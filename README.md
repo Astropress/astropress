@@ -36,9 +36,16 @@ Specs:
 - CLI: `crates/astropress-cli/SPEC.md`
 - example/docs: `examples/github-pages/SPEC.md`
 
+Planning docs:
+
+- org layout and split strategy: `docs/ORG_LAYOUT.md`
+- consumer migration map: `docs/CONSUMER_MIGRATION.md`
+- GitHub bootstrap status: `docs/GITHUB_BOOTSTRAP.md`
+
 Host integration helpers:
 
 - `astropress/integration` re-exports the current Vite, Vitest, and host-runtime helper surface from one place
+- `astropress/vite-integration` composes the standard Vite plugin and alias rules into one helper
 - `astropress/vite-runtime-alias` exposes reusable Vite alias/plugin helpers for `local-runtime-modules`
 - `astropress/vitest-runtime-alias` exposes reusable Vitest plugin helpers for external-package test runs
 - `astropress/local-runtime-modules` exposes the typed seam contract for host implementations

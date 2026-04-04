@@ -12,6 +12,7 @@
     "./platform-contracts": "./src/platform-contracts.ts",
     "./provider-targets": "./src/provider-targets.ts",
     "./integration": "./src/integration.ts",
+    "./vite-integration": "./src/vite-integration.ts",
     "./vite-runtime-alias": "./src/vite-runtime-alias.ts",
     "./vitest-runtime-alias": "./src/vitest-runtime-alias.ts",
     "./host-runtime-modules": "./src/host-runtime-modules.ts",

@@ -4,7 +4,7 @@
 
 As checked from the local development environment:
 
-- `gh` is installed locally
+- `gh` is installed system-wide
 - authenticated GitHub user: `shatachandra`
 - visible org membership:
   - `anvil-foundry` with role `admin`
