@@ -20,6 +20,7 @@
     "./host-runtime-factories": "./src/host-runtime-factories.js",
     "./admin-store-adapter-factory": "./src/admin-store-adapter-factory.js",
     "./local-media-repository-factory": "./src/local-media-repository-factory.js",
+    "./redirect-repository-factory": "./src/redirect-repository-factory.js",
     "./local-runtime-modules": "./src/local-runtime-modules.ts",
     "./cloudflare-workers-stub": "./src/cloudflare-workers-stub.ts",
     "./cloudflare-local-runtime-stubs": "./src/cloudflare-local-runtime-stubs.ts",

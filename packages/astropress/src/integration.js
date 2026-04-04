@@ -19,3 +19,4 @@ export {
 } from "./host-runtime-factories.js";
 export { createAstropressAdminStoreAdapter } from "./admin-store-adapter-factory.js";
 export { createAstropressLocalMediaRepository } from "./local-media-repository-factory.js";
+export { createAstropressRedirectRepository } from "./redirect-repository-factory.js";

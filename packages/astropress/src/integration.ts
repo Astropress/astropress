@@ -39,3 +39,7 @@ export {
   createAstropressLocalMediaRepository,
 } from "./local-media-repository-factory";
 export type { AstropressLocalMediaRepositoryOptions } from "./local-media-repository-factory";
+export {
+  createAstropressRedirectRepository,
+} from "./redirect-repository-factory";
+export type { AstropressRedirectRepositoryInput } from "./redirect-repository-factory";
