@@ -1,33 +1,55 @@
+use std::collections::BTreeMap;
 use std::env;
-use std::process::ExitCode;
+use std::fs;
+use std::io;
+use std::path::{Path, PathBuf};
+use std::process::{Command as ProcessCommand, ExitCode};
+use std::time::{SystemTime, UNIX_EPOCH};
+
+use serde::{Deserialize, Serialize};
 
 fn main() -> ExitCode {
     let args = env::args().skip(1).collect::<Vec<_>>();
     match parse_command(&args) {
-        Ok(Command::New) => {
-            println!("astropress new: scaffold command placeholder");
-            ExitCode::SUCCESS
-        }
-        Ok(Command::Dev) => {
-            println!("astropress dev: local runtime command placeholder");
-            ExitCode::SUCCESS
-        }
-        Ok(Command::ImportWordPress) => {
-            println!("astropress import wordpress: migration command placeholder");
-            ExitCode::SUCCESS
-        }
-        Ok(Command::SyncExport) => {
-            println!("astropress sync export: git/export command placeholder");
-            ExitCode::SUCCESS
-        }
-        Ok(Command::SyncImport) => {
-            println!("astropress sync import: git/import command placeholder");
-            ExitCode::SUCCESS
-        }
-        Ok(Command::Deploy) => {
-            println!("astropress deploy: provider deployment command placeholder");
-            ExitCode::SUCCESS
-        }
+        Ok(Command::New {
+            project_dir,
+            use_local_package,
+        }) => match scaffold_new_project(&project_dir, use_local_package) {
+            Ok(()) => ExitCode::SUCCESS,
+            Err(error) => fail(error),
+        },
+        Ok(Command::Dev { project_dir }) => match run_dev_server(&project_dir) {
+            Ok(code) => code,
+            Err(error) => fail(error),
+        },
+        Ok(Command::ImportWordPress {
+            project_dir,
+            source_path,
+        }) => match stage_wordpress_import(&project_dir, &source_path) {
+            Ok(()) => ExitCode::SUCCESS,
+            Err(error) => fail(error),
+        },
+        Ok(Command::SyncExport {
+            project_dir,
+            output_dir,
+        }) => match export_project_snapshot(&project_dir, output_dir.as_deref()) {
+            Ok(()) => ExitCode::SUCCESS,
+            Err(error) => fail(error),
+        },
+        Ok(Command::SyncImport {
+            project_dir,
+            input_dir,
+        }) => match import_project_snapshot(&project_dir, &input_dir) {
+            Ok(()) => ExitCode::SUCCESS,
+            Err(error) => fail(error),
+        },
+        Ok(Command::Deploy {
+            project_dir,
+            target,
+        }) => match deploy_project(&project_dir, target.as_deref()) {
+            Ok(code) => code,
+            Err(error) => fail(error),
+        },
         Ok(Command::Help) => {
             print_help();
             ExitCode::SUCCESS
@@ -41,33 +63,82 @@ fn main() -> ExitCode {
     }
 }
 
+fn fail(message: String) -> ExitCode {
+    eprintln!("{message}");
+    ExitCode::from(1)
+}
+
 #[derive(Debug, PartialEq, Eq)]
 enum Command {
-    New,
-    Dev,
-    ImportWordPress,
-    SyncExport,
-    SyncImport,
-    Deploy,
+    New {
+        project_dir: PathBuf,
+        use_local_package: bool,
+    },
+    Dev {
+        project_dir: PathBuf,
+    },
+    ImportWordPress {
+        project_dir: PathBuf,
+        source_path: PathBuf,
+    },
+    SyncExport {
+        project_dir: PathBuf,
+        output_dir: Option<PathBuf>,
+    },
+    SyncImport {
+        project_dir: PathBuf,
+        input_dir: PathBuf,
+    },
+    Deploy {
+        project_dir: PathBuf,
+        target: Option<String>,
+    },
     Help,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum PackageManager {
+    Bun,
+    Npm,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct PackageManifest {
+    name: String,
+    #[serde(default)]
+    private: bool,
+    #[serde(rename = "type", default)]
+    package_type: Option<String>,
+    #[serde(default)]
+    scripts: BTreeMap<String, String>,
+    #[serde(default)]
+    dependencies: BTreeMap<String, String>,
+    #[serde(rename = "devDependencies", default)]
+    dev_dependencies: BTreeMap<String, String>,
+}
+
+#[derive(Debug, Serialize)]
+struct WordPressImportManifest {
+    source_file: String,
+    imported_at_unix_ms: u128,
 }
 
 fn parse_command(args: &[String]) -> Result<Command, String> {
     match args {
         [] => Ok(Command::Help),
         [flag] if flag == "--help" || flag == "-h" || flag == "help" => Ok(Command::Help),
-        [command] if command == "new" => Ok(Command::New),
-        [command] if command == "dev" => Ok(Command::Dev),
-        [command] if command == "deploy" => Ok(Command::Deploy),
-        [command, subcommand] if command == "import" && subcommand == "wordpress" => {
-            Ok(Command::ImportWordPress)
+        [command, rest @ ..] if command == "new" => parse_new_command(rest),
+        [command, rest @ ..] if command == "dev" => parse_dev_command(rest),
+        [command, subcommand, rest @ ..] if command == "import" && subcommand == "wordpress" => {
+            parse_import_wordpress_command(rest)
         }
-        [command, subcommand] if command == "sync" && subcommand == "export" => {
-            Ok(Command::SyncExport)
+        [command, subcommand, rest @ ..] if command == "sync" && subcommand == "export" => {
+            parse_sync_export_command(rest)
         }
-        [command, subcommand] if command == "sync" && subcommand == "import" => {
-            Ok(Command::SyncImport)
+        [command, subcommand, rest @ ..] if command == "sync" && subcommand == "import" => {
+            parse_sync_import_command(rest)
         }
+        [command, rest @ ..] if command == "deploy" => parse_deploy_command(rest),
         [command, ..] if command == "import" => {
             Err("Unsupported import source. Only `astropress import wordpress` is available.".into())
         }
@@ -78,46 +149,585 @@ fn parse_command(args: &[String]) -> Result<Command, String> {
     }
 }
 
+fn parse_new_command(args: &[String]) -> Result<Command, String> {
+    let mut project_dir = PathBuf::from("astropress-site");
+    let mut use_local_package = true;
+
+    for arg in args {
+        match arg.as_str() {
+            "--use-published-package" => use_local_package = false,
+            "--use-local-package" => use_local_package = true,
+            value if value.starts_with("--") => {
+                return Err(format!("Unsupported astropress new option: `{value}`."));
+            }
+            value => {
+                project_dir = PathBuf::from(value);
+            }
+        }
+    }
+
+    Ok(Command::New {
+        project_dir,
+        use_local_package,
+    })
+}
+
+fn parse_dev_command(args: &[String]) -> Result<Command, String> {
+    if args.len() > 1 {
+        return Err("Usage: `astropress dev [project-dir]`.".into());
+    }
+
+    Ok(Command::Dev {
+        project_dir: args
+            .first()
+            .map(PathBuf::from)
+            .unwrap_or_else(|| env::current_dir().unwrap_or_else(|_| PathBuf::from("."))),
+    })
+}
+
+fn parse_import_wordpress_command(args: &[String]) -> Result<Command, String> {
+    let mut project_dir = env::current_dir().unwrap_or_else(|_| PathBuf::from("."));
+    let mut source_path: Option<PathBuf> = None;
+    let mut index = 0;
+
+    while index < args.len() {
+        match args[index].as_str() {
+            "--project-dir" => {
+                index += 1;
+                let value = args
+                    .get(index)
+                    .ok_or_else(|| "Missing value after `--project-dir`.".to_string())?;
+                project_dir = PathBuf::from(value);
+            }
+            "--source" => {
+                index += 1;
+                let value = args
+                    .get(index)
+                    .ok_or_else(|| "Missing value after `--source`.".to_string())?;
+                source_path = Some(PathBuf::from(value));
+            }
+            other => return Err(format!("Unsupported astropress import wordpress option: `{other}`.")),
+        }
+        index += 1;
+    }
+
+    let source_path = source_path.ok_or_else(|| {
+        "Usage: `astropress import wordpress --source <path-to-export.xml> [--project-dir <dir>]`."
+            .to_string()
+    })?;
+
+    Ok(Command::ImportWordPress {
+        project_dir,
+        source_path,
+    })
+}
+
+fn parse_sync_export_command(args: &[String]) -> Result<Command, String> {
+    let mut project_dir = env::current_dir().unwrap_or_else(|_| PathBuf::from("."));
+    let mut output_dir = None;
+    let mut index = 0;
+
+    while index < args.len() {
+        match args[index].as_str() {
+            "--project-dir" => {
+                index += 1;
+                let value = args
+                    .get(index)
+                    .ok_or_else(|| "Missing value after `--project-dir`.".to_string())?;
+                project_dir = PathBuf::from(value);
+            }
+            "--out" => {
+                index += 1;
+                let value = args
+                    .get(index)
+                    .ok_or_else(|| "Missing value after `--out`.".to_string())?;
+                output_dir = Some(PathBuf::from(value));
+            }
+            other => return Err(format!("Unsupported astropress sync export option: `{other}`.")),
+        }
+        index += 1;
+    }
+
+    Ok(Command::SyncExport {
+        project_dir,
+        output_dir,
+    })
+}
+
+fn parse_sync_import_command(args: &[String]) -> Result<Command, String> {
+    let mut project_dir = env::current_dir().unwrap_or_else(|_| PathBuf::from("."));
+    let mut input_dir = None;
+    let mut index = 0;
+
+    while index < args.len() {
+        match args[index].as_str() {
+            "--project-dir" => {
+                index += 1;
+                let value = args
+                    .get(index)
+                    .ok_or_else(|| "Missing value after `--project-dir`.".to_string())?;
+                project_dir = PathBuf::from(value);
+            }
+            "--from" => {
+                index += 1;
+                let value = args
+                    .get(index)
+                    .ok_or_else(|| "Missing value after `--from`.".to_string())?;
+                input_dir = Some(PathBuf::from(value));
+            }
+            other => return Err(format!("Unsupported astropress sync import option: `{other}`.")),
+        }
+        index += 1;
+    }
+
+    Ok(Command::SyncImport {
+        project_dir,
+        input_dir: input_dir.ok_or_else(|| {
+            "Usage: `astropress sync import --from <snapshot-dir> [--project-dir <dir>]`.".to_string()
+        })?,
+    })
+}
+
+fn parse_deploy_command(args: &[String]) -> Result<Command, String> {
+    let mut project_dir = env::current_dir().unwrap_or_else(|_| PathBuf::from("."));
+    let mut target = None;
+    let mut index = 0;
+
+    while index < args.len() {
+        match args[index].as_str() {
+            "--project-dir" => {
+                index += 1;
+                let value = args
+                    .get(index)
+                    .ok_or_else(|| "Missing value after `--project-dir`.".to_string())?;
+                project_dir = PathBuf::from(value);
+            }
+            "--target" => {
+                index += 1;
+                let value = args
+                    .get(index)
+                    .ok_or_else(|| "Missing value after `--target`.".to_string())?;
+                target = Some(value.clone());
+            }
+            other => return Err(format!("Unsupported astropress deploy option: `{other}`.")),
+        }
+        index += 1;
+    }
+
+    Ok(Command::Deploy { project_dir, target })
+}
+
 fn print_help() {
     println!("astropress-cli");
     println!("Commands:");
-    println!("  astropress new");
+    println!("  astropress new [project-dir] [--use-local-package|--use-published-package]");
+    println!("  astropress dev [project-dir]");
+    println!("  astropress import wordpress --source <export.xml> [--project-dir <dir>]");
+    println!("  astropress sync export [--project-dir <dir>] [--out <snapshot-dir>]");
+    println!("  astropress sync import --from <snapshot-dir> [--project-dir <dir>]");
+    println!("  astropress deploy [--project-dir <dir>] [--target github-pages|cloudflare|supabase|runway]");
+}
+
+fn repo_root() -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .and_then(Path::parent)
+        .unwrap()
+        .to_path_buf()
+}
+
+fn example_template_dir() -> PathBuf {
+    repo_root().join("examples").join("github-pages")
+}
+
+fn sanitize_package_name(input: &str) -> String {
+    let mut output = String::new();
+    let mut last_dash = false;
+    for character in input.chars().flat_map(|character| character.to_lowercase()) {
+        if character.is_ascii_alphanumeric() {
+            output.push(character);
+            last_dash = false;
+        } else if !last_dash {
+            output.push('-');
+            last_dash = true;
+        }
+    }
+    output.trim_matches('-').to_string()
+}
+
+fn copy_template_dir(source: &Path, destination: &Path) -> Result<(), String> {
+    for entry in fs::read_dir(source).map_err(io_error)? {
+        let entry = entry.map_err(io_error)?;
+        let source_path = entry.path();
+        let destination_path = destination.join(entry.file_name());
+        let file_type = entry.file_type().map_err(io_error)?;
+
+        if source_path
+            .file_name()
+            .and_then(|value| value.to_str())
+            .is_some_and(|value| value == ".astro")
+        {
+            continue;
+        }
+
+        if file_type.is_dir() {
+            fs::create_dir_all(&destination_path).map_err(io_error)?;
+            copy_template_dir(&source_path, &destination_path)?;
+        } else if file_type.is_file() {
+            fs::copy(&source_path, &destination_path).map_err(io_error)?;
+        }
+    }
+
+    Ok(())
+}
+
+fn read_package_manifest(project_dir: &Path) -> Result<PackageManifest, String> {
+    let package_json = fs::read_to_string(project_dir.join("package.json")).map_err(io_error)?;
+    serde_json::from_str::<PackageManifest>(&package_json).map_err(|error| error.to_string())
+}
+
+fn write_package_manifest(project_dir: &Path, manifest: &PackageManifest) -> Result<(), String> {
+    let package_json = serde_json::to_string_pretty(manifest).map_err(|error| error.to_string())?;
+    fs::write(project_dir.join("package.json"), format!("{package_json}\n")).map_err(io_error)
+}
+
+fn scaffold_new_project(project_dir: &Path, use_local_package: bool) -> Result<(), String> {
+    if project_dir.exists() {
+        let mut entries = fs::read_dir(project_dir).map_err(io_error)?;
+        if entries.next().transpose().map_err(io_error)?.is_some() {
+            return Err(format!(
+                "Refusing to scaffold into `{}` because the directory is not empty.",
+                project_dir.display()
+            ));
+        }
+    } else {
+        fs::create_dir_all(project_dir).map_err(io_error)?;
+    }
+
+    let template_dir = example_template_dir();
+    copy_template_dir(&template_dir, project_dir)?;
+
+    let mut manifest = read_package_manifest(project_dir)?;
+    let fallback_name = project_dir
+        .file_name()
+        .and_then(|value| value.to_str())
+        .unwrap_or("astropress-site");
+    manifest.name = sanitize_package_name(fallback_name);
+    manifest.dependencies.insert(
+        "astropress".into(),
+        if use_local_package {
+            format!("file:{}", repo_root().join("packages").join("astropress").display())
+        } else {
+            "^0.1.0".into()
+        },
+    );
+    write_package_manifest(project_dir, &manifest)?;
+
+    fs::write(
+        project_dir.join(".gitignore"),
+        ".astro/\ndist/\nnode_modules/\n.astropress/\n",
+    )
+    .map_err(io_error)?;
+
+    println!("Scaffolded Astropress project at {}", project_dir.display());
+    println!("Next steps:");
+    println!("  cd {}", project_dir.display());
+    println!("  bun install");
     println!("  astropress dev");
-    println!("  astropress import wordpress");
-    println!("  astropress sync export");
-    println!("  astropress sync import");
-    println!("  astropress deploy");
+    Ok(())
+}
+
+fn detect_package_manager(project_dir: &Path) -> PackageManager {
+    if project_dir.join("bun.lock").exists() || command_available("bun") {
+        PackageManager::Bun
+    } else {
+        PackageManager::Npm
+    }
+}
+
+fn command_available(command: &str) -> bool {
+    ProcessCommand::new(command)
+        .arg("--version")
+        .output()
+        .map(|output| output.status.success())
+        .unwrap_or(false)
+}
+
+fn install_dependencies_if_needed(project_dir: &Path, package_manager: PackageManager) -> Result<(), String> {
+    if project_dir.join("node_modules").exists() {
+        return Ok(());
+    }
+
+    let status = match package_manager {
+        PackageManager::Bun => ProcessCommand::new("bun")
+            .arg("install")
+            .current_dir(project_dir)
+            .status()
+            .map_err(io_error)?,
+        PackageManager::Npm => ProcessCommand::new("npm")
+            .arg("install")
+            .current_dir(project_dir)
+            .status()
+            .map_err(io_error)?,
+    };
+
+    if status.success() {
+        Ok(())
+    } else {
+        Err("Dependency installation failed.".into())
+    }
+}
+
+fn run_script(project_dir: &Path, script_name: &str) -> Result<ExitCode, String> {
+    let package_manager = detect_package_manager(project_dir);
+    install_dependencies_if_needed(project_dir, package_manager)?;
+
+    let status = match package_manager {
+        PackageManager::Bun => ProcessCommand::new("bun")
+            .args(["run", script_name])
+            .current_dir(project_dir)
+            .status()
+            .map_err(io_error)?,
+        PackageManager::Npm => ProcessCommand::new("npm")
+            .args(["run", script_name])
+            .current_dir(project_dir)
+            .status()
+            .map_err(io_error)?,
+    };
+
+    Ok(ExitCode::from(status.code().unwrap_or(1) as u8))
+}
+
+fn run_dev_server(project_dir: &Path) -> Result<ExitCode, String> {
+    run_script(project_dir, "dev")
+}
+
+fn now_unix_ms() -> u128 {
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_millis()
+}
+
+fn stage_wordpress_import(project_dir: &Path, source_path: &Path) -> Result<(), String> {
+    if !source_path.is_file() {
+        return Err(format!(
+            "WordPress export file was not found: {}",
+            source_path.display()
+        ));
+    }
+
+    let import_dir = project_dir
+        .join(".astropress")
+        .join("imports")
+        .join("wordpress");
+    fs::create_dir_all(&import_dir).map_err(io_error)?;
+
+    let extension = source_path
+        .extension()
+        .and_then(|value| value.to_str())
+        .unwrap_or("xml");
+    let staged_source = import_dir.join(format!("source.{extension}"));
+    fs::copy(source_path, &staged_source).map_err(io_error)?;
+
+    let manifest = WordPressImportManifest {
+        source_file: staged_source
+            .file_name()
+            .and_then(|value| value.to_str())
+            .unwrap_or("source.xml")
+            .to_string(),
+        imported_at_unix_ms: now_unix_ms(),
+    };
+
+    let manifest_json = serde_json::to_string_pretty(&manifest).map_err(|error| error.to_string())?;
+    fs::write(import_dir.join("manifest.json"), format!("{manifest_json}\n")).map_err(io_error)?;
+
+    println!(
+        "Staged WordPress import assets in {}",
+        import_dir.display()
+    );
+    Ok(())
+}
+
+fn copy_selected_path(source: &Path, destination: &Path) -> Result<(), String> {
+    if source.is_dir() {
+        fs::create_dir_all(destination).map_err(io_error)?;
+        for entry in fs::read_dir(source).map_err(io_error)? {
+            let entry = entry.map_err(io_error)?;
+            copy_selected_path(&entry.path(), &destination.join(entry.file_name()))?;
+        }
+        Ok(())
+    } else if source.is_file() {
+        if let Some(parent) = destination.parent() {
+            fs::create_dir_all(parent).map_err(io_error)?;
+        }
+        fs::copy(source, destination).map_err(io_error)?;
+        Ok(())
+    } else {
+        Ok(())
+    }
+}
+
+fn export_project_snapshot(project_dir: &Path, output_dir: Option<&Path>) -> Result<(), String> {
+    let snapshot_dir = output_dir
+        .map(PathBuf::from)
+        .unwrap_or_else(|| project_dir.join(".astropress").join("sync").join("latest"));
+
+    if snapshot_dir.exists() {
+        fs::remove_dir_all(&snapshot_dir).map_err(io_error)?;
+    }
+    fs::create_dir_all(&snapshot_dir).map_err(io_error)?;
+
+    for relative_path in [
+        "package.json",
+        "astro.config.mjs",
+        "astro.cloudflare.config.mjs",
+        "tsconfig.json",
+        "src",
+        "public",
+    ] {
+        let source = project_dir.join(relative_path);
+        if source.exists() {
+            copy_selected_path(&source, &snapshot_dir.join(relative_path))?;
+        }
+    }
+
+    println!("Exported Astropress snapshot to {}", snapshot_dir.display());
+    Ok(())
+}
+
+fn import_project_snapshot(project_dir: &Path, input_dir: &Path) -> Result<(), String> {
+    if !input_dir.exists() {
+        return Err(format!("Snapshot directory was not found: {}", input_dir.display()));
+    }
+
+    for relative_path in [
+        "package.json",
+        "astro.config.mjs",
+        "astro.cloudflare.config.mjs",
+        "tsconfig.json",
+        "src",
+        "public",
+    ] {
+        let source = input_dir.join(relative_path);
+        if source.exists() {
+            copy_selected_path(&source, &project_dir.join(relative_path))?;
+        }
+    }
+
+    println!(
+        "Imported Astropress snapshot from {} into {}",
+        input_dir.display(),
+        project_dir.display()
+    );
+    Ok(())
+}
+
+fn deploy_script_for_target(
+    manifest: &PackageManifest,
+    explicit_target: Option<&str>,
+) -> Result<&'static str, String> {
+    let target = explicit_target.unwrap_or("github-pages");
+    match target {
+        "github-pages" => {
+            if manifest.scripts.contains_key("build") {
+                Ok("build")
+            } else {
+                Err("The project does not define a `build` script.".into())
+            }
+        }
+        "cloudflare" => {
+            if manifest.scripts.contains_key("build:cloudflare-production") {
+                Ok("build:cloudflare-production")
+            } else if manifest.scripts.contains_key("build:cloudflare-repro") {
+                Ok("build:cloudflare-repro")
+            } else {
+                Err("The project does not define a Cloudflare build script.".into())
+            }
+        }
+        "supabase" => {
+            if manifest.scripts.contains_key("deploy:supabase") {
+                Ok("deploy:supabase")
+            } else {
+                Err("The project does not define a `deploy:supabase` script.".into())
+            }
+        }
+        "runway" => {
+            if manifest.scripts.contains_key("deploy:runway") {
+                Ok("deploy:runway")
+            } else {
+                Err("The project does not define a `deploy:runway` script.".into())
+            }
+        }
+        other => Err(format!(
+            "Unsupported deploy target `{other}`. Use github-pages, cloudflare, supabase, or runway."
+        )),
+    }
+}
+
+fn deploy_project(project_dir: &Path, target: Option<&str>) -> Result<ExitCode, String> {
+    let manifest = read_package_manifest(project_dir)?;
+    let script = deploy_script_for_target(&manifest, target)?;
+    run_script(project_dir, script)
+}
+
+fn io_error(error: io::Error) -> String {
+    error.to_string()
 }
 
 #[cfg(test)]
 mod tests {
-    use super::{parse_command, Command};
+    use super::{
+        command_available, deploy_script_for_target, export_project_snapshot, import_project_snapshot,
+        parse_command, sanitize_package_name, scaffold_new_project, stage_wordpress_import, Command,
+        PackageManifest,
+    };
+    use std::collections::BTreeMap;
+    use std::fs;
+    use std::path::PathBuf;
+    use std::time::{SystemTime, UNIX_EPOCH};
 
     fn strings(values: &[&str]) -> Vec<String> {
         values.iter().map(|value| value.to_string()).collect()
     }
 
-    #[test]
-    fn parses_top_level_commands() {
-        assert_eq!(parse_command(&strings(&["new"])), Ok(Command::New));
-        assert_eq!(parse_command(&strings(&["dev"])), Ok(Command::Dev));
-        assert_eq!(parse_command(&strings(&["deploy"])), Ok(Command::Deploy));
+    fn temp_dir(label: &str) -> PathBuf {
+        let unique = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_nanos();
+        let path = std::env::temp_dir().join(format!("astropress-cli-{label}-{unique}"));
+        fs::create_dir_all(&path).unwrap();
+        path
     }
 
     #[test]
     fn parses_nested_commands() {
-        assert_eq!(
-            parse_command(&strings(&["import", "wordpress"])),
-            Ok(Command::ImportWordPress)
-        );
-        assert_eq!(
+        assert!(matches!(
+            parse_command(&strings(&["import", "wordpress", "--source", "export.xml"])),
+            Ok(Command::ImportWordPress { .. })
+        ));
+        assert!(matches!(
             parse_command(&strings(&["sync", "export"])),
-            Ok(Command::SyncExport)
-        );
-        assert_eq!(
-            parse_command(&strings(&["sync", "import"])),
-            Ok(Command::SyncImport)
-        );
+            Ok(Command::SyncExport { .. })
+        ));
+        assert!(matches!(
+            parse_command(&strings(&["sync", "import", "--from", "snapshot"])),
+            Ok(Command::SyncImport { .. })
+        ));
+    }
+
+    #[test]
+    fn parses_top_level_commands() {
+        assert!(matches!(
+            parse_command(&strings(&["new", "demo"])),
+            Ok(Command::New { .. })
+        ));
+        assert!(matches!(parse_command(&strings(&["dev"])), Ok(Command::Dev { .. })));
+        assert!(matches!(
+            parse_command(&strings(&["deploy", "--target", "cloudflare"])),
+            Ok(Command::Deploy { .. })
+        ));
     }
 
     #[test]
@@ -139,5 +749,89 @@ mod tests {
     fn rejects_unknown_commands() {
         let error = parse_command(&strings(&["explode"])).unwrap_err();
         assert!(error.contains("Unsupported astropress command"));
+    }
+
+    #[test]
+    fn sanitizes_package_names() {
+        assert_eq!(sanitize_package_name("My Cool Site"), "my-cool-site");
+    }
+
+    #[test]
+    fn deploy_script_selection_prefers_targeted_scripts() {
+        let mut manifest = PackageManifest {
+            name: "demo".into(),
+            private: true,
+            package_type: Some("module".into()),
+            scripts: BTreeMap::new(),
+            dependencies: BTreeMap::new(),
+            dev_dependencies: BTreeMap::new(),
+        };
+        manifest.scripts.insert("build".into(), "astro build".into());
+        manifest
+            .scripts
+            .insert("build:cloudflare-production".into(), "astro build".into());
+        assert_eq!(
+            deploy_script_for_target(&manifest, Some("cloudflare")).unwrap(),
+            "build:cloudflare-production"
+        );
+        assert_eq!(
+            deploy_script_for_target(&manifest, Some("github-pages")).unwrap(),
+            "build"
+        );
+    }
+
+    #[test]
+    fn scaffolds_new_project_from_example() {
+        let root = temp_dir("new");
+        let project_dir = root.join("demo");
+        scaffold_new_project(&project_dir, true).unwrap();
+
+        let package_json = fs::read_to_string(project_dir.join("package.json")).unwrap();
+        assert!(package_json.contains("\"name\": \"demo\""));
+        assert!(package_json.contains("\"astropress\": \"file:"));
+        assert!(project_dir.join("src/pages/index.astro").exists());
+    }
+
+    #[test]
+    fn stages_wordpress_imports() {
+        let root = temp_dir("import");
+        let project_dir = root.join("project");
+        fs::create_dir_all(&project_dir).unwrap();
+        let source = root.join("export.xml");
+        fs::write(&source, "<rss></rss>").unwrap();
+
+        stage_wordpress_import(&project_dir, &source).unwrap();
+        assert!(project_dir
+            .join(".astropress/imports/wordpress/source.xml")
+            .exists());
+        assert!(project_dir
+            .join(".astropress/imports/wordpress/manifest.json")
+            .exists());
+    }
+
+    #[test]
+    fn exports_and_imports_project_snapshots() {
+        let root = temp_dir("sync");
+        let project_dir = root.join("project");
+        fs::create_dir_all(project_dir.join("src")).unwrap();
+        fs::write(project_dir.join("package.json"), "{\"name\":\"demo\",\"scripts\":{}}").unwrap();
+        fs::write(project_dir.join("src/index.txt"), "hello").unwrap();
+
+        let snapshot_dir = root.join("snapshot");
+        export_project_snapshot(&project_dir, Some(&snapshot_dir)).unwrap();
+        assert!(snapshot_dir.join("package.json").exists());
+        assert!(snapshot_dir.join("src/index.txt").exists());
+
+        fs::write(snapshot_dir.join("src/index.txt"), "updated").unwrap();
+        import_project_snapshot(&project_dir, &snapshot_dir).unwrap();
+        assert_eq!(
+            fs::read_to_string(project_dir.join("src/index.txt")).unwrap(),
+            "updated"
+        );
+    }
+
+    #[test]
+    fn command_availability_check_is_safe() {
+        let _ = command_available("definitely-not-a-real-command-binary");
     }
 }
