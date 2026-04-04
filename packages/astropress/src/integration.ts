@@ -67,3 +67,7 @@ export {
   createAstropressSettingsRepository,
 } from "./settings-repository-factory";
 export type { AstropressSettingsRepositoryInput } from "./settings-repository-factory";
+export {
+  createAstropressTranslationRepository,
+} from "./translation-repository-factory";
+export type { AstropressTranslationRepositoryInput } from "./translation-repository-factory";
