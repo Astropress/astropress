@@ -3,6 +3,7 @@ import {
   createAstropressAdminStoreModule,
   createAstropressBootstrapAdminUsers,
   createAstropressCmsRegistryModule,
+  createAstropressHostRuntimeBundle,
   createAstropressPasswordAuthModule,
 } from "../src/host-runtime-factories";
 
@@ -174,5 +175,123 @@ describe("host runtime factories", () => {
         name: "Fleet Editor",
       },
     ]);
+  });
+
+  it("creates a combined host runtime bundle", async () => {
+    const getStore = vi.fn(() => ({
+      backend: "sqlite" as const,
+      audit: { getAuditEvents: vi.fn(() => []) },
+      auth: {
+        createSession: vi.fn(() => "session"),
+        getSessionUser: vi.fn(() => ({ email: "admin@example.com", role: "admin" as const, name: "Admin" })),
+        getCsrfToken: vi.fn(() => "csrf"),
+        revokeSession: vi.fn(),
+        createPasswordResetToken: vi.fn(() => ({ ok: true as const, resetUrl: null })),
+        getInviteRequest: vi.fn(() => null),
+        getPasswordResetRequest: vi.fn(() => null),
+        consumeInviteToken: vi.fn(() => ({ ok: false as const, error: "not implemented" })),
+        consumePasswordResetToken: vi.fn(() => ({ ok: false as const, error: "not implemented" })),
+        recordSuccessfulLogin: vi.fn(),
+        recordLogout: vi.fn(),
+      },
+      users: {
+        listAdminUsers: vi.fn(() => []),
+        inviteAdminUser: vi.fn(() => ({ ok: false as const, error: "not implemented" })),
+        suspendAdminUser: vi.fn(() => ({ ok: false as const, error: "not implemented" })),
+        unsuspendAdminUser: vi.fn(() => ({ ok: false as const, error: "not implemented" })),
+      },
+      authors: {
+        listAuthors: vi.fn(() => []),
+        createAuthor: vi.fn(() => ({ ok: false as const, error: "not implemented" })),
+        updateAuthor: vi.fn(() => ({ ok: false as const, error: "not implemented" })),
+        deleteAuthor: vi.fn(() => ({ ok: false as const, error: "not implemented" })),
+      },
+      taxonomies: {
+        listCategories: vi.fn(() => []),
+        createCategory: vi.fn(() => ({ ok: false as const, error: "not implemented" })),
+        updateCategory: vi.fn(() => ({ ok: false as const, error: "not implemented" })),
+        deleteCategory: vi.fn(() => ({ ok: false as const, error: "not implemented" })),
+        listTags: vi.fn(() => []),
+        createTag: vi.fn(() => ({ ok: false as const, error: "not implemented" })),
+        updateTag: vi.fn(() => ({ ok: false as const, error: "not implemented" })),
+        deleteTag: vi.fn(() => ({ ok: false as const, error: "not implemented" })),
+      },
+      redirects: {
+        getRedirectRules: vi.fn(() => []),
+        createRedirectRule: vi.fn(() => ({ ok: false as const, error: "not implemented" })),
+        deleteRedirectRule: vi.fn(() => ({ ok: false as const })),
+      },
+      comments: {
+        getComments: vi.fn(() => []),
+        moderateComment: vi.fn(() => ({ ok: false as const, error: "not implemented" })),
+        submitPublicComment: vi.fn(() => ({ ok: false as const, error: "not implemented" })),
+        getApprovedCommentsForRoute: vi.fn(() => []),
+      },
+      content: {
+        listContentStates: vi.fn(() => []),
+        getContentState: vi.fn(() => null),
+        getContentRevisions: vi.fn(() => null),
+        createContentRecord: vi.fn(() => ({ ok: false as const, error: "not implemented" })),
+        saveContentState: vi.fn(() => ({ ok: false as const, error: "not implemented" })),
+        restoreRevision: vi.fn(() => ({ ok: false as const, error: "not implemented" })),
+      },
+      submissions: {
+        getContactSubmissions: vi.fn(() => []),
+        submitContact: vi.fn(() => ({ ok: true as const, submission: { id: "1", name: "A", email: "a@example.com", message: "Hi", submittedAt: "now" } })),
+      },
+      translations: {
+        updateTranslationState: vi.fn(() => ({ ok: false as const, error: "not implemented" })),
+        getEffectiveTranslationState: vi.fn(() => "draft"),
+      },
+      settings: {
+        getSettings: vi.fn(() => ({
+          siteTitle: "Site",
+          siteTagline: "Tagline",
+          donationUrl: "",
+          newsletterEnabled: true,
+          commentsDefaultPolicy: "open-moderated" as const,
+        })),
+        saveSettings: vi.fn(() => ({ ok: false as const, error: "not implemented" })),
+      },
+      rateLimits: {
+        checkRateLimit: vi.fn(() => true),
+        peekRateLimit: vi.fn(() => true),
+        recordFailedAttempt: vi.fn(),
+      },
+      media: {
+        listMediaAssets: vi.fn(() => []),
+        createMediaAsset: vi.fn(() => ({ ok: false as const, error: "not implemented" })),
+        updateMediaAsset: vi.fn(() => ({ ok: false as const, error: "not implemented" })),
+        deleteMediaAsset: vi.fn(() => ({ ok: false as const, error: "not implemented" })),
+      },
+    }));
+
+    const bundle = createAstropressHostRuntimeBundle({
+      getStore,
+      authenticateAdminUser: async (email, password) =>
+        email === "admin@example.com" && password === "secret"
+          ? { email, role: "admin", name: "Admin" }
+          : null,
+      cmsRegistry: createAstropressCmsRegistryModule({
+        listSystemRoutes: () => [],
+        getSystemRoute: () => null,
+        saveSystemRoute: () => ({ ok: false as const, error: "not implemented" }),
+        listStructuredPageRoutes: () => [],
+        getStructuredPageRoute: () => null,
+        saveStructuredPageRoute: () => ({ ok: false as const, error: "not implemented" }),
+        createStructuredPageRoute: () => ({ ok: false as const, error: "not implemented" }),
+        getArchiveRoute: () => null,
+        listArchiveRoutes: () => [],
+        saveArchiveRoute: () => ({ ok: false as const, error: "not implemented" }),
+      }),
+    });
+
+    expect(bundle.localAdminStoreModule.getSessionUser("session")).toMatchObject({
+      email: "admin@example.com",
+    });
+    await expect(bundle.localAdminAuthModule.authenticateAdminUser("admin@example.com", "secret")).resolves.toMatchObject({
+      email: "admin@example.com",
+    });
+    expect(bundle.localCmsRegistryModule.listSystemRoutes()).toEqual([]);
   });
 });

@@ -183,3 +183,11 @@ export function createAstropressBootstrapAdminUsers(input) {
     },
   ];
 }
+
+export function createAstropressHostRuntimeBundle(input) {
+  return {
+    localAdminStoreModule: createAstropressAdminStoreModule(input.getStore),
+    localAdminAuthModule: createAstropressPasswordAuthModule(input.authenticateAdminUser),
+    localCmsRegistryModule: createAstropressCmsRegistryModule(input.cmsRegistry),
+  };
+}

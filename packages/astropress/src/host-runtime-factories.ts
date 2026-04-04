@@ -21,6 +21,18 @@ export interface AstropressBootstrapAdminUsersInput {
   editorName?: string;
 }
 
+export interface AstropressHostRuntimeBundle {
+  localAdminStoreModule: LocalAdminStoreModule;
+  localAdminAuthModule: LocalAdminAuthModule;
+  localCmsRegistryModule: LocalCmsRegistryModule;
+}
+
+export interface AstropressHostRuntimeBundleInput {
+  getStore: () => AdminStoreAdapter;
+  authenticateAdminUser: (email: string, password: string) => Promise<SessionUser | null>;
+  cmsRegistry: LocalCmsRegistryModule;
+}
+
 export function createAstropressAdminStoreModule(
   getStore: () => AdminStoreAdapter,
 ): LocalAdminStoreModule {
@@ -213,4 +225,14 @@ export function createAstropressBootstrapAdminUsers(
       name: input.editorName ?? "Editor",
     },
   ];
+}
+
+export function createAstropressHostRuntimeBundle(
+  input: AstropressHostRuntimeBundleInput,
+): AstropressHostRuntimeBundle {
+  return {
+    localAdminStoreModule: createAstropressAdminStoreModule(input.getStore),
+    localAdminAuthModule: createAstropressPasswordAuthModule(input.authenticateAdminUser),
+    localCmsRegistryModule: createAstropressCmsRegistryModule(input.cmsRegistry),
+  };
 }

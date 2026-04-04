@@ -14,6 +14,7 @@ export {
   createAstropressAdminStoreModule,
   createAstropressBootstrapAdminUsers,
   createAstropressCmsRegistryModule,
+  createAstropressHostRuntimeBundle,
   createAstropressPasswordAuthModule,
 } from "./host-runtime-factories.js";
 export { createAstropressAdminStoreAdapter } from "./admin-store-adapter-factory.js";

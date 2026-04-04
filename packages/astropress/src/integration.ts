@@ -25,9 +25,15 @@ export {
   createAstropressAdminStoreModule,
   createAstropressBootstrapAdminUsers,
   createAstropressCmsRegistryModule,
+  createAstropressHostRuntimeBundle,
   createAstropressPasswordAuthModule,
 } from "./host-runtime-factories";
-export type { AstropressBootstrapAdminUser, AstropressBootstrapAdminUsersInput } from "./host-runtime-factories";
+export type {
+  AstropressBootstrapAdminUser,
+  AstropressBootstrapAdminUsersInput,
+  AstropressHostRuntimeBundle,
+  AstropressHostRuntimeBundleInput,
+} from "./host-runtime-factories";
 export { createAstropressAdminStoreAdapter } from "./admin-store-adapter-factory";
 export {
   createAstropressLocalMediaRepository,
