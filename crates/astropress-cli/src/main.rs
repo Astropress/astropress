@@ -391,6 +391,63 @@ fn write_package_manifest(project_dir: &Path, manifest: &PackageManifest) -> Res
     fs::write(project_dir.join("package.json"), format!("{package_json}\n")).map_err(io_error)
 }
 
+fn default_admin_db_relative_path() -> &'static str {
+    ".data/admin.sqlite"
+}
+
+fn ensure_local_sqlite_defaults(project_dir: &Path) -> Result<(), String> {
+    let data_dir = project_dir.join(".data");
+    fs::create_dir_all(&data_dir).map_err(io_error)?;
+
+    let gitkeep_path = data_dir.join(".gitkeep");
+    if !gitkeep_path.exists() {
+        fs::write(&gitkeep_path, "").map_err(io_error)?;
+    }
+
+    let env_path = project_dir.join(".env");
+    if !env_path.exists() {
+        fs::write(
+            &env_path,
+            format!(
+                "ADMIN_DB_PATH={}\nADMIN_PASSWORD=fleet-test-admin-password\nEDITOR_PASSWORD=fleet-test-editor-password\n",
+                default_admin_db_relative_path()
+            ),
+        )
+        .map_err(io_error)?;
+    }
+
+    Ok(())
+}
+
+fn seed_local_sqlite_database(project_dir: &Path, package_manager: PackageManager) -> Result<(), String> {
+    let script = r#"import { createDefaultAstropressSqliteSeedToolkit } from "astropress/sqlite-bootstrap";
+
+const toolkit = createDefaultAstropressSqliteSeedToolkit();
+const dbPath = process.env.ADMIN_DB_PATH ?? toolkit.getDefaultAdminDbPath(process.cwd());
+toolkit.seedDatabase({ dbPath, workspaceRoot: process.cwd() });
+console.log(`Seeded Astropress SQLite runtime at ${dbPath}`);
+"#;
+
+    let status = match package_manager {
+        PackageManager::Bun => ProcessCommand::new("bun")
+            .args(["--eval", script])
+            .current_dir(project_dir)
+            .status()
+            .map_err(io_error)?,
+        PackageManager::Npm => ProcessCommand::new("node")
+            .args(["--input-type=module", "--eval", script])
+            .current_dir(project_dir)
+            .status()
+            .map_err(io_error)?,
+    };
+
+    if status.success() {
+        Ok(())
+    } else {
+        Err("Local Astropress SQLite bootstrap failed.".into())
+    }
+}
+
 fn scaffold_new_project(project_dir: &Path, use_local_package: bool) -> Result<(), String> {
     if project_dir.exists() {
         let mut entries = fs::read_dir(project_dir).map_err(io_error)?;
@@ -422,6 +479,7 @@ fn scaffold_new_project(project_dir: &Path, use_local_package: bool) -> Result<(
         },
     );
     write_package_manifest(project_dir, &manifest)?;
+    ensure_local_sqlite_defaults(project_dir)?;
 
     fs::write(
         project_dir.join(".gitignore"),
@@ -499,7 +557,25 @@ fn run_script(project_dir: &Path, script_name: &str) -> Result<ExitCode, String>
 }
 
 fn run_dev_server(project_dir: &Path) -> Result<ExitCode, String> {
-    run_script(project_dir, "dev")
+    let package_manager = detect_package_manager(project_dir);
+    install_dependencies_if_needed(project_dir, package_manager)?;
+    ensure_local_sqlite_defaults(project_dir)?;
+    seed_local_sqlite_database(project_dir, package_manager)?;
+
+    let status = match package_manager {
+        PackageManager::Bun => ProcessCommand::new("bun")
+            .args(["run", "dev"])
+            .current_dir(project_dir)
+            .status()
+            .map_err(io_error)?,
+        PackageManager::Npm => ProcessCommand::new("npm")
+            .args(["run", "dev"])
+            .current_dir(project_dir)
+            .status()
+            .map_err(io_error)?,
+    };
+
+    Ok(ExitCode::from(status.code().unwrap_or(1) as u8))
 }
 
 fn now_unix_ms() -> u128 {
@@ -678,9 +754,9 @@ fn io_error(error: io::Error) -> String {
 #[cfg(test)]
 mod tests {
     use super::{
-        command_available, deploy_script_for_target, export_project_snapshot, import_project_snapshot,
-        parse_command, sanitize_package_name, scaffold_new_project, stage_wordpress_import, Command,
-        PackageManifest,
+        command_available, default_admin_db_relative_path, deploy_script_for_target,
+        ensure_local_sqlite_defaults, export_project_snapshot, import_project_snapshot, parse_command,
+        sanitize_package_name, scaffold_new_project, stage_wordpress_import, Command, PackageManifest,
     };
     use std::collections::BTreeMap;
     use std::fs;
@@ -789,7 +865,29 @@ mod tests {
         let package_json = fs::read_to_string(project_dir.join("package.json")).unwrap();
         assert!(package_json.contains("\"name\": \"demo\""));
         assert!(package_json.contains("\"astropress\": \"file:"));
+        assert_eq!(
+            fs::read_to_string(project_dir.join(".env")).unwrap(),
+            format!(
+                "ADMIN_DB_PATH={}\nADMIN_PASSWORD=fleet-test-admin-password\nEDITOR_PASSWORD=fleet-test-editor-password\n",
+                default_admin_db_relative_path()
+            )
+        );
+        assert!(project_dir.join(".data/.gitkeep").exists());
         assert!(project_dir.join("src/pages/index.astro").exists());
+    }
+
+    #[test]
+    fn preserves_existing_env_when_setting_sqlite_defaults() {
+        let root = temp_dir("env");
+        fs::write(root.join(".env"), "ADMIN_DB_PATH=custom.sqlite\n").unwrap();
+
+        ensure_local_sqlite_defaults(&root).unwrap();
+
+        assert_eq!(
+            fs::read_to_string(root.join(".env")).unwrap(),
+            "ADMIN_DB_PATH=custom.sqlite\n"
+        );
+        assert!(root.join(".data/.gitkeep").exists());
     }
 
     #[test]
