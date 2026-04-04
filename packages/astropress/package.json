@@ -12,6 +12,7 @@
     "./platform-contracts": "./src/platform-contracts.ts",
     "./provider-targets": "./src/provider-targets.ts",
     "./integration": "./src/integration.js",
+    "./cloudflare-vite-integration": "./src/cloudflare-vite-integration.js",
     "./vite-integration": "./src/vite-integration.js",
     "./vite-runtime-alias": "./src/vite-runtime-alias.js",
     "./vitest-runtime-alias": "./src/vitest-runtime-alias.js",

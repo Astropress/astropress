@@ -45,6 +45,7 @@ Planning docs:
 Host integration helpers:
 
 - `astropress/integration` re-exports the current Vite, Vitest, and host-runtime helper surface from one place
+- `astropress/cloudflare-vite-integration` composes the Cloudflare-specific local-runtime stub aliases and resolver
 - `astropress/vite-integration` composes the standard Vite plugin and alias rules into one helper
 - `astropress/vite-runtime-alias` exposes reusable Vite alias/plugin helpers for `local-runtime-modules`
 - `astropress/vitest-runtime-alias` exposes reusable Vitest plugin helpers for external-package test runs

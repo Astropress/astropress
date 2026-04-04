@@ -5,6 +5,7 @@ export {
 } from "./vite-runtime-alias.js";
 
 export { createAstropressViteIntegration } from "./vite-integration.js";
+export { createAstropressCloudflareViteIntegration } from "./cloudflare-vite-integration.js";
 
 export { createAstropressVitestLocalRuntimePlugins } from "./vitest-runtime-alias.js";
 
