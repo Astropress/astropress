@@ -21,3 +21,4 @@ export { createAstropressAdminStoreAdapter } from "./admin-store-adapter-factory
 export { createAstropressLocalMediaRepository } from "./local-media-repository-factory.js";
 export { createAstropressRedirectRepository } from "./redirect-repository-factory.js";
 export { createAstropressTaxonomyRepository } from "./taxonomy-repository-factory.js";
+export { createAstropressAuthorRepository } from "./author-repository-factory.js";
