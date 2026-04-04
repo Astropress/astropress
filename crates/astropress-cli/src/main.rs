@@ -121,6 +121,27 @@ struct PackageManifest {
 struct WordPressImportManifest {
     source_file: String,
     imported_at_unix_ms: u128,
+    imported_records: usize,
+    imported_media: usize,
+}
+
+#[derive(Debug, Deserialize)]
+struct WordPressImportResult {
+    imported_records: usize,
+    imported_media: usize,
+}
+
+#[derive(Debug, Deserialize)]
+struct SnapshotResult {
+    target_dir: Option<String>,
+    source_dir: Option<String>,
+    file_count: usize,
+}
+
+#[derive(Debug, Deserialize)]
+struct DeployResult {
+    deployment_id: Option<String>,
+    url: Option<String>,
 }
 
 fn parse_command(args: &[String]) -> Result<Command, String> {
@@ -536,6 +557,45 @@ fn install_dependencies_if_needed(project_dir: &Path, package_manager: PackageMa
     }
 }
 
+fn run_package_json_command<T: for<'de> Deserialize<'de>>(
+    project_dir: &Path,
+    package_manager: PackageManager,
+    script: &str,
+) -> Result<T, String> {
+    let output = match package_manager {
+        PackageManager::Bun => ProcessCommand::new("bun")
+            .args(["--eval", script])
+            .current_dir(project_dir)
+            .output()
+            .map_err(io_error)?,
+        PackageManager::Npm => ProcessCommand::new("node")
+            .args(["--input-type=module", "--eval", script])
+            .current_dir(project_dir)
+            .output()
+            .map_err(io_error)?,
+    };
+
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr).trim().to_string();
+        let stdout = String::from_utf8_lossy(&output.stdout).trim().to_string();
+        let detail = if !stderr.is_empty() { stderr } else { stdout };
+        return Err(if detail.is_empty() {
+            "Astropress package command failed.".into()
+        } else {
+            detail
+        });
+    }
+
+    let stdout = String::from_utf8(output.stdout).map_err(|error| error.to_string())?;
+    serde_json::from_str(stdout.trim()).map_err(|error| error.to_string())
+}
+
+fn package_module_import(module_path: &str) -> Result<String, String> {
+    let full_path = repo_root().join("packages").join("astropress").join("src").join(module_path);
+    let canonical = full_path.canonicalize().map_err(io_error)?;
+    Ok(format!("file://{}", canonical.display()))
+}
+
 fn run_script(project_dir: &Path, script_name: &str) -> Result<ExitCode, String> {
     let package_manager = detect_package_manager(project_dir);
     install_dependencies_if_needed(project_dir, package_manager)?;
@@ -606,6 +666,21 @@ fn stage_wordpress_import(project_dir: &Path, source_path: &Path) -> Result<(), 
     let staged_source = import_dir.join(format!("source.{extension}"));
     fs::copy(source_path, &staged_source).map_err(io_error)?;
 
+    let package_manager = detect_package_manager(project_dir);
+    let importer_module = package_module_import("import/wordpress.js")?;
+    let script = format!(
+        r#"import {{ createAstropressWordPressImportSource }} from {};
+const importer = createAstropressWordPressImportSource();
+const result = await importer.importWordPress({{ exportFile: {} }});
+console.log(JSON.stringify({{
+  imported_records: result.importedRecords,
+  imported_media: result.importedMedia,
+}}));"#,
+        serde_json::to_string(&importer_module).map_err(|error| error.to_string())?,
+        serde_json::to_string(&staged_source.display().to_string()).map_err(|error| error.to_string())?
+    );
+    let result: WordPressImportResult = run_package_json_command(project_dir, package_manager, &script)?;
+
     let manifest = WordPressImportManifest {
         source_file: staged_source
             .file_name()
@@ -613,6 +688,8 @@ fn stage_wordpress_import(project_dir: &Path, source_path: &Path) -> Result<(), 
             .unwrap_or("source.xml")
             .to_string(),
         imported_at_unix_ms: now_unix_ms(),
+        imported_records: result.imported_records,
+        imported_media: result.imported_media,
     };
 
     let manifest_json = serde_json::to_string_pretty(&manifest).map_err(|error| error.to_string())?;
@@ -622,53 +699,41 @@ fn stage_wordpress_import(project_dir: &Path, source_path: &Path) -> Result<(), 
         "Staged WordPress import assets in {}",
         import_dir.display()
     );
+    println!(
+        "Imported {} records and {} media references from {}",
+        result.imported_records,
+        result.imported_media,
+        source_path.display()
+    );
     Ok(())
-}
-
-fn copy_selected_path(source: &Path, destination: &Path) -> Result<(), String> {
-    if source.is_dir() {
-        fs::create_dir_all(destination).map_err(io_error)?;
-        for entry in fs::read_dir(source).map_err(io_error)? {
-            let entry = entry.map_err(io_error)?;
-            copy_selected_path(&entry.path(), &destination.join(entry.file_name()))?;
-        }
-        Ok(())
-    } else if source.is_file() {
-        if let Some(parent) = destination.parent() {
-            fs::create_dir_all(parent).map_err(io_error)?;
-        }
-        fs::copy(source, destination).map_err(io_error)?;
-        Ok(())
-    } else {
-        Ok(())
-    }
 }
 
 fn export_project_snapshot(project_dir: &Path, output_dir: Option<&Path>) -> Result<(), String> {
     let snapshot_dir = output_dir
         .map(PathBuf::from)
         .unwrap_or_else(|| project_dir.join(".astropress").join("sync").join("latest"));
-
-    if snapshot_dir.exists() {
-        fs::remove_dir_all(&snapshot_dir).map_err(io_error)?;
-    }
-    fs::create_dir_all(&snapshot_dir).map_err(io_error)?;
-
-    for relative_path in [
-        "package.json",
-        "astro.config.mjs",
-        "astro.cloudflare.config.mjs",
-        "tsconfig.json",
-        "src",
-        "public",
-    ] {
-        let source = project_dir.join(relative_path);
-        if source.exists() {
-            copy_selected_path(&source, &snapshot_dir.join(relative_path))?;
-        }
-    }
-
-    println!("Exported Astropress snapshot to {}", snapshot_dir.display());
+    let package_manager = detect_package_manager(project_dir);
+    let sync_module = package_module_import("sync/git.js")?;
+    let script = format!(
+        r#"import {{ createAstropressGitSyncAdapter }} from {};
+const sync = createAstropressGitSyncAdapter({{ projectDir: process.cwd() }});
+const result = await sync.exportSnapshot({});
+console.log(JSON.stringify({{
+  target_dir: result.targetDir,
+  file_count: result.fileCount,
+}}));"#,
+        serde_json::to_string(&sync_module).map_err(|error| error.to_string())?,
+        serde_json::to_string(&snapshot_dir.display().to_string()).map_err(|error| error.to_string())?
+    );
+    let result: SnapshotResult = run_package_json_command(project_dir, package_manager, &script)?;
+    println!(
+        "Exported Astropress snapshot to {} ({} files)",
+        result
+            .target_dir
+            .as_deref()
+            .unwrap_or_else(|| snapshot_dir.to_str().unwrap_or("unknown")),
+        result.file_count
+    );
     Ok(())
 }
 
@@ -676,25 +741,28 @@ fn import_project_snapshot(project_dir: &Path, input_dir: &Path) -> Result<(), S
     if !input_dir.exists() {
         return Err(format!("Snapshot directory was not found: {}", input_dir.display()));
     }
-
-    for relative_path in [
-        "package.json",
-        "astro.config.mjs",
-        "astro.cloudflare.config.mjs",
-        "tsconfig.json",
-        "src",
-        "public",
-    ] {
-        let source = input_dir.join(relative_path);
-        if source.exists() {
-            copy_selected_path(&source, &project_dir.join(relative_path))?;
-        }
-    }
-
+    let package_manager = detect_package_manager(project_dir);
+    let sync_module = package_module_import("sync/git.js")?;
+    let script = format!(
+        r#"import {{ createAstropressGitSyncAdapter }} from {};
+const sync = createAstropressGitSyncAdapter({{ projectDir: process.cwd() }});
+const result = await sync.importSnapshot({});
+console.log(JSON.stringify({{
+  source_dir: result.sourceDir,
+  file_count: result.fileCount,
+}}));"#,
+        serde_json::to_string(&sync_module).map_err(|error| error.to_string())?,
+        serde_json::to_string(&input_dir.display().to_string()).map_err(|error| error.to_string())?
+    );
+    let result: SnapshotResult = run_package_json_command(project_dir, package_manager, &script)?;
     println!(
-        "Imported Astropress snapshot from {} into {}",
-        input_dir.display(),
-        project_dir.display()
+        "Imported Astropress snapshot from {} into {} ({} files)",
+        result
+            .source_dir
+            .as_deref()
+            .unwrap_or_else(|| input_dir.to_str().unwrap_or("unknown")),
+        project_dir.display(),
+        result.file_count
     );
     Ok(())
 }
@@ -743,8 +811,38 @@ fn deploy_script_for_target(
 
 fn deploy_project(project_dir: &Path, target: Option<&str>) -> Result<ExitCode, String> {
     let manifest = read_package_manifest(project_dir)?;
-    let script = deploy_script_for_target(&manifest, target)?;
-    run_script(project_dir, script)
+    let selected_target = target.unwrap_or("github-pages");
+    let script = deploy_script_for_target(&manifest, Some(selected_target))?;
+    let build_exit = run_script(project_dir, script)?;
+    if build_exit != ExitCode::SUCCESS {
+        return Ok(build_exit);
+    }
+
+    if selected_target == "github-pages" {
+        let package_manager = detect_package_manager(project_dir);
+        let deploy_module = package_module_import("deploy/github-pages.js")?;
+        let deploy_script = format!(
+            r#"import {{ createAstropressGitHubPagesDeployTarget }} from {};
+const target = createAstropressGitHubPagesDeployTarget();
+const result = await target.deploy({{
+  buildDir: new URL("./dist", `file://${{process.cwd()}}/`).pathname,
+  projectName: process.cwd().split(/[/\\]/).filter(Boolean).at(-1) ?? "astropress-site",
+}});
+console.log(JSON.stringify({{
+  deployment_id: result.deploymentId ?? null,
+  url: result.url ?? null,
+}}));"#,
+            serde_json::to_string(&deploy_module).map_err(|error| error.to_string())?
+        );
+        let result: DeployResult = run_package_json_command(project_dir, package_manager, &deploy_script)?;
+        if let Some(url) = result.url {
+            println!("Deployed GitHub Pages build to {url}");
+        } else if let Some(deployment_id) = result.deployment_id {
+            println!("Prepared GitHub Pages deployment {deployment_id}");
+        }
+    }
+
+    Ok(ExitCode::SUCCESS)
 }
 
 fn io_error(error: io::Error) -> String {
@@ -899,12 +997,10 @@ mod tests {
         fs::write(&source, "<rss></rss>").unwrap();
 
         stage_wordpress_import(&project_dir, &source).unwrap();
-        assert!(project_dir
-            .join(".astropress/imports/wordpress/source.xml")
-            .exists());
-        assert!(project_dir
-            .join(".astropress/imports/wordpress/manifest.json")
-            .exists());
+        assert!(project_dir.join(".astropress/imports/wordpress/source.xml").exists());
+        let manifest = fs::read_to_string(project_dir.join(".astropress/imports/wordpress/manifest.json")).unwrap();
+        assert!(manifest.contains("\"imported_records\": 0"));
+        assert!(manifest.contains("\"imported_media\": 0"));
     }
 
     #[test]
