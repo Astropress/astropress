@@ -36,6 +36,15 @@ export type {
 } from "./host-runtime-factories";
 export { createAstropressAdminStoreAdapter } from "./admin-store-adapter-factory";
 export {
+  createAstropressAuthRepository,
+} from "./auth-repository-factory";
+export type {
+  AstropressAuthRepositoryInput,
+  AstropressAuthSessionRow,
+  AstropressInviteTokenRecord,
+  AstropressPasswordResetTokenRecord,
+} from "./auth-repository-factory";
+export {
   createAstropressLocalMediaRepository,
 } from "./local-media-repository-factory";
 export type { AstropressLocalMediaRepositoryOptions } from "./local-media-repository-factory";
