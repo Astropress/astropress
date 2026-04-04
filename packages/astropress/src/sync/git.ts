@@ -1,5 +1,5 @@
 import { cp, mkdir, readdir, rm, stat } from "node:fs/promises";
-import { basename, dirname, join, resolve } from "node:path";
+import { dirname, join, resolve } from "node:path";
 import type { GitSyncAdapter } from "../platform-contracts";
 
 export interface AstropressGitSyncAdapterOptions {

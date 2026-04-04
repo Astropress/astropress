@@ -93,40 +93,6 @@ export {
 } from "./translation-repository-factory";
 export type { AstropressTranslationRepositoryInput } from "./translation-repository-factory";
 export {
-  createAstropressInMemoryPlatformAdapter,
-} from "./in-memory-platform-adapter";
-export type {
-  AstropressInMemoryPlatformAdapterOptions,
-} from "./in-memory-platform-adapter";
-export {
-  createAstropressSqliteAdapter,
-} from "./adapters/sqlite";
-export type { AstropressSqliteAdapterOptions } from "./adapters/sqlite";
-export {
-  createAstropressCloudflareAdapter,
-} from "./adapters/cloudflare";
-export type { AstropressCloudflareAdapterOptions } from "./adapters/cloudflare";
-export {
-  createAstropressSupabaseAdapter,
-} from "./adapters/supabase";
-export type { AstropressSupabaseAdapterOptions } from "./adapters/supabase";
-export {
-  createAstropressRunwayAdapter,
-} from "./adapters/runway";
-export type { AstropressRunwayAdapterOptions } from "./adapters/runway";
-export {
-  createAstropressGitHubPagesDeployTarget,
-} from "./deploy/github-pages";
-export type { AstropressGitHubPagesDeployTargetOptions } from "./deploy/github-pages";
-export {
-  createAstropressWordPressImportSource,
-} from "./import/wordpress";
-export type { AstropressWordPressImportSourceOptions } from "./import/wordpress";
-export {
-  createAstropressGitSyncAdapter,
-} from "./sync/git";
-export type { AstropressGitSyncAdapterOptions } from "./sync/git";
-export {
   createAstropressRateLimitRepository,
 } from "./rate-limit-repository-factory";
 export type {
