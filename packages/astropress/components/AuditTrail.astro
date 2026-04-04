@@ -1,0 +1,53 @@
+---
+import type { AuditEvent } from "astropress";
+
+interface Props {
+  events: AuditEvent[];
+  heading?: string;
+}
+
+const { events, heading = "Recent Audit Trail" } = Astro.props;
+---
+
+<section class="panel audit-trail">
+  <h2>{heading}</h2>
+  {events.length > 0 ? (
+    <ul class="audit-list">
+      {events.map((event) => (
+        <li>
+          <strong>{event.summary}</strong>
+          <span>{event.action}</span>
+        </li>
+      ))}
+    </ul>
+  ) : (
+    <p>No audit events have been recorded in this session yet.</p>
+  )}
+</section>
+
+<style>
+  .audit-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    gap: 0.8rem;
+  }
+
+  .audit-list li {
+    display: grid;
+    gap: 0.2rem;
+    padding-bottom: 0.8rem;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .audit-list li:last-child {
+    border-bottom: 0;
+    padding-bottom: 0;
+  }
+
+  .audit-list span {
+    color: var(--muted);
+    font-size: 0.9rem;
+  }
+</style>

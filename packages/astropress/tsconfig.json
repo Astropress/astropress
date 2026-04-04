@@ -1,0 +1,12 @@
+{
+  "extends": "astro/tsconfigs/strict",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "astropress": ["./index.ts"],
+      "astropress/components/*": ["./components/*"],
+      "astropress/*": ["./src/*"]
+    }
+  },
+  "include": ["src/**/*", "index.ts", "components/**/*", "bin/**/*"]
+}

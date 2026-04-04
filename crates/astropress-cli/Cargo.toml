@@ -1,0 +1,8 @@
+[package]
+name = "astropress-cli"
+version = "0.1.0"
+edition = "2021"
+description = "Astropress CLI for project scaffolding, WordPress import, sync, and deployment."
+license = "MIT"
+
+[dependencies]

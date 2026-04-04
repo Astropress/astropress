@@ -1,0 +1,49 @@
+{
+  "name": "astropress",
+  "version": "0.1.0",
+  "description": "Low-carbon, provider-neutral Astro CMS toolkit for migrations from WordPress and new editorial sites.",
+  "type": "module",
+  "bin": {
+    "astropress": "./bin/astropress.js"
+  },
+  "exports": {
+    ".": "./index.ts",
+    "./components/*": "./components/*.astro",
+    "./platform-contracts": "./src/platform-contracts.ts",
+    "./provider-targets": "./src/provider-targets.ts",
+    "./local-image-storage": "./src/local-image-storage.ts",
+    "./local-media-storage": "./src/local-media-storage.ts"
+  },
+  "files": [
+    "bin",
+    "components",
+    "index.ts",
+    "src"
+  ],
+  "peerDependencies": {
+    "astro": ">=6.0.0",
+    "zod": ">=4.0.0"
+  },
+  "dependencies": {
+    "htmlparser2": "^9.1.0",
+    "sanitize-html": "^2.17.0"
+  },
+  "devDependencies": {
+    "typescript": "5.9.3",
+    "vitest": "^3"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "keywords": [
+    "astro",
+    "cms",
+    "wordpress-migration",
+    "cloudflare",
+    "supabase",
+    "runway",
+    "github-pages"
+  ],
+  "license": "MIT"
+}

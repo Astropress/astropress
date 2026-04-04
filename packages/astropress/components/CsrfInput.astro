@@ -1,0 +1,9 @@
+---
+interface Props {
+  token?: string | null;
+}
+
+const { token } = Astro.props;
+---
+
+{token && <input type="hidden" name="_csrf" value={token} />}

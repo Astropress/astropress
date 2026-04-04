@@ -1,0 +1,16 @@
+node_modules/
+.DS_Store
+
+# Bun / frontend build output
+.astro/
+dist/
+coverage/
+
+# Rust build output
+target/
+crates/*/target/
+
+# Local env
+.env
+.env.*
+!.env.example

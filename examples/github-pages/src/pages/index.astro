@@ -1,0 +1,88 @@
+---
+import { normalizeProviderCapabilities } from "astropress";
+
+const ghPages = normalizeProviderCapabilities({
+  name: "github-pages",
+  staticPublishing: true,
+  gitSync: true,
+});
+---
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <title>Astropress Example</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #f4f6ef;
+        --surface: #ffffff;
+        --text: #203028;
+        --muted: #5d6d64;
+        --accent: #295f43;
+        --border: #d5ddd8;
+      }
+      body {
+        margin: 0;
+        font-family: Georgia, serif;
+        background: linear-gradient(180deg, #eef3e7, var(--bg));
+        color: var(--text);
+      }
+      main {
+        max-width: 64rem;
+        margin: 0 auto;
+        padding: 3rem 1.25rem 5rem;
+      }
+      .hero, .panel {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 1.25rem;
+        padding: 1.5rem;
+        box-shadow: 0 1rem 2rem rgba(32, 48, 40, 0.06);
+      }
+      .grid {
+        display: grid;
+        gap: 1rem;
+        grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+        margin-top: 1rem;
+      }
+      a { color: var(--accent); }
+      code {
+        background: #eef2ec;
+        padding: 0.1rem 0.35rem;
+        border-radius: 0.35rem;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <section class="hero">
+        <p>Astropress Example</p>
+        <h1>Database-backed CMS, static public output when you want it.</h1>
+        <p>
+          This GitHub Pages example hosts public docs and a sample static site while Astropress keeps
+          editorial workflows provider-neutral.
+        </p>
+        <p>
+          GitHub Pages capability: <code>{JSON.stringify(ghPages)}</code>
+        </p>
+        <p><a href="/docs">Read the docs</a> · <a href="/admin">View admin model</a></p>
+      </section>
+      <section class="grid">
+        <article class="panel">
+          <h2>WordPress migration</h2>
+          <p>Import pages, posts, media, redirects, comments, and users through the CLI.</p>
+        </article>
+        <article class="panel">
+          <h2>Provider portability</h2>
+          <p>Deploy the same content model through GitHub Pages, Cloudflare, Supabase, or Runway.</p>
+        </article>
+        <article class="panel">
+          <h2>Low operational footprint</h2>
+          <p>Static output where possible, server runtime only where it adds editorial or preview value.</p>
+        </article>
+      </section>
+    </main>
+  </body>
+</html>

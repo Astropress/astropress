@@ -1,0 +1,18 @@
+{
+  "name": "astropress-example-gh-pages",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "check": "astro check"
+  },
+  "dependencies": {
+    "astro": "6.1.1",
+    "astropress": "workspace:*"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.8",
+    "typescript": "5.9.3"
+  }
+}
