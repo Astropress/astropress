@@ -1,6 +1,6 @@
 {
   "name": "astropress",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "description": "Low-carbon, provider-neutral Astro CMS toolkit for migrations from WordPress and new editorial sites.",
   "type": "module",
   "bin": {
@@ -11,6 +11,7 @@
     "./components/*": "./components/*.astro",
     "./platform-contracts": "./src/platform-contracts.js",
     "./provider-targets": "./src/provider-targets.ts",
+    "./sqlite-admin-runtime": "./src/sqlite-admin-runtime.ts",
     "./adapters/sqlite": "./src/adapters/sqlite.js",
     "./adapters/cloudflare": "./src/adapters/cloudflare.js",
     "./adapters/supabase": "./src/adapters/supabase.js",
@@ -42,6 +43,7 @@
     "./local-runtime-modules": "./src/local-runtime-modules.ts",
     "./cloudflare-workers-stub": "./src/cloudflare-workers-stub.ts",
     "./cloudflare-local-runtime-stubs": "./src/cloudflare-local-runtime-stubs.ts",
+    "./cloudflare-sqlite-admin-runtime-stub": "./src/cloudflare-sqlite-admin-runtime-stub.js",
     "./cloudflare-local-image-storage-stub": "./src/cloudflare-local-image-storage-stub.js",
     "./cloudflare-local-media-storage-stub": "./src/cloudflare-local-media-storage-stub.js",
     "./admin-dashboard": "./src/admin-dashboard.ts",

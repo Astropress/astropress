@@ -11,6 +11,7 @@ export type AstropressCloudflareViteIntegrationOptions = {
   cloudflareLocalRuntimeStubsPath?: string;
   cloudflareLocalImageStorageStubPath?: string;
   cloudflareLocalMediaStorageStubPath?: string;
+  cloudflareSqliteAdminRuntimeStubPath?: string;
 };
 
 function isLocalRuntimeModuleRequest(id: string, localRuntimeModulesPath: string): boolean {
@@ -39,6 +40,15 @@ function isPackageStorageModuleRequest(id: string, moduleName: "local-image-stor
   );
 }
 
+function isSqliteAdminRuntimeRequest(id: string): boolean {
+  return (
+    id === "astropress/sqlite-admin-runtime" ||
+    id.endsWith("/sqlite-admin-runtime") ||
+    id.endsWith("/sqlite-admin-runtime.ts") ||
+    id.endsWith("/sqlite-admin-runtime.js")
+  );
+}
+
 function normalizeImportId(id: string): string {
   let normalized = id.replaceAll("\\", "/");
   if (normalized.startsWith("file://")) {
@@ -62,6 +72,8 @@ export function createAstropressCloudflareViteIntegration(
     options.cloudflareLocalImageStorageStubPath ?? "astropress/cloudflare-local-image-storage-stub";
   const cloudflareLocalMediaStorageStubPath =
     options.cloudflareLocalMediaStorageStubPath ?? "astropress/cloudflare-local-media-storage-stub";
+  const cloudflareSqliteAdminRuntimeStubPath =
+    options.cloudflareSqliteAdminRuntimeStubPath ?? "astropress/cloudflare-sqlite-admin-runtime-stub";
 
   return {
     aliases: [
@@ -80,6 +92,14 @@ export function createAstropressCloudflareViteIntegration(
       {
         find: /^.*\/local-media-storage(?:\.[cm]?[jt]s)?$/,
         replacement: cloudflareLocalMediaStorageStubPath,
+      },
+      {
+        find: "astropress/sqlite-admin-runtime",
+        replacement: cloudflareSqliteAdminRuntimeStubPath,
+      },
+      {
+        find: /^.*\/sqlite-admin-runtime(?:\.[cm]?[jt]s)?$/,
+        replacement: cloudflareSqliteAdminRuntimeStubPath,
       },
       {
         find: /^\.\/local-runtime-modules(?:\.ts)?$/,
@@ -106,6 +126,10 @@ export function createAstropressCloudflareViteIntegration(
 
         if (isPackageStorageModuleRequest(normalizedId, "local-media-storage")) {
           return cloudflareLocalMediaStorageStubPath;
+        }
+
+        if (isSqliteAdminRuntimeRequest(normalizedId)) {
+          return cloudflareSqliteAdminRuntimeStubPath;
         }
 
         if (isLocalRuntimeModuleRequest(normalizedId, localRuntimeModulesPath)) {
