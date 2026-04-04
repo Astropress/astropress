@@ -22,3 +22,4 @@ export { createAstropressLocalMediaRepository } from "./local-media-repository-f
 export { createAstropressRedirectRepository } from "./redirect-repository-factory.js";
 export { createAstropressTaxonomyRepository } from "./taxonomy-repository-factory.js";
 export { createAstropressAuthorRepository } from "./author-repository-factory.js";
+export { createAstropressCommentRepository } from "./comment-repository-factory.js";
