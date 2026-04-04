@@ -1,6 +1,3 @@
-import path from "node:path";
-import { fileURLToPath } from "node:url";
-
 function isLocalRuntimeModuleRequest(id, localRuntimeModulesPath) {
   if (
     id === "./local-runtime-modules" ||
@@ -18,12 +15,40 @@ function isLocalRuntimeModuleRequest(id, localRuntimeModulesPath) {
   );
 }
 
+function normalizeImportId(id) {
+  let normalized = id.replaceAll("\\", "/");
+  if (normalized.startsWith("file://")) {
+    normalized = decodeURIComponent(normalized.replace(/^file:\/\/\/?/, "/"));
+  }
+
+  if (/^\/[a-zA-Z]:\//.test(normalized)) {
+    return normalized.slice(1);
+  }
+
+  return normalized;
+}
+
 export function createAstropressCloudflareViteIntegration(
   localRuntimeModulesPath,
-  cloudflareLocalRuntimeStubsPath = "astropress/cloudflare-local-runtime-stubs",
+  options = {},
 ) {
+  const cloudflareLocalRuntimeStubsPath =
+    options.cloudflareLocalRuntimeStubsPath ?? "astropress/cloudflare-local-runtime-stubs";
+  const cloudflareLocalImageStorageStubPath =
+    options.cloudflareLocalImageStorageStubPath ?? "astropress/cloudflare-local-image-storage-stub";
+  const cloudflareLocalMediaStorageStubPath =
+    options.cloudflareLocalMediaStorageStubPath ?? "astropress/cloudflare-local-media-storage-stub";
+
   return {
     aliases: [
+      {
+        find: "astropress/local-image-storage",
+        replacement: cloudflareLocalImageStorageStubPath,
+      },
+      {
+        find: "astropress/local-media-storage",
+        replacement: cloudflareLocalMediaStorageStubPath,
+      },
       {
         find: /^\.\/local-runtime-modules(?:\.ts)?$/,
         replacement: cloudflareLocalRuntimeStubsPath,
@@ -41,7 +66,15 @@ export function createAstropressCloudflareViteIntegration(
       name: "astropress-cloudflare-local-runtime-stubs",
       enforce: "pre",
       resolveId(id) {
-        const normalizedId = id.startsWith("file://") ? fileURLToPath(id) : path.normalize(id);
+        const normalizedId = normalizeImportId(id);
+
+        if (normalizedId === "astropress/local-image-storage") {
+          return cloudflareLocalImageStorageStubPath;
+        }
+
+        if (normalizedId === "astropress/local-media-storage") {
+          return cloudflareLocalMediaStorageStubPath;
+        }
 
         if (isLocalRuntimeModuleRequest(normalizedId, localRuntimeModulesPath)) {
           return cloudflareLocalRuntimeStubsPath;

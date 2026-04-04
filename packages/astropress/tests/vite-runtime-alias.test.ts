@@ -11,6 +11,12 @@ describe("vite runtime alias helpers", () => {
   it("matches relative and resolved local runtime module requests", () => {
     expect(isAstropressLocalRuntimeModuleRequest("./local-runtime-modules", localRuntimeModulesPath)).toBe(true);
     expect(isAstropressLocalRuntimeModuleRequest("/tmp/site/src/astropress/local-runtime-modules.ts", localRuntimeModulesPath)).toBe(true);
+    expect(
+      isAstropressLocalRuntimeModuleRequest(
+        "file:///tmp/site/src/astropress/local-runtime-modules.ts",
+        localRuntimeModulesPath,
+      ),
+    ).toBe(true);
     expect(isAstropressLocalRuntimeModuleRequest("./something-else", localRuntimeModulesPath)).toBe(false);
   });
 

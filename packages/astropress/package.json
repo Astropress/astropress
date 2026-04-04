@@ -22,6 +22,8 @@
     "./local-runtime-modules": "./src/local-runtime-modules.ts",
     "./cloudflare-workers-stub": "./src/cloudflare-workers-stub.ts",
     "./cloudflare-local-runtime-stubs": "./src/cloudflare-local-runtime-stubs.ts",
+    "./cloudflare-local-image-storage-stub": "./src/cloudflare-local-image-storage-stub.js",
+    "./cloudflare-local-media-storage-stub": "./src/cloudflare-local-media-storage-stub.js",
     "./admin-dashboard": "./src/admin-dashboard.ts",
     "./admin-page-models": "./src/admin-page-models.ts",
     "./runtime-page-store": "./src/runtime-page-store.ts",

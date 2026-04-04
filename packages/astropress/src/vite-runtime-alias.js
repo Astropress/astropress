@@ -1,16 +1,27 @@
-import path from "node:path";
-import { fileURLToPath } from "node:url";
+function normalizeRuntimeRequest(id) {
+  let normalized = id.replaceAll("\\", "/");
+  if (normalized.startsWith("file://")) {
+    normalized = decodeURIComponent(normalized.replace(/^file:\/\/\/?/, "/"));
+  }
+
+  if (/^\/[a-zA-Z]:\//.test(normalized)) {
+    return normalized.slice(1);
+  }
+
+  return normalized;
+}
 
 export function isAstropressLocalRuntimeModuleRequest(id, localRuntimeModulesPath) {
   if (id === "./local-runtime-modules" || id === "./local-runtime-modules.ts") {
     return true;
   }
 
-  const normalized = id.startsWith("file://") ? fileURLToPath(id) : path.normalize(id);
+  const normalized = normalizeRuntimeRequest(id);
+  const normalizedLocalRuntimeModulesPath = normalizeRuntimeRequest(localRuntimeModulesPath);
   return (
-    normalized === localRuntimeModulesPath ||
-    normalized.endsWith(`${path.sep}local-runtime-modules`) ||
-    normalized.endsWith(`${path.sep}local-runtime-modules.ts`)
+    normalized === normalizedLocalRuntimeModulesPath ||
+    normalized.endsWith("/local-runtime-modules") ||
+    normalized.endsWith("/local-runtime-modules.ts")
   );
 }
 
