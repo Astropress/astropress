@@ -4,13 +4,13 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import {
   createAstropressCloudflareAdapter,
-  createAstropressGitHubPagesDeployTarget,
-  createAstropressGitSyncAdapter,
   createAstropressRunwayAdapter,
   createAstropressSqliteAdapter,
   createAstropressSupabaseAdapter,
-  createAstropressWordPressImportSource,
 } from "astropress";
+import { createAstropressGitHubPagesDeployTarget } from "../src/deploy/github-pages.js";
+import { createAstropressWordPressImportSource } from "../src/import/wordpress.js";
+import { createAstropressGitSyncAdapter } from "../src/sync/git.js";
 
 describe("provider adapters", () => {
   it("creates first-party adapters with provider-specific capability defaults", async () => {
