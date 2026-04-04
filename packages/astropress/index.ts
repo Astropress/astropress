@@ -26,21 +26,21 @@ export type {
 } from "./src/platform-contracts";
 export { listFirstPartyProviderTargets, getFirstPartyProviderTarget } from "./src/provider-targets";
 export type { FirstPartyProviderTarget } from "./src/provider-targets";
-export { createAstropressInMemoryPlatformAdapter } from "./src/in-memory-platform-adapter";
+export { createAstropressInMemoryPlatformAdapter } from "./src/in-memory-platform-adapter.js";
 export type { AstropressInMemoryPlatformAdapterOptions } from "./src/in-memory-platform-adapter";
-export { createAstropressSqliteAdapter } from "./src/adapters/sqlite";
+export { createAstropressSqliteAdapter } from "./src/adapters/sqlite.js";
 export type { AstropressSqliteAdapterOptions } from "./src/adapters/sqlite";
-export { createAstropressCloudflareAdapter } from "./src/adapters/cloudflare";
+export { createAstropressCloudflareAdapter } from "./src/adapters/cloudflare.js";
 export type { AstropressCloudflareAdapterOptions } from "./src/adapters/cloudflare";
-export { createAstropressSupabaseAdapter } from "./src/adapters/supabase";
+export { createAstropressSupabaseAdapter } from "./src/adapters/supabase.js";
 export type { AstropressSupabaseAdapterOptions } from "./src/adapters/supabase";
-export { createAstropressRunwayAdapter } from "./src/adapters/runway";
+export { createAstropressRunwayAdapter } from "./src/adapters/runway.js";
 export type { AstropressRunwayAdapterOptions } from "./src/adapters/runway";
-export { createAstropressGitHubPagesDeployTarget } from "./src/deploy/github-pages";
+export { createAstropressGitHubPagesDeployTarget } from "./src/deploy/github-pages.js";
 export type { AstropressGitHubPagesDeployTargetOptions } from "./src/deploy/github-pages";
-export { createAstropressWordPressImportSource } from "./src/import/wordpress";
+export { createAstropressWordPressImportSource } from "./src/import/wordpress.js";
 export type { AstropressWordPressImportSourceOptions } from "./src/import/wordpress";
-export { createAstropressGitSyncAdapter } from "./src/sync/git";
+export { createAstropressGitSyncAdapter } from "./src/sync/git.js";
 export type { AstropressGitSyncAdapterOptions } from "./src/sync/git";
 
 // Persistence types
