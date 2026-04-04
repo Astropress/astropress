@@ -23,3 +23,4 @@ export { createAstropressRedirectRepository } from "./redirect-repository-factor
 export { createAstropressTaxonomyRepository } from "./taxonomy-repository-factory.js";
 export { createAstropressAuthorRepository } from "./author-repository-factory.js";
 export { createAstropressCommentRepository } from "./comment-repository-factory.js";
+export { createAstropressSubmissionRepository } from "./submission-repository-factory.js";

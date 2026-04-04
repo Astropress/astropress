@@ -24,6 +24,7 @@
     "./taxonomy-repository-factory": "./src/taxonomy-repository-factory.js",
     "./author-repository-factory": "./src/author-repository-factory.js",
     "./comment-repository-factory": "./src/comment-repository-factory.js",
+    "./submission-repository-factory": "./src/submission-repository-factory.js",
     "./local-runtime-modules": "./src/local-runtime-modules.ts",
     "./cloudflare-workers-stub": "./src/cloudflare-workers-stub.ts",
     "./cloudflare-local-runtime-stubs": "./src/cloudflare-local-runtime-stubs.ts",

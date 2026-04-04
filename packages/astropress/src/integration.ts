@@ -55,3 +55,7 @@ export {
   createAstropressCommentRepository,
 } from "./comment-repository-factory";
 export type { AstropressCommentRepositoryInput } from "./comment-repository-factory";
+export {
+  createAstropressSubmissionRepository,
+} from "./submission-repository-factory";
+export type { AstropressSubmissionRepositoryInput } from "./submission-repository-factory";
