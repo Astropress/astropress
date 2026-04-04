@@ -54,6 +54,7 @@ export interface LocalAdminStoreModule extends AdminStoreAdapter {
   getComments: AdminStoreAdapter["comments"]["getComments"];
   moderateComment: AdminStoreAdapter["comments"]["moderateComment"];
   submitPublicComment: AdminStoreAdapter["comments"]["submitPublicComment"];
+  getApprovedCommentsForRoute: AdminStoreAdapter["comments"]["getApprovedCommentsForRoute"];
   // Content
   listContentStates: AdminStoreAdapter["content"]["listContentStates"];
   getContentState: AdminStoreAdapter["content"]["getContentState"];
@@ -165,7 +166,9 @@ export interface LocalMediaStorageModule {
 }
 
 export interface LocalImageStorageModule {
-  readLocalImageAsset(publicPath: string): { ok: boolean; asset?: { bytes: Uint8Array; mimeType: string } };
+  readLocalImageAsset(publicPath: string):
+    | { ok: false; error: string }
+    | { ok: true; asset: { bytes: ArrayBuffer; mimeType: string } };
   resolveLocalImageDiskPath(publicPath: string): string;
 }
 

@@ -17,6 +17,7 @@
     "./vite-runtime-alias": "./src/vite-runtime-alias.js",
     "./vitest-runtime-alias": "./src/vitest-runtime-alias.js",
     "./host-runtime-modules": "./src/host-runtime-modules.js",
+    "./host-runtime-factories": "./src/host-runtime-factories.js",
     "./local-runtime-modules": "./src/local-runtime-modules.ts",
     "./cloudflare-workers-stub": "./src/cloudflare-workers-stub.ts",
     "./cloudflare-local-runtime-stubs": "./src/cloudflare-local-runtime-stubs.ts",

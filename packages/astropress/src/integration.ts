@@ -18,3 +18,7 @@ export type { AstropressVitestPlugin } from "./vitest-runtime-alias";
 
 export { defineAstropressHostRuntimeModules } from "./host-runtime-modules";
 export type { AstropressHostRuntimeModules } from "./host-runtime-modules";
+export {
+  createAstropressAdminStoreModule,
+  createAstropressPasswordAuthModule,
+} from "./host-runtime-factories";

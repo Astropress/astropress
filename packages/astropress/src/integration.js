@@ -10,3 +10,7 @@ export { createAstropressCloudflareViteIntegration } from "./cloudflare-vite-int
 export { createAstropressVitestLocalRuntimePlugins } from "./vitest-runtime-alias.js";
 
 export { defineAstropressHostRuntimeModules } from "./host-runtime-modules.js";
+export {
+  createAstropressAdminStoreModule,
+  createAstropressPasswordAuthModule,
+} from "./host-runtime-factories.js";

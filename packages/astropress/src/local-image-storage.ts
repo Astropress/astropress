@@ -41,11 +41,14 @@ export function readLocalImageAsset(publicPath: string) {
     return { ok: false as const, error: "Image not found." };
   }
 
+  const bytes = readFileSync(diskPath);
+  const arrayBuffer = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength);
+
   return {
     ok: true as const,
     asset: {
       diskPath,
-      bytes: readFileSync(diskPath),
+      bytes: arrayBuffer,
       mimeType: guessImageMimeType(diskPath),
     },
   };
