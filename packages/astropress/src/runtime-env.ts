@@ -39,6 +39,7 @@ export interface RuntimeBindings {
   ADMIN_DB_PATH?: string;
   SESSION_SECRET?: string;
   LOCAL_IMAGE_ROOT?: string;
+  LOGIN_MAX_ATTEMPTS?: string;
 }
 
 type StringRuntimeKey = Exclude<keyof RuntimeBindings, "DB" | "MEDIA_BUCKET">;
@@ -109,8 +110,16 @@ export function getAdminBootstrapConfig(locals?: App.Locals | null) {
 }
 
 export function getLoginSecurityConfig(locals?: App.Locals | null) {
+  const configuredMaxAttempts = Number(getStringRuntimeValue("LOGIN_MAX_ATTEMPTS", locals));
+  const runningPlaywright = Boolean(getRuntimeEnv("PLAYWRIGHT_E2E_MODE"));
+  const maxLoginAttempts = Number.isFinite(configuredMaxAttempts) && configuredMaxAttempts > 0
+    ? configuredMaxAttempts
+    : isProductionRuntime() || runningPlaywright
+      ? 5
+      : 250;
+
   return {
-    maxLoginAttempts: isProductionRuntime() ? 5 : 250,
+    maxLoginAttempts,
     secureCookies: isProductionRuntime(),
     turnstileSiteKey: getStringRuntimeValue("PUBLIC_TURNSTILE_SITE_KEY", locals),
     turnstileSecretKey: getStringRuntimeValue("TURNSTILE_SECRET_KEY", locals),

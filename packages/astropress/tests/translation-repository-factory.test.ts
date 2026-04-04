@@ -18,7 +18,7 @@ describe("createAstropressTranslationRepository", () => {
 
     expect(repository.updateTranslationState("/about", "wrong", actor)).toEqual({
       ok: false,
-      error: "Invalid translation state. Must be one of: not_started, in_progress, review, published",
+      error: "Invalid translation state. Must be one of: not_started, partial, fallback_en, translated, reviewed, published",
     });
   });
 
@@ -47,7 +47,7 @@ describe("createAstropressTranslationRepository", () => {
       recordTranslationAudit: vi.fn(),
     });
 
-    expect(repository.getEffectiveTranslationState("/about", "review")).toBe("review");
+    expect(repository.getEffectiveTranslationState("/about", "reviewed")).toBe("reviewed");
   });
 
   it("normalizes the stored translation state", () => {

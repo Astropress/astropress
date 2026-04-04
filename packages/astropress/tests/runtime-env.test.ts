@@ -25,4 +25,20 @@ describe("runtime env login security config", () => {
     expect(runtimeEnv.getLoginSecurityConfig().maxLoginAttempts).toBe(250);
     expect(runtimeEnv.getLoginSecurityConfig().secureCookies).toBe(false);
   });
+
+  it("keeps the login-attempt ceiling strict during playwright runs", async () => {
+    vi.stubEnv("PROD", false);
+    vi.stubEnv("PLAYWRIGHT_E2E_MODE", "admin");
+    const runtimeEnv = await importRuntimeEnv();
+
+    expect(runtimeEnv.getLoginSecurityConfig().maxLoginAttempts).toBe(5);
+  });
+
+  it("allows an explicit login-attempt override", async () => {
+    vi.stubEnv("PROD", false);
+    vi.stubEnv("LOGIN_MAX_ATTEMPTS", "12");
+    const runtimeEnv = await importRuntimeEnv();
+
+    expect(runtimeEnv.getLoginSecurityConfig().maxLoginAttempts).toBe(12);
+  });
 });
