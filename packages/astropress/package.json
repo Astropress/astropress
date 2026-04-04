@@ -28,6 +28,7 @@
     "./user-repository-factory": "./src/user-repository-factory.js",
     "./settings-repository-factory": "./src/settings-repository-factory.js",
     "./translation-repository-factory": "./src/translation-repository-factory.js",
+    "./rate-limit-repository-factory": "./src/rate-limit-repository-factory.js",
     "./local-runtime-modules": "./src/local-runtime-modules.ts",
     "./cloudflare-workers-stub": "./src/cloudflare-workers-stub.ts",
     "./cloudflare-local-runtime-stubs": "./src/cloudflare-local-runtime-stubs.ts",

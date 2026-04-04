@@ -71,3 +71,10 @@ export {
   createAstropressTranslationRepository,
 } from "./translation-repository-factory";
 export type { AstropressTranslationRepositoryInput } from "./translation-repository-factory";
+export {
+  createAstropressRateLimitRepository,
+} from "./rate-limit-repository-factory";
+export type {
+  AstropressRateLimitRepositoryInput,
+  AstropressRateLimitWindowRecord,
+} from "./rate-limit-repository-factory";

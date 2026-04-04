@@ -27,3 +27,4 @@ export { createAstropressSubmissionRepository } from "./submission-repository-fa
 export { createAstropressUserRepository } from "./user-repository-factory.js";
 export { createAstropressSettingsRepository } from "./settings-repository-factory.js";
 export { createAstropressTranslationRepository } from "./translation-repository-factory.js";
+export { createAstropressRateLimitRepository } from "./rate-limit-repository-factory.js";
