@@ -19,6 +19,7 @@
     "./host-runtime-modules": "./src/host-runtime-modules.js",
     "./host-runtime-factories": "./src/host-runtime-factories.js",
     "./admin-store-adapter-factory": "./src/admin-store-adapter-factory.js",
+    "./local-media-repository-factory": "./src/local-media-repository-factory.js",
     "./local-runtime-modules": "./src/local-runtime-modules.ts",
     "./cloudflare-workers-stub": "./src/cloudflare-workers-stub.ts",
     "./cloudflare-local-runtime-stubs": "./src/cloudflare-local-runtime-stubs.ts",
@@ -38,8 +39,8 @@
     "./transactional-email": "./src/transactional-email.ts",
     "./newsletter-adapter": "./src/newsletter-adapter.ts",
     "./turnstile": "./src/turnstile.ts",
-    "./local-image-storage": "./src/local-image-storage.ts",
-    "./local-media-storage": "./src/local-media-storage.ts"
+    "./local-image-storage": "./src/local-image-storage.js",
+    "./local-media-storage": "./src/local-media-storage.js"
   },
   "files": [
     "bin",

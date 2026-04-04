@@ -26,3 +26,7 @@ export {
   createAstropressPasswordAuthModule,
 } from "./host-runtime-factories";
 export { createAstropressAdminStoreAdapter } from "./admin-store-adapter-factory";
+export {
+  createAstropressLocalMediaRepository,
+} from "./local-media-repository-factory";
+export type { AstropressLocalMediaRepositoryOptions } from "./local-media-repository-factory";

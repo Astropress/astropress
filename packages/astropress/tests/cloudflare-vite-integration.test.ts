@@ -7,16 +7,24 @@ describe("cloudflare vite integration helper", () => {
       "/tmp/site/src/astropress/local-runtime-modules.ts",
     );
 
-    expect(integration.aliases).toHaveLength(5);
+    expect(integration.aliases).toHaveLength(7);
     expect(integration.aliases[0]).toEqual({
       find: "astropress/local-image-storage",
       replacement: "astropress/cloudflare-local-image-storage-stub",
     });
     expect(integration.aliases[1]).toEqual({
+      find: /^.*\/local-image-storage(?:\.[cm]?[jt]s)?$/,
+      replacement: "astropress/cloudflare-local-image-storage-stub",
+    });
+    expect(integration.aliases[2]).toEqual({
       find: "astropress/local-media-storage",
       replacement: "astropress/cloudflare-local-media-storage-stub",
     });
-    expect(integration.aliases[2]?.replacement).toBe("astropress/cloudflare-local-runtime-stubs");
+    expect(integration.aliases[3]).toEqual({
+      find: /^.*\/local-media-storage(?:\.[cm]?[jt]s)?$/,
+      replacement: "astropress/cloudflare-local-media-storage-stub",
+    });
+    expect(integration.aliases[4]?.replacement).toBe("astropress/cloudflare-local-runtime-stubs");
     expect(integration.plugin.name).toBe("astropress-cloudflare-local-runtime-stubs");
     expect(integration.plugin.resolveId("./local-runtime-modules")).toBe(
       "astropress/cloudflare-local-runtime-stubs",
@@ -24,7 +32,13 @@ describe("cloudflare vite integration helper", () => {
     expect(integration.plugin.resolveId("astropress/local-image-storage")).toBe(
       "astropress/cloudflare-local-image-storage-stub",
     );
+    expect(integration.plugin.resolveId("/workspace/packages/astropress/src/local-image-storage.ts")).toBe(
+      "astropress/cloudflare-local-image-storage-stub",
+    );
     expect(integration.plugin.resolveId("astropress/local-media-storage")).toBe(
+      "astropress/cloudflare-local-media-storage-stub",
+    );
+    expect(integration.plugin.resolveId("/workspace/packages/astropress/src/local-media-storage.ts")).toBe(
       "astropress/cloudflare-local-media-storage-stub",
     );
   });

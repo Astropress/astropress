@@ -15,6 +15,15 @@ function isLocalRuntimeModuleRequest(id, localRuntimeModulesPath) {
   );
 }
 
+function isPackageStorageModuleRequest(id, moduleName) {
+  return (
+    id === `astropress/${moduleName}` ||
+    id.endsWith(`/${moduleName}`) ||
+    id.endsWith(`/${moduleName}.ts`) ||
+    id.endsWith(`/${moduleName}.js`)
+  );
+}
+
 function normalizeImportId(id) {
   let normalized = id.replaceAll("\\", "/");
   if (normalized.startsWith("file://")) {
@@ -46,7 +55,15 @@ export function createAstropressCloudflareViteIntegration(
         replacement: cloudflareLocalImageStorageStubPath,
       },
       {
+        find: /^.*\/local-image-storage(?:\.[cm]?[jt]s)?$/,
+        replacement: cloudflareLocalImageStorageStubPath,
+      },
+      {
         find: "astropress/local-media-storage",
+        replacement: cloudflareLocalMediaStorageStubPath,
+      },
+      {
+        find: /^.*\/local-media-storage(?:\.[cm]?[jt]s)?$/,
         replacement: cloudflareLocalMediaStorageStubPath,
       },
       {
@@ -68,11 +85,11 @@ export function createAstropressCloudflareViteIntegration(
       resolveId(id) {
         const normalizedId = normalizeImportId(id);
 
-        if (normalizedId === "astropress/local-image-storage") {
+        if (isPackageStorageModuleRequest(normalizedId, "local-image-storage")) {
           return cloudflareLocalImageStorageStubPath;
         }
 
-        if (normalizedId === "astropress/local-media-storage") {
+        if (isPackageStorageModuleRequest(normalizedId, "local-media-storage")) {
           return cloudflareLocalMediaStorageStubPath;
         }
 
