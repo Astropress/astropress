@@ -29,6 +29,13 @@ Development:
 - `bun run test:cli`
 - `bun run test:example`
 
+Specs:
+
+- org-level: `SPEC.md`
+- package: `packages/astropress/SPEC.md`
+- CLI: `crates/astropress-cli/SPEC.md`
+- example/docs: `examples/github-pages/SPEC.md`
+
 Host integration helpers:
 
 - `astropress/integration` re-exports the current Vite, Vitest, and host-runtime helper surface from one place

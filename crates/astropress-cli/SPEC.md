@@ -1,0 +1,41 @@
+# Astropress CLI Specification
+
+## Scope
+
+This spec covers the Rust CLI crate currently located at `crates/astropress-cli`.
+
+If Astropress later splits into multiple repositories, this file should move with the CLI repo.
+
+## Responsibilities
+
+The CLI is responsible for:
+
+- project scaffolding
+- local development workflow commands
+- WordPress import orchestration
+- deploy and sync orchestration
+- packaging a non-Node-native entry point for operational workflows
+
+## Required Command Surface
+
+The CLI must support:
+
+- `astropress new`
+- `astropress dev`
+- `astropress import wordpress`
+- `astropress sync export`
+- `astropress sync import`
+- `astropress deploy`
+
+## Delivery Model
+
+- implementation language: Rust
+- package manager/build tool: Cargo
+- normal user distribution: prebuilt binaries and/or npm wrapper
+- end users should not need Rust installed to use the released CLI
+
+## Design Constraints
+
+- commands should map to product workflows, not low-level provider internals
+- provider-specific behavior should be hidden behind shared command semantics
+- the CLI should stay aligned with the core package contracts rather than inventing separate concepts

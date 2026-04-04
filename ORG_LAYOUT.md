@@ -21,7 +21,7 @@ Current mapping from the local repo:
 - `packages/astropress` -> published npm package
 - `crates/astropress-cli` -> Rust CLI crate
 - `examples/github-pages` -> example site and docs surface
-- `SPEC.md` -> product and architecture contract
+- `SPEC.md` -> org-level product and architecture contract
 - `features/` -> BDD source of truth
 - `docs/` -> supporting testing and architecture docs
 
@@ -47,6 +47,7 @@ Ship from that repo:
 - npm package from `packages/astropress`
 - CLI binaries from `crates/astropress-cli`
 - docs/example deployment from `examples/github-pages`
+- repo-scoped specs from each subtree
 
 ### Phase 2
 

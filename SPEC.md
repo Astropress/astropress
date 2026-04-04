@@ -1,4 +1,18 @@
-# Astropress Production Specification
+# Astropress Organization Specification
+
+## Scope
+
+This is the org-level specification for the future `astropress` GitHub organization.
+
+It defines the shared product contract across the repositories that may eventually live in the org, including:
+
+- the core publishing and admin product
+- the provider model
+- the canonical data model
+- the editorial/admin expectations
+- the division of responsibility between package, CLI, examples, and docs
+
+Repo-specific implementation details should live in repo-scoped spec files.
 
 ## Product
 
@@ -63,7 +77,7 @@ Therefore:
 
 ## CLI Contract
 
-The CLI is authored as a Cargo crate and exposed through the npm package wrapper.
+The CLI is authored as a Cargo crate and exposed through the npm package wrapper or prebuilt binaries.
 
 Required v1 commands:
 
@@ -94,3 +108,13 @@ The example must demonstrate:
 - a static public site
 - admin architecture and workflow documentation
 - how the same content model can deploy to GitHub Pages, Cloudflare, Supabase, or Runway
+
+## Repository Specs
+
+Each future repo should carry its own relevant spec.
+
+Current repo-scoped spec locations in this monorepo:
+
+- `packages/astropress/SPEC.md`
+- `crates/astropress-cli/SPEC.md`
+- `examples/github-pages/SPEC.md`
