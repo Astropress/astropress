@@ -9,7 +9,7 @@
   "exports": {
     ".": "./index.ts",
     "./components/*": "./components/*.astro",
-    "./platform-contracts": "./src/platform-contracts.ts",
+    "./platform-contracts": "./src/platform-contracts.js",
     "./provider-targets": "./src/provider-targets.ts",
     "./adapters/sqlite": "./src/adapters/sqlite.js",
     "./adapters/cloudflare": "./src/adapters/cloudflare.js",

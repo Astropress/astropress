@@ -1,4 +1,4 @@
-import { assertProviderContract, normalizeProviderCapabilities } from "./platform-contracts.ts";
+import { assertProviderContract, normalizeProviderCapabilities } from "./platform-contracts.js";
 
 function createInMemoryContentStore() {
   const records = new Map();
