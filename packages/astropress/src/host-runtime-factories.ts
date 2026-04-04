@@ -1,5 +1,9 @@
 import type { AdminStoreAdapter, SessionUser } from "./persistence-types";
-import type { LocalAdminAuthModule, LocalAdminStoreModule } from "./local-runtime-modules";
+import type {
+  LocalAdminAuthModule,
+  LocalAdminStoreModule,
+  LocalCmsRegistryModule,
+} from "./local-runtime-modules";
 
 export function createAstropressAdminStoreModule(
   getStore: () => AdminStoreAdapter,
@@ -148,5 +152,22 @@ export function createAstropressPasswordAuthModule(
 ): LocalAdminAuthModule {
   return {
     authenticateAdminUser,
+  };
+}
+
+export function createAstropressCmsRegistryModule(
+  registry: LocalCmsRegistryModule,
+): LocalCmsRegistryModule {
+  return {
+    listSystemRoutes: (...args) => registry.listSystemRoutes(...args),
+    getSystemRoute: (...args) => registry.getSystemRoute(...args),
+    saveSystemRoute: (...args) => registry.saveSystemRoute(...args),
+    listStructuredPageRoutes: (...args) => registry.listStructuredPageRoutes(...args),
+    getStructuredPageRoute: (...args) => registry.getStructuredPageRoute(...args),
+    saveStructuredPageRoute: (...args) => registry.saveStructuredPageRoute(...args),
+    createStructuredPageRoute: (...args) => registry.createStructuredPageRoute(...args),
+    getArchiveRoute: (...args) => registry.getArchiveRoute(...args),
+    listArchiveRoutes: (...args) => registry.listArchiveRoutes(...args),
+    saveArchiveRoute: (...args) => registry.saveArchiveRoute(...args),
   };
 }

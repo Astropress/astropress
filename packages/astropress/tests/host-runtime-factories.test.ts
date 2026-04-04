@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import {
   createAstropressAdminStoreModule,
+  createAstropressCmsRegistryModule,
   createAstropressPasswordAuthModule,
 } from "../src/host-runtime-factories";
 
@@ -115,5 +116,36 @@ describe("host runtime factories", () => {
       email: "admin@example.com",
     });
     await expect(authModule.authenticateAdminUser("admin@example.com", "wrong")).resolves.toBeNull();
+  });
+
+  it("creates a delegating cms registry module", () => {
+    const listSystemRoutes = vi.fn(() => [{ path: "/hello", title: "Hello", renderStrategy: "generated_text", settings: null }]);
+    const getSystemRoute = vi.fn(() => null);
+    const saveSystemRoute = vi.fn(() => ({ ok: false, error: "not implemented" }));
+    const listStructuredPageRoutes = vi.fn(() => []);
+    const getStructuredPageRoute = vi.fn(() => null);
+    const saveStructuredPageRoute = vi.fn(() => ({ ok: false, error: "not implemented" }));
+    const createStructuredPageRoute = vi.fn(() => ({ ok: false, error: "not implemented" }));
+    const getArchiveRoute = vi.fn(() => null);
+    const listArchiveRoutes = vi.fn(() => []);
+    const saveArchiveRoute = vi.fn(() => ({ ok: false, error: "not implemented" }));
+
+    const registryModule = createAstropressCmsRegistryModule({
+      listSystemRoutes,
+      getSystemRoute,
+      saveSystemRoute,
+      listStructuredPageRoutes,
+      getStructuredPageRoute,
+      saveStructuredPageRoute,
+      createStructuredPageRoute,
+      getArchiveRoute,
+      listArchiveRoutes,
+      saveArchiveRoute,
+    });
+
+    expect(registryModule.listSystemRoutes()).toHaveLength(1);
+    expect(listSystemRoutes).toHaveBeenCalled();
+    expect(registryModule.getArchiveRoute("/archive")).toBeNull();
+    expect(getArchiveRoute).toHaveBeenCalledWith("/archive");
   });
 });

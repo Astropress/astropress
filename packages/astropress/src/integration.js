@@ -12,6 +12,7 @@ export { createAstropressVitestLocalRuntimePlugins } from "./vitest-runtime-alia
 export { defineAstropressHostRuntimeModules } from "./host-runtime-modules.js";
 export {
   createAstropressAdminStoreModule,
+  createAstropressCmsRegistryModule,
   createAstropressPasswordAuthModule,
 } from "./host-runtime-factories.js";
 export { createAstropressAdminStoreAdapter } from "./admin-store-adapter-factory.js";
