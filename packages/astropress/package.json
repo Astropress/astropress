@@ -26,6 +26,7 @@
     "./comment-repository-factory": "./src/comment-repository-factory.js",
     "./submission-repository-factory": "./src/submission-repository-factory.js",
     "./user-repository-factory": "./src/user-repository-factory.js",
+    "./settings-repository-factory": "./src/settings-repository-factory.js",
     "./local-runtime-modules": "./src/local-runtime-modules.ts",
     "./cloudflare-workers-stub": "./src/cloudflare-workers-stub.ts",
     "./cloudflare-local-runtime-stubs": "./src/cloudflare-local-runtime-stubs.ts",

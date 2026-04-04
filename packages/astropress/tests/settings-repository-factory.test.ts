@@ -1,0 +1,43 @@
+import { describe, expect, it, vi } from "vitest";
+import { createAstropressSettingsRepository } from "../src/settings-repository-factory";
+
+describe("settings repository factory", () => {
+  it("merges and persists site settings through package-owned repository assembly", () => {
+    const persistSettings = vi.fn();
+    const recordSettingsAudit = vi.fn();
+    const repository = createAstropressSettingsRepository({
+      getSettings: vi.fn(() => ({
+        siteTitle: "Fleet",
+        siteTagline: "Food",
+        donationUrl: "/donate",
+        newsletterEnabled: true,
+        commentsDefaultPolicy: "open-moderated",
+        adminSlug: "wp-admin",
+      })),
+      persistSettings,
+      recordSettingsAudit,
+    });
+
+    const result = repository.saveSettings(
+      {
+        siteTitle: "Fleet Farming",
+        newsletterEnabled: false,
+      },
+      { email: "admin@example.com", role: "admin", name: "Admin" },
+    );
+
+    expect(result).toEqual({
+      ok: true,
+      settings: {
+        siteTitle: "Fleet Farming",
+        siteTagline: "Food",
+        donationUrl: "/donate",
+        newsletterEnabled: false,
+        commentsDefaultPolicy: "open-moderated",
+        adminSlug: "wp-admin",
+      },
+    });
+    expect(persistSettings).toHaveBeenCalledTimes(1);
+    expect(recordSettingsAudit).toHaveBeenCalledTimes(1);
+  });
+});
