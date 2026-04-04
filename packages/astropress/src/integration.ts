@@ -59,3 +59,7 @@ export {
   createAstropressSubmissionRepository,
 } from "./submission-repository-factory";
 export type { AstropressSubmissionRepositoryInput } from "./submission-repository-factory";
+export {
+  createAstropressUserRepository,
+} from "./user-repository-factory";
+export type { AstropressUserRepositoryInput } from "./user-repository-factory";
