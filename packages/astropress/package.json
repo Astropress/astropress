@@ -21,6 +21,7 @@
     "./admin-store-adapter-factory": "./src/admin-store-adapter-factory.js",
     "./auth-repository-factory": "./src/auth-repository-factory.js",
     "./content-repository-factory": "./src/content-repository-factory.js",
+    "./cms-route-registry-factory": "./src/cms-route-registry-factory.js",
     "./local-media-repository-factory": "./src/local-media-repository-factory.js",
     "./redirect-repository-factory": "./src/redirect-repository-factory.js",
     "./taxonomy-repository-factory": "./src/taxonomy-repository-factory.js",

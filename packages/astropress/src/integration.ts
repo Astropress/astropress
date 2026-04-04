@@ -53,6 +53,10 @@ export type {
   AstropressContentRepositoryInput,
 } from "./content-repository-factory";
 export {
+  createAstropressCmsRouteRegistry,
+} from "./cms-route-registry-factory";
+export type { AstropressCmsRouteRegistryFactoryInput } from "./cms-route-registry-factory";
+export {
   createAstropressLocalMediaRepository,
 } from "./local-media-repository-factory";
 export type { AstropressLocalMediaRepositoryOptions } from "./local-media-repository-factory";

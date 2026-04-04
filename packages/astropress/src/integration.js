@@ -20,6 +20,7 @@ export {
 export { createAstropressAdminStoreAdapter } from "./admin-store-adapter-factory.js";
 export { createAstropressAuthRepository } from "./auth-repository-factory.js";
 export { createAstropressContentRepository } from "./content-repository-factory.js";
+export { createAstropressCmsRouteRegistry } from "./cms-route-registry-factory.js";
 export { createAstropressLocalMediaRepository } from "./local-media-repository-factory.js";
 export { createAstropressRedirectRepository } from "./redirect-repository-factory.js";
 export { createAstropressTaxonomyRepository } from "./taxonomy-repository-factory.js";
