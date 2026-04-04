@@ -234,6 +234,15 @@ export type {
 } from "./src/vite-runtime-alias";
 export { createAstropressVitestLocalRuntimePlugins } from "./src/vitest-runtime-alias";
 export type { AstropressVitestPlugin } from "./src/vitest-runtime-alias";
+export { defineAstropressHostRuntimeModules } from "./src/host-runtime-modules";
+export type { AstropressHostRuntimeModules } from "./src/host-runtime-modules";
+export type {
+  LocalAdminStoreModule,
+  LocalAdminAuthModule,
+  LocalCmsRegistryModule,
+  LocalMediaStorageModule,
+  LocalImageStorageModule,
+} from "./src/local-runtime-modules";
 
 // Content utilities
 export { sanitizeHtml } from "./src/html-sanitization";
