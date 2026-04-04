@@ -43,3 +43,7 @@ export {
   createAstropressRedirectRepository,
 } from "./redirect-repository-factory";
 export type { AstropressRedirectRepositoryInput } from "./redirect-repository-factory";
+export {
+  createAstropressTaxonomyRepository,
+} from "./taxonomy-repository-factory";
+export type { AstropressTaxonomyRepositoryInput } from "./taxonomy-repository-factory";
