@@ -12,6 +12,7 @@ export type AstropressCloudflareViteIntegrationOptions = {
   cloudflareLocalImageStorageStubPath?: string;
   cloudflareLocalMediaStorageStubPath?: string;
   cloudflareSqliteAdminRuntimeStubPath?: string;
+  cloudflareSqliteBootstrapStubPath?: string;
 };
 
 function isLocalRuntimeModuleRequest(id: string, localRuntimeModulesPath: string): boolean {
@@ -49,6 +50,15 @@ function isSqliteAdminRuntimeRequest(id: string): boolean {
   );
 }
 
+function isSqliteBootstrapRequest(id: string): boolean {
+  return (
+    id === "astropress/sqlite-bootstrap" ||
+    id.endsWith("/sqlite-bootstrap") ||
+    id.endsWith("/sqlite-bootstrap.ts") ||
+    id.endsWith("/sqlite-bootstrap.js")
+  );
+}
+
 function normalizeImportId(id: string): string {
   let normalized = id.replaceAll("\\", "/");
   if (normalized.startsWith("file://")) {
@@ -74,6 +84,8 @@ export function createAstropressCloudflareViteIntegration(
     options.cloudflareLocalMediaStorageStubPath ?? "astropress/cloudflare-local-media-storage-stub";
   const cloudflareSqliteAdminRuntimeStubPath =
     options.cloudflareSqliteAdminRuntimeStubPath ?? "astropress/cloudflare-sqlite-admin-runtime-stub";
+  const cloudflareSqliteBootstrapStubPath =
+    options.cloudflareSqliteBootstrapStubPath ?? "astropress/cloudflare-sqlite-bootstrap-stub";
 
   return {
     aliases: [
@@ -100,6 +112,14 @@ export function createAstropressCloudflareViteIntegration(
       {
         find: /^.*\/sqlite-admin-runtime(?:\.[cm]?[jt]s)?$/,
         replacement: cloudflareSqliteAdminRuntimeStubPath,
+      },
+      {
+        find: "astropress/sqlite-bootstrap",
+        replacement: cloudflareSqliteBootstrapStubPath,
+      },
+      {
+        find: /^.*\/sqlite-bootstrap(?:\.[cm]?[jt]s)?$/,
+        replacement: cloudflareSqliteBootstrapStubPath,
       },
       {
         find: /^\.\/local-runtime-modules(?:\.ts)?$/,
@@ -130,6 +150,10 @@ export function createAstropressCloudflareViteIntegration(
 
         if (isSqliteAdminRuntimeRequest(normalizedId)) {
           return cloudflareSqliteAdminRuntimeStubPath;
+        }
+
+        if (isSqliteBootstrapRequest(normalizedId)) {
+          return cloudflareSqliteBootstrapStubPath;
         }
 
         if (isLocalRuntimeModuleRequest(normalizedId, localRuntimeModulesPath)) {

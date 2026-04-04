@@ -1,121 +1,25 @@
+import { createRequire } from "node:module";
+var __require = /* @__PURE__ */ createRequire(import.meta.url);
+
+// packages/astropress/src/sqlite-bootstrap.ts
 import { pbkdf2Sync, randomBytes } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { defaultSiteSettings } from "./site-settings";
 
-export interface SqliteStatementLike {
-  run(...params: unknown[]): { changes?: number | bigint };
-  get(...params: unknown[]): unknown;
-  all(...params: unknown[]): unknown[];
-}
+// packages/astropress/src/site-settings.ts
+var defaultSiteSettings = {
+  siteTitle: "",
+  siteTagline: "",
+  donationUrl: "",
+  newsletterEnabled: false,
+  commentsDefaultPolicy: "legacy-readonly",
+  adminSlug: "wp-admin"
+};
 
-export interface SqliteDatabaseLike {
-  exec(sql: string): void;
-  prepare(sql: string): SqliteStatementLike;
-  close(): void;
-}
-
-type SqliteDatabaseConstructor = new (filename: string) => SqliteDatabaseLike;
-
-export type AdminRole = "admin" | "editor";
-
-export interface MediaSeedRecord {
-  id: string;
-  sourceUrl?: string;
-  localPath?: string;
-  r2Key?: string;
-}
-
-export interface RedirectRuleSeed {
-  sourcePath: string;
-  targetPath: string;
-  statusCode: 301 | 302;
-}
-
-export interface SeededComment {
-  id: string;
-  author: string;
-  email?: string;
-  body?: string;
-  route: string;
-  status: "pending" | "approved" | "rejected";
-  policy: "legacy-readonly" | "disabled" | "open-moderated";
-  submittedAt?: string;
-}
-
-export interface BootstrapUserSeed {
-  email: string;
-  password: string;
-  role: AdminRole;
-  name: string;
-}
-
-export interface SystemRouteSeed {
-  groupId: string;
-  variantId: string;
-  path: string;
-  title: string;
-  summary?: string;
-  bodyHtml?: string;
-  renderStrategy: "structured_sections" | "generated_text" | "generated_xml";
-  settingsJson?: string;
-  metaDescription?: string;
-  robotsDirective?: string;
-}
-
-export interface ArchiveSeedRecord {
-  legacyUrl: string;
-  title: string;
-  summary?: string;
-  seoTitle?: string;
-  metaDescription?: string;
-  canonicalUrlOverride?: string;
-  robotsDirective?: string;
-}
-
-export interface MarketingRouteSeedRecord {
-  path: string;
-  title: string;
-  summary?: string;
-  seoTitle?: string;
-  metaDescription?: string;
-  canonicalUrlOverride?: string;
-  robotsDirective?: string;
-  ogImage?: string;
-  templateKey: string;
-  alternateLinks?: Array<{ hreflang: string; href: string }>;
-  sections: Record<string, unknown> | null;
-}
-
-export interface SiteSettingsSeed {
-  siteTitle: string;
-  siteTagline: string;
-  donationUrl: string;
-  newsletterEnabled: boolean;
-  commentsDefaultPolicy: (typeof defaultSiteSettings)["commentsDefaultPolicy"];
-}
-
-export interface SeedDatabaseOptions {
-  db?: SqliteDatabaseLike;
-  dbPath?: string;
-  reset?: boolean;
-  workspaceRoot?: string;
-}
-
-export interface SeedSummary {
-  bootstrapUsers: number;
-  mediaAssets: number;
-  redirectRules: number;
-  comments: number;
-  siteSettings: number;
-  systemRoutes: number;
-  archiveRoutes: number;
-  marketingRoutes: number;
-}
-
-export const defaultSeedImportTables = [
+// packages/astropress/src/sqlite-bootstrap.ts
+var defaultSeedImportTables = [
   "admin_users",
   "media_assets",
   "redirect_rules",
@@ -124,163 +28,90 @@ export const defaultSeedImportTables = [
   "cms_route_groups",
   "cms_route_variants",
   "cms_route_aliases",
-  "cms_route_revisions",
-] as const;
-
-export interface SeedImportStatement<TableName extends string = (typeof defaultSeedImportTables)[number]> {
-  table: TableName;
-  statements: string[];
-  sql: string;
-}
-
-export interface AstropressSqliteSeedToolkitOptions<TableName extends string = (typeof defaultSeedImportTables)[number]> {
-  readSchemaSql(): string;
-  loadBootstrapUsers(): BootstrapUserSeed[];
-  loadMediaSeeds(workspaceRoot: string): MediaSeedRecord[];
-  redirectRules: RedirectRuleSeed[];
-  comments: SeededComment[];
-  systemRoutes: SystemRouteSeed[];
-  archiveRoutes: ArchiveSeedRecord[];
-  marketingRoutes: MarketingRouteSeedRecord[];
-  siteSettings: SiteSettingsSeed;
-  seedImportTables?: readonly TableName[];
-  getDefaultAdminDbPath?(workspaceRoot?: string): string;
-}
-
-export interface AstropressSqliteSeedToolkit<TableName extends string = (typeof defaultSeedImportTables)[number]> {
-  getDefaultAdminDbPath(workspaceRoot?: string): string;
-  applyCommittedSchema(db: SqliteDatabaseLike): void;
-  openSeedDatabase(dbPath: string): SqliteDatabaseLike;
-  seedDatabase(options?: SeedDatabaseOptions): SeedSummary;
-  buildSeedImportSql(workspaceRoot?: string): string;
-  buildSeedImportStatements(workspaceRoot?: string, seededDb?: SqliteDatabaseLike): SeedImportStatement<TableName>[];
-}
-
-async function loadSqliteDatabase(): Promise<SqliteDatabaseConstructor> {
+  "cms_route_revisions"
+];
+async function loadSqliteDatabase() {
   if ("Bun" in globalThis) {
-    const module = await import("bun:sqlite");
-    return module.Database as unknown as SqliteDatabaseConstructor;
+    const module2 = await import("bun:sqlite");
+    return module2.Database;
   }
-
   const module = await import("node:sqlite");
-  return module.DatabaseSync as unknown as SqliteDatabaseConstructor;
+  return module.DatabaseSync;
 }
-
-const SqliteDatabase = await loadSqliteDatabase();
-
+var SqliteDatabase = await loadSqliteDatabase();
 function defaultAdminDbPath(workspaceRoot = process.cwd()) {
   return path.join(workspaceRoot, ".data", "admin.sqlite");
 }
-
-export function resolveAstropressSqliteSchemaPath() {
+function resolveAstropressSqliteSchemaPath() {
   const primaryPath = fileURLToPath(new URL("./sqlite-schema.sql", import.meta.url));
   if (existsSync(primaryPath)) {
     return primaryPath;
   }
-
   return fileURLToPath(new URL("../sqlite-schema.sql", import.meta.url));
 }
-
-export function readAstropressSqliteSchemaSql() {
+function readAstropressSqliteSchemaSql() {
   return readFileSync(resolveAstropressSqliteSchemaPath(), "utf8");
 }
-
-function hashPasswordSync(password: string, iterations = 100_000) {
+function hashPasswordSync(password, iterations = 1e5) {
   const salt = randomBytes(32);
   const derived = pbkdf2Sync(password, salt, iterations, 64, "sha256");
   return `${iterations}$${salt.toString("base64")}$${derived.toString("base64")}`;
 }
-
-function guessMimeType(pathname: string) {
+function guessMimeType(pathname) {
   const lower = pathname.toLowerCase();
-  if (lower.endsWith(".png")) return "image/png";
-  if (lower.endsWith(".webp")) return "image/webp";
-  if (lower.endsWith(".gif")) return "image/gif";
+  if (lower.endsWith(".png"))
+    return "image/png";
+  if (lower.endsWith(".webp"))
+    return "image/webp";
+  if (lower.endsWith(".gif"))
+    return "image/gif";
   return "image/jpeg";
 }
-
-function toSqlLiteral(value: unknown): string {
+function toSqlLiteral(value) {
   if (value === null || value === undefined) {
     return "NULL";
   }
-
   if (typeof value === "number" || typeof value === "bigint") {
     return String(value);
   }
-
   if (typeof value === "boolean") {
     return value ? "1" : "0";
   }
-
   if (value instanceof Uint8Array) {
     return `X'${Buffer.from(value).toString("hex")}'`;
   }
-
   return `'${String(value).replaceAll("'", "''")}'`;
 }
-
-function buildTableImportStatements(db: SqliteDatabaseLike, table: string) {
-  const columns = (
-    db.prepare(`PRAGMA table_info(${table})`).all() as Array<{
-      name: string;
-    }>
-  ).map((column) => column.name);
-
+function buildTableImportStatements(db, table) {
+  const columns = db.prepare(`PRAGMA table_info(${table})`).all().map((column) => column.name);
   if (columns.length === 0) {
-    return [] as string[];
+    return [];
   }
-
-  const rows = db.prepare(`SELECT * FROM ${table}`).all() as Array<Record<string, unknown>>;
+  const rows = db.prepare(`SELECT * FROM ${table}`).all();
   const statements = [`DELETE FROM ${table};`];
-
   for (const row of rows) {
     const serializedValues = columns.map((column) => toSqlLiteral(row[column]));
     statements.push(`INSERT INTO ${table} (${columns.join(", ")}) VALUES (${serializedValues.join(", ")});`);
   }
-
   return statements;
 }
-
-function buildTableImportSql(db: SqliteDatabaseLike, table: string) {
-  return buildTableImportStatements(db, table).join("\n");
+function buildTableImportSql(db, table) {
+  return buildTableImportStatements(db, table).join(`
+`);
 }
-
-function getTableColumns(db: SqliteDatabaseLike, table: string) {
-  return (
-    db.prepare(`PRAGMA table_info(${table})`).all() as Array<{
-      name: string;
-    }>
-  ).map((column) => column.name);
+function getTableColumns(db, table) {
+  return db.prepare(`PRAGMA table_info(${table})`).all().map((column) => column.name);
 }
-
-function getTableSql(db: SqliteDatabaseLike, table: string) {
-  return (
-    db.prepare("SELECT sql FROM sqlite_master WHERE type = 'table' AND name = ?").get(table) as
-      | {
-          sql: string | null;
-        }
-      | undefined
-  )?.sql;
+function getTableSql(db, table) {
+  return db.prepare("SELECT sql FROM sqlite_master WHERE type = 'table' AND name = ?").get(table)?.sql;
 }
-
-function rebuildContentTablesForCompatibility(
-  db: SqliteDatabaseLike,
-  options: {
-    hasRevisionAuthorIds: boolean;
-    hasRevisionCategoryIds: boolean;
-    hasRevisionTagIds: boolean;
-    hasOverrideScheduledAt: boolean;
-    hasRevisionScheduledAt: boolean;
-    hasRevisionNote: boolean;
-  },
-) {
+function rebuildContentTablesForCompatibility(db, options) {
   const authorIdsSelect = options.hasRevisionAuthorIds ? "COALESCE(author_ids, '[]')" : "'[]'";
   const categoryIdsSelect = options.hasRevisionCategoryIds ? "COALESCE(category_ids, '[]')" : "'[]'";
   const tagIdsSelect = options.hasRevisionTagIds ? "COALESCE(tag_ids, '[]')" : "'[]'";
   const overrideScheduledAtSelect = options.hasOverrideScheduledAt ? "scheduled_at" : "NULL";
   const revisionScheduledAtSelect = options.hasRevisionScheduledAt ? "scheduled_at" : "NULL";
   const revisionNoteSelect = options.hasRevisionNote ? "revision_note" : "NULL";
-
   db.exec(`
     PRAGMA foreign_keys = OFF;
 
@@ -396,59 +227,39 @@ function rebuildContentTablesForCompatibility(
     PRAGMA foreign_keys = ON;
   `);
 }
-
-function ensureLegacySchemaCompatibility(db: SqliteDatabaseLike) {
+function ensureLegacySchemaCompatibility(db) {
   const revisionColumns = new Set(getTableColumns(db, "content_revisions"));
   const overrideColumns = new Set(getTableColumns(db, "content_overrides"));
-  const needsRevisionColumns =
-    !revisionColumns.has("author_ids") ||
-    !revisionColumns.has("category_ids") ||
-    !revisionColumns.has("tag_ids") ||
-    !revisionColumns.has("scheduled_at") ||
-    !revisionColumns.has("revision_note");
+  const needsRevisionColumns = !revisionColumns.has("author_ids") || !revisionColumns.has("category_ids") || !revisionColumns.has("tag_ids") || !revisionColumns.has("scheduled_at") || !revisionColumns.has("revision_note");
   const needsOverrideColumns = !overrideColumns.has("scheduled_at");
-
   const overrideSql = getTableSql(db, "content_overrides") ?? "";
   const revisionSql = getTableSql(db, "content_revisions") ?? "";
-  const needsExpandedStatuses =
-    !overrideSql.includes("'review'") ||
-    !overrideSql.includes("'archived'") ||
-    !revisionSql.includes("'review'") ||
-    !revisionSql.includes("'archived'");
-
+  const needsExpandedStatuses = !overrideSql.includes("'review'") || !overrideSql.includes("'archived'") || !revisionSql.includes("'review'") || !revisionSql.includes("'archived'");
   if (!needsRevisionColumns && !needsOverrideColumns && !needsExpandedStatuses) {
     return;
   }
-
   rebuildContentTablesForCompatibility(db, {
     hasRevisionAuthorIds: revisionColumns.has("author_ids"),
     hasRevisionCategoryIds: revisionColumns.has("category_ids"),
     hasRevisionTagIds: revisionColumns.has("tag_ids"),
     hasOverrideScheduledAt: overrideColumns.has("scheduled_at"),
     hasRevisionScheduledAt: revisionColumns.has("scheduled_at"),
-    hasRevisionNote: revisionColumns.has("revision_note"),
+    hasRevisionNote: revisionColumns.has("revision_note")
   });
 }
-
-export function createAstropressSqliteSeedToolkit<TableName extends string = (typeof defaultSeedImportTables)[number]>(
-  options: AstropressSqliteSeedToolkitOptions<TableName>,
-): AstropressSqliteSeedToolkit<TableName> {
-  const seedImportTables = [...(options.seedImportTables ?? defaultSeedImportTables)] as TableName[];
-
+function createAstropressSqliteSeedToolkit(options) {
+  const seedImportTables = [...options.seedImportTables ?? defaultSeedImportTables];
   function getDefaultAdminDbPath(workspaceRoot = process.cwd()) {
     return options.getDefaultAdminDbPath?.(workspaceRoot) ?? defaultAdminDbPath(workspaceRoot);
   }
-
-  function applyCommittedSchema(db: SqliteDatabaseLike) {
+  function applyCommittedSchema(db) {
     db.exec(options.readSchemaSql());
     ensureLegacySchemaCompatibility(db);
   }
-
-  function openSeedDatabase(dbPath: string) {
+  function openSeedDatabase(dbPath) {
     return new SqliteDatabase(dbPath);
   }
-
-  function seedBootstrapUsers(db: SqliteDatabaseLike) {
+  function seedBootstrapUsers(db) {
     const upsert = db.prepare(`
       INSERT INTO admin_users (email, password_hash, role, name, active)
       VALUES (?, ?, ?, ?, 1)
@@ -458,18 +269,14 @@ export function createAstropressSqliteSeedToolkit<TableName extends string = (ty
         name = excluded.name,
         active = 1
     `);
-
     let count = 0;
     for (const user of options.loadBootstrapUsers()) {
-      const result = upsert.run(user.email.toLowerCase(), hashPasswordSync(user.password), user.role, user.name) as {
-        changes?: number;
-      };
+      const result = upsert.run(user.email.toLowerCase(), hashPasswordSync(user.password), user.role, user.name);
       count += result.changes ?? 1;
     }
     return count;
   }
-
-  function seedMediaAssets(db: SqliteDatabaseLike, workspaceRoot: string) {
+  function seedMediaAssets(db, workspaceRoot) {
     const insert = db.prepare(`
       INSERT INTO media_assets (
         id, source_url, local_path, r2_key, mime_type, file_size, alt_text, title, uploaded_by
@@ -482,26 +289,14 @@ export function createAstropressSqliteSeedToolkit<TableName extends string = (ty
         uploaded_by = excluded.uploaded_by,
         deleted_at = NULL
     `);
-
     let count = 0;
     for (const asset of options.loadMediaSeeds(workspaceRoot)) {
-      const result = insert.run(
-        asset.id,
-        asset.sourceUrl ?? null,
-        asset.localPath ?? `/images/legacy/${asset.id}`,
-        asset.r2Key ?? null,
-        guessMimeType(asset.localPath ?? asset.sourceUrl ?? asset.id),
-        null,
-        "",
-        asset.id,
-        "seed-import",
-      ) as { changes?: number };
+      const result = insert.run(asset.id, asset.sourceUrl ?? null, asset.localPath ?? `/images/legacy/${asset.id}`, asset.r2Key ?? null, guessMimeType(asset.localPath ?? asset.sourceUrl ?? asset.id), null, "", asset.id, "seed-import");
       count += result.changes ?? 1;
     }
     return count;
   }
-
-  function seedRedirects(db: SqliteDatabaseLike) {
+  function seedRedirects(db) {
     const insert = db.prepare(`
       INSERT INTO redirect_rules (source_path, target_path, status_code, created_by, deleted_at)
       VALUES (?, ?, ?, ?, NULL)
@@ -511,63 +306,36 @@ export function createAstropressSqliteSeedToolkit<TableName extends string = (ty
         created_by = excluded.created_by,
         deleted_at = NULL
     `);
-
     let count = 0;
     for (const rule of options.redirectRules) {
-      const result = insert.run(rule.sourcePath, rule.targetPath, rule.statusCode, "seed-import") as { changes?: number };
+      const result = insert.run(rule.sourcePath, rule.targetPath, rule.statusCode, "seed-import");
       count += result.changes ?? 1;
     }
     return count;
   }
-
-  function seedComments(db: SqliteDatabaseLike) {
+  function seedComments(db) {
     const insert = db.prepare(`
       INSERT INTO comments (id, author, email, body, route, status, policy, submitted_at)
       VALUES (?, ?, ?, ?, ?, ?, ?, COALESCE(?, CURRENT_TIMESTAMP))
       ON CONFLICT(id) DO NOTHING
     `);
-
     let count = 0;
     for (const comment of options.comments) {
-      const result = insert.run(
-        comment.id,
-        comment.author,
-        comment.email ?? null,
-        comment.body ?? null,
-        comment.route,
-        comment.status,
-        comment.policy,
-        comment.submittedAt ?? null,
-      ) as { changes?: number };
+      const result = insert.run(comment.id, comment.author, comment.email ?? null, comment.body ?? null, comment.route, comment.status, comment.policy, comment.submittedAt ?? null);
       count += result.changes ?? 0;
     }
     return count;
   }
-
-  function seedSiteSettings(db: SqliteDatabaseLike) {
-    const result = db
-      .prepare(
-        `
+  function seedSiteSettings(db) {
+    const result = db.prepare(`
           INSERT INTO site_settings (
             id, site_title, site_tagline, donation_url, newsletter_enabled, comments_default_policy, updated_by
           ) VALUES (?, ?, ?, ?, ?, ?, ?)
           ON CONFLICT(id) DO NOTHING
-        `,
-      )
-      .run(
-        1,
-        options.siteSettings.siteTitle,
-        options.siteSettings.siteTagline,
-        options.siteSettings.donationUrl,
-        options.siteSettings.newsletterEnabled ? 1 : 0,
-        options.siteSettings.commentsDefaultPolicy,
-        "seed-import",
-      ) as { changes?: number };
-
+        `).run(1, options.siteSettings.siteTitle, options.siteSettings.siteTagline, options.siteSettings.donationUrl, options.siteSettings.newsletterEnabled ? 1 : 0, options.siteSettings.commentsDefaultPolicy, "seed-import");
     return result.changes ?? 0;
   }
-
-  function seedSystemRoutes(db: SqliteDatabaseLike) {
+  function seedSystemRoutes(db) {
     const insertGroup = db.prepare(`
       INSERT INTO cms_route_groups (id, kind, render_strategy, canonical_locale, canonical_path)
       VALUES (?, 'system', ?, 'en', ?)
@@ -599,45 +367,23 @@ export function createAstropressSqliteSeedToolkit<TableName extends string = (ty
       VALUES (?, ?, ?, 'en', ?, ?, ?)
       ON CONFLICT(id) DO NOTHING
     `);
-
     let count = 0;
     for (const route of options.systemRoutes) {
       insertGroup.run(route.groupId, route.renderStrategy, route.path);
-      const result = insertVariant.run(
-        route.variantId,
-        route.groupId,
-        route.path,
-        route.title,
-        route.summary ?? null,
-        route.bodyHtml ?? null,
-        route.settingsJson ?? null,
-        route.title,
-        route.metaDescription ?? route.summary ?? route.title,
-        route.robotsDirective ?? null,
-        "seed-import",
-      ) as { changes?: number };
+      const result = insertVariant.run(route.variantId, route.groupId, route.path, route.title, route.summary ?? null, route.bodyHtml ?? null, route.settingsJson ?? null, route.title, route.metaDescription ?? route.summary ?? route.title, route.robotsDirective ?? null, "seed-import");
       count += result.changes ?? 1;
-      insertRevision.run(
-        `revision:${route.variantId}:seed`,
-        route.variantId,
-        route.path,
-        JSON.stringify({
-          path: route.path,
-          title: route.title,
-          summary: route.summary ?? "",
-          bodyHtml: route.bodyHtml ?? "",
-          settings: route.settingsJson ? JSON.parse(route.settingsJson) : null,
-          renderStrategy: route.renderStrategy,
-        }),
-        "Imported baseline",
-        "seed-import",
-      );
+      insertRevision.run(`revision:${route.variantId}:seed`, route.variantId, route.path, JSON.stringify({
+        path: route.path,
+        title: route.title,
+        summary: route.summary ?? "",
+        bodyHtml: route.bodyHtml ?? "",
+        settings: route.settingsJson ? JSON.parse(route.settingsJson) : null,
+        renderStrategy: route.renderStrategy
+      }), "Imported baseline", "seed-import");
     }
-
     return count;
   }
-
-  function seedArchiveRoutes(db: SqliteDatabaseLike) {
+  function seedArchiveRoutes(db) {
     const insertGroup = db.prepare(`
       INSERT INTO cms_route_groups (id, kind, render_strategy, canonical_locale, canonical_path)
       VALUES (?, 'archive', 'archive_listing', 'en', ?)
@@ -661,32 +407,18 @@ export function createAstropressSqliteSeedToolkit<TableName extends string = (ty
         updated_at = CURRENT_TIMESTAMP,
         updated_by = excluded.updated_by
     `);
-
     let count = 0;
     for (const archive of options.archiveRoutes) {
       const baseId = archive.legacyUrl.replace(/^\//, "").replaceAll("/", ":") || "root";
       const groupId = `archive:${baseId}`;
       const variantId = `variant:archive:${baseId}:en`;
       insertGroup.run(groupId, archive.legacyUrl);
-      const result = insertVariant.run(
-        variantId,
-        groupId,
-        archive.legacyUrl,
-        archive.title,
-        archive.summary ?? null,
-        archive.seoTitle ?? archive.title,
-        archive.metaDescription ?? archive.summary ?? "",
-        archive.canonicalUrlOverride ?? null,
-        archive.robotsDirective ?? null,
-        "seed-import",
-      ) as { changes?: number };
+      const result = insertVariant.run(variantId, groupId, archive.legacyUrl, archive.title, archive.summary ?? null, archive.seoTitle ?? archive.title, archive.metaDescription ?? archive.summary ?? "", archive.canonicalUrlOverride ?? null, archive.robotsDirective ?? null, "seed-import");
       count += result.changes ?? 1;
     }
-
     return count;
   }
-
-  function seedMarketingRoutes(db: SqliteDatabaseLike) {
+  function seedMarketingRoutes(db) {
     const insertGroup = db.prepare(`
       INSERT INTO cms_route_groups (id, kind, render_strategy, canonical_locale, canonical_path)
       VALUES (?, 'page', 'structured_sections', ?, ?)
@@ -714,7 +446,6 @@ export function createAstropressSqliteSeedToolkit<TableName extends string = (ty
         updated_at = CURRENT_TIMESTAMP,
         updated_by = excluded.updated_by
     `);
-
     let count = 0;
     for (const page of options.marketingRoutes) {
       const locale = page.path.startsWith("/es/") ? "es" : "en";
@@ -722,43 +453,22 @@ export function createAstropressSqliteSeedToolkit<TableName extends string = (ty
       const groupId = `page:${baseId}`;
       const variantId = `variant:page:${baseId}:${locale}`;
       insertGroup.run(groupId, locale, page.path);
-      const result = insertVariant.run(
-        variantId,
-        groupId,
-        locale,
-        page.path,
-        page.title,
-        page.summary,
-        JSON.stringify(page.sections),
-        JSON.stringify({ templateKey: page.templateKey, alternateLinks: page.alternateLinks ?? [] }),
-        page.seoTitle,
-        page.metaDescription,
-        page.ogImage ?? null,
-        page.canonicalUrlOverride ?? null,
-        page.robotsDirective ?? null,
-        "seed-import",
-      ) as { changes?: number };
+      const result = insertVariant.run(variantId, groupId, locale, page.path, page.title, page.summary, JSON.stringify(page.sections), JSON.stringify({ templateKey: page.templateKey, alternateLinks: page.alternateLinks ?? [] }), page.seoTitle, page.metaDescription, page.ogImage ?? null, page.canonicalUrlOverride ?? null, page.robotsDirective ?? null, "seed-import");
       count += result.changes ?? 1;
     }
-
     return count;
   }
-
-  function seedDatabase(seedOptions: SeedDatabaseOptions = {}): SeedSummary {
+  function seedDatabase(seedOptions = {}) {
     const workspaceRoot = seedOptions.workspaceRoot ?? process.cwd();
     const dbPath = seedOptions.dbPath ?? getDefaultAdminDbPath(workspaceRoot);
     const ownsConnection = !seedOptions.db;
-
     if (seedOptions.reset && dbPath !== ":memory:") {
       rmSync(dbPath, { force: true });
     }
-
     if (ownsConnection && dbPath !== ":memory:") {
       mkdirSync(path.dirname(dbPath), { recursive: true });
     }
-
     const db = seedOptions.db ?? openSeedDatabase(dbPath);
-
     try {
       applyCommittedSchema(db);
       return {
@@ -769,7 +479,7 @@ export function createAstropressSqliteSeedToolkit<TableName extends string = (ty
         siteSettings: seedSiteSettings(db),
         systemRoutes: seedSystemRoutes(db),
         archiveRoutes: seedArchiveRoutes(db),
-        marketingRoutes: seedMarketingRoutes(db),
+        marketingRoutes: seedMarketingRoutes(db)
       };
     } catch (error) {
       throw new Error(`Database seeding failed: ${error instanceof Error ? error.message : String(error)}`);
@@ -779,17 +489,16 @@ export function createAstropressSqliteSeedToolkit<TableName extends string = (ty
       }
     }
   }
-
   function buildSeedImportSql(workspaceRoot = process.cwd()) {
     const tempPath = path.join(tmpdir(), `astropress-seed-${Date.now()}-${Math.random().toString(36).slice(2)}.sqlite`);
-
     try {
       seedDatabase({ dbPath: tempPath, reset: true, workspaceRoot });
       const db = openSeedDatabase(tempPath);
-
       try {
         const tableSql = buildSeedImportStatements(workspaceRoot, db).map((statement) => statement.sql);
-        return ["BEGIN TRANSACTION;", ...tableSql, "COMMIT;"].join("\n\n");
+        return ["BEGIN TRANSACTION;", ...tableSql, "COMMIT;"].join(`
+
+`);
       } finally {
         db.close();
       }
@@ -797,22 +506,18 @@ export function createAstropressSqliteSeedToolkit<TableName extends string = (ty
       rmSync(tempPath, { force: true });
     }
   }
-
-  function buildSeedImportStatements(workspaceRoot = process.cwd(), seededDb?: SqliteDatabaseLike) {
+  function buildSeedImportStatements(workspaceRoot = process.cwd(), seededDb) {
     const tempPath = path.join(tmpdir(), `astropress-seed-${Date.now()}-${Math.random().toString(36).slice(2)}.sqlite`);
     const db = seededDb ?? (() => {
       seedDatabase({ dbPath: tempPath, reset: true, workspaceRoot });
       return openSeedDatabase(tempPath);
     })();
-
     try {
-      return seedImportTables
-        .map((table) => ({
-          table,
-          statements: buildTableImportStatements(db, table),
-          sql: buildTableImportSql(db, table),
-        }))
-        .filter((statement): statement is SeedImportStatement<TableName> => statement.sql.length > 0);
+      return seedImportTables.map((table) => ({
+        table,
+        statements: buildTableImportStatements(db, table),
+        sql: buildTableImportSql(db, table)
+      })).filter((statement) => statement.sql.length > 0);
     } finally {
       if (!seededDb) {
         db.close();
@@ -820,18 +525,16 @@ export function createAstropressSqliteSeedToolkit<TableName extends string = (ty
       }
     }
   }
-
   return {
     getDefaultAdminDbPath,
     applyCommittedSchema,
     openSeedDatabase,
     seedDatabase,
     buildSeedImportSql,
-    buildSeedImportStatements,
+    buildSeedImportStatements
   };
 }
-
-export function createDefaultAstropressSqliteSeedToolkit() {
+function createDefaultAstropressSqliteSeedToolkit() {
   return createAstropressSqliteSeedToolkit({
     readSchemaSql: readAstropressSqliteSchemaSql,
     loadBootstrapUsers() {
@@ -839,15 +542,15 @@ export function createDefaultAstropressSqliteSeedToolkit() {
         {
           email: "admin@example.com",
           password: "password",
-          role: "admin" as const,
-          name: "Admin",
+          role: "admin",
+          name: "Admin"
         },
         {
           email: "editor@example.com",
           password: "password",
-          role: "editor" as const,
-          name: "Editor",
-        },
+          role: "editor",
+          name: "Editor"
+        }
       ];
     },
     loadMediaSeeds() {
@@ -863,7 +566,14 @@ export function createDefaultAstropressSqliteSeedToolkit() {
       siteTagline: "Low-carbon publishing",
       donationUrl: "https://example.com/donate",
       newsletterEnabled: false,
-      commentsDefaultPolicy: defaultSiteSettings.commentsDefaultPolicy,
-    },
+      commentsDefaultPolicy: defaultSiteSettings.commentsDefaultPolicy
+    }
   });
 }
+export {
+  resolveAstropressSqliteSchemaPath,
+  readAstropressSqliteSchemaSql,
+  defaultSeedImportTables,
+  createDefaultAstropressSqliteSeedToolkit,
+  createAstropressSqliteSeedToolkit
+};

@@ -5,16 +5,20 @@ import { describe, expect, it } from "vitest";
 import {
   createAstropressCloudflareAdapter,
   createAstropressRunwayAdapter,
-  createAstropressSqliteAdapter,
   createAstropressSupabaseAdapter,
 } from "astropress";
+import { createAstropressSqliteAdapter } from "../src/adapters/sqlite.js";
 import { createAstropressGitHubPagesDeployTarget } from "../src/deploy/github-pages.js";
 import { createAstropressWordPressImportSource } from "../src/import/wordpress.js";
 import { createAstropressGitSyncAdapter } from "../src/sync/git.js";
 
 describe("provider adapters", () => {
   it("creates first-party adapters with provider-specific capability defaults", async () => {
-    const sqlite = createAstropressSqliteAdapter();
+    const workspace = await mkdtemp(join(tmpdir(), "astropress-sqlite-adapter-"));
+    const sqlite = createAstropressSqliteAdapter({
+      workspaceRoot: workspace,
+      dbPath: join(workspace, "admin.sqlite"),
+    });
     const cloudflare = createAstropressCloudflareAdapter();
     const supabase = createAstropressSupabaseAdapter();
     const runway = createAstropressRunwayAdapter();
@@ -27,6 +31,30 @@ describe("provider adapters", () => {
 
     const user = await sqlite.auth.signIn("admin@example.com", "password");
     expect(user?.role).toBe("admin");
+    expect(user?.id).toBeTruthy();
+    expect(await sqlite.auth.getSession(user?.id ?? "")).toEqual(user);
+
+    const savedRecord = await sqlite.content.save({
+      id: "hello-world",
+      kind: "post",
+      slug: "hello-world",
+      status: "published",
+      title: "Hello world",
+      body: "Astropress SQLite adapter",
+      metadata: {
+        metaDescription: "Adapter-backed post",
+        seoTitle: "Hello world",
+        legacyUrl: "/hello-world",
+      },
+    });
+    expect(savedRecord.kind).toBe("post");
+    expect(await sqlite.content.get("hello-world")).toMatchObject({
+      slug: "hello-world",
+      kind: "post",
+    });
+    expect((await sqlite.content.list("post")).some((record) => record.slug === "hello-world")).toBe(true);
+
+    await rm(workspace, { recursive: true, force: true });
   });
 
   it("deploys a build directory to the github pages target", async () => {

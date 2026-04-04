@@ -42,15 +42,24 @@ export interface CmsConfig {
   }>;
 }
 
-let _config: CmsConfig | null = null;
+const CMS_CONFIG_KEY = Symbol.for("astropress.cms-config");
+
+type AstropressGlobalWithConfig = typeof globalThis & {
+  [CMS_CONFIG_KEY]?: CmsConfig | null;
+};
+
+function getConfigStore(): AstropressGlobalWithConfig {
+  return globalThis as AstropressGlobalWithConfig;
+}
 
 export function registerCms(config: CmsConfig): void {
-  _config = config;
+  getConfigStore()[CMS_CONFIG_KEY] = config;
 }
 
 export function getCmsConfig(): CmsConfig {
-  if (!_config) {
+  const config = getConfigStore()[CMS_CONFIG_KEY] ?? null;
+  if (!config) {
     throw new Error("CMS not initialized — call registerCms() before using the CMS.");
   }
-  return _config;
+  return config;
 }

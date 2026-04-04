@@ -28,8 +28,6 @@ export { listFirstPartyProviderTargets, getFirstPartyProviderTarget } from "./sr
 export type { FirstPartyProviderTarget } from "./src/provider-targets";
 export { createAstropressInMemoryPlatformAdapter } from "./src/in-memory-platform-adapter.js";
 export type { AstropressInMemoryPlatformAdapterOptions } from "./src/in-memory-platform-adapter";
-export { createAstropressSqliteAdapter } from "./src/adapters/sqlite.js";
-export type { AstropressSqliteAdapterOptions } from "./src/adapters/sqlite";
 export { createAstropressCloudflareAdapter } from "./src/adapters/cloudflare.js";
 export type { AstropressCloudflareAdapterOptions } from "./src/adapters/cloudflare";
 export { createAstropressSupabaseAdapter } from "./src/adapters/supabase.js";
