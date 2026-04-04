@@ -45,6 +45,14 @@ export type {
   AstropressPasswordResetTokenRecord,
 } from "./auth-repository-factory";
 export {
+  createAstropressContentRepository,
+} from "./content-repository-factory";
+export type {
+  AstropressContentAssignments,
+  AstropressContentOverride,
+  AstropressContentRepositoryInput,
+} from "./content-repository-factory";
+export {
   createAstropressLocalMediaRepository,
 } from "./local-media-repository-factory";
 export type { AstropressLocalMediaRepositoryOptions } from "./local-media-repository-factory";
