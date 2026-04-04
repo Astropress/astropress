@@ -11,6 +11,7 @@
     "./components/*": "./components/*.astro",
     "./platform-contracts": "./src/platform-contracts.ts",
     "./provider-targets": "./src/provider-targets.ts",
+    "./vite-runtime-alias": "./src/vite-runtime-alias.ts",
     "./local-image-storage": "./src/local-image-storage.ts",
     "./local-media-storage": "./src/local-media-storage.ts"
   },

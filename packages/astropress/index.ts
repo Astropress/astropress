@@ -221,6 +221,18 @@ export {
 export { getAdminLocalePair } from "./src/admin-locale-links";
 export type { AdminLocalePair } from "./src/admin-locale-links";
 
+// Vite integration helpers
+export {
+  isAstropressLocalRuntimeModuleRequest,
+  createAstropressLocalRuntimeModulePlugin,
+  createAstropressViteAliases,
+} from "./src/vite-runtime-alias";
+export type {
+  AstropressViteRuntimeAliasOptions,
+  AstropressVitePlugin,
+  AstropressViteAlias,
+} from "./src/vite-runtime-alias";
+
 // Content utilities
 export { sanitizeHtml } from "./src/html-sanitization";
 export { optimizeImageLoading } from "./src/html-optimization";
