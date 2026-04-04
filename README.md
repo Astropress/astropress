@@ -28,3 +28,9 @@ Development:
 - `bun run test`
 - `bun run test:cli`
 - `bun run test:example`
+
+Host integration helpers:
+
+- `astropress/vite-runtime-alias` exposes reusable Vite alias/plugin helpers for `local-runtime-modules`
+- `astropress/vitest-runtime-alias` exposes reusable Vitest plugin helpers for external-package test runs
+- `astropress/cloudflare-workers-stub` and `astropress/cloudflare-local-runtime-stubs` are exported as stable package entry points

@@ -232,6 +232,8 @@ export type {
   AstropressVitePlugin,
   AstropressViteAlias,
 } from "./src/vite-runtime-alias";
+export { createAstropressVitestLocalRuntimePlugins } from "./src/vitest-runtime-alias";
+export type { AstropressVitestPlugin } from "./src/vitest-runtime-alias";
 
 // Content utilities
 export { sanitizeHtml } from "./src/html-sanitization";

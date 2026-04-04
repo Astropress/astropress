@@ -12,6 +12,9 @@
     "./platform-contracts": "./src/platform-contracts.ts",
     "./provider-targets": "./src/provider-targets.ts",
     "./vite-runtime-alias": "./src/vite-runtime-alias.ts",
+    "./vitest-runtime-alias": "./src/vitest-runtime-alias.ts",
+    "./cloudflare-workers-stub": "./src/cloudflare-workers-stub.ts",
+    "./cloudflare-local-runtime-stubs": "./src/cloudflare-local-runtime-stubs.ts",
     "./local-image-storage": "./src/local-image-storage.ts",
     "./local-media-storage": "./src/local-media-storage.ts"
   },
