@@ -5,6 +5,7 @@ node_modules/
 .astro/
 dist/
 coverage/
+*.tgz
 
 # Rust build output
 target/

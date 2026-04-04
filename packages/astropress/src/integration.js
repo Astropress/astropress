@@ -9,6 +9,15 @@ export { createAstropressCloudflareViteIntegration } from "./cloudflare-vite-int
 
 export { createAstropressVitestLocalRuntimePlugins } from "./vitest-runtime-alias.js";
 
+export { createAstropressInMemoryPlatformAdapter } from "./in-memory-platform-adapter.js";
+export { createAstropressSqliteAdapter } from "./adapters/sqlite.js";
+export { createAstropressCloudflareAdapter } from "./adapters/cloudflare.js";
+export { createAstropressSupabaseAdapter } from "./adapters/supabase.js";
+export { createAstropressRunwayAdapter } from "./adapters/runway.js";
+export { createAstropressGitHubPagesDeployTarget } from "./deploy/github-pages.js";
+export { createAstropressWordPressImportSource } from "./import/wordpress.js";
+export { createAstropressGitSyncAdapter } from "./sync/git.js";
+
 export { defineAstropressHostRuntimeModules } from "./host-runtime-modules.js";
 export {
   createAstropressAdminStoreModule,

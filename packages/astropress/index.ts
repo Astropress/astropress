@@ -26,6 +26,22 @@ export type {
 } from "./src/platform-contracts";
 export { listFirstPartyProviderTargets, getFirstPartyProviderTarget } from "./src/provider-targets";
 export type { FirstPartyProviderTarget } from "./src/provider-targets";
+export { createAstropressInMemoryPlatformAdapter } from "./src/in-memory-platform-adapter";
+export type { AstropressInMemoryPlatformAdapterOptions } from "./src/in-memory-platform-adapter";
+export { createAstropressSqliteAdapter } from "./src/adapters/sqlite";
+export type { AstropressSqliteAdapterOptions } from "./src/adapters/sqlite";
+export { createAstropressCloudflareAdapter } from "./src/adapters/cloudflare";
+export type { AstropressCloudflareAdapterOptions } from "./src/adapters/cloudflare";
+export { createAstropressSupabaseAdapter } from "./src/adapters/supabase";
+export type { AstropressSupabaseAdapterOptions } from "./src/adapters/supabase";
+export { createAstropressRunwayAdapter } from "./src/adapters/runway";
+export type { AstropressRunwayAdapterOptions } from "./src/adapters/runway";
+export { createAstropressGitHubPagesDeployTarget } from "./src/deploy/github-pages";
+export type { AstropressGitHubPagesDeployTargetOptions } from "./src/deploy/github-pages";
+export { createAstropressWordPressImportSource } from "./src/import/wordpress";
+export type { AstropressWordPressImportSourceOptions } from "./src/import/wordpress";
+export { createAstropressGitSyncAdapter } from "./src/sync/git";
+export type { AstropressGitSyncAdapterOptions } from "./src/sync/git";
 
 // Persistence types
 export type {

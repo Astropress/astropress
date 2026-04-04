@@ -22,6 +22,8 @@ The package must expose stable import paths for:
 
 - the main public API from `astropress`
 - host integration helpers from `astropress/integration`
+- first-party provider adapters from `astropress/adapters/*`
+- deploy/import/sync workflows from `astropress/deploy/*`, `astropress/import/*`, and `astropress/sync/*`
 - host-runtime seam typing from `astropress/host-runtime-modules`
 - typed local seam contracts from `astropress/local-runtime-modules`
 - provider/runtime stubs needed by consuming apps
