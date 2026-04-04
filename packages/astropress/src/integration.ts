@@ -23,9 +23,11 @@ export { defineAstropressHostRuntimeModules } from "./host-runtime-modules";
 export type { AstropressHostRuntimeModules } from "./host-runtime-modules";
 export {
   createAstropressAdminStoreModule,
+  createAstropressBootstrapAdminUsers,
   createAstropressCmsRegistryModule,
   createAstropressPasswordAuthModule,
 } from "./host-runtime-factories";
+export type { AstropressBootstrapAdminUser, AstropressBootstrapAdminUsersInput } from "./host-runtime-factories";
 export { createAstropressAdminStoreAdapter } from "./admin-store-adapter-factory";
 export {
   createAstropressLocalMediaRepository,

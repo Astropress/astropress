@@ -5,6 +5,22 @@ import type {
   LocalCmsRegistryModule,
 } from "./local-runtime-modules";
 
+export interface AstropressBootstrapAdminUser {
+  email: string;
+  role: "admin" | "editor";
+  name: string;
+  password: string;
+}
+
+export interface AstropressBootstrapAdminUsersInput {
+  adminPassword?: string;
+  editorPassword?: string;
+  adminEmail?: string;
+  adminName?: string;
+  editorEmail?: string;
+  editorName?: string;
+}
+
 export function createAstropressAdminStoreModule(
   getStore: () => AdminStoreAdapter,
 ): LocalAdminStoreModule {
@@ -170,4 +186,31 @@ export function createAstropressCmsRegistryModule(
     listArchiveRoutes: (...args) => registry.listArchiveRoutes(...args),
     saveArchiveRoute: (...args) => registry.saveArchiveRoute(...args),
   };
+}
+
+function requireBootstrapPassword(value: string | undefined, name: "ADMIN_PASSWORD" | "EDITOR_PASSWORD") {
+  if (!value) {
+    throw new Error(`${name} must be set to enable bootstrap admin authentication.`);
+  }
+
+  return value;
+}
+
+export function createAstropressBootstrapAdminUsers(
+  input: AstropressBootstrapAdminUsersInput,
+): AstropressBootstrapAdminUser[] {
+  return [
+    {
+      email: input.adminEmail ?? "admin@example.com",
+      password: requireBootstrapPassword(input.adminPassword, "ADMIN_PASSWORD"),
+      role: "admin",
+      name: input.adminName ?? "Admin",
+    },
+    {
+      email: input.editorEmail ?? "editor@example.com",
+      password: requireBootstrapPassword(input.editorPassword, "EDITOR_PASSWORD"),
+      role: "editor",
+      name: input.editorName ?? "Editor",
+    },
+  ];
 }

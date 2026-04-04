@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import {
   createAstropressAdminStoreModule,
+  createAstropressBootstrapAdminUsers,
   createAstropressCmsRegistryModule,
   createAstropressPasswordAuthModule,
 } from "../src/host-runtime-factories";
@@ -147,5 +148,31 @@ describe("host runtime factories", () => {
     expect(listSystemRoutes).toHaveBeenCalled();
     expect(registryModule.getArchiveRoute("/archive")).toBeNull();
     expect(getArchiveRoute).toHaveBeenCalledWith("/archive");
+  });
+
+  it("creates bootstrap admin users from runtime passwords", () => {
+    expect(
+      createAstropressBootstrapAdminUsers({
+        adminPassword: "admin-secret",
+        editorPassword: "editor-secret",
+        adminEmail: "admin@fleetfarming.org",
+        adminName: "Fleet Admin",
+        editorEmail: "editor@fleetfarming.org",
+        editorName: "Fleet Editor",
+      }),
+    ).toEqual([
+      {
+        email: "admin@fleetfarming.org",
+        password: "admin-secret",
+        role: "admin",
+        name: "Fleet Admin",
+      },
+      {
+        email: "editor@fleetfarming.org",
+        password: "editor-secret",
+        role: "editor",
+        name: "Fleet Editor",
+      },
+    ]);
   });
 });

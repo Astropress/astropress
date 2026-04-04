@@ -158,3 +158,28 @@ export function createAstropressCmsRegistryModule(registry) {
     saveArchiveRoute: (...args) => registry.saveArchiveRoute(...args),
   };
 }
+
+function requireBootstrapPassword(value, name) {
+  if (!value) {
+    throw new Error(`${name} must be set to enable bootstrap admin authentication.`);
+  }
+
+  return value;
+}
+
+export function createAstropressBootstrapAdminUsers(input) {
+  return [
+    {
+      email: input.adminEmail ?? "admin@example.com",
+      password: requireBootstrapPassword(input.adminPassword, "ADMIN_PASSWORD"),
+      role: "admin",
+      name: input.adminName ?? "Admin",
+    },
+    {
+      email: input.editorEmail ?? "editor@example.com",
+      password: requireBootstrapPassword(input.editorPassword, "EDITOR_PASSWORD"),
+      role: "editor",
+      name: input.editorName ?? "Editor",
+    },
+  ];
+}
