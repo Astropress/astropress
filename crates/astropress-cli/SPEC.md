@@ -39,3 +39,9 @@ The CLI must support:
 - commands should map to product workflows, not low-level provider internals
 - provider-specific behavior should be hidden behind shared command semantics
 - the CLI should stay aligned with the core package contracts rather than inventing separate concepts
+
+## Current Runtime State
+
+- `astropress new` should scaffold local SQLite defaults for a working non-technical admin flow
+- `astropress dev` should seed the packaged SQLite runtime before launching the local site
+- `astropress import wordpress`, `astropress sync export`, `astropress sync import`, and GitHub Pages deploy should invoke the packaged Astropress workflow modules instead of reimplementing those workflows directly in Rust

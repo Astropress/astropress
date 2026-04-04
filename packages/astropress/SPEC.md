@@ -15,6 +15,7 @@ The package is responsible for:
 - host-facing integration helpers
 - admin components and shared models
 - runtime utilities used by consuming Astro sites
+- packaged local runtime assets such as the SQLite schema/bootstrap/runtime path
 
 ## Package Contract
 
@@ -30,6 +31,13 @@ The package must expose stable import paths for:
 - current host-facing runtime modules during extraction
 
 The package should reduce host-specific glue over time by replacing temporary seams with real provider adapters.
+
+## Current Runtime State
+
+- `astropress/adapters/sqlite` is a first-party SQLite-backed adapter, not a placeholder capability shim
+- `astropress/sqlite-bootstrap` owns the packaged schema/bootstrap path for local admin databases
+- `astropress/sqlite-admin-runtime` owns the packaged Node SQLite admin runtime
+- Node-only runtime entry points stay on explicit subpaths and must not leak through the root package API into Cloudflare builds
 
 ## Design Constraints
 

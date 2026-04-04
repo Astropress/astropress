@@ -55,6 +55,19 @@ Host integration helpers:
 - `astropress/cloudflare-workers-stub` and `astropress/cloudflare-local-runtime-stubs` are exported as stable package entry points
 - current host-facing runtime modules are also exported as stable subpaths so consuming apps can stop using repo-relative `src` paths during extraction
 
+Current package-owned runtime surfaces:
+
+- `astropress/adapters/sqlite` is now a real SQLite-backed provider adapter
+- `astropress/sqlite-bootstrap` exposes the packaged schema/bootstrap toolkit for local admin databases
+- `astropress/sqlite-admin-runtime` exposes the packaged Node SQLite admin runtime
+- those Node-only SQLite entry points stay off the root `astropress` API and are stubbed out of Cloudflare builds
+
+Current CLI workflow behavior:
+
+- `astropress new` scaffolds the example site and writes local SQLite defaults in `.env` and `.data/`
+- `astropress dev` seeds the local SQLite runtime before starting the site
+- `astropress import wordpress`, `astropress sync export`, `astropress sync import`, and GitHub Pages deploy now call the packaged Astropress workflow modules rather than duplicating those workflows in Rust
+
 Why `local-runtime-modules` exists:
 
 - Astropress is intended to be reusable, but the actual admin store, auth backend, CMS registry, and local asset readers are host-app concerns until the full provider adapter layer is finished.
