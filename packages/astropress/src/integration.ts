@@ -22,3 +22,4 @@ export {
   createAstropressAdminStoreModule,
   createAstropressPasswordAuthModule,
 } from "./host-runtime-factories";
+export { createAstropressAdminStoreAdapter } from "./admin-store-adapter-factory";

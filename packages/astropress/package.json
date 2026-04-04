@@ -18,6 +18,7 @@
     "./vitest-runtime-alias": "./src/vitest-runtime-alias.js",
     "./host-runtime-modules": "./src/host-runtime-modules.js",
     "./host-runtime-factories": "./src/host-runtime-factories.js",
+    "./admin-store-adapter-factory": "./src/admin-store-adapter-factory.js",
     "./local-runtime-modules": "./src/local-runtime-modules.ts",
     "./cloudflare-workers-stub": "./src/cloudflare-workers-stub.ts",
     "./cloudflare-local-runtime-stubs": "./src/cloudflare-local-runtime-stubs.ts",
