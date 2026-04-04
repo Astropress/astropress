@@ -31,8 +31,10 @@ Development:
 
 Host integration helpers:
 
+- `astropress/integration` re-exports the current Vite, Vitest, and host-runtime helper surface from one place
 - `astropress/vite-runtime-alias` exposes reusable Vite alias/plugin helpers for `local-runtime-modules`
 - `astropress/vitest-runtime-alias` exposes reusable Vitest plugin helpers for external-package test runs
+- `astropress/local-runtime-modules` exposes the typed seam contract for host implementations
 - `astropress/cloudflare-workers-stub` and `astropress/cloudflare-local-runtime-stubs` are exported as stable package entry points
 - current host-facing runtime modules are also exported as stable subpaths so consuming apps can stop using repo-relative `src` paths during extraction
 
