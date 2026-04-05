@@ -523,6 +523,49 @@ fn format_env_map(values: &BTreeMap<String, String>) -> String {
     output
 }
 
+fn read_env_file(project_dir: &Path) -> Result<BTreeMap<String, String>, String> {
+    let env_path = project_dir.join(".env");
+    if !env_path.exists() {
+        return Ok(BTreeMap::new());
+    }
+
+    let contents = fs::read_to_string(env_path).map_err(io_error)?;
+    let mut values = BTreeMap::new();
+    for line in contents.lines() {
+        let trimmed = line.trim();
+        if trimmed.is_empty() || trimmed.starts_with('#') {
+            continue;
+        }
+
+        if let Some((key, value)) = trimmed.split_once('=') {
+            values.insert(key.trim().to_string(), value.trim().to_string());
+        }
+    }
+
+    Ok(values)
+}
+
+fn resolve_local_provider(project_dir: &Path, provider: Option<LocalProvider>) -> Result<LocalProvider, String> {
+    if let Some(provider) = provider {
+        return Ok(provider);
+    }
+
+    let env_values = read_env_file(project_dir)?;
+    if let Some(value) = env_values.get("ASTROPRESS_LOCAL_PROVIDER") {
+        return LocalProvider::parse(value);
+    }
+
+    Ok(LocalProvider::Sqlite)
+}
+
+fn resolve_admin_db_path(project_dir: &Path, provider: LocalProvider) -> Result<String, String> {
+    let env_values = read_env_file(project_dir)?;
+    Ok(env_values
+        .get("ADMIN_DB_PATH")
+        .cloned()
+        .unwrap_or_else(|| default_admin_db_relative_path(provider).to_string()))
+}
+
 fn load_project_scaffold(provider: LocalProvider) -> Result<ProjectScaffold, String> {
     let scaffold_module = package_module_import("project-scaffold.js")?;
     let scaffold_module_literal =
@@ -556,6 +599,7 @@ fn seed_local_sqlite_database(
     project_dir: &Path,
     package_manager: PackageManager,
     provider: LocalProvider,
+    db_path: &str,
 ) -> Result<(), String> {
     let script = r#"import { createDefaultAstropressSqliteSeedToolkit } from "astropress/sqlite-bootstrap";
 
@@ -580,7 +624,7 @@ console.log(`Seeded Astropress SQLite runtime at ${dbPath}`);
     let status = command
         .current_dir(project_dir)
         .env("ASTROPRESS_LOCAL_PROVIDER", provider.as_str())
-        .env("ADMIN_DB_PATH", default_admin_db_relative_path(provider))
+        .env("ADMIN_DB_PATH", db_path)
         .status()
         .map_err(io_error)?;
 
@@ -753,10 +797,11 @@ fn run_script(project_dir: &Path, script_name: &str) -> Result<ExitCode, String>
 
 fn run_dev_server(project_dir: &Path, provider: Option<LocalProvider>) -> Result<ExitCode, String> {
     let package_manager = detect_package_manager(project_dir);
-    let provider = provider.unwrap_or(LocalProvider::Sqlite);
+    let provider = resolve_local_provider(project_dir, provider)?;
+    let admin_db_path = resolve_admin_db_path(project_dir, provider)?;
     install_dependencies_if_needed(project_dir, package_manager)?;
     ensure_local_provider_defaults(project_dir)?;
-    seed_local_sqlite_database(project_dir, package_manager, provider)?;
+    seed_local_sqlite_database(project_dir, package_manager, provider, &admin_db_path)?;
 
     let mut command = match package_manager {
         PackageManager::Bun => {
@@ -773,7 +818,7 @@ fn run_dev_server(project_dir: &Path, provider: Option<LocalProvider>) -> Result
     let status = command
         .current_dir(project_dir)
         .env("ASTROPRESS_LOCAL_PROVIDER", provider.as_str())
-        .env("ADMIN_DB_PATH", default_admin_db_relative_path(provider))
+        .env("ADMIN_DB_PATH", &admin_db_path)
         .status()
         .map_err(io_error)?;
 
@@ -996,7 +1041,8 @@ mod tests {
     use super::{
         command_available, default_admin_db_relative_path, deploy_script_for_target,
         ensure_local_provider_defaults, export_project_snapshot, import_project_snapshot, parse_command,
-        sanitize_package_name, scaffold_new_project, stage_wordpress_import, Command, LocalProvider, PackageManifest,
+        read_env_file, resolve_admin_db_path, resolve_local_provider, sanitize_package_name, scaffold_new_project,
+        stage_wordpress_import, Command, LocalProvider, PackageManifest,
     };
     use std::collections::BTreeMap;
     use std::fs;
@@ -1143,6 +1189,41 @@ mod tests {
         ensure_local_provider_defaults(&root).unwrap();
 
         assert!(root.join(".data/.gitkeep").exists());
+    }
+
+    #[test]
+    fn reads_provider_and_db_path_from_env() {
+        let root = temp_dir("env-config");
+        fs::write(
+            root.join(".env"),
+            "ASTROPRESS_LOCAL_PROVIDER=runway\nADMIN_DB_PATH=.data/custom-runway.sqlite\n",
+        )
+        .unwrap();
+
+        let env_values = read_env_file(&root).unwrap();
+        assert_eq!(
+            env_values.get("ASTROPRESS_LOCAL_PROVIDER"),
+            Some(&"runway".to_string())
+        );
+        assert_eq!(
+            resolve_local_provider(&root, None).unwrap(),
+            LocalProvider::Runway
+        );
+        assert_eq!(
+            resolve_admin_db_path(&root, LocalProvider::Runway).unwrap(),
+            ".data/custom-runway.sqlite"
+        );
+    }
+
+    #[test]
+    fn explicit_provider_overrides_env_provider() {
+        let root = temp_dir("env-provider-override");
+        fs::write(root.join(".env"), "ASTROPRESS_LOCAL_PROVIDER=runway\n").unwrap();
+
+        assert_eq!(
+            resolve_local_provider(&root, Some(LocalProvider::Supabase)).unwrap(),
+            LocalProvider::Supabase
+        );
     }
 
     #[test]
