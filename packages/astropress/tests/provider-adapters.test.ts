@@ -149,20 +149,24 @@ describe("provider adapters", () => {
       detectedMedia: 1,
       detectedComments: 1,
       detectedUsers: 1,
+      detectedShortcodes: 1,
+      detectedBuilderMarkers: 0,
     });
     expect(inventory?.warnings).toContain(
-      "Potential shortcode or builder markup detected; manual review may be required.",
+      "WordPress shortcodes were detected; imported content will need manual review.",
     );
     expect(report).toMatchObject({
       importedRecords: 2,
       importedMedia: 1,
       importedComments: 0,
       importedUsers: 1,
+      reviewRequired: true,
       plan: {
         exportFile,
         includeComments: false,
         includeUsers: true,
         includeMedia: true,
+        reviewRequired: true,
       },
       inventory: {
         exportFile,
@@ -926,18 +930,29 @@ describe("provider adapters", () => {
       `
         <rss>
           <channel>
+            <wp:author><wp:author_login>admin</wp:author_login></wp:author>
             <item><title>One</title><wp:attachment_url>https://cdn.example.com/a.jpg</wp:attachment_url></item>
-            <item><title>Two</title></item>
+            <item><title>Two</title><content:encoded><![CDATA[[gallery ids="1,2"] <div class="elementor-section">Body</div>]]></content:encoded><wp:comment><wp:comment_id>1</wp:comment_id></wp:comment></item>
           </channel>
         </rss>
       `,
     );
 
     const importer = createAstropressWordPressImportSource();
-    const result = await importer.importWordPress({ exportFile });
+    const inventory = await importer.inspectWordPress?.({ exportFile });
+    const plan = await importer.planWordPressImport?.({ inventory: inventory! });
+    const result = await importer.importWordPress({ exportFile, plan });
 
+    expect(inventory?.detectedUsers).toBe(1);
+    expect(inventory?.detectedComments).toBe(1);
+    expect(inventory?.detectedShortcodes).toBe(1);
+    expect(inventory?.detectedBuilderMarkers).toBeGreaterThan(0);
+    expect(inventory?.unsupportedPatterns).toContain("shortcodes");
+    expect(plan?.reviewRequired).toBe(true);
     expect(result.importedRecords).toBe(2);
     expect(result.importedMedia).toBe(1);
+    expect(result.reviewRequired).toBe(true);
+    expect(result.manualTasks.length).toBeGreaterThan(0);
 
     await rm(workspace, { recursive: true, force: true });
   });

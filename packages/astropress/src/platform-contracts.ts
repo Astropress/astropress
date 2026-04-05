@@ -92,12 +92,19 @@ export interface ImportSource {
     includeUsers?: boolean;
     includeMedia?: boolean;
   }): Promise<AstropressWordPressImportInventory>;
+  planWordPressImport?(input: {
+    inventory: AstropressWordPressImportInventory;
+    includeComments?: boolean;
+    includeUsers?: boolean;
+    includeMedia?: boolean;
+  }): Promise<AstropressWordPressImportPlan>;
   importWordPress(input: {
     sourceUrl?: string;
     exportFile?: string;
     includeComments?: boolean;
     includeUsers?: boolean;
     includeMedia?: boolean;
+    plan?: AstropressWordPressImportPlan;
   }): Promise<AstropressWordPressImportReport>;
 }
 
@@ -108,6 +115,9 @@ export interface AstropressWordPressImportInventory {
   detectedMedia: number;
   detectedComments: number;
   detectedUsers: number;
+  detectedShortcodes: number;
+  detectedBuilderMarkers: number;
+  unsupportedPatterns: string[];
   warnings: string[];
 }
 
@@ -117,6 +127,8 @@ export interface AstropressWordPressImportPlan {
   includeComments: boolean;
   includeUsers: boolean;
   includeMedia: boolean;
+  reviewRequired: boolean;
+  manualTasks: string[];
 }
 
 export interface AstropressWordPressImportReport {
@@ -124,6 +136,8 @@ export interface AstropressWordPressImportReport {
   importedMedia: number;
   importedComments: number;
   importedUsers: number;
+  reviewRequired: boolean;
+  manualTasks: string[];
   plan: AstropressWordPressImportPlan;
   inventory: AstropressWordPressImportInventory;
   warnings: string[];

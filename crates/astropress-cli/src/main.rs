@@ -174,6 +174,9 @@ struct WordPressImportInventory {
     detected_media: usize,
     detected_comments: usize,
     detected_users: usize,
+    detected_shortcodes: usize,
+    detected_builder_markers: usize,
+    unsupported_patterns: Vec<String>,
     warnings: Vec<String>,
 }
 
@@ -182,6 +185,8 @@ struct WordPressImportPlan {
     include_comments: bool,
     include_users: bool,
     include_media: bool,
+    review_required: bool,
+    manual_tasks: Vec<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -190,6 +195,8 @@ struct WordPressImportResult {
     imported_media: usize,
     imported_comments: usize,
     imported_users: usize,
+    review_required: bool,
+    manual_tasks: Vec<String>,
     inventory: WordPressImportInventory,
     plan: WordPressImportPlan,
     warnings: Vec<String>,
@@ -1081,23 +1088,31 @@ fn stage_wordpress_import(project_dir: &Path, source_path: &Path) -> Result<(), 
         r#"import {{ createAstropressWordPressImportSource }} from {};
 const importer = createAstropressWordPressImportSource();
 const inventory = await importer.inspectWordPress({{ exportFile: {} }});
-const result = await importer.importWordPress({{ exportFile: {} }});
+const plan = await importer.planWordPressImport({{ inventory }});
+const result = await importer.importWordPress({{ exportFile: {}, plan }});
 console.log(JSON.stringify({{
   imported_records: result.importedRecords,
   imported_media: result.importedMedia,
   imported_comments: result.importedComments,
   imported_users: result.importedUsers,
+  review_required: result.reviewRequired,
+  manual_tasks: result.manualTasks,
   inventory: {{
     detected_records: inventory.detectedRecords,
     detected_media: inventory.detectedMedia,
     detected_comments: inventory.detectedComments,
     detected_users: inventory.detectedUsers,
+    detected_shortcodes: inventory.detectedShortcodes,
+    detected_builder_markers: inventory.detectedBuilderMarkers,
+    unsupported_patterns: inventory.unsupportedPatterns,
     warnings: inventory.warnings,
   }},
   plan: {{
-    include_comments: result.plan.includeComments,
-    include_users: result.plan.includeUsers,
-    include_media: result.plan.includeMedia,
+    include_comments: plan.includeComments,
+    include_users: plan.includeUsers,
+    include_media: plan.includeMedia,
+    review_required: plan.reviewRequired,
+    manual_tasks: plan.manualTasks,
   }},
   warnings: result.warnings,
 }}));"#,
@@ -1158,6 +1173,13 @@ console.log(JSON.stringify({{
         result.imported_users,
         source_path.display()
     );
+    println!(
+        "Detected {} shortcodes and {} builder markers",
+        result.inventory.detected_shortcodes, result.inventory.detected_builder_markers
+    );
+    if result.review_required {
+        println!("Manual review is required for this import.");
+    }
     if !result.warnings.is_empty() {
         println!("Warnings:");
         for warning in result.warnings {
