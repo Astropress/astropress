@@ -67,7 +67,8 @@ Current package-owned runtime surfaces:
 Current CLI workflow behavior:
 
 - `astropress new` scaffolds the example site and writes local SQLite defaults in `.env` and `.data/`
-- `astropress dev` seeds the local SQLite runtime before starting the site
+- `astropress new --provider sqlite|supabase|runway` scaffolds the example site with a matching local provider default in `.env`
+- `astropress dev --provider sqlite|supabase|runway` seeds the matching local SQLite-backed provider runtime before starting the site
 - `astropress import wordpress`, `astropress sync export`, `astropress sync import`, and GitHub Pages deploy now call the packaged Astropress workflow modules rather than duplicating those workflows in Rust
 
 Why `local-runtime-modules` exists:

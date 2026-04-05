@@ -14,11 +14,15 @@ fn main() -> ExitCode {
         Ok(Command::New {
             project_dir,
             use_local_package,
-        }) => match scaffold_new_project(&project_dir, use_local_package) {
+            provider,
+        }) => match scaffold_new_project(&project_dir, use_local_package, provider) {
             Ok(()) => ExitCode::SUCCESS,
             Err(error) => fail(error),
         },
-        Ok(Command::Dev { project_dir }) => match run_dev_server(&project_dir) {
+        Ok(Command::Dev {
+            project_dir,
+            provider,
+        }) => match run_dev_server(&project_dir, provider) {
             Ok(code) => code,
             Err(error) => fail(error),
         },
@@ -73,9 +77,11 @@ enum Command {
     New {
         project_dir: PathBuf,
         use_local_package: bool,
+        provider: LocalProvider,
     },
     Dev {
         project_dir: PathBuf,
+        provider: Option<LocalProvider>,
     },
     ImportWordPress {
         project_dir: PathBuf,
@@ -100,6 +106,42 @@ enum Command {
 enum PackageManager {
     Bun,
     Npm,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum LocalProvider {
+    Sqlite,
+    Supabase,
+    Runway,
+}
+
+impl LocalProvider {
+    fn parse(value: &str) -> Result<Self, String> {
+        match value {
+            "sqlite" => Ok(Self::Sqlite),
+            "supabase" => Ok(Self::Supabase),
+            "runway" => Ok(Self::Runway),
+            other => Err(format!(
+                "Unsupported local provider `{other}`. Use sqlite, supabase, or runway."
+            )),
+        }
+    }
+
+    fn as_str(self) -> &'static str {
+        match self {
+            Self::Sqlite => "sqlite",
+            Self::Supabase => "supabase",
+            Self::Runway => "runway",
+        }
+    }
+
+    fn default_admin_db_relative_path(self) -> &'static str {
+        match self {
+            Self::Sqlite => ".data/admin.sqlite",
+            Self::Supabase => ".data/supabase-admin.sqlite",
+            Self::Runway => ".data/runway-admin.sqlite",
+        }
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -173,11 +215,20 @@ fn parse_command(args: &[String]) -> Result<Command, String> {
 fn parse_new_command(args: &[String]) -> Result<Command, String> {
     let mut project_dir = PathBuf::from("astropress-site");
     let mut use_local_package = true;
+    let mut provider = LocalProvider::Sqlite;
+    let mut index = 0;
 
-    for arg in args {
-        match arg.as_str() {
+    while index < args.len() {
+        match args[index].as_str() {
             "--use-published-package" => use_local_package = false,
             "--use-local-package" => use_local_package = true,
+            "--provider" => {
+                index += 1;
+                let value = args
+                    .get(index)
+                    .ok_or_else(|| "Missing value after `--provider`.".to_string())?;
+                provider = LocalProvider::parse(value)?;
+            }
             value if value.starts_with("--") => {
                 return Err(format!("Unsupported astropress new option: `{value}`."));
             }
@@ -185,24 +236,47 @@ fn parse_new_command(args: &[String]) -> Result<Command, String> {
                 project_dir = PathBuf::from(value);
             }
         }
+        index += 1;
     }
 
     Ok(Command::New {
         project_dir,
         use_local_package,
+        provider,
     })
 }
 
 fn parse_dev_command(args: &[String]) -> Result<Command, String> {
-    if args.len() > 1 {
-        return Err("Usage: `astropress dev [project-dir]`.".into());
+    let mut project_dir = env::current_dir().unwrap_or_else(|_| PathBuf::from("."));
+    let mut provider = None;
+    let mut index = 0;
+    let mut positional_project_dir = None;
+
+    while index < args.len() {
+        match args[index].as_str() {
+            "--provider" => {
+                index += 1;
+                let value = args
+                    .get(index)
+                    .ok_or_else(|| "Missing value after `--provider`.".to_string())?;
+                provider = Some(LocalProvider::parse(value)?);
+            }
+            value if value.starts_with("--") => {
+                return Err(format!("Unsupported astropress dev option: `{value}`."));
+            }
+            value => {
+                if positional_project_dir.is_some() {
+                    return Err("Usage: `astropress dev [project-dir] [--provider sqlite|supabase|runway]`.".into());
+                }
+                positional_project_dir = Some(PathBuf::from(value));
+            }
+        }
+        index += 1;
     }
 
     Ok(Command::Dev {
-        project_dir: args
-            .first()
-            .map(PathBuf::from)
-            .unwrap_or_else(|| env::current_dir().unwrap_or_else(|_| PathBuf::from("."))),
+        project_dir: positional_project_dir.unwrap_or_else(|| std::mem::take(&mut project_dir)),
+        provider,
     })
 }
 
@@ -341,8 +415,8 @@ fn parse_deploy_command(args: &[String]) -> Result<Command, String> {
 fn print_help() {
     println!("astropress-cli");
     println!("Commands:");
-    println!("  astropress new [project-dir] [--use-local-package|--use-published-package]");
-    println!("  astropress dev [project-dir]");
+    println!("  astropress new [project-dir] [--provider sqlite|supabase|runway] [--use-local-package|--use-published-package]");
+    println!("  astropress dev [project-dir] [--provider sqlite|supabase|runway]");
     println!("  astropress import wordpress --source <export.xml> [--project-dir <dir>]");
     println!("  astropress sync export [--project-dir <dir>] [--out <snapshot-dir>]");
     println!("  astropress sync import --from <snapshot-dir> [--project-dir <dir>]");
@@ -412,11 +486,11 @@ fn write_package_manifest(project_dir: &Path, manifest: &PackageManifest) -> Res
     fs::write(project_dir.join("package.json"), format!("{package_json}\n")).map_err(io_error)
 }
 
-fn default_admin_db_relative_path() -> &'static str {
-    ".data/admin.sqlite"
+fn default_admin_db_relative_path(provider: LocalProvider) -> &'static str {
+    provider.default_admin_db_relative_path()
 }
 
-fn ensure_local_sqlite_defaults(project_dir: &Path) -> Result<(), String> {
+fn ensure_local_provider_defaults(project_dir: &Path, provider: LocalProvider) -> Result<(), String> {
     let data_dir = project_dir.join(".data");
     fs::create_dir_all(&data_dir).map_err(io_error)?;
 
@@ -430,8 +504,9 @@ fn ensure_local_sqlite_defaults(project_dir: &Path) -> Result<(), String> {
         fs::write(
             &env_path,
             format!(
-                "ADMIN_DB_PATH={}\nADMIN_PASSWORD=fleet-test-admin-password\nEDITOR_PASSWORD=fleet-test-editor-password\n",
-                default_admin_db_relative_path()
+                "ASTROPRESS_LOCAL_PROVIDER={}\nADMIN_DB_PATH={}\nADMIN_PASSWORD=fleet-test-admin-password\nEDITOR_PASSWORD=fleet-test-editor-password\n",
+                provider.as_str(),
+                default_admin_db_relative_path(provider)
             ),
         )
         .map_err(io_error)?;
@@ -440,7 +515,11 @@ fn ensure_local_sqlite_defaults(project_dir: &Path) -> Result<(), String> {
     Ok(())
 }
 
-fn seed_local_sqlite_database(project_dir: &Path, package_manager: PackageManager) -> Result<(), String> {
+fn seed_local_sqlite_database(
+    project_dir: &Path,
+    package_manager: PackageManager,
+    provider: LocalProvider,
+) -> Result<(), String> {
     let script = r#"import { createDefaultAstropressSqliteSeedToolkit } from "astropress/sqlite-bootstrap";
 
 const toolkit = createDefaultAstropressSqliteSeedToolkit();
@@ -449,18 +528,24 @@ toolkit.seedDatabase({ dbPath, workspaceRoot: process.cwd() });
 console.log(`Seeded Astropress SQLite runtime at ${dbPath}`);
 "#;
 
-    let status = match package_manager {
-        PackageManager::Bun => ProcessCommand::new("bun")
-            .args(["--eval", script])
-            .current_dir(project_dir)
-            .status()
-            .map_err(io_error)?,
-        PackageManager::Npm => ProcessCommand::new("node")
-            .args(["--input-type=module", "--eval", script])
-            .current_dir(project_dir)
-            .status()
-            .map_err(io_error)?,
+    let mut command = match package_manager {
+        PackageManager::Bun => {
+            let mut command = ProcessCommand::new("bun");
+            command.args(["--eval", script]);
+            command
+        }
+        PackageManager::Npm => {
+            let mut command = ProcessCommand::new("node");
+            command.args(["--input-type=module", "--eval", script]);
+            command
+        }
     };
+    let status = command
+        .current_dir(project_dir)
+        .env("ASTROPRESS_LOCAL_PROVIDER", provider.as_str())
+        .env("ADMIN_DB_PATH", default_admin_db_relative_path(provider))
+        .status()
+        .map_err(io_error)?;
 
     if status.success() {
         Ok(())
@@ -469,7 +554,11 @@ console.log(`Seeded Astropress SQLite runtime at ${dbPath}`);
     }
 }
 
-fn scaffold_new_project(project_dir: &Path, use_local_package: bool) -> Result<(), String> {
+fn scaffold_new_project(
+    project_dir: &Path,
+    use_local_package: bool,
+    provider: LocalProvider,
+) -> Result<(), String> {
     if project_dir.exists() {
         let mut entries = fs::read_dir(project_dir).map_err(io_error)?;
         if entries.next().transpose().map_err(io_error)?.is_some() {
@@ -500,7 +589,7 @@ fn scaffold_new_project(project_dir: &Path, use_local_package: bool) -> Result<(
         },
     );
     write_package_manifest(project_dir, &manifest)?;
-    ensure_local_sqlite_defaults(project_dir)?;
+    ensure_local_provider_defaults(project_dir, provider)?;
 
     fs::write(
         project_dir.join(".gitignore"),
@@ -509,6 +598,7 @@ fn scaffold_new_project(project_dir: &Path, use_local_package: bool) -> Result<(
     .map_err(io_error)?;
 
     println!("Scaffolded Astropress project at {}", project_dir.display());
+    println!("Local provider: {}", provider.as_str());
     println!("Next steps:");
     println!("  cd {}", project_dir.display());
     println!("  bun install");
@@ -616,24 +706,31 @@ fn run_script(project_dir: &Path, script_name: &str) -> Result<ExitCode, String>
     Ok(ExitCode::from(status.code().unwrap_or(1) as u8))
 }
 
-fn run_dev_server(project_dir: &Path) -> Result<ExitCode, String> {
+fn run_dev_server(project_dir: &Path, provider: Option<LocalProvider>) -> Result<ExitCode, String> {
     let package_manager = detect_package_manager(project_dir);
+    let provider = provider.unwrap_or(LocalProvider::Sqlite);
     install_dependencies_if_needed(project_dir, package_manager)?;
-    ensure_local_sqlite_defaults(project_dir)?;
-    seed_local_sqlite_database(project_dir, package_manager)?;
+    ensure_local_provider_defaults(project_dir, provider)?;
+    seed_local_sqlite_database(project_dir, package_manager, provider)?;
 
-    let status = match package_manager {
-        PackageManager::Bun => ProcessCommand::new("bun")
-            .args(["run", "dev"])
-            .current_dir(project_dir)
-            .status()
-            .map_err(io_error)?,
-        PackageManager::Npm => ProcessCommand::new("npm")
-            .args(["run", "dev"])
-            .current_dir(project_dir)
-            .status()
-            .map_err(io_error)?,
+    let mut command = match package_manager {
+        PackageManager::Bun => {
+            let mut command = ProcessCommand::new("bun");
+            command.args(["run", "dev"]);
+            command
+        }
+        PackageManager::Npm => {
+            let mut command = ProcessCommand::new("npm");
+            command.args(["run", "dev"]);
+            command
+        }
     };
+    let status = command
+        .current_dir(project_dir)
+        .env("ASTROPRESS_LOCAL_PROVIDER", provider.as_str())
+        .env("ADMIN_DB_PATH", default_admin_db_relative_path(provider))
+        .status()
+        .map_err(io_error)?;
 
     Ok(ExitCode::from(status.code().unwrap_or(1) as u8))
 }
@@ -853,8 +950,8 @@ fn io_error(error: io::Error) -> String {
 mod tests {
     use super::{
         command_available, default_admin_db_relative_path, deploy_script_for_target,
-        ensure_local_sqlite_defaults, export_project_snapshot, import_project_snapshot, parse_command,
-        sanitize_package_name, scaffold_new_project, stage_wordpress_import, Command, PackageManifest,
+        ensure_local_provider_defaults, export_project_snapshot, import_project_snapshot, parse_command,
+        sanitize_package_name, scaffold_new_project, stage_wordpress_import, Command, LocalProvider, PackageManifest,
     };
     use std::collections::BTreeMap;
     use std::fs;
@@ -898,6 +995,20 @@ mod tests {
             Ok(Command::New { .. })
         ));
         assert!(matches!(parse_command(&strings(&["dev"])), Ok(Command::Dev { .. })));
+        assert!(matches!(
+            parse_command(&strings(&["new", "demo", "--provider", "supabase"])),
+            Ok(Command::New {
+                provider: LocalProvider::Supabase,
+                ..
+            })
+        ));
+        assert!(matches!(
+            parse_command(&strings(&["dev", "--provider", "runway"])),
+            Ok(Command::Dev {
+                provider: Some(LocalProvider::Runway),
+                ..
+            })
+        ));
         assert!(matches!(
             parse_command(&strings(&["deploy", "--target", "cloudflare"])),
             Ok(Command::Deploy { .. })
@@ -958,7 +1069,7 @@ mod tests {
     fn scaffolds_new_project_from_example() {
         let root = temp_dir("new");
         let project_dir = root.join("demo");
-        scaffold_new_project(&project_dir, true).unwrap();
+        scaffold_new_project(&project_dir, true, LocalProvider::Supabase).unwrap();
 
         let package_json = fs::read_to_string(project_dir.join("package.json")).unwrap();
         assert!(package_json.contains("\"name\": \"demo\""));
@@ -966,8 +1077,8 @@ mod tests {
         assert_eq!(
             fs::read_to_string(project_dir.join(".env")).unwrap(),
             format!(
-                "ADMIN_DB_PATH={}\nADMIN_PASSWORD=fleet-test-admin-password\nEDITOR_PASSWORD=fleet-test-editor-password\n",
-                default_admin_db_relative_path()
+                "ASTROPRESS_LOCAL_PROVIDER=supabase\nADMIN_DB_PATH={}\nADMIN_PASSWORD=fleet-test-admin-password\nEDITOR_PASSWORD=fleet-test-editor-password\n",
+                default_admin_db_relative_path(LocalProvider::Supabase)
             )
         );
         assert!(project_dir.join(".data/.gitkeep").exists());
@@ -979,7 +1090,7 @@ mod tests {
         let root = temp_dir("env");
         fs::write(root.join(".env"), "ADMIN_DB_PATH=custom.sqlite\n").unwrap();
 
-        ensure_local_sqlite_defaults(&root).unwrap();
+        ensure_local_provider_defaults(&root, LocalProvider::Runway).unwrap();
 
         assert_eq!(
             fs::read_to_string(root.join(".env")).unwrap(),
