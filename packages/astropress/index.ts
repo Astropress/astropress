@@ -34,11 +34,13 @@ export {
   resolveAstropressDeployTarget,
   resolveAstropressHostedProviderFromEnv,
   resolveAstropressLocalProviderFromEnv,
+  resolveAstropressProjectEnvContract,
 } from "./src/project-env.js";
 export type {
   AstropressDeployTargetEnv,
   AstropressHostedProviderEnv,
   AstropressLocalProviderEnv,
+  AstropressProjectEnvContract,
 } from "./src/project-env";
 export { createAstropressHostedPlatformAdapter } from "./src/hosted-platform-adapter.js";
 export type { AstropressHostedPlatformAdapterOptions } from "./src/hosted-platform-adapter";

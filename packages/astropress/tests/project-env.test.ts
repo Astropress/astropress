@@ -3,6 +3,7 @@ import {
   resolveAstropressDeployTarget,
   resolveAstropressHostedProviderFromEnv,
   resolveAstropressLocalProviderFromEnv,
+  resolveAstropressProjectEnvContract,
 } from "../src/project-env.js";
 
 describe("project env", () => {
@@ -35,5 +36,19 @@ describe("project env", () => {
       "supabase",
     );
     expect(resolveAstropressDeployTarget({ ASTROPRESS_LOCAL_PROVIDER: "runway" })).toBe("runway");
+  });
+
+  it("returns a single resolved project env contract", () => {
+    expect(
+      resolveAstropressProjectEnvContract({
+        ASTROPRESS_LOCAL_PROVIDER: "supabase",
+        ASTROPRESS_HOSTED_PROVIDER: "runway",
+        ASTROPRESS_DEPLOY_TARGET: "cloudflare",
+      }),
+    ).toEqual({
+      localProvider: "supabase",
+      hostedProvider: "runway",
+      deployTarget: "cloudflare",
+    });
   });
 });

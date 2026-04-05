@@ -6,6 +6,12 @@ export type AstropressDeployTargetEnv =
   | "supabase"
   | "runway";
 
+export interface AstropressProjectEnvContract {
+  localProvider: AstropressLocalProviderEnv;
+  hostedProvider: AstropressHostedProviderEnv;
+  deployTarget: AstropressDeployTargetEnv;
+}
+
 export function resolveAstropressLocalProviderFromEnv(
   env: Record<string, string | undefined> = process.env,
 ): AstropressLocalProviderEnv {
@@ -43,4 +49,14 @@ export function resolveAstropressDeployTarget(
     return "runway";
   }
   return "github-pages";
+}
+
+export function resolveAstropressProjectEnvContract(
+  env: Record<string, string | undefined> = process.env,
+): AstropressProjectEnvContract {
+  return {
+    localProvider: resolveAstropressLocalProviderFromEnv(env),
+    hostedProvider: resolveAstropressHostedProviderFromEnv(env),
+    deployTarget: resolveAstropressDeployTarget(env),
+  };
 }

@@ -29,3 +29,11 @@ export function resolveAstropressDeployTarget(env = process.env) {
   }
   return "github-pages";
 }
+
+export function resolveAstropressProjectEnvContract(env = process.env) {
+  return {
+    localProvider: resolveAstropressLocalProviderFromEnv(env),
+    hostedProvider: resolveAstropressHostedProviderFromEnv(env),
+    deployTarget: resolveAstropressDeployTarget(env)
+  };
+}
