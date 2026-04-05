@@ -186,6 +186,17 @@ struct DeployResult {
     url: Option<String>,
 }
 
+#[derive(Debug, Deserialize)]
+struct ProjectScaffold {
+    provider: String,
+    #[serde(rename = "recommendedDeployTarget")]
+    recommended_deploy_target: String,
+    #[serde(rename = "localEnv")]
+    local_env: BTreeMap<String, String>,
+    #[serde(rename = "envExample")]
+    env_example: BTreeMap<String, String>,
+}
+
 fn parse_command(args: &[String]) -> Result<Command, String> {
     match args {
         [] => Ok(Command::Help),
@@ -490,7 +501,7 @@ fn default_admin_db_relative_path(provider: LocalProvider) -> &'static str {
     provider.default_admin_db_relative_path()
 }
 
-fn ensure_local_provider_defaults(project_dir: &Path, provider: LocalProvider) -> Result<(), String> {
+fn ensure_local_provider_defaults(project_dir: &Path) -> Result<(), String> {
     let data_dir = project_dir.join(".data");
     fs::create_dir_all(&data_dir).map_err(io_error)?;
 
@@ -498,21 +509,47 @@ fn ensure_local_provider_defaults(project_dir: &Path, provider: LocalProvider) -
     if !gitkeep_path.exists() {
         fs::write(&gitkeep_path, "").map_err(io_error)?;
     }
+    Ok(())
+}
 
-    let env_path = project_dir.join(".env");
-    if !env_path.exists() {
-        fs::write(
-            &env_path,
-            format!(
-                "ASTROPRESS_LOCAL_PROVIDER={}\nADMIN_DB_PATH={}\nADMIN_PASSWORD=fleet-test-admin-password\nEDITOR_PASSWORD=fleet-test-editor-password\n",
-                provider.as_str(),
-                default_admin_db_relative_path(provider)
-            ),
-        )
+fn format_env_map(values: &BTreeMap<String, String>) -> String {
+    let mut output = String::new();
+    for (key, value) in values {
+        output.push_str(key);
+        output.push('=');
+        output.push_str(value);
+        output.push('\n');
+    }
+    output
+}
+
+fn load_project_scaffold(provider: LocalProvider) -> Result<ProjectScaffold, String> {
+    let scaffold_module = package_module_import("project-scaffold.js")?;
+    let scaffold_module_literal =
+        serde_json::to_string(&scaffold_module).map_err(|error| error.to_string())?;
+    let script = format!(
+        r#"import {{ createAstropressProjectScaffold }} from {module};
+
+const scaffold = createAstropressProjectScaffold("{provider}");
+console.log(JSON.stringify(scaffold));
+"#,
+        module = scaffold_module_literal,
+        provider = provider.as_str()
+    );
+
+    let output = ProcessCommand::new("node")
+        .args(["--input-type=module", "--eval", &script])
+        .output()
         .map_err(io_error)?;
+
+    if !output.status.success() {
+        return Err(format!(
+            "Failed to load Astropress scaffold defaults: {}",
+            String::from_utf8_lossy(&output.stderr).trim()
+        ));
     }
 
-    Ok(())
+    serde_json::from_slice::<ProjectScaffold>(&output.stdout).map_err(|error| error.to_string())
 }
 
 fn seed_local_sqlite_database(
@@ -589,7 +626,11 @@ fn scaffold_new_project(
         },
     );
     write_package_manifest(project_dir, &manifest)?;
-    ensure_local_provider_defaults(project_dir, provider)?;
+    ensure_local_provider_defaults(project_dir)?;
+    let scaffold = load_project_scaffold(provider)?;
+    fs::write(project_dir.join(".env"), format_env_map(&scaffold.local_env)).map_err(io_error)?;
+    fs::write(project_dir.join(".env.example"), format_env_map(&scaffold.env_example))
+        .map_err(io_error)?;
 
     fs::write(
         project_dir.join(".gitignore"),
@@ -598,7 +639,11 @@ fn scaffold_new_project(
     .map_err(io_error)?;
 
     println!("Scaffolded Astropress project at {}", project_dir.display());
-    println!("Local provider: {}", provider.as_str());
+    println!("Local provider: {}", scaffold.provider);
+    println!(
+        "Recommended deploy target: {}",
+        scaffold.recommended_deploy_target
+    );
     println!("Next steps:");
     println!("  cd {}", project_dir.display());
     println!("  bun install");
@@ -710,7 +755,7 @@ fn run_dev_server(project_dir: &Path, provider: Option<LocalProvider>) -> Result
     let package_manager = detect_package_manager(project_dir);
     let provider = provider.unwrap_or(LocalProvider::Sqlite);
     install_dependencies_if_needed(project_dir, package_manager)?;
-    ensure_local_provider_defaults(project_dir, provider)?;
+    ensure_local_provider_defaults(project_dir)?;
     seed_local_sqlite_database(project_dir, package_manager, provider)?;
 
     let mut command = match package_manager {
@@ -1074,28 +1119,29 @@ mod tests {
         let package_json = fs::read_to_string(project_dir.join("package.json")).unwrap();
         assert!(package_json.contains("\"name\": \"demo\""));
         assert!(package_json.contains("\"astropress\": \"file:"));
-        assert_eq!(
-            fs::read_to_string(project_dir.join(".env")).unwrap(),
-            format!(
-                "ASTROPRESS_LOCAL_PROVIDER=supabase\nADMIN_DB_PATH={}\nADMIN_PASSWORD=fleet-test-admin-password\nEDITOR_PASSWORD=fleet-test-editor-password\n",
-                default_admin_db_relative_path(LocalProvider::Supabase)
-            )
-        );
+        let env_contents = fs::read_to_string(project_dir.join(".env")).unwrap();
+        assert!(env_contents.contains("ASTROPRESS_LOCAL_PROVIDER=supabase"));
+        assert!(env_contents.contains(&format!(
+            "ADMIN_DB_PATH={}",
+            default_admin_db_relative_path(LocalProvider::Supabase)
+        )));
+        assert!(env_contents.contains("ADMIN_PASSWORD=fleet-test-admin-password"));
+        assert!(env_contents.contains("EDITOR_PASSWORD=fleet-test-editor-password"));
+        let env_example = fs::read_to_string(project_dir.join(".env.example")).unwrap();
+        assert!(env_example.contains("SUPABASE_URL=https://your-project.supabase.co"));
+        assert!(env_example.contains("SUPABASE_ANON_KEY=replace-me"));
+        assert!(env_example.contains("SUPABASE_SERVICE_ROLE_KEY=replace-me"));
         assert!(project_dir.join(".data/.gitkeep").exists());
         assert!(project_dir.join("src/pages/index.astro").exists());
     }
 
     #[test]
-    fn preserves_existing_env_when_setting_sqlite_defaults() {
+    fn preserves_existing_data_dir_when_setting_sqlite_defaults() {
         let root = temp_dir("env");
-        fs::write(root.join(".env"), "ADMIN_DB_PATH=custom.sqlite\n").unwrap();
+        fs::write(root.join(".data-existing"), "").unwrap();
 
-        ensure_local_provider_defaults(&root, LocalProvider::Runway).unwrap();
+        ensure_local_provider_defaults(&root).unwrap();
 
-        assert_eq!(
-            fs::read_to_string(root.join(".env")).unwrap(),
-            "ADMIN_DB_PATH=custom.sqlite\n"
-        );
         assert!(root.join(".data/.gitkeep").exists());
     }
 
