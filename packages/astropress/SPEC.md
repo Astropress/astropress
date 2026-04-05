@@ -17,6 +17,7 @@ The package is responsible for:
 - package-owned admin UI defaults with host override hooks for branding, labels, favicon, logo, navigation naming, and optional custom stylesheet loading
 - runtime utilities used by consuming Astro sites
 - packaged local runtime assets such as the SQLite schema/bootstrap/runtime path
+- package-owned provider recommendation logic for non-technical setup flows
 
 ## Package Contract
 

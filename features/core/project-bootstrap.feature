@@ -8,3 +8,8 @@ Feature: Project bootstrap follows package-owned defaults
     Given a scaffolded Astropress project with provider-specific .env values
     When the operator runs "astropress dev"
     Then Astropress resolves the local provider admin database path and default deploy target from the shared env contract
+
+  Scenario: New-project scaffolding includes a package-owned provider recommendation
+    Given a non-technical operator creates a new Astropress project
+    When Astropress computes the default hosting recommendation
+    Then Cloudflare should be the default canonical runtime and GitHub Pages should remain a static deploy target only

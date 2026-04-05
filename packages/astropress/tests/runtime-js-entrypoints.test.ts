@@ -5,6 +5,7 @@ const runtimeEntryPoints = [
   "../src/platform-contracts.js",
   "../src/project-env.js",
   "../src/project-runtime.js",
+  "../src/provider-choice.js",
   "../src/admin-routes.js",
   "../src/admin-ui.js",
   "../src/config.js",

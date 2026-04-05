@@ -757,7 +757,7 @@ function createAstropressContentRepository(input) {
 
 // packages/astropress/src/local-media-storage.ts
 import { unlinkSync, writeFileSync } from "node:fs";
-import { tmpdir } from "node:os";
+import { tmpdir as tmpdir2 } from "node:os";
 import path2 from "node:path";
 
 // packages/astropress/src/local-image-storage.ts
@@ -3096,7 +3096,7 @@ function createAstropressSqliteSeedToolkit(options) {
     }
   }
   function buildSeedImportSql(workspaceRoot2 = process.cwd()) {
-    const tempPath = path3.join(tmpdir(), `astropress-seed-${Date.now()}-${Math.random().toString(36).slice(2)}.sqlite`);
+    const tempPath = path3.join(tmpdir2(), `astropress-seed-${Date.now()}-${Math.random().toString(36).slice(2)}.sqlite`);
     try {
       seedDatabase({ dbPath: tempPath, reset: true, workspaceRoot: workspaceRoot2 });
       const db = openSeedDatabase(tempPath);
@@ -3113,7 +3113,7 @@ function createAstropressSqliteSeedToolkit(options) {
     }
   }
   function buildSeedImportStatements(workspaceRoot2 = process.cwd(), seededDb) {
-    const tempPath = path3.join(tmpdir(), `astropress-seed-${Date.now()}-${Math.random().toString(36).slice(2)}.sqlite`);
+    const tempPath = path3.join(tmpdir2(), `astropress-seed-${Date.now()}-${Math.random().toString(36).slice(2)}.sqlite`);
     const db = seededDb ?? (() => {
       seedDatabase({ dbPath: tempPath, reset: true, workspaceRoot: workspaceRoot2 });
       return openSeedDatabase(tempPath);

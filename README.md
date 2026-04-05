@@ -53,6 +53,7 @@ Host integration helpers:
 - `astropress/integration` re-exports the current Vite, Vitest, and host-runtime helper surface from one place
 - `astropress/hosted-platform-adapter` exposes the package-owned assembler for hosted providers built from explicit store modules
 - `astropress/adapters/sqlite`, `astropress/adapters/local`, `astropress/adapters/hosted`, `astropress/adapters/project`, `astropress/adapters/cloudflare`, `astropress/adapters/supabase`, and `astropress/adapters/runway` expose first-party provider adapter factories
+- `astropress/provider-choice` exposes the package-owned provider recommendation helper used by scaffolding, docs, and future setup flows
 - `astropress/adapters/supabase-sqlite` and `astropress/adapters/runway-sqlite` expose Node-only local runtimes for those providers backed by the packaged SQLite adapter
 - Supabase and Runway hosted config loading now lives in Astropress too via `readAstropressSupabaseHostedConfig`, `createAstropressSupabaseHostedAdapter`, `readAstropressRunwayHostedConfig`, and `createAstropressRunwayHostedAdapter`
 - `astropress/deploy/github-pages`, `astropress/import/wordpress`, and `astropress/sync/git` expose the Node-only deploy/import/sync workflow helpers as stable package entry points
@@ -85,6 +86,7 @@ Current CLI workflow behavior:
 - `astropress new --provider sqlite|supabase|runway` scaffolds the example site with a matching local provider default in `.env`
 - `astropress dev --provider sqlite|supabase|runway` seeds the matching local SQLite-backed provider runtime before starting the site
 - `astropress import wordpress`, `astropress sync export`, `astropress sync import`, and GitHub Pages deploy now call the packaged Astropress workflow modules rather than duplicating those workflows in Rust
+- the package-owned provider recommendation defaults to Cloudflare for most non-technical users, while treating GitHub Pages as a static deploy target rather than the canonical write runtime
 
 Why there are duplicated `src/*.ts` and `src/*.js` files:
 

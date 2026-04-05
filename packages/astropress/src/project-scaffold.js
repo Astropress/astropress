@@ -1,4 +1,7 @@
+import { recommendAstropressProvider } from "./provider-choice.js";
+
 export function createAstropressProjectScaffold(provider = "sqlite") {
+  const recommendation = provider === "sqlite" ? recommendAstropressProvider() : recommendAstropressProvider({ existingPlatform: provider });
   const baseLocalEnv = {
     ASTROPRESS_LOCAL_PROVIDER: provider,
     ASTROPRESS_DEPLOY_TARGET:
@@ -15,7 +18,8 @@ export function createAstropressProjectScaffold(provider = "sqlite") {
   if (provider === "supabase") {
     return {
       provider,
-      recommendedDeployTarget: "supabase",
+      recommendedDeployTarget: recommendation.publicDeployTarget,
+      recommendationRationale: recommendation.rationale,
       localEnv: baseLocalEnv,
       envExample: {
         ...baseLocalEnv,
@@ -29,7 +33,8 @@ export function createAstropressProjectScaffold(provider = "sqlite") {
   if (provider === "runway") {
     return {
       provider,
-      recommendedDeployTarget: "runway",
+      recommendedDeployTarget: recommendation.publicDeployTarget,
+      recommendationRationale: recommendation.rationale,
       localEnv: baseLocalEnv,
       envExample: {
         ...baseLocalEnv,
@@ -41,7 +46,8 @@ export function createAstropressProjectScaffold(provider = "sqlite") {
   }
   return {
     provider: "sqlite",
-    recommendedDeployTarget: "github-pages",
+    recommendedDeployTarget: recommendation.publicDeployTarget,
+    recommendationRationale: recommendation.rationale,
     localEnv: baseLocalEnv,
     envExample: baseLocalEnv
   };

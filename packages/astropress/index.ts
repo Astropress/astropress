@@ -49,6 +49,13 @@ export { createAstropressInMemoryPlatformAdapter } from "./src/in-memory-platfor
 export type { AstropressInMemoryPlatformAdapterOptions } from "./src/in-memory-platform-adapter";
 export { createAstropressProjectScaffold } from "./src/project-scaffold.js";
 export type { AstropressProjectScaffold, AstropressScaffoldProvider } from "./src/project-scaffold";
+export { recommendAstropressProvider } from "./src/provider-choice.js";
+export type {
+  AstropressExistingPlatform,
+  AstropressProviderChoiceInput,
+  AstropressProviderChoiceRecommendation,
+  AstropressProviderOpsComfort,
+} from "./src/provider-choice";
 export {
   resolveAstropressDeployTarget,
   resolveAstropressHostedProviderFromEnv,

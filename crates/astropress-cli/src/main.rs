@@ -163,14 +163,36 @@ struct PackageManifest {
 struct WordPressImportManifest {
     source_file: String,
     imported_at_unix_ms: u128,
-    imported_records: usize,
-    imported_media: usize,
+    inventory_file: String,
+    plan_file: String,
+    report_file: String,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
+struct WordPressImportInventory {
+    detected_records: usize,
+    detected_media: usize,
+    detected_comments: usize,
+    detected_users: usize,
+    warnings: Vec<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct WordPressImportPlan {
+    include_comments: bool,
+    include_users: bool,
+    include_media: bool,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
 struct WordPressImportResult {
     imported_records: usize,
     imported_media: usize,
+    imported_comments: usize,
+    imported_users: usize,
+    inventory: WordPressImportInventory,
+    plan: WordPressImportPlan,
+    warnings: Vec<String>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -191,6 +213,8 @@ struct ProjectScaffold {
     provider: String,
     #[serde(rename = "recommendedDeployTarget")]
     recommended_deploy_target: String,
+    #[serde(rename = "recommendationRationale")]
+    recommendation_rationale: String,
     #[serde(rename = "localEnv")]
     local_env: BTreeMap<String, String>,
     #[serde(rename = "envExample")]
@@ -815,6 +839,7 @@ fn scaffold_new_project(
         "Recommended deploy target: {}",
         scaffold.recommended_deploy_target
     );
+    println!("Recommendation: {}", scaffold.recommendation_rationale);
     println!("Next steps:");
     println!("  cd {}", project_dir.display());
     println!("  bun install");
@@ -974,17 +999,14 @@ fn stage_wordpress_import(project_dir: &Path, source_path: &Path) -> Result<(), 
         ));
     }
 
-    let import_dir = project_dir
-        .join(".astropress")
-        .join("imports")
-        .join("wordpress");
+    let import_dir = project_dir.join(".astropress").join("import");
     fs::create_dir_all(&import_dir).map_err(io_error)?;
 
     let extension = source_path
         .extension()
         .and_then(|value| value.to_str())
         .unwrap_or("xml");
-    let staged_source = import_dir.join(format!("source.{extension}"));
+    let staged_source = import_dir.join(format!("wordpress-source.{extension}"));
     fs::copy(source_path, &staged_source).map_err(io_error)?;
 
     let package_manager = detect_package_manager(project_dir);
@@ -992,15 +1014,44 @@ fn stage_wordpress_import(project_dir: &Path, source_path: &Path) -> Result<(), 
     let script = format!(
         r#"import {{ createAstropressWordPressImportSource }} from {};
 const importer = createAstropressWordPressImportSource();
+const inventory = await importer.inspectWordPress({{ exportFile: {} }});
 const result = await importer.importWordPress({{ exportFile: {} }});
 console.log(JSON.stringify({{
   imported_records: result.importedRecords,
   imported_media: result.importedMedia,
+  imported_comments: result.importedComments,
+  imported_users: result.importedUsers,
+  inventory: {{
+    detected_records: inventory.detectedRecords,
+    detected_media: inventory.detectedMedia,
+    detected_comments: inventory.detectedComments,
+    detected_users: inventory.detectedUsers,
+    warnings: inventory.warnings,
+  }},
+  plan: {{
+    include_comments: result.plan.includeComments,
+    include_users: result.plan.includeUsers,
+    include_media: result.plan.includeMedia,
+  }},
+  warnings: result.warnings,
 }}));"#,
         serde_json::to_string(&importer_module).map_err(|error| error.to_string())?,
+        serde_json::to_string(&staged_source.display().to_string()).map_err(|error| error.to_string())?,
         serde_json::to_string(&staged_source.display().to_string()).map_err(|error| error.to_string())?
     );
     let result: WordPressImportResult = run_package_json_command(project_dir, package_manager, &script)?;
+
+    let inventory_json =
+        serde_json::to_string_pretty(&result.inventory).map_err(|error| error.to_string())?;
+    let plan_json = serde_json::to_string_pretty(&result.plan).map_err(|error| error.to_string())?;
+    let report_json =
+        serde_json::to_string_pretty(&result).map_err(|error| error.to_string())?;
+    let inventory_file = import_dir.join("wordpress.inventory.json");
+    let plan_file = import_dir.join("wordpress.plan.json");
+    let report_file = import_dir.join("wordpress.report.json");
+    fs::write(&inventory_file, format!("{inventory_json}\n")).map_err(io_error)?;
+    fs::write(&plan_file, format!("{plan_json}\n")).map_err(io_error)?;
+    fs::write(&report_file, format!("{report_json}\n")).map_err(io_error)?;
 
     let manifest = WordPressImportManifest {
         source_file: staged_source
@@ -1009,23 +1060,44 @@ console.log(JSON.stringify({{
             .unwrap_or("source.xml")
             .to_string(),
         imported_at_unix_ms: now_unix_ms(),
-        imported_records: result.imported_records,
-        imported_media: result.imported_media,
+        inventory_file: inventory_file
+            .file_name()
+            .and_then(|value| value.to_str())
+            .unwrap_or("wordpress.inventory.json")
+            .to_string(),
+        plan_file: plan_file
+            .file_name()
+            .and_then(|value| value.to_str())
+            .unwrap_or("wordpress.plan.json")
+            .to_string(),
+        report_file: report_file
+            .file_name()
+            .and_then(|value| value.to_str())
+            .unwrap_or("wordpress.report.json")
+            .to_string(),
     };
 
     let manifest_json = serde_json::to_string_pretty(&manifest).map_err(|error| error.to_string())?;
     fs::write(import_dir.join("manifest.json"), format!("{manifest_json}\n")).map_err(io_error)?;
 
     println!(
-        "Staged WordPress import assets in {}",
+        "Staged WordPress import artifacts in {}",
         import_dir.display()
     );
     println!(
-        "Imported {} records and {} media references from {}",
+        "Imported {} records, {} media references, {} comments, and {} users from {}",
         result.imported_records,
         result.imported_media,
+        result.imported_comments,
+        result.imported_users,
         source_path.display()
     );
+    if !result.warnings.is_empty() {
+        println!("Warnings:");
+        for warning in result.warnings {
+            println!("  - {warning}");
+        }
+    }
     Ok(())
 }
 
@@ -1415,10 +1487,13 @@ mod tests {
         fs::write(&source, "<rss></rss>").unwrap();
 
         stage_wordpress_import(&project_dir, &source).unwrap();
-        assert!(project_dir.join(".astropress/imports/wordpress/source.xml").exists());
-        let manifest = fs::read_to_string(project_dir.join(".astropress/imports/wordpress/manifest.json")).unwrap();
-        assert!(manifest.contains("\"imported_records\": 0"));
-        assert!(manifest.contains("\"imported_media\": 0"));
+        assert!(project_dir.join(".astropress/import/wordpress-source.xml").exists());
+        let manifest = fs::read_to_string(project_dir.join(".astropress/import/manifest.json")).unwrap();
+        assert!(manifest.contains("\"inventory_file\": \"wordpress.inventory.json\""));
+        assert!(manifest.contains("\"report_file\": \"wordpress.report.json\""));
+        let report = fs::read_to_string(project_dir.join(".astropress/import/wordpress.report.json")).unwrap();
+        assert!(report.contains("\"imported_records\": 0"));
+        assert!(report.contains("\"imported_media\": 0"));
     }
 
     #[test]

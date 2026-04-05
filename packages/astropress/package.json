@@ -13,6 +13,7 @@
     "./project-env": "./src/project-env.js",
     "./project-runtime": "./src/project-runtime.js",
     "./project-scaffold": "./src/project-scaffold.js",
+    "./provider-choice": "./src/provider-choice.js",
     "./admin-routes": "./src/admin-routes.js",
     "./admin-ui": "./src/admin-ui.js",
     "./hosted-platform-adapter": "./src/hosted-platform-adapter.js",

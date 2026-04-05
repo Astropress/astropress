@@ -1,8 +1,11 @@
+import { recommendAstropressProvider } from "./provider-choice";
+
 export type AstropressScaffoldProvider = "sqlite" | "supabase" | "runway";
 
 export interface AstropressProjectScaffold {
   provider: AstropressScaffoldProvider;
-  recommendedDeployTarget: "github-pages" | "supabase" | "runway";
+  recommendedDeployTarget: "github-pages" | "cloudflare" | "supabase" | "runway";
+  recommendationRationale: string;
   localEnv: Record<string, string>;
   envExample: Record<string, string>;
 }
@@ -26,10 +29,16 @@ function baseLocalEnv(provider: AstropressScaffoldProvider) {
 export function createAstropressProjectScaffold(
   provider: AstropressScaffoldProvider = "sqlite",
 ): AstropressProjectScaffold {
+  const recommendation =
+    provider === "sqlite"
+      ? recommendAstropressProvider()
+      : recommendAstropressProvider({ existingPlatform: provider });
+
   if (provider === "supabase") {
     return {
       provider,
-      recommendedDeployTarget: "supabase",
+      recommendedDeployTarget: recommendation.publicDeployTarget,
+      recommendationRationale: recommendation.rationale,
       localEnv: baseLocalEnv(provider),
       envExample: {
         ...baseLocalEnv(provider),
@@ -44,7 +53,8 @@ export function createAstropressProjectScaffold(
   if (provider === "runway") {
     return {
       provider,
-      recommendedDeployTarget: "runway",
+      recommendedDeployTarget: recommendation.publicDeployTarget,
+      recommendationRationale: recommendation.rationale,
       localEnv: baseLocalEnv(provider),
       envExample: {
         ...baseLocalEnv(provider),
@@ -57,7 +67,8 @@ export function createAstropressProjectScaffold(
 
   return {
     provider: "sqlite",
-    recommendedDeployTarget: "github-pages",
+    recommendedDeployTarget: recommendation.publicDeployTarget,
+    recommendationRationale: recommendation.rationale,
     localEnv: baseLocalEnv("sqlite"),
     envExample: baseLocalEnv("sqlite"),
   };

@@ -5,7 +5,8 @@ describe("project scaffold", () => {
   it("returns sqlite defaults by default", () => {
     const scaffold = createAstropressProjectScaffold();
     expect(scaffold.provider).toBe("sqlite");
-    expect(scaffold.recommendedDeployTarget).toBe("github-pages");
+    expect(scaffold.recommendedDeployTarget).toBe("cloudflare");
+    expect(scaffold.recommendationRationale).toMatch(/Cloudflare/i);
     expect(scaffold.localEnv.ADMIN_DB_PATH).toBe(".data/admin.sqlite");
     expect(scaffold.localEnv.ASTROPRESS_DEPLOY_TARGET).toBe("github-pages");
   });
