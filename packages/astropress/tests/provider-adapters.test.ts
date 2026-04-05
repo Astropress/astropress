@@ -11,6 +11,7 @@ import {
   createAstropressRunwayHostedAdapter,
   createAstropressSupabaseAdapter,
   createAstropressSupabaseHostedAdapter,
+  resolveAstropressHostedProvider,
   readAstropressRunwayHostedConfig,
   readAstropressSupabaseHostedConfig,
   registerCms,
@@ -426,6 +427,10 @@ describe("provider adapters", () => {
   });
 
   it("selects hosted providers from explicit options or env", async () => {
+    expect(resolveAstropressHostedProvider(undefined)).toBe("supabase");
+    expect(resolveAstropressHostedProvider("runway")).toBe("runway");
+    expect(resolveAstropressHostedProvider("unexpected")).toBe("supabase");
+
     const supabase = createAstropressHostedAdapter({
       env: {
         SUPABASE_URL: "https://selector.supabase.co",

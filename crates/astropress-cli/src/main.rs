@@ -579,6 +579,11 @@ fn resolve_deploy_target(project_dir: &Path, target: Option<&str>) -> Result<Str
         return Ok(target.to_string());
     }
 
+    let env_values = read_env_file(project_dir)?;
+    if let Some(target) = env_values.get("ASTROPRESS_DEPLOY_TARGET") {
+        return Ok(target.clone());
+    }
+
     let provider = resolve_local_provider(project_dir, None)?;
     Ok(recommended_deploy_target_for_provider(provider).to_string())
 }
@@ -1253,6 +1258,18 @@ mod tests {
             resolve_deploy_target(&root, Some("cloudflare")).unwrap(),
             "cloudflare"
         );
+    }
+
+    #[test]
+    fn deploy_target_prefers_explicit_env_target() {
+        let root = temp_dir("deploy-target-env");
+        fs::write(
+            root.join(".env"),
+            "ASTROPRESS_LOCAL_PROVIDER=sqlite\nASTROPRESS_DEPLOY_TARGET=runway\n",
+        )
+        .unwrap();
+
+        assert_eq!(resolve_deploy_target(&root, None).unwrap(), "runway");
     }
 
     #[test]

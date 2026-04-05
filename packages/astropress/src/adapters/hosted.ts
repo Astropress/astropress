@@ -14,7 +14,9 @@ export type AstropressHostedAdapterOptions =
   | ({ provider?: "supabase" } & AstropressSupabaseHostedAdapterOptions)
   | ({ provider: "runway" } & AstropressRunwayHostedAdapterOptions);
 
-function normalizeHostedProvider(provider?: string | null): AstropressHostedProviderKind {
+export function resolveAstropressHostedProvider(
+  provider?: string | null,
+): AstropressHostedProviderKind {
   if (provider === "runway") {
     return "runway";
   }
@@ -24,7 +26,7 @@ function normalizeHostedProvider(provider?: string | null): AstropressHostedProv
 export function createAstropressHostedAdapter(
   options: AstropressHostedAdapterOptions = {},
 ): AstropressPlatformAdapter {
-  const provider = normalizeHostedProvider(
+  const provider = resolveAstropressHostedProvider(
     options.provider ?? process.env.ASTROPRESS_HOSTED_PROVIDER ?? null,
   );
 

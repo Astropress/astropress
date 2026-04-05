@@ -1,7 +1,7 @@
 import { createAstropressRunwayHostedAdapter } from "./runway.js";
 import { createAstropressSupabaseHostedAdapter } from "./supabase.js";
 
-function normalizeHostedProvider(provider) {
+export function resolveAstropressHostedProvider(provider) {
   if (provider === "runway") {
     return "runway";
   }
@@ -9,7 +9,7 @@ function normalizeHostedProvider(provider) {
 }
 
 export function createAstropressHostedAdapter(options = {}) {
-  const provider = normalizeHostedProvider(
+  const provider = resolveAstropressHostedProvider(
     options.provider ?? process.env.ASTROPRESS_HOSTED_PROVIDER ?? null
   );
   if (provider === "runway") {
