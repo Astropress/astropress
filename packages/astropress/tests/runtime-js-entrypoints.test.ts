@@ -5,6 +5,7 @@ const runtimeEntryPoints = [
   "../src/platform-contracts.js",
   "../src/config.js",
   "../src/d1-admin-store.js",
+  "../src/hosted-platform-adapter.js",
   "../src/sqlite-bootstrap.js",
   "../src/sqlite-admin-runtime.js",
   "../src/adapters/sqlite.js",
