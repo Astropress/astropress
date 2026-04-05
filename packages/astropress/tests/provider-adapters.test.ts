@@ -10,6 +10,7 @@ import {
   registerCms,
 } from "astropress";
 import { createAstropressRunwaySqliteAdapter } from "../src/adapters/runway-sqlite.js";
+import { createAstropressLocalAdapter } from "../src/adapters/local.js";
 import { createAstropressSqliteAdapter } from "../src/adapters/sqlite.js";
 import { createAstropressSupabaseSqliteAdapter } from "../src/adapters/supabase-sqlite.js";
 import { createAstropressGitHubPagesDeployTarget } from "../src/deploy/github-pages.js";
@@ -193,6 +194,30 @@ describe("provider adapters", () => {
     expect(await runway.content.get("runway-local-post")).toMatchObject({
       slug: "runway-local-post",
     });
+
+    await rm(workspace, { recursive: true, force: true });
+  });
+
+  it("selects the requested local provider runtime", async () => {
+    const workspace = await mkdtemp(join(tmpdir(), "astropress-provider-local-select-"));
+    const supabase = createAstropressLocalAdapter({
+      provider: "supabase",
+      workspaceRoot: workspace,
+      dbPath: join(workspace, "supabase-admin.sqlite"),
+    });
+    const runway = createAstropressLocalAdapter({
+      provider: "runway",
+      workspaceRoot: workspace,
+      dbPath: join(workspace, "runway-admin.sqlite"),
+    });
+    const sqlite = createAstropressLocalAdapter({
+      workspaceRoot: workspace,
+      dbPath: join(workspace, "admin.sqlite"),
+    });
+
+    expect(supabase.capabilities.name).toBe("supabase");
+    expect(runway.capabilities.name).toBe("runway");
+    expect(sqlite.capabilities.name).toBe("sqlite");
 
     await rm(workspace, { recursive: true, force: true });
   });

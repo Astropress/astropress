@@ -35,6 +35,7 @@ The package should reduce host-specific glue over time by replacing temporary se
 ## Current Runtime State
 
 - `astropress/adapters/sqlite` is a first-party SQLite-backed adapter, not a placeholder capability shim
+- `astropress/adapters/local` chooses the local SQLite-backed provider runtime for sqlite, Supabase, or Runway
 - `astropress/adapters/supabase-sqlite` and `astropress/adapters/runway-sqlite` provide Node-only provider-local runtimes backed by the packaged SQLite adapter
 - `astropress/sqlite-bootstrap` owns the packaged schema/bootstrap path for local admin databases
 - `astropress/sqlite-admin-runtime` owns the packaged Node SQLite admin runtime
