@@ -31,9 +31,16 @@ export function resolveAstropressDeployTarget(env = process.env) {
 }
 
 export function resolveAstropressProjectEnvContract(env = process.env) {
+  const localProvider = resolveAstropressLocalProviderFromEnv(env);
+  const adminDbPath = env.ADMIN_DB_PATH?.trim() || (localProvider === "supabase"
+    ? ".data/supabase-admin.sqlite"
+    : localProvider === "runway"
+      ? ".data/runway-admin.sqlite"
+      : ".data/admin.sqlite");
   return {
-    localProvider: resolveAstropressLocalProviderFromEnv(env),
+    localProvider,
     hostedProvider: resolveAstropressHostedProviderFromEnv(env),
-    deployTarget: resolveAstropressDeployTarget(env)
+    deployTarget: resolveAstropressDeployTarget(env),
+    adminDbPath
   };
 }

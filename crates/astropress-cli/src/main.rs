@@ -205,6 +205,8 @@ struct ProjectEnvContract {
     hosted_provider: String,
     #[serde(rename = "deployTarget")]
     deploy_target: String,
+    #[serde(rename = "adminDbPath")]
+    admin_db_path: String,
 }
 
 fn parse_command(args: &[String]) -> Result<Command, String> {
@@ -594,11 +596,11 @@ fn resolve_local_provider(project_dir: &Path, provider: Option<LocalProvider>) -
 }
 
 fn resolve_admin_db_path(project_dir: &Path, provider: LocalProvider) -> Result<String, String> {
-    let env_values = read_env_file(project_dir)?;
-    Ok(env_values
-        .get("ADMIN_DB_PATH")
-        .cloned()
-        .unwrap_or_else(|| default_admin_db_relative_path(provider).to_string()))
+    let contract = load_project_env_contract(project_dir)?;
+    if contract.local_provider != provider.as_str() {
+        return Ok(default_admin_db_relative_path(provider).to_string());
+    }
+    Ok(contract.admin_db_path)
 }
 
 fn resolve_deploy_target(project_dir: &Path, target: Option<&str>) -> Result<String, String> {
@@ -1252,6 +1254,7 @@ mod tests {
         assert_eq!(project_env.local_provider, "runway");
         assert_eq!(project_env.deploy_target, "runway");
         assert_eq!(project_env.hosted_provider, "supabase");
+        assert_eq!(project_env.admin_db_path, ".data/custom-runway.sqlite");
         assert_eq!(
             resolve_local_provider(&root, None).unwrap(),
             LocalProvider::Runway

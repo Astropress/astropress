@@ -44,11 +44,27 @@ describe("project env", () => {
         ASTROPRESS_LOCAL_PROVIDER: "supabase",
         ASTROPRESS_HOSTED_PROVIDER: "runway",
         ASTROPRESS_DEPLOY_TARGET: "cloudflare",
+        ADMIN_DB_PATH: ".data/custom-admin.sqlite",
       }),
     ).toEqual({
       localProvider: "supabase",
       hostedProvider: "runway",
       deployTarget: "cloudflare",
+      adminDbPath: ".data/custom-admin.sqlite",
     });
+  });
+
+  it("derives the default admin db path from the local provider", () => {
+    expect(resolveAstropressProjectEnvContract({}).adminDbPath).toBe(".data/admin.sqlite");
+    expect(
+      resolveAstropressProjectEnvContract({
+        ASTROPRESS_LOCAL_PROVIDER: "supabase",
+      }).adminDbPath,
+    ).toBe(".data/supabase-admin.sqlite");
+    expect(
+      resolveAstropressProjectEnvContract({
+        ASTROPRESS_LOCAL_PROVIDER: "runway",
+      }).adminDbPath,
+    ).toBe(".data/runway-admin.sqlite");
   });
 });
