@@ -18,6 +18,13 @@ export type {
 
 export { createAstropressVitestLocalRuntimePlugins } from "./vitest-runtime-alias";
 export type { AstropressVitestPlugin } from "./vitest-runtime-alias";
+export {
+  ASTROPRESS_ADMIN_BASE_PATH,
+  createAstropressAdminRouteInjectionPlan,
+  listAstropressAdminRoutes,
+  resolveAstropressAdminRouteEntrypoints,
+} from "./admin-routes";
+export type { AstropressAdminRouteDefinition, AstropressAdminRouteKind } from "./admin-routes";
 
 export { defineAstropressHostRuntimeModules } from "./host-runtime-modules";
 export type { AstropressHostRuntimeModules } from "./host-runtime-modules";

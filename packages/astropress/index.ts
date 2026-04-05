@@ -6,6 +6,13 @@ export {
   ASTROPRESS_ADMIN_PRODUCT_NAME,
   buildAstropressAdminDocumentTitle,
 } from "./src/admin-branding.js";
+export {
+  ASTROPRESS_ADMIN_BASE_PATH,
+  createAstropressAdminRouteInjectionPlan,
+  listAstropressAdminRoutes,
+  resolveAstropressAdminRouteEntrypoints,
+} from "./src/admin-routes.js";
+export type { AstropressAdminRouteDefinition, AstropressAdminRouteKind } from "./src/admin-routes";
 
 // Platform contracts
 export {

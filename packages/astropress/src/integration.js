@@ -8,6 +8,12 @@ export { createAstropressViteIntegration } from "./vite-integration.js";
 export { createAstropressCloudflareViteIntegration } from "./cloudflare-vite-integration.js";
 
 export { createAstropressVitestLocalRuntimePlugins } from "./vitest-runtime-alias.js";
+export {
+  ASTROPRESS_ADMIN_BASE_PATH,
+  createAstropressAdminRouteInjectionPlan,
+  listAstropressAdminRoutes,
+  resolveAstropressAdminRouteEntrypoints,
+} from "./admin-routes.js";
 
 export { defineAstropressHostRuntimeModules } from "./host-runtime-modules.js";
 export {
