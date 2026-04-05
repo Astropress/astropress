@@ -10,7 +10,7 @@ export function resolveAstropressHostedProvider(provider) {
 
 export function createAstropressHostedAdapter(options = {}) {
   const provider = resolveAstropressHostedProvider(
-    options.provider ?? resolveAstropressHostedProviderFromEnv(process.env)
+    options.provider ?? resolveAstropressHostedProviderFromEnv(options.env ?? process.env)
   );
   if (provider === "runway") {
     return createAstropressRunwayHostedAdapter(options);

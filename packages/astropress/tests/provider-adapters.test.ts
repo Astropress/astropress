@@ -499,6 +499,33 @@ describe("provider adapters", () => {
     });
   });
 
+  it("selects local and hosted providers from explicit env maps", async () => {
+    const localSupabase = createAstropressLocalAdapter({
+      env: {
+        ASTROPRESS_LOCAL_PROVIDER: "supabase",
+      },
+      workspaceRoot: await mkdtemp(join(tmpdir(), "astropress-local-env-")),
+      dbPath: join(tmpdir(), `astropress-local-env-${Date.now()}.sqlite`),
+    });
+    const hostedRunway = createAstropressHostedAdapter({
+      env: {
+        ASTROPRESS_HOSTED_PROVIDER: "runway",
+        RUNWAY_API_TOKEN: "token",
+        RUNWAY_PROJECT_ID: "env-map-runway",
+      },
+      content: localSupabase.content,
+      media: localSupabase.media,
+      revisions: localSupabase.revisions,
+      auth: localSupabase.auth,
+    });
+
+    expect(localSupabase.capabilities.name).toBe("supabase");
+    expect(hostedRunway.capabilities.name).toBe("runway");
+    expect(await hostedRunway.preview?.create({ recordId: "env-map" })).toEqual({
+      url: "https://runway.example/env-map-runway/preview",
+    });
+  });
+
   it("selects the requested local provider runtime", async () => {
     const workspace = await mkdtemp(join(tmpdir(), "astropress-provider-local-select-"));
     const supabase = createAstropressLocalAdapter({

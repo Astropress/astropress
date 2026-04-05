@@ -4,7 +4,7 @@ import { createAstropressSqliteAdapter } from "./sqlite.js";
 import { createAstropressSupabaseSqliteAdapter } from "./supabase-sqlite.js";
 
 export function createAstropressLocalAdapter(options = {}) {
-  const provider = options.provider ?? resolveAstropressLocalProviderFromEnv(process.env);
+  const provider = options.provider ?? resolveAstropressLocalProviderFromEnv(options.env ?? process.env);
   if (provider === "supabase") {
     return createAstropressSupabaseSqliteAdapter(options);
   }

@@ -12,8 +12,8 @@ import {
 export type AstropressHostedProviderKind = "supabase" | "runway";
 
 export type AstropressHostedAdapterOptions =
-  | ({ provider?: "supabase" } & AstropressSupabaseHostedAdapterOptions)
-  | ({ provider: "runway" } & AstropressRunwayHostedAdapterOptions);
+  | ({ provider?: "supabase"; env?: Record<string, string | undefined> } & AstropressSupabaseHostedAdapterOptions)
+  | ({ provider: "runway"; env?: Record<string, string | undefined> } & AstropressRunwayHostedAdapterOptions);
 
 export function resolveAstropressHostedProvider(
   provider?: string | null,
@@ -27,7 +27,7 @@ export function createAstropressHostedAdapter(
   options: AstropressHostedAdapterOptions = {},
 ): AstropressPlatformAdapter {
   const provider = resolveAstropressHostedProvider(
-    options.provider ?? resolveAstropressHostedProviderFromEnv(process.env),
+    options.provider ?? resolveAstropressHostedProviderFromEnv(options.env ?? process.env),
   );
 
   if (provider === "runway") {

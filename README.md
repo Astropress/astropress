@@ -64,6 +64,7 @@ Current package-owned runtime surfaces:
 - `astropress/hosted-platform-adapter` is the stable assembly surface for Supabase-, Runway-, or custom-style hosted providers built from explicit content/media/revision/auth stores
 - `astropress/adapters/local` selects the local SQLite-backed provider runtime from explicit options or `ASTROPRESS_LOCAL_PROVIDER`
 - `astropress/adapters/hosted` selects the hosted Supabase or Runway adapter from explicit options or `ASTROPRESS_HOSTED_PROVIDER`
+- both selector surfaces now accept an explicit `env` map, so startup code can resolve providers from package-owned env contracts without mutating `process.env`
 - `astropress/adapters/supabase-sqlite` and `astropress/adapters/runway-sqlite` wrap that packaged SQLite runtime behind provider-specific capabilities for local development
 - Supabase and Runway hosted adapters can now load and validate their provider env config inside Astropress before building hosted-store adapters
 - `astropress/sqlite-bootstrap` exposes the packaged schema/bootstrap toolkit for local admin databases
