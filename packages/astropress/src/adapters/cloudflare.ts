@@ -29,12 +29,20 @@ export interface AstropressCloudflareAdapterOptions {
   preview?: PreviewSession;
 }
 
-function unsupportedCloudflareWrite(operation: string): never {
-  throw new Error(`Cloudflare adapter does not support ${operation} yet. Use the runtime admin surface for mutations.`);
-}
-
 function mapContentRecordKind(record: { kind?: string | null }): ContentStoreRecord["kind"] {
   return record.kind === "post" ? "post" : "page";
+}
+
+function nowIso() {
+  return new Date().toISOString();
+}
+
+function cloudflareActorEmail() {
+  return "admin@example.com";
+}
+
+function normalizeContentStatus(status: ContentStoreRecord["status"]) {
+  return status === "archived" ? "archived" : status === "draft" ? "draft" : "published";
 }
 
 function toContentStoreRecord(record: {
@@ -80,6 +88,68 @@ function toRedirectRecord(rule: { sourcePath: string; targetPath: string; status
       statusCode: rule.statusCode,
     },
   };
+}
+
+function toTranslationRecord(route: string, state: string, updatedAt: string, updatedBy: string) {
+  return {
+    id: route,
+    kind: "translation" as const,
+    slug: route,
+    status: state === "published" ? "published" : "draft",
+    title: route,
+    metadata: {
+      state,
+      updatedAt,
+      updatedBy,
+    },
+  };
+}
+
+async function listTranslationRecords(db: D1DatabaseLike) {
+  const rows = (
+    await db
+      .prepare("SELECT route, state, updated_at, updated_by FROM translation_overrides ORDER BY route ASC")
+      .all<{ route: string; state: string; updated_at: string; updated_by: string }>()
+  ).results;
+
+  return rows.map((row) => toTranslationRecord(row.route, row.state, row.updated_at, row.updated_by));
+}
+
+async function saveD1Revision(db: D1DatabaseLike, revision: RevisionRecord, actorEmail: string) {
+  const snapshot = revision.snapshot as Record<string, unknown>;
+  await db
+    .prepare(
+      `
+        INSERT INTO content_revisions (
+          id, slug, source, title, status, scheduled_at, body, seo_title, meta_description, excerpt,
+          og_title, og_description, og_image, author_ids, category_ids, tag_ids, canonical_url_override,
+          robots_directive, revision_note, created_at, created_by
+        ) VALUES (?, ?, 'reviewed', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `,
+    )
+    .bind(
+      revision.id,
+      revision.recordId,
+      String(snapshot.title ?? revision.recordId),
+      snapshot.status === "archived" ? "archived" : snapshot.status === "draft" ? "draft" : "published",
+      snapshot.scheduledAt ?? null,
+      snapshot.body ?? null,
+      String(snapshot.seoTitle ?? snapshot.title ?? revision.recordId),
+      String(snapshot.metaDescription ?? snapshot.title ?? revision.recordId),
+      snapshot.excerpt ?? null,
+      snapshot.ogTitle ?? null,
+      snapshot.ogDescription ?? null,
+      snapshot.ogImage ?? null,
+      JSON.stringify(snapshot.authorIds ?? []),
+      JSON.stringify(snapshot.categoryIds ?? []),
+      JSON.stringify(snapshot.tagIds ?? []),
+      snapshot.canonicalUrlOverride ?? null,
+      snapshot.robotsDirective ?? null,
+      revision.summary ?? null,
+      revision.createdAt,
+      revision.actorId ?? actorEmail,
+    )
+    .run();
 }
 
 function createFallbackCloudflareAuthStore(seedUsers: AstropressCloudflareSeedUser[]): AuthStore {
@@ -164,6 +234,7 @@ export function createAstropressCloudflareAdapter(
   }
 
   const readStore = createD1AdminReadStore(options.db);
+  const db = options.db;
   return assertProviderContract({
     capabilities: normalizeProviderCapabilities({
       name: "cloudflare",
@@ -265,6 +336,10 @@ export function createAstropressCloudflareAdapter(
           );
         }
 
+        if (!kind || kind === "translation") {
+          records.push(...(await listTranslationRecords(db)));
+        }
+
         return records;
       },
       async get(id) {
@@ -275,16 +350,268 @@ export function createAstropressCloudflareAdapter(
         const all = await this.list();
         return all.find((record) => record.id === normalizedId || record.slug === normalizedId) ?? null;
       },
-      async save() {
-        unsupportedCloudflareWrite("content.save");
+      async save(record) {
+        const slug = record.slug || record.id;
+
+        if (record.kind === "redirect") {
+          const targetPath = String(record.metadata?.targetPath ?? "").trim();
+          const statusCode = Number(record.metadata?.statusCode) === 302 ? 302 : 301;
+          await db
+            .prepare(
+              `
+                INSERT INTO redirect_rules (source_path, target_path, status_code, created_by, deleted_at)
+                VALUES (?, ?, ?, ?, NULL)
+                ON CONFLICT(source_path) DO UPDATE SET
+                  target_path = excluded.target_path,
+                  status_code = excluded.status_code,
+                  created_by = excluded.created_by,
+                  deleted_at = NULL
+              `,
+            )
+            .bind(slug, targetPath, statusCode, cloudflareActorEmail())
+            .run();
+          return toRedirectRecord({ sourcePath: slug, targetPath, statusCode });
+        }
+
+        if (record.kind === "settings") {
+          const current = await readStore.settings.getSettings();
+          const next = { ...current, ...(record.metadata ?? {}) };
+          await db
+            .prepare(
+              `
+                INSERT INTO site_settings (
+                  id, site_title, site_tagline, donation_url, newsletter_enabled, comments_default_policy, admin_slug, updated_at, updated_by
+                ) VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?)
+                ON CONFLICT(id) DO UPDATE SET
+                  site_title = excluded.site_title,
+                  site_tagline = excluded.site_tagline,
+                  donation_url = excluded.donation_url,
+                  newsletter_enabled = excluded.newsletter_enabled,
+                  comments_default_policy = excluded.comments_default_policy,
+                  admin_slug = excluded.admin_slug,
+                  updated_at = excluded.updated_at,
+                  updated_by = excluded.updated_by
+              `,
+            )
+            .bind(
+              next.siteTitle,
+              next.siteTagline,
+              next.donationUrl,
+              next.newsletterEnabled ? 1 : 0,
+              next.commentsDefaultPolicy,
+              next.adminSlug,
+              nowIso(),
+              cloudflareActorEmail(),
+            )
+            .run();
+          return {
+            id: "site-settings",
+            kind: "settings",
+            slug: "site-settings",
+            status: "published",
+            title: next.siteTitle,
+            metadata: next,
+          };
+        }
+
+        if (record.kind === "translation") {
+          const state = String(record.metadata?.state ?? "not_started");
+          const updatedAt = nowIso();
+          const updatedBy = cloudflareActorEmail();
+          await db
+            .prepare(
+              `
+                INSERT INTO translation_overrides (route, state, updated_at, updated_by)
+                VALUES (?, ?, ?, ?)
+                ON CONFLICT(route) DO UPDATE SET
+                  state = excluded.state,
+                  updated_at = excluded.updated_at,
+                  updated_by = excluded.updated_by
+              `,
+            )
+            .bind(slug, state, updatedAt, updatedBy)
+            .run();
+          return toTranslationRecord(slug, state, updatedAt, updatedBy);
+        }
+
+        if (record.kind === "page" || record.kind === "post") {
+          const existing = await readStore.content.getContentState(slug);
+          const title = record.title ?? existing?.title ?? slug;
+          const body = record.body ?? existing?.body ?? "";
+          const summary = String(record.metadata?.summary ?? existing?.summary ?? "");
+          const seoTitle = String(record.metadata?.seoTitle ?? title);
+          const metaDescription = String(record.metadata?.metaDescription ?? title);
+          const ogTitle = typeof record.metadata?.ogTitle === "string" ? record.metadata.ogTitle : existing?.ogTitle ?? null;
+          const ogDescription =
+            typeof record.metadata?.ogDescription === "string" ? record.metadata.ogDescription : existing?.ogDescription ?? null;
+          const ogImage = typeof record.metadata?.ogImage === "string" ? record.metadata.ogImage : existing?.ogImage ?? null;
+          const canonicalUrlOverride =
+            typeof record.metadata?.canonicalUrlOverride === "string"
+              ? record.metadata.canonicalUrlOverride
+              : existing?.canonicalUrlOverride ?? null;
+          const robotsDirective =
+            typeof record.metadata?.robotsDirective === "string"
+              ? record.metadata.robotsDirective
+              : existing?.robotsDirective ?? null;
+          const status = normalizeContentStatus(record.status);
+
+          if (!existing) {
+            await db
+              .prepare(
+                `
+                  INSERT INTO content_entries (
+                    slug, legacy_url, title, kind, template_key, source_html_path, updated_at, body, summary,
+                    seo_title, meta_description, og_title, og_description, og_image
+                  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                `,
+              )
+              .bind(
+                slug,
+                typeof record.metadata?.legacyUrl === "string" ? record.metadata.legacyUrl : `/${slug}`,
+                title,
+                record.kind,
+                typeof record.metadata?.templateKey === "string" ? record.metadata.templateKey : "content",
+                `runtime://content/${slug}`,
+                nowIso(),
+                body,
+                summary,
+                seoTitle,
+                metaDescription,
+                ogTitle,
+                ogDescription,
+                ogImage,
+              )
+              .run();
+          }
+
+          await db
+            .prepare(
+              `
+                INSERT INTO content_overrides (
+                  slug, title, status, scheduled_at, body, seo_title, meta_description, excerpt,
+                  og_title, og_description, og_image, canonical_url_override, robots_directive, updated_at, updated_by
+                ) VALUES (?, ?, ?, NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ON CONFLICT(slug) DO UPDATE SET
+                  title = excluded.title,
+                  status = excluded.status,
+                  body = excluded.body,
+                  seo_title = excluded.seo_title,
+                  meta_description = excluded.meta_description,
+                  excerpt = excluded.excerpt,
+                  og_title = excluded.og_title,
+                  og_description = excluded.og_description,
+                  og_image = excluded.og_image,
+                  canonical_url_override = excluded.canonical_url_override,
+                  robots_directive = excluded.robots_directive,
+                  updated_at = excluded.updated_at,
+                  updated_by = excluded.updated_by
+              `,
+            )
+            .bind(
+              slug,
+              title,
+              status,
+              body,
+              seoTitle,
+              metaDescription,
+              summary,
+              ogTitle,
+              ogDescription,
+              ogImage,
+              canonicalUrlOverride,
+              robotsDirective,
+              nowIso(),
+              cloudflareActorEmail(),
+            )
+            .run();
+
+          await saveD1Revision(
+            db,
+            {
+              id: `cloudflare-${crypto.randomUUID()}`,
+              recordId: slug,
+              createdAt: nowIso(),
+              actorId: cloudflareActorEmail(),
+              snapshot: {
+                title,
+                status,
+                body,
+                seoTitle,
+                metaDescription,
+                excerpt: summary,
+                ogTitle,
+                ogDescription,
+                ogImage,
+                canonicalUrlOverride,
+                robotsDirective,
+              },
+            },
+            cloudflareActorEmail(),
+          );
+
+          const saved = await readStore.content.getContentState(slug);
+          if (!saved) {
+            throw new Error(`Cloudflare adapter failed to persist content record ${slug}.`);
+          }
+          return toContentStoreRecord(saved);
+        }
+
+        throw new Error(`Cloudflare content store does not support saving ${record.kind} records yet.`);
       },
-      async delete() {
-        unsupportedCloudflareWrite("content.delete");
+      async delete(id) {
+        const existing = await this.get(id);
+        if (!existing) {
+          return;
+        }
+        if (existing.kind === "redirect") {
+          await db
+            .prepare("UPDATE redirect_rules SET deleted_at = CURRENT_TIMESTAMP WHERE source_path = ? AND deleted_at IS NULL")
+            .bind(existing.slug)
+            .run();
+          return;
+        }
+        if (existing.kind === "page" || existing.kind === "post") {
+          await this.save({ ...existing, status: "archived" });
+          return;
+        }
+        if (existing.kind === "media") {
+          await db.prepare("UPDATE media_assets SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?").bind(existing.id).run();
+          return;
+        }
+        throw new Error(`Cloudflare content store does not support deleting ${existing.kind} records yet.`);
       },
     },
     media: {
-      async put(_asset: MediaAssetRecord) {
-        unsupportedCloudflareWrite("media.put");
+      async put(asset: MediaAssetRecord) {
+        await db
+          .prepare(
+            `
+              INSERT INTO media_assets (
+                id, source_url, local_path, mime_type, file_size, alt_text, title, uploaded_at, uploaded_by, deleted_at
+              ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NULL)
+              ON CONFLICT(id) DO UPDATE SET
+                source_url = excluded.source_url,
+                local_path = excluded.local_path,
+                mime_type = excluded.mime_type,
+                file_size = excluded.file_size,
+                alt_text = excluded.alt_text,
+                title = excluded.title,
+                deleted_at = NULL
+            `,
+          )
+          .bind(
+            asset.id,
+            asset.publicUrl ?? null,
+            asset.publicUrl ?? `/media/${asset.filename}`,
+            asset.mimeType,
+            asset.bytes?.byteLength ?? null,
+            String(asset.metadata?.altText ?? ""),
+            String(asset.metadata?.title ?? asset.filename),
+            nowIso(),
+            cloudflareActorEmail(),
+          )
+          .run();
+        return asset;
       },
       async get(id) {
         const asset = (await readStore.media.listMediaAssets()).find((entry) => entry.id === id);
@@ -302,8 +629,8 @@ export function createAstropressCloudflareAdapter(
           },
         };
       },
-      async delete() {
-        unsupportedCloudflareWrite("media.delete");
+      async delete(id) {
+        await db.prepare("UPDATE media_assets SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?").bind(id).run();
       },
     },
     revisions: {
@@ -319,8 +646,9 @@ export function createAstropressCloudflareAdapter(
           }),
         );
       },
-      async append() {
-        unsupportedCloudflareWrite("revisions.append");
+      async append(revision) {
+        await saveD1Revision(db, revision, cloudflareActorEmail());
+        return revision;
       },
     },
     gitSync: options.gitSync,
