@@ -15,7 +15,10 @@ The Astropress codebase is now prepared locally as four sibling repositories und
 
 - `astropress-js`: `bun run test`
 - `astropress-cli`: `cargo test`
-- `astropress` consumer verification through Fleet:
+- `astropress` example/docs app:
+  - `bun install --force`
+  - `bun run test:example`
+- Fleet consumer verification against the standalone `astropress-js` repo:
   - `bun install --force`
   - `bun run check`
   - `bun run test`
@@ -28,3 +31,4 @@ The Astropress codebase is now prepared locally as four sibling repositories und
 - The current `astropress` repo remains the best local stand-in for the future docs/site repo.
 - The sibling repos are local-only preparation; they have no remotes configured yet.
 - The split repos use repo-local git identity and can be pushed once remotes exist.
+- Fleet no longer points at `astropress/packages/astropress`; it consumes the sibling `astropress-js` repo directly.
