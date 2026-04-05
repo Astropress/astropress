@@ -1,6 +1,11 @@
 // Core configuration seam
 export { registerCms, getCmsConfig } from "./src/config";
 export type { CmsConfig } from "./src/config";
+export {
+  ASTROPRESS_ADMIN_APP_NAME,
+  ASTROPRESS_ADMIN_PRODUCT_NAME,
+  buildAstropressAdminDocumentTitle,
+} from "./src/admin-branding.js";
 
 // Platform contracts
 export {

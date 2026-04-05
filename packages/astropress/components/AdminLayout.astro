@@ -1,4 +1,6 @@
 ---
+import { ASTROPRESS_ADMIN_PRODUCT_NAME, buildAstropressAdminDocumentTitle } from "../src/admin-branding";
+
 interface NavItem {
   href?: string;
   label: string;
@@ -18,6 +20,8 @@ interface Props {
 }
 
 const { title, heading, currentPath, description = "", role, userName, siteName } = Astro.props;
+const documentTitle = buildAstropressAdminDocumentTitle(title);
+const adminSiteName = siteName ?? ASTROPRESS_ADMIN_PRODUCT_NAME;
 
 const navItems: NavItem[] = [
   { href: "/wp-admin", label: "Dashboard" },
@@ -59,14 +63,14 @@ const navItems: NavItem[] = [
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="robots" content="noindex, nofollow" />
-    <title>{title}</title>
-    <meta name="description" content={description || title} />
+    <title>{documentTitle}</title>
+    <meta name="description" content={description || documentTitle} />
   </head>
   <body>
     <a class="skip-link" href="#admin-main">Skip to admin content</a>
     <header class="topbar">
       <div>
-        <strong>{siteName ?? "Fleet Farming Admin"}</strong>
+        <strong>{adminSiteName}</strong>
       </div>
       <div class="topbar-meta">
         <span>Signed in as {userName}</span>
