@@ -70,6 +70,8 @@ export type {
 } from "./src/project-env";
 export { createAstropressHostedPlatformAdapter } from "./src/hosted-platform-adapter.js";
 export type { AstropressHostedPlatformAdapterOptions } from "./src/hosted-platform-adapter";
+export { createAstropressHostedApiAdapter } from "./src/hosted-api-adapter.js";
+export type { AstropressHostedApiAdapterOptions } from "./src/hosted-api-adapter";
 export { createAstropressCloudflareAdapter } from "./src/adapters/cloudflare.js";
 export type { AstropressCloudflareAdapterOptions } from "./src/adapters/cloudflare";
 export {

@@ -5,6 +5,7 @@ import { DatabaseSync } from "node:sqlite";
 import { describe, expect, it } from "vitest";
 import {
   createAstropressHostedPlatformAdapter,
+  createAstropressHostedApiAdapter,
   createAstropressCloudflareAdapter,
   createAstropressHostedAdapter,
   createAstropressRunwayAdapter,
@@ -19,10 +20,18 @@ import {
 import { createAstropressRunwaySqliteAdapter } from "../src/adapters/runway-sqlite.js";
 import { createAstropressLocalAdapter } from "../src/adapters/local.js";
 import {
+  createAstropressRunwayHostedAdapter as createDirectRunwayHostedAdapter,
+  readAstropressRunwayHostedConfig as readDirectRunwayHostedConfig,
+} from "../src/adapters/runway.js";
+import {
   createAstropressProjectAdapter,
   resolveAstropressProjectAdapterMode,
 } from "../src/adapters/project.js";
 import { createAstropressSqliteAdapter } from "../src/adapters/sqlite.js";
+import {
+  createAstropressSupabaseHostedAdapter as createDirectSupabaseHostedAdapter,
+  readAstropressSupabaseHostedConfig as readDirectSupabaseHostedConfig,
+} from "../src/adapters/supabase.js";
 import { createAstropressSupabaseSqliteAdapter } from "../src/adapters/supabase-sqlite.js";
 import { createAstropressGitHubPagesDeployTarget } from "../src/deploy/github-pages.js";
 import { createAstropressWordPressImportSource } from "../src/import/wordpress.js";
@@ -304,6 +313,38 @@ describe("provider adapters", () => {
     expect(runway.capabilities.name).toBe("runway");
   });
 
+  it("creates Supabase and Runway hosted adapters with package-owned remote api defaults", async () => {
+    const supabaseConfig = readDirectSupabaseHostedConfig({
+      SUPABASE_URL: "https://demo.supabase.co",
+      SUPABASE_ANON_KEY: "anon",
+      SUPABASE_SERVICE_ROLE_KEY: "service",
+    });
+    const runwayConfig = readDirectRunwayHostedConfig({
+      RUNWAY_API_TOKEN: "token",
+      RUNWAY_PROJECT_ID: "project-123",
+    });
+
+    const supabase = createDirectSupabaseHostedAdapter({
+      config: supabaseConfig,
+      fetchImpl: async () => new Response(JSON.stringify([]), { status: 200 }),
+    });
+    const runway = createDirectRunwayHostedAdapter({
+      config: runwayConfig,
+      fetchImpl: async () => new Response(JSON.stringify([]), { status: 200 }),
+    });
+
+    expect(supabaseConfig.apiBaseUrl).toContain("demo.supabase.co/functions/v1/astropress");
+    expect(runwayConfig.apiBaseUrl).toContain("runway.example/project-123/astropress-api");
+    expect((await supabase.preview?.create({ recordId: "hello" }))?.url).toContain(
+      "demo.supabase.co/preview/preview/hello",
+    );
+    expect((await runway.preview?.create({ recordId: "hello" }))?.url).toContain(
+      "runway.example/project-123/preview/preview/hello",
+    );
+    expect(supabase.capabilities.hostedAdmin).toBe(true);
+    expect(runway.capabilities.serverRuntime).toBe(true);
+  });
+
   it("creates sqlite-backed local runtimes for Supabase and Runway", async () => {
     const workspace = await mkdtemp(join(tmpdir(), "astropress-provider-sqlite-"));
     const supabase = createAstropressSupabaseSqliteAdapter({
@@ -370,6 +411,7 @@ describe("provider adapters", () => {
       url: "https://example.supabase.co",
       anonKey: "anon",
       serviceRoleKey: "service",
+      apiBaseUrl: "https://example.supabase.co/functions/v1/astropress",
     });
     expect(
       readAstropressRunwayHostedConfig({
@@ -379,6 +421,8 @@ describe("provider adapters", () => {
     ).toEqual({
       apiToken: "token",
       projectId: "project-123",
+      apiBaseUrl: "https://runway.example/project-123/astropress-api",
+      previewBaseUrl: "https://runway.example/project-123",
     });
   });
 

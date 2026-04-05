@@ -2,11 +2,14 @@ import {
   type AstropressPlatformAdapter,
 } from "../platform-contracts";
 import { type AstropressInMemoryPlatformAdapterOptions } from "../in-memory-platform-adapter";
+import { createAstropressHostedApiAdapter, type AstropressHostedApiAdapterOptions } from "../hosted-api-adapter";
 import { createAstropressHostedPlatformAdapter } from "../hosted-platform-adapter";
 
 export interface AstropressRunwayHostedConfig {
   apiToken: string;
   projectId: string;
+  apiBaseUrl: string;
+  previewBaseUrl: string;
 }
 
 export type AstropressRunwayAdapterOptions = Omit<AstropressInMemoryPlatformAdapterOptions, "capabilities"> & {
@@ -23,6 +26,7 @@ export function createAstropressRunwayAdapter(options: AstropressRunwayAdapterOp
 export interface AstropressRunwayHostedAdapterOptions extends AstropressRunwayAdapterOptions {
   config?: AstropressRunwayHostedConfig;
   env?: Record<string, string | undefined>;
+  fetchImpl?: AstropressHostedApiAdapterOptions["fetchImpl"];
 }
 
 export function readAstropressRunwayHostedConfig(
@@ -38,6 +42,8 @@ export function readAstropressRunwayHostedConfig(
   return {
     apiToken,
     projectId,
+    apiBaseUrl: `https://runway.example/${projectId}/astropress-api`,
+    previewBaseUrl: `https://runway.example/${projectId}`,
   };
 }
 
@@ -45,6 +51,24 @@ export function createAstropressRunwayHostedAdapter(
   options: AstropressRunwayHostedAdapterOptions = {},
 ) {
   const config = options.config ?? readAstropressRunwayHostedConfig(options.env);
+  if (!options.backingAdapter && !options.content && !options.media && !options.revisions && !options.auth) {
+    return createAstropressHostedApiAdapter({
+      providerName: "runway",
+      apiBaseUrl: config.apiBaseUrl,
+      accessToken: config.apiToken,
+      previewBaseUrl: `${config.previewBaseUrl.replace(/\/$/, "")}/preview`,
+      fetchImpl: options.fetchImpl,
+      defaultCapabilities: {
+        ...options.defaultCapabilities,
+        hostedAdmin: true,
+        previewEnvironments: true,
+        serverRuntime: true,
+        database: true,
+        objectStorage: true,
+        gitSync: true,
+      },
+    });
+  }
   return createAstropressHostedPlatformAdapter({
     ...options,
     providerName: "runway",
@@ -62,7 +86,7 @@ export function createAstropressRunwayHostedAdapter(
       {
         async create() {
           return {
-            url: `https://runway.example/${config.projectId}/preview`,
+            url: `${config.previewBaseUrl.replace(/\/$/, "")}/preview`,
           };
         },
       },

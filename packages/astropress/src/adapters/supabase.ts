@@ -2,12 +2,14 @@ import {
   type AstropressPlatformAdapter,
 } from "../platform-contracts";
 import { type AstropressInMemoryPlatformAdapterOptions } from "../in-memory-platform-adapter";
+import { createAstropressHostedApiAdapter, type AstropressHostedApiAdapterOptions } from "../hosted-api-adapter";
 import { createAstropressHostedPlatformAdapter } from "../hosted-platform-adapter";
 
 export interface AstropressSupabaseHostedConfig {
   url: string;
   anonKey: string;
   serviceRoleKey: string;
+  apiBaseUrl: string;
 }
 
 export type AstropressSupabaseAdapterOptions = Omit<AstropressInMemoryPlatformAdapterOptions, "capabilities"> & {
@@ -24,6 +26,7 @@ export function createAstropressSupabaseAdapter(options: AstropressSupabaseAdapt
 export interface AstropressSupabaseHostedAdapterOptions extends AstropressSupabaseAdapterOptions {
   config?: AstropressSupabaseHostedConfig;
   env?: Record<string, string | undefined>;
+  fetchImpl?: AstropressHostedApiAdapterOptions["fetchImpl"];
 }
 
 export function readAstropressSupabaseHostedConfig(
@@ -43,6 +46,7 @@ export function readAstropressSupabaseHostedConfig(
     url,
     anonKey,
     serviceRoleKey,
+    apiBaseUrl: `${url.replace(/\/$/, "")}/functions/v1/astropress`,
   };
 }
 
@@ -50,6 +54,24 @@ export function createAstropressSupabaseHostedAdapter(
   options: AstropressSupabaseHostedAdapterOptions = {},
 ) {
   const config = options.config ?? readAstropressSupabaseHostedConfig(options.env);
+  if (!options.backingAdapter && !options.content && !options.media && !options.revisions && !options.auth) {
+    return createAstropressHostedApiAdapter({
+      providerName: "supabase",
+      apiBaseUrl: config.apiBaseUrl,
+      accessToken: config.serviceRoleKey,
+      previewBaseUrl: `${config.url.replace(/\/$/, "")}/preview`,
+      fetchImpl: options.fetchImpl,
+      defaultCapabilities: {
+        ...options.defaultCapabilities,
+        hostedAdmin: true,
+        previewEnvironments: true,
+        serverRuntime: true,
+        database: true,
+        objectStorage: true,
+        gitSync: true,
+      },
+    });
+  }
   return createAstropressHostedPlatformAdapter({
     ...options,
     providerName: "supabase",

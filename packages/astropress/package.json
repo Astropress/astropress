@@ -17,6 +17,7 @@
     "./provider-choice": "./src/provider-choice.js",
     "./admin-routes": "./src/admin-routes.js",
     "./admin-ui": "./src/admin-ui.js",
+    "./hosted-api-adapter": "./src/hosted-api-adapter.js",
     "./hosted-platform-adapter": "./src/hosted-platform-adapter.js",
     "./provider-targets": "./src/provider-targets.ts",
     "./sqlite-bootstrap": "./src/sqlite-bootstrap.js",

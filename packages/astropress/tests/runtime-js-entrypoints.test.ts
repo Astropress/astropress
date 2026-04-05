@@ -10,6 +10,7 @@ const runtimeEntryPoints = [
   "../src/admin-routes.js",
   "../src/admin-ui.js",
   "../src/config.js",
+  "../src/hosted-api-adapter.js",
   "../src/d1-admin-store.js",
   "../src/hosted-platform-adapter.js",
   "../src/sqlite-bootstrap.js",
