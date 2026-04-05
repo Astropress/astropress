@@ -1,0 +1,217 @@
+---
+import AdminLayout from "astropress/components/AdminLayout.astro";
+import { buildSeoPageModel } from "astropress";
+
+const adminUser = Astro.locals.adminUser;
+const selectedType = Astro.url.searchParams.get("type") ?? "all";
+const missingOnly = Astro.url.searchParams.get("missing") === "1";
+const sortKey = Astro.url.searchParams.get("sort") ?? "path";
+const model = await buildSeoPageModel(Astro.locals, adminUser!.role);
+
+if (model.status === "forbidden") {
+  Astro.response.status = 403;
+}
+const rows = model.data.rows;
+const sortedRows = [...rows].sort((left, right) => {
+  if (sortKey === "status") {
+    if (left.missingMetadata === right.missingMetadata) {
+      return left.path.localeCompare(right.path);
+    }
+    return Number(left.missingMetadata) - Number(right.missingMetadata);
+  }
+
+  if (sortKey === "title") {
+    return left.label.localeCompare(right.label);
+  }
+
+  if (sortKey === "type") {
+    return left.type.localeCompare(right.type) || left.path.localeCompare(right.path);
+  }
+
+  return left.path.localeCompare(right.path);
+});
+const visibleRows = sortedRows.filter((row) => (selectedType === "all" || row.type === selectedType) && (!missingOnly || row.missingMetadata));
+const countsByType = rows.reduce<Record<string, number>>((accumulator, row) => {
+  accumulator[row.type] = (accumulator[row.type] ?? 0) + 1;
+  return accumulator;
+}, {});
+const rowsMissingMetadata = rows.filter((row) => row.missingMetadata).length;
+---
+
+{model.status !== "forbidden" ? (
+  <AdminLayout
+    title="SEO | Astropress Admin"
+    heading="SEO"
+    currentPath="/wp-admin/seo"
+    description="Review SEO metadata across pages, posts, archives, and system routes."
+    role={adminUser!.role}
+    userName={adminUser!.name}
+  >
+    {model.warnings.length > 0 && <p class="notice">Some SEO records are temporarily unavailable. This page is showing partial results.</p>}
+    <div class="admin-subgrid two summary-grid">
+      <section class="panel stat summary-card">
+        <span>Indexed SEO records</span>
+        <strong>{rows.length}</strong>
+        <span>Pages, posts, archives, structured pages, and system routes.</span>
+      </section>
+      <section class="panel stat summary-card">
+        <span>Needs metadata</span>
+        <strong>{rowsMissingMetadata}</strong>
+        <span>Items still missing a dedicated SEO title or meta description.</span>
+      </section>
+    </div>
+    <section class="panel seo-panel">
+      <div class="section-header">
+        <div>
+          <p class="admin-kicker">Triage</p>
+          <h2>SEO Triage</h2>
+          <p>Filter by record family, isolate missing metadata, then jump into the owning editor.</p>
+        </div>
+        <form method="get" class="seo-sort-form">
+          <input type="hidden" name="type" value={selectedType} />
+          {missingOnly && <input type="hidden" name="missing" value="1" />}
+          <label>
+            <span class="sr-only">Sort SEO rows</span>
+            <select class="admin-select" name="sort" aria-label="Sort SEO rows">
+              <option value="path" selected={sortKey === "path"}>Sort by path</option>
+              <option value="title" selected={sortKey === "title"}>Sort by title</option>
+              <option value="type" selected={sortKey === "type"}>Sort by type</option>
+              <option value="status" selected={sortKey === "status"}>Sort by status</option>
+            </select>
+          </label>
+          <button type="submit" class="admin-button">Apply</button>
+        </form>
+      </div>
+      <p><strong>{visibleRows.length} of {rows.length} indexed items</strong></p>
+      <div class="seo-filters">
+        <a href="/wp-admin/seo" class="admin-button-ghost small" aria-current={selectedType === "all" && !missingOnly ? "page" : undefined}>All</a>
+        <a href="/wp-admin/seo?type=Page" class="admin-button-ghost small" aria-current={selectedType === "Page" && !missingOnly ? "page" : undefined}>Pages ({countsByType.Page ?? 0})</a>
+        <a href="/wp-admin/seo?type=Post" class="admin-button-ghost small" aria-current={selectedType === "Post" && !missingOnly ? "page" : undefined}>Posts ({countsByType.Post ?? 0})</a>
+        <a href="/wp-admin/seo?type=Structured%20Page" class="admin-button-ghost small" aria-current={selectedType === "Structured Page" && !missingOnly ? "page" : undefined}>Structured ({countsByType["Structured Page"] ?? 0})</a>
+        <a href="/wp-admin/seo?type=Archive" class="admin-button-ghost small" aria-current={selectedType === "Archive" && !missingOnly ? "page" : undefined}>Archives ({countsByType.Archive ?? 0})</a>
+        <a href="/wp-admin/seo?type=System" class="admin-button-ghost small" aria-current={selectedType === "System" && !missingOnly ? "page" : undefined}>System ({countsByType.System ?? 0})</a>
+        <a
+          href={selectedType === "all" ? `/wp-admin/seo?missing=1&sort=${encodeURIComponent(sortKey)}` : `/wp-admin/seo?type=${encodeURIComponent(selectedType)}&missing=1&sort=${encodeURIComponent(sortKey)}`}
+          class="admin-button-ghost small"
+          aria-current={missingOnly ? "page" : undefined}
+        >
+          Missing metadata only
+        </a>
+      </div>
+      <p><strong>SEO metadata overview</strong></p>
+      <div class="admin-table-shell">
+        <table aria-label="SEO metadata">
+          <thead>
+            <tr>
+              <th>Title</th>
+              <th>Type</th>
+              <th>Path</th>
+              <th>SEO Title</th>
+              <th>Meta Description</th>
+              <th>Status</th>
+              <th>Edit</th>
+            </tr>
+          </thead>
+          <tbody>
+            {visibleRows.map((row) => (
+              <tr>
+                <td>{row.label}</td>
+                <td>{row.type}</td>
+                <td><code>{row.path}</code></td>
+                <td>{row.seoTitle}</td>
+                <td>{row.metaDescription}</td>
+                <td><span class="admin-chip">{row.missingMetadata ? "Needs work" : "Ready"}</span></td>
+                <td><a href={row.editHref} class="admin-button-ghost small">Edit</a></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </AdminLayout>
+) : (
+  <AdminLayout
+    title="Forbidden | Astropress Admin"
+    heading="Forbidden"
+    currentPath="/wp-admin/posts"
+    description="This action requires an admin account."
+    role={adminUser!.role}
+    userName={adminUser!.name}
+  >
+    <section class="panel">
+      <p>This action requires an admin account and is hidden from editor-only roles.</p>
+    </section>
+  </AdminLayout>
+)}
+
+<style>
+  .summary-grid {
+    margin-bottom: 1rem;
+  }
+
+  .summary-card span:first-child {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    font-weight: 700;
+  }
+
+  .summary-card span:last-child {
+    color: var(--muted);
+    font-size: 0.9rem;
+  }
+
+  .seo-panel {
+    display: grid;
+    gap: 1rem;
+  }
+
+  code {
+    background: var(--bg);
+    padding: 0.2rem 0.4rem;
+    border-radius: 0.3rem;
+    font-family: monospace;
+    font-size: 0.85rem;
+  }
+
+  .seo-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+  }
+
+  .seo-sort-form {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .seo-sort-form select,
+  .seo-sort-form button {
+    font: inherit;
+  }
+
+  .seo-sort-form button {
+    padding: 0;
+  }
+
+  .seo-filters a[aria-current="page"] {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--accent-soft);
+  }
+
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    border: 0;
+  }
+</style>

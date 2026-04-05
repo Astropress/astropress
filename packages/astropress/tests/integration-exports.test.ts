@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   ASTROPRESS_ADMIN_BASE_PATH,
+  createAstropressAdminAppIntegration,
   createAstropressAdminRouteInjectionPlan,
   createAstropressLocalRuntimeModulePlugin,
   createAstropressVitestLocalRuntimePlugins,
@@ -32,6 +33,7 @@ describe("integration exports", () => {
     });
     const adminRoutes = listAstropressAdminRoutes();
     const injectionPlan = createAstropressAdminRouteInjectionPlan("/tmp/site/pages/wp-admin");
+    const adminAppIntegration = createAstropressAdminAppIntegration();
     const injectedRoutes: typeof injectionPlan = [];
     injectAstropressAdminRoutes("/tmp/site/pages/wp-admin", (route) => {
       injectedRoutes.push(route);
@@ -42,6 +44,7 @@ describe("integration exports", () => {
     expect(hostRuntimeModules).toHaveProperty("loadLocalAdminStore");
     expect(ASTROPRESS_ADMIN_BASE_PATH).toBe("/wp-admin");
     expect(adminRoutes).not.toHaveLength(0);
+    expect(adminAppIntegration.name).toBe("astropress-admin-app");
     expect(injectionPlan[0]?.entrypoint).toBe("/tmp/site/pages/wp-admin/index.astro");
     expect(injectedRoutes).toEqual(injectionPlan);
   });

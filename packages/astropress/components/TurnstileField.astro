@@ -1,0 +1,30 @@
+---
+import { getTurnstileSiteKey } from "astropress";
+
+interface Props {
+  locals?: App.Locals | null;
+  theme?: "light" | "dark" | "auto";
+}
+
+const { locals = Astro.locals, theme = "light" } = Astro.props;
+const siteKey = getTurnstileSiteKey(locals);
+---
+
+{siteKey && (
+  <div class="turnstile-field">
+    <script is:inline src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+    <div class="cf-turnstile" data-sitekey={siteKey} data-theme={theme}></div>
+  </div>
+)}
+
+<style>
+  .turnstile-field {
+    display: grid;
+    justify-content: start;
+    gap: 0.5rem;
+  }
+
+  .turnstile-field :global(.cf-turnstile) {
+    min-height: 65px;
+  }
+</style>

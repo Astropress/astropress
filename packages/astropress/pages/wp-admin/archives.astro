@@ -1,0 +1,191 @@
+---
+import AdminLayout from "astropress/components/AdminLayout.astro";
+import { buildArchivesIndexPageModel } from "astropress";
+
+const adminUser = Astro.locals.adminUser;
+const model = await buildArchivesIndexPageModel(Astro.locals, adminUser!.role);
+if (model.status === "forbidden") {
+  Astro.response.status = 403;
+}
+const { archiveList, kindCounts, totalArchives, totalItems } = model.data;
+---
+
+{model.status !== "forbidden" ? (
+<AdminLayout
+  title="Archives - Astropress Admin"
+  heading="Archives"
+  description="Owner-editable metadata for public archive landing pages."
+  role={adminUser!.role}
+  userName={adminUser!.name}
+  currentPath="/wp-admin/archives"
+>
+  {model.warnings.length > 0 && <p class="notice">Some archive metadata is temporarily unavailable. This page is showing partial results.</p>}
+  <div class="toolbar">
+    <a href="/wp-admin/pages" class="admin-button-secondary">Back to pages</a>
+    <a href="/wp-admin/posts" class="admin-button-ghost">Manage posts in archive families</a>
+  </div>
+  <div class="grid two">
+    <div class="panel stat">
+      <strong>{totalArchives}</strong>
+      <p>Total Archives</p>
+    </div>
+    <div class="panel stat">
+      <strong>{totalItems}</strong>
+      <p>Total Listing Items</p>
+    </div>
+  </div>
+
+  <section class="panel section-space">
+    <div class="section-header">
+      <div>
+        <h2>Archives by Kind</h2>
+        <p>Each archive kind has its own owner-edited landing pages.</p>
+      </div>
+    </div>
+    <div class="grid two">
+      {
+        kindCounts.map((stat) => (
+          <div class="kind-stat">
+            <strong>{stat.count}</strong>
+            <p>{stat.kind}</p>
+          </div>
+        ))
+      }
+    </div>
+  </section>
+
+  <section class="panel section-space overflow-table">
+    <div class="section-header">
+      <div>
+        <h2>All Archives</h2>
+        <p>Edit archive metadata here. Use Posts for the entries that appear inside each archive.</p>
+      </div>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>Title</th>
+          <th>Kind</th>
+          <th>Slug</th>
+          <th class="right">Items</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {
+          archiveList.map((archive) => (
+            <tr>
+              <td>
+                <a href={`/wp-admin/archives/${archive.slug}`}>{archive.title}</a>
+              </td>
+              <td>
+                <span class="kind-chip">{archive.kind}</span>
+              </td>
+              <td><code>{archive.slug}</code></td>
+              <td class="right muted">{archive.listingItems?.length || 0}</td>
+              <td>
+                <div class="row-actions">
+                  <a href={`/wp-admin/archives/${archive.slug}`} class="admin-button-ghost small">Edit archive</a>
+                  <a href={archive.legacyUrl} target="_blank" rel="noreferrer" class="admin-button-ghost small">Open archive</a>
+                </div>
+              </td>
+            </tr>
+          ))
+        }
+      </tbody>
+    </table>
+  </section>
+
+  <p class="archive-note">
+    <strong>Note:</strong> Archive metadata is edited here. Use the archive editor for
+    public titles and SEO, and use Posts to manage the individual content that appears inside each archive.
+  </p>
+</AdminLayout>
+) : (
+  <AdminLayout
+    title="Forbidden | Astropress Admin"
+    heading="Forbidden"
+    description="This action requires an admin account."
+    role={adminUser!.role}
+    userName={adminUser!.name}
+    currentPath="/wp-admin/posts"
+  >
+    <section class="panel">
+      <p>This action requires an admin account and is hidden from editor-only roles.</p>
+    </section>
+  </AdminLayout>
+)}
+
+<style>
+  h2 {
+    font-size: 1.25rem;
+    margin-bottom: 1rem;
+  }
+
+  table {
+    font-size: 0.95rem;
+  }
+
+  th {
+    background: var(--bg);
+    font-weight: 700;
+  }
+
+  tr:hover {
+    background: var(--bg);
+  }
+
+  code {
+    font-family: "Monaco", "Courier New", monospace;
+    font-size: 0.85rem;
+  }
+
+  .section-space {
+    margin-top: 1.5rem;
+  }
+
+  .overflow-table {
+    overflow-x: auto;
+  }
+
+  .kind-stat strong {
+    color: var(--accent);
+    font-size: 1.2rem;
+  }
+
+  .kind-stat p {
+    margin: 0.25rem 0 0;
+    color: var(--muted);
+  }
+
+  .kind-chip {
+    display: inline-flex;
+    padding: 0.25rem 0.6rem;
+    background: var(--accent-soft);
+    color: var(--accent);
+    border-radius: 999px;
+    font-size: 0.85rem;
+    font-weight: 600;
+  }
+
+  .row-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+
+  .archive-note,
+  .muted {
+    color: var(--muted);
+  }
+
+  .archive-note {
+    margin-top: 1.5rem;
+    font-size: 0.9rem;
+    max-width: 68ch;
+  }
+
+  .right {
+    text-align: right;
+  }
+</style>

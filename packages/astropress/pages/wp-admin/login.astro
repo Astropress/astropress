@@ -1,0 +1,257 @@
+---
+import { ASTROPRESS_ADMIN_APP_NAME, buildAstropressAdminDocumentTitle } from "astropress";
+import TurnstileField from "astropress/components/TurnstileField.astro";
+
+const hasError = Astro.url.searchParams.get("error") === "1";
+const isRateLimited = Astro.url.searchParams.get("ratelimited") === "1";
+const requiresChallenge = Astro.url.searchParams.get("challenge") === "1";
+const wasReset = Astro.url.searchParams.get("reset") === "1";
+const invitationAccepted = Astro.url.searchParams.get("invited") === "1";
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <script is:inline>
+      (function() {
+        try {
+          var t = localStorage.getItem('theme');
+          if (t === 'dark' || t === 'light') {
+            document.documentElement.setAttribute('data-theme', t);
+          } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.setAttribute('data-theme', 'dark');
+          } else {
+            document.documentElement.setAttribute('data-theme', 'light');
+          }
+        } catch (e) {}
+      })();
+    </script>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>{buildAstropressAdminDocumentTitle("Admin Login")}</title>
+  </head>
+  <body>
+    <main class="login-shell">
+      <section class="login-card">
+        <div class="login-card-top">
+          <p class="eyebrow">{ASTROPRESS_ADMIN_APP_NAME}</p>
+          <button
+            type="button"
+            class="theme-toggle-admin"
+            id="login-theme-toggle"
+            aria-pressed="false"
+            aria-label="Toggle dark mode"
+            title="Toggle dark mode"
+          >
+            <span class="theme-toggle-icon" aria-hidden="true"></span>
+          </button>
+        </div>
+        <h1>Admin Login</h1>
+        <p>Use an authorized admin account to access the editorial workspace.</p>
+
+        {isRateLimited && <p class="error">Too many sign-in attempts. Wait a minute and try again.</p>}
+        {hasError && !isRateLimited && <p class="error">The email or password was not recognized.</p>}
+        {requiresChallenge && <p class="error">Complete the security challenge and try signing in again.</p>}
+        {wasReset && <p class="success">Your password was reset successfully. Sign in with the new password.</p>}
+        {invitationAccepted && <p class="success">Your invitation was accepted successfully. Sign in with the new password.</p>}
+
+        <form method="post" action="/wp-admin/session">
+          <label>
+            <span>Email</span>
+            <input type="email" name="email" autocomplete="email" required />
+          </label>
+          <label>
+            <span>Password</span>
+            <input type="password" name="password" autocomplete="current-password" required />
+          </label>
+          <TurnstileField />
+          <button type="submit">Sign in</button>
+        </form>
+        <p class="aux-link"><a href="/wp-admin/reset-password">Forgot your password?</a></p>
+
+      </section>
+    </main>
+    <script is:inline>
+      (function() {
+        var root = document.documentElement;
+        var toggle = document.getElementById('login-theme-toggle');
+        if (!toggle) return;
+
+        function applyTheme(theme) {
+          root.setAttribute('data-theme', theme);
+          toggle.setAttribute('aria-pressed', theme === 'dark' ? 'true' : 'false');
+          var nextTheme = theme === 'dark' ? 'light' : 'dark';
+          toggle.setAttribute('aria-label', nextTheme === 'dark' ? 'Switch to dark mode' : 'Switch to light mode');
+          toggle.setAttribute('title', nextTheme === 'dark' ? 'Switch to dark mode' : 'Switch to light mode');
+          toggle.querySelector('.theme-toggle-icon').textContent = theme === 'dark' ? '☀' : '☾';
+        }
+
+        function currentTheme() {
+          return root.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+        }
+
+        applyTheme(currentTheme());
+        toggle.addEventListener('click', function() {
+          var next = currentTheme() === 'dark' ? 'light' : 'dark';
+          applyTheme(next);
+          try {
+            localStorage.setItem('theme', next);
+          } catch (e) {}
+        });
+      })();
+    </script>
+  </body>
+</html>
+
+<style>
+  :root {
+    color-scheme: light;
+    --bg: #eff4f7;
+    --card: #fffefb;
+    --text: #1d2733;
+    --accent: #0d5c63;
+    --line: #d8dee5;
+    --error: #a11f36;
+    --success: #155239;
+    --surface-glow: radial-gradient(circle at top, #dceef0 0%, var(--bg) 48%, #edf1e8 100%);
+  }
+
+  html[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #101815;
+    --card: #18231f;
+    --text: #edf4ef;
+    --accent: #8fd0a0;
+    --line: #31433b;
+    --error: #ff9bb0;
+    --success: #9de0ae;
+    --surface-glow: radial-gradient(circle at top, #203429 0%, #101815 48%, #17211d 100%);
+  }
+
+  html {
+    font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+    background: var(--surface-glow);
+    color: var(--text);
+  }
+
+  body {
+    margin: 0;
+  }
+
+  .login-shell {
+    min-height: 100vh;
+    display: grid;
+    place-items: center;
+    padding: 1.5rem;
+  }
+
+  .login-card {
+    position: relative;
+    width: min(100%, 30rem);
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 1.25rem;
+    padding: 1.5rem;
+    box-shadow: 0 20px 60px rgba(17, 30, 42, 0.08);
+  }
+
+  html[data-theme="dark"] .login-card {
+    box-shadow: 0 22px 70px rgba(0, 0, 0, 0.34);
+  }
+
+  .login-card-top {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 1rem;
+    margin-bottom: 0.35rem;
+  }
+
+  .eyebrow {
+    margin: 0;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--accent);
+  }
+
+  .theme-toggle-admin {
+    position: absolute;
+    top: 1.1rem;
+    right: 1.1rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.8rem;
+    height: 2.8rem;
+    padding: 0;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--text);
+    cursor: pointer;
+  }
+
+  .theme-toggle-icon {
+    font-size: 1.35rem;
+    line-height: 1;
+  }
+
+  h1 {
+    margin: 0 0 0.5rem;
+  }
+
+  form {
+    display: grid;
+    gap: 1rem;
+    margin-top: 1.25rem;
+  }
+
+  label {
+    display: grid;
+    gap: 0.4rem;
+  }
+
+  input {
+    border: 1px solid var(--line);
+    border-radius: 0.7rem;
+    padding: 0.8rem 0.9rem;
+    font: inherit;
+    background: var(--card);
+    color: var(--text);
+  }
+
+  button {
+    border: 0;
+    border-radius: 0.75rem;
+    padding: 0.85rem 1rem;
+    background: var(--accent);
+    color: white;
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .error {
+    color: var(--error);
+    font-weight: 700;
+  }
+
+  .success {
+    color: var(--success);
+    font-weight: 700;
+  }
+
+  .aux-link {
+    margin: 1rem 0 0;
+    font-size: 0.95rem;
+  }
+
+  .aux-link a {
+    color: var(--accent);
+    font-weight: 600;
+  }
+
+</style>

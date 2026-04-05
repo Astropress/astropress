@@ -1,0 +1,125 @@
+---
+import AdminLayout from "astropress/components/AdminLayout.astro";
+import AuditTrail from "astropress/components/AuditTrail.astro";
+import CsrfInput from "astropress/components/CsrfInput.astro";
+import { buildPostRevisionsPageModel } from "astropress";
+
+const adminUser = Astro.locals.adminUser;
+const slug = Astro.params.slug ?? "";
+const model = await buildPostRevisionsPageModel(Astro.locals, slug);
+const { pageRecord, revisions, auditEvents, authors, categories, tags } = model.data;
+const wasRestored = Astro.url.searchParams.get("restored") === "1";
+const errorMessage = Astro.url.searchParams.get("error") === "1" ? Astro.url.searchParams.get("message") : "";
+
+const authorNamesById = new Map(authors.map((author) => [author.id, author.name]));
+const categoryNamesById = new Map(categories.map((term) => [term.id, term.name]));
+const tagNamesById = new Map(tags.map((term) => [term.id, term.name]));
+
+function joinAssignmentLabels(ids: number[] | undefined, labelsById: Map<number, string>) {
+  if (!ids || ids.length === 0) {
+    return "—";
+  }
+
+  const labels = ids.map((id) => labelsById.get(id)).filter((value): value is string => Boolean(value));
+  return labels.length > 0 ? labels.join(", ") : "—";
+}
+
+if (model.status === "not_found") {
+  Astro.response.status = 404;
+}
+---
+
+{pageRecord && revisions ? (
+  <AdminLayout
+    title={`Revisions | ${pageRecord.title}`}
+    heading="Revisions"
+    currentPath="/wp-admin/posts"
+    description="Reviewed and imported revision history for a representative content record."
+    role={adminUser!.role}
+    userName={adminUser!.name}
+  >
+    {model.warnings.length > 0 && <p class="notice">Some revision data is temporarily unavailable. This page is showing partial results.</p>}
+    <div class="toolbar">
+      <a href={`/wp-admin/posts/${pageRecord.slug}`}>Return to edit view</a>
+    </div>
+    {wasRestored && <p class="notice">Revision restored successfully.</p>}
+    {errorMessage && <p class="error-notice">{errorMessage}</p>}
+    <section class="panel">
+      <p><strong>Revision history</strong></p>
+      <table aria-label="Revision history">
+        <thead>
+          <tr>
+            <th>Source</th>
+            <th>Title</th>
+            <th>Status</th>
+            <th>Scheduled</th>
+            <th>SEO title</th>
+            <th>Authors</th>
+            <th>Categories</th>
+            <th>Tags</th>
+            <th>Note</th>
+            <th>By</th>
+            <th>Timestamp</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {revisions.map((revision) => (
+            <tr>
+              <td>{revision.source}</td>
+              <td>{revision.title}</td>
+              <td>{revision.status}</td>
+              <td>{revision.scheduledAt ? new Date(revision.scheduledAt).toLocaleString("en-US") : "—"}</td>
+              <td>{revision.seoTitle}</td>
+              <td>{joinAssignmentLabels(revision.authorIds, authorNamesById)}</td>
+              <td>{joinAssignmentLabels(revision.categoryIds, categoryNamesById)}</td>
+              <td>{joinAssignmentLabels(revision.tagIds, tagNamesById)}</td>
+              <td>{revision.revisionNote || "—"}</td>
+              <td>{revision.createdBy || "—"}</td>
+              <td>{revision.createdAt}</td>
+              <td>
+                <form method="post" action="/wp-admin/actions/revision-restore" class="restore-form">
+                  <CsrfInput token={Astro.locals.csrfToken} />
+                  <input type="hidden" name="slug" value={slug} />
+                  <input type="hidden" name="revisionId" value={revision.id} />
+                  <button type="submit" class="restore-button">Restore</button>
+                </form>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </section>
+    <AuditTrail events={auditEvents.filter((event) => event.targetType === "content").slice(0, 5)} />
+  </AdminLayout>
+) : (
+  <AdminLayout
+    title="Not Found | Astropress Admin"
+    heading="Not Found"
+    currentPath="/wp-admin/posts"
+    description="The requested revision history could not be found."
+    role={adminUser!.role}
+    userName={adminUser!.name}
+  >
+    <section class="panel">
+      <p>The requested revision history could not be found.</p>
+    </section>
+  </AdminLayout>
+)}
+
+<style>
+  .restore-form {
+    display: flex;
+  }
+
+  .restore-button {
+    border: 0;
+    border-radius: 0.65rem;
+    padding: 0.55rem 0.8rem;
+    background: var(--accent);
+    color: white;
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+  }
+</style>

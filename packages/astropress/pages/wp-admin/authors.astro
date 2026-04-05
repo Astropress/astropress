@@ -1,0 +1,144 @@
+---
+import AdminLayout from "astropress/components/AdminLayout.astro";
+import AuditTrail from "astropress/components/AuditTrail.astro";
+import CsrfInput from "astropress/components/CsrfInput.astro";
+import { buildAuthorsPageModel } from "astropress";
+
+const adminUser = Astro.locals.adminUser;
+const model = await buildAuthorsPageModel(Astro.locals, adminUser!.role);
+const { authors, auditEvents } = model.data;
+const wasSaved = Astro.url.searchParams.get("saved") === "1";
+const wasDeleted = Astro.url.searchParams.get("deleted") === "1";
+const errorMessage = Astro.url.searchParams.get("error") === "1" ? Astro.url.searchParams.get("message") : "";
+
+if (model.status === "forbidden") {
+  Astro.response.status = 403;
+}
+---
+
+{model.status !== "forbidden" ? (
+  <AdminLayout
+    title="Authors | Astropress Admin"
+    heading="Authors"
+    currentPath="/wp-admin/authors"
+    description="Manage reusable author records for editorial attribution."
+    role={adminUser!.role}
+    userName={adminUser!.name}
+  >
+    {model.warnings.length > 0 && <p class="notice">Some author data is temporarily unavailable. This page is showing partial results.</p>}
+    {wasSaved && <p class="notice">The author record was saved successfully.</p>}
+    {wasDeleted && <p class="notice">The author record was deleted successfully.</p>}
+    {errorMessage && <p class="error-notice">{errorMessage}</p>}
+
+    <form class="panel stack-form" method="post" action="/wp-admin/actions/author-save">
+      <CsrfInput token={Astro.locals.csrfToken} />
+      <div class="section-header">
+        <div>
+          <h2>New Author</h2>
+          <p>Create reusable attribution records for posts and legacy content.</p>
+        </div>
+      </div>
+      <label class="admin-field">
+        <span>Author name</span>
+        <input aria-label="Author name" type="text" name="name" placeholder="Maria Rivera" class="admin-input" />
+      </label>
+      <label class="admin-field">
+        <span>Slug</span>
+        <input aria-label="Author slug" type="text" name="slug" placeholder="maria-rivera" class="admin-input" />
+      </label>
+      <label class="admin-field">
+        <span>Bio</span>
+        <textarea aria-label="Author bio" name="bio" rows="3" placeholder="Short author biography" class="admin-textarea"></textarea>
+      </label>
+      <button type="submit" class="admin-button">Save author</button>
+    </form>
+
+    <section class="panel">
+      <div class="section-header">
+        <div>
+          <h2>Authors</h2>
+          <p>Edit author details inline and remove records that are no longer needed.</p>
+        </div>
+      </div>
+      <table aria-label="Authors">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Slug</th>
+            <th>Bio</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {authors.map((author) => (
+            <tr>
+              <td>{author.name}</td>
+              <td>{author.slug}</td>
+              <td>{author.bio || "-"}</td>
+              <td class="actions">
+                <details>
+                  <summary class="edit-summary">Edit</summary>
+                  <form method="post" action="/wp-admin/actions/author-save" class="inline-form">
+                    <CsrfInput token={Astro.locals.csrfToken} />
+                    <input type="hidden" name="id" value={author.id} />
+                    <input aria-label={`Name ${author.slug}`} type="text" name="name" value={author.name} class="admin-input" />
+                    <input aria-label={`Slug ${author.slug}`} type="text" name="slug" value={author.slug} class="admin-input" />
+                    <textarea aria-label={`Bio ${author.slug}`} name="bio" rows="2" class="admin-textarea">{author.bio || ""}</textarea>
+                    <button type="submit" class="admin-button small">Update</button>
+                  </form>
+                </details>
+                <form method="post" action="/wp-admin/actions/author-delete" class="admin-inline-form">
+                  <CsrfInput token={Astro.locals.csrfToken} />
+                  <input type="hidden" name="id" value={author.id} />
+                  <button type="submit" class="admin-button-ghost small delete-button">Delete</button>
+                </form>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </section>
+    <AuditTrail events={auditEvents.filter((event) => event.action.startsWith("author.")).slice(0, 5)} />
+  </AdminLayout>
+) : (
+  <AdminLayout
+    title="Forbidden | Astropress Admin"
+    heading="Forbidden"
+    currentPath=""
+    description="This action requires an admin account."
+    role={adminUser!.role}
+    userName={adminUser!.name}
+  >
+    <section class="panel forbidden">
+      <p>This action requires an admin account and is hidden from editor-only roles.</p>
+    </section>
+  </AdminLayout>
+)}
+
+<style>
+  .stack-form,
+  .inline-form {
+    display: grid;
+    gap: 0.75rem;
+  }
+
+  .delete-button {
+    border-color: color-mix(in srgb, var(--danger) 50%, var(--line));
+    color: var(--danger);
+  }
+
+  .actions {
+    display: grid;
+    gap: 0.5rem;
+  }
+
+  details summary {
+    cursor: pointer;
+    color: var(--accent);
+    font-weight: 700;
+  }
+
+  .edit-summary {
+    width: fit-content;
+  }
+</style>

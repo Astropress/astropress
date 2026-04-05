@@ -20,6 +20,7 @@ const runtimeEntryPoints = [
   "../src/adapters/runway-sqlite.js",
   "../src/adapters/local.js",
   "../src/adapters/project.js",
+  "../src/admin-app-integration.js",
   "../src/integration.js",
   "../src/cloudflare-vite-integration.js",
   "../src/deploy/github-pages.js",

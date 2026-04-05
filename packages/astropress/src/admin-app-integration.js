@@ -1,0 +1,15 @@
+import { fileURLToPath } from "node:url";
+
+import { injectAstropressAdminRoutes } from "./admin-routes.js";
+
+export function createAstropressAdminAppIntegration() {
+  return {
+    name: "astropress-admin-app",
+    hooks: {
+      "astro:config:setup": ({ injectRoute }) => {
+        const pagesDirectory = fileURLToPath(new URL("../pages/wp-admin", import.meta.url));
+        injectAstropressAdminRoutes(pagesDirectory, injectRoute);
+      },
+    },
+  };
+}

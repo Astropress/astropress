@@ -1,0 +1,96 @@
+---
+import AdminLayout from "astropress/components/AdminLayout.astro";
+import CsrfInput from "astropress/components/CsrfInput.astro";
+
+const adminUser = Astro.locals.adminUser;
+const errorMessage = Astro.url.searchParams.get("error") === "1" ? Astro.url.searchParams.get("message") : "";
+---
+
+<AdminLayout
+  title="New Post | Astropress Admin"
+  heading="New Post"
+  currentPath="/wp-admin/posts"
+  description="Create a new blog post draft."
+  role={adminUser!.role}
+  userName={adminUser!.name}
+>
+  {errorMessage && <p class="error-notice">{errorMessage}</p>}
+
+  <form method="post" action="/wp-admin/actions/content-create" class="edit-form">
+    <CsrfInput token={Astro.locals.csrfToken} />
+
+    <section class="panel">
+      <div class="section-header">
+        <div>
+          <h2>General</h2>
+          <p>Create a new blog record with its route, publish state, and summary in one place.</p>
+        </div>
+      </div>
+      <label class="admin-field">
+        <span>Title</span>
+        <input type="text" name="title" aria-label="Post title" required class="admin-input" />
+      </label>
+      <label class="admin-field">
+        <span>Slug</span>
+        <input type="text" name="slug" aria-label="Slug" required class="admin-input" />
+      </label>
+      <label class="admin-field">
+        <span>Public route</span>
+        <input type="text" name="legacyUrl" aria-label="Public route" placeholder="/your-post-slug" class="admin-input" />
+      </label>
+      <label class="admin-field">
+        <span>Status</span>
+        <select name="status" aria-label="Publish status" class="admin-select">
+          <option value="draft" selected>Draft</option>
+          <option value="review">In Review</option>
+          <option value="published">Published</option>
+        </select>
+      </label>
+    </section>
+
+    <section class="panel">
+      <div class="section-header">
+        <div>
+          <h2>Content</h2>
+          <p>Start with the summary and body HTML that should appear on the public post page.</p>
+        </div>
+      </div>
+      <label class="admin-field">
+        <span>Summary</span>
+        <textarea name="summary" aria-label="Content summary" rows="3" class="admin-textarea"></textarea>
+      </label>
+      <label class="admin-field">
+        <span>Body HTML</span>
+        <textarea name="body" aria-label="Body HTML" rows="12" class="admin-textarea code-field"></textarea>
+      </label>
+    </section>
+
+    <section class="panel">
+      <div class="section-header">
+        <div>
+          <h2>SEO</h2>
+          <p>Set the initial search title and description before the post is published.</p>
+        </div>
+      </div>
+      <label class="admin-field">
+        <span>SEO Title</span>
+        <input type="text" name="seoTitle" aria-label="SEO title" required class="admin-input" />
+      </label>
+      <label class="admin-field">
+        <span>Meta Description</span>
+        <textarea name="metaDescription" aria-label="Meta description" rows="3" required class="admin-textarea"></textarea>
+      </label>
+    </section>
+
+    <div class="form-actions">
+      <button type="submit" class="admin-button">Create post</button>
+      <a href="/wp-admin/posts" class="admin-button-ghost secondary-button">Cancel</a>
+    </div>
+  </form>
+</AdminLayout>
+
+<style>
+  .code-field {
+    font-family: monospace;
+  }
+</style>

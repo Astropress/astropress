@@ -7,6 +7,10 @@ export {
   buildAstropressAdminDocumentTitle,
 } from "./src/admin-branding.js";
 export {
+  invalidateAstropressAdminSlugCache,
+  resolveAstropressAdminSlug,
+} from "./src/admin-slug-cache";
+export {
   ASTROPRESS_ADMIN_BASE_PATH,
   createAstropressAdminRouteInjectionPlan,
   injectAstropressAdminRoutes,

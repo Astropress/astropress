@@ -80,6 +80,7 @@
     "bin",
     "components",
     "index.ts",
+    "pages",
     "src"
   ],
   "peerDependencies": {

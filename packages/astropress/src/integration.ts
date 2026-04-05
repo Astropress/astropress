@@ -18,6 +18,7 @@ export type {
 
 export { createAstropressVitestLocalRuntimePlugins } from "./vitest-runtime-alias";
 export type { AstropressVitestPlugin } from "./vitest-runtime-alias";
+export { createAstropressAdminAppIntegration } from "./admin-app-integration";
 export {
   ASTROPRESS_ADMIN_BASE_PATH,
   createAstropressAdminRouteInjectionPlan,

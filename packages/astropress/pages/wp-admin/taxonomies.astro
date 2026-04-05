@@ -1,0 +1,210 @@
+---
+import AdminLayout from "astropress/components/AdminLayout.astro";
+import AuditTrail from "astropress/components/AuditTrail.astro";
+import CsrfInput from "astropress/components/CsrfInput.astro";
+import { buildTaxonomiesPageModel } from "astropress";
+
+const adminUser = Astro.locals.adminUser;
+const model = await buildTaxonomiesPageModel(Astro.locals, adminUser!.role);
+const { categories, tags, auditEvents } = model.data;
+const wasSaved = Astro.url.searchParams.get("saved") === "1";
+const wasDeleted = Astro.url.searchParams.get("deleted") === "1";
+const errorMessage = Astro.url.searchParams.get("error") === "1" ? Astro.url.searchParams.get("message") : "";
+
+if (model.status === "forbidden") {
+  Astro.response.status = 403;
+}
+---
+
+{model.status !== "forbidden" ? (
+  <AdminLayout
+    title="Taxonomies | Astropress Admin"
+    heading="Taxonomies"
+    currentPath="/wp-admin/taxonomies"
+    description="Manage reusable categories and tags for future editorial workflows."
+    role={adminUser!.role}
+    userName={adminUser!.name}
+  >
+    {model.warnings.length > 0 && <p class="notice">Some taxonomy data is temporarily unavailable. This page is showing partial results.</p>}
+    {wasSaved && <p class="notice">The taxonomy term was saved successfully.</p>}
+    {wasDeleted && <p class="notice">The taxonomy term was deleted successfully.</p>}
+    {errorMessage && <p class="error-notice">{errorMessage}</p>}
+
+    <div class="taxonomy-grid">
+      <section class="panel">
+        <div class="section-header">
+          <div>
+            <h2>Categories</h2>
+            <p>Group posts into durable archive families and editorial buckets.</p>
+          </div>
+        </div>
+        <form class="stack-form" method="post" action="/wp-admin/actions/taxonomy-save">
+          <CsrfInput token={Astro.locals.csrfToken} />
+          <input type="hidden" name="kind" value="category" />
+          <label class="admin-field">
+            <span>Category name</span>
+            <input aria-label="Category name" type="text" name="name" placeholder="Programs" class="admin-input" />
+          </label>
+          <label class="admin-field">
+            <span>Slug</span>
+            <input aria-label="Category slug" type="text" name="slug" placeholder="programs" class="admin-input" />
+          </label>
+          <label class="admin-field">
+            <span>Description</span>
+            <textarea aria-label="Category description" name="description" rows="2" class="admin-textarea"></textarea>
+          </label>
+          <button type="submit" class="admin-button">Save category</button>
+        </form>
+        <table aria-label="Categories">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Slug</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {categories.map((term) => (
+              <tr>
+                <td>{term.name}</td>
+                <td>{term.slug}</td>
+                <td class="actions">
+                  <details>
+                    <summary class="edit-summary">Edit</summary>
+                    <form method="post" action="/wp-admin/actions/taxonomy-save" class="inline-form">
+                      <CsrfInput token={Astro.locals.csrfToken} />
+                      <input type="hidden" name="kind" value="category" />
+                      <input type="hidden" name="id" value={term.id} />
+                      <input aria-label={`Category name ${term.slug}`} type="text" name="name" value={term.name} class="admin-input" />
+                      <input aria-label={`Category slug ${term.slug}`} type="text" name="slug" value={term.slug} class="admin-input" />
+                      <textarea aria-label={`Category description ${term.slug}`} name="description" rows="2" class="admin-textarea">{term.description || ""}</textarea>
+                      <button type="submit" class="admin-button small">Update</button>
+                    </form>
+                  </details>
+                  <form method="post" action="/wp-admin/actions/taxonomy-delete" class="admin-inline-form">
+                    <CsrfInput token={Astro.locals.csrfToken} />
+                    <input type="hidden" name="kind" value="category" />
+                    <input type="hidden" name="id" value={term.id} />
+                    <button type="submit" class="admin-button-ghost small delete-button">Delete</button>
+                  </form>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </section>
+
+      <section class="panel">
+        <div class="section-header">
+          <div>
+            <h2>Tags</h2>
+            <p>Capture lighter-weight topical labels without creating a whole category family.</p>
+          </div>
+        </div>
+        <form class="stack-form" method="post" action="/wp-admin/actions/taxonomy-save">
+          <CsrfInput token={Astro.locals.csrfToken} />
+          <input type="hidden" name="kind" value="tag" />
+          <label class="admin-field">
+            <span>Tag name</span>
+            <input aria-label="Tag name" type="text" name="name" placeholder="Volunteer Stories" class="admin-input" />
+          </label>
+          <label class="admin-field">
+            <span>Slug</span>
+            <input aria-label="Tag slug" type="text" name="slug" placeholder="volunteer-stories" class="admin-input" />
+          </label>
+          <label class="admin-field">
+            <span>Description</span>
+            <textarea aria-label="Tag description" name="description" rows="2" class="admin-textarea"></textarea>
+          </label>
+          <button type="submit" class="admin-button">Save tag</button>
+        </form>
+        <table aria-label="Tags">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Slug</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {tags.map((term) => (
+              <tr>
+                <td>{term.name}</td>
+                <td>{term.slug}</td>
+                <td class="actions">
+                  <details>
+                    <summary class="edit-summary">Edit</summary>
+                    <form method="post" action="/wp-admin/actions/taxonomy-save" class="inline-form">
+                      <CsrfInput token={Astro.locals.csrfToken} />
+                      <input type="hidden" name="kind" value="tag" />
+                      <input type="hidden" name="id" value={term.id} />
+                      <input aria-label={`Tag name ${term.slug}`} type="text" name="name" value={term.name} class="admin-input" />
+                      <input aria-label={`Tag slug ${term.slug}`} type="text" name="slug" value={term.slug} class="admin-input" />
+                      <textarea aria-label={`Tag description ${term.slug}`} name="description" rows="2" class="admin-textarea">{term.description || ""}</textarea>
+                      <button type="submit" class="admin-button small">Update</button>
+                    </form>
+                  </details>
+                  <form method="post" action="/wp-admin/actions/taxonomy-delete" class="admin-inline-form">
+                    <CsrfInput token={Astro.locals.csrfToken} />
+                    <input type="hidden" name="kind" value="tag" />
+                    <input type="hidden" name="id" value={term.id} />
+                    <button type="submit" class="admin-button-ghost small delete-button">Delete</button>
+                  </form>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </section>
+    </div>
+    <AuditTrail
+      events={auditEvents.filter((event) => event.action.startsWith("category.") || event.action.startsWith("tag.")).slice(0, 5)}
+    />
+  </AdminLayout>
+) : (
+  <AdminLayout
+    title="Forbidden | Astropress Admin"
+    heading="Forbidden"
+    currentPath=""
+    description="This action requires an admin account."
+    role={adminUser!.role}
+    userName={adminUser!.name}
+  >
+    <section class="panel forbidden">
+      <p>This action requires an admin account and is hidden from editor-only roles.</p>
+    </section>
+  </AdminLayout>
+)}
+
+<style>
+  .taxonomy-grid {
+    display: grid;
+    gap: 1rem;
+  }
+
+  .stack-form,
+  .inline-form {
+    display: grid;
+    gap: 0.75rem;
+  }
+
+  .delete-button {
+    border-color: color-mix(in srgb, var(--danger) 50%, var(--line));
+    color: var(--danger);
+  }
+
+  .actions {
+    display: grid;
+    gap: 0.5rem;
+  }
+
+  details summary {
+    cursor: pointer;
+    color: var(--accent);
+    font-weight: 700;
+  }
+
+  .edit-summary {
+    width: fit-content;
+  }
+</style>

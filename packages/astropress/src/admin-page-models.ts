@@ -280,7 +280,25 @@ export async function buildPostsIndexPageModel(locals: AdminLocals) {
   const categories = await withFallback(warnings, "Category filters are temporarily unavailable.", () => getRuntimeCategories(locals), []);
   const tags = await withFallback(warnings, "Tag filters are temporarily unavailable.", () => getRuntimeTags(locals), []);
   const allContent = await withFallback(warnings, "Post records are temporarily unavailable.", () => listRuntimeContentStates(locals), []);
-  return ok({ authors, categories, tags, allContent }, warnings);
+  const archives = await withSettledMap(
+    warnings,
+    "Archive filters are temporarily unavailable.",
+    getCmsConfig().archives as Array<{ slug: string; title: string; legacyUrl: string; listingItems?: Array<{ href: string }> }>,
+    async (archive) => {
+      const runtimeArchive = await getRuntimeArchiveRoute(archive.legacyUrl, locals);
+      return {
+        slug: archive.slug,
+        title: runtimeArchive?.title || archive.title,
+        listingItems: archive.listingItems ?? [],
+      };
+    },
+    (archive) => ({
+      slug: archive.slug,
+      title: archive.title,
+      listingItems: archive.listingItems ?? [],
+    }),
+  );
+  return ok({ authors, categories, tags, allContent, archives }, warnings);
 }
 
 export async function buildTranslationsPageModel(locals: AdminLocals, role: AdminRole) {

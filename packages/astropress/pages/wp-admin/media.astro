@@ -1,0 +1,233 @@
+---
+import AdminLayout from "astropress/components/AdminLayout.astro";
+import AuditTrail from "astropress/components/AuditTrail.astro";
+import CsrfInput from "astropress/components/CsrfInput.astro";
+import { buildMediaPageModel } from "astropress";
+
+const adminUser = Astro.locals.adminUser;
+const model = await buildMediaPageModel(Astro.locals);
+const { mediaWithResolvedUrls, auditEvents } = model.data;
+const wasSaved = Astro.url.searchParams.get("saved") === "1";
+const wasDeleted = Astro.url.searchParams.get("deleted") === "1";
+const errorMessage = Astro.url.searchParams.get("error") === "1" ? Astro.url.searchParams.get("message") : "";
+---
+
+<AdminLayout
+  title="Media | Astropress Admin"
+  heading="Media"
+  currentPath="/wp-admin/media"
+  description="Media management with familiar grid and list affordances."
+  role={adminUser!.role}
+  userName={adminUser!.name}
+>
+  {model.warnings.length > 0 && <p class="notice">Some media data is temporarily unavailable. This page is showing partial results.</p>}
+  {wasSaved && <p class="notice">The media library was updated successfully.</p>}
+  {wasDeleted && <p class="notice">The media asset was deleted successfully.</p>}
+  {errorMessage && <p class="error-notice">{errorMessage}</p>}
+
+  <div class="admin-subgrid two summary-grid">
+    <section class="panel stat summary-card">
+      <span>Total assets</span>
+      <strong>{mediaWithResolvedUrls.length}</strong>
+      <span>Images currently available in the media library.</span>
+    </section>
+    <section class="panel stat summary-card">
+      <span>Missing alt text</span>
+      <strong>{mediaWithResolvedUrls.filter((asset) => !asset.altText).length}</strong>
+      <span>Assets that still need accessible alternative text.</span>
+    </section>
+  </div>
+
+  <section class="panel upload-panel">
+    <div class="section-header">
+      <div>
+        <p class="admin-kicker">Add Assets</p>
+        <h2>Upload Media</h2>
+        <p>Add a new image asset, then update its title and alt text from the asset table below.</p>
+      </div>
+    </div>
+    <form method="post" action="/wp-admin/actions/media-upload" enctype="multipart/form-data" class="upload-form admin-form-grid">
+      <CsrfInput token={Astro.locals.csrfToken} />
+      <label class="admin-field">
+        <span>File</span>
+        <input aria-label="Media file" type="file" name="file" accept="image/*" required class="admin-input" />
+      </label>
+      <label class="admin-field">
+        <span>Title</span>
+        <input aria-label="Media title" type="text" name="title" class="admin-input" />
+      </label>
+      <label class="admin-field">
+        <span>Alt text</span>
+        <input aria-label="Media alt text" type="text" name="altText" class="admin-input" />
+      </label>
+      <button type="submit" class="admin-button">Upload media</button>
+    </form>
+  </section>
+
+  <section class="panel library-panel">
+    <div class="section-header">
+      <div>
+        <p class="admin-kicker">Browse</p>
+        <h2>Library Grid</h2>
+        <p>Quick scan of current assets and the filenames editors are most likely to recognize.</p>
+      </div>
+    </div>
+    <div class="media-grid">
+      {mediaWithResolvedUrls.map((asset: any) => (
+        <div class="media-card">
+          <img src={asset.resolvedUrl} alt={asset.altText || asset.title || asset.id} />
+          <p class="filename">{asset.sourceUrl?.split("/").pop() || asset.id}</p>
+          <p class="source">{asset.sourceUrl || asset.resolvedUrl}</p>
+          <p class="meta">{asset.title || asset.id}</p>
+        </div>
+      ))}
+    </div>
+  </section>
+
+  <section class="panel library-panel">
+    <div class="section-header">
+      <div>
+        <p class="admin-kicker">Metadata</p>
+        <h2>Library List</h2>
+        <p>Update metadata and remove assets from the detailed asset table below.</p>
+      </div>
+    </div>
+    <div class="admin-table-shell">
+      <table aria-label="Media assets">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Preview</th>
+            <th>Title / Alt</th>
+            <th>Local Path</th>
+            <th>R2 Key</th>
+            <th>Source URL</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {mediaWithResolvedUrls.map((asset: any) => (
+            <tr>
+              <td>{asset.id}</td>
+              <td><img class="thumb" src={asset.resolvedUrl} alt={asset.altText || asset.title || asset.id} /></td>
+              <td>
+                <p class="asset-title">{asset.title || asset.id}</p>
+                <p class="asset-alt">{asset.altText || "No alt text yet"}</p>
+                <form method="post" action="/wp-admin/actions/media-update" class="meta-form admin-form-grid">
+                  <CsrfInput token={Astro.locals.csrfToken} />
+                  <input type="hidden" name="id" value={asset.id} />
+                  <input aria-label={`Title ${asset.id}`} type="text" name="title" value={asset.title || ""} class="admin-input" />
+                  <input aria-label={`Alt text ${asset.id}`} type="text" name="altText" value={asset.altText || ""} class="admin-input" />
+                  <button type="submit" class="admin-button small">Save metadata</button>
+                </form>
+              </td>
+              <td>{asset.resolvedUrl || "-"}</td>
+              <td>{asset.r2Key || "-"}</td>
+              <td>{asset.sourceUrl || "-"}</td>
+              <td>
+                <form method="post" action="/wp-admin/actions/media-delete" class="admin-inline-form">
+                  <CsrfInput token={Astro.locals.csrfToken} />
+                  <input type="hidden" name="id" value={asset.id} />
+                  <button type="submit" class="admin-button-ghost small danger-button">Delete</button>
+                </form>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <AuditTrail events={auditEvents.filter((event) => event.action.startsWith("media.")).slice(0, 6)} heading="Media Audit" />
+</AdminLayout>
+
+<style>
+  .summary-grid,
+  .upload-panel,
+  .library-panel {
+    margin-bottom: 1rem;
+  }
+
+  .summary-card span:first-child {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    font-weight: 700;
+  }
+
+  .summary-card span:last-child {
+    color: var(--muted);
+    font-size: 0.9rem;
+  }
+
+  .upload-form,
+  .meta-form {
+    display: grid;
+    gap: 0.75rem;
+  }
+
+  .upload-form label,
+  .meta-form label {
+    display: grid;
+    gap: 0.35rem;
+  }
+
+  .media-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 1rem;
+  }
+
+  .media-card {
+    padding: 1rem;
+    border: 1px solid var(--line);
+    border-radius: 1rem;
+    background: var(--surface);
+  }
+
+  .media-card img,
+  .thumb {
+    width: 100%;
+    max-width: 120px;
+    height: auto;
+    border-radius: 0.5rem;
+    display: block;
+    margin-bottom: 0.75rem;
+  }
+
+  .media-card .filename {
+    font-weight: bold;
+    font-size: 0.9rem;
+    margin: 0 0 0.5rem 0;
+    word-break: break-word;
+  }
+
+  .media-card .source {
+    font-size: 0.8rem;
+    color: var(--muted);
+    margin: 0;
+  }
+
+  .media-card .meta {
+    font-size: 0.8rem;
+    margin: 0.5rem 0 0;
+    color: var(--muted);
+  }
+
+  .asset-title {
+    margin: 0 0 0.35rem;
+    font-weight: 700;
+  }
+
+  .asset-alt {
+    margin: 0 0 0.5rem;
+    font-size: 0.85rem;
+    color: var(--muted);
+  }
+
+  .danger-button {
+    border-color: color-mix(in srgb, var(--danger) 50%, var(--line));
+    color: var(--danger);
+  }
+</style>
