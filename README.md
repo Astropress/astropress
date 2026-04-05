@@ -1,6 +1,6 @@
 # Astropress
 
-Astropress is a provider-neutral CMS toolkit for low-carbon publishing, WordPress migration, and new editorial Astro sites.
+Astropress is a low-carbon web app framework for individuals and small organizations building relatively simple websites that can be hosted freely or cheaply on common providers. It includes a non-technical admin layer and WordPress migration paths, but it is not intended to become a generic drag-everything-into-it website builder the way WordPress often does in practice.
 
 Current repository shape:
 
@@ -9,6 +9,12 @@ Current repository shape:
 - `examples/github-pages` — static example site plus docs/admin explainer for GitHub Pages
 - `SPEC.md` — production architecture contract
 - `features/` — BDD source of truth
+
+Product boundary:
+
+- Astropress is for editorial, informational, campaign, brochure, blog, and other relatively simple organization or individual sites
+- Astropress is not trying to be a universal generic website builder for every kind of arbitrary business workflow
+- Astropress treats the site as an application with a clear content model, admin model, and provider model
 
 Authoring model:
 
@@ -78,6 +84,13 @@ Current CLI workflow behavior:
 - `astropress new --provider sqlite|supabase|runway` scaffolds the example site with a matching local provider default in `.env`
 - `astropress dev --provider sqlite|supabase|runway` seeds the matching local SQLite-backed provider runtime before starting the site
 - `astropress import wordpress`, `astropress sync export`, `astropress sync import`, and GitHub Pages deploy now call the packaged Astropress workflow modules rather than duplicating those workflows in Rust
+
+Why there are duplicated `src/*.ts` and `src/*.js` files:
+
+- the TypeScript files are the source of truth for typed development inside the repo
+- the matching JavaScript files exist for runtime entry points that must load directly from `node_modules` in Bun/Node without a TypeScript build step
+- this is deliberate package-boundary plumbing, not two independent implementations
+- the JS entry points keep tarball consumers and config-time imports working while Astropress is still distributed as source plus selected runtime JS shims
 
 Why `local-runtime-modules` exists:
 

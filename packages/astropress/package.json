@@ -1,7 +1,7 @@
 {
   "name": "astropress",
-  "version": "0.1.3",
-  "description": "Low-carbon, provider-neutral Astro CMS toolkit for migrations from WordPress and new editorial sites.",
+  "version": "0.0.1",
+  "description": "Low-carbon Astro web app framework for relatively simple sites run by individuals and small organizations.",
   "type": "module",
   "bin": {
     "astropress": "./bin/astropress.js"

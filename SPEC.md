@@ -16,12 +16,15 @@ Repo-specific implementation details should live in repo-scoped spec files.
 
 ## Product
 
-Astropress is a low-carbon WordPress replacement for individuals and small organizations that need:
+Astropress is a low-carbon web app framework for individuals and small organizations that need:
 
-- a non-technical admin panel for editing all site content
+- a relatively simple public website with a clear content model
+- a non-technical admin panel for editing that content
 - migration from WordPress without bespoke engineering
 - deployment portability across static, edge, managed database, and application-platform providers
 - a lower operational footprint than a traditional always-on PHP/WordPress stack
+
+Astropress is not intended to be a generic website builder where every possible site shape is modeled through ad hoc plugins and page-builder behavior. It should stay opinionated enough that sites remain simple to operate and cheap to host.
 
 ## Canonical Data Model
 

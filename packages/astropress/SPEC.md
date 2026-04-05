@@ -10,7 +10,7 @@ If Astropress later splits into multiple repositories, this file should move wit
 
 The package is responsible for:
 
-- the reusable CMS runtime surface
+- the reusable web-app runtime surface for relatively simple websites
 - provider-neutral contracts
 - host-facing integration helpers
 - admin components and shared models
@@ -52,6 +52,8 @@ The package should reduce host-specific glue over time by replacing temporary se
 - no provider-specific editorial behavior in shared admin templates
 - no git-first authoring requirement
 - support non-technical editors
+- target individuals and small organizations running relatively simple sites
+- do not drift into a generic site-builder product model
 - support GitHub Pages, Cloudflare, Supabase, and Runway through stable contracts
 - keep published entry points stable once consumers adopt them
 

@@ -16,6 +16,8 @@ The CLI is responsible for:
 - deploy and sync orchestration
 - packaging a non-Node-native entry point for operational workflows
 
+The CLI is for shipping and operating Astropress sites built as relatively simple web applications for individuals and small organizations, not for exposing a generic website-builder surface.
+
 ## Required Command Surface
 
 The CLI must support:

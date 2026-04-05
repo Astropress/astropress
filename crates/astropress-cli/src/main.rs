@@ -509,6 +509,21 @@ fn write_package_manifest(project_dir: &Path, manifest: &PackageManifest) -> Res
     fs::write(project_dir.join("package.json"), format!("{package_json}\n")).map_err(io_error)
 }
 
+fn astropress_package_version() -> Result<String, String> {
+    let package_manifest_path = repo_root()
+        .join("packages")
+        .join("astropress")
+        .join("package.json");
+    let package_json = fs::read_to_string(package_manifest_path).map_err(io_error)?;
+    let package_manifest =
+        serde_json::from_str::<serde_json::Value>(&package_json).map_err(|error| error.to_string())?;
+    package_manifest
+        .get("version")
+        .and_then(|value| value.as_str())
+        .map(ToString::to_string)
+        .ok_or_else(|| "Astropress package version is missing from package.json.".to_string())
+}
+
 fn default_admin_db_relative_path(provider: LocalProvider) -> &'static str {
     provider.default_admin_db_relative_path()
 }
@@ -711,7 +726,7 @@ fn scaffold_new_project(
         if use_local_package {
             format!("file:{}", repo_root().join("packages").join("astropress").display())
         } else {
-            "^0.1.0".into()
+            format!("^{}", astropress_package_version()?)
         },
     );
     write_package_manifest(project_dir, &manifest)?;
