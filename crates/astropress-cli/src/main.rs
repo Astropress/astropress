@@ -566,6 +566,23 @@ fn resolve_admin_db_path(project_dir: &Path, provider: LocalProvider) -> Result<
         .unwrap_or_else(|| default_admin_db_relative_path(provider).to_string()))
 }
 
+fn recommended_deploy_target_for_provider(provider: LocalProvider) -> &'static str {
+    match provider {
+        LocalProvider::Sqlite => "github-pages",
+        LocalProvider::Supabase => "supabase",
+        LocalProvider::Runway => "runway",
+    }
+}
+
+fn resolve_deploy_target(project_dir: &Path, target: Option<&str>) -> Result<String, String> {
+    if let Some(target) = target {
+        return Ok(target.to_string());
+    }
+
+    let provider = resolve_local_provider(project_dir, None)?;
+    Ok(recommended_deploy_target_for_provider(provider).to_string())
+}
+
 fn load_project_scaffold(provider: LocalProvider) -> Result<ProjectScaffold, String> {
     let scaffold_module = package_module_import("project-scaffold.js")?;
     let scaffold_module_literal =
@@ -998,8 +1015,8 @@ fn deploy_script_for_target(
 
 fn deploy_project(project_dir: &Path, target: Option<&str>) -> Result<ExitCode, String> {
     let manifest = read_package_manifest(project_dir)?;
-    let selected_target = target.unwrap_or("github-pages");
-    let script = deploy_script_for_target(&manifest, Some(selected_target))?;
+    let selected_target = resolve_deploy_target(project_dir, target)?;
+    let script = deploy_script_for_target(&manifest, Some(&selected_target))?;
     let build_exit = run_script(project_dir, script)?;
     if build_exit != ExitCode::SUCCESS {
         return Ok(build_exit);
@@ -1042,7 +1059,7 @@ mod tests {
         command_available, default_admin_db_relative_path, deploy_script_for_target,
         ensure_local_provider_defaults, export_project_snapshot, import_project_snapshot, parse_command,
         read_env_file, resolve_admin_db_path, resolve_local_provider, sanitize_package_name, scaffold_new_project,
-        stage_wordpress_import, Command, LocalProvider, PackageManifest,
+        stage_wordpress_import, resolve_deploy_target, Command, LocalProvider, PackageManifest,
     };
     use std::collections::BTreeMap;
     use std::fs;
@@ -1223,6 +1240,18 @@ mod tests {
         assert_eq!(
             resolve_local_provider(&root, Some(LocalProvider::Supabase)).unwrap(),
             LocalProvider::Supabase
+        );
+    }
+
+    #[test]
+    fn deploy_target_defaults_follow_local_provider() {
+        let root = temp_dir("deploy-target");
+        fs::write(root.join(".env"), "ASTROPRESS_LOCAL_PROVIDER=supabase\n").unwrap();
+
+        assert_eq!(resolve_deploy_target(&root, None).unwrap(), "supabase");
+        assert_eq!(
+            resolve_deploy_target(&root, Some("cloudflare")).unwrap(),
+            "cloudflare"
         );
     }
 
