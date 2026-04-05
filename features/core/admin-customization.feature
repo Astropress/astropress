@@ -8,3 +8,8 @@ Feature: Admin customization
     Given Astropress exposes admin branding assets through registerCms
     When a host sets a custom logo and favicon for the admin app
     Then the package-owned admin shell and auth pages should use those assets without duplicating Astropress route files
+
+  Scenario: Hosts can restyle package-owned admin pages without copying them
+    Given Astropress exposes a custom admin stylesheet hook through registerCms
+    When a host sets a client-specific admin stylesheet asset
+    Then the package-owned admin shell and auth pages should load that stylesheet without duplicating Astropress route files

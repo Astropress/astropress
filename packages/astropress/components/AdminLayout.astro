@@ -66,6 +66,7 @@ const navItems: NavItem[] = [
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="robots" content="noindex, nofollow" />
     {adminUi.branding.faviconHref && <link rel="icon" href={adminUi.branding.faviconHref} />}
+    {adminUi.branding.stylesheetHref && <link rel="stylesheet" href={adminUi.branding.stylesheetHref} />}
     <title>{documentTitle}</title>
     <meta name="description" content={description || documentTitle} />
   </head>
@@ -88,6 +89,8 @@ const navItems: NavItem[] = [
           aria-pressed="false"
           aria-label={adminUi.labels.themeToggleDark}
           title={adminUi.labels.themeToggleDark}
+          data-theme-label-dark={adminUi.labels.themeToggleDark}
+          data-theme-label-light={adminUi.labels.themeToggleLight}
         >
           <span class="theme-toggle-icon" aria-hidden="true"></span>
         </button>
@@ -134,10 +137,12 @@ const navItems: NavItem[] = [
         if (!toggle) return;
 
         function applyTheme(theme) {
+          var darkLabel = toggle.getAttribute('data-theme-label-dark') || 'Switch to dark mode';
+          var lightLabel = toggle.getAttribute('data-theme-label-light') || 'Switch to light mode';
           root.setAttribute('data-theme', theme);
           toggle.setAttribute('aria-pressed', theme === 'dark' ? 'true' : 'false');
-          toggle.setAttribute('aria-label', theme === 'dark' ? '{adminUi.labels.themeToggleLight}' : '{adminUi.labels.themeToggleDark}');
-          toggle.setAttribute('title', theme === 'dark' ? '{adminUi.labels.themeToggleLight}' : '{adminUi.labels.themeToggleDark}');
+          toggle.setAttribute('aria-label', theme === 'dark' ? lightLabel : darkLabel);
+          toggle.setAttribute('title', theme === 'dark' ? lightLabel : darkLabel);
           toggle.querySelector('.theme-toggle-icon').textContent = theme === 'dark' ? '☀' : '☾';
         }
 

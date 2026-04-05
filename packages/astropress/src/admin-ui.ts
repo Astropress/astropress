@@ -27,6 +27,7 @@ export interface AstropressResolvedAdminUiConfig {
     logoHref: string;
     logoAlt: string;
     faviconHref: string | null;
+    stylesheetHref: string | null;
   };
   labels: {
     sidebarTitle: string;
@@ -70,6 +71,7 @@ const defaultAdminUiConfig: AstropressResolvedAdminUiConfig = {
     logoHref: "/wp-admin",
     logoAlt: "Astropress Admin",
     faviconHref: null,
+    stylesheetHref: null,
   },
   labels: {
     sidebarTitle: "Workspace",
@@ -149,6 +151,7 @@ export function resolveAstropressAdminUiConfig(): AstropressResolvedAdminUiConfi
       shellName: merged.branding.shellName || merged.branding.productName,
       logoAlt: merged.branding.logoAlt || merged.branding.productName,
       logoHref: merged.branding.logoHref || "/wp-admin",
+      stylesheetHref: merged.branding.stylesheetHref || null,
     },
     labels: merged.labels,
     navigation: merged.navigation,

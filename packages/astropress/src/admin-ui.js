@@ -7,7 +7,8 @@ const defaultAdminUiConfig = {
     logoSrc: null,
     logoHref: "/wp-admin",
     logoAlt: "Astropress Admin",
-    faviconHref: null
+    faviconHref: null,
+    stylesheetHref: null
   },
   labels: {
     sidebarTitle: "Workspace",
@@ -83,7 +84,8 @@ export function resolveAstropressAdminUiConfig() {
       ...merged.branding,
       shellName: merged.branding.shellName || merged.branding.productName,
       logoAlt: merged.branding.logoAlt || merged.branding.productName,
-      logoHref: merged.branding.logoHref || "/wp-admin"
+      logoHref: merged.branding.logoHref || "/wp-admin",
+      stylesheetHref: merged.branding.stylesheetHref || null
     },
     labels: merged.labels,
     navigation: merged.navigation

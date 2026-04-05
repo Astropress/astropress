@@ -22,6 +22,7 @@ describe("admin ui", () => {
 
     expect(adminUi.branding.productName).toBe("Astropress Admin");
     expect(adminUi.branding.logoSrc).toBeNull();
+    expect(adminUi.branding.stylesheetHref).toBeNull();
     expect(adminUi.labels.sidebarTitle).toBe("Workspace");
     expect(adminUi.navigation.routePages).toBe("Route Table");
     expect(buildAstropressAdminDocumentTitle("Dashboard")).toBe("Dashboard | Astropress Admin");
@@ -41,6 +42,7 @@ describe("admin ui", () => {
           shellName: "Client Workspace",
           logoSrc: "/brand/admin-mark.svg",
           faviconHref: "/brand/favicon.ico",
+          stylesheetHref: "/brand/admin.css",
         },
         labels: {
           sidebarTitle: "Operations",
@@ -62,6 +64,7 @@ describe("admin ui", () => {
     expect(adminUi.branding.shellName).toBe("Client Workspace");
     expect(adminUi.branding.logoSrc).toBe("/brand/admin-mark.svg");
     expect(adminUi.branding.faviconHref).toBe("/brand/favicon.ico");
+    expect(adminUi.branding.stylesheetHref).toBe("/brand/admin.css");
     expect(adminUi.labels.sidebarTitle).toBe("Operations");
     expect(adminUi.labels.signOut).toBe("Log out");
     expect(adminUi.labels.loginHeading).toBe("Client sign in");

@@ -54,6 +54,7 @@ export interface CmsConfig {
       logoHref?: string;
       logoAlt?: string;
       faviconHref?: string;
+      stylesheetHref?: string;
     };
     labels?: {
       sidebarTitle?: string;
