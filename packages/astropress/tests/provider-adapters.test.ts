@@ -6,6 +6,7 @@ import { describe, expect, it } from "vitest";
 import {
   createAstropressHostedPlatformAdapter,
   createAstropressCloudflareAdapter,
+  createAstropressHostedAdapter,
   createAstropressRunwayAdapter,
   createAstropressRunwayHostedAdapter,
   createAstropressSupabaseAdapter,
@@ -421,6 +422,75 @@ describe("provider adapters", () => {
     });
     expect(await runway.preview?.create({ recordId: "hosted-config-post" })).toEqual({
       url: "https://runway.example/project-123/preview",
+    });
+  });
+
+  it("selects hosted providers from explicit options or env", async () => {
+    const supabase = createAstropressHostedAdapter({
+      env: {
+        SUPABASE_URL: "https://selector.supabase.co",
+        SUPABASE_ANON_KEY: "anon",
+        SUPABASE_SERVICE_ROLE_KEY: "service",
+      },
+      content: {
+        async list() {
+          return [];
+        },
+        async get() {
+          return null;
+        },
+        async save(record) {
+          return record;
+        },
+        async delete() {},
+      },
+      media: {
+        async put(asset) {
+          return asset;
+        },
+        async get() {
+          return null;
+        },
+        async delete() {},
+      },
+      revisions: {
+        async list() {
+          return [];
+        },
+        async append(revision) {
+          return revision;
+        },
+      },
+      auth: {
+        async signIn(email) {
+          return { id: "selector-session", email, role: "admin" as const };
+        },
+        async signOut() {},
+        async getSession(sessionId) {
+          return { id: sessionId, email: "admin@example.com", role: "admin" as const };
+        },
+      },
+    });
+
+    const runway = createAstropressHostedAdapter({
+      provider: "runway",
+      env: {
+        RUNWAY_API_TOKEN: "token",
+        RUNWAY_PROJECT_ID: "selector-runway",
+      },
+      content: supabase.content,
+      media: supabase.media,
+      revisions: supabase.revisions,
+      auth: supabase.auth,
+    });
+
+    expect(supabase.capabilities.name).toBe("supabase");
+    expect(runway.capabilities.name).toBe("runway");
+    expect(await supabase.preview?.create({ recordId: "x" })).toEqual({
+      url: "https://selector.supabase.co/preview",
+    });
+    expect(await runway.preview?.create({ recordId: "x" })).toEqual({
+      url: "https://runway.example/selector-runway/preview",
     });
   });
 

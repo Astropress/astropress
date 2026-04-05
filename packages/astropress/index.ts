@@ -34,6 +34,8 @@ export { createAstropressHostedPlatformAdapter } from "./src/hosted-platform-ada
 export type { AstropressHostedPlatformAdapterOptions } from "./src/hosted-platform-adapter";
 export { createAstropressCloudflareAdapter } from "./src/adapters/cloudflare.js";
 export type { AstropressCloudflareAdapterOptions } from "./src/adapters/cloudflare";
+export { createAstropressHostedAdapter } from "./src/adapters/hosted.js";
+export type { AstropressHostedAdapterOptions, AstropressHostedProviderKind } from "./src/adapters/hosted";
 export { createAstropressSupabaseAdapter } from "./src/adapters/supabase.js";
 export {
   createAstropressSupabaseHostedAdapter,

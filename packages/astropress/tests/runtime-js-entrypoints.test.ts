@@ -9,6 +9,7 @@ const runtimeEntryPoints = [
   "../src/sqlite-bootstrap.js",
   "../src/sqlite-admin-runtime.js",
   "../src/adapters/sqlite.js",
+  "../src/adapters/hosted.js",
   "../src/adapters/cloudflare.js",
   "../src/adapters/supabase.js",
   "../src/adapters/runway.js",
