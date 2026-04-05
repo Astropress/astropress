@@ -45,6 +45,7 @@ Planning docs:
 Host integration helpers:
 
 - `astropress/integration` re-exports the current Vite, Vitest, and host-runtime helper surface from one place
+- `astropress/hosted-platform-adapter` exposes the package-owned assembler for hosted providers built from explicit store modules
 - `astropress/adapters/sqlite`, `astropress/adapters/local`, `astropress/adapters/cloudflare`, `astropress/adapters/supabase`, and `astropress/adapters/runway` expose first-party provider adapter factories
 - `astropress/adapters/supabase-sqlite` and `astropress/adapters/runway-sqlite` expose Node-only local runtimes for those providers backed by the packaged SQLite adapter
 - `astropress/deploy/github-pages`, `astropress/import/wordpress`, and `astropress/sync/git` expose the Node-only deploy/import/sync workflow helpers as stable package entry points
@@ -59,6 +60,7 @@ Host integration helpers:
 Current package-owned runtime surfaces:
 
 - `astropress/adapters/sqlite` is now a real SQLite-backed provider adapter
+- `astropress/hosted-platform-adapter` is the stable assembly surface for Supabase-, Runway-, or custom-style hosted providers built from explicit content/media/revision/auth stores
 - `astropress/adapters/local` selects the local SQLite-backed provider runtime from explicit options or `ASTROPRESS_LOCAL_PROVIDER`
 - `astropress/adapters/supabase-sqlite` and `astropress/adapters/runway-sqlite` wrap that packaged SQLite runtime behind provider-specific capabilities for local development
 - `astropress/sqlite-bootstrap` exposes the packaged schema/bootstrap toolkit for local admin databases

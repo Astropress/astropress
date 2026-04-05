@@ -4,6 +4,7 @@ import { join } from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import { describe, expect, it } from "vitest";
 import {
+  createAstropressHostedPlatformAdapter,
   createAstropressCloudflareAdapter,
   createAstropressRunwayAdapter,
   createAstropressSupabaseAdapter,
@@ -141,6 +142,97 @@ describe("provider adapters", () => {
     });
 
     await rm(workspace, { recursive: true, force: true });
+  });
+
+  it("lets Supabase and Runway use explicit hosted store modules", async () => {
+    const contentRecords = new Map<string, { id: string; slug: string; title: string }>();
+    const supabaseHosted = createAstropressHostedPlatformAdapter({
+      providerName: "supabase",
+      content: {
+        async list() {
+          return [...contentRecords.values()].map((record) => ({
+            id: record.id,
+            kind: "post" as const,
+            slug: record.slug,
+            status: "published" as const,
+            title: record.title,
+          }));
+        },
+        async get(id) {
+          const record = contentRecords.get(id);
+          return record
+            ? {
+                id: record.id,
+                kind: "post" as const,
+                slug: record.slug,
+                status: "published" as const,
+                title: record.title,
+              }
+            : null;
+        },
+        async save(record) {
+          contentRecords.set(record.id, {
+            id: record.id,
+            slug: record.slug,
+            title: String(record.title ?? record.id),
+          });
+          return record;
+        },
+        async delete(id) {
+          contentRecords.delete(id);
+        },
+      },
+      media: {
+        async put(asset) {
+          return asset;
+        },
+        async get() {
+          return null;
+        },
+        async delete() {},
+      },
+      revisions: {
+        async list() {
+          return [];
+        },
+        async append(revision) {
+          return revision;
+        },
+      },
+      auth: {
+        async signIn(email) {
+          return { id: "remote-session", email, role: "admin" as const };
+        },
+        async signOut() {},
+        async getSession(sessionId) {
+          return { id: sessionId, email: "admin@example.com", role: "admin" as const };
+        },
+      },
+    });
+    const supabase = createAstropressSupabaseAdapter({
+      backingAdapter: supabaseHosted,
+    });
+    const runway = createAstropressRunwayAdapter({
+      backingAdapter: supabaseHosted,
+    });
+
+    await supabase.content.save({
+      id: "hosted-remote-post",
+      kind: "post",
+      slug: "hosted-remote-post",
+      status: "published",
+      title: "Hosted remote post",
+    });
+
+    expect(await runway.content.get("hosted-remote-post")).toMatchObject({
+      slug: "hosted-remote-post",
+      title: "Hosted remote post",
+    });
+    expect(await supabase.auth.signIn("admin@example.com", "password")).toMatchObject({
+      email: "admin@example.com",
+      role: "admin",
+    });
+    expect(runway.capabilities.name).toBe("runway");
   });
 
   it("creates sqlite-backed local runtimes for Supabase and Runway", async () => {

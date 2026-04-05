@@ -10,6 +10,7 @@
     ".": "./index.ts",
     "./components/*": "./components/*.astro",
     "./platform-contracts": "./src/platform-contracts.js",
+    "./hosted-platform-adapter": "./src/hosted-platform-adapter.js",
     "./provider-targets": "./src/provider-targets.ts",
     "./sqlite-bootstrap": "./src/sqlite-bootstrap.js",
     "./sqlite-admin-runtime": "./src/sqlite-admin-runtime.js",

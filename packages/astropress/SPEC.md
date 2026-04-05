@@ -23,6 +23,7 @@ The package must expose stable import paths for:
 
 - the main public API from `astropress`
 - host integration helpers from `astropress/integration`
+- hosted provider assembly from `astropress/hosted-platform-adapter`
 - first-party provider adapters from `astropress/adapters/*`
 - deploy/import/sync workflows from `astropress/deploy/*`, `astropress/import/*`, and `astropress/sync/*`
 - host-runtime seam typing from `astropress/host-runtime-modules`
@@ -35,6 +36,7 @@ The package should reduce host-specific glue over time by replacing temporary se
 ## Current Runtime State
 
 - `astropress/adapters/sqlite` is a first-party SQLite-backed adapter, not a placeholder capability shim
+- `astropress/hosted-platform-adapter` is the package-owned assembly surface for hosted provider runtimes built from explicit stores
 - `astropress/adapters/local` chooses the local SQLite-backed provider runtime for sqlite, Supabase, or Runway
 - `astropress/adapters/supabase-sqlite` and `astropress/adapters/runway-sqlite` provide Node-only provider-local runtimes backed by the packaged SQLite adapter
 - `astropress/sqlite-bootstrap` owns the packaged schema/bootstrap path for local admin databases
