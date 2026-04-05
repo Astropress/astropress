@@ -48,6 +48,7 @@ Host integration helpers:
 - `astropress/hosted-platform-adapter` exposes the package-owned assembler for hosted providers built from explicit store modules
 - `astropress/adapters/sqlite`, `astropress/adapters/local`, `astropress/adapters/cloudflare`, `astropress/adapters/supabase`, and `astropress/adapters/runway` expose first-party provider adapter factories
 - `astropress/adapters/supabase-sqlite` and `astropress/adapters/runway-sqlite` expose Node-only local runtimes for those providers backed by the packaged SQLite adapter
+- Supabase and Runway hosted config loading now lives in Astropress too via `readAstropressSupabaseHostedConfig`, `createAstropressSupabaseHostedAdapter`, `readAstropressRunwayHostedConfig`, and `createAstropressRunwayHostedAdapter`
 - `astropress/deploy/github-pages`, `astropress/import/wordpress`, and `astropress/sync/git` expose the Node-only deploy/import/sync workflow helpers as stable package entry points
 - `astropress/cloudflare-vite-integration` composes the Cloudflare-specific local-runtime stub aliases and resolver
 - `astropress/vite-integration` composes the standard Vite plugin and alias rules into one helper
@@ -63,6 +64,7 @@ Current package-owned runtime surfaces:
 - `astropress/hosted-platform-adapter` is the stable assembly surface for Supabase-, Runway-, or custom-style hosted providers built from explicit content/media/revision/auth stores
 - `astropress/adapters/local` selects the local SQLite-backed provider runtime from explicit options or `ASTROPRESS_LOCAL_PROVIDER`
 - `astropress/adapters/supabase-sqlite` and `astropress/adapters/runway-sqlite` wrap that packaged SQLite runtime behind provider-specific capabilities for local development
+- Supabase and Runway hosted adapters can now load and validate their provider env config inside Astropress before building hosted-store adapters
 - `astropress/sqlite-bootstrap` exposes the packaged schema/bootstrap toolkit for local admin databases
 - `astropress/sqlite-admin-runtime` exposes the packaged Node SQLite admin runtime
 - those Node-only SQLite entry points stay off the root `astropress` API and are stubbed out of Cloudflare builds

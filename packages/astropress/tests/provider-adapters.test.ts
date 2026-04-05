@@ -7,7 +7,11 @@ import {
   createAstropressHostedPlatformAdapter,
   createAstropressCloudflareAdapter,
   createAstropressRunwayAdapter,
+  createAstropressRunwayHostedAdapter,
   createAstropressSupabaseAdapter,
+  createAstropressSupabaseHostedAdapter,
+  readAstropressRunwayHostedConfig,
+  readAstropressSupabaseHostedConfig,
   registerCms,
 } from "astropress";
 import { createAstropressRunwaySqliteAdapter } from "../src/adapters/runway-sqlite.js";
@@ -288,6 +292,136 @@ describe("provider adapters", () => {
     });
 
     await rm(workspace, { recursive: true, force: true });
+  });
+
+  it("reads hosted provider config from env maps", () => {
+    expect(
+      readAstropressSupabaseHostedConfig({
+        SUPABASE_URL: "https://example.supabase.co",
+        SUPABASE_ANON_KEY: "anon",
+        SUPABASE_SERVICE_ROLE_KEY: "service",
+      }),
+    ).toEqual({
+      url: "https://example.supabase.co",
+      anonKey: "anon",
+      serviceRoleKey: "service",
+    });
+    expect(
+      readAstropressRunwayHostedConfig({
+        RUNWAY_API_TOKEN: "token",
+        RUNWAY_PROJECT_ID: "project-123",
+      }),
+    ).toEqual({
+      apiToken: "token",
+      projectId: "project-123",
+    });
+  });
+
+  it("guards hosted provider config and builds hosted adapters with preview URLs", async () => {
+    expect(() => readAstropressSupabaseHostedConfig({})).toThrow(/SUPABASE_URL/);
+    expect(() => readAstropressRunwayHostedConfig({})).toThrow(/RUNWAY_API_TOKEN/);
+
+    const contentRecords = new Map<string, { id: string; slug: string; title: string }>();
+    const hostedStores = {
+      content: {
+        async list() {
+          return [...contentRecords.values()].map((record) => ({
+            id: record.id,
+            kind: "post" as const,
+            slug: record.slug,
+            status: "published" as const,
+            title: record.title,
+          }));
+        },
+        async get(id: string) {
+          const record = contentRecords.get(id);
+          return record
+            ? {
+                id: record.id,
+                kind: "post" as const,
+                slug: record.slug,
+                status: "published" as const,
+                title: record.title,
+              }
+            : null;
+        },
+        async save(record: { id: string; slug: string; title?: string | null }) {
+          contentRecords.set(record.id, {
+            id: record.id,
+            slug: record.slug,
+            title: String(record.title ?? record.id),
+          });
+          return {
+            ...record,
+            kind: "post" as const,
+            status: "published" as const,
+          };
+        },
+        async delete(id: string) {
+          contentRecords.delete(id);
+        },
+      },
+      media: {
+        async put(asset: { id: string; filename: string; mimeType: string }) {
+          return asset;
+        },
+        async get() {
+          return null;
+        },
+        async delete() {},
+      },
+      revisions: {
+        async list() {
+          return [];
+        },
+        async append(revision: { id: string; recordId: string; createdAt: string; snapshot: Record<string, unknown> }) {
+          return revision;
+        },
+      },
+      auth: {
+        async signIn(email: string) {
+          return { id: "hosted-session", email, role: "admin" as const };
+        },
+        async signOut() {},
+        async getSession(sessionId: string) {
+          return { id: sessionId, email: "admin@example.com", role: "admin" as const };
+        },
+      },
+    };
+
+    const supabase = createAstropressSupabaseHostedAdapter({
+      env: {
+        SUPABASE_URL: "https://example.supabase.co",
+        SUPABASE_ANON_KEY: "anon",
+        SUPABASE_SERVICE_ROLE_KEY: "service",
+      },
+      ...hostedStores,
+    });
+    const runway = createAstropressRunwayHostedAdapter({
+      env: {
+        RUNWAY_API_TOKEN: "token",
+        RUNWAY_PROJECT_ID: "project-123",
+      },
+      ...hostedStores,
+    });
+
+    await supabase.content.save({
+      id: "hosted-config-post",
+      kind: "post",
+      slug: "hosted-config-post",
+      status: "published",
+      title: "Hosted config post",
+    });
+
+    expect(await runway.content.get("hosted-config-post")).toMatchObject({
+      slug: "hosted-config-post",
+    });
+    expect(await supabase.preview?.create({ recordId: "hosted-config-post" })).toEqual({
+      url: "https://example.supabase.co/preview",
+    });
+    expect(await runway.preview?.create({ recordId: "hosted-config-post" })).toEqual({
+      url: "https://runway.example/project-123/preview",
+    });
   });
 
   it("selects the requested local provider runtime", async () => {

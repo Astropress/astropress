@@ -35,9 +35,25 @@ export type { AstropressHostedPlatformAdapterOptions } from "./src/hosted-platfo
 export { createAstropressCloudflareAdapter } from "./src/adapters/cloudflare.js";
 export type { AstropressCloudflareAdapterOptions } from "./src/adapters/cloudflare";
 export { createAstropressSupabaseAdapter } from "./src/adapters/supabase.js";
-export type { AstropressSupabaseAdapterOptions } from "./src/adapters/supabase";
+export {
+  createAstropressSupabaseHostedAdapter,
+  readAstropressSupabaseHostedConfig,
+} from "./src/adapters/supabase.js";
+export type {
+  AstropressSupabaseAdapterOptions,
+  AstropressSupabaseHostedAdapterOptions,
+  AstropressSupabaseHostedConfig,
+} from "./src/adapters/supabase";
 export { createAstropressRunwayAdapter } from "./src/adapters/runway.js";
-export type { AstropressRunwayAdapterOptions } from "./src/adapters/runway";
+export {
+  createAstropressRunwayHostedAdapter,
+  readAstropressRunwayHostedConfig,
+} from "./src/adapters/runway.js";
+export type {
+  AstropressRunwayAdapterOptions,
+  AstropressRunwayHostedAdapterOptions,
+  AstropressRunwayHostedConfig,
+} from "./src/adapters/runway";
 
 // Persistence types
 export type {

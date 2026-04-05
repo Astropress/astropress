@@ -39,6 +39,7 @@ The package should reduce host-specific glue over time by replacing temporary se
 - `astropress/hosted-platform-adapter` is the package-owned assembly surface for hosted provider runtimes built from explicit stores
 - `astropress/adapters/local` chooses the local SQLite-backed provider runtime for sqlite, Supabase, or Runway
 - `astropress/adapters/supabase-sqlite` and `astropress/adapters/runway-sqlite` provide Node-only provider-local runtimes backed by the packaged SQLite adapter
+- Supabase and Runway hosted config loading and runtime guards are package-owned, not host-app glue
 - `astropress/sqlite-bootstrap` owns the packaged schema/bootstrap path for local admin databases
 - `astropress/sqlite-admin-runtime` owns the packaged Node SQLite admin runtime
 - Node-only runtime entry points stay on explicit subpaths and must not leak through the root package API into Cloudflare builds
