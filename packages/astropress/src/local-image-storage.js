@@ -1,11 +1,12 @@
 import { existsSync, mkdirSync, readFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import path from "node:path";
 
 const workspaceRoot = process.cwd();
-const defaultImageRoot = path.resolve(workspaceRoot, "..", "new-site-images");
+const defaultImageRoot = path.join(tmpdir(), "astropress", "local-images", path.basename(workspaceRoot));
 
 export function getLocalImageRoot() {
-  return process.env.LOCAL_IMAGE_ROOT?.trim() || defaultImageRoot;
+  return process.env.ASTROPRESS_LOCAL_IMAGE_ROOT?.trim() || process.env.LOCAL_IMAGE_ROOT?.trim() || defaultImageRoot;
 }
 
 export function getLocalUploadsDir() {

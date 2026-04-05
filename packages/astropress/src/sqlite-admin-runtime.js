@@ -740,15 +740,16 @@ function createAstropressContentRepository(input) {
 
 // packages/astropress/src/local-media-storage.ts
 import { unlinkSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import path2 from "node:path";
 
 // packages/astropress/src/local-image-storage.ts
 import { existsSync, mkdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 var workspaceRoot = process.cwd();
-var defaultImageRoot = path.resolve(workspaceRoot, "..", "new-site-images");
+var defaultImageRoot = path.join(tmpdir(), "astropress", "local-images", path.basename(workspaceRoot));
 function getLocalImageRoot() {
-  return process.env.LOCAL_IMAGE_ROOT?.trim() || defaultImageRoot;
+  return process.env.ASTROPRESS_LOCAL_IMAGE_ROOT?.trim() || process.env.LOCAL_IMAGE_ROOT?.trim() || defaultImageRoot;
 }
 function getLocalUploadsDir() {
   return path.join(getLocalImageRoot(), "uploads");
