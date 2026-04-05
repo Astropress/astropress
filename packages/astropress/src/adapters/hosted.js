@@ -1,16 +1,16 @@
+import { resolveAstropressHostedProviderFromEnv } from "../project-env.js";
 import { createAstropressRunwayHostedAdapter } from "./runway.js";
 import { createAstropressSupabaseHostedAdapter } from "./supabase.js";
 
 export function resolveAstropressHostedProvider(provider) {
-  if (provider === "runway") {
-    return "runway";
-  }
-  return "supabase";
+  return resolveAstropressHostedProviderFromEnv({
+    ASTROPRESS_HOSTED_PROVIDER: provider ?? undefined
+  });
 }
 
 export function createAstropressHostedAdapter(options = {}) {
   const provider = resolveAstropressHostedProvider(
-    options.provider ?? process.env.ASTROPRESS_HOSTED_PROVIDER ?? null
+    options.provider ?? resolveAstropressHostedProviderFromEnv(process.env)
   );
   if (provider === "runway") {
     return createAstropressRunwayHostedAdapter(options);

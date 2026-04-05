@@ -30,6 +30,16 @@ export { createAstropressInMemoryPlatformAdapter } from "./src/in-memory-platfor
 export type { AstropressInMemoryPlatformAdapterOptions } from "./src/in-memory-platform-adapter";
 export { createAstropressProjectScaffold } from "./src/project-scaffold.js";
 export type { AstropressProjectScaffold, AstropressScaffoldProvider } from "./src/project-scaffold";
+export {
+  resolveAstropressDeployTarget,
+  resolveAstropressHostedProviderFromEnv,
+  resolveAstropressLocalProviderFromEnv,
+} from "./src/project-env.js";
+export type {
+  AstropressDeployTargetEnv,
+  AstropressHostedProviderEnv,
+  AstropressLocalProviderEnv,
+} from "./src/project-env";
 export { createAstropressHostedPlatformAdapter } from "./src/hosted-platform-adapter.js";
 export type { AstropressHostedPlatformAdapterOptions } from "./src/hosted-platform-adapter";
 export { createAstropressCloudflareAdapter } from "./src/adapters/cloudflare.js";
