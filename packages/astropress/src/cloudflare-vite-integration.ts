@@ -11,6 +11,7 @@ export type AstropressCloudflareViteIntegrationOptions = {
   cloudflareLocalRuntimeStubsPath?: string;
   cloudflareLocalImageStorageStubPath?: string;
   cloudflareLocalMediaStorageStubPath?: string;
+  cloudflareSqliteAdapterStubPath?: string;
   cloudflareSqliteAdminRuntimeStubPath?: string;
   cloudflareSqliteBootstrapStubPath?: string;
 };
@@ -50,6 +51,15 @@ function isSqliteAdminRuntimeRequest(id: string): boolean {
   );
 }
 
+function isSqliteAdapterRequest(id: string): boolean {
+  return (
+    id === "astropress/adapters/sqlite" ||
+    id.endsWith("/adapters/sqlite") ||
+    id.endsWith("/adapters/sqlite.ts") ||
+    id.endsWith("/adapters/sqlite.js")
+  );
+}
+
 function isSqliteBootstrapRequest(id: string): boolean {
   return (
     id === "astropress/sqlite-bootstrap" ||
@@ -82,6 +92,8 @@ export function createAstropressCloudflareViteIntegration(
     options.cloudflareLocalImageStorageStubPath ?? "astropress/cloudflare-local-image-storage-stub";
   const cloudflareLocalMediaStorageStubPath =
     options.cloudflareLocalMediaStorageStubPath ?? "astropress/cloudflare-local-media-storage-stub";
+  const cloudflareSqliteAdapterStubPath =
+    options.cloudflareSqliteAdapterStubPath ?? "astropress/cloudflare-sqlite-adapter-stub";
   const cloudflareSqliteAdminRuntimeStubPath =
     options.cloudflareSqliteAdminRuntimeStubPath ?? "astropress/cloudflare-sqlite-admin-runtime-stub";
   const cloudflareSqliteBootstrapStubPath =
@@ -104,6 +116,14 @@ export function createAstropressCloudflareViteIntegration(
       {
         find: /^.*\/local-media-storage(?:\.[cm]?[jt]s)?$/,
         replacement: cloudflareLocalMediaStorageStubPath,
+      },
+      {
+        find: "astropress/adapters/sqlite",
+        replacement: cloudflareSqliteAdapterStubPath,
+      },
+      {
+        find: /^.*\/adapters\/sqlite(?:\.[cm]?[jt]s)?$/,
+        replacement: cloudflareSqliteAdapterStubPath,
       },
       {
         find: "astropress/sqlite-admin-runtime",
@@ -146,6 +166,10 @@ export function createAstropressCloudflareViteIntegration(
 
         if (isPackageStorageModuleRequest(normalizedId, "local-media-storage")) {
           return cloudflareLocalMediaStorageStubPath;
+        }
+
+        if (isSqliteAdapterRequest(normalizedId)) {
+          return cloudflareSqliteAdapterStubPath;
         }
 
         if (isSqliteAdminRuntimeRequest(normalizedId)) {

@@ -7,7 +7,7 @@ describe("cloudflare vite integration helper", () => {
       "/tmp/site/src/astropress/local-runtime-modules.ts",
     );
 
-    expect(integration.aliases).toHaveLength(11);
+    expect(integration.aliases).toHaveLength(13);
     expect(integration.aliases[0]).toEqual({
       find: "astropress/local-image-storage",
       replacement: "astropress/cloudflare-local-image-storage-stub",
@@ -25,22 +25,30 @@ describe("cloudflare vite integration helper", () => {
       replacement: "astropress/cloudflare-local-media-storage-stub",
     });
     expect(integration.aliases[4]).toEqual({
+      find: "astropress/adapters/sqlite",
+      replacement: "astropress/cloudflare-sqlite-adapter-stub",
+    });
+    expect(integration.aliases[5]).toEqual({
+      find: /^.*\/adapters\/sqlite(?:\.[cm]?[jt]s)?$/,
+      replacement: "astropress/cloudflare-sqlite-adapter-stub",
+    });
+    expect(integration.aliases[6]).toEqual({
       find: "astropress/sqlite-admin-runtime",
       replacement: "astropress/cloudflare-sqlite-admin-runtime-stub",
     });
-    expect(integration.aliases[5]).toEqual({
+    expect(integration.aliases[7]).toEqual({
       find: /^.*\/sqlite-admin-runtime(?:\.[cm]?[jt]s)?$/,
       replacement: "astropress/cloudflare-sqlite-admin-runtime-stub",
     });
-    expect(integration.aliases[6]).toEqual({
+    expect(integration.aliases[8]).toEqual({
       find: "astropress/sqlite-bootstrap",
       replacement: "astropress/cloudflare-sqlite-bootstrap-stub",
     });
-    expect(integration.aliases[7]).toEqual({
+    expect(integration.aliases[9]).toEqual({
       find: /^.*\/sqlite-bootstrap(?:\.[cm]?[jt]s)?$/,
       replacement: "astropress/cloudflare-sqlite-bootstrap-stub",
     });
-    expect(integration.aliases[10]?.replacement).toBe("astropress/cloudflare-local-runtime-stubs");
+    expect(integration.aliases[12]?.replacement).toBe("astropress/cloudflare-local-runtime-stubs");
     expect(integration.plugin.name).toBe("astropress-cloudflare-local-runtime-stubs");
     expect(integration.plugin.resolveId("./local-runtime-modules")).toBe(
       "astropress/cloudflare-local-runtime-stubs",
@@ -56,6 +64,9 @@ describe("cloudflare vite integration helper", () => {
     );
     expect(integration.plugin.resolveId("/workspace/packages/astropress/src/local-media-storage.ts")).toBe(
       "astropress/cloudflare-local-media-storage-stub",
+    );
+    expect(integration.plugin.resolveId("astropress/adapters/sqlite")).toBe(
+      "astropress/cloudflare-sqlite-adapter-stub",
     );
     expect(integration.plugin.resolveId("astropress/sqlite-admin-runtime")).toBe(
       "astropress/cloudflare-sqlite-admin-runtime-stub",

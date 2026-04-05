@@ -53,6 +53,7 @@
     "./local-runtime-modules": "./src/local-runtime-modules.ts",
     "./cloudflare-workers-stub": "./src/cloudflare-workers-stub.ts",
     "./cloudflare-local-runtime-stubs": "./src/cloudflare-local-runtime-stubs.ts",
+    "./cloudflare-sqlite-adapter-stub": "./src/cloudflare-sqlite-adapter-stub.js",
     "./cloudflare-sqlite-admin-runtime-stub": "./src/cloudflare-sqlite-admin-runtime-stub.js",
     "./cloudflare-sqlite-bootstrap-stub": "./src/cloudflare-sqlite-bootstrap-stub.js",
     "./cloudflare-local-image-storage-stub": "./src/cloudflare-local-image-storage-stub.js",

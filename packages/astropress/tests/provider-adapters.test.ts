@@ -7,12 +7,10 @@ import {
   createAstropressHostedPlatformAdapter,
   createAstropressCloudflareAdapter,
   createAstropressHostedAdapter,
-  createAstropressProjectAdapter,
   createAstropressRunwayAdapter,
   createAstropressRunwayHostedAdapter,
   createAstropressSupabaseAdapter,
   createAstropressSupabaseHostedAdapter,
-  resolveAstropressProjectAdapterMode,
   resolveAstropressHostedProvider,
   readAstropressRunwayHostedConfig,
   readAstropressSupabaseHostedConfig,
@@ -20,6 +18,10 @@ import {
 } from "astropress";
 import { createAstropressRunwaySqliteAdapter } from "../src/adapters/runway-sqlite.js";
 import { createAstropressLocalAdapter } from "../src/adapters/local.js";
+import {
+  createAstropressProjectAdapter,
+  resolveAstropressProjectAdapterMode,
+} from "../src/adapters/project.js";
 import { createAstropressSqliteAdapter } from "../src/adapters/sqlite.js";
 import { createAstropressSupabaseSqliteAdapter } from "../src/adapters/supabase-sqlite.js";
 import { createAstropressGitHubPagesDeployTarget } from "../src/deploy/github-pages.js";

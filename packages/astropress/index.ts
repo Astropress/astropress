@@ -42,11 +42,6 @@ export type {
   AstropressLocalProviderEnv,
   AstropressProjectEnvContract,
 } from "./src/project-env";
-export { createAstropressProjectRuntimePlan } from "./src/project-runtime.js";
-export type {
-  AstropressProjectRuntimeOptions,
-  AstropressProjectRuntimePlan,
-} from "./src/project-runtime";
 export { createAstropressHostedPlatformAdapter } from "./src/hosted-platform-adapter.js";
 export type { AstropressHostedPlatformAdapterOptions } from "./src/hosted-platform-adapter";
 export { createAstropressCloudflareAdapter } from "./src/adapters/cloudflare.js";
@@ -56,14 +51,6 @@ export {
   resolveAstropressHostedProvider,
 } from "./src/adapters/hosted.js";
 export type { AstropressHostedAdapterOptions, AstropressHostedProviderKind } from "./src/adapters/hosted";
-export {
-  createAstropressProjectAdapter,
-  resolveAstropressProjectAdapterMode,
-} from "./src/adapters/project.js";
-export type {
-  AstropressProjectAdapterMode,
-  AstropressProjectAdapterOptions,
-} from "./src/adapters/project";
 export { createAstropressSupabaseAdapter } from "./src/adapters/supabase.js";
 export {
   createAstropressSupabaseHostedAdapter,

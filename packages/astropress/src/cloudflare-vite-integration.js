@@ -11,6 +11,9 @@ function isPackageStorageModuleRequest(id, moduleName) {
 function isSqliteAdminRuntimeRequest(id) {
   return id === "astropress/sqlite-admin-runtime" || id.endsWith("/sqlite-admin-runtime") || id.endsWith("/sqlite-admin-runtime.ts") || id.endsWith("/sqlite-admin-runtime.js");
 }
+function isSqliteAdapterRequest(id) {
+  return id === "astropress/adapters/sqlite" || id.endsWith("/adapters/sqlite") || id.endsWith("/adapters/sqlite.ts") || id.endsWith("/adapters/sqlite.js");
+}
 function isSqliteBootstrapRequest(id) {
   return id === "astropress/sqlite-bootstrap" || id.endsWith("/sqlite-bootstrap") || id.endsWith("/sqlite-bootstrap.ts") || id.endsWith("/sqlite-bootstrap.js");
 }
@@ -28,6 +31,7 @@ function createAstropressCloudflareViteIntegration(localRuntimeModulesPath, opti
   const cloudflareLocalRuntimeStubsPath = options.cloudflareLocalRuntimeStubsPath ?? "astropress/cloudflare-local-runtime-stubs";
   const cloudflareLocalImageStorageStubPath = options.cloudflareLocalImageStorageStubPath ?? "astropress/cloudflare-local-image-storage-stub";
   const cloudflareLocalMediaStorageStubPath = options.cloudflareLocalMediaStorageStubPath ?? "astropress/cloudflare-local-media-storage-stub";
+  const cloudflareSqliteAdapterStubPath = options.cloudflareSqliteAdapterStubPath ?? "astropress/cloudflare-sqlite-adapter-stub";
   const cloudflareSqliteAdminRuntimeStubPath = options.cloudflareSqliteAdminRuntimeStubPath ?? "astropress/cloudflare-sqlite-admin-runtime-stub";
   const cloudflareSqliteBootstrapStubPath = options.cloudflareSqliteBootstrapStubPath ?? "astropress/cloudflare-sqlite-bootstrap-stub";
   return {
@@ -47,6 +51,14 @@ function createAstropressCloudflareViteIntegration(localRuntimeModulesPath, opti
       {
         find: /^.*\/local-media-storage(?:\.[cm]?[jt]s)?$/,
         replacement: cloudflareLocalMediaStorageStubPath
+      },
+      {
+        find: "astropress/adapters/sqlite",
+        replacement: cloudflareSqliteAdapterStubPath
+      },
+      {
+        find: /^.*\/adapters\/sqlite(?:\.[cm]?[jt]s)?$/,
+        replacement: cloudflareSqliteAdapterStubPath
       },
       {
         find: "astropress/sqlite-admin-runtime",
@@ -87,6 +99,9 @@ function createAstropressCloudflareViteIntegration(localRuntimeModulesPath, opti
         }
         if (isPackageStorageModuleRequest(normalizedId, "local-media-storage")) {
           return cloudflareLocalMediaStorageStubPath;
+        }
+        if (isSqliteAdapterRequest(normalizedId)) {
+          return cloudflareSqliteAdapterStubPath;
         }
         if (isSqliteAdminRuntimeRequest(normalizedId)) {
           return cloudflareSqliteAdminRuntimeStubPath;
