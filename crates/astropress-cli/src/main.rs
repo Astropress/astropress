@@ -197,6 +197,16 @@ struct ProjectScaffold {
     env_example: BTreeMap<String, String>,
 }
 
+#[derive(Debug, Deserialize)]
+struct ProjectEnvContract {
+    #[serde(rename = "localProvider")]
+    local_provider: String,
+    #[serde(rename = "hostedProvider")]
+    hosted_provider: String,
+    #[serde(rename = "deployTarget")]
+    deploy_target: String,
+}
+
 fn parse_command(args: &[String]) -> Result<Command, String> {
     match args {
         [] => Ok(Command::Help),
@@ -545,17 +555,42 @@ fn read_env_file(project_dir: &Path) -> Result<BTreeMap<String, String>, String>
     Ok(values)
 }
 
+fn load_project_env_contract(project_dir: &Path) -> Result<ProjectEnvContract, String> {
+    let env_module = package_module_import("project-env.js")?;
+    let env_module_literal = serde_json::to_string(&env_module).map_err(|error| error.to_string())?;
+    let env_values = read_env_file(project_dir)?;
+    let env_values_json = serde_json::to_string(&env_values).map_err(|error| error.to_string())?;
+    let script = format!(
+        r#"import {{ resolveAstropressProjectEnvContract }} from {module};
+
+const envValues = {env_values};
+console.log(JSON.stringify(resolveAstropressProjectEnvContract(envValues)));
+"#,
+        module = env_module_literal,
+        env_values = env_values_json,
+    );
+
+    let output = ProcessCommand::new("node")
+        .args(["--input-type=module", "--eval", &script])
+        .output()
+        .map_err(io_error)?;
+
+    if !output.status.success() {
+        return Err(format!(
+            "Failed to load Astropress project env contract: {}",
+            String::from_utf8_lossy(&output.stderr).trim()
+        ));
+    }
+
+    serde_json::from_slice::<ProjectEnvContract>(&output.stdout).map_err(|error| error.to_string())
+}
+
 fn resolve_local_provider(project_dir: &Path, provider: Option<LocalProvider>) -> Result<LocalProvider, String> {
     if let Some(provider) = provider {
         return Ok(provider);
     }
 
-    let env_values = read_env_file(project_dir)?;
-    if let Some(value) = env_values.get("ASTROPRESS_LOCAL_PROVIDER") {
-        return LocalProvider::parse(value);
-    }
-
-    Ok(LocalProvider::Sqlite)
+    LocalProvider::parse(&load_project_env_contract(project_dir)?.local_provider)
 }
 
 fn resolve_admin_db_path(project_dir: &Path, provider: LocalProvider) -> Result<String, String> {
@@ -566,26 +601,12 @@ fn resolve_admin_db_path(project_dir: &Path, provider: LocalProvider) -> Result<
         .unwrap_or_else(|| default_admin_db_relative_path(provider).to_string()))
 }
 
-fn recommended_deploy_target_for_provider(provider: LocalProvider) -> &'static str {
-    match provider {
-        LocalProvider::Sqlite => "github-pages",
-        LocalProvider::Supabase => "supabase",
-        LocalProvider::Runway => "runway",
-    }
-}
-
 fn resolve_deploy_target(project_dir: &Path, target: Option<&str>) -> Result<String, String> {
     if let Some(target) = target {
         return Ok(target.to_string());
     }
 
-    let env_values = read_env_file(project_dir)?;
-    if let Some(target) = env_values.get("ASTROPRESS_DEPLOY_TARGET") {
-        return Ok(target.clone());
-    }
-
-    let provider = resolve_local_provider(project_dir, None)?;
-    Ok(recommended_deploy_target_for_provider(provider).to_string())
+    Ok(load_project_env_contract(project_dir)?.deploy_target)
 }
 
 fn load_project_scaffold(provider: LocalProvider) -> Result<ProjectScaffold, String> {
@@ -1062,9 +1083,9 @@ fn io_error(error: io::Error) -> String {
 mod tests {
     use super::{
         command_available, default_admin_db_relative_path, deploy_script_for_target,
-        ensure_local_provider_defaults, export_project_snapshot, import_project_snapshot, parse_command,
-        read_env_file, resolve_admin_db_path, resolve_local_provider, sanitize_package_name, scaffold_new_project,
-        stage_wordpress_import, resolve_deploy_target, Command, LocalProvider, PackageManifest,
+        ensure_local_provider_defaults, export_project_snapshot, import_project_snapshot, load_project_env_contract,
+        parse_command, read_env_file, resolve_admin_db_path, resolve_local_provider, sanitize_package_name,
+        scaffold_new_project, stage_wordpress_import, resolve_deploy_target, Command, LocalProvider, PackageManifest,
     };
     use std::collections::BTreeMap;
     use std::fs;
@@ -1227,6 +1248,10 @@ mod tests {
             env_values.get("ASTROPRESS_LOCAL_PROVIDER"),
             Some(&"runway".to_string())
         );
+        let project_env = load_project_env_contract(&root).unwrap();
+        assert_eq!(project_env.local_provider, "runway");
+        assert_eq!(project_env.deploy_target, "runway");
+        assert_eq!(project_env.hosted_provider, "supabase");
         assert_eq!(
             resolve_local_provider(&root, None).unwrap(),
             LocalProvider::Runway
