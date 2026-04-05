@@ -209,6 +209,23 @@ struct ProjectEnvContract {
     admin_db_path: String,
 }
 
+#[derive(Debug, Deserialize)]
+struct ProjectRuntimePlan {
+    mode: String,
+    env: ProjectEnvContract,
+    adapter: ProjectRuntimeAdapter,
+}
+
+#[derive(Debug, Deserialize)]
+struct ProjectRuntimeAdapter {
+    capabilities: ProjectRuntimeCapabilities,
+}
+
+#[derive(Debug, Deserialize)]
+struct ProjectRuntimeCapabilities {
+    name: String,
+}
+
 fn parse_command(args: &[String]) -> Result<Command, String> {
     match args {
         [] => Ok(Command::Help),
@@ -602,16 +619,66 @@ console.log(JSON.stringify(resolveAstropressProjectEnvContract(envValues)));
     serde_json::from_slice::<ProjectEnvContract>(&output.stdout).map_err(|error| error.to_string())
 }
 
+fn load_project_runtime_plan(
+    project_dir: &Path,
+    provider: Option<LocalProvider>,
+) -> Result<ProjectRuntimePlan, String> {
+    let runtime_module = package_module_import("project-runtime.js")?;
+    let runtime_module_literal =
+        serde_json::to_string(&runtime_module).map_err(|error| error.to_string())?;
+    let env_values = read_env_file(project_dir)?;
+    let env_values_json = serde_json::to_string(&env_values).map_err(|error| error.to_string())?;
+    let local_json = serde_json::to_string(&serde_json::json!({
+        "workspaceRoot": project_dir.display().to_string(),
+        "dbPath": provider.map(|local_provider| {
+            project_dir
+                .join(default_admin_db_relative_path(local_provider))
+                .display()
+                .to_string()
+        }),
+        "provider": provider.map(LocalProvider::as_str),
+    }))
+    .map_err(|error| error.to_string())?;
+    let script = format!(
+        r#"import {{ createAstropressProjectRuntimePlan }} from {module};
+
+const envValues = {env_values};
+const localOptions = {local_options};
+console.log(JSON.stringify(createAstropressProjectRuntimePlan({{
+  env: envValues,
+  local: localOptions,
+}})));
+"#,
+        module = runtime_module_literal,
+        env_values = env_values_json,
+        local_options = local_json,
+    );
+
+    let output = ProcessCommand::new("node")
+        .args(["--input-type=module", "--eval", &script])
+        .output()
+        .map_err(io_error)?;
+
+    if !output.status.success() {
+        return Err(format!(
+            "Failed to load Astropress project runtime plan: {}",
+            String::from_utf8_lossy(&output.stderr).trim()
+        ));
+    }
+
+    serde_json::from_slice::<ProjectRuntimePlan>(&output.stdout).map_err(|error| error.to_string())
+}
+
 fn resolve_local_provider(project_dir: &Path, provider: Option<LocalProvider>) -> Result<LocalProvider, String> {
     if let Some(provider) = provider {
         return Ok(provider);
     }
 
-    LocalProvider::parse(&load_project_env_contract(project_dir)?.local_provider)
+    LocalProvider::parse(&load_project_runtime_plan(project_dir, None)?.env.local_provider)
 }
 
 fn resolve_admin_db_path(project_dir: &Path, provider: LocalProvider) -> Result<String, String> {
-    let contract = load_project_env_contract(project_dir)?;
+    let contract = load_project_runtime_plan(project_dir, Some(provider))?.env;
     if contract.local_provider != provider.as_str() {
         return Ok(default_admin_db_relative_path(provider).to_string());
     }
@@ -623,7 +690,7 @@ fn resolve_deploy_target(project_dir: &Path, target: Option<&str>) -> Result<Str
         return Ok(target.to_string());
     }
 
-    Ok(load_project_env_contract(project_dir)?.deploy_target)
+    Ok(load_project_runtime_plan(project_dir, None)?.env.deploy_target)
 }
 
 fn load_project_scaffold(provider: LocalProvider) -> Result<ProjectScaffold, String> {
@@ -857,8 +924,15 @@ fn run_script(project_dir: &Path, script_name: &str) -> Result<ExitCode, String>
 
 fn run_dev_server(project_dir: &Path, provider: Option<LocalProvider>) -> Result<ExitCode, String> {
     let package_manager = detect_package_manager(project_dir);
-    let provider = resolve_local_provider(project_dir, provider)?;
-    let admin_db_path = resolve_admin_db_path(project_dir, provider)?;
+    let runtime_plan = load_project_runtime_plan(project_dir, provider)?;
+    if runtime_plan.mode != "local" {
+        return Err(format!(
+            "Astropress dev currently supports only local runtime mode, but this project resolved to `{}` with adapter `{}`.",
+            runtime_plan.mode, runtime_plan.adapter.capabilities.name
+        ));
+    }
+    let provider = LocalProvider::parse(&runtime_plan.env.local_provider)?;
+    let admin_db_path = runtime_plan.env.admin_db_path;
     install_dependencies_if_needed(project_dir, package_manager)?;
     ensure_local_provider_defaults(project_dir)?;
     seed_local_sqlite_database(project_dir, package_manager, provider, &admin_db_path)?;
@@ -1101,8 +1175,9 @@ mod tests {
     use super::{
         command_available, default_admin_db_relative_path, deploy_script_for_target,
         ensure_local_provider_defaults, export_project_snapshot, import_project_snapshot, load_project_env_contract,
-        parse_command, read_env_file, resolve_admin_db_path, resolve_local_provider, sanitize_package_name,
-        scaffold_new_project, stage_wordpress_import, resolve_deploy_target, Command, LocalProvider, PackageManifest,
+        load_project_runtime_plan, parse_command, read_env_file, resolve_admin_db_path, resolve_local_provider,
+        resolve_deploy_target, sanitize_package_name, scaffold_new_project, stage_wordpress_import, Command,
+        LocalProvider, PackageManifest,
     };
     use std::collections::BTreeMap;
     use std::fs;
@@ -1278,6 +1353,22 @@ mod tests {
             resolve_admin_db_path(&root, LocalProvider::Runway).unwrap(),
             ".data/custom-runway.sqlite"
         );
+    }
+
+    #[test]
+    fn project_runtime_plan_exposes_local_runtime_selection() {
+        let root = temp_dir("project-runtime");
+        fs::write(
+            root.join(".env"),
+            "ASTROPRESS_RUNTIME_MODE=local\nASTROPRESS_LOCAL_PROVIDER=supabase\nADMIN_DB_PATH=.data/local-supabase.sqlite\n",
+        )
+        .unwrap();
+
+        let plan = load_project_runtime_plan(&root, None).unwrap();
+        assert_eq!(plan.mode, "local");
+        assert_eq!(plan.env.local_provider, "supabase");
+        assert_eq!(plan.env.admin_db_path, ".data/local-supabase.sqlite");
+        assert_eq!(plan.adapter.capabilities.name, "supabase");
     }
 
     #[test]
