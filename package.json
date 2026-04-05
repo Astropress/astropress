@@ -7,7 +7,8 @@
     "examples/*"
   ],
   "scripts": {
-    "test": "bun run --filter astropress test",
+    "bdd:lint": "bun run scripts/bdd-lint.ts",
+    "test": "bun run bdd:lint && bun run --filter astropress test",
     "test:cli": "source \"$HOME/.cargo/env\" && cargo test",
     "test:example": "bun run --filter astropress-example-gh-pages check",
     "dev:example": "bun run --filter astropress-example-gh-pages dev"

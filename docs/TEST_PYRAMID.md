@@ -26,6 +26,12 @@ This repo uses a Percival-style outside-in test pyramid.
 4. Implement the smallest change to pass.
 5. Re-run acceptance before moving to the next slice.
 
+## Feature Wiring
+
+- Feature files live in `features/`.
+- `bun run bdd:lint` validates feature-file structure and runs as part of the root `bun run test`.
+- When implementation slices change the public project contract, add or update the relevant feature file before closing the slice.
+
 ## Current priorities
 
 - provider-neutral adapter contracts
