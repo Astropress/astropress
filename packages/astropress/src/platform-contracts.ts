@@ -85,13 +85,48 @@ export interface DeployTarget {
 }
 
 export interface ImportSource {
+  inspectWordPress?(input: {
+    sourceUrl?: string;
+    exportFile?: string;
+    includeComments?: boolean;
+    includeUsers?: boolean;
+    includeMedia?: boolean;
+  }): Promise<AstropressWordPressImportInventory>;
   importWordPress(input: {
     sourceUrl?: string;
     exportFile?: string;
     includeComments?: boolean;
     includeUsers?: boolean;
     includeMedia?: boolean;
-  }): Promise<{ importedRecords: number; importedMedia: number }>;
+  }): Promise<AstropressWordPressImportReport>;
+}
+
+export interface AstropressWordPressImportInventory {
+  exportFile?: string;
+  sourceUrl?: string;
+  detectedRecords: number;
+  detectedMedia: number;
+  detectedComments: number;
+  detectedUsers: number;
+  warnings: string[];
+}
+
+export interface AstropressWordPressImportPlan {
+  sourceUrl?: string;
+  exportFile?: string;
+  includeComments: boolean;
+  includeUsers: boolean;
+  includeMedia: boolean;
+}
+
+export interface AstropressWordPressImportReport {
+  importedRecords: number;
+  importedMedia: number;
+  importedComments: number;
+  importedUsers: number;
+  plan: AstropressWordPressImportPlan;
+  inventory: AstropressWordPressImportInventory;
+  warnings: string[];
 }
 
 export interface PreviewSession {

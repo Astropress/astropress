@@ -118,6 +118,61 @@ describe("provider adapters", () => {
     await rm(workspace, { recursive: true, force: true });
   });
 
+  it("returns a structured WordPress import inventory and report", async () => {
+    const workspace = await mkdtemp(join(tmpdir(), "astropress-wordpress-import-"));
+    const exportFile = join(workspace, "export.xml");
+    await writeFile(
+      exportFile,
+      [
+        "<rss>",
+        "<channel>",
+        "<wp:author><wp:author_login>admin</wp:author_login></wp:author>",
+        "<item><title>Hello</title><wp:comment><wp:comment_id>1</wp:comment_id></wp:comment></item>",
+        "<item><title>World</title><wp:attachment_url>https://example.org/media.png</wp:attachment_url></item>",
+        "[gallery ids=\"1,2\"]",
+        "</channel>",
+        "</rss>",
+      ].join(""),
+      "utf8",
+    );
+
+    const importer = createAstropressWordPressImportSource();
+    const inventory = await importer.inspectWordPress?.({ exportFile });
+    const report = await importer.importWordPress({
+      exportFile,
+      includeComments: false,
+    });
+
+    expect(inventory).toMatchObject({
+      exportFile,
+      detectedRecords: 2,
+      detectedMedia: 1,
+      detectedComments: 1,
+      detectedUsers: 1,
+    });
+    expect(inventory?.warnings).toContain(
+      "Potential shortcode or builder markup detected; manual review may be required.",
+    );
+    expect(report).toMatchObject({
+      importedRecords: 2,
+      importedMedia: 1,
+      importedComments: 0,
+      importedUsers: 1,
+      plan: {
+        exportFile,
+        includeComments: false,
+        includeUsers: true,
+        includeMedia: true,
+      },
+      inventory: {
+        exportFile,
+        detectedRecords: 2,
+      },
+    });
+
+    await rm(workspace, { recursive: true, force: true });
+  });
+
   it("lets Supabase and Runway wrap a real backing adapter surface", async () => {
     const workspace = await mkdtemp(join(tmpdir(), "astropress-provider-wrap-"));
     const backingAdapter = createAstropressSqliteAdapter({
