@@ -1,7 +1,11 @@
+import {
+  assertProviderContract,
+  normalizeProviderCapabilities
+} from "../platform-contracts.js";
 import { createAstropressInMemoryPlatformAdapter } from "../in-memory-platform-adapter.js";
 
 export function createAstropressSupabaseAdapter(options = {}) {
-  return createAstropressInMemoryPlatformAdapter({
+  const baseAdapter = options.backingAdapter ?? createAstropressInMemoryPlatformAdapter({
     ...options,
     capabilities: {
       name: "supabase",
@@ -10,7 +14,20 @@ export function createAstropressSupabaseAdapter(options = {}) {
       serverRuntime: true,
       database: true,
       objectStorage: true,
-      gitSync: true,
-    },
+      gitSync: true
+    }
+  });
+  return assertProviderContract({
+    ...baseAdapter,
+    capabilities: normalizeProviderCapabilities({
+      ...baseAdapter.capabilities,
+      name: "supabase",
+      hostedAdmin: true,
+      previewEnvironments: true,
+      serverRuntime: true,
+      database: true,
+      objectStorage: true,
+      gitSync: true
+    })
   });
 }
