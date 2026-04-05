@@ -19,6 +19,7 @@
     "./adapters/sqlite": "./src/adapters/sqlite.js",
     "./adapters/local": "./src/adapters/local.js",
     "./adapters/hosted": "./src/adapters/hosted.js",
+    "./adapters/project": "./src/adapters/project.js",
     "./adapters/cloudflare": "./src/adapters/cloudflare.js",
     "./adapters/supabase": "./src/adapters/supabase.js",
     "./adapters/supabase-sqlite": "./src/adapters/supabase-sqlite.js",

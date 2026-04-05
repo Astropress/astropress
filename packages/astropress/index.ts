@@ -51,6 +51,14 @@ export {
   resolveAstropressHostedProvider,
 } from "./src/adapters/hosted.js";
 export type { AstropressHostedAdapterOptions, AstropressHostedProviderKind } from "./src/adapters/hosted";
+export {
+  createAstropressProjectAdapter,
+  resolveAstropressProjectAdapterMode,
+} from "./src/adapters/project.js";
+export type {
+  AstropressProjectAdapterMode,
+  AstropressProjectAdapterOptions,
+} from "./src/adapters/project";
 export { createAstropressSupabaseAdapter } from "./src/adapters/supabase.js";
 export {
   createAstropressSupabaseHostedAdapter,

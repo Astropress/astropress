@@ -7,10 +7,12 @@ import {
   createAstropressHostedPlatformAdapter,
   createAstropressCloudflareAdapter,
   createAstropressHostedAdapter,
+  createAstropressProjectAdapter,
   createAstropressRunwayAdapter,
   createAstropressRunwayHostedAdapter,
   createAstropressSupabaseAdapter,
   createAstropressSupabaseHostedAdapter,
+  resolveAstropressProjectAdapterMode,
   resolveAstropressHostedProvider,
   readAstropressRunwayHostedConfig,
   readAstropressSupabaseHostedConfig,
@@ -524,6 +526,45 @@ describe("provider adapters", () => {
     expect(await hostedRunway.preview?.create({ recordId: "env-map" })).toEqual({
       url: "https://runway.example/env-map-runway/preview",
     });
+  });
+
+  it("selects project adapters from runtime mode and project env", async () => {
+    expect(resolveAstropressProjectAdapterMode({})).toBe("local");
+    expect(resolveAstropressProjectAdapterMode({ ASTROPRESS_RUNTIME_MODE: "hosted" })).toBe("hosted");
+
+    const workspace = await mkdtemp(join(tmpdir(), "astropress-project-adapter-"));
+    const localAdapter = createAstropressProjectAdapter({
+      env: {
+        ASTROPRESS_RUNTIME_MODE: "local",
+        ASTROPRESS_LOCAL_PROVIDER: "supabase",
+      },
+      local: {
+        workspaceRoot: workspace,
+        dbPath: join(workspace, "project-adapter.sqlite"),
+      },
+    });
+    const hostedAdapter = createAstropressProjectAdapter({
+      env: {
+        ASTROPRESS_RUNTIME_MODE: "hosted",
+        ASTROPRESS_HOSTED_PROVIDER: "runway",
+        RUNWAY_API_TOKEN: "token",
+        RUNWAY_PROJECT_ID: "project-adapter-runway",
+      },
+      hosted: {
+        content: localAdapter.content,
+        media: localAdapter.media,
+        revisions: localAdapter.revisions,
+        auth: localAdapter.auth,
+      },
+    });
+
+    expect(localAdapter.capabilities.name).toBe("supabase");
+    expect(hostedAdapter.capabilities.name).toBe("runway");
+    expect(await hostedAdapter.preview?.create({ recordId: "project-adapter" })).toEqual({
+      url: "https://runway.example/project-adapter-runway/preview",
+    });
+
+    await rm(workspace, { recursive: true, force: true });
   });
 
   it("selects the requested local provider runtime", async () => {

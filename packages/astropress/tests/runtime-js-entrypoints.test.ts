@@ -17,6 +17,7 @@ const runtimeEntryPoints = [
   "../src/adapters/supabase-sqlite.js",
   "../src/adapters/runway-sqlite.js",
   "../src/adapters/local.js",
+  "../src/adapters/project.js",
   "../src/integration.js",
   "../src/cloudflare-vite-integration.js",
   "../src/deploy/github-pages.js",
