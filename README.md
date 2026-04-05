@@ -45,6 +45,7 @@ Specs:
 Planning docs:
 
 - org layout and split strategy: `docs/ORG_LAYOUT.md`
+- local split map: `docs/LOCAL_SPLIT.md`
 - consumer migration map: `docs/CONSUMER_MIGRATION.md`
 - GitHub bootstrap status: `docs/GITHUB_BOOTSTRAP.md`
 
