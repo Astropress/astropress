@@ -1,5 +1,5 @@
 ---
-import { ASTROPRESS_ADMIN_APP_NAME, buildAstropressAdminDocumentTitle } from "astropress";
+import { buildAstropressAdminDocumentTitle, resolveAstropressAdminUiConfig } from "astropress";
 import TurnstileField from "astropress/components/TurnstileField.astro";
 
 const hasError = Astro.url.searchParams.get("error") === "1";
@@ -7,6 +7,7 @@ const isRateLimited = Astro.url.searchParams.get("ratelimited") === "1";
 const requiresChallenge = Astro.url.searchParams.get("challenge") === "1";
 const wasReset = Astro.url.searchParams.get("reset") === "1";
 const invitationAccepted = Astro.url.searchParams.get("invited") === "1";
+const adminUi = resolveAstropressAdminUiConfig();
 ---
 
 <!doctype html>
@@ -29,46 +30,48 @@ const invitationAccepted = Astro.url.searchParams.get("invited") === "1";
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="robots" content="noindex, nofollow" />
+    {adminUi.branding.faviconHref && <link rel="icon" href={adminUi.branding.faviconHref} />}
     <title>{buildAstropressAdminDocumentTitle("Admin Login")}</title>
   </head>
   <body>
     <main class="login-shell">
       <section class="login-card">
         <div class="login-card-top">
-          <p class="eyebrow">{ASTROPRESS_ADMIN_APP_NAME}</p>
+          {adminUi.branding.logoSrc && <img src={adminUi.branding.logoSrc} alt={adminUi.branding.logoAlt} class="auth-logo" />}
+          <p class="eyebrow">{adminUi.branding.appName}</p>
           <button
             type="button"
             class="theme-toggle-admin"
             id="login-theme-toggle"
             aria-pressed="false"
-            aria-label="Toggle dark mode"
-            title="Toggle dark mode"
+            aria-label={adminUi.labels.themeToggleDark}
+            title={adminUi.labels.themeToggleDark}
           >
             <span class="theme-toggle-icon" aria-hidden="true"></span>
           </button>
         </div>
-        <h1>Admin Login</h1>
-        <p>Use an authorized admin account to access the editorial workspace.</p>
+        <h1>{adminUi.labels.loginHeading}</h1>
+        <p>{adminUi.labels.loginDescription}</p>
 
-        {isRateLimited && <p class="error">Too many sign-in attempts. Wait a minute and try again.</p>}
-        {hasError && !isRateLimited && <p class="error">The email or password was not recognized.</p>}
-        {requiresChallenge && <p class="error">Complete the security challenge and try signing in again.</p>}
-        {wasReset && <p class="success">Your password was reset successfully. Sign in with the new password.</p>}
-        {invitationAccepted && <p class="success">Your invitation was accepted successfully. Sign in with the new password.</p>}
+        {isRateLimited && <p class="error">{adminUi.labels.rateLimited}</p>}
+        {hasError && !isRateLimited && <p class="error">{adminUi.labels.invalidCredentials}</p>}
+        {requiresChallenge && <p class="error">{adminUi.labels.challengeRequired}</p>}
+        {wasReset && <p class="success">{adminUi.labels.passwordResetSuccess}</p>}
+        {invitationAccepted && <p class="success">{adminUi.labels.invitationAcceptedSuccess}</p>}
 
         <form method="post" action="/wp-admin/session">
           <label>
-            <span>Email</span>
+            <span>{adminUi.labels.loginEmailLabel}</span>
             <input type="email" name="email" autocomplete="email" required />
           </label>
           <label>
-            <span>Password</span>
+            <span>{adminUi.labels.loginPasswordLabel}</span>
             <input type="password" name="password" autocomplete="current-password" required />
           </label>
           <TurnstileField />
-          <button type="submit">Sign in</button>
+          <button type="submit">{adminUi.labels.loginSubmit}</button>
         </form>
-        <p class="aux-link"><a href="/wp-admin/reset-password">Forgot your password?</a></p>
+        <p class="aux-link"><a href="/wp-admin/reset-password">{adminUi.labels.forgotPassword}</a></p>
 
       </section>
     </main>
@@ -81,9 +84,8 @@ const invitationAccepted = Astro.url.searchParams.get("invited") === "1";
         function applyTheme(theme) {
           root.setAttribute('data-theme', theme);
           toggle.setAttribute('aria-pressed', theme === 'dark' ? 'true' : 'false');
-          var nextTheme = theme === 'dark' ? 'light' : 'dark';
-          toggle.setAttribute('aria-label', nextTheme === 'dark' ? 'Switch to dark mode' : 'Switch to light mode');
-          toggle.setAttribute('title', nextTheme === 'dark' ? 'Switch to dark mode' : 'Switch to light mode');
+          toggle.setAttribute('aria-label', theme === 'dark' ? '{adminUi.labels.themeToggleLight}' : '{adminUi.labels.themeToggleDark}');
+          toggle.setAttribute('title', theme === 'dark' ? '{adminUi.labels.themeToggleLight}' : '{adminUi.labels.themeToggleDark}');
           toggle.querySelector('.theme-toggle-icon').textContent = theme === 'dark' ? '☀' : '☾';
         }
 
@@ -175,6 +177,13 @@ const invitationAccepted = Astro.url.searchParams.get("invited") === "1";
     font-size: 0.78rem;
     font-weight: 700;
     color: var(--accent);
+  }
+
+  .auth-logo {
+    width: 2rem;
+    height: 2rem;
+    object-fit: contain;
+    border-radius: 0.35rem;
   }
 
   .theme-toggle-admin {

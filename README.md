@@ -63,6 +63,7 @@ Host integration helpers:
 - `astropress/local-runtime-modules` exposes the typed seam contract for host implementations
 - `astropress/cloudflare-workers-stub` and `astropress/cloudflare-local-runtime-stubs` are exported as stable package entry points
 - current host-facing runtime modules are also exported as stable subpaths so consuming apps can stop using repo-relative `src` paths during extraction
+- `registerCms({ admin: ... })` lets hosts override package-owned admin branding, labels, nav names, favicon, and simple logo assets without forking the admin app
 
 Current package-owned runtime surfaces:
 
@@ -99,3 +100,33 @@ Why `local-runtime-modules` exists:
 - In development and test, the host app aliases `./local-runtime-modules` to its own implementation file.
 - In Cloudflare-style builds, the host can instead point that import at `astropress/cloudflare-local-runtime-stubs` so unsupported local fallbacks fail explicitly.
 - The host-side implementation shape is now documented and typed through `astropress/host-runtime-modules`.
+
+Admin customization example:
+
+```ts
+registerCms({
+  siteUrl: "https://example.org",
+  templateKeys: ["home"],
+  seedPages: [],
+  archives: [],
+  translationStatus: [],
+  admin: {
+    branding: {
+      appName: "Client Console",
+      productName: "Client Console Admin",
+      shellName: "Client Workspace",
+      logoSrc: "/brand/admin-mark.svg",
+      faviconHref: "/brand/favicon.ico",
+    },
+    labels: {
+      sidebarTitle: "Operations",
+      signOut: "Log out",
+      loginHeading: "Client sign in",
+    },
+    navigation: {
+      routePages: "Page Routes",
+      media: "Asset Library",
+    },
+  },
+});
+```

@@ -1,3 +1,5 @@
+import { resolveAstropressAdminUiConfig } from "./admin-ui";
+
 export const ASTROPRESS_ADMIN_PRODUCT_NAME = "Astropress Admin";
 export const ASTROPRESS_ADMIN_APP_NAME = "Astropress";
 
@@ -14,5 +16,6 @@ function stripLegacyAdminSuffixes(value: string): string {
 
 export function buildAstropressAdminDocumentTitle(title: string): string {
   const baseTitle = stripLegacyAdminSuffixes(title);
-  return baseTitle ? `${baseTitle} | ${ASTROPRESS_ADMIN_PRODUCT_NAME}` : ASTROPRESS_ADMIN_PRODUCT_NAME;
+  const productName = resolveAstropressAdminUiConfig().branding.productName;
+  return baseTitle ? `${baseTitle} | ${productName}` : productName;
 }

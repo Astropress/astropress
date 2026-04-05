@@ -18,3 +18,6 @@ export function getCmsConfig() {
     }
     return config;
 }
+export function peekCmsConfig() {
+    return getConfigStore()[CMS_CONFIG_KEY] ?? null;
+}

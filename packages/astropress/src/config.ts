@@ -40,6 +40,71 @@ export interface CmsConfig {
     englishSourceUrl: string;
     locale: string;
   }>;
+
+  /**
+   * Optional admin-shell customization. Hosts can rename labels and swap simple
+   * brand assets without forking Astropress admin templates.
+   */
+  admin?: {
+    branding?: {
+      appName?: string;
+      productName?: string;
+      shellName?: string;
+      logoSrc?: string;
+      logoHref?: string;
+      logoAlt?: string;
+      faviconHref?: string;
+    };
+    labels?: {
+      sidebarTitle?: string;
+      signedInAsPrefix?: string;
+      signOut?: string;
+      themeToggleDark?: string;
+      themeToggleLight?: string;
+      languageToggle?: string;
+      languageToggleTitle?: string;
+      loginHeading?: string;
+      loginDescription?: string;
+      loginSubmit?: string;
+      loginEmailLabel?: string;
+      loginPasswordLabel?: string;
+      forgotPassword?: string;
+      invalidCredentials?: string;
+      rateLimited?: string;
+      challengeRequired?: string;
+      passwordResetSuccess?: string;
+      invitationAcceptedSuccess?: string;
+      acceptInvitationHeading?: string;
+      acceptInvitationDescription?: string;
+      acceptInvitationSubmit?: string;
+      resetPasswordRequestHeading?: string;
+      resetPasswordRequestDescription?: string;
+      resetPasswordTokenHeading?: string;
+      resetPasswordTokenDescription?: string;
+      resetPasswordRequestSubmit?: string;
+      resetPasswordTokenSubmit?: string;
+      backToLogin?: string;
+    };
+    navigation?: Partial<Record<
+      | "dashboard"
+      | "contentGroup"
+      | "pages"
+      | "posts"
+      | "authors"
+      | "taxonomies"
+      | "routePages"
+      | "archives"
+      | "users"
+      | "media"
+      | "comments"
+      | "redirects"
+      | "translations"
+      | "seo"
+      | "system"
+      | "settings",
+      string
+    >>;
+  };
 }
 
 const CMS_CONFIG_KEY = Symbol.for("astropress.cms-config");
@@ -62,4 +127,8 @@ export function getCmsConfig(): CmsConfig {
     throw new Error("CMS not initialized — call registerCms() before using the CMS.");
   }
   return config;
+}
+
+export function peekCmsConfig(): CmsConfig | null {
+  return getConfigStore()[CMS_CONFIG_KEY] ?? null;
 }

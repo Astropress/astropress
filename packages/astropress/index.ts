@@ -6,6 +6,8 @@ export {
   ASTROPRESS_ADMIN_PRODUCT_NAME,
   buildAstropressAdminDocumentTitle,
 } from "./src/admin-branding.js";
+export { resolveAstropressAdminUiConfig } from "./src/admin-ui.js";
+export type { AstropressAdminNavKey, AstropressResolvedAdminUiConfig } from "./src/admin-ui";
 export {
   invalidateAstropressAdminSlugCache,
   resolveAstropressAdminSlug,

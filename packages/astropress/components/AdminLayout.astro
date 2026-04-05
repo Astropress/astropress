@@ -1,5 +1,6 @@
 ---
-import { ASTROPRESS_ADMIN_PRODUCT_NAME, buildAstropressAdminDocumentTitle } from "../src/admin-branding";
+import { buildAstropressAdminDocumentTitle } from "../src/admin-branding";
+import { resolveAstropressAdminUiConfig } from "../src/admin-ui";
 
 interface NavItem {
   href?: string;
@@ -21,25 +22,26 @@ interface Props {
 
 const { title, heading, currentPath, description = "", role, userName, siteName } = Astro.props;
 const documentTitle = buildAstropressAdminDocumentTitle(title);
-const adminSiteName = siteName ?? ASTROPRESS_ADMIN_PRODUCT_NAME;
+const adminUi = resolveAstropressAdminUiConfig();
+const adminSiteName = siteName ?? adminUi.branding.shellName;
 
 const navItems: NavItem[] = [
-  { href: "/wp-admin", label: "Dashboard" },
-  { href: "", label: "Content", isGroupLabel: true },
-  { href: "/wp-admin/pages", label: "Pages", adminOnly: true, indent: true },
-  { href: "/wp-admin/posts", label: "Posts", indent: true },
-  { href: "/wp-admin/authors", label: "Authors", adminOnly: true, indent: true },
-  { href: "/wp-admin/taxonomies", label: "Categories & Tags", adminOnly: true, indent: true },
-  { href: "/wp-admin/route-pages", label: "Route Table", adminOnly: true, indent: true },
-  { href: "/wp-admin/archives", label: "Archives", adminOnly: true, indent: true },
-  { href: "/wp-admin/users", label: "Users", adminOnly: true, indent: true },
-  { href: "/wp-admin/media", label: "Media" },
-  { href: "/wp-admin/comments", label: "Comments" },
-  { href: "/wp-admin/redirects", label: "Redirects", adminOnly: true },
-  { href: "/wp-admin/translations", label: "Translations", adminOnly: true },
-  { href: "/wp-admin/seo", label: "SEO", adminOnly: true },
-  { href: "/wp-admin/system", label: "System", adminOnly: true },
-  { href: "/wp-admin/settings", label: "Settings", adminOnly: true },
+  { href: "/wp-admin", label: adminUi.navigation.dashboard },
+  { href: "", label: adminUi.navigation.contentGroup, isGroupLabel: true },
+  { href: "/wp-admin/pages", label: adminUi.navigation.pages, adminOnly: true, indent: true },
+  { href: "/wp-admin/posts", label: adminUi.navigation.posts, indent: true },
+  { href: "/wp-admin/authors", label: adminUi.navigation.authors, adminOnly: true, indent: true },
+  { href: "/wp-admin/taxonomies", label: adminUi.navigation.taxonomies, adminOnly: true, indent: true },
+  { href: "/wp-admin/route-pages", label: adminUi.navigation.routePages, adminOnly: true, indent: true },
+  { href: "/wp-admin/archives", label: adminUi.navigation.archives, adminOnly: true, indent: true },
+  { href: "/wp-admin/users", label: adminUi.navigation.users, adminOnly: true, indent: true },
+  { href: "/wp-admin/media", label: adminUi.navigation.media },
+  { href: "/wp-admin/comments", label: adminUi.navigation.comments },
+  { href: "/wp-admin/redirects", label: adminUi.navigation.redirects, adminOnly: true },
+  { href: "/wp-admin/translations", label: adminUi.navigation.translations, adminOnly: true },
+  { href: "/wp-admin/seo", label: adminUi.navigation.seo, adminOnly: true },
+  { href: "/wp-admin/system", label: adminUi.navigation.system, adminOnly: true },
+  { href: "/wp-admin/settings", label: adminUi.navigation.settings, adminOnly: true },
 ];
 ---
 
@@ -63,39 +65,43 @@ const navItems: NavItem[] = [
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="robots" content="noindex, nofollow" />
+    {adminUi.branding.faviconHref && <link rel="icon" href={adminUi.branding.faviconHref} />}
     <title>{documentTitle}</title>
     <meta name="description" content={description || documentTitle} />
   </head>
   <body>
     <a class="skip-link" href="#admin-main">Skip to admin content</a>
     <header class="topbar">
-      <div>
+      <a class="topbar-brand" href={adminUi.branding.logoHref}>
+        {adminUi.branding.logoSrc ? (
+          <img src={adminUi.branding.logoSrc} alt={adminUi.branding.logoAlt} class="topbar-logo" />
+        ) : null}
         <strong>{adminSiteName}</strong>
-      </div>
+      </a>
       <div class="topbar-meta">
-        <span>Signed in as {userName}</span>
+        <span>{adminUi.labels.signedInAsPrefix} {userName}</span>
         <span class="role-chip">{role}</span>
         <button
           type="button"
           class="theme-toggle-admin"
           id="admin-theme-toggle"
           aria-pressed="false"
-          aria-label="Toggle dark mode"
-          title="Toggle dark mode"
+          aria-label={adminUi.labels.themeToggleDark}
+          title={adminUi.labels.themeToggleDark}
         >
           <span class="theme-toggle-icon" aria-hidden="true"></span>
         </button>
-        <button type="button" disabled class="lang-toggle-admin" title="Bilingual admin interface coming in Phase 2">
-          <span class="lang-text">EN/ES</span>
+        <button type="button" disabled class="lang-toggle-admin" title={adminUi.labels.languageToggleTitle}>
+          <span class="lang-text">{adminUi.labels.languageToggle}</span>
         </button>
         <form method="post" action="/wp-admin/session?logout=1">
-          <button type="submit">Sign out</button>
+          <button type="submit">{adminUi.labels.signOut}</button>
         </form>
       </div>
     </header>
     <div class="admin-shell">
       <nav class="sidebar" aria-label="Admin sections">
-        <p class="sidebar-label">Workspace</p>
+        <p class="sidebar-label">{adminUi.labels.sidebarTitle}</p>
         {navItems
           .filter((item) => (item.adminOnly ? role === "admin" : true))
           .map((item) => {
@@ -130,9 +136,8 @@ const navItems: NavItem[] = [
         function applyTheme(theme) {
           root.setAttribute('data-theme', theme);
           toggle.setAttribute('aria-pressed', theme === 'dark' ? 'true' : 'false');
-          var nextTheme = theme === 'dark' ? 'light' : 'dark';
-          toggle.setAttribute('aria-label', nextTheme === 'dark' ? 'Switch to dark mode' : 'Switch to light mode');
-          toggle.setAttribute('title', nextTheme === 'dark' ? 'Switch to dark mode' : 'Switch to light mode');
+          toggle.setAttribute('aria-label', theme === 'dark' ? '{adminUi.labels.themeToggleLight}' : '{adminUi.labels.themeToggleDark}');
+          toggle.setAttribute('title', theme === 'dark' ? '{adminUi.labels.themeToggleLight}' : '{adminUi.labels.themeToggleDark}');
           toggle.querySelector('.theme-toggle-icon').textContent = theme === 'dark' ? '☀' : '☾';
         }
 
@@ -240,6 +245,21 @@ const navItems: NavItem[] = [
     background: var(--topbar-bg);
     color: white;
     border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  }
+
+  .topbar-brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .topbar-logo {
+    width: 1.9rem;
+    height: 1.9rem;
+    object-fit: contain;
+    border-radius: 0.35rem;
   }
 
   .topbar-meta {

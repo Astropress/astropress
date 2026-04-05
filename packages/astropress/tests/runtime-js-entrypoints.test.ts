@@ -6,6 +6,7 @@ const runtimeEntryPoints = [
   "../src/project-env.js",
   "../src/project-runtime.js",
   "../src/admin-routes.js",
+  "../src/admin-ui.js",
   "../src/config.js",
   "../src/d1-admin-store.js",
   "../src/hosted-platform-adapter.js",

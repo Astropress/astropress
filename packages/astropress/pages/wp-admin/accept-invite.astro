@@ -1,11 +1,12 @@
 ---
-import { ASTROPRESS_ADMIN_APP_NAME, buildAcceptInvitePageModel, buildAstropressAdminDocumentTitle } from "astropress";
+import { buildAcceptInvitePageModel, buildAstropressAdminDocumentTitle, resolveAstropressAdminUiConfig } from "astropress";
 
 const token = Astro.url.searchParams.get("token") ?? "";
 const hasError = Astro.url.searchParams.get("error") === "1";
 const errorMessage = Astro.url.searchParams.get("message") ?? "That invitation link is invalid or has expired.";
 const model = await buildAcceptInvitePageModel(Astro.locals, token);
 const { inviteRequest } = model.data;
+const adminUi = resolveAstropressAdminUiConfig();
 ---
 
 <!doctype html>
@@ -28,26 +29,28 @@ const { inviteRequest } = model.data;
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="robots" content="noindex, nofollow" />
+    {adminUi.branding.faviconHref && <link rel="icon" href={adminUi.branding.faviconHref} />}
     <title>{buildAstropressAdminDocumentTitle("Accept Invitation")}</title>
   </head>
   <body>
     <main class="login-shell">
       <section class="login-card">
         <div class="login-card-top">
-          <p class="eyebrow">{ASTROPRESS_ADMIN_APP_NAME}</p>
+          {adminUi.branding.logoSrc && <img src={adminUi.branding.logoSrc} alt={adminUi.branding.logoAlt} class="auth-logo" />}
+          <p class="eyebrow">{adminUi.branding.appName}</p>
           <button
             type="button"
             class="theme-toggle-admin"
             id="auth-theme-toggle"
             aria-pressed="false"
-            aria-label="Toggle dark mode"
-            title="Toggle dark mode"
+            aria-label={adminUi.labels.themeToggleDark}
+            title={adminUi.labels.themeToggleDark}
           >
             <span class="theme-toggle-icon" aria-hidden="true"></span>
           </button>
         </div>
-        <h1>Accept invitation</h1>
-        <p>Set your password to activate this invited admin account.</p>
+        <h1>{adminUi.labels.acceptInvitationHeading}</h1>
+        <p>{adminUi.labels.acceptInvitationDescription}</p>
 
         {model.warnings.length > 0 && <p class="error">Invite-token validation is temporarily unavailable. This page is showing a safe fallback state.</p>}
         {hasError && <p class="error">{errorMessage}</p>}
@@ -67,14 +70,14 @@ const { inviteRequest } = model.data;
                 <span>Confirm new password</span>
                 <input type="password" name="confirmPassword" autocomplete="new-password" minlength="12" required />
               </label>
-              <button type="submit">Accept invitation</button>
-            </form>
-          </>
-        ) : (
-          <p class="error">That invitation link is invalid or has expired.</p>
-        )}
+                <button type="submit">{adminUi.labels.acceptInvitationSubmit}</button>
+              </form>
+            </>
+          ) : (
+            <p class="error">That invitation link is invalid or has expired.</p>
+          )}
 
-        <p class="aux-link"><a href="/wp-admin/login">Back to admin login</a></p>
+        <p class="aux-link"><a href="/wp-admin/login">{adminUi.labels.backToLogin}</a></p>
       </section>
     </main>
     <script is:inline>
@@ -86,9 +89,8 @@ const { inviteRequest } = model.data;
         function applyTheme(theme) {
           root.setAttribute('data-theme', theme);
           toggle.setAttribute('aria-pressed', theme === 'dark' ? 'true' : 'false');
-          var nextTheme = theme === 'dark' ? 'light' : 'dark';
-          toggle.setAttribute('aria-label', nextTheme === 'dark' ? 'Switch to dark mode' : 'Switch to light mode');
-          toggle.setAttribute('title', nextTheme === 'dark' ? 'Switch to dark mode' : 'Switch to light mode');
+          toggle.setAttribute('aria-label', theme === 'dark' ? '{adminUi.labels.themeToggleLight}' : '{adminUi.labels.themeToggleDark}');
+          toggle.setAttribute('title', theme === 'dark' ? '{adminUi.labels.themeToggleLight}' : '{adminUi.labels.themeToggleDark}');
           toggle.querySelector('.theme-toggle-icon').textContent = theme === 'dark' ? '☀' : '☾';
         }
 
@@ -178,6 +180,13 @@ const { inviteRequest } = model.data;
     font-size: 0.78rem;
     font-weight: 700;
     color: var(--accent);
+  }
+
+  .auth-logo {
+    width: 2rem;
+    height: 2rem;
+    object-fit: contain;
+    border-radius: 0.35rem;
   }
 
   .theme-toggle-admin {

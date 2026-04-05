@@ -14,6 +14,7 @@ The package is responsible for:
 - provider-neutral contracts
 - host-facing integration helpers
 - admin components and shared models
+- package-owned admin UI defaults with host override hooks for branding, labels, favicon, logo, and navigation naming
 - runtime utilities used by consuming Astro sites
 - packaged local runtime assets such as the SQLite schema/bootstrap/runtime path
 

@@ -14,6 +14,7 @@
     "./project-runtime": "./src/project-runtime.js",
     "./project-scaffold": "./src/project-scaffold.js",
     "./admin-routes": "./src/admin-routes.js",
+    "./admin-ui": "./src/admin-ui.js",
     "./hosted-platform-adapter": "./src/hosted-platform-adapter.js",
     "./provider-targets": "./src/provider-targets.ts",
     "./sqlite-bootstrap": "./src/sqlite-bootstrap.js",
