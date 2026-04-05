@@ -11,6 +11,7 @@
     "./components/*": "./components/*.astro",
     "./platform-contracts": "./src/platform-contracts.js",
     "./project-env": "./src/project-env.js",
+    "./project-runtime": "./src/project-runtime.js",
     "./project-scaffold": "./src/project-scaffold.js",
     "./hosted-platform-adapter": "./src/hosted-platform-adapter.js",
     "./provider-targets": "./src/provider-targets.ts",

@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 const runtimeEntryPoints = [
   "../src/platform-contracts.js",
   "../src/project-env.js",
+  "../src/project-runtime.js",
   "../src/config.js",
   "../src/d1-admin-store.js",
   "../src/hosted-platform-adapter.js",

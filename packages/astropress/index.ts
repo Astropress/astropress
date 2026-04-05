@@ -42,6 +42,11 @@ export type {
   AstropressLocalProviderEnv,
   AstropressProjectEnvContract,
 } from "./src/project-env";
+export { createAstropressProjectRuntimePlan } from "./src/project-runtime.js";
+export type {
+  AstropressProjectRuntimeOptions,
+  AstropressProjectRuntimePlan,
+} from "./src/project-runtime";
 export { createAstropressHostedPlatformAdapter } from "./src/hosted-platform-adapter.js";
 export type { AstropressHostedPlatformAdapterOptions } from "./src/hosted-platform-adapter";
 export { createAstropressCloudflareAdapter } from "./src/adapters/cloudflare.js";

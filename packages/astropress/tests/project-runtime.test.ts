@@ -1,0 +1,83 @@
+import { mkdtemp, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { describe, expect, it } from "vitest";
+import { createAstropressProjectRuntimePlan } from "../src/project-runtime.js";
+
+describe("project runtime", () => {
+  it("builds a local runtime plan from project env", async () => {
+    const workspace = await mkdtemp(join(tmpdir(), "astropress-project-runtime-local-"));
+    const plan = createAstropressProjectRuntimePlan({
+      env: {
+        ASTROPRESS_RUNTIME_MODE: "local",
+        ASTROPRESS_LOCAL_PROVIDER: "runway",
+      },
+      local: {
+        workspaceRoot: workspace,
+        dbPath: join(workspace, "runtime.sqlite"),
+      },
+    });
+
+    expect(plan.mode).toBe("local");
+    expect(plan.env.localProvider).toBe("runway");
+    expect(plan.adapter.capabilities.name).toBe("runway");
+
+    await rm(workspace, { recursive: true, force: true });
+  });
+
+  it("builds a hosted runtime plan from project env", async () => {
+    const plan = createAstropressProjectRuntimePlan({
+      env: {
+        ASTROPRESS_RUNTIME_MODE: "hosted",
+        ASTROPRESS_HOSTED_PROVIDER: "supabase",
+        SUPABASE_URL: "https://runtime.supabase.co",
+        SUPABASE_ANON_KEY: "anon",
+        SUPABASE_SERVICE_ROLE_KEY: "service",
+      },
+      hosted: {
+        content: {
+          async list() {
+            return [];
+          },
+          async get() {
+            return null;
+          },
+          async save(record) {
+            return record;
+          },
+          async delete() {},
+        },
+        media: {
+          async put(asset) {
+            return asset;
+          },
+          async get() {
+            return null;
+          },
+          async delete() {},
+        },
+        revisions: {
+          async list() {
+            return [];
+          },
+          async append(revision) {
+            return revision;
+          },
+        },
+        auth: {
+          async signIn(email) {
+            return { id: "runtime-session", email, role: "admin" as const };
+          },
+          async signOut() {},
+          async getSession(sessionId) {
+            return { id: sessionId, email: "admin@example.com", role: "admin" as const };
+          },
+        },
+      },
+    });
+
+    expect(plan.mode).toBe("hosted");
+    expect(plan.env.hostedProvider).toBe("supabase");
+    expect(plan.adapter.capabilities.name).toBe("supabase");
+  });
+});
