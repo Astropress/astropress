@@ -54,6 +54,7 @@ Host integration helpers:
 - `astropress/hosted-platform-adapter` exposes the package-owned assembler for hosted providers built from explicit store modules
 - `astropress/adapters/sqlite`, `astropress/adapters/local`, `astropress/adapters/hosted`, `astropress/adapters/project`, `astropress/adapters/cloudflare`, `astropress/adapters/supabase`, and `astropress/adapters/runway` expose first-party provider adapter factories
 - `astropress/provider-choice` exposes the package-owned provider recommendation helper used by scaffolding, docs, and future setup flows
+- `astropress/project-launch` exposes the package-owned runtime/bootstrap plan used by local dev startup and future hosted boot flows
 - `astropress/adapters/supabase-sqlite` and `astropress/adapters/runway-sqlite` expose Node-only local runtimes for those providers backed by the packaged SQLite adapter
 - Supabase and Runway hosted config loading now lives in Astropress too via `readAstropressSupabaseHostedConfig`, `createAstropressSupabaseHostedAdapter`, `readAstropressRunwayHostedConfig`, and `createAstropressRunwayHostedAdapter`
 - `astropress/deploy/github-pages`, `astropress/import/wordpress`, and `astropress/sync/git` expose the Node-only deploy/import/sync workflow helpers as stable package entry points

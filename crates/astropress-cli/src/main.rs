@@ -241,6 +241,18 @@ struct ProjectRuntimePlan {
 }
 
 #[derive(Debug, Deserialize)]
+struct ProjectLaunchPlan {
+    runtime: ProjectRuntimePlan,
+    provider: String,
+    #[serde(rename = "deployTarget")]
+    deploy_target: String,
+    #[serde(rename = "adminDbPath")]
+    admin_db_path: String,
+    #[serde(rename = "requiresLocalSeed")]
+    requires_local_seed: bool,
+}
+
+#[derive(Debug, Deserialize)]
 struct ProjectRuntimeAdapter {
     capabilities: ProjectRuntimeCapabilities,
 }
@@ -693,20 +705,71 @@ console.log(JSON.stringify(createAstropressProjectRuntimePlan({{
     serde_json::from_slice::<ProjectRuntimePlan>(&output.stdout).map_err(|error| error.to_string())
 }
 
+fn load_project_launch_plan(
+    project_dir: &Path,
+    provider: Option<LocalProvider>,
+) -> Result<ProjectLaunchPlan, String> {
+    let launch_module = package_module_import("project-launch.js")?;
+    let launch_module_literal =
+        serde_json::to_string(&launch_module).map_err(|error| error.to_string())?;
+    let env_values = read_env_file(project_dir)?;
+    let env_values_json = serde_json::to_string(&env_values).map_err(|error| error.to_string())?;
+    let local_json = serde_json::to_string(&serde_json::json!({
+        "workspaceRoot": project_dir.display().to_string(),
+        "dbPath": provider.map(|local_provider| {
+            project_dir
+                .join(default_admin_db_relative_path(local_provider))
+                .display()
+                .to_string()
+        }),
+        "provider": provider.map(LocalProvider::as_str),
+    }))
+    .map_err(|error| error.to_string())?;
+    let script = format!(
+        r#"import {{ createAstropressProjectLaunchPlan }} from {module};
+
+const envValues = {env_values};
+const localOptions = {local_options};
+console.log(JSON.stringify(createAstropressProjectLaunchPlan({{
+  env: envValues,
+  local: localOptions,
+}})));
+"#,
+        module = launch_module_literal,
+        env_values = env_values_json,
+        local_options = local_json,
+    );
+
+    let output = ProcessCommand::new("node")
+        .args(["--input-type=module", "--eval", &script])
+        .output()
+        .map_err(io_error)?;
+
+    if !output.status.success() {
+        return Err(format!(
+            "Failed to load Astropress project launch plan: {}",
+            String::from_utf8_lossy(&output.stderr).trim()
+        ));
+    }
+
+    serde_json::from_slice::<ProjectLaunchPlan>(&output.stdout).map_err(|error| error.to_string())
+}
+
 fn resolve_local_provider(project_dir: &Path, provider: Option<LocalProvider>) -> Result<LocalProvider, String> {
     if let Some(provider) = provider {
         return Ok(provider);
     }
 
-    LocalProvider::parse(&load_project_runtime_plan(project_dir, None)?.env.local_provider)
+    LocalProvider::parse(&load_project_launch_plan(project_dir, None)?.provider)
 }
 
 fn resolve_admin_db_path(project_dir: &Path, provider: LocalProvider) -> Result<String, String> {
-    let contract = load_project_runtime_plan(project_dir, Some(provider))?.env;
+    let launch_plan = load_project_launch_plan(project_dir, Some(provider))?;
+    let contract = launch_plan.runtime.env;
     if contract.local_provider != provider.as_str() {
         return Ok(default_admin_db_relative_path(provider).to_string());
     }
-    Ok(contract.admin_db_path)
+    Ok(launch_plan.admin_db_path)
 }
 
 fn resolve_deploy_target(project_dir: &Path, target: Option<&str>) -> Result<String, String> {
@@ -714,7 +777,7 @@ fn resolve_deploy_target(project_dir: &Path, target: Option<&str>) -> Result<Str
         return Ok(target.to_string());
     }
 
-    Ok(load_project_runtime_plan(project_dir, None)?.env.deploy_target)
+    Ok(load_project_launch_plan(project_dir, None)?.deploy_target)
 }
 
 fn load_project_scaffold(provider: LocalProvider) -> Result<ProjectScaffold, String> {
@@ -949,18 +1012,21 @@ fn run_script(project_dir: &Path, script_name: &str) -> Result<ExitCode, String>
 
 fn run_dev_server(project_dir: &Path, provider: Option<LocalProvider>) -> Result<ExitCode, String> {
     let package_manager = detect_package_manager(project_dir);
-    let runtime_plan = load_project_runtime_plan(project_dir, provider)?;
+    let launch_plan = load_project_launch_plan(project_dir, provider)?;
+    let runtime_plan = launch_plan.runtime;
     if runtime_plan.mode != "local" {
         return Err(format!(
             "Astropress dev currently supports only local runtime mode, but this project resolved to `{}` with adapter `{}`.",
             runtime_plan.mode, runtime_plan.adapter.capabilities.name
         ));
     }
-    let provider = LocalProvider::parse(&runtime_plan.env.local_provider)?;
-    let admin_db_path = runtime_plan.env.admin_db_path;
+    let provider = LocalProvider::parse(&launch_plan.provider)?;
+    let admin_db_path = launch_plan.admin_db_path;
     install_dependencies_if_needed(project_dir, package_manager)?;
     ensure_local_provider_defaults(project_dir)?;
-    seed_local_sqlite_database(project_dir, package_manager, provider, &admin_db_path)?;
+    if launch_plan.requires_local_seed {
+        seed_local_sqlite_database(project_dir, package_manager, provider, &admin_db_path)?;
+    }
 
     let mut command = match package_manager {
         PackageManager::Bun => {

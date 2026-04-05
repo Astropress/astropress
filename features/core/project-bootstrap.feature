@@ -13,3 +13,8 @@ Feature: Project bootstrap follows package-owned defaults
     Given a non-technical operator creates a new Astropress project
     When Astropress computes the default hosting recommendation
     Then Cloudflare should be the default canonical runtime and GitHub Pages should remain a static deploy target only
+
+  Scenario: Project launch planning stays package-owned
+    Given a scaffolded Astropress project with local or hosted provider settings
+    When Astropress computes the project launch plan
+    Then the runtime mode provider deploy target and local-seed requirement should come from Astropress package logic rather than CLI-specific branching

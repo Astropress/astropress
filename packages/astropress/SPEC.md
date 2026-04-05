@@ -18,6 +18,7 @@ The package is responsible for:
 - runtime utilities used by consuming Astro sites
 - packaged local runtime assets such as the SQLite schema/bootstrap/runtime path
 - package-owned provider recommendation logic for non-technical setup flows
+- package-owned project launch planning so CLI and consumers share one runtime/bootstrap decision path
 
 ## Package Contract
 
@@ -42,6 +43,7 @@ The package should reduce host-specific glue over time by replacing temporary se
 - `astropress/adapters/local` chooses the local SQLite-backed provider runtime for sqlite, Supabase, or Runway
 - `astropress/adapters/hosted` chooses the hosted provider runtime for Supabase or Runway
 - `astropress/adapters/project` chooses local or hosted runtime mode from the project env contract
+- `astropress/project-launch` converts the project env and runtime mode into one launch/bootstrap plan
 - provider selectors must support explicit env maps as well as ambient process env
 - `astropress/adapters/supabase-sqlite` and `astropress/adapters/runway-sqlite` provide Node-only provider-local runtimes backed by the packaged SQLite adapter
 - Supabase and Runway hosted config loading and runtime guards are package-owned, not host-app glue

@@ -12,6 +12,7 @@
     "./platform-contracts": "./src/platform-contracts.js",
     "./project-env": "./src/project-env.js",
     "./project-runtime": "./src/project-runtime.js",
+    "./project-launch": "./src/project-launch.js",
     "./project-scaffold": "./src/project-scaffold.js",
     "./provider-choice": "./src/provider-choice.js",
     "./admin-routes": "./src/admin-routes.js",
