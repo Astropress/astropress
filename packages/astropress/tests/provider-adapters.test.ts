@@ -1,16 +1,63 @@
 import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { DatabaseSync } from "node:sqlite";
 import { describe, expect, it } from "vitest";
 import {
   createAstropressCloudflareAdapter,
   createAstropressRunwayAdapter,
   createAstropressSupabaseAdapter,
+  registerCms,
 } from "astropress";
 import { createAstropressSqliteAdapter } from "../src/adapters/sqlite.js";
 import { createAstropressGitHubPagesDeployTarget } from "../src/deploy/github-pages.js";
 import { createAstropressWordPressImportSource } from "../src/import/wordpress.js";
 import { createAstropressGitSyncAdapter } from "../src/sync/git.js";
+import { readAstropressSqliteSchemaSql } from "../src/sqlite-bootstrap.js";
+import type { D1DatabaseLike, D1PreparedStatement, D1Result } from "../src/d1-database";
+
+class SqliteD1PreparedStatement implements D1PreparedStatement {
+  constructor(
+    private readonly db: DatabaseSync,
+    private readonly sql: string,
+    private readonly params: unknown[] = [],
+  ) {}
+
+  bind(...values: unknown[]) {
+    return new SqliteD1PreparedStatement(this.db, this.sql, values);
+  }
+
+  async first<T = Record<string, unknown>>(columnName?: string): Promise<T | null> {
+    const row = this.db.prepare(this.sql).get(...this.params) as Record<string, unknown> | undefined;
+    if (!row) {
+      return null;
+    }
+
+    if (columnName) {
+      return ((row[columnName] ?? null) as T) ?? null;
+    }
+
+    return row as T;
+  }
+
+  async all<T = Record<string, unknown>>(): Promise<D1Result<T>> {
+    const results = this.db.prepare(this.sql).all(...this.params) as T[];
+    return { success: true, results };
+  }
+
+  async run<T = Record<string, unknown>>(): Promise<D1Result<T>> {
+    this.db.prepare(this.sql).run(...this.params);
+    return { success: true, results: [] };
+  }
+}
+
+class SqliteBackedD1Database implements D1DatabaseLike {
+  constructor(private readonly db: DatabaseSync) {}
+
+  prepare(query: string): D1PreparedStatement {
+    return new SqliteD1PreparedStatement(this.db, query);
+  }
+}
 
 describe("provider adapters", () => {
   it("creates first-party adapters with provider-specific capability defaults", async () => {
@@ -55,6 +102,112 @@ describe("provider adapters", () => {
     expect((await sqlite.content.list("post")).some((record) => record.slug === "hello-world")).toBe(true);
 
     await rm(workspace, { recursive: true, force: true });
+  });
+
+  it("creates a D1-backed Cloudflare adapter surface", async () => {
+    registerCms({
+      templateKeys: ["content"],
+      siteUrl: "https://example.com",
+      seedPages: [],
+      archives: [],
+      translationStatus: [],
+    });
+
+    const db = new DatabaseSync(":memory:");
+    db.exec(readAstropressSqliteSchemaSql());
+    db.prepare(
+      `
+        INSERT INTO content_entries (
+          slug, legacy_url, title, kind, template_key, source_html_path, body, summary, seo_title, meta_description
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `,
+    ).run(
+      "cloudflare-post",
+      "/cloudflare-post",
+      "Cloudflare post",
+      "post",
+      "content",
+      "runtime://content/cloudflare-post",
+      "<p>Cloudflare body</p>",
+      "Cloudflare summary",
+      "Cloudflare SEO",
+      "Cloudflare description",
+    );
+    db.prepare(
+      `
+        INSERT INTO content_overrides (
+          slug, title, status, body, seo_title, meta_description, updated_by
+        ) VALUES (?, ?, ?, ?, ?, ?, ?)
+      `,
+    ).run(
+      "cloudflare-post",
+      "Cloudflare post",
+      "published",
+      "<p>Cloudflare body</p>",
+      "Cloudflare SEO",
+      "Cloudflare description",
+      "admin@example.com",
+    );
+    db.prepare(
+      `
+        INSERT INTO content_revisions (
+          id, slug, source, title, status, body, seo_title, meta_description, created_by
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `,
+    ).run(
+      "revision-cloudflare-1",
+      "cloudflare-post",
+      "reviewed",
+      "Cloudflare post",
+      "published",
+      "<p>Cloudflare body</p>",
+      "Cloudflare SEO",
+      "Cloudflare description",
+      "admin@example.com",
+    );
+    db.prepare(
+      `
+        INSERT INTO media_assets (
+          id, source_url, local_path, mime_type, alt_text, title, uploaded_by
+        ) VALUES (?, ?, ?, ?, ?, ?, ?)
+      `,
+    ).run(
+      "cloudflare-media-1",
+      "https://cdn.example.com/cloudflare.png",
+      "/media/cloudflare.png",
+      "image/png",
+      "Cloudflare alt",
+      "cloudflare.png",
+      "admin@example.com",
+    );
+
+    const cloudflare = createAstropressCloudflareAdapter({
+      db: new SqliteBackedD1Database(db),
+    });
+
+    expect(cloudflare.capabilities.name).toBe("cloudflare");
+    expect(cloudflare.capabilities.database).toBe(true);
+    expect(cloudflare.capabilities.objectStorage).toBe(true);
+
+    const user = await cloudflare.auth.signIn("admin@example.com", "password");
+    expect(user?.role).toBe("admin");
+    expect(await cloudflare.content.get("cloudflare-post")).toMatchObject({
+      slug: "cloudflare-post",
+      kind: "post",
+      title: "Cloudflare post",
+    });
+    expect(await cloudflare.media.get("cloudflare-media-1")).toMatchObject({
+      id: "cloudflare-media-1",
+      mimeType: "image/png",
+    });
+    expect(await cloudflare.revisions.list("cloudflare-post")).toMatchObject([
+      {
+        id: "revision-cloudflare-1",
+        recordId: "cloudflare-post",
+      },
+    ]);
+
+    db.close();
   });
 
   it("deploys a build directory to the github pages target", async () => {
