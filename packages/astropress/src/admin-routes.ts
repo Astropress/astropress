@@ -6,6 +6,8 @@ export type AstropressAdminRouteDefinition = {
   kind: AstropressAdminRouteKind;
 };
 
+export type AstropressAdminRouteInjector = (route: AstropressAdminRouteDefinition) => void;
+
 const adminRouteDefinitions = [
   { pattern: "/wp-admin", entrypoint: "index.astro", kind: "page" },
   { pattern: "/wp-admin/login", entrypoint: "login.astro", kind: "page" },
@@ -76,4 +78,15 @@ export function resolveAstropressAdminRouteEntrypoints(basePath: string) {
 
 export function createAstropressAdminRouteInjectionPlan(pagesDirectory: string) {
   return resolveAstropressAdminRouteEntrypoints(pagesDirectory);
+}
+
+export function injectAstropressAdminRoutes(
+  pagesDirectory: string,
+  injectRoute: AstropressAdminRouteInjector,
+) {
+  const plan = createAstropressAdminRouteInjectionPlan(pagesDirectory);
+  for (const route of plan) {
+    injectRoute(route);
+  }
+  return plan;
 }

@@ -69,3 +69,11 @@ export function resolveAstropressAdminRouteEntrypoints(basePath) {
 export function createAstropressAdminRouteInjectionPlan(pagesDirectory) {
   return resolveAstropressAdminRouteEntrypoints(pagesDirectory);
 }
+
+export function injectAstropressAdminRoutes(pagesDirectory, injectRoute) {
+  const plan = createAstropressAdminRouteInjectionPlan(pagesDirectory);
+  for (const route of plan) {
+    injectRoute(route);
+  }
+  return plan;
+}

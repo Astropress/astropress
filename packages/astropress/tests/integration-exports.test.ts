@@ -5,6 +5,7 @@ import {
   createAstropressLocalRuntimeModulePlugin,
   createAstropressVitestLocalRuntimePlugins,
   defineAstropressHostRuntimeModules,
+  injectAstropressAdminRoutes,
   listAstropressAdminRoutes,
 } from "../src/integration";
 
@@ -31,6 +32,10 @@ describe("integration exports", () => {
     });
     const adminRoutes = listAstropressAdminRoutes();
     const injectionPlan = createAstropressAdminRouteInjectionPlan("/tmp/site/pages/wp-admin");
+    const injectedRoutes: typeof injectionPlan = [];
+    injectAstropressAdminRoutes("/tmp/site/pages/wp-admin", (route) => {
+      injectedRoutes.push(route);
+    });
 
     expect(plugin.name).toBe("astropress-local-runtime-modules");
     expect(vitestPlugins).toHaveLength(2);
@@ -38,5 +43,6 @@ describe("integration exports", () => {
     expect(ASTROPRESS_ADMIN_BASE_PATH).toBe("/wp-admin");
     expect(adminRoutes).not.toHaveLength(0);
     expect(injectionPlan[0]?.entrypoint).toBe("/tmp/site/pages/wp-admin/index.astro");
+    expect(injectedRoutes).toEqual(injectionPlan);
   });
 });

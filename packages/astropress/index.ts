@@ -9,10 +9,11 @@ export {
 export {
   ASTROPRESS_ADMIN_BASE_PATH,
   createAstropressAdminRouteInjectionPlan,
+  injectAstropressAdminRoutes,
   listAstropressAdminRoutes,
   resolveAstropressAdminRouteEntrypoints,
 } from "./src/admin-routes.js";
-export type { AstropressAdminRouteDefinition, AstropressAdminRouteKind } from "./src/admin-routes";
+export type { AstropressAdminRouteDefinition, AstropressAdminRouteInjector, AstropressAdminRouteKind } from "./src/admin-routes";
 
 // Platform contracts
 export {

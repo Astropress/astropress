@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   ASTROPRESS_ADMIN_BASE_PATH,
   createAstropressAdminRouteInjectionPlan,
+  injectAstropressAdminRoutes,
   listAstropressAdminRoutes,
   resolveAstropressAdminRouteEntrypoints,
 } from "../src/admin-routes";
@@ -90,5 +91,15 @@ describe("admin routes", () => {
     expect(createAstropressAdminRouteInjectionPlan("/tmp/astropress/pages/wp-admin")).toEqual(
       resolveAstropressAdminRouteEntrypoints("/tmp/astropress/pages/wp-admin"),
     );
+  });
+
+  it("injects the full canonical route plan into a host callback", () => {
+    const injectedRoutes: ReturnType<typeof createAstropressAdminRouteInjectionPlan> = [];
+    const plan = injectAstropressAdminRoutes("/tmp/astropress/pages/wp-admin", (route) => {
+      injectedRoutes.push(route);
+    });
+
+    expect(injectedRoutes).toEqual(plan);
+    expect(injectedRoutes).toHaveLength(51);
   });
 });

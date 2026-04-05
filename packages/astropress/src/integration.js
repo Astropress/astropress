@@ -11,6 +11,7 @@ export { createAstropressVitestLocalRuntimePlugins } from "./vitest-runtime-alia
 export {
   ASTROPRESS_ADMIN_BASE_PATH,
   createAstropressAdminRouteInjectionPlan,
+  injectAstropressAdminRoutes,
   listAstropressAdminRoutes,
   resolveAstropressAdminRouteEntrypoints,
 } from "./admin-routes.js";
