@@ -9,7 +9,9 @@ import {
   createAstropressSupabaseAdapter,
   registerCms,
 } from "astropress";
+import { createAstropressRunwaySqliteAdapter } from "../src/adapters/runway-sqlite.js";
 import { createAstropressSqliteAdapter } from "../src/adapters/sqlite.js";
+import { createAstropressSupabaseSqliteAdapter } from "../src/adapters/supabase-sqlite.js";
 import { createAstropressGitHubPagesDeployTarget } from "../src/deploy/github-pages.js";
 import { createAstropressWordPressImportSource } from "../src/import/wordpress.js";
 import { createAstropressGitSyncAdapter } from "../src/sync/git.js";
@@ -135,6 +137,61 @@ describe("provider adapters", () => {
     expect(await supabase.content.get("wrapped-post")).toMatchObject({
       slug: "wrapped-post",
       kind: "post",
+    });
+
+    await rm(workspace, { recursive: true, force: true });
+  });
+
+  it("creates sqlite-backed local runtimes for Supabase and Runway", async () => {
+    const workspace = await mkdtemp(join(tmpdir(), "astropress-provider-sqlite-"));
+    const supabase = createAstropressSupabaseSqliteAdapter({
+      workspaceRoot: workspace,
+      dbPath: join(workspace, "supabase-admin.sqlite"),
+    });
+    const runway = createAstropressRunwaySqliteAdapter({
+      workspaceRoot: workspace,
+      dbPath: join(workspace, "runway-admin.sqlite"),
+    });
+
+    const supabaseUser = await supabase.auth.signIn("admin@example.com", "password");
+    const runwayUser = await runway.auth.signIn("admin@example.com", "password");
+    expect(supabaseUser?.role).toBe("admin");
+    expect(runwayUser?.role).toBe("admin");
+
+    const saved = await supabase.content.save({
+      id: "provider-local-post",
+      kind: "post",
+      slug: "provider-local-post",
+      status: "published",
+      title: "Provider local post",
+      body: "Supabase local runtime",
+      metadata: {
+        metaDescription: "Provider local runtime",
+        seoTitle: "Provider local post",
+        legacyUrl: "/provider-local-post",
+      },
+    });
+    expect(saved.slug).toBe("provider-local-post");
+    expect(await supabase.content.get("provider-local-post")).toMatchObject({
+      slug: "provider-local-post",
+    });
+
+    const runwaySaved = await runway.content.save({
+      id: "runway-local-post",
+      kind: "post",
+      slug: "runway-local-post",
+      status: "published",
+      title: "Runway local post",
+      body: "Runway local runtime",
+      metadata: {
+        metaDescription: "Runway local runtime",
+        seoTitle: "Runway local post",
+        legacyUrl: "/runway-local-post",
+      },
+    });
+    expect(runwaySaved.slug).toBe("runway-local-post");
+    expect(await runway.content.get("runway-local-post")).toMatchObject({
+      slug: "runway-local-post",
     });
 
     await rm(workspace, { recursive: true, force: true });

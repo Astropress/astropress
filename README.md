@@ -46,6 +46,7 @@ Host integration helpers:
 
 - `astropress/integration` re-exports the current Vite, Vitest, and host-runtime helper surface from one place
 - `astropress/adapters/sqlite`, `astropress/adapters/cloudflare`, `astropress/adapters/supabase`, and `astropress/adapters/runway` expose first-party provider adapter factories
+- `astropress/adapters/supabase-sqlite` and `astropress/adapters/runway-sqlite` expose Node-only local runtimes for those providers backed by the packaged SQLite adapter
 - `astropress/deploy/github-pages`, `astropress/import/wordpress`, and `astropress/sync/git` expose the Node-only deploy/import/sync workflow helpers as stable package entry points
 - `astropress/cloudflare-vite-integration` composes the Cloudflare-specific local-runtime stub aliases and resolver
 - `astropress/vite-integration` composes the standard Vite plugin and alias rules into one helper
@@ -58,6 +59,7 @@ Host integration helpers:
 Current package-owned runtime surfaces:
 
 - `astropress/adapters/sqlite` is now a real SQLite-backed provider adapter
+- `astropress/adapters/supabase-sqlite` and `astropress/adapters/runway-sqlite` wrap that packaged SQLite runtime behind provider-specific capabilities for local development
 - `astropress/sqlite-bootstrap` exposes the packaged schema/bootstrap toolkit for local admin databases
 - `astropress/sqlite-admin-runtime` exposes the packaged Node SQLite admin runtime
 - those Node-only SQLite entry points stay off the root `astropress` API and are stubbed out of Cloudflare builds
