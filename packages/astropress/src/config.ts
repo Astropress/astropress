@@ -118,10 +118,42 @@ function getConfigStore(): AstropressGlobalWithConfig {
   return globalThis as AstropressGlobalWithConfig;
 }
 
+/**
+ * Register the astropress configuration for this host application.
+ *
+ * Call once at startup — typically in `src/middleware.ts` or imported by the
+ * admin layout — before any other astropress function is invoked.
+ *
+ * @example
+ * ```ts
+ * // src/site/cms-registration.ts
+ * import { registerCms } from "astropress";
+ * import seedPages from "../content/pages.json";
+ *
+ * registerCms({
+ *   siteUrl: "https://example.com",
+ *   templateKeys: ["home", "about", "content"],
+ *   seedPages,
+ *   archives: [],
+ *   translationStatus: [],
+ * });
+ * ```
+ */
 export function registerCms(config: CmsConfig): void {
   getConfigStore()[CMS_CONFIG_KEY] = config;
 }
 
+/**
+ * Retrieve the registered astropress configuration.
+ *
+ * Throws if `registerCms()` has not been called yet.
+ *
+ * @example
+ * ```ts
+ * import { getCmsConfig } from "astropress";
+ * const { siteUrl } = getCmsConfig();
+ * ```
+ */
 export function getCmsConfig(): CmsConfig {
   const config = getConfigStore()[CMS_CONFIG_KEY] ?? null;
   if (!config) {

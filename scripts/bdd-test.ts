@@ -222,6 +222,21 @@ const verificationGroups: VerificationGroup[] = [
       },
     ],
   },
+  {
+    label: "sync command scenarios",
+    scenarios: [
+      "sync export produces a versioned content snapshot",
+      "sync import applies a content snapshot to the local database",
+      "sync export produces git-committable output",
+    ],
+    steps: [
+      {
+        command: "bunx",
+        args: ["vitest", "run", "tests/deploy-and-sync.contract.test.ts"],
+        cwd: astropressPackageRoot,
+      },
+    ],
+  },
 ];
 
 const scenarios = readFeatureScenarios();
