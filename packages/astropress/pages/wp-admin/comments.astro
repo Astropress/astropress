@@ -71,10 +71,12 @@ const errorMessage = Astro.url.searchParams.get("error") === "1" ? Astro.url.sea
                   type="button"
                   class="admin-button-ghost small reject"
                   data-confirm-reject
-                  data-comment-id={comment.id}
-                  data-author={comment.author}
-                  data-route={comment.route}
-                  onclick={`document.getElementById('reject-dialog').showModal(); document.getElementById('reject-author').textContent = '${comment.author}'; document.getElementById('reject-route').textContent = '${comment.route}'; document.getElementById('reject-form').querySelector('input[name=commentId]').value = '${comment.id}';`}
+                  data-confirm-trigger
+                  data-dialog-id="reject-dialog"
+                  data-field-name="commentId"
+                  data-field-value={comment.id}
+                  data-text-reject-author={comment.author}
+                  data-text-reject-route={comment.route}
                 >
                   Reject
                 </button>
@@ -87,26 +89,31 @@ const errorMessage = Astro.url.searchParams.get("error") === "1" ? Astro.url.sea
   </section>
 
   {/* Rejection Confirmation Dialog */}
-  <dialog id="reject-dialog" class="confirm-modal">
-    <div class="modal-content">
-      <h2>Reject comment?</h2>
-      <p>Are you sure you want to reject this comment? It will be removed from the queue.</p>
-      <p class="dialog-context">
-        <strong id="reject-author"></strong> on <strong id="reject-route"></strong>
-      </p>
-      <div class="modal-actions">
-        <button type="button" class="admin-button-ghost small secondary-button" onclick="document.getElementById('reject-dialog').close()">Cancel</button>
-        <form id="reject-form" method="post" action="/wp-admin/actions/comment-moderate" style="display: inline;">
-          <CsrfInput token={Astro.locals.csrfToken} />
-          <input type="hidden" name="commentId" value="" />
-          <input type="hidden" name="status" value="rejected" />
-          <button type="submit" class="admin-button small reject-button">Reject</button>
-        </form>
+  <ap-confirm-dialog>
+    <dialog id="reject-dialog" class="confirm-modal" aria-labelledby="reject-dialog-title">
+      <div class="modal-content">
+        <h2 id="reject-dialog-title">Reject comment?</h2>
+        <p>Are you sure you want to reject this comment? It will be removed from the queue.</p>
+        <p class="dialog-context">
+          <strong id="reject-author"></strong> on <strong id="reject-route"></strong>
+        </p>
+        <div class="modal-actions">
+          <button type="button" class="admin-button-ghost small secondary-button" data-dialog-close>Cancel</button>
+          <form id="reject-form" method="post" action="/wp-admin/actions/comment-moderate" style="display: inline;">
+            <CsrfInput token={Astro.locals.csrfToken} />
+            <input type="hidden" name="commentId" value="" />
+            <input type="hidden" name="status" value="rejected" />
+            <button type="submit" class="admin-button small reject-button">Reject</button>
+          </form>
+        </div>
       </div>
-    </div>
-  </dialog>
+    </dialog>
+  </ap-confirm-dialog>
 
   <AuditTrail events={auditEvents.filter((event) => event.targetType === "comment").slice(0, 5)} />
+  <script>
+    import "../../web-components/confirm-dialog";
+  </script>
 </AdminLayout>
 
 <style>

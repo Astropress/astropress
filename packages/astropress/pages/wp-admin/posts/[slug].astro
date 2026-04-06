@@ -6,6 +6,8 @@ import { buildPostEditorPageModel } from "astropress";
 import { getAdminLocalePair } from "astropress";
 import { getSeededAdminContentType } from "astropress";
 
+export const prerender = false;
+
 const adminUser = Astro.locals.adminUser;
 const slug = Astro.params.slug ?? "";
 const model = await buildPostEditorPageModel(Astro.locals, slug);
@@ -48,6 +50,7 @@ if (model.status === "not_found") {
     {wasSaved && <p class="notice">✓ Changes saved successfully</p>}
     {errorMessage && <p class="error-notice">⚠️ {errorMessage}</p>}
 
+    <ap-html-editor>
     <form method="post" action="/wp-admin/actions/content-save" class="edit-form">
       <CsrfInput token={Astro.locals.csrfToken} />
       <input type="hidden" name="slug" value={pageRecord.slug} />
@@ -142,23 +145,18 @@ if (model.status === "not_found") {
           <button type="button" class="toolbar-btn" data-cmd="italic" aria-label="Italic"><em>I</em></button>
           <button type="button" class="toolbar-btn" data-cmd="insertUnorderedList" aria-label="Bullet list">&#8226; List</button>
           <button type="button" class="toolbar-btn" data-cmd="createLink" aria-label="Insert link">Link</button>
-          <button type="button" class="toolbar-btn insert-media-btn" aria-label="Insert media">Insert media</button>
+          <button type="button" class="toolbar-btn insert-media-btn" aria-label="Open media library">Open media library</button>
         </div>
-        <div
-          class="body-editor"
-          role="textbox"
-          contenteditable="true"
-          aria-label="Body editor"
-          aria-multiline="true"
-          data-body-editor
-        ></div>
-        <textarea aria-label="Body HTML" name="body" class="admin-textarea code-field body-hidden-input" style="display:none">{pageRecord.body}</textarea>
+        <label class="admin-field">
+          <span>Body HTML</span>
+          <textarea aria-label="Body HTML" name="body" rows="14" class="admin-textarea code-field body-editor" data-body-editor>{pageRecord.body}</textarea>
+        </label>
       </section>
 
       {/* Media library dialog */}
-      <dialog class="media-dialog" aria-label="Media library" id="media-library-dialog">
+      <dialog class="media-dialog" aria-labelledby="media-library-title" id="media-library-dialog">
         <div class="media-dialog-inner">
-          <p><strong>Media library</strong></p>
+          <h2 id="media-library-title">Media Library</h2>
           <p class="field-note">Select an image to insert into the body.</p>
           <div class="media-grid" id="media-grid-placeholder">
             <p class="field-note">No media files available yet. Upload images via the server to make them available here.</p>
@@ -178,7 +176,11 @@ if (model.status === "not_found") {
         </div>
         <p class="field-note">Rendered preview of the currently reviewed body state.</p>
         <div class="preview-frame">
-          <div set:html={pageRecord.body} />
+          <iframe
+            title="Rendered preview"
+            sandbox=""
+            srcdoc={`<!doctype html><html lang="en"><head><meta charset="utf-8"><style>body{font-family:Georgia,serif;padding:1rem;line-height:1.6;color:#17212c}</style></head><body>${pageRecord.body}</body></html>`}
+          />
         </div>
       </section>
 
@@ -192,7 +194,7 @@ if (model.status === "not_found") {
         </div>
         <label class="admin-field">
           <span>Summary / Excerpt</span>
-          <textarea tabindex="-1" aria-label="Content excerpt" rows="4" name="excerpt" placeholder="Brief summary of this content..." class="admin-textarea">{("excerpt" in pageRecord ? pageRecord.excerpt : "") || pageRecord.summary}</textarea>
+          <textarea aria-label="Content excerpt" rows="4" name="excerpt" placeholder="Brief summary of this content..." class="admin-textarea">{("excerpt" in pageRecord ? pageRecord.excerpt : "") || pageRecord.summary}</textarea>
         </label>
       </section>
 
@@ -339,67 +341,29 @@ if (model.status === "not_found") {
       </div>
     </form>
 
+    {/* URL input dialog — replaces window.prompt() for the Insert Link toolbar action */}
+    <dialog id="url-input-dialog" class="url-input-dialog" aria-labelledby="url-input-title">
+      <div class="modal-content">
+        <h2 id="url-input-title">Insert link</h2>
+        <form id="url-input-form" method="dialog">
+          <label class="admin-field">
+            <span>URL</span>
+            <input id="url-input-field" type="url" name="url" placeholder="https://" class="admin-input" />
+          </label>
+          <div class="modal-actions">
+            <button type="button" class="admin-button-ghost small" data-dialog-close>Cancel</button>
+            <button type="submit" class="admin-button small">Insert link</button>
+          </div>
+        </form>
+      </div>
+    </dialog>
+
+    </ap-html-editor>
+
     <AuditTrail events={auditEvents.filter((event) => event.targetType === "content").slice(0, 5)} />
 
-    <script is:inline>
-      (function () {
-        var editor = document.querySelector('[data-body-editor]');
-        var hiddenInput = document.querySelector('.body-hidden-input');
-        var preview = document.querySelector('.preview-frame');
-
-        if (editor && hiddenInput) {
-          // Initialize editor with saved HTML
-          editor.innerHTML = hiddenInput.value;
-
-          // Sync editor → hidden input + preview on every change
-          function sync() {
-            hiddenInput.value = editor.innerHTML;
-            if (preview) preview.innerHTML = editor.innerHTML;
-          }
-          editor.addEventListener('input', sync);
-
-          // Toolbar format commands
-          var toolbar = document.querySelector('[role="toolbar"][aria-label="Format body"]');
-          if (toolbar) {
-            toolbar.addEventListener('mousedown', function (e) {
-              var btn = e.target.closest('[data-cmd]');
-              if (!btn) return;
-              e.preventDefault();
-              var cmd = btn.getAttribute('data-cmd');
-              if (cmd === 'createLink') {
-                var url = window.prompt('Enter URL:');
-                if (url) document.execCommand('createLink', false, url);
-              } else {
-                document.execCommand(cmd, false, null);
-              }
-              editor.focus();
-              sync();
-            });
-          }
-        }
-
-        // Media library dialog
-        var mediaBtn = document.querySelector('.insert-media-btn');
-        var mediaDialog = document.getElementById('media-library-dialog');
-        var mediaClose = document.getElementById('media-dialog-close');
-        if (mediaBtn && mediaDialog) {
-          mediaBtn.addEventListener('click', function () {
-            mediaDialog.showModal();
-          });
-        }
-        if (mediaClose && mediaDialog) {
-          mediaClose.addEventListener('click', function () {
-            mediaDialog.close();
-          });
-        }
-
-        // Legacy: also keep preview in sync for any direct textarea edits
-        if (hiddenInput && preview) {
-          hiddenInput.addEventListener('input', function () {
-            preview.innerHTML = hiddenInput.value;
-          });
-        }
-      })();
+    <script>
+      import "../../../web-components/html-editor";
     </script>
   </AdminLayout>
 ) : (
@@ -480,8 +444,16 @@ if (model.status === "not_found") {
   .preview-frame {
     border: 1px solid var(--line);
     border-radius: 1rem;
-    padding: 1rem 1.1rem;
     background: color-mix(in srgb, var(--panel) 95%, var(--accent-soft) 5%);
+    overflow: hidden;
+  }
+
+  .preview-frame iframe {
+    display: block;
+    width: 100%;
+    min-height: 18rem;
+    border: 0;
+    background: transparent;
   }
 
   .taxonomy-columns {
@@ -593,6 +565,35 @@ if (model.status === "not_found") {
     margin-top: 1rem;
     padding-top: 1rem;
     border-top: 1px solid var(--line);
+  }
+
+  .url-input-dialog {
+    border: none;
+    border-radius: 1rem;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    max-width: 28rem;
+    width: 90vw;
+    padding: 0;
+  }
+
+  .url-input-dialog::backdrop {
+    background: rgba(0, 0, 0, 0.5);
+  }
+
+  .modal-content {
+    padding: 1.5rem;
+  }
+
+  .modal-content h2 {
+    margin: 0 0 1rem;
+    font-size: 1.15rem;
+  }
+
+  .modal-actions {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: flex-end;
+    margin-top: 1rem;
   }
 
   @media (max-width: 900px) {

@@ -1,5 +1,6 @@
 ---
 import { buildAstropressAdminDocumentTitle } from "../src/admin-branding";
+import { applyAstropressSecurityHeaders } from "../src/security-headers";
 import { resolveAstropressAdminUiConfig } from "../src/admin-ui";
 
 interface NavItem {
@@ -24,6 +25,7 @@ const { title, heading, currentPath, description = "", role, userName, siteName 
 const documentTitle = buildAstropressAdminDocumentTitle(title);
 const adminUi = resolveAstropressAdminUiConfig();
 const adminSiteName = siteName ?? adminUi.branding.shellName;
+applyAstropressSecurityHeaders(Astro.response.headers, { area: "admin", forceHsts: Astro.url.protocol === "https:" });
 
 const navItems: NavItem[] = [
   { href: "/wp-admin", label: adminUi.navigation.dashboard },
@@ -48,20 +50,6 @@ const navItems: NavItem[] = [
 <!doctype html>
 <html lang="en">
   <head>
-    <script is:inline>
-      (function() {
-        try {
-          var t = localStorage.getItem('theme');
-          if (t === 'dark' || t === 'light') {
-            document.documentElement.setAttribute('data-theme', t);
-          } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-            document.documentElement.setAttribute('data-theme', 'dark');
-          } else {
-            document.documentElement.setAttribute('data-theme', 'light');
-          }
-        } catch (e) {}
-      })();
-    </script>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="robots" content="noindex, nofollow" />
@@ -82,21 +70,18 @@ const navItems: NavItem[] = [
       <div class="topbar-meta">
         <span>{adminUi.labels.signedInAsPrefix} {userName}</span>
         <span class="role-chip">{role}</span>
-        <button
-          type="button"
-          class="theme-toggle-admin"
-          id="admin-theme-toggle"
-          aria-pressed="false"
-          aria-label={adminUi.labels.themeToggleDark}
-          title={adminUi.labels.themeToggleDark}
-          data-theme-label-dark={adminUi.labels.themeToggleDark}
-          data-theme-label-light={adminUi.labels.themeToggleLight}
-        >
-          <span class="theme-toggle-icon" aria-hidden="true"></span>
-        </button>
-        <button type="button" disabled class="lang-toggle-admin" title={adminUi.labels.languageToggleTitle}>
-          <span class="lang-text">{adminUi.labels.languageToggle}</span>
-        </button>
+        <ap-theme-toggle label-dark={adminUi.labels.themeToggleDark} label-light={adminUi.labels.themeToggleLight}>
+          <button
+            type="button"
+            class="theme-toggle-admin"
+            id="admin-theme-toggle"
+            aria-pressed="false"
+            aria-label={adminUi.labels.themeToggleDark}
+            title={adminUi.labels.themeToggleDark}
+          >
+            <span class="theme-toggle-icon" aria-hidden="true"></span>
+          </button>
+        </ap-theme-toggle>
         <form method="post" action="/wp-admin/session?logout=1">
           <button type="submit">{adminUi.labels.signOut}</button>
         </form>
@@ -130,35 +115,8 @@ const navItems: NavItem[] = [
         <slot />
       </main>
     </div>
-    <script is:inline>
-      (function() {
-        var root = document.documentElement;
-        var toggle = document.getElementById('admin-theme-toggle');
-        if (!toggle) return;
-
-        function applyTheme(theme) {
-          var darkLabel = toggle.getAttribute('data-theme-label-dark') || 'Switch to dark mode';
-          var lightLabel = toggle.getAttribute('data-theme-label-light') || 'Switch to light mode';
-          root.setAttribute('data-theme', theme);
-          toggle.setAttribute('aria-pressed', theme === 'dark' ? 'true' : 'false');
-          toggle.setAttribute('aria-label', theme === 'dark' ? lightLabel : darkLabel);
-          toggle.setAttribute('title', theme === 'dark' ? lightLabel : darkLabel);
-          toggle.querySelector('.theme-toggle-icon').textContent = theme === 'dark' ? '☀' : '☾';
-        }
-
-        function currentTheme() {
-          return root.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
-        }
-
-        applyTheme(currentTheme());
-        toggle.addEventListener('click', function() {
-          var next = currentTheme() === 'dark' ? 'light' : 'dark';
-          applyTheme(next);
-          try {
-            localStorage.setItem('theme', next);
-          } catch (e) {}
-        });
-      })();
+    <script>
+      import "../web-components/theme-toggle";
     </script>
   </body>
 </html>

@@ -15,6 +15,9 @@
     "./project-launch": "./src/project-launch.js",
     "./project-scaffold": "./src/project-scaffold.js",
     "./provider-choice": "./src/provider-choice.js",
+    "./app-host-targets": "./src/app-host-targets.ts",
+    "./data-service-targets": "./src/data-service-targets.ts",
+    "./deployment-matrix": "./src/deployment-matrix.js",
     "./admin-routes": "./src/admin-routes.js",
     "./admin-ui": "./src/admin-ui.js",
     "./hosted-api-adapter": "./src/hosted-api-adapter.js",
@@ -28,10 +31,21 @@
     "./adapters/project": "./src/adapters/project.js",
     "./adapters/cloudflare": "./src/adapters/cloudflare.js",
     "./adapters/supabase": "./src/adapters/supabase.js",
+    "./adapters/firebase": "./src/adapters/firebase.js",
+    "./adapters/appwrite": "./src/adapters/appwrite.js",
+    "./adapters/pocketbase": "./src/adapters/pocketbase.js",
     "./adapters/supabase-sqlite": "./src/adapters/supabase-sqlite.js",
     "./adapters/runway": "./src/adapters/runway.js",
     "./adapters/runway-sqlite": "./src/adapters/runway-sqlite.js",
     "./deploy/github-pages": "./src/deploy/github-pages.js",
+    "./deploy/cloudflare-pages": "./src/deploy/cloudflare-pages.js",
+    "./deploy/vercel": "./src/deploy/vercel.js",
+    "./deploy/netlify": "./src/deploy/netlify.js",
+    "./deploy/render": "./src/deploy/render.js",
+    "./deploy/gitlab-pages": "./src/deploy/gitlab-pages.js",
+    "./deploy/firebase-hosting": "./src/deploy/firebase-hosting.js",
+    "./deploy/custom": "./src/deploy/custom.js",
+    "./content-services-ops": "./src/content-services-ops.js",
     "./import/wordpress": "./src/import/wordpress.js",
     "./sync/git": "./src/sync/git.js",
     "./integration": "./src/integration.js",
@@ -78,14 +92,19 @@
     "./newsletter-adapter": "./src/newsletter-adapter.ts",
     "./turnstile": "./src/turnstile.ts",
     "./local-image-storage": "./src/local-image-storage.js",
-    "./local-media-storage": "./src/local-media-storage.js"
+    "./local-media-storage": "./src/local-media-storage.js",
+    "./web-components": "./web-components/index.ts",
+    "./web-components/theme-toggle": "./web-components/theme-toggle.ts",
+    "./web-components/confirm-dialog": "./web-components/confirm-dialog.ts",
+    "./web-components/html-editor": "./web-components/html-editor.ts"
   },
   "files": [
     "bin",
     "components",
     "index.ts",
     "pages",
-    "src"
+    "src",
+    "web-components"
   ],
   "peerDependencies": {
     "astro": ">=6.0.0",
@@ -96,21 +115,24 @@
     "sanitize-html": "^2.17.0"
   },
   "devDependencies": {
+    "@vitest/coverage-v8": "^3.2.4",
     "typescript": "5.9.3",
     "vitest": "^3"
   },
   "scripts": {
     "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
     "test:watch": "vitest"
   },
   "keywords": [
     "astro",
-    "cms",
+    "web-app-framework",
     "wordpress-migration",
     "cloudflare",
     "supabase",
     "runway",
-    "github-pages"
+    "github-pages",
+    "web-components"
   ],
   "license": "MIT"
 }
