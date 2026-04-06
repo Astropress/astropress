@@ -63,10 +63,33 @@ function buildPreviewDocument(html: string): string {
 
 export class ApHtmlEditor extends HTMLElement {
   private _abortController: AbortController | null = null;
+  private _broadcastChannel: BroadcastChannel | null = null;
 
   connectedCallback() {
     this._abortController = new AbortController();
     const { signal } = this._abortController;
+
+    // Multi-tab safety: warn if this post is already open in another tab
+    const slug = this.getAttribute("data-slug")
+      ?? this.querySelector<HTMLFormElement>("form[action]")
+          ?.action?.split("/").at(-1)
+      ?? "";
+
+    if (slug && typeof BroadcastChannel !== "undefined") {
+      this._broadcastChannel = new BroadcastChannel("ap-editor");
+      this._broadcastChannel.postMessage({ slug, ts: Date.now() });
+      this._broadcastChannel.addEventListener("message", (event) => {
+        if (event.data?.slug === slug) {
+          const notice = document.createElement("ap-notice") as HTMLElement;
+          notice.setAttribute("type", "error");
+          notice.textContent = "This post is open in another tab. Save carefully to avoid overwriting changes.";
+          this.insertAdjacentElement("afterbegin", notice);
+          // Only show once
+          this._broadcastChannel?.close();
+          this._broadcastChannel = null;
+        }
+      });
+    }
 
     const editor = this.querySelector<HTMLTextAreaElement>("[data-body-editor]");
     const preview = this.querySelector<HTMLIFrameElement>(".preview-frame iframe");
@@ -167,6 +190,8 @@ export class ApHtmlEditor extends HTMLElement {
   disconnectedCallback() {
     this._abortController?.abort();
     this._abortController = null;
+    this._broadcastChannel?.close();
+    this._broadcastChannel = null;
   }
 }
 

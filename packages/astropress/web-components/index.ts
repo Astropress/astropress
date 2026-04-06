@@ -12,6 +12,7 @@
  */
 
 export { ApAdminNav } from "./admin-nav";
+export { ApNotice } from "./notice";
 export { ApThemeToggle } from "./theme-toggle";
 export { ApConfirmDialog } from "./confirm-dialog";
 export { ApHtmlEditor } from "./html-editor";

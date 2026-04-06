@@ -25,13 +25,13 @@ if (model.status === "forbidden") {
     role={adminUser!.role}
     userName={adminUser!.name}
   >
-    {model.warnings.length > 0 && <p class="notice">Some redirect data is temporarily unavailable. This page is showing partial results.</p>}
+    {model.warnings.length > 0 && <ap-notice type="info">Some redirect data is temporarily unavailable. This page is showing partial results.</ap-notice>}
     <div class="toolbar">
       <a href="#new-rule" class="admin-button">Add rule</a>
     </div>
-    {wasSaved && <p class="notice">The reviewed redirect rule was added successfully.</p>}
-    {wasDeleted && <p class="notice">The redirect rule was deleted successfully.</p>}
-    {errorMessage && <p class="error-notice">{errorMessage}</p>}
+    {wasSaved && <ap-notice type="success" dismiss-after="6000">The reviewed redirect rule was added successfully.</ap-notice>}
+    {wasDeleted && <ap-notice type="success" dismiss-after="6000">The redirect rule was deleted successfully.</ap-notice>}
+    {errorMessage && <ap-notice type="error">{errorMessage}</ap-notice>}
     <form id="new-rule" class="panel redirect-form" method="post" action="/wp-admin/actions/redirect-create">
       <CsrfInput token={Astro.locals.csrfToken} />
       <div class="section-header">
@@ -79,7 +79,10 @@ if (model.status === "forbidden") {
           <tbody>
             {redirectRules.map((rule) => (
               <tr>
-                <td><code>{rule.sourcePath}</code></td>
+                <td>
+                  <code>{rule.sourcePath}</code>
+                  <button type="button" class="copy-path-btn admin-button-ghost small" data-copy={rule.sourcePath} aria-label={`Copy ${rule.sourcePath}`}>Copy</button>
+                </td>
                 <td><code>{rule.targetPath}</code></td>
                 <td><span class="admin-chip">{rule.statusCode}</span></td>
                 <td>
@@ -237,4 +240,25 @@ if (model.status === "forbidden") {
   .secondary-button:hover {
     background: var(--accent-soft);
   }
+
+  .copy-path-btn {
+    margin-left: 0.4rem;
+    font-size: 0.78rem;
+    padding: 0.15rem 0.45rem;
+    vertical-align: middle;
+  }
 </style>
+
+<script>
+  // Clipboard API: copy source path on button click
+  document.addEventListener("click", async (event) => {
+    const btn = (event.target as Element).closest<HTMLElement>("[data-copy]");
+    if (!btn) return;
+    const text = btn.getAttribute("data-copy") ?? "";
+    if (!text || !navigator.clipboard) return;
+    await navigator.clipboard.writeText(text);
+    const original = btn.textContent;
+    btn.textContent = "Copied!";
+    setTimeout(() => { btn.textContent = original; }, 1500);
+  });
+</script>

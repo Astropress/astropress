@@ -140,6 +140,7 @@ const navItems: NavItem[] = [
     <script>
       import "../web-components/theme-toggle";
       import "../web-components/admin-nav";
+      import "../web-components/notice";
     </script>
   </body>
 </html>
@@ -667,6 +668,46 @@ const navItems: NavItem[] = [
 
   .forbidden {
     max-width: 42rem;
+  }
+
+  /* ap-notice — status banners */
+  :global(ap-notice) {
+    display: block;
+    padding: 0.7rem 1rem;
+    border-radius: 0.55rem;
+    font-size: 0.92rem;
+    line-height: 1.5;
+    margin-bottom: 1rem;
+  }
+
+  :global(ap-notice[type="success"]) {
+    background: #e6f7f0;
+    color: #0a5c3a;
+    border: 1px solid #9dd8be;
+  }
+
+  :global(ap-notice[type="error"]) {
+    background: #fdf1f0;
+    color: #8b1c1c;
+    border: 1px solid #f4b8b8;
+  }
+
+  :global(ap-notice[type="info"]) {
+    background: var(--accent-soft);
+    color: var(--accent);
+    border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent);
+  }
+
+  html[data-theme="dark"] :global(ap-notice[type="success"]) {
+    background: #0d2e1e;
+    color: #6ee7b7;
+    border-color: #1f5c3a;
+  }
+
+  html[data-theme="dark"] :global(ap-notice[type="error"]) {
+    background: #2d1010;
+    color: #ff8ea3;
+    border-color: #5c1f1f;
   }
 
   /* Mobile nav toggle — hidden on desktop */

@@ -19,9 +19,9 @@ const errorMessage = Astro.url.searchParams.get("error") === "1" ? Astro.url.sea
   role={adminUser!.role}
   userName={adminUser!.name}
 >
-  {model.warnings.length > 0 && <p class="notice">Some comment data is temporarily unavailable. This page is showing partial results.</p>}
-  {wasSaved && <p class="notice">The comment moderation state was updated successfully.</p>}
-  {errorMessage && <p class="error-notice">{errorMessage}</p>}
+  {model.warnings.length > 0 && <ap-notice type="info">Some comment data is temporarily unavailable. This page is showing partial results.</ap-notice>}
+  {wasSaved && <ap-notice type="success" dismiss-after="6000">The comment moderation state was updated successfully.</ap-notice>}
+  {errorMessage && <ap-notice type="error">{errorMessage}</ap-notice>}
   <div class="admin-subgrid two summary-grid">
     <section class="panel stat summary-card">
       <span>Total comments</span>

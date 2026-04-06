@@ -41,14 +41,14 @@ if (model.status === "not_found") {
     role={adminUser!.role}
     userName={adminUser!.name}
   >
-    {model.warnings.length > 0 && <p class="notice">Some editor data is temporarily unavailable. This page is showing partial results.</p>}
+    {model.warnings.length > 0 && <ap-notice type="info">Some editor data is temporarily unavailable. This page is showing partial results.</ap-notice>}
     <div class="toolbar">
       <a href={listPath} class="admin-button-secondary">{contentType === "page" ? "Back to pages" : "Back to posts"}</a>
       <a href={publicHref} target="_blank" rel="noreferrer" class="admin-button-ghost">Open public {contentType === "page" ? "page" : "post"}</a>
       <a href={`/wp-admin/posts/${pageRecord.slug}/revisions`} class="admin-button-ghost">View revisions</a>
     </div>
-    {wasSaved && <p class="notice">✓ Changes saved successfully</p>}
-    {errorMessage && <p class="error-notice">⚠️ {errorMessage}</p>}
+    {wasSaved && <ap-notice type="success" dismiss-after="6000">Changes saved successfully</ap-notice>}
+    {errorMessage && <ap-notice type="error">{errorMessage}</ap-notice>}
 
     <ap-html-editor>
     <form method="post" action="/wp-admin/actions/content-save" class="edit-form">
