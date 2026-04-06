@@ -1,6 +1,7 @@
-import type { APIRoute } from "astro";
+import type { APIRoute, AstroCookies } from "astro";
 import { getLoginSecurityConfig } from "astropress";
 import {
+  createAstropressSecureRedirect,
   authenticateRuntimeAdminUser,
   createRuntimeSession,
   getRuntimeSessionUser,
@@ -8,23 +9,42 @@ import {
   recordRuntimeSuccessfulLogin,
   revokeRuntimeSession,
 } from "astropress";
+import { isTrustedRequestOrigin } from "astropress";
 import { peekRuntimeRateLimit, recordRuntimeFailedAttempt } from "astropress";
 import { verifyTurnstileToken } from "astropress";
 
-const SESSION_COOKIE = "ff_admin_session";
+const LEGACY_SESSION_COOKIE = "ff_admin_session";
+const LOCAL_SESSION_COOKIE = "astropress_admin_session";
+const SECURE_SESSION_COOKIE = "__Host-astropress_admin_session";
 
-export const POST: APIRoute = async ({ request, cookies, redirect, url, locals }) => {
+function getSessionCookieName(isSecure: boolean) {
+  return isSecure ? SECURE_SESSION_COOKIE : LOCAL_SESSION_COOKIE;
+}
+
+function getSessionToken(cookies: AstroCookies, isSecure: boolean) {
+  return cookies.get(getSessionCookieName(isSecure))?.value ?? cookies.get(LEGACY_SESSION_COOKIE)?.value;
+}
+
+export const POST: APIRoute = async ({ request, cookies, url, locals }) => {
   try {
     const security = getLoginSecurityConfig(locals);
+    const cookieName = getSessionCookieName(security.secureCookies);
     if (url.searchParams.get("logout") === "1") {
-      const sessionToken = cookies.get(SESSION_COOKIE)?.value;
+      const sessionToken = getSessionToken(cookies, security.secureCookies);
       const user = await getRuntimeSessionUser(sessionToken, locals);
       if (user) {
         await recordRuntimeLogout(user, locals);
         await revokeRuntimeSession(sessionToken, locals);
       }
-      cookies.delete(SESSION_COOKIE, { path: "/" });
-      return redirect("/wp-admin/login", 302);
+      cookies.delete(cookieName, { path: "/" });
+      cookies.delete(LEGACY_SESSION_COOKIE, { path: "/" });
+      return createAstropressSecureRedirect("/wp-admin/login", 302, { forceHsts: request.url.startsWith("https://") });
+    }
+
+    if (!isTrustedRequestOrigin(request)) {
+      return createAstropressSecureRedirect("/wp-admin/login?error=1", 302, {
+        forceHsts: request.url.startsWith("https://"),
+      });
     }
 
     const formData = await request.formData();
@@ -38,7 +58,9 @@ export const POST: APIRoute = async ({ request, cookies, redirect, url, locals }
       !(await peekRuntimeRateLimit(`login:${email}`, security.maxLoginAttempts, 60_000, locals)) ||
       !(await peekRuntimeRateLimit(`login-ip:${ipAddress}`, security.maxLoginAttempts * 2, 60_000, locals))
     ) {
-      return redirect("/wp-admin/login?error=1&ratelimited=1", 302);
+      return createAstropressSecureRedirect("/wp-admin/login?error=1&ratelimited=1", 302, {
+        forceHsts: request.url.startsWith("https://"),
+      });
     }
 
     const challengeResult = await verifyTurnstileToken({
@@ -49,7 +71,9 @@ export const POST: APIRoute = async ({ request, cookies, redirect, url, locals }
     });
 
     if (!challengeResult.ok) {
-      return redirect("/wp-admin/login?error=1&challenge=1", 302);
+      return createAstropressSecureRedirect("/wp-admin/login?error=1&challenge=1", 302, {
+        forceHsts: request.url.startsWith("https://"),
+      });
     }
 
     const user = await authenticateRuntimeAdminUser(email, password, locals);
@@ -58,7 +82,9 @@ export const POST: APIRoute = async ({ request, cookies, redirect, url, locals }
       // Only record a failed attempt — successful logins never consume rate-limit quota.
       await recordRuntimeFailedAttempt(`login:${email}`, security.maxLoginAttempts, 60_000, locals);
       await recordRuntimeFailedAttempt(`login-ip:${ipAddress}`, security.maxLoginAttempts * 2, 60_000, locals);
-      return redirect("/wp-admin/login?error=1", 302);
+      return createAstropressSecureRedirect("/wp-admin/login?error=1", 302, {
+        forceHsts: request.url.startsWith("https://"),
+      });
     }
 
     const sessionToken = await createRuntimeSession(user, {
@@ -66,19 +92,23 @@ export const POST: APIRoute = async ({ request, cookies, redirect, url, locals }
       userAgent: request.headers.get("user-agent"),
     }, locals);
 
-    cookies.set(SESSION_COOKIE, sessionToken, {
+    cookies.set(cookieName, sessionToken, {
       path: "/",
       httpOnly: true,
       sameSite: "lax",
       maxAge: 60 * 60 * 12,
       secure: security.secureCookies,
     });
+    cookies.delete(LEGACY_SESSION_COOKIE, { path: "/" });
 
     await recordRuntimeSuccessfulLogin(user, locals);
 
-    return redirect("/wp-admin", 302);
+    return createAstropressSecureRedirect("/wp-admin", 302, { forceHsts: request.url.startsWith("https://") });
   } catch {
-    cookies.delete(SESSION_COOKIE, { path: "/" });
-    return redirect("/wp-admin/login?error=1", 302);
+    cookies.delete(getSessionCookieName(getLoginSecurityConfig(locals).secureCookies), { path: "/" });
+    cookies.delete(LEGACY_SESSION_COOKIE, { path: "/" });
+    return createAstropressSecureRedirect("/wp-admin/login?error=1", 302, {
+      forceHsts: request.url.startsWith("https://"),
+    });
   }
 };

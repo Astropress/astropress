@@ -10,13 +10,26 @@ vi.mock("../src/runtime-admin-auth", () => ({
   getRuntimeSessionUser: mocks.getRuntimeSessionUser,
 }));
 
-function makeContext(form: Record<string, string> = {}) {
+function makeContext(
+  form: Record<string, string> = {},
+  options: { url?: string; origin?: string | null; referer?: string | null } = {},
+) {
+  const headers = new Headers();
+  if (options.origin !== undefined && options.origin !== null) {
+    headers.set("origin", options.origin);
+  }
+  if (options.referer !== undefined && options.referer !== null) {
+    headers.set("referer", options.referer);
+  }
+
   return {
     cookies: {
       get: vi.fn(() => ({ value: "session-token" })),
     },
     locals: {} as App.Locals,
     request: {
+      url: options.url ?? "https://example.com/wp-admin/actions/content-save",
+      headers,
       formData: vi.fn(async () => {
         const fd = new FormData();
         for (const [key, value] of Object.entries(form)) {
@@ -83,6 +96,20 @@ describe("admin action utils", () => {
     expect(result.ok).toBe(false);
     if (!result.ok) {
       expect(result.response.headers.get("Location")).toBe("/wp-admin/posts/new?error=1&message=Invalid+security+token");
+    }
+  });
+
+  it("rejects cross-origin admin form posts", async () => {
+    const { requireAdminFormAction } = await import("astropress");
+
+    const result = await requireAdminFormAction(
+      makeContext({ _csrf: "csrf-token" }, { origin: "https://evil.example" }),
+      { failurePath: "/wp-admin/posts/new" },
+    );
+
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.response.headers.get("Location")).toBe("/wp-admin/posts/new?error=1&message=Invalid+request+origin");
     }
   });
 

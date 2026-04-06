@@ -4,6 +4,8 @@ import CsrfInput from "astropress/components/CsrfInput.astro";
 import { buildRoutePageEditorModel } from "astropress";
 import { getAdminLocalePair } from "astropress";
 
+export const prerender = false;
+
 const adminUser = Astro.locals.adminUser;
 const slugSegments = Array.isArray(Astro.params.slug) ? Astro.params.slug : Astro.params.slug ? [Astro.params.slug] : [];
 const routePath = `/${slugSegments.join("/")}`;

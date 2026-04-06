@@ -4,6 +4,8 @@ import AuditTrail from "astropress/components/AuditTrail.astro";
 import CsrfInput from "astropress/components/CsrfInput.astro";
 import { buildPostRevisionsPageModel } from "astropress";
 
+export const prerender = false;
+
 const adminUser = Astro.locals.adminUser;
 const slug = Astro.params.slug ?? "";
 const model = await buildPostRevisionsPageModel(Astro.locals, slug);

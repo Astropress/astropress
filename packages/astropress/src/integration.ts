@@ -27,6 +27,8 @@ export {
   resolveAstropressAdminRouteEntrypoints,
 } from "./admin-routes";
 export type { AstropressAdminRouteDefinition, AstropressAdminRouteInjector, AstropressAdminRouteKind } from "./admin-routes";
+export { createAstropressSecurityMiddleware, resolveAstropressSecurityArea } from "./security-middleware.js";
+export type { AstropressSecurityMiddlewareOptions } from "./security-middleware";
 
 export { defineAstropressHostRuntimeModules } from "./host-runtime-modules";
 export type { AstropressHostRuntimeModules } from "./host-runtime-modules";

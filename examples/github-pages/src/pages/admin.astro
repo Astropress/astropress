@@ -1,21 +1,42 @@
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width" />
-    <title>Astropress Admin Model</title>
-  </head>
-  <body>
-    <main>
-      <h1>Admin Model</h1>
+---
+import SiteLayout from "../components/SiteLayout.astro";
+---
+
+<SiteLayout
+  title="Astropress Admin Model"
+  description="Astropress treats the admin as the product surface for editors, not as a sidecar to a static site generator."
+  heading="The admin is the center of the editing workflow."
+  currentPath="/admin"
+>
+  <section class="panel-grid">
+    <article class="panel">
+      <h2>Editor workflow</h2>
       <p>
-        GitHub Pages hosts this explainer, but the real Astropress admin is backed by the canonical database
-        model and provider-neutral runtime adapters.
+        Editors work in the admin to create, review, schedule, revise, and publish content. They do not need Git to
+        do normal editorial work.
       </p>
-      <ul>
-        <li>non-technical users edit pages, posts, media, redirects, comments, users, and translations in admin</li>
-        <li>git sync is optional export/import infrastructure, not the primary editing path</li>
-        <li>provider adapters hide deploy/runtime differences from editors</li>
-      </ul>
-    </main>
-  </body>
-</html>
+    </article>
+    <article class="panel">
+      <h2>Core surfaces</h2>
+      <p>
+        Pages, posts, media, redirects, comments, users, translations, settings, and revisions are all intended to be
+        managed from one bounded admin surface.
+      </p>
+    </article>
+    <article class="panel">
+      <h2>Provider neutrality</h2>
+      <p>
+        Editors should not have to learn provider-specific runtime differences just to update content. Adapters absorb
+        those differences behind stable contracts.
+      </p>
+    </article>
+  </section>
+
+  <section class="panel">
+    <h2>What Astropress is trying to avoid</h2>
+    <p>
+      The project is intentionally not drifting toward a universal website builder. The goal is a simpler, more
+      operable publishing app for clearly bounded sites.
+    </p>
+  </section>
+</SiteLayout>

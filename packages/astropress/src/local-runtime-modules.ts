@@ -172,8 +172,28 @@ export interface LocalImageStorageModule {
   resolveLocalImageDiskPath(publicPath: string): string;
 }
 
-export declare function loadLocalAdminStore(): Promise<LocalAdminStoreModule>;
-export declare function loadLocalAdminAuth(): Promise<LocalAdminAuthModule>;
-export declare function loadLocalCmsRegistry(): Promise<LocalCmsRegistryModule>;
-export declare function loadLocalMediaStorage(): Promise<LocalMediaStorageModule>;
-export declare function loadLocalImageStorage(): Promise<LocalImageStorageModule>;
+function unavailable(): never {
+  throw new Error(
+    "Local runtime modules are only available when the host app provides them via the Astropress runtime alias.",
+  );
+}
+
+export async function loadLocalAdminStore(): Promise<LocalAdminStoreModule> {
+  return unavailable();
+}
+
+export async function loadLocalAdminAuth(): Promise<LocalAdminAuthModule> {
+  return unavailable();
+}
+
+export async function loadLocalCmsRegistry(): Promise<LocalCmsRegistryModule> {
+  return unavailable();
+}
+
+export async function loadLocalMediaStorage(): Promise<LocalMediaStorageModule> {
+  return unavailable();
+}
+
+export async function loadLocalImageStorage(): Promise<LocalImageStorageModule> {
+  return unavailable();
+}

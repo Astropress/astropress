@@ -1,7 +1,18 @@
-import type { AstropressDeployTargetEnv, AstropressHostedProviderEnv } from "./project-env";
+import type { AstropressAppHostEnv, AstropressDataServicesEnv, AstropressDeployTargetEnv } from "./project-env";
+import {
+  getAstropressDeploymentMatrixEntry,
+  resolveAstropressDeploymentSupportLevel,
+  type AstropressDeploymentSupportLevel,
+} from "./deployment-matrix";
 
 export type AstropressProviderOpsComfort = "minimal" | "moderate" | "advanced";
-export type AstropressExistingPlatform = "none" | "cloudflare" | "supabase" | "runway";
+export type AstropressExistingPlatform =
+  | "none"
+  | "cloudflare"
+  | "supabase"
+  | "firebase"
+  | "appwrite"
+  | "runway";
 
 export interface AstropressProviderChoiceInput {
   existingPlatform?: AstropressExistingPlatform;
@@ -11,10 +22,46 @@ export interface AstropressProviderChoiceInput {
 }
 
 export interface AstropressProviderChoiceRecommendation {
-  canonicalProvider: "cloudflare" | AstropressHostedProviderEnv;
-  publicDeployTarget: AstropressDeployTargetEnv;
+  appHost: AstropressAppHostEnv;
+  dataServices: AstropressDataServicesEnv;
+  supportLevel: AstropressDeploymentSupportLevel;
   rationale: string;
   requiredEnvKeys: string[];
+  deployTarget: AstropressDeployTargetEnv;
+  canonicalProvider: "cloudflare" | "supabase" | "firebase" | "appwrite" | "runway";
+  publicDeployTarget: AstropressDeployTargetEnv;
+}
+
+function appHostToDeployTarget(appHost: AstropressAppHostEnv): AstropressDeployTargetEnv {
+  return appHost === "cloudflare-pages" ? "cloudflare" : appHost;
+}
+
+function finalizeRecommendation(
+  appHost: AstropressAppHostEnv,
+  dataServices: AstropressDataServicesEnv,
+  rationale: string,
+): AstropressProviderChoiceRecommendation {
+  const entry = getAstropressDeploymentMatrixEntry({ appHost, dataServices });
+  const deployTarget = appHostToDeployTarget(appHost);
+  return {
+    appHost,
+    dataServices,
+    supportLevel: resolveAstropressDeploymentSupportLevel({ appHost, dataServices }),
+    rationale: entry?.notes ? `${rationale} ${entry.notes}` : rationale,
+    requiredEnvKeys: entry?.requiredEnvKeys ?? [],
+    deployTarget,
+    canonicalProvider:
+      dataServices === "cloudflare" ||
+      dataServices === "supabase" ||
+      dataServices === "firebase" ||
+      dataServices === "appwrite" ||
+      dataServices === "runway"
+        ? dataServices
+        : appHost === "runway"
+          ? "runway"
+          : "cloudflare",
+    publicDeployTarget: deployTarget,
+  };
 }
 
 export function recommendAstropressProvider(
@@ -26,50 +73,64 @@ export function recommendAstropressProvider(
   const opsComfort = input.opsComfort ?? "minimal";
 
   if (existingPlatform === "supabase") {
-    return {
-      canonicalProvider: "supabase",
-      publicDeployTarget: wantsStaticMirror ? "github-pages" : "supabase",
-      rationale:
-        "Supabase is the best fit when the project already expects the Supabase ecosystem and wants Astropress to keep using a hosted database and object storage stack.",
-      requiredEnvKeys: ["SUPABASE_URL", "SUPABASE_ANON_KEY", "SUPABASE_SERVICE_ROLE_KEY"],
-    };
+    return finalizeRecommendation(
+      wantsStaticMirror ? "github-pages" : "vercel",
+      "supabase",
+      "Supabase is already the content-services platform, so Astropress should keep Supabase for data, auth, storage, and the Astropress service API while using a separate Astro app host.",
+    );
+  }
+
+  if (existingPlatform === "firebase") {
+    return finalizeRecommendation(
+      wantsStaticMirror ? "github-pages" : "render-web",
+      "firebase",
+      "Firebase is already the content-services platform, so Astropress should keep Firebase for data, auth, storage, and the Astropress service API while choosing a separate Astro app host.",
+    );
+  }
+
+  if (existingPlatform === "appwrite") {
+    return finalizeRecommendation(
+      wantsStaticMirror ? "github-pages" : "render-web",
+      "appwrite",
+      "Appwrite is already the content-services platform, so Astropress should keep Appwrite for data, auth, media, and the Astropress service API while choosing a separate Astro app host.",
+    );
   }
 
   if (existingPlatform === "runway") {
-    return {
-      canonicalProvider: "runway",
-      publicDeployTarget: wantsStaticMirror ? "github-pages" : "runway",
-      rationale:
-        "Runway is the best fit when the project already expects an app-platform workflow and wants Astropress to stay aligned with that operational model.",
-      requiredEnvKeys: ["RUNWAY_API_TOKEN", "RUNWAY_PROJECT_ID"],
-    };
-  }
-
-  if (!wantsHostedAdmin && wantsStaticMirror) {
-    return {
-      canonicalProvider: "cloudflare",
-      publicDeployTarget: "github-pages",
-      rationale:
-        "Cloudflare keeps Astropress operationally light while GitHub Pages can mirror the public site as a static deployment target.",
-      requiredEnvKeys: ["CLOUDFLARE_ACCOUNT_ID", "CLOUDFLARE_API_TOKEN"],
-    };
+    return finalizeRecommendation(
+      "runway",
+      "runway",
+      "Runway remains the best fit when the project already expects a bundled app-host and services platform workflow.",
+    );
   }
 
   if (existingPlatform === "cloudflare" || opsComfort === "advanced") {
-    return {
-      canonicalProvider: "cloudflare",
-      publicDeployTarget: wantsStaticMirror ? "github-pages" : "cloudflare",
-      rationale:
-        "Cloudflare is the recommended fit for teams already comfortable with its edge/runtime model and wanting the lowest-cost hosted Astropress setup.",
-      requiredEnvKeys: ["CLOUDFLARE_ACCOUNT_ID", "CLOUDFLARE_API_TOKEN"],
-    };
+    return finalizeRecommendation(
+      wantsStaticMirror ? "github-pages" : "cloudflare-pages",
+      "cloudflare",
+      "Cloudflare is the best fit for teams already comfortable with its edge/runtime model and wanting one provider to cover app hosting plus content services.",
+    );
   }
 
-  return {
-    canonicalProvider: "cloudflare",
-    publicDeployTarget: wantsStaticMirror ? "github-pages" : "cloudflare",
-    rationale:
-      "Cloudflare is the default recommendation for most non-technical Astropress users because it keeps the hosted admin/runtime path simple and inexpensive.",
-    requiredEnvKeys: ["CLOUDFLARE_ACCOUNT_ID", "CLOUDFLARE_API_TOKEN"],
-  };
+  if (!wantsHostedAdmin && wantsStaticMirror) {
+    return finalizeRecommendation(
+      "github-pages",
+      "none",
+      "GitHub Pages is the clearest low-ops choice when the project only needs static Astro output and no hosted Astropress admin backend.",
+    );
+  }
+
+  if (!wantsHostedAdmin) {
+    return finalizeRecommendation(
+      "github-pages",
+      "none",
+      "A static Astro deployment keeps the public site simple when hosted Astropress services are not required.",
+    );
+  }
+
+  return finalizeRecommendation(
+    "cloudflare-pages",
+    "cloudflare",
+    "Cloudflare is still the default recommendation for most Astropress users because it keeps the app host and the content-services layer aligned under one operational model.",
+  );
 }

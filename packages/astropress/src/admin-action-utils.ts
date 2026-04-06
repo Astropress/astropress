@@ -1,5 +1,6 @@
 import type { APIRoute } from "astro";
 import { getRuntimeCsrfToken, getRuntimeSessionUser } from "./runtime-admin-auth";
+import { createAstropressSecureRedirect, isTrustedRequestOrigin } from "./security-headers.js";
 
 const SESSION_COOKIE = "ff_admin_session";
 
@@ -11,6 +12,7 @@ type GuardOptions = {
   loginPath?: string;
   requireAdmin?: boolean;
   invalidCsrfMessage?: string;
+  invalidOriginMessage?: string;
   adminRequiredMessage?: string;
   unexpectedMessage?: string;
 };
@@ -30,7 +32,7 @@ type ActionContext = {
 };
 
 export function actionRedirect(location: string, status = 302): Response {
-  return new Response(null, { status, headers: { Location: location } });
+  return createAstropressSecureRedirect(location, status, { forceHsts: location.startsWith("https://") });
 }
 
 export function actionErrorRedirect(path: string, message: string): Response {
@@ -58,6 +60,13 @@ export async function requireAdminFormAction(
     return {
       ok: false,
       response: actionErrorRedirect(options.failurePath, options.adminRequiredMessage ?? "This action requires an admin account."),
+    };
+  }
+
+  if (!isTrustedRequestOrigin(context.request)) {
+    return {
+      ok: false,
+      response: actionErrorRedirect(options.failurePath, options.invalidOriginMessage ?? "Invalid request origin"),
     };
   }
 

@@ -3,6 +3,8 @@ import AdminLayout from "astropress/components/AdminLayout.astro";
 import CsrfInput from "astropress/components/CsrfInput.astro";
 import { buildArchiveEditorModel } from "astropress";
 
+export const prerender = false;
+
 const adminUser = Astro.locals.adminUser;
 const slugValue = Array.isArray(Astro.params.slug) ? Astro.params.slug.join("/") : Astro.params.slug ?? "";
 const archivePath = `/${slugValue}`;

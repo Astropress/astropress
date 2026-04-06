@@ -1,5 +1,6 @@
 ---
 import { buildAstropressAdminDocumentTitle, resolveAstropressAdminUiConfig } from "astropress";
+import { applyAstropressSecurityHeaders } from "astropress";
 import TurnstileField from "astropress/components/TurnstileField.astro";
 
 const hasError = Astro.url.searchParams.get("error") === "1";
@@ -8,25 +9,12 @@ const requiresChallenge = Astro.url.searchParams.get("challenge") === "1";
 const wasReset = Astro.url.searchParams.get("reset") === "1";
 const invitationAccepted = Astro.url.searchParams.get("invited") === "1";
 const adminUi = resolveAstropressAdminUiConfig();
+applyAstropressSecurityHeaders(Astro.response.headers, { area: "auth", forceHsts: Astro.url.protocol === "https:" });
 ---
 
 <!doctype html>
 <html lang="en">
   <head>
-    <script is:inline>
-      (function() {
-        try {
-          var t = localStorage.getItem('theme');
-          if (t === 'dark' || t === 'light') {
-            document.documentElement.setAttribute('data-theme', t);
-          } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-            document.documentElement.setAttribute('data-theme', 'dark');
-          } else {
-            document.documentElement.setAttribute('data-theme', 'light');
-          }
-        } catch (e) {}
-      })();
-    </script>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="robots" content="noindex, nofollow" />
@@ -56,11 +44,20 @@ const adminUi = resolveAstropressAdminUiConfig();
         <h1>{adminUi.labels.loginHeading}</h1>
         <p>{adminUi.labels.loginDescription}</p>
 
-        {isRateLimited && <p class="error">{adminUi.labels.rateLimited}</p>}
-        {hasError && !isRateLimited && <p class="error">{adminUi.labels.invalidCredentials}</p>}
-        {requiresChallenge && <p class="error">{adminUi.labels.challengeRequired}</p>}
-        {wasReset && <p class="success">{adminUi.labels.passwordResetSuccess}</p>}
-        {invitationAccepted && <p class="success">{adminUi.labels.invitationAcceptedSuccess}</p>}
+        {(isRateLimited || hasError || requiresChallenge) && (
+          <div class="message-block error-summary" tabindex="-1" aria-live="polite" data-focus-summary>
+            <p class="message-heading">Sign-in issue</p>
+            {isRateLimited && <p class="error">{adminUi.labels.rateLimited}</p>}
+            {hasError && !isRateLimited && <p class="error">{adminUi.labels.invalidCredentials}</p>}
+            {requiresChallenge && <p class="error">{adminUi.labels.challengeRequired}</p>}
+          </div>
+        )}
+        {(wasReset || invitationAccepted) && (
+          <div class="message-block success-summary" tabindex="-1" aria-live="polite" data-focus-summary>
+            {wasReset && <p class="success">{adminUi.labels.passwordResetSuccess}</p>}
+            {invitationAccepted && <p class="success">{adminUi.labels.invitationAcceptedSuccess}</p>}
+          </div>
+        )}
 
         <form method="post" action="/wp-admin/session">
           <label>
@@ -78,35 +75,12 @@ const adminUi = resolveAstropressAdminUiConfig();
 
       </section>
     </main>
-    <script is:inline>
-      (function() {
-        var root = document.documentElement;
-        var toggle = document.getElementById('login-theme-toggle');
-        if (!toggle) return;
+    <script>
+      import "../../src/client/theme-toggle";
 
-        function applyTheme(theme) {
-          var darkLabel = toggle.getAttribute('data-theme-label-dark') || 'Switch to dark mode';
-          var lightLabel = toggle.getAttribute('data-theme-label-light') || 'Switch to light mode';
-          root.setAttribute('data-theme', theme);
-          toggle.setAttribute('aria-pressed', theme === 'dark' ? 'true' : 'false');
-          toggle.setAttribute('aria-label', theme === 'dark' ? lightLabel : darkLabel);
-          toggle.setAttribute('title', theme === 'dark' ? lightLabel : darkLabel);
-          toggle.querySelector('.theme-toggle-icon').textContent = theme === 'dark' ? '☀' : '☾';
-        }
-
-        function currentTheme() {
-          return root.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
-        }
-
-        applyTheme(currentTheme());
-        toggle.addEventListener('click', function() {
-          var next = currentTheme() === 'dark' ? 'light' : 'dark';
-          applyTheme(next);
-          try {
-            localStorage.setItem('theme', next);
-          } catch (e) {}
-        });
-      })();
+      window.addEventListener("DOMContentLoaded", () => {
+        document.querySelector("[data-focus-summary]")?.focus();
+      });
     </script>
   </body>
 </html>
@@ -256,6 +230,26 @@ const adminUi = resolveAstropressAdminUiConfig();
   .success {
     color: var(--success);
     font-weight: 700;
+  }
+
+  .message-block {
+    margin-top: 1rem;
+    padding: 0.9rem 1rem;
+    border-radius: 0.85rem;
+    border: 1px solid var(--line);
+  }
+
+  .message-heading {
+    margin: 0 0 0.35rem;
+    font-weight: 700;
+  }
+
+  .error-summary {
+    background: rgba(161, 31, 54, 0.06);
+  }
+
+  .success-summary {
+    background: rgba(21, 82, 57, 0.08);
   }
 
   .aux-link {

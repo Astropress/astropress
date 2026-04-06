@@ -1,8 +1,19 @@
 import type { APIRoute } from "astro";
-import { consumeRuntimePasswordResetToken, createRuntimePasswordResetToken } from "astropress";
+import {
+  consumeRuntimePasswordResetToken,
+  createAstropressSecureRedirect,
+  createRuntimePasswordResetToken,
+  isTrustedRequestOrigin,
+} from "astropress";
 import { sendPasswordResetEmail } from "astropress";
 
-export const POST: APIRoute = async ({ request, redirect, locals }) => {
+export const POST: APIRoute = async ({ request, locals }) => {
+  if (!isTrustedRequestOrigin(request)) {
+    return createAstropressSecureRedirect("/wp-admin/reset-password?error=1&message=Invalid+request+origin", 302, {
+      forceHsts: request.url.startsWith("https://"),
+    });
+  }
+
   const formData = await request.formData();
   const token = String(formData.get("token") ?? "");
 
@@ -11,18 +22,25 @@ export const POST: APIRoute = async ({ request, redirect, locals }) => {
     const confirmPassword = String(formData.get("confirmPassword") ?? "");
 
     if (password !== confirmPassword) {
-      return redirect("/wp-admin/reset-password?error=1&message=Passwords+must+match.&token=" + encodeURIComponent(token), 302);
+      return createAstropressSecureRedirect(
+        "/wp-admin/reset-password?error=1&message=Passwords+must+match.&token=" + encodeURIComponent(token),
+        302,
+        { forceHsts: request.url.startsWith("https://") },
+      );
     }
 
     const result = await consumeRuntimePasswordResetToken(token, password, locals);
     if (!result.ok) {
-      return redirect(
+      return createAstropressSecureRedirect(
         "/wp-admin/reset-password?error=1&message=" + encodeURIComponent(result.error) + "&token=" + encodeURIComponent(token),
         302,
+        { forceHsts: request.url.startsWith("https://") },
       );
     }
 
-    return redirect("/wp-admin/login?reset=1", 302);
+    return createAstropressSecureRedirect("/wp-admin/login?reset=1", 302, {
+      forceHsts: request.url.startsWith("https://"),
+    });
   }
 
   const email = String(formData.get("email") ?? "");
@@ -43,5 +61,7 @@ export const POST: APIRoute = async ({ request, redirect, locals }) => {
     redirectUrl.searchParams.set("reset_link", result.resetUrl);
   }
 
-  return redirect(redirectUrl.pathname + redirectUrl.search, 302);
+  return createAstropressSecureRedirect(redirectUrl.pathname + redirectUrl.search, 302, {
+    forceHsts: request.url.startsWith("https://"),
+  });
 };

@@ -9,6 +9,7 @@ export { createAstropressCloudflareViteIntegration } from "./cloudflare-vite-int
 
 export { createAstropressVitestLocalRuntimePlugins } from "./vitest-runtime-alias.js";
 export { createAstropressAdminAppIntegration } from "./admin-app-integration.js";
+export { createAstropressSecurityMiddleware, resolveAstropressSecurityArea } from "./security-middleware.js";
 export {
   ASTROPRESS_ADMIN_BASE_PATH,
   createAstropressAdminRouteInjectionPlan,

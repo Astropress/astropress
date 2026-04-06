@@ -12,7 +12,7 @@ const siteKey = getTurnstileSiteKey(locals);
 
 {siteKey && (
   <div class="turnstile-field">
-    <script is:inline src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
     <div class="cf-turnstile" data-sitekey={siteKey} data-theme={theme}></div>
   </div>
 )}

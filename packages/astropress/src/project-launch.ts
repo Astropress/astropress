@@ -13,6 +13,8 @@ export interface AstropressProjectLaunchPlan {
   runtime: AstropressProjectRuntimePlan;
   provider: string;
   deployTarget: string;
+  appHost: string;
+  dataServices: string;
   adminDbPath: string;
   requiresLocalSeed: boolean;
   recommendation: AstropressProviderChoiceRecommendation;
@@ -20,15 +22,15 @@ export interface AstropressProjectLaunchPlan {
 
 export interface AstropressProjectLaunchOptions extends AstropressProjectRuntimeOptions {}
 
-function resolveExistingPlatform(provider: string, mode: "local" | "hosted"): AstropressExistingPlatform {
-  if (provider === "supabase") {
-    return "supabase";
-  }
-  if (provider === "runway") {
-    return "runway";
-  }
-  if (mode === "hosted" && provider === "cloudflare") {
-    return "cloudflare";
+function resolveExistingPlatform(dataServices: string): AstropressExistingPlatform {
+  if (
+    dataServices === "cloudflare" ||
+    dataServices === "supabase" ||
+    dataServices === "firebase" ||
+    dataServices === "appwrite" ||
+    dataServices === "runway"
+  ) {
+    return dataServices;
   }
   return "none";
 }
@@ -42,12 +44,14 @@ export function createAstropressProjectLaunchPlan(
     runtime,
     provider,
     deployTarget: runtime.env.deployTarget,
+    appHost: runtime.env.appHost,
+    dataServices: runtime.env.dataServices,
     adminDbPath: runtime.env.adminDbPath,
     requiresLocalSeed: runtime.mode === "local",
     recommendation: recommendAstropressProvider({
-      existingPlatform: resolveExistingPlatform(provider, runtime.mode),
-      wantsStaticMirror: runtime.env.deployTarget === "github-pages",
-      wantsHostedAdmin: runtime.mode === "hosted",
+      existingPlatform: resolveExistingPlatform(runtime.env.dataServices),
+      wantsStaticMirror: runtime.env.appHost === "github-pages" || runtime.env.appHost === "gitlab-pages",
+      wantsHostedAdmin: runtime.env.dataServices !== "none",
     }),
   };
 }

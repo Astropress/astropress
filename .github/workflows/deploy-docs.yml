@@ -16,5 +16,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
+      - uses: dtolnay/rust-toolchain@stable
       - run: bun install
+      - run: npx playwright install --with-deps chromium
+      - run: bun run audit:deps
+      - run: bun run audit:security
+      - run: bun run test
+      - run: bun run test:cli
       - run: bun run test:example
+      - run: bun run test:admin-harness
+      - run: bun run test:accessibility
+      - run: bun run test:acceptance

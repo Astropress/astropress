@@ -8,9 +8,29 @@
   ],
   "scripts": {
     "bdd:lint": "bun run scripts/bdd-lint.ts",
-    "test": "bun run bdd:lint && bun run --filter astropress test",
+    "bdd:test": "bun run scripts/bdd-test.ts",
+    "audit:deps": "bun audit",
+    "audit:security": "bun run scripts/security-audit.ts",
+    "test": "bun run bdd:lint && bun run bdd:test && bun run --filter astropress test",
+    "test:coverage": "bun run --filter astropress test:coverage",
+    "test:acceptance": "bun run scripts/run-playwright.ts --project=example-a11y --project=admin-harness-a11y",
+    "test:accessibility": "bun run --filter astropress-example-gh-pages build && bun run scripts/accessibility-audit.ts examples/github-pages/dist",
+    "test:accessibility:browser": "bun run scripts/run-playwright.ts --project=example-a11y",
+    "test:accessibility:admin-harness": "bun run scripts/run-playwright.ts --project=admin-harness-a11y",
+    "test:admin-harness": "bun run --filter astropress-example-admin-harness check",
     "test:cli": "source \"$HOME/.cargo/env\" && cargo test",
     "test:example": "bun run --filter astropress-example-gh-pages check",
+    "test:static-site": "bun run --filter astropress-example-gh-pages build && bun run scripts/static-site-audit.ts examples/github-pages/dist",
     "dev:example": "bun run --filter astropress-example-gh-pages dev"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "^4.11.1",
+    "@playwright/test": "^1.59.1",
+    "axe-core": "^4.10.3",
+    "jsdom": "^26.1.0",
+    "playwright": "^1.59.1"
+  },
+  "overrides": {
+    "yaml": "^2.8.3"
   }
 }

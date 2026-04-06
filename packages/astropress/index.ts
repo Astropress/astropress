@@ -40,15 +40,39 @@ export type {
   GitSyncAdapter,
   DeployTarget,
   ImportSource,
+  AstropressWordPressImportArtifacts,
+  AstropressWordPressImportEntityCount,
+  AstropressWordPressImportInventory,
+  AstropressWordPressImportLocalApplyReport,
+  AstropressWordPressImportPlan,
+  AstropressWordPressImportReport,
   PreviewSession,
   AstropressPlatformAdapter,
 } from "./src/platform-contracts";
 export { listFirstPartyProviderTargets, getFirstPartyProviderTarget } from "./src/provider-targets";
 export type { FirstPartyProviderTarget } from "./src/provider-targets";
+export { listAstropressAppHosts, getAstropressAppHostTarget } from "./src/app-host-targets";
+export type { AstropressAppHost, AstropressAppHostTarget } from "./src/app-host-targets";
+export { listAstropressDataServiceTargets, getAstropressDataServiceTarget } from "./src/data-service-targets";
+export type { AstropressDataServices, AstropressDataServiceTarget } from "./src/data-service-targets";
+export {
+  listAstropressDeploymentMatrixEntries,
+  getAstropressDeploymentMatrixEntry,
+  resolveAstropressDeploymentSupportLevel,
+} from "./src/deployment-matrix";
+export type {
+  AstropressDeploymentProfile,
+  AstropressDeploymentMatrixEntry,
+  AstropressDeploymentSupportLevel,
+} from "./src/deployment-matrix";
 export { createAstropressInMemoryPlatformAdapter } from "./src/in-memory-platform-adapter.js";
 export type { AstropressInMemoryPlatformAdapterOptions } from "./src/in-memory-platform-adapter";
 export { createAstropressProjectScaffold } from "./src/project-scaffold.js";
-export type { AstropressProjectScaffold, AstropressScaffoldProvider } from "./src/project-scaffold";
+export type {
+  AstropressProjectScaffold,
+  AstropressScaffoldProvider,
+  AstropressProjectScaffoldInput,
+} from "./src/project-scaffold";
 export { recommendAstropressProvider } from "./src/provider-choice.js";
 export type {
   AstropressExistingPlatform,
@@ -57,12 +81,18 @@ export type {
   AstropressProviderOpsComfort,
 } from "./src/provider-choice";
 export {
+  resolveAstropressAppHostFromEnv,
+  resolveAstropressDataServicesFromEnv,
   resolveAstropressDeployTarget,
   resolveAstropressHostedProviderFromEnv,
   resolveAstropressLocalProviderFromEnv,
   resolveAstropressProjectEnvContract,
+  resolveAstropressServiceOriginFromEnv,
 } from "./src/project-env.js";
 export type {
+  AstropressAppHostEnv,
+  AstropressContentServicesEnv,
+  AstropressDataServicesEnv,
   AstropressDeployTargetEnv,
   AstropressHostedProviderEnv,
   AstropressLocalProviderEnv,
@@ -89,6 +119,36 @@ export type {
   AstropressSupabaseHostedAdapterOptions,
   AstropressSupabaseHostedConfig,
 } from "./src/adapters/supabase";
+export { createAstropressFirebaseAdapter } from "./src/adapters/firebase.js";
+export {
+  createAstropressFirebaseHostedAdapter,
+  readAstropressFirebaseHostedConfig,
+} from "./src/adapters/firebase.js";
+export type {
+  AstropressFirebaseAdapterOptions,
+  AstropressFirebaseHostedAdapterOptions,
+  AstropressFirebaseHostedConfig,
+} from "./src/adapters/firebase";
+export { createAstropressAppwriteAdapter } from "./src/adapters/appwrite.js";
+export {
+  createAstropressAppwriteHostedAdapter,
+  readAstropressAppwriteHostedConfig,
+} from "./src/adapters/appwrite.js";
+export type {
+  AstropressAppwriteAdapterOptions,
+  AstropressAppwriteHostedAdapterOptions,
+  AstropressAppwriteHostedConfig,
+} from "./src/adapters/appwrite";
+export { createAstropressPocketbaseAdapter } from "./src/adapters/pocketbase.js";
+export {
+  createAstropressPocketbaseHostedAdapter,
+  readAstropressPocketbaseHostedConfig,
+} from "./src/adapters/pocketbase.js";
+export type {
+  AstropressPocketbaseAdapterOptions,
+  AstropressPocketbaseHostedAdapterOptions,
+  AstropressPocketbaseHostedConfig,
+} from "./src/adapters/pocketbase";
 export { createAstropressRunwayAdapter } from "./src/adapters/runway.js";
 export {
   createAstropressRunwayHostedAdapter,
@@ -164,6 +224,15 @@ export {
   getTurnstileSiteKey,
 } from "./src/runtime-env";
 export type { RuntimeBindings, R2BucketLike, R2ObjectBodyLike } from "./src/runtime-env";
+export {
+  applyAstropressSecurityHeaders,
+  createAstropressSecureRedirect,
+  createAstropressSecurityHeaders,
+  isTrustedRequestOrigin,
+} from "./src/security-headers.js";
+export type { AstropressSecurityArea, AstropressSecurityHeadersOptions } from "./src/security-headers";
+export { createAstropressSecurityMiddleware, resolveAstropressSecurityArea } from "./src/security-middleware.js";
+export type { AstropressSecurityMiddlewareOptions } from "./src/security-middleware";
 
 // Page store (read + rate limits)
 export {
@@ -354,3 +423,22 @@ export { hashPassword, verifyPassword } from "./src/crypto-utils";
 
 // Local image storage (dev only)
 export { readLocalImageAsset, resolveLocalImageDiskPath } from "./src/local-image-storage";
+
+// Deploy and content-services ops
+export { createAstropressGitHubPagesDeployTarget } from "./src/deploy/github-pages.js";
+export { createAstropressCloudflarePagesDeployTarget } from "./src/deploy/cloudflare-pages.js";
+export { createAstropressVercelDeployTarget } from "./src/deploy/vercel.js";
+export { createAstropressNetlifyDeployTarget } from "./src/deploy/netlify.js";
+export { createAstropressRenderDeployTarget } from "./src/deploy/render.js";
+export { createAstropressGitLabPagesDeployTarget } from "./src/deploy/gitlab-pages.js";
+export { createAstropressFirebaseHostingDeployTarget } from "./src/deploy/firebase-hosting.js";
+export { createAstropressCustomDeployTarget } from "./src/deploy/custom.js";
+export {
+  bootstrapAstropressContentServices,
+  verifyAstropressContentServices,
+} from "./src/content-services-ops.js";
+export type {
+  AstropressContentServicesBootstrapInput,
+  AstropressContentServicesVerifyInput,
+  AstropressContentServicesOperationReport,
+} from "./src/content-services-ops";

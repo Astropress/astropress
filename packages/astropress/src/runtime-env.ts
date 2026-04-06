@@ -1,4 +1,3 @@
-import { env as cloudflareWorkersEnv } from "cloudflare:workers";
 import type { D1DatabaseLike } from "./d1-database";
 
 export interface R2BucketLike {
@@ -70,7 +69,11 @@ export function getCloudflareBindings(locals?: App.Locals | null): RuntimeBindin
     }
   }
 
-  return (cloudflareWorkersEnv ?? {}) as RuntimeBindings;
+  const globalBindings = (globalThis as typeof globalThis & {
+    __astropressCloudflareBindings?: RuntimeBindings;
+  }).__astropressCloudflareBindings;
+
+  return (globalBindings ?? {}) as RuntimeBindings;
 }
 
 export function getStringRuntimeValue(name: StringRuntimeKey, locals?: App.Locals | null) {

@@ -1,8 +1,8 @@
-import { verifyPassword } from "./crypto-utils";
+import { createSessionTokenDigest, verifyPassword } from "./crypto-utils";
 import type { D1DatabaseLike } from "./d1-database";
 import { loadLocalAdminAuth, loadLocalAdminStore } from "./local-runtime-modules";
 import type { SessionUser } from "./persistence-types";
-import { getCloudflareBindings } from "./runtime-env";
+import { getAdminBootstrapConfig, getCloudflareBindings } from "./runtime-env";
 
 const SESSION_TTL_MS = 12 * 60 * 60 * 1000;
 
@@ -23,34 +23,55 @@ async function cleanupExpiredSessions(db: D1DatabaseLike) {
     .run();
 }
 
-async function getLiveD1SessionRow(db: D1DatabaseLike, sessionToken: string | null | undefined) {
+async function getLiveD1SessionRow(db: D1DatabaseLike, sessionToken: string | null | undefined, locals?: App.Locals | null) {
   if (!sessionToken) {
     return null;
   }
 
   await cleanupExpiredSessions(db);
 
-  const row = await db
-    .prepare(
-      `
-        SELECT s.id, s.csrf_token, s.last_active_at, u.email, u.role, u.name
-        FROM admin_sessions s
-        JOIN admin_users u ON u.id = s.user_id
-        WHERE s.id = ?
-          AND s.revoked_at IS NULL
-          AND u.active = 1
-        LIMIT 1
-      `,
-    )
-    .bind(sessionToken)
-    .first<{
-      id: string;
-      csrf_token: string;
-      last_active_at: string;
-      email: string;
-      role: SessionUser["role"];
-      name: string;
-    }>();
+  const sessionCandidates = [sessionToken];
+  const sessionSecret = getAdminBootstrapConfig(locals).sessionSecret?.trim();
+  if (sessionSecret) {
+    sessionCandidates.unshift(await createSessionTokenDigest(sessionToken, sessionSecret));
+  }
+
+  let row: {
+    id: string;
+    csrf_token: string;
+    last_active_at: string;
+    email: string;
+    role: SessionUser["role"];
+    name: string;
+  } | null = null;
+
+  for (const sessionId of sessionCandidates) {
+    row = await db
+      .prepare(
+        `
+          SELECT s.id, s.csrf_token, s.last_active_at, u.email, u.role, u.name
+          FROM admin_sessions s
+          JOIN admin_users u ON u.id = s.user_id
+          WHERE s.id = ?
+            AND s.revoked_at IS NULL
+            AND u.active = 1
+          LIMIT 1
+        `,
+      )
+      .bind(sessionId)
+      .first<{
+        id: string;
+        csrf_token: string;
+        last_active_at: string;
+        email: string;
+        role: SessionUser["role"];
+        name: string;
+      }>();
+
+    if (row) {
+      break;
+    }
+  }
 
   if (!row) {
     return null;
@@ -67,12 +88,12 @@ async function getLiveD1SessionRow(db: D1DatabaseLike, sessionToken: string | nu
             AND revoked_at IS NULL
         `,
       )
-      .bind(sessionToken)
+      .bind(row.id)
       .run();
     return null;
   }
 
-  await db.prepare("UPDATE admin_sessions SET last_active_at = CURRENT_TIMESTAMP WHERE id = ?").bind(sessionToken).run();
+  await db.prepare("UPDATE admin_sessions SET last_active_at = CURRENT_TIMESTAMP WHERE id = ?").bind(row.id).run();
   return row;
 }
 
@@ -143,6 +164,10 @@ export async function createRuntimeSession(
 
   const sessionToken = crypto.randomUUID();
   const csrfToken = crypto.randomUUID();
+  const sessionSecret = getAdminBootstrapConfig(locals).sessionSecret?.trim();
+  const storedSessionId = sessionSecret
+    ? await createSessionTokenDigest(sessionToken, sessionSecret)
+    : sessionToken;
 
   await db
     .prepare(
@@ -151,7 +176,7 @@ export async function createRuntimeSession(
         VALUES (?, ?, ?, ?, ?)
       `,
     )
-    .bind(sessionToken, userRow.id, csrfToken, metadata?.ipAddress ?? null, metadata?.userAgent ?? null)
+    .bind(storedSessionId, userRow.id, csrfToken, metadata?.ipAddress ?? null, metadata?.userAgent ?? null)
     .run();
 
   return sessionToken;
@@ -164,7 +189,7 @@ export async function getRuntimeSessionUser(sessionToken: string | null | undefi
     return localAdminStore.getSessionUser(sessionToken);
   }
 
-  const row = await getLiveD1SessionRow(db, sessionToken);
+  const row = await getLiveD1SessionRow(db, sessionToken, locals);
   if (!row) {
     return null;
   }
@@ -183,7 +208,7 @@ export async function getRuntimeCsrfToken(sessionToken: string | null | undefine
     return localAdminStore.getCsrfToken(sessionToken);
   }
 
-  const row = await getLiveD1SessionRow(db, sessionToken);
+  const row = await getLiveD1SessionRow(db, sessionToken, locals);
   return row?.csrf_token ?? null;
 }
 
@@ -199,17 +224,25 @@ export async function revokeRuntimeSession(sessionToken: string | null | undefin
     return;
   }
 
-  await db
-    .prepare(
-      `
-        UPDATE admin_sessions
-        SET revoked_at = CURRENT_TIMESTAMP
-        WHERE id = ?
-          AND revoked_at IS NULL
-      `,
-    )
-    .bind(sessionToken)
-    .run();
+  const sessionCandidates = [sessionToken];
+  const sessionSecret = getAdminBootstrapConfig(locals).sessionSecret?.trim();
+  if (sessionSecret) {
+    sessionCandidates.unshift(await createSessionTokenDigest(sessionToken, sessionSecret));
+  }
+
+  for (const sessionId of sessionCandidates) {
+    await db
+      .prepare(
+        `
+          UPDATE admin_sessions
+          SET revoked_at = CURRENT_TIMESTAMP
+          WHERE id = ?
+            AND revoked_at IS NULL
+        `,
+      )
+      .bind(sessionId)
+      .run();
+  }
 }
 
 async function recordRuntimeAudit(
