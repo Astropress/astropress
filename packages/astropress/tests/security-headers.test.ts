@@ -63,6 +63,49 @@ describe("security headers", () => {
     ).toBe(false);
   });
 
+  it("adds report-uri and Report-To header when reportUri option is set", () => {
+    const reportUri = "/wp-admin/actions/csp-report";
+    const headers = createAstropressSecurityHeaders({ area: "admin", reportUri });
+    const csp = headers.get("Content-Security-Policy") ?? "";
+
+    expect(csp).toContain(`report-uri ${reportUri}`);
+    expect(csp).toContain("report-to csp-endpoint");
+    expect(headers.get("Report-To")).toContain("csp-endpoint");
+    expect(headers.get("Report-To")).toContain(reportUri);
+  });
+
+  it("omits report-uri and Report-To when reportUri is not set", () => {
+    const headers = createAstropressSecurityHeaders({ area: "admin" });
+    const csp = headers.get("Content-Security-Policy") ?? "";
+
+    expect(csp).not.toContain("report-uri");
+    expect(csp).not.toContain("report-to");
+    expect(headers.has("Report-To")).toBe(false);
+  });
+
+  it("public area uses object-src self and form-action self https:", () => {
+    const headers = createAstropressSecurityHeaders({ area: "public" });
+    const csp = headers.get("Content-Security-Policy") ?? "";
+
+    expect(csp).toContain("object-src 'self'");
+    expect(csp).toContain("form-action 'self' https:");
+  });
+
+  it("admin/auth/api areas use object-src none and restricted form-action", () => {
+    for (const area of ["admin", "auth", "api"] as const) {
+      const csp = createAstropressSecurityHeaders({ area }).get("Content-Security-Policy") ?? "";
+      expect(csp).toContain("object-src 'none'");
+      expect(csp).toContain("form-action 'self'");
+      expect(csp).not.toContain("form-action 'self' https:");
+    }
+  });
+
+  it("disables inline styles when allowInlineStyles is false", () => {
+    const csp = createAstropressSecurityHeaders({ allowInlineStyles: false }).get("Content-Security-Policy") ?? "";
+    expect(csp).toContain("style-src 'self'");
+    expect(csp).not.toContain("'unsafe-inline'");
+  });
+
   it("classifies public, auth, admin, and action routes for middleware application", () => {
     expect(resolveAstropressSecurityArea(new URL("https://example.com/"))).toBe("public");
     expect(resolveAstropressSecurityArea(new URL("https://example.com/wp-admin/login"))).toBe("auth");

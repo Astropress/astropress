@@ -5,6 +5,7 @@ export interface AstropressSecurityHeadersOptions {
   allowInlineStyles?: boolean;
   frameAncestors?: "'none'" | "'self'";
   forceHsts?: boolean;
+  reportUri?: string;
 }
 
 function parseOrigin(value: string | null): URL | null {
@@ -24,7 +25,7 @@ function buildContentSecurityPolicy(options: Required<AstropressSecurityHeadersO
   const objectSource = options.area === "public" ? "object-src 'self'" : "object-src 'none'";
   const formAction = options.area === "public" ? "form-action 'self' https:" : "form-action 'self'";
 
-  return [
+  const directives = [
     "default-src 'self'",
     "base-uri 'self'",
     `frame-ancestors ${options.frameAncestors}`,
@@ -40,7 +41,13 @@ function buildContentSecurityPolicy(options: Required<AstropressSecurityHeadersO
     "worker-src 'self' blob:",
     "manifest-src 'self'",
     "upgrade-insecure-requests",
-  ].join("; ");
+  ];
+
+  if (options.reportUri) {
+    directives.push(`report-uri ${options.reportUri}`, `report-to csp-endpoint`);
+  }
+
+  return directives.join("; ");
 }
 
 export function createAstropressSecurityHeaders(
@@ -51,6 +58,7 @@ export function createAstropressSecurityHeaders(
     allowInlineStyles: options.allowInlineStyles ?? true,
     frameAncestors: options.frameAncestors ?? "'none'",
     forceHsts: options.forceHsts ?? false,
+    reportUri: options.reportUri ?? "",
   };
 
   const headers = new Headers();
@@ -63,6 +71,13 @@ export function createAstropressSecurityHeaders(
 
   if (resolved.forceHsts) {
     headers.set("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
+  }
+
+  if (resolved.reportUri) {
+    headers.set(
+      "Report-To",
+      JSON.stringify({ group: "csp-endpoint", max_age: 86400, endpoints: [{ url: resolved.reportUri }] }),
+    );
   }
 
   return headers;

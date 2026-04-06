@@ -68,6 +68,18 @@ const navItems: NavItem[] = [
         <strong>{adminSiteName}</strong>
       </a>
       <div class="topbar-meta">
+        <button
+          type="button"
+          class="nav-toggle"
+          data-nav-toggle
+          aria-label="Open navigation"
+          aria-expanded="false"
+          aria-controls="admin-sidebar"
+          data-label-open="Open navigation"
+          data-label-close="Close navigation"
+        >
+          <span aria-hidden="true">☰</span>
+        </button>
         <span>{adminUi.labels.signedInAsPrefix} {userName}</span>
         <span class="role-chip">{role}</span>
         <ap-theme-toggle label-dark={adminUi.labels.themeToggleDark} label-light={adminUi.labels.themeToggleLight}>
@@ -87,8 +99,17 @@ const navItems: NavItem[] = [
         </form>
       </div>
     </header>
+    <ap-admin-nav>
     <div class="admin-shell">
-      <nav class="sidebar" aria-label="Admin sections">
+      <nav id="admin-sidebar" class="sidebar" data-nav-sidebar aria-label="Admin sections">
+        <button
+          type="button"
+          class="nav-close"
+          data-nav-close
+          aria-label="Close navigation"
+        >
+          <span aria-hidden="true">✕</span>
+        </button>
         <p class="sidebar-label">{adminUi.labels.sidebarTitle}</p>
         {navItems
           .filter((item) => (item.adminOnly ? role === "admin" : true))
@@ -115,8 +136,10 @@ const navItems: NavItem[] = [
         <slot />
       </main>
     </div>
+    </ap-admin-nav>
     <script>
       import "../web-components/theme-toggle";
+      import "../web-components/admin-nav";
     </script>
   </body>
 </html>
@@ -646,7 +669,66 @@ const navItems: NavItem[] = [
     max-width: 42rem;
   }
 
+  /* Mobile nav toggle — hidden on desktop */
+  .nav-toggle {
+    display: none;
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    border-radius: 0.4rem;
+    color: white;
+    font-size: 1.15rem;
+    line-height: 1;
+    padding: 0.3rem 0.55rem;
+    cursor: pointer;
+  }
+
+  .nav-toggle:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  /* Close button inside sidebar — hidden on desktop */
+  .nav-close {
+    display: none;
+    background: transparent;
+    border: none;
+    color: var(--sidebar-muted);
+    font-size: 1.15rem;
+    padding: 0.5rem;
+    cursor: pointer;
+    align-self: flex-end;
+  }
+
+  .nav-close:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
   @media (max-width: 900px) {
+    .nav-toggle {
+      display: inline-flex;
+      align-items: center;
+    }
+
+    .nav-close {
+      display: block;
+    }
+
+    /* Sidebar hidden by default on mobile; shown when data-open is set */
+    .sidebar {
+      display: none;
+      position: fixed;
+      inset: 0 auto 0 0;
+      width: min(17rem, 85vw);
+      z-index: 100;
+      overflow-y: auto;
+    }
+
+    .sidebar[data-open] {
+      display: flex;
+      flex-direction: column;
+    }
+
     .admin-shell {
       grid-template-columns: 1fr;
     }

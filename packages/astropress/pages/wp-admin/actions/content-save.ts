@@ -12,7 +12,7 @@ export const POST: APIRoute = async (context) =>
         title: String(formData.get("title") ?? ""),
         status: String(formData.get("status") ?? ""),
         scheduledAt: String(formData.get("scheduledAt") ?? ""),
-        body: sanitizeHtml(String(formData.get("body") ?? "")),
+        body: await sanitizeHtml(String(formData.get("body") ?? "")),
         authorIds: formData.getAll("authorIds").map((value) => Number(value)).filter((value) => Number.isInteger(value) && value > 0),
         categoryIds: formData.getAll("categoryIds").map((value) => Number(value)).filter((value) => Number.isInteger(value) && value > 0),
         tagIds: formData.getAll("tagIds").map((value) => Number(value)).filter((value) => Number.isInteger(value) && value > 0),

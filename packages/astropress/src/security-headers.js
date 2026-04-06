@@ -2,7 +2,7 @@ function buildContentSecurityPolicy(options) {
   const styleSource = options.allowInlineStyles ? "style-src 'self' 'unsafe-inline'" : "style-src 'self'";
   const objectSource = options.area === "public" ? "object-src 'self'" : "object-src 'none'";
   const formAction = options.area === "public" ? "form-action 'self' https:" : "form-action 'self'";
-  return [
+  const directives = [
     "default-src 'self'",
     "base-uri 'self'",
     `frame-ancestors ${options.frameAncestors}`,
@@ -18,7 +18,11 @@ function buildContentSecurityPolicy(options) {
     "worker-src 'self' blob:",
     "manifest-src 'self'",
     "upgrade-insecure-requests",
-  ].join("; ");
+  ];
+  if (options.reportUri) {
+    directives.push(`report-uri ${options.reportUri}`, `report-to csp-endpoint`);
+  }
+  return directives.join("; ");
 }
 
 function parseOrigin(value) {
@@ -38,6 +42,7 @@ export function createAstropressSecurityHeaders(options = {}) {
     allowInlineStyles: options.allowInlineStyles ?? true,
     frameAncestors: options.frameAncestors ?? "'none'",
     forceHsts: options.forceHsts ?? false,
+    reportUri: options.reportUri ?? "",
   };
   const headers = new Headers();
   headers.set("Content-Security-Policy", buildContentSecurityPolicy(resolved));
@@ -48,6 +53,12 @@ export function createAstropressSecurityHeaders(options = {}) {
   headers.set("Cross-Origin-Opener-Policy", "same-origin");
   if (resolved.forceHsts) {
     headers.set("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
+  }
+  if (resolved.reportUri) {
+    headers.set(
+      "Report-To",
+      JSON.stringify({ group: "csp-endpoint", max_age: 86400, endpoints: [{ url: resolved.reportUri }] }),
+    );
   }
   return headers;
 }

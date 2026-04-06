@@ -5,11 +5,13 @@
  *   import "astropress/web-components";
  *
  * Or import individual elements:
+ *   import "astropress/web-components/admin-nav";
  *   import "astropress/web-components/theme-toggle";
  *   import "astropress/web-components/confirm-dialog";
  *   import "astropress/web-components/html-editor";
  */
 
+export { ApAdminNav } from "./admin-nav";
 export { ApThemeToggle } from "./theme-toggle";
 export { ApConfirmDialog } from "./confirm-dialog";
 export { ApHtmlEditor } from "./html-editor";

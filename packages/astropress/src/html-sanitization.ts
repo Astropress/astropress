@@ -1,5 +1,3 @@
-import { parseDocument } from "htmlparser2";
-
 const allowedTags = new Set([
   "a",
   "b",
@@ -46,21 +44,9 @@ const allowedAttributes = new Map<string, Set<string>>([
 ]);
 
 const dropContentTags = new Set(["script", "style", "textarea", "option", "iframe"]);
-const voidTags = new Set(["br", "hr", "img"]);
 const urlAttributes = new Set(["href", "src"]);
 const srcsetAttributes = new Set(["srcset"]);
 const allowedSchemes = new Set(["http", "https", "mailto", "tel"]);
-
-function escapeHtml(value: string) {
-  return value
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;");
-}
-
-function escapeAttribute(value: string) {
-  return escapeHtml(value).replaceAll('"', "&quot;");
-}
 
 function isAllowedUrl(value: string) {
   const trimmed = value.trim();
@@ -116,78 +102,36 @@ function sanitizeAttribute(tagName: string, attributeName: string, attributeValu
   return trimmedValue;
 }
 
-function serializeAttributes(tagName: string, attribs: Record<string, string | undefined>) {
-  const renderedAttributes = new Map<string, string>();
+export async function sanitizeHtml(html: string): Promise<string> {
+  const rewriter = new HTMLRewriter()
+    .on("*", {
+      element(el) {
+        const tag = el.tagName.toLowerCase();
 
-  for (const [attributeName, attributeValue] of Object.entries(attribs)) {
-    if (typeof attributeValue !== "string") {
-      continue;
-    }
+        if (dropContentTags.has(tag)) {
+          el.remove();
+          return;
+        }
 
-    const sanitizedValue = sanitizeAttribute(tagName, attributeName, attributeValue);
-    if (sanitizedValue) {
-      renderedAttributes.set(attributeName, sanitizedValue);
-    }
-  }
+        if (!allowedTags.has(tag)) {
+          el.removeAndKeepContent();
+          return;
+        }
 
-  if (tagName === "a") {
-    renderedAttributes.set("rel", "noopener noreferrer");
-  }
+        for (const [name, value] of el.attributes) {
+          const sanitized = sanitizeAttribute(tag, name, value);
+          if (sanitized === null) {
+            el.removeAttribute(name);
+          } else if (sanitized !== value) {
+            el.setAttribute(name, sanitized);
+          }
+        }
 
-  return [...renderedAttributes.entries()]
-    .map(([name, value]) => ` ${name}="${escapeAttribute(value)}"`)
-    .join("");
-}
+        if (tag === "a") {
+          el.setAttribute("rel", "noopener noreferrer");
+        }
+      },
+    });
 
-function sanitizeChildren(children: Array<Record<string, unknown>> | undefined) {
-  return (children ?? []).map((child) => sanitizeNode(child)).join("");
-}
-
-function sanitizeNode(node: Record<string, unknown>): string {
-  const nodeType = typeof node.type === "string" ? node.type : "";
-
-  if (nodeType === "text") {
-    return escapeHtml(typeof node.data === "string" ? node.data : "");
-  }
-
-  if (nodeType === "comment" || nodeType === "directive" || nodeType === "cdata") {
-    return "";
-  }
-
-  const tagName = typeof node.name === "string" ? node.name : "";
-  const children = Array.isArray(node.children) ? (node.children as Array<Record<string, unknown>>) : [];
-
-  if (!tagName) {
-    return sanitizeChildren(children);
-  }
-
-  if (!allowedTags.has(tagName)) {
-    if (dropContentTags.has(tagName)) {
-      return "";
-    }
-
-    return sanitizeChildren(children);
-  }
-
-  const attribs =
-    node.attribs && typeof node.attribs === "object"
-      ? (node.attribs as Record<string, string | undefined>)
-      : {};
-  const serializedAttributes = serializeAttributes(tagName, attribs);
-
-  if (voidTags.has(tagName)) {
-    return `<${tagName}${serializedAttributes}>`;
-  }
-
-  return `<${tagName}${serializedAttributes}>${sanitizeChildren(children)}</${tagName}>`;
-}
-
-export function sanitizeHtml(html: string): string {
-  const document = parseDocument(html, {
-    decodeEntities: false,
-    lowerCaseTags: true,
-    lowerCaseAttributeNames: true,
-  });
-
-  return sanitizeChildren(document.children as unknown as Array<Record<string, unknown>>);
+  return rewriter.transform(new Response(html)).text();
 }

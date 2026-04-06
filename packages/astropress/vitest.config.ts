@@ -9,6 +9,7 @@ export default defineConfig({
     ],
   },
   test: {
+    setupFiles: ["tests/setup/html-rewriter-polyfill.ts"],
     include: ["tests/**/*.test.ts"],
     coverage: {
       provider: "v8",

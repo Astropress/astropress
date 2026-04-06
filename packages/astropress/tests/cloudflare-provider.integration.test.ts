@@ -174,4 +174,61 @@ describe("cloudflare provider integration", () => {
 
     db.close();
   });
+
+  it("throws when saving an unsupported record kind", async () => {
+    registerCms({
+      templateKeys: ["content"],
+      siteUrl: "https://example.com",
+      seedPages: [],
+      archives: [],
+      translationStatus: [],
+    });
+
+    const db = new DatabaseSync(":memory:");
+    db.exec(readAstropressSqliteSchemaSql());
+    const cloudflare = createAstropressCloudflareAdapter({
+      db: new SqliteBackedD1Database(db),
+    });
+
+    await expect(
+      cloudflare.content.save({
+        id: "comment-1",
+        kind: "comment",
+        slug: "comment-1",
+        status: "published",
+        metadata: {},
+      } as Parameters<typeof cloudflare.content.save>[0]),
+    ).rejects.toThrow("does not support saving comment records yet");
+
+    db.close();
+  });
+
+  it("throws when deleting an unsupported record kind", async () => {
+    registerCms({
+      templateKeys: ["content"],
+      siteUrl: "https://example.com",
+      seedPages: [],
+      archives: [],
+      translationStatus: [],
+    });
+
+    const db = await createSeededCloudflareDatabase();
+
+    // Insert a comment record — the Cloudflare adapter lists comments via readStore
+    // and surfaces them through content.get(). The delete path throws for comments.
+    db.prepare(
+      `INSERT INTO comments (id, author, email, body, route, status, policy, submitted_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+    ).run("comment-del-1", "Test Author", "test@example.com", "Test comment", "/blog", "pending", "open-moderated", "2026-01-01T00:00:00.000Z");
+
+    const cloudflare = createAstropressCloudflareAdapter({
+      db: new SqliteBackedD1Database(db),
+    });
+
+    await expect(cloudflare.content.delete("comment-del-1")).rejects.toThrow(
+      "does not support deleting comment records yet",
+    );
+
+    db.close();
+  });
 });

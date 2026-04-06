@@ -5,6 +5,7 @@ import { join } from "node:path";
 
 import { describe, expect, it } from "vitest";
 import { createAstropressWordPressImportSource } from "../src/import/wordpress.js";
+import { readAstropressSqliteSchemaSql } from "../src/sqlite-bootstrap.js";
 
 describe("wordpress import contract", () => {
   it("parses WXR content into staged import artifacts and redirects", async () => {
@@ -217,4 +218,34 @@ describe("wordpress import contract", () => {
 
     await rm(workspace, { recursive: true, force: true });
   });
+
+  it("skips local apply when applyLocal is false", async () => {
+    const workspace = await mkdtemp(join(tmpdir(), "astropress-wordpress-noapply-"));
+    const artifactDir = join(workspace, "artifacts");
+    const exportFile = join(workspace, "export.xml");
+    await writeFile(
+      exportFile,
+      [
+        "<rss><channel>",
+        "<item><title><![CDATA[Hello]]></title><link>https://example.org/blog/hello/</link><content:encoded><![CDATA[<p>Hi</p>]]></content:encoded><wp:post_id>1</wp:post_id><wp:post_name>hello</wp:post_name><wp:status>publish</wp:status><wp:post_type>post</wp:post_type></item>",
+        "</channel></rss>",
+      ].join(""),
+      "utf8",
+    );
+
+    const importer = createAstropressWordPressImportSource();
+    const report = await importer.importWordPress({
+      exportFile,
+      artifactDir,
+      downloadMedia: false,
+      applyLocal: false,
+    });
+
+    // localApply must be undefined when applyLocal: false
+    expect(report.localApply).toBeUndefined();
+    expect(report.importedRecords).toBe(1);
+
+    await rm(workspace, { recursive: true, force: true });
+  });
+
 });
