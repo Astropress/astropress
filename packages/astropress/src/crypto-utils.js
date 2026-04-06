@@ -1,4 +1,4 @@
-function bytesToBase64(bytes: Uint8Array) {
+function bytesToBase64(bytes) {
   let binary = "";
   for (const byte of bytes) {
     binary += String.fromCharCode(byte);
@@ -6,7 +6,7 @@ function bytesToBase64(bytes: Uint8Array) {
   return btoa(binary);
 }
 
-function base64ToBytes(value: string) {
+function base64ToBytes(value) {
   const binary = atob(value);
   const bytes = new Uint8Array(binary.length);
   for (let index = 0; index < binary.length; index += 1) {
@@ -15,7 +15,7 @@ function base64ToBytes(value: string) {
   return bytes;
 }
 
-function constantTimeEqual(left: Uint8Array, right: Uint8Array) {
+function constantTimeEqual(left, right) {
   if (left.length !== right.length) {
     return false;
   }
@@ -27,33 +27,29 @@ function constantTimeEqual(left: Uint8Array, right: Uint8Array) {
   return mismatch === 0;
 }
 
-function bytesToHex(bytes: Uint8Array) {
+function bytesToHex(bytes) {
   return Array.from(bytes).map((byte) => byte.toString(16).padStart(2, "0")).join("");
 }
 
-export async function hashPassword(password: string, saltLength = 32, iterations = 100000): Promise<string> {
+export async function hashPassword(password, saltLength = 32, iterations = 100000) {
   const salt = crypto.getRandomValues(new Uint8Array(saltLength));
   const encoder = new TextEncoder();
   const passwordBuffer = encoder.encode(password);
-
   const hashBuffer = await crypto.subtle.deriveBits(
     {
       name: "PBKDF2",
-      salt: salt,
-      iterations: iterations,
+      salt,
+      iterations,
       hash: "SHA-256",
     },
     await crypto.subtle.importKey("raw", passwordBuffer, "PBKDF2", false, ["deriveBits"]),
-    512 // 64 bytes = 512 bits
+    512,
   );
 
-  const saltBase64 = bytesToBase64(salt);
-  const hashBase64 = bytesToBase64(new Uint8Array(hashBuffer));
-
-  return `${iterations}$${saltBase64}$${hashBase64}`;
+  return `${iterations}$${bytesToBase64(salt)}$${bytesToBase64(new Uint8Array(hashBuffer))}`;
 }
 
-export async function verifyPassword(password: string, storedHash: string): Promise<boolean> {
+export async function verifyPassword(password, storedHash) {
   try {
     const [iterationsStr, saltBase64, hashBase64] = storedHash.split("$");
     const iterations = parseInt(iterationsStr, 10);
@@ -64,19 +60,17 @@ export async function verifyPassword(password: string, storedHash: string): Prom
 
     const salt = base64ToBytes(saltBase64);
     const expectedHash = base64ToBytes(hashBase64);
-
     const encoder = new TextEncoder();
     const passwordBuffer = encoder.encode(password);
-
     const hashBuffer = await crypto.subtle.deriveBits(
       {
         name: "PBKDF2",
-        salt: salt,
-        iterations: iterations,
+        salt,
+        iterations,
         hash: "SHA-256",
       },
       await crypto.subtle.importKey("raw", passwordBuffer, "PBKDF2", false, ["deriveBits"]),
-      512
+      512,
     );
 
     return constantTimeEqual(expectedHash, new Uint8Array(hashBuffer));
@@ -85,7 +79,7 @@ export async function verifyPassword(password: string, storedHash: string): Prom
   }
 }
 
-export async function createSessionTokenDigest(sessionToken: string, secret: string): Promise<string> {
+export async function createSessionTokenDigest(sessionToken, secret) {
   const encoder = new TextEncoder();
   const key = await crypto.subtle.importKey(
     "raw",
