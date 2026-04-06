@@ -1,19 +1,69 @@
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width" />
-    <title>Astropress Docs</title>
-  </head>
-  <body>
-    <main>
-      <h1>Astropress Docs</h1>
-      <p>See the repository root for <code>SPEC.md</code>, <code>docs/TEST_PYRAMID.md</code>, and <code>features/</code>.</p>
-      <p>This static app is intended for GitHub Pages publication of docs and an example site.</p>
+---
+import SiteLayout from "../components/SiteLayout.astro";
+---
+
+<SiteLayout
+  title="Astropress Getting Started"
+  description="Start Astropress with the local SQLite-backed flow, understand what is supported today, and use the CLI without guessing at the product boundary."
+  heading="Start with the local path that Astropress validates most heavily."
+  currentPath="/docs"
+>
+  <section class="panel-grid">
+    <article class="panel">
+      <h2>Quick start</h2>
+      <ol>
+        <li><code>astropress new my-site</code></li>
+        <li><code>cd my-site</code></li>
+        <li><code>bun install</code></li>
+        <li><code>astropress doctor</code></li>
+        <li><code>astropress dev</code></li>
+      </ol>
+    </article>
+    <article class="panel">
+      <h2>Default release posture</h2>
       <p>
-        The example host runtime seam lives at
-        <code>examples/github-pages/src/astropress/local-runtime-modules.ts</code>
-        and shows the contract a host app implements while Astropress finishes extracting provider adapters.
+        Treat the local SQLite-backed admin and the static public example as the reference implementation. Move to
+        hosted adapters when you need them, but do not assume every hosted path has the same maturity today.
       </p>
-    </main>
-  </body>
-</html>
+    </article>
+  </section>
+
+  <section class="panel-grid">
+    <article class="panel">
+      <h2>Two setup choices</h2>
+      <p>
+        Astropress now separates <strong>App Host</strong> from <strong>Content Services</strong>. App Host means
+        where the Astro app runs. Content Services means where Astropress stores content, media, auth, sessions, and
+        the service API that powers admin actions.
+      </p>
+    </article>
+    <article class="panel">
+      <h2>CLI examples</h2>
+      <ol>
+        <li><code>astropress new my-site --app-host vercel --content-services supabase</code></li>
+        <li><code>astropress new brochure --app-host github-pages --content-services none</code></li>
+        <li><code>astropress new team-site --app-host cloudflare-pages --content-services cloudflare</code></li>
+      </ol>
+    </article>
+  </section>
+
+  <section class="panel">
+    <h2>What editors get</h2>
+    <p>
+      Package-owned admin routes cover pages, posts, media, redirects, comments, users, translations, settings, and
+      revisions. The intended workflow is editor-first, not Git-first.
+    </p>
+    <p>
+      Git sync remains useful for export, backup, review, and static deploy workflows, but the content database is the
+      canonical source of truth.
+    </p>
+  </section>
+
+  <section class="panel">
+    <h2>Read next</h2>
+    <p>
+      Use <a href="/providers">Hosting</a> for app-host and content-services fit, <a href="/wordpress">WordPress</a> for
+      import scope, and <a href="/operations">Operations</a> for backup, restore, and health checks.
+    </p>
+  </section>
+</SiteLayout>

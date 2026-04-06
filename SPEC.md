@@ -28,7 +28,7 @@ Astropress is not intended to be a generic website builder where every possible 
 
 ## Canonical Data Model
 
-The canonical source of truth is a database-backed CMS, not git.
+The canonical source of truth is a database-backed content store, not git.
 
 Required canonical entities:
 
@@ -65,7 +65,7 @@ Rules:
 
 - admin behavior may not fork by provider in templates
 - provider differences must stay inside adapter implementations
-- any provider with a database and object-store equivalent should be addable without redesigning the CMS core
+- any provider with a database and object-store equivalent should be addable without redesigning the framework core
 
 ## Admin Contract
 

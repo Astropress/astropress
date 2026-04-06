@@ -1,88 +1,92 @@
 ---
-import { normalizeProviderCapabilities } from "astropress";
-
-const ghPages = normalizeProviderCapabilities({
-  name: "github-pages",
-  staticPublishing: true,
-  gitSync: true,
-});
+import SiteLayout from "../components/SiteLayout.astro";
 ---
 
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width" />
-    <title>Astropress Example</title>
-    <style>
-      :root {
-        color-scheme: light;
-        --bg: #f4f6ef;
-        --surface: #ffffff;
-        --text: #203028;
-        --muted: #5d6d64;
-        --accent: #295f43;
-        --border: #d5ddd8;
-      }
-      body {
-        margin: 0;
-        font-family: Georgia, serif;
-        background: linear-gradient(180deg, #eef3e7, var(--bg));
-        color: var(--text);
-      }
-      main {
-        max-width: 64rem;
-        margin: 0 auto;
-        padding: 3rem 1.25rem 5rem;
-      }
-      .hero, .panel {
-        background: var(--surface);
-        border: 1px solid var(--border);
-        border-radius: 1.25rem;
-        padding: 1.5rem;
-        box-shadow: 0 1rem 2rem rgba(32, 48, 40, 0.06);
-      }
-      .grid {
-        display: grid;
-        gap: 1rem;
-        grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
-        margin-top: 1rem;
-      }
-      a { color: var(--accent); }
-      code {
-        background: #eef2ec;
-        padding: 0.1rem 0.35rem;
-        border-radius: 0.35rem;
-      }
-    </style>
-  </head>
-  <body>
-    <main>
-      <section class="hero">
-        <p>Astropress Example</p>
-        <h1>Database-backed CMS, static public output when you want it.</h1>
-        <p>
-          This GitHub Pages example hosts public docs and a sample static site while Astropress keeps
-          editorial workflows provider-neutral.
-        </p>
-        <p>
-          GitHub Pages capability: <code>{JSON.stringify(ghPages)}</code>
-        </p>
-        <p><a href="/docs">Read the docs</a> · <a href="/admin">View admin model</a></p>
-      </section>
-      <section class="grid">
-        <article class="panel">
-          <h2>WordPress migration</h2>
-          <p>Import pages, posts, media, redirects, comments, and users through the CLI.</p>
-        </article>
-        <article class="panel">
-          <h2>Provider portability</h2>
-          <p>Deploy the same content model through GitHub Pages, Cloudflare, Supabase, or Runway.</p>
-        </article>
-        <article class="panel">
-          <h2>Low operational footprint</h2>
-          <p>Static output where possible, server runtime only where it adds editorial or preview value.</p>
-        </article>
-      </section>
-    </main>
-  </body>
-</html>
+<SiteLayout
+  title="Astropress Overview"
+  description="Astropress is an opinionated web app framework for relatively simple sites that need a real admin, a clear content model, and low-ops hosting options."
+  heading="A real admin for simple sites, without inheriting all of WordPress."
+  currentPath="/"
+>
+  <Fragment slot="hero">
+    <p>
+      Astropress is aimed at editorial, informational, campaign, brochure, and blog sites for individuals and small
+      organizations. It is not a drag-and-drop builder and it is not trying to model arbitrary business workflows.
+    </p>
+    <div class="action-row">
+      <a class="primary" href="/docs">Read the getting started guide</a>
+      <a href="/admin">See the admin model</a>
+    </div>
+  </Fragment>
+
+  <section class="panel-grid">
+    <article class="panel">
+      <h2>What Astropress is</h2>
+      <p>
+        A database-backed web app framework with provider-neutral runtime adapters, a non-technical admin surface, and
+        static output where static output actually makes sense.
+      </p>
+    </article>
+    <article class="panel">
+      <h2>Who it fits</h2>
+      <p>
+        Teams that want pages, posts, media, redirects, comments, users, revisions, and localization in one bounded
+        system instead of plugin sprawl.
+      </p>
+    </article>
+    <article class="panel">
+      <h2>What it avoids</h2>
+      <p>
+        Site-builder abstraction layers, page-builder lock-in, always-on PHP hosting, and any requirement that editors
+        learn Git just to publish content.
+      </p>
+    </article>
+  </section>
+
+  <section class="panel">
+    <h2>Deployment model</h2>
+    <p>
+      Astropress no longer treats hosting as one overloaded provider choice. It separates the <strong>App Host</strong>
+      from the <strong>Content Services</strong> layer. For example, you can run the Astro app on Vercel or Netlify while
+      keeping content, media, and auth services on Supabase. Or you can keep both layers on Cloudflare.
+    </p>
+  </section>
+
+  <section class="status-table">
+    <h2>Current maturity</h2>
+    <table>
+      <tbody>
+        <tr>
+          <th scope="row">Local SQLite runtime</th>
+          <td><span class="badge badge-supported">Supported</span></td>
+          <td>Reference path for local development and the strongest validated flow today.</td>
+        </tr>
+        <tr>
+          <th scope="row">GitHub Pages public deploy</th>
+          <td><span class="badge badge-supported">Supported</span></td>
+          <td>Good fit for public docs and static output, not the canonical write runtime.</td>
+        </tr>
+        <tr>
+          <th scope="row">WordPress staged import</th>
+          <td><span class="badge badge-supported">Supported</span></td>
+          <td>Creates typed inventory, plan, report, and artifact sets for operator-reviewed migration work.</td>
+        </tr>
+        <tr>
+          <th scope="row">Split hosting matrix</th>
+          <td><span class="badge badge-supported">Supported</span></td>
+          <td>App Host and Content Services are now chosen separately in the CLI and docs.</td>
+        </tr>
+        <tr>
+          <th scope="row">Hosted adapters beyond Cloudflare and Supabase</th>
+          <td><span class="badge badge-preview">Preview</span></td>
+          <td>Firebase, Appwrite, and several host combinations are exposed in the matrix, but not all have first-party runtime adapters yet.</td>
+        </tr>
+        <tr>
+          <th scope="row">One-step hosted migration</th>
+          <td><span class="badge badge-limited">Not yet</span></td>
+          <td>WordPress import is not presented as a one-click persisted hosted migration.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+</SiteLayout>

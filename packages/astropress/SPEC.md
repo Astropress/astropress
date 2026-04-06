@@ -44,6 +44,7 @@ The package should reduce host-specific glue over time by replacing temporary se
 - `astropress/adapters/hosted` chooses the hosted provider runtime for Supabase or Runway
 - `astropress/adapters/project` chooses local or hosted runtime mode from the project env contract
 - `astropress/project-launch` converts the project env and runtime mode into one launch/bootstrap plan
+- `astropress/import/wordpress` owns a staged WordPress import pipeline with typed inspection, plan generation, artifact output, remediation reporting, and resumable media download state
 - provider selectors must support explicit env maps as well as ambient process env
 - `astropress/adapters/supabase-sqlite` and `astropress/adapters/runway-sqlite` provide Node-only provider-local runtimes backed by the packaged SQLite adapter
 - Supabase and Runway hosted config loading and runtime guards are package-owned, not host-app glue

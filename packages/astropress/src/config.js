@@ -1,8 +1,8 @@
 /**
- * CmsConfig — the single seam between AstroPress (src/cms/) and the host site (src/site/).
+ * CmsConfig — the single seam between astropress and the host site.
  *
  * Call registerCms() once at startup (e.g. in src/site/cms-registration.ts imported by
- * middleware or the admin layout) before any CMS function is invoked.
+ * middleware or the admin layout) before any astropress function is invoked.
  */
 const CMS_CONFIG_KEY = Symbol.for("astropress.cms-config");
 function getConfigStore() {
@@ -14,7 +14,7 @@ export function registerCms(config) {
 export function getCmsConfig() {
     const config = getConfigStore()[CMS_CONFIG_KEY] ?? null;
     if (!config) {
-        throw new Error("CMS not initialized — call registerCms() before using the CMS.");
+        throw new Error("Astropress not initialized — call registerCms() before using astropress.");
     }
     return config;
 }
