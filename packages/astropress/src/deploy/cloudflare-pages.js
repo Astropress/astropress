@@ -1,13 +1,13 @@
 import { prepareAstropressDeployment } from "./shared.js";
 
-export function createAstropressGitHubPagesDeployTarget(options = {}) {
+export function createAstropressCloudflarePagesDeployTarget(options = {}) {
   return {
-    provider: "github-pages",
+    provider: "cloudflare",
     async deploy(input) {
       return prepareAstropressDeployment(input, {
-        provider: "github-pages",
+        provider: "cloudflare-pages",
         outputDir: options.outputDir,
-        baseUrl: options.baseUrl,
+        baseUrl: options.baseUrl ?? "https://pages.dev",
       });
     },
   };

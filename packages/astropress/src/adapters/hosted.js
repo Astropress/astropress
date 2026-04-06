@@ -1,4 +1,7 @@
 import { resolveAstropressHostedProviderFromEnv } from "../project-env.js";
+import { createAstropressAppwriteHostedAdapter } from "./appwrite.js";
+import { createAstropressFirebaseHostedAdapter } from "./firebase.js";
+import { createAstropressPocketbaseHostedAdapter } from "./pocketbase.js";
 import { createAstropressRunwayHostedAdapter } from "./runway.js";
 import { createAstropressSupabaseHostedAdapter } from "./supabase.js";
 
@@ -14,6 +17,15 @@ export function createAstropressHostedAdapter(options = {}) {
   );
   if (provider === "runway") {
     return createAstropressRunwayHostedAdapter(options);
+  }
+  if (provider === "firebase") {
+    return createAstropressFirebaseHostedAdapter(options);
+  }
+  if (provider === "appwrite") {
+    return createAstropressAppwriteHostedAdapter(options);
+  }
+  if (provider === "pocketbase") {
+    return createAstropressPocketbaseHostedAdapter(options);
   }
   return createAstropressSupabaseHostedAdapter(options);
 }

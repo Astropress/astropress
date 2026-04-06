@@ -1,21 +1,21 @@
 import type { DeployTarget } from "../platform-contracts";
 import { prepareAstropressDeployment } from "./shared.js";
 
-export interface AstropressGitHubPagesDeployTargetOptions {
+export interface AstropressNetlifyDeployTargetOptions {
   outputDir?: string;
   baseUrl?: string;
 }
 
-export function createAstropressGitHubPagesDeployTarget(
-  options: AstropressGitHubPagesDeployTargetOptions = {},
+export function createAstropressNetlifyDeployTarget(
+  options: AstropressNetlifyDeployTargetOptions = {},
 ): DeployTarget {
   return {
-    provider: "github-pages",
+    provider: "custom",
     async deploy(input) {
       return prepareAstropressDeployment(input, {
-        provider: "github-pages",
+        provider: "netlify",
         outputDir: options.outputDir,
-        baseUrl: options.baseUrl,
+        baseUrl: options.baseUrl ?? "https://netlify.app",
       });
     },
   };

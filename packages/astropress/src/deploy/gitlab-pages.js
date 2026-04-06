@@ -1,13 +1,13 @@
 import { prepareAstropressDeployment } from "./shared.js";
 
-export function createAstropressGitHubPagesDeployTarget(options = {}) {
+export function createAstropressGitLabPagesDeployTarget(options = {}) {
   return {
     provider: "github-pages",
     async deploy(input) {
       return prepareAstropressDeployment(input, {
-        provider: "github-pages",
+        provider: "gitlab-pages",
         outputDir: options.outputDir,
-        baseUrl: options.baseUrl,
+        baseUrl: options.baseUrl ?? "https://gitlab.io",
       });
     },
   };

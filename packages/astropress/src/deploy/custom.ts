@@ -1,19 +1,21 @@
 import type { DeployTarget } from "../platform-contracts";
 import { prepareAstropressDeployment } from "./shared.js";
 
-export interface AstropressGitHubPagesDeployTargetOptions {
+export interface AstropressCustomDeployTargetOptions {
   outputDir?: string;
   baseUrl?: string;
+  provider?: string;
 }
 
-export function createAstropressGitHubPagesDeployTarget(
-  options: AstropressGitHubPagesDeployTargetOptions = {},
+export function createAstropressCustomDeployTarget(
+  options: AstropressCustomDeployTargetOptions = {},
 ): DeployTarget {
+  const provider = options.provider ?? "custom";
   return {
-    provider: "github-pages",
+    provider: "custom",
     async deploy(input) {
       return prepareAstropressDeployment(input, {
-        provider: "github-pages",
+        provider,
         outputDir: options.outputDir,
         baseUrl: options.baseUrl,
       });

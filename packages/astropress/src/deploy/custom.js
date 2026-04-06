@@ -1,11 +1,12 @@
 import { prepareAstropressDeployment } from "./shared.js";
 
-export function createAstropressGitHubPagesDeployTarget(options = {}) {
+export function createAstropressCustomDeployTarget(options = {}) {
+  const provider = options.provider ?? "custom";
   return {
-    provider: "github-pages",
+    provider: "custom",
     async deploy(input) {
       return prepareAstropressDeployment(input, {
-        provider: "github-pages",
+        provider,
         outputDir: options.outputDir,
         baseUrl: options.baseUrl,
       });

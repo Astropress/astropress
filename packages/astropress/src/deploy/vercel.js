@@ -1,13 +1,13 @@
 import { prepareAstropressDeployment } from "./shared.js";
 
-export function createAstropressGitHubPagesDeployTarget(options = {}) {
+export function createAstropressVercelDeployTarget(options = {}) {
   return {
-    provider: "github-pages",
+    provider: "custom",
     async deploy(input) {
       return prepareAstropressDeployment(input, {
-        provider: "github-pages",
+        provider: "vercel",
         outputDir: options.outputDir,
-        baseUrl: options.baseUrl,
+        baseUrl: options.baseUrl ?? "https://vercel.app",
       });
     },
   };

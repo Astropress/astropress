@@ -1,13 +1,13 @@
 import { prepareAstropressDeployment } from "./shared.js";
 
-export function createAstropressGitHubPagesDeployTarget(options = {}) {
+export function createAstropressFirebaseHostingDeployTarget(options = {}) {
   return {
-    provider: "github-pages",
+    provider: "custom",
     async deploy(input) {
       return prepareAstropressDeployment(input, {
-        provider: "github-pages",
+        provider: "firebase-hosting",
         outputDir: options.outputDir,
-        baseUrl: options.baseUrl,
+        baseUrl: options.baseUrl ?? "https://web.app",
       });
     },
   };

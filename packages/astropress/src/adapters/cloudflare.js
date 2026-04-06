@@ -1,5 +1,6 @@
 import { assertProviderContract, normalizeProviderCapabilities, } from "../platform-contracts.js";
 import { createD1AdminReadStore } from "../d1-admin-store.js";
+import { createSessionTokenDigest, verifyPassword } from "../crypto-utils.js";
 function mapContentRecordKind(record) {
     return record.kind === "post" ? "post" : "page";
 }
@@ -98,6 +99,118 @@ function createFallbackCloudflareAuthStore(seedUsers) {
         },
     };
 }
+function createDisabledCloudflareAuthStore() {
+    return {
+        async signIn() {
+            return null;
+        },
+        async signOut() { },
+        async getSession() {
+            return null;
+        },
+    };
+}
+const CLOUDFLARE_SESSION_TTL_MS = 12 * 60 * 60 * 1000;
+async function cleanupExpiredCloudflareSessions(db) {
+    await db
+        .prepare(`
+        UPDATE admin_sessions
+        SET revoked_at = CURRENT_TIMESTAMP
+        WHERE revoked_at IS NULL
+          AND last_active_at < datetime('now', '-12 hours')
+      `)
+        .run();
+}
+async function getLiveCloudflareSessionRow(db, sessionId) {
+    await cleanupExpiredCloudflareSessions(db);
+    const sessionCandidates = [sessionId, await createSessionTokenDigest(sessionId, "cloudflare-adapter-session-secret")];
+    let row = null;
+    for (const candidate of sessionCandidates) {
+        row = await db
+            .prepare(`
+        SELECT s.id, s.last_active_at, u.email, u.role
+        FROM admin_sessions s
+        JOIN admin_users u ON u.id = s.user_id
+        WHERE s.id = ?
+          AND s.revoked_at IS NULL
+          AND u.active = 1
+        LIMIT 1
+      `)
+            .bind(candidate)
+            .first();
+        if (row) {
+            break;
+        }
+    }
+    if (!row) {
+        return null;
+    }
+    const lastActiveAt = Date.parse(row.last_active_at);
+    if (!Number.isFinite(lastActiveAt) || Date.now() - lastActiveAt > CLOUDFLARE_SESSION_TTL_MS) {
+        await db
+            .prepare(`
+          UPDATE admin_sessions
+          SET revoked_at = CURRENT_TIMESTAMP
+          WHERE id = ?
+            AND revoked_at IS NULL
+        `)
+            .bind(row.id)
+            .run();
+        return null;
+    }
+    await db.prepare("UPDATE admin_sessions SET last_active_at = CURRENT_TIMESTAMP WHERE id = ?").bind(row.id).run();
+    return row;
+}
+function createD1CloudflareAuthStore(db) {
+    return {
+        async signIn(email, password) {
+            const row = await db
+                .prepare(`
+            SELECT id, email, role, password_hash
+            FROM admin_users
+            WHERE email = ?
+              AND active = 1
+            LIMIT 1
+          `)
+                .bind(email.trim().toLowerCase())
+                .first();
+            if (!row || !(await verifyPassword(password, row.password_hash))) {
+                return null;
+            }
+            const sessionId = crypto.randomUUID();
+            const storedSessionId = await createSessionTokenDigest(sessionId, "cloudflare-adapter-session-secret");
+            const csrfToken = crypto.randomUUID();
+            await db
+                .prepare(`
+            INSERT INTO admin_sessions (id, user_id, csrf_token, ip_address, user_agent)
+            VALUES (?, ?, ?, ?, ?)
+          `)
+                .bind(storedSessionId, row.id, csrfToken, null, "astropress-cloudflare-adapter")
+                .run();
+            return { id: sessionId, email: row.email, role: row.role };
+        },
+        async signOut(sessionId) {
+            for (const candidate of [sessionId, await createSessionTokenDigest(sessionId, "cloudflare-adapter-session-secret")]) {
+                await db
+                    .prepare(`
+            UPDATE admin_sessions
+            SET revoked_at = CURRENT_TIMESTAMP
+            WHERE id = ?
+              AND revoked_at IS NULL
+          `)
+                    .bind(candidate)
+                    .run();
+            }
+        },
+        async getSession(sessionId) {
+            const row = await getLiveCloudflareSessionRow(db, sessionId);
+            if (!row) {
+                return null;
+            }
+            return { id: sessionId, email: row.email, role: row.role };
+        },
+    };
+}
 export function createAstropressCloudflareAdapter(options = {}) {
     if (!options.db) {
         return assertProviderContract({
@@ -141,7 +254,9 @@ export function createAstropressCloudflareAdapter(options = {}) {
                 },
             },
             auth: options.auth ??
-                createFallbackCloudflareAuthStore(options.users ?? [{ id: "admin-1", email: "admin@example.com", role: "admin", password: "password" }]),
+                (options.allowInsecureFallbackAuth && options.users
+                    ? createFallbackCloudflareAuthStore(options.users)
+                    : createDisabledCloudflareAuthStore()),
             gitSync: options.gitSync,
             deploy: options.deploy,
             importer: options.importer,
@@ -162,7 +277,9 @@ export function createAstropressCloudflareAdapter(options = {}) {
             gitSync: true,
         }),
         auth: options.auth ??
-            createFallbackCloudflareAuthStore(options.users ?? [{ id: "admin-1", email: "admin@example.com", role: "admin", password: "password" }]),
+            (options.allowInsecureFallbackAuth && options.users
+                ? createFallbackCloudflareAuthStore(options.users)
+                : createD1CloudflareAuthStore(options.db)),
         content: {
             async list(kind) {
                 const records = [];
