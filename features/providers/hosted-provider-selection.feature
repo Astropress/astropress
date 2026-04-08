@@ -1,5 +1,9 @@
-Feature: Hosted provider selection is package-owned
-  Scenario: Hosted providers can be selected without host-app branching
-    Given an Astropress project with hosted provider env for Supabase or Runway
-    When the consumer loads the hosted adapter through Astropress
-    Then Astropress resolves the hosted provider and validates the provider-specific env contract before creating the adapter
+Feature: Hosted database provider selection
+  As a developer
+  I want to choose a hosted database provider for my AstroPress site
+  So that my content is managed in the cloud without running my own server
+
+  Scenario: A developer can switch to a hosted database provider without modifying any application code
+    Given an AstroPress project configured for a hosted provider such as Supabase or Runway
+    When the developer sets the provider environment variables and deploys
+    Then the admin panel and all content operations use that hosted provider automatically

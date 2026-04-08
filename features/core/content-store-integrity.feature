@@ -1,11 +1,14 @@
-Feature: Content store integrity
+Feature: Content persistence across editor sessions
+  As a content editor
+  I want my changes to be saved reliably
+  So that I never lose work when I navigate away or the session ends
 
-  Scenario: Cloudflare content adapter persists post status updates through the database
-    Given an existing post record in the Cloudflare content store
-    When the operator updates the post status and title
-    Then reading the record back from the database reflects the updated values
+  Scenario: An editor's post status change is saved and immediately visible to all admin users
+    Given a post is in draft state in the admin panel
+    When the editor publishes the post
+    Then any other admin who opens the post sees it as published
 
-  Scenario: Cloudflare media adapter records the byte size of uploaded assets
-    Given a media asset with binary content
-    When the operator stores the asset in the Cloudflare media store
-    Then the stored media record includes the correct file size in bytes
+  Scenario: An admin can see the file size of each uploaded image in the media library
+    Given an image has been uploaded to the media library
+    When the admin opens the media panel
+    Then the image entry shows its file size in bytes

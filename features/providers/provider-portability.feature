@@ -1,10 +1,14 @@
-Feature: Provider portability
-  Scenario: The same project can publish through first-party adapters
-    Given an Astropress project with canonical content in the database
-    When the operator deploys it to GitHub Pages Cloudflare Supabase or Runway
-    Then the provider-specific work stays behind a common deploy contract
+Feature: Switching and deploying across hosting providers
+  As a developer
+  I want to deploy the same project to different hosting providers
+  So that I am not locked in to a single platform
 
-  Scenario: Startup selects the correct runtime mode from one project contract
-    Given an Astropress project env contract for local or hosted operation
-    When startup code asks Astropress for the project adapter
-    Then Astropress selects the matching local or hosted provider adapter without host-app branching
+  Scenario: A developer can move their site from one hosting provider to another by changing environment variables
+    Given an AstroPress project deployed on Cloudflare
+    When the developer updates the provider environment variables and redeploys
+    Then the site runs on the new provider with the same content and admin panel
+
+  Scenario: A deployed site connects to the right database based on environment variables alone
+    Given the same AstroPress codebase is deployed to two different hosts with different database credentials
+    When each host starts up
+    Then each deployment connects to its own database without any code changes

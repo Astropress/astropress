@@ -1,30 +1,34 @@
-Feature: Full editorial WordPress import
-  Scenario: Importing a WordPress export stages editorial inventory into Astropress import artifacts
-    Given a supported WordPress export or source site
-    When the operator runs "astropress import wordpress"
-    Then Astropress writes inventory plan report content media comment user taxonomy and redirect artifacts for import
+Feature: Importing content from a WordPress site
+  As a site owner migrating from WordPress
+  I want to import all my content into AstroPress
+  So that I can switch platforms without losing posts, media, or metadata
 
-  Scenario: WordPress import produces inspect plan and report artifacts
-    Given a WordPress export contains shortcode or page-builder markup
+  Scenario: An operator can review all imported posts and pages before they go live
+    Given a WordPress XML export file
     When the operator runs "astropress import wordpress"
-    Then Astropress should write inventory plan and report artifacts and flag the import for manual review
+    Then an inventory file lists every post, page, media item, comment, user, and taxonomy from the export
 
-  Scenario: WordPress import can resume staged media downloads
-    Given a staged WordPress import artifact directory
+  Scenario: An operator receives a human-readable report after running astropress import wordpress
+    Given a WordPress export containing shortcode or page-builder markup
+    When the operator runs "astropress import wordpress"
+    Then a report file summarises what was imported and flags any items needing manual review
+
+  Scenario: An operator can resume an interrupted import without re-downloading already-saved media
+    Given an import has been partially run and some media files are already downloaded
     When the operator reruns "astropress import wordpress --resume --download-media"
-    Then Astropress should reuse completed media downloads and continue any unfinished staged downloads
+    Then previously downloaded media is reused and only missing files are fetched
 
-  Scenario: WordPress import normalizes non-standard post statuses for editorial workflow
-    Given a WordPress export with posts in pending future or private status
+  Scenario: Content from WordPress with unusual status values is imported in a valid editorial state
+    Given a WordPress export contains posts with pending, future, or private status
     When the operator runs "astropress import wordpress"
-    Then pending and future posts become draft and private posts become archived in the content artifacts
+    Then pending and future posts become drafts and private posts become archived in AstroPress
 
-  Scenario: WordPress import preserves content fidelity for XML entity references
-    Given a WordPress export with posts containing decimal hex and named XML entities
+  Scenario: Special characters in WordPress content survive the import unchanged
+    Given a WordPress export contains posts with XML entity references and Unicode characters
     When the operator runs "astropress import wordpress"
-    Then numeric entities are decoded to their characters and unrecognized entities are preserved verbatim
+    Then the rendered content shows the correct characters with no encoding artifacts
 
-  Scenario: WordPress import produces a structured operator-facing import report file
-    Given a WordPress export with posts comments and media
+  Scenario: An operator receives a JSON report file summarising the import for automation and logging
+    Given a WordPress export with posts, comments, and media
     When the operator runs "astropress import wordpress" with an artifact directory
-    Then Astropress writes an import-report.json file containing entity counts errors and manual-review flags
+    Then the artifact directory contains an import-report.json with entity counts, errors, and review flags

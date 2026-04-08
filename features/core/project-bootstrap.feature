@@ -1,20 +1,24 @@
-Feature: Project bootstrap follows package-owned defaults
-  Scenario: New projects get provider-aligned env defaults
-    Given an operator scaffolds a new Astropress project for sqlite Supabase or Runway
-    When Astropress writes the project .env and .env.example files
-    Then the local provider hosted provider and deploy target defaults come from Astropress package scaffolds rather than consumer-specific logic
+Feature: New project setup with astropress new
+  As a developer
+  I want to scaffold a new AstroPress project for my chosen hosting provider
+  So that I can start developing immediately without writing boilerplate configuration
 
-  Scenario: Local development reads the scaffolded env contract
-    Given a scaffolded Astropress project with provider-specific .env values
-    When the operator runs "astropress dev"
-    Then Astropress resolves the local provider admin database path and default deploy target from the shared env contract
+  Scenario: A developer running astropress new gets pre-filled environment variables for their chosen provider
+    Given the developer runs "astropress new" and selects a hosting provider
+    When astropress writes the project files
+    Then the .env and .env.example files contain correct variable names for that provider
 
-  Scenario: New-project scaffolding includes a package-owned provider recommendation
-    Given a non-technical operator creates a new Astropress project
-    When Astropress computes the default hosting recommendation
-    Then Cloudflare should be the default canonical runtime and GitHub Pages should remain a static deploy target only
+  Scenario: A developer can start local development immediately after running astropress new
+    Given a project has been scaffolded with "astropress new"
+    When the developer runs "astropress dev" without editing any files
+    Then the local site and admin panel are accessible at localhost
 
-  Scenario: Project launch planning stays package-owned
-    Given a scaffolded Astropress project with local or hosted provider settings
-    When Astropress computes the project launch plan
-    Then the runtime mode provider deploy target and local-seed requirement should come from Astropress package logic rather than CLI-specific branching
+  Scenario: A developer creating a new project sees recommended hosting pairings matched to their chosen database
+    Given the developer is running "astropress new" and selecting a database
+    When astropress presents the hosting options
+    Then the recommended app host is matched to the selected database provider
+
+  Scenario: A developer gets a generated DEPLOY.md with deploy steps specific to their chosen hosting provider
+    Given the developer has scaffolded a project for Vercel with Supabase
+    When the project directory is created
+    Then a DEPLOY.md file contains the correct deploy commands and required secrets for that combination
