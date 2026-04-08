@@ -6,6 +6,174 @@ use crate::providers::{AppHost, DataServices, LocalProvider};
 use crate::cli_config::env::{format_env_map, read_env_file, read_package_manifest, write_package_manifest};
 use crate::js_bridge::loaders::load_project_scaffold;
 
+// ---------------------------------------------------------------------------
+// Service selection choices (stored in .env stubs when a service is chosen)
+// ---------------------------------------------------------------------------
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum CmsChoice {
+    BuiltIn,
+    Keystatic,
+    Directus,
+    Payload,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum CommerceChoice {
+    None,
+    Medusa,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum CommunityChoice {
+    Giscus,
+    Remark42,
+    None,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum EmailChoice {
+    None,
+    Listmonk,
+}
+
+/// Prompt the user for optional service integrations.
+/// Returns env stubs to write into the project `.env` / `.env.example`.
+fn prompt_service_choices() -> ServiceSelections {
+    if crate::tui::is_plain() {
+        return ServiceSelections::defaults();
+    }
+
+    use dialoguer::{Select, theme::ColorfulTheme};
+
+    let cms = {
+        let items = &[
+            "Keep AstroPress built-in (Cloudflare D1 / SQLite / Supabase) — recommended",
+            "Keystatic — git-backed, zero server, free on Cloudflare Pages",
+            "Directus — best REST/GraphQL API (Cloudflare Workers adapter available)",
+            "Payload — TypeScript, local-first (needs Node/Bun server)",
+        ];
+        let idx = Select::with_theme(&ColorfulTheme::default())
+            .with_prompt("Choose a CMS")
+            .items(items)
+            .default(0)
+            .interact()
+            .unwrap_or(0);
+        match idx {
+            1 => CmsChoice::Keystatic,
+            2 => CmsChoice::Directus,
+            3 => CmsChoice::Payload,
+            _ => CmsChoice::BuiltIn,
+        }
+    };
+
+    let commerce = {
+        let items = &[
+            "No storefront",
+            "Medusa — full headless commerce, MIT (Fly.io/Railway/Render free)",
+        ];
+        let idx = Select::with_theme(&ColorfulTheme::default())
+            .with_prompt("Add a storefront?")
+            .items(items)
+            .default(0)
+            .interact()
+            .unwrap_or(0);
+        if idx == 1 { CommerceChoice::Medusa } else { CommerceChoice::None }
+    };
+
+    let community = {
+        let items = &[
+            "Giscus — GitHub Discussions, zero server, free (default)",
+            "Remark42 — self-hosted comments (Fly.io free)",
+            "No comments",
+        ];
+        let idx = Select::with_theme(&ColorfulTheme::default())
+            .with_prompt("Add comments / community?")
+            .items(items)
+            .default(0)
+            .interact()
+            .unwrap_or(0);
+        match idx {
+            1 => CommunityChoice::Remark42,
+            2 => CommunityChoice::None,
+            _ => CommunityChoice::Giscus,
+        }
+    };
+
+    let email = {
+        let items = &[
+            "No email / newsletter",
+            "Listmonk — self-hosted campaigns + subscriber lists, MIT (Fly.io free)",
+        ];
+        let idx = Select::with_theme(&ColorfulTheme::default())
+            .with_prompt("Add email / newsletter?")
+            .items(items)
+            .default(0)
+            .interact()
+            .unwrap_or(0);
+        if idx == 1 { EmailChoice::Listmonk } else { EmailChoice::None }
+    };
+
+    ServiceSelections { cms, commerce, community, email }
+}
+
+struct ServiceSelections {
+    cms: CmsChoice,
+    commerce: CommerceChoice,
+    community: CommunityChoice,
+    email: EmailChoice,
+}
+
+impl ServiceSelections {
+    fn defaults() -> Self {
+        ServiceSelections {
+            cms: CmsChoice::BuiltIn,
+            commerce: CommerceChoice::None,
+            community: CommunityChoice::Giscus,
+            email: EmailChoice::None,
+        }
+    }
+
+    /// Lines to append to `.env.example` describing chosen optional services.
+    fn env_example_stubs(&self) -> String {
+        let mut lines = Vec::new();
+        match self.cms {
+            CmsChoice::Keystatic => lines.push("# Keystatic CMS — configure in keystatic.config.ts"),
+            CmsChoice::Directus => {
+                lines.push("# Directus CMS");
+                lines.push("DIRECTUS_URL=http://localhost:8055");
+                lines.push("DIRECTUS_TOKEN=replace-me");
+            }
+            CmsChoice::Payload => {
+                lines.push("# Payload CMS");
+                lines.push("PAYLOAD_URL=http://localhost:3000");
+                lines.push("PAYLOAD_SECRET=replace-me");
+            }
+            CmsChoice::BuiltIn => {}
+        }
+        if self.commerce == CommerceChoice::Medusa {
+            lines.push("# Medusa headless commerce");
+            lines.push("MEDUSA_BACKEND_URL=http://localhost:9000");
+        }
+        if self.community == CommunityChoice::Remark42 {
+            lines.push("# Remark42 comments");
+            lines.push("REMARK42_URL=http://localhost:8080");
+            lines.push("REMARK42_SITE_ID=remark");
+        }
+        if self.email == EmailChoice::Listmonk {
+            lines.push("# Listmonk email / newsletter");
+            lines.push("LISTMONK_URL=http://localhost:9001");
+            lines.push("LISTMONK_USERNAME=listmonk");
+            lines.push("LISTMONK_PASSWORD=replace-me");
+        }
+        if lines.is_empty() {
+            String::new()
+        } else {
+            format!("\n# Optional service integrations\n{}\n", lines.join("\n"))
+        }
+    }
+}
+
 /// Writes all scaffold files into project_dir. Does not run install or bootstrap.
 pub(crate) fn scaffold_new_project(
     project_dir: &Path,
@@ -61,9 +229,21 @@ pub(crate) fn scaffold_new_project(
         format_env_map(&scaffold.env_example),
     )
     .map_err(crate::io_error)?;
+    // Interactive service selection (skipped in plain mode — uses defaults).
+    let services = prompt_service_choices();
+    let service_stubs = services.env_example_stubs();
+
     crate::write_text_file(project_dir, "DEPLOY.md", &scaffold.deploy_doc)?;
     for (relative_path, contents) in &scaffold.ci_files {
         crate::write_text_file(project_dir, relative_path, contents)?;
+    }
+
+    // Append service env stubs to .env.example if any services were chosen.
+    if !service_stubs.is_empty() {
+        let example_path = project_dir.join(".env.example");
+        let existing = fs::read_to_string(&example_path).unwrap_or_default();
+        fs::write(example_path, format!("{}{}", existing.trim_end_matches('\n'), service_stubs))
+            .map_err(crate::io_error)?;
     }
 
     fs::write(
@@ -103,7 +283,7 @@ pub(crate) fn run_post_scaffold_setup(project_dir: &Path) -> Result<(), String> 
     println!("┌──────────────────────────────────────────────────────┐");
     println!("│              Astropress is ready!                    │");
     println!("├──────────────────────────────────────────────────────┤");
-    println!("│  Admin URL:     http://localhost:4321/wp-admin       │");
+    println!("│  Admin URL:     http://localhost:4321/ap-admin       │");
     println!("│  Admin email:   admin@example.com                    │");
     println!("│  Admin pass:    {:<38}│", admin_pass);
     println!("│  Editor email:  editor@example.com                   │");

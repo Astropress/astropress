@@ -14,6 +14,8 @@ mod cli_config;
 mod commands;
 mod js_bridge;
 mod providers;
+mod telemetry;
+mod tui;
 
 use cli_config::args::{parse_command, print_help, Command};
 use commands::backup_restore::{export_project_snapshot, import_project_snapshot};
@@ -27,7 +29,16 @@ use commands::new::{scaffold_new_project, run_post_scaffold_setup};
 use commands::services::{bootstrap_content_services, print_content_services_report, verify_content_services};
 
 fn main() -> ExitCode {
-    let args = std::env::args().skip(1).collect::<Vec<_>>();
+    let raw_args = std::env::args().skip(1).collect::<Vec<_>>();
+
+    // Strip global --plain / --no-tui before subcommand parsing.
+    let plain = raw_args.iter().any(|a| a == "--plain" || a == "--no-tui");
+    tui::set_plain(plain);
+    let args: Vec<String> = raw_args
+        .into_iter()
+        .filter(|a| a != "--plain" && a != "--no-tui")
+        .collect();
+
     match parse_command(&args) {
         Ok(Command::New {
             project_dir,
@@ -61,7 +72,7 @@ fn main() -> ExitCode {
             download_media,
             apply_local,
             resume,
-            crawl_pages,
+            crawl_mode,
         }) => match stage_wordpress_import(
             &project_dir,
             source_path.as_deref(),
@@ -73,7 +84,7 @@ fn main() -> ExitCode {
             download_media,
             apply_local,
             resume,
-            crawl_pages,
+            crawl_mode,
         ) {
             Ok(()) => ExitCode::SUCCESS,
             Err(error) => fail(error),
@@ -89,7 +100,7 @@ fn main() -> ExitCode {
             download_media,
             apply_local,
             resume,
-            crawl_pages,
+            crawl_mode,
         }) => match stage_wix_import(
             &project_dir,
             source_path.as_deref(),
@@ -101,7 +112,7 @@ fn main() -> ExitCode {
             download_media,
             apply_local,
             resume,
-            crawl_pages,
+            crawl_mode,
         ) {
             Ok(()) => ExitCode::SUCCESS,
             Err(error) => fail(error),
@@ -347,6 +358,36 @@ mod tests {
         let path = std::env::temp_dir().join(format!("astropress-cli-{label}-{unique}"));
         fs::create_dir_all(&path).unwrap();
         path
+    }
+
+    #[test]
+    fn parses_crawl_modes() {
+        assert!(matches!(
+            parse_command(&strings(&["import", "wordpress", "--url", "https://mysite.com", "--crawl-pages"])),
+            Ok(Command::ImportWordPress { crawl_mode: cli_config::args::CrawlMode::Fetch, .. })
+        ));
+        assert!(matches!(
+            parse_command(&strings(&["import", "wordpress", "--url", "https://mysite.com", "--crawl-pages=playwright"])),
+            Ok(Command::ImportWordPress { crawl_mode: cli_config::args::CrawlMode::Browser, .. })
+        ));
+        assert!(matches!(
+            parse_command(&strings(&["import", "wix", "--url", "https://site.wixsite.com/s", "--crawl-pages=playwright"])),
+            Ok(Command::ImportWix { crawl_mode: cli_config::args::CrawlMode::Browser, .. })
+        ));
+    }
+
+    #[test]
+    fn strips_plain_flag_from_args() {
+        // --plain is a global flag stripped before subcommand parsing.
+        // parse_command should not see it; the import command should still parse correctly.
+        let raw: Vec<String> = strings(&["--plain", "import", "wordpress", "--source", "export.xml"]);
+        let plain = raw.iter().any(|a| a == "--plain" || a == "--no-tui");
+        let filtered: Vec<String> = raw.into_iter().filter(|a| a != "--plain" && a != "--no-tui").collect();
+        assert!(plain);
+        assert!(matches!(
+            parse_command(&filtered),
+            Ok(Command::ImportWordPress { .. })
+        ));
     }
 
     #[test]
@@ -694,7 +735,7 @@ mod tests {
         let source = root.join("export.xml");
         fs::write(&source, "<rss></rss>").unwrap();
 
-        stage_wordpress_import(&project_dir, Some(&source), None, None, None, None, None, true, false, false, false).unwrap();
+        stage_wordpress_import(&project_dir, Some(&source), None, None, None, None, None, true, false, false, cli_config::args::CrawlMode::None).unwrap();
         assert!(project_dir.join(".astropress/import/wordpress-source.xml").exists());
         let manifest = fs::read_to_string(project_dir.join(".astropress/import/manifest.json")).unwrap();
         assert!(manifest.contains("\"inventory_file\": \"wordpress.inventory.json\""));

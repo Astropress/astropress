@@ -5,8 +5,10 @@ use std::time::{SystemTime, UNIX_EPOCH};
 
 use serde::{Deserialize, Serialize};
 
+use crate::cli_config::args::CrawlMode;
 use crate::js_bridge::loaders::{resolve_admin_db_path, resolve_local_provider};
 use crate::js_bridge::runner::{detect_package_manager, run_package_json_command};
+use crate::telemetry::{ImportSummary, PostImportChoice};
 
 #[derive(Debug, Serialize)]
 pub(crate) struct WordPressImportManifest {
@@ -161,7 +163,7 @@ pub(crate) fn stage_wordpress_import(
     download_media: bool,
     apply_local: bool,
     resume: bool,
-    crawl_pages: bool,
+    crawl_mode: CrawlMode,
 ) -> Result<(), String> {
     let import_dir = artifact_dir
         .map(PathBuf::from)
@@ -223,6 +225,7 @@ console.log(JSON.stringify(result));"#,
     let staged_source = import_dir.join(format!("wordpress-source.{extension}"));
     fs::copy(&resolved_source, &staged_source).map_err(crate::io_error)?;
 
+    let spinner = crate::tui::spinner("Importing WordPress content…");
     let package_manager = detect_package_manager(project_dir);
     let importer_module =
         crate::js_bridge::loaders::package_module_import("import/wordpress.js", Some(project_dir))?;
@@ -379,6 +382,7 @@ console.log(JSON.stringify({{
     );
     let result: WordPressImportResult =
         run_package_json_command(project_dir, package_manager, &script)?;
+    crate::tui::finish_spinner(spinner, "WordPress import complete.");
     let report_json =
         serde_json::to_string_pretty(&result).map_err(|error| error.to_string())?;
     let report_file = import_dir.join("wordpress.report.json");
@@ -513,35 +517,65 @@ console.log(JSON.stringify({{
     }
     if !result.warnings.is_empty() {
         println!("Warnings:");
-        for warning in result.warnings {
+        for warning in &result.warnings {
             println!("  - {warning}");
         }
     }
 
+    // Post-import verification (interactive, skipped in plain mode).
+    let source_label = resolved_source
+        .file_name()
+        .and_then(|v| v.to_str())
+        .unwrap_or("WordPress")
+        .to_string();
+    let summary = ImportSummary {
+        post_count: result.imported_records,
+        page_count: result.inventory.entity_counts.pages,
+        media_count: result.imported_media,
+        warning_count: result.warnings.len(),
+        source_label,
+    };
+    let choice = crate::telemetry::post_import_verification(&summary);
+
+    // Determine effective crawl mode (user may have chosen 'c' in the verification prompt).
+    let effective_crawl = match choice {
+        PostImportChoice::Crawl => CrawlMode::Browser,
+        _ => crawl_mode,
+    };
+
     // Optional: crawl pages not covered by the XML export.
-    if crawl_pages {
+    if effective_crawl != CrawlMode::None {
         if let Some(site_url) = url {
             let pm = detect_package_manager(project_dir);
             let crawler_module = crate::js_bridge::loaders::package_module_import(
                 "import/page-crawler.js",
                 Some(project_dir),
             )?;
+            let (fn_name, label) = match effective_crawl {
+                CrawlMode::Browser => ("crawlSitePagesWithBrowser", "browser"),
+                _ => ("crawlSitePages", "fetch"),
+            };
+            let crawl_spinner = crate::tui::spinner(&format!("Crawling site pages ({label})…"));
             let crawl_script = format!(
-                r#"import {{ crawlSitePages }} from {};
-const result = await crawlSitePages({{ siteUrl: {} }});
+                r#"import {{ {fn_name} }} from {};
+const result = await {fn_name}({{ siteUrl: {} }});
 console.log(JSON.stringify(result));"#,
                 serde_json::to_string(&crawler_module).map_err(|e| e.to_string())?,
                 serde_json::to_string(site_url).map_err(|e| e.to_string())?,
             );
             let crawl_result: serde_json::Value =
                 run_package_json_command(project_dir, pm, &crawl_script)?;
+            let page_count = crawl_result["pages"].as_array().map_or(0, |p| p.len());
+            let fail_count = crawl_result["failed"].as_array().map_or(0, |f| f.len());
+            crate::tui::finish_spinner(
+                crawl_spinner,
+                &format!("Crawled {page_count} pages ({fail_count} failures)."),
+            );
             let crawl_json =
                 serde_json::to_string_pretty(&crawl_result).map_err(|e| e.to_string())?;
             fs::write(import_dir.join("crawled-pages.json"), format!("{crawl_json}\n"))
                 .map_err(crate::io_error)?;
-            let page_count = crawl_result["pages"].as_array().map_or(0, |p| p.len());
-            let fail_count = crawl_result["failed"].as_array().map_or(0, |f| f.len());
-            println!("Crawled {page_count} pages ({fail_count} failures) — saved to crawled-pages.json");
+            println!("Crawl results saved to crawled-pages.json");
         }
     }
 

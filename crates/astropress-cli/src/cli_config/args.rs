@@ -3,6 +3,17 @@ use std::path::PathBuf;
 
 use crate::providers::{AppHost, DataServices, LocalProvider};
 
+/// How the page crawler should operate after a live-site import.
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+pub(crate) enum CrawlMode {
+    /// No crawl.
+    None,
+    /// Fast fetch-based crawl (default `--crawl-pages`).
+    Fetch,
+    /// Full browser crawl via Playwright (`--crawl-pages=playwright`).
+    Browser,
+}
+
 #[derive(Debug, PartialEq, Eq)]
 pub(crate) enum Command {
     New {
@@ -31,7 +42,7 @@ pub(crate) enum Command {
         download_media: bool,
         apply_local: bool,
         resume: bool,
-        crawl_pages: bool,
+        crawl_mode: CrawlMode,
     },
     ImportWix {
         project_dir: PathBuf,
@@ -46,7 +57,7 @@ pub(crate) enum Command {
         download_media: bool,
         apply_local: bool,
         resume: bool,
-        crawl_pages: bool,
+        crawl_mode: CrawlMode,
     },
     Backup {
         project_dir: PathBuf,
@@ -252,7 +263,7 @@ fn parse_import_wordpress_command(args: &[String]) -> Result<Command, String> {
     let mut download_media = false;
     let mut apply_local = false;
     let mut resume = false;
-    let mut crawl_pages = false;
+    let mut crawl_mode = CrawlMode::None;
     let mut index = 0;
 
     while index < args.len() {
@@ -309,7 +320,8 @@ fn parse_import_wordpress_command(args: &[String]) -> Result<Command, String> {
             "--download-media" => download_media = true,
             "--apply-local" => apply_local = true,
             "--resume" => resume = true,
-            "--crawl-pages" => crawl_pages = true,
+            "--crawl-pages" => crawl_mode = CrawlMode::Fetch,
+            "--crawl-pages=playwright" => crawl_mode = CrawlMode::Browser,
             other => {
                 return Err(format!(
                     "Unsupported astropress import wordpress option: `{other}`."
@@ -340,7 +352,7 @@ fn parse_import_wordpress_command(args: &[String]) -> Result<Command, String> {
         download_media,
         apply_local,
         resume,
-        crawl_pages,
+        crawl_mode,
     })
 }
 
@@ -355,7 +367,7 @@ fn parse_import_wix_command(args: &[String]) -> Result<Command, String> {
     let mut download_media = false;
     let mut apply_local = false;
     let mut resume = false;
-    let mut crawl_pages = false;
+    let mut crawl_mode = CrawlMode::None;
     let mut index = 0;
 
     while index < args.len() {
@@ -412,7 +424,8 @@ fn parse_import_wix_command(args: &[String]) -> Result<Command, String> {
             "--download-media" => download_media = true,
             "--apply-local" => apply_local = true,
             "--resume" => resume = true,
-            "--crawl-pages" => crawl_pages = true,
+            "--crawl-pages" => crawl_mode = CrawlMode::Fetch,
+            "--crawl-pages=playwright" => crawl_mode = CrawlMode::Browser,
             other => {
                 return Err(format!(
                     "Unsupported astropress import wix option: `{other}`."
@@ -443,7 +456,7 @@ fn parse_import_wix_command(args: &[String]) -> Result<Command, String> {
         download_media,
         apply_local,
         resume,
-        crawl_pages,
+        crawl_mode,
     })
 }
 
@@ -737,13 +750,17 @@ fn parse_config_migrate_command(args: &[String]) -> Result<Command, String> {
 
 pub(crate) fn print_help() {
     println!("astropress-cli");
+    println!();
+    println!("Global flags:");
+    println!("  --plain / --no-tui    Disable interactive prompts and progress bars (for CI/AI use)");
+    println!();
     println!("Commands:");
     println!("  astropress new [project-dir] [--app-host <host>] [--content-services <services>] [--use-local-package|--use-published-package]");
     println!("  astropress dev [project-dir] [--app-host <host>] [--content-services <services>]");
     println!("  astropress import wordpress --source <export.xml> [--project-dir <dir>] [--artifact-dir <dir>] [--download-media] [--apply-local] [--resume]");
-    println!("  astropress import wordpress --url <https://mysite.com> [--credentials-file <file>] [--username <u>] [--password <p>] [--crawl-pages] [--project-dir <dir>] [--artifact-dir <dir>] [--download-media] [--apply-local]");
+    println!("  astropress import wordpress --url <https://mysite.com> [--credentials-file <file>] [--username <u>] [--password <p>] [--crawl-pages[=playwright]] [--project-dir <dir>] [--artifact-dir <dir>] [--download-media] [--apply-local]");
     println!("  astropress import wix --source <export.csv> [--project-dir <dir>] [--artifact-dir <dir>] [--download-media] [--apply-local] [--resume]");
-    println!("  astropress import wix --url <https://username.wixsite.com/mysite> [--credentials-file <file>] [--email <e>] [--password <p>] [--crawl-pages] [--project-dir <dir>] [--artifact-dir <dir>] [--download-media] [--apply-local]");
+    println!("  astropress import wix --url <https://username.wixsite.com/mysite> [--credentials-file <file>] [--email <e>] [--password <p>] [--crawl-pages[=playwright]] [--project-dir <dir>] [--artifact-dir <dir>] [--download-media] [--apply-local]");
     println!("  astropress backup [--project-dir <dir>] [--out <snapshot-dir>]");
     println!("  astropress restore --from <snapshot-dir> [--project-dir <dir>]");
     println!("  astropress doctor [--project-dir <dir>] [--strict]");
@@ -753,4 +770,8 @@ pub(crate) fn print_help() {
     println!("  astropress sync export [--project-dir <dir>] [--out <snapshot-dir>]");
     println!("  astropress sync import --from <snapshot-dir> [--project-dir <dir>]");
     println!("  astropress deploy [--project-dir <dir>] [--app-host <host>] [--target github-pages|cloudflare|vercel|netlify|render-static|render-web|gitlab-pages|firebase-hosting|runway|custom]");
+    println!();
+    println!("Crawl modes:");
+    println!("  --crawl-pages              Fast fetch-based crawl (uses sitemap + HTML fetch)");
+    println!("  --crawl-pages=playwright   Full browser crawl (handles JS-rendered pages, e.g. Wix)");
 }
