@@ -54,7 +54,8 @@ const defaultAdminUiConfig = {
     translations: "Translations",
     seo: "SEO",
     system: "System",
-    settings: "Settings"
+    settings: "Settings",
+    services: "Services"
   }
 };
 function mergeWithDefaults() {

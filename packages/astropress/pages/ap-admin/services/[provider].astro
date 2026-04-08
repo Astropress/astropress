@@ -1,0 +1,104 @@
+---
+import AdminLayout from "astropress/components/AdminLayout.astro";
+import { getAstropressService, type ServiceProvider } from "astropress/services-config";
+
+const adminUser = Astro.locals.adminUser;
+if (adminUser?.role !== "admin") {
+  Astro.response.status = 403;
+}
+
+const { provider } = Astro.params as { provider: string };
+const service = getAstropressService(provider as ServiceProvider);
+
+if (!service) {
+  Astro.response.status = 404;
+}
+---
+
+{!service ? (
+  <AdminLayout
+    title="Service not configured | Astropress Admin"
+    heading="Service not configured"
+    currentPath="/ap-admin/services"
+    description="This service integration is not registered."
+    role={adminUser!.role}
+    userName={adminUser!.name}
+  >
+    <section class="panel">
+      <p class="admin-kicker">Not found</p>
+      <h2>Service not configured</h2>
+      <p>
+        There is no service registered for provider <code>{provider}</code>.
+        Register it by calling <code>registerAstropressService(&#123;&#125;)</code> in your Astro config.
+      </p>
+      <a href="/ap-admin/services" class="admin-button-ghost">Back to Services</a>
+    </section>
+  </AdminLayout>
+) : (
+  <AdminLayout
+    title={`${service.label} | Astropress Admin`}
+    heading={service.label}
+    currentPath="/ap-admin/services"
+    description={service.description}
+    role={adminUser!.role}
+    userName={adminUser!.name}
+  >
+    <div class="service-host">
+      <div class="service-host__toolbar">
+        <a href="/ap-admin/services" class="admin-button-ghost small">← All services</a>
+        <span class="service-host__label">{service.description}</span>
+        <a
+          href={service.adminPath + "/"}
+          target="_blank"
+          rel="noreferrer"
+          class="admin-button-ghost small"
+        >
+          Open in new tab ↗
+        </a>
+      </div>
+      <iframe
+        class="service-host__frame"
+        src={service.adminPath + "/"}
+        title={service.label + " admin"}
+        allow="clipboard-read; clipboard-write"
+      ></iframe>
+    </div>
+  </AdminLayout>
+)}
+
+<style>
+  .service-host {
+    display: grid;
+    grid-template-rows: auto 1fr;
+    height: calc(100vh - 6rem);
+    gap: 0.6rem;
+  }
+
+  .service-host__toolbar {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  .service-host__label {
+    color: var(--muted);
+    font-size: 0.9rem;
+    flex: 1;
+  }
+
+  .service-host__frame {
+    width: 100%;
+    height: 100%;
+    border: 1px solid var(--line);
+    border-radius: 0.7rem;
+    background: var(--panel);
+  }
+
+  /* Expand the admin main so the iframe fills the viewport */
+  :global(#admin-main) {
+    display: grid;
+    grid-template-rows: 1fr;
+    overflow: hidden;
+  }
+</style>

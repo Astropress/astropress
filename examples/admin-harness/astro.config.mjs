@@ -31,6 +31,38 @@ export default defineConfig({
       fs: {
         allow: [astropressRoot],
       },
+      // Optional proxy targets for embedded service admin UIs.
+      // Set SERVICE_CMS_PORT / SERVICE_SHOP_PORT / SERVICE_COMMUNITY_PORT / SERVICE_EMAIL_PORT
+      // in your shell to activate proxying when those services are running locally.
+      proxy: {
+        ...(process.env.SERVICE_CMS_PORT ? {
+          "/ap-admin/services/cms": {
+            target: `http://localhost:${process.env.SERVICE_CMS_PORT}`,
+            rewrite: (p) => p.replace(/^\/ap-admin\/services\/cms/, ""),
+            ws: true,
+          },
+        } : {}),
+        ...(process.env.SERVICE_SHOP_PORT ? {
+          "/ap-admin/services/shop": {
+            target: `http://localhost:${process.env.SERVICE_SHOP_PORT}`,
+            rewrite: (p) => p.replace(/^\/ap-admin\/services\/shop/, ""),
+            ws: true,
+          },
+        } : {}),
+        ...(process.env.SERVICE_COMMUNITY_PORT ? {
+          "/ap-admin/services/community": {
+            target: `http://localhost:${process.env.SERVICE_COMMUNITY_PORT}`,
+            rewrite: (p) => p.replace(/^\/ap-admin\/services\/community/, ""),
+            ws: true,
+          },
+        } : {}),
+        ...(process.env.SERVICE_EMAIL_PORT ? {
+          "/ap-admin/services/email": {
+            target: `http://localhost:${process.env.SERVICE_EMAIL_PORT}`,
+            rewrite: (p) => p.replace(/^\/ap-admin\/services\/email/, ""),
+          },
+        } : {}),
+      },
     },
   },
 });

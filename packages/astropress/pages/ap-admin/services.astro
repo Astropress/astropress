@@ -1,0 +1,172 @@
+---
+import AdminLayout from "astropress/components/AdminLayout.astro";
+import { getAstropressServices } from "astropress/services-config";
+
+const adminUser = Astro.locals.adminUser;
+if (adminUser?.role !== "admin") {
+  Astro.response.status = 403;
+}
+
+const services = getAstropressServices();
+
+const DEFAULT_SERVICE_DOCS: Record<string, { docs: string; badge: string }> = {
+  cms: {
+    docs: "https://payloadcms.com/docs",
+    badge: "MIT · Payload / Keystatic / Directus",
+  },
+  shop: {
+    docs: "https://docs.medusajs.com",
+    badge: "MIT · Medusa / Vendure",
+  },
+  community: {
+    docs: "https://remark42.com/docs",
+    badge: "MIT · Giscus / Remark42",
+  },
+  email: {
+    docs: "https://listmonk.app/docs",
+    badge: "MIT · Listmonk / Keila",
+  },
+};
+---
+
+<AdminLayout
+  title="Services | Astropress Admin"
+  heading="Services"
+  currentPath="/ap-admin/services"
+  description="Manage integrated headless services: CMS, commerce, community, and email."
+  role={adminUser!.role}
+  userName={adminUser!.name}
+>
+  {services.length === 0 ? (
+    <section class="panel empty-services">
+      <div class="section-header">
+        <div>
+          <p class="admin-kicker">No services configured</p>
+          <h2>Add integrations to your project</h2>
+          <p>Register optional headless services to access their admin UIs from this tab. Available integrations:</p>
+        </div>
+      </div>
+      <div class="service-grid">
+        {(["cms", "shop", "community", "email"] as const).map((provider) => (
+          <div class="service-card service-card--inactive">
+            <div class="service-card__header">
+              <span class="service-badge">{DEFAULT_SERVICE_DOCS[provider].badge}</span>
+              <strong class="service-name">{provider.charAt(0).toUpperCase() + provider.slice(1)}</strong>
+            </div>
+            <p class="service-description">
+              {provider === "cms" && "Headless CMS — content modelling, editorial UI, media management."}
+              {provider === "shop" && "Headless commerce — products, cart, orders, fulfilment."}
+              {provider === "community" && "Comments and community — Giscus (zero server) or Remark42 (self-hosted)."}
+              {provider === "email" && "Newsletter and campaigns — Listmonk (self-hosted, MIT)."}
+            </p>
+            <a href={DEFAULT_SERVICE_DOCS[provider].docs} target="_blank" rel="noreferrer" class="admin-button-ghost small">
+              View docs ↗
+            </a>
+          </div>
+        ))}
+      </div>
+      <p class="setup-note">
+        Call <code>registerAstropressService(&#123;&#125;)</code> in your Astro integration or <code>astro.config.mjs</code> to enable a service.
+        See <a href="https://github.com/withastro/astropress" target="_blank" rel="noreferrer">the docs</a> for setup guides.
+      </p>
+    </section>
+  ) : (
+    <div class="service-grid">
+      {services.map((service) => (
+        <a href={service.adminPath} class="service-card service-card--active">
+          <div class="service-card__header">
+            <span class="service-badge">{service.provider}</span>
+            <strong class="service-name">{service.label}</strong>
+          </div>
+          <p class="service-description">{service.description}</p>
+          <span class="open-label">Open admin →</span>
+        </a>
+      ))}
+    </div>
+  )}
+</AdminLayout>
+
+<style>
+  .service-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));
+    gap: 1rem;
+    margin-top: 0.5rem;
+  }
+
+  .service-card {
+    display: grid;
+    gap: 0.6rem;
+    padding: 1.1rem;
+    border-radius: 0.95rem;
+    border: 1px solid var(--line);
+    background: var(--panel);
+    text-decoration: none;
+    color: inherit;
+  }
+
+  .service-card--active {
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+  }
+
+  .service-card--active:hover {
+    border-color: var(--accent);
+    background: color-mix(in srgb, var(--panel) 94%, var(--accent) 6%);
+  }
+
+  .service-card--inactive {
+    opacity: 0.72;
+  }
+
+  .service-card__header {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+  }
+
+  .service-name {
+    font-size: 1.05rem;
+  }
+
+  .service-badge {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    padding: 0.2em 0.55em;
+    border-radius: 0.4em;
+    background: var(--accent-soft);
+    color: var(--accent-strong);
+  }
+
+  .service-description {
+    margin: 0;
+    color: var(--muted);
+    font-size: 0.92rem;
+    line-height: 1.55;
+  }
+
+  .open-label {
+    font-size: 0.9rem;
+    color: var(--accent);
+    font-weight: 600;
+  }
+
+  .empty-services {
+    padding: 1.5rem;
+  }
+
+  .setup-note {
+    margin-top: 1.25rem;
+    color: var(--muted);
+    font-size: 0.92rem;
+  }
+
+  .setup-note code {
+    font-family: monospace;
+    background: var(--surface);
+    padding: 0.1em 0.4em;
+    border-radius: 0.3em;
+  }
+</style>

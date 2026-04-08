@@ -34,6 +34,8 @@ const adminRouteDefinitions = [
   { pattern: "/ap-admin/users", entrypoint: "users.astro", kind: "page" },
   { pattern: "/ap-admin/settings", entrypoint: "settings.astro", kind: "page" },
   { pattern: "/ap-admin/system", entrypoint: "system.astro", kind: "page" },
+  { pattern: "/ap-admin/services", entrypoint: "services.astro", kind: "page" },
+  { pattern: "/ap-admin/services/[provider]", entrypoint: "services/[provider].astro", kind: "page" },
   { pattern: "/ap-admin/actions/accept-invite", entrypoint: "actions/accept-invite.ts", kind: "action" },
   { pattern: "/ap-admin/actions/admin-slug-save", entrypoint: "actions/admin-slug-save.ts", kind: "action" },
   { pattern: "/ap-admin/actions/archive-save", entrypoint: "actions/archive-save.ts", kind: "action" },
