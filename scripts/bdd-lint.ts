@@ -37,7 +37,21 @@ function validateFeatureFile(featureFile: string) {
 
   let featureTitle = "";
   let currentScenario: Scenario | null = null;
+  let inBackground = false;
+  let backgroundHasGiven = false;
   const scenarios: Scenario[] = [];
+
+  // Lines that are valid outside a Scenario (feature-level descriptions, Background steps).
+  function isFeatureLevelDescription(trimmed: string) {
+    return (
+      trimmed.startsWith("As a ") ||
+      trimmed.startsWith("As an ") ||
+      trimmed.startsWith("I want ") ||
+      trimmed.startsWith("So that ") ||
+      trimmed.startsWith("In order to ") ||
+      trimmed.startsWith("# ")
+    );
+  }
 
   for (const [index, line] of lines.entries()) {
     const trimmed = line.trim();
@@ -53,10 +67,24 @@ function validateFeatureFile(featureFile: string) {
       continue;
     }
 
+    // Feature-level description lines (narrative text before any Scenario/Background).
+    if (!currentScenario && !inBackground && isFeatureLevelDescription(trimmed)) {
+      continue;
+    }
+
+    // Background section — shared preconditions that apply to all scenarios.
+    if (trimmed.startsWith("Background:")) {
+      inBackground = true;
+      currentScenario = null;
+      continue;
+    }
+
     if (trimmed.startsWith("Scenario:")) {
+      inBackground = false;
       currentScenario = {
         title: trimmed.slice("Scenario:".length).trim(),
-        hasGiven: false,
+        // Background-provided Given counts toward this scenario's Given.
+        hasGiven: backgroundHasGiven,
         hasWhen: false,
         hasThen: false,
       };
@@ -64,6 +92,14 @@ function validateFeatureFile(featureFile: string) {
         errors.push(`${relativePath}:${index + 1} has an empty Scenario title.`);
       }
       scenarios.push(currentScenario);
+      continue;
+    }
+
+    if (inBackground) {
+      // Track whether the Background provides a Given step.
+      if (trimmed.startsWith("Given ") || trimmed.startsWith("And ") || trimmed.startsWith("But ")) {
+        backgroundHasGiven = true;
+      }
       continue;
     }
 

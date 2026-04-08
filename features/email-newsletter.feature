@@ -20,6 +20,7 @@ Feature: Headless email / newsletter integration via Listmonk
     And a log entry notes how to bulk-import into Listmonk via its REST API
 
   Scenario: Listmonk service appears in scaffold prompts
+    Given Listmonk email integration is available as an option
     When I run "astropress new my-site" and choose email integration
     Then "Listmonk" is presented as the default option
     And "Keila" is presented as an alternative

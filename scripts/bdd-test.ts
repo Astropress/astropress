@@ -254,6 +254,157 @@ const verificationGroups: VerificationGroup[] = [
       },
     ],
   },
+  {
+    label: "wix live-site fetch scenarios",
+    scenarios: [
+      "Operator provides URL and is prompted for Wix credentials",
+      "Successful blog post export via headless browser",
+      "Crawl Wix pages not available in the blog export",
+      "Wix login rejects invalid credentials",
+      "Wix requires phone verification (2FA)",
+      "CAPTCHA blocks automated Wix login",
+      "Published site URL does not match any Wix account blog",
+      "Page crawler reports failed pages without aborting the import",
+    ],
+    steps: [
+      {
+        command: "bunx",
+        args: ["vitest", "run", "tests/import/fetch-wix.test.ts"],
+        cwd: astropressPackageRoot,
+      },
+    ],
+  },
+  {
+    label: "wordpress live-site fetch scenarios",
+    scenarios: [
+      "Operator provides URL and is prompted for credentials",
+      "Operator provides a credentials file to skip the prompt",
+      "Successful export download via headless browser",
+      "Also crawl site pages not included in the XML export",
+      "Unreachable site reports DNS or connection failure verbosely",
+      "URL is reachable but not a WordPress site",
+      "Wrong credentials produce a clear login failure message",
+      "Two-factor authentication blocks automated login",
+      "CAPTCHA on login page prevents automated login",
+      "Authenticated user lacks export permissions",
+      "Interrupted media download resumes without re-fetching completed files",
+    ],
+    steps: [
+      {
+        command: "bunx",
+        args: ["vitest", "run", "tests/import/fetch-wordpress.test.ts"],
+        cwd: astropressPackageRoot,
+      },
+    ],
+  },
+  {
+    label: "playwright crawl mode scenarios",
+    scenarios: [
+      "Default --crawl-pages uses fast fetch mode",
+      "--crawl-pages=playwright uses full browser crawl",
+      "Playwright crawl handles navigation errors gracefully",
+      "crawlSitePagesWithBrowser is exported from page-crawler module",
+    ],
+    steps: [
+      {
+        command: "bunx",
+        args: ["vitest", "run", "tests/import/page-crawler.test.ts"],
+        cwd: astropressPackageRoot,
+      },
+      {
+        command: "cargo",
+        args: ["test", "parses_crawl_modes"],
+      },
+    ],
+  },
+  {
+    label: "email newsletter integration scenarios",
+    scenarios: [
+      "Listmonk admin is accessible from the Services tab",
+      "Subscriber endpoint forwards to Listmonk API",
+      "Import pipeline can extract WordPress subscribers",
+      "Listmonk service appears in scaffold prompts",
+    ],
+    steps: [
+      {
+        command: "bunx",
+        args: ["vitest", "run", "tests/newsletter-adapter.test.ts", "tests/services-config.test.ts"],
+        cwd: astropressPackageRoot,
+      },
+      {
+        command: "bunx",
+        args: ["vitest", "run", "tests/wordpress-import.contract.test.ts"],
+        cwd: astropressPackageRoot,
+      },
+      {
+        command: "cargo",
+        args: ["test", "listmonk_generates_api_env_entries"],
+      },
+    ],
+  },
+  {
+    label: "service tabs admin scenarios",
+    scenarios: [
+      "Services hub page shows all registered services",
+      "Service provider page embeds the external admin UI in an iframe",
+      "Navigating directly to an unconfigured provider returns a graceful error",
+      "Services nav item appears in the sidebar for admin users",
+    ],
+    steps: [
+      {
+        command: "bunx",
+        args: ["vitest", "run", "tests/services-config.test.ts", "tests/admin-routes.test.ts"],
+        cwd: astropressPackageRoot,
+      },
+    ],
+  },
+  {
+    label: "service scaffold scenarios",
+    scenarios: [
+      "Interactive mode presents CMS choices",
+      "Choosing Payload generates a payload.config.ts stub",
+      "Choosing Keystatic generates a keystatic.config.ts stub",
+      "Choosing Medusa generates a medusa-config.js stub",
+      "Choosing Listmonk generates env entries",
+      "Plain mode uses defaults without prompting",
+    ],
+    steps: [
+      {
+        command: "cargo",
+        args: ["test", "commands::new::tests"],
+      },
+      {
+        command: "cargo",
+        args: ["test", "strips_plain_flag_from_args"],
+      },
+    ],
+  },
+  {
+    label: "post-import verification and telemetry scenarios",
+    scenarios: [
+      "Happy path skips feedback entirely",
+      "Choosing \"c\" triggers browser crawl",
+      "Choosing \"n\" offers a multi-select feedback form",
+      "User declines to share feedback",
+      "User consents to share feedback",
+      "Consent is remembered so the prompt only appears once",
+      "Plain mode skips all interactive prompts",
+    ],
+    steps: [
+      {
+        command: "cargo",
+        args: ["test", "strips_plain_flag_from_args"],
+      },
+      {
+        command: "cargo",
+        args: ["test", "stages_wordpress_imports"],
+      },
+      {
+        command: "cargo",
+        args: ["test", "parses_crawl_modes"],
+      },
+    ],
+  },
 ];
 
 const scenarios = readFeatureScenarios();

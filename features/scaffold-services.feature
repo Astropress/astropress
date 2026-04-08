@@ -11,22 +11,26 @@ Feature: Service selection during astropress new
 
   Scenario: Choosing Payload generates a payload.config.ts stub
     Given I select "Payload" for CMS during scaffolding
+    When scaffolding completes
     Then the project directory contains "payload.config.ts"
-    And the .env file contains "PAYLOAD_SECRET"
+    And the .env.example file contains "PAYLOAD_SECRET"
 
   Scenario: Choosing Keystatic generates a keystatic.config.ts stub
     Given I select "Keystatic" for CMS during scaffolding
+    When scaffolding completes
     Then the project directory contains "keystatic.config.ts"
 
   Scenario: Choosing Medusa generates a medusa-config.js stub
     Given I select "Medusa" for commerce during scaffolding
+    When scaffolding completes
     Then the project directory contains "medusa-config.js"
-    And the .env file contains "MEDUSA_BACKEND_URL"
+    And the .env.example file contains "MEDUSA_BACKEND_URL"
 
   Scenario: Choosing Listmonk generates env entries
     Given I select "Listmonk" for email during scaffolding
-    Then the .env file contains "LISTMONK_API_URL"
-    And the .env file contains "LISTMONK_API_TOKEN"
+    When scaffolding completes
+    Then the .env.example file contains "LISTMONK_API_URL"
+    And the .env.example file contains "LISTMONK_API_TOKEN"
 
   Scenario: Plain mode uses defaults without prompting
     Given the --plain flag is passed

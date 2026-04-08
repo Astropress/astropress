@@ -165,12 +165,42 @@ impl ServiceSelections {
             lines.push("LISTMONK_URL=http://localhost:9001");
             lines.push("LISTMONK_USERNAME=listmonk");
             lines.push("LISTMONK_PASSWORD=replace-me");
+            lines.push("LISTMONK_API_URL=http://localhost:9001");
+            lines.push("LISTMONK_API_TOKEN=replace-me");
         }
         if lines.is_empty() {
             String::new()
         } else {
             format!("\n# Optional service integrations\n{}\n", lines.join("\n"))
         }
+    }
+
+    /// Config file stubs to write into the project directory for chosen services.
+    /// Returns a list of (relative_path, contents) pairs.
+    fn config_file_stubs(&self) -> Vec<(&'static str, &'static str)> {
+        let mut files = Vec::new();
+        match self.cms {
+            CmsChoice::Payload => {
+                files.push((
+                    "payload.config.ts",
+                    "import { buildConfig } from 'payload/config';\n\nexport default buildConfig({\n  // Configure Payload CMS here.\n  // See: https://payloadcms.com/docs/configuration/overview\n  collections: [],\n});\n",
+                ));
+            }
+            CmsChoice::Keystatic => {
+                files.push((
+                    "keystatic.config.ts",
+                    "import { config } from '@keystatic/core';\n\nexport default config({\n  // Configure Keystatic here.\n  // See: https://keystatic.com/docs\n  collections: {},\n});\n",
+                ));
+            }
+            CmsChoice::Directus | CmsChoice::BuiltIn => {}
+        }
+        if self.commerce == CommerceChoice::Medusa {
+            files.push((
+                "medusa-config.js",
+                "/** @type {import('@medusajs/medusa').ConfigModule} */\nmodule.exports = {\n  projectConfig: {\n    databaseUrl: process.env.DATABASE_URL,\n    // See: https://docs.medusajs.com/development/backend/configurations\n  },\n  plugins: [],\n};\n",
+            ));
+        }
+        files
     }
 }
 
@@ -232,6 +262,7 @@ pub(crate) fn scaffold_new_project(
     // Interactive service selection (skipped in plain mode — uses defaults).
     let services = prompt_service_choices();
     let service_stubs = services.env_example_stubs();
+    let service_config_files = services.config_file_stubs();
 
     crate::write_text_file(project_dir, "DEPLOY.md", &scaffold.deploy_doc)?;
     for (relative_path, contents) in &scaffold.ci_files {
@@ -244,6 +275,11 @@ pub(crate) fn scaffold_new_project(
         let existing = fs::read_to_string(&example_path).unwrap_or_default();
         fs::write(example_path, format!("{}{}", existing.trim_end_matches('\n'), service_stubs))
             .map_err(crate::io_error)?;
+    }
+
+    // Write service config file stubs.
+    for (relative_path, contents) in &service_config_files {
+        crate::write_text_file(project_dir, relative_path, contents)?;
     }
 
     fs::write(
@@ -301,4 +337,101 @@ fn astropress_package_version() -> Result<String, String> {
     // Version is baked in at compile time. Keep Cargo.toml in sync with
     // packages/astropress/package.json when cutting releases.
     Ok(env!("CARGO_PKG_VERSION").to_string())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn payload_selections() -> ServiceSelections {
+        ServiceSelections {
+            cms: CmsChoice::Payload,
+            commerce: CommerceChoice::None,
+            community: CommunityChoice::Giscus,
+            email: EmailChoice::None,
+        }
+    }
+
+    fn keystatic_selections() -> ServiceSelections {
+        ServiceSelections {
+            cms: CmsChoice::Keystatic,
+            commerce: CommerceChoice::None,
+            community: CommunityChoice::Giscus,
+            email: EmailChoice::None,
+        }
+    }
+
+    fn medusa_selections() -> ServiceSelections {
+        ServiceSelections {
+            cms: CmsChoice::BuiltIn,
+            commerce: CommerceChoice::Medusa,
+            community: CommunityChoice::None,
+            email: EmailChoice::None,
+        }
+    }
+
+    fn listmonk_selections() -> ServiceSelections {
+        ServiceSelections {
+            cms: CmsChoice::BuiltIn,
+            commerce: CommerceChoice::None,
+            community: CommunityChoice::None,
+            email: EmailChoice::Listmonk,
+        }
+    }
+
+    #[test]
+    fn payload_generates_config_stub() {
+        let files = payload_selections().config_file_stubs();
+        let paths: Vec<_> = files.iter().map(|(p, _)| *p).collect();
+        assert!(paths.contains(&"payload.config.ts"), "expected payload.config.ts in {paths:?}");
+        let (_, content) = files.iter().find(|(p, _)| *p == "payload.config.ts").unwrap();
+        assert!(content.contains("buildConfig"), "payload.config.ts should import buildConfig");
+    }
+
+    #[test]
+    fn payload_generates_payload_secret_env_stub() {
+        let stubs = payload_selections().env_example_stubs();
+        assert!(stubs.contains("PAYLOAD_SECRET"), "env stubs should include PAYLOAD_SECRET");
+    }
+
+    #[test]
+    fn keystatic_generates_config_stub() {
+        let files = keystatic_selections().config_file_stubs();
+        let paths: Vec<_> = files.iter().map(|(p, _)| *p).collect();
+        assert!(paths.contains(&"keystatic.config.ts"), "expected keystatic.config.ts in {paths:?}");
+        let (_, content) = files.iter().find(|(p, _)| *p == "keystatic.config.ts").unwrap();
+        assert!(content.contains("@keystatic/core"), "keystatic.config.ts should reference @keystatic/core");
+    }
+
+    #[test]
+    fn medusa_generates_config_stub() {
+        let files = medusa_selections().config_file_stubs();
+        let paths: Vec<_> = files.iter().map(|(p, _)| *p).collect();
+        assert!(paths.contains(&"medusa-config.js"), "expected medusa-config.js in {paths:?}");
+        let (_, content) = files.iter().find(|(p, _)| *p == "medusa-config.js").unwrap();
+        assert!(content.contains("@medusajs/medusa"), "medusa-config.js should reference @medusajs/medusa");
+    }
+
+    #[test]
+    fn medusa_generates_medusa_backend_url_env_stub() {
+        let stubs = medusa_selections().env_example_stubs();
+        assert!(stubs.contains("MEDUSA_BACKEND_URL"), "env stubs should include MEDUSA_BACKEND_URL");
+    }
+
+    #[test]
+    fn listmonk_generates_api_env_entries() {
+        let stubs = listmonk_selections().env_example_stubs();
+        assert!(stubs.contains("LISTMONK_API_URL"), "env stubs should include LISTMONK_API_URL");
+        assert!(stubs.contains("LISTMONK_API_TOKEN"), "env stubs should include LISTMONK_API_TOKEN");
+    }
+
+    #[test]
+    fn defaults_use_built_in_cms_no_commerce_no_email() {
+        let defaults = ServiceSelections::defaults();
+        assert!(matches!(defaults.cms, CmsChoice::BuiltIn));
+        assert!(matches!(defaults.commerce, CommerceChoice::None));
+        assert!(matches!(defaults.email, EmailChoice::None));
+        assert!(defaults.config_file_stubs().is_empty(), "built-in defaults should produce no config stubs");
+        assert!(defaults.env_example_stubs().is_empty(), "built-in defaults should produce no env stubs");
+    }
 }
