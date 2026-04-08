@@ -280,22 +280,25 @@ export async function buildPostsIndexPageModel(locals: AdminLocals) {
   const categories = await withFallback(warnings, "Category filters are temporarily unavailable.", () => getRuntimeCategories(locals), []);
   const tags = await withFallback(warnings, "Tag filters are temporarily unavailable.", () => getRuntimeTags(locals), []);
   const allContent = await withFallback(warnings, "Post records are temporarily unavailable.", () => listRuntimeContentStates(locals), []);
+  const archiveList = (getCmsConfig().archives as Array<{ slug: string; title: string; legacyUrl: string; listingItems?: Array<{ href: string }> }>).map(
+    (a) => ({ ...a, listingItems: a.listingItems ?? ([] as Array<{ href: string }>) }),
+  );
   const archives = await withSettledMap(
     warnings,
     "Archive filters are temporarily unavailable.",
-    getCmsConfig().archives as Array<{ slug: string; title: string; legacyUrl: string; listingItems?: Array<{ href: string }> }>,
+    archiveList,
     async (archive) => {
       const runtimeArchive = await getRuntimeArchiveRoute(archive.legacyUrl, locals);
       return {
         slug: archive.slug,
         title: runtimeArchive?.title || archive.title,
-        listingItems: archive.listingItems ?? [],
+        listingItems: archive.listingItems,
       };
     },
     (archive) => ({
       slug: archive.slug,
       title: archive.title,
-      listingItems: archive.listingItems ?? [],
+      listingItems: archive.listingItems,
     }),
   );
   return ok({ authors, categories, tags, allContent, archives }, warnings);
@@ -308,29 +311,28 @@ export async function buildTranslationsPageModel(locals: AdminLocals, role: Admi
   }
 
   const warnings: string[] = [];
+  const seedPages = getCmsConfig().seedPages as Array<{ slug: string; legacyUrl: string; title: string }>;
+  const translationEntries = (getCmsConfig().translationStatus as Array<{ route: string; translationState: string; englishSourceUrl: string; locale: string }>).map((entry) => {
+    const englishSeed = seedPages.find((page) => page.legacyUrl === entry.englishSourceUrl);
+    return { ...entry, englishEditHref: englishSeed ? `/ap-admin/posts/${englishSeed.slug}` : undefined };
+  });
   const rows = await withSettledMap(
     warnings,
     "Some translation rows are temporarily unavailable.",
-    getCmsConfig().translationStatus as Array<{ route: string; translationState: string; englishSourceUrl: string; locale: string }>,
+    translationEntries,
     async (entry) => {
-      const englishSeed = (getCmsConfig().seedPages as Array<{ slug: string; legacyUrl: string; title: string }>).find((page) => page.legacyUrl === entry.englishSourceUrl);
       const localizedRoute = await getRuntimeStructuredPageRoute(entry.route, locals);
       return {
         ...entry,
         effectiveState: await getRuntimeTranslationState(entry.route, entry.translationState, locals),
-        englishEditHref: englishSeed ? `/ap-admin/posts/${englishSeed.slug}` : undefined,
         localizedEditHref: localizedRoute ? `/ap-admin/route-pages${entry.route}` : undefined,
       };
     },
-    (entry) => {
-      const englishSeed = (getCmsConfig().seedPages as Array<{ slug: string; legacyUrl: string; title: string }>).find((page) => page.legacyUrl === entry.englishSourceUrl);
-      return {
-        ...entry,
-        effectiveState: entry.translationState,
-        englishEditHref: englishSeed ? `/ap-admin/posts/${englishSeed.slug}` : undefined,
-        localizedEditHref: undefined,
-      };
-    },
+    (entry) => ({
+      ...entry,
+      effectiveState: entry.translationState,
+      localizedEditHref: undefined,
+    }),
   );
 
   return ok({ rows }, warnings);
@@ -430,7 +432,7 @@ export async function buildPostEditorPageModel(locals: AdminLocals, slug: string
     : null;
   const effectiveTranslationState = localizedRoutePath
     ? await withFallback(warnings, "Translation state is temporarily unavailable.", () => getRuntimeTranslationState(localizedRoutePath, fallbackTranslationState, locals), fallbackTranslationState)
-    : localePair?.translationState;
+    : undefined;
 
   return ok({ pageRecord, authors, categories, tags, auditEvents, englishOwnerRecord, localizedRouteRecord, effectiveTranslationState }, warnings);
 }
@@ -474,7 +476,7 @@ export async function buildRoutePageEditorModel(locals: AdminLocals, routePath: 
     : null;
   const effectiveTranslationState = localizedRoutePath
     ? await withFallback(warnings, "Translation state is temporarily unavailable.", () => getRuntimeTranslationState(localizedRoutePath, fallbackTranslationState, locals), fallbackTranslationState)
-    : localePair?.translationState;
+    : undefined;
 
   return ok({ pageRecord, englishOwner, effectiveTranslationState }, warnings);
 }

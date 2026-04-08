@@ -995,3 +995,90 @@ describe("buildImportPlan inventory-based defaults (lines 317-321 ?? branches)",
     expect(report.importedComments).toBeGreaterThanOrEqual(1);
   });
 });
+
+describe("authorLogins empty array branch (lines 203-205: no creator, no authors)", () => {
+  let exportFile: string;
+  let tmpDir: string;
+
+  beforeEach(async () => {
+    tmpDir = await mkdtemp(join(tmpdir(), "astropress-author-test-"));
+    exportFile = join(tmpDir, "export.xml");
+  });
+
+  afterEach(async () => {
+    await rm(tmpDir, { recursive: true, force: true });
+  });
+
+  it("sets authorLogins to [] when post has no dc:creator and WXR has no authors", async () => {
+    // No <wp:author> blocks, no <dc:creator> in post → authorLogins = []
+    const item = [
+      "<item>",
+      "<title><![CDATA[Authorless Post]]></title>",
+      "<link>https://example.org/authorless/</link>",
+      "<wp:post_id>9001</wp:post_id>",
+      "<wp:post_name>authorless</wp:post_name>",
+      "<wp:status>publish</wp:status>",
+      "<wp:post_type>post</wp:post_type>",
+      "</item>",
+    ].join("");
+    await writeFile(exportFile, makeWxr([item]), "utf8");
+    const importer = createAstropressWordPressImportSource();
+    const report = await importer.importWordPress({ exportFile });
+    expect(report.importedRecords).toBe(1);
+  });
+
+  it("uses first author login when dc:creator doesn't match any known author", async () => {
+    // Authors exist but dc:creator doesn't match → falls back to authors[0].login
+    const wxr = [
+      "<rss><channel>",
+      "<wp:author>",
+      "<wp:author_id>1</wp:author_id>",
+      "<wp:author_login><![CDATA[alice]]></wp:author_login>",
+      "<wp:author_email><![CDATA[alice@example.com]]></wp:author_email>",
+      "<wp:author_display_name><![CDATA[Alice]]></wp:author_display_name>",
+      "</wp:author>",
+      "<item>",
+      "<title><![CDATA[Unmatched Creator Post]]></title>",
+      "<link>https://example.org/unmatched/</link>",
+      "<wp:post_id>9002</wp:post_id>",
+      "<wp:post_name>unmatched</wp:post_name>",
+      "<wp:status>publish</wp:status>",
+      "<wp:post_type>post</wp:post_type>",
+      // dc:creator login doesn't match any author → matchedAuthor = undefined, authors.length > 0 → uses authors[0]
+      "<dc:creator><![CDATA[nobody]]></dc:creator>",
+      "</item>",
+      "</channel></rss>",
+    ].join("");
+    await writeFile(exportFile, wxr, "utf8");
+    const importer = createAstropressWordPressImportSource();
+    const report = await importer.importWordPress({ exportFile });
+    expect(report.importedRecords).toBe(1);
+  });
+
+  it("uses matched author login when dc:creator matches a known author (line 205 matchedAuthor truthy branch)", async () => {
+    // dc:creator exactly matches wp:author_login → matchedAuthor found → authorLogins = [matchedAuthor.login]
+    const wxr = [
+      "<rss><channel>",
+      "<wp:author>",
+      "<wp:author_id>1</wp:author_id>",
+      "<wp:author_login><![CDATA[alice]]></wp:author_login>",
+      "<wp:author_email><![CDATA[alice@example.com]]></wp:author_email>",
+      "<wp:author_display_name><![CDATA[Alice]]></wp:author_display_name>",
+      "</wp:author>",
+      "<item>",
+      "<title><![CDATA[Matched Creator Post]]></title>",
+      "<link>https://example.org/matched/</link>",
+      "<wp:post_id>9003</wp:post_id>",
+      "<wp:post_name>matched</wp:post_name>",
+      "<wp:status>publish</wp:status>",
+      "<wp:post_type>post</wp:post_type>",
+      "<dc:creator><![CDATA[alice]]></dc:creator>",
+      "</item>",
+      "</channel></rss>",
+    ].join("");
+    await writeFile(exportFile, wxr, "utf8");
+    const importer = createAstropressWordPressImportSource();
+    const report = await importer.importWordPress({ exportFile });
+    expect(report.importedRecords).toBe(1);
+  });
+});
