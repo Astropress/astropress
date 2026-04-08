@@ -80,4 +80,11 @@ describe("project runtime", () => {
     expect(plan.env.hostedProvider).toBe("supabase");
     expect(plan.adapter.capabilities.name).toBe("supabase");
   });
+
+  it("falls back to process.env when no env option is provided", () => {
+    // Covers the `options.env ?? process.env` right-branch
+    const plan = createAstropressProjectRuntimePlan({});
+    expect(plan.env).toBeDefined();
+    expect(typeof plan.env.localProvider).toBe("string");
+  });
 });

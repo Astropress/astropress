@@ -147,7 +147,7 @@ function createAstropressAuthRepository(input) {
           targetId: normalizedEmail
         });
       }
-      return { ok: true, resetUrl: `/wp-admin/reset-password?token=${encodeURIComponent(rawToken)}` };
+      return { ok: true, resetUrl: `/ap-admin/reset-password?token=${encodeURIComponent(rawToken)}` };
     },
     getInviteRequest(rawToken) {
       const trimmedToken = rawToken.trim();
@@ -1200,7 +1200,7 @@ function createAstropressUserRepository(input) {
         summary: `Invited ${email} as an ${role} user.`,
         targetId: email
       });
-      return { ok: true, inviteUrl: `/wp-admin/accept-invite?token=${encodeURIComponent(rawToken)}` };
+      return { ok: true, inviteUrl: `/ap-admin/accept-invite?token=${encodeURIComponent(rawToken)}` };
     },
     suspendAdminUser(email, actor) {
       const normalizedEmail = email.trim().toLowerCase();
@@ -1250,7 +1250,7 @@ var defaultSiteSettings = {
   donationUrl: "",
   newsletterEnabled: false,
   commentsDefaultPolicy: "legacy-readonly",
-  adminSlug: "wp-admin"
+  adminSlug: "ap-admin"
 };
 
 // packages/astropress/src/settings-repository-factory.ts
@@ -2089,7 +2089,7 @@ function createAstropressSqliteAdminRuntime(options) {
       donationUrl: row.donation_url,
       newsletterEnabled: row.newsletter_enabled === 1,
       commentsDefaultPolicy: row.comments_default_policy,
-      adminSlug: row.admin_slug ?? "wp-admin"
+      adminSlug: row.admin_slug ?? "ap-admin"
     };
   }
   const sqliteSettingsRepository = createAstropressSettingsRepository({

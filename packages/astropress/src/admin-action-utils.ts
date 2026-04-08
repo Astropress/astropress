@@ -52,7 +52,7 @@ export async function requireAdminFormAction(
   if (!sessionUser) {
     return {
       ok: false,
-      response: actionRedirect(options.loginPath ?? "/wp-admin/login"),
+      response: actionRedirect(options.loginPath ?? "/ap-admin/login"),
     };
   }
 

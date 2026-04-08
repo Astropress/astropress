@@ -1,0 +1,161 @@
+import { createAstropressLocalMediaRepository } from "../local-media-repository-factory";
+import { createAstropressRateLimitRepository } from "../rate-limit-repository-factory";
+import { type AstropressSqliteDatabaseLike } from "./utils";
+import type { SessionUser } from "../persistence-types";
+
+interface Actor extends SessionUser {}
+
+export function createSqliteAssetsStore(getDb: () => AstropressSqliteDatabaseLike, now: () => number) {
+  function recordAudit(actor: Actor, action: string, summary: string, resourceType: string, resourceId: string) {
+    getDb()
+      .prepare(
+        `
+          INSERT INTO audit_events (user_email, action, resource_type, resource_id, summary)
+          VALUES (?, ?, ?, ?, ?)
+        `,
+      )
+      .run(actor.email, action, resourceType, resourceId, summary);
+  }
+
+  const sqliteRateLimitRepository = createAstropressRateLimitRepository({
+    now,
+    readRateLimitWindow(key: string) {
+      const row = getDb()
+        .prepare("SELECT count, window_start_ms, window_ms FROM rate_limits WHERE key = ? LIMIT 1")
+        .get(key) as { count: number; window_start_ms: number; window_ms: number } | undefined;
+
+      if (!row) {
+        return null;
+      }
+
+      return {
+        count: row.count,
+        windowStartMs: row.window_start_ms,
+        windowMs: row.window_ms,
+      };
+    },
+    resetRateLimitWindow(key: string, currentTime: number, windowMs: number) {
+      getDb()
+        .prepare(
+          `
+            INSERT INTO rate_limits (key, count, window_start_ms, window_ms)
+            VALUES (?, 1, ?, ?)
+            ON CONFLICT(key) DO UPDATE SET
+              count = 1,
+              window_start_ms = excluded.window_start_ms,
+              window_ms = excluded.window_ms
+          `,
+        )
+        .run(key, currentTime, windowMs);
+    },
+    incrementRateLimitWindow(key: string) {
+      getDb().prepare("UPDATE rate_limits SET count = count + 1 WHERE key = ?").run(key);
+    },
+  });
+
+  function listMediaAssets() {
+    const rows = getDb()
+      .prepare(
+        `
+          SELECT id, source_url, local_path, r2_key, mime_type, width, height, file_size, alt_text, title, uploaded_at, uploaded_by
+          FROM media_assets
+          WHERE deleted_at IS NULL
+          ORDER BY datetime(uploaded_at) DESC, id DESC
+        `,
+      )
+      .all() as Array<{
+      id: string;
+      source_url: string | null;
+      local_path: string;
+      r2_key: string | null;
+      mime_type: string | null;
+      width: number | null;
+      height: number | null;
+      file_size: number | null;
+      alt_text: string | null;
+      title: string | null;
+      uploaded_at: string;
+      uploaded_by: string | null;
+    }>;
+
+    return rows.map((row) => ({
+      id: row.id,
+      sourceUrl: row.source_url,
+      localPath: row.local_path,
+      r2Key: row.r2_key,
+      mimeType: row.mime_type,
+      width: row.width,
+      height: row.height,
+      fileSize: row.file_size,
+      altText: row.alt_text ?? "",
+      title: row.title ?? "",
+      uploadedAt: row.uploaded_at,
+      uploadedBy: row.uploaded_by ?? "",
+    }));
+  }
+
+  function updateMediaAsset(
+    input: {
+      id: string;
+      title?: string;
+      altText?: string;
+    },
+    actor: Actor,
+  ) {
+    const id = input.id.trim();
+    if (!id) {
+      return { ok: false as const, error: "Media asset id is required." };
+    }
+
+    const result = getDb()
+      .prepare("UPDATE media_assets SET title = ?, alt_text = ? WHERE id = ? AND deleted_at IS NULL")
+      .run(input.title?.trim() ?? "", input.altText?.trim() ?? "", id);
+
+    if (result.changes === 0) {
+      return { ok: false as const, error: "The selected media asset could not be updated." };
+    }
+
+    recordAudit(actor, "media.update", `Updated media metadata for ${id}.`, "content", id);
+    return { ok: true as const };
+  }
+
+  const sqliteMediaRepository = createAstropressLocalMediaRepository({
+    listMediaAssets,
+    updateMediaAsset,
+    insertStoredMediaAsset({ asset, actor }: { asset: { id: string; publicPath: string; r2Key: string | null; mimeType: string | null; fileSize: number | null; altText: string; title: string; storedFilename?: string }; actor: Actor }) {
+      getDb()
+        .prepare(
+          `
+            INSERT INTO media_assets (
+              id, source_url, local_path, r2_key, mime_type, file_size, alt_text, title, uploaded_by
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+          `,
+        )
+        .run(
+          asset.id,
+          null,
+          asset.publicPath,
+          asset.r2Key,
+          asset.mimeType,
+          asset.fileSize,
+          asset.altText,
+          asset.title,
+          actor.email,
+        );
+    },
+    getStoredMediaDeletionCandidate(id: string) {
+      const row = getDb()
+        .prepare("SELECT local_path FROM media_assets WHERE id = ? AND deleted_at IS NULL")
+        .get(id) as { local_path: string } | undefined;
+      return row ? { localPath: row.local_path } : null;
+    },
+    markStoredMediaDeleted(id: string) {
+      return getDb().prepare("UPDATE media_assets SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?").run(id).changes > 0;
+    },
+    recordMediaAudit({ actor, action, summary, targetId }: { actor: Actor; action: string; summary: string; targetId: string }) {
+      recordAudit(actor, action, summary, "content", targetId);
+    },
+  });
+
+  return { sqliteRateLimitRepository, sqliteMediaRepository };
+}

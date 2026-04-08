@@ -1,6 +1,6 @@
 import { applyAstropressSecurityHeaders } from "./security-headers.js";
 
-export function resolveAstropressSecurityArea(url, adminBasePath = "/wp-admin") {
+export function resolveAstropressSecurityArea(url, adminBasePath = "/ap-admin") {
   if (!url.pathname.startsWith(adminBasePath)) {
     return "public";
   }

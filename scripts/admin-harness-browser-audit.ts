@@ -10,14 +10,14 @@ type RouteAudit = {
 };
 
 const auditedRoutes: RouteAudit[] = [
-  { path: "/wp-admin", heading: "Dashboard" },
-  { path: "/wp-admin/posts", heading: "Posts" },
-  { path: "/wp-admin/posts/hello-world", heading: "Edit Post" },
-  { path: "/wp-admin/comments", heading: "Comments" },
-  { path: "/wp-admin/redirects", heading: "Redirects" },
-  { path: "/wp-admin/login", heading: "Admin Login" },
-  { path: "/wp-admin/reset-password", heading: "Reset password" },
-  { path: "/wp-admin/accept-invite?token=demo", heading: "Accept invitation" },
+  { path: "/ap-admin", heading: "Dashboard" },
+  { path: "/ap-admin/posts", heading: "Posts" },
+  { path: "/ap-admin/posts/hello-world", heading: "Edit Post" },
+  { path: "/ap-admin/comments", heading: "Comments" },
+  { path: "/ap-admin/redirects", heading: "Redirects" },
+  { path: "/ap-admin/login", heading: "Admin Login" },
+  { path: "/ap-admin/reset-password", heading: "Reset password" },
+  { path: "/ap-admin/accept-invite?token=demo", heading: "Accept invitation" },
 ];
 
 async function waitForServer(url: string, timeoutMs = 60_000) {

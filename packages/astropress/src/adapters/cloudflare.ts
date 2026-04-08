@@ -24,11 +24,27 @@ export interface AstropressCloudflareAdapterOptions {
   db?: D1DatabaseLike;
   auth?: AuthStore;
   users?: AstropressCloudflareSeedUser[];
+  /**
+   * WARNING: Enables an in-memory auth store backed by plaintext password comparison.
+   * Intended only for local development and test harnesses.
+   * Do NOT set this to true in any deployed or internet-accessible environment.
+   */
   allowInsecureFallbackAuth?: boolean;
   gitSync?: GitSyncAdapter;
   deploy?: DeployTarget;
   importer?: ImportSource;
   preview?: PreviewSession;
+}
+
+function resolveCloudflareSessionSecret(): string {
+  const secret = process.env.CLOUDFLARE_SESSION_SECRET ?? "cloudflare-adapter-session-secret";
+  if (secret === "cloudflare-adapter-session-secret") {
+    console.warn(
+      "[AstroPress] CLOUDFLARE_SESSION_SECRET is using the insecure default. " +
+        "Set this env var to a long random string before deploying.",
+    );
+  }
+  return secret;
 }
 
 function mapContentRecordKind(record: { kind?: string | null }): ContentStoreRecord["kind"] {
@@ -209,7 +225,7 @@ async function cleanupExpiredCloudflareSessions(db: D1DatabaseLike) {
 async function getLiveCloudflareSessionRow(db: D1DatabaseLike, sessionId: string) {
   await cleanupExpiredCloudflareSessions(db);
 
-  const sessionCandidates = [sessionId, await createSessionTokenDigest(sessionId, "cloudflare-adapter-session-secret")];
+  const sessionCandidates = [sessionId, await createSessionTokenDigest(sessionId, resolveCloudflareSessionSecret())];
   let row: {
     id: string;
     last_active_at: string;
@@ -287,7 +303,7 @@ function createD1CloudflareAuthStore(db: D1DatabaseLike): AuthStore {
       }
 
       const sessionId = crypto.randomUUID();
-      const storedSessionId = await createSessionTokenDigest(sessionId, "cloudflare-adapter-session-secret");
+      const storedSessionId = await createSessionTokenDigest(sessionId, resolveCloudflareSessionSecret());
       const csrfToken = crypto.randomUUID();
 
       await db
@@ -303,7 +319,7 @@ function createD1CloudflareAuthStore(db: D1DatabaseLike): AuthStore {
       return { id: sessionId, email: row.email, role: row.role };
     },
     async signOut(sessionId) {
-      for (const candidate of [sessionId, await createSessionTokenDigest(sessionId, "cloudflare-adapter-session-secret")]) {
+      for (const candidate of [sessionId, await createSessionTokenDigest(sessionId, resolveCloudflareSessionSecret())]) {
         await db
           .prepare(
             `

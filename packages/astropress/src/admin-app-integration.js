@@ -6,9 +6,13 @@ export function createAstropressAdminAppIntegration() {
   return {
     name: "astropress-admin-app",
     hooks: {
-      "astro:config:setup": ({ injectRoute }) => {
-        const pagesDirectory = fileURLToPath(new URL("../pages/wp-admin", import.meta.url));
+      "astro:config:setup": ({ injectRoute, addMiddleware }) => {
+        const pagesDirectory = fileURLToPath(new URL("../pages/ap-admin", import.meta.url));
         injectAstropressAdminRoutes(pagesDirectory, injectRoute);
+        addMiddleware({
+          order: "pre",
+          entrypoint: new URL("./security-middleware-entrypoint.js", import.meta.url),
+        });
       },
     },
   };

@@ -20,7 +20,7 @@
  * Usage (Astro, replaces redirects dialog):
  *   <ap-confirm-dialog>
  *     <dialog id="confirm-dialog" class="confirm-modal" aria-labelledby="confirm-dialog-title">
- *       <form id="confirm-form" method="post" action="/wp-admin/actions/redirect-delete">
+ *       <form id="confirm-form" method="post" action="/ap-admin/actions/redirect-delete">
  *         <input type="hidden" name="sourcePath" value="" />
  *         ...
  *       </form>

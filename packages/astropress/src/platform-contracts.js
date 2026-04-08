@@ -1,3 +1,15 @@
+/**
+ * Fill missing boolean flags in a partial capabilities object with `false` defaults,
+ * producing a complete `ProviderCapabilities` value.
+ *
+ * @example
+ * ```ts
+ * import { normalizeProviderCapabilities } from "astropress";
+ *
+ * const caps = normalizeProviderCapabilities({ name: "sqlite", database: true });
+ * // { name: "sqlite", database: true, staticPublishing: false, hostedAdmin: false, ... }
+ * ```
+ */
 export function normalizeProviderCapabilities(partial) {
   return {
     name: partial.name,
@@ -11,6 +23,19 @@ export function normalizeProviderCapabilities(partial) {
   };
 }
 
+/**
+ * Validate that a provider adapter implements the required contract.
+ * Throws a descriptive error if `capabilities.name` is missing or any of
+ * `content`, `media`, `revisions`, `auth` stores are absent.
+ *
+ * @example
+ * ```ts
+ * import { assertProviderContract, createAstropressSqliteAdapter } from "astropress";
+ *
+ * const adapter = createAstropressSqliteAdapter({ db });
+ * assertProviderContract(adapter); // throws if adapter is incomplete
+ * ```
+ */
 export function assertProviderContract(adapter) {
   if (!adapter.capabilities.name) {
     throw new Error("Provider adapter must declare a name.");

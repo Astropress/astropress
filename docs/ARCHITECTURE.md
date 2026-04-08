@@ -55,7 +55,7 @@ The `.js` files are maintained in sync with the `.ts` files. They are committed 
 
 ## Admin pages and components
 
-Admin pages live in `packages/astropress/pages/wp-admin/`. They are Astro pages that:
+Admin pages live in `packages/astropress/pages/ap-admin/`. They are Astro pages that:
 - Import from `"astropress"` (re-exports from the package itself)
 - Import from `"local-runtime-modules"` (resolved at build time to the host app's runtime)
 - Never import from host-app paths directly

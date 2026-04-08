@@ -43,3 +43,54 @@ describe("provider choice", () => {
     expect(scaffold.recommendationRationale).toMatch(/Cloudflare/i);
   });
 });
+
+describe("recommendAstropressProvider — uncovered branches", () => {
+  it("recommends render-web + firebase when existingPlatform=firebase", () => {
+    const rec = recommendAstropressProvider({ existingPlatform: "firebase" });
+    expect(rec.appHost).toBe("render-web");
+    expect(rec.dataServices).toBe("firebase");
+  });
+
+  it("recommends github-pages + firebase when existingPlatform=firebase and wantsStaticMirror=true", () => {
+    const rec = recommendAstropressProvider({ existingPlatform: "firebase", wantsStaticMirror: true });
+    expect(rec.appHost).toBe("github-pages");
+    expect(rec.dataServices).toBe("firebase");
+  });
+
+  it("recommends render-web + appwrite when existingPlatform=appwrite", () => {
+    const rec = recommendAstropressProvider({ existingPlatform: "appwrite" });
+    expect(rec.appHost).toBe("render-web");
+    expect(rec.dataServices).toBe("appwrite");
+  });
+
+  it("recommends github-pages + appwrite when existingPlatform=appwrite and wantsStaticMirror=true", () => {
+    const rec = recommendAstropressProvider({ existingPlatform: "appwrite", wantsStaticMirror: true });
+    expect(rec.appHost).toBe("github-pages");
+    expect(rec.dataServices).toBe("appwrite");
+  });
+
+  it("recommends github-pages when opsComfort=advanced and wantsStaticMirror=true", () => {
+    const rec = recommendAstropressProvider({ opsComfort: "advanced", wantsStaticMirror: true });
+    expect(rec.appHost).toBe("github-pages");
+    expect(rec.dataServices).toBe("cloudflare");
+  });
+
+  it("recommends cloudflare-pages when opsComfort=advanced and wantsStaticMirror=false", () => {
+    const rec = recommendAstropressProvider({ opsComfort: "advanced", wantsStaticMirror: false });
+    expect(rec.appHost).toBe("cloudflare-pages");
+    expect(rec.dataServices).toBe("cloudflare");
+  });
+
+  it("recommends github-pages when wantsHostedAdmin=false and wantsStaticMirror=false", () => {
+    const rec = recommendAstropressProvider({ wantsHostedAdmin: false, wantsStaticMirror: false });
+    expect(rec.appHost).toBe("github-pages");
+    expect(rec.dataServices).toBe("none");
+    expect(rec.rationale).toMatch(/static/i);
+  });
+
+  it("recommends github-pages when existingPlatform=supabase and wantsStaticMirror=true", () => {
+    const rec = recommendAstropressProvider({ existingPlatform: "supabase", wantsStaticMirror: true });
+    expect(rec.appHost).toBe("github-pages");
+    expect(rec.dataServices).toBe("supabase");
+  });
+});

@@ -1,0 +1,160 @@
+---
+import AdminLayout from "astropress/components/AdminLayout.astro";
+import CsrfInput from "astropress/components/CsrfInput.astro";
+import { buildArchiveEditorModel } from "astropress";
+
+export const prerender = false;
+
+const adminUser = Astro.locals.adminUser;
+const slugValue = Array.isArray(Astro.params.slug) ? Astro.params.slug.join("/") : Astro.params.slug ?? "";
+const archivePath = `/${slugValue}`;
+const model = await buildArchiveEditorModel(Astro.locals, archivePath, adminUser!.role);
+const { archive } = model.data;
+const wasSaved = Astro.url.searchParams.get("saved") === "1";
+const errorMessage = Astro.url.searchParams.get("error") === "1" ? Astro.url.searchParams.get("message") : "";
+
+if (model.status === "forbidden") {
+  Astro.response.status = 403;
+}
+
+if (model.status === "not_found") {
+  Astro.response.status = 404;
+}
+---
+
+{archive && model.status !== "forbidden" ? (
+  <AdminLayout
+    title={`Edit Archive | ${archive.title}`}
+    heading="Edit Archive"
+    currentPath="/ap-admin/archives"
+    description="Editable metadata for public archive routes. Use Posts to manage the content that appears inside the archive."
+    role={adminUser!.role}
+    userName={adminUser!.name}
+  >
+    {model.warnings.length > 0 && <p class="notice">Some archive data is temporarily unavailable. This page is showing partial results.</p>}
+    <div class="toolbar">
+      <a href="/ap-admin/archives">Back to archives</a>
+      <a href={archive.path} target="_blank" rel="noreferrer">Open public archive</a>
+      <a href="/ap-admin/posts">Manage archive content in posts</a>
+    </div>
+    {wasSaved && <p class="notice">Archive route updated successfully.</p>}
+    {errorMessage && <p class="error-notice">{errorMessage}</p>}
+    <form method="post" action="/ap-admin/actions/archive-save" class="archive-form">
+      <CsrfInput token={Astro.locals.csrfToken} />
+      <input type="hidden" name="path" value={archive.path} />
+      <section class="panel">
+        <h3>Archive Metadata</h3>
+        <p class="field-note">Public archive route: <a href={archive.path} target="_blank" rel="noreferrer">{archive.path}</a></p>
+        <label>
+          <span>Title</span>
+          <input type="text" name="title" value={archive.title} required />
+        </label>
+        <label>
+          <span>Summary</span>
+          <textarea name="summary" rows="5">{archive.summary ?? ""}</textarea>
+        </label>
+        <label>
+          <span>SEO Title</span>
+          <input type="text" name="seoTitle" value={archive.seoTitle ?? archive.title} />
+        </label>
+        <label>
+          <span>Meta Description</span>
+          <textarea name="metaDescription" rows="4">{archive.metaDescription ?? ""}</textarea>
+        </label>
+        <label>
+          <span>Canonical URL Override</span>
+          <input type="url" name="canonicalUrlOverride" value={archive.canonicalUrlOverride ?? ""} />
+        </label>
+        <label>
+          <span>Robots Directive</span>
+          <input type="text" name="robotsDirective" value={archive.robotsDirective ?? ""} />
+        </label>
+        <label>
+          <span>Revision Note</span>
+          <input type="text" name="revisionNote" placeholder="Summarize this change" />
+        </label>
+      </section>
+      <div class="form-actions">
+        <button type="submit">Save archive metadata</button>
+        <a href="/ap-admin/archives" class="secondary-button">Cancel</a>
+      </div>
+    </form>
+  </AdminLayout>
+) : (
+  <AdminLayout
+    title={adminUser?.role !== "admin" ? "Forbidden | Astropress Admin" : "Not Found | Astropress Admin"}
+    heading={adminUser?.role !== "admin" ? "Forbidden" : "Not Found"}
+    currentPath="/ap-admin/archives"
+    description={adminUser?.role !== "admin" ? "This action requires an admin account." : "The requested archive route could not be found."}
+    role={adminUser!.role}
+    userName={adminUser!.name}
+  >
+    <section class="panel">
+      <p>{adminUser?.role !== "admin" ? "This action requires an admin account and is hidden from editor-only roles." : "The requested archive route could not be found."}</p>
+    </section>
+  </AdminLayout>
+)}
+
+<style>
+  .archive-form {
+    display: grid;
+    gap: 1rem;
+  }
+  .toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+  label {
+    display: grid;
+    gap: 0.45rem;
+    margin-bottom: 1rem;
+  }
+  label span {
+    font-weight: 600;
+  }
+  input,
+  textarea {
+    font: inherit;
+    border: 1px solid var(--line);
+    border-radius: 0.7rem;
+    padding: 0.75rem 0.85rem;
+    background: white;
+  }
+  .form-actions {
+    display: flex;
+    gap: 0.75rem;
+  }
+  button,
+  .secondary-button {
+    display: inline-flex;
+    align-items: center;
+    border: 0;
+    border-radius: 0.75rem;
+    padding: 0.85rem 1rem;
+    background: var(--accent);
+    color: white;
+    font: inherit;
+    font-weight: 700;
+    text-decoration: none;
+    cursor: pointer;
+    width: fit-content;
+  }
+  .secondary-button {
+    background: #67707b;
+  }
+  .toolbar a,
+  .field-note a {
+    color: var(--accent);
+    font-weight: 700;
+    text-decoration: none;
+  }
+  .toolbar a:hover,
+  .field-note a:hover {
+    text-decoration: underline;
+  }
+  .field-note {
+    margin: 0 0 1rem 0;
+    color: var(--muted);
+  }
+</style>

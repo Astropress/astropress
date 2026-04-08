@@ -123,9 +123,8 @@ function filenameFromUrl(sourceUrl, fallback) {
   }
 }
 
-function safeArtifactFilename(filename, fallback) {
-  const sanitized = filename.replace(/[^a-zA-Z0-9._-]+/g, "-").replace(/-{2,}/g, "-");
-  return sanitized || fallback;
+function safeArtifactFilename(filename) {
+  return filename.replace(/[^a-zA-Z0-9._-]+/g, "-").replace(/-{2,}/g, "-");
 }
 
 function detectUnsupportedPatterns(source) {
@@ -200,6 +199,13 @@ function parseWordPressExport(source) {
       }
     }
     if (postType === "post" || postType === "page") {
+      const creatorLogin = getTagText(item, "dc:creator");
+      const matchedAuthor = creatorLogin ? authors.find((a) => a.login === creatorLogin) : undefined;
+      const authorLogins = matchedAuthor
+        ? [matchedAuthor.login]
+        : authors.length > 0
+          ? [authors[0].login]
+          : [];
       contentRecords.push({
         id: `${postType}-${legacyId}`,
         legacyId,
@@ -211,7 +217,7 @@ function parseWordPressExport(source) {
         status: postStatus,
         legacyUrl,
         publishedAt,
-        authorLogins: authors.length > 0 ? [authors[0].login] : [],
+        authorLogins,
         categorySlugs,
         tagSlugs,
         oldSlugs
@@ -245,7 +251,7 @@ function parseWordPressExport(source) {
     }
     if (postType === "attachment") {
       const sourceUrl = getTagText(item, "wp:attachment_url") || getTagText(item, "guid");
-      const filename = safeArtifactFilename(filenameFromUrl(sourceUrl, `${slug || legacyId}.bin`), `${slug || legacyId}.bin`);
+      const filename = safeArtifactFilename(filenameFromUrl(sourceUrl, `${slug}.bin`));
       mediaAssets.push({
         id: `media-${legacyId}`,
         legacyId,
@@ -478,14 +484,6 @@ function resolveLocalAdminDbPath(workspaceRoot, adminDbPath) {
   return createDefaultAstropressSqliteSeedToolkit().getDefaultAdminDbPath(workspaceRoot);
 }
 
-async function fileSizeOrNull(targetPath) {
-  try {
-    return (await stat(targetPath)).size;
-  } catch {
-    return null;
-  }
-}
-
 async function applyImportToLocalRuntime(input) {
   const seedToolkit = createDefaultAstropressSqliteSeedToolkit();
   const resolvedDbPath = resolveLocalAdminDbPath(input.workspaceRoot, input.adminDbPath);
@@ -576,14 +574,11 @@ async function applyImportToLocalRuntime(input) {
           tagIds,
           revisionNote: `WordPress import ${record.legacyId}`
         }, WORDPRESS_IMPORT_ACTOR);
-        if (!result.ok) {
-          throw new Error(result.error);
-        }
         db.prepare("UPDATE content_entries SET legacy_url = ?, summary = ?, kind = ? WHERE slug = ?").run(record.legacyUrl, record.excerpt ?? "", record.kind, record.slug);
         contentRouteByImportId.set(record.id, record.legacyUrl);
         contentRouteByImportId.set(record.legacyId, record.legacyUrl);
       } else {
-        const created = runtime.sqliteAdminStore.content.createContentRecord({
+        runtime.sqliteAdminStore.content.createContentRecord({
           title: record.title,
           slug: record.slug,
           legacyUrl: record.legacyUrl,
@@ -594,10 +589,7 @@ async function applyImportToLocalRuntime(input) {
           metaDescription: record.excerpt ?? record.title,
           excerpt: record.excerpt
         }, WORDPRESS_IMPORT_ACTOR);
-        if (!created.ok) {
-          throw new Error(created.error);
-        }
-        const saved = runtime.sqliteAdminStore.content.saveContentState(record.slug, {
+        runtime.sqliteAdminStore.content.saveContentState(record.slug, {
           title: record.title,
           status: contentStatus,
           body: record.body,
@@ -609,9 +601,6 @@ async function applyImportToLocalRuntime(input) {
           tagIds,
           revisionNote: `WordPress import ${record.legacyId}`
         }, WORDPRESS_IMPORT_ACTOR);
-        if (!saved.ok) {
-          throw new Error(saved.error);
-        }
         db.prepare("UPDATE content_entries SET kind = ?, legacy_url = ?, summary = ? WHERE slug = ?").run(record.kind, record.legacyUrl, record.excerpt ?? "", record.slug);
         contentRouteByImportId.set(record.id, record.legacyUrl);
         contentRouteByImportId.set(record.legacyId, record.legacyUrl);
@@ -640,7 +629,7 @@ async function applyImportToLocalRuntime(input) {
       `);
     if (input.plan.includeComments) {
       for (const comment of input.bundle.comments) {
-        upsertComment.run(comment.id, comment.authorName, comment.authorEmail ?? null, comment.body, contentRouteByImportId.get(comment.recordId) ?? "/", comment.status, "legacy-readonly", comment.createdAt ?? new Date().toISOString());
+        upsertComment.run(comment.id, comment.authorName, comment.authorEmail ?? null, comment.body, contentRouteByImportId.get(comment.recordId), comment.status, "legacy-readonly", comment.createdAt ?? new Date().toISOString());
       }
     }
     const upsertMedia = db.prepare(`
@@ -662,7 +651,7 @@ async function applyImportToLocalRuntime(input) {
         const downloadedPath = input.artifactDir ? path.join(input.artifactDir, "downloads", asset.filename) : void 0;
         const hasDownloadedFile = downloadedPath ? await fileExists(downloadedPath) : false;
         const localPath = hasDownloadedFile ? downloadedPath : asset.legacyUrl;
-        upsertMedia.run(asset.id, asset.sourceUrl, localPath, asset.mimeType, hasDownloadedFile ? await fileSizeOrNull(downloadedPath) : null, "", asset.title, WORDPRESS_IMPORT_ACTOR.email);
+        upsertMedia.run(asset.id, asset.sourceUrl, localPath, asset.mimeType, hasDownloadedFile ? (await stat(downloadedPath)).size : null, "", asset.title, WORDPRESS_IMPORT_ACTOR.email);
       }
     }
     for (const redirect of input.bundle.redirects) {
@@ -679,9 +668,6 @@ async function applyImportToLocalRuntime(input) {
       appliedUsers: input.plan.includeUsers ? input.bundle.authors.length : 0,
       appliedRedirects: input.bundle.redirects.length
     };
-  } catch (error) {
-    db.exec("ROLLBACK");
-    throw error;
   } finally {
     db.close();
   }
@@ -698,12 +684,12 @@ export function createAstropressWordPressImportSource(options = {}) {
     },
     async planWordPressImport(input) {
       return buildImportPlan(input.inventory, {
-        includeComments: input.includeComments ?? true,
-        includeUsers: input.includeUsers ?? true,
-        includeMedia: input.includeMedia ?? true,
-        downloadMedia: input.downloadMedia ?? false,
+        includeComments: input.includeComments,
+        includeUsers: input.includeUsers,
+        includeMedia: input.includeMedia,
+        downloadMedia: input.downloadMedia,
         artifactDir: input.artifactDir,
-        applyLocal: input.applyLocal ?? false
+        applyLocal: input.applyLocal
       });
     },
     async importWordPress(input) {
@@ -712,12 +698,12 @@ export function createAstropressWordPressImportSource(options = {}) {
         sourceUrl: input.sourceUrl ?? options.sourceUrl
       });
       const plan = input.plan ?? buildImportPlan(inventory, {
-        includeComments: input.includeComments ?? true,
-        includeUsers: input.includeUsers ?? true,
-        includeMedia: input.includeMedia ?? true,
-        downloadMedia: input.downloadMedia ?? false,
+        includeComments: input.includeComments,
+        includeUsers: input.includeUsers,
+        includeMedia: input.includeMedia,
+        downloadMedia: input.downloadMedia,
         artifactDir: input.artifactDir,
-        applyLocal: input.applyLocal ?? false
+        applyLocal: input.applyLocal
       });
       const artifactsOutcome = plan.artifactDir ? await stageArtifacts(plan.artifactDir, inventory, plan, bundle, input.resumeFrom) : {
         artifacts: void 0,
@@ -737,6 +723,29 @@ export function createAstropressWordPressImportSource(options = {}) {
         if (artifactsOutcome.artifacts) {
           artifactsOutcome.artifacts.localApplyReportFile = localApplyReportFile;
         }
+      }
+      if (plan.artifactDir && artifactsOutcome.artifacts) {
+        const reportFile = path.join(plan.artifactDir, "import-report.json");
+        const report = {
+          generatedAt: new Date().toISOString(),
+          status: plan.reviewRequired || artifactsOutcome.failedMedia.length > 0 ? "completed_with_warnings" : "completed",
+          counts: {
+            posts: bundle.entityCounts.posts,
+            pages: bundle.entityCounts.pages,
+            attachments: bundle.entityCounts.attachments,
+            comments: bundle.entityCounts.comments,
+            users: bundle.entityCounts.users,
+            categories: bundle.entityCounts.categories,
+            tags: bundle.entityCounts.tags,
+            redirects: bundle.entityCounts.redirects,
+            skipped: bundle.entityCounts.skipped,
+          },
+          mediaErrors: artifactsOutcome.failedMedia.map((f) => ({ id: f.id, sourceUrl: f.sourceUrl, reason: f.reason })),
+          manualReviewFlags: bundle.remediationCandidates,
+          warnings: plan.manualTasks,
+        };
+        await writeJsonArtifact(reportFile, report);
+        artifactsOutcome.artifacts.reportFile = reportFile;
       }
       return {
         status: plan.reviewRequired || artifactsOutcome.failedMedia.length > 0 ? "completed_with_warnings" : "completed",

@@ -104,3 +104,191 @@ describe("project env", () => {
     ).toBe(".data/runway-admin.sqlite");
   });
 });
+
+describe("resolveAstropressAppHostFromEnv — additional branches", () => {
+  it("returns each explicit ASTROPRESS_APP_HOST value verbatim", () => {
+    const hosts = ["render-web", "firebase-hosting", "gitlab-pages", "render-static", "runway", "netlify", "custom"] as const;
+    for (const host of hosts) {
+      expect(resolveAstropressAppHostFromEnv({ ASTROPRESS_APP_HOST: host })).toBe(host);
+    }
+  });
+
+  it("falls back to ASTROPRESS_WEB_HOST when ASTROPRESS_APP_HOST is absent", () => {
+    expect(resolveAstropressAppHostFromEnv({ ASTROPRESS_WEB_HOST: "netlify" })).toBe("netlify");
+  });
+
+  it("maps legacy ASTROPRESS_LOCAL_PROVIDER=supabase → vercel via data-services chain", () => {
+    expect(resolveAstropressAppHostFromEnv({ ASTROPRESS_LOCAL_PROVIDER: "supabase" })).toBe("vercel");
+  });
+
+  it("maps legacy ASTROPRESS_HOSTED_PROVIDER=firebase → render-web via data-services chain", () => {
+    expect(resolveAstropressAppHostFromEnv({ ASTROPRESS_HOSTED_PROVIDER: "firebase" })).toBe("render-web");
+  });
+
+  it("maps legacy ASTROPRESS_HOSTED_PROVIDER=appwrite → render-web via data-services chain", () => {
+    expect(resolveAstropressAppHostFromEnv({ ASTROPRESS_HOSTED_PROVIDER: "appwrite" })).toBe("render-web");
+  });
+
+  it("maps legacy ASTROPRESS_HOSTED_PROVIDER=runway → runway via data-services chain", () => {
+    expect(resolveAstropressAppHostFromEnv({ ASTROPRESS_HOSTED_PROVIDER: "runway" })).toBe("runway");
+  });
+
+  it("maps ASTROPRESS_DEPLOY_TARGET=github-pages → github-pages via legacy deploy target mapper (line 4)", () => {
+    expect(resolveAstropressAppHostFromEnv({ ASTROPRESS_DEPLOY_TARGET: "github-pages" })).toBe("github-pages");
+  });
+
+  it("maps ASTROPRESS_DEPLOY_TARGET=vercel → vercel via legacy deploy target mapper", () => {
+    expect(resolveAstropressAppHostFromEnv({ ASTROPRESS_DEPLOY_TARGET: "vercel" })).toBe("vercel");
+  });
+
+  it("maps ASTROPRESS_DEPLOY_TARGET=netlify → netlify via legacy deploy target mapper", () => {
+    expect(resolveAstropressAppHostFromEnv({ ASTROPRESS_DEPLOY_TARGET: "netlify" })).toBe("netlify");
+  });
+
+  it("maps ASTROPRESS_DEPLOY_TARGET=render-static → render-static via legacy deploy target mapper", () => {
+    expect(resolveAstropressAppHostFromEnv({ ASTROPRESS_DEPLOY_TARGET: "render-static" })).toBe("render-static");
+  });
+
+  it("maps ASTROPRESS_DEPLOY_TARGET=render-web → render-web via legacy deploy target mapper", () => {
+    expect(resolveAstropressAppHostFromEnv({ ASTROPRESS_DEPLOY_TARGET: "render-web" })).toBe("render-web");
+  });
+
+  it("maps ASTROPRESS_DEPLOY_TARGET=cloudflare → cloudflare-pages via data-services chain", () => {
+    // non-cloudflare deploy target does NOT produce a legacyDeployTarget early-return,
+    // so cloudflare data-services branch is hit instead
+    expect(resolveAstropressAppHostFromEnv({ ASTROPRESS_DEPLOY_TARGET: "cloudflare" })).toBe("cloudflare-pages");
+  });
+
+  it("maps ASTROPRESS_DEPLOY_TARGET=gitlab-pages → gitlab-pages via legacy deploy target mapper", () => {
+    expect(resolveAstropressAppHostFromEnv({ ASTROPRESS_DEPLOY_TARGET: "gitlab-pages" })).toBe("gitlab-pages");
+  });
+
+  it("maps ASTROPRESS_DEPLOY_TARGET=firebase-hosting → firebase-hosting via legacy deploy target mapper", () => {
+    expect(resolveAstropressAppHostFromEnv({ ASTROPRESS_DEPLOY_TARGET: "firebase-hosting" })).toBe("firebase-hosting");
+  });
+
+  it("maps ASTROPRESS_DEPLOY_TARGET=runway → runway via legacy deploy target mapper", () => {
+    expect(resolveAstropressAppHostFromEnv({ ASTROPRESS_DEPLOY_TARGET: "runway" })).toBe("runway");
+  });
+});
+
+describe("resolveAstropressHostedProviderFromEnv — additional branches", () => {
+  it("returns pocketbase when ASTROPRESS_HOSTED_PROVIDER=pocketbase", () => {
+    expect(resolveAstropressHostedProviderFromEnv({ ASTROPRESS_HOSTED_PROVIDER: "pocketbase" })).toBe("pocketbase");
+  });
+
+  it("returns appwrite when ASTROPRESS_HOSTED_PROVIDER=appwrite", () => {
+    expect(resolveAstropressHostedProviderFromEnv({ ASTROPRESS_HOSTED_PROVIDER: "appwrite" })).toBe("appwrite");
+  });
+
+  it("returns firebase when ASTROPRESS_HOSTED_PROVIDER=firebase", () => {
+    expect(resolveAstropressHostedProviderFromEnv({ ASTROPRESS_HOSTED_PROVIDER: "firebase" })).toBe("firebase");
+  });
+
+  it("returns pocketbase when ASTROPRESS_DATA_SERVICES=pocketbase (fallback from dataServices)", () => {
+    expect(resolveAstropressHostedProviderFromEnv({ ASTROPRESS_DATA_SERVICES: "pocketbase" })).toBe("pocketbase");
+  });
+
+  it("returns firebase when ASTROPRESS_DATA_SERVICES=firebase (fallback from dataServices)", () => {
+    expect(resolveAstropressHostedProviderFromEnv({ ASTROPRESS_DATA_SERVICES: "firebase" })).toBe("firebase");
+  });
+
+  it("returns appwrite when ASTROPRESS_DATA_SERVICES=appwrite (fallback from dataServices)", () => {
+    expect(resolveAstropressHostedProviderFromEnv({ ASTROPRESS_DATA_SERVICES: "appwrite" })).toBe("appwrite");
+  });
+});
+
+describe("resolveAstropressServiceOriginFromEnv — additional branches", () => {
+  it("returns firebase service origin from FIREBASE_PROJECT_ID", () => {
+    expect(
+      resolveAstropressServiceOriginFromEnv({
+        ASTROPRESS_DATA_SERVICES: "firebase",
+        FIREBASE_PROJECT_ID: "my-project",
+      }),
+    ).toBe("https://my-project.firebaseapp.com/astropress-api");
+  });
+
+  it("returns null when firebase is selected but FIREBASE_PROJECT_ID is absent", () => {
+    expect(
+      resolveAstropressServiceOriginFromEnv({ ASTROPRESS_DATA_SERVICES: "firebase" }),
+    ).toBeNull();
+  });
+
+  it("returns appwrite service origin from APPWRITE_ENDPOINT", () => {
+    expect(
+      resolveAstropressServiceOriginFromEnv({
+        ASTROPRESS_DATA_SERVICES: "appwrite",
+        APPWRITE_ENDPOINT: "https://cloud.appwrite.io/v1",
+      }),
+    ).toBe("https://cloud.appwrite.io/v1/functions/astropress");
+  });
+
+  it("returns null when appwrite is selected but APPWRITE_ENDPOINT is absent", () => {
+    expect(
+      resolveAstropressServiceOriginFromEnv({ ASTROPRESS_DATA_SERVICES: "appwrite" }),
+    ).toBeNull();
+  });
+
+  it("returns runway service origin from RUNWAY_PROJECT_ID", () => {
+    expect(
+      resolveAstropressServiceOriginFromEnv({
+        ASTROPRESS_DATA_SERVICES: "runway",
+        RUNWAY_PROJECT_ID: "my-runway-proj",
+      }),
+    ).toBe("https://runway.example/my-runway-proj/astropress-api");
+  });
+
+  it("returns null when runway is selected but RUNWAY_PROJECT_ID is absent", () => {
+    expect(
+      resolveAstropressServiceOriginFromEnv({ ASTROPRESS_DATA_SERVICES: "runway" }),
+    ).toBeNull();
+  });
+
+  it("returns null when supabase is selected but SUPABASE_URL is absent", () => {
+    expect(
+      resolveAstropressServiceOriginFromEnv({ ASTROPRESS_DATA_SERVICES: "supabase" }),
+    ).toBeNull();
+  });
+});
+
+describe("resolveAstropressServiceOriginFromEnv — fallthrough branch", () => {
+  it("returns null for cloudflare (no ASTROPRESS_SERVICE_ORIGIN and no specific env key for cloudflare)", () => {
+    // cloudflare doesn't have a dedicated origin-building path → falls through to null
+    expect(
+      resolveAstropressServiceOriginFromEnv({ ASTROPRESS_DATA_SERVICES: "cloudflare" }),
+    ).toBeNull();
+  });
+});
+
+describe("mapLegacyDeployTargetToAppHost — custom arm (line 22)", () => {
+  it("maps ASTROPRESS_DEPLOY_TARGET=custom → custom appHost", () => {
+    expect(resolveAstropressAppHostFromEnv({ ASTROPRESS_DEPLOY_TARGET: "custom" })).toBe("custom");
+  });
+});
+
+describe("resolveDataServicesFromLegacyEnv — cloudflare via DEPLOY_TARGET (lines 54-55)", () => {
+  it("returns cloudflare from ASTROPRESS_DEPLOY_TARGET=cloudflare when no explicit data-services set", () => {
+    // resolveAstropressDataServicesFromEnv falls through to resolveDataServicesFromLegacyEnv
+    // which checks ASTROPRESS_DEPLOY_TARGET === "cloudflare"
+    expect(resolveAstropressDataServicesFromEnv({ ASTROPRESS_DEPLOY_TARGET: "cloudflare" })).toBe("cloudflare");
+  });
+});
+
+describe("resolveAstropressDeployTarget — explicit target values", () => {
+  it("returns each explicit ASTROPRESS_DEPLOY_TARGET value verbatim", () => {
+    const targets = ["render-static", "render-web", "gitlab-pages", "netlify", "firebase-hosting", "runway", "custom"] as const;
+    for (const target of targets) {
+      expect(resolveAstropressDeployTarget({ ASTROPRESS_DEPLOY_TARGET: target })).toBe(target);
+    }
+  });
+});
+
+describe("project-env — uncovered branch targets", () => {
+  it("resolveAstropressDataServicesFromEnv with BACKEND_PLATFORM and no CONTENT/DATA_SERVICES (line 85 b78 arm 0)", () => {
+    // CONTENT_SERVICES and DATA_SERVICES are both undefined → chain reaches BACKEND_PLATFORM
+    // BACKEND_PLATFORM is undefined → ?? arm 0 (null short-circuit) taken
+    expect(resolveAstropressDataServicesFromEnv({ ASTROPRESS_BACKEND_PLATFORM: undefined })).toBe("none");
+    // BACKEND_PLATFORM is set to a valid value → arm 1 (trim() called)
+    expect(resolveAstropressDataServicesFromEnv({ ASTROPRESS_BACKEND_PLATFORM: "supabase" })).toBe("supabase");
+  });
+});

@@ -318,8 +318,8 @@ export async function buildTranslationsPageModel(locals: AdminLocals, role: Admi
       return {
         ...entry,
         effectiveState: await getRuntimeTranslationState(entry.route, entry.translationState, locals),
-        englishEditHref: englishSeed ? `/wp-admin/posts/${englishSeed.slug}` : undefined,
-        localizedEditHref: localizedRoute ? `/wp-admin/route-pages${entry.route}` : undefined,
+        englishEditHref: englishSeed ? `/ap-admin/posts/${englishSeed.slug}` : undefined,
+        localizedEditHref: localizedRoute ? `/ap-admin/route-pages${entry.route}` : undefined,
       };
     },
     (entry) => {
@@ -327,7 +327,7 @@ export async function buildTranslationsPageModel(locals: AdminLocals, role: Admi
       return {
         ...entry,
         effectiveState: entry.translationState,
-        englishEditHref: englishSeed ? `/wp-admin/posts/${englishSeed.slug}` : undefined,
+        englishEditHref: englishSeed ? `/ap-admin/posts/${englishSeed.slug}` : undefined,
         localizedEditHref: undefined,
       };
     },
@@ -365,7 +365,7 @@ export async function buildSeoPageModel(locals: AdminLocals, role: AdminRole) {
       seoTitle: record.seoTitle || "—",
       metaDescription: record.metaDescription || "—",
       missingMetadata: !record.seoTitle || !record.metaDescription,
-      editHref: `/wp-admin/posts/${record.slug}`,
+      editHref: `/ap-admin/posts/${record.slug}`,
     })),
     ...routePages.map((route) => ({
       label: route.title,
@@ -374,7 +374,7 @@ export async function buildSeoPageModel(locals: AdminLocals, role: AdminRole) {
       seoTitle: route.seoTitle || route.title,
       metaDescription: route.metaDescription || route.summary || "—",
       missingMetadata: !route.seoTitle || !route.metaDescription,
-      editHref: `/wp-admin/route-pages${route.path}`,
+      editHref: `/ap-admin/route-pages${route.path}`,
     })),
     ...archiveRoutes.map(({ archive, runtime }) => ({
       label: runtime?.title ?? archive.title,
@@ -383,7 +383,7 @@ export async function buildSeoPageModel(locals: AdminLocals, role: AdminRole) {
       seoTitle: runtime?.seoTitle || runtime?.title || archive.title,
       metaDescription: runtime?.metaDescription || runtime?.summary || "—",
       missingMetadata: !runtime?.seoTitle || !runtime?.metaDescription,
-      editHref: `/wp-admin/archives/${archive.slug}`,
+      editHref: `/ap-admin/archives/${archive.slug}`,
     })),
     ...systemRoutes.map((route) => ({
       label: route.title,
@@ -392,7 +392,7 @@ export async function buildSeoPageModel(locals: AdminLocals, role: AdminRole) {
       seoTitle: route.title,
       metaDescription: route.summary || "—",
       missingMetadata: !route.summary,
-      editHref: "/wp-admin/system",
+      editHref: "/ap-admin/system",
     })),
   ];
 

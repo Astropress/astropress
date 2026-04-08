@@ -61,7 +61,7 @@ The `<dialog>` markup lives inside `<ap-confirm-dialog>`. Trigger buttons can li
       <p><strong id="item-name"></strong></p>
       <div class="modal-actions">
         <button type="button" data-dialog-close>Cancel</button>
-        <form method="post" action="/wp-admin/actions/item-delete">
+        <form method="post" action="/ap-admin/actions/item-delete">
           <input type="hidden" name="itemId" value="" />
           <button type="submit">Delete</button>
         </form>
@@ -107,7 +107,7 @@ Wraps a textarea editor with a formatting toolbar, live preview iframe, media li
 
 ```html
 <ap-html-editor>
-  <form method="post" action="/wp-admin/actions/content-save">
+  <form method="post" action="/ap-admin/actions/content-save">
     <div role="toolbar" aria-label="Format body">
       <button type="button" data-cmd="bold" aria-label="Bold"><strong>B</strong></button>
       <button type="button" data-cmd="italic" aria-label="Italic"><em>I</em></button>

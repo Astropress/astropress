@@ -95,20 +95,20 @@ export async function buildAdminDashboardModel(
           ...contentStates.map((record) => ({
             title: record.title,
             updatedAt: record.updatedAt,
-            editHref: `/wp-admin/posts/${record.slug}`,
+            editHref: `/ap-admin/posts/${record.slug}`,
             kind: deps.isSeededPostRecord(record) ? "Post" : "Page",
           })),
           ...routePages.map((route) => ({
             title: route.title,
             updatedAt: route.updatedAt,
-            editHref: `/wp-admin/route-pages${route.path}`,
+            editHref: `/ap-admin/route-pages${route.path}`,
             kind: "Structured Page",
           })),
         ]
       : posts.map((record) => ({
           title: record.title,
           updatedAt: record.updatedAt,
-          editHref: `/wp-admin/posts/${record.slug}`,
+          editHref: `/ap-admin/posts/${record.slug}`,
           kind: "Post",
         }))
   )
@@ -146,10 +146,10 @@ export async function buildAdminDashboardModel(
     : [];
 
   const supportSurfaceLinks = [
-    { label: "Translations", href: "/wp-admin/translations", count: translationNeedsAttention, helper: "Localized routes not yet published." },
-    { label: "SEO", href: "/wp-admin/seo?missing=1", count: seoNeedsAttention, helper: "Pages or routes missing dedicated metadata." },
-    { label: "Archives", href: "/wp-admin/archives", count: archiveRoutes.filter(Boolean).length, helper: "Archive landing pages with separate owner editors." },
-    { label: "System", href: "/wp-admin/system", count: systemRoutes.length, helper: "500 page and generated public outputs." },
+    { label: "Translations", href: "/ap-admin/translations", count: translationNeedsAttention, helper: "Localized routes not yet published." },
+    { label: "SEO", href: "/ap-admin/seo?missing=1", count: seoNeedsAttention, helper: "Pages or routes missing dedicated metadata." },
+    { label: "Archives", href: "/ap-admin/archives", count: archiveRoutes.filter(Boolean).length, helper: "Archive landing pages with separate owner editors." },
+    { label: "System", href: "/ap-admin/system", count: systemRoutes.length, helper: "500 page and generated public outputs." },
   ];
 
   return {

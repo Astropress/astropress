@@ -67,9 +67,58 @@ Current scope:
 - set `ADMIN_BOOTSTRAP_DISABLED=1` once named admin accounts are established
 - treat missing `TURNSTILE_SECRET_KEY` as a release blocker for hosted login surfaces
 
-## Remaining operational gaps
+## Rollback procedure
 
-- hosted-provider restore and rollback flows
-- automated rotation for bootstrap credentials and session secrets
-- release-by-release migration runbooks
-- disaster recovery playbooks for real hosted environments
+1. Restore from the last backup: `astropress restore --project-dir <site> --from <snapshot-dir>`
+2. Redeploy the previous release tag via your host's deployment UI or CLI.
+3. For Cloudflare D1: use Wrangler's point-in-time restore — `wrangler d1 time-travel restore <database-name> --timestamp <iso-timestamp>`
+4. After restore, run `astropress doctor` to confirm env and schema health before reopening traffic.
+
+## Secret rotation
+
+**SESSION_SECRET**
+
+The session TTL is 12 hours. To rotate without a hard logout:
+1. Add a `SESSION_SECRET_PREV` env var set to the current secret value.
+2. Deploy the new `SESSION_SECRET`.
+3. During the 12-hour window the runtime will accept tokens signed with either secret.
+4. After the window, remove `SESSION_SECRET_PREV`.
+
+**CLOUDFLARE_SESSION_SECRET**
+
+Rotating this secret invalidates all existing Cloudflare D1 sessions immediately (the stored hashes become unverifiable). This is an acceptable tradeoff — users are logged out cleanly. If you want to minimise disruption, revoke all active sessions first:
+
+```sql
+UPDATE admin_sessions SET revoked_at = CURRENT_TIMESTAMP WHERE revoked_at IS NULL;
+```
+
+Then deploy the new `CLOUDFLARE_SESSION_SECRET`.
+
+## Upgrade and migration policy
+
+1. Always snapshot before upgrading: `astropress backup --project-dir <site> --out <snapshot-dir>`
+2. Run `astropress doctor` after upgrading — it warns on env contract changes and schema drift.
+3. SQLite local runtime: apply schema changes by running `astropress services bootstrap` again (idempotent).
+4. Hosted providers (Cloudflare D1, Supabase): apply schema migrations via the provider CLI before deploying the new package version. Never deploy new code before the schema is ready.
+
+## Incident handling checklist
+
+**Auth breach (leaked session or compromised admin account)**
+1. Revoke all active sessions:
+   ```sql
+   UPDATE admin_sessions SET revoked_at = CURRENT_TIMESTAMP WHERE revoked_at IS NULL;
+   ```
+2. Rotate both `SESSION_SECRET` and `CLOUDFLARE_SESSION_SECRET` (see Secret rotation above).
+3. Audit the `admin_sessions` and `audit_events` tables for suspicious activity.
+4. Reset affected user passwords and deactivate any unknown accounts.
+
+**Data loss**
+1. Restore from the last clean backup.
+2. Run `astropress doctor` and `astropress services verify` to confirm integrity.
+3. Re-apply any content created since the snapshot using audit logs as a reference.
+
+**Admin panel down**
+1. Run `astropress doctor` to check env contract and service health.
+2. Verify all required env vars (`SESSION_SECRET`, `ASTROPRESS_APP_HOST`, `ASTROPRESS_CONTENT_SERVICES`, etc.) are set correctly.
+3. Check server logs for runtime errors or schema migration failures.
+4. If the cause is a failed migration, restore from the last known-good snapshot and replay the migration in isolation before redeploying.

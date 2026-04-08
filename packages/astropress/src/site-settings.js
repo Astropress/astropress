@@ -4,5 +4,5 @@ export const defaultSiteSettings = {
   donationUrl: "",
   newsletterEnabled: false,
   commentsDefaultPolicy: "legacy-readonly",
-  adminSlug: "wp-admin",
+  adminSlug: "ap-admin",
 };

@@ -41,7 +41,7 @@ async function existingFiles(paths: string[]) {
 async function main() {
   const root = process.cwd();
   const auditedFiles = await existingFiles([
-    ...((await walk(join(root, "packages/astropress/pages/wp-admin"))).filter((path) => path.endsWith(".astro") || path.endsWith(".ts"))),
+    ...((await walk(join(root, "packages/astropress/pages/ap-admin"))).filter((path) => path.endsWith(".astro") || path.endsWith(".ts"))),
     ...((await walk(join(root, "packages/astropress/components"))).filter((path) => path.endsWith(".astro"))),
     join(root, "packages/astropress/src/admin-action-utils.ts"),
     join(root, "packages/astropress/src/security-headers.ts"),
@@ -76,11 +76,11 @@ async function main() {
 
   const securityHeaderEntrypoints = [
     "packages/astropress/components/AdminLayout.astro",
-    "packages/astropress/pages/wp-admin/login.astro",
-    "packages/astropress/pages/wp-admin/accept-invite.astro",
-    "packages/astropress/pages/wp-admin/reset-password.astro",
+    "packages/astropress/pages/ap-admin/login.astro",
+    "packages/astropress/pages/ap-admin/accept-invite.astro",
+    "packages/astropress/pages/ap-admin/reset-password.astro",
     "packages/astropress/src/admin-action-utils.ts",
-    "packages/astropress/pages/wp-admin/session.ts",
+    "packages/astropress/pages/ap-admin/session.ts",
   ];
 
   for (const file of securityHeaderEntrypoints) {

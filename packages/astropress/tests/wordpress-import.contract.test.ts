@@ -146,6 +146,10 @@ describe("wordpress import contract", () => {
     expect(downloadState.completed).toContain("media-201");
     expect(downloadState.failed).toEqual([]);
 
+    const importReport = JSON.parse(await readFile(join(artifactDir, "import-report.json"), "utf8")) as Record<string, unknown>;
+    expect(importReport).toMatchObject({ counts: { posts: 1 }, mediaErrors: [] });
+    expect(importReport.status === "completed" || importReport.status === "completed_with_warnings").toBe(true);
+
     const resumed = await importer.resumeWordPressImport?.({
       exportFile,
       artifactDir,

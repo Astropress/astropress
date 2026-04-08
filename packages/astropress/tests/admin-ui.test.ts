@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it } from "vitest";
 
 import { buildAstropressAdminDocumentTitle } from "../src/admin-branding";
-import { peekCmsConfig, registerCms } from "../src/config";
+import { getCmsConfig, peekCmsConfig, registerCms } from "../src/config";
 import { resolveAstropressAdminUiConfig } from "../src/admin-ui";
 
 const CMS_CONFIG_KEY = Symbol.for("astropress.cms-config");
@@ -12,6 +12,13 @@ function restoreConfig(config: ReturnType<typeof peekCmsConfig>) {
 
 afterEach(() => {
   restoreConfig(null);
+});
+
+describe("getCmsConfig — uninitialized state", () => {
+  it("throws when getCmsConfig is called before registerCms", () => {
+    restoreConfig(null);
+    expect(() => getCmsConfig()).toThrow("Astropress not initialized");
+  });
 });
 
 describe("admin ui", () => {
@@ -72,5 +79,31 @@ describe("admin ui", () => {
     expect(adminUi.navigation.routePages).toBe("Page Routes");
     expect(adminUi.navigation.media).toBe("Asset Library");
     expect(buildAstropressAdminDocumentTitle("Dashboard")).toBe("Dashboard | Client Console Admin");
+  });
+
+  it("falls back to productName for shellName/logoAlt and to /ap-admin for logoHref when overrides are empty strings", () => {
+    registerCms({
+      siteUrl: "https://example.org",
+      templateKeys: [],
+      seedPages: [],
+      archives: [],
+      translationStatus: [],
+      admin: {
+        branding: {
+          productName: "Fallback Admin",
+          shellName: "",
+          logoAlt: "",
+          logoHref: "",
+        },
+      },
+    });
+
+    const adminUi = resolveAstropressAdminUiConfig();
+    // shellName falls back to productName when empty
+    expect(adminUi.branding.shellName).toBe("Fallback Admin");
+    // logoAlt falls back to productName when empty
+    expect(adminUi.branding.logoAlt).toBe("Fallback Admin");
+    // logoHref falls back to "/ap-admin" when empty
+    expect(adminUi.branding.logoHref).toBe("/ap-admin");
   });
 });

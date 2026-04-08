@@ -1,6 +1,5 @@
-import { defineMiddleware, sequence } from "astro:middleware";
+import { defineMiddleware } from "astro:middleware";
 import { registerCms } from "astropress";
-import { createAstropressSecurityMiddleware } from "astropress/integration";
 
 registerCms({
   templateKeys: ["content", "campaign", "landing"],
@@ -63,7 +62,4 @@ const injectHarnessLocals = defineMiddleware(async ({ locals }, next) => {
   return next();
 });
 
-export const onRequest = sequence(
-  createAstropressSecurityMiddleware(),
-  injectHarnessLocals,
-);
+export const onRequest = injectHarnessLocals;

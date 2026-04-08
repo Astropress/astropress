@@ -25,5 +25,36 @@ export default defineConfig({
         baseURL: process.env.PLAYWRIGHT_ADMIN_BASE_URL ?? "http://127.0.0.1:4325",
       },
     },
+    {
+      name: "admin-harness-mobile",
+      testMatch: /admin-harness-mobile\.spec\.ts/,
+      use: {
+        ...devices["iPhone 13"],
+        baseURL: process.env.PLAYWRIGHT_ADMIN_BASE_URL ?? "http://127.0.0.1:4325",
+      },
+    },
+    {
+      name: "admin-harness-mobile-iphonese",
+      testMatch: /admin-harness-mobile\.spec\.ts/,
+      use: {
+        ...devices["iPhone SE"],
+        baseURL: process.env.PLAYWRIGHT_ADMIN_BASE_URL ?? "http://127.0.0.1:4325",
+      },
+    },
+    {
+      name: "admin-harness-mobile-galaxys5",
+      testMatch: /admin-harness-mobile\.spec\.ts/,
+      use: {
+        ...devices["Galaxy S5"],
+        baseURL: process.env.PLAYWRIGHT_ADMIN_BASE_URL ?? "http://127.0.0.1:4325",
+      },
+    },
+    {
+      name: "admin-harness-a11y-interactions",
+      testMatch: /admin-harness-interactions\.spec\.ts/,
+      use: {
+        baseURL: process.env.PLAYWRIGHT_ADMIN_BASE_URL ?? "http://127.0.0.1:4325",
+      },
+    },
   ],
 });

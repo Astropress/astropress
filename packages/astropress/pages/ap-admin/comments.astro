@@ -1,0 +1,227 @@
+---
+import AdminLayout from "astropress/components/AdminLayout.astro";
+import AuditTrail from "astropress/components/AuditTrail.astro";
+import CsrfInput from "astropress/components/CsrfInput.astro";
+import { buildCommentsPageModel } from "astropress";
+
+const adminUser = Astro.locals.adminUser;
+const model = await buildCommentsPageModel(Astro.locals);
+const { comments, auditEvents } = model.data;
+const wasSaved = Astro.url.searchParams.get("saved") === "1";
+const errorMessage = Astro.url.searchParams.get("error") === "1" ? Astro.url.searchParams.get("message") : "";
+---
+
+<AdminLayout
+  title="Comments | Astropress Admin"
+  heading="Comments"
+  currentPath="/ap-admin/comments"
+  description="Moderate pending, approved, and rejected comment records."
+  role={adminUser!.role}
+  userName={adminUser!.name}
+>
+  {model.warnings.length > 0 && <ap-notice type="info">Some comment data is temporarily unavailable. This page is showing partial results.</ap-notice>}
+  {wasSaved && <ap-notice type="success" dismiss-after="6000">The comment moderation state was updated successfully.</ap-notice>}
+  {errorMessage && <ap-notice type="error">{errorMessage}</ap-notice>}
+  <div class="admin-subgrid two summary-grid">
+    <section class="panel stat summary-card">
+      <span>Total comments</span>
+      <strong>{comments.length}</strong>
+      <span>Comment records currently available for moderation.</span>
+    </section>
+    <section class="panel stat summary-card">
+      <span>Pending review</span>
+      <strong>{comments.filter((comment) => comment.status === "pending").length}</strong>
+      <span>Comments still waiting for an explicit moderation decision.</span>
+    </section>
+  </div>
+  <section class="panel comments-panel">
+    <div class="section-header">
+      <div>
+        <p class="admin-kicker">Moderation</p>
+        <h2>Moderation Queue</h2>
+        <p>Review public comments and approve or reject them without leaving the queue.</p>
+      </div>
+    </div>
+    <div class="admin-table-shell">
+      <table aria-label="Comments queue">
+        <thead>
+          <tr>
+            <th>Author</th>
+            <th>Route</th>
+            <th>Status</th>
+            <th>Policy</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {comments.map((comment) => (
+            <tr>
+              <td>{comment.author}</td>
+              <td><code>{comment.route}</code></td>
+              <td><span class="admin-chip">{comment.status}</span></td>
+              <td>{comment.policy}</td>
+              <td class="action-cell">
+                <form method="post" action="/ap-admin/actions/comment-moderate" class="comment-action">
+                  <CsrfInput token={Astro.locals.csrfToken} />
+                  <input type="hidden" name="commentId" value={comment.id} />
+                  <input type="hidden" name="status" value="approved" />
+                  <button type="submit" class="admin-button small">Approve</button>
+                </form>
+                <button
+                  type="button"
+                  class="admin-button-ghost small reject"
+                  data-confirm-reject
+                  data-confirm-trigger
+                  data-dialog-id="reject-dialog"
+                  data-field-name="commentId"
+                  data-field-value={comment.id}
+                  data-text-reject-author={comment.author}
+                  data-text-reject-route={comment.route}
+                >
+                  Reject
+                </button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  {/* Rejection Confirmation Dialog */}
+  <ap-confirm-dialog>
+    <dialog id="reject-dialog" class="confirm-modal" aria-labelledby="reject-dialog-title">
+      <div class="modal-content">
+        <h2 id="reject-dialog-title">Reject comment?</h2>
+        <p>Are you sure you want to reject this comment? It will be removed from the queue.</p>
+        <p class="dialog-context">
+          <strong id="reject-author"></strong> on <strong id="reject-route"></strong>
+        </p>
+        <div class="modal-actions">
+          <button type="button" class="admin-button-ghost small secondary-button" data-dialog-close>Cancel</button>
+          <form id="reject-form" method="post" action="/ap-admin/actions/comment-moderate" style="display: inline;">
+            <CsrfInput token={Astro.locals.csrfToken} />
+            <input type="hidden" name="commentId" value="" />
+            <input type="hidden" name="status" value="rejected" />
+            <button type="submit" class="admin-button small reject-button">Reject</button>
+          </form>
+        </div>
+      </div>
+    </dialog>
+  </ap-confirm-dialog>
+
+  <AuditTrail events={auditEvents.filter((event) => event.targetType === "comment").slice(0, 5)} />
+  <script>
+    import "../../web-components/confirm-dialog";
+  </script>
+</AdminLayout>
+
+<style>
+  .summary-grid,
+  .comments-panel {
+    margin-bottom: 1rem;
+  }
+
+  .summary-card span:first-child {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    font-weight: 700;
+  }
+
+  .summary-card span:last-child {
+    color: var(--muted);
+    font-size: 0.9rem;
+  }
+
+  .comments-panel {
+    display: grid;
+    gap: 1rem;
+  }
+
+  .action-cell {
+    display: flex;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+  }
+
+  .comment-action {
+    display: inline-flex;
+  }
+
+  [data-confirm-reject] {
+    border-color: color-mix(in srgb, var(--danger) 50%, var(--line));
+    color: var(--danger);
+  }
+
+  [data-confirm-reject]:hover {
+    background: color-mix(in srgb, var(--danger) 10%, transparent);
+  }
+
+  .confirm-modal {
+    border: none;
+    border-radius: 1rem;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    max-width: 400px;
+    padding: 0;
+    backdrop-filter: blur(4px);
+  }
+
+  .confirm-modal::backdrop {
+    background: rgba(0, 0, 0, 0.5);
+  }
+
+  .modal-content {
+    padding: 1.75rem;
+  }
+
+  .modal-content h2 {
+    margin: 0 0 1rem;
+    font-size: 1.25rem;
+    color: var(--text);
+  }
+
+  .modal-content p {
+    margin: 0 0 0.75rem;
+    color: var(--text-muted);
+    font-size: 0.95rem;
+    line-height: 1.6;
+  }
+
+  .modal-content p:last-of-type {
+    margin-bottom: 1.5rem;
+  }
+
+  .dialog-context {
+    background: var(--bg);
+    padding: 0.75rem;
+    border-radius: 0.6rem;
+    font-family: "Monaco", monospace;
+    font-size: 0.85rem;
+    color: var(--text);
+    word-break: break-all;
+  }
+
+  .modal-actions {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: flex-end;
+  }
+
+  .secondary-button {
+    padding: 0;
+  }
+
+  .secondary-button:hover {
+    background: var(--accent-soft);
+  }
+
+  .reject-button {
+    background: var(--danger);
+  }
+
+  .reject-button:hover {
+    background: #a83021;
+  }
+</style>

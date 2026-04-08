@@ -3,13 +3,13 @@ import { test, expect } from "@playwright/test";
 import { expectKeyboardFocusMoves, expectNoAxeViolations } from "./helpers/accessibility";
 
 const routes = [
-  { path: "/wp-admin", heading: "Dashboard" },
-  { path: "/wp-admin/posts", heading: "Posts" },
-  { path: "/wp-admin/comments", heading: "Comments" },
-  { path: "/wp-admin/redirects", heading: "Redirects" },
-  { path: "/wp-admin/login", heading: "Sign in to the admin" },
-  { path: "/wp-admin/reset-password", heading: "Reset password" },
-  { path: "/wp-admin/accept-invite?token=demo", heading: "Accept invitation" },
+  { path: "/ap-admin", heading: "Dashboard" },
+  { path: "/ap-admin/posts", heading: "Posts" },
+  { path: "/ap-admin/comments", heading: "Comments" },
+  { path: "/ap-admin/redirects", heading: "Redirects" },
+  { path: "/ap-admin/login", heading: "Sign in to the admin" },
+  { path: "/ap-admin/reset-password", heading: "Reset password" },
+  { path: "/ap-admin/accept-invite?token=demo", heading: "Accept invitation" },
 ];
 
 test.describe("Feature: package-owned admin accessibility coverage", () => {
@@ -23,7 +23,7 @@ test.describe("Feature: package-owned admin accessibility coverage", () => {
   }
 
   test("Scenario: redirects confirmation dialog is keyboard operable", async ({ page }) => {
-    await page.goto("/wp-admin/redirects", { waitUntil: "networkidle" });
+    await page.goto("/ap-admin/redirects", { waitUntil: "networkidle" });
     await page.locator("[data-confirm-delete]").first().click();
     const dialog = page.locator("#confirm-dialog");
     await expect(dialog).toBeVisible();
@@ -33,7 +33,7 @@ test.describe("Feature: package-owned admin accessibility coverage", () => {
   });
 
   test("Scenario: comments rejection dialog restores focus and remains axe clean", async ({ page }) => {
-    await page.goto("/wp-admin/comments", { waitUntil: "networkidle" });
+    await page.goto("/ap-admin/comments", { waitUntil: "networkidle" });
     const trigger = page.locator("[data-confirm-reject]").first();
     await trigger.click();
     const dialog = page.locator("#reject-dialog");
@@ -45,7 +45,7 @@ test.describe("Feature: package-owned admin accessibility coverage", () => {
   });
 
   test("Scenario: post editor media dialog opens from the canonical textarea editor", async ({ page }) => {
-    await page.goto("/wp-admin/posts", { waitUntil: "networkidle" });
+    await page.goto("/ap-admin/posts", { waitUntil: "networkidle" });
     await page.getByRole("link", { name: "Hello World" }).click();
     await expect(page.getByRole("heading", { level: 1, name: "Edit Post" })).toBeVisible();
     await expect(page.getByRole("textbox", { name: "Body HTML" })).toBeVisible();

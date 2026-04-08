@@ -142,11 +142,14 @@ const verificationGroups: VerificationGroup[] = [
       "Importing a WordPress export stages editorial inventory into Astropress import artifacts",
       "WordPress import produces inspect plan and report artifacts",
       "WordPress import can resume staged media downloads",
+      "WordPress import normalizes non-standard post statuses for editorial workflow",
+      "WordPress import preserves content fidelity for XML entity references",
+      "WordPress import produces a structured operator-facing import report file",
     ],
     steps: [
       {
         command: "bunx",
-        args: ["vitest", "run", "tests/wordpress-import.contract.test.ts"],
+        args: ["vitest", "run", "tests/wordpress-import.contract.test.ts", "tests/wordpress-import-branches.test.ts"],
         cwd: astropressPackageRoot,
       },
       {
@@ -233,6 +236,20 @@ const verificationGroups: VerificationGroup[] = [
       {
         command: "bunx",
         args: ["vitest", "run", "tests/deploy-and-sync.contract.test.ts"],
+        cwd: astropressPackageRoot,
+      },
+    ],
+  },
+  {
+    label: "cloudflare content store scenarios",
+    scenarios: [
+      "Cloudflare content adapter persists post status updates through the database",
+      "Cloudflare media adapter records the byte size of uploaded assets",
+    ],
+    steps: [
+      {
+        command: "bunx",
+        args: ["vitest", "run", "tests/cloudflare-adapter-full.test.ts"],
         cwd: astropressPackageRoot,
       },
     ],

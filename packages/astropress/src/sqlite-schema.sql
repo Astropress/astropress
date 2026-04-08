@@ -237,7 +237,7 @@ CREATE TABLE IF NOT EXISTS site_settings (
   donation_url TEXT NOT NULL,
   newsletter_enabled INTEGER NOT NULL DEFAULT 0,
   comments_default_policy TEXT NOT NULL CHECK(comments_default_policy IN ('disabled', 'legacy-readonly', 'open-moderated')),
-  admin_slug TEXT NOT NULL DEFAULT 'wp-admin',
+  admin_slug TEXT NOT NULL DEFAULT 'ap-admin',
   updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_by TEXT NOT NULL
 );

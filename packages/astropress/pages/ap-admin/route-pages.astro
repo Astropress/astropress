@@ -1,0 +1,212 @@
+---
+import AdminLayout from "astropress/components/AdminLayout.astro";
+import { buildRouteTablePageModel } from "astropress";
+
+const adminUser = Astro.locals.adminUser;
+const model = await buildRouteTablePageModel(Astro.locals, adminUser!.role);
+const { routePages, settings } = model.data;
+if (model.status === "forbidden") {
+  Astro.response.status = 403;
+}
+const currentAdminSlug = settings.adminSlug || "ap-admin";
+const isDefaultSlug = currentAdminSlug === "ap-admin";
+const slugSaved = Astro.url.searchParams.get("slugSaved") === "1";
+const slugError = Astro.url.searchParams.get("error");
+---
+
+{model.status !== "forbidden" ? (
+  <AdminLayout
+    title="Route Table | Astropress Admin"
+    heading="Route Table"
+    currentPath="/ap-admin/route-pages"
+    description="Technical inventory of route-backed structured pages. Normal page editing should start from Pages."
+    role={adminUser!.role}
+    userName={adminUser!.name}
+  >
+    {model.warnings.length > 0 && <p class="notice">Some route-table data is temporarily unavailable. This page is showing partial results.</p>}
+
+    <section class="panel admin-slug-panel">
+      <div class="section-header">
+        <div>
+          <p class="admin-kicker">Security</p>
+          <h2>Admin URL</h2>
+          <p>
+            The admin area is accessible at <code>/{currentAdminSlug}/</code>. Changing it to a unique path makes it harder for bots to find your login page.
+          </p>
+        </div>
+      </div>
+
+      {isDefaultSlug && (
+        <div class="slug-warning" role="alert">
+          <strong>You are using the default admin path <code>/ap-admin/</code>.</strong> Automated bots routinely target this path. Change it to a unique value to reduce unwanted login attempts.
+        </div>
+      )}
+
+      {slugSaved && (
+        <p class="slug-success">Admin URL updated. You are now at <code>/{currentAdminSlug}/route-pages</code>.</p>
+      )}
+
+      {slugError && (
+        <p class="slug-error">{slugError}</p>
+      )}
+
+      <form method="post" action="/ap-admin/actions/admin-slug-save" class="slug-form">
+        <input type="hidden" name="_csrf" value={Astro.locals.csrfToken ?? ""} />
+        <div class="slug-field">
+          <label for="adminSlug">Admin URL prefix</label>
+          <div class="slug-input-row">
+            <span class="slug-prefix">your-site.com/</span>
+            <input
+              type="text"
+              id="adminSlug"
+              name="adminSlug"
+              value={currentAdminSlug}
+              required
+              pattern="[a-z0-9][a-z0-9\-]*[a-z0-9]|[a-z0-9]"
+              title="Lowercase letters, numbers, and hyphens only. Cannot start or end with a hyphen."
+              class="admin-input slug-input"
+            />
+            <span class="slug-suffix">/</span>
+          </div>
+          <p class="field-note">Lowercase letters, numbers, and hyphens only. Avoid generic paths like <code>admin</code> or <code>cms</code>.</p>
+        </div>
+        <div class="form-actions">
+          <button type="submit" class="admin-button">Save admin URL</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="panel route-table-panel">
+      <div class="section-header">
+        <div>
+          <p class="admin-kicker">Technical Inventory</p>
+          <h2>Structured Route Inventory</h2>
+          <p>Use this screen for technical route review. Normal editorial work should still start from Pages.</p>
+        </div>
+        <a href="/ap-admin/pages" class="admin-button-secondary">Back to pages</a>
+      </div>
+      <div class="admin-table-shell">
+        <table aria-label="Route pages list">
+          <thead>
+            <tr>
+              <th>Title</th>
+              <th>Path</th>
+              <th>Template</th>
+              <th>Owner Editor</th>
+              <th>Public View</th>
+              <th>Updated</th>
+            </tr>
+          </thead>
+          <tbody>
+            {routePages.map((page) => (
+              <tr>
+                <td>
+                  <a href={`/ap-admin/route-pages${page.path}`}>{page.title}</a>
+                </td>
+                <td><code>{page.path}</code></td>
+                <td><span class="admin-chip">{page.templateKey}</span></td>
+                <td><a href="/ap-admin/pages" class="admin-button-ghost small">Pages</a></td>
+                <td><a href={page.path} target="_blank" rel="noreferrer" class="admin-button-ghost small">Open route</a></td>
+                <td>{page.updatedAt ? new Date(page.updatedAt).toLocaleString() : "Seeded"}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </AdminLayout>
+) : (
+  <AdminLayout
+    title="Forbidden | Astropress Admin"
+    heading="Forbidden"
+    currentPath="/ap-admin/posts"
+    description="This action requires an admin account."
+    role={adminUser!.role}
+    userName={adminUser!.name}
+  >
+    <section class="panel">
+      <p>This action requires an admin account and is hidden from editor-only roles.</p>
+    </section>
+  </AdminLayout>
+)}
+
+<style>
+  .route-table-panel {
+    display: grid;
+    gap: 1rem;
+  }
+
+  .admin-slug-panel {
+    display: grid;
+    gap: 1.25rem;
+  }
+
+  .slug-warning {
+    background: #fff8e1;
+    border: 1px solid #f59e0b;
+    border-left: 4px solid #f59e0b;
+    border-radius: 4px;
+    padding: 0.75rem 1rem;
+    color: #92400e;
+    font-size: 0.9rem;
+  }
+
+  .slug-success {
+    background: #f0fdf4;
+    border: 1px solid #22c55e;
+    border-radius: 4px;
+    padding: 0.6rem 1rem;
+    color: #166534;
+    font-size: 0.9rem;
+    margin: 0;
+  }
+
+  .slug-error {
+    background: #fef2f2;
+    border: 1px solid #ef4444;
+    border-radius: 4px;
+    padding: 0.6rem 1rem;
+    color: #991b1b;
+    font-size: 0.9rem;
+    margin: 0;
+  }
+
+  .slug-form {
+    display: grid;
+    gap: 1rem;
+    max-width: 480px;
+  }
+
+  .slug-field {
+    display: grid;
+    gap: 0.4rem;
+  }
+
+  .slug-field label {
+    font-weight: 600;
+    font-size: 0.9rem;
+  }
+
+  .slug-input-row {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+  }
+
+  .slug-prefix,
+  .slug-suffix {
+    color: var(--text-muted, #6b7280);
+    font-size: 0.9rem;
+    white-space: nowrap;
+  }
+
+  .slug-input {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .form-actions {
+    display: flex;
+    gap: 0.75rem;
+  }
+</style>

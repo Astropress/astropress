@@ -59,7 +59,7 @@ export function createAstropressUserRepository(input) {
         summary: `Invited ${email} as an ${role} user.`,
         targetId: email,
       });
-      return { ok: true, inviteUrl: `/wp-admin/accept-invite?token=${encodeURIComponent(rawToken)}` };
+      return { ok: true, inviteUrl: `/ap-admin/accept-invite?token=${encodeURIComponent(rawToken)}` };
     },
     suspendAdminUser(email, actor) {
       const normalizedEmail = email.trim().toLowerCase();

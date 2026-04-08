@@ -12,7 +12,7 @@ describe("settings repository factory", () => {
         donationUrl: "/donate",
         newsletterEnabled: true,
         commentsDefaultPolicy: "open-moderated",
-        adminSlug: "wp-admin",
+        adminSlug: "ap-admin",
       })),
       persistSettings,
       recordSettingsAudit,
@@ -34,7 +34,7 @@ describe("settings repository factory", () => {
         donationUrl: "/donate",
         newsletterEnabled: false,
         commentsDefaultPolicy: "open-moderated",
-        adminSlug: "wp-admin",
+        adminSlug: "ap-admin",
       },
     });
     expect(persistSettings).toHaveBeenCalledTimes(1);

@@ -197,7 +197,7 @@ export function createAstropressAuthRepository(
         });
       }
 
-      return { ok: true as const, resetUrl: `/wp-admin/reset-password?token=${encodeURIComponent(rawToken)}` };
+      return { ok: true as const, resetUrl: `/ap-admin/reset-password?token=${encodeURIComponent(rawToken)}` };
     },
     getInviteRequest(rawToken) {
       const trimmedToken = rawToken.trim();

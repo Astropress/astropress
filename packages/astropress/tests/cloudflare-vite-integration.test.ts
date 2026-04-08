@@ -74,5 +74,18 @@ describe("cloudflare vite integration helper", () => {
     expect(integration.plugin.resolveId("astropress/sqlite-bootstrap")).toBe(
       "astropress/cloudflare-sqlite-bootstrap-stub",
     );
+
+    // line 115: non-matching ID returns null
+    expect(integration.plugin.resolveId("/workspace/packages/astropress/src/some-other-module.ts")).toBeNull();
+
+    // lines 23-24: file:// URL normalization (decodeURIComponent + file:// strip)
+    expect(integration.plugin.resolveId("file:///workspace/packages/astropress/src/local-image-storage.ts")).toBe(
+      "astropress/cloudflare-local-image-storage-stub",
+    );
+
+    // lines 26-27: Windows-style path after file:// stripping (/C:/... → C:/...)
+    expect(integration.plugin.resolveId("file:///C:/workspace/packages/astropress/src/local-image-storage.ts")).toBe(
+      "astropress/cloudflare-local-image-storage-stub",
+    );
   });
 });

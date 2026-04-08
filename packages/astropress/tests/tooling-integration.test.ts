@@ -14,7 +14,7 @@ import { createAstropressViteIntegration } from "../src/vite-integration";
 import { createAstropressVitestLocalRuntimePlugins } from "../src/vitest-runtime-alias";
 import { createAstropressLocalRuntimeModulePlugin } from "../src/vite-runtime-alias";
 
-const pagesDirectory = path.resolve(import.meta.dirname, "../pages/wp-admin");
+const pagesDirectory = path.resolve(import.meta.dirname, "../pages/ap-admin");
 
 describe("tooling integration", () => {
   it("ships page files for the canonical admin route inventory and injects them through the Astro integration", () => {
@@ -30,14 +30,26 @@ describe("tooling integration", () => {
       injectRoute(route) {
         injectedRoutes.push(route);
       },
+      addMiddleware: () => {},
     } as never);
     const callbackInjectedRoutes: Array<{ pattern: string; entrypoint: string }> = [];
 
-    expect(ASTROPRESS_ADMIN_BASE_PATH).toBe("/wp-admin");
+    expect(ASTROPRESS_ADMIN_BASE_PATH).toBe("/ap-admin");
     expect(listAstropressAdminRoutes()).toHaveLength(routeEntrypoints.length);
     expect(injectedRoutes).toEqual(routeEntrypoints);
     expect(injectAstropressAdminRoutes(pagesDirectory, (route) => callbackInjectedRoutes.push(route))).toEqual(routeEntrypoints);
     expect(callbackInjectedRoutes).toEqual(routeEntrypoints);
+  });
+
+  it("registers security middleware via addMiddleware in astro:config:setup", () => {
+    const integration = createAstropressAdminAppIntegration();
+    const registered: unknown[] = [];
+    integration.hooks["astro:config:setup"]?.({
+      injectRoute: () => {},
+      addMiddleware: (m) => registered.push(m),
+    } as never);
+    expect(registered).toHaveLength(1);
+    expect(registered[0]).toMatchObject({ order: "pre" });
   });
 
   it("exposes Vite, Vitest, and host runtime helpers from one coherent boundary", async () => {

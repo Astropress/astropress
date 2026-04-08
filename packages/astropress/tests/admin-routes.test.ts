@@ -12,90 +12,90 @@ describe("admin routes", () => {
   it("defines the full package-owned admin surface", () => {
     const routes = listAstropressAdminRoutes();
 
-    expect(ASTROPRESS_ADMIN_BASE_PATH).toBe("/wp-admin");
+    expect(ASTROPRESS_ADMIN_BASE_PATH).toBe("/ap-admin");
     expect(routes).toHaveLength(51);
     expect(routes.filter((route) => route.kind === "page")).toHaveLength(24);
     expect(routes.filter((route) => route.kind === "action")).toHaveLength(26);
     expect(routes.filter((route) => route.kind === "endpoint")).toHaveLength(1);
     expect(routes.map((route) => route.pattern)).toEqual([
-      "/wp-admin",
-      "/wp-admin/login",
-      "/wp-admin/accept-invite",
-      "/wp-admin/reset-password",
-      "/wp-admin/session",
-      "/wp-admin/posts",
-      "/wp-admin/posts/new",
-      "/wp-admin/posts/[slug]",
-      "/wp-admin/posts/[slug]/revisions",
-      "/wp-admin/pages",
-      "/wp-admin/pages/new",
-      "/wp-admin/route-pages",
-      "/wp-admin/route-pages/[...slug]",
-      "/wp-admin/archives",
-      "/wp-admin/archives/[...slug]",
-      "/wp-admin/media",
-      "/wp-admin/redirects",
-      "/wp-admin/comments",
-      "/wp-admin/translations",
-      "/wp-admin/seo",
-      "/wp-admin/authors",
-      "/wp-admin/taxonomies",
-      "/wp-admin/users",
-      "/wp-admin/settings",
-      "/wp-admin/system",
-      "/wp-admin/actions/accept-invite",
-      "/wp-admin/actions/admin-slug-save",
-      "/wp-admin/actions/archive-save",
-      "/wp-admin/actions/author-delete",
-      "/wp-admin/actions/author-save",
-      "/wp-admin/actions/comment-moderate",
-      "/wp-admin/actions/content-create",
-      "/wp-admin/actions/content-save",
-      "/wp-admin/actions/media-delete",
-      "/wp-admin/actions/media-update",
-      "/wp-admin/actions/media-upload",
-      "/wp-admin/actions/redirect-create",
-      "/wp-admin/actions/redirect-delete",
-      "/wp-admin/actions/reset-password",
-      "/wp-admin/actions/revision-restore",
-      "/wp-admin/actions/route-page-create",
-      "/wp-admin/actions/route-page-save",
-      "/wp-admin/actions/settings-save",
-      "/wp-admin/actions/system-route-save",
-      "/wp-admin/actions/taxonomy-delete",
-      "/wp-admin/actions/taxonomy-save",
-      "/wp-admin/actions/translation-update",
-      "/wp-admin/actions/user-invite",
-      "/wp-admin/actions/user-reset-link",
-      "/wp-admin/actions/user-suspend",
-      "/wp-admin/actions/user-unsuspend",
+      "/ap-admin",
+      "/ap-admin/login",
+      "/ap-admin/accept-invite",
+      "/ap-admin/reset-password",
+      "/ap-admin/session",
+      "/ap-admin/posts",
+      "/ap-admin/posts/new",
+      "/ap-admin/posts/[slug]",
+      "/ap-admin/posts/[slug]/revisions",
+      "/ap-admin/pages",
+      "/ap-admin/pages/new",
+      "/ap-admin/route-pages",
+      "/ap-admin/route-pages/[...slug]",
+      "/ap-admin/archives",
+      "/ap-admin/archives/[...slug]",
+      "/ap-admin/media",
+      "/ap-admin/redirects",
+      "/ap-admin/comments",
+      "/ap-admin/translations",
+      "/ap-admin/seo",
+      "/ap-admin/authors",
+      "/ap-admin/taxonomies",
+      "/ap-admin/users",
+      "/ap-admin/settings",
+      "/ap-admin/system",
+      "/ap-admin/actions/accept-invite",
+      "/ap-admin/actions/admin-slug-save",
+      "/ap-admin/actions/archive-save",
+      "/ap-admin/actions/author-delete",
+      "/ap-admin/actions/author-save",
+      "/ap-admin/actions/comment-moderate",
+      "/ap-admin/actions/content-create",
+      "/ap-admin/actions/content-save",
+      "/ap-admin/actions/media-delete",
+      "/ap-admin/actions/media-update",
+      "/ap-admin/actions/media-upload",
+      "/ap-admin/actions/redirect-create",
+      "/ap-admin/actions/redirect-delete",
+      "/ap-admin/actions/reset-password",
+      "/ap-admin/actions/revision-restore",
+      "/ap-admin/actions/route-page-create",
+      "/ap-admin/actions/route-page-save",
+      "/ap-admin/actions/settings-save",
+      "/ap-admin/actions/system-route-save",
+      "/ap-admin/actions/taxonomy-delete",
+      "/ap-admin/actions/taxonomy-save",
+      "/ap-admin/actions/translation-update",
+      "/ap-admin/actions/user-invite",
+      "/ap-admin/actions/user-reset-link",
+      "/ap-admin/actions/user-suspend",
+      "/ap-admin/actions/user-unsuspend",
     ]);
   });
 
   it("resolves entrypoints from a package pages directory", () => {
-    const routeEntrypoints = resolveAstropressAdminRouteEntrypoints("/tmp/astropress/pages/wp-admin/");
+    const routeEntrypoints = resolveAstropressAdminRouteEntrypoints("/tmp/astropress/pages/ap-admin/");
 
     expect(routeEntrypoints[0]).toEqual({
-      pattern: "/wp-admin",
-      entrypoint: "/tmp/astropress/pages/wp-admin/index.astro",
+      pattern: "/ap-admin",
+      entrypoint: "/tmp/astropress/pages/ap-admin/index.astro",
       kind: "page",
     });
     expect(routeEntrypoints.at(-1)).toEqual({
-      pattern: "/wp-admin/actions/user-unsuspend",
-      entrypoint: "/tmp/astropress/pages/wp-admin/actions/user-unsuspend.ts",
+      pattern: "/ap-admin/actions/user-unsuspend",
+      entrypoint: "/tmp/astropress/pages/ap-admin/actions/user-unsuspend.ts",
       kind: "action",
     });
   });
 
   it("builds an injection plan from the same canonical route inventory", () => {
-    expect(createAstropressAdminRouteInjectionPlan("/tmp/astropress/pages/wp-admin")).toEqual(
-      resolveAstropressAdminRouteEntrypoints("/tmp/astropress/pages/wp-admin"),
+    expect(createAstropressAdminRouteInjectionPlan("/tmp/astropress/pages/ap-admin")).toEqual(
+      resolveAstropressAdminRouteEntrypoints("/tmp/astropress/pages/ap-admin"),
     );
   });
 
   it("injects the full canonical route plan into a host callback", () => {
     const injectedRoutes: ReturnType<typeof createAstropressAdminRouteInjectionPlan> = [];
-    const plan = injectAstropressAdminRoutes("/tmp/astropress/pages/wp-admin", (route) => {
+    const plan = injectAstropressAdminRoutes("/tmp/astropress/pages/ap-admin", (route) => {
       injectedRoutes.push(route);
     });
 

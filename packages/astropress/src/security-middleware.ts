@@ -6,7 +6,7 @@ export interface AstropressSecurityMiddlewareOptions extends AstropressSecurityH
   resolveArea?: (url: URL) => AstropressSecurityArea;
 }
 
-export function resolveAstropressSecurityArea(url: URL, adminBasePath = "/wp-admin"): AstropressSecurityArea {
+export function resolveAstropressSecurityArea(url: URL, adminBasePath = "/ap-admin"): AstropressSecurityArea {
   if (!url.pathname.startsWith(adminBasePath)) {
     return "public";
   }

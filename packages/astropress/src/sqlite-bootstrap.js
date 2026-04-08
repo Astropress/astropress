@@ -15,7 +15,7 @@ var defaultSiteSettings = {
   donationUrl: "",
   newsletterEnabled: false,
   commentsDefaultPolicy: "legacy-readonly",
-  adminSlug: "wp-admin"
+  adminSlug: "ap-admin"
 };
 
 // packages/astropress/src/sqlite-bootstrap.ts

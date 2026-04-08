@@ -28,7 +28,7 @@ function makeContext(
     },
     locals: {} as App.Locals,
     request: {
-      url: options.url ?? "https://example.com/wp-admin/actions/content-save",
+      url: options.url ?? "https://example.com/ap-admin/actions/content-save",
       headers,
       formData: vi.fn(async () => {
         const fd = new FormData();
@@ -58,12 +58,12 @@ describe("admin action utils", () => {
     const { requireAdminFormAction } = await import("astropress");
 
     const result = await requireAdminFormAction(makeContext({ _csrf: "csrf-token" }), {
-      failurePath: "/wp-admin/posts",
+      failurePath: "/ap-admin/posts",
     });
 
     expect(result.ok).toBe(false);
     if (!result.ok) {
-      expect(result.response.headers.get("Location")).toBe("/wp-admin/login");
+      expect(result.response.headers.get("Location")).toBe("/ap-admin/login");
     }
   });
 
@@ -76,13 +76,13 @@ describe("admin action utils", () => {
     const { requireAdminFormAction } = await import("astropress");
 
     const result = await requireAdminFormAction(makeContext({ _csrf: "csrf-token" }), {
-      failurePath: "/wp-admin/users",
+      failurePath: "/ap-admin/users",
       requireAdmin: true,
     });
 
     expect(result.ok).toBe(false);
     if (!result.ok) {
-      expect(result.response.headers.get("Location")).toContain("/wp-admin/users?error=1");
+      expect(result.response.headers.get("Location")).toContain("/ap-admin/users?error=1");
     }
   });
 
@@ -90,12 +90,12 @@ describe("admin action utils", () => {
     const { requireAdminFormAction } = await import("astropress");
 
     const result = await requireAdminFormAction(makeContext({ _csrf: "wrong" }), {
-      failurePath: "/wp-admin/posts/new",
+      failurePath: "/ap-admin/posts/new",
     });
 
     expect(result.ok).toBe(false);
     if (!result.ok) {
-      expect(result.response.headers.get("Location")).toBe("/wp-admin/posts/new?error=1&message=Invalid+security+token");
+      expect(result.response.headers.get("Location")).toBe("/ap-admin/posts/new?error=1&message=Invalid+security+token");
     }
   });
 
@@ -104,12 +104,12 @@ describe("admin action utils", () => {
 
     const result = await requireAdminFormAction(
       makeContext({ _csrf: "csrf-token" }, { origin: "https://evil.example" }),
-      { failurePath: "/wp-admin/posts/new" },
+      { failurePath: "/ap-admin/posts/new" },
     );
 
     expect(result.ok).toBe(false);
     if (!result.ok) {
-      expect(result.response.headers.get("Location")).toBe("/wp-admin/posts/new?error=1&message=Invalid+request+origin");
+      expect(result.response.headers.get("Location")).toBe("/ap-admin/posts/new?error=1&message=Invalid+request+origin");
     }
   });
 
@@ -118,13 +118,13 @@ describe("admin action utils", () => {
 
     const response = await withAdminFormAction(
       makeContext({ _csrf: "csrf-token" }),
-      { failurePath: "/wp-admin/posts/new" },
+      { failurePath: "/ap-admin/posts/new" },
       async () => {
         throw new Error("boom");
       },
     );
 
-    expect(response.headers.get("Location")).toBe("/wp-admin/posts/new?error=1&message=Something+went+wrong.+Please+try+again.");
+    expect(response.headers.get("Location")).toBe("/ap-admin/posts/new?error=1&message=Something+went+wrong.+Please+try+again.");
   });
 
   it("passes actor and form data into successful handlers", async () => {
@@ -132,20 +132,20 @@ describe("admin action utils", () => {
 
     const response = await withAdminFormAction(
       makeContext({ _csrf: "csrf-token", slug: "hello-world" }),
-      { failurePath: "/wp-admin/posts/new" },
+      { failurePath: "/ap-admin/posts/new" },
       async ({ actor, formData, redirect }) => {
         expect(actor.email).toBe("admin@example.com");
         expect(String(formData.get("slug"))).toBe("hello-world");
-        return redirect("/wp-admin/posts/hello-world?created=1");
+        return redirect("/ap-admin/posts/hello-world?created=1");
       },
     );
 
-    expect(response.headers.get("Location")).toBe("/wp-admin/posts/hello-world?created=1");
+    expect(response.headers.get("Location")).toBe("/ap-admin/posts/hello-world?created=1");
   });
 
   it("builds error redirects with encoded messages", async () => {
     const { actionErrorRedirect } = await import("astropress");
-    const response = actionErrorRedirect("/wp-admin/settings", "Bad input");
-    expect(response.headers.get("Location")).toBe("/wp-admin/settings?error=1&message=Bad+input");
+    const response = actionErrorRedirect("/ap-admin/settings", "Bad input");
+    expect(response.headers.get("Location")).toBe("/ap-admin/settings?error=1&message=Bad+input");
   });
 });

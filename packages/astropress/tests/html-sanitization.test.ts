@@ -119,4 +119,22 @@ describe("html-sanitization.feature: sanitizeHtml() allowlist contract", () => {
     expect(output).toContain("<li>");
     expect(output).toContain("<p>");
   });
+
+  it("strips an attribute with empty value on a non-class attribute (line 91-92 trimmedValue empty branch)", async () => {
+    // An empty alt="" is explicitly stripped when attribute is not "class" (the !trimmedValue && attr !== "class" branch)
+    const input = '<img src="/image.jpg" alt="" />';
+    const output = await sanitizeHtml(input);
+    // The empty alt attribute is removed; src is a safe URL so it stays
+    expect(output).toContain("/image.jpg");
+    // alt="" (empty non-class attribute) is stripped
+    expect(output).not.toMatch(/alt=""/);
+  });
+
+  it("returns null srcset when all candidates are blocked (line 75 false branch)", async () => {
+    // All candidates use javascript: → all filtered → candidates.length === 0 → null → attr removed
+    const input = '<img srcset="javascript:alert(1) 1x" alt="probe" />';
+    const output = await sanitizeHtml(input);
+    expect(output).not.toContain("srcset=");
+    expect(output).toContain("probe");
+  });
 });

@@ -127,7 +127,7 @@ async function main() {
   const root = process.cwd();
   const requestedProjects = process.argv.slice(2);
   const needsExample = requestedProjects.length === 0 || requestedProjects.some((arg) => arg.includes("example-a11y"));
-  const needsAdminHarness = requestedProjects.length === 0 || requestedProjects.some((arg) => arg.includes("admin-harness-a11y"));
+  const needsAdminHarness = requestedProjects.length === 0 || requestedProjects.some((arg) => arg.includes("admin-harness"));
   const servers: ServerHandle[] = [];
 
   try {
@@ -156,12 +156,12 @@ async function main() {
       );
       servers.push(harnessServer);
       process.env.PLAYWRIGHT_ADMIN_BASE_URL = `http://127.0.0.1:${adminPort}`;
-      await waitForServer(`${process.env.PLAYWRIGHT_ADMIN_BASE_URL}/wp-admin`);
+      await waitForServer(`${process.env.PLAYWRIGHT_ADMIN_BASE_URL}/ap-admin`);
       await warmRoutes(process.env.PLAYWRIGHT_ADMIN_BASE_URL, [
-        "/wp-admin",
-        "/wp-admin/posts",
-        "/wp-admin/comments",
-        "/wp-admin/redirects",
+        "/ap-admin",
+        "/ap-admin/posts",
+        "/ap-admin/comments",
+        "/ap-admin/redirects",
       ]);
     }
 

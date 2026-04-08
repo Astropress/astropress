@@ -307,6 +307,14 @@ function parseWordPressExport(source: string): ParsedBundle {
     }
 
     if (postType === "post" || postType === "page") {
+      const creatorLogin = getTagText(item, "dc:creator");
+      const matchedAuthor = creatorLogin ? authors.find((a) => a.login === creatorLogin) : undefined;
+      const authorLogins = matchedAuthor
+        ? [matchedAuthor.login]
+        : authors.length > 0
+          ? [authors[0]!.login]
+          : [];
+
       contentRecords.push({
         id: `${postType}-${legacyId}`,
         legacyId,
@@ -318,7 +326,7 @@ function parseWordPressExport(source: string): ParsedBundle {
         status: postStatus,
         legacyUrl,
         publishedAt,
-        authorLogins: authors.length > 0 ? [authors[0]!.login] : [],
+        authorLogins,
         categorySlugs,
         tagSlugs,
         oldSlugs,
@@ -939,6 +947,30 @@ export function createAstropressWordPressImportSource(
         if (artifactsOutcome.artifacts) {
           artifactsOutcome.artifacts.localApplyReportFile = localApplyReportFile;
         }
+      }
+
+      if (plan.artifactDir && artifactsOutcome.artifacts) {
+        const reportFile = path.join(plan.artifactDir, "import-report.json");
+        const report = {
+          generatedAt: new Date().toISOString(),
+          status: plan.reviewRequired || artifactsOutcome.failedMedia.length > 0 ? "completed_with_warnings" : "completed",
+          counts: {
+            posts: bundle.entityCounts.posts,
+            pages: bundle.entityCounts.pages,
+            attachments: bundle.entityCounts.attachments,
+            comments: bundle.entityCounts.comments,
+            users: bundle.entityCounts.users,
+            categories: bundle.entityCounts.categories,
+            tags: bundle.entityCounts.tags,
+            redirects: bundle.entityCounts.redirects,
+            skipped: bundle.entityCounts.skipped,
+          },
+          mediaErrors: artifactsOutcome.failedMedia.map((f) => ({ id: f.id, sourceUrl: f.sourceUrl, reason: f.reason })),
+          manualReviewFlags: bundle.remediationCandidates,
+          warnings: plan.manualTasks,
+        };
+        await writeJsonArtifact(reportFile, report);
+        artifactsOutcome.artifacts.reportFile = reportFile;
       }
 
       return {

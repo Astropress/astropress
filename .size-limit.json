@@ -1,0 +1,8 @@
+[
+  {
+    "name": "Example site JS (total)",
+    "path": "examples/github-pages/dist/**/*.js",
+    "limit": "10 KB",
+    "gzip": false
+  }
+]

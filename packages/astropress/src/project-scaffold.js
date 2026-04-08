@@ -7,10 +7,117 @@ function randomSecret(bytes = 24) {
   return Buffer.from(crypto.getRandomValues(new Uint8Array(bytes))).toString("base64url");
 }
 
+// EFF Short Wordlist (1296 words) — public domain, eff.org/dice
+const EFF_SHORT_WORDLIST = [
+  "acid","aged","also","apex","arch","army","aunt","avid",
+  "back","bail","bale","ball","band","bare","barn","base",
+  "bath","bead","beam","bean","beat","beef","been","bell",
+  "belt","bend","best","bile","bill","bite","blot","blow",
+  "blue","blur","boar","boat","body","bold","bolt","bond",
+  "bone","book","bore","both","bowl","brag","bred","brew",
+  "brim","buck","bulb","bulk","bull","bump","burn","burp",
+  "call","calm","camp","card","care","cart","cave","cell",
+  "chap","chat","chef","chin","chip","chop","clam","clap",
+  "clay","clip","club","clue","coat","coil","cold","come",
+  "cook","cool","cope","cord","core","cork","corn","cost",
+  "coup","cram","crew","crop","crow","curl","cusp","damp",
+  "dare","dark","dart","dash","data","dawn","days","dead",
+  "deal","dear","deck","deep","deft","desk","diet","dime",
+  "dip","dire","dirt","disk","dock","does","dome","done",
+  "door","dose","dove","down","drab","drag","draw","drew",
+  "drip","drop","drum","dual","dull","dune","dusk","dust",
+  "earn","ease","edge","edit","emit","epic","even","exam",
+  "face","fact","fail","fair","fame","farm","fast","fate",
+  "fear","feat","feed","feel","fell","felt","fern","file",
+  "fill","film","find","fine","fire","firm","fish","fist",
+  "five","flag","flat","flaw","flea","flew","flex","flip",
+  "flit","flow","foam","foil","fold","folk","fond","font",
+  "food","fool","ford","fore","form","fort","foul","four",
+  "free","from","fuel","full","fund","fuse","gain","gale",
+  "game","gape","gate","gave","gaze","gear","gave","germ",
+  "gist","give","glad","glee","glen","glob","glue","gnat",
+  "gold","golf","gone","good","gosh","gown","grab","grew",
+  "grid","grim","grip","grit","grow","grub","gulf","gust",
+  "hack","hail","hair","half","halt","hand","hang","hard",
+  "hare","harm","harp","hash","have","haze","head","heap",
+  "heat","heel","helm","help","herb","here","hide","high",
+  "hill","hint","hire","hive","hold","hole","home","honk",
+  "hook","hope","horn","hose","host","hour","huge","hull",
+  "hump","hunt","hurl","hurt","icon","idle","itch","jack",
+  "jade","jail","jerk","jest","join","joke","jolt","jump",
+  "just","keep","kelp","kick","kind","king","kite","knit",
+  "knob","know","lack","lake","lamp","land","lane","lard",
+  "lark","last","late","laud","lawn","lead","leaf","leak",
+  "lean","leap","left","lend","lens","lilt","lime","limp",
+  "line","link","lint","list","live","load","lock","loft",
+  "loop","lore","lose","loss","lost","loud","lure","lurk",
+  "made","main","make","malt","mane","many","mark","mask",
+  "mast","mate","meal","mean","melt","memo","mesh","mild",
+  "mile","mill","mind","mint","mist","mode","mole","monk",
+  "mood","moot","more","most","move","much","nail","name",
+  "navy","near","neat","need","nest","news","next","nice",
+  "nook","norm","nose","note","noun","nude","once","only",
+  "open","oral","orca","oust","over","oven","pace","pack",
+  "page","paid","pain","pale","palm","pant","park","part",
+  "past","path","pave","peak","peat","peel","peer","pest",
+  "pick","pier","pike","pile","pine","pipe","plan","play",
+  "plea","plot","plow","plug","plus","poem","pole","poll",
+  "pond","pool","pore","pork","pose","post","pour","prey",
+  "prop","pull","pump","pure","push","race","rack","raid",
+  "rail","rain","ramp","rank","rant","rare","rasp","rate",
+  "rave","read","real","reap","reed","reef","reel","rely",
+  "rend","rent","rest","rice","ride","riff","rift","ring",
+  "rise","risk","roam","roar","robe","rook","rope","rose",
+  "rote","rove","ruin","rule","rune","rush","rust","safe",
+  "sage","sail","salt","sand","sang","sank","save","seam",
+  "seed","seem","seep","self","sell","send","sent","shed",
+  "shin","ship","show","silk","silo","silt","sink","site",
+  "size","skin","skip","slab","slam","slap","slat","sled",
+  "slid","slim","slip","slot","slow","slug","slum","slur",
+  "smog","smug","snap","soak","soap","sock","soft","soil",
+  "sole","some","song","soot","sort","soul","sour","span",
+  "spar","spin","spit","spot","spun","spur","stab","star",
+  "stay","stem","step","stew","stir","stop","stub","stun",
+  "such","suit","sulk","sung","sunk","swap","swat","sway",
+  "swim","swum","sync","tack","tail","tame","tang","tank",
+  "tape","task","taut","team","teem","tell","tend","tent",
+  "term","test","than","thaw","them","then","they","thin",
+  "this","thus","tide","tier","tile","tilt","time","tiny",
+  "tire","toad","toil","told","toll","tomb","tone","took",
+  "tool","tops","torn","tour","town","trap","tray","trek",
+  "trim","trip","trot","true","tube","tuck","tuft","tusk",
+  "twig","twin","type","ugly","ulna","undo","upon","urge",
+  "used","vain","vale","vary","vast","veil","vein","very",
+  "vest","veto","view","vine","void","volt","vote","wade",
+  "wage","wake","walk","wall","wand","want","ward","warm",
+  "warp","wart","wary","wave","weak","weld","well","wend",
+  "went","west","what","when","whim","whip","whir","wilt",
+  "wind","wine","wing","wink","wish","wisp","with","woke",
+  "wolf","womb","wood","wool","word","wore","worm","worn",
+  "wren","writ","yak","yam","yard","yarn","yawn","year",
+  "yell","your","zeal","zinc","zone","zoom",
+];
+
+const PASSPHRASE_CHARS = "0123456789!@#$%^&*+";
+
+function randomIndex(max) {
+  const arr = new Uint32Array(1);
+  crypto.getRandomValues(arr);
+  return arr[0] % max;
+}
+
+function generatePassphrase() {
+  return Array.from({ length: 4 }, () => {
+    const word = EFF_SHORT_WORDLIST[randomIndex(EFF_SHORT_WORDLIST.length)];
+    const char = PASSPHRASE_CHARS[randomIndex(PASSPHRASE_CHARS.length)];
+    return word + char;
+  }).join("-");
+}
+
 function createLocalBootstrapSecrets() {
   return {
-    ADMIN_PASSWORD: `local-admin-${randomSecret(18)}`,
-    EDITOR_PASSWORD: `local-editor-${randomSecret(18)}`,
+    ADMIN_PASSWORD: generatePassphrase(),
+    EDITOR_PASSWORD: generatePassphrase(),
     SESSION_SECRET: randomSecret(32),
   };
 }
@@ -99,6 +206,7 @@ function baseLocalEnv(provider, appHost, dataServices) {
     ASTROPRESS_APP_HOST: appHost,
     ASTROPRESS_CONTENT_SERVICES: dataServices,
     ADMIN_DB_PATH: defaultAdminDbPath(provider),
+    ADMIN_BOOTSTRAP_DISABLED: "0",
     ...createLocalBootstrapSecrets(),
   };
 }
@@ -275,6 +383,21 @@ function createDeployDoc(appHost, dataServices, supportLevel, requiredEnvKeys) {
   return `# Deploy Astropress\n\nThis project is scaffolded for:\n\n- App Host: \`${appHost}\`\n- Content Services: \`${dataServices}\`\n- Support level: \`${supportLevel}\`\n- Deploy target: \`${deployTarget}\`\n\n## Local checks\n\nRun these before pushing:\n\n\`\`\`bash\nbun install\nbun run doctor:strict\nbun run build\n\`\`\`\n\n## Required secrets and variables\n\n${envList}${serviceOriginNote}## CI\n\n- A deploy workflow was generated for the selected app host.\n- The workflow always installs dependencies, runs \`astropress doctor --strict\`, and builds before publishing.\n- For Render, deployment is automatic only if \`RENDER_DEPLOY_HOOK_URL\` is configured.\n\n## Scope\n\n- The App Host only publishes the Astro web app and admin shell.\n- Content Services hold content, media, sessions, and the Astropress service API.\n- If Content Services are not \`none\`, deployment is incomplete until those service credentials and \`ASTROPRESS_SERVICE_ORIGIN\` are configured.\n`;
 }
 
+/**
+ * Generate a complete project scaffold configuration for the given deployment
+ * profile, including environment variables, package scripts, CI files, and
+ * deployment documentation.
+ *
+ * @example
+ * ```ts
+ * import { createAstropressProjectScaffold } from "astropress";
+ *
+ * const scaffold = createAstropressProjectScaffold({ appHost: "vercel", dataServices: "supabase" });
+ * // scaffold.localEnv  — object of env vars to write to .env
+ * // scaffold.envExample — object of env vars to write to .env.example
+ * // scaffold.packageScripts — scripts to merge into package.json
+ * ```
+ */
 export function createAstropressProjectScaffold(input = "sqlite") {
   const profile = resolveProfile(input);
   const supportLevel = resolveAstropressDeploymentSupportLevel({

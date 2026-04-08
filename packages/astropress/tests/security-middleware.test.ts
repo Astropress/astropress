@@ -11,33 +11,33 @@ describe("resolveAstropressSecurityArea", () => {
     expect(resolveAstropressSecurityArea(new URL("http://localhost/blog/post-slug"))).toBe("public");
   });
 
-  it("returns auth for /wp-admin/login", () => {
-    expect(resolveAstropressSecurityArea(new URL("http://localhost/wp-admin/login"))).toBe("auth");
+  it("returns auth for /ap-admin/login", () => {
+    expect(resolveAstropressSecurityArea(new URL("http://localhost/ap-admin/login"))).toBe("auth");
   });
 
-  it("returns auth for /wp-admin/reset-password", () => {
-    expect(resolveAstropressSecurityArea(new URL("http://localhost/wp-admin/reset-password"))).toBe("auth");
+  it("returns auth for /ap-admin/reset-password", () => {
+    expect(resolveAstropressSecurityArea(new URL("http://localhost/ap-admin/reset-password"))).toBe("auth");
   });
 
-  it("returns auth for /wp-admin/accept-invite", () => {
-    expect(resolveAstropressSecurityArea(new URL("http://localhost/wp-admin/accept-invite"))).toBe("auth");
+  it("returns auth for /ap-admin/accept-invite", () => {
+    expect(resolveAstropressSecurityArea(new URL("http://localhost/ap-admin/accept-invite"))).toBe("auth");
   });
 
-  it("returns api for paths under /wp-admin/actions/", () => {
-    expect(resolveAstropressSecurityArea(new URL("http://localhost/wp-admin/actions/save-post"))).toBe("api");
-    expect(resolveAstropressSecurityArea(new URL("http://localhost/wp-admin/actions/redirect-create"))).toBe("api");
+  it("returns api for paths under /ap-admin/actions/", () => {
+    expect(resolveAstropressSecurityArea(new URL("http://localhost/ap-admin/actions/save-post"))).toBe("api");
+    expect(resolveAstropressSecurityArea(new URL("http://localhost/ap-admin/actions/redirect-create"))).toBe("api");
   });
 
-  it("returns admin for other /wp-admin paths", () => {
-    expect(resolveAstropressSecurityArea(new URL("http://localhost/wp-admin/settings"))).toBe("admin");
-    expect(resolveAstropressSecurityArea(new URL("http://localhost/wp-admin/users"))).toBe("admin");
-    expect(resolveAstropressSecurityArea(new URL("http://localhost/wp-admin/posts"))).toBe("admin");
+  it("returns admin for other /ap-admin paths", () => {
+    expect(resolveAstropressSecurityArea(new URL("http://localhost/ap-admin/settings"))).toBe("admin");
+    expect(resolveAstropressSecurityArea(new URL("http://localhost/ap-admin/users"))).toBe("admin");
+    expect(resolveAstropressSecurityArea(new URL("http://localhost/ap-admin/posts"))).toBe("admin");
   });
 
   it("supports a custom adminBasePath", () => {
     expect(resolveAstropressSecurityArea(new URL("http://localhost/admin/login"), "/admin")).toBe("auth");
     expect(resolveAstropressSecurityArea(new URL("http://localhost/admin/settings"), "/admin")).toBe("admin");
-    expect(resolveAstropressSecurityArea(new URL("http://localhost/wp-admin/login"), "/admin")).toBe("public");
+    expect(resolveAstropressSecurityArea(new URL("http://localhost/ap-admin/login"), "/admin")).toBe("public");
   });
 });
 

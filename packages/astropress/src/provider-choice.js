@@ -16,13 +16,25 @@ function finalizeRecommendation(appHost, dataServices, rationale) {
     deployTarget,
     canonicalProvider: dataServices === "cloudflare" || dataServices === "supabase" || dataServices === "firebase" || dataServices === "appwrite" || dataServices === "runway"
       ? dataServices
-      : appHost === "runway"
-        ? "runway"
-        : "cloudflare",
+      : "cloudflare",
     publicDeployTarget: deployTarget
   };
 }
 
+/**
+ * Analyze user preferences and return a recommended provider combination with
+ * rationale and required environment keys.
+ *
+ * @example
+ * ```ts
+ * import { recommendAstropressProvider } from "astropress";
+ *
+ * const rec = recommendAstropressProvider({ existingPlatform: "supabase" });
+ * console.log(rec.appHost);       // "vercel"
+ * console.log(rec.dataServices);  // "supabase"
+ * console.log(rec.supportLevel);  // "supported"
+ * ```
+ */
 export function recommendAstropressProvider(input = {}) {
   const existingPlatform = input.existingPlatform ?? "none";
   const wantsHostedAdmin = input.wantsHostedAdmin ?? true;

@@ -2,6 +2,7 @@
 import { buildAstropressAdminDocumentTitle } from "../src/admin-branding";
 import { applyAstropressSecurityHeaders } from "../src/security-headers";
 import { resolveAstropressAdminUiConfig } from "../src/admin-ui";
+import { getAdminBootstrapConfig } from "../src/runtime-env";
 
 interface NavItem {
   href?: string;
@@ -25,25 +26,26 @@ const { title, heading, currentPath, description = "", role, userName, siteName 
 const documentTitle = buildAstropressAdminDocumentTitle(title);
 const adminUi = resolveAstropressAdminUiConfig();
 const adminSiteName = siteName ?? adminUi.branding.shellName;
+const { bootstrapDisabled } = getAdminBootstrapConfig(Astro.locals);
 applyAstropressSecurityHeaders(Astro.response.headers, { area: "admin", forceHsts: Astro.url.protocol === "https:" });
 
 const navItems: NavItem[] = [
-  { href: "/wp-admin", label: adminUi.navigation.dashboard },
+  { href: "/ap-admin", label: adminUi.navigation.dashboard },
   { href: "", label: adminUi.navigation.contentGroup, isGroupLabel: true },
-  { href: "/wp-admin/pages", label: adminUi.navigation.pages, adminOnly: true, indent: true },
-  { href: "/wp-admin/posts", label: adminUi.navigation.posts, indent: true },
-  { href: "/wp-admin/authors", label: adminUi.navigation.authors, adminOnly: true, indent: true },
-  { href: "/wp-admin/taxonomies", label: adminUi.navigation.taxonomies, adminOnly: true, indent: true },
-  { href: "/wp-admin/route-pages", label: adminUi.navigation.routePages, adminOnly: true, indent: true },
-  { href: "/wp-admin/archives", label: adminUi.navigation.archives, adminOnly: true, indent: true },
-  { href: "/wp-admin/users", label: adminUi.navigation.users, adminOnly: true, indent: true },
-  { href: "/wp-admin/media", label: adminUi.navigation.media },
-  { href: "/wp-admin/comments", label: adminUi.navigation.comments },
-  { href: "/wp-admin/redirects", label: adminUi.navigation.redirects, adminOnly: true },
-  { href: "/wp-admin/translations", label: adminUi.navigation.translations, adminOnly: true },
-  { href: "/wp-admin/seo", label: adminUi.navigation.seo, adminOnly: true },
-  { href: "/wp-admin/system", label: adminUi.navigation.system, adminOnly: true },
-  { href: "/wp-admin/settings", label: adminUi.navigation.settings, adminOnly: true },
+  { href: "/ap-admin/pages", label: adminUi.navigation.pages, adminOnly: true, indent: true },
+  { href: "/ap-admin/posts", label: adminUi.navigation.posts, indent: true },
+  { href: "/ap-admin/authors", label: adminUi.navigation.authors, adminOnly: true, indent: true },
+  { href: "/ap-admin/taxonomies", label: adminUi.navigation.taxonomies, adminOnly: true, indent: true },
+  { href: "/ap-admin/route-pages", label: adminUi.navigation.routePages, adminOnly: true, indent: true },
+  { href: "/ap-admin/archives", label: adminUi.navigation.archives, adminOnly: true, indent: true },
+  { href: "/ap-admin/users", label: adminUi.navigation.users, adminOnly: true, indent: true },
+  { href: "/ap-admin/media", label: adminUi.navigation.media },
+  { href: "/ap-admin/comments", label: adminUi.navigation.comments },
+  { href: "/ap-admin/redirects", label: adminUi.navigation.redirects, adminOnly: true },
+  { href: "/ap-admin/translations", label: adminUi.navigation.translations, adminOnly: true },
+  { href: "/ap-admin/seo", label: adminUi.navigation.seo, adminOnly: true },
+  { href: "/ap-admin/system", label: adminUi.navigation.system, adminOnly: true },
+  { href: "/ap-admin/settings", label: adminUi.navigation.settings, adminOnly: true },
 ];
 ---
 
@@ -94,7 +96,7 @@ const navItems: NavItem[] = [
             <span class="theme-toggle-icon" aria-hidden="true"></span>
           </button>
         </ap-theme-toggle>
-        <form method="post" action="/wp-admin/session?logout=1">
+        <form method="post" action="/ap-admin/session?logout=1">
           <button type="submit">{adminUi.labels.signOut}</button>
         </form>
       </div>
@@ -133,6 +135,11 @@ const navItems: NavItem[] = [
           <h1>{heading}</h1>
           {description && <p>{description}</p>}
         </section>
+        {!bootstrapDisabled && (
+          <ap-notice type="info">
+            You're using default bootstrap credentials — <a href="/ap-admin/settings">change your password</a> before deploying to a live server.
+          </ap-notice>
+        )}
         <slot />
       </main>
     </div>

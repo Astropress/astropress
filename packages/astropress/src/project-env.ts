@@ -115,9 +115,6 @@ export function resolveAstropressAppHostFromEnv(
   }
 
   const dataServices = resolveDataServicesFromLegacyEnv(env);
-  if (dataServices === "cloudflare") {
-    return "cloudflare-pages";
-  }
   if (dataServices === "supabase") {
     return "vercel";
   }
@@ -267,6 +264,20 @@ export function resolveAstropressDeployTarget(
   return mapAppHostToDeployTarget(resolveAstropressAppHostFromEnv(env));
 }
 
+/**
+ * Parse environment variables (with legacy key support) and resolve them into
+ * a normalized project environment contract.
+ *
+ * @example
+ * ```ts
+ * import { resolveAstropressProjectEnvContract } from "astropress";
+ *
+ * const env = resolveAstropressProjectEnvContract(process.env);
+ * console.log(env.localProvider);  // "sqlite" | "supabase" | "runway"
+ * console.log(env.appHost);        // "vercel" | "github-pages" | ...
+ * console.log(env.adminDbPath);    // ".data/admin.sqlite"
+ * ```
+ */
 export function resolveAstropressProjectEnvContract(
   env: Record<string, string | undefined> = process.env,
 ): AstropressProjectEnvContract {

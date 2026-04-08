@@ -389,7 +389,7 @@ export function createD1AdminReadStore(db) {
                     donationUrl: row.donation_url,
                     newsletterEnabled: row.newsletter_enabled === 1,
                     commentsDefaultPolicy: row.comments_default_policy,
-                    adminSlug: row.admin_slug ?? "wp-admin",
+                    adminSlug: row.admin_slug ?? "ap-admin",
                 };
             },
         },

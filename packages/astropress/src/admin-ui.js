@@ -5,7 +5,7 @@ const defaultAdminUiConfig = {
     productName: "Astropress Admin",
     shellName: "Astropress Admin",
     logoSrc: null,
-    logoHref: "/wp-admin",
+    logoHref: "/ap-admin",
     logoAlt: "Astropress Admin",
     faviconHref: null,
     stylesheetHref: null
@@ -75,6 +75,18 @@ function mergeWithDefaults() {
     }
   };
 }
+/**
+ * Merge host-provided CMS config with Astropress defaults to produce a complete
+ * admin UI configuration object ready for use in admin layout templates.
+ *
+ * @example
+ * ```ts
+ * import { resolveAstropressAdminUiConfig } from "astropress";
+ *
+ * const { branding, labels, navigation } = resolveAstropressAdminUiConfig();
+ * console.log(branding.appName); // "Astropress" or host-overridden value
+ * ```
+ */
 export function resolveAstropressAdminUiConfig() {
   const merged = mergeWithDefaults();
   return {
@@ -82,7 +94,7 @@ export function resolveAstropressAdminUiConfig() {
       ...merged.branding,
       shellName: merged.branding.shellName || merged.branding.productName,
       logoAlt: merged.branding.logoAlt || merged.branding.productName,
-      logoHref: merged.branding.logoHref || "/wp-admin",
+      logoHref: merged.branding.logoHref || "/ap-admin",
       stylesheetHref: merged.branding.stylesheetHref || null
     },
     labels: merged.labels,

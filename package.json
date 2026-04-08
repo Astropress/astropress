@@ -13,7 +13,7 @@
     "audit:security": "bun run scripts/security-audit.ts",
     "test": "bun run bdd:lint && bun run bdd:test && bun run --filter astropress test",
     "test:coverage": "bun run --filter astropress test:coverage",
-    "test:acceptance": "bun run scripts/run-playwright.ts --project=example-a11y --project=admin-harness-a11y",
+    "test:acceptance": "bun run scripts/run-playwright.ts --project=example-a11y --project=admin-harness-a11y --project=admin-harness-mobile --project=admin-harness-mobile-iphonese --project=admin-harness-mobile-galaxys5 --project=admin-harness-a11y-interactions",
     "test:accessibility": "bun run --filter astropress-example-gh-pages build && bun run scripts/accessibility-audit.ts examples/github-pages/dist",
     "test:accessibility:browser": "bun run scripts/run-playwright.ts --project=example-a11y",
     "test:accessibility:admin-harness": "bun run scripts/run-playwright.ts --project=admin-harness-a11y",
@@ -22,16 +22,18 @@
     "test:example": "bun run --filter astropress-example-gh-pages check",
     "test:static-site": "bun run --filter astropress-example-gh-pages build && bun run scripts/static-site-audit.ts examples/github-pages/dist",
     "dev:example": "bun run --filter astropress-example-gh-pages dev",
-    "audit:carbon": "bun run scripts/carbon-audit.ts"
+    "audit:carbon": "bunx size-limit && bun run scripts/carbon-audit.ts --domains-only"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.11.1",
     "@playwright/test": "^1.59.1",
+    "@size-limit/file": "^12.0.1",
     "astropress": "workspace:*",
     "axe-core": "^4.10.3",
     "htmlparser2": "^12.0.0",
     "jsdom": "^26.1.0",
-    "playwright": "^1.59.1"
+    "playwright": "^1.59.1",
+    "size-limit": "^12.0.1"
   },
   "overrides": {
     "yaml": "^2.8.3"

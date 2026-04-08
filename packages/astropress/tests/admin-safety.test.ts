@@ -2,7 +2,7 @@ import { readdirSync, readFileSync, statSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 
-const adminPagesRoot = path.resolve(import.meta.dirname, "../pages/wp-admin");
+const adminPagesRoot = path.resolve(import.meta.dirname, "../pages/ap-admin");
 
 function listAstroFiles(root: string, files: string[] = []) {
   for (const entry of readdirSync(root)) {

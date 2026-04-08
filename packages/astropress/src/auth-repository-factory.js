@@ -123,7 +123,7 @@ export function createAstropressAuthRepository(input) {
         });
       }
 
-      return { ok: true, resetUrl: `/wp-admin/reset-password?token=${encodeURIComponent(rawToken)}` };
+      return { ok: true, resetUrl: `/ap-admin/reset-password?token=${encodeURIComponent(rawToken)}` };
     },
     getInviteRequest(rawToken) {
       const trimmedToken = rawToken.trim();

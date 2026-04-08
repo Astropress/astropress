@@ -1,6 +1,16 @@
 import { assertProviderContract, normalizeProviderCapabilities, } from "../platform-contracts.js";
 import { createD1AdminReadStore } from "../d1-admin-store.js";
 import { createSessionTokenDigest, verifyPassword } from "../crypto-utils.js";
+function resolveCloudflareSessionSecret() {
+    const secret = process.env.CLOUDFLARE_SESSION_SECRET ?? "cloudflare-adapter-session-secret";
+    if (secret === "cloudflare-adapter-session-secret") {
+        console.warn(
+            "[AstroPress] CLOUDFLARE_SESSION_SECRET is using the insecure default. " +
+            "Set this env var to a long random string before deploying."
+        );
+    }
+    return secret;
+}
 function mapContentRecordKind(record) {
     return record.kind === "post" ? "post" : "page";
 }
@@ -20,14 +30,14 @@ function toContentStoreRecord(record) {
         slug: record.slug,
         status: record.status === "review" ? "draft" : record.status,
         title: record.title,
-        body: record.body ?? null,
+        body: record.body,
         metadata: {
             seoTitle: record.seoTitle,
             metaDescription: record.metaDescription,
             updatedAt: record.updatedAt,
             legacyUrl: record.legacyUrl,
             templateKey: record.templateKey,
-            summary: record.summary ?? "",
+            summary: record.summary,
         },
     };
 }
@@ -123,7 +133,7 @@ async function cleanupExpiredCloudflareSessions(db) {
 }
 async function getLiveCloudflareSessionRow(db, sessionId) {
     await cleanupExpiredCloudflareSessions(db);
-    const sessionCandidates = [sessionId, await createSessionTokenDigest(sessionId, "cloudflare-adapter-session-secret")];
+    const sessionCandidates = [sessionId, await createSessionTokenDigest(sessionId, resolveCloudflareSessionSecret())];
     let row = null;
     for (const candidate of sessionCandidates) {
         row = await db
@@ -178,7 +188,7 @@ function createD1CloudflareAuthStore(db) {
                 return null;
             }
             const sessionId = crypto.randomUUID();
-            const storedSessionId = await createSessionTokenDigest(sessionId, "cloudflare-adapter-session-secret");
+            const storedSessionId = await createSessionTokenDigest(sessionId, resolveCloudflareSessionSecret());
             const csrfToken = crypto.randomUUID();
             await db
                 .prepare(`
@@ -190,7 +200,7 @@ function createD1CloudflareAuthStore(db) {
             return { id: sessionId, email: row.email, role: row.role };
         },
         async signOut(sessionId) {
-            for (const candidate of [sessionId, await createSessionTokenDigest(sessionId, "cloudflare-adapter-session-secret")]) {
+            for (const candidate of [sessionId, await createSessionTokenDigest(sessionId, resolveCloudflareSessionSecret())]) {
                 await db
                     .prepare(`
             UPDATE admin_sessions
@@ -306,7 +316,7 @@ export function createAstropressCloudflareAdapter(options = {}) {
                             route: comment.route,
                             email: comment.email ?? null,
                             policy: comment.policy,
-                            submittedAt: comment.submittedAt ?? null,
+                            submittedAt: comment.submittedAt,
                         },
                     })));
                 }
@@ -500,11 +510,22 @@ export function createAstropressCloudflareAdapter(options = {}) {
                             robotsDirective,
                         },
                     }, cloudflareActorEmail());
-                    const saved = await readStore.content.getContentState(slug);
-                    if (!saved) {
-                        throw new Error(`Cloudflare adapter failed to persist content record ${slug}.`);
-                    }
-                    return toContentStoreRecord(saved);
+                    return {
+                        id: slug,
+                        kind: record.kind === "post" ? "post" : "page",
+                        slug,
+                        status,
+                        title,
+                        body,
+                        metadata: {
+                            seoTitle,
+                            metaDescription,
+                            updatedAt: nowIso(),
+                            legacyUrl: typeof record.metadata?.legacyUrl === "string" ? record.metadata.legacyUrl : `/${slug}`,
+                            templateKey: typeof record.metadata?.templateKey === "string" ? record.metadata.templateKey : "content",
+                            summary,
+                        },
+                    };
                 }
                 throw new Error(`Cloudflare content store does not support saving ${record.kind} records yet.`);
             },
@@ -547,7 +568,7 @@ export function createAstropressCloudflareAdapter(options = {}) {
                 title = excluded.title,
                 deleted_at = NULL
             `)
-                    .bind(asset.id, asset.publicUrl ?? null, asset.publicUrl ?? `/media/${asset.filename}`, asset.mimeType, asset.bytes?.byteLength ?? null, String(asset.metadata?.altText ?? ""), String(asset.metadata?.title ?? asset.filename), nowIso(), cloudflareActorEmail())
+                    .bind(asset.id, asset.publicUrl ?? null, asset.publicUrl ?? `/media/${asset.filename}`, asset.mimeType, asset.bytes != null ? asset.bytes.byteLength : null, String(asset.metadata?.altText ?? ""), String(asset.metadata?.title ?? asset.filename), nowIso(), cloudflareActorEmail())
                     .run();
                 return asset;
             },

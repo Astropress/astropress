@@ -20,7 +20,7 @@ describe("ap-admin-nav", () => {
           id="admin-sidebar"
         >
           <button type="button" data-nav-close aria-label="Close navigation">✕</button>
-          <a href="/wp-admin">Dashboard</a>
+          <a href="/ap-admin">Dashboard</a>
         </nav>
       </div>
     `;

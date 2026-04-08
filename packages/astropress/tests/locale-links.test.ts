@@ -84,6 +84,12 @@ describe("sanitizeCanonicalUrl()", () => {
     const url = sanitizeCanonicalUrl("https://example.com/en/impact", "/en/impact");
     expect(url).toMatch(/\/en\/impact\/$/);
   });
+
+  it("preserves '/' without adding extra slash when override URL is the site root", () => {
+    // Covers the `parsed.pathname === "/"` ternary true branch on line 46
+    const url = sanitizeCanonicalUrl("https://example.com/", "/");
+    expect(url).toBe("https://example.com/");
+  });
 });
 
 describe("getLocaleSwitchTargets()", () => {
@@ -114,5 +120,58 @@ describe("getLocaleSwitchTargets()", () => {
       en: "/en/about",
       es: "/es",
     });
+  });
+
+  it("sets the current path for the es locale when on an es route (isLocalePath es branch)", () => {
+    const targets = getLocaleSwitchTargets({
+      lang: "es",
+      currentPath: "/es/impacto",
+      alternateLinks: [],
+    });
+    expect(targets.es).toBe("/es/impacto");
+    expect(targets.en).toBe("/en");
+  });
+
+  it("uses empty array fallback when alternateLinks is omitted (?? [] branch)", () => {
+    const targets = getLocaleSwitchTargets({ lang: "en" });
+    expect(targets).toEqual({ en: "/en", es: "/es" });
+  });
+
+  it("redirects en path '/' to '/en' when viewed from es locale (line 89 ternary true branch)", () => {
+    const targets = getLocaleSwitchTargets({
+      lang: "es",
+      currentPath: "/es/inicio",
+      alternateLinks: [
+        { hreflang: "en", href: "https://example.com/" },
+      ],
+    });
+    expect(targets.en).toBe("/en");
+  });
+
+  it("skips alternate links with non-standard hreflang (fr is ignored)", () => {
+    const targets = getLocaleSwitchTargets({
+      lang: "en",
+      currentPath: "/en/about",
+      alternateLinks: [
+        { hreflang: "fr", href: "https://example.com/fr/about/" },
+        { hreflang: "es", href: "https://example.com/es/sobre/" },
+      ],
+    });
+    // fr link ignored; es link used
+    expect(targets.es).toBe("/es/sobre/");
+    expect(targets).not.toHaveProperty("fr");
+  });
+
+  it("falls back to returning href as-is when URL parse fails (pathFromHref catch branch)", () => {
+    const badHref = "http://[invalid-host]/path/";
+    const targets = getLocaleSwitchTargets({
+      lang: "en",
+      currentPath: "/en/about",
+      alternateLinks: [
+        { hreflang: "es", href: badHref },
+      ],
+    });
+    // The catch branch returns the raw href string as the path
+    expect(targets.es).toBe(badHref);
   });
 });

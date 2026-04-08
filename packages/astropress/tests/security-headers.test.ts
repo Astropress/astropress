@@ -37,16 +37,16 @@ describe("security headers", () => {
     expect(target.get("Cache-Control")).toBe("no-store");
     expect(target.get("Permissions-Policy")).toContain("camera=()");
 
-    const response = createAstropressSecureRedirect("/wp-admin/login", 302);
+    const response = createAstropressSecureRedirect("/ap-admin/login", 302);
     expect(response.status).toBe(302);
-    expect(response.headers.get("Location")).toBe("/wp-admin/login");
+    expect(response.headers.get("Location")).toBe("/ap-admin/login");
     expect(response.headers.get("Content-Security-Policy")).toContain("default-src 'self'");
   });
 
   it("accepts same-origin form posts and rejects cross-origin origins", () => {
     expect(
       isTrustedRequestOrigin(
-        new Request("https://example.com/wp-admin/actions/content-save", {
+        new Request("https://example.com/ap-admin/actions/content-save", {
           method: "POST",
           headers: { origin: "https://example.com" },
         }),
@@ -55,7 +55,7 @@ describe("security headers", () => {
 
     expect(
       isTrustedRequestOrigin(
-        new Request("https://example.com/wp-admin/actions/content-save", {
+        new Request("https://example.com/ap-admin/actions/content-save", {
           method: "POST",
           headers: { origin: "https://attacker.example" },
         }),
@@ -64,7 +64,7 @@ describe("security headers", () => {
   });
 
   it("adds report-uri and Report-To header when reportUri option is set", () => {
-    const reportUri = "/wp-admin/actions/csp-report";
+    const reportUri = "/ap-admin/actions/csp-report";
     const headers = createAstropressSecurityHeaders({ area: "admin", reportUri });
     const csp = headers.get("Content-Security-Policy") ?? "";
 
@@ -81,6 +81,45 @@ describe("security headers", () => {
     expect(csp).not.toContain("report-uri");
     expect(csp).not.toContain("report-to");
     expect(headers.has("Report-To")).toBe(false);
+  });
+
+  it("rejects cross-origin requests and handles no-origin/no-referer (returns true)", () => {
+    // Lines 83-84: requestUrl null → false; use duck-typed object with invalid URL
+    expect(isTrustedRequestOrigin({ url: "not-a-url", headers: new Headers() } as unknown as Request)).toBe(false);
+
+    // Line 91-92: referer check branch (origin absent, referer present)
+    expect(
+      isTrustedRequestOrigin(
+        new Request("https://example.com/ap-admin/save", {
+          method: "POST",
+          headers: { referer: "https://example.com/ap-admin/page" },
+        }),
+      ),
+    ).toBe(true); // same-origin referer → truthy
+
+    expect(
+      isTrustedRequestOrigin(
+        new Request("https://example.com/ap-admin/save", {
+          method: "POST",
+          headers: { referer: "https://attacker.com/page" },
+        }),
+      ),
+    ).toBe(false); // cross-origin referer → false
+
+    // Lines 35-36: parseOrigin catch branch — invalid URL string in origin header
+    expect(
+      isTrustedRequestOrigin(
+        new Request("https://example.com/ap-admin/save", {
+          method: "POST",
+          headers: { origin: "not-a-valid-url" },
+        }),
+      ),
+    ).toBe(true); // parseOrigin throws → null → falls through to referer → no referer → return true
+  });
+
+  it("uses SAMEORIGIN when frameAncestors is not 'none' (line 51 false branch)", () => {
+    const headers = createAstropressSecurityHeaders({ frameAncestors: "'self'" });
+    expect(headers.get("X-Frame-Options")).toBe("SAMEORIGIN");
   });
 
   it("public area uses object-src self and form-action self https:", () => {
@@ -108,8 +147,8 @@ describe("security headers", () => {
 
   it("classifies public, auth, admin, and action routes for middleware application", () => {
     expect(resolveAstropressSecurityArea(new URL("https://example.com/"))).toBe("public");
-    expect(resolveAstropressSecurityArea(new URL("https://example.com/wp-admin/login"))).toBe("auth");
-    expect(resolveAstropressSecurityArea(new URL("https://example.com/wp-admin"))).toBe("admin");
-    expect(resolveAstropressSecurityArea(new URL("https://example.com/wp-admin/actions/comment-moderate"))).toBe("api");
+    expect(resolveAstropressSecurityArea(new URL("https://example.com/ap-admin/login"))).toBe("auth");
+    expect(resolveAstropressSecurityArea(new URL("https://example.com/ap-admin"))).toBe("admin");
+    expect(resolveAstropressSecurityArea(new URL("https://example.com/ap-admin/actions/comment-moderate"))).toBe("api");
   });
 });

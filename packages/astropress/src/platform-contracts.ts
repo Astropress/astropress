@@ -185,6 +185,7 @@ export interface AstropressWordPressImportArtifacts {
   remediationFile?: string;
   downloadStateFile?: string;
   localApplyReportFile?: string;
+  reportFile?: string;
 }
 
 export interface AstropressWordPressImportLocalApplyReport {
@@ -232,6 +233,18 @@ export interface AstropressPlatformAdapter {
   preview?: PreviewSession;
 }
 
+/**
+ * Fill missing boolean flags in a partial capabilities object with `false` defaults,
+ * producing a complete `ProviderCapabilities` value.
+ *
+ * @example
+ * ```ts
+ * import { normalizeProviderCapabilities } from "astropress";
+ *
+ * const caps = normalizeProviderCapabilities({ name: "sqlite", database: true });
+ * // { name: "sqlite", database: true, staticPublishing: false, hostedAdmin: false, ... }
+ * ```
+ */
 export function normalizeProviderCapabilities(
   partial: Pick<ProviderCapabilities, "name"> & Partial<Omit<ProviderCapabilities, "name">>,
 ): ProviderCapabilities {
@@ -247,6 +260,19 @@ export function normalizeProviderCapabilities(
   };
 }
 
+/**
+ * Validate that a provider adapter implements the required contract.
+ * Throws a descriptive error if `capabilities.name` is missing or any of
+ * `content`, `media`, `revisions`, `auth` stores are absent.
+ *
+ * @example
+ * ```ts
+ * import { assertProviderContract, createAstropressSqliteAdapter } from "astropress";
+ *
+ * const adapter = createAstropressSqliteAdapter({ db });
+ * assertProviderContract(adapter); // throws if adapter is incomplete
+ * ```
+ */
 export function assertProviderContract(adapter: AstropressPlatformAdapter) {
   if (!adapter.capabilities.name) {
     throw new Error("Provider adapter must declare a name.");

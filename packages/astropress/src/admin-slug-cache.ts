@@ -2,7 +2,7 @@ import type { APIContext } from "astro";
 
 import { getRuntimeSettings } from "./runtime-page-store";
 
-const DEFAULT_ADMIN_SLUG = "wp-admin";
+const DEFAULT_ADMIN_SLUG = "ap-admin";
 const ADMIN_SLUG_CACHE_TTL_MS = 60_000;
 
 let cachedAdminSlug: string | null = null;

@@ -6,5 +6,5 @@ Feature: Admin route mounting
 
   Scenario: Astropress keeps admin actions and pages under one mount
     Given Astropress exposes page, action, and endpoint routes for the admin app
-    When a host site mounts the Astropress admin app at /wp-admin
+    When a host site mounts the Astropress admin app at /ap-admin
     Then the host should receive the full admin surface from Astropress without redefining each route

@@ -49,12 +49,12 @@ ASTROPRESS_DATABASE_PATH=.data/admin.sqlite
 bun dev
 ```
 
-Open http://localhost:4321/wp-admin — log in with the credentials from your `.env`.
+Open http://localhost:4321/ap-admin — log in with the credentials from your `.env`.
 
 ## 4. What you get out of the box
 
-- `/wp-admin` — full content admin: pages, posts, media, redirects, comments, authors, SEO
-- `/wp-admin/login` — session-based auth (no third-party service required)
+- `/ap-admin` — full content admin: pages, posts, media, redirects, comments, authors, SEO
+- `/ap-admin/login` — session-based auth (no third-party service required)
 - SQLite database at `.data/admin.sqlite` — zero external dependencies for local dev
 - Theme toggle, confirm dialogs, HTML editor — all native Web Components (`<ap-theme-toggle>`, `<ap-confirm-dialog>`, `<ap-html-editor>`)
 

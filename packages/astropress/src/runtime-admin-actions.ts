@@ -360,7 +360,7 @@ export async function saveRuntimeSettings(partial: Partial<SiteSettings>, actor:
         donationUrl: currentRow.donation_url,
         newsletterEnabled: currentRow.newsletter_enabled === 1,
         commentsDefaultPolicy: currentRow.comments_default_policy,
-        adminSlug: currentRow.admin_slug ?? "wp-admin",
+        adminSlug: currentRow.admin_slug ?? "ap-admin",
       }
     : { ...defaultSiteSettings };
 
@@ -1045,7 +1045,7 @@ export async function inviteRuntimeAdminUser(
     .run();
 
   await recordD1Audit(locals, actor, "user.invite", "auth", email, `Invited ${email} as an ${role} user.`);
-  return { ok: true as const, inviteUrl: `/wp-admin/accept-invite?token=${encodeURIComponent(rawToken)}` };
+  return { ok: true as const, inviteUrl: `/ap-admin/accept-invite?token=${encodeURIComponent(rawToken)}` };
 }
 
 export async function getRuntimeInviteRequest(rawToken: string, locals?: App.Locals | null) {
@@ -1183,7 +1183,7 @@ export async function createRuntimePasswordResetToken(email: string, actor?: Act
     );
   }
 
-  return { ok: true as const, resetUrl: `/wp-admin/reset-password?token=${encodeURIComponent(rawToken)}` };
+  return { ok: true as const, resetUrl: `/ap-admin/reset-password?token=${encodeURIComponent(rawToken)}` };
 }
 
 export async function getRuntimePasswordResetRequest(rawToken: string, locals?: App.Locals | null) {

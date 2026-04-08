@@ -4,7 +4,7 @@ export interface SiteSettings {
   donationUrl: string;
   newsletterEnabled: boolean;
   commentsDefaultPolicy: "disabled" | "legacy-readonly" | "open-moderated";
-  /** URL prefix for the admin area. Default is "wp-admin". Change it to something unique to reduce automated bot targeting. */
+  /** URL prefix for the admin area. Default is "ap-admin". Change it to something unique to reduce automated bot targeting. */
   adminSlug: string;
 }
 
@@ -14,5 +14,5 @@ export const defaultSiteSettings: SiteSettings = {
   donationUrl: "",
   newsletterEnabled: false,
   commentsDefaultPolicy: "legacy-readonly",
-  adminSlug: "wp-admin",
+  adminSlug: "ap-admin",
 };

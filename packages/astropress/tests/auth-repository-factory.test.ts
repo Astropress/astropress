@@ -236,7 +236,7 @@ describe("createAstropressAuthRepository", () => {
 
     expect(repository.createPasswordResetToken("admin@example.com")).toEqual({
       ok: true,
-      resetUrl: "/wp-admin/reset-password?token=raw-reset-token",
+      resetUrl: "/ap-admin/reset-password?token=raw-reset-token",
     });
     expect(insertPasswordResetToken).toHaveBeenCalledWith({
       tokenId: "reset-id-reset-token",
