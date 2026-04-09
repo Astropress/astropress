@@ -1,5 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { makeFormRequest } from "./helpers/make-request.js";
+
 const mocks = vi.hoisted(() => ({
   getRuntimeCsrfToken: vi.fn(),
   getRuntimeSessionUser: vi.fn(),
@@ -27,18 +29,9 @@ function makeContext(
       get: vi.fn(() => ({ value: "session-token" })),
     },
     locals: {} as App.Locals,
-    request: {
-      url: options.url ?? "https://example.com/ap-admin/actions/content-save",
-      headers,
-      formData: vi.fn(async () => {
-        const fd = new FormData();
-        for (const [key, value] of Object.entries(form)) {
-          fd.set(key, value);
-        }
-        return fd;
-      }),
-    } as unknown as Request,
-  } as never;
+    // makeFormRequest builds a real Request with a real FormData body — no cast needed.
+    request: makeFormRequest(form, { url: options.url, headers }),
+  } as unknown as Parameters<(typeof import("astropress"))["requireAdminFormAction"]>[0];
 }
 
 describe("admin action utils", () => {

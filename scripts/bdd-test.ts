@@ -426,6 +426,61 @@ const verificationGroups: VerificationGroup[] = [
     ],
   },
   {
+    label: "author management scenarios",
+    scenarios: [
+      "An admin creates a new author profile so they can be credited on posts",
+      "An admin updates an existing author's bio after they change their byline",
+      "An admin removes an author who has left the organisation",
+    ],
+    steps: [
+      {
+        command: "bunx",
+        args: ["vitest", "run", "tests/author-repository-factory.test.ts"],
+        cwd: astropressPackageRoot,
+      },
+    ],
+  },
+  {
+    label: "content revision scenarios",
+    scenarios: [
+      "An editor can view the full revision history of a post before publishing",
+      "An admin restores a previous content revision to undo unwanted changes",
+    ],
+    steps: [
+      {
+        command: "bunx",
+        args: ["vitest", "run", "tests/content-repository-factory.test.ts", "tests/runtime-admin-actions.test.ts"],
+        cwd: astropressPackageRoot,
+      },
+    ],
+  },
+  {
+    label: "admin dashboard scenarios",
+    scenarios: [
+      "An admin sees a summary of site activity when they open the admin panel",
+    ],
+    steps: [
+      {
+        command: "bunx",
+        args: ["vitest", "run", "tests/admin-page-models.test.ts"],
+        cwd: astropressPackageRoot,
+      },
+    ],
+  },
+  {
+    label: "public comment submission scenarios",
+    scenarios: [
+      "A reader submits a comment on a post and it enters the moderation queue",
+    ],
+    steps: [
+      {
+        command: "bunx",
+        args: ["vitest", "run", "tests/comment-repository-factory.test.ts"],
+        cwd: astropressPackageRoot,
+      },
+    ],
+  },
+  {
     label: "comment moderation scenarios",
     scenarios: [
       "A moderator approves a pending reader comment so it appears on the post",

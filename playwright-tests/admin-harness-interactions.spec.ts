@@ -123,6 +123,30 @@ test.describe("Feature: authenticated admin interaction flows", () => {
     await expect(page.getByRole("heading", { level: 1, name: "Edit Post" })).toBeVisible();
   });
 
+  test("Scenario: redirect creation with duplicate path — error shown, not saved twice", async ({ page }) => {
+    const uniquePath = `/dup-test-${Date.now()}/`;
+    await page.goto("/ap-admin/redirects", { waitUntil: "networkidle" });
+
+    // Create the redirect the first time
+    await page.getByLabel("Legacy path").fill(uniquePath);
+    await page.getByLabel("Target path").fill("/target-path/");
+    await page.getByRole("button", { name: "Save rule" }).click();
+    await page.waitForURL(/\/ap-admin\/redirects/, { waitUntil: "networkidle" });
+    await expect(page.locator("td", { hasText: uniquePath })).toBeVisible();
+
+    // Attempt to create the same redirect again
+    await page.getByLabel("Legacy path").fill(uniquePath);
+    await page.getByLabel("Target path").fill("/other-target/");
+    await page.getByRole("button", { name: "Save rule" }).click();
+    await page.waitForURL(/\/ap-admin\/redirects/, { waitUntil: "networkidle" });
+
+    // Should show an error and not create a duplicate row
+    const duplicateRows = page.locator("td", { hasText: uniquePath });
+    await expect(duplicateRows).toHaveCount(1);
+    const errorIndicator = page.locator("[data-error], .error, [aria-live='polite'], [role='alert']");
+    await expect(errorIndicator.first()).toBeVisible();
+  });
+
   test("Scenario: login form keyboard nav — focus order is email → password → submit", async ({ page }) => {
     await page.goto("/ap-admin/login", { waitUntil: "networkidle" });
     await expect(page.getByRole("heading", { level: 1, name: "Sign in to the admin" })).toBeVisible();
