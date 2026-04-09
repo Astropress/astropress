@@ -2,6 +2,7 @@
 name = "astropress-cli"
 version = "0.0.1"
 edition = "2021"
+rust-version = "1.82"
 description = "Astropress CLI for project scaffolding, WordPress import, sync, and deployment."
 license = "MIT"
 
@@ -12,5 +13,21 @@ include_dir = "0.7"
 rpassword = "7"
 dialoguer = "0.11"
 indicatif = "0.17"
-ratatui = "0.29"
-crossterm = "0.28"
+
+[lints.rust]
+unused_imports = "warn"
+dead_code = "warn"
+
+[lints.clippy]
+# Core correctness and style lints — warnings only (errors enforced by #![deny(warnings)] in main.rs)
+all = "warn"
+# Suppress noisy style lints that require touching pre-existing generated/templated code
+needless_raw_string_hashes = "allow"
+module_name_repetitions = "allow"
+missing_errors_doc = "allow"
+missing_panics_doc = "allow"
+wildcard_imports = "allow"
+uninlined_format_args = "allow"
+doc_markdown = "allow"
+unnecessary_wraps = "allow"
+too_many_arguments = "allow"

@@ -22,9 +22,8 @@ Feature: Playwright-based page crawl for JS-rendered sites
     Then that URL is skipped with a warning
     And the rest of the crawl continues
 
-  Scenario: crawlSitePagesWithBrowser is exported from page-crawler module
-    Given the AstroPress page-crawler TypeScript module exists
-    When its exports are inspected
-    Then the TypeScript export crawlSitePagesWithBrowser exists in src/import/page-crawler.ts
-    And it accepts siteUrl and optional timeoutMs
-    And it returns an array of CrawledPage objects
+  Scenario: Developers can use the page crawler library to crawl JS-rendered sites programmatically
+    Given a developer imports the AstroPress page-crawler module in their script
+    When they call the browser crawler with a site URL and an optional timeout
+    Then an array of crawled pages is returned, each with a URL and the rendered HTML body
+    And the function is available as a named export from the module

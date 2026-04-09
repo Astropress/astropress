@@ -123,7 +123,6 @@ async function main() {
 
       const accessibilityScan = await new AxeBuilder({ page })
         .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
-        .disableRules(["color-contrast"])
         .analyze();
 
       if (accessibilityScan.violations.length > 0) {

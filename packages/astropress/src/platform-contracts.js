@@ -20,6 +20,8 @@ export function normalizeProviderCapabilities(partial) {
     database: partial.database ?? false,
     objectStorage: partial.objectStorage ?? false,
     gitSync: partial.gitSync ?? false,
+    hostPanel: partial.hostPanel,
+    deployHook: partial.deployHook,
   };
 }
 

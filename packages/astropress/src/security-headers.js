@@ -63,11 +63,20 @@ export function createAstropressSecurityHeaders(options = {}) {
   return headers;
 }
 
+export function applyCacheHeaders(headers, area = "public") {
+  if (area === "public") {
+    headers.set("Cache-Control", "public, max-age=300, s-maxage=3600");
+  } else {
+    headers.set("Cache-Control", "private, no-store");
+  }
+}
+
 export function applyAstropressSecurityHeaders(target, options = {}) {
   const generated = createAstropressSecurityHeaders(options);
   generated.forEach((value, key) => {
     target.set(key, value);
   });
+  applyCacheHeaders(target, options.area ?? "public");
   return target;
 }
 

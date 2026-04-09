@@ -11,7 +11,8 @@
     "bdd:test": "bun run scripts/bdd-test.ts",
     "audit:deps": "bun audit",
     "audit:security": "bun run scripts/security-audit.ts",
-    "test": "bun run bdd:lint && bun run bdd:test && bun run --filter astropress test",
+    "audit:arch": "bun run scripts/arch-lint.ts",
+    "test": "bun run audit:arch && bun run bdd:lint && bun run bdd:test && bun run --filter astropress test",
     "test:coverage": "bun run --filter astropress test:coverage",
     "test:acceptance": "bun run scripts/run-playwright.ts --project=example-a11y --project=admin-harness-a11y --project=admin-harness-mobile --project=admin-harness-mobile-iphonese --project=admin-harness-mobile-galaxys5 --project=admin-harness-a11y-interactions",
     "test:accessibility": "bun run --filter astropress-example-gh-pages build && bun run scripts/accessibility-audit.ts examples/github-pages/dist",
@@ -22,7 +23,8 @@
     "test:example": "bun run --filter astropress-example-gh-pages check",
     "test:static-site": "bun run --filter astropress-example-gh-pages build && bun run scripts/static-site-audit.ts examples/github-pages/dist",
     "dev:example": "bun run --filter astropress-example-gh-pages dev",
-    "audit:carbon": "bunx size-limit && bun run scripts/carbon-audit.ts --domains-only"
+    "audit:carbon": "bunx size-limit && bun run scripts/carbon-audit.ts --domains-only",
+    "audit:sync": "bun run scripts/check-js-sync.ts"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.11.1",

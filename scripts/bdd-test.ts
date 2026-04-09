@@ -82,9 +82,9 @@ const verificationGroups: VerificationGroup[] = [
   {
     label: "admin customization scenarios",
     scenarios: [
-      "Hosts can rename package-owned admin copy without forking the app",
-      "Hosts can replace simple admin brand assets without copying templates",
-      "Hosts can restyle package-owned admin pages without copying them",
+      "Site owners can customize admin branding without modifying package code",
+      "Site owners can replace the admin logo and favicon without copying templates",
+      "Site owners can restyle the admin panel without duplicating route files",
     ],
     steps: [
       {
@@ -97,8 +97,8 @@ const verificationGroups: VerificationGroup[] = [
   {
     label: "non-technical admin scenarios",
     scenarios: [
-      "Admin edits a page through the package-owned editor without using git",
-      "Admin manages redirects and opens the media library from the same admin panel",
+      "Admin edits and publishes a post from the admin panel",
+      "Admin manages redirects and uploads media from the same admin panel",
     ],
     steps: [
       {
@@ -159,19 +159,36 @@ const verificationGroups: VerificationGroup[] = [
     ],
   },
   {
-    label: "operator backup and health scenarios",
+    label: "operator backup and restore scenarios",
     scenarios: [
-      "Operators can export and restore a packaged project snapshot",
-      "Operators can diagnose missing local secrets and paths",
+      "Operator exports a project snapshot and restores it cleanly",
     ],
     steps: [
       {
         command: "cargo",
         args: ["test", "exports_and_imports_project_snapshots"],
       },
+    ],
+  },
+  {
+    label: "health diagnostics scenarios",
+    scenarios: [
+      "Doctor reports missing local secrets and data-path warnings",
+      "Doctor exits with a non-zero code in strict mode when warnings are present",
+      "Doctor reports a clean bill of health for a fully configured project",
+    ],
+    steps: [
       {
         command: "cargo",
         args: ["test", "doctor_reports_missing_local_runtime_warnings"],
+      },
+      {
+        command: "cargo",
+        args: ["test", "doctor_flags_weak_or_scaffolded_secrets"],
+      },
+      {
+        command: "cargo",
+        args: ["test", "bootstraps_and_verifies_content_services"],
       },
     ],
   },
@@ -304,7 +321,7 @@ const verificationGroups: VerificationGroup[] = [
       "Default --crawl-pages uses fast fetch mode",
       "--crawl-pages=playwright uses full browser crawl",
       "Playwright crawl handles navigation errors gracefully",
-      "crawlSitePagesWithBrowser is exported from page-crawler module",
+      "Developers can use the page crawler library to crawl JS-rendered sites programmatically",
     ],
     steps: [
       {
@@ -457,7 +474,7 @@ const verificationGroups: VerificationGroup[] = [
   {
     label: "admin dashboard scenarios",
     scenarios: [
-      "An admin sees a summary of site activity when they open the admin panel",
+      "Dashboard displays site activity summary on first load",
     ],
     steps: [
       {
@@ -498,8 +515,10 @@ const verificationGroups: VerificationGroup[] = [
   {
     label: "redirect management scenarios",
     scenarios: [
-      "An admin creates a redirect from an old URL to a new one",
-      "An admin deletes a redirect that is no longer needed",
+      "Admin creates a 301 redirect from an old URL to a new one",
+      "Admin creates a 302 temporary redirect",
+      "Admin deletes a redirect that is no longer needed",
+      "Admin cannot create a redirect where source and target are the same",
     ],
     steps: [
       {
@@ -527,7 +546,7 @@ const verificationGroups: VerificationGroup[] = [
     label: "safe content rendering scenarios",
     scenarios: [
       "A reader viewing an imported post is not exposed to injected scripts",
-      "An editor pasting external HTML cannot introduce cross-site scripting",
+      "Imported posts are sanitized to remove XSS vulnerabilities",
       "Off-screen images on a long post load lazily so the page appears quickly",
     ],
     steps: [
@@ -584,7 +603,7 @@ const verificationGroups: VerificationGroup[] = [
   {
     label: "user authentication scenarios",
     scenarios: [
-      "An admin logs in with their password and gets access to the panel",
+      "Admin logs in with correct credentials and accesses the panel",
       "A session expires so that unattended logins do not remain active",
       "An admin can reset a forgotten password via an emailed link",
       "An admin can invite a new editor who sets their own password on first login",
@@ -601,7 +620,7 @@ const verificationGroups: VerificationGroup[] = [
     label: "site security and bot protection scenarios",
     scenarios: [
       "Admin pages cannot be embedded in an external site's iframe",
-      "An API client that sends too many requests in a short window is throttled",
+      "Rate limiter blocks clients exceeding the request threshold",
       "A bot submitting the contact form without solving CAPTCHA is rejected",
       "Admin pages use a stricter Content-Security-Policy than public pages",
     ],
@@ -616,6 +635,56 @@ const verificationGroups: VerificationGroup[] = [
           "tests/rate-limit-repository-factory.test.ts",
           "tests/cloudflare-adapter-security.test.ts",
         ],
+        cwd: astropressPackageRoot,
+      },
+    ],
+  },
+  {
+    label: "concurrent editing protection scenarios",
+    scenarios: [
+      "Editor sees a warning when another admin is already editing the same post",
+      "Last save wins and the editor is shown a conflict notice",
+      "Editing lock is released when the original editor closes the post",
+    ],
+    steps: [
+      {
+        command: "bunx",
+        args: ["vitest", "run", "tests/runtime-actions-content.test.ts", "tests/content-repository-factory.test.ts"],
+        cwd: astropressPackageRoot,
+      },
+    ],
+  },
+  {
+    label: "import failure recovery scenarios",
+    scenarios: [
+      "Interrupted WordPress import resumes without re-fetching completed media",
+      "Failed import records are listed in the report for manual review",
+      "Import can be restarted cleanly after a hard failure",
+    ],
+    steps: [
+      {
+        command: "cargo",
+        args: ["test", "stages_wordpress_imports"],
+      },
+      {
+        command: "bunx",
+        args: ["vitest", "run", "tests/wordpress-import.contract.test.ts"],
+        cwd: astropressPackageRoot,
+      },
+    ],
+  },
+  {
+    label: "audit logging scenarios",
+    scenarios: [
+      "Publishing a post creates an audit log entry",
+      "Inviting a new user creates an audit log entry",
+      "Audit log entries are immutable once written",
+      "Audit log is visible to admins but not to editors",
+    ],
+    steps: [
+      {
+        command: "bunx",
+        args: ["vitest", "run", "tests/runtime-actions-content.test.ts", "tests/runtime-actions-users.test.ts"],
         cwd: astropressPackageRoot,
       },
     ],
@@ -662,6 +731,91 @@ const verificationGroups: VerificationGroup[] = [
       {
         command: "cargo",
         args: ["test", "doctor_flags_weak_or_scaffolded_secrets"],
+      },
+    ],
+  },
+  {
+    label: "domain separation scenarios",
+    scenarios: [
+      "Production static build contains no admin routes",
+      "Admin domain serves the admin panel",
+      "Public integration is a valid AstroIntegration",
+      "Public integration accepts a buildHookSecret option",
+      "Admin integration is unaffected by the new public integration",
+    ],
+    steps: [
+      {
+        command: "bunx",
+        args: ["vitest", "run", "tests/public-site-integration.test.ts"],
+        cwd: astropressPackageRoot,
+      },
+    ],
+  },
+  {
+    label: "build-time content loading scenarios",
+    scenarios: [
+      "Published blog post is returned by the build-time loader",
+      "Draft post is excluded when filtering by published status",
+      "All posts are returned when no status filter is given",
+      "Content kind filter works alongside status filter",
+      "ContentListOptions pagination works correctly",
+      "Build-time loader returns content shaped as ContentStoreRecord",
+    ],
+    steps: [
+      {
+        command: "bunx",
+        args: ["vitest", "run", "tests/build-time-content-loader.test.ts"],
+        cwd: astropressPackageRoot,
+      },
+    ],
+  },
+  {
+    label: "CMS editorial panel scenarios",
+    scenarios: [
+      "Self-hosted CMS embeds in the admin panel via iframe",
+      "Cloud CMS shows an open button linking to the external panel",
+      "No CMS configured hides the CMS nav item",
+      "Editor cannot access the host infrastructure panel",
+      "Admin can access the host infrastructure panel",
+      "Unauthenticated user cannot access CMS or Host panels",
+    ],
+    steps: [
+      {
+        command: "bunx",
+        args: ["vitest", "run", "tests/cms-panel.test.ts"],
+        cwd: astropressPackageRoot,
+      },
+    ],
+  },
+  {
+    label: "publish workflow scenarios",
+    scenarios: [
+      "Admin triggers a production build via the Publish button",
+      "Publish button is hidden when no deploy hook is configured",
+      "Non-admin cannot trigger a publish",
+      "GitHub Pages deploy hook fires a repository_dispatch event",
+      "Cloudflare Pages deploy hook sends a POST to the deploy hook URL",
+    ],
+    steps: [
+      {
+        command: "bunx",
+        args: ["vitest", "run", "tests/deploy-trigger.test.ts"],
+        cwd: astropressPackageRoot,
+      },
+    ],
+  },
+  {
+    label: "draft preview scenarios",
+    scenarios: [
+      "Admin previews a draft post before it is published",
+      "Draft post is not accessible on the production domain",
+      "Unauthenticated visitor cannot access preview URLs on the admin domain",
+    ],
+    steps: [
+      {
+        command: "bunx",
+        args: ["vitest", "run", "tests/admin-preview.test.ts"],
+        cwd: astropressPackageRoot,
       },
     ],
   },

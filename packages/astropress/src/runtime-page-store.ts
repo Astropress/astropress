@@ -1,6 +1,6 @@
 import { getCmsConfig } from "./config";
 import { createD1AdminMutationStore, createD1AdminReadStore } from "./d1-admin-store";
-import { loadLocalAdminStore } from "./local-runtime-modules";
+import { safeLoadLocalAdminStore } from "./admin-store-dispatch";
 import type { ContentRecord, ContentStatus } from "./persistence-types";
 import { getCloudflareBindings } from "./runtime-env";
 import { defaultSiteSettings } from "./site-settings";
@@ -36,14 +36,6 @@ function getSeededContentRecords(): SeededContentRecord[] {
         tagIds: Array.isArray(page.tagIds) ? page.tagIds : undefined,
       }) satisfies SeededContentRecord,
   );
-}
-
-async function loadSafeLocalAdminStore() {
-  try {
-    return await loadLocalAdminStore();
-  } catch {
-    return null;
-  }
 }
 
 function createStaticReadStore(): D1AdminReadStore {
@@ -94,7 +86,7 @@ function createStaticReadStore(): D1AdminReadStore {
   };
 }
 
-function createFallbackReadStore(localAdminStore: Awaited<ReturnType<typeof loadSafeLocalAdminStore>>): D1AdminReadStore {
+function createFallbackReadStore(localAdminStore: Awaited<ReturnType<typeof safeLoadLocalAdminStore>>): D1AdminReadStore {
   if (!localAdminStore) {
     return createStaticReadStore();
   }
@@ -193,7 +185,7 @@ function createStaticMutationStore() {
 
 async function getReadStore(locals?: App.Locals | null) {
   const db = getCloudflareBindings(locals).DB;
-  const localAdminStore = await loadSafeLocalAdminStore();
+  const localAdminStore = await safeLoadLocalAdminStore();
   const fallbackStore = createFallbackReadStore(localAdminStore);
 
   if (db) {
@@ -424,7 +416,7 @@ async function getMutationStore(locals?: App.Locals | null) {
     return createD1AdminMutationStore(db);
   }
 
-  const localAdminStore = await loadSafeLocalAdminStore();
+  const localAdminStore = await safeLoadLocalAdminStore();
   if (!localAdminStore) {
     return createStaticMutationStore();
   }

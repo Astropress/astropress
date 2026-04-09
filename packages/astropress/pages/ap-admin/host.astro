@@ -1,0 +1,120 @@
+---
+import AdminLayout from "astropress/components/AdminLayout.astro";
+
+const adminUser = Astro.locals.adminUser;
+
+// Require authentication
+if (!adminUser) {
+  return Astro.redirect("/ap-admin/login?return=/ap-admin/host", 302);
+}
+
+// Host panel is admin-only
+if (adminUser.role !== "admin") {
+  return Astro.redirect("/ap-admin", 302);
+}
+
+// Read hostPanel config from locals (set by the adapter's capabilities)
+const hostPanel = (Astro.locals as Record<string, unknown>).hostPanel as
+  | {
+      mode: "iframe" | "link";
+      url: string;
+      label: string;
+    }
+  | undefined;
+
+if (!hostPanel) {
+  return Astro.redirect("/ap-admin", 302);
+}
+---
+
+<AdminLayout
+  title={`${hostPanel.label} | Astropress Admin`}
+  heading={hostPanel.label}
+  currentPath="/ap-admin/host"
+  description={`Database provider infrastructure panel — ${hostPanel.label}`}
+  role={adminUser.role}
+  userName={adminUser.name}
+  hasHostPanel={true}
+>
+  {hostPanel.mode === "iframe" ? (
+    <div class="host-frame-shell">
+      <iframe
+        src={hostPanel.url}
+        class="host-frame"
+        title={`${hostPanel.label} provider panel`}
+        allow="clipboard-write; fullscreen"
+        data-host-panel
+      />
+    </div>
+  ) : (
+    <section class="panel host-link-panel">
+      <div class="section-header">
+        <div>
+          <p class="admin-kicker">Database Provider</p>
+          <h2>{hostPanel.label}</h2>
+          <p>The provider's infrastructure panel runs as a separate service. Click below to open it in a new tab.</p>
+        </div>
+      </div>
+      <div class="host-link-actions">
+        <a
+          href={hostPanel.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="admin-button"
+          data-host-panel-link
+        >
+          Open {hostPanel.label}
+        </a>
+        <p class="admin-note">
+          Opens <code>{hostPanel.url}</code> in a new tab.
+        </p>
+      </div>
+    </section>
+  )}
+</AdminLayout>
+
+<style>
+  .host-frame-shell {
+    position: fixed;
+    top: 66px;
+    left: 17rem;
+    right: 0;
+    bottom: 0;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 0.8rem 0 0 0;
+    overflow: hidden;
+  }
+
+  .host-frame {
+    width: 100%;
+    height: 100%;
+    border: none;
+  }
+
+  .host-link-panel {
+    max-width: 38rem;
+    padding: 1.5rem;
+  }
+
+  .host-link-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    align-items: flex-start;
+  }
+
+  .host-link-actions code {
+    font-size: 0.88rem;
+    color: var(--muted);
+    background: var(--surface-subtle);
+    padding: 0.15rem 0.4rem;
+    border-radius: 0.35rem;
+  }
+
+  @media (max-width: 900px) {
+    .host-frame-shell {
+      left: 0;
+    }
+  }
+</style>

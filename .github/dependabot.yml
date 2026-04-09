@@ -1,0 +1,23 @@
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    groups:
+      dev-tooling:
+        patterns:
+          - "vitest*"
+          - "@vitest/*"
+          - "playwright*"
+          - "@playwright/*"
+          - "axe-core*"
+          - "@axe-core/*"
+  - package-ecosystem: "cargo"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"

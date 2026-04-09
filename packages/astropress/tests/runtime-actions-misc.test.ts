@@ -1,0 +1,138 @@
+import { DatabaseSync } from "node:sqlite";
+import { beforeEach, describe, expect, it } from "vitest";
+
+import { registerCms } from "../src/config";
+import { readAstropressSqliteSchemaSql } from "../src/sqlite-bootstrap.js";
+import { makeLocals } from "./helpers/make-locals.js";
+import {
+  createRuntimeRedirectRule,
+  deleteRuntimeRedirectRule,
+  moderateRuntimeComment,
+  saveRuntimeSettings,
+  updateRuntimeTranslationState,
+} from "../src/runtime-actions-misc";
+
+function makeDb() {
+  const db = new DatabaseSync(":memory:");
+  db.exec(readAstropressSqliteSchemaSql());
+  return db;
+}
+
+const actor = { email: "admin@test.local", role: "admin" as const, name: "Test Admin" };
+
+let db: DatabaseSync;
+let locals: App.Locals;
+
+beforeEach(() => {
+  db = makeDb();
+  locals = makeLocals(db);
+  registerCms({ templateKeys: ["content"], siteUrl: "https://example.com", seedPages: [], archives: [], translationStatus: [] });
+
+  db.prepare("INSERT INTO redirect_rules (source_path, target_path, status_code, created_by) VALUES (?, ?, ?, ?)").run("/existing", "/dest", 301, "admin@test.local");
+  db.prepare("INSERT INTO comments (id, route, author, body, status) VALUES (?, ?, ?, ?, ?)").run("c-1", "/page", "Bob", "Hello", "pending");
+});
+
+describe("updateRuntimeTranslationState", () => {
+  it("persists a valid state", async () => {
+    const result = await updateRuntimeTranslationState("/about", "translated", actor, locals);
+    expect(result).toMatchObject({ ok: true });
+    const row = db.prepare("SELECT state FROM translation_overrides WHERE route = ?").get("/about") as { state: string };
+    expect(row.state).toBe("translated");
+  });
+
+  it("rejects an invalid state", async () => {
+    const result = await updateRuntimeTranslationState("/about", "bogus", actor, locals);
+    expect(result).toMatchObject({ ok: false });
+  });
+
+  it("upserts on second call for same route", async () => {
+    await updateRuntimeTranslationState("/about", "partial", actor, locals);
+    await updateRuntimeTranslationState("/about", "translated", actor, locals);
+    const row = db.prepare("SELECT state FROM translation_overrides WHERE route = ?").get("/about") as { state: string };
+    expect(row.state).toBe("translated");
+  });
+});
+
+describe("createRuntimeRedirectRule", () => {
+  it("creates a redirect", async () => {
+    const result = await createRuntimeRedirectRule({ sourcePath: "/from", targetPath: "/to", statusCode: 301 }, actor, locals);
+    expect(result).toMatchObject({ ok: true, rule: { sourcePath: "/from", targetPath: "/to", statusCode: 301 } });
+  });
+
+  it("rejects same source and target", async () => {
+    const result = await createRuntimeRedirectRule({ sourcePath: "/same", targetPath: "/same", statusCode: 301 }, actor, locals);
+    expect(result).toMatchObject({ ok: false });
+  });
+
+  it("rejects empty source path", async () => {
+    const result = await createRuntimeRedirectRule({ sourcePath: "   ", targetPath: "/to", statusCode: 301 }, actor, locals);
+    expect(result).toMatchObject({ ok: false });
+  });
+
+  it("rejects protocol-relative path (open redirect guard)", async () => {
+    const result = await createRuntimeRedirectRule({ sourcePath: "//evil.example/x", targetPath: "/safe", statusCode: 301 }, actor, locals);
+    expect(result).toMatchObject({ ok: false });
+  });
+
+  it("rejects duplicate active rule", async () => {
+    const result = await createRuntimeRedirectRule({ sourcePath: "/existing", targetPath: "/other", statusCode: 301 }, actor, locals);
+    expect(result).toMatchObject({ ok: false });
+  });
+
+  it("normalises 302 and defaults others to 301", async () => {
+    const r = await createRuntimeRedirectRule({ sourcePath: "/a", targetPath: "/b", statusCode: 302 }, actor, locals);
+    expect(r).toMatchObject({ ok: true, rule: { statusCode: 302 } });
+    const r2 = await createRuntimeRedirectRule({ sourcePath: "/c", targetPath: "/d", statusCode: 303 }, actor, locals);
+    expect(r2).toMatchObject({ ok: true, rule: { statusCode: 301 } });
+  });
+});
+
+describe("deleteRuntimeRedirectRule", () => {
+  it("soft-deletes an active rule", async () => {
+    const result = await deleteRuntimeRedirectRule("/existing", actor, locals);
+    expect(result).toMatchObject({ ok: true });
+    const row = db.prepare("SELECT deleted_at FROM redirect_rules WHERE source_path = '/existing'").get() as { deleted_at: string | null };
+    expect(row.deleted_at).not.toBeNull();
+  });
+
+  it("returns not-ok for non-existent path", async () => {
+    const result = await deleteRuntimeRedirectRule("/ghost", actor, locals);
+    expect(result).toMatchObject({ ok: false });
+  });
+});
+
+describe("moderateRuntimeComment", () => {
+  it("approves a pending comment", async () => {
+    const result = await moderateRuntimeComment("c-1", "approved", actor, locals);
+    expect(result).toMatchObject({ ok: true });
+    const row = db.prepare("SELECT status FROM comments WHERE id = 'c-1'").get() as { status: string };
+    expect(row.status).toBe("approved");
+  });
+
+  it("rejects a pending comment", async () => {
+    await moderateRuntimeComment("c-1", "rejected", actor, locals);
+    const row = db.prepare("SELECT status FROM comments WHERE id = 'c-1'").get() as { status: string };
+    expect(row.status).toBe("rejected");
+  });
+
+  it("returns not-ok for unknown comment id", async () => {
+    const result = await moderateRuntimeComment("ghost", "approved", actor, locals);
+    expect(result).toMatchObject({ ok: false });
+  });
+});
+
+describe("saveRuntimeSettings", () => {
+  it("creates settings when none exist", async () => {
+    const result = await saveRuntimeSettings({ siteTitle: "My Blog" }, actor, locals);
+    expect(result).toMatchObject({ ok: true });
+    expect((result as { settings: { siteTitle: string } }).settings.siteTitle).toBe("My Blog");
+  });
+
+  it("partial update preserves other fields", async () => {
+    await saveRuntimeSettings({ siteTitle: "Original", siteTagline: "Tag" }, actor, locals);
+    await saveRuntimeSettings({ siteTitle: "Updated" }, actor, locals);
+    const row = db.prepare("SELECT site_title, site_tagline FROM site_settings WHERE id = 1").get() as { site_title: string; site_tagline: string };
+    expect(row.site_title).toBe("Updated");
+    expect(row.site_tagline).toBe("Tag");
+  });
+});

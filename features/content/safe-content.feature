@@ -8,10 +8,11 @@ Feature: Safe content display for readers and editors
     When the post is rendered for a reader
     Then all scripts and event handlers are stripped and only the text content is displayed
 
-  Scenario: An editor pasting external HTML cannot introduce cross-site scripting
-    Given an editor pastes HTML containing onclick attributes and javascript: links
+  Scenario: Imported posts are sanitized to remove XSS vulnerabilities
+    Given an editor pastes HTML containing an `<img onclick="alert('xss')">` and an `<a href="javascript:void(0)">Click me</a>`
     When the content is saved and a reader views the post
-    Then all unsafe attributes and links are removed before the page is served
+    Then the onclick attribute is stripped from the img element
+    And the javascript: href is removed, leaving only the link text "Click me"
 
   Scenario: Off-screen images on a long post load lazily so the page appears quickly
     Given a post contains multiple images below the visible fold

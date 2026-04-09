@@ -28,6 +28,13 @@ export {
 } from "./src/admin-routes.js";
 export type { AstropressAdminRouteDefinition, AstropressAdminRouteInjector, AstropressAdminRouteKind } from "./src/admin-routes";
 
+// Build-time content loading
+export { createAstropressBuildTimeLoader } from "./src/build-time-content-loader.js";
+export type {
+  AstropressBuildTimeLoaderOptions,
+  AstropressContentLoader,
+} from "./src/build-time-content-loader";
+
 // Platform contracts
 export {
   normalizeProviderCapabilities,
@@ -36,8 +43,11 @@ export {
 export type {
   ProviderKind,
   ProviderCapabilities,
+  AstropressCmsConfig,
+  AstropressHostPanelCapability,
   SaveableContentKind,
   ReadableContentKind,
+  ContentListOptions,
   ContentStoreRecord,
   ContentStore,
   MediaAssetRecord,
@@ -358,6 +368,14 @@ export {
   actionRedirect,
   actionErrorRedirect,
 } from "./src/admin-action-utils";
+
+// Publish action
+export { triggerPublish, resolveDeployHookFromEnv } from "./src/admin-action-publish.js";
+export type { PublishTriggerResult, DeployHookType, DeployHookConfig } from "./src/admin-action-publish";
+
+// Preview middleware helpers
+export { resolvePreviewPath, buildPreviewLoginRedirect } from "./src/admin-preview-middleware.js";
+export type { AdminPreviewRequest, AdminPreviewContext } from "./src/admin-preview-middleware";
 
 // Path utilities
 export { resolveSafeReturnPath, appendQueryParam } from "./src/return-path";

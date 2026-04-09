@@ -17,7 +17,9 @@ export type AstropressAdminNavKey =
   | "seo"
   | "system"
   | "settings"
-  | "services";
+  | "services"
+  | "cms"
+  | "host";
 
 export interface AstropressResolvedAdminUiConfig {
   branding: {
@@ -118,6 +120,8 @@ const defaultAdminUiConfig: AstropressResolvedAdminUiConfig = {
     system: "System",
     settings: "Settings",
     services: "Services",
+    cms: "CMS",
+    host: "Host",
   },
 };
 

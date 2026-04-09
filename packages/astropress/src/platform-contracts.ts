@@ -1,5 +1,42 @@
 export type ProviderKind = "github-pages" | "cloudflare" | "supabase" | "runway" | "custom";
 
+/** Configuration for the editorial CMS panel embedded in the admin. */
+export interface AstropressCmsConfig {
+  /** The CMS system in use. */
+  type:
+    | "payload"
+    | "sanity"
+    | "directus"
+    | "strapi"
+    | "tina"
+    | "contentful"
+    | "storyblok"
+    | "keystatic"
+    | "custom";
+  /**
+   * How to surface the CMS panel.
+   * "iframe" — embed the CMS URL in a full-screen iframe (best for self-hosted CMSes).
+   * "link"   — show a branded "Open [CMS]" button that opens a new tab.
+   */
+  mode: "iframe" | "link";
+  /** The base URL of the CMS admin (e.g. "http://localhost:3000" for self-hosted Payload). */
+  url: string;
+  /** Override the display label shown in the sidebar and on the panel page. */
+  label?: string;
+  /** Custom iframe allow attribute (e.g. "clipboard-write; fullscreen"). */
+  iframeAllow?: string;
+}
+
+/** Database provider infrastructure panel declaration. */
+export interface AstropressHostPanelCapability {
+  /** How to surface the provider panel. */
+  mode: "iframe" | "link";
+  /** The URL of the provider's admin panel. */
+  url: string;
+  /** Label shown in the admin sidebar (e.g. "Supabase Studio"). */
+  label: string;
+}
+
 export interface ProviderCapabilities {
   name: ProviderKind | string;
   staticPublishing: boolean;
@@ -9,6 +46,21 @@ export interface ProviderCapabilities {
   database: boolean;
   objectStorage: boolean;
   gitSync: boolean;
+  /**
+   * Optional link to the database provider's own infrastructure panel
+   * (e.g. Supabase Studio, Firebase Console, PocketBase admin).
+   * When declared, a "Host" nav item is shown to admin-role users.
+   */
+  hostPanel?: AstropressHostPanelCapability;
+  /**
+   * Optional configuration for a deploy hook so the Publish button can
+   * trigger a new static build without leaving the admin panel.
+   */
+  deployHook?: {
+    type: "cloudflare-pages" | "vercel" | "netlify" | "render" | "github-actions";
+    /** Env var names that must be set for the hook to be active. */
+    configuredViaEnv: string[];
+  };
 }
 
 /** Kinds that can be written via ContentStore.save. */
@@ -28,8 +80,19 @@ export interface ContentStoreRecord {
   metadata?: Record<string, unknown>;
 }
 
+export interface ContentListOptions {
+  /** Filter by status. "published" is the default for build-time usage. */
+  status?: "published" | "draft" | "archived" | "all";
+  /** Filter by locale code (e.g. "en", "fr"). */
+  locale?: string;
+  /** Maximum number of records to return. */
+  limit?: number;
+  /** Number of records to skip (for pagination). */
+  offset?: number;
+}
+
 export interface ContentStore {
-  list(kind?: ReadableContentKind): Promise<ContentStoreRecord[]>;
+  list(kind?: ReadableContentKind, options?: ContentListOptions): Promise<ContentStoreRecord[]>;
   get(id: string): Promise<ContentStoreRecord | null>;
   save(record: Omit<ContentStoreRecord, "kind"> & { kind: SaveableContentKind }): Promise<ContentStoreRecord>;
   delete(id: string): Promise<void>;
@@ -88,6 +151,13 @@ export interface DeployTarget {
     projectName: string;
     environment?: string;
   }): Promise<{ url?: string; deploymentId?: string }>;
+  /**
+   * Trigger a new build/deployment without requiring a local build directory.
+   * Used by the admin Publish button to kick off a CI/CD rebuild.
+   */
+  triggerBuild?(options?: {
+    environment?: string;
+  }): Promise<{ buildId?: string; statusUrl?: string }>;
 }
 
 export interface ImportSource {
@@ -263,6 +333,8 @@ export function normalizeProviderCapabilities(
     database: partial.database ?? false,
     objectStorage: partial.objectStorage ?? false,
     gitSync: partial.gitSync ?? false,
+    hostPanel: partial.hostPanel,
+    deployHook: partial.deployHook,
   };
 }
 

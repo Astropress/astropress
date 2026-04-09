@@ -3,8 +3,11 @@ Feature: Admin user authentication and access control
   I want to manage who can log in to the admin panel and what they can do
   So that only authorised people can edit content or change site settings
 
-  Scenario: An admin logs in with their password and gets access to the panel
-    Given an admin account exists with a known email and password
+  Background:
+    Given the admin panel is deployed and the login page is accessible
+
+  Scenario: Admin logs in with correct credentials and accesses the panel
+    Given an admin account exists with email "admin@example.com" and a known password
     When the admin submits correct credentials on the login page
     Then they are granted a session and can access the admin panel
 

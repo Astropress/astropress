@@ -20,9 +20,15 @@ interface Props {
   role: "admin" | "editor";
   userName: string;
   siteName?: string;
+  /** When true, shows the CMS nav item linking to /ap-admin/cms. */
+  hasCms?: boolean;
+  /** When true, shows the Host nav item (admin-only) linking to /ap-admin/host. */
+  hasHostPanel?: boolean;
+  /** When true, shows the Publish button in the topbar (admin-only). */
+  canPublish?: boolean;
 }
 
-const { title, heading, currentPath, description = "", role, userName, siteName } = Astro.props;
+const { title, heading, currentPath, description = "", role, userName, siteName, hasCms = false, hasHostPanel = false, canPublish = false } = Astro.props;
 const documentTitle = buildAstropressAdminDocumentTitle(title);
 const adminUi = resolveAstropressAdminUiConfig();
 const adminSiteName = siteName ?? adminUi.branding.shellName;
@@ -47,6 +53,8 @@ const navItems: NavItem[] = [
   { href: "/ap-admin/system", label: adminUi.navigation.system, adminOnly: true },
   { href: "/ap-admin/settings", label: adminUi.navigation.settings, adminOnly: true },
   { href: "/ap-admin/services", label: adminUi.navigation.services, adminOnly: true },
+  ...(hasCms ? [{ href: "/ap-admin/cms", label: adminUi.navigation.cms }] : []),
+  ...(hasHostPanel ? [{ href: "/ap-admin/host", label: adminUi.navigation.host, adminOnly: true as const }] : []),
 ];
 ---
 
@@ -71,6 +79,13 @@ const navItems: NavItem[] = [
         <strong>{adminSiteName}</strong>
       </a>
       <div class="topbar-meta">
+        {canPublish && role === "admin" && (
+          <form method="post" action="/ap-admin/actions/publish" class="publish-form">
+            <button type="submit" class="publish-btn" title="Trigger a new production build">
+              Publish
+            </button>
+          </form>
+        )}
         <button
           type="button"
           class="nav-toggle"
@@ -280,6 +295,27 @@ const navItems: NavItem[] = [
     padding: 0.5rem 0.8rem;
     font: inherit;
     cursor: pointer;
+  }
+
+  .publish-form {
+    display: inline-flex;
+  }
+
+  .publish-btn {
+    background: #16a34a;
+    color: #fff;
+    font-weight: 700;
+    font-size: 0.88rem;
+    padding: 0.4rem 0.9rem;
+    border-radius: 999px;
+    border: 0;
+    cursor: pointer;
+    transition: background-color 140ms ease;
+  }
+
+  .publish-btn:hover,
+  .publish-btn:focus-visible {
+    background: #15803d;
   }
 
   .theme-toggle-admin {

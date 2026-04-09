@@ -56,9 +56,19 @@
  *   >Reject</button>
  */
 
+const FOCUSABLE = [
+  "a[href]",
+  "button:not([disabled])",
+  "input:not([disabled])",
+  "select:not([disabled])",
+  "textarea:not([disabled])",
+  '[tabindex]:not([tabindex="-1"])',
+].join(", ");
+
 export class ApConfirmDialog extends HTMLElement {
   private _dialog: HTMLDialogElement | null = null;
   private _abortController: AbortController | null = null;
+  private _triggerElement: HTMLElement | null = null;
 
   connectedCallback() {
     this._dialog = this.querySelector<HTMLDialogElement>("dialog");
@@ -69,6 +79,16 @@ export class ApConfirmDialog extends HTMLElement {
     this.querySelectorAll<HTMLElement>("[data-dialog-close]").forEach((btn) => {
       btn.addEventListener("click", () => this._dialog?.close(), { signal });
     });
+
+    // Restore focus to the trigger element when the dialog closes
+    this._dialog?.addEventListener(
+      "close",
+      () => {
+        this._triggerElement?.focus();
+        this._triggerElement = null;
+      },
+      { signal },
+    );
 
     // Triggers anywhere in the document that target this dialog
     const dialogId = this._dialog?.id;
@@ -103,6 +123,9 @@ export class ApConfirmDialog extends HTMLElement {
       return;
     }
 
+    // Track the element that opened the dialog so focus can be restored on close
+    this._triggerElement = trigger;
+
     // Set text nodes: data-text-[elementId] → element.textContent
     for (const attr of Array.from(trigger.attributes)) {
       if (attr.name.startsWith("data-text-")) {
@@ -125,6 +148,10 @@ export class ApConfirmDialog extends HTMLElement {
     }
 
     this._dialog.showModal();
+
+    // Move focus to the first focusable element inside the dialog
+    const firstFocusable = this._dialog.querySelector<HTMLElement>(FOCUSABLE);
+    firstFocusable?.focus();
   }
 }
 

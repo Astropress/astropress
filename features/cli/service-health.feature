@@ -3,6 +3,10 @@ Feature: Content service health checks and diagnostics
   I want to verify that all required services are running and correctly configured
   So that I can catch problems before they affect readers
 
+  Background:
+    Given the AstroPress CLI is installed and available on the PATH
+    And an Astropress project exists in the current directory
+
   Scenario: An operator verifies that content services are reachable before going live
     Given the project has a configured database and content service
     When the operator runs "astropress services verify"

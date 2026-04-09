@@ -3,6 +3,9 @@ Feature: Comment moderation
   I want to review and manage reader comments from the admin panel
   So that I can keep discussions constructive and free of spam
 
+  Background:
+    Given an admin is signed in to the admin panel
+
   Scenario: A moderator approves a pending reader comment so it appears on the post
     Given a reader has posted a comment that is awaiting approval
     When the moderator approves the comment in the admin comments panel

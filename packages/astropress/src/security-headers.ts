@@ -83,6 +83,19 @@ export function createAstropressSecurityHeaders(
   return headers;
 }
 
+export function applyCacheHeaders(
+  headers: Headers,
+  area: AstropressSecurityArea = "public",
+): void {
+  if (area === "public") {
+    // Public content: short browser cache, longer CDN cache
+    headers.set("Cache-Control", "public, max-age=300, s-maxage=3600");
+  } else {
+    // Admin, auth, and API responses must never be cached
+    headers.set("Cache-Control", "private, no-store");
+  }
+}
+
 export function applyAstropressSecurityHeaders(
   target: Headers,
   options: AstropressSecurityHeadersOptions = {},
@@ -91,6 +104,7 @@ export function applyAstropressSecurityHeaders(
   generated.forEach((value, key) => {
     target.set(key, value);
   });
+  applyCacheHeaders(target, options.area ?? "public");
   return target;
 }
 

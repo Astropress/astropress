@@ -20,6 +20,21 @@ The package is responsible for:
 - package-owned provider recommendation logic for non-technical setup flows
 - package-owned project launch planning so CLI and consumers share one runtime/bootstrap decision path
 
+## v0 Stability Policy
+
+Astropress is pre-1.0. The `AstropressProviderContract` TypeScript interface is the primary public API surface. In v0, all types are subject to breaking change with notice in [CHANGELOG.md](../../CHANGELOG.md).
+
+The package exports a `PROVIDER_CONTRACT_VERSION` string constant (e.g. `"0.1"`) so consumers can assert compatibility at runtime:
+
+```ts
+import { PROVIDER_CONTRACT_VERSION } from "astropress";
+if (PROVIDER_CONTRACT_VERSION !== "0.1") {
+  throw new Error(`Unsupported provider contract version: ${PROVIDER_CONTRACT_VERSION}`);
+}
+```
+
+Once the package reaches v1.0, it will follow semantic versioning strictly and the contract will be considered stable.
+
 ## Package Contract
 
 The package must expose stable import paths for:

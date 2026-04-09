@@ -1,0 +1,129 @@
+---
+import AdminLayout from "astropress/components/AdminLayout.astro";
+import { applyAstropressSecurityHeaders } from "astropress";
+
+const adminUser = Astro.locals.adminUser;
+
+// Require authentication
+if (!adminUser) {
+  return Astro.redirect("/ap-admin/login?return=/ap-admin/cms", 302);
+}
+
+// Read CMS config from locals (set by the host app's local-runtime-modules)
+const cmsConfig = (Astro.locals as Record<string, unknown>).cmsConfig as
+  | {
+      type: string;
+      mode: "iframe" | "link";
+      url: string;
+      label?: string;
+      iframeAllow?: string;
+    }
+  | undefined;
+
+if (!cmsConfig) {
+  return Astro.redirect("/ap-admin", 302);
+}
+
+const cmsLabel = cmsConfig.label ?? cmsConfig.type.charAt(0).toUpperCase() + cmsConfig.type.slice(1);
+
+// Allow iframe embedding of the CMS panel for admin pages only
+applyAstropressSecurityHeaders(Astro.response.headers, {
+  area: "admin",
+  forceHsts: Astro.url.protocol === "https:",
+  frameAncestors: "sameorigin",
+});
+---
+
+<AdminLayout
+  title={`${cmsLabel} | Astropress Admin`}
+  heading={cmsLabel}
+  currentPath="/ap-admin/cms"
+  description={`Editorial CMS panel — ${cmsLabel}`}
+  role={adminUser.role}
+  userName={adminUser.name}
+  hasCms={true}
+>
+  {cmsConfig.mode === "iframe" ? (
+    <div class="cms-frame-shell">
+      <iframe
+        src={cmsConfig.url}
+        class="cms-frame"
+        title={`${cmsLabel} editorial panel`}
+        allow={cmsConfig.iframeAllow ?? "clipboard-write; fullscreen"}
+        data-cms-type={cmsConfig.type}
+      />
+    </div>
+  ) : (
+    <section class="panel cms-link-panel">
+      <div class="section-header">
+        <div>
+          <p class="admin-kicker">Editorial CMS</p>
+          <h2>{cmsLabel}</h2>
+          <p>This CMS runs as a separate service. Click below to open the editorial panel in a new tab.</p>
+        </div>
+      </div>
+      <div class="cms-link-actions">
+        <a
+          href={cmsConfig.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="admin-button"
+          data-cms-open-link
+        >
+          Open {cmsLabel}
+        </a>
+        <p class="admin-note">
+          Opens <code>{cmsConfig.url}</code> in a new tab.
+        </p>
+      </div>
+    </section>
+  )}
+</AdminLayout>
+
+<style>
+  .cms-frame-shell {
+    position: fixed;
+    top: 0;
+    left: 17rem;
+    right: 0;
+    bottom: 0;
+    /* Push below the topbar (~66px) */
+    top: 66px;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 0.8rem 0 0 0;
+    overflow: hidden;
+  }
+
+  .cms-frame {
+    width: 100%;
+    height: 100%;
+    border: none;
+  }
+
+  .cms-link-panel {
+    max-width: 38rem;
+    padding: 1.5rem;
+  }
+
+  .cms-link-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    align-items: flex-start;
+  }
+
+  .cms-link-actions code {
+    font-size: 0.88rem;
+    color: var(--muted);
+    background: var(--surface-subtle);
+    padding: 0.15rem 0.4rem;
+    border-radius: 0.35rem;
+  }
+
+  @media (max-width: 900px) {
+    .cms-frame-shell {
+      left: 0;
+    }
+  }
+</style>

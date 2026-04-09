@@ -3,6 +3,7 @@ pub(crate) mod config;
 pub(crate) mod deploy;
 pub(crate) mod dev;
 pub(crate) mod doctor;
+pub(crate) mod import_common;
 pub(crate) mod import_wordpress;
 pub(crate) mod import_wix;
 pub(crate) mod new;

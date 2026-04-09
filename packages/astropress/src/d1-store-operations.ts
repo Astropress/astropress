@@ -1,0 +1,400 @@
+import type { D1DatabaseLike } from "./d1-database";
+import type {
+  AuditEvent,
+  CommentRecord,
+  CommentStatus,
+  ContactSubmission,
+  ManagedAdminUser,
+  MediaAsset,
+  RedirectRule,
+} from "./persistence-types";
+import type { SiteSettings } from "./site-settings";
+import { defaultSiteSettings } from "./site-settings";
+import { normalizeTranslationState } from "./translation-state";
+import type { D1AdminMutationStore, D1AdminReadStore } from "./d1-admin-store";
+
+type CommentPolicy = "legacy-readonly" | "disabled" | "open-moderated";
+
+/** Rate-limit logic shared between read (check/peek) and mutation (recordFailedAttempt) stores. */
+function createD1RateLimitPart(db: D1DatabaseLike): D1AdminReadStore["rateLimits"] {
+  return {
+    async checkRateLimit(key: string, max: number, windowMs: number) {
+      const now = Date.now();
+      const row = await db
+        .prepare("SELECT count, window_start_ms, window_ms FROM rate_limits WHERE key = ? LIMIT 1")
+        .bind(key)
+        .first<{ count: number; window_start_ms: number; window_ms: number }>();
+
+      if (!row || now - row.window_start_ms > windowMs) {
+        await db
+          .prepare(
+            `
+              INSERT INTO rate_limits (key, count, window_start_ms, window_ms)
+              VALUES (?, 1, ?, ?)
+              ON CONFLICT(key) DO UPDATE SET
+                count = 1,
+                window_start_ms = excluded.window_start_ms,
+                window_ms = excluded.window_ms
+            `,
+          )
+          .bind(key, now, windowMs)
+          .run();
+        return true;
+      }
+
+      if (row.count < max) {
+        await db.prepare("UPDATE rate_limits SET count = count + 1 WHERE key = ?").bind(key).run();
+        return true;
+      }
+
+      return false;
+    },
+    async peekRateLimit(key: string, max: number, windowMs: number) {
+      const now = Date.now();
+      const row = await db
+        .prepare("SELECT count, window_start_ms FROM rate_limits WHERE key = ? LIMIT 1")
+        .bind(key)
+        .first<{ count: number; window_start_ms: number }>();
+      if (!row || now - row.window_start_ms > windowMs) return true;
+      return row.count < max;
+    },
+    async recordFailedAttempt(key: string, max: number, windowMs: number) {
+      const now = Date.now();
+      const row = await db
+        .prepare("SELECT count, window_start_ms FROM rate_limits WHERE key = ? LIMIT 1")
+        .bind(key)
+        .first<{ count: number; window_start_ms: number }>();
+      if (!row || now - row.window_start_ms > windowMs) {
+        await db
+          .prepare(
+            `
+              INSERT INTO rate_limits (key, count, window_start_ms, window_ms)
+              VALUES (?, 1, ?, ?)
+              ON CONFLICT(key) DO UPDATE SET
+                count = 1,
+                window_start_ms = excluded.window_start_ms,
+                window_ms = excluded.window_ms
+            `,
+          )
+          .bind(key, now, windowMs)
+          .run();
+        return;
+      }
+      await db.prepare("UPDATE rate_limits SET count = count + 1 WHERE key = ?").bind(key).run();
+    },
+  };
+}
+
+export function createD1OperationsReadPart(db: D1DatabaseLike): Omit<D1AdminReadStore, "content" | "authors" | "taxonomies"> {
+  return {
+    audit: {
+      async getAuditEvents(): Promise<AuditEvent[]> {
+        const rows = (
+          await db
+            .prepare(
+              `
+                SELECT id, user_email, action, resource_type, resource_id, summary, created_at
+                FROM audit_events
+                ORDER BY datetime(created_at) DESC, id DESC
+              `,
+            )
+            .all<{
+              id: number;
+              user_email: string;
+              action: string;
+              resource_type: string;
+              resource_id: string | null;
+              summary: string;
+              created_at: string;
+            }>()
+        ).results;
+
+        return rows.map((row) => ({
+          id: `d1-audit-${row.id}`,
+          action: row.action,
+          actorEmail: row.user_email,
+          actorRole: "admin" as const,
+          summary: row.summary,
+          targetType:
+            row.resource_type === "redirect" || row.resource_type === "comment" || row.resource_type === "content"
+              ? row.resource_type
+              : "auth",
+          targetId: row.resource_id ?? `${row.id}`,
+          createdAt: row.created_at,
+        }));
+      },
+    },
+    users: {
+      async listAdminUsers(): Promise<ManagedAdminUser[]> {
+        const rows = (
+          await db
+            .prepare(
+              `
+                SELECT
+                  id, email, role, name, active, created_at,
+                  EXISTS (
+                    SELECT 1
+                    FROM user_invites i
+                    WHERE i.user_id = admin_users.id
+                      AND i.accepted_at IS NULL
+                      AND datetime(i.expires_at) > CURRENT_TIMESTAMP
+                  ) AS has_pending_invite
+                FROM admin_users
+                ORDER BY CASE role WHEN 'admin' THEN 0 ELSE 1 END, datetime(created_at) ASC, email ASC
+              `,
+            )
+            .all<{
+              id: number;
+              email: string;
+              role: "admin" | "editor";
+              name: string;
+              active: number;
+              created_at: string;
+              has_pending_invite: number;
+            }>()
+        ).results;
+
+        return rows.map((row) => ({
+          id: row.id,
+          email: row.email,
+          role: row.role,
+          name: row.name,
+          active: row.active === 1,
+          status: row.active !== 1 ? ("suspended" as const) : row.has_pending_invite === 1 ? ("invited" as const) : ("active" as const),
+          createdAt: row.created_at,
+        }));
+      },
+    },
+    redirects: {
+      async getRedirectRules(): Promise<RedirectRule[]> {
+        const rows = (
+          await db
+            .prepare(
+              `
+                SELECT source_path, target_path, status_code
+                FROM redirect_rules
+                WHERE deleted_at IS NULL
+                ORDER BY source_path ASC
+              `,
+            )
+            .all<{ source_path: string; target_path: string; status_code: 301 | 302 }>()
+        ).results;
+
+        return rows.map((row) => ({
+          sourcePath: row.source_path,
+          targetPath: row.target_path,
+          statusCode: row.status_code,
+        }));
+      },
+    },
+    comments: {
+      async getComments(): Promise<CommentRecord[]> {
+        const rows = (
+          await db
+            .prepare(
+              `
+                SELECT id, author, email, body, route, status, policy, submitted_at
+                FROM comments
+                ORDER BY
+                  CASE status WHEN 'pending' THEN 0 WHEN 'approved' THEN 1 ELSE 2 END,
+                  datetime(submitted_at) DESC,
+                  id DESC
+              `,
+            )
+            .all<{
+              id: string;
+              author: string;
+              email: string | null;
+              body: string | null;
+              route: string;
+              status: CommentStatus;
+              policy: CommentPolicy;
+              submitted_at: string;
+            }>()
+        ).results;
+
+        return rows.map((row) => ({
+          id: row.id,
+          author: row.author,
+          email: row.email ?? undefined,
+          body: row.body ?? undefined,
+          route: row.route,
+          status: row.status,
+          policy: row.policy,
+          submittedAt: row.submitted_at,
+        }));
+      },
+      async getApprovedCommentsForRoute(route: string): Promise<CommentRecord[]> {
+        const comments = await this.getComments();
+        return comments.filter((comment) => comment.route === route && comment.status === "approved");
+      },
+    },
+    submissions: {
+      async getContactSubmissions(): Promise<ContactSubmission[]> {
+        const rows = (
+          await db
+            .prepare(
+              `
+                SELECT id, name, email, message, submitted_at
+                FROM contact_submissions
+                ORDER BY datetime(submitted_at) DESC, id DESC
+              `,
+            )
+            .all<{ id: string; name: string; email: string; message: string; submitted_at: string }>()
+        ).results;
+
+        return rows.map((row) => ({
+          id: row.id,
+          name: row.name,
+          email: row.email,
+          message: row.message,
+          submittedAt: row.submitted_at,
+        }));
+      },
+    },
+    translations: {
+      async getEffectiveTranslationState(route: string, fallback = "not_started"): Promise<string> {
+        const row = await db
+          .prepare("SELECT state FROM translation_overrides WHERE route = ? LIMIT 1")
+          .bind(route)
+          .first<{ state: string }>();
+        return normalizeTranslationState(row?.state, normalizeTranslationState(fallback));
+      },
+    },
+    settings: {
+      async getSettings(): Promise<SiteSettings> {
+        const row = await db
+          .prepare(
+            `
+              SELECT site_title, site_tagline, donation_url, newsletter_enabled, comments_default_policy, admin_slug
+              FROM site_settings
+              WHERE id = 1
+              LIMIT 1
+            `,
+          )
+          .first<{
+            site_title: string;
+            site_tagline: string;
+            donation_url: string;
+            newsletter_enabled: number;
+            comments_default_policy: SiteSettings["commentsDefaultPolicy"];
+            admin_slug: string;
+          }>();
+
+        if (!row) {
+          return { ...defaultSiteSettings };
+        }
+
+        return {
+          siteTitle: row.site_title,
+          siteTagline: row.site_tagline,
+          donationUrl: row.donation_url,
+          newsletterEnabled: row.newsletter_enabled === 1,
+          commentsDefaultPolicy: row.comments_default_policy,
+          adminSlug: row.admin_slug ?? "ap-admin",
+        };
+      },
+    },
+    rateLimits: createD1RateLimitPart(db),
+    media: {
+      async listMediaAssets(): Promise<MediaAsset[]> {
+        const rows = (
+          await db
+            .prepare(
+              `
+                SELECT id, source_url, local_path, r2_key, mime_type, width, height, file_size, alt_text, title, uploaded_at, uploaded_by
+                FROM media_assets
+                WHERE deleted_at IS NULL
+                ORDER BY datetime(uploaded_at) DESC, id DESC
+              `,
+            )
+            .all<{
+              id: string;
+              source_url: string | null;
+              local_path: string;
+              r2_key: string | null;
+              mime_type: string | null;
+              width: number | null;
+              height: number | null;
+              file_size: number | null;
+              alt_text: string | null;
+              title: string | null;
+              uploaded_at: string;
+              uploaded_by: string | null;
+            }>()
+        ).results;
+
+        return rows.map((row) => ({
+          id: row.id,
+          sourceUrl: row.source_url,
+          localPath: row.local_path,
+          r2Key: row.r2_key,
+          mimeType: row.mime_type,
+          width: row.width,
+          height: row.height,
+          fileSize: row.file_size,
+          altText: row.alt_text ?? "",
+          title: row.title ?? "",
+          uploadedAt: row.uploaded_at,
+          uploadedBy: row.uploaded_by ?? "",
+        }));
+      },
+    },
+  };
+}
+
+export function createD1OperationsMutationPart(db: D1DatabaseLike): Pick<D1AdminMutationStore, "submissions" | "comments" | "rateLimits"> {
+  return {
+    submissions: {
+      async submitContact(input): Promise<{ ok: true; submission: ContactSubmission }> {
+        const submission: ContactSubmission = {
+          id: `contact-${crypto.randomUUID()}`,
+          name: input.name,
+          email: input.email,
+          message: input.message,
+          submittedAt: input.submittedAt,
+        };
+
+        await db
+          .prepare(
+            `
+              INSERT INTO contact_submissions (id, name, email, message, submitted_at)
+              VALUES (?, ?, ?, ?, ?)
+            `,
+          )
+          .bind(submission.id, submission.name, submission.email, submission.message, submission.submittedAt)
+          .run();
+
+        return { ok: true as const, submission };
+      },
+    },
+    comments: {
+      async submitPublicComment(input): Promise<{ ok: true; comment: CommentRecord }> {
+        const submittedAt = input.submittedAt || new Date().toISOString();
+        const comment: CommentRecord = {
+          id: `public-${crypto.randomUUID()}`,
+          author: input.author,
+          email: input.email,
+          body: input.body,
+          route: input.route,
+          status: "pending",
+          policy: "open-moderated",
+          submittedAt,
+        };
+
+        await db
+          .prepare(
+            `
+              INSERT INTO comments (id, author, email, body, route, status, policy, submitted_at)
+              VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            `,
+          )
+          .bind(comment.id, comment.author, comment.email ?? null, comment.body ?? null, comment.route, comment.status, comment.policy, submittedAt)
+          .run();
+
+        return { ok: true as const, comment };
+      },
+    },
+    rateLimits: createD1RateLimitPart(db),
+  };
+}

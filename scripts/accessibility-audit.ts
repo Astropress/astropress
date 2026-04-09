@@ -44,9 +44,6 @@ for (const htmlFile of htmlFiles) {
       type: "tag",
       values: ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"],
     },
-    rules: {
-      "color-contrast": { enabled: false },
-    },
   });
 
   for (const violation of result.violations) {

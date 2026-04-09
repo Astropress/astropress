@@ -1,12 +1,11 @@
 use std::fs;
 use std::io::Write as _;
 use std::path::{Path, PathBuf};
-use std::time::{SystemTime, UNIX_EPOCH};
 
 use serde::{Deserialize, Serialize};
 
 use crate::cli_config::args::CrawlMode;
-use crate::js_bridge::loaders::{resolve_admin_db_path, resolve_local_provider};
+use crate::commands::import_common::{crawl_and_save, now_unix_ms, resolve_absolute_admin_db_path};
 use crate::js_bridge::runner::{detect_package_manager, run_package_json_command};
 use crate::telemetry::{ImportSummary, PostImportChoice};
 
@@ -64,13 +63,7 @@ struct FetchWixResult {
     warnings: Vec<String>,
 }
 
-fn now_unix_ms() -> u128 {
-    SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .unwrap_or_default()
-        .as_millis()
-}
-
+#[allow(clippy::too_many_arguments)]
 pub(crate) fn stage_wix_import(
     project_dir: &Path,
     source_path: Option<&Path>,
@@ -143,20 +136,11 @@ console.log(JSON.stringify(result));"#,
     let staged_source = import_dir.join("wix-export.csv");
     fs::copy(&resolved_source, &staged_source).map_err(crate::io_error)?;
 
-    let spinner = crate::tui::spinner("Importing Wix content…");
+    let spinner = crate::tui::spinner("Importing Wix content\u{2026}");
     let package_manager = detect_package_manager(project_dir);
     let importer_module =
         crate::js_bridge::loaders::package_module_import("import/wix.js", Some(project_dir))?;
-    let local_provider = resolve_local_provider(project_dir, None)?;
-    let admin_db_path = resolve_admin_db_path(project_dir, local_provider)?;
-    let resolved_admin_db_path = {
-        let candidate = PathBuf::from(&admin_db_path);
-        if candidate.is_absolute() {
-            candidate
-        } else {
-            project_dir.join(candidate)
-        }
-    };
+    let resolved_admin_db_path = resolve_absolute_admin_db_path(project_dir)?;
 
     let resume_from = if resume {
         let state_file = import_dir.join("download-state.json");
@@ -269,42 +253,7 @@ console.log(JSON.stringify(result));
         _ => crawl_mode,
     };
 
-    // Optional: crawl pages not covered by the blog CSV export.
-    if effective_crawl != CrawlMode::None {
-        if let Some(site_url) = url {
-            let pm = detect_package_manager(project_dir);
-            let crawler_module = crate::js_bridge::loaders::package_module_import(
-                "import/page-crawler.js",
-                Some(project_dir),
-            )?;
-            let (fn_name, label) = match effective_crawl {
-                CrawlMode::Browser => ("crawlSitePagesWithBrowser", "browser"),
-                _ => ("crawlSitePages", "fetch"),
-            };
-            let crawl_spinner = crate::tui::spinner(&format!("Crawling site pages ({label})…"));
-            let crawl_script = format!(
-                r#"import {{ {fn_name} }} from {};
-const result = await {fn_name}({{ siteUrl: {} }});
-console.log(JSON.stringify(result));"#,
-                serde_json::to_string(&crawler_module).map_err(|e| e.to_string())?,
-                serde_json::to_string(site_url).map_err(|e| e.to_string())?,
-            );
-            let crawl_result: serde_json::Value =
-                run_package_json_command(project_dir, pm, &crawl_script)?;
-            let page_count = crawl_result["pages"].as_array().map_or(0, |p| p.len());
-            let fail_count = crawl_result["failed"].as_array().map_or(0, |f| f.len());
-            crate::tui::finish_spinner(
-                crawl_spinner,
-                &format!("Crawled {page_count} pages ({fail_count} failures)."),
-            );
-            let crawl_json =
-                serde_json::to_string_pretty(&crawl_result).map_err(|e| e.to_string())?;
-            fs::write(import_dir.join("crawled-pages.json"), format!("{crawl_json}\n"))
-                .map_err(crate::io_error)?;
-            println!("Crawl results saved to crawled-pages.json");
-        }
-    }
-
+    crawl_and_save(project_dir, &import_dir, url, effective_crawl)?;
     Ok(())
 }
 

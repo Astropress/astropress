@@ -96,10 +96,34 @@ Then deploy the new `CLOUDFLARE_SESSION_SECRET`.
 
 ## Upgrade and migration policy
 
+See [CHANGELOG.md](../CHANGELOG.md) for version-specific breaking changes before upgrading.
+
 1. Always snapshot before upgrading: `astropress backup --project-dir <site> --out <snapshot-dir>`
 2. Run `astropress doctor` after upgrading — it warns on env contract changes and schema drift.
 3. SQLite local runtime: apply schema changes by running `astropress services bootstrap` again (idempotent).
 4. Hosted providers (Cloudflare D1, Supabase): apply schema migrations via the provider CLI before deploying the new package version. Never deploy new code before the schema is ready.
+5. If a migration fails: restore from the last clean backup (`astropress restore`), fix the migration in isolation, then redeploy.
+
+## Caching strategy
+
+### Application-managed headers
+
+`applyAstropressSecurityHeaders()` automatically sets `Cache-Control` based on the area:
+
+| Area | `Cache-Control` value | Effect |
+|------|-----------------------|--------|
+| `public` | `public, max-age=300, s-maxage=3600` | 5-min browser cache, 1-hr CDN cache |
+| `admin` | `private, no-store` | Never cached |
+| `auth` | `private, no-store` | Never cached |
+| `api` | `private, no-store` | Never cached |
+
+### Cloudflare CDN recommendations
+
+For sites deployed on Cloudflare Pages or Workers:
+
+- Create a **Cache Rule** matching the public site origin (non-`/ap-admin/` paths) with **Cache Eligibility: Eligible for cache** and a 1-hour edge TTL.
+- Create a **Cache Rule** matching `/ap-admin/*` with **Cache Eligibility: Bypass cache** — admin pages must never be served from edge cache.
+- Static assets (`.js`, `.css`, `.woff2`, images) can use longer TTLs (e.g., 1 week) if filenames are content-hashed.
 
 ## Incident handling checklist
 

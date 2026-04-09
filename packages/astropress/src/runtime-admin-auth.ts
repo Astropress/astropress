@@ -1,8 +1,9 @@
 import { createSessionTokenDigest, verifyPassword } from "./crypto-utils";
 import type { D1DatabaseLike } from "./d1-database";
-import { loadLocalAdminAuth, loadLocalAdminStore } from "./local-runtime-modules";
+import { loadLocalAdminAuth } from "./local-runtime-modules";
 import type { SessionUser } from "./persistence-types";
 import { getAdminBootstrapConfig, getCloudflareBindings } from "./runtime-env";
+import { withLocalStoreFallback } from "./admin-store-dispatch";
 
 const SESSION_TTL_MS = 12 * 60 * 60 * 1000;
 
@@ -147,102 +148,98 @@ export async function createRuntimeSession(
   metadata?: { ipAddress?: string | null; userAgent?: string | null },
   locals?: App.Locals | null,
 ) {
-  const db = getD1(locals);
-  if (!db) {
-    const localAdminStore = await loadLocalAdminStore();
-    return localAdminStore.createSession(user, metadata);
-  }
+  return withLocalStoreFallback(
+    locals,
+    async (db) => {
+      const userRow = await db
+        .prepare("SELECT id FROM admin_users WHERE email = ? AND active = 1 LIMIT 1")
+        .bind(user.email.toLowerCase())
+        .first<{ id: number }>();
 
-  const userRow = await db
-    .prepare("SELECT id FROM admin_users WHERE email = ? AND active = 1 LIMIT 1")
-    .bind(user.email.toLowerCase())
-    .first<{ id: number }>();
+      if (!userRow) {
+        throw new Error(`Cannot create a session for unknown admin user ${user.email}.`);
+      }
 
-  if (!userRow) {
-    throw new Error(`Cannot create a session for unknown admin user ${user.email}.`);
-  }
+      const sessionToken = crypto.randomUUID();
+      const csrfToken = crypto.randomUUID();
+      const sessionSecret = getAdminBootstrapConfig(locals).sessionSecret?.trim();
+      const storedSessionId = sessionSecret
+        ? await createSessionTokenDigest(sessionToken, sessionSecret)
+        : sessionToken;
 
-  const sessionToken = crypto.randomUUID();
-  const csrfToken = crypto.randomUUID();
-  const sessionSecret = getAdminBootstrapConfig(locals).sessionSecret?.trim();
-  const storedSessionId = sessionSecret
-    ? await createSessionTokenDigest(sessionToken, sessionSecret)
-    : sessionToken;
+      await db
+        .prepare(
+          `
+            INSERT INTO admin_sessions (id, user_id, csrf_token, ip_address, user_agent)
+            VALUES (?, ?, ?, ?, ?)
+          `,
+        )
+        .bind(storedSessionId, userRow.id, csrfToken, metadata?.ipAddress ?? null, metadata?.userAgent ?? null)
+        .run();
 
-  await db
-    .prepare(
-      `
-        INSERT INTO admin_sessions (id, user_id, csrf_token, ip_address, user_agent)
-        VALUES (?, ?, ?, ?, ?)
-      `,
-    )
-    .bind(storedSessionId, userRow.id, csrfToken, metadata?.ipAddress ?? null, metadata?.userAgent ?? null)
-    .run();
-
-  return sessionToken;
+      return sessionToken;
+    },
+    async (store) => store.createSession(user, metadata),
+  );
 }
 
 export async function getRuntimeSessionUser(sessionToken: string | null | undefined, locals?: App.Locals | null) {
-  const db = getD1(locals);
-  if (!db) {
-    const localAdminStore = await loadLocalAdminStore();
-    return localAdminStore.getSessionUser(sessionToken);
-  }
-
-  const row = await getLiveD1SessionRow(db, sessionToken, locals);
-  if (!row) {
-    return null;
-  }
-
-  return {
-    email: row.email,
-    role: row.role,
-    name: row.name,
-  };
+  return withLocalStoreFallback(
+    locals,
+    async (db) => {
+      const row = await getLiveD1SessionRow(db, sessionToken, locals);
+      if (!row) {
+        return null;
+      }
+      return { email: row.email, role: row.role, name: row.name };
+    },
+    async (store) => store.getSessionUser(sessionToken),
+  );
 }
 
 export async function getRuntimeCsrfToken(sessionToken: string | null | undefined, locals?: App.Locals | null) {
-  const db = getD1(locals);
-  if (!db) {
-    const localAdminStore = await loadLocalAdminStore();
-    return localAdminStore.getCsrfToken(sessionToken);
-  }
-
-  const row = await getLiveD1SessionRow(db, sessionToken, locals);
-  return row?.csrf_token ?? null;
+  return withLocalStoreFallback(
+    locals,
+    async (db) => {
+      const row = await getLiveD1SessionRow(db, sessionToken, locals);
+      return row?.csrf_token ?? null;
+    },
+    async (store) => store.getCsrfToken(sessionToken),
+  );
 }
 
 export async function revokeRuntimeSession(sessionToken: string | null | undefined, locals?: App.Locals | null) {
-  const db = getD1(locals);
-  if (!db) {
-    const localAdminStore = await loadLocalAdminStore();
-    localAdminStore.revokeSession(sessionToken);
-    return;
-  }
+  return withLocalStoreFallback(
+    locals,
+    async (db) => {
+      if (!sessionToken) {
+        return;
+      }
 
-  if (!sessionToken) {
-    return;
-  }
+      const sessionCandidates = [sessionToken];
+      const sessionSecret = getAdminBootstrapConfig(locals).sessionSecret?.trim();
+      if (sessionSecret) {
+        sessionCandidates.unshift(await createSessionTokenDigest(sessionToken, sessionSecret));
+      }
 
-  const sessionCandidates = [sessionToken];
-  const sessionSecret = getAdminBootstrapConfig(locals).sessionSecret?.trim();
-  if (sessionSecret) {
-    sessionCandidates.unshift(await createSessionTokenDigest(sessionToken, sessionSecret));
-  }
-
-  for (const sessionId of sessionCandidates) {
-    await db
-      .prepare(
-        `
-          UPDATE admin_sessions
-          SET revoked_at = CURRENT_TIMESTAMP
-          WHERE id = ?
-            AND revoked_at IS NULL
-        `,
-      )
-      .bind(sessionId)
-      .run();
-  }
+      for (const sessionId of sessionCandidates) {
+        await db
+          .prepare(
+            `
+              UPDATE admin_sessions
+              SET revoked_at = CURRENT_TIMESTAMP
+              WHERE id = ?
+                AND revoked_at IS NULL
+            `,
+          )
+          .bind(sessionId)
+          .run();
+      }
+    },
+    async (store) => {
+      store.revokeSession(sessionToken);
+    },
+  );
 }
 
 async function recordRuntimeAudit(
@@ -251,29 +248,27 @@ async function recordRuntimeAudit(
   actor: SessionUser,
   locals?: App.Locals | null,
 ) {
-  const db = getD1(locals);
-  if (!db) {
-    const localAdminStore = await loadLocalAdminStore();
-    if (action === "auth.login") {
-      localAdminStore.recordSuccessfulLogin(actor);
-      return;
-    }
-    if (action === "auth.logout") {
-      localAdminStore.recordLogout(actor);
-      return;
-    }
-    return;
-  }
-
-  await db
-    .prepare(
-      `
-        INSERT INTO audit_events (user_email, action, resource_type, resource_id, summary)
-        VALUES (?, ?, 'auth', ?, ?)
-      `,
-    )
-    .bind(actor.email, action, actor.email, summary)
-    .run();
+  return withLocalStoreFallback(
+    locals,
+    async (db) => {
+      await db
+        .prepare(
+          `
+            INSERT INTO audit_events (user_email, action, resource_type, resource_id, summary)
+            VALUES (?, ?, 'auth', ?, ?)
+          `,
+        )
+        .bind(actor.email, action, actor.email, summary)
+        .run();
+    },
+    async (store) => {
+      if (action === "auth.login") {
+        store.recordSuccessfulLogin(actor);
+      } else if (action === "auth.logout") {
+        store.recordLogout(actor);
+      }
+    },
+  );
 }
 
 export async function recordRuntimeSuccessfulLogin(actor: SessionUser, locals?: App.Locals | null) {

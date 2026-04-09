@@ -3,6 +3,9 @@ Feature: Local development server
   I want to run the site locally before deploying
   So that I can preview content changes and test the admin panel without affecting the live site
 
+  Background:
+    Given the AstroPress CLI is installed and available on the PATH
+
   Scenario: A developer starts the local preview server with a single command
     Given a project has been scaffolded with "astropress new"
     When the developer runs "astropress dev"

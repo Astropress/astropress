@@ -1,0 +1,191 @@
+import { readdir, readFile } from "node:fs/promises";
+import { join, relative } from "node:path";
+
+type Violation = {
+  file: string;
+  rule: string;
+  message: string;
+};
+
+type Warning = {
+  file: string;
+  rule: string;
+  message: string;
+};
+
+async function walk(directory: string): Promise<string[]> {
+  const entries = await readdir(directory, { withFileTypes: true });
+  const files: string[] = [];
+
+  for (const entry of entries) {
+    const fullPath = join(directory, entry.name);
+    if (entry.isDirectory()) {
+      files.push(...(await walk(fullPath)));
+      continue;
+    }
+    if (entry.isFile()) {
+      files.push(fullPath);
+    }
+  }
+
+  return files;
+}
+
+async function main() {
+  const root = process.cwd();
+  const srcDir = join(root, "packages/astropress/src");
+  const allFiles = (await walk(srcDir)).filter((f) => f.endsWith(".ts") && !f.endsWith(".d.ts"));
+
+  const violations: Violation[] = [];
+  const warnings: Warning[] = [];
+
+  for (const file of allFiles) {
+    const content = await readFile(file, "utf8");
+    const display = relative(root, file);
+    const filename = file.split("/").pop() ?? "";
+    const lines = content.split("\n").length;
+
+    // --- Rule: LOC limits ---
+    // Exempt: known-large stable files (schema bootstrap, public barrel, import workers, sqlite runtime)
+    const LOC_WARN = 400;
+    const LOC_ERROR = 600;
+    const locExempt = new Set([
+      "sqlite-bootstrap.ts",
+      "index.ts",
+      "project-scaffold.ts",          // CLI scaffolding — intentionally verbose
+      "cms-route-registry-factory.ts", // factory with injected deps — stable
+      "auth-repository-factory.ts",
+      "runtime-actions-content.ts",   // complex multi-step content coordinator
+    ]);
+    const locExemptDirs = ["sqlite-runtime/", "import/", "adapters/"];
+    const isLocExempt = locExempt.has(filename) || locExemptDirs.some((d) => display.includes(d));
+
+    if (!isLocExempt) {
+      if (lines > LOC_ERROR) {
+        violations.push({
+          file: display,
+          rule: "max-lines",
+          message: `${lines} lines exceeds the ${LOC_ERROR}-line limit. Split into domain-focused modules.`,
+        });
+      } else if (lines > LOC_WARN) {
+        warnings.push({
+          file: display,
+          rule: "max-lines",
+          message: `${lines} lines exceeds the ${LOC_WARN}-line warning. Consider splitting.`,
+        });
+      }
+    }
+
+    // --- Rule: SQL containment ---
+    // .prepare() is only allowed in:
+    //   - d1-*.ts files (D1 adapter layer)
+    //   - sqlite-*.ts files and sqlite-runtime/ (local SQLite layer)
+    //   - adapters/ (provider adapters legitimately use SQL)
+    //   - import/ (import workers write SQL directly)
+    const isSqlAllowed =
+      filename.startsWith("d1-") ||
+      filename.startsWith("sqlite-") ||
+      filename.startsWith("runtime-actions-") ||          // action/service layer: multi-step D1 coordination
+      filename.startsWith("runtime-route-registry-") ||   // route registry service layer
+      filename === "runtime-admin-auth.ts" ||              // auth session management
+      display.includes("sqlite-runtime/") ||
+      display.includes("/adapters/") ||
+      display.includes("/import/");
+
+    if (!isSqlAllowed && content.includes(".prepare(")) {
+      violations.push({
+        file: display,
+        rule: "sql-containment",
+        message: "Raw .prepare() SQL outside adapter/import layer. Move into a d1-*.ts or sqlite-*.ts file.",
+      });
+    }
+
+    // --- Rule: Dependency direction ---
+    // d1-store-*.ts files must not import from runtime-*.ts (adapters don't depend on runtime layer)
+    if (filename.startsWith("d1-store-") && /from\s+["']\.\/runtime-/.test(content)) {
+      violations.push({
+        file: display,
+        rule: "dependency-direction",
+        message: "Adapter (d1-store-*) imports from runtime-* — reverse dependency violates hexagonal architecture.",
+      });
+    }
+
+    // --- Rule: Dispatch containment ---
+    // Once admin-store-dispatch.ts exists, loadLocalAdminStore() must only be called from there.
+    // Exempt: the dispatch module itself, the type-stub (local-runtime-modules.ts),
+    //         infrastructure stubs (cloudflare-local-runtime-stubs.ts, host-runtime-modules.ts)
+    const dispatchExempt = new Set([
+      "admin-store-dispatch.ts",
+      "local-runtime-modules.ts",           // type stub — declares the module shape
+      "cloudflare-local-runtime-stubs.ts",  // cloudflare stub — legitimate re-export
+      "host-runtime-modules.ts",            // host bundle factory — legitimate consumer
+    ]);
+    if (!dispatchExempt.has(filename) && content.includes("loadLocalAdminStore()")) {
+      violations.push({
+        file: display,
+        rule: "dispatch-containment",
+        message:
+          "loadLocalAdminStore() called outside admin-store-dispatch.ts. Use withAdminStore() instead.",
+      });
+    }
+
+    // --- Rule: Utility uniqueness ---
+    // normalizePath and normalizeEmail must only be *defined* (not imported) in admin-normalizers.ts
+    // or in sqlite-runtime/utils.ts (separate layer with its own copy).
+    // Factory files that accept normalizePath as a *parameter* are exempt.
+    const utilDefExempt = new Set([
+      "admin-normalizers.ts",
+    ]);
+    const utilDefExemptPatterns = [
+      "sqlite-runtime/",
+      "cms-route-registry-factory.ts",      // receives normalizePath as injected param
+      "content-repository-factory.ts",      // receives normalizePath as injected param
+      "redirect-repository-factory.ts",     // receives normalizePath as injected param
+      "import/",
+    ];
+    const isUtilDefExempt =
+      utilDefExempt.has(filename) ||
+      utilDefExemptPatterns.some((p) => display.includes(p));
+
+    if (
+      !isUtilDefExempt &&
+      /^(?:export\s+)?function\s+(?:normalizeEmail|normalizePath)\s*\(/m.test(content)
+    ) {
+      violations.push({
+        file: display,
+        rule: "utility-uniqueness",
+        message:
+          "normalizeEmail or normalizePath defined outside admin-normalizers.ts. Import from './admin-normalizers' instead.",
+      });
+    }
+  }
+
+  const hasViolations = violations.length > 0;
+  const hasWarnings = warnings.length > 0;
+
+  if (hasWarnings) {
+    console.log("\n⚠️  Architecture Warnings:\n");
+    for (const w of warnings) {
+      console.log(`  [${w.rule}] ${w.file}`);
+      console.log(`    ${w.message}\n`);
+    }
+  }
+
+  if (hasViolations) {
+    console.error("❌ Architecture Violations:\n");
+    for (const v of violations) {
+      console.error(`  [${v.rule}] ${v.file}`);
+      console.error(`    ${v.message}\n`);
+    }
+    console.error(`${violations.length} violation(s) found. Fix before committing.\n`);
+    process.exit(1);
+  }
+
+  const label = hasWarnings ? `✅ Architecture lint passed (${warnings.length} warning(s)).` : "✅ Architecture lint passed.";
+  console.log(label);
+}
+
+main().catch((err) => {
+  console.error("arch-lint failed:", err);
+  process.exit(1);
+});

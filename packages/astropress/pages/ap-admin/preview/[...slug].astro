@@ -1,0 +1,124 @@
+---
+import AdminLayout from "astropress/components/AdminLayout.astro";
+
+const adminUser = Astro.locals.adminUser;
+
+// Require authentication — preview is gated to admin/editor users
+if (!adminUser) {
+  const returnPath = encodeURIComponent(Astro.url.pathname + Astro.url.search);
+  return Astro.redirect(`/ap-admin/login?return=${returnPath}`, 302);
+}
+
+const { slug } = Astro.params;
+const contentSlug = Array.isArray(slug) ? slug.join("/") : (slug ?? "");
+
+// Load the content record (drafts included — this is a preview surface)
+let record: { title?: string | null; body?: string | null; status?: string; kind?: string } | null = null;
+
+try {
+  const provider = (Astro.locals as Record<string, unknown>).provider as
+    | { content: { get(id: string): Promise<{ title?: string | null; body?: string | null; status?: string; kind?: string } | null> } }
+    | undefined;
+
+  if (provider) {
+    record = await provider.content.get(contentSlug);
+  }
+} catch {
+  // Provider not available — show placeholder
+}
+---
+
+<AdminLayout
+  title={record?.title ? `Preview: ${record.title} | Astropress Admin` : "Preview | Astropress Admin"}
+  heading={record?.title ?? "Content Preview"}
+  currentPath={Astro.url.pathname}
+  description={`Draft preview for /${contentSlug}`}
+  role={adminUser.role}
+  userName={adminUser.name}
+>
+  {record ? (
+    <div class="preview-shell">
+      <div class="preview-meta panel">
+        <div class="preview-meta-row">
+          <span class="admin-kicker">Preview</span>
+          <span class="preview-slug">{contentSlug}</span>
+          <span class={`admin-chip status-${record.status ?? "published"}`}>{record.status ?? "published"}</span>
+        </div>
+        <p class="admin-note">
+          This preview shows the current saved state including drafts. Only published content appears on the production site.
+        </p>
+        {record.kind && (
+          <a href={`/ap-admin/${record.kind === "post" ? "posts" : "pages"}/${contentSlug}`} class="admin-button-ghost small">
+            Edit in admin
+          </a>
+        )}
+      </div>
+      <article class="preview-content panel" set:html={record.body ?? "<p>No content body to preview.</p>"} />
+    </div>
+  ) : (
+    <section class="panel preview-empty">
+      <p class="admin-note">No content record was found for slug <code>{contentSlug}</code>.</p>
+      <a href="/ap-admin" class="admin-button-ghost small">Back to dashboard</a>
+    </section>
+  )}
+</AdminLayout>
+
+<style>
+  .preview-shell {
+    display: grid;
+    gap: 1rem;
+  }
+
+  .preview-meta {
+    padding: 1rem 1.2rem;
+  }
+
+  .preview-meta-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    margin-bottom: 0.6rem;
+  }
+
+  .preview-slug {
+    font-family: monospace;
+    font-size: 0.9rem;
+    color: var(--muted);
+  }
+
+  .status-draft {
+    background: #fef3c7;
+    color: #92400e;
+  }
+
+  .status-published {
+    background: var(--accent-soft);
+    color: var(--accent);
+  }
+
+  .status-archived {
+    background: var(--line);
+    color: var(--muted);
+  }
+
+  .preview-content {
+    padding: 1.5rem 2rem;
+    max-width: 72ch;
+    line-height: 1.7;
+  }
+
+  .preview-empty {
+    max-width: 38rem;
+    padding: 1.5rem;
+    display: grid;
+    gap: 1rem;
+  }
+
+  .preview-empty code {
+    font-size: 0.88rem;
+    background: var(--surface-subtle);
+    padding: 0.15rem 0.4rem;
+    border-radius: 0.35rem;
+  }
+</style>
