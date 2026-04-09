@@ -29,6 +29,8 @@ export {
 export type {
   ProviderKind,
   ProviderCapabilities,
+  SaveableContentKind,
+  ReadableContentKind,
   ContentStoreRecord,
   ContentStore,
   MediaAssetRecord,

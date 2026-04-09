@@ -85,22 +85,19 @@ function createInMemoryAdapter(): AstropressPlatformAdapter {
 }
 
 describe("platform contracts", () => {
-  it("fills omitted capability flags with false", () => {
-    expect(
-      normalizeProviderCapabilities({
-        name: "supabase",
-        database: true,
-      }),
-    ).toEqual({
-      name: "supabase",
-      staticPublishing: false,
-      hostedAdmin: false,
-      previewEnvironments: false,
-      serverRuntime: false,
-      database: true,
-      objectStorage: false,
-      gitSync: false,
-    });
+  it("fills omitted capability flags with false and preserves explicitly set flags", () => {
+    const result = normalizeProviderCapabilities({ name: "supabase", database: true });
+    expect(result.name).toBe("supabase");
+    expect(result.database).toBe(true);
+    const defaultFalseFlags = ["staticPublishing", "hostedAdmin", "previewEnvironments", "serverRuntime", "objectStorage", "gitSync"] as const;
+    for (const flag of defaultFalseFlags) {
+      expect(result[flag]).toBe(false);
+    }
+  });
+
+  it("preserves unknown provider names as-is", () => {
+    const result = normalizeProviderCapabilities({ name: "my-custom-provider" });
+    expect(result.name).toBe("my-custom-provider");
   });
 
   it("accepts an adapter that satisfies the required contracts", async () => {
@@ -123,5 +120,31 @@ describe("platform contracts", () => {
         capabilities: normalizeProviderCapabilities({ name: "custom" }),
       } as unknown as AstropressPlatformAdapter),
     ).toThrow(/missing one or more required stores/i);
+  });
+
+  it("rejects adapters with no capabilities name", () => {
+    expect(() =>
+      assertProviderContract({
+        ...createInMemoryAdapter(),
+        capabilities: { ...normalizeProviderCapabilities({ name: "" }) },
+      }),
+    ).toThrow(/must declare a name/i);
+  });
+
+  it("supports full content CRUD lifecycle", async () => {
+    const adapter = assertProviderContract(createInMemoryAdapter());
+
+    const record = await adapter.content.save({ id: "post-1", kind: "post", slug: "hello", status: "draft", title: "Hello" });
+    expect(record.id).toBe("post-1");
+
+    const fetched = await adapter.content.get("post-1");
+    expect(fetched?.slug).toBe("hello");
+
+    const all = await adapter.content.list("post");
+    expect(all).toHaveLength(1);
+
+    await adapter.content.delete("post-1");
+    expect(await adapter.content.get("post-1")).toBeNull();
+    expect(await adapter.content.list("post")).toHaveLength(0);
   });
 });

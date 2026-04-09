@@ -117,7 +117,7 @@ describe("security headers", () => {
     ).toBe(true); // parseOrigin throws → null → falls through to referer → no referer → return true
   });
 
-  it("uses SAMEORIGIN when frameAncestors is not 'none' (line 51 false branch)", () => {
+  it("uses SAMEORIGIN when frameAncestors option is not 'none'", () => {
     const headers = createAstropressSecurityHeaders({ frameAncestors: "'self'" });
     expect(headers.get("X-Frame-Options")).toBe("SAMEORIGIN");
   });

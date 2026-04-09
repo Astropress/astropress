@@ -11,9 +11,15 @@ export interface ProviderCapabilities {
   gitSync: boolean;
 }
 
+/** Kinds that can be written via ContentStore.save. */
+export type SaveableContentKind = "page" | "post" | "redirect" | "settings" | "translation";
+
+/** All kinds that can be read via ContentStore.list/get (superset of SaveableContentKind). */
+export type ReadableContentKind = SaveableContentKind | "comment" | "user" | "media";
+
 export interface ContentStoreRecord {
   id: string;
-  kind: "page" | "post" | "redirect" | "comment" | "media" | "user" | "settings" | "translation";
+  kind: ReadableContentKind;
   slug: string;
   status: "draft" | "published" | "archived";
   locale?: string | null;
@@ -23,9 +29,9 @@ export interface ContentStoreRecord {
 }
 
 export interface ContentStore {
-  list(kind?: ContentStoreRecord["kind"]): Promise<ContentStoreRecord[]>;
+  list(kind?: ReadableContentKind): Promise<ContentStoreRecord[]>;
   get(id: string): Promise<ContentStoreRecord | null>;
-  save(record: ContentStoreRecord): Promise<ContentStoreRecord>;
+  save(record: Omit<ContentStoreRecord, "kind"> & { kind: SaveableContentKind }): Promise<ContentStoreRecord>;
   delete(id: string): Promise<void>;
 }
 

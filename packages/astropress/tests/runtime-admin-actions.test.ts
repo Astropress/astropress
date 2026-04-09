@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { registerCms } from "../src/config";
 import { readAstropressSqliteSchemaSql } from "../src/sqlite-bootstrap.js";
-import { SqliteBackedD1Database } from "./helpers/provider-test-fixtures.js";
+import { makeLocals } from "./helpers/make-locals.js";
 import {
   consumeRuntimeInviteToken,
   consumeRuntimePasswordResetToken,
@@ -57,12 +57,6 @@ function makeDb() {
   const db = new DatabaseSync(":memory:");
   db.exec(readAstropressSqliteSchemaSql());
   return db;
-}
-
-function makeLocals(db: DatabaseSync) {
-  return {
-    runtime: { env: { DB: new SqliteBackedD1Database(db) } },
-  } as unknown as App.Locals;
 }
 
 const actor = { email: "admin@test.local", role: "admin" as const, name: "Test Admin" };
@@ -395,7 +389,7 @@ describe("saveRuntimeContentState", () => {
     expect(result).toMatchObject({ ok: false });
   });
 
-  it("saves null-field entry with all optional inputs (covers ?? fallbacks and loop bodies)", async () => {
+  it("saves null-field entry when all optional inputs are provided", async () => {
     const { lastInsertRowid: authorId } = db.prepare("INSERT INTO authors (name, slug) VALUES (?, ?)").run("Author A", "author-a");
     const { lastInsertRowid: catId } = db.prepare("INSERT INTO categories (name, slug) VALUES (?, ?)").run("Cat A", "cat-a");
     const { lastInsertRowid: tagId } = db.prepare("INSERT INTO tags (name, slug) VALUES (?, ?)").run("Tag A", "tag-a");
@@ -439,9 +433,7 @@ describe("saveRuntimeContentState", () => {
     expect(row.status).toBe("published");
   });
 
-  it("uses empty string body when input.body and pageRecord.body are both absent (covers body || '' branch)", async () => {
-    // null-fields has NULL body in content_entries → mapped to "" by getCustomContentEntries
-    // calling without input.body exercises: input.body?.trim() → undefined, pageRecord.body → "", || "" right branch
+  it("uses empty string body when neither the input nor the stored record has a body", async () => {
     const result = await saveRuntimeContentState(
       "null-fields",
       { title: "Null Fields", status: "published", seoTitle: "Null SEO", metaDescription: "Null meta" },
@@ -451,8 +443,7 @@ describe("saveRuntimeContentState", () => {
     expect(result).toMatchObject({ ok: true });
   });
 
-  it("covers ensureD1BaselineRevision ?? branches via seed page with undefined optional fields", async () => {
-    // Register a seed page with no optional fields — status/seoTitle/metaDescription/summary are all undefined
+  it("saves content state for a seed page that has no optional fields set", async () => {
     registerCms({
       templateKeys: ["content"],
       siteUrl: "https://example.com",
@@ -465,7 +456,6 @@ describe("saveRuntimeContentState", () => {
       .run("seed-minimal", "/seed-minimal", "Seed Minimal", "post", "content", "runtime://content/seed-minimal");
 
     // findPageRecord finds the seed page first (from getPageRecords()) since it precedes customEntries in the spread
-    // ensureD1BaselineRevision receives pageRecord with undefined optional fields → ?? right branches covered
     const result = await saveRuntimeContentState(
       "seed-minimal",
       { title: "Seed Minimal", status: "published", seoTitle: "Seed SEO", metaDescription: "Seed meta" },
@@ -563,7 +553,7 @@ describe("createRuntimeContentRecord", () => {
     expect(result).toMatchObject({ ok: false });
   });
 
-  it("falls back to title when seoTitle is empty (covers seoTitle || title right branch)", async () => {
+  it("falls back to title when seoTitle is empty", async () => {
     const result = await createRuntimeContentRecord(
       {
         title: "Title As SEO",
@@ -580,7 +570,7 @@ describe("createRuntimeContentRecord", () => {
     expect(entry?.seo_title).toBe("Title As SEO");
   });
 
-  it("prepends slash when legacyUrl has no leading slash (covers rawLegacyUrl false branch)", async () => {
+  it("prepends slash when legacyUrl has no leading slash", async () => {
     const result = await createRuntimeContentRecord(
       {
         title: "No Slash Post",

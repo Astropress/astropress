@@ -133,7 +133,7 @@ describe("resolveAstropressAppHostFromEnv — additional branches", () => {
     expect(resolveAstropressAppHostFromEnv({ ASTROPRESS_HOSTED_PROVIDER: "runway" })).toBe("runway");
   });
 
-  it("maps ASTROPRESS_DEPLOY_TARGET=github-pages → github-pages via legacy deploy target mapper (line 4)", () => {
+  it("maps ASTROPRESS_DEPLOY_TARGET=github-pages → github-pages via legacy deploy target mapper", () => {
     expect(resolveAstropressAppHostFromEnv({ ASTROPRESS_DEPLOY_TARGET: "github-pages" })).toBe("github-pages");
   });
 
@@ -284,7 +284,7 @@ describe("resolveAstropressDeployTarget — explicit target values", () => {
 });
 
 describe("project-env — uncovered branch targets", () => {
-  it("resolveAstropressDataServicesFromEnv with BACKEND_PLATFORM and no CONTENT/DATA_SERVICES (line 85 b78 arm 0)", () => {
+  it("resolveAstropressDataServicesFromEnv falls back to BACKEND_PLATFORM when CONTENT/DATA_SERVICES are absent", () => {
     // CONTENT_SERVICES and DATA_SERVICES are both undefined → chain reaches BACKEND_PLATFORM
     // BACKEND_PLATFORM is undefined → ?? arm 0 (null short-circuit) taken
     expect(resolveAstropressDataServicesFromEnv({ ASTROPRESS_BACKEND_PLATFORM: undefined })).toBe("none");

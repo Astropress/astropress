@@ -204,7 +204,8 @@ describe("cloudflare adapter — content.save() branches", () => {
     const adapter = createAstropressCloudflareAdapter({ db: new SqliteBackedD1Database(db) });
 
     await expect(
-      adapter.content.save({ id: "c1", kind: "comment" as never, slug: "c1", status: "published", title: "Comment" }),
+      // @ts-expect-error — intentionally passing an unsupported kind to verify the runtime guard
+      adapter.content.save({ id: "c1", kind: "comment", slug: "c1", status: "published", title: "Comment" }),
     ).rejects.toThrow("does not support saving comment records yet");
   });
 
@@ -213,7 +214,8 @@ describe("cloudflare adapter — content.save() branches", () => {
     const adapter = createAstropressCloudflareAdapter({ db: new SqliteBackedD1Database(db) });
 
     await expect(
-      adapter.content.save({ id: "u1", kind: "user" as never, slug: "u1", status: "published", title: "User" }),
+      // @ts-expect-error — intentionally passing an unsupported kind to verify the runtime guard
+      adapter.content.save({ id: "u1", kind: "user", slug: "u1", status: "published", title: "User" }),
     ).rejects.toThrow("does not support saving user records yet");
   });
 });
@@ -276,7 +278,7 @@ describe("cloudflare adapter — content.save() extended branches", () => {
     const adapter = createAstropressCloudflareAdapter({ db: new SqliteBackedD1Database(db) });
     const saved = await adapter.content.save({
       id: "/es/hello",
-      kind: "translation" as never,
+      kind: "translation",
       slug: "/es/hello",
       status: "published",
       metadata: { state: "reviewed" },
@@ -448,7 +450,7 @@ describe("cloudflare adapter — auth edge cases", () => {
     db.close();
   });
 
-  it("D1 auth returns null for wrong password (verifyPassword false branch)", async () => {
+  it("D1 auth returns null for wrong password", async () => {
     const db = await createSeededCloudflareDatabase();
     const adapter = createAstropressCloudflareAdapter({ db: new SqliteBackedD1Database(db) });
     expect(await adapter.auth.signIn("admin@example.com", "wrong-password")).toBeNull();
@@ -472,7 +474,7 @@ describe("cloudflare adapter — DB + fallback auth (lines 280-281)", () => {
 });
 
 describe("cloudflare adapter — null-field branches in ?? operators", () => {
-  it("toContentStoreRecord: status 'review' maps to 'draft' (line 21)", async () => {
+  it("toContentStoreRecord: status 'review' maps to 'draft'", async () => {
     const db = makeDb();
     // Insert a content record with review status via content_entries + content_overrides
     db.prepare(
@@ -490,13 +492,13 @@ describe("cloudflare adapter — null-field branches in ?? operators", () => {
   });
 
 
-  it("toTranslationRecord: state='published' → 'published' status (line 52)", async () => {
+  it("toTranslationRecord: state='published' returns 'published' status", async () => {
     const db = makeDb();
     const adapter = createAstropressCloudflareAdapter({ db: new SqliteBackedD1Database(db) });
     // Save a translation with state=published
     await adapter.content.save({
       id: "/es/published",
-      kind: "translation" as never,
+      kind: "translation",
       slug: "/es/published",
       status: "published",
       metadata: { state: "published" },
@@ -507,12 +509,12 @@ describe("cloudflare adapter — null-field branches in ?? operators", () => {
     db.close();
   });
 
-  it("content.save translation without state metadata (state ?? 'not_started' branch — line 417)", async () => {
+  it("content.save translation defaults state to 'not_started' when metadata is absent", async () => {
     const db = makeDb();
     const adapter = createAstropressCloudflareAdapter({ db: new SqliteBackedD1Database(db) });
     const saved = await adapter.content.save({
       id: "/es/no-state",
-      kind: "translation" as never,
+      kind: "translation",
       slug: "/es/no-state",
       status: "draft",
       // No metadata → state falls back to "not_started"
@@ -521,7 +523,7 @@ describe("cloudflare adapter — null-field branches in ?? operators", () => {
     db.close();
   });
 
-  it("content.save redirect without targetPath metadata (targetPath ?? '' branch — line 371)", async () => {
+  it("content.save redirect uses empty string target when targetPath metadata is absent", async () => {
     const db = makeDb();
     const adapter = createAstropressCloudflareAdapter({ db: new SqliteBackedD1Database(db) });
     const saved = await adapter.content.save({
@@ -536,7 +538,7 @@ describe("cloudflare adapter — null-field branches in ?? operators", () => {
     db.close();
   });
 
-  it("content.save settings without metadata (record.metadata ?? {} branch — line 389)", async () => {
+  it("content.save settings merges with existing settings when metadata is absent", async () => {
     const db = makeDb();
     const adapter = createAstropressCloudflareAdapter({ db: new SqliteBackedD1Database(db) });
     const saved = await adapter.content.save({
@@ -550,7 +552,7 @@ describe("cloudflare adapter — null-field branches in ?? operators", () => {
     db.close();
   });
 
-  it("comment list with null email and null body (lines 304, 307)", async () => {
+  it("comment list handles null email and null body gracefully", async () => {
     const db = makeDb();
     // Insert a comment with NULL email and NULL body
     db.prepare(
@@ -564,7 +566,7 @@ describe("cloudflare adapter — null-field branches in ?? operators", () => {
     db.close();
   });
 
-  it("media.put without publicUrl or bytes (null fallback branches — line 550)", async () => {
+  it("media.put stores null publicUrl and null bytes when omitted", async () => {
     const db = makeDb();
     const adapter = createAstropressCloudflareAdapter({ db: new SqliteBackedD1Database(db) });
     const asset = await adapter.media.put({
@@ -578,7 +580,7 @@ describe("cloudflare adapter — null-field branches in ?? operators", () => {
     db.close();
   });
 
-  it("media.get for asset with null mimeType and null sourceUrl (lines 562-563)", async () => {
+  it("media.get returns asset with null mimeType and null sourceUrl when those fields are absent", async () => {
     const db = makeDb();
     db.prepare(
       `INSERT INTO media_assets (id, source_url, local_path, mime_type, alt_text, title, uploaded_by)
@@ -591,7 +593,7 @@ describe("cloudflare adapter — null-field branches in ?? operators", () => {
     db.close();
   });
 
-  it("revisions.list with null createdBy and null revisionNote (lines 580-581)", async () => {
+  it("revisions.list returns null actorId and null summary when those fields are absent", async () => {
     const db = makeDb();
     // content_revisions FK is on slug → content_overrides.slug, so need both tables
     db.prepare(
@@ -613,7 +615,7 @@ describe("cloudflare adapter — null-field branches in ?? operators", () => {
     db.close();
   });
 
-  it("revisions.append with null snapshot fields (line 77 null ?? fallbacks)", async () => {
+  it("revisions.append handles null snapshot fields gracefully", async () => {
     const db = makeDb();
     const adapter = createAstropressCloudflareAdapter({ db: new SqliteBackedD1Database(db) });
     // First create a content record to avoid FK errors
@@ -644,7 +646,7 @@ describe("cloudflare adapter — null-field branches in ?? operators", () => {
     db.close();
   });
 
-  it("revisions.append with no title/seoTitle/metaDescription covers ?? recordId fallback (line 77 b22/b28-31)", async () => {
+  it("revisions.append uses record ID as fallback title when title fields are absent from snapshot", async () => {
     const db = makeDb();
     const adapter = createAstropressCloudflareAdapter({ db: new SqliteBackedD1Database(db) });
     await adapter.content.save({
@@ -668,7 +670,7 @@ describe("cloudflare adapter — null-field branches in ?? operators", () => {
     db.close();
   });
 
-  it("content.save page without title or body covers ?? fallback (line 435 b147/b148)", async () => {
+  it("content.save page preserves existing title and body when update omits them", async () => {
     const db = makeDb();
     const adapter = createAstropressCloudflareAdapter({ db: new SqliteBackedD1Database(db) });
     // First save with title so existing?.title is available
@@ -684,7 +686,7 @@ describe("cloudflare adapter — null-field branches in ?? operators", () => {
     db.close();
   });
 
-  it("content.save NEW page without title covers existing?.title ?? slug (line 435 b148)", async () => {
+  it("content.save new page uses slug as title when no title is provided", async () => {
     const db = makeDb();
     const adapter = createAstropressCloudflareAdapter({ db: new SqliteBackedD1Database(db) });
     // Save a brand-new page WITHOUT title → no existing → existing?.title is undefined → slug used
@@ -699,7 +701,7 @@ describe("cloudflare adapter — null-field branches in ?? operators", () => {
     db.close();
   });
 
-  it("content.save NEW post with metadata.templateKey string covers ternary truthy branch (line 458 b185)", async () => {
+  it("content.save new post stores templateKey from metadata", async () => {
     const db = makeDb();
     const adapter = createAstropressCloudflareAdapter({ db: new SqliteBackedD1Database(db) });
     const saved = await adapter.content.save({
@@ -717,7 +719,7 @@ describe("cloudflare adapter — null-field branches in ?? operators", () => {
     db.close();
   });
 
-  it("media.put without any metadata covers altText ?? '' and title ?? filename (line 550 b201/b202)", async () => {
+  it("media.put uses filename as title and empty string for altText when metadata is absent", async () => {
     const db = makeDb();
     const adapter = createAstropressCloudflareAdapter({ db: new SqliteBackedD1Database(db) });
     // No metadata at all → asset.metadata?.altText → undefined → ?? "" and asset.metadata?.title → undefined → ?? filename
@@ -762,7 +764,7 @@ describe("cloudflare adapter — null-field branches in ?? operators", () => {
     db.close();
   });
 
-  it("media.get for asset with empty string title falls back to id (line 561 b206)", async () => {
+  it("media.get uses asset id as title when title is an empty string", async () => {
     const db = makeDb();
     // Insert media asset with empty title directly so asset.title is falsy
     db.prepare(
@@ -775,19 +777,18 @@ describe("cloudflare adapter — null-field branches in ?? operators", () => {
     db.close();
   });
 
-  it("revisions.list for unknown recordId returns [] via ?? [] (line 576 b212)", async () => {
+  it("revisions.list returns empty array for an unknown recordId", async () => {
     const db = makeDb();
     const adapter = createAstropressCloudflareAdapter({ db: new SqliteBackedD1Database(db) });
-    // A slug that was never saved → getContentRevisions returns null/undefined → ?? [] fires
     const revisions = await adapter.revisions.list("slug-that-never-existed");
-    expect(Array.isArray(revisions)).toBe(true);
+    expect(revisions).toEqual([]);
     expect(revisions.length).toBe(0);
     db.close();
   });
 });
 
 describe("cloudflare adapter — session expiry", () => {
-  it("returns null when last_active_at is not a parseable date (NaN path — lines 150-160)", async () => {
+  it("returns null session when last_active_at is not a parseable date", async () => {
     const db = await createSeededCloudflareDatabase();
     const adapter = createAstropressCloudflareAdapter({ db: new SqliteBackedD1Database(db) });
 

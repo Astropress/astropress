@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { registerCms } from "../src/config";
 import { readAstropressSqliteSchemaSql } from "../src/sqlite-bootstrap.js";
-import { SqliteBackedD1Database } from "./helpers/provider-test-fixtures.js";
+import { makeLocals } from "./helpers/make-locals.js";
 import {
   createRuntimeStructuredPageRoute,
   getRuntimeArchiveRoute,
@@ -52,12 +52,6 @@ function makeDb() {
   const db = new DatabaseSync(":memory:");
   db.exec(readAstropressSqliteSchemaSql());
   return db;
-}
-
-function makeLocals(db: DatabaseSync) {
-  return {
-    runtime: { env: { DB: new SqliteBackedD1Database(db) } },
-  } as unknown as App.Locals;
 }
 
 const actor = { email: "admin@test.local", role: "admin" as const, name: "Test Admin" };
@@ -143,9 +137,9 @@ describe("listRuntimeSystemRoutes", () => {
     expect(routes[0].renderStrategy).toBe("structured_sections");
   });
 
-  it("returns empty array for null locals (no registry available)", async () => {
+  it("returns empty array when locals are null (no registry)", async () => {
     const routes = await listRuntimeSystemRoutes(null);
-    expect(Array.isArray(routes)).toBe(true);
+    expect(routes).toEqual([]);
   });
 });
 
@@ -174,7 +168,7 @@ describe("getRuntimeSystemRoute", () => {
     expect(route!.path).toBe("/contact");
   });
 
-  it("returns null for null locals (no registry)", async () => {
+  it("returns null when locals are null (no registry)", async () => {
     const route = await getRuntimeSystemRoute("/anything", null);
     expect(route).toBeNull();
   });
@@ -248,7 +242,7 @@ describe("saveRuntimeSystemRoute", () => {
     expect(route?.bodyHtml).toBe("<p>Content</p>");
   });
 
-  it("returns not-ok for null locals (no registry)", async () => {
+  it("returns not-ok when locals are null and no local registry is available", async () => {
     const result = await saveRuntimeSystemRoute("/contact", { title: "T" }, actor, null);
     expect(result).toMatchObject({ ok: false });
   });
@@ -265,9 +259,9 @@ describe("saveRuntimeSystemRoute", () => {
 // ---------------------------------------------------------------------------
 
 describe("listRuntimeStructuredPageRoutes", () => {
-  it("returns empty array for null locals (no registry available)", async () => {
+  it("returns empty array when locals are null (no registry)", async () => {
     const routes = await listRuntimeStructuredPageRoutes(null);
-    expect(Array.isArray(routes)).toBe(true);
+    expect(routes).toEqual([]);
   });
 
   it("returns empty array for empty DB", async () => {
@@ -304,7 +298,7 @@ describe("listRuntimeStructuredPageRoutes", () => {
 // ---------------------------------------------------------------------------
 
 describe("getRuntimeStructuredPageRoute", () => {
-  it("returns null for null locals (no registry)", async () => {
+  it("returns null when locals are null (no registry)", async () => {
     const route = await getRuntimeStructuredPageRoute("/ghost", null);
     expect(route).toBeNull();
   });
@@ -395,12 +389,12 @@ describe("saveRuntimeStructuredPageRoute", () => {
     expect(route?.canonicalUrlOverride).toBe("https://example.com/full-opts");
   });
 
-  it("returns not-ok for null locals (no registry)", async () => {
+  it("returns not-ok when locals are null and no local registry is available", async () => {
     const result = await saveRuntimeStructuredPageRoute("/about", { title: "T", templateKey: "content" }, actor, null);
     expect(result).toMatchObject({ ok: false });
   });
 
-  it("saves without optional fields (covers || fallbacks and ?? undefined in return)", async () => {
+  it("saves without optional fields and reads back with undefined for omitted values", async () => {
     seedStructuredPageRoute(db, "/minimal-page");
     const result = await saveRuntimeStructuredPageRoute(
       "/minimal-page",
@@ -472,12 +466,12 @@ describe("createRuntimeStructuredPageRoute", () => {
     expect(result).toMatchObject({ ok: false });
   });
 
-  it("returns not-ok for null locals (no registry)", async () => {
+  it("returns not-ok when locals are null and no local registry is available", async () => {
     const result = await createRuntimeStructuredPageRoute("/x", { title: "X", templateKey: "content" }, actor, null);
     expect(result).toMatchObject({ ok: false });
   });
 
-  it("creates without optional fields (covers || and ?? fallbacks in bindings and return)", async () => {
+  it("creates without optional fields and reads back with undefined for omitted values", async () => {
     const result = await createRuntimeStructuredPageRoute(
       "/minimal-create",
       { title: "Minimal Create", templateKey: "content" },
@@ -552,7 +546,7 @@ describe("getRuntimeArchiveRoute", () => {
     expect(route!.path).toBe("/blog");
   });
 
-  it("returns null for null locals", async () => {
+  it("returns null when locals are null (no registry)", async () => {
     const route = await getRuntimeArchiveRoute("/blog", null);
     expect(route).toBeNull();
   });
@@ -622,7 +616,7 @@ describe("saveRuntimeArchiveRoute", () => {
     expect(route?.canonicalUrlOverride).toBe("https://example.com/archive");
   });
 
-  it("saves without optional fields (covers || fallbacks and ?? undefined in return)", async () => {
+  it("saves without optional fields and reads back with undefined for omitted values", async () => {
     seedArchiveRoute(db, "/minimal-archive");
     const result = await saveRuntimeArchiveRoute("/minimal-archive", { title: "Minimal" }, actor, locals);
     expect(result).toMatchObject({ ok: true });
@@ -631,7 +625,7 @@ describe("saveRuntimeArchiveRoute", () => {
     expect(route?.robotsDirective).toBeUndefined();
   });
 
-  it("returns not-ok for null locals (no registry)", async () => {
+  it("returns not-ok when locals are null and no local registry is available", async () => {
     const result = await saveRuntimeArchiveRoute("/blog", { title: "T" }, actor, null);
     expect(result).toMatchObject({ ok: false });
   });

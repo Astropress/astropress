@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { registerCms } from "../src/config";
 import { readAstropressSqliteSchemaSql } from "../src/sqlite-bootstrap.js";
-import { SqliteBackedD1Database } from "./helpers/provider-test-fixtures.js";
+import { makeLocals } from "./helpers/make-locals.js";
 import * as runtimePageStore from "../src/runtime-page-store";
 import * as runtimeRouteRegistry from "../src/runtime-route-registry";
 import {
@@ -38,12 +38,6 @@ function makeDb() {
   const db = new DatabaseSync(":memory:");
   db.exec(readAstropressSqliteSchemaSql());
   return db;
-}
-
-function makeLocals(db: DatabaseSync) {
-  return {
-    runtime: { env: { DB: new SqliteBackedD1Database(db) } },
-  } as unknown as App.Locals;
 }
 
 const adminRole = "admin" as const;
@@ -215,7 +209,7 @@ describe("buildMediaPageModel", () => {
     expect(result.status).toBe("partial");
   });
 
-  it("resolves media URLs when assets are present (covers media.map body lines 185-186)", async () => {
+  it("resolves media URLs when assets are present", async () => {
     db.prepare(
       `INSERT INTO media_assets (id, source_url, local_path, mime_type, alt_text, title, uploaded_by)
        VALUES (?, ?, ?, ?, ?, ?, ?)`,
@@ -324,8 +318,8 @@ describe("buildArchivesIndexPageModel", () => {
     expect(result.data.totalArchives).toBeGreaterThanOrEqual(0);
   });
 
-  it("covers runtimeArchive?.title left branch when archive exists in DB", async () => {
-    // Seed a cms_route_groups entry for /blog so getRuntimeArchiveRoute returns non-null → ?.title left branch
+  it("uses archive title from database when the archive route exists", async () => {
+    // Seed a cms_route_groups entry for /blog so getRuntimeArchiveRoute returns a real title from DB
     const settings = JSON.stringify({ templateKey: "content", alternateLinks: [] });
     db.prepare(`INSERT INTO cms_route_groups (id, kind, render_strategy, canonical_locale, canonical_path) VALUES ('g-arc-idx-blog', 'archive', 'archive_listing', 'en', '/blog')`).run();
     db.prepare(`INSERT INTO cms_route_variants (id, group_id, locale, path, status, title, settings_json, updated_by) VALUES ('v-arc-idx-blog', 'g-arc-idx-blog', 'en', '/blog', 'published', 'Blog Archive Title', ?, 'admin@test.local')`).run(settings);
@@ -392,8 +386,8 @@ describe("buildPostsIndexPageModel", () => {
     expect(result.status).toBe("partial");
   });
 
-  it("covers archive branch combinations: listingItems fallback, runtimeArchive title, and withSettledMap fallback", async () => {
-    // Register an archive WITHOUT listingItems (covers ?? [] right branch in pre-processing)
+  it("includes archive titles from the database and gracefully handles fetch failures", async () => {
+    // Register an archive without explicit listingItems to exercise the default fallback
     registerCms({
       templateKeys: ["content"],
       siteUrl: "https://example.com",
@@ -407,16 +401,14 @@ describe("buildPostsIndexPageModel", () => {
       ],
     });
 
-    // Seed an archive route for /blog so getRuntimeArchiveRoute returns non-null (covers ?.title left branch)
+    // Seed an archive route for /blog so the DB title is used instead of the config title
     const settings = JSON.stringify({ templateKey: "content", alternateLinks: [] });
     db.prepare(`INSERT INTO cms_route_groups (id, kind, render_strategy, canonical_locale, canonical_path) VALUES ('g-blog', 'archive', 'archive_listing', 'en', '/blog')`).run();
     db.prepare(`INSERT INTO cms_route_variants (id, group_id, locale, path, status, title, settings_json, updated_by) VALUES ('v-blog', 'g-blog', 'en', '/blog', 'published', 'Blog Archive', ?, 'admin@test.local')`).run(settings);
 
-    // Mock the SECOND call (for /news) to throw → news goes to fallback (covers fallback lambda lines 295-299)
+    // Simulate the /news archive lookup failing to verify the page still renders with partial data
     vi.spyOn(runtimeRouteRegistry, "getRuntimeArchiveRoute").mockResolvedValueOnce(
-      // First call (/blog): return the actual DB result by calling through, but we need to let it run normally.
-      // Instead, mock SECOND call to throw — use two separate mock calls.
-      { path: "/blog", title: "Blog Archive", status: "published", summary: undefined, seoTitle: undefined, metaDescription: undefined, updatedAt: "2025-01-01" } as any,
+      { path: "/blog", title: "Blog Archive", status: "published", summary: undefined, seoTitle: undefined, metaDescription: undefined, updatedAt: "2025-01-01" },
     ).mockRejectedValueOnce(new Error("fail"));
 
     const result = await buildPostsIndexPageModel(locals);
@@ -441,8 +433,7 @@ describe("buildTranslationsPageModel", () => {
     expect(Array.isArray(result.data.rows)).toBe(true);
   });
 
-  it("covers englishSeed true branch and localizedRoute true branch via seed page and structured route", async () => {
-    // Register a seed page with legacyUrl="/about" → englishSeed truthy → englishEditHref set (covers ternary true branch)
+  it("provides edit links for both the english source and its localized route when both exist", async () => {
     registerCms({
       templateKeys: ["content"],
       siteUrl: "https://example.com",
@@ -453,7 +444,7 @@ describe("buildTranslationsPageModel", () => {
       ],
     });
 
-    // Seed a structured page route for /es/about → localizedRoute truthy → localizedEditHref set (covers localizedRoute ternary true)
+    // Seed a structured page route for /es/about so localizedEditHref is populated
     const settings = JSON.stringify({ templateKey: "content", alternateLinks: [] });
     db.prepare(`INSERT INTO cms_route_groups (id, kind, render_strategy, canonical_locale, canonical_path) VALUES ('g-es-about', 'page', 'structured_sections', 'es', '/es/about')`).run();
     db.prepare(`INSERT INTO cms_route_variants (id, group_id, locale, path, status, title, settings_json, updated_by) VALUES ('v-es-about', 'g-es-about', 'es', '/es/about', 'published', 'Sobre Nosotros', ?, 'admin@test.local')`).run(settings);
@@ -465,8 +456,7 @@ describe("buildTranslationsPageModel", () => {
     expect(row.localizedEditHref).toContain("/ap-admin/route-pages/es/about");
   });
 
-  it("covers withSettledMap fallback (lines 325-333) when translation lookup throws", async () => {
-    // Mock getRuntimeTranslationState to throw → fallback lambda runs (covers lines 325-333)
+  it("returns partial status when a translation state lookup fails", async () => {
     vi.spyOn(runtimePageStore, "getRuntimeTranslationState").mockRejectedValueOnce(new Error("db fail"));
     const result = await buildTranslationsPageModel(locals, adminRole);
     expect(result.status).toMatch(/ok|partial/);
@@ -495,9 +485,7 @@ describe("buildSeoPageModel", () => {
     expect(result.status).toBe("partial");
   });
 
-  it("covers contentStates map body: isSeededPostRecord false branch and || '—' branches via mocked page record", async () => {
-    // Mock listRuntimeContentStates to return a non-post record with missing SEO fields
-    // → isSeededPostRecord returns false ("Page"), seoTitle || "—" and metaDescription || "—" right branches covered
+  it("shows em-dash placeholder when seo fields are absent on a page record", async () => {
     vi.spyOn(runtimePageStore, "listRuntimeContentStates").mockResolvedValueOnce([
       {
         slug: "about",
@@ -505,9 +493,9 @@ describe("buildSeoPageModel", () => {
         title: "About",
         kind: "page",
         templateKey: "page",
-        seoTitle: undefined as any,
-        metaDescription: undefined as any,
-        status: "published" as any,
+        seoTitle: undefined,
+        metaDescription: undefined,
+        status: "published",
         listingItems: [],
         paginationLinks: [],
         sourceHtmlPath: "runtime://content/about",
@@ -516,14 +504,13 @@ describe("buildSeoPageModel", () => {
     ]);
     const result = await buildSeoPageModel(locals, adminRole);
     expect(result.status).toMatch(/ok|partial/);
-    const row = result.data.rows.find((r: any) => r.path === "/about");
+    const row = result.data.rows.find((r: { path: string }) => r.path === "/about");
     expect(row?.type).toBe("Page");
     expect(row?.seoTitle).toBe("—");
     expect(row?.metaDescription).toBe("—");
   });
 
-  it("covers archiveRoutes map body with all runtime?.field branch combinations", async () => {
-    // Register 3 archives; the basic test (Blog, no DB entry) covers the runtime=null branches
+  it("shows correct seo fields for archives with varying amounts of metadata in the database", async () => {
     registerCms({
       templateKeys: ["content"],
       siteUrl: "https://example.com",
@@ -540,15 +527,15 @@ describe("buildSeoPageModel", () => {
 
     const settings = JSON.stringify({ templateKey: "content", alternateLinks: [] });
 
-    // Blog: seoTitle + metaDescription → left branches of || on lines 385-386, right branch of ! on 387
+    // Blog: full seo_title + meta_description in the DB
     db.prepare(`INSERT INTO cms_route_groups (id, kind, render_strategy, canonical_locale, canonical_path) VALUES ('g-arc-blog', 'archive', 'archive_listing', 'en', '/blog')`).run();
     db.prepare(`INSERT INTO cms_route_variants (id, group_id, locale, path, status, title, seo_title, meta_description, settings_json, updated_by) VALUES ('v-arc-blog', 'g-arc-blog', 'en', '/blog', 'published', 'Blog Archive', 'Blog SEO', 'Blog meta desc', ?, 'admin@test.local')`).run(settings);
 
-    // News: no seoTitle, but summary → right of first || on 385, middle on 386, left branch of ! on 387
+    // News: no seo_title, but has a summary (should fall back to summary for the meta description)
     db.prepare(`INSERT INTO cms_route_groups (id, kind, render_strategy, canonical_locale, canonical_path) VALUES ('g-arc-news', 'archive', 'archive_listing', 'en', '/news')`).run();
     db.prepare(`INSERT INTO cms_route_variants (id, group_id, locale, path, status, title, summary, settings_json, updated_by) VALUES ('v-arc-news', 'g-arc-news', 'en', '/news', 'published', 'News Archive', 'News summary', ?, 'admin@test.local')`).run(settings);
 
-    // Tips: seoTitle set, no metaDescription → F-right G-true on line 387 (!seoTitle=false, !metaDescription=true)
+    // Tips: has seo_title but no meta_description (should show em-dash placeholder for meta)
     db.prepare(`INSERT INTO cms_route_groups (id, kind, render_strategy, canonical_locale, canonical_path) VALUES ('g-arc-tips', 'archive', 'archive_listing', 'en', '/tips')`).run();
     db.prepare(`INSERT INTO cms_route_variants (id, group_id, locale, path, status, title, seo_title, settings_json, updated_by) VALUES ('v-arc-tips', 'g-arc-tips', 'en', '/tips', 'published', 'Tips Archive', 'Tips SEO', ?, 'admin@test.local')`).run(settings);
 
@@ -557,26 +544,26 @@ describe("buildSeoPageModel", () => {
     expect(result.data.rows.some((r) => r.type === "Archive")).toBe(true);
   });
 
-  it("covers routePages and systemRoutes map bodies with all || branch combinations", async () => {
+  it("shows correct seo fields for route pages and system routes with varying metadata", async () => {
     const settings = JSON.stringify({ templateKey: "content", alternateLinks: [] });
 
-    // Route A: seoTitle + metaDescription both present → left branches of || on lines 374-376
+    // Full seo_title + meta_description in DB
     db.prepare(`INSERT INTO cms_route_groups (id, kind, render_strategy, canonical_locale, canonical_path) VALUES ('g-seo-a', 'page', 'structured_sections', 'en', '/contact')`).run();
     db.prepare(`INSERT INTO cms_route_variants (id, group_id, locale, path, status, title, seo_title, meta_description, settings_json, updated_by) VALUES ('v-seo-a', 'g-seo-a', 'en', '/contact', 'published', 'Contact', 'Contact SEO', 'Contact meta', ?, 'admin@test.local')`).run(settings);
 
-    // Route B: seoTitle absent, summary present → right branch of (seoTitle || title) and right branch of first (metaDesc || summary)
+    // No seo_title, but has summary (summary should be used as description fallback)
     db.prepare(`INSERT INTO cms_route_groups (id, kind, render_strategy, canonical_locale, canonical_path) VALUES ('g-seo-b', 'page', 'structured_sections', 'en', '/careers')`).run();
     db.prepare(`INSERT INTO cms_route_variants (id, group_id, locale, path, status, title, summary, settings_json, updated_by) VALUES ('v-seo-b', 'g-seo-b', 'en', '/careers', 'published', 'Careers', 'Careers summary', ?, 'admin@test.local')`).run(settings);
 
-    // Route C: seoTitle present, metaDescription absent, summary absent → right branch of (seoTitle || title? no, left taken) + right of (|| "—")
+    // seo_title present, no meta_description, no summary (should show em-dash placeholder)
     db.prepare(`INSERT INTO cms_route_groups (id, kind, render_strategy, canonical_locale, canonical_path) VALUES ('g-seo-c', 'page', 'structured_sections', 'en', '/team')`).run();
     db.prepare(`INSERT INTO cms_route_variants (id, group_id, locale, path, status, title, seo_title, settings_json, updated_by) VALUES ('v-seo-c', 'g-seo-c', 'en', '/team', 'published', 'Team', 'Team SEO', ?, 'admin@test.local')`).run(settings);
 
-    // System route WITH summary → left branch of (summary || "—") on line 393
+    // System route with a summary (should appear in the SEO table with real description)
     db.prepare(`INSERT INTO cms_route_groups (id, kind, render_strategy, canonical_locale, canonical_path) VALUES ('g-sys-a', 'system', 'structured_sections', 'en', '/ap-admin')`).run();
     db.prepare(`INSERT INTO cms_route_variants (id, group_id, locale, path, status, title, summary, settings_json, updated_by) VALUES ('v-sys-a', 'g-sys-a', 'en', '/ap-admin', 'published', 'Admin', 'Admin area', ?, 'admin@test.local')`).run(settings);
 
-    // System route WITHOUT summary → right branch of (summary || "—") → "—"
+    // System route without any description (should show em-dash placeholder)
     db.prepare(`INSERT INTO cms_route_groups (id, kind, render_strategy, canonical_locale, canonical_path) VALUES ('g-sys-b', 'system', 'structured_sections', 'en', '/sitemap.xml')`).run();
     db.prepare(`INSERT INTO cms_route_variants (id, group_id, locale, path, status, title, settings_json, updated_by) VALUES ('v-sys-b', 'g-sys-b', 'en', '/sitemap.xml', 'published', 'Sitemap', ?, 'admin@test.local')`).run(settings);
 
@@ -612,8 +599,7 @@ describe("buildPostEditorPageModel", () => {
     expect(["ok", "partial"]).toContain(result.status);
   });
 
-  it("covers englishOwnerRecord true branch (line 426) for a localized page whose owner differs", async () => {
-    // /es/about matches translationStatus route → localePair.englishRoute="/about" !== pageRecord.legacyUrl="/es/about" → true branch
+  it("loads the editor for a localized post whose english source is a different slug", async () => {
     db.prepare(
       `INSERT INTO content_entries (slug, legacy_url, title, kind, template_key, source_html_path, body, summary, seo_title, meta_description)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
@@ -629,8 +615,7 @@ describe("buildPostEditorPageModel", () => {
     expect(result.data.pageRecord?.slug).toBe("es-about");
   });
 
-  it("covers localizedRoutePath true branches (lines 429/432) when post has a locale pair", async () => {
-    // /about is the englishSourceUrl in translationStatus → getAdminLocalePair returns a pair with localizedRoute="/es/about"
+  it("loads the editor for an english post that has a localized counterpart", async () => {
     db.prepare(
       `INSERT INTO content_entries (slug, legacy_url, title, kind, template_key, source_html_path, body, summary, seo_title, meta_description)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
@@ -643,7 +628,6 @@ describe("buildPostEditorPageModel", () => {
 
     const result = await buildPostEditorPageModel(locals, "about");
     expect(result.status).toMatch(/ok|partial/);
-    // localizedRoutePath = "/es/about" (truthy) → lines 429/432 true branches executed
     expect(result.data.pageRecord?.slug).toBe("about");
   });
 });
@@ -680,7 +664,7 @@ describe("buildRoutePageEditorModel", () => {
     expect(result.status).toBe("not_found");
   });
 
-  it("returns ok when route page exists in DB (covers localizedRoutePath false branch)", async () => {
+  it("returns ok when route page exists in DB without a locale pair", async () => {
     // Seed a structured page route for /services — NOT in translationStatus config
     const groupId = "group-services";
     const variantId = "variant-services";
@@ -694,14 +678,14 @@ describe("buildRoutePageEditorModel", () => {
        VALUES (?, ?, 'en', '/services', 'published', 'Services', ?, 'admin@test.local')`,
     ).run(variantId, groupId, settingsJson);
 
-    // /services has no locale pair → localePair is null → localizedRoutePath is undefined → else branch → effectiveTranslationState is undefined
+    // /services is not in translationStatus config so effectiveTranslationState should be undefined
     const result = await buildRoutePageEditorModel(locals, "/services", adminRole);
     expect(result.status).toBe("ok");
     expect(result.data.pageRecord).not.toBeNull();
     expect(result.data.effectiveTranslationState).toBeUndefined();
   });
 
-  it("covers localePair/localizedRoutePath true branches (lines 473/476) when route has a locale pair", async () => {
+  it("includes localized route path when the route has a locale pair", async () => {
     // Seed a structured page route for /about (registered as englishSourceUrl with localizedRoute /es/about)
     const groupId = "group-about";
     const variantId = "variant-about";
@@ -715,7 +699,7 @@ describe("buildRoutePageEditorModel", () => {
        VALUES (?, ?, 'en', '/about', 'published', 'About', ?, 'admin@test.local')`,
     ).run(variantId, groupId, settingsJson);
 
-    // /about is an englishSourceUrl → localePair non-null, localizedRoute="/es/about" (non-null) → lines 473/476 true branches
+    // /about is registered as an englishSourceUrl so its localizedRoute should be /es/about
     const result = await buildRoutePageEditorModel(locals, "/about", adminRole);
     expect(result.status).toMatch(/ok|partial/);
     expect(result.data.pageRecord).not.toBeNull();
@@ -737,7 +721,7 @@ describe("buildArchiveEditorModel", () => {
     expect(result.status).toBe("not_found");
   });
 
-  it("returns ok when archive route exists in DB (covers the ok branch, lines 494-495)", async () => {
+  it("returns ok when archive route exists in DB", async () => {
     // Seed an archive route
     const groupId = "group-blog";
     const variantId = "variant-blog";

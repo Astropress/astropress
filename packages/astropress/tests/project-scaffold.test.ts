@@ -78,13 +78,13 @@ describe("project scaffold — additional provider/host combinations", () => {
     expect(scaffold.recommendedDeployTarget).toBe("github-pages");
   });
 
-  it("infers appHost=cloudflare-pages from dataServices=cloudflare when appHost omitted (line 84 branch)", () => {
+  it("infers appHost=cloudflare-pages from dataServices=cloudflare when appHost omitted", () => {
     const scaffold = createAstropressProjectScaffold({ dataServices: "cloudflare" } as Parameters<typeof createAstropressProjectScaffold>[0]);
     expect(scaffold.appHost).toBe("cloudflare-pages");
     expect(scaffold.dataServices).toBe("cloudflare");
   });
 
-  it("infers appHost=vercel from dataServices=supabase when appHost omitted (line 86 branch)", () => {
+  it("infers appHost=vercel from dataServices=supabase when appHost omitted", () => {
     // Also hits deriveLegacyProvider("supabase") → "supabase" (line 20-21)
     const scaffold = createAstropressProjectScaffold({ dataServices: "supabase" } as Parameters<typeof createAstropressProjectScaffold>[0]);
     expect(scaffold.appHost).toBe("vercel");
@@ -92,35 +92,35 @@ describe("project scaffold — additional provider/host combinations", () => {
     expect(scaffold.provider).toBe("supabase");
   });
 
-  it("infers appHost=runway from dataServices=runway when appHost omitted (line 88 branch)", () => {
+  it("infers appHost=runway from dataServices=runway when appHost omitted", () => {
     const scaffold = createAstropressProjectScaffold({ dataServices: "runway" } as Parameters<typeof createAstropressProjectScaffold>[0]);
     expect(scaffold.appHost).toBe("runway");
     expect(scaffold.dataServices).toBe("runway");
   });
 
-  it("infers appHost=render-web from dataServices=pocketbase when appHost omitted (line 90 branch)", () => {
+  it("infers appHost=render-web from dataServices=pocketbase when appHost omitted", () => {
     const scaffold = createAstropressProjectScaffold({ dataServices: "pocketbase" } as Parameters<typeof createAstropressProjectScaffold>[0]);
     expect(scaffold.appHost).toBe("render-web");
     expect(scaffold.dataServices).toBe("pocketbase");
   });
 
-  it("derives dataServices from legacyProvider=supabase when dataServices omitted (line 78 branch)", () => {
+  it("derives dataServices from legacyProvider=supabase when dataServices omitted", () => {
     const scaffold = createAstropressProjectScaffold({ legacyProvider: "supabase" } as Parameters<typeof createAstropressProjectScaffold>[0]);
     expect(scaffold.dataServices).toBe("supabase");
   });
 
-  it("derives dataServices from legacyProvider=runway when dataServices omitted (line 80 branch)", () => {
+  it("derives dataServices from legacyProvider=runway when dataServices omitted", () => {
     const scaffold = createAstropressProjectScaffold({ legacyProvider: "runway" } as Parameters<typeof createAstropressProjectScaffold>[0]);
     expect(scaffold.dataServices).toBe("runway");
   });
 
-  it("defaults dataServices to none when no dataServices or legacyProvider set (line 81 branch)", () => {
+  it("defaults dataServices to none when no dataServices or legacyProvider set", () => {
     // input.dataServices is undefined AND input.legacyProvider is undefined → falls to "none"
     const scaffold = createAstropressProjectScaffold({ appHost: "netlify" } as Parameters<typeof createAstropressProjectScaffold>[0]);
     expect(scaffold.dataServices).toBe("none");
   });
 
-  it("defaults appHost to github-pages when dataServices is none and appHost omitted (line 91 branch)", () => {
+  it("defaults appHost to github-pages when dataServices is none and appHost omitted", () => {
     // dataServices = "none" → none of the ternary arms match → "github-pages"
     const scaffold = createAstropressProjectScaffold({ dataServices: "none" } as Parameters<typeof createAstropressProjectScaffold>[0]);
     expect(scaffold.appHost).toBe("github-pages");

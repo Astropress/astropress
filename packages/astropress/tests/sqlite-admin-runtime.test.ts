@@ -726,7 +726,7 @@ describe("content", () => {
     expect(result.ok).toBe(false);
   });
 
-  it("saveContentState with author/category/tag assignments (parseIdList null→[] and non-empty branch)", () => {
+  it("saveContentState with author/category/tag assignments", () => {
     // Create author + taxonomy for assignment tests
     store.authors.createAuthor({ name: "Assigned Author" }, actor);
     const authorId = store.authors.listAuthors().find((a) => a.name === "Assigned Author")!.id;
@@ -1032,7 +1032,7 @@ describe("media", () => {
     expect(result.error).toMatch(/not allowed/i);
   });
 
-  it("createMediaAsset: filename with special-chars-only base cleans to 'upload' (covers baseName || 'upload' branch)", () => {
+  it("createMediaAsset: filename with special-chars-only base uses 'upload' as the base name", () => {
     // Filename "----.png" → baseName after cleanup = "" → "upload" used
     const result = store.media.createMediaAsset({ filename: "----.png", bytes: makePngBytes() }, actor);
     expect(result.ok).toBe(true);
@@ -1259,7 +1259,7 @@ describe("CMS route factory error guards", () => {
     expect(registry.createStructuredPageRoute("/no-title-page", { title: "", templateKey: "hero" }, actor).ok).toBe(false);
   });
 
-  it("createStructuredPageRoute: all optional fields provided (covers || and ?? branches)", () => {
+  it("createStructuredPageRoute: all optional fields provided", () => {
     registry.createStructuredPageRoute(
       "/full-options-page",
       {
@@ -1284,7 +1284,7 @@ describe("CMS route factory error guards", () => {
     expect(registry.saveStructuredPageRoute("/numeric-key", { title: "", templateKey: "hero" }, actor).ok).toBe(false);
   });
 
-  it("saveStructuredPageRoute: all optional fields provided (covers || and ?? branches)", () => {
+  it("saveStructuredPageRoute: all optional fields provided", () => {
     registry.saveStructuredPageRoute(
       "/numeric-key",
       {
@@ -1309,7 +1309,7 @@ describe("CMS route factory error guards", () => {
     expect(registry.saveArchiveRoute("/blog", { title: "" }, actor).ok).toBe(false);
   });
 
-  it("saveArchiveRoute: all optional fields provided (covers || and ?? branches)", () => {
+  it("saveArchiveRoute: all optional fields provided", () => {
     const result = registry.saveArchiveRoute(
       "/blog",
       {
@@ -1409,7 +1409,7 @@ describe("CMS config registered: structured template key branches", () => {
     expect(routes.every((r) => r.path !== "/string-key")).toBe(true);
   });
 
-  it("listStructuredPageRoutes returns routes with all optional fields (covers ?? undefined branches)", () => {
+  it("listStructuredPageRoutes returns routes with all optional fields populated", () => {
     const routes = cmsRegistry.listStructuredPageRoutes();
     const full = routes.find((r) => r.path === "/full-page");
     expect(full?.summary).toBe("Page summary");
@@ -1420,14 +1420,14 @@ describe("CMS config registered: structured template key branches", () => {
     expect(full?.sections).not.toBeNull();
   });
 
-  it("listSystemRoutes with summary and body_html (covers ?? undefined branches in mapSystemRoute)", () => {
+  it("listSystemRoutes returns summary and body_html when populated", () => {
     const routes = cmsRegistry.listSystemRoutes();
     const rich = routes.find((r) => r.path === "/rich-sitemap.xml");
     expect(rich?.summary).toBe("A summary");
     expect(rich?.settings).toMatchObject({ crawl: true });
   });
 
-  it("listArchiveRoutes with optional fields populated (covers ?? undefined branches)", () => {
+  it("listArchiveRoutes returns all optional fields when populated", () => {
     const routes = cmsRegistry.listArchiveRoutes();
     const rich = routes.find((r) => r.path === "/rich-blog");
     expect(rich?.summary).toBe("Blog summary");
@@ -1435,7 +1435,7 @@ describe("CMS config registered: structured template key branches", () => {
     expect(rich?.metaDescription).toBe("Blog meta");
   });
 
-  it("createStructuredPageRoute SUCCESS path when getCmsConfig works (covers lines 368-381)", () => {
+  it("createStructuredPageRoute succeeds when cms config is available", () => {
     const result = cmsRegistry.createStructuredPageRoute(
       "/new-hero-page",
       { title: "New Hero Page", templateKey: "hero", sections: { hero: "hello" } },
@@ -1446,7 +1446,7 @@ describe("CMS config registered: structured template key branches", () => {
     expect(result.route.path).toBe("/new-hero-page");
   });
 
-  it("createStructuredPageRoute: all optional fields with getCmsConfig working (covers all || ?? branches)", () => {
+  it("createStructuredPageRoute: all optional fields with getCmsConfig working", () => {
     const result = cmsRegistry.createStructuredPageRoute(
       "/hero-full-options",
       {
@@ -1551,12 +1551,12 @@ describe("taxonomies additional branches", () => {
     expect(store.taxonomies.createCategory({ name: "---" }, actor).ok).toBe(false);
   });
 
-  it("createCategory: explicit slug provided (covers rawInput.slug?.trim() || name LEFT truthy)", () => {
+  it("createCategory: uses provided slug when explicitly set", () => {
     const result = store.taxonomies.createCategory({ name: "Cat With Slug", slug: "cat-with-slug" }, actor);
     expect(result.ok).toBe(true);
   });
 
-  it("createCategory: description provided (covers description?.trim() ?? '' LEFT truthy)", () => {
+  it("createCategory: description provided", () => {
     const result = store.taxonomies.createCategory({ name: "Cat With Desc", description: "A description" }, actor);
     expect(result.ok).toBe(true);
   });
@@ -1585,12 +1585,12 @@ describe("taxonomies additional branches", () => {
     expect(store.taxonomies.createTag({ name: "---" }, actor).ok).toBe(false);
   });
 
-  it("createTag: explicit slug provided (covers rawInput.slug?.trim() || name LEFT truthy)", () => {
+  it("createTag: uses provided slug when explicitly set", () => {
     const result = store.taxonomies.createTag({ name: "Tag With Slug", slug: "tag-with-slug" }, actor);
     expect(result.ok).toBe(true);
   });
 
-  it("createTag: description provided (covers description?.trim() ?? '' LEFT truthy)", () => {
+  it("createTag: description provided", () => {
     const result = store.taxonomies.createTag({ name: "Tag With Desc", description: "A tag desc" }, actor);
     expect(result.ok).toBe(true);
   });
@@ -1617,7 +1617,7 @@ describe("authors additional branches", () => {
     expect(store.authors.deleteAuthor(999_996, actor).ok).toBe(false);
   });
 
-  it("createAuthor: with explicit slug (covers rawInput.slug?.trim() || name LEFT truthy)", () => {
+  it("createAuthor: uses provided slug when explicitly set", () => {
     const result = store.authors.createAuthor({ name: "Author With Slug", slug: "author-with-slug" }, actor);
     expect(result.ok).toBe(true);
   });
@@ -1632,7 +1632,7 @@ describe("authors additional branches", () => {
 // ─── Content additional branches ─────────────────────────────────────────────
 
 describe("content additional branches", () => {
-  it("createContentRecord: all optional fields provided (covers || and ?? branches)", () => {
+  it("createContentRecord: all optional fields provided", () => {
     const result = store.content.createContentRecord(
       {
         title: "Optional Fields Post",
@@ -1676,7 +1676,7 @@ describe("content additional branches", () => {
     expect(result.ok).toBe(true);
   });
 
-  it("createContentRecord: with summary (covers excerpt ?? summary branch)", () => {
+  it("createContentRecord: uses summary as excerpt when no explicit excerpt is given", () => {
     const result = store.content.createContentRecord(
       {
         title: "Summary Post",
@@ -1695,8 +1695,7 @@ describe("content additional branches", () => {
 // ─── Settings additional branches ─────────────────────────────────────────────
 
 describe("settings additional branches", () => {
-  it("saveSettings: getSettings() returns null → defaultSiteSettings used (covers ?? branch)", () => {
-    // Use a fresh DB with no settings row so getSettings() returns null/default
+  it("saveSettings: uses default site settings when no settings have been saved yet", () => {
     const freshDb = new DatabaseSync(":memory:");
     freshDb.exec(readAstropressSqliteSchemaSql());
     freshDb.prepare("INSERT INTO admin_users (email, password_hash, role, name, active) VALUES (?, ?, ?, ?, 1)").run(
@@ -1712,8 +1711,7 @@ describe("settings additional branches", () => {
     freshDb.close();
   });
 
-  it("saveSettings: partial with undefined fields → current.field fallback (covers ?? current.x branches)", () => {
-    // Save with undefined fields to force ?? current.x branches
+  it("saveSettings: preserves existing field values when new values are undefined", () => {
     const result = store.settings.saveSettings(
       { siteTitle: undefined as unknown as string, siteTagline: undefined as unknown as string, donationUrl: undefined as unknown as string, newsletterEnabled: undefined as unknown as boolean, commentsDefaultPolicy: undefined as unknown as string, adminSlug: undefined as unknown as string },
       actor,
@@ -1725,7 +1723,7 @@ describe("settings additional branches", () => {
 // ─── Additional route branches ────────────────────────────────────────────────
 
 describe("additional route branches", () => {
-  it("saveStructuredPageRoute: without sections (covers sections ?? null branch)", () => {
+  it("saveStructuredPageRoute: stores null sections when sections are omitted", () => {
     // Call on an existing route (/numeric-key) without sections → sections = null
     registry.saveStructuredPageRoute(
       "/numeric-key",
@@ -1735,7 +1733,7 @@ describe("additional route branches", () => {
     // No assertion needed; we just need to exercise the branch
   });
 
-  it("saveArchiveRoute: without optional fields (covers || null and || '' branches)", () => {
+  it("saveArchiveRoute: saves with null values for omitted optional fields", () => {
     // No summary, no seoTitle, no metaDescription, no canonicalUrlOverride, no robotsDirective
     const result = registry.saveArchiveRoute("/blog", { title: "Minimal Archive Save" }, actor);
     expect(result.ok).toBe(true);
@@ -1754,7 +1752,7 @@ describe("users inviteAdminUser role branches", () => {
 // ─── Content restoreRevision optional fields ─────────────────────────────────
 
 describe("content restoreRevision optional assignment branches", () => {
-  it("restoreRevision from a revision with authorIds/categoryIds/tagIds (covers ?? [] branches)", () => {
+  it("restoreRevision from a revision with authorIds/categoryIds/tagIds", () => {
     // Create a post and save with assignments, then restore
     store.content.createContentRecord(
       { title: "Revision Post", slug: "revision-post-for-restore", status: "draft", seoTitle: "Revision SEO", metaDescription: "Revision meta" },
@@ -1777,7 +1775,7 @@ describe("content restoreRevision optional assignment branches", () => {
 // ─── Content entry with og fields for mapCustomContentEntry ──────────────────
 
 describe("content entry optional fields in DB", () => {
-  it("listContentStates: content_entries with body and summary populate non-null (covers ?? '' branches)", () => {
+  it("listContentStates: content_entries with body and summary return non-null values", () => {
     // Directly insert a content_entries row with body and summary set
     db.prepare(`
       INSERT INTO content_entries (slug, legacy_url, title, kind, template_key, source_html_path, body, summary, seo_title, meta_description)

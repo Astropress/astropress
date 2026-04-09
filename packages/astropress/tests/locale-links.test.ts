@@ -137,7 +137,7 @@ describe("getLocaleSwitchTargets()", () => {
     expect(targets).toEqual({ en: "/en", es: "/es" });
   });
 
-  it("redirects en path '/' to '/en' when viewed from es locale (line 89 ternary true branch)", () => {
+  it("redirects root path '/' to '/en' when viewed from es locale", () => {
     const targets = getLocaleSwitchTargets({
       lang: "es",
       currentPath: "/es/inicio",

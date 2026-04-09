@@ -419,7 +419,7 @@ describe("WXR parsing — inferMimeType, normalizeSlug, filenameFromUrl, normali
     expect(report.importedRecords).toBe(0);
   });
 
-  it("falls back to legacyId for slug when link is a root URL '/' (line 176 b55 at(-1) || legacyId)", async () => {
+  it("falls back to legacyId for slug when the link URL is just '/'", async () => {
     // When link = "https://example.com/" → legacyUrl = "/" → after strip → "" → split → [""] → at(-1) = "" → falsy → || legacyId
     await writeFile(exportFile, makeWxr([makePost({ id: "550", name: "root-url-post", link: "https://example.com/" })]), "utf8");
     const importer = createAstropressWordPressImportSource();
@@ -525,7 +525,7 @@ describe("WXR parsing — inferMimeType, normalizeSlug, filenameFromUrl, normali
     expect(report.status).toMatch(/^completed/);
   });
 
-  it("handles post_name with only dashes (normalizeSlug empty → fallback branch)", async () => {
+  it("handles post_name with only dashes by generating a slug from the post ID", async () => {
     const item = [
       "<item>",
       "<title><![CDATA[Dash Slug Post]]></title>",
@@ -561,8 +561,7 @@ describe("WXR parsing — inferMimeType, normalizeSlug, filenameFromUrl, normali
     expect(report.importedRecords).toBeGreaterThanOrEqual(1);
   });
 
-  it("handles category block without domain attribute (getAttributeValue false branch)", async () => {
-    // No domain= attribute → getAttributeValue returns "" → neither category nor tag
+  it("ignores category blocks that have no domain attribute", async () => {
     const item = [
       "<item>",
       "<title><![CDATA[No Domain Cat]]></title>",
@@ -600,7 +599,7 @@ describe("WXR parsing — inferMimeType, normalizeSlug, filenameFromUrl, normali
     expect(report.importedRecords).toBe(1);
   });
 
-  it("handles a comment with an email address (authorEmail truthy branch)", async () => {
+  it("handles a comment that includes an author email address", async () => {
     const innerComment = [
       "<wp:comment>",
       "<wp:comment_id>99</wp:comment_id>",
@@ -657,7 +656,7 @@ describe("WXR parsing — inferMimeType, normalizeSlug, filenameFromUrl, normali
 });
 
 describe("importWordPress — error/guard branches", () => {
-  it("throws when exportFile is not provided (line 546 guard)", async () => {
+  it("throws when exportFile is not provided", async () => {
     const importer = createAstropressWordPressImportSource();
     await expect(importer.importWordPress({} as Parameters<typeof importer.importWordPress>[0])).rejects.toThrow(
       "WordPress import requires an",
@@ -696,7 +695,7 @@ describe("importWordPress — error/guard branches", () => {
 });
 
 describe("applyLocal — additional branches", () => {
-  it("applies with a relative adminDbPath (path.isAbsolute false branch)", async () => {
+  it("applies with a relative adminDbPath", async () => {
     await writeFile(exportFile, makeWxr([makePost({ id: "801", name: "relative-db-post" })]), "utf8");
     const importer = createAstropressWordPressImportSource();
     const report = await importer.importWordPress({
@@ -710,7 +709,7 @@ describe("applyLocal — additional branches", () => {
     expect(report.localApply?.appliedRecords).toBeGreaterThan(0);
   });
 
-  it("applies comment with email (authorEmail ?? null left branch) in applyLocal", async () => {
+  it("applies comment with author email in applyLocal", async () => {
     const innerComment = [
       "<wp:comment>",
       "<wp:comment_id>800</wp:comment_id>",
@@ -791,7 +790,7 @@ describe("applyLocal — additional branches", () => {
     expect(report.localApply?.appliedRedirects).toBeGreaterThan(0);
   });
 
-  it("uses process.cwd() when workspaceRoot is omitted (line 930 ?? right branch)", async () => {
+  it("uses process.cwd() when workspaceRoot is omitted", async () => {
     // Write a minimal export; the DB will be created under process.cwd()
     await writeFile(exportFile, makeWxr([makePost({ id: "903", name: "cwd-post" })]), "utf8");
     const importer = createAstropressWordPressImportSource();
@@ -807,7 +806,7 @@ describe("applyLocal — additional branches", () => {
     expect(report.localApply?.appliedRecords).toBeGreaterThan(0);
   });
 
-  it("applies users when includeUsers:true and WXR has author blocks (line 679 b178 arm0)", async () => {
+  it("applies users when includeUsers:true and WXR has author blocks", async () => {
     const authorBlock = [
       "<wp:author>",
       "<wp:author_id>1</wp:author_id>",
@@ -832,7 +831,7 @@ describe("applyLocal — additional branches", () => {
     expect(report.localApply?.appliedUsers).toBeGreaterThan(0);
   });
 
-  it("applies import with includeUsers: false so appliedUsers ternary takes 0 branch (line 679 b179)", async () => {
+  it("applies import with includeUsers: false and reports zero applied users", async () => {
     await writeFile(exportFile, makeWxr([makePost({ id: "950", name: "no-users-post" })]), "utf8");
     const importer = createAstropressWordPressImportSource();
     const report = await importer.importWordPress({
@@ -847,7 +846,7 @@ describe("applyLocal — additional branches", () => {
     expect(report.localApply?.appliedUsers).toBe(0);
   });
 
-  it("applies media without artifactDir (downloadedPath = void 0 branch, line 662 b167 arm0)", async () => {
+  it("applies media without artifactDir when no download path is available", async () => {
     const attachment = [
       "<item>",
       "<title><![CDATA[No Artifact Media]]></title>",
@@ -1055,7 +1054,7 @@ describe("authorLogins empty array branch (lines 203-205: no creator, no authors
     expect(report.importedRecords).toBe(1);
   });
 
-  it("uses matched author login when dc:creator matches a known author (line 205 matchedAuthor truthy branch)", async () => {
+  it("uses matched author login when dc:creator matches a known author", async () => {
     // dc:creator exactly matches wp:author_login → matchedAuthor found → authorLogins = [matchedAuthor.login]
     const wxr = [
       "<rss><channel>",

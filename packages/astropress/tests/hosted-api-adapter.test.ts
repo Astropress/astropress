@@ -89,20 +89,16 @@ describe("hosted api adapter", () => {
     expect((await adapter.auth.getSession("session-1"))?.email).toBe("admin@example.com");
     await adapter.auth.signOut("session-1");
     expect((await adapter.preview?.create({ recordId: "1" }))?.url).toContain("/preview/1");
-    // Lines 70-71: media.get (missing from original test)
     expect((await adapter.media.get("logo"))?.filename).toBe("logo.png");
-    // Lines 74-77: media.delete (missing from original test)
     await adapter.media.delete("logo");
-    // Lines 84-88: revisions.append (missing from original test)
     const revision = { id: "r2", recordId: "1", createdAt: "now", snapshot: {} };
     await adapter.revisions.append(revision as Parameters<typeof adapter.revisions.append>[0]);
-    // Lines 58-61: content.delete (missing from original test)
     await adapter.content.delete("1");
 
     expect(requests.every((request) => request.auth === "Bearer secret-token")).toBe(true);
   });
 
-  it("throws when the API returns a non-OK response (lines 9-10 readJson error branch)", async () => {
+  it("throws when the API returns a non-OK HTTP response", async () => {
     const adapter = createAstropressHostedApiAdapter({
       providerName: "supabase",
       apiBaseUrl: "https://api.example.test/astropress",

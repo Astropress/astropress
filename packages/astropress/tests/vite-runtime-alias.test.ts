@@ -29,7 +29,7 @@ describe("vite runtime alias helpers", () => {
     expect(plugin.resolveId("./not-it")).toBeNull();
   });
 
-  it("normalizes Windows-style file:// URLs (line 8-9 Windows path slice branch)", () => {
+  it("normalizes Windows-style file:// URLs to a drive-letter path", () => {
     // After file:// stripping, /C:/path matches ^/[a-zA-Z]:/ → slice(1) → C:/path
     const winPath = "C:/site/src/astropress/local-runtime-modules.ts";
     expect(isAstropressLocalRuntimeModuleRequest(`file:///C:/site/src/astropress/local-runtime-modules.ts`, winPath)).toBe(true);

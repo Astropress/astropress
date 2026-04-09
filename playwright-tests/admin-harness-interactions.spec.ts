@@ -95,6 +95,34 @@ test.describe("Feature: authenticated admin interaction flows", () => {
     await expect(openButton).toBeFocused();
   });
 
+  test("Scenario: login with wrong credentials — error message shown, stays on login page", async ({ page }) => {
+    await page.goto("/ap-admin/login", { waitUntil: "networkidle" });
+
+    await page.locator("input[name='email']").fill("wrong@example.com");
+    await page.locator("input[name='password']").fill("wrongpassword");
+    await page.getByRole("button", { name: /sign in/i }).click();
+
+    await page.waitForURL(/\/ap-admin\/login/, { waitUntil: "networkidle" });
+    // Should stay on login page and show an error
+    await expect(page.getByRole("heading", { level: 1, name: "Sign in to the admin" })).toBeVisible();
+    const errorIndicator = page.locator("[data-error], .error, [aria-live='polite'], [role='alert']");
+    await expect(errorIndicator.first()).toBeVisible();
+  });
+
+  test("Scenario: post editor save with empty title — validation prevents submission", async ({ page }) => {
+    await page.goto("/ap-admin/posts", { waitUntil: "networkidle" });
+    await page.getByRole("link", { name: "Hello World" }).click();
+    await expect(page.getByRole("heading", { level: 1, name: "Edit Post" })).toBeVisible();
+
+    // Clear the title field and attempt to save
+    const titleInput = page.locator("input[name='title'], input[name='seoTitle']").first();
+    await titleInput.fill("");
+    await page.getByRole("button", { name: /save/i }).first().click();
+
+    // Should not navigate away — either browser validation stops it or the page shows an error
+    await expect(page.getByRole("heading", { level: 1, name: "Edit Post" })).toBeVisible();
+  });
+
   test("Scenario: login form keyboard nav — focus order is email → password → submit", async ({ page }) => {
     await page.goto("/ap-admin/login", { waitUntil: "networkidle" });
     await expect(page.getByRole("heading", { level: 1, name: "Sign in to the admin" })).toBeVisible();
