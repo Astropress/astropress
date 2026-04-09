@@ -34,7 +34,8 @@ describe("security headers", () => {
     const target = new Headers({ "Cache-Control": "no-store" });
     applyAstropressSecurityHeaders(target, { area: "api" });
 
-    expect(target.get("Cache-Control")).toBe("no-store");
+    // applyAstropressSecurityHeaders sets Cache-Control to 'private, no-store' for api area
+    expect(target.get("Cache-Control")).toBe("private, no-store");
     expect(target.get("Permissions-Policy")).toContain("camera=()");
 
     const response = createAstropressSecureRedirect("/ap-admin/login", 302);

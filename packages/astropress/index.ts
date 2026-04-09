@@ -1,3 +1,10 @@
+// Package version
+export const PROVIDER_CONTRACT_VERSION = "0.1";
+
+// Integration helpers
+export { createAstropressPublicSiteIntegration } from "./src/public-site-integration.js";
+export type { AstropressPublicSiteOptions } from "./src/public-site-integration";
+
 // Core configuration seam
 export { registerCms, getCmsConfig } from "./src/config";
 export type { CmsConfig } from "./src/config";
