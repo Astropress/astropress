@@ -26,16 +26,33 @@ function listTsFiles(root: string, files: string[] = []) {
 function extractExports(source: string): Set<string> {
   const exports = new Set<string>();
 
-  // export function/class/const/let/var/type/interface/enum Foo
-  for (const match of source.matchAll(/^export\s+(?:async\s+)?(?:function|class|const|let|var|type|interface|enum)\s+(\w+)/gm)) {
+  // Collect names that were imported as types (import type { X } or import { type X }) — these are not runtime values.
+  const typeOnlyImports = new Set<string>();
+  for (const match of source.matchAll(/^import\s+type\s+\{([^}]+)\}/gm)) {
+    for (const part of match[1].split(",")) {
+      const name = part.trim().split(/\s+as\s+/).at(-1)?.trim();
+      if (name) typeOnlyImports.add(name);
+    }
+  }
+  // Also handle "import { type X }" inline type imports
+  for (const match of source.matchAll(/\btype\s+(\w+)\s*(?:,|})/g)) {
+    if (match[1]) typeOnlyImports.add(match[1]);
+  }
+
+  // export function/class/const/let/var/enum Foo (runtime values only — exclude type and interface)
+  for (const match of source.matchAll(/^export\s+(?:async\s+)?(?:function|class|const|let|var|enum)\s+(\w+)/gm)) {
     exports.add(match[1]);
   }
 
-  // export { Foo, Bar as Baz }
-  for (const match of source.matchAll(/^export\s*\{([^}]+)\}/gm)) {
+  // export { Foo, Bar as Baz } — skip "export type { ... }" blocks
+  // Also skip names that were imported as type-only.
+  for (const match of source.matchAll(/^export\s*(?!type\s*[\{(])\{([^}]+)\}/gm)) {
     for (const part of match[1].split(",")) {
-      const name = part.trim().split(/\s+as\s+/).at(-1)?.trim();
-      if (name && name !== "default") {
+      const trimmed = part.trim();
+      // Skip inline "type X" re-exports
+      if (trimmed.startsWith("type ")) continue;
+      const name = trimmed.split(/\s+as\s+/).at(-1)?.trim();
+      if (name && name !== "default" && !typeOnlyImports.has(name)) {
         exports.add(name);
       }
     }

@@ -32,12 +32,11 @@ export function createAstropressPublicSiteIntegration(
   return {
     name: "astropress-public-site",
     hooks: {
-      "astro:config:setup": ({ _config }) => {
-        // No admin routes are injected.
-        // No admin middleware is registered.
-        // The host site registers its own content loaders and public routes.
+      // No admin routes are injected.
+      // No admin middleware is registered.
+      // The host site registers its own content loaders and public routes.
+      "astro:config:setup": () => {
         // buildHookSecret is reserved for future webhook rebuild support.
-        void options.buildHookSecret;
       },
     },
   };

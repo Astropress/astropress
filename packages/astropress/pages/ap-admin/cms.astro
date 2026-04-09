@@ -1,6 +1,5 @@
 ---
 import AdminLayout from "astropress/components/AdminLayout.astro";
-import { applyAstropressSecurityHeaders } from "astropress";
 
 const adminUser = Astro.locals.adminUser;
 
@@ -26,11 +25,9 @@ if (!cmsConfig) {
 
 const cmsLabel = cmsConfig.label ?? cmsConfig.type.charAt(0).toUpperCase() + cmsConfig.type.slice(1);
 
-// Allow iframe embedding of the CMS panel for admin pages only
 applyAstropressSecurityHeaders(Astro.response.headers, {
   area: "admin",
   forceHsts: Astro.url.protocol === "https:",
-  frameAncestors: "sameorigin",
 });
 ---
 
