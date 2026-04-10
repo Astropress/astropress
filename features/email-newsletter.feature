@@ -8,10 +8,17 @@ Feature: Headless email / newsletter integration via Listmonk
     When I visit "/ap-admin/services/email"
     Then the page embeds the Listmonk admin UI in an iframe
 
-  Scenario: Subscriber endpoint forwards to Listmonk API
-    Given the site has a newsletter signup form
+  Scenario: Subscriber endpoint forwards to Listmonk API via newsletterAdapter
+    Given NEWSLETTER_DELIVERY_MODE is set to "listmonk" in the environment
+    And LISTMONK_API_URL, LISTMONK_API_USERNAME, LISTMONK_API_PASSWORD, LISTMONK_LIST_ID are configured
+    When a visitor submits their email to the newsletter signup endpoint
+    Then the newsletterAdapter calls the Listmonk /api/subscribers endpoint with Basic auth
+    And the visitor's email is subscribed to the configured list without any third-party SaaS involvement
+
+  Scenario: Listmonk adapter returns error when configuration is incomplete
+    Given NEWSLETTER_DELIVERY_MODE is "listmonk" but LISTMONK_API_URL is missing
     When a visitor submits their email
-    Then the submission is forwarded to the Listmonk subscriber API
+    Then the adapter returns ok: false with a user-facing error message
 
   Scenario: Import pipeline can extract WordPress subscribers
     Given a WordPress XML export contains subscriber metadata

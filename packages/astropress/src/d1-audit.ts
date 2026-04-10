@@ -1,5 +1,6 @@
 import type { Actor } from "./persistence-types";
 import { getCloudflareBindings } from "./runtime-env";
+import { peekCmsConfig } from "./config";
 
 export async function recordD1Audit(
   locals: App.Locals | null | undefined,
@@ -24,4 +25,12 @@ export async function recordD1Audit(
     )
     .bind(actor.email, action, resourceType, resourceId, summary)
     .run();
+
+  const retentionDays = peekCmsConfig()?.auditRetentionDays ?? 90;
+  if (retentionDays > 0) {
+    await db
+      .prepare(`DELETE FROM audit_events WHERE created_at < datetime('now', '-' || ? || ' days')`)
+      .bind(retentionDays)
+      .run();
+  }
 }

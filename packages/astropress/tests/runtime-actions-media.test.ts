@@ -45,6 +45,33 @@ beforeEach(() => {
 });
 
 describe("createRuntimeMediaAsset", () => {
+  it("rejects a file that exceeds the configured maxUploadBytes limit", async () => {
+    registerCms({ templateKeys: ["content"], siteUrl: "https://example.com", seedPages: [], archives: [], translationStatus: [], maxUploadBytes: 100 });
+    const bigBytes = new Uint8Array(101);
+    const result = await createRuntimeMediaAsset({ filename: "big.png", bytes: bigBytes, mimeType: "image/png" }, actor, locals);
+    expect(result).toMatchObject({ ok: false, error: expect.stringContaining("too large") });
+    expect(mockStoreMedia).not.toHaveBeenCalled();
+  });
+
+  it("allows a file within the configured maxUploadBytes limit", async () => {
+    registerCms({ templateKeys: ["content"], siteUrl: "https://example.com", seedPages: [], archives: [], translationStatus: [], maxUploadBytes: 100 });
+    mockStoreMedia.mockResolvedValue({
+      ok: true,
+      asset: {
+        id: "asset-small",
+        publicPath: "/images/small.png",
+        r2Key: null,
+        mimeType: "image/png",
+        fileSize: 50,
+        altText: "",
+        title: "small.png",
+        storedFilename: "small.png",
+      },
+    });
+    const result = await createRuntimeMediaAsset({ filename: "small.png", bytes: new Uint8Array(50), mimeType: "image/png" }, actor, locals);
+    expect(result).toMatchObject({ ok: true });
+  });
+
   it("inserts a media asset row after successful storage", async () => {
     mockStoreMedia.mockResolvedValue({
       ok: true,

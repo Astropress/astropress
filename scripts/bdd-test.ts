@@ -342,11 +342,14 @@ const verificationGroups: VerificationGroup[] = [
       "Subscriber endpoint forwards to Listmonk API",
       "Import pipeline can extract WordPress subscribers",
       "Listmonk service appears in scaffold prompts",
+      "POST /ap/newsletter/subscribe returns 200 for valid email",
+      "POST /ap/newsletter/subscribe returns 400 for invalid email",
+      "POST /ap/newsletter/subscribe returns 422 on adapter error",
     ],
     steps: [
       {
         command: "bunx",
-        args: ["vitest", "run", "tests/newsletter-adapter.test.ts", "tests/services-config.test.ts"],
+        args: ["vitest", "run", "tests/newsletter-adapter.test.ts", "tests/newsletter-subscribe.test.ts", "tests/services-config.test.ts"],
         cwd: astropressPackageRoot,
       },
       {
@@ -379,17 +382,47 @@ const verificationGroups: VerificationGroup[] = [
   {
     label: "service scaffold scenarios",
     scenarios: [
+      // CMS / content backend
       "Interactive mode presents CMS choices",
       "Choosing Payload generates a payload.config.ts stub",
       "Choosing Keystatic generates a keystatic.config.ts stub",
+      "Choosing Directus generates env stubs",
+      // Commerce
       "Choosing Medusa generates a medusa-config.js stub",
+      // Email
       "Choosing Listmonk generates env entries",
+      // Testimonials
+      "Choosing Formbricks generates testimonial env entries",
+      // Courses
+      "Choosing Frappe LMS generates course env entries",
+      // Donations
+      "Choosing Polar generates donation env entries",
+      // Forum
+      "Choosing Flarum generates forum env entries",
+      // Live chat
+      "Choosing Chatwoot generates live chat env entries",
+      // Payments
+      "Choosing HyperSwitch generates payment router env entries",
+      "HyperSwitch env stubs document supported payment providers",
+      // Push notifications
+      "Choosing ntfy generates push notification env entries",
+      // Scheduling
+      "Choosing Rallly generates scheduling env entries",
+      // Job board
+      "Choosing job board scaffolds a content type stub",
+      // Smart defaults
+      "PostHog selected for analytics pre-selects PostHog for session replay",
+      // Plain mode
       "Plain mode uses defaults without prompting",
     ],
     steps: [
       {
         command: "cargo",
         args: ["test", "commands::new::tests"],
+      },
+      {
+        command: "cargo",
+        args: ["test", "features::tests"],
       },
       {
         command: "cargo",
@@ -577,6 +610,8 @@ const verificationGroups: VerificationGroup[] = [
       "A reader can switch to the translated version of a page",
       "Search engines can discover all language versions through hreflang tags",
       "An editor can see which translated pages are current and which are out of date",
+      "An editor creates content in two locales and both appear with correct hreflang links",
+      "Accept-Language header negotiation selects the best configured locale",
     ],
     steps: [
       {
@@ -642,14 +677,46 @@ const verificationGroups: VerificationGroup[] = [
   {
     label: "concurrent editing protection scenarios",
     scenarios: [
+      "Save is rejected when the record was modified after the editor opened it (HTTP 409)",
+      "Save succeeds when lastKnownUpdatedAt matches the current updated_at",
+      "Save proceeds normally when no lastKnownUpdatedAt is provided",
       "Editor sees a warning when another admin is already editing the same post",
-      "Last save wins and the editor is shown a conflict notice",
-      "Editing lock is released when the original editor closes the post",
     ],
     steps: [
       {
         command: "bunx",
         args: ["vitest", "run", "tests/runtime-actions-content.test.ts", "tests/content-repository-factory.test.ts"],
+        cwd: astropressPackageRoot,
+      },
+    ],
+  },
+  {
+    label: "media upload enforcement scenarios",
+    scenarios: [
+      "Upload is rejected when the file exceeds maxUploadBytes",
+      "Upload is accepted when the file is within the maxUploadBytes limit",
+      "Upload uses the 10 MiB default limit when maxUploadBytes is not configured",
+    ],
+    steps: [
+      {
+        command: "bunx",
+        args: ["vitest", "run", "tests/runtime-actions-media.test.ts"],
+        cwd: astropressPackageRoot,
+      },
+    ],
+  },
+  {
+    label: "content type field validation scenarios",
+    scenarios: [
+      "Save is rejected when a required custom field is missing",
+      "Save succeeds when all required fields are provided",
+      "Save succeeds when no contentType is registered for the templateKey",
+      "Custom validate function can reject a field value",
+    ],
+    steps: [
+      {
+        command: "bunx",
+        args: ["vitest", "run", "tests/runtime-actions-content.test.ts"],
         cwd: astropressPackageRoot,
       },
     ],
@@ -680,11 +747,12 @@ const verificationGroups: VerificationGroup[] = [
       "Inviting a new user creates an audit log entry",
       "Audit log entries are immutable once written",
       "Audit log is visible to admins but not to editors",
+      "Audit log entries older than auditRetentionDays are pruned on each write",
     ],
     steps: [
       {
         command: "bunx",
-        args: ["vitest", "run", "tests/runtime-actions-content.test.ts", "tests/runtime-actions-users.test.ts"],
+        args: ["vitest", "run", "tests/runtime-actions-content.test.ts", "tests/runtime-actions-users.test.ts", "tests/audit-log.test.ts"],
         cwd: astropressPackageRoot,
       },
     ],
@@ -731,6 +799,39 @@ const verificationGroups: VerificationGroup[] = [
       {
         command: "cargo",
         args: ["test", "doctor_flags_weak_or_scaffolded_secrets"],
+      },
+    ],
+  },
+  {
+    label: "schema migration scenarios",
+    scenarios: [
+      "Operator applies new SQL migrations and skips already-applied ones",
+      "Dry-run migration preview shows what would be applied without writing changes",
+      "Migration runner handles a missing migrations directory gracefully",
+    ],
+    steps: [
+      {
+        command: "bunx",
+        args: ["vitest", "run", "tests/db-migrate-ops.test.ts"],
+        cwd: astropressPackageRoot,
+      },
+    ],
+  },
+  {
+    label: "plugin API scenarios",
+    scenarios: [
+      "A plugin's onContentSave hook is called after content is saved",
+      "A plugin's onContentPublish hook is called when content is published",
+      "A failing plugin hook does not fail the admin action",
+      "A plugin can register custom admin navigation items",
+      "A plugin's onMediaUpload hook is called after a media asset is uploaded",
+      "A failing onMediaUpload hook does not fail the upload action",
+    ],
+    steps: [
+      {
+        command: "bunx",
+        args: ["vitest", "run", "tests/plugin-api.test.ts"],
+        cwd: astropressPackageRoot,
       },
     ],
   },
@@ -837,6 +938,42 @@ const verificationGroups: VerificationGroup[] = [
     ],
   },
   {
+    label: "structured data / AEO JSON-LD scenarios",
+    scenarios: [
+      "AstropressFaqJsonLd emits valid FAQPage JSON-LD for a list of Q&A pairs",
+      "AstropressFaqJsonLd renders nothing when items array is empty",
+      "llms.txt endpoint lists published posts for AI crawlers",
+      "AstropressBreadcrumbJsonLd emits valid BreadcrumbList JSON-LD",
+      "AstropressHowToJsonLd emits valid HowTo JSON-LD for a step-by-step guide",
+      "AstropressSpeakableJsonLd emits WebPage + SpeakableSpecification JSON-LD with CSS selectors",
+      "AstropressSpeakableJsonLd emits XPath selectors as fallback",
+    ],
+    steps: [
+      {
+        command: "bunx",
+        args: ["vitest", "run", "tests/public-site-integration.test.ts"],
+        cwd: astropressPackageRoot,
+      },
+    ],
+  },
+  {
+    label: "image optimization / Core Web Vitals scenarios",
+    scenarios: [
+      "AstropressImage renders with explicit width, height, and aspect-ratio style",
+      "AstropressImage defaults to loading='lazy' and decoding='async'",
+      "AstropressImage renders srcset and sizes for responsive images",
+      "AstropressImage supports fetchpriority='high' for LCP images",
+      "AstropressImage merges additional inline styles with aspect-ratio",
+    ],
+    steps: [
+      {
+        command: "bunx",
+        args: ["vitest", "run", "tests/public-site-integration.test.ts"],
+        cwd: astropressPackageRoot,
+      },
+    ],
+  },
+  {
     label: "A/B testing integration scenarios",
     scenarios: [
       "GrowthBook dashboard embeds in the admin panel",
@@ -874,6 +1011,7 @@ const verificationGroups: VerificationGroup[] = [
     scenarios: [
       "AI agent reads published content via REST API",
       "AI agent creates a new draft post via REST API",
+      "AI agent paginates content using page and per_page parameters",
       "Request without Authorization header is rejected",
       "Token with insufficient scope is rejected",
       "OpenAPI spec is publicly accessible without authentication",
@@ -921,6 +1059,21 @@ const verificationGroups: VerificationGroup[] = [
         command: "bunx",
         args: ["vitest", "run", "tests/content-scheduling.test.ts"],
         cwd: astropressPackageRoot,
+      },
+    ],
+  },
+  {
+    label: "install script scenarios",
+    scenarios: [
+      "Install script creates project .env with generated secrets",
+      "Install script runs bun install in the project directory",
+      "Install script exits non-zero on missing bun",
+    ],
+    steps: [
+      {
+        command: "cargo",
+        args: ["test", "scaffolds_new_project_from_example"],
+        cwd: repoRoot,
       },
     ],
   },

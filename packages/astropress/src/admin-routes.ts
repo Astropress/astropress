@@ -73,6 +73,7 @@ const adminRouteDefinitions = [
   { pattern: "/ap-admin/actions/webhook-create", entrypoint: "actions/webhook-create.ts", kind: "action" },
   { pattern: "/ap-admin/actions/webhook-delete", entrypoint: "actions/webhook-delete.ts", kind: "action" },
   { pattern: "/ap-admin/actions/schedule-publish", entrypoint: "actions/schedule-publish.ts", kind: "action" },
+  { pattern: "/ap-admin/actions/user-purge", entrypoint: "actions/user-purge.ts", kind: "action" },
 ] as const satisfies readonly AstropressAdminRouteDefinition[];
 
 /**

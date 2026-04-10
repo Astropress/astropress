@@ -17,3 +17,22 @@ Feature: Multilingual content and locale switching
     Given the admin translations panel is open
     When the editor views the translation status list
     Then each entry shows whether its translation is current, outdated, or not yet started
+
+  Scenario: An editor creates content in two locales and both appear with correct hreflang links
+    Given the CMS is configured with locales "en" and "es"
+    And an editor creates a post at "/en/about-us/" with title "About Us"
+    And an editor creates a post at "/es/sobre-nosotros/" with title "Sobre Nosotros"
+    When the English post "/en/about-us/" is rendered
+    Then the page includes a hreflang tag pointing to "/es/sobre-nosotros/" for locale "es"
+    And the page includes a hreflang tag pointing to "/en/about-us/" for locale "en"
+    And the localeFromPath function returns "en" for "/en/about-us/"
+    And the localeFromPath function returns "es" for "/es/sobre-nosotros/"
+
+  Scenario: Accept-Language header negotiation selects the best configured locale
+    Given the CMS is configured with locales "en" and "es"
+    When a request arrives with Accept-Language header "es;q=0.9, en;q=0.5"
+    Then the localeFromAcceptLanguage function returns "es"
+    When a request arrives with Accept-Language header "fr, de;q=0.9, en;q=0.5"
+    Then the localeFromAcceptLanguage function returns "en"
+    When a request arrives with no Accept-Language header
+    Then the localeFromAcceptLanguage function returns the first configured locale "en"

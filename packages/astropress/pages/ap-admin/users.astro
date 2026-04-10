@@ -165,6 +165,38 @@ if (model.status === "forbidden") {
       events={auditEvents.filter((event) => event.action.startsWith("user.") || event.action.startsWith("auth.")).slice(0, 6)}
       heading="User And Access Audit"
     />
+
+    <section class="panel gdpr-panel">
+      <div class="section-header">
+        <div>
+          <p class="admin-kicker">GDPR / Right of Erasure</p>
+          <h2>Purge User Data</h2>
+          <p>
+            Permanently remove all personal data associated with an email address. This action revokes sessions,
+            anonymises audit log entries, deletes comments and contact submissions, and suspends or deletes the
+            admin account. A JSON export of all affected records is downloaded for your data-subject-request records.
+          </p>
+        </div>
+      </div>
+      <form method="post" action="/ap-admin/actions/user-purge" class="form-grid admin-form-grid columns-3" id="gdpr-purge-form">
+        <CsrfInput token={Astro.locals.csrfToken} />
+        <div class="form-group admin-field">
+          <label for="purge-email">Email address to purge</label>
+          <input type="email" id="purge-email" name="email" required class="admin-input" />
+        </div>
+        <div class="form-group admin-field admin-field--checkbox">
+          <label>
+            <input type="checkbox" name="deleteAccount" value="1" />
+            Permanently delete admin account (instead of suspending)
+          </label>
+        </div>
+        <div class="form-group form-actions">
+          <button type="submit" class="admin-button danger" data-confirm="This will permanently erase all personal data for this email. This cannot be undone. Continue?">
+            Purge &amp; Download Report
+          </button>
+        </div>
+      </form>
+    </section>
   </AdminLayout>
 ) : (
   <AdminLayout

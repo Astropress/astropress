@@ -171,6 +171,33 @@ pub(crate) fn inspect_project_health(project_dir: &Path) -> Result<DoctorReport,
     })
 }
 
+pub(crate) fn print_doctor_report_json(report: &DoctorReport) {
+    let status = if report.warnings.is_empty() { "ok" } else { "warn" };
+    let checks: Vec<serde_json::Value> = report
+        .warnings
+        .iter()
+        .map(|w| {
+            serde_json::json!({
+                "name": "warning",
+                "status": "warn",
+                "message": w
+            })
+        })
+        .collect();
+
+    let output = serde_json::json!({
+        "status": status,
+        "project": report.project_dir.display().to_string(),
+        "runtimeMode": report.launch_plan.runtime.mode,
+        "appHost": report.launch_plan.app_host,
+        "contentServices": report.launch_plan.data_services,
+        "pairSupport": deployment_support_level(&report.launch_plan.app_host, &report.launch_plan.data_services),
+        "checks": checks
+    });
+
+    println!("{}", serde_json::to_string_pretty(&output).unwrap_or_else(|_| "{}".to_string()));
+}
+
 pub(crate) fn print_doctor_report(report: &DoctorReport) {
     println!("Astropress doctor report");
     println!("Project: {}", report.project_dir.display());

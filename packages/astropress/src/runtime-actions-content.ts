@@ -1,4 +1,4 @@
-import { getCmsConfig } from "./config";
+import { getCmsConfig, dispatchPluginContentEvent, peekCmsConfig, validateContentFields } from "./config";
 import type { Actor, ContentOverride } from "./persistence-types";
 import { getAdminDb, withLocalStoreFallback } from "./admin-store-dispatch";
 import { parseIdList, serializeIdList, slugifyContent } from "./admin-normalizers";
@@ -18,6 +18,7 @@ interface PageRecord {
   seoTitle?: string;
   metaDescription?: string;
   status?: ContentStatus;
+  templateKey?: string;
 }
 
 function getPageRecords() {
@@ -29,7 +30,7 @@ async function getCustomContentEntries(db: D1DatabaseLike) {
     await db
       .prepare(
         `
-          SELECT slug, legacy_url, title, kind, source_html_path, updated_at, body, summary, seo_title, meta_description
+          SELECT slug, legacy_url, title, kind, template_key, source_html_path, updated_at, body, summary, seo_title, meta_description
           FROM content_entries
           ORDER BY datetime(updated_at) DESC, slug ASC
         `,
@@ -39,6 +40,7 @@ async function getCustomContentEntries(db: D1DatabaseLike) {
         legacy_url: string;
         title: string;
         kind: string;
+        template_key: string;
         source_html_path: string;
         updated_at: string;
         body: string | null;
@@ -52,6 +54,7 @@ async function getCustomContentEntries(db: D1DatabaseLike) {
     slug: row.slug,
     legacyUrl: row.legacy_url,
     title: row.title,
+    templateKey: row.template_key,
     sourceHtmlPath: row.source_html_path,
     updatedAt: row.updated_at,
     body: row.body ?? "",
@@ -197,6 +200,10 @@ export async function saveRuntimeContentState(
     canonicalUrlOverride?: string;
     robotsDirective?: string;
     revisionNote?: string;
+    /** ISO timestamp from when the editor loaded the record. Used for optimistic conflict detection. */
+    lastKnownUpdatedAt?: string;
+    /** Custom field values for the content type. Validated against `contentTypes` in `registerCms()`. */
+    metadata?: Record<string, unknown>;
   },
   actor: Actor,
   locals?: App.Locals | null,
@@ -226,6 +233,31 @@ export async function saveRuntimeContentState(
 
       await ensureD1BaselineRevision(db, pageRecord);
 
+      if (input.lastKnownUpdatedAt) {
+        const currentOverride = await db
+          .prepare("SELECT updated_at FROM content_overrides WHERE slug = ?")
+          .bind(pageRecord.slug)
+          .first<{ updated_at: string }>();
+        if (currentOverride && currentOverride.updated_at !== input.lastKnownUpdatedAt) {
+          return {
+            ok: false as const,
+            error: "This record was modified by another editor after you opened it. Reload to see the latest version.",
+            conflict: true as const,
+          };
+        }
+      }
+
+      // Content type field validation
+      const metadata = input.metadata ?? {};
+      const contentTypeDefinition = peekCmsConfig()?.contentTypes?.find((ct) => ct.key === pageRecord.templateKey);
+      if (contentTypeDefinition) {
+        const fieldError = validateContentFields(contentTypeDefinition, metadata);
+        if (fieldError) {
+          return { ok: false as const, error: fieldError };
+        }
+      }
+      const metadataJson = Object.keys(metadata).length > 0 ? JSON.stringify(metadata) : null;
+
       const excerpt = input.excerpt?.trim() ?? null;
       const ogTitle = input.ogTitle?.trim() ?? null;
       const ogDescription = input.ogDescription?.trim() ?? null;
@@ -238,8 +270,8 @@ export async function saveRuntimeContentState(
           `
             INSERT INTO content_overrides (
               slug, title, status, body, seo_title, meta_description, excerpt, og_title,
-              og_description, og_image, scheduled_at, canonical_url_override, robots_directive, updated_at, updated_by
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, ?)
+              og_description, og_image, scheduled_at, canonical_url_override, robots_directive, metadata, updated_at, updated_by
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, ?)
             ON CONFLICT(slug) DO UPDATE SET
               title = excluded.title,
               status = excluded.status,
@@ -253,6 +285,7 @@ export async function saveRuntimeContentState(
               scheduled_at = excluded.scheduled_at,
               canonical_url_override = excluded.canonical_url_override,
               robots_directive = excluded.robots_directive,
+              metadata = excluded.metadata,
               updated_at = CURRENT_TIMESTAMP,
               updated_by = excluded.updated_by
           `,
@@ -271,6 +304,7 @@ export async function saveRuntimeContentState(
           scheduledAt,
           canonicalUrlOverride,
           robotsDirective,
+          metadataJson,
           actor.email,
         )
         .run();
@@ -310,6 +344,12 @@ export async function saveRuntimeContentState(
         .run();
 
       await recordD1Audit(locals, actor, "content.update", "content", pageRecord.slug, `Updated reviewed metadata for ${pageRecord.legacyUrl}.`);
+
+      const pluginEvent = { slug: pageRecord.slug, kind: "post", status, actor: actor.email };
+      await dispatchPluginContentEvent("onContentSave", pluginEvent);
+      if (status === "published") {
+        await dispatchPluginContentEvent("onContentPublish", pluginEvent);
+      }
 
       return {
         ok: true as const,

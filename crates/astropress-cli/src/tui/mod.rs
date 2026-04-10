@@ -1,3 +1,5 @@
+pub(crate) mod import_dashboard;
+
 use std::sync::atomic::{AtomicBool, Ordering};
 
 static PLAIN_MODE: AtomicBool = AtomicBool::new(false);

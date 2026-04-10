@@ -149,6 +149,68 @@ describe("project scaffold", () => {
     expect(scaffold.envExample.SESSION_SECRET).toBe("replace-with-a-long-random-session-secret");
   });
 
+  it("does not include analytics keys when analytics is not set", () => {
+    const scaffold = createAstropressProjectScaffold();
+    expect(scaffold.envExample.PUBLIC_UMAMI_WEBSITE_ID).toBeUndefined();
+    expect(scaffold.envExample.PUBLIC_PLAUSIBLE_DOMAIN).toBeUndefined();
+    expect(scaffold.envExample.PUBLIC_MATOMO_URL).toBeUndefined();
+    expect(scaffold.envExample.PUBLIC_POSTHOG_KEY).toBeUndefined();
+    expect(scaffold.envExample.ASTROPRESS_API_ENABLED).toBeUndefined();
+  });
+
+  it("umami analytics produces correct env example keys", () => {
+    const scaffold = createAstropressProjectScaffold({ analytics: "umami" } as Parameters<typeof createAstropressProjectScaffold>[0]);
+    expect(scaffold.envExample.PUBLIC_UMAMI_WEBSITE_ID).toBeDefined();
+    expect(scaffold.envExample.PUBLIC_UMAMI_SCRIPT_URL).toBeDefined();
+    expect(scaffold.envExample.PUBLIC_PLAUSIBLE_DOMAIN).toBeUndefined();
+  });
+
+  it("plausible analytics produces correct env example keys", () => {
+    const scaffold = createAstropressProjectScaffold({ analytics: "plausible" } as Parameters<typeof createAstropressProjectScaffold>[0]);
+    expect(scaffold.envExample.PUBLIC_PLAUSIBLE_DOMAIN).toBeDefined();
+    expect(scaffold.envExample.PUBLIC_PLAUSIBLE_SCRIPT_URL).toBeDefined();
+  });
+
+  it("matomo analytics produces correct env example keys", () => {
+    const scaffold = createAstropressProjectScaffold({ analytics: "matomo" } as Parameters<typeof createAstropressProjectScaffold>[0]);
+    expect(scaffold.envExample.PUBLIC_MATOMO_URL).toBeDefined();
+    expect(scaffold.envExample.PUBLIC_MATOMO_SITE_ID).toBeDefined();
+  });
+
+  it("posthog analytics produces correct env example keys", () => {
+    const scaffold = createAstropressProjectScaffold({ analytics: "posthog" } as Parameters<typeof createAstropressProjectScaffold>[0]);
+    expect(scaffold.envExample.PUBLIC_POSTHOG_KEY).toBeDefined();
+    expect(scaffold.envExample.PUBLIC_POSTHOG_HOST).toBeDefined();
+  });
+
+  it("growthbook ab-testing produces correct env example keys", () => {
+    const scaffold = createAstropressProjectScaffold({ abTesting: "growthbook" } as Parameters<typeof createAstropressProjectScaffold>[0]);
+    expect(scaffold.envExample.GROWTHBOOK_API_HOST).toBeDefined();
+    expect(scaffold.envExample.GROWTHBOOK_CLIENT_KEY).toBeDefined();
+  });
+
+  it("unleash ab-testing produces correct env example keys", () => {
+    const scaffold = createAstropressProjectScaffold({ abTesting: "unleash" } as Parameters<typeof createAstropressProjectScaffold>[0]);
+    expect(scaffold.envExample.UNLEASH_URL).toBeDefined();
+    expect(scaffold.envExample.UNLEASH_CLIENT_KEY).toBeDefined();
+  });
+
+  it("openreplay heatmap produces correct env example keys", () => {
+    const scaffold = createAstropressProjectScaffold({ heatmap: "openreplay" } as Parameters<typeof createAstropressProjectScaffold>[0]);
+    expect(scaffold.envExample.PUBLIC_OPENREPLAY_PROJECT_KEY).toBeDefined();
+  });
+
+  it("enableApi produces ASTROPRESS_API_ENABLED in env example", () => {
+    const scaffold = createAstropressProjectScaffold({ enableApi: true } as Parameters<typeof createAstropressProjectScaffold>[0]);
+    expect(scaffold.envExample.ASTROPRESS_API_ENABLED).toBe("true");
+    expect(scaffold.envExample.ASTROPRESS_API_RATE_LIMIT).toBe("60");
+  });
+
+  it("enableApi also sets ASTROPRESS_API_ENABLED in localEnv", () => {
+    const scaffold = createAstropressProjectScaffold({ enableApi: true } as Parameters<typeof createAstropressProjectScaffold>[0]);
+    expect(scaffold.localEnv.ASTROPRESS_API_ENABLED).toBe("true");
+  });
+
   it("returns service-specific remote examples", () => {
     const supabase = createAstropressProjectScaffold("supabase");
     const runway = createAstropressProjectScaffold("runway");

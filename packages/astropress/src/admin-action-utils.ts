@@ -1,6 +1,9 @@
 import type { APIRoute } from "astro";
 import { getRuntimeCsrfToken, getRuntimeSessionUser } from "./runtime-admin-auth";
 import { createAstropressSecureRedirect, isTrustedRequestOrigin } from "./security-headers.js";
+import { createLogger } from "./runtime-logger.js";
+
+const logger = createLogger("admin-action");
 
 const SESSION_COOKIE = "ff_admin_session";
 
@@ -89,6 +92,7 @@ export async function withAdminFormAction(
   options: GuardOptions,
   run: (action: ActionContext) => Promise<Response> | Response,
 ): Promise<Response> {
+  const actionPath = new URL(context.request.url).pathname;
   try {
     const guarded = await requireAdminFormAction(context, options);
     if (!guarded.ok) {
@@ -96,6 +100,7 @@ export async function withAdminFormAction(
     }
 
     const { sessionUser, formData } = guarded;
+    logger.info("admin action", { path: actionPath, actor: sessionUser.email, role: sessionUser.role });
     return await run({
       sessionUser,
       actor: {
@@ -106,10 +111,14 @@ export async function withAdminFormAction(
       formData,
       locals: context.locals,
       request: context.request,
-      fail: (message, overridePath) => actionErrorRedirect(overridePath ?? options.failurePath, message),
+      fail: (message, overridePath) => {
+        logger.warn("admin action failed", { path: actionPath, actor: sessionUser.email, message });
+        return actionErrorRedirect(overridePath ?? options.failurePath, message);
+      },
       redirect: actionRedirect,
     });
-  } catch {
+  } catch (err) {
+    logger.error("admin action error", { path: actionPath, error: String(err) });
     return actionErrorRedirect(options.failurePath, options.unexpectedMessage ?? "Something went wrong. Please try again.");
   }
 }

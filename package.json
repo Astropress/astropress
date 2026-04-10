@@ -12,7 +12,9 @@
     "audit:deps": "bun audit",
     "audit:security": "bun run scripts/security-audit.ts",
     "audit:arch": "bun run scripts/arch-lint.ts",
-    "test": "bun run audit:arch && bun run bdd:lint && bun run bdd:test && bun run --filter astropress test",
+    "audit:arch:rust": "bun run scripts/rust-arch-lint.ts",
+    "audit:bundle": "bun run scripts/bundle-audit.ts",
+    "test": "bun run audit:arch && bun run audit:arch:rust && bun run bdd:lint && bun run bdd:test && bun run --filter astropress test",
     "test:coverage": "bun run --filter astropress test:coverage",
     "test:acceptance": "bun run scripts/run-playwright.ts --project=example-a11y --project=admin-harness-a11y --project=admin-harness-mobile --project=admin-harness-mobile-iphonese --project=admin-harness-mobile-galaxys5 --project=admin-harness-a11y-interactions",
     "test:accessibility": "bun run --filter astropress-example-gh-pages build && bun run scripts/accessibility-audit.ts examples/github-pages/dist",
@@ -37,7 +39,20 @@
     "playwright": "^1.59.1",
     "size-limit": "^12.0.1"
   },
+  "size-limit": [
+    {
+      "path": "examples/github-pages/dist/**/*.js",
+      "limit": "10 KB",
+      "running": false
+    }
+  ],
   "overrides": {
     "yaml": "^2.8.3"
-  }
+  },
+  "browserslist": [
+    "Chrome >= 108",
+    "Firefox >= 98",
+    "Safari >= 15.4",
+    "Edge >= 108"
+  ]
 }

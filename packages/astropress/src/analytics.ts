@@ -63,6 +63,43 @@ export function resolveAnalyticsSnippet(config?: AnalyticsConfig | null): string
   }
 }
 
+/**
+ * Returns true if the incoming request signals that the user has opted out of
+ * tracking, either via the `DNT: 1` (Do Not Track) header or the newer
+ * `Sec-GPC: 1` (Global Privacy Control) header.
+ *
+ * Operators should call this before injecting analytics snippets and skip
+ * tracking when it returns `true`.
+ *
+ * @example
+ * ```astro
+ * ---
+ * import { resolveAnalyticsSnippet, requestOptedOutOfTracking } from "astropress/analytics";
+ * const snippet = requestOptedOutOfTracking(Astro.request)
+ *   ? ""
+ *   : resolveAnalyticsSnippet(config.analytics);
+ * ---
+ * {snippet && <Fragment set:html={snippet} />}
+ * ```
+ */
+export function requestOptedOutOfTracking(request: Request): boolean {
+  const dnt = request.headers.get("DNT");
+  const gpc = request.headers.get("Sec-GPC");
+  return dnt === "1" || gpc === "1";
+}
+
+/**
+ * Like `resolveAnalyticsSnippet`, but returns an empty string when the request
+ * carries a `DNT: 1` or `Sec-GPC: 1` header — honoring the user's opt-out.
+ */
+export function resolveAnalyticsSnippetConsentAware(
+  config: import("./config").AnalyticsConfig | null | undefined,
+  request: Request,
+): string {
+  if (requestOptedOutOfTracking(request)) return "";
+  return resolveAnalyticsSnippet(config);
+}
+
 /** Escape a string for use inside an HTML attribute value (double-quoted). */
 function escAttr(value: string): string {
   return value

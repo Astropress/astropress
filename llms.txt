@@ -1,0 +1,107 @@
+# Astropress
+
+Astropress is a web application development framework for editorial, informational, and content-driven sites built on Astro with TypeScript and a Rust CLI.
+
+## Key concepts
+
+- **App Host**: where the Astro app runs (Cloudflare Pages, Vercel, Netlify, Render, GitHub Pages)
+- **Content Services**: where content, media, auth, and sessions are stored (Cloudflare D1/R2/KV, Supabase, Runway, SQLite)
+- **local-runtime-modules**: Vite alias seam — the host app provides the DB/auth implementation; the package provides the admin UI and route handlers
+- **Admin panel**: injected routes under `/ap-admin/` — login, post editor, media, settings, users, redirects, comments, API tokens, webhooks
+- **Security middleware**: area-aware CSP (`public` / `admin` / `auth` / `api`), CSRF via origin checking, `__Host-` cookies, rate limiting
+
+## REST API
+
+- Base URL: `/ap-api/v1/`
+- Auth: `Authorization: Bearer <token>` — create tokens at `/ap-admin/api-tokens`
+- OpenAPI 3.1 spec: `GET /ap-api/v1/openapi.json`
+- Scopes: `content:read`, `content:write`, `media:read`, `media:write`, `settings:read`, `webhooks:manage`
+
+### Endpoints
+
+| Method | Path | Scope |
+|--------|------|-------|
+| GET | `/ap-api/v1/content` | content:read |
+| POST | `/ap-api/v1/content` | content:write |
+| GET | `/ap-api/v1/content/{id}` | content:read |
+| PUT | `/ap-api/v1/content/{id}` | content:write |
+| DELETE | `/ap-api/v1/content/{id}` | content:write |
+| GET | `/ap-api/v1/media` | media:read |
+| POST | `/ap-api/v1/media` | media:write |
+| DELETE | `/ap-api/v1/media/{id}` | media:write |
+| GET | `/ap-api/v1/revisions/{recordId}` | content:read |
+| GET | `/ap-api/v1/settings` | settings:read |
+| GET POST | `/ap-api/v1/webhooks` | webhooks:manage |
+
+## Health check
+
+`GET /ap/health` — no auth required, returns `{ status, version, uptime, timestamp }`
+
+## MCP server
+
+Package: `astropress-mcp`
+Run: `npx astropress-mcp` (stdio transport)
+
+Tools:
+- `list_content(type?, status?)` — list content records
+- `get_content(id)` — fetch single record by ID or slug
+- `create_content(type, title, body, status)` — create a new content record
+- `update_content(id, fields)` — update an existing record
+- `list_media()` — list media assets
+- `get_site_settings()` — fetch site settings
+- `get_health()` — get health status
+
+## CLI
+
+```bash
+astropress new <name>              # scaffold a new project
+astropress dev                     # start local dev server
+astropress doctor                  # check project health (human-readable)
+astropress doctor --json           # machine-readable JSON health check
+astropress doctor --strict         # exit 1 if any warnings
+astropress import wordpress --source <xml> --artifact-dir <dir>
+astropress services verify         # verify Content Services connectivity
+astropress backup --output <dir>   # export SQLite snapshot
+astropress restore --from <dir>    # restore from snapshot
+```
+
+## Core export paths
+
+```ts
+import { astropressIntegration } from "astropress/integration"         // astro.config.mjs
+import { selectAstropressAdapter } from "astropress/adapters/project"  // local-runtime-modules.ts
+import { astropressSecurityMiddleware } from "astropress/security"     // middleware.ts
+import { registerCms } from "astropress"                               // astropress.config.ts
+import { resolveProjectEnv } from "astropress/project-env"             // env inspection
+import { AstropressProviderContract } from "astropress/platform-contracts" // custom adapters
+import { handleHealthRequest } from "astropress/runtime-health"        // /ap/health handler
+import { createLogger } from "astropress/runtime-logger"               // structured logging
+```
+
+## Content record shape
+
+```ts
+interface ContentRecord {
+  id: string;          // same as slug
+  slug: string;
+  kind: "post" | "page";
+  title: string;
+  status: "draft" | "review" | "published" | "archived";
+  body: string | null;
+  metadata: {
+    seoTitle: string;
+    metaDescription: string;
+    updatedAt: string;
+  };
+}
+```
+
+## Quick start
+
+```bash
+npx astropress new my-site
+cd my-site
+bun install
+bun dev
+# Admin panel available at http://localhost:4321/ap-admin
+```

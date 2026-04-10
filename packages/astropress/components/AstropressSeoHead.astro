@@ -1,0 +1,73 @@
+---
+/**
+ * AstropressSeoHead.astro
+ *
+ * Emits SEO meta tags, Open Graph tags, Twitter Card tags, and a canonical
+ * link from a content record's SEO fields. Place this inside <head> in your
+ * layout — it does NOT include <title> because Astro layouts typically handle
+ * the title themselves.
+ *
+ * Usage:
+ *   <AstropressSeoHead record={post} siteOrigin={Astro.url.origin} siteName="My Site" />
+ *
+ * All fields are optional — only tags with defined values are emitted.
+ */
+
+interface SeoRecord {
+  slug?: string;
+  title?: string;
+  seoTitle?: string;
+  metaDescription?: string;
+  excerpt?: string;
+  ogTitle?: string;
+  ogDescription?: string;
+  ogImage?: string;
+  canonicalUrlOverride?: string;
+  robotsDirective?: string;
+  kind?: string | null;
+}
+
+interface Props {
+  record: SeoRecord;
+  /** The origin of the site, e.g. "https://example.com". Used to build canonical URLs. */
+  siteOrigin?: string;
+  /** Site name for og:site_name. */
+  siteName?: string;
+  /** Twitter handle, e.g. "@mysite". */
+  twitterSite?: string;
+}
+
+const { record, siteOrigin, siteName, twitterSite } = Astro.props;
+
+const pageTitle = record.seoTitle || record.title || "";
+const description = record.metaDescription || record.excerpt || "";
+const ogTitle = record.ogTitle || pageTitle;
+const ogDescription = record.ogDescription || description;
+const ogImage = record.ogImage;
+
+let canonicalHref: string | undefined;
+if (record.canonicalUrlOverride) {
+  canonicalHref = record.canonicalUrlOverride;
+} else if (siteOrigin && record.slug) {
+  const basePath = record.kind === "post" || record.kind == null ? `/blog/${record.slug}/` : `/${record.slug}/`;
+  canonicalHref = `${siteOrigin}${basePath}`;
+}
+
+const robotsContent = record.robotsDirective;
+---
+
+{pageTitle && <meta property="og:title" content={pageTitle} />}
+{description && <meta name="description" content={description} />}
+{robotsContent && <meta name="robots" content={robotsContent} />}
+{canonicalHref && <link rel="canonical" href={canonicalHref} />}
+{siteName && <meta property="og:site_name" content={siteName} />}
+{ogTitle && <meta property="og:title" content={ogTitle} />}
+{ogDescription && <meta property="og:description" content={ogDescription} />}
+{ogImage && <meta property="og:image" content={ogImage} />}
+{canonicalHref && <meta property="og:url" content={canonicalHref} />}
+<meta property="og:type" content={record.kind === "post" || record.kind == null ? "article" : "website"} />
+{twitterSite && <meta name="twitter:site" content={twitterSite} />}
+<meta name="twitter:card" content={ogImage ? "summary_large_image" : "summary"} />
+{ogTitle && <meta name="twitter:title" content={ogTitle} />}
+{ogDescription && <meta name="twitter:description" content={ogDescription} />}
+{ogImage && <meta name="twitter:image" content={ogImage} />}

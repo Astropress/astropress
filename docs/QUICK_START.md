@@ -100,6 +100,28 @@ export default defineConfig({
 export { createSqliteAdminRuntime as createAdminRuntime } from "astropress/adapters/sqlite";
 ```
 
+## The 6 imports you need
+
+```ts
+// astro.config.mjs — wire astropress into Astro
+import { createAstropressAdminAppIntegration } from "astropress/integration";
+
+// src/astropress/local-runtime-modules.ts — host-side DB/auth seam
+import { selectAstropressAdapter } from "astropress/adapters/project";
+
+// src/middleware.ts — security headers + CSRF + rate limiting
+import { astropressSecurityMiddleware } from "astropress/security";
+
+// astropress.config.ts — register content types and features
+import { registerCms } from "astropress";
+
+// any server file — inspect APP_HOST / CONTENT_SERVICES env vars
+import { resolveProjectEnv } from "astropress/project-env";
+
+// src/adapters/my-adapter.ts — build a custom runtime adapter
+import type { AstropressProviderContract } from "astropress/platform-contracts";
+```
+
 ## Next steps
 
 - [ARCHITECTURE.md](./ARCHITECTURE.md) — how the provider seam works

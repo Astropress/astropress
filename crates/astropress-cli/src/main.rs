@@ -4,6 +4,7 @@ use std::process::ExitCode;
 
 mod cli_config;
 mod commands;
+mod features;
 mod js_bridge;
 mod providers;
 mod scaffold;
@@ -22,9 +23,10 @@ pub(crate) use scaffold::write_embedded_template;
 use cli_config::args::{parse_command, print_help, Command};
 use commands::backup_restore::{export_project_snapshot, import_project_snapshot};
 use commands::config::migrate_project_config;
+use commands::db::run_db_migrations;
 use commands::deploy::deploy_project;
 use commands::dev::run_dev_server;
-use commands::doctor::{inspect_project_health, print_doctor_report};
+use commands::doctor::{inspect_project_health, print_doctor_report, print_doctor_report_json};
 use commands::import_wordpress::stage_wordpress_import;
 use commands::import_wix::stage_wix_import;
 use commands::new::{scaffold_new_project, run_post_scaffold_setup};
@@ -48,7 +50,11 @@ fn main() -> ExitCode {
             provider,
             app_host,
             data_services,
-        }) => match scaffold_new_project(&project_dir, use_local_package, provider, app_host, data_services)
+            analytics,
+            ab_testing,
+            heatmap,
+            enable_api,
+        }) => match scaffold_new_project(&project_dir, use_local_package, provider, app_host, data_services, analytics, ab_testing, heatmap, enable_api)
             .and_then(|()| run_post_scaffold_setup(&project_dir))
         {
             Ok(()) => ExitCode::SUCCESS,
@@ -133,9 +139,13 @@ fn main() -> ExitCode {
             Ok(()) => ExitCode::SUCCESS,
             Err(error) => fail(error),
         },
-        Ok(Command::Doctor { project_dir, strict }) => match inspect_project_health(&project_dir) {
+        Ok(Command::Doctor { project_dir, strict, json }) => match inspect_project_health(&project_dir) {
             Ok(report) => {
-                print_doctor_report(&report);
+                if json {
+                    print_doctor_report_json(&report);
+                } else {
+                    print_doctor_report(&report);
+                }
                 if strict && !report.warnings.is_empty() {
                     ExitCode::from(1)
                 } else {
@@ -174,6 +184,12 @@ fn main() -> ExitCode {
                         ExitCode::SUCCESS
                     }
                 }
+                Err(error) => fail(error),
+            }
+        }
+        Ok(Command::DbMigrate { project_dir, migrations_dir, dry_run }) => {
+            match run_db_migrations(&project_dir, migrations_dir.as_deref(), dry_run) {
+                Ok(()) => ExitCode::SUCCESS,
                 Err(error) => fail(error),
             }
         }
@@ -330,6 +346,10 @@ mod tests {
             Ok(Command::Doctor { strict: true, .. })
         ));
         assert!(matches!(
+            parse_command(&strings(&["doctor", "--json"])),
+            Ok(Command::Doctor { json: true, .. })
+        ));
+        assert!(matches!(
             parse_command(&strings(&["new", "demo", "--provider", "supabase"])),
             Ok(Command::New {
                 provider: LocalProvider::Supabase,
@@ -382,6 +402,14 @@ mod tests {
             parse_command(&strings(&["services", "verify"])),
             Ok(Command::ServicesVerify { .. })
         ));
+        assert!(matches!(
+            parse_command(&strings(&["db", "migrate"])),
+            Ok(Command::DbMigrate { dry_run: false, .. })
+        ));
+        assert!(matches!(
+            parse_command(&strings(&["db", "migrate", "--dry-run"])),
+            Ok(Command::DbMigrate { dry_run: true, .. })
+        ));
     }
 
     #[test]
@@ -397,6 +425,9 @@ mod tests {
 
         let sync_error = parse_command(&strings(&["sync", "push"])).unwrap_err();
         assert!(sync_error.contains("Unsupported sync subcommand"));
+
+        let db_error = parse_command(&strings(&["db", "rollback"])).unwrap_err();
+        assert!(db_error.contains("Unsupported db subcommand"));
     }
 
     #[test]
@@ -439,7 +470,7 @@ mod tests {
         let root = temp_dir("new");
         let project_dir = root.join("demo");
         // Pass explicit app_host to skip the interactive hosting prompt
-        scaffold_new_project(&project_dir, true, LocalProvider::Supabase, Some(AppHost::Vercel), Some(DataServices::Supabase)).unwrap();
+        scaffold_new_project(&project_dir, true, LocalProvider::Supabase, Some(AppHost::Vercel), Some(DataServices::Supabase), None, None, None, false).unwrap();
 
         let package_json = fs::read_to_string(project_dir.join("package.json")).unwrap();
         assert!(package_json.contains("\"name\": \"demo\""));

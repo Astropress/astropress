@@ -122,6 +122,7 @@ describe("tooling integration", () => {
       "../src/deploy/firebase-hosting.js",
       "../src/deploy/custom.js",
       "../src/content-services-ops.js",
+      "../src/db-migrate-ops.js",
       "../src/import/wordpress.js",
       "../src/sync/git.js",
     ] as const;

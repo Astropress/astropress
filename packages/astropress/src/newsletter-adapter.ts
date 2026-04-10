@@ -3,6 +3,9 @@ export interface NewsletterAdapter {
 }
 
 import { getNewsletterConfig } from "./runtime-env";
+import { createLogger } from "./runtime-logger";
+
+const logger = createLogger("Newsletter");
 
 function toBasicAuthToken(value: string) {
   return btoa(value);
@@ -24,15 +27,49 @@ function toBasicAuthToken(value: string) {
  */
 export const newsletterAdapter: NewsletterAdapter = {
   subscribe: async (email: string, locals?: App.Locals | null) => {
-    const { mode, apiKey, listId, server } = getNewsletterConfig(locals);
+    const { mode, apiKey, listId, server, listmonkApiUrl, listmonkApiUsername, listmonkApiPassword, listmonkListId } = getNewsletterConfig(locals);
+
+    if (mode === "listmonk") {
+      if (!listmonkApiUrl || !listmonkApiUsername || !listmonkApiPassword || !listmonkListId) {
+        logger.error("LISTMONK_* environment is incomplete while listmonk delivery is enabled.");
+        return { ok: false, error: "Newsletter signup is temporarily unavailable." };
+      }
+      try {
+        const auth = toBasicAuthToken(`${listmonkApiUsername}:${listmonkApiPassword}`);
+        const response = await fetch(`${listmonkApiUrl}/api/subscribers`, {
+          method: "POST",
+          headers: {
+            Authorization: `Basic ${auth}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email,
+            name: email,
+            status: "enabled",
+            lists: [Number(listmonkListId)],
+            preconfirm_subscriptions: true,
+          }),
+        });
+        if (!response.ok) {
+          const body = await response.text();
+          logger.error("Listmonk API error", { status: response.status, body });
+          return { ok: false, error: "Failed to subscribe. Please try again." };
+        }
+        logger.info("Successfully subscribed to Listmonk", { email });
+        return { ok: true };
+      } catch (error) {
+        logger.error("Listmonk subscription error", { error });
+        return { ok: false, error: "Network error. Please try again." };
+      }
+    }
 
     if (mode !== "mailchimp") {
-      console.info("[Newsletter] Using explicit mock delivery mode.");
+      logger.info("Using explicit mock delivery mode.");
       return { ok: true };
     }
 
     if (!apiKey || !listId || !server) {
-      console.error("[Newsletter] MAILCHIMP_* environment is incomplete while live delivery is enabled.");
+      logger.error("MAILCHIMP_* environment is incomplete while live delivery is enabled.");
       return {
         ok: false,
         error: "Newsletter signup is temporarily unavailable.",
@@ -58,17 +95,17 @@ export const newsletterAdapter: NewsletterAdapter = {
 
       if (!response.ok) {
         const error = await response.json();
-        console.error("[Newsletter] Mailchimp API error:", error);
+        logger.error("Mailchimp API error", { error });
         return {
           ok: false,
           error: error.detail || "Failed to subscribe. Please try again.",
         };
       }
 
-      console.log(`[Newsletter] Successfully subscribed ${email} to Mailchimp`);
+      logger.info("Successfully subscribed to Mailchimp", { email });
       return { ok: true };
     } catch (error) {
-      console.error("[Newsletter] Subscription error:", error);
+      logger.error("Subscription error", { error });
       return {
         ok: false,
         error: "Network error. Please try again.",

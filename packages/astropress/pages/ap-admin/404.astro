@@ -1,0 +1,30 @@
+---
+import AdminLayout from "astropress/components/AdminLayout.astro";
+import { applyAstropressSecurityHeaders } from "astropress/security-headers";
+
+const adminUser = Astro.locals.adminUser;
+
+// Ensure headers are set even for 404 responses
+applyAstropressSecurityHeaders(Astro.response.headers, {
+  area: "admin",
+  allowInlineStyles: true,
+  forceHsts: Astro.url.protocol === "https:",
+});
+
+Astro.response.status = 404;
+---
+
+<AdminLayout
+  title="Page not found | Astropress Admin"
+  heading="Page not found"
+  currentPath=""
+  description="The admin page you requested does not exist."
+  role={adminUser?.role ?? "editor"}
+  userName={adminUser?.name ?? ""}
+>
+  <div class="panel" style="padding: 2rem; text-align: center; margin-top: 2rem;">
+    <p style="font-size: 3rem; margin: 0; line-height: 1;">404</p>
+    <p>That admin page doesn't exist.</p>
+    <a href="/ap-admin" class="button">Back to Dashboard</a>
+  </div>
+</AdminLayout>

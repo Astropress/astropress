@@ -44,6 +44,13 @@ export function isAstropressLocalRuntimeModuleRequest(id: string, localRuntimeMo
 export function createAstropressLocalRuntimeModulePlugin(
   localRuntimeModulesPath: string,
 ): AstropressVitePlugin {
+  if (!localRuntimeModulesPath) {
+    throw new Error(
+      "[astropress] Missing Vite alias: 'local-runtime-modules'. " +
+        "Add astropressIntegration() to your astro.config.mjs — " +
+        "see https://astropress.dev/docs/quick-start#step-2-add-the-integration",
+    );
+  }
   return {
     name: "astropress-local-runtime-modules",
     enforce: "pre",

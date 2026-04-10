@@ -15,7 +15,7 @@ Astropress currently enforces and tests:
 Do not open public issues for suspected vulnerabilities that expose live credentials, authentication bypass, stored XSS, or privilege escalation.
 
 Use GitHub's private security advisory feature:
-**[Report a vulnerability](https://github.com/withastro/astropress/security/advisories/new)**
+Open a [GitHub private security advisory](https://docs.github.com/en/code-security/security-advisories/guidance-on-reporting-and-writing/privately-reporting-a-security-vulnerability) in your fork or deployment repo, or email the maintainer directly. (If you are on the canonical repo, use the **Security → Advisories → New draft** tab in your GitHub repository.)
 
 Response SLA:
 - Acknowledgement within **7 days**

@@ -1,0 +1,22 @@
+---
+/**
+ * JsonLd.astro — Renders a JSON-LD <script type="application/ld+json"> block.
+ *
+ * Usage:
+ *   <JsonLd data={{ "@context": "https://schema.org", "@type": "Article", ... }} />
+ *
+ * The `data` prop is serialised to JSON. All values are escaped to prevent
+ * script injection (</script> and <script are replaced with Unicode escapes).
+ */
+interface Props {
+  /** A valid Schema.org JSON-LD object or array of objects. */
+  data: Record<string, unknown> | Array<Record<string, unknown>>;
+}
+
+const { data } = Astro.props;
+
+// Escape </script> sequences to prevent breaking out of the script tag.
+const json = JSON.stringify(data).replace(/<\/(script)/gi, "<\\/$1").replace(/<(script)/gi, "<$1");
+---
+
+<script type="application/ld+json" set:html={json}></script>

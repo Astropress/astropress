@@ -1,0 +1,78 @@
+---
+/**
+ * AstropressArticleJsonLd.astro
+ *
+ * Emits a JSON-LD Article schema (schema.org/Article) for a content record.
+ * Place this inside <head> in your post/page layout.
+ *
+ * Usage:
+ *   <AstropressArticleJsonLd
+ *     record={post}
+ *     siteOrigin={Astro.url.origin}
+ *     publisherName="My Site"
+ *     publisherLogo="https://example.com/logo.png"
+ *   />
+ */
+
+interface ArticleRecord {
+  slug?: string;
+  title?: string;
+  seoTitle?: string;
+  metaDescription?: string;
+  excerpt?: string;
+  ogImage?: string;
+  updatedAt?: string;
+  kind?: string | null;
+  authorName?: string;
+}
+
+interface Props {
+  record: ArticleRecord;
+  siteOrigin?: string;
+  /** Publisher org name for the "publisher" field. */
+  publisherName?: string;
+  /** Publisher logo URL for the "publisher.logo" field. */
+  publisherLogo?: string;
+  /** ISO date string for datePublished. Falls back to record.updatedAt. */
+  datePublished?: string;
+}
+
+const { record, siteOrigin, publisherName, publisherLogo, datePublished } = Astro.props;
+
+const url = siteOrigin && record.slug
+  ? (record.kind === "post" || record.kind == null
+    ? `${siteOrigin}/blog/${record.slug}/`
+    : `${siteOrigin}/${record.slug}/`)
+  : undefined;
+
+const headline = record.seoTitle || record.title || "";
+const description = record.metaDescription || record.excerpt || "";
+const image = record.ogImage;
+const dateModified = record.updatedAt?.slice(0, 10);
+const datePublishedValue = datePublished || dateModified;
+
+const jsonLd: Record<string, unknown> = {
+  "@context": "https://schema.org",
+  "@type": "Article",
+};
+
+if (headline) jsonLd.headline = headline;
+if (description) jsonLd.description = description;
+if (url) jsonLd.url = url;
+if (url) jsonLd.mainEntityOfPage = { "@type": "WebPage", "@id": url };
+if (image) jsonLd.image = image;
+if (datePublishedValue) jsonLd.datePublished = datePublishedValue;
+if (dateModified) jsonLd.dateModified = dateModified;
+if (record.authorName) jsonLd.author = { "@type": "Person", name: record.authorName };
+if (publisherName) {
+  jsonLd.publisher = {
+    "@type": "Organization",
+    name: publisherName,
+    ...(publisherLogo ? { logo: { "@type": "ImageObject", url: publisherLogo } } : {}),
+  };
+}
+
+const json = JSON.stringify(jsonLd).replace(/<\/(script)/gi, "<\\/$1").replace(/<(script)/gi, "<$1");
+---
+
+<script type="application/ld+json" set:html={json}></script>

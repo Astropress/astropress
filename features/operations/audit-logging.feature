@@ -28,3 +28,9 @@ Feature: Admin action audit logging
     Then all entries are visible with user, action, resource, and timestamp columns
     When an editor attempts to access the audit log URL directly
     Then they receive a 403 Forbidden response
+
+  Scenario: Audit log entries older than auditRetentionDays are pruned on each write
+    Given auditRetentionDays is configured to 30 in registerCms
+    And an audit entry exists with created_at 31 days ago
+    When a new audit event is written
+    Then the stale entry is automatically deleted and only the new entry remains

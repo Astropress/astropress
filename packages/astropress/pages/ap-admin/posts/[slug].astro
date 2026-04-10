@@ -54,6 +54,7 @@ if (model.status === "not_found") {
     <form method="post" action="/ap-admin/actions/content-save" class="edit-form">
       <CsrfInput token={Astro.locals.csrfToken} />
       <input type="hidden" name="slug" value={pageRecord.slug} />
+      <input type="hidden" name="lastKnownUpdatedAt" value={pageRecord.updatedAt} />
 
       {/* Panel 1: Publish */}
       <section class="panel">

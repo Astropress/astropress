@@ -13,7 +13,16 @@ function normalizeStructuredTemplateKey(value) {
 }
 
 function localeFromPath(pathname) {
-  return pathname.startsWith("/es/") ? "es" : "en";
+  let locales;
+  try {
+    locales = getCmsConfig().locales ?? ["en", "es"];
+  } catch {
+    locales = ["en", "es"];
+  }
+  for (const locale of locales) {
+    if (pathname.startsWith(`/${locale}/`)) return locale;
+  }
+  return locales[0] ?? "en";
 }
 
 function getSeedPageRecords() {
@@ -111,9 +120,33 @@ function normalizeSystemRoutePath(pathname) {
   return trimmed.startsWith("/") ? trimmed : `/${trimmed}`;
 }
 
+function localeFromAcceptLanguage(acceptLanguage) {
+  let locales;
+  try {
+    locales = getCmsConfig().locales ?? ["en", "es"];
+  } catch {
+    locales = ["en", "es"];
+  }
+  if (!acceptLanguage) return locales[0] ?? "en";
+  const entries = acceptLanguage
+    .split(",")
+    .map((part) => {
+      const [tag, qPart] = part.trim().split(";");
+      const q = qPart ? Number(qPart.trim().replace("q=", "")) : 1;
+      return { tag: (tag ?? "").trim().toLowerCase(), q: Number.isFinite(q) ? q : 1 };
+    })
+    .sort((a, b) => b.q - a.q);
+  for (const { tag } of entries) {
+    const matched = locales.find((l) => l.toLowerCase() === tag || tag.startsWith(`${l.toLowerCase()}-`));
+    if (matched) return matched;
+  }
+  return locales[0] ?? "en";
+}
+
 export {
   normalizeStructuredTemplateKey,
   localeFromPath,
+  localeFromAcceptLanguage,
   getSeedPageRecords,
   hashOpaqueToken,
   hashPasswordSync,

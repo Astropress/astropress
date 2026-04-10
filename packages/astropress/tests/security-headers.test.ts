@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  applyCacheHeaders,
   applyAstropressSecurityHeaders,
   createAstropressSecureRedirect,
   createAstropressSecurityHeaders,
@@ -10,7 +11,8 @@ import { resolveAstropressSecurityArea } from "../src/security-middleware.js";
 
 describe("security headers", () => {
   it("builds a CSP that forbids inline scripts and framing by default", () => {
-    const headers = createAstropressSecurityHeaders({ area: "admin" });
+    // allowInlineStyles defaults to false — callers that need it must opt in explicitly
+    const headers = createAstropressSecurityHeaders({ area: "admin", allowInlineStyles: true });
     const csp = headers.get("Content-Security-Policy") ?? "";
 
     expect(csp).toContain("script-src 'self' https://challenges.cloudflare.com");
@@ -20,6 +22,23 @@ describe("security headers", () => {
     expect(headers.get("X-Frame-Options")).toBe("DENY");
     expect(headers.get("X-Content-Type-Options")).toBe("nosniff");
     expect(headers.get("Referrer-Policy")).toBe("strict-origin-when-cross-origin");
+  });
+
+  it("defaults allowInlineStyles to false — style-src excludes unsafe-inline without explicit opt-in", () => {
+    const headers = createAstropressSecurityHeaders({ area: "admin" });
+    const csp = headers.get("Content-Security-Policy") ?? "";
+    expect(csp).toContain("style-src 'self'");
+    expect(csp).not.toContain("'unsafe-inline'");
+  });
+
+  it("sets Cross-Origin-Resource-Policy: same-site for admin, auth, and api areas", () => {
+    for (const area of ["admin", "auth", "api"] as const) {
+      const headers = createAstropressSecurityHeaders({ area });
+      expect(headers.get("Cross-Origin-Resource-Policy"), `area: ${area}`).toBe("same-site");
+    }
+    // Public area does NOT get CORP
+    const publicHeaders = createAstropressSecurityHeaders({ area: "public" });
+    expect(publicHeaders.has("Cross-Origin-Resource-Policy")).toBe(false);
   });
 
   it("adds HSTS only when explicitly requested", () => {
@@ -144,6 +163,26 @@ describe("security headers", () => {
     const csp = createAstropressSecurityHeaders({ allowInlineStyles: false }).get("Content-Security-Policy") ?? "";
     expect(csp).toContain("style-src 'self'");
     expect(csp).not.toContain("'unsafe-inline'");
+  });
+
+  it("applyCacheHeaders uses default 300/3600 TTL for public area", () => {
+    const headers = new Headers();
+    applyCacheHeaders(headers, "public");
+    expect(headers.get("Cache-Control")).toBe("public, max-age=300, s-maxage=3600, stale-while-revalidate=86400");
+  });
+
+  it("applyCacheHeaders respects publicCacheTtl override for public area", () => {
+    const headers = new Headers();
+    applyCacheHeaders(headers, "public", 600);
+    expect(headers.get("Cache-Control")).toBe("public, max-age=600, s-maxage=7200, stale-while-revalidate=86400");
+  });
+
+  it("applyCacheHeaders sets no-store for non-public areas regardless of publicCacheTtl", () => {
+    for (const area of ["admin", "auth", "api"] as const) {
+      const headers = new Headers();
+      applyCacheHeaders(headers, area, 600);
+      expect(headers.get("Cache-Control"), `area: ${area}`).toBe("private, no-store");
+    }
   });
 
   it("classifies public, auth, admin, and action routes for middleware application", () => {

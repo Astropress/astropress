@@ -1,4 +1,5 @@
 import type { AstroIntegration } from "astro";
+import { fileURLToPath } from "node:url";
 
 export interface AstropressPublicSiteOptions {
   /**
@@ -35,8 +36,20 @@ export function createAstropressPublicSiteIntegration(
       // No admin routes are injected.
       // No admin middleware is registered.
       // The host site registers its own content loaders and public routes.
-      "astro:config:setup": () => {
+      "astro:config:setup": ({ injectRoute }) => {
         // buildHookSecret is reserved for future webhook rebuild support.
+        injectRoute({
+          pattern: "/sitemap.xml",
+          entrypoint: fileURLToPath(new URL("../pages/sitemap.xml.js", import.meta.url)),
+        });
+        injectRoute({
+          pattern: "/robots.txt",
+          entrypoint: fileURLToPath(new URL("../pages/robots.txt.js", import.meta.url)),
+        });
+        injectRoute({
+          pattern: "/llms.txt",
+          entrypoint: fileURLToPath(new URL("../pages/llms.txt.js", import.meta.url)),
+        });
       },
     },
   };

@@ -9,7 +9,7 @@ const requiresChallenge = Astro.url.searchParams.get("challenge") === "1";
 const wasReset = Astro.url.searchParams.get("reset") === "1";
 const invitationAccepted = Astro.url.searchParams.get("invited") === "1";
 const adminUi = resolveAstropressAdminUiConfig();
-applyAstropressSecurityHeaders(Astro.response.headers, { area: "auth", forceHsts: Astro.url.protocol === "https:" });
+applyAstropressSecurityHeaders(Astro.response.headers, { area: "auth", allowInlineStyles: true, forceHsts: Astro.url.protocol === "https:" });
 ---
 
 <!doctype html>

@@ -55,7 +55,7 @@ export function createAstropressSecurityHeaders(
 ): Headers {
   const resolved: Required<AstropressSecurityHeadersOptions> = {
     area: options.area ?? "public",
-    allowInlineStyles: options.allowInlineStyles ?? true,
+    allowInlineStyles: options.allowInlineStyles ?? false,
     frameAncestors: options.frameAncestors ?? "'none'",
     forceHsts: options.forceHsts ?? false,
     reportUri: options.reportUri ?? "",
@@ -68,6 +68,10 @@ export function createAstropressSecurityHeaders(
   headers.set("X-Frame-Options", resolved.frameAncestors === "'none'" ? "DENY" : "SAMEORIGIN");
   headers.set("Permissions-Policy", "camera=(), geolocation=(), microphone=(), payment=(), usb=()");
   headers.set("Cross-Origin-Opener-Policy", "same-origin");
+
+  if (resolved.area === "admin" || resolved.area === "api" || resolved.area === "auth") {
+    headers.set("Cross-Origin-Resource-Policy", "same-site");
+  }
 
   if (resolved.forceHsts) {
     headers.set("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
@@ -86,10 +90,13 @@ export function createAstropressSecurityHeaders(
 export function applyCacheHeaders(
   headers: Headers,
   area: AstropressSecurityArea = "public",
+  publicCacheTtl?: number,
 ): void {
   if (area === "public") {
-    // Public content: short browser cache, longer CDN cache
-    headers.set("Cache-Control", "public, max-age=300, s-maxage=3600");
+    // Public content: short browser cache, longer CDN cache, stale-while-revalidate for background refresh
+    const browserTtl = publicCacheTtl ?? 300;
+    const cdnTtl = publicCacheTtl != null ? publicCacheTtl * 12 : 3600;
+    headers.set("Cache-Control", `public, max-age=${browserTtl}, s-maxage=${cdnTtl}, stale-while-revalidate=86400`);
   } else {
     // Admin, auth, and API responses must never be cached
     headers.set("Cache-Control", "private, no-store");

@@ -6,7 +6,8 @@ export { createAstropressPublicSiteIntegration } from "./src/public-site-integra
 export type { AstropressPublicSiteOptions } from "./src/public-site-integration";
 
 // Core configuration seam
-export { registerCms, getCmsConfig } from "./src/config";
+export { registerCms, getCmsConfig, dispatchPluginContentEvent, dispatchPluginMediaEvent, validateContentFields } from "./src/config";
+export type { AstropressPlugin, AstropressContentEvent, AstropressMediaEvent, FieldDefinition, ContentTypeDefinition } from "./src/config";
 export type { CmsConfig } from "./src/config";
 export {
   ASTROPRESS_ADMIN_APP_NAME,
@@ -389,6 +390,7 @@ export {
 } from "./src/locale-links";
 export { getAdminLocalePair } from "./src/admin-locale-links";
 export type { AdminLocalePair } from "./src/admin-locale-links";
+export { localeFromPath, localeFromAcceptLanguage } from "./src/sqlite-runtime/utils";
 
 // Vite integration helpers
 export {
@@ -469,3 +471,5 @@ export type {
   AstropressContentServicesVerifyInput,
   AstropressContentServicesOperationReport,
 } from "./src/content-services-ops";
+export { runAstropressDbMigrationsForCli } from "./src/db-migrate-ops.js";
+export type { AstropressDbMigrateInput, AstropressDbMigrateReport } from "./src/db-migrate-ops";

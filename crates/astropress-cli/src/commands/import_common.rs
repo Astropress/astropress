@@ -3,8 +3,42 @@ use std::path::{Path, PathBuf};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use crate::cli_config::args::CrawlMode;
-use crate::js_bridge::loaders::{resolve_admin_db_path, resolve_local_provider};
+use crate::js_bridge::loaders::{
+    resolve_admin_db_path, resolve_local_provider, run_content_services_operation,
+    ContentServicesReport,
+};
 use crate::js_bridge::runner::{detect_package_manager, run_package_json_command};
+
+pub(crate) fn bootstrap_content_services(project_dir: &Path) -> Result<(), String> {
+    let report = run_content_services_operation(project_dir, "bootstrapAstropressContentServices")?;
+    print_content_services_report(&report);
+    Ok(())
+}
+
+pub(crate) fn print_content_services_report(report: &ContentServicesReport) {
+    println!("Astropress content services report");
+    println!("Content services: {}", report.content_services);
+    println!("Status: {}", report.support_level);
+    println!(
+        "Service origin: {}",
+        report.service_origin.as_deref().unwrap_or("not set")
+    );
+    if let Some(manifest_file) = &report.manifest_file {
+        println!("Manifest: {manifest_file}");
+    }
+    if !report.required_env_keys.is_empty() {
+        println!("Required keys:");
+        for key in &report.required_env_keys {
+            println!("  - {key}");
+        }
+    }
+    if !report.missing_env_keys.is_empty() {
+        println!("Missing keys:");
+        for key in &report.missing_env_keys {
+            println!("  - {key}");
+        }
+    }
+}
 
 pub(crate) fn now_unix_ms() -> u128 {
     SystemTime::now()

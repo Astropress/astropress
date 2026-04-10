@@ -1,0 +1,62 @@
+---
+/**
+ * AstropressHowToJsonLd.astro
+ *
+ * Emits a JSON-LD HowTo schema (schema.org/HowTo) for step-by-step procedural content.
+ * Place this inside <head> in your post/page layout for tutorials and how-to guides.
+ *
+ * Usage:
+ *   <AstropressHowToJsonLd
+ *     name="How to deploy Astropress to Cloudflare Pages"
+ *     description="A step-by-step guide to deploying an Astropress site using Cloudflare Pages and D1."
+ *     steps={[
+ *       { name: "Install dependencies", text: "Run `bun install` in your project root." },
+ *       { name: "Configure wrangler.toml", text: "Add your D1 database binding and R2 bucket." },
+ *       { name: "Deploy", text: "Run `bunx wrangler pages deploy dist/`." },
+ *     ]}
+ *   />
+ *
+ * AI answer engines (Google AI Overviews, Bing Copilot, Perplexity) preferentially cite
+ * HowTo structured data when answering procedural queries. This is especially valuable
+ * for developer documentation and recipe-style content.
+ */
+
+export interface HowToStep {
+  name: string;
+  text: string;
+  /** Optional URL pointing to the image illustrating this step. */
+  imageUrl?: string;
+}
+
+interface Props {
+  /** Title of the how-to guide (maps to schema.org/HowTo name). */
+  name: string;
+  /** Short description of the guide (maps to schema.org/HowTo description). */
+  description?: string;
+  /** Ordered list of steps. */
+  steps: HowToStep[];
+  /** Optional total time in ISO 8601 duration format, e.g. "PT30M" for 30 minutes. */
+  totalTime?: string;
+}
+
+const { name, description, steps, totalTime } = Astro.props;
+
+const jsonLd: Record<string, unknown> = {
+  "@context": "https://schema.org",
+  "@type": "HowTo",
+  name,
+  ...(description ? { description } : {}),
+  ...(totalTime ? { totalTime } : {}),
+  step: steps.map((step, index) => ({
+    "@type": "HowToStep",
+    position: index + 1,
+    name: step.name,
+    text: step.text,
+    ...(step.imageUrl ? { image: { "@type": "ImageObject", url: step.imageUrl } } : {}),
+  })),
+};
+
+const json = JSON.stringify(jsonLd).replace(/<\/(script)/gi, "<\\/$1").replace(/<(script)/gi, "<$1");
+---
+
+<script type="application/ld+json" set:html={json}></script>

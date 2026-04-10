@@ -1,5 +1,6 @@
 pub(crate) mod backup_restore;
 pub(crate) mod config;
+pub(crate) mod db;
 pub(crate) mod deploy;
 pub(crate) mod dev;
 pub(crate) mod doctor;

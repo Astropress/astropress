@@ -1,0 +1,25 @@
+{
+  "name": "astropress-mcp",
+  "version": "0.0.1",
+  "description": "MCP server for Astropress — lets AI agents read and write content via the REST API",
+  "type": "module",
+  "bin": {
+    "astropress-mcp": "./dist/server.js"
+  },
+  "main": "./dist/server.js",
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc --project tsconfig.json",
+    "start": "node dist/server.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.0"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "license": "MIT"
+}

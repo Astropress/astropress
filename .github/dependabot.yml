@@ -4,20 +4,34 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
     groups:
-      dev-tooling:
+      astro:
+        patterns:
+          - "astro"
+          - "@astrojs/*"
+      vitest:
         patterns:
           - "vitest*"
           - "@vitest/*"
+      dev-tooling:
+        patterns:
           - "playwright*"
           - "@playwright/*"
           - "axe-core*"
           - "@axe-core/*"
+
   - package-ecosystem: "cargo"
-    directory: "/"
+    directory: "/crates/astropress-cli"
     schedule:
       interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 3
+
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5

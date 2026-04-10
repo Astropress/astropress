@@ -3,10 +3,11 @@ var __require = /* @__PURE__ */ createRequire(import.meta.url);
 
 // packages/astropress/src/sqlite-bootstrap.ts
 import { pbkdf2Sync, randomBytes } from "node:crypto";
-import { existsSync, mkdirSync, readFileSync, rmSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { getCmsConfig } from "./config.js";
 
 // packages/astropress/src/site-settings.ts
 var defaultSiteSettings = {
@@ -51,6 +52,33 @@ function resolveAstropressSqliteSchemaPath() {
 }
 function readAstropressSqliteSchemaSql() {
   return readFileSync(resolveAstropressSqliteSchemaPath(), "utf8");
+}
+function runAstropressMigrations(db, migrationsDir) {
+  const applied = [];
+  const skipped = [];
+  db.exec(`CREATE TABLE IF NOT EXISTS schema_migrations (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL UNIQUE,
+    applied_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+  )`);
+  const alreadyApplied = new Set(
+    db.prepare(`SELECT name FROM schema_migrations`).all().map((r) => r.name),
+  );
+  if (!existsSync(migrationsDir)) {
+    return { applied, skipped };
+  }
+  const migrationFiles = readdirSync(migrationsDir).filter((f) => f.endsWith(".sql")).sort();
+  for (const file of migrationFiles) {
+    if (alreadyApplied.has(file)) {
+      skipped.push(file);
+      continue;
+    }
+    const sql = readFileSync(path.join(migrationsDir, file), "utf8");
+    db.exec(sql);
+    db.prepare(`INSERT INTO schema_migrations (name) VALUES (?)`).run(file);
+    applied.push(file);
+  }
+  return { applied, skipped };
 }
 function hashPasswordSync(password, iterations = 1e5) {
   const salt = randomBytes(32);
@@ -129,13 +157,14 @@ function rebuildContentTablesForCompatibility(db, options) {
       og_image TEXT,
       canonical_url_override TEXT,
       robots_directive TEXT,
+      metadata TEXT,
       updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
       updated_by TEXT NOT NULL
     );
 
     INSERT INTO content_overrides__migrated (
       slug, title, status, scheduled_at, body, seo_title, meta_description, excerpt, og_title,
-      og_description, og_image, canonical_url_override, robots_directive, updated_at, updated_by
+      og_description, og_image, canonical_url_override, robots_directive, metadata, updated_at, updated_by
     )
     SELECT
       slug,
@@ -154,6 +183,7 @@ function rebuildContentTablesForCompatibility(db, options) {
       og_image,
       canonical_url_override,
       robots_directive,
+      NULL,
       updated_at,
       updated_by
     FROM content_overrides;
@@ -232,6 +262,9 @@ function ensureLegacySchemaCompatibility(db) {
   const overrideColumns = new Set(getTableColumns(db, "content_overrides"));
   const needsRevisionColumns = !revisionColumns.has("author_ids") || !revisionColumns.has("category_ids") || !revisionColumns.has("tag_ids") || !revisionColumns.has("scheduled_at") || !revisionColumns.has("revision_note");
   const needsOverrideColumns = !overrideColumns.has("scheduled_at");
+  if (!overrideColumns.has("metadata")) {
+    db.exec("ALTER TABLE content_overrides ADD COLUMN metadata TEXT");
+  }
   const overrideSql = getTableSql(db, "content_overrides") ?? "";
   const revisionSql = getTableSql(db, "content_revisions") ?? "";
   const needsExpandedStatuses = !overrideSql.includes("'review'") || !overrideSql.includes("'archived'") || !revisionSql.includes("'review'") || !revisionSql.includes("'archived'");
@@ -255,6 +288,11 @@ function createAstropressSqliteSeedToolkit(options) {
   function applyCommittedSchema(db) {
     db.exec(options.readSchemaSql());
     ensureLegacySchemaCompatibility(db);
+    try {
+      db.prepare(`INSERT OR IGNORE INTO schema_migrations (name) VALUES ('baseline-schema')`).run();
+    } catch {
+      // Silently skip if schema_migrations table is missing (non-standard setup).
+    }
   }
   function openSeedDatabase(dbPath) {
     return new SqliteDatabase(dbPath);
@@ -448,7 +486,9 @@ function createAstropressSqliteSeedToolkit(options) {
     `);
     let count = 0;
     for (const page of options.marketingRoutes) {
-      const locale = page.path.startsWith("/es/") ? "es" : "en";
+      let configLocales;
+      try { configLocales = getCmsConfig().locales ?? ["en", "es"]; } catch { configLocales = ["en", "es"]; }
+      const locale = configLocales.find((l) => page.path.startsWith(`/${l}/`)) ?? (configLocales[0] ?? "en");
       const baseId = page.path.replace(/^\//, "").replaceAll("/", ":");
       const groupId = `page:${baseId}`;
       const variantId = `variant:page:${baseId}:${locale}`;
@@ -573,6 +613,7 @@ function createDefaultAstropressSqliteSeedToolkit() {
 export {
   resolveAstropressSqliteSchemaPath,
   readAstropressSqliteSchemaSql,
+  runAstropressMigrations,
   defaultSeedImportTables,
   createDefaultAstropressSqliteSeedToolkit,
   createAstropressSqliteSeedToolkit

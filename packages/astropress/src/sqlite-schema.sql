@@ -62,6 +62,7 @@ CREATE TABLE IF NOT EXISTS content_overrides (
   og_image TEXT,
   canonical_url_override TEXT,
   robots_directive TEXT,
+  metadata TEXT,
   updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
   updated_by TEXT NOT NULL
 );

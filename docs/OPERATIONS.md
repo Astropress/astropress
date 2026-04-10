@@ -104,6 +104,33 @@ See [CHANGELOG.md](../CHANGELOG.md) for version-specific breaking changes before
 4. Hosted providers (Cloudflare D1, Supabase): apply schema migrations via the provider CLI before deploying the new package version. Never deploy new code before the schema is ready.
 5. If a migration fails: restore from the last clean backup (`astropress restore`), fix the migration in isolation, then redeploy.
 
+### Framework-managed schema compatibility
+
+Astropress performs automatic schema compatibility on every boot:
+
+- **New databases** receive the full schema from `sqlite-schema.sql` (all tables, indexes, and constraints).
+- **Existing databases** receive additive `ALTER TABLE ... ADD COLUMN` statements for any columns added in newer framework versions. These are idempotent — running bootstrap twice is safe.
+- **Status constraint migrations** (e.g., adding `'review'` and `'archived'` statuses) are applied via a table rebuild with data migration when detected.
+- Applied migrations are recorded in `schema_migrations` so they are never re-run.
+
+This means **most framework upgrades require no manual migration steps** for SQLite-backed deployments. For hosted D1/Supabase deployments, check the `CHANGELOG.md` for any `ALTER TABLE` statements you must apply before deploying new code.
+
+### User-managed migrations
+
+The `runAstropressMigrations(db, migrationsDir)` function applies numbered `.sql` files from your own `migrations/` directory in lexicographic order:
+
+```
+migrations/
+  0001_add_event_taxonomy.sql
+  0002_add_event_date_index.sql
+```
+
+Run via CLI:
+```sh
+astropress db migrate --migrations-dir ./migrations
+astropress db migrate --migrations-dir ./migrations --dry-run   # preview only
+```
+
 ## Caching strategy
 
 ### Application-managed headers
@@ -124,6 +151,63 @@ For sites deployed on Cloudflare Pages or Workers:
 - Create a **Cache Rule** matching the public site origin (non-`/ap-admin/` paths) with **Cache Eligibility: Eligible for cache** and a 1-hour edge TTL.
 - Create a **Cache Rule** matching `/ap-admin/*` with **Cache Eligibility: Bypass cache** — admin pages must never be served from edge cache.
 - Static assets (`.js`, `.css`, `.woff2`, images) can use longer TTLs (e.g., 1 week) if filenames are content-hashed.
+
+## Alerting and monitoring
+
+### Request-level visibility
+
+- **Cloudflare Analytics** (free tier) — available automatically for sites behind Cloudflare Pages or a Cloudflare-proxied domain. Shows request volume, error rates, cache hit ratio, and country-level traffic. No configuration needed.
+- **UptimeRobot** (free tier) — set up a monitor on the admin login page (`/ap-admin/login`) to receive email/Slack alerts if the admin surface goes down. Recommended check interval: 5 minutes.
+
+### Structured logs
+
+When `LOG_LEVEL` is set, the runtime emits structured JSON log lines to stderr (one JSON object per line). Fields: `level`, `context`, `message`, `timestamp`, and `requestId` (threaded per request via `X-Request-Id`).
+
+- **Cloudflare Workers**: logs appear in `wrangler tail --env production`
+- **Vercel/Netlify**: logs appear in the platform's function log dashboard
+- **Local / self-hosted**: logs go to stdout/stderr and can be piped to any log aggregator
+
+Set `LOG_LEVEL=silent` in test environments to suppress all log output.
+
+### Audit trail
+
+The `ap_audit_log` table records all admin write actions (content save, user invite, media delete, etc.) with actor email, action name, resource type, resource ID, and a timestamp.
+
+Query recent events:
+
+```sql
+SELECT actor, action, resource_type, resource_id, created_at
+FROM ap_audit_log
+ORDER BY created_at DESC
+LIMIT 100;
+```
+
+Recommended retention strategy: run `astropress backup` on a weekly schedule to export the audit log alongside content. The `ap_audit_log` table has no built-in TTL — delete old rows explicitly if storage is a concern:
+
+```sql
+DELETE FROM ap_audit_log WHERE created_at < datetime('now', '-365 days');
+```
+
+### Nightly health checks
+
+Use a scheduled GitHub Actions workflow to run `astropress doctor --json` against a staging environment and alert on non-zero exit:
+
+```yaml
+# .github/workflows/nightly-health.yml
+on:
+  schedule:
+    - cron: "0 6 * * *"
+jobs:
+  health:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: astropress doctor --json
+        env:
+          ASTROPRESS_APP_HOST: ${{ vars.STAGING_APP_HOST }}
+          ASTROPRESS_CONTENT_SERVICES: ${{ vars.STAGING_CONTENT_SERVICES }}
+          SESSION_SECRET: ${{ secrets.STAGING_SESSION_SECRET }}
+```
 
 ## Incident handling checklist
 

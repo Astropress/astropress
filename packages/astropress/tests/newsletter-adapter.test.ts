@@ -95,6 +95,37 @@ describe("newsletterAdapter.subscribe", () => {
     expect(result.error).toContain("Failed to subscribe");
   });
 
+  it("calls the Listmonk subscribers API and returns ok on 200", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(
+      new Response("{}", { status: 200 }),
+    );
+    const listmonkLocals = {
+      runtime: {
+        env: {
+          NEWSLETTER_DELIVERY_MODE: "listmonk",
+          LISTMONK_API_URL: "https://listmonk.example.com",
+          LISTMONK_API_USERNAME: "admin",
+          LISTMONK_API_PASSWORD: "secret",
+          LISTMONK_LIST_ID: "1",
+        },
+      },
+    } as unknown as App.Locals;
+    const result = await newsletterAdapter.subscribe("user@example.com", listmonkLocals);
+    expect(result).toMatchObject({ ok: true });
+    expect(fetch).toHaveBeenCalledOnce();
+    const [url] = (fetch as ReturnType<typeof vi.fn>).mock.calls[0] as [string];
+    expect(url).toContain("/api/subscribers");
+  });
+
+  it("returns error when listmonk config is incomplete", async () => {
+    const incompleteLocals = {
+      runtime: { env: { NEWSLETTER_DELIVERY_MODE: "listmonk" } },
+    } as unknown as App.Locals;
+    const result = await newsletterAdapter.subscribe("user@example.com", incompleteLocals);
+    expect(result).toMatchObject({ ok: false });
+    expect(result.error).toBeTruthy();
+  });
+
   it("placeholderAdapter is the same object as newsletterAdapter", () => {
     expect(placeholderAdapter).toBe(newsletterAdapter);
   });

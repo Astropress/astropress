@@ -9,6 +9,47 @@ function buildPreviewDocument(html: string) {
   ].join("");
 }
 
+function createUrlDialog(): { dialog: HTMLDialogElement; resolve: (value: string | null) => void } {
+  let resolveFn: (value: string | null) => void = () => {};
+  const dialog = document.createElement("dialog");
+  dialog.setAttribute("aria-labelledby", "url-dialog-label");
+  dialog.innerHTML = `
+    <form method="dialog" class="url-dialog-form">
+      <label id="url-dialog-label" for="url-dialog-input">Enter URL</label>
+      <input id="url-dialog-input" type="url" name="url" placeholder="https://" autocomplete="off" />
+      <div class="url-dialog-actions">
+        <button type="submit" value="ok">Insert</button>
+        <button type="button" data-cancel>Cancel</button>
+      </div>
+    </form>`;
+  dialog.querySelector("[data-cancel]")?.addEventListener("click", () => {
+    dialog.close("");
+  });
+  dialog.addEventListener("close", () => {
+    const val = dialog.returnValue === "ok"
+      ? (dialog.querySelector<HTMLInputElement>("#url-dialog-input")?.value ?? "")
+      : null;
+    resolveFn(val || null);
+  });
+  document.body.appendChild(dialog);
+  return {
+    dialog,
+    get resolve() { return resolveFn; },
+    set resolve(fn) { resolveFn = fn; },
+  } as { dialog: HTMLDialogElement; resolve: (value: string | null) => void };
+}
+
+function promptUrl(urlDialog: { dialog: HTMLDialogElement; resolve: (value: string | null) => void }): Promise<string | null> {
+  const input = urlDialog.dialog.querySelector<HTMLInputElement>("#url-dialog-input");
+  if (input) input.value = "";
+  return new Promise((resolve) => {
+    urlDialog.resolve = resolve;
+    urlDialog.dialog.returnValue = "";
+    urlDialog.dialog.showModal();
+    input?.focus();
+  });
+}
+
 window.addEventListener("DOMContentLoaded", () => {
   const editor = document.querySelector<HTMLTextAreaElement>("[data-body-editor]");
   const preview = document.querySelector<HTMLIFrameElement>(".preview-frame iframe");
@@ -16,6 +57,7 @@ window.addEventListener("DOMContentLoaded", () => {
   const mediaButton = document.querySelector<HTMLButtonElement>(".insert-media-btn");
   const mediaDialog = document.getElementById("media-library-dialog") as HTMLDialogElement | null;
   const mediaClose = document.getElementById("media-dialog-close");
+  const urlDialog = createUrlDialog();
 
   const syncPreview = () => {
     if (!editor || !preview) {
@@ -63,10 +105,11 @@ window.addEventListener("DOMContentLoaded", () => {
     } else if (cmd === "insertUnorderedList") {
       wrapSelection("<ul>\n  <li>", "</li>\n</ul>", "List item");
     } else if (cmd === "createLink") {
-      const url = window.prompt("Enter URL:");
-      if (url) {
-        wrapSelection(`<a href="${url.replaceAll("\"", "&quot;")}">`, "</a>", "Link text");
-      }
+      promptUrl(urlDialog).then((url) => {
+        if (url) {
+          wrapSelection(`<a href="${url.replaceAll("\"", "&quot;")}">`, "</a>", "Link text");
+        }
+      });
     }
   });
 

@@ -1,0 +1,46 @@
+---
+/**
+ * AstropressBreadcrumbJsonLd.astro
+ *
+ * Emits a JSON-LD BreadcrumbList schema (schema.org/BreadcrumbList).
+ * Place this inside <head> in any page layout that has a navigational breadcrumb trail.
+ *
+ * Usage:
+ *   <AstropressBreadcrumbJsonLd
+ *     items={[
+ *       { name: "Home", url: "https://example.com/" },
+ *       { name: "Blog", url: "https://example.com/blog/" },
+ *       { name: "My Post Title", url: "https://example.com/blog/my-post/" },
+ *     ]}
+ *   />
+ *
+ * Search engines use BreadcrumbList to display breadcrumbs in the SERPs under the
+ * page title, improving click-through rates and site structure discoverability.
+ */
+
+export interface BreadcrumbItem {
+  name: string;
+  url: string;
+}
+
+interface Props {
+  items: BreadcrumbItem[];
+}
+
+const { items } = Astro.props;
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  itemListElement: items.map((item, index) => ({
+    "@type": "ListItem",
+    position: index + 1,
+    name: item.name,
+    item: item.url,
+  })),
+};
+
+const json = JSON.stringify(jsonLd).replace(/<\/(script)/gi, "<\\/$1").replace(/<(script)/gi, "<$1");
+---
+
+<script type="application/ld+json" set:html={json}></script>

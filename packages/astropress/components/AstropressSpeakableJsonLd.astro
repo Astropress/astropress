@@ -1,0 +1,68 @@
+---
+/**
+ * AstropressSpeakableJsonLd.astro
+ *
+ * Emits a JSON-LD WebPage + SpeakableSpecification (schema.org/SpeakableSpecification).
+ * Voice assistants (Google Assistant, Alexa via rich results) use Speakable markup to
+ * identify which sections of a page are appropriate to read aloud.
+ *
+ * Speakable specification supports two selector types — use whichever fits your layout:
+ *   - `cssSelectors`: array of CSS selector strings (preferred; widely supported)
+ *   - `xpaths`: array of XPath expression strings (fallback for legacy structures)
+ *
+ * Usage (CSS selectors — recommended):
+ *   <AstropressSpeakableJsonLd
+ *     url="https://example.com/blog/my-post"
+ *     cssSelectors={["h1", ".article-summary", ".article-body"]}
+ *   />
+ *
+ * Usage (XPath fallback):
+ *   <AstropressSpeakableJsonLd
+ *     url="https://example.com/blog/my-post"
+ *     xpaths={["/html/body/article/h1", "/html/body/article/section[1]"]}
+ *   />
+ *
+ * Combined usage:
+ *   <AstropressSpeakableJsonLd
+ *     url="https://example.com/blog/my-post"
+ *     cssSelectors={["h1"]}
+ *     xpaths={["/html/body/article/section[1]"]}
+ *   />
+ *
+ * Google rich results: https://developers.google.com/search/docs/appearance/speakable
+ * Schema.org: https://schema.org/SpeakableSpecification
+ */
+
+interface Props {
+  /** Canonical URL of the page (required for the WebPage @id) */
+  url: string;
+  /** CSS selectors identifying speakable sections */
+  cssSelectors?: string[];
+  /** XPath expressions identifying speakable sections (fallback) */
+  xpaths?: string[];
+}
+
+const { url, cssSelectors, xpaths } = Astro.props;
+
+const speakable: Record<string, unknown> = {
+  "@type": "SpeakableSpecification",
+};
+if (cssSelectors && cssSelectors.length > 0) {
+  speakable.cssSelector = cssSelectors;
+}
+if (xpaths && xpaths.length > 0) {
+  speakable.xpath = xpaths;
+}
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "WebPage",
+  "@id": url,
+  speakable,
+  url,
+};
+
+const json = JSON.stringify(jsonLd).replace(/<\/(script)/gi, "<\\/$1").replace(/<(script)/gi, "<$1");
+---
+
+<script type="application/ld+json" set:html={json}></script>

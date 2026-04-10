@@ -1,9 +1,10 @@
 import { pbkdf2Sync, randomBytes } from "node:crypto";
-import { existsSync, mkdirSync, readFileSync, rmSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { defaultSiteSettings } from "./site-settings";
+import { getCmsConfig } from "./config";
 
 export interface SqliteStatementLike {
   run(...params: unknown[]): { changes?: number | bigint };
@@ -185,6 +186,61 @@ export function readAstropressSqliteSchemaSql() {
   return readFileSync(resolveAstropressSqliteSchemaPath(), "utf8");
 }
 
+/**
+ * Run incremental SQL migrations from a directory against a live SQLite database.
+ *
+ * Migration files must be named with a numeric prefix (e.g. `0001_add_column.sql`,
+ * `0002_create_index.sql`). They are applied in lexicographic order. Applied migrations
+ * are recorded in `schema_migrations` so they are never re-run.
+ *
+ * @example
+ * ```ts
+ * import { runAstropressMigrations } from "astropress/sqlite-bootstrap";
+ * runAstropressMigrations(db, "./migrations");
+ * ```
+ */
+export function runAstropressMigrations(
+  db: SqliteDatabaseLike,
+  migrationsDir: string,
+): { applied: string[]; skipped: string[] } {
+  const applied: string[] = [];
+  const skipped: string[] = [];
+
+  // Ensure the migrations table exists (it should, but guard defensively).
+  db.exec(`CREATE TABLE IF NOT EXISTS schema_migrations (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL UNIQUE,
+    applied_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+  )`);
+
+  const alreadyApplied = new Set(
+    (db.prepare(`SELECT name FROM schema_migrations`).all() as Array<{ name: string }>).map(
+      (r) => r.name,
+    ),
+  );
+
+  if (!existsSync(migrationsDir)) {
+    return { applied, skipped };
+  }
+
+  const migrationFiles = readdirSync(migrationsDir)
+    .filter((f) => f.endsWith(".sql"))
+    .sort();
+
+  for (const file of migrationFiles) {
+    if (alreadyApplied.has(file)) {
+      skipped.push(file);
+      continue;
+    }
+    const sql = readFileSync(path.join(migrationsDir, file), "utf8");
+    db.exec(sql);
+    db.prepare(`INSERT INTO schema_migrations (name) VALUES (?)`).run(file);
+    applied.push(file);
+  }
+
+  return { applied, skipped };
+}
+
 function hashPasswordSync(password: string, iterations = 100_000) {
   const salt = randomBytes(32);
   const derived = pbkdf2Sync(password, salt, iterations, 64, "sha256");
@@ -298,13 +354,14 @@ function rebuildContentTablesForCompatibility(
       og_image TEXT,
       canonical_url_override TEXT,
       robots_directive TEXT,
+      metadata TEXT,
       updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
       updated_by TEXT NOT NULL
     );
 
     INSERT INTO content_overrides__migrated (
       slug, title, status, scheduled_at, body, seo_title, meta_description, excerpt, og_title,
-      og_description, og_image, canonical_url_override, robots_directive, updated_at, updated_by
+      og_description, og_image, canonical_url_override, robots_directive, metadata, updated_at, updated_by
     )
     SELECT
       slug,
@@ -323,6 +380,7 @@ function rebuildContentTablesForCompatibility(
       og_image,
       canonical_url_override,
       robots_directive,
+      NULL,
       updated_at,
       updated_by
     FROM content_overrides;
@@ -407,6 +465,10 @@ function ensureLegacySchemaCompatibility(db: SqliteDatabaseLike) {
     !revisionColumns.has("scheduled_at") ||
     !revisionColumns.has("revision_note");
   const needsOverrideColumns = !overrideColumns.has("scheduled_at");
+  // metadata column: added via safe ADD COLUMN (no rebuild required for nullable column)
+  if (!overrideColumns.has("metadata")) {
+    db.exec("ALTER TABLE content_overrides ADD COLUMN metadata TEXT");
+  }
 
   const overrideSql = getTableSql(db, "content_overrides") ?? "";
   const revisionSql = getTableSql(db, "content_revisions") ?? "";
@@ -442,6 +504,15 @@ export function createAstropressSqliteSeedToolkit<TableName extends string = (ty
   function applyCommittedSchema(db: SqliteDatabaseLike) {
     db.exec(options.readSchemaSql());
     ensureLegacySchemaCompatibility(db);
+    // Record the baseline schema application in the migrations table so that
+    // future migration runners can determine what has already been applied.
+    try {
+      db.prepare(
+        `INSERT OR IGNORE INTO schema_migrations (name) VALUES ('baseline-schema')`,
+      ).run();
+    } catch {
+      // Silently skip if schema_migrations table is missing (non-standard setup).
+    }
   }
 
   function openSeedDatabase(dbPath: string) {
@@ -717,7 +788,9 @@ export function createAstropressSqliteSeedToolkit<TableName extends string = (ty
 
     let count = 0;
     for (const page of options.marketingRoutes) {
-      const locale = page.path.startsWith("/es/") ? "es" : "en";
+      let configLocales: readonly string[];
+      try { configLocales = getCmsConfig().locales ?? ["en", "es"]; } catch { configLocales = ["en", "es"]; }
+      const locale = configLocales.find((l) => page.path.startsWith(`/${l}/`)) ?? (configLocales[0] ?? "en");
       const baseId = page.path.replace(/^\//, "").replaceAll("/", ":");
       const groupId = `page:${baseId}`;
       const variantId = `variant:page:${baseId}:${locale}`;

@@ -1,7 +1,8 @@
 import { afterEach, describe, expect, it } from "vitest";
 
 import { getCmsConfig, peekCmsConfig, registerCms, type AnalyticsConfig, type AbTestingConfig, type AstropressApiConfig } from "../src/config";
-import { resolveAnalyticsSnippet } from "../src/analytics.js";
+import { resolveAnalyticsSnippet, requestOptedOutOfTracking, resolveAnalyticsSnippetConsentAware } from "../src/analytics.js";
+import { localeFromAcceptLanguage } from "../src/sqlite-runtime/utils.js";
 
 const CMS_CONFIG_KEY = Symbol.for("astropress.cms-config");
 
@@ -175,6 +176,115 @@ describe("registerCms with analytics, abTesting, api fields", () => {
     expect(config.analytics).toBeUndefined();
     expect(config.abTesting).toBeUndefined();
     expect(config.api).toBeUndefined();
+  });
+
+  it("locales config is optional and defaults to ['en', 'es'] behavior", () => {
+    registerCms({
+      siteUrl: "https://example.com",
+      templateKeys: [],
+      seedPages: [],
+      archives: [],
+      translationStatus: [],
+    });
+
+    const config = getCmsConfig();
+    expect(config.locales).toBeUndefined();
+  });
+
+  it("locales config can be set to arbitrary locale list", () => {
+    registerCms({
+      siteUrl: "https://example.com",
+      templateKeys: [],
+      seedPages: [],
+      archives: [],
+      translationStatus: [],
+      locales: ["en", "es", "fr", "de"],
+    });
+
+    const config = getCmsConfig();
+    expect(config.locales).toEqual(["en", "es", "fr", "de"]);
+  });
+});
+
+describe("requestOptedOutOfTracking", () => {
+  function makeRequest(headers: Record<string, string> = {}) {
+    return new Request("https://example.com/", { headers });
+  }
+
+  it("returns false when neither DNT nor Sec-GPC is set", () => {
+    expect(requestOptedOutOfTracking(makeRequest())).toBe(false);
+  });
+
+  it("returns true when DNT: 1 is set", () => {
+    expect(requestOptedOutOfTracking(makeRequest({ DNT: "1" }))).toBe(true);
+  });
+
+  it("returns true when Sec-GPC: 1 is set", () => {
+    expect(requestOptedOutOfTracking(makeRequest({ "Sec-GPC": "1" }))).toBe(true);
+  });
+
+  it("returns false when DNT is 0", () => {
+    expect(requestOptedOutOfTracking(makeRequest({ DNT: "0" }))).toBe(false);
+  });
+});
+
+describe("resolveAnalyticsSnippetConsentAware", () => {
+  function makeRequest(headers: Record<string, string> = {}) {
+    return new Request("https://example.com/", { headers });
+  }
+
+  const umamiConfig: AnalyticsConfig = {
+    type: "umami",
+    mode: "snippet",
+    snippetSrc: "https://analytics.example.com/script.js",
+    siteId: "test-site-id",
+  };
+
+  it("returns snippet when no opt-out header", () => {
+    const snippet = resolveAnalyticsSnippetConsentAware(umamiConfig, makeRequest());
+    expect(snippet).toContain("analytics.example.com");
+  });
+
+  it("returns empty string when DNT: 1", () => {
+    const snippet = resolveAnalyticsSnippetConsentAware(umamiConfig, makeRequest({ DNT: "1" }));
+    expect(snippet).toBe("");
+  });
+
+  it("returns empty string when Sec-GPC: 1", () => {
+    const snippet = resolveAnalyticsSnippetConsentAware(umamiConfig, makeRequest({ "Sec-GPC": "1" }));
+    expect(snippet).toBe("");
+  });
+
+  it("returns empty string when config is null", () => {
+    const snippet = resolveAnalyticsSnippetConsentAware(null, makeRequest());
+    expect(snippet).toBe("");
+  });
+});
+
+describe("localeFromAcceptLanguage", () => {
+  it("returns first locale when Accept-Language is null (no config registered)", () => {
+    // No registerCms() call — should fall back to ["en","es"] default
+    expect(localeFromAcceptLanguage(null)).toBe("en");
+  });
+
+  it("matches exact locale tag", () => {
+    expect(localeFromAcceptLanguage("es")).toBe("es");
+  });
+
+  it("matches language prefix (fr-CH → 'en' when only en/es configured)", () => {
+    expect(localeFromAcceptLanguage("fr-CH, fr;q=0.9, en;q=0.8")).toBe("en");
+  });
+
+  it("respects q-weight ordering — picks higher quality value first", () => {
+    expect(localeFromAcceptLanguage("en;q=0.5, es;q=0.9")).toBe("es");
+  });
+
+  it("returns first configured locale when no tag matches", () => {
+    expect(localeFromAcceptLanguage("zh, ja")).toBe("en");
+  });
+
+  it("matches region-qualified tag (es-MX) against 'es' locale", () => {
+    expect(localeFromAcceptLanguage("es-MX")).toBe("es");
   });
 });
 

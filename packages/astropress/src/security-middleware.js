@@ -26,6 +26,7 @@ export function resolveAstropressSecurityArea(url, adminBasePath = "/ap-admin") 
 
 export function createAstropressSecurityMiddleware(options = {}) {
   return async ({ url }, next) => {
+    const requestId = crypto.randomUUID();
     const response = await next();
     const area = options.resolveArea?.(url) ?? resolveAstropressSecurityArea(url, options.adminBasePath);
 
@@ -36,6 +37,7 @@ export function createAstropressSecurityMiddleware(options = {}) {
       frameAncestors: options.frameAncestors,
     });
 
+    response.headers.set("X-Request-Id", requestId);
     return response;
   };
 }

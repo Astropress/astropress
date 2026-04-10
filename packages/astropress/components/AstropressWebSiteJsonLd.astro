@@ -1,0 +1,75 @@
+---
+/**
+ * AstropressWebSiteJsonLd.astro
+ *
+ * Emits JSON-LD for schema.org/WebSite and optionally schema.org/Organization.
+ * Suitable for inclusion in a site-wide layout (once, in the <head>).
+ *
+ * Usage:
+ *   <AstropressWebSiteJsonLd
+ *     name="My Site"
+ *     url={Astro.url.origin}
+ *     description="A short description of my site."
+ *     organizationName="My Org"
+ *     organizationLogo="https://example.com/logo.png"
+ *   />
+ */
+
+interface Props {
+  /** Site display name. */
+  name: string;
+  /** Site root URL. */
+  url: string;
+  /** Short site description (for description field). */
+  description?: string;
+  /** Publisher / organization name. When provided, also emits Organization schema. */
+  organizationName?: string;
+  /** Publisher / organization logo URL. */
+  organizationLogo?: string;
+  /** SearchAction target URL template, e.g. "https://example.com/search?q={search_term_string}". */
+  searchUrl?: string;
+}
+
+const { name, url, description, organizationName, organizationLogo, searchUrl } = Astro.props;
+
+const siteSchema: Record<string, unknown> = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  name,
+  url,
+};
+
+if (description) siteSchema.description = description;
+
+if (searchUrl) {
+  siteSchema.potentialAction = {
+    "@type": "SearchAction",
+    target: {
+      "@type": "EntryPoint",
+      urlTemplate: searchUrl,
+    },
+    "query-input": "required name=search_term_string",
+  };
+}
+
+const schemas: Record<string, unknown>[] = [siteSchema];
+
+if (organizationName) {
+  const org: Record<string, unknown> = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: organizationName,
+    url,
+  };
+  if (organizationLogo) {
+    org.logo = { "@type": "ImageObject", url: organizationLogo };
+  }
+  schemas.push(org);
+}
+
+const json = JSON.stringify(schemas.length === 1 ? schemas[0] : schemas)
+  .replace(/<\/(script)/gi, "<\\/$1")
+  .replace(/<(script)/gi, "<$1");
+---
+
+<script type="application/ld+json" set:html={json}></script>

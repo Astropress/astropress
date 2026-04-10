@@ -1,4 +1,5 @@
 import { loadLocalCmsRegistry } from "./local-runtime-modules";
+import { getCmsConfig } from "./config";
 
 export interface RuntimeSystemRouteRecord {
   path: string;
@@ -78,6 +79,15 @@ export function parseSettings(value: string | null) {
   /* v8 ignore stop */
 }
 
-export function localeFromPath(pathname: string) {
-  return pathname.startsWith("/es/") ? "es" : "en";
+export function localeFromPath(pathname: string): string {
+  let locales: readonly string[];
+  try {
+    locales = getCmsConfig().locales ?? ["en", "es"];
+  } catch {
+    locales = ["en", "es"];
+  }
+  for (const locale of locales) {
+    if (pathname.startsWith(`/${locale}/`)) return locale;
+  }
+  return locales[0] ?? "en";
 }

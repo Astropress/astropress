@@ -1,5 +1,5 @@
 import type { APIRoute } from "astro";
-import { withApiRequest, jsonOk, apiErrors } from "astropress/api-middleware.js";
+import { withApiRequest, jsonOk, jsonOkPaginated, apiErrors } from "astropress/api-middleware.js";
 import { loadLocalAdminStore } from "astropress/local-runtime-modules.js";
 import { getCmsConfig } from "astropress";
 import type { WebhookEvent } from "astropress/platform-contracts.js";
@@ -19,8 +19,14 @@ export const GET: APIRoute = async (context) => {
   if (!store.apiTokens || !store.webhooks) return apiErrors.notFound("Webhook store unavailable.");
 
   return withApiRequest(context.request, buildApiCtx(store, getCmsConfig()), ["webhooks:manage"], async () => {
-    const webhooks = await store.webhooks!.list();
-    return jsonOk({ records: webhooks, total: webhooks.length });
+    const url = new URL(context.request.url);
+    const limit = Math.min(Number(url.searchParams.get("limit") ?? url.searchParams.get("per_page") ?? "20"), 100);
+    const page = Math.max(Number(url.searchParams.get("page") ?? "1"), 1);
+    const offset = Number(url.searchParams.get("offset") ?? String((page - 1) * limit));
+
+    const all = await store.webhooks!.list();
+    const pageRecords = all.slice(offset, offset + limit);
+    return jsonOkPaginated({ records: pageRecords, total: all.length, limit, offset, page }, all.length);
   });
 };
 

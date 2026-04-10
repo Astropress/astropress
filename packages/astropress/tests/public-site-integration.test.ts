@@ -26,7 +26,7 @@ describe("createAstropressPublicSiteIntegration", () => {
     const hook = integration.hooks["astro:config:setup"];
     if (typeof hook !== "function") throw new Error("Expected hook to be a function");
 
-    // Call the hook with a spy injectRoute — public site should call it zero times
+    // Call the hook with a spy injectRoute — public site should never inject admin routes
     hook({
       _config: {},
       injectRoute: (route: { pattern: string }) => {
@@ -35,8 +35,28 @@ describe("createAstropressPublicSiteIntegration", () => {
       addMiddleware: vi.fn(),
     } as never);
 
-    expect(injectedPatterns).toHaveLength(0);
+    // Public site may inject non-admin routes (sitemap, robots, llms.txt) but never ap-admin
     expect(injectedPatterns.some((p) => p.includes("ap-admin"))).toBe(false);
+  });
+
+  it("injects sitemap.xml, robots.txt, and llms.txt routes", () => {
+    const integration = createAstropressPublicSiteIntegration();
+    const injectedPatterns: string[] = [];
+
+    const hook = integration.hooks["astro:config:setup"];
+    if (typeof hook !== "function") throw new Error("Expected hook to be a function");
+
+    hook({
+      _config: {},
+      injectRoute: (route: { pattern: string }) => {
+        injectedPatterns.push(route.pattern);
+      },
+      addMiddleware: vi.fn(),
+    } as never);
+
+    expect(injectedPatterns).toContain("/sitemap.xml");
+    expect(injectedPatterns).toContain("/robots.txt");
+    expect(injectedPatterns).toContain("/llms.txt");
   });
 
   it("does not register any admin middleware when hook is called", () => {
@@ -51,7 +71,7 @@ describe("createAstropressPublicSiteIntegration", () => {
     expect(addMiddleware).not.toHaveBeenCalled();
   });
 
-  it("public integration injects zero routes while admin routes are non-empty", () => {
+  it("public integration injects no admin routes while admin routes are non-empty", () => {
     const publicIntegration = createAstropressPublicSiteIntegration();
     const publicInjected: string[] = [];
 
@@ -68,7 +88,8 @@ describe("createAstropressPublicSiteIntegration", () => {
 
     const adminRoutes = listAstropressAdminRoutes();
 
-    expect(publicInjected).toHaveLength(0);
+    // Public site integration injects public utility routes (sitemap, robots, llms.txt) but never admin routes
+    expect(publicInjected.some((p) => p.includes("ap-admin"))).toBe(false);
     expect(adminRoutes.length).toBeGreaterThan(0);
     expect(adminRoutes.every((r) => r.pattern.startsWith("/ap-admin"))).toBe(true);
   });

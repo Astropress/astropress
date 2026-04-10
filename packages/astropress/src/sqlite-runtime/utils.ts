@@ -56,8 +56,63 @@ export function normalizeStructuredTemplateKey(value: unknown): string | null {
   }
 }
 
-export function localeFromPath(pathname: string) {
-  return pathname.startsWith("/es/") ? "es" : "en";
+export function localeFromPath(pathname: string): string {
+  let locales: readonly string[];
+  try {
+    locales = getCmsConfig().locales ?? ["en", "es"];
+  } catch {
+    locales = ["en", "es"];
+  }
+  for (const locale of locales) {
+    if (pathname.startsWith(`/${locale}/`)) return locale;
+  }
+  // Default to the first locale (usually "en"), or "en" if the list is empty.
+  return locales[0] ?? "en";
+}
+
+/**
+ * Negotiate a locale from an `Accept-Language` request header against the
+ * configured `locales` list (or the default `["en", "es"]` fallback).
+ *
+ * Returns the best-matching locale string, or the first configured locale when
+ * no match is found.
+ *
+ * @example
+ * ```ts
+ * // Accept-Language: fr-CH, fr;q=0.9, en;q=0.8
+ * localeFromAcceptLanguage("fr-CH, fr;q=0.9, en;q=0.8"); // "en" (if locales = ["en","es"])
+ * localeFromAcceptLanguage("es;q=0.9, en;q=0.8");          // "es" (if locales = ["en","es"])
+ * ```
+ */
+export function localeFromAcceptLanguage(acceptLanguage: string | null | undefined): string {
+  let locales: readonly string[];
+  try {
+    locales = getCmsConfig().locales ?? ["en", "es"];
+  } catch {
+    locales = ["en", "es"];
+  }
+
+  if (!acceptLanguage) return locales[0] ?? "en";
+
+  // Parse "lang-region;q=weight" entries, sorted by weight descending.
+  const entries = acceptLanguage
+    .split(",")
+    .map((part) => {
+      const [tag, qPart] = part.trim().split(";");
+      const q = qPart ? Number(qPart.trim().replace("q=", "")) : 1;
+      return { tag: (tag ?? "").trim().toLowerCase(), q: Number.isFinite(q) ? q : 1 };
+    })
+    .sort((a, b) => b.q - a.q);
+
+  for (const { tag } of entries) {
+    // Match exact locale or language prefix (e.g. "fr-CH" matches "fr")
+    const matched = locales.find(
+      (l) => l.toLowerCase() === tag || tag.startsWith(`${l.toLowerCase()}-`),
+    );
+    if (matched) return matched;
+  }
+
+  return locales[0] ?? "en";
 }
 
 export function getSeedPageRecords(): PageRecord[] {

@@ -3,6 +3,7 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 
 const adminPagesRoot = path.resolve(import.meta.dirname, "../pages/ap-admin");
+const scriptsRoot = path.resolve(import.meta.dirname, "../../../scripts");
 
 function listAstroFiles(root: string, files: string[] = []) {
   for (const entry of readdirSync(root)) {
@@ -44,6 +45,15 @@ describe("admin markup safety", () => {
     expect(postEditorPage).toContain("<iframe");
     expect(postEditorPage).toContain('sandbox=""');
     expect(postEditorPage).not.toContain("set:html={pageRecord.body}");
+  });
+
+  it("does not suppress color-contrast in any axe audit script", () => {
+    const auditScripts = readdirSync(scriptsRoot).filter((f) => f.endsWith(".ts"));
+    for (const script of auditScripts) {
+      const src = readFileSync(path.join(scriptsRoot, script), "utf8");
+      expect(src, `${script} must not suppress color-contrast`).not.toContain('disableRules(["color-contrast"])');
+      expect(src, `${script} must not suppress color-contrast`).not.toContain("disableRules(['color-contrast'])");
+    }
   });
 
   it("keeps core auth/admin accessibility affordances in place", () => {

@@ -35,6 +35,40 @@ export function jsonOk(body: JsonValue, status = 200) {
   });
 }
 
+/** Generate a weak ETag from the serialized body using a fast djb2-style hash. */
+function weakEtag(serialized: string): string {
+  let h = 5381;
+  for (let i = 0; i < serialized.length; i++) {
+    h = ((h << 5) + h) ^ serialized.charCodeAt(i);
+    h = h >>> 0; // keep unsigned 32-bit
+  }
+  return `W/"${h.toString(16)}"`;
+}
+
+export function jsonOkWithEtag(body: JsonValue, request: Request, status = 200): Response {
+  const serialized = JSON.stringify(body);
+  const etag = weakEtag(serialized);
+  const ifNoneMatch = request.headers.get("If-None-Match");
+  if (ifNoneMatch === etag) {
+    return new Response(null, { status: 304, headers: { ETag: etag } });
+  }
+  return new Response(serialized, {
+    status,
+    headers: { "Content-Type": "application/json", ETag: etag },
+  });
+}
+
+export function jsonOkPaginated(body: JsonValue, total: number, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: {
+      "Content-Type": "application/json",
+      "X-Total-Count": String(total),
+      "Access-Control-Expose-Headers": "X-Total-Count",
+    },
+  });
+}
+
 export async function withApiRequest(
   request: Request,
   ctx: ApiRequestContext,

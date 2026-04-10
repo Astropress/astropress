@@ -86,11 +86,17 @@ const OPENAPI_SPEC = {
         parameters: [
           { name: "kind", in: "query", schema: { type: "string" } },
           { name: "status", in: "query", schema: { type: "string" } },
-          { name: "limit", in: "query", schema: { type: "integer", default: 20, maximum: 100 } },
-          { name: "offset", in: "query", schema: { type: "integer", default: 0 } },
+          { name: "limit", in: "query", schema: { type: "integer", default: 20, maximum: 100 }, description: "Records per page (alias: per_page)" },
+          { name: "per_page", in: "query", schema: { type: "integer", default: 20, maximum: 100 }, description: "Alias for limit" },
+          { name: "page", in: "query", schema: { type: "integer", default: 1 }, description: "1-based page number (alternative to offset)" },
+          { name: "offset", in: "query", schema: { type: "integer", default: 0 }, description: "Zero-based record offset (alternative to page)" },
         ],
         responses: {
-          200: { description: "Paginated content records", content: { "application/json": { schema: { "$ref": "#/components/schemas/PaginatedContent" } } } },
+          200: {
+            description: "Paginated content records",
+            headers: { "X-Total-Count": { schema: { type: "integer" }, description: "Total number of records matching the filter" } },
+            content: { "application/json": { schema: { "$ref": "#/components/schemas/PaginatedContent" } } },
+          },
           401: { description: "Unauthorized" },
           403: { description: "Forbidden — insufficient scope (requires content:read)" },
         },
@@ -115,7 +121,12 @@ const OPENAPI_SPEC = {
       delete: { summary: "Delete content (archives it)", operationId: "deleteContent", parameters: [{ name: "id", in: "path", required: true, schema: { type: "string" } }], responses: { 204: { description: "Deleted" }, 401: { description: "Unauthorized" }, 404: { description: "Not found" } }, security: [{ BearerAuth: ["content:write"] }] },
     },
     "/media": {
-      get: { summary: "List media assets", operationId: "listMedia", responses: { 200: { description: "Media assets" } }, security: [{ BearerAuth: ["media:read"] }] },
+      get: { summary: "List media assets", operationId: "listMedia", parameters: [
+        { name: "limit", in: "query", schema: { type: "integer", default: 20, maximum: 100 }, description: "Records per page (alias: per_page)" },
+        { name: "per_page", in: "query", schema: { type: "integer", default: 20, maximum: 100 }, description: "Alias for limit" },
+        { name: "page", in: "query", schema: { type: "integer", default: 1 }, description: "1-based page number" },
+        { name: "offset", in: "query", schema: { type: "integer", default: 0 }, description: "Zero-based record offset" },
+      ], responses: { 200: { description: "Media assets", headers: { "X-Total-Count": { schema: { type: "integer" }, description: "Total number of media assets" } } } }, security: [{ BearerAuth: ["media:read"] }] },
       post: { summary: "Upload media", operationId: "uploadMedia", requestBody: { required: true, content: { "multipart/form-data": { schema: { type: "object", required: ["file"], properties: { file: { type: "string", format: "binary" } } } } } }, responses: { 201: { description: "Uploaded asset" } }, security: [{ BearerAuth: ["media:write"] }] },
     },
     "/media/{id}": {
@@ -128,7 +139,12 @@ const OPENAPI_SPEC = {
       get: { summary: "Get site settings", operationId: "getSettings", responses: { 200: { description: "Site settings" } }, security: [{ BearerAuth: ["settings:read"] }] },
     },
     "/webhooks": {
-      get: { summary: "List webhooks", operationId: "listWebhooks", responses: { 200: { description: "Webhook list" } }, security: [{ BearerAuth: ["webhooks:manage"] }] },
+      get: { summary: "List webhooks", operationId: "listWebhooks", parameters: [
+        { name: "limit", in: "query", schema: { type: "integer", default: 20, maximum: 100 }, description: "Records per page (alias: per_page)" },
+        { name: "per_page", in: "query", schema: { type: "integer", default: 20, maximum: 100 }, description: "Alias for limit" },
+        { name: "page", in: "query", schema: { type: "integer", default: 1 }, description: "1-based page number" },
+        { name: "offset", in: "query", schema: { type: "integer", default: 0 }, description: "Zero-based record offset" },
+      ], responses: { 200: { description: "Webhook list", headers: { "X-Total-Count": { schema: { type: "integer" }, description: "Total number of webhooks" } } } }, security: [{ BearerAuth: ["webhooks:manage"] }] },
       post: { summary: "Register a webhook", operationId: "createWebhook", requestBody: { required: true, content: { "application/json": { schema: { type: "object", required: ["url", "events"], properties: { url: { type: "string", format: "uri" }, events: { type: "array", items: { type: "string" } } } } } } }, responses: { 201: { description: "Created webhook with signing secret (shown once)" } }, security: [{ BearerAuth: ["webhooks:manage"] }] },
     },
     "/openapi.json": {

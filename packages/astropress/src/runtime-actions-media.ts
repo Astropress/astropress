@@ -2,6 +2,7 @@ import { deleteRuntimeMediaObject, storeRuntimeMediaObject } from "./runtime-med
 import type { Actor } from "./persistence-types";
 import { withLocalStoreFallback } from "./admin-store-dispatch";
 import { recordD1Audit } from "./d1-audit";
+import { peekCmsConfig, dispatchPluginMediaEvent } from "./config";
 
 export async function updateRuntimeMediaAsset(
   input: {
@@ -53,6 +54,12 @@ export async function createRuntimeMediaAsset(
   actor: Actor,
   locals?: App.Locals | null,
 ) {
+  const maxUploadBytes = peekCmsConfig()?.maxUploadBytes ?? 10 * 1024 * 1024;
+  if (input.bytes.length > maxUploadBytes) {
+    const limitMib = (maxUploadBytes / (1024 * 1024)).toFixed(1);
+    return { ok: false as const, error: `File too large — maximum upload size is ${limitMib} MiB` };
+  }
+
   return withLocalStoreFallback(
     locals,
     async (db) => {
@@ -83,6 +90,13 @@ export async function createRuntimeMediaAsset(
         .run();
 
       await recordD1Audit(locals, actor, "media.upload", "content", stored.asset.id, `Uploaded media asset ${stored.asset.storedFilename}.`);
+      await dispatchPluginMediaEvent({
+        id: stored.asset.id,
+        filename: input.filename,
+        mimeType: stored.asset.mimeType,
+        size: stored.asset.fileSize,
+        actor: actor.email,
+      });
       return { ok: true as const, id: stored.asset.id };
     },
     /* v8 ignore next 1 */

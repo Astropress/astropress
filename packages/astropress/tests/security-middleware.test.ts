@@ -75,4 +75,15 @@ describe("createAstropressSecurityMiddleware", () => {
     const csp = response.headers.get("content-security-policy") ?? "";
     expect(csp).toContain("form-action 'self' https:");
   });
+
+  it("attaches a unique X-Request-Id header to every response", async () => {
+    const middleware = createAstropressSecurityMiddleware();
+    const r1 = await middleware({ url: new URL("http://localhost/") }, makeNext());
+    const r2 = await middleware({ url: new URL("http://localhost/") }, makeNext());
+    const id1 = r1.headers.get("x-request-id");
+    const id2 = r2.headers.get("x-request-id");
+    expect(id1).toBeTruthy();
+    expect(id2).toBeTruthy();
+    expect(id1).not.toBe(id2);
+  });
 });

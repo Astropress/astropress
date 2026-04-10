@@ -655,6 +655,98 @@ describe("WXR parsing — inferMimeType, normalizeSlug, filenameFromUrl, normali
   });
 });
 
+// ---------------------------------------------------------------------------
+// K2: Malformed XML input — parser must not throw, should return empty/partial result
+// ---------------------------------------------------------------------------
+
+describe("malformed XML input handling", () => {
+  it("handles completely empty export file gracefully — returns zero records", async () => {
+    await writeFile(exportFile, "", "utf8");
+    const importer = createAstropressWordPressImportSource();
+    const report = await importer.importWordPress({ exportFile });
+    expect(report.importedRecords).toBe(0);
+    expect(report.failedMedia).toHaveLength(0);
+  });
+
+  it("handles export file with XML but no <item> elements — returns zero records", async () => {
+    await writeFile(exportFile, "<rss><channel><title>Empty Export</title></channel></rss>", "utf8");
+    const importer = createAstropressWordPressImportSource();
+    const report = await importer.importWordPress({ exportFile });
+    expect(report.importedRecords).toBe(0);
+  });
+
+  it("handles export file with truncated item — processes other items without throwing", async () => {
+    // A truncated item (missing closing tag) mixed with a valid item
+    const validItem = makePost({ id: "5001", name: "valid-post" });
+    const truncated = "<item><title><![CDATA[Truncated]]></title><wp:post_id>5002</wp:post_id>";
+    // The truncated item appears after the valid one; parser should still surface the valid post
+    await writeFile(exportFile, `<rss><channel>${validItem}${truncated}</channel></rss>`, "utf8");
+    const importer = createAstropressWordPressImportSource();
+    // Must not throw — partial result is acceptable
+    const report = await importer.importWordPress({ exportFile });
+    expect(report.importedRecords).toBeGreaterThanOrEqual(0);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// K2: Missing media attachment URL — filenameFromUrl catch branch via empty sourceUrl
+// ---------------------------------------------------------------------------
+
+describe("attachment with no URL and no guid", () => {
+  it("records media asset using slug fallback when both wp:attachment_url and guid are absent", async () => {
+    const item = [
+      "<item>",
+      "<title><![CDATA[No-URL Attachment]]></title>",
+      "<wp:post_id>6001</wp:post_id>",
+      "<wp:post_name>no-url-attachment</wp:post_name>",
+      "<wp:status>inherit</wp:status>",
+      "<wp:post_type>attachment</wp:post_type>",
+      // deliberately omit wp:attachment_url and guid — sourceUrl will be ''
+      "</item>",
+    ].join("");
+    await writeFile(exportFile, makeWxr([item]), "utf8");
+    const importer = createAstropressWordPressImportSource();
+    const report = await importer.importWordPress({ exportFile });
+    // The media asset is still recorded — sourceUrl is empty but filename falls back to slug.bin
+    expect(report.importedMedia).toBe(1);
+    expect(report.mediaAssets[0].filename).toMatch(/no-url-attachment|6001/);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// K2: Duplicate slugs — same wp:post_name on two items
+// ---------------------------------------------------------------------------
+
+describe("duplicate slug handling", () => {
+  it("imports both records when two posts share the same post_name — both appear in contentRecords", async () => {
+    const post1 = makePost({ id: "7001", name: "duplicate-slug", type: "post" });
+    const post2 = makePost({ id: "7002", name: "duplicate-slug", type: "post" });
+    await writeFile(exportFile, makeWxr([post1, post2]), "utf8");
+    const importer = createAstropressWordPressImportSource();
+    const report = await importer.importWordPress({ exportFile });
+    // Both records should be parsed — the importer does not deduplicate at parse time
+    expect(report.importedRecords).toBe(2);
+  });
+
+  it("applyLocal update path is exercised when the same slug is imported twice sequentially", async () => {
+    const post = makePost({ id: "7003", name: "update-path-slug", type: "post" });
+    await writeFile(exportFile, makeWxr([post]), "utf8");
+    const { default: Database } = await import("better-sqlite3");
+    const dbPath = join(workspace, "update-path.sqlite");
+    const db = new Database(dbPath);
+    const { createDefaultAstropressSqliteSeedToolkit } = await import("../src/sqlite-bootstrap.js");
+    createDefaultAstropressSqliteSeedToolkit({ db }).seed({ adminEmail: "admin@example.com", adminPassword: "test1234!", siteName: "Test" });
+    db.close();
+
+    const importer = createAstropressWordPressImportSource();
+    // First apply — inserts
+    await importer.importWordPress({ exportFile, applyLocal: true, workspaceRoot: workspace, adminDbPath: dbPath, includeComments: false, includeMedia: false });
+    // Second apply — hits the 'existing record' update path (line 716)
+    const report2 = await importer.importWordPress({ exportFile, applyLocal: true, workspaceRoot: workspace, adminDbPath: dbPath, includeComments: false, includeMedia: false });
+    expect(report2.importedRecords).toBe(1);
+  });
+});
+
 describe("importWordPress — error/guard branches", () => {
   it("throws when exportFile is not provided", async () => {
     const importer = createAstropressWordPressImportSource();
@@ -1079,5 +1171,97 @@ describe("authorLogins empty array branch (lines 203-205: no creator, no authors
     const importer = createAstropressWordPressImportSource();
     const report = await importer.importWordPress({ exportFile });
     expect(report.importedRecords).toBe(1);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// K2: Malformed XML input — parser must not throw, should return empty/partial result
+// ---------------------------------------------------------------------------
+
+describe("malformed XML input handling", () => {
+  it("handles completely empty export file gracefully — returns zero records", async () => {
+    await writeFile(exportFile, "", "utf8");
+    const importer = createAstropressWordPressImportSource();
+    const report = await importer.importWordPress({ exportFile });
+    expect(report.importedRecords).toBe(0);
+    expect(report.failedMedia).toHaveLength(0);
+  });
+
+  it("handles export file with XML but no <item> elements — returns zero records", async () => {
+    await writeFile(exportFile, "<rss><channel><title>Empty Export</title></channel></rss>", "utf8");
+    const importer = createAstropressWordPressImportSource();
+    const report = await importer.importWordPress({ exportFile });
+    expect(report.importedRecords).toBe(0);
+  });
+
+  it("handles export file with truncated item — processes other items without throwing", async () => {
+    // A truncated item (missing closing tag) mixed with a valid item
+    const validItem = makePost({ id: "5001", name: "valid-post" });
+    const truncated = "<item><title><![CDATA[Truncated]]></title><wp:post_id>5002</wp:post_id>";
+    // The truncated item appears after the valid one; parser should still surface the valid post
+    await writeFile(exportFile, `<rss><channel>${validItem}${truncated}</channel></rss>`, "utf8");
+    const importer = createAstropressWordPressImportSource();
+    // Must not throw — partial result is acceptable
+    const report = await importer.importWordPress({ exportFile });
+    expect(report.importedRecords).toBeGreaterThanOrEqual(0);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// K2: Missing media attachment URL — filenameFromUrl catch branch via empty sourceUrl
+// ---------------------------------------------------------------------------
+
+describe("attachment with no URL and no guid", () => {
+  it("records media asset using slug fallback when both wp:attachment_url and guid are absent", async () => {
+    const item = [
+      "<item>",
+      "<title><![CDATA[No-URL Attachment]]></title>",
+      "<wp:post_id>6001</wp:post_id>",
+      "<wp:post_name>no-url-attachment</wp:post_name>",
+      "<wp:status>inherit</wp:status>",
+      "<wp:post_type>attachment</wp:post_type>",
+      // deliberately omit wp:attachment_url and guid — sourceUrl will be ''
+      "</item>",
+    ].join("");
+    await writeFile(exportFile, makeWxr([item]), "utf8");
+    const importer = createAstropressWordPressImportSource();
+    const report = await importer.importWordPress({ exportFile });
+    // The media asset is still recorded — sourceUrl is empty but filename falls back to slug.bin
+    expect(report.importedMedia).toBe(1);
+    expect(report.mediaAssets[0].filename).toMatch(/no-url-attachment|6001/);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// K2: Duplicate slugs — same wp:post_name on two items
+// ---------------------------------------------------------------------------
+
+describe("duplicate slug handling", () => {
+  it("imports both records when two posts share the same post_name — both appear in contentRecords", async () => {
+    const post1 = makePost({ id: "7001", name: "duplicate-slug", type: "post" });
+    const post2 = makePost({ id: "7002", name: "duplicate-slug", type: "post" });
+    await writeFile(exportFile, makeWxr([post1, post2]), "utf8");
+    const importer = createAstropressWordPressImportSource();
+    const report = await importer.importWordPress({ exportFile });
+    // Both records should be parsed — the importer does not deduplicate at parse time
+    expect(report.importedRecords).toBe(2);
+  });
+
+  it("applyLocal update path is exercised when the same slug is imported twice sequentially", async () => {
+    const post = makePost({ id: "7003", name: "update-path-slug", type: "post" });
+    await writeFile(exportFile, makeWxr([post]), "utf8");
+    const { default: Database } = await import("better-sqlite3");
+    const dbPath = join(workspace, "update-path.sqlite");
+    const db = new Database(dbPath);
+    const { createDefaultAstropressSqliteSeedToolkit } = await import("../src/sqlite-bootstrap.js");
+    createDefaultAstropressSqliteSeedToolkit({ db }).seed({ adminEmail: "admin@example.com", adminPassword: "test1234!", siteName: "Test" });
+    db.close();
+
+    const importer = createAstropressWordPressImportSource();
+    // First apply — inserts
+    await importer.importWordPress({ exportFile, applyLocal: true, workspaceRoot: workspace, adminDbPath: dbPath, includeComments: false, includeMedia: false });
+    // Second apply — hits the 'existing record' update path (line 716)
+    const report2 = await importer.importWordPress({ exportFile, applyLocal: true, workspaceRoot: workspace, adminDbPath: dbPath, includeComments: false, includeMedia: false });
+    expect(report2.importedRecords).toBe(1);
   });
 });

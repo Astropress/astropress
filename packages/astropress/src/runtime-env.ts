@@ -31,6 +31,10 @@ export interface RuntimeBindings {
   TURNSTILE_SECRET_KEY?: string;
   PUBLIC_TURNSTILE_SITE_KEY?: string;
   NEWSLETTER_DELIVERY_MODE?: string;
+  LISTMONK_API_URL?: string;
+  LISTMONK_API_USERNAME?: string;
+  LISTMONK_API_PASSWORD?: string;
+  LISTMONK_LIST_ID?: string;
   EMAIL_DELIVERY_MODE?: string;
   ADMIN_PASSWORD?: string;
   EDITOR_PASSWORD?: string;
@@ -88,6 +92,10 @@ export function getNewsletterConfig(locals?: App.Locals | null) {
     apiKey: getStringRuntimeValue("MAILCHIMP_API_KEY", locals),
     listId: getStringRuntimeValue("MAILCHIMP_LIST_ID", locals),
     server: getStringRuntimeValue("MAILCHIMP_SERVER", locals),
+    listmonkApiUrl: getStringRuntimeValue("LISTMONK_API_URL", locals),
+    listmonkApiUsername: getStringRuntimeValue("LISTMONK_API_USERNAME", locals),
+    listmonkApiPassword: getStringRuntimeValue("LISTMONK_API_PASSWORD", locals),
+    listmonkListId: getStringRuntimeValue("LISTMONK_LIST_ID", locals),
   };
 }
 

@@ -7,10 +7,18 @@ import {
 
 export type AstropressScaffoldProvider = "sqlite" | "supabase" | "runway";
 
+export type AstropressAnalyticsProvider = "umami" | "plausible" | "matomo" | "posthog" | "custom";
+export type AstropressAbTestingProvider = "growthbook" | "unleash" | "custom";
+export type AstropressHeatmapProvider = "openreplay" | "posthog" | "custom";
+
 export interface AstropressProjectScaffoldInput {
   appHost?: AstropressAppHost;
   dataServices?: AstropressDataServices;
   legacyProvider?: AstropressScaffoldProvider;
+  analytics?: AstropressAnalyticsProvider;
+  abTesting?: AstropressAbTestingProvider;
+  heatmap?: AstropressHeatmapProvider;
+  enableApi?: boolean;
 }
 
 export interface AstropressProjectScaffold {
@@ -474,6 +482,88 @@ ${envList}${serviceOriginNote}
 `;
 }
 
+function buildAnalyticsEnvExample(analytics: AstropressAnalyticsProvider | undefined): Record<string, string> {
+  switch (analytics) {
+    case "umami":
+      return {
+        PUBLIC_UMAMI_WEBSITE_ID: "replace-with-your-umami-website-id",
+        PUBLIC_UMAMI_SCRIPT_URL: "https://analytics.umami.is/script.js",
+      };
+    case "plausible":
+      return {
+        PUBLIC_PLAUSIBLE_DOMAIN: "replace-with-your-domain.com",
+        PUBLIC_PLAUSIBLE_SCRIPT_URL: "https://plausible.io/js/script.js",
+      };
+    case "matomo":
+      return {
+        PUBLIC_MATOMO_URL: "https://your-matomo-instance.example.com",
+        PUBLIC_MATOMO_SITE_ID: "1",
+      };
+    case "posthog":
+      return {
+        PUBLIC_POSTHOG_KEY: "replace-with-your-posthog-api-key",
+        PUBLIC_POSTHOG_HOST: "https://app.posthog.com",
+      };
+    case "custom":
+      return {
+        PUBLIC_ANALYTICS_SCRIPT_URL: "replace-with-your-analytics-script-url",
+      };
+    default:
+      return {};
+  }
+}
+
+function buildAbTestingEnvExample(abTesting: AstropressAbTestingProvider | undefined): Record<string, string> {
+  switch (abTesting) {
+    case "growthbook":
+      return {
+        GROWTHBOOK_API_HOST: "https://cdn.growthbook.io",
+        GROWTHBOOK_CLIENT_KEY: "replace-with-your-growthbook-client-key",
+      };
+    case "unleash":
+      return {
+        UNLEASH_URL: "https://your-unleash-instance.example.com/api",
+        UNLEASH_CLIENT_KEY: "replace-with-your-unleash-client-key",
+      };
+    case "custom":
+      return {
+        AB_TESTING_API_URL: "replace-with-your-ab-testing-api-url",
+        AB_TESTING_CLIENT_KEY: "replace-with-your-ab-testing-client-key",
+      };
+    default:
+      return {};
+  }
+}
+
+function buildHeatmapEnvExample(heatmap: AstropressHeatmapProvider | undefined): Record<string, string> {
+  switch (heatmap) {
+    case "openreplay":
+      return {
+        PUBLIC_OPENREPLAY_PROJECT_KEY: "replace-with-your-openreplay-project-key",
+      };
+    case "posthog":
+      return {
+        // PostHog handles both analytics and heatmaps with the same keys.
+        // Keys are already emitted by buildAnalyticsEnvExample when analytics=posthog.
+        PUBLIC_POSTHOG_KEY: "replace-with-your-posthog-api-key",
+        PUBLIC_POSTHOG_HOST: "https://app.posthog.com",
+      };
+    case "custom":
+      return {
+        PUBLIC_HEATMAP_SCRIPT_URL: "replace-with-your-heatmap-script-url",
+      };
+    default:
+      return {};
+  }
+}
+
+function buildApiEnvExample(): Record<string, string> {
+  return {
+    ASTROPRESS_API_ENABLED: "true",
+    ASTROPRESS_API_RATE_LIMIT: "60",
+  };
+}
+
 /**
  * Generate a complete project scaffold configuration for the given deployment
  * profile, including environment variables, package scripts, CI files, and
@@ -506,6 +596,16 @@ export function createAstropressProjectScaffold(
     `Astropress does not yet mark ${profile.appHost} + ${profile.dataServices} as a first-class pair. Keep this combination in preview until you validate the missing runtime and operational pieces yourself.`;
   const requiredEnvKeys = matrixEntry?.requiredEnvKeys ?? [];
 
+  const analyticsOpt = typeof input === "string" ? undefined : input.analytics;
+  const abTestingOpt = typeof input === "string" ? undefined : input.abTesting;
+  const heatmapOpt = typeof input === "string" ? undefined : input.heatmap;
+  const enableApi = typeof input === "string" ? false : (input.enableApi ?? false);
+
+  const localEnv = baseLocalEnv(profile.provider, profile.appHost, profile.dataServices);
+  if (enableApi) {
+    localEnv.ASTROPRESS_API_ENABLED = "true";
+  }
+
   return {
     provider: profile.provider,
     appHost: profile.appHost,
@@ -514,10 +614,14 @@ export function createAstropressProjectScaffold(
     recommendedDeployTarget: appHostToDeployTarget(profile.appHost),
     recommendationRationale,
     supportLevel,
-    localEnv: baseLocalEnv(profile.provider, profile.appHost, profile.dataServices),
+    localEnv,
     envExample: {
       ...baseEnvExample(profile.provider, profile.appHost, profile.dataServices),
       ...buildDataServiceExample(profile.dataServices),
+      ...buildAnalyticsEnvExample(analyticsOpt),
+      ...buildAbTestingEnvExample(abTestingOpt),
+      ...buildHeatmapEnvExample(heatmapOpt),
+      ...(enableApi ? buildApiEnvExample() : {}),
     },
     packageScripts: createPackageScripts(profile.appHost),
     ciFiles: createCiFiles(profile.appHost, requiredEnvKeys),

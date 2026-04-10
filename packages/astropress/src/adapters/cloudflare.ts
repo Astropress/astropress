@@ -14,6 +14,9 @@ import {
 } from "../platform-contracts";
 import { createD1AdminReadStore } from "../d1-admin-store";
 import { createSessionTokenDigest, verifyPassword } from "../crypto-utils.js";
+import { createLogger } from "../runtime-logger";
+
+const logger = createLogger("Cloudflare");
 import type { D1DatabaseLike } from "../d1-database";
 
 type AstropressCloudflareSeedUser = AuthUser & {
@@ -39,8 +42,8 @@ export interface AstropressCloudflareAdapterOptions {
 function resolveCloudflareSessionSecret(): string {
   const secret = process.env.CLOUDFLARE_SESSION_SECRET ?? "cloudflare-adapter-session-secret";
   if (secret === "cloudflare-adapter-session-secret") {
-    console.warn(
-      "[AstroPress] CLOUDFLARE_SESSION_SECRET is using the insecure default. " +
+    logger.warn(
+      "CLOUDFLARE_SESSION_SECRET is using the insecure default. " +
         "Set this env var to a long random string before deploying.",
     );
   }

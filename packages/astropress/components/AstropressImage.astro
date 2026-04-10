@@ -1,0 +1,90 @@
+---
+/**
+ * AstropressImage.astro
+ *
+ * Opinionated `<img>` wrapper that enforces Core Web Vitals best practices:
+ *   - Explicit `width` + `height` (required) prevent Cumulative Layout Shift (CLS)
+ *   - `aspect-ratio` style computed from w/h so the browser reserves space before decode
+ *   - `loading="lazy"` by default; pass `fetchpriority="high"` for above-the-fold LCP images
+ *   - `decoding="async"` by default (non-blocking decode)
+ *   - Accepts `srcset` / `sizes` for responsive art-direction without build-time processing
+ *
+ * Usage (basic):
+ *   <AstropressImage
+ *     src="/uploads/hero.jpg"
+ *     alt="Hero image of the product"
+ *     width={1200}
+ *     height={630}
+ *   />
+ *
+ * Usage (responsive with srcset):
+ *   <AstropressImage
+ *     src="/uploads/hero.jpg"
+ *     alt="Hero image"
+ *     width={1200}
+ *     height={630}
+ *     srcset="/uploads/hero-400.jpg 400w, /uploads/hero-800.jpg 800w, /uploads/hero.jpg 1200w"
+ *     sizes="(max-width: 480px) 400px, (max-width: 960px) 800px, 1200px"
+ *   />
+ *
+ * Usage (LCP image — skip lazy, load eagerly):
+ *   <AstropressImage
+ *     src="/uploads/hero.jpg"
+ *     alt="Hero"
+ *     width={1200}
+ *     height={630}
+ *     fetchpriority="high"
+ *     loading="eager"
+ *   />
+ *
+ * For Cloudflare Images or Imgix, pass the CDN-resized URL as `src` and build
+ * your `srcset` with CDN URL variants. This component handles the HTML contract;
+ * image format conversion (WebP/AVIF) is handled by your CDN or Astro's `astro:assets`.
+ */
+
+interface Props {
+  src: string;
+  alt: string;
+  width: number;
+  height: number;
+  srcset?: string;
+  sizes?: string;
+  loading?: "lazy" | "eager";
+  decoding?: "async" | "sync" | "auto";
+  fetchpriority?: "high" | "low" | "auto";
+  class?: string;
+  style?: string;
+}
+
+const {
+  src,
+  alt,
+  width,
+  height,
+  srcset,
+  sizes,
+  loading = "lazy",
+  decoding = "async",
+  fetchpriority,
+  class: className,
+  style: extraStyle,
+} = Astro.props;
+
+// Reserve layout space before the image loads to prevent CLS.
+const aspectRatioStyle = `aspect-ratio: ${width} / ${height};`;
+const combinedStyle = extraStyle ? `${aspectRatioStyle} ${extraStyle}` : aspectRatioStyle;
+---
+
+<img
+  src={src}
+  alt={alt}
+  width={width}
+  height={height}
+  loading={loading}
+  decoding={decoding}
+  fetchpriority={fetchpriority}
+  srcset={srcset}
+  sizes={sizes}
+  class={className}
+  style={combinedStyle}
+/>

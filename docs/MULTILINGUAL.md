@@ -1,0 +1,141 @@
+# Multilingual Site Architecture
+
+This document describes the reference architecture for building multilingual sites with Astropress.
+
+---
+
+## Overview
+
+Astropress provides locale-aware primitives without enforcing a routing scheme.
+The host application controls URL structure (path prefix, subdomain, or TLD strategy).
+
+---
+
+## Configuring Locales
+
+Register the locales your site supports in `registerCms()`:
+
+```ts
+// src/site/cms-registration.ts
+import { registerCms } from "astropress";
+
+registerCms({
+  siteUrl: "https://example.com",
+  locales: ["en", "es", "fr", "de"],   // first entry is the default locale
+  templateKeys: ["content"],
+  seedPages: [],
+  archives: [],
+  translationStatus: [],
+});
+```
+
+Astropress exports two locale utilities:
+
+| Function | Description |
+|----------|-------------|
+| `localeFromPath(pathname)` | Extracts a locale prefix from a URL path (e.g. `/es/my-post/` → `"es"`) |
+| `localeFromAcceptLanguage(header)` | Negotiates a locale from an `Accept-Language` header |
+
+---
+
+## URL Strategy
+
+### Path-prefix (recommended)
+
+All content lives under a locale prefix:
+
+```
+/en/blog/my-post/
+/es/blog/mi-articulo/
+/fr/blog/mon-article/
+```
+
+Configure Astro's i18n routing in `astro.config.mjs`:
+
+```js
+import { defineConfig } from "astro/config";
+
+export default defineConfig({
+  i18n: {
+    defaultLocale: "en",
+    locales: ["en", "es", "fr", "de"],
+    routing: { prefixDefaultLocale: false },  // /blog/... for EN, /es/blog/... for ES
+  },
+});
+```
+
+### Subdomain or TLD
+
+Use a CDN or reverse proxy to route traffic. The Astropress `localeFromPath` utility
+can be replaced with a custom resolver that reads a cookie or subdomain header.
+
+---
+
+## Content Storage
+
+Content records have a single `slug` and `legacyUrl`. For multilingual content:
+
+1. **Separate slugs per locale** — store `en/blog/my-post` and `es/blog/mi-articulo` as distinct records.
+2. **`hreflang` links** — add alternate links to each page's `<head>` pointing to the other locales.
+
+Example using `<AstropressSeoHead>`:
+
+```astro
+---
+import { AstropressSeoHead } from "astropress/components/AstropressSeoHead.astro";
+---
+<head>
+  <AstropressSeoHead record={pageRecord} siteUrl={siteUrl} />
+  <!-- hreflang for each locale -->
+  <link rel="alternate" hreflang="en" href="https://example.com/blog/my-post/" />
+  <link rel="alternate" hreflang="es" href="https://example.com/es/blog/mi-articulo/" />
+  <link rel="alternate" hreflang="x-default" href="https://example.com/blog/my-post/" />
+</head>
+```
+
+---
+
+## Translation Workflow
+
+1. Create the primary content record in the default locale via the admin panel.
+2. Navigate to `/ap-admin/translations` to track translation state per route.
+3. Create the translated record with the locale-prefixed slug (e.g. `es/blog/mi-articulo`).
+4. Update the translation status to `"translated"` once the record is ready.
+
+The `translationStatus` array in `registerCms()` seeds the initial translation dashboard
+from a `translation-status.json` file in your host app.
+
+---
+
+## Admin UI Labels
+
+Admin UI strings (login heading, nav labels, etc.) are currently English-only.
+They can be customized via `registerCms({ admin: { labels: { loginHeading: "..." } } })`.
+For full locale-switching in the admin panel, the host app can inject a `?locale=es`
+query parameter and pass it to `registerCms` on each request.
+
+---
+
+## Locale-Aware SEO
+
+Use `localeFromPath` in your Astro layouts to set `<html lang>` and resolve alternate links:
+
+```astro
+---
+import { localeFromPath } from "astropress";
+const locale = localeFromPath(Astro.url.pathname);
+---
+<html lang={locale}>
+  <head>
+    <!-- ... -->
+  </head>
+</html>
+```
+
+---
+
+## Further Reading
+
+- [Astro i18n Routing](https://docs.astro.build/en/guides/internationalization/)
+- [`hreflang` spec (Google)](https://developers.google.com/search/docs/specialty/international/localized-versions)
+- [Astropress Translation API](/ap-admin/translations)

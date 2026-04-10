@@ -60,6 +60,8 @@ export interface ContentOverride {
   ogImage?: string;
   canonicalUrlOverride?: string;
   robotsDirective?: string;
+  /** Custom field values for typed content types registered via `registerCms({ contentTypes })`. */
+  metadata?: Record<string, unknown>;
 }
 
 export interface ContentRecord extends ContentOverride {

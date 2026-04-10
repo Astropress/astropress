@@ -1,0 +1,133 @@
+# Astropress Compliance Guide
+
+This document covers data handling, privacy obligations, and operator responsibilities for deployments built on Astropress. Astropress is a framework — operators (you, the developer deploying the project) are the data controllers for their users' data.
+
+---
+
+## Data Inventory
+
+The following tables are owned by Astropress and may contain personal data:
+
+| Table | Personal data fields | Retention |
+|-------|---------------------|-----------|
+| `admin_users` | `email`, `display_name`, `password_hash` | Until account deleted |
+| `admin_sessions` | `user_id` (FK), session token hash | 12 hours TTL (revoked on logout) |
+| `audit_events` / `ap_audit_log` | `actor` (email), `action`, resource IDs | Permanent by default |
+| `comments` | `author_name`, `author_email`, `body`, IP (if captured) | Until deleted |
+| `contact_submissions` | All fields submitted via contact forms | Until deleted |
+| `rate_limit_events` | IP address hash | Short window (per rate-limit config) |
+
+### What is NOT collected by default
+
+- Astropress does not set third-party cookies.
+- Astropress does not send user data to external analytics services.
+- Astropress does not collect device fingerprints, browser characteristics, or cross-site identifiers.
+- The only first-party cookie is the session cookie (`__Host-ap-session`), scoped to the admin domain, `SameSite=Strict`, `HttpOnly`, `Secure`.
+
+---
+
+## Cookie Inventory
+
+| Cookie | Purpose | Lifetime | Scope |
+|--------|---------|----------|-------|
+| `__Host-ap-session` | Admin authentication session | 12 hours | Admin domain only |
+
+No other cookies are set by Astropress. If you add analytics scripts (e.g. via `resolveAnalyticsSnippet`), those providers may set their own cookies — document them in your site privacy policy.
+
+---
+
+## GDPR / Privacy Regulation Compliance
+
+Astropress provides the plumbing; operator compliance is your responsibility:
+
+- **Data minimisation** — Astropress does not collect more data than needed for core CMS functionality. Comments capture the minimum fields; contact forms are operator-defined.
+- **Storage limitation** — Admin sessions expire after 12 hours. Audit log entries and comments have no automatic TTL — configure a periodic purge if your jurisdiction requires it.
+- **Right of erasure** — Use the `POST /ap-admin/actions/user-purge` endpoint (admin-only) or the SQL snippets below.
+- **Data export** — Use the SQL snippets below to export all data for a given email.
+- **Privacy notice** — You must post a privacy notice on your public site explaining what data is collected (comments, contact forms, session cookies) and how long it is retained.
+
+### SQL: Export all data for a given email
+
+```sql
+-- Replace 'user@example.com' with the subject's email address.
+
+-- Admin account
+SELECT * FROM admin_users WHERE email = 'user@example.com';
+
+-- Active sessions
+SELECT * FROM admin_sessions WHERE user_id = (SELECT id FROM admin_users WHERE email = 'user@example.com');
+
+-- Audit events authored by this user
+SELECT * FROM audit_events WHERE actor = 'user@example.com';
+
+-- Comments (visitor, not admin)
+SELECT * FROM comments WHERE author_email = 'user@example.com';
+
+-- Contact form submissions
+SELECT * FROM contact_submissions WHERE email = 'user@example.com';
+```
+
+### SQL: Delete / anonymise all data for a given email
+
+```sql
+-- Revoke sessions
+DELETE FROM admin_sessions
+  WHERE user_id = (SELECT id FROM admin_users WHERE email = 'user@example.com');
+
+-- Anonymise audit events (preserves audit trail integrity, removes PII)
+UPDATE audit_events
+  SET actor = '[deleted]'
+  WHERE actor = 'user@example.com';
+
+-- Delete comments
+DELETE FROM comments WHERE author_email = 'user@example.com';
+
+-- Delete contact submissions
+DELETE FROM contact_submissions WHERE email = 'user@example.com';
+
+-- Deactivate or delete admin account
+UPDATE admin_users SET suspended_at = CURRENT_TIMESTAMP WHERE email = 'user@example.com';
+-- Or permanently delete:
+-- DELETE FROM admin_users WHERE email = 'user@example.com';
+```
+
+### Automated purge via admin action
+
+`POST /ap-admin/actions/user-purge` (admin role required, JSON body `{ "email": "..." }`) runs the erasure sequence above and returns a JSON export of the deleted records for your records.
+
+---
+
+## Audit Trail Retention Policy
+
+By default, `ap_audit_log` (and `audit_events` if used) retains records indefinitely. To enforce a retention limit:
+
+```sql
+-- Delete audit events older than 2 years
+DELETE FROM ap_audit_log WHERE created_at < datetime('now', '-730 days');
+```
+
+Run this via a scheduled job (e.g. `astropress doctor --json` on a nightly GitHub Actions schedule) or as a Cloudflare D1 scheduled query.
+
+---
+
+## Compliance Frameworks
+
+Astropress's data handling is designed with the following frameworks in mind. Operator responsibilities are noted:
+
+| Framework | Region | Key operator obligations |
+|-----------|--------|------------------------|
+| GDPR | EU/EEA | Privacy notice, right to erasure, DPA if using sub-processors |
+| CCPA/CPRA | California, USA | "Do Not Sell" opt-out if applicable; no sale of data by Astropress |
+| LGPD | Brazil | Similar to GDPR; DPO appointment if required by size |
+| PDPA | Thailand | Consent for data collection |
+| APP | Australia | Privacy policy; 13 APPs compliance |
+| POPIA | South Africa | Information Officer, PAIA manual |
+| PIPEDA | Canada | Consent, accountability, safeguards |
+
+Astropress does not transfer personal data to third parties except as directed by operator configuration (e.g. analytics snippets you add to your layout).
+
+---
+
+## Security Contact
+
+See [SECURITY.md](../SECURITY.md) for vulnerability reporting procedures.

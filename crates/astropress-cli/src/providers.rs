@@ -153,6 +153,169 @@ impl DataServices {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum AnalyticsProvider {
+    None,
+    Umami,
+    Plausible,
+    Matomo,
+    PostHog,
+    Custom,
+}
+
+impl AnalyticsProvider {
+    pub(crate) fn parse(value: &str) -> Result<Self, String> {
+        match value {
+            "none" => Ok(Self::None),
+            "umami" => Ok(Self::Umami),
+            "plausible" => Ok(Self::Plausible),
+            "matomo" => Ok(Self::Matomo),
+            "posthog" => Ok(Self::PostHog),
+            "custom" => Ok(Self::Custom),
+            other => Err(format!(
+                "Unsupported analytics provider `{other}`. Use none, umami, plausible, matomo, posthog, or custom."
+            )),
+        }
+    }
+
+    pub(crate) fn as_str(self) -> &'static str {
+        match self {
+            Self::None => "none",
+            Self::Umami => "umami",
+            Self::Plausible => "plausible",
+            Self::Matomo => "matomo",
+            Self::PostHog => "posthog",
+            Self::Custom => "custom",
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum AbTestingProvider {
+    None,
+    GrowthBook,
+    Unleash,
+    Custom,
+}
+
+impl AbTestingProvider {
+    pub(crate) fn parse(value: &str) -> Result<Self, String> {
+        match value {
+            "none" => Ok(Self::None),
+            "growthbook" => Ok(Self::GrowthBook),
+            "unleash" => Ok(Self::Unleash),
+            "custom" => Ok(Self::Custom),
+            other => Err(format!(
+                "Unsupported A/B testing provider `{other}`. Use none, growthbook, unleash, or custom."
+            )),
+        }
+    }
+
+    pub(crate) fn as_str(self) -> &'static str {
+        match self {
+            Self::None => "none",
+            Self::GrowthBook => "growthbook",
+            Self::Unleash => "unleash",
+            Self::Custom => "custom",
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum HeatmapProvider {
+    None,
+    OpenReplay,
+    PostHog,
+    Custom,
+}
+
+impl HeatmapProvider {
+    pub(crate) fn parse(value: &str) -> Result<Self, String> {
+        match value {
+            "none" => Ok(Self::None),
+            "openreplay" => Ok(Self::OpenReplay),
+            "posthog" => Ok(Self::PostHog),
+            "custom" => Ok(Self::Custom),
+            other => Err(format!(
+                "Unsupported heatmap provider `{other}`. Use none, openreplay, posthog, or custom."
+            )),
+        }
+    }
+
+    pub(crate) fn as_str(self) -> &'static str {
+        match self {
+            Self::None => "none",
+            Self::OpenReplay => "openreplay",
+            Self::PostHog => "posthog",
+            Self::Custom => "custom",
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn analytics_provider_round_trips() {
+        let pairs = [
+            ("none", AnalyticsProvider::None),
+            ("umami", AnalyticsProvider::Umami),
+            ("plausible", AnalyticsProvider::Plausible),
+            ("matomo", AnalyticsProvider::Matomo),
+            ("posthog", AnalyticsProvider::PostHog),
+            ("custom", AnalyticsProvider::Custom),
+        ];
+        for (s, variant) in pairs {
+            assert_eq!(AnalyticsProvider::parse(s).unwrap(), variant);
+            assert_eq!(variant.as_str(), s);
+        }
+    }
+
+    #[test]
+    fn analytics_provider_rejects_unknown() {
+        assert!(AnalyticsProvider::parse("mixpanel").is_err());
+    }
+
+    #[test]
+    fn ab_testing_provider_round_trips() {
+        let pairs = [
+            ("none", AbTestingProvider::None),
+            ("growthbook", AbTestingProvider::GrowthBook),
+            ("unleash", AbTestingProvider::Unleash),
+            ("custom", AbTestingProvider::Custom),
+        ];
+        for (s, variant) in pairs {
+            assert_eq!(AbTestingProvider::parse(s).unwrap(), variant);
+            assert_eq!(variant.as_str(), s);
+        }
+    }
+
+    #[test]
+    fn ab_testing_provider_rejects_unknown() {
+        assert!(AbTestingProvider::parse("launchdarkly").is_err());
+    }
+
+    #[test]
+    fn heatmap_provider_round_trips() {
+        let pairs = [
+            ("none", HeatmapProvider::None),
+            ("openreplay", HeatmapProvider::OpenReplay),
+            ("posthog", HeatmapProvider::PostHog),
+            ("custom", HeatmapProvider::Custom),
+        ];
+        for (s, variant) in pairs {
+            assert_eq!(HeatmapProvider::parse(s).unwrap(), variant);
+            assert_eq!(variant.as_str(), s);
+        }
+    }
+
+    #[test]
+    fn heatmap_provider_rejects_unknown() {
+        assert!(HeatmapProvider::parse("hotjar").is_err());
+    }
+}
+
 pub(crate) fn deployment_support_level(app_host: &str, data_services: &str) -> &'static str {
     match (app_host, data_services) {
         ("github-pages", "none")

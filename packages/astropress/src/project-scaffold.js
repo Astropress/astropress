@@ -383,6 +383,86 @@ function createDeployDoc(appHost, dataServices, supportLevel, requiredEnvKeys) {
   return `# Deploy Astropress\n\nThis project is scaffolded for:\n\n- App Host: \`${appHost}\`\n- Content Services: \`${dataServices}\`\n- Support level: \`${supportLevel}\`\n- Deploy target: \`${deployTarget}\`\n\n## Local checks\n\nRun these before pushing:\n\n\`\`\`bash\nbun install\nbun run doctor:strict\nbun run build\n\`\`\`\n\n## Required secrets and variables\n\n${envList}${serviceOriginNote}## CI\n\n- A deploy workflow was generated for the selected app host.\n- The workflow always installs dependencies, runs \`astropress doctor --strict\`, and builds before publishing.\n- For Render, deployment is automatic only if \`RENDER_DEPLOY_HOOK_URL\` is configured.\n\n## Scope\n\n- The App Host only publishes the Astro web app and admin shell.\n- Content Services hold content, media, sessions, and the Astropress service API.\n- If Content Services are not \`none\`, deployment is incomplete until those service credentials and \`ASTROPRESS_SERVICE_ORIGIN\` are configured.\n`;
 }
 
+function buildAnalyticsEnvExample(analytics) {
+  switch (analytics) {
+    case "umami":
+      return {
+        PUBLIC_UMAMI_WEBSITE_ID: "replace-with-your-umami-website-id",
+        PUBLIC_UMAMI_SCRIPT_URL: "https://analytics.umami.is/script.js",
+      };
+    case "plausible":
+      return {
+        PUBLIC_PLAUSIBLE_DOMAIN: "replace-with-your-domain.com",
+        PUBLIC_PLAUSIBLE_SCRIPT_URL: "https://plausible.io/js/script.js",
+      };
+    case "matomo":
+      return {
+        PUBLIC_MATOMO_URL: "https://your-matomo-instance.example.com",
+        PUBLIC_MATOMO_SITE_ID: "1",
+      };
+    case "posthog":
+      return {
+        PUBLIC_POSTHOG_KEY: "replace-with-your-posthog-api-key",
+        PUBLIC_POSTHOG_HOST: "https://app.posthog.com",
+      };
+    case "custom":
+      return {
+        PUBLIC_ANALYTICS_SCRIPT_URL: "replace-with-your-analytics-script-url",
+      };
+    default:
+      return {};
+  }
+}
+
+function buildAbTestingEnvExample(abTesting) {
+  switch (abTesting) {
+    case "growthbook":
+      return {
+        GROWTHBOOK_API_HOST: "https://cdn.growthbook.io",
+        GROWTHBOOK_CLIENT_KEY: "replace-with-your-growthbook-client-key",
+      };
+    case "unleash":
+      return {
+        UNLEASH_URL: "https://your-unleash-instance.example.com/api",
+        UNLEASH_CLIENT_KEY: "replace-with-your-unleash-client-key",
+      };
+    case "custom":
+      return {
+        AB_TESTING_API_URL: "replace-with-your-ab-testing-api-url",
+        AB_TESTING_CLIENT_KEY: "replace-with-your-ab-testing-client-key",
+      };
+    default:
+      return {};
+  }
+}
+
+function buildHeatmapEnvExample(heatmap) {
+  switch (heatmap) {
+    case "openreplay":
+      return {
+        PUBLIC_OPENREPLAY_PROJECT_KEY: "replace-with-your-openreplay-project-key",
+      };
+    case "posthog":
+      return {
+        PUBLIC_POSTHOG_KEY: "replace-with-your-posthog-api-key",
+        PUBLIC_POSTHOG_HOST: "https://app.posthog.com",
+      };
+    case "custom":
+      return {
+        PUBLIC_HEATMAP_SCRIPT_URL: "replace-with-your-heatmap-script-url",
+      };
+    default:
+      return {};
+  }
+}
+
+function buildApiEnvExample() {
+  return {
+    ASTROPRESS_API_ENABLED: "true",
+    ASTROPRESS_API_RATE_LIMIT: "60",
+  };
+}
+
 /**
  * Generate a complete project scaffold configuration for the given deployment
  * profile, including environment variables, package scripts, CI files, and
@@ -410,6 +490,17 @@ export function createAstropressProjectScaffold(input = "sqlite") {
   });
   const recommendationRationale = matrixEntry?.notes ?? `Astropress does not yet mark ${profile.appHost} + ${profile.dataServices} as a first-class pair. Keep this combination in preview until you validate the missing runtime and operational pieces yourself.`;
   const requiredEnvKeys = matrixEntry?.requiredEnvKeys ?? [];
+
+  const analyticsOpt = typeof input === "string" ? undefined : input.analytics;
+  const abTestingOpt = typeof input === "string" ? undefined : input.abTesting;
+  const heatmapOpt = typeof input === "string" ? undefined : input.heatmap;
+  const enableApi = typeof input === "string" ? false : (input.enableApi ?? false);
+
+  const localEnv = baseLocalEnv(profile.provider, profile.appHost, profile.dataServices);
+  if (enableApi) {
+    localEnv.ASTROPRESS_API_ENABLED = "true";
+  }
+
   return {
     provider: profile.provider,
     appHost: profile.appHost,
@@ -418,10 +509,14 @@ export function createAstropressProjectScaffold(input = "sqlite") {
     recommendedDeployTarget: appHostToDeployTarget(profile.appHost),
     recommendationRationale,
     supportLevel,
-    localEnv: baseLocalEnv(profile.provider, profile.appHost, profile.dataServices),
+    localEnv,
     envExample: {
       ...baseEnvExample(profile.provider, profile.appHost, profile.dataServices),
       ...buildDataServiceExample(profile.dataServices),
+      ...buildAnalyticsEnvExample(analyticsOpt),
+      ...buildAbTestingEnvExample(abTestingOpt),
+      ...buildHeatmapEnvExample(heatmapOpt),
+      ...(enableApi ? buildApiEnvExample() : {}),
     },
     packageScripts: createPackageScripts(profile.appHost),
     ciFiles: createCiFiles(profile.appHost, requiredEnvKeys),

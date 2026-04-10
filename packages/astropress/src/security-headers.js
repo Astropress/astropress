@@ -39,7 +39,7 @@ function parseOrigin(value) {
 export function createAstropressSecurityHeaders(options = {}) {
   const resolved = {
     area: options.area ?? "public",
-    allowInlineStyles: options.allowInlineStyles ?? true,
+    allowInlineStyles: options.allowInlineStyles ?? false,
     frameAncestors: options.frameAncestors ?? "'none'",
     forceHsts: options.forceHsts ?? false,
     reportUri: options.reportUri ?? "",
@@ -51,6 +51,9 @@ export function createAstropressSecurityHeaders(options = {}) {
   headers.set("X-Frame-Options", resolved.frameAncestors === "'none'" ? "DENY" : "SAMEORIGIN");
   headers.set("Permissions-Policy", "camera=(), geolocation=(), microphone=(), payment=(), usb=()");
   headers.set("Cross-Origin-Opener-Policy", "same-origin");
+  if (resolved.area === "admin" || resolved.area === "api" || resolved.area === "auth") {
+    headers.set("Cross-Origin-Resource-Policy", "same-site");
+  }
   if (resolved.forceHsts) {
     headers.set("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
   }
@@ -63,9 +66,11 @@ export function createAstropressSecurityHeaders(options = {}) {
   return headers;
 }
 
-export function applyCacheHeaders(headers, area = "public") {
+export function applyCacheHeaders(headers, area = "public", publicCacheTtl = undefined) {
   if (area === "public") {
-    headers.set("Cache-Control", "public, max-age=300, s-maxage=3600");
+    const browserTtl = publicCacheTtl ?? 300;
+    const cdnTtl = publicCacheTtl != null ? publicCacheTtl * 12 : 3600;
+    headers.set("Cache-Control", `public, max-age=${browserTtl}, s-maxage=${cdnTtl}, stale-while-revalidate=86400`);
   } else {
     headers.set("Cache-Control", "private, no-store");
   }

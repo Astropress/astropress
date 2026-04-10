@@ -11,7 +11,15 @@ Feature: REST API for AI agents and external integrations
     Given the token has scope "content:read"
     When the agent sends GET /ap-api/v1/content with the Bearer token
     Then the response is 200 OK with a paginated JSON array of content records
-    And the response includes total, limit, and offset fields
+    And the response includes total, limit, offset, and page fields
+    And the response includes an X-Total-Count header with the total record count
+
+  Scenario: AI agent paginates content using page and per_page parameters
+    Given the token has scope "content:read"
+    When the agent sends GET /ap-api/v1/content?page=2&per_page=10 with the Bearer token
+    Then the response is 200 OK with at most 10 content records
+    And the response body includes page=2 and limit=10
+    And the response includes an X-Total-Count header
 
   Scenario: AI agent creates a new draft post via REST API
     Given the token has scope "content:write"

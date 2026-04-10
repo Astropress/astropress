@@ -27,6 +27,7 @@ const cmsLabel = cmsConfig.label ?? cmsConfig.type.charAt(0).toUpperCase() + cms
 
 applyAstropressSecurityHeaders(Astro.response.headers, {
   area: "admin",
+  allowInlineStyles: true,
   forceHsts: Astro.url.protocol === "https:",
 });
 ---

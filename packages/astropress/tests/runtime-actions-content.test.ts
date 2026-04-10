@@ -87,6 +87,123 @@ describe("saveRuntimeContentState", () => {
     expect(result).toMatchObject({ ok: false });
   });
 
+  it("returns conflict error when lastKnownUpdatedAt does not match stored updated_at", async () => {
+    // First, save once to establish an updated_at
+    await saveRuntimeContentState(
+      "hello-world",
+      { title: "First save", status: "published", seoTitle: "SEO", metaDescription: "Meta" },
+      actor,
+      locals,
+    );
+    // Now simulate a second editor submitting with a stale timestamp
+    const result = await saveRuntimeContentState(
+      "hello-world",
+      { title: "Conflict save", status: "published", seoTitle: "SEO", metaDescription: "Meta", lastKnownUpdatedAt: "2000-01-01 00:00:00" },
+      actor,
+      locals,
+    );
+    expect(result).toMatchObject({ ok: false, conflict: true });
+    expect((result as { error: string }).error).toMatch(/modified by another editor/);
+  });
+
+  it("succeeds when lastKnownUpdatedAt matches stored updated_at", async () => {
+    const currentOverride = db.prepare("SELECT updated_at FROM content_overrides WHERE slug = 'hello-world'").get() as { updated_at: string };
+    const result = await saveRuntimeContentState(
+      "hello-world",
+      { title: "Matching save", status: "published", seoTitle: "SEO", metaDescription: "Meta", lastKnownUpdatedAt: currentOverride.updated_at },
+      actor,
+      locals,
+    );
+    expect(result).toMatchObject({ ok: true });
+  });
+
+  it("rejects save when a required content type field is missing from metadata", async () => {
+    registerCms({
+      templateKeys: ["content"],
+      siteUrl: "https://example.com",
+      seedPages: [],
+      archives: [],
+      translationStatus: [],
+      contentTypes: [
+        {
+          key: "content",
+          label: "Content",
+          fields: [
+            { name: "subtitle", label: "Subtitle", type: "text", required: true },
+          ],
+        },
+      ],
+    });
+    const result = await saveRuntimeContentState(
+      "hello-world",
+      { title: "Missing field", status: "published", seoTitle: "SEO", metaDescription: "Meta", metadata: {} },
+      actor,
+      locals,
+    );
+    expect(result).toMatchObject({ ok: false });
+    expect((result as { error: string }).error).toMatch(/Subtitle.*required/);
+  });
+
+  it("accepts save when content type metadata passes field validation", async () => {
+    registerCms({
+      templateKeys: ["content"],
+      siteUrl: "https://example.com",
+      seedPages: [],
+      archives: [],
+      translationStatus: [],
+      contentTypes: [
+        {
+          key: "content",
+          label: "Content",
+          fields: [
+            { name: "subtitle", label: "Subtitle", type: "text", required: true },
+          ],
+        },
+      ],
+    });
+    const result = await saveRuntimeContentState(
+      "hello-world",
+      { title: "Valid field", status: "published", seoTitle: "SEO", metaDescription: "Meta", metadata: { subtitle: "My Subtitle" } },
+      actor,
+      locals,
+    );
+    expect(result).toMatchObject({ ok: true });
+    const saved = db.prepare("SELECT metadata FROM content_overrides WHERE slug = 'hello-world'").get() as { metadata: string };
+    expect(JSON.parse(saved.metadata)).toMatchObject({ subtitle: "My Subtitle" });
+  });
+
+  it("rejects save when a custom validate function returns an error string", async () => {
+    registerCms({
+      templateKeys: ["content"],
+      siteUrl: "https://example.com",
+      seedPages: [],
+      archives: [],
+      translationStatus: [],
+      contentTypes: [
+        {
+          key: "content",
+          label: "Content",
+          fields: [
+            {
+              name: "capacity",
+              label: "Max Capacity",
+              type: "number",
+              validate: (v) => Number(v) > 0 || "Capacity must be a positive number",
+            },
+          ],
+        },
+      ],
+    });
+    const result = await saveRuntimeContentState(
+      "hello-world",
+      { title: "Bad capacity", status: "published", seoTitle: "SEO", metaDescription: "Meta", metadata: { capacity: -5 } },
+      actor,
+      locals,
+    );
+    expect(result).toMatchObject({ ok: false });
+    expect((result as { error: string }).error).toContain("Capacity must be a positive number");
+  });
+
   it("saves author/category/tag assignments", async () => {
     const { lastInsertRowid: authorId } = db.prepare("INSERT INTO authors (name, slug) VALUES (?, ?)").run("Author A", "author-a");
     const { lastInsertRowid: catId } = db.prepare("INSERT INTO categories (name, slug) VALUES (?, ?)").run("Cat A", "cat-a");

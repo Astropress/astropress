@@ -1,6 +1,9 @@
 import { createHmac, randomBytes } from "node:crypto";
 import type { WebhookEvent, WebhookRecord, WebhookStore } from "../platform-contracts";
 import type { AstropressSqliteDatabaseLike } from "./utils";
+import { createLogger } from "../runtime-logger";
+
+const logger = createLogger("Webhook");
 
 // Webhook signing secrets are stored in plain text because they are needed
 // to compute outgoing HMAC signatures. This is the standard approach used by
@@ -97,7 +100,7 @@ export function createWebhookStore(db: AstropressSqliteDatabaseLike, fetchImpl: 
               body: bodyText,
             }));
           } catch (err) {
-            console.error(`[Webhook] Failed to dispatch ${event} to ${row.url}:`, err);
+            logger.error(`Failed to dispatch ${event} to ${row.url}`, { error: err });
             return;
           }
 

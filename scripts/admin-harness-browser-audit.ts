@@ -106,7 +106,6 @@ async function main() {
 
         const axe = await new AxeBuilder({ page })
           .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
-          .disableRules(["color-contrast"])
           .analyze();
 
         if (axe.violations.length > 0) {

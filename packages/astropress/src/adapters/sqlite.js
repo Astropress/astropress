@@ -1374,7 +1374,16 @@ function normalizeStructuredTemplateKey(value) {
   }
 }
 function localeFromPath(pathname) {
-  return pathname.startsWith("/es/") ? "es" : "en";
+  let locales;
+  try {
+    locales = getCmsConfig().locales ?? ["en", "es"];
+  } catch {
+    locales = ["en", "es"];
+  }
+  for (const locale of locales) {
+    if (pathname.startsWith(`/${locale}/`)) return locale;
+  }
+  return locales[0] ?? "en";
 }
 function getSeedPageRecords() {
   try {
@@ -3054,7 +3063,9 @@ function createAstropressSqliteSeedToolkit(options) {
     `);
     let count = 0;
     for (const page of options.marketingRoutes) {
-      const locale = page.path.startsWith("/es/") ? "es" : "en";
+      let configLocales3;
+      try { configLocales3 = getCmsConfig().locales ?? ["en", "es"]; } catch { configLocales3 = ["en", "es"]; }
+      const locale = configLocales3.find((l) => page.path.startsWith(`/${l}/`)) ?? (configLocales3[0] ?? "en");
       const baseId = page.path.replace(/^\//, "").replaceAll("/", ":");
       const groupId = `page:${baseId}`;
       const variantId = `variant:page:${baseId}:${locale}`;

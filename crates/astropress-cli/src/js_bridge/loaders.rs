@@ -278,6 +278,10 @@ pub(crate) fn load_project_scaffold(
     provider: LocalProvider,
     app_host: Option<AppHost>,
     data_services: Option<DataServices>,
+    analytics: Option<&str>,
+    ab_testing: Option<&str>,
+    heatmap: Option<&str>,
+    enable_api: bool,
 ) -> Result<ProjectScaffold, String> {
     let scaffold_module = package_module_import("project-scaffold.js", None)?;
     let scaffold_module_literal =
@@ -288,7 +292,11 @@ pub(crate) fn load_project_scaffold(
 const scaffold = createAstropressProjectScaffold({{
   legacyProvider: "{provider}",
   appHost: {app_host},
-  dataServices: {data_services}
+  dataServices: {data_services},
+  analytics: {analytics},
+  abTesting: {ab_testing},
+  heatmap: {heatmap},
+  enableApi: {enable_api}
 }});
 console.log(JSON.stringify(scaffold));
 "#,
@@ -297,7 +305,11 @@ console.log(JSON.stringify(scaffold));
         app_host = serde_json::to_string(&app_host.map(AppHost::as_str))
             .map_err(|error| error.to_string())?,
         data_services = serde_json::to_string(&data_services.map(DataServices::as_str))
-            .map_err(|error| error.to_string())?
+            .map_err(|error| error.to_string())?,
+        analytics = serde_json::to_string(&analytics).map_err(|e| e.to_string())?,
+        ab_testing = serde_json::to_string(&ab_testing).map_err(|e| e.to_string())?,
+        heatmap = serde_json::to_string(&heatmap).map_err(|e| e.to_string())?,
+        enable_api = enable_api,
     );
 
     let output = ProcessCommand::new("node")
@@ -313,6 +325,45 @@ console.log(JSON.stringify(scaffold));
     }
 
     serde_json::from_slice::<ProjectScaffold>(&output.stdout).map_err(|error| error.to_string())
+}
+
+#[derive(Debug, Deserialize)]
+pub(crate) struct DbMigrateReport {
+    #[serde(rename = "dbPath")]
+    pub(crate) db_path: String,
+    #[serde(rename = "migrationsDir")]
+    pub(crate) migrations_dir: String,
+    pub(crate) applied: Vec<String>,
+    pub(crate) skipped: Vec<String>,
+    #[serde(rename = "dryRun")]
+    pub(crate) dry_run: bool,
+}
+
+pub(crate) fn run_db_migrations_operation(
+    project_dir: &Path,
+    db_path: &str,
+    migrations_dir: &str,
+    dry_run: bool,
+) -> Result<DbMigrateReport, String> {
+    let module = package_module_import("db-migrate-ops.js", Some(project_dir))?;
+    let module_literal = serde_json::to_string(&module).map_err(|error| error.to_string())?;
+    let db_path_json = serde_json::to_string(db_path).map_err(|error| error.to_string())?;
+    let migrations_dir_json = serde_json::to_string(migrations_dir).map_err(|error| error.to_string())?;
+    let script = format!(
+        r#"import {{ runAstropressDbMigrationsForCli }} from {module};
+const result = runAstropressDbMigrationsForCli({{
+  dbPath: {db_path},
+  migrationsDir: {migrations_dir},
+  dryRun: {dry_run},
+}});
+console.log(JSON.stringify(result));
+"#,
+        module = module_literal,
+        db_path = db_path_json,
+        migrations_dir = migrations_dir_json,
+        dry_run = dry_run,
+    );
+    run_package_json_command(project_dir, detect_package_manager(project_dir), &script)
 }
 
 pub(crate) fn run_content_services_operation(

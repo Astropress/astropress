@@ -1,5 +1,5 @@
 import type { APIRoute } from "astro";
-import { withApiRequest, jsonOk, apiErrors } from "astropress/api-middleware.js";
+import { withApiRequest, jsonOk, jsonOkWithEtag, apiErrors } from "astropress/api-middleware.js";
 import { loadLocalAdminStore } from "astropress/local-runtime-modules.js";
 import { getRuntimeContentState, saveRuntimeContentState } from "astropress";
 import { getCmsConfig } from "astropress";
@@ -22,7 +22,7 @@ export const GET: APIRoute = async (context) => {
     const id = context.params.id ?? "";
     const record = await getRuntimeContentState(id, context.locals);
     if (!record) return apiErrors.notFound(`Content '${id}' not found.`);
-    return jsonOk(record);
+    return jsonOkWithEtag(record as Parameters<typeof jsonOkWithEtag>[0], context.request);
   });
 };
 

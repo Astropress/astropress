@@ -56,5 +56,13 @@ export default defineConfig({
         baseURL: process.env.PLAYWRIGHT_ADMIN_BASE_URL ?? "http://127.0.0.1:4325",
       },
     },
+    {
+      name: "admin-harness-firefox",
+      testMatch: /admin-harness-accessibility\.spec\.ts/,
+      use: {
+        ...devices["Desktop Firefox"],
+        baseURL: process.env.PLAYWRIGHT_ADMIN_BASE_URL ?? "http://127.0.0.1:4325",
+      },
+    },
   ],
 });

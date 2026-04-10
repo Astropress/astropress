@@ -25,12 +25,19 @@ export const POST: APIRoute = async (context) =>
         canonicalUrlOverride: String(formData.get("canonicalUrlOverride") ?? ""),
         robotsDirective: String(formData.get("robotsDirective") ?? ""),
         revisionNote: String(formData.get("revisionNote") ?? ""),
+        lastKnownUpdatedAt: String(formData.get("lastKnownUpdatedAt") ?? "") || undefined,
       },
       actor,
       locals,
     );
 
     if (!result.ok) {
+      if (result.conflict) {
+        return new Response(JSON.stringify({ error: result.error, conflict: true }), {
+          status: 409,
+          headers: { "Content-Type": "application/json" },
+        });
+      }
       return fail(result.error, `/ap-admin/posts/${slug}`);
     }
 
