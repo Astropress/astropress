@@ -97,7 +97,9 @@
     "./web-components": "./web-components/index.ts",
     "./web-components/theme-toggle": "./web-components/theme-toggle.ts",
     "./web-components/confirm-dialog": "./web-components/confirm-dialog.ts",
-    "./web-components/html-editor": "./web-components/html-editor.ts"
+    "./web-components/html-editor": "./web-components/html-editor.ts",
+    "./api-middleware": "./src/api-middleware.ts",
+    "./api-routes": "./src/api-routes.ts"
   },
   "files": [
     "bin",

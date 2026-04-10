@@ -80,6 +80,14 @@ export interface LocalAdminStoreModule extends AdminStoreAdapter {
   createMediaAsset: AdminStoreAdapter["media"]["createMediaAsset"];
   updateMediaAsset: AdminStoreAdapter["media"]["updateMediaAsset"];
   deleteMediaAsset: AdminStoreAdapter["media"]["deleteMediaAsset"];
+  // API tokens and webhooks (optional — only present when api.enabled)
+  apiTokens?: AdminStoreAdapter["apiTokens"];
+  webhooks?: AdminStoreAdapter["webhooks"];
+  // Content scheduling
+  schedulePublish?: AdminStoreAdapter["content"]["schedulePublish"];
+  listScheduled?: AdminStoreAdapter["content"]["listScheduled"];
+  cancelScheduledPublish?: AdminStoreAdapter["content"]["cancelScheduledPublish"];
+  runScheduledPublishes?: AdminStoreAdapter["content"]["runScheduledPublishes"];
 }
 
 export interface LocalAdminAuthModule {

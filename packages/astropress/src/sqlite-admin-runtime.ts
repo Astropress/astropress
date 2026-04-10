@@ -8,6 +8,8 @@ import { createSqliteContentStore } from "./sqlite-runtime/content";
 import { createSqliteCatalogStore } from "./sqlite-runtime/catalog";
 import { createSqliteRoutesStore } from "./sqlite-runtime/routes";
 import { createSqliteAssetsStore } from "./sqlite-runtime/assets";
+import { createApiTokenStore } from "./sqlite-runtime/api-tokens";
+import { createWebhookStore } from "./sqlite-runtime/webhooks";
 import type { SiteSettings } from "./site-settings";
 import type { AdminStoreAdapter, ContentRecord, SessionUser } from "./persistence-types";
 
@@ -62,6 +64,8 @@ export function createAstropressSqliteAdminRuntime(options: AstropressSqliteAdmi
 
   const { sqliteAuthorRepository, sqliteTaxonomyRepository } = createSqliteCatalogStore(getDb);
   const { sqliteRateLimitRepository, sqliteMediaRepository } = createSqliteAssetsStore(getDb, now);
+  const sqliteApiTokenStore = createApiTokenStore(getDb());
+  const sqliteWebhookStore = createWebhookStore(getDb());
 
 
 
@@ -150,6 +154,8 @@ export function createAstropressSqliteAdminRuntime(options: AstropressSqliteAdmi
       updateMediaAsset: sqliteMediaRepository.updateMediaAsset,
       deleteMediaAsset: sqliteMediaRepository.deleteMediaAsset,
     },
+    apiTokens: sqliteApiTokenStore,
+    webhooks: sqliteWebhookStore,
   });
 
   return {

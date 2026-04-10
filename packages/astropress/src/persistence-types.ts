@@ -209,6 +209,10 @@ export interface ContentRepository {
   createContentRecord: PersistenceModule["createContentRecord"];
   saveContentState: PersistenceModule["saveContentState"];
   restoreRevision: PersistenceModule["restoreRevision"];
+  schedulePublish?: (id: string, scheduledAt: string) => void;
+  listScheduled?: () => Array<{ id: string; slug: string; title: string; scheduledAt: string }>;
+  cancelScheduledPublish?: (id: string) => void;
+  runScheduledPublishes?: () => number;
 }
 
 export interface SubmissionRepository {
@@ -254,4 +258,6 @@ export interface AdminStoreAdapter {
   settings: SettingsRepository;
   rateLimits: RateLimitRepository;
   media: MediaRepository;
+  apiTokens?: import("./platform-contracts").ApiTokenStore;
+  webhooks?: import("./platform-contracts").WebhookStore;
 }

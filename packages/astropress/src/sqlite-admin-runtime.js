@@ -6,6 +6,8 @@ import { createSqliteContentStore } from "./sqlite-runtime/content.js";
 import { createSqliteCatalogStore } from "./sqlite-runtime/catalog.js";
 import { createSqliteRoutesStore } from "./sqlite-runtime/routes.js";
 import { createSqliteAssetsStore } from "./sqlite-runtime/assets.js";
+import { createApiTokenStore } from "./sqlite-runtime/api-tokens.js";
+import { createWebhookStore } from "./sqlite-runtime/webhooks.js";
 
 // packages/astropress/src/admin-store-adapter-factory.ts
 function createAstropressAdminStoreAdapter(backend, modules) {
@@ -32,7 +34,8 @@ function createAstropressSqliteAdminRuntime(options) {
 
   const { sqliteAuthorRepository, sqliteTaxonomyRepository } = createSqliteCatalogStore(getDb);
   const { sqliteRateLimitRepository, sqliteMediaRepository } = createSqliteAssetsStore(getDb, now);
-
+  const sqliteApiTokenStore = createApiTokenStore(getDb());
+  const sqliteWebhookStore = createWebhookStore(getDb());
 
   const sqliteAdminStore = createAstropressAdminStoreAdapter("sqlite", {
     auth: {
@@ -118,7 +121,9 @@ function createAstropressSqliteAdminRuntime(options) {
       createMediaAsset: sqliteMediaRepository.createMediaAsset,
       updateMediaAsset: sqliteMediaRepository.updateMediaAsset,
       deleteMediaAsset: sqliteMediaRepository.deleteMediaAsset
-    }
+    },
+    apiTokens: sqliteApiTokenStore,
+    webhooks: sqliteWebhookStore,
   });
   return {
     sqliteAdminStore,
