@@ -56,7 +56,7 @@ export function createAstropressSqliteAdminRuntime(options: AstropressSqliteAdmi
   );
   const { sqliteRedirectRepository, sqliteCommentRepository, sqliteTranslationRepository, sqliteSettingsRepository } = createSqliteSettingsStore(getDb);
 
-  const { sqliteContentRepository, sqliteSubmissionRepository } = createSqliteContentStore(getDb, randomId);
+  const { sqliteContentRepository, sqliteSubmissionRepository, sqliteSchedulingRepository } = createSqliteContentStore(getDb, randomId);
 
   const { sqliteCmsRouteRegistry, sqliteCmsRegistryModule } = createSqliteRoutesStore(getDb, randomId);
 
@@ -122,6 +122,10 @@ export function createAstropressSqliteAdminRuntime(options: AstropressSqliteAdmi
       createContentRecord: sqliteContentRepository.createContentRecord,
       saveContentState: sqliteContentRepository.saveContentState,
       restoreRevision: sqliteContentRepository.restoreRevision,
+      schedulePublish: sqliteSchedulingRepository.schedulePublish,
+      listScheduled: sqliteSchedulingRepository.listScheduled,
+      cancelScheduledPublish: sqliteSchedulingRepository.cancelScheduledPublish,
+      runScheduledPublishes: sqliteSchedulingRepository.runScheduledPublishes,
     },
     submissions: {
       submitContact: sqliteSubmissionRepository.submitContact,
