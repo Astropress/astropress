@@ -1,0 +1,103 @@
+---
+import AdminLayout from "astropress/components/AdminLayout.astro";
+import CsrfInput from "astropress/components/CsrfInput.astro";
+import { loadLocalAdminStore } from "astropress/local-runtime-modules.js";
+
+const adminUser = Astro.locals.adminUser;
+if (!adminUser || adminUser.role !== "admin") {
+  return Astro.redirect("/ap-admin?error=insufficient-permissions");
+}
+
+const store = await loadLocalAdminStore();
+const webhooks = store.webhooks ? await store.webhooks.list() : [];
+
+const wasCreated = Astro.url.searchParams.get("created") === "1";
+const wasDeleted = Astro.url.searchParams.get("deleted") === "1";
+const createdSecret = wasCreated ? Astro.url.searchParams.get("secret") : null;
+const errorMessage = Astro.url.searchParams.get("error") === "1" ? Astro.url.searchParams.get("message") : null;
+
+const ALL_EVENTS = ["content.published", "content.updated", "content.deleted", "media.uploaded", "media.deleted"] as const;
+---
+
+<AdminLayout
+  title="Webhooks | Astropress Admin"
+  heading="Webhooks"
+  currentPath="/ap-admin/webhooks"
+  description="Register webhook endpoints to receive real-time event notifications."
+  role={adminUser.role}
+  userName={adminUser.name}
+>
+  {wasDeleted && <p class="notice">Webhook deleted successfully.</p>}
+  {errorMessage && <p class="error-notice">{errorMessage}</p>}
+
+  {wasCreated && createdSecret && (
+    <div class="panel notice" style="border-left: 4px solid var(--color-success, green); padding: 1rem;">
+      <strong>Webhook created.</strong> Copy this signing secret now — it will not be shown again.
+      Use it to verify the <code>X-Astropress-Signature</code> header on incoming webhook requests.
+      <br />
+      <code style="word-break: break-all; font-size: 0.9em;">{createdSecret}</code>
+    </div>
+  )}
+
+  <section class="panel">
+    <div class="section-header">
+      <div>
+        <p class="admin-kicker">Register</p>
+        <h2>New Webhook</h2>
+      </div>
+    </div>
+    <form method="post" action="/ap-admin/actions/webhook-create" class="admin-form-grid">
+      <CsrfInput token={Astro.locals.csrfToken} />
+      <label class="admin-field">
+        <span>Endpoint URL</span>
+        <input type="url" name="url" placeholder="https://your-server.com/hooks" required class="admin-input" />
+      </label>
+      <fieldset class="admin-field">
+        <legend>Events</legend>
+        {ALL_EVENTS.map((event) => (
+          <label class="admin-checkbox">
+            <input type="checkbox" name="events" value={event} />
+            {event}
+          </label>
+        ))}
+      </fieldset>
+      <button type="submit" class="admin-btn admin-btn-primary">Register Webhook</button>
+    </form>
+  </section>
+
+  <section class="panel">
+    <h2>Active Webhooks</h2>
+    {webhooks.length === 0 ? (
+      <p>No webhooks yet. Register one above.</p>
+    ) : (
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>URL</th>
+            <th>Events</th>
+            <th>Created</th>
+            <th>Last Fired</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {webhooks.map((wh) => (
+            <tr>
+              <td style="font-family: monospace; font-size: 0.85em; word-break: break-all;">{wh.url}</td>
+              <td>{wh.events.join(", ")}</td>
+              <td>{wh.createdAt ? new Date(wh.createdAt).toLocaleDateString() : "—"}</td>
+              <td>{wh.lastFiredAt ? new Date(wh.lastFiredAt).toLocaleDateString() : "Never"}</td>
+              <td>
+                <form method="post" action="/ap-admin/actions/webhook-delete" style="display:inline;">
+                  <CsrfInput token={Astro.locals.csrfToken} />
+                  <input type="hidden" name="id" value={wh.id} />
+                  <button type="submit" class="admin-btn admin-btn-danger">Delete</button>
+                </form>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    )}
+  </section>
+</AdminLayout>

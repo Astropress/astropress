@@ -1,0 +1,106 @@
+---
+import AdminLayout from "astropress/components/AdminLayout.astro";
+import CsrfInput from "astropress/components/CsrfInput.astro";
+import { loadLocalAdminStore } from "astropress/local-runtime-modules.js";
+
+const adminUser = Astro.locals.adminUser;
+if (!adminUser || adminUser.role !== "admin") {
+  return Astro.redirect("/ap-admin?error=insufficient-permissions");
+}
+
+const store = await loadLocalAdminStore();
+const tokens = store.apiTokens ? await store.apiTokens.list() : [];
+
+const wasCreated = Astro.url.searchParams.get("created") === "1";
+const wasRevoked = Astro.url.searchParams.get("revoked") === "1";
+const createdRawToken = wasCreated ? Astro.url.searchParams.get("rawToken") : null;
+const errorMessage = Astro.url.searchParams.get("error") === "1" ? Astro.url.searchParams.get("message") : null;
+
+const ALL_SCOPES = ["content:read", "content:write", "media:read", "media:write", "settings:read", "webhooks:manage"] as const;
+---
+
+<AdminLayout
+  title="API Tokens | Astropress Admin"
+  heading="API Tokens"
+  currentPath="/ap-admin/api-tokens"
+  description="Manage API tokens for programmatic access."
+  role={adminUser.role}
+  userName={adminUser.name}
+>
+  {wasRevoked && <p class="notice">Token revoked successfully.</p>}
+  {errorMessage && <p class="error-notice">{errorMessage}</p>}
+
+  {wasCreated && createdRawToken && (
+    <div class="panel notice" style="border-left: 4px solid var(--color-success, green); padding: 1rem;">
+      <strong>Token created.</strong> Copy this token now — it will not be shown again.
+      <br />
+      <code style="word-break: break-all; font-size: 0.9em;">{createdRawToken}</code>
+    </div>
+  )}
+
+  <section class="panel">
+    <div class="section-header">
+      <div>
+        <p class="admin-kicker">Create Token</p>
+        <h2>New API Token</h2>
+      </div>
+    </div>
+    <form method="post" action="/ap-admin/actions/api-token-create" class="admin-form-grid">
+      <CsrfInput token={Astro.locals.csrfToken} />
+      <label class="admin-field">
+        <span>Label</span>
+        <input type="text" name="label" placeholder="e.g. AI assistant" required class="admin-input" />
+      </label>
+      <fieldset class="admin-field">
+        <legend>Scopes</legend>
+        {ALL_SCOPES.map((scope) => (
+          <label class="admin-checkbox">
+            <input type="checkbox" name="scopes" value={scope} />
+            {scope}
+          </label>
+        ))}
+      </fieldset>
+      <button type="submit" class="admin-btn admin-btn-primary">Create Token</button>
+    </form>
+  </section>
+
+  <section class="panel">
+    <h2>Existing Tokens</h2>
+    {tokens.length === 0 ? (
+      <p>No tokens yet. Create one above.</p>
+    ) : (
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>Label</th>
+            <th>Scopes</th>
+            <th>Created</th>
+            <th>Last Used</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {tokens.map((token) => (
+            <tr>
+              <td>{token.label}</td>
+              <td>{token.scopes.join(", ")}</td>
+              <td>{token.createdAt ? new Date(token.createdAt).toLocaleDateString() : "—"}</td>
+              <td>{token.lastUsedAt ? new Date(token.lastUsedAt).toLocaleDateString() : "Never"}</td>
+              <td>{token.revokedAt ? <span style="color: var(--color-danger, red);">Revoked</span> : <span style="color: var(--color-success, green);">Active</span>}</td>
+              <td>
+                {!token.revokedAt && (
+                  <form method="post" action="/ap-admin/actions/api-token-revoke" style="display:inline;">
+                    <CsrfInput token={Astro.locals.csrfToken} />
+                    <input type="hidden" name="id" value={token.id} />
+                    <button type="submit" class="admin-btn admin-btn-danger">Revoke</button>
+                  </form>
+                )}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    )}
+  </section>
+</AdminLayout>

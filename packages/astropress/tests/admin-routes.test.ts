@@ -13,9 +13,9 @@ describe("admin routes", () => {
     const routes = listAstropressAdminRoutes();
 
     expect(ASTROPRESS_ADMIN_BASE_PATH).toBe("/ap-admin");
-    expect(routes).toHaveLength(57);
-    expect(routes.filter((route) => route.kind === "page")).toHaveLength(29);
-    expect(routes.filter((route) => route.kind === "action")).toHaveLength(27);
+    expect(routes).toHaveLength(64);
+    expect(routes.filter((route) => route.kind === "page")).toHaveLength(31);
+    expect(routes.filter((route) => route.kind === "action")).toHaveLength(32);
     expect(routes.filter((route) => route.kind === "endpoint")).toHaveLength(1);
     expect(routes.map((route) => route.pattern)).toEqual([
       "/ap-admin",
@@ -75,6 +75,13 @@ describe("admin routes", () => {
       "/ap-admin/actions/user-reset-link",
       "/ap-admin/actions/user-suspend",
       "/ap-admin/actions/user-unsuspend",
+      "/ap-admin/api-tokens",
+      "/ap-admin/webhooks",
+      "/ap-admin/actions/api-token-create",
+      "/ap-admin/actions/api-token-revoke",
+      "/ap-admin/actions/webhook-create",
+      "/ap-admin/actions/webhook-delete",
+      "/ap-admin/actions/schedule-publish",
     ]);
   });
 
@@ -87,8 +94,8 @@ describe("admin routes", () => {
       kind: "page",
     });
     expect(routeEntrypoints.at(-1)).toEqual({
-      pattern: "/ap-admin/actions/user-unsuspend",
-      entrypoint: "/tmp/astropress/pages/ap-admin/actions/user-unsuspend.ts",
+      pattern: "/ap-admin/actions/schedule-publish",
+      entrypoint: "/tmp/astropress/pages/ap-admin/actions/schedule-publish.ts",
       kind: "action",
     });
   });
@@ -106,6 +113,6 @@ describe("admin routes", () => {
     });
 
     expect(injectedRoutes).toEqual(plan);
-    expect(injectedRoutes).toHaveLength(57);
+    expect(injectedRoutes).toHaveLength(64);
   });
 });

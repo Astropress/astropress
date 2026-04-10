@@ -66,6 +66,13 @@ const adminRouteDefinitions = [
   { pattern: "/ap-admin/actions/user-reset-link", entrypoint: "actions/user-reset-link.ts", kind: "action" },
   { pattern: "/ap-admin/actions/user-suspend", entrypoint: "actions/user-suspend.ts", kind: "action" },
   { pattern: "/ap-admin/actions/user-unsuspend", entrypoint: "actions/user-unsuspend.ts", kind: "action" },
+  { pattern: "/ap-admin/api-tokens", entrypoint: "api-tokens.astro", kind: "page" },
+  { pattern: "/ap-admin/webhooks", entrypoint: "webhooks.astro", kind: "page" },
+  { pattern: "/ap-admin/actions/api-token-create", entrypoint: "actions/api-token-create.ts", kind: "action" },
+  { pattern: "/ap-admin/actions/api-token-revoke", entrypoint: "actions/api-token-revoke.ts", kind: "action" },
+  { pattern: "/ap-admin/actions/webhook-create", entrypoint: "actions/webhook-create.ts", kind: "action" },
+  { pattern: "/ap-admin/actions/webhook-delete", entrypoint: "actions/webhook-delete.ts", kind: "action" },
+  { pattern: "/ap-admin/actions/schedule-publish", entrypoint: "actions/schedule-publish.ts", kind: "action" },
 ] as const satisfies readonly AstropressAdminRouteDefinition[];
 
 /**
