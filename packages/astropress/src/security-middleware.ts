@@ -7,6 +7,10 @@ export interface AstropressSecurityMiddlewareOptions extends AstropressSecurityH
 }
 
 export function resolveAstropressSecurityArea(url: URL, adminBasePath = "/ap-admin"): AstropressSecurityArea {
+  if (url.pathname.startsWith("/ap-api/")) {
+    return "api";
+  }
+
   if (!url.pathname.startsWith(adminBasePath)) {
     return "public";
   }
