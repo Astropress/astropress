@@ -1807,3 +1807,56 @@ describe("comments optional fields", () => {
     expect(Array.isArray(comments)).toBe(true);
   });
 });
+
+// ─── Schema table presence ────────────────────────────────────────────────────
+
+describe("SQLite schema table presence", () => {
+  it("api_tokens table exists in the schema", () => {
+    const result = db
+      .prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='api_tokens'")
+      .get() as { name: string } | undefined;
+    expect(result?.name).toBe("api_tokens");
+  });
+
+  it("api_tokens table has expected columns", () => {
+    const columns = db
+      .prepare("PRAGMA table_info(api_tokens)")
+      .all() as Array<{ name: string }>;
+    const names = columns.map((c) => c.name);
+    expect(names).toContain("id");
+    expect(names).toContain("label");
+    expect(names).toContain("token_hash");
+    expect(names).toContain("scopes");
+    expect(names).toContain("created_at");
+    expect(names).toContain("revoked_at");
+    expect(names).toContain("last_used_at");
+  });
+
+  it("webhooks table exists in the schema", () => {
+    const result = db
+      .prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='webhooks'")
+      .get() as { name: string } | undefined;
+    expect(result?.name).toBe("webhooks");
+  });
+
+  it("webhooks table has expected columns", () => {
+    const columns = db
+      .prepare("PRAGMA table_info(webhooks)")
+      .all() as Array<{ name: string }>;
+    const names = columns.map((c) => c.name);
+    expect(names).toContain("id");
+    expect(names).toContain("url");
+    expect(names).toContain("events");
+    expect(names).toContain("secret_hash");
+    expect(names).toContain("active");
+    expect(names).toContain("deleted_at");
+  });
+
+  it("content_overrides already has scheduled_at column", () => {
+    const columns = db
+      .prepare("PRAGMA table_info(content_overrides)")
+      .all() as Array<{ name: string }>;
+    const names = columns.map((c) => c.name);
+    expect(names).toContain("scheduled_at");
+  });
+});
