@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it } from "vitest";
 
 import { getCmsConfig, peekCmsConfig, registerCms, type AnalyticsConfig, type AbTestingConfig, type AstropressApiConfig } from "../src/config";
+import { resolveAnalyticsSnippet } from "../src/analytics.js";
 
 const CMS_CONFIG_KEY = Symbol.for("astropress.cms-config");
 
@@ -174,5 +175,88 @@ describe("registerCms with analytics, abTesting, api fields", () => {
     expect(config.analytics).toBeUndefined();
     expect(config.abTesting).toBeUndefined();
     expect(config.api).toBeUndefined();
+  });
+});
+
+describe("resolveAnalyticsSnippet", () => {
+  it("returns empty string for null/undefined config", () => {
+    expect(resolveAnalyticsSnippet(null)).toBe("");
+    expect(resolveAnalyticsSnippet(undefined)).toBe("");
+  });
+
+  it("umami: produces script tag with data-website-id", () => {
+    const snippet = resolveAnalyticsSnippet({
+      type: "umami",
+      mode: "snippet-only",
+      snippetSrc: "https://analytics.example.com/script.js",
+      siteId: "abc-123",
+    });
+    expect(snippet).toContain('<script');
+    expect(snippet).toContain('data-website-id="abc-123"');
+    expect(snippet).toContain('src="https://analytics.example.com/script.js"');
+  });
+
+  it("plausible: produces script tag with data-domain", () => {
+    const snippet = resolveAnalyticsSnippet({
+      type: "plausible",
+      mode: "snippet-only",
+      snippetSrc: "https://plausible.io/js/script.js",
+      siteId: "example.com",
+    });
+    expect(snippet).toContain('data-domain="example.com"');
+    expect(snippet).toContain('src="https://plausible.io/js/script.js"');
+  });
+
+  it("matomo: produces tracker script with site ID", () => {
+    const snippet = resolveAnalyticsSnippet({
+      type: "matomo",
+      mode: "snippet-only",
+      url: "https://matomo.example.com",
+      siteId: "5",
+    });
+    expect(snippet).toContain("matomo.php");
+    expect(snippet).toContain("'5'");
+    expect(snippet).toContain("matomo.example.com");
+  });
+
+  it("posthog: produces posthog init script", () => {
+    const snippet = resolveAnalyticsSnippet({
+      type: "posthog",
+      mode: "snippet-only",
+      snippetSrc: "https://app.posthog.com",
+      siteId: "phc_testkey",
+    });
+    expect(snippet).toContain("posthog.init");
+    expect(snippet).toContain("phc_testkey");
+  });
+
+  it("custom: passes snippet through as-is", () => {
+    const custom = "<script>window.myAnalytics = true;</script>";
+    const snippet = resolveAnalyticsSnippet({
+      type: "custom",
+      mode: "snippet-only",
+      snippetSrc: custom,
+    });
+    expect(snippet).toBe(custom);
+  });
+
+  it("umami: returns empty string when siteId is missing", () => {
+    const snippet = resolveAnalyticsSnippet({
+      type: "umami",
+      mode: "snippet-only",
+      snippetSrc: "https://analytics.example.com/script.js",
+    });
+    expect(snippet).toBe("");
+  });
+
+  it("HTML-encodes attribute values to prevent XSS (non-custom types)", () => {
+    const snippet = resolveAnalyticsSnippet({
+      type: "umami",
+      mode: "snippet-only",
+      snippetSrc: "https://example.com/script.js",
+      siteId: 'abc"<>',
+    });
+    expect(snippet).not.toContain('"<>');
+    expect(snippet).toContain("&quot;&lt;&gt;");
   });
 });

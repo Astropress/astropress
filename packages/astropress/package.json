@@ -99,7 +99,8 @@
     "./web-components/confirm-dialog": "./web-components/confirm-dialog.ts",
     "./web-components/html-editor": "./web-components/html-editor.ts",
     "./api-middleware": "./src/api-middleware.ts",
-    "./api-routes": "./src/api-routes.ts"
+    "./api-routes": "./src/api-routes.ts",
+    "./analytics": "./src/analytics.ts"
   },
   "files": [
     "bin",
