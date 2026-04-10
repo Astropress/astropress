@@ -1,3 +1,48 @@
+// ─── Analytics / observability config ────────────────────────────────────────
+
+export interface AnalyticsConfig {
+  /** Analytics provider identifier. */
+  type: "umami" | "plausible" | "matomo" | "posthog" | "custom";
+  /**
+   * "iframe" — embed the dashboard URL in a full-screen iframe in /ap-admin/services/analytics.
+   * "link"   — show a branded open-in-new-tab button.
+   * "snippet-only" — inject tracker script into site <head> only; no admin panel.
+   */
+  mode: "iframe" | "link" | "snippet-only";
+  /** Dashboard URL for iframe/link mode. */
+  url?: string;
+  /** Tracker script src for snippet injection (e.g. "https://analytics.example.com/script.js"). */
+  snippetSrc?: string;
+  /** Provider-specific site/website ID (Umami: website ID, Plausible: domain). */
+  siteId?: string;
+  /** Override the display label shown in the sidebar. */
+  label?: string;
+}
+
+export interface AbTestingConfig {
+  /** A/B testing / feature flag provider identifier. */
+  type: "growthbook" | "unleash" | "custom";
+  /** "iframe" — embed dashboard. "link" — open-in-new-tab button. */
+  mode: "iframe" | "link";
+  /** Dashboard URL for iframe/link mode. */
+  url?: string;
+  /** API endpoint for flag loading at runtime (e.g. GrowthBook API host). */
+  apiEndpoint?: string;
+  /** Override the display label shown in the sidebar. */
+  label?: string;
+}
+
+export interface AstropressApiConfig {
+  /** Enable /ap-api/v1/* REST endpoints. When false (default), all API routes return 404. */
+  enabled: boolean;
+  /** Require HTTPS for token auth in production. Default: true. */
+  requireHttps?: boolean;
+  /** Max requests per token per minute before rate-limiting. Default: 60. */
+  rateLimit?: number;
+}
+
+// ─── Main config ─────────────────────────────────────────────────────────────
+
 /**
  * CmsConfig — the single seam between astropress and the host site.
  *
@@ -106,6 +151,26 @@ export interface CmsConfig {
       string
     >>;
   };
+
+  /**
+   * Optional analytics / heatmap integration.
+   * When configured, an "Analytics" entry appears in the admin services sidebar.
+   */
+  analytics?: AnalyticsConfig;
+
+  /**
+   * Optional A/B testing / feature flag integration.
+   * When configured, an "A/B Testing" entry appears in the admin services sidebar.
+   */
+  abTesting?: AbTestingConfig;
+
+  /**
+   * Optional REST API configuration.
+   * When api.enabled is true, /ap-api/v1/* endpoints are active and
+   * API Tokens + Webhooks appear in the admin sidebar.
+   * Default: disabled (all /ap-api/* routes return 404).
+   */
+  api?: AstropressApiConfig;
 }
 
 const CMS_CONFIG_KEY = Symbol.for("astropress.cms-config");

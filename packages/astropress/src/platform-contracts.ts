@@ -63,6 +63,60 @@ export interface ProviderCapabilities {
   };
 }
 
+// ─── API Token Store ─────────────────────────────────────────────────────────
+
+export type ApiScope =
+  | "content:read"
+  | "content:write"
+  | "media:read"
+  | "media:write"
+  | "settings:read"
+  | "webhooks:manage";
+
+export interface ApiTokenRecord {
+  id: string;
+  label: string;
+  scopes: ApiScope[];
+  createdAt: string;
+  expiresAt?: string | null;
+  lastUsedAt?: string | null;
+  revokedAt?: string | null;
+}
+
+export interface ApiTokenStore {
+  create(input: { label: string; scopes: ApiScope[]; expiresAt?: string }): Promise<{ record: ApiTokenRecord; rawToken: string }>;
+  list(): Promise<ApiTokenRecord[]>;
+  verify(rawToken: string): Promise<{ valid: true; record: ApiTokenRecord } | { valid: false; reason: string }>;
+  revoke(id: string): Promise<void>;
+}
+
+// ─── Webhook Store ────────────────────────────────────────────────────────────
+
+export type WebhookEvent =
+  | "content.published"
+  | "content.updated"
+  | "content.deleted"
+  | "media.uploaded"
+  | "media.deleted";
+
+export interface WebhookRecord {
+  id: string;
+  url: string;
+  events: WebhookEvent[];
+  active: boolean;
+  createdAt: string;
+  lastFiredAt?: string | null;
+}
+
+export interface WebhookStore {
+  list(): Promise<WebhookRecord[]>;
+  create(input: { url: string; events: WebhookEvent[] }): Promise<{ record: WebhookRecord; signingSecret: string }>;
+  delete(id: string): Promise<void>;
+  dispatch(event: WebhookEvent, payload: unknown): Promise<void>;
+}
+
+// ─── Content kinds ───────────────────────────────────────────────────────────
+
 /** Kinds that can be written via ContentStore.save. */
 export type SaveableContentKind = "page" | "post" | "redirect" | "settings" | "translation";
 
@@ -74,6 +128,8 @@ export interface ContentStoreRecord {
   kind: ReadableContentKind;
   slug: string;
   status: "draft" | "published" | "archived";
+  /** ISO 8601 datetime. When set and status is draft, content is scheduled for auto-publish. */
+  scheduledAt?: string | null;
   locale?: string | null;
   title?: string | null;
   body?: string | null;
@@ -307,6 +363,10 @@ export interface AstropressPlatformAdapter {
   deploy?: DeployTarget;
   importer?: ImportSource;
   preview?: PreviewSession;
+  /** Optional: Bearer-token API access management. Required to enable /ap-api/v1/* endpoints. */
+  apiTokens?: ApiTokenStore;
+  /** Optional: Webhook event dispatch. Required to enable outbound webhook delivery. */
+  webhooks?: WebhookStore;
 }
 
 /**

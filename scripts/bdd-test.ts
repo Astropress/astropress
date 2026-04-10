@@ -819,6 +819,111 @@ const verificationGroups: VerificationGroup[] = [
       },
     ],
   },
+  {
+    label: "analytics and observability integration scenarios",
+    scenarios: [
+      "Analytics dashboard embeds in the admin panel via iframe",
+      "Analytics configured in link mode shows an open button",
+      "Analytics snippet helper returns correct script tag for Umami",
+      "No analytics configured hides the analytics nav item",
+      "AEO schema configuration is available on the SEO settings page",
+    ],
+    steps: [
+      {
+        command: "bunx",
+        args: ["vitest", "run", "tests/analytics-config.test.ts"],
+        cwd: astropressPackageRoot,
+      },
+    ],
+  },
+  {
+    label: "A/B testing integration scenarios",
+    scenarios: [
+      "GrowthBook dashboard embeds in the admin panel",
+      "Unleash configured in link mode shows an open button",
+      "No A/B testing configured hides the nav item",
+      "CLI new command prompts for A/B testing provider selection",
+    ],
+    steps: [
+      {
+        command: "bunx",
+        args: ["vitest", "run", "tests/analytics-config.test.ts"],
+        cwd: astropressPackageRoot,
+      },
+    ],
+  },
+  {
+    label: "API token management scenarios",
+    scenarios: [
+      "Admin can create an API token with selected scopes",
+      "API token verification succeeds for a valid unrevoked token",
+      "Revoked API token is rejected",
+      "Editor cannot access the API tokens management page",
+      "API tokens page is hidden when API is not enabled",
+    ],
+    steps: [
+      {
+        command: "bunx",
+        args: ["vitest", "run", "tests/api-token-store.test.ts"],
+        cwd: astropressPackageRoot,
+      },
+    ],
+  },
+  {
+    label: "REST API for AI agents scenarios",
+    scenarios: [
+      "AI agent reads published content via REST API",
+      "AI agent creates a new draft post via REST API",
+      "Request without Authorization header is rejected",
+      "Token with insufficient scope is rejected",
+      "OpenAPI spec is publicly accessible without authentication",
+      "REST API endpoints return 404 when API is not enabled",
+    ],
+    steps: [
+      {
+        command: "bunx",
+        args: ["vitest", "run", "tests/api-routes.test.ts"],
+        cwd: astropressPackageRoot,
+      },
+      {
+        command: "bunx",
+        args: ["vitest", "run", "tests/api-endpoints.test.ts"],
+        cwd: astropressPackageRoot,
+      },
+    ],
+  },
+  {
+    label: "webhook dispatch scenarios",
+    scenarios: [
+      "Admin registers a webhook for content publish events",
+      "Webhook receives a signed payload when content is published",
+      "Webhook failure does not block the originating operation",
+      "Deleted webhook no longer receives events",
+    ],
+    steps: [
+      {
+        command: "bunx",
+        args: ["vitest", "run", "tests/webhook-store.test.ts"],
+        cwd: astropressPackageRoot,
+      },
+    ],
+  },
+  {
+    label: "content scheduling scenarios",
+    scenarios: [
+      "Editor schedules a post for future publication",
+      "Scheduler publishes content when its scheduled time arrives",
+      "Editor can cancel a scheduled publish",
+      "Scheduling a post does not immediately publish it",
+    ],
+    steps: [
+      {
+        command: "bunx",
+        args: ["vitest", "run", "tests/content-scheduling.test.ts"],
+        cwd: astropressPackageRoot,
+      },
+    ],
+  },
 ];
 
 const scenarios = readFeatureScenarios();
