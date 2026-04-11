@@ -4,7 +4,7 @@ import { createAstropressHostedPlatformAdapter } from "../hosted-platform-adapte
 export function createAstropressAppwriteAdapter(options = {}) {
   return createAstropressHostedPlatformAdapter({
     ...options,
-    providerName: "custom",
+    providerName: "appwrite",
     defaultCapabilities: {
       ...options.defaultCapabilities,
       hostedAdmin: true,
@@ -12,7 +12,12 @@ export function createAstropressAppwriteAdapter(options = {}) {
       serverRuntime: true,
       database: true,
       objectStorage: true,
-      gitSync: true
+      gitSync: true,
+      hostPanel: options.defaultCapabilities?.hostPanel ?? {
+        mode: "link",
+        url: "https://cloud.appwrite.io",
+        label: "Appwrite Console",
+      },
     }
   });
 }
@@ -24,20 +29,31 @@ export function readAstropressAppwriteHostedConfig(env = process.env) {
   if (!endpoint || !projectId || !apiKey) {
     throw new Error("Appwrite hosted config requires APPWRITE_ENDPOINT, APPWRITE_PROJECT_ID, and APPWRITE_API_KEY.");
   }
+  const base = endpoint.replace(/\/$/, "");
+  const databaseId = env.APPWRITE_DATABASE_ID?.trim();
+  const bucketId = env.APPWRITE_BUCKET_ID?.trim();
   return {
     endpoint,
     projectId,
     apiKey,
-    apiBaseUrl: `${endpoint.replace(/\/$/, "")}/functions/astropress`,
-    previewBaseUrl: `${endpoint.replace(/\/$/, "")}/console/project-${projectId}`
+    ...(databaseId && { databaseId }),
+    ...(bucketId && { bucketId }),
+    apiBaseUrl: `${base}/functions/astropress`,
+    previewBaseUrl: `${base}/console/project-${projectId}`
   };
 }
 
 export function createAstropressAppwriteHostedAdapter(options = {}) {
   const config = options.config ?? readAstropressAppwriteHostedConfig(options.env);
+  const hostPanel = options.defaultCapabilities?.hostPanel ?? {
+    mode: "link",
+    url: `https://cloud.appwrite.io/console/project-${config.projectId}`,
+    label: "Appwrite Console",
+  };
+
   if (!options.backingAdapter && !options.content && !options.media && !options.revisions && !options.auth) {
     return createAstropressHostedApiAdapter({
-      providerName: "custom",
+      providerName: "appwrite",
       apiBaseUrl: config.apiBaseUrl,
       accessToken: config.apiKey,
       previewBaseUrl: `${config.previewBaseUrl.replace(/\/$/, "")}/preview`,
@@ -49,13 +65,14 @@ export function createAstropressAppwriteHostedAdapter(options = {}) {
         serverRuntime: true,
         database: true,
         objectStorage: true,
-        gitSync: true
+        gitSync: true,
+        hostPanel,
       }
     });
   }
   return createAstropressHostedPlatformAdapter({
     ...options,
-    providerName: "custom",
+    providerName: "appwrite",
     defaultCapabilities: {
       ...options.defaultCapabilities,
       hostedAdmin: true,
@@ -63,7 +80,8 @@ export function createAstropressAppwriteHostedAdapter(options = {}) {
       serverRuntime: true,
       database: true,
       objectStorage: true,
-      gitSync: true
+      gitSync: true,
+      hostPanel,
     },
     preview: options.preview ?? {
       async create() {
