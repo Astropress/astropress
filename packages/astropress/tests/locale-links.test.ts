@@ -17,7 +17,7 @@ beforeEach(() => {
       { route: "/es/impacto", locale: "es", englishSourceUrl: "/impact", translationState: "published" },
       { route: "/es", locale: "es", englishSourceUrl: "/", translationState: "published" },
       { route: "/es/paisajes-comestibles", locale: "es", englishSourceUrl: "/en/edible-landscapes", translationState: "published" },
-      { route: "/es/contacto", locale: "es", englishSourceUrl: "/en/contact-fleet-farming", translationState: "published" },
+      { route: "/es/contacto", locale: "es", englishSourceUrl: "/en/contact", translationState: "published" },
     ],
   });
 });
@@ -96,15 +96,15 @@ describe("getLocaleSwitchTargets()", () => {
   it("uses explicit alternate links for reviewed EN/ES route pairs", () => {
     const targets = getLocaleSwitchTargets({
       lang: "en",
-      currentPath: "/en/contact-fleet-farming",
+      currentPath: "/en/contact",
       alternateLinks: [
-        { hreflang: "en", href: "https://example.com/en/contact-fleet-farming/" },
+        { hreflang: "en", href: "https://example.com/en/contact/" },
         { hreflang: "es", href: "https://example.com/es/contacto/" },
       ],
     });
 
     expect(targets).toEqual({
-      en: "/en/contact-fleet-farming/",
+      en: "/en/contact/",
       es: "/es/contacto/",
     });
   });

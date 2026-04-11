@@ -47,6 +47,19 @@ export interface AstropressApiConfig {
   requireHttps?: boolean;
   /** Max requests per token per minute before rate-limiting. Default: 60. */
   rateLimit?: number;
+  /**
+   * Optional CORS configuration for the REST API.
+   * Set `origin` to `"*"` to allow all origins, a single origin string, or an array of allowed origins.
+   * When unset, no CORS headers are added.
+   *
+   * @example
+   * ```ts
+   * registerCms({ api: { enabled: true, cors: { origin: "https://app.example.com" } } });
+   * ```
+   */
+  cors?: {
+    origin: string | string[] | "*";
+  };
 }
 
 // ─── Main config ─────────────────────────────────────────────────────────────
@@ -62,8 +75,11 @@ export interface CmsConfig {
   /** Template keys that are valid for structured page routes (e.g. "home", "impact"). */
   templateKeys: readonly string[];
 
-  /** Canonical base URL of the site, e.g. "https://fleetfarming.org". Used for sitemap, canonical tags, etc. */
+  /** Canonical base URL of the site, e.g. "https://example.com". Used for sitemap, canonical tags, etc. */
   siteUrl: string;
+
+  /** Human-readable site name used in transactional emails and admin UI. Defaults to "Astropress". */
+  siteName?: string;
 
   /**
    * Seeded content records loaded from the host site's pages.json.
@@ -364,4 +380,4 @@ export function peekCmsConfig(): CmsConfig | null {
 }
 
 // ─── Plugin dispatch — extracted to plugin-dispatch.ts ───────────────────────
-export { dispatchPluginContentEvent, dispatchPluginMediaEvent } from "./plugin-dispatch";
+export { dispatchPluginContentEvent, dispatchPluginMediaEvent, reportAstropressError } from "./plugin-dispatch";

@@ -16,6 +16,7 @@ interface EmailMessage {
 }
 
 import { getTransactionalEmailConfig, isProductionRuntime } from "./runtime-env";
+import { peekCmsConfig } from "./config";
 
 function isMockMode(locals?: App.Locals | null) {
   return getTransactionalEmailConfig(locals).mode !== "resend";
@@ -81,20 +82,22 @@ export async function sendTransactionalEmail(message: EmailMessage, locals?: App
 }
 
 export async function sendPasswordResetEmail(email: string, resetUrl: string, locals?: App.Locals | null): Promise<EmailResult> {
+  const siteName = peekCmsConfig()?.siteName ?? "Astropress";
   return sendTransactionalEmail({
     to: email,
-    subject: "Reset your Fleet Farming admin password",
-    text: `Use this link to reset your Fleet Farming admin password: ${resetUrl}`,
-    html: `<p>Use the link below to reset your Fleet Farming admin password.</p><p><a href="${resetUrl}">${resetUrl}</a></p>`,
+    subject: `Reset your ${siteName} admin password`,
+    text: `Use this link to reset your ${siteName} admin password: ${resetUrl}`,
+    html: `<p>Use the link below to reset your ${siteName} admin password.</p><p><a href="${resetUrl}">${resetUrl}</a></p>`,
   }, locals);
 }
 
 export async function sendUserInviteEmail(email: string, inviteUrl: string, locals?: App.Locals | null): Promise<EmailResult> {
+  const siteName = peekCmsConfig()?.siteName ?? "Astropress";
   return sendTransactionalEmail({
     to: email,
-    subject: "Accept your Fleet Farming admin invitation",
-    text: `Use this link to accept your Fleet Farming admin invitation and set your password: ${inviteUrl}`,
-    html: `<p>You have been invited to the Fleet Farming admin.</p><p>Use the link below to accept the invitation and set your password.</p><p><a href="${inviteUrl}">${inviteUrl}</a></p>`,
+    subject: `Accept your ${siteName} admin invitation`,
+    text: `Use this link to accept your ${siteName} admin invitation and set your password: ${inviteUrl}`,
+    html: `<p>You have been invited to the ${siteName} admin.</p><p>Use the link below to accept the invitation and set your password.</p><p><a href="${inviteUrl}">${inviteUrl}</a></p>`,
   }, locals);
 }
 
@@ -113,7 +116,7 @@ export async function sendContactNotification(input: {
     return {
       ok: true,
       preview: {
-        to: "admin-preview@fleetfarming.local",
+        to: "admin-preview@example.local",
         subject: `Preview contact submission from ${input.name}`,
         html: `<p>${input.name} (${input.email}) submitted a contact request.</p><p>${input.message}</p>`,
       },
@@ -122,7 +125,7 @@ export async function sendContactNotification(input: {
 
   return sendTransactionalEmail({
     to: destination,
-    subject: `Fleet Farming contact submission from ${input.name}`,
+    subject: `${peekCmsConfig()?.siteName ?? "Astropress"} contact submission from ${input.name}`,
     text: `${input.name} <${input.email}> submitted a contact request at ${input.submittedAt}\n\n${input.message}`,
     html: `<p><strong>${input.name}</strong> &lt;${input.email}&gt; submitted a contact request at ${input.submittedAt}.</p><p>${input.message}</p>`,
   }, locals);

@@ -15,17 +15,25 @@ use crate::providers::{
 
 // ── scaffold ──────────────────────────────────────────────────────────────────
 
+/// Optional feature flags for `scaffold_new_project`.
+/// Grouping these into a struct keeps the function signature within clippy's
+/// `too_many_arguments` limit and makes future additions non-breaking.
+pub(crate) struct ScaffoldOptions {
+    pub analytics_flag: Option<AnalyticsProvider>,
+    pub ab_testing_flag: Option<AbTestingProvider>,
+    pub heatmap_flag: Option<HeatmapProvider>,
+    pub enable_api_flag: bool,
+}
+
 pub(crate) fn scaffold_new_project(
     project_dir: &Path,
     use_local_package: bool,
     provider: LocalProvider,
     app_host: Option<AppHost>,
     data_services: Option<DataServices>,
-    analytics_flag: Option<AnalyticsProvider>,
-    ab_testing_flag: Option<AbTestingProvider>,
-    heatmap_flag: Option<HeatmapProvider>,
-    enable_api_flag: bool,
+    options: ScaffoldOptions,
 ) -> Result<(), String> {
+    let ScaffoldOptions { analytics_flag, ab_testing_flag, heatmap_flag, enable_api_flag } = options;
     if project_dir.exists() {
         let mut entries = fs::read_dir(project_dir).map_err(crate::io_error)?;
         if entries.next().transpose().map_err(crate::io_error)?.is_some() {

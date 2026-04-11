@@ -7,7 +7,7 @@ describe("settings repository factory", () => {
     const recordSettingsAudit = vi.fn();
     const repository = createAstropressSettingsRepository({
       getSettings: vi.fn(() => ({
-        siteTitle: "Fleet",
+        siteTitle: "Acme",
         siteTagline: "Food",
         donationUrl: "/donate",
         newsletterEnabled: true,
@@ -20,7 +20,7 @@ describe("settings repository factory", () => {
 
     const result = repository.saveSettings(
       {
-        siteTitle: "Fleet Farming",
+        siteTitle: "Acme Corp",
         newsletterEnabled: false,
       },
       { email: "admin@example.com", role: "admin", name: "Admin" },
@@ -29,7 +29,7 @@ describe("settings repository factory", () => {
     expect(result).toEqual({
       ok: true,
       settings: {
-        siteTitle: "Fleet Farming",
+        siteTitle: "Acme Corp",
         siteTagline: "Food",
         donationUrl: "/donate",
         newsletterEnabled: false,

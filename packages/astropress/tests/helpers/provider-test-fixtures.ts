@@ -45,6 +45,14 @@ export class SqliteBackedD1Database implements D1DatabaseLike {
   prepare(query: string): D1PreparedStatement {
     return new SqliteD1PreparedStatement(this.db, query);
   }
+
+  async batch<T = Record<string, unknown>>(statements: D1PreparedStatement[]): Promise<D1Result<T>[]> {
+    const results: D1Result<T>[] = [];
+    for (const stmt of statements) {
+      results.push(await (stmt as SqliteD1PreparedStatement).run<T>());
+    }
+    return results;
+  }
 }
 
 export function createHostedStores() {

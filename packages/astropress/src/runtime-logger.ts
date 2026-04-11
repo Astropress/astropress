@@ -1,12 +1,29 @@
 const isDev = process.env.NODE_ENV !== "production";
 
+const LOG_LEVEL_ORDER = { error: 0, warn: 1, info: 2 } as const;
+type LogLevel = keyof typeof LOG_LEVEL_ORDER;
+
+function resolveConfiguredLevel(): LogLevel {
+  const raw = process.env.LOG_LEVEL?.toLowerCase();
+  if (raw === "error" || raw === "warn" || raw === "info") return raw;
+  return "info";
+}
+
+const configuredOrder = LOG_LEVEL_ORDER[resolveConfiguredLevel()];
+
+function shouldEmit(level: LogLevel): boolean {
+  return LOG_LEVEL_ORDER[level] <= configuredOrder;
+}
+
 export interface AstropressLogger {
   info(message: string, meta?: Record<string, unknown>): void;
   warn(message: string, meta?: Record<string, unknown>): void;
   error(message: string, meta?: Record<string, unknown>): void;
 }
 
-function emit(level: "info" | "warn" | "error", context: string, message: string, meta?: Record<string, unknown>) {
+function emit(level: LogLevel, context: string, message: string, meta?: Record<string, unknown>) {
+  if (!shouldEmit(level)) return;
+
   if (isDev) {
     const prefix = `[astropress:${context}]`;
     if (meta && Object.keys(meta).length > 0) {

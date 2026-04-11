@@ -156,23 +156,23 @@ describe("host runtime factories", () => {
       createAstropressBootstrapAdminUsers({
         adminPassword: "admin-secret",
         editorPassword: "editor-secret",
-        adminEmail: "admin@fleetfarming.org",
-        adminName: "Fleet Admin",
-        editorEmail: "editor@fleetfarming.org",
-        editorName: "Fleet Editor",
+        adminEmail: "admin@example.com",
+        adminName: "Test Admin",
+        editorEmail: "editor@example.com",
+        editorName: "Test Editor",
       }),
     ).toEqual([
       {
-        email: "admin@fleetfarming.org",
+        email: "admin@example.com",
         password: "admin-secret",
         role: "admin",
-        name: "Fleet Admin",
+        name: "Test Admin",
       },
       {
-        email: "editor@fleetfarming.org",
+        email: "editor@example.com",
         password: "editor-secret",
         role: "editor",
-        name: "Fleet Editor",
+        name: "Test Editor",
       },
     ]);
   });

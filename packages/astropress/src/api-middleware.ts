@@ -1,4 +1,5 @@
 import type { ApiScope, ApiTokenStore } from "./platform-contracts";
+import { peekCmsConfig } from "./config";
 
 export interface ApiRequestContext {
   apiTokens: ApiTokenStore;
@@ -83,32 +84,80 @@ export function jsonOkPaginated(body: JsonValue, total: number, status = 200) {
   });
 }
 
+function resolveCorsOrigin(request: Request): string | null {
+  const corsConfig = peekCmsConfig()?.api?.cors;
+  if (!corsConfig) return null;
+  const { origin } = corsConfig;
+  if (origin === "*") return "*";
+  const requestOrigin = request.headers.get("Origin") ?? "";
+  if (!requestOrigin) return null;
+  if (Array.isArray(origin)) {
+    return origin.includes(requestOrigin) ? requestOrigin : null;
+  }
+  return origin === requestOrigin ? requestOrigin : null;
+}
+
+function applyCorsHeaders(response: Response, request: Request): Response {
+  const allowedOrigin = resolveCorsOrigin(request);
+  if (!allowedOrigin) return response;
+  const headers = new Headers(response.headers);
+  headers.set("Access-Control-Allow-Origin", allowedOrigin);
+  headers.set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+  headers.set("Access-Control-Allow-Headers", "Authorization, Content-Type");
+  if (allowedOrigin !== "*") {
+    headers.set("Vary", "Origin");
+  }
+  return new Response(response.body, { status: response.status, statusText: response.statusText, headers });
+}
+
+export function handleCorsPreflightRequest(request: Request): Response | null {
+  if (request.method !== "OPTIONS") return null;
+  const allowedOrigin = resolveCorsOrigin(request);
+  if (!allowedOrigin) return null;
+  return new Response(null, {
+    status: 204,
+    headers: {
+      "Access-Control-Allow-Origin": allowedOrigin,
+      "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+      "Access-Control-Allow-Headers": "Authorization, Content-Type",
+      "Access-Control-Max-Age": "86400",
+      ...(allowedOrigin !== "*" ? { Vary: "Origin" } : {}),
+    },
+  });
+}
+
 export async function withApiRequest(
   request: Request,
   ctx: ApiRequestContext,
   requiredScopes: ApiScope[],
   handler: (tokenId: string) => Promise<Response>,
 ): Promise<Response> {
+  const preflight = handleCorsPreflightRequest(request);
+  if (preflight) return preflight;
+
   const authHeader = request.headers.get("Authorization") ?? "";
   if (!authHeader.startsWith("Bearer ")) {
-    return API_ERROR_SHAPES.unauthorized("Missing or invalid Authorization header. Use: Authorization: Bearer <token>");
+    return applyCorsHeaders(
+      API_ERROR_SHAPES.unauthorized("Missing or invalid Authorization header. Use: Authorization: Bearer <token>"),
+      request,
+    );
   }
 
   const rawToken = authHeader.slice(7).trim();
   if (!rawToken) {
-    return API_ERROR_SHAPES.unauthorized("Bearer token is empty.");
+    return applyCorsHeaders(API_ERROR_SHAPES.unauthorized("Bearer token is empty."), request);
   }
 
   const result = await ctx.apiTokens.verify(rawToken);
   if (!result.valid) {
-    return API_ERROR_SHAPES.unauthorized(result.reason);
+    return applyCorsHeaders(API_ERROR_SHAPES.unauthorized(result.reason), request);
   }
 
   const { record } = result;
 
   for (const scope of requiredScopes) {
     if (!record.scopes.includes(scope)) {
-      return API_ERROR_SHAPES.forbidden(`Token lacks required scope: ${scope}`);
+      return applyCorsHeaders(API_ERROR_SHAPES.forbidden(`Token lacks required scope: ${scope}`), request);
     }
   }
 
@@ -116,10 +165,11 @@ export async function withApiRequest(
   const rateLimit = ctx.rateLimit ?? 60;
   const allowed = ctx.checkRateLimit(rateLimitKey, rateLimit, 60_000);
   if (!allowed) {
-    return API_ERROR_SHAPES.rateLimited();
+    return applyCorsHeaders(API_ERROR_SHAPES.rateLimited(), request);
   }
 
-  return handler(record.id);
+  const response = await handler(record.id);
+  return applyCorsHeaders(response, request);
 }
 
 export const apiErrors = API_ERROR_SHAPES;

@@ -133,7 +133,8 @@
     "test:coverage": "vitest run --coverage",
     "test:watch": "vitest",
     "release": "changeset publish",
-    "version": "changeset version"
+    "version": "changeset version",
+    "prepublishOnly": "cd ../.. && bun run audit:sync && bun run audit:arch"
   },
   "keywords": [
     "astro",
@@ -144,6 +145,11 @@
     "runway",
     "github-pages",
     "web-components"
+  ],
+  "sideEffects": [
+    "./web-components/*.ts",
+    "./web-components/*.js",
+    "./web-components/index.ts"
   ],
   "license": "MIT",
   "repository": {

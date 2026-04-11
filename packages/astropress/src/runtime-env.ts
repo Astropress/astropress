@@ -109,8 +109,9 @@ export function getTransactionalEmailConfig(locals?: App.Locals | null) {
 }
 
 export function getAdminBootstrapConfig(locals?: App.Locals | null) {
-  const adminPassword = getStringRuntimeValue("ADMIN_PASSWORD", locals) ?? (!isProductionRuntime() ? "fleet-test-admin-password" : undefined);
-  const editorPassword = getStringRuntimeValue("EDITOR_PASSWORD", locals) ?? (!isProductionRuntime() ? "fleet-test-editor-password" : undefined);
+  const isPlaywright = Boolean(getRuntimeEnv("PLAYWRIGHT_E2E_MODE") ?? getRuntimeEnv("PLAYWRIGHT"));
+  const adminPassword = getStringRuntimeValue("ADMIN_PASSWORD", locals) ?? (isPlaywright ? "ap-e2e-admin-password" : undefined);
+  const editorPassword = getStringRuntimeValue("EDITOR_PASSWORD", locals) ?? (isPlaywright ? "ap-e2e-editor-password" : undefined);
   return {
     adminPassword,
     editorPassword,

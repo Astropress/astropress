@@ -5,10 +5,30 @@ import { peekCmsConfig } from "./config";
 import type { AstropressContentEvent, AstropressMediaEvent } from "./cms-plugins";
 
 /**
+ * Dispatch an error to all registered plugin `onError` hooks.
+ * Called internally whenever a plugin hook or Astropress operation throws unexpectedly.
+ * Errors thrown inside `onError` are silently swallowed.
+ */
+async function dispatchPluginError(error: Error, context: string): Promise<void> {
+  const config = peekCmsConfig();
+  if (!config?.plugins?.length) return;
+  for (const plugin of config.plugins) {
+    const fn = plugin.onError;
+    if (typeof fn !== "function") continue;
+    try {
+      await fn(error, context);
+    } catch {
+      // swallow — onError must never throw
+    }
+  }
+}
+
+/**
  * Dispatch a content lifecycle event to all registered plugin hooks.
  *
  * Called internally after content saves and publishes. Errors thrown by
- * individual plugin hooks are caught and logged; they never fail the action.
+ * individual plugin hooks are caught, forwarded to `onError`, and logged;
+ * they never fail the action.
  */
 export async function dispatchPluginContentEvent(
   hook: "onContentSave" | "onContentPublish",
@@ -22,9 +42,10 @@ export async function dispatchPluginContentEvent(
     try {
       await fn(event);
     } catch (err) {
-      // Plugin errors must not propagate — they would fail the admin action.
+      const error = err instanceof Error ? err : new Error(String(err));
       // biome-ignore lint/suspicious/noConsole: server-side plugin error logging
       console.error(`[astropress] Plugin "${plugin.name}" threw in ${hook}:`, err);
+      await dispatchPluginError(error, `plugin:${plugin.name}`);
     }
   }
 }
@@ -33,7 +54,8 @@ export async function dispatchPluginContentEvent(
  * Dispatch a media upload event to all registered plugin hooks.
  *
  * Called internally after a media asset is successfully stored. Errors thrown by
- * individual plugin hooks are caught and logged; they never fail the upload action.
+ * individual plugin hooks are caught, forwarded to `onError`, and logged;
+ * they never fail the upload action.
  */
 export async function dispatchPluginMediaEvent(event: AstropressMediaEvent): Promise<void> {
   const config = peekCmsConfig();
@@ -44,9 +66,29 @@ export async function dispatchPluginMediaEvent(event: AstropressMediaEvent): Pro
     try {
       await fn(event);
     } catch (err) {
-      // Plugin errors must not propagate — they would fail the upload action.
+      const error = err instanceof Error ? err : new Error(String(err));
       // biome-ignore lint/suspicious/noConsole: server-side plugin error logging
       console.error(`[astropress] Plugin "${plugin.name}" threw in onMediaUpload:`, err);
+      await dispatchPluginError(error, `plugin:${plugin.name}`);
     }
   }
+}
+
+/**
+ * Report an error from a non-plugin Astropress operation to all `onError` plugin hooks.
+ * Use this for unexpected errors in admin actions, background jobs, etc.
+ *
+ * @example
+ * ```ts
+ * try {
+ *   await performOperation();
+ * } catch (err) {
+ *   await reportAstropressError(err, "content-save");
+ *   throw err;
+ * }
+ * ```
+ */
+export async function reportAstropressError(error: unknown, context: string): Promise<void> {
+  const err = error instanceof Error ? error : new Error(String(error));
+  await dispatchPluginError(err, context);
 }

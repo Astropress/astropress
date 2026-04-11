@@ -318,7 +318,14 @@ function createAstropressSqliteSeedToolkit(options) {
     }
   }
   function openSeedDatabase(dbPath) {
-    return new SqliteDatabase(dbPath);
+    const db = new SqliteDatabase(dbPath);
+    if (dbPath !== ":memory:") {
+      // journal_mode requires prepare().get() (not exec) to take effect in both bun:sqlite and node:sqlite
+      db.prepare("PRAGMA journal_mode = WAL").get();
+      db.prepare("PRAGMA synchronous = NORMAL").get();
+    }
+    db.prepare("PRAGMA foreign_keys = ON").get();
+    return db;
   }
   function seedBootstrapUsers(db) {
     const upsert = db.prepare(`

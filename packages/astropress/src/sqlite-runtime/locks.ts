@@ -23,51 +23,55 @@ function lockExpiresAt(): string {
 }
 
 export function createSqliteLocksOps(getDb: () => AstropressSqliteDatabaseLike) {
-  function expireStale() {
-    getDb()
-      .prepare("DELETE FROM content_locks WHERE expires_at <= ?")
-      .run(new Date().toISOString());
-  }
-
   return {
     acquireLock(
       slug: string,
       email: string,
       name: string,
     ): ContentLockResult | ContentLockConflict {
-      expireStale();
-      const existing = getDb()
-        .prepare(
-          "SELECT locked_by_email, locked_by_name, expires_at FROM content_locks WHERE slug = ? LIMIT 1",
-        )
-        .get(slug) as
-        | { locked_by_email: string; locked_by_name: string; expires_at: string }
-        | undefined;
+      const db = getDb();
+      db.exec("BEGIN IMMEDIATE");
+      try {
+        db.prepare("DELETE FROM content_locks WHERE expires_at <= ?").run(new Date().toISOString());
 
-      if (existing && existing.locked_by_email !== email) {
-        return {
-          ok: false,
-          conflict: true,
-          lockedByEmail: existing.locked_by_email,
-          lockedByName: existing.locked_by_name,
-          expiresAt: existing.expires_at,
-        };
+        const existing = db
+          .prepare(
+            "SELECT locked_by_email, locked_by_name, expires_at FROM content_locks WHERE slug = ? LIMIT 1",
+          )
+          .get(slug) as
+          | { locked_by_email: string; locked_by_name: string; expires_at: string }
+          | undefined;
+
+        if (existing && existing.locked_by_email !== email) {
+          db.exec("ROLLBACK");
+          return {
+            ok: false,
+            conflict: true,
+            lockedByEmail: existing.locked_by_email,
+            lockedByName: existing.locked_by_name,
+            expiresAt: existing.expires_at,
+          };
+        }
+
+        const lockToken = crypto.randomUUID();
+        const expiresAt = lockExpiresAt();
+        db
+          .prepare(
+            `INSERT INTO content_locks (slug, locked_by_email, locked_by_name, lock_token, expires_at)
+             VALUES (?, ?, ?, ?, ?)
+             ON CONFLICT(slug) DO UPDATE SET
+               locked_by_email = excluded.locked_by_email,
+               locked_by_name = excluded.locked_by_name,
+               lock_token = excluded.lock_token,
+               expires_at = excluded.expires_at`,
+          )
+          .run(slug, email, name, lockToken, expiresAt);
+        db.exec("COMMIT");
+        return { ok: true, lockToken, expiresAt };
+      } catch (e) {
+        db.exec("ROLLBACK");
+        throw e;
       }
-
-      const lockToken = crypto.randomUUID();
-      const expiresAt = lockExpiresAt();
-      getDb()
-        .prepare(
-          `INSERT INTO content_locks (slug, locked_by_email, locked_by_name, lock_token, expires_at)
-           VALUES (?, ?, ?, ?, ?)
-           ON CONFLICT(slug) DO UPDATE SET
-             locked_by_email = excluded.locked_by_email,
-             locked_by_name = excluded.locked_by_name,
-             lock_token = excluded.lock_token,
-             expires_at = excluded.expires_at`,
-        )
-        .run(slug, email, name, lockToken, expiresAt);
-      return { ok: true, lockToken, expiresAt };
     },
 
     refreshLock(slug: string, lockToken: string): boolean {

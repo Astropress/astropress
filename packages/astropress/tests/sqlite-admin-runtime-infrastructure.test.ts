@@ -1,7 +1,10 @@
 import { DatabaseSync } from "node:sqlite";
+import { mkdirSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import path from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createAstropressSqliteAdminRuntime } from "../src/sqlite-admin-runtime.js";
-import { readAstropressSqliteSchemaSql } from "../src/sqlite-bootstrap.js";
+import { readAstropressSqliteSchemaSql, createDefaultAstropressSqliteSeedToolkit } from "../src/sqlite-bootstrap.js";
 import { createRuntimeFixture, makePasswordHash, type RuntimeFixture } from "./helpers/sqlite-admin-runtime-fixture.js";
 
 let fixture: RuntimeFixture;
@@ -216,6 +219,45 @@ describe("rateLimits", () => {
     fixture.store.rateLimits.checkRateLimit("rl:fail-existing", 10, 60_000);
     fixture.store.rateLimits.recordFailedAttempt("rl:fail-existing", 10, 60_000);
     expect(fixture.store.rateLimits.peekRateLimit("rl:fail-existing", 10, 60_000)).toBe(true);
+  });
+});
+
+// ─── WAL mode and PRAGMA settings ────────────────────────────────────────────
+
+describe("SQLite PRAGMA settings (file-based database)", () => {
+  let tmpDir: string;
+  let tmpDbPath: string;
+
+  beforeAll(() => {
+    tmpDir = path.join(tmpdir(), `astropress-test-${Date.now()}`);
+    mkdirSync(tmpDir, { recursive: true });
+    tmpDbPath = path.join(tmpDir, "test.sqlite");
+  });
+
+  afterAll(() => {
+    rmSync(tmpDir, { recursive: true, force: true });
+  });
+
+  it("openSeedDatabase enables WAL journal mode on file-based databases", () => {
+    const toolkit = createDefaultAstropressSqliteSeedToolkit();
+    const db = toolkit.openSeedDatabase(tmpDbPath);
+    try {
+      const row = db.prepare("PRAGMA journal_mode").get() as { journal_mode: string };
+      expect(row.journal_mode).toBe("wal");
+    } finally {
+      db.close();
+    }
+  });
+
+  it("openSeedDatabase enables foreign key enforcement", () => {
+    const toolkit = createDefaultAstropressSqliteSeedToolkit();
+    const db = toolkit.openSeedDatabase(tmpDbPath);
+    try {
+      const row = db.prepare("PRAGMA foreign_keys").get() as { foreign_keys: number };
+      expect(row.foreign_keys).toBe(1);
+    } finally {
+      db.close();
+    }
   });
 });
 

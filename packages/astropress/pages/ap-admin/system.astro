@@ -70,7 +70,7 @@ const sitemapPage = routeMap.get("/sitemap.xml");
         </label>
         <label class="admin-field">
           <span>Contact href</span>
-          <input class="admin-input" type="text" name="contactHref" value={String(errorPage?.settings?.contactHref ?? "/en/contact-fleet-farming")} required />
+          <input class="admin-input" type="text" name="contactHref" value={String(errorPage?.settings?.contactHref ?? "/en/contact")} required />
         </label>
         <label class="admin-field">
           <span>Revision note</span>
@@ -130,7 +130,7 @@ const sitemapPage = routeMap.get("/sitemap.xml");
         </label>
         <label class="admin-field">
           <span>Extra canonical URLs</span>
-          <textarea class="admin-textarea code-textarea" name="extraUrls" rows="4" placeholder="https://fleetfarming.org/custom-url/">{Array.isArray(sitemapPage?.settings?.extraUrls) ? (sitemapPage?.settings?.extraUrls as string[]).join("\n") : ""}</textarea>
+          <textarea class="admin-textarea code-textarea" name="extraUrls" rows="4" placeholder="https://example.com/custom-url/">{Array.isArray(sitemapPage?.settings?.extraUrls) ? (sitemapPage?.settings?.extraUrls as string[]).join("\n") : ""}</textarea>
         </label>
         <label class="admin-field">
           <span>Revision note</span>

@@ -10,6 +10,7 @@ interface SqliteStatementLike {
 }
 
 export interface AstropressSqliteDatabaseLike {
+  exec(sql: string): void;
   prepare(sql: string): SqliteStatementLike;
 }
 

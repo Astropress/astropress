@@ -39,7 +39,7 @@ export function actionRedirect(location: string, status = 302): Response {
 }
 
 export function actionErrorRedirect(path: string, message: string): Response {
-  const url = new URL(path, "https://fleetfarming.local");
+  const url = new URL(path, "https://astropress.invalid");
   url.searchParams.set("error", "1");
   url.searchParams.set("message", message);
   return actionRedirect(url.pathname + url.search);

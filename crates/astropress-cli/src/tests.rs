@@ -255,7 +255,7 @@ fn scaffolds_new_project_from_example() {
     let root = temp_dir("new");
     let project_dir = root.join("demo");
     // Pass explicit app_host to skip the interactive hosting prompt
-    scaffold_new_project(&project_dir, true, LocalProvider::Supabase, Some(AppHost::Vercel), Some(DataServices::Supabase), None, None, None, false).unwrap();
+    scaffold_new_project(&project_dir, true, LocalProvider::Supabase, Some(AppHost::Vercel), Some(DataServices::Supabase), crate::commands::new::ScaffoldOptions { analytics_flag: None, ab_testing_flag: None, heatmap_flag: None, enable_api_flag: false }).unwrap();
 
     let package_json = fs::read_to_string(project_dir.join("package.json")).unwrap();
     assert!(package_json.contains("\"name\": \"demo\""));

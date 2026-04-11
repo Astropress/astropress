@@ -1,12 +1,31 @@
+import { createReadStream } from "node:fs";
+import { copyFile, mkdir } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
+import { join } from "node:path";
 
 import { injectAstropressAdminRoutes } from "./admin-routes.js";
 import { peekCmsConfig } from "./config.js";
+
+const adminCssSrc = fileURLToPath(new URL("../public/admin.css", import.meta.url));
 
 export function createAstropressAdminAppIntegration() {
   return {
     name: "astropress-admin-app",
     hooks: {
+      // Serve admin.css from the package public directory during development.
+      "astro:server:setup": ({ server }) => {
+        server.middlewares.use("/admin.css", (_req, res) => {
+          res.setHeader("Content-Type", "text/css; charset=utf-8");
+          res.setHeader("Cache-Control", "no-cache");
+          createReadStream(adminCssSrc).pipe(res);
+        });
+      },
+      // Copy admin.css into the build output for production deployments.
+      "astro:build:done": async ({ dir }) => {
+        const dest = join(fileURLToPath(dir), "admin.css");
+        await mkdir(fileURLToPath(dir), { recursive: true });
+        await copyFile(adminCssSrc, dest);
+      },
       "astro:config:setup": ({ injectRoute, addMiddleware }) => {
         const pagesDirectory = fileURLToPath(new URL("../pages/ap-admin", import.meta.url));
         injectAstropressAdminRoutes(pagesDirectory, injectRoute);

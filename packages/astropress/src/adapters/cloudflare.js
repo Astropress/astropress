@@ -4,8 +4,15 @@ import { createSessionTokenDigest, verifyPassword } from "../crypto-utils.js";
 function resolveCloudflareSessionSecret() {
     const secret = process.env.CLOUDFLARE_SESSION_SECRET ?? "cloudflare-adapter-session-secret";
     if (secret === "cloudflare-adapter-session-secret") {
+        const isProd = process.env.NODE_ENV === "production" || process.env.CF_PAGES === "1";
+        if (isProd) {
+            throw new Error(
+                "[astropress] CLOUDFLARE_SESSION_SECRET must be set before deployment. " +
+                "Use a random string of 32+ characters."
+            );
+        }
         console.warn(
-            "[AstroPress] CLOUDFLARE_SESSION_SECRET is using the insecure default. " +
+            "[astropress] CLOUDFLARE_SESSION_SECRET is using the insecure default. " +
             "Set this env var to a long random string before deploying."
         );
     }
@@ -190,27 +197,24 @@ function createD1CloudflareAuthStore(db) {
             const sessionId = crypto.randomUUID();
             const storedSessionId = await createSessionTokenDigest(sessionId, resolveCloudflareSessionSecret());
             const csrfToken = crypto.randomUUID();
-            await db
-                .prepare(`
-            INSERT INTO admin_sessions (id, user_id, csrf_token, ip_address, user_agent)
-            VALUES (?, ?, ?, ?, ?)
-          `)
-                .bind(storedSessionId, row.id, csrfToken, null, "astropress-cloudflare-adapter")
-                .run();
+            // Batch cleanup of expired sessions with the new session insert — atomic on D1
+            await db.batch([
+                db.prepare(
+                    `UPDATE admin_sessions SET revoked_at = CURRENT_TIMESTAMP
+                     WHERE revoked_at IS NULL AND last_active_at < datetime('now', '-12 hours')`,
+                ),
+                db.prepare(`INSERT INTO admin_sessions (id, user_id, csrf_token, ip_address, user_agent) VALUES (?, ?, ?, ?, ?)`)
+                    .bind(storedSessionId, row.id, csrfToken, null, "astropress-cloudflare-adapter"),
+            ]);
             return { id: sessionId, email: row.email, role: row.role };
         },
         async signOut(sessionId) {
-            for (const candidate of [sessionId, await createSessionTokenDigest(sessionId, resolveCloudflareSessionSecret())]) {
-                await db
-                    .prepare(`
-            UPDATE admin_sessions
-            SET revoked_at = CURRENT_TIMESTAMP
-            WHERE id = ?
-              AND revoked_at IS NULL
-          `)
-                    .bind(candidate)
-                    .run();
-            }
+            const digest = await createSessionTokenDigest(sessionId, resolveCloudflareSessionSecret());
+            const revokeStmt = `UPDATE admin_sessions SET revoked_at = CURRENT_TIMESTAMP WHERE id = ? AND revoked_at IS NULL`;
+            await db.batch([
+                db.prepare(revokeStmt).bind(sessionId),
+                db.prepare(revokeStmt).bind(digest),
+            ]);
         },
         async getSession(sessionId) {
             const row = await getLiveCloudflareSessionRow(db, sessionId);

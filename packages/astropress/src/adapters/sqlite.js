@@ -1,4 +1,5 @@
 import { createRequire } from "node:module";
+import { registerHealthCheck } from "../runtime-health.js";
 var __require = /* @__PURE__ */ createRequire(import.meta.url);
 
 // packages/astropress/src/platform-contracts.ts
@@ -3239,6 +3240,8 @@ function createAstropressSqliteAdapter(options = {}) {
     }
     return database;
   }
+  registerHealthCheck(() => { ensureDatabase().prepare("SELECT 1").get(); });
+
   const actor = { email: "admin@example.com", role: "admin", name: "Astropress SQLite" };
   const runtime = createAstropressSqliteAdminRuntime({ getDatabase: ensureDatabase });
   return {

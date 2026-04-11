@@ -19,15 +19,32 @@ function resolveVersion(): string {
   return "unknown";
 }
 
-export function handleHealthRequest(_request: Request): Response {
+type HealthCheckFn = () => Promise<void> | void;
+
+let _healthCheck: HealthCheckFn | null = null;
+
+export function registerHealthCheck(fn: HealthCheckFn): void {
+  _healthCheck = fn;
+}
+
+export async function handleHealthRequest(_request: Request): Promise<Response> {
+  let status: "ok" | "degraded" = "ok";
+  if (_healthCheck) {
+    try {
+      await _healthCheck();
+    } catch {
+      status = "degraded";
+    }
+  }
+
   const body: HealthStatus = {
-    status: "ok",
+    status,
     version: resolveVersion(),
     uptime: Math.floor((Date.now() - startTime) / 1000),
     timestamp: new Date().toISOString(),
   };
   return new Response(JSON.stringify(body), {
-    status: 200,
+    status: status === "ok" ? 200 : 503,
     headers: {
       "Content-Type": "application/json",
       "Cache-Control": "no-store",

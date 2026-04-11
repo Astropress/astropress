@@ -30,6 +30,13 @@ bun run audit:arch        # architecture boundary checks
 bun run audit:sync        # .ts/.js export parity check (see below)
 ```
 
+> **Important:** always use `bun run <script>` (not bare `bun test`) for running tests.
+>
+> Bare `bun test` uses Bun's native test runner which lacks `vi.hoisted` and `vi.stubGlobal` —
+> APIs that the Astropress test suite relies on. CI uses `bun run --filter astropress test`
+> which invokes Vitest (the correct runner) via the `packages/astropress/package.json` `test`
+> script. Running `bun test` in the repo root will fail with confusing import errors.
+
 ### Test pyramid
 
 Write tests in this order, from outermost in:

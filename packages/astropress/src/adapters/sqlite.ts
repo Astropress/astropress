@@ -2,6 +2,7 @@ import type { AstropressPlatformAdapter, ContentStoreRecord, MediaAssetRecord, R
 import { normalizeProviderCapabilities } from "../platform-contracts";
 import { createAstropressSqliteAdminRuntime } from "../sqlite-admin-runtime";
 import { createDefaultAstropressSqliteSeedToolkit, type AstropressSqliteSeedToolkit } from "../sqlite-bootstrap";
+import { registerHealthCheck } from "../runtime-health";
 
 export interface AstropressSqliteAdapterOptions {
   dbPath?: string;
@@ -79,6 +80,8 @@ export function createAstropressSqliteAdapter(
 
     return database;
   }
+
+  registerHealthCheck(() => { ensureDatabase().prepare("SELECT 1").get(); });
 
   const actor = { email: "admin@example.com", role: "admin" as const, name: "Astropress SQLite" };
   const runtime = createAstropressSqliteAdminRuntime({ getDatabase: ensureDatabase });

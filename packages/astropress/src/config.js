@@ -46,9 +46,24 @@ export function peekCmsConfig() {
     return getConfigStore()[CMS_CONFIG_KEY] ?? null;
 }
 
+async function dispatchPluginError(error, context) {
+    const config = peekCmsConfig();
+    if (!config?.plugins?.length) return;
+    for (const plugin of config.plugins) {
+        const fn = plugin.onError;
+        if (typeof fn !== "function") continue;
+        try {
+            await fn(error, context);
+        } catch {
+            // swallow — onError must never throw
+        }
+    }
+}
+
 /**
  * Dispatch a content lifecycle event to all registered plugin hooks.
- * Errors thrown by plugin hooks are caught and logged; they never fail the action.
+ * Errors thrown by plugin hooks are forwarded to onError, caught and logged;
+ * they never fail the action.
  */
 export async function dispatchPluginContentEvent(hook, event) {
     const config = peekCmsConfig();
@@ -59,15 +74,18 @@ export async function dispatchPluginContentEvent(hook, event) {
         try {
             await fn(event);
         } catch (err) {
+            const error = err instanceof Error ? err : new Error(String(err));
             // biome-ignore lint/suspicious/noConsole: server-side plugin error logging
             console.error(`[astropress] Plugin "${plugin.name}" threw in ${hook}:`, err);
+            await dispatchPluginError(error, `plugin:${plugin.name}`);
         }
     }
 }
 
 /**
  * Dispatch a media upload event to all registered plugin hooks.
- * Errors thrown by plugin hooks are caught and logged; they never fail the upload action.
+ * Errors thrown by plugin hooks are forwarded to onError, caught and logged;
+ * they never fail the upload action.
  */
 export async function dispatchPluginMediaEvent(event) {
     const config = peekCmsConfig();
@@ -78,8 +96,18 @@ export async function dispatchPluginMediaEvent(event) {
         try {
             await fn(event);
         } catch (err) {
+            const error = err instanceof Error ? err : new Error(String(err));
             // biome-ignore lint/suspicious/noConsole: server-side plugin error logging
             console.error(`[astropress] Plugin "${plugin.name}" threw in onMediaUpload:`, err);
+            await dispatchPluginError(error, `plugin:${plugin.name}`);
         }
     }
+}
+
+/**
+ * Report an error from a non-plugin Astropress operation to all onError plugin hooks.
+ */
+export async function reportAstropressError(error, context) {
+    const err = error instanceof Error ? error : new Error(String(error));
+    await dispatchPluginError(err, context);
 }

@@ -79,6 +79,30 @@ export interface AstropressPlugin {
   onMediaUpload?: (event: AstropressMediaEvent) => Promise<void> | void;
 
   /**
+   * Called when an unexpected error occurs inside Astropress admin action handlers
+   * or background operations. Use this hook to send errors to an external tracker
+   * such as Sentry, Honeybadger, or a custom OpenTelemetry exporter.
+   *
+   * The hook receives the raw `Error` object and a `context` string describing
+   * where the error occurred (e.g. `"content-save"`, `"media-upload"`, `"plugin:<name>"`).
+   *
+   * Errors thrown inside this hook are silently swallowed to avoid infinite loops.
+   *
+   * @example
+   * ```ts
+   * import * as Sentry from "@sentry/node";
+   * const errorTracker: AstropressPlugin = {
+   *   name: "sentry",
+   *   onError(error, context) {
+   *     Sentry.captureException(error, { tags: { context } });
+   *   },
+   * };
+   * registerCms({ ..., plugins: [errorTracker] });
+   * ```
+   */
+  onError?: (error: Error, context: string) => Promise<void> | void;
+
+  /**
    * Extra items to add to the admin sidebar navigation.
    * Rendered after the core nav items.
    */

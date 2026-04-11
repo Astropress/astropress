@@ -1,6 +1,22 @@
 const isDev = process.env.NODE_ENV !== "production";
 
+const LOG_LEVEL_ORDER = { error: 0, warn: 1, info: 2 };
+
+function resolveConfiguredLevel() {
+  const raw = process.env.LOG_LEVEL?.toLowerCase();
+  if (raw === "error" || raw === "warn" || raw === "info") return raw;
+  return "info";
+}
+
+const configuredOrder = LOG_LEVEL_ORDER[resolveConfiguredLevel()];
+
+function shouldEmit(level) {
+  return LOG_LEVEL_ORDER[level] <= configuredOrder;
+}
+
 function emit(level, context, message, meta) {
+  if (!shouldEmit(level)) return;
+
   if (isDev) {
     const prefix = `[astropress:${context}]`;
     if (meta && Object.keys(meta).length > 0) {

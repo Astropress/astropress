@@ -26,7 +26,7 @@ export const POST: APIRoute = async (context) =>
       settings = {
         buttonLabel: String(formData.get("buttonLabel") ?? "").trim() || "Go to homepage",
         buttonHref: String(formData.get("buttonHref") ?? "").trim() || "/",
-        contactHref: String(formData.get("contactHref") ?? "").trim() || "/en/contact-fleet-farming",
+        contactHref: String(formData.get("contactHref") ?? "").trim() || "/en/contact",
       };
     } else if (path === "/sitemap.xml") {
       settings = {

@@ -56,7 +56,7 @@ fn main() -> ExitCode {
             ab_testing,
             heatmap,
             enable_api,
-        }) => match scaffold_new_project(&project_dir, use_local_package, provider, app_host, data_services, analytics, ab_testing, heatmap, enable_api)
+        }) => match scaffold_new_project(&project_dir, use_local_package, provider, app_host, data_services, commands::new::ScaffoldOptions { analytics_flag: analytics, ab_testing_flag: ab_testing, heatmap_flag: heatmap, enable_api_flag: enable_api })
             .and_then(|()| run_post_scaffold_setup(&project_dir))
         {
             Ok(()) => ExitCode::SUCCESS,
