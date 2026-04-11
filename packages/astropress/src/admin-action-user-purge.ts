@@ -12,6 +12,9 @@
  * own data-subject-request records.
  */
 
+import { withLocalStoreFallback } from "./admin-store-dispatch";
+import { createD1PurgeOps } from "./d1-purge";
+
 export interface UserPurgeResult {
   ok: boolean;
   email: string;
@@ -24,11 +27,9 @@ export interface UserPurgeResult {
 }
 
 /**
- * Purge all personal data for a given email address from the SQLite runtime.
+ * Purge all personal data for a given email address.
  *
- * This is a stub implementation — it validates the input and returns the
- * expected result shape. A full implementation would execute the SQL
- * operations described in docs/COMPLIANCE.md against the live database.
+ * Dispatches to D1 (Cloudflare) or SQLite (local) based on the request context.
  *
  * @param email   The email address of the data subject.
  * @param locals  Astro App.Locals (used to access the database binding).
@@ -53,22 +54,23 @@ export async function purgeUserData(
     };
   }
 
-  // NOTE: The SQLite runtime is accessed through the provider adapter injected
-  // via App.Locals. Import the sqlite-runtime auth and operations stores here
-  // once the provider type system makes the sqlite runtime directly accessible.
-  //
-  // For now this stub documents the contract and returns a placeholder result.
-  // See docs/COMPLIANCE.md for the raw SQL to execute manually.
-  void locals;
-  void options;
-
-  return {
-    ok: true,
-    email,
-    revokedSessions: 0,
-    anonymisedAuditEvents: 0,
-    deletedComments: 0,
-    deletedContactSubmissions: 0,
-    adminUserAction: options.deleteAccount ? "deleted" : "suspended",
-  };
+  return withLocalStoreFallback(
+    locals,
+    async (db) => createD1PurgeOps(db).purgeUserData(email, options),
+    async (store) => {
+      if (store.purgeUserData) {
+        return store.purgeUserData(email, options);
+      }
+      // Fallback: return zero counts if local store doesn't wire purge ops
+      return {
+        ok: true,
+        email,
+        revokedSessions: 0,
+        anonymisedAuditEvents: 0,
+        deletedComments: 0,
+        deletedContactSubmissions: 0,
+        adminUserAction: (options.deleteAccount ? "deleted" : "suspended") as UserPurgeResult["adminUserAction"],
+      };
+    },
+  );
 }

@@ -219,3 +219,67 @@ describe("right-to-erasure schema readiness", () => {
     ).toMatch(/ON DELETE CASCADE/i);
   });
 });
+
+// ---------------------------------------------------------------------------
+// Email hashing: comment author emails must be hashed before storage
+// ---------------------------------------------------------------------------
+
+import { createAstropressCommentRepository, hashCommentEmail } from "../src/comment-repository-factory";
+import { vi } from "vitest";
+
+describe("comment author email hashing", () => {
+  it("hashCommentEmail produces a 64-char SHA-256 hex digest", async () => {
+    const digest = await hashCommentEmail("author@example.com", "test-salt");
+    expect(digest).toMatch(/^[a-f0-9]{64}$/);
+  });
+
+  it("hashCommentEmail is deterministic for the same email and salt", async () => {
+    const a = await hashCommentEmail("author@example.com", "my-salt");
+    const b = await hashCommentEmail("author@example.com", "my-salt");
+    expect(a).toBe(b);
+  });
+
+  it("hashCommentEmail produces different digests for different emails", async () => {
+    const a = await hashCommentEmail("alice@example.com", "salt");
+    const b = await hashCommentEmail("bob@example.com", "salt");
+    expect(a).not.toBe(b);
+  });
+
+  it("hashCommentEmail produces different digests for different salts", async () => {
+    const a = await hashCommentEmail("author@example.com", "salt1");
+    const b = await hashCommentEmail("author@example.com", "salt2");
+    expect(a).not.toBe(b);
+  });
+
+  it("submitPublicComment stores a hashed email (64-char hex) when sessionSalt is provided", async () => {
+    const insertedComments: Array<{ email?: string }> = [];
+    const repository = createAstropressCommentRepository({
+      getComments: vi.fn(() => []),
+      getCommentRoute: vi.fn(() => null),
+      updateCommentStatus: vi.fn(() => true),
+      insertPublicComment: vi.fn((c) => {
+        insertedComments.push({ email: c.email });
+        return new Date().toISOString();
+      }),
+      recordCommentAudit: vi.fn(),
+      sessionSalt: "site-secret-salt",
+    });
+
+    const result = await repository.submitPublicComment({
+      author: "Alice",
+      email: "alice@example.com",
+      body: "Great post",
+      route: "/blog/hello",
+      submittedAt: new Date().toISOString(),
+    });
+
+    expect(result.ok).toBe(true);
+    // The stored email must be a SHA-256 hex digest, never the raw address
+    expect(insertedComments[0]?.email).toMatch(/^[a-f0-9]{64}$/);
+    expect(insertedComments[0]?.email).not.toContain("alice");
+  });
+
+  it("schema has no column named author_email_plain (no plaintext email column)", () => {
+    expect(schema).not.toMatch(/author_email_plain/i);
+  });
+});

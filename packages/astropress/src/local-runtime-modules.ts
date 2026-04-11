@@ -88,6 +88,12 @@ export interface LocalAdminStoreModule extends AdminStoreAdapter {
   listScheduled?: AdminStoreAdapter["content"]["listScheduled"];
   cancelScheduledPublish?: AdminStoreAdapter["content"]["cancelScheduledPublish"];
   runScheduledPublishes?: AdminStoreAdapter["content"]["runScheduledPublishes"];
+  // Content locking
+  acquireLock?: (slug: string, email: string, name: string) => { ok: true; lockToken: string; expiresAt: string } | { ok: false; conflict: true; lockedByEmail: string; lockedByName: string; expiresAt: string };
+  refreshLock?: (slug: string, lockToken: string) => boolean;
+  releaseLock?: (slug: string, lockToken: string) => void;
+  // User data purge (GDPR)
+  purgeUserData?: (email: string, options?: { deleteAccount?: boolean }) => import("./admin-action-user-purge").UserPurgeResult;
 }
 
 export interface LocalAdminAuthModule {

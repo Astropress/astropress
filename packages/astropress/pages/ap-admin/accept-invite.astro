@@ -1,6 +1,5 @@
 ---
 import { buildAcceptInvitePageModel, buildAstropressAdminDocumentTitle, resolveAstropressAdminUiConfig } from "astropress";
-import { applyAstropressSecurityHeaders } from "astropress";
 
 const token = Astro.url.searchParams.get("token") ?? "";
 const hasError = Astro.url.searchParams.get("error") === "1";
@@ -8,7 +7,6 @@ const errorMessage = Astro.url.searchParams.get("message") ?? "That invitation l
 const model = await buildAcceptInvitePageModel(Astro.locals, token);
 const { inviteRequest } = model.data;
 const adminUi = resolveAstropressAdminUiConfig();
-applyAstropressSecurityHeaders(Astro.response.headers, { area: "auth", allowInlineStyles: true, forceHsts: Astro.url.protocol === "https:" });
 ---
 
 <!doctype html>

@@ -14,7 +14,7 @@ function finalizeRecommendation(appHost, dataServices, rationale) {
     rationale: entry?.notes ? `${rationale} ${entry.notes}` : rationale,
     requiredEnvKeys: entry?.requiredEnvKeys ?? [],
     deployTarget,
-    canonicalProvider: dataServices === "cloudflare" || dataServices === "supabase" || dataServices === "firebase" || dataServices === "appwrite" || dataServices === "runway"
+    canonicalProvider: dataServices === "cloudflare" || dataServices === "supabase" || dataServices === "appwrite" || dataServices === "runway"
       ? dataServices
       : "cloudflare",
     publicDeployTarget: deployTarget
@@ -42,9 +42,6 @@ export function recommendAstropressProvider(input = {}) {
   const opsComfort = input.opsComfort ?? "minimal";
   if (existingPlatform === "supabase") {
     return finalizeRecommendation(wantsStaticMirror ? "github-pages" : "vercel", "supabase", "Supabase is already the content-services platform, so Astropress should keep Supabase for data, auth, storage, and the Astropress service API while using a separate Astro app host.");
-  }
-  if (existingPlatform === "firebase") {
-    return finalizeRecommendation(wantsStaticMirror ? "github-pages" : "render-web", "firebase", "Firebase is already the content-services platform, so Astropress should keep Firebase for data, auth, storage, and the Astropress service API while choosing a separate Astro app host.");
   }
   if (existingPlatform === "appwrite") {
     return finalizeRecommendation(wantsStaticMirror ? "github-pages" : "render-web", "appwrite", "Appwrite is already the content-services platform, so Astropress should keep Appwrite for data, auth, media, and the Astropress service API while choosing a separate Astro app host.");

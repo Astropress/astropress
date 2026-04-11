@@ -1,5 +1,6 @@
 import type { APIRoute } from "astro";
-import { newsletterAdapter } from "../../src/newsletter-adapter.js";
+import { newsletterAdapter } from "../../../src/newsletter-adapter.js";
+import { recordD1Audit } from "../../../src/d1-audit.js";
 
 const SIMPLE_EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const JSON_HEADERS = { "Content-Type": "application/json" };
@@ -45,6 +46,19 @@ export const POST: APIRoute = async ({ request, locals }) => {
   if (!result.ok) {
     return new Response(JSON.stringify({ ok: false, error: result.error ?? "Subscription failed." }), { status: 422, headers: JSON_HEADERS });
   }
+
+  // Record a conversion audit event for first-party analytics (GDPR Art. 6(1)(f))
+  const utmSource = new URL(request.url).searchParams.get("utm_source") ?? undefined;
+  await recordD1Audit(
+    locals,
+    { email: "public", role: "editor" as const, name: "Public visitor" },
+    "newsletter.subscribe",
+    "newsletter",
+    email,
+    `Newsletter subscription from ${utmSource ?? "direct"}`,
+  ).catch(() => {
+    // Non-fatal: audit failure must not break the subscription response
+  });
 
   return new Response(JSON.stringify({ ok: true }), { status: 200, headers: JSON_HEADERS });
 };

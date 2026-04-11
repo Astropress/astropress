@@ -19,7 +19,7 @@ packages/astropress/          # Core framework package
 crates/astropress-cli/        # Rust CLI (astropress new/doctor/import)
   src/commands/               # One file per command; shared logic in import_common.rs
 
-packages/astropress-mcp/      # MCP server (7 tools for AI agents)
+packages/astropress-mcp/      # MCP server (8 tools for AI agents)
 
 scripts/                      # arch-lint, bdd-test, check-js-sync, bundle-audit
 features/                     # Gherkin BDD scenarios

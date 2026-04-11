@@ -150,8 +150,6 @@ function defaultServiceOrigin(dataServices) {
   switch (dataServices) {
     case "supabase":
       return "https://your-project.supabase.co/functions/v1/astropress";
-    case "firebase":
-      return "https://your-project.firebaseapp.com/astropress-api";
     case "appwrite":
       return "https://cloud.appwrite.io/v1/functions/astropress";
     case "cloudflare":
@@ -193,7 +191,7 @@ function resolveProfile(input = "sqlite") {
         ? "vercel"
         : dataServices === "runway"
           ? "runway"
-          : dataServices === "firebase" || dataServices === "appwrite" || dataServices === "pocketbase"
+          : dataServices === "appwrite" || dataServices === "pocketbase"
             ? "render-web"
             : "github-pages"),
     dataServices,
@@ -231,13 +229,6 @@ function buildDataServiceExample(dataServices) {
         SUPABASE_URL: "https://your-project.supabase.co",
         SUPABASE_ANON_KEY: "replace-me",
         SUPABASE_SERVICE_ROLE_KEY: "replace-me",
-      };
-    case "firebase":
-      return {
-        ASTROPRESS_SERVICE_ORIGIN: serviceOrigin,
-        FIREBASE_PROJECT_ID: "replace-me",
-        FIREBASE_CLIENT_EMAIL: "replace-me",
-        FIREBASE_PRIVATE_KEY: "replace-me",
       };
     case "appwrite":
       return {
@@ -304,9 +295,6 @@ function createPackageScripts(appHost) {
     case "netlify":
       scripts["deploy:netlify"] = "netlify deploy --dir dist --prod";
       break;
-    case "firebase-hosting":
-      scripts["deploy:firebase-hosting"] = "firebase deploy --only hosting";
-      break;
     case "render-static":
       scripts["deploy:render-static"] = "astro build";
       break;
@@ -347,8 +335,6 @@ function gitHubActionsDeployWorkflow(appHost, requiredEnvKeys) {
     deployStep = `      - run: bunx vercel pull --yes --environment=production --token "\${VERCEL_TOKEN}"\n        env:\n          VERCEL_TOKEN: \${{ secrets.VERCEL_TOKEN }}\n          VERCEL_ORG_ID: \${{ secrets.VERCEL_ORG_ID }}\n          VERCEL_PROJECT_ID: \${{ secrets.VERCEL_PROJECT_ID }}\n      - run: bunx vercel build --prod --token "\${VERCEL_TOKEN}"\n        env:\n          VERCEL_TOKEN: \${{ secrets.VERCEL_TOKEN }}\n          VERCEL_ORG_ID: \${{ secrets.VERCEL_ORG_ID }}\n          VERCEL_PROJECT_ID: \${{ secrets.VERCEL_PROJECT_ID }}\n      - run: bunx vercel deploy --prebuilt --prod --token "\${VERCEL_TOKEN}"\n        env:\n          VERCEL_TOKEN: \${{ secrets.VERCEL_TOKEN }}\n          VERCEL_ORG_ID: \${{ secrets.VERCEL_ORG_ID }}\n          VERCEL_PROJECT_ID: \${{ secrets.VERCEL_PROJECT_ID }}`;
   } else if (appHost === "netlify") {
     deployStep = `      - run: bunx netlify deploy --dir dist --prod\n        env:\n          NETLIFY_AUTH_TOKEN: \${{ secrets.NETLIFY_AUTH_TOKEN }}\n          NETLIFY_SITE_ID: \${{ secrets.NETLIFY_SITE_ID }}`;
-  } else if (appHost === "firebase-hosting") {
-    deployStep = `      - run: bunx firebase-tools deploy --only hosting\n        env:\n          FIREBASE_TOKEN: \${{ secrets.FIREBASE_TOKEN }}`;
   } else if (appHost === "render-static" || appHost === "render-web") {
     deployStep = `      - run: |\n          if [ -n "\${RENDER_DEPLOY_HOOK_URL}" ]; then\n            curl -fsSL -X POST "\${RENDER_DEPLOY_HOOK_URL}"\n          else\n            echo "Build completed. Connect the repo in Render or set RENDER_DEPLOY_HOOK_URL for automatic deploys."\n          fi\n        env:\n          RENDER_DEPLOY_HOOK_URL: \${{ secrets.RENDER_DEPLOY_HOOK_URL }}`;
   } else if (appHost === "runway") {

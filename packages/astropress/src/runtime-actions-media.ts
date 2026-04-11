@@ -4,6 +4,46 @@ import { withLocalStoreFallback } from "./admin-store-dispatch";
 import { recordD1Audit } from "./d1-audit";
 import { peekCmsConfig, dispatchPluginMediaEvent } from "./config";
 
+/**
+ * Detect pixel dimensions of an image buffer using the `image-size` package
+ * (no native deps — pure JavaScript, works in CF Workers). Returns null when
+ * the format is not recognised or the package is unavailable.
+ */
+async function detectImageDimensions(
+  bytes: Uint8Array,
+): Promise<{ width: number; height: number } | null> {
+  try {
+    const { imageSize } = await import("image-size");
+    // image-size accepts Buffer / Uint8Array
+    const result = imageSize(Buffer.from(bytes));
+    if (result.width && result.height) {
+      return { width: result.width, height: result.height };
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Generate a 400px-wide WebP thumbnail using Sharp when it is available
+ * (Sharp has native bindings so it fails silently in CF Workers or test envs).
+ * Returns null when Sharp is unavailable or the image is already ≤400px wide.
+ */
+async function generateThumbnail(
+  bytes: Uint8Array,
+  width: number,
+): Promise<Uint8Array | null> {
+  if (width <= 400) return null;
+  try {
+    const sharp = (await import("sharp")).default;
+    const output = await sharp(Buffer.from(bytes)).resize({ width: 400 }).webp().toBuffer();
+    return new Uint8Array(output);
+  } catch {
+    return null;
+  }
+}
+
 export async function updateRuntimeMediaAsset(
   input: {
     id: string;
@@ -60,6 +100,14 @@ export async function createRuntimeMediaAsset(
     return { ok: false as const, error: `File too large — maximum upload size is ${limitMib} MiB` };
   }
 
+  // Detect image dimensions for image uploads (MIME type starts with "image/")
+  let imageDimensions: { width: number; height: number } | null = null;
+  let thumbnailUrl: string | null = null;
+
+  if (input.mimeType.startsWith("image/")) {
+    imageDimensions = await detectImageDimensions(input.bytes);
+  }
+
   return withLocalStoreFallback(
     locals,
     async (db) => {
@@ -68,12 +116,42 @@ export async function createRuntimeMediaAsset(
         return stored;
       }
 
+      // Generate and store thumbnail for large images when Sharp is available
+      if (imageDimensions && imageDimensions.width > 400) {
+        const thumbBytes = await generateThumbnail(input.bytes, imageDimensions.width);
+        if (thumbBytes) {
+          const basename = stored.asset.storedFilename.replace(/\.[^.]+$/, "");
+          const thumbFilename = `${basename}-thumb.webp`;
+          const thumbStored = await storeRuntimeMediaObject(
+            { ...input, filename: thumbFilename, bytes: thumbBytes, mimeType: "image/webp" },
+            locals,
+          );
+          if (thumbStored.ok) {
+            thumbnailUrl = thumbStored.asset.publicPath ?? null;
+          }
+        }
+      }
+
+      // Generate responsive srcset variants (400w, 800w, 1200w WebP) for image uploads
+      let srcset: string | null = null;
+      if (imageDimensions && input.mimeType.startsWith("image/") && !input.mimeType.includes("svg")) {
+        const { generateSrcset } = await import("./local-image-storage.js");
+        srcset = await generateSrcset(input.bytes, stored.asset.publicPath, async (variantFilename, variantBytes) => {
+          const variantStored = await storeRuntimeMediaObject(
+            { ...input, filename: variantFilename, bytes: variantBytes, mimeType: "image/webp" },
+            locals,
+          );
+          return variantStored.ok ? (variantStored.asset.publicPath ?? null) : null;
+        });
+      }
+
       await db
         .prepare(
           `
             INSERT INTO media_assets (
-              id, source_url, local_path, r2_key, mime_type, file_size, alt_text, title, uploaded_by
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+              id, source_url, local_path, r2_key, mime_type, file_size, alt_text, title, uploaded_by,
+              width, height, thumbnail_url, srcset
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
           `,
         )
         .bind(
@@ -86,6 +164,10 @@ export async function createRuntimeMediaAsset(
           stored.asset.altText,
           stored.asset.title,
           actor.email,
+          imageDimensions?.width ?? null,
+          imageDimensions?.height ?? null,
+          thumbnailUrl,
+          srcset,
         )
         .run();
 
@@ -97,7 +179,14 @@ export async function createRuntimeMediaAsset(
         size: stored.asset.fileSize,
         actor: actor.email,
       });
-      return { ok: true as const, id: stored.asset.id };
+      return {
+        ok: true as const,
+        id: stored.asset.id,
+        width: imageDimensions?.width ?? undefined,
+        height: imageDimensions?.height ?? undefined,
+        thumbnailUrl: thumbnailUrl ?? undefined,
+        srcset: srcset ?? undefined,
+      };
     },
     /* v8 ignore next 1 */
     (localStore) => localStore.createMediaAsset(input, actor),

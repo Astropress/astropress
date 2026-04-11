@@ -1,10 +1,15 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-// Mock the newsletter adapter before importing the endpoint
+// Mock the newsletter adapter and audit logger before importing the endpoint
 vi.mock("../src/newsletter-adapter.js", () => ({
   newsletterAdapter: {
     subscribe: vi.fn(),
   },
+}));
+
+const { mockRecordAudit } = vi.hoisted(() => ({ mockRecordAudit: vi.fn().mockResolvedValue(undefined) }));
+vi.mock("../src/d1-audit.js", () => ({
+  recordD1Audit: mockRecordAudit,
 }));
 
 import { newsletterAdapter } from "../src/newsletter-adapter.js";
@@ -35,6 +40,7 @@ describe("POST /ap/newsletter/subscribe", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockSubscribe.mockResolvedValue({ ok: true });
+    mockRecordAudit.mockResolvedValue(undefined);
   });
 
   it("returns 200 ok for a valid JSON email", async () => {
@@ -108,5 +114,42 @@ describe("POST /ap/newsletter/subscribe", () => {
   it("returns Content-Type: application/json on all responses", async () => {
     const res = await POST({ request: jsonRequest({ email: "bad" }), locals: MOCK_LOCALS } as Parameters<typeof POST>[0]);
     expect(res.headers.get("content-type")).toContain("application/json");
+  });
+
+  it("records a newsletter.subscribe conversion audit event on success", async () => {
+    const res = await POST({ request: jsonRequest({ email: "subscriber@example.com" }), locals: MOCK_LOCALS } as Parameters<typeof POST>[0]);
+    expect(res.status).toBe(200);
+    expect(mockRecordAudit).toHaveBeenCalledWith(
+      MOCK_LOCALS,
+      expect.objectContaining({ email: "public" }),
+      "newsletter.subscribe",
+      "newsletter",
+      "subscriber@example.com",
+      expect.any(String),
+    );
+  });
+
+  it("includes utm_source in the audit summary when present in query string", async () => {
+    const reqWithUtm = new Request("http://localhost/ap/newsletter/subscribe?utm_source=homepage", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: "user@example.com" }),
+    });
+    await POST({ request: reqWithUtm, locals: MOCK_LOCALS } as Parameters<typeof POST>[0]);
+    expect(mockRecordAudit).toHaveBeenCalledWith(
+      MOCK_LOCALS,
+      expect.anything(),
+      "newsletter.subscribe",
+      "newsletter",
+      "user@example.com",
+      expect.stringContaining("homepage"),
+    );
+  });
+
+  it("does not record an audit event when subscription fails", async () => {
+    mockSubscribe.mockResolvedValueOnce({ ok: false, error: "Adapter error" });
+    const res = await POST({ request: jsonRequest({ email: "user@example.com" }), locals: MOCK_LOCALS } as Parameters<typeof POST>[0]);
+    expect(res.status).toBe(422);
+    expect(mockRecordAudit).not.toHaveBeenCalled();
   });
 });

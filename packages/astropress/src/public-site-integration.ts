@@ -1,5 +1,6 @@
 import type { AstroIntegration } from "astro";
 import { fileURLToPath } from "node:url";
+import { peekCmsConfig } from "./config";
 
 export interface AstropressPublicSiteOptions {
   /**
@@ -50,6 +51,79 @@ export function createAstropressPublicSiteIntegration(
           pattern: "/llms.txt",
           entrypoint: fileURLToPath(new URL("../pages/llms.txt.js", import.meta.url)),
         });
+      },
+    },
+  };
+}
+
+export interface AstropressSitemapOptions {
+  /**
+   * Canonical base URL used as `<loc>` prefix in the sitemap.
+   * Defaults to `getCmsConfig().siteUrl` if not provided.
+   */
+  siteUrl?: string;
+  /**
+   * Additional URL paths to include in the sitemap beyond the framework-generated ones.
+   * Each entry should be a root-relative path (e.g. "/about", "/contact").
+   */
+  additionalPaths?: string[];
+}
+
+/**
+ * createAstropressSitemapIntegration
+ *
+ * A thin Astro integration wrapper around the framework's built-in sitemap
+ * page (`/sitemap.xml`). It ensures the sitemap is injected with the correct
+ * canonical URL configuration.
+ *
+ * Use this when you prefer the named integration pattern (`integrations: [...]`)
+ * rather than calling `createAstropressPublicSiteIntegration()` which injects
+ * all public routes at once.
+ *
+ * @example
+ * ```ts
+ * // astro.config.mjs
+ * import { createAstropressSitemapIntegration } from "astropress";
+ *
+ * export default defineConfig({
+ *   integrations: [
+ *     createAstropressSitemapIntegration({ siteUrl: "https://example.com" }),
+ *   ],
+ * });
+ * ```
+ */
+export function createAstropressSitemapIntegration(
+  options: AstropressSitemapOptions = {},
+): AstroIntegration {
+  return {
+    name: "astropress-sitemap",
+    hooks: {
+      "astro:config:setup": ({ injectRoute, updateConfig }) => {
+        const siteUrl = options.siteUrl ?? peekCmsConfig()?.siteUrl ?? "";
+
+        injectRoute({
+          pattern: "/sitemap.xml",
+          entrypoint: fileURLToPath(new URL("../pages/sitemap.xml.js", import.meta.url)),
+        });
+
+        // Inject the OG image endpoint so social cards are available on public sites too
+        injectRoute({
+          pattern: "/ap-api/v1/og-image/[slug].png",
+          entrypoint: fileURLToPath(
+            new URL("../pages/ap-api/v1/og-image/[slug].png.js", import.meta.url),
+          ),
+        });
+
+        // Expose siteUrl to the page via Vite define so sitemap.xml can use it
+        if (siteUrl) {
+          updateConfig({
+            vite: {
+              define: {
+                "import.meta.env.ASTROPRESS_SITE_URL": JSON.stringify(siteUrl),
+              },
+            },
+          });
+        }
       },
     },
   };

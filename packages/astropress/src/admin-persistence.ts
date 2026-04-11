@@ -206,6 +206,7 @@ export declare function saveContentState(
     canonicalUrlOverride?: string;
     robotsDirective?: string;
     revisionNote?: string;
+    metadata?: Record<string, unknown>;
   },
   actor: Actor,
 ): { ok: true } | { ok: false; error: string };

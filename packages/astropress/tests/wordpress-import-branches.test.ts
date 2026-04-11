@@ -707,9 +707,9 @@ describe("attachment with no URL and no guid", () => {
     await writeFile(exportFile, makeWxr([item]), "utf8");
     const importer = createAstropressWordPressImportSource();
     const report = await importer.importWordPress({ exportFile });
-    // The media asset is still recorded — sourceUrl is empty but filename falls back to slug.bin
-    expect(report.importedMedia).toBe(1);
-    expect(report.mediaAssets[0].filename).toMatch(/no-url-attachment|6001/);
+    // The media asset is still recorded — sourceUrl is empty but filename falls back to slug.bin.
+    // The filename is internal to the bundle; the report exposes the count via inventory.detectedMedia.
+    expect(report.inventory.detectedMedia).toBe(1);
   });
 });
 
@@ -731,12 +731,9 @@ describe("duplicate slug handling", () => {
   it("applyLocal update path is exercised when the same slug is imported twice sequentially", async () => {
     const post = makePost({ id: "7003", name: "update-path-slug", type: "post" });
     await writeFile(exportFile, makeWxr([post]), "utf8");
-    const { default: Database } = await import("better-sqlite3");
     const dbPath = join(workspace, "update-path.sqlite");
-    const db = new Database(dbPath);
     const { createDefaultAstropressSqliteSeedToolkit } = await import("../src/sqlite-bootstrap.js");
-    createDefaultAstropressSqliteSeedToolkit({ db }).seed({ adminEmail: "admin@example.com", adminPassword: "test1234!", siteName: "Test" });
-    db.close();
+    createDefaultAstropressSqliteSeedToolkit().seedDatabase({ dbPath });
 
     const importer = createAstropressWordPressImportSource();
     // First apply — inserts
@@ -1226,9 +1223,9 @@ describe("attachment with no URL and no guid", () => {
     await writeFile(exportFile, makeWxr([item]), "utf8");
     const importer = createAstropressWordPressImportSource();
     const report = await importer.importWordPress({ exportFile });
-    // The media asset is still recorded — sourceUrl is empty but filename falls back to slug.bin
-    expect(report.importedMedia).toBe(1);
-    expect(report.mediaAssets[0].filename).toMatch(/no-url-attachment|6001/);
+    // The media asset is still recorded — sourceUrl is empty but filename falls back to slug.bin.
+    // The filename is internal to the bundle; the report exposes the count via inventory.detectedMedia.
+    expect(report.inventory.detectedMedia).toBe(1);
   });
 });
 
@@ -1250,12 +1247,9 @@ describe("duplicate slug handling", () => {
   it("applyLocal update path is exercised when the same slug is imported twice sequentially", async () => {
     const post = makePost({ id: "7003", name: "update-path-slug", type: "post" });
     await writeFile(exportFile, makeWxr([post]), "utf8");
-    const { default: Database } = await import("better-sqlite3");
     const dbPath = join(workspace, "update-path.sqlite");
-    const db = new Database(dbPath);
     const { createDefaultAstropressSqliteSeedToolkit } = await import("../src/sqlite-bootstrap.js");
-    createDefaultAstropressSqliteSeedToolkit({ db }).seed({ adminEmail: "admin@example.com", adminPassword: "test1234!", siteName: "Test" });
-    db.close();
+    createDefaultAstropressSqliteSeedToolkit().seedDatabase({ dbPath });
 
     const importer = createAstropressWordPressImportSource();
     // First apply — inserts

@@ -6,8 +6,6 @@ import { describe, expect, it } from "vitest";
 import {
   createAstropressAppwriteAdapter,
   createAstropressAppwriteHostedAdapter,
-  createAstropressFirebaseAdapter,
-  createAstropressFirebaseHostedAdapter,
   createAstropressHostedAdapter,
   createAstropressHostedPlatformAdapter,
   createAstropressPocketbaseAdapter,
@@ -17,7 +15,6 @@ import {
   createAstropressSupabaseAdapter,
   createAstropressSupabaseHostedAdapter,
   readAstropressAppwriteHostedConfig,
-  readAstropressFirebaseHostedConfig,
   readAstropressPocketbaseHostedConfig,
   readAstropressRunwayHostedConfig,
   readAstropressSupabaseHostedConfig,
@@ -27,10 +24,6 @@ import {
   createAstropressAppwriteHostedAdapter as createDirectAppwriteHostedAdapter,
   readAstropressAppwriteHostedConfig as readDirectAppwriteHostedConfig,
 } from "../src/adapters/appwrite.js";
-import {
-  createAstropressFirebaseHostedAdapter as createDirectFirebaseHostedAdapter,
-  readAstropressFirebaseHostedConfig as readDirectFirebaseHostedConfig,
-} from "../src/adapters/firebase.js";
 import {
   createAstropressPocketbaseHostedAdapter as createDirectPocketbaseHostedAdapter,
   readAstropressPocketbaseHostedConfig as readDirectPocketbaseHostedConfig,
@@ -78,13 +71,10 @@ describe("hosted provider contracts", () => {
     expect(runway.capabilities.name).toBe("runway");
   });
 
-  it("lets Firebase, Appwrite, and PocketBase use explicit hosted store modules", async () => {
+  it("lets Appwrite and PocketBase use explicit hosted store modules", async () => {
     const hosted = createAstropressHostedPlatformAdapter({
       providerName: "custom",
       ...createHostedStores(),
-    });
-    const firebase = createAstropressFirebaseAdapter({
-      backingAdapter: hosted,
     });
     const appwrite = createAstropressAppwriteAdapter({
       backingAdapter: hosted,
@@ -93,25 +83,25 @@ describe("hosted provider contracts", () => {
       backingAdapter: hosted,
     });
 
-    await firebase.content.save({
-      id: "firebase-remote-post",
+    await appwrite.content.save({
+      id: "custom-remote-post",
       kind: "post",
-      slug: "firebase-remote-post",
+      slug: "custom-remote-post",
       status: "published",
-      title: "Firebase remote post",
+      title: "Custom remote post",
     });
 
-    expect(await appwrite.content.get("firebase-remote-post")).toMatchObject({
-      slug: "firebase-remote-post",
-      title: "Firebase remote post",
+    expect(await appwrite.content.get("custom-remote-post")).toMatchObject({
+      slug: "custom-remote-post",
+      title: "Custom remote post",
     });
-    expect(await firebase.auth.signIn("admin@example.com", "password")).toMatchObject({
+    expect(await appwrite.auth.signIn("admin@example.com", "password")).toMatchObject({
       email: "admin@example.com",
       role: "admin",
     });
-    expect(await pocketbase.content.get("firebase-remote-post")).toMatchObject({
-      slug: "firebase-remote-post",
-      title: "Firebase remote post",
+    expect(await pocketbase.content.get("custom-remote-post")).toMatchObject({
+      slug: "custom-remote-post",
+      title: "Custom remote post",
     });
   });
 
@@ -147,12 +137,7 @@ describe("hosted provider contracts", () => {
     expect(runway.capabilities.serverRuntime).toBe(true);
   });
 
-  it("creates Firebase, Appwrite, and PocketBase hosted adapters with package-owned remote api defaults", async () => {
-    const firebaseConfig = readDirectFirebaseHostedConfig({
-      FIREBASE_PROJECT_ID: "demo-firebase",
-      FIREBASE_CLIENT_EMAIL: "service@example.com",
-      FIREBASE_PRIVATE_KEY: "private-key",
-    });
+  it("creates Appwrite and PocketBase hosted adapters with package-owned remote api defaults", async () => {
     const appwriteConfig = readDirectAppwriteHostedConfig({
       APPWRITE_ENDPOINT: "https://cloud.appwrite.io/v1",
       APPWRITE_PROJECT_ID: "project-123",
@@ -164,10 +149,6 @@ describe("hosted provider contracts", () => {
       POCKETBASE_PASSWORD: "secret",
     });
 
-    const firebase = createDirectFirebaseHostedAdapter({
-      config: firebaseConfig,
-      fetchImpl: async () => new Response(JSON.stringify([]), { status: 200 }),
-    });
     const appwrite = createDirectAppwriteHostedAdapter({
       config: appwriteConfig,
       fetchImpl: async () => new Response(JSON.stringify([]), { status: 200 }),
@@ -177,11 +158,7 @@ describe("hosted provider contracts", () => {
       fetchImpl: async () => new Response(JSON.stringify([]), { status: 200 }),
     });
 
-    expect(firebaseConfig.apiBaseUrl).toContain("demo-firebase.firebaseapp.com/astropress-api");
     expect(appwriteConfig.apiBaseUrl).toContain("cloud.appwrite.io/v1/functions/astropress");
-    expect((await firebase.preview?.create({ recordId: "hello" }))?.url).toContain(
-      "demo-firebase.web.app/preview/preview/hello",
-    );
     expect((await appwrite.preview?.create({ recordId: "hello" }))?.url).toContain(
       "cloud.appwrite.io/v1/console/project-project-123/preview/preview/hello",
     );
@@ -216,19 +193,6 @@ describe("hosted provider contracts", () => {
       previewBaseUrl: "https://runway.example/project-123",
     });
     expect(
-      readAstropressFirebaseHostedConfig({
-        FIREBASE_PROJECT_ID: "demo-firebase",
-        FIREBASE_CLIENT_EMAIL: "service@example.com",
-        FIREBASE_PRIVATE_KEY: "private-key",
-      }),
-    ).toEqual({
-      projectId: "demo-firebase",
-      clientEmail: "service@example.com",
-      privateKey: "private-key",
-      apiBaseUrl: "https://demo-firebase.firebaseapp.com/astropress-api",
-      previewBaseUrl: "https://demo-firebase.web.app",
-    });
-    expect(
       readAstropressAppwriteHostedConfig({
         APPWRITE_ENDPOINT: "https://cloud.appwrite.io/v1",
         APPWRITE_PROJECT_ID: "project-123",
@@ -259,7 +223,6 @@ describe("hosted provider contracts", () => {
   it("guards hosted provider config and builds hosted adapters with preview URLs", async () => {
     expect(() => readAstropressSupabaseHostedConfig({})).toThrow(/SUPABASE_URL/);
     expect(() => readAstropressRunwayHostedConfig({})).toThrow(/RUNWAY_API_TOKEN/);
-    expect(() => readAstropressFirebaseHostedConfig({})).toThrow(/FIREBASE_PROJECT_ID/);
     expect(() => readAstropressAppwriteHostedConfig({})).toThrow(/APPWRITE_ENDPOINT/);
     expect(() => readAstropressPocketbaseHostedConfig({})).toThrow(/POCKETBASE_URL/);
 
@@ -276,14 +239,6 @@ describe("hosted provider contracts", () => {
       env: {
         RUNWAY_API_TOKEN: "token",
         RUNWAY_PROJECT_ID: "project-123",
-      },
-      ...hostedStores,
-    });
-    const firebase = createAstropressFirebaseHostedAdapter({
-      env: {
-        FIREBASE_PROJECT_ID: "demo-firebase",
-        FIREBASE_CLIENT_EMAIL: "service@example.com",
-        FIREBASE_PRIVATE_KEY: "private-key",
       },
       ...hostedStores,
     });
@@ -321,9 +276,6 @@ describe("hosted provider contracts", () => {
     expect(await runway.preview?.create({ recordId: "hosted-config-post" })).toEqual({
       url: "https://runway.example/project-123/preview",
     });
-    expect(await firebase.preview?.create({ recordId: "hosted-config-post" })).toEqual({
-      url: "https://demo-firebase.web.app/preview",
-    });
     expect(await appwrite.preview?.create({ recordId: "hosted-config-post" })).toEqual({
       url: "https://cloud.appwrite.io/v1/console/project-project-123/preview",
     });
@@ -335,7 +287,6 @@ describe("hosted provider contracts", () => {
   it("selects hosted providers from explicit options or env", async () => {
     expect(resolveAstropressHostedProvider(undefined)).toBe("supabase");
     expect(resolveAstropressHostedProvider("runway")).toBe("runway");
-    expect(resolveAstropressHostedProvider("firebase")).toBe("firebase");
     expect(resolveAstropressHostedProvider("appwrite")).toBe("appwrite");
     expect(resolveAstropressHostedProvider("pocketbase")).toBe("pocketbase");
     expect(resolveAstropressHostedProvider("unexpected")).toBe("supabase");
@@ -355,18 +306,6 @@ describe("hosted provider contracts", () => {
       env: {
         RUNWAY_API_TOKEN: "token",
         RUNWAY_PROJECT_ID: "selector-runway",
-      },
-      content: hostedStores.content,
-      media: hostedStores.media,
-      revisions: hostedStores.revisions,
-      auth: hostedStores.auth,
-    });
-    const firebase = createAstropressHostedAdapter({
-      provider: "firebase",
-      env: {
-        FIREBASE_PROJECT_ID: "selector-firebase",
-        FIREBASE_CLIENT_EMAIL: "service@example.com",
-        FIREBASE_PRIVATE_KEY: "private-key",
       },
       content: hostedStores.content,
       media: hostedStores.media,
@@ -400,7 +339,6 @@ describe("hosted provider contracts", () => {
 
     expect(supabase.capabilities.name).toBe("supabase");
     expect(runway.capabilities.name).toBe("runway");
-    expect(firebase.capabilities.serverRuntime).toBe(true);
     expect(appwrite.capabilities.objectStorage).toBe(true);
     expect(pocketbase.capabilities.database).toBe(true);
     expect(await supabase.preview?.create({ recordId: "x" })).toEqual({
@@ -408,9 +346,6 @@ describe("hosted provider contracts", () => {
     });
     expect(await runway.preview?.create({ recordId: "x" })).toEqual({
       url: "https://runway.example/selector-runway/preview",
-    });
-    expect(await firebase.preview?.create({ recordId: "x" })).toEqual({
-      url: "https://selector-firebase.web.app/preview",
     });
     expect(await appwrite.preview?.create({ recordId: "x" })).toEqual({
       url: "https://cloud.appwrite.io/v1/console/project-selector-appwrite/preview",

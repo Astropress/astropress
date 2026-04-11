@@ -17,3 +17,8 @@ Feature: Publishing a site to a hosting provider
     Given the developer is choosing a hosting provider and database combination
     When they check the AstroPress deployment matrix
     Then they see clearly which pairings are first-class supported and which are community-supported
+
+  Scenario: CDN purge webhook fires when content is published
+    Given a CMS config has cdnPurgeWebhook set to a test endpoint
+    When purgeCdnCache is called with a slug and the config
+    Then the webhook receives a POST request with the slug and purgedAt timestamp

@@ -17,7 +17,7 @@
  *     height={630}
  *   />
  *
- * Usage (responsive with srcset):
+ * Usage (responsive with srcset — explicit):
  *   <AstropressImage
  *     src="/uploads/hero.jpg"
  *     alt="Hero image"
@@ -25,6 +25,15 @@
  *     height={630}
  *     srcset="/uploads/hero-400.jpg 400w, /uploads/hero-800.jpg 800w, /uploads/hero.jpg 1200w"
  *     sizes="(max-width: 480px) 400px, (max-width: 960px) 800px, 1200px"
+ *   />
+ *
+ * Usage (auto srcset from MediaAssetRecord — uses variants generated at upload time):
+ *   <AstropressImage
+ *     src={asset.publicUrl}
+ *     alt={asset.metadata?.altText}
+ *     width={asset.width}
+ *     height={asset.height}
+ *     mediaAsset={asset}
  *   />
  *
  * Usage (LCP image — skip lazy, load eagerly):
@@ -54,6 +63,12 @@ interface Props {
   fetchpriority?: "high" | "low" | "auto";
   class?: string;
   style?: string;
+  /**
+   * Optional MediaAssetRecord used to auto-populate `srcset` and `sizes` from
+   * variants generated at upload time (400w/800w/1200w WebP). When both this
+   * and an explicit `srcset` prop are provided, the explicit prop wins.
+   */
+  mediaAsset?: { srcset?: string; width?: number; height?: number };
 }
 
 const {
@@ -61,14 +76,20 @@ const {
   alt,
   width,
   height,
-  srcset,
-  sizes,
+  srcset: explicitSrcset,
+  sizes: explicitSizes,
   loading = "lazy",
   decoding = "async",
   fetchpriority,
   class: className,
   style: extraStyle,
+  mediaAsset,
 } = Astro.props;
+
+// Auto-resolve srcset and sizes from mediaAsset when not explicitly provided
+const srcset = explicitSrcset ?? mediaAsset?.srcset;
+const defaultSizes = srcset ? "(max-width: 480px) 400px, (max-width: 960px) 800px, 1200px" : undefined;
+const sizes = explicitSizes ?? (srcset ? defaultSizes : undefined);
 
 // Reserve layout space before the image loads to prevent CLS.
 const aspectRatioStyle = `aspect-ratio: ${width} / ${height};`;

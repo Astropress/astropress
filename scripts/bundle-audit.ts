@@ -13,7 +13,7 @@
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import path from "node:path";
 
-// Strings that must never appear in a non-Cloudflare, non-Firebase, non-Supabase build.
+// Strings that must never appear in a non-Cloudflare, non-Supabase build.
 // These are internal identifiers from provider-specific adapters.
 const CLOUDFLARE_LEAKAGE_PATTERNS = [
   "D1Database",
@@ -21,13 +21,6 @@ const CLOUDFLARE_LEAKAGE_PATTERNS = [
   "KVNamespace",
   "getCloudflareBindings",
   "createD1Admin",
-];
-
-const FIREBASE_LEAKAGE_PATTERNS = [
-  "initializeApp",
-  "getFirestore",
-  "collection(",
-  "FirebaseError",
 ];
 
 const SUPABASE_LEAKAGE_PATTERNS = [
@@ -38,7 +31,6 @@ const SUPABASE_LEAKAGE_PATTERNS = [
 
 const ALL_LEAKAGE_PATTERNS = [
   ...CLOUDFLARE_LEAKAGE_PATTERNS.map((p) => ({ pattern: p, provider: "Cloudflare" })),
-  ...FIREBASE_LEAKAGE_PATTERNS.map((p) => ({ pattern: p, provider: "Firebase" })),
   ...SUPABASE_LEAKAGE_PATTERNS.map((p) => ({ pattern: p, provider: "Supabase" })),
 ];
 

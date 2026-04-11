@@ -59,8 +59,14 @@ function runAstropressMigrations(db, migrationsDir) {
   db.exec(`CREATE TABLE IF NOT EXISTS schema_migrations (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL UNIQUE,
-    applied_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    applied_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    rollback_sql TEXT
   )`);
+  // Ensure rollback_sql column exists on legacy tables
+  const migrationCols = new Set(getTableColumns(db, "schema_migrations"));
+  if (!migrationCols.has("rollback_sql")) {
+    db.exec("ALTER TABLE schema_migrations ADD COLUMN rollback_sql TEXT");
+  }
   const alreadyApplied = new Set(
     db.prepare(`SELECT name FROM schema_migrations`).all().map((r) => r.name),
   );
@@ -75,10 +81,27 @@ function runAstropressMigrations(db, migrationsDir) {
     }
     const sql = readFileSync(path.join(migrationsDir, file), "utf8");
     db.exec(sql);
-    db.prepare(`INSERT INTO schema_migrations (name) VALUES (?)`).run(file);
+    const downFilePath = path.join(migrationsDir, file.replace(/\.sql$/, ".down.sql"));
+    const rollbackSql = existsSync(downFilePath) ? readFileSync(downFilePath, "utf8") : null;
+    db.prepare(`INSERT INTO schema_migrations (name, rollback_sql) VALUES (?, ?)`).run(file, rollbackSql);
     applied.push(file);
   }
   return { applied, skipped };
+}
+export const ASTROPRESS_FRAMEWORK_MIGRATION_BASELINE = 1;
+export function checkSchemaVersionAhead(db, frameworkBaseline = ASTROPRESS_FRAMEWORK_MIGRATION_BASELINE) {
+  try {
+    const row = db.prepare(`SELECT COUNT(*) as count FROM schema_migrations`).get();
+    if (!row) return null;
+    const dbCount = row.count;
+    return {
+      isAhead: dbCount > frameworkBaseline,
+      dbCount,
+      frameworkCount: frameworkBaseline,
+    };
+  } catch {
+    return null;
+  }
 }
 function hashPasswordSync(password, iterations = 1e5) {
   const salt = randomBytes(32);

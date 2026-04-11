@@ -1,5 +1,115 @@
 import { peekCmsConfig } from "./config";
 
+// ---------------------------------------------------------------------------
+// Multi-locale admin label map (Rubric 19 — Internationalization)
+// ---------------------------------------------------------------------------
+
+export type AdminLocale = "en" | "es" | "fr" | "de" | "pt" | "ja";
+
+export type AdminLabelKey =
+  | "loginHeading"
+  | "themeToggleDark"
+  | "themeToggleLight"
+  | "saveButton"
+  | "publishButton"
+  | "discardButton"
+  | "deleteButton"
+  | "cancelButton"
+  | "signOut"
+  | "sidebarTitle";
+
+export const adminLabels: Record<AdminLocale, Record<AdminLabelKey, string>> = {
+  en: {
+    loginHeading: "Sign in to the admin",
+    themeToggleDark: "Switch to dark mode",
+    themeToggleLight: "Switch to light mode",
+    saveButton: "Save",
+    publishButton: "Publish",
+    discardButton: "Discard",
+    deleteButton: "Delete",
+    cancelButton: "Cancel",
+    signOut: "Sign out",
+    sidebarTitle: "Workspace",
+  },
+  es: {
+    loginHeading: "Acceder al panel de administración",
+    themeToggleDark: "Cambiar a modo oscuro",
+    themeToggleLight: "Cambiar a modo claro",
+    saveButton: "Guardar",
+    publishButton: "Publicar",
+    discardButton: "Descartar",
+    deleteButton: "Eliminar",
+    cancelButton: "Cancelar",
+    signOut: "Cerrar sesión",
+    sidebarTitle: "Espacio de trabajo",
+  },
+  fr: {
+    loginHeading: "Se connecter à l'administration",
+    themeToggleDark: "Passer en mode sombre",
+    themeToggleLight: "Passer en mode clair",
+    saveButton: "Enregistrer",
+    publishButton: "Publier",
+    discardButton: "Ignorer",
+    deleteButton: "Supprimer",
+    cancelButton: "Annuler",
+    signOut: "Se déconnecter",
+    sidebarTitle: "Espace de travail",
+  },
+  de: {
+    loginHeading: "Beim Admin anmelden",
+    themeToggleDark: "Zum Dunkelmodus wechseln",
+    themeToggleLight: "Zum Hellmodus wechseln",
+    saveButton: "Speichern",
+    publishButton: "Veröffentlichen",
+    discardButton: "Verwerfen",
+    deleteButton: "Löschen",
+    cancelButton: "Abbrechen",
+    signOut: "Abmelden",
+    sidebarTitle: "Arbeitsbereich",
+  },
+  pt: {
+    loginHeading: "Entrar no painel de administração",
+    themeToggleDark: "Mudar para modo escuro",
+    themeToggleLight: "Mudar para modo claro",
+    saveButton: "Salvar",
+    publishButton: "Publicar",
+    discardButton: "Descartar",
+    deleteButton: "Excluir",
+    cancelButton: "Cancelar",
+    signOut: "Sair",
+    sidebarTitle: "Área de trabalho",
+  },
+  ja: {
+    loginHeading: "管理パネルにサインイン",
+    themeToggleDark: "ダークモードに切り替え",
+    themeToggleLight: "ライトモードに切り替え",
+    saveButton: "保存",
+    publishButton: "公開",
+    discardButton: "破棄",
+    deleteButton: "削除",
+    cancelButton: "キャンセル",
+    signOut: "サインアウト",
+    sidebarTitle: "ワークスペース",
+  },
+};
+
+/**
+ * Resolve a localised admin UI label.
+ *
+ * Falls back through: `locale` → first site locale from config → `"en"`.
+ * Unknown keys return `key` so missing translations are visible rather than blank.
+ *
+ * @param key    The label key (e.g. `"saveButton"`).
+ * @param locale Optional BCP-47 locale tag. When omitted the first locale from
+ *               `getCmsConfig().locales` is used, falling back to `"en"`.
+ */
+export function getAdminLabel(key: AdminLabelKey, locale?: string): string {
+  const configLocale = peekCmsConfig()?.locales?.[0] ?? "en";
+  const resolvedLocale = (locale ?? configLocale).split("-")[0] as AdminLocale;
+  const map = adminLabels[resolvedLocale] ?? adminLabels.en;
+  return (map[key] ?? adminLabels.en[key]) || key;
+}
+
 export type AstropressAdminNavKey =
   | "dashboard"
   | "contentGroup"

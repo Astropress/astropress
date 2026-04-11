@@ -150,6 +150,7 @@ export function createAstropressContentRepository(input) {
         ogImage: rawInput.ogImage?.trim() || undefined,
         canonicalUrlOverride: rawInput.canonicalUrlOverride?.trim() || undefined,
         robotsDirective: rawInput.robotsDirective?.trim() || undefined,
+        metadata: rawInput.metadata,
       }, actor);
 
       input.replaceContentAssignments(record.slug, assignments);

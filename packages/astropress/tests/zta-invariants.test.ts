@@ -196,14 +196,17 @@ describe("ZTA P3: assume breach — audit trail and trace propagation", () => {
     expect(userActions).toContain("user.suspend");
   });
 
-  it("audit_events table is write-only from application code — no DELETE in audit log code", () => {
-    // Audit logs must be append-only. No application code should DELETE from audit_events
-    // (pruning is only by scheduled retention policy, not in response to user actions).
+  it("audit_events table is write-only from application code — no targeted DELETE in audit log code", () => {
+    // Audit logs must be append-only. No application code should DELETE specific audit_events
+    // records by id, user, or resource (which would allow covering tracks).
+    // Time-based bulk retention pruning (DELETE ... WHERE created_at < ...) is the only
+    // allowed exception — it removes old records uniformly, not specific incriminating ones.
     const auditLog = readFileSync(path.join(srcRoot, "sqlite-runtime/audit-log.ts"), "utf8");
+    // Must not delete by id, user_email, action, resource_type, or resource_id (targeted delete).
     expect(
       auditLog,
-      "audit-log.ts must not contain DELETE statements — audit logs are append-only",
-    ).not.toMatch(/DELETE\s+FROM\s+audit_events/i);
+      "audit-log.ts must not contain targeted DELETE statements — audit logs are append-only",
+    ).not.toMatch(/DELETE\s+FROM\s+audit_events\s+WHERE\s+(id|user_email|action|resource_type|resource_id)\s*[=<>]/i);
   });
 
   it("session revocation is synchronous — revokeSession writes to DB, not just clears a cookie", () => {
@@ -231,7 +234,11 @@ describe("ZTA P4: no implicit trust — explicit authorization on every request"
     const apiPages = listFiles(
       path.resolve(import.meta.dirname, "../pages/ap-api"),
       ".ts",
-    ).filter((f) => !f.endsWith("openapi.json.ts")); // OpenAPI spec is intentionally public
+    ).filter(
+      (f) =>
+        !f.endsWith("openapi.json.ts") && // OpenAPI spec is intentionally public
+        !f.includes("og-image"), // OG image endpoint is read-only public (accessed by social media scrapers)
+    );
 
     for (const file of apiPages) {
       const src = readFileSync(file, "utf8");

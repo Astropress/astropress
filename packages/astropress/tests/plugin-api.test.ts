@@ -96,4 +96,50 @@ describe("AstropressPlugin API", () => {
     const config = peekCmsConfig();
     expect(config?.plugins?.[0]?.navItems?.[0]?.label).toBe("My Tool");
   });
+
+  it("plugin adminRoutes are stored in config and accessible via peekCmsConfig", () => {
+    const routePlugin: AstropressPlugin = {
+      name: "route-plugin",
+      adminRoutes: [
+        { pattern: "/ap-admin/my-plugin", entrypoint: "./src/pages/my-plugin-admin.astro" },
+        { pattern: "/ap-admin/my-plugin/settings", entrypoint: "./src/pages/my-plugin-settings.astro" },
+      ],
+    };
+    registerCms(makeMinimalConfig([routePlugin]));
+    const config = peekCmsConfig();
+    const routes = config?.plugins?.[0]?.adminRoutes;
+    expect(routes).toHaveLength(2);
+    expect(routes?.[0]?.pattern).toBe("/ap-admin/my-plugin");
+    expect(routes?.[0]?.entrypoint).toBe("./src/pages/my-plugin-admin.astro");
+    expect(routes?.[1]?.pattern).toBe("/ap-admin/my-plugin/settings");
+  });
+
+  it("plugin with no adminRoutes does not break config access", () => {
+    const plainPlugin: AstropressPlugin = { name: "plain-plugin" };
+    registerCms(makeMinimalConfig([plainPlugin]));
+    const config = peekCmsConfig();
+    expect(config?.plugins?.[0]?.adminRoutes).toBeUndefined();
+  });
+});
+
+describe("createSitemapPlugin", () => {
+  it("source file exists and exports createSitemapPlugin", async () => {
+    const { createSitemapPlugin: fn } = await import("../src/plugins/sitemap-plugin.js");
+    expect(typeof fn).toBe("function");
+  });
+
+  it("returned plugin has name 'astropress-sitemap' and onContentPublish hook", async () => {
+    const { createSitemapPlugin: fn } = await import("../src/plugins/sitemap-plugin.js");
+    const plugin = fn();
+    expect(plugin.name).toBe("astropress-sitemap");
+    expect(typeof plugin.onContentPublish).toBe("function");
+  });
+
+  it("onContentPublish calls onPublish callback with slug", async () => {
+    const { createSitemapPlugin: fn } = await import("../src/plugins/sitemap-plugin.js");
+    const slugs: string[] = [];
+    const plugin = fn({ onPublish: (slug: string) => { slugs.push(slug); } });
+    await plugin.onContentPublish!({ slug: "my-post", kind: "post", status: "published", actor: "admin@example.com" });
+    expect(slugs).toEqual(["my-post"]);
+  });
 });

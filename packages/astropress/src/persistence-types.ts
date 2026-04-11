@@ -127,6 +127,9 @@ export interface MediaAsset {
   title: string;
   uploadedAt: string;
   uploadedBy: string;
+  thumbnailUrl?: string | null;
+  /** Responsive image srcset string, e.g. "/images/img-400w.webp 400w, /images/img-800w.webp 800w" */
+  srcset?: string | null;
 }
 
 export interface AuthorRecord {

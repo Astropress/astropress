@@ -14,7 +14,7 @@ import type {
   TaxonomyTerm,
 } from "./persistence-types";
 import type { SiteSettings } from "./site-settings";
-import { createD1ContentReadPart } from "./d1-store-content";
+import { createD1ContentReadPart, createD1SchedulingPart } from "./d1-store-content";
 import { createD1AuthorsReadPart, createD1AuthorsMutationPart, createD1TaxonomiesReadPart, createD1TaxonomiesMutationPart } from "./d1-store-taxonomies";
 import { createD1OperationsReadPart, createD1OperationsMutationPart } from "./d1-store-operations";
 
@@ -60,6 +60,10 @@ export interface D1AdminReadStore {
     listContentStates(): Promise<ContentRecord[]>;
     getContentState(slug: string): Promise<ContentRecord | null>;
     getContentRevisions(slug: string): Promise<ContentRevision[] | null>;
+    schedulePublish(id: string, scheduledAt: string): Promise<void>;
+    listScheduled(): Promise<Array<{ id: string; slug: string; title: string; scheduledAt: string }>>;
+    cancelScheduledPublish(id: string): Promise<void>;
+    runScheduledPublishes(): Promise<number>;
   };
   submissions: {
     getContactSubmissions(): Promise<ContactSubmission[]>;
@@ -124,7 +128,7 @@ export function createD1AdminReadStore(db: D1DatabaseLike): D1AdminReadStore {
     ...createD1OperationsReadPart(db),
     authors: createD1AuthorsReadPart(db),
     taxonomies: createD1TaxonomiesReadPart(db),
-    content: createD1ContentReadPart(db),
+    content: { ...createD1ContentReadPart(db), ...createD1SchedulingPart(db) },
   };
 }
 

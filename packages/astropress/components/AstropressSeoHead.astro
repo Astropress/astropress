@@ -43,7 +43,20 @@ const pageTitle = record.seoTitle || record.title || "";
 const description = record.metaDescription || record.excerpt || "";
 const ogTitle = record.ogTitle || pageTitle;
 const ogDescription = record.ogDescription || description;
-const ogImage = record.ogImage;
+
+/**
+ * OG image with automatic fallback to the framework-generated endpoint.
+ * If `record.ogImage` is set, use it directly. Otherwise, fall back to
+ * `/ap-api/v1/og-image/{slug}.png?title={title}&site={siteName}` — the
+ * framework's built-in SVG-based social card generator.
+ */
+const ogImageFallbackParams = record.slug && siteOrigin
+  ? `?title=${encodeURIComponent(pageTitle)}${siteName ? `&site=${encodeURIComponent(siteName)}` : ""}`
+  : null;
+const ogImage = record.ogImage
+  ?? (record.slug && ogImageFallbackParams
+    ? `${siteOrigin ?? ""}/ap-api/v1/og-image/${record.slug}.png${ogImageFallbackParams}`
+    : undefined);
 
 let canonicalHref: string | undefined;
 if (record.canonicalUrlOverride) {

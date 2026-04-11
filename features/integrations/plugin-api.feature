@@ -20,6 +20,7 @@ Feature: Plugin and Extension API
 
   Scenario: A plugin can register custom admin navigation items
     Given a plugin with navItems is registered in CmsConfig
+    When getCmsConfig is called after registration
     Then getCmsConfig().plugins[0].navItems is accessible with the correct label and href
 
   Scenario: A plugin's onMediaUpload hook is called after a media asset is uploaded

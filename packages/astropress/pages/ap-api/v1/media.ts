@@ -49,12 +49,33 @@ export const POST: APIRoute = async (context) => {
       return apiErrors.validationError("A 'file' field is required in the multipart body.");
     }
 
+    // Enforce allowed MIME types (415 Unsupported Media Type)
+    const ALLOWED_MIME_TYPES = [
+      "image/jpeg", "image/png", "image/gif", "image/webp", "image/svg+xml",
+      "image/avif", "image/tiff", "image/bmp",
+      "video/mp4", "video/webm", "video/ogg",
+      "audio/mpeg", "audio/ogg", "audio/wav", "audio/webm",
+      "application/pdf",
+      "application/zip", "application/gzip",
+      "text/plain", "text/csv",
+    ];
+    const mimeType = file.type || "application/octet-stream";
+    if (!ALLOWED_MIME_TYPES.includes(mimeType)) {
+      return apiErrors.unsupportedMediaType(mimeType, ALLOWED_MIME_TYPES);
+    }
+
+    // Enforce maximum upload size (413 Request Entity Too Large)
+    const maxUploadBytes = getCmsConfig().maxUploadBytes ?? 10 * 1024 * 1024;
+    if (file.size > maxUploadBytes) {
+      return apiErrors.fileTooLarge(maxUploadBytes, file.size);
+    }
+
     const bytes = new Uint8Array(await file.arrayBuffer());
     const id = crypto.randomUUID();
     const asset = await store.createMediaAsset({
       id,
       filename: file.name,
-      mimeType: file.type || "application/octet-stream",
+      mimeType,
       bytes,
     });
 

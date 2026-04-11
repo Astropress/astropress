@@ -30,3 +30,16 @@ Feature: Typed content type field definitions
     When a save is submitted with metadata { eventDate: "2026-06-01", capacity: -5 }
     Then saveRuntimeContentState returns ok: false
     And the error message comes from the validate() return value
+
+  Scenario: Admin form auto-generates inputs for registered content type fields
+    Given a content type "event" is registered with fields: eventDate (text, required), venue (text), featured (boolean)
+    When an admin opens the post editor for a post with templateKey "event"
+    Then the editor renders a text input for "eventDate" with required attribute
+    And the editor renders a text input for "venue" without required
+    And the editor renders a checkbox input for "featured"
+    And all input names follow the "metadata.{fieldName}" pattern
+
+  Scenario: Admin form renders select inputs for select-type fields
+    Given a content type "product" is registered with a "status" select field (options: draft, active, discontinued)
+    When an admin opens the post editor for a post with templateKey "product"
+    Then the editor renders a select element for "status" with the configured options

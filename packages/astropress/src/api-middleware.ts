@@ -19,6 +19,20 @@ const API_ERROR_SHAPES = {
     jsonError(404, { error: detail, code: "not_found" }),
   validationError: (detail: string) =>
     jsonError(422, { error: detail, code: "validation_error" }),
+  fileTooLarge: (maxBytes: number, uploadedBytes: number) =>
+    jsonError(413, {
+      error: "FILE_TOO_LARGE",
+      code: "file_too_large",
+      maxBytes,
+      uploadedBytes,
+    }),
+  unsupportedMediaType: (mimeType: string, allowed: string[]) =>
+    jsonError(415, {
+      error: "UNSUPPORTED_MEDIA_TYPE",
+      code: "unsupported_media_type",
+      mimeType,
+      allowed: allowed as unknown as JsonValue,
+    }),
 };
 
 function jsonError(status: number, body: Record<string, JsonValue>) {

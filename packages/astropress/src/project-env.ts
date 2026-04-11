@@ -2,7 +2,7 @@ import type { AstropressAppHost } from "./app-host-targets";
 import type { AstropressDataServices } from "./data-service-targets";
 
 export type AstropressLocalProviderEnv = "sqlite" | "supabase" | "runway";
-export type AstropressHostedProviderEnv = "supabase" | "runway" | "firebase" | "appwrite" | "pocketbase";
+export type AstropressHostedProviderEnv = "supabase" | "runway" | "appwrite" | "pocketbase";
 export type AstropressDeployTargetEnv =
   | "github-pages"
   | "cloudflare"
@@ -11,7 +11,6 @@ export type AstropressDeployTargetEnv =
   | "render-static"
   | "render-web"
   | "gitlab-pages"
-  | "firebase-hosting"
   | "runway"
   | "custom";
 export type AstropressAppHostEnv = AstropressAppHost;
@@ -45,8 +44,6 @@ function mapLegacyDeployTargetToAppHost(target?: string | null): AstropressAppHo
       return "render-web";
     case "gitlab-pages":
       return "gitlab-pages";
-    case "firebase-hosting":
-      return "firebase-hosting";
     case "runway":
       return "runway";
     case "custom":
@@ -66,9 +63,6 @@ function resolveDataServicesFromLegacyEnv(
   const hostedProvider = env.ASTROPRESS_HOSTED_PROVIDER?.trim();
   if (hostedProvider === "runway") {
     return "runway";
-  }
-  if (hostedProvider === "firebase") {
-    return "firebase";
   }
   if (hostedProvider === "appwrite") {
     return "appwrite";
@@ -102,7 +96,6 @@ export function resolveAstropressAppHostFromEnv(
     explicitHost === "render-static" ||
     explicitHost === "render-web" ||
     explicitHost === "gitlab-pages" ||
-    explicitHost === "firebase-hosting" ||
     explicitHost === "runway" ||
     explicitHost === "custom"
   ) {
@@ -118,7 +111,7 @@ export function resolveAstropressAppHostFromEnv(
   if (dataServices === "supabase") {
     return "vercel";
   }
-  if (dataServices === "firebase" || dataServices === "appwrite" || dataServices === "pocketbase" || dataServices === "nhost" || dataServices === "neon" || dataServices === "custom") {
+  if (dataServices === "appwrite" || dataServices === "pocketbase" || dataServices === "nhost" || dataServices === "neon" || dataServices === "custom") {
     return "render-web";
   }
   if (dataServices === "runway") {
@@ -138,7 +131,6 @@ export function resolveAstropressDataServicesFromEnv(
     explicitServices === "none" ||
     explicitServices === "cloudflare" ||
     explicitServices === "supabase" ||
-    explicitServices === "firebase" ||
     explicitServices === "appwrite" ||
     explicitServices === "pocketbase" ||
     explicitServices === "neon" ||
@@ -168,11 +160,6 @@ export function resolveAstropressServiceOriginFromEnv(
   if (dataServices === "supabase") {
     const url = env.SUPABASE_URL?.trim();
     return url ? `${url.replace(/\/$/, "")}/functions/v1/astropress` : null;
-  }
-
-  if (dataServices === "firebase") {
-    const projectId = env.FIREBASE_PROJECT_ID?.trim();
-    return projectId ? `https://${projectId}.firebaseapp.com/astropress-api` : null;
   }
 
   if (dataServices === "appwrite") {
@@ -213,9 +200,6 @@ export function resolveAstropressHostedProviderFromEnv(
   if (provider === "runway") {
     return "runway";
   }
-  if (provider === "firebase") {
-    return "firebase";
-  }
   if (provider === "appwrite") {
     return "appwrite";
   }
@@ -229,9 +213,6 @@ export function resolveAstropressHostedProviderFromEnv(
   const dataServices = resolveAstropressDataServicesFromEnv(env);
   if (dataServices === "runway") {
     return "runway";
-  }
-  if (dataServices === "firebase") {
-    return "firebase";
   }
   if (dataServices === "appwrite") {
     return "appwrite";
@@ -254,7 +235,6 @@ export function resolveAstropressDeployTarget(
     explicitTarget === "render-static" ||
     explicitTarget === "render-web" ||
     explicitTarget === "gitlab-pages" ||
-    explicitTarget === "firebase-hosting" ||
     explicitTarget === "runway" ||
     explicitTarget === "custom"
   ) {

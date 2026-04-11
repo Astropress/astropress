@@ -3,7 +3,7 @@ Feature: Service selection during astropress new
   I want to choose which optional services to include during scaffolding
   So that the project is wired up correctly from the start
 
-  # ── CMS / content backend ────────────────────────────────────────────────────
+  # CMS / content backend
 
   Scenario: Interactive mode presents CMS choices
     Given the --plain flag is not passed
@@ -28,15 +28,11 @@ Feature: Service selection during astropress new
     Then the .env.example file contains "DIRECTUS_URL"
     And the .env.example file contains "DIRECTUS_TOKEN"
 
-  # ── commerce ─────────────────────────────────────────────────────────────────
-
   Scenario: Choosing Medusa generates a medusa-config.js stub
     Given I select "Medusa" for commerce during scaffolding
     When scaffolding completes
     Then the project directory contains "medusa-config.js"
     And the .env.example file contains "MEDUSA_BACKEND_URL"
-
-  # ── email / newsletter ────────────────────────────────────────────────────────
 
   Scenario: Choosing Listmonk generates env entries
     Given I select "Listmonk" for email during scaffolding
@@ -44,15 +40,11 @@ Feature: Service selection during astropress new
     Then the .env.example file contains "LISTMONK_API_URL"
     And the .env.example file contains "LISTMONK_API_TOKEN"
 
-  # ── testimonials / surveys ────────────────────────────────────────────────────
-
   Scenario: Choosing Formbricks generates testimonial env entries
     Given I select "Formbricks" for testimonials during scaffolding
     When scaffolding completes
     Then the .env.example file contains "FORMBRICKS_API_KEY"
     And the .env.example file contains "FORMBRICKS_ENVIRONMENT_ID"
-
-  # ── courses / LMS ─────────────────────────────────────────────────────────────
 
   Scenario: Choosing Frappe LMS generates course env entries
     Given I select "Frappe LMS" for courses during scaffolding
@@ -60,15 +52,11 @@ Feature: Service selection during astropress new
     Then the .env.example file contains "FRAPPE_LMS_URL"
     And the .env.example file contains "FRAPPE_LMS_API_KEY"
 
-  # ── donations / sponsorships ──────────────────────────────────────────────────
-
   Scenario: Choosing Polar generates donation env entries
     Given I select "Polar" for donations during scaffolding
     When scaffolding completes
     Then the .env.example file contains "POLAR_ACCESS_TOKEN"
     And the .env.example file contains "POLAR_ORGANIZATION_ID"
-
-  # ── forum ─────────────────────────────────────────────────────────────────────
 
   Scenario: Choosing Flarum generates forum env entries
     Given I select "Flarum" for forum during scaffolding
@@ -76,16 +64,12 @@ Feature: Service selection during astropress new
     Then the .env.example file contains "FLARUM_URL"
     And the .env.example file contains "FLARUM_API_KEY"
 
-  # ── live chat ─────────────────────────────────────────────────────────────────
-
   Scenario: Choosing Chatwoot generates live chat env entries
     Given I select "Chatwoot" for live chat during scaffolding
     When scaffolding completes
     Then the .env.example file contains "CHATWOOT_URL"
     And the .env.example file contains "CHATWOOT_API_ACCESS_TOKEN"
     And the .env.example file contains "CHATWOOT_INBOX_ID"
-
-  # ── payments ──────────────────────────────────────────────────────────────────
 
   Scenario: Choosing HyperSwitch generates payment router env entries
     Given I select "HyperSwitch" for payments during scaffolding
@@ -100,22 +84,16 @@ Feature: Service selection during astropress new
     Then the .env.example file mentions "Razorpay" for UPI and India
     And the .env.example file mentions "M-PESA"
 
-  # ── push notifications ────────────────────────────────────────────────────────
-
   Scenario: Choosing ntfy generates push notification env entries
     Given I select "ntfy" for push notifications during scaffolding
     When scaffolding completes
     Then the .env.example file contains "NTFY_URL"
     And the .env.example file contains "NTFY_TOPIC"
 
-  # ── scheduling ────────────────────────────────────────────────────────────────
-
   Scenario: Choosing Rallly generates scheduling env entries
     Given I select "Rallly" for scheduling during scaffolding
     When scaffolding completes
     Then the .env.example file contains "RALLLY_URL"
-
-  # ── job board ─────────────────────────────────────────────────────────────────
 
   Scenario: Choosing job board scaffolds a content type stub
     Given I enable the job board option during scaffolding
@@ -123,15 +101,10 @@ Feature: Service selection during astropress new
     Then the project directory contains "content-types.example.ts"
     And the file contains "jobListingContentType"
 
-  # ── smart defaults ───────────────────────────────────────────────────────────
-
   Scenario: PostHog selected for analytics pre-selects PostHog for session replay
     Given I select "PostHog" for analytics during scaffolding
     When the session replay prompt is shown
     Then the default selection is "PostHog" rather than "OpenReplay"
-    So that the user does not deploy a second analytics service unnecessarily
-
-  # ── plain mode ────────────────────────────────────────────────────────────────
 
   Scenario: Plain mode uses defaults without prompting
     Given the --plain flag is passed

@@ -1,0 +1,80 @@
+---
+/**
+ * AstropressBlogPostingJsonLd.astro
+ *
+ * Emits a JSON-LD BlogPosting schema (schema.org/BlogPosting) for blog-style
+ * content entries.
+ *
+ * Auto-wired by AstropressContentLayout when content.kind === "post".
+ *
+ * The frontmatter uses schema-dts types for compile-time schema.org validation —
+ * any property not defined in the BlogPosting vocabulary produces a TypeScript error.
+ *
+ * Usage (manual):
+ *   <AstropressBlogPostingJsonLd
+ *     record={{ slug: "my-post", title: "My Post", metaDescription: "A post." }}
+ *     siteOrigin="https://example.com"
+ *     publisherName="My Site"
+ *   />
+ */
+
+import type { BlogPosting, WithContext } from "schema-dts";
+
+interface BlogPostingProps {
+  slug?: string;
+  title?: string;
+  seoTitle?: string;
+  metaDescription?: string;
+  excerpt?: string;
+  ogImage?: string;
+  updatedAt?: string;
+  authorName?: string;
+}
+
+interface Props {
+  record: BlogPostingProps;
+  siteOrigin?: string;
+  publisherName?: string;
+  publisherLogo?: string;
+  datePublished?: string;
+}
+
+const { record, siteOrigin, publisherName, publisherLogo, datePublished } = Astro.props;
+
+const url =
+  siteOrigin && record.slug
+    ? `${siteOrigin.replace(/\/$/, "")}/blog/${record.slug}/`
+    : undefined;
+
+const headline = record.seoTitle || record.title || "";
+const description = record.metaDescription || record.excerpt || "";
+const dateModified = record.updatedAt?.slice(0, 10);
+const datePublishedValue = datePublished ?? dateModified;
+
+const blogPosting: BlogPosting = {
+  "@type": "BlogPosting",
+  ...(headline && { headline }),
+  ...(description && { description }),
+  ...(url && { url, mainEntityOfPage: { "@type": "WebPage", "@id": url } }),
+  ...(record.ogImage && { image: record.ogImage }),
+  ...(datePublishedValue && { datePublished: datePublishedValue }),
+  ...(dateModified && { dateModified }),
+  ...(record.authorName && { author: { "@type": "Person", name: record.authorName } }),
+  ...(publisherName && {
+    publisher: {
+      "@type": "Organization",
+      name: publisherName,
+      ...(publisherLogo ? { logo: { "@type": "ImageObject", url: publisherLogo } } : {}),
+    },
+  }),
+};
+
+const jsonLd: WithContext<BlogPosting> = {
+  "@context": "https://schema.org",
+  ...blogPosting,
+};
+
+const json = JSON.stringify(jsonLd).replace(/<\/(script)/gi, "<\\/$1").replace(/<(script)/gi, "<$1");
+---
+
+<script type="application/ld+json" set:html={json}></script>

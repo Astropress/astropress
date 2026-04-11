@@ -5,10 +5,6 @@ import {
   type AstropressAppwriteHostedAdapterOptions,
 } from "./appwrite";
 import {
-  createAstropressFirebaseHostedAdapter,
-  type AstropressFirebaseHostedAdapterOptions,
-} from "./firebase";
-import {
   createAstropressPocketbaseHostedAdapter,
   type AstropressPocketbaseHostedAdapterOptions,
 } from "./pocketbase";
@@ -21,11 +17,10 @@ import {
   type AstropressSupabaseHostedAdapterOptions,
 } from "./supabase";
 
-export type AstropressHostedProviderKind = "supabase" | "runway" | "firebase" | "appwrite" | "pocketbase";
+export type AstropressHostedProviderKind = "supabase" | "runway" | "appwrite" | "pocketbase";
 
 export type AstropressHostedAdapterOptions =
   | ({ provider?: "supabase"; env?: Record<string, string | undefined> } & AstropressSupabaseHostedAdapterOptions)
-  | ({ provider: "firebase"; env?: Record<string, string | undefined> } & AstropressFirebaseHostedAdapterOptions)
   | ({ provider: "appwrite"; env?: Record<string, string | undefined> } & AstropressAppwriteHostedAdapterOptions)
   | ({ provider: "pocketbase"; env?: Record<string, string | undefined> } & AstropressPocketbaseHostedAdapterOptions)
   | ({ provider: "runway"; env?: Record<string, string | undefined> } & AstropressRunwayHostedAdapterOptions);
@@ -48,12 +43,6 @@ export function createAstropressHostedAdapter(
   if (provider === "runway") {
     return createAstropressRunwayHostedAdapter(
       options as Extract<AstropressHostedAdapterOptions, { provider: "runway" }>,
-    );
-  }
-
-  if (provider === "firebase") {
-    return createAstropressFirebaseHostedAdapter(
-      options as Extract<AstropressHostedAdapterOptions, { provider: "firebase" }>,
     );
   }
 

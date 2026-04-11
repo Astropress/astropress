@@ -49,7 +49,6 @@ pub(crate) enum AppHost {
     RenderStatic,
     RenderWeb,
     GitlabPages,
-    FirebaseHosting,
     Runway,
     Custom,
 }
@@ -64,11 +63,10 @@ impl AppHost {
             "render-static" => Ok(Self::RenderStatic),
             "render-web" => Ok(Self::RenderWeb),
             "gitlab-pages" => Ok(Self::GitlabPages),
-            "firebase-hosting" => Ok(Self::FirebaseHosting),
             "runway" => Ok(Self::Runway),
             "custom" => Ok(Self::Custom),
             other => Err(format!(
-                "Unsupported app host `{other}`. Use github-pages, cloudflare-pages, vercel, netlify, render-static, render-web, gitlab-pages, firebase-hosting, runway, or custom."
+                "Unsupported app host `{other}`. Use github-pages, cloudflare-pages, vercel, netlify, render-static, render-web, gitlab-pages, runway, or custom."
             )),
         }
     }
@@ -82,7 +80,6 @@ impl AppHost {
             Self::RenderStatic => "render-static",
             Self::RenderWeb => "render-web",
             Self::GitlabPages => "gitlab-pages",
-            Self::FirebaseHosting => "firebase-hosting",
             Self::Runway => "runway",
             Self::Custom => "custom",
         }
@@ -101,7 +98,6 @@ pub(crate) enum DataServices {
     None,
     Cloudflare,
     Supabase,
-    Firebase,
     Appwrite,
     Pocketbase,
     Neon,
@@ -116,7 +112,6 @@ impl DataServices {
             "none" => Ok(Self::None),
             "cloudflare" => Ok(Self::Cloudflare),
             "supabase" => Ok(Self::Supabase),
-            "firebase" => Ok(Self::Firebase),
             "appwrite" => Ok(Self::Appwrite),
             "pocketbase" => Ok(Self::Pocketbase),
             "neon" => Ok(Self::Neon),
@@ -124,7 +119,7 @@ impl DataServices {
             "runway" => Ok(Self::Runway),
             "custom" => Ok(Self::Custom),
             other => Err(format!(
-                "Unsupported data services `{other}`. Use none, cloudflare, supabase, firebase, appwrite, pocketbase, neon, nhost, runway, or custom."
+                "Unsupported data services `{other}`. Use none, cloudflare, supabase, appwrite, pocketbase, neon, nhost, runway, or custom."
             )),
         }
     }
@@ -134,7 +129,6 @@ impl DataServices {
             Self::None => "none",
             Self::Cloudflare => "cloudflare",
             Self::Supabase => "supabase",
-            Self::Firebase => "firebase",
             Self::Appwrite => "appwrite",
             Self::Pocketbase => "pocketbase",
             Self::Neon => "neon",
@@ -325,17 +319,11 @@ pub(crate) fn deployment_support_level(app_host: &str, data_services: &str) -> &
         | ("render-web", "supabase")
         | ("runway", "runway") => "supported",
         ("github-pages", "supabase")
-        | ("github-pages", "firebase")
-        | ("render-web", "firebase")
         | ("render-web", "appwrite")
         | ("gitlab-pages", "supabase")
-        | ("firebase-hosting", "supabase")
-        | ("vercel", "firebase")
-        | ("netlify", "firebase")
         | ("vercel", "appwrite")
         | ("netlify", "appwrite")
-        | ("cloudflare-pages", "supabase")
-        | ("cloudflare-pages", "firebase") => "preview",
+        | ("cloudflare-pages", "supabase") => "preview",
         _ => "unsupported",
     }
 }

@@ -10,7 +10,6 @@ export type AstropressExistingPlatform =
   | "none"
   | "cloudflare"
   | "supabase"
-  | "firebase"
   | "appwrite"
   | "runway";
 
@@ -28,7 +27,7 @@ export interface AstropressProviderChoiceRecommendation {
   rationale: string;
   requiredEnvKeys: string[];
   deployTarget: AstropressDeployTargetEnv;
-  canonicalProvider: "cloudflare" | "supabase" | "firebase" | "appwrite" | "runway";
+  canonicalProvider: "cloudflare" | "supabase" | "appwrite" | "runway";
   publicDeployTarget: AstropressDeployTargetEnv;
 }
 
@@ -53,7 +52,6 @@ function finalizeRecommendation(
     canonicalProvider:
       dataServices === "cloudflare" ||
       dataServices === "supabase" ||
-      dataServices === "firebase" ||
       dataServices === "appwrite" ||
       dataServices === "runway"
         ? dataServices
@@ -89,14 +87,6 @@ export function recommendAstropressProvider(
       wantsStaticMirror ? "github-pages" : "vercel",
       "supabase",
       "Supabase is already the content-services platform, so Astropress should keep Supabase for data, auth, storage, and the Astropress service API while using a separate Astro app host.",
-    );
-  }
-
-  if (existingPlatform === "firebase") {
-    return finalizeRecommendation(
-      wantsStaticMirror ? "github-pages" : "render-web",
-      "firebase",
-      "Firebase is already the content-services platform, so Astropress should keep Firebase for data, auth, storage, and the Astropress service API while choosing a separate Astro app host.",
     );
   }
 

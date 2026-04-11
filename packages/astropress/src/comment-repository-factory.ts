@@ -1,5 +1,20 @@
 import type { Actor, CommentPolicy, CommentRecord, CommentRepository, CommentStatus } from "./persistence-types";
 
+/**
+ * Hash a comment author's email address with a site-specific salt (GDPR Article 25 —
+ * data protection by design). The resulting hex digest is used in place of the raw
+ * email so the stored value cannot be reversed without knowledge of the salt.
+ *
+ * @param email     The raw email address (never stored after this call).
+ * @param siteSalt  Site-specific secret (e.g. `getCmsConfig().sessionSecret`).
+ */
+export async function hashCommentEmail(email: string, siteSalt: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(email + siteSalt);
+  const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+  return Array.from(new Uint8Array(hashBuffer), (b) => b.toString(16).padStart(2, "0")).join("");
+}
+
 export interface AstropressCommentRepositoryInput {
   getComments: CommentRepository["getComments"];
   getCommentRoute(commentId: string): string | null | undefined;
@@ -11,6 +26,14 @@ export interface AstropressCommentRepositoryInput {
     summary: string;
     targetId: string;
   }): void;
+  /**
+   * Site-specific salt used to hash comment author emails before storage.
+   * When provided, `submitPublicComment` replaces the raw email with a
+   * SHA-256 hex digest so no recoverable email address is persisted.
+   *
+   * Pass `getCmsConfig().sessionSecret` here in production.
+   */
+  sessionSalt?: string;
 }
 
 export function createAstropressCommentRepository(
@@ -34,11 +57,18 @@ export function createAstropressCommentRepository(
 
       return { ok: true as const };
     },
-    submitPublicComment(rawInput) {
+    async submitPublicComment(rawInput) {
+      // Hash the author email before storage when a site salt is provided.
+      // This ensures no recoverable PII is persisted (GDPR Art. 25).
+      const hashedEmail =
+        rawInput.email && input.sessionSalt
+          ? await hashCommentEmail(rawInput.email, input.sessionSalt)
+          : rawInput.email;
+
       const comment: CommentRecord = {
         id: `public-${crypto.randomUUID()}`,
         author: rawInput.author,
-        email: rawInput.email,
+        email: hashedEmail,
         body: rawInput.body,
         route: rawInput.route,
         status: "pending",

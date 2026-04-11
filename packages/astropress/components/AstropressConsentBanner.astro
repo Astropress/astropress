@@ -1,0 +1,182 @@
+---
+/**
+ * AstropressConsentBanner
+ *
+ * A sticky footer consent banner for analytics opt-in. Sets
+ * `localStorage["ap-analytics-consent"]` to "1" (accepted) or "0" (rejected)
+ * and dispatches a `CustomEvent("ap-consent-accepted")` on accept.
+ *
+ * The banner reads the stored choice on mount and hides itself if a decision
+ * has already been made — no flash of consent banner on return visits.
+ *
+ * Accessibility: rendered as a `<dialog>` element with `role="dialog"`,
+ * `aria-labelledby`, and a focus trap so keyboard users cannot tab past the
+ * consent choice without responding.
+ *
+ * Props:
+ *   message      — Banner text (default: generic analytics consent message)
+ *   acceptLabel  — Accept button label (default: "Accept")
+ *   rejectLabel  — Reject button label (default: "Decline")
+ */
+
+interface Props {
+  message?: string;
+  acceptLabel?: string;
+  rejectLabel?: string;
+}
+
+const {
+  message = "This site uses optional analytics to understand how visitors use it. No personal data is shared with third parties.",
+  acceptLabel = "Accept",
+  rejectLabel = "Decline",
+} = Astro.props;
+---
+
+<dialog
+  id="ap-consent-banner"
+  class="ap-consent-banner"
+  aria-labelledby="ap-consent-title"
+  aria-modal="true"
+>
+  <div class="ap-consent-inner">
+    <p id="ap-consent-title" class="ap-consent-message">{message}</p>
+    <div class="ap-consent-actions">
+      <button
+        id="ap-consent-accept"
+        class="ap-consent-btn ap-consent-btn--accept"
+        type="button"
+      >
+        {acceptLabel}
+      </button>
+      <button
+        id="ap-consent-reject"
+        class="ap-consent-btn ap-consent-btn--reject"
+        type="button"
+      >
+        {rejectLabel}
+      </button>
+    </div>
+  </div>
+</dialog>
+
+<style>
+  .ap-consent-banner {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    margin: 0;
+    max-width: 100%;
+    width: 100%;
+    border: none;
+    border-top: 1px solid var(--ap-color-border, #e5e7eb);
+    background: var(--ap-color-surface, #fff);
+    padding: 1rem 1.5rem;
+    box-shadow: 0 -2px 8px rgba(0 0 0 / 0.08);
+    z-index: 9999;
+  }
+
+  .ap-consent-banner:not([open]) {
+    display: none;
+  }
+
+  .ap-consent-inner {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1rem;
+    max-width: 64rem;
+    margin: 0 auto;
+  }
+
+  .ap-consent-message {
+    flex: 1;
+    margin: 0;
+    font-size: 0.875rem;
+    color: var(--ap-color-text, #374151);
+  }
+
+  .ap-consent-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-shrink: 0;
+  }
+
+  .ap-consent-btn {
+    padding: 0.5rem 1.25rem;
+    border-radius: 4px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    border: 1px solid transparent;
+  }
+
+  .ap-consent-btn--accept {
+    background: var(--ap-color-primary, #2563eb);
+    color: #fff;
+    border-color: var(--ap-color-primary, #2563eb);
+  }
+
+  .ap-consent-btn--accept:hover {
+    opacity: 0.9;
+  }
+
+  .ap-consent-btn--reject {
+    background: transparent;
+    color: var(--ap-color-text-muted, #6b7280);
+    border-color: var(--ap-color-border, #d1d5db);
+  }
+
+  .ap-consent-btn--reject:hover {
+    background: var(--ap-color-surface-alt, #f9fafb);
+  }
+</style>
+
+<script>
+  const CONSENT_KEY = "ap-analytics-consent";
+  const banner = document.getElementById("ap-consent-banner") as HTMLDialogElement | null;
+
+  if (banner) {
+    const stored = localStorage.getItem(CONSENT_KEY);
+
+    if (stored === null) {
+      // No prior decision — show the banner
+      banner.show();
+
+      // Focus trap: keep focus inside the banner while it is open
+      const focusableSelectors = 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
+      const focusable = Array.from(banner.querySelectorAll<HTMLElement>(focusableSelectors));
+      if (focusable.length > 0) {
+        focusable[0]?.focus();
+      }
+
+      banner.addEventListener("keydown", (e: KeyboardEvent) => {
+        if (e.key !== "Tab" || focusable.length === 0) return;
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (e.shiftKey) {
+          if (document.activeElement === first) {
+            e.preventDefault();
+            last?.focus();
+          }
+        } else {
+          if (document.activeElement === last) {
+            e.preventDefault();
+            first?.focus();
+          }
+        }
+      });
+    }
+
+    document.getElementById("ap-consent-accept")?.addEventListener("click", () => {
+      localStorage.setItem(CONSENT_KEY, "1");
+      banner.close();
+      document.dispatchEvent(new CustomEvent("ap-consent-accepted", { bubbles: true }));
+    });
+
+    document.getElementById("ap-consent-reject")?.addEventListener("click", () => {
+      localStorage.setItem(CONSENT_KEY, "0");
+      banner.close();
+    });
+  }
+</script>

@@ -26,7 +26,10 @@
     "test:static-site": "bun run --filter astropress-example-gh-pages build && bun run scripts/static-site-audit.ts examples/github-pages/dist",
     "dev:example": "bun run --filter astropress-example-gh-pages dev",
     "audit:carbon": "bunx size-limit && bun run scripts/carbon-audit.ts --domains-only",
-    "audit:sync": "bun run scripts/check-js-sync.ts"
+    "audit:sync": "bun run scripts/check-js-sync.ts",
+    "audit:aeo": "bun run scripts/audit-aeo.ts",
+    "check:version": "bun run scripts/check-version-bump.ts",
+    "docs:api": "bun run scripts/generate-api-docs.ts"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.11.1",

@@ -23,9 +23,6 @@ describe("project env", () => {
     expect(resolveAstropressDataServicesFromEnv({ ASTROPRESS_CONTENT_SERVICES: "appwrite" })).toBe(
       "appwrite",
     );
-    expect(resolveAstropressDataServicesFromEnv({ ASTROPRESS_DATA_SERVICES: "firebase" })).toBe(
-      "firebase",
-    );
     expect(
       resolveAstropressDataServicesFromEnv({ ASTROPRESS_LOCAL_PROVIDER: "supabase" }),
     ).toBe("supabase");
@@ -38,9 +35,6 @@ describe("project env", () => {
     );
     expect(resolveAstropressLocalProviderFromEnv({ ASTROPRESS_DATA_SERVICES: "runway" })).toBe(
       "runway",
-    );
-    expect(resolveAstropressLocalProviderFromEnv({ ASTROPRESS_DATA_SERVICES: "firebase" })).toBe(
-      "sqlite",
     );
   });
 
@@ -107,7 +101,7 @@ describe("project env", () => {
 
 describe("resolveAstropressAppHostFromEnv — additional branches", () => {
   it("returns each explicit ASTROPRESS_APP_HOST value verbatim", () => {
-    const hosts = ["render-web", "firebase-hosting", "gitlab-pages", "render-static", "runway", "netlify", "custom"] as const;
+    const hosts = ["render-web", "gitlab-pages", "render-static", "runway", "netlify", "custom"] as const;
     for (const host of hosts) {
       expect(resolveAstropressAppHostFromEnv({ ASTROPRESS_APP_HOST: host })).toBe(host);
     }
@@ -119,10 +113,6 @@ describe("resolveAstropressAppHostFromEnv — additional branches", () => {
 
   it("maps legacy ASTROPRESS_LOCAL_PROVIDER=supabase → vercel via data-services chain", () => {
     expect(resolveAstropressAppHostFromEnv({ ASTROPRESS_LOCAL_PROVIDER: "supabase" })).toBe("vercel");
-  });
-
-  it("maps legacy ASTROPRESS_HOSTED_PROVIDER=firebase → render-web via data-services chain", () => {
-    expect(resolveAstropressAppHostFromEnv({ ASTROPRESS_HOSTED_PROVIDER: "firebase" })).toBe("render-web");
   });
 
   it("maps legacy ASTROPRESS_HOSTED_PROVIDER=appwrite → render-web via data-services chain", () => {
@@ -163,10 +153,6 @@ describe("resolveAstropressAppHostFromEnv — additional branches", () => {
     expect(resolveAstropressAppHostFromEnv({ ASTROPRESS_DEPLOY_TARGET: "gitlab-pages" })).toBe("gitlab-pages");
   });
 
-  it("maps ASTROPRESS_DEPLOY_TARGET=firebase-hosting → firebase-hosting via legacy deploy target mapper", () => {
-    expect(resolveAstropressAppHostFromEnv({ ASTROPRESS_DEPLOY_TARGET: "firebase-hosting" })).toBe("firebase-hosting");
-  });
-
   it("maps ASTROPRESS_DEPLOY_TARGET=runway → runway via legacy deploy target mapper", () => {
     expect(resolveAstropressAppHostFromEnv({ ASTROPRESS_DEPLOY_TARGET: "runway" })).toBe("runway");
   });
@@ -181,16 +167,8 @@ describe("resolveAstropressHostedProviderFromEnv — additional branches", () =>
     expect(resolveAstropressHostedProviderFromEnv({ ASTROPRESS_HOSTED_PROVIDER: "appwrite" })).toBe("appwrite");
   });
 
-  it("returns firebase when ASTROPRESS_HOSTED_PROVIDER=firebase", () => {
-    expect(resolveAstropressHostedProviderFromEnv({ ASTROPRESS_HOSTED_PROVIDER: "firebase" })).toBe("firebase");
-  });
-
   it("returns pocketbase when ASTROPRESS_DATA_SERVICES=pocketbase (fallback from dataServices)", () => {
     expect(resolveAstropressHostedProviderFromEnv({ ASTROPRESS_DATA_SERVICES: "pocketbase" })).toBe("pocketbase");
-  });
-
-  it("returns firebase when ASTROPRESS_DATA_SERVICES=firebase (fallback from dataServices)", () => {
-    expect(resolveAstropressHostedProviderFromEnv({ ASTROPRESS_DATA_SERVICES: "firebase" })).toBe("firebase");
   });
 
   it("returns appwrite when ASTROPRESS_DATA_SERVICES=appwrite (fallback from dataServices)", () => {
@@ -199,21 +177,6 @@ describe("resolveAstropressHostedProviderFromEnv — additional branches", () =>
 });
 
 describe("resolveAstropressServiceOriginFromEnv — additional branches", () => {
-  it("returns firebase service origin from FIREBASE_PROJECT_ID", () => {
-    expect(
-      resolveAstropressServiceOriginFromEnv({
-        ASTROPRESS_DATA_SERVICES: "firebase",
-        FIREBASE_PROJECT_ID: "my-project",
-      }),
-    ).toBe("https://my-project.firebaseapp.com/astropress-api");
-  });
-
-  it("returns null when firebase is selected but FIREBASE_PROJECT_ID is absent", () => {
-    expect(
-      resolveAstropressServiceOriginFromEnv({ ASTROPRESS_DATA_SERVICES: "firebase" }),
-    ).toBeNull();
-  });
-
   it("returns appwrite service origin from APPWRITE_ENDPOINT", () => {
     expect(
       resolveAstropressServiceOriginFromEnv({
@@ -276,7 +239,7 @@ describe("resolveDataServicesFromLegacyEnv — cloudflare via DEPLOY_TARGET (lin
 
 describe("resolveAstropressDeployTarget — explicit target values", () => {
   it("returns each explicit ASTROPRESS_DEPLOY_TARGET value verbatim", () => {
-    const targets = ["render-static", "render-web", "gitlab-pages", "netlify", "firebase-hosting", "runway", "custom"] as const;
+    const targets = ["render-static", "render-web", "gitlab-pages", "netlify", "runway", "custom"] as const;
     for (const target of targets) {
       expect(resolveAstropressDeployTarget({ ASTROPRESS_DEPLOY_TARGET: target })).toBe(target);
     }

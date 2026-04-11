@@ -23,3 +23,9 @@ Feature: Site security and bot protection
   Scenario: Admin pages use a stricter Content-Security-Policy than public pages
     When a public page and an admin page are both loaded
     Then the admin page CSP blocks inline scripts and restricts form targets more tightly than the public page CSP
+
+  Scenario: Comment author email is hashed before storage
+    Given a visitor submits a comment with their email address
+    When the comment repository stores the submission with a site session salt
+    Then the stored email field is a 64-character SHA-256 hex digest
+    And the raw email address is not present anywhere in the stored record

@@ -32,10 +32,10 @@ describe("deployment matrix", () => {
   it("returns env requirements for listed pairs", () => {
     const entry = getAstropressDeploymentMatrixEntry({
       appHost: "render-web",
-      dataServices: "firebase",
+      dataServices: "appwrite",
     });
     expect(entry?.supportLevel).toBe("preview");
     expect(entry?.requiredEnvKeys).toContain("ASTROPRESS_SERVICE_ORIGIN");
-    expect(entry?.requiredEnvKeys).toContain("FIREBASE_PROJECT_ID");
+    expect(entry?.requiredEnvKeys).toContain("APPWRITE_ENDPOINT");
   });
 });

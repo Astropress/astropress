@@ -19,6 +19,7 @@ export interface AstropressContentOverride {
   ogImage?: string;
   canonicalUrlOverride?: string;
   robotsDirective?: string;
+  metadata?: Record<string, unknown>;
 }
 
 export interface AstropressContentRepositoryInput {
@@ -235,6 +236,7 @@ export function createAstropressContentRepository(
           ogImage: rawInput.ogImage?.trim() || undefined,
           canonicalUrlOverride: rawInput.canonicalUrlOverride?.trim() || undefined,
           robotsDirective: rawInput.robotsDirective?.trim() || undefined,
+          metadata: rawInput.metadata,
         },
         actor,
       );

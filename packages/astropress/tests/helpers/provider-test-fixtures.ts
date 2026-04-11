@@ -34,8 +34,8 @@ export class SqliteD1PreparedStatement implements D1PreparedStatement {
   }
 
   async run<T = Record<string, unknown>>(): Promise<D1Result<T>> {
-    this.db.prepare(this.sql).run(...this.params);
-    return { success: true, results: [] };
+    const result = this.db.prepare(this.sql).run(...this.params);
+    return { success: true, results: [], meta: { changes: result.changes } };
   }
 }
 

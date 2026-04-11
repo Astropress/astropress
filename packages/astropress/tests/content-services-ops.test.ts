@@ -34,17 +34,17 @@ describe("content services operations", () => {
 
   it("reports missing config when verify runs without required keys", async () => {
     const workspace = await mkdtemp(join(tmpdir(), "astropress-services-missing-"));
-    await writeFile(join(workspace, ".env"), "ASTROPRESS_CONTENT_SERVICES=firebase\n");
+    await writeFile(join(workspace, ".env"), "ASTROPRESS_CONTENT_SERVICES=appwrite\n");
 
     const report = await verifyAstropressContentServices({
       workspaceRoot: workspace,
       env: {
-        ASTROPRESS_CONTENT_SERVICES: "firebase",
+        ASTROPRESS_CONTENT_SERVICES: "appwrite",
       },
     });
 
     expect(report.supportLevel).toBe("missing-config");
-    expect(report.missingEnvKeys).toContain("FIREBASE_PROJECT_ID");
+    expect(report.missingEnvKeys).toContain("APPWRITE_ENDPOINT");
 
     await rm(workspace, { recursive: true, force: true });
   });

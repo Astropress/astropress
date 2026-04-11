@@ -205,8 +205,9 @@ function createSqliteContentStore(getDb, randomId) {
       getDb().prepare(`
             INSERT INTO content_overrides (
               slug, title, status, body, seo_title, meta_description, excerpt, og_title,
-              og_description, og_image, scheduled_at, canonical_url_override, robots_directive, updated_at, updated_by
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, ?)
+              og_description, og_image, scheduled_at, canonical_url_override, robots_directive,
+              metadata, updated_at, updated_by
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, ?)
             ON CONFLICT(slug) DO UPDATE SET
               title = excluded.title,
               status = excluded.status,
@@ -220,10 +221,11 @@ function createSqliteContentStore(getDb, randomId) {
               scheduled_at = excluded.scheduled_at,
               canonical_url_override = excluded.canonical_url_override,
               robots_directive = excluded.robots_directive,
+              metadata = excluded.metadata,
               updated_at = CURRENT_TIMESTAMP,
               updated_by = excluded.updated_by
           /* v8 ignore next 1 */
-          `).run(slug, override.title, override.status, override.body ?? null, override.seoTitle, override.metaDescription, override.excerpt ?? null, override.ogTitle ?? null, override.ogDescription ?? null, override.ogImage ?? null, override.scheduledAt ?? null, override.canonicalUrlOverride ?? null, override.robotsDirective ?? null, actor.email);
+          `).run(slug, override.title, override.status, override.body ?? null, override.seoTitle, override.metaDescription, override.excerpt ?? null, override.ogTitle ?? null, override.ogDescription ?? null, override.ogImage ?? null, override.scheduledAt ?? null, override.canonicalUrlOverride ?? null, override.robotsDirective ?? null, override.metadata ? JSON.stringify(override.metadata) : null, actor.email);
     },
     replaceContentAssignments(slug, assignments) {
       replaceContentAssignments(slug, assignments);

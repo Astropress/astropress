@@ -145,11 +145,21 @@ export function createSqliteContentStore(getDb: () => AstropressSqliteDatabaseLi
           og_image: string | null;
           canonical_url_override: string | null;
           robots_directive: string | null;
+          metadata: string | null;
         }
       | undefined,
   ) {
     if (!row) {
       return null;
+    }
+
+    let metadata: Record<string, unknown> | undefined;
+    if (row.metadata) {
+      try {
+        metadata = JSON.parse(row.metadata) as Record<string, unknown>;
+      } catch {
+        metadata = undefined;
+      }
     }
 
     return {
@@ -165,6 +175,7 @@ export function createSqliteContentStore(getDb: () => AstropressSqliteDatabaseLi
       ogImage: row.og_image ?? undefined,
       canonicalUrlOverride: row.canonical_url_override ?? undefined,
       robotsDirective: row.robots_directive ?? undefined,
+      metadata,
     };
   }
 
@@ -173,7 +184,7 @@ export function createSqliteContentStore(getDb: () => AstropressSqliteDatabaseLi
       .prepare(
         `
           SELECT title, status, body, seo_title, meta_description, excerpt, og_title, og_description, og_image,
-                 scheduled_at, canonical_url_override, robots_directive
+                 scheduled_at, canonical_url_override, robots_directive, metadata
           FROM content_overrides
           WHERE slug = ?
           LIMIT 1
@@ -193,6 +204,7 @@ export function createSqliteContentStore(getDb: () => AstropressSqliteDatabaseLi
           og_image: string | null;
           canonical_url_override: string | null;
           robots_directive: string | null;
+          metadata: string | null;
         }
       | undefined;
 
@@ -348,8 +360,9 @@ export function createSqliteContentStore(getDb: () => AstropressSqliteDatabaseLi
           `
             INSERT INTO content_overrides (
               slug, title, status, body, seo_title, meta_description, excerpt, og_title,
-              og_description, og_image, scheduled_at, canonical_url_override, robots_directive, updated_at, updated_by
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, ?)
+              og_description, og_image, scheduled_at, canonical_url_override, robots_directive,
+              metadata, updated_at, updated_by
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, ?)
             ON CONFLICT(slug) DO UPDATE SET
               title = excluded.title,
               status = excluded.status,
@@ -363,6 +376,7 @@ export function createSqliteContentStore(getDb: () => AstropressSqliteDatabaseLi
               scheduled_at = excluded.scheduled_at,
               canonical_url_override = excluded.canonical_url_override,
               robots_directive = excluded.robots_directive,
+              metadata = excluded.metadata,
               updated_at = CURRENT_TIMESTAMP,
               updated_by = excluded.updated_by
           `,
@@ -381,6 +395,7 @@ export function createSqliteContentStore(getDb: () => AstropressSqliteDatabaseLi
           override.scheduledAt ?? null,
           override.canonicalUrlOverride ?? null,
           override.robotsDirective ?? null,
+          override.metadata ? JSON.stringify(override.metadata) : null,
           actor.email,
         );
     },

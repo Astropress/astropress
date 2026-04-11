@@ -21,3 +21,13 @@ Feature: Schema migration runner
     Given an Astropress SQLite database with no migrations directory
     When the operator runs "astropress db migrate"
     Then no error is raised and an empty result is returned
+
+  Scenario: rollback_sql is stored with each migration when a .down.sql companion file exists
+    Given a migrations directory with "0001_add_tags.sql" and a companion "0001_add_tags.down.sql"
+    When the migration is applied via runAstropressMigrations
+    Then the rollback_sql column in schema_migrations contains the .down.sql content
+
+  Scenario: Doctor warns when the database schema is ahead of the framework version
+    Given an Astropress SQLite database with more migrations than the framework baseline
+    When checkSchemaVersionAhead is called
+    Then it returns isAhead: true with the database count and framework baseline count

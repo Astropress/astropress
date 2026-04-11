@@ -10,15 +10,19 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.3.10"
       - uses: dtolnay/rust-toolchain@stable
-      - run: bun install
+      - run: bun install --frozen-lockfile
       - run: bun run audit:deps
       - run: bun run audit:security
       - run: bun run audit:sync
+      - run: bun run check:version
       - run: bun run audit:arch
       - run: bunx biome check --reporter=github packages/astropress/src packages/astropress/tests packages/astropress/web-components
       - run: cargo clippy --manifest-path crates/astropress-cli/Cargo.toml -- -D warnings
       - run: bun run audit:arch:rust
+      - run: bun run audit:aeo
 
   test-unit:
     runs-on: ubuntu-latest
@@ -68,3 +72,34 @@ jobs:
       - run: bun run test:admin-harness
       - run: bun run bdd:lint
       - run: bun run bdd:test
+      - run: cd packages/astropress-mcp && bun run build
+
+  preview-deploy:
+    runs-on: ubuntu-latest
+    needs: test-build
+    if: github.event_name == 'pull_request'
+    permissions:
+      contents: read
+      deployments: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.3.10"
+      - run: bun install
+      - run: bun run test:example
+      - run: bun run --filter astropress-example-gh-pages build
+      - name: Deploy preview to Cloudflare Pages
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy examples/github-pages/dist --project-name=astropress-preview --branch=${{ github.head_ref }}
+        continue-on-error: true
+      - name: Lighthouse CI against preview
+        run: |
+          if [ -n "${{ secrets.CLOUDFLARE_API_TOKEN }}" ]; then
+            npx @lhci/cli@0.14 autorun --collect.url="https://astropress-preview.pages.dev" --assert.preset=lighthouse:recommended || true
+          else
+            echo "No Cloudflare credentials — skipping Lighthouse CI preview run"
+          fi

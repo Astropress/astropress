@@ -6,7 +6,12 @@ import { DatabaseSync } from "node:sqlite";
 import { describe, expect, it } from "vitest";
 
 import { runAstropressDbMigrationsForCli } from "../src/db-migrate-ops.js";
-import { readAstropressSqliteSchemaSql } from "../src/sqlite-bootstrap.js";
+import {
+  readAstropressSqliteSchemaSql,
+  runAstropressMigrations,
+  checkSchemaVersionAhead,
+  ASTROPRESS_FRAMEWORK_MIGRATION_BASELINE,
+} from "../src/sqlite-bootstrap.js";
 
 describe("db-migrate-ops", () => {
   function setupDb(dir: string): string {
@@ -22,7 +27,7 @@ describe("db-migrate-ops", () => {
     const migrationsDir = join(dir, "migrations");
     mkdirSync(migrationsDir);
     writeFileSync(join(migrationsDir, "0001_add_feature.sql"), "CREATE TABLE IF NOT EXISTS feature_flags (id INTEGER PRIMARY KEY);");
-    writeFileSync(join(migrationsDir, "0002_add_index.sql"), "CREATE INDEX IF NOT EXISTS idx_content_slug ON ap_content_records (slug);");
+    writeFileSync(join(migrationsDir, "0002_add_index.sql"), "CREATE INDEX IF NOT EXISTS idx_content_slug ON content_entries (slug);");
 
     const dbPath = setupDb(dir);
     const report = runAstropressDbMigrationsForCli({ dbPath, migrationsDir });
@@ -69,5 +74,65 @@ describe("db-migrate-ops", () => {
     expect(report.skipped).toEqual([]);
 
     rmSync(dir, { recursive: true });
+  });
+
+  it("rollback_sql is stored with each migration when a .down.sql companion file exists", () => {
+    const dir = mkdtempSync(join(tmpdir(), "astropress-rollback-"));
+    const migrationsDir = join(dir, "migrations");
+    mkdirSync(migrationsDir);
+    writeFileSync(join(migrationsDir, "0001_add_tags.sql"), "CREATE TABLE IF NOT EXISTS tags (id INTEGER PRIMARY KEY);");
+    writeFileSync(join(migrationsDir, "0001_add_tags.down.sql"), "DROP TABLE IF EXISTS tags;");
+
+    const db = new DatabaseSync(":memory:");
+    db.exec(readAstropressSqliteSchemaSql());
+    runAstropressMigrations(db, migrationsDir);
+
+    const row = db.prepare("SELECT rollback_sql FROM schema_migrations WHERE name = '0001_add_tags.sql'").get() as { rollback_sql: string | null } | undefined;
+    expect(row?.rollback_sql).toBe("DROP TABLE IF EXISTS tags;");
+
+    rmSync(dir, { recursive: true });
+  });
+
+  it("rollback_sql is NULL when no .down.sql companion exists", () => {
+    const dir = mkdtempSync(join(tmpdir(), "astropress-no-rollback-"));
+    const migrationsDir = join(dir, "migrations");
+    mkdirSync(migrationsDir);
+    writeFileSync(join(migrationsDir, "0001_add_flags.sql"), "CREATE TABLE IF NOT EXISTS feature_flags (id INTEGER PRIMARY KEY);");
+
+    const db = new DatabaseSync(":memory:");
+    db.exec(readAstropressSqliteSchemaSql());
+    runAstropressMigrations(db, migrationsDir);
+
+    const row = db.prepare("SELECT rollback_sql FROM schema_migrations WHERE name = '0001_add_flags.sql'").get() as { rollback_sql: string | null } | undefined;
+    expect(row?.rollback_sql).toBeNull();
+
+    rmSync(dir, { recursive: true });
+  });
+
+  it("checkSchemaVersionAhead returns isAhead=false for a fresh baseline-only DB", () => {
+    const db = new DatabaseSync(":memory:");
+    db.exec(readAstropressSqliteSchemaSql());
+    // Fresh DB has 'baseline-schema' applied via applyCommittedSchema equivalent
+    // For this test, insert the baseline entry manually
+    db.prepare("INSERT OR IGNORE INTO schema_migrations (name) VALUES ('baseline-schema')").run();
+
+    const result = checkSchemaVersionAhead(db, ASTROPRESS_FRAMEWORK_MIGRATION_BASELINE);
+    expect(result).not.toBeNull();
+    expect(result?.isAhead).toBe(false);
+    expect(result?.dbCount).toBe(1);
+    expect(result?.frameworkCount).toBe(ASTROPRESS_FRAMEWORK_MIGRATION_BASELINE);
+  });
+
+  it("checkSchemaVersionAhead returns isAhead=true when host app migrations are present", () => {
+    const db = new DatabaseSync(":memory:");
+    db.exec(readAstropressSqliteSchemaSql());
+    db.prepare("INSERT OR IGNORE INTO schema_migrations (name) VALUES ('baseline-schema')").run();
+    db.prepare("INSERT INTO schema_migrations (name) VALUES ('0001_host_migration.sql')").run();
+    db.prepare("INSERT INTO schema_migrations (name) VALUES ('0002_host_migration.sql')").run();
+
+    const result = checkSchemaVersionAhead(db, ASTROPRESS_FRAMEWORK_MIGRATION_BASELINE);
+    expect(result?.isAhead).toBe(true);
+    expect(result?.dbCount).toBe(3);
+    expect(result?.frameworkCount).toBe(1);
   });
 });

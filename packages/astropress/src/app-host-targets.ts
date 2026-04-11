@@ -6,7 +6,6 @@ export type AstropressAppHost =
   | "render-static"
   | "render-web"
   | "gitlab-pages"
-  | "firebase-hosting"
   | "runway"
   | "custom";
 
@@ -75,14 +74,6 @@ const appHostTargets: Record<AstropressAppHost, AstropressAppHostTarget> = {
     supportsStatic: true,
     supportsServerRuntime: false,
     notes: "Static-only hosting for prerendered Astro output.",
-  },
-  "firebase-hosting": {
-    id: "firebase-hosting",
-    label: "Firebase Hosting",
-    runtime: "static",
-    supportsStatic: true,
-    supportsServerRuntime: false,
-    notes: "CDN/static hosting. Dynamic Astro runtime requires separate app hosting.",
   },
   runway: {
     id: "runway",

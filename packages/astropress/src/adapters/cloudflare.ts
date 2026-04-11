@@ -3,7 +3,6 @@ import {
   normalizeProviderCapabilities,
   type AstropressPlatformAdapter,
   type AuthStore,
-  type AuthUser,
   type ContentStoreRecord,
   type DeployTarget,
   type GitSyncAdapter,
@@ -13,15 +12,23 @@ import {
   type RevisionRecord,
 } from "../platform-contracts";
 import { createD1AdminReadStore } from "../d1-admin-store";
-import { createSessionTokenDigest, verifyPassword } from "../crypto-utils.js";
-import { createLogger } from "../runtime-logger";
-
-const logger = createLogger("Cloudflare");
 import type { D1DatabaseLike } from "../d1-database";
-
-type AstropressCloudflareSeedUser = AuthUser & {
-  password: string;
-};
+import {
+  type AstropressCloudflareSeedUser,
+  createFallbackCloudflareAuthStore,
+  createDisabledCloudflareAuthStore,
+  createD1CloudflareAuthStore,
+} from "./cloudflare-auth.js";
+import {
+  nowIso,
+  cloudflareActorEmail,
+  normalizeContentStatus,
+  toContentStoreRecord,
+  toRedirectRecord,
+  toTranslationRecord,
+  listTranslationRecords,
+  saveD1Revision,
+} from "./cloudflare-record-helpers.js";
 
 export interface AstropressCloudflareAdapterOptions {
   db?: D1DatabaseLike;
@@ -37,314 +44,6 @@ export interface AstropressCloudflareAdapterOptions {
   deploy?: DeployTarget;
   importer?: ImportSource;
   preview?: PreviewSession;
-}
-
-function resolveCloudflareSessionSecret(): string {
-  const secret = process.env.CLOUDFLARE_SESSION_SECRET ?? "cloudflare-adapter-session-secret";
-  if (secret === "cloudflare-adapter-session-secret") {
-    logger.warn(
-      "CLOUDFLARE_SESSION_SECRET is using the insecure default. " +
-        "Set this env var to a long random string before deploying.",
-    );
-  }
-  return secret;
-}
-
-function mapContentRecordKind(record: { kind?: string | null }): ContentStoreRecord["kind"] {
-  return record.kind === "post" ? "post" : "page";
-}
-
-function nowIso() {
-  return new Date().toISOString();
-}
-
-function cloudflareActorEmail() {
-  return "admin@example.com";
-}
-
-function normalizeContentStatus(status: ContentStoreRecord["status"]) {
-  return status === "archived" ? "archived" : status === "draft" ? "draft" : "published";
-}
-
-function toContentStoreRecord(record: {
-  slug: string;
-  kind?: string | null;
-  title: string;
-  body?: string;
-  status: "draft" | "review" | "published" | "archived";
-  seoTitle: string;
-  metaDescription: string;
-  updatedAt: string;
-  legacyUrl: string;
-  templateKey: string;
-  summary?: string;
-}) {
-  return {
-    id: record.slug,
-    kind: mapContentRecordKind(record),
-    slug: record.slug,
-    status: record.status === "review" ? "draft" : record.status,
-    title: record.title,
-    body: record.body ?? null,
-    metadata: {
-      seoTitle: record.seoTitle,
-      metaDescription: record.metaDescription,
-      updatedAt: record.updatedAt,
-      legacyUrl: record.legacyUrl,
-      templateKey: record.templateKey,
-      summary: record.summary ?? "",
-    },
-  } satisfies ContentStoreRecord;
-}
-
-function toRedirectRecord(rule: { sourcePath: string; targetPath: string; statusCode: 301 | 302 }) {
-  return {
-    id: rule.sourcePath,
-    kind: "redirect" as const,
-    slug: rule.sourcePath,
-    status: "published" as const,
-    title: rule.sourcePath,
-    metadata: {
-      targetPath: rule.targetPath,
-      statusCode: rule.statusCode,
-    },
-  };
-}
-
-function toTranslationRecord(route: string, state: string, updatedAt: string, updatedBy: string) {
-  return {
-    id: route,
-    kind: "translation" as const,
-    slug: route,
-    status: state === "published" ? "published" : "draft",
-    title: route,
-    metadata: {
-      state,
-      updatedAt,
-      updatedBy,
-    },
-  };
-}
-
-async function listTranslationRecords(db: D1DatabaseLike) {
-  const rows = (
-    await db
-      .prepare("SELECT route, state, updated_at, updated_by FROM translation_overrides ORDER BY route ASC")
-      .all<{ route: string; state: string; updated_at: string; updated_by: string }>()
-  ).results;
-
-  return rows.map((row) => toTranslationRecord(row.route, row.state, row.updated_at, row.updated_by));
-}
-
-async function saveD1Revision(db: D1DatabaseLike, revision: RevisionRecord, actorEmail: string) {
-  const snapshot = revision.snapshot as Record<string, unknown>;
-  await db
-    .prepare(
-      `
-        INSERT INTO content_revisions (
-          id, slug, source, title, status, scheduled_at, body, seo_title, meta_description, excerpt,
-          og_title, og_description, og_image, author_ids, category_ids, tag_ids, canonical_url_override,
-          robots_directive, revision_note, created_at, created_by
-        ) VALUES (?, ?, 'reviewed', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `,
-    )
-    .bind(
-      revision.id,
-      revision.recordId,
-      String(snapshot.title ?? revision.recordId),
-      snapshot.status === "archived" ? "archived" : snapshot.status === "draft" ? "draft" : "published",
-      snapshot.scheduledAt ?? null,
-      snapshot.body ?? null,
-      String(snapshot.seoTitle ?? snapshot.title ?? revision.recordId),
-      String(snapshot.metaDescription ?? snapshot.title ?? revision.recordId),
-      snapshot.excerpt ?? null,
-      snapshot.ogTitle ?? null,
-      snapshot.ogDescription ?? null,
-      snapshot.ogImage ?? null,
-      JSON.stringify(snapshot.authorIds ?? []),
-      JSON.stringify(snapshot.categoryIds ?? []),
-      JSON.stringify(snapshot.tagIds ?? []),
-      snapshot.canonicalUrlOverride ?? null,
-      snapshot.robotsDirective ?? null,
-      revision.summary ?? null,
-      revision.createdAt,
-      revision.actorId ?? actorEmail,
-    )
-    .run();
-}
-
-function createFallbackCloudflareAuthStore(seedUsers: AstropressCloudflareSeedUser[]): AuthStore {
-  const users = new Map(seedUsers.map((user) => [user.email.toLowerCase(), user]));
-  const sessions = new Map<string, AuthUser>();
-
-  return {
-    async signIn(email, password) {
-      const user = users.get(email.trim().toLowerCase());
-      if (!user || user.password !== password) {
-        return null;
-      }
-
-      const sessionId = `cloudflare-session:${user.id}`;
-      const sessionUser = { id: sessionId, email: user.email, role: user.role };
-      sessions.set(sessionId, sessionUser);
-      return sessionUser;
-    },
-    async signOut(sessionId) {
-      sessions.delete(sessionId);
-    },
-    async getSession(sessionId) {
-      return sessions.get(sessionId) ?? null;
-    },
-  };
-}
-
-function createDisabledCloudflareAuthStore(): AuthStore {
-  return {
-    async signIn() {
-      return null;
-    },
-    async signOut() {},
-    async getSession() {
-      return null;
-    },
-  };
-}
-
-const CLOUDFLARE_SESSION_TTL_MS = 12 * 60 * 60 * 1000;
-
-async function cleanupExpiredCloudflareSessions(db: D1DatabaseLike) {
-  await db
-    .prepare(
-      `
-        UPDATE admin_sessions
-        SET revoked_at = CURRENT_TIMESTAMP
-        WHERE revoked_at IS NULL
-          AND last_active_at < datetime('now', '-12 hours')
-      `,
-    )
-    .run();
-}
-
-async function getLiveCloudflareSessionRow(db: D1DatabaseLike, sessionId: string) {
-  await cleanupExpiredCloudflareSessions(db);
-
-  const sessionCandidates = [sessionId, await createSessionTokenDigest(sessionId, resolveCloudflareSessionSecret())];
-  let row: {
-    id: string;
-    last_active_at: string;
-    email: string;
-    role: AuthUser["role"];
-  } | null = null;
-
-  for (const candidate of sessionCandidates) {
-    row = await db
-      .prepare(
-        `
-          SELECT s.id, s.last_active_at, u.email, u.role
-          FROM admin_sessions s
-          JOIN admin_users u ON u.id = s.user_id
-          WHERE s.id = ?
-            AND s.revoked_at IS NULL
-            AND u.active = 1
-          LIMIT 1
-        `,
-      )
-      .bind(candidate)
-      .first<{
-        id: string;
-        last_active_at: string;
-        email: string;
-        role: AuthUser["role"];
-      }>();
-    if (row) {
-      break;
-    }
-  }
-
-  if (!row) {
-    return null;
-  }
-
-  const lastActiveAt = Date.parse(row.last_active_at);
-  if (!Number.isFinite(lastActiveAt) || Date.now() - lastActiveAt > CLOUDFLARE_SESSION_TTL_MS) {
-    await db
-      .prepare(
-        `
-          UPDATE admin_sessions
-          SET revoked_at = CURRENT_TIMESTAMP
-          WHERE id = ?
-            AND revoked_at IS NULL
-        `,
-      )
-      .bind(row.id)
-      .run();
-    return null;
-  }
-
-  await db.prepare("UPDATE admin_sessions SET last_active_at = CURRENT_TIMESTAMP WHERE id = ?").bind(row.id).run();
-  return row;
-}
-
-function createD1CloudflareAuthStore(db: D1DatabaseLike): AuthStore {
-  return {
-    async signIn(email, password) {
-      const row = await db
-        .prepare(
-          `
-            SELECT id, email, role, password_hash
-            FROM admin_users
-            WHERE email = ?
-              AND active = 1
-            LIMIT 1
-          `,
-        )
-        .bind(email.trim().toLowerCase())
-        .first<{ id: number; email: string; role: AuthUser["role"]; password_hash: string }>();
-
-      if (!row || !(await verifyPassword(password, row.password_hash))) {
-        return null;
-      }
-
-      const sessionId = crypto.randomUUID();
-      const storedSessionId = await createSessionTokenDigest(sessionId, resolveCloudflareSessionSecret());
-      const csrfToken = crypto.randomUUID();
-
-      await db
-        .prepare(
-          `
-            INSERT INTO admin_sessions (id, user_id, csrf_token, ip_address, user_agent)
-            VALUES (?, ?, ?, ?, ?)
-          `,
-        )
-        .bind(storedSessionId, row.id, csrfToken, null, "astropress-cloudflare-adapter")
-        .run();
-
-      return { id: sessionId, email: row.email, role: row.role };
-    },
-    async signOut(sessionId) {
-      for (const candidate of [sessionId, await createSessionTokenDigest(sessionId, resolveCloudflareSessionSecret())]) {
-        await db
-          .prepare(
-            `
-              UPDATE admin_sessions
-              SET revoked_at = CURRENT_TIMESTAMP
-              WHERE id = ?
-                AND revoked_at IS NULL
-            `,
-          )
-          .bind(candidate)
-          .run();
-      }
-    },
-    async getSession(sessionId) {
-      const row = await getLiveCloudflareSessionRow(db, sessionId);
-      if (!row) {
-        return null;
-      }
-
-      return { id: sessionId, email: row.email, role: row.role };
-    },
-  };
 }
 
 export function createAstropressCloudflareAdapter(
@@ -363,33 +62,19 @@ export function createAstropressCloudflareAdapter(
         gitSync: true,
       }),
       content: {
-        async list() {
-          return [];
-        },
-        async get() {
-          return null;
-        },
-        async save(record) {
-          return record;
-        },
+        async list() { return []; },
+        async get() { return null; },
+        async save(record) { return record; },
         async delete() {},
       },
       media: {
-        async put(asset) {
-          return asset;
-        },
-        async get() {
-          return null;
-        },
+        async put(asset) { return asset; },
+        async get() { return null; },
         async delete() {},
       },
       revisions: {
-        async list() {
-          return [];
-        },
-        async append(revision) {
-          return revision;
-        },
+        async list() { return []; },
+        async append(revision) { return revision; },
       },
       auth:
         options.auth ??
@@ -428,9 +113,7 @@ export function createAstropressCloudflareAdapter(
         if (!kind || kind === "page" || kind === "post") {
           for (const record of await readStore.content.listContentStates()) {
             const mapped = toContentStoreRecord(record);
-            if (!kind || mapped.kind === kind) {
-              records.push(mapped);
-            }
+            if (!kind || mapped.kind === kind) records.push(mapped);
           }
         }
 
@@ -514,9 +197,7 @@ export function createAstropressCloudflareAdapter(
       },
       async get(id) {
         const normalizedId = id.trim();
-        if (!normalizedId) {
-          return null;
-        }
+        if (!normalizedId) return null;
         const all = await this.list();
         return all.find((record) => record.id === normalizedId || record.slug === normalizedId) ?? null;
       },
@@ -612,17 +293,10 @@ export function createAstropressCloudflareAdapter(
           const seoTitle = String(record.metadata?.seoTitle ?? title);
           const metaDescription = String(record.metadata?.metaDescription ?? title);
           const ogTitle = typeof record.metadata?.ogTitle === "string" ? record.metadata.ogTitle : existing?.ogTitle ?? null;
-          const ogDescription =
-            typeof record.metadata?.ogDescription === "string" ? record.metadata.ogDescription : existing?.ogDescription ?? null;
+          const ogDescription = typeof record.metadata?.ogDescription === "string" ? record.metadata.ogDescription : existing?.ogDescription ?? null;
           const ogImage = typeof record.metadata?.ogImage === "string" ? record.metadata.ogImage : existing?.ogImage ?? null;
-          const canonicalUrlOverride =
-            typeof record.metadata?.canonicalUrlOverride === "string"
-              ? record.metadata.canonicalUrlOverride
-              : existing?.canonicalUrlOverride ?? null;
-          const robotsDirective =
-            typeof record.metadata?.robotsDirective === "string"
-              ? record.metadata.robotsDirective
-              : existing?.robotsDirective ?? null;
+          const canonicalUrlOverride = typeof record.metadata?.canonicalUrlOverride === "string" ? record.metadata.canonicalUrlOverride : existing?.canonicalUrlOverride ?? null;
+          const robotsDirective = typeof record.metadata?.robotsDirective === "string" ? record.metadata.robotsDirective : existing?.robotsDirective ?? null;
           const status = normalizeContentStatus(record.status);
 
           if (!existing) {
@@ -678,20 +352,9 @@ export function createAstropressCloudflareAdapter(
               `,
             )
             .bind(
-              slug,
-              title,
-              status,
-              body,
-              seoTitle,
-              metaDescription,
-              summary,
-              ogTitle,
-              ogDescription,
-              ogImage,
-              canonicalUrlOverride,
-              robotsDirective,
-              nowIso(),
-              cloudflareActorEmail(),
+              slug, title, status, body, seoTitle, metaDescription, summary,
+              ogTitle, ogDescription, ogImage, canonicalUrlOverride, robotsDirective,
+              nowIso(), cloudflareActorEmail(),
             )
             .run();
 
@@ -702,27 +365,13 @@ export function createAstropressCloudflareAdapter(
               recordId: slug,
               createdAt: nowIso(),
               actorId: cloudflareActorEmail(),
-              snapshot: {
-                title,
-                status,
-                body,
-                seoTitle,
-                metaDescription,
-                excerpt: summary,
-                ogTitle,
-                ogDescription,
-                ogImage,
-                canonicalUrlOverride,
-                robotsDirective,
-              },
+              snapshot: { title, status, body, seoTitle, metaDescription, excerpt: summary, ogTitle, ogDescription, ogImage, canonicalUrlOverride, robotsDirective },
             },
             cloudflareActorEmail(),
           );
 
           const saved = await readStore.content.getContentState(slug);
-          if (!saved) {
-            throw new Error(`Cloudflare adapter failed to persist content record ${slug}.`);
-          }
+          if (!saved) throw new Error(`Cloudflare adapter failed to persist content record ${slug}.`);
           return toContentStoreRecord(saved);
         }
 
@@ -730,9 +379,7 @@ export function createAstropressCloudflareAdapter(
       },
       async delete(id) {
         const existing = await this.get(id);
-        if (!existing) {
-          return;
-        }
+        if (!existing) return;
         if (existing.kind === "redirect") {
           await db
             .prepare("UPDATE redirect_rules SET deleted_at = CURRENT_TIMESTAMP WHERE source_path = ? AND deleted_at IS NULL")
@@ -785,18 +432,13 @@ export function createAstropressCloudflareAdapter(
       },
       async get(id) {
         const asset = (await readStore.media.listMediaAssets()).find((entry) => entry.id === id);
-        if (!asset) {
-          return null;
-        }
+        if (!asset) return null;
         return {
           id: asset.id,
           filename: asset.title || asset.id,
           mimeType: asset.mimeType ?? "application/octet-stream",
           publicUrl: asset.sourceUrl ?? asset.localPath,
-          metadata: {
-            altText: asset.altText,
-            uploadedAt: asset.uploadedAt,
-          },
+          metadata: { altText: asset.altText, uploadedAt: asset.uploadedAt },
         };
       },
       async delete(id) {

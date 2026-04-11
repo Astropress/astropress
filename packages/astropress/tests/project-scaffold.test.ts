@@ -36,12 +36,6 @@ describe("project scaffold — additional provider/host combinations", () => {
     expect(scaffold.envExample.APPWRITE_PROJECT_ID).toBeDefined();
   });
 
-  it("firebase-hosting appHost produces firebase-hosting deploy script", () => {
-    const scaffold = createAstropressProjectScaffold({ appHost: "firebase-hosting", dataServices: "firebase" });
-    expect(scaffold.packageScripts["deploy:firebase-hosting"]).toContain("firebase deploy");
-    expect(scaffold.ciFiles[".github/workflows/deploy-astropress.yml"]).toContain("FIREBASE_TOKEN");
-  });
-
   it("render-static appHost produces render-static deploy script", () => {
     const scaffold = createAstropressProjectScaffold({ appHost: "render-static", dataServices: "none" });
     expect(scaffold.packageScripts["deploy:render-static"]).toContain("astro build");
@@ -67,7 +61,7 @@ describe("project scaffold — additional provider/host combinations", () => {
   });
 
   it("render-web appHost produces render-web CI workflow with RENDER_DEPLOY_HOOK_URL", () => {
-    const scaffold = createAstropressProjectScaffold({ appHost: "render-web", dataServices: "firebase" });
+    const scaffold = createAstropressProjectScaffold({ appHost: "render-web", dataServices: "appwrite" });
     expect(scaffold.packageScripts["deploy:render-web"]).toContain("astro build");
     expect(scaffold.ciFiles[".github/workflows/deploy-astropress.yml"]).toContain("RENDER_DEPLOY_HOOK_URL");
   });
@@ -214,10 +208,6 @@ describe("project scaffold", () => {
   it("returns service-specific remote examples", () => {
     const supabase = createAstropressProjectScaffold("supabase");
     const runway = createAstropressProjectScaffold("runway");
-    const firebase = createAstropressProjectScaffold({
-      appHost: "render-web",
-      dataServices: "firebase",
-    });
 
     expect(supabase.appHost).toBe("vercel");
     expect(supabase.dataServices).toBe("supabase");
@@ -231,9 +221,5 @@ describe("project scaffold", () => {
     expect(runway.envExample.RUNWAY_API_TOKEN).toBe("replace-me");
     expect(runway.envExample.ASTROPRESS_DATA_SERVICES).toBeUndefined();
     expect(runway.localEnv.ASTROPRESS_DEPLOY_TARGET).toBeUndefined();
-    expect(firebase.envExample.FIREBASE_PROJECT_ID).toBe("replace-me");
-    expect(firebase.appHost).toBe("render-web");
-    expect(firebase.dataServices).toBe("firebase");
-    expect(firebase.ciFiles[".github/workflows/deploy-astropress.yml"]).toContain("RENDER_DEPLOY_HOOK_URL");
   });
 });

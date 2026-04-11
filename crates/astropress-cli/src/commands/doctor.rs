@@ -134,7 +134,6 @@ pub(crate) fn inspect_project_health(project_dir: &Path) -> Result<DoctorReport,
         && env_contract.content_services != "cloudflare"
         && env_contract.content_services != "supabase"
         && env_contract.content_services != "runway"
-        && env_contract.content_services != "firebase"
         && env_contract.content_services != "appwrite"
     {
         warnings.push(format!(

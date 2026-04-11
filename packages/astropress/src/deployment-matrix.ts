@@ -52,13 +52,6 @@ const deploymentMatrixEntries: AstropressDeploymentMatrixEntry[] = [
   },
   {
     appHost: "render-web",
-    dataServices: "firebase",
-    supportLevel: "preview",
-    notes: "Astro app on Render with Firebase handling hosted data and auth services.",
-    requiredEnvKeys: ["ASTROPRESS_SERVICE_ORIGIN", "FIREBASE_PROJECT_ID", "FIREBASE_CLIENT_EMAIL", "FIREBASE_PRIVATE_KEY"],
-  },
-  {
-    appHost: "render-web",
     dataServices: "appwrite",
     supportLevel: "preview",
     notes: "Astro app on Render with Appwrite handling data, media, and auth.",
@@ -79,39 +72,11 @@ const deploymentMatrixEntries: AstropressDeploymentMatrixEntry[] = [
     requiredEnvKeys: ["ASTROPRESS_SERVICE_ORIGIN", "SUPABASE_URL", "SUPABASE_ANON_KEY", "SUPABASE_SERVICE_ROLE_KEY"],
   },
   {
-    appHost: "github-pages",
-    dataServices: "firebase",
-    supportLevel: "preview",
-    notes: "Static public site with Firebase-hosted services handled separately.",
-    requiredEnvKeys: ["ASTROPRESS_SERVICE_ORIGIN", "FIREBASE_PROJECT_ID", "FIREBASE_CLIENT_EMAIL", "FIREBASE_PRIVATE_KEY"],
-  },
-  {
     appHost: "gitlab-pages",
     dataServices: "supabase",
     supportLevel: "preview",
     notes: "Static public site on GitLab Pages with separate Supabase-hosted services.",
     requiredEnvKeys: ["ASTROPRESS_SERVICE_ORIGIN", "SUPABASE_URL", "SUPABASE_ANON_KEY", "SUPABASE_SERVICE_ROLE_KEY"],
-  },
-  {
-    appHost: "firebase-hosting",
-    dataServices: "supabase",
-    supportLevel: "preview",
-    notes: "Firebase Hosting for the public Astro app with Supabase as the service layer.",
-    requiredEnvKeys: ["ASTROPRESS_SERVICE_ORIGIN", "SUPABASE_URL", "SUPABASE_ANON_KEY", "SUPABASE_SERVICE_ROLE_KEY"],
-  },
-  {
-    appHost: "vercel",
-    dataServices: "firebase",
-    supportLevel: "preview",
-    notes: "Astro app on Vercel with Firebase as the service layer.",
-    requiredEnvKeys: ["ASTROPRESS_SERVICE_ORIGIN", "FIREBASE_PROJECT_ID", "FIREBASE_CLIENT_EMAIL", "FIREBASE_PRIVATE_KEY"],
-  },
-  {
-    appHost: "netlify",
-    dataServices: "firebase",
-    supportLevel: "preview",
-    notes: "Astro app on Netlify with Firebase as the service layer.",
-    requiredEnvKeys: ["ASTROPRESS_SERVICE_ORIGIN", "FIREBASE_PROJECT_ID", "FIREBASE_CLIENT_EMAIL", "FIREBASE_PRIVATE_KEY"],
   },
   {
     appHost: "vercel",
@@ -133,13 +98,6 @@ const deploymentMatrixEntries: AstropressDeploymentMatrixEntry[] = [
     supportLevel: "preview",
     notes: "Cloudflare-hosted Astro app with Supabase-hosted data and auth services.",
     requiredEnvKeys: ["ASTROPRESS_SERVICE_ORIGIN", "SUPABASE_URL", "SUPABASE_ANON_KEY", "SUPABASE_SERVICE_ROLE_KEY"],
-  },
-  {
-    appHost: "cloudflare-pages",
-    dataServices: "firebase",
-    supportLevel: "preview",
-    notes: "Cloudflare-hosted Astro app with Firebase-hosted data and auth services.",
-    requiredEnvKeys: ["ASTROPRESS_SERVICE_ORIGIN", "FIREBASE_PROJECT_ID", "FIREBASE_CLIENT_EMAIL", "FIREBASE_PRIVATE_KEY"],
   },
 ];
 

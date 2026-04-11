@@ -119,6 +119,34 @@ const navItems: NavItem[] = [
             <span class="theme-toggle-icon" aria-hidden="true"></span>
           </button>
         </ap-theme-toggle>
+        <button
+          type="button"
+          class="help-popover-trigger"
+          popovertarget="admin-keyboard-shortcuts"
+          aria-label="Keyboard shortcuts"
+          title="Keyboard shortcuts"
+        >
+          <span aria-hidden="true">?</span>
+        </button>
+        <div
+          id="admin-keyboard-shortcuts"
+          popover
+          class="keyboard-shortcuts-popover"
+          role="dialog"
+          aria-label="Keyboard shortcuts"
+        >
+          <h2>Keyboard shortcuts</h2>
+          <table>
+            <tbody>
+              <tr><td><kbd>Ctrl</kbd>+<kbd>S</kbd></td><td>Save draft</td></tr>
+              <tr><td><kbd>Ctrl</kbd>+<kbd>Enter</kbd></td><td>Publish / submit form</td></tr>
+              <tr><td><kbd>Escape</kbd></td><td>Close dialog or panel</td></tr>
+              <tr><td><kbd>Tab</kbd></td><td>Move to next field</td></tr>
+              <tr><td><kbd>Shift</kbd>+<kbd>Tab</kbd></td><td>Move to previous field</td></tr>
+              <tr><td><kbd>?</kbd></td><td>Show this help panel</td></tr>
+            </tbody>
+          </table>
+        </div>
         <form method="post" action="/ap-admin/session?logout=1">
           <button type="submit">{adminUi.labels.signOut}</button>
         </form>

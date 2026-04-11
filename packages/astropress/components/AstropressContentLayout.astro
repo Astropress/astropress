@@ -1,0 +1,101 @@
+---
+/**
+ * AstropressContentLayout.astro
+ *
+ * Wraps content pages with automatic JSON-LD injection based on AEO metadata stored
+ * in the content record. When a content record includes `faqItems`, `howToSteps`, or
+ * `speakableCssSelectors` in its `metadata` field, the corresponding JSON-LD schema
+ * component is rendered automatically — no manual component wiring required.
+ *
+ * Usage:
+ *   ---
+ *   import AstropressContentLayout from "astropress/components/AstropressContentLayout.astro";
+ *   const { content } = Astro.props; // ContentStoreRecord
+ *   ---
+ *   <AstropressContentLayout content={content}>
+ *     <article set:html={content.body} />
+ *   </AstropressContentLayout>
+ *
+ * AEO auto-wiring:
+ *   content.metadata.faqItems        → <AstropressFaqJsonLd> (FAQPage schema)
+ *   content.metadata.howToSteps      → <AstropressHowToJsonLd> (HowTo schema)
+ *   content.metadata.speakableCssSelectors → <AstropressSpeakableJsonLd>
+ *   content.kind === "post"           → <AstropressBlogPostingJsonLd> (BlogPosting schema)
+ */
+
+import type { ContentStoreRecord } from "../src/platform-contracts.ts";
+import AstropressFaqJsonLd from "./AstropressFaqJsonLd.astro";
+import AstropressHowToJsonLd from "./AstropressHowToJsonLd.astro";
+import AstropressSpeakableJsonLd from "./AstropressSpeakableJsonLd.astro";
+import AstropressBlogPostingJsonLd from "./AstropressBlogPostingJsonLd.astro";
+
+interface Props {
+  /** The content record whose metadata drives JSON-LD auto-wiring. */
+  content: ContentStoreRecord;
+  /**
+   * Canonical URL of the page — required when speakableCssSelectors are present.
+   * Falls back to an empty string if not provided (valid for local dev, not ideal for prod).
+   */
+  canonicalUrl?: string;
+  /** Optional HTML lang attribute (e.g. "en", "fr"). */
+  lang?: string;
+}
+
+const { content, canonicalUrl = "", lang = "en" } = Astro.props;
+
+const meta = (content.metadata ?? {}) as Record<string, unknown>;
+
+// BlogPosting auto-wire: render for all "post" kind content
+const isBlogPost = content.kind === "post";
+const siteOrigin = canonicalUrl ? new URL(canonicalUrl).origin : undefined;
+
+const faqItems = Array.isArray(meta.faqItems) ? (meta.faqItems as { question: string; answer: string }[]) : null;
+
+const howToSteps = Array.isArray(meta.howToSteps)
+  ? (meta.howToSteps as { name: string; text: string; imageUrl?: string }[])
+  : null;
+
+const speakableSelectors = Array.isArray(meta.speakableCssSelectors)
+  ? (meta.speakableCssSelectors as string[])
+  : null;
+
+const howToName = typeof meta.howToName === "string" ? meta.howToName : (content.title ?? "");
+const howToDescription = typeof meta.howToDescription === "string" ? meta.howToDescription : undefined;
+const howToTotalTime = typeof meta.howToTotalTime === "string" ? meta.howToTotalTime : undefined;
+---
+
+{isBlogPost && (
+  <AstropressBlogPostingJsonLd
+    record={{
+      slug: content.slug,
+      title: content.title,
+      seoTitle: content.seoTitle,
+      metaDescription: content.metaDescription,
+      excerpt: typeof meta.excerpt === "string" ? meta.excerpt : undefined,
+      ogImage: content.ogImage,
+      updatedAt: content.updatedAt,
+      authorName: typeof meta.authorName === "string" ? meta.authorName : undefined,
+    }}
+    siteOrigin={siteOrigin}
+  />
+)}
+{faqItems && faqItems.length > 0 && <AstropressFaqJsonLd items={faqItems} />}
+{
+  howToSteps && howToSteps.length > 0 && (
+    <AstropressHowToJsonLd
+      name={howToName}
+      description={howToDescription}
+      steps={howToSteps}
+      totalTime={howToTotalTime}
+    />
+  )
+}
+{
+  speakableSelectors && speakableSelectors.length > 0 && canonicalUrl && (
+    <AstropressSpeakableJsonLd url={canonicalUrl} cssSelectors={speakableSelectors} />
+  )
+}
+
+<div lang={lang} data-ap-content-layout>
+  <slot />
+</div>

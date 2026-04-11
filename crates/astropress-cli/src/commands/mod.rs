@@ -11,3 +11,4 @@ pub(crate) mod import_wix;
 pub(crate) mod new;
 pub(crate) mod new_wizard;
 pub(crate) mod services;
+pub(crate) mod upgrade;

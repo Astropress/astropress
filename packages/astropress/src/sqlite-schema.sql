@@ -2,7 +2,8 @@
 CREATE TABLE IF NOT EXISTS schema_migrations (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   name TEXT NOT NULL UNIQUE,
-  applied_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+  applied_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  rollback_sql TEXT
 );
 
 -- Admin users
@@ -68,6 +69,17 @@ CREATE TABLE IF NOT EXISTS content_overrides (
 );
 
 CREATE INDEX IF NOT EXISTS idx_content_overrides_updated_at ON content_overrides(updated_at DESC);
+
+-- Pessimistic edit locks for content records
+CREATE TABLE IF NOT EXISTS content_locks (
+  slug TEXT PRIMARY KEY,
+  locked_by_email TEXT NOT NULL,
+  locked_by_name TEXT NOT NULL,
+  lock_token TEXT NOT NULL,
+  expires_at TEXT NOT NULL,
+  acquired_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_content_locks_expires_at ON content_locks(expires_at);
 
 -- User-created content records (blog posts and any non-imported rich content)
 CREATE TABLE IF NOT EXISTS content_entries (
@@ -214,6 +226,8 @@ CREATE TABLE IF NOT EXISTS media_assets (
   mime_type TEXT,
   width INTEGER,
   height INTEGER,
+  thumbnail_url TEXT,
+  srcset TEXT,
   file_size INTEGER,
   alt_text TEXT,
   title TEXT,

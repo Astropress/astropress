@@ -72,15 +72,6 @@ pub(crate) fn deploy_script_for_target(
                 Err("The project does not define a GitLab Pages deploy or build script.".into())
             }
         }
-        "firebase-hosting" => {
-            if manifest.scripts.contains_key("deploy:firebase-hosting") {
-                Ok("deploy:firebase-hosting")
-            } else if manifest.scripts.contains_key("build") {
-                Ok("build")
-            } else {
-                Err("The project does not define a Firebase Hosting deploy or build script.".into())
-            }
-        }
         "custom" => {
             if manifest.scripts.contains_key("deploy:custom") {
                 Ok("deploy:custom")
@@ -114,7 +105,7 @@ pub(crate) fn deploy_script_for_target(
             }
         }
         other => Err(format!(
-            "Unsupported deploy target `{other}`. Use github-pages, cloudflare, vercel, netlify, render-static, render-web, gitlab-pages, firebase-hosting, runway, or custom."
+            "Unsupported deploy target `{other}`. Use github-pages, cloudflare, vercel, netlify, render-static, render-web, gitlab-pages, runway, or custom."
         )),
     }
 }
@@ -160,10 +151,6 @@ pub(crate) fn deploy_project(
         "gitlab-pages" => (
             "deploy/gitlab-pages.js",
             "createAstropressGitLabPagesDeployTarget",
-        ),
-        "firebase-hosting" => (
-            "deploy/firebase-hosting.js",
-            "createAstropressFirebaseHostingDeployTarget",
         ),
         "runway" | "custom" => ("deploy/custom.js", "createAstropressCustomDeployTarget"),
         _ => ("deploy/custom.js", "createAstropressCustomDeployTarget"),

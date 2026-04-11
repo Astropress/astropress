@@ -1,0 +1,13 @@
+# Astropress CODEOWNERS
+# These owners are automatically requested for review on every pull request.
+
+* @astropress/core
+
+# CLI (Rust)
+/crates/ @astropress/core @astropress/cli
+
+# MCP server
+/packages/astropress-mcp/ @astropress/core
+
+# CI/CD
+/.github/ @astropress/core

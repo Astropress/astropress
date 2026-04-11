@@ -30,6 +30,34 @@ bun run audit:arch        # architecture boundary checks
 bun run audit:sync        # .ts/.js export parity check (see below)
 ```
 
+### Test pyramid
+
+Write tests in this order, from outermost in:
+
+1. **BDD scenario** (`features/*.feature`) — describes the user-visible
+   behaviour in plain language. Add or update one before touching code.
+2. **Integration / contract test** (`tests/*.test.ts`) — exercises a
+   real SQLite DB or provider adapter; no mocks.
+3. **Unit test** — for pure functions, parsers, and utilities that don't
+   need a DB.
+
+Coverage gates (enforced in CI): **97% statements, 97% lines, 97% functions,
+80% branches**. Branch coverage is deliberately lower — dead branches in
+error paths are acceptable; missing feature branches are not.
+
+To add a BDD scenario:
+
+```gherkin
+# features/content/scheduling.feature
+Scenario: Editor schedules a post for future publication
+  Given I am logged in as an editor
+  When I set the post's publish time to tomorrow at 9am
+  Then the post status becomes "scheduled"
+  And the post appears in the Scheduled tab
+```
+
+Run `bun run bdd:lint` to validate Gherkin syntax before committing.
+
 ## The dual `.ts` / `.js` file pattern
 
 Most source files in `packages/astropress/src/` appear in pairs:

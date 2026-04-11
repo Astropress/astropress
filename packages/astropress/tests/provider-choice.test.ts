@@ -45,18 +45,6 @@ describe("provider choice", () => {
 });
 
 describe("recommendAstropressProvider — uncovered branches", () => {
-  it("recommends render-web + firebase when existingPlatform=firebase", () => {
-    const rec = recommendAstropressProvider({ existingPlatform: "firebase" });
-    expect(rec.appHost).toBe("render-web");
-    expect(rec.dataServices).toBe("firebase");
-  });
-
-  it("recommends github-pages + firebase when existingPlatform=firebase and wantsStaticMirror=true", () => {
-    const rec = recommendAstropressProvider({ existingPlatform: "firebase", wantsStaticMirror: true });
-    expect(rec.appHost).toBe("github-pages");
-    expect(rec.dataServices).toBe("firebase");
-  });
-
   it("recommends render-web + appwrite when existingPlatform=appwrite", () => {
     const rec = recommendAstropressProvider({ existingPlatform: "appwrite" });
     expect(rec.appHost).toBe("render-web");

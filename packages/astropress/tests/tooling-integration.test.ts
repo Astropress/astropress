@@ -36,7 +36,10 @@ describe("tooling integration", () => {
 
     expect(ASTROPRESS_ADMIN_BASE_PATH).toBe("/ap-admin");
     expect(listAstropressAdminRoutes()).toHaveLength(routeEntrypoints.length);
-    expect(injectedRoutes).toEqual(routeEntrypoints);
+    // The integration injects admin routes plus additional system routes (health, sitemap, robots, llms, metrics, og-image).
+    // Filter to only the admin routes before comparing against the plan.
+    const adminInjectedRoutes = injectedRoutes.filter((r) => r.pattern.startsWith("/ap-admin"));
+    expect(adminInjectedRoutes).toEqual(routeEntrypoints);
     expect(injectAstropressAdminRoutes(pagesDirectory, (route) => callbackInjectedRoutes.push(route))).toEqual(routeEntrypoints);
     expect(callbackInjectedRoutes).toEqual(routeEntrypoints);
   });
@@ -119,12 +122,13 @@ describe("tooling integration", () => {
       "../src/deploy/netlify.js",
       "../src/deploy/render.js",
       "../src/deploy/gitlab-pages.js",
-      "../src/deploy/firebase-hosting.js",
       "../src/deploy/custom.js",
       "../src/content-services-ops.js",
       "../src/db-migrate-ops.js",
       "../src/import/wordpress.js",
       "../src/sync/git.js",
+      "../src/newsletter-adapter.js",
+      "../src/api-middleware.js",
     ] as const;
 
     for (const entryPoint of runtimeEntryPoints) {

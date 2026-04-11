@@ -36,6 +36,29 @@ export function resolveLocalImageDiskPath(publicPath) {
   return path.join(getLocalImageRoot(), relativePath);
 }
 
+export async function generateSrcset(bytes, originalPublicPath, storeVariant) {
+  try {
+    const sharp = (await import("sharp")).default;
+    const widths = [400, 800, 1200];
+    const parts = [];
+    const basename = originalPublicPath.replace(/\.[^.]+$/, "").replace(/^\/images\/uploads\//, "").replace(/^\/images\//, "");
+    for (const w of widths) {
+      const variantBuffer = await sharp(Buffer.from(bytes))
+        .resize({ width: w, withoutEnlargement: true })
+        .webp()
+        .toBuffer();
+      const variantFilename = `${basename}-${w}w.webp`;
+      const variantPath = await storeVariant(variantFilename, new Uint8Array(variantBuffer));
+      if (variantPath) {
+        parts.push(`${variantPath} ${w}w`);
+      }
+    }
+    return parts.length > 0 ? parts.join(", ") : null;
+  } catch {
+    return null;
+  }
+}
+
 export function readLocalImageAsset(publicPath) {
   const diskPath = resolveLocalImageDiskPath(publicPath);
   if (!existsSync(diskPath)) {

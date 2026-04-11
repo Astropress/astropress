@@ -23,3 +23,9 @@ Feature: Admin panel customization for site owners
     When the admin panel pages are loaded
     Then the custom stylesheet is included in the page head
     And the host's CSS overrides are applied to the admin shell and auth pages
+
+  Scenario: A plugin can inject a custom admin route via adminRoutes
+    Given a plugin declares adminRoutes with pattern "/ap-admin/my-plugin" and an entrypoint path
+    When the plugin is registered via registerCms({ plugins })
+    Then the adminRoutes array is accessible via peekCmsConfig()
+    And the route pattern and entrypoint are preserved exactly as declared

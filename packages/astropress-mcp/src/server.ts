@@ -111,6 +111,18 @@ const tools: Tool[] = [
     description: "Check the health of the Astropress site.",
     inputSchema: { type: "object", properties: {} },
   },
+  {
+    name: "get_revisions",
+    description: "Get the revision history for a content record. Returns all saved revisions with author, timestamp, and the body snapshot at that point in time.",
+    inputSchema: {
+      type: "object",
+      required: ["id"],
+      properties: {
+        id: { type: "string", description: "Content record ID or slug" },
+        limit: { type: "number", description: "Max revisions to return (default 20)" },
+      },
+    },
+  },
 ];
 
 const server = new Server(
@@ -171,6 +183,15 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       }
       case "get_health": {
         result = await apiFetch("/ap/health");
+        break;
+      }
+      case "get_revisions": {
+        const params = new URLSearchParams();
+        if (input.limit) params.set("limit", String(input.limit));
+        const paramStr = params.toString();
+        result = await apiFetch(
+          `/ap-api/v1/revisions/${encodeURIComponent(String(input.id))}${paramStr ? `?${paramStr}` : ""}`,
+        );
         break;
       }
       default:

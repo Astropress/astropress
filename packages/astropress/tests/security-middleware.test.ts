@@ -39,6 +39,15 @@ describe("resolveAstropressSecurityArea", () => {
     expect(resolveAstropressSecurityArea(new URL("http://localhost/admin/settings"), "/admin")).toBe("admin");
     expect(resolveAstropressSecurityArea(new URL("http://localhost/ap-admin/login"), "/admin")).toBe("public");
   });
+
+  it("returns api for /ap-api/ paths regardless of adminBasePath", () => {
+    // The /ap-api/ prefix check runs BEFORE the adminBasePath check
+    expect(resolveAstropressSecurityArea(new URL("http://localhost/ap-api/v1/content"))).toBe("api");
+    expect(resolveAstropressSecurityArea(new URL("http://localhost/ap-api/v1/media"))).toBe("api");
+    expect(resolveAstropressSecurityArea(new URL("http://localhost/ap-api/v1/health"))).toBe("api");
+    // Custom adminBasePath does not affect /ap-api/ classification
+    expect(resolveAstropressSecurityArea(new URL("http://localhost/ap-api/v1/content"), "/admin")).toBe("api");
+  });
 });
 
 describe("createAstropressSecurityMiddleware", () => {
@@ -85,5 +94,33 @@ describe("createAstropressSecurityMiddleware", () => {
     expect(id1).toBeTruthy();
     expect(id2).toBeTruthy();
     expect(id1).not.toBe(id2);
+  });
+
+  it("applies allowInlineStyles option to the CSP", async () => {
+    const middleware = createAstropressSecurityMiddleware({ allowInlineStyles: true });
+    const response = await middleware({ url: new URL("http://localhost/ap-admin/settings") }, makeNext());
+    const csp = response.headers.get("content-security-policy") ?? "";
+    expect(csp).toContain("'unsafe-inline'");
+  });
+
+  it("applies forceHsts option when set", async () => {
+    const middleware = createAstropressSecurityMiddleware({ forceHsts: true });
+    const response = await middleware({ url: new URL("http://localhost/") }, makeNext());
+    expect(response.headers.get("strict-transport-security")).toContain("max-age=31536000");
+  });
+
+  it("applies frameAncestors option to X-Frame-Options", async () => {
+    const middleware = createAstropressSecurityMiddleware({ frameAncestors: "'self'" });
+    const response = await middleware({ url: new URL("http://localhost/") }, makeNext());
+    expect(response.headers.get("x-frame-options")).toBe("SAMEORIGIN");
+  });
+
+  it("classifies /ap-api/ paths as api area (applyAstropressSecurityHeaders branch)", async () => {
+    const middleware = createAstropressSecurityMiddleware();
+    const response = await middleware({ url: new URL("http://localhost/ap-api/v1/content") }, makeNext());
+    // API area: Cross-Origin-Resource-Policy must be set
+    expect(response.headers.get("cross-origin-resource-policy")).toBe("same-site");
+    // API area: Cache-Control must be no-store
+    expect(response.headers.get("cache-control")).toBe("private, no-store");
   });
 });

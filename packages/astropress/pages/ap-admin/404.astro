@@ -1,15 +1,7 @@
 ---
 import AdminLayout from "astropress/components/AdminLayout.astro";
-import { applyAstropressSecurityHeaders } from "astropress/security-headers";
 
 const adminUser = Astro.locals.adminUser;
-
-// Ensure headers are set even for 404 responses
-applyAstropressSecurityHeaders(Astro.response.headers, {
-  area: "admin",
-  allowInlineStyles: true,
-  forceHsts: Astro.url.protocol === "https:",
-});
 
 Astro.response.status = 404;
 ---

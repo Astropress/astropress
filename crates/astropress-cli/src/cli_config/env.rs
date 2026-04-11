@@ -89,7 +89,7 @@ pub(crate) fn migrate_env_map(
             let app_host = match value.as_str() {
                 "cloudflare" => "cloudflare-pages",
                 "github-pages" | "vercel" | "netlify" | "render-static" | "render-web"
-                | "gitlab-pages" | "firebase-hosting" | "runway" | "custom" => value.as_str(),
+                | "gitlab-pages" | "runway" | "custom" => value.as_str(),
                 _ => "",
             };
             if !app_host.is_empty() {
@@ -103,11 +103,6 @@ pub(crate) fn migrate_env_map(
             env_values.insert(
                 "ASTROPRESS_SERVICE_ORIGIN".into(),
                 format!("{}/functions/v1/astropress", url.trim_end_matches('/')),
-            );
-        } else if let Some(project_id) = env_values.get("FIREBASE_PROJECT_ID").cloned() {
-            env_values.insert(
-                "ASTROPRESS_SERVICE_ORIGIN".into(),
-                format!("https://{project_id}.firebaseapp.com/astropress-api"),
             );
         } else if let Some(endpoint) = env_values.get("APPWRITE_ENDPOINT").cloned() {
             env_values.insert(

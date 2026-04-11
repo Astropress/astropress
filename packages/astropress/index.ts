@@ -139,16 +139,6 @@ export type {
   AstropressSupabaseHostedAdapterOptions,
   AstropressSupabaseHostedConfig,
 } from "./src/adapters/supabase";
-export { createAstropressFirebaseAdapter } from "./src/adapters/firebase.js";
-export {
-  createAstropressFirebaseHostedAdapter,
-  readAstropressFirebaseHostedConfig,
-} from "./src/adapters/firebase.js";
-export type {
-  AstropressFirebaseAdapterOptions,
-  AstropressFirebaseHostedAdapterOptions,
-  AstropressFirebaseHostedConfig,
-} from "./src/adapters/firebase";
 export { createAstropressAppwriteAdapter } from "./src/adapters/appwrite.js";
 export {
   createAstropressAppwriteHostedAdapter,
@@ -460,7 +450,6 @@ export { createAstropressVercelDeployTarget } from "./src/deploy/vercel.js";
 export { createAstropressNetlifyDeployTarget } from "./src/deploy/netlify.js";
 export { createAstropressRenderDeployTarget } from "./src/deploy/render.js";
 export { createAstropressGitLabPagesDeployTarget } from "./src/deploy/gitlab-pages.js";
-export { createAstropressFirebaseHostingDeployTarget } from "./src/deploy/firebase-hosting.js";
 export { createAstropressCustomDeployTarget } from "./src/deploy/custom.js";
 export {
   bootstrapAstropressContentServices,

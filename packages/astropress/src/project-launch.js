@@ -2,7 +2,7 @@ import { createAstropressProjectRuntimePlan } from "./project-runtime.js";
 import { recommendAstropressProvider } from "./provider-choice.js";
 
 function resolveExistingPlatform(dataServices) {
-  if (dataServices === "cloudflare" || dataServices === "supabase" || dataServices === "firebase" || dataServices === "appwrite" || dataServices === "runway") {
+  if (dataServices === "cloudflare" || dataServices === "supabase" || dataServices === "appwrite" || dataServices === "runway") {
     return dataServices;
   }
   return "none";

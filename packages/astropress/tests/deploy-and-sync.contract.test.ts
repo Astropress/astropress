@@ -4,7 +4,6 @@ import { join } from "node:path";
 
 import { describe, expect, it } from "vitest";
 import { createAstropressCloudflarePagesDeployTarget } from "../src/deploy/cloudflare-pages.js";
-import { createAstropressFirebaseHostingDeployTarget } from "../src/deploy/firebase-hosting.js";
 import { createAstropressGitHubPagesDeployTarget } from "../src/deploy/github-pages.js";
 import { createAstropressGitLabPagesDeployTarget } from "../src/deploy/gitlab-pages.js";
 import { createAstropressNetlifyDeployTarget } from "../src/deploy/netlify.js";
@@ -51,7 +50,6 @@ describe("deploy and sync contracts", () => {
       [createAstropressNetlifyDeployTarget, "netlify"],
       [createAstropressRenderDeployTarget, "render-web"],
       [createAstropressGitLabPagesDeployTarget, "gitlab-pages"],
-      [createAstropressFirebaseHostingDeployTarget, "firebase-hosting"],
     ] as const) {
       const outputDir = join(workspace, provider);
       const target = factory({ outputDir } as never);

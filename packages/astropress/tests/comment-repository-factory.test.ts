@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import { createAstropressCommentRepository } from "../src/comment-repository-factory";
 
 describe("comment repository factory", () => {
-  it("moderates and submits comments through package-owned repository assembly", () => {
+  it("moderates and submits comments through package-owned repository assembly", async () => {
     const recordCommentAudit = vi.fn();
     const repository = createAstropressCommentRepository({
       getComments: vi.fn(() => [
@@ -30,7 +30,7 @@ describe("comment repository factory", () => {
       }),
     ).toEqual({ ok: true });
 
-    const submitted = repository.submitPublicComment({
+    const submitted = await repository.submitPublicComment({
       author: "Bob",
       email: "bob@example.com",
       body: "Nice post",
@@ -39,7 +39,7 @@ describe("comment repository factory", () => {
     });
 
     expect(submitted.ok).toBe(true);
-    if (submitted.ok) {
+    if (submitted.ok === true) {
       expect(submitted.comment.status).toBe("pending");
       expect(submitted.comment.submittedAt).toBe("2025-01-02T00:00:00.000Z");
     }

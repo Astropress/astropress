@@ -1,5 +1,5 @@
 import { DatabaseSync } from "node:sqlite";
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { registerCms } from "../src/config";
 import { readAstropressSqliteSchemaSql } from "../src/sqlite-bootstrap.js";
@@ -284,5 +284,62 @@ describe("restoreRuntimeRevision", () => {
   it("returns not-ok for unknown slug", async () => {
     const result = await restoreRuntimeRevision("no-such-slug", "rev-1", actor, locals);
     expect(result).toMatchObject({ ok: false });
+  });
+});
+
+describe("purgeCdnCache", () => {
+  it("is a no-op and resolves successfully when no cdnPurgeWebhook is configured", async () => {
+    const { purgeCdnCache } = await import("../src/cache-purge");
+    registerCms({
+      templateKeys: ["home"],
+      siteUrl: "https://example.com",
+      seedPages: [],
+      archives: [],
+      translationStatus: [],
+    });
+    // Should resolve without throwing (no webhook configured, no CF env vars)
+    await expect(purgeCdnCache("my-slug", { siteUrl: "https://example.com", templateKeys: ["home"], seedPages: [], archives: [], translationStatus: [] })).resolves.toBeUndefined();
+  });
+
+  it("POSTs to cdnPurgeWebhook with slug and purgedAt when configured", async () => {
+    const { purgeCdnCache } = await import("../src/cache-purge");
+    const requests: { url: string; body: unknown }[] = [];
+    vi.stubGlobal("fetch", async (url: string, init: RequestInit) => {
+      requests.push({ url, body: JSON.parse(init.body as string) });
+      return new Response(null, { status: 200 });
+    });
+
+    await purgeCdnCache("test-slug", {
+      siteUrl: "https://example.com",
+      templateKeys: ["home"],
+      seedPages: [],
+      archives: [],
+      translationStatus: [],
+      cdnPurgeWebhook: "https://hooks.example.com/purge",
+    });
+
+    vi.unstubAllGlobals();
+    expect(requests).toHaveLength(1);
+    expect(requests[0].url).toBe("https://hooks.example.com/purge");
+    expect((requests[0].body as Record<string, unknown>).slug).toBe("test-slug");
+    expect(typeof (requests[0].body as Record<string, unknown>).purgedAt).toBe("string");
+  });
+
+  it("does not throw when the webhook returns a non-200 status", async () => {
+    const { purgeCdnCache } = await import("../src/cache-purge");
+    vi.stubGlobal("fetch", async () => new Response("Server Error", { status: 500 }));
+
+    await expect(
+      purgeCdnCache("test-slug", {
+        siteUrl: "https://example.com",
+        templateKeys: ["home"],
+        seedPages: [],
+        archives: [],
+        translationStatus: [],
+        cdnPurgeWebhook: "https://hooks.example.com/purge",
+      }),
+    ).resolves.toBeUndefined();
+
+    vi.unstubAllGlobals();
   });
 });

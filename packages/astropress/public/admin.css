@@ -692,3 +692,105 @@ html[data-theme="dark"] ap-notice[type="error"] {
     grid-template-columns: 1fr;
   }
 }
+
+/* ─── Native popover (keyboard shortcuts panel) ──────────────────────────────
+ * Uses the native HTML Popover API (zero JS) for the keyboard shortcuts panel.
+ * The `popover` attribute auto-wires toggle behavior via `popovertarget`.
+ * ────────────────────────────────────────────────────────────────────────────── */
+.help-popover-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  background: var(--panel);
+  color: var(--muted);
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+}
+
+.keyboard-shortcuts-popover {
+  position: fixed;
+  inset-block-start: 4rem;
+  inset-inline-end: 1rem;
+  width: min(22rem, calc(100vw - 2rem));
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 0.75rem;
+  padding: 1.25rem;
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.15);
+  z-index: 200;
+  margin: 0;
+}
+
+.keyboard-shortcuts-popover h2 {
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  margin: 0 0 0.75rem;
+}
+
+.keyboard-shortcuts-popover table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.keyboard-shortcuts-popover td {
+  padding: 0.3rem 0;
+  font-size: 0.88rem;
+}
+
+.keyboard-shortcuts-popover td:first-child {
+  width: 45%;
+  white-space: nowrap;
+}
+
+.keyboard-shortcuts-popover kbd {
+  display: inline-block;
+  padding: 0.1em 0.4em;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 0.25rem;
+  font-size: 0.78rem;
+  font-family: ui-monospace, monospace;
+}
+
+/* ─── WCAG 2.2 AAA: Enhanced focus-visible (SC 2.4.12) ────────────────────────
+ * Minimum 2px focus indicator with at least 3:1 contrast against adjacent colors.
+ * Uses :focus-visible to avoid showing keyboard ring on mouse clicks.
+ * ────────────────────────────────────────────────────────────────────────────── */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+/* Interactive controls that need their own focus treatment */
+.admin-button:focus-visible,
+.admin-button-secondary:focus-visible,
+.admin-button-ghost:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 20%, transparent);
+}
+
+.admin-input:focus-visible,
+.admin-select:focus-visible,
+.admin-textarea:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 0;
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 20%, transparent);
+  border-color: var(--accent);
+}
+
+/* Skip link — always visible when focused; renders above all content */
+.skip-link:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}

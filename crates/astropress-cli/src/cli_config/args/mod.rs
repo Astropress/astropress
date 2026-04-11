@@ -111,6 +111,9 @@ pub(crate) enum Command {
         target: Option<String>,
         app_host: Option<AppHost>,
     },
+    UpgradeCheck {
+        project_dir: PathBuf,
+    },
     Help,
 }
 
@@ -118,7 +121,7 @@ pub(crate) fn parse_command(args: &[String]) -> Result<Command, String> {
     match args {
         [] => Ok(Command::Help),
         [flag] if flag == "--help" || flag == "-h" || flag == "help" => Ok(Command::Help),
-        [command, rest @ ..] if command == "new" => new::parse_new_command(rest),
+        [command, rest @ ..] if command == "new" || command == "init" => new::parse_new_command(rest),
         [command, rest @ ..] if command == "dev" => dev_deploy::parse_dev_command(rest),
         [command, rest @ ..] if command == "backup" => ops::parse_backup_command(rest),
         [command, rest @ ..] if command == "restore" => ops::parse_restore_command(rest),
@@ -148,6 +151,10 @@ pub(crate) fn parse_command(args: &[String]) -> Result<Command, String> {
             ops::parse_db_migrate_command(rest)
         }
         [command, rest @ ..] if command == "deploy" => dev_deploy::parse_deploy_command(rest),
+        [command, subcommand, rest @ ..] if command == "upgrade" && subcommand == "--check" => {
+            ops::parse_upgrade_check_command(rest)
+        }
+        [command, rest @ ..] if command == "upgrade" => ops::parse_upgrade_check_command(rest),
         [command, ..] if command == "import" => {
             Err("Unsupported import source. Use `astropress import wordpress` or `astropress import wix`.".into())
         }

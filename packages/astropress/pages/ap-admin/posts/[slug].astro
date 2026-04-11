@@ -5,6 +5,7 @@ import CsrfInput from "astropress/components/CsrfInput.astro";
 import { buildPostEditorPageModel } from "astropress";
 import { getAdminLocalePair } from "astropress";
 import { getSeededAdminContentType } from "astropress";
+import { peekCmsConfig } from "../../src/config.js";
 
 export const prerender = false;
 
@@ -22,6 +23,15 @@ const englishEditorHref = englishOwnerRecord ? `/ap-admin/posts/${englishOwnerRe
 const localizedEditorHref = localizedRouteRecord ? `/ap-admin/route-pages${localizedRouteRecord.path}` : undefined;
 const publicHref = pageRecord?.legacyUrl || "/";
 const publicStatus = pageRecord?.status ?? "published";
+
+// Resolve the registered ContentTypeDefinition for this record's templateKey, if any.
+// Used to auto-generate custom field inputs in the editor.
+const registeredContentTypes = peekCmsConfig()?.contentTypes ?? [];
+const registeredContentType = pageRecord
+  ? registeredContentTypes.find((ct) => ct.key === pageRecord.templateKey) ?? null
+  : null;
+const customFields = registeredContentType?.fields ?? [];
+const currentMetadata = (pageRecord?.metadata ?? {}) as Record<string, unknown>;
 
 if (adminUser?.role !== "admin" && contentType === "page") {
   Astro.response.status = 403;
@@ -335,6 +345,65 @@ if (model.status === "not_found") {
         </label>
         <p class="field-note">This content was imported from the legacy site. Reviewed HTML overrides now take precedence on the public route.</p>
       </section>
+
+      {/* Panel: Custom fields — auto-generated from registered ContentTypeDefinition */}
+      {customFields.length > 0 && (
+        <section class="panel" data-ap-custom-fields>
+          <div class="section-header">
+            <div>
+              <h2>{registeredContentType!.label} Fields</h2>
+              <p>Custom fields defined for this content type in <code>registerCms()</code>.</p>
+            </div>
+          </div>
+          {customFields.map((field) => {
+            const fieldName = `metadata.${field.name}`;
+            const currentValue = currentMetadata[field.name];
+            const labelText = `${field.label}${field.required ? " *" : ""}`;
+
+            if (field.type === "boolean") {
+              return (
+                <label class="admin-field admin-field--checkbox">
+                  <input
+                    type="checkbox"
+                    name={fieldName}
+                    value="true"
+                    checked={Boolean(currentValue)}
+                  />
+                  <span>{labelText}</span>
+                </label>
+              );
+            }
+
+            if (field.type === "select" && field.options) {
+              return (
+                <label class="admin-field">
+                  <span>{labelText}</span>
+                  <select name={fieldName} class="admin-input" required={field.required}>
+                    <option value="">— Select —</option>
+                    {field.options.map((opt) => (
+                      <option value={opt} selected={currentValue === opt}>{opt}</option>
+                    ))}
+                  </select>
+                </label>
+              );
+            }
+
+            // Default: text input
+            return (
+              <label class="admin-field">
+                <span>{labelText}</span>
+                <input
+                  type="text"
+                  name={fieldName}
+                  value={String(currentValue ?? "")}
+                  class="admin-input"
+                  required={field.required}
+                />
+              </label>
+            );
+          })}
+        </section>
+      )}
 
       <div class="form-actions">
         <button type="submit" class="admin-button">Save reviewed changes</button>

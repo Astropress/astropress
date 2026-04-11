@@ -31,7 +31,6 @@
     "./adapters/project": "./src/adapters/project.ts",
     "./adapters/cloudflare": "./src/adapters/cloudflare.ts",
     "./adapters/supabase": "./src/adapters/supabase.ts",
-    "./adapters/firebase": "./src/adapters/firebase.ts",
     "./adapters/appwrite": "./src/adapters/appwrite.ts",
     "./adapters/pocketbase": "./src/adapters/pocketbase.ts",
     "./adapters/supabase-sqlite": "./src/adapters/supabase-sqlite.ts",
@@ -43,7 +42,6 @@
     "./deploy/netlify": "./src/deploy/netlify.ts",
     "./deploy/render": "./src/deploy/render.ts",
     "./deploy/gitlab-pages": "./src/deploy/gitlab-pages.ts",
-    "./deploy/firebase-hosting": "./src/deploy/firebase-hosting.ts",
     "./deploy/custom": "./src/deploy/custom.ts",
     "./content-services-ops": "./src/content-services-ops.ts",
     "./db-migrate-ops": "./src/db-migrate-ops.ts",
@@ -101,6 +99,7 @@
     "./web-components/theme-toggle": "./web-components/theme-toggle.ts",
     "./web-components/confirm-dialog": "./web-components/confirm-dialog.ts",
     "./web-components/html-editor": "./web-components/html-editor.ts",
+    "./web-components/ap-stale-tab-warning": "./web-components/ap-stale-tab-warning.ts",
     "./api-middleware": "./src/api-middleware.ts",
     "./api-routes": "./src/api-routes.ts",
     "./analytics": "./src/analytics.ts",
@@ -125,13 +124,16 @@
   },
   "devDependencies": {
     "@vitest/coverage-v8": "^3.2.4",
+    "schema-dts": "^2.0.0",
     "typescript": "5.9.3",
     "vitest": "^3"
   },
   "scripts": {
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "release": "changeset publish",
+    "version": "changeset version"
   },
   "keywords": [
     "astro",

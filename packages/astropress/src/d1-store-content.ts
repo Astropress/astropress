@@ -171,6 +171,66 @@ async function getPersistedContentOverride(db: D1DatabaseLike, slug: string) {
   return mapPersistedOverride(row);
 }
 
+export interface D1SchedulingRecord {
+  id: string;
+  slug: string;
+  title: string;
+  scheduledAt: string;
+}
+
+export function createD1SchedulingPart(db: D1DatabaseLike) {
+  return {
+    async schedulePublish(id: string, scheduledAt: string): Promise<void> {
+      await db
+        .prepare("UPDATE content_overrides SET scheduled_at = ?, status = 'draft' WHERE slug = ?")
+        .bind(scheduledAt, id)
+        .run();
+      await db
+        .prepare(
+          `INSERT INTO content_overrides (slug, scheduled_at, status, title, seo_title, meta_description, updated_at, updated_by)
+           SELECT ce.slug, ?, 'draft', ce.title, ce.title, '', CURRENT_TIMESTAMP, 'scheduler'
+           FROM content_entries ce WHERE ce.slug = ?
+           AND NOT EXISTS (SELECT 1 FROM content_overrides co WHERE co.slug = ?)`,
+        )
+        .bind(scheduledAt, id, id)
+        .run();
+    },
+
+    async listScheduled(): Promise<D1SchedulingRecord[]> {
+      const now = new Date().toISOString();
+      const rows = (
+        await db
+          .prepare(
+            `SELECT co.slug AS id, co.slug, COALESCE(co.title, ce.title, co.slug) AS title, co.scheduled_at
+             FROM content_overrides co
+             LEFT JOIN content_entries ce ON ce.slug = co.slug
+             WHERE co.scheduled_at IS NOT NULL AND co.scheduled_at > ?
+             ORDER BY co.scheduled_at ASC`,
+          )
+          .bind(now)
+          .all<{ id: string; slug: string; title: string; scheduled_at: string }>()
+      ).results;
+      return rows.map((r) => ({ id: r.slug, slug: r.slug, title: r.title, scheduledAt: r.scheduled_at }));
+    },
+
+    async cancelScheduledPublish(id: string): Promise<void> {
+      await db.prepare("UPDATE content_overrides SET scheduled_at = NULL WHERE slug = ?").bind(id).run();
+    },
+
+    async runScheduledPublishes(): Promise<number> {
+      const now = new Date().toISOString();
+      const result = await db
+        .prepare(
+          `UPDATE content_overrides SET status = 'published', scheduled_at = NULL
+           WHERE scheduled_at IS NOT NULL AND scheduled_at <= ?`,
+        )
+        .bind(now)
+        .run();
+      return result.meta?.changes ?? 0;
+    },
+  };
+}
+
 export function createD1ContentReadPart(db: D1DatabaseLike): D1AdminReadStore["content"] {
   return {
     async listContentStates() {

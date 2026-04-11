@@ -6,7 +6,6 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { createAstropressCloudflarePagesDeployTarget } from "../src/deploy/cloudflare-pages";
 import { createAstropressCustomDeployTarget } from "../src/deploy/custom";
-import { createAstropressFirebaseHostingDeployTarget } from "../src/deploy/firebase-hosting";
 import { createAstropressGitLabPagesDeployTarget } from "../src/deploy/gitlab-pages";
 import { createAstropressNetlifyDeployTarget } from "../src/deploy/netlify";
 import { createAstropressRenderDeployTarget } from "../src/deploy/render";
@@ -193,17 +192,6 @@ describe("createAstropressRenderDeployTarget", () => {
     const target = createAstropressRenderDeployTarget({ outputDir, kind: "render-static" });
     const result = await target.deploy({ buildDir, projectName: "rs-site" });
     expect(result.deploymentId).toContain("render-static:");
-  });
-});
-
-describe("createAstropressFirebaseHostingDeployTarget", () => {
-  it("deploys with firebase-hosting provider", async () => {
-    const buildDir = makeBuildDir("build-firebase");
-    const outputDir = join(testRoot, "out-firebase");
-    const target = createAstropressFirebaseHostingDeployTarget({ outputDir });
-    const result = await target.deploy({ buildDir, projectName: "fb-site" });
-    expect(result.deploymentId).toContain("firebase-hosting:");
-    expect(result.url).toContain("web.app");
   });
 });
 

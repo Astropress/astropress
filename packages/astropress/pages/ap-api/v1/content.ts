@@ -28,6 +28,7 @@ export const GET: APIRoute = async (context) => {
     const status = url.searchParams.get("status") ?? undefined;
     const limit = Math.min(Number(url.searchParams.get("limit") ?? url.searchParams.get("per_page") ?? "20"), 100);
     const page = Math.max(Number(url.searchParams.get("page") ?? "1"), 1);
+    const cursor = url.searchParams.get("cursor") ?? undefined;
     const offset = Number(url.searchParams.get("offset") ?? String((page - 1) * limit));
 
     const all = await listRuntimeContentStates(context.locals);
@@ -37,8 +38,45 @@ export const GET: APIRoute = async (context) => {
       return true;
     });
 
-    const pageRecords = filtered.slice(offset, offset + limit);
-    return jsonOkPaginated({ records: pageRecords, total: filtered.length, limit, offset, page }, filtered.length);
+    // Cursor-based pagination: cursor is a base64-encoded offset index
+    let effectiveOffset = offset;
+    if (cursor) {
+      try {
+        const decoded = Number(Buffer.from(cursor, "base64url").toString("utf8"));
+        if (!Number.isNaN(decoded)) effectiveOffset = decoded;
+      } catch { /* ignore invalid cursor — fall back to offset */ }
+    }
+
+    const pageRecords = filtered.slice(effectiveOffset, effectiveOffset + limit);
+    const nextOffset = effectiveOffset + limit;
+    const prevOffset = Math.max(effectiveOffset - limit, 0);
+    const hasNext = nextOffset < filtered.length;
+    const hasPrev = effectiveOffset > 0;
+
+    const nextCursor = hasNext ? Buffer.from(String(nextOffset)).toString("base64url") : null;
+    const prevCursor = hasPrev ? Buffer.from(String(prevOffset)).toString("base64url") : null;
+
+    const baseUrl = `${url.origin}${url.pathname}`;
+    const selfParams = new URLSearchParams(url.searchParams);
+    selfParams.delete("cursor");
+    selfParams.delete("offset");
+
+    const nextParams = new URLSearchParams(selfParams);
+    if (nextCursor) nextParams.set("cursor", nextCursor);
+
+    const prevParams = new URLSearchParams(selfParams);
+    if (prevCursor) prevParams.set("cursor", prevCursor);
+
+    const _links = {
+      self: `${baseUrl}?${selfParams.toString()}`,
+      ...(hasNext ? { next: `${baseUrl}?${nextParams.toString()}` } : {}),
+      ...(hasPrev ? { prev: `${baseUrl}?${prevParams.toString()}` } : {}),
+    };
+
+    return jsonOkPaginated(
+      { records: pageRecords, total: filtered.length, limit, offset: effectiveOffset, page, nextCursor, _links },
+      filtered.length,
+    );
   });
 };
 

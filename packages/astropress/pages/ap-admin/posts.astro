@@ -73,6 +73,9 @@ function getWorkflowLabel(state: (typeof rows)[number]) {
   return "scheduled";
 }
 
+const PAGE_SIZE = 25;
+const currentPage = Math.max(Number(query.get("page") ?? "1") || 1, 1);
+
 const filteredRows = rows.filter((page) => {
   const effectiveStatus = page.status || "published";
   const authorIds = page.authorIds ?? [];
@@ -109,6 +112,16 @@ const filteredRows = rows.filter((page) => {
     matchesSearch
   );
 });
+
+const totalPages = Math.max(Math.ceil(filteredRows.length / PAGE_SIZE), 1);
+const safePage = Math.min(currentPage, totalPages);
+const pagedRows = filteredRows.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
+
+function paginationHref(targetPage: number) {
+  const p = new URLSearchParams(query);
+  p.set("page", String(targetPage));
+  return `/ap-admin/posts?${p.toString()}`;
+}
 ---
 
 <AdminLayout
@@ -213,7 +226,7 @@ const filteredRows = rows.filter((page) => {
         Archive filter: <strong>{selectedArchive.title}</strong>
       </p>
     )}
-    <p class="field-note">{filteredRows.length} posts matched the current filters.</p>
+    <p class="field-note">{filteredRows.length} posts matched the current filters. Showing page {safePage} of {totalPages}.</p>
     <div class="admin-table-shell">
       <table aria-label="Content list">
         <thead>
@@ -227,7 +240,7 @@ const filteredRows = rows.filter((page) => {
           </tr>
         </thead>
         <tbody>
-          {filteredRows.map((page) => {
+          {pagedRows.map((page) => {
             const workflowLabel = getWorkflowLabel(page);
             return (
               <tr>
@@ -245,7 +258,7 @@ const filteredRows = rows.filter((page) => {
               </tr>
             );
           })}
-          {filteredRows.length === 0 && (
+          {pagedRows.length === 0 && (
             <tr>
               <td colspan="6">No content records matched the current filters.</td>
             </tr>
@@ -253,6 +266,19 @@ const filteredRows = rows.filter((page) => {
         </tbody>
       </table>
     </div>
+    {totalPages > 1 && (
+      <nav aria-label="pagination" class="pagination-nav">
+        {safePage > 1
+          ? <a href={paginationHref(safePage - 1)} class="admin-button-ghost" rel="prev" aria-label="Previous page">← Previous</a>
+          : <span class="admin-button-ghost disabled" aria-disabled="true">← Previous</span>
+        }
+        <span class="page-counter" aria-current="page">Page {safePage} of {totalPages}</span>
+        {safePage < totalPages
+          ? <a href={paginationHref(safePage + 1)} class="admin-button-ghost" rel="next" aria-label="Next page">Next →</a>
+          : <span class="admin-button-ghost disabled" aria-disabled="true">Next →</span>
+        }
+      </nav>
+    )}
   </section>
 </AdminLayout>
 
@@ -341,6 +367,25 @@ const filteredRows = rows.filter((page) => {
     color: inherit;
     font-weight: 700;
     text-decoration: none;
+  }
+
+  .pagination-nav {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    justify-content: center;
+    padding: 0.75rem 0;
+  }
+
+  .page-counter {
+    color: var(--muted);
+    font-size: 0.9rem;
+  }
+
+  .admin-button-ghost.disabled {
+    opacity: 0.4;
+    cursor: default;
+    pointer-events: none;
   }
 
   .title-cell span {

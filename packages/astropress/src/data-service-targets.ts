@@ -2,7 +2,6 @@ export type AstropressDataServices =
   | "none"
   | "cloudflare"
   | "supabase"
-  | "firebase"
   | "appwrite"
   | "pocketbase"
   | "neon"
@@ -47,15 +46,6 @@ const dataServiceTargets: Record<AstropressDataServices, AstropressDataServiceTa
     providesObjectStorage: true,
     providesAuth: true,
     notes: "Hosted database, storage, and service primitives. The Astro app still needs an app host.",
-  },
-  firebase: {
-    id: "firebase",
-    label: "Firebase",
-    kind: "full-stack-services",
-    providesDatabase: true,
-    providesObjectStorage: true,
-    providesAuth: true,
-    notes: "Firestore/Auth/Storage/Functions style services. The Astro app host is a separate choice.",
   },
   appwrite: {
     id: "appwrite",

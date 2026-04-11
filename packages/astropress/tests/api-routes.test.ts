@@ -3,7 +3,7 @@ import { DatabaseSync } from "node:sqlite";
 import { describe, expect, it } from "vitest";
 
 import { apiRouteDefinitions } from "../src/api-routes.js";
-import { withApiRequest, jsonOk, jsonOkPaginated, jsonOkWithEtag } from "../src/api-middleware.js";
+import { withApiRequest, jsonOk, jsonOkPaginated, jsonOkWithEtag, apiErrors } from "../src/api-middleware.js";
 import { resolveAstropressSecurityArea } from "../src/security-middleware.js";
 import { readAstropressSqliteSchemaSql, runAstropressMigrations } from "../src/sqlite-bootstrap.js";
 import { createApiTokenStore } from "../src/sqlite-runtime/api-tokens.js";
@@ -257,6 +257,51 @@ describe("runAstropressMigrations", () => {
     expect(rows).toHaveLength(1);
 
     rmSync(tmpDir, { recursive: true });
+  });
+});
+
+// ─── Typed error shapes (413 / 415) ──────────────────────────────────────────
+
+describe("apiErrors.fileTooLarge (413)", () => {
+  it("returns 413 status", () => {
+    const res = apiErrors.fileTooLarge(10 * 1024 * 1024, 15 * 1024 * 1024);
+    expect(res.status).toBe(413);
+  });
+
+  it("returns typed error body with FILE_TOO_LARGE code", async () => {
+    const res = apiErrors.fileTooLarge(10485760, 15728640);
+    const body = await res.json() as Record<string, unknown>;
+    expect(body.error).toBe("FILE_TOO_LARGE");
+    expect(body.code).toBe("file_too_large");
+    expect(body.maxBytes).toBe(10485760);
+    expect(body.uploadedBytes).toBe(15728640);
+  });
+
+  it("returns JSON content-type", () => {
+    const res = apiErrors.fileTooLarge(1024, 2048);
+    expect(res.headers.get("Content-Type")).toBe("application/json");
+  });
+});
+
+describe("apiErrors.unsupportedMediaType (415)", () => {
+  it("returns 415 status", () => {
+    const res = apiErrors.unsupportedMediaType("application/x-evil", ["image/jpeg", "image/png"]);
+    expect(res.status).toBe(415);
+  });
+
+  it("returns typed error body with UNSUPPORTED_MEDIA_TYPE code", async () => {
+    const allowed = ["image/jpeg", "image/png", "application/pdf"];
+    const res = apiErrors.unsupportedMediaType("application/x-custom", allowed);
+    const body = await res.json() as Record<string, unknown>;
+    expect(body.error).toBe("UNSUPPORTED_MEDIA_TYPE");
+    expect(body.code).toBe("unsupported_media_type");
+    expect(body.mimeType).toBe("application/x-custom");
+    expect(body.allowed).toEqual(allowed);
+  });
+
+  it("returns JSON content-type", () => {
+    const res = apiErrors.unsupportedMediaType("text/html", ["image/png"]);
+    expect(res.headers.get("Content-Type")).toBe("application/json");
   });
 });
 

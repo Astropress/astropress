@@ -12,9 +12,13 @@ import "astropress/web-components";
 import "astropress/web-components/theme-toggle";
 import "astropress/web-components/confirm-dialog";
 import "astropress/web-components/html-editor";
+import "astropress/web-components/admin-nav";
+import "astropress/web-components/ap-stale-tab-warning";
+import "astropress/web-components/notice";
 ```
 
-Each import registers the custom element globally via `customElements.define()`. Import them in a `<script>` tag inside your `.astro` component.
+Each import registers the custom element globally via `customElements.define()`.
+Import them in a `<script>` tag inside your `.astro` component.
 
 ## Built-in elements
 
@@ -165,6 +169,98 @@ Wraps a textarea editor with a formatting toolbar, live preview iframe, media li
 
 ---
 
+### `<ap-admin-nav>`
+
+The sidebar navigation element. Highlights the current page using
+`aria-current="page"` and supports keyboard navigation between links.
+
+```html
+<ap-admin-nav>
+  <nav aria-label="Main navigation">
+    <ul>
+      <li><a href="/ap-admin" aria-current="page">Dashboard</a></li>
+      <li><a href="/ap-admin/posts">Posts</a></li>
+      <li><a href="/ap-admin/media">Media</a></li>
+    </ul>
+  </nav>
+</ap-admin-nav>
+
+<script>
+  import "astropress/web-components/admin-nav";
+</script>
+```
+
+The component derives `aria-current` from `window.location.pathname` — no
+attribute needed; the server can render without knowing the current path.
+
+---
+
+### `<ap-stale-tab-warning>`
+
+Shows an accessible warning banner when another browser tab is editing the
+same content, or when the page has been open longer than the session TTL.
+
+Uses the [`BroadcastChannel` API](https://developer.mozilla.org/en-US/docs/Web/API/BroadcastChannel)
+— cross-tab communication with no server round-trips.
+
+```html
+<ap-stale-tab-warning
+  slug="my-post-slug"
+  session-ttl-ms="3600000"
+>
+</ap-stale-tab-warning>
+
+<script>
+  import "astropress/web-components/ap-stale-tab-warning";
+</script>
+```
+
+**Attributes:**
+
+| Attribute | Default | Description |
+|-----------|---------|-------------|
+| `slug` | — | Identifies the content being edited (should match `pageRecord.slug`) |
+| `session-ttl-ms` | `3600000` (1 hr) | Shows a reload warning after this many ms without a page refresh |
+
+When triggered, the element renders a `role="alert"` banner — screen readers
+announce it immediately without focus change.
+
+---
+
+### `<ap-notice>`
+
+A transient notification banner with an accessible live region. Use it
+to announce save confirmations, warnings, or status changes.
+
+```html
+<ap-notice dismiss-after="4000">Post saved.</ap-notice>
+
+<script>
+  import "astropress/web-components/notice";
+</script>
+```
+
+**Attributes:**
+
+| Attribute | Default | Description |
+|-----------|---------|-------------|
+| `dismiss-after` | — | Removes the element after this many milliseconds |
+
+The element renders with `role="status"` and `aria-live="polite"` — screen
+readers announce the message when it appears, without interrupting the user.
+Omit `dismiss-after` for a persistent notice.
+
+Create notices dynamically:
+
+```ts
+const notice = document.createElement("ap-notice");
+notice.setAttribute("dismiss-after", "3000");
+notice.textContent = "Saved!";
+document.body.appendChild(notice);
+```
+
+---
+
 ## Design principles
 
 ### Light DOM (not shadow DOM)
@@ -252,3 +348,62 @@ Run:
 ```bash
 bun run test
 ```
+
+---
+
+## Screen Reader Usage
+
+The Astropress admin panel is designed to be fully navigable with screen readers. This section documents how to navigate key areas.
+
+### Navigation and landmarks
+
+The admin UI uses semantic HTML landmarks:
+- `<header>` — top bar with site title and user menu
+- `<nav aria-label="Main navigation">` — sidebar navigation (`<ap-admin-nav>`)
+- `<main>` — page content area
+- `<footer>` — bottom bar (if present)
+
+Use your screen reader's landmark navigation shortcut to jump between these areas:
+- **NVDA/JAWS:** `D` (next landmark) or `Shift+D` (previous)
+- **VoiceOver (macOS):** `VO+U` (rotor) → Landmarks
+- **TalkBack (Android):** Swipe with two fingers
+
+### Page headings
+
+Each admin page has a structured heading hierarchy:
+- `<h1>` — page title (e.g., "Posts", "Media Library", "Settings")
+- `<h2>` — section titles within the page
+- `<h3>` — sub-sections or component headings
+
+Use heading navigation to jump to sections:
+- **NVDA:** `H` (next heading), `1`–`6` (heading level)
+- **VoiceOver:** `VO+Command+H`
+
+### Forms and inputs
+
+All form controls have explicit `<label>` elements or `aria-label` attributes. Required fields are marked with `*` in the visible label and `aria-required="true"` on the input.
+
+Error messages are associated with their inputs via `aria-describedby` and will be announced automatically when focus moves to an invalid field.
+
+### Dialogs
+
+The `<ap-confirm-dialog>` component uses the native `<dialog>` element:
+- Focus moves into the dialog when it opens
+- `Escape` closes the dialog and returns focus to the trigger element
+- The dialog has `aria-labelledby` pointing to its heading
+
+### Theme toggle
+
+`<ap-theme-toggle>` is a `role="switch"` button with `aria-checked` indicating the current theme. Activating it announces "Dark mode on" or "Dark mode off".
+
+### Rich text editor
+
+`<ap-html-editor>` wraps a `<textarea>` with a toolbar. The toolbar buttons have `aria-label` attributes. The textarea announces character counts when available. Use `Tab` to move from the toolbar to the textarea.
+
+### `<ap-stale-tab-warning>`
+
+When multiple tabs are editing the same content, a warning banner appears with `role="alert"`. Screen readers will announce the warning message automatically when it appears.
+
+### Skip link
+
+A visually-hidden skip link (`<a class="skip-link" href="#main-content">Skip to main content</a>`) appears at the top of every admin page. It becomes visible on keyboard focus. Activating it moves keyboard focus past the navigation to the main content area.
