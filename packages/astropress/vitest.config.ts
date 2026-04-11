@@ -7,7 +7,13 @@ export default defineConfig({
       ".js": [".ts", ".js"],
     },
     alias: [
-      { find: "astropress", replacement: fileURLToPath(new URL("./index.ts", import.meta.url)) },
+      // Exact-match only so subpath imports like "astropress/api-middleware.js" fall through
+      // to the package.json exports map (required for page-handler test imports).
+      { find: /^astropress$/, replacement: fileURLToPath(new URL("./index.ts", import.meta.url)) },
+      // Explicit aliases for subpaths used by pages/ap-api/v1/* handlers
+      { find: /^astropress\/local-runtime-modules(?:\.js)?$/, replacement: fileURLToPath(new URL("./src/local-runtime-modules.ts", import.meta.url)) },
+      { find: /^astropress\/api-middleware(?:\.js)?$/, replacement: fileURLToPath(new URL("./src/api-middleware.ts", import.meta.url)) },
+      { find: /^astropress\/platform-contracts(?:\.js)?$/, replacement: fileURLToPath(new URL("./src/platform-contracts.ts", import.meta.url)) },
       { find: "cloudflare:workers", replacement: fileURLToPath(new URL("./src/cloudflare-workers-stub.ts", import.meta.url)) },
     ],
   },
@@ -60,7 +66,6 @@ export default defineConfig({
         "src/deploy/vercel.ts",
         "src/deploy/cloudflare-pages.ts",
         "src/deploy/render.ts",
-        "src/deploy/firebase-hosting.ts",
         "src/deploy/gitlab-pages.ts",
         "src/deploy/custom.ts",
         "src/adapters/cloudflare.ts",
