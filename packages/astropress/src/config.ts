@@ -1,197 +1,10 @@
-// ─── Content Modeling ─────────────────────────────────────────────────────────
+// Content modeling types and validation — extracted to keep this file under the 600-line limit
+export type { FieldDefinition, ContentTypeDefinition } from "./content-modeling.js";
+export { validateContentFields } from "./content-modeling.js";
 
-/**
- * A single field in a content type definition.
- *
- * @example
- * ```ts
- * const titleField: FieldDefinition = {
- *   name: "subtitle",
- *   type: "text",
- *   label: "Subtitle",
- *   required: true,
- *   validate: (value) => value.length <= 120 || "Subtitle must be 120 characters or fewer",
- * };
- * ```
- */
-export interface FieldDefinition {
-  /** Identifier used as the key in `metadata`. Must be a valid JS identifier. */
-  name: string;
-  /** Human-readable label for the admin form field. */
-  label: string;
-  /** Input type. Controls admin form rendering and basic type coercion. */
-  type: "text" | "textarea" | "number" | "boolean" | "date" | "select" | "url" | "email";
-  /** When true, `saveRuntimeContentState` rejects saves where this field is absent or empty. */
-  required?: boolean;
-  /** Allowed values for `type: "select"` fields. */
-  options?: readonly string[];
-  /**
-   * Optional server-side validation hook.
-   * Return `true` (or a string with no content) to pass.
-   * Return a non-empty string to fail with that message.
-   *
-   * @example
-   * ```ts
-   * validate: (v) => /^[\w-]+$/.test(v) || "Only letters, numbers, and hyphens are allowed"
-   * ```
-   */
-  validate?: (value: unknown) => true | string;
-}
-
-/**
- * A content type definition that associates a `templateKey` with a set of typed field definitions.
- *
- * Field values are stored in the `metadata` JSON column and validated at save time.
- *
- * @example
- * ```ts
- * registerCms({
- *   contentTypes: [
- *     {
- *       key: "event",
- *       label: "Event",
- *       fields: [
- *         { name: "eventDate", label: "Event Date", type: "date", required: true },
- *         { name: "venue", label: "Venue", type: "text" },
- *         {
- *           name: "capacity",
- *           label: "Max Capacity",
- *           type: "number",
- *           validate: (v) => Number(v) > 0 || "Capacity must be a positive number",
- *         },
- *       ],
- *     },
- *   ],
- *   // ...
- * });
- * ```
- */
-export interface ContentTypeDefinition {
-  /** Must match one of the `templateKeys` registered in `registerCms()`. */
-  key: string;
-  /** Human-readable name shown in the admin panel content type selector. */
-  label: string;
-  /** Ordered list of custom field definitions for this content type. */
-  fields: readonly FieldDefinition[];
-}
-
-/**
- * Validate `metadata` values against the field definitions for a given content type.
- *
- * Returns `null` when all validations pass, or the first validation error message encountered.
- * Called internally by `saveRuntimeContentState` when `contentTypes` are configured.
- */
-export function validateContentFields(
-  contentType: ContentTypeDefinition,
-  metadata: Record<string, unknown>,
-): string | null {
-  for (const field of contentType.fields) {
-    const value = metadata[field.name];
-    const isEmpty = value === undefined || value === null || value === "";
-    if (field.required && isEmpty) {
-      return `"${field.label}" is required.`;
-    }
-    if (!isEmpty && typeof field.validate === "function") {
-      const result = field.validate(value);
-      if (result !== true && result) {
-        return result;
-      }
-    }
-  }
-  return null;
-}
-
-// ─── Plugin API ───────────────────────────────────────────────────────────────
-
-/**
- * Payload passed to lifecycle event hooks.
- */
-export interface AstropressContentEvent {
-  /** The slug of the content record that was saved or published. */
-  slug: string;
-  /** The content kind (e.g. "post", "page"). */
-  kind: string;
-  /** The new status after the save ("draft", "published", "archived"). */
-  status: string;
-  /** Email of the admin user who performed the action. */
-  actor: string;
-}
-
-export interface AstropressMediaEvent {
-  /** The unique asset ID (UUID) assigned at upload time. */
-  id: string;
-  /** Original filename as provided by the uploader. */
-  filename: string;
-  /** MIME type of the uploaded file, e.g. "image/jpeg". */
-  mimeType: string;
-  /** Size of the file in bytes. */
-  size: number;
-  /** Email of the admin user who uploaded the file. */
-  actor: string;
-}
-
-/**
- * A plugin that extends Astropress with lifecycle hooks or admin navigation items.
- *
- * Plugins are registered via `registerCms({ plugins: [myPlugin] })`.
- * Hook functions are called on the server — async is supported.
- *
- * @example
- * ```ts
- * const searchPlugin: AstropressPlugin = {
- *   name: "search-indexer",
- *   async onContentSave({ slug, status }) {
- *     if (status === "published") {
- *       await searchIndex.upsert(slug);
- *     }
- *   },
- * };
- * registerCms({ ..., plugins: [searchPlugin] });
- * ```
- */
-export interface AstropressPlugin {
-  /** Unique identifier for this plugin (used in error messages). */
-  name: string;
-
-  /**
-   * Called after a content record is saved via the admin panel.
-   * Errors thrown here are logged but do not fail the admin action.
-   */
-  onContentSave?: (event: AstropressContentEvent) => Promise<void> | void;
-
-  /**
-   * Called after a content record status changes to "published".
-   * Runs in addition to `onContentSave` when the saved status is "published".
-   */
-  onContentPublish?: (event: AstropressContentEvent) => Promise<void> | void;
-
-  /**
-   * Called after a media asset is successfully uploaded via the admin panel.
-   * Errors thrown here are logged but do not fail the upload action.
-   *
-   * @example
-   * ```ts
-   * const mediaIndexPlugin: AstropressPlugin = {
-   *   name: "media-indexer",
-   *   async onMediaUpload({ id, filename, mimeType }) {
-   *     await searchIndex.addMedia({ id, filename, mimeType });
-   *   },
-   * };
-   * ```
-   */
-  onMediaUpload?: (event: AstropressMediaEvent) => Promise<void> | void;
-
-  /**
-   * Extra items to add to the admin sidebar navigation.
-   * Rendered after the core nav items.
-   */
-  navItems?: ReadonlyArray<{
-    label: string;
-    href: string;
-    /** Optional icon name or SVG src for the nav item. */
-    icon?: string;
-  }>;
-}
+// Plugin API interfaces — extracted for the same reason
+export type { AstropressContentEvent, AstropressMediaEvent, AstropressPlugin } from "./cms-plugins.js";
+import type { AstropressContentEvent, AstropressMediaEvent, AstropressPlugin } from "./cms-plugins.js";
 
 // ─── Analytics / observability config ────────────────────────────────────────
 
@@ -473,6 +286,23 @@ export interface CmsConfig {
    * ```
    */
   plugins?: readonly AstropressPlugin[];
+
+  /**
+   * Optional CDN purge webhook URL.
+   * When set, Astropress will POST `{ slug, purgedAt }` to this URL after content is published.
+   * Supports Cloudflare deploy hooks, Vercel deploy hooks, and Netlify build hooks.
+   *
+   * For Cloudflare Cache API purging, set `CLOUDFLARE_ZONE_ID` and `CLOUDFLARE_API_TOKEN`
+   * environment variables instead of (or in addition to) this webhook URL.
+   *
+   * @example
+   * ```ts
+   * registerCms({
+   *   cdnPurgeWebhook: process.env.NETLIFY_BUILD_HOOK_URL,
+   * });
+   * ```
+   */
+  cdnPurgeWebhook?: string;
 }
 
 const CMS_CONFIG_KEY = Symbol.for("astropress.cms-config");
