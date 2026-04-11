@@ -4,6 +4,7 @@ use std::process::ExitCode;
 
 mod cli_config;
 mod commands;
+mod feature_stubs;
 mod features;
 mod js_bridge;
 mod providers;
@@ -372,10 +373,10 @@ mod tests {
             })
         ));
         assert!(matches!(
-            parse_command(&strings(&["dev", "--app-host", "netlify", "--data-services", "firebase"])),
+            parse_command(&strings(&["dev", "--app-host", "netlify", "--data-services", "appwrite"])),
             Ok(Command::Dev {
                 app_host: Some(AppHost::Netlify),
-                data_services: Some(DataServices::Firebase),
+                data_services: Some(DataServices::Appwrite),
                 ..
             })
         ));
@@ -409,6 +410,22 @@ mod tests {
         assert!(matches!(
             parse_command(&strings(&["db", "migrate", "--dry-run"])),
             Ok(Command::DbMigrate { dry_run: true, .. })
+        ));
+    }
+
+    #[test]
+    fn init_is_alias_for_new() {
+        assert!(matches!(
+            parse_command(&strings(&["init", "my-site"])),
+            Ok(Command::New { .. })
+        ));
+        assert!(matches!(
+            parse_command(&strings(&["init", "my-site", "--app-host", "vercel", "--data-services", "supabase"])),
+            Ok(Command::New {
+                app_host: Some(AppHost::Vercel),
+                data_services: Some(DataServices::Supabase),
+                ..
+            })
         ));
     }
 

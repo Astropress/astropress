@@ -1,7 +1,6 @@
 import type { APIContext } from "astro";
 import { getCmsConfig } from "./config";
-import { buildAdminDashboardModel, type AdminDashboardModel } from "./admin-dashboard";
-import { getAdminLocalePair } from "./admin-locale-links";
+import { buildAdminDashboardModel } from "./admin-dashboard";
 import { defaultSiteSettings } from "./site-settings";
 import { isSeededPostRecord } from "./seeded-content-type";
 import { resolveRuntimeMediaUrl } from "./media";
@@ -11,9 +10,6 @@ import {
   getRuntimeAuthors,
   getRuntimeCategories,
   getRuntimeComments,
-  getRuntimeContentRevisions,
-  getRuntimeContentState,
-  getRuntimeContentStateByPath,
   getRuntimeMediaAssets,
   getRuntimeRedirectRules,
   getRuntimeSettings,
@@ -21,100 +17,36 @@ import {
   getRuntimeTranslationState,
   listRuntimeContentStates,
 } from "./runtime-page-store";
-import { getRuntimeInviteRequest, getRuntimePasswordResetRequest } from "./runtime-admin-actions";
 import {
   getRuntimeArchiveRoute,
   getRuntimeStructuredPageRoute,
   listRuntimeStructuredPageRoutes,
   listRuntimeSystemRoutes,
 } from "./runtime-route-registry";
+import {
+  type AdminPageResult,
+  ok,
+  forbidden,
+  notFound,
+  adminOnlyPage,
+  withFallback,
+  withSettledMap,
+  emptyDashboardModel,
+} from "./admin-page-model-helpers";
+
+// ─── Editor models — extracted to admin-page-models-editors.ts ───────────────
+export {
+  buildPostEditorPageModel,
+  buildPostRevisionsPageModel,
+  buildRoutePageEditorModel,
+  buildArchiveEditorModel,
+  buildResetPasswordPageModel,
+  buildAcceptInvitePageModel,
+} from "./admin-page-models-editors";
+export type { AdminPageResult } from "./admin-page-model-helpers";
 
 type AdminLocals = APIContext["locals"];
 type AdminRole = "admin" | "editor";
-type Status = "ok" | "partial" | "forbidden" | "not_found";
-
-export type AdminPageResult<T> = {
-  status: Status;
-  data: T;
-  warnings: string[];
-};
-
-function result<T>(status: Status, data: T, warnings: string[] = []): AdminPageResult<T> {
-  return { status, data, warnings };
-}
-
-function ok<T>(data: T, warnings: string[] = []): AdminPageResult<T> {
-  return result(warnings.length > 0 ? "partial" : "ok", data, warnings);
-}
-
-function forbidden<T>(data: T): AdminPageResult<T> {
-  return result("forbidden", data);
-}
-
-function notFound<T>(data: T, warnings: string[] = []): AdminPageResult<T> {
-  return result("not_found", data, warnings);
-}
-
-async function adminOnlyPage<T>(
-  role: AdminRole,
-  empty: T,
-  build: (warnings: string[]) => Promise<T>,
-): Promise<AdminPageResult<T>> {
-  if (role !== "admin") return forbidden(empty);
-  const warnings: string[] = [];
-  return ok(await build(warnings), warnings);
-}
-
-async function withFallback<T>(
-  warnings: string[],
-  message: string,
-  load: () => Promise<T>,
-  fallback: T,
-): Promise<T> {
-  try {
-    return await load();
-  } catch {
-    warnings.push(message);
-    return fallback;
-  }
-}
-
-async function withSettledMap<TInput, TOutput>(
-  warnings: string[],
-  message: string,
-  items: TInput[],
-  map: (item: TInput) => Promise<TOutput>,
-  fallback: (item: TInput) => TOutput,
-): Promise<TOutput[]> {
-  const settled = await Promise.allSettled(items.map((item) => map(item)));
-  const hadFailure = settled.some((entry) => entry.status === "rejected");
-  if (hadFailure) {
-    warnings.push(message);
-  }
-
-  return settled.map((entry, index) => entry.status === "fulfilled" ? entry.value : fallback(items[index]));
-}
-
-function emptyDashboardModel(): AdminDashboardModel {
-  return {
-    auditEvents: [],
-    comments: [],
-    redirectRules: [],
-    routePages: [],
-    contentStates: [],
-    systemRoutes: [],
-    posts: [],
-    pages: [],
-    reviewPosts: [],
-    scheduledPosts: [],
-    recentAuditEvents: [],
-    recentActivity: [],
-    translationNeedsAttention: 0,
-    seoNeedsAttention: 0,
-    archiveRoutes: [],
-    supportSurfaceLinks: [],
-  };
-}
 
 export async function buildAdminDashboardPageModel(
   locals: AdminLocals,
@@ -401,113 +333,3 @@ export async function buildSeoPageModel(locals: AdminLocals, role: AdminRole) {
   return ok({ rows }, warnings);
 }
 
-export async function buildPostEditorPageModel(locals: AdminLocals, slug: string) {
-  const warnings: string[] = [];
-  const pageRecord = await withFallback(warnings, "The content record could not be loaded.", () => getRuntimeContentState(slug, locals), null);
-  if (!pageRecord) {
-    return notFound({
-      pageRecord: null,
-      authors: [],
-      categories: [],
-      tags: [],
-      auditEvents: [],
-      englishOwnerRecord: null,
-      localizedRouteRecord: null,
-      effectiveTranslationState: undefined,
-    }, warnings);
-  }
-
-  const authors = await withFallback(warnings, "Authors are temporarily unavailable.", () => getRuntimeAuthors(locals), []);
-  const categories = await withFallback(warnings, "Categories are temporarily unavailable.", () => getRuntimeCategories(locals), []);
-  const tags = await withFallback(warnings, "Tags are temporarily unavailable.", () => getRuntimeTags(locals), []);
-  const auditEvents = await withFallback(warnings, "Audit history is temporarily unavailable.", () => getRuntimeAuditEvents(locals), []);
-  const localePair = getAdminLocalePair(pageRecord.legacyUrl);
-  const localizedRoutePath = localePair?.localizedRoute;
-  const fallbackTranslationState = localePair?.translationState ?? "not_started";
-  const englishOwnerRecord = localePair?.englishRoute && localePair.englishRoute !== pageRecord.legacyUrl
-    ? await withFallback(warnings, "The linked English owner record is temporarily unavailable.", () => getRuntimeContentStateByPath(localePair.englishRoute, locals), null)
-    : pageRecord;
-  const localizedRouteRecord = localizedRoutePath
-    ? await withFallback(warnings, "The linked locale route is temporarily unavailable.", () => getRuntimeStructuredPageRoute(localizedRoutePath, locals), null)
-    : null;
-  const effectiveTranslationState = localizedRoutePath
-    ? await withFallback(warnings, "Translation state is temporarily unavailable.", () => getRuntimeTranslationState(localizedRoutePath, fallbackTranslationState, locals), fallbackTranslationState)
-    : undefined;
-
-  return ok({ pageRecord, authors, categories, tags, auditEvents, englishOwnerRecord, localizedRouteRecord, effectiveTranslationState }, warnings);
-}
-
-export async function buildPostRevisionsPageModel(locals: AdminLocals, slug: string) {
-  const warnings: string[] = [];
-  const pageRecord = await withFallback(warnings, "The content record could not be loaded.", () => getRuntimeContentState(slug, locals), null);
-  const revisions = pageRecord
-    ? await withFallback(warnings, "Revision history is temporarily unavailable.", () => getRuntimeContentRevisions(slug, locals), null)
-    : null;
-
-  if (!pageRecord || !revisions) {
-    return notFound({ pageRecord: null, revisions: null, auditEvents: [], authors: [], categories: [], tags: [] }, warnings);
-  }
-
-  const auditEvents = await withFallback(warnings, "Audit history is temporarily unavailable.", () => getRuntimeAuditEvents(locals), []);
-  const authors = await withFallback(warnings, "Authors are temporarily unavailable.", () => getRuntimeAuthors(locals), []);
-  const categories = await withFallback(warnings, "Categories are temporarily unavailable.", () => getRuntimeCategories(locals), []);
-  const tags = await withFallback(warnings, "Tags are temporarily unavailable.", () => getRuntimeTags(locals), []);
-
-  return ok({ pageRecord, revisions, auditEvents, authors, categories, tags }, warnings);
-}
-
-export async function buildRoutePageEditorModel(locals: AdminLocals, routePath: string, role: AdminRole) {
-  const empty = { pageRecord: null, englishOwner: null, effectiveTranslationState: undefined };
-  if (role !== "admin") {
-    return forbidden(empty);
-  }
-
-  const warnings: string[] = [];
-  const pageRecord = await withFallback(warnings, "The route page could not be loaded.", () => getRuntimeStructuredPageRoute(routePath, locals), null);
-  if (!pageRecord) {
-    return notFound(empty, warnings);
-  }
-
-  const localePair = getAdminLocalePair(routePath);
-  const localizedRoutePath = localePair?.localizedRoute;
-  const fallbackTranslationState = localePair?.translationState ?? "not_started";
-  const englishOwner = localePair
-    ? await withFallback(warnings, "The linked English owner record is temporarily unavailable.", () => getRuntimeContentStateByPath(localePair.englishRoute, locals), null)
-    : null;
-  const effectiveTranslationState = localizedRoutePath
-    ? await withFallback(warnings, "Translation state is temporarily unavailable.", () => getRuntimeTranslationState(localizedRoutePath, fallbackTranslationState, locals), fallbackTranslationState)
-    : undefined;
-
-  return ok({ pageRecord, englishOwner, effectiveTranslationState }, warnings);
-}
-
-export async function buildArchiveEditorModel(locals: AdminLocals, archivePath: string, role: AdminRole) {
-  const empty = { archive: null };
-  if (role !== "admin") {
-    return forbidden(empty);
-  }
-
-  const warnings: string[] = [];
-  const archive = await withFallback(warnings, "The archive record could not be loaded.", () => getRuntimeArchiveRoute(archivePath, locals), null);
-  if (!archive) {
-    return notFound(empty, warnings);
-  }
-
-  return ok({ archive }, warnings);
-}
-
-export async function buildResetPasswordPageModel(locals: AdminLocals, token: string) {
-  const warnings: string[] = [];
-  const request = token
-    ? await withFallback(warnings, "The reset token could not be validated.", () => getRuntimePasswordResetRequest(token, locals), null)
-    : null;
-  return ok({ request }, warnings);
-}
-
-export async function buildAcceptInvitePageModel(locals: AdminLocals, token: string) {
-  const warnings: string[] = [];
-  const inviteRequest = token
-    ? await withFallback(warnings, "The invite token could not be validated.", () => getRuntimeInviteRequest(token, locals), null)
-    : null;
-  return ok({ inviteRequest }, warnings);
-}

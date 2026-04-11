@@ -4,7 +4,7 @@ export { validateContentFields } from "./content-modeling.js";
 
 // Plugin API interfaces — extracted for the same reason
 export type { AstropressContentEvent, AstropressMediaEvent, AstropressPlugin } from "./cms-plugins.js";
-import type { AstropressContentEvent, AstropressMediaEvent, AstropressPlugin } from "./cms-plugins.js";
+import type { AstropressPlugin } from "./cms-plugins.js";
 
 // ─── Analytics / observability config ────────────────────────────────────────
 
@@ -363,49 +363,5 @@ export function peekCmsConfig(): CmsConfig | null {
   return getConfigStore()[CMS_CONFIG_KEY] ?? null;
 }
 
-/**
- * Dispatch a content lifecycle event to all registered plugin hooks.
- *
- * Called internally after content saves and publishes. Errors thrown by
- * individual plugin hooks are caught and logged; they never fail the action.
- */
-export async function dispatchPluginContentEvent(
-  hook: "onContentSave" | "onContentPublish",
-  event: AstropressContentEvent,
-): Promise<void> {
-  const config = peekCmsConfig();
-  if (!config?.plugins?.length) return;
-  for (const plugin of config.plugins) {
-    const fn = plugin[hook];
-    if (typeof fn !== "function") continue;
-    try {
-      await fn(event);
-    } catch (err) {
-      // Plugin errors must not propagate — they would fail the admin action.
-      // biome-ignore lint/suspicious/noConsole: server-side plugin error logging
-      console.error(`[astropress] Plugin "${plugin.name}" threw in ${hook}:`, err);
-    }
-  }
-}
-
-/**
- * Dispatch a media upload event to all registered plugin hooks.
- *
- * Called internally after a media asset is successfully stored. Errors thrown by
- * individual plugin hooks are caught and logged; they never fail the upload action.
- */
-export async function dispatchPluginMediaEvent(event: AstropressMediaEvent): Promise<void> {
-  const config = peekCmsConfig();
-  if (!config?.plugins?.length) return;
-  for (const plugin of config.plugins) {
-    const fn = plugin.onMediaUpload;
-    if (typeof fn !== "function") continue;
-    try {
-      await fn(event);
-    } catch (err) {
-      // Plugin errors must not propagate — they would fail the upload action.
-      // biome-ignore lint/suspicious/noConsole: server-side plugin error logging
-      console.error(`[astropress] Plugin "${plugin.name}" threw in onMediaUpload:`, err);
-    }
-  }
-}
+// ─── Plugin dispatch — extracted to plugin-dispatch.ts ───────────────────────
+export { dispatchPluginContentEvent, dispatchPluginMediaEvent } from "./plugin-dispatch";

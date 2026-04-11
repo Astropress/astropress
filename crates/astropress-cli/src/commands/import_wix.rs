@@ -1,11 +1,10 @@
 use std::fs;
-use std::io::Write as _;
 use std::path::{Path, PathBuf};
 
 use serde::{Deserialize, Serialize};
 
 use crate::cli_config::args::CrawlMode;
-use crate::commands::import_common::{crawl_and_save, now_unix_ms, resolve_absolute_admin_db_path};
+use crate::commands::import_common::{crawl_and_save, now_unix_ms, resolve_absolute_admin_db_path, resolve_wix_credentials};
 use crate::js_bridge::runner::{detect_package_manager, run_package_json_command};
 use crate::telemetry::{ImportSummary, PostImportChoice};
 
@@ -255,57 +254,4 @@ console.log(JSON.stringify(result));
 
     crawl_and_save(project_dir, &import_dir, url, effective_crawl)?;
     Ok(())
-}
-
-// ---------------------------------------------------------------------------
-// Credential resolution helpers
-// ---------------------------------------------------------------------------
-
-fn resolve_wix_credentials(
-    site_url: &str,
-    credentials_file: Option<&Path>,
-    email: Option<&str>,
-    password: Option<&str>,
-) -> Result<(String, String), String> {
-    // 1. Credentials file
-    if let Some(file) = credentials_file {
-        let content = fs::read_to_string(file)
-            .map_err(|e| format!("Cannot read credentials file: {e}"))?;
-        let json: serde_json::Value = serde_json::from_str(&content)
-            .map_err(|e| format!("Credentials file is not valid JSON: {e}"))?;
-        let wix = json
-            .get("wix")
-            .ok_or("Credentials file is missing a 'wix' section")?;
-        let e = wix["email"]
-            .as_str()
-            .ok_or("Credentials file missing 'wix.email'")?
-            .to_string();
-        let p = wix["password"]
-            .as_str()
-            .ok_or("Credentials file missing 'wix.password'")?
-            .to_string();
-        return Ok((e, p));
-    }
-
-    // 2. Inline flags
-    if let (Some(e), Some(p)) = (email, password) {
-        return Ok((e.to_string(), p.to_string()));
-    }
-
-    // 3. Interactive prompt
-    let e = match email {
-        Some(e) => e.to_string(),
-        None => {
-            eprint!("Wix email for {site_url}: ");
-            std::io::stderr().flush().ok();
-            let mut buf = String::new();
-            std::io::stdin()
-                .read_line(&mut buf)
-                .map_err(|e| format!("Failed to read email: {e}"))?;
-            buf.trim().to_string()
-        }
-    };
-    let p = rpassword::prompt_password(format!("Wix password for {e}: "))
-        .map_err(|e| format!("Failed to read password: {e}"))?;
-    Ok((e, p))
 }

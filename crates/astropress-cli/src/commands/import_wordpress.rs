@@ -1,148 +1,16 @@
 use std::fs;
-use std::io::Write as _;
 use std::path::{Path, PathBuf};
 
-use serde::{Deserialize, Serialize};
-
 use crate::cli_config::args::CrawlMode;
-use crate::commands::import_common::{crawl_and_save, now_unix_ms, resolve_absolute_admin_db_path};
+use super::import_common::{
+    crawl_and_save, resolve_absolute_admin_db_path, resolve_wordpress_credentials,
+};
+use super::import_wordpress_types::{
+    FetchExportResult, WordPressImportResult,
+    build_wordpress_manifest, print_wordpress_import_results,
+};
 use crate::js_bridge::runner::{detect_package_manager, run_package_json_command};
 use crate::telemetry::{ImportSummary, PostImportChoice};
-
-#[derive(Debug, Serialize)]
-pub(crate) struct WordPressImportManifest {
-    source_file: String,
-    imported_at_unix_ms: u128,
-    inventory_file: String,
-    plan_file: String,
-    report_file: String,
-    artifact_dir: String,
-    content_file: String,
-    media_file: String,
-    comment_file: String,
-    user_file: String,
-    redirect_file: String,
-    taxonomy_file: String,
-    remediation_file: String,
-    download_state_file: String,
-    local_apply_report_file: String,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-struct WordPressImportEntityCounts {
-    posts: usize,
-    pages: usize,
-    attachments: usize,
-    redirects: usize,
-    comments: usize,
-    users: usize,
-    categories: usize,
-    tags: usize,
-    skipped: usize,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-struct WordPressImportInventory {
-    detected_records: usize,
-    detected_media: usize,
-    detected_comments: usize,
-    detected_users: usize,
-    detected_shortcodes: usize,
-    detected_builder_markers: usize,
-    entity_counts: WordPressImportEntityCounts,
-    unsupported_patterns: Vec<String>,
-    remediation_candidates: Vec<String>,
-    warnings: Vec<String>,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-struct WordPressImportPlan {
-    artifact_dir: Option<String>,
-    include_comments: bool,
-    include_users: bool,
-    include_media: bool,
-    download_media: bool,
-    apply_local: bool,
-    permalink_strategy: String,
-    resume_supported: bool,
-    entity_counts: WordPressImportEntityCounts,
-    review_required: bool,
-    manual_tasks: Vec<String>,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-struct WordPressImportArtifacts {
-    artifact_dir: Option<String>,
-    inventory_file: Option<String>,
-    plan_file: Option<String>,
-    content_file: Option<String>,
-    media_file: Option<String>,
-    comment_file: Option<String>,
-    user_file: Option<String>,
-    redirect_file: Option<String>,
-    taxonomy_file: Option<String>,
-    remediation_file: Option<String>,
-    download_state_file: Option<String>,
-    local_apply_report_file: Option<String>,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-struct WordPressLocalApplyReport {
-    runtime: String,
-    workspace_root: String,
-    admin_db_path: String,
-    applied_records: usize,
-    applied_media: usize,
-    applied_comments: usize,
-    applied_users: usize,
-    applied_redirects: usize,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-struct WordPressImportFailedMedia {
-    id: String,
-    source_url: Option<String>,
-    reason: String,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-struct WordPressImportResult {
-    status: String,
-    imported_records: usize,
-    imported_media: usize,
-    imported_comments: usize,
-    imported_users: usize,
-    imported_redirects: usize,
-    downloaded_media: usize,
-    failed_media: Vec<WordPressImportFailedMedia>,
-    review_required: bool,
-    manual_tasks: Vec<String>,
-    inventory: WordPressImportInventory,
-    plan: WordPressImportPlan,
-    artifacts: Option<WordPressImportArtifacts>,
-    local_apply: Option<WordPressLocalApplyReport>,
-    warnings: Vec<String>,
-}
-
-/// Returned by the JS `fetchWordPressExport` call.
-#[derive(Debug, Deserialize)]
-#[serde(rename_all = "camelCase")]
-struct FetchExportResult {
-    export_path: String,
-    warnings: Vec<String>,
-}
-
-fn basename_or(value: Option<String>, fallback: &str) -> String {
-    value
-        .as_deref()
-        .map(PathBuf::from)
-        .and_then(|path| {
-            path.file_name()
-                .and_then(|value| value.to_str())
-                .map(ToString::to_string)
-        })
-        .unwrap_or_else(|| fallback.to_string())
-}
 
 #[allow(clippy::too_many_arguments)]
 pub(crate) fn stage_wordpress_import(
@@ -372,139 +240,13 @@ console.log(JSON.stringify({{
     let report_file = import_dir.join("wordpress.report.json");
     fs::write(&report_file, format!("{report_json}\n")).map_err(crate::io_error)?;
 
-    let manifest = WordPressImportManifest {
-        source_file: staged_source
-            .file_name()
-            .and_then(|value| value.to_str())
-            .unwrap_or("source.xml")
-            .to_string(),
-        imported_at_unix_ms: now_unix_ms(),
-        inventory_file: basename_or(
-            result
-                .artifacts
-                .as_ref()
-                .and_then(|artifacts| artifacts.inventory_file.clone()),
-            "wordpress.inventory.json",
-        ),
-        plan_file: basename_or(
-            result
-                .artifacts
-                .as_ref()
-                .and_then(|artifacts| artifacts.plan_file.clone()),
-            "wordpress.plan.json",
-        ),
-        report_file: report_file
-            .file_name()
-            .and_then(|value| value.to_str())
-            .unwrap_or("wordpress.report.json")
-            .to_string(),
-        artifact_dir: import_dir.display().to_string(),
-        content_file: basename_or(
-            result
-                .artifacts
-                .as_ref()
-                .and_then(|artifacts| artifacts.content_file.clone()),
-            "content-records.json",
-        ),
-        media_file: basename_or(
-            result
-                .artifacts
-                .as_ref()
-                .and_then(|artifacts| artifacts.media_file.clone()),
-            "media-manifest.json",
-        ),
-        comment_file: basename_or(
-            result
-                .artifacts
-                .as_ref()
-                .and_then(|artifacts| artifacts.comment_file.clone()),
-            "comment-records.json",
-        ),
-        user_file: basename_or(
-            result
-                .artifacts
-                .as_ref()
-                .and_then(|artifacts| artifacts.user_file.clone()),
-            "user-records.json",
-        ),
-        redirect_file: basename_or(
-            result
-                .artifacts
-                .as_ref()
-                .and_then(|artifacts| artifacts.redirect_file.clone()),
-            "redirect-records.json",
-        ),
-        taxonomy_file: basename_or(
-            result
-                .artifacts
-                .as_ref()
-                .and_then(|artifacts| artifacts.taxonomy_file.clone()),
-            "taxonomy-records.json",
-        ),
-        remediation_file: basename_or(
-            result
-                .artifacts
-                .as_ref()
-                .and_then(|artifacts| artifacts.remediation_file.clone()),
-            "remediation-candidates.json",
-        ),
-        download_state_file: basename_or(
-            result
-                .artifacts
-                .as_ref()
-                .and_then(|artifacts| artifacts.download_state_file.clone()),
-            "download-state.json",
-        ),
-        local_apply_report_file: basename_or(
-            result
-                .artifacts
-                .as_ref()
-                .and_then(|artifacts| artifacts.local_apply_report_file.clone()),
-            "",
-        ),
-    };
-
+    let manifest = build_wordpress_manifest(&result, &staged_source, &import_dir, &report_file);
     let manifest_json =
         serde_json::to_string_pretty(&manifest).map_err(|error| error.to_string())?;
     fs::write(import_dir.join("manifest.json"), format!("{manifest_json}\n"))
         .map_err(crate::io_error)?;
 
-    println!(
-        "Staged WordPress import artifacts in {}",
-        import_dir.display()
-    );
-    println!(
-        "Imported {} records, {} media references, {} comments, {} users, and {} redirects from {}",
-        result.imported_records,
-        result.imported_media,
-        result.imported_comments,
-        result.imported_users,
-        result.imported_redirects,
-        resolved_source.display()
-    );
-    println!(
-        "Execution status: {} (downloaded {} media files)",
-        result.status, result.downloaded_media
-    );
-    println!(
-        "Detected {} shortcodes and {} builder markers",
-        result.inventory.detected_shortcodes, result.inventory.detected_builder_markers
-    );
-    if result.review_required {
-        println!("Manual review is required for this import.");
-    }
-    if let Some(local_apply) = result.local_apply {
-        println!(
-            "Applied import into {} at {}",
-            local_apply.runtime, local_apply.admin_db_path
-        );
-    }
-    if !result.warnings.is_empty() {
-        println!("Warnings:");
-        for warning in &result.warnings {
-            println!("  - {warning}");
-        }
-    }
+    print_wordpress_import_results(&result, &resolved_source, &import_dir);
 
     // Post-import verification (interactive, skipped in plain mode).
     let source_label = resolved_source
@@ -529,57 +271,4 @@ console.log(JSON.stringify({{
 
     crawl_and_save(project_dir, &import_dir, url, effective_crawl)?;
     Ok(())
-}
-
-// ---------------------------------------------------------------------------
-// Credential resolution helpers
-// ---------------------------------------------------------------------------
-
-fn resolve_wordpress_credentials(
-    site_url: &str,
-    credentials_file: Option<&Path>,
-    username: Option<&str>,
-    password: Option<&str>,
-) -> Result<(String, String), String> {
-    // 1. Credentials file
-    if let Some(file) = credentials_file {
-        let content = fs::read_to_string(file)
-            .map_err(|e| format!("Cannot read credentials file: {e}"))?;
-        let json: serde_json::Value = serde_json::from_str(&content)
-            .map_err(|e| format!("Credentials file is not valid JSON: {e}"))?;
-        let wp = json
-            .get("wordpress")
-            .ok_or("Credentials file is missing a 'wordpress' section")?;
-        let u = wp["username"]
-            .as_str()
-            .ok_or("Credentials file missing 'wordpress.username'")?
-            .to_string();
-        let p = wp["password"]
-            .as_str()
-            .ok_or("Credentials file missing 'wordpress.password'")?
-            .to_string();
-        return Ok((u, p));
-    }
-
-    // 2. Inline flags
-    if let (Some(u), Some(p)) = (username, password) {
-        return Ok((u.to_string(), p.to_string()));
-    }
-
-    // 3. Interactive prompt
-    let u = match username {
-        Some(u) => u.to_string(),
-        None => {
-            eprint!("WordPress username for {site_url}: ");
-            std::io::stderr().flush().ok();
-            let mut buf = String::new();
-            std::io::stdin()
-                .read_line(&mut buf)
-                .map_err(|e| format!("Failed to read username: {e}"))?;
-            buf.trim().to_string()
-        }
-    };
-    let p = rpassword::prompt_password(format!("WordPress password for {u}: "))
-        .map_err(|e| format!("Failed to read password: {e}"))?;
-    Ok((u, p))
 }

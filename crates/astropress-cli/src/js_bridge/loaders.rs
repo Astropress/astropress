@@ -336,6 +336,7 @@ pub(crate) struct DbMigrateReport {
     pub(crate) applied: Vec<String>,
     pub(crate) skipped: Vec<String>,
     #[serde(rename = "dryRun")]
+    #[allow(dead_code)]
     pub(crate) dry_run: bool,
 }
 

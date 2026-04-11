@@ -6,6 +6,8 @@ pub(crate) mod dev;
 pub(crate) mod doctor;
 pub(crate) mod import_common;
 pub(crate) mod import_wordpress;
+pub(crate) mod import_wordpress_types;
 pub(crate) mod import_wix;
 pub(crate) mod new;
+pub(crate) mod new_wizard;
 pub(crate) mod services;

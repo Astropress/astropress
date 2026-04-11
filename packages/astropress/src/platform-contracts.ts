@@ -1,3 +1,46 @@
+// ─── WordPress import contracts ───────────────────────────────────────────────
+// Extracted to keep this file under the 400-line limit.
+export type {
+  AstropressWordPressImportEntityCount,
+  AstropressWordPressImportInventory,
+  AstropressWordPressImportPlan,
+  AstropressWordPressImportArtifacts,
+  AstropressWordPressImportLocalApplyReport,
+  AstropressWordPressImportReport,
+  ImportSource,
+} from "./wordpress-import-contracts.js";
+import type {
+  AstropressWordPressImportInventory,
+  AstropressWordPressImportPlan,
+  AstropressWordPressImportReport,
+  ImportSource,
+} from "./wordpress-import-contracts.js";
+
+// ─── Branded types for key identifiers ───────────────────────────────────────
+// Branded types prevent accidental mixing of IDs from different domains.
+// Use `id as ContentId` to brand a plain string; use `String(id)` to unwrap.
+
+/** A content record ID — prevents mixing with media or user IDs. */
+export type ContentId = string & { readonly __brand: "ContentId" };
+
+/** A media asset ID — prevents mixing with content or user IDs. */
+export type MediaAssetId = string & { readonly __brand: "MediaAssetId" };
+
+/** An admin user ID — prevents mixing with content or media IDs. */
+export type AdminUserId = string & { readonly __brand: "AdminUserId" };
+
+/** An API token ID — prevents mixing with other ID types. */
+export type ApiTokenId = string & { readonly __brand: "ApiTokenId" };
+
+/** An audit event ID — prevents mixing with content or user IDs. */
+export type AuditEventId = string & { readonly __brand: "AuditEventId" };
+
+// ─── Discriminated union for action results ───────────────────────────────────
+/** Standard discriminated union for all repository / action operation results. */
+export type ActionResult<T> =
+  | { ok: true; data: T }
+  | { ok: false; error: string; code?: string };
+
 export type ProviderKind = "github-pages" | "cloudflare" | "supabase" | "runway" | "custom";
 
 /** Configuration for the editorial CMS panel embedded in the admin. */
@@ -123,6 +166,39 @@ export type SaveableContentKind = "page" | "post" | "redirect" | "settings" | "t
 /** All kinds that can be read via ContentStore.list/get (superset of SaveableContentKind). */
 export type ReadableContentKind = SaveableContentKind | "comment" | "user" | "media";
 
+/** A single FAQ item for AEO-optimised FAQPage JSON-LD. */
+export interface FaqItem {
+  question: string;
+  answer: string;
+}
+
+/** A single step in a HowTo guide for AEO-optimised HowTo JSON-LD. */
+export interface HowToStep {
+  name: string;
+  text: string;
+  /** Optional URL pointing to an image illustrating this step. */
+  imageUrl?: string;
+}
+
+/**
+ * AEO (Answer Engine Optimisation) metadata that can be stored in a content record's
+ * `metadata` field to trigger automatic JSON-LD rendering via AstropressContentLayout.
+ */
+export interface AeoMetadata {
+  /** FAQ items — automatically renders AstropressFaqJsonLd (FAQPage schema). */
+  faqItems?: FaqItem[];
+  /** How-to steps — automatically renders AstropressHowToJsonLd (HowTo schema). */
+  howToSteps?: HowToStep[];
+  /** CSS selectors for speakable sections — renders AstropressSpeakableJsonLd. */
+  speakableCssSelectors?: string[];
+  /** How-to title override (defaults to the content record title). */
+  howToName?: string;
+  /** How-to description. */
+  howToDescription?: string;
+  /** ISO 8601 duration for the HowTo total time (e.g. "PT30M"). */
+  howToTotalTime?: string;
+}
+
 export interface ContentStoreRecord {
   id: string;
   kind: ReadableContentKind;
@@ -133,7 +209,7 @@ export interface ContentStoreRecord {
   locale?: string | null;
   title?: string | null;
   body?: string | null;
-  metadata?: Record<string, unknown>;
+  metadata?: Record<string, unknown> & AeoMetadata;
 }
 
 export interface ContentListOptions {
@@ -161,6 +237,12 @@ export interface MediaAssetRecord {
   bytes?: Uint8Array;
   publicUrl?: string | null;
   metadata?: Record<string, unknown>;
+  /** Width in pixels — populated for image uploads when dimension detection succeeds. */
+  width?: number;
+  /** Height in pixels — populated for image uploads when dimension detection succeeds. */
+  height?: number;
+  /** Public URL of the 400px-wide WebP thumbnail; set when the upload was an image wider than 400px. */
+  thumbnailUrl?: string;
 }
 
 export interface MediaStore {
@@ -214,139 +296,6 @@ export interface DeployTarget {
   triggerBuild?(options?: {
     environment?: string;
   }): Promise<{ buildId?: string; statusUrl?: string }>;
-}
-
-export interface ImportSource {
-  inspectWordPress?(input: {
-    sourceUrl?: string;
-    exportFile?: string;
-    includeComments?: boolean;
-    includeUsers?: boolean;
-    includeMedia?: boolean;
-  }): Promise<AstropressWordPressImportInventory>;
-  planWordPressImport?(input: {
-    inventory: AstropressWordPressImportInventory;
-    includeComments?: boolean;
-    includeUsers?: boolean;
-    includeMedia?: boolean;
-    downloadMedia?: boolean;
-    artifactDir?: string;
-    applyLocal?: boolean;
-  }): Promise<AstropressWordPressImportPlan>;
-  importWordPress(input: {
-    sourceUrl?: string;
-    exportFile?: string;
-    includeComments?: boolean;
-    includeUsers?: boolean;
-    includeMedia?: boolean;
-    downloadMedia?: boolean;
-    artifactDir?: string;
-    applyLocal?: boolean;
-    workspaceRoot?: string;
-    adminDbPath?: string;
-    resumeFrom?: string;
-    plan?: AstropressWordPressImportPlan;
-  }): Promise<AstropressWordPressImportReport>;
-  resumeWordPressImport?(input: {
-    sourceUrl?: string;
-    exportFile?: string;
-    artifactDir: string;
-    includeComments?: boolean;
-    includeUsers?: boolean;
-    includeMedia?: boolean;
-    downloadMedia?: boolean;
-    applyLocal?: boolean;
-    workspaceRoot?: string;
-    adminDbPath?: string;
-  }): Promise<AstropressWordPressImportReport>;
-}
-
-export interface AstropressWordPressImportEntityCount {
-  posts: number;
-  pages: number;
-  attachments: number;
-  redirects: number;
-  comments: number;
-  users: number;
-  categories: number;
-  tags: number;
-  skipped: number;
-}
-
-export interface AstropressWordPressImportInventory {
-  exportFile?: string;
-  sourceUrl?: string;
-  detectedRecords: number;
-  detectedMedia: number;
-  detectedComments: number;
-  detectedUsers: number;
-  detectedShortcodes: number;
-  detectedBuilderMarkers: number;
-  entityCounts: AstropressWordPressImportEntityCount;
-  unsupportedPatterns: string[];
-  remediationCandidates: string[];
-  warnings: string[];
-}
-
-export interface AstropressWordPressImportPlan {
-  sourceUrl?: string;
-  exportFile?: string;
-  artifactDir?: string;
-  includeComments: boolean;
-  includeUsers: boolean;
-  includeMedia: boolean;
-  downloadMedia: boolean;
-  applyLocal: boolean;
-  permalinkStrategy: "preserve-wordpress-links";
-  resumeSupported: boolean;
-  entityCounts: AstropressWordPressImportEntityCount;
-  reviewRequired: boolean;
-  manualTasks: string[];
-}
-
-export interface AstropressWordPressImportArtifacts {
-  artifactDir?: string;
-  inventoryFile?: string;
-  planFile?: string;
-  contentFile?: string;
-  mediaFile?: string;
-  commentFile?: string;
-  userFile?: string;
-  redirectFile?: string;
-  taxonomyFile?: string;
-  remediationFile?: string;
-  downloadStateFile?: string;
-  localApplyReportFile?: string;
-  reportFile?: string;
-}
-
-export interface AstropressWordPressImportLocalApplyReport {
-  runtime: "sqlite-local";
-  workspaceRoot: string;
-  adminDbPath: string;
-  appliedRecords: number;
-  appliedMedia: number;
-  appliedComments: number;
-  appliedUsers: number;
-  appliedRedirects: number;
-}
-
-export interface AstropressWordPressImportReport {
-  status: "completed" | "completed_with_warnings";
-  importedRecords: number;
-  importedMedia: number;
-  importedComments: number;
-  importedUsers: number;
-  importedRedirects: number;
-  downloadedMedia: number;
-  failedMedia: Array<{ id: string; sourceUrl?: string; reason: string }>;
-  reviewRequired: boolean;
-  manualTasks: string[];
-  plan: AstropressWordPressImportPlan;
-  inventory: AstropressWordPressImportInventory;
-  artifacts?: AstropressWordPressImportArtifacts;
-  localApply?: AstropressWordPressImportLocalApplyReport;
-  warnings: string[];
 }
 
 export interface PreviewSession {

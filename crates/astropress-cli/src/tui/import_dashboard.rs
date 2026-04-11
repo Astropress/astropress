@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 //! Ratatui-based import dashboard.
 //!
 //! Provides a live-updating terminal UI for the WordPress / Wix import pipeline.
