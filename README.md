@@ -48,6 +48,7 @@ stores content, media, auth, and sessions. These are independent selections.
 | `github-pages` | `none` | Static output; SQLite at build time |
 | `cloudflare-pages` | `cloudflare` | D1 + R2; full edge deployment |
 | `vercel` or `netlify` | `supabase` | Postgres + Storage |
+| `render-web` | `appwrite` | Full backend services + Astro on Render |
 | `runway` | `runway` | Bundled path |
 
 ## Adapter status

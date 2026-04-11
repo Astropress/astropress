@@ -8,7 +8,7 @@ Baseline: **1363 Vitest tests pass** (across 104 test files including `privacy-i
 
 **Grade: A**
 
-**Summary:** The framework delivers on all core contractual claims — database-first admin, WordPress import pipeline, provider abstraction, and headless panel integration. The GitHub Pages + SQLite path is the complete reference path. Hosted provider paths (Cloudflare, Supabase, Runway) have working adapters. REST API fully implemented across all 7 route groups with real handlers. Appwrite adapter status documented in README with roadmap.
+**Summary:** The framework delivers on all core contractual claims — database-first admin, WordPress import pipeline, provider abstraction, and headless panel integration. The GitHub Pages + SQLite path is the complete reference path. Five hosted provider paths have full working adapters: Cloudflare D1+R2, Supabase, Runway, and Appwrite. REST API fully implemented across all 7 route groups with real handlers.
 
 **Strengths:**
 - All 160+ BDD scenarios pass across 56 feature files, covering admin editing, WordPress import, provider portability, CLI bootstrap, backup/health, content modeling, structured data, and newsletter subscription
@@ -16,8 +16,8 @@ Baseline: **1363 Vitest tests pass** (across 104 test files including `privacy-i
 - WordPress import is staged and resumable; import artifacts are typed and produce remediation reports
 - Provider differences are confined to adapter implementations — admin templates never fork by provider
 - REST API at `/ap-api/v1/` with content, media, revisions, settings, and webhooks endpoints all implemented
-- Adapter roadmap table in `README.md` with accurate status for all adapters (SQLite, Cloudflare D1, Supabase, Runway, Appwrite: Full)
-- Appwrite configuration documented in `docs/OPERATIONS.md`
+- All 5 adapters Full: SQLite (local), Cloudflare D1+R2, Supabase, Runway, Appwrite — each with dedicated tests and documented env vars
+- Appwrite adapter reports `providerName: "appwrite"`, exposes `hostPanel` capability pointing to Appwrite Console, and reads optional `APPWRITE_DATABASE_ID`/`APPWRITE_BUCKET_ID`
 
 **Gaps:**
 - "One-click hosted migration from WordPress" is not claimed — staged CLI import is multi-step and requires manual apply
@@ -833,7 +833,7 @@ astropress/web-components/notice
 
 | Rubric | Grade | Key Finding |
 |--------|-------|-------------|
-| 1. Spec Fidelity | A | + adapter roadmap table; Appwrite status documented in README + OPERATIONS.md |
+| 1. Spec Fidelity | A | All 5 adapters Full; Appwrite `providerName`, `hostPanel`, and config fully implemented |
 | 2. Architecture | A+ | + ADRs: host-runtime seam, volatility decomposition, dual TS/JS source |
 | 3. Test Quality | A+ | **1363 tests / 104 files**; content-locking, content-modeling, data-portability, image-srcset, d1-content-scheduling added |
 | 4. Security | A+ | + full `resolveArea` branch coverage incl. `/ap-api/`; ZAP baseline scan in CI; ZTA + privacy invariant tests |
