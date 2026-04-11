@@ -31,3 +31,28 @@ Feature: Headless email / newsletter integration via Listmonk
     When I run "astropress new my-site" and choose email integration
     Then "Listmonk" is presented as the default option
     And "Keila" is presented as an alternative
+
+  Scenario: POST /ap/newsletter/subscribe returns 200 for valid email
+    Given a valid email address is submitted to POST /ap/newsletter/subscribe
+    When the newsletter adapter succeeds
+    Then the response status is 200 with body { ok: true }
+
+  Scenario: POST /ap/newsletter/subscribe returns 400 for invalid email
+    Given an invalid email address is submitted to POST /ap/newsletter/subscribe
+    When the endpoint validates the request
+    Then the response status is 400 with body { ok: false }
+
+  Scenario: POST /ap/newsletter/subscribe returns 422 on adapter error
+    Given a valid email is submitted but the newsletter adapter returns an error
+    When the endpoint processes the request
+    Then the response status is 422 with body { ok: false }
+
+  Scenario: Newsletter subscription records a conversion audit event
+    Given a visitor subscribes to the newsletter via POST /ap/newsletter/subscribe
+    When the subscription succeeds
+    Then a "newsletter.subscribe" audit event is recorded with the email as resource_id
+
+  Scenario: Conversion audit event includes utm_source when present in query string
+    Given a visitor subscribes via a link with ?utm_source=homepage
+    When the subscription succeeds
+    Then the audit event summary references "homepage"

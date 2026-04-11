@@ -121,6 +121,26 @@ describe("moderateRuntimeComment", () => {
   });
 });
 
+describe("no-db fallback (null locals)", () => {
+  it("updateRuntimeTranslationState throws without runtime alias", async () => {
+    await expect(updateRuntimeTranslationState("/about", "needs-review", actor, null)).rejects.toThrow(
+      "Local runtime modules are only available",
+    );
+  });
+
+  it("saveRuntimeSettings throws without runtime alias", async () => {
+    await expect(saveRuntimeSettings({ siteTitle: "Local" }, actor, null)).rejects.toThrow(
+      "Local runtime modules are only available",
+    );
+  });
+
+  it("createRuntimeRedirectRule throws without runtime alias", async () => {
+    await expect(
+      createRuntimeRedirectRule({ sourcePath: "/local", targetPath: "/dest", statusCode: 301 }, actor, null),
+    ).rejects.toThrow("Local runtime modules are only available");
+  });
+});
+
 describe("saveRuntimeSettings", () => {
   it("creates settings when none exist", async () => {
     const result = await saveRuntimeSettings({ siteTitle: "My Blog" }, actor, locals);

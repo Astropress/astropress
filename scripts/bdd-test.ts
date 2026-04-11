@@ -95,6 +95,22 @@ const verificationGroups: VerificationGroup[] = [
     ],
   },
   {
+    label: "admin i18n scenarios",
+    scenarios: [
+      "Admin UI displays labels in the site's configured locale",
+      "Admin UI falls back to English for an unknown locale",
+      "Admin UI falls back to English for an unknown label key",
+      "BCP-47 locale tags with region code resolve to the base locale",
+    ],
+    steps: [
+      {
+        command: "bunx",
+        args: ["vitest", "run", "tests/admin-ui.test.ts"],
+        cwd: astropressPackageRoot,
+      },
+    ],
+  },
+  {
     label: "non-technical admin scenarios",
     scenarios: [
       "Admin edits and publishes a post from the admin panel",
@@ -339,12 +355,15 @@ const verificationGroups: VerificationGroup[] = [
     label: "email newsletter integration scenarios",
     scenarios: [
       "Listmonk admin is accessible from the Services tab",
-      "Subscriber endpoint forwards to Listmonk API",
+      "Subscriber endpoint forwards to Listmonk API via newsletterAdapter",
+      "Listmonk adapter returns error when configuration is incomplete",
       "Import pipeline can extract WordPress subscribers",
       "Listmonk service appears in scaffold prompts",
       "POST /ap/newsletter/subscribe returns 200 for valid email",
       "POST /ap/newsletter/subscribe returns 400 for invalid email",
       "POST /ap/newsletter/subscribe returns 422 on adapter error",
+      "Newsletter subscription records a conversion audit event",
+      "Conversion audit event includes utm_source when present in query string",
     ],
     steps: [
       {
@@ -462,11 +481,12 @@ const verificationGroups: VerificationGroup[] = [
       "A developer deploying to GitHub Pages gets a generated Actions workflow",
       "A developer deploying to Vercel or Cloudflare Pages uses provider-specific deploy scripts",
       "A developer can see which hosting and database combinations are fully supported",
+      "CDN purge webhook fires when content is published",
     ],
     steps: [
       {
         command: "bunx",
-        args: ["vitest", "run", "tests/deploy-targets.test.ts", "tests/deployment-matrix.test.ts", "tests/deploy-and-sync.contract.test.ts"],
+        args: ["vitest", "run", "tests/deploy-targets.test.ts", "tests/deployment-matrix.test.ts", "tests/deploy-and-sync.contract.test.ts", "tests/runtime-actions-content.test.ts"],
         cwd: astropressPackageRoot,
       },
       {
@@ -499,7 +519,15 @@ const verificationGroups: VerificationGroup[] = [
     steps: [
       {
         command: "bunx",
-        args: ["vitest", "run", "tests/content-repository-factory.test.ts", "tests/runtime-admin-actions.test.ts"],
+        args: [
+          "vitest", "run",
+          "tests/content-repository-factory.test.ts",
+          "tests/runtime-actions-content.test.ts",
+          "tests/runtime-actions-media.test.ts",
+          "tests/runtime-actions-misc.test.ts",
+          "tests/runtime-actions-taxonomies.test.ts",
+          "tests/runtime-actions-users.test.ts",
+        ],
         cwd: astropressPackageRoot,
       },
     ],
@@ -658,6 +686,7 @@ const verificationGroups: VerificationGroup[] = [
       "Rate limiter blocks clients exceeding the request threshold",
       "A bot submitting the contact form without solving CAPTCHA is rejected",
       "Admin pages use a stricter Content-Security-Policy than public pages",
+      "Comment author email is hashed before storage",
     ],
     steps: [
       {
@@ -669,6 +698,7 @@ const verificationGroups: VerificationGroup[] = [
           "tests/security-middleware.test.ts",
           "tests/rate-limit-repository-factory.test.ts",
           "tests/cloudflare-adapter-security.test.ts",
+          "tests/privacy-invariants.test.ts",
         ],
         cwd: astropressPackageRoot,
       },
@@ -681,11 +711,20 @@ const verificationGroups: VerificationGroup[] = [
       "Save succeeds when lastKnownUpdatedAt matches the current updated_at",
       "Save proceeds normally when no lastKnownUpdatedAt is provided",
       "Editor sees a warning when another admin is already editing the same post",
+      "Editor sees a stale-tab warning when another admin tab is editing the same post",
+      "Stale-tab warning is cleared when the competing tab is closed",
+      "Editor sees a stale-session warning when the page has been open too long",
     ],
     steps: [
       {
         command: "bunx",
-        args: ["vitest", "run", "tests/runtime-actions-content.test.ts", "tests/content-repository-factory.test.ts"],
+        args: [
+          "vitest",
+          "run",
+          "tests/runtime-actions-content.test.ts",
+          "tests/content-repository-factory.test.ts",
+          "tests/admin-safety.test.ts",
+        ],
         cwd: astropressPackageRoot,
       },
     ],
@@ -696,6 +735,9 @@ const verificationGroups: VerificationGroup[] = [
       "Upload is rejected when the file exceeds maxUploadBytes",
       "Upload is accepted when the file is within the maxUploadBytes limit",
       "Upload uses the 10 MiB default limit when maxUploadBytes is not configured",
+      "Width and height are stored in media_assets on image upload",
+      "Non-image uploads have null width and height in media_assets",
+      "thumbnail_url column exists in media_assets schema",
     ],
     steps: [
       {
@@ -712,6 +754,8 @@ const verificationGroups: VerificationGroup[] = [
       "Save succeeds when all required fields are provided",
       "Save succeeds when no contentType is registered for the templateKey",
       "Custom validate function can reject a field value",
+      "Admin form auto-generates inputs for registered content type fields",
+      "Admin form renders select inputs for select-type fields",
     ],
     steps: [
       {
@@ -808,6 +852,8 @@ const verificationGroups: VerificationGroup[] = [
       "Operator applies new SQL migrations and skips already-applied ones",
       "Dry-run migration preview shows what would be applied without writing changes",
       "Migration runner handles a missing migrations directory gracefully",
+      "rollback_sql is stored with each migration when a .down.sql companion file exists",
+      "Doctor warns when the database schema is ahead of the framework version",
     ],
     steps: [
       {
@@ -826,6 +872,7 @@ const verificationGroups: VerificationGroup[] = [
       "A plugin can register custom admin navigation items",
       "A plugin's onMediaUpload hook is called after a media asset is uploaded",
       "A failing onMediaUpload hook does not fail the upload action",
+      "A plugin can inject a custom admin route via adminRoutes",
     ],
     steps: [
       {
@@ -947,11 +994,17 @@ const verificationGroups: VerificationGroup[] = [
       "AstropressHowToJsonLd emits valid HowTo JSON-LD for a step-by-step guide",
       "AstropressSpeakableJsonLd emits WebPage + SpeakableSpecification JSON-LD with CSS selectors",
       "AstropressSpeakableJsonLd emits XPath selectors as fallback",
+      "Content with faqItems metadata auto-renders FAQPage JSON-LD without manual component wiring",
+      "Content with howToSteps metadata auto-renders HowTo JSON-LD",
+      "Content with speakableCssSelectors auto-renders SpeakableSpecification JSON-LD",
+      "Content without AEO metadata renders no JSON-LD overhead",
+      "AstropressSeoHead falls back to generated OG image when ogImage is not set",
+      "Sitemap integration exports all published content URLs",
     ],
     steps: [
       {
         command: "bunx",
-        args: ["vitest", "run", "tests/public-site-integration.test.ts"],
+        args: ["vitest", "run", "tests/public-site-integration.test.ts", "tests/aeo-metadata.test.ts"],
         cwd: astropressPackageRoot,
       },
     ],
@@ -960,9 +1013,9 @@ const verificationGroups: VerificationGroup[] = [
     label: "image optimization / Core Web Vitals scenarios",
     scenarios: [
       "AstropressImage renders with explicit width, height, and aspect-ratio style",
-      "AstropressImage defaults to loading='lazy' and decoding='async'",
+      "AstropressImage defaults to loading=\"lazy\" and decoding=\"async\"",
       "AstropressImage renders srcset and sizes for responsive images",
-      "AstropressImage supports fetchpriority='high' for LCP images",
+      "AstropressImage supports fetchpriority=\"high\" for LCP images",
       "AstropressImage merges additional inline styles with aspect-ratio",
     ],
     steps: [
