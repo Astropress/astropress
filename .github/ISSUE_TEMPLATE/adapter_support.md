@@ -10,7 +10,7 @@ assignees: ""
 
 | Field | Value |
 |-------|-------|
-| Provider name | <!-- e.g. PlanetScale, Turso, Neon --> |
+| Provider name | <!-- e.g. Turso, Neon, Vercel Postgres --> |
 | Provider type | <!-- database / object-storage / hosting --> |
 | Official Node/Edge SDK | <!-- link to npm package --> |
 

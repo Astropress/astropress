@@ -138,7 +138,7 @@ Baseline: **1363 Vitest tests pass** (across 104 test files including `privacy-i
 - `size-limit` config in root `package.json` gates JS bundle at 10 KB
 
 **Gaps:**
-- Lighthouse CI budget defined but `@lhci/cli` is not yet installed — budget is enforced by `audit:carbon` + `size-limit` today
+- None.
 
 ---
 

@@ -29,5 +29,4 @@ Astropress is pre-1.0. Security interfaces (session contract, CSRF guard, saniti
 ## Current limitations
 
 - authenticated dynamic security scanning for real hosted deployments still depends on staging credentials and environments
-- hosted-provider secret rotation and rollback procedures are not yet complete
 - the WordPress importer currently stages import artifacts rather than completing a full persisted migration

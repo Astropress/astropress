@@ -14,6 +14,13 @@ bun create astropress my-site
 cd my-site
 ```
 
+You can also use `astropress init` as an alias for `astropress new`:
+
+```bash
+astropress init my-site
+# equivalent to: astropress new my-site
+```
+
 The scaffold creates:
 
 ```
@@ -38,9 +45,9 @@ cp .env.example .env
 The default `.env` for local development:
 
 ```
-ASTROPRESS_ADMIN_EMAIL=admin@example.com
-ASTROPRESS_ADMIN_PASSWORD=changeme
-ASTROPRESS_DATABASE_PATH=.data/admin.sqlite
+ADMIN_PASSWORD=changeme
+ADMIN_DB_PATH=.data/admin.sqlite
+SESSION_SECRET=replace-with-a-long-random-session-secret
 ```
 
 ## 3. Start the dev server
@@ -103,27 +110,91 @@ export { createSqliteAdminRuntime as createAdminRuntime } from "astropress/adapt
 ## The 6 imports you need
 
 ```ts
-// astro.config.mjs — wire astropress into Astro
+// astro.config.mjs
+// Wire the admin app and Vite alias into Astro
 import { createAstropressAdminAppIntegration } from "astropress/integration";
 
-// src/astropress/local-runtime-modules.ts — host-side DB/auth seam
+// src/astropress/local-runtime-modules.ts
+// Host-side DB/auth seam — swap this file to change your runtime
 import { selectAstropressAdapter } from "astropress/adapters/project";
 
-// src/middleware.ts — security headers + CSRF + rate limiting
+// src/middleware.ts
+// Security headers, CSRF protection, rate limiting — add to every request
 import { astropressSecurityMiddleware } from "astropress/security";
 
-// astropress.config.ts — register content types and features
+// astropress.config.ts
+// Register content types, analytics, plugins, locales, and admin branding
 import { registerCms } from "astropress";
 
-// any server file — inspect APP_HOST / CONTENT_SERVICES env vars
+// any server file
+// Read APP_HOST / CONTENT_SERVICES env vars (normalizes legacy vars too)
 import { resolveProjectEnv } from "astropress/project-env";
 
-// src/adapters/my-adapter.ts — build a custom runtime adapter
+// src/adapters/my-adapter.ts
+// Implement this interface to build a custom storage backend
 import type { AstropressProviderContract } from "astropress/platform-contracts";
 ```
 
+## `astropress doctor` output
+
+Run `astropress doctor` to check your project setup:
+
+```
+astropress doctor
+✓ ASTROPRESS_APP_HOST: cloudflare-pages
+✓ ASTROPRESS_CONTENT_SERVICES: supabase
+✓ SESSION_SECRET is set (≥ 32 chars)
+✓ ADMIN_DB_PATH: .data/admin.sqlite
+✓ .data directory exists
+⚠ ADMIN_BOOTSTRAP_DISABLED is 0 — bootstrap passwords are still available
+```
+
+Use `astropress doctor --json` for machine-readable output:
+
+```json
+{
+  "status": "warn",
+  "project": "/path/to/my-site",
+  "runtimeMode": "local",
+  "appHost": "cloudflare-pages",
+  "contentServices": "supabase",
+  "pairSupport": "sqlite-local",
+  "adminLocale": "en",
+  "checks": [
+    { "key": "SESSION_SECRET", "status": "ok" },
+    { "key": "ADMIN_DB_PATH", "status": "ok", "value": ".data/admin.sqlite" },
+    { "key": "ADMIN_BOOTSTRAP_DISABLED", "status": "warn", "message": "bootstrap passwords remain available" }
+  ],
+  "warnings": [
+    "ADMIN_BOOTSTRAP_DISABLED is 0 — bootstrap passwords are still available"
+  ]
+}
+```
+
+## Troubleshooting
+
+**"SESSION_SECRET is missing or too short"**
+Set a strong random secret in `.env`: `SESSION_SECRET=$(openssl rand -hex 32)`
+
+**"ADMIN_PASSWORD is a scaffold-style local default"**
+Change your admin password: `astropress doctor` warns when the default scaffold passwords are still in use. Update `ADMIN_PASSWORD` in `.env` and restart the dev server.
+
+**Admin panel shows a blank page or 500 error**
+Run `astropress doctor --strict` — this surfaces any missing env vars or schema mismatches that would cause admin page model failures.
+
+**"`.data` directory does not exist"**
+Create it: `mkdir -p .data && touch .data/.gitkeep`. The directory holds the local SQLite database.
+
+**"local-runtime-modules not found"**
+The host app must alias `local-runtime-modules` in `astro.config.mjs` to its own runtime implementation. See [ARCHITECTURE.md](./ARCHITECTURE.md).
+
 ## Next steps
 
-- [ARCHITECTURE.md](./ARCHITECTURE.md) — how the provider seam works
-- [WEB_COMPONENTS.md](./WEB_COMPONENTS.md) — built-in web components and how to extend them
-- [EVALUATION.md](./EVALUATION.md) — how well astropress does what it claims
+| Topic | Doc |
+|-------|-----|
+| How the provider seam works | [ARCHITECTURE.md](./ARCHITECTURE.md) |
+| Analytics, consent banner, custom snippets | [ANALYTICS.md](./ANALYTICS.md) |
+| Built-in web components and how to extend them | [WEB_COMPONENTS.md](./WEB_COMPONENTS.md) |
+| Import from WordPress or Wix; content scheduling | [OPERATIONS.md](./OPERATIONS.md) |
+| GDPR data inventory and right of erasure | [COMPLIANCE.md](./COMPLIANCE.md) |
+| Multilingual sites and admin UI labels | [MULTILINGUAL.md](./MULTILINGUAL.md) |
