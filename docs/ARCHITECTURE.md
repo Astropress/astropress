@@ -35,11 +35,11 @@ The alias is injected by `vite-integration.ts` inside the astropress package, wh
 
 ## Adding a new provider
 
-To add a new provider (e.g., PlanetScale):
+To add a new provider (e.g., a self-hosted Postgres service):
 
-1. Create `packages/astropress/src/adapters/planetscale.ts` implementing the `AstropressProviderContract` interface from `platform-contracts.ts`.
-2. Export it from `packages/astropress/index.ts`.
-3. The host app's `local-runtime-modules.ts` imports and uses `createAstropressPlanetScaleAdapter`.
+1. Create `packages/astropress/src/adapters/custom.ts` implementing `AstropressPlatformAdapter` from `platform-contracts.ts`.
+2. Export it from the package and add it to `package.json` exports.
+3. The host app's `local-runtime-modules.ts` imports and uses the new adapter factory.
 
 No admin pages, components, or templates change. The seam absorbs the difference.
 

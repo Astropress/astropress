@@ -1,123 +1,170 @@
-# Astropress Operations
+# Operations Runbook
 
-This is the current operator runbook for local and small-organization Astropress deployments.
+Operator reference for local and small-organization Astropress deployments.
 
-## Core checks
+## Health checks
 
-- `astropress doctor`
-  - validates the package-owned env contract
-  - resolves the runtime and deploy plan
-  - warns about missing local secrets, weak session secrets, scaffold-style local passwords, bootstrap-password exposure, missing `.data/` paths, missing `ASTROPRESS_SERVICE_ORIGIN`, and projects still relying on legacy provider inference instead of explicit `ASTROPRESS_APP_HOST` and `ASTROPRESS_CONTENT_SERVICES`
-- `bun run audit:security`
-  - checks for inline handlers, missing hardening expectations, and risky local patterns
-- `bun run test:acceptance`
-  - runs the current Playwright + axe acceptance layer
-- `astropress services bootstrap`
-  - writes a local manifest under `.astropress/services/` for the selected content-services layer
-- `astropress services verify`
-  - confirms that the selected content-services layer has the required keys and a known service origin
+```bash
+astropress doctor           # env contract, runtime plan, schema drift warnings
+astropress doctor --json    # machine-readable output
+astropress doctor --strict  # exit non-zero on any warning
+astropress services verify  # confirm content-services keys + service origin
+bun run audit:security      # inline-handler and hardening checks
+```
 
-## Backup and restore
-
-- Create a content/config snapshot:
-  - `astropress backup --project-dir <site> --out <snapshot-dir>`
-- Restore a snapshot into a project:
-  - `astropress restore --project-dir <site> --from <snapshot-dir>`
-
-Current scope:
-
-- snapshots are file-based exports using the packaged sync adapter
-- this is suitable for source/config backup and recovery workflows
-- database-native backup for hosted providers still needs provider-specific implementation
+`astropress doctor` warns on:
+- missing or weak `SESSION_SECRET`
+- scaffold-default `ADMIN_PASSWORD` still in use
+- `ADMIN_BOOTSTRAP_DISABLED` not set
+- missing `.data/` directory
+- projects still using legacy `ASTROPRESS_*PROVIDER` vars
 
 ## Local bootstrap
 
-- `astropress new <site>`
-- choose an app host and content-services pair when the default static path is not enough:
-  - `astropress new <site> --app-host vercel --content-services supabase`
-  - `astropress new <site> --app-host cloudflare-pages --content-services cloudflare`
-- `cd <site>`
-- `bun install`
-- `astropress doctor`
-- `astropress services bootstrap`
-- `astropress services verify`
-- `astropress dev`
+```bash
+astropress new my-site
+astropress new my-site --app-host vercel --content-services supabase
+astropress new my-site --app-host cloudflare-pages --content-services cloudflare
+cd my-site
+bun install
+astropress doctor
+astropress services bootstrap
+astropress services verify
+astropress dev
+```
 
-## WordPress staging
+## Backup and restore
 
-- `astropress import wordpress --project-dir <site> --source <export.xml>`
-- Optional staging flags:
-  - `--artifact-dir <dir>`
-  - `--download-media`
-  - `--apply-local`
-  - `--resume`
+```bash
+# Create a snapshot
+astropress backup --project-dir <site> --out <snapshot-dir>
 
-Current scope:
+# Restore from a snapshot
+astropress restore --project-dir <site> --from <snapshot-dir>
+```
 
-- writes staged inventory, plan, report, content, media, comment, user, taxonomy, redirect, remediation, and download-state artifacts under `.astropress/import/` or a chosen artifact directory
-- can download attachment assets into a resumable staged `downloads/` directory
-- can apply the staged import into the supported local SQLite runtime and record a `wordpress.local-apply.json` report
-- flags shortcode and page-builder cleanup work with explicit remediation candidates
-- still stages into operator-reviewed artifacts rather than auto-writing directly into every provider runtime
+Snapshots are file-based exports. For hosted providers, supplement with
+provider-native point-in-time restore (Cloudflare D1 time travel, Supabase
+Point-in-Time Recovery).
+
+## Importing content
+
+### WordPress
+
+```bash
+astropress import wordpress --project-dir <site> --source export.xml
+```
+
+Optional flags:
+- `--artifact-dir <dir>` — write artifacts here (default: `.astropress/import/`)
+- `--download-media` — download attachment assets into `artifacts/downloads/`
+- `--apply-local` — apply staged artifacts into the local SQLite runtime
+- `--resume` — re-enter a previous import and skip already-downloaded media
+
+The import is staged, not instant. It writes structured JSON artifacts
+(content, media, comments, users, taxonomies, redirects) for review before
+applying. Run without `--apply-local` first to inspect what will change.
+
+### Wix
+
+Export your site from Wix's dashboard (Settings → General → Export Site Data),
+then:
+
+```bash
+astropress import wix --project-dir <site> --source wix-export.csv
+```
+
+Same flags as WordPress: `--artifact-dir`, `--download-media`, `--apply-local`,
+`--resume`.
+
+If you need to download the export programmatically, the Playwright-based
+credential fetcher handles authenticated Wix dashboard access — see the
+`import wix --fetch` flag.
+
+### Crawling any site
+
+For sites without an export format:
+
+```bash
+astropress import crawl --project-dir <site> --url https://example.com
+```
+
+The crawler walks links from the start URL, extracts page titles and body HTML,
+and writes the results as importable content records. Useful for migrating from
+static generators or hand-authored HTML sites.
+
+## Content scheduling
+
+Set a publish time in the post editor (`Scheduled Publish Time` field) to
+queue a draft for future publication.
+
+The SQLite runtime exposes `runScheduledPublishes()` which promotes all
+due posts atomically:
+
+```ts
+import { runScheduledPublishes } from "astropress/sqlite-admin-runtime";
+
+// Call this on a schedule — e.g., every 5 minutes
+const published = runScheduledPublishes(db);
+console.log(`Published ${published} scheduled posts`);
+```
+
+**Cloudflare Workers:** wire it in a `scheduled` handler in `worker.ts`:
+
+```ts
+export default {
+  async scheduled(_event, env, _ctx) {
+    const runtime = await createRuntime(env);
+    await runtime.content.runScheduledPublishes();
+  },
+};
+```
+
+**GitHub Actions:** use a cron workflow to hit a secured API route that
+calls `runScheduledPublishes()`.
+
+The posts list shows a **Scheduled** filter tab. Posts stay `draft` until
+`runScheduledPublishes` fires; cancelling clears the scheduled time.
 
 ## Secret handling
 
-- generate a long random `SESSION_SECRET` before any real deployment
-- rotate scaffolded `ADMIN_PASSWORD` and `EDITOR_PASSWORD` before handing the system to real editors
-- set `ADMIN_BOOTSTRAP_DISABLED=1` once named admin accounts are established
-- treat missing `TURNSTILE_SECRET_KEY` as a release blocker for hosted login surfaces
+Before any real deployment:
 
-## Rollback procedure
-
-1. Restore from the last backup: `astropress restore --project-dir <site> --from <snapshot-dir>`
-2. Redeploy the previous release tag via your host's deployment UI or CLI.
-3. For Cloudflare D1: use Wrangler's point-in-time restore — `wrangler d1 time-travel restore <database-name> --timestamp <iso-timestamp>`
-4. After restore, run `astropress doctor` to confirm env and schema health before reopening traffic.
+1. Generate a strong `SESSION_SECRET`:
+   `SESSION_SECRET=$(openssl rand -hex 32)`
+2. Change `ADMIN_PASSWORD` and `EDITOR_PASSWORD` from scaffold defaults
+3. Set `ADMIN_BOOTSTRAP_DISABLED=1` once named admin accounts exist
+4. Set `TURNSTILE_SECRET_KEY` before exposing the login form publicly
 
 ## Secret rotation
 
-**SESSION_SECRET**
+**SESSION_SECRET** — 12-hour window rotation (no hard logout):
 
-The session TTL is 12 hours. To rotate without a hard logout:
-1. Add a `SESSION_SECRET_PREV` env var set to the current secret value.
-2. Deploy the new `SESSION_SECRET`.
-3. During the 12-hour window the runtime will accept tokens signed with either secret.
-4. After the window, remove `SESSION_SECRET_PREV`.
+1. Set `SESSION_SECRET_PREV` to the current secret value
+2. Deploy the new `SESSION_SECRET`
+3. After 12 hours, remove `SESSION_SECRET_PREV`
 
-**CLOUDFLARE_SESSION_SECRET**
-
-Rotating this secret invalidates all existing Cloudflare D1 sessions immediately (the stored hashes become unverifiable). This is an acceptable tradeoff — users are logged out cleanly. If you want to minimise disruption, revoke all active sessions first:
+**CLOUDFLARE_SESSION_SECRET** — invalidates all D1 sessions immediately.
+To minimize disruption, revoke sessions first:
 
 ```sql
-UPDATE admin_sessions SET revoked_at = CURRENT_TIMESTAMP WHERE revoked_at IS NULL;
+UPDATE admin_sessions SET revoked_at = CURRENT_TIMESTAMP
+WHERE revoked_at IS NULL;
 ```
 
-Then deploy the new `CLOUDFLARE_SESSION_SECRET`.
+Then deploy the new secret.
 
-## Upgrade and migration policy
+## Schema migrations
 
-See [CHANGELOG.md](../CHANGELOG.md) for version-specific breaking changes before upgrading.
+### Framework-managed (SQLite)
 
-1. Always snapshot before upgrading: `astropress backup --project-dir <site> --out <snapshot-dir>`
-2. Run `astropress doctor` after upgrading — it warns on env contract changes and schema drift.
-3. SQLite local runtime: apply schema changes by running `astropress services bootstrap` again (idempotent).
-4. Hosted providers (Cloudflare D1, Supabase): apply schema migrations via the provider CLI before deploying the new package version. Never deploy new code before the schema is ready.
-5. If a migration fails: restore from the last clean backup (`astropress restore`), fix the migration in isolation, then redeploy.
-
-### Framework-managed schema compatibility
-
-Astropress performs automatic schema compatibility on every boot:
-
-- **New databases** receive the full schema from `sqlite-schema.sql` (all tables, indexes, and constraints).
-- **Existing databases** receive additive `ALTER TABLE ... ADD COLUMN` statements for any columns added in newer framework versions. These are idempotent — running bootstrap twice is safe.
-- **Status constraint migrations** (e.g., adding `'review'` and `'archived'` statuses) are applied via a table rebuild with data migration when detected.
-- Applied migrations are recorded in `schema_migrations` so they are never re-run.
-
-This means **most framework upgrades require no manual migration steps** for SQLite-backed deployments. For hosted D1/Supabase deployments, check the `CHANGELOG.md` for any `ALTER TABLE` statements you must apply before deploying new code.
+Most upgrades require no manual steps for SQLite deployments. On every boot,
+Astropress applies any new `ALTER TABLE ... ADD COLUMN` statements idempotently.
+Applied migrations are recorded in `schema_migrations`.
 
 ### User-managed migrations
 
-The `runAstropressMigrations(db, migrationsDir)` function applies numbered `.sql` files from your own `migrations/` directory in lexicographic order:
+Place numbered `.sql` files in your `migrations/` directory:
 
 ```
 migrations/
@@ -125,75 +172,72 @@ migrations/
   0002_add_event_date_index.sql
 ```
 
-Run via CLI:
-```sh
+```bash
 astropress db migrate --migrations-dir ./migrations
-astropress db migrate --migrations-dir ./migrations --dry-run   # preview only
+astropress db migrate --migrations-dir ./migrations --dry-run  # preview only
 ```
 
-## Caching strategy
+Companion `.down.sql` files are read and stored in `schema_migrations.rollback_sql`
+for safe rollback.
 
-### Application-managed headers
+### Hosted providers (D1, Supabase)
 
-`applyAstropressSecurityHeaders()` automatically sets `Cache-Control` based on the area:
+Check `CHANGELOG.md` for any `ALTER TABLE` statements required before deploying
+new package versions. Always apply schema changes before deploying new code.
 
-| Area | `Cache-Control` value | Effect |
-|------|-----------------------|--------|
-| `public` | `public, max-age=300, s-maxage=3600` | 5-min browser cache, 1-hr CDN cache |
+### Version upgrade procedure
+
+1. Snapshot: `astropress backup --project-dir <site> --out <snapshot-dir>`
+2. Upgrade the package: `bun add astropress@latest`
+3. Run `astropress doctor` — flags env contract changes and schema drift
+4. For SQLite: run `astropress services bootstrap` (idempotent)
+5. For D1/Supabase: apply any required `ALTER TABLE` statements from CHANGELOG
+6. Deploy. If migration fails, restore from snapshot and replay in isolation.
+
+## Caching
+
+`applyAstropressSecurityHeaders()` sets `Cache-Control` by area:
+
+| Area | Value | Effect |
+|------|-------|--------|
+| `public` | `public, max-age=300, s-maxage=3600, stale-while-revalidate=86400` | 5 min browser / 1 hr CDN |
 | `admin` | `private, no-store` | Never cached |
 | `auth` | `private, no-store` | Never cached |
 | `api` | `private, no-store` | Never cached |
 
-### Cloudflare CDN recommendations
+**CDN purge on publish:** Astropress fires `purgeCdnCache(slug, config)` on
+every content publish — supports Cloudflare Cache API and generic webhook URLs:
 
-For sites deployed on Cloudflare Pages or Workers:
+```ts
+registerCms({
+  cdnPurgeWebhook: "https://api.netlify.com/build_hooks/your-hook-id",
+});
+```
 
-- Create a **Cache Rule** matching the public site origin (non-`/ap-admin/` paths) with **Cache Eligibility: Eligible for cache** and a 1-hour edge TTL.
-- Create a **Cache Rule** matching `/ap-admin/*` with **Cache Eligibility: Bypass cache** — admin pages must never be served from edge cache.
-- Static assets (`.js`, `.css`, `.woff2`, images) can use longer TTLs (e.g., 1 week) if filenames are content-hashed.
-
-## Alerting and monitoring
-
-### Request-level visibility
-
-- **Cloudflare Analytics** (free tier) — available automatically for sites behind Cloudflare Pages or a Cloudflare-proxied domain. Shows request volume, error rates, cache hit ratio, and country-level traffic. No configuration needed.
-- **UptimeRobot** (free tier) — set up a monitor on the admin login page (`/ap-admin/login`) to receive email/Slack alerts if the admin surface goes down. Recommended check interval: 5 minutes.
+## Observability
 
 ### Structured logs
 
-When `LOG_LEVEL` is set, the runtime emits structured JSON log lines to stderr (one JSON object per line). Fields: `level`, `context`, `message`, `timestamp`, and `requestId` (threaded per request via `X-Request-Id`).
+Set `LOG_LEVEL` to emit structured JSON lines to stderr. Fields: `level`,
+`context`, `message`, `timestamp`, `requestId`.
 
-- **Cloudflare Workers**: logs appear in `wrangler tail --env production`
-- **Vercel/Netlify**: logs appear in the platform's function log dashboard
-- **Local / self-hosted**: logs go to stdout/stderr and can be piped to any log aggregator
+- Cloudflare: `wrangler tail --env production`
+- Vercel/Netlify: platform function log dashboard
+- Local: pipe stderr to any log aggregator
 
-Set `LOG_LEVEL=silent` in test environments to suppress all log output.
+Set `LOG_LEVEL=silent` in test environments.
 
-### Audit trail
+### Metrics endpoint
 
-The `ap_audit_log` table records all admin write actions (content save, user invite, media delete, etc.) with actor email, action name, resource type, resource ID, and a timestamp.
-
-Query recent events:
-
-```sql
-SELECT actor, action, resource_type, resource_id, created_at
-FROM ap_audit_log
-ORDER BY created_at DESC
-LIMIT 100;
+```
+GET /ap-api/v1/metrics   Bearer token required (content:read scope)
 ```
 
-Recommended retention strategy: run `astropress backup` on a weekly schedule to export the audit log alongside content. The `ap_audit_log` table has no built-in TTL — delete old rows explicitly if storage is a concern:
+Returns `{ posts, pages, media, comments, uptime }`.
 
-```sql
-DELETE FROM ap_audit_log WHERE created_at < datetime('now', '-365 days');
-```
-
-### Nightly health checks
-
-Use a scheduled GitHub Actions workflow to run `astropress doctor --json` against a staging environment and alert on non-zero exit:
+### Nightly health check (GitHub Actions)
 
 ```yaml
-# .github/workflows/nightly-health.yml
 on:
   schedule:
     - cron: "0 6 * * *"
@@ -205,28 +249,66 @@ jobs:
       - run: astropress doctor --json
         env:
           ASTROPRESS_APP_HOST: ${{ vars.STAGING_APP_HOST }}
-          ASTROPRESS_CONTENT_SERVICES: ${{ vars.STAGING_CONTENT_SERVICES }}
           SESSION_SECRET: ${{ secrets.STAGING_SESSION_SECRET }}
 ```
 
-## Incident handling checklist
+### Audit trail
 
-**Auth breach (leaked session or compromised admin account)**
-1. Revoke all active sessions:
+```sql
+SELECT actor, action, resource_type, resource_id, created_at
+FROM ap_audit_log
+ORDER BY created_at DESC
+LIMIT 100;
+```
+
+Prune old rows if storage is a concern:
+
+```sql
+DELETE FROM ap_audit_log
+WHERE created_at < datetime('now', '-365 days');
+```
+
+## Incident handling
+
+**Auth breach**
+1. Revoke all sessions:
    ```sql
-   UPDATE admin_sessions SET revoked_at = CURRENT_TIMESTAMP WHERE revoked_at IS NULL;
+   UPDATE admin_sessions SET revoked_at = CURRENT_TIMESTAMP
+   WHERE revoked_at IS NULL;
    ```
-2. Rotate both `SESSION_SECRET` and `CLOUDFLARE_SESSION_SECRET` (see Secret rotation above).
-3. Audit the `admin_sessions` and `audit_events` tables for suspicious activity.
-4. Reset affected user passwords and deactivate any unknown accounts.
+2. Rotate `SESSION_SECRET` and `CLOUDFLARE_SESSION_SECRET`
+3. Audit `admin_sessions` and `audit_events` for suspicious activity
+4. Reset affected passwords, deactivate unknown accounts
 
 **Data loss**
-1. Restore from the last clean backup.
-2. Run `astropress doctor` and `astropress services verify` to confirm integrity.
-3. Re-apply any content created since the snapshot using audit logs as a reference.
+1. Restore from the last clean backup
+2. Run `astropress doctor` and `astropress services verify`
+3. Re-apply content created since the snapshot using audit logs as reference
 
 **Admin panel down**
-1. Run `astropress doctor` to check env contract and service health.
-2. Verify all required env vars (`SESSION_SECRET`, `ASTROPRESS_APP_HOST`, `ASTROPRESS_CONTENT_SERVICES`, etc.) are set correctly.
-3. Check server logs for runtime errors or schema migration failures.
-4. If the cause is a failed migration, restore from the last known-good snapshot and replay the migration in isolation before redeploying.
+1. Run `astropress doctor` — check env and service health
+2. Verify required env vars are set
+3. Check server logs for runtime errors or migration failures
+4. If a failed migration caused it: restore from snapshot, replay migration
+   in isolation, then redeploy
+
+---
+
+## Provider configuration
+
+### Appwrite
+
+```
+ASTROPRESS_CONTENT_SERVICES=appwrite
+APPWRITE_ENDPOINT=https://cloud.appwrite.io/v1
+APPWRITE_PROJECT_ID=your-project-id
+APPWRITE_API_KEY=your-api-key
+
+# Optional — used when routing directly to Appwrite collections/buckets
+APPWRITE_DATABASE_ID=your-database-id
+APPWRITE_BUCKET_ID=your-bucket-id
+```
+
+Use `createAstropressAppwriteHostedAdapter()` from `astropress/adapters/appwrite`.
+The adapter resolves the Appwrite Console URL automatically from `APPWRITE_PROJECT_ID`
+and exposes it as `capabilities.hostPanel` for admin-role navigation.

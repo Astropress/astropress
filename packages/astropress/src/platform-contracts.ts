@@ -91,7 +91,7 @@ export interface ProviderCapabilities {
   gitSync: boolean;
   /**
    * Optional link to the database provider's own infrastructure panel
-   * (e.g. Supabase Studio, Firebase Console, PocketBase admin).
+   * (e.g. Supabase Studio, PocketBase admin).
    * When declared, a "Host" nav item is shown to admin-role users.
    */
   hostPanel?: AstropressHostPanelCapability;
@@ -243,6 +243,8 @@ export interface MediaAssetRecord {
   height?: number;
   /** Public URL of the 400px-wide WebP thumbnail; set when the upload was an image wider than 400px. */
   thumbnailUrl?: string;
+  /** Responsive srcset string with 400w/800w/1200w WebP variants; auto-generated at upload time for images wider than 400px. */
+  srcset?: string;
 }
 
 export interface MediaStore {
