@@ -15,3 +15,12 @@ crates/*/target/
 .env
 .env.*
 !.env.example
+
+# Playwright runtime output
+test-results/
+playwright-report/
+
+# Host-app runtime data (SQLite WAL/SHM journals)
+**/.data/*.sqlite-shm
+**/.data/*.sqlite-wal
+packages/astropress/.data/
