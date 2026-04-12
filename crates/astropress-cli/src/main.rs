@@ -33,6 +33,7 @@ use commands::doctor::{inspect_project_health, print_doctor_report, print_doctor
 use commands::import_wordpress::stage_wordpress_import;
 use commands::import_wix::stage_wix_import;
 use commands::add::{add_integrations, parse_add_features};
+use commands::list::list_tools;
 use commands::migrate::{run_migrate, MigrateOptions};
 use commands::new::{scaffold_new_project, run_post_scaffold_setup};
 use commands::services::{bootstrap_content_services, print_content_services_report, verify_content_services};
@@ -266,6 +267,10 @@ fn main() -> ExitCode {
                 Ok(()) => ExitCode::SUCCESS,
                 Err(error) => fail(error),
             }
+        }
+        Ok(Command::ListTools) => {
+            list_tools();
+            ExitCode::SUCCESS
         }
         Ok(Command::Help) => {
             print_help();

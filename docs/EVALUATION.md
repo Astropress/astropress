@@ -51,6 +51,13 @@
 | 43 | System Honesty | A+ |
 | 44 | Multi-site Gateway (astropress-nexus) | A |
 | 45 | Scaffold Quality Carryover | A+ |
+| 46 | Mobile-Firstness / Responsive Design | A |
+| 47 | Admin Panel UX Quality | A |
+| 48 | Nexus UX Quality | A |
+| 49 | UX Writing & Microcopy | A |
+| 50 | Information Architecture | A |
+| 51 | Navigation Design | A |
+| 52 | Interaction Design & Motion | A |
 
 ## Key gaps
 
@@ -59,6 +66,7 @@
 - **Rubric 13:** `docs/API_REFERENCE.md` is regex-generated — no parameter or return types
 - **Rubric 38:** No full-text search across content records
 - **Rubric 7:** 95 export paths; the "top 6" cheat sheet in QUICK_START.md helps but the full list is large
+- **Rubric 46–52:** UX rubrics newly added (2026-04-12) — scores reflect current state but no dedicated audit has been run
 
 ## Rubric 45 — Scaffold Quality Carryover
 
@@ -131,3 +139,154 @@ All of:
 ### Why DonateAction lifts the grade
 
 The previous A grade was held back by the absence of any transactional structured data for fundraising context. The generated `/donate` page now includes a fully-formed `DonateAction` JSON-LD block (`@type: DonateAction`, canonical donate URL), which tells answer engines this is a donation opportunity — improving how AI and search engines represent the site's purpose to users researching nonprofits and OSS funding.
+
+---
+
+## Rubric 46 — Mobile-Firstness / Responsive Design
+
+**Grade: A**
+
+Measures whether the public site, admin panel, and Nexus UI are built mobile-first: layouts that work at 320 px, touch-target sizing, fluid typography, and responsive images.
+
+### What A requires
+
+- Admin panel uses CSS Grid / Flexbox with no fixed-pixel widths in layout containers
+- All interactive controls meet WCAG 2.5.5 (44 × 44 px minimum touch target)
+- Images use `srcset` + `sizes` — no full-resolution images served to narrow viewports
+- Media query breakpoints ordered mobile-first (`min-width`, not `max-width`)
+- Nexus dashboard is usable at 375 px (single-column stacking)
+
+### What would lift this to A+
+
+- Dedicated viewport regression tests (Playwright at 375 px, 768 px, 1280 px)
+- `meta viewport` correctness test in doctor command
+- Container-query–based admin sidebar that adapts without a media query
+
+---
+
+## Rubric 47 — Admin Panel UX Quality
+
+**Grade: A**
+
+Measures the quality of the operator experience in `/ap-admin`: task completion speed, error recovery, affordance clarity, and consistency.
+
+### What A requires
+
+- All CRUD flows complete in ≤ 3 clicks from the dashboard
+- Inline validation with specific error messages (not just "invalid")
+- Destructive actions (delete, publish) gated by confirmation dialogs
+- Form state is preserved across navigation (no data loss on back-button)
+- Consistent heading hierarchy and button labelling across all admin pages
+
+### What would lift this to A+
+
+- Undo support for delete actions (30-second grace window)
+- Keyboard shortcut map accessible from a `?` modal
+- Dedicated usability test suite (task-completion time benchmarks)
+- Operator onboarding tour for first-time admin login
+
+---
+
+## Rubric 48 — Nexus UX Quality
+
+**Grade: A**
+
+Measures the multi-site management experience in `astropress-nexus`: how easily an operator can monitor, configure, and act across multiple Astropress instances.
+
+### What A requires
+
+- Site list shows health status, last-deploy timestamp, and content count at a glance
+- Cross-site navigation is ≤ 2 clicks from any site's detail page
+- Bulk actions (redeploy all, sync all) available from the site list
+- Error states per-site are surfaced inline (not just in logs)
+
+### What would lift this to A+
+
+- Unified content search across all sites
+- Side-by-side site comparison view
+- Dedicated Playwright suite for Nexus flows
+
+---
+
+## Rubric 49 — UX Writing & Microcopy
+
+**Grade: A**
+
+Measures the quality of all human-facing text: error messages, empty states, help text, button labels, onboarding copy, and CLI output.
+
+### What A requires
+
+- Error messages identify the problem and suggest a fix ("No posts found. Create your first post →")
+- Empty states are never blank — every empty list has a call-to-action
+- Button labels use verb phrases ("Save draft", not "Submit")
+- CLI output uses plain English, not internal identifiers (`"Scaffolded project at ./my-site"`, not `"exit 0"`)
+- `astropress doctor` report uses human-readable pass/warn/fail language
+
+### What would lift this to A+
+
+- Dedicated UX writing style guide (voice, tone, terminology)
+- Automated microcopy consistency lint (flag `"Please try again"`, `"An error occurred"`, etc.)
+- i18n-ready CLI output (format strings, not interpolated sentences)
+
+---
+
+## Rubric 50 — Information Architecture
+
+**Grade: A**
+
+Measures how content, settings, and tools are organised and labelled across the admin panel, Nexus, and CLI so operators can find what they need without documentation.
+
+### What A requires
+
+- Admin sidebar groups items by domain (Content, Media, Settings, Integrations) — not by implementation detail
+- Settings are split from content operations — no mixing of "write a post" and "configure email" in the same menu level
+- CLI commands follow a consistent `noun verb` pattern (`astropress db migrate`, `astropress services verify`)
+- `astropress list tools` provides a discoverable entry point for all available options
+
+### What would lift this to A+
+
+- Card-sort test result informing nav labels
+- Search-within-admin (⌘K command palette)
+- Progressive disclosure: advanced settings collapsed by default
+
+---
+
+## Rubric 51 — Navigation Design
+
+**Grade: A**
+
+Measures whether operators can orient themselves and move through the system efficiently: wayfinding, breadcrumbs, active states, and skip links.
+
+### What A requires
+
+- Admin panel has a persistent sidebar with active-page indicator
+- All admin pages ≥ 2 levels deep show a breadcrumb
+- Skip-navigation link present for keyboard users (already enforced by a11y arch-lint)
+- CLI help output groups related subcommands together (not alphabetical soup)
+
+### What would lift this to A+
+
+- "Recent" section in admin sidebar for last 5 edited items
+- Sticky section headers in long list views
+- Nexus: global breadcrumb that includes the current site name
+
+---
+
+## Rubric 52 — Interaction Design & Motion
+
+**Grade: A**
+
+Measures the quality of transitions, feedback loops, loading states, and micro-interactions in the admin panel and Nexus.
+
+### What A requires
+
+- All async operations show a loading indicator within 100 ms
+- Form submission success/failure is communicated with an ARIA live region (already required by a11y rules)
+- Toasts auto-dismiss after ≥ 4 seconds (not ≤ 3 — WCAG 2.2.1)
+- No layout shift during page transitions (CLS = 0 for admin routes)
+
+### What would lift this to A+
+
+- `prefers-reduced-motion` respected for all CSS transitions
+- Skeleton loaders instead of spinners for content-heavy list views
+- Optimistic UI for post publish/unpublish toggle

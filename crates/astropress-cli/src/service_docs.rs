@@ -199,6 +199,7 @@ const ENV_REMARK42: &str = concat!(
 
 const COMPOSE_FLARUM: &str = concat!(
     "# Flarum — lightweight forum (MIT, PHP).\n",
+    "# Free tier: Railway free (512 MB RAM) or Fly.io shared-cpu-1x (256 MB) — fits comfortably.\n",
     "# Usage: cp .env.flarum.example .env.flarum && docker compose --env-file .env.flarum up -d\n",
     "services:\n",
     "  flarum:\n",
@@ -219,7 +220,8 @@ const COMPOSE_FLARUM: &str = concat!(
     "    restart: unless-stopped\n",
     "\n",
     "  db:\n",
-    "    image: mysql:8\n",
+    "    # mariadb:11 uses ~100 MB idle vs MySQL 8's ~300 MB — better fit for free tiers.\n",
+    "    image: mariadb:11\n",
     "    environment:\n",
     "      MYSQL_DATABASE: flarum\n",
     "      MYSQL_USER: flarum\n",
@@ -288,6 +290,7 @@ const ENV_DISCOURSE: &str = concat!(
 
 const COMPOSE_TILEDESK: &str = concat!(
     "# Tiledesk — live chat + helpdesk (Apache 2.0).\n",
+    "# Free tier: Railway free (512 MB RAM) or Fly.io shared-cpu-1x with 512 MB.\n",
     "# Full compose: https://github.com/Tiledesk/tiledesk-deployment\n",
     "# Usage: cp .env.tiledesk.example .env.tiledesk && docker compose --env-file .env.tiledesk up -d\n",
     "services:\n",
@@ -305,6 +308,8 @@ const COMPOSE_TILEDESK: &str = concat!(
     "\n",
     "  mongo:\n",
     "    image: mongo:6\n",
+    "    # Cap the WiredTiger cache to 256 MB so MongoDB fits on free-tier VMs.\n",
+    "    command: [\"mongod\", \"--wiredTigerCacheSizeGB\", \"0.25\"]\n",
     "    volumes:\n",
     "      - tiledesk_db:/data/db\n",
     "    restart: unless-stopped\n",
@@ -794,6 +799,7 @@ const ENV_PEERTUBE: &str = concat!(
 const COMPOSE_CASTOPOD: &str = concat!(
     "# Castopod — self-hosted podcast hosting (AGPL 3.0).\n",
     "# ⚠ Audio files need object storage (Cloudflare R2 or Tigris) — local disk fills up fast.\n",
+    "# Free tier: Railway free (512 MB RAM) or Fly.io shared-cpu-1x with 512 MB.\n",
     "# Usage: cp .env.castopod.example .env.castopod && docker compose --env-file .env.castopod up -d\n",
     "services:\n",
     "  castopod:\n",
@@ -821,7 +827,8 @@ const COMPOSE_CASTOPOD: &str = concat!(
     "    restart: unless-stopped\n",
     "\n",
     "  db:\n",
-    "    image: mysql:8\n",
+    "    # mariadb:11 uses ~100 MB idle vs MySQL 8's ~300 MB — better fit for free tiers.\n",
+    "    image: mariadb:11\n",
     "    environment:\n",
     "      MYSQL_DATABASE: castopod\n",
     "      MYSQL_USER: castopod\n",
@@ -985,6 +992,7 @@ const COMPOSE_POSTAL: &str = concat!(
     "# Postal — self-hosted SMTP server (MIT).\n",
     "# ⚠ For best email deliverability, Postal needs a dedicated IP address.\n",
     "#   On Fly.io: use a dedicated-vm machine. On Railway: use a static outbound IP add-on.\n",
+    "# ⚠ Requires ~512 MB RAM across all three services — Railway free tier works; Fly.io needs 512 MB.\n",
     "# Full guide: https://docs.postalserver.io/install/installation\n",
     "# Usage: cp .env.postal.example .env.postal && docker compose --env-file .env.postal up -d\n",
     "services:\n",
@@ -1010,7 +1018,8 @@ const COMPOSE_POSTAL: &str = concat!(
     "    restart: unless-stopped\n",
     "\n",
     "  db:\n",
-    "    image: mysql:8\n",
+    "    # mariadb:11 uses ~100 MB idle vs MySQL 8's ~300 MB — better fit for free tiers.\n",
+    "    image: mariadb:11\n",
     "    environment:\n",
     "      MYSQL_DATABASE: postal\n",
     "      MYSQL_USER: postal\n",
@@ -1067,6 +1076,7 @@ const ENV_UPTIME_KUMA: &str = concat!(
 
 const COMPOSE_BOOKSTACK: &str = concat!(
     "# BookStack — structured wiki and knowledge base (MIT).\n",
+    "# Free tier: Railway free (512 MB RAM) or Fly.io shared-cpu-1x with 512 MB — fits comfortably.\n",
     "# Usage: cp .env.bookstack.example .env.bookstack && docker compose --env-file .env.bookstack up -d\n",
     "services:\n",
     "  bookstack:\n",
@@ -1093,7 +1103,8 @@ const COMPOSE_BOOKSTACK: &str = concat!(
     "    restart: unless-stopped\n",
     "\n",
     "  db:\n",
-    "    image: mysql:8\n",
+    "    # mariadb:11 uses ~100 MB idle vs MySQL 8's ~300 MB — better fit for free tiers.\n",
+    "    image: mariadb:11\n",
     "    environment:\n",
     "      MYSQL_DATABASE: bookstack\n",
     "      MYSQL_USER: bookstack\n",
@@ -1315,6 +1326,7 @@ const ENV_ZITADEL: &str = concat!(
 
 const COMPOSE_FRAPPE_LMS: &str = concat!(
     "# Frappe LMS — open-source courses and learning management (MIT).\n",
+    "# ⚠ Requires ~512 MB RAM total. Railway free tier works; Fly.io needs 512 MB shared VM.\n",
     "# Full guide: https://github.com/frappe/lms#installation\n",
     "# Usage: cp .env.frappe-lms.example .env.frappe-lms && docker compose --env-file .env.frappe-lms up -d\n",
     "services:\n",
@@ -1339,7 +1351,8 @@ const COMPOSE_FRAPPE_LMS: &str = concat!(
     "    restart: unless-stopped\n",
     "\n",
     "  db:\n",
-    "    image: mysql:8\n",
+    "    # mariadb:10.11 (Frappe's recommended database) — uses ~100 MB idle vs MySQL 8's ~300 MB.\n",
+    "    image: mariadb:10.11\n",
     "    environment:\n",
     "      MYSQL_ROOT_PASSWORD: \"${DB_ROOT_PASSWORD}\"\n",
     "    volumes:\n",

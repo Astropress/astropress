@@ -14,6 +14,10 @@ use crate::providers::{
     AbTestingProvider, AnalyticsProvider, AppHost, DataServices, HeatmapProvider, LocalProvider,
 };
 
+#[path = "new_rubric.rs"]
+mod new_rubric;
+use new_rubric::build_evaluation_rubric;
+
 // ── scaffold ──────────────────────────────────────────────────────────────────
 
 /// Optional feature flags for `scaffold_new_project`.
@@ -117,6 +121,7 @@ pub(crate) fn scaffold_new_project(
     for (relative_path, contents) in &scaffold.ci_files {
         crate::write_text_file(project_dir, relative_path, contents)?;
     }
+    crate::write_text_file(project_dir, "EVALUATION.md", &build_evaluation_rubric())?;
     fs::write(project_dir.join(".gitignore"),
         ".astro/\ndist/\nnode_modules/\n.astropress/\n.env\n")
         .map_err(crate::io_error)?;
@@ -162,6 +167,7 @@ pub(crate) fn run_post_scaffold_setup(project_dir: &Path) -> Result<(), String> 
 fn astropress_package_version() -> Result<String, String> {
     Ok(env!("CARGO_PKG_VERSION").to_string())
 }
+
 
 #[cfg(test)]
 mod tests {

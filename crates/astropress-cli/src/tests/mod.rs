@@ -554,3 +554,46 @@ fn exports_and_imports_project_snapshots() {
 fn command_availability_check_is_safe() {
     let _ = command_available("definitely-not-a-real-command-binary");
 }
+
+#[test]
+fn list_tools_command_parses() {
+    assert!(matches!(
+        parse_command(&strings(&["list", "tools"])),
+        Ok(Command::ListTools)
+    ));
+}
+
+#[test]
+fn list_without_subcommand_returns_error() {
+    let err = parse_command(&strings(&["list"])).unwrap_err();
+    assert!(
+        err.contains("list tools"),
+        "expected 'list tools' in error message, got: {err}"
+    );
+}
+
+#[test]
+fn list_tools_with_unknown_flag_returns_error() {
+    let err = parse_command(&strings(&["list", "tools", "--unknown"])).unwrap_err();
+    assert!(
+        err.contains("--unknown"),
+        "expected unknown flag name in error, got: {err}"
+    );
+}
+
+#[test]
+fn ls_tools_alias_parses() {
+    assert!(matches!(
+        parse_command(&strings(&["ls", "tools"])),
+        Ok(Command::ListTools)
+    ));
+}
+
+#[test]
+fn ls_without_subcommand_returns_error() {
+    let err = parse_command(&strings(&["ls"])).unwrap_err();
+    assert!(
+        err.contains("list tools"),
+        "expected 'list tools' in error message, got: {err}"
+    );
+}

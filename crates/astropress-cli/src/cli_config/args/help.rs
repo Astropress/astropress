@@ -25,6 +25,7 @@ pub(crate) fn print_help() {
     println!("  astropress sync import --from <snapshot-dir> [--project-dir <dir>]");
     println!("  astropress deploy [--project-dir <dir>] [--app-host <host>] [--target github-pages|cloudflare|vercel|netlify|render-static|render-web|gitlab-pages|runway|custom]");
     println!();
+    println!("  astropress list tools  (alias: ls tools)       List all available tools by category");
     println!("  astropress completions <bash|zsh|fish>          Print shell completion script");
     println!();
     println!("New project flags:");

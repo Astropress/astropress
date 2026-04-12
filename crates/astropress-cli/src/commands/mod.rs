@@ -10,6 +10,7 @@ pub(crate) mod import_common;
 pub(crate) mod import_wordpress;
 pub(crate) mod import_wordpress_types;
 pub(crate) mod import_wix;
+pub(crate) mod list;
 pub(crate) mod migrate;
 pub(crate) mod new;
 pub(crate) mod new_wizard;

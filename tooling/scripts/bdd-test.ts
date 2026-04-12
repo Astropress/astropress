@@ -276,6 +276,24 @@ const verificationGroups: VerificationGroup[] = [
     ],
   },
   {
+    label: "list tools command scenarios",
+    scenarios: [
+      "Developer runs astropress list tools and sees all categories",
+      "Data providers section lists all supported providers",
+      "App Hosts section lists all supported deployment targets",
+      "Import Sources section lists all supported migration sources",
+      "Integrations section lists tools grouped by add flag",
+      "Running astropress list without a subcommand returns an error",
+      "Running astropress list tools with an unknown extra argument returns an error",
+    ],
+    steps: [
+      {
+        command: "cargo",
+        args: ["test", "list_tools"],
+      },
+    ],
+  },
+  {
     label: "content persistence scenarios",
     scenarios: [
       "An editor's post status change is saved and immediately visible to all admin users",
