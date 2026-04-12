@@ -49,7 +49,10 @@ describe("cloudflare session secret", () => {
     const d1 = new SqliteBackedD1Database(db);
     const adapter = createAstropressCloudflareAdapter({ db: d1 });
     await adapter.auth.signIn("admin@example.com", "correctpass");
-    expect(console.warn).toHaveBeenCalledWith(expect.stringContaining("CLOUDFLARE_SESSION_SECRET is using the insecure default"));
+    expect(console.warn).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.stringContaining("CLOUDFLARE_SESSION_SECRET is using the insecure default"),
+    );
     db.close();
   });
 

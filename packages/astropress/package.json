@@ -132,9 +132,10 @@
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "test:watch": "vitest",
+    "build": "tsc -p tsconfig.build.json --noCheck",
     "release": "changeset publish",
     "version": "changeset version",
-    "prepublishOnly": "cd ../.. && bun run audit:sync && bun run audit:arch"
+    "prepublishOnly": "bun run build && cd ../.. && bun run audit:sync && bun run audit:arch"
   },
   "keywords": [
     "astro",

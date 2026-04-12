@@ -13,9 +13,9 @@ describe("admin routes", () => {
     const routes = listAstropressAdminRoutes();
 
     expect(ASTROPRESS_ADMIN_BASE_PATH).toBe("/ap-admin");
-    expect(routes).toHaveLength(64);
+    expect(routes).toHaveLength(65);
     expect(routes.filter((route) => route.kind === "page")).toHaveLength(31);
-    expect(routes.filter((route) => route.kind === "action")).toHaveLength(32);
+    expect(routes.filter((route) => route.kind === "action")).toHaveLength(33);
     expect(routes.filter((route) => route.kind === "endpoint")).toHaveLength(1);
     expect(routes.map((route) => route.pattern)).toEqual([
       "/ap-admin",
@@ -82,6 +82,7 @@ describe("admin routes", () => {
       "/ap-admin/actions/webhook-create",
       "/ap-admin/actions/webhook-delete",
       "/ap-admin/actions/schedule-publish",
+      "/ap-admin/actions/user-purge",
     ]);
   });
 
@@ -94,8 +95,8 @@ describe("admin routes", () => {
       kind: "page",
     });
     expect(routeEntrypoints.at(-1)).toEqual({
-      pattern: "/ap-admin/actions/schedule-publish",
-      entrypoint: "/tmp/astropress/pages/ap-admin/actions/schedule-publish.ts",
+      pattern: "/ap-admin/actions/user-purge",
+      entrypoint: "/tmp/astropress/pages/ap-admin/actions/user-purge.ts",
       kind: "action",
     });
   });
@@ -113,6 +114,6 @@ describe("admin routes", () => {
     });
 
     expect(injectedRoutes).toEqual(plan);
-    expect(injectedRoutes).toHaveLength(64);
+    expect(injectedRoutes).toHaveLength(65);
   });
 });

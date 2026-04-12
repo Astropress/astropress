@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "target": "esnext",
+    "module": "preserve",
+    "declaration": false,
+    "sourceMap": false,
+    "outDir": ".",
+    "rootDir": ".",
+    "skipLibCheck": true,
+    "isolatedModules": true
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["**/*.d.ts"]
+}
