@@ -1,5 +1,7 @@
 //! Env stubs, config file stubs, and stack summary for optional features.
 //! Extracted from features.rs to keep that file under the 300-line limit.
+//!
+//! Docker Compose and SERVICES.md generation lives in `service_docs.rs`.
 
 use crate::features::{
     AllFeatures, ChatChoice, CmsChoice, CommerceChoice, CommunityChoice, CourseChoice,
@@ -8,6 +10,7 @@ use crate::features::{
     SsoChoice, StatusChoice, TransactionalEmailChoice, VideoChoice,
 };
 use crate::providers::{AbTestingProvider, AnalyticsProvider, AppHost, HeatmapProvider};
+use crate::service_docs::service_compose_stubs;
 
 // ── env stubs ─────────────────────────────────────────────────────────────────
 
@@ -136,10 +139,20 @@ pub(crate) fn feature_env_stubs(f: &AllFeatures) -> String {
             "PRETIX_URL=http://localhost:8000", "PRETIX_API_TOKEN=replace-me",
             "PRETIX_ORGANIZER=replace-me", "PRETIX_EVENT=replace-me"]);
     }
+    if f.transactional_email == TransactionalEmailChoice::Brevo {
+        lines.extend(&["# Brevo (transactional email — SaaS; 300 emails/day free)",
+            "# Use for password resets, order confirmations, notifications.",
+            "# Sign up at https://www.brevo.com → SMTP & API → Generate SMTP key.",
+            "BREVO_SMTP_HOST=smtp-relay.brevo.com", "BREVO_SMTP_PORT=587",
+            "BREVO_SMTP_USERNAME=replace-with-brevo-login-email",
+            "BREVO_SMTP_PASSWORD=replace-with-brevo-smtp-key",
+            "BREVO_FROM_ADDRESS=noreply@yourdomain.com"]);
+    }
     if f.transactional_email == TransactionalEmailChoice::Postal {
         lines.extend(&["# Postal (transactional email server — MIT)",
             "# Use for password resets, order confirmations, notifications.",
             "# Listmonk handles newsletter campaigns; Postal handles triggered emails.",
+            "# ⚠ For best deliverability, Postal needs a dedicated IP (Fly.io dedicated-vm).",
             "POSTAL_SMTP_HOST=localhost", "POSTAL_SMTP_PORT=587",
             "POSTAL_SMTP_USERNAME=replace-me", "POSTAL_SMTP_PASSWORD=replace-me",
             "POSTAL_FROM_ADDRESS=noreply@yourdomain.com"]);
@@ -175,6 +188,10 @@ pub(crate) fn feature_env_stubs(f: &AllFeatures) -> String {
 
 pub(crate) fn feature_config_stubs(f: &AllFeatures) -> Vec<(&'static str, &'static str)> {
     let mut files: Vec<(&'static str, &'static str)> = Vec::new();
+
+    // Per-service docker-compose + .env.example files
+    files.extend(service_compose_stubs(f));
+
     match f.cms {
         CmsChoice::Keystatic => files.push((
             "keystatic.config.ts",
@@ -205,7 +222,7 @@ pub(crate) fn feature_config_stubs(f: &AllFeatures) -> Vec<(&'static str, &'stat
             "\n",
             "// Register Listmonk so the admin panel can embed it at /ap-admin/services/email.\n",
             "// LISTMONK_API_URL is the public URL of your Listmonk instance (via the Caddy proxy).\n",
-            "// See LISTMONK.md for setup instructions.\n",
+            "// See SERVICES.md for setup instructions.\n",
             "registerAstropressService({\n",
             "  provider: \"email\",\n",
             "  label: \"Listmonk\",\n",
@@ -219,170 +236,8 @@ pub(crate) fn feature_config_stubs(f: &AllFeatures) -> Vec<(&'static str, &'stat
             "export const onRequest = createAstropressSecurityMiddleware();\n",
         )));
 
-        // listmonk/Caddyfile — reverse proxy that strips X-Frame-Options so the Listmonk
-        // admin can be embedded in the Astropress admin panel via iframe.
-        // Listmonk sends X-Frame-Options: SAMEORIGIN by default (hardcoded); Caddy removes it
-        // and replaces it with a Content-Security-Policy frame-ancestors directive scoped to
-        // the Astropress site URL.
-        files.push(("listmonk/Caddyfile", concat!(
-            "# Caddy reverse proxy for Listmonk.\n",
-            "# Strips X-Frame-Options: SAMEORIGIN so the Listmonk admin can be embedded\n",
-            "# in the Astropress admin panel at /ap-admin/services/email.\n",
-            "# SITE_URL must be set to your Astropress site's public URL (e.g. https://example.com).\n",
-            "{\n",
-            "    admin off\n",
-            "}\n",
-            "\n",
-            ":80 {\n",
-            "    reverse_proxy listmonk:9000 {\n",
-            "        header_down -X-Frame-Options\n",
-            "    }\n",
-            "    header {\n",
-            "        Content-Security-Policy \"frame-ancestors 'self' {$SITE_URL}\"\n",
-            "    }\n",
-            "}\n",
-        )));
-
-        // listmonk/docker-compose.yml — runs Listmonk + Caddy + Postgres.
-        // Works locally, on Railway (deploy via Docker Compose), and on Fly.io (fly deploy).
-        files.push(("listmonk/docker-compose.yml", concat!(
-            "# Listmonk + Caddy reverse proxy + Postgres.\n",
-            "# Caddy strips X-Frame-Options so Listmonk can be embedded in the Astropress admin panel.\n",
-            "#\n",
-            "# Usage:\n",
-            "#   cp .env.listmonk.example .env.listmonk\n",
-            "#   # Edit .env.listmonk and set DB_PASSWORD and SITE_URL\n",
-            "#   docker compose --env-file .env.listmonk up -d\n",
-            "#\n",
-            "# Deploy to Railway: connect this directory as a Docker Compose service.\n",
-            "# Deploy to Fly.io:  cd listmonk && fly launch && fly deploy\n",
-            "services:\n",
-            "  caddy:\n",
-            "    image: caddy:2-alpine\n",
-            "    ports:\n",
-            "      - \"80:80\"\n",
-            "      - \"443:443\"\n",
-            "    volumes:\n",
-            "      - ./Caddyfile:/etc/caddy/Caddyfile\n",
-            "      - caddy_data:/data\n",
-            "    environment:\n",
-            "      SITE_URL: \"${SITE_URL:-https://example.com}\"\n",
-            "    depends_on:\n",
-            "      - listmonk\n",
-            "    restart: unless-stopped\n",
-            "\n",
-            "  listmonk:\n",
-            "    image: listmonk/listmonk:latest\n",
-            "    environment:\n",
-            "      LISTMONK_app__address: \"0.0.0.0:9000\"\n",
-            "      LISTMONK_db__host: db\n",
-            "      LISTMONK_db__port: \"5432\"\n",
-            "      LISTMONK_db__user: listmonk\n",
-            "      LISTMONK_db__password: \"${DB_PASSWORD:?set DB_PASSWORD in .env.listmonk}\"\n",
-            "      LISTMONK_db__database: listmonk\n",
-            "    depends_on:\n",
-            "      db:\n",
-            "        condition: service_healthy\n",
-            "    restart: unless-stopped\n",
-            "\n",
-            "  db:\n",
-            "    image: postgres:16-alpine\n",
-            "    environment:\n",
-            "      POSTGRES_USER: listmonk\n",
-            "      POSTGRES_PASSWORD: \"${DB_PASSWORD:?set DB_PASSWORD in .env.listmonk}\"\n",
-            "      POSTGRES_DB: listmonk\n",
-            "    volumes:\n",
-            "      - listmonk_db:/var/lib/postgresql/data\n",
-            "    healthcheck:\n",
-            "      test: [\"CMD-SHELL\", \"pg_isready -U listmonk\"]\n",
-            "      interval: 5s\n",
-            "      timeout: 5s\n",
-            "      retries: 5\n",
-            "    restart: unless-stopped\n",
-            "\n",
-            "volumes:\n",
-            "  caddy_data:\n",
-            "  listmonk_db:\n",
-        )));
-
-        // listmonk/.env.listmonk.example — env vars for the docker-compose deployment
-        files.push(("listmonk/.env.listmonk.example", concat!(
-            "# Copy to .env.listmonk and fill in real values before running docker compose.\n",
-            "DB_PASSWORD=change-me\n",
-            "SITE_URL=https://your-astropress-site.example.com\n",
-        )));
-
-        files.push(("LISTMONK.md", concat!(
-            "# Listmonk Setup Guide\n\n",
-            "Listmonk is a self-hosted, open-source newsletter and mailing list manager.\n",
-            "Your subscriber list and campaign data stay on your own infrastructure — no SaaS fees or vendor lock-in.\n\n",
-            "## What was generated\n\n",
-            "| File | Purpose |\n",
-            "|---|---|\n",
-            "| `listmonk/docker-compose.yml` | Runs Listmonk + Caddy reverse proxy + Postgres |\n",
-            "| `listmonk/Caddyfile` | Caddy config — proxies Listmonk and removes `X-Frame-Options` so the admin UI can be embedded in Astropress |\n",
-            "| `listmonk/.env.listmonk.example` | Environment variables for the docker-compose deployment |\n",
-            "| `src/middleware.ts` | Updated to call `registerAstropressService` so the Listmonk UI appears at `/ap-admin/services/email` |\n\n",
-            "## Why Caddy?\n\n",
-            "Listmonk sends `X-Frame-Options: SAMEORIGIN` on every response (hardcoded).\n",
-            "This header prevents the Listmonk admin from being embedded in the Astropress admin panel iframe.\n",
-            "The generated Caddy config sits in front of Listmonk and strips that header, replacing it with\n",
-            "a `Content-Security-Policy: frame-ancestors` directive scoped to your Astropress site URL.\n\n",
-            "## Deploy\n\n",
-            "### Option A — Docker Compose (local or Railway)\n\n",
-            "```sh\n",
-            "cd listmonk\n",
-            "cp .env.listmonk.example .env.listmonk\n",
-            "# Edit .env.listmonk: set DB_PASSWORD and SITE_URL\n",
-            "docker compose --env-file .env.listmonk up -d\n",
-            "```\n\n",
-            "Your Listmonk instance is now reachable at `http://localhost` (via Caddy on port 80).\n\n",
-            "To deploy on **Railway**: push this repo, create a new Railway service, point it at the `listmonk/` directory, and set `DB_PASSWORD` and `SITE_URL` as Railway environment variables.\n\n",
-            "### Option B — Fly.io\n\n",
-            "```sh\n",
-            "cd listmonk\n",
-            "fly launch          # creates fly.toml from docker-compose.yml\n",
-            "fly secrets set DB_PASSWORD=change-me SITE_URL=https://your-astropress-site.example.com\n",
-            "fly deploy\n",
-            "```\n\n",
-            "## First-time Listmonk configuration\n\n",
-            "1. Visit your Listmonk URL and complete the setup wizard.\n",
-            "2. Create an admin account (save these credentials — you will need them below).\n",
-            "3. Go to **Lists** → **New list** and create a subscriber list.\n",
-            "4. Note the numeric list ID shown in the URL (e.g. `/lists/1/...` → ID is `1`).\n\n",
-            "## Configure your Astropress site\n\n",
-            "Add these variables to your `.env` (local) or your host's environment settings (production):\n\n",
-            "```\n",
-            "NEWSLETTER_DELIVERY_MODE=listmonk\n",
-            "LISTMONK_API_URL=https://your-listmonk-instance.example.com\n",
-            "LISTMONK_API_USERNAME=your-admin-username\n",
-            "LISTMONK_API_PASSWORD=your-admin-password\n",
-            "LISTMONK_LIST_ID=1\n",
-            "```\n\n",
-            "`LISTMONK_API_URL` doubles as the `adminPath` used by `registerAstropressService` in `src/middleware.ts`.\n",
-            "This means the Caddy proxy URL (not the internal `listmonk:9000` address) must be set here.\n\n",
-            "## Test locally\n\n",
-            "Set `NEWSLETTER_DELIVERY_MODE=mock` in `.env.local` to skip the API call during development.\n",
-            "The mock adapter always returns `{ ok: true }` without contacting Listmonk.\n\n",
-            "## Mailchimp subscriber migration\n\n",
-            "If you are moving from Mailchimp:\n\n",
-            "1. In Mailchimp, go to **Audience** → **Manage Contacts** → **Export Audience** → download as CSV.\n",
-            "2. Convert the CSV to Listmonk import JSON:\n\n",
-            "   ```json\n",
-            "   [\n",
-            "     { \"email\": \"subscriber@example.com\", \"name\": \"First Last\" }\n",
-            "   ]\n",
-            "   ```\n\n",
-            "3. POST to your Listmonk instance:\n\n",
-            "   ```sh\n",
-            "   curl -u admin:password -X POST https://your-listmonk/api/subscribers/import \\\n",
-            "     -H 'Content-Type: application/json' \\\n",
-            "     -d '{ \"mode\": \"subscribe\", \"subscription_status\": \"confirmed\",\n",
-            "          \"lists\": [1],\n",
-            "          \"records\": [ { \"email\": \"subscriber@example.com\", \"name\": \"First Last\" } ] }'\n",
-            "   ```\n\n",
-            "   Replace `lists: [1]` with your actual list ID.\n",
-        )));
+        // Listmonk compose files are now generated by service_docs::service_compose_stubs().
+        // Setup instructions are in SERVICES.md (generated by service_docs::build_services_doc()).
     }
     if f.commerce == CommerceChoice::Medusa {
         files.push(("medusa-config.js",
@@ -435,7 +290,8 @@ pub(crate) fn print_stack_summary(f: &AllFeatures, app_host: Option<AppHost>) {
         CmsChoice::Payload   => println!("    Content       Payload            ⚠ needs a Node server (Fly.io / Railway free)"),
     }
     if f.email == EmailChoice::Listmonk                       { println!("    Email         Listmonk           → Fly.io / Railway (free)"); }
-    if f.transactional_email == TransactionalEmailChoice::Postal { println!("    Txn email     Postal             → Fly.io / Railway (free)"); }
+    if f.transactional_email == TransactionalEmailChoice::Brevo   { println!("    Txn email     Brevo              → SaaS free (300/day); no server needed"); }
+    if f.transactional_email == TransactionalEmailChoice::Postal  { println!("    Txn email     Postal             → Fly.io / Railway (free)  ⚠ dedicated IP for deliverability"); }
     match f.analytics {
         AnalyticsProvider::Umami     => println!("    Analytics     Umami              → Railway / Fly.io (free)"),
         AnalyticsProvider::Plausible => println!("    Analytics     Plausible          ⚠ cloud $9/mo; self-host free"),

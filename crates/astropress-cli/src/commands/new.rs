@@ -7,6 +7,7 @@ use crate::cli_config::env::{
 use super::import_common::bootstrap_content_services;
 use super::new_wizard::prompt_all_features;
 use crate::feature_stubs::{feature_config_stubs, feature_env_stubs, print_stack_summary};
+use crate::service_docs::build_services_doc;
 use crate::features::AllFeatures;
 use crate::js_bridge::loaders::load_project_scaffold;
 use crate::providers::{
@@ -107,6 +108,9 @@ pub(crate) fn scaffold_new_project(
     }
     for (relative_path, contents) in feature_config_stubs(&features) {
         crate::write_text_file(project_dir, relative_path, contents)?;
+    }
+    if let Some(services_doc) = build_services_doc(&features) {
+        crate::write_text_file(project_dir, "SERVICES.md", &services_doc)?;
     }
 
     crate::write_text_file(project_dir, "DEPLOY.md", &scaffold.deploy_doc)?;

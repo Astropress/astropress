@@ -9,6 +9,7 @@ mod features;
 mod js_bridge;
 mod providers;
 mod scaffold;
+mod service_docs;
 mod telemetry;
 mod tui;
 mod utils;

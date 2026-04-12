@@ -13,7 +13,9 @@ use crate::providers::{AbTestingProvider, AnalyticsProvider, HeatmapProvider};
 pub(crate) enum CmsChoice { BuiltIn, Keystatic, Payload }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)] pub(crate) enum EmailChoice             { None, Listmonk }
-#[derive(Debug, Clone, Copy, PartialEq, Eq)] pub(crate) enum TransactionalEmailChoice { None, Postal }
+/// Brevo = SaaS SMTP (300 emails/day free; no server to run).
+/// Postal = self-hosted SMTP server (MIT; Fly.io / Railway free; needs dedicated IP for best deliverability).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)] pub(crate) enum TransactionalEmailChoice { None, Brevo, Postal }
 #[derive(Debug, Clone, Copy, PartialEq, Eq)] pub(crate) enum CommerceChoice          { None, Medusa, Vendure }
 #[derive(Debug, Clone, Copy, PartialEq, Eq)] pub(crate) enum CommunityChoice         { None, Giscus, Remark42 }
 /// Pagefind = static index at build time (zero server).
@@ -175,27 +177,14 @@ mod tests {
     }
 
     #[test]
-    fn listmonk_generates_setup_doc() {
-        let f = AllFeatures { email: EmailChoice::Listmonk, ..AllFeatures::defaults() };
-        let stubs = feature_config_stubs(&f);
-        let md = stubs.iter().find(|(p, _)| *p == "LISTMONK.md");
-        assert!(md.is_some(), "LISTMONK.md not generated");
-        let content = md.unwrap().1;
-        assert!(content.contains("LISTMONK_API_URL"));
-        assert!(content.contains("Fly.io"));
-        assert!(content.contains("docker-compose.yml"));
-        assert!(content.contains("Caddyfile"));
-        assert!(content.contains("registerAstropressService"));
-    }
-
-    #[test]
     fn listmonk_generates_caddy_proxy_files() {
+        // Compose files now come from service_docs::service_compose_stubs() via feature_config_stubs().
         let f = AllFeatures { email: EmailChoice::Listmonk, ..AllFeatures::defaults() };
         let stubs = feature_config_stubs(&f);
         let paths: Vec<&str> = stubs.iter().map(|(p, _)| *p).collect();
-        assert!(paths.contains(&"listmonk/Caddyfile"));
-        assert!(paths.contains(&"listmonk/docker-compose.yml"));
-        assert!(paths.contains(&"listmonk/.env.listmonk.example"));
+        assert!(paths.contains(&"listmonk/Caddyfile"), "{paths:?}");
+        assert!(paths.contains(&"listmonk/docker-compose.yml"), "{paths:?}");
+        assert!(paths.contains(&"listmonk/.env.listmonk.example"), "{paths:?}");
         let caddyfile = stubs.iter().find(|(p, _)| *p == "listmonk/Caddyfile").unwrap().1;
         assert!(caddyfile.contains("header_down -X-Frame-Options"));
         assert!(caddyfile.contains("frame-ancestors"));
@@ -216,6 +205,15 @@ mod tests {
         assert!(content.contains("provider: \"email\""));
         assert!(content.contains("registerCms"));
         assert!(content.contains("createAstropressSecurityMiddleware"));
+    }
+
+    #[test]
+    fn brevo_generates_env_stubs() {
+        let f = AllFeatures { transactional_email: TransactionalEmailChoice::Brevo, ..AllFeatures::defaults() };
+        let s = feature_env_stubs(&f);
+        assert!(s.contains("BREVO_SMTP_HOST"));
+        assert!(s.contains("BREVO_SMTP_PASSWORD"));
+        assert!(s.contains("BREVO_FROM_ADDRESS"));
     }
 
     #[test]

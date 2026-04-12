@@ -9,6 +9,7 @@
 use std::path::Path;
 
 use crate::feature_stubs::{feature_config_stubs, feature_env_stubs};
+use crate::service_docs::build_services_doc;
 use crate::features::{
     AllFeatures, ChatChoice, CmsChoice, CommerceChoice, CommunityChoice, CourseChoice,
     CrmChoice, EmailChoice, EventChoice, FormsChoice, ForumChoice, KnowledgeBaseChoice,
@@ -131,6 +132,14 @@ pub(crate) fn add_integrations(project_dir: &Path, features: AllFeatures) -> Res
         println!("Wrote {rel_path}");
     }
 
+    // Write or update SERVICES.md
+    if let Some(services_doc) = build_services_doc(&features) {
+        let services_path = project_dir.join("SERVICES.md");
+        std::fs::write(&services_path, services_doc)
+            .map_err(|e| format!("Could not write SERVICES.md: {e}"))?;
+        println!("Wrote SERVICES.md");
+    }
+
     Ok(())
 }
 
@@ -239,9 +248,10 @@ pub(crate) fn parse_add_features(args: &[String]) -> Result<AllFeatures, String>
             }
             "--transactional-email" | "--transactional_email" => {
                 f.transactional_email = match value.as_str() {
+                    "brevo"  => TransactionalEmailChoice::Brevo,
                     "postal" => TransactionalEmailChoice::Postal,
                     other => return Err(format!(
-                        "Unknown transactional email provider `{other}`. Use: postal."
+                        "Unknown transactional email provider `{other}`. Use: brevo, postal."
                     )),
                 };
             }

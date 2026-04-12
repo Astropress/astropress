@@ -293,12 +293,17 @@ pub(crate) fn prompt_all_features() -> AllFeatures {
         .with_prompt("Add transactional email?  (password resets, order confirmations, notifications)")
         .default(false).interact().unwrap_or(false)
     {
-        let _ = Select::with_theme(t).with_prompt("Transactional email").items(&[
-            "Postal  — MIT; self-hosted SMTP server for triggered emails; use alongside\n\
-             \x20        Listmonk (which handles campaigns) for a fully self-hosted email stack\n\
-             \x20        (Fly.io / Railway free)",
-        ]).default(0).interact().unwrap_or(0);
-        TransactionalEmailChoice::Postal
+        match Select::with_theme(t).with_prompt("Transactional email").items(&[
+            "Brevo   — SaaS SMTP; 300 emails/day free; no server to run;\n\
+             \x20        use for most projects (sign up at brevo.com)",
+            "Postal  — MIT; self-hosted SMTP server; use when you need full\n\
+             \x20        ownership of your email infrastructure; use alongside Listmonk\n\
+             \x20        for a fully self-hosted stack\n\
+             \x20        ⚠ needs dedicated IP for best deliverability (Fly.io / Railway free)",
+        ]).default(0).interact().unwrap_or(0) {
+            1 => TransactionalEmailChoice::Postal,
+            _ => TransactionalEmailChoice::Brevo,
+        }
     } else { TransactionalEmailChoice::None };
 
     // ── uptime / status page ──────────────────────────────────────────────
