@@ -39,11 +39,9 @@ export async function deleteRuntimeAuthor(id: number, actor: Actor, locals?: App
   return withLocalStoreFallback(
     locals,
     async (db) => {
-      const result = await createD1AdminMutationStore(db).authors.deleteAuthor(id);
-      /* v8 ignore next 2 — deleteAuthor always returns ok:true */
-      if (!result.ok) return result;
+      await createD1AdminMutationStore(db).authors.deleteAuthor(id);
       await recordD1Audit(locals, actor, "author.delete", "content", String(id), `Deleted author ${id}.`);
-      return result;
+      return { ok: true as const };
     },
     /* v8 ignore next 1 */
     (localStore) => localStore.deleteAuthor(id, actor),
@@ -90,11 +88,9 @@ export async function deleteRuntimeCategory(id: number, actor: Actor, locals?: A
   return withLocalStoreFallback(
     locals,
     async (db) => {
-      const result = await createD1AdminMutationStore(db).taxonomies.deleteCategory(id);
-      /* v8 ignore next 2 — deleteCategory always returns ok:true */
-      if (!result.ok) return result;
+      await createD1AdminMutationStore(db).taxonomies.deleteCategory(id);
       await recordD1Audit(locals, actor, "category.delete", "content", String(id), `Deleted category ${id}.`);
-      return result;
+      return { ok: true as const };
     },
     /* v8 ignore next 1 */
     (localStore) => localStore.deleteCategory(id, actor),
@@ -137,11 +133,9 @@ export async function deleteRuntimeTag(id: number, actor: Actor, locals?: App.Lo
   return withLocalStoreFallback(
     locals,
     async (db) => {
-      const result = await createD1AdminMutationStore(db).taxonomies.deleteTag(id);
-      /* v8 ignore next 2 — deleteTag always returns ok:true */
-      if (!result.ok) return result;
+      await createD1AdminMutationStore(db).taxonomies.deleteTag(id);
       await recordD1Audit(locals, actor, "tag.delete", "content", String(id), `Deleted tag ${id}.`);
-      return result;
+      return { ok: true as const };
     },
     /* v8 ignore next 1 */
     (localStore) => localStore.deleteTag(id, actor),
