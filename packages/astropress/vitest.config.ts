@@ -3,6 +3,11 @@ import { defineConfig } from "vitest/config";
 
 export default defineConfig({
   resolve: {
+    // Prefer .ts over .js for extensionless imports so v8 coverage tracks
+    // TypeScript source files. Vite's default order puts .js ahead of .ts,
+    // which causes coverage to attach to the generated .js siblings (which
+    // are excluded below) and report 0% for the .ts source.
+    extensions: [".ts", ".tsx", ".mts", ".mjs", ".js", ".jsx", ".json"],
     extensionAlias: {
       ".js": [".ts", ".js"],
     },

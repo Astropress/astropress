@@ -80,30 +80,32 @@ Run `bun run bdd:lint` to validate Gherkin syntax before committing.
 
 ## The dual `.ts` / `.js` file pattern
 
-Most source files in `packages/astropress/src/` appear in pairs:
+Files in `packages/astropress/src/` and `packages/astropress/index.ts` ship to npm
+with generated `.js` siblings so consumers without a TypeScript build step can
+`import` them. The `.js` files are **generated output** — they're listed in
+`packages/astropress/.gitignore` (`src/**/*.js` and `/index.js`) and are never
+committed. The TypeScript source is the single source of truth.
 
-- `foo.ts` — TypeScript source (typed development, test suite, type checking)
-- `foo.js` — pre-compiled JavaScript (what consumers without a TypeScript build step import)
-
-**The `.js` files are not generated.** They are committed alongside the `.ts` files and must be kept in sync manually. See [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md#the-dual-ts--js-file-pattern) for why.
-
-**The rule:** whenever you edit a `.ts` file that has a `.js` sibling, you must also update the `.js` file to match.
-
-**Quick regen helper:** if you have made changes to `.ts` files and want to regenerate all `.js` files in one shot, run from the repo root:
+**Workflow:** edit only the `.ts` file. Before publishing (or to smoke-test the
+built package locally), regenerate the `.js` siblings:
 
 ```bash
 bun run sync:js
 ```
 
-This wraps `tsc -p packages/astropress/tsconfig.build.json --noCheck` followed by the `add-js-ext.ts` pass that rewrites import paths. After running it, verify the results:
+This wraps `tsc -p packages/astropress/tsconfig.build.json --noCheck` followed by
+the `add-js-ext.ts` pass that rewrites import paths. The `audit:sync` script
+(run by CI and the pre-commit hook) verifies export-level parity between each
+`.ts` source and its generated `.js` sibling:
 
 ```bash
 bun run audit:sync
 ```
 
-The `audit:sync` script checks export-level divergence — if you add a new exported symbol to a `.ts` file and forget the `.js`, CI will fail.
-
-Files that are `.ts`-only (no `.js` sibling) do not need this treatment — they are consumed exclusively through the TypeScript compiler path.
+Files that are `.ts`-only (no `.js` export listed in `package.json`) are
+consumed exclusively through the TypeScript compiler path and skip this step.
+See [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md#the-dual-ts--js-file-pattern)
+for why this pattern exists (ADR-003).
 
 ## Architecture boundaries
 
@@ -132,7 +134,7 @@ Run `bun run bdd:lint` to validate feature file syntax.
 ## Commit conventions
 
 - One logical change per commit
-- Present-tense imperative subject line (`Add focus trap to confirm dialog`)
+- Present-tense imperative subject line (`add focus trap to confirm dialog`)
 - Reference the feature file or test if the change is behaviour-driven
 
 ## Opening a pull request
