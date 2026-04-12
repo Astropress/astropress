@@ -1,7 +1,8 @@
 Feature: D1 schema migration runner
 
-  Astropress provides a programmatic migration runner for Cloudflare D1 databases
-  that mirrors the SQLite migration runner's interface and report shape.
+  As an operator deploying to Cloudflare D1
+  I want a programmatic migration runner that mirrors the SQLite runner
+  So that I can apply, skip, dry-run, and roll back schema changes with the same report shape on either backend
 
   Background:
     Given a D1-compatible database mock is available

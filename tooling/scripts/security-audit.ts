@@ -74,18 +74,19 @@ async function main() {
     }
   }
 
+  // Auth pages (login, reset-password, accept-invite) are covered centrally by
+  // src/security-middleware-entrypoint.ts and must NOT call the helper directly
+  // (ZTA P4 invariant in zta-invariants.test.ts). AdminLayout stays an exception.
   const securityHeaderEntrypoints = [
     "packages/astropress/components/AdminLayout.astro",
-    "packages/astropress/pages/ap-admin/login.astro",
-    "packages/astropress/pages/ap-admin/accept-invite.astro",
-    "packages/astropress/pages/ap-admin/reset-password.astro",
     "packages/astropress/src/admin-action-utils.ts",
+    "packages/astropress/src/security-middleware-entrypoint.ts",
     "packages/astropress/pages/ap-admin/session.ts",
   ];
 
   for (const file of securityHeaderEntrypoints) {
     const content = await readFile(join(root, file), "utf8");
-    if (!/applyAstropressSecurityHeaders|createAstropressSecureRedirect/.test(content)) {
+    if (!/applyAstropressSecurityHeaders|createAstropressSecureRedirect|createAstropressSecurityMiddleware/.test(content)) {
       violations.push({ file, message: "security headers helper not applied in required entrypoint" });
     }
   }

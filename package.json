@@ -37,11 +37,11 @@
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.11.1",
-    "lefthook": "^1.11.13",
+    "lefthook": "^1.13.6",
     "@playwright/test": "^1.59.1",
     "@size-limit/file": "^12.0.1",
     "astropress": "workspace:*",
-    "axe-core": "^4.10.3",
+    "axe-core": "^4.11.2",
     "htmlparser2": "^12.0.0",
     "jsdom": "^26.1.0",
     "playwright": "^1.59.1",
@@ -49,7 +49,8 @@
     "typescript": "5.9.3"
   },
   "overrides": {
-    "yaml": "^2.8.3"
+    "yaml": "^2.8.3",
+    "vite": "^7.3.2"
   },
   "browserslist": [
     "Chrome >= 108",

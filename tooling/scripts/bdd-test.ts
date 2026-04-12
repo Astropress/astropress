@@ -865,6 +865,24 @@ const verificationGroups: VerificationGroup[] = [
     ],
   },
   {
+    label: "D1 schema migration scenarios",
+    scenarios: [
+      "Apply a pending migration to D1",
+      "Skip an already-applied D1 migration",
+      "Dry-run reports without writing",
+      "Rollback the last D1 migration",
+      "Rollback returns no_rollback_sql when no .down.sql was provided",
+      "D1 migration report shape matches SQLite report shape",
+    ],
+    steps: [
+      {
+        command: "bunx",
+        args: ["vitest", "run", "tests/d1-migrate-ops.test.ts"],
+        cwd: astropressPackageRoot,
+      },
+    ],
+  },
+  {
     label: "plugin API scenarios",
     scenarios: [
       "A plugin's onContentSave hook is called after content is saved",
