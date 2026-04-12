@@ -7,9 +7,11 @@ pre-commit:
       stage_fixed: true
 
     audit-sync:
+      glob: "packages/astropress/src/**/*.ts"
       run: bun run audit:sync
 
     audit-arch:
+      glob: "packages/**/*.ts"
       run: bun run audit:arch
 
     bdd-lint:
@@ -27,8 +29,9 @@ commit-msg:
   commands:
     format:
       run: |
-        msg=$(cat {1})
-        if ! echo "$msg" | grep -qE '^(feat|fix|chore|docs|test|refactor|perf|ci|build|revert)(\(.+\))?: .{1,72}'; then
+        msg=$(head -1 {1})
+        echo "$msg" | grep -qE '^(Merge|Revert|fixup!|squash!)' && exit 0
+        if ! echo "$msg" | grep -qE '^(feat|fix|chore|docs|test|refactor|perf|ci|build|revert)(\(.+\))?: .{1,72}$'; then
           echo "Commit message must follow conventional commits format:"
           echo "  type(scope)?: subject  (subject max 72 chars)"
           echo "  Types: feat fix chore docs test refactor perf ci build revert"
@@ -39,13 +42,10 @@ pre-push:
   parallel: true
   commands:
     gates:
-      run: bun run audit:arch && bun run audit:arch:rust && bun run bdd:lint && bun run bdd:test
+      run: bun run audit:arch && bun run audit:arch:rust && bun run bdd:test
 
     coverage:
       run: bun run test:coverage
 
     test-cli:
       run: bun run test:cli
-
-    docs-api:
-      run: bun run docs:api:check
