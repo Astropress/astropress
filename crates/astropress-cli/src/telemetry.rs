@@ -196,7 +196,7 @@ fn send_telemetry_report(summary: &ImportSummary, issues: &[String]) -> Result<(
             "Content-Type: application/json",
             "-d",
             &json,
-            "https://telemetry.astropress.dev/import-feedback",
+            "https://telemetry.astropress.diy/import-feedback",
         ])
         .stdout(std::process::Stdio::null())
         .stderr(std::process::Stdio::null())

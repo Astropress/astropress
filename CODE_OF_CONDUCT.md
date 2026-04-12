@@ -23,7 +23,7 @@ This code of conduct applies to all project spaces, including the GitHub reposit
 
 ## Enforcement
 
-If you experience or witness behavior that violates these standards, please report it to the maintainers at **conduct@astropress.dev**. All reports will be reviewed promptly and kept confidential.
+If you experience or witness behavior that violates these standards, please report it to the maintainers at **conduct@astropress.diy**. All reports will be reviewed promptly and kept confidential.
 
 Maintainers have the right and responsibility to remove, edit, or reject contributions that do not align with this code of conduct, and to temporarily or permanently ban contributors whose behavior is harmful to the community.
 
@@ -38,4 +38,4 @@ The severity of the response will be proportional to the severity and pattern of
 
 ## Attribution
 
-This code of conduct is adapted from the norms of open source communities that have fostered healthy collaboration. Contact conduct@astropress.dev with any questions.
+This code of conduct is adapted from the norms of open source communities that have fostered healthy collaboration. Contact conduct@astropress.diy with any questions.
