@@ -7,6 +7,7 @@ use serde::{Deserialize, Serialize};
 use crate::providers::{AppHost, DataServices, LocalProvider};
 use crate::cli_config::env::{merge_env_overrides, read_env_file};
 use crate::js_bridge::runner::{detect_package_manager, run_package_json_command};
+use crate::features::DonationChoices;
 
 #[derive(Debug, Deserialize)]
 pub(crate) struct ProjectScaffold {
@@ -282,10 +283,26 @@ pub(crate) fn load_project_scaffold(
     ab_testing: Option<&str>,
     heatmap: Option<&str>,
     enable_api: bool,
+    donations: &DonationChoices,
 ) -> Result<ProjectScaffold, String> {
     let scaffold_module = package_module_import("project-scaffold.js", None)?;
     let scaffold_module_literal =
         serde_json::to_string(&scaffold_module).map_err(|error| error.to_string())?;
+
+    // Build a donations object for the JS bridge — only include fields for
+    // the widget-based providers (give_lively, liberapay, pledge_crypto).
+    // Polar stays Rust-only (env stubs only; no JS scaffold changes needed).
+    let has_widget_donations = donations.give_lively || donations.liberapay || donations.pledge_crypto;
+    let donations_json = if has_widget_donations {
+        let mut m = serde_json::Map::new();
+        if donations.give_lively  { m.insert("giveLively".into(),   true.into()); }
+        if donations.liberapay    { m.insert("liberapay".into(),    true.into()); }
+        if donations.pledge_crypto { m.insert("pledgeCrypto".into(), true.into()); }
+        serde_json::to_string(&serde_json::Value::Object(m)).map_err(|e| e.to_string())?
+    } else {
+        "undefined".to_string()
+    };
+
     let script = format!(
         r#"import {{ createAstropressProjectScaffold }} from {module};
 
@@ -296,7 +313,8 @@ const scaffold = createAstropressProjectScaffold({{
   analytics: {analytics},
   abTesting: {ab_testing},
   heatmap: {heatmap},
-  enableApi: {enable_api}
+  enableApi: {enable_api},
+  donations: {donations}
 }});
 console.log(JSON.stringify(scaffold));
 "#,
@@ -310,6 +328,7 @@ console.log(JSON.stringify(scaffold));
         ab_testing = serde_json::to_string(&ab_testing).map_err(|e| e.to_string())?,
         heatmap = serde_json::to_string(&heatmap).map_err(|e| e.to_string())?,
         enable_api = enable_api,
+        donations = donations_json,
     );
 
     let output = ProcessCommand::new("node")

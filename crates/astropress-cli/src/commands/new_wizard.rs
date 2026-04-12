@@ -3,7 +3,7 @@
 
 use crate::features::{
     AllFeatures, ChatChoice, CmsChoice, CommunityChoice, CommerceChoice, CourseChoice,
-    DonationChoice, EmailChoice, ForumChoice, NotifyChoice, PaymentChoice, ScheduleChoice,
+    DonationChoices, EmailChoice, ForumChoice, NotifyChoice, PaymentChoice, ScheduleChoice,
     SearchChoice, TestimonialChoice,
 };
 use crate::providers::{
@@ -17,7 +17,7 @@ pub(crate) fn prompt_all_features() -> AllFeatures {
     if crate::tui::is_plain() {
         return AllFeatures::defaults();
     }
-    use dialoguer::{Confirm, Select, theme::ColorfulTheme};
+    use dialoguer::{Confirm, MultiSelect, Select, theme::ColorfulTheme};
     let t = &ColorfulTheme::default();
 
     // ── content backend (always a choice, no y/n — every project needs one) ──
@@ -143,12 +143,23 @@ pub(crate) fn prompt_all_features() -> AllFeatures {
         .with_prompt("Add donations / sponsorships?")
         .default(false).interact().unwrap_or(false)
     {
-        let _ = Select::with_theme(t).with_prompt("Donations provider").items(&[
-            "Polar  — Apache 2.0; dev/OSS-focused; paid posts + sponsorships + issue funding;\n\
-             \x20      use when your audience is developers or open-source users  (polar.sh free tier)",
-        ]).default(0).interact().unwrap_or(0);
-        DonationChoice::Polar
-    } else { DonationChoice::None };
+        let selected = MultiSelect::with_theme(t)
+            .with_prompt("Donation providers (space to toggle, enter to confirm)")
+            .items(&[
+                "Polar         — dev/OSS-focused; paid posts + sponsorships + issue funding (polar.sh free tier)",
+                "GiveLively    — fiat widget for US nonprofits (free, HTTPS widget embed)",
+                "Liberapay     — recurring fiat donations; no external JS; OSS-friendly (liberapay.com free)",
+                "PledgeCrypto  — crypto donations with automatic carbon offsets per transaction",
+            ])
+            .interact()
+            .unwrap_or_default();
+        DonationChoices {
+            polar:        selected.contains(&0),
+            give_lively:  selected.contains(&1),
+            liberapay:    selected.contains(&2),
+            pledge_crypto: selected.contains(&3),
+        }
+    } else { DonationChoices::default() };
 
     // ── payment processing ────────────────────────────────────────────────
     let payments = if Confirm::with_theme(t)

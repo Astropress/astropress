@@ -3,7 +3,7 @@
 
 use crate::features::{
     AllFeatures, ChatChoice, CmsChoice, CommerceChoice, CommunityChoice, CourseChoice,
-    DonationChoice, EmailChoice, ForumChoice, NotifyChoice, PaymentChoice, ScheduleChoice,
+    EmailChoice, ForumChoice, NotifyChoice, PaymentChoice, ScheduleChoice,
     SearchChoice, TestimonialChoice,
 };
 use crate::providers::{AbTestingProvider, AnalyticsProvider, AppHost, HeatmapProvider};
@@ -47,9 +47,22 @@ pub(crate) fn feature_env_stubs(f: &AllFeatures) -> String {
             "FORMBRICKS_URL=http://localhost:3000", "FORMBRICKS_API_KEY=replace-me",
             "FORMBRICKS_ENVIRONMENT_ID=replace-me"]);
     }
-    if f.donations == DonationChoice::Polar {
+    if f.donations.polar {
         lines.extend(&["# Polar (donations / sponsorships)",
             "POLAR_ACCESS_TOKEN=replace-me", "POLAR_ORGANIZATION_ID=replace-me"]);
+    }
+    if f.donations.give_lively {
+        lines.extend(&["# GiveLively (fiat donations — US nonprofits)",
+            "GIVELIVELY_ORG_SLUG=replace-with-your-org-slug",
+            "GIVELIVELY_CAMPAIGN_SLUG=replace-with-your-campaign-slug-or-remove"]);
+    }
+    if f.donations.liberapay {
+        lines.extend(&["# Liberapay (recurring donations — OSS-friendly)",
+            "LIBERAPAY_USERNAME=replace-with-your-liberapay-username"]);
+    }
+    if f.donations.pledge_crypto {
+        lines.extend(&["# PledgeCrypto (crypto donations + automatic carbon offsets)",
+            "PLEDGE_PARTNER_KEY=[YOUR_PLEDGE_PARTNER_KEY]"]);
     }
     if f.forum == ForumChoice::Flarum {
         lines.extend(&["# Flarum (forum)",
@@ -160,7 +173,10 @@ pub(crate) fn print_stack_summary(f: &AllFeatures, app_host: Option<AppHost>) {
     if f.commerce    == CommerceChoice::Medusa       { println!("    Storefront    Medusa             → Fly.io / Railway (free)  ⚠ needs Node server"); }
     if f.courses     == CourseChoice::FrappeLms      { println!("    Courses       Frappe LMS         → Fly.io / Railway (free)"); }
     if f.testimonials == TestimonialChoice::Formbricks { println!("    Testimonials  Formbricks         → formbricks.com (free tier)"); }
-    if f.donations   == DonationChoice::Polar        { println!("    Donations     Polar              → polar.sh (Apache 2.0, free tier)"); }
+    if f.donations.polar        { println!("    Donations     Polar              → polar.sh (Apache 2.0, free tier)"); }
+    if f.donations.give_lively  { println!("    Donations     GiveLively         → givelively.org (free for nonprofits)"); }
+    if f.donations.liberapay    { println!("    Donations     Liberapay          → liberapay.com (free, OSS-friendly)"); }
+    if f.donations.pledge_crypto { println!("    Donations     PledgeCrypto       → pledgecrypto.com (free; auto carbon offsets)"); }
     if f.payments    == PaymentChoice::HyperSwitch   { println!("    Payments      HyperSwitch        → Fly.io / Railway (free); provider fees apply"); }
     if f.forum       == ForumChoice::Flarum          { println!("    Forum         Flarum             → Fly.io / Railway (free)"); }
     if f.chat        == ChatChoice::Chatwoot         { println!("    Live chat     Chatwoot           → Fly.io / Railway (free)"); }

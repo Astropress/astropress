@@ -16,7 +16,21 @@ pub(crate) enum CmsChoice { BuiltIn, Keystatic, Directus, Payload }
 #[derive(Debug, Clone, Copy, PartialEq, Eq)] pub(crate) enum SearchChoice     { None, Pagefind }
 #[derive(Debug, Clone, Copy, PartialEq, Eq)] pub(crate) enum CourseChoice     { None, FrappeLms }
 #[derive(Debug, Clone, Copy, PartialEq, Eq)] pub(crate) enum TestimonialChoice{ None, Formbricks }
-#[derive(Debug, Clone, Copy, PartialEq, Eq)] pub(crate) enum DonationChoice   { None, Polar }
+/// Multiple donation providers can be enabled simultaneously.
+/// Polar remains an exclusive single-provider option (SaaS paid posts model).
+/// GiveLively, Liberapay, and PledgeCrypto are widget-based and go through the JS bridge.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct DonationChoices {
+    pub polar:        bool,
+    pub give_lively:  bool,
+    pub liberapay:    bool,
+    pub pledge_crypto: bool,
+}
+impl Default for DonationChoices {
+    fn default() -> Self {
+        Self { polar: false, give_lively: false, liberapay: false, pledge_crypto: false }
+    }
+}
 #[derive(Debug, Clone, Copy, PartialEq, Eq)] pub(crate) enum ForumChoice      { None, Flarum }
 #[derive(Debug, Clone, Copy, PartialEq, Eq)] pub(crate) enum ChatChoice       { None, Chatwoot }
 #[derive(Debug, Clone, Copy, PartialEq, Eq)] pub(crate) enum PaymentChoice    { None, HyperSwitch }
@@ -33,7 +47,7 @@ pub(crate) struct AllFeatures {
     pub search:       SearchChoice,
     pub courses:      CourseChoice,
     pub testimonials: TestimonialChoice,
-    pub donations:    DonationChoice,
+    pub donations:    DonationChoices,
     pub forum:        ForumChoice,
     pub chat:         ChatChoice,
     pub payments:     PaymentChoice,
@@ -56,7 +70,7 @@ impl AllFeatures {
             search:       SearchChoice::None,
             courses:      CourseChoice::None,
             testimonials: TestimonialChoice::None,
-            donations:    DonationChoice::None,
+            donations:    DonationChoices::default(),
             forum:        ForumChoice::None,
             chat:         ChatChoice::None,
             payments:     PaymentChoice::None,
@@ -193,10 +207,59 @@ mod tests {
 
     #[test]
     fn polar_generates_env_stubs() {
-        let f = AllFeatures { donations: DonationChoice::Polar, ..AllFeatures::defaults() };
+        let f = AllFeatures {
+            donations: DonationChoices { polar: true, ..DonationChoices::default() },
+            ..AllFeatures::defaults()
+        };
         let s = feature_env_stubs(&f);
         assert!(s.contains("POLAR_ACCESS_TOKEN"));
         assert!(s.contains("POLAR_ORGANIZATION_ID"));
+    }
+
+    #[test]
+    fn give_lively_generates_env_stubs() {
+        let f = AllFeatures {
+            donations: DonationChoices { give_lively: true, ..DonationChoices::default() },
+            ..AllFeatures::defaults()
+        };
+        let s = feature_env_stubs(&f);
+        assert!(s.contains("GIVELIVELY_ORG_SLUG"));
+        assert!(s.contains("GIVELIVELY_CAMPAIGN_SLUG"));
+    }
+
+    #[test]
+    fn liberapay_generates_env_stubs() {
+        let f = AllFeatures {
+            donations: DonationChoices { liberapay: true, ..DonationChoices::default() },
+            ..AllFeatures::defaults()
+        };
+        let s = feature_env_stubs(&f);
+        assert!(s.contains("LIBERAPAY_USERNAME"));
+    }
+
+    #[test]
+    fn pledge_crypto_generates_env_stubs() {
+        let f = AllFeatures {
+            donations: DonationChoices { pledge_crypto: true, ..DonationChoices::default() },
+            ..AllFeatures::defaults()
+        };
+        let s = feature_env_stubs(&f);
+        assert!(s.contains("PLEDGE_PARTNER_KEY"));
+    }
+
+    #[test]
+    fn multiple_donation_providers_generate_all_stubs() {
+        let f = AllFeatures {
+            donations: DonationChoices {
+                give_lively: true, liberapay: true, pledge_crypto: true,
+                ..DonationChoices::default()
+            },
+            ..AllFeatures::defaults()
+        };
+        let s = feature_env_stubs(&f);
+        assert!(s.contains("GIVELIVELY_ORG_SLUG"));
+        assert!(s.contains("LIBERAPAY_USERNAME"));
+        assert!(s.contains("PLEDGE_PARTNER_KEY"));
     }
 
     // ── forum ─────────────────────────────────────────────────────────────

@@ -86,6 +86,7 @@ pub(crate) fn scaffold_new_project(
         Some(features.ab_testing.as_str()).filter(|s| *s != "none"),
         Some(features.heatmap.as_str()).filter(|s| *s != "none"),
         features.enable_api,
+        &features.donations,
     )?;
     for (script_name, command) in &scaffold.package_scripts {
         manifest.scripts.insert(script_name.clone(), command.clone());
