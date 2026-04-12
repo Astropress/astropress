@@ -22,55 +22,55 @@ pub(crate) struct MigrationTool {
 }
 
 /// All tools that support `astropress migrate`.
+/// AstroPress built-in CMS is excluded — it is not an optional integration
+/// and has no migration path (it is the default starting point).
 const TOOLS: &[MigrationTool] = &[
     // ── scheduling ────────────────────────────────────────────────────────────
-    MigrationTool { slug: "rallly",   name: "Rallly",   category: "scheduling",
+    MigrationTool { slug: "rallly",    name: "Rallly",    category: "scheduling",
         description: "Availability polling (MIT; no-account group scheduling)" },
-    MigrationTool { slug: "calcom",   name: "Cal.com",  category: "scheduling",
+    MigrationTool { slug: "calcom",    name: "Cal.com",   category: "scheduling",
         description: "Full booking + calendar integrations (AGPL 3.0)" },
     // ── commerce ─────────────────────────────────────────────────────────────
-    MigrationTool { slug: "medusa",   name: "Medusa",   category: "commerce",
+    MigrationTool { slug: "medusa",    name: "Medusa",    category: "commerce",
         description: "Headless commerce with Stripe + product catalog (MIT)" },
-    MigrationTool { slug: "vendure",  name: "Vendure",  category: "commerce",
+    MigrationTool { slug: "vendure",   name: "Vendure",   category: "commerce",
         description: "TypeScript-first headless commerce; GraphQL API (MIT)" },
     // ── forum ─────────────────────────────────────────────────────────────────
-    MigrationTool { slug: "flarum",   name: "Flarum",   category: "forum",
+    MigrationTool { slug: "flarum",    name: "Flarum",    category: "forum",
         description: "Lightweight forum; REST API (MIT; PHP)" },
-    MigrationTool { slug: "discourse",name: "Discourse",category: "forum",
+    MigrationTool { slug: "discourse", name: "Discourse", category: "forum",
         description: "Mature forum with moderation tools + email digests (GPL 2.0; Ruby)" },
     // ── notifications ─────────────────────────────────────────────────────────
-    MigrationTool { slug: "ntfy",     name: "ntfy",     category: "notifications",
+    MigrationTool { slug: "ntfy",      name: "ntfy",      category: "notifications",
         description: "Pub/sub HTTP push; single Go binary (Apache 2.0)" },
-    MigrationTool { slug: "gotify",   name: "Gotify",   category: "notifications",
+    MigrationTool { slug: "gotify",    name: "Gotify",    category: "notifications",
         description: "Simple self-hosted push; REST API + WebSocket (MIT)" },
     // ── cms ───────────────────────────────────────────────────────────────────
-    MigrationTool { slug: "keystatic",name: "Keystatic",category: "cms",
+    MigrationTool { slug: "keystatic", name: "Keystatic", category: "cms",
         description: "Git-backed JSON/YAML; zero server (MIT)" },
-    MigrationTool { slug: "payload",  name: "Payload",  category: "cms",
+    MigrationTool { slug: "payload",   name: "Payload",   category: "cms",
         description: "TypeScript-first headless CMS; full schema control (MIT)" },
-    MigrationTool { slug: "builtin",  name: "AstroPress Built-in", category: "cms",
-        description: "SQLite / Cloudflare D1 / Supabase; admin panel + REST API included" },
     // ── analytics ─────────────────────────────────────────────────────────────
-    MigrationTool { slug: "umami",    name: "Umami",    category: "analytics",
+    MigrationTool { slug: "umami",     name: "Umami",     category: "analytics",
         description: "Simple page views + events; no cookie banner (MIT)" },
-    MigrationTool { slug: "plausible",name: "Plausible",category: "analytics",
+    MigrationTool { slug: "plausible", name: "Plausible", category: "analytics",
         description: "Polished dashboard; EU data residency (AGPL; cloud $9/mo or self-host)" },
-    MigrationTool { slug: "matomo",   name: "Matomo",   category: "analytics",
+    MigrationTool { slug: "matomo",    name: "Matomo",    category: "analytics",
         description: "Full GA replacement + GDPR consent tools (GPL; cloud $23/mo or self-host)" },
-    MigrationTool { slug: "posthog",  name: "PostHog",  category: "analytics",
+    MigrationTool { slug: "posthog",   name: "PostHog",   category: "analytics",
         description: "Analytics + feature flags + session replay (MIT; generous free tier)" },
     // ── chat ─────────────────────────────────────────────────────────────────
-    MigrationTool { slug: "tiledesk", name: "Tiledesk", category: "chat",
+    MigrationTool { slug: "tiledesk",  name: "Tiledesk",  category: "chat",
         description: "Live chat + chatbot + helpdesk; REST + webhook API (Apache 2.0)" },
     // ── search ────────────────────────────────────────────────────────────────
     MigrationTool { slug: "pagefind",    name: "Pagefind",    category: "search",
         description: "Static index at deploy time; zero server (Apache 2.0)" },
-    MigrationTool { slug: "meilisearch",name: "Meilisearch", category: "search",
+    MigrationTool { slug: "meilisearch", name: "Meilisearch", category: "search",
         description: "Typo-tolerant full-text search API; real-time updates (MIT)" },
     // ── comments ─────────────────────────────────────────────────────────────
-    MigrationTool { slug: "giscus",   name: "Giscus",   category: "comments",
+    MigrationTool { slug: "giscus",    name: "Giscus",    category: "comments",
         description: "GitHub Discussions as comments; zero server (MIT)" },
-    MigrationTool { slug: "remark42", name: "Remark42", category: "comments",
+    MigrationTool { slug: "remark42",  name: "Remark42",  category: "comments",
         description: "Self-hosted; no social login required (MIT)" },
 ];
 
@@ -230,95 +230,75 @@ mod tests {
 
     #[test]
     fn migrate_rallly_to_calcom_generates_guide() {
-        let o = opts("rallly", "calcom", true);
-        let result = run_migrate(&o);
-        assert!(result.is_ok(), "expected ok, got: {result:?}");
+        assert!(run_migrate(&opts("rallly", "calcom", true)).is_ok());
     }
 
     #[test]
     fn migrate_medusa_to_vendure_generates_guide() {
-        let o = opts("medusa", "vendure", true);
-        assert!(run_migrate(&o).is_ok());
+        assert!(run_migrate(&opts("medusa", "vendure", true)).is_ok());
     }
 
     #[test]
     fn migrate_flarum_to_discourse_generates_guide() {
-        let o = opts("flarum", "discourse", true);
-        assert!(run_migrate(&o).is_ok());
+        assert!(run_migrate(&opts("flarum", "discourse", true)).is_ok());
     }
 
     #[test]
     fn migrate_ntfy_to_gotify_generates_guide() {
-        let o = opts("ntfy", "gotify", true);
-        assert!(run_migrate(&o).is_ok());
+        assert!(run_migrate(&opts("ntfy", "gotify", true)).is_ok());
     }
 
     #[test]
     fn migrate_keystatic_to_payload_generates_guide() {
-        let o = opts("keystatic", "payload", true);
-        assert!(run_migrate(&o).is_ok());
+        assert!(run_migrate(&opts("keystatic", "payload", true)).is_ok());
     }
 
     #[test]
     fn migrate_umami_to_plausible_generates_guide() {
-        let o = opts("umami", "plausible", true);
-        assert!(run_migrate(&o).is_ok());
+        assert!(run_migrate(&opts("umami", "plausible", true)).is_ok());
     }
 
     #[test]
     fn migrate_same_tool_returns_error() {
-        let o = opts("rallly", "rallly", true);
-        let result = run_migrate(&o);
+        let result = run_migrate(&opts("rallly", "rallly", true));
         assert!(result.is_err());
-        let err = result.unwrap_err();
-        assert!(
-            err.contains("nothing to migrate"),
-            "expected 'nothing to migrate', got: {err}"
-        );
+        assert!(result.unwrap_err().contains("nothing to migrate"));
     }
 
     #[test]
     fn migrate_incompatible_categories_returns_error() {
-        // rallly = scheduling, flarum = forum
-        let o = opts("rallly", "flarum", true);
-        let result = run_migrate(&o);
+        let result = run_migrate(&opts("rallly", "flarum", true));
         assert!(result.is_err());
-        let err = result.unwrap_err();
-        assert!(
-            err.contains("different categories"),
-            "expected 'different categories', got: {err}"
-        );
+        assert!(result.unwrap_err().contains("different categories"));
     }
 
     #[test]
     fn migrate_unknown_from_returns_error() {
-        let o = opts("unknown-tool", "calcom", true);
-        let result = run_migrate(&o);
+        let result = run_migrate(&opts("unknown-tool", "calcom", true));
         assert!(result.is_err());
-        let err = result.unwrap_err();
-        assert!(
-            err.contains("Unknown tool"),
-            "expected 'Unknown tool', got: {err}"
-        );
+        assert!(result.unwrap_err().contains("Unknown tool"));
     }
 
     #[test]
     fn migrate_unknown_to_returns_error() {
-        let o = opts("rallly", "unknown-tool", true);
-        let result = run_migrate(&o);
+        let result = run_migrate(&opts("rallly", "unknown-tool", true));
         assert!(result.is_err());
-        let err = result.unwrap_err();
-        assert!(
-            err.contains("Unknown tool"),
-            "expected 'Unknown tool', got: {err}"
-        );
+        assert!(result.unwrap_err().contains("Unknown tool"));
+    }
+
+    #[test]
+    fn migrate_builtin_cms_rejected() {
+        // builtin is not in the registry — projects on built-in should use
+        // astropress add --cms keystatic/payload instead.
+        let result = run_migrate(&opts("builtin", "keystatic", true));
+        assert!(result.is_err());
+        assert!(result.unwrap_err().contains("Unknown tool"));
     }
 
     #[test]
     fn migrate_dry_run_prints_without_writing() {
-        // dry_run=true: should succeed without needing a real project dir
         let o = MigrateOptions {
-            project_dir: PathBuf::from("/nonexistent/path/that/should/not/matter"),
+            project_dir: PathBuf::from("/nonexistent/path"),
             from: "ntfy".to_string(),
             to: "gotify".to_string(),
             dry_run: true,
@@ -331,7 +311,7 @@ mod tests {
         let from = find_tool("rallly").unwrap();
         let to   = find_tool("calcom").unwrap();
         let guide = build_migration_guide(from, to);
-        assert!(guide.contains("Rallly"),  "guide should mention Rallly");
-        assert!(guide.contains("Cal.com"), "guide should mention Cal.com");
+        assert!(guide.contains("Rallly"));
+        assert!(guide.contains("Cal.com"));
     }
 }

@@ -255,11 +255,10 @@ pub(crate) fn parse_add_features(args: &[String]) -> Result<AllFeatures, String>
             }
             "--cms" => {
                 f.cms = match value.as_str() {
-                    "builtin" | "built-in" => CmsChoice::BuiltIn,
-                    "keystatic"            => CmsChoice::Keystatic,
-                    "payload"              => CmsChoice::Payload,
+                    "keystatic" => CmsChoice::Keystatic,
+                    "payload"   => CmsChoice::Payload,
                     other => return Err(format!(
-                        "Unknown CMS `{other}`. Use: builtin, keystatic, payload."
+                        "Unknown CMS `{other}`. Use: keystatic, payload."
                     )),
                 };
             }
