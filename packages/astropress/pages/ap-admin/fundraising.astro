@@ -1,0 +1,160 @@
+---
+import AdminLayout from "astropress/components/AdminLayout.astro";
+import { peekCmsConfig } from "astropress";
+
+const adminUser = Astro.locals.adminUser;
+
+if (!adminUser) {
+  return Astro.redirect("/ap-admin/login?return=/ap-admin/fundraising", 302);
+}
+
+if (adminUser.role !== "admin") {
+  return Astro.redirect("/ap-admin", 302);
+}
+
+const donations = peekCmsConfig()?.donations;
+
+if (!donations) {
+  return Astro.redirect("/ap-admin", 302);
+}
+
+const siteUrl = peekCmsConfig()?.siteUrl ?? "";
+const donateUrl = `${siteUrl.replace(/\/$/, "")}/donate`;
+
+interface ProviderCard {
+  name: string;
+  description: string;
+  donateUrl: string;
+  configured: boolean;
+}
+
+const providers: ProviderCard[] = [
+  ...(donations.giveLively
+    ? [{
+        name: "GiveLively",
+        description: "Fiat donations for US nonprofits. Widget embedded on your /donate page.",
+        donateUrl,
+        configured: !!(donations.giveLively.orgSlug),
+      }]
+    : []),
+  ...(donations.liberapay
+    ? [{
+        name: "Liberapay",
+        description: "Recurring fiat donations. Static button on your /donate page — no external scripts.",
+        donateUrl,
+        configured: !!(donations.liberapay.username),
+      }]
+    : []),
+  ...(donations.pledgeCrypto
+    ? [{
+        name: "PledgeCrypto",
+        description: "Crypto donations with automatic carbon offsets per transaction.",
+        donateUrl,
+        configured: !!(donations.pledgeCrypto.partnerKey),
+      }]
+    : []),
+];
+---
+
+<AdminLayout
+  title="Fundraising | Astropress Admin"
+  heading="Fundraising"
+  currentPath="/ap-admin/fundraising"
+  description="Configured donation providers for this site"
+  role={adminUser.role}
+  userName={adminUser.name}
+>
+  <section class="panel fundraising-panel">
+    <div class="section-header">
+      <div>
+        <p class="admin-kicker">Donation Providers</p>
+        <h2>Fundraising</h2>
+        <p>
+          The following donation providers are enabled. Widgets appear on your{" "}
+          <a href={donateUrl} target="_blank" rel="noopener noreferrer">/donate page</a>.
+        </p>
+      </div>
+    </div>
+
+    <div class="provider-cards">
+      {providers.map((provider) => (
+        <div class="provider-card">
+          <div class="provider-card-header">
+            <strong>{provider.name}</strong>
+            {provider.configured
+              ? <span class="badge badge-ok">Configured</span>
+              : <span class="badge badge-warn">Needs config</span>
+            }
+          </div>
+          <p class="provider-description">{provider.description}</p>
+          <a
+            href={provider.donateUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            class="admin-button admin-button-secondary"
+          >
+            View /donate page
+          </a>
+        </div>
+      ))}
+    </div>
+  </section>
+</AdminLayout>
+
+<style>
+  .fundraising-panel {
+    max-width: 48rem;
+    padding: 1.5rem;
+  }
+
+  .provider-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-top: 1.5rem;
+  }
+
+  .provider-card {
+    border: 1px solid var(--line);
+    border-radius: 0.6rem;
+    padding: 1.25rem;
+    background: var(--surface-subtle);
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .provider-card-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .provider-description {
+    color: var(--muted);
+    font-size: 0.92rem;
+    margin: 0;
+  }
+
+  .badge {
+    font-size: 0.78rem;
+    padding: 0.15rem 0.5rem;
+    border-radius: 0.35rem;
+    font-weight: 600;
+  }
+
+  .badge-ok {
+    background: var(--success-subtle, #d1fae5);
+    color: var(--success, #065f46);
+  }
+
+  .badge-warn {
+    background: var(--warn-subtle, #fef3c7);
+    color: var(--warn, #92400e);
+  }
+
+  .admin-button-secondary {
+    align-self: flex-start;
+    margin-top: 0.25rem;
+  }
+</style>

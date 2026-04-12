@@ -42,6 +42,7 @@ export type AstropressAdminNavKey =
   | "system"
   | "settings"
   | "services"
+  | "fundraising"
   | "cms"
   | "host";
 
@@ -146,6 +147,7 @@ const defaultAdminUiConfig: AstropressResolvedAdminUiConfig = {
     system: "System",
     settings: "Settings",
     services: "Services",
+    fundraising: "Fundraising",
     cms: "CMS",
     host: "Host",
   },
