@@ -63,6 +63,8 @@ astropress import wordpress --source <xml> --artifact-dir <dir>
 astropress services verify         # verify Content Services connectivity
 astropress backup --output <dir>   # export SQLite snapshot
 astropress restore --from <dir>    # restore from snapshot
+astropress db migrate              # apply pending schema migrations
+astropress db rollback             # roll back the last applied migration
 ```
 
 ## Core export paths

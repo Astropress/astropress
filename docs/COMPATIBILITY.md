@@ -100,3 +100,45 @@ Run `astropress config migrate` to automatically rewrite legacy environment vari
 in your `.env` file.
 
 See also: [OPERATIONS.md](OPERATIONS.md) for the full upgrade and migration policy.
+
+---
+
+## Cloud Provider Migration Procedures
+
+### Cloudflare D1
+
+1. **Snapshot first**: `astropress backup --project-dir <site> --out backups/pre-migration`
+2. **Apply migration**:
+   ```sh
+   wrangler d1 execute <DATABASE_NAME> --file migrations/0001_my_migration.sql --remote
+   ```
+3. **Verify**:
+   ```sh
+   wrangler d1 execute <DATABASE_NAME> --command "SELECT * FROM schema_migrations ORDER BY id DESC LIMIT 5" --remote
+   ```
+4. **Deploy new code**: push to Cloudflare Pages; the new runtime picks up the schema automatically.
+
+Note: `ensureLegacySchemaCompatibility` handles additive column additions automatically at boot.
+Destructive migrations (table rebuilds, column renames) must be applied manually.
+
+### Supabase (PostgreSQL)
+
+1. **Snapshot first**: use Supabase Dashboard → Database → Backups → Download backup.
+2. **Apply migration**: use the Supabase SQL Editor or `supabase db push` with a migration file.
+3. **Verify**: confirm new columns via Supabase Dashboard → Table Editor.
+4. **Deploy**: redeploy the host application.
+
+### Upgrading with `astropress upgrade --apply`
+
+For SQLite deployments, run the full upgrade sequence in one step:
+
+```sh
+astropress upgrade --apply --project-dir <site>
+```
+
+This command:
+1. Runs the pre-flight compatibility check (`astropress upgrade`).
+2. Applies pending `.sql` migration files from the `migrations/` directory.
+3. Exits with a non-zero status if any migration fails.
+
+Run `astropress doctor --project-dir <site>` after upgrading to verify schema health.

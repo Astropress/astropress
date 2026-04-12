@@ -178,7 +178,16 @@ astropress db migrate --migrations-dir ./migrations --dry-run  # preview only
 ```
 
 Companion `.down.sql` files are read and stored in `schema_migrations.rollback_sql`
-for safe rollback.
+for safe rollback. To apply the most recent migration's rollback SQL:
+
+```bash
+astropress db rollback                     # apply rollback_sql from the last migration
+astropress db rollback --dry-run           # preview what would be rolled back
+```
+
+`db rollback` reads the `rollback_sql` from the last row in `schema_migrations`, executes it
+against the local SQLite database, and removes the migration record. Returns an error if no
+`rollback_sql` is stored (the companion `.down.sql` was not present when the migration ran).
 
 ### Hosted providers (D1, Supabase)
 
@@ -234,6 +243,49 @@ GET /ap-api/v1/metrics   Bearer token required (content:read scope)
 ```
 
 Returns `{ posts, pages, media, comments, uptime }`.
+
+### Prometheus metrics
+
+Enable the unauthenticated Prometheus text format endpoint:
+
+```ts
+registerCms({
+  monitoring: { prometheusEnabled: true },
+  // ...
+});
+```
+
+```
+GET /ap/metrics   No authentication required
+Content-Type: text/plain; version=0.0.4
+```
+
+Exported metrics:
+
+| Metric | Type | Description |
+|--------|------|-------------|
+| `ap_content_total{kind="post"}` | gauge | Published post count |
+| `ap_content_total{kind="page"}` | gauge | Published page count |
+| `ap_media_total` | gauge | Total media assets |
+| `ap_uptime_seconds` | gauge | Process uptime in seconds |
+
+**Grafana scrape config:**
+```yaml
+scrape_configs:
+  - job_name: astropress
+    static_configs:
+      - targets: ["your-site.com"]
+    metrics_path: /ap/metrics
+    scheme: https
+```
+
+**Uptime monitoring:** Point Uptime Robot or BetterUptime at `GET /ap/health` (HTTP 200 = ok). Use `GET /ap/metrics` for Prometheus scraping.
+
+**Alerting example (Grafana alert rule):**
+```
+ap_content_total{kind="post"} == 0 → alert "No posts found — possible data loss"
+ap_uptime_seconds < 60 → alert "Service restarted recently"
+```
 
 ### Nightly health check (GitHub Actions)
 

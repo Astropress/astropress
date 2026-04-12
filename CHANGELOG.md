@@ -13,6 +13,21 @@ Once the package reaches v1.0, it will follow semantic versioning strictly.
 
 ---
 
+## [Unreleased]
+
+### Added
+
+- `astropress db rollback [--dry-run]` CLI command — reads `rollback_sql` from the last `schema_migrations` row, executes it against local SQLite, and removes the migration record. Returns an error if no rollback SQL is stored.
+- `rollbackAstropressLastMigration(input)` TypeScript function exported from `astropress/db-migrate-ops` — returns `AstropressDbRollbackReport` with status `rolled_back | no_rollback_sql | no_migrations | dry_run`.
+- `astropress/adapters/neon` and `astropress/adapters/nhost` export paths — stub adapters that throw descriptive `[astropress]` errors; prevents confusing module-not-found failures when these providers are selected in the scaffold wizard.
+
+### Fixed
+
+- `createAstropressPocketbaseAdapter` reported `providerName: "custom"` instead of `"pocketbase"`. Fixed in all three call sites (adapter, hosted API adapter, hosted platform adapter).
+- `packages/astropress/package.json` `repository`, `bugs`, and `homepage` URLs corrected from `withastro/astropress` → `astropress/astropress`.
+
+---
+
 ## [0.0.1] — Initial release
 
 ### Provider Contract

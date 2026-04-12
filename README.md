@@ -85,7 +85,7 @@ packages/astropress/      # Published npm package
 crates/astropress-cli/    # Rust CLI
   src/commands/           # One file per command
 
-packages/astropress-mcp/  # MCP server (7 tools for AI agents)
+packages/astropress-mcp/  # MCP server (8 tools for AI agents)
 features/                 # Gherkin BDD scenarios
 ```
 
