@@ -119,6 +119,32 @@ const navItems: NavItem[] = [
             <span class="theme-toggle-icon" aria-hidden="true"></span>
           </button>
         </ap-theme-toggle>
+        <select
+          class="locale-select"
+          aria-label={adminUi.labels.changeLanguage}
+          title={adminUi.labels.changeLanguage}
+          data-locale-select
+        >
+          <option value="en">English</option>
+          <option value="es">Español</option>
+          <option value="fr">Français</option>
+          <option value="de">Deutsch</option>
+          <option value="pt">Português</option>
+          <option value="ja">日本語</option>
+        </select>
+        <script>
+          {`(function () {
+            var sel = document.querySelector('[data-locale-select]');
+            if (!sel) return;
+            var stored = localStorage.getItem('ap-admin-locale') || 'en';
+            sel.value = stored;
+            document.documentElement.lang = stored;
+            sel.addEventListener('change', function () {
+              localStorage.setItem('ap-admin-locale', sel.value);
+              document.documentElement.lang = sel.value;
+            });
+          })();`}
+        </script>
         <button
           type="button"
           class="help-popover-trigger"

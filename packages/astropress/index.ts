@@ -250,6 +250,7 @@ export {
   getRuntimeContentStateByPath,
   getRuntimeRedirectRules,
   listRuntimeContentStates,
+  searchRuntimeContentStates,
   getRuntimeAuthors,
   getRuntimeCategories,
   getRuntimeTags,

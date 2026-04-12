@@ -794,3 +794,16 @@ html[data-theme="dark"] ap-notice[type="error"] {
   outline: 3px solid var(--accent);
   outline-offset: 2px;
 }
+
+/* Dashboard support-surface cards — global styles ensure layout correctness even before
+ * the component's scoped CSS finishes loading in development mode. */
+.support-card {
+  display: grid;
+  gap: 0.28rem;
+  padding: 0.95rem;
+  min-height: 3rem;
+  border-radius: 0.95rem;
+  border: 1px solid var(--line);
+  color: inherit;
+  text-decoration: none;
+}

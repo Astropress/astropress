@@ -1,7 +1,7 @@
 import type { APIRoute } from "astro";
 import { withApiRequest, jsonOk, jsonOkPaginated, apiErrors } from "astropress/api-middleware.js";
 import { loadLocalAdminStore } from "astropress/local-runtime-modules.js";
-import { listRuntimeContentStates, createRuntimeContentRecord } from "astropress";
+import { listRuntimeContentStates, searchRuntimeContentStates, createRuntimeContentRecord } from "astropress";
 import { getCmsConfig } from "astropress";
 
 function buildApiCtx(store: Awaited<ReturnType<typeof loadLocalAdminStore>>, config: ReturnType<typeof getCmsConfig>) {
@@ -26,12 +26,15 @@ export const GET: APIRoute = async (context) => {
     const url = new URL(context.request.url);
     const kind = url.searchParams.get("kind") ?? undefined;
     const status = url.searchParams.get("status") ?? undefined;
+    const q = url.searchParams.get("q") ?? undefined;
     const limit = Math.min(Number(url.searchParams.get("limit") ?? url.searchParams.get("per_page") ?? "20"), 100);
     const page = Math.max(Number(url.searchParams.get("page") ?? "1"), 1);
     const cursor = url.searchParams.get("cursor") ?? undefined;
     const offset = Number(url.searchParams.get("offset") ?? String((page - 1) * limit));
 
-    const all = await listRuntimeContentStates(context.locals);
+    const all = q
+      ? await searchRuntimeContentStates(q, context.locals)
+      : await listRuntimeContentStates(context.locals);
     const filtered = all.filter((r) => {
       if (kind && r.kind !== kind) return false;
       if (status && r.status !== status) return false;

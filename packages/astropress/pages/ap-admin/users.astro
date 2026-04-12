@@ -8,6 +8,7 @@ const adminUser = Astro.locals.adminUser;
 const model = await buildUsersPageModel(Astro.locals, adminUser!.role);
 const { users, auditEvents } = model.data;
 const wasCreated = Astro.url.searchParams.get("saved") === "1";
+const userCreatedNoEmail = Astro.url.searchParams.get("user_created") === "1";
 const wasSuspended = Astro.url.searchParams.get("suspended") === "1";
 const wasRestored = Astro.url.searchParams.get("restored") === "1";
 const inviteLink = Astro.url.searchParams.get("invite_link");
@@ -30,9 +31,10 @@ if (model.status === "forbidden") {
   >
     {model.warnings.length > 0 && <p class="notice">Some user-management data is temporarily unavailable. This page is showing partial results.</p>}
     {wasCreated && <p class="notice">The invitation was issued successfully.</p>}
+    {userCreatedNoEmail && <p class="notice">User created. Email delivery is in preview mode — no invitation email was sent. Use the link below to share the invite manually.</p>}
     {wasSuspended && <p class="notice">The admin user was suspended successfully.</p>}
     {wasRestored && <p class="notice">The admin user was restored successfully.</p>}
-    {inviteLink && <p class="notice">Invitation link issued: <a href={inviteLink}>{inviteLink}</a></p>}
+    {inviteLink && <p class="notice">Invitation link: <a href={inviteLink}>{inviteLink}</a></p>}
     {resetLink && <p class="notice">Password reset link issued: <a href={resetLink}>{resetLink}</a></p>}
     {errorMessage && <p class="error-notice">{errorMessage}</p>}
     <div class="notice intro-notice">
