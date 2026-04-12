@@ -2,8 +2,8 @@ import { DatabaseSync } from "node:sqlite";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { registerCms } from "../src/config";
-import { readAstropressSqliteSchemaSql } from "../src/sqlite-bootstrap.js";
 import { makeLocals } from "./helpers/make-locals.js";
+import { makeDb } from "./helpers/make-db.js";
 import * as runtimePageStore from "../src/runtime-page-store";
 import * as runtimeRouteRegistry from "../src/runtime-route-registry";
 import {
@@ -33,12 +33,6 @@ import {
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
-
-function makeDb() {
-  const db = new DatabaseSync(":memory:");
-  db.exec(readAstropressSqliteSchemaSql());
-  return db;
-}
 
 const adminRole = "admin" as const;
 const editorRole = "editor" as const;

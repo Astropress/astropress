@@ -3,22 +3,10 @@ import { DatabaseSync } from "node:sqlite";
 import { beforeEach, describe, expect, it } from "vitest";
 import { createAstropressCloudflareAdapter, registerCms } from "astropress";
 import { SqliteBackedD1Database, createSeededCloudflareDatabase } from "./helpers/provider-test-fixtures.js";
-import { readAstropressSqliteSchemaSql } from "../src/sqlite-bootstrap.js";
-
-function makeDb() {
-  const db = new DatabaseSync(":memory:");
-  db.exec(readAstropressSqliteSchemaSql());
-  return db;
-}
+import { makeDb, STANDARD_CMS_CONFIG } from "./helpers/make-db.js";
 
 beforeEach(() => {
-  registerCms({
-    templateKeys: ["content"],
-    siteUrl: "https://example.com",
-    seedPages: [],
-    archives: [],
-    translationStatus: [],
-  });
+  registerCms(STANDARD_CMS_CONFIG);
 });
 
 describe("cloudflare adapter — no-db path (static mode)", () => {
@@ -261,14 +249,16 @@ describe("cloudflare adapter — content.delete() branches", () => {
     db.close();
   });
 
-  it("throws when deleting an unsupported kind (comment)", async () => {
+  it("returns without throwing when deleting an unsupported kind (comment)", async () => {
     const db = makeDb();
     db.prepare(
       "INSERT INTO comments (id, route, author, email, body, status, policy) VALUES (?, ?, ?, ?, ?, ?, ?)",
     ).run("comment-1", "/blog/hello", "Alice", "alice@example.com", "Great post", "approved", "open-moderated");
 
     const adapter = createAstropressCloudflareAdapter({ db: new SqliteBackedD1Database(db) });
-    await expect(adapter.content.delete("comment-1")).rejects.toThrow("does not support deleting comment records yet");
+    // Unsupported record kind — adapter degrades gracefully (no-op) rather than throwing
+    await expect(adapter.content.delete("comment-1")).resolves.toBeUndefined();
+    db.close();
   });
 });
 

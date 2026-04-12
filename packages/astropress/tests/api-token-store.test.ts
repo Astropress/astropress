@@ -2,17 +2,11 @@ import { createHash } from "node:crypto";
 import { DatabaseSync } from "node:sqlite";
 import { describe, expect, it } from "vitest";
 
-import { readAstropressSqliteSchemaSql } from "../src/sqlite-bootstrap.js";
 import { createApiTokenStore } from "../src/sqlite-runtime/api-tokens.js";
 import type { ApiScope, ApiTokenRecord, ApiTokenStore } from "../src/platform-contracts";
+import { makeDb } from "./helpers/make-db.js";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
-
-function makeDb() {
-  const db = new DatabaseSync(":memory:");
-  db.exec(readAstropressSqliteSchemaSql());
-  return db;
-}
 
 function sha256(input: string) {
   return createHash("sha256").update(input).digest("hex");

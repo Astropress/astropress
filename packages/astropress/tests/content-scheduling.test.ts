@@ -1,15 +1,9 @@
 import { DatabaseSync } from "node:sqlite";
 import { describe, expect, it } from "vitest";
 
-import { readAstropressSqliteSchemaSql } from "../src/sqlite-bootstrap.js";
 import { createSqliteContentStore } from "../src/sqlite-runtime/content.js";
 import type { ContentStoreRecord } from "../src/platform-contracts";
-
-function makeDb() {
-  const db = new DatabaseSync(":memory:");
-  db.exec(readAstropressSqliteSchemaSql());
-  return db;
-}
+import { makeDb } from "./helpers/make-db.js";
 
 function makeStore(db: DatabaseSync) {
   let id = 0;

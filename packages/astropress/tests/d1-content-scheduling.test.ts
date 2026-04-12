@@ -2,15 +2,9 @@ import { DatabaseSync } from "node:sqlite";
 
 import { beforeEach, describe, expect, it } from "vitest";
 
-import { readAstropressSqliteSchemaSql } from "../src/sqlite-bootstrap.js";
 import { createD1SchedulingPart } from "../src/d1-store-content.js";
 import { SqliteBackedD1Database } from "./helpers/provider-test-fixtures.js";
-
-function makeDb() {
-  const db = new DatabaseSync(":memory:");
-  db.exec(readAstropressSqliteSchemaSql());
-  return db;
-}
+import { makeDb } from "./helpers/make-db.js";
 
 function seedEntry(db: DatabaseSync, slug: string) {
   db.prepare(

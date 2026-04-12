@@ -1,14 +1,8 @@
 import { DatabaseSync } from "node:sqlite";
 import { describe, expect, it, beforeEach } from "vitest";
 
-import { readAstropressSqliteSchemaSql } from "../src/sqlite-bootstrap.js";
 import { createSqliteLocksOps } from "../src/sqlite-runtime/locks.js";
-
-function makeDb() {
-  const db = new DatabaseSync(":memory:");
-  db.exec(readAstropressSqliteSchemaSql());
-  return db;
-}
+import { makeDb } from "./helpers/make-db.js";
 
 describe("createSqliteLocksOps — pessimistic content locking", () => {
   let db: DatabaseSync;

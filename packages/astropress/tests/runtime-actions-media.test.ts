@@ -2,17 +2,20 @@ import { DatabaseSync } from "node:sqlite";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { registerCms } from "../src/config";
-import { readAstropressSqliteSchemaSql } from "../src/sqlite-bootstrap.js";
 import { makeLocals } from "./helpers/make-locals.js";
+import { makeDb, STANDARD_ACTOR, STANDARD_CMS_CONFIG } from "./helpers/make-db.js";
 import {
   createRuntimeMediaAsset,
   deleteRuntimeMediaAsset,
   updateRuntimeMediaAsset,
 } from "../src/runtime-actions-media";
 
-const { mockStoreMedia, mockDeleteMedia } = vi.hoisted(() => ({
+const { mockStoreMedia, mockDeleteMedia, mockImageSize, mockSharp, mockGenerateSrcset } = vi.hoisted(() => ({
   mockStoreMedia: vi.fn(),
   mockDeleteMedia: vi.fn(),
+  mockImageSize: vi.fn(),
+  mockSharp: vi.fn(),
+  mockGenerateSrcset: vi.fn(),
 }));
 
 vi.mock("../src/runtime-media-storage", () => ({
@@ -20,13 +23,19 @@ vi.mock("../src/runtime-media-storage", () => ({
   deleteRuntimeMediaObject: mockDeleteMedia,
 }));
 
-function makeDb() {
-  const db = new DatabaseSync(":memory:");
-  db.exec(readAstropressSqliteSchemaSql());
-  return db;
-}
+vi.mock("image-size", () => ({
+  imageSize: mockImageSize,
+}));
 
-const actor = { email: "admin@test.local", role: "admin" as const, name: "Test Admin" };
+vi.mock("sharp", () => ({
+  default: mockSharp,
+}));
+
+vi.mock("../src/local-image-storage.js", () => ({
+  generateSrcset: mockGenerateSrcset,
+}));
+
+const actor = STANDARD_ACTOR;
 
 let db: DatabaseSync;
 let locals: App.Locals;
@@ -34,7 +43,7 @@ let locals: App.Locals;
 beforeEach(() => {
   db = makeDb();
   locals = makeLocals(db);
-  registerCms({ templateKeys: ["content"], siteUrl: "https://example.com", seedPages: [], archives: [], translationStatus: [] });
+  registerCms(STANDARD_CMS_CONFIG);
 
   db.prepare(
     "INSERT INTO media_assets (id, local_path, alt_text, title, uploaded_by) VALUES (?, ?, ?, ?, ?)",
@@ -42,6 +51,11 @@ beforeEach(() => {
 
   mockStoreMedia.mockReset();
   mockDeleteMedia.mockReset();
+  mockImageSize.mockReset();
+  mockSharp.mockReset();
+  mockGenerateSrcset.mockReset();
+  // Default: srcset returns null (avoids undefined binding to SQLite parameter)
+  mockGenerateSrcset.mockResolvedValue(null);
 });
 
 describe("createRuntimeMediaAsset", () => {
@@ -111,11 +125,7 @@ describe("createRuntimeMediaAsset", () => {
 
 describe("createRuntimeMediaAsset — dimension detection", () => {
   it("stores width and height in media_assets when image-size detects dimensions", async () => {
-    // Mock image-size to return known dimensions
-    vi.mock("image-size", () => ({
-      imageSize: () => ({ width: 800, height: 600 }),
-    }));
-
+    mockImageSize.mockReturnValue({ width: 800, height: 600 });
     mockStoreMedia.mockResolvedValue({
       ok: true,
       asset: {
@@ -137,13 +147,12 @@ describe("createRuntimeMediaAsset — dimension detection", () => {
     );
 
     expect(result.ok).toBe(true);
-    // Verify the row has width/height columns (they may be null if image-size mock didn't fire
-    // but the SQL INSERT must include the columns — structure test)
     const row = db
       .prepare("SELECT width, height FROM media_assets WHERE id = 'asset-dims'")
       .get() as { width: number | null; height: number | null } | undefined;
     expect(row).toBeDefined();
-    vi.unmock("image-size");
+    expect(row?.width).toBe(800);
+    expect(row?.height).toBe(600);
   });
 
   it("stores null width/height for non-image uploads", async () => {
@@ -223,5 +232,131 @@ describe("deleteRuntimeMediaAsset", () => {
   it("returns not-ok for empty id", async () => {
     const result = await deleteRuntimeMediaAsset("  ", actor, locals);
     expect(result).toMatchObject({ ok: false });
+  });
+});
+
+describe("createRuntimeMediaAsset — thumbnail and srcset", () => {
+  const baseAsset = {
+    ok: true as const,
+    asset: {
+      id: "asset-img",
+      publicPath: "/images/uploads/photo.jpg",
+      r2Key: null,
+      mimeType: "image/jpeg",
+      fileSize: 2048,
+      altText: "",
+      title: "photo.jpg",
+      storedFilename: "photo.jpg",
+    },
+  };
+
+  it("image-size returning no width/height leaves imageDimensions null — no thumbnail or srcset", async () => {
+    mockImageSize.mockReturnValue({});
+    mockStoreMedia.mockResolvedValue(baseAsset);
+
+    const result = await createRuntimeMediaAsset(
+      { filename: "photo.jpg", bytes: new Uint8Array([0xff, 0xd8]), mimeType: "image/jpeg" },
+      actor,
+      locals,
+    );
+
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.thumbnailUrl).toBeUndefined();
+      expect(result.srcset).toBeUndefined();
+    }
+    // Only one storage call — no thumbnail or srcset variants stored
+    expect(mockStoreMedia).toHaveBeenCalledOnce();
+  });
+
+  it("image ≤ 400px wide — no thumbnail generated", async () => {
+    mockImageSize.mockReturnValue({ width: 200, height: 150 });
+    mockStoreMedia.mockResolvedValue(baseAsset);
+
+    const result = await createRuntimeMediaAsset(
+      { filename: "small.jpg", bytes: new Uint8Array([0xff, 0xd8]), mimeType: "image/jpeg" },
+      actor,
+      locals,
+    );
+
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.thumbnailUrl).toBeUndefined();
+    }
+    // Sharp must not have been called for a small image
+    expect(mockSharp).not.toHaveBeenCalled();
+    expect(mockStoreMedia).toHaveBeenCalledOnce();
+  });
+
+  it("image > 400px wide — thumbnail generated and stored", async () => {
+    mockImageSize.mockReturnValue({ width: 800, height: 600 });
+
+    const thumbBuffer = Buffer.from([0x00, 0x01, 0x02]);
+    const sharpInstance = {
+      resize: vi.fn().mockReturnThis(),
+      webp: vi.fn().mockReturnThis(),
+      toBuffer: vi.fn().mockResolvedValue(thumbBuffer),
+    };
+    mockSharp.mockReturnValue(sharpInstance);
+
+    const thumbAsset = { ...baseAsset, asset: { ...baseAsset.asset, id: "asset-thumb", publicPath: "/images/uploads/photo-thumb.webp", storedFilename: "photo-thumb.webp" } };
+    mockStoreMedia
+      .mockResolvedValueOnce(baseAsset)   // main image
+      .mockResolvedValueOnce(thumbAsset); // thumbnail
+
+    const result = await createRuntimeMediaAsset(
+      { filename: "photo.jpg", bytes: new Uint8Array([0xff, 0xd8]), mimeType: "image/jpeg" },
+      actor,
+      locals,
+    );
+
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.thumbnailUrl).toBe("/images/uploads/photo-thumb.webp");
+    }
+    expect(mockStoreMedia).toHaveBeenCalledTimes(2);
+  });
+
+  it("thumbnail storage failure — thumbnailUrl absent in result", async () => {
+    mockImageSize.mockReturnValue({ width: 800, height: 600 });
+
+    const sharpInstance = {
+      resize: vi.fn().mockReturnThis(),
+      webp: vi.fn().mockReturnThis(),
+      toBuffer: vi.fn().mockResolvedValue(Buffer.from([0x00])),
+    };
+    mockSharp.mockReturnValue(sharpInstance);
+
+    mockStoreMedia
+      .mockResolvedValueOnce(baseAsset)
+      .mockResolvedValueOnce({ ok: false as const, error: "Storage failed" });
+
+    const result = await createRuntimeMediaAsset(
+      { filename: "photo.jpg", bytes: new Uint8Array([0xff, 0xd8]), mimeType: "image/jpeg" },
+      actor,
+      locals,
+    );
+
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.thumbnailUrl).toBeUndefined();
+    }
+  });
+
+  it("SVG uploads skip srcset generation", async () => {
+    mockImageSize.mockReturnValue({ width: 800, height: 600 });
+    mockStoreMedia.mockResolvedValue({ ...baseAsset, asset: { ...baseAsset.asset, mimeType: "image/svg+xml" } });
+
+    const result = await createRuntimeMediaAsset(
+      { filename: "icon.svg", bytes: new Uint8Array([0x3c, 0x73]), mimeType: "image/svg+xml" },
+      actor,
+      locals,
+    );
+
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.srcset).toBeUndefined();
+    }
+    expect(mockGenerateSrcset).not.toHaveBeenCalled();
   });
 });

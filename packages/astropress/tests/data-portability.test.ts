@@ -1,14 +1,8 @@
 import { DatabaseSync } from "node:sqlite";
 import { describe, expect, it, beforeEach } from "vitest";
 
-import { readAstropressSqliteSchemaSql } from "../src/sqlite-bootstrap.js";
 import { createSqlitePurgeOps } from "../src/sqlite-runtime/purge.js";
-
-function makeDb() {
-  const db = new DatabaseSync(":memory:");
-  db.exec(readAstropressSqliteSchemaSql());
-  return db;
-}
+import { makeDb } from "./helpers/make-db.js";
 
 function seedUser(db: DatabaseSync, email: string, name = "Test User") {
   db.prepare(

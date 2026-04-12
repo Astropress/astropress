@@ -369,4 +369,28 @@ describe("resolveAnalyticsSnippet", () => {
     expect(snippet).not.toContain('"<>');
     expect(snippet).toContain("&quot;&lt;&gt;");
   });
+
+  it("umami: returns empty string when snippetSrc is missing", () => {
+    expect(resolveAnalyticsSnippet({ type: "umami", mode: "snippet-only", siteId: "abc-123" })).toBe("");
+  });
+
+  it("plausible: returns empty string when snippetSrc is missing", () => {
+    expect(resolveAnalyticsSnippet({ type: "plausible", mode: "snippet-only", siteId: "example.com" })).toBe("");
+  });
+
+  it("plausible: returns empty string when siteId is missing", () => {
+    expect(resolveAnalyticsSnippet({ type: "plausible", mode: "snippet-only", snippetSrc: "https://plausible.io/js/script.js" })).toBe("");
+  });
+
+  it("posthog: returns empty string when snippetSrc is missing", () => {
+    expect(resolveAnalyticsSnippet({ type: "posthog", mode: "snippet-only", siteId: "phc_key" })).toBe("");
+  });
+
+  it("matomo: returns empty string when url is missing", () => {
+    expect(resolveAnalyticsSnippet({ type: "matomo", mode: "snippet-only", siteId: "5" })).toBe("");
+  });
+
+  it("custom: returns empty string when snippetSrc is absent", () => {
+    expect(resolveAnalyticsSnippet({ type: "custom", mode: "snippet-only" })).toBe("");
+  });
 });

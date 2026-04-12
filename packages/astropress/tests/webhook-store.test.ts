@@ -2,15 +2,9 @@ import { createHmac } from "node:crypto";
 import { DatabaseSync } from "node:sqlite";
 import { describe, expect, it, vi } from "vitest";
 
-import { readAstropressSqliteSchemaSql } from "../src/sqlite-bootstrap.js";
 import { createWebhookStore } from "../src/sqlite-runtime/webhooks.js";
 import type { WebhookEvent, WebhookRecord, WebhookStore } from "../src/platform-contracts";
-
-function makeDb() {
-  const db = new DatabaseSync(":memory:");
-  db.exec(readAstropressSqliteSchemaSql());
-  return db;
-}
+import { makeDb } from "./helpers/make-db.js";
 
 describe("WebhookRecord shape", () => {
   it("has all required fields", () => {

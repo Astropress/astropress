@@ -2,21 +2,15 @@ import { DatabaseSync } from "node:sqlite";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { registerCms } from "../src/config";
-import { readAstropressSqliteSchemaSql } from "../src/sqlite-bootstrap.js";
 import { makeLocals } from "./helpers/make-locals.js";
+import { makeDb, STANDARD_ACTOR, STANDARD_CMS_CONFIG } from "./helpers/make-db.js";
 import {
   createRuntimeContentRecord,
   restoreRuntimeRevision,
   saveRuntimeContentState,
 } from "../src/runtime-actions-content";
 
-function makeDb() {
-  const db = new DatabaseSync(":memory:");
-  db.exec(readAstropressSqliteSchemaSql());
-  return db;
-}
-
-const actor = { email: "admin@test.local", role: "admin" as const, name: "Test Admin" };
+const actor = STANDARD_ACTOR;
 
 let db: DatabaseSync;
 let locals: App.Locals;
@@ -24,7 +18,7 @@ let locals: App.Locals;
 beforeEach(() => {
   db = makeDb();
   locals = makeLocals(db);
-  registerCms({ templateKeys: ["content"], siteUrl: "https://example.com", seedPages: [], archives: [], translationStatus: [] });
+  registerCms(STANDARD_CMS_CONFIG);
 
   db.prepare(
     `INSERT INTO content_entries (slug, legacy_url, title, kind, template_key, source_html_path, body, summary, seo_title, meta_description)
