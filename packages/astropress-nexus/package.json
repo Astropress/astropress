@@ -1,0 +1,33 @@
+{
+  "name": "astropress-nexus",
+  "version": "0.0.1",
+  "description": "Multi-site gateway for Astropress — a single control plane over multiple Astropress sites",
+  "type": "module",
+  "bin": {
+    "astropress-nexus": "./dist/server.js"
+  },
+  "main": "./dist/index.js",
+  "exports": {
+    ".": "./dist/index.js"
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc --project tsconfig.json",
+    "start": "node dist/server.js",
+    "dev": "bun run src/server.ts",
+    "test": "bunx vitest run"
+  },
+  "dependencies": {
+    "@hono/node-server": "^1.19.13",
+    "hono": "^4.6.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.0",
+    "vitest": "^2.1.0",
+    "@types/node": "^22.0.0"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "license": "MIT"
+}

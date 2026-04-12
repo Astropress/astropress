@@ -20,6 +20,7 @@ type VerificationGroup = {
 const repoRoot = path.resolve(new URL("..", import.meta.url).pathname);
 const featuresRoot = path.join(repoRoot, "features");
 const astropressPackageRoot = path.join(repoRoot, "packages", "astropress");
+const nexusPackageRoot = path.join(repoRoot, "packages", "astropress-nexus");
 
 function walkFeatureFiles(root: string, files: string[] = []) {
   for (const entry of readdirSync(root)) {
@@ -1127,6 +1128,70 @@ const verificationGroups: VerificationGroup[] = [
         command: "cargo",
         args: ["test", "scaffolds_new_project_from_example"],
         cwd: repoRoot,
+      },
+    ],
+  },
+  {
+    label: "nexus gateway health scenarios",
+    scenarios: [
+      "Health endpoint returns all registered sites with status",
+      "Sites endpoint lists registered sites with live health",
+      "Single site endpoint returns site metadata",
+      "Unknown site returns 404",
+    ],
+    steps: [
+      {
+        command: "bunx",
+        args: ["vitest", "run", "tests/app.test.ts"],
+        cwd: nexusPackageRoot,
+      },
+    ],
+  },
+  {
+    label: "nexus gateway proxy scenarios",
+    scenarios: [
+      "Proxy routes content request to the correct member site",
+      "Proxy routes settings request to the correct member site",
+      "Proxy routes media request to the correct member site",
+      "Proxy returns 404 for an unknown site",
+      "Degraded site is surfaced without failing the gateway",
+    ],
+    steps: [
+      {
+        command: "bunx",
+        args: ["vitest", "run", "tests/app.test.ts"],
+        cwd: nexusPackageRoot,
+      },
+    ],
+  },
+  {
+    label: "nexus gateway fan-out scenarios",
+    scenarios: [
+      "Fan-out content query returns results from all available sites",
+      "Fan-out continues when one site is degraded",
+      "Metrics endpoint aggregates counts across all sites",
+    ],
+    steps: [
+      {
+        command: "bunx",
+        args: ["vitest", "run", "tests/app.test.ts"],
+        cwd: nexusPackageRoot,
+      },
+    ],
+  },
+  {
+    label: "nexus gateway auth scenarios",
+    scenarios: [
+      "Request without token is rejected",
+      "Request with wrong token is rejected",
+      "Request with correct token is accepted",
+      "Health endpoint does not require auth",
+    ],
+    steps: [
+      {
+        command: "bunx",
+        args: ["vitest", "run", "tests/app.test.ts"],
+        cwd: nexusPackageRoot,
       },
     ],
   },

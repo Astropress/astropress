@@ -1,0 +1,54 @@
+export type SiteEntry = {
+  id: string;
+  name: string;
+  baseUrl: string;
+  token: string;
+};
+
+export type NexusConfig = {
+  sites: SiteEntry[];
+};
+
+export type SiteStatus = "ok" | "degraded" | "unknown";
+
+export type SiteHealth = {
+  id: string;
+  name: string;
+  baseUrl: string;
+  status: SiteStatus;
+  error?: string;
+  latencyMs?: number;
+};
+
+export type FanOutResult<T> = {
+  siteId: string;
+  status: "ok" | "degraded";
+  data?: T;
+  error?: string;
+};
+
+export type ContentItem = {
+  siteId: string;
+  id: string;
+  slug: string;
+  title?: string;
+  kind: string;
+  status: string;
+  [key: string]: unknown;
+};
+
+export type AggregateMetrics = {
+  siteCount: number;
+  reachableSites: number;
+  degradedSites: number;
+  totalPosts: number;
+  totalPages: number;
+  totalMedia: number;
+  sites: Array<{
+    id: string;
+    status: SiteStatus;
+    posts?: number;
+    pages?: number;
+    media?: number;
+  }>;
+};
