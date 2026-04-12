@@ -175,9 +175,9 @@ mod tests {
 
     #[test]
     fn cms_choices_exist_as_variants() {
-        // Verifies that all four CMS options the wizard presents are valid variants.
-        let choices = [CmsChoice::BuiltIn, CmsChoice::Keystatic, CmsChoice::Directus, CmsChoice::Payload];
-        assert_eq!(choices.len(), 4, "wizard must present exactly 4 CMS options");
+        // Verifies that all three CMS options the wizard presents are valid variants.
+        let choices = [CmsChoice::BuiltIn, CmsChoice::Keystatic, CmsChoice::Payload];
+        assert_eq!(choices.len(), 3, "wizard must present exactly 3 CMS options");
     }
 
     #[test]
@@ -186,25 +186,22 @@ mod tests {
         let f = AllFeatures {
             analytics:  AnalyticsProvider::Umami,
             ab_testing: AbTestingProvider::GrowthBook,
-            heatmap:    HeatmapProvider::OpenReplay,
+            heatmap:    HeatmapProvider::PostHog,
             enable_api: true,
             ..AllFeatures::defaults()
         };
         assert_eq!(Some(f.analytics.as_str()).filter(|s| *s != "none"), Some("umami"));
         assert_eq!(Some(f.ab_testing.as_str()).filter(|s| *s != "none"), Some("growthbook"));
-        assert_eq!(Some(f.heatmap.as_str()).filter(|s| *s != "none"), Some("openreplay"));
+        assert_eq!(Some(f.heatmap.as_str()).filter(|s| *s != "none"), Some("posthog"));
         assert!(f.enable_api);
     }
 
     #[test]
     fn posthog_analytics_selects_posthog_as_heatmap_default() {
-        // When PostHog is chosen for analytics, index 1 (PostHog) is the preselected
-        // default for the heatmap/session-replay Select — not index 0 (OpenReplay).
-        let heatmap_default: usize = if AnalyticsProvider::PostHog == AnalyticsProvider::PostHog { 1 } else { 0 };
-        assert_eq!(heatmap_default, 1, "PostHog analytics should preselect PostHog for heatmaps");
-
-        let non_posthog_default: usize = if AnalyticsProvider::Umami == AnalyticsProvider::PostHog { 1 } else { 0 };
-        assert_eq!(non_posthog_default, 0, "non-PostHog analytics should default heatmap to OpenReplay");
+        // OpenReplay removed (EL 2.0). PostHog is now index 0 in the heatmap Select.
+        // The default is always 0 regardless of analytics choice.
+        let heatmap_default: usize = 0;
+        assert_eq!(heatmap_default, 0, "PostHog is always index 0 in the heatmap select");
     }
 
     #[test]

@@ -215,10 +215,11 @@ impl AbTestingProvider {
     }
 }
 
+/// OpenReplay (Elastic License 2.0) is excluded — not OSI-approved.
+/// PostHog (MIT core) is the recommended self-hosted session replay option.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum HeatmapProvider {
     None,
-    OpenReplay,
     PostHog,
     Custom,
 }
@@ -227,11 +228,10 @@ impl HeatmapProvider {
     pub(crate) fn parse(value: &str) -> Result<Self, String> {
         match value {
             "none" => Ok(Self::None),
-            "openreplay" => Ok(Self::OpenReplay),
             "posthog" => Ok(Self::PostHog),
             "custom" => Ok(Self::Custom),
             other => Err(format!(
-                "Unsupported heatmap provider `{other}`. Use none, openreplay, posthog, or custom."
+                "Unsupported heatmap provider `{other}`. Use none, posthog, or custom."
             )),
         }
     }
@@ -239,7 +239,6 @@ impl HeatmapProvider {
     pub(crate) fn as_str(self) -> &'static str {
         match self {
             Self::None => "none",
-            Self::OpenReplay => "openreplay",
             Self::PostHog => "posthog",
             Self::Custom => "custom",
         }
@@ -292,9 +291,9 @@ mod tests {
 
     #[test]
     fn heatmap_provider_round_trips() {
+        // OpenReplay removed (Elastic License 2.0, not OSI-approved).
         let pairs = [
             ("none", HeatmapProvider::None),
-            ("openreplay", HeatmapProvider::OpenReplay),
             ("posthog", HeatmapProvider::PostHog),
             ("custom", HeatmapProvider::Custom),
         ];
@@ -302,6 +301,12 @@ mod tests {
             assert_eq!(HeatmapProvider::parse(s).unwrap(), variant);
             assert_eq!(variant.as_str(), s);
         }
+    }
+
+    #[test]
+    fn heatmap_provider_rejects_openreplay() {
+        // OpenReplay was removed — parse should now error.
+        assert!(HeatmapProvider::parse("openreplay").is_err());
     }
 
     #[test]

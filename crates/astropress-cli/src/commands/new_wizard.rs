@@ -26,14 +26,11 @@ pub(crate) fn prompt_all_features() -> AllFeatures {
          \x20                     full admin panel + REST API included",
         "Keystatic            — git-backed JSON/YAML; zero server; use for small teams that\n\
          \x20                     prefer editing content files directly in the repo",
-        "Directus             — REST + GraphQL API; use when you need a powerful data\n\
-         \x20                     platform and don't mind running a separate service  (Fly.io free)",
         "Payload              — TypeScript-first, local-first; use when you want full\n\
          \x20                     schema control in code  ⚠ needs a Node server (Fly.io / Railway free)",
     ]).default(0).interact().unwrap_or(0) {
         1 => CmsChoice::Keystatic,
-        2 => CmsChoice::Directus,
-        3 => CmsChoice::Payload,
+        2 => CmsChoice::Payload,
         _ => CmsChoice::BuiltIn,
     };
 
@@ -78,11 +75,15 @@ pub(crate) fn prompt_all_features() -> AllFeatures {
         .with_prompt("Add a storefront / e-commerce?")
         .default(false).interact().unwrap_or(false)
     {
-        let _ = Select::with_theme(t).with_prompt("Commerce platform").items(&[
-            "Medusa  — MIT; headless commerce with Stripe + product catalog; use when you need\n\
-             \x20        a full cart + checkout flow  ⚠ needs a Node server (Fly.io / Railway free)",
-        ]).default(0).interact().unwrap_or(0);
-        CommerceChoice::Medusa
+        match Select::with_theme(t).with_prompt("Commerce platform").items(&[
+            "Medusa    — MIT; headless commerce with Stripe + product catalog; use when you need\n\
+             \x20          a full cart + checkout flow  ⚠ needs a Node server (Fly.io / Railway free)",
+            "Vendure   — MIT; TypeScript-first headless commerce; GraphQL API; use when you want\n\
+             \x20          full type safety + plugin architecture  ⚠ needs a Node server (Fly.io / Railway free)",
+        ]).default(0).interact().unwrap_or(0) {
+            1 => CommerceChoice::Vendure,
+            _ => CommerceChoice::Medusa,
+        }
     } else { CommerceChoice::None };
 
     // ── comments ─────────────────────────────────────────────────────────
@@ -106,11 +107,15 @@ pub(crate) fn prompt_all_features() -> AllFeatures {
         .with_prompt("Add client-side search?")
         .default(false).interact().unwrap_or(false)
     {
-        let _ = Select::with_theme(t).with_prompt("Search").items(&[
-            "Pagefind  — Apache 2.0; static index built at deploy time; use for content-heavy\n\
-             \x20          sites that want instant search with zero server cost (<10 KB on page)",
-        ]).default(0).interact().unwrap_or(0);
-        SearchChoice::Pagefind
+        match Select::with_theme(t).with_prompt("Search").items(&[
+            "Pagefind      — Apache 2.0; static index at deploy time; zero server; use for\n\
+             \x20              content-heavy sites that want instant client-side search (<10 KB on page)",
+            "Meilisearch   — MIT; typo-tolerant full-text search API; use when you need\n\
+             \x20              real-time search across frequently updated content  (Fly.io / Railway free)",
+        ]).default(0).interact().unwrap_or(0) {
+            1 => SearchChoice::Meilisearch,
+            _ => SearchChoice::Pagefind,
+        }
     } else { SearchChoice::None };
 
     // ── courses / LMS ─────────────────────────────────────────────────────
@@ -181,11 +186,15 @@ pub(crate) fn prompt_all_features() -> AllFeatures {
         .with_prompt("Add a forum / community discussion space?")
         .default(false).interact().unwrap_or(false)
     {
-        let _ = Select::with_theme(t).with_prompt("Forum software").items(&[
-            "Flarum  — MIT; PHP; lightweight REST API; use when you need async threaded\n\
-             \x20        discussion and Giscus is too developer-centric  (Fly.io / Railway free)",
-        ]).default(0).interact().unwrap_or(0);
-        ForumChoice::Flarum
+        match Select::with_theme(t).with_prompt("Forum software").items(&[
+            "Flarum     — MIT; PHP; lightweight REST API; use when you need async threaded\n\
+             \x20           discussion and Giscus is too developer-centric  (Fly.io / Railway free)",
+            "Discourse  — GPL 2.0; Ruby; mature platform with plugins, moderation tools,\n\
+             \x20           and email digests  ⚠ heavier: needs Redis + Postgres  (Fly.io / Railway free)",
+        ]).default(0).interact().unwrap_or(0) {
+            1 => ForumChoice::Discourse,
+            _ => ForumChoice::Flarum,
+        }
     } else { ForumChoice::None };
 
     // ── live chat ─────────────────────────────────────────────────────────
@@ -194,10 +203,10 @@ pub(crate) fn prompt_all_features() -> AllFeatures {
         .default(false).interact().unwrap_or(false)
     {
         let _ = Select::with_theme(t).with_prompt("Chat provider").items(&[
-            "Chatwoot  — MIT; live chat + helpdesk + email inbox, REST API; use when you\n\
-             \x20          need real-time support or sales chat on public pages  (Fly.io / Railway free)",
+            "Tiledesk  — Apache 2.0; live chat + chatbot + helpdesk; REST + webhook API;\n\
+             \x20          use when you need real-time support or sales chat  (Fly.io / Railway free)",
         ]).default(0).interact().unwrap_or(0);
-        ChatChoice::Chatwoot
+        ChatChoice::Tiledesk
     } else { ChatChoice::None };
 
     // ── push notifications ────────────────────────────────────────────────
@@ -205,11 +214,15 @@ pub(crate) fn prompt_all_features() -> AllFeatures {
         .with_prompt("Add push notifications?")
         .default(false).interact().unwrap_or(false)
     {
-        let _ = Select::with_theme(t).with_prompt("Notifications").items(&[
-            "ntfy  — Apache 2.0; pub/sub HTTP push; single Go binary; use for order updates,\n\
-             \x20      release pings, or alert fans when new content drops  (ntfy.sh free or self-host)",
-        ]).default(0).interact().unwrap_or(0);
-        NotifyChoice::Ntfy
+        match Select::with_theme(t).with_prompt("Notifications").items(&[
+            "ntfy      — Apache 2.0; pub/sub HTTP push; single Go binary; use for order updates,\n\
+             \x20          release pings, or fan alerts  (ntfy.sh free or self-host)",
+            "Gotify    — MIT; simple self-hosted push; REST API + WebSocket; use when you want\n\
+             \x20          zero third-party dependency and a lightweight server  (Fly.io / Railway free)",
+        ]).default(0).interact().unwrap_or(0) {
+            1 => NotifyChoice::Gotify,
+            _ => NotifyChoice::Ntfy,
+        }
     } else { NotifyChoice::None };
 
     // ── scheduling / availability polls ──────────────────────────────────
@@ -217,11 +230,15 @@ pub(crate) fn prompt_all_features() -> AllFeatures {
         .with_prompt("Add scheduling / availability polls?")
         .default(false).interact().unwrap_or(false)
     {
-        let _ = Select::with_theme(t).with_prompt("Scheduling").items(&[
-            "Rallly  — MIT; availability polling (open-source Doodle); use when you need\n\
-             \x20        group scheduling without requiring accounts  (Fly.io / Railway free)",
-        ]).default(0).interact().unwrap_or(0);
-        ScheduleChoice::Rallly
+        match Select::with_theme(t).with_prompt("Scheduling").items(&[
+            "Rallly    — MIT; availability polling (open-source Doodle); use for\n\
+             \x20          group scheduling without requiring accounts  (Fly.io / Railway free)",
+            "Cal.com   — AGPL 3.0; full booking system; calendar integrations; use when you need\n\
+             \x20          appointment booking with availability rules  ⚠ needs Postgres  (Fly.io / Railway free)",
+        ]).default(0).interact().unwrap_or(0) {
+            1 => ScheduleChoice::CalCom,
+            _ => ScheduleChoice::Rallly,
+        }
     } else { ScheduleChoice::None };
 
     // ── job board content type ────────────────────────────────────────────
@@ -250,21 +267,19 @@ pub(crate) fn prompt_all_features() -> AllFeatures {
     // ── session replay / heatmaps ─────────────────────────────────────────
     // Default to PostHog (index 1) when PostHog was already chosen for analytics
     // — same script, no extra deploy needed.
-    let heatmap_default: usize = if analytics == AnalyticsProvider::PostHog { 1 } else { 0 };
+    // Default to PostHog (index 0) when PostHog was already chosen for analytics — same script.
+    let heatmap_default: usize = 0;
     let heatmap = if Confirm::with_theme(t)
         .with_prompt("Add session replay / heatmaps?")
         .default(false).interact().unwrap_or(false)
     {
         match Select::with_theme(t).with_prompt("Session replay provider").items(&[
-            "OpenReplay  — MIT; full session replay + heatmaps + DevTools; use when you need\n\
-             \x20            rich UX debugging self-hosted  (needs a dedicated server)",
-            "PostHog     — MIT; use this if PostHog was chosen for analytics above;\n\
-             \x20            same script, no extra deploy",
-            "Custom      — I'll wire it myself",
+            "PostHog   — MIT; session replay + heatmaps; use this if PostHog was chosen for\n\
+             \x20          analytics above — same script, no extra deploy  (generous free tier)",
+            "Custom    — I'll wire it myself",
         ]).default(heatmap_default).interact().unwrap_or(heatmap_default) {
-            1 => HeatmapProvider::PostHog,
-            2 => HeatmapProvider::Custom,
-            _ => HeatmapProvider::OpenReplay,
+            1 => HeatmapProvider::Custom,
+            _ => HeatmapProvider::PostHog,
         }
     } else { HeatmapProvider::None };
 

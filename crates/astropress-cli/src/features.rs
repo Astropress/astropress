@@ -7,13 +7,17 @@ use crate::providers::{AbTestingProvider, AnalyticsProvider, HeatmapProvider};
 
 /// Content backend for the project. AstroPress is always the admin panel;
 /// this selects what stores and serves the content data.
+/// Content backend. Directus (BSL 1.1) and Strapi v5 (custom non-OSI licence)
+/// are excluded; all remaining options are MIT or Apache 2.0.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub(crate) enum CmsChoice { BuiltIn, Keystatic, Directus, Payload }
+pub(crate) enum CmsChoice { BuiltIn, Keystatic, Payload }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)] pub(crate) enum EmailChoice      { None, Listmonk }
-#[derive(Debug, Clone, Copy, PartialEq, Eq)] pub(crate) enum CommerceChoice   { None, Medusa }
+#[derive(Debug, Clone, Copy, PartialEq, Eq)] pub(crate) enum CommerceChoice   { None, Medusa, Vendure }
 #[derive(Debug, Clone, Copy, PartialEq, Eq)] pub(crate) enum CommunityChoice  { None, Giscus, Remark42 }
-#[derive(Debug, Clone, Copy, PartialEq, Eq)] pub(crate) enum SearchChoice     { None, Pagefind }
+/// Pagefind = static index at build time (zero server).
+/// Meilisearch = running service with full-text search API (MIT).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)] pub(crate) enum SearchChoice     { None, Pagefind, Meilisearch }
 #[derive(Debug, Clone, Copy, PartialEq, Eq)] pub(crate) enum CourseChoice     { None, FrappeLms }
 #[derive(Debug, Clone, Copy, PartialEq, Eq)] pub(crate) enum TestimonialChoice{ None, Formbricks }
 /// Multiple donation providers can be enabled simultaneously.
@@ -31,11 +35,13 @@ impl Default for DonationChoices {
         Self { polar: false, give_lively: false, liberapay: false, pledge_crypto: false }
     }
 }
-#[derive(Debug, Clone, Copy, PartialEq, Eq)] pub(crate) enum ForumChoice      { None, Flarum }
-#[derive(Debug, Clone, Copy, PartialEq, Eq)] pub(crate) enum ChatChoice       { None, Chatwoot }
+#[derive(Debug, Clone, Copy, PartialEq, Eq)] pub(crate) enum ForumChoice      { None, Flarum, Discourse }
+/// Chatwoot excluded (EE split — enterprise features are proprietary).
+/// Tiledesk is fully Apache 2.0.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)] pub(crate) enum ChatChoice       { None, Tiledesk }
 #[derive(Debug, Clone, Copy, PartialEq, Eq)] pub(crate) enum PaymentChoice    { None, HyperSwitch }
-#[derive(Debug, Clone, Copy, PartialEq, Eq)] pub(crate) enum NotifyChoice     { None, Ntfy }
-#[derive(Debug, Clone, Copy, PartialEq, Eq)] pub(crate) enum ScheduleChoice   { None, Rallly }
+#[derive(Debug, Clone, Copy, PartialEq, Eq)] pub(crate) enum NotifyChoice     { None, Ntfy, Gotify }
+#[derive(Debug, Clone, Copy, PartialEq, Eq)] pub(crate) enum ScheduleChoice   { None, Rallly, CalCom }
 
 // ── aggregated feature bag ────────────────────────────────────────────────────
 
@@ -123,14 +129,6 @@ mod tests {
         assert!(paths.contains(&"keystatic.config.ts"), "expected keystatic.config.ts, got {paths:?}");
         let content = files.iter().find(|(p, _)| *p == "keystatic.config.ts").unwrap().1;
         assert!(content.contains("@keystatic/core"));
-    }
-
-    #[test]
-    fn directus_generates_env_stubs() {
-        let f = AllFeatures { cms: CmsChoice::Directus, ..AllFeatures::defaults() };
-        let s = feature_env_stubs(&f);
-        assert!(s.contains("DIRECTUS_URL"));
-        assert!(s.contains("DIRECTUS_TOKEN"));
     }
 
     #[test]
@@ -329,12 +327,12 @@ mod tests {
     // ── live chat ─────────────────────────────────────────────────────────
 
     #[test]
-    fn chatwoot_generates_env_stubs() {
-        let f = AllFeatures { chat: ChatChoice::Chatwoot, ..AllFeatures::defaults() };
+    fn tiledesk_generates_env_stubs() {
+        let f = AllFeatures { chat: ChatChoice::Tiledesk, ..AllFeatures::defaults() };
         let s = feature_env_stubs(&f);
-        assert!(s.contains("CHATWOOT_URL"));
-        assert!(s.contains("CHATWOOT_API_ACCESS_TOKEN"));
-        assert!(s.contains("CHATWOOT_INBOX_ID"));
+        assert!(s.contains("TILEDESK_API_URL"));
+        assert!(s.contains("TILEDESK_PROJECT_ID"));
+        assert!(s.contains("TILEDESK_TOKEN"));
     }
 
     // ── payments ──────────────────────────────────────────────────────────

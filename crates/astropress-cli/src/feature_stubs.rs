@@ -15,8 +15,6 @@ pub(crate) fn feature_env_stubs(f: &AllFeatures) -> String {
 
     match f.cms {
         CmsChoice::Keystatic => lines.push("# Keystatic CMS — configure in keystatic.config.ts"),
-        CmsChoice::Directus  => lines.extend(&["# Directus CMS",
-            "DIRECTUS_URL=http://localhost:8055", "DIRECTUS_TOKEN=replace-me"]),
         CmsChoice::Payload   => lines.extend(&["# Payload CMS",
             "PAYLOAD_URL=http://localhost:3000", "PAYLOAD_SECRET=replace-me"]),
         CmsChoice::BuiltIn   => {}
@@ -31,7 +29,13 @@ pub(crate) fn feature_env_stubs(f: &AllFeatures) -> String {
             "LISTMONK_LIST_ID=1"]);
     }
     if f.commerce == CommerceChoice::Medusa {
-        lines.extend(&["# Medusa (e-commerce)", "MEDUSA_BACKEND_URL=http://localhost:9000"]);
+        lines.extend(&["# Medusa (headless commerce — MIT)",
+            "MEDUSA_BACKEND_URL=http://localhost:9000"]);
+    }
+    if f.commerce == CommerceChoice::Vendure {
+        lines.extend(&["# Vendure (headless commerce — MIT)",
+            "VENDURE_API_URL=http://localhost:3000/shop-api",
+            "VENDURE_ADMIN_API_URL=http://localhost:3000/admin-api"]);
     }
     if f.community == CommunityChoice::Remark42 {
         lines.extend(&["# Remark42 (comments)",
@@ -39,6 +43,11 @@ pub(crate) fn feature_env_stubs(f: &AllFeatures) -> String {
     }
     if f.search == SearchChoice::Pagefind {
         lines.push("# Pagefind — add `npx pagefind --source dist` to your build script");
+    }
+    if f.search == SearchChoice::Meilisearch {
+        lines.extend(&["# Meilisearch (full-text search — MIT)",
+            "MEILISEARCH_URL=http://localhost:7700",
+            "MEILISEARCH_API_KEY=replace-me"]);
     }
     if f.courses == CourseChoice::FrappeLms {
         lines.extend(&["# Frappe LMS (courses)",
@@ -67,13 +76,18 @@ pub(crate) fn feature_env_stubs(f: &AllFeatures) -> String {
             "PLEDGE_PARTNER_KEY=[YOUR_PLEDGE_PARTNER_KEY]"]);
     }
     if f.forum == ForumChoice::Flarum {
-        lines.extend(&["# Flarum (forum)",
+        lines.extend(&["# Flarum (forum — MIT)",
             "FLARUM_URL=http://localhost:8080", "FLARUM_API_KEY=replace-me"]);
     }
-    if f.chat == ChatChoice::Chatwoot {
-        lines.extend(&["# Chatwoot (live chat + support)",
-            "CHATWOOT_URL=http://localhost:3000",
-            "CHATWOOT_API_ACCESS_TOKEN=replace-me", "CHATWOOT_INBOX_ID=replace-me"]);
+    if f.forum == ForumChoice::Discourse {
+        lines.extend(&["# Discourse (forum — GPL 2.0)",
+            "DISCOURSE_URL=http://localhost:3000",
+            "DISCOURSE_API_KEY=replace-me", "DISCOURSE_API_USERNAME=system"]);
+    }
+    if f.chat == ChatChoice::Tiledesk {
+        lines.extend(&["# Tiledesk (live chat + support — Apache 2.0)",
+            "TILEDESK_API_URL=http://localhost:8080",
+            "TILEDESK_PROJECT_ID=replace-me", "TILEDESK_TOKEN=replace-me"]);
     }
     if f.payments == PaymentChoice::HyperSwitch {
         lines.extend(&["# HyperSwitch (payment router — Apache 2.0)",
@@ -89,8 +103,16 @@ pub(crate) fn feature_env_stubs(f: &AllFeatures) -> String {
         lines.extend(&["# ntfy (push notifications — Apache 2.0)",
             "NTFY_URL=https://ntfy.sh", "NTFY_TOPIC=replace-with-your-topic"]);
     }
+    if f.notify == NotifyChoice::Gotify {
+        lines.extend(&["# Gotify (push notifications — MIT)",
+            "GOTIFY_URL=http://localhost:80", "GOTIFY_APP_TOKEN=replace-me"]);
+    }
     if f.schedule == ScheduleChoice::Rallly {
-        lines.extend(&["# Rallly (scheduling polls)", "RALLLY_URL=http://localhost:3000"]);
+        lines.extend(&["# Rallly (scheduling polls — MIT)", "RALLLY_URL=http://localhost:3000"]);
+    }
+    if f.schedule == ScheduleChoice::CalCom {
+        lines.extend(&["# Cal.com (scheduling — AGPL 3.0)",
+            "CALCOM_API_URL=https://api.cal.com/v1", "CALCOM_API_KEY=replace-me"]);
     }
 
     if lines.is_empty() { String::new() }
@@ -110,7 +132,7 @@ pub(crate) fn feature_config_stubs(f: &AllFeatures) -> Vec<(&'static str, &'stat
             "payload.config.ts",
             "import { buildConfig } from 'payload/config';\n\nexport default buildConfig({\n  // Configure Payload CMS here.\n  // See: https://payloadcms.com/docs/configuration/overview\n  collections: [],\n});\n",
         )),
-        CmsChoice::Directus | CmsChoice::BuiltIn => {}
+        CmsChoice::BuiltIn => {}
     }
     if f.email == EmailChoice::Listmonk {
         // src/middleware.ts — overrides the static template to add registerAstropressService
@@ -358,7 +380,6 @@ pub(crate) fn print_stack_summary(f: &AllFeatures, app_host: Option<AppHost>) {
     match f.cms {
         CmsChoice::BuiltIn   => println!("    Content       Astropress built-in (SQLite / D1 / Supabase)"),
         CmsChoice::Keystatic => println!("    Content       Keystatic          → git-backed, zero server"),
-        CmsChoice::Directus  => println!("    Content       Directus           → Fly.io / Railway (free)"),
         CmsChoice::Payload   => println!("    Content       Payload            ⚠ needs a Node server (Fly.io / Railway free)"),
     }
     if f.email       == EmailChoice::Listmonk        { println!("    Email         Listmonk           → Fly.io / Railway (free)"); }
@@ -371,6 +392,7 @@ pub(crate) fn print_stack_summary(f: &AllFeatures, app_host: Option<AppHost>) {
         AnalyticsProvider::None      => {}
     }
     if f.commerce    == CommerceChoice::Medusa       { println!("    Storefront    Medusa             → Fly.io / Railway (free)  ⚠ needs Node server"); }
+    if f.commerce    == CommerceChoice::Vendure      { println!("    Storefront    Vendure            → Fly.io / Railway (free)  ⚠ needs Node server"); }
     if f.courses     == CourseChoice::FrappeLms      { println!("    Courses       Frappe LMS         → Fly.io / Railway (free)"); }
     if f.testimonials == TestimonialChoice::Formbricks { println!("    Testimonials  Formbricks         → formbricks.com (free tier)"); }
     if f.donations.polar        { println!("    Donations     Polar              → polar.sh (Apache 2.0, free tier)"); }
@@ -379,9 +401,13 @@ pub(crate) fn print_stack_summary(f: &AllFeatures, app_host: Option<AppHost>) {
     if f.donations.pledge_crypto { println!("    Donations     PledgeCrypto       → pledgecrypto.com (free; auto carbon offsets)"); }
     if f.payments    == PaymentChoice::HyperSwitch   { println!("    Payments      HyperSwitch        → Fly.io / Railway (free); provider fees apply"); }
     if f.forum       == ForumChoice::Flarum          { println!("    Forum         Flarum             → Fly.io / Railway (free)"); }
-    if f.chat        == ChatChoice::Chatwoot         { println!("    Live chat     Chatwoot           → Fly.io / Railway (free)"); }
+    if f.forum       == ForumChoice::Discourse       { println!("    Forum         Discourse          → Fly.io / Railway (free)  ⚠ heavier: needs Redis + Postgres"); }
+    if f.search      == SearchChoice::Meilisearch    { println!("    Search        Meilisearch        → Fly.io / Railway (free)"); }
+    if f.chat        == ChatChoice::Tiledesk         { println!("    Live chat     Tiledesk           → Fly.io / Railway (free)"); }
     if f.notify      == NotifyChoice::Ntfy           { println!("    Push notify   ntfy               → ntfy.sh (free) or self-host"); }
+    if f.notify      == NotifyChoice::Gotify         { println!("    Push notify   Gotify             → Fly.io / Railway (free)"); }
     if f.schedule    == ScheduleChoice::Rallly       { println!("    Scheduling    Rallly             → Fly.io / Railway (free)"); }
+    if f.schedule    == ScheduleChoice::CalCom       { println!("    Scheduling    Cal.com            → Fly.io / Railway (free)  ⚠ needs Postgres"); }
     match f.community {
         CommunityChoice::Giscus   => println!("    Comments      Giscus             → zero server (GitHub Discussions)"),
         CommunityChoice::Remark42 => println!("    Comments      Remark42           → Fly.io (free)"),
@@ -395,7 +421,6 @@ pub(crate) fn print_stack_summary(f: &AllFeatures, app_host: Option<AppHost>) {
         AbTestingProvider::None       => {}
     }
     match f.heatmap {
-        HeatmapProvider::OpenReplay => println!("    Replays       OpenReplay         → self-hosted"),
         HeatmapProvider::PostHog    => println!("    Replays       PostHog            → same script as analytics"),
         HeatmapProvider::Custom     => println!("    Replays       Custom"),
         HeatmapProvider::None       => {}
