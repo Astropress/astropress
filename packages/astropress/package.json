@@ -134,7 +134,7 @@
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "test:watch": "vitest",
-    "build": "tsc -p tsconfig.build.json --noCheck",
+    "build": "tsc -p tsconfig.build.json --noCheck && bun ../../scripts/add-js-ext.ts src",
     "release": "changeset publish",
     "version": "changeset version",
     "prepublishOnly": "bun run build && cd ../.. && bun run audit:sync && bun run audit:arch"
