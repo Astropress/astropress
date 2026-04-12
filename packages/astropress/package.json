@@ -104,6 +104,7 @@
     "./api-middleware": { "types": "./src/api-middleware.ts", "default": "./src/api-middleware.js" },
     "./api-routes": { "types": "./src/api-routes.ts", "default": "./src/api-routes.js" },
     "./analytics": { "types": "./src/analytics.ts", "default": "./src/analytics.js" },
+    "./donations": { "types": "./src/donations.ts", "default": "./src/donations.js" },
     "./runtime-health": { "types": "./src/runtime-health.ts", "default": "./src/runtime-health.js" },
     "./runtime-logger": { "types": "./src/runtime-logger.ts", "default": "./src/runtime-logger.js" }
   },

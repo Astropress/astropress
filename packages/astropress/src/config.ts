@@ -22,6 +22,32 @@ export interface AnalyticsConfig {
   label?: string;
 }
 
+export interface GiveLivelyConfig {
+  /** GiveLively organization slug (GIVELIVELY_ORG_SLUG). */
+  orgSlug: string;
+  /** GiveLively campaign slug (GIVELIVELY_CAMPAIGN_SLUG). Falls back to orgSlug when omitted. */
+  campaignSlug?: string;
+}
+
+export interface LiberapayConfig {
+  /** Liberapay username (LIBERAPAY_USERNAME). */
+  username: string;
+}
+
+export interface PledgeCryptoConfig {
+  /** PledgeCrypto partner key (PLEDGE_PARTNER_KEY). Carbon offsets are applied automatically per transaction. */
+  partnerKey: string;
+}
+
+export interface DonationsConfig {
+  /** GiveLively widget for fiat donations (US nonprofits). */
+  giveLively?: GiveLivelyConfig;
+  /** Liberapay recurring donation button (no external JS, always shown). */
+  liberapay?: LiberapayConfig;
+  /** PledgeCrypto widget for crypto donations with automatic carbon offsets. */
+  pledgeCrypto?: PledgeCryptoConfig;
+}
+
 export interface AbTestingConfig {
   /** A/B testing / feature flag provider identifier. */
   type: "growthbook" | "unleash" | "custom";
@@ -194,6 +220,13 @@ export interface CmsConfig {
    * When configured, an "Analytics" entry appears in the admin services sidebar.
    */
   analytics?: AnalyticsConfig;
+
+  /**
+   * Optional donation / fundraising integrations.
+   * When configured, a "Fundraising" entry appears in the admin sidebar.
+   * Multiple providers can be enabled simultaneously.
+   */
+  donations?: DonationsConfig;
 
   /**
    * Optional A/B testing / feature flag integration.

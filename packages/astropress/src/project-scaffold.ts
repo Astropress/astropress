@@ -15,6 +15,7 @@ import {
   buildAbTestingEnvExample,
   buildHeatmapEnvExample,
   buildApiEnvExample,
+  buildDonationsEnvExample,
 } from "./project-scaffold-env";
 import { createPackageScripts, createCiFiles, createDeployDoc } from "./project-scaffold-ci";
 
@@ -24,6 +25,12 @@ export type AstropressAnalyticsProvider = "umami" | "plausible" | "matomo" | "po
 export type AstropressAbTestingProvider = "growthbook" | "unleash" | "custom";
 export type AstropressHeatmapProvider = "openreplay" | "posthog" | "custom";
 
+export interface AstropressDonationsProviders {
+  giveLively?: boolean;
+  liberapay?: boolean;
+  pledgeCrypto?: boolean;
+}
+
 export interface AstropressProjectScaffoldInput {
   appHost?: AstropressAppHost;
   dataServices?: AstropressDataServices;
@@ -32,6 +39,7 @@ export interface AstropressProjectScaffoldInput {
   abTesting?: AstropressAbTestingProvider;
   heatmap?: AstropressHeatmapProvider;
   enableApi?: boolean;
+  donations?: AstropressDonationsProviders;
 }
 
 export interface AstropressProjectScaffold {
@@ -117,6 +125,7 @@ export function createAstropressProjectScaffold(
   const abTestingOpt = typeof input === "string" ? undefined : input.abTesting;
   const heatmapOpt = typeof input === "string" ? undefined : input.heatmap;
   const enableApi = typeof input === "string" ? false : (input.enableApi ?? false);
+  const donationsOpt = typeof input === "string" ? undefined : input.donations;
 
   const localEnv = baseLocalEnv(profile.provider, profile.appHost, profile.dataServices);
   if (enableApi) localEnv.ASTROPRESS_API_ENABLED = "true";
@@ -137,9 +146,10 @@ export function createAstropressProjectScaffold(
       ...buildAbTestingEnvExample(abTestingOpt),
       ...buildHeatmapEnvExample(heatmapOpt),
       ...(enableApi ? buildApiEnvExample() : {}),
+      ...buildDonationsEnvExample(donationsOpt),
     },
     packageScripts: createPackageScripts(profile.appHost),
-    ciFiles: createCiFiles(profile.appHost, requiredEnvKeys),
+    ciFiles: createCiFiles(profile.appHost, requiredEnvKeys, donationsOpt),
     deployDoc: createDeployDoc(profile.appHost, profile.dataServices, supportLevel, requiredEnvKeys),
     requiredEnvKeys,
   };

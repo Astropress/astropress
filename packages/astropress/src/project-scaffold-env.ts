@@ -5,6 +5,7 @@ import type {
   AstropressAbTestingProvider,
   AstropressHeatmapProvider,
   AstropressScaffoldProvider,
+  AstropressDonationsProviders,
 } from "./project-scaffold";
 import { createLocalBootstrapSecrets } from "./project-scaffold-passphrase";
 
@@ -124,4 +125,20 @@ export function buildHeatmapEnvExample(heatmap: AstropressHeatmapProvider | unde
 
 export function buildApiEnvExample(): Record<string, string> {
   return { ASTROPRESS_API_ENABLED: "true", ASTROPRESS_API_RATE_LIMIT: "60" };
+}
+
+export function buildDonationsEnvExample(donations: AstropressDonationsProviders | undefined): Record<string, string> {
+  if (!donations) return {};
+  const result: Record<string, string> = {};
+  if (donations.giveLively) {
+    result["GIVELIVELY_ORG_SLUG"] = "replace-with-your-org-slug";
+    result["GIVELIVELY_CAMPAIGN_SLUG"] = "replace-with-your-campaign-slug-or-remove";
+  }
+  if (donations.liberapay) {
+    result["LIBERAPAY_USERNAME"] = "replace-with-your-liberapay-username";
+  }
+  if (donations.pledgeCrypto) {
+    result["PLEDGE_PARTNER_KEY"] = "[YOUR_PLEDGE_PARTNER_KEY]";
+  }
+  return result;
 }

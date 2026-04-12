@@ -1,5 +1,6 @@
 import type { AstropressAppHost } from "./app-host-targets";
 import type { AstropressDataServices } from "./data-service-targets";
+import type { AstropressDonationsProviders } from "./project-scaffold";
 import { appHostToDeployTarget } from "./project-scaffold-env";
 
 export function createPackageScripts(appHost: AstropressAppHost) {
@@ -7,7 +8,11 @@ export function createPackageScripts(appHost: AstropressAppHost) {
     dev: "astro dev",
     build: "astro build",
     check: "astro check",
+    test: "vitest run --passWithNoTests",
+    lint: "bunx biome check src",
+    format: "bunx biome format --write src",
     "doctor:strict": "astropress doctor --strict",
+    prepare: "bunx lefthook install",
   };
 
   switch (appHost) {
@@ -79,11 +84,169 @@ function gitLabPagesWorkflow(): string {
   return `image: oven/bun:1\n\npages:\n  stage: deploy\n  script:\n    - bun install\n    - bun run doctor:strict\n    - bun run build\n    - mv dist public\n  artifacts:\n    paths:\n      - public\n  only:\n    - main\n`;
 }
 
-export function createCiFiles(appHost: AstropressAppHost, requiredEnvKeys: string[]) {
+function createAstropressConfig(appHost: AstropressAppHost): string {
+  const isStatic = appHost === "github-pages" || appHost === "gitlab-pages";
+  const adminImport = isStatic ? "" : ", createAstropressAdminAppIntegration";
+  const output = isStatic ? '"static"' : '"server"';
+  const integrationLine = isStatic ? "" : "\n  integrations: [createAstropressAdminAppIntegration()],";
+
+  return [
+    `import { defineConfig } from "astro/config";`,
+    `import { fileURLToPath } from "node:url";`,
+    `import { createAstropressViteIntegration${adminImport} } from "astropress/integration";`,
+    ``,
+    `const viteIntegration = createAstropressViteIntegration({`,
+    `  localRuntimeModulesPath: fileURLToPath(`,
+    `    new URL("./src/astropress/local-runtime-modules.ts", import.meta.url),`,
+    `  ),`,
+    `});`,
+    ``,
+    `export default defineConfig({`,
+    `  output: ${output},${integrationLine}`,
+    `  vite: {`,
+    `    plugins: viteIntegration.plugins,`,
+    `    resolve: { alias: viteIntegration.aliases },`,
+    `  },`,
+    `});`,
+  ].join("\n");
+}
+
+function createQualityWorkflow(): string {
+  return [
+    `name: Quality`,
+    ``,
+    `on:`,
+    `  push:`,
+    `    branches: [main]`,
+    `  pull_request:`,
+    `    branches: [main]`,
+    ``,
+    `jobs:`,
+    `  quality:`,
+    `    runs-on: ubuntu-latest`,
+    `    steps:`,
+    `      - uses: actions/checkout@v4`,
+    `      - uses: oven-sh/setup-bun@v2`,
+    `      - run: bun install`,
+    `      - run: bun run lint`,
+    `      - run: bun run check`,
+    `      - run: bun run test`,
+    `      - run: bun run doctor:strict`,
+  ].join("\n");
+}
+
+function createSecurityWorkflow(): string {
+  return [
+    `name: Security`,
+    ``,
+    `on:`,
+    `  push:`,
+    `    branches: [main]`,
+    `  pull_request:`,
+    `    branches: [main]`,
+    `  schedule:`,
+    `    - cron: "0 6 * * 1"`,
+    ``,
+    `jobs:`,
+    `  trivy:`,
+    `    runs-on: ubuntu-latest`,
+    `    permissions:`,
+    `      contents: read`,
+    `    steps:`,
+    `      - uses: actions/checkout@v4`,
+    `      - uses: aquasecurity/trivy-action@0.28.0`,
+    `        with:`,
+    `          scan-type: fs`,
+    `          scan-ref: .`,
+    `          scanners: vuln,secret,misconfig`,
+    `          exit-code: '1'`,
+    `          severity: CRITICAL,HIGH`,
+    `          ignore-unfixed: true`,
+    `          skip-dirs: node_modules,dist,.astro`,
+    ``,
+    `  semgrep:`,
+    `    runs-on: ubuntu-latest`,
+    `    permissions:`,
+    `      contents: read`,
+    `    steps:`,
+    `      - uses: actions/checkout@v4`,
+    `      - uses: returntocorp/semgrep-action@v1`,
+    `        with:`,
+    `          config: >-`,
+    `            p/owasp-top-ten`,
+    `            p/secrets`,
+    `            p/typescript`,
+    `            p/javascript`,
+    `            p/nodejs`,
+  ].join("\n");
+}
+
+function createDonatePage(donations: AstropressDonationsProviders, siteUrl: string): string {
+  const providers: string[] = [];
+  if (donations.giveLively) providers.push("giveLively");
+  if (donations.liberapay) providers.push("liberapay");
+  if (donations.pledgeCrypto) providers.push("pledgeCrypto");
+
+  const imports = [
+    `import { resolveDonationSnippets } from "astropress/donations";`,
+    `import { requestOptedOutOfTracking } from "astropress/analytics";`,
+    `import { getCmsConfig } from "astropress";`,
+  ];
+
+  const enabledProviders = providers.map((p) => `"${p}"`).join(", ");
+
+  return [
+    `---`,
+    ...imports,
+    `const config = getCmsConfig();`,
+    `const optedOut = requestOptedOutOfTracking(Astro.request);`,
+    `const snippets = resolveDonationSnippets(config.donations, config.siteUrl, optedOut);`,
+    `const title = "Donate";`,
+    `---`,
+    ``,
+    `<!doctype html>`,
+    `<html lang="en">`,
+    `  <head>`,
+    `    <meta charset="utf-8" />`,
+    `    <meta name="viewport" content="width=device-width, initial-scale=1" />`,
+    `    <title>{title}</title>`,
+    `    {snippets.pledgeCryptoHeadScript && <Fragment set:html={snippets.pledgeCryptoHeadScript} />}`,
+    `    {snippets.jsonLd && (`,
+    `      <script type="application/ld+json" set:html={snippets.jsonLd} />`,
+    `    )}`,
+    `  </head>`,
+    `  <body>`,
+    `    <main>`,
+    `      <h1>{title}</h1>`,
+    `      <!-- Enabled providers: ${enabledProviders} -->`,
+    `      {snippets.giveLively && <Fragment set:html={snippets.giveLively} />}`,
+    `      {snippets.liberapay && <Fragment set:html={snippets.liberapay} />}`,
+    `      {snippets.pledgeCrypto && <Fragment set:html={snippets.pledgeCrypto} />}`,
+    `    </main>`,
+    `  </body>`,
+    `</html>`,
+  ].join("\n");
+}
+
+export function createCiFiles(
+  appHost: AstropressAppHost,
+  requiredEnvKeys: string[],
+  donations?: AstropressDonationsProviders,
+) {
+  const files: Record<string, string> = {};
   if (appHost === "gitlab-pages") {
-    return { ".gitlab-ci.yml": gitLabPagesWorkflow() };
+    files[".gitlab-ci.yml"] = gitLabPagesWorkflow();
+  } else {
+    files[".github/workflows/deploy-astropress.yml"] = gitHubActionsDeployWorkflow(appHost, requiredEnvKeys);
+    files[".github/workflows/quality.yml"] = createQualityWorkflow();
+    files[".github/workflows/security.yml"] = createSecurityWorkflow();
   }
-  return { ".github/workflows/deploy-astropress.yml": gitHubActionsDeployWorkflow(appHost, requiredEnvKeys) };
+  files["astro.config.mjs"] = createAstropressConfig(appHost);
+  const hasAnyDonation = donations && (donations.giveLively || donations.liberapay || donations.pledgeCrypto);
+  if (hasAnyDonation) {
+    files["src/pages/donate.astro"] = createDonatePage(donations, "https://example.com");
+  }
+  return files;
 }
 
 export function createDeployDoc(
