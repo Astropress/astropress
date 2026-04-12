@@ -20,6 +20,10 @@ export default defineConfig({
       { find: /^astropress\/api-middleware(?:\.js)?$/, replacement: fileURLToPath(new URL("./src/api-middleware.ts", import.meta.url)) },
       { find: /^astropress\/platform-contracts(?:\.js)?$/, replacement: fileURLToPath(new URL("./src/platform-contracts.ts", import.meta.url)) },
       { find: "cloudflare:workers", replacement: fileURLToPath(new URL("./src/cloudflare-workers-stub.ts", import.meta.url)) },
+      // Force the two src files whose v8 sourcemaps misattribute execution to .js
+      // (despite extensionAlias) to resolve explicitly to .ts.
+      { find: /^(.*\/src\/analytics)\.js$/, replacement: "$1.ts" },
+      { find: /^(.*\/src\/api-routes)\.js$/, replacement: "$1.ts" },
     ],
   },
   test: {

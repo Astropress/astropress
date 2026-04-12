@@ -393,4 +393,9 @@ describe("resolveAnalyticsSnippet", () => {
   it("custom: returns empty string when snippetSrc is absent", () => {
     expect(resolveAnalyticsSnippet({ type: "custom", mode: "snippet-only" })).toBe("");
   });
+
+  it("unknown type falls through to default and returns empty string", () => {
+    // Defensive branch for forward-compatible configs from a newer schema version
+    expect(resolveAnalyticsSnippet({ type: "unknown-future-type" as never, mode: "link" })).toBe("");
+  });
 });
