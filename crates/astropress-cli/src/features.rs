@@ -166,6 +166,42 @@ mod tests {
         assert!(content.contains("LISTMONK_LIST_ID"), "missing LISTMONK_LIST_ID in LISTMONK.md");
         assert!(content.contains("NEWSLETTER_DELIVERY_MODE"), "missing NEWSLETTER_DELIVERY_MODE in LISTMONK.md");
         assert!(content.contains("Fly.io"), "missing Fly.io instructions in LISTMONK.md");
+        // verify all three generated files are mentioned
+        assert!(content.contains("docker-compose.yml"), "LISTMONK.md should reference docker-compose.yml");
+        assert!(content.contains("Caddyfile"), "LISTMONK.md should reference Caddyfile");
+        assert!(content.contains("registerAstropressService"), "LISTMONK.md should mention registerAstropressService");
+    }
+
+    #[test]
+    fn listmonk_generates_caddy_proxy_files() {
+        let f = AllFeatures { email: EmailChoice::Listmonk, ..AllFeatures::defaults() };
+        let stubs = feature_config_stubs(&f);
+        let paths: Vec<&str> = stubs.iter().map(|(p, _)| *p).collect();
+        assert!(paths.contains(&"listmonk/Caddyfile"), "Caddyfile not generated");
+        assert!(paths.contains(&"listmonk/docker-compose.yml"), "docker-compose.yml not generated");
+        assert!(paths.contains(&"listmonk/.env.listmonk.example"), ".env.listmonk.example not generated");
+
+        let caddyfile = stubs.iter().find(|(p, _)| *p == "listmonk/Caddyfile").unwrap().1;
+        assert!(caddyfile.contains("header_down -X-Frame-Options"), "Caddyfile should strip X-Frame-Options");
+        assert!(caddyfile.contains("frame-ancestors"), "Caddyfile should set frame-ancestors CSP");
+
+        let compose = stubs.iter().find(|(p, _)| *p == "listmonk/docker-compose.yml").unwrap().1;
+        assert!(compose.contains("caddy:2-alpine"), "docker-compose should include Caddy");
+        assert!(compose.contains("listmonk/listmonk:latest"), "docker-compose should include Listmonk");
+        assert!(compose.contains("postgres:16-alpine"), "docker-compose should include Postgres");
+    }
+
+    #[test]
+    fn listmonk_generates_middleware_with_register_service() {
+        let f = AllFeatures { email: EmailChoice::Listmonk, ..AllFeatures::defaults() };
+        let stubs = feature_config_stubs(&f);
+        let middleware = stubs.iter().find(|(p, _)| *p == "src/middleware.ts");
+        assert!(middleware.is_some(), "src/middleware.ts not generated");
+        let content = middleware.unwrap().1;
+        assert!(content.contains("registerAstropressService"), "middleware should call registerAstropressService");
+        assert!(content.contains("provider: \"email\""), "middleware should register email provider");
+        assert!(content.contains("registerCms"), "middleware should still call registerCms");
+        assert!(content.contains("createAstropressSecurityMiddleware"), "middleware should export security middleware");
     }
 
     // ── commerce ──────────────────────────────────────────────────────────
