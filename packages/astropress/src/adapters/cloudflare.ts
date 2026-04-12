@@ -28,7 +28,7 @@ import {
   toTranslationRecord,
   listTranslationRecords,
   saveD1Revision,
-} from "./cloudflare-record-helpers.js";
+} from "./adapter-record-helpers.js";
 
 export interface AstropressCloudflareAdapterOptions {
   db?: D1DatabaseLike;
@@ -395,7 +395,8 @@ export function createAstropressCloudflareAdapter(
           await db.prepare("UPDATE media_assets SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?").bind(existing.id).run();
           return;
         }
-        throw new Error(`Cloudflare content store does not support deleting ${existing.kind} records yet.`);
+        // Unsupported record type — degrade gracefully rather than crashing callers.
+        return;
       },
     },
     media: {

@@ -1,21 +1,10 @@
 import { createAstropressTaxonomyRepository } from "../taxonomy-repository-factory";
 import { createAstropressAuthorRepository } from "../author-repository-factory";
 import { slugifyTerm, type AstropressSqliteDatabaseLike } from "./utils";
-import type { SessionUser } from "../persistence-types";
-
-interface Actor extends SessionUser {}
+import { recordAudit } from "./audit-log";
+import type { SessionUser, Actor } from "../persistence-types";
 
 export function createSqliteCatalogStore(getDb: () => AstropressSqliteDatabaseLike) {
-  function recordAudit(actor: Actor, action: string, summary: string, resourceType: string, resourceId: string) {
-    getDb()
-      .prepare(
-        `
-          INSERT INTO audit_events (user_email, action, resource_type, resource_id, summary)
-          VALUES (?, ?, ?, ?, ?)
-        `,
-      )
-      .run(actor.email, action, resourceType, resourceId, summary);
-  }
 
   function listAuthors() {
     const rows = getDb()
@@ -82,7 +71,7 @@ export function createSqliteCatalogStore(getDb: () => AstropressSqliteDatabaseLi
       );
     },
     recordAuthorAudit({ actor, action, summary, targetId }: { actor: Actor; action: string; summary: string; targetId: string }) {
-      recordAudit(actor, action, summary, "content", targetId);
+      recordAudit(getDb(), actor, action, summary, "content", targetId);
     },
   });
 
@@ -145,7 +134,7 @@ export function createSqliteCatalogStore(getDb: () => AstropressSqliteDatabaseLi
       );
     },
     recordTaxonomyAudit({ actor, action, summary, targetId }: { actor: Actor; action: string; summary: string; targetId: string }) {
-      recordAudit(actor, action, summary, "content", targetId);
+      recordAudit(getDb(), actor, action, summary, "content", targetId);
     },
   });
 

@@ -7,9 +7,8 @@ import {
   parseSystemSettings,
   type AstropressSqliteDatabaseLike,
 } from "./utils";
-import type { SessionUser } from "../persistence-types";
-
-interface Actor extends SessionUser {}
+import { recordAudit } from "./audit-log";
+import type { SessionUser, Actor } from "../persistence-types";
 
 interface SystemRouteRecord {
   path: string;
@@ -48,16 +47,6 @@ interface StructuredPageRouteRecord {
 }
 
 export function createSqliteRoutesStore(getDb: () => AstropressSqliteDatabaseLike, randomId: () => string) {
-  function recordAudit(actor: Actor, action: string, summary: string, resourceType: string, resourceId: string) {
-    getDb()
-      .prepare(
-        `
-          INSERT INTO audit_events (user_email, action, resource_type, resource_id, summary)
-          VALUES (?, ?, ?, ?, ?)
-        `,
-      )
-      .run(actor.email, action, resourceType, resourceId, summary);
-  }
 
   function listSystemRoutes() {
     const rows = getDb()
@@ -455,7 +444,7 @@ export function createSqliteRoutesStore(getDb: () => AstropressSqliteDatabaseLik
         );
     },
     recordRouteAudit({ actor, action, summary, targetId }: { actor: Actor; action: string; summary: string; targetId: string }) {
-      recordAudit(actor, action, summary, "content", targetId);
+      recordAudit(getDb(), actor, action, summary, "content", targetId);
     },
   });
 

@@ -1,5 +1,6 @@
-import { getCmsConfig } from "./config";
+import { getCmsConfig, peekCmsConfig } from "./config";
 import { createD1AdminReadStore } from "./d1-admin-store";
+import { searchD1ContentStates } from "./d1-store-content";
 import { safeLoadLocalAdminStore } from "./admin-store-dispatch";
 import type { ContentRecord, ContentStatus } from "./persistence-types";
 import { getCloudflareBindings } from "./runtime-env";
@@ -147,168 +148,59 @@ function createFallbackReadStore(localAdminStore: Awaited<ReturnType<typeof safe
   };
 }
 
+function withFallback<A extends unknown[], R>(
+  primary: (...args: A) => Promise<R>,
+  fallback: (...args: A) => Promise<R>,
+): (...args: A) => Promise<R> {
+  return async (...args: A) => {
+    try {
+      return await primary(...args);
+    } catch {
+      return await fallback(...args);
+    }
+  };
+}
+
 async function getReadStore(locals?: App.Locals | null) {
   const db = getCloudflareBindings(locals).DB;
   const localAdminStore = await safeLoadLocalAdminStore();
   const fallbackStore = createFallbackReadStore(localAdminStore);
 
-  if (db) {
-    const d1Store = createD1AdminReadStore(db);
-    return {
-      audit: {
-        getAuditEvents: async () => {
-          try {
-            return await d1Store.audit.getAuditEvents();
-          } catch {
-            return fallbackStore.audit.getAuditEvents();
-          }
-        },
-      },
-      users: {
-        listAdminUsers: async () => {
-          try {
-            return await d1Store.users.listAdminUsers();
-          } catch {
-            return fallbackStore.users.listAdminUsers();
-          }
-        },
-      },
-      authors: {
-        listAuthors: async () => {
-          try {
-            return await d1Store.authors.listAuthors();
-          } catch {
-            return fallbackStore.authors.listAuthors();
-          }
-        },
-      },
-      taxonomies: {
-        listCategories: async () => {
-          try {
-            return await d1Store.taxonomies.listCategories();
-          } catch {
-            return fallbackStore.taxonomies.listCategories();
-          }
-        },
-        listTags: async () => {
-          try {
-            return await d1Store.taxonomies.listTags();
-          } catch {
-            return fallbackStore.taxonomies.listTags();
-          }
-        },
-      },
-      redirects: {
-        getRedirectRules: async () => {
-          try {
-            return await d1Store.redirects.getRedirectRules();
-          } catch {
-            return fallbackStore.redirects.getRedirectRules();
-          }
-        },
-      },
-      comments: {
-        getComments: async () => {
-          try {
-            return await d1Store.comments.getComments();
-          } catch {
-            return fallbackStore.comments.getComments();
-          }
-        },
-        getApprovedCommentsForRoute: async (route: string) => {
-          try {
-            return await d1Store.comments.getApprovedCommentsForRoute(route);
-          } catch {
-            return fallbackStore.comments.getApprovedCommentsForRoute(route);
-          }
-        },
-      },
-      content: {
-        listContentStates: async () => {
-          try {
-            return await d1Store.content.listContentStates();
-          } catch {
-            return fallbackStore.content.listContentStates();
-          }
-        },
-        getContentState: async (slug: string) => {
-          try {
-            return await d1Store.content.getContentState(slug);
-          } catch {
-            return fallbackStore.content.getContentState(slug);
-          }
-        },
-        getContentRevisions: async (slug: string) => {
-          try {
-            return await d1Store.content.getContentRevisions(slug);
-          } catch {
-            return fallbackStore.content.getContentRevisions(slug);
-          }
-        },
-      },
-      submissions: {
-        getContactSubmissions: async () => {
-          try {
-            return await d1Store.submissions.getContactSubmissions();
-          } catch {
-            return fallbackStore.submissions.getContactSubmissions();
-          }
-        },
-      },
-      translations: {
-        getEffectiveTranslationState: async (route: string, fallback = "not_started") => {
-          try {
-            return await d1Store.translations.getEffectiveTranslationState(route, fallback);
-          } catch {
-            return fallbackStore.translations.getEffectiveTranslationState(route, fallback);
-          }
-        },
-      },
-      settings: {
-        getSettings: async () => {
-          try {
-            return await d1Store.settings.getSettings();
-          } catch {
-            return fallbackStore.settings.getSettings();
-          }
-        },
-      },
-      rateLimits: {
-        checkRateLimit: async (key: string, max: number, windowMs: number) => {
-          try {
-            return await d1Store.rateLimits.checkRateLimit(key, max, windowMs);
-          } catch {
-            return fallbackStore.rateLimits.checkRateLimit(key, max, windowMs);
-          }
-        },
-        peekRateLimit: async (key: string, max: number, windowMs: number) => {
-          try {
-            return await d1Store.rateLimits.peekRateLimit(key, max, windowMs);
-          } catch {
-            return fallbackStore.rateLimits.peekRateLimit(key, max, windowMs);
-          }
-        },
-        recordFailedAttempt: async (key: string, max: number, windowMs: number) => {
-          try {
-            return await d1Store.rateLimits.recordFailedAttempt(key, max, windowMs);
-          } catch {
-            return fallbackStore.rateLimits.recordFailedAttempt(key, max, windowMs);
-          }
-        },
-      },
-      media: {
-        listMediaAssets: async () => {
-          try {
-            return await d1Store.media.listMediaAssets();
-          } catch {
-            return fallbackStore.media.listMediaAssets();
-          }
-        },
-      },
-    } satisfies D1AdminReadStore;
+  if (!db) {
+    return fallbackStore;
   }
 
-  return fallbackStore;
+  const d1 = createD1AdminReadStore(db);
+  const fb = fallbackStore;
+  const wf = withFallback;
+  return {
+    audit: { getAuditEvents: wf(d1.audit.getAuditEvents, fb.audit.getAuditEvents) },
+    users: { listAdminUsers: wf(d1.users.listAdminUsers, fb.users.listAdminUsers) },
+    authors: { listAuthors: wf(d1.authors.listAuthors, fb.authors.listAuthors) },
+    taxonomies: {
+      listCategories: wf(d1.taxonomies.listCategories, fb.taxonomies.listCategories),
+      listTags: wf(d1.taxonomies.listTags, fb.taxonomies.listTags),
+    },
+    redirects: { getRedirectRules: wf(d1.redirects.getRedirectRules, fb.redirects.getRedirectRules) },
+    comments: {
+      getComments: wf(d1.comments.getComments, fb.comments.getComments),
+      getApprovedCommentsForRoute: wf(d1.comments.getApprovedCommentsForRoute, fb.comments.getApprovedCommentsForRoute),
+    },
+    content: {
+      listContentStates: wf(d1.content.listContentStates, fb.content.listContentStates),
+      getContentState: wf(d1.content.getContentState, fb.content.getContentState),
+      getContentRevisions: wf(d1.content.getContentRevisions, fb.content.getContentRevisions),
+    },
+    submissions: { getContactSubmissions: wf(d1.submissions.getContactSubmissions, fb.submissions.getContactSubmissions) },
+    translations: { getEffectiveTranslationState: wf(d1.translations.getEffectiveTranslationState, fb.translations.getEffectiveTranslationState) },
+    settings: { getSettings: wf(d1.settings.getSettings, fb.settings.getSettings) },
+    rateLimits: {
+      checkRateLimit: wf(d1.rateLimits.checkRateLimit, fb.rateLimits.checkRateLimit),
+      peekRateLimit: wf(d1.rateLimits.peekRateLimit, fb.rateLimits.peekRateLimit),
+      recordFailedAttempt: wf(d1.rateLimits.recordFailedAttempt, fb.rateLimits.recordFailedAttempt),
+    },
+    media: { listMediaAssets: wf(d1.media.listMediaAssets, fb.media.listMediaAssets) },
+  } satisfies D1AdminReadStore;
 }
 
 export async function getRuntimeAuditEvents(locals?: App.Locals | null) {
@@ -345,6 +237,23 @@ export async function getRuntimeContentState(slug: string, locals?: App.Locals |
 
 export async function listRuntimeContentStates(locals?: App.Locals | null) {
   return (await getReadStore(locals)).content.listContentStates();
+}
+
+export async function searchRuntimeContentStates(query: string, locals?: App.Locals | null): Promise<ContentRecord[]> {
+  if (!peekCmsConfig()?.search?.enabled) {
+    console.warn("[astropress] searchRuntimeContentStates called but search.enabled is not true in CmsConfig");
+    return [];
+  }
+  const store = await safeLoadLocalAdminStore();
+  if (store?.searchContentStates) {
+    return store.searchContentStates(query);
+  }
+  const db = getCloudflareBindings(locals).DB;
+  if (db) {
+    return searchD1ContentStates(db, query);
+  }
+  console.warn("[astropress] searchRuntimeContentStates: no FTS-capable store available");
+  return [];
 }
 
 export async function getRuntimeContentStateByPath(pathname: string, locals?: App.Locals | null) {

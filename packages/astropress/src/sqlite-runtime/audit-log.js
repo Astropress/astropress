@@ -1,5 +1,15 @@
 import { peekCmsConfig } from "../config.js";
 
+export function recordAudit(db, actor, action, summary, resourceType, resourceId) {
+  recordAuditEvent(db, {
+    userEmail: actor.email,
+    action,
+    resourceType,
+    resourceId,
+    summary,
+  });
+}
+
 export function recordAuditEvent(db, input) {
   db.prepare(
     `INSERT INTO audit_events (user_email, action, resource_type, resource_id, summary, details)

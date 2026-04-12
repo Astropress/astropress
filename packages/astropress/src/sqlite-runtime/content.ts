@@ -10,23 +10,12 @@ import {
   type AstropressSqliteDatabaseLike,
   type PageRecord,
 } from "./utils";
-import type { ContentRecord, SessionUser } from "../persistence-types";
+import { recordAudit } from "./audit-log";
+import type { ContentRecord, SessionUser, Actor } from "../persistence-types";
 
 type ContentStatus = "draft" | "review" | "published" | "archived";
 
-interface Actor extends SessionUser {}
-
 export function createSqliteContentStore(getDb: () => AstropressSqliteDatabaseLike, randomId: () => string) {
-  function recordAudit(actor: Actor, action: string, summary: string, resourceType: string, resourceId: string) {
-    getDb()
-      .prepare(
-        `
-          INSERT INTO audit_events (user_email, action, resource_type, resource_id, summary)
-          VALUES (?, ?, ?, ?, ?)
-        `,
-      )
-      .run(actor.email, action, resourceType, resourceId, summary);
-  }
 
   function getCustomContentEntries() {
     return getDb()
@@ -464,7 +453,7 @@ export function createSqliteContentStore(getDb: () => AstropressSqliteDatabaseLi
       }
     },
     recordContentAudit({ actor, action, summary, targetId }) {
-      recordAudit(actor, action, summary, "content", targetId);
+      recordAudit(getDb(), actor, action, summary, "content", targetId);
     },
   });
 

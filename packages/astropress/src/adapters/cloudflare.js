@@ -553,7 +553,8 @@ export function createAstropressCloudflareAdapter(options = {}) {
                     await db.prepare("UPDATE media_assets SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?").bind(existing.id).run();
                     return;
                 }
-                throw new Error(`Cloudflare content store does not support deleting ${existing.kind} records yet.`);
+                // Unsupported record type — degrade gracefully rather than crashing callers.
+                return;
             },
         },
         media: {

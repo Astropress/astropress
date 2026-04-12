@@ -21,6 +21,23 @@ export interface RecordAuditEventInput {
   details?: Record<string, unknown> | null;
 }
 
+export function recordAudit(
+  db: AstropressSqliteDatabaseLike,
+  actor: { email: string },
+  action: string,
+  summary: string,
+  resourceType: string,
+  resourceId: string,
+): void {
+  recordAuditEvent(db, {
+    userEmail: actor.email,
+    action,
+    resourceType,
+    resourceId,
+    summary,
+  });
+}
+
 export function recordAuditEvent(db: AstropressSqliteDatabaseLike, input: RecordAuditEventInput): void {
   db.prepare(
     `INSERT INTO audit_events (user_email, action, resource_type, resource_id, summary, details)

@@ -1,21 +1,10 @@
 import { createAstropressLocalMediaRepository } from "../local-media-repository-factory";
 import { createAstropressRateLimitRepository } from "../rate-limit-repository-factory";
 import { type AstropressSqliteDatabaseLike } from "./utils";
-import type { SessionUser } from "../persistence-types";
-
-interface Actor extends SessionUser {}
+import { recordAudit } from "./audit-log";
+import type { SessionUser, Actor } from "../persistence-types";
 
 export function createSqliteAssetsStore(getDb: () => AstropressSqliteDatabaseLike, now: () => number) {
-  function recordAudit(actor: Actor, action: string, summary: string, resourceType: string, resourceId: string) {
-    getDb()
-      .prepare(
-        `
-          INSERT INTO audit_events (user_email, action, resource_type, resource_id, summary)
-          VALUES (?, ?, ?, ?, ?)
-        `,
-      )
-      .run(actor.email, action, resourceType, resourceId, summary);
-  }
 
   const sqliteRateLimitRepository = createAstropressRateLimitRepository({
     now,
@@ -115,7 +104,7 @@ export function createSqliteAssetsStore(getDb: () => AstropressSqliteDatabaseLik
       return { ok: false as const, error: "The selected media asset could not be updated." };
     }
 
-    recordAudit(actor, "media.update", `Updated media metadata for ${id}.`, "content", id);
+    recordAudit(getDb(), actor, "media.update", `Updated media metadata for ${id}.`, "content", id);
     return { ok: true as const };
   }
 
@@ -153,7 +142,7 @@ export function createSqliteAssetsStore(getDb: () => AstropressSqliteDatabaseLik
       return getDb().prepare("UPDATE media_assets SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?").run(id).changes > 0;
     },
     recordMediaAudit({ actor, action, summary, targetId }: { actor: Actor; action: string; summary: string; targetId: string }) {
-      recordAudit(actor, action, summary, "content", targetId);
+      recordAudit(getDb(), actor, action, summary, "content", targetId);
     },
   });
 

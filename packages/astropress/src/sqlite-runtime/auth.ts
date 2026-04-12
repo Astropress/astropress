@@ -1,11 +1,10 @@
 import { createAstropressAuthRepository } from "../auth-repository-factory";
 import { createAstropressUserRepository } from "../user-repository-factory";
 import { hashOpaqueToken, hashPasswordSync, verifyPasswordSync, type AstropressSqliteDatabaseLike } from "./utils";
-import type { SessionUser } from "../persistence-types";
+import { recordAudit } from "./audit-log";
+import type { SessionUser, Actor } from "../persistence-types";
 
 type AdminRole = SessionUser["role"];
-
-interface Actor extends SessionUser {}
 
 interface PasswordResetTokenRow {
   id: string;
@@ -36,17 +35,6 @@ export function createSqliteAuthStore(
   options: AuthStoreOptions,
 ) {
   const { sessionTtlMs, now, randomId } = options;
-
-  function recordAudit(actor: Actor, action: string, summary: string, resourceType: string, resourceId: string) {
-    getDb()
-      .prepare(
-        `
-          INSERT INTO audit_events (user_email, action, resource_type, resource_id, summary)
-          VALUES (?, ?, ?, ?, ?)
-        `,
-      )
-      .run(actor.email, action, resourceType, resourceId, summary);
-  }
 
   function getPersistedAuditEvents() {
     const rows = getDb()
@@ -202,7 +190,7 @@ export function createSqliteAuthStore(
         .run(email);
     },
     recordUserAudit({ actor, action, summary, targetId }: { actor: Actor; action: string; summary: string; targetId: string }) {
-      recordAudit(actor, action, summary, "auth", targetId);
+      recordAudit(getDb(), actor, action, summary, "auth", targetId);
     },
   });
 
@@ -463,7 +451,7 @@ export function createSqliteAuthStore(
         .run(userId);
     },
     recordAuthAudit({ actor, action, summary, targetId }: { actor: Actor; action: string; summary: string; targetId: string }) {
-      recordAudit(actor, action, summary, "auth", targetId);
+      recordAudit(getDb(), actor, action, summary, "auth", targetId);
     },
   });
 

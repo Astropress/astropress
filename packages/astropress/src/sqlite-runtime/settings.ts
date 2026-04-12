@@ -4,24 +4,13 @@ import { createAstropressTranslationRepository } from "../translation-repository
 import { createAstropressSettingsRepository } from "../settings-repository-factory";
 import { defaultSiteSettings, type SiteSettings } from "../site-settings";
 import { normalizePath, type AstropressSqliteDatabaseLike } from "./utils";
-import type { SessionUser } from "../persistence-types";
-
-interface Actor extends SessionUser {}
+import { recordAudit } from "./audit-log";
+import type { SessionUser, Actor } from "../persistence-types";
 
 type CommentStatus = "pending" | "approved" | "rejected";
 type CommentPolicy = "legacy-readonly" | "disabled" | "open-moderated";
 
 export function createSqliteSettingsStore(getDb: () => AstropressSqliteDatabaseLike) {
-  function recordAudit(actor: Actor, action: string, summary: string, resourceType: string, resourceId: string) {
-    getDb()
-      .prepare(
-        `
-          INSERT INTO audit_events (user_email, action, resource_type, resource_id, summary)
-          VALUES (?, ?, ?, ?, ?)
-        `,
-      )
-      .run(actor.email, action, resourceType, resourceId, summary);
-  }
 
   function getRedirectRules() {
     const rows = getDb()
@@ -74,7 +63,7 @@ export function createSqliteSettingsStore(getDb: () => AstropressSqliteDatabaseL
       );
     },
     recordRedirectAudit({ actor, action, summary, targetId }: { actor: Actor; action: string; summary: string; targetId: string }) {
-      recordAudit(actor, action, summary, "redirect", targetId);
+      recordAudit(getDb(), actor, action, summary, "redirect", targetId);
     },
   });
 
@@ -146,7 +135,7 @@ export function createSqliteSettingsStore(getDb: () => AstropressSqliteDatabaseL
       return submittedAt;
     },
     recordCommentAudit({ actor, action, summary, targetId }: { actor: Actor; action: string; summary: string; targetId: string }) {
-      recordAudit(actor, action, summary, "comment", targetId);
+      recordAudit(getDb(), actor, action, summary, "comment", targetId);
     },
   });
 
@@ -172,7 +161,7 @@ export function createSqliteSettingsStore(getDb: () => AstropressSqliteDatabaseL
         .run(route, state, actor.email);
     },
     recordTranslationAudit({ actor, route, state }: { actor: Actor; route: string; state: string }) {
-      recordAudit(actor, "translation.update", `Updated translation state for ${route} to ${state}.`, "content", route);
+      recordAudit(getDb(), actor, "translation.update", `Updated translation state for ${route} to ${state}.`, "content", route);
     },
   });
 
@@ -243,7 +232,7 @@ export function createSqliteSettingsStore(getDb: () => AstropressSqliteDatabaseL
         );
     },
     recordSettingsAudit(actor: Actor) {
-      recordAudit(actor, "settings.update", "Updated site settings.", "auth", "site-settings");
+      recordAudit(getDb(), actor, "settings.update", "Updated site settings.", "auth", "site-settings");
     },
   });
 

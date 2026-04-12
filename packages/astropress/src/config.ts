@@ -1,12 +1,7 @@
-// Content modeling types and validation — extracted to keep this file under the 600-line limit
 export type { FieldDefinition, ContentTypeDefinition } from "./content-modeling.js";
 export { validateContentFields } from "./content-modeling.js";
-
-// Plugin API interfaces — extracted for the same reason
 export type { AstropressContentEvent, AstropressMediaEvent, AstropressPlugin } from "./cms-plugins.js";
 import type { AstropressPlugin } from "./cms-plugins.js";
-
-// ─── Analytics / observability config ────────────────────────────────────────
 
 export interface AnalyticsConfig {
   /** Analytics provider identifier. */
@@ -319,6 +314,26 @@ export interface CmsConfig {
    * ```
    */
   cdnPurgeWebhook?: string;
+
+  /**
+   * Optional full-text search configuration.
+   * When `enabled` is true, an FTS5 virtual table is created for `content_overrides`
+   * and the REST API accepts `?q=` for full-text search.
+   */
+  search?: {
+    /** Enable SQLite FTS5 full-text search on content. Default: false. */
+    enabled?: boolean;
+  };
+
+  /**
+   * Optional monitoring / observability configuration.
+   * When `prometheusEnabled` is true, an unauthenticated Prometheus text format
+   * endpoint is exposed at GET /ap/metrics.
+   */
+  monitoring?: {
+    /** Expose Prometheus text format metrics at GET /ap/metrics. Default: false. */
+    prometheusEnabled?: boolean;
+  };
 }
 
 const CMS_CONFIG_KEY = Symbol.for("astropress.cms-config");

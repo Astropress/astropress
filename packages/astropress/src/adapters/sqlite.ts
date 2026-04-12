@@ -3,60 +3,12 @@ import { normalizeProviderCapabilities } from "../platform-contracts";
 import { createAstropressSqliteAdminRuntime } from "../sqlite-admin-runtime";
 import { createDefaultAstropressSqliteSeedToolkit, type AstropressSqliteSeedToolkit } from "../sqlite-bootstrap";
 import { registerHealthCheck } from "../runtime-health";
+import { toContentStoreRecord, toRedirectRecord } from "./adapter-record-helpers.js";
 
 export interface AstropressSqliteAdapterOptions {
   dbPath?: string;
   workspaceRoot?: string;
   seedToolkit?: AstropressSqliteSeedToolkit;
-}
-
-function mapContentRecordKind(record: { kind?: string | null }): ContentStoreRecord["kind"] {
-  return record.kind === "post" ? "post" : "page";
-}
-
-function toContentStoreRecord(record: {
-  slug: string;
-  kind?: string | null;
-  title: string;
-  body?: string;
-  status: "draft" | "review" | "published" | "archived";
-  seoTitle: string;
-  metaDescription: string;
-  updatedAt: string;
-  legacyUrl: string;
-  templateKey: string;
-  summary?: string;
-}) {
-  return {
-    id: record.slug,
-    kind: mapContentRecordKind(record),
-    slug: record.slug,
-    status: record.status === "review" ? "draft" : record.status,
-    title: record.title,
-    body: record.body ?? null,
-    metadata: {
-      seoTitle: record.seoTitle,
-      metaDescription: record.metaDescription,
-      updatedAt: record.updatedAt,
-      legacyUrl: record.legacyUrl,
-      templateKey: record.templateKey,
-      summary: record.summary ?? "",
-    },
-  } satisfies ContentStoreRecord;
-}
-
-function toRedirectRecord(rule: { sourcePath: string; targetPath: string; statusCode: 301 | 302 }) {
-  return {
-    id: rule.sourcePath,
-    kind: "redirect" as const,
-    slug: rule.sourcePath,
-    status: "published" as const,
-    title: rule.sourcePath,
-    metadata: {
-      targetPath: rule.targetPath,
-      statusCode: rule.statusCode,
-    },
-  };
 }
 
 export function createAstropressSqliteAdapter(

@@ -2,6 +2,9 @@ import { createAstropressAdminStoreAdapter } from "./admin-store-adapter-factory
 import {
   type AstropressSqliteDatabaseLike,
 } from "./sqlite-runtime/utils";
+import { ensureFts5SearchIndex } from "./sqlite-schema-compat";
+import { searchContentOverrides } from "./sqlite-runtime/search";
+import { peekCmsConfig } from "./config";
 import { createSqliteAuthStore } from "./sqlite-runtime/auth";
 import { createSqliteSettingsStore } from "./sqlite-runtime/settings";
 import { createSqliteContentStore } from "./sqlite-runtime/content";
@@ -13,11 +16,9 @@ import { createWebhookStore } from "./sqlite-runtime/webhooks";
 import { createSqliteLocksOps } from "./sqlite-runtime/locks";
 import { createSqlitePurgeOps } from "./sqlite-runtime/purge";
 import type { SiteSettings } from "./site-settings";
-import type { AdminStoreAdapter, ContentRecord, SessionUser } from "./persistence-types";
+import type { AdminStoreAdapter, ContentRecord, SessionUser, Actor } from "./persistence-types";
 
 type AdminRole = SessionUser["role"];
-
-interface Actor extends SessionUser {}
 
 interface PasswordResetTokenRow {
   id: string;
@@ -162,11 +163,16 @@ export function createAstropressSqliteAdminRuntime(options: AstropressSqliteAdmi
     webhooks: sqliteWebhookStore,
   });
 
+  if (peekCmsConfig()?.search?.enabled) {
+    ensureFts5SearchIndex(getDb());
+  }
+
   return {
     sqliteAdminStore,
     sqliteCmsRegistryModule,
     authenticatePersistedAdminUser: sqliteAuthRepository.authenticatePersistedAdminUser,
     sqliteLocksOps,
     sqlitePurgeOps,
+    searchContentStates: (query: string) => searchContentOverrides(getDb(), query),
   };
 }
