@@ -59,8 +59,11 @@ Write tests in this order, from outermost in:
    need a DB.
 
 Coverage gates (enforced in CI): **97% statements, 97% lines, 97% functions,
-80% branches**. Branch coverage is deliberately lower — dead branches in
-error paths are acceptable; missing feature branches are not.
+80% branches**. The branch threshold is lower only because some branches
+genuinely can't be exercised from tests (e.g. platform-specific fallbacks
+behind `process.platform === "win32"`). Uncovered branches that *can* be
+reached — including error paths — must be tested or removed; dead branches
+are not acceptable and should be pruned, not tolerated.
 
 To add a BDD scenario:
 

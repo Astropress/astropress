@@ -35,8 +35,9 @@ $HasChoco  = has choco
 
 if (-not $HasWinget -and -not $HasScoop -and -not $HasChoco) {
     warn "No package manager found (winget / scoop / choco)."
-    warn "Install winget from the Microsoft Store (App Installer) then re-run."
-    warn "Or install Node, Bun, and Rust manually from their official sites."
+    warn "Node.js will fall back to a direct .msi download; Rust uses its own installer."
+    warn "Python must be installed manually if not already present (https://python.org)."
+    warn "For a smoother setup, install winget from the Microsoft Store (App Installer)."
 }
 
 # ─── helper: install via best available package manager ──────────────────────
@@ -71,6 +72,24 @@ if (has python) {
 }
 
 # ─── 2. Node 20+ ─────────────────────────────────────────────────────────────
+$NodeMsiVersion = "20.18.1"   # bump when a newer 20.x LTS is available
+
+function Install-NodeViaMsi {
+    param($Version)
+    $arch = if ([Environment]::Is64BitOperatingSystem) { "x64" } else { "x86" }
+    $msiName = "node-v$Version-$arch.msi"
+    $msiUrl  = "https://nodejs.org/dist/v$Version/$msiName"
+    $msiPath = Join-Path $env:TEMP $msiName
+    info "Downloading $msiUrl..."
+    Invoke-WebRequest -Uri $msiUrl -OutFile $msiPath -UseBasicParsing
+    info "Running msiexec /i $msiName /qn (silent install)..."
+    $proc = Start-Process msiexec.exe -ArgumentList "/i","`"$msiPath`"","/qn","/norestart" -Wait -PassThru
+    if ($proc.ExitCode -ne 0) {
+        die "msiexec failed with exit code $($proc.ExitCode). Install Node.js manually from https://nodejs.org/"
+    }
+    Remove-Item $msiPath -ErrorAction SilentlyContinue
+}
+
 section "Node.js 20+"
 $NodeOk = $false
 if (has node) {
@@ -84,9 +103,17 @@ if (has node) {
     }
 }
 if (-not $NodeOk) {
-    Install-Package "OpenJS.NodeJS.LTS" "nodejs-lts" "nodejs-lts" "Node.js 20 LTS"
+    if ($HasWinget -or $HasScoop -or $HasChoco) {
+        Install-Package "OpenJS.NodeJS.LTS" "nodejs-lts" "nodejs-lts" "Node.js 20 LTS"
+    } else {
+        info "No package manager found — falling back to direct .msi download"
+        Install-NodeViaMsi $NodeMsiVersion
+    }
     $env:PATH = [System.Environment]::GetEnvironmentVariable("PATH","Machine") + ";" +
                 [System.Environment]::GetEnvironmentVariable("PATH","User")
+    if (-not (has node)) {
+        die "Node.js installed but not yet on PATH. Open a new PowerShell window and re-run."
+    }
     ok "Node.js installed: $(node --version)"
 }
 
