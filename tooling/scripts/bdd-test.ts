@@ -1241,6 +1241,47 @@ const verificationGroups: VerificationGroup[] = [
       },
     ],
   },
+  {
+    label: "astropress add command scenarios",
+    scenarios: [
+      "astropress add --analytics umami appends env stubs to .env.example",
+      "astropress add --email listmonk generates LISTMONK.md and middleware",
+      "astropress add --forum flarum appends env stubs to .env.example",
+      "astropress add --notify gotify appends env stubs to .env.example",
+      "astropress add --schedule calcom appends env stubs to .env.example",
+      "astropress add --commerce vendure appends env stubs to .env.example",
+      "astropress add --chat tiledesk appends env stubs to .env.example",
+      "astropress add with an unrecognised flag returns a clear error",
+      "astropress add to a directory that does not exist returns an error",
+    ],
+    steps: [
+      {
+        command: "cargo",
+        args: ["test", "add_analytics", "add_email", "add_forum", "add_notify", "add_schedule", "add_commerce", "add_chat", "add_to_nonexistent", "add_with_unknown"],
+      },
+    ],
+  },
+  {
+    label: "astropress migrate command scenarios",
+    scenarios: [
+      "astropress migrate --from rallly --to calcom generates a migration guide",
+      "astropress migrate --from medusa --to vendure generates a migration guide",
+      "astropress migrate --from flarum --to discourse generates a migration guide",
+      "astropress migrate --from ntfy --to gotify generates a migration guide",
+      "astropress migrate --from keystatic --to payload generates a migration guide",
+      "astropress migrate --from umami --to plausible generates a migration guide",
+      "astropress migrate --from and --to the same tool returns an error",
+      "astropress migrate between incompatible categories returns an error",
+      "astropress migrate with an unknown tool name returns an error",
+      "astropress migrate --dry-run prints the migration guide without writing files",
+    ],
+    steps: [
+      {
+        command: "cargo",
+        args: ["test", "migrate_rallly", "migrate_medusa", "migrate_flarum", "migrate_ntfy", "migrate_keystatic", "migrate_umami", "migrate_same_tool", "migrate_incompatible", "migrate_unknown", "migrate_dry_run"],
+      },
+    ],
+  },
 ];
 
 const scenarios = readFeatureScenarios();
