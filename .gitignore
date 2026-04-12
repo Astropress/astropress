@@ -7,9 +7,8 @@ dist/
 coverage/
 *.tgz
 
-# Rust build output
+# Rust build output (workspace root is crates/, so target lands at crates/target/)
 target/
-crates/*/target/
 
 # Local env
 .env
