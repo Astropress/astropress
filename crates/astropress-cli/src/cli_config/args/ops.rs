@@ -227,6 +227,7 @@ pub(super) fn parse_db_migrate_command(args: &[String]) -> Result<Command, Strin
     let mut project_dir = env::current_dir().unwrap_or_else(|_| PathBuf::from("."));
     let mut migrations_dir = None;
     let mut dry_run = false;
+    let mut target = "local".to_string();
     let mut index = 0;
 
     while index < args.len() {
@@ -248,6 +249,16 @@ pub(super) fn parse_db_migrate_command(args: &[String]) -> Result<Command, Strin
             "--dry-run" => {
                 dry_run = true;
             }
+            "--target" => {
+                index += 1;
+                let value = args
+                    .get(index)
+                    .ok_or_else(|| "Missing value after `--target`. Use `local` or `d1`.".to_string())?;
+                match value.as_str() {
+                    "local" | "d1" => target = value.clone(),
+                    other => return Err(format!("Unknown --target `{other}`. Supported: local, d1.")),
+                }
+            }
             other => {
                 return Err(format!(
                     "Unsupported astropress db migrate option: `{other}`."
@@ -257,12 +268,13 @@ pub(super) fn parse_db_migrate_command(args: &[String]) -> Result<Command, Strin
         index += 1;
     }
 
-    Ok(Command::DbMigrate { project_dir, migrations_dir, dry_run })
+    Ok(Command::DbMigrate { project_dir, migrations_dir, dry_run, target })
 }
 
 pub(super) fn parse_db_rollback_command(args: &[String]) -> Result<Command, String> {
     let mut project_dir = env::current_dir().unwrap_or_else(|_| PathBuf::from("."));
     let mut dry_run = false;
+    let mut target = "local".to_string();
     let mut index = 0;
 
     while index < args.len() {
@@ -277,6 +289,16 @@ pub(super) fn parse_db_rollback_command(args: &[String]) -> Result<Command, Stri
             "--dry-run" => {
                 dry_run = true;
             }
+            "--target" => {
+                index += 1;
+                let value = args
+                    .get(index)
+                    .ok_or_else(|| "Missing value after `--target`. Use `local` or `d1`.".to_string())?;
+                match value.as_str() {
+                    "local" | "d1" => target = value.clone(),
+                    other => return Err(format!("Unknown --target `{other}`. Supported: local, d1.")),
+                }
+            }
             other => {
                 return Err(format!(
                     "Unsupported astropress db rollback option: `{other}`."
@@ -286,7 +308,7 @@ pub(super) fn parse_db_rollback_command(args: &[String]) -> Result<Command, Stri
         index += 1;
     }
 
-    Ok(Command::DbRollback { project_dir, dry_run })
+    Ok(Command::DbRollback { project_dir, dry_run, target })
 }
 
 pub(super) fn parse_upgrade_check_command(args: &[String]) -> Result<Command, String> {

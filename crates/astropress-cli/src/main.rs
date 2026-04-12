@@ -197,14 +197,14 @@ fn main() -> ExitCode {
                 Err(error) => fail(error),
             }
         }
-        Ok(Command::DbMigrate { project_dir, migrations_dir, dry_run }) => {
-            match run_db_migrations(&project_dir, migrations_dir.as_deref(), dry_run) {
+        Ok(Command::DbMigrate { project_dir, migrations_dir, dry_run, target }) => {
+            match run_db_migrations(&project_dir, migrations_dir.as_deref(), dry_run, &target) {
                 Ok(()) => ExitCode::SUCCESS,
                 Err(error) => fail(error),
             }
         }
-        Ok(Command::DbRollback { project_dir, dry_run }) => {
-            match rollback_db_migration(&project_dir, dry_run) {
+        Ok(Command::DbRollback { project_dir, dry_run, target }) => {
+            match rollback_db_migration(&project_dir, dry_run, &target) {
                 Ok(()) => ExitCode::SUCCESS,
                 Err(error) => fail(error),
             }

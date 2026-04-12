@@ -58,6 +58,8 @@ const navItems: NavItem[] = [
   { href: "/ap-admin/system", label: adminUi.navigation.system, adminOnly: true },
   { href: "/ap-admin/settings", label: adminUi.navigation.settings, adminOnly: true },
   { href: "/ap-admin/services", label: adminUi.navigation.services, adminOnly: true },
+  { href: "/ap-admin/import", label: "Import", adminOnly: true },
+  { href: "/ap-admin/subscribers", label: "Subscribers", adminOnly: true },
   ...(hasCms ? [{ href: "/ap-admin/cms", label: adminUi.navigation.cms }] : []),
   ...(hasHostPanel ? [{ href: "/ap-admin/host", label: adminUi.navigation.host, adminOnly: true as const }] : []),
   ...pluginNavItems,

@@ -109,10 +109,14 @@ pub(crate) enum Command {
         project_dir: PathBuf,
         migrations_dir: Option<String>,
         dry_run: bool,
+        /// Deployment target: "local" (SQLite, default) or "d1" (Cloudflare D1 via wrangler).
+        target: String,
     },
     DbRollback {
         project_dir: PathBuf,
         dry_run: bool,
+        /// Deployment target: "local" (SQLite, default) or "d1" (Cloudflare D1 via wrangler).
+        target: String,
     },
     Deploy {
         project_dir: PathBuf,

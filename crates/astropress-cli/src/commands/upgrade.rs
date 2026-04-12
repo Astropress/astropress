@@ -163,7 +163,7 @@ pub(crate) fn apply_upgrade(project_dir: &Path) -> Result<(), String> {
 
     println!();
     println!("Applying pending schema migrations...");
-    crate::commands::db::run_db_migrations(project_dir, None, false)?;
+    crate::commands::db::run_db_migrations(project_dir, None, false, "local")?;
 
     println!();
     println!("Upgrade applied. Run `astropress doctor` to verify schema.");
