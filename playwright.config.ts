@@ -64,5 +64,12 @@ export default defineConfig({
         baseURL: process.env.PLAYWRIGHT_ADMIN_BASE_URL ?? "http://127.0.0.1:4325",
       },
     },
+    {
+      name: "admin-harness-crud",
+      testMatch: /admin-harness-crud\.spec\.ts/,
+      use: {
+        baseURL: process.env.PLAYWRIGHT_ADMIN_BASE_URL ?? "http://127.0.0.1:4325",
+      },
+    },
   ],
 });
