@@ -1,0 +1,25 @@
+pre-commit:
+  parallel: true
+  commands:
+    biome:
+      glob: "packages/**/*.{ts,js,astro,json}"
+      run: bunx biome check --no-errors-on-unmatched {staged_files}
+      stage_fixed: true
+
+    audit-sync:
+      run: bun run audit:sync
+
+    audit-arch:
+      run: bun run audit:arch
+
+    no-secrets:
+      run: |
+        if git diff --cached --name-only | grep -qE '(^|/)\.env(\.|$)'; then
+          echo "Refusing to commit .env files — remove them from the staging area."
+          exit 1
+        fi
+
+pre-push:
+  commands:
+    test:
+      run: bun run test
