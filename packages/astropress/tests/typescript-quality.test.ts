@@ -13,6 +13,8 @@ import type {
   AuditEventId,
   ActionResult,
 } from "../src/platform-contracts";
+import { adminLabels } from "../src/admin-ui.js";
+import type { AdminLabelKey, AdminLocale } from "../src/admin-ui.js";
 
 describe("Branded ID types", () => {
   it("ContentId is exported from platform-contracts", () => {
@@ -87,5 +89,44 @@ describe("ActionResult discriminated union", () => {
 
     expect(fail.ok).toBe(false);
     if (!fail.ok) expect(fail.error).toBe("Failed");
+  });
+});
+
+// ─── Admin i18n label map ─────────────────────────────────────────────────────
+
+const ALL_LOCALES: AdminLocale[] = ["en", "es", "fr", "de", "pt", "ja"];
+
+// Derive the expected key list from the English locale (the authoritative source)
+const EXPECTED_KEYS = Object.keys(adminLabels.en) as AdminLabelKey[];
+
+describe("admin i18n label map", () => {
+  it("has at least 30 label keys", () => {
+    expect(EXPECTED_KEYS.length).toBeGreaterThanOrEqual(30);
+  });
+
+  for (const locale of ALL_LOCALES) {
+    it(`locale '${locale}' has all required keys`, () => {
+      const localeKeys = Object.keys(adminLabels[locale]);
+      for (const key of EXPECTED_KEYS) {
+        expect(localeKeys, `locale '${locale}' missing key '${key}'`).toContain(key);
+      }
+    });
+
+    it(`locale '${locale}' has no empty string values`, () => {
+      for (const [key, value] of Object.entries(adminLabels[locale])) {
+        expect(value, `locale '${locale}' key '${key}' is empty`).not.toBe("");
+      }
+    });
+  }
+
+  it("required keys include navigation and content action labels", () => {
+    const keys = new Set(EXPECTED_KEYS);
+    expect(keys.has("navDashboard")).toBe(true);
+    expect(keys.has("navPosts")).toBe(true);
+    expect(keys.has("navMedia")).toBe(true);
+    expect(keys.has("createPost")).toBe(true);
+    expect(keys.has("changeLanguage")).toBe(true);
+    expect(keys.has("confirmDelete")).toBe(true);
+    expect(keys.has("approveComment")).toBe(true);
   });
 });

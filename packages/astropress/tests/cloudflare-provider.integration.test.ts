@@ -203,7 +203,7 @@ describe("cloudflare provider integration", () => {
     db.close();
   });
 
-  it("throws when deleting an unsupported record kind", async () => {
+  it("returns without throwing when deleting an unsupported record kind", async () => {
     registerCms({
       templateKeys: ["content"],
       siteUrl: "https://example.com",
@@ -215,7 +215,7 @@ describe("cloudflare provider integration", () => {
     const db = await createSeededCloudflareDatabase();
 
     // Insert a comment record — the Cloudflare adapter lists comments via readStore
-    // and surfaces them through content.get(). The delete path throws for comments.
+    // and surfaces them through content.get(). The delete path now degrades gracefully.
     db.prepare(
       `INSERT INTO comments (id, author, email, body, route, status, policy, submitted_at)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
@@ -225,9 +225,8 @@ describe("cloudflare provider integration", () => {
       db: new SqliteBackedD1Database(db),
     });
 
-    await expect(cloudflare.content.delete("comment-del-1")).rejects.toThrow(
-      "does not support deleting comment records yet",
-    );
+    // Unsupported record kind — adapter degrades gracefully (no-op) rather than throwing
+    await expect(cloudflare.content.delete("comment-del-1")).resolves.toBeUndefined();
 
     db.close();
   });
