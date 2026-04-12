@@ -141,6 +141,7 @@ pub(crate) enum Command {
         dry_run: bool,
     },
     ListTools,
+    ListProviders,
     Help,
 }
 
@@ -220,8 +221,15 @@ pub(crate) fn parse_command(args: &[String]) -> Result<Command, String> {
                 Ok(Command::ListTools)
             }
         }
+        [command, subcommand, rest @ ..] if (command == "list" || command == "ls") && subcommand == "providers" => {
+            if let Some(unknown) = rest.first() {
+                Err(format!("Unsupported astropress list providers option: `{unknown}`."))
+            } else {
+                Ok(Command::ListProviders)
+            }
+        }
         [command, ..] if command == "list" || command == "ls" => {
-            Err("Unsupported list subcommand. Use `astropress list tools`.".into())
+            Err("Unsupported list subcommand. Use `astropress list tools` or `astropress list providers`.".into())
         }
         [command, ..] => Err(format!("Unsupported astropress command: `{command}`.")),
     }

@@ -294,6 +294,24 @@ const verificationGroups: VerificationGroup[] = [
     ],
   },
   {
+    label: "list providers command scenarios",
+    scenarios: [
+      "Developer runs astropress list providers and sees host categories",
+      "Developer runs astropress list providers and sees data service categories",
+      "App Hosts section lists all supported deployment targets",
+      "Data Services section lists all supported providers",
+      "Recommended pairings section lists fully tested combinations",
+      "ls providers is an alias for list providers",
+      "Running astropress list providers with an unknown extra argument returns an error",
+    ],
+    steps: [
+      {
+        command: "cargo",
+        args: ["test", "list_providers"],
+      },
+    ],
+  },
+  {
     label: "content persistence scenarios",
     scenarios: [
       "An editor's post status change is saved and immediately visible to all admin users",

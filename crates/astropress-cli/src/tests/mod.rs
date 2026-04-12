@@ -597,3 +597,28 @@ fn ls_without_subcommand_returns_error() {
         "expected 'list tools' in error message, got: {err}"
     );
 }
+
+#[test]
+fn list_providers_command_parses() {
+    assert!(matches!(
+        parse_command(&strings(&["list", "providers"])),
+        Ok(Command::ListProviders)
+    ));
+}
+
+#[test]
+fn ls_providers_alias_parses() {
+    assert!(matches!(
+        parse_command(&strings(&["ls", "providers"])),
+        Ok(Command::ListProviders)
+    ));
+}
+
+#[test]
+fn list_providers_with_unknown_flag_returns_error() {
+    let err = parse_command(&strings(&["list", "providers", "--unknown"])).unwrap_err();
+    assert!(
+        err.contains("--unknown"),
+        "expected unknown flag name in error, got: {err}"
+    );
+}

@@ -69,11 +69,83 @@ pub(crate) fn list_tools() {
     println!("  --sso                authentik, zitadel");
 }
 
+/// Print the provider catalogue to stdout, organised by hosting category.
+///
+/// Covers app hosts (static, serverless, server, managed), data services
+/// (edge, serverless Postgres, self-hosted BaaS, built-in), and the fully-
+/// tested host+data pairings.
+pub(crate) fn list_providers() {
+    println!("astropress provider catalogue");
+    println!();
+
+    // ── App Hosts ─────────────────────────────────────────────────────────────
+    println!("App Hosts   (--app-host <host> during `astropress new` or `astropress deploy`)");
+    println!();
+    println!("  Static — free, no server required");
+    println!("    github-pages       GitHub Pages: zero-config, free forever, 1 GB limit");
+    println!("    gitlab-pages       GitLab Pages: zero-config, free forever");
+    println!("    cloudflare-pages   Cloudflare Pages: static + edge functions, 500 builds/month free");
+    println!("    netlify            Netlify: static + serverless, 300 build-minutes/month free");
+    println!("    vercel             Vercel: static + serverless, 6 000 build-minutes/month free");
+    println!("    render-static      Render Static: static, 100 GB bandwidth free");
+    println!();
+    println!("  Server — persistent runtime");
+    println!("    render-web         Render Web Service: always-on; free tier spins down on idle");
+    println!();
+    println!("  Managed — single-provider, fully hosted");
+    println!("    runway             Runway: managed Astropress platform");
+    println!();
+    println!("  Bring your own");
+    println!("    custom             Any target — supply your own deploy script");
+    println!();
+
+    // ── Data Services ─────────────────────────────────────────────────────────
+    println!("Data Services   (--content-services <provider> during `astropress new`)");
+    println!();
+    println!("  Edge / global");
+    println!("    cloudflare         Cloudflare D1 + R2: SQL at the edge, 5 GB free (pairs with cloudflare-pages)");
+    println!();
+    println!("  Serverless Postgres");
+    println!("    supabase           Supabase: Postgres + Auth + Storage, 500 MB free (recommended)");
+    println!("    neon               Neon: serverless Postgres with branching, 0.5 GB free");
+    println!("    nhost              Nhost: GraphQL + Postgres + Auth, open-source Firebase alternative");
+    println!();
+    println!("  Self-hosted BaaS");
+    println!("    pocketbase         PocketBase: single-binary, self-hosted, zero cloud cost");
+    println!("    appwrite           Appwrite: Docker Compose BaaS, self-hosted or cloud");
+    println!();
+    println!("  Built-in (default)");
+    println!("    none               SQLite: local file, zero sign-up, works offline (pairs with github-pages)");
+    println!();
+    println!("  Managed");
+    println!("    runway             Runway: managed database included with Runway hosting");
+    println!();
+
+    // ── Recommended pairings ──────────────────────────────────────────────────
+    println!("Recommended pairings   (fully tested host + data combinations)");
+    println!();
+    println!("  github-pages     + none         Pure static — zero infrastructure, free forever");
+    println!("  cloudflare-pages + cloudflare   Edge SQL — global, fast; Cloudflare account required");
+    println!("  vercel           + supabase     Serverless + Postgres — generous free tiers");
+    println!("  netlify          + supabase     Serverless + Postgres — generous free tiers");
+    println!("  render-web       + supabase     Server + Postgres — persistent runtime, always-on");
+    println!("  runway           + runway       Fully managed — one provider handles everything");
+    println!();
+    println!("Preview pairings   (work but not officially tested end-to-end)");
+    println!();
+    println!("  github-pages     + supabase     Static site with external Postgres API");
+    println!("  gitlab-pages     + supabase     Same as above on GitLab");
+    println!("  cloudflare-pages + supabase     Edge pages + Supabase Postgres");
+    println!("  vercel           + appwrite      Serverless + self-hosted BaaS");
+    println!("  netlify          + appwrite      Serverless + self-hosted BaaS");
+    println!("  render-web       + appwrite      Server + self-hosted BaaS");
+}
+
 // ── tests ─────────────────────────────────────────────────────────────────────
 
 #[cfg(test)]
 mod tests {
-    use super::list_tools;
+    use super::{list_providers, list_tools};
 
     fn capture_list_tools() -> String {
         // list_tools() prints to stdout. We verify the function runs without
@@ -87,8 +159,12 @@ mod tests {
 
     #[test]
     fn list_tools_runs_without_panic() {
-        // Calling list_tools() must not panic.
         let result = capture_list_tools();
         assert_eq!(result, "ok");
+    }
+
+    #[test]
+    fn list_providers_runs_without_panic() {
+        list_providers();
     }
 }

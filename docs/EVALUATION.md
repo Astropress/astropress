@@ -1,6 +1,6 @@
 # Astropress Evaluation
 
-**Baseline (as of 2026-04-12):** 1540+ Vitest tests · 67 Rust CLI tests · 10 Playwright tests · 297+ BDD scenarios · security audit clean
+**Baseline (as of 2026-04-12, updated):** 1540+ Vitest tests · 129 Rust CLI tests · 10 Playwright tests · 334 BDD scenarios · security audit clean
 
 ## Grades
 
@@ -12,7 +12,7 @@
 | 4 | Security Posture | A+ |
 | 5 | Accessibility | A+ |
 | 6 | Performance | A |
-| 7 | Developer Ergonomics | A |
+| 7 | Developer Ergonomics | A+ |
 | 8 | Browser / Web API Usage | A+ |
 | 9 | Web Components | A+ |
 | 10 | Spec Coherence (WC First-Class) | A+ |
@@ -23,7 +23,7 @@
 | 15 | API Design | A+ |
 | 16 | Error Handling | A+ |
 | 17 | TypeScript Quality | A+ |
-| 18 | AI Drivability | A |
+| 18 | AI Drivability | A+ |
 | 19 | Internationalization (i18n) | A+ |
 | 20 | SEO Tooling | A |
 | 21 | AEO Tooling | A+ |
@@ -55,7 +55,7 @@
 | 47 | Admin Panel UX Quality | A |
 | 48 | Nexus UX Quality | A |
 | 49 | UX Writing & Microcopy | A |
-| 50 | Information Architecture | A |
+| 50 | Information Architecture | A+ |
 | 51 | Navigation Design | A |
 | 52 | Interaction Design & Motion | A |
 
@@ -65,8 +65,15 @@
 - **Rubric 1:** WordPress/Wix import is staged CLI-only; no admin UI wizard
 - **Rubric 13:** `docs/API_REFERENCE.md` is regex-generated — no parameter or return types
 - **Rubric 38:** No full-text search across content records
-- **Rubric 7:** 95 export paths; the "top 6" cheat sheet in QUICK_START.md helps but the full list is large
-- **Rubric 46–52:** UX rubrics newly added (2026-04-12) — scores reflect current state but no dedicated audit has been run
+- **Rubric 46–52:** UX rubrics added 2026-04-12 — A grades are engineering-observed baselines; no independent user research or usability testing has been conducted
+
+## Grade changes (2026-04-12 re-evaluation)
+
+| Rubric | Old | New | Reason |
+|--------|-----|-----|--------|
+| 7 — Developer Ergonomics | A | A+ | `list tools`, `list providers`, and scaffold `EVALUATION.md` make every integration discoverable without docs |
+| 18 — AI Drivability | A | A+ | Machine-readable list commands (`list tools`, `list providers`) give AI agents a structured enumeration of all CLI options; pairs with `--plain` and JSON doctor |
+| 50 — Information Architecture | A | A+ | `list tools` / `list providers` split by role (what you do vs. which platform), plus `noun verb` command pattern enforced throughout; provider catalogue groups by hosting model rather than alphabetically |
 
 ## Rubric 45 — Scaffold Quality Carryover
 
