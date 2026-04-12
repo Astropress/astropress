@@ -52,7 +52,6 @@ export async function withSafeRouteRegistryFallback<T>(
 ) {
   try {
     return await operation();
-  /* v8 ignore start */
   } catch {
     const local = await loadSafeLocalCmsRegistry();
     if (local) {
@@ -61,7 +60,6 @@ export async function withSafeRouteRegistryFallback<T>(
 
     return defaultValue;
   }
-  /* v8 ignore stop */
 }
 
 export function parseSettings(value: string | null) {
@@ -69,14 +67,12 @@ export function parseSettings(value: string | null) {
     return null;
   }
 
-  /* v8 ignore start */
   try {
     const parsed = JSON.parse(value) as unknown;
     return parsed && typeof parsed === "object" ? (parsed as Record<string, unknown>) : null;
   } catch {
     return null;
   }
-  /* v8 ignore stop */
 }
 
 export function localeFromPath(pathname: string): string {

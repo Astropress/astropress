@@ -630,3 +630,103 @@ describe("saveRuntimeArchiveRoute", () => {
     expect(result).toMatchObject({ ok: true });
   });
 });
+
+// ---------------------------------------------------------------------------
+// D1 error recovery — withSafeRouteRegistryFallback catch block
+// ---------------------------------------------------------------------------
+
+describe("D1 error recovery — withSafeRouteRegistryFallback", () => {
+  it("returns default value when D1 throws and no local registry is available", async () => {
+    seedSystemRoute(db, "/sitemap.xml");
+    // Drop the table so the D1 query throws; mock default rejects (no local modules)
+    db.exec("DROP TABLE cms_route_variants");
+    const routes = await listRuntimeSystemRoutes(locals);
+    expect(routes).toEqual([]);
+  });
+
+  it("returns null default when D1 throws on a single-record fetch and no local registry is available", async () => {
+    seedSystemRoute(db, "/contact");
+    db.exec("DROP TABLE cms_route_variants");
+    const route = await getRuntimeSystemRoute("/contact", locals);
+    expect(route).toBeNull();
+  });
+
+  it("delegates to local registry when D1 throws and local registry is available", async () => {
+    const mockRoute = { path: "/sitemap.xml", title: "Sitemap", renderStrategy: "generated_xml" as const, settings: null, updatedAt: "2024-01-01" };
+    mockLoadLocalCmsRegistry.mockResolvedValueOnce({
+      ...mockLocalRegistry,
+      listSystemRoutes: vi.fn().mockResolvedValue([mockRoute]),
+    });
+    db.exec("DROP TABLE cms_route_variants");
+    const routes = await listRuntimeSystemRoutes(locals);
+    expect(routes).toEqual([mockRoute]);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// parseSettings — malformed or non-object JSON in D1 data
+// ---------------------------------------------------------------------------
+
+describe("parseSettings — malformed settings_json in D1 data", () => {
+  it("returns null settings when settings_json is malformed JSON", async () => {
+    const groupId = "group-malformed";
+    db.prepare(
+      "INSERT INTO cms_route_groups (id, kind, render_strategy, canonical_locale, canonical_path) VALUES (?, 'system', 'generated_text', 'en', '/robots-txt')",
+    ).run(groupId);
+    db.prepare(
+      "INSERT INTO cms_route_variants (id, group_id, locale, path, status, title, settings_json, updated_by) VALUES (?, ?, 'en', '/robots-txt', 'published', 'Robots', '{ bad json', 'seed')",
+    ).run("v-malformed", groupId);
+    const route = await getRuntimeSystemRoute("/robots-txt", locals);
+    expect(route).not.toBeNull();
+    expect(route!.settings).toBeNull();
+  });
+
+  it("returns null settings when settings_json is a JSON primitive (not an object)", async () => {
+    const groupId = "group-primitive";
+    db.prepare(
+      "INSERT INTO cms_route_groups (id, kind, render_strategy, canonical_locale, canonical_path) VALUES (?, 'system', 'generated_text', 'en', '/feed.xml')",
+    ).run(groupId);
+    db.prepare(
+      "INSERT INTO cms_route_variants (id, group_id, locale, path, status, title, settings_json, updated_by) VALUES (?, ?, 'en', '/feed.xml', 'published', 'Feed', 'true', 'seed')",
+    ).run("v-primitive", groupId);
+    const route = await getRuntimeSystemRoute("/feed.xml", locals);
+    expect(route).not.toBeNull();
+    expect(route!.settings).toBeNull();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// mapStructuredPageRow — alternateLinks and templateKey edge cases
+// ---------------------------------------------------------------------------
+
+describe("mapStructuredPageRow — edge cases in page settings_json", () => {
+  it("falls back to empty alternateLinks when settings_json has a non-array alternateLinks value", async () => {
+    const groupId = "group-non-array-links";
+    const settingsJson = JSON.stringify({ templateKey: "content", alternateLinks: "not-an-array" });
+    db.prepare(
+      "INSERT INTO cms_route_groups (id, kind, render_strategy, canonical_locale, canonical_path) VALUES (?, 'page', 'structured_sections', 'en', '/non-array-links')",
+    ).run(groupId);
+    db.prepare(
+      "INSERT INTO cms_route_variants (id, group_id, locale, path, status, title, settings_json, updated_by) VALUES (?, ?, 'en', '/non-array-links', 'published', 'Non-Array Links', ?, 'seed')",
+    ).run("v-non-array-links", groupId, settingsJson);
+    const route = await getRuntimeStructuredPageRoute("/non-array-links", locals);
+    expect(route).not.toBeNull();
+    expect(route!.alternateLinks).toEqual([]);
+  });
+
+  it("excludes page routes whose templateKey is not in the configured template keys", async () => {
+    const groupId = "group-unknown-template";
+    const settingsJson = JSON.stringify({ templateKey: "unknown-template" });
+    db.prepare(
+      "INSERT INTO cms_route_groups (id, kind, render_strategy, canonical_locale, canonical_path) VALUES (?, 'page', 'structured_sections', 'en', '/unknown-template')",
+    ).run(groupId);
+    db.prepare(
+      "INSERT INTO cms_route_variants (id, group_id, locale, path, status, title, settings_json, updated_by) VALUES (?, ?, 'en', '/unknown-template', 'published', 'Unknown Template', ?, 'seed')",
+    ).run("v-unknown-template", groupId, settingsJson);
+    // Single-record fetch returns null (templateKey not configured)
+    expect(await getRuntimeStructuredPageRoute("/unknown-template", locals)).toBeNull();
+    // List also omits this route
+    const routes = await listRuntimeStructuredPageRoutes(locals);
+    expect(routes.some((r) => r.path === "/unknown-template")).toBe(false);
+  });
+});

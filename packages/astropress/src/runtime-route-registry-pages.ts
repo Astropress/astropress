@@ -15,7 +15,6 @@ function normalizeStructuredTemplateKey(value: unknown): string | null {
   if (typeof value !== "string" || !value) {
     return null;
   }
-  /* v8 ignore next 2 */
   return getCmsConfig().templateKeys.includes(value) ? value : null;
 }
 
@@ -56,11 +55,9 @@ function mapStructuredPageRow(
     robotsDirective: row.robots_directive ?? undefined,
     ogImage: row.og_image ?? undefined,
     templateKey,
-    /* v8 ignore start */
     alternateLinks: Array.isArray(settings.alternateLinks)
       ? (settings.alternateLinks as Array<{ hreflang: string; href: string }>)
       : [],
-    /* v8 ignore stop */
     sections: parseSettings(row.sections_json),
     updatedAt: row.updated_at,
   } satisfies RuntimeStructuredPageRouteRecord;
