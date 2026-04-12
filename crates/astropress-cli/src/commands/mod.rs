@@ -1,3 +1,4 @@
+pub(crate) mod add;
 pub(crate) mod backup_restore;
 pub(crate) mod completions;
 pub(crate) mod config;
@@ -9,6 +10,7 @@ pub(crate) mod import_common;
 pub(crate) mod import_wordpress;
 pub(crate) mod import_wordpress_types;
 pub(crate) mod import_wix;
+pub(crate) mod migrate;
 pub(crate) mod new;
 pub(crate) mod new_wizard;
 pub(crate) mod services;

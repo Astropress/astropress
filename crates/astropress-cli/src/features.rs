@@ -45,6 +45,7 @@ impl Default for DonationChoices {
 
 // ── aggregated feature bag ────────────────────────────────────────────────────
 
+#[derive(Debug)]
 pub(crate) struct AllFeatures {
     pub cms:          CmsChoice,
     pub email:        EmailChoice,

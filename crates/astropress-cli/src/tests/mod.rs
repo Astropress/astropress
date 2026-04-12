@@ -192,6 +192,18 @@ fn parses_top_level_commands() {
         parse_command(&strings(&["upgrade", "--apply"])),
         Ok(Command::UpgradeApply { .. })
     ));
+    assert!(matches!(
+        parse_command(&strings(&["add", "--analytics", "umami"])),
+        Ok(Command::Add { .. })
+    ));
+    assert!(matches!(
+        parse_command(&strings(&["migrate", "--from", "rallly", "--to", "calcom"])),
+        Ok(Command::Migrate { .. })
+    ));
+    assert!(matches!(
+        parse_command(&strings(&["migrate", "--from", "ntfy", "--to", "gotify", "--dry-run"])),
+        Ok(Command::Migrate { dry_run: true, .. })
+    ));
 }
 
 #[test]

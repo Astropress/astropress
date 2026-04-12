@@ -31,6 +31,8 @@ use commands::dev::run_dev_server;
 use commands::doctor::{inspect_project_health, print_doctor_report, print_doctor_report_json};
 use commands::import_wordpress::stage_wordpress_import;
 use commands::import_wix::stage_wix_import;
+use commands::add::{add_integrations, parse_add_features};
+use commands::migrate::{run_migrate, MigrateOptions};
 use commands::new::{scaffold_new_project, run_post_scaffold_setup};
 use commands::services::{bootstrap_content_services, print_content_services_report, verify_content_services};
 use commands::upgrade::{apply_upgrade, check_upgrade_compatibility, print_upgrade_check_report};
@@ -250,6 +252,20 @@ fn main() -> ExitCode {
             Ok(()) => ExitCode::SUCCESS,
             Err(error) => fail(error),
         },
+        Ok(Command::Add { project_dir, feature_args }) => {
+            match parse_add_features(&feature_args)
+                .and_then(|features| add_integrations(&project_dir, features))
+            {
+                Ok(()) => ExitCode::SUCCESS,
+                Err(error) => fail(error),
+            }
+        }
+        Ok(Command::Migrate { project_dir, from, to, dry_run }) => {
+            match run_migrate(&MigrateOptions { project_dir, from, to, dry_run }) {
+                Ok(()) => ExitCode::SUCCESS,
+                Err(error) => fail(error),
+            }
+        }
         Ok(Command::Help) => {
             print_help();
             ExitCode::SUCCESS
