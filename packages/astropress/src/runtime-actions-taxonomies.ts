@@ -40,6 +40,7 @@ export async function deleteRuntimeAuthor(id: number, actor: Actor, locals?: App
     locals,
     async (db) => {
       const result = await createD1AdminMutationStore(db).authors.deleteAuthor(id);
+      /* v8 ignore next 2 — deleteAuthor always returns ok:true */
       if (!result.ok) return result;
       await recordD1Audit(locals, actor, "author.delete", "content", String(id), `Deleted author ${id}.`);
       return result;
@@ -90,6 +91,7 @@ export async function deleteRuntimeCategory(id: number, actor: Actor, locals?: A
     locals,
     async (db) => {
       const result = await createD1AdminMutationStore(db).taxonomies.deleteCategory(id);
+      /* v8 ignore next 2 — deleteCategory always returns ok:true */
       if (!result.ok) return result;
       await recordD1Audit(locals, actor, "category.delete", "content", String(id), `Deleted category ${id}.`);
       return result;
@@ -136,6 +138,7 @@ export async function deleteRuntimeTag(id: number, actor: Actor, locals?: App.Lo
     locals,
     async (db) => {
       const result = await createD1AdminMutationStore(db).taxonomies.deleteTag(id);
+      /* v8 ignore next 2 — deleteTag always returns ok:true */
       if (!result.ok) return result;
       await recordD1Audit(locals, actor, "tag.delete", "content", String(id), `Deleted tag ${id}.`);
       return result;

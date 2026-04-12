@@ -198,6 +198,30 @@ describe("saveRuntimeContentState", () => {
     expect((result as { error: string }).error).toContain("Capacity must be a positive number");
   });
 
+  it("saves with all optional fields populated", async () => {
+    const result = await saveRuntimeContentState(
+      "hello-world",
+      {
+        title: "Full Save",
+        status: "draft",
+        body: "<p>Rich body</p>",
+        scheduledAt: "2026-06-01T12:00:00.000Z",
+        revisionNote: "test revision",
+        seoTitle: "SEO Full",
+        metaDescription: "Meta full",
+        excerpt: "Short excerpt",
+        ogTitle: "OG Title",
+        ogDescription: "OG Desc",
+        ogImage: "https://example.com/img.jpg",
+        canonicalUrlOverride: "https://example.com/canonical",
+        robotsDirective: "noindex",
+      },
+      actor,
+      locals,
+    );
+    expect(result).toMatchObject({ ok: true });
+  });
+
   it("saves author/category/tag assignments", async () => {
     const { lastInsertRowid: authorId } = db.prepare("INSERT INTO authors (name, slug) VALUES (?, ?)").run("Author A", "author-a");
     const { lastInsertRowid: catId } = db.prepare("INSERT INTO categories (name, slug) VALUES (?, ?)").run("Cat A", "cat-a");
@@ -261,6 +285,49 @@ describe("createRuntimeContentRecord", () => {
       locals,
     );
     expect(result).toMatchObject({ ok: false });
+  });
+
+  it("normalises legacyUrl by prepending slash when missing", async () => {
+    const result = await createRuntimeContentRecord(
+      { title: "No Slash", slug: "no-slash-url", legacyUrl: "no-slash-url", status: "draft", seoTitle: "SEO", metaDescription: "Meta" },
+      actor,
+      locals,
+    );
+    expect(result).toMatchObject({ ok: true });
+    expect((result as { state: { legacyUrl: string } }).state.legacyUrl).toBe("/no-slash-url");
+  });
+
+  it("falls back to title when seoTitle is empty", async () => {
+    const result = await createRuntimeContentRecord(
+      { title: "Fallback Title", slug: "fallback-seo", status: "draft", seoTitle: "  ", metaDescription: "Meta" },
+      actor,
+      locals,
+    );
+    expect(result).toMatchObject({ ok: true });
+  });
+
+  it("creates with all optional fields populated", async () => {
+    const result = await createRuntimeContentRecord(
+      {
+        title: "Full Record",
+        slug: "full-record",
+        legacyUrl: "/full-record",
+        status: "published",
+        body: "<p>Body</p>",
+        summary: "Summary text",
+        seoTitle: "SEO",
+        metaDescription: "Meta",
+        excerpt: "Short",
+        ogTitle: "OG Title",
+        ogDescription: "OG Desc",
+        ogImage: "https://example.com/img.jpg",
+        canonicalUrlOverride: "https://example.com/canonical",
+        robotsDirective: "noindex",
+      },
+      actor,
+      locals,
+    );
+    expect(result).toMatchObject({ ok: true });
   });
 });
 

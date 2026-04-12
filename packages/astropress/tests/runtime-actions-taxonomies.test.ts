@@ -93,6 +93,11 @@ describe("updateRuntimeCategory", () => {
     const result = await updateRuntimeCategory({ id: Number(id), name: "Updated Cat" }, actor, locals);
     expect(result).toMatchObject({ ok: true });
   });
+
+  it("returns not-ok for invalid id (0)", async () => {
+    const result = await updateRuntimeCategory({ id: 0, name: "Invalid" }, actor, locals);
+    expect(result).toMatchObject({ ok: false });
+  });
 });
 
 describe("deleteRuntimeCategory", () => {
@@ -121,6 +126,11 @@ describe("updateRuntimeTag", () => {
     const { lastInsertRowid: id } = db.prepare("INSERT INTO tags (name, slug) VALUES (?, ?)").run("Old Tag", "old-tag");
     const result = await updateRuntimeTag({ id: Number(id), name: "Updated Tag" }, actor, locals);
     expect(result).toMatchObject({ ok: true });
+  });
+
+  it("returns not-ok for invalid id (0)", async () => {
+    const result = await updateRuntimeTag({ id: 0, name: "Invalid" }, actor, locals);
+    expect(result).toMatchObject({ ok: false });
   });
 });
 

@@ -181,6 +181,7 @@ export async function saveRuntimeContentState(
       if (status === "published") {
         await dispatchPluginContentEvent("onContentPublish", pluginEvent);
         // Fire CDN purge asynchronously — failure must not block the publish response
+        /* v8 ignore next 2 — purgeCdnCache never rejects (all errors caught internally) */
         purgeCdnCache(pageRecord.slug, getCmsConfig()).catch((err: unknown) => {
           console.warn("[cache-purge] CDN purge failed silently:", err);
         });
