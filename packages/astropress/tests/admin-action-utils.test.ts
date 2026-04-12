@@ -141,4 +141,41 @@ describe("admin action utils", () => {
     const response = actionErrorRedirect("/ap-admin/settings", "Bad input");
     expect(response.headers.get("Location")).toBe("/ap-admin/settings?error=1&message=Bad+input");
   });
+
+  it("propagates guard non-ok response when auth check fails inside withAdminFormAction", async () => {
+    mocks.getRuntimeSessionUser.mockResolvedValue(null);
+    const { withAdminFormAction } = await import("astropress");
+
+    const response = await withAdminFormAction(
+      makeContext({ _csrf: "csrf-token" }),
+      { failurePath: "/ap-admin/posts" },
+      async () => new Response("should not reach"),
+    );
+
+    expect(response.headers.get("Location")).toBe("/ap-admin/login");
+  });
+
+  it("fail() redirects to failurePath with encoded message", async () => {
+    const { withAdminFormAction } = await import("astropress");
+
+    const response = await withAdminFormAction(
+      makeContext({ _csrf: "csrf-token" }),
+      { failurePath: "/ap-admin/posts/new" },
+      async ({ fail }) => fail("Invalid title"),
+    );
+
+    expect(response.headers.get("Location")).toBe("/ap-admin/posts/new?error=1&message=Invalid+title");
+  });
+
+  it("fail() uses overridePath when provided", async () => {
+    const { withAdminFormAction } = await import("astropress");
+
+    const response = await withAdminFormAction(
+      makeContext({ _csrf: "csrf-token" }),
+      { failurePath: "/ap-admin/posts/new" },
+      async ({ fail }) => fail("Already exists", "/ap-admin/posts/existing"),
+    );
+
+    expect(response.headers.get("Location")).toBe("/ap-admin/posts/existing?error=1&message=Already+exists");
+  });
 });

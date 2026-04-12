@@ -2,7 +2,7 @@ import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { DatabaseSync } from "node:sqlite";
 import { describe, expect, it } from "vitest";
 
-import { apiRouteDefinitions } from "../src/api-routes.js";
+import { apiRouteDefinitions, injectApiRoutes } from "../src/api-routes.js";
 import { withApiRequest, jsonOk, jsonOkPaginated, jsonOkWithEtag, apiErrors } from "../src/api-middleware.js";
 import { resolveAstropressSecurityArea } from "../src/security-middleware.js";
 import { readAstropressSqliteSchemaSql, runAstropressMigrations } from "../src/sqlite-bootstrap.js";
@@ -55,6 +55,15 @@ describe("REST API route inventory", () => {
   });
   it("api-routes.ts defines GET /ap-api/v1/openapi.json", () => {
     expect(hasRoute("/ap-api/v1/openapi.json", "GET")).toBe(true);
+  });
+});
+
+describe("injectApiRoutes", () => {
+  it("calls injector once per route definition with the full route object", () => {
+    const collected: typeof apiRouteDefinitions = [];
+    injectApiRoutes((route) => collected.push(route));
+    expect(collected).toHaveLength(apiRouteDefinitions.length);
+    expect(collected).toEqual(apiRouteDefinitions);
   });
 });
 
