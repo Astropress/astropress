@@ -72,7 +72,7 @@ if (has python) {
 }
 
 # ─── 2. Node 20+ ─────────────────────────────────────────────────────────────
-$NodeMsiVersion = "20.18.1"   # bump when a newer 20.x LTS is available
+$NodeMsiVersion = "22.14.0"   # Node 22 LTS (Active LTS; required for node:sqlite)
 
 function Install-NodeViaMsi {
     param($Version)
@@ -95,16 +95,16 @@ $NodeOk = $false
 if (has node) {
     $nodever = node -e "process.stdout.write(process.version)"
     $nodeMajor = [int]($nodever.TrimStart("v").Split(".")[0])
-    if ($nodeMajor -ge 20) {
+    if ($nodeMajor -ge 22) {
         ok "node $nodever already installed"
         $NodeOk = $true
     } else {
-        warn "node $nodever is too old (need 20+)"
+        warn "node $nodever is too old (need 22+ for node:sqlite)"
     }
 }
 if (-not $NodeOk) {
     if ($HasWinget -or $HasScoop -or $HasChoco) {
-        Install-Package "OpenJS.NodeJS.LTS" "nodejs-lts" "nodejs-lts" "Node.js 20 LTS"
+        Install-Package "OpenJS.NodeJS.LTS" "nodejs-lts" "nodejs-lts" "Node.js 22 LTS"
     } else {
         info "No package manager found — falling back to direct .msi download"
         Install-NodeViaMsi $NodeMsiVersion

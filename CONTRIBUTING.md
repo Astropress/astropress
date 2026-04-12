@@ -5,7 +5,7 @@
 | Tool | Version | Install |
 |------|---------|---------|
 | Bun | 1.3.10 | `curl -fsSL https://bun.sh/install | bash` |
-| Node.js | 20+ | `curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh \| bash` then `nvm install 20 && nvm use 20 && nvm alias default 20` |
+| Node.js | 22+ | `curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh \| bash` then `nvm install 22 && nvm use 22 && nvm alias default 22` |
 | Rust | 1.82+ | `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh` |
 | Playwright browsers | latest | `npx playwright install --with-deps chromium` |
 

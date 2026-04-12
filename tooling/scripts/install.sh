@@ -91,11 +91,11 @@ fi
 NODE_OK=false
 if has node; then
   NODE_MAJOR="$(node -e 'process.stdout.write(String(process.versions.node.split(".")[0]))')"
-  if [[ "$NODE_MAJOR" -ge 20 ]]; then
+  if [[ "$NODE_MAJOR" -ge 22 ]]; then
     ok "node $(node --version) already installed"
     NODE_OK=true
   else
-    warn "node $(node --version) is too old (need 20+)"
+    warn "node $(node --version) is too old (need 22+ for node:sqlite)"
   fi
 fi
 
@@ -107,10 +107,10 @@ if [[ "$NODE_OK" == false ]]; then
     # shellcheck source=/dev/null
     source "$NVM_DIR/nvm.sh"
   fi
-  info "Installing Node 20 LTS via nvm…"
-  nvm install 20
-  nvm use 20
-  nvm alias default 20
+  info "Installing Node 22 LTS via nvm…"
+  nvm install 22
+  nvm use 22
+  nvm alias default 22
   ok "node $(node --version) installed"
 fi
 

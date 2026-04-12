@@ -13,7 +13,7 @@ with a beautiful admin panel, AI-ready scaffolding, and zero vendor lock-in.
 [![npm](https://img.shields.io/npm/v/astropress?color=orange&label=npm)](https://www.npmjs.com/package/astropress)
 [![CI](https://img.shields.io/github/actions/workflow/status/astropress/astropress/ci.yml?label=CI&logo=github)](https://github.com/astropress/astropress/actions)
 [![Coverage](https://img.shields.io/badge/coverage-99%25-brightgreen)](#)
-[![Node ≥ 20](https://img.shields.io/badge/node-%E2%89%A520-brightgreen?logo=node.js&logoColor=white)](https://nodejs.org)
+[![Node ≥ 22](https://img.shields.io/badge/node-%E2%89%A522-brightgreen?logo=node.js&logoColor=white)](https://nodejs.org)
 [![Bun 1.3](https://img.shields.io/badge/bun-1.3-f472b6?logo=bun&logoColor=white)](https://bun.sh)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-blueviolet.svg)](./CONTRIBUTING.md)
 
