@@ -1,5 +1,7 @@
 interface EmailResult {
   ok: boolean;
+  /** true only when the email was actually transmitted to the delivery provider */
+  delivered: boolean;
   error?: string;
   preview?: {
     to: string;
@@ -18,6 +20,15 @@ interface EmailMessage {
 import { getTransactionalEmailConfig, isProductionRuntime } from "./runtime-env";
 import { peekCmsConfig } from "./config";
 
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 function isMockMode(locals?: App.Locals | null) {
   return getTransactionalEmailConfig(locals).mode !== "resend";
 }
@@ -27,11 +38,12 @@ async function sendResendEmail(message: EmailMessage, locals?: App.Locals | null
 
   if (!apiKey || !from) {
     if (isProductionRuntime()) {
-      return { ok: false, error: "Transactional email is not configured." };
+      return { ok: false, delivered: false, error: "Transactional email is not configured." };
     }
 
     return {
       ok: true,
+      delivered: false,
       preview: {
         to: message.to,
         subject: message.subject,
@@ -59,17 +71,19 @@ async function sendResendEmail(message: EmailMessage, locals?: App.Locals | null
     const errorBody = await response.text();
     return {
       ok: false,
+      delivered: false,
       error: `Resend error: ${errorBody || response.statusText}`,
     };
   }
 
-  return { ok: true };
+  return { ok: true, delivered: true };
 }
 
 export async function sendTransactionalEmail(message: EmailMessage, locals?: App.Locals | null): Promise<EmailResult> {
   if (isMockMode(locals)) {
     return {
       ok: true,
+      delivered: false,
       preview: {
         to: message.to,
         subject: message.subject,
@@ -82,7 +96,7 @@ export async function sendTransactionalEmail(message: EmailMessage, locals?: App
 }
 
 export async function sendPasswordResetEmail(email: string, resetUrl: string, locals?: App.Locals | null): Promise<EmailResult> {
-  const siteName = peekCmsConfig()?.siteName ?? "Astropress";
+  const siteName = escapeHtml(peekCmsConfig()?.siteName ?? "Astropress");
   return sendTransactionalEmail({
     to: email,
     subject: `Reset your ${siteName} admin password`,
@@ -92,7 +106,7 @@ export async function sendPasswordResetEmail(email: string, resetUrl: string, lo
 }
 
 export async function sendUserInviteEmail(email: string, inviteUrl: string, locals?: App.Locals | null): Promise<EmailResult> {
-  const siteName = peekCmsConfig()?.siteName ?? "Astropress";
+  const siteName = escapeHtml(peekCmsConfig()?.siteName ?? "Astropress");
   return sendTransactionalEmail({
     to: email,
     subject: `Accept your ${siteName} admin invitation`,
@@ -108,25 +122,31 @@ export async function sendContactNotification(input: {
   submittedAt: string;
 }, locals?: App.Locals | null): Promise<EmailResult> {
   const { contactDestination: destination } = getTransactionalEmailConfig(locals);
+  const safeName = escapeHtml(input.name);
+  const safeEmail = escapeHtml(input.email);
+  const safeMessage = escapeHtml(input.message);
+  const safeSubmittedAt = escapeHtml(input.submittedAt);
+
   if (!destination) {
     if (isProductionRuntime()) {
-      return { ok: false, error: "Contact notification email is not configured." };
+      return { ok: false, delivered: false, error: "Contact notification email is not configured." };
     }
 
     return {
       ok: true,
+      delivered: false,
       preview: {
         to: "admin-preview@example.local",
-        subject: `Preview contact submission from ${input.name}`,
-        html: `<p>${input.name} (${input.email}) submitted a contact request.</p><p>${input.message}</p>`,
+        subject: `Preview contact submission from ${safeName}`,
+        html: `<p>${safeName} (${safeEmail}) submitted a contact request.</p><p>${safeMessage}</p>`,
       },
     };
   }
 
   return sendTransactionalEmail({
     to: destination,
-    subject: `${peekCmsConfig()?.siteName ?? "Astropress"} contact submission from ${input.name}`,
+    subject: `${escapeHtml(peekCmsConfig()?.siteName ?? "Astropress")} contact submission from ${safeName}`,
     text: `${input.name} <${input.email}> submitted a contact request at ${input.submittedAt}\n\n${input.message}`,
-    html: `<p><strong>${input.name}</strong> &lt;${input.email}&gt; submitted a contact request at ${input.submittedAt}.</p><p>${input.message}</p>`,
+    html: `<p><strong>${safeName}</strong> &lt;${safeEmail}&gt; submitted a contact request at ${safeSubmittedAt}.</p><p>${safeMessage}</p>`,
   }, locals);
 }

@@ -4,6 +4,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createAstropressSqliteAdminRuntime } from "../src/sqlite-admin-runtime.js";
 import { readAstropressSqliteSchemaSql } from "../src/sqlite-bootstrap.js";
 import { createRuntimeFixture, makePasswordHash, type RuntimeFixture } from "./helpers/sqlite-admin-runtime-fixture.js";
+import { hashPassword, isLegacyHash, verifyPassword } from "../src/crypto-utils.js";
 
 let fixture: RuntimeFixture;
 
@@ -221,5 +222,60 @@ describe("auth additional branches", () => {
     expect(() =>
       fixture.store.auth.createSession({ email: "nobody-at-all@test.local", role: "admin" as const, name: "Nobody" }, {}),
     ).toThrow();
+  });
+});
+
+// ─── Password hashing — v2 (SHA-512) and legacy (SHA-256) compatibility ───────
+
+// Use reduced iterations in tests to keep run time under 5 s while still exercising
+// the same code paths. The stored format embeds the iteration count, so verifyPassword
+// reads it back and uses the same value — the round-trip is still fully verified.
+const TEST_ITERATIONS = 1_000;
+
+describe("password hashing", () => {
+  it("hashPassword produces a v2: prefixed hash", async () => {
+    const hash = await hashPassword("my-secret-password", 32, TEST_ITERATIONS);
+    expect(hash.startsWith("v2:")).toBe(true);
+  });
+
+  it("hashPassword encodes the iteration count in the stored string", async () => {
+    const hash = await hashPassword("password", 32, TEST_ITERATIONS);
+    // format: v2:<iterations>$<salt>$<hash>
+    const [iters] = hash.slice("v2:".length).split("$");
+    expect(Number(iters)).toBe(TEST_ITERATIONS);
+  });
+
+  it("isLegacyHash returns false for a v2 hash", async () => {
+    const hash = await hashPassword("password", 32, TEST_ITERATIONS);
+    expect(isLegacyHash(hash)).toBe(false);
+  });
+
+  it("isLegacyHash returns true for a legacy SHA-256 hash", () => {
+    const legacyHash = makePasswordHash("password");
+    expect(isLegacyHash(legacyHash)).toBe(true);
+  });
+
+  it("verifyPassword returns true for a correct v2 password", async () => {
+    const hash = await hashPassword("correct-v2-password", 32, TEST_ITERATIONS);
+    expect(await verifyPassword("correct-v2-password", hash)).toBe(true);
+  });
+
+  it("verifyPassword returns false for a wrong v2 password", async () => {
+    const hash = await hashPassword("correct-v2-password", 32, TEST_ITERATIONS);
+    expect(await verifyPassword("wrong-password", hash)).toBe(false);
+  });
+
+  it("verifyPassword returns true for a correct legacy SHA-256 password", async () => {
+    const legacyHash = makePasswordHash("legacy-password");
+    expect(await verifyPassword("legacy-password", legacyHash)).toBe(true);
+  });
+
+  it("verifyPassword returns false for a wrong legacy SHA-256 password", async () => {
+    const legacyHash = makePasswordHash("legacy-password");
+    expect(await verifyPassword("wrong-password", legacyHash)).toBe(false);
+  });
+
+  it("verifyPassword returns false for a malformed hash string", async () => {
+    expect(await verifyPassword("any-password", "not-a-valid-hash")).toBe(false);
   });
 });

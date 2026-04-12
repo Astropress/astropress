@@ -20,7 +20,6 @@ export const POST: APIRoute = async (context) =>
     }
 
     const redirectUrl = new URL("/ap-admin/users", request.url);
-    redirectUrl.searchParams.set("saved", "1");
 
     if (result.inviteUrl) {
       const absoluteInviteUrl = new URL(result.inviteUrl, request.url).toString();
@@ -30,9 +29,15 @@ export const POST: APIRoute = async (context) =>
         redirectUrl.searchParams.set("message", emailResult.error ?? "Invitation email failed.");
         return redirect(redirectUrl.pathname + redirectUrl.search);
       }
-      if (!import.meta.env.PROD) {
+      if (emailResult.delivered) {
+        redirectUrl.searchParams.set("saved", "1");
+      } else {
+        // Email was not actually sent (preview/mock mode) — user was created but no email went out
+        redirectUrl.searchParams.set("user_created", "1");
         redirectUrl.searchParams.set("invite_link", result.inviteUrl);
       }
+    } else {
+      redirectUrl.searchParams.set("saved", "1");
     }
 
     return redirect(redirectUrl.pathname + redirectUrl.search);

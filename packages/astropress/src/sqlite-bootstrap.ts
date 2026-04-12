@@ -273,6 +273,56 @@ export function checkSchemaVersionAhead(
   }
 }
 
+/**
+ * Rolls back the most recently applied migration by executing its `rollback_sql` and
+ * removing its record from `schema_migrations`. Returns the name of the rolled-back
+ * migration, or `null` if there are no applied migrations or the last one has no rollback SQL.
+ */
+export function rollbackAstropressLastMigration(db: SqliteDatabaseLike): string | null {
+  const last = db
+    .prepare(`SELECT name, rollback_sql FROM schema_migrations ORDER BY id DESC LIMIT 1`)
+    .get() as { name: string; rollback_sql: string | null } | undefined;
+
+  if (!last) return null;
+  if (last.rollback_sql) {
+    db.exec(last.rollback_sql);
+  }
+  db.prepare(`DELETE FROM schema_migrations WHERE name = ?`).run(last.name);
+  return last.name;
+}
+
+export type AstropressRollbackStatus = "no_migrations" | "no_rollback_sql" | "dry_run" | "rolled_back";
+
+export interface AstropressRollbackResult {
+  migrationName: string | null;
+  status: AstropressRollbackStatus;
+  dryRun: boolean;
+}
+
+export function rollbackAstropressLastMigrationWithOptions(
+  db: SqliteDatabaseLike,
+  options: { dryRun?: boolean } = {},
+): AstropressRollbackResult {
+  const dryRun = options.dryRun ?? false;
+  const row = db
+    .prepare(`SELECT name, rollback_sql FROM schema_migrations ORDER BY id DESC LIMIT 1`)
+    .get() as { name: string; rollback_sql: string | null } | undefined;
+
+  if (!row) {
+    return { migrationName: null, status: "no_migrations", dryRun };
+  }
+  if (!row.rollback_sql) {
+    return { migrationName: row.name, status: "no_rollback_sql", dryRun };
+  }
+  if (dryRun) {
+    return { migrationName: row.name, status: "dry_run", dryRun: true };
+  }
+
+  db.exec(row.rollback_sql);
+  db.prepare(`DELETE FROM schema_migrations WHERE name = ?`).run(row.name);
+  return { migrationName: row.name, status: "rolled_back", dryRun: false };
+}
+
 export function createAstropressSqliteSeedToolkit<TableName extends string = (typeof defaultSeedImportTables)[number]>(
   options: AstropressSqliteSeedToolkitOptions<TableName>,
 ): AstropressSqliteSeedToolkit<TableName> {

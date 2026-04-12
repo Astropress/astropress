@@ -31,7 +31,27 @@ function bytesToHex(bytes: Uint8Array) {
   return Array.from(bytes).map((byte) => byte.toString(16).padStart(2, "0")).join("");
 }
 
-export async function hashPassword(password: string, saltLength = 32, iterations = 100000): Promise<string> {
+// ---------------------------------------------------------------------------
+// Password hashing — PBKDF2-HMAC-SHA-512, 600 000 iterations (OWASP 2024)
+// ---------------------------------------------------------------------------
+//
+// Stored format (v2):  "v2:<iterations>$<saltBase64>$<hashBase64>"
+// Legacy format (v1):  "<iterations>$<saltBase64>$<hashBase64>"  (SHA-256, read-only)
+//
+// `verifyPassword` handles both formats for backward compatibility.
+// New passwords always use the v2 format.
+
+const V2_PREFIX = "v2:";
+const V2_HASH = "SHA-512";
+const V2_ITERATIONS = 600_000;
+
+/**
+ * Hash a password using PBKDF2-HMAC-SHA-512 (OWASP 2024 recommendation).
+ * Returns a versioned string: `v2:<iterations>$<saltBase64>$<hashBase64>`.
+ *
+ * Pure Web Crypto API — compatible with Node.js, Bun, and Cloudflare Workers.
+ */
+export async function hashPassword(password: string, saltLength = 32, iterations = V2_ITERATIONS): Promise<string> {
   const salt = crypto.getRandomValues(new Uint8Array(saltLength));
   const encoder = new TextEncoder();
   const passwordBuffer = encoder.encode(password);
@@ -41,21 +61,46 @@ export async function hashPassword(password: string, saltLength = 32, iterations
       name: "PBKDF2",
       salt: salt,
       iterations: iterations,
-      hash: "SHA-256",
+      hash: V2_HASH,
     },
     await crypto.subtle.importKey("raw", passwordBuffer, "PBKDF2", false, ["deriveBits"]),
-    512 // 64 bytes = 512 bits
+    512, // 64 bytes = 512 bits
   );
 
   const saltBase64 = bytesToBase64(salt);
   const hashBase64 = bytesToBase64(new Uint8Array(hashBuffer));
 
-  return `${iterations}$${saltBase64}$${hashBase64}`;
+  return `${V2_PREFIX}${iterations}$${saltBase64}$${hashBase64}`;
 }
 
+/**
+ * Returns `true` when `storedHash` was produced by the legacy SHA-256 path
+ * (no `v2:` prefix). Use this to identify accounts that need re-hashing on
+ * next successful login.
+ */
+export function isLegacyHash(storedHash: string): boolean {
+  return !storedHash.startsWith(V2_PREFIX);
+}
+
+/**
+ * Verify a password against a stored hash. Handles both v2 (SHA-512) and
+ * legacy v1 (SHA-256) formats for backward compatibility.
+ */
 export async function verifyPassword(password: string, storedHash: string): Promise<boolean> {
   try {
-    const [iterationsStr, saltBase64, hashBase64] = storedHash.split("$");
+    let hashAlgorithm: string;
+    let rest: string;
+
+    if (storedHash.startsWith(V2_PREFIX)) {
+      hashAlgorithm = "SHA-512";
+      rest = storedHash.slice(V2_PREFIX.length);
+    } else {
+      // Legacy format: SHA-256 (read-only backward compat)
+      hashAlgorithm = "SHA-256";
+      rest = storedHash;
+    }
+
+    const [iterationsStr, saltBase64, hashBase64] = rest.split("$");
     const iterations = parseInt(iterationsStr, 10);
 
     if (!iterations || !saltBase64 || !hashBase64) {
@@ -73,10 +118,10 @@ export async function verifyPassword(password: string, storedHash: string): Prom
         name: "PBKDF2",
         salt: salt,
         iterations: iterations,
-        hash: "SHA-256",
+        hash: hashAlgorithm,
       },
       await crypto.subtle.importKey("raw", passwordBuffer, "PBKDF2", false, ["deriveBits"]),
-      512
+      512,
     );
 
     return constantTimeEqual(expectedHash, new Uint8Array(hashBuffer));

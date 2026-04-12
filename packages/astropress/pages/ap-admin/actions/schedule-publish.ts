@@ -18,6 +18,9 @@ export const POST: APIRoute = async (context) =>
     const store = await loadLocalAdminStore();
     if (!store.schedulePublish) return fail("Content scheduling is not available.");
 
+    const existing = await store.getContentState(slug);
+    if (!existing) return fail("Content not found.");
+
     store.schedulePublish(slug, date.toISOString());
     return redirect(`/ap-admin/posts/${slug}?scheduled=1`);
   });

@@ -5,7 +5,7 @@ import { DatabaseSync } from "node:sqlite";
 
 import { describe, expect, it } from "vitest";
 
-import { runAstropressDbMigrationsForCli } from "../src/db-migrate-ops.js";
+import { runAstropressDbMigrationsForCli, rollbackAstropressLastMigration } from "../src/db-migrate-ops.js";
 import {
   readAstropressSqliteSchemaSql,
   runAstropressMigrations,
@@ -105,6 +105,80 @@ describe("db-migrate-ops", () => {
 
     const row = db.prepare("SELECT rollback_sql FROM schema_migrations WHERE name = '0001_add_flags.sql'").get() as { rollback_sql: string | null } | undefined;
     expect(row?.rollback_sql).toBeNull();
+
+    rmSync(dir, { recursive: true });
+  });
+
+  it("rollbackAstropressLastMigration rolls back the last migration when rollback_sql exists", () => {
+    const dir = mkdtempSync(join(tmpdir(), "astropress-rollback-exec-"));
+    const migrationsDir = join(dir, "migrations");
+    mkdirSync(migrationsDir);
+    writeFileSync(join(migrationsDir, "0001_add_rollback_table.sql"), "CREATE TABLE IF NOT EXISTS rollback_test (id INTEGER PRIMARY KEY);");
+    writeFileSync(join(migrationsDir, "0001_add_rollback_table.down.sql"), "DROP TABLE IF EXISTS rollback_test;");
+
+    const dbPath = setupDb(dir);
+    runAstropressDbMigrationsForCli({ dbPath, migrationsDir });
+
+    const report = rollbackAstropressLastMigration({ dbPath });
+    expect(report.status).toBe("rolled_back");
+    expect(report.migrationName).toBe("0001_add_rollback_table.sql");
+    expect(report.dryRun).toBe(false);
+
+    // Migration record should be gone
+    const db = new DatabaseSync(dbPath);
+    const rows = db.prepare("SELECT name FROM schema_migrations WHERE name = '0001_add_rollback_table.sql'").all();
+    db.close();
+    expect(rows).toHaveLength(0);
+
+    rmSync(dir, { recursive: true });
+  });
+
+  it("rollbackAstropressLastMigration returns no_rollback_sql when no .down.sql was stored", () => {
+    const dir = mkdtempSync(join(tmpdir(), "astropress-rollback-missing-"));
+    const migrationsDir = join(dir, "migrations");
+    mkdirSync(migrationsDir);
+    writeFileSync(join(migrationsDir, "0001_no_down.sql"), "CREATE TABLE IF NOT EXISTS no_down_test (id INTEGER PRIMARY KEY);");
+
+    const dbPath = setupDb(dir);
+    runAstropressDbMigrationsForCli({ dbPath, migrationsDir });
+
+    const report = rollbackAstropressLastMigration({ dbPath });
+    expect(report.status).toBe("no_rollback_sql");
+    expect(report.migrationName).toBe("0001_no_down.sql");
+
+    rmSync(dir, { recursive: true });
+  });
+
+  it("rollbackAstropressLastMigration returns no_migrations when no migrations have been applied", () => {
+    const dir = mkdtempSync(join(tmpdir(), "astropress-rollback-empty-"));
+    const dbPath = setupDb(dir);
+
+    const report = rollbackAstropressLastMigration({ dbPath });
+    expect(report.status).toBe("no_migrations");
+    expect(report.migrationName).toBeNull();
+
+    rmSync(dir, { recursive: true });
+  });
+
+  it("rollbackAstropressLastMigration dry-run does not write changes", () => {
+    const dir = mkdtempSync(join(tmpdir(), "astropress-rollback-dryrun-"));
+    const migrationsDir = join(dir, "migrations");
+    mkdirSync(migrationsDir);
+    writeFileSync(join(migrationsDir, "0001_dryrun.sql"), "CREATE TABLE IF NOT EXISTS dry_rollback (id INTEGER PRIMARY KEY);");
+    writeFileSync(join(migrationsDir, "0001_dryrun.down.sql"), "DROP TABLE IF EXISTS dry_rollback;");
+
+    const dbPath = setupDb(dir);
+    runAstropressDbMigrationsForCli({ dbPath, migrationsDir });
+
+    const report = rollbackAstropressLastMigration({ dbPath, dryRun: true });
+    expect(report.status).toBe("dry_run");
+    expect(report.dryRun).toBe(true);
+
+    // Migration record should still exist after dry-run
+    const db = new DatabaseSync(dbPath);
+    const rows = db.prepare("SELECT name FROM schema_migrations WHERE name = '0001_dryrun.sql'").all();
+    db.close();
+    expect(rows).toHaveLength(1);
 
     rmSync(dir, { recursive: true });
   });

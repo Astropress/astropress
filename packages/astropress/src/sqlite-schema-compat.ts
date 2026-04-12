@@ -150,6 +150,44 @@ export function rebuildContentTablesForCompatibility(
   `);
 }
 
+export function ensureFts5SearchIndex(db: SqliteDatabaseLike) {
+  const existing = (
+    db.prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'content_fts'").get() as
+      | { name: string }
+      | undefined
+  );
+  if (existing) {
+    return;
+  }
+
+  db.exec(`
+    CREATE VIRTUAL TABLE content_fts USING fts5(
+      slug UNINDEXED, title, body,
+      content='content_overrides', content_rowid='rowid'
+    );
+
+    INSERT INTO content_fts(rowid, slug, title, body)
+    SELECT rowid, slug, title, COALESCE(body, '') FROM content_overrides;
+
+    CREATE TRIGGER content_fts_ai AFTER INSERT ON content_overrides BEGIN
+      INSERT INTO content_fts(rowid, slug, title, body)
+      VALUES (new.rowid, new.slug, new.title, COALESCE(new.body, ''));
+    END;
+
+    CREATE TRIGGER content_fts_au AFTER UPDATE ON content_overrides BEGIN
+      INSERT INTO content_fts(content_fts, rowid, slug, title, body)
+      VALUES ('delete', old.rowid, old.slug, old.title, COALESCE(old.body, ''));
+      INSERT INTO content_fts(rowid, slug, title, body)
+      VALUES (new.rowid, new.slug, new.title, COALESCE(new.body, ''));
+    END;
+
+    CREATE TRIGGER content_fts_ad AFTER DELETE ON content_overrides BEGIN
+      INSERT INTO content_fts(content_fts, rowid, slug, title, body)
+      VALUES ('delete', old.rowid, old.slug, old.title, COALESCE(old.body, ''));
+    END;
+  `);
+}
+
 export function ensureLegacySchemaCompatibility(db: SqliteDatabaseLike) {
   const revisionColumns = new Set(getTableColumns(db, "content_revisions"));
   const overrideColumns = new Set(getTableColumns(db, "content_overrides"));

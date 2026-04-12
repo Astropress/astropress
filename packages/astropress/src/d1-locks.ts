@@ -75,11 +75,12 @@ export function createD1LocksOps(db: D1DatabaseLike) {
       return (result.meta?.changes ?? 0) > 0;
     },
 
-    async releaseLock(slug: string, lockToken: string): Promise<void> {
-      await db
+    async releaseLock(slug: string, lockToken: string): Promise<boolean> {
+      const result = await db
         .prepare("DELETE FROM content_locks WHERE slug = ? AND lock_token = ?")
         .bind(slug, lockToken)
         .run();
+      return (result.meta?.changes ?? 0) > 0;
     },
   };
 }

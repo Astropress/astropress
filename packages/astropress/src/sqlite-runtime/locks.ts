@@ -84,10 +84,11 @@ export function createSqliteLocksOps(getDb: () => AstropressSqliteDatabaseLike) 
       return (result.changes as number) > 0;
     },
 
-    releaseLock(slug: string, lockToken: string): void {
-      getDb()
+    releaseLock(slug: string, lockToken: string): boolean {
+      const result = getDb()
         .prepare("DELETE FROM content_locks WHERE slug = ? AND lock_token = ?")
         .run(slug, lockToken);
+      return (result.changes as number) > 0;
     },
   };
 }

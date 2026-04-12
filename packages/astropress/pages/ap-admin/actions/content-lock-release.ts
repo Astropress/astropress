@@ -8,13 +8,16 @@ export const POST: APIRoute = async (context) =>
     const slug = String(formData.get("slug") ?? "");
     const lockToken = String(formData.get("lock_token") ?? "");
 
-    await withLocalStoreFallback(
+    const released = await withLocalStoreFallback(
       locals,
       async (db) => createD1LocksOps(db).releaseLock(slug, lockToken),
       async (store) => store.releaseLock?.(slug, lockToken),
     );
 
-    return new Response(JSON.stringify({ ok: true }), {
+    // released is boolean (true = row deleted) or void/undefined (store didn't report)
+    const ok = released !== false;
+
+    return new Response(JSON.stringify({ ok }), {
       status: 200,
       headers: { "Content-Type": "application/json" },
     });

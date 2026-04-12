@@ -46,19 +46,24 @@ export const POST: APIRoute = async ({ request, locals }) => {
   const email = String(formData.get("email") ?? "");
   const result = await createRuntimePasswordResetToken(email, null, locals);
   const redirectUrl = new URL("/ap-admin/reset-password", request.url);
-  redirectUrl.searchParams.set("mail_sent", "1");
 
   if (result.ok && result.resetUrl) {
     const absoluteResetUrl = new URL(result.resetUrl, request.url).toString();
     const emailResult = await sendPasswordResetEmail(email, absoluteResetUrl, locals);
     if (!emailResult.ok) {
+      // Email failed in production — tell the user clearly rather than falsely claiming success
       redirectUrl.searchParams.set("error", "1");
-      redirectUrl.searchParams.set("message", emailResult.error ?? "Password reset email failed.");
+      redirectUrl.searchParams.set("message", emailResult.error ?? "Password reset email could not be sent. Please try again or contact support.");
+    } else {
+      // Email sent (or simulated in dev) — show the intentionally-vague anti-enumeration message
+      redirectUrl.searchParams.set("mail_sent", "1");
     }
-  }
-
-  if (!import.meta.env.PROD && result.ok && result.resetUrl) {
-    redirectUrl.searchParams.set("reset_link", result.resetUrl);
+    if (!import.meta.env.PROD) {
+      redirectUrl.searchParams.set("reset_link", result.resetUrl);
+    }
+  } else {
+    // No account found (or token creation failed) — still show the same vague message to prevent enumeration
+    redirectUrl.searchParams.set("mail_sent", "1");
   }
 
   return createAstropressSecureRedirect(redirectUrl.pathname + redirectUrl.search, 302, {
