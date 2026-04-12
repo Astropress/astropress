@@ -62,6 +62,6 @@ Firefox is covered via the `admin-harness-firefox` Playwright project in `playwr
 
 ## Known Limitations
 
-- **RTL (Right-to-Left)** — The admin UI uses physical direction CSS properties (`margin-left`, `text-align: left`) in several places. RTL scripts are not currently supported. See [DESIGN_SYSTEM.md](./DESIGN_SYSTEM.md) for the list of files that need `margin-inline-start` conversions.
+- **RTL (Right-to-Left)** — The admin UI uses physical direction CSS properties (`margin-left`, `text-align: left`) in several places. RTL scripts are not currently supported. See [DESIGN_SYSTEM.md](./DESIGN_SYSTEM.md) for the list of files that need `margin-inline-start` conversions. (Same directory — both are in `docs/reference/`.)
 - **Screen magnification** — The layout is tested at 100% zoom. High zoom levels (400%) may cause horizontal overflow in some admin table views.
 - **High-contrast mode** — The CSS custom property palette respects `prefers-contrast: more` on Chrome/Edge. Firefox and Safari may show reduced contrast at extreme zoom with forced colours enabled.

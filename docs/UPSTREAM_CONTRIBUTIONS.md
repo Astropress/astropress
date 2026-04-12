@@ -56,7 +56,30 @@ the Rust crate `include_dir!` to embed the scaffold template at compile time
 
 ---
 
-### 3. `bun:sqlite` — `exec()` should apply `PRAGMA journal_mode = WAL`
+### 3. Workspace root discovery: support non-root `package.json` in polyglot monorepos
+
+**Pain point:** Bun's workspace root must be the directory from which `bun install` is invoked. In a
+polyglot monorepo (Rust + TypeScript), the natural layout puts JS packages under `packages/` and Rust
+crates under `crates/`, with neither language owning the repo root. The ideal structure would have
+`packages/package.json` define the Bun workspace, keeping `bun.lock` and `node_modules/` inside
+`packages/` where they belong — but running `bun install` from the git root would then fail to find
+the workspace, so `package.json` and `bun.lock` must remain at the git root regardless.
+
+**Astropress code:** Root `package.json` and `bun.lock` are forced to stay at the git root despite all
+JS code living in `packages/`. See the layout notes in `README.md` and `docs/ARCHITECTURE.md`.
+
+**Upstream ask:**
+- Support a `bunfig.toml` field (e.g. `workspaceRoot = "./packages"`) that lets the git root declare
+  where the actual Bun workspace lives, so `bun install` run from the git root discovers
+  `packages/package.json` as the workspace manifest.
+- Alternatively: when `bun install` finds no `package.json` at the current directory, walk down into
+  subdirectories to find the nearest workspace root (similar to how Cargo resolves workspaces).
+- This would allow polyglot repos to place `bun.lock` and `node_modules/` inside `packages/`, keeping
+  the git root free of JS-specific lockfiles.
+
+---
+
+### 4. `bun:sqlite` — `exec()` should apply `PRAGMA journal_mode = WAL`
 
 **Pain point:** In both `bun:sqlite` and `node:sqlite`, calling `db.exec("PRAGMA journal_mode = WAL")`
 silently has no effect — WAL mode is never actually applied. The workaround is
@@ -212,6 +235,7 @@ change between Node minor versions.
 |---|---|---|
 | Bun | `vi.hoisted` / `vi.stubGlobal` in `bun:test` | Drop Vitest; use `bun test` everywhere |
 | Bun | `bun build --compile` embedded asset dirs | Rewrite CLI in TypeScript; eliminate Rust |
+| Bun | `workspaceRoot` in `bunfig.toml` | Move `bun.lock` + `node_modules` into `packages/` |
 | Bun / Node | `exec()` applies WAL PRAGMA correctly | Remove undocumented `prepare().get()` workaround |
 | Astro | `injectRoute` accepts `.ts` entrypoints | Eliminate 105 hand-authored `.js` companions |
 | Astro | `injectStaticAsset()` integration API | Remove manual Vite middleware + copy-file hooks |

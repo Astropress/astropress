@@ -69,7 +69,7 @@ Client-side interactivity uses native Custom Elements (Web Components) registere
 - **Progressive enhancement** — the admin UI is functional even if JavaScript is blocked
 - **AbortController** — event listeners are cleaned up declaratively in `disconnectedCallback`
 
-See [WEB_COMPONENTS.md](./WEB_COMPONENTS.md) for the authoring guide.
+See [WEB_COMPONENTS.md](./reference/WEB_COMPONENTS.md) for the authoring guide.
 
 ## Provider contract
 

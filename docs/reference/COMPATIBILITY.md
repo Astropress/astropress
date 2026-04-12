@@ -99,7 +99,7 @@ change is resolved.
 Run `astropress config migrate` to automatically rewrite legacy environment variable names
 in your `.env` file.
 
-See also: [OPERATIONS.md](OPERATIONS.md) for the full upgrade and migration policy.
+See also: [OPERATIONS.md](../guides/OPERATIONS.md) for the full upgrade and migration policy.
 
 ---
 

@@ -1,0 +1,26 @@
+# API Reference
+
+The live OpenAPI 3.1 specification is served directly from any running Astropress instance:
+
+```
+GET /ap-api/v1/openapi.json   (no auth required)
+```
+
+This is the authoritative, always-current source of all REST API endpoints, request schemas,
+response shapes, and Bearer token scopes. Import it into any OpenAPI-compatible client
+(Postman, Insomnia, Scalar, Swagger UI).
+
+## MCP server tools
+
+The `astropress-mcp` package exposes 8 tools for AI agents:
+`list_content`, `get_content`, `create_content`, `update_content`,
+`list_media`, `get_site_settings`, `get_health`, `get_revisions`.
+
+Configure via `ASTROPRESS_API_URL` and `ASTROPRESS_API_TOKEN` env vars.
+
+## Note
+
+The static markdown reference previously kept here was generated from regex parsing and lacked
+parameter types and return types. It has been removed in favor of the live OpenAPI spec above.
+See [SPEC.md](../SPEC.md#rest-api-contract) for the endpoint surface overview, or run
+`bun run docs:api` to regenerate a static snapshot.

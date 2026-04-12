@@ -30,13 +30,19 @@ cargo test --manifest-path crates/astropress-cli/Cargo.toml
 # 3. TS/JS companion files must be in sync
 bun run audit:sync
 
-# 4. Architectural invariants must pass
-bun run audit:arch
+# 4. Architectural invariants must pass (TS and Rust)
+bun run audit:arch && bun run audit:arch:rust
 
 # 5. BDD scenarios must all pass
 bun run bdd:test
 
-# 6. No uncommitted changes
+# 6. API reference must be up to date
+bun run docs:api:check
+
+# 7. Dependency audit must be clean
+bun run audit:deps && bun run audit:security
+
+# 8. No uncommitted changes
 git status --short
 ```
 
@@ -101,10 +107,13 @@ publish: bun run release -- --provenance
 
 This calls `changeset publish --provenance`, which:
 
-1. Publishes `packages/astropress` to the npm registry
-2. Attaches a **SLSA Build L1 provenance attestation** via npm's OIDC
-   integration — verifiable at npmjs.com under the package's provenance tab
-3. Creates a git tag (`astropress@<version>`) and pushes it
+1. Runs `prepublishOnly` (`bun run build && bun run audit:sync && bun run audit:arch`) to build compiled `.js` output
+2. Publishes `packages/astropress` to the npm registry
+3. Attaches a **SLSA Build L1 provenance attestation** — verifiable at
+   npmjs.com under the package's provenance tab. See
+   [npm provenance docs](https://docs.npmjs.com/generating-provenance-statements)
+   for how to verify it.
+4. Creates a git tag (`astropress@<version>`) and pushes it
 
 No manual `npm publish` step is required.
 
@@ -113,14 +122,19 @@ No manual `npm publish` step is required.
 ## Step 5 — Verify the release
 
 ```sh
-# Confirm the new version is visible on npm
-# (replace X.Y.Z with the published version)
+# Confirm the new version is visible on npm (replace X.Y.Z with the published version)
 npm show astropress version
 
 # Smoke-test the published package in a scratch directory
 mkdir /tmp/ap-smoke && cd /tmp/ap-smoke
 bun add astropress@latest
-node -e "const ap = require('astropress'); console.log('ok', typeof ap)"
+
+# ESM smoke test — should print a list of exported names
+cat > smoke.mjs << 'EOF'
+import * as ap from 'astropress';
+console.log('ok', Object.keys(ap).slice(0, 10));
+EOF
+node smoke.mjs
 ```
 
 Check the provenance badge on the npm package page — it should show
@@ -138,6 +152,28 @@ Check the provenance badge on the npm package page — it should show
 
 ---
 
+## CLI distribution
+
+The Astropress CLI is a Rust binary distributed **separately** from the npm
+package. It is not bundled in the `astropress` npm package — the `bin` field
+was intentionally removed.
+
+**For users:** install the CLI independently:
+
+```sh
+cargo install astropress-cli
+```
+
+Pre-built binaries for each platform are attached to GitHub Releases by the
+`.github/workflows/cli-release.yml` workflow.
+
+**For maintainers:** the CLI release is triggered by pushing a tag matching
+`astropress-cli@*`. The release workflow builds and attaches binaries for
+`x86_64-unknown-linux-gnu`, `x86_64-apple-darwin`, `aarch64-apple-darwin`,
+and `x86_64-pc-windows-msvc`.
+
+---
+
 ## Required repository secrets
 
 | Secret | Purpose |
@@ -152,17 +188,33 @@ OIDC is used for provenance — no additional secret is needed beyond the
 ## Troubleshooting
 
 **"Version Packages" PR does not appear after push**
-→ Check that `.changeset/config.json` lists `astropress` and that the
-changeset file was committed correctly (`bun run changeset status`).
+→ Check that `.changeset/config.json` lists `astropress` in the packages
+(not in `ignore`) and that the changeset file was committed correctly
+(`bun run changeset status`). Also verify that `GITHUB_TOKEN` has
+`pull-requests: write` permission (it does by default, but org settings can
+restrict it).
 
 **Publish step fails with 403**
 → The `NPM_TOKEN` secret may be expired or have insufficient permissions.
 Regenerate an automation token on npmjs.com and update the repository secret.
 
-**`--provenance` flag not recognized**
+**`--provenance` flag not recognised**
 → npm 9.5+ is required. Bun bundles a compatible npm; verify with
-`bun pm --version`.
+`bun pm --version`. The `release.yml` job uses `oven-sh/setup-bun` which
+provides a compatible version.
+
+**`prepublishOnly` fails**
+→ `prepublishOnly` runs `bun run build` then `audit:sync` and `audit:arch`.
+If `build` fails, check that `tsc` can find all imports (`tsconfig.build.json`
+includes both `src/**/*.ts` and `index.ts`). If `audit:sync` fails, there is
+a `.ts`/`.js` export divergence — run `bun run audit:sync` locally to see which
+file is out of sync.
 
 **Changeset is for the wrong package**
 → Delete the changeset file from `.changeset/`, run `bun run changeset add`
 again, and select only `astropress`.
+
+**`id-token: write` permission missing**
+→ If provenance signing fails, verify that `release.yml` has
+`permissions: id-token: write` at the job level. This is required for the OIDC
+token exchange that backs the provenance attestation.

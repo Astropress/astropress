@@ -83,7 +83,7 @@ The package imports `import { ... } from "local-runtime-modules"` and Vite resol
 - Switch from SQLite to Cloudflare? Update `local-runtime-modules.ts` + `astro.config.mjs`
 - No admin templates or components need to change.
 
-See [ARCHITECTURE.md](./ARCHITECTURE.md) for the full picture.
+See [ARCHITECTURE.md](../ARCHITECTURE.md) for the full picture.
 
 ## 6. Add to an existing Astro site
 
@@ -186,15 +186,15 @@ Run `astropress doctor --strict` — this surfaces any missing env vars or schem
 Create it: `mkdir -p .data && touch .data/.gitkeep`. The directory holds the local SQLite database.
 
 **"local-runtime-modules not found"**
-The host app must alias `local-runtime-modules` in `astro.config.mjs` to its own runtime implementation. See [ARCHITECTURE.md](./ARCHITECTURE.md).
+The host app must alias `local-runtime-modules` in `astro.config.mjs` to its own runtime implementation. See [ARCHITECTURE.md](../ARCHITECTURE.md).
 
 ## Next steps
 
 | Topic | Doc |
 |-------|-----|
-| How the provider seam works | [ARCHITECTURE.md](./ARCHITECTURE.md) |
+| How the provider seam works | [ARCHITECTURE.md](../ARCHITECTURE.md) |
 | Analytics, consent banner, custom snippets | [ANALYTICS.md](./ANALYTICS.md) |
-| Built-in web components and how to extend them | [WEB_COMPONENTS.md](./WEB_COMPONENTS.md) |
+| Built-in web components and how to extend them | [WEB_COMPONENTS.md](../reference/WEB_COMPONENTS.md) |
 | Import from WordPress or Wix; content scheduling | [OPERATIONS.md](./OPERATIONS.md) |
 | GDPR data inventory and right of erasure | [COMPLIANCE.md](./COMPLIANCE.md) |
 | Multilingual sites and admin UI labels | [MULTILINGUAL.md](./MULTILINGUAL.md) |

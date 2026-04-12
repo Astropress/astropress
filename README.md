@@ -26,15 +26,18 @@ Full walkthrough: [docs/QUICK_START.md](./docs/QUICK_START.md)
 
 | Doc | What it covers |
 |-----|----------------|
-| [QUICK_START.md](./docs/QUICK_START.md) | Scaffold, env setup, 5-minute getting started |
-| [ARCHITECTURE.md](./docs/ARCHITECTURE.md) | Provider seam, two-table schema, security model |
-| [OPERATIONS.md](./docs/OPERATIONS.md) | Import, backup, migrations, secret rotation, incident runbook |
-| [ANALYTICS.md](./docs/ANALYTICS.md) | Analytics providers, consent banner, custom snippets |
-| [WEB_COMPONENTS.md](./docs/WEB_COMPONENTS.md) | Built-in elements, extending, screen reader guide |
-| [MULTILINGUAL.md](./docs/MULTILINGUAL.md) | Locale config, hreflang, admin UI labels |
-| [COMPLIANCE.md](./docs/COMPLIANCE.md) | GDPR data inventory, right of erasure SQL, audit log |
-| [DESIGN_SYSTEM.md](./docs/DESIGN_SYSTEM.md) | CSS tokens, contrast ratios, adding admin pages |
-| [BROWSER_SUPPORT.md](./docs/BROWSER_SUPPORT.md) | Minimum versions, key API requirements |
+| [docs/SPEC.md](./docs/SPEC.md) | Product identity, data model, all contracts, known gaps |
+| [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) | Provider seam, schema ERD, security model |
+| [docs/guides/QUICK_START.md](./docs/guides/QUICK_START.md) | Scaffold, env setup, 5-minute getting started |
+| [docs/guides/OPERATIONS.md](./docs/guides/OPERATIONS.md) | Import, backup, migrations, secret rotation, DR runbooks |
+| [docs/guides/ANALYTICS.md](./docs/guides/ANALYTICS.md) | Analytics providers, consent banner, custom snippets |
+| [docs/guides/MULTILINGUAL.md](./docs/guides/MULTILINGUAL.md) | Locale config, hreflang, admin UI labels |
+| [docs/guides/COMPLIANCE.md](./docs/guides/COMPLIANCE.md) | GDPR data inventory, right of erasure SQL, audit log |
+| [docs/reference/WEB_COMPONENTS.md](./docs/reference/WEB_COMPONENTS.md) | Built-in elements, extending, screen reader guide |
+| [docs/reference/DESIGN_SYSTEM.md](./docs/reference/DESIGN_SYSTEM.md) | CSS tokens, contrast ratios, adding admin pages |
+| [docs/reference/BROWSER_SUPPORT.md](./docs/reference/BROWSER_SUPPORT.md) | Minimum versions, key API requirements |
+| [docs/reference/COMPATIBILITY.md](./docs/reference/COMPATIBILITY.md) | Version upgrade procedure, schema migration reference |
+| [llms.txt](./llms.txt) | Machine-readable API surface for AI agents and tooling |
 | [CONTRIBUTING.md](./CONTRIBUTING.md) | Local setup, test commands, PR checklist |
 | [SECURITY.md](./SECURITY.md) | Vulnerability reporting, SLA |
 
@@ -82,11 +85,15 @@ packages/astropress/      # Published npm package
   pages/ap-api/v1/        # REST API endpoints
   web-components/         # Vanilla Web Components
 
-crates/astropress-cli/    # Rust CLI
-  src/commands/           # One file per command
+crates/                   # Rust workspace root (Cargo.toml lives here)
+  astropress-cli/         # Rust CLI
+    src/commands/         # One file per command
 
 packages/astropress-mcp/  # MCP server (8 tools for AI agents)
-features/                 # Gherkin BDD scenarios
+tooling/
+  scripts/                # Dev and audit scripts
+  e2e/                    # Playwright end-to-end tests
+  bdd/                    # Gherkin BDD scenarios
 ```
 
 ## License

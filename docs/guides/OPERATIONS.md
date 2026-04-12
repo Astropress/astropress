@@ -189,19 +189,60 @@ astropress db rollback --dry-run           # preview what would be rolled back
 against the local SQLite database, and removes the migration record. Returns an error if no
 `rollback_sql` is stored (the companion `.down.sql` was not present when the migration ran).
 
-### Hosted providers (D1, Supabase)
+### Cloudflare D1 migrations
 
-Check `CHANGELOG.md` for any `ALTER TABLE` statements required before deploying
-new package versions. Always apply schema changes before deploying new code.
+`astropress db migrate --target=d1` applies pending migration files to your D1
+database via `wrangler d1 execute`. Requirements:
+
+- `wrangler` on PATH: `bun add -g wrangler` or `npm install -g wrangler`
+- Authenticated: `wrangler login` or `CLOUDFLARE_API_TOKEN` env var
+- `CLOUDFLARE_D1_BINDING` env var set to your D1 binding name (default: `DB`)
+
+```sh
+# Preview which files would run (no writes):
+astropress db migrate --target=d1 --dry-run
+
+# Apply to the remote D1 database:
+astropress db migrate --target=d1
+
+# D1 rollback: apply the .down.sql file manually via wrangler
+wrangler d1 execute $CLOUDFLARE_D1_BINDING --remote \
+  --file migrations/0001_your_migration.down.sql
+```
+
+Each `.sql` file in your `migrations/` directory is passed to `wrangler d1 execute`
+in lexicographic order. The `.down.sql` rollback SQL is stored in the
+`schema_migrations` table (same as SQLite) for reference.
+
+### Supabase migrations
+
+Supabase projects use the [Supabase CLI](https://supabase.com/docs/reference/cli) for
+schema migrations. Astropress migration `.sql` files are compatible — place them in
+`supabase/migrations/` and use the Supabase CLI workflow:
+
+```sh
+# Link to your project (once):
+supabase link --project-ref <ref>
+
+# Push pending migrations to the remote database:
+supabase db push
+
+# Rollback: apply the .down.sql file via psql or the Supabase Dashboard SQL editor
+```
+
+For programmatic use from TypeScript (e.g. in a CI script), import
+`runD1Migrations` from `astropress/d1-migrate-ops` for D1, or use a plain
+Postgres client with the same SQL files for Supabase.
 
 ### Version upgrade procedure
 
 1. Snapshot: `astropress backup --project-dir <site> --out <snapshot-dir>`
 2. Upgrade the package: `bun add astropress@latest`
 3. Run `astropress doctor` — flags env contract changes and schema drift
-4. For SQLite: run `astropress services bootstrap` (idempotent)
-5. For D1/Supabase: apply any required `ALTER TABLE` statements from CHANGELOG
-6. Deploy. If migration fails, restore from snapshot and replay in isolation.
+4. For SQLite: run `astropress db migrate` (defaults to `--target=local`)
+5. For D1: run `astropress db migrate --target=d1`
+6. For Supabase: run `supabase db push`
+7. Deploy. If migration fails, restore from snapshot and replay in isolation.
 
 ## Caching
 
@@ -222,6 +263,90 @@ registerCms({
   cdnPurgeWebhook: "https://api.netlify.com/build_hooks/your-hook-id",
 });
 ```
+
+## Static host publishing
+
+### Full rebuild
+
+The default publish path rebuilds all pages on every content change:
+
+```bash
+astropress build                    # full Astro build → dist/
+astropress publish                  # build + push to configured static host
+```
+
+### Incremental rebuild (ISR-style)
+
+For sites with large page counts, a full rebuild on every change is wasteful.
+Astropress supports an incremental mode that regenerates only the pages affected
+by a given set of slug changes.
+
+**CLI usage:**
+
+```bash
+# Rebuild only the affected slug(s) — faster than a full rebuild
+astropress publish --incremental --slugs /blog/my-post,/blog/another-post
+
+# Or pass slugs via stdin (one per line)
+echo -e "/blog/my-post\n/blog/another-post" | astropress publish --incremental --stdin
+```
+
+**How it works:**
+
+1. For each changed slug, Astropress resolves which Astro routes generate that
+   URL via `getStaticPaths`.
+2. Only those route files are rebuilt; other `dist/` entries are left untouched.
+3. The CDN purge webhook (`cdnPurgeWebhook` in `registerCms`) fires for each
+   regenerated slug so stale CDN entries are invalidated immediately.
+
+**GitHub Actions example (incremental on content push):**
+
+```yaml
+name: Incremental publish
+on:
+  repository_dispatch:
+    types: [content-changed]
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install
+      - run: astropress publish --incremental --slugs "${{ github.event.client_payload.slugs }}"
+        env:
+          ASTROPRESS_DEPLOY_TOKEN: ${{ secrets.ASTROPRESS_DEPLOY_TOKEN }}
+```
+
+Trigger this workflow from the `cdnPurgeWebhook` callback or any CI/CD hook
+that knows which slugs changed:
+
+```ts
+registerCms({
+  cdnPurgeWebhook: "https://api.github.com/repos/owner/repo/dispatches",
+  // The webhook receiver should POST the changed slug list back to GitHub
+  // as a repository_dispatch event with type "content-changed".
+});
+```
+
+**GitHub Pages:**
+
+GitHub Pages does not natively support partial deploys — every push to the
+`gh-pages` branch replaces the entire `dist/`. The incremental approach still
+saves build time (fewer pages to compile), but the full `dist/` directory must
+be pushed on every publish. Use `astropress publish --incremental` to limit
+which pages are recompiled, then let the GitHub Pages action push the full tree.
+
+**Trade-offs:**
+
+| Mode | Build time | Stale risk | Best for |
+|------|-----------|------------|----------|
+| Full rebuild | Proportional to site size | None | Small sites, release deploys |
+| Incremental (`--incremental`) | Proportional to changed pages | Low (CDN purge fires) | Large sites, frequent edits |
+
+For sites with fewer than ~500 pages, full rebuild is simpler and fast enough.
+Switch to incremental when build time becomes a bottleneck.
 
 ## Observability
 
@@ -344,8 +469,6 @@ WHERE created_at < datetime('now', '-365 days');
 4. If a failed migration caused it: restore from snapshot, replay migration
    in isolation, then redeploy
 
----
-
 ## Provider configuration
 
 ### Appwrite
@@ -364,3 +487,71 @@ APPWRITE_BUCKET_ID=your-bucket-id
 Use `createAstropressAppwriteHostedAdapter()` from `astropress/adapters/appwrite`.
 The adapter resolves the Appwrite Console URL automatically from `APPWRITE_PROJECT_ID`
 and exposes it as `capabilities.hostPanel` for admin-role navigation.
+
+## Disaster recovery
+
+### RTO / RPO targets
+
+| Tier | Data store | RPO | RTO |
+|------|------------|-----|-----|
+| Local / GitHub Pages + SQLite | SQLite file | Last `astropress backup` snapshot | < 5 min |
+| Cloudflare Pages + D1 | Cloudflare D1 | D1 time-travel (30 days) | < 15 min |
+| Supabase | PostgreSQL | Point-in-time recovery (up to 7 days on Pro) | < 30 min |
+| Runway | Managed SQLite | Provider snapshot schedule | < 30 min |
+
+### Failure runbooks
+
+**Corrupted SQLite database**
+
+Detect: `astropress doctor` or `sqlite3 .data/admin.db "PRAGMA integrity_check;"`. Take the site offline to prevent further writes, then:
+```sh
+astropress restore --project-dir <site> --from <snapshot-dir>
+astropress doctor --project-dir <site>
+```
+
+**Accidental content deletion**
+
+Detect via audit log:
+```sh
+sqlite3 .data/admin.db \
+  "SELECT * FROM audit_events WHERE action LIKE 'content.delete%' ORDER BY created_at DESC LIMIT 10;"
+```
+For SQLite: restore from snapshot then re-apply changes made after the snapshot.
+For D1: `wrangler d1 time-travel restore <DATABASE_NAME> --timestamp <ISO_TIMESTAMP>`.
+For Supabase: Dashboard → Database → Backups → Point in Time Recovery.
+
+**Failed schema migration**
+
+Detect: `astropress doctor` or `sqlite3 .data/admin.db "SELECT * FROM schema_migrations ORDER BY id DESC LIMIT 5;"`. Roll back:
+```sh
+astropress db rollback --project-dir <site> --dry-run  # preview first
+astropress db rollback --project-dir <site>
+```
+If rollback SQL is unavailable, restore from the pre-migration snapshot.
+
+**Provider outage (D1 / Supabase)**
+
+No action required while the provider restores service. For prolonged outages, switch to a local SQLite fallback with the last snapshot. `GET /ap/health` returns `degraded` during the outage; resume when it returns `{ status: "ok" }`.
+
+### Backup procedure
+
+```sh
+astropress backup --project-dir <site> --out backups/$(date +%Y%m%d-%H%M%S)
+
+# Cloudflare D1:
+wrangler d1 export <DATABASE_NAME> --output backup-$(date +%Y%m%d).sql --remote
+```
+
+Schedule via cron or CI. Store snapshots separately from the site directory.
+
+### Post-restore checklist
+
+- [ ] `astropress doctor --project-dir <site>` — all checks pass
+- [ ] `astropress services verify` — database connectivity confirmed
+- [ ] `sqlite3 .data/admin.db "PRAGMA integrity_check;"` returns `ok`
+- [ ] `SELECT COUNT(*) FROM content_overrides` returns non-zero
+- [ ] `SELECT * FROM schema_migrations ORDER BY id DESC LIMIT 3` shows expected state
+- [ ] Admin panel login succeeds
+- [ ] `GET /ap/health` returns `{ "status": "ok" }`
+
+When restoring an older snapshot onto a newer Astropress install, `ensureLegacySchemaCompatibility()` runs at boot and applies any missing additive column migrations automatically. For destructive migrations (table rebuilds) review [COMPATIBILITY.md](../reference/COMPATIBILITY.md) before restarting.
