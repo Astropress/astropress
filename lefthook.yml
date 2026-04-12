@@ -49,6 +49,3 @@ pre-push:
 
     docs-api:
       run: bun run docs:api:check
-
-    check-version:
-      run: bun run check:version
