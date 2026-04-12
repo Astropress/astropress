@@ -1004,6 +1004,35 @@ const verificationGroups: VerificationGroup[] = [
     ],
   },
   {
+    label: "donation integration scenarios",
+    scenarios: [
+      "no donations configured returns empty snippets",
+      "GiveLively config generates widget HTML",
+      "GiveLively with campaign slug uses campaign identifier",
+      "GiveLively without campaign slug falls back to org slug",
+      "Liberapay config generates button HTML",
+      "PledgeCrypto config generates widget HTML",
+      "PledgeCrypto generates head script tag",
+      "GiveLively suppressed when DNT opted out",
+      "PledgeCrypto suppressed when DNT opted out",
+      "Liberapay not suppressed when DNT opted out",
+      "multiple providers can be enabled simultaneously",
+      "JSON-LD DonateAction included when any provider enabled",
+      "JSON-LD omitted when no providers configured",
+      "env example includes GiveLively keys when enabled",
+      "env example includes Liberapay key when enabled",
+      "env example includes PledgeCrypto key when enabled",
+      "env example omits donation keys when none enabled",
+    ],
+    steps: [
+      {
+        command: "bunx",
+        args: ["vitest", "run", "tests/donations-config.test.ts"],
+        cwd: astropressPackageRoot,
+      },
+    ],
+  },
+  {
     label: "structured data / AEO JSON-LD scenarios",
     scenarios: [
       "AstropressFaqJsonLd emits valid FAQPage JSON-LD for a list of Q&A pairs",

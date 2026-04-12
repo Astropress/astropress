@@ -80,3 +80,49 @@ The package should reduce host-specific glue over time by replacing temporary se
 ## Extraction Goal
 
 Consuming apps should eventually depend only on published Astropress package entry points, not repo-relative source paths.
+
+## Donation Integrations
+
+Astropress supports three donation / fundraising providers that site owners can enable through `registerCms()`.
+
+### Providers
+
+- **GiveLively** — fiat donations for US nonprofits; embedded JavaScript widget; suppressed when visitor has opted out of tracking (DNT/GPC)
+- **Liberapay** — recurring fiat donations popular in OSS communities; static HTML button with no external JavaScript; never suppressed (no tracker)
+- **PledgeCrypto** — crypto donations with automatic carbon offsets per transaction via the UN Climate Neutral Now Initiative; embedded JavaScript widget; suppressed when visitor has opted out of tracking (DNT/GPC)
+
+All three providers block iframe embedding (`X-Frame-Options: SAMEORIGIN`). The admin fundraising page therefore uses link-mode cards pointing to the live `/donate` page rather than iframes.
+
+### Admin depth
+
+The admin panel's fundraising page shows one link card per enabled provider, linking to the live `/donate` page. This is sufficient for operators to verify configuration without an iframe.
+
+### /donate page generation
+
+When one or more donation providers are configured during `astropress new`, the scaffold generates a `src/pages/donate.astro` page containing:
+
+- The provider widgets in order: GiveLively, Liberapay, PledgeCrypto
+- A schema.org `DonateAction` JSON-LD block (improves AEO discoverability)
+- DNT/GPC consent checks: GiveLively and PledgeCrypto widgets are suppressed when the visitor has opted out; Liberapay is never suppressed
+
+### Config shape
+
+```typescript
+interface GiveLivelyConfig {
+  orgSlug: string;        // GIVELIVELY_ORG_SLUG env var
+  campaignSlug?: string;  // GIVELIVELY_CAMPAIGN_SLUG env var (optional)
+}
+interface LiberapayConfig {
+  username: string;       // LIBERAPAY_USERNAME env var
+}
+interface PledgeCryptoConfig {
+  partnerKey: string;     // PLEDGE_PARTNER_KEY env var
+}
+interface DonationsConfig {
+  giveLively?: GiveLivelyConfig;
+  liberapay?: LiberapayConfig;
+  pledgeCrypto?: PledgeCryptoConfig;
+}
+```
+
+`DonationsConfig` is available as `donations` in `CmsConfig` (passed to `registerCms()`). Multiple providers can be enabled simultaneously. Polar (developer sponsorships) is handled separately through the Polar.sh integration and is not part of this config surface.
