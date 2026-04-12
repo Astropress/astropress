@@ -81,6 +81,46 @@ The package should reduce host-specific glue over time by replacing temporary se
 
 Consuming apps should eventually depend only on published Astropress package entry points, not repo-relative source paths.
 
+## Newsletter / Email Integration
+
+Astropress uses **Listmonk** exclusively as its newsletter delivery backend. Mailchimp is not supported as a delivery mode — operators who previously used Mailchimp should migrate subscribers to Listmonk (see below).
+
+### Why Listmonk only
+
+- Self-hosted, MIT-licensed, zero per-subscriber fees
+- Operator owns the subscriber list and campaign data
+- No third-party SaaS dependency in the runtime path
+- Consistent with the project's privacy-by-design posture
+
+### Runtime behavior
+
+- `NEWSLETTER_DELIVERY_MODE` defaults to `"listmonk"` in production and `"mock"` in development/test
+- The `mock` mode always returns `{ ok: true }` without calling any API — safe for local dev and CI
+- Any value other than `"listmonk"` falls through to mock
+
+### Required env vars (production)
+
+| Variable | Description |
+|---|---|
+| `NEWSLETTER_DELIVERY_MODE` | Must be `"listmonk"` |
+| `LISTMONK_API_URL` | Base URL of your Listmonk instance (e.g. `https://listmonk.example.com`) |
+| `LISTMONK_API_USERNAME` | Listmonk admin username |
+| `LISTMONK_API_PASSWORD` | Listmonk admin password |
+| `LISTMONK_LIST_ID` | Numeric ID of the list subscribers are added to |
+
+### Setup guide generation
+
+When a project is scaffolded with `--email` (or email is chosen in the interactive wizard), `astropress new` writes a `LISTMONK.md` file to the project root. This guide covers:
+- Deploying Listmonk to Fly.io or Railway (free tier)
+- Creating an admin account and a subscriber list
+- Obtaining the list ID
+- Configuring the required env vars
+- Testing locally with `NEWSLETTER_DELIVERY_MODE=mock`
+
+### Mailchimp subscriber migration
+
+Operators moving from Mailchimp can export their audience as CSV from the Mailchimp dashboard and bulk-import into Listmonk via its REST API (`POST /api/subscribers/import`). The import accepts a JSON payload of subscriber records. See the "Mailchimp import" section below for details.
+
 ## Donation Integrations
 
 Astropress supports three donation / fundraising providers that site owners can enable through `registerCms()`.
