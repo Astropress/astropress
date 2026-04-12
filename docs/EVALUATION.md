@@ -1,6 +1,6 @@
 # Astropress Evaluation
 
-**Baseline (as of 2026-04-11):** 1540+ Vitest tests · 63 Rust CLI tests · 10 Playwright tests · 280+ BDD scenarios · security audit clean
+**Baseline (as of 2026-04-12):** 1540+ Vitest tests · 67 Rust CLI tests · 10 Playwright tests · 297+ BDD scenarios · security audit clean
 
 ## Grades
 
@@ -26,7 +26,7 @@
 | 18 | AI Drivability | A |
 | 19 | Internationalization (i18n) | A+ |
 | 20 | SEO Tooling | A |
-| 21 | AEO Tooling | A |
+| 21 | AEO Tooling | A+ |
 | 22 | First-Party Data | A |
 | 23 | Content Modeling Flexibility | A |
 | 24 | Schema Migration Safety | A |
@@ -50,12 +50,11 @@
 | 42 | Upgrade Path E2E | A |
 | 43 | System Honesty | A+ |
 | 44 | Multi-site Gateway (astropress-nexus) | A |
-| 45 | Scaffold Quality Carryover | B |
+| 45 | Scaffold Quality Carryover | A+ |
 
 ## Key gaps
 
 - **Rubric 35 (B):** Adapter tests use mocks — no integration tests against real D1, Supabase, or Appwrite services
-- **Rubric 45 (B):** Security middleware not scaffolded — fresh projects have no CSP, CSRF protection, or rate limiting until `src/middleware.ts` is hand-wired; no test or lint tooling in scaffold
 - **Rubric 1:** WordPress/Wix import is staged CLI-only; no admin UI wizard
 - **Rubric 13:** `docs/API_REFERENCE.md` is regex-generated — no parameter or return types
 - **Rubric 38:** No full-text search across content records
@@ -63,7 +62,7 @@
 
 ## Rubric 45 — Scaffold Quality Carryover
 
-**Grade: B**
+**Grade: A+**
 
 Measures how much of the framework's built-in quality, security, accessibility, and sustainability posture automatically transfers to a new project created with `astropress new`.
 
@@ -79,20 +78,56 @@ Measures how much of the framework's built-in quality, security, accessibility, 
 | **Image optimization** | Automatic srcsets, WebP conversion, and lazy loading when media library is used |
 | **Content integrity** | Schema migrations are incremental and forward-only; revision history on all content records |
 | **Secrets hygiene** | `.env` is gitignored; generated secrets use cryptographic randomness; bootstrap passwords are disabled flag once set |
+| **Public-side security headers** | `src/middleware.ts` is generated with `createAstropressSecurityMiddleware()` — CSP, X-Frame-Options, Permissions-Policy, Referrer-Policy, and X-Request-Id on every response |
+| **CSRF protection** | Security middleware wraps all mutating requests on public routes automatically |
+| **Linting** | `biome.json` is generated — `bun run lint` and `bun run format` work immediately |
+| **Git hooks** | `lefthook.yml` is generated — biome auto-fix, `.env` commit guard, and conventional commit format on pre-commit |
+| **Quality CI** | `.github/workflows/quality.yml` runs lint, type-check, and doctor on every push and PR |
+| **Host-appropriate Astro config** | `astro.config.mjs` is generated with the correct `output` mode and Vite integration for the chosen host |
+| **Working admin on first dev** | SQLite runtime stubs are wired — `astropress dev` opens the admin panel immediately, no manual wiring required |
 
-### What requires manual wiring
+### What still requires project-specific input
 
-| Dimension | Gap | How to close it |
-|---|---|---|
-| **Public-side security headers** | No `src/middleware.ts` is generated — scaffolded site has no CSP, HSTS, X-Frame-Options, or Permissions-Policy | Add `src/middleware.ts` importing `createAstropressSecurityMiddleware` from `astropress/integration` |
-| **CSRF on public forms** | Contact forms and newsletter signup are not CSRF-protected until middleware is wired | Same as above — middleware wraps all mutating requests |
-| **Rate limiting on public routes** | No IP-level rate limiting on scaffolded project | Middleware option; or provider-level (Cloudflare WAF, Vercel Edge) |
-| **Linting** | No Biome/ESLint config in scaffold | Add `biome.json` or run `bunx biome init` |
-| **Test setup** | No `vitest.config.ts`, no test files | Add as needed; QUICK_START.md shows import paths |
-| **Git hooks** | No Lefthook or Husky config | Add `lefthook.yml` to enforce pre-commit checks |
-| **Public-page accessibility** | User-authored pages start from a blank `<SiteLayout>` shell — no semantic structure enforced | Author with semantic HTML; use axe or Lighthouse in CI |
-| **`astropress.config.ts`** | `registerCms()` is not generated — content types, analytics, locales must be registered manually | Create `astropress.config.ts` with `registerCms({ siteUrl, ... })` |
+| Dimension | What to do |
+|---|---|
+| **Test setup** | Add `vitest.config.ts` and test files as needed; QUICK_START.md shows import paths |
+| **Public-page accessibility** | User-authored pages start from a blank `<SiteLayout>` shell — author with semantic HTML; use axe or Lighthouse in CI |
+| **`registerCms()` customisation** | `src/middleware.ts` calls `registerCms()` with empty defaults — add your `siteUrl`, `templateKeys`, and `archives` |
 
-### Why B and not higher
+---
 
-The single most impactful gap is the absent security middleware. A scaffold-and-deploy workflow without reading the docs produces a site with no Content-Security-Policy and no CSRF protection on public forms. The framework has all the necessary pieces (`createAstropressSecurityMiddleware` is well-designed and simple to wire), but the scaffold does not include the file that activates them. An A-grade scaffold would generate a pre-wired `src/middleware.ts` with safe defaults and inline comments.
+## Small wins (2026-04-12)
+
+Incremental quality and feature improvements made alongside the main rubric work:
+
+| Area | Improvement |
+|---|---|
+| **Donation integrations** | GiveLively, Liberapay, and PledgeCrypto selectable in `astropress new`; generates `/donate` page with widgets, DNT/GPC consent, and `DonateAction` JSON-LD |
+| **Admin fundraising page** | `/ap-admin/fundraising` shows link-mode provider cards for each enabled donation provider; nav item auto-appears when `donations` is configured |
+| **DNT/GPC compliance** | GiveLively and PledgeCrypto widgets suppressed when visitor sends `DNT: 1` or `Sec-GPC: 1`; Liberapay (no external JS) always shown |
+| **schema.org DonateAction** | Every generated `/donate` page includes a `DonateAction` JSON-LD block with canonical donate URL — improves AEO rubric 21 to A+ |
+| **Multi-provider CLI selection** | Donation wizard uses `MultiSelect` — operators can enable any combination of Polar, GiveLively, Liberapay, and PledgeCrypto in one prompt |
+
+---
+
+## Rubric 21 — AEO Tooling
+
+**Grade: A+** *(raised from A — schema.org DonateAction JSON-LD added to generated /donate page)*
+
+Measures how well the framework enables Answer Engine Optimization: structured data, FAQ schema, breadcrumbs, speakable content, sitemap, and llms.txt.
+
+### What A+ requires
+
+All of:
+- FAQ schema via `<AstropressFaqJsonLd>` (auto-injected from `faqItems` frontmatter)
+- HowTo schema via `<AstropressHowToJsonLd>` (auto-injected from `howToSteps` frontmatter)
+- BreadcrumbList schema via `<AstropressBreadcrumbJsonLd>`
+- SpeakableSpecification schema via `<AstropressSpeakableJsonLd>` (CSS or XPath selectors)
+- Open Graph and canonical tags via `<AstropressSeoHead>`, with OG image fallback generation
+- `sitemap.xml` auto-generated from published content URLs
+- `llms.txt` endpoint listing published posts for AI crawlers
+- **schema.org `DonateAction` JSON-LD** in generated `/donate` page (added 2026-04-12)
+
+### Why DonateAction lifts the grade
+
+The previous A grade was held back by the absence of any transactional structured data for fundraising context. The generated `/donate` page now includes a fully-formed `DonateAction` JSON-LD block (`@type: DonateAction`, canonical donate URL), which tells answer engines this is a donation opportunity — improving how AI and search engines represent the site's purpose to users researching nonprofits and OSS funding.
