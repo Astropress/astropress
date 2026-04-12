@@ -5,11 +5,21 @@
 | Tool | Version | Install |
 |------|---------|---------|
 | Bun | 1.3.10 | `curl -fsSL https://bun.sh/install | bash` |
-| Node.js | 20+ | [nodejs.org](https://nodejs.org) |
+| Node.js | 20+ | `curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh \| bash` then `nvm install 20 && nvm use 20 && nvm alias default 20` |
 | Rust | 1.82+ | `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh` |
 | Playwright browsers | latest | `npx playwright install --with-deps chromium` |
 
 Alternatively, open the repo in VS Code and select **Reopen in Container** — the devcontainer handles all prerequisites automatically.
+
+Or run the bundled installer, which provisions all of the above (Bun, nvm + Node 20, Rust, Playwright browsers) and then runs the test suite:
+
+```bash
+bash tooling/scripts/install.sh           # macOS / Linux / *BSD
+# or on Windows PowerShell:
+pwsh tooling/scripts/install.ps1
+```
+
+Pass `--skip-tests` to skip the post-install test run, or `--skip-playwright` to skip browser download.
 
 ## Setup
 
