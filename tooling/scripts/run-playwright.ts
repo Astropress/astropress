@@ -165,7 +165,7 @@ async function main() {
       ]);
     }
 
-    await runCommand("npx", ["playwright", "test", ...requestedProjects], root, {
+    await runCommand("npx", ["playwright", "test", "--config", "tooling/e2e/playwright.config.ts", ...requestedProjects], root, {
       PLAYWRIGHT_EXAMPLE_BASE_URL: process.env.PLAYWRIGHT_EXAMPLE_BASE_URL,
       PLAYWRIGHT_ADMIN_BASE_URL: process.env.PLAYWRIGHT_ADMIN_BASE_URL,
     });

@@ -67,7 +67,7 @@ async function serveStaticFile(root: string, request: IncomingMessage, response:
 async function main() {
   const distRoot = process.argv[2];
   if (!distRoot) {
-    console.error("Usage: bun run scripts/accessibility-browser-audit.ts <dist-directory>");
+    console.error("Usage: bun run tooling/scripts/accessibility-browser-audit.ts <dist-directory>");
     process.exit(1);
   }
 

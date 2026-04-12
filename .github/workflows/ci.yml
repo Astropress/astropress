@@ -23,6 +23,7 @@ jobs:
       - run: cargo clippy --manifest-path crates/astropress-cli/Cargo.toml -- -D warnings
       - run: bun run audit:arch:rust
       - run: bun run audit:aeo
+      - run: bun run docs:api:check
 
   test-unit:
     runs-on: ubuntu-latest

@@ -1,8 +1,8 @@
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import path from "node:path";
 
-const repoRoot = path.resolve(new URL("..", import.meta.url).pathname);
-const featuresRoot = path.join(repoRoot, "features");
+const repoRoot = path.resolve(new URL("../..", import.meta.url).pathname);
+const featuresRoot = path.join(repoRoot, "tooling", "bdd");
 
 type Scenario = {
   title: string;

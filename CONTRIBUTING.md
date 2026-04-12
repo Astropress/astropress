@@ -55,7 +55,7 @@ error paths are acceptable; missing feature branches are not.
 To add a BDD scenario:
 
 ```gherkin
-# features/content/scheduling.feature
+# tooling/bdd/content/scheduling.feature
 Scenario: Editor schedules a post for future publication
   Given I am logged in as an editor
   When I set the post's publish time to tomorrow at 9am
@@ -74,13 +74,21 @@ Most source files in `packages/astropress/src/` appear in pairs:
 
 **The `.js` files are not generated.** They are committed alongside the `.ts` files and must be kept in sync manually. See [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md#the-dual-ts--js-file-pattern) for why.
 
-**The rule:** whenever you edit a `.ts` file that has a `.js` sibling, you must also update the `.js` file to match. The `audit:sync` script catches export-level divergence:
+**The rule:** whenever you edit a `.ts` file that has a `.js` sibling, you must also update the `.js` file to match.
+
+**Quick regen helper:** if you have made changes to `.ts` files and want to regenerate all `.js` files in one shot, run from the repo root:
+
+```bash
+bun run sync:js
+```
+
+This wraps `tsc -p packages/astropress/tsconfig.build.json --noCheck` followed by the `add-js-ext.ts` pass that rewrites import paths. After running it, verify the results:
 
 ```bash
 bun run audit:sync
 ```
 
-If you add a new exported symbol to a `.ts` file and forget the `.js`, CI will fail.
+The `audit:sync` script checks export-level divergence — if you add a new exported symbol to a `.ts` file and forget the `.js`, CI will fail.
 
 Files that are `.ts`-only (no `.js` sibling) do not need this treatment — they are consumed exclusively through the TypeScript compiler path.
 
@@ -96,10 +104,10 @@ Never import host-app paths directly from `packages/astropress/`. All runtime de
 
 ## BDD feature files
 
-Acceptance behaviour is documented in `features/`. Before opening a PR that changes user-visible behaviour, add or update a scenario:
+Acceptance behaviour is documented in `tooling/bdd/`. Before opening a PR that changes user-visible behaviour, add or update a scenario:
 
 ```gherkin
-# features/content/posts.feature
+# tooling/bdd/content/posts.feature
 Scenario: Editor publishes a draft post
   Given I am logged in as an editor
   When I open a draft post and click "Publish"

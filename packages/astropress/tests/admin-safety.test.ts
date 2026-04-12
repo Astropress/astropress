@@ -3,7 +3,7 @@ import path from "node:path";
 import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
 
 const adminPagesRoot = path.resolve(import.meta.dirname, "../pages/ap-admin");
-const scriptsRoot = path.resolve(import.meta.dirname, "../../../scripts");
+const scriptsRoot = path.resolve(import.meta.dirname, "../../../tooling/scripts");
 
 function listAstroFiles(root: string, files: string[] = []) {
   for (const entry of readdirSync(root)) {

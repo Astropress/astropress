@@ -32,7 +32,7 @@ jobs:
         if: matrix.language == 'rust'
       - run: bun install
         if: matrix.language == 'javascript-typescript'
-      - run: cargo build --locked
+      - run: cargo build --locked --manifest-path crates/Cargo.toml
         if: matrix.language == 'rust'
       - uses: github/codeql-action/autobuild@v3
       - uses: github/codeql-action/analyze@v3

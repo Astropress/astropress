@@ -20,7 +20,7 @@ function listHtmlFiles(root: string, files: string[] = []) {
 
 const targetRoot = process.argv[2];
 if (!targetRoot) {
-  throw new Error("Usage: bun run scripts/accessibility-audit.ts <built-html-directory>");
+  throw new Error("Usage: bun run tooling/scripts/accessibility-audit.ts <built-html-directory>");
 }
 
 const htmlFiles = listHtmlFiles(path.resolve(targetRoot));

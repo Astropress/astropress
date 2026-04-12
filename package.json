@@ -7,32 +7,37 @@
     "examples/*"
   ],
   "scripts": {
-    "bdd:lint": "bun run scripts/bdd-lint.ts",
-    "bdd:test": "bun run scripts/bdd-test.ts",
+    "bdd:lint": "bun run tooling/scripts/bdd-lint.ts",
+    "bdd:test": "bun run tooling/scripts/bdd-test.ts",
     "audit:deps": "bun audit",
-    "audit:security": "bun run scripts/security-audit.ts",
-    "audit:arch": "bun run scripts/arch-lint.ts",
-    "audit:arch:rust": "bun run scripts/rust-arch-lint.ts",
-    "audit:bundle": "bun run scripts/bundle-audit.ts",
+    "audit:security": "bun run tooling/scripts/security-audit.ts",
+    "audit:arch": "bun run tooling/scripts/arch-lint.ts",
+    "audit:arch:rust": "bun run tooling/scripts/rust-arch-lint.ts",
+    "audit:bundle": "bun run tooling/scripts/bundle-audit.ts",
     "test": "bun run audit:arch && bun run audit:arch:rust && bun run bdd:lint && bun run bdd:test && bun run --filter astropress test",
     "test:coverage": "bun run --filter astropress test:coverage",
-    "test:acceptance": "bun run scripts/run-playwright.ts --project=example-a11y --project=admin-harness-a11y --project=admin-harness-mobile --project=admin-harness-mobile-iphonese --project=admin-harness-mobile-galaxys5 --project=admin-harness-a11y-interactions --project=admin-harness-crud",
-    "test:accessibility": "bun run --filter astropress-example-gh-pages build && bun run scripts/accessibility-audit.ts examples/github-pages/dist",
-    "test:accessibility:browser": "bun run scripts/run-playwright.ts --project=example-a11y",
-    "test:accessibility:admin-harness": "bun run scripts/run-playwright.ts --project=admin-harness-a11y",
+    "test:acceptance": "bun run tooling/scripts/run-playwright.ts --project=example-a11y --project=admin-harness-a11y --project=admin-harness-mobile --project=admin-harness-mobile-iphonese --project=admin-harness-mobile-galaxys5 --project=admin-harness-a11y-interactions --project=admin-harness-crud",
+    "test:accessibility": "bun run --filter astropress-example-gh-pages build && bun run tooling/scripts/accessibility-audit.ts examples/github-pages/dist",
+    "test:accessibility:browser": "bun run tooling/scripts/run-playwright.ts --project=example-a11y",
+    "test:accessibility:admin-harness": "bun run tooling/scripts/run-playwright.ts --project=admin-harness-a11y",
     "test:admin-harness": "bun run --filter astropress-example-admin-harness check",
-    "test:cli": "source \"$HOME/.cargo/env\" && cargo test",
+    "test:cli": "source \"$HOME/.cargo/env\" && cargo test --manifest-path crates/Cargo.toml",
     "test:example": "bun run --filter astropress-example-gh-pages check",
-    "test:static-site": "bun run --filter astropress-example-gh-pages build && bun run scripts/static-site-audit.ts examples/github-pages/dist",
+    "test:static-site": "bun run --filter astropress-example-gh-pages build && bun run tooling/scripts/static-site-audit.ts examples/github-pages/dist",
     "dev:example": "bun run --filter astropress-example-gh-pages dev",
-    "audit:carbon": "bunx size-limit && bun run scripts/carbon-audit.ts --domains-only",
-    "audit:sync": "bun run scripts/check-js-sync.ts",
-    "audit:aeo": "bun run scripts/audit-aeo.ts",
-    "check:version": "bun run scripts/check-version-bump.ts",
-    "docs:api": "bun run scripts/generate-api-docs.ts"
+    "audit:carbon": "bunx size-limit --config tooling/size-limit.json && bun run tooling/scripts/carbon-audit.ts --domains-only",
+    "audit:sync": "bun run tooling/scripts/check-js-sync.ts",
+    "audit:aeo": "bun run tooling/scripts/audit-aeo.ts",
+    "check:version": "bun run tooling/scripts/check-version-bump.ts",
+    "docs:api": "bun run tooling/scripts/generate-api-docs.ts",
+    "docs:api:check": "bun run tooling/scripts/generate-api-docs.ts --check",
+    "stress:sqlite": "bun run tooling/scripts/stress-sqlite-writes.ts",
+    "sync:js": "bun run tooling/scripts/sync-js-from-ts.ts",
+    "prepare": "lefthook install"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.11.1",
+    "lefthook": "^1.11.13",
     "@playwright/test": "^1.59.1",
     "@size-limit/file": "^12.0.1",
     "astropress": "workspace:*",
@@ -40,15 +45,9 @@
     "htmlparser2": "^12.0.0",
     "jsdom": "^26.1.0",
     "playwright": "^1.59.1",
-    "size-limit": "^12.0.1"
+    "size-limit": "^12.0.1",
+    "typescript": "5.9.3"
   },
-  "size-limit": [
-    {
-      "path": "examples/github-pages/dist/**/*.js",
-      "limit": "10 KB",
-      "running": false
-    }
-  ],
   "overrides": {
     "yaml": "^2.8.3"
   },

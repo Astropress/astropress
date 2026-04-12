@@ -10,7 +10,7 @@
  * This enforces the "low operational footprint" claim in SPEC.md.
  *
  * Usage:
- *   bun scripts/carbon-audit.ts [--dist path/to/dist] [--budget 10240]
+ *   bun tooling/scripts/carbon-audit.ts [--dist path/to/dist] [--budget 10240]
  */
 
 import { readdir, readFile, stat } from "node:fs/promises";

@@ -44,7 +44,7 @@ function resolveInternalTarget(root: string, href: string, sourceFile: string) {
 
 const targetRoot = process.argv[2];
 if (!targetRoot) {
-  throw new Error("Usage: bun run scripts/static-site-audit.ts <built-static-directory>");
+  throw new Error("Usage: bun run tooling/scripts/static-site-audit.ts <built-static-directory>");
 }
 
 const resolvedRoot = path.resolve(targetRoot);

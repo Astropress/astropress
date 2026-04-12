@@ -17,8 +17,8 @@ type VerificationGroup = {
   }>;
 };
 
-const repoRoot = path.resolve(new URL("..", import.meta.url).pathname);
-const featuresRoot = path.join(repoRoot, "features");
+const repoRoot = path.resolve(new URL("../..", import.meta.url).pathname);
+const featuresRoot = path.join(repoRoot, "tooling", "bdd");
 const astropressPackageRoot = path.join(repoRoot, "packages", "astropress");
 const nexusPackageRoot = path.join(repoRoot, "packages", "astropress-nexus");
 
