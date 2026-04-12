@@ -1,6 +1,6 @@
 use std::path::Path;
 
-use crate::js_bridge::loaders::{run_db_migrations_operation, resolve_admin_db_path, resolve_local_provider};
+use crate::js_bridge::loaders::{run_db_migrations_operation, run_db_rollback_operation, resolve_admin_db_path, resolve_local_provider};
 
 pub(crate) fn run_db_migrations(
     project_dir: &Path,
@@ -49,6 +49,47 @@ pub(crate) fn run_db_migrations(
         }
         if report.applied.is_empty() {
             println!("All migrations already applied — database is up to date.");
+        }
+    }
+
+    Ok(())
+}
+
+pub(crate) fn rollback_db_migration(
+    project_dir: &Path,
+    dry_run: bool,
+) -> Result<(), String> {
+    let provider = resolve_local_provider(project_dir, None)?;
+    let db_path = resolve_admin_db_path(project_dir, provider)?;
+    let abs_db_path = project_dir.join(&db_path);
+    let abs_db_path_str = abs_db_path.to_string_lossy();
+
+    let report = run_db_rollback_operation(project_dir, &abs_db_path_str, dry_run)?;
+
+    println!("Database: {}", report.db_path);
+    println!();
+
+    match report.status.as_str() {
+        "rolled_back" => {
+            let name = report.migration_name.as_deref().unwrap_or("(unknown)");
+            println!("Rolled back migration: {name}");
+        }
+        "dry_run" => {
+            let name = report.migration_name.as_deref().unwrap_or("(unknown)");
+            println!("Dry run — would roll back: {name}");
+            println!("Re-run without --dry-run to apply.");
+        }
+        "no_rollback_sql" => {
+            let name = report.migration_name.as_deref().unwrap_or("(unknown)");
+            println!("Cannot roll back: migration `{name}` has no rollback SQL.");
+            println!("Add a companion `.down.sql` file alongside the migration to enable rollback.");
+            return Err(format!("No rollback SQL for migration: {name}"));
+        }
+        "no_migrations" => {
+            println!("No migrations have been applied — nothing to roll back.");
+        }
+        other => {
+            return Err(format!("Unexpected rollback status: {other}"));
         }
     }
 

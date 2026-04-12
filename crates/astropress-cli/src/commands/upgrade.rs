@@ -156,6 +156,20 @@ fn collect_notes(framework_version: &str) -> Vec<String> {
     notes
 }
 
+pub(crate) fn apply_upgrade(project_dir: &Path) -> Result<(), String> {
+    println!("Running pre-flight compatibility check...");
+    let report = check_upgrade_compatibility(project_dir)?;
+    print_upgrade_check_report(&report, project_dir);
+
+    println!();
+    println!("Applying pending schema migrations...");
+    crate::commands::db::run_db_migrations(project_dir, None, false)?;
+
+    println!();
+    println!("Upgrade applied. Run `astropress doctor` to verify schema.");
+    Ok(())
+}
+
 fn resolve_compatibility_doc(project_dir: &Path) -> String {
     // Try repo-relative docs/COMPATIBILITY.md first (dev environment).
     let repo_doc = crate::repo_root().join("docs").join("COMPATIBILITY.md");

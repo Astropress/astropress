@@ -33,6 +33,10 @@ pub(crate) enum Command {
         ab_testing: Option<AbTestingProvider>,
         heatmap: Option<HeatmapProvider>,
         enable_api: bool,
+        yes_defaults: bool,
+    },
+    Completions {
+        shell: String,
     },
     Dev {
         project_dir: PathBuf,
@@ -106,12 +110,19 @@ pub(crate) enum Command {
         migrations_dir: Option<String>,
         dry_run: bool,
     },
+    DbRollback {
+        project_dir: PathBuf,
+        dry_run: bool,
+    },
     Deploy {
         project_dir: PathBuf,
         target: Option<String>,
         app_host: Option<AppHost>,
     },
     UpgradeCheck {
+        project_dir: PathBuf,
+    },
+    UpgradeApply {
         project_dir: PathBuf,
     },
     Help,
@@ -150,9 +161,15 @@ pub(crate) fn parse_command(args: &[String]) -> Result<Command, String> {
         [command, subcommand, rest @ ..] if command == "db" && subcommand == "migrate" => {
             ops::parse_db_migrate_command(rest)
         }
+        [command, subcommand, rest @ ..] if command == "db" && subcommand == "rollback" => {
+            ops::parse_db_rollback_command(rest)
+        }
         [command, rest @ ..] if command == "deploy" => dev_deploy::parse_deploy_command(rest),
         [command, subcommand, rest @ ..] if command == "upgrade" && subcommand == "--check" => {
             ops::parse_upgrade_check_command(rest)
+        }
+        [command, subcommand, rest @ ..] if command == "upgrade" && subcommand == "--apply" => {
+            ops::parse_upgrade_apply_command(rest)
         }
         [command, rest @ ..] if command == "upgrade" => ops::parse_upgrade_check_command(rest),
         [command, ..] if command == "import" => {
@@ -168,7 +185,15 @@ pub(crate) fn parse_command(args: &[String]) -> Result<Command, String> {
             Err("Unsupported config subcommand. Use `astropress config migrate`.".into())
         }
         [command, ..] if command == "db" => {
-            Err("Unsupported db subcommand. Use `astropress db migrate`.".into())
+            Err("Unsupported db subcommand. Use `astropress db migrate` or `astropress db rollback`.".into())
+        }
+        [command, rest @ ..] if command == "completions" => {
+            let shell = rest.first().cloned().unwrap_or_default();
+            if shell.is_empty() {
+                Err("Usage: `astropress completions <bash|zsh|fish>`.".into())
+            } else {
+                Ok(Command::Completions { shell })
+            }
         }
         [command, ..] => Err(format!("Unsupported astropress command: `{command}`.")),
     }

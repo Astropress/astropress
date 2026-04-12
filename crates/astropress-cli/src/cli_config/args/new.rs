@@ -14,6 +14,7 @@ pub(super) fn parse_new_command(args: &[String]) -> Result<Command, String> {
     let mut ab_testing = None;
     let mut heatmap = None;
     let mut enable_api = false;
+    let mut yes_defaults = false;
     let mut index = 0;
 
     while index < args.len() {
@@ -21,6 +22,7 @@ pub(super) fn parse_new_command(args: &[String]) -> Result<Command, String> {
             "--use-published-package" => use_local_package = false,
             "--use-local-package" => use_local_package = true,
             "--enable-api" => enable_api = true,
+            "--yes" | "--defaults" => yes_defaults = true,
             "--provider" => {
                 index += 1;
                 let value = args
@@ -85,5 +87,6 @@ pub(super) fn parse_new_command(args: &[String]) -> Result<Command, String> {
         ab_testing,
         heatmap,
         enable_api,
+        yes_defaults,
     })
 }

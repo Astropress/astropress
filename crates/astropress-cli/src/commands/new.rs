@@ -23,6 +23,8 @@ pub(crate) struct ScaffoldOptions {
     pub ab_testing_flag: Option<AbTestingProvider>,
     pub heatmap_flag: Option<HeatmapProvider>,
     pub enable_api_flag: bool,
+    /// Skip interactive prompts and use `AllFeatures::defaults()` — for CI and scripted use.
+    pub yes_defaults_flag: bool,
 }
 
 pub(crate) fn scaffold_new_project(
@@ -33,7 +35,7 @@ pub(crate) fn scaffold_new_project(
     data_services: Option<DataServices>,
     options: ScaffoldOptions,
 ) -> Result<(), String> {
-    let ScaffoldOptions { analytics_flag, ab_testing_flag, heatmap_flag, enable_api_flag } = options;
+    let ScaffoldOptions { analytics_flag, ab_testing_flag, heatmap_flag, enable_api_flag, yes_defaults_flag } = options;
     if project_dir.exists() {
         let mut entries = fs::read_dir(project_dir).map_err(crate::io_error)?;
         if entries.next().transpose().map_err(crate::io_error)?.is_some() {
@@ -61,7 +63,7 @@ pub(crate) fn scaffold_new_project(
         },
     );
 
-    // Collect all feature choices. CLI flags bypass the interactive wizard (CI/scripted use).
+    // Collect all feature choices. CLI flags or --yes/--defaults bypass the interactive wizard.
     let features = if analytics_flag.is_some() || ab_testing_flag.is_some()
         || heatmap_flag.is_some() || enable_api_flag
     {
@@ -72,6 +74,8 @@ pub(crate) fn scaffold_new_project(
             enable_api: enable_api_flag,
             ..AllFeatures::defaults()
         }
+    } else if yes_defaults_flag {
+        AllFeatures::defaults()
     } else {
         prompt_all_features()
     };

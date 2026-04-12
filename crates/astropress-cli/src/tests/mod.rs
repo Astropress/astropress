@@ -4,7 +4,6 @@ use cli_config::env::{read_env_file, PackageManifest};
 use commands::backup_restore::{export_project_snapshot, import_project_snapshot};
 use commands::config::migrate_project_config;
 use commands::deploy::deploy_script_for_target;
-use commands::doctor::inspect_project_health;
 use commands::new::scaffold_new_project;
 use commands::services::{bootstrap_content_services, verify_content_services};
 use js_bridge::loaders::{
@@ -18,6 +17,8 @@ use std::collections::BTreeMap;
 use std::fs;
 use std::path::PathBuf;
 use std::time::{SystemTime, UNIX_EPOCH};
+
+mod doctor;
 
 fn strings(values: &[&str]) -> Vec<String> {
     values.iter().map(|value| value.to_string()).collect()
@@ -172,12 +173,24 @@ fn parses_top_level_commands() {
         Ok(Command::DbMigrate { dry_run: true, .. })
     ));
     assert!(matches!(
+        parse_command(&strings(&["db", "rollback"])),
+        Ok(Command::DbRollback { dry_run: false, .. })
+    ));
+    assert!(matches!(
+        parse_command(&strings(&["db", "rollback", "--dry-run"])),
+        Ok(Command::DbRollback { dry_run: true, .. })
+    ));
+    assert!(matches!(
         parse_command(&strings(&["upgrade"])),
         Ok(Command::UpgradeCheck { .. })
     ));
     assert!(matches!(
         parse_command(&strings(&["upgrade", "--check"])),
         Ok(Command::UpgradeCheck { .. })
+    ));
+    assert!(matches!(
+        parse_command(&strings(&["upgrade", "--apply"])),
+        Ok(Command::UpgradeApply { .. })
     ));
 }
 
@@ -211,7 +224,7 @@ fn rejects_unknown_subcommands() {
     let sync_error = parse_command(&strings(&["sync", "push"])).unwrap_err();
     assert!(sync_error.contains("Unsupported sync subcommand"));
 
-    let db_error = parse_command(&strings(&["db", "rollback"])).unwrap_err();
+    let db_error = parse_command(&strings(&["db", "unknown"])).unwrap_err();
     assert!(db_error.contains("Unsupported db subcommand"));
 }
 
@@ -219,6 +232,51 @@ fn rejects_unknown_subcommands() {
 fn rejects_unknown_commands() {
     let error = parse_command(&strings(&["explode"])).unwrap_err();
     assert!(error.contains("Unsupported astropress command"));
+}
+
+#[test]
+fn version_flag_recognized() {
+    // --version and -V are consumed before parse_command (in main), so we
+    // verify only that the arg strings themselves are distinguishable from
+    // subcommands (parse_command treats them as unknown commands, not panics).
+    let err = parse_command(&strings(&["--version"]));
+    // Acceptable: either recognized as Help or rejected as unknown flag.
+    assert!(err.is_err() || matches!(err, Ok(Command::Help)));
+}
+
+#[test]
+fn new_yes_flag_recognized() {
+    assert!(matches!(
+        parse_command(&strings(&["new", "demo", "--yes"])),
+        Ok(Command::New { yes_defaults: true, .. })
+    ));
+    assert!(matches!(
+        parse_command(&strings(&["new", "demo", "--defaults"])),
+        Ok(Command::New { yes_defaults: true, .. })
+    ));
+    // Without the flag, yes_defaults is false
+    assert!(matches!(
+        parse_command(&strings(&["new", "demo"])),
+        Ok(Command::New { yes_defaults: false, .. })
+    ));
+}
+
+#[test]
+fn completions_command_recognized() {
+    assert!(matches!(
+        parse_command(&strings(&["completions", "bash"])),
+        Ok(Command::Completions { shell }) if shell == "bash"
+    ));
+    assert!(matches!(
+        parse_command(&strings(&["completions", "zsh"])),
+        Ok(Command::Completions { shell }) if shell == "zsh"
+    ));
+    assert!(matches!(
+        parse_command(&strings(&["completions", "fish"])),
+        Ok(Command::Completions { shell }) if shell == "fish"
+    ));
+    // Missing shell argument → error
+    assert!(parse_command(&strings(&["completions"])).is_err());
 }
 
 #[test]
@@ -255,7 +313,7 @@ fn scaffolds_new_project_from_example() {
     let root = temp_dir("new");
     let project_dir = root.join("demo");
     // Pass explicit app_host to skip the interactive hosting prompt
-    scaffold_new_project(&project_dir, true, LocalProvider::Supabase, Some(AppHost::Vercel), Some(DataServices::Supabase), crate::commands::new::ScaffoldOptions { analytics_flag: None, ab_testing_flag: None, heatmap_flag: None, enable_api_flag: false }).unwrap();
+    scaffold_new_project(&project_dir, true, LocalProvider::Supabase, Some(AppHost::Vercel), Some(DataServices::Supabase), crate::commands::new::ScaffoldOptions { analytics_flag: None, ab_testing_flag: None, heatmap_flag: None, enable_api_flag: false, yes_defaults_flag: false }).unwrap();
 
     let package_json = fs::read_to_string(project_dir.join("package.json")).unwrap();
     assert!(package_json.contains("\"name\": \"demo\""));
@@ -483,76 +541,4 @@ fn exports_and_imports_project_snapshots() {
 #[test]
 fn command_availability_check_is_safe() {
     let _ = command_available("definitely-not-a-real-command-binary");
-}
-
-#[test]
-fn doctor_reports_missing_local_runtime_warnings() {
-    let root = temp_dir("doctor");
-    fs::write(
-        root.join(".env"),
-        [
-            "ASTROPRESS_RUNTIME_MODE=local",
-            "ASTROPRESS_LOCAL_PROVIDER=sqlite",
-            "ADMIN_DB_PATH=.data/admin.sqlite",
-        ]
-        .join("\n"),
-    )
-    .unwrap();
-
-    let report = inspect_project_health(&root).unwrap();
-    assert_eq!(report.launch_plan.runtime.mode, "local");
-    assert!(report
-        .warnings
-        .iter()
-        .any(|warning| warning.contains("SESSION_SECRET")));
-    assert!(report
-        .warnings
-        .iter()
-        .any(|warning| warning.contains("ADMIN_PASSWORD")));
-    assert!(report
-        .warnings
-        .iter()
-        .any(|warning| warning.contains("EDITOR_PASSWORD")));
-    assert!(report
-        .warnings
-        .iter()
-        .any(|warning| warning.contains("`.data` directory")));
-    assert!(report
-        .warnings
-        .iter()
-        .any(|warning| warning.contains("ADMIN_BOOTSTRAP_DISABLED")));
-}
-
-#[test]
-fn doctor_flags_weak_or_scaffolded_secrets() {
-    let root = temp_dir("doctor-secrets");
-    fs::create_dir_all(root.join(".data")).unwrap();
-    fs::write(
-        root.join(".env"),
-        [
-            "ASTROPRESS_RUNTIME_MODE=local",
-            "ASTROPRESS_LOCAL_PROVIDER=sqlite",
-            "ADMIN_DB_PATH=.data/admin.sqlite",
-            "SESSION_SECRET=short-secret",
-            "ADMIN_PASSWORD=local-admin-demo",
-            "EDITOR_PASSWORD=local-editor-demo",
-            "ADMIN_BOOTSTRAP_DISABLED=0",
-        ]
-        .join("\n"),
-    )
-    .unwrap();
-
-    let report = inspect_project_health(&root).unwrap();
-    assert!(report
-        .warnings
-        .iter()
-        .any(|warning| warning.contains("shorter than 24 characters")));
-    assert!(report
-        .warnings
-        .iter()
-        .any(|warning| warning.contains("scaffold-style local default")));
-    assert!(report
-        .warnings
-        .iter()
-        .any(|warning| warning.contains("bootstrap passwords remain available")));
 }

@@ -14,9 +14,20 @@ pub(crate) struct DoctorReport {
 }
 
 pub(crate) fn inspect_project_health(project_dir: &Path) -> Result<DoctorReport, String> {
+    // Capture filesystem state BEFORE invoking the JS bridge. Loading the launch plan
+    // instantiates the local adapter, which may seed an admin SQLite file on disk.
+    let data_dir = project_dir.join(".data");
+    let data_dir_existed = data_dir.exists();
+
     let env_values = read_env_file(project_dir)?;
     let env_contract = load_project_env_contract(project_dir)?;
     let launch_plan = load_project_launch_plan(project_dir, None, None, None)?;
+    let admin_db_path = project_dir.join(&launch_plan.admin_db_path);
+    let admin_db_parent_existed = admin_db_path
+        .parent()
+        .map(|parent| parent.exists())
+        .unwrap_or(true);
+
     let mut warnings = Vec::new();
 
     if env_values.is_empty() {
@@ -143,17 +154,15 @@ pub(crate) fn inspect_project_health(project_dir: &Path) -> Result<DoctorReport,
     }
 
     if launch_plan.runtime.mode == "local" {
-        let data_dir = project_dir.join(".data");
-        if !data_dir.exists() {
+        if !data_dir_existed {
             warnings.push(format!(
                 "Local runtime expects a `.data` directory, but {} does not exist.",
                 data_dir.display()
             ));
         }
 
-        let admin_db_path = project_dir.join(&launch_plan.admin_db_path);
-        if let Some(parent) = admin_db_path.parent() {
-            if !parent.exists() {
+        if !admin_db_parent_existed {
+            if let Some(parent) = admin_db_path.parent() {
                 warnings.push(format!(
                     "The admin database directory {} does not exist yet.",
                     parent.display()

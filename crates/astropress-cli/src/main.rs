@@ -22,9 +22,10 @@ pub(crate) use utils::{
 pub(crate) use scaffold::write_embedded_template;
 
 use cli_config::args::{parse_command, print_help, Command};
+use commands::completions::print_completions;
 use commands::backup_restore::{export_project_snapshot, import_project_snapshot};
 use commands::config::migrate_project_config;
-use commands::db::run_db_migrations;
+use commands::db::{run_db_migrations, rollback_db_migration};
 use commands::deploy::deploy_project;
 use commands::dev::run_dev_server;
 use commands::doctor::{inspect_project_health, print_doctor_report, print_doctor_report_json};
@@ -32,10 +33,16 @@ use commands::import_wordpress::stage_wordpress_import;
 use commands::import_wix::stage_wix_import;
 use commands::new::{scaffold_new_project, run_post_scaffold_setup};
 use commands::services::{bootstrap_content_services, print_content_services_report, verify_content_services};
-use commands::upgrade::{check_upgrade_compatibility, print_upgrade_check_report};
+use commands::upgrade::{apply_upgrade, check_upgrade_compatibility, print_upgrade_check_report};
 
 fn main() -> ExitCode {
     let raw_args = std::env::args().skip(1).collect::<Vec<_>>();
+
+    // Handle --version / -V before any other parsing.
+    if raw_args.iter().any(|a| a == "--version" || a == "-V") {
+        println!("{}", env!("CARGO_PKG_VERSION"));
+        return ExitCode::SUCCESS;
+    }
 
     // Strip global --plain / --no-tui before subcommand parsing.
     let plain = raw_args.iter().any(|a| a == "--plain" || a == "--no-tui");
@@ -56,7 +63,8 @@ fn main() -> ExitCode {
             ab_testing,
             heatmap,
             enable_api,
-        }) => match scaffold_new_project(&project_dir, use_local_package, provider, app_host, data_services, commands::new::ScaffoldOptions { analytics_flag: analytics, ab_testing_flag: ab_testing, heatmap_flag: heatmap, enable_api_flag: enable_api })
+            yes_defaults,
+        }) => match scaffold_new_project(&project_dir, use_local_package, provider, app_host, data_services, commands::new::ScaffoldOptions { analytics_flag: analytics, ab_testing_flag: ab_testing, heatmap_flag: heatmap, enable_api_flag: enable_api, yes_defaults_flag: yes_defaults })
             .and_then(|()| run_post_scaffold_setup(&project_dir))
         {
             Ok(()) => ExitCode::SUCCESS,
@@ -195,6 +203,12 @@ fn main() -> ExitCode {
                 Err(error) => fail(error),
             }
         }
+        Ok(Command::DbRollback { project_dir, dry_run }) => {
+            match rollback_db_migration(&project_dir, dry_run) {
+                Ok(()) => ExitCode::SUCCESS,
+                Err(error) => fail(error),
+            }
+        }
         Ok(Command::ConfigMigrate { project_dir, dry_run }) => {
             match migrate_project_config(&project_dir, dry_run) {
                 Ok(changed) => {
@@ -220,12 +234,20 @@ fn main() -> ExitCode {
                 Err(error) => fail(error),
             }
         }
+        Ok(Command::UpgradeApply { project_dir }) => match apply_upgrade(&project_dir) {
+            Ok(()) => ExitCode::SUCCESS,
+            Err(error) => fail(error),
+        },
         Ok(Command::Deploy {
             project_dir,
             target,
             app_host,
         }) => match deploy_project(&project_dir, target.as_deref(), app_host) {
             Ok(code) => code,
+            Err(error) => fail(error),
+        },
+        Ok(Command::Completions { shell }) => match print_completions(&shell) {
+            Ok(()) => ExitCode::SUCCESS,
             Err(error) => fail(error),
         },
         Ok(Command::Help) => {

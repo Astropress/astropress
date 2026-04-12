@@ -1,12 +1,13 @@
 pub(crate) fn print_help() {
-    println!("astropress-cli");
+    println!("astropress-cli  v{}", env!("CARGO_PKG_VERSION"));
     println!();
     println!("Global flags:");
+    println!("  --version / -V        Print the CLI version and exit");
     println!("  --plain / --no-tui    Disable interactive prompts and progress bars (for CI/AI use)");
     println!();
     println!("Commands:");
-    println!("  astropress new [project-dir] [--app-host <host>] [--content-services <services>] [--use-local-package|--use-published-package]");
-    println!("  astropress init [project-dir] [--app-host <host>] [--content-services <services>]  (alias for `new`)");
+    println!("  astropress new [project-dir] [--app-host <host>] [--content-services <services>] [--yes] [--use-local-package|--use-published-package]");
+    println!("  astropress init [project-dir] [--app-host <host>] [--content-services <services>] [--yes]  (alias for `new`)");
     println!("  astropress dev [project-dir] [--app-host <host>] [--content-services <services>]");
     println!("  astropress import wordpress --source <export.xml> [--project-dir <dir>] [--artifact-dir <dir>] [--download-media] [--apply-local] [--resume]");
     println!("  astropress import wordpress --url <https://mysite.com> [--credentials-file <file>] [--username <u>] [--password <p>] [--crawl-pages[=playwright]] [--project-dir <dir>] [--artifact-dir <dir>] [--download-media] [--apply-local]");
@@ -19,9 +20,15 @@ pub(crate) fn print_help() {
     println!("  astropress services verify [--project-dir <dir>]");
     println!("  astropress config migrate [--project-dir <dir>] [--dry-run]");
     println!("  astropress db migrate [--project-dir <dir>] [--migrations-dir <dir>] [--dry-run]");
+    println!("  astropress db rollback [--project-dir <dir>] [--dry-run]");
     println!("  astropress sync export [--project-dir <dir>] [--out <snapshot-dir>]");
     println!("  astropress sync import --from <snapshot-dir> [--project-dir <dir>]");
     println!("  astropress deploy [--project-dir <dir>] [--app-host <host>] [--target github-pages|cloudflare|vercel|netlify|render-static|render-web|gitlab-pages|runway|custom]");
+    println!();
+    println!("  astropress completions <bash|zsh|fish>          Print shell completion script");
+    println!();
+    println!("New project flags:");
+    println!("  --yes / --defaults    Skip interactive prompts and use defaults (for CI use)");
     println!();
     println!("Crawl modes:");
     println!("  --crawl-pages              Fast fetch-based crawl (uses sitemap + HTML fetch)");

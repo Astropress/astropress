@@ -367,6 +367,40 @@ console.log(JSON.stringify(result));
     run_package_json_command(project_dir, detect_package_manager(project_dir), &script)
 }
 
+#[derive(Debug, Deserialize)]
+pub(crate) struct DbRollbackReport {
+    #[serde(rename = "dbPath")]
+    pub(crate) db_path: String,
+    #[serde(rename = "migrationName")]
+    pub(crate) migration_name: Option<String>,
+    pub(crate) status: String,
+    #[serde(rename = "dryRun")]
+    pub(crate) _dry_run: bool,
+}
+
+pub(crate) fn run_db_rollback_operation(
+    project_dir: &Path,
+    db_path: &str,
+    dry_run: bool,
+) -> Result<DbRollbackReport, String> {
+    let module = package_module_import("db-migrate-ops.js", Some(project_dir))?;
+    let module_literal = serde_json::to_string(&module).map_err(|error| error.to_string())?;
+    let db_path_json = serde_json::to_string(db_path).map_err(|error| error.to_string())?;
+    let script = format!(
+        r#"import {{ rollbackAstropressLastMigration }} from {module};
+const result = rollbackAstropressLastMigration({{
+  dbPath: {db_path},
+  dryRun: {dry_run},
+}});
+console.log(JSON.stringify(result));
+"#,
+        module = module_literal,
+        db_path = db_path_json,
+        dry_run = dry_run,
+    );
+    run_package_json_command(project_dir, detect_package_manager(project_dir), &script)
+}
+
 pub(crate) fn run_content_services_operation(
     project_dir: &Path,
     export_name: &str,

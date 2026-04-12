@@ -1,4 +1,5 @@
 pub(crate) mod backup_restore;
+pub(crate) mod completions;
 pub(crate) mod config;
 pub(crate) mod db;
 pub(crate) mod deploy;

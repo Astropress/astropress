@@ -260,6 +260,35 @@ pub(super) fn parse_db_migrate_command(args: &[String]) -> Result<Command, Strin
     Ok(Command::DbMigrate { project_dir, migrations_dir, dry_run })
 }
 
+pub(super) fn parse_db_rollback_command(args: &[String]) -> Result<Command, String> {
+    let mut project_dir = env::current_dir().unwrap_or_else(|_| PathBuf::from("."));
+    let mut dry_run = false;
+    let mut index = 0;
+
+    while index < args.len() {
+        match args[index].as_str() {
+            "--project-dir" => {
+                index += 1;
+                let value = args
+                    .get(index)
+                    .ok_or_else(|| "Missing value after `--project-dir`.".to_string())?;
+                project_dir = PathBuf::from(value);
+            }
+            "--dry-run" => {
+                dry_run = true;
+            }
+            other => {
+                return Err(format!(
+                    "Unsupported astropress db rollback option: `{other}`."
+                ))
+            }
+        }
+        index += 1;
+    }
+
+    Ok(Command::DbRollback { project_dir, dry_run })
+}
+
 pub(super) fn parse_upgrade_check_command(args: &[String]) -> Result<Command, String> {
     let mut project_dir = env::current_dir().unwrap_or_else(|_| PathBuf::from("."));
     let mut index = 0;
@@ -286,6 +315,34 @@ pub(super) fn parse_upgrade_check_command(args: &[String]) -> Result<Command, St
     }
 
     Ok(Command::UpgradeCheck { project_dir })
+}
+
+pub(super) fn parse_upgrade_apply_command(args: &[String]) -> Result<Command, String> {
+    let mut project_dir = env::current_dir().unwrap_or_else(|_| PathBuf::from("."));
+    let mut index = 0;
+
+    while index < args.len() {
+        match args[index].as_str() {
+            "--project-dir" => {
+                index += 1;
+                let value = args
+                    .get(index)
+                    .ok_or_else(|| "Missing value after `--project-dir`.".to_string())?;
+                project_dir = PathBuf::from(value);
+            }
+            "--apply" => {
+                // --apply is the subcommand; accept it as a no-op flag if repeated.
+            }
+            other => {
+                return Err(format!(
+                    "Unsupported astropress upgrade --apply option: `{other}`."
+                ))
+            }
+        }
+        index += 1;
+    }
+
+    Ok(Command::UpgradeApply { project_dir })
 }
 
 pub(super) fn parse_config_migrate_command(args: &[String]) -> Result<Command, String> {
