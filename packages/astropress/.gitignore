@@ -1,3 +1,4 @@
 # Generated JS companions — tsc output, not maintained by hand.
 # Run `bun run build` to regenerate for npm publish.
 src/**/*.js
+/index.js
