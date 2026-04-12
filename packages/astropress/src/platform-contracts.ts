@@ -221,6 +221,8 @@ export interface ContentListOptions {
   limit?: number;
   /** Number of records to skip (for pagination). */
   offset?: number;
+  /** Full-text search query. Only applied when search.enabled is true in CmsConfig. */
+  query?: string;
 }
 
 export interface ContentStore {

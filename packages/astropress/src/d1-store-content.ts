@@ -334,3 +334,11 @@ export function createD1ContentReadPart(db: D1DatabaseLike): D1AdminReadStore["c
     },
   };
 }
+
+export async function searchD1ContentStates(db: D1DatabaseLike, query: string): Promise<ContentRecord[]> {
+  const results = await db
+    .prepare(`SELECT co.* FROM content_overrides co WHERE co.rowid IN (SELECT rowid FROM content_fts(?) ORDER BY rank)`)
+    .bind(query)
+    .all<Record<string, unknown>>();
+  return (results.results ?? []) as unknown as ContentRecord[];
+}

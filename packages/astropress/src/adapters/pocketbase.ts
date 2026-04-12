@@ -20,7 +20,7 @@ export type AstropressPocketbaseAdapterOptions = Omit<AstropressInMemoryPlatform
 export function createAstropressPocketbaseAdapter(options: AstropressPocketbaseAdapterOptions = {}) {
   return createAstropressHostedPlatformAdapter({
     ...options,
-    providerName: "custom",
+    providerName: "pocketbase",
     defaultCapabilities: {
       ...options.defaultCapabilities,
       hostedAdmin: true,
@@ -67,7 +67,7 @@ export function createAstropressPocketbaseHostedAdapter(
   const config = options.config ?? readAstropressPocketbaseHostedConfig(options.env);
   if (!options.backingAdapter && !options.content && !options.media && !options.revisions && !options.auth) {
     return createAstropressHostedApiAdapter({
-      providerName: "custom",
+      providerName: "pocketbase",
       apiBaseUrl: config.apiBaseUrl,
       accessToken: `${config.email}:${config.password}`,
       previewBaseUrl: `${config.previewBaseUrl}/preview`,
@@ -86,7 +86,7 @@ export function createAstropressPocketbaseHostedAdapter(
 
   return createAstropressHostedPlatformAdapter({
     ...options,
-    providerName: "custom",
+    providerName: "pocketbase",
     defaultCapabilities: {
       ...options.defaultCapabilities,
       hostedAdmin: true,

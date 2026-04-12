@@ -33,6 +33,8 @@
     "./adapters/supabase": "./src/adapters/supabase.ts",
     "./adapters/appwrite": "./src/adapters/appwrite.ts",
     "./adapters/pocketbase": "./src/adapters/pocketbase.ts",
+    "./adapters/neon": "./src/adapters/neon.ts",
+    "./adapters/nhost": "./src/adapters/nhost.ts",
     "./adapters/supabase-sqlite": "./src/adapters/supabase-sqlite.ts",
     "./adapters/runway": "./src/adapters/runway.ts",
     "./adapters/runway-sqlite": "./src/adapters/runway-sqlite.ts",
@@ -155,10 +157,10 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/withastro/astropress"
+    "url": "https://github.com/astropress/astropress"
   },
   "bugs": {
-    "url": "https://github.com/withastro/astropress/issues"
+    "url": "https://github.com/astropress/astropress/issues"
   },
-  "homepage": "https://github.com/withastro/astropress#readme"
+  "homepage": "https://github.com/astropress/astropress#readme"
 }
