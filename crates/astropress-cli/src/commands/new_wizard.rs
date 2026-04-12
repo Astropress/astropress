@@ -3,8 +3,9 @@
 
 use crate::features::{
     AllFeatures, ChatChoice, CmsChoice, CommunityChoice, CommerceChoice, CourseChoice,
-    DonationChoices, EmailChoice, ForumChoice, NotifyChoice, PaymentChoice, ScheduleChoice,
-    SearchChoice, TestimonialChoice,
+    CrmChoice, DonationChoices, EmailChoice, EventChoice, FormsChoice, ForumChoice,
+    KnowledgeBaseChoice, NotifyChoice, PaymentChoice, PodcastChoice, ScheduleChoice,
+    SearchChoice, SsoChoice, StatusChoice, TransactionalEmailChoice, VideoChoice,
 };
 use crate::providers::{
     AbTestingProvider, AnalyticsProvider, HeatmapProvider,
@@ -130,18 +131,23 @@ pub(crate) fn prompt_all_features() -> AllFeatures {
         CourseChoice::FrappeLms
     } else { CourseChoice::None };
 
-    // ── testimonials / surveys ────────────────────────────────────────────
-    let testimonials = if Confirm::with_theme(t)
-        .with_prompt("Add testimonials / surveys?")
+    // ── forms / surveys / testimonials ────────────────────────────────────
+    let forms = if Confirm::with_theme(t)
+        .with_prompt("Add forms / surveys / testimonials?")
         .default(false).interact().unwrap_or(false)
     {
-        let _ = Select::with_theme(t).with_prompt("Testimonials + surveys").items(&[
+        match Select::with_theme(t).with_prompt("Forms provider").items(&[
             "Formbricks  — MIT community edition; survey + testimonial collection, REST API;\n\
              \x20            use when you need NPS surveys, onboarding flows, or social proof\n\
              \x20            collection  (formbricks.com free tier or self-host)",
-        ]).default(0).interact().unwrap_or(0);
-        TestimonialChoice::Formbricks
-    } else { TestimonialChoice::None };
+            "Typebot     — AGPL 3.0; visual chatbot + conversational form builder;\n\
+             \x20            use when you want interactive flows embedded on any page\n\
+             \x20            (typebot.io free tier or self-host)",
+        ]).default(0).interact().unwrap_or(0) {
+            1 => FormsChoice::Typebot,
+            _ => FormsChoice::Formbricks,
+        }
+    } else { FormsChoice::None };
 
     // ── donations / sponsorships ──────────────────────────────────────────
     let donations = if Confirm::with_theme(t)
@@ -241,6 +247,112 @@ pub(crate) fn prompt_all_features() -> AllFeatures {
         }
     } else { ScheduleChoice::None };
 
+    // ── video hosting ─────────────────────────────────────────────────────
+    let video = if Confirm::with_theme(t)
+        .with_prompt("Add self-hosted video?")
+        .default(false).interact().unwrap_or(false)
+    {
+        let _ = Select::with_theme(t).with_prompt("Video provider").items(&[
+            "PeerTube  — AGPL 3.0; self-hosted video with embeds + ActivityPub federation;\n\
+             \x20          use when you want to host video without YouTube dependency  (Fly.io / Railway free)",
+        ]).default(0).interact().unwrap_or(0);
+        VideoChoice::PeerTube
+    } else { VideoChoice::None };
+
+    // ── podcast hosting ───────────────────────────────────────────────────
+    let podcast = if Confirm::with_theme(t)
+        .with_prompt("Add podcast hosting?")
+        .default(false).interact().unwrap_or(false)
+    {
+        let _ = Select::with_theme(t).with_prompt("Podcast provider").items(&[
+            "Castopod  — AGPL 3.0; self-hosted podcast hosting; RSS feed, embeddable player,\n\
+             \x20          ActivityPub federation; use when you run a podcast alongside your site\n\
+             \x20          (Fly.io / Railway free)",
+        ]).default(0).interact().unwrap_or(0);
+        PodcastChoice::Castopod
+    } else { PodcastChoice::None };
+
+    // ── event management / ticketing ──────────────────────────────────────
+    let events = if Confirm::with_theme(t)
+        .with_prompt("Add event management / ticketing?")
+        .default(false).interact().unwrap_or(false)
+    {
+        match Select::with_theme(t).with_prompt("Events platform").items(&[
+            "Hi.Events  — AGPL 3.0; event pages, RSVP, ticket sales; use for community orgs\n\
+             \x20           and nonprofits running public events  (self-host free)",
+            "Pretix     — Apache 2.0; established ticketing with seating charts and complex\n\
+             \x20           ticket types; use when you need box-office-level features  (Fly.io / Railway free)",
+        ]).default(0).interact().unwrap_or(0) {
+            1 => EventChoice::Pretix,
+            _ => EventChoice::HiEvents,
+        }
+    } else { EventChoice::None };
+
+    // ── transactional email ───────────────────────────────────────────────
+    let transactional_email = if Confirm::with_theme(t)
+        .with_prompt("Add transactional email?  (password resets, order confirmations, notifications)")
+        .default(false).interact().unwrap_or(false)
+    {
+        let _ = Select::with_theme(t).with_prompt("Transactional email").items(&[
+            "Postal  — MIT; self-hosted SMTP server for triggered emails; use alongside\n\
+             \x20        Listmonk (which handles campaigns) for a fully self-hosted email stack\n\
+             \x20        (Fly.io / Railway free)",
+        ]).default(0).interact().unwrap_or(0);
+        TransactionalEmailChoice::Postal
+    } else { TransactionalEmailChoice::None };
+
+    // ── uptime / status page ──────────────────────────────────────────────
+    let status = if Confirm::with_theme(t)
+        .with_prompt("Add uptime monitoring + status page?")
+        .default(false).interact().unwrap_or(false)
+    {
+        let _ = Select::with_theme(t).with_prompt("Status / uptime").items(&[
+            "Uptime Kuma  — MIT; self-hosted uptime monitor with a public status page;\n\
+             \x20             use to show service health to your users  (Fly.io / Railway free)",
+        ]).default(0).interact().unwrap_or(0);
+        StatusChoice::UptimeKuma
+    } else { StatusChoice::None };
+
+    // ── knowledge base ────────────────────────────────────────────────────
+    let knowledge_base = if Confirm::with_theme(t)
+        .with_prompt("Add a knowledge base / wiki?")
+        .default(false).interact().unwrap_or(false)
+    {
+        let _ = Select::with_theme(t).with_prompt("Knowledge base").items(&[
+            "BookStack  — MIT; structured wiki and docs with shelves, books, and chapters;\n\
+             \x20           use for a public help center or internal documentation  (Fly.io / Railway free)",
+        ]).default(0).interact().unwrap_or(0);
+        KnowledgeBaseChoice::BookStack
+    } else { KnowledgeBaseChoice::None };
+
+    // ── CRM ───────────────────────────────────────────────────────────────
+    let crm = if Confirm::with_theme(t)
+        .with_prompt("Add a CRM?  (track contacts, donors, or leads)")
+        .default(false).interact().unwrap_or(false)
+    {
+        let _ = Select::with_theme(t).with_prompt("CRM").items(&[
+            "Twenty  — AGPL 3.0; modern open-source CRM; use for nonprofits tracking donors\n\
+             \x20        and volunteers, or businesses tracking leads  (Fly.io / Railway free)",
+        ]).default(0).interact().unwrap_or(0);
+        CrmChoice::Twenty
+    } else { CrmChoice::None };
+
+    // ── SSO / identity ────────────────────────────────────────────────────
+    let sso = if Confirm::with_theme(t)
+        .with_prompt("Add SSO / identity provider?  (unified login for staff across services)")
+        .default(false).interact().unwrap_or(false)
+    {
+        match Select::with_theme(t).with_prompt("Identity provider").items(&[
+            "Authentik  — MIT; social login, MFA, LDAP; use when multiple self-hosted services\n\
+             \x20           need a single sign-on  (Fly.io / Railway free)",
+            "Zitadel    — Apache 2.0; hosted-or-self-hosted; use when you need fine-grained\n\
+             \x20           org/team roles  (zitadel.com free tier or self-host)",
+        ]).default(0).interact().unwrap_or(0) {
+            1 => SsoChoice::Zitadel,
+            _ => SsoChoice::Authentik,
+        }
+    } else { SsoChoice::None };
+
     // ── job board content type ────────────────────────────────────────────
     let job_board = Confirm::with_theme(t)
         .with_prompt("Scaffold a job board content type?  (generates content-types.example.ts)")
@@ -289,8 +401,9 @@ pub(crate) fn prompt_all_features() -> AllFeatures {
         .default(false).interact().unwrap_or(false);
 
     AllFeatures {
-        cms, email, commerce, community, search, courses, testimonials, donations,
-        forum, chat, payments, notify, schedule, job_board,
-        analytics, ab_testing, heatmap, enable_api,
+        cms, email, transactional_email, commerce, community, search, courses, forms,
+        donations, forum, chat, payments, notify, schedule, video, podcast, events,
+        status, knowledge_base, crm, sso, job_board, analytics, ab_testing, heatmap,
+        enable_api,
     }
 }

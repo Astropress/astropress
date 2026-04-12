@@ -3,8 +3,9 @@
 
 use crate::features::{
     AllFeatures, ChatChoice, CmsChoice, CommerceChoice, CommunityChoice, CourseChoice,
-    EmailChoice, ForumChoice, NotifyChoice, PaymentChoice, ScheduleChoice,
-    SearchChoice, TestimonialChoice,
+    CrmChoice, EmailChoice, EventChoice, FormsChoice, ForumChoice, KnowledgeBaseChoice,
+    NotifyChoice, PaymentChoice, PodcastChoice, ScheduleChoice, SearchChoice,
+    SsoChoice, StatusChoice, TransactionalEmailChoice, VideoChoice,
 };
 use crate::providers::{AbTestingProvider, AnalyticsProvider, AppHost, HeatmapProvider};
 
@@ -53,10 +54,14 @@ pub(crate) fn feature_env_stubs(f: &AllFeatures) -> String {
         lines.extend(&["# Frappe LMS (courses)",
             "FRAPPE_LMS_URL=http://localhost:8000", "FRAPPE_LMS_API_KEY=replace-me"]);
     }
-    if f.testimonials == TestimonialChoice::Formbricks {
-        lines.extend(&["# Formbricks (testimonials + surveys)",
+    if f.forms == FormsChoice::Formbricks {
+        lines.extend(&["# Formbricks (forms + surveys + testimonials — MIT community edition)",
             "FORMBRICKS_URL=http://localhost:3000", "FORMBRICKS_API_KEY=replace-me",
             "FORMBRICKS_ENVIRONMENT_ID=replace-me"]);
+    }
+    if f.forms == FormsChoice::Typebot {
+        lines.extend(&["# Typebot (conversational forms + chatbot flows — AGPL 3.0)",
+            "TYPEBOT_URL=https://typebot.io", "TYPEBOT_API_TOKEN=replace-me"]);
     }
     if f.donations.polar {
         lines.extend(&["# Polar (donations / sponsorships)",
@@ -113,6 +118,53 @@ pub(crate) fn feature_env_stubs(f: &AllFeatures) -> String {
     if f.schedule == ScheduleChoice::CalCom {
         lines.extend(&["# Cal.com (scheduling — AGPL 3.0)",
             "CALCOM_API_URL=https://api.cal.com/v1", "CALCOM_API_KEY=replace-me"]);
+    }
+    if f.video == VideoChoice::PeerTube {
+        lines.extend(&["# PeerTube (self-hosted video — AGPL 3.0)",
+            "PEERTUBE_URL=http://localhost:9000", "PEERTUBE_API_TOKEN=replace-me"]);
+    }
+    if f.podcast == PodcastChoice::Castopod {
+        lines.extend(&["# Castopod (self-hosted podcast hosting — AGPL 3.0)",
+            "CASTOPOD_URL=http://localhost:8000", "CASTOPOD_API_TOKEN=replace-me"]);
+    }
+    if f.events == EventChoice::HiEvents {
+        lines.extend(&["# Hi.Events (event management + ticketing — AGPL 3.0)",
+            "HIEVENTS_URL=http://localhost:8080", "HIEVENTS_API_KEY=replace-me"]);
+    }
+    if f.events == EventChoice::Pretix {
+        lines.extend(&["# Pretix (event ticketing — Apache 2.0)",
+            "PRETIX_URL=http://localhost:8000", "PRETIX_API_TOKEN=replace-me",
+            "PRETIX_ORGANIZER=replace-me", "PRETIX_EVENT=replace-me"]);
+    }
+    if f.transactional_email == TransactionalEmailChoice::Postal {
+        lines.extend(&["# Postal (transactional email server — MIT)",
+            "# Use for password resets, order confirmations, notifications.",
+            "# Listmonk handles newsletter campaigns; Postal handles triggered emails.",
+            "POSTAL_SMTP_HOST=localhost", "POSTAL_SMTP_PORT=587",
+            "POSTAL_SMTP_USERNAME=replace-me", "POSTAL_SMTP_PASSWORD=replace-me",
+            "POSTAL_FROM_ADDRESS=noreply@yourdomain.com"]);
+    }
+    if f.status == StatusChoice::UptimeKuma {
+        lines.extend(&["# Uptime Kuma (uptime monitoring + status page — MIT)",
+            "UPTIME_KUMA_URL=http://localhost:3001"]);
+    }
+    if f.knowledge_base == KnowledgeBaseChoice::BookStack {
+        lines.extend(&["# BookStack (knowledge base / wiki — MIT)",
+            "BOOKSTACK_URL=http://localhost:6875",
+            "BOOKSTACK_TOKEN_ID=replace-me", "BOOKSTACK_TOKEN_SECRET=replace-me"]);
+    }
+    if f.crm == CrmChoice::Twenty {
+        lines.extend(&["# Twenty CRM (open-source CRM — AGPL 3.0)",
+            "TWENTY_URL=http://localhost:3000", "TWENTY_API_KEY=replace-me"]);
+    }
+    if f.sso == SsoChoice::Authentik {
+        lines.extend(&["# Authentik (identity provider — MIT)",
+            "AUTHENTIK_URL=http://localhost:9000", "AUTHENTIK_TOKEN=replace-me"]);
+    }
+    if f.sso == SsoChoice::Zitadel {
+        lines.extend(&["# Zitadel (identity platform — Apache 2.0)",
+            "ZITADEL_DOMAIN=replace-me.zitadel.cloud",
+            "ZITADEL_CLIENT_ID=replace-me", "ZITADEL_CLIENT_SECRET=replace-me"]);
     }
 
     if lines.is_empty() { String::new() }
@@ -382,7 +434,8 @@ pub(crate) fn print_stack_summary(f: &AllFeatures, app_host: Option<AppHost>) {
         CmsChoice::Keystatic => println!("    Content       Keystatic          → git-backed, zero server"),
         CmsChoice::Payload   => println!("    Content       Payload            ⚠ needs a Node server (Fly.io / Railway free)"),
     }
-    if f.email       == EmailChoice::Listmonk        { println!("    Email         Listmonk           → Fly.io / Railway (free)"); }
+    if f.email == EmailChoice::Listmonk                       { println!("    Email         Listmonk           → Fly.io / Railway (free)"); }
+    if f.transactional_email == TransactionalEmailChoice::Postal { println!("    Txn email     Postal             → Fly.io / Railway (free)"); }
     match f.analytics {
         AnalyticsProvider::Umami     => println!("    Analytics     Umami              → Railway / Fly.io (free)"),
         AnalyticsProvider::Plausible => println!("    Analytics     Plausible          ⚠ cloud $9/mo; self-host free"),
@@ -393,8 +446,9 @@ pub(crate) fn print_stack_summary(f: &AllFeatures, app_host: Option<AppHost>) {
     }
     if f.commerce    == CommerceChoice::Medusa       { println!("    Storefront    Medusa             → Fly.io / Railway (free)  ⚠ needs Node server"); }
     if f.commerce    == CommerceChoice::Vendure      { println!("    Storefront    Vendure            → Fly.io / Railway (free)  ⚠ needs Node server"); }
-    if f.courses     == CourseChoice::FrappeLms      { println!("    Courses       Frappe LMS         → Fly.io / Railway (free)"); }
-    if f.testimonials == TestimonialChoice::Formbricks { println!("    Testimonials  Formbricks         → formbricks.com (free tier)"); }
+    if f.courses == CourseChoice::FrappeLms           { println!("    Courses       Frappe LMS         → Fly.io / Railway (free)"); }
+    if f.forms == FormsChoice::Formbricks             { println!("    Forms         Formbricks         → formbricks.com (free tier)"); }
+    if f.forms == FormsChoice::Typebot                { println!("    Forms         Typebot            → typebot.io (free tier) or self-host"); }
     if f.donations.polar        { println!("    Donations     Polar              → polar.sh (Apache 2.0, free tier)"); }
     if f.donations.give_lively  { println!("    Donations     GiveLively         → givelively.org (free for nonprofits)"); }
     if f.donations.liberapay    { println!("    Donations     Liberapay          → liberapay.com (free, OSS-friendly)"); }
@@ -425,6 +479,15 @@ pub(crate) fn print_stack_summary(f: &AllFeatures, app_host: Option<AppHost>) {
         HeatmapProvider::Custom     => println!("    Replays       Custom"),
         HeatmapProvider::None       => {}
     }
+    if f.video == VideoChoice::PeerTube               { println!("    Video         PeerTube           → Fly.io / Railway (free)"); }
+    if f.podcast == PodcastChoice::Castopod           { println!("    Podcast       Castopod           → Fly.io / Railway (free)"); }
+    if f.events == EventChoice::HiEvents              { println!("    Events        Hi.Events          → self-host free"); }
+    if f.events == EventChoice::Pretix                { println!("    Events        Pretix             → Fly.io / Railway (free)"); }
+    if f.status == StatusChoice::UptimeKuma           { println!("    Status page   Uptime Kuma        → Fly.io / Railway (free)"); }
+    if f.knowledge_base == KnowledgeBaseChoice::BookStack { println!("    Knowledge base BookStack        → Fly.io / Railway (free)"); }
+    if f.crm == CrmChoice::Twenty                     { println!("    CRM           Twenty             → Fly.io / Railway (free)"); }
+    if f.sso == SsoChoice::Authentik                  { println!("    SSO           Authentik          → Fly.io / Railway (free)"); }
+    if f.sso == SsoChoice::Zitadel                    { println!("    SSO           Zitadel            → zitadel.com (free tier) or self-host"); }
     if f.job_board  { println!("    Job board     content type       → see content-types.example.ts"); }
     if f.enable_api { println!("    REST API      enabled            → /ap-api/v1/* (Bearer token)"); }
     println!("  ─────────────────────────────────────────────────────");

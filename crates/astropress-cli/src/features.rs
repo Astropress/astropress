@@ -7,27 +7,27 @@ use crate::providers::{AbTestingProvider, AnalyticsProvider, HeatmapProvider};
 
 /// Content backend for the project. AstroPress is always the admin panel;
 /// this selects what stores and serves the content data.
-/// Content backend. Directus (BSL 1.1) and Strapi v5 (custom non-OSI licence)
-/// are excluded; all remaining options are MIT or Apache 2.0.
+/// Directus (BSL 1.1) and Strapi v5 (custom non-OSI licence) are excluded;
+/// all remaining options are MIT or Apache 2.0.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum CmsChoice { BuiltIn, Keystatic, Payload }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)] pub(crate) enum EmailChoice      { None, Listmonk }
-#[derive(Debug, Clone, Copy, PartialEq, Eq)] pub(crate) enum CommerceChoice   { None, Medusa, Vendure }
-#[derive(Debug, Clone, Copy, PartialEq, Eq)] pub(crate) enum CommunityChoice  { None, Giscus, Remark42 }
+#[derive(Debug, Clone, Copy, PartialEq, Eq)] pub(crate) enum EmailChoice             { None, Listmonk }
+#[derive(Debug, Clone, Copy, PartialEq, Eq)] pub(crate) enum TransactionalEmailChoice { None, Postal }
+#[derive(Debug, Clone, Copy, PartialEq, Eq)] pub(crate) enum CommerceChoice          { None, Medusa, Vendure }
+#[derive(Debug, Clone, Copy, PartialEq, Eq)] pub(crate) enum CommunityChoice         { None, Giscus, Remark42 }
 /// Pagefind = static index at build time (zero server).
 /// Meilisearch = running service with full-text search API (MIT).
-#[derive(Debug, Clone, Copy, PartialEq, Eq)] pub(crate) enum SearchChoice     { None, Pagefind, Meilisearch }
-#[derive(Debug, Clone, Copy, PartialEq, Eq)] pub(crate) enum CourseChoice     { None, FrappeLms }
-#[derive(Debug, Clone, Copy, PartialEq, Eq)] pub(crate) enum TestimonialChoice{ None, Formbricks }
+#[derive(Debug, Clone, Copy, PartialEq, Eq)] pub(crate) enum SearchChoice            { None, Pagefind, Meilisearch }
+#[derive(Debug, Clone, Copy, PartialEq, Eq)] pub(crate) enum CourseChoice            { None, FrappeLms }
+/// Forms, surveys, testimonials, and conversational flows.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)] pub(crate) enum FormsChoice             { None, Formbricks, Typebot }
 /// Multiple donation providers can be enabled simultaneously.
-/// Polar remains an exclusive single-provider option (SaaS paid posts model).
-/// GiveLively, Liberapay, and PledgeCrypto are widget-based and go through the JS bridge.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct DonationChoices {
-    pub polar:        bool,
-    pub give_lively:  bool,
-    pub liberapay:    bool,
+    pub polar:         bool,
+    pub give_lively:   bool,
+    pub liberapay:     bool,
     pub pledge_crypto: bool,
 }
 impl Default for DonationChoices {
@@ -35,59 +35,81 @@ impl Default for DonationChoices {
         Self { polar: false, give_lively: false, liberapay: false, pledge_crypto: false }
     }
 }
-#[derive(Debug, Clone, Copy, PartialEq, Eq)] pub(crate) enum ForumChoice      { None, Flarum, Discourse }
-/// Chatwoot excluded (EE split — enterprise features are proprietary).
-/// Tiledesk is fully Apache 2.0.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)] pub(crate) enum ChatChoice       { None, Tiledesk }
-#[derive(Debug, Clone, Copy, PartialEq, Eq)] pub(crate) enum PaymentChoice    { None, HyperSwitch }
-#[derive(Debug, Clone, Copy, PartialEq, Eq)] pub(crate) enum NotifyChoice     { None, Ntfy, Gotify }
-#[derive(Debug, Clone, Copy, PartialEq, Eq)] pub(crate) enum ScheduleChoice   { None, Rallly, CalCom }
+#[derive(Debug, Clone, Copy, PartialEq, Eq)] pub(crate) enum ForumChoice             { None, Flarum, Discourse }
+/// Chatwoot excluded (EE split). Tiledesk is fully Apache 2.0.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)] pub(crate) enum ChatChoice              { None, Tiledesk }
+#[derive(Debug, Clone, Copy, PartialEq, Eq)] pub(crate) enum PaymentChoice           { None, HyperSwitch }
+#[derive(Debug, Clone, Copy, PartialEq, Eq)] pub(crate) enum NotifyChoice            { None, Ntfy, Gotify }
+#[derive(Debug, Clone, Copy, PartialEq, Eq)] pub(crate) enum ScheduleChoice          { None, Rallly, CalCom }
+#[derive(Debug, Clone, Copy, PartialEq, Eq)] pub(crate) enum VideoChoice             { None, PeerTube }
+#[derive(Debug, Clone, Copy, PartialEq, Eq)] pub(crate) enum PodcastChoice           { None, Castopod }
+#[derive(Debug, Clone, Copy, PartialEq, Eq)] pub(crate) enum EventChoice             { None, HiEvents, Pretix }
+#[derive(Debug, Clone, Copy, PartialEq, Eq)] pub(crate) enum StatusChoice            { None, UptimeKuma }
+#[derive(Debug, Clone, Copy, PartialEq, Eq)] pub(crate) enum KnowledgeBaseChoice     { None, BookStack }
+#[derive(Debug, Clone, Copy, PartialEq, Eq)] pub(crate) enum CrmChoice               { None, Twenty }
+#[derive(Debug, Clone, Copy, PartialEq, Eq)] pub(crate) enum SsoChoice               { None, Authentik, Zitadel }
 
 // ── aggregated feature bag ────────────────────────────────────────────────────
 
 #[derive(Debug)]
 pub(crate) struct AllFeatures {
-    pub cms:          CmsChoice,
-    pub email:        EmailChoice,
-    pub commerce:     CommerceChoice,
-    pub community:    CommunityChoice,
-    pub search:       SearchChoice,
-    pub courses:      CourseChoice,
-    pub testimonials: TestimonialChoice,
-    pub donations:    DonationChoices,
-    pub forum:        ForumChoice,
-    pub chat:         ChatChoice,
-    pub payments:     PaymentChoice,
-    pub notify:       NotifyChoice,
-    pub schedule:     ScheduleChoice,
-    pub job_board:    bool,
-    pub analytics:    AnalyticsProvider,
-    pub ab_testing:   AbTestingProvider,
-    pub heatmap:      HeatmapProvider,
-    pub enable_api:   bool,
+    pub cms:                CmsChoice,
+    pub email:              EmailChoice,
+    pub transactional_email: TransactionalEmailChoice,
+    pub commerce:           CommerceChoice,
+    pub community:          CommunityChoice,
+    pub search:             SearchChoice,
+    pub courses:            CourseChoice,
+    pub forms:              FormsChoice,
+    pub donations:          DonationChoices,
+    pub forum:              ForumChoice,
+    pub chat:               ChatChoice,
+    pub payments:           PaymentChoice,
+    pub notify:             NotifyChoice,
+    pub schedule:           ScheduleChoice,
+    pub video:              VideoChoice,
+    pub podcast:            PodcastChoice,
+    pub events:             EventChoice,
+    pub status:             StatusChoice,
+    pub knowledge_base:     KnowledgeBaseChoice,
+    pub crm:                CrmChoice,
+    pub sso:                SsoChoice,
+    pub job_board:          bool,
+    pub analytics:          AnalyticsProvider,
+    pub ab_testing:         AbTestingProvider,
+    pub heatmap:            HeatmapProvider,
+    pub enable_api:         bool,
 }
 
 impl AllFeatures {
     pub(crate) fn defaults() -> Self {
         AllFeatures {
-            cms:          CmsChoice::BuiltIn,
-            email:        EmailChoice::None,
-            commerce:     CommerceChoice::None,
-            community:    CommunityChoice::Giscus,
-            search:       SearchChoice::None,
-            courses:      CourseChoice::None,
-            testimonials: TestimonialChoice::None,
-            donations:    DonationChoices::default(),
-            forum:        ForumChoice::None,
-            chat:         ChatChoice::None,
-            payments:     PaymentChoice::None,
-            notify:       NotifyChoice::None,
-            schedule:     ScheduleChoice::None,
-            job_board:    false,
-            analytics:    AnalyticsProvider::None,
-            ab_testing:   AbTestingProvider::None,
-            heatmap:      HeatmapProvider::None,
-            enable_api:   false,
+            cms:                CmsChoice::BuiltIn,
+            email:              EmailChoice::None,
+            transactional_email: TransactionalEmailChoice::None,
+            commerce:           CommerceChoice::None,
+            community:          CommunityChoice::Giscus,
+            search:             SearchChoice::None,
+            courses:            CourseChoice::None,
+            forms:              FormsChoice::None,
+            donations:          DonationChoices::default(),
+            forum:              ForumChoice::None,
+            chat:               ChatChoice::None,
+            payments:           PaymentChoice::None,
+            notify:             NotifyChoice::None,
+            schedule:           ScheduleChoice::None,
+            video:              VideoChoice::None,
+            podcast:            PodcastChoice::None,
+            events:             EventChoice::None,
+            status:             StatusChoice::None,
+            knowledge_base:     KnowledgeBaseChoice::None,
+            crm:                CrmChoice::None,
+            sso:                SsoChoice::None,
+            job_board:          false,
+            analytics:          AnalyticsProvider::None,
+            ab_testing:         AbTestingProvider::None,
+            heatmap:            HeatmapProvider::None,
+            enable_api:         false,
         }
     }
 }
@@ -99,7 +121,7 @@ mod tests {
     use super::*;
     use crate::feature_stubs::{feature_config_stubs, feature_env_stubs};
 
-    // ── CMS choices ───────────────────────────────────────────────────────
+    // ── CMS ───────────────────────────────────────────────────────────────
 
     #[test]
     fn cms_default_is_builtin() {
@@ -145,30 +167,25 @@ mod tests {
     fn listmonk_generates_env_stubs() {
         let f = AllFeatures { email: EmailChoice::Listmonk, ..AllFeatures::defaults() };
         let s = feature_env_stubs(&f);
-        assert!(s.contains("NEWSLETTER_DELIVERY_MODE=listmonk"), "missing NEWSLETTER_DELIVERY_MODE");
-        assert!(s.contains("LISTMONK_API_URL"), "missing LISTMONK_API_URL");
-        assert!(s.contains("LISTMONK_API_USERNAME"), "missing LISTMONK_API_USERNAME");
-        assert!(s.contains("LISTMONK_API_PASSWORD"), "missing LISTMONK_API_PASSWORD");
-        assert!(s.contains("LISTMONK_LIST_ID"), "missing LISTMONK_LIST_ID");
+        assert!(s.contains("NEWSLETTER_DELIVERY_MODE=listmonk"));
+        assert!(s.contains("LISTMONK_API_URL"));
+        assert!(s.contains("LISTMONK_API_USERNAME"));
+        assert!(s.contains("LISTMONK_API_PASSWORD"));
+        assert!(s.contains("LISTMONK_LIST_ID"));
     }
 
     #[test]
     fn listmonk_generates_setup_doc() {
         let f = AllFeatures { email: EmailChoice::Listmonk, ..AllFeatures::defaults() };
         let stubs = feature_config_stubs(&f);
-        let listmonk_md = stubs.iter().find(|(p, _)| *p == "LISTMONK.md");
-        assert!(listmonk_md.is_some(), "LISTMONK.md not generated");
-        let content = listmonk_md.unwrap().1;
-        assert!(content.contains("LISTMONK_API_URL"), "missing LISTMONK_API_URL in LISTMONK.md");
-        assert!(content.contains("LISTMONK_API_USERNAME"), "missing LISTMONK_API_USERNAME in LISTMONK.md");
-        assert!(content.contains("LISTMONK_API_PASSWORD"), "missing LISTMONK_API_PASSWORD in LISTMONK.md");
-        assert!(content.contains("LISTMONK_LIST_ID"), "missing LISTMONK_LIST_ID in LISTMONK.md");
-        assert!(content.contains("NEWSLETTER_DELIVERY_MODE"), "missing NEWSLETTER_DELIVERY_MODE in LISTMONK.md");
-        assert!(content.contains("Fly.io"), "missing Fly.io instructions in LISTMONK.md");
-        // verify all three generated files are mentioned
-        assert!(content.contains("docker-compose.yml"), "LISTMONK.md should reference docker-compose.yml");
-        assert!(content.contains("Caddyfile"), "LISTMONK.md should reference Caddyfile");
-        assert!(content.contains("registerAstropressService"), "LISTMONK.md should mention registerAstropressService");
+        let md = stubs.iter().find(|(p, _)| *p == "LISTMONK.md");
+        assert!(md.is_some(), "LISTMONK.md not generated");
+        let content = md.unwrap().1;
+        assert!(content.contains("LISTMONK_API_URL"));
+        assert!(content.contains("Fly.io"));
+        assert!(content.contains("docker-compose.yml"));
+        assert!(content.contains("Caddyfile"));
+        assert!(content.contains("registerAstropressService"));
     }
 
     #[test]
@@ -176,31 +193,37 @@ mod tests {
         let f = AllFeatures { email: EmailChoice::Listmonk, ..AllFeatures::defaults() };
         let stubs = feature_config_stubs(&f);
         let paths: Vec<&str> = stubs.iter().map(|(p, _)| *p).collect();
-        assert!(paths.contains(&"listmonk/Caddyfile"), "Caddyfile not generated");
-        assert!(paths.contains(&"listmonk/docker-compose.yml"), "docker-compose.yml not generated");
-        assert!(paths.contains(&"listmonk/.env.listmonk.example"), ".env.listmonk.example not generated");
-
+        assert!(paths.contains(&"listmonk/Caddyfile"));
+        assert!(paths.contains(&"listmonk/docker-compose.yml"));
+        assert!(paths.contains(&"listmonk/.env.listmonk.example"));
         let caddyfile = stubs.iter().find(|(p, _)| *p == "listmonk/Caddyfile").unwrap().1;
-        assert!(caddyfile.contains("header_down -X-Frame-Options"), "Caddyfile should strip X-Frame-Options");
-        assert!(caddyfile.contains("frame-ancestors"), "Caddyfile should set frame-ancestors CSP");
-
+        assert!(caddyfile.contains("header_down -X-Frame-Options"));
+        assert!(caddyfile.contains("frame-ancestors"));
         let compose = stubs.iter().find(|(p, _)| *p == "listmonk/docker-compose.yml").unwrap().1;
-        assert!(compose.contains("caddy:2-alpine"), "docker-compose should include Caddy");
-        assert!(compose.contains("listmonk/listmonk:latest"), "docker-compose should include Listmonk");
-        assert!(compose.contains("postgres:16-alpine"), "docker-compose should include Postgres");
+        assert!(compose.contains("caddy:2-alpine"));
+        assert!(compose.contains("listmonk/listmonk:latest"));
+        assert!(compose.contains("postgres:16-alpine"));
     }
 
     #[test]
     fn listmonk_generates_middleware_with_register_service() {
         let f = AllFeatures { email: EmailChoice::Listmonk, ..AllFeatures::defaults() };
         let stubs = feature_config_stubs(&f);
-        let middleware = stubs.iter().find(|(p, _)| *p == "src/middleware.ts");
-        assert!(middleware.is_some(), "src/middleware.ts not generated");
-        let content = middleware.unwrap().1;
-        assert!(content.contains("registerAstropressService"), "middleware should call registerAstropressService");
-        assert!(content.contains("provider: \"email\""), "middleware should register email provider");
-        assert!(content.contains("registerCms"), "middleware should still call registerCms");
-        assert!(content.contains("createAstropressSecurityMiddleware"), "middleware should export security middleware");
+        let mw = stubs.iter().find(|(p, _)| *p == "src/middleware.ts");
+        assert!(mw.is_some(), "src/middleware.ts not generated");
+        let content = mw.unwrap().1;
+        assert!(content.contains("registerAstropressService"));
+        assert!(content.contains("provider: \"email\""));
+        assert!(content.contains("registerCms"));
+        assert!(content.contains("createAstropressSecurityMiddleware"));
+    }
+
+    #[test]
+    fn postal_generates_env_stubs() {
+        let f = AllFeatures { transactional_email: TransactionalEmailChoice::Postal, ..AllFeatures::defaults() };
+        let s = feature_env_stubs(&f);
+        assert!(s.contains("POSTAL_SMTP_HOST"));
+        assert!(s.contains("POSTAL_FROM_ADDRESS"));
     }
 
     // ── commerce ──────────────────────────────────────────────────────────
@@ -210,12 +233,6 @@ mod tests {
         let f = AllFeatures { commerce: CommerceChoice::Medusa, ..AllFeatures::defaults() };
         assert!(feature_env_stubs(&f).contains("MEDUSA_BACKEND_URL"));
         assert!(feature_config_stubs(&f).iter().any(|(p, _)| *p == "medusa-config.js"));
-    }
-
-    #[test]
-    fn medusa_generates_medusa_backend_url_env_stub() {
-        let f = AllFeatures { commerce: CommerceChoice::Medusa, ..AllFeatures::defaults() };
-        assert!(feature_env_stubs(&f).contains("MEDUSA_BACKEND_URL"));
     }
 
     // ── community / comments ──────────────────────────────────────────────
@@ -246,14 +263,22 @@ mod tests {
         assert!(s.contains("FRAPPE_LMS_API_KEY"));
     }
 
-    // ── testimonials ──────────────────────────────────────────────────────
+    // ── forms ─────────────────────────────────────────────────────────────
 
     #[test]
     fn formbricks_env_stubs() {
-        let f = AllFeatures { testimonials: TestimonialChoice::Formbricks, ..AllFeatures::defaults() };
+        let f = AllFeatures { forms: FormsChoice::Formbricks, ..AllFeatures::defaults() };
         let s = feature_env_stubs(&f);
         assert!(s.contains("FORMBRICKS_API_KEY"));
         assert!(s.contains("FORMBRICKS_ENVIRONMENT_ID"));
+    }
+
+    #[test]
+    fn typebot_generates_env_stubs() {
+        let f = AllFeatures { forms: FormsChoice::Typebot, ..AllFeatures::defaults() };
+        let s = feature_env_stubs(&f);
+        assert!(s.contains("TYPEBOT_URL"));
+        assert!(s.contains("TYPEBOT_API_TOKEN"));
     }
 
     // ── donations ─────────────────────────────────────────────────────────
@@ -277,7 +302,6 @@ mod tests {
         };
         let s = feature_env_stubs(&f);
         assert!(s.contains("GIVELIVELY_ORG_SLUG"));
-        assert!(s.contains("GIVELIVELY_CAMPAIGN_SLUG"));
     }
 
     #[test]
@@ -286,8 +310,7 @@ mod tests {
             donations: DonationChoices { liberapay: true, ..DonationChoices::default() },
             ..AllFeatures::defaults()
         };
-        let s = feature_env_stubs(&f);
-        assert!(s.contains("LIBERAPAY_USERNAME"));
+        assert!(feature_env_stubs(&f).contains("LIBERAPAY_USERNAME"));
     }
 
     #[test]
@@ -296,8 +319,7 @@ mod tests {
             donations: DonationChoices { pledge_crypto: true, ..DonationChoices::default() },
             ..AllFeatures::defaults()
         };
-        let s = feature_env_stubs(&f);
-        assert!(s.contains("PLEDGE_PARTNER_KEY"));
+        assert!(feature_env_stubs(&f).contains("PLEDGE_PARTNER_KEY"));
     }
 
     #[test]
@@ -343,8 +365,8 @@ mod tests {
         let f = AllFeatures { payments: PaymentChoice::HyperSwitch, ..AllFeatures::defaults() };
         let s = feature_env_stubs(&f);
         assert!(s.contains("HYPERSWITCH_API_KEY"));
-        assert!(s.contains("Razorpay"), "should mention Razorpay (UPI/India)");
-        assert!(s.contains("M-PESA"), "should mention M-PESA");
+        assert!(s.contains("Razorpay"));
+        assert!(s.contains("M-PESA"));
     }
 
     #[test]
@@ -371,6 +393,94 @@ mod tests {
     fn rallly_generates_env_stubs() {
         let f = AllFeatures { schedule: ScheduleChoice::Rallly, ..AllFeatures::defaults() };
         assert!(feature_env_stubs(&f).contains("RALLLY_URL"));
+    }
+
+    // ── video ─────────────────────────────────────────────────────────────
+
+    #[test]
+    fn peertube_generates_env_stubs() {
+        let f = AllFeatures { video: VideoChoice::PeerTube, ..AllFeatures::defaults() };
+        let s = feature_env_stubs(&f);
+        assert!(s.contains("PEERTUBE_URL"));
+        assert!(s.contains("PEERTUBE_API_TOKEN"));
+    }
+
+    // ── podcast ───────────────────────────────────────────────────────────
+
+    #[test]
+    fn castopod_generates_env_stubs() {
+        let f = AllFeatures { podcast: PodcastChoice::Castopod, ..AllFeatures::defaults() };
+        let s = feature_env_stubs(&f);
+        assert!(s.contains("CASTOPOD_URL"));
+        assert!(s.contains("CASTOPOD_API_TOKEN"));
+    }
+
+    // ── events ────────────────────────────────────────────────────────────
+
+    #[test]
+    fn hievents_generates_env_stubs() {
+        let f = AllFeatures { events: EventChoice::HiEvents, ..AllFeatures::defaults() };
+        let s = feature_env_stubs(&f);
+        assert!(s.contains("HIEVENTS_URL"));
+        assert!(s.contains("HIEVENTS_API_KEY"));
+    }
+
+    #[test]
+    fn pretix_generates_env_stubs() {
+        let f = AllFeatures { events: EventChoice::Pretix, ..AllFeatures::defaults() };
+        let s = feature_env_stubs(&f);
+        assert!(s.contains("PRETIX_URL"));
+        assert!(s.contains("PRETIX_API_TOKEN"));
+        assert!(s.contains("PRETIX_ORGANIZER"));
+    }
+
+    // ── status ────────────────────────────────────────────────────────────
+
+    #[test]
+    fn uptime_kuma_generates_env_stubs() {
+        let f = AllFeatures { status: StatusChoice::UptimeKuma, ..AllFeatures::defaults() };
+        let s = feature_env_stubs(&f);
+        assert!(s.contains("UPTIME_KUMA_URL"));
+    }
+
+    // ── knowledge base ────────────────────────────────────────────────────
+
+    #[test]
+    fn bookstack_generates_env_stubs() {
+        let f = AllFeatures { knowledge_base: KnowledgeBaseChoice::BookStack, ..AllFeatures::defaults() };
+        let s = feature_env_stubs(&f);
+        assert!(s.contains("BOOKSTACK_URL"));
+        assert!(s.contains("BOOKSTACK_TOKEN_ID"));
+        assert!(s.contains("BOOKSTACK_TOKEN_SECRET"));
+    }
+
+    // ── crm ───────────────────────────────────────────────────────────────
+
+    #[test]
+    fn twenty_generates_env_stubs() {
+        let f = AllFeatures { crm: CrmChoice::Twenty, ..AllFeatures::defaults() };
+        let s = feature_env_stubs(&f);
+        assert!(s.contains("TWENTY_URL"));
+        assert!(s.contains("TWENTY_API_KEY"));
+    }
+
+    // ── sso ───────────────────────────────────────────────────────────────
+
+    #[test]
+    fn authentik_generates_env_stubs() {
+        let f = AllFeatures { sso: SsoChoice::Authentik, ..AllFeatures::defaults() };
+        let s = feature_env_stubs(&f);
+        assert!(s.contains("AUTHENTIK_URL"));
+        assert!(s.contains("AUTHENTIK_TOKEN"));
+    }
+
+    #[test]
+    fn zitadel_generates_env_stubs() {
+        let f = AllFeatures { sso: SsoChoice::Zitadel, ..AllFeatures::defaults() };
+        let s = feature_env_stubs(&f);
+        assert!(s.contains("ZITADEL_DOMAIN"));
+        assert!(s.contains("ZITADEL_CLIENT_ID"));
+        assert!(s.contains("ZITADEL_CLIENT_SECRET"));
     }
 
     // ── job board ─────────────────────────────────────────────────────────

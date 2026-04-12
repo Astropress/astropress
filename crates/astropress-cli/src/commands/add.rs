@@ -11,8 +11,9 @@ use std::path::Path;
 use crate::feature_stubs::{feature_config_stubs, feature_env_stubs};
 use crate::features::{
     AllFeatures, ChatChoice, CmsChoice, CommerceChoice, CommunityChoice, CourseChoice,
-    EmailChoice, ForumChoice, NotifyChoice, PaymentChoice, ScheduleChoice, SearchChoice,
-    TestimonialChoice,
+    CrmChoice, EmailChoice, EventChoice, FormsChoice, ForumChoice, KnowledgeBaseChoice,
+    NotifyChoice, PaymentChoice, PodcastChoice, ScheduleChoice, SearchChoice,
+    SsoChoice, StatusChoice, TransactionalEmailChoice, VideoChoice,
 };
 use crate::providers::{AbTestingProvider, AnalyticsProvider, HeatmapProvider};
 use crate::utils::write_text_file;
@@ -202,11 +203,78 @@ pub(crate) fn parse_add_features(args: &[String]) -> Result<AllFeatures, String>
                     )),
                 };
             }
-            "--testimonials" => {
-                f.testimonials = match value.as_str() {
-                    "formbricks" => TestimonialChoice::Formbricks,
+            "--forms" | "--testimonials" => {
+                f.forms = match value.as_str() {
+                    "formbricks" => FormsChoice::Formbricks,
+                    "typebot"    => FormsChoice::Typebot,
                     other => return Err(format!(
-                        "Unknown testimonials provider `{other}`. Use: formbricks."
+                        "Unknown forms provider `{other}`. Use: formbricks, typebot."
+                    )),
+                };
+            }
+            "--video" => {
+                f.video = match value.as_str() {
+                    "peertube" => VideoChoice::PeerTube,
+                    other => return Err(format!(
+                        "Unknown video provider `{other}`. Use: peertube."
+                    )),
+                };
+            }
+            "--podcast" => {
+                f.podcast = match value.as_str() {
+                    "castopod" => PodcastChoice::Castopod,
+                    other => return Err(format!(
+                        "Unknown podcast provider `{other}`. Use: castopod."
+                    )),
+                };
+            }
+            "--events" => {
+                f.events = match value.as_str() {
+                    "hievents"  => EventChoice::HiEvents,
+                    "pretix"    => EventChoice::Pretix,
+                    other => return Err(format!(
+                        "Unknown events platform `{other}`. Use: hievents, pretix."
+                    )),
+                };
+            }
+            "--transactional-email" | "--transactional_email" => {
+                f.transactional_email = match value.as_str() {
+                    "postal" => TransactionalEmailChoice::Postal,
+                    other => return Err(format!(
+                        "Unknown transactional email provider `{other}`. Use: postal."
+                    )),
+                };
+            }
+            "--status" => {
+                f.status = match value.as_str() {
+                    "uptime-kuma" | "uptimekuma" => StatusChoice::UptimeKuma,
+                    other => return Err(format!(
+                        "Unknown status provider `{other}`. Use: uptime-kuma."
+                    )),
+                };
+            }
+            "--knowledge-base" | "--knowledge_base" => {
+                f.knowledge_base = match value.as_str() {
+                    "bookstack" => KnowledgeBaseChoice::BookStack,
+                    other => return Err(format!(
+                        "Unknown knowledge base `{other}`. Use: bookstack."
+                    )),
+                };
+            }
+            "--crm" => {
+                f.crm = match value.as_str() {
+                    "twenty" => CrmChoice::Twenty,
+                    other => return Err(format!(
+                        "Unknown CRM `{other}`. Use: twenty."
+                    )),
+                };
+            }
+            "--sso" => {
+                f.sso = match value.as_str() {
+                    "authentik" => SsoChoice::Authentik,
+                    "zitadel"   => SsoChoice::Zitadel,
+                    other => return Err(format!(
+                        "Unknown SSO provider `{other}`. Use: authentik, zitadel."
                     )),
                 };
             }

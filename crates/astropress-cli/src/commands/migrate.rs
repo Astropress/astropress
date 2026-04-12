@@ -72,6 +72,39 @@ const TOOLS: &[MigrationTool] = &[
         description: "GitHub Discussions as comments; zero server (MIT)" },
     MigrationTool { slug: "remark42",  name: "Remark42",  category: "comments",
         description: "Self-hosted; no social login required (MIT)" },
+    // ── forms ─────────────────────────────────────────────────────────────
+    MigrationTool { slug: "formbricks", name: "Formbricks", category: "forms",
+        description: "Surveys + testimonials + NPS flows (MIT community edition)" },
+    MigrationTool { slug: "typebot",    name: "Typebot",    category: "forms",
+        description: "Conversational form + chatbot builder (AGPL 3.0)" },
+    // ── video ─────────────────────────────────────────────────────────────
+    MigrationTool { slug: "peertube",  name: "PeerTube",  category: "video",
+        description: "Self-hosted video with embeds + ActivityPub (AGPL 3.0)" },
+    // ── podcast ───────────────────────────────────────────────────────────
+    MigrationTool { slug: "castopod",  name: "Castopod",  category: "podcast",
+        description: "Self-hosted podcast hosting; RSS + embeddable player (AGPL 3.0)" },
+    // ── events ────────────────────────────────────────────────────────────
+    MigrationTool { slug: "hievents",  name: "Hi.Events", category: "events",
+        description: "Event pages, RSVP, ticket sales (AGPL 3.0)" },
+    MigrationTool { slug: "pretix",    name: "Pretix",    category: "events",
+        description: "Established ticketing with seating charts (Apache 2.0)" },
+    // ── transactional email ───────────────────────────────────────────────
+    MigrationTool { slug: "postal",    name: "Postal",    category: "transactional-email",
+        description: "Self-hosted SMTP server for triggered emails (MIT)" },
+    // ── status ────────────────────────────────────────────────────────────
+    MigrationTool { slug: "uptime-kuma", name: "Uptime Kuma", category: "status",
+        description: "Uptime monitoring + public status page (MIT)" },
+    // ── knowledge base ────────────────────────────────────────────────────
+    MigrationTool { slug: "bookstack", name: "BookStack", category: "knowledge-base",
+        description: "Structured wiki and docs (MIT)" },
+    // ── crm ───────────────────────────────────────────────────────────────
+    MigrationTool { slug: "twenty",    name: "Twenty",    category: "crm",
+        description: "Modern open-source CRM (AGPL 3.0)" },
+    // ── sso ───────────────────────────────────────────────────────────────
+    MigrationTool { slug: "authentik", name: "Authentik", category: "sso",
+        description: "Identity provider; social login, MFA, LDAP (MIT)" },
+    MigrationTool { slug: "zitadel",   name: "Zitadel",   category: "sso",
+        description: "Hosted-or-self-hosted identity; fine-grained org roles (Apache 2.0)" },
 ];
 
 fn find_tool(slug: &str) -> Option<&'static MigrationTool> {
