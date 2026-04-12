@@ -1,0 +1,141 @@
+---
+import AdminLayout from "astropress/components/AdminLayout.astro";
+
+const adminUser = Astro.locals.adminUser;
+
+if (!adminUser || adminUser.role !== "admin") {
+  Astro.response.status = 403;
+}
+---
+
+{adminUser?.role === "admin" ? (
+  <AdminLayout
+    title="Import Content — Astropress Admin"
+    heading="Import Content"
+    description="Import content from WordPress, Wix, or any live website."
+    role={adminUser.role}
+    userName={adminUser.name}
+    currentPath="/ap-admin/import"
+  >
+    <div class="import-sources">
+      <p class="import-intro">
+        Choose a content source to import from. Imports are non-destructive — existing
+        content is not modified unless you explicitly apply changes.
+      </p>
+
+      <div class="source-grid">
+        <a href="/ap-admin/import/wordpress" class="source-card">
+          <div class="source-icon" aria-hidden="true">WP</div>
+          <h2 class="source-name">WordPress</h2>
+          <p class="source-desc">
+            Import from a WordPress XML export file or a live WordPress site URL.
+            Imports posts, pages, media, authors, and taxonomies.
+          </p>
+          <span class="source-action">Set up WordPress import &rarr;</span>
+        </a>
+
+        <a href="/ap-admin/import/wix" class="source-card">
+          <div class="source-icon" aria-hidden="true">WX</div>
+          <h2 class="source-name">Wix</h2>
+          <p class="source-desc">
+            Import from a Wix CSV export or a live Wix site URL.
+            Imports blog posts, pages, authors, and media.
+          </p>
+          <span class="source-action">Set up Wix import &rarr;</span>
+        </a>
+
+        <a href="/ap-admin/import/crawl" class="source-card">
+          <div class="source-icon" aria-hidden="true">CR</div>
+          <h2 class="source-name">Web crawl</h2>
+          <p class="source-desc">
+            Crawl any publicly accessible website and import its pages as content
+            records. Useful for static sites without an export format.
+          </p>
+          <span class="source-action">Set up crawl import &rarr;</span>
+        </a>
+      </div>
+
+      <p class="import-note">
+        All imports run as CLI commands under the hood. The CLI is available via
+        <code>cargo install astropress-cli</code>. This wizard generates the
+        correct command for your configuration.
+      </p>
+    </div>
+
+    <style>
+      .import-intro {
+        margin: 0 0 1.5rem;
+        color: var(--text-muted, #6b7280);
+      }
+      .source-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 1.25rem;
+        margin-bottom: 2rem;
+      }
+      .source-card {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        padding: 1.25rem;
+        border: 1px solid var(--border, #e5e7eb);
+        border-radius: 8px;
+        text-decoration: none;
+        color: inherit;
+        background: var(--surface, #fff);
+        transition: border-color 0.15s, box-shadow 0.15s;
+      }
+      .source-card:hover, .source-card:focus-visible {
+        border-color: var(--accent, #6366f1);
+        box-shadow: 0 0 0 3px var(--accent-muted, #e0e7ff);
+        outline: none;
+      }
+      .source-icon {
+        width: 2.5rem;
+        height: 2.5rem;
+        border-radius: 6px;
+        background: var(--accent-muted, #e0e7ff);
+        color: var(--accent, #6366f1);
+        font-weight: 700;
+        font-size: 0.75rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        letter-spacing: 0.05em;
+      }
+      .source-name {
+        margin: 0;
+        font-size: 1rem;
+        font-weight: 600;
+      }
+      .source-desc {
+        margin: 0;
+        font-size: 0.875rem;
+        color: var(--text-muted, #6b7280);
+        flex: 1;
+      }
+      .source-action {
+        font-size: 0.875rem;
+        color: var(--accent, #6366f1);
+        font-weight: 500;
+      }
+      .import-note {
+        font-size: 0.8125rem;
+        color: var(--text-muted, #6b7280);
+        border-top: 1px solid var(--border, #e5e7eb);
+        padding-top: 1rem;
+      }
+    </style>
+  </AdminLayout>
+) : (
+  <AdminLayout
+    title="Forbidden — Astropress Admin"
+    heading="Access denied"
+    description="You do not have permission to view this page."
+    role={adminUser?.role ?? "editor"}
+    userName={adminUser?.name ?? ""}
+    currentPath="/ap-admin/import"
+  >
+    <p>Only admin users can access the import wizard.</p>
+  </AdminLayout>
+)}

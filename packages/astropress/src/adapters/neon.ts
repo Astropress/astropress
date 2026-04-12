@@ -1,29 +1,97 @@
+import {
+  type AstropressPlatformAdapter,
+} from "../platform-contracts";
+import { type AstropressInMemoryPlatformAdapterOptions } from "../in-memory-platform-adapter";
+import { createAstropressHostedPlatformAdapter } from "../hosted-platform-adapter";
+
+export interface AstropressNeonHostedConfig {
+  databaseUrl: string;
+  projectId?: string;
+  apiBaseUrl: string;
+}
+
+export type AstropressNeonAdapterOptions = Omit<AstropressInMemoryPlatformAdapterOptions, "capabilities"> & {
+  backingAdapter?: AstropressPlatformAdapter;
+};
+
 /**
- * Neon adapter stub for Astropress.
+ * Creates a Neon adapter with database-only capabilities.
  *
- * Neon is a database-only provider — it does not include object storage or
- * auth services. A full Neon adapter requires pairing Neon with a storage
- * service (e.g. Cloudflare R2, AWS S3) and an auth service.
- *
- * This stub is intentionally not implemented. It exists so that consumers
- * who select "neon" in `astropress new` receive a clear error at runtime
- * rather than a confusing module-not-found failure.
- *
- * To use Neon with Astropress today:
- * 1. Set up a Neon Postgres database and obtain a connection string.
- * 2. Implement `AstropressPlatformAdapter` using `@neondatabase/serverless`.
- * 3. Register your adapter in `local-runtime-modules.ts`.
- *
- * See: https://neon.tech/docs/serverless/serverless-driver
+ * Neon is a serverless Postgres database — it does not provide object storage,
+ * a hosted admin panel, or a server runtime for Astropress functions. Pair Neon
+ * with a static host (Vercel, Netlify) for the app and a storage service
+ * (Cloudflare R2, AWS S3) for media uploads.
  */
+export function createAstropressNeonAdapter(options: AstropressNeonAdapterOptions = {}) {
+  return createAstropressHostedPlatformAdapter({
+    ...options,
+    providerName: "neon",
+    defaultCapabilities: {
+      hostedAdmin: false,
+      previewEnvironments: false,
+      serverRuntime: false,
+      database: true,
+      objectStorage: false,
+      gitSync: false,
+      ...options.defaultCapabilities,
+    },
+  });
+}
 
-import type { AstropressPlatformAdapter } from "../platform-contracts.js";
+export interface AstropressNeonHostedAdapterOptions extends AstropressNeonAdapterOptions {
+  config?: AstropressNeonHostedConfig;
+  env?: Record<string, string | undefined>;
+}
 
-export function createAstropressNeonAdapter(): AstropressPlatformAdapter {
-  throw new Error(
-    "[astropress] The Neon adapter is not yet implemented. " +
-    "Neon is a database-only provider that requires pairing with a storage and auth service. " +
-    "Implement AstropressPlatformAdapter directly using @neondatabase/serverless, " +
-    "or choose a full-stack provider (cloudflare, supabase, appwrite) instead.",
-  );
+export function readAstropressNeonHostedConfig(
+  env: Record<string, string | undefined> = process.env,
+): AstropressNeonHostedConfig {
+  const databaseUrl = env.DATABASE_URL?.trim();
+
+  if (!databaseUrl) {
+    throw new Error(
+      "Neon hosted config requires DATABASE_URL (your Neon connection string).",
+    );
+  }
+
+  if (!databaseUrl.startsWith("postgres://") && !databaseUrl.startsWith("postgresql://")) {
+    throw new Error(
+      "Neon DATABASE_URL must be a postgres:// or postgresql:// connection string.",
+    );
+  }
+
+  const projectId = env.NEON_PROJECT_ID?.trim();
+
+  return {
+    databaseUrl,
+    ...(projectId && { projectId }),
+    apiBaseUrl: projectId
+      ? `https://console.neon.tech/app/projects/${projectId}`
+      : "https://console.neon.tech",
+  };
+}
+
+export function createAstropressNeonHostedAdapter(
+  options: AstropressNeonHostedAdapterOptions = {},
+) {
+  const config = options.config ?? readAstropressNeonHostedConfig(options.env);
+
+  return createAstropressHostedPlatformAdapter({
+    ...options,
+    providerName: "neon",
+    defaultCapabilities: {
+      ...options.defaultCapabilities,
+      hostedAdmin: false,
+      previewEnvironments: false,
+      serverRuntime: false,
+      database: true,
+      objectStorage: false,
+      gitSync: false,
+      hostPanel: options.defaultCapabilities?.hostPanel ?? {
+        mode: "link",
+        url: config.apiBaseUrl,
+        label: "Neon Console",
+      },
+    },
+  });
 }

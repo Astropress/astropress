@@ -1,0 +1,360 @@
+---
+import AdminLayout from "astropress/components/AdminLayout.astro";
+
+const adminUser = Astro.locals.adminUser;
+const { source } = Astro.params;
+
+const VALID_SOURCES = ["wordpress", "wix", "crawl"] as const;
+type ImportSource = typeof VALID_SOURCES[number];
+
+function isValidSource(s: string | undefined): s is ImportSource {
+  return VALID_SOURCES.includes(s as ImportSource);
+}
+
+if (!adminUser || adminUser.role !== "admin") {
+  Astro.response.status = 403;
+} else if (!isValidSource(source)) {
+  Astro.response.status = 404;
+}
+
+const sourceMeta: Record<ImportSource, { label: string; description: string; fileLabel: string; fileHint: string; urlHint: string }> = {
+  wordpress: {
+    label: "WordPress",
+    description: "Import posts, pages, media, authors, and taxonomies from WordPress.",
+    fileLabel: "WordPress XML export file (.xml)",
+    fileHint: "Export via WordPress Admin → Tools → Export → All content.",
+    urlHint: "Provide a live WordPress site URL to trigger an authenticated export download.",
+  },
+  wix: {
+    label: "Wix",
+    description: "Import blog posts, pages, authors, and media from Wix.",
+    fileLabel: "Wix CSV export file (.csv)",
+    fileHint: "Export via Wix Dashboard → Blog → Posts → Export.",
+    urlHint: "Provide a live Wix site URL to trigger an authenticated export download.",
+  },
+  crawl: {
+    label: "Web crawl",
+    description: "Crawl any publicly accessible website and import its pages as content records.",
+    fileLabel: "",
+    fileHint: "",
+    urlHint: "Provide the starting URL of the site to crawl. Only publicly accessible pages are imported.",
+  },
+};
+
+const meta = isValidSource(source) ? sourceMeta[source] : null;
+const pageTitle = meta ? `Import from ${meta.label} — Astropress Admin` : "Import — Astropress Admin";
+---
+
+{adminUser?.role === "admin" && isValidSource(source) && meta ? (
+  <AdminLayout
+    title={pageTitle}
+    heading={`Import from ${meta.label}`}
+    description={meta.description}
+    role={adminUser.role}
+    userName={adminUser.name}
+    currentPath="/ap-admin/import"
+  >
+    <div class="import-wizard">
+      <nav class="breadcrumb" aria-label="breadcrumb">
+        <a href="/ap-admin/import">Import</a>
+        <span aria-hidden="true"> / </span>
+        <span aria-current="page">{meta.label}</span>
+      </nav>
+
+      <div class="wizard-section">
+        <h2 class="wizard-section-title">1. Source</h2>
+
+        {source !== "crawl" && (
+          <div class="source-tabs" role="tablist" aria-label="Import source type">
+            <button
+              id="tab-file"
+              role="tab"
+              class="tab-btn tab-btn--active"
+              aria-selected="true"
+              aria-controls="panel-file"
+              type="button"
+            >Upload file</button>
+            <button
+              id="tab-url"
+              role="tab"
+              class="tab-btn"
+              aria-selected="false"
+              aria-controls="panel-url"
+              type="button"
+            >Live site URL</button>
+          </div>
+        )}
+
+        {source !== "crawl" && (
+          <div id="panel-file" role="tabpanel" aria-labelledby="tab-file" class="tab-panel">
+            <p class="hint">{meta.fileHint}</p>
+            <label class="field-label" for="file-input">{meta.fileLabel}</label>
+            <input
+              id="file-input"
+              type="file"
+              accept={source === "wordpress" ? ".xml" : ".csv"}
+              class="file-input"
+            />
+          </div>
+        )}
+
+        {source !== "crawl" && (
+          <div id="panel-url" role="tabpanel" aria-labelledby="tab-url" class="tab-panel tab-panel--hidden">
+            <p class="hint">{meta.urlHint}</p>
+            <label class="field-label" for="url-input">Site URL</label>
+            <input id="url-input" type="url" class="text-input" placeholder={`https://mysite.${source === "wordpress" ? "com" : "wixsite.com/site"}`} />
+          </div>
+        )}
+
+        {source === "crawl" && (
+          <div>
+            <p class="hint">{meta.urlHint}</p>
+            <label class="field-label" for="crawl-url">Start URL</label>
+            <input id="crawl-url" type="url" class="text-input" placeholder="https://mysite.com" />
+            <label class="field-label" for="max-pages">Max pages (default: 100)</label>
+            <input id="max-pages" type="number" class="text-input text-input--short" value="100" min="1" max="10000" />
+          </div>
+        )}
+      </div>
+
+      <div class="wizard-section">
+        <h2 class="wizard-section-title">2. Options</h2>
+        <div class="options-grid">
+          {source !== "crawl" && (
+            <label class="checkbox-label">
+              <input type="checkbox" class="checkbox" id="opt-download-media" checked />
+              Download media files
+            </label>
+          )}
+          <label class="checkbox-label">
+            <input type="checkbox" class="checkbox" id="opt-dry-run" />
+            Dry run (preview only — no content will be saved)
+          </label>
+        </div>
+      </div>
+
+      <div class="wizard-section">
+        <h2 class="wizard-section-title">3. Run import</h2>
+        <div class="run-options">
+          <label class="checkbox-label">
+            <input type="checkbox" class="checkbox" id="opt-apply-local" checked />
+            Apply to local database (uncheck for dry run)
+          </label>
+        </div>
+        <div class="run-actions">
+          <button type="button" class="run-btn" id="run-btn">
+            Run import
+          </button>
+          <span class="run-hint">or</span>
+          <details class="cli-details">
+            <summary class="cli-summary">Show CLI command</summary>
+            <pre id="cli-output" class="cli-preview"><code>astropress import {source} --source &lt;file&gt; --apply-local</code></pre>
+            <button type="button" class="copy-btn" id="copy-btn" aria-label="Copy command to clipboard">
+              Copy command
+            </button>
+          </details>
+        </div>
+      </div>
+
+      <div class="wizard-section">
+        <h2 class="wizard-section-title">4. Result</h2>
+        <div id="import-status" class="import-status" aria-live="polite" aria-atomic="true">
+          <p class="status-idle">Ready — configure options above and click <strong>Run import</strong>.</p>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // Tab switching
+      const tabs = document.querySelectorAll<HTMLButtonElement>(".tab-btn");
+      const panels = document.querySelectorAll<HTMLDivElement>(".tab-panel");
+      tabs.forEach((tab) => {
+        tab.addEventListener("click", () => {
+          tabs.forEach((t) => { t.setAttribute("aria-selected", "false"); t.classList.remove("tab-btn--active"); });
+          panels.forEach((p) => p.classList.add("tab-panel--hidden"));
+          tab.setAttribute("aria-selected", "true");
+          tab.classList.add("tab-btn--active");
+          const target = document.getElementById(tab.getAttribute("aria-controls") ?? "");
+          target?.classList.remove("tab-panel--hidden");
+          updateCliCommand();
+        });
+      });
+
+      // Live CLI command preview
+      function updateCliCommand() {
+        const source = document.location.pathname.split("/").pop() ?? "";
+        const isDryRun = (document.getElementById("opt-dry-run") as HTMLInputElement)?.checked;
+        const downloadMedia = (document.getElementById("opt-download-media") as HTMLInputElement)?.checked ?? false;
+        const activeTab = document.querySelector<HTMLButtonElement>(".tab-btn--active")?.id;
+
+        let cmd = `astropress import ${source}`;
+
+        if (activeTab === "tab-url" || source === "crawl") {
+          const urlInput = document.getElementById(source === "crawl" ? "crawl-url" : "url-input") as HTMLInputElement;
+          const url = urlInput?.value || `<site-url>`;
+          cmd += ` --url ${url}`;
+        } else {
+          const fileInput = document.getElementById("file-input") as HTMLInputElement;
+          const filename = fileInput?.files?.[0]?.name || `<export-file>`;
+          cmd += ` --source ${filename}`;
+        }
+
+        if (source === "crawl") {
+          const maxPages = (document.getElementById("max-pages") as HTMLInputElement)?.value;
+          if (maxPages && maxPages !== "100") cmd += ` --max-pages ${maxPages}`;
+        }
+
+        if (downloadMedia && source !== "crawl") cmd += " --download-media";
+        cmd += " --apply-local";
+        if (isDryRun) cmd += " --dry-run";
+
+        const output = document.getElementById("cli-output");
+        if (output) output.textContent = cmd;
+      }
+
+      document.querySelectorAll("input").forEach((input) => {
+        input.addEventListener("input", updateCliCommand);
+        input.addEventListener("change", updateCliCommand);
+      });
+      updateCliCommand();
+
+      // Copy button
+      document.getElementById("copy-btn")?.addEventListener("click", async () => {
+        const text = document.getElementById("cli-output")?.textContent ?? "";
+        await navigator.clipboard.writeText(text);
+        const btn = document.getElementById("copy-btn") as HTMLButtonElement;
+        const original = btn.textContent;
+        btn.textContent = "Copied!";
+        setTimeout(() => { btn.textContent = original; }, 1500);
+      });
+
+      // Run import button
+      document.getElementById("run-btn")?.addEventListener("click", async () => {
+        const runBtn = document.getElementById("run-btn") as HTMLButtonElement;
+        const statusDiv = document.getElementById("import-status")!;
+        const applyLocal = (document.getElementById("opt-apply-local") as HTMLInputElement)?.checked ?? true;
+        const activeTab = document.querySelector<HTMLButtonElement>(".tab-btn--active")?.id;
+
+        runBtn.disabled = true;
+        runBtn.textContent = "Running…";
+        statusDiv.innerHTML = '<p class="status-running">Import in progress&hellip;</p>';
+
+        const formData = new FormData();
+        formData.set("source", source);
+        formData.set("dryRun", applyLocal ? "false" : "true");
+
+        const csrfInput = document.querySelector<HTMLInputElement>('input[name="_csrf"]');
+        if (csrfInput) formData.set("_csrf", csrfInput.value);
+
+        if (source === "crawl") {
+          const crawlUrl = (document.getElementById("crawl-url") as HTMLInputElement)?.value;
+          const maxPages = (document.getElementById("max-pages") as HTMLInputElement)?.value;
+          formData.set("url", crawlUrl ?? "");
+          formData.set("maxPages", maxPages ?? "100");
+        } else if (activeTab === "tab-url") {
+          const urlInput = (document.getElementById("url-input") as HTMLInputElement)?.value;
+          formData.set("url", urlInput ?? "");
+        } else {
+          const fileInput = document.getElementById("file-input") as HTMLInputElement;
+          const file = fileInput?.files?.[0];
+          if (!file) {
+            statusDiv.innerHTML = '<p class="status-error">Please select a file to import.</p>';
+            runBtn.disabled = false;
+            runBtn.textContent = "Run import";
+            return;
+          }
+          formData.set("file", file);
+        }
+
+        try {
+          const response = await fetch("/ap-admin/actions/import-start", { method: "POST", body: formData });
+          const result = await response.json() as Record<string, unknown>;
+
+          if (!result.ok) {
+            statusDiv.innerHTML = `<p class="status-error">Import failed: ${String(result.error ?? "Unknown error")}</p>`;
+          } else {
+            const detected = result.detected as Record<string, number> ?? {};
+            const applied = result.applied as Record<string, number> | null;
+            const warnings = (result.warnings as string[]) ?? [];
+            const manualTasks = (result.manualTasks as string[]) ?? [];
+
+            let html = `<p class="status-success">${result.dryRun ? "Dry run complete" : "Import complete"}.</p>`;
+            html += `<ul class="result-list">`;
+            html += `<li><strong>Detected:</strong> ${detected.content ?? 0} content, ${detected.media ?? 0} media, ${detected.authors ?? 0} authors</li>`;
+            if (applied) html += `<li><strong>Applied:</strong> ${applied.records ?? 0} content records, ${applied.media ?? 0} media</li>`;
+            if (warnings.length) html += `<li><strong>Warnings:</strong> ${warnings.join("; ")}</li>`;
+            if (manualTasks.length) html += `<li><strong>Next steps:</strong> ${manualTasks.join(" ")}</li>`;
+            html += `</ul>`;
+            statusDiv.innerHTML = html;
+          }
+        } catch {
+          statusDiv.innerHTML = '<p class="status-error">Network error — could not reach the import action.</p>';
+        } finally {
+          runBtn.disabled = false;
+          runBtn.textContent = "Run import";
+        }
+      });
+    </script>
+
+    <style>
+      .import-wizard { max-width: 680px; }
+      .breadcrumb { font-size: 0.875rem; color: var(--text-muted, #6b7280); margin-bottom: 1.5rem; }
+      .breadcrumb a { color: var(--accent, #6366f1); text-decoration: none; }
+      .breadcrumb a:hover { text-decoration: underline; }
+      .wizard-section { margin-bottom: 2rem; padding: 1.25rem; border: 1px solid var(--border, #e5e7eb); border-radius: 8px; background: var(--surface, #fff); }
+      .wizard-section-title { margin: 0 0 1rem; font-size: 1rem; font-weight: 600; }
+      .hint { font-size: 0.875rem; color: var(--text-muted, #6b7280); margin: 0 0 0.75rem; }
+      .field-label { display: block; font-size: 0.875rem; font-weight: 500; margin-bottom: 0.375rem; }
+      .file-input, .text-input { width: 100%; padding: 0.5rem 0.75rem; border: 1px solid var(--border, #e5e7eb); border-radius: 6px; font-size: 0.9375rem; background: var(--input-bg, #f9fafb); }
+      .text-input--short { width: auto; max-width: 120px; }
+      .source-tabs { display: flex; gap: 0; border: 1px solid var(--border, #e5e7eb); border-radius: 6px; overflow: hidden; margin-bottom: 1rem; width: fit-content; }
+      .tab-btn { padding: 0.375rem 0.875rem; font-size: 0.875rem; border: none; background: none; cursor: pointer; color: var(--text-muted, #6b7280); }
+      .tab-btn--active { background: var(--accent, #6366f1); color: #fff; font-weight: 500; }
+      .tab-panel { }
+      .tab-panel--hidden { display: none; }
+      .options-grid { display: flex; flex-direction: column; gap: 0.625rem; }
+      .checkbox-label { display: flex; align-items: center; gap: 0.5rem; font-size: 0.9375rem; cursor: pointer; }
+      .checkbox { width: 1rem; height: 1rem; cursor: pointer; }
+      .cli-preview { background: var(--code-bg, #1e1e2e); color: var(--code-text, #cdd6f4); padding: 0.875rem 1rem; border-radius: 6px; font-size: 0.875rem; overflow-x: auto; margin: 0 0 0.75rem; }
+      .copy-btn { padding: 0.375rem 0.875rem; border: 1px solid var(--border, #e5e7eb); border-radius: 6px; font-size: 0.875rem; cursor: pointer; background: var(--surface, #fff); }
+      .copy-btn:hover { background: var(--accent-muted, #e0e7ff); border-color: var(--accent, #6366f1); }
+      .import-status { border: 1px solid var(--border, #e5e7eb); border-radius: 6px; padding: 1rem; min-height: 4rem; background: var(--code-bg-light, #f8f9fa); }
+      .status-idle { color: var(--text-muted, #6b7280); font-size: 0.9375rem; margin: 0; }
+      .status-running { color: var(--accent, #6366f1); font-size: 0.9375rem; margin: 0; }
+      .status-success { color: var(--success, #16a34a); font-size: 0.9375rem; margin: 0 0 0.5rem; font-weight: 500; }
+      .status-error { color: var(--error, #dc2626); font-size: 0.9375rem; margin: 0; }
+      .result-list { margin: 0.5rem 0 0; padding-left: 1.25rem; font-size: 0.9375rem; }
+      .result-list li { margin-bottom: 0.25rem; }
+      .run-options { margin-bottom: 1rem; }
+      .run-actions { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
+      .run-btn { padding: 0.5rem 1.25rem; background: var(--accent, #6366f1); color: #fff; border: none; border-radius: 6px; font-size: 0.9375rem; font-weight: 500; cursor: pointer; }
+      .run-btn:hover:not(:disabled) { background: var(--accent-dark, #4f46e5); }
+      .run-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+      .run-hint { font-size: 0.875rem; color: var(--text-muted, #6b7280); }
+      .cli-details { flex: 1; }
+      .cli-summary { font-size: 0.875rem; color: var(--accent, #6366f1); cursor: pointer; }
+    </style>
+  </AdminLayout>
+) : adminUser?.role !== "admin" ? (
+  <AdminLayout
+    title="Forbidden — Astropress Admin"
+    heading="Access denied"
+    description="You do not have permission to view this page."
+    role={adminUser?.role ?? "editor"}
+    userName={adminUser?.name ?? ""}
+    currentPath="/ap-admin/import"
+  >
+    <p>Only admin users can access the import wizard.</p>
+  </AdminLayout>
+) : (
+  <AdminLayout
+    title="Not found — Astropress Admin"
+    heading="Unknown import source"
+    description="The requested import source is not supported."
+    role={adminUser?.role ?? "editor"}
+    userName={adminUser?.name ?? ""}
+    currentPath="/ap-admin/import"
+  >
+    <p>Supported sources: <a href="/ap-admin/import/wordpress">WordPress</a>, <a href="/ap-admin/import/wix">Wix</a>, <a href="/ap-admin/import/crawl">Web crawl</a>.</p>
+  </AdminLayout>
+)}
