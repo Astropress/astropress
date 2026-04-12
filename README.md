@@ -1,101 +1,165 @@
+<div align="center">
+
+<img src="https://raw.githubusercontent.com/astropress/astropress/main/docs/assets/logo.svg" alt="Astropress" width="200" />
+
 # Astropress
 
-A web application framework for editorial, informational, and campaign sites. Ships
-a headless admin panel, a REST API, and a SQLite runtime. Host applications compose
-these into their own Astro sites — Astropress is not a hosted service.
+**Your website, fully yours.**
 
-## When to use it
+A free, open-source website builder for individuals and small organizations —  
+with a beautiful admin panel, AI-ready scaffolding, and zero vendor lock-in.
 
-- You need a real content admin without writing one yourself
-- You want a Git-friendly static export path (GitHub Pages, Netlify, Vercel)
-- Your editors should not need Git for everyday publishing
-- You want a privacy-first, self-hosted stack (no third-party analytics forced on you)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
+[![npm](https://img.shields.io/npm/v/astropress?color=orange&label=npm)](https://www.npmjs.com/package/astropress)
+[![CI](https://img.shields.io/github/actions/workflow/status/astropress/astropress/ci.yml?label=CI&logo=github)](https://github.com/astropress/astropress/actions)
+[![Coverage](https://img.shields.io/badge/coverage-99%25-brightgreen)](#)
+[![Node ≥ 20](https://img.shields.io/badge/node-%E2%89%A520-brightgreen?logo=node.js&logoColor=white)](https://nodejs.org)
+[![Bun 1.3](https://img.shields.io/badge/bun-1.3-f472b6?logo=bun&logoColor=white)](https://bun.sh)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-blueviolet.svg)](./CONTRIBUTING.md)
+
+</div>
+
+---
+
+## What is Astropress?
+
+Astropress gives you everything you need to run a real website — a clean editing dashboard, pages and blog posts, media uploads, contact forms, redirects, multilingual support, and more — without paying for subscriptions, storing your data on someone else's servers, or needing a developer on call.
+
+You own your content. You choose where it lives. You can export everything at any time.
+
+It works equally well as a **static site** (free hosting on GitHub Pages or Netlify) or a **dynamic site** (on Cloudflare, Render, or your own server). Switch between them without rewriting anything.
+
+**Designed to be built with AI.** Ask Claude, ChatGPT, Cursor, or any AI coding assistant to scaffold your site, add features, or customise the design. Astropress ships an [MCP server](./packages/astropress-mcp/) and a machine-readable [`llms.txt`](./llms.txt) so AI tools understand the codebase out of the box.
+
+---
+
+## What you get
+
+| Feature | What it means for you |
+|---|---|
+| **Admin dashboard** | Write and publish content from a clean browser interface — no coding required |
+| **Pages & blog** | Create any number of pages and posts, with drafts, scheduling, and revision history |
+| **Media library** | Upload images and files; automatic thumbnails and srcsets |
+| **SEO tools** | Page titles, descriptions, Open Graph, schema.org structured data |
+| **Comments** | Moderated comment threads on any post or page |
+| **Redirects** | Manage URL changes without breaking links |
+| **User accounts** | Invite editors and authors with role-based access |
+| **Multilingual** | Publish in multiple languages from the same admin |
+| **Import from WordPress** | Bring your existing content over in one step |
+| **Privacy-first** | No forced third-party analytics. No telemetry. Your data stays yours |
+| **Accessibility** | WCAG 2.2 AA compliant admin UI, tested with axe and screen readers |
+
+---
 
 ## Get started
 
+### One-line installer (macOS / Linux)
+
+The installer sets up all prerequisites (Node.js via nvm, Bun, Rust) and then creates your site:
+
 ```bash
-bun create astropress my-site
-cd my-site && bun dev
+bash <(curl -fsSL https://raw.githubusercontent.com/astropress/astropress/main/tooling/scripts/install.sh)
 ```
 
-Open `http://localhost:4321/ap-admin` and log in.
+Or clone the repo first and run it locally:
 
-Full walkthrough: [docs/QUICK_START.md](./docs/QUICK_START.md)
+```bash
+git clone https://github.com/astropress/astropress.git
+bash astropress/tooling/scripts/install.sh
+```
+
+### On Windows
+
+```powershell
+# In PowerShell (run as Administrator if needed)
+pwsh tooling/scripts/install.ps1
+```
+
+### Then scaffold your site
+
+```bash
+astropress new my-site
+cd my-site
+astropress dev
+```
+
+Open **http://localhost:4321/ap-admin** and log in with the credentials shown in your `.env` file.
+
+> **Full walkthrough →** [docs/guides/QUICK_START.md](./docs/guides/QUICK_START.md)
+
+---
+
+## Build with AI
+
+Astropress is designed for AI-assisted development. Hand off the technical work to an AI coding assistant and focus on your content and design.
+
+**With Claude Code, Cursor, or any MCP-enabled tool:**
+
+```bash
+# The MCP server gives AI agents direct access to Astropress tools
+cd my-site
+astropress mcp start
+```
+
+**With any AI chat tool (ChatGPT, Claude, Gemini):**
+
+The [`llms.txt`](./llms.txt) file at the root of every Astropress project describes the full API surface in plain text. Paste it into any AI conversation to get accurate, project-aware suggestions.
+
+Ask your AI assistant things like:
+- *"Add a newsletter signup form to my site"*
+- *"Create a custom page template for my portfolio"*
+- *"Migrate my site from SQLite to Cloudflare D1"*
+- *"Add a custom analytics dashboard to the admin panel"*
+
+---
+
+## Hosting options
+
+Astropress runs on the platforms you already use. Pick any combination:
+
+| Where your site runs | Where your content lives | Best for |
+|---|---|---|
+| **GitHub Pages** | Built into the repo | Free static sites, blogs |
+| **Cloudflare Pages** | Cloudflare D1 + R2 | Fast global edge, free tier |
+| **Vercel / Netlify** | Supabase | Developer-friendly deploys |
+| **Render** | Appwrite | Full backend on one platform |
+| **Runway** | Runway | All-in-one managed option |
+
+---
 
 ## Documentation
 
-| Doc | What it covers |
-|-----|----------------|
-| [docs/SPEC.md](./docs/SPEC.md) | Product identity, data model, all contracts, known gaps |
-| [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) | Provider seam, schema ERD, security model |
-| [docs/guides/QUICK_START.md](./docs/guides/QUICK_START.md) | Scaffold, env setup, 5-minute getting started |
-| [docs/guides/OPERATIONS.md](./docs/guides/OPERATIONS.md) | Import, backup, migrations, secret rotation, DR runbooks |
-| [docs/guides/ANALYTICS.md](./docs/guides/ANALYTICS.md) | Analytics providers, consent banner, custom snippets |
-| [docs/guides/MULTILINGUAL.md](./docs/guides/MULTILINGUAL.md) | Locale config, hreflang, admin UI labels |
-| [docs/guides/COMPLIANCE.md](./docs/guides/COMPLIANCE.md) | GDPR data inventory, right of erasure SQL, audit log |
-| [docs/reference/WEB_COMPONENTS.md](./docs/reference/WEB_COMPONENTS.md) | Built-in elements, extending, screen reader guide |
-| [docs/reference/DESIGN_SYSTEM.md](./docs/reference/DESIGN_SYSTEM.md) | CSS tokens, contrast ratios, adding admin pages |
-| [docs/reference/BROWSER_SUPPORT.md](./docs/reference/BROWSER_SUPPORT.md) | Minimum versions, key API requirements |
-| [docs/reference/COMPATIBILITY.md](./docs/reference/COMPATIBILITY.md) | Version upgrade procedure, schema migration reference |
-| [llms.txt](./llms.txt) | Machine-readable API surface for AI agents and tooling |
-| [CONTRIBUTING.md](./CONTRIBUTING.md) | Local setup, test commands, PR checklist |
-| [SECURITY.md](./SECURITY.md) | Vulnerability reporting, SLA |
+| Guide | What it covers |
+|---|---|
+| [Quick Start](./docs/guides/QUICK_START.md) | Scaffold, environment setup, first 5 minutes |
+| [Operations](./docs/guides/OPERATIONS.md) | Backups, WordPress import, migrations, disaster recovery |
+| [Analytics](./docs/guides/ANALYTICS.md) | Privacy-respecting analytics providers, consent banner |
+| [Multilingual](./docs/guides/MULTILINGUAL.md) | Multiple languages, locale config, admin UI labels |
+| [Compliance](./docs/guides/COMPLIANCE.md) | GDPR data inventory, right-of-erasure SQL, audit log |
+| [Web Components](./docs/reference/WEB_COMPONENTS.md) | Built-in UI elements, screen reader guide |
+| [Design System](./docs/reference/DESIGN_SYSTEM.md) | CSS tokens, contrast ratios, adding admin pages |
+| [API Reference](./docs/reference/API_REFERENCE.md) | REST API endpoints, authentication, scopes |
+| [Architecture](./docs/ARCHITECTURE.md) | Provider seam, schema ERD, security model |
+| [Contributing](./CONTRIBUTING.md) | Local setup, test commands, PR checklist |
+| [Security](./SECURITY.md) | Vulnerability reporting, response SLA |
 
-## Deployment model
+---
 
-`App Host` is where the Astro web app runs. `Content Services` is where Astropress
-stores content, media, auth, and sessions. These are independent selections.
+## Contributing
 
-| App Host | Content Services | Notes |
-|----------|-----------------|-------|
-| `github-pages` | `none` | Static output; SQLite at build time |
-| `cloudflare-pages` | `cloudflare` | D1 + R2; full edge deployment |
-| `vercel` or `netlify` | `supabase` | Postgres + Storage |
-| `render-web` | `appwrite` | Full backend services + Astro on Render |
-| `runway` | `runway` | Bundled path |
-
-## Adapter status
-
-| Adapter | Status |
-|---------|--------|
-| SQLite (local) | Full — reference implementation |
-| Cloudflare D1 + R2 | Full |
-| Supabase (Postgres + Storage) | Full |
-| Runway | Full |
-| Appwrite | Full |
-
-## Development
+Astropress is built in the open. Contributions of all kinds are welcome — bug reports, documentation improvements, new features, and translations.
 
 ```bash
-bun install
-bun run test              # arch lint + BDD + Vitest
-bun run test:coverage     # with 97% coverage thresholds
-bun run test:acceptance   # Playwright + axe
-bun run test:cli          # Rust CLI (cargo test)
-bun run audit:arch        # architecture boundary checks
-bun run audit:sync        # .ts/.js export parity
+git clone https://github.com/astropress/astropress.git
+cd astropress
+bash tooling/scripts/install.sh --skip-tests
+bun run test   # arch lint + BDD + 1500+ unit tests
 ```
 
-## Repository layout
+See [CONTRIBUTING.md](./CONTRIBUTING.md) for the full guide, test commands, and PR checklist.
 
-```
-packages/astropress/      # Published npm package
-  src/                    # TypeScript source (paired .ts/.js)
-  pages/ap-admin/         # Admin UI pages
-  pages/ap-api/v1/        # REST API endpoints
-  web-components/         # Vanilla Web Components
-
-crates/                   # Rust workspace root (Cargo.toml lives here)
-  astropress-cli/         # Rust CLI
-    src/commands/         # One file per command
-
-packages/astropress-mcp/  # MCP server (8 tools for AI agents)
-tooling/
-  scripts/                # Dev and audit scripts
-  e2e/                    # Playwright end-to-end tests
-  bdd/                    # Gherkin BDD scenarios
-```
+---
 
 ## License
 
-MIT
+[MIT](./LICENSE) © Astropress Contributors

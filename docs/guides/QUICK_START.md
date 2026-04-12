@@ -5,16 +5,22 @@ Get a working astropress site with an admin panel in under 5 minutes.
 ## Prerequisites
 
 - [Bun](https://bun.sh) 1.3+
-- Node.js 22+ (for `node:sqlite` fallback — Bun's built-in SQLite is preferred)
+- Node.js 20+
+
+The bundled installer provisions all prerequisites automatically:
+
+```bash
+bash <(curl -fsSL https://raw.githubusercontent.com/astropress/astropress/main/tooling/scripts/install.sh)
+```
 
 ## 1. Scaffold a new project
 
 ```bash
-bun create astropress my-site
+astropress new my-site
 cd my-site
 ```
 
-You can also use `astropress init` as an alias for `astropress new`:
+`astropress init` is an alias for `astropress new`:
 
 ```bash
 astropress init my-site
@@ -53,7 +59,7 @@ SESSION_SECRET=replace-with-a-long-random-session-secret
 ## 3. Start the dev server
 
 ```bash
-bun dev
+astropress dev
 ```
 
 Open http://localhost:4321/ap-admin — log in with the credentials from your `.env`.
@@ -94,45 +100,48 @@ bun add astropress
 ```js
 // astro.config.mjs
 import { defineConfig } from "astro/config";
-import { astropressIntegration } from "astropress";
+import { createAstropressAdminAppIntegration, createAstropressViteIntegration } from "astropress/integration";
+
+const viteIntegration = createAstropressViteIntegration({
+  localRuntimeModulesPath: new URL("./src/astropress/local-runtime-modules.ts", import.meta.url).pathname,
+});
 
 export default defineConfig({
-  integrations: [astropressIntegration()],
+  integrations: [createAstropressAdminAppIntegration()],
+  vite: {
+    plugins: viteIntegration.plugins,
+    resolve: { alias: viteIntegration.aliases },
+  },
 });
 ```
 
 ```ts
 // src/astropress/local-runtime-modules.ts
-// Implement the LocalRuntimeModules contract for your runtime.
-export { createSqliteAdminRuntime as createAdminRuntime } from "astropress/adapters/sqlite";
+// Implement the host-side runtime seam — swap this to change your storage backend.
+import { createAstropressSqliteAdapter } from "astropress/adapters/sqlite";
+export const createAdminRuntime = () => createAstropressSqliteAdapter({ dbPath: ".data/admin.sqlite" });
 ```
 
-## The 6 imports you need
+## The key imports
 
 ```ts
-// astro.config.mjs
-// Wire the admin app and Vite alias into Astro
-import { createAstropressAdminAppIntegration } from "astropress/integration";
+// astro.config.mjs — Wire the admin app and Vite aliases into Astro
+import { createAstropressAdminAppIntegration, createAstropressViteIntegration } from "astropress/integration";
 
-// src/astropress/local-runtime-modules.ts
-// Host-side DB/auth seam — swap this file to change your runtime
-import { selectAstropressAdapter } from "astropress/adapters/project";
+// src/astropress/local-runtime-modules.ts — Host-side DB/auth seam; swap to change your runtime
+import { createAstropressProjectAdapter } from "astropress/adapters/project";
 
-// src/middleware.ts
-// Security headers, CSRF protection, rate limiting — add to every request
-import { astropressSecurityMiddleware } from "astropress/security";
+// src/middleware.ts — Security headers, CSRF protection, rate limiting
+import { createAstropressSecurityMiddleware } from "astropress/integration";
 
-// astropress.config.ts
-// Register content types, analytics, plugins, locales, and admin branding
+// astropress.config.ts — Register content types, analytics, plugins, locales, and admin branding
 import { registerCms } from "astropress";
 
-// any server file
-// Read APP_HOST / CONTENT_SERVICES env vars (normalizes legacy vars too)
-import { resolveProjectEnv } from "astropress/project-env";
+// any server file — Read APP_HOST / CONTENT_SERVICES env vars
+import { resolveAstropressProjectEnvContract } from "astropress/project-env";
 
-// src/adapters/my-adapter.ts
-// Implement this interface to build a custom storage backend
-import type { AstropressProviderContract } from "astropress/platform-contracts";
+// src/adapters/my-adapter.ts — Implement this interface to build a custom storage backend
+import type { AstropressPlatformAdapter } from "astropress";
 ```
 
 ## `astropress doctor` output

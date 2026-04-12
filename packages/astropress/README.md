@@ -5,8 +5,8 @@ admin panel, a REST API, and a SQLite runtime. Host applications compose these i
 Astro sites — Astropress is not a hosted service.
 
 ```bash
-bun create astropress my-site
-cd my-site && bun dev
+astropress new my-site
+cd my-site && astropress dev
 ```
 
 Open `http://localhost:4321/ap-admin` and log in.
@@ -52,11 +52,11 @@ Pre-built binaries are available on the
 
 ## Documentation
 
-- [Quick Start](https://github.com/astropress/astropress/blob/main/docs/QUICK_START.md)
+- [Quick Start](https://github.com/astropress/astropress/blob/main/docs/guides/QUICK_START.md)
 - [Architecture](https://github.com/astropress/astropress/blob/main/docs/ARCHITECTURE.md)
-- [Operations](https://github.com/astropress/astropress/blob/main/docs/OPERATIONS.md)
-- [API Reference](https://github.com/astropress/astropress/blob/main/docs/API_REFERENCE.md)
-- [Web Components](https://github.com/astropress/astropress/blob/main/docs/WEB_COMPONENTS.md)
+- [Operations](https://github.com/astropress/astropress/blob/main/docs/guides/OPERATIONS.md)
+- [API Reference](https://github.com/astropress/astropress/blob/main/docs/reference/API_REFERENCE.md)
+- [Web Components](https://github.com/astropress/astropress/blob/main/docs/reference/WEB_COMPONENTS.md)
 - [Security](https://github.com/astropress/astropress/blob/main/SECURITY.md)
 
 ## License
