@@ -83,6 +83,7 @@ export interface AstropressResolvedAdminUiConfig {
     resetPasswordRequestSubmit: string;
     resetPasswordTokenSubmit: string;
     backToLogin: string;
+    changeLanguage: string;
   };
   navigation: Record<AstropressAdminNavKey, string>;
 }
@@ -125,6 +126,7 @@ const defaultAdminUiConfig: AstropressResolvedAdminUiConfig = {
     resetPasswordRequestSubmit: "Issue reset link",
     resetPasswordTokenSubmit: "Save new password",
     backToLogin: "Back to admin login",
+    changeLanguage: "Change language",
   },
   navigation: {
     dashboard: "Dashboard",

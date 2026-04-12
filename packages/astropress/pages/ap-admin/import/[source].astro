@@ -229,6 +229,50 @@ const pageTitle = meta ? `Import from ${meta.label} — Astropress Admin` : "Imp
       });
 
       // Run import button
+      function renderStatusLine(statusDiv: HTMLElement, variant: "idle" | "running" | "success" | "error", text: string) {
+        const p = document.createElement("p");
+        p.className = `status-${variant}`;
+        p.textContent = text;
+        statusDiv.replaceChildren(p);
+      }
+
+      function appendResultItem(list: HTMLUListElement, label: string, value: string) {
+        const li = document.createElement("li");
+        const strong = document.createElement("strong");
+        strong.textContent = `${label}:`;
+        li.append(strong, ` ${value}`);
+        list.append(li);
+      }
+
+      function renderResultBlock(
+        statusDiv: HTMLElement,
+        dryRun: boolean,
+        detected: Record<string, number>,
+        applied: Record<string, number> | null,
+        warnings: string[],
+        manualTasks: string[],
+      ) {
+        const summary = document.createElement("p");
+        summary.className = "status-success";
+        summary.textContent = `${dryRun ? "Dry run complete" : "Import complete"}.`;
+
+        const list = document.createElement("ul");
+        list.className = "result-list";
+
+        appendResultItem(
+          list,
+          "Detected",
+          `${detected.content ?? 0} content, ${detected.media ?? 0} media, ${detected.authors ?? 0} authors`,
+        );
+        if (applied) {
+          appendResultItem(list, "Applied", `${applied.records ?? 0} content records, ${applied.media ?? 0} media`);
+        }
+        if (warnings.length) appendResultItem(list, "Warnings", warnings.join("; "));
+        if (manualTasks.length) appendResultItem(list, "Next steps", manualTasks.join(" "));
+
+        statusDiv.replaceChildren(summary, list);
+      }
+
       document.getElementById("run-btn")?.addEventListener("click", async () => {
         const runBtn = document.getElementById("run-btn") as HTMLButtonElement;
         const statusDiv = document.getElementById("import-status")!;
@@ -237,7 +281,7 @@ const pageTitle = meta ? `Import from ${meta.label} — Astropress Admin` : "Imp
 
         runBtn.disabled = true;
         runBtn.textContent = "Running…";
-        statusDiv.innerHTML = '<p class="status-running">Import in progress&hellip;</p>';
+        renderStatusLine(statusDiv, "running", "Import in progress…");
 
         const formData = new FormData();
         formData.set("source", source);
@@ -258,7 +302,7 @@ const pageTitle = meta ? `Import from ${meta.label} — Astropress Admin` : "Imp
           const fileInput = document.getElementById("file-input") as HTMLInputElement;
           const file = fileInput?.files?.[0];
           if (!file) {
-            statusDiv.innerHTML = '<p class="status-error">Please select a file to import.</p>';
+            renderStatusLine(statusDiv, "error", "Please select a file to import.");
             runBtn.disabled = false;
             runBtn.textContent = "Run import";
             return;
@@ -271,24 +315,19 @@ const pageTitle = meta ? `Import from ${meta.label} — Astropress Admin` : "Imp
           const result = await response.json() as Record<string, unknown>;
 
           if (!result.ok) {
-            statusDiv.innerHTML = `<p class="status-error">Import failed: ${String(result.error ?? "Unknown error")}</p>`;
+            renderStatusLine(statusDiv, "error", `Import failed: ${String(result.error ?? "Unknown error")}`);
           } else {
-            const detected = result.detected as Record<string, number> ?? {};
-            const applied = result.applied as Record<string, number> | null;
-            const warnings = (result.warnings as string[]) ?? [];
-            const manualTasks = (result.manualTasks as string[]) ?? [];
-
-            let html = `<p class="status-success">${result.dryRun ? "Dry run complete" : "Import complete"}.</p>`;
-            html += `<ul class="result-list">`;
-            html += `<li><strong>Detected:</strong> ${detected.content ?? 0} content, ${detected.media ?? 0} media, ${detected.authors ?? 0} authors</li>`;
-            if (applied) html += `<li><strong>Applied:</strong> ${applied.records ?? 0} content records, ${applied.media ?? 0} media</li>`;
-            if (warnings.length) html += `<li><strong>Warnings:</strong> ${warnings.join("; ")}</li>`;
-            if (manualTasks.length) html += `<li><strong>Next steps:</strong> ${manualTasks.join(" ")}</li>`;
-            html += `</ul>`;
-            statusDiv.innerHTML = html;
+            renderResultBlock(
+              statusDiv,
+              Boolean(result.dryRun),
+              (result.detected as Record<string, number>) ?? {},
+              (result.applied as Record<string, number> | null) ?? null,
+              (result.warnings as string[]) ?? [],
+              (result.manualTasks as string[]) ?? [],
+            );
           }
         } catch {
-          statusDiv.innerHTML = '<p class="status-error">Network error — could not reach the import action.</p>';
+          renderStatusLine(statusDiv, "error", "Network error — could not reach the import action.");
         } finally {
           runBtn.disabled = false;
           runBtn.textContent = "Run import";
