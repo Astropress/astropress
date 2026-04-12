@@ -22,9 +22,6 @@ export interface RuntimeBindings {
   DB?: D1DatabaseLike;
   MEDIA_BUCKET?: R2BucketLike;
   PUBLIC_R2_BASE_URL?: string;
-  MAILCHIMP_API_KEY?: string;
-  MAILCHIMP_LIST_ID?: string;
-  MAILCHIMP_SERVER?: string;
   RESEND_API_KEY?: string;
   RESEND_FROM_EMAIL?: string;
   CONTACT_NOTIFICATION_TO_EMAIL?: string;
@@ -86,12 +83,9 @@ export function getStringRuntimeValue(name: StringRuntimeKey, locals?: App.Local
 }
 
 export function getNewsletterConfig(locals?: App.Locals | null) {
-  const mode = getStringRuntimeValue("NEWSLETTER_DELIVERY_MODE", locals) ?? (isProductionRuntime() ? "mailchimp" : "mock");
+  const mode = getStringRuntimeValue("NEWSLETTER_DELIVERY_MODE", locals) ?? (isProductionRuntime() ? "listmonk" : "mock");
   return {
     mode,
-    apiKey: getStringRuntimeValue("MAILCHIMP_API_KEY", locals),
-    listId: getStringRuntimeValue("MAILCHIMP_LIST_ID", locals),
-    server: getStringRuntimeValue("MAILCHIMP_SERVER", locals),
     listmonkApiUrl: getStringRuntimeValue("LISTMONK_API_URL", locals),
     listmonkApiUsername: getStringRuntimeValue("LISTMONK_API_USERNAME", locals),
     listmonkApiPassword: getStringRuntimeValue("LISTMONK_API_PASSWORD", locals),

@@ -23,10 +23,12 @@ pub(crate) fn feature_env_stubs(f: &AllFeatures) -> String {
     }
 
     if f.email == EmailChoice::Listmonk {
-        lines.extend(&["# Listmonk (email / newsletter)",
-            "LISTMONK_URL=http://localhost:9001", "LISTMONK_USERNAME=listmonk",
-            "LISTMONK_PASSWORD=replace-me", "LISTMONK_API_URL=http://localhost:9001",
-            "LISTMONK_API_TOKEN=replace-me"]);
+        lines.extend(&["# Listmonk (email / newsletter — see LISTMONK.md for setup instructions)",
+            "NEWSLETTER_DELIVERY_MODE=listmonk",
+            "LISTMONK_API_URL=http://localhost:9001",
+            "LISTMONK_API_USERNAME=listmonk",
+            "LISTMONK_API_PASSWORD=replace-me",
+            "LISTMONK_LIST_ID=1"]);
     }
     if f.commerce == CommerceChoice::Medusa {
         lines.extend(&["# Medusa (e-commerce)", "MEDUSA_BACKEND_URL=http://localhost:9000"]);
@@ -109,6 +111,62 @@ pub(crate) fn feature_config_stubs(f: &AllFeatures) -> Vec<(&'static str, &'stat
             "import { buildConfig } from 'payload/config';\n\nexport default buildConfig({\n  // Configure Payload CMS here.\n  // See: https://payloadcms.com/docs/configuration/overview\n  collections: [],\n});\n",
         )),
         CmsChoice::Directus | CmsChoice::BuiltIn => {}
+    }
+    if f.email == EmailChoice::Listmonk {
+        files.push(("LISTMONK.md", concat!(
+            "# Listmonk Setup Guide\n\n",
+            "Listmonk is a self-hosted, open-source newsletter and mailing list manager.\n",
+            "Your subscriber list and campaign data stay on your own infrastructure — no SaaS fees or vendor lock-in.\n\n",
+            "## Deploy Listmonk\n\n",
+            "### Option A — Fly.io (free tier)\n\n",
+            "```sh\n",
+            "fly launch --image listmonk/listmonk:latest --name my-listmonk\n",
+            "fly postgres create --name my-listmonk-db\n",
+            "fly postgres attach my-listmonk-db\n",
+            "fly deploy\n",
+            "```\n\n",
+            "### Option B — Railway (free tier)\n\n",
+            "1. Create a new Railway project.\n",
+            "2. Add a PostgreSQL service.\n",
+            "3. Add a new service → Docker image → `listmonk/listmonk:latest`.\n",
+            "4. Set `LISTMONK_db_host`, `LISTMONK_db_port`, `LISTMONK_db_user`, `LISTMONK_db_password`, `LISTMONK_db_database` from the Postgres service variables.\n",
+            "5. Deploy and open the public URL.\n\n",
+            "## First-time configuration\n\n",
+            "1. Visit your Listmonk URL and complete the setup wizard.\n",
+            "2. Create an admin account (save these credentials — you will need them below).\n",
+            "3. Go to **Lists** → **New list** and create a subscriber list.\n",
+            "4. Note the numeric list ID shown in the URL (e.g. `/lists/1/...` → ID is `1`).\n\n",
+            "## Configure your Astropress site\n\n",
+            "Add these variables to your `.env` (local) or your host's environment settings (production):\n\n",
+            "```\n",
+            "NEWSLETTER_DELIVERY_MODE=listmonk\n",
+            "LISTMONK_API_URL=https://your-listmonk-instance.fly.dev\n",
+            "LISTMONK_API_USERNAME=your-admin-username\n",
+            "LISTMONK_API_PASSWORD=your-admin-password\n",
+            "LISTMONK_LIST_ID=1\n",
+            "```\n\n",
+            "## Test locally\n\n",
+            "Set `NEWSLETTER_DELIVERY_MODE=mock` in `.env.local` to skip the API call during development.\n",
+            "The mock adapter always returns `{ ok: true }` without contacting Listmonk.\n\n",
+            "## Mailchimp subscriber migration\n\n",
+            "If you are moving from Mailchimp:\n\n",
+            "1. In Mailchimp, go to **Audience** → **Manage Contacts** → **Export Audience** → download as CSV.\n",
+            "2. Convert the CSV to the Listmonk import JSON format:\n\n",
+            "   ```json\n",
+            "   [\n",
+            "     { \"email\": \"subscriber@example.com\", \"name\": \"First Last\", \"status\": \"enabled\" }\n",
+            "   ]\n",
+            "   ```\n\n",
+            "3. POST the array to your Listmonk instance:\n\n",
+            "   ```sh\n",
+            "   curl -u admin:password -X POST https://your-listmonk/api/subscribers/import \\\n",
+            "     -H 'Content-Type: application/json' \\\n",
+            "     -d '{ \"mode\": \"subscribe\", \"subscription_status\": \"confirmed\",\n",
+            "          \"lists\": [1],\n",
+            "          \"records\": [ { \"email\": \"subscriber@example.com\", \"name\": \"First Last\" } ] }'\n",
+            "   ```\n\n",
+            "   Replace `lists: [1]` with your actual list ID.\n",
+        )));
     }
     if f.commerce == CommerceChoice::Medusa {
         files.push(("medusa-config.js",

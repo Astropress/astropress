@@ -143,11 +143,29 @@ mod tests {
     // ── email ─────────────────────────────────────────────────────────────
 
     #[test]
-    fn listmonk_generates_api_env_entries() {
+    fn listmonk_generates_env_stubs() {
         let f = AllFeatures { email: EmailChoice::Listmonk, ..AllFeatures::defaults() };
         let s = feature_env_stubs(&f);
-        assert!(s.contains("LISTMONK_API_URL"));
-        assert!(s.contains("LISTMONK_API_TOKEN"));
+        assert!(s.contains("NEWSLETTER_DELIVERY_MODE=listmonk"), "missing NEWSLETTER_DELIVERY_MODE");
+        assert!(s.contains("LISTMONK_API_URL"), "missing LISTMONK_API_URL");
+        assert!(s.contains("LISTMONK_API_USERNAME"), "missing LISTMONK_API_USERNAME");
+        assert!(s.contains("LISTMONK_API_PASSWORD"), "missing LISTMONK_API_PASSWORD");
+        assert!(s.contains("LISTMONK_LIST_ID"), "missing LISTMONK_LIST_ID");
+    }
+
+    #[test]
+    fn listmonk_generates_setup_doc() {
+        let f = AllFeatures { email: EmailChoice::Listmonk, ..AllFeatures::defaults() };
+        let stubs = feature_config_stubs(&f);
+        let listmonk_md = stubs.iter().find(|(p, _)| *p == "LISTMONK.md");
+        assert!(listmonk_md.is_some(), "LISTMONK.md not generated");
+        let content = listmonk_md.unwrap().1;
+        assert!(content.contains("LISTMONK_API_URL"), "missing LISTMONK_API_URL in LISTMONK.md");
+        assert!(content.contains("LISTMONK_API_USERNAME"), "missing LISTMONK_API_USERNAME in LISTMONK.md");
+        assert!(content.contains("LISTMONK_API_PASSWORD"), "missing LISTMONK_API_PASSWORD in LISTMONK.md");
+        assert!(content.contains("LISTMONK_LIST_ID"), "missing LISTMONK_LIST_ID in LISTMONK.md");
+        assert!(content.contains("NEWSLETTER_DELIVERY_MODE"), "missing NEWSLETTER_DELIVERY_MODE in LISTMONK.md");
+        assert!(content.contains("Fly.io"), "missing Fly.io instructions in LISTMONK.md");
     }
 
     // ── commerce ──────────────────────────────────────────────────────────
