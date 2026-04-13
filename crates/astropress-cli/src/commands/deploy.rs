@@ -97,6 +97,42 @@ pub(crate) fn deploy_script_for_target(
                 Err("The project does not define a `deploy:supabase` script.".into())
             }
         }
+        "fly-io" => {
+            if manifest.scripts.contains_key("deploy:fly-io") {
+                Ok("deploy:fly-io")
+            } else if manifest.scripts.contains_key("build") {
+                Ok("build")
+            } else {
+                Err("The project does not define a Fly.io deploy or build script.".into())
+            }
+        }
+        "coolify" => {
+            if manifest.scripts.contains_key("deploy:coolify") {
+                Ok("deploy:coolify")
+            } else if manifest.scripts.contains_key("build") {
+                Ok("build")
+            } else {
+                Err("The project does not define a Coolify deploy or build script.".into())
+            }
+        }
+        "digitalocean" => {
+            if manifest.scripts.contains_key("deploy:digitalocean") {
+                Ok("deploy:digitalocean")
+            } else if manifest.scripts.contains_key("build") {
+                Ok("build")
+            } else {
+                Err("The project does not define a DigitalOcean deploy or build script.".into())
+            }
+        }
+        "railway" => {
+            if manifest.scripts.contains_key("deploy:railway") {
+                Ok("deploy:railway")
+            } else if manifest.scripts.contains_key("build") {
+                Ok("build")
+            } else {
+                Err("The project does not define a Railway deploy or build script.".into())
+            }
+        }
         "runway" => {
             if manifest.scripts.contains_key("deploy:runway") {
                 Ok("deploy:runway")
@@ -105,7 +141,7 @@ pub(crate) fn deploy_script_for_target(
             }
         }
         other => Err(format!(
-            "Unsupported deploy target `{other}`. Use github-pages, cloudflare, vercel, netlify, render-static, render-web, gitlab-pages, runway, or custom."
+            "Unsupported deploy target `{other}`. Use github-pages, cloudflare, vercel, netlify, render-static, render-web, gitlab-pages, fly-io, coolify, digitalocean, railway, runway, or custom."
         )),
     }
 }

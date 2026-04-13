@@ -31,6 +31,10 @@ pub(crate) fn list_tools() {
     println!("  render-static      Render Static Site — free tier");
     println!("  render-web         Render Web Service — persistent server");
     println!("  gitlab-pages       GitLab Pages — static, free");
+    println!("  fly-io             Fly.io — container platform, web service");
+    println!("  coolify            Coolify — self-hosted PaaS");
+    println!("  digitalocean       DigitalOcean App Platform — managed container hosting");
+    println!("  railway            Railway — container platform  ⚠ paid, usage-based billing");
     println!("  runway             Runway — managed platform");
     println!("  custom             Any custom deployment target");
     println!();
@@ -91,6 +95,10 @@ pub(crate) fn list_providers() {
     println!();
     println!("  Server — persistent runtime");
     println!("    render-web         Render Web Service: always-on; free tier spins down on idle");
+    println!("    fly-io             Fly.io: Docker-based container deployment, web service");
+    println!("    coolify            Coolify: self-hosted PaaS, git-push or Docker Compose deploy");
+    println!("    digitalocean       DigitalOcean App Platform: managed container hosting");
+    println!("    railway            Railway: container platform  ⚠ paid — usage-based billing, no free tier");
     println!();
     println!("  Managed — single-provider, fully hosted");
     println!("    runway             Runway: managed Astropress platform");
