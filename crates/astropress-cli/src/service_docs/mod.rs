@@ -281,6 +281,35 @@ mod tests {
     }
 
     #[test]
+    fn hyperswitch_services_doc_covers_all_payment_regions() {
+        let f = AllFeatures { payments: PaymentChoice::HyperSwitch, ..AllFeatures::defaults() };
+        let doc = build_services_doc(&f).expect("should generate doc");
+        // East Africa
+        assert!(doc.contains("M-Pesa"),       "East Africa M-Pesa: {doc}");
+        assert!(doc.contains("Daraja"),        "East Africa Daraja: {doc}");
+        // West & Southern Africa
+        assert!(doc.contains("Flutterwave"),   "W/S Africa Flutterwave: {doc}");
+        assert!(doc.contains("Paystack"),      "W/S Africa Paystack: {doc}");
+        // India
+        assert!(doc.contains("Razorpay"),      "India Razorpay: {doc}");
+        assert!(doc.contains("UPI"),           "India UPI: {doc}");
+        // Southeast Asia
+        assert!(doc.contains("Xendit"),        "SE Asia Xendit: {doc}");
+        assert!(doc.contains("GrabPay"),       "SE Asia GrabPay: {doc}");
+        assert!(doc.contains("PromptPay"),     "SE Asia PromptPay: {doc}");
+        // Middle East & N. Africa
+        assert!(doc.contains("Noon"),          "Middle East Noon: {doc}");
+        assert!(doc.contains("mada"),          "Middle East mada: {doc}");
+        assert!(doc.contains("KNET"),          "Middle East KNET: {doc}");
+        assert!(doc.contains("Fawry"),         "Egypt Fawry: {doc}");
+        // Latin America
+        assert!(doc.contains("dLocal"),        "LatAm dLocal: {doc}");
+        assert!(doc.contains("PIX"),           "LatAm PIX: {doc}");
+        assert!(doc.contains("OXXO"),          "LatAm OXXO: {doc}");
+        assert!(doc.contains("Boleto"),        "LatAm Boleto: {doc}");
+    }
+
+    #[test]
     fn resend_does_not_generate_compose() {
         let f = AllFeatures {
             transactional_email: TransactionalEmailChoice::Resend,

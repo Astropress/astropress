@@ -40,15 +40,28 @@ fn chatwoot_generates_env_stubs() {
 // ── payments ──────────────────────────────────────────────────────────
 
 #[test]
-fn hyperswitch_env_mentions_regional_providers() {
+fn hyperswitch_env_mentions_all_six_regions() {
     let f = AllFeatures { payments: PaymentChoice::HyperSwitch, ..AllFeatures::defaults() };
     let s = feature_env_stubs(&f);
     // East Africa
-    assert!(s.contains("M-Pesa"), "env stub must mention M-Pesa: {s}");
-    assert!(s.contains("Daraja"), "env stub must mention Daraja: {s}");
+    assert!(s.contains("M-Pesa"),      "East Africa: {s}");
+    assert!(s.contains("Daraja"),      "East Africa: {s}");
+    // West & Southern Africa
+    assert!(s.contains("Flutterwave"), "W/S Africa: {s}");
+    assert!(s.contains("Paystack"),    "W/S Africa: {s}");
     // India
-    assert!(s.contains("Razorpay"), "env stub must mention Razorpay: {s}");
-    assert!(s.contains("UPI"), "env stub must mention UPI: {s}");
+    assert!(s.contains("Razorpay"),    "India: {s}");
+    assert!(s.contains("UPI"),         "India: {s}");
+    // Southeast Asia
+    assert!(s.contains("Xendit"),      "SE Asia: {s}");
+    assert!(s.contains("GrabPay"),     "SE Asia: {s}");
+    // Middle East
+    assert!(s.contains("Noon"),        "Middle East: {s}");
+    assert!(s.contains("mada"),        "Middle East: {s}");
+    // Latin America
+    assert!(s.contains("dLocal"),      "LatAm: {s}");
+    assert!(s.contains("PIX"),         "LatAm: {s}");
+    assert!(s.contains("OXXO"),        "LatAm: {s}");
 }
 
 #[test]

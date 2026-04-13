@@ -43,12 +43,16 @@ pub(super) fn prompt_more_features() -> MoreFeatures {
     {
         let _ = Select::with_theme(t).with_prompt("Payment router").items(&[
             "HyperSwitch  — Apache 2.0; Rust; made by Juspay (India); one self-hosted service\n\
-             \x20             that routes to your choice of provider via the HyperSwitch dashboard:\n\
-             \x20             • East Africa: Safaricom M-Pesa (Daraja STK Push — phone number → PIN)\n\
-             \x20             • India: Razorpay (UPI/IMPS/NEFT), Cashfree (UPI QR), PayU, PhonePe\n\
-             \x20             • Global: Stripe (cards/Apple Pay/Google Pay), Adyen, Braintree, 50+\n\
+             \x20             that routes to any provider you configure in the dashboard:\n\
+             \x20             • East Africa:   M-Pesa / Daraja (STK Push)\n\
+             \x20             • W/S Africa:    Flutterwave (30+ countries), Paystack (NG/GH/KE/ZA)\n\
+             \x20             • India:         Razorpay (UPI/IMPS/NEFT), Cashfree, PayU, PhonePe\n\
+             \x20             • SE Asia:       Xendit (GCash/Maya/QRIS), Adyen (GrabPay/PromptPay/FPX)\n\
+             \x20             • Middle East:   Noon (AE/SA/EG), Checkout.com (mada/KNET/BENEFIT/Fawry)\n\
+             \x20             • Latin America: dLocal (PIX/OXXO/Boleto, 15 countries), Ebanx, PayU\n\
+             \x20             • Global:        Stripe (cards/Apple Pay/Google Pay), Adyen, PayPal\n\
              \x20             Includes src/components/HyperCheckout.astro — Unified Checkout Web SDK\n\
-             \x20             (MIT) that auto-shows M-Pesa / UPI / card UI based on enabled connectors\n\
+             \x20             (MIT) that renders the right UI automatically per enabled connector\n\
              \x20             ⚠ each provider charges its own transaction fees",
         ]).default(0).interact().unwrap_or(0);
         PaymentChoice::HyperSwitch

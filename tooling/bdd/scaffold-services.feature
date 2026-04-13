@@ -78,15 +78,40 @@ Feature: Service selection during astropress new
     And the .env.example file contains "HYPERSWITCH_BASE_URL"
     And the .env.example file contains "PAYMENT_SUCCESS_REDIRECT_URL"
 
-  Scenario: HyperSwitch env stubs name both API keys and regional providers
+  Scenario: HyperSwitch env stubs name both API keys and all six regions
     Given I select "HyperSwitch" for payments during scaffolding
     When scaffolding completes
     Then the .env.example file contains "HYPERSWITCH_API_KEY"
     And the .env.example file contains "HYPERSWITCH_PUBLISHABLE_KEY"
     And the .env.example file mentions "M-Pesa"
     And the .env.example file mentions "Daraja"
+    And the .env.example file mentions "Flutterwave"
+    And the .env.example file mentions "Paystack"
     And the .env.example file mentions "Razorpay"
     And the .env.example file mentions "UPI"
+    And the .env.example file mentions "Xendit"
+    And the .env.example file mentions "GrabPay"
+    And the .env.example file mentions "Noon"
+    And the .env.example file mentions "dLocal"
+    And the .env.example file mentions "PIX"
+    And the .env.example file mentions "OXXO"
+
+  Scenario: HyperSwitch SERVICES.md connector table covers all payment regions
+    Given I select "HyperSwitch" for payments during scaffolding
+    When scaffolding completes
+    Then the generated SERVICES.md mentions "Flutterwave" for West and Southern Africa
+    And the generated SERVICES.md mentions "Paystack" for Nigeria and Ghana
+    And the generated SERVICES.md mentions "Xendit" for Southeast Asia
+    And the generated SERVICES.md mentions "GrabPay" for Southeast Asia
+    And the generated SERVICES.md mentions "PromptPay" for Thailand
+    And the generated SERVICES.md mentions "Noon" for Middle East
+    And the generated SERVICES.md mentions "mada" for Saudi Arabia
+    And the generated SERVICES.md mentions "KNET" for Kuwait
+    And the generated SERVICES.md mentions "Fawry" for Egypt
+    And the generated SERVICES.md mentions "dLocal" for Latin America
+    And the generated SERVICES.md mentions "PIX" for Brazil payments
+    And the generated SERVICES.md mentions "OXXO" for Mexico payments
+    And the generated SERVICES.md mentions "Boleto" for Brazil payments
 
   Scenario: HyperSwitch scaffolds a Unified Checkout component
     Given I select "HyperSwitch" for payments during scaffolding
