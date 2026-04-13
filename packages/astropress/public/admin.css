@@ -818,6 +818,103 @@ html[data-theme="dark"] ap-notice[type="error"] {
   text-decoration: none;
 }
 
+/* ── Skeleton loaders ─────────────────────────────────────────────────────── */
+@keyframes ap-shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
+}
+.skeleton {
+  background: linear-gradient(90deg, var(--border, #e2e8f0) 25%, var(--surface-alt, #f8fafc) 50%, var(--border, #e2e8f0) 75%);
+  background-size: 200% 100%;
+  animation: ap-shimmer 1.4s infinite;
+  border-radius: 4px;
+  color: transparent;
+  user-select: none;
+}
+.skeleton-row  { height: 1.25rem; margin: 0.5rem 0; }
+.skeleton-text { height: 0.875rem; }
+
+/* ── Undo toast ───────────────────────────────────────────────────────────── */
+.undo-toast {
+  position: fixed;
+  bottom: 1.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  padding: 0.75rem 1.25rem;
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  z-index: 200;
+  animation: ap-toast-in 0.2s ease;
+}
+@keyframes ap-toast-in {
+  from { opacity: 0; transform: translateX(-50%) translateY(8px); }
+}
+.undo-btn {
+  background: none;
+  border: 1px solid currentColor;
+  border-radius: 4px;
+  cursor: pointer;
+  font: inherit;
+  padding: 0.2rem 0.6rem;
+  color: var(--accent);
+}
+.undo-btn:hover { background: var(--surface-alt); }
+
+/* ── Command palette ──────────────────────────────────────────────────────── */
+.cmd-palette {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+  padding: 0;
+  width: min(560px, 92vw);
+  max-height: 60vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.cmd-palette::backdrop { background: rgba(0, 0, 0, 0.4); }
+.cmd-input {
+  border: none;
+  border-bottom: 1px solid var(--border);
+  font: inherit;
+  font-size: 1.05rem;
+  padding: 0.85rem 1rem;
+  width: 100%;
+  background: var(--surface);
+  color: inherit;
+  outline: none;
+}
+.cmd-results {
+  list-style: none;
+  margin: 0;
+  padding: 0.4rem 0;
+  overflow-y: auto;
+  flex: 1;
+}
+.cmd-results li a,
+.cmd-results li span {
+  display: block;
+  padding: 0.55rem 1rem;
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
+}
+.cmd-results li[aria-selected="true"] a,
+.cmd-results li:hover a {
+  background: var(--surface-alt);
+}
+.cmd-empty {
+  padding: 1rem;
+  text-align: center;
+  color: var(--text-muted, #64748b);
+  font-size: 0.9rem;
+}
+
 /* WCAG 2.3.3 — suppress all transforms and transitions when the user requests
  * reduced motion. Keeps background-color swaps usable as focus/hover feedback. */
 @media (prefers-reduced-motion: reduce) {
@@ -838,4 +935,7 @@ html[data-theme="dark"] ap-notice[type="error"] {
   .admin-button-ghost:focus-visible {
     transform: none;
   }
+
+  .skeleton { animation: none; background: var(--border, #e2e8f0); }
+  .undo-toast { animation: none; }
 }

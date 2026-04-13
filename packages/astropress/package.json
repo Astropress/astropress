@@ -100,6 +100,7 @@
     "./web-components/notice": { "types": "./web-components/notice.ts", "default": "./web-components/notice.ts" },
     "./web-components/theme-toggle": { "types": "./web-components/theme-toggle.ts", "default": "./web-components/theme-toggle.ts" },
     "./web-components/confirm-dialog": { "types": "./web-components/confirm-dialog.ts", "default": "./web-components/confirm-dialog.ts" },
+    "./web-components/command-palette": { "types": "./web-components/command-palette.ts", "default": "./web-components/command-palette.ts" },
     "./web-components/html-editor": { "types": "./web-components/html-editor.ts", "default": "./web-components/html-editor.ts" },
     "./web-components/ap-stale-tab-warning": { "types": "./web-components/ap-stale-tab-warning.ts", "default": "./web-components/ap-stale-tab-warning.ts" },
     "./web-components/ap-lock-indicator": { "types": "./web-components/ap-lock-indicator.ts", "default": "./web-components/ap-lock-indicator.ts" },

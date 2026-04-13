@@ -1327,7 +1327,23 @@ const verificationGroups: VerificationGroup[] = [
     steps: [
       {
         command: "bun",
-        args: ["run", "--filter", "astropress", "test", "--", "settings_tabs"],
+        args: ["run", "--filter", "astropress", "test", "--", "settings-tabs"],
+        cwd: astropressPackageRoot,
+      },
+    ],
+  },
+  {
+    label: "Admin command palette",
+    scenarios: [
+      "Pressing Ctrl+K opens the command palette",
+      "Typing in the palette filters nav items",
+      "Pressing Enter on a selected result navigates to that page",
+      "Pressing Escape closes the palette",
+    ],
+    steps: [
+      {
+        command: "bun",
+        args: ["run", "--filter", "astropress", "test", "--", "command-palette"],
         cwd: astropressPackageRoot,
       },
     ],
