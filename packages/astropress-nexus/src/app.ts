@@ -4,6 +4,9 @@ import { SiteRegistry } from "./registry.js";
 import { checkSiteHealth, proxySiteRequest, postSiteRequest } from "./site-client.js";
 import { getAggregateMetrics } from "./metrics-cache.js";
 import { createJob, getJob, listJobs, updateJob } from "./jobs.js";
+import { discoverCloudwaySites } from "./connectors/cloudways.js";
+import { discoverCPanelWordPressSites } from "./connectors/cpanel.js";
+import { discoverHPanelSites } from "./connectors/hpanel.js";
 
 export type NexusAppOptions = {
   config: NexusConfig;
@@ -221,6 +224,74 @@ export function createNexusApp(options: NexusAppOptions): Hono {
     const job = getJob(c.req.param("id"));
     if (!job) return c.json({ error: "Job not found" }, 404);
     return c.json(job);
+  });
+
+  // ── POST /connectors/cloudways/discover ───────────────────────────────────
+  app.post("/connectors/cloudways/discover", async (c) => {
+    let body: Record<string, unknown>;
+    try {
+      body = await c.req.json() as Record<string, unknown>;
+    } catch {
+      return c.json({ error: "Request body must be valid JSON." }, 422);
+    }
+
+    const email = typeof body.email === "string" ? body.email.trim() : "";
+    const apiKey = typeof body.apiKey === "string" ? body.apiKey.trim() : "";
+
+    if (!email) return c.json({ error: "email is required." }, 422);
+    if (!apiKey) return c.json({ error: "apiKey is required." }, 422);
+
+    try {
+      const sites = await discoverCloudwaySites({ email, apiKey });
+      return c.json({ sites });
+    } catch (err) {
+      return c.json({ error: err instanceof Error ? err.message : "Cloudways discovery failed." }, 502);
+    }
+  });
+
+  // ── POST /connectors/cpanel/discover ─────────────────────────────────────
+  app.post("/connectors/cpanel/discover", async (c) => {
+    let body: Record<string, unknown>;
+    try {
+      body = await c.req.json() as Record<string, unknown>;
+    } catch {
+      return c.json({ error: "Request body must be valid JSON." }, 422);
+    }
+
+    const host = typeof body.host === "string" ? body.host.trim() : "";
+    const username = typeof body.username === "string" ? body.username.trim() : "";
+    const password = typeof body.password === "string" ? body.password : "";
+
+    if (!host) return c.json({ error: "host is required." }, 422);
+    if (!username) return c.json({ error: "username is required." }, 422);
+    if (!password) return c.json({ error: "password is required." }, 422);
+
+    try {
+      const sites = await discoverCPanelWordPressSites({ host, username, password });
+      return c.json({ sites });
+    } catch (err) {
+      return c.json({ error: err instanceof Error ? err.message : "cPanel discovery failed." }, 502);
+    }
+  });
+
+  // ── POST /connectors/hpanel/discover ─────────────────────────────────────
+  app.post("/connectors/hpanel/discover", async (c) => {
+    let body: Record<string, unknown>;
+    try {
+      body = await c.req.json() as Record<string, unknown>;
+    } catch {
+      return c.json({ error: "Request body must be valid JSON." }, 422);
+    }
+
+    const accessToken = typeof body.accessToken === "string" ? body.accessToken.trim() : "";
+    if (!accessToken) return c.json({ error: "accessToken is required." }, 422);
+
+    try {
+      const sites = await discoverHPanelSites({ accessToken });
+      return c.json({ sites });
+    } catch (err) {
+      return c.json({ error: err instanceof Error ? err.message : "hPanel discovery failed." }, 502);
+    }
   });
 
   return app;
