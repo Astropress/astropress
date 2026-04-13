@@ -11,6 +11,10 @@ const viteIntegration = createAstropressViteIntegration({
 });
 
 export default defineConfig({
+  devToolbar: {
+    enabled: false,
+  },
+  output: "server",
   integrations: [createAstropressAdminAppIntegration()],
   vite: {
     plugins: viteIntegration.plugins,

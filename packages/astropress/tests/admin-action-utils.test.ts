@@ -5,12 +5,29 @@ import { makeFormRequest } from "./helpers/make-request.js";
 const mocks = vi.hoisted(() => ({
   getRuntimeCsrfToken: vi.fn(),
   getRuntimeSessionUser: vi.fn(),
+  getRuntimeEnv: vi.fn(),
 }));
 
 vi.mock("../src/runtime-admin-auth", () => ({
   getRuntimeCsrfToken: mocks.getRuntimeCsrfToken,
   getRuntimeSessionUser: mocks.getRuntimeSessionUser,
 }));
+
+vi.mock("../src/runtime-env", async () => {
+  const actual = await vi.importActual<typeof import("../src/runtime-env")>("../src/runtime-env");
+  return {
+    ...actual,
+    getRuntimeEnv: mocks.getRuntimeEnv,
+  };
+});
+
+vi.mock("../src/runtime-env.js", async () => {
+  const actual = await vi.importActual<typeof import("../src/runtime-env")>("../src/runtime-env");
+  return {
+    ...actual,
+    getRuntimeEnv: mocks.getRuntimeEnv,
+  };
+});
 
 function makeContext(
   form: Record<string, string> = {},
@@ -44,6 +61,7 @@ describe("admin action utils", () => {
       role: "admin",
       name: "Admin User",
     });
+    mocks.getRuntimeEnv.mockReturnValue(undefined);
   });
 
   it("redirects unauthenticated requests to login", async () => {
@@ -117,7 +135,41 @@ describe("admin action utils", () => {
       },
     );
 
-    expect(response.headers.get("Location")).toBe("/ap-admin/posts/new?error=1&message=Something+went+wrong.+Please+try+again.");
+    expect(response.headers.get("Location")).toBe("/ap-admin/posts/new?error=1&message=The+requested+change+could+not+be+completed.+Reload+the+page+and+retry+the+action.");
+  });
+
+  it("accepts the current non-legacy session cookie name", async () => {
+    const { requireAdminFormAction } = await import("astropress");
+    const context = makeContext({ _csrf: "csrf-token" });
+    context.cookies.get = vi.fn((name: string) => (name === "astropress_admin_session" ? { value: "session-token" } : undefined));
+
+    const result = await requireAdminFormAction(context, {
+      failurePath: "/ap-admin/posts",
+    });
+
+    expect(result.ok).toBe(true);
+  });
+
+  it("accepts harness locals when PLAYWRIGHT_E2E_MODE is admin-harness", async () => {
+    mocks.getRuntimeSessionUser.mockResolvedValue(null);
+    mocks.getRuntimeCsrfToken.mockResolvedValue(null);
+    mocks.getRuntimeEnv.mockImplementation((name: string) => (name === "PLAYWRIGHT_E2E_MODE" ? "admin-harness" : undefined));
+    const { requireAdminFormAction } = await import("astropress");
+    const context = makeContext({ _csrf: "harness-csrf-token" });
+    context.locals = {
+      adminUser: {
+        email: "admin@example.com",
+        role: "admin",
+        name: "Admin Harness",
+      },
+      csrfToken: "harness-csrf-token",
+    } as App.Locals;
+
+    const result = await requireAdminFormAction(context, {
+      failurePath: "/ap-admin/posts",
+    });
+
+    expect(result.ok).toBe(true);
   });
 
   it("passes actor and form data into successful handlers", async () => {

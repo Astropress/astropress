@@ -65,6 +65,12 @@ export class ApHtmlEditor extends HTMLElement {
   private _abortController: AbortController | null = null;
   private _broadcastChannel: BroadcastChannel | null = null;
 
+  private getFocusableElements(container: HTMLElement) {
+    return [...container.querySelectorAll<HTMLElement>(
+      'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+    )].filter((element) => !element.hasAttribute("hidden"));
+  }
+
   connectedCallback() {
     this._abortController = new AbortController();
     const { signal } = this._abortController;
@@ -100,6 +106,55 @@ export class ApHtmlEditor extends HTMLElement {
     const urlDialog = this.querySelector<HTMLDialogElement>("#url-input-dialog");
     const urlField = this.querySelector<HTMLInputElement>("#url-input-field");
     const urlForm = this.querySelector<HTMLFormElement>("#url-input-form");
+
+    const trapDialogFocus = (dialog: HTMLDialogElement, event: KeyboardEvent) => {
+      if (event.key !== "Tab") {
+        return;
+      }
+
+      const focusable = this.getFocusableElements(dialog);
+      if (focusable.length === 0) {
+        event.preventDefault();
+        dialog.focus();
+        return;
+      }
+
+      const first = focusable[0];
+      const last = focusable.at(-1)!;
+      const active = dialog.ownerDocument.activeElement as HTMLElement | null;
+
+      if (event.shiftKey) {
+        if (!active || active === first) {
+          event.preventDefault();
+          last.focus();
+        }
+        return;
+      }
+
+      if (!active || active === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+
+    const prepareDialog = (dialog: HTMLDialogElement | null, initialFocus?: HTMLElement | null, restoreFocus?: HTMLElement | null) => {
+      if (!dialog) {
+        return;
+      }
+
+      dialog.addEventListener("keydown", (event) => trapDialogFocus(dialog, event), { signal });
+      dialog.addEventListener("close", () => restoreFocus?.focus(), { signal });
+      dialog.addEventListener("cancel", () => restoreFocus?.focus(), { signal });
+      dialog.addEventListener(
+        "transitionend",
+        () => {
+          if (dialog.open) {
+            (initialFocus ?? this.getFocusableElements(dialog)[0] ?? dialog).focus();
+          }
+        },
+        { signal },
+      );
+    };
 
     const syncPreview = () => {
       if (editor && preview) {
@@ -183,7 +238,13 @@ export class ApHtmlEditor extends HTMLElement {
     );
 
     // Media library
-    mediaButton?.addEventListener("click", () => mediaDialog?.showModal(), { signal });
+    prepareDialog(mediaDialog, mediaClose ?? null, mediaButton ?? null);
+    prepareDialog(urlDialog, urlField ?? null, toolbar?.querySelector<HTMLElement>('[data-cmd="createLink"]') ?? null);
+
+    mediaButton?.addEventListener("click", () => {
+      mediaDialog?.showModal();
+      (mediaClose ?? mediaDialog)?.focus();
+    }, { signal });
     mediaClose?.addEventListener("click", () => mediaDialog?.close(), { signal });
   }
 

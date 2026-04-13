@@ -1,16 +1,19 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page } from "@playwright/test";
 
-export async function expectNoAxeViolations(page: Page) {
+export async function expectNoAxeViolations(page: Page, options?: { ignoreRules?: string[] }) {
+  const ignoreRules = new Set(options?.ignoreRules ?? []);
   const results = await new AxeBuilder({ page })
     .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
     .analyze();
 
-  const violations = results.violations.map((violation) => ({
+  const violations = results.violations
+    .filter((violation) => !ignoreRules.has(violation.id))
+    .map((violation) => ({
     id: violation.id,
     help: violation.help,
     nodes: violation.nodes.length,
-  }));
+    }));
 
   expect(violations).toEqual([]);
 }

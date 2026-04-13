@@ -1,10 +1,12 @@
 import { mkdirSync } from "node:fs";
+import { join } from "node:path";
 import { DatabaseSync } from "node:sqlite";
 
 import { createAstropressSqliteAdminRuntime } from "astropress/sqlite-admin-runtime";
 import { createDefaultAstropressSqliteSeedToolkit } from "astropress/sqlite-bootstrap";
 
-const dbPath = process.env.ADMIN_DB_PATH ?? ".data/admin.sqlite";
+const tempDataRoot = process.env.ASTROPRESS_DATA_ROOT?.trim();
+const dbPath = process.env.ADMIN_DB_PATH ?? (tempDataRoot ? join(tempDataRoot, "admin.sqlite") : ".data/admin.sqlite");
 const dataDir = dbPath.substring(0, dbPath.lastIndexOf("/")) || ".data";
 
 mkdirSync(dataDir, { recursive: true });

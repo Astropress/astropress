@@ -1,4 +1,5 @@
 import { mkdirSync } from "node:fs";
+import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { DatabaseSync } from "node:sqlite";
@@ -8,8 +9,9 @@ import { createAstropressSqliteSeedToolkit, readAstropressSqliteSchemaSql } from
 import type { RedirectRuleSeed, SeededComment } from "astropress/sqlite-bootstrap";
 
 const workspaceRoot = fileURLToPath(new URL("../../", import.meta.url));
-const dataDirectory = fileURLToPath(new URL("../../.data/", import.meta.url));
-const dbPath = fileURLToPath(new URL("../../.data/admin-harness.sqlite", import.meta.url));
+const configuredDataDirectory = process.env.ASTROPRESS_DATA_ROOT?.trim();
+const dataDirectory = configuredDataDirectory || fileURLToPath(new URL("../../.data/", import.meta.url));
+const dbPath = process.env.ADMIN_DB_PATH?.trim() || join(dataDirectory, "admin-harness.sqlite");
 
 mkdirSync(dataDirectory, { recursive: true });
 

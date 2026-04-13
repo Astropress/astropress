@@ -1,17 +1,7 @@
 import type { APIRoute } from "astro";
 import { withAdminFormAction } from "astropress";
 import { saveRuntimeStructuredPageRoute } from "astropress";
-
-type StructuredPageTemplateKey =
-  | "about"
-  | "getinvolved"
-  | "education"
-  | "impact"
-  | "simple_landing"
-  | "donate"
-  | "contact"
-  | "home"
-  | "blog";
+import { getCmsConfig } from "astropress";
 
 function parseJson<T>(value: FormDataEntryValue | null, fallback: T) {
   try {
@@ -21,19 +11,9 @@ function parseJson<T>(value: FormDataEntryValue | null, fallback: T) {
   }
 }
 
-function parseTemplateKey(value: FormDataEntryValue | null): StructuredPageTemplateKey | null {
+function parseTemplateKey(value: FormDataEntryValue | null): string | null {
   const normalized = String(value ?? "").trim();
-  if (
-    normalized === "about" ||
-    normalized === "getinvolved" ||
-    normalized === "education" ||
-    normalized === "impact" ||
-    normalized === "simple_landing" ||
-    normalized === "donate" ||
-    normalized === "contact" ||
-    normalized === "home" ||
-    normalized === "blog"
-  ) {
+  if (getCmsConfig().templateKeys.includes(normalized)) {
     return normalized;
   }
   return null;

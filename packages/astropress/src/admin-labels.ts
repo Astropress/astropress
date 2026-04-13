@@ -91,7 +91,7 @@ export const adminLabels: Record<AdminLocale, Record<AdminLabelKey, string>> = {
     confirmDelete: "Are you sure you want to delete this? This action cannot be undone.",
     changeLanguage: "Change language",
     loadingLabel: "Loading\u2026",
-    errorLabel: "An error occurred",
+    errorLabel: "Action failed",
   },
   es: {
     loginHeading: "Acceder al panel de administraci\u00f3n",

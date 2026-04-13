@@ -1,6 +1,8 @@
 import { spawn, type ChildProcess } from "node:child_process";
+import { mkdtemp, rm } from "node:fs/promises";
 import path from "node:path";
 import net from "node:net";
+import { tmpdir } from "node:os";
 
 type ServerHandle = {
   name: string;
@@ -129,11 +131,17 @@ async function main() {
   const needsExample = requestedProjects.length === 0 || requestedProjects.some((arg) => arg.includes("example-a11y"));
   const needsAdminHarness = requestedProjects.length === 0 || requestedProjects.some((arg) => arg.includes("admin-harness"));
   const servers: ServerHandle[] = [];
+  const tempDataRoots: string[] = [];
 
   try {
     if (needsExample) {
+      const exampleDataRoot = await mkdtemp(path.join(tmpdir(), "astropress-example-data-"));
+      tempDataRoots.push(exampleDataRoot);
       const examplePort = await findAvailablePort(4173);
-      await runCommand("bun", ["run", "--filter", "astropress-example-gh-pages", "build"], root);
+      await runCommand("bun", ["run", "--filter", "astropress-example-gh-pages", "build"], root, {
+        ASTROPRESS_DATA_ROOT: exampleDataRoot,
+        ASTROPRESS_LOCAL_IMAGE_ROOT: exampleDataRoot,
+      });
       const exampleServer = spawnCommand(
         "example-server",
         "python3",
@@ -146,13 +154,19 @@ async function main() {
     }
 
     if (needsAdminHarness) {
+      const adminDataRoot = await mkdtemp(path.join(tmpdir(), "astropress-admin-data-"));
+      tempDataRoots.push(adminDataRoot);
       const adminPort = await findAvailablePort(4325);
       const harnessServer = spawnCommand(
         "admin-harness",
         "bun",
         ["run", "--filter", "astropress-example-admin-harness", "dev", "--", "--host", "127.0.0.1", "--port", String(adminPort)],
         root,
-        { PLAYWRIGHT_E2E_MODE: "admin-harness" },
+        {
+          PLAYWRIGHT_E2E_MODE: "admin-harness",
+          ASTROPRESS_DATA_ROOT: adminDataRoot,
+          ASTROPRESS_LOCAL_IMAGE_ROOT: adminDataRoot,
+        },
       );
       servers.push(harnessServer);
       process.env.PLAYWRIGHT_ADMIN_BASE_URL = `http://127.0.0.1:${adminPort}`;
@@ -171,6 +185,7 @@ async function main() {
     });
   } finally {
     await Promise.allSettled(servers.map((server) => stopServer(server)));
+    await Promise.allSettled(tempDataRoots.map((dir) => rm(dir, { recursive: true, force: true })));
   }
 }
 

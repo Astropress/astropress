@@ -98,6 +98,7 @@ test.describe("Feature: admin media upload", () => {
   test("Scenario: upload PNG — asset appears in media library with thumbnail", async ({ page }) => {
     await page.goto("/ap-admin/media", { waitUntil: "networkidle" });
     await expect(page.getByRole("heading", { level: 1, name: "Media" })).toBeVisible();
+    const initialAssetCount = Number((await page.locator(".summary-card strong").first().textContent()) ?? "0");
 
     // Build a minimal 1×1 PNG in memory using a data URL
     const pngBase64 =
@@ -111,12 +112,16 @@ test.describe("Feature: admin media upload", () => {
       mimeType: "image/png",
       buffer: pngBytes,
     });
+    await page.locator("input[aria-label='Media title']").fill("E2E Upload");
+    await page.locator("input[aria-label='Media alt text']").fill("A 1x1 upload used by the CRUD harness.");
+    await page.getByRole("button", { name: "Upload media" }).click();
 
-    // Wait for the library to update — at least one entry should now be present
-    await page.waitForTimeout(800);
+    await page.waitForURL(/\/ap-admin\/media\?saved=1/, { waitUntil: "networkidle" });
+    await expect(page.getByText("The media library was updated successfully.")).toBeVisible();
 
-    // The uploaded filename should appear somewhere on the page
-    await expect(page.getByText("e2e-test-upload.png")).toBeVisible();
+    const updatedAssetCount = Number((await page.locator(".summary-card strong").first().textContent()) ?? "0");
+    expect(updatedAssetCount).toBeGreaterThan(initialAssetCount);
+    await expect(page.getByLabel("Media assets").getByText("E2E Upload")).toBeVisible();
 
     // A non-empty src thumbnail should appear
     const thumbnails = page.locator("img[src]");
@@ -130,29 +135,20 @@ test.describe("Feature: admin user invite flow", () => {
     await page.goto("/ap-admin/users", { waitUntil: "networkidle" });
     await expect(page.getByRole("heading", { level: 1, name: "Users" })).toBeVisible();
 
-    // Open the invite dialog / form
-    const inviteButton = page.getByRole("button", { name: /invite/i });
-    await expect(inviteButton).toBeVisible();
-    await inviteButton.click();
-
-    // Fill in the invite email
-    const emailInput = page.locator("input[type='email'], input[name='email']").first();
+    const emailInput = page.locator("#invite-email");
     await expect(emailInput).toBeVisible();
+    await page.locator("#invite-name").fill("E2E Invite");
     await emailInput.fill(`e2e-invite-${Date.now()}@test.local`);
+    await page.locator("#invite-role").selectOption("editor");
+    await page.getByRole("button", { name: "Send Invitation" }).click();
 
-    // Select a role if the field is present
-    const roleSelect = page.locator("select[name='role']");
-    if (await roleSelect.isVisible()) {
-      await roleSelect.selectOption("editor");
-    }
-
-    await page.getByRole("button", { name: /send invite|invite user|submit/i }).click();
-
-    // After submission we expect either a success notice or a preview-mode link
-    await page.waitForTimeout(500);
-    const successNotice = page.locator("ap-notice[type='success'], [data-testid='invite-success']");
-    const previewLink = page.getByText(/preview|accept.*invite/i);
-    const hasSuccess = (await successNotice.count()) > 0 || (await previewLink.count()) > 0;
-    expect(hasSuccess, "Expected a success notice or preview link after invite submission").toBe(true);
+    await page.waitForURL(/\/ap-admin\/users\?/, { waitUntil: "networkidle" });
+    const successText = page.getByText("The invitation was issued successfully.");
+    const previewText = page.getByText(/User created\. Email delivery is in preview mode/i);
+    const previewLink = page.getByText(/Invitation link:/i);
+    const successVisible = await successText.isVisible().catch(() => false);
+    const previewVisible = await previewText.isVisible().catch(() => false);
+    const previewLinkVisible = await previewLink.isVisible().catch(() => false);
+    expect(successVisible || (previewVisible && previewLinkVisible), "Expected delivered or preview invite feedback after submission").toBe(true);
   });
 });

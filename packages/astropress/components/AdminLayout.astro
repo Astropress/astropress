@@ -250,7 +250,7 @@ const navItems: NavItem[] = [
     <ap-command-palette data-nav-items={JSON.stringify(navItems.filter((n) => n.href && !n.isGroupLabel).map((n) => ({ label: n.label, href: n.href })))}>
       <dialog id="cmd-palette" class="cmd-palette" aria-label="Command palette">
         <input type="search" class="cmd-input" placeholder="Go to\u2026" aria-label="Search admin pages" autocomplete="off" />
-        <ul class="cmd-results" role="listbox" aria-live="polite"></ul>
+        <ul class="cmd-results" role="listbox" aria-label="Command palette results" aria-live="polite"></ul>
       </dialog>
     </ap-command-palette>
     <script>

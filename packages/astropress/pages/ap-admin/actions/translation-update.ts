@@ -9,7 +9,7 @@ export const POST: APIRoute = async (context) => {
 
   return withAdminFormAction(
     context,
-    { failurePath: refererPath, unexpectedMessage: "Translation state could not be updated. Please try again." },
+    { failurePath: refererPath, unexpectedMessage: "Translation state could not be updated. Reload the page and retry the status change." },
     async ({ actor, formData, locals, redirect, fail }) => {
       const returnPath = resolveSafeReturnPath(formData.get("returnPath") as string | null, refererPath);
       const route = formData.get("route") as string | null;

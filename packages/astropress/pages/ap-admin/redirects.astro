@@ -43,7 +43,7 @@ if (model.status === "forbidden") {
       </div>
       <label class="admin-field">
         <span>Legacy path</span>
-        <input aria-label="Legacy path" type="text" name="sourcePath" placeholder="/fresh-start" class="admin-input" />
+        <input aria-label="Legacy path" type="text" name="sourcePath" placeholder="/fresh-start" class="admin-input" autofocus={Boolean(errorMessage)} />
       </label>
       <label class="admin-field">
         <span>Target path</span>

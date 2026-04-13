@@ -1,6 +1,7 @@
 import type { APIRoute } from "astro";
 import { withAdminFormAction } from "astropress";
 import { createRuntimeStructuredPageRoute } from "astropress";
+import { getCmsConfig } from "astropress";
 
 function buildDefaultSections(title: string, summary: string, path: string) {
   return {
@@ -32,7 +33,15 @@ export const POST: APIRoute = async (context) =>
     const path = String(formData.get("path") ?? "");
     const title = String(formData.get("title") ?? "");
     const summary = String(formData.get("summary") ?? "");
-    const templateKey = "simple_landing" as const;
+    const templateKeys = getCmsConfig().templateKeys;
+    const templateKey = templateKeys.includes("landing")
+      ? "landing"
+      : templateKeys.includes("content")
+        ? "content"
+        : templateKeys[0];
+    if (!templateKey) {
+      return fail("No route-page template is registered for this project.");
+    }
     const result = await createRuntimeStructuredPageRoute(
       path,
       {

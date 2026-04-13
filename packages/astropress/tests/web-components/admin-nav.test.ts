@@ -4,16 +4,18 @@ import "../../web-components/admin-nav";
 
 describe("ap-admin-nav", () => {
   function buildNav(): { root: HTMLElement; toggle: HTMLButtonElement; close: HTMLButtonElement; sidebar: HTMLElement } {
+    const toggle = document.createElement("button");
+    toggle.type = "button";
+    toggle.setAttribute("data-nav-toggle", "");
+    toggle.setAttribute("aria-label", "Open navigation");
+    toggle.setAttribute("aria-expanded", "false");
+    toggle.setAttribute("data-label-open", "Open navigation");
+    toggle.setAttribute("data-label-close", "Close navigation");
+    toggle.textContent = "☰";
+    document.body.appendChild(toggle);
+
     const root = document.createElement("ap-admin-nav") as HTMLElement;
     root.innerHTML = `
-      <button
-        type="button"
-        data-nav-toggle
-        aria-label="Open navigation"
-        aria-expanded="false"
-        data-label-open="Open navigation"
-        data-label-close="Close navigation"
-      >☰</button>
       <div>
         <nav
           data-nav-sidebar
@@ -27,7 +29,7 @@ describe("ap-admin-nav", () => {
     document.body.appendChild(root);
     return {
       root,
-      toggle: root.querySelector("[data-nav-toggle]") as HTMLButtonElement,
+      toggle,
       close: root.querySelector("[data-nav-close]") as HTMLButtonElement,
       sidebar: root.querySelector("[data-nav-sidebar]") as HTMLElement,
     };

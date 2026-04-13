@@ -103,6 +103,27 @@ function sanitizeAttribute(tagName: string, attributeName: string, attributeValu
 }
 
 export async function sanitizeHtml(html: string): Promise<string> {
+  if (typeof globalThis.HTMLRewriter === "undefined") {
+    return sanitizeHtmlLibrary(html, {
+      allowedTags: [...allowedTags],
+      allowedAttributes: Object.fromEntries(
+        [...allowedAttributes.entries()].map(([tagName, attributes]) => [tagName, [...attributes]]),
+      ),
+      allowedSchemes: [...allowedSchemes],
+      allowProtocolRelative: false,
+      nonBooleanAttributes: ["class"],
+      transformTags: {
+        a: (tagName, attribs) => ({
+          tagName,
+          attribs: {
+            ...attribs,
+            rel: "noopener noreferrer",
+          },
+        }),
+      },
+    });
+  }
+
   const rewriter = new HTMLRewriter()
     .on("*", {
       element(el) {
@@ -135,3 +156,4 @@ export async function sanitizeHtml(html: string): Promise<string> {
 
   return rewriter.transform(new Response(html)).text();
 }
+import sanitizeHtmlLibrary from "sanitize-html";

@@ -68,13 +68,13 @@ export const newsletterAdapter: NewsletterAdapter = {
         if (!response.ok) {
           const body = await response.text();
           logger.error("Listmonk API error", { status: response.status, body });
-          return { ok: false, error: "Failed to subscribe. Please try again." };
+          return { ok: false, error: "Subscription could not be saved. Confirm the list settings and retry." };
         }
         logger.info("Successfully subscribed to Listmonk", { email });
         return { ok: true };
       } catch (error) {
         logger.error("Listmonk subscription error", { error });
-        return { ok: false, error: "Network error. Please try again." };
+        return { ok: false, error: "The newsletter provider could not be reached. Check the network connection or provider status." };
       }
     }
 

@@ -101,7 +101,7 @@ export const defaultAdminStrings: Record<AstropressAdminStringKey, string> = {
   "error.invalidEmail": "Enter a valid email address.",
   "error.passwordTooShort": "Password must be at least 12 characters.",
   "error.invalidSlug": "Slug must contain only lowercase letters, numbers, and hyphens.",
-  "error.generic": "Something went wrong. Please try again.",
+  "error.generic": "The requested change could not be completed. Reload the page and retry the action.",
 };
 
 /** A partial override map — only the keys you want to translate. */

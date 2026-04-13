@@ -18,7 +18,8 @@ export class ApAdminNav extends HTMLElement {
     this._abortController = new AbortController();
     const { signal } = this._abortController;
 
-    const toggle = this.querySelector<HTMLButtonElement>("[data-nav-toggle]");
+    const root = this.ownerDocument;
+    const toggle = root.querySelector<HTMLButtonElement>("[data-nav-toggle]");
     const close = this.querySelector<HTMLButtonElement>("[data-nav-close]");
     const sidebar = this.querySelector<HTMLElement>("[data-nav-sidebar]");
 

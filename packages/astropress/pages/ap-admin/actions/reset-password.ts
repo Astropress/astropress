@@ -53,7 +53,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
     if (!emailResult.ok) {
       // Email failed in production — tell the user clearly rather than falsely claiming success
       redirectUrl.searchParams.set("error", "1");
-      redirectUrl.searchParams.set("message", emailResult.error ?? "Password reset email could not be sent. Please try again or contact support.");
+      redirectUrl.searchParams.set("message", emailResult.error ?? "Password reset email could not be sent. Verify SMTP or Resend settings, then contact support if delivery is still blocked.");
     } else {
       // Email sent (or simulated in dev) — show the intentionally-vague anti-enumeration message
       redirectUrl.searchParams.set("mail_sent", "1");
