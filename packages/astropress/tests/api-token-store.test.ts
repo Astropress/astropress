@@ -37,6 +37,7 @@ describe("ApiTokenRecord shape", () => {
       "media:write",
       "settings:read",
       "webhooks:manage",
+      "import:write",
     ];
     const record: ApiTokenRecord = {
       id: "tok_02",
@@ -44,7 +45,7 @@ describe("ApiTokenRecord shape", () => {
       scopes: allScopes,
       createdAt: new Date().toISOString(),
     };
-    expect(record.scopes).toHaveLength(6);
+    expect(record.scopes).toHaveLength(7);
   });
 
   it("optional fields are truly optional", () => {

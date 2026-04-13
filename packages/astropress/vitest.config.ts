@@ -18,6 +18,7 @@ export default defineConfig({
       { find: /^astropress\/local-runtime-modules(?:\.js)?$/, replacement: fileURLToPath(new URL("./src/local-runtime-modules.ts", import.meta.url)) },
       { find: /^astropress\/api-middleware(?:\.js)?$/, replacement: fileURLToPath(new URL("./src/api-middleware.ts", import.meta.url)) },
       { find: /^astropress\/platform-contracts(?:\.js)?$/, replacement: fileURLToPath(new URL("./src/platform-contracts.ts", import.meta.url)) },
+      { find: /^astropress\/import\/wordpress(?:\.js)?$/, replacement: fileURLToPath(new URL("./src/import/wordpress.ts", import.meta.url)) },
       { find: "cloudflare:workers", replacement: fileURLToPath(new URL("./src/cloudflare-workers-stub.ts", import.meta.url)) },
     ],
   },

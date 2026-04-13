@@ -2,7 +2,7 @@
 
 ## Purpose
 
-`astropress-nexus` is a **Hono-based multi-site gateway** for operators who run more than one Astropress site. It provides a single HTTP control plane over all registered sites, handling authentication exchange, fan-out queries, and partial-failure isolation.
+`astropress-nexus` is a **Hono-based multi-site gateway** for operators who run more than one Astropress site. It provides a single HTTP control plane over all registered sites, handling authentication exchange, fan-out queries, partial-failure isolation, and orchestrated WordPress imports from hosting control panels.
 
 ## Package identity
 
@@ -42,6 +42,8 @@ Configuration is read from a JSON file (default: `nexus.config.json` in the work
 
 ## Endpoints
 
+### Site proxy
+
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
 | GET | `/` | Public | Gateway health — lists all sites + reachability |
@@ -54,6 +56,66 @@ Configuration is read from a JSON file (default: `nexus.config.json` in the work
 | GET | `/content` | Required | Fan-out GET content from all sites |
 | GET | `/metrics` | Required | Aggregate metrics (30 s TTL cache) |
 
+### Import jobs
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| POST | `/jobs/import/wordpress` | Required | Queue an async WordPress import on a member site |
+| GET | `/jobs` | Required | List all jobs, newest first (paginated) |
+| GET | `/jobs/:id` | Required | Poll job status |
+
+### Panel connectors
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| POST | `/connectors/cloudways/discover` | Required | Discover WordPress apps via Cloudways REST API |
+| POST | `/connectors/cpanel/discover` | Required | Discover WordPress installs via Softaculous (cPanel) |
+| POST | `/connectors/hpanel/discover` | Required | Discover WordPress plans via Hostinger hPanel |
+
+## Types
+
+### `JobEntry`
+
+```typescript
+type JobStatus = "queued" | "running" | "completed" | "failed";
+
+type JobEntry = {
+  id: string;           // UUID
+  siteId: string;       // member site ID from config
+  kind: "import:wordpress";
+  status: JobStatus;
+  queuedAt: string;     // ISO 8601
+  startedAt?: string;
+  completedAt?: string;
+  result?: unknown;     // AstropressWordPressImportReport on success
+  error?: string;       // error message on failure
+};
+```
+
+Jobs are stored in-memory — they do not survive a Nexus restart. For long-running deployments, monitor the job before the process exits.
+
+### `DiscoveredSite`
+
+```typescript
+type DiscoveredSite = {
+  siteUrl: string;                        // e.g. "https://my-blog.example.com"
+  name: string;                           // human-readable label
+  metadata: Record<string, unknown>;      // connector-specific extras
+};
+```
+
+## Credential handling
+
+Each connector has different access to WordPress admin credentials:
+
+| Connector | Exposes WP credentials? | Notes |
+|-----------|------------------------|-------|
+| Cloudways | No | Returns site URLs only (`app_fqdn`) |
+| cPanel/Softaculous | Yes (in `metadata`) | `adminUsername` is included; password is **not** forwarded |
+| hPanel | No | Returns plan domains only |
+
+The panel connectors are discovery tools. Use the discovered `siteUrl` values with the `/jobs/import/wordpress` endpoint to trigger imports (which run on the member site itself with its configured import token).
+
 ## Failure modes
 
 | Failure | Behaviour |
@@ -63,6 +125,8 @@ Configuration is read from a JSON file (default: `nexus.config.json` in the work
 | Unknown site ID | `404 { "error": "Site 'x' not found" }` |
 | Missing / invalid org token | `401 { "error": "Unauthorized" }` |
 | Site request timeout (10 s) | Treated as network error → degraded |
+| Job site request fails | Job transitions to `"failed"` with error message |
+| Connector API unreachable | `502 { "error": "..." }` |
 
 ## Running locally
 
@@ -81,4 +145,4 @@ cd packages/astropress-nexus
 bunx vitest run
 ```
 
-18 tests covering auth, health, proxy routing, fan-out, partial failure, and the site registry.
+Tests cover: auth, health, proxy routing, fan-out, partial failure, site registry, import job lifecycle, and panel connector discovery.

@@ -114,7 +114,8 @@ export type ApiScope =
   | "media:read"
   | "media:write"
   | "settings:read"
-  | "webhooks:manage";
+  | "webhooks:manage"
+  | "import:write";
 
 export interface ApiTokenRecord {
   id: string;
