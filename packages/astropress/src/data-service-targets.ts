@@ -6,6 +6,7 @@ export type AstropressDataServices =
   | "pocketbase"
   | "neon"
   | "nhost"
+  | "turso"
   | "runway"
   | "custom";
 
@@ -82,6 +83,15 @@ const dataServiceTargets: Record<AstropressDataServices, AstropressDataServiceTa
     providesObjectStorage: true,
     providesAuth: true,
     notes: "Supabase-like backend services option behind a separate Astro app host.",
+  },
+  turso: {
+    id: "turso",
+    label: "Turso (LibSQL)",
+    kind: "database-only",
+    providesDatabase: true,
+    providesObjectStorage: false,
+    providesAuth: false,
+    notes: "Distributed SQLite-wire database (LibSQL). Auth and storage must be handled separately.",
   },
   runway: {
     id: "runway",

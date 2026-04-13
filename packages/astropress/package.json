@@ -35,6 +35,7 @@
     "./adapters/supabase-sqlite": { "types": "./src/adapters/supabase-sqlite.ts", "default": "./dist/src/adapters/supabase-sqlite.js" },
     "./adapters/runway": { "types": "./src/adapters/runway.ts", "default": "./dist/src/adapters/runway.js" },
     "./adapters/runway-sqlite": { "types": "./src/adapters/runway-sqlite.ts", "default": "./dist/src/adapters/runway-sqlite.js" },
+    "./adapters/turso": { "types": "./src/adapters/turso.ts", "default": "./dist/src/adapters/turso.js" },
     "./deploy/github-pages": { "types": "./src/deploy/github-pages.ts", "default": "./dist/src/deploy/github-pages.js" },
     "./deploy/cloudflare-pages": { "types": "./src/deploy/cloudflare-pages.ts", "default": "./dist/src/deploy/cloudflare-pages.js" },
     "./deploy/vercel": { "types": "./src/deploy/vercel.ts", "default": "./dist/src/deploy/vercel.js" },

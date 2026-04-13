@@ -169,6 +169,16 @@ export type {
   AstropressRunwayHostedAdapterOptions,
   AstropressRunwayHostedConfig,
 } from "./src/adapters/runway";
+export { createAstropressTursoAdapter } from "./src/adapters/turso.js";
+export {
+  createAstropressTursoHostedAdapter,
+  readAstropressTursoHostedConfig,
+} from "./src/adapters/turso.js";
+export type {
+  AstropressTursoAdapterOptions,
+  AstropressTursoHostedAdapterOptions,
+  AstropressTursoHostedConfig,
+} from "./src/adapters/turso";
 
 // Persistence types
 export type {

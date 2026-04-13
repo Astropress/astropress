@@ -34,6 +34,7 @@ export function defaultServiceOrigin(dataServices: AstropressDataServices) {
     case "pocketbase": return "https://your-pocketbase.example.com/api/astropress";
     case "nhost": return "https://your-subdomain.nhost.run/v1/functions/astropress";
     case "neon": return "https://your-service.example.com/astropress";
+    case "turso": return "https://your-service.example.com/astropress";
     case "custom": return "https://your-service.example.com/astropress";
     default: return "";
   }
@@ -85,6 +86,8 @@ export function buildDataServiceExample(dataServices: AstropressDataServices): R
       return { ASTROPRESS_SERVICE_ORIGIN: serviceOrigin, NHOST_SUBDOMAIN: "replace-me", NHOST_REGION: "replace-me", NHOST_ADMIN_SECRET: "replace-me" };
     case "neon":
       return { ASTROPRESS_SERVICE_ORIGIN: serviceOrigin, NEON_DATABASE_URL: "postgres://replace-me" };
+    case "turso":
+      return { TURSO_DATABASE_URL: "libsql://your-database-org.turso.io", TURSO_AUTH_TOKEN: "replace-me" };
     case "custom":
       return { ASTROPRESS_SERVICE_ORIGIN: serviceOrigin };
     default:
@@ -107,6 +110,7 @@ export function buildAbTestingEnvExample(abTesting: AstropressAbTestingProvider 
   switch (abTesting) {
     case "growthbook": return { GROWTHBOOK_API_HOST: "https://cdn.growthbook.io", GROWTHBOOK_CLIENT_KEY: "replace-with-your-growthbook-client-key" };
     case "unleash": return { UNLEASH_URL: "https://your-unleash-instance.example.com/api", UNLEASH_CLIENT_KEY: "replace-with-your-unleash-client-key" };
+    case "flagsmith": return { FLAGSMITH_API_URL: "https://flags.yourdomain.com/api/v1/", FLAGSMITH_ENVIRONMENT_KEY: "replace-with-your-flagsmith-environment-key" };
     case "custom": return { AB_TESTING_API_URL: "replace-with-your-ab-testing-api-url", AB_TESTING_CLIENT_KEY: "replace-with-your-ab-testing-client-key" };
     default: return {};
   }
