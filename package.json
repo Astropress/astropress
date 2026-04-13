@@ -21,7 +21,7 @@
     "test:accessibility:browser": "bun run tooling/scripts/run-playwright.ts --project=example-a11y",
     "test:accessibility:admin-harness": "bun run tooling/scripts/run-playwright.ts --project=admin-harness-a11y",
     "test:admin-harness": "bun run --filter astropress-example-admin-harness check",
-    "test:cli": "source \"$HOME/.cargo/env\" && cargo test --manifest-path crates/Cargo.toml",
+    "test:cli": "cargo test --manifest-path crates/Cargo.toml",
     "test:example": "bun run --filter astropress-example-gh-pages check",
     "test:static-site": "bun run --filter astropress-example-gh-pages build && bun run tooling/scripts/static-site-audit.ts examples/github-pages/dist",
     "dev:example": "bun run --filter astropress-example-gh-pages dev",

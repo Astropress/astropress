@@ -8,16 +8,22 @@ import {
   createAstropressAppwriteHostedAdapter,
   createAstropressHostedAdapter,
   createAstropressHostedPlatformAdapter,
+  createAstropressNeonHostedAdapter,
+  createAstropressNhostHostedAdapter,
   createAstropressPocketbaseAdapter,
   createAstropressPocketbaseHostedAdapter,
   createAstropressRunwayAdapter,
   createAstropressRunwayHostedAdapter,
   createAstropressSupabaseAdapter,
   createAstropressSupabaseHostedAdapter,
+  createAstropressTursoHostedAdapter,
   readAstropressAppwriteHostedConfig,
+  readAstropressNeonHostedConfig,
+  readAstropressNhostHostedConfig,
   readAstropressPocketbaseHostedConfig,
   readAstropressRunwayHostedConfig,
   readAstropressSupabaseHostedConfig,
+  readAstropressTursoHostedConfig,
   resolveAstropressHostedProvider,
 } from "astropress";
 import {
@@ -218,6 +224,39 @@ describe("hosted provider contracts", () => {
       apiBaseUrl: "https://pocketbase.example.com/api/astropress",
       previewBaseUrl: "https://pocketbase.example.com",
     });
+    expect(
+      readAstropressNhostHostedConfig({
+        NHOST_SUBDOMAIN: "abcdefgh",
+        NHOST_REGION: "eu-central-1",
+        NHOST_ADMIN_SECRET: "secret",
+      }),
+    ).toEqual({
+      subdomain: "abcdefgh",
+      region: "eu-central-1",
+      adminSecret: "secret",
+      apiBaseUrl: "https://abcdefgh.eu-central-1.nhost.run/v1/functions/astropress",
+      previewBaseUrl: "https://abcdefgh.eu-central-1.nhost.run/console",
+    });
+    expect(
+      readAstropressNeonHostedConfig({
+        NEON_DATABASE_URL: "postgres://user:pass@ep-example.us-east-1.aws.neon.tech/neondb",
+        NEON_PROJECT_ID: "proj-quiet-moon-123456",
+      }),
+    ).toEqual({
+      databaseUrl: "postgres://user:pass@ep-example.us-east-1.aws.neon.tech/neondb",
+      projectId: "proj-quiet-moon-123456",
+      apiBaseUrl: "https://console.neon.tech/app/projects/proj-quiet-moon-123456",
+    });
+    expect(
+      readAstropressTursoHostedConfig({
+        TURSO_DATABASE_URL: "libsql://astropress-prod.turso.io",
+        TURSO_AUTH_TOKEN: "secret",
+      }),
+    ).toEqual({
+      databaseUrl: "libsql://astropress-prod.turso.io",
+      authToken: "secret",
+      apiBaseUrl: "https://app.turso.tech/databases/astropress-prod",
+    });
   });
 
   it("guards hosted provider config and builds hosted adapters with preview URLs", async () => {
@@ -225,6 +264,9 @@ describe("hosted provider contracts", () => {
     expect(() => readAstropressRunwayHostedConfig({})).toThrow(/RUNWAY_API_TOKEN/);
     expect(() => readAstropressAppwriteHostedConfig({})).toThrow(/APPWRITE_ENDPOINT/);
     expect(() => readAstropressPocketbaseHostedConfig({})).toThrow(/POCKETBASE_URL/);
+    expect(() => readAstropressNhostHostedConfig({})).toThrow(/NHOST_SUBDOMAIN/);
+    expect(() => readAstropressNeonHostedConfig({})).toThrow(/NEON_DATABASE_URL|DATABASE_URL/);
+    expect(() => readAstropressTursoHostedConfig({})).toThrow(/TURSO_DATABASE_URL/);
 
     const hostedStores = createHostedStores();
     const supabase = createAstropressSupabaseHostedAdapter({
@@ -258,6 +300,27 @@ describe("hosted provider contracts", () => {
       },
       ...hostedStores,
     });
+    const nhost = createAstropressNhostHostedAdapter({
+      env: {
+        NHOST_SUBDOMAIN: "abcdefgh",
+        NHOST_REGION: "eu-central-1",
+        NHOST_ADMIN_SECRET: "secret",
+      },
+      ...hostedStores,
+    });
+    const neon = createAstropressNeonHostedAdapter({
+      env: {
+        NEON_DATABASE_URL: "postgres://user:pass@ep-example.us-east-1.aws.neon.tech/neondb",
+      },
+      ...hostedStores,
+    });
+    const turso = createAstropressTursoHostedAdapter({
+      env: {
+        TURSO_DATABASE_URL: "libsql://astropress-prod.turso.io",
+        TURSO_AUTH_TOKEN: "secret",
+      },
+      ...hostedStores,
+    });
 
     await supabase.content.save({
       id: "hosted-config-post",
@@ -282,6 +345,11 @@ describe("hosted provider contracts", () => {
     expect(await pocketbase.preview?.create({ recordId: "hosted-config-post" })).toEqual({
       url: "https://pocketbase.example.com/preview",
     });
+    expect(await nhost.preview?.create({ recordId: "hosted-config-post" })).toEqual({
+      url: "https://abcdefgh.eu-central-1.nhost.run/console/preview",
+    });
+    expect(neon.capabilities.hostedAdmin).toBe(false);
+    expect(await turso.preview?.create({ recordId: "hosted-config-post" })).toBeUndefined();
   });
 
   it("selects hosted providers from explicit options or env", async () => {
@@ -289,6 +357,9 @@ describe("hosted provider contracts", () => {
     expect(resolveAstropressHostedProvider("runway")).toBe("runway");
     expect(resolveAstropressHostedProvider("appwrite")).toBe("appwrite");
     expect(resolveAstropressHostedProvider("pocketbase")).toBe("pocketbase");
+    expect(resolveAstropressHostedProvider("nhost")).toBe("nhost");
+    expect(resolveAstropressHostedProvider("neon")).toBe("neon");
+    expect(resolveAstropressHostedProvider("turso")).toBe("turso");
     expect(resolveAstropressHostedProvider("unexpected")).toBe("supabase");
 
     const hostedStores = createHostedStores();
@@ -336,11 +407,47 @@ describe("hosted provider contracts", () => {
       revisions: hostedStores.revisions,
       auth: hostedStores.auth,
     });
+    const nhost = createAstropressHostedAdapter({
+      provider: "nhost",
+      env: {
+        NHOST_SUBDOMAIN: "abcdefgh",
+        NHOST_REGION: "eu-central-1",
+        NHOST_ADMIN_SECRET: "secret",
+      },
+      content: hostedStores.content,
+      media: hostedStores.media,
+      revisions: hostedStores.revisions,
+      auth: hostedStores.auth,
+    });
+    const neon = createAstropressHostedAdapter({
+      provider: "neon",
+      env: {
+        NEON_DATABASE_URL: "postgres://user:pass@ep-example.us-east-1.aws.neon.tech/neondb",
+      },
+      content: hostedStores.content,
+      media: hostedStores.media,
+      revisions: hostedStores.revisions,
+      auth: hostedStores.auth,
+    });
+    const turso = createAstropressHostedAdapter({
+      provider: "turso",
+      env: {
+        TURSO_DATABASE_URL: "libsql://astropress-prod.turso.io",
+        TURSO_AUTH_TOKEN: "secret",
+      },
+      content: hostedStores.content,
+      media: hostedStores.media,
+      revisions: hostedStores.revisions,
+      auth: hostedStores.auth,
+    });
 
     expect(supabase.capabilities.name).toBe("supabase");
     expect(runway.capabilities.name).toBe("runway");
     expect(appwrite.capabilities.objectStorage).toBe(true);
     expect(pocketbase.capabilities.database).toBe(true);
+    expect(nhost.capabilities.name).toBe("nhost");
+    expect(neon.capabilities.database).toBe(true);
+    expect(turso.capabilities.name).toBe("turso");
     expect(await supabase.preview?.create({ recordId: "x" })).toEqual({
       url: "https://selector.supabase.co/preview",
     });
@@ -352,6 +459,9 @@ describe("hosted provider contracts", () => {
     });
     expect(await pocketbase.preview?.create({ recordId: "x" })).toEqual({
       url: "https://pocketbase.example.com/preview",
+    });
+    expect(await nhost.preview?.create({ recordId: "x" })).toEqual({
+      url: "https://abcdefgh.eu-central-1.nhost.run/console/preview",
     });
   });
 

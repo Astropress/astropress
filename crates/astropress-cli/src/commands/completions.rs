@@ -7,7 +7,9 @@
 #[path = "completions_scripts.rs"]
 mod completions_scripts;
 
-use completions_scripts::{BASH_COMPLETION, FISH_COMPLETION, ZSH_COMPLETION};
+use completions_scripts::{
+    BASH_COMPLETION, FISH_COMPLETION, POWERSHELL_COMPLETION, ZSH_COMPLETION,
+};
 
 pub(crate) fn print_completions(shell: &str) -> Result<(), String> {
     match shell.to_ascii_lowercase().as_str() {
@@ -23,9 +25,13 @@ pub(crate) fn print_completions(shell: &str) -> Result<(), String> {
             print!("{}", FISH_COMPLETION);
             Ok(())
         }
+        "powershell" => {
+            print!("{}", POWERSHELL_COMPLETION);
+            Ok(())
+        }
         other => Err(format!(
-            "Unknown shell `{other}`. Supported shells: bash, zsh, fish.\n\
-             Usage: astropress completions <bash|zsh|fish>"
+            "Unknown shell `{other}`. Supported shells: bash, zsh, fish, powershell.\n\
+             Usage: astropress completions <bash|zsh|fish|powershell>"
         )),
     }
 }
@@ -50,8 +56,13 @@ mod tests {
     }
 
     #[test]
+    fn completions_prints_powershell() {
+        assert!(print_completions("powershell").is_ok());
+    }
+
+    #[test]
     fn completions_rejects_unknown_shell() {
-        let result = print_completions("powershell");
+        let result = print_completions("unknown");
         assert!(result.is_err());
         assert!(result.unwrap_err().contains("Supported shells"));
     }

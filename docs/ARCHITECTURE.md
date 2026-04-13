@@ -351,9 +351,10 @@ Cloudflare D1-backed deployments currently store session data in the `admin_sess
 
 Astropress uses a layered security model:
 
-1. **Session tokens** — PBKDF2-hashed, stored in SQLite `admin_sessions`; session IDs are never exposed
-2. **CSRF tokens** — per-session token validated on all state-mutating form actions
-3. **CSP** — per-area Content-Security-Policy (public / auth / admin / api areas have different policies)
-4. **Origin checks** — `isTrustedRequestOrigin()` validates `Origin` and `Referer` headers
-5. **HTML sanitization** — `sanitizeHtml()` uses `Bun.HTMLRewriter` to allowlist tags and attributes before storing post bodies
-6. **Cache-Control** — `applyAstropressSecurityHeaders()` sets `Cache-Control: private, no-store` on all admin/auth/api routes automatically
+1. **Session tokens** — HMAC-SHA-256 digested before storage when a session secret is configured; raw session IDs are not persisted server-side
+2. **Passwords** — new password hashes use PBKDF2-HMAC-SHA-512; legacy SHA-256 verification remains for backward compatibility
+3. **CSRF tokens** — per-session token validated on all state-mutating form actions
+4. **CSP** — per-area Content-Security-Policy (public / auth / admin / api areas have different policies)
+5. **Origin checks** — `isTrustedRequestOrigin()` validates `Origin` and `Referer` headers
+6. **HTML sanitization** — `sanitizeHtml()` uses `Bun.HTMLRewriter` to allowlist tags and attributes before storing post bodies
+7. **Cache-Control** — `applyAstropressSecurityHeaders()` sets `Cache-Control: private, no-store` on all admin/auth/api routes automatically

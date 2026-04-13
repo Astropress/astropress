@@ -302,7 +302,7 @@ const verificationGroups: VerificationGroup[] = [
       "Developer runs astropress list providers and sees data service categories",
       "App Hosts section lists all supported deployment targets",
       "Data Services section lists all supported providers",
-      "Recommended pairings section lists fully tested combinations",
+      "Recommended pairings section lists best-supported combinations",
       "ls providers is an alias for list providers",
       "Running astropress list providers with an unknown extra argument returns an error",
     ],

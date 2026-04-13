@@ -5,6 +5,14 @@ import {
   type AstropressAppwriteHostedAdapterOptions,
 } from "./appwrite";
 import {
+  createAstropressNeonHostedAdapter,
+  type AstropressNeonHostedAdapterOptions,
+} from "./neon";
+import {
+  createAstropressNhostHostedAdapter,
+  type AstropressNhostHostedAdapterOptions,
+} from "./nhost";
+import {
   createAstropressPocketbaseHostedAdapter,
   type AstropressPocketbaseHostedAdapterOptions,
 } from "./pocketbase";
@@ -16,14 +24,28 @@ import {
   createAstropressSupabaseHostedAdapter,
   type AstropressSupabaseHostedAdapterOptions,
 } from "./supabase";
+import {
+  createAstropressTursoHostedAdapter,
+  type AstropressTursoHostedAdapterOptions,
+} from "./turso";
 
-export type AstropressHostedProviderKind = "supabase" | "runway" | "appwrite" | "pocketbase";
+export type AstropressHostedProviderKind =
+  | "supabase"
+  | "runway"
+  | "appwrite"
+  | "pocketbase"
+  | "nhost"
+  | "neon"
+  | "turso";
 
 export type AstropressHostedAdapterOptions =
   | ({ provider?: "supabase"; env?: Record<string, string | undefined> } & AstropressSupabaseHostedAdapterOptions)
   | ({ provider: "appwrite"; env?: Record<string, string | undefined> } & AstropressAppwriteHostedAdapterOptions)
   | ({ provider: "pocketbase"; env?: Record<string, string | undefined> } & AstropressPocketbaseHostedAdapterOptions)
-  | ({ provider: "runway"; env?: Record<string, string | undefined> } & AstropressRunwayHostedAdapterOptions);
+  | ({ provider: "runway"; env?: Record<string, string | undefined> } & AstropressRunwayHostedAdapterOptions)
+  | ({ provider: "nhost"; env?: Record<string, string | undefined> } & AstropressNhostHostedAdapterOptions)
+  | ({ provider: "neon"; env?: Record<string, string | undefined> } & AstropressNeonHostedAdapterOptions)
+  | ({ provider: "turso"; env?: Record<string, string | undefined> } & AstropressTursoHostedAdapterOptions);
 
 export function resolveAstropressHostedProvider(
   provider?: string | null,
@@ -55,6 +77,24 @@ export function createAstropressHostedAdapter(
   if (provider === "pocketbase") {
     return createAstropressPocketbaseHostedAdapter(
       options as Extract<AstropressHostedAdapterOptions, { provider: "pocketbase" }>,
+    );
+  }
+
+  if (provider === "nhost") {
+    return createAstropressNhostHostedAdapter(
+      options as Extract<AstropressHostedAdapterOptions, { provider: "nhost" }>,
+    );
+  }
+
+  if (provider === "neon") {
+    return createAstropressNeonHostedAdapter(
+      options as Extract<AstropressHostedAdapterOptions, { provider: "neon" }>,
+    );
+  }
+
+  if (provider === "turso") {
+    return createAstropressTursoHostedAdapter(
+      options as Extract<AstropressHostedAdapterOptions, { provider: "turso" }>,
     );
   }
 

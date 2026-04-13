@@ -88,7 +88,9 @@ pub(crate) fn list_providers() {
     println!("  Static — free, no server required");
     println!("    github-pages       GitHub Pages: zero-config, free forever, 1 GB limit");
     println!("    gitlab-pages       GitLab Pages: zero-config, free forever");
-    println!("    cloudflare-pages   Cloudflare Pages: static + edge functions, 500 builds/month free");
+    println!(
+        "    cloudflare-pages   Cloudflare Pages: static + edge functions, 500 builds/month free"
+    );
     println!("    netlify            Netlify: static + serverless, 300 build-minutes/month free");
     println!("    vercel             Vercel: static + serverless, 6 000 build-minutes/month free");
     println!("    render-static      Render Static: static, 100 GB bandwidth free");
@@ -114,9 +116,13 @@ pub(crate) fn list_providers() {
     println!("    cloudflare         Cloudflare D1 + R2: SQL at the edge, 5 GB free (pairs with cloudflare-pages)");
     println!();
     println!("  Serverless Postgres");
-    println!("    supabase           Supabase: Postgres + Auth + Storage, 500 MB free (recommended)");
+    println!(
+        "    supabase           Supabase: Postgres + Auth + Storage, 500 MB free (recommended)"
+    );
     println!("    neon               Neon: serverless Postgres with branching, 0.5 GB free");
-    println!("    nhost              Nhost: GraphQL + Postgres + Auth, open-source Firebase alternative");
+    println!(
+        "    nhost              Nhost: GraphQL + Postgres + Auth, open-source Firebase alternative"
+    );
     println!();
     println!("  Self-hosted BaaS");
     println!("    pocketbase         PocketBase: single-binary, self-hosted, zero cloud cost");
@@ -130,16 +136,18 @@ pub(crate) fn list_providers() {
     println!();
 
     // ── Recommended pairings ──────────────────────────────────────────────────
-    println!("Recommended pairings   (fully tested host + data combinations)");
+    println!("Recommended pairings   (best-supported host + data combinations)");
     println!();
     println!("  github-pages     + none         Pure static — zero infrastructure, free forever");
-    println!("  cloudflare-pages + cloudflare   Edge SQL — global, fast; Cloudflare account required");
+    println!(
+        "  cloudflare-pages + cloudflare   Edge SQL — global, fast; Cloudflare account required"
+    );
     println!("  vercel           + supabase     Serverless + Postgres — generous free tiers");
     println!("  netlify          + supabase     Serverless + Postgres — generous free tiers");
     println!("  render-web       + supabase     Server + Postgres — persistent runtime, always-on");
     println!("  runway           + runway       Fully managed — one provider handles everything");
     println!();
-    println!("Preview pairings   (work but not officially tested end-to-end)");
+    println!("Preview pairings   (work but are not yet verified end-to-end in CI)");
     println!();
     println!("  github-pages     + supabase     Static site with external Postgres API");
     println!("  gitlab-pages     + supabase     Same as above on GitLab");

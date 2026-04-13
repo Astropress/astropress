@@ -251,7 +251,7 @@ Rewrite legacy environment variable names to their current equivalents in `.env`
 astropress config migrate   # rewrites ASTROPRESS_DATA_SERVICES → ASTROPRESS_CONTENT_SERVICES, etc.
 ```
 
-### `astropress completions [bash|zsh|fish]`
+### `astropress completions [bash|zsh|fish|powershell]`
 
 Print a shell completion script. Add to your shell profile to enable tab-completion for all Astropress commands and flags.
 
@@ -259,6 +259,7 @@ Print a shell completion script. Add to your shell profile to enable tab-complet
 astropress completions bash >> ~/.bashrc
 astropress completions zsh  >> ~/.zshrc
 astropress completions fish >> ~/.config/fish/completions/astropress.fish
+astropress completions powershell | Out-String | Invoke-Expression
 ```
 
 ### `astropress list tools`

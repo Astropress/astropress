@@ -1,11 +1,11 @@
 ---
 title: Quality evaluation
 description: >-
-  52-rubric quality assessment covering architecture, security, accessibility,
-  and UX — updated 2026-04-12.
+  54-rubric quality assessment covering architecture, security, accessibility,
+  UX, and cross-platform support — updated 2026-04-13.
 ---
 
-**Baseline (as of 2026-04-12, updated):** 1540+ Vitest tests · 129 Rust CLI tests · 10 Playwright tests · 334 BDD scenarios · security audit clean
+**Baseline (as of 2026-04-13, updated):** 1540+ Vitest tests · 159 Rust CLI tests · 10 Playwright tests · 334 BDD scenarios · security audit clean
 
 ## Grades
 
@@ -53,7 +53,7 @@ description: >-
 | 40 | Disaster Recovery | A |
 | 41 | Monitoring Integration | A |
 | 42 | Upgrade Path E2E | A |
-| 43 | System Honesty | A+ |
+| 43 | System Honesty | A |
 | 44 | Multi-site Gateway (astropress-nexus) | A |
 | 45 | Scaffold Quality Carryover | A+ |
 | 46 | Mobile-Firstness / Responsive Design | A |
@@ -63,22 +63,51 @@ description: >-
 | 50 | Information Architecture | A+ |
 | 51 | Navigation Design | A |
 | 52 | Interaction Design & Motion | A |
+| 53 | Cross-Platform Support | A |
+| 54 | Test Artifact Cleanup | B |
 
 ## Key gaps
 
-- **Rubric 35 (B):** Adapter tests use mocks — no integration tests against real D1, Supabase, or Appwrite services
-- **Rubric 1:** WordPress/Wix import is staged CLI-only; no admin UI wizard
-- **Rubric 13:** `docs/API_REFERENCE.md` is regex-generated — no parameter or return types
-- **Rubric 38:** No full-text search across content records
+- **Rubric 4 / 43:** New passwords use PBKDF2-HMAC-SHA-512, but SHA-256 remains in token/webhook/comment digests and legacy password verification; no post-quantum cryptography is implemented
+- **Rubric 35 (B):** Live hosted-provider coverage still depends on maintainer-owned accounts, seeded projects, and teardown automation; see `HOSTED_E2E_SETUP.md`
+- **Rubric 37:** Transactional email runtime and docs are not fully unified around one canonical provider contract yet
+- **Rubric 44 / 48:** `astropress-nexus` is still API-first; the operator dashboard and bulk-action UX from the A+ plan are not implemented yet
 - **Rubric 46–52:** UX rubrics added 2026-04-12 — A grades are engineering-observed baselines; no independent user research or usability testing has been conducted
+- **Rubric 53 (A):** Windows, macOS, and Linux now have CI smoke coverage and shell parity, but BSD remains best-effort rather than verified support
+- **Rubric 54 (B):** Rust CLI temp directories self-clean, but some local example/docs runs can still leave generated `.data/` artifacts unless they are explicitly removed
 
-## Grade changes (2026-04-12 re-evaluation)
+## Grade changes (2026-04-13 audit)
 
 | Rubric | Old | New | Reason |
 |--------|-----|-----|--------|
-| 7 — Developer Ergonomics | A | A+ | `list tools`, `list providers`, and scaffold `EVALUATION.md` make every integration discoverable without docs |
-| 18 — AI Drivability | A | A+ | Machine-readable list commands give AI agents a structured enumeration of all CLI options |
-| 50 — Information Architecture | A | A+ | `list tools` / `list providers` split by role; `noun verb` command pattern enforced throughout |
+| 43 — System Honesty | A+ | A | Public docs and CLI wording overstated parts of the crypto story and hosted-test coverage; current wording is corrected, but the audit is still manual rather than CI-enforced |
+| 54 — Test Artifact Cleanup | New | B | Rust CLI tests sweep and delete temp directories, but local repo-level verification can still leave generated `.data/` directories in the worktree |
+
+## Readiness verdict
+
+| Area | Verdict | Why |
+|---|---|---|
+| GitHub readiness | **Yes** | The repo has a licence, contributing guide, code of conduct, security policy, issue templates, CODEOWNERS, Dependabot, CodeQL/security workflows, and automated release/docs pipelines |
+| Production readiness | **Yes, with caveats** | The framework has strong architecture, tests, security defaults, and deployment automation, but it is still `0.0.1`, hosted-provider E2E coverage is incomplete, and cross-platform verification is not uniform |
+| Cross-platform readiness | **Yes for mainstream OSes** | Linux, macOS, and Windows have install/release coverage and CI smoke lanes; BSD is documented as best-effort pending native runner verification |
+
+## Rubric 43 — System Honesty
+
+**Grade: A**
+
+Measures whether the repo's public claims, CLI output, and failure reporting match the implementation instead of presenting a cleaner story than the code can actually prove.
+
+### Evidence
+
+- README, docs, and CLI wording were audited and corrected where they overstated hosted-provider coverage or cryptography details
+- `HOSTED_E2E_SETUP.md` explicitly states that hosted-provider E2E is not `A+` yet and why
+- The compatibility matrix now states Linux/macOS/Windows as verified and BSD as best-effort
+- Security docs now distinguish PBKDF2-HMAC-SHA-512 password hashing for new passwords from the remaining SHA-256 token, webhook, comment-email, and legacy-password paths
+
+### What keeps this from an A+
+
+- Public-claim review is still a manual audit, not a generated or CI-enforced truth check
+- The repo still contains conventional SHA-256 paths and no post-quantum cryptography, so security wording must stay precise to avoid overclaiming
 
 ## Rubric 45 — Scaffold Quality Carryover
 
@@ -90,7 +119,7 @@ Measures how much of the framework's built-in quality, security, accessibility, 
 
 | Dimension | What you get for free |
 |---|---|
-| **Admin security** | Zero-Trust Admin (ZTA) wrappers on every action handler; session hardening; rate-limited login; bcrypt passwords; CSRF tokens on all admin forms |
+| **Admin security** | Zero-Trust Admin (ZTA) wrappers on every action handler; session hardening; rate-limited login; PBKDF2-HMAC-SHA-512 for new password hashes; CSRF tokens on all admin forms |
 | **Input validation** | All admin form inputs are validated and HTML-sanitized before persistence; SQL injection surface is contained to adapter layer |
 | **Admin accessibility** | WCAG 2.2 AA admin panel with keyboard navigation, ARIA live regions, focus traps, and screen-reader-tested components |
 | **Privacy defaults** | No third-party analytics, no telemetry; structured GDPR right-of-erasure SQL included |
@@ -107,3 +136,43 @@ Measures how much of the framework's built-in quality, security, accessibility, 
 | **Test setup** | Add `vitest.config.ts` and test files as needed |
 | **Public-page accessibility** | User-authored pages start from a blank `<SiteLayout>` shell — author with semantic HTML; use axe or Lighthouse in CI |
 | **`registerCms()` customisation** | `src/middleware.ts` calls `registerCms()` with empty defaults — add your `siteUrl`, `templateKeys`, and `archives` |
+
+## Rubric 53 — Cross-Platform Support
+
+**Grade: A**
+
+Measures whether the developer workflow, CLI, release artifacts, and test matrix are genuinely portable across Windows, macOS, Linux, and BSD-family systems.
+
+### Evidence
+
+- `tooling/scripts/install.sh` supports macOS, Linux, FreeBSD, OpenBSD, and NetBSD
+- `tooling/scripts/install.ps1` provides a native PowerShell bootstrap path for Windows
+- `.github/workflows/cli-release.yml` builds CLI binaries for Linux, macOS, and Windows
+- `.github/workflows/ci.yml` now runs a `platform-smoke` matrix on `ubuntu-latest`, `macos-latest`, and `windows-latest`
+- The root `package.json` `test:cli` script is shell-agnostic and works without Bash-specific `source` setup
+- Shell completions cover `bash`, `zsh`, `fish`, and `powershell`
+- `docs/COMPATIBILITY.md` publishes support tiers and the verified cross-platform command set
+- The Rust CLI has a `--plain` / `--no-tui` fallback, which reduces dependence on terminal-specific raw-mode support
+- BSD is explicitly called out as an upstream and CI gap in `docs/UPSTREAM_CONTRIBUTIONS.md`
+
+### What would improve this
+
+- Define a documented BSD support tier and verify at least one BSD target in CI or a self-hosted runner
+- Run browser or static-build smoke tests on macOS in addition to Linux
+
+## Rubric 54 — Test Artifact Cleanup
+
+**Grade: B**
+
+Measures whether automated tests and local verification runs clean up their temporary directories, generated databases, and repo-local artifacts so reruns do not leave avoidable residue behind.
+
+### Evidence
+
+- The Rust CLI test harness uses `TestDir` RAII cleanup and an orphan sweep for `astropress-cli-*` / `astropress-*` temp directories in `crates/astropress-cli/src/tests/mod.rs`
+- Many Vitest suites create temp workspaces under `tmpdir()` and remove them with `rm`, `rmSync`, or `afterEach` cleanup hooks
+- Import and migration tests generally keep generated files in temporary directories rather than under committed paths
+
+### What would improve this
+
+- Eliminate repo-local `.data/` output from example/docs smoke runs or remove it automatically after each run
+- Add a CI assertion that the repo remains clean after the verification suite finishes

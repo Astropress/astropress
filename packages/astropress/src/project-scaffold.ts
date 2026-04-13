@@ -81,7 +81,11 @@ function resolveProfile(
           ? "vercel"
           : dataServices === "runway"
             ? "runway"
-            : dataServices === "appwrite" || dataServices === "pocketbase"
+            : dataServices === "appwrite" ||
+                dataServices === "pocketbase" ||
+                dataServices === "nhost" ||
+                dataServices === "neon" ||
+                dataServices === "turso"
               ? "render-web"
               : "github-pages"),
     dataServices,

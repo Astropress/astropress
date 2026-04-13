@@ -204,6 +204,13 @@ and the Rust toolchain's `x86_64-unknown-freebsd` target is Tier 2 (no prebuilt 
 - Promote `x86_64-unknown-freebsd` to Tier 2 with a hosted runner or prebuilt std distribution
   so cross-compilation and CI are practical.
 
+**What would let Astropress promote BSD from best-effort to verified support:**
+- A self-hosted FreeBSD runner (or another reliable BSD CI target) that can run `bun install`, `cargo test`, and the non-browser smoke commands from `docs/COMPATIBILITY.md`
+- `crossterm` fixes for BSD raw-mode activation and terminal detection so the TUI path is not limited to `--plain`
+- `ratatui` behavior that degrades cleanly to the existing plain-text fallback when raw mode cannot be enabled
+- A practical Rust toolchain path for BSD release artifacts, either via upstream target promotion or a reproducible cross-compilation pipeline
+- One repeatable maintainer-owned validation pass covering install, scaffold, CLI completions, and plain-mode import/doctor flows on native BSD
+
 **Reference:**
 - https://github.com/crossterm-rs/crossterm/issues/685
 - https://github.com/ratatui/ratatui/discussions/1046

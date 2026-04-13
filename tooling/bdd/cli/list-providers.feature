@@ -39,7 +39,7 @@ Feature: astropress list providers — display supported hosting and data servic
     And the Data Services section lists "appwrite"
     And the Data Services section lists "none"
 
-  Scenario: Recommended pairings section lists fully tested combinations
+  Scenario: Recommended pairings section lists best-supported combinations
     When the developer runs "astropress list providers"
     Then the output contains a "Recommended pairings" section
     And the output lists the "github-pages + none" pairing

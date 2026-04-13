@@ -73,14 +73,10 @@ Astropress treats providers as interchangeable adapters behind stable contracts.
 | Supabase (Postgres + Storage) | `astropress/adapters/supabase` | Full |
 | Runway | `astropress/adapters/runway` | Full |
 | Appwrite | `astropress/adapters/appwrite` | Full |
-| PocketBase | `astropress/adapters/pocketbase` | Hosted API adapter (no dedicated tests in evaluation) |
-
-### Recognized content services (scaffold/env selection — no adapter yet)
-
-| Service | Notes |
-|---------|-------|
-| Neon | Database-only; no object storage or auth |
-| Nhost | Full-stack services; adapter not yet implemented |
+| PocketBase | `astropress/adapters/pocketbase` | Full hosted adapter |
+| Nhost | `astropress/adapters/nhost` | Full-stack hosted adapter |
+| Neon | `astropress/adapters/neon` | Database-only hosted adapter |
+| Turso | `astropress/adapters/turso` | Database-only hosted adapter |
 
 ### App host deploy targets (implemented)
 

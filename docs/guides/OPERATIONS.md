@@ -631,4 +631,4 @@ Schedule via cron or CI. Store snapshots separately from the site directory.
 - [ ] Admin panel login succeeds
 - [ ] `GET /ap/health` returns `{ "status": "ok" }`
 
-When restoring an older snapshot onto a newer Astropress install, `ensureLegacySchemaCompatibility()` runs at boot and applies any missing additive column migrations automatically. For destructive migrations (table rebuilds) review [COMPATIBILITY.md](../reference/COMPATIBILITY.md) before restarting.
+When restoring an older snapshot onto a newer Astropress install, `ensureLegacySchemaCompatibility()` runs at boot and applies any missing additive column migrations automatically. For destructive migrations (table rebuilds) review [COMPATIBILITY.md](../COMPATIBILITY.md) before restarting.

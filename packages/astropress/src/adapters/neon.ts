@@ -46,11 +46,11 @@ export interface AstropressNeonHostedAdapterOptions extends AstropressNeonAdapte
 export function readAstropressNeonHostedConfig(
   env: Record<string, string | undefined> = process.env,
 ): AstropressNeonHostedConfig {
-  const databaseUrl = env.DATABASE_URL?.trim();
+  const databaseUrl = env.NEON_DATABASE_URL?.trim() ?? env.DATABASE_URL?.trim();
 
   if (!databaseUrl) {
     throw new Error(
-      "Neon hosted config requires DATABASE_URL (your Neon connection string).",
+      "Neon hosted config requires NEON_DATABASE_URL or DATABASE_URL (your Neon connection string).",
     );
   }
 

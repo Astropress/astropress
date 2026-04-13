@@ -48,4 +48,44 @@ describe("content services operations", () => {
 
     await rm(workspace, { recursive: true, force: true });
   });
+
+  it("accepts scaffolded Neon env keys during verification", async () => {
+    const workspace = await mkdtemp(join(tmpdir(), "astropress-services-neon-"));
+
+    const report = await verifyAstropressContentServices({
+      workspaceRoot: workspace,
+      env: {
+        ASTROPRESS_CONTENT_SERVICES: "neon",
+        ASTROPRESS_SERVICE_ORIGIN: "https://service.example.com/astropress",
+        NEON_DATABASE_URL: "postgres://user:pass@ep-example.us-east-1.aws.neon.tech/neondb",
+      },
+    });
+
+    expect(report.supportLevel).toBe("configured");
+    expect(report.missingEnvKeys).toEqual([]);
+
+    await rm(workspace, { recursive: true, force: true });
+  });
+
+  it("reports NHOST and Turso missing keys with the canonical env contract", async () => {
+    const workspace = await mkdtemp(join(tmpdir(), "astropress-services-more-"));
+
+    const nhostReport = await verifyAstropressContentServices({
+      workspaceRoot: workspace,
+      env: {
+        ASTROPRESS_CONTENT_SERVICES: "nhost",
+      },
+    });
+    const tursoReport = await verifyAstropressContentServices({
+      workspaceRoot: workspace,
+      env: {
+        ASTROPRESS_CONTENT_SERVICES: "turso",
+      },
+    });
+
+    expect(nhostReport.missingEnvKeys).toContain("NHOST_SUBDOMAIN");
+    expect(tursoReport.missingEnvKeys).toContain("TURSO_DATABASE_URL");
+
+    await rm(workspace, { recursive: true, force: true });
+  });
 });

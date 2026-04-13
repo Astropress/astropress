@@ -43,6 +43,15 @@ describe("project env", () => {
     expect(resolveAstropressHostedProviderFromEnv({ ASTROPRESS_HOSTED_PROVIDER: "runway" })).toBe(
       "runway",
     );
+    expect(resolveAstropressHostedProviderFromEnv({ ASTROPRESS_HOSTED_PROVIDER: "nhost" })).toBe(
+      "nhost",
+    );
+    expect(resolveAstropressHostedProviderFromEnv({ ASTROPRESS_HOSTED_PROVIDER: "neon" })).toBe(
+      "neon",
+    );
+    expect(resolveAstropressHostedProviderFromEnv({ ASTROPRESS_HOSTED_PROVIDER: "turso" })).toBe(
+      "turso",
+    );
   });
 
   it("resolves deploy targets from explicit values or the app-host selection", () => {
@@ -119,6 +128,12 @@ describe("resolveAstropressAppHostFromEnv — additional branches", () => {
     expect(resolveAstropressAppHostFromEnv({ ASTROPRESS_HOSTED_PROVIDER: "appwrite" })).toBe("render-web");
   });
 
+  it("maps ASTROPRESS_HOSTED_PROVIDER=nhost|neon|turso → render-web via data-services chain", () => {
+    expect(resolveAstropressAppHostFromEnv({ ASTROPRESS_HOSTED_PROVIDER: "nhost" })).toBe("render-web");
+    expect(resolveAstropressAppHostFromEnv({ ASTROPRESS_HOSTED_PROVIDER: "neon" })).toBe("render-web");
+    expect(resolveAstropressAppHostFromEnv({ ASTROPRESS_HOSTED_PROVIDER: "turso" })).toBe("render-web");
+  });
+
   it("maps legacy ASTROPRESS_HOSTED_PROVIDER=runway → runway via data-services chain", () => {
     expect(resolveAstropressAppHostFromEnv({ ASTROPRESS_HOSTED_PROVIDER: "runway" })).toBe("runway");
   });
@@ -163,6 +178,12 @@ describe("resolveAstropressHostedProviderFromEnv — additional branches", () =>
     expect(resolveAstropressHostedProviderFromEnv({ ASTROPRESS_HOSTED_PROVIDER: "pocketbase" })).toBe("pocketbase");
   });
 
+  it("returns nhost, neon, and turso when selected explicitly", () => {
+    expect(resolveAstropressHostedProviderFromEnv({ ASTROPRESS_HOSTED_PROVIDER: "nhost" })).toBe("nhost");
+    expect(resolveAstropressHostedProviderFromEnv({ ASTROPRESS_HOSTED_PROVIDER: "neon" })).toBe("neon");
+    expect(resolveAstropressHostedProviderFromEnv({ ASTROPRESS_HOSTED_PROVIDER: "turso" })).toBe("turso");
+  });
+
   it("returns appwrite when ASTROPRESS_HOSTED_PROVIDER=appwrite", () => {
     expect(resolveAstropressHostedProviderFromEnv({ ASTROPRESS_HOSTED_PROVIDER: "appwrite" })).toBe("appwrite");
   });
@@ -173,6 +194,12 @@ describe("resolveAstropressHostedProviderFromEnv — additional branches", () =>
 
   it("returns appwrite when ASTROPRESS_DATA_SERVICES=appwrite (fallback from dataServices)", () => {
     expect(resolveAstropressHostedProviderFromEnv({ ASTROPRESS_DATA_SERVICES: "appwrite" })).toBe("appwrite");
+  });
+
+  it("returns nhost, neon, and turso from ASTROPRESS_DATA_SERVICES fallback", () => {
+    expect(resolveAstropressHostedProviderFromEnv({ ASTROPRESS_DATA_SERVICES: "nhost" })).toBe("nhost");
+    expect(resolveAstropressHostedProviderFromEnv({ ASTROPRESS_DATA_SERVICES: "neon" })).toBe("neon");
+    expect(resolveAstropressHostedProviderFromEnv({ ASTROPRESS_DATA_SERVICES: "turso" })).toBe("turso");
   });
 });
 
@@ -211,6 +238,16 @@ describe("resolveAstropressServiceOriginFromEnv — additional branches", () => 
     expect(
       resolveAstropressServiceOriginFromEnv({ ASTROPRESS_DATA_SERVICES: "supabase" }),
     ).toBeNull();
+  });
+
+  it("returns nhost service origin from NHOST_SUBDOMAIN and NHOST_REGION", () => {
+    expect(
+      resolveAstropressServiceOriginFromEnv({
+        ASTROPRESS_DATA_SERVICES: "nhost",
+        NHOST_SUBDOMAIN: "abcdefgh",
+        NHOST_REGION: "eu-central-1",
+      }),
+    ).toBe("https://abcdefgh.eu-central-1.nhost.run/v1/functions/astropress");
   });
 });
 

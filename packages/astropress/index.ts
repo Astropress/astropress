@@ -179,6 +179,26 @@ export type {
   AstropressTursoHostedAdapterOptions,
   AstropressTursoHostedConfig,
 } from "./src/adapters/turso";
+export { createAstropressNeonAdapter } from "./src/adapters/neon.js";
+export {
+  createAstropressNeonHostedAdapter,
+  readAstropressNeonHostedConfig,
+} from "./src/adapters/neon.js";
+export type {
+  AstropressNeonAdapterOptions,
+  AstropressNeonHostedAdapterOptions,
+  AstropressNeonHostedConfig,
+} from "./src/adapters/neon";
+export { createAstropressNhostAdapter } from "./src/adapters/nhost.js";
+export {
+  createAstropressNhostHostedAdapter,
+  readAstropressNhostHostedConfig,
+} from "./src/adapters/nhost.js";
+export type {
+  AstropressNhostAdapterOptions,
+  AstropressNhostHostedAdapterOptions,
+  AstropressNhostHostedConfig,
+} from "./src/adapters/nhost";
 
 // Persistence types
 export type {

@@ -1,6 +1,8 @@
 use std::path::PathBuf;
 
-use crate::providers::{AbTestingProvider, AnalyticsProvider, AppHost, DataServices, HeatmapProvider, LocalProvider};
+use crate::providers::{
+    AbTestingProvider, AnalyticsProvider, AppHost, DataServices, HeatmapProvider, LocalProvider,
+};
 
 mod dev_deploy;
 mod help;
@@ -210,7 +212,7 @@ pub(crate) fn parse_command(args: &[String]) -> Result<Command, String> {
         [command, rest @ ..] if command == "completions" => {
             let shell = rest.first().cloned().unwrap_or_default();
             if shell.is_empty() {
-                Err("Usage: `astropress completions <bash|zsh|fish>`.".into())
+                Err("Usage: `astropress completions <bash|zsh|fish|powershell>`.".into())
             } else {
                 Ok(Command::Completions { shell })
             }
@@ -237,4 +239,3 @@ pub(crate) fn parse_command(args: &[String]) -> Result<Command, String> {
         [command, ..] => Err(format!("Unsupported astropress command: `{command}`.")),
     }
 }
-

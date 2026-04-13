@@ -32,11 +32,34 @@ function requiredEnvKeysForContentServices(contentServices: string) {
       return ["ASTROPRESS_SERVICE_ORIGIN", "APPWRITE_ENDPOINT", "APPWRITE_PROJECT_ID", "APPWRITE_API_KEY"];
     case "pocketbase":
       return ["ASTROPRESS_SERVICE_ORIGIN", "POCKETBASE_URL", "POCKETBASE_EMAIL", "POCKETBASE_PASSWORD"];
+    case "nhost":
+      return ["ASTROPRESS_SERVICE_ORIGIN", "NHOST_SUBDOMAIN", "NHOST_REGION", "NHOST_ADMIN_SECRET"];
+    case "neon":
+      return ["ASTROPRESS_SERVICE_ORIGIN", "NEON_DATABASE_URL"];
     case "runway":
       return ["ASTROPRESS_SERVICE_ORIGIN", "RUNWAY_API_TOKEN", "RUNWAY_PROJECT_ID"];
+    case "turso":
+      return ["ASTROPRESS_SERVICE_ORIGIN", "TURSO_DATABASE_URL", "TURSO_AUTH_TOKEN"];
     default:
       return [];
   }
+}
+
+function missingEnvKeysForContentServices(
+  contentServices: string,
+  env: Record<string, string | undefined>,
+  requiredEnvKeys: string[],
+): string[] {
+  if (contentServices !== "neon") {
+    return requiredEnvKeys.filter((key) => !env[key]?.trim());
+  }
+
+  return requiredEnvKeys.filter((key) => {
+    if (key !== "NEON_DATABASE_URL") {
+      return !env[key]?.trim();
+    }
+    return !(env.NEON_DATABASE_URL?.trim() || env.DATABASE_URL?.trim());
+  });
 }
 
 function createOperationReport(
@@ -46,7 +69,7 @@ function createOperationReport(
 ): AstropressContentServicesOperationReport {
   const contract = resolveAstropressProjectEnvContract(env);
   const requiredEnvKeys = requiredEnvKeysForContentServices(contentServices);
-  const missingEnvKeys = requiredEnvKeys.filter((key) => !env[key]?.trim());
+  const missingEnvKeys = missingEnvKeysForContentServices(contentServices, env, requiredEnvKeys);
   return {
     contentServices,
     supportLevel:

@@ -2,7 +2,14 @@ import type { AstropressAppHost } from "./app-host-targets";
 import type { AstropressDataServices } from "./data-service-targets";
 
 export type AstropressLocalProviderEnv = "sqlite" | "supabase" | "runway";
-export type AstropressHostedProviderEnv = "supabase" | "runway" | "appwrite" | "pocketbase";
+export type AstropressHostedProviderEnv =
+  | "supabase"
+  | "runway"
+  | "appwrite"
+  | "pocketbase"
+  | "nhost"
+  | "neon"
+  | "turso";
 export type AstropressDeployTargetEnv =
   | "github-pages"
   | "cloudflare"
@@ -67,6 +74,18 @@ function resolveDataServicesFromLegacyEnv(
   if (hostedProvider === "appwrite") {
     return "appwrite";
   }
+  if (hostedProvider === "pocketbase") {
+    return "pocketbase";
+  }
+  if (hostedProvider === "nhost") {
+    return "nhost";
+  }
+  if (hostedProvider === "neon") {
+    return "neon";
+  }
+  if (hostedProvider === "turso") {
+    return "turso";
+  }
   if (hostedProvider === "supabase") {
     return "supabase";
   }
@@ -111,7 +130,14 @@ export function resolveAstropressAppHostFromEnv(
   if (dataServices === "supabase") {
     return "vercel";
   }
-  if (dataServices === "appwrite" || dataServices === "pocketbase" || dataServices === "nhost" || dataServices === "neon" || dataServices === "custom") {
+  if (
+    dataServices === "appwrite" ||
+    dataServices === "pocketbase" ||
+    dataServices === "nhost" ||
+    dataServices === "neon" ||
+    dataServices === "turso" ||
+    dataServices === "custom"
+  ) {
     return "render-web";
   }
   if (dataServices === "runway") {
@@ -135,6 +161,7 @@ export function resolveAstropressDataServicesFromEnv(
     explicitServices === "pocketbase" ||
     explicitServices === "neon" ||
     explicitServices === "nhost" ||
+    explicitServices === "turso" ||
     explicitServices === "runway" ||
     explicitServices === "custom"
   ) {
@@ -165,6 +192,12 @@ export function resolveAstropressServiceOriginFromEnv(
   if (dataServices === "appwrite") {
     const endpoint = env.APPWRITE_ENDPOINT?.trim();
     return endpoint ? `${endpoint.replace(/\/$/, "")}/functions/astropress` : null;
+  }
+
+  if (dataServices === "nhost") {
+    const subdomain = env.NHOST_SUBDOMAIN?.trim();
+    const region = env.NHOST_REGION?.trim();
+    return subdomain && region ? `https://${subdomain}.${region}.nhost.run/v1/functions/astropress` : null;
   }
 
   if (dataServices === "runway") {
@@ -206,6 +239,15 @@ export function resolveAstropressHostedProviderFromEnv(
   if (provider === "pocketbase") {
     return "pocketbase";
   }
+  if (provider === "nhost") {
+    return "nhost";
+  }
+  if (provider === "neon") {
+    return "neon";
+  }
+  if (provider === "turso") {
+    return "turso";
+  }
   if (provider === "supabase") {
     return "supabase";
   }
@@ -219,6 +261,15 @@ export function resolveAstropressHostedProviderFromEnv(
   }
   if (dataServices === "pocketbase") {
     return "pocketbase";
+  }
+  if (dataServices === "nhost") {
+    return "nhost";
+  }
+  if (dataServices === "neon") {
+    return "neon";
+  }
+  if (dataServices === "turso") {
+    return "turso";
   }
   return "supabase";
 }

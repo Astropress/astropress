@@ -2,7 +2,7 @@
 /**
  * generate-api-docs.ts
  *
- * Generates docs/API_REFERENCE.md from the TypeScript compiler API.
+ * Generates docs/reference/API_REFERENCE.md from the TypeScript compiler API.
  * Uses ts.createProgram + TypeChecker to extract full signatures (parameter
  * types, return types) and JSDoc from every exported symbol in the key
  * entry-point files.
@@ -16,9 +16,9 @@ import { writeFileSync, readFileSync, existsSync } from "node:fs";
 import { resolve, join } from "node:path";
 import ts from "typescript";
 
-const ROOT = resolve(import.meta.dir, "..");
+const ROOT = resolve(import.meta.dir, "..", "..");
 const PKG_DIR = join(ROOT, "packages/astropress");
-const OUT_FILE = join(ROOT, "docs/API_REFERENCE.md");
+const OUT_FILE = join(ROOT, "docs/reference/API_REFERENCE.md");
 const CHECK_MODE = process.argv.includes("--check");
 
 // ── Entry points to document ────────────────────────────────────────────────
@@ -246,18 +246,18 @@ const output = lines.join("\n");
 
 if (CHECK_MODE) {
   if (!existsSync(OUT_FILE)) {
-    console.error("docs:api:check failed — API_REFERENCE.md does not exist. Run `bun run docs:api`.");
+    console.error("docs:api:check failed — docs/reference/API_REFERENCE.md does not exist. Run `bun run docs:api`.");
     process.exit(1);
   }
   const existing = readFileSync(OUT_FILE, "utf8");
   // Strip the Generated date line before comparing so date changes don't fail the check
   const normalize = (s: string) => s.replace(/^Generated: .+$/m, "Generated: <date>").trim();
   if (normalize(existing) !== normalize(output)) {
-    console.error("docs:api:check failed — docs/API_REFERENCE.md is stale. Run `bun run docs:api`.");
+    console.error("docs:api:check failed — docs/reference/API_REFERENCE.md is stale. Run `bun run docs:api`.");
     process.exit(1);
   }
-  console.log("✓ docs/API_REFERENCE.md is up to date.");
+  console.log("✓ docs/reference/API_REFERENCE.md is up to date.");
 } else {
   writeFileSync(OUT_FILE, output);
-  console.log(`✓ API reference written to docs/API_REFERENCE.md (${allEntries.length} entries)`);
+  console.log(`✓ API reference written to docs/reference/API_REFERENCE.md (${allEntries.length} entries)`);
 }

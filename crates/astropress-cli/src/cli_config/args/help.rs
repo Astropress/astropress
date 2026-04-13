@@ -3,7 +3,9 @@ pub(crate) fn print_help() {
     println!();
     println!("Global flags:");
     println!("  --version / -V        Print the CLI version and exit");
-    println!("  --plain / --no-tui    Disable interactive prompts and progress bars (for CI/AI use)");
+    println!(
+        "  --plain / --no-tui    Disable interactive prompts and progress bars (for CI/AI use)"
+    );
     println!();
     println!("Commands:");
     println!("  astropress new [project-dir] [--app-host <host>] [--content-services <services>] [--yes] [--use-local-package|--use-published-package]");
@@ -26,13 +28,15 @@ pub(crate) fn print_help() {
     println!("  astropress deploy [--project-dir <dir>] [--app-host <host>] [--target github-pages|cloudflare|vercel|netlify|render-static|render-web|gitlab-pages|runway|custom]");
     println!();
     println!("  astropress list tools      (alias: ls tools)      List all tools by category");
-  println!("  astropress list providers  (alias: ls providers)  List supported hosts and data services with pairings");
-    println!("  astropress completions <bash|zsh|fish>          Print shell completion script");
+    println!("  astropress list providers  (alias: ls providers)  List supported hosts and data services with pairings");
+    println!("  astropress completions <bash|zsh|fish|powershell> Print shell completion script");
     println!();
     println!("New project flags:");
     println!("  --yes / --defaults    Skip interactive prompts and use defaults (for CI use)");
     println!();
     println!("Crawl modes:");
     println!("  --crawl-pages              Fast fetch-based crawl (uses sitemap + HTML fetch)");
-    println!("  --crawl-pages=playwright   Full browser crawl (handles JS-rendered pages, e.g. Wix)");
+    println!(
+        "  --crawl-pages=playwright   Full browser crawl (handles JS-rendered pages, e.g. Wix)"
+    );
 }

@@ -6,7 +6,7 @@ description: >-
 template: splash
 hero:
   tagline: >-
-    Build your site with a production-ready admin panel.
+    Build your site with a built-in admin panel.
     Add the integrations you need — self-hosted, privacy-respecting, and yours.
   actions:
     - text: Quick start
@@ -23,8 +23,8 @@ import { Card, CardGrid } from "@astrojs/starlight/components";
 <CardGrid stagger>
   <Card title="Built-in admin panel" icon="puzzle">
     Manage pages, posts, media, and users without writing a CMS from scratch.
-    Secured with Zero-Trust Admin guards, bcrypt passwords, CSRF tokens, and
-    session hardening — all configured by default.
+    Secured with Zero-Trust Admin guards, PBKDF2-HMAC-SHA-512 for new password
+    hashes, CSRF tokens, and session hardening — all configured by default.
   </Card>
   <Card title="Privacy by design" icon="shield">
     No third-party tracking scripts, no forced analytics, no cookie banner by

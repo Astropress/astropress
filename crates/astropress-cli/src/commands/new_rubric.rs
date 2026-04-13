@@ -65,6 +65,8 @@ Grade scale: A+ / A / B / C / D / F
 | 50 | Information Architecture | | |
 | 51 | Navigation Design | | |
 | 52 | Interaction Design & Motion | | |
+| 53 | Cross-Platform Support | | |
+| 54 | Test Artifact Cleanup | | |
 
 ## What each rubric measures
 
@@ -90,6 +92,8 @@ Grade scale: A+ / A / B / C / D / F
 | **11 — CI/CD Pipeline** | Lint, type-check, test, and deploy gated on every push; no manual steps to ship |
 | **12 — Dependency Management** | No unused packages; peer-dep conflicts absent; audit clean; update cadence documented |
 | **17 — TypeScript Quality** | Strict mode; no `any` in public APIs; branded types for IDs and tokens |
+| **53 — Cross-Platform Support** | Scaffold, CLI, docs, and release flow work on Windows, macOS, Linux, and documented BSD tiers; shell-specific steps are either avoided or explicitly supported |
+| **54 — Test Artifact Cleanup** | Test and verification commands clean temporary directories and generated artifacts so reruns do not dirty the repo or require manual cleanup |
 
 ### Content & data
 
@@ -133,7 +137,7 @@ Grade scale: A+ / A / B / C / D / F
 | **40 — Disaster Recovery** | Backup + restore tested on a clean environment; RTO documented |
 | **41 — Monitoring Integration** | Health endpoint wired to uptime monitor; alerts configured for error-rate spikes |
 | **42 — Upgrade Path E2E** | Automated test: create project on v(N−1), upgrade to v(N), assert content and config intact |
-| **43 — System Honesty** | CLI and admin never hide failure; every error surfaced with context; no silent data loss |
+| **43 — System Honesty** | CLI, docs, and admin claims stay aligned with implementation; failures surface with context; no silent data loss |
 | **44 — Multi-site Gateway (Nexus)** | `astropress-nexus` can proxy and manage multiple instances; health dashboard works |
 | **45 — Scaffold Quality Carryover** | Security, a11y, privacy, and CI quality built into the scaffold — not added post-hoc |
 

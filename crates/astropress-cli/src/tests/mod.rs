@@ -15,7 +15,9 @@ use providers::{AppHost, DataServices, LocalProvider};
 
 use std::collections::BTreeMap;
 use std::fs;
-use std::path::PathBuf;
+use std::ops::Deref;
+use std::path::{Path, PathBuf};
+use std::sync::Once;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 mod doctor;
@@ -26,14 +28,72 @@ fn strings(values: &[&str]) -> Vec<String> {
     values.iter().map(|value| value.to_string()).collect()
 }
 
-fn temp_dir(label: &str) -> PathBuf {
-    let unique = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .unwrap()
-        .as_nanos();
-    let path = std::env::temp_dir().join(format!("astropress-cli-{label}-{unique}"));
-    fs::create_dir_all(&path).unwrap();
-    path
+/// RAII guard for a per-test temp directory.
+///
+/// Creates `/tmp/astropress-cli-{label}-{nanos}` on construction and removes it on drop.
+/// Implements `Deref<Target=Path>` and `AsRef<Path>` so call sites can use `&dir`,
+/// `dir.join(...)`, etc. without changes.
+pub(crate) struct TestDir(PathBuf);
+
+impl TestDir {
+    fn new(label: &str) -> Self {
+        sweep_orphaned_test_dirs_once();
+        let unique = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_nanos();
+        let path = std::env::temp_dir().join(format!("astropress-cli-{label}-{unique}"));
+        fs::create_dir_all(&path).unwrap();
+        Self(path)
+    }
+}
+
+impl Deref for TestDir {
+    type Target = Path;
+    fn deref(&self) -> &Path {
+        &self.0
+    }
+}
+
+impl AsRef<Path> for TestDir {
+    fn as_ref(&self) -> &Path {
+        &self.0
+    }
+}
+
+impl Drop for TestDir {
+    fn drop(&mut self) {
+        let _ = fs::remove_dir_all(&self.0);
+    }
+}
+
+fn temp_dir(label: &str) -> TestDir {
+    TestDir::new(label)
+}
+
+/// Removes orphaned `astropress-cli-*` and `astropress-*` dirs older than 1 hour.
+/// Runs once per test process to clear leftovers from prior crashed runs.
+fn sweep_orphaned_test_dirs_once() {
+    static SWEEP: Once = Once::new();
+    SWEEP.call_once(|| {
+        let Ok(entries) = fs::read_dir(std::env::temp_dir()) else {
+            return;
+        };
+        let cutoff = SystemTime::now() - std::time::Duration::from_secs(60 * 60);
+        for entry in entries.flatten() {
+            let name = entry.file_name();
+            let name = name.to_string_lossy();
+            if !name.starts_with("astropress-cli-") && !name.starts_with("astropress-") {
+                continue;
+            }
+            let Ok(metadata) = entry.metadata() else {
+                continue;
+            };
+            if metadata.modified().map(|m| m < cutoff).unwrap_or(false) {
+                let _ = fs::remove_dir_all(entry.path());
+            }
+        }
+    });
 }
 
 #[test]
@@ -43,7 +103,14 @@ fn init_is_alias_for_new() {
         Ok(Command::New { .. })
     ));
     assert!(matches!(
-        parse_command(&strings(&["init", "my-site", "--app-host", "vercel", "--data-services", "supabase"])),
+        parse_command(&strings(&[
+            "init",
+            "my-site",
+            "--app-host",
+            "vercel",
+            "--data-services",
+            "supabase"
+        ])),
         Ok(Command::New {
             app_host: Some(AppHost::Vercel),
             data_services: Some(DataServices::Supabase),
@@ -90,16 +157,25 @@ fn version_flag_recognized() {
 fn new_yes_flag_recognized() {
     assert!(matches!(
         parse_command(&strings(&["new", "demo", "--yes"])),
-        Ok(Command::New { yes_defaults: true, .. })
+        Ok(Command::New {
+            yes_defaults: true,
+            ..
+        })
     ));
     assert!(matches!(
         parse_command(&strings(&["new", "demo", "--defaults"])),
-        Ok(Command::New { yes_defaults: true, .. })
+        Ok(Command::New {
+            yes_defaults: true,
+            ..
+        })
     ));
     // Without the flag, yes_defaults is false
     assert!(matches!(
         parse_command(&strings(&["new", "demo"])),
-        Ok(Command::New { yes_defaults: false, .. })
+        Ok(Command::New {
+            yes_defaults: false,
+            ..
+        })
     ));
 }
 
@@ -116,6 +192,10 @@ fn completions_command_recognized() {
     assert!(matches!(
         parse_command(&strings(&["completions", "fish"])),
         Ok(Command::Completions { shell }) if shell == "fish"
+    ));
+    assert!(matches!(
+        parse_command(&strings(&["completions", "powershell"])),
+        Ok(Command::Completions { shell }) if shell == "powershell"
     ));
     // Missing shell argument → error
     assert!(parse_command(&strings(&["completions"])).is_err());
@@ -136,7 +216,9 @@ fn deploy_script_selection_prefers_targeted_scripts() {
         dependencies: BTreeMap::new(),
         dev_dependencies: BTreeMap::new(),
     };
-    manifest.scripts.insert("build".into(), "astro build".into());
+    manifest
+        .scripts
+        .insert("build".into(), "astro build".into());
     manifest
         .scripts
         .insert("build:cloudflare-production".into(), "astro build".into());
@@ -170,7 +252,9 @@ fn deploy_script_for_railway_prefers_deploy_script() {
     );
     // Without deploy:railway, falls back to build.
     manifest.scripts.remove("deploy:railway");
-    manifest.scripts.insert("build".into(), "astro build".into());
+    manifest
+        .scripts
+        .insert("build".into(), "astro build".into());
     assert_eq!(
         deploy_script_for_target(&manifest, Some("railway")).unwrap(),
         "build"
@@ -203,7 +287,9 @@ fn deploy_script_for_new_hosts_falls_back_to_build() {
         dependencies: BTreeMap::new(),
         dev_dependencies: BTreeMap::new(),
     };
-    manifest.scripts.insert("build".into(), "astro build".into());
+    manifest
+        .scripts
+        .insert("build".into(), "astro build".into());
     for target in &["fly-io", "coolify", "digitalocean", "railway"] {
         assert_eq!(
             deploy_script_for_target(&manifest, Some(target)).unwrap(),
