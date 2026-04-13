@@ -40,13 +40,23 @@ fn chatwoot_generates_env_stubs() {
 // ── payments ──────────────────────────────────────────────────────────
 
 #[test]
-fn hyperswitch_env_mentions_providers() {
+fn hyperswitch_env_mentions_regional_providers() {
     let f = AllFeatures { payments: PaymentChoice::HyperSwitch, ..AllFeatures::defaults() };
     let s = feature_env_stubs(&f);
-    assert!(s.contains("HYPERSWITCH_API_KEY"));
-    assert!(s.contains("Razorpay"));
-    assert!(s.contains("M-Pesa"));
-    assert!(s.contains("Daraja"));
+    // East Africa
+    assert!(s.contains("M-Pesa"), "env stub must mention M-Pesa: {s}");
+    assert!(s.contains("Daraja"), "env stub must mention Daraja: {s}");
+    // India
+    assert!(s.contains("Razorpay"), "env stub must mention Razorpay: {s}");
+    assert!(s.contains("UPI"), "env stub must mention UPI: {s}");
+}
+
+#[test]
+fn hyperswitch_env_includes_both_api_keys() {
+    let f = AllFeatures { payments: PaymentChoice::HyperSwitch, ..AllFeatures::defaults() };
+    let s = feature_env_stubs(&f);
+    assert!(s.contains("HYPERSWITCH_API_KEY"), "server-side key missing: {s}");
+    assert!(s.contains("HYPERSWITCH_PUBLISHABLE_KEY"), "client-side key for Web SDK missing: {s}");
 }
 
 #[test]
@@ -58,22 +68,17 @@ fn hyperswitch_env_includes_redirect_urls() {
 }
 
 #[test]
-fn mpesa_daraja_generates_env_stubs() {
-    let f = AllFeatures { payments: PaymentChoice::MpesaDaraja, ..AllFeatures::defaults() };
-    let s = feature_env_stubs(&f);
-    assert!(s.contains("MPESA_CONSUMER_KEY"));
-    assert!(s.contains("MPESA_CONSUMER_SECRET"));
-    assert!(s.contains("MPESA_SHORTCODE"));
-    assert!(s.contains("MPESA_PASSKEY"));
-    assert!(s.contains("MPESA_BASE_URL"));
-    assert!(s.contains("MPESA_CALLBACK_URL"));
-}
-
-#[test]
-fn mpesa_daraja_does_not_generate_hyperswitch_stubs() {
-    let f = AllFeatures { payments: PaymentChoice::MpesaDaraja, ..AllFeatures::defaults() };
-    let s = feature_env_stubs(&f);
-    assert!(!s.contains("HYPERSWITCH_API_KEY"), "MpesaDaraja must not emit HyperSwitch vars");
+fn hyperswitch_scaffolds_checkout_component() {
+    let f = AllFeatures { payments: PaymentChoice::HyperSwitch, ..AllFeatures::defaults() };
+    let files = feature_config_stubs(&f);
+    let component = files.iter().find(|(p, _)| *p == "src/components/HyperCheckout.astro");
+    assert!(component.is_some(), "HyperCheckout.astro must be scaffolded: {:?}", files.iter().map(|(p,_)| p).collect::<Vec<_>>());
+    let content = component.unwrap().1;
+    assert!(content.contains("HyperLoader.js"), "must load HyperSwitch Web SDK: {content}");
+    assert!(content.contains("HYPERSWITCH_PUBLISHABLE_KEY"), "must reference publishable key: {content}");
+    assert!(content.contains("M-Pesa"), "must document M-Pesa STK Push behaviour: {content}");
+    assert!(content.contains("UPI"), "must document UPI collect flow: {content}");
+    assert!(content.contains("confirmPayment"), "must wire confirmPayment: {content}");
 }
 
 // ── notifications ─────────────────────────────────────────────────────

@@ -173,9 +173,8 @@ pub(crate) fn parse_add_features(args: &[String]) -> Result<AllFeatures, String>
             "--payments" => {
                 f.payments = match value.as_str() {
                     "hyperswitch" => PaymentChoice::HyperSwitch,
-                    "mpesa" | "mpesa-daraja" | "daraja" => PaymentChoice::MpesaDaraja,
                     other => return Err(format!(
-                        "Unknown payment router `{other}`. Use: hyperswitch, mpesa."
+                        "Unknown payment router `{other}`. Use: hyperswitch."
                     )),
                 };
             }

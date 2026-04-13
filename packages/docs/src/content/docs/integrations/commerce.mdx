@@ -66,30 +66,56 @@ astropress add --commerce vendure
 
 ## Payments: HyperSwitch
 
-HyperSwitch is an open-source payment router. Instead of integrating with one payment provider (Stripe, Razorpay, PayPal, etc.), you integrate with HyperSwitch once and route payments to any of 50+ providers through a single API.
+HyperSwitch is an open-source payment router made by Juspay (India). Instead of integrating directly with one payment provider, you integrate with HyperSwitch once and route to 50+ providers through a single API. It includes a pre-built **Unified Checkout Web SDK** that renders the right payment UI automatically.
 
 | Attribute | Detail |
 |-----------|--------|
-| Licence | Apache 2.0 |
+| Router licence | Apache 2.0 |
+| Web SDK licence | MIT |
 | Hosting | Self-hosted Rust server (or HyperSwitch cloud) |
-| Supported providers | Stripe, Razorpay, PayPal, Square, Adyen, Braintree, and 50+ more |
-| Payment methods | Cards, Apple Pay, M-PESA, UPI, IMPS, NEFT, Venmo, Cash App |
+| Made by | Juspay — India's largest payment infrastructure company |
 
 ```sh
 astropress new my-site --payments hyperswitch
 astropress add --payments hyperswitch
 ```
 
-Add your payment provider API keys via the HyperSwitch dashboard after deploying. Astropress writes `HYPERSWITCH_API_KEY`, `HYPERSWITCH_BASE_URL`, and redirect URL env stubs to `.env.example`.
+Scaffolding writes env stubs and generates `src/components/HyperCheckout.astro` — a complete checkout form that auto-selects the right UI based on which connectors you enable.
+
+### Regional payment support
+
+| Region | Provider | Methods |
+|--------|----------|---------|
+| East Africa | Safaricom M-Pesa (Daraja) | STK Push: user enters phone number on your site, receives a PIN prompt on their phone, and confirms without leaving the page |
+| India | Razorpay | UPI, IMPS, NEFT, cards, netbanking |
+| India | Cashfree | UPI, UPI QR, cards, wallets |
+| India | PayU | UPI, EMI, cards, wallets |
+| India | PhonePe | UPI via PhonePe switch |
+| Global | Stripe | Cards, Apple Pay, Google Pay |
+| Global | Adyen | Cards + 50+ local methods |
+| Global | PayPal | PayPal, Venmo |
+
+Configure connectors via the HyperSwitch dashboard after deploying — no code changes required to add or swap providers.
+
+### How the checkout works
+
+`HyperCheckout.astro` loads the HyperSwitch Web SDK (MIT, [`juspay/hyperswitch-web`](https://github.com/juspay/hyperswitch-web)) and mounts a Unified Checkout element. The SDK inspects which connectors are active and the user's device, then renders:
+
+- **M-Pesa**: a phone-number field; on submit, Safaricom pushes a PIN prompt to the user's phone via STK Push — the payment completes without any redirect
+- **UPI**: a VPA (UPI ID) field with a collect flow; works across Razorpay, Cashfree, PayU, and PhonePe
+- **Cards / Apple Pay / Google Pay**: a standard card form or native payment sheet
+
+The component is wired to `HYPERSWITCH_PUBLISHABLE_KEY` (client-side) and expects a `client_secret` you create server-side using `HYPERSWITCH_API_KEY`. See the component comments for a minimal API route example.
 
 **When it's the right choice:**
-- You need to accept payments in multiple currencies or regions that different providers handle well (e.g. Stripe for cards, Razorpay for UPI in India, M-PESA in East Africa)
-- You want to switch payment providers without code changes
-- You want a fallback if your primary provider has an outage
+- You need M-Pesa, UPI, or other regional methods alongside cards
+- You want to switch or add providers via a dashboard without touching code
+- You want a fallback connector if your primary provider has an outage
+- You're building for East Africa, India, or a multi-region audience
 
-**Using HyperSwitch without a commerce engine:** HyperSwitch is a standalone payment router — you can use it for one-time payments, donations, or ticket sales without Medusa or Vendure.
+**Using HyperSwitch without a commerce engine:** it works standalone for one-time payments, donations, or ticket sales.
 
-**Further reading:** [hyperswitch.io/docs](https://hyperswitch.io/docs)
+**Further reading:** [hyperswitch.io/docs](https://hyperswitch.io/docs) · [Web SDK](https://github.com/juspay/hyperswitch-web)
 
 ## Putting it together
 

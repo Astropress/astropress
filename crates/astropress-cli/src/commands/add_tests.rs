@@ -4,7 +4,7 @@
 use super::*;
 use crate::features::{
     ChatChoice, CommerceChoice, DocsChoice, EmailChoice, ForumChoice, NotifyChoice,
-    PaymentChoice, ScheduleChoice,
+    ScheduleChoice,
 };
 
 fn args(s: &[&str]) -> Vec<String> {
@@ -150,27 +150,25 @@ fn add_to_nonexistent_dir_returns_error() {
 #[test]
 fn add_payments_hyperswitch_parses() {
     let f = parse_add_features(&args(&["--payments", "hyperswitch"])).unwrap();
-    assert_eq!(f.payments, PaymentChoice::HyperSwitch);
+    assert!(matches!(f.payments, crate::features::PaymentChoice::HyperSwitch));
 }
 
 #[test]
-fn add_payments_mpesa_parses() {
-    let f = parse_add_features(&args(&["--payments", "mpesa"])).unwrap();
-    assert_eq!(f.payments, PaymentChoice::MpesaDaraja);
+fn add_payments_hyperswitch_scaffolds_checkout_component() {
+    let f = parse_add_features(&args(&["--payments", "hyperswitch"])).unwrap();
+    let config = feature_config_stubs(&f);
+    let component = config.iter().find(|(p, _)| *p == "src/components/HyperCheckout.astro");
+    assert!(component.is_some(), "HyperCheckout.astro must be scaffolded: {:?}", config.iter().map(|(p,_)| p).collect::<Vec<_>>());
+    let content = component.unwrap().1;
+    assert!(content.contains("HYPERSWITCH_PUBLISHABLE_KEY"), "{content}");
+    assert!(content.contains("confirmPayment"), "{content}");
 }
 
 #[test]
-fn add_payments_mpesa_daraja_alias_parses() {
-    let f = parse_add_features(&args(&["--payments", "mpesa-daraja"])).unwrap();
-    assert_eq!(f.payments, PaymentChoice::MpesaDaraja);
-}
-
-#[test]
-fn add_payments_mpesa_appends_env_stubs() {
-    let f = parse_add_features(&args(&["--payments", "mpesa"])).unwrap();
-    let stubs = feature_env_stubs(&f);
-    assert!(stubs.contains("MPESA_CONSUMER_KEY"), "expected MPESA_CONSUMER_KEY in stubs, got: {stubs}");
-    assert!(stubs.contains("MPESA_CALLBACK_URL"), "expected MPESA_CALLBACK_URL in stubs, got: {stubs}");
+fn add_payments_unknown_returns_error() {
+    let result = parse_add_features(&args(&["--payments", "stripe"]));
+    assert!(result.is_err(), "unknown payment provider must return an error");
+    assert!(result.unwrap_err().contains("hyperswitch"), "error must list valid options");
 }
 
 // ── docs-site generators (Starlight / VitePress / mdBook) ────────────────

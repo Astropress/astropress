@@ -41,18 +41,17 @@ pub(super) fn prompt_more_features() -> MoreFeatures {
         .with_prompt("Add payment processing?")
         .default(false).interact().unwrap_or(false)
     {
-        match Select::with_theme(t).with_prompt("Payment provider").items(&[
-            "HyperSwitch    — Apache 2.0; Rust; self-hosted payment router with native\n\
-             \x20               Safaricom M-Pesa (Daraja), Stripe (cards/Apple Pay/Google Pay),\n\
-             \x20               Razorpay (UPI/IMPS/NEFT), PayPal, Adyen, Braintree, 50+ more;\n\
-             \x20               ⚠ one self-hosted service; provider transaction fees apply",
-            "M-Pesa Daraja  — Safaricom REST API; direct mobile money (KES + M-Pesa wallet);\n\
-             \x20               no self-hosted service needed; use for East Africa-first sites;\n\
-             \x20               register free at developer.safaricom.co.ke",
-        ]).default(0).interact().unwrap_or(0) {
-            1 => PaymentChoice::MpesaDaraja,
-            _ => PaymentChoice::HyperSwitch,
-        }
+        let _ = Select::with_theme(t).with_prompt("Payment router").items(&[
+            "HyperSwitch  — Apache 2.0; Rust; made by Juspay (India); one self-hosted service\n\
+             \x20             that routes to your choice of provider via the HyperSwitch dashboard:\n\
+             \x20             • East Africa: Safaricom M-Pesa (Daraja STK Push — phone number → PIN)\n\
+             \x20             • India: Razorpay (UPI/IMPS/NEFT), Cashfree (UPI QR), PayU, PhonePe\n\
+             \x20             • Global: Stripe (cards/Apple Pay/Google Pay), Adyen, Braintree, 50+\n\
+             \x20             Includes src/components/HyperCheckout.astro — Unified Checkout Web SDK\n\
+             \x20             (MIT) that auto-shows M-Pesa / UPI / card UI based on enabled connectors\n\
+             \x20             ⚠ each provider charges its own transaction fees",
+        ]).default(0).interact().unwrap_or(0);
+        PaymentChoice::HyperSwitch
     } else { PaymentChoice::None };
 
     // ── forum ─────────────────────────────────────────────────────────────

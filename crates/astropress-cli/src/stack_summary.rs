@@ -57,8 +57,7 @@ pub(crate) fn print_stack_summary(f: &AllFeatures, app_host: Option<AppHost>) {
     if f.donations.give_lively  { println!("    Donations     GiveLively         → givelively.org (free for US nonprofits)"); }
     if f.donations.liberapay    { println!("    Donations     Liberapay          → liberapay.com (SaaS, OSS-friendly)"); }
     if f.donations.pledge_crypto { println!("    Donations     PledgeCrypto       → pledgecrypto.com (auto carbon offsets)"); }
-    if f.payments    == PaymentChoice::HyperSwitch   { println!("    Payments      HyperSwitch        → self-hosted; provider fees apply"); }
-    if f.payments    == PaymentChoice::MpesaDaraja   { println!("    Payments      M-Pesa (Daraja)    → Safaricom cloud API; KES + mobile money; no server"); }
+    if f.payments    == PaymentChoice::HyperSwitch   { println!("    Payments      HyperSwitch        → self-hosted router + Unified Checkout Web SDK"); }
     if f.forum       == ForumChoice::Flarum          { println!("    Forum         Flarum             → self-hosted"); }
     if f.forum       == ForumChoice::Discourse       { println!("    Forum         Discourse          → self-hosted  ⚠ heavier: needs Redis + Postgres"); }
     if f.search      == SearchChoice::Meilisearch    { println!("    Search        Meilisearch        → self-hosted"); }

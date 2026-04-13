@@ -117,27 +117,18 @@ pub(crate) fn feature_env_stubs(f: &AllFeatures) -> String {
             "CHATWOOT_WEBSITE_TOKEN=replace-me"]);
     }
     if f.payments == PaymentChoice::HyperSwitch {
-        lines.extend(&["# HyperSwitch (payment router — Apache 2.0, self-hosted Rust service)",
-            "# Native connectors include: Safaricom M-Pesa (Daraja), Stripe (cards/Apple Pay/Google Pay),",
-            "# Razorpay (UPI/India/IMPS/NEFT), PayPal (Venmo), Square (Cash App), Adyen, Braintree, 50+ more.",
-            "# Upstream contrib: https://github.com/juspay/hyperswitch — add connectors in crates/router/src/connector/",
-            "# Add provider API keys via the HyperSwitch dashboard after deploying.",
+        lines.extend(&["# HyperSwitch (payment router + Unified Checkout Web SDK — Apache 2.0 / MIT)",
+            "# Made by Juspay (India) — native connectors for East Africa and India:",
+            "#   M-Pesa Daraja (Safaricom STK Push), Razorpay (UPI/IMPS/NEFT), Cashfree (UPI QR),",
+            "#   PayU, PhonePe, Stripe (cards/Apple Pay/Google Pay), Adyen, Braintree, 50+ more.",
+            "# See SERVICES.md → HyperSwitch for the connector setup guide.",
+            "# HYPERSWITCH_API_KEY    — server-side; used to create PaymentIntents.",
+            "# HYPERSWITCH_PUBLISHABLE_KEY — client-side; used by src/components/HyperCheckout.astro.",
             "HYPERSWITCH_API_KEY=replace-me",
+            "HYPERSWITCH_PUBLISHABLE_KEY=replace-me",
             "HYPERSWITCH_BASE_URL=http://localhost:8080",
             "PAYMENT_SUCCESS_REDIRECT_URL=https://yourdomain.com/payment/success",
             "PAYMENT_FAILURE_REDIRECT_URL=https://yourdomain.com/payment/failure"]);
-    }
-    if f.payments == PaymentChoice::MpesaDaraja {
-        lines.extend(&["# M-Pesa Daraja API (Safaricom — direct mobile money integration, no self-hosted service needed)",
-            "# Daraja API docs: https://developer.safaricom.co.ke/Documentation",
-            "# Register at https://developer.safaricom.co.ke → Create App → get Consumer Key + Secret.",
-            "# STK Push (Lipa Na M-Pesa Online) requires a Shortcode and Passkey from Safaricom.",
-            "MPESA_CONSUMER_KEY=replace-me",
-            "MPESA_CONSUMER_SECRET=replace-me",
-            "MPESA_SHORTCODE=174379",
-            "MPESA_PASSKEY=replace-me",
-            "MPESA_BASE_URL=https://sandbox.safaricom.co.ke",
-            "MPESA_CALLBACK_URL=https://yourdomain.com/api/mpesa/callback"]);
     }
     if f.notify == NotifyChoice::Ntfy {
         lines.extend(&["# ntfy (push notifications — Apache 2.0)",
@@ -289,6 +280,76 @@ pub(crate) fn feature_config_stubs(f: &AllFeatures) -> Vec<(&'static str, &'stat
         files.push(("medusa-config.js",
             "/** @type {import('@medusajs/medusa').ConfigModule} */\nmodule.exports = {\n  projectConfig: { databaseUrl: process.env.DATABASE_URL },\n  plugins: [],\n};\n",
         ));
+    }
+    if f.payments == PaymentChoice::HyperSwitch {
+        // HyperCheckout.astro — Unified Checkout form that handles M-Pesa STK Push,
+        // UPI (Razorpay/Cashfree/PayU/PhonePe), cards, Apple Pay, Google Pay, and every
+        // other method enabled in the HyperSwitch connector dashboard.
+        // MIT: https://github.com/juspay/hyperswitch-web
+        files.push(("src/components/HyperCheckout.astro", concat!(
+            "---\n",
+            "// HyperSwitch Unified Checkout — https://github.com/juspay/hyperswitch-web (MIT)\n",
+            "//\n",
+            "// Mounts a pre-built checkout form that auto-selects the right UI based on\n",
+            "// the connectors you have enabled in the HyperSwitch dashboard:\n",
+            "//   • M-Pesa: phone-number field → Safaricom STK Push PIN prompt on the user's phone\n",
+            "//   • UPI (Razorpay / Cashfree / PayU / PhonePe): VPA field + collect flow\n",
+            "//   • Cards / Apple Pay / Google Pay: standard card form or native sheet\n",
+            "//\n",
+            "// Usage — create a PaymentIntent server-side first:\n",
+            "//\n",
+            "//   // src/pages/api/create-payment.ts\n",
+            "//   export const POST: APIRoute = async ({ request }) => {\n",
+            "//     const { amount, currency } = await request.json();   // amount in minor units (e.g. 100 = KES 1.00)\n",
+            "//     const res = await fetch(`${import.meta.env.HYPERSWITCH_BASE_URL}/payments`, {\n",
+            "//       method: \"POST\",\n",
+            "//       headers: { \"Content-Type\": \"application/json\", \"api-key\": import.meta.env.HYPERSWITCH_API_KEY },\n",
+            "//       body: JSON.stringify({ amount, currency, confirm: false }),\n",
+            "//     });\n",
+            "//     const { client_secret } = await res.json();\n",
+            "//     return new Response(JSON.stringify({ client_secret }), {\n",
+            "//       headers: { \"Content-Type\": \"application/json\" },\n",
+            "//     });\n",
+            "//   };\n",
+            "//\n",
+            "// Then render this component on your checkout page:\n",
+            "//   <HyperCheckout clientSecret={clientSecret} returnUrl=\"https://yourdomain.com/payment/done\" />\n",
+            "\n",
+            "interface Props {\n",
+            "  clientSecret: string;\n",
+            "  returnUrl: string;\n",
+            "  /** Optional appearance config — https://hyperswitch.io/docs/sdkIntegrations/unifiedCheckoutWeb/customization */\n",
+            "  appearance?: Record<string, unknown>;\n",
+            "}\n",
+            "const { clientSecret, returnUrl, appearance = {} } = Astro.props;\n",
+            "const publishableKey = import.meta.env.HYPERSWITCH_PUBLISHABLE_KEY;\n",
+            "---\n",
+            "<div id=\"hs-unified-checkout\"></div>\n",
+            "<button id=\"hs-pay-btn\" type=\"button\">Pay now</button>\n",
+            "\n",
+            "<script define:vars={{ clientSecret, returnUrl, publishableKey, appearance }}>\n",
+            "  const s = document.createElement(\"script\");\n",
+            "  s.src = \"https://beta.hyperswitch.io/v1/HyperLoader.js\";\n",
+            "  s.onload = () => {\n",
+            "    const hyper = window.Hyper(publishableKey);\n",
+            "    const elements = hyper.elements({ clientSecret, appearance });\n",
+            "    const checkout = elements.create(\"payment\");\n",
+            "    checkout.mount(\"#hs-unified-checkout\");\n",
+            "\n",
+            "    document.getElementById(\"hs-pay-btn\")?.addEventListener(\"click\", async () => {\n",
+            "      const { error } = await hyper.confirmPayment({\n",
+            "        elements,\n",
+            "        confirmParams: { return_url: returnUrl },\n",
+            "      });\n",
+            "      if (error) {\n",
+            "        // Show error.message to the user — e.g. update a <p id=\"hs-error\"> element.\n",
+            "        console.error(error.message);\n",
+            "      }\n",
+            "    });\n",
+            "  };\n",
+            "  document.head.appendChild(s);\n",
+            "</script>\n",
+        )));
     }
     if f.job_board {
         files.push(("content-types.example.ts", concat!(
