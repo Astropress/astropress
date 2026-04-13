@@ -1,0 +1,55 @@
+---
+title: Astropress
+description: >-
+  An Astro web app framework with a built-in admin panel, privacy-respecting
+  optional integrations, and a CLI that covers the full project lifecycle.
+template: splash
+hero:
+  tagline: >-
+    Build your site with a production-ready admin panel.
+    Add the integrations you need — self-hosted, privacy-respecting, and yours.
+  actions:
+    - text: Quick start
+      link: /guides/quick-start/
+      icon: right-arrow
+      variant: primary
+    - text: View on GitHub
+      link: https://github.com/astropress/astropress
+      icon: external
+---
+
+import { Card, CardGrid } from "@astrojs/starlight/components";
+
+<CardGrid stagger>
+  <Card title="Built-in admin panel" icon="puzzle">
+    Manage pages, posts, media, and users without writing a CMS from scratch.
+    Secured with Zero-Trust Admin guards, bcrypt passwords, CSRF tokens, and
+    session hardening — all configured by default.
+  </Card>
+  <Card title="Privacy by design" icon="shield">
+    No third-party tracking scripts, no forced analytics, no cookie banner by
+    default. If you add analytics, it stays first-party and self-hosted.
+    GDPR and CCPA compliance helpers are built in.
+  </Card>
+  <Card title="Deploy on your terms" icon="rocket">
+    Static output works on GitHub Pages, Cloudflare Pages, Vercel, Netlify, and
+    Render. Server output works on Vercel Functions, Cloudflare Workers, and
+    Fly.io. No vendor lock-in.
+  </Card>
+  <Card title="Add what you need" icon="open-book">
+    60+ optional integrations — newsletters, e-commerce, comments, full-text
+    search, event ticketing, and more. You run them; Astropress wires them up.
+    Add via <code>astropress add</code> at any time.
+  </Card>
+  <Card title="Accessible admin UI" icon="star">
+    Keyboard navigation, ARIA live regions, skip-to-content, focus traps, and
+    screen-reader-tested markup in the admin panel — WCAG AA out of the box,
+    no accessibility plugins required.
+  </Card>
+  <Card title="One CLI, full lifecycle" icon="laptop">
+    <code>astropress new</code> to scaffold, <code>add</code> to extend,
+    <code>doctor</code> to diagnose, <code>db migrate</code> to evolve your
+    schema, <code>import</code> to migrate content, and <code>deploy</code> to
+    ship.
+  </Card>
+</CardGrid>
