@@ -31,7 +31,7 @@ pub(crate) fn prompt_all_features() -> AllFeatures {
         "Keystatic            — git-backed JSON/YAML; zero server; use for small teams that\n\
          \x20                     prefer editing content files directly in the repo",
         "Payload              — TypeScript-first, local-first; use when you want full\n\
-         \x20                     schema control in code  ⚠ needs a Node server (Fly.io / Railway free)",
+         \x20                     schema control in code  ⚠ needs a Node server (Fly.io free)",
     ]).default(0).interact().unwrap_or(0) {
         1 => CmsChoice::Keystatic,
         2 => CmsChoice::Payload,
@@ -45,7 +45,7 @@ pub(crate) fn prompt_all_features() -> AllFeatures {
     {
         let _ = Select::with_theme(t).with_prompt("Email provider").items(&[
             "Listmonk  — MIT; self-hosted subscriber lists + campaigns; use when you need full\n\
-             \x20           ownership of your list and want to send newsletters (Fly.io / Railway free)",
+             \x20           ownership of your list and want to send newsletters (Fly.io free)",
         ]).default(0).interact().unwrap_or(0);
         EmailChoice::Listmonk
     } else { EmailChoice::None };
@@ -57,7 +57,7 @@ pub(crate) fn prompt_all_features() -> AllFeatures {
     {
         match Select::with_theme(t).with_prompt("Analytics provider").items(&[
             "Umami      — MIT; ~1 KB; pageviews, bounce rate, custom events\n\
-             \x20           no funnels / heatmaps / session replay  (Railway / Fly.io free)",
+             \x20           no funnels / heatmaps / session replay  (Fly.io free)",
             "Plausible  — AGPL; ~1 KB; pageviews, bounce rate, conversion goals\n\
              \x20           no funnels / heatmaps / session replay  ⚠ cloud $9/mo; self-host free",
             "Matomo     — GPL; bounce rate, conversion goals, funnels, heatmaps, session replay\n\
@@ -81,9 +81,9 @@ pub(crate) fn prompt_all_features() -> AllFeatures {
     {
         match Select::with_theme(t).with_prompt("Commerce platform").items(&[
             "Medusa    — MIT; headless commerce with Stripe + product catalog; use when you need\n\
-             \x20          a full cart + checkout flow  ⚠ needs a Node server (Fly.io / Railway free)",
+             \x20          a full cart + checkout flow  ⚠ needs a Node server (Fly.io free)",
             "Vendure   — MIT; TypeScript-first headless commerce; GraphQL API; use when you want\n\
-             \x20          full type safety + plugin architecture  ⚠ needs a Node server (Fly.io / Railway free)",
+             \x20          full type safety + plugin architecture  ⚠ needs a Node server (Fly.io free)",
         ]).default(0).interact().unwrap_or(0) {
             1 => CommerceChoice::Vendure,
             _ => CommerceChoice::Medusa,
@@ -115,7 +115,7 @@ pub(crate) fn prompt_all_features() -> AllFeatures {
             "Pagefind      — Apache 2.0; static index at deploy time; zero server; use for\n\
              \x20              content-heavy sites that want instant client-side search (<10 KB on page)",
             "Meilisearch   — MIT; typo-tolerant full-text search API; use when you need\n\
-             \x20              real-time search across frequently updated content  (Fly.io / Railway free)",
+             \x20              real-time search across frequently updated content  (Fly.io free)",
         ]).default(0).interact().unwrap_or(0) {
             1 => SearchChoice::Meilisearch,
             _ => SearchChoice::Pagefind,
@@ -129,7 +129,7 @@ pub(crate) fn prompt_all_features() -> AllFeatures {
     {
         let _ = Select::with_theme(t).with_prompt("LMS provider").items(&[
             "Frappe LMS  — MIT; Python; progress tracking + certificates; use when you need\n\
-             \x20            structured learning paths with quizzes  (Fly.io / Railway free)",
+             \x20            structured learning paths with quizzes  (Fly.io free)",
         ]).default(0).interact().unwrap_or(0);
         CourseChoice::FrappeLms
     } else { CourseChoice::None };

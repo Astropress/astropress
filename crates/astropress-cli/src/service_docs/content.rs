@@ -76,7 +76,7 @@ pub(super) const ENV_MEILISEARCH: &str = concat!(
 
 pub(super) const COMPOSE_FLARUM: &str = concat!(
     "# Flarum — lightweight forum (MIT, PHP).\n",
-    "# Free tier: Railway free (512 MB RAM) or Fly.io shared-cpu-1x (256 MB) — fits comfortably.\n",
+    "# Free tier: Fly.io shared-cpu-1x (256 MB) fits comfortably.\n",
     "# Usage: cp .env.flarum.example .env.flarum && docker compose --env-file .env.flarum up -d\n",
     "services:\n",
     "  flarum:\n",
@@ -169,7 +169,7 @@ pub(super) const ENV_DISCOURSE: &str = concat!(
 
 pub(super) const COMPOSE_BOOKSTACK: &str = concat!(
     "# BookStack — structured wiki and knowledge base (MIT).\n",
-    "# Free tier: Railway free (512 MB RAM) or Fly.io shared-cpu-1x with 512 MB — fits comfortably.\n",
+    "# Free tier: Fly.io shared-cpu-1x with 512 MB fits comfortably.\n",
     "# Usage: cp .env.bookstack.example .env.bookstack && docker compose --env-file .env.bookstack up -d\n",
     "services:\n",
     "  bookstack:\n",

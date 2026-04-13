@@ -46,7 +46,7 @@ pub(super) fn prompt_more_features() -> MoreFeatures {
              \x20             provider: Stripe (M-PESA/cards/Apple Pay/Google Pay),\n\
              \x20             Razorpay (UPI/India/IMPS/NEFT), PayPal (Venmo), Square (Cash App),\n\
              \x20             Adyen, Braintree, and 50+ more; one self-hosted service;\n\
-             \x20             ⚠ each provider has its own transaction fees  (Fly.io / Railway free)",
+             \x20             ⚠ each provider has its own transaction fees  (Fly.io free)",
         ]).default(0).interact().unwrap_or(0);
         PaymentChoice::HyperSwitch
     } else { PaymentChoice::None };
@@ -58,9 +58,9 @@ pub(super) fn prompt_more_features() -> MoreFeatures {
     {
         match Select::with_theme(t).with_prompt("Forum software").items(&[
             "Flarum     — MIT; PHP; lightweight REST API; use when you need async threaded\n\
-             \x20           discussion and Giscus is too developer-centric  (Fly.io / Railway free)",
+             \x20           discussion and Giscus is too developer-centric  (Fly.io free)",
             "Discourse  — GPL 2.0; Ruby; mature platform with plugins, moderation tools,\n\
-             \x20           and email digests  ⚠ heavier: needs Redis + Postgres  (Fly.io / Railway free)",
+             \x20           and email digests  ⚠ heavier: needs Redis + Postgres  (Fly.io free)",
         ]).default(0).interact().unwrap_or(0) {
             1 => ForumChoice::Discourse,
             _ => ForumChoice::Flarum,
@@ -74,7 +74,7 @@ pub(super) fn prompt_more_features() -> MoreFeatures {
     {
         let _ = Select::with_theme(t).with_prompt("Chat provider").items(&[
             "Tiledesk  — Apache 2.0; live chat + chatbot + helpdesk; REST + webhook API;\n\
-             \x20          use when you need real-time support or sales chat  (Fly.io / Railway free)",
+             \x20          use when you need real-time support or sales chat  (Fly.io free)",
         ]).default(0).interact().unwrap_or(0);
         ChatChoice::Tiledesk
     } else { ChatChoice::None };
@@ -88,7 +88,7 @@ pub(super) fn prompt_more_features() -> MoreFeatures {
             "ntfy      — Apache 2.0; pub/sub HTTP push; single Go binary; use for order updates,\n\
              \x20          release pings, or fan alerts  (ntfy.sh free or self-host)",
             "Gotify    — MIT; simple self-hosted push; REST API + WebSocket; use when you want\n\
-             \x20          zero third-party dependency and a lightweight server  (Fly.io / Railway free)",
+             \x20          zero third-party dependency and a lightweight server  (Fly.io free)",
         ]).default(0).interact().unwrap_or(0) {
             1 => NotifyChoice::Gotify,
             _ => NotifyChoice::Ntfy,
@@ -102,9 +102,9 @@ pub(super) fn prompt_more_features() -> MoreFeatures {
     {
         match Select::with_theme(t).with_prompt("Scheduling").items(&[
             "Rallly    — MIT; availability polling (open-source Doodle); use for\n\
-             \x20          group scheduling without requiring accounts  (Fly.io / Railway free)",
+             \x20          group scheduling without requiring accounts  (Fly.io free)",
             "Cal.com   — AGPL 3.0; full booking system; calendar integrations; use when you need\n\
-             \x20          appointment booking with availability rules  ⚠ needs Postgres  (Fly.io / Railway free)",
+             \x20          appointment booking with availability rules  ⚠ needs Postgres  (Fly.io free)",
         ]).default(0).interact().unwrap_or(0) {
             1 => ScheduleChoice::CalCom,
             _ => ScheduleChoice::Rallly,
@@ -118,7 +118,7 @@ pub(super) fn prompt_more_features() -> MoreFeatures {
     {
         let _ = Select::with_theme(t).with_prompt("Video provider").items(&[
             "PeerTube  — AGPL 3.0; self-hosted video with embeds + ActivityPub federation;\n\
-             \x20          use when you want to host video without YouTube dependency  (Fly.io / Railway free)",
+             \x20          use when you want to host video without YouTube dependency  (Fly.io free)",
         ]).default(0).interact().unwrap_or(0);
         VideoChoice::PeerTube
     } else { VideoChoice::None };
@@ -131,7 +131,7 @@ pub(super) fn prompt_more_features() -> MoreFeatures {
         let _ = Select::with_theme(t).with_prompt("Podcast provider").items(&[
             "Castopod  — AGPL 3.0; self-hosted podcast hosting; RSS feed, embeddable player,\n\
              \x20          ActivityPub federation; use when you run a podcast alongside your site\n\
-             \x20          (Fly.io / Railway free)",
+             \x20          (Fly.io free)",
         ]).default(0).interact().unwrap_or(0);
         PodcastChoice::Castopod
     } else { PodcastChoice::None };
@@ -145,7 +145,7 @@ pub(super) fn prompt_more_features() -> MoreFeatures {
             "Hi.Events  — AGPL 3.0; event pages, RSVP, ticket sales; use for community orgs\n\
              \x20           and nonprofits running public events  (self-host free)",
             "Pretix     — Apache 2.0; established ticketing with seating charts and complex\n\
-             \x20           ticket types; use when you need box-office-level features  (Fly.io / Railway free)",
+             \x20           ticket types; use when you need box-office-level features  (Fly.io free)",
         ]).default(0).interact().unwrap_or(0) {
             1 => EventChoice::Pretix,
             _ => EventChoice::HiEvents,
@@ -163,7 +163,7 @@ pub(super) fn prompt_more_features() -> MoreFeatures {
             "Postal  — MIT; self-hosted SMTP server; use when you need full\n\
              \x20        ownership of your email infrastructure; use alongside Listmonk\n\
              \x20        for a fully self-hosted stack\n\
-             \x20        ⚠ needs dedicated IP for best deliverability (Fly.io / Railway free)",
+             \x20        ⚠ needs dedicated IP for best deliverability (Fly.io free)",
         ]).default(0).interact().unwrap_or(0) {
             1 => TransactionalEmailChoice::Postal,
             _ => TransactionalEmailChoice::Brevo,
@@ -177,7 +177,7 @@ pub(super) fn prompt_more_features() -> MoreFeatures {
     {
         let _ = Select::with_theme(t).with_prompt("Status / uptime").items(&[
             "Uptime Kuma  — MIT; self-hosted uptime monitor with a public status page;\n\
-             \x20             use to show service health to your users  (Fly.io / Railway free)",
+             \x20             use to show service health to your users  (Fly.io free)",
         ]).default(0).interact().unwrap_or(0);
         StatusChoice::UptimeKuma
     } else { StatusChoice::None };
@@ -189,7 +189,7 @@ pub(super) fn prompt_more_features() -> MoreFeatures {
     {
         let _ = Select::with_theme(t).with_prompt("Knowledge base").items(&[
             "BookStack  — MIT; structured wiki and docs with shelves, books, and chapters;\n\
-             \x20           use for a public help center or internal documentation  (Fly.io / Railway free)",
+             \x20           use for a public help center or internal documentation  (Fly.io free)",
         ]).default(0).interact().unwrap_or(0);
         KnowledgeBaseChoice::BookStack
     } else { KnowledgeBaseChoice::None };
@@ -201,7 +201,7 @@ pub(super) fn prompt_more_features() -> MoreFeatures {
     {
         let _ = Select::with_theme(t).with_prompt("CRM").items(&[
             "Twenty  — AGPL 3.0; modern open-source CRM; use for nonprofits tracking donors\n\
-             \x20        and volunteers, or businesses tracking leads  (Fly.io / Railway free)",
+             \x20        and volunteers, or businesses tracking leads  (Fly.io free)",
         ]).default(0).interact().unwrap_or(0);
         CrmChoice::Twenty
     } else { CrmChoice::None };
@@ -213,7 +213,7 @@ pub(super) fn prompt_more_features() -> MoreFeatures {
     {
         match Select::with_theme(t).with_prompt("Identity provider").items(&[
             "Authentik  — MIT; social login, MFA, LDAP; use when multiple self-hosted services\n\
-             \x20           need a single sign-on  (Fly.io / Railway free)",
+             \x20           need a single sign-on  (Fly.io free)",
             "Zitadel    — Apache 2.0; hosted-or-self-hosted; use when you need fine-grained\n\
              \x20           org/team roles  (zitadel.com free tier or self-host)",
         ]).default(0).interact().unwrap_or(0) {

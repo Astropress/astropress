@@ -169,7 +169,7 @@ pub(super) fn append_more_services(doc: &mut String, f: &AllFeatures) {
     if f.sso == SsoChoice::Authentik {
         doc.push_str(concat!(
             "### Authentik (identity provider)\n\n",
-            "> ⚠ Requires ~512 MB RAM. Railway free tier works; Fly.io free tier is borderline.\n\n",
+            "> ⚠ Requires ~512 MB RAM. Fly.io free tier is borderline (512 MB shared VM); Railway $5/mo works.\n\n",
             "```sh\n",
             "cd authentik\n",
             "cp .env.authentik.example .env.authentik\n",

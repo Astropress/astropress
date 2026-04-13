@@ -93,7 +93,7 @@ pub(super) const ENV_TWENTY: &str = concat!(
 
 pub(super) const COMPOSE_AUTHENTIK: &str = concat!(
     "# Authentik — identity provider (MIT).\n",
-    "# ⚠ Requires ~512 MB RAM. Borderline on Fly.io free; Railway free tier works.\n",
+    "# ⚠ Requires ~512 MB RAM. Borderline on Fly.io free tier (256 MB); use Fly.io 512 MB shared VM.\n",
     "# Full guide: https://docs.goauthentik.io/docs/installation/docker-compose\n",
     "# Usage: cp .env.authentik.example .env.authentik && docker compose --env-file .env.authentik up -d\n",
     "services:\n",
@@ -217,7 +217,7 @@ pub(super) const ENV_ZITADEL: &str = concat!(
 
 pub(super) const COMPOSE_FRAPPE_LMS: &str = concat!(
     "# Frappe LMS — open-source courses and learning management (MIT).\n",
-    "# ⚠ Requires ~512 MB RAM total. Railway free tier works; Fly.io needs 512 MB shared VM.\n",
+    "# ⚠ Requires ~512 MB RAM total. Fly.io shared-cpu-1x with 512 MB works.\n",
     "# Full guide: https://github.com/frappe/lms#installation\n",
     "# Usage: cp .env.frappe-lms.example .env.frappe-lms && docker compose --env-file .env.frappe-lms up -d\n",
     "services:\n",

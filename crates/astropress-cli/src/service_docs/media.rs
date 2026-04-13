@@ -82,7 +82,7 @@ pub(super) const ENV_PEERTUBE: &str = concat!(
 pub(super) const COMPOSE_CASTOPOD: &str = concat!(
     "# Castopod — self-hosted podcast hosting (AGPL 3.0).\n",
     "# ⚠ Audio files need object storage (Cloudflare R2 or Tigris) — local disk fills up fast.\n",
-    "# Free tier: Railway free (512 MB RAM) or Fly.io shared-cpu-1x with 512 MB.\n",
+    "# Free tier: Fly.io shared-cpu-1x with 512 MB.\n",
     "# Usage: cp .env.castopod.example .env.castopod && docker compose --env-file .env.castopod up -d\n",
     "services:\n",
     "  castopod:\n",

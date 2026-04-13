@@ -93,7 +93,7 @@ pub(super) const COMPOSE_POSTAL: &str = concat!(
     "# Postal — self-hosted SMTP server (MIT).\n",
     "# ⚠ For best email deliverability, Postal needs a dedicated IP address.\n",
     "#   On Fly.io: use a dedicated-vm machine. On Railway: use a static outbound IP add-on.\n",
-    "# ⚠ Requires ~512 MB RAM across all three services — Railway free tier works; Fly.io needs 512 MB.\n",
+    "# ⚠ Requires ~512 MB RAM across all three services — Fly.io shared-cpu-1x with 512 MB works; Railway $5/mo.\n",
     "# Full guide: https://docs.postalserver.io/install/installation\n",
     "# Usage: cp .env.postal.example .env.postal && docker compose --env-file .env.postal up -d\n",
     "services:\n",
@@ -181,7 +181,7 @@ pub(super) const ENV_GOTIFY: &str = concat!(
 
 pub(super) const COMPOSE_TILEDESK: &str = concat!(
     "# Tiledesk — live chat + helpdesk (Apache 2.0).\n",
-    "# Free tier: Railway free (512 MB RAM) or Fly.io shared-cpu-1x with 512 MB.\n",
+    "# Free tier: Fly.io shared-cpu-1x with 512 MB.\n",
     "# Full compose: https://github.com/Tiledesk/tiledesk-deployment\n",
     "# Usage: cp .env.tiledesk.example .env.tiledesk && docker compose --env-file .env.tiledesk up -d\n",
     "services:\n",
