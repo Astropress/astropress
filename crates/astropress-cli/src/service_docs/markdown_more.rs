@@ -5,8 +5,7 @@
 
 use crate::features::{
     AllFeatures, CommerceChoice, CourseChoice, CrmChoice, EventChoice, FormsChoice,
-    KnowledgeBaseChoice, PodcastChoice, SsoChoice, StatusChoice,
-    TransactionalEmailChoice, VideoChoice,
+    KnowledgeBaseChoice, PodcastChoice, SsoChoice, StatusChoice, VideoChoice,
 };
 use crate::providers::AbTestingProvider;
 
@@ -110,23 +109,6 @@ pub(super) fn append_more_services(doc: &mut String, f: &AllFeatures) {
             "docker compose --env-file .env.pretix up -d\n",
             "```\n\n",
             "Full guide: <https://docs.pretix.eu/en/latest/admin/installation/docker_smallscale.html>\n\n",
-        ));
-    }
-
-    if f.transactional_email == TransactionalEmailChoice::Postal {
-        doc.push_str(concat!(
-            "### Postal (transactional email server)\n\n",
-            "> ⚠ For best deliverability, Postal needs a **dedicated IP address**.\n",
-            "> On Fly.io: provision a `dedicated-vm` machine (paid).\n",
-            "> On Railway: add a static outbound IP add-on.\n",
-            "> Alternatively, use **Brevo** (free SaaS, 300 emails/day) with no server required.\n\n",
-            "```sh\n",
-            "cd postal\n",
-            "cp .env.postal.example .env.postal\n",
-            "# Edit .env.postal — set DB_PASSWORD and SECRET_KEY\n",
-            "docker compose --env-file .env.postal up -d\n",
-            "```\n\n",
-            "Full guide: <https://docs.postalserver.io/install/installation>\n\n",
         ));
     }
 

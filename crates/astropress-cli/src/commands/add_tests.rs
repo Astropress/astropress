@@ -24,6 +24,12 @@ fn add_email_listmonk_parses() {
 }
 
 #[test]
+fn add_transactional_email_smtp_parses() {
+    let f = parse_add_features(&args(&["--transactional-email", "smtp"])).unwrap();
+    assert!(matches!(f.transactional_email, crate::features::TransactionalEmailChoice::Smtp));
+}
+
+#[test]
 fn add_forum_flarum_parses() {
     let f = parse_add_features(&args(&["--forum", "flarum"])).unwrap();
     assert_eq!(f.forum, ForumChoice::Flarum);

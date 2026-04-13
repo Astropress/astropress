@@ -28,8 +28,9 @@ use crate::providers::AbTestingProvider;
 pub(crate) use markdown::build_services_doc;
 
 /// Returns per-service `docker-compose.yml` and `.env.example` files for all
-/// self-hosted services selected in `f`. Brevo and other SaaS services are
-/// excluded — they need no local infrastructure.
+/// self-hosted services selected in `f`. SMTP-backed transactional email is
+/// configured through generic env vars, so it does not imply a provider-
+/// specific compose stack.
 pub(crate) fn service_compose_stubs(f: &AllFeatures) -> Vec<(&'static str, &'static str)> {
     let mut files: Vec<(&'static str, &'static str)> = Vec::new();
 
@@ -117,10 +118,6 @@ pub(crate) fn service_compose_stubs(f: &AllFeatures) -> Vec<(&'static str, &'sta
     if f.events == EventChoice::Pretix {
         files.push(("pretix/docker-compose.yml",  scheduling::COMPOSE_PRETIX));
         files.push(("pretix/.env.pretix.example", scheduling::ENV_PRETIX));
-    }
-    if f.transactional_email == TransactionalEmailChoice::Postal {
-        files.push(("postal/docker-compose.yml",  communication::COMPOSE_POSTAL));
-        files.push(("postal/.env.postal.example", communication::ENV_POSTAL));
     }
     if f.status == StatusChoice::UptimeKuma {
         files.push(("uptime-kuma/docker-compose.yml",       identity::COMPOSE_UPTIME_KUMA));
@@ -277,16 +274,6 @@ mod tests {
     }
 
     #[test]
-    fn postal_doc_warns_about_dedicated_ip() {
-        let f = AllFeatures {
-            transactional_email: TransactionalEmailChoice::Postal,
-            ..AllFeatures::defaults()
-        };
-        let doc = build_services_doc(&f).expect("should generate doc");
-        assert!(doc.contains("dedicated IP") || doc.contains("dedicated-vm"), "{}", &doc[..200]);
-    }
-
-    #[test]
     fn twenty_doc_warns_about_ram() {
         let f = AllFeatures { crm: CrmChoice::Twenty, ..AllFeatures::defaults() };
         let doc = build_services_doc(&f).expect("should generate doc");
@@ -305,13 +292,13 @@ mod tests {
     }
 
     #[test]
-    fn brevo_does_not_generate_compose() {
+    fn smtp_does_not_generate_compose() {
         let f = AllFeatures {
-            transactional_email: TransactionalEmailChoice::Brevo,
+            transactional_email: TransactionalEmailChoice::Smtp,
             ..AllFeatures::defaults()
         };
         let stubs = service_compose_stubs(&f);
         let paths: Vec<_> = stubs.iter().map(|(p, _)| *p).collect();
-        assert!(!paths.iter().any(|p| p.contains("brevo")), "Brevo is SaaS — no compose: {paths:?}");
+        assert!(!paths.iter().any(|p| p.contains("postal") || p.contains("smtp")), "SMTP should not imply a provider-specific compose stack: {paths:?}");
     }
 }

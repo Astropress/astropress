@@ -94,25 +94,19 @@ fn listmonk_generates_middleware_with_register_service() {
 fn resend_generates_env_stubs() {
     let f = AllFeatures { transactional_email: TransactionalEmailChoice::Resend, ..AllFeatures::defaults() };
     let s = feature_env_stubs(&f);
+    assert!(s.contains("EMAIL_DELIVERY_MODE=resend"));
     assert!(s.contains("RESEND_API_KEY"));
     assert!(s.contains("RESEND_FROM_EMAIL"));
 }
 
 #[test]
-fn brevo_generates_env_stubs() {
-    let f = AllFeatures { transactional_email: TransactionalEmailChoice::Brevo, ..AllFeatures::defaults() };
+fn smtp_generates_env_stubs() {
+    let f = AllFeatures { transactional_email: TransactionalEmailChoice::Smtp, ..AllFeatures::defaults() };
     let s = feature_env_stubs(&f);
-    assert!(s.contains("BREVO_SMTP_HOST"));
-    assert!(s.contains("BREVO_SMTP_PASSWORD"));
-    assert!(s.contains("BREVO_FROM_ADDRESS"));
-}
-
-#[test]
-fn postal_generates_env_stubs() {
-    let f = AllFeatures { transactional_email: TransactionalEmailChoice::Postal, ..AllFeatures::defaults() };
-    let s = feature_env_stubs(&f);
-    assert!(s.contains("POSTAL_SMTP_HOST"));
-    assert!(s.contains("POSTAL_FROM_ADDRESS"));
+    assert!(s.contains("EMAIL_DELIVERY_MODE=smtp"));
+    assert!(s.contains("SMTP_HOST"));
+    assert!(s.contains("SMTP_PASSWORD"));
+    assert!(s.contains("SMTP_FROM_EMAIL"));
 }
 
 // ── commerce ──────────────────────────────────────────────────────────

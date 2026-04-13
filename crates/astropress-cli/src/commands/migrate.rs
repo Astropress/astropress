@@ -89,10 +89,10 @@ const TOOLS: &[MigrationTool] = &[
     MigrationTool { slug: "pretix",    name: "Pretix",    category: "events",
         description: "Established ticketing with seating charts (Apache 2.0)" },
     // ── transactional email ───────────────────────────────────────────────
-    MigrationTool { slug: "brevo",     name: "Brevo",     category: "transactional-email",
-        description: "SaaS SMTP relay; 300 emails/day free; no server needed" },
-    MigrationTool { slug: "postal",    name: "Postal",    category: "transactional-email",
-        description: "Self-hosted SMTP server for triggered emails (MIT)" },
+    MigrationTool { slug: "resend",    name: "Resend",    category: "transactional-email",
+        description: "Hosted transactional email API with a direct Astropress integration" },
+    MigrationTool { slug: "smtp",      name: "SMTP relay", category: "transactional-email",
+        description: "Generic SMTP contract for Postal, Brevo SMTP, SES, Mailgun, and similar providers" },
     // ── status ────────────────────────────────────────────────────────────
     MigrationTool { slug: "uptime-kuma", name: "Uptime Kuma", category: "status",
         description: "Uptime monitoring + public status page (MIT)" },

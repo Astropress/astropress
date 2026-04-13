@@ -142,4 +142,12 @@ describe("mock mode behavior", () => {
     expect(result.preview).toBeDefined();
     expect(result.preview!.to).toBe("user@example.com");
   });
+
+  it("returns a preview object when SMTP mode is selected without SMTP config", async () => {
+    vi.stubEnv("EMAIL_DELIVERY_MODE", "smtp");
+    const result = await sendPasswordResetEmail("user@example.com", "https://example.com/reset");
+    expect(result.ok).toBe(true);
+    expect(result.delivered).toBe(false);
+    expect(result.preview).toBeDefined();
+  });
 });

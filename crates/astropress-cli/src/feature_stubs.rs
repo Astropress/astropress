@@ -162,26 +162,18 @@ pub(crate) fn feature_env_stubs(f: &AllFeatures) -> String {
         lines.extend(&["# Resend (transactional email — MIT SDK)",
             "# Use for password resets, order confirmations, and notifications.",
             "# Sign up at https://resend.com → API Keys → Create API key.",
+            "EMAIL_DELIVERY_MODE=resend",
             "RESEND_API_KEY=re_replace-me",
             "RESEND_FROM_EMAIL=noreply@yourdomain.com"]);
     }
-    if f.transactional_email == TransactionalEmailChoice::Brevo {
-        lines.extend(&["# Brevo (transactional email — SaaS; 300 emails/day free)",
-            "# Use for password resets, order confirmations, notifications.",
-            "# Sign up at https://www.brevo.com → SMTP & API → Generate SMTP key.",
-            "BREVO_SMTP_HOST=smtp-relay.brevo.com", "BREVO_SMTP_PORT=587",
-            "BREVO_SMTP_USERNAME=replace-with-brevo-login-email",
-            "BREVO_SMTP_PASSWORD=replace-with-brevo-smtp-key",
-            "BREVO_FROM_ADDRESS=noreply@yourdomain.com"]);
-    }
-    if f.transactional_email == TransactionalEmailChoice::Postal {
-        lines.extend(&["# Postal (transactional email server — MIT)",
-            "# Use for password resets, order confirmations, notifications.",
-            "# Listmonk handles newsletter campaigns; Postal handles triggered emails.",
-            "# ⚠ For best deliverability, Postal needs a dedicated IP (Fly.io dedicated-vm).",
-            "POSTAL_SMTP_HOST=localhost", "POSTAL_SMTP_PORT=587",
-            "POSTAL_SMTP_USERNAME=replace-me", "POSTAL_SMTP_PASSWORD=replace-me",
-            "POSTAL_FROM_ADDRESS=noreply@yourdomain.com"]);
+    if f.transactional_email == TransactionalEmailChoice::Smtp {
+        lines.extend(&["# SMTP (transactional email — generic contract)",
+            "# Use for password resets, order confirmations, and notifications.",
+            "# Works with Postal, Brevo SMTP, Amazon SES SMTP, Mailgun SMTP, and similar relays.",
+            "EMAIL_DELIVERY_MODE=smtp",
+            "SMTP_HOST=smtp.example.com", "SMTP_PORT=587",
+            "SMTP_USERNAME=replace-me", "SMTP_PASSWORD=replace-me",
+            "SMTP_FROM_EMAIL=noreply@yourdomain.com"]);
     }
     if f.status == StatusChoice::UptimeKuma {
         lines.extend(&["# Uptime Kuma (uptime monitoring + status page — MIT)",
@@ -304,4 +296,3 @@ pub(crate) fn feature_config_stubs(f: &AllFeatures) -> Vec<(&'static str, &'stat
     }
     files
 }
-

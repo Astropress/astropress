@@ -19,7 +19,7 @@ Scaffold a new Astropress project in `dir` (default: current directory). Runs an
 |------|---------|---------|
 | `--cms` | `builtin` \| `keystatic` \| `payload` | `builtin` |
 | `--email` | `none` \| `listmonk` | `none` |
-| `--transactional-email` | `none` \| `brevo` \| `postal` | `none` |
+| `--transactional-email` | `none` \| `resend` \| `smtp` | `none` |
 | `--analytics` | `none` \| `umami` \| `plausible` \| `matomo` \| `posthog` | `none` |
 | `--community` | `none` \| `giscus` \| `remark42` | `giscus` |
 | `--search` | `none` \| `pagefind` \| `meilisearch` | `none` |
@@ -272,7 +272,7 @@ Print all available integration options, grouped by category.
 
 ```sh
 astropress list providers
-# Email:        listmonk, brevo, postal
+# Email:        listmonk, resend, smtp
 # Analytics:    umami, plausible, matomo, posthog
 # Commerce:     medusa, vendure
 # ...

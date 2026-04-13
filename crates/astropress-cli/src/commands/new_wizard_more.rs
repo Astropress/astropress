@@ -164,15 +164,11 @@ pub(super) fn prompt_more_features() -> MoreFeatures {
         match Select::with_theme(t).with_prompt("Transactional email").items(&[
             "Resend  — MIT SDK; developer-first API; built-in SPF/DKIM/DMARC;\n\
              \x20        use when you want the simplest integration (resend.com)",
-            "Brevo   — SaaS SMTP; 300 emails/day free; no server to run;\n\
-             \x20        use when you need bulk SMTP without Node SDK (brevo.com)",
-            "Postal  — MIT; self-hosted SMTP server; use when you need full\n\
-             \x20        ownership of your email infrastructure; use alongside Listmonk\n\
-             \x20        for a fully self-hosted stack\n\
-             \x20        ⚠ needs dedicated IP for best deliverability",
+            "SMTP    — bring your own relay (Brevo SMTP, Postal, SES, Postmark SMTP,\n\
+             \x20        Mailgun SMTP, etc.); use when you want one generic contract\n\
+             \x20        and will manage provider credentials yourself",
         ]).default(0).interact().unwrap_or(0) {
-            1 => TransactionalEmailChoice::Brevo,
-            2 => TransactionalEmailChoice::Postal,
+            1 => TransactionalEmailChoice::Smtp,
             _ => TransactionalEmailChoice::Resend,
         }
     } else { TransactionalEmailChoice::None };

@@ -39,8 +39,7 @@ pub(crate) fn print_stack_summary(f: &AllFeatures, app_host: Option<AppHost>) {
     }
     if f.email == EmailChoice::Listmonk                       { println!("    Email         Listmonk           → self-hosted"); }
     if f.transactional_email == TransactionalEmailChoice::Resend  { println!("    Txn email     Resend             → SaaS; built-in SPF/DKIM/DMARC"); }
-    if f.transactional_email == TransactionalEmailChoice::Brevo   { println!("    Txn email     Brevo              → SaaS (300 emails/day free); no server needed"); }
-    if f.transactional_email == TransactionalEmailChoice::Postal  { println!("    Txn email     Postal             → self-hosted  ⚠ dedicated IP for deliverability"); }
+    if f.transactional_email == TransactionalEmailChoice::Smtp    { println!("    Txn email     SMTP               → generic relay (Postal, Brevo SMTP, SES, etc.)"); }
     match f.analytics {
         AnalyticsProvider::Umami     => println!("    Analytics     Umami              → self-hosted or cloud"),
         AnalyticsProvider::Plausible => println!("    Analytics     Plausible          → self-hosted or cloud"),

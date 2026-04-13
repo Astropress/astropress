@@ -87,72 +87,6 @@ pub(super) const CADDYFILE_LISTMONK: &str = concat!(
     "}\n",
 );
 
-// ── Postal ────────────────────────────────────────────────────────────────────
-
-pub(super) const COMPOSE_POSTAL: &str = concat!(
-    "# Postal — self-hosted SMTP server (MIT).\n",
-    "# ⚠ For best email deliverability, Postal needs a dedicated IP address.\n",
-    "#   On Fly.io: use a dedicated-vm machine. On Railway: use a static outbound IP add-on.\n",
-    "# ⚠ Requires ~512 MB RAM across all three services — Fly.io shared-cpu-1x with 512 MB works; Railway $5/mo.\n",
-    "# Full guide: https://docs.postalserver.io/install/installation\n",
-    "# Usage: cp .env.postal.example .env.postal && docker compose --env-file .env.postal up -d\n",
-    "services:\n",
-    "  postal:\n",
-    "    image: ghcr.io/postalserver/postal:latest\n",
-    "    ports:\n",
-    "      - \"25:25\"    # SMTP inbound\n",
-    "      - \"587:587\"  # SMTP submission\n",
-    "      - \"5000:5000\" # Web UI\n",
-    "    environment:\n",
-    "      POSTAL_DATABASE_HOST: db\n",
-    "      POSTAL_DATABASE_USERNAME: postal\n",
-    "      POSTAL_DATABASE_PASSWORD: \"${DB_PASSWORD:?set DB_PASSWORD in .env.postal}\"\n",
-    "      POSTAL_RABBITMQ_HOST: rabbitmq\n",
-    "      POSTAL_SECRET_KEY: \"${SECRET_KEY:?set SECRET_KEY in .env.postal}\"\n",
-    "    depends_on:\n",
-    "      db:\n",
-    "        condition: service_healthy\n",
-    "      rabbitmq:\n",
-    "        condition: service_started\n",
-    "    volumes:\n",
-    "      - postal_data:/config\n",
-    "    restart: unless-stopped\n",
-    "\n",
-    "  db:\n",
-    "    # mariadb:11 uses ~100 MB idle vs MySQL 8's ~300 MB — better fit for free tiers.\n",
-    "    image: mariadb:11\n",
-    "    environment:\n",
-    "      MYSQL_DATABASE: postal\n",
-    "      MYSQL_USER: postal\n",
-    "      MYSQL_PASSWORD: \"${DB_PASSWORD}\"\n",
-    "      MYSQL_ROOT_PASSWORD: \"${DB_ROOT_PASSWORD:-rootpass}\"\n",
-    "    volumes:\n",
-    "      - postal_db:/var/lib/mysql\n",
-    "    healthcheck:\n",
-    "      test: [\"CMD\", \"mysqladmin\", \"ping\", \"-h\", \"localhost\"]\n",
-    "      interval: 5s\n",
-    "      timeout: 5s\n",
-    "      retries: 10\n",
-    "    restart: unless-stopped\n",
-    "\n",
-    "  rabbitmq:\n",
-    "    image: rabbitmq:3-management-alpine\n",
-    "    volumes:\n",
-    "      - postal_rabbitmq:/var/lib/rabbitmq\n",
-    "    restart: unless-stopped\n",
-    "\n",
-    "volumes:\n",
-    "  postal_data:\n",
-    "  postal_db:\n",
-    "  postal_rabbitmq:\n",
-);
-pub(super) const ENV_POSTAL: &str = concat!(
-    "DB_PASSWORD=change-me\n",
-    "DB_ROOT_PASSWORD=change-me-root\n",
-    "SECRET_KEY=change-me-long-random-string\n",
-);
-
-
 // ── Gotify ────────────────────────────────────────────────────────────────────
 
 pub(super) const COMPOSE_GOTIFY: &str = concat!(
@@ -310,4 +244,3 @@ pub(super) const ENV_REMARK42: &str = concat!(
     "REMARK_URL=https://comments.yourdomain.com\n",
     "REMARK_SECRET=change-me-long-random-string\n",
 );
-

@@ -113,10 +113,10 @@ pub(crate) fn parse_add_features(args: &[String]) -> Result<AllFeatures, String>
             }
             "--transactional-email" | "--transactional_email" => {
                 f.transactional_email = match value.as_str() {
-                    "brevo"  => TransactionalEmailChoice::Brevo,
-                    "postal" => TransactionalEmailChoice::Postal,
+                    "resend" => TransactionalEmailChoice::Resend,
+                    "smtp" => TransactionalEmailChoice::Smtp,
                     other => return Err(format!(
-                        "Unknown transactional email provider `{other}`. Use: brevo, postal."
+                        "Unknown transactional email provider `{other}`. Use: resend, smtp."
                     )),
                 };
             }

@@ -52,7 +52,7 @@ pub(crate) fn list_tools() {
     println!("  --ab-testing         growthbook, unleash, custom");
     println!("  --cms                keystatic, payload");
     println!("  --email              listmonk");
-    println!("  --transactional-email  brevo, postal");
+    println!("  --transactional-email  resend, smtp");
     println!("  --commerce           medusa, vendure");
     println!("  --payments           hyperswitch");
     println!("  --community          giscus, remark42");
