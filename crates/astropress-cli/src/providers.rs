@@ -49,6 +49,10 @@ pub(crate) enum AppHost {
     RenderStatic,
     RenderWeb,
     GitlabPages,
+    FlyIo,
+    Coolify,
+    DigitalOcean,
+    Railway,
     Runway,
     Custom,
 }
@@ -63,10 +67,14 @@ impl AppHost {
             "render-static" => Ok(Self::RenderStatic),
             "render-web" => Ok(Self::RenderWeb),
             "gitlab-pages" => Ok(Self::GitlabPages),
+            "fly-io" => Ok(Self::FlyIo),
+            "coolify" => Ok(Self::Coolify),
+            "digitalocean" => Ok(Self::DigitalOcean),
+            "railway" => Ok(Self::Railway),
             "runway" => Ok(Self::Runway),
             "custom" => Ok(Self::Custom),
             other => Err(format!(
-                "Unsupported app host `{other}`. Use github-pages, cloudflare-pages, vercel, netlify, render-static, render-web, gitlab-pages, runway, or custom."
+                "Unsupported app host `{other}`. Use github-pages, cloudflare-pages, vercel, netlify, render-static, render-web, gitlab-pages, fly-io, coolify, digitalocean, railway, runway, or custom."
             )),
         }
     }
@@ -80,6 +88,10 @@ impl AppHost {
             Self::RenderStatic => "render-static",
             Self::RenderWeb => "render-web",
             Self::GitlabPages => "gitlab-pages",
+            Self::FlyIo => "fly-io",
+            Self::Coolify => "coolify",
+            Self::DigitalOcean => "digitalocean",
+            Self::Railway => "railway",
             Self::Runway => "runway",
             Self::Custom => "custom",
         }
@@ -102,6 +114,7 @@ pub(crate) enum DataServices {
     Pocketbase,
     Neon,
     Nhost,
+    Turso,
     Runway,
     Custom,
 }
@@ -116,10 +129,11 @@ impl DataServices {
             "pocketbase" => Ok(Self::Pocketbase),
             "neon" => Ok(Self::Neon),
             "nhost" => Ok(Self::Nhost),
+            "turso" => Ok(Self::Turso),
             "runway" => Ok(Self::Runway),
             "custom" => Ok(Self::Custom),
             other => Err(format!(
-                "Unsupported data services `{other}`. Use none, cloudflare, supabase, appwrite, pocketbase, neon, nhost, runway, or custom."
+                "Unsupported data services `{other}`. Use none, cloudflare, supabase, appwrite, pocketbase, neon, nhost, turso, runway, or custom."
             )),
         }
     }
@@ -133,6 +147,7 @@ impl DataServices {
             Self::Pocketbase => "pocketbase",
             Self::Neon => "neon",
             Self::Nhost => "nhost",
+            Self::Turso => "turso",
             Self::Runway => "runway",
             Self::Custom => "custom",
         }
@@ -317,6 +332,34 @@ mod tests {
     fn heatmap_provider_rejects_unknown() {
         assert!(HeatmapProvider::parse("hotjar").is_err());
     }
+
+    #[test]
+    fn app_host_railway_round_trips() {
+        assert_eq!(AppHost::parse("railway").unwrap(), AppHost::Railway);
+        assert_eq!(AppHost::Railway.as_str(), "railway");
+        assert_eq!(AppHost::Railway.deploy_target(), "railway");
+    }
+
+    #[test]
+    fn app_host_railway_rejects_alias() {
+        // "railway-app" is not a valid identifier — only "railway" is.
+        assert!(AppHost::parse("railway-app").is_err());
+    }
+
+    #[test]
+    fn deployment_support_level_railway_is_preview() {
+        assert_eq!(deployment_support_level("railway", "supabase"), "preview");
+        assert_eq!(deployment_support_level("railway", "appwrite"), "preview");
+        assert_eq!(deployment_support_level("railway", "turso"), "preview");
+        assert_eq!(deployment_support_level("railway", "none"), "preview");
+    }
+
+    #[test]
+    fn deployment_support_level_railway_does_not_claim_supported() {
+        // Railway has no officially tested end-to-end path — must not be "supported".
+        assert_ne!(deployment_support_level("railway", "supabase"), "supported");
+        assert_ne!(deployment_support_level("railway", "none"), "supported");
+    }
 }
 
 pub(crate) fn deployment_support_level(app_host: &str, data_services: &str) -> &'static str {
@@ -332,7 +375,15 @@ pub(crate) fn deployment_support_level(app_host: &str, data_services: &str) -> &
         | ("gitlab-pages", "supabase")
         | ("vercel", "appwrite")
         | ("netlify", "appwrite")
-        | ("cloudflare-pages", "supabase") => "preview",
+        | ("cloudflare-pages", "supabase")
+        | ("fly-io", _)
+        | ("coolify", _)
+        | ("digitalocean", _)
+        | ("railway", _)
+        | ("vercel", "turso")
+        | ("netlify", "turso")
+        | ("render-web", "turso")
+        | ("cloudflare-pages", "turso") => "preview",
         _ => "unsupported",
     }
 }

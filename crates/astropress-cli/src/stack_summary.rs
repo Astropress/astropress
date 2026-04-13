@@ -19,6 +19,10 @@ pub(crate) fn print_stack_summary(f: &AllFeatures, app_host: Option<AppHost>) {
         Some(AppHost::RenderStatic)    => "Render static         (free tier)",
         Some(AppHost::RenderWeb)       => "Render web service    (free tier)",
         Some(AppHost::GitlabPages)     => "GitLab Pages          (free, static)",
+        Some(AppHost::FlyIo)           => "Fly.io                (web service)",
+        Some(AppHost::Coolify)         => "Coolify               (self-hosted PaaS)",
+        Some(AppHost::DigitalOcean)    => "DigitalOcean App Platform",
+        Some(AppHost::Railway)         => "Railway               ⚠ paid — usage-based billing, no free tier",
         Some(AppHost::Runway)          => "Runway                (paid)",
         Some(AppHost::Custom) | None   => "custom / TBD",
     };
