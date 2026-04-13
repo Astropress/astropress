@@ -145,4 +145,4 @@ cd packages/astropress-nexus
 bunx vitest run
 ```
 
-Tests cover: auth, health, proxy routing, fan-out, partial failure, site registry, import job lifecycle, and panel connector discovery.
+49 tests covering: auth, health, proxy routing, fan-out, partial failure, site registry, import job lifecycle (queued/running/completed/failed states), and panel connector discovery (Cloudways, cPanel/Softaculous, hPanel).
