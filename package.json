@@ -30,6 +30,9 @@
     "check:version": "bun run tooling/scripts/check-version-bump.ts",
     "docs:api": "bun run tooling/scripts/generate-api-docs.ts",
     "docs:api:check": "bun run tooling/scripts/generate-api-docs.ts --check",
+    "docs:dev": "bun run --filter astropress-docs dev",
+    "docs:build": "bun run --filter astropress-docs build",
+    "docs:check": "bun run --filter astropress-docs check",
     "stress:sqlite": "bun run tooling/scripts/stress-sqlite-writes.ts",
     "prepare": "lefthook install"
   },
