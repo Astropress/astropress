@@ -16,27 +16,42 @@ pub(crate) fn repo_root() -> PathBuf {
         .to_path_buf()
 }
 
-/// Resolves the `astropress/src` directory at runtime.
+/// Resolves the directory containing astropress's compiled JS modules.
+/// `src/` is TypeScript-only; `tsc` emits to `dist/src/` at build time, and
+/// that is where `node`/`bun` must import from via `file://…/<module>.js`.
+///
 /// Search order:
-///   1. `{hint_project_dir}/node_modules/astropress/src/`  (existing project)
+///   1. `{hint_project_dir}/node_modules/astropress/dist/src/`  (installed package)
 ///   2. Binary-relative ancestors (npm global install)
-///   3. Dev fallback: compile-time repo root
+///   3. Dev fallback: `packages/astropress/dist/src/` (requires `bun run --filter astropress build`)
 pub(crate) fn find_astropress_src(hint_project_dir: Option<&Path>) -> Option<PathBuf> {
     if let Some(dir) = hint_project_dir {
-        let candidate = dir.join("node_modules").join("astropress").join("src");
+        let candidate = dir
+            .join("node_modules")
+            .join("astropress")
+            .join("dist")
+            .join("src");
         if candidate.exists() {
             return Some(candidate);
         }
     }
     if let Ok(exe) = std::env::current_exe() {
         for ancestor in exe.ancestors().skip(1).take(4) {
-            let candidate = ancestor.join("node_modules").join("astropress").join("src");
+            let candidate = ancestor
+                .join("node_modules")
+                .join("astropress")
+                .join("dist")
+                .join("src");
             if candidate.exists() {
                 return Some(candidate);
             }
         }
     }
-    let dev_path = repo_root().join("packages").join("astropress").join("src");
+    let dev_path = repo_root()
+        .join("packages")
+        .join("astropress")
+        .join("dist")
+        .join("src");
     if dev_path.exists() {
         return Some(dev_path);
     }
