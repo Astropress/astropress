@@ -174,14 +174,20 @@ fn add_docs_unknown_returns_error_listing_options() {
 
 #[test]
 fn add_docs_starlight_generates_config_files() {
+    // Starlight integrates inline into the existing Astro project — no separate
+    // docs/ subproject. The CLI emits the first docs page + a setup guide.
     let f = parse_add_features(&args(&["--docs", "starlight"])).unwrap();
     let stubs = feature_config_stubs(&f);
     let paths: Vec<_> = stubs.iter().map(|(p, _)| *p).collect();
-    assert!(paths.contains(&"docs/package.json"), "{paths:?}");
-    assert!(paths.contains(&"docs/astro.config.mjs"), "{paths:?}");
-    assert!(paths.contains(&"docs/src/content/docs/index.mdx"), "{paths:?}");
-    let pkg = stubs.iter().find(|(p, _)| *p == "docs/package.json").unwrap().1;
-    assert!(pkg.contains("@astrojs/starlight"), "package.json missing starlight dep: {pkg}");
+    assert!(paths.contains(&"src/content/docs/index.mdx"), "{paths:?}");
+    assert!(paths.contains(&"DOCS.md"), "{paths:?}");
+    // DOCS.md must carry the bun add command and astro.config.mjs snippet
+    let docs_md = stubs.iter().find(|(p, _)| *p == "DOCS.md").unwrap().1;
+    assert!(docs_md.contains("@astrojs/starlight"), "DOCS.md missing @astrojs/starlight: {docs_md}");
+    assert!(docs_md.contains("astro.config.mjs"), "DOCS.md missing astro.config.mjs instructions: {docs_md}");
+    assert!(docs_md.contains("bun add"), "DOCS.md missing bun add command: {docs_md}");
+    // Must NOT create a separate docs/package.json — that implies a subproject
+    assert!(!paths.contains(&"docs/package.json"), "Starlight must not scaffold a separate docs/ package: {paths:?}");
 }
 
 #[test]

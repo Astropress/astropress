@@ -43,11 +43,20 @@ mod tests {
     }
 
     #[test]
-    fn starlight_includes_astro_config_and_index() {
+    fn starlight_integrates_inline_not_as_subproject() {
         let f = AllFeatures { docs: DocsChoice::Starlight, ..AllFeatures::defaults() };
-        let paths: Vec<_> = docs_config_stubs(&f).into_iter().map(|(p, _)| p).collect();
-        assert!(paths.contains(&"docs/astro.config.mjs"));
-        assert!(paths.contains(&"docs/src/content/docs/index.mdx"));
+        let stubs = docs_config_stubs(&f);
+        let paths: Vec<_> = stubs.iter().map(|(p, _)| *p).collect();
+        // Inline files — live inside the user's existing Astro project.
+        assert!(paths.contains(&"src/content/docs/index.mdx"), "{paths:?}");
+        assert!(paths.contains(&"DOCS.md"), "{paths:?}");
+        // Must NOT create a separate docs/ subproject.
+        assert!(!paths.contains(&"docs/package.json"), "no separate docs/ package: {paths:?}");
+        assert!(!paths.contains(&"docs/astro.config.mjs"), "no separate astro.config.mjs: {paths:?}");
+        // DOCS.md carries bun add command and astro.config.mjs diff.
+        let docs_md = stubs.iter().find(|(p, _)| *p == "DOCS.md").unwrap().1;
+        assert!(docs_md.contains("bun add @astrojs/starlight"));
+        assert!(docs_md.contains("astro.config.mjs"));
     }
 
     #[test]

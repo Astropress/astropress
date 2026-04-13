@@ -183,7 +183,7 @@ pub(crate) fn feature_env_stubs(f: &AllFeatures) -> String {
     }
     match f.docs {
         DocsChoice::Starlight => lines.push(
-            "# Starlight docs site (MIT, Astro team) — see docs/README.md to build",
+            "# Starlight docs (MIT, Astro team) — see DOCS.md to complete setup",
         ),
         DocsChoice::VitePress => lines.push(
             "# VitePress docs site (MIT, Vue team) — see docs/README.md to build",

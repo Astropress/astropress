@@ -3,12 +3,11 @@ Feature: astropress add --docs — scaffold a lightweight, accessible docs-site
   I want to add a docs-site generator to an existing Astropress project
   So that I can publish reference documentation without pulling in big-tech-owned tools
 
-  Scenario: astropress add --docs starlight scaffolds an Astro + Starlight docs site
+  Scenario: astropress add --docs starlight integrates Starlight inline into the Astro project
     Given an existing Astropress project directory
     When I run "astropress add --docs starlight"
-    Then docs/package.json references @astrojs/starlight
-    And docs/astro.config.mjs is written to the project
-    And docs/src/content/docs/index.mdx is written to the project
+    Then src/content/docs/index.mdx is written to the project
+    And DOCS.md is written with astro.config.mjs integration instructions and the bun add command
 
   Scenario: astropress add --docs vitepress scaffolds a VitePress docs site
     Given an existing Astropress project directory
