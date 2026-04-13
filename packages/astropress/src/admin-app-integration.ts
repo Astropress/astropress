@@ -2,12 +2,22 @@ import type { AstroIntegration } from "astro";
 import { createReadStream } from "node:fs";
 import { copyFile, mkdir } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
-import { join } from "node:path";
+import { basename, dirname, join } from "node:path";
 
 import { injectAstropressAdminRoutes } from "./admin-routes";
 import { peekCmsConfig } from "./config";
 
-const adminCssSrc = fileURLToPath(new URL("../public/admin.css", import.meta.url));
+// Package-root resolution: when this module runs from `dist/src/`, walk up two
+// levels; when it runs from `src/` (tests, dev without build), walk up one.
+const packageRoot = (() => {
+  const here = fileURLToPath(new URL(".", import.meta.url));
+  const parent = dirname(here);
+  return basename(parent) === "dist" ? dirname(parent) : parent;
+})();
+
+const packageResource = (relativePath: string) => join(packageRoot, relativePath);
+
+const adminCssSrc = packageResource("public/admin.css");
 
 export function createAstropressAdminAppIntegration(): AstroIntegration {
   return {
@@ -28,31 +38,31 @@ export function createAstropressAdminAppIntegration(): AstroIntegration {
         await copyFile(adminCssSrc, dest);
       },
       "astro:config:setup": ({ injectRoute, addMiddleware }) => {
-        const pagesDirectory = fileURLToPath(new URL("../pages/ap-admin", import.meta.url));
+        const pagesDirectory = packageResource("pages/ap-admin");
         injectAstropressAdminRoutes(pagesDirectory, injectRoute);
         injectRoute({
           pattern: "/ap/health",
-          entrypoint: fileURLToPath(new URL("../pages/ap/health.js", import.meta.url)),
+          entrypoint: packageResource("pages/ap/health.js"),
         });
         injectRoute({
           pattern: "/sitemap.xml",
-          entrypoint: fileURLToPath(new URL("../pages/sitemap.xml.js", import.meta.url)),
+          entrypoint: packageResource("pages/sitemap.xml.js"),
         });
         injectRoute({
           pattern: "/robots.txt",
-          entrypoint: fileURLToPath(new URL("../pages/robots.txt.js", import.meta.url)),
+          entrypoint: packageResource("pages/robots.txt.js"),
         });
         injectRoute({
           pattern: "/llms.txt",
-          entrypoint: fileURLToPath(new URL("../pages/llms.txt.js", import.meta.url)),
+          entrypoint: packageResource("pages/llms.txt.js"),
         });
         injectRoute({
           pattern: "/ap-api/v1/metrics",
-          entrypoint: fileURLToPath(new URL("../pages/ap-api/v1/metrics.js", import.meta.url)),
+          entrypoint: packageResource("pages/ap-api/v1/metrics.js"),
         });
         injectRoute({
           pattern: "/ap-api/v1/og-image/[slug].png",
-          entrypoint: fileURLToPath(new URL("../pages/ap-api/v1/og-image/[slug].png.js", import.meta.url)),
+          entrypoint: packageResource("pages/ap-api/v1/og-image/[slug].png.js"),
         });
 
         // Inject plugin-declared admin routes

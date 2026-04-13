@@ -113,6 +113,7 @@
     "dist",
     "index.ts",
     "pages",
+    "public",
     "src",
     "web-components",
     "LICENSE",

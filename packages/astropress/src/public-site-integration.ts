@@ -1,6 +1,17 @@
 import type { AstroIntegration } from "astro";
 import { fileURLToPath } from "node:url";
+import { basename, dirname, join } from "node:path";
 import { peekCmsConfig } from "./config";
+
+// Package-root resolution: when this module runs from `dist/src/`, walk up two
+// levels; when it runs from `src/` (tests, dev without build), walk up one.
+const packageRoot = (() => {
+  const here = fileURLToPath(new URL(".", import.meta.url));
+  const parent = dirname(here);
+  return basename(parent) === "dist" ? dirname(parent) : parent;
+})();
+
+const packageResource = (relativePath: string) => join(packageRoot, relativePath);
 
 export interface AstropressPublicSiteOptions {
   /**
@@ -41,15 +52,15 @@ export function createAstropressPublicSiteIntegration(
         // buildHookSecret is reserved for future webhook rebuild support.
         injectRoute({
           pattern: "/sitemap.xml",
-          entrypoint: fileURLToPath(new URL("../pages/sitemap.xml.js", import.meta.url)),
+          entrypoint: packageResource("pages/sitemap.xml.js"),
         });
         injectRoute({
           pattern: "/robots.txt",
-          entrypoint: fileURLToPath(new URL("../pages/robots.txt.js", import.meta.url)),
+          entrypoint: packageResource("pages/robots.txt.js"),
         });
         injectRoute({
           pattern: "/llms.txt",
-          entrypoint: fileURLToPath(new URL("../pages/llms.txt.js", import.meta.url)),
+          entrypoint: packageResource("pages/llms.txt.js"),
         });
       },
     },
@@ -103,15 +114,13 @@ export function createAstropressSitemapIntegration(
 
         injectRoute({
           pattern: "/sitemap.xml",
-          entrypoint: fileURLToPath(new URL("../pages/sitemap.xml.js", import.meta.url)),
+          entrypoint: packageResource("pages/sitemap.xml.js"),
         });
 
         // Inject the OG image endpoint so social cards are available on public sites too
         injectRoute({
           pattern: "/ap-api/v1/og-image/[slug].png",
-          entrypoint: fileURLToPath(
-            new URL("../pages/ap-api/v1/og-image/[slug].png.js", import.meta.url),
-          ),
+          entrypoint: packageResource("pages/ap-api/v1/og-image/[slug].png.js"),
         });
 
         // Expose siteUrl to the page via Vite define so sitemap.xml can use it
