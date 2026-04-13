@@ -71,5 +71,29 @@ export default defineConfig({
         baseURL: process.env.PLAYWRIGHT_ADMIN_BASE_URL ?? "http://127.0.0.1:4325",
       },
     },
+    {
+      name: "viewport-375",
+      testMatch: /admin-harness-mobile\.spec\.ts/,
+      use: {
+        viewport: { width: 375, height: 812 },
+        baseURL: process.env.PLAYWRIGHT_ADMIN_BASE_URL ?? "http://127.0.0.1:4325",
+      },
+    },
+    {
+      name: "viewport-768",
+      testMatch: /admin-harness-mobile\.spec\.ts/,
+      use: {
+        viewport: { width: 768, height: 1024 },
+        baseURL: process.env.PLAYWRIGHT_ADMIN_BASE_URL ?? "http://127.0.0.1:4325",
+      },
+    },
+    {
+      name: "viewport-1280",
+      testMatch: /admin-harness-mobile\.spec\.ts/,
+      use: {
+        viewport: { width: 1280, height: 800 },
+        baseURL: process.env.PLAYWRIGHT_ADMIN_BASE_URL ?? "http://127.0.0.1:4325",
+      },
+    },
   ],
 });

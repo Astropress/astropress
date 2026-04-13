@@ -16,7 +16,7 @@
     "audit:bundle": "bun run tooling/scripts/bundle-audit.ts",
     "test": "bun run audit:arch && bun run audit:arch:rust && bun run bdd:lint && bun run bdd:test && bun run --filter astropress test",
     "test:coverage": "bun run --filter astropress test:coverage",
-    "test:acceptance": "bun run tooling/scripts/run-playwright.ts --project=example-a11y --project=admin-harness-a11y --project=admin-harness-mobile --project=admin-harness-mobile-iphonese --project=admin-harness-mobile-galaxys5 --project=admin-harness-a11y-interactions --project=admin-harness-crud",
+    "test:acceptance": "bun run tooling/scripts/run-playwright.ts --project=example-a11y --project=admin-harness-a11y --project=admin-harness-mobile --project=admin-harness-mobile-iphonese --project=admin-harness-mobile-galaxys5 --project=admin-harness-a11y-interactions --project=admin-harness-crud --project=viewport-375 --project=viewport-768 --project=viewport-1280",
     "test:accessibility": "bun run --filter astropress-example-gh-pages build && bun run tooling/scripts/accessibility-audit.ts examples/github-pages/dist",
     "test:accessibility:browser": "bun run tooling/scripts/run-playwright.ts --project=example-a11y",
     "test:accessibility:admin-harness": "bun run tooling/scripts/run-playwright.ts --project=admin-harness-a11y",
