@@ -72,11 +72,15 @@ pub(super) fn prompt_more_features() -> MoreFeatures {
         .with_prompt("Add live chat / customer support?")
         .default(false).interact().unwrap_or(false)
     {
-        let _ = Select::with_theme(t).with_prompt("Chat provider").items(&[
+        match Select::with_theme(t).with_prompt("Chat provider").items(&[
             "Tiledesk  — Apache 2.0; live chat + chatbot + helpdesk; REST + webhook API;\n\
-             \x20          use when you need real-time support or sales chat",
-        ]).default(0).interact().unwrap_or(0);
-        ChatChoice::Tiledesk
+             \x20          use when you need real-time support or sales chat with chatbot flows",
+            "Chatwoot  — MIT; omnichannel support (email, live chat, social DMs); webhook\n\
+             \x20          + REST API; use when you need a full-featured helpdesk for teams",
+        ]).default(0).interact().unwrap_or(0) {
+            1 => ChatChoice::Chatwoot,
+            _ => ChatChoice::Tiledesk,
+        }
     } else { ChatChoice::None };
 
     // ── push notifications ────────────────────────────────────────────────
@@ -158,15 +162,18 @@ pub(super) fn prompt_more_features() -> MoreFeatures {
         .default(false).interact().unwrap_or(false)
     {
         match Select::with_theme(t).with_prompt("Transactional email").items(&[
+            "Resend  — MIT SDK; developer-first API; built-in SPF/DKIM/DMARC;\n\
+             \x20        use when you want the simplest integration (resend.com)",
             "Brevo   — SaaS SMTP; 300 emails/day free; no server to run;\n\
-             \x20        use for most projects (sign up at brevo.com)",
+             \x20        use when you need bulk SMTP without Node SDK (brevo.com)",
             "Postal  — MIT; self-hosted SMTP server; use when you need full\n\
              \x20        ownership of your email infrastructure; use alongside Listmonk\n\
              \x20        for a fully self-hosted stack\n\
              \x20        ⚠ needs dedicated IP for best deliverability",
         ]).default(0).interact().unwrap_or(0) {
-            1 => TransactionalEmailChoice::Postal,
-            _ => TransactionalEmailChoice::Brevo,
+            1 => TransactionalEmailChoice::Brevo,
+            2 => TransactionalEmailChoice::Postal,
+            _ => TransactionalEmailChoice::Resend,
         }
     } else { TransactionalEmailChoice::None };
 
@@ -237,10 +244,13 @@ pub(super) fn prompt_more_features() -> MoreFeatures {
              \x20            rollouts without a full analytics platform",
             "Unleash     — Apache 2.0; enterprise feature toggles; use when you need audit\n\
              \x20            trails and role-based flag access  ⚠ cloud is expensive; self-host free",
+            "Flagsmith   — BSD-3-Clause; feature flags + remote config + A/B testing;\n\
+             \x20            use when you want simple flag management with a clean UI",
             "Custom      — I'll wire it myself",
         ]).default(0).interact().unwrap_or(0) {
             1 => AbTestingProvider::Unleash,
-            2 => AbTestingProvider::Custom,
+            2 => AbTestingProvider::Flagsmith,
+            3 => AbTestingProvider::Custom,
             _ => AbTestingProvider::GrowthBook,
         }
     } else { AbTestingProvider::None };

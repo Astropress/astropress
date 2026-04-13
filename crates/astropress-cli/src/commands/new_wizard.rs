@@ -116,8 +116,11 @@ pub(crate) fn prompt_all_features() -> AllFeatures {
              \x20              content-heavy sites that want instant client-side search (<10 KB on page)",
             "Meilisearch   — MIT; typo-tolerant full-text search API; use when you need\n\
              \x20              real-time search across frequently updated content",
+            "Typesense     — GPL-3.0; single binary, lower memory than Meilisearch; use when\n\
+             \x20              you need typo-tolerant search with simpler ops",
         ]).default(0).interact().unwrap_or(0) {
             1 => SearchChoice::Meilisearch,
+            2 => SearchChoice::Typesense,
             _ => SearchChoice::Pagefind,
         }
     } else { SearchChoice::None };

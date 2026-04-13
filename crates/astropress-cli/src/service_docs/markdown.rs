@@ -153,6 +153,27 @@ pub(crate) fn build_services_doc(f: &AllFeatures) -> Option<String> {
         ));
     }
 
+    if f.search == SearchChoice::Typesense {
+        doc.push_str(concat!(
+            "### Typesense (full-text search)\n\n",
+            "```sh\n",
+            "cd typesense\n",
+            "cp .env.typesense.example .env.typesense\n",
+            "# Edit .env.typesense — set TYPESENSE_API_KEY\n",
+            "docker compose --env-file .env.typesense up -d\n",
+            "```\n\n",
+            "Update `.env`:\n",
+            "```\n",
+            "TYPESENSE_HOST=search.yourdomain.com\n",
+            "TYPESENSE_PORT=443\n",
+            "TYPESENSE_PROTOCOL=https\n",
+            "TYPESENSE_API_KEY=<your-typesense-api-key>\n",
+            "```\n\n",
+            "Create a collection after deploy: `POST /collections` with your schema.\n",
+            "See <https://typesense.org/docs/guide/> for indexing examples.\n\n",
+        ));
+    }
+
     if f.community == CommunityChoice::Remark42 {
         doc.push_str(concat!(
             "### Remark42 (comments)\n\n",
@@ -213,6 +234,26 @@ pub(crate) fn build_services_doc(f: &AllFeatures) -> Option<String> {
             "docker compose --env-file .env.tiledesk up -d\n",
             "```\n\n",
             "Full compose with all services: <https://github.com/Tiledesk/tiledesk-deployment>\n\n",
+        ));
+    }
+
+    if f.chat == ChatChoice::Chatwoot {
+        doc.push_str(concat!(
+            "### Chatwoot (customer support)\n\n",
+            "```sh\n",
+            "cd chatwoot\n",
+            "cp .env.chatwoot.example .env.chatwoot\n",
+            "# Edit .env.chatwoot — set DB_PASSWORD, SECRET_KEY_BASE, CHATWOOT_URL\n",
+            "docker compose --env-file .env.chatwoot up -d\n",
+            "# Run database migrations on first deploy:\n",
+            "docker compose exec chatwoot-server bundle exec rails db:chatwoot_prepare\n",
+            "```\n\n",
+            "Update `.env`:\n",
+            "```\n",
+            "CHATWOOT_API_URL=https://support.yourdomain.com\n",
+            "CHATWOOT_API_TOKEN=<create in Settings → Integrations → API Access Token>\n",
+            "CHATWOOT_WEBSITE_TOKEN=<create in Settings → Inboxes → New Inbox → Website>\n",
+            "```\n\n",
         ));
     }
 

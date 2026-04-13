@@ -189,6 +189,7 @@ pub(crate) enum AbTestingProvider {
     None,
     GrowthBook,
     Unleash,
+    Flagsmith,
     Custom,
 }
 
@@ -198,9 +199,10 @@ impl AbTestingProvider {
             "none" => Ok(Self::None),
             "growthbook" => Ok(Self::GrowthBook),
             "unleash" => Ok(Self::Unleash),
+            "flagsmith" => Ok(Self::Flagsmith),
             "custom" => Ok(Self::Custom),
             other => Err(format!(
-                "Unsupported A/B testing provider `{other}`. Use none, growthbook, unleash, or custom."
+                "Unsupported A/B testing provider `{other}`. Use none, growthbook, unleash, flagsmith, or custom."
             )),
         }
     }
@@ -210,6 +212,7 @@ impl AbTestingProvider {
             Self::None => "none",
             Self::GrowthBook => "growthbook",
             Self::Unleash => "unleash",
+            Self::Flagsmith => "flagsmith",
             Self::Custom => "custom",
         }
     }
@@ -276,6 +279,7 @@ mod tests {
             ("none", AbTestingProvider::None),
             ("growthbook", AbTestingProvider::GrowthBook),
             ("unleash", AbTestingProvider::Unleash),
+            ("flagsmith", AbTestingProvider::Flagsmith),
             ("custom", AbTestingProvider::Custom),
         ];
         for (s, variant) in pairs {

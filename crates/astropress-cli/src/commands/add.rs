@@ -64,6 +64,11 @@ fn provider_env_stubs(
             "UNLEASH_URL=https://your-unleash-instance.example.com/api",
             "UNLEASH_CLIENT_KEY=replace-with-your-unleash-client-key",
         ]),
+        AbTestingProvider::Flagsmith => lines.extend(&[
+            "# Flagsmith (feature flags + A/B testing — BSD-3-Clause; self-hosted or cloud)",
+            "FLAGSMITH_API_URL=https://flags.yourdomain.com/api/v1/",
+            "FLAGSMITH_ENVIRONMENT_KEY=replace-with-your-flagsmith-environment-key",
+        ]),
         AbTestingProvider::Custom => lines.push("# A/B testing: configure manually"),
         AbTestingProvider::None => {}
     }

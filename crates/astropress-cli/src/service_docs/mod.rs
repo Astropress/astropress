@@ -23,6 +23,7 @@ use crate::features::{
     NotifyChoice, PaymentChoice, PodcastChoice, ScheduleChoice, SearchChoice,
     SsoChoice, StatusChoice, TransactionalEmailChoice, VideoChoice,
 };
+use crate::providers::AbTestingProvider;
 
 pub(crate) use markdown::build_services_doc;
 
@@ -45,6 +46,10 @@ pub(crate) fn service_compose_stubs(f: &AllFeatures) -> Vec<(&'static str, &'sta
         files.push(("meilisearch/docker-compose.yml",       content::COMPOSE_MEILISEARCH));
         files.push(("meilisearch/.env.meilisearch.example", content::ENV_MEILISEARCH));
     }
+    if f.search == SearchChoice::Typesense {
+        files.push(("typesense/docker-compose.yml",       content::COMPOSE_TYPESENSE));
+        files.push(("typesense/.env.typesense.example", content::ENV_TYPESENSE));
+    }
     if f.community == CommunityChoice::Remark42 {
         files.push(("remark42/docker-compose.yml",    communication::COMPOSE_REMARK42));
         files.push(("remark42/.env.remark42.example", communication::ENV_REMARK42));
@@ -60,6 +65,10 @@ pub(crate) fn service_compose_stubs(f: &AllFeatures) -> Vec<(&'static str, &'sta
     if f.chat == ChatChoice::Tiledesk {
         files.push(("tiledesk/docker-compose.yml",    communication::COMPOSE_TILEDESK));
         files.push(("tiledesk/.env.tiledesk.example", communication::ENV_TILEDESK));
+    }
+    if f.chat == ChatChoice::Chatwoot {
+        files.push(("chatwoot/docker-compose.yml",    communication::COMPOSE_CHATWOOT));
+        files.push(("chatwoot/.env.chatwoot.example", communication::ENV_CHATWOOT));
     }
     if f.payments == PaymentChoice::HyperSwitch {
         files.push(("hyperswitch/docker-compose.yml",       commerce::COMPOSE_HYPERSWITCH));
@@ -137,6 +146,10 @@ pub(crate) fn service_compose_stubs(f: &AllFeatures) -> Vec<(&'static str, &'sta
         files.push(("frappe-lms/docker-compose.yml",      identity::COMPOSE_FRAPPE_LMS));
         files.push(("frappe-lms/.env.frappe-lms.example", identity::ENV_FRAPPE_LMS));
     }
+    if f.ab_testing == AbTestingProvider::Flagsmith {
+        files.push(("flagsmith/docker-compose.yml",       identity::COMPOSE_FLAGSMITH));
+        files.push(("flagsmith/.env.flagsmith.example",   identity::ENV_FLAGSMITH));
+    }
 
     files
 }
@@ -194,6 +207,61 @@ mod tests {
     }
 
     #[test]
+    fn typesense_generates_compose() {
+        let f = AllFeatures { search: SearchChoice::Typesense, ..AllFeatures::defaults() };
+        let stubs = service_compose_stubs(&f);
+        let paths: Vec<_> = stubs.iter().map(|(p, _)| *p).collect();
+        assert!(paths.contains(&"typesense/docker-compose.yml"), "{paths:?}");
+        let compose = stubs.iter().find(|(p, _)| *p == "typesense/docker-compose.yml").unwrap().1;
+        assert!(compose.contains("TYPESENSE_API_KEY"));
+    }
+
+    #[test]
+    fn typesense_services_doc_has_section() {
+        let f = AllFeatures { search: SearchChoice::Typesense, ..AllFeatures::defaults() };
+        let doc = build_services_doc(&f).expect("should generate doc");
+        assert!(doc.contains("Typesense"));
+        assert!(doc.contains("TYPESENSE_API_KEY"));
+    }
+
+    #[test]
+    fn chatwoot_generates_compose() {
+        let f = AllFeatures { chat: ChatChoice::Chatwoot, ..AllFeatures::defaults() };
+        let stubs = service_compose_stubs(&f);
+        let paths: Vec<_> = stubs.iter().map(|(p, _)| *p).collect();
+        assert!(paths.contains(&"chatwoot/docker-compose.yml"), "{paths:?}");
+        let compose = stubs.iter().find(|(p, _)| *p == "chatwoot/docker-compose.yml").unwrap().1;
+        assert!(compose.contains("SECRET_KEY_BASE"));
+        assert!(compose.contains("sidekiq"));
+    }
+
+    #[test]
+    fn chatwoot_services_doc_has_section() {
+        let f = AllFeatures { chat: ChatChoice::Chatwoot, ..AllFeatures::defaults() };
+        let doc = build_services_doc(&f).expect("should generate doc");
+        assert!(doc.contains("Chatwoot"));
+        assert!(doc.contains("CHATWOOT_API_TOKEN"));
+    }
+
+    #[test]
+    fn flagsmith_generates_compose() {
+        let f = AllFeatures { ab_testing: crate::providers::AbTestingProvider::Flagsmith, ..AllFeatures::defaults() };
+        let stubs = service_compose_stubs(&f);
+        let paths: Vec<_> = stubs.iter().map(|(p, _)| *p).collect();
+        assert!(paths.contains(&"flagsmith/docker-compose.yml"), "{paths:?}");
+        let compose = stubs.iter().find(|(p, _)| *p == "flagsmith/docker-compose.yml").unwrap().1;
+        assert!(compose.contains("SECRET_KEY"));
+    }
+
+    #[test]
+    fn flagsmith_services_doc_has_section() {
+        let f = AllFeatures { ab_testing: crate::providers::AbTestingProvider::Flagsmith, ..AllFeatures::defaults() };
+        let doc = build_services_doc(&f).expect("should generate doc");
+        assert!(doc.contains("Flagsmith"));
+        assert!(doc.contains("FLAGSMITH_ENVIRONMENT_KEY"));
+    }
+
+    #[test]
     fn peertube_needs_r2_note_in_doc() {
         let f = AllFeatures { video: VideoChoice::PeerTube, ..AllFeatures::defaults() };
         let doc = build_services_doc(&f).expect("should generate doc");
@@ -223,6 +291,17 @@ mod tests {
         let f = AllFeatures { crm: CrmChoice::Twenty, ..AllFeatures::defaults() };
         let doc = build_services_doc(&f).expect("should generate doc");
         assert!(doc.contains("4 GB RAM") || doc.contains("4GB"), "{doc}");
+    }
+
+    #[test]
+    fn resend_does_not_generate_compose() {
+        let f = AllFeatures {
+            transactional_email: TransactionalEmailChoice::Resend,
+            ..AllFeatures::defaults()
+        };
+        let stubs = service_compose_stubs(&f);
+        let paths: Vec<_> = stubs.iter().map(|(p, _)| *p).collect();
+        assert!(!paths.iter().any(|p| p.contains("resend")), "Resend is SaaS — no compose: {paths:?}");
     }
 
     #[test]

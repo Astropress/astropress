@@ -10,10 +10,10 @@ use crate::providers::{AbTestingProvider, AnalyticsProvider, HeatmapProvider};
 pub(crate) enum CmsChoice { BuiltIn, Keystatic, Payload }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)] pub(crate) enum EmailChoice             { None, Listmonk }
-#[derive(Debug, Clone, Copy, PartialEq, Eq)] pub(crate) enum TransactionalEmailChoice { None, Brevo, Postal }
+#[derive(Debug, Clone, Copy, PartialEq, Eq)] pub(crate) enum TransactionalEmailChoice { None, Resend, Brevo, Postal }
 #[derive(Debug, Clone, Copy, PartialEq, Eq)] pub(crate) enum CommerceChoice          { None, Medusa, Vendure }
 #[derive(Debug, Clone, Copy, PartialEq, Eq)] pub(crate) enum CommunityChoice         { None, Giscus, Remark42 }
-#[derive(Debug, Clone, Copy, PartialEq, Eq)] pub(crate) enum SearchChoice            { None, Pagefind, Meilisearch }
+#[derive(Debug, Clone, Copy, PartialEq, Eq)] pub(crate) enum SearchChoice            { None, Pagefind, Meilisearch, Typesense }
 #[derive(Debug, Clone, Copy, PartialEq, Eq)] pub(crate) enum CourseChoice            { None, FrappeLms }
 #[derive(Debug, Clone, Copy, PartialEq, Eq)] pub(crate) enum FormsChoice             { None, Formbricks, Typebot }
 
@@ -31,7 +31,7 @@ impl Default for DonationChoices {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)] pub(crate) enum ForumChoice             { None, Flarum, Discourse }
-#[derive(Debug, Clone, Copy, PartialEq, Eq)] pub(crate) enum ChatChoice              { None, Tiledesk }
+#[derive(Debug, Clone, Copy, PartialEq, Eq)] pub(crate) enum ChatChoice              { None, Tiledesk, Chatwoot }
 #[derive(Debug, Clone, Copy, PartialEq, Eq)] pub(crate) enum PaymentChoice           { None, HyperSwitch }
 #[derive(Debug, Clone, Copy, PartialEq, Eq)] pub(crate) enum NotifyChoice            { None, Ntfy, Gotify }
 #[derive(Debug, Clone, Copy, PartialEq, Eq)] pub(crate) enum ScheduleChoice          { None, Rallly, CalCom }

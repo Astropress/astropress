@@ -8,6 +8,7 @@ use crate::features::{
     KnowledgeBaseChoice, PodcastChoice, SsoChoice, StatusChoice,
     TransactionalEmailChoice, VideoChoice,
 };
+use crate::providers::AbTestingProvider;
 
 pub(super) fn append_more_services(doc: &mut String, f: &AllFeatures) {
     if f.commerce == CommerceChoice::Medusa {
@@ -204,6 +205,24 @@ pub(super) fn append_more_services(doc: &mut String, f: &AllFeatures) {
             "docker compose --env-file .env.frappe-lms up -d\n",
             "```\n\n",
             "Full guide: <https://github.com/frappe/lms#installation>\n\n",
+        ));
+    }
+
+    if f.ab_testing == AbTestingProvider::Flagsmith {
+        doc.push_str(concat!(
+            "### Flagsmith (feature flags)\n\n",
+            "```sh\n",
+            "cd flagsmith\n",
+            "cp .env.flagsmith.example .env.flagsmith\n",
+            "# Edit .env.flagsmith — set DB_PASSWORD, SECRET_KEY, FLAGSMITH_HOST\n",
+            "docker compose --env-file .env.flagsmith up -d\n",
+            "```\n\n",
+            "Update `.env`:\n",
+            "```\n",
+            "FLAGSMITH_API_URL=https://flags.yourdomain.com/api/v1/\n",
+            "FLAGSMITH_ENVIRONMENT_KEY=<create in Flagsmith dashboard → Environments>\n",
+            "```\n\n",
+            "Full guide: <https://docs.flagsmith.com/deployment/hosting/docker>\n\n",
         ));
     }
 }

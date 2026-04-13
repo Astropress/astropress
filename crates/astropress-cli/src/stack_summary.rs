@@ -34,6 +34,7 @@ pub(crate) fn print_stack_summary(f: &AllFeatures, app_host: Option<AppHost>) {
         CmsChoice::Payload   => println!("    Content       Payload            ⚠ needs a separate Node server"),
     }
     if f.email == EmailChoice::Listmonk                       { println!("    Email         Listmonk           → self-hosted"); }
+    if f.transactional_email == TransactionalEmailChoice::Resend  { println!("    Txn email     Resend             → SaaS; built-in SPF/DKIM/DMARC"); }
     if f.transactional_email == TransactionalEmailChoice::Brevo   { println!("    Txn email     Brevo              → SaaS (300 emails/day free); no server needed"); }
     if f.transactional_email == TransactionalEmailChoice::Postal  { println!("    Txn email     Postal             → self-hosted  ⚠ dedicated IP for deliverability"); }
     match f.analytics {
@@ -57,7 +58,9 @@ pub(crate) fn print_stack_summary(f: &AllFeatures, app_host: Option<AppHost>) {
     if f.forum       == ForumChoice::Flarum          { println!("    Forum         Flarum             → self-hosted"); }
     if f.forum       == ForumChoice::Discourse       { println!("    Forum         Discourse          → self-hosted  ⚠ heavier: needs Redis + Postgres"); }
     if f.search      == SearchChoice::Meilisearch    { println!("    Search        Meilisearch        → self-hosted"); }
+    if f.search      == SearchChoice::Typesense      { println!("    Search        Typesense          → self-hosted"); }
     if f.chat        == ChatChoice::Tiledesk         { println!("    Live chat     Tiledesk           → self-hosted"); }
+    if f.chat        == ChatChoice::Chatwoot         { println!("    Live chat     Chatwoot           → self-hosted"); }
     if f.notify      == NotifyChoice::Ntfy           { println!("    Push notify   ntfy               → self-hosted or cloud"); }
     if f.notify      == NotifyChoice::Gotify         { println!("    Push notify   Gotify             → self-hosted"); }
     if f.schedule    == ScheduleChoice::Rallly       { println!("    Scheduling    Rallly             → self-hosted"); }
@@ -71,6 +74,7 @@ pub(crate) fn print_stack_summary(f: &AllFeatures, app_host: Option<AppHost>) {
     match f.ab_testing {
         AbTestingProvider::GrowthBook => println!("    A/B testing   GrowthBook         → self-hosted or cloud"),
         AbTestingProvider::Unleash    => println!("    A/B testing   Unleash            → self-hosted or cloud  ⚠ cloud is expensive"),
+        AbTestingProvider::Flagsmith  => println!("    A/B testing   Flagsmith          → self-hosted or cloud"),
         AbTestingProvider::Custom     => println!("    A/B testing   Custom"),
         AbTestingProvider::None       => {}
     }

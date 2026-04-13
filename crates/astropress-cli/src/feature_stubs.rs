@@ -55,6 +55,13 @@ pub(crate) fn feature_env_stubs(f: &AllFeatures) -> String {
             "MEILISEARCH_URL=http://localhost:7700",
             "MEILISEARCH_API_KEY=replace-me"]);
     }
+    if f.search == SearchChoice::Typesense {
+        lines.extend(&["# Typesense (typo-tolerant full-text search — GPL-3.0)",
+            "TYPESENSE_HOST=localhost",
+            "TYPESENSE_PORT=8108",
+            "TYPESENSE_PROTOCOL=http",
+            "TYPESENSE_API_KEY=replace-me"]);
+    }
     if f.courses == CourseChoice::FrappeLms {
         lines.extend(&["# Frappe LMS (courses)",
             "FRAPPE_LMS_URL=http://localhost:8000", "FRAPPE_LMS_API_KEY=replace-me"]);
@@ -81,6 +88,10 @@ pub(crate) fn feature_env_stubs(f: &AllFeatures) -> String {
         lines.extend(&["# Liberapay (recurring donations — OSS-friendly)",
             "LIBERAPAY_USERNAME=replace-with-your-liberapay-username"]);
     }
+    // ── A/B testing / feature flags ──────────────────────────────────────
+    // (analytics handled separately via ScaffoldOptions; these cover the
+    // standalone providers selected in new_wizard_more)
+
     if f.donations.pledge_crypto {
         lines.extend(&["# PledgeCrypto (crypto donations + automatic carbon offsets)",
             "PLEDGE_PARTNER_KEY=[YOUR_PLEDGE_PARTNER_KEY]"]);
@@ -98,6 +109,12 @@ pub(crate) fn feature_env_stubs(f: &AllFeatures) -> String {
         lines.extend(&["# Tiledesk (live chat + support — Apache 2.0)",
             "TILEDESK_API_URL=http://localhost:8080",
             "TILEDESK_PROJECT_ID=replace-me", "TILEDESK_TOKEN=replace-me"]);
+    }
+    if f.chat == ChatChoice::Chatwoot {
+        lines.extend(&["# Chatwoot (omnichannel customer support — MIT)",
+            "CHATWOOT_API_URL=http://localhost:3000",
+            "CHATWOOT_API_TOKEN=replace-me",
+            "CHATWOOT_WEBSITE_TOKEN=replace-me"]);
     }
     if f.payments == PaymentChoice::HyperSwitch {
         lines.extend(&["# HyperSwitch (payment router — Apache 2.0)",
@@ -140,6 +157,13 @@ pub(crate) fn feature_env_stubs(f: &AllFeatures) -> String {
         lines.extend(&["# Pretix (event ticketing — Apache 2.0)",
             "PRETIX_URL=http://localhost:8000", "PRETIX_API_TOKEN=replace-me",
             "PRETIX_ORGANIZER=replace-me", "PRETIX_EVENT=replace-me"]);
+    }
+    if f.transactional_email == TransactionalEmailChoice::Resend {
+        lines.extend(&["# Resend (transactional email — MIT SDK)",
+            "# Use for password resets, order confirmations, and notifications.",
+            "# Sign up at https://resend.com → API Keys → Create API key.",
+            "RESEND_API_KEY=re_replace-me",
+            "RESEND_FROM_EMAIL=noreply@yourdomain.com"]);
     }
     if f.transactional_email == TransactionalEmailChoice::Brevo {
         lines.extend(&["# Brevo (transactional email — SaaS; 300 emails/day free)",

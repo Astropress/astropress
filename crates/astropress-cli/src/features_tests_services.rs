@@ -28,6 +28,15 @@ fn tiledesk_generates_env_stubs() {
     assert!(s.contains("TILEDESK_TOKEN"));
 }
 
+#[test]
+fn chatwoot_generates_env_stubs() {
+    let f = AllFeatures { chat: ChatChoice::Chatwoot, ..AllFeatures::defaults() };
+    let s = feature_env_stubs(&f);
+    assert!(s.contains("CHATWOOT_API_URL"));
+    assert!(s.contains("CHATWOOT_API_TOKEN"));
+    assert!(s.contains("CHATWOOT_WEBSITE_TOKEN"));
+}
+
 // ── payments ──────────────────────────────────────────────────────────
 
 #[test]

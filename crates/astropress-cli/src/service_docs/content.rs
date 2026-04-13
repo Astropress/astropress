@@ -72,6 +72,32 @@ pub(super) const ENV_MEILISEARCH: &str = concat!(
 );
 
 
+// ── Typesense ─────────────────────────────────────────────────────────────────
+
+pub(super) const COMPOSE_TYPESENSE: &str = concat!(
+    "# Typesense — typo-tolerant full-text search (GPL-3.0).\n",
+    "# Single binary, lower memory footprint than Meilisearch.\n",
+    "# Usage: cp .env.typesense.example .env.typesense && docker compose --env-file .env.typesense up -d\n",
+    "services:\n",
+    "  typesense:\n",
+    "    image: typesense/typesense:27.1\n",
+    "    ports:\n",
+    "      - \"8108:8108\"\n",
+    "    environment:\n",
+    "      TYPESENSE_DATA_DIR: /data\n",
+    "      TYPESENSE_API_KEY: \"${TYPESENSE_API_KEY:?set TYPESENSE_API_KEY in .env.typesense}\"\n",
+    "    volumes:\n",
+    "      - typesense_data:/data\n",
+    "    restart: unless-stopped\n",
+    "\n",
+    "volumes:\n",
+    "  typesense_data:\n",
+);
+pub(super) const ENV_TYPESENSE: &str = concat!(
+    "TYPESENSE_API_KEY=change-me-long-random-string\n",
+);
+
+
 // ── Flarum ────────────────────────────────────────────────────────────────────
 
 pub(super) const COMPOSE_FLARUM: &str = concat!(

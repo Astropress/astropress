@@ -214,6 +214,77 @@ pub(super) const ENV_TILEDESK: &str = concat!(
 );
 
 
+// ── Chatwoot ──────────────────────────────────────────────────────────────────
+
+pub(super) const COMPOSE_CHATWOOT: &str = concat!(
+    "# Chatwoot — omnichannel customer support (MIT).\n",
+    "# Usage: cp .env.chatwoot.example .env.chatwoot && docker compose --env-file .env.chatwoot up -d\n",
+    "services:\n",
+    "  chatwoot-server:\n",
+    "    image: chatwoot/chatwoot:latest\n",
+    "    command: bundle exec rails s -p 3000 -b 0.0.0.0\n",
+    "    ports:\n",
+    "      - \"3000:3000\"\n",
+    "    environment:\n",
+    "      RAILS_ENV: production\n",
+    "      SECRET_KEY_BASE: \"${SECRET_KEY_BASE:?set SECRET_KEY_BASE in .env.chatwoot}\"\n",
+    "      DATABASE_URL: \"postgres://chatwoot:${DB_PASSWORD}@db:5432/chatwoot_production\"\n",
+    "      REDIS_URL: \"redis://redis:6379\"\n",
+    "      FRONTEND_URL: \"${CHATWOOT_URL:?set CHATWOOT_URL in .env.chatwoot}\"\n",
+    "    depends_on:\n",
+    "      db:\n",
+    "        condition: service_healthy\n",
+    "      redis:\n",
+    "        condition: service_started\n",
+    "    restart: unless-stopped\n",
+    "\n",
+    "  chatwoot-worker:\n",
+    "    image: chatwoot/chatwoot:latest\n",
+    "    command: bundle exec sidekiq -C config/sidekiq.yml\n",
+    "    environment:\n",
+    "      RAILS_ENV: production\n",
+    "      SECRET_KEY_BASE: \"${SECRET_KEY_BASE}\"\n",
+    "      DATABASE_URL: \"postgres://chatwoot:${DB_PASSWORD}@db:5432/chatwoot_production\"\n",
+    "      REDIS_URL: \"redis://redis:6379\"\n",
+    "    depends_on:\n",
+    "      db:\n",
+    "        condition: service_healthy\n",
+    "      redis:\n",
+    "        condition: service_started\n",
+    "    restart: unless-stopped\n",
+    "\n",
+    "  db:\n",
+    "    image: postgres:16-alpine\n",
+    "    environment:\n",
+    "      POSTGRES_USER: chatwoot\n",
+    "      POSTGRES_PASSWORD: \"${DB_PASSWORD:?set DB_PASSWORD in .env.chatwoot}\"\n",
+    "      POSTGRES_DB: chatwoot_production\n",
+    "    volumes:\n",
+    "      - chatwoot_db:/var/lib/postgresql/data\n",
+    "    healthcheck:\n",
+    "      test: [\"CMD-SHELL\", \"pg_isready -U chatwoot\"]\n",
+    "      interval: 5s\n",
+    "      timeout: 5s\n",
+    "      retries: 5\n",
+    "    restart: unless-stopped\n",
+    "\n",
+    "  redis:\n",
+    "    image: redis:7-alpine\n",
+    "    volumes:\n",
+    "      - chatwoot_redis:/data\n",
+    "    restart: unless-stopped\n",
+    "\n",
+    "volumes:\n",
+    "  chatwoot_db:\n",
+    "  chatwoot_redis:\n",
+);
+pub(super) const ENV_CHATWOOT: &str = concat!(
+    "DB_PASSWORD=change-me\n",
+    "SECRET_KEY_BASE=change-me-long-random-string\n",
+    "CHATWOOT_URL=https://support.yourdomain.com\n",
+);
+
+
 // ── Remark42 ──────────────────────────────────────────────────────────────────
 
 pub(super) const COMPOSE_REMARK42: &str = concat!(

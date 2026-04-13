@@ -91,6 +91,14 @@ fn listmonk_generates_middleware_with_register_service() {
 }
 
 #[test]
+fn resend_generates_env_stubs() {
+    let f = AllFeatures { transactional_email: TransactionalEmailChoice::Resend, ..AllFeatures::defaults() };
+    let s = feature_env_stubs(&f);
+    assert!(s.contains("RESEND_API_KEY"));
+    assert!(s.contains("RESEND_FROM_EMAIL"));
+}
+
+#[test]
 fn brevo_generates_env_stubs() {
     let f = AllFeatures { transactional_email: TransactionalEmailChoice::Brevo, ..AllFeatures::defaults() };
     let s = feature_env_stubs(&f);
@@ -132,6 +140,14 @@ fn remark42_env_stubs() {
 fn pagefind_adds_build_note() {
     let f = AllFeatures { search: SearchChoice::Pagefind, ..AllFeatures::defaults() };
     assert!(feature_env_stubs(&f).to_lowercase().contains("pagefind"));
+}
+
+#[test]
+fn typesense_generates_env_stubs() {
+    let f = AllFeatures { search: SearchChoice::Typesense, ..AllFeatures::defaults() };
+    let s = feature_env_stubs(&f);
+    assert!(s.contains("TYPESENSE_HOST"));
+    assert!(s.contains("TYPESENSE_API_KEY"));
 }
 
 // ── courses ───────────────────────────────────────────────────────────
