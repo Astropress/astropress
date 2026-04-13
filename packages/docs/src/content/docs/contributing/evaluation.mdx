@@ -68,7 +68,6 @@ description: >-
 
 ## Key gaps
 
-- **Rubric 4 / 43:** New passwords use PBKDF2-HMAC-SHA-512, but SHA-256 remains in token/webhook/comment digests and legacy password verification; no post-quantum cryptography is implemented
 - **Rubric 35 (B):** Live hosted-provider coverage still depends on maintainer-owned accounts, seeded projects, and teardown automation; see `HOSTED_E2E_SETUP.md`
 - **Rubric 37:** Transactional email runtime and docs are not fully unified around one canonical provider contract yet
 - **Rubric 44 / 48:** `astropress-nexus` is still API-first; the operator dashboard and bulk-action UX from the A+ plan are not implemented yet
@@ -80,7 +79,7 @@ description: >-
 
 | Rubric | Old | New | Reason |
 |--------|-----|-----|--------|
-| 43 — System Honesty | A+ | A | Public docs and CLI wording overstated parts of the crypto story and hosted-test coverage; current wording is corrected, but the audit is still manual rather than CI-enforced |
+| 43 — System Honesty | A | A | Public docs and CLI wording were corrected, but the honesty audit is still manual rather than CI-enforced |
 | 54 — Test Artifact Cleanup | New | B | Rust CLI tests sweep and delete temp directories, but local repo-level verification can still leave generated `.data/` directories in the worktree |
 
 ## Readiness verdict
@@ -102,12 +101,11 @@ Measures whether the repo's public claims, CLI output, and failure reporting mat
 - README, docs, and CLI wording were audited and corrected where they overstated hosted-provider coverage or cryptography details
 - `HOSTED_E2E_SETUP.md` explicitly states that hosted-provider E2E is not `A+` yet and why
 - The compatibility matrix now states Linux/macOS/Windows as verified and BSD as best-effort
-- Security docs now distinguish PBKDF2-HMAC-SHA-512 password hashing for new passwords from the remaining SHA-256 token, webhook, comment-email, and legacy-password paths
+- Security docs now describe the actual crypto stack: Argon2id password hashing, KMAC256 token/privacy digests, and ML-DSA-65 webhook signatures
 
 ### What keeps this from an A+
 
 - Public-claim review is still a manual audit, not a generated or CI-enforced truth check
-- The repo still contains conventional SHA-256 paths and no post-quantum cryptography, so security wording must stay precise to avoid overclaiming
 
 ## Rubric 45 — Scaffold Quality Carryover
 
@@ -119,7 +117,7 @@ Measures how much of the framework's built-in quality, security, accessibility, 
 
 | Dimension | What you get for free |
 |---|---|
-| **Admin security** | Zero-Trust Admin (ZTA) wrappers on every action handler; session hardening; rate-limited login; PBKDF2-HMAC-SHA-512 for new password hashes; CSRF tokens on all admin forms |
+| **Admin security** | Zero-Trust Admin (ZTA) wrappers on every action handler; session hardening; rate-limited login; Argon2id password hashing; KMAC256 token digests; CSRF tokens on all admin forms |
 | **Input validation** | All admin form inputs are validated and HTML-sanitized before persistence; SQL injection surface is contained to adapter layer |
 | **Admin accessibility** | WCAG 2.2 AA admin panel with keyboard navigation, ARIA live regions, focus traps, and screen-reader-tested components |
 | **Privacy defaults** | No third-party analytics, no telemetry; structured GDPR right-of-erasure SQL included |

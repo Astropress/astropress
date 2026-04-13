@@ -17,6 +17,7 @@ import { createSqliteLocksOps } from "./sqlite-runtime/locks";
 import { createSqlitePurgeOps } from "./sqlite-runtime/purge";
 import type { SiteSettings } from "./site-settings";
 import type { AdminStoreAdapter, ContentRecord, SessionUser, Actor } from "./persistence-types";
+import { getAstropressRootSecret } from "./runtime-env";
 
 type AdminRole = SessionUser["role"];
 
@@ -45,6 +46,7 @@ export interface AstropressSqliteAdminRuntimeOptions {
   sessionTtlMs?: number;
   now?: () => number;
   randomId?: () => string;
+  rootSecret?: string;
 }
 
 const DEFAULT_SESSION_TTL_MS = 12 * 60 * 60 * 1000;
@@ -54,10 +56,11 @@ export function createAstropressSqliteAdminRuntime(options: AstropressSqliteAdmi
   const sessionTtlMs = options.sessionTtlMs ?? DEFAULT_SESSION_TTL_MS;
   const now = options.now ?? (() => Date.now());
   const randomId = options.randomId ?? (() => crypto.randomUUID());
+  const rootSecret = options.rootSecret ?? getAstropressRootSecret();
 
   const { sqliteUserRepository, sqliteAuthRepository, getPersistedAuditEvents } = createSqliteAuthStore(
     getDb,
-    { sessionTtlMs, now, randomId },
+    { sessionTtlMs, now, randomId, rootSecret },
   );
   const { sqliteRedirectRepository, sqliteCommentRepository, sqliteTranslationRepository, sqliteSettingsRepository } = createSqliteSettingsStore(getDb);
 

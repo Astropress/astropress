@@ -57,4 +57,4 @@ WordPress importer (staged artifacts; SQLite apply supported).
 
 ### Security
 
-CSRF protection, origin validation, HTML sanitization, PBKDF2 session hashing, area-specific CSP headers, rate limiting, audit trail.
+CSRF protection, origin validation, HTML sanitization, Argon2id password hashing, KMAC256 token digests, area-specific CSP headers, rate limiting, audit trail.

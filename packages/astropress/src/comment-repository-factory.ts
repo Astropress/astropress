@@ -1,4 +1,5 @@
 import type { Actor, CommentPolicy, CommentRecord, CommentRepository, CommentStatus } from "./persistence-types";
+import { createKmacDigest } from "./crypto-primitives";
 
 /**
  * Hash a comment author's email address with a site-specific salt (GDPR Article 25 —
@@ -9,10 +10,7 @@ import type { Actor, CommentPolicy, CommentRecord, CommentRepository, CommentSta
  * @param siteSalt  Site-specific secret (e.g. `getCmsConfig().sessionSecret`).
  */
 export async function hashCommentEmail(email: string, siteSalt: string): Promise<string> {
-  const encoder = new TextEncoder();
-  const data = encoder.encode(email + siteSalt);
-  const hashBuffer = await crypto.subtle.digest("SHA-256", data);
-  return Array.from(new Uint8Array(hashBuffer), (b) => b.toString(16).padStart(2, "0")).join("");
+  return createKmacDigest(email.trim().toLowerCase(), siteSalt, "comment-email");
 }
 
 export interface AstropressCommentRepositoryInput {
@@ -29,7 +27,7 @@ export interface AstropressCommentRepositoryInput {
   /**
    * Site-specific salt used to hash comment author emails before storage.
    * When provided, `submitPublicComment` replaces the raw email with a
-   * SHA-256 hex digest so no recoverable email address is persisted.
+   * KMAC256 hex digest so no recoverable email address is persisted.
    *
    * Pass `getCmsConfig().sessionSecret` here in production.
    */

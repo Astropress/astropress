@@ -28,13 +28,14 @@ interface AuthStoreOptions {
   sessionTtlMs: number;
   now: () => number;
   randomId: () => string;
+  rootSecret: string;
 }
 
 export function createSqliteAuthStore(
   getDb: () => AstropressSqliteDatabaseLike,
   options: AuthStoreOptions,
 ) {
-  const { sessionTtlMs, now, randomId } = options;
+  const { sessionTtlMs, now, randomId, rootSecret } = options;
 
   function getPersistedAuditEvents() {
     const rows = getDb()
@@ -132,7 +133,7 @@ export function createSqliteAuthStore(
   const sqliteUserRepository = createAstropressUserRepository({
     listAdminUsers,
     hashPassword: hashPasswordSync,
-    hashOpaqueToken,
+    hashOpaqueToken: (value) => hashOpaqueToken(value, rootSecret),
     findAdminUserByEmail(email: string) {
       return (getDb().prepare("SELECT id FROM admin_users WHERE email = ? LIMIT 1").get(email) as { id: number } | undefined) ?? null;
     },
@@ -198,7 +199,7 @@ export function createSqliteAuthStore(
     sessionTtlMs,
     now,
     randomId,
-    hashOpaqueToken,
+    hashOpaqueToken: (value) => hashOpaqueToken(value, rootSecret),
     hashPassword: hashPasswordSync,
     verifyPassword: verifyPasswordSync,
     cleanupExpiredSessions,

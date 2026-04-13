@@ -10,14 +10,14 @@ Feature: Webhook dispatch for real-time event notifications
   Scenario: Admin registers a webhook for content publish events
     Given the user is logged in as an admin
     When the admin creates a webhook pointing to "https://example.com/hook" for event "content.published"
-    Then a signing secret is displayed exactly once
+    Then a verification key bundle is displayed exactly once
     And the webhook is listed on the webhooks page
 
   Scenario: Webhook receives a signed payload when content is published
     Given a webhook is registered for event "content.published"
     When a piece of content is published via the REST API
     Then the webhook URL receives a POST request
-    And the request includes an X-Astropress-Signature header with a valid HMAC-SHA256 signature
+    And the request includes an X-Astropress-Signature header with a valid ML-DSA-65 signature
     And the payload contains the published content record
 
   Scenario: Webhook failure does not block the originating operation

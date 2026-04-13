@@ -33,10 +33,16 @@ export interface RuntimeBindings {
   LISTMONK_API_PASSWORD?: string;
   LISTMONK_LIST_ID?: string;
   EMAIL_DELIVERY_MODE?: string;
+  SMTP_HOST?: string;
+  SMTP_PORT?: string;
+  SMTP_USERNAME?: string;
+  SMTP_PASSWORD?: string;
+  SMTP_FROM_EMAIL?: string;
   ADMIN_PASSWORD?: string;
   EDITOR_PASSWORD?: string;
   ADMIN_BOOTSTRAP_DISABLED?: string;
   ADMIN_DB_PATH?: string;
+  ASTROPRESS_ROOT_SECRET?: string;
   SESSION_SECRET?: string;
   LOCAL_IMAGE_ROOT?: string;
   LOGIN_MAX_ATTEMPTS?: string;
@@ -96,10 +102,21 @@ export function getNewsletterConfig(locals?: App.Locals | null) {
 export function getTransactionalEmailConfig(locals?: App.Locals | null) {
   return {
     mode: getStringRuntimeValue("EMAIL_DELIVERY_MODE", locals) ?? "mock",
-    apiKey: getStringRuntimeValue("RESEND_API_KEY", locals),
-    from: getStringRuntimeValue("RESEND_FROM_EMAIL", locals),
+    resendApiKey: getStringRuntimeValue("RESEND_API_KEY", locals),
+    resendFrom: getStringRuntimeValue("RESEND_FROM_EMAIL", locals),
+    smtpHost: getStringRuntimeValue("SMTP_HOST", locals),
+    smtpPort: getStringRuntimeValue("SMTP_PORT", locals),
+    smtpUsername: getStringRuntimeValue("SMTP_USERNAME", locals),
+    smtpPassword: getStringRuntimeValue("SMTP_PASSWORD", locals),
+    smtpFrom: getStringRuntimeValue("SMTP_FROM_EMAIL", locals),
     contactDestination: getStringRuntimeValue("CONTACT_NOTIFICATION_TO_EMAIL", locals),
   };
+}
+
+export function getAstropressRootSecret(locals?: App.Locals | null) {
+  return getStringRuntimeValue("ASTROPRESS_ROOT_SECRET", locals)
+    ?? getStringRuntimeValue("SESSION_SECRET", locals)
+    ?? "astropress-dev-root-secret";
 }
 
 export function getAdminBootstrapConfig(locals?: App.Locals | null) {
@@ -111,6 +128,7 @@ export function getAdminBootstrapConfig(locals?: App.Locals | null) {
     editorPassword,
     bootstrapDisabled: getStringRuntimeValue("ADMIN_BOOTSTRAP_DISABLED", locals) === "1",
     adminDbPath: getStringRuntimeValue("ADMIN_DB_PATH", locals),
+    rootSecret: getAstropressRootSecret(locals),
     sessionSecret: getStringRuntimeValue("SESSION_SECRET", locals),
   };
 }

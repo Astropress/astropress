@@ -1,5 +1,5 @@
-import { createHash } from "node:crypto";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { createKmacDigest } from "../src/crypto-primitives.js";
 import { createAstropressSqliteAdminRuntime } from "../src/sqlite-admin-runtime.js";
 import { createRuntimeFixture, makePasswordHash, type RuntimeFixture } from "./helpers/sqlite-admin-runtime-fixture.js";
 import { hashPassword, isLegacyHash, verifyPassword } from "../src/crypto-utils.js";
@@ -163,7 +163,7 @@ describe("auth", () => {
     fixture.store.users.inviteAdminUser({ email: "invite-flow@test.local", role: "editor", name: "Invite Flow" }, fixture.actor);
 
     const inviteRawToken = "test-invite-raw-token-xyz";
-    const tokenHash = createHash("sha256").update(inviteRawToken).digest("hex");
+    const tokenHash = createKmacDigest(inviteRawToken, "astropress-dev-root-secret", "sqlite-opaque-token");
     const invitedUserId = (fixture.db.prepare("SELECT id FROM admin_users WHERE email = 'invite-flow@test.local'").get() as { id: number }).id;
     fixture.db.prepare("INSERT INTO user_invites (id, user_id, token_hash, expires_at, invited_by) VALUES (?, ?, ?, datetime('now', '+7 days'), ?)").run(
       "invite-flow-1", invitedUserId, tokenHash, "admin@test.local",
@@ -222,53 +222,47 @@ describe("auth additional branches", () => {
   });
 });
 
-// ─── Password hashing — v2 (SHA-512) and legacy (SHA-256) compatibility ───────
+// ─── Password hashing — Argon2id with explicit legacy cutoff ─────────────────
 
 // Use reduced iterations in tests to keep run time under 5 s while still exercising
 // the same code paths. The stored format embeds the iteration count, so verifyPassword
 // reads it back and uses the same value — the round-trip is still fully verified.
-const TEST_ITERATIONS = 1_000;
+const TEST_ITERATIONS = 1;
 
 describe("password hashing", () => {
-  it("hashPassword produces a v2: prefixed hash", async () => {
+  it("hashPassword produces an Argon2id-prefixed hash", async () => {
     const hash = await hashPassword("my-secret-password", 32, TEST_ITERATIONS);
-    expect(hash.startsWith("v2:")).toBe(true);
+    expect(hash.startsWith("v3:argon2id$")).toBe(true);
   });
 
-  it("hashPassword encodes the iteration count in the stored string", async () => {
+  it("hashPassword encodes the work factor in the stored string", async () => {
     const hash = await hashPassword("password", 32, TEST_ITERATIONS);
-    // format: v2:<iterations>$<salt>$<hash>
-    const [iters] = hash.slice("v2:".length).split("$");
+    const [, iters] = hash.split("$");
     expect(Number(iters)).toBe(TEST_ITERATIONS);
   });
 
-  it("isLegacyHash returns false for a v2 hash", async () => {
+  it("isLegacyHash returns false for an Argon2id hash", async () => {
     const hash = await hashPassword("password", 32, TEST_ITERATIONS);
     expect(isLegacyHash(hash)).toBe(false);
   });
 
-  it("isLegacyHash returns true for a legacy SHA-256 hash", () => {
-    const legacyHash = makePasswordHash("password");
+  it("isLegacyHash returns true for a pre-Argon2 password format", () => {
+    const legacyHash = "600000$c2FsdA==$aGFzaA==";
     expect(isLegacyHash(legacyHash)).toBe(true);
   });
 
-  it("verifyPassword returns true for a correct v2 password", async () => {
-    const hash = await hashPassword("correct-v2-password", 32, TEST_ITERATIONS);
-    expect(await verifyPassword("correct-v2-password", hash)).toBe(true);
+  it("verifyPassword returns true for a correct Argon2id password", async () => {
+    const hash = await hashPassword("correct-password", 32, TEST_ITERATIONS);
+    expect(await verifyPassword("correct-password", hash)).toBe(true);
   });
 
-  it("verifyPassword returns false for a wrong v2 password", async () => {
-    const hash = await hashPassword("correct-v2-password", 32, TEST_ITERATIONS);
+  it("verifyPassword returns false for a wrong Argon2id password", async () => {
+    const hash = await hashPassword("correct-password", 32, TEST_ITERATIONS);
     expect(await verifyPassword("wrong-password", hash)).toBe(false);
   });
 
-  it("verifyPassword returns true for a correct legacy SHA-256 password", async () => {
-    const legacyHash = makePasswordHash("legacy-password");
-    expect(await verifyPassword("legacy-password", legacyHash)).toBe(true);
-  });
-
-  it("verifyPassword returns false for a wrong legacy SHA-256 password", async () => {
-    const legacyHash = makePasswordHash("legacy-password");
+  it("verifyPassword returns false for a legacy pre-Argon2 password", async () => {
+    const legacyHash = "600000$c2FsdA==$aGFzaA==";
     expect(await verifyPassword("wrong-password", legacyHash)).toBe(false);
   });
 

@@ -1,16 +1,10 @@
-import { createHash } from "node:crypto";
 import { DatabaseSync } from "node:sqlite";
 import { describe, expect, it } from "vitest";
 
 import { createApiTokenStore } from "../src/sqlite-runtime/api-tokens.js";
 import type { ApiScope, ApiTokenRecord, ApiTokenStore } from "../src/platform-contracts";
+import { hashOpaqueToken } from "../src/sqlite-runtime/utils.js";
 import { makeDb } from "./helpers/make-db.js";
-
-// ─── Helpers ─────────────────────────────────────────────────────────────────
-
-function sha256(input: string) {
-  return createHash("sha256").update(input).digest("hex");
-}
 
 // ─── ApiTokenRecord shape ─────────────────────────────────────────────────────
 
@@ -75,7 +69,7 @@ describe("ApiTokenStore SQLite implementation", () => {
 
     // Hash stored, not raw token
     const row = db.prepare("SELECT token_hash FROM api_tokens WHERE id = ?").get(record.id) as { token_hash: string };
-    expect(row.token_hash).toBe(sha256(rawToken));
+    expect(row.token_hash).toBe(hashOpaqueToken(rawToken));
     expect(row.token_hash).not.toBe(rawToken);
   });
 

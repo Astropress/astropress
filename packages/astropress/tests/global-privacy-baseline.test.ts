@@ -142,11 +142,11 @@ describe("global privacy: security measures for stored data", () => {
     expect(apiTokensTable).not.toMatch(/\btoken\s+TEXT\b/i);
   });
 
-  it("crypto utilities use PBKDF2 or comparable KDF for password hashing", () => {
+  it("crypto utilities use Argon2 or a comparable KDF for password hashing", () => {
     const cryptoUtils = readFileSync(path.join(srcRoot, "crypto-utils.ts"), "utf8");
-    // Must use PBKDF2, bcrypt, argon2, or scrypt — not MD5, SHA-1, or raw SHA-256
+    // Must use argon2, bcrypt, or scrypt — not MD5 or raw SHA hashing.
     expect(cryptoUtils, "passwords must use a proper KDF, not raw SHA hashing").toMatch(
-      /pbkdf2|bcrypt|argon2|scrypt/i,
+      /bcrypt|argon2|scrypt/i,
     );
     expect(cryptoUtils, "password hashing must not use MD5").not.toMatch(/createHash\s*\(\s*["']md5["']\)/i);
     expect(cryptoUtils, "password hashing must not use raw SHA-1").not.toMatch(/createHash\s*\(\s*["']sha1["']\)/i);

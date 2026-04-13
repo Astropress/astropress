@@ -237,13 +237,13 @@ All are light DOM, zero-dependency, attribute-driven, and progressively enhanced
 - **CSRF**: `isTrustedRequestOrigin()` checks Origin + Referer headers
 - **Cookies**: `__Host-` prefix with Secure flag
 - **CSP**: area-aware (public / admin / auth / api) with appropriate strictness per area
-- **Sessions**: HMAC-SHA-256 digested at rest, TTL-enforced, server-side revocable
+- **Sessions**: KMAC256-digested at rest, TTL-enforced, server-side revocable
 - **Rate limiting**: per-key with configurable windows
 - **HTML sanitization**: custom allowlist parser; force-adds `rel="noopener noreferrer"`
 - **API tokens**: hashed at rest; raw token shown once on creation
 - **Audit trail**: immutable `audit_events` table with `X-Request-Id` correlation
 - **ZTA**: `withAdminFormAction` / `requireAdminFormAction` enforced on all admin actions
-- **Privacy**: comment emails SHA-256 hashed; no IP storage; no default analytics; DNT/GPC honored
+- **Privacy**: comment emails KMAC256-digested; no IP storage; no default analytics; DNT/GPC honored
 - **Scanning**: ZAP baseline, CodeQL, Semgrep, Gitleaks in CI
 
 ## Plugin / Extension API

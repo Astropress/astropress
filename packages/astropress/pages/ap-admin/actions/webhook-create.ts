@@ -24,6 +24,8 @@ export const POST: APIRoute = async (context) =>
     const store = await loadLocalAdminStore();
     if (!store.webhooks) return fail("Webhook store is not available.");
 
-    const { record, signingSecret } = await store.webhooks.create({ url, events });
-    return redirect(`/ap-admin/webhooks?created=1&webhookId=${encodeURIComponent(record.id)}&secret=${encodeURIComponent(signingSecret)}`);
+    const { record, verification } = await store.webhooks.create({ url, events });
+    return redirect(
+      `/ap-admin/webhooks?created=1&webhookId=${encodeURIComponent(record.id)}&algorithm=${encodeURIComponent(verification.algorithm)}&publicKey=${encodeURIComponent(verification.publicKey)}`,
+    );
   });

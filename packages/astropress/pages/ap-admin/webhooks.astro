@@ -13,7 +13,8 @@ const webhooks = store.webhooks ? await store.webhooks.list() : [];
 
 const wasCreated = Astro.url.searchParams.get("created") === "1";
 const wasDeleted = Astro.url.searchParams.get("deleted") === "1";
-const createdSecret = wasCreated ? Astro.url.searchParams.get("secret") : null;
+const createdAlgorithm = wasCreated ? Astro.url.searchParams.get("algorithm") : null;
+const createdPublicKey = wasCreated ? Astro.url.searchParams.get("publicKey") : null;
 const errorMessage = Astro.url.searchParams.get("error") === "1" ? Astro.url.searchParams.get("message") : null;
 
 const ALL_EVENTS = ["content.published", "content.updated", "content.deleted", "media.uploaded", "media.deleted"] as const;
@@ -30,12 +31,12 @@ const ALL_EVENTS = ["content.published", "content.updated", "content.deleted", "
   {wasDeleted && <p class="notice">Webhook deleted successfully.</p>}
   {errorMessage && <p class="error-notice">{errorMessage}</p>}
 
-  {wasCreated && createdSecret && (
+  {wasCreated && createdAlgorithm && createdPublicKey && (
     <div class="panel notice" style="border-left: 4px solid var(--color-success, green); padding: 1rem;">
-      <strong>Webhook created.</strong> Copy this signing secret now — it will not be shown again.
+      <strong>Webhook created.</strong> Copy this verification bundle now — it will not be shown again.
       Use it to verify the <code>X-Astropress-Signature</code> header on incoming webhook requests.
       <br />
-      <code style="word-break: break-all; font-size: 0.9em;">{createdSecret}</code>
+      <code style="word-break: break-all; font-size: 0.9em;">{JSON.stringify({ algorithm: createdAlgorithm, publicKey: createdPublicKey })}</code>
     </div>
   )}
 

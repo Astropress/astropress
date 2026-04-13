@@ -1,16 +1,16 @@
 import { hashPassword } from "./crypto-utils";
+import { createKmacDigest } from "./crypto-primitives";
 import type { Actor } from "./persistence-types";
 import { getAdminDb, withLocalStoreFallback } from "./admin-store-dispatch";
 import { normalizeEmail } from "./admin-normalizers";
 import { recordD1Audit } from "./d1-audit";
+import { getAstropressRootSecret } from "./runtime-env";
 
 // ─── Password reset — extracted to runtime-actions-password-reset.ts ──────────
 export { createRuntimePasswordResetToken, getRuntimePasswordResetRequest, consumeRuntimePasswordResetToken } from "./runtime-actions-password-reset";
 
 async function hashOpaqueToken(token: string) {
-  const encoded = new TextEncoder().encode(token);
-  const digest = await crypto.subtle.digest("SHA-256", encoded);
-  return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, "0")).join("");
+  return createKmacDigest(token, getAstropressRootSecret(), "invite-token");
 }
 
 async function getD1InviteToken(rawToken: string, locals?: App.Locals | null) {

@@ -19,6 +19,7 @@ interface EmailMessage {
 
 import { getTransactionalEmailConfig, isProductionRuntime } from "./runtime-env";
 import { peekCmsConfig } from "./config";
+import nodemailer from "nodemailer";
 
 function escapeHtml(str: string): string {
   return str
@@ -30,11 +31,11 @@ function escapeHtml(str: string): string {
 }
 
 function isMockMode(locals?: App.Locals | null) {
-  return getTransactionalEmailConfig(locals).mode !== "resend";
+  return getTransactionalEmailConfig(locals).mode === "mock";
 }
 
 async function sendResendEmail(message: EmailMessage, locals?: App.Locals | null): Promise<EmailResult> {
-  const { apiKey, from } = getTransactionalEmailConfig(locals);
+  const { resendApiKey: apiKey, resendFrom: from } = getTransactionalEmailConfig(locals);
 
   if (!apiKey || !from) {
     if (isProductionRuntime()) {
@@ -79,6 +80,59 @@ async function sendResendEmail(message: EmailMessage, locals?: App.Locals | null
   return { ok: true, delivered: true };
 }
 
+async function sendSmtpEmail(message: EmailMessage, locals?: App.Locals | null): Promise<EmailResult> {
+  const config = getTransactionalEmailConfig(locals);
+  const host = config.smtpHost;
+  const from = config.smtpFrom;
+  const port = Number.parseInt(config.smtpPort ?? "587", 10);
+
+  if (!host || !from || !port) {
+    if (isProductionRuntime()) {
+      return { ok: false, delivered: false, error: "SMTP transactional email is not configured." };
+    }
+
+    return {
+      ok: true,
+      delivered: false,
+      preview: {
+        to: message.to,
+        subject: message.subject,
+        html: message.html,
+      },
+    };
+  }
+
+  try {
+    const transporter = nodemailer.createTransport({
+      host,
+      port,
+      secure: port === 465,
+      auth: config.smtpUsername || config.smtpPassword
+        ? {
+            user: config.smtpUsername,
+            pass: config.smtpPassword,
+          }
+        : undefined,
+    });
+
+    await transporter.sendMail({
+      from,
+      to: message.to,
+      subject: message.subject,
+      html: message.html,
+      text: message.text,
+    });
+
+    return { ok: true, delivered: true };
+  } catch (error) {
+    return {
+      ok: false,
+      delivered: false,
+      error: error instanceof Error ? error.message : "SMTP delivery failed.",
+    };
+  }
+}
+
 export async function sendTransactionalEmail(message: EmailMessage, locals?: App.Locals | null): Promise<EmailResult> {
   if (isMockMode(locals)) {
     return {
@@ -90,6 +144,10 @@ export async function sendTransactionalEmail(message: EmailMessage, locals?: App
         html: message.html,
       },
     };
+  }
+
+  if (getTransactionalEmailConfig(locals).mode === "smtp") {
+    return sendSmtpEmail(message, locals);
   }
 
   return sendResendEmail(message, locals);

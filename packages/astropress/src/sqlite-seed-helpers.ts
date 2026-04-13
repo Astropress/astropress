@@ -1,11 +1,9 @@
-import { pbkdf2Sync, randomBytes } from "node:crypto";
 import type { SqliteDatabaseLike } from "./sqlite-bootstrap.js";
+import { hashPasswordArgon2id } from "./crypto-primitives";
 import { getTableColumns } from "./sqlite-schema-compat.js";
 
-export function hashPasswordSync(password: string, iterations = 100_000) {
-  const salt = randomBytes(32);
-  const derived = pbkdf2Sync(password, salt, iterations, 64, "sha256");
-  return `${iterations}$${salt.toString("base64")}$${derived.toString("base64")}`;
+export function hashPasswordSync(password: string, iterations = 2) {
+  return hashPasswordArgon2id(password, { iterations });
 }
 
 export function guessMimeType(pathname: string) {

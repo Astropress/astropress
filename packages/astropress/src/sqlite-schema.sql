@@ -349,7 +349,7 @@ CREATE TABLE IF NOT EXISTS api_tokens (
 CREATE INDEX IF NOT EXISTS idx_api_tokens_token_hash ON api_tokens(token_hash);
 CREATE INDEX IF NOT EXISTS idx_api_tokens_revoked_at ON api_tokens(revoked_at);
 
--- Webhooks (signing secret hashed at rest; shown once on creation)
+-- Webhooks (ML-DSA verification key shown once on creation; private key stored server-side)
 CREATE TABLE IF NOT EXISTS webhooks (
   id TEXT PRIMARY KEY,
   url TEXT NOT NULL,

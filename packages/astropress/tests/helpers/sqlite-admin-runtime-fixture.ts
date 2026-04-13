@@ -1,5 +1,5 @@
-import { pbkdf2Sync, randomBytes } from "node:crypto";
 import { DatabaseSync } from "node:sqlite";
+import { hashPasswordArgon2id } from "../../src/crypto-primitives.js";
 import { createAstropressSqliteAdminRuntime } from "../../src/sqlite-admin-runtime.js";
 import { readAstropressSqliteSchemaSql } from "../../src/sqlite-bootstrap.js";
 
@@ -12,10 +12,7 @@ export type RuntimeFixture = {
 };
 
 export function makePasswordHash(password: string): string {
-  const iterations = 100_000;
-  const salt = randomBytes(32);
-  const derived = pbkdf2Sync(password, salt, iterations, 64, "sha256");
-  return `${iterations}$${salt.toString("base64")}$${derived.toString("base64")}`;
+  return hashPasswordArgon2id(password, { iterations: 2 });
 }
 
 /**

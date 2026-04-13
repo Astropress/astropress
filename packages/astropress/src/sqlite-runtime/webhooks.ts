@@ -1,21 +1,19 @@
-import { createHmac, randomBytes } from "node:crypto";
+import { randomBytes } from "node:crypto";
 import type { WebhookEvent, WebhookRecord, WebhookStore } from "../platform-contracts";
 import type { AstropressSqliteDatabaseLike } from "./utils";
 import { createLogger } from "../runtime-logger";
+import { createMlDsaKeyPair, secretKeyToBase64, signMlDsaMessage } from "../crypto-primitives";
 
 const logger = createLogger("Webhook");
 
-// Webhook signing secrets are stored in plain text because they are needed
-// to compute outgoing HMAC signatures. This is the standard approach used by
-// GitHub, Stripe, and other services. The secret is shown to the admin once;
-// the DB holds the same value for use when signing dispatched requests.
-// The column is named secret_hash for backwards-compat with the schema DDL.
+// The historical secret_hash column stores the ML-DSA-65 private signing key
+// in base64 form. The verification key is returned once at creation time.
 
 interface WebhookRow {
   id: string;
   url: string;
   events: string;
-  secret_hash: string; // stores the raw signing secret (field naming is historical)
+  secret_hash: string; // stores the ML-DSA secret key (field naming is historical)
   active: number;
   created_at: string;
   last_fired_at: string | null;
@@ -45,12 +43,12 @@ export function createWebhookStore(db: AstropressSqliteDatabaseLike, fetchImpl: 
 
     async create({ url, events }) {
       const id = `wh_${randomBytes(12).toString("hex")}`;
-      const signingSecret = randomBytes(32).toString("hex");
+      const keyPair = createMlDsaKeyPair(id, randomBytes(32));
       const now = new Date().toISOString();
 
       db.prepare(
         "INSERT INTO webhooks (id, url, events, secret_hash, active, created_at) VALUES (?, ?, ?, ?, 1, ?)",
-      ).run(id, url, JSON.stringify(events), signingSecret, now);
+      ).run(id, url, JSON.stringify(events), secretKeyToBase64(keyPair.secretKey), now);
 
       const record: WebhookRecord = {
         id,
@@ -61,7 +59,7 @@ export function createWebhookStore(db: AstropressSqliteDatabaseLike, fetchImpl: 
         lastFiredAt: null,
       };
 
-      return { record, signingSecret };
+      return { record, verification: keyPair.verification };
     },
 
     async delete(id) {
@@ -88,7 +86,7 @@ export function createWebhookStore(db: AstropressSqliteDatabaseLike, fetchImpl: 
 
       await Promise.allSettled(
         subscribers.map(async (row) => {
-          const signature = `sha256=${createHmac("sha256", row.secret_hash).update(bodyText).digest("hex")}`;
+          const signature = signMlDsaMessage(bodyText, row.secret_hash);
           try {
             await fetchImpl(new Request(row.url, {
               method: "POST",
@@ -96,6 +94,8 @@ export function createWebhookStore(db: AstropressSqliteDatabaseLike, fetchImpl: 
                 "Content-Type": "application/json",
                 "X-Astropress-Event": event,
                 "X-Astropress-Signature": signature,
+                "X-Astropress-Signature-Alg": "ML-DSA-65",
+                "X-Astropress-Key-Id": row.id,
               },
               body: bodyText,
             }));

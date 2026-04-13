@@ -154,7 +154,15 @@ export interface WebhookRecord {
 
 export interface WebhookStore {
   list(): Promise<WebhookRecord[]>;
-  create(input: { url: string; events: WebhookEvent[] }): Promise<{ record: WebhookRecord; signingSecret: string }>;
+  create(input: { url: string; events: WebhookEvent[] }): Promise<{
+    record: WebhookRecord;
+    verification: {
+      algorithm: "ML-DSA-65";
+      keyId: string;
+      publicKey: string;
+      encoding: "base64";
+    };
+  }>;
   delete(id: string): Promise<void>;
   dispatch(event: WebhookEvent, payload: unknown): Promise<void>;
 }

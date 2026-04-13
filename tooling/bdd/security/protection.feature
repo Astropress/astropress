@@ -27,5 +27,5 @@ Feature: Site security and bot protection
   Scenario: Comment author email is hashed before storage
     Given a visitor submits a comment with their email address
     When the comment repository stores the submission with a site session salt
-    Then the stored email field is a 64-character SHA-256 hex digest
+    Then the stored email field is a 64-character keyed digest
     And the raw email address is not present anywhere in the stored record

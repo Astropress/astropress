@@ -2,15 +2,15 @@
 // Extracted from runtime-actions-users.ts to keep that file under the 400-line limit.
 
 import { hashPassword } from "./crypto-utils";
+import { createKmacDigest } from "./crypto-primitives";
 import type { Actor } from "./persistence-types";
 import { getAdminDb, withLocalStoreFallback } from "./admin-store-dispatch";
 import { normalizeEmail } from "./admin-normalizers";
 import { recordD1Audit } from "./d1-audit";
+import { getAstropressRootSecret } from "./runtime-env";
 
 async function hashOpaqueToken(token: string) {
-  const encoded = new TextEncoder().encode(token);
-  const digest = await crypto.subtle.digest("SHA-256", encoded);
-  return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, "0")).join("");
+  return createKmacDigest(token, getAstropressRootSecret(), "password-reset-token");
 }
 
 async function getD1PasswordResetToken(rawToken: string, locals?: App.Locals | null) {

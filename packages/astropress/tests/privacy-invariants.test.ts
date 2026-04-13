@@ -228,7 +228,7 @@ import { createAstropressCommentRepository, hashCommentEmail } from "../src/comm
 import { vi } from "vitest";
 
 describe("comment author email hashing", () => {
-  it("hashCommentEmail produces a 64-char SHA-256 hex digest", async () => {
+  it("hashCommentEmail produces a 64-char KMAC256 hex digest", async () => {
     const digest = await hashCommentEmail("author@example.com", "test-salt");
     expect(digest).toMatch(/^[a-f0-9]{64}$/);
   });
@@ -274,7 +274,7 @@ describe("comment author email hashing", () => {
     });
 
     expect(result.ok).toBe(true);
-    // The stored email must be a SHA-256 hex digest, never the raw address
+    // The stored email must be a deterministic keyed digest, never the raw address
     expect(insertedComments[0]?.email).toMatch(/^[a-f0-9]{64}$/);
     expect(insertedComments[0]?.email).not.toContain("alice");
   });

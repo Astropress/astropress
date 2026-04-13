@@ -1,7 +1,7 @@
-import { createHmac } from "node:crypto";
 import { DatabaseSync } from "node:sqlite";
 import { describe, expect, it, vi } from "vitest";
 
+import { verifyMlDsaMessage } from "../src/crypto-primitives.js";
 import { createWebhookStore } from "../src/sqlite-runtime/webhooks.js";
 import type { WebhookEvent, WebhookRecord, WebhookStore } from "../src/platform-contracts";
 import { makeDb } from "./helpers/make-db.js";
@@ -42,23 +42,25 @@ describe("WebhookRecord shape", () => {
 });
 
 describe("WebhookStore SQLite implementation", () => {
-  it("create: returns signing secret (stored for outbound HMAC signing)", async () => {
+  it("create: returns a one-time ML-DSA verification bundle", async () => {
     const db = makeDb();
     const store = createWebhookStore(db, fetch);
 
-    const { record, signingSecret } = await store.create({
+    const { record, verification } = await store.create({
       url: "https://example.com/hook",
       events: ["content.published"],
     });
 
-    expect(signingSecret.length).toBeGreaterThanOrEqual(32);
+    expect(verification.algorithm).toBe("ML-DSA-65");
+    expect(verification.keyId).toBe(record.id);
+    expect(verification.publicKey.length).toBeGreaterThan(100);
     expect(record.url).toBe("https://example.com/hook");
     expect(record.events).toEqual(["content.published"]);
     expect(record.active).toBe(true);
 
-    // Secret is stored (needed for HMAC signing of outbound requests)
+    // The private signing key is stored server-side; the public key is returned once.
     const row = db.prepare("SELECT secret_hash FROM webhooks WHERE id = ?").get(record.id) as { secret_hash: string };
-    expect(row.secret_hash).toBe(signingSecret);
+    expect(row.secret_hash).not.toBe(verification.publicKey);
   });
 
   it("list: returns only active (non-deleted) webhooks", async () => {
@@ -85,7 +87,7 @@ describe("WebhookStore SQLite implementation", () => {
     expect(row.deleted_at).not.toBeNull();
   });
 
-  it("dispatch: sends POST with HMAC-SHA256 signature header", async () => {
+  it("dispatch: sends POST with ML-DSA-65 signature headers", async () => {
     const db = makeDb();
     let capturedRequest: Request | undefined;
     const mockFetch = async (req: Request) => {
@@ -94,7 +96,7 @@ describe("WebhookStore SQLite implementation", () => {
     };
 
     const store = createWebhookStore(db, mockFetch as typeof fetch);
-    const { signingSecret } = await store.create({
+    const { record, verification } = await store.create({
       url: "https://hooks.example.com/receive",
       events: ["content.published"],
     });
@@ -106,12 +108,12 @@ describe("WebhookStore SQLite implementation", () => {
     expect(capturedRequest!.method).toBe("POST");
 
     const sig = capturedRequest!.headers.get("x-astropress-signature");
-    expect(sig).toMatch(/^sha256=/);
+    expect(sig).toBeTruthy();
+    expect(capturedRequest!.headers.get("x-astropress-signature-alg")).toBe("ML-DSA-65");
+    expect(capturedRequest!.headers.get("x-astropress-key-id")).toBe(record.id);
 
-    // Verify HMAC
     const body = await capturedRequest!.clone().text();
-    const expectedHmac = createHmac("sha256", signingSecret).update(body).digest("hex");
-    expect(sig).toBe(`sha256=${expectedHmac}`);
+    expect(verifyMlDsaMessage(body, sig!, verification.publicKey)).toBe(true);
   });
 
   it("dispatch: partial failure does not throw", async () => {

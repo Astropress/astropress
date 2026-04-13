@@ -5,7 +5,7 @@ description: >-
   when the built-in admin auth isn't enough.
 ---
 
-Astropress ships with its own session-based admin authentication — PBKDF2-HMAC-SHA-512 for new password hashes, 12-hour sessions, CSRF protection, and rate-limited login. **You do not need to add SSO to use the admin panel.**
+Astropress ships with its own session-based admin authentication — Argon2id for password hashes, KMAC256-backed session/token digests, 12-hour sessions, CSRF protection, and rate-limited login. **You do not need to add SSO to use the admin panel.**
 
 Add SSO only if you need one of the following:
 

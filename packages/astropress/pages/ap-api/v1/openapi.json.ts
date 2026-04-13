@@ -145,7 +145,7 @@ const OPENAPI_SPEC = {
         { name: "page", in: "query", schema: { type: "integer", default: 1 }, description: "1-based page number" },
         { name: "offset", in: "query", schema: { type: "integer", default: 0 }, description: "Zero-based record offset" },
       ], responses: { 200: { description: "Webhook list", headers: { "X-Total-Count": { schema: { type: "integer" }, description: "Total number of webhooks" } } } }, security: [{ BearerAuth: ["webhooks:manage"] }] },
-      post: { summary: "Register a webhook", operationId: "createWebhook", requestBody: { required: true, content: { "application/json": { schema: { type: "object", required: ["url", "events"], properties: { url: { type: "string", format: "uri" }, events: { type: "array", items: { type: "string" } } } } } } }, responses: { 201: { description: "Created webhook with signing secret (shown once)" } }, security: [{ BearerAuth: ["webhooks:manage"] }] },
+      post: { summary: "Register a webhook", operationId: "createWebhook", requestBody: { required: true, content: { "application/json": { schema: { type: "object", required: ["url", "events"], properties: { url: { type: "string", format: "uri" }, events: { type: "array", items: { type: "string" } } } } } } }, responses: { 201: { description: "Created webhook with ML-DSA-65 verification key (shown once)" } }, security: [{ BearerAuth: ["webhooks:manage"] }] },
     },
     "/openapi.json": {
       get: { summary: "OpenAPI specification", operationId: "getOpenApiSpec", security: [], responses: { 200: { description: "OpenAPI 3.1 JSON spec" } } },

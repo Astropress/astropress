@@ -32,7 +32,7 @@ async function getLiveD1SessionRow(db: D1DatabaseLike, sessionToken: string | nu
   await cleanupExpiredSessions(db);
 
   const sessionCandidates = [sessionToken];
-  const sessionSecret = getAdminBootstrapConfig(locals).sessionSecret?.trim();
+  const sessionSecret = getAdminBootstrapConfig(locals).rootSecret?.trim();
   if (sessionSecret) {
     sessionCandidates.unshift(await createSessionTokenDigest(sessionToken, sessionSecret));
   }
@@ -162,7 +162,7 @@ export async function createRuntimeSession(
 
       const sessionToken = crypto.randomUUID();
       const csrfToken = crypto.randomUUID();
-      const sessionSecret = getAdminBootstrapConfig(locals).sessionSecret?.trim();
+      const sessionSecret = getAdminBootstrapConfig(locals).rootSecret?.trim();
       const storedSessionId = sessionSecret
         ? await createSessionTokenDigest(sessionToken, sessionSecret)
         : sessionToken;
@@ -217,7 +217,7 @@ export async function revokeRuntimeSession(sessionToken: string | null | undefin
       }
 
       const sessionCandidates = [sessionToken];
-      const sessionSecret = getAdminBootstrapConfig(locals).sessionSecret?.trim();
+      const sessionSecret = getAdminBootstrapConfig(locals).rootSecret?.trim();
       if (sessionSecret) {
         sessionCandidates.unshift(await createSessionTokenDigest(sessionToken, sessionSecret));
       }

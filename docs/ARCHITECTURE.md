@@ -351,8 +351,8 @@ Cloudflare D1-backed deployments currently store session data in the `admin_sess
 
 Astropress uses a layered security model:
 
-1. **Session tokens** — HMAC-SHA-256 digested before storage when a session secret is configured; raw session IDs are not persisted server-side
-2. **Passwords** — new password hashes use PBKDF2-HMAC-SHA-512; legacy SHA-256 verification remains for backward compatibility
+1. **Session tokens** — KMAC256-digested before storage when a root secret is configured; raw session IDs are not persisted server-side
+2. **Passwords** — Argon2id-hashed before storage; pre-Argon2 formats are treated as legacy and rejected
 3. **CSRF tokens** — per-session token validated on all state-mutating form actions
 4. **CSP** — per-area Content-Security-Policy (public / auth / admin / api areas have different policies)
 5. **Origin checks** — `isTrustedRequestOrigin()` validates `Origin` and `Referer` headers

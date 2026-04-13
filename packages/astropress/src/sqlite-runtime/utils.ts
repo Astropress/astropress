@@ -1,5 +1,5 @@
-import { createHash, pbkdf2Sync, randomBytes, timingSafeEqual } from "node:crypto";
 import { getCmsConfig } from "../config";
+import { createKmacDigest, hashPasswordArgon2id, verifyArgon2idPassword } from "../crypto-primitives";
 
 type ContentStatus = "draft" | "review" | "published" | "archived";
 
@@ -124,33 +124,16 @@ export function getSeedPageRecords(): PageRecord[] {
   }
 }
 
-export function hashOpaqueToken(token: string) {
-  return createHash("sha256").update(token).digest("hex");
+export function hashOpaqueToken(token: string, secret = "astropress-dev-root-secret") {
+  return createKmacDigest(token, secret, "sqlite-opaque-token");
 }
 
-export function hashPasswordSync(password: string, iterations = 100_000) {
-  const salt = randomBytes(32);
-  const derived = pbkdf2Sync(password, salt, iterations, 64, "sha256");
-  return `${iterations}$${salt.toString("base64")}$${derived.toString("base64")}`;
+export function hashPasswordSync(password: string, iterations = 2) {
+  return hashPasswordArgon2id(password, { iterations });
 }
 
 export function verifyPasswordSync(password: string, storedHash: string) {
-  const [iterationsText, saltText, hashText] = storedHash.split("$");
-  const iterations = Number.parseInt(iterationsText, 10);
-
-  if (!iterations || !saltText || !hashText) {
-    return false;
-  }
-
-  const salt = Buffer.from(saltText, "base64");
-  const expected = Buffer.from(hashText, "base64");
-  const actual = pbkdf2Sync(password, salt, iterations, expected.length, "sha256");
-
-  if (actual.length !== expected.length) {
-    return false;
-  }
-
-  return timingSafeEqual(actual, expected);
+  return verifyArgon2idPassword(password, storedHash);
 }
 
 export function normalizePath(value: string) {

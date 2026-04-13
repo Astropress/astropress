@@ -51,10 +51,10 @@ Importing content from Wordpress or Wix, or even subscription lists from Mailchi
 | **Privacy-first** | No forced third-party analytics. No opt-out telemetry. Your data stays yours |
 | **Accessibility** | WCAG 2.2 AA compliant admin UI, tested with axe and screen readers |
 | **Open-Source Plugins** | Whether building a course, hosting events, or setting up shop: just add a new service |
-| **Reasonably Secure** | PBKDF2-HMAC-SHA-512 for new password hashes, CSRF and session hardening, and security headers by default |
+| **Reasonably Secure** | Argon2id password hashing, KMAC256 token hardening, ML-DSA-65 webhook signatures, and security headers by default |
 ---
 
-Security note: Astropress does **not** use post-quantum cryptography today. New password hashes use PBKDF2-HMAC-SHA-512, but SHA-256 is still present in token, webhook, comment-email, and legacy password compatibility paths.
+Security note: Astropress now uses Argon2id for passwords, KMAC256 for token and privacy digests, and ML-DSA-65 for outbound webhook signatures. Hosted-provider live E2E remains incomplete.
 
 ## Get started
 

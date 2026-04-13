@@ -50,7 +50,7 @@ export const POST: APIRoute = async (context) => {
     const events = Array.isArray(body.events) ? (body.events as WebhookEvent[]) : [];
     if (events.length === 0) return apiErrors.validationError("At least one event is required.");
 
-    const { record, signingSecret } = await store.webhooks!.create({ url, events });
-    return jsonOk({ record, signingSecret }, 201);
+    const { record, verification } = await store.webhooks!.create({ url, events });
+    return jsonOk({ record, verification }, 201);
   });
 };

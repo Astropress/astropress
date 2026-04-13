@@ -124,7 +124,12 @@ beforeEach(() => {
   mocks.webhooksList.mockResolvedValue([]);
   mocks.webhooksCreate.mockResolvedValue({
     record: { id: "wh-1", url: "https://example.com/hook", events: ["content.published"], active: true },
-    signingSecret: "test-secret-xyz",
+    verification: {
+      algorithm: "ML-DSA-65",
+      keyId: "wh-1",
+      publicKey: "test-public-key",
+      encoding: "base64",
+    },
   });
   mocks.webhooksDispatch.mockResolvedValue(undefined);
 });
@@ -360,15 +365,15 @@ describe("GET /ap-api/v1/webhooks + POST /ap-api/v1/webhooks", () => {
     expect(Array.isArray(body.records)).toBe(true);
   });
 
-  it("POST creates a webhook and returns signing secret once", async () => {
+  it("POST creates a webhook and returns verification metadata once", async () => {
     const res = await webhooksPOST(ctx(req("POST", "/ap-api/v1/webhooks", {
       token: webhooksManageToken,
       body: { url: "https://example.com/hook", events: ["content.published"] },
     })));
     expect(res.status).toBe(201);
-    const body = await res.json() as { signingSecret: string };
-    expect(typeof body.signingSecret).toBe("string");
-    expect(body.signingSecret.length).toBeGreaterThan(0);
+    const body = await res.json() as { verification: { algorithm: string; publicKey: string } };
+    expect(body.verification.algorithm).toBe("ML-DSA-65");
+    expect(body.verification.publicKey.length).toBeGreaterThan(0);
   });
 });
 
