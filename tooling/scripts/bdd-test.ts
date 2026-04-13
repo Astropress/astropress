@@ -1314,6 +1314,25 @@ const verificationGroups: VerificationGroup[] = [
     ],
   },
   {
+    label: "Settings tabs — import and newsletter restructuring",
+    scenarios: [
+      "Settings page shows General tab by default",
+      "Settings Newsletter tab shows subscriber list and Mailchimp import form",
+      "Settings Import tab shows WordPress, Wix, and crawl source cards",
+      "/ap-admin/import redirects to Settings Import tab",
+      "/ap-admin/subscribers redirects to Settings Newsletter tab",
+      "Import and Subscribers are not top-level sidebar nav items",
+      "Mailchimp CSV import uploads and returns imported count",
+    ],
+    steps: [
+      {
+        command: "bun",
+        args: ["run", "--filter", "astropress", "test", "--", "settings_tabs"],
+        cwd: astropressPackageRoot,
+      },
+    ],
+  },
+  {
     label: "astropress migrate command scenarios",
     scenarios: [
       "astropress migrate --from rallly --to calcom generates a migration guide",

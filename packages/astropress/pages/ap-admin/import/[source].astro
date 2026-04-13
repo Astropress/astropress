@@ -56,7 +56,9 @@ const pageTitle = meta ? `Import from ${meta.label} — Astropress Admin` : "Imp
   >
     <div class="import-wizard">
       <nav class="breadcrumb" aria-label="breadcrumb">
-        <a href="/ap-admin/import">Import</a>
+        <a href="/ap-admin/settings?tab=import">Settings</a>
+        <span aria-hidden="true"> / </span>
+        <a href="/ap-admin/settings?tab=import">Import</a>
         <span aria-hidden="true"> / </span>
         <span aria-current="page">{meta.label}</span>
       </nav>

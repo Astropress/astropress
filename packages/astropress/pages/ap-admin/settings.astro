@@ -2,12 +2,66 @@
 import AdminLayout from "astropress/components/AdminLayout.astro";
 import CsrfInput from "astropress/components/CsrfInput.astro";
 import { buildSettingsPageModel } from "astropress";
+import { createListmonkOps } from "astropress/newsletter-adapter";
+import { getNewsletterConfig } from "astropress/runtime-env";
 
 const adminUser = Astro.locals.adminUser;
 const model = await buildSettingsPageModel(Astro.locals, adminUser!.role);
 const { settings } = model.data;
 const wasSaved = Astro.url.searchParams.get("saved") === "1";
 const errorMessage = Astro.url.searchParams.get("error") === "1" ? Astro.url.searchParams.get("message") : "";
+
+const activeTab = Astro.url.searchParams.get("tab") ?? "general";
+
+// Newsletter tab data (only fetched when on that tab)
+interface SubscriberRow {
+  id: string | number;
+  email: string;
+  name: string;
+  status: string;
+  createdAt: string;
+}
+let subscribers: SubscriberRow[] = [];
+let subTotal = 0;
+let listSupported = false;
+let subError = "";
+const subPage = Number(Astro.url.searchParams.get("page") ?? "1");
+const subQuery = Astro.url.searchParams.get("q") ?? "";
+const perPage = 25;
+
+if (activeTab === "newsletter" && adminUser?.role === "admin") {
+  try {
+    const cfg = getNewsletterConfig(Astro.locals);
+    if (
+      cfg.mode === "listmonk" &&
+      cfg.listmonkApiUrl &&
+      cfg.listmonkApiUsername &&
+      cfg.listmonkApiPassword &&
+      cfg.listmonkListId
+    ) {
+      listSupported = true;
+      const ops = createListmonkOps({
+        apiUrl: cfg.listmonkApiUrl,
+        apiUsername: cfg.listmonkApiUsername,
+        apiPassword: cfg.listmonkApiPassword,
+        listId: Number(cfg.listmonkListId),
+      });
+      const result = await ops.listSubscribers({ page: subPage, perPage, query: subQuery });
+      subscribers = result.subscribers as SubscriberRow[];
+      subTotal = result.total;
+    }
+  } catch {
+    subError = "Could not load subscriber list. Check your LISTMONK_* environment variables.";
+  }
+}
+
+const subTotalPages = Math.ceil(subTotal / perPage);
+const subPrevPage = subPage > 1 ? subPage - 1 : null;
+const subNextPage = subPage < subTotalPages ? subPage + 1 : null;
+
+const importedCount = Astro.url.searchParams.get("imported");
+const wasImported = importedCount !== null;
+const subWasDeleted = Astro.url.searchParams.get("deleted") === "1";
 
 if (model.status === "forbidden") {
   Astro.response.status = 403;
@@ -19,7 +73,7 @@ if (model.status === "forbidden") {
     title="Settings | Astropress Admin"
     heading="Settings"
     currentPath="/ap-admin/settings"
-    description="Configure site-wide settings for content, donations, and engagement."
+    description="Configure site-wide settings, newsletter, and content import."
     role={adminUser!.role}
     userName={adminUser!.name}
   >
@@ -27,117 +81,341 @@ if (model.status === "forbidden") {
     {wasSaved && <p class="notice">Settings saved successfully.</p>}
     {errorMessage && <p class="error-notice">{errorMessage}</p>}
 
-    <form method="post" action="/ap-admin/actions/settings-save" class="settings-form">
-      <CsrfInput token={Astro.locals.csrfToken} />
+    <nav class="settings-tabs" role="tablist" aria-label="Settings sections">
+      <a
+        href="/ap-admin/settings?tab=general"
+        role="tab"
+        aria-selected={activeTab === "general" ? "true" : "false"}
+        class={`settings-tab${activeTab === "general" ? " settings-tab--active" : ""}`}
+      >General</a>
+      <a
+        href="/ap-admin/settings?tab=newsletter"
+        role="tab"
+        aria-selected={activeTab === "newsletter" ? "true" : "false"}
+        class={`settings-tab${activeTab === "newsletter" ? " settings-tab--active" : ""}`}
+      >Newsletter</a>
+      <a
+        href="/ap-admin/settings?tab=import"
+        role="tab"
+        aria-selected={activeTab === "import" ? "true" : "false"}
+        class={`settings-tab${activeTab === "import" ? " settings-tab--active" : ""}`}
+      >Import</a>
+    </nav>
 
-      <div class="admin-subgrid two summary-grid">
-        <section class="panel stat summary-card">
-          <span>Donation destination</span>
-          <strong>1</strong>
-          <span>Primary site-wide donation URL configured here.</span>
+    {/* ── General tab ─────────────────────────────────────────────────── */}
+    {activeTab === "general" && (
+      <form method="post" action="/ap-admin/actions/settings-save" class="settings-form">
+        <CsrfInput token={Astro.locals.csrfToken} />
+
+        <div class="admin-subgrid two summary-grid">
+          <section class="panel stat summary-card">
+            <span>Donation destination</span>
+            <strong>1</strong>
+            <span>Primary site-wide donation URL configured here.</span>
+          </section>
+          <section class="panel stat summary-card">
+            <span>Newsletter state</span>
+            <strong>{settings.newsletterEnabled ? "On" : "Off"}</strong>
+            <span>Controls newsletter collection across public signup surfaces.</span>
+          </section>
+        </div>
+
+        <section class="panel settings-section">
+          <div class="section-header">
+            <div>
+              <p class="admin-kicker">Brand</p>
+              <h2>Site Identity</h2>
+              <p>Global naming and branding copy used across the public site.</p>
+            </div>
+          </div>
+          <label class="admin-field">
+            <span>Site title</span>
+            <input
+              type="text"
+              name="siteTitle"
+              value={settings.siteTitle}
+              required
+              aria-label="Site title"
+              class="admin-input"
+            />
+          </label>
+          <label class="admin-field">
+            <span>Site tagline</span>
+            <input
+              type="text"
+              name="siteTagline"
+              value={settings.siteTagline}
+              required
+              aria-label="Site tagline"
+              class="admin-input"
+            />
+          </label>
         </section>
-        <section class="panel stat summary-card">
-          <span>Newsletter state</span>
-          <strong>{settings.newsletterEnabled ? "On" : "Off"}</strong>
-          <span>Controls newsletter collection across public signup surfaces.</span>
+
+        <section class="panel settings-section">
+          <div class="section-header">
+            <div>
+              <p class="admin-kicker">Engagement</p>
+              <h2>Newsletter</h2>
+              <p>Enable or disable newsletter collection across public signup surfaces.</p>
+            </div>
+          </div>
+          <label class="checkbox-label">
+            <input
+              type="checkbox"
+              name="newsletterEnabled"
+              value="1"
+              checked={settings.newsletterEnabled}
+              aria-label="Enable newsletter signup"
+            />
+            <span>Enable newsletter signup</span>
+          </label>
+        </section>
+
+        <details class="settings-details">
+          <summary class="settings-summary">
+            <span class="admin-kicker">Fundraising</span>
+            Donation settings
+          </summary>
+          <section class="panel settings-section settings-details-panel">
+            <label class="admin-field">
+              <span>Donation URL</span>
+              <input
+                type="url"
+                name="donationUrl"
+                value={settings.donationUrl}
+                required
+                aria-label="Donation URL"
+                class="admin-input"
+              />
+            </label>
+          </section>
+        </details>
+
+        <details class="settings-details">
+          <summary class="settings-summary">
+            <span class="admin-kicker">Moderation</span>
+            Comment settings
+          </summary>
+          <section class="panel settings-section settings-details-panel">
+            <label class="admin-field">
+              <span>Default comment policy</span>
+              <select name="commentsDefaultPolicy" required aria-label="Default comment policy" class="admin-select">
+                <option value="disabled" selected={settings.commentsDefaultPolicy === "disabled"}>Disabled</option>
+                <option value="legacy-readonly" selected={settings.commentsDefaultPolicy === "legacy-readonly"}>Legacy (read-only)</option>
+                <option value="open-moderated" selected={settings.commentsDefaultPolicy === "open-moderated"}>Open (moderated)</option>
+              </select>
+            </label>
+          </section>
+        </details>
+
+        <div class="actions admin-actions-row">
+          <button type="submit" class="admin-button">Save settings</button>
+        </div>
+      </form>
+    )}
+
+    {/* ── Newsletter tab ───────────────────────────────────────────────── */}
+    {activeTab === "newsletter" && (
+      <div class="tab-panel-content">
+        {subWasDeleted && <p class="notice">Subscriber removed successfully.</p>}
+        {wasImported && <p class="notice">Import complete — {importedCount} subscriber{importedCount === "1" ? "" : "s"} added to Listmonk.</p>}
+        {subError && <p class="error-notice">{subError}</p>}
+
+        <section class="panel settings-section">
+          <div class="section-header">
+            <div>
+              <p class="admin-kicker">Subscribers</p>
+              <h2>Newsletter subscribers</h2>
+              <p>Subscribers are managed via Listmonk. Configure <code>LISTMONK_*</code> environment variables to enable list management.</p>
+            </div>
+          </div>
+
+          {!listSupported && !subError && (
+            <div class="notice">
+              <p>Subscriber list management requires Listmonk. Configure these environment variables to enable it:</p>
+              <ul>
+                <li><code>NEWSLETTER_DELIVERY=listmonk</code></li>
+                <li><code>LISTMONK_API_URL</code> — e.g. <code>http://localhost:9000</code></li>
+                <li><code>LISTMONK_API_USERNAME</code></li>
+                <li><code>LISTMONK_API_PASSWORD</code></li>
+                <li><code>LISTMONK_LIST_ID</code></li>
+              </ul>
+            </div>
+          )}
+
+          {listSupported && (
+            <div class="subscribers-panel">
+              <form method="get" action="/ap-admin/settings" class="search-form" role="search">
+                <input type="hidden" name="tab" value="newsletter" />
+                <label for="sub-search" class="visually-hidden">Search subscribers</label>
+                <input
+                  id="sub-search"
+                  type="search"
+                  name="q"
+                  value={subQuery}
+                  placeholder="Search by email or name…"
+                  class="search-input"
+                  autocomplete="off"
+                />
+                <button type="submit" class="search-btn">Search</button>
+                {subQuery && <a href="/ap-admin/settings?tab=newsletter" class="clear-btn">Clear</a>}
+              </form>
+
+              <p class="sub-count">
+                {subTotal === 0 ? "No subscribers found." : `${subTotal} subscriber${subTotal === 1 ? "" : "s"}`}
+                {subQuery ? ` matching "${subQuery}"` : ""}
+              </p>
+
+              {subscribers.length > 0 && (
+                <table class="sub-table">
+                  <thead>
+                    <tr>
+                      <th scope="col">Email</th>
+                      <th scope="col">Name</th>
+                      <th scope="col">Status</th>
+                      <th scope="col">Subscribed</th>
+                      <th scope="col"><span class="visually-hidden">Actions</span></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {subscribers.map((sub) => (
+                      <tr>
+                        <td class="email-cell">{sub.email}</td>
+                        <td>{sub.name || "—"}</td>
+                        <td>
+                          <span class={`status-badge status-badge--${sub.status}`}>{sub.status}</span>
+                        </td>
+                        <td class="date-cell">{sub.createdAt ? new Date(sub.createdAt).toLocaleDateString() : "—"}</td>
+                        <td class="actions-cell">
+                          <a href={`/ap-admin/subscribers/${sub.id}`} class="action-link">View</a>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+
+              {subTotalPages > 1 && (
+                <nav class="pagination" aria-label="Subscriber pages">
+                  {subPrevPage ? (
+                    <a href={`/ap-admin/settings?tab=newsletter&page=${subPrevPage}${subQuery ? `&q=${encodeURIComponent(subQuery)}` : ""}`} rel="prev" class="page-link">&larr; Previous</a>
+                  ) : <span class="page-link page-link--disabled">&larr; Previous</span>}
+                  <span class="page-info">Page {subPage} of {subTotalPages}</span>
+                  {subNextPage ? (
+                    <a href={`/ap-admin/settings?tab=newsletter&page=${subNextPage}${subQuery ? `&q=${encodeURIComponent(subQuery)}` : ""}`} rel="next" class="page-link">Next &rarr;</a>
+                  ) : <span class="page-link page-link--disabled">Next &rarr;</span>}
+                </nav>
+              )}
+            </div>
+          )}
+        </section>
+
+        <section class="panel settings-section">
+          <div class="section-header">
+            <div>
+              <p class="admin-kicker">Migration</p>
+              <h2>Import from Mailchimp</h2>
+              <p>
+                Export your Mailchimp audience as a CSV (Mailchimp dashboard → Audience → Export as CSV),
+                then upload it here to bulk-import subscribers into Listmonk.
+                Required columns: <code>Email Address</code>. Optional: <code>First Name</code>, <code>Last Name</code>.
+              </p>
+            </div>
+          </div>
+
+          <form
+            method="post"
+            action="/ap-admin/actions/mailchimp-import"
+            enctype="multipart/form-data"
+            class="mailchimp-form"
+            id="mailchimp-import-form"
+          >
+            <CsrfInput token={Astro.locals.csrfToken} />
+            <label class="admin-field">
+              <span>Mailchimp audience CSV</span>
+              <input
+                type="file"
+                name="mailchimp_csv"
+                accept=".csv,text/csv"
+                required
+                aria-label="Mailchimp audience CSV file"
+                class="admin-input"
+              />
+            </label>
+            <div class="actions admin-actions-row">
+              <button type="submit" class="admin-button" id="mailchimp-submit-btn">Import subscribers</button>
+            </div>
+            <div class="import-skeleton-area" id="mailchimp-skeleton" hidden aria-live="polite" aria-label="Importing subscribers…">
+              <div class="skeleton skeleton-row"></div>
+              <div class="skeleton skeleton-row" style="width:80%"></div>
+              <div class="skeleton skeleton-row" style="width:60%"></div>
+            </div>
+          </form>
+          <script>
+            document.getElementById("mailchimp-import-form")?.addEventListener("submit", () => {
+              const btn = document.getElementById("mailchimp-submit-btn") as HTMLButtonElement | null;
+              const skeleton = document.getElementById("mailchimp-skeleton");
+              if (btn) { btn.disabled = true; btn.textContent = "Uploading…"; }
+              if (skeleton) skeleton.hidden = false;
+            });
+          </script>
         </section>
       </div>
+    )}
 
-      <section class="panel settings-section">
-        <div class="section-header">
-          <div>
-            <p class="admin-kicker">Brand</p>
-            <h2>Site Identity</h2>
-            <p>Global naming and branding copy used across the public site.</p>
+    {/* ── Import tab ──────────────────────────────────────────────────── */}
+    {activeTab === "import" && (
+      <div class="tab-panel-content">
+        <section class="panel settings-section">
+          <div class="section-header">
+            <div>
+              <p class="admin-kicker">Content migration</p>
+              <h2>Import content</h2>
+              <p>Import content from another platform. Imports are non-destructive — existing content is not modified unless you explicitly apply changes.</p>
+            </div>
           </div>
-        </div>
-        <label class="admin-field">
-          <span>Site title</span>
-          <input
-            type="text"
-            name="siteTitle"
-            value={settings.siteTitle}
-            required
-            aria-label="Site title"
-            class="admin-input"
-          />
-        </label>
-        <label class="admin-field">
-          <span>Site tagline</span>
-          <input
-            type="text"
-            name="siteTagline"
-            value={settings.siteTagline}
-            required
-            aria-label="Site tagline"
-            class="admin-input"
-          />
-        </label>
-      </section>
 
-      <section class="panel settings-section">
-        <div class="section-header">
-          <div>
-            <p class="admin-kicker">Fundraising</p>
-            <h2>Donation</h2>
-            <p>Primary donation destination used by site-wide calls to action.</p>
+          <div class="source-grid">
+            <a href="/ap-admin/import/wordpress" class="source-card">
+              <div class="source-icon" aria-hidden="true">WP</div>
+              <h3 class="source-name">WordPress</h3>
+              <p class="source-desc">
+                Import from a WordPress XML export file or a live WordPress site URL.
+                Imports posts, pages, media, authors, and taxonomies.
+              </p>
+              <span class="source-action">Set up WordPress import &rarr;</span>
+            </a>
+
+            <a href="/ap-admin/import/wix" class="source-card">
+              <div class="source-icon" aria-hidden="true">WX</div>
+              <h3 class="source-name">Wix</h3>
+              <p class="source-desc">
+                Import from a Wix CSV export or a live Wix site URL.
+                Imports blog posts, pages, authors, and media.
+              </p>
+              <span class="source-action">Set up Wix import &rarr;</span>
+            </a>
+
+            <a href="/ap-admin/import/crawl" class="source-card">
+              <div class="source-icon" aria-hidden="true">CR</div>
+              <h3 class="source-name">Web crawl</h3>
+              <p class="source-desc">
+                Crawl any publicly accessible website and import its pages as content
+                records. Useful for static sites without an export format.
+              </p>
+              <span class="source-action">Set up crawl import &rarr;</span>
+            </a>
           </div>
-        </div>
-        <label class="admin-field">
-          <span>Donation URL</span>
-          <input
-            type="url"
-            name="donationUrl"
-            value={settings.donationUrl}
-            required
-            aria-label="Donation URL"
-            class="admin-input"
-          />
-        </label>
-      </section>
 
-      <section class="panel settings-section">
-        <div class="section-header">
-          <div>
-            <p class="admin-kicker">Engagement</p>
-            <h2>Newsletter</h2>
-            <p>Enable or disable newsletter collection across public signup surfaces.</p>
-          </div>
-        </div>
-        <label class="checkbox-label">
-          <input
-            type="checkbox"
-            name="newsletterEnabled"
-            value="1"
-            checked={settings.newsletterEnabled}
-            aria-label="Enable newsletter signup"
-          />
-          <span>Enable newsletter signup</span>
-        </label>
-      </section>
-
-      <section class="panel settings-section">
-        <div class="section-header">
-          <div>
-            <p class="admin-kicker">Moderation</p>
-            <h2>Comments</h2>
-            <p>Default moderation policy for new or imported content records.</p>
-          </div>
-        </div>
-        <label class="admin-field">
-          <span>Default comment policy</span>
-          <select name="commentsDefaultPolicy" required aria-label="Default comment policy" class="admin-select">
-            <option value="disabled" selected={settings.commentsDefaultPolicy === "disabled"}>Disabled</option>
-            <option value="legacy-readonly" selected={settings.commentsDefaultPolicy === "legacy-readonly"}>Legacy (read-only)</option>
-            <option value="open-moderated" selected={settings.commentsDefaultPolicy === "open-moderated"}>Open (moderated)</option>
-          </select>
-        </label>
-      </section>
-
-      <div class="actions admin-actions-row">
-        <button type="submit" class="admin-button">Save settings</button>
+          <p class="import-note">
+            All imports run as CLI commands under the hood. The CLI is available via
+            <code>cargo install astropress-cli</code>. This wizard generates the
+            correct command for your configuration.
+          </p>
+        </section>
       </div>
-    </form>
+    )}
   </AdminLayout>
 ) : (
   <AdminLayout
@@ -155,60 +433,112 @@ if (model.status === "forbidden") {
 )}
 
 <style>
-  .settings-form {
-    display: grid;
-    gap: 1rem;
-  }
-
-  .summary-grid {
-    margin-bottom: 0.25rem;
-  }
-
-  .summary-card span:first-child {
-    font-size: 0.8rem;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: var(--muted);
-    font-weight: 700;
-  }
-
-  .summary-card span:last-child {
-    color: var(--muted);
-    font-size: 0.9rem;
-  }
-
-  .settings-section {
-    display: grid;
-    gap: 1rem;
-  }
-
-  .settings-section h2 {
-    margin: 0;
-    font-size: 1.1rem;
-  }
-
-  .checkbox-label {
+  /* Tab bar */
+  .settings-tabs {
     display: flex;
-    align-items: center;
-    gap: 0.6rem;
+    gap: 0;
+    border-bottom: 2px solid var(--border, #e5e7eb);
+    margin-bottom: 1.5rem;
+  }
+  .settings-tab {
+    padding: 0.625rem 1.25rem;
+    font-size: 0.9375rem;
+    font-weight: 500;
+    text-decoration: none;
+    color: var(--text-muted, #6b7280);
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+    transition: color 0.12s, border-color 0.12s;
+  }
+  .settings-tab:hover { color: var(--text, #111827); }
+  .settings-tab--active {
+    color: var(--accent, #6366f1);
+    border-bottom-color: var(--accent, #6366f1);
     font-weight: 600;
   }
+  @media (prefers-reduced-motion: reduce) {
+    .settings-tab { transition: none; }
+  }
 
-  input[type="checkbox"] {
-    width: 1.2rem;
-    height: 1.2rem;
+  /* General tab */
+  .settings-form { display: grid; gap: 1rem; }
+  .summary-grid { margin-bottom: 0.25rem; }
+  .summary-card span:first-child {
+    font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.08em;
+    color: var(--muted); font-weight: 700;
+  }
+  .summary-card span:last-child { color: var(--muted); font-size: 0.9rem; }
+  .settings-section { display: grid; gap: 1rem; }
+  .settings-section h2 { margin: 0; font-size: 1.1rem; }
+  .checkbox-label { display: flex; align-items: center; gap: 0.6rem; font-weight: 600; }
+  input[type="checkbox"] { width: 1.2rem; height: 1.2rem; cursor: pointer; }
+  .checkbox-label span { font-weight: normal; }
+  .actions { margin-top: 1rem; }
+
+  /* Progressive disclosure */
+  .settings-details { border: 1px solid var(--border, #e5e7eb); border-radius: 8px; }
+  .settings-summary {
+    padding: 0.875rem 1.125rem;
     cursor: pointer;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+    user-select: none;
+  }
+  .settings-summary::-webkit-details-marker { display: none; }
+  .settings-summary::after {
+    content: "›";
+    position: absolute;
+    right: 1.25rem;
+    font-size: 1.25rem;
+    color: var(--text-muted, #6b7280);
+    transition: transform 0.15s;
+  }
+  details[open] .settings-summary::after { transform: rotate(90deg); }
+  .settings-summary { position: relative; }
+  .settings-details-panel { border-top: 1px solid var(--border, #e5e7eb); border-radius: 0 0 8px 8px; }
+  @media (prefers-reduced-motion: reduce) {
+    .settings-summary::after { transition: none; }
   }
 
-  .checkbox-label span {
-    font-weight: normal;
-  }
+  /* Newsletter tab */
+  .tab-panel-content { display: grid; gap: 1rem; }
+  .subscribers-panel { margin-top: 0.5rem; }
+  .search-form { display: flex; gap: 0.5rem; margin-bottom: 1rem; align-items: center; flex-wrap: wrap; }
+  .search-input { flex: 1; min-width: 0; max-width: 360px; padding: 0.5rem 0.75rem; border: 1px solid var(--border, #e5e7eb); border-radius: 6px; font-size: 0.9375rem; }
+  .search-btn, .clear-btn { padding: 0.5rem 0.875rem; border: 1px solid var(--border, #e5e7eb); border-radius: 6px; font-size: 0.875rem; cursor: pointer; background: var(--surface, #fff); text-decoration: none; white-space: nowrap; }
+  .search-btn { background: var(--accent, #6366f1); color: #fff; border-color: var(--accent, #6366f1); }
+  .sub-count { font-size: 0.875rem; color: var(--text-muted, #6b7280); margin-bottom: 0.75rem; }
+  .sub-table { width: 100%; border-collapse: collapse; font-size: 0.9375rem; }
+  .sub-table th { text-align: left; padding: 0.5rem 0.75rem; font-size: 0.8125rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-muted, #6b7280); border-bottom: 2px solid var(--border, #e5e7eb); }
+  .sub-table td { padding: 0.625rem 0.75rem; border-bottom: 1px solid var(--border, #e5e7eb); vertical-align: middle; }
+  .email-cell { font-weight: 500; }
+  .date-cell { color: var(--text-muted, #6b7280); font-size: 0.875rem; }
+  .actions-cell { text-align: right; }
+  .action-link { font-size: 0.875rem; color: var(--accent, #6366f1); text-decoration: none; }
+  .status-badge { display: inline-block; padding: 0.125rem 0.5rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 500; text-transform: capitalize; background: var(--status-bg, #f3f4f6); }
+  .status-badge--enabled, .status-badge--subscribed { background: #dcfce7; color: #166534; }
+  .status-badge--disabled, .status-badge--unsubscribed { background: #fee2e2; color: #991b1b; }
+  .status-badge--blocklisted { background: #fef3c7; color: #92400e; }
+  .pagination { display: flex; align-items: center; gap: 1rem; margin-top: 1.25rem; font-size: 0.9375rem; flex-wrap: wrap; }
+  .page-link { color: var(--accent, #6366f1); text-decoration: none; }
+  .page-link--disabled { color: var(--text-muted, #6b7280); cursor: default; }
+  .page-info { color: var(--text-muted, #6b7280); }
+  .mailchimp-form { display: grid; gap: 1rem; }
+  .import-skeleton-area { margin-top: 0.5rem; }
 
-  .actions {
-    margin-top: 1rem;
-  }
+  /* Import tab */
+  .source-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.25rem; margin-bottom: 1.5rem; }
+  .source-card { display: flex; flex-direction: column; gap: 0.5rem; padding: 1.25rem; border: 1px solid var(--border, #e5e7eb); border-radius: 8px; text-decoration: none; color: inherit; background: var(--surface, #fff); transition: border-color 0.15s, box-shadow 0.15s; }
+  .source-card:hover, .source-card:focus-visible { border-color: var(--accent, #6366f1); box-shadow: 0 0 0 3px var(--accent-muted, #e0e7ff); outline: none; }
+  .source-icon { width: 2.5rem; height: 2.5rem; border-radius: 6px; background: var(--accent-muted, #e0e7ff); color: var(--accent, #6366f1); font-weight: 700; font-size: 0.75rem; display: flex; align-items: center; justify-content: center; letter-spacing: 0.05em; }
+  .source-name { margin: 0; font-size: 1rem; font-weight: 600; }
+  .source-desc { margin: 0; font-size: 0.875rem; color: var(--text-muted, #6b7280); flex: 1; }
+  .source-action { font-size: 0.875rem; color: var(--accent, #6366f1); font-weight: 500; }
+  .import-note { font-size: 0.8125rem; color: var(--text-muted, #6b7280); border-top: 1px solid var(--border, #e5e7eb); padding-top: 1rem; }
 
-  .forbidden {
-    max-width: 42rem;
-  }
+  /* Shared */
+  .visually-hidden { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+  .forbidden { max-width: 42rem; }
 </style>
