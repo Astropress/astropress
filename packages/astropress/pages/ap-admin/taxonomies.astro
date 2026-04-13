@@ -9,6 +9,8 @@ const model = await buildTaxonomiesPageModel(Astro.locals, adminUser!.role);
 const { categories, tags, auditEvents } = model.data;
 const wasSaved = Astro.url.searchParams.get("saved") === "1";
 const wasDeleted = Astro.url.searchParams.get("deleted") === "1";
+const restoreTable = Astro.url.searchParams.get("restore_table") ?? "";
+const restoreId = Astro.url.searchParams.get("restore_id") ?? "";
 const errorMessage = Astro.url.searchParams.get("error") === "1" ? Astro.url.searchParams.get("message") : "";
 
 if (model.status === "forbidden") {
@@ -27,7 +29,19 @@ if (model.status === "forbidden") {
   >
     {model.warnings.length > 0 && <p class="notice">Some taxonomy data is temporarily unavailable. This page is showing partial results.</p>}
     {wasSaved && <p class="notice">The taxonomy term was saved successfully.</p>}
-    {wasDeleted && <p class="notice">The taxonomy term was deleted successfully.</p>}
+    {wasDeleted && restoreId && (
+      <div class="undo-toast" role="status" aria-live="polite" data-undo-toast>
+        Taxonomy term deleted.
+        <form method="post" action="/ap-admin/actions/restore" style="display:contents">
+          <input type="hidden" name="_csrf" value={Astro.locals.csrfToken} />
+          <input type="hidden" name="table" value={restoreTable} />
+          <input type="hidden" name="id" value={restoreId} />
+          <input type="hidden" name="return_to" value="/ap-admin/taxonomies" />
+          <button type="submit" class="undo-btn">Undo</button>
+        </form>
+      </div>
+    )}
+    {wasDeleted && !restoreId && <p class="notice">The taxonomy term was deleted successfully.</p>}
     {errorMessage && <p class="error-notice">{errorMessage}</p>}
 
     <div class="taxonomy-grid">
@@ -160,6 +174,9 @@ if (model.status === "forbidden") {
     <AuditTrail
       events={auditEvents.filter((event) => event.action.startsWith("category.") || event.action.startsWith("tag.")).slice(0, 5)}
     />
+    {wasDeleted && restoreId && (
+      <script>{`(function(){var t=document.querySelector('[data-undo-toast]');if(t)setTimeout(function(){t.remove();},8000);})();`}</script>
+    )}
   </AdminLayout>
 ) : (
   <AdminLayout

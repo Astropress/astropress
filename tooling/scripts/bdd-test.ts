@@ -1333,6 +1333,20 @@ const verificationGroups: VerificationGroup[] = [
     ],
   },
   {
+    label: "Undo toast after deleting admin resources",
+    scenarios: [
+      "Deleting a resource shows an undo toast",
+      "Clicking Undo restores the deleted resource",
+    ],
+    steps: [
+      {
+        command: "bun",
+        args: ["run", "--filter", "astropress", "test", "--", "delete-undo"],
+        cwd: astropressPackageRoot,
+      },
+    ],
+  },
+  {
     label: "Admin command palette",
     scenarios: [
       "Pressing Ctrl+K opens the command palette",

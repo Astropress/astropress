@@ -91,6 +91,7 @@
     "./transactional-email": { "types": "./src/transactional-email.ts", "default": "./dist/src/transactional-email.js" },
     "./newsletter-adapter": { "types": "./src/newsletter-adapter.ts", "default": "./dist/src/newsletter-adapter.js" },
     "./admin-action-mailchimp-import": { "types": "./src/admin-action-mailchimp-import.ts", "default": "./dist/src/admin-action-mailchimp-import.js" },
+    "./runtime-actions-restore": { "types": "./src/runtime-actions-restore.ts", "default": "./dist/src/runtime-actions-restore.js" },
     "./admin-recent": { "types": "./src/admin-recent.ts", "default": "./dist/src/admin-recent.js" },
     "./turnstile": { "types": "./src/turnstile.ts", "default": "./dist/src/turnstile.js" },
     "./local-image-storage": { "types": "./src/local-image-storage.ts", "default": "./dist/src/local-image-storage.js" },

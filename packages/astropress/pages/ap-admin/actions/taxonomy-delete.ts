@@ -15,5 +15,6 @@ export const POST: APIRoute = async (context) =>
       return fail(result.error);
     }
 
-    return redirect("/ap-admin/taxonomies?deleted=1");
+    const restoreTable = kind === "tag" ? "tags" : "categories";
+    return redirect(`/ap-admin/taxonomies?deleted=1&restore_table=${restoreTable}&restore_id=${id}`);
   });

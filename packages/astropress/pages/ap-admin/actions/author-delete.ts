@@ -14,5 +14,5 @@ export const POST: APIRoute = async (context) =>
       return fail(result.error);
     }
 
-    return redirect("/ap-admin/authors?deleted=1");
+    return redirect(`/ap-admin/authors?deleted=1&restore_table=authors&restore_id=${id}`);
   });
