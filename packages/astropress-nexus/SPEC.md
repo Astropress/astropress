@@ -7,7 +7,7 @@
 ## Package identity
 
 - **Name**: `astropress-nexus`
-- **Runtime**: Node.js ≥ 20 / Bun / any environment that supports the `fetch` API
+- **Runtime**: Node.js ≥ 24.8.0 (canonical) / Bun best-effort / any environment that supports the `fetch` API on a best-effort basis
 - **Framework**: [Hono](https://hono.dev/) — lightweight, edge-first HTTP framework
 - **Port**: `4330` (default, overridden via `PORT` env var)
 
@@ -17,27 +17,37 @@ Configuration is read from a JSON file (default: `nexus.config.json` in the work
 
 ```json
 {
+  "dashboardTitle": "Astropress Nexus",
   "sites": [
     {
       "id": "marketing",
       "name": "Marketing Site",
       "baseUrl": "https://marketing.example.com",
-      "token": "sk_live_abc123"
+      "token": "sk_live_abc123",
+      "adminUrl": "https://marketing.example.com/ap-admin",
+      "deployHookUrl": "https://deploy.example.com/hooks/marketing",
+      "description": "Primary marketing property with the latest launch content."
     },
     {
       "id": "docs",
       "name": "Docs Site",
       "baseUrl": "https://docs.example.com",
-      "token": "sk_live_xyz789"
+      "token": "sk_live_xyz789",
+      "adminUrl": "https://docs.example.com/ap-admin",
+      "description": "Documentation and release notes site."
     }
   ]
 }
 ```
 
+- `dashboardTitle` is optional and changes the operator UI title.
+- `adminUrl`, `deployHookUrl`, and `description` are optional per-site fields used by the Nexus dashboard.
+
 ## Auth
 
 - Set `NEXUS_AUTH_TOKEN` to require a bearer token on all routes except `GET /`.
 - The `GET /` health endpoint is always public.
+- Browser-driven dashboard routes also accept `?token=...` so operators can follow dashboard links and form actions without custom JavaScript.
 - Per-site `token` values are never exposed in API responses.
 
 ## Endpoints
@@ -47,6 +57,8 @@ Configuration is read from a JSON file (default: `nexus.config.json` in the work
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
 | GET | `/` | Public | Gateway health — lists all sites + reachability |
+| GET | `/dashboard` | Required | Server-rendered operator dashboard with search, summary cards, and bulk actions |
+| GET | `/dashboard/sites/{id}` | Required | Operator detail page for a single site |
 | GET | `/sites` | Required | List all sites with live health status |
 | GET | `/sites/{id}` | Required | Single site metadata + health |
 | GET | `/sites/{id}/content` | Required | Proxy → member `/ap-api/v1/content` |
@@ -63,6 +75,8 @@ Configuration is read from a JSON file (default: `nexus.config.json` in the work
 | POST | `/jobs/import/wordpress` | Required | Queue an async WordPress import on a member site |
 | GET | `/jobs` | Required | List all jobs, newest first (paginated) |
 | GET | `/jobs/:id` | Required | Poll job status |
+| POST | `/actions/refresh` | Required | Refresh live health for selected sites and redirect back to the dashboard |
+| POST | `/actions/redeploy` | Required | Trigger site deploy hooks for selected sites and redirect back to the dashboard |
 
 ### Panel connectors
 
@@ -211,6 +225,8 @@ cp nexus.config.example.json nexus.config.json
 NEXUS_AUTH_TOKEN=my-secret bun run dev
 ```
 
+The dashboard is available at `http://localhost:4330/dashboard?token=my-secret` when auth is enabled.
+
 ## Tests
 
 ```sh
@@ -218,4 +234,4 @@ cd packages/astropress-nexus
 bunx vitest run
 ```
 
-49 tests covering: auth, health, proxy routing, fan-out, partial failure, site registry, import job lifecycle (queued/running/completed/failed states), and panel connector discovery (Cloudways, cPanel/Softaculous, hPanel).
+The suite covers auth, health, dashboard rendering, bulk actions, proxy routing, fan-out, partial failure, site registry, import job lifecycle (queued/running/completed/failed states), and panel connector discovery (Cloudways, cPanel/Softaculous, hPanel).

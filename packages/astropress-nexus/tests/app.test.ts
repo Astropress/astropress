@@ -6,9 +6,18 @@ import type { NexusConfig } from "../src/types.js";
 
 const testConfig: NexusConfig = {
   sites: [
-    { id: "site-a", name: "Site A", baseUrl: "https://site-a.example.com", token: "token-a" },
-    { id: "site-b", name: "Site B", baseUrl: "https://site-b.example.com", token: "token-b" },
+    {
+      id: "site-a",
+      name: "Site A",
+      baseUrl: "https://site-a.example.com",
+      token: "token-a",
+      adminUrl: "https://site-a.example.com/ap-admin",
+      deployHookUrl: "https://deploy.example.com/site-a",
+      description: "Primary marketing property",
+    },
+    { id: "site-b", name: "Site B", baseUrl: "https://site-b.example.com", token: "token-b", description: "Docs property" },
   ],
+  dashboardTitle: "Astropress Nexus",
 };
 
 const ORG_TOKEN = "org-secret-token";
@@ -36,24 +45,29 @@ function networkError(): Response {
 async function callApp(
   app: ReturnType<typeof createNexusApp>,
   path: string,
-  options: { token?: string; method?: string } = {},
-): Promise<{ status: number; body: unknown }> {
+  options: { token?: string; method?: string; body?: BodyInit | null; contentType?: string } = {},
+): Promise<{ status: number; body: unknown; text: string }> {
   const headers: Record<string, string> = {};
   if (options.token) {
     headers["Authorization"] = `Bearer ${options.token}`;
   }
+  if (options.contentType) {
+    headers["Content-Type"] = options.contentType;
+  }
   const req = new Request(`http://localhost${path}`, {
     method: options.method ?? "GET",
     headers,
+    body: options.body,
   });
   const res = await app.fetch(req);
-  let body: unknown;
+  const text = await res.text();
+  let body: unknown = null;
   try {
-    body = await res.json();
+    body = JSON.parse(text) as unknown;
   } catch {
-    body = null;
+    body = text;
   }
-  return { status: res.status, body };
+  return { status: res.status, body, text };
 }
 
 // ─── Auth tests ───────────────────────────────────────────────────────────────
@@ -90,6 +104,17 @@ describe("gateway auth", () => {
     );
     const { status } = await callApp(app, "/sites", { token: ORG_TOKEN });
     expect(status).toBe(200);
+  });
+
+  it("GET /dashboard accepts the query token for browser-driven auth", async () => {
+    vi.spyOn(globalThis, "fetch").mockImplementation(
+      makeFetchMock((url) => url.includes("/metrics")
+        ? { ok: true, status: 200, body: { posts: 1, pages: 1, media: 0 } }
+        : { ok: true, status: 200, body: {} }),
+    );
+    const { status, text } = await callApp(app, `/dashboard?token=${ORG_TOKEN}`);
+    expect(status).toBe(200);
+    expect(text).toContain("Astropress Nexus");
   });
 });
 
@@ -147,6 +172,53 @@ describe("GET /sites", () => {
     expect(Array.isArray(body)).toBe(true);
     const sites = body as Array<Record<string, unknown>>;
     expect(sites).toHaveLength(2);
+  });
+});
+
+describe("GET /dashboard", () => {
+  const app = createNexusApp({ config: testConfig });
+
+  beforeEach(() => vi.restoreAllMocks());
+
+  it("renders a searchable HTML dashboard with site cards", async () => {
+    vi.spyOn(globalThis, "fetch").mockImplementation(
+      makeFetchMock((url) => url.includes("/metrics")
+        ? { ok: true, status: 200, body: { posts: 3, pages: 2, media: 1 } }
+        : { ok: true, status: 200, body: {} }),
+    );
+    const { status, text } = await callApp(app, "/dashboard");
+    expect(status).toBe(200);
+    expect(text).toContain("Operate multiple Astropress sites");
+    expect(text).toContain("Site A");
+    expect(text).toContain("Primary marketing property");
+  });
+
+  it("filters dashboard cards by the q search param", async () => {
+    vi.spyOn(globalThis, "fetch").mockImplementation(
+      makeFetchMock((url) => url.includes("/metrics")
+        ? { ok: true, status: 200, body: { posts: 3, pages: 2, media: 1 } }
+        : { ok: true, status: 200, body: {} }),
+    );
+    const { text } = await callApp(app, "/dashboard?q=docs");
+    expect(text).toContain("Site B");
+    expect(text).not.toContain("Primary marketing property");
+  });
+});
+
+describe("GET /dashboard/sites/:id", () => {
+  const app = createNexusApp({ config: testConfig });
+
+  beforeEach(() => vi.restoreAllMocks());
+
+  it("renders a site detail page with breadcrumbs and actions", async () => {
+    vi.spyOn(globalThis, "fetch").mockImplementation(
+      makeFetchMock(() => ({ ok: true, status: 200, body: {} })),
+    );
+    const { status, text } = await callApp(app, "/dashboard/sites/site-a");
+    expect(status).toBe(200);
+    expect(text).toContain("Dashboard");
+    expect(text).toContain("Open admin");
+    expect(text).toContain("Primary marketing property");
   });
 });
 
@@ -294,6 +366,48 @@ describe("GET /metrics", () => {
     const b = body as Record<string, unknown>;
     expect(b.siteCount).toBe(2);
     expect(typeof b.totalPosts).toBe("number");
+  });
+});
+
+describe("POST /actions/redeploy", () => {
+  const app = createNexusApp({ config: testConfig, authToken: ORG_TOKEN });
+
+  beforeEach(() => vi.restoreAllMocks());
+
+  it("triggers deploy hooks for selected sites and redirects back to dashboard", async () => {
+    vi.spyOn(globalThis, "fetch").mockImplementation(
+      makeFetchMock((url) => url.includes("deploy.example.com")
+        ? { ok: true, status: 202, body: {} }
+        : { ok: true, status: 200, body: {} }),
+    );
+    const form = new URLSearchParams({ siteId: "site-a", redirectTo: "/dashboard" });
+    const res = await app.fetch(new Request(`http://localhost/actions/redeploy?token=${ORG_TOKEN}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: form,
+    }));
+    expect(res.status).toBe(302);
+    expect(res.headers.get("location")).toContain("redeployed=1");
+  });
+});
+
+describe("POST /actions/refresh", () => {
+  const app = createNexusApp({ config: testConfig, authToken: ORG_TOKEN });
+
+  beforeEach(() => vi.restoreAllMocks());
+
+  it("refreshes selected sites and redirects with a refreshed count", async () => {
+    vi.spyOn(globalThis, "fetch").mockImplementation(
+      makeFetchMock(() => ({ ok: true, status: 200, body: {} })),
+    );
+    const form = new URLSearchParams({ siteId: "site-a", redirectTo: "/dashboard" });
+    const res = await app.fetch(new Request(`http://localhost/actions/refresh?token=${ORG_TOKEN}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: form,
+    }));
+    expect(res.status).toBe(302);
+    expect(res.headers.get("location")).toContain("refreshed=1");
   });
 });
 

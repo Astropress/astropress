@@ -3,10 +3,14 @@ export type SiteEntry = {
   name: string;
   baseUrl: string;
   token: string;
+  adminUrl?: string;
+  deployHookUrl?: string;
+  description?: string;
 };
 
 export type NexusConfig = {
   sites: SiteEntry[];
+  dashboardTitle?: string;
 };
 
 export type SiteStatus = "ok" | "degraded" | "unknown";

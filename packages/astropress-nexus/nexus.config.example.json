@@ -1,16 +1,22 @@
 {
+  "dashboardTitle": "Astropress Nexus",
   "sites": [
     {
       "id": "marketing",
       "name": "Marketing Site",
       "baseUrl": "https://marketing.example.com",
-      "token": "sk_live_replace_with_import_write_token"
+      "token": "sk_live_replace_with_import_write_token",
+      "adminUrl": "https://marketing.example.com/ap-admin",
+      "deployHookUrl": "https://deploy.example.com/hooks/marketing",
+      "description": "Primary marketing property with the latest launch content."
     },
     {
       "id": "docs",
       "name": "Docs Site",
       "baseUrl": "https://docs.example.com",
-      "token": "sk_live_replace_with_import_write_token"
+      "token": "sk_live_replace_with_import_write_token",
+      "adminUrl": "https://docs.example.com/ap-admin",
+      "description": "Documentation and release notes site."
     }
   ]
 }
