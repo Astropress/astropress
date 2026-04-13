@@ -42,6 +42,19 @@ export function createPackageScripts(appHost: AstropressAppHost) {
     case "gitlab-pages":
       scripts["deploy:gitlab-pages"] = "astro build";
       break;
+    case "fly-io":
+      scripts["deploy:fly-io"] = "flyctl deploy --remote-only";
+      break;
+    case "railway":
+      scripts["deploy:railway"] = "railway up";
+      break;
+    case "digitalocean":
+      scripts["deploy:digitalocean"] = "doctl apps create-deployment $DO_APP_ID";
+      break;
+    case "coolify":
+      // Coolify deploys via git push / webhooks — no CLI deploy step needed.
+      scripts["deploy:coolify"] = "astro build";
+      break;
     case "runway":
       scripts["deploy:runway"] = "astro build";
       break;
@@ -80,6 +93,14 @@ function gitHubActionsDeployWorkflow(appHost: AstropressAppHost, requiredEnvKeys
     deployStep = `      - run: bunx netlify deploy --dir dist --prod\n        env:\n          NETLIFY_AUTH_TOKEN: \${{ secrets.NETLIFY_AUTH_TOKEN }}\n          NETLIFY_SITE_ID: \${{ secrets.NETLIFY_SITE_ID }}`;
   } else if (appHost === "render-static" || appHost === "render-web") {
     deployStep = `      - run: |\n          if [ -n "\${RENDER_DEPLOY_HOOK_URL}" ]; then\n            curl -fsSL -X POST "\${RENDER_DEPLOY_HOOK_URL}"\n          else\n            echo "Build completed. Connect the repo in Render or set RENDER_DEPLOY_HOOK_URL for automatic deploys."\n          fi\n        env:\n          RENDER_DEPLOY_HOOK_URL: \${{ secrets.RENDER_DEPLOY_HOOK_URL }}`;
+  } else if (appHost === "railway") {
+    deployStep = `      - run: npm install -g @railway/cli\n      - run: railway up\n        env:\n          RAILWAY_TOKEN: \${{ secrets.RAILWAY_TOKEN }}`;
+  } else if (appHost === "fly-io") {
+    deployStep = `      - uses: superfly/flyctl-actions/setup-flyctl@master\n      - run: flyctl deploy --remote-only\n        env:\n          FLY_API_TOKEN: \${{ secrets.FLY_API_TOKEN }}`;
+  } else if (appHost === "digitalocean") {
+    deployStep = `      - uses: digitalocean/action-doctl@v2\n        with:\n          token: \${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}\n      - run: doctl apps create-deployment \${{ secrets.DO_APP_ID }}`;
+  } else if (appHost === "coolify") {
+    deployStep = `      - run: |\n          # Coolify deploys automatically on git push via webhooks.\n          # If you've configured a manual deploy hook, set COOLIFY_WEBHOOK_URL as a secret.\n          if [ -n "\${COOLIFY_WEBHOOK_URL}" ]; then\n            curl -fsSL -X POST "\${COOLIFY_WEBHOOK_URL}"\n          else\n            echo "Build completed. Push to your Coolify-connected branch to trigger a deploy."\n          fi\n        env:\n          COOLIFY_WEBHOOK_URL: \${{ secrets.COOLIFY_WEBHOOK_URL }}`;
   } else if (appHost === "runway") {
     deployStep = `      - run: echo "Build completed. Finish the Runway publish step with your normal platform workflow."`;
   }

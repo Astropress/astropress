@@ -6,6 +6,10 @@ export type AstropressAppHost =
   | "render-static"
   | "render-web"
   | "gitlab-pages"
+  | "fly-io"
+  | "coolify"
+  | "digitalocean"
+  | "railway"
   | "runway"
   | "custom";
 
@@ -74,6 +78,38 @@ const appHostTargets: Record<AstropressAppHost, AstropressAppHostTarget> = {
     supportsStatic: true,
     supportsServerRuntime: false,
     notes: "Static-only hosting for prerendered Astro output.",
+  },
+  "fly-io": {
+    id: "fly-io",
+    label: "Fly.io",
+    runtime: "web-service",
+    supportsStatic: true,
+    supportsServerRuntime: true,
+    notes: "Docker-based Node web service on Fly.io; deploy with flyctl.",
+  },
+  coolify: {
+    id: "coolify",
+    label: "Coolify",
+    runtime: "web-service",
+    supportsStatic: true,
+    supportsServerRuntime: true,
+    notes: "Self-hosted PaaS (Coolify) deploying via git push or Docker Compose.",
+  },
+  digitalocean: {
+    id: "digitalocean",
+    label: "DigitalOcean App Platform",
+    runtime: "web-service",
+    supportsStatic: true,
+    supportsServerRuntime: true,
+    notes: "DigitalOcean App Platform for Node web service deployments.",
+  },
+  railway: {
+    id: "railway",
+    label: "Railway",
+    runtime: "web-service",
+    supportsStatic: true,
+    supportsServerRuntime: true,
+    notes: "Railway container platform for Node web service deployments. Paid — usage-based billing, no free tier.",
   },
   runway: {
     id: "runway",

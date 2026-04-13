@@ -99,6 +99,138 @@ const deploymentMatrixEntries: AstropressDeploymentMatrixEntry[] = [
     notes: "Cloudflare-hosted Astro app with Supabase-hosted data and auth services.",
     requiredEnvKeys: ["ASTROPRESS_SERVICE_ORIGIN", "SUPABASE_URL", "SUPABASE_ANON_KEY", "SUPABASE_SERVICE_ROLE_KEY"],
   },
+  // ── Fly.io ──────────────────────────────────────────────────────────────────
+  {
+    appHost: "fly-io",
+    dataServices: "none",
+    supportLevel: "preview",
+    notes: "Fly.io web service (Docker/Node) with no hosted content services.",
+    requiredEnvKeys: [],
+  },
+  {
+    appHost: "fly-io",
+    dataServices: "supabase",
+    supportLevel: "preview",
+    notes: "Fly.io Node app with Supabase for data, media, and auth.",
+    requiredEnvKeys: ["ASTROPRESS_SERVICE_ORIGIN", "SUPABASE_URL", "SUPABASE_ANON_KEY", "SUPABASE_SERVICE_ROLE_KEY"],
+  },
+  {
+    appHost: "fly-io",
+    dataServices: "appwrite",
+    supportLevel: "preview",
+    notes: "Fly.io Node app with Appwrite for data, media, and auth.",
+    requiredEnvKeys: ["ASTROPRESS_SERVICE_ORIGIN", "APPWRITE_ENDPOINT", "APPWRITE_PROJECT_ID", "APPWRITE_API_KEY"],
+  },
+  {
+    appHost: "fly-io",
+    dataServices: "turso",
+    supportLevel: "preview",
+    notes: "Fly.io Node app with Turso (LibSQL) for distributed SQLite data.",
+    requiredEnvKeys: ["TURSO_DATABASE_URL", "TURSO_AUTH_TOKEN"],
+  },
+  // ── Coolify ─────────────────────────────────────────────────────────────────
+  {
+    appHost: "coolify",
+    dataServices: "none",
+    supportLevel: "preview",
+    notes: "Self-hosted Coolify PaaS with no hosted content services.",
+    requiredEnvKeys: [],
+  },
+  {
+    appHost: "coolify",
+    dataServices: "supabase",
+    supportLevel: "preview",
+    notes: "Coolify-hosted Node app with Supabase for data and auth.",
+    requiredEnvKeys: ["ASTROPRESS_SERVICE_ORIGIN", "SUPABASE_URL", "SUPABASE_ANON_KEY", "SUPABASE_SERVICE_ROLE_KEY"],
+  },
+  {
+    appHost: "coolify",
+    dataServices: "turso",
+    supportLevel: "preview",
+    notes: "Coolify-hosted Node app with Turso (LibSQL) for distributed SQLite data.",
+    requiredEnvKeys: ["TURSO_DATABASE_URL", "TURSO_AUTH_TOKEN"],
+  },
+  // ── DigitalOcean ────────────────────────────────────────────────────────────
+  {
+    appHost: "digitalocean",
+    dataServices: "supabase",
+    supportLevel: "preview",
+    notes: "DigitalOcean App Platform with Supabase for data, media, and auth.",
+    requiredEnvKeys: ["ASTROPRESS_SERVICE_ORIGIN", "SUPABASE_URL", "SUPABASE_ANON_KEY", "SUPABASE_SERVICE_ROLE_KEY"],
+  },
+  {
+    appHost: "digitalocean",
+    dataServices: "appwrite",
+    supportLevel: "preview",
+    notes: "DigitalOcean App Platform with Appwrite as the service layer.",
+    requiredEnvKeys: ["ASTROPRESS_SERVICE_ORIGIN", "APPWRITE_ENDPOINT", "APPWRITE_PROJECT_ID", "APPWRITE_API_KEY"],
+  },
+  {
+    appHost: "digitalocean",
+    dataServices: "turso",
+    supportLevel: "preview",
+    notes: "DigitalOcean App Platform with Turso (LibSQL) for distributed SQLite data.",
+    requiredEnvKeys: ["TURSO_DATABASE_URL", "TURSO_AUTH_TOKEN"],
+  },
+  // ── Turso with other hosts ───────────────────────────────────────────────────
+  {
+    appHost: "vercel",
+    dataServices: "turso",
+    supportLevel: "preview",
+    notes: "Vercel serverless with Turso (LibSQL) for distributed SQLite data.",
+    requiredEnvKeys: ["TURSO_DATABASE_URL", "TURSO_AUTH_TOKEN"],
+  },
+  {
+    appHost: "netlify",
+    dataServices: "turso",
+    supportLevel: "preview",
+    notes: "Netlify serverless with Turso (LibSQL) for distributed SQLite data.",
+    requiredEnvKeys: ["TURSO_DATABASE_URL", "TURSO_AUTH_TOKEN"],
+  },
+  {
+    appHost: "render-web",
+    dataServices: "turso",
+    supportLevel: "preview",
+    notes: "Render web service with Turso (LibSQL) for distributed SQLite data.",
+    requiredEnvKeys: ["TURSO_DATABASE_URL", "TURSO_AUTH_TOKEN"],
+  },
+  {
+    appHost: "cloudflare-pages",
+    dataServices: "turso",
+    supportLevel: "preview",
+    notes: "Cloudflare Pages + Workers with Turso (LibSQL) for SQLite-compatible edge data.",
+    requiredEnvKeys: ["TURSO_DATABASE_URL", "TURSO_AUTH_TOKEN"],
+  },
+  // ── Railway ─────────────────────────────────────────────────────────────────
+  // Railway is a paid platform — usage-based billing, no free tier.
+  {
+    appHost: "railway",
+    dataServices: "none",
+    supportLevel: "preview",
+    notes: "Railway container service with no hosted content services. Paid — usage-based billing.",
+    requiredEnvKeys: [],
+  },
+  {
+    appHost: "railway",
+    dataServices: "supabase",
+    supportLevel: "preview",
+    notes: "Railway Node app with Supabase for data, media, and auth. Paid — usage-based billing.",
+    requiredEnvKeys: ["ASTROPRESS_SERVICE_ORIGIN", "SUPABASE_URL", "SUPABASE_ANON_KEY", "SUPABASE_SERVICE_ROLE_KEY"],
+  },
+  {
+    appHost: "railway",
+    dataServices: "appwrite",
+    supportLevel: "preview",
+    notes: "Railway container with Appwrite as the service layer. Paid — usage-based billing.",
+    requiredEnvKeys: ["ASTROPRESS_SERVICE_ORIGIN", "APPWRITE_ENDPOINT", "APPWRITE_PROJECT_ID", "APPWRITE_API_KEY"],
+  },
+  {
+    appHost: "railway",
+    dataServices: "turso",
+    supportLevel: "preview",
+    notes: "Railway deployment with Turso (LibSQL) for distributed SQLite data. Paid — usage-based billing.",
+    requiredEnvKeys: ["TURSO_DATABASE_URL", "TURSO_AUTH_TOKEN"],
+  },
 ];
 
 export function listAstropressDeploymentMatrixEntries(): AstropressDeploymentMatrixEntry[] {
