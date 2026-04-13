@@ -56,14 +56,14 @@ pub(crate) fn prompt_all_features() -> AllFeatures {
         .default(false).interact().unwrap_or(false)
     {
         match Select::with_theme(t).with_prompt("Analytics provider").items(&[
-            "Umami      — MIT; ~1 KB script; use when you want simple page views + events\n\
-             \x20           with no cookie banner (Railway / Fly.io free)",
-            "Plausible  — AGPL; ~1 KB; use when you want a polished dashboard and EU data\n\
-             \x20           residency  ⚠ cloud $9/mo; self-host free",
-            "Matomo     — GPL; use when you need full GA replacement + GDPR consent tools\n\
-             \x20           ⚠ cloud $23/mo; self-host free (heavier)",
-            "PostHog    — MIT; use when you need analytics + feature flags + session replay\n\
-             \x20           in one service  (generous free tier, then paid)",
+            "Umami      — MIT; ~1 KB; pageviews, bounce rate, custom events\n\
+             \x20           no funnels / heatmaps / session replay  (Railway / Fly.io free)",
+            "Plausible  — AGPL; ~1 KB; pageviews, bounce rate, conversion goals\n\
+             \x20           no funnels / heatmaps / session replay  ⚠ cloud $9/mo; self-host free",
+            "Matomo     — GPL; bounce rate, conversion goals, funnels, heatmaps, session replay\n\
+             \x20           (heatmaps & replay via free built-in plugins)  ⚠ cloud $23/mo; self-host free",
+            "PostHog    — MIT; bounce rate, funnels, heatmaps, session replay, A/B testing\n\
+             \x20           all built-in, no plugins needed; ~70 KB script  (generous free tier, then paid)",
             "Custom     — I'll configure manually",
         ]).default(0).interact().unwrap_or(0) {
             1 => AnalyticsProvider::Plausible,

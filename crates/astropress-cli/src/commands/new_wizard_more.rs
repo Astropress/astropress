@@ -246,16 +246,18 @@ pub(super) fn prompt_more_features() -> MoreFeatures {
     } else { AbTestingProvider::None };
 
     // ── session replay / heatmaps ─────────────────────────────────────────
+    // Note: if Matomo was chosen for analytics, its built-in plugins already cover
+    // heatmaps and session replay — skip this prompt or choose Custom and wire nothing.
     // Default to PostHog (index 0) when PostHog was already chosen for analytics — same script.
     let heatmap_default: usize = 0;
     let heatmap = if Confirm::with_theme(t)
-        .with_prompt("Add session replay / heatmaps?")
+        .with_prompt("Add session replay / heatmaps?  (skip if you chose Matomo — it includes these via built-in plugins)")
         .default(false).interact().unwrap_or(false)
     {
         match Select::with_theme(t).with_prompt("Session replay provider").items(&[
-            "PostHog   — MIT; session replay + heatmaps; use this if PostHog was chosen for\n\
-             \x20          analytics above — same script, no extra deploy  (generous free tier)",
-            "Custom    — I'll wire it myself",
+            "PostHog   — MIT; session replay + heatmaps built-in; choose this if PostHog was\n\
+             \x20          selected for analytics — same script, no extra deploy  (generous free tier)",
+            "Custom    — I'll wire it myself  (or Matomo plugins are already configured)",
         ]).default(heatmap_default).interact().unwrap_or(heatmap_default) {
             1 => HeatmapProvider::Custom,
             _ => HeatmapProvider::PostHog,

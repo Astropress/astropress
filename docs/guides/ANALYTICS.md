@@ -50,10 +50,35 @@ when the visitor sends `DNT: 1` or `Sec-GPC: 1` — no extra check needed.
 
 ## Providers
 
+### Capability comparison
+
+| Feature | Umami | Plausible | Matomo | PostHog |
+|---|---|---|---|---|
+| Pageviews & referrers | ✓ | ✓ | ✓ | ✓ |
+| Bounce rate | ✓ | ✓ | ✓ | ✓ (session duration proxy) |
+| Custom events | ✓ | ✓ | ✓ | ✓ |
+| Conversion goals | ✓ (events) | ✓ (paid cloud or self-host) | ✓ | ✓ |
+| Conversion funnels | ✗ | ✗ | ✓ | ✓ |
+| Heatmaps | ✗ | ✗ | ✓ (Heatmaps plugin) | ✓ |
+| Session replay | ✗ | ✗ | ✓ (HeatmapSession plugin) | ✓ |
+| A/B testing | ✗ | ✗ | ✓ (A/B Testing plugin) | ✓ (built-in) |
+| Self-hostable | ✓ | ✓ | ✓ | ✓ |
+| Script weight | ~2 KB | ~1 KB | ~30 KB | ~70 KB |
+| License | MIT | AGPL | GPL | MIT |
+
+**Choose Umami or Plausible** when you only need traffic metrics and bounce rate — the lightest option.  
+**Choose Matomo** when you need funnels, heatmaps, or session replay without PostHog's product-analytics overhead. Heatmaps and session replay require the Matomo Heatmap & Session Recording plugin (free, included in self-hosted installs).  
+**Choose PostHog** when you need funnels, heatmaps, session replay, and A/B testing in a single deployment — all features are on by default with no extra plugins.
+
+---
+
 ### Umami
 
 Self-hosted, lightweight (~2 KB script), privacy-first.
 [umami.is](https://umami.is) — Docker one-liner, MIT license.
+
+**Gives you:** pageviews, unique visitors, bounce rate, referrers, custom events.  
+**Does not include:** conversion funnels, heatmaps, session replay, A/B testing.
 
 ```ts
 analytics: {
@@ -79,6 +104,9 @@ Generated snippet:
 ~1 KB script, excellent UI, cloud or self-hosted, EU-hosted option.
 [plausible.io](https://plausible.io)
 
+**Gives you:** pageviews, unique visitors, bounce rate, referrers, conversion goals (tracked as custom events).  
+**Does not include:** conversion funnels, heatmaps, session replay, A/B testing.
+
 ```ts
 analytics: {
   type: "plausible",
@@ -103,6 +131,9 @@ Generated snippet:
 Full Google Analytics replacement with GDPR compliance features.
 Self-hosted or Matomo Cloud. [matomo.org](https://matomo.org)
 
+**Gives you:** pageviews, bounce rate, conversion goals, conversion funnels, and — via free plugins included in every self-hosted install — heatmaps, session replay, and A/B testing.  
+**Plugin note:** Enable **Heatmap & Session Recording** and **A/B Testing** in your Matomo admin under _Marketplace > Installed plugins_. Both are free for self-hosted installs.
+
 ```ts
 analytics: {
   type: "matomo",
@@ -119,8 +150,11 @@ No copy-pasting from the Matomo dashboard needed.
 
 ### PostHog
 
-Product analytics + session replay + feature flags. Self-hostable.
+Product analytics with conversion funnels, heatmaps, session replay, and A/B testing — all in one deployment. Self-hostable.
 [posthog.com](https://posthog.com)
+
+**Gives you:** pageviews, bounce rate (via session duration), conversion goals, conversion funnels, heatmaps, session replay, and A/B testing / feature flags — no plugins or add-ons required.  
+**Heavier than the other options** (~70 KB script vs ~1–2 KB for Umami/Plausible). Worth it when you need the full funnel + replay stack without running Matomo's plugin ecosystem.
 
 ```ts
 analytics: {
