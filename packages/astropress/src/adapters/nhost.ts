@@ -4,6 +4,7 @@ import {
 import { type AstropressInMemoryPlatformAdapterOptions } from "../in-memory-platform-adapter";
 import { createAstropressHostedApiAdapter, type AstropressHostedApiAdapterOptions } from "../hosted-api-adapter";
 import { createAstropressHostedPlatformAdapter } from "../hosted-platform-adapter";
+import { FULL_STACK_CAPABILITIES } from "./adapter-record-helpers";
 
 export interface AstropressNhostHostedConfig {
   subdomain: string;
@@ -30,12 +31,7 @@ export function createAstropressNhostAdapter(options: AstropressNhostAdapterOpti
     providerName: "nhost",
     defaultCapabilities: {
       ...options.defaultCapabilities,
-      hostedAdmin: true,
-      previewEnvironments: true,
-      serverRuntime: true,
-      database: true,
-      objectStorage: true,
-      gitSync: true,
+      ...FULL_STACK_CAPABILITIES,
     },
   });
 }
@@ -83,12 +79,7 @@ export function createAstropressNhostHostedAdapter(
       fetchImpl: options.fetchImpl,
       defaultCapabilities: {
         ...options.defaultCapabilities,
-        hostedAdmin: true,
-        previewEnvironments: true,
-        serverRuntime: true,
-        database: true,
-        objectStorage: true,
-        gitSync: true,
+        ...FULL_STACK_CAPABILITIES,
         hostPanel: options.defaultCapabilities?.hostPanel ?? {
           mode: "link",
           url: config.previewBaseUrl,
@@ -103,12 +94,7 @@ export function createAstropressNhostHostedAdapter(
     providerName: "nhost",
     defaultCapabilities: {
       ...options.defaultCapabilities,
-      hostedAdmin: true,
-      previewEnvironments: true,
-      serverRuntime: true,
-      database: true,
-      objectStorage: true,
-      gitSync: true,
+      ...FULL_STACK_CAPABILITIES,
     },
     preview:
       options.preview ??

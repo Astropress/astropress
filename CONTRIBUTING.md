@@ -37,7 +37,6 @@ bun run test:acceptance   # Playwright + axe end-to-end
 bun run test:cli          # Rust CLI tests (cargo test)
 bun run test:accessibility # static-site axe audit
 bun run audit:arch        # architecture boundary checks
-bun run audit:sync        # .ts/.js export parity check (see below)
 ```
 
 > **Important:** always use `bun run <script>` (not bare `bun test`) for running tests.
@@ -78,34 +77,22 @@ Scenario: Editor schedules a post for future publication
 
 Run `bun run bdd:lint` to validate Gherkin syntax before committing.
 
-## The dual `.ts` / `.js` file pattern
+## Build output
 
-Files in `packages/astropress/src/` and `packages/astropress/index.ts` ship to npm
-with generated `.js` siblings so consumers without a TypeScript build step can
-`import` them. The `.js` files are **generated output** — they're listed in
-`packages/astropress/.gitignore` (`src/**/*.js` and `/index.js`) and are never
-committed. The TypeScript source is the single source of truth.
-
-**Workflow:** edit only the `.ts` file. Before publishing (or to smoke-test the
-built package locally), regenerate the `.js` siblings:
+`tsc` emits compiled `.js` into `packages/astropress/dist/` (gitignored). The
+`src/` tree is TypeScript-only — the `no-js-in-src` arch-lint rule fails the
+build if a `.js` file appears there or at the package root. To produce the
+published layout locally:
 
 ```bash
-bun run sync:js
+bun run --filter astropress build
 ```
 
-This wraps `tsc -p packages/astropress/tsconfig.build.json --noCheck` followed by
-the `add-js-ext.ts` pass that rewrites import paths. The `audit:sync` script
-(run by CI and the pre-commit hook) verifies export-level parity between each
-`.ts` source and its generated `.js` sibling:
-
-```bash
-bun run audit:sync
-```
-
-Files that are `.ts`-only (no `.js` export listed in `package.json`) are
-consumed exclusively through the TypeScript compiler path and skip this step.
-See [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md#the-dual-ts--js-file-pattern)
-for why this pattern exists (ADR-003).
+This runs `tsc -p packages/astropress/tsconfig.build.json --noCheck` followed
+by `tooling/scripts/add-js-ext.ts dist`, which rewrites extensionless relative
+imports to `.js` so the emitted ESM works under Node. `package.json` `exports`
+point consumers at `./dist/src/*.js`; the `types` condition still points at
+the `.ts` source, so no `.d.ts` emission is needed.
 
 ## Architecture boundaries
 
@@ -141,6 +128,5 @@ Run `bun run bdd:lint` to validate feature file syntax.
 
 1. `bun run test` — all tests pass
 2. `bun run audit:arch` — no boundary violations
-3. `bun run audit:sync` — no .ts/.js divergence
-4. `bunx biome check packages/astropress/src` — zero lint errors
-5. Open the PR; CI runs the full gate automatically
+3. `bunx biome check packages/astropress/src` — zero lint errors
+4. Open the PR; CI runs the full gate automatically

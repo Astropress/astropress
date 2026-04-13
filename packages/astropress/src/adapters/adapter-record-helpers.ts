@@ -1,6 +1,15 @@
 import type { ContentStoreRecord, RevisionRecord } from "../platform-contracts";
 import type { D1DatabaseLike } from "../d1-database";
 
+export const FULL_STACK_CAPABILITIES = {
+  hostedAdmin: true,
+  previewEnvironments: true,
+  serverRuntime: true,
+  database: true,
+  objectStorage: true,
+  gitSync: true,
+} as const;
+
 export function mapContentRecordKind(record: { kind?: string | null }): ContentStoreRecord["kind"] {
   return record.kind === "post" ? "post" : "page";
 }

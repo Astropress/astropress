@@ -4,6 +4,7 @@ import {
 import { type AstropressInMemoryPlatformAdapterOptions } from "../in-memory-platform-adapter";
 import { createAstropressHostedApiAdapter, type AstropressHostedApiAdapterOptions } from "../hosted-api-adapter";
 import { createAstropressHostedPlatformAdapter } from "../hosted-platform-adapter";
+import { FULL_STACK_CAPABILITIES } from "./adapter-record-helpers";
 
 export interface AstropressSupabaseHostedConfig {
   url: string;
@@ -63,12 +64,7 @@ export function createAstropressSupabaseHostedAdapter(
       fetchImpl: options.fetchImpl,
       defaultCapabilities: {
         ...options.defaultCapabilities,
-        hostedAdmin: true,
-        previewEnvironments: true,
-        serverRuntime: true,
-        database: true,
-        objectStorage: true,
-        gitSync: true,
+        ...FULL_STACK_CAPABILITIES,
       },
     });
   }
@@ -77,12 +73,7 @@ export function createAstropressSupabaseHostedAdapter(
     providerName: "supabase",
     defaultCapabilities: {
       ...options.defaultCapabilities,
-      hostedAdmin: true,
-      previewEnvironments: true,
-      serverRuntime: true,
-      database: true,
-      objectStorage: true,
-      gitSync: true,
+      ...FULL_STACK_CAPABILITIES,
     },
     preview:
       options.preview ??

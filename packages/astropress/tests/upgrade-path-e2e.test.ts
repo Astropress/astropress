@@ -12,12 +12,12 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { mkdtempSync, rmSync } from "node:fs";
 
 import {
-  readAstropressSqliteSchemaSql,
   runAstropressMigrations,
   rollbackAstropressLastMigration,
   checkSchemaVersionAhead,
 } from "../src/sqlite-bootstrap.js";
 import { ensureLegacySchemaCompatibility, getTableColumns } from "../src/sqlite-schema-compat.js";
+import { makeDb } from "./helpers/make-db.js";
 
 // Minimal v0.0.1 schema — mirrors what a real pre-upgrade backup would contain
 const V001_SCHEMA = `
@@ -134,8 +134,7 @@ describe("compat upgrade: old schema → current schema", () => {
 
 describe("migration runner", () => {
   it("applies pending migrations and records them in schema_migrations", () => {
-    const db = new DatabaseSync(":memory:");
-    db.exec(readAstropressSqliteSchemaSql());
+    const db = makeDb();
 
     const migrationsDir = join(tempDir, "migrations");
     mkdirSync(migrationsDir);
@@ -157,8 +156,7 @@ describe("migration runner", () => {
   });
 
   it("rollbackAstropressLastMigration removes the last migration record", () => {
-    const db = new DatabaseSync(":memory:");
-    db.exec(readAstropressSqliteSchemaSql());
+    const db = makeDb();
 
     const migrationsDir = join(tempDir, "migrations");
     mkdirSync(migrationsDir);
@@ -185,8 +183,7 @@ describe("migration runner", () => {
 
 describe("checkSchemaVersionAhead", () => {
   it("returns isAhead:true when DB has more migrations than the baseline", () => {
-    const db = new DatabaseSync(":memory:");
-    db.exec(readAstropressSqliteSchemaSql());
+    const db = makeDb();
 
     const migrationsDir = join(tempDir, "migrations");
     mkdirSync(migrationsDir);
@@ -207,8 +204,7 @@ describe("checkSchemaVersionAhead", () => {
   });
 
   it("returns isAhead:false on a fresh schema with no extra migrations", () => {
-    const db = new DatabaseSync(":memory:");
-    db.exec(readAstropressSqliteSchemaSql());
+    const db = makeDb();
 
     // No migrations applied — baseline is 1 (framework migration)
     const result = checkSchemaVersionAhead(db, 1);

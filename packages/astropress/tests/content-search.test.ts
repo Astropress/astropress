@@ -5,12 +5,11 @@
  * All tests run in-process using DatabaseSync with the real schema.
  */
 
-import { DatabaseSync } from "node:sqlite";
 import { describe, expect, it, vi } from "vitest";
 
-import { readAstropressSqliteSchemaSql } from "../src/sqlite-bootstrap.js";
 import { ensureFts5SearchIndex, getTableSql } from "../src/sqlite-schema-compat.js";
 import { searchContentOverrides } from "../src/sqlite-runtime/search.js";
+import { makeDb } from "./helpers/make-db.js";
 
 const CMS_CONFIG_KEY = Symbol.for("astropress.cms-config");
 
@@ -30,15 +29,10 @@ function clearCmsConfig() {
   (globalThis as typeof globalThis & { [key: symbol]: unknown })[CMS_CONFIG_KEY] = null;
 }
 
-function freshDb() {
-  const db = new DatabaseSync(":memory:");
-  db.exec(readAstropressSqliteSchemaSql());
-  return db;
-}
 
 describe("FTS5 search index creation", () => {
   it("ensureFts5SearchIndex creates content_fts virtual table", () => {
-    const db = freshDb();
+    const db = makeDb();
     expect(getTableSql(db, "content_fts")).toBeUndefined();
 
     ensureFts5SearchIndex(db);
@@ -52,7 +46,7 @@ describe("FTS5 search index creation", () => {
   });
 
   it("ensureFts5SearchIndex is idempotent — calling twice does not throw", () => {
-    const db = freshDb();
+    const db = makeDb();
     ensureFts5SearchIndex(db);
     expect(() => ensureFts5SearchIndex(db)).not.toThrow();
     db.close();
@@ -61,7 +55,7 @@ describe("FTS5 search index creation", () => {
 
 describe("FTS5 search query", () => {
   it("returns a record whose body matches a unique phrase", () => {
-    const db = freshDb();
+    const db = makeDb();
     ensureFts5SearchIndex(db);
 
     db.prepare(
@@ -76,7 +70,7 @@ describe("FTS5 search query", () => {
   });
 
   it("returns updated content after an UPDATE trigger fires", () => {
-    const db = freshDb();
+    const db = makeDb();
     ensureFts5SearchIndex(db);
 
     db.prepare(

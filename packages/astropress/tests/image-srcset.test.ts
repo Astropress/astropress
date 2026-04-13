@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { generateSrcset } from "../src/local-image-storage.js";
+import { ensureLegacySchemaCompatibility, getTableColumns } from "../src/sqlite-schema-compat.js";
+import { makeDb } from "./helpers/make-db.js";
 
 // ─── generateSrcset ───────────────────────────────────────────────────────────
 
@@ -98,26 +100,9 @@ describe("MediaAssetRecord.srcset field", () => {
 // ─── sqlite-schema-compat: srcset column migration ───────────────────────────
 
 describe("srcset column migration (ensureLegacySchemaCompatibility)", () => {
-  it("adds srcset column to media_assets when missing", async () => {
-    const { DatabaseSync } = await import("node:sqlite");
-    const { readAstropressSqliteSchemaSql } = await import("../src/sqlite-bootstrap.js");
-    const { ensureLegacySchemaCompatibility, getTableColumns } = await import("../src/sqlite-schema-compat.js");
-
-    const db = new DatabaseSync(":memory:");
-    // Create the schema without srcset (simulate old DB by dropping the column)
-    db.exec(readAstropressSqliteSchemaSql());
-    // Remove srcset column if it exists in the bootstrap schema by recreating without it
-    const cols = getTableColumns(db, "media_assets");
-    if (!cols.includes("srcset")) {
-      // Column already absent — schema migration needed
-      ensureLegacySchemaCompatibility(db);
-      const colsAfter = getTableColumns(db, "media_assets");
-      expect(colsAfter).toContain("srcset");
-    } else {
-      // Column present in bootstrap schema — migration is idempotent
-      ensureLegacySchemaCompatibility(db);
-      const colsAfter = getTableColumns(db, "media_assets");
-      expect(colsAfter).toContain("srcset");
-    }
+  it("adds srcset column to media_assets when missing", () => {
+    const db = makeDb();
+    ensureLegacySchemaCompatibility(db);
+    expect(getTableColumns(db, "media_assets")).toContain("srcset");
   });
 });

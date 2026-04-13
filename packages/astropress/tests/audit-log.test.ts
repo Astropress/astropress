@@ -1,14 +1,12 @@
-import { DatabaseSync } from "node:sqlite";
 import { beforeAll, describe, expect, it } from "vitest";
-import { readAstropressSqliteSchemaSql } from "../src/sqlite-bootstrap.js";
 import { listAuditEvents, recordAuditEvent } from "../src/sqlite-runtime/audit-log.js";
 import { registerCms } from "../src/config.js";
+import { makeDb } from "./helpers/make-db.js";
 
-let db: DatabaseSync;
+let db: ReturnType<typeof makeDb>;
 
 beforeAll(() => {
-  db = new DatabaseSync(":memory:");
-  db.exec(readAstropressSqliteSchemaSql());
+  db = makeDb();
 });
 
 describe("audit log", () => {
@@ -62,8 +60,7 @@ describe("audit log", () => {
   });
 
   it("prunes audit events older than auditRetentionDays on write", () => {
-    const freshDb = new DatabaseSync(":memory:");
-    freshDb.exec(readAstropressSqliteSchemaSql());
+    const freshDb = makeDb();
     registerCms({ templateKeys: [], siteUrl: "https://example.com", seedPages: [], archives: [], translationStatus: [], auditRetentionDays: 30 });
 
     // Insert a very old event by manipulating created_at directly

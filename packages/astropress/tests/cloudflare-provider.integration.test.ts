@@ -1,9 +1,7 @@
-import { DatabaseSync } from "node:sqlite";
-
 import { describe, expect, it } from "vitest";
 import { createAstropressCloudflareAdapter, registerCms } from "astropress";
 import { SqliteBackedD1Database, createSeededCloudflareDatabase } from "./helpers/provider-test-fixtures.js";
-import { readAstropressSqliteSchemaSql } from "../src/sqlite-bootstrap.js";
+import { makeDb } from "./helpers/make-db.js";
 
 describe("cloudflare provider integration", () => {
   it("creates a D1-backed Cloudflare adapter surface", async () => {
@@ -63,8 +61,7 @@ describe("cloudflare provider integration", () => {
       translationStatus: [],
     });
 
-    const db = new DatabaseSync(":memory:");
-    db.exec(readAstropressSqliteSchemaSql());
+    const db = makeDb();
     const cloudflare = createAstropressCloudflareAdapter({
       db: new SqliteBackedD1Database(db),
     });
@@ -184,8 +181,7 @@ describe("cloudflare provider integration", () => {
       translationStatus: [],
     });
 
-    const db = new DatabaseSync(":memory:");
-    db.exec(readAstropressSqliteSchemaSql());
+    const db = makeDb();
     const cloudflare = createAstropressCloudflareAdapter({
       db: new SqliteBackedD1Database(db),
     });

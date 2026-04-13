@@ -4,6 +4,7 @@ import {
 import { type AstropressInMemoryPlatformAdapterOptions } from "../in-memory-platform-adapter";
 import { createAstropressHostedApiAdapter, type AstropressHostedApiAdapterOptions } from "../hosted-api-adapter";
 import { createAstropressHostedPlatformAdapter } from "../hosted-platform-adapter";
+import { FULL_STACK_CAPABILITIES } from "./adapter-record-helpers";
 
 export interface AstropressPocketbaseHostedConfig {
   url: string;
@@ -23,12 +24,7 @@ export function createAstropressPocketbaseAdapter(options: AstropressPocketbaseA
     providerName: "pocketbase",
     defaultCapabilities: {
       ...options.defaultCapabilities,
-      hostedAdmin: true,
-      previewEnvironments: true,
-      serverRuntime: true,
-      database: true,
-      objectStorage: true,
-      gitSync: true,
+      ...FULL_STACK_CAPABILITIES,
     },
   });
 }
@@ -74,12 +70,7 @@ export function createAstropressPocketbaseHostedAdapter(
       fetchImpl: options.fetchImpl,
       defaultCapabilities: {
         ...options.defaultCapabilities,
-        hostedAdmin: true,
-        previewEnvironments: true,
-        serverRuntime: true,
-        database: true,
-        objectStorage: true,
-        gitSync: true,
+        ...FULL_STACK_CAPABILITIES,
       },
     });
   }
@@ -89,12 +80,7 @@ export function createAstropressPocketbaseHostedAdapter(
     providerName: "pocketbase",
     defaultCapabilities: {
       ...options.defaultCapabilities,
-      hostedAdmin: true,
-      previewEnvironments: true,
-      serverRuntime: true,
-      database: true,
-      objectStorage: true,
-      gitSync: true,
+      ...FULL_STACK_CAPABILITIES,
     },
     preview:
       options.preview ??

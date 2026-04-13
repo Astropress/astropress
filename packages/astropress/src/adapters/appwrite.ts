@@ -4,6 +4,7 @@ import {
 import { type AstropressInMemoryPlatformAdapterOptions } from "../in-memory-platform-adapter";
 import { createAstropressHostedApiAdapter, type AstropressHostedApiAdapterOptions } from "../hosted-api-adapter";
 import { createAstropressHostedPlatformAdapter } from "../hosted-platform-adapter";
+import { FULL_STACK_CAPABILITIES } from "./adapter-record-helpers";
 
 export interface AstropressAppwriteHostedConfig {
   endpoint: string;
@@ -25,12 +26,7 @@ export function createAstropressAppwriteAdapter(options: AstropressAppwriteAdapt
     providerName: "appwrite",
     defaultCapabilities: {
       ...options.defaultCapabilities,
-      hostedAdmin: true,
-      previewEnvironments: true,
-      serverRuntime: true,
-      database: true,
-      objectStorage: true,
-      gitSync: true,
+      ...FULL_STACK_CAPABILITIES,
       hostPanel: options.defaultCapabilities?.hostPanel ?? {
         mode: "link",
         url: "https://cloud.appwrite.io",
@@ -92,12 +88,7 @@ export function createAstropressAppwriteHostedAdapter(
       fetchImpl: options.fetchImpl,
       defaultCapabilities: {
         ...options.defaultCapabilities,
-        hostedAdmin: true,
-        previewEnvironments: true,
-        serverRuntime: true,
-        database: true,
-        objectStorage: true,
-        gitSync: true,
+        ...FULL_STACK_CAPABILITIES,
         hostPanel,
       },
     });
@@ -108,12 +99,7 @@ export function createAstropressAppwriteHostedAdapter(
     providerName: "appwrite",
     defaultCapabilities: {
       ...options.defaultCapabilities,
-      hostedAdmin: true,
-      previewEnvironments: true,
-      serverRuntime: true,
-      database: true,
-      objectStorage: true,
-      gitSync: true,
+      ...FULL_STACK_CAPABILITIES,
       hostPanel,
     },
     preview:

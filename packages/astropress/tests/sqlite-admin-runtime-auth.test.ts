@@ -1,10 +1,9 @@
 import { createHash } from "node:crypto";
-import { DatabaseSync } from "node:sqlite";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createAstropressSqliteAdminRuntime } from "../src/sqlite-admin-runtime.js";
-import { readAstropressSqliteSchemaSql } from "../src/sqlite-bootstrap.js";
 import { createRuntimeFixture, makePasswordHash, type RuntimeFixture } from "./helpers/sqlite-admin-runtime-fixture.js";
 import { hashPassword, isLegacyHash, verifyPassword } from "../src/crypto-utils.js";
+import { makeDb } from "./helpers/make-db.js";
 
 let fixture: RuntimeFixture;
 
@@ -77,8 +76,7 @@ describe("auth", () => {
   });
 
   it("getSessionUser returns null for expired session (sessionTtlMs branch)", async () => {
-    const expiredDb = new DatabaseSync(":memory:");
-    expiredDb.exec(readAstropressSqliteSchemaSql());
+    const expiredDb = makeDb();
     expiredDb.prepare("INSERT INTO admin_users (email, password_hash, role, name, active) VALUES (?, ?, ?, ?, 1)").run(
       "expired@test.local", makePasswordHash("password"), "admin", "Expired",
     );
@@ -189,8 +187,7 @@ describe("auth", () => {
   });
 
   it("getCsrfToken returns null for expired session", async () => {
-    const expiredDb = new DatabaseSync(":memory:");
-    expiredDb.exec(readAstropressSqliteSchemaSql());
+    const expiredDb = makeDb();
     expiredDb.prepare("INSERT INTO admin_users (email, password_hash, role, name, active) VALUES (?, ?, ?, ?, 1)").run(
       "expired2@test.local", makePasswordHash("password"), "admin", "Expired2",
     );

@@ -1,8 +1,8 @@
-import { DatabaseSync } from "node:sqlite";
+import type { DatabaseSync } from "node:sqlite";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createAstropressSqliteAdminRuntime } from "../src/sqlite-admin-runtime.js";
-import { readAstropressSqliteSchemaSql } from "../src/sqlite-bootstrap.js";
 import { createRuntimeFixture, makePasswordHash, type RuntimeFixture } from "./helpers/sqlite-admin-runtime-fixture.js";
+import { makeDb } from "./helpers/make-db.js";
 
 let fixture: RuntimeFixture;
 
@@ -165,8 +165,7 @@ describe("media", () => {
     const prev = process.env.ASTROPRESS_LOCAL_IMAGE_ROOT;
     process.env.ASTROPRESS_LOCAL_IMAGE_ROOT = "/tmp/test-astropress-uploads";
     try {
-      const testDb = new DatabaseSync(":memory:");
-      testDb.exec(readAstropressSqliteSchemaSql());
+      const testDb = makeDb();
       testDb.prepare("INSERT INTO admin_users (email, password_hash, role, name, active) VALUES (?, ?, ?, ?, 1)").run(
         "env@test.local", makePasswordHash("password"), "admin", "Env Test",
       );
@@ -396,8 +395,7 @@ describe("CMS config registered: structured template key branches", () => {
       seedPages: [],
     };
 
-    cmsDb = new DatabaseSync(":memory:");
-    cmsDb.exec(readAstropressSqliteSchemaSql());
+    cmsDb = makeDb();
     cmsDb.prepare("INSERT INTO admin_users (email, password_hash, role, name, active) VALUES (?, ?, ?, ?, 1)").run(
       "cms@test.local", makePasswordHash("password"), "admin", "CMS Test",
     );

@@ -7,20 +7,13 @@
  * No Cloudflare account or credentials required.
  */
 
-import { DatabaseSync } from "node:sqlite";
 import { describe, expect, it, beforeEach } from "vitest";
 import { createAstropressCloudflareAdapter, registerCms } from "astropress";
 import { SqliteBackedD1Database, createSeededCloudflareDatabase } from "./helpers/provider-test-fixtures.js";
-import { readAstropressSqliteSchemaSql } from "../src/sqlite-bootstrap.js";
+import { makeDb, STANDARD_CMS_CONFIG } from "./helpers/make-db.js";
 
 beforeEach(() => {
-  registerCms({
-    templateKeys: ["content"],
-    siteUrl: "https://example.com",
-    seedPages: [],
-    archives: [],
-    translationStatus: [],
-  });
+  registerCms(STANDARD_CMS_CONFIG);
 });
 
 describe("D1 adapter: auth round-trip via SQLite shim", () => {
@@ -97,8 +90,7 @@ describe("D1 adapter: content CRUD via SQLite shim", () => {
 
 describe("D1 adapter: schema bootstrap via SQLite shim", () => {
   it("bootstraps the schema and confirms schema_migrations table exists", () => {
-    const db = new DatabaseSync(":memory:");
-    db.exec(readAstropressSqliteSchemaSql());
+    const db = makeDb();
 
     const tableRow = db
       .prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='schema_migrations'")

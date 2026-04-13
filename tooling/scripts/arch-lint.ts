@@ -1,4 +1,4 @@
-import { readdir, readFile } from "node:fs/promises";
+import { readdir, readFile, stat } from "node:fs/promises";
 import { join, relative } from "node:path";
 
 type Violation = {
@@ -33,11 +33,34 @@ async function walk(directory: string): Promise<string[]> {
 
 async function main() {
   const root = process.cwd();
-  const srcDir = join(root, "packages/astropress/src");
+  const pkgDir = join(root, "packages/astropress");
+  const srcDir = join(pkgDir, "src");
   const allFiles = (await walk(srcDir)).filter((f) => f.endsWith(".ts") && !f.endsWith(".d.ts"));
 
   const violations: Violation[] = [];
   const warnings: Warning[] = [];
+
+  // --- Rule: no-js-in-src ---
+  // tsc emits to dist/; stray .js files in src/ or at the package root re-introduce
+  // the dual-file maintenance problem (v8 coverage misattribution, resolver
+  // shadowing). dist/ is the only legitimate output location.
+  const strayJsFiles = (await walk(srcDir)).filter((f) => f.endsWith(".js"));
+  const rootIndexJs = join(pkgDir, "index.js");
+  try {
+    const info = await stat(rootIndexJs);
+    if (info.isFile()) strayJsFiles.push(rootIndexJs);
+  } catch {
+    // absent — good
+  }
+  for (const jsFile of strayJsFiles) {
+    violations.push({
+      file: relative(root, jsFile),
+      rule: "no-js-in-src",
+      message:
+        "Committed .js file inside packages/astropress/src/ or at packages/astropress/index.js. " +
+        "Run `bun run --filter astropress build` to emit into dist/ instead and delete the stray .js.",
+    });
+  }
 
   for (const file of allFiles) {
     const content = await readFile(file, "utf8");

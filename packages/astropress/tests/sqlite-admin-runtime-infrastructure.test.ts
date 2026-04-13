@@ -1,11 +1,11 @@
-import { DatabaseSync } from "node:sqlite";
 import { mkdirSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createAstropressSqliteAdminRuntime } from "../src/sqlite-admin-runtime.js";
-import { readAstropressSqliteSchemaSql, createDefaultAstropressSqliteSeedToolkit } from "../src/sqlite-bootstrap.js";
+import { createDefaultAstropressSqliteSeedToolkit } from "../src/sqlite-bootstrap.js";
 import { createRuntimeFixture, makePasswordHash, type RuntimeFixture } from "./helpers/sqlite-admin-runtime-fixture.js";
+import { makeDb } from "./helpers/make-db.js";
 
 let fixture: RuntimeFixture;
 
@@ -154,8 +154,7 @@ describe("settings", () => {
 
 describe("settings additional branches", () => {
   it("saveSettings: uses default site settings when no settings have been saved yet", () => {
-    const freshDb = new DatabaseSync(":memory:");
-    freshDb.exec(readAstropressSqliteSchemaSql());
+    const freshDb = makeDb();
     freshDb.prepare("INSERT INTO admin_users (email, password_hash, role, name, active) VALUES (?, ?, ?, ?, 1)").run(
       "fresh@test.local", makePasswordHash("password"), "admin", "Fresh",
     );

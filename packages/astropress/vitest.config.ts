@@ -4,26 +4,21 @@ import { defineConfig } from "vitest/config";
 export default defineConfig({
   resolve: {
     // Prefer .ts over .js for extensionless imports so v8 coverage tracks
-    // TypeScript source files. Vite's default order puts .js ahead of .ts,
-    // which causes coverage to attach to the generated .js siblings (which
-    // are excluded below) and report 0% for the .ts source.
-    extensions: [".ts", ".tsx", ".mts", ".mjs", ".js", ".jsx", ".json"],
+    // TypeScript source files during tests. The package.json `default`
+    // condition points at the built `dist/` files, which we don't want
+    // vitest to resolve — these aliases short-circuit that.
     extensionAlias: {
       ".js": [".ts", ".js"],
     },
     alias: [
       // Exact-match only so subpath imports like "astropress/api-middleware.js" fall through
-      // to the package.json exports map (required for page-handler test imports).
+      // to the alias rules below (required for page-handler test imports).
       { find: /^astropress$/, replacement: fileURLToPath(new URL("./index.ts", import.meta.url)) },
       // Explicit aliases for subpaths used by pages/ap-api/v1/* handlers
       { find: /^astropress\/local-runtime-modules(?:\.js)?$/, replacement: fileURLToPath(new URL("./src/local-runtime-modules.ts", import.meta.url)) },
       { find: /^astropress\/api-middleware(?:\.js)?$/, replacement: fileURLToPath(new URL("./src/api-middleware.ts", import.meta.url)) },
       { find: /^astropress\/platform-contracts(?:\.js)?$/, replacement: fileURLToPath(new URL("./src/platform-contracts.ts", import.meta.url)) },
       { find: "cloudflare:workers", replacement: fileURLToPath(new URL("./src/cloudflare-workers-stub.ts", import.meta.url)) },
-      // Force the two src files whose v8 sourcemaps misattribute execution to .js
-      // (despite extensionAlias) to resolve explicitly to .ts.
-      { find: /^(.*\/src\/analytics)\.js$/, replacement: "$1.ts" },
-      { find: /^(.*\/src\/api-routes)\.js$/, replacement: "$1.ts" },
     ],
   },
   test: {
@@ -33,10 +28,6 @@ export default defineConfig({
       provider: "v8",
       reporter: ["text", "json-summary", "json"],
       reportsDirectory: "./coverage",
-      // Only include files that do NOT have a paired .js companion.
-      // Files with .js companions are loaded as .js at runtime (v8 tracks the .js path)
-      // so their .ts coverage would always be 0% — a false negative.
-      // Modules covered here are the ones directly executed from .ts source.
       include: [
         "src/admin-action-utils.ts",
         "src/admin-normalizers.ts",
@@ -65,11 +56,7 @@ export default defineConfig({
         "src/client/**/*.ts",
         "src/local-runtime-modules.ts",
         "src/**/*.d.ts",
-        // Exclude .js companion stubs — they are not the executed code; the .ts
-        // source files are resolved via extensionAlias and tracked instead.
-        "src/**/*.js",
-        "web-components/**/*.js",
-        "index.js",
+        "dist/**",
       ],
       thresholds: {
         lines: 95,

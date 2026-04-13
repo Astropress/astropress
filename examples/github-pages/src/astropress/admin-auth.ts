@@ -1,5 +1,5 @@
-import type { SessionUser } from "astropress";
+import { createAstropressPasswordAuthModule } from "astropress/integration";
 
-export async function authenticateAdminUser(_email: string, _password: string): Promise<SessionUser | null> {
-  throw new Error("Example app: admin auth wiring is documented here but not implemented for the static GitHub Pages demo.");
-}
+import { authenticatePersistedAdminUser } from "./runtime.ts";
+
+export const hostRuntimeAdminAuth = createAstropressPasswordAuthModule(authenticatePersistedAdminUser);

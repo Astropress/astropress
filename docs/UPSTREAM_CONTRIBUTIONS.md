@@ -44,7 +44,7 @@ the Rust crate `include_dir!` to embed the scaffold template at compile time
 (`crates/astropress-cli/src/scaffold.rs:9`). If Bun's compiler supported the equivalent of
 `Bun.embeddedFiles` for whole directory trees, the CLI could be rewritten in TypeScript.
 
-**Astropress code:** `crates/astropress-cli/src/scaffold.rs`, `docs/adr/003-dual-ts-js-source.md`.
+**Astropress code:** `crates/astropress-cli/src/scaffold.rs`.
 
 **Upstream ask:**
 - `bun build --compile` should accept a `--asset-dir path` flag (or equivalent `Bun.plugin` API) that
@@ -103,18 +103,20 @@ explaining the workaround.
 ### 4. `injectRoute` should accept `.ts` entrypoints directly
 
 **Pain point:** Astro's `injectRoute()` integration API requires a JavaScript or `.astro` file path as
-the `entrypoint`. TypeScript files are rejected. This forces Astropress to maintain hand-authored `.js`
-companion files for every injected route — currently 105 `.js` companions alongside 181 `.ts` source
-files. The `audit:sync` CI script exists entirely to catch divergence between these pairs.
+the `entrypoint`. TypeScript files are rejected. This forces Astropress to hand-maintain `.js` companion
+files for every injected route under `packages/astropress/pages/` alongside the `.ts` source.
+
+> **Scope note (2026-04-13):** `src/` was migrated to tsc-into-`dist/`, so the `.ts`/`.js`
+> duplication there is gone. The remaining duplication is narrower — it only affects route
+> entrypoints under `pages/` that `injectRoute` loads directly.
 
 **Astropress code:** `packages/astropress/src/admin-app-integration.ts` (all `injectRoute` calls use
-`.js` paths), `scripts/check-js-sync.ts`, `docs/adr/003-dual-ts-js-source.md`.
+`.js` paths), `packages/astropress/pages/**/*.{ts,js}` pairs.
 
 **Upstream ask:**
 - `injectRoute({ entrypoint: "path/to/file.ts" })` should work, with Astro (via Vite) handling the
   TypeScript transform the same way it does for host-app pages.
-- This would eliminate the need for hand-authored `.js` companions for all route entrypoints, halving
-  the per-file maintenance overhead.
+- This would eliminate the remaining hand-authored `.js` companions for route entrypoints.
 
 **Reference:** https://github.com/withastro/astro/issues/9567
 

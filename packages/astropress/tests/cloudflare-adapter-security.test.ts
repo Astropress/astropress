@@ -1,9 +1,8 @@
-import { DatabaseSync } from "node:sqlite";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createAstropressCloudflareAdapter } from "../src/adapters/cloudflare.js";
 import { SqliteBackedD1Database } from "./helpers/provider-test-fixtures.js";
-import { readAstropressSqliteSchemaSql } from "../src/sqlite-bootstrap.js";
 import { hashPassword } from "../src/crypto-utils.js";
+import { makeDb } from "./helpers/make-db.js";
 
 describe("cloudflare adapter security defaults", () => {
   it("does not allow insecure fallback sign-in unless explicitly enabled", async () => {
@@ -39,8 +38,7 @@ describe("cloudflare session secret", () => {
   });
 
   it("emits console.warn when using the default hardcoded secret", async () => {
-    const db = new DatabaseSync(":memory:");
-    db.exec(readAstropressSqliteSchemaSql());
+    const db = makeDb();
     db.prepare("INSERT INTO admin_users (email, role, password_hash, name, active) VALUES (?, ?, ?, 'Admin', 1)").run(
       "admin@example.com",
       "admin",
@@ -58,8 +56,7 @@ describe("cloudflare session secret", () => {
 
   it("suppresses console.warn when CLOUDFLARE_SESSION_SECRET is set to a custom value", async () => {
     process.env.CLOUDFLARE_SESSION_SECRET = "my-long-random-secret-value";
-    const db = new DatabaseSync(":memory:");
-    db.exec(readAstropressSqliteSchemaSql());
+    const db = makeDb();
     db.prepare("INSERT INTO admin_users (email, role, password_hash, name, active) VALUES (?, ?, ?, 'Admin', 1)").run(
       "admin@example.com",
       "admin",
@@ -75,8 +72,7 @@ describe("cloudflare session secret", () => {
   it("session sign-in/lookup round-trips correctly with a custom secret", async () => {
     process.env.CLOUDFLARE_SESSION_SECRET = "custom-test-secret-xyz";
 
-    const db = new DatabaseSync(":memory:");
-    db.exec(readAstropressSqliteSchemaSql());
+    const db = makeDb();
     db.prepare("INSERT INTO admin_users (email, role, password_hash, name, active) VALUES (?, ?, ?, 'Admin', 1)").run(
       "admin@example.com",
       "admin",

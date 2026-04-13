@@ -26,13 +26,11 @@
     "test:static-site": "bun run --filter astropress-example-gh-pages build && bun run tooling/scripts/static-site-audit.ts examples/github-pages/dist",
     "dev:example": "bun run --filter astropress-example-gh-pages dev",
     "audit:carbon": "bunx size-limit --config tooling/size-limit.json && bun run tooling/scripts/carbon-audit.ts --domains-only",
-    "audit:sync": "bun run tooling/scripts/check-js-sync.ts",
     "audit:aeo": "bun run tooling/scripts/audit-aeo.ts",
     "check:version": "bun run tooling/scripts/check-version-bump.ts",
     "docs:api": "bun run tooling/scripts/generate-api-docs.ts",
     "docs:api:check": "bun run tooling/scripts/generate-api-docs.ts --check",
     "stress:sqlite": "bun run tooling/scripts/stress-sqlite-writes.ts",
-    "sync:js": "bun run tooling/scripts/sync-js-from-ts.ts",
     "prepare": "lefthook install"
   },
   "devDependencies": {

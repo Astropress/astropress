@@ -297,7 +297,7 @@ These are known gaps between the current state and a production v1.0 release.
 10. ~~**No full-text search**~~: **implemented** — `GET /ap-api/v1/search?q=` (FTS5); also available via `GET /ap-api/v1/content?q=`
 11. **No ISR for static hosts**: static deploy paths require full rebuild on content change
 12. **No load/stress testing**: no SQLite concurrent-write benchmarks
-13. **Dual `.ts`/`.js` maintenance burden**: `audit:sync` catches divergence but two manually synced files per module is unusual friction
+13. ~~**Dual `.ts`/`.js` maintenance burden in `src/`**~~: **resolved** — `tsc` now emits to `dist/`; `pages/` entrypoints still have `.js` companions pending upstream Astro support for `.ts` in `injectRoute` (see `docs/UPSTREAM_CONTRIBUTIONS.md` §4)
 14. **Thin Playwright coverage**: E2E tests cover accessibility and CRUD workflows but not import or multi-site (nexus) flows
 
 ## Packages

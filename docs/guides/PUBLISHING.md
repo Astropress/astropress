@@ -27,22 +27,19 @@ bun run --filter astropress test
 # 2. All Rust CLI tests must pass
 cargo test --manifest-path crates/astropress-cli/Cargo.toml
 
-# 3. TS/JS companion files must be in sync
-bun run audit:sync
-
-# 4. Architectural invariants must pass (TS and Rust)
+# 3. Architectural invariants must pass (TS and Rust)
 bun run audit:arch && bun run audit:arch:rust
 
-# 5. BDD scenarios must all pass
+# 4. BDD scenarios must all pass
 bun run bdd:test
 
-# 6. API reference must be up to date
+# 5. API reference must be up to date
 bun run docs:api:check
 
-# 7. Dependency audit must be clean
+# 6. Dependency audit must be clean
 bun run audit:deps && bun run audit:security
 
-# 8. No uncommitted changes
+# 7. No uncommitted changes
 git status --short
 ```
 
@@ -107,7 +104,7 @@ publish: bun run release -- --provenance
 
 This calls `changeset publish --provenance`, which:
 
-1. Runs `prepublishOnly` (`bun run build && bun run audit:sync && bun run audit:arch`) to build compiled `.js` output
+1. Runs `prepublishOnly` (`bun run build && bun run audit:arch`) to emit the compiled `.js` output into `dist/`
 2. Publishes `packages/astropress` to the npm registry
 3. Attaches a **SLSA Build L1 provenance attestation** — verifiable at
    npmjs.com under the package's provenance tab. See
@@ -204,11 +201,11 @@ Regenerate an automation token on npmjs.com and update the repository secret.
 provides a compatible version.
 
 **`prepublishOnly` fails**
-→ `prepublishOnly` runs `bun run build` then `audit:sync` and `audit:arch`.
-If `build` fails, check that `tsc` can find all imports (`tsconfig.build.json`
-includes both `src/**/*.ts` and `index.ts`). If `audit:sync` fails, there is
-a `.ts`/`.js` export divergence — run `bun run audit:sync` locally to see which
-file is out of sync.
+→ `prepublishOnly` runs `bun run build` then `audit:arch`. If `build` fails,
+check that `tsc` can find all imports (`tsconfig.build.json` includes both
+`src/**/*.ts` and `index.ts`). If `audit:arch` fails with `no-js-in-src`, a
+stray `.js` file crept into `packages/astropress/src/` — delete it and let
+the build re-emit into `dist/`.
 
 **Changeset is for the wrong package**
 → Delete the changeset file from `.changeset/`, run `bun run changeset add`

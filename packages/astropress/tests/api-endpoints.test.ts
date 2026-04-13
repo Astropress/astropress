@@ -1,10 +1,10 @@
-import { DatabaseSync } from "node:sqlite";
+import type { DatabaseSync } from "node:sqlite";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { registerCms } from "../src/config";
-import { readAstropressSqliteSchemaSql } from "../src/sqlite-bootstrap.js";
 import { createApiTokenStore } from "../src/sqlite-runtime/api-tokens.js";
 import { makeLocals } from "./helpers/make-locals.js";
+import { makeDb } from "./helpers/make-db.js";
 
 // ─── Hoisted mock functions ────────────────────────────────────────────────────
 
@@ -62,8 +62,7 @@ let webhooksManageToken: string;
 const BASE = "http://localhost";
 
 beforeAll(async () => {
-  db = new DatabaseSync(":memory:");
-  db.exec(readAstropressSqliteSchemaSql());
+  db = makeDb();
   locals = makeLocals(db);
 
   registerCms({

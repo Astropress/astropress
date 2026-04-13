@@ -16,7 +16,6 @@ jobs:
       - run: bun install --frozen-lockfile
       - run: bun run audit:deps
       - run: bun run audit:security
-      - run: bun run audit:sync
       - run: bun run check:version
       - run: bun run audit:arch
       - run: bunx biome check --reporter=github packages/astropress/src packages/astropress/tests packages/astropress/web-components

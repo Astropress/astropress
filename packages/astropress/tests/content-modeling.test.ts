@@ -1,12 +1,12 @@
-import { DatabaseSync } from "node:sqlite";
+import type { DatabaseSync } from "node:sqlite";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 
 import { validateContentFields } from "../src/content-modeling.js";
 import type { ContentTypeDefinition, FieldDefinition } from "../src/content-modeling.js";
-import { readAstropressSqliteSchemaSql } from "../src/sqlite-bootstrap.js";
 import { createSqliteContentStore } from "../src/sqlite-runtime/content.js";
+import { makeDb } from "./helpers/make-db.js";
 
 // ─── FieldDefinition new types — structural ───────────────────────────────────
 
@@ -126,12 +126,6 @@ describe("validateContentFields — repeater type", () => {
 // ─── SQLite metadata persistence ─────────────────────────────────────────────
 
 describe("SQLite upsertContentOverride — metadata persistence", () => {
-  function makeDb() {
-    const db = new DatabaseSync(":memory:");
-    db.exec(readAstropressSqliteSchemaSql());
-    return db;
-  }
-
   function makeStore(db: DatabaseSync) {
     let id = 0;
     const { sqliteContentRepository } = createSqliteContentStore(

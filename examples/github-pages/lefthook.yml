@@ -2,24 +2,20 @@ pre-commit:
   parallel: true
   commands:
     biome:
-      glob: "packages/**/*.{ts,js,astro,json}"
+      glob: "src/**/*.{ts,js,astro,json}"
       run: bunx biome check --no-errors-on-unmatched {staged_files}
       stage_fixed: true
-
-    audit-arch:
-      glob: "packages/**/*.ts"
-      run: bun run audit:arch
-
-    bdd-lint:
-      glob: "tooling/bdd/**/*.feature"
-      run: bun run bdd:lint
-
     no-secrets:
       run: |
         if git diff --cached --name-only | grep -qE '(^|/)\.env(\.|$)'; then
-          echo "Refusing to commit .env files — remove them from the staging area."
+          echo "Refusing to commit .env files — remove them from staging."
           exit 1
         fi
+
+pre-push:
+  commands:
+    test:
+      run: bun run test
 
 commit-msg:
   commands:
@@ -29,19 +25,7 @@ commit-msg:
         echo "$msg" | grep -qE '^(Merge|Revert|fixup!|squash!)' && exit 0
         if ! echo "$msg" | grep -qE '^(feat|fix|chore|docs|test|refactor|perf|ci|build|revert)(\(.+\))?: .{1,72}$'; then
           echo "Commit message must follow conventional commits format:"
-          echo "  type(scope)?: subject  (subject max 72 chars)"
+          echo "  type(scope)?: subject   (max 72 chars)"
           echo "  Types: feat fix chore docs test refactor perf ci build revert"
           exit 1
         fi
-
-pre-push:
-  parallel: true
-  commands:
-    gates:
-      run: bun run audit:arch && bun run audit:arch:rust && bun run bdd:test
-
-    coverage:
-      run: bun run test:coverage
-
-    test-cli:
-      run: bun run test:cli

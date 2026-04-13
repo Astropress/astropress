@@ -5,7 +5,6 @@ import { join } from "node:path";
 
 import { describe, expect, it } from "vitest";
 import { createAstropressWordPressImportSource } from "../src/import/wordpress.js";
-import { readAstropressSqliteSchemaSql } from "../src/sqlite-bootstrap.js";
 
 describe("wordpress import contract", () => {
   it("parses WXR content into staged import artifacts and redirects", async () => {

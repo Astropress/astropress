@@ -43,6 +43,7 @@ function makePost(overrides: {
 
 let workspace: string;
 let exportFile: string;
+const importer = createAstropressWordPressImportSource();
 
 beforeEach(async () => {
   workspace = await mkdtemp(join(tmpdir(), "astropress-wp-branches-"));
@@ -58,7 +59,6 @@ describe("normalizeContentStatus branches", () => {
   it("maps 'pending' status to 'draft'", async () => {
     const artifactDir = join(workspace, "artifacts-pending");
     await writeFile(exportFile, makeWxr([makePost({ status: "pending" })]), "utf8");
-    const importer = createAstropressWordPressImportSource();
     await importer.importWordPress({ exportFile, artifactDir });
     const records = JSON.parse(await readFile(join(artifactDir, "content-records.json"), "utf8")) as Array<Record<string, unknown>>;
     expect(records[0].status).toBe("draft");
@@ -67,7 +67,6 @@ describe("normalizeContentStatus branches", () => {
   it("maps 'future' status to 'draft'", async () => {
     const artifactDir = join(workspace, "artifacts-future");
     await writeFile(exportFile, makeWxr([makePost({ status: "future" })]), "utf8");
-    const importer = createAstropressWordPressImportSource();
     await importer.importWordPress({ exportFile, artifactDir });
     const records = JSON.parse(await readFile(join(artifactDir, "content-records.json"), "utf8")) as Array<Record<string, unknown>>;
     expect(records[0].status).toBe("draft");
@@ -76,7 +75,6 @@ describe("normalizeContentStatus branches", () => {
   it("maps 'private' status to 'archived' (default branch)", async () => {
     const artifactDir = join(workspace, "artifacts-private");
     await writeFile(exportFile, makeWxr([makePost({ status: "private" })]), "utf8");
-    const importer = createAstropressWordPressImportSource();
     await importer.importWordPress({ exportFile, artifactDir });
     const records = JSON.parse(await readFile(join(artifactDir, "content-records.json"), "utf8")) as Array<Record<string, unknown>>;
     expect(records[0].status).toBe("archived");
@@ -90,7 +88,6 @@ describe("normalizePathname catch branch", () => {
     const badLink = "http://[not-valid-host]/path/";
     const artifactDir = join(workspace, "artifacts-pathname");
     await writeFile(exportFile, makeWxr([makePost({ link: badLink, name: "fallback-slug" })]), "utf8");
-    const importer = createAstropressWordPressImportSource();
     await importer.importWordPress({ exportFile, artifactDir });
     const records = JSON.parse(await readFile(join(artifactDir, "content-records.json"), "utf8")) as Array<Record<string, unknown>>;
     // catch branch produced the fallback slug as the pathname, not the malformed URL
@@ -102,7 +99,6 @@ describe("detectUnsupportedPatterns branches", () => {
   it("flags page builder markup when body contains vc_row", async () => {
     const pageBuilderBody = '<div class="vc_row">Page builder content</div>';
     await writeFile(exportFile, makeWxr([makePost({ body: pageBuilderBody })]), "utf8");
-    const importer = createAstropressWordPressImportSource();
     const report = await importer.importWordPress({ exportFile });
     expect(report.reviewRequired).toBe(true);
     expect(report.manualTasks.some((t) => t.includes("page-builder"))).toBe(true);
@@ -111,7 +107,6 @@ describe("detectUnsupportedPatterns branches", () => {
   it("flags shortcodes when body contains [shortcode]", async () => {
     const shortcodeBody = "<p>Intro</p>[gallery ids=\"1,2\"]";
     await writeFile(exportFile, makeWxr([makePost({ body: shortcodeBody })]), "utf8");
-    const importer = createAstropressWordPressImportSource();
     const report = await importer.importWordPress({ exportFile });
     expect(report.reviewRequired).toBe(true);
     expect(report.manualTasks.some((t) => t.includes("shortcode"))).toBe(true);
@@ -127,7 +122,6 @@ describe("buildImportPlan branches", () => {
       ]),
       "utf8",
     );
-    const importer = createAstropressWordPressImportSource();
     const inventory = await importer.inspectWordPress?.({ exportFile });
     const plan = await importer.planWordPressImport?.({
       inventory: inventory!,
@@ -140,7 +134,6 @@ describe("buildImportPlan branches", () => {
 
   it("planWordPressImport without downloadMedia option uses false default (right ?? branch)", async () => {
     await writeFile(exportFile, makeWxr([makePost({ id: "202", name: "plan-default" })]), "utf8");
-    const importer = createAstropressWordPressImportSource();
     const inventory = await importer.inspectWordPress?.({ exportFile });
     const plan = await importer.planWordPressImport?.({ inventory: inventory! });
     expect(plan?.downloadMedia).toBe(false);
@@ -153,7 +146,6 @@ describe("buildImportPlan branches", () => {
       makeWxr([makePost({ id: "101", name: "hello", innerBlocks: comment })]),
       "utf8",
     );
-    const importer = createAstropressWordPressImportSource();
     const report = await importer.importWordPress({ exportFile, includeComments: false });
     expect(report.importedComments).toBe(0);
   });
@@ -166,7 +158,6 @@ describe("buildImportPlan branches", () => {
       ]),
       "utf8",
     );
-    const importer = createAstropressWordPressImportSource();
     const report = await importer.importWordPress({ exportFile, includeMedia: false });
     expect(report.importedMedia).toBe(0);
   });
@@ -200,7 +191,6 @@ describe("downloadMediaAssets failure branch", () => {
     );
 
     const artifactDir = join(workspace, "artifacts");
-    const importer = createAstropressWordPressImportSource();
     const report = await importer.importWordPress({
       exportFile,
       artifactDir,
@@ -236,7 +226,6 @@ describe("applyLocal: true with includeComments/Media: false", () => {
       "utf8",
     );
 
-    const importer = createAstropressWordPressImportSource();
     const report = await importer.importWordPress({
       exportFile,
       applyLocal: true,
@@ -272,7 +261,6 @@ describe("applyLocal: true with comments included", () => {
       "utf8",
     );
 
-    const importer = createAstropressWordPressImportSource();
     const report = await importer.importWordPress({
       exportFile,
       applyLocal: true,
@@ -292,7 +280,6 @@ describe("applyLocal: true with comments included", () => {
       "utf8",
     );
 
-    const importer = createAstropressWordPressImportSource();
     const adminDbPath = join(workspace, "admin.sqlite");
 
     // First import creates the record
@@ -325,7 +312,6 @@ describe("applyLocal: true with comments included", () => {
       "utf8",
     );
 
-    const importer = createAstropressWordPressImportSource();
     const report = await importer.importWordPress({
       exportFile,
       applyLocal: true,
@@ -361,7 +347,6 @@ describe("WXR parsing — inferMimeType, normalizeSlug, filenameFromUrl, normali
       "</item>",
     ].join(""));
     await writeFile(exportFile, makeWxr(items), "utf8");
-    const importer = createAstropressWordPressImportSource();
     const report = await importer.importWordPress({ exportFile });
     // All attachment types are imported without error
     expect(report.status).toMatch(/^completed/);
@@ -379,7 +364,6 @@ describe("WXR parsing — inferMimeType, normalizeSlug, filenameFromUrl, normali
       "</item>",
     ].join("");
     await writeFile(exportFile, makeWxr([item]), "utf8");
-    const importer = createAstropressWordPressImportSource();
     const report = await importer.importWordPress({ exportFile });
     expect(report.importedRecords).toBeGreaterThan(0);
   });
@@ -396,7 +380,6 @@ describe("WXR parsing — inferMimeType, normalizeSlug, filenameFromUrl, normali
       "</item>",
     ].join("");
     await writeFile(exportFile, makeWxr([item]), "utf8");
-    const importer = createAstropressWordPressImportSource();
     const report = await importer.importWordPress({ exportFile });
     expect(report.status).toMatch(/^completed/);
   });
@@ -413,7 +396,6 @@ describe("WXR parsing — inferMimeType, normalizeSlug, filenameFromUrl, normali
       "</item>",
     ].join("");
     await writeFile(exportFile, makeWxr([item]), "utf8");
-    const importer = createAstropressWordPressImportSource();
     const report = await importer.importWordPress({ exportFile });
     // unrecognized type is skipped — 0 content records
     expect(report.importedRecords).toBe(0);
@@ -422,7 +404,6 @@ describe("WXR parsing — inferMimeType, normalizeSlug, filenameFromUrl, normali
   it("falls back to legacyId for slug when the link URL is just '/'", async () => {
     // When link = "https://example.com/" → legacyUrl = "/" → after strip → "" → split → [""] → at(-1) = "" → falsy → || legacyId
     await writeFile(exportFile, makeWxr([makePost({ id: "550", name: "root-url-post", link: "https://example.com/" })]), "utf8");
-    const importer = createAstropressWordPressImportSource();
     const report = await importer.importWordPress({ exportFile });
     expect(report.importedRecords).toBeGreaterThanOrEqual(1);
   });
@@ -443,7 +424,6 @@ describe("WXR parsing — inferMimeType, normalizeSlug, filenameFromUrl, normali
       "</rss>",
     ].join("");
     await writeFile(exportFile, wxr, "utf8");
-    const importer = createAstropressWordPressImportSource();
     const report = await importer.importWordPress({ exportFile });
     expect(report.importedRecords).toBeGreaterThanOrEqual(1);
   });
@@ -462,7 +442,6 @@ describe("WXR parsing — inferMimeType, normalizeSlug, filenameFromUrl, normali
     ].join("");
     const wxr = makeWxr([makePost({ id: "502", name: "commented-post", innerBlocks: innerComment })]);
     await writeFile(exportFile, wxr, "utf8");
-    const importer = createAstropressWordPressImportSource();
     const report = await importer.importWordPress({ exportFile, includeComments: true });
     // Parser ran without error; comment with pending status was processed
     expect(report.status).toMatch(/^completed/);
@@ -483,7 +462,6 @@ describe("WXR parsing — inferMimeType, normalizeSlug, filenameFromUrl, normali
       "</item>",
     ].join("");
     await writeFile(exportFile, makeWxr([item]), "utf8");
-    const importer = createAstropressWordPressImportSource();
     const report = await importer.importWordPress({ exportFile });
     expect(report.importedRecords).toBe(1);
   });
@@ -501,7 +479,6 @@ describe("WXR parsing — inferMimeType, normalizeSlug, filenameFromUrl, normali
       "</channel></rss>",
     ].join("");
     await writeFile(exportFile, wxr, "utf8");
-    const importer = createAstropressWordPressImportSource();
     const report = await importer.importWordPress({ exportFile, includeUsers: false });
     expect(report.importedUsers).toBe(0);
   });
@@ -520,7 +497,6 @@ describe("WXR parsing — inferMimeType, normalizeSlug, filenameFromUrl, normali
       "</item>",
     ].join("");
     await writeFile(exportFile, makeWxr([item]), "utf8");
-    const importer = createAstropressWordPressImportSource();
     const report = await importer.importWordPress({ exportFile });
     expect(report.status).toMatch(/^completed/);
   });
@@ -538,7 +514,6 @@ describe("WXR parsing — inferMimeType, normalizeSlug, filenameFromUrl, normali
       "</item>",
     ].join("");
     await writeFile(exportFile, makeWxr([item]), "utf8");
-    const importer = createAstropressWordPressImportSource();
     const report = await importer.importWordPress({ exportFile });
     expect(report.importedRecords).toBe(1);
   });
@@ -556,7 +531,6 @@ describe("WXR parsing — inferMimeType, normalizeSlug, filenameFromUrl, normali
       "</channel></rss>",
     ].join("");
     await writeFile(exportFile, wxr, "utf8");
-    const importer = createAstropressWordPressImportSource();
     const report = await importer.importWordPress({ exportFile });
     expect(report.importedRecords).toBeGreaterThanOrEqual(1);
   });
@@ -574,7 +548,6 @@ describe("WXR parsing — inferMimeType, normalizeSlug, filenameFromUrl, normali
       "</item>",
     ].join("");
     await writeFile(exportFile, makeWxr([item]), "utf8");
-    const importer = createAstropressWordPressImportSource();
     const report = await importer.importWordPress({ exportFile });
     expect(report.importedRecords).toBe(1);
   });
@@ -594,7 +567,6 @@ describe("WXR parsing — inferMimeType, normalizeSlug, filenameFromUrl, normali
       "</item>",
     ].join("");
     await writeFile(exportFile, makeWxr([item]), "utf8");
-    const importer = createAstropressWordPressImportSource();
     const report = await importer.importWordPress({ exportFile });
     expect(report.importedRecords).toBe(1);
   });
@@ -615,7 +587,6 @@ describe("WXR parsing — inferMimeType, normalizeSlug, filenameFromUrl, normali
       makeWxr([makePost({ id: "510", name: "email-comment-post", innerBlocks: innerComment })]),
       "utf8",
     );
-    const importer = createAstropressWordPressImportSource();
     const report = await importer.importWordPress({ exportFile, includeComments: true });
     expect(report.importedComments).toBeGreaterThan(0);
   });
@@ -632,7 +603,6 @@ describe("WXR parsing — inferMimeType, normalizeSlug, filenameFromUrl, normali
       makeWxr([makePost({ id: "511", name: "hello-world", innerBlocks: postmeta })]),
       "utf8",
     );
-    const importer = createAstropressWordPressImportSource();
     const report = await importer.importWordPress({ exportFile });
     expect(report.importedRedirects).toBeGreaterThan(0);
   });
@@ -649,7 +619,6 @@ describe("WXR parsing — inferMimeType, normalizeSlug, filenameFromUrl, normali
       "</item>",
     ].join("");
     await writeFile(exportFile, makeWxr([item]), "utf8");
-    const importer = createAstropressWordPressImportSource();
     const report = await importer.importWordPress({ exportFile });
     expect(report.importedRecords).toBe(1);
   });
@@ -662,7 +631,6 @@ describe("WXR parsing — inferMimeType, normalizeSlug, filenameFromUrl, normali
 describe("malformed XML input handling", () => {
   it("handles completely empty export file gracefully — returns zero records", async () => {
     await writeFile(exportFile, "", "utf8");
-    const importer = createAstropressWordPressImportSource();
     const report = await importer.importWordPress({ exportFile });
     expect(report.importedRecords).toBe(0);
     expect(report.failedMedia).toHaveLength(0);
@@ -670,7 +638,6 @@ describe("malformed XML input handling", () => {
 
   it("handles export file with XML but no <item> elements — returns zero records", async () => {
     await writeFile(exportFile, "<rss><channel><title>Empty Export</title></channel></rss>", "utf8");
-    const importer = createAstropressWordPressImportSource();
     const report = await importer.importWordPress({ exportFile });
     expect(report.importedRecords).toBe(0);
   });
@@ -681,7 +648,6 @@ describe("malformed XML input handling", () => {
     const truncated = "<item><title><![CDATA[Truncated]]></title><wp:post_id>5002</wp:post_id>";
     // The truncated item appears after the valid one; parser should still surface the valid post
     await writeFile(exportFile, `<rss><channel>${validItem}${truncated}</channel></rss>`, "utf8");
-    const importer = createAstropressWordPressImportSource();
     // Must not throw — partial result is acceptable
     const report = await importer.importWordPress({ exportFile });
     expect(report.importedRecords).toBeGreaterThanOrEqual(0);
@@ -705,7 +671,6 @@ describe("attachment with no URL and no guid", () => {
       "</item>",
     ].join("");
     await writeFile(exportFile, makeWxr([item]), "utf8");
-    const importer = createAstropressWordPressImportSource();
     const report = await importer.importWordPress({ exportFile });
     // The media asset is still recorded — sourceUrl is empty but filename falls back to slug.bin.
     // The filename is internal to the bundle; the report exposes the count via inventory.detectedMedia.
@@ -722,7 +687,6 @@ describe("duplicate slug handling", () => {
     const post1 = makePost({ id: "7001", name: "duplicate-slug", type: "post" });
     const post2 = makePost({ id: "7002", name: "duplicate-slug", type: "post" });
     await writeFile(exportFile, makeWxr([post1, post2]), "utf8");
-    const importer = createAstropressWordPressImportSource();
     const report = await importer.importWordPress({ exportFile });
     // Both records should be parsed — the importer does not deduplicate at parse time
     expect(report.importedRecords).toBe(2);
@@ -735,7 +699,6 @@ describe("duplicate slug handling", () => {
     const { createDefaultAstropressSqliteSeedToolkit } = await import("../src/sqlite-bootstrap.js");
     createDefaultAstropressSqliteSeedToolkit().seedDatabase({ dbPath });
 
-    const importer = createAstropressWordPressImportSource();
     // First apply — inserts
     await importer.importWordPress({ exportFile, applyLocal: true, workspaceRoot: workspace, adminDbPath: dbPath, includeComments: false, includeMedia: false });
     // Second apply — hits the 'existing record' update path (line 716)
@@ -746,7 +709,6 @@ describe("duplicate slug handling", () => {
 
 describe("importWordPress — error/guard branches", () => {
   it("throws when exportFile is not provided", async () => {
-    const importer = createAstropressWordPressImportSource();
     await expect(importer.importWordPress({} as Parameters<typeof importer.importWordPress>[0])).rejects.toThrow(
       "WordPress import requires an",
     );
@@ -770,7 +732,6 @@ describe("importWordPress — error/guard branches", () => {
     vi.stubGlobal("fetch", vi.fn().mockRejectedValue("network failure"));
 
     const artifactDir = join(workspace, "artifacts");
-    const importer = createAstropressWordPressImportSource();
     const report = await importer.importWordPress({
       exportFile,
       artifactDir,
@@ -786,7 +747,6 @@ describe("importWordPress — error/guard branches", () => {
 describe("applyLocal — additional branches", () => {
   it("applies with a relative adminDbPath", async () => {
     await writeFile(exportFile, makeWxr([makePost({ id: "801", name: "relative-db-post" })]), "utf8");
-    const importer = createAstropressWordPressImportSource();
     const report = await importer.importWordPress({
       exportFile,
       applyLocal: true,
@@ -814,7 +774,6 @@ describe("applyLocal — additional branches", () => {
       makeWxr([makePost({ id: "802", name: "email-apply-post", innerBlocks: innerComment })]),
       "utf8",
     );
-    const importer = createAstropressWordPressImportSource();
     const report = await importer.importWordPress({
       exportFile,
       applyLocal: true,
@@ -841,7 +800,6 @@ describe("applyLocal — additional branches", () => {
     await writeFile(exportFile, makeWxr([item]), "utf8");
 
     const artifactDir = join(workspace, "media-artifacts");
-    const importer = createAstropressWordPressImportSource();
     const report = await importer.importWordPress({
       exportFile,
       applyLocal: true,
@@ -867,7 +825,6 @@ describe("applyLocal — additional branches", () => {
       makeWxr([makePost({ id: "902", name: "apply-redirect-post", innerBlocks: postmeta })]),
       "utf8",
     );
-    const importer = createAstropressWordPressImportSource();
     const report = await importer.importWordPress({
       exportFile,
       applyLocal: true,
@@ -882,7 +839,6 @@ describe("applyLocal — additional branches", () => {
   it("uses process.cwd() when workspaceRoot is omitted", async () => {
     // Write a minimal export; the DB will be created under process.cwd()
     await writeFile(exportFile, makeWxr([makePost({ id: "903", name: "cwd-post" })]), "utf8");
-    const importer = createAstropressWordPressImportSource();
     // Provide an absolute adminDbPath so we control where the DB goes
     const report = await importer.importWordPress({
       exportFile,
@@ -907,7 +863,6 @@ describe("applyLocal — additional branches", () => {
     // Wrap author block in channel via custom WXR
     const wxr = ["<rss>", "<channel>", authorBlock, makePost({ id: "901", name: "user-post" }), "</channel>", "</rss>"].join("");
     await writeFile(exportFile, wxr, "utf8");
-    const importer = createAstropressWordPressImportSource();
     const report = await importer.importWordPress({
       exportFile,
       applyLocal: true,
@@ -922,7 +877,6 @@ describe("applyLocal — additional branches", () => {
 
   it("applies import with includeUsers: false and reports zero applied users", async () => {
     await writeFile(exportFile, makeWxr([makePost({ id: "950", name: "no-users-post" })]), "utf8");
-    const importer = createAstropressWordPressImportSource();
     const report = await importer.importWordPress({
       exportFile,
       applyLocal: true,
@@ -948,7 +902,6 @@ describe("applyLocal — additional branches", () => {
       "</item>",
     ].join("");
     await writeFile(exportFile, makeWxr([attachment]), "utf8");
-    const importer = createAstropressWordPressImportSource();
     const report = await importer.importWordPress({
       exportFile,
       applyLocal: true,
@@ -970,7 +923,6 @@ describe("decodeXml — numeric XML entity branches (lines 35-39)", () => {
       makeWxr([makePost({ id: "2001", name: "entity-numeric", body: "it&#39;s &#x27;hello&#x27; &#60;" })]),
       "utf8",
     );
-    const importer = createAstropressWordPressImportSource();
     await importer.importWordPress({ exportFile, artifactDir });
     const records = JSON.parse(await readFile(join(artifactDir, "content-records.json"), "utf8")) as Array<Record<string, unknown>>;
     // &#39; → ', &#x27; → ', &#60; → <
@@ -984,7 +936,6 @@ describe("decodeXml — numeric XML entity branches (lines 35-39)", () => {
       makeWxr([makePost({ id: "2002", name: "entity-nan", body: "bad &#a; entity" })]),
       "utf8",
     );
-    const importer = createAstropressWordPressImportSource();
     await importer.importWordPress({ exportFile, artifactDir });
     const records = JSON.parse(await readFile(join(artifactDir, "content-records.json"), "utf8")) as Array<Record<string, unknown>>;
     // &#a; → parseInt("a", 10) = NaN → !isFinite → entity left verbatim
@@ -998,7 +949,6 @@ describe("decodeXml — numeric XML entity branches (lines 35-39)", () => {
       makeWxr([makePost({ id: "2003", name: "entity-unknown", body: "text&hellip;more" })]),
       "utf8",
     );
-    const importer = createAstropressWordPressImportSource();
     await importer.importWordPress({ exportFile, artifactDir });
     const records = JSON.parse(await readFile(join(artifactDir, "content-records.json"), "utf8")) as Array<Record<string, unknown>>;
     // &hellip; is not in XML_ENTITY_LOOKUP → preserved verbatim
@@ -1013,7 +963,6 @@ describe("resolveLocalAdminDbPath default path (line 478)", () => {
       makeWxr([makePost({ id: "2300", name: "default-db-path-post" })]),
       "utf8",
     );
-    const importer = createAstropressWordPressImportSource();
     const report = await importer.importWordPress({
       exportFile,
       applyLocal: true,
@@ -1042,7 +991,6 @@ describe("comment without email — authorEmail ?? null (line 643 branch)", () =
       makeWxr([makePost({ id: "2401", name: "no-email-comment-post", innerBlocks: innerComment })]),
       "utf8",
     );
-    const importer = createAstropressWordPressImportSource();
     const report = await importer.importWordPress({
       exportFile,
       applyLocal: true,
@@ -1076,7 +1024,6 @@ describe("buildImportPlan inventory-based defaults (lines 317-321 ?? branches)",
       ]),
       "utf8",
     );
-    const importer = createAstropressWordPressImportSource();
     // No includeComments/Users/Media specified — buildImportPlan uses inventory detection
     const report = await importer.importWordPress({ exportFile });
     expect(report.importedRecords).toBeGreaterThanOrEqual(1);
@@ -1110,7 +1057,6 @@ describe("authorLogins empty array branch (lines 203-205: no creator, no authors
       "</item>",
     ].join("");
     await writeFile(exportFile, makeWxr([item]), "utf8");
-    const importer = createAstropressWordPressImportSource();
     const report = await importer.importWordPress({ exportFile });
     expect(report.importedRecords).toBe(1);
   });
@@ -1138,7 +1084,6 @@ describe("authorLogins empty array branch (lines 203-205: no creator, no authors
       "</channel></rss>",
     ].join("");
     await writeFile(exportFile, wxr, "utf8");
-    const importer = createAstropressWordPressImportSource();
     const report = await importer.importWordPress({ exportFile });
     expect(report.importedRecords).toBe(1);
   });
@@ -1165,7 +1110,6 @@ describe("authorLogins empty array branch (lines 203-205: no creator, no authors
       "</channel></rss>",
     ].join("");
     await writeFile(exportFile, wxr, "utf8");
-    const importer = createAstropressWordPressImportSource();
     const report = await importer.importWordPress({ exportFile });
     expect(report.importedRecords).toBe(1);
   });
@@ -1178,7 +1122,6 @@ describe("authorLogins empty array branch (lines 203-205: no creator, no authors
 describe("malformed XML input handling", () => {
   it("handles completely empty export file gracefully — returns zero records", async () => {
     await writeFile(exportFile, "", "utf8");
-    const importer = createAstropressWordPressImportSource();
     const report = await importer.importWordPress({ exportFile });
     expect(report.importedRecords).toBe(0);
     expect(report.failedMedia).toHaveLength(0);
@@ -1186,7 +1129,6 @@ describe("malformed XML input handling", () => {
 
   it("handles export file with XML but no <item> elements — returns zero records", async () => {
     await writeFile(exportFile, "<rss><channel><title>Empty Export</title></channel></rss>", "utf8");
-    const importer = createAstropressWordPressImportSource();
     const report = await importer.importWordPress({ exportFile });
     expect(report.importedRecords).toBe(0);
   });
@@ -1197,7 +1139,6 @@ describe("malformed XML input handling", () => {
     const truncated = "<item><title><![CDATA[Truncated]]></title><wp:post_id>5002</wp:post_id>";
     // The truncated item appears after the valid one; parser should still surface the valid post
     await writeFile(exportFile, `<rss><channel>${validItem}${truncated}</channel></rss>`, "utf8");
-    const importer = createAstropressWordPressImportSource();
     // Must not throw — partial result is acceptable
     const report = await importer.importWordPress({ exportFile });
     expect(report.importedRecords).toBeGreaterThanOrEqual(0);
@@ -1221,7 +1162,6 @@ describe("attachment with no URL and no guid", () => {
       "</item>",
     ].join("");
     await writeFile(exportFile, makeWxr([item]), "utf8");
-    const importer = createAstropressWordPressImportSource();
     const report = await importer.importWordPress({ exportFile });
     // The media asset is still recorded — sourceUrl is empty but filename falls back to slug.bin.
     // The filename is internal to the bundle; the report exposes the count via inventory.detectedMedia.
@@ -1238,7 +1178,6 @@ describe("duplicate slug handling", () => {
     const post1 = makePost({ id: "7001", name: "duplicate-slug", type: "post" });
     const post2 = makePost({ id: "7002", name: "duplicate-slug", type: "post" });
     await writeFile(exportFile, makeWxr([post1, post2]), "utf8");
-    const importer = createAstropressWordPressImportSource();
     const report = await importer.importWordPress({ exportFile });
     // Both records should be parsed — the importer does not deduplicate at parse time
     expect(report.importedRecords).toBe(2);
@@ -1251,7 +1190,6 @@ describe("duplicate slug handling", () => {
     const { createDefaultAstropressSqliteSeedToolkit } = await import("../src/sqlite-bootstrap.js");
     createDefaultAstropressSqliteSeedToolkit().seedDatabase({ dbPath });
 
-    const importer = createAstropressWordPressImportSource();
     // First apply — inserts
     await importer.importWordPress({ exportFile, applyLocal: true, workspaceRoot: workspace, adminDbPath: dbPath, includeComments: false, includeMedia: false });
     // Second apply — hits the 'existing record' update path (line 716)

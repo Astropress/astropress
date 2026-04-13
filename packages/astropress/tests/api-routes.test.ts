@@ -1,12 +1,12 @@
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
-import { DatabaseSync } from "node:sqlite";
 import { describe, expect, it } from "vitest";
 
 import { apiRouteDefinitions, injectApiRoutes } from "../src/api-routes.js";
 import { withApiRequest, jsonOk, jsonOkPaginated, jsonOkWithEtag, apiErrors } from "../src/api-middleware.js";
 import { resolveAstropressSecurityArea } from "../src/security-middleware.js";
-import { readAstropressSqliteSchemaSql, runAstropressMigrations } from "../src/sqlite-bootstrap.js";
+import { runAstropressMigrations } from "../src/sqlite-bootstrap.js";
 import { createApiTokenStore } from "../src/sqlite-runtime/api-tokens.js";
+import { makeDb } from "./helpers/make-db.js";
 
 // ─── Route inventory ──────────────────────────────────────────────────────────
 
@@ -70,8 +70,7 @@ describe("injectApiRoutes", () => {
 // ─── API middleware ───────────────────────────────────────────────────────────
 
 function makeCtx(options?: { rateLimit?: number }) {
-  const db = new DatabaseSync(":memory:");
-  db.exec(readAstropressSqliteSchemaSql());
+  const db = makeDb();
   const apiTokens = createApiTokenStore(db);
 
   const rateLimitMap = new Map<string, { count: number; windowStart: number }>();
@@ -224,8 +223,7 @@ describe("jsonOkWithEtag helper", () => {
 
 describe("runAstropressMigrations", () => {
   it("applies .sql files from a directory in lexicographic order", () => {
-    const db = new DatabaseSync(":memory:");
-    db.exec(readAstropressSqliteSchemaSql());
+    const db = makeDb();
 
     const tmpDir = `/tmp/astropress-migration-test-${Date.now()}`;
     mkdirSync(tmpDir, { recursive: true });
@@ -245,16 +243,14 @@ describe("runAstropressMigrations", () => {
   });
 
   it("returns empty result when migrations directory does not exist", () => {
-    const db = new DatabaseSync(":memory:");
-    db.exec(readAstropressSqliteSchemaSql());
+    const db = makeDb();
     const result = runAstropressMigrations(db, `/tmp/does-not-exist-${Date.now()}`);
     expect(result.applied).toEqual([]);
     expect(result.skipped).toEqual([]);
   });
 
   it("records applied migrations in schema_migrations table", () => {
-    const db = new DatabaseSync(":memory:");
-    db.exec(readAstropressSqliteSchemaSql());
+    const db = makeDb();
 
     const tmpDir = `/tmp/astropress-migration-record-test-${Date.now()}`;
     mkdirSync(tmpDir, { recursive: true });

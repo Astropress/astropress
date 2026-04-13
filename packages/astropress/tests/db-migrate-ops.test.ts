@@ -12,6 +12,7 @@ import {
   checkSchemaVersionAhead,
   ASTROPRESS_FRAMEWORK_MIGRATION_BASELINE,
 } from "../src/sqlite-bootstrap.js";
+import { makeDb } from "./helpers/make-db.js";
 
 describe("db-migrate-ops", () => {
   function setupDb(dir: string): string {
@@ -83,8 +84,7 @@ describe("db-migrate-ops", () => {
     writeFileSync(join(migrationsDir, "0001_add_tags.sql"), "CREATE TABLE IF NOT EXISTS tags (id INTEGER PRIMARY KEY);");
     writeFileSync(join(migrationsDir, "0001_add_tags.down.sql"), "DROP TABLE IF EXISTS tags;");
 
-    const db = new DatabaseSync(":memory:");
-    db.exec(readAstropressSqliteSchemaSql());
+    const db = makeDb();
     runAstropressMigrations(db, migrationsDir);
 
     const row = db.prepare("SELECT rollback_sql FROM schema_migrations WHERE name = '0001_add_tags.sql'").get() as { rollback_sql: string | null } | undefined;
@@ -99,8 +99,7 @@ describe("db-migrate-ops", () => {
     mkdirSync(migrationsDir);
     writeFileSync(join(migrationsDir, "0001_add_flags.sql"), "CREATE TABLE IF NOT EXISTS feature_flags (id INTEGER PRIMARY KEY);");
 
-    const db = new DatabaseSync(":memory:");
-    db.exec(readAstropressSqliteSchemaSql());
+    const db = makeDb();
     runAstropressMigrations(db, migrationsDir);
 
     const row = db.prepare("SELECT rollback_sql FROM schema_migrations WHERE name = '0001_add_flags.sql'").get() as { rollback_sql: string | null } | undefined;
@@ -184,8 +183,7 @@ describe("db-migrate-ops", () => {
   });
 
   it("checkSchemaVersionAhead returns isAhead=false for a fresh baseline-only DB", () => {
-    const db = new DatabaseSync(":memory:");
-    db.exec(readAstropressSqliteSchemaSql());
+    const db = makeDb();
     // Fresh DB has 'baseline-schema' applied via applyCommittedSchema equivalent
     // For this test, insert the baseline entry manually
     db.prepare("INSERT OR IGNORE INTO schema_migrations (name) VALUES ('baseline-schema')").run();
@@ -198,8 +196,7 @@ describe("db-migrate-ops", () => {
   });
 
   it("checkSchemaVersionAhead returns isAhead=true when host app migrations are present", () => {
-    const db = new DatabaseSync(":memory:");
-    db.exec(readAstropressSqliteSchemaSql());
+    const db = makeDb();
     db.prepare("INSERT OR IGNORE INTO schema_migrations (name) VALUES ('baseline-schema')").run();
     db.prepare("INSERT INTO schema_migrations (name) VALUES ('0001_host_migration.sql')").run();
     db.prepare("INSERT INTO schema_migrations (name) VALUES ('0002_host_migration.sql')").run();

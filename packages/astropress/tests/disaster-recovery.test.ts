@@ -14,6 +14,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { readAstropressSqliteSchemaSql, runAstropressMigrations } from "../src/sqlite-bootstrap.js";
 import { ensureLegacySchemaCompatibility, getTableColumns } from "../src/sqlite-schema-compat.js";
 import { createAstropressGitSyncAdapter } from "../src/sync/git.js";
+import { makeDb } from "./helpers/make-db.js";
 
 // Minimal v0.0.1-era schema — missing columns added in later versions
 const V001_SCHEMA = `
@@ -159,8 +160,7 @@ describe("schema compatibility after restore from old version", () => {
 
 describe("migration runner on fresh schema", () => {
   it("runAstropressMigrations does not throw on a fresh schema with no migrations dir", () => {
-    const db = new DatabaseSync(":memory:");
-    db.exec(readAstropressSqliteSchemaSql());
+    const db = makeDb();
 
     const migrationsDir = join(tempDir, "nonexistent-migrations");
     expect(() => runAstropressMigrations(db, migrationsDir)).not.toThrow();
@@ -169,8 +169,7 @@ describe("migration runner on fresh schema", () => {
   });
 
   it("applies pending migrations from a migrations dir and records them", () => {
-    const db = new DatabaseSync(":memory:");
-    db.exec(readAstropressSqliteSchemaSql());
+    const db = makeDb();
 
     const migrationsDir = join(tempDir, "migrations");
     mkdirSync(migrationsDir);
@@ -206,8 +205,7 @@ describe("migration runner on fresh schema", () => {
   });
 
   it("skips already-applied migrations on re-run", () => {
-    const db = new DatabaseSync(":memory:");
-    db.exec(readAstropressSqliteSchemaSql());
+    const db = makeDb();
 
     const migrationsDir = join(tempDir, "migrations");
     mkdirSync(migrationsDir);
