@@ -1,0 +1,16 @@
+{
+  "sites": [
+    {
+      "id": "marketing",
+      "name": "Marketing Site",
+      "baseUrl": "https://marketing.example.com",
+      "token": "sk_live_replace_with_import_write_token"
+    },
+    {
+      "id": "docs",
+      "name": "Docs Site",
+      "baseUrl": "https://docs.example.com",
+      "token": "sk_live_replace_with_import_write_token"
+    }
+  ]
+}

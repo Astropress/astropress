@@ -104,6 +104,79 @@ type DiscoveredSite = {
 };
 ```
 
+## Request and response shapes
+
+### `POST /jobs/import/wordpress`
+
+Request body:
+
+```json
+{ "siteId": "marketing", "exportFile": "/var/www/marketing/wp-export.xml" }
+```
+
+`exportFile` is an absolute path on the **member site's server**, not a local path.
+The member site's `POST /ap-api/v1/import/wordpress` endpoint reads it from disk.
+
+Success response (202):
+
+```json
+{ "jobId": "a3f1c2e4-7b8d-4f2a-9e1c-3d0f5a6b2c8e", "status": "queued" }
+```
+
+### `POST /connectors/cloudways/discover`
+
+Request body:
+
+```json
+{ "email": "ops@yourorg.com", "apiKey": "cw_api_key_here" }
+```
+
+Success response (200):
+
+```json
+{
+  "sites": [
+    { "siteUrl": "https://blog.example.com", "name": "Blog", "metadata": { "appId": "123", "appType": "wordpress" } }
+  ]
+}
+```
+
+### `POST /connectors/cpanel/discover`
+
+Request body:
+
+```json
+{ "host": "cpanel.yourhost.com", "username": "cpanel_user", "password": "cpanel_pass" }
+```
+
+Success response (200):
+
+```json
+{
+  "sites": [
+    { "siteUrl": "https://blog.example.com", "name": "https://blog.example.com", "metadata": { "adminUsername": "wpadmin" } }
+  ]
+}
+```
+
+### `POST /connectors/hpanel/discover`
+
+Request body:
+
+```json
+{ "accessToken": "hpanel_oauth_bearer_token" }
+```
+
+Success response (200):
+
+```json
+{
+  "sites": [
+    { "siteUrl": "https://myblog.example.com", "name": "myblog.example.com", "metadata": { "plan": "premium" } }
+  ]
+}
+```
+
 ## Credential handling
 
 Each connector has different access to WordPress admin credentials:

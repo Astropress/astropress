@@ -161,6 +161,7 @@ The REST API runs at `/ap-api/v1/` when `config.api.enabled` is `true`.
 | GET/POST | `/ap-api/v1/webhooks` | webhooks:manage |
 | GET | `/ap-api/v1/metrics` | content:read |
 | GET | `/ap-api/v1/search?q=` | content:read |
+| POST | `/ap-api/v1/import/wordpress` | import:write |
 | GET | `/ap-api/v1/openapi.json` | (no auth) |
 | GET | `/ap-api/v1/og-image/[slug].png` | (no auth) |
 

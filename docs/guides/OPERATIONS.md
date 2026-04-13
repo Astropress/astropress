@@ -49,26 +49,104 @@ Point-in-Time Recovery).
 
 ## Importing content
 
+Astropress imports are **staged** — the pipeline writes structured JSON artifacts
+(content, media, comments, users, taxonomies, redirects) for review before
+anything touches the database. Run without `--apply-local` first to inspect what
+will change.
+
+### How the pipeline works
+
+1. **Parse** — reads the export file (WXR XML for WordPress, CSV for Wix) and
+   extracts all records into typed in-memory structures
+2. **Inventory** — counts records, detects shortcodes or page-builder markup that
+   cannot be auto-migrated, and lists all media attachment URLs
+3. **Stage** — writes JSON artifacts to `--artifact-dir` for review before any
+   database write
+4. **Download** (`--download-media`) — fetches each attachment URL into
+   `artifacts/downloads/`; supports resume via `download-state.json`
+5. **Apply** (`--apply-local`) — inserts staged records into the local SQLite
+   runtime idempotently; safe to re-run
+
 ### WordPress
 
+Export your content from the WordPress admin panel: **Tools → Export → All
+content**, then:
+
 ```bash
+# Stage only — safe, no database writes
 astropress import wordpress --project-dir <site> --source export.xml
+
+# Inspect what will be imported before touching anything
+cat .astropress/import/wordpress.inventory.json
+
+# Stage + download media assets
+astropress import wordpress --project-dir <site> --source export.xml \
+  --artifact-dir ./import-artifacts --download-media
+
+# Apply staged artifacts to the local SQLite database
+astropress import wordpress --project-dir <site> --source export.xml \
+  --artifact-dir ./import-artifacts --apply-local
+
+# Resume a partial import (re-runs download, skipping already-completed assets)
+astropress import wordpress --project-dir <site> --source export.xml \
+  --artifact-dir ./import-artifacts --download-media --resume
 ```
 
-Optional flags:
-- `--artifact-dir <dir>` — write artifacts here (default: `.astropress/import/`)
-- `--download-media` — download attachment assets into `artifacts/downloads/`
-- `--apply-local` — apply staged artifacts into the local SQLite runtime
-- `--resume` — re-enter a previous import and skip already-downloaded media
+**Artifacts written to `--artifact-dir`:**
 
-The import is staged, not instant. It writes structured JSON artifacts
-(content, media, comments, users, taxonomies, redirects) for review before
-applying. Run without `--apply-local` first to inspect what will change.
+| File | Contents |
+|------|----------|
+| `wordpress.inventory.json` | Record counts, unsupported pattern flags, warnings |
+| `wordpress.plan.json` | Options the import will use (review before applying) |
+| `content-records.json` | Posts and pages mapped to Astropress content records |
+| `media-manifest.json` | Attachment metadata and source URLs |
+| `redirect-records.json` | WXR old-slug redirects mapped to Astropress redirect rules |
+| `user-records.json` | Author records |
+| `taxonomy-records.json` | Categories and tags |
+| `remediation-candidates.json` | Records with shortcodes or builder markup requiring cleanup |
+| `download-state.json` | Completed and failed media download state (used by `--resume`) |
+| `import-report.json` | Final summary written after `--apply-local` completes |
+
+**Shortcodes and page-builder markup** — if `wordpress.inventory.json` shows
+`detectedShortcodes > 0` or `detectedBuilderMarkers > 0`, the import sets
+`reviewRequired: true`. Review `remediation-candidates.json` and strip or replace
+problematic markup before publishing.
+
+### Programmatic import via REST API
+
+For server-to-server workflows (CI pipelines, Nexus-orchestrated bulk imports),
+use the REST endpoint directly:
+
+```
+POST /ap-api/v1/import/wordpress
+Authorization: Bearer <token with import:write scope>
+Content-Type: application/json
+
+{ "exportFile": "/absolute/path/to/export.xml" }
+```
+
+The export file must be accessible on the **server's filesystem** — it is not
+uploaded via the request body. Transfer the file via SFTP or rsync before
+calling this endpoint.
+
+Rate limit: 5 requests per minute per token. Returns an
+`AstropressWordPressImportReport` on success (same structure as the CLI output).
+
+**Create an `import:write` token:**
+
+```bash
+astropress api-tokens create --label "Import automation" --scopes import:write
+```
+
+Or in the admin panel: **Settings → API Tokens → New token → select
+`import:write` scope**.
+
+For bulk imports across multiple sites with Nexus panel connectors, see
+[BULK_IMPORTS.md](./BULK_IMPORTS.md).
 
 ### Wix
 
-Export your site from Wix's dashboard (Settings → General → Export Site Data),
-then:
+Export from the Wix dashboard: **Settings → General → Export Site Data**, then:
 
 ```bash
 astropress import wix --project-dir <site> --source wix-export.csv
@@ -77,9 +155,8 @@ astropress import wix --project-dir <site> --source wix-export.csv
 Same flags as WordPress: `--artifact-dir`, `--download-media`, `--apply-local`,
 `--resume`.
 
-If you need to download the export programmatically, the Playwright-based
-credential fetcher handles authenticated Wix dashboard access — see the
-`import wix --fetch` flag.
+For programmatic Wix dashboard access, the Playwright-based credential fetcher
+handles authenticated login — see the `import wix --fetch` flag.
 
 ### Crawling any site
 

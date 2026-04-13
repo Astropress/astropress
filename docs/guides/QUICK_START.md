@@ -204,6 +204,7 @@ The host app must alias `local-runtime-modules` in `astro.config.mjs` to its own
 | How the provider seam works | [ARCHITECTURE.md](../ARCHITECTURE.md) |
 | Analytics, consent banner, custom snippets | [ANALYTICS.md](./ANALYTICS.md) |
 | Built-in web components and how to extend them | [WEB_COMPONENTS.md](../reference/WEB_COMPONENTS.md) |
-| Import from WordPress or Wix; content scheduling | [OPERATIONS.md](./OPERATIONS.md) |
+| Import from WordPress or Wix (single site) | [OPERATIONS.md — Importing content](./OPERATIONS.md#importing-content) |
+| Bulk imports across multiple sites via Nexus | [BULK_IMPORTS.md](./BULK_IMPORTS.md) |
 | GDPR data inventory and right of erasure | [COMPLIANCE.md](./COMPLIANCE.md) |
 | Multilingual sites and admin UI labels | [MULTILINGUAL.md](./MULTILINGUAL.md) |
