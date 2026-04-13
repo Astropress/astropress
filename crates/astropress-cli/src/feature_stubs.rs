@@ -117,14 +117,27 @@ pub(crate) fn feature_env_stubs(f: &AllFeatures) -> String {
             "CHATWOOT_WEBSITE_TOKEN=replace-me"]);
     }
     if f.payments == PaymentChoice::HyperSwitch {
-        lines.extend(&["# HyperSwitch (payment router — Apache 2.0)",
-            "# Routes to: Stripe (M-PESA/cards/Apple Pay), Razorpay (UPI/India/IMPS/NEFT),",
-            "# PayPal (Venmo), Square (Cash App), Adyen, Braintree, and 50+ more providers.",
-            "# Add connector API keys via the HyperSwitch dashboard after deploying.",
+        lines.extend(&["# HyperSwitch (payment router — Apache 2.0, self-hosted Rust service)",
+            "# Native connectors include: Safaricom M-Pesa (Daraja), Stripe (cards/Apple Pay/Google Pay),",
+            "# Razorpay (UPI/India/IMPS/NEFT), PayPal (Venmo), Square (Cash App), Adyen, Braintree, 50+ more.",
+            "# Upstream contrib: https://github.com/juspay/hyperswitch — add connectors in crates/router/src/connector/",
+            "# Add provider API keys via the HyperSwitch dashboard after deploying.",
             "HYPERSWITCH_API_KEY=replace-me",
             "HYPERSWITCH_BASE_URL=http://localhost:8080",
             "PAYMENT_SUCCESS_REDIRECT_URL=https://yourdomain.com/payment/success",
             "PAYMENT_FAILURE_REDIRECT_URL=https://yourdomain.com/payment/failure"]);
+    }
+    if f.payments == PaymentChoice::MpesaDaraja {
+        lines.extend(&["# M-Pesa Daraja API (Safaricom — direct mobile money integration, no self-hosted service needed)",
+            "# Daraja API docs: https://developer.safaricom.co.ke/Documentation",
+            "# Register at https://developer.safaricom.co.ke → Create App → get Consumer Key + Secret.",
+            "# STK Push (Lipa Na M-Pesa Online) requires a Shortcode and Passkey from Safaricom.",
+            "MPESA_CONSUMER_KEY=replace-me",
+            "MPESA_CONSUMER_SECRET=replace-me",
+            "MPESA_SHORTCODE=174379",
+            "MPESA_PASSKEY=replace-me",
+            "MPESA_BASE_URL=https://sandbox.safaricom.co.ke",
+            "MPESA_CALLBACK_URL=https://yourdomain.com/api/mpesa/callback"]);
     }
     if f.notify == NotifyChoice::Ntfy {
         lines.extend(&["# ntfy (push notifications — Apache 2.0)",

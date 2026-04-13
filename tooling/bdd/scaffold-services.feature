@@ -82,7 +82,22 @@ Feature: Service selection during astropress new
     Given I select "HyperSwitch" for payments during scaffolding
     When scaffolding completes
     Then the .env.example file mentions "Razorpay" for UPI and India
-    And the .env.example file mentions "M-PESA"
+    And the .env.example file mentions "M-Pesa"
+    And the .env.example file mentions "Daraja"
+
+  Scenario: Choosing M-Pesa Daraja generates mobile money env entries
+    Given I select "M-Pesa Daraja" for payments during scaffolding
+    When scaffolding completes
+    Then the .env.example file contains "MPESA_CONSUMER_KEY"
+    And the .env.example file contains "MPESA_CONSUMER_SECRET"
+    And the .env.example file contains "MPESA_SHORTCODE"
+    And the .env.example file contains "MPESA_PASSKEY"
+    And the .env.example file contains "MPESA_CALLBACK_URL"
+
+  Scenario: M-Pesa Daraja is available via the add command
+    Given I run "astropress add --payments mpesa"
+    When scaffolding completes
+    Then the .env.example file contains "MPESA_CONSUMER_KEY"
 
   Scenario: Choosing ntfy generates push notification env entries
     Given I select "ntfy" for push notifications during scaffolding

@@ -45,7 +45,8 @@ fn hyperswitch_env_mentions_providers() {
     let s = feature_env_stubs(&f);
     assert!(s.contains("HYPERSWITCH_API_KEY"));
     assert!(s.contains("Razorpay"));
-    assert!(s.contains("M-PESA"));
+    assert!(s.contains("M-Pesa"));
+    assert!(s.contains("Daraja"));
 }
 
 #[test]
@@ -54,6 +55,25 @@ fn hyperswitch_env_includes_redirect_urls() {
     let s = feature_env_stubs(&f);
     assert!(s.contains("PAYMENT_SUCCESS_REDIRECT_URL"));
     assert!(s.contains("PAYMENT_FAILURE_REDIRECT_URL"));
+}
+
+#[test]
+fn mpesa_daraja_generates_env_stubs() {
+    let f = AllFeatures { payments: PaymentChoice::MpesaDaraja, ..AllFeatures::defaults() };
+    let s = feature_env_stubs(&f);
+    assert!(s.contains("MPESA_CONSUMER_KEY"));
+    assert!(s.contains("MPESA_CONSUMER_SECRET"));
+    assert!(s.contains("MPESA_SHORTCODE"));
+    assert!(s.contains("MPESA_PASSKEY"));
+    assert!(s.contains("MPESA_BASE_URL"));
+    assert!(s.contains("MPESA_CALLBACK_URL"));
+}
+
+#[test]
+fn mpesa_daraja_does_not_generate_hyperswitch_stubs() {
+    let f = AllFeatures { payments: PaymentChoice::MpesaDaraja, ..AllFeatures::defaults() };
+    let s = feature_env_stubs(&f);
+    assert!(!s.contains("HYPERSWITCH_API_KEY"), "MpesaDaraja must not emit HyperSwitch vars");
 }
 
 // ── notifications ─────────────────────────────────────────────────────

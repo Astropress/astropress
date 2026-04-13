@@ -4,7 +4,7 @@
 use super::*;
 use crate::features::{
     ChatChoice, CommerceChoice, DocsChoice, EmailChoice, ForumChoice, NotifyChoice,
-    ScheduleChoice,
+    PaymentChoice, ScheduleChoice,
 };
 
 fn args(s: &[&str]) -> Vec<String> {
@@ -143,6 +143,34 @@ fn add_to_nonexistent_dir_returns_error() {
         ),
         Ok(()) => panic!("expected an error but got Ok"),
     }
+}
+
+// ── payments ─────────────────────────────────────────────────────────────
+
+#[test]
+fn add_payments_hyperswitch_parses() {
+    let f = parse_add_features(&args(&["--payments", "hyperswitch"])).unwrap();
+    assert_eq!(f.payments, PaymentChoice::HyperSwitch);
+}
+
+#[test]
+fn add_payments_mpesa_parses() {
+    let f = parse_add_features(&args(&["--payments", "mpesa"])).unwrap();
+    assert_eq!(f.payments, PaymentChoice::MpesaDaraja);
+}
+
+#[test]
+fn add_payments_mpesa_daraja_alias_parses() {
+    let f = parse_add_features(&args(&["--payments", "mpesa-daraja"])).unwrap();
+    assert_eq!(f.payments, PaymentChoice::MpesaDaraja);
+}
+
+#[test]
+fn add_payments_mpesa_appends_env_stubs() {
+    let f = parse_add_features(&args(&["--payments", "mpesa"])).unwrap();
+    let stubs = feature_env_stubs(&f);
+    assert!(stubs.contains("MPESA_CONSUMER_KEY"), "expected MPESA_CONSUMER_KEY in stubs, got: {stubs}");
+    assert!(stubs.contains("MPESA_CALLBACK_URL"), "expected MPESA_CALLBACK_URL in stubs, got: {stubs}");
 }
 
 // ── docs-site generators (Starlight / VitePress / mdBook) ────────────────

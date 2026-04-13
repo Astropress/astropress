@@ -32,7 +32,7 @@ impl Default for DonationChoices {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)] pub(crate) enum ForumChoice             { None, Flarum, Discourse }
 #[derive(Debug, Clone, Copy, PartialEq, Eq)] pub(crate) enum ChatChoice              { None, Tiledesk, Chatwoot }
-#[derive(Debug, Clone, Copy, PartialEq, Eq)] pub(crate) enum PaymentChoice           { None, HyperSwitch }
+#[derive(Debug, Clone, Copy, PartialEq, Eq)] pub(crate) enum PaymentChoice           { None, HyperSwitch, MpesaDaraja }
 #[derive(Debug, Clone, Copy, PartialEq, Eq)] pub(crate) enum NotifyChoice            { None, Ntfy, Gotify }
 #[derive(Debug, Clone, Copy, PartialEq, Eq)] pub(crate) enum ScheduleChoice          { None, Rallly, CalCom }
 #[derive(Debug, Clone, Copy, PartialEq, Eq)] pub(crate) enum VideoChoice             { None, PeerTube }

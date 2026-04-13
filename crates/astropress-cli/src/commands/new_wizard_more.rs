@@ -41,14 +41,18 @@ pub(super) fn prompt_more_features() -> MoreFeatures {
         .with_prompt("Add payment processing?")
         .default(false).interact().unwrap_or(false)
     {
-        let _ = Select::with_theme(t).with_prompt("Payment router").items(&[
-            "HyperSwitch  — Apache 2.0; Rust; unified API that routes to your choice of\n\
-             \x20             provider: Stripe (M-PESA/cards/Apple Pay/Google Pay),\n\
-             \x20             Razorpay (UPI/India/IMPS/NEFT), PayPal (Venmo), Square (Cash App),\n\
-             \x20             Adyen, Braintree, and 50+ more; one self-hosted service;\n\
-             \x20             ⚠ each provider has its own transaction fees",
-        ]).default(0).interact().unwrap_or(0);
-        PaymentChoice::HyperSwitch
+        match Select::with_theme(t).with_prompt("Payment provider").items(&[
+            "HyperSwitch    — Apache 2.0; Rust; self-hosted payment router with native\n\
+             \x20               Safaricom M-Pesa (Daraja), Stripe (cards/Apple Pay/Google Pay),\n\
+             \x20               Razorpay (UPI/IMPS/NEFT), PayPal, Adyen, Braintree, 50+ more;\n\
+             \x20               ⚠ one self-hosted service; provider transaction fees apply",
+            "M-Pesa Daraja  — Safaricom REST API; direct mobile money (KES + M-Pesa wallet);\n\
+             \x20               no self-hosted service needed; use for East Africa-first sites;\n\
+             \x20               register free at developer.safaricom.co.ke",
+        ]).default(0).interact().unwrap_or(0) {
+            1 => PaymentChoice::MpesaDaraja,
+            _ => PaymentChoice::HyperSwitch,
+        }
     } else { PaymentChoice::None };
 
     // ── forum ─────────────────────────────────────────────────────────────
