@@ -1,0 +1,22 @@
+{
+  "crypto": {
+    "passwordHash": "Argon2id",
+    "tokenDigest": "KMAC256",
+    "webhookSignature": "ML-DSA-65"
+  },
+  "docs": {
+    "readmeSecurityNote": "Security note: Astropress now uses Argon2id for passwords, KMAC256 for token and privacy digests, and ML-DSA-65 for outbound webhook signatures. Hosted-provider live E2E remains incomplete.",
+    "hostedE2EGap": "Live hosted-provider coverage still depends on maintainer-owned accounts, seeded projects, and teardown automation; see `HOSTED_E2E_SETUP.md`"
+  },
+  "bannedPhrases": [
+    "SHA-256",
+    "SHA256",
+    "sha256",
+    "PBKDF2",
+    "signing secret",
+    "fully tested",
+    "production-ready",
+    "GitHub-ready",
+    "github-ready"
+  ]
+}

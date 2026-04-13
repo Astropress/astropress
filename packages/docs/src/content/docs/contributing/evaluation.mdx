@@ -79,7 +79,7 @@ description: >-
 
 | Rubric | Old | New | Reason |
 |--------|-----|-----|--------|
-| 43 — System Honesty | A | A | Public docs and CLI wording were corrected, but the honesty audit is still manual rather than CI-enforced |
+| 43 — System Honesty | A | A+ | Public docs, BDD text, and user-facing crypto/readiness claims are now checked against a canonical truth source in CI |
 | 54 — Test Artifact Cleanup | New | B | Rust CLI tests sweep and delete temp directories, but local repo-level verification can still leave generated `.data/` directories in the worktree |
 
 ## Readiness verdict
@@ -92,20 +92,16 @@ description: >-
 
 ## Rubric 43 — System Honesty
 
-**Grade: A**
+**Grade: A+**
 
 Measures whether the repo's public claims, CLI output, and failure reporting match the implementation instead of presenting a cleaner story than the code can actually prove.
 
 ### Evidence
 
-- README, docs, and CLI wording were audited and corrected where they overstated hosted-provider coverage or cryptography details
+- README, docs, BDD text, and user-facing crypto/readiness wording are audited by `bun run audit:honesty`
 - `HOSTED_E2E_SETUP.md` explicitly states that hosted-provider E2E is not `A+` yet and why
 - The compatibility matrix now states Linux/macOS/Windows as verified and BSD as best-effort
 - Security docs now describe the actual crypto stack: Argon2id password hashing, KMAC256 token/privacy digests, and ML-DSA-65 webhook signatures
-
-### What keeps this from an A+
-
-- Public-claim review is still a manual audit, not a generated or CI-enforced truth check
 
 ## Rubric 45 — Scaffold Quality Carryover
 

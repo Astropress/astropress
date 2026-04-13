@@ -16,6 +16,7 @@ jobs:
       - run: bun install --frozen-lockfile
       - run: bun run audit:deps
       - run: bun run audit:security
+      - run: bun run audit:honesty
       - run: bun run check:version
       - run: bun run audit:arch
       - run: bunx biome check --reporter=github packages/astropress/src packages/astropress/tests packages/astropress/web-components
@@ -24,6 +25,7 @@ jobs:
       - run: bun run audit:aeo
       - run: bun run docs:api:check
       - run: bun run docs:check
+      - run: bun run repo:clean
 
   platform-smoke:
     needs: lint
@@ -43,6 +45,7 @@ jobs:
       - run: bun run docs:api:check
       - run: bun run docs:check
       - run: bun run test:example
+      - run: bun run repo:clean
 
   test-unit:
     runs-on: ubuntu-latest
@@ -58,6 +61,7 @@ jobs:
       - run: bun install
       - run: bun run --filter astropress test
       - run: bun run test:coverage
+      - run: bun run repo:clean
 
   test-cli:
     runs-on: ubuntu-latest
@@ -93,6 +97,7 @@ jobs:
       - run: bun run bdd:lint
       - run: bun run bdd:test
       - run: cd packages/astropress-mcp && bun run build
+      - run: bun run repo:clean
 
   preview-deploy:
     runs-on: ubuntu-latest

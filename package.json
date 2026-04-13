@@ -11,6 +11,7 @@
     "bdd:test": "bun run tooling/scripts/bdd-test.ts",
     "audit:deps": "bun audit",
     "audit:security": "bun run tooling/scripts/security-audit.ts",
+    "audit:honesty": "bun run tooling/scripts/audit-honesty.ts",
     "audit:arch": "bun run tooling/scripts/arch-lint.ts",
     "audit:arch:rust": "bun run tooling/scripts/rust-arch-lint.ts",
     "audit:bundle": "bun run tooling/scripts/bundle-audit.ts",
@@ -33,6 +34,7 @@
     "docs:dev": "bun run --filter astropress-docs dev",
     "docs:build": "bun run --filter astropress-docs build",
     "docs:check": "bun run --filter astropress-docs check",
+    "repo:clean": "bun run tooling/scripts/assert-clean-worktree.ts",
     "stress:sqlite": "bun run tooling/scripts/stress-sqlite-writes.ts",
     "prepare": "lefthook install"
   },
