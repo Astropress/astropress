@@ -1,0 +1,349 @@
+---
+title: Operations
+description: >-
+  Runbook for local and small-organisation Astropress deployments: backups,
+  imports, migrations, and incident response.
+---
+
+Operator reference for local and small-organization Astropress deployments.
+
+## Health checks
+
+```bash
+astropress doctor           # env contract, runtime plan, schema drift warnings
+astropress doctor --json    # machine-readable output
+astropress doctor --strict  # exit non-zero on any warning
+astropress services verify  # confirm content-services keys + service origin
+bun run audit:security      # inline-handler and hardening checks
+```
+
+`astropress doctor` warns on:
+- missing or weak `SESSION_SECRET`
+- scaffold-default `ADMIN_PASSWORD` still in use
+- `ADMIN_BOOTSTRAP_DISABLED` not set
+- missing `.data/` directory
+- projects still using legacy `ASTROPRESS_*PROVIDER` vars
+
+## Local bootstrap
+
+```bash
+astropress new my-site
+astropress new my-site --app-host vercel --content-services supabase
+astropress new my-site --app-host cloudflare-pages --content-services cloudflare
+cd my-site
+bun install
+astropress doctor
+astropress services bootstrap
+astropress services verify
+astropress dev
+```
+
+## Backup and restore
+
+```bash
+# Create a snapshot
+astropress backup --project-dir <site> --out <snapshot-dir>
+
+# Restore from a snapshot
+astropress restore --project-dir <site> --from <snapshot-dir>
+```
+
+Snapshots are file-based exports. For hosted providers, supplement with
+provider-native point-in-time restore (Cloudflare D1 time travel, Supabase
+Point-in-Time Recovery).
+
+## Importing content
+
+### WordPress
+
+```bash
+astropress import wordpress --project-dir <site> --source export.xml
+```
+
+Optional flags:
+- `--artifact-dir <dir>` — write artifacts here (default: `.astropress/import/`)
+- `--download-media` — download attachment assets into `artifacts/downloads/`
+- `--apply-local` — apply staged artifacts into the local SQLite runtime
+- `--resume` — re-enter a previous import and skip already-downloaded media
+
+The import is staged, not instant. It writes structured JSON artifacts
+(content, media, comments, users, taxonomies, redirects) for review before
+applying. Run without `--apply-local` first to inspect what will change.
+
+### Wix
+
+Export your site from Wix's dashboard (Settings → General → Export Site Data),
+then:
+
+```bash
+astropress import wix --project-dir <site> --source wix-export.csv
+```
+
+Same flags as WordPress: `--artifact-dir`, `--download-media`, `--apply-local`,
+`--resume`.
+
+If you need to download the export programmatically, the Playwright-based
+credential fetcher handles authenticated Wix dashboard access — see the
+`import wix --fetch` flag.
+
+### Crawling any site
+
+For sites without an export format:
+
+```bash
+astropress import crawl --project-dir <site> --url https://example.com
+```
+
+The crawler walks links from the start URL, extracts page titles and body HTML,
+and writes the results as importable content records. Useful for migrating from
+static generators or hand-authored HTML sites.
+
+## Content scheduling
+
+Set a publish time in the post editor (`Scheduled Publish Time` field) to
+queue a draft for future publication.
+
+The SQLite runtime exposes `runScheduledPublishes()` which promotes all
+due posts atomically:
+
+```ts
+import { runScheduledPublishes } from "astropress/sqlite-admin-runtime";
+
+// Call this on a schedule — e.g., every 5 minutes
+const published = runScheduledPublishes(db);
+console.log(`Published ${published} scheduled posts`);
+```
+
+**Cloudflare Workers:** wire it in a `scheduled` handler in `worker.ts`:
+
+```ts
+export default {
+  async scheduled(_event, env, _ctx) {
+    const runtime = await createRuntime(env);
+    await runtime.content.runScheduledPublishes();
+  },
+};
+```
+
+**GitHub Actions:** use a cron workflow to hit a secured API route that
+calls `runScheduledPublishes()`.
+
+The posts list shows a **Scheduled** filter tab. Posts stay `draft` until
+`runScheduledPublishes` fires; cancelling clears the scheduled time.
+
+## Secret handling
+
+Before any real deployment:
+
+1. Generate a strong `SESSION_SECRET`:
+   `SESSION_SECRET=$(openssl rand -hex 32)`
+2. Change `ADMIN_PASSWORD` and `EDITOR_PASSWORD` from scaffold defaults
+3. Set `ADMIN_BOOTSTRAP_DISABLED=1` once named admin accounts exist
+4. Set `TURNSTILE_SECRET_KEY` before exposing the login form publicly
+
+## Secret rotation
+
+**SESSION_SECRET** — 12-hour window rotation (no hard logout):
+
+1. Set `SESSION_SECRET_PREV` to the current secret value
+2. Deploy the new `SESSION_SECRET`
+3. After 12 hours, remove `SESSION_SECRET_PREV`
+
+**CLOUDFLARE_SESSION_SECRET** — invalidates all D1 sessions immediately.
+To minimize disruption, revoke sessions first:
+
+```sql
+UPDATE admin_sessions SET revoked_at = CURRENT_TIMESTAMP
+WHERE revoked_at IS NULL;
+```
+
+Then deploy the new secret.
+
+## Schema migrations
+
+### Framework-managed (SQLite)
+
+Most upgrades require no manual steps for SQLite deployments. On every boot,
+Astropress applies any new `ALTER TABLE ... ADD COLUMN` statements idempotently.
+Applied migrations are recorded in `schema_migrations`.
+
+### User-managed migrations
+
+Place numbered `.sql` files in your `migrations/` directory:
+
+```
+migrations/
+  0001_add_event_taxonomy.sql
+  0002_add_event_date_index.sql
+```
+
+```bash
+astropress db migrate --migrations-dir ./migrations
+astropress db migrate --migrations-dir ./migrations --dry-run  # preview only
+```
+
+Companion `.down.sql` files are read and stored in `schema_migrations.rollback_sql`
+for safe rollback. To apply the most recent migration's rollback SQL:
+
+```bash
+astropress db rollback                     # apply rollback_sql from the last migration
+astropress db rollback --dry-run           # preview what would be rolled back
+```
+
+### Cloudflare D1 migrations
+
+`astropress db migrate --target=d1` applies pending migration files to your D1
+database via `wrangler d1 execute`. Requirements:
+
+- `wrangler` on PATH: `bun add -g wrangler` or `npm install -g wrangler`
+- Authenticated: `wrangler login` or `CLOUDFLARE_API_TOKEN` env var
+- `CLOUDFLARE_D1_BINDING` env var set to your D1 binding name (default: `DB`)
+
+```sh
+# Preview which files would run (no writes):
+astropress db migrate --target=d1 --dry-run
+
+# Apply to the remote D1 database:
+astropress db migrate --target=d1
+```
+
+### Supabase migrations
+
+Supabase projects use the [Supabase CLI](https://supabase.com/docs/reference/cli) for
+schema migrations. Astropress migration `.sql` files are compatible — place them in
+`supabase/migrations/` and use the Supabase CLI workflow:
+
+```sh
+# Link to your project (once):
+supabase link --project-ref <ref>
+
+# Push pending migrations to the remote database:
+supabase db push
+```
+
+### Version upgrade procedure
+
+1. Snapshot: `astropress backup --project-dir <site> --out <snapshot-dir>`
+2. Upgrade the package: `bun add astropress@latest`
+3. Run `astropress doctor` — flags env contract changes and schema drift
+4. For SQLite: run `astropress db migrate` (defaults to `--target=local`)
+5. For D1: run `astropress db migrate --target=d1`
+6. For Supabase: run `supabase db push`
+7. Deploy. If migration fails, restore from snapshot and replay in isolation.
+
+## Caching
+
+`applyAstropressSecurityHeaders()` sets `Cache-Control` by area:
+
+| Area | Value | Effect |
+|------|-------|--------|
+| `public` | `public, max-age=300, s-maxage=3600, stale-while-revalidate=86400` | 5 min browser / 1 hr CDN |
+| `admin` | `private, no-store` | Never cached |
+| `auth` | `private, no-store` | Never cached |
+| `api` | `private, no-store` | Never cached |
+
+**CDN purge on publish:** Astropress fires `purgeCdnCache(slug, config)` on
+every content publish — supports Cloudflare Cache API and generic webhook URLs:
+
+```ts
+registerCms({
+  cdnPurgeWebhook: "https://api.netlify.com/build_hooks/your-hook-id",
+});
+```
+
+## Static host publishing
+
+### Full rebuild
+
+```bash
+astropress build                    # full Astro build → dist/
+astropress publish                  # build + push to configured static host
+```
+
+### Incremental rebuild
+
+For sites with large page counts, use `--incremental` to regenerate only the
+pages affected by a given set of slug changes:
+
+```bash
+astropress publish --incremental --slugs /blog/my-post,/blog/another-post
+echo -e "/blog/my-post\n/blog/another-post" | astropress publish --incremental --stdin
+```
+
+| Mode | Build time | Best for |
+|------|-----------|----------|
+| Full rebuild | Proportional to site size | Small sites, release deploys |
+| Incremental | Proportional to changed pages | Large sites, frequent edits |
+
+For sites with fewer than ~500 pages, full rebuild is simpler and fast enough.
+
+## Observability
+
+### Structured logs
+
+Set `LOG_LEVEL` to emit structured JSON lines to stderr. Fields: `level`,
+`context`, `message`, `timestamp`, `requestId`.
+
+### Metrics endpoint
+
+```
+GET /ap-api/v1/metrics   Bearer token required (content:read scope)
+```
+
+Returns `{ posts, pages, media, comments, uptime }`.
+
+### Prometheus metrics
+
+Enable the unauthenticated Prometheus text format endpoint:
+
+```ts
+registerCms({
+  monitoring: { prometheusEnabled: true },
+});
+```
+
+```
+GET /ap/metrics   No authentication required
+Content-Type: text/plain; version=0.0.4
+```
+
+Exported metrics: `ap_content_total{kind}`, `ap_media_total`, `ap_uptime_seconds`.
+
+## Incident handling
+
+**Auth breach**
+1. Revoke all sessions:
+   ```sql
+   UPDATE admin_sessions SET revoked_at = CURRENT_TIMESTAMP
+   WHERE revoked_at IS NULL;
+   ```
+2. Rotate `SESSION_SECRET` and `CLOUDFLARE_SESSION_SECRET`
+3. Audit `admin_sessions` and `audit_events` for suspicious activity
+
+**Data loss**
+1. Restore from the last clean backup
+2. Run `astropress doctor` and `astropress services verify`
+3. Re-apply content created since the snapshot using audit logs as reference
+
+**Admin panel down**
+1. Run `astropress doctor` — check env and service health
+2. Check server logs for runtime errors or migration failures
+3. If a failed migration caused it: restore from snapshot, replay migration
+   in isolation, then redeploy
+
+## Disaster recovery
+
+### RTO / RPO targets
+
+| Tier | Data store | RPO | RTO |
+|------|------------|-----|-----|
+| Local + SQLite | SQLite file | Last `astropress backup` snapshot | < 5 min |
+| Cloudflare Pages + D1 | Cloudflare D1 | D1 time-travel (30 days) | < 15 min |
+| Supabase | PostgreSQL | Point-in-time recovery (up to 7 days on Pro) | < 30 min |
+
+### Post-restore checklist
+
+- [ ] `astropress doctor` — all checks pass
+- [ ] `astropress services verify` — database connectivity confirmed
+- [ ] Admin panel login succeeds
+- [ ] `GET /ap/health` returns `{ "status": "ok" }`

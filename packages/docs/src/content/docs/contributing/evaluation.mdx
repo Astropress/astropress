@@ -1,0 +1,109 @@
+---
+title: Quality evaluation
+description: >-
+  52-rubric quality assessment covering architecture, security, accessibility,
+  and UX — updated 2026-04-12.
+---
+
+**Baseline (as of 2026-04-12, updated):** 1540+ Vitest tests · 129 Rust CLI tests · 10 Playwright tests · 334 BDD scenarios · security audit clean
+
+## Grades
+
+| # | Rubric | Grade |
+|---|--------|-------|
+| 1 | Spec Fidelity | A |
+| 2 | Architecture Quality | A+ |
+| 3 | Test Quality | A+ |
+| 4 | Security Posture | A+ |
+| 5 | Accessibility | A+ |
+| 6 | Performance | A |
+| 7 | Developer Ergonomics | A+ |
+| 8 | Browser / Web API Usage | A+ |
+| 9 | Web Components | A+ |
+| 10 | Spec Coherence (WC First-Class) | A+ |
+| 11 | CI/CD Pipeline | A+ |
+| 12 | Dependency Management | A |
+| 13 | Documentation | A+ |
+| 14 | Observability / Logging | A |
+| 15 | API Design | A+ |
+| 16 | Error Handling | A+ |
+| 17 | TypeScript Quality | A+ |
+| 18 | AI Drivability | A+ |
+| 19 | Internationalization (i18n) | A+ |
+| 20 | SEO Tooling | A |
+| 21 | AEO Tooling | A+ |
+| 22 | First-Party Data | A |
+| 23 | Content Modeling Flexibility | A |
+| 24 | Schema Migration Safety | A |
+| 25 | Caching Strategy | A |
+| 26 | Plugin / Extension API | A |
+| 27 | Image Optimization | A |
+| 28 | Real-Time Collaboration | A |
+| 29 | Privacy by Design | A+ |
+| 30 | Open Source Health | A+ |
+| 31 | Data Portability | A |
+| 32 | Upgrade Path / Migration DX | A |
+| 33 | Import / Migration Tooling | A |
+| 34 | Content Scheduling | A |
+| 35 | E2E Hosted Provider Testing | B |
+| 36 | CLI UX Quality | A+ |
+| 37 | Email Delivery | A |
+| 38 | Search / Discovery | A |
+| 39 | Admin CRUD E2E | A+ |
+| 40 | Disaster Recovery | A |
+| 41 | Monitoring Integration | A |
+| 42 | Upgrade Path E2E | A |
+| 43 | System Honesty | A+ |
+| 44 | Multi-site Gateway (astropress-nexus) | A |
+| 45 | Scaffold Quality Carryover | A+ |
+| 46 | Mobile-Firstness / Responsive Design | A |
+| 47 | Admin Panel UX Quality | A |
+| 48 | Nexus UX Quality | A |
+| 49 | UX Writing & Microcopy | A |
+| 50 | Information Architecture | A+ |
+| 51 | Navigation Design | A |
+| 52 | Interaction Design & Motion | A |
+
+## Key gaps
+
+- **Rubric 35 (B):** Adapter tests use mocks — no integration tests against real D1, Supabase, or Appwrite services
+- **Rubric 1:** WordPress/Wix import is staged CLI-only; no admin UI wizard
+- **Rubric 13:** `docs/API_REFERENCE.md` is regex-generated — no parameter or return types
+- **Rubric 38:** No full-text search across content records
+- **Rubric 46–52:** UX rubrics added 2026-04-12 — A grades are engineering-observed baselines; no independent user research or usability testing has been conducted
+
+## Grade changes (2026-04-12 re-evaluation)
+
+| Rubric | Old | New | Reason |
+|--------|-----|-----|--------|
+| 7 — Developer Ergonomics | A | A+ | `list tools`, `list providers`, and scaffold `EVALUATION.md` make every integration discoverable without docs |
+| 18 — AI Drivability | A | A+ | Machine-readable list commands give AI agents a structured enumeration of all CLI options |
+| 50 — Information Architecture | A | A+ | `list tools` / `list providers` split by role; `noun verb` command pattern enforced throughout |
+
+## Rubric 45 — Scaffold Quality Carryover
+
+**Grade: A+**
+
+Measures how much of the framework's built-in quality, security, accessibility, and sustainability posture automatically transfers to a new project created with `astropress new`.
+
+### What carries over automatically
+
+| Dimension | What you get for free |
+|---|---|
+| **Admin security** | Zero-Trust Admin (ZTA) wrappers on every action handler; session hardening; rate-limited login; bcrypt passwords; CSRF tokens on all admin forms |
+| **Input validation** | All admin form inputs are validated and HTML-sanitized before persistence; SQL injection surface is contained to adapter layer |
+| **Admin accessibility** | WCAG 2.2 AA admin panel with keyboard navigation, ARIA live regions, focus traps, and screen-reader-tested components |
+| **Privacy defaults** | No third-party analytics, no telemetry; structured GDPR right-of-erasure SQL included |
+| **Static-first carbon footprint** | Default scaffold targets GitHub Pages (`output: "static"`) — no always-on server compute; CDN edge delivery |
+| **Image optimization** | Automatic srcsets, WebP conversion, and lazy loading when media library is used |
+| **Secrets hygiene** | `.env` is gitignored; generated secrets use cryptographic randomness; bootstrap passwords are disabled flag once set |
+| **Public-side security headers** | `src/middleware.ts` is generated with `createAstropressSecurityMiddleware()` — CSP, X-Frame-Options, Permissions-Policy, Referrer-Policy, and X-Request-Id on every response |
+| **Git hooks** | `lefthook.yml` is generated — biome auto-fix, `.env` commit guard, and conventional commit format on pre-commit |
+
+### What still requires project-specific input
+
+| Dimension | What to do |
+|---|---|
+| **Test setup** | Add `vitest.config.ts` and test files as needed |
+| **Public-page accessibility** | User-authored pages start from a blank `<SiteLayout>` shell — author with semantic HTML; use axe or Lighthouse in CI |
+| **`registerCms()` customisation** | `src/middleware.ts` calls `registerCms()` with empty defaults — add your `siteUrl`, `templateKeys`, and `archives` |
