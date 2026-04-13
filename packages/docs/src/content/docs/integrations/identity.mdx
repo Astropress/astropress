@@ -1,0 +1,97 @@
+---
+title: Authentication & SSO
+description: >-
+  Add single sign-on, social login, or organisation-level access controls —
+  when the built-in admin auth isn't enough.
+---
+
+Astropress ships with its own session-based admin authentication — bcrypt passwords, 12-hour sessions, CSRF protection, and rate-limited login. **You do not need to add SSO to use the admin panel.**
+
+Add SSO only if you need one of the following:
+
+- **Social login** — let users sign in with their GitHub, Google, or similar account instead of a password
+- **Multi-tenant access** — manage access for an organisation with teams and roles, rather than individual named accounts
+- **External identity provider** — your organisation already has an IdP (Active Directory, LDAP, SAML) and you want to use it
+
+## Options at a glance
+
+| Option | Licence | Hosting | Best for |
+|--------|---------|---------|----------|
+| **Authentik** | MIT | Docker (Go + Python) | Social login, MFA, individual users |
+| **Zitadel** | Apache 2.0 | Docker or managed cloud | Organisations, teams, role-based access, B2B SaaS |
+
+## Authentik
+
+Authentik is a self-hosted identity provider. It handles social login (GitHub, Google, Apple, Discord, and more), LDAP, SAML 2.0, OAuth 2.0, OpenID Connect, and multi-factor authentication.
+
+| Attribute | Detail |
+|-----------|--------|
+| Licence | MIT |
+| Hosting | Self-hosted Docker (Go server + Python workers) |
+| Cost | Free (server cost only); Authentik Enterprise adds support contracts |
+| Memory | ~200–500 MB RAM |
+
+```sh
+astropress new my-site --sso authentik
+astropress add --sso authentik
+```
+
+After scaffolding, configure `AUTHENTIK_URL` and `AUTHENTIK_TOKEN` in `.env`. See `SERVICES.md` for Docker Compose setup and the Authentik admin guide for provider configuration.
+
+**When it's the right choice:**
+- You want to let users sign in with GitHub, Google, or similar without managing passwords
+- You need MFA (TOTP, hardware keys) for your admin accounts
+- Your site has dozens of users with individual accounts
+
+**Limitations:**
+- Requires running a persistent Docker stack (server + worker + database + Redis)
+- Configuration of social login providers (OAuth apps on each platform) takes time
+- Both Authentik and your site must be reachable over HTTPS for OIDC to work
+
+**Further reading:** [goauthentik.io](https://goauthentik.io) · [Authentik docs](https://docs.goauthentik.io/)
+
+## Zitadel
+
+Zitadel is an identity platform designed for organisations and B2B products. It supports multi-tenancy (multiple organisations, each with their own users and roles), machine-to-machine tokens, and enterprise SSO (SAML, LDAP).
+
+| Attribute | Detail |
+|-----------|--------|
+| Licence | Apache 2.0 |
+| Hosting | Self-hosted Docker or Zitadel Cloud (managed) |
+| Cost | Free self-hosted; Zitadel Cloud from $100/month for production |
+| Memory | ~500 MB–1 GB RAM (self-hosted) |
+
+```sh
+astropress new my-site --sso zitadel
+astropress add --sso zitadel
+```
+
+After scaffolding, configure `ZITADEL_DOMAIN`, `ZITADEL_CLIENT_ID`, and `ZITADEL_CLIENT_SECRET` in `.env`.
+
+**When it's the right choice:**
+- You are building a multi-tenant product where each customer has their own organisation
+- You need organisation-level role assignment (e.g. admin vs. viewer per customer)
+- You need machine-to-machine (service account) authentication
+
+**Limitations:**
+- More complex to set up than Authentik — intended for organisations, not individual sites
+- Zitadel Cloud has a cost at production scale
+- Both Zitadel and your site must be reachable over HTTPS
+
+**Further reading:** [zitadel.com](https://zitadel.com) · [Zitadel docs](https://zitadel.com/docs)
+
+## Choosing between them
+
+| Need | Choose |
+|------|--------|
+| Social login for a personal site or small team | Authentik |
+| MFA for admin accounts | Authentik |
+| Multiple organisations / B2B product | Zitadel |
+| Enterprise SSO (SAML, Active Directory) | Either (both support it) |
+| Managed cloud IdP to avoid self-hosting | Zitadel Cloud |
+
+If in doubt, **start with Authentik** — it covers most single-site use cases and is simpler to configure.
+
+:::caution
+Both Authentik and Zitadel require a persistent Docker host and are not compatible with serverless edge deployments (Cloudflare Workers, Vercel Edge Functions). If your admin runs on a serverless edge runtime, you'll need to use a managed identity service instead.
+:::

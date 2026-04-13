@@ -1,0 +1,278 @@
+---
+title: CLI reference
+description: Every astropress command, flag, and argument — with examples.
+---
+
+Astropress ships a CLI that covers the full project lifecycle. Run `astropress --help` at any time for a summary, or `astropress list tools` for the full command catalogue.
+
+## Project setup
+
+### `astropress new [dir]`
+
+Scaffold a new Astropress project in `dir` (default: current directory). Runs an interactive wizard to choose your CMS, email provider, analytics, and other integrations. All wizard choices can also be passed as flags to run non-interactively.
+
+`astropress init` is an alias for `astropress new`.
+
+**Flags:**
+
+| Flag | Options | Default |
+|------|---------|---------|
+| `--cms` | `builtin` \| `keystatic` \| `payload` | `builtin` |
+| `--email` | `none` \| `listmonk` | `none` |
+| `--transactional-email` | `none` \| `brevo` \| `postal` | `none` |
+| `--analytics` | `none` \| `umami` \| `plausible` \| `matomo` \| `posthog` | `none` |
+| `--community` | `none` \| `giscus` \| `remark42` | `giscus` |
+| `--search` | `none` \| `pagefind` \| `meilisearch` | `none` |
+| `--commerce` | `none` \| `medusa` \| `vendure` | `none` |
+| `--forum` | `none` \| `flarum` \| `discourse` | `none` |
+| `--chat` | `none` \| `tiledesk` | `none` |
+| `--payments` | `none` \| `hyperswitch` | `none` |
+| `--notify` | `none` \| `ntfy` \| `gotify` | `none` |
+| `--schedule` | `none` \| `rallly` \| `calcom` | `none` |
+| `--video` | `none` \| `peertube` | `none` |
+| `--podcast` | `none` \| `castopod` | `none` |
+| `--events` | `none` \| `hievents` \| `pretix` | `none` |
+| `--status` | `none` \| `uptime-kuma` | `none` |
+| `--knowledge-base` | `none` \| `bookstack` | `none` |
+| `--crm` | `none` \| `twenty` | `none` |
+| `--sso` | `none` \| `authentik` \| `zitadel` | `none` |
+| `--forms` | `none` \| `formbricks` \| `typebot` | `none` |
+| `--courses` | `none` \| `frappe-lms` | `none` |
+| `--docs` | `none` \| `starlight` \| `vitepress` \| `mdbook` | `none` |
+| `--donations` | `polar` \| `give-lively` \| `liberapay` \| `pledge-crypto` | — |
+| `--job-board` | boolean flag | off |
+| `--enable-api` | boolean flag | off |
+| `--ab-testing` | `none` \| `growthbook` \| `unleash` | `none` |
+| `--heatmap` | `none` \| `posthog` | `none` |
+
+Multiple `--donations` values can be combined in one command.
+
+**Examples:**
+
+```sh
+# Interactive wizard (recommended for first-time use)
+astropress new my-site
+
+# Non-interactive — specific choices
+astropress new my-site --cms builtin --email listmonk --analytics umami
+
+# GitHub Pages static site with search and comments
+astropress new my-site --search pagefind --community giscus
+
+# Full-featured: newsletter + commerce + payments
+astropress new my-site --email listmonk --commerce medusa --payments hyperswitch
+```
+
+---
+
+### `astropress add [flags] [dir]`
+
+Add one or more integrations to an **existing** Astropress project. Accepts the same flags as `new`. Writes config stubs and `.env` additions without overwriting existing values.
+
+```sh
+# Add Meilisearch search and ntfy push notifications
+astropress add --search meilisearch --notify ntfy
+
+# Add a docs site to your project
+astropress add --docs starlight
+```
+
+---
+
+## Development
+
+### `astropress dev [dir]`
+
+Start the Astro dev server for the project in `dir` (default: current directory).
+
+```sh
+astropress dev                  # http://localhost:4321, admin at /ap-admin
+astropress dev ./my-site
+```
+
+---
+
+### `astropress doctor [dir]`
+
+Check project health: reads `.env`, verifies required variables are set, reports the active runtime (local / D1 / Supabase), checks schema state.
+
+Run this first when debugging unexpected behaviour.
+
+```sh
+astropress doctor               # human-readable output
+astropress doctor --json        # machine-readable JSON
+astropress doctor --strict      # exit non-zero on any warning
+```
+
+`doctor` warns on: missing or weak `SESSION_SECRET`, scaffold-default passwords still in use, `ADMIN_BOOTSTRAP_DISABLED` not set, missing `.data/` directory, and deprecated env var names.
+
+---
+
+## Database
+
+### `astropress db migrate [--target local|d1|supabase]`
+
+Apply all pending `.sql` migrations in order. Defaults to `--target local` (SQLite file at `.data/admin.sqlite`).
+
+```sh
+astropress db migrate                          # local SQLite
+astropress db migrate --target d1             # Cloudflare D1 (requires wrangler)
+astropress db migrate --migrations-dir ./migrations
+astropress db migrate --dry-run               # preview without writing
+```
+
+### `astropress db rollback [--target local|d1|supabase]`
+
+Revert the last applied migration using its stored rollback SQL.
+
+```sh
+astropress db rollback
+astropress db rollback --dry-run
+```
+
+---
+
+## Content import
+
+### `astropress import wordpress [--file path] [--media]`
+
+Import content from a WordPress WXR export file. The import is **staged** — it writes structured JSON artifacts for review before applying. Run without `--apply-local` first to inspect what will change.
+
+```sh
+# Stage only (recommended first step)
+astropress import wordpress --file export.xml
+
+# Stage and apply to local SQLite
+astropress import wordpress --file export.xml --apply-local
+
+# Download media attachments too
+astropress import wordpress --file export.xml --apply-local --download-media
+
+# Resume a previous import (skips already-downloaded media)
+astropress import wordpress --file export.xml --apply-local --resume
+```
+
+### `astropress import wix [--source path]`
+
+Import content from a Wix CSV export. Same flags as WordPress.
+
+```sh
+astropress import wix --source wix-export.csv --apply-local
+```
+
+### `astropress import crawl [--url https://example.com]`
+
+Crawl any public website and import discovered pages as content records. Useful for migrating from static generators or hand-authored HTML sites.
+
+```sh
+astropress import crawl --url https://example.com
+```
+
+---
+
+## Backup and restore
+
+### `astropress backup [--out path]`
+
+Create a file-based snapshot of all content. `astropress sync export` is an alias.
+
+```sh
+astropress backup --project-dir ./my-site --out backups/$(date +%Y%m%d)
+```
+
+### `astropress restore [--from path]`
+
+Restore content from a snapshot. `astropress sync import` is an alias.
+
+```sh
+astropress restore --project-dir ./my-site --from backups/20260101
+```
+
+---
+
+## Deployment
+
+### `astropress deploy [--target vercel|cloudflare|netlify|fly]`
+
+Build and push to the specified host.
+
+### `astropress publish [--incremental] [--slugs slug1,slug2]`
+
+Build and publish to a static host. `--incremental` rebuilds only pages affected by the named slugs (faster for large sites).
+
+```sh
+astropress publish                                           # full rebuild
+astropress publish --incremental --slugs /blog/post-1,/blog/post-2
+```
+
+---
+
+## Version management
+
+### `astropress upgrade --check`
+
+Report any breaking changes between the current version and the latest release. Shows env variable renames, schema changes, and removed APIs.
+
+### `astropress upgrade --apply`
+
+Apply pending migrations and config renames for the current version.
+
+```sh
+astropress upgrade --check                 # see what would change
+astropress upgrade --apply                 # apply it
+```
+
+---
+
+## Services
+
+### `astropress services bootstrap [--provider d1|supabase|appwrite]`
+
+Provision your content-services provider: creates the required tables, buckets, and API keys.
+
+### `astropress services verify`
+
+Confirm that all configured services are reachable and that API keys are valid.
+
+```sh
+astropress services bootstrap --provider supabase
+astropress services verify
+```
+
+---
+
+## Utilities
+
+### `astropress config migrate`
+
+Rewrite legacy environment variable names to their current equivalents in `.env`.
+
+```sh
+astropress config migrate   # rewrites ASTROPRESS_DATA_SERVICES → ASTROPRESS_CONTENT_SERVICES, etc.
+```
+
+### `astropress completions [bash|zsh|fish]`
+
+Print a shell completion script. Add to your shell profile to enable tab-completion for all Astropress commands and flags.
+
+```sh
+astropress completions bash >> ~/.bashrc
+astropress completions zsh  >> ~/.zshrc
+astropress completions fish >> ~/.config/fish/completions/astropress.fish
+```
+
+### `astropress list tools`
+
+Print all available CLI commands with one-line descriptions.
+
+### `astropress list providers`
+
+Print all available integration options, grouped by category.
+
+```sh
+astropress list providers
+# Email:        listmonk, brevo, postal
+# Analytics:    umami, plausible, matomo, posthog
+# Commerce:     medusa, vendure
+# ...
+```

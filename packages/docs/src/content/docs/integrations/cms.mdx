@@ -1,0 +1,79 @@
+---
+title: Content management
+description: >-
+  Choose how Astropress stores and serves your content — the built-in editor,
+  a Git-backed CMS, or a TypeScript headless CMS.
+---
+
+Astropress comes with a built-in content editor that covers most use cases. You only need to change this setting if you have a specific workflow that the built-in editor doesn't support.
+
+## Options at a glance
+
+| Option | Licence | Hosting | Best for |
+|--------|---------|---------|----------|
+| **Built-in** (default) | MIT | None — same process as your site | Blogs, portfolios, small organisations |
+| **Keystatic** | MIT | None — content stored in Git | Developer-owned workflows, PRs as an editorial review step |
+| **Payload CMS** | MIT | Separate Node.js server | Complex content models, programmatic content APIs, large teams |
+
+## Built-in (default)
+
+The built-in editor is always active unless you choose something else. It gives you a `/ap-admin` panel with full CRUD for pages, posts, media, users, redirects, and SEO fields — without running any external service.
+
+Content is stored in a database whose backend depends on your deployment target:
+- **Local development / GitHub Pages:** SQLite file at `.data/admin.sqlite`
+- **Cloudflare Pages:** Cloudflare D1
+- **Vercel / Netlify / Fly.io:** Supabase or your own Postgres/SQLite host
+
+You do not choose the database manually; `astropress new` sets it up based on your deployment target choice.
+
+**When it's the right choice:** you want a working admin panel with no external dependencies. Start here.
+
+**Limitations:** content is stored in the database, not in Git. There's no PR-based review workflow and no Markdown-file-based content.
+
+## Keystatic
+
+Keystatic stores content as JSON or YAML files **in your Git repository**. The admin panel reads and writes those files directly; changes go through normal Git commits (and PRs, if you set up branch protection).
+
+```sh
+# Add Keystatic to a new project
+astropress new my-site --cms keystatic
+
+# Or add it to an existing project
+astropress add --cms keystatic
+```
+
+After running either command, complete setup by following the instructions in `keystatic.config.ts`.
+
+**When it's the right choice:**
+- You want editors to work in a pull-request review workflow
+- Your content is already Markdown files checked into Git
+- You prefer content versioned alongside code
+
+**Limitations:**
+- Not suitable for large media-heavy sites (binary assets in Git get unwieldy)
+- Requires Git access — editors need a GitHub/GitLab account
+- Does not support real-time collaboration
+
+**Further reading:** [keystatic.com/docs](https://keystatic.com/docs)
+
+## Payload CMS
+
+Payload is a TypeScript headless CMS that runs as a separate server. It gives you a powerful collection-based content model, a full REST/GraphQL API, custom fields, and rich access control.
+
+```sh
+astropress new my-site --cms payload
+```
+
+After scaffolding, follow the instructions in `payload.config.ts` to configure your collections.
+
+**When it's the right choice:**
+- You need custom content types with complex field types (relationship fields, rich text with plugins, blocks)
+- Your team accesses content programmatically via an API
+- You're building a multi-tenant or SaaS product on top of Astropress
+
+**Limitations:**
+- Requires a persistent Node.js server — **not compatible with edge runtimes or static hosts** like GitHub Pages or Cloudflare Pages
+- Higher operational complexity: you run Payload as a separate service alongside your Astropress admin
+- Uses its own database (MongoDB or Postgres) in addition to the Astropress SQLite/D1 database
+
+**Further reading:** [payloadcms.com/docs](https://payloadcms.com/docs)

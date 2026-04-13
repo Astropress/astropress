@@ -1,0 +1,87 @@
+---
+title: Search
+description: >-
+  Add site search with Pagefind (static, build-time, zero server) or
+  Meilisearch (full-text API with real-time indexing).
+---
+
+Astropress supports two search backends with very different tradeoffs. Choosing the right one depends on whether your searchable content is static or dynamic.
+
+## Options at a glance
+
+| Option | Licence | Hosting | When it updates | Best for |
+|--------|---------|---------|-----------------|---------|
+| **Pagefind** | Apache 2.0 | None | At build time | Static sites, docs, blogs |
+| **Meilisearch** | MIT | Self-hosted server | In real-time | Large sites, user-generated content |
+
+## Pagefind
+
+Pagefind is a fully static search solution. It runs as a build step, crawls your compiled HTML, and produces a pre-built search index. No server, no API, no external dependencies — the search runs entirely in the user's browser from static assets.
+
+```sh
+astropress new my-site --search pagefind
+astropress add --search pagefind
+```
+
+After scaffolding, add the Pagefind build step to your publish script:
+
+```sh
+# After `astro build`, run:
+npx pagefind --source dist
+```
+
+Or in `package.json`:
+
+```json
+{
+  "scripts": {
+    "build": "astro build && npx pagefind --source dist"
+  }
+}
+```
+
+The scaffold also adds a `PUBLIC_PAGEFIND_BASE_URL` env stub — set it to your site's base URL.
+
+**When it's the right choice:**
+- Your site is static or mostly static (blog, docs, portfolio, product site)
+- You want zero ongoing infrastructure cost for search
+- You want search that works offline and doesn't send queries to any external server
+
+**Limitations:**
+- **Build-time only** — new content is not searchable until you rebuild and redeploy
+- Not suitable for user-generated content (forum posts, comments) that needs to be searchable immediately
+- Search quality depends on your HTML structure — poorly structured content produces poor results
+
+**Further reading:** [pagefind.app](https://pagefind.app) · [Pagefind docs](https://pagefind.app/docs/)
+
+## Meilisearch
+
+Meilisearch is an open-source, self-hosted full-text search API. It supports real-time indexing, typo-tolerance, faceted search, and geosearch. Content added to Meilisearch is searchable within milliseconds.
+
+```sh
+astropress new my-site --search meilisearch
+astropress add --search meilisearch
+```
+
+After scaffolding, configure `MEILISEARCH_URL` and `MEILISEARCH_API_KEY` in `.env`, then see `SERVICES.md` for Docker Compose setup.
+
+**When it's the right choice:**
+- Your site has content that changes frequently and needs to be searchable immediately (e-commerce product catalogue, user forum, news site)
+- You need advanced search features: faceted filters, geolocation, multi-language ranking
+- You have the operational capacity to run and maintain a Meilisearch instance
+
+**Limitations:**
+- Requires running a persistent Meilisearch server (Docker, ~100 MB RAM for small indices)
+- You are responsible for keeping the index in sync with your content
+- More expensive operationally than Pagefind's zero-server approach
+
+**Further reading:** [meilisearch.com](https://www.meilisearch.com) · [Meilisearch docs](https://www.meilisearch.com/docs/)
+
+## Making the choice
+
+**Start with Pagefind** unless you have a specific reason to need real-time search. For blogs, documentation sites, and most content marketing sites, Pagefind's build-time approach is faster, cheaper, and more private (no search queries leave the user's browser).
+
+**Switch to Meilisearch** when:
+- You have more than ~10,000 pages and Pagefind's index becomes large
+- You need to search content that isn't in your static HTML (e.g. user-generated content in a database)
+- You need faceted filtering (e.g. searching by category, date range, price)

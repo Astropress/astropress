@@ -1,0 +1,106 @@
+---
+title: Commerce & payments
+description: >-
+  Add a product catalogue and checkout flow with Medusa or Vendure, and route
+  payments through HyperSwitch.
+---
+
+Astropress supports two headless commerce engines and one payment router. These are independent: you can use a commerce engine without HyperSwitch, HyperSwitch without a commerce engine, or all three together.
+
+## Commerce engines
+
+A commerce engine gives you a product catalogue, cart, orders, and a checkout flow. Both options are MIT-licensed and self-hosted.
+
+### Medusa
+
+Medusa is a modular headless commerce platform. Its plugin ecosystem and API surface are deliberately close to Shopify's — teams migrating from Shopify will find the concepts familiar.
+
+| Attribute | Detail |
+|-----------|--------|
+| Licence | MIT |
+| Hosting | Node.js server (persistent — not edge/static compatible) |
+| Language | TypeScript |
+| API | REST + Events |
+| Ecosystem | Large plugin registry (payment providers, fulfilment, analytics) |
+
+```sh
+astropress new my-site --commerce medusa
+astropress add --commerce medusa   # existing project
+```
+
+After scaffolding, see `medusa-config.js` and the Medusa quickstart guide.
+
+**When it's the right choice:** you want a battle-tested commerce backend with a large plugin ecosystem and Shopify-compatible concepts. Good for teams already familiar with Shopify's data model.
+
+**Limitations:**
+- Requires a persistent Node.js server — not compatible with static hosts or edge runtimes
+- Medusa v2 is a significant rewrite from v1; check the migration guide before upgrading
+
+**Further reading:** [docs.medusajs.com](https://docs.medusajs.com)
+
+### Vendure
+
+Vendure is a TypeScript-native headless commerce framework built around a GraphQL API. It is more developer-ergonomic than Medusa for teams comfortable with TypeScript and GraphQL.
+
+| Attribute | Detail |
+|-----------|--------|
+| Licence | MIT |
+| Hosting | Node.js server (persistent — not edge/static compatible) |
+| Language | TypeScript |
+| API | GraphQL + REST |
+| Ecosystem | Plugin system via NestJS modules |
+
+```sh
+astropress new my-site --commerce vendure
+astropress add --commerce vendure
+```
+
+**When it's the right choice:** you prefer a GraphQL API, are comfortable with NestJS conventions, or find Medusa's REST-first approach awkward. Vendure's type safety extends from the server to your storefront queries.
+
+**Limitations:**
+- Requires a persistent Node.js server
+- Steeper learning curve if you're not familiar with NestJS
+- Smaller plugin ecosystem than Medusa
+
+**Further reading:** [docs.vendure.io](https://docs.vendure.io)
+
+## Payments: HyperSwitch
+
+HyperSwitch is an open-source payment router. Instead of integrating with one payment provider (Stripe, Razorpay, PayPal, etc.), you integrate with HyperSwitch once and route payments to any of 50+ providers through a single API.
+
+| Attribute | Detail |
+|-----------|--------|
+| Licence | Apache 2.0 |
+| Hosting | Self-hosted Rust server (or HyperSwitch cloud) |
+| Supported providers | Stripe, Razorpay, PayPal, Square, Adyen, Braintree, and 50+ more |
+| Payment methods | Cards, Apple Pay, M-PESA, UPI, IMPS, NEFT, Venmo, Cash App |
+
+```sh
+astropress new my-site --payments hyperswitch
+astropress add --payments hyperswitch
+```
+
+Add your payment provider API keys via the HyperSwitch dashboard after deploying. Astropress writes `HYPERSWITCH_API_KEY`, `HYPERSWITCH_BASE_URL`, and redirect URL env stubs to `.env.example`.
+
+**When it's the right choice:**
+- You need to accept payments in multiple currencies or regions that different providers handle well (e.g. Stripe for cards, Razorpay for UPI in India, M-PESA in East Africa)
+- You want to switch payment providers without code changes
+- You want a fallback if your primary provider has an outage
+
+**Using HyperSwitch without a commerce engine:** HyperSwitch is a standalone payment router — you can use it for one-time payments, donations, or ticket sales without Medusa or Vendure.
+
+**Further reading:** [hyperswitch.io/docs](https://hyperswitch.io/docs)
+
+## Putting it together
+
+A typical commerce setup:
+
+```sh
+# Commerce engine + payment router
+astropress new my-site --commerce medusa --payments hyperswitch
+
+# Payments only (no product catalogue — suitable for donations, tickets)
+astropress new my-site --payments hyperswitch
+```
+
+Both Medusa and Vendure have native payment provider plugins. If you use them alongside HyperSwitch, configure HyperSwitch as the payment provider in the commerce engine's settings.

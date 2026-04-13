@@ -1,0 +1,146 @@
+---
+title: Community & discussion
+description: >-
+  Add comments, a forum, or live chat to your site. All options are self-hosted
+  or backed by infrastructure you control.
+---
+
+Astropress supports three layers of community interaction: **comments** on individual pages, a standalone **forum**, and **live chat** for real-time support. Each is optional and independent.
+
+## Comments
+
+Comments appear inline on blog posts or pages. Astropress defaults to Giscus; Remark42 is the self-hosted alternative.
+
+### Giscus (default)
+
+Giscus stores comments as GitHub Discussions. Visitors authenticate with their GitHub account to post.
+
+| Attribute | Detail |
+|-----------|--------|
+| Licence | MIT |
+| Hosting | GitHub CDN (no server to run) |
+| Cost | Free |
+| Requires | A public GitHub repository and visitors with GitHub accounts |
+
+```sh
+# Giscus is on by default — no flag needed
+astropress new my-site
+
+# Explicitly select it
+astropress new my-site --community giscus
+```
+
+After scaffolding, configure your GitHub repo in `giscus.config.ts` following the [giscus.app](https://giscus.app) setup guide.
+
+**When it's the right choice:** your audience is developers or open-source contributors who already have GitHub accounts and are comfortable using them.
+
+**Limitations:**
+- Visitors must have a GitHub account to comment — a significant barrier for non-technical audiences
+- All comment data lives in GitHub Discussions — you cannot export it to a self-hosted system later without API scripting
+- Comment moderation happens in GitHub, not in your Astropress admin
+
+### Remark42
+
+Remark42 is a self-hosted, privacy-focused commenting system. It supports multiple login providers (GitHub, Google, Twitter/X, email) or anonymous comments.
+
+| Attribute | Detail |
+|-----------|--------|
+| Licence | MIT |
+| Hosting | Self-hosted Go binary or Docker |
+| Cost | Free (server cost only) |
+| Requires | A persistent server (Docker, ~50 MB RAM) |
+
+```sh
+astropress new my-site --community remark42
+astropress add --community remark42
+```
+
+After scaffolding, see `SERVICES.md` for Docker Compose setup. Configure `REMARK42_URL` and `REMARK42_SITE_ID` in `.env`.
+
+**When it's the right choice:** your audience is not on GitHub, you want moderation controls in your own admin, or you need to keep comment data on your own server for compliance reasons.
+
+**Limitations:**
+- Requires running a persistent Docker container
+- You manage moderation, spam filtering, and backups
+
+**Further reading:** [remark42.com](https://remark42.com) · [Remark42 docs](https://remark42.com/docs/getting-started/installation/)
+
+:::caution
+You cannot enable both Giscus and Remark42 at the same time. They are mutually exclusive choices.
+:::
+
+## Forum
+
+A forum is a separate discussion space — not tied to individual posts. Use it when you want a community space with topics, categories, and user profiles.
+
+### Flarum
+
+Flarum is a lightweight, extensible forum built with PHP. It's fast to deploy and has a clean, modern UI.
+
+| Attribute | Detail |
+|-----------|--------|
+| Licence | MIT |
+| Hosting | Self-hosted PHP + MySQL/MariaDB |
+| Cost | Free (server cost only) |
+| Requirements | PHP 8.0+, MySQL 5.7+ or MariaDB 10.3+ |
+
+```sh
+astropress new my-site --forum flarum
+astropress add --forum flarum
+```
+
+Configure `FLARUM_URL` and `FLARUM_API_KEY` in `.env` after deploying Flarum.
+
+**When it's the right choice:** you want a forum with moderate traffic, don't have strict performance requirements, and prefer a simpler PHP stack over Discourse's heavier infrastructure.
+
+**Further reading:** [flarum.org](https://flarum.org) · [Flarum docs](https://docs.flarum.org)
+
+### Discourse
+
+Discourse is the most feature-complete open-source forum platform: full-text search, trust levels, email integration, SSO, plugins, and a robust moderation system.
+
+| Attribute | Detail |
+|-----------|--------|
+| Licence | GPL 2.0 |
+| Hosting | Self-hosted Docker (official install script) |
+| Cost | Free (server cost only — **minimum 2 GB RAM dedicated VM**) |
+| Requirements | Docker, 2 GB RAM, Redis, PostgreSQL (all managed by Discourse's install script) |
+
+```sh
+astropress new my-site --forum discourse
+astropress add --forum discourse
+```
+
+Configure `DISCOURSE_URL`, `DISCOURSE_API_KEY`, and `DISCOURSE_API_USERNAME` in `.env`.
+
+**When it's the right choice:** you need a high-traffic, full-featured community forum with trust levels, gamification, and a proven moderation toolkit. Discourse is the industry standard for developer communities.
+
+**Limitations:**
+- **Requires a dedicated VM with at least 2 GB RAM** — it will not run on a cheap shared server
+- Higher operational complexity: Redis, PostgreSQL, Sidekiq background workers, and email configuration all need to be running
+- Not suitable for low-traffic sites where the operational overhead outweighs the benefits
+
+**Further reading:** [discourse.org](https://www.discourse.org) · [Discourse install guide](https://github.com/discourse/discourse/blob/main/docs/INSTALL-cloud.md)
+
+## Live chat
+
+### Tiledesk
+
+Tiledesk is an open-source live chat and customer support platform. It supports chatbots, agent routing, conversation history, and integrations with Slack and Teams.
+
+| Attribute | Detail |
+|-----------|--------|
+| Licence | Apache 2.0 |
+| Hosting | Self-hosted Docker or Tiledesk cloud |
+| Cost | Free self-hosted; cloud plans from $25/month |
+
+```sh
+astropress new my-site --chat tiledesk
+astropress add --chat tiledesk
+```
+
+Configure `TILEDESK_API_URL`, `TILEDESK_PROJECT_ID`, and `TILEDESK_TOKEN` in `.env`.
+
+**When it's the right choice:** you need real-time customer support with multiple agents, conversation history, and escalation routing. Not appropriate for sites that don't have staff available to respond to chats.
+
+**Further reading:** [tiledesk.com](https://tiledesk.com) · [Tiledesk docs](https://developer.tiledesk.com/docs)

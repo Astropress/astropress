@@ -1,0 +1,108 @@
+---
+title: Email & newsletters
+description: >-
+  Send newsletters and transactional email from your own infrastructure —
+  choose the right tool for each job.
+---
+
+Email in Astropress covers two distinct jobs, and the right tool for each is different:
+
+- **Newsletter / campaign email** — bulk sends to a subscriber list, with open tracking, unsubscribe links, and campaign analytics → use **Listmonk**
+- **Transactional email** — triggered one-to-one messages like password resets, order confirmations, and account notifications → use **Brevo** or **Postal**
+
+You can enable both at the same time: `astropress add --email listmonk --transactional-email brevo`.
+
+## Newsletter: Listmonk
+
+Listmonk is a self-hosted newsletter and mailing list manager. It handles subscriber imports, double opt-in, HTML/plain-text templates, campaign scheduling, open/click tracking, and unsubscribe compliance. It does not handle transactional email.
+
+| Attribute | Detail |
+|-----------|--------|
+| Licence | MIT |
+| Hosting | Self-hosted (Docker, ~200 MB RAM) |
+| Cost | Free (server cost only) |
+| SMTP | Bring your own SMTP server (Postal, Brevo SMTP, etc.) |
+
+```sh
+# Add to new project
+astropress new my-site --email listmonk
+
+# Add to existing project
+astropress add --email listmonk
+```
+
+After scaffolding, see `SERVICES.md` for Docker Compose setup and `LISTMONK.md` for integration steps.
+
+**When it's the right choice:** you want full control over your subscriber data, your newsletter history, and your send infrastructure. Listmonk is the privacy-respecting default and the only option that keeps all subscriber data on your server.
+
+**Limitations:**
+- Requires running a persistent Docker container (Listmonk + PostgreSQL)
+- You are responsible for SMTP deliverability (SPF, DKIM, DMARC records)
+- No built-in email-sending — you must point Listmonk at an SMTP server
+
+**Further reading:** [listmonk.app](https://listmonk.app) · [listmonk.app/docs](https://listmonk.app/docs)
+
+## Transactional email
+
+Transactional email (password resets, receipts, notifications) needs reliable delivery to individuals. Newsletter tools are not designed for this — use a dedicated transactional service.
+
+### Brevo
+
+Brevo (formerly Sendinblue) is a SaaS transactional email service with a free tier of 300 emails/day.
+
+| Attribute | Detail |
+|-----------|--------|
+| Licence | SaaS (proprietary) |
+| Hosting | Brevo cloud |
+| Cost | Free up to 300 emails/day; paid plans from $25/month |
+| Setup | Sign up → generate SMTP key → paste into `.env` |
+
+```sh
+astropress add --transactional-email brevo
+```
+
+**When it's the right choice:** you want transactional email without running your own SMTP server. Brevo's free tier is generous enough for small sites and handles deliverability for you (reputation management, DKIM signing).
+
+**Limitations:**
+- Your subscriber/send data is on Brevo's servers (EU-based)
+- Free tier has daily sending limits and Brevo branding in some contexts
+- Proprietary service — vendor lock-in risk if Brevo changes pricing
+
+**Further reading:** [brevo.com](https://www.brevo.com) · [Brevo SMTP docs](https://help.brevo.com/hc/en-us/articles/209462765)
+
+### Postal
+
+Postal is an open-source self-hosted mail server. It handles both transactional and bulk sending, with a web dashboard, bounce handling, and a full API.
+
+| Attribute | Detail |
+|-----------|--------|
+| Licence | MIT |
+| Hosting | Self-hosted (Docker; needs a **dedicated IP**) |
+| Cost | Free (server cost + dedicated IP required) |
+| Setup | Complex — requires DNS records, rDNS, and a dedicated IP for deliverability |
+
+```sh
+astropress add --transactional-email postal
+```
+
+**When it's the right choice:** you need full control over your transactional email infrastructure, are willing to manage server reputation, and have the ops capacity to maintain it.
+
+**Limitations:**
+- **Requires a dedicated IP address** for good deliverability — shared IPs on cheap VPSes result in high spam rates. Use a Fly.io `dedicated-vm` or a dedicated cloud VM.
+- Higher operational complexity than Brevo: you manage rDNS, SPF, DKIM, DMARC, and bounce handling
+- Not appropriate for teams without email deliverability experience
+
+**Further reading:** [postalserver.io](https://postalserver.io) · [Postal docs](https://docs.postalserver.io)
+
+## Combining Listmonk and Postal
+
+A common setup for full self-hosting:
+
+- **Listmonk** for newsletter campaigns → sends via Postal's SMTP relay
+- **Postal** for transactional email → password resets, order confirmations
+
+```sh
+astropress add --email listmonk --transactional-email postal
+```
+
+Point Listmonk's SMTP settings at Postal, and configure Postal's `POSTAL_SMTP_HOST` env var in your site's `.env`.
