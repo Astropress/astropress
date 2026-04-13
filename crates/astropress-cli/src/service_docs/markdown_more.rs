@@ -5,7 +5,7 @@
 
 use crate::features::{
     AllFeatures, CommerceChoice, CourseChoice, CrmChoice, EventChoice, FormsChoice,
-    KnowledgeBaseChoice, PodcastChoice, SsoChoice, StatusChoice, VideoChoice,
+    KnowledgeBaseChoice, PodcastChoice, SocialChoice, SsoChoice, StatusChoice, VideoChoice,
 };
 use crate::providers::AbTestingProvider;
 
@@ -187,6 +187,41 @@ pub(super) fn append_more_services(doc: &mut String, f: &AllFeatures) {
             "docker compose --env-file .env.frappe-lms up -d\n",
             "```\n\n",
             "Full guide: <https://github.com/frappe/lms#installation>\n\n",
+        ));
+    }
+
+    if f.social == SocialChoice::Postiz {
+        doc.push_str(concat!(
+            "### Postiz (social media cross-posting)\n\n",
+            "> Platforms: LinkedIn, Bluesky, Mastodon, Twitter/X, Instagram, TikTok, Pinterest,\n",
+            "> Reddit, Threads, Facebook, YouTube.\n\n",
+            "```sh\n",
+            "cd postiz\n",
+            "cp .env.postiz.example .env.postiz\n",
+            "# Edit .env.postiz — set POSTIZ_DB_PASSWORD, JWT_SECRET, MAIN_URL\n",
+            "# Update DATABASE_URL to match POSTIZ_DB_PASSWORD\n",
+            "docker compose --env-file .env.postiz up -d\n",
+            "```\n\n",
+            "Then open `http://localhost:5000`, create your account, and connect platforms at\n",
+            "**Settings → Socials**.\n\n",
+            "Full guide: <https://docs.postiz.com/installation/self-hosting>\n\n",
+        ));
+    }
+
+    if f.social == SocialChoice::Mixpost {
+        doc.push_str(concat!(
+            "### Mixpost (social media scheduler)\n\n",
+            "> MIT community edition. Platforms: Twitter/X, Facebook, Instagram, LinkedIn,\n",
+            "> Pinterest, TikTok, Mastodon.\n",
+            "> Note: Bluesky is not available in the community edition.\n\n",
+            "```sh\n",
+            "cd mixpost\n",
+            "cp .env.mixpost.example .env.mixpost\n",
+            "# Edit .env.mixpost — set MIXPOST_DB_PASSWORD, DB_PASSWORD, and APP_KEY\n",
+            "docker compose --env-file .env.mixpost up -d\n",
+            "```\n\n",
+            "Then open `http://localhost:8080` to create your account.\n\n",
+            "Full guide: <https://mixpost.app/docs/self-hosted>\n\n",
         ));
     }
 

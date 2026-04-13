@@ -5,8 +5,8 @@
 use crate::features::{
     AllFeatures, ChatChoice, CmsChoice, CommerceChoice, CommunityChoice, CourseChoice, CrmChoice,
     DocsChoice, EmailChoice, EventChoice, FormsChoice, ForumChoice, KnowledgeBaseChoice,
-    NotifyChoice, PaymentChoice, PodcastChoice, ScheduleChoice, SearchChoice, SsoChoice,
-    StatusChoice, TransactionalEmailChoice, VideoChoice,
+    NotifyChoice, PaymentChoice, PodcastChoice, ScheduleChoice, SearchChoice, SocialChoice,
+    SsoChoice, StatusChoice, TransactionalEmailChoice, VideoChoice,
 };
 use crate::providers::{AbTestingProvider, AnalyticsProvider, HeatmapProvider};
 
@@ -150,6 +150,15 @@ pub(crate) fn parse_add_features(args: &[String]) -> Result<AllFeatures, String>
                     "zitadel"   => SsoChoice::Zitadel,
                     other => return Err(format!(
                         "Unknown SSO provider `{other}`. Use: authentik, zitadel."
+                    )),
+                };
+            }
+            "--social" => {
+                f.social = match value.as_str() {
+                    "postiz"  => SocialChoice::Postiz,
+                    "mixpost" => SocialChoice::Mixpost,
+                    other => return Err(format!(
+                        "Unknown social cross-posting tool `{other}`. Use: postiz, mixpost."
                     )),
                 };
             }

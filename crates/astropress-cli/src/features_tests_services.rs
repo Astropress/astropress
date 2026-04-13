@@ -6,6 +6,7 @@
 
 use super::*;
 use crate::feature_stubs::{feature_config_stubs, feature_env_stubs};
+use crate::features::SocialChoice;
 
 // ── forum ─────────────────────────────────────────────────────────────
 
@@ -198,6 +199,28 @@ fn zitadel_generates_env_stubs() {
     assert!(s.contains("ZITADEL_DOMAIN"));
     assert!(s.contains("ZITADEL_CLIENT_ID"));
     assert!(s.contains("ZITADEL_CLIENT_SECRET"));
+}
+
+// ── social media ─────────────────────────────────────────────────────
+
+#[test]
+fn postiz_generates_env_stubs() {
+    let f = AllFeatures { social: SocialChoice::Postiz, ..AllFeatures::defaults() };
+    let s = feature_env_stubs(&f);
+    assert!(s.contains("POSTIZ_URL"),      "URL missing: {s}");
+    assert!(s.contains("POSTIZ_API_TOKEN"), "token missing: {s}");
+    assert!(s.contains("LinkedIn"),         "platforms missing: {s}");
+    assert!(s.contains("Bluesky"),          "Bluesky missing: {s}");
+    assert!(s.contains("Mastodon"),         "Mastodon missing: {s}");
+}
+
+#[test]
+fn mixpost_generates_env_stubs() {
+    let f = AllFeatures { social: SocialChoice::Mixpost, ..AllFeatures::defaults() };
+    let s = feature_env_stubs(&f);
+    assert!(s.contains("MIXPOST_URL"),      "URL missing: {s}");
+    assert!(s.contains("MIXPOST_API_TOKEN"), "token missing: {s}");
+    assert!(s.contains("Mastodon"),          "Mastodon missing: {s}");
 }
 
 // ── job board ─────────────────────────────────────────────────────────

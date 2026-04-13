@@ -1,0 +1,136 @@
+---
+title: Social media cross-posting
+description: >-
+  Schedule and publish to LinkedIn, Bluesky, Mastodon, Twitter/X, and more
+  with Postiz or Mixpost.
+---
+
+Astropress supports two self-hosted social media schedulers. Both run as Docker
+Compose stacks and connect to the same platforms your audience uses.
+
+## Postiz
+
+Postiz is an open-source social media scheduling platform (AGPL-3.0) made by
+[GitRoom](https://github.com/gitroomhq/postiz-app). It supports the broadest
+platform list of the two options and includes an AI caption assistant.
+
+| Attribute | Detail |
+|-----------|--------|
+| Licence | AGPL-3.0 |
+| Image | `ghcr.io/gitroomhq/postiz-app:latest` |
+| Platforms | LinkedIn, Bluesky, Mastodon, Twitter/X, Instagram, TikTok, Pinterest, Reddit, Threads, Facebook, YouTube |
+| Hosting | Self-hosted Docker Compose (Postgres + Redis) |
+
+```sh
+astropress new my-site --social postiz
+astropress add --social postiz   # existing project
+```
+
+Scaffolding writes `postiz/docker-compose.yml`, `postiz/.env.postiz.example`,
+and env stubs for `POSTIZ_URL` and `POSTIZ_API_TOKEN`.
+
+### Setup
+
+1. Copy and edit the env file:
+
+   ```sh
+   cd postiz
+   cp .env.postiz.example .env.postiz
+   # Set POSTIZ_DB_PASSWORD, JWT_SECRET, and MAIN_URL
+   # Update DATABASE_URL to match POSTIZ_DB_PASSWORD
+   ```
+
+2. Start the stack:
+
+   ```sh
+   docker compose --env-file .env.postiz up -d
+   ```
+
+3. Open `http://localhost:5000`, create your admin account, then connect
+   platforms at **Settings → Socials**.
+
+**When it's the right choice:**
+- You need LinkedIn and Bluesky alongside Mastodon and Twitter/X
+- You want an AI assistant to help write captions
+- You're publishing across more than 4–5 platforms
+
+**Limitations:**
+- AGPL-3.0 — if you distribute a modified version, you must publish the source
+- Heavier stack than Mixpost (Node.js app + Postgres + Redis)
+
+**Further reading:** [docs.postiz.com](https://docs.postiz.com)
+
+## Mixpost
+
+Mixpost is a social media scheduling tool (MIT community edition) by
+[Inovector](https://github.com/inovector/mixpost). It is lighter and simpler
+than Postiz, with a clean UI and MIT licensing.
+
+| Attribute | Detail |
+|-----------|--------|
+| Licence | MIT (community edition) |
+| Image | `inovector/mixpost:latest` |
+| Platforms | Twitter/X, Facebook, Instagram, LinkedIn, Pinterest, TikTok, Mastodon |
+| Hosting | Self-hosted Docker Compose (Postgres + Redis) |
+
+```sh
+astropress new my-site --social mixpost
+astropress add --social mixpost   # existing project
+```
+
+Scaffolding writes `mixpost/docker-compose.yml`, `mixpost/.env.mixpost.example`,
+and env stubs for `MIXPOST_URL` and `MIXPOST_API_TOKEN`.
+
+### Setup
+
+1. Copy and edit the env file:
+
+   ```sh
+   cd mixpost
+   cp .env.mixpost.example .env.mixpost
+   # Set MIXPOST_DB_PASSWORD, DB_PASSWORD, and APP_KEY
+   ```
+
+2. Start the stack:
+
+   ```sh
+   docker compose --env-file .env.mixpost up -d
+   ```
+
+3. Open `http://localhost:8080` to create your account.
+
+**When it's the right choice:**
+- You want MIT licensing with no copyleft requirements
+- You don't need Bluesky or YouTube
+- You prefer a simpler, lighter deployment
+
+**Limitations:**
+- Bluesky is not supported in the community edition (only in the Pro/Enterprise plan)
+- Smaller platform list than Postiz
+
+**Further reading:** [mixpost.app/docs](https://mixpost.app/docs)
+
+## Platform comparison
+
+| Platform | Postiz | Mixpost |
+|----------|--------|---------|
+| LinkedIn | Yes | Yes |
+| Bluesky | Yes | No (community) |
+| Mastodon | Yes | Yes |
+| Twitter/X | Yes | Yes |
+| Instagram | Yes | Yes |
+| TikTok | Yes | Yes |
+| Pinterest | Yes | Yes |
+| Reddit | Yes | No |
+| Threads | Yes | No |
+| Facebook | Yes | Yes |
+| YouTube | Yes | No |
+| Licence | AGPL-3.0 | MIT |
+
+## Relationship to ActivityPub federation
+
+PeerTube and Castopod (selected under **Video** and **Podcast**) already
+federate natively over ActivityPub — followers on Mastodon, Pixelfed, and
+other Fediverse instances see new uploads automatically without any
+cross-posting tool. Postiz/Mixpost complement this by pushing to centralised
+platforms (LinkedIn, Instagram, TikTok, etc.) that do not speak ActivityPub.

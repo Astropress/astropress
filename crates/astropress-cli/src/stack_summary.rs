@@ -6,7 +6,7 @@ use crate::features::{
     AllFeatures, ChatChoice, CmsChoice, CommerceChoice, CommunityChoice, CourseChoice,
     CrmChoice, DocsChoice, EmailChoice, EventChoice, FormsChoice, ForumChoice,
     KnowledgeBaseChoice, NotifyChoice, PaymentChoice, PodcastChoice, ScheduleChoice,
-    SearchChoice, SsoChoice, StatusChoice, TransactionalEmailChoice, VideoChoice,
+    SearchChoice, SocialChoice, SsoChoice, StatusChoice, TransactionalEmailChoice, VideoChoice,
 };
 use crate::providers::{AbTestingProvider, AnalyticsProvider, AppHost, HeatmapProvider};
 
@@ -95,6 +95,8 @@ pub(crate) fn print_stack_summary(f: &AllFeatures, app_host: Option<AppHost>) {
     if f.crm == CrmChoice::Twenty                     { println!("    CRM           Twenty             → self-hosted"); }
     if f.sso == SsoChoice::Authentik                  { println!("    SSO           Authentik          → self-hosted"); }
     if f.sso == SsoChoice::Zitadel                    { println!("    SSO           Zitadel            → self-hosted or cloud"); }
+    if f.social == SocialChoice::Postiz               { println!("    Social        Postiz             → self-hosted; LinkedIn/Bluesky/Mastodon/X + 8 more"); }
+    if f.social == SocialChoice::Mixpost              { println!("    Social        Mixpost            → self-hosted; Twitter/X/Facebook/Instagram/LinkedIn + Mastodon"); }
     match f.docs {
         DocsChoice::Starlight => println!("    Docs site     Starlight (MIT)    → docs/; static output, WCAG AA"),
         DocsChoice::VitePress => println!("    Docs site     VitePress (MIT)    → docs/; static output, local search"),

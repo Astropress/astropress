@@ -71,6 +71,7 @@ pub(crate) fn list_tools() {
     println!("  --knowledge-base     bookstack");
     println!("  --crm                twenty");
     println!("  --sso                authentik, zitadel");
+    println!("  --social             postiz, mixpost");
 }
 
 /// Print the provider catalogue to stdout, organised by hosting category.

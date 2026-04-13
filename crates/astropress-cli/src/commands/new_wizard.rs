@@ -200,14 +200,14 @@ pub(crate) fn prompt_all_features() -> AllFeatures {
 
     let MoreFeatures {
         payments, forum, chat, notify, schedule, video, podcast, events,
-        transactional_email, status, knowledge_base, crm, sso, job_board,
+        transactional_email, status, knowledge_base, crm, sso, social, job_board,
         ab_testing, heatmap, enable_api,
     } = prompt_more_features();
 
     AllFeatures {
         cms, email, transactional_email, commerce, community, search, courses, forms,
         donations, forum, chat, payments, notify, schedule, video, podcast, events,
-        status, knowledge_base, crm, sso, docs, job_board,
+        status, knowledge_base, crm, sso, social, docs, job_board,
         analytics, ab_testing, heatmap, enable_api,
     }
 }

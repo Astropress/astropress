@@ -16,12 +16,13 @@ mod identity;
 mod markdown;
 mod media;
 mod scheduling;
+mod social;
 
 use crate::features::{
     AllFeatures, ChatChoice, CmsChoice, CommerceChoice, CommunityChoice, CourseChoice,
     CrmChoice, EmailChoice, EventChoice, FormsChoice, ForumChoice, KnowledgeBaseChoice,
     NotifyChoice, PaymentChoice, PodcastChoice, ScheduleChoice, SearchChoice,
-    SsoChoice, StatusChoice, TransactionalEmailChoice, VideoChoice,
+    SocialChoice, SsoChoice, StatusChoice, TransactionalEmailChoice, VideoChoice,
 };
 use crate::providers::AbTestingProvider;
 
@@ -146,6 +147,14 @@ pub(crate) fn service_compose_stubs(f: &AllFeatures) -> Vec<(&'static str, &'sta
     if f.ab_testing == AbTestingProvider::Flagsmith {
         files.push(("flagsmith/docker-compose.yml",       identity::COMPOSE_FLAGSMITH));
         files.push(("flagsmith/.env.flagsmith.example",   identity::ENV_FLAGSMITH));
+    }
+    if f.social == SocialChoice::Postiz {
+        files.push(("postiz/docker-compose.yml",    social::COMPOSE_POSTIZ));
+        files.push(("postiz/.env.postiz.example",   social::ENV_POSTIZ));
+    }
+    if f.social == SocialChoice::Mixpost {
+        files.push(("mixpost/docker-compose.yml",   social::COMPOSE_MIXPOST));
+        files.push(("mixpost/.env.mixpost.example", social::ENV_MIXPOST));
     }
 
     files
@@ -307,6 +316,48 @@ mod tests {
         assert!(doc.contains("PIX"),           "LatAm PIX: {doc}");
         assert!(doc.contains("OXXO"),          "LatAm OXXO: {doc}");
         assert!(doc.contains("Boleto"),        "LatAm Boleto: {doc}");
+    }
+
+    #[test]
+    fn postiz_generates_compose_and_env() {
+        let f = AllFeatures { social: SocialChoice::Postiz, ..AllFeatures::defaults() };
+        let stubs = service_compose_stubs(&f);
+        let paths: Vec<_> = stubs.iter().map(|(p, _)| *p).collect();
+        assert!(paths.contains(&"postiz/docker-compose.yml"), "{paths:?}");
+        assert!(paths.contains(&"postiz/.env.postiz.example"), "{paths:?}");
+        let compose = stubs.iter().find(|(p, _)| *p == "postiz/docker-compose.yml").unwrap().1;
+        assert!(compose.contains("postiz_uploads"), "uploads volume missing: {compose}");
+        let env = stubs.iter().find(|(p, _)| *p == "postiz/.env.postiz.example").unwrap().1;
+        assert!(env.contains("JWT_SECRET"), "JWT_SECRET missing from env: {env}");
+    }
+
+    #[test]
+    fn postiz_services_doc_has_section() {
+        let f = AllFeatures { social: SocialChoice::Postiz, ..AllFeatures::defaults() };
+        let doc = build_services_doc(&f).expect("should generate doc");
+        assert!(doc.contains("Postiz"), "{doc}");
+        assert!(doc.contains("LinkedIn"), "{doc}");
+        assert!(doc.contains("Bluesky"), "{doc}");
+        assert!(doc.contains("Mastodon"), "{doc}");
+    }
+
+    #[test]
+    fn mixpost_generates_compose_and_env() {
+        let f = AllFeatures { social: SocialChoice::Mixpost, ..AllFeatures::defaults() };
+        let stubs = service_compose_stubs(&f);
+        let paths: Vec<_> = stubs.iter().map(|(p, _)| *p).collect();
+        assert!(paths.contains(&"mixpost/docker-compose.yml"), "{paths:?}");
+        assert!(paths.contains(&"mixpost/.env.mixpost.example"), "{paths:?}");
+        let compose = stubs.iter().find(|(p, _)| *p == "mixpost/docker-compose.yml").unwrap().1;
+        assert!(compose.contains("APP_KEY") || compose.contains("MIXPOST"));
+    }
+
+    #[test]
+    fn mixpost_services_doc_has_section() {
+        let f = AllFeatures { social: SocialChoice::Mixpost, ..AllFeatures::defaults() };
+        let doc = build_services_doc(&f).expect("should generate doc");
+        assert!(doc.contains("Mixpost"), "{doc}");
+        assert!(doc.contains("Mastodon"), "{doc}");
     }
 
     #[test]

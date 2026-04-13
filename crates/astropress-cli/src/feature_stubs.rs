@@ -10,7 +10,7 @@ use crate::features::{
     AllFeatures, ChatChoice, CmsChoice, CommerceChoice, CommunityChoice, CourseChoice,
     CrmChoice, DocsChoice, EmailChoice, EventChoice, FormsChoice, ForumChoice,
     KnowledgeBaseChoice, NotifyChoice, PaymentChoice, PodcastChoice, ScheduleChoice,
-    SearchChoice, SsoChoice, StatusChoice, TransactionalEmailChoice, VideoChoice,
+    SearchChoice, SocialChoice, SsoChoice, StatusChoice, TransactionalEmailChoice, VideoChoice,
 };
 use crate::service_docs::service_compose_stubs;
 
@@ -204,6 +204,20 @@ pub(crate) fn feature_env_stubs(f: &AllFeatures) -> String {
         lines.extend(&["# Zitadel (identity platform — Apache 2.0)",
             "ZITADEL_DOMAIN=replace-me.zitadel.cloud",
             "ZITADEL_CLIENT_ID=replace-me", "ZITADEL_CLIENT_SECRET=replace-me"]);
+    }
+    if f.social == SocialChoice::Postiz {
+        lines.extend(&["# Postiz (social media cross-posting — AGPL 3.0)",
+            "# Platforms: LinkedIn, Bluesky, Mastodon, Twitter/X, Instagram, TikTok, Pinterest,",
+            "#            Reddit, Threads, Facebook, YouTube",
+            "POSTIZ_URL=http://localhost:5000",
+            "POSTIZ_API_TOKEN=replace-me"]);
+    }
+    if f.social == SocialChoice::Mixpost {
+        lines.extend(&["# Mixpost (social media scheduler — MIT community edition)",
+            "# Platforms: Twitter/X, Facebook, Instagram, LinkedIn, Pinterest, TikTok, Mastodon",
+            "# Note: Bluesky is not supported in the community edition.",
+            "MIXPOST_URL=http://localhost:8080",
+            "MIXPOST_API_TOKEN=replace-me"]);
     }
     match f.docs {
         DocsChoice::Starlight => lines.push(

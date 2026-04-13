@@ -42,6 +42,7 @@ impl Default for DonationChoices {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)] pub(crate) enum KnowledgeBaseChoice     { None, BookStack }
 #[derive(Debug, Clone, Copy, PartialEq, Eq)] pub(crate) enum CrmChoice               { None, Twenty }
 #[derive(Debug, Clone, Copy, PartialEq, Eq)] pub(crate) enum SsoChoice               { None, Authentik, Zitadel }
+#[derive(Debug, Clone, Copy, PartialEq, Eq)] pub(crate) enum SocialChoice            { None, Postiz, Mixpost }
 #[derive(Debug, Clone, Copy, PartialEq, Eq)] pub(crate) enum DocsChoice              { None, Starlight, VitePress, MdBook }
 
 // ── aggregated feature bag ────────────────────────────────────────────────────
@@ -69,6 +70,7 @@ pub(crate) struct AllFeatures {
     pub knowledge_base:      KnowledgeBaseChoice,
     pub crm:                 CrmChoice,
     pub sso:                 SsoChoice,
+    pub social:              SocialChoice,
     pub docs:                DocsChoice,
     pub job_board:           bool,
     pub analytics:           AnalyticsProvider,
@@ -101,6 +103,7 @@ impl AllFeatures {
             knowledge_base:     KnowledgeBaseChoice::None,
             crm:                CrmChoice::None,
             sso:                SsoChoice::None,
+            social:             SocialChoice::None,
             docs:               DocsChoice::None,
             job_board:          false,
             analytics:          AnalyticsProvider::None,

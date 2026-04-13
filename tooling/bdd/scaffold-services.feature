@@ -139,6 +139,31 @@ Feature: Service selection during astropress new
     Then the project directory contains "content-types.example.ts"
     And the file contains "jobListingContentType"
 
+  Scenario: Choosing Postiz generates social cross-posting env entries
+    Given I select "Postiz" for social cross-posting during scaffolding
+    When scaffolding completes
+    Then the .env.example file contains "POSTIZ_URL"
+    And the .env.example file contains "POSTIZ_API_TOKEN"
+    And the .env.example file mentions "LinkedIn"
+    And the .env.example file mentions "Bluesky"
+    And the .env.example file mentions "Mastodon"
+
+  Scenario: Choosing Mixpost generates social scheduling env entries
+    Given I select "Mixpost" for social cross-posting during scaffolding
+    When scaffolding completes
+    Then the .env.example file contains "MIXPOST_URL"
+    And the .env.example file contains "MIXPOST_API_TOKEN"
+    And the .env.example file mentions "Mastodon"
+
+  Scenario: Postiz SERVICES.md section covers all supported platforms
+    Given I select "Postiz" for social cross-posting during scaffolding
+    When scaffolding completes
+    Then the generated SERVICES.md mentions "LinkedIn"
+    And the generated SERVICES.md mentions "Bluesky"
+    And the generated SERVICES.md mentions "Mastodon"
+    And the generated SERVICES.md mentions "TikTok"
+    And the generated SERVICES.md mentions "YouTube"
+
   Scenario: PostHog selected for analytics pre-selects PostHog for session replay
     Given I select "PostHog" for analytics during scaffolding
     When the session replay prompt is shown

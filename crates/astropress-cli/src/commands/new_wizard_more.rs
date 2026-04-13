@@ -3,7 +3,7 @@
 
 use crate::features::{
     ChatChoice, CrmChoice, EventChoice, ForumChoice, KnowledgeBaseChoice, NotifyChoice,
-    PaymentChoice, PodcastChoice, ScheduleChoice, SsoChoice, StatusChoice,
+    PaymentChoice, PodcastChoice, ScheduleChoice, SocialChoice, SsoChoice, StatusChoice,
     TransactionalEmailChoice, VideoChoice,
 };
 use crate::providers::{AbTestingProvider, HeatmapProvider};
@@ -22,6 +22,7 @@ pub(super) struct MoreFeatures {
     pub knowledge_base: KnowledgeBaseChoice,
     pub crm: CrmChoice,
     pub sso: SsoChoice,
+    pub social: SocialChoice,
     pub job_board: bool,
     pub ab_testing: AbTestingProvider,
     pub heatmap: HeatmapProvider,
@@ -232,6 +233,24 @@ pub(super) fn prompt_more_features() -> MoreFeatures {
         }
     } else { SsoChoice::None };
 
+    // ── social media cross-posting ────────────────────────────────────────
+    let social = if Confirm::with_theme(t)
+        .with_prompt("Add social media cross-posting?  (schedule posts to LinkedIn, Bluesky, Mastodon, etc.)")
+        .default(false).interact().unwrap_or(false)
+    {
+        match Select::with_theme(t).with_prompt("Social cross-posting").items(&[
+            "Postiz    — AGPL 3.0; LinkedIn, Bluesky, Mastodon, Twitter/X, Instagram,\n\
+             \x20          TikTok, Pinterest, Reddit, Threads, Facebook, YouTube;\n\
+             \x20          scheduling dashboard + AI caption assistant",
+            "Mixpost   — MIT (community edition); Twitter/X, Facebook, Instagram,\n\
+             \x20          LinkedIn, Pinterest, TikTok, Mastodon;\n\
+             \x20          simpler UI, no Bluesky in community edition",
+        ]).default(0).interact().unwrap_or(0) {
+            1 => SocialChoice::Mixpost,
+            _ => SocialChoice::Postiz,
+        }
+    } else { SocialChoice::None };
+
     // ── job board content type ────────────────────────────────────────────
     let job_board = Confirm::with_theme(t)
         .with_prompt("Scaffold a job board content type?  (generates content-types.example.ts)")
@@ -284,7 +303,7 @@ pub(super) fn prompt_more_features() -> MoreFeatures {
 
     MoreFeatures {
         payments, forum, chat, notify, schedule, video, podcast, events,
-        transactional_email, status, knowledge_base, crm, sso, job_board,
+        transactional_email, status, knowledge_base, crm, sso, social, job_board,
         ab_testing, heatmap, enable_api,
     }
 }
