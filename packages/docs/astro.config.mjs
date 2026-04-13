@@ -11,13 +11,9 @@ export default defineConfig({
       // Accessibility: WCAG AA contrast, skip-to-content, keyboard nav,
       // and prefers-reduced-motion support ship by default.
       // https://starlight.astro.build/guides/accessibility/
-      social: [
-        {
-          icon: "github",
-          label: "GitHub",
-          href: "https://github.com/astropress/astropress",
-        },
-      ],
+      social: {
+        github: "https://github.com/astropress/astropress",
+      },
       sidebar: [
         {
           label: "Start here",

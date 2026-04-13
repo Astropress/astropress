@@ -3,14 +3,14 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev":     "astro dev",
-    "build":   "astro build",
-    "check":   "astro check",
+    "dev": "astro dev",
+    "build": "astro build",
+    "check": "astro check",
     "preview": "astro preview",
     "prepare": "bunx lefthook install"
   },
   "dependencies": {
-    "@astrojs/starlight": "^0.29.0",
+    "@astrojs/starlight": "^0.31.0",
     "astro": "^5.0.0",
     "sharp": "^0.33.0"
   },
