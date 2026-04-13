@@ -1,6 +1,6 @@
 # Astropress Evaluation
 
-**Baseline (as of 2026-04-13, updated):** 1540+ Vitest tests · 159 Rust CLI tests · 10 Playwright tests · 334 BDD scenarios · security audit clean
+**Baseline (as of 2026-04-14, updated):** 1540+ Vitest tests · 159 Rust CLI tests · 10 Playwright specs across 70 acceptance checks · 334 BDD scenarios · security audit clean
 
 ## Grades
 
@@ -44,40 +44,42 @@ Grade scale: `A+ / A / B / C / D / F`
 | 34 | Content Scheduling | A |
 | 35 | E2E Hosted Provider Testing | B |
 | 36 | CLI UX Quality | A+ |
-| 37 | Email Delivery | A |
+| 37 | Email Delivery | A+ |
 | 38 | Search / Discovery | A |
 | 39 | Admin CRUD E2E | A+ |
 | 40 | Disaster Recovery | A |
 | 41 | Monitoring Integration | A |
 | 42 | Upgrade Path E2E | A |
-| 43 | System Honesty | A |
-| 44 | Multi-site Gateway (astropress-nexus) | A |
+| 43 | System Honesty | A+ |
+| 44 | Multi-site Gateway (astropress-nexus) | A+ |
 | 45 | Scaffold Quality Carryover | A+ |
 | 46 | Mobile-Firstness / Responsive Design | A |
 | 47 | Admin Panel UX Quality | A |
-| 48 | Nexus UX Quality | A |
-| 49 | UX Writing & Microcopy | A |
+| 48 | Nexus UX Quality | A+ |
+| 49 | UX Writing & Microcopy | A+ |
 | 50 | Information Architecture | A+ |
-| 51 | Navigation Design | A |
+| 51 | Navigation Design | A+ |
 | 52 | Interaction Design & Motion | A |
 | 53 | Cross-Platform Support | A |
-| 54 | Test Artifact Cleanup | B |
+| 54 | Test Artifact Cleanup | A+ |
 
 ## Known gaps
 
 - **Rubric 35:** Live hosted-provider coverage still depends on maintainer-owned accounts, seeded projects, and teardown automation; see `HOSTED_E2E_SETUP.md`
-- **Rubric 37:** Transactional email runtime and docs are not fully unified around one canonical provider contract yet
-- **Rubric 44 / 48:** `astropress-nexus` is still API-first; the operator dashboard and bulk-action UX from the A+ plan are not implemented yet
 - **Rubric 46–52:** UX rubrics added 2026-04-12 — no independent user research or usability testing has been conducted
 - **Rubric 53:** Windows, macOS, and Linux now have CI smoke coverage and shell parity, but BSD remains best-effort rather than verified support
-- **Rubric 54:** Rust CLI temp directories self-clean, but some local example/docs runs can still leave generated `.data/` artifacts unless they are explicitly removed
 
-## Grade changes (2026-04-13 audit)
+## Grade changes (2026-04-14 audit)
 
 | Rubric | Old | New | Reason |
 |--------|-----|-----|--------|
-| 43 — System Honesty | A | A+ | Public docs, BDD text, and user-facing crypto/readiness claims are now checked against a canonical truth source in CI |
-| 54 — Test Artifact Cleanup | New | B | Rust CLI tests sweep and delete temp directories, but local repo-level verification can still leave generated `.data/` directories in the worktree |
+| 37 — Email Delivery | A | A+ | Runtime, CLI, and docs now share one canonical `mock | resend | smtp` contract with passing tests |
+| 43 — System Honesty | A | A+ | Public docs, BDD text, and user-facing crypto/readiness claims are checked against a canonical truth source in CI |
+| 44 — Multi-site Gateway | A | A+ | `astropress-nexus` now includes a tested operator dashboard, detail pages, and bulk refresh/redeploy actions |
+| 48 — Nexus UX Quality | A | A+ | Nexus now has a real operator UI with search, per-site actions, degraded-state surfacing, and responsive cards |
+| 49 — UX Writing & Microcopy | A | A+ | `docs/UX_WRITING.md` and `bun run audit:microcopy` now enforce higher-signal user-facing copy |
+| 51 — Navigation Design | A | A+ | Command palette, keyboard shortcut help, recent-item nav, breadcrumbs coverage, and mobile nav behavior are now tested |
+| 54 — Test Artifact Cleanup | B | A+ | Example/admin-harness verification now runs inside temp data roots and CI fails if the repo is left dirty |
 
 ---
 
@@ -90,6 +92,7 @@ Measures whether the repo's public claims, CLI output, and failure reporting mat
 ### Evidence
 
 - README, docs, BDD text, and user-facing crypto/readiness wording are audited by `bun run audit:honesty`
+- User-facing fallback copy is audited by `bun run audit:microcopy`
 - `HOSTED_E2E_SETUP.md` explicitly states that hosted-provider E2E is not `A+` yet and why
 - The compatibility matrix now states Linux/macOS/Windows as verified and BSD as best-effort
 - Security docs now describe the actual crypto stack: Argon2id password hashing, KMAC256 token/privacy digests, and ML-DSA-65 webhook signatures
@@ -100,8 +103,8 @@ Measures whether the repo's public claims, CLI output, and failure reporting mat
 
 | Area | Verdict | Why |
 |---|---|---|
-| GitHub readiness | **Yes** | The repo has a licence, contributing guide, code of conduct, security policy, issue templates, CODEOWNERS, Dependabot, CodeQL/security workflows, and automated release/docs pipelines |
-| Production readiness | **Yes, with caveats** | The framework has strong architecture, tests, security defaults, and deployment automation, but it is still `0.0.1`, hosted-provider E2E coverage is incomplete, and some docs are ahead of others |
+| GitHub readiness | **Yes** | The repo has the expected open-source hygiene, enforced docs/readiness audits, cross-platform smoke lanes, and clean-worktree verification in CI |
+| Production readiness | **Yes, with caveats** | The core stack is production-capable for the verified Node 24 / Linux-macOS-Windows matrix, but hosted-provider live E2E remains incomplete and BSD is not a verified target |
 | Cross-platform readiness | **Yes for mainstream OSes** | Linux, macOS, and Windows have install/release coverage and CI smoke lanes; BSD is documented as best-effort pending native runner verification |
 
 ---
