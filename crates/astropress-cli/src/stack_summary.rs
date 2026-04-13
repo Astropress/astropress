@@ -4,9 +4,9 @@
 
 use crate::features::{
     AllFeatures, ChatChoice, CmsChoice, CommerceChoice, CommunityChoice, CourseChoice,
-    CrmChoice, EmailChoice, EventChoice, FormsChoice, ForumChoice, KnowledgeBaseChoice,
-    NotifyChoice, PaymentChoice, PodcastChoice, ScheduleChoice, SearchChoice,
-    SsoChoice, StatusChoice, TransactionalEmailChoice, VideoChoice,
+    CrmChoice, DocsChoice, EmailChoice, EventChoice, FormsChoice, ForumChoice,
+    KnowledgeBaseChoice, NotifyChoice, PaymentChoice, PodcastChoice, ScheduleChoice,
+    SearchChoice, SsoChoice, StatusChoice, TransactionalEmailChoice, VideoChoice,
 };
 use crate::providers::{AbTestingProvider, AnalyticsProvider, AppHost, HeatmapProvider};
 
@@ -88,6 +88,12 @@ pub(crate) fn print_stack_summary(f: &AllFeatures, app_host: Option<AppHost>) {
     if f.crm == CrmChoice::Twenty                     { println!("    CRM           Twenty             → Fly.io / Railway (free)"); }
     if f.sso == SsoChoice::Authentik                  { println!("    SSO           Authentik          → Fly.io / Railway (free)"); }
     if f.sso == SsoChoice::Zitadel                    { println!("    SSO           Zitadel            → zitadel.com (free tier) or self-host"); }
+    match f.docs {
+        DocsChoice::Starlight => println!("    Docs site     Starlight (MIT)    → docs/; static output, WCAG AA"),
+        DocsChoice::VitePress => println!("    Docs site     VitePress (MIT)    → docs/; static output, local search"),
+        DocsChoice::MdBook    => println!("    Docs site     mdBook (MPL-2.0)   → docs/; static output, zero JS framework"),
+        DocsChoice::None      => {}
+    }
     if f.job_board  { println!("    Job board     content type       → see content-types.example.ts"); }
     if f.enable_api { println!("    REST API      enabled            → /ap-api/v1/* (Bearer token)"); }
     println!("  ─────────────────────────────────────────────────────");

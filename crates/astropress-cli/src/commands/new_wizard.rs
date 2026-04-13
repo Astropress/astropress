@@ -175,6 +175,28 @@ pub(crate) fn prompt_all_features() -> AllFeatures {
         }
     } else { DonationChoices::default() };
 
+    // ── docs site (Starlight / VitePress / mdBook) ────────────────────────
+    let docs = if Confirm::with_theme(t)
+        .with_prompt("Add a docs site?")
+        .default(false).interact().unwrap_or(false)
+    {
+        match Select::with_theme(t).with_prompt("Docs generator").items(&[
+            "Starlight  — MIT; Astro-based; WCAG AA out of the box, keyboard nav,\n\
+             \x20           prefers-reduced-motion, built-in Pagefind search. Use when\n\
+             \x20           you want a polished reference site with zero accessibility work.",
+            "VitePress  — MIT; Vue-based; minimal, keyboard-friendly, local-first\n\
+             \x20           client-side search. Use when you want a fast, simple site\n\
+             \x20           with no external trackers.",
+            "mdBook     — MPL-2.0; Rust tool; zero JS framework lock-in, semantic HTML,\n\
+             \x20           print-friendly. Use when you want the lightest possible\n\
+             \x20           dependency surface and offline-friendly reading.",
+        ]).default(0).interact().unwrap_or(0) {
+            1 => DocsChoice::VitePress,
+            2 => DocsChoice::MdBook,
+            _ => DocsChoice::Starlight,
+        }
+    } else { DocsChoice::None };
+
     let MoreFeatures {
         payments, forum, chat, notify, schedule, video, podcast, events,
         transactional_email, status, knowledge_base, crm, sso, job_board,
@@ -184,7 +206,7 @@ pub(crate) fn prompt_all_features() -> AllFeatures {
     AllFeatures {
         cms, email, transactional_email, commerce, community, search, courses, forms,
         donations, forum, chat, payments, notify, schedule, video, podcast, events,
-        status, knowledge_base, crm, sso, docs: DocsChoice::None, job_board,
+        status, knowledge_base, crm, sso, docs, job_board,
         analytics, ab_testing, heatmap, enable_api,
     }
 }
