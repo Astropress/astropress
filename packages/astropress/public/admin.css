@@ -922,6 +922,41 @@ html[data-theme="dark"] ap-notice[type="error"] {
   font-size: 0.9rem;
 }
 
+/* ── Dialog entrance / exit ────────────────────────────────────────────────
+ * Uses @starting-style (Chrome 117+, Firefox 129+, Safari 17.5+) to animate
+ * <dialog> elements in and out without JavaScript. The allow-discrete keyword
+ * delays display:none until after the exit transition completes.
+ * Suppressed automatically by the prefers-reduced-motion block below. */
+dialog {
+  opacity: 0;
+  transform: translateY(-6px) scale(0.98);
+  transition:
+    opacity 180ms ease,
+    transform 180ms ease,
+    display 180ms allow-discrete,
+    overlay 180ms allow-discrete;
+}
+dialog[open] {
+  opacity: 1;
+  transform: none;
+}
+@starting-style {
+  dialog[open] {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.98);
+  }
+}
+
+/* ── Cross-document view transitions for admin page navigation ─────────────
+ * Progressive enhancement — Chrome/Edge 126+. Lets the browser animate
+ * same-origin navigations between admin pages with a default cross-fade.
+ * Guarded by prefers-reduced-motion so motion-sensitive users are unaffected. */
+@media (prefers-reduced-motion: no-preference) {
+  @view-transition {
+    navigation: auto;
+  }
+}
+
 /* WCAG 2.3.3 — suppress all transforms and transitions when the user requests
  * reduced motion. Keeps background-color swaps usable as focus/hover feedback. */
 @media (prefers-reduced-motion: reduce) {
