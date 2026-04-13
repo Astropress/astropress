@@ -229,40 +229,30 @@ matching `cli-v*` (e.g. `cli-v0.2.0`).
    git push origin main --tags
    ```
 
-4. **Wait for the binary-release CI.** Pushing the `cli-v*` tag triggers
-   `.github/workflows/cli-release.yml`, which builds release binaries for
-   every target in the matrix (`x86_64-unknown-linux-gnu`,
-   `aarch64-unknown-linux-gnu`, `x86_64-apple-darwin`,
-   `aarch64-apple-darwin`, `x86_64-pc-windows-msvc`) and attaches them to
-   a new GitHub Release named from the tag.
+4. **Wait for CI — it handles the rest.** Pushing the `cli-v*` tag triggers
+   `.github/workflows/cli-release.yml`, which runs three jobs in sequence:
 
-   > The current workflow **does not** publish to crates.io — that step
-   > is run manually after the GitHub Release is created. See step 5.
+   - **build** — compiles release binaries for all five targets
+     (`x86_64-unknown-linux-gnu`, `aarch64-unknown-linux-gnu`,
+     `x86_64-apple-darwin`, `aarch64-apple-darwin`,
+     `x86_64-pc-windows-msvc`)
+   - **release** — attaches the binaries to a new GitHub Release named
+     from the tag, with auto-generated release notes
+   - **publish-crate** — runs `cargo publish` using the
+     `CARGO_REGISTRY_TOKEN` secret (requires the one-time setup above)
 
-5. **Publish to crates.io from your workstation.** Once the GitHub
-   Release is live, run the cargo publish from the tagged commit:
+   No manual publish step is required once the secret is configured.
 
-   ```sh
-   git checkout cli-v0.2.0
-   cargo publish --manifest-path crates/astropress-cli/Cargo.toml
-   ```
+   > **Dry-run safety net:** if the `cargo publish --dry-run` in step 2
+   > passes locally, the CI publish step will also pass. The dry-run
+   > catches missing files, license errors, and version conflicts before
+   > you push the tag.
 
-   If you'd rather automate this step, append a publish job to
-   `cli-release.yml` that runs after `build`:
+   If you ever need to re-run only the publish step (e.g. a transient
+   crates.io outage), re-trigger the `publish-crate` job from the
+   GitHub Actions UI — do **not** re-push the tag.
 
-   ```yaml
-   publish-crates-io:
-     needs: build
-     runs-on: ubuntu-latest
-     steps:
-       - uses: actions/checkout@v4
-       - uses: dtolnay/rust-toolchain@stable
-       - run: cargo publish --manifest-path crates/astropress-cli/Cargo.toml
-         env:
-           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
-   ```
-
-6. **Verify the release** — see the "Verify the CLI release" section below.
+5. **Verify the release** — see the "Verify the CLI release" section below.
 
 ---
 
