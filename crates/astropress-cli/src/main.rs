@@ -10,6 +10,7 @@ mod js_bridge;
 mod providers;
 mod scaffold;
 mod service_docs;
+mod stack_summary;
 mod telemetry;
 mod tui;
 mod utils;

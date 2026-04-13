@@ -15,6 +15,13 @@ export function createPackageScripts(appHost: AstropressAppHost) {
     prepare: "bunx lefthook install",
   };
 
+  // Server-output hosts ship the admin surface. For the two-site topology
+  // (admin/test + public/prod) we also expose a static-only build that uses
+  // the secondary public config. See docs/guides/TWO_SITE_DEPLOY.md.
+  if (!isStaticOnlyHost(appHost)) {
+    scripts["build:public"] = "astro build --config astro.config.public.mjs";
+  }
+
   switch (appHost) {
     case "cloudflare-pages":
       scripts["deploy:cloudflare"] = "wrangler pages deploy dist --commit-dirty=true";
@@ -84,8 +91,12 @@ function gitLabPagesWorkflow(): string {
   return `image: oven/bun:1\n\npages:\n  stage: deploy\n  script:\n    - bun install\n    - bun run doctor:strict\n    - bun run build\n    - mv dist public\n  artifacts:\n    paths:\n      - public\n  only:\n    - main\n`;
 }
 
+function isStaticOnlyHost(appHost: AstropressAppHost): boolean {
+  return appHost === "github-pages" || appHost === "gitlab-pages";
+}
+
 function createAstropressConfig(appHost: AstropressAppHost): string {
-  const isStatic = appHost === "github-pages" || appHost === "gitlab-pages";
+  const isStatic = isStaticOnlyHost(appHost);
   const adminImport = isStatic ? "" : ", createAstropressAdminAppIntegration";
   const output = isStatic ? '"static"' : '"server"';
   const integrationLine = isStatic ? "" : "\n  integrations: [createAstropressAdminAppIntegration()],";
@@ -103,6 +114,37 @@ function createAstropressConfig(appHost: AstropressAppHost): string {
     ``,
     `export default defineConfig({`,
     `  output: ${output},${integrationLine}`,
+    `  vite: {`,
+    `    plugins: viteIntegration.plugins,`,
+    `    resolve: { alias: viteIntegration.aliases },`,
+    `  },`,
+    `});`,
+  ].join("\n");
+}
+
+/**
+ * Public-site Astro config for the prod static deploy. Ships zero admin
+ * routes — only `/sitemap.xml`, `/robots.txt`, and `/llms.txt`. Emitted
+ * alongside the admin config so server-output hosts can publish a safe
+ * static bundle via `bun run build:public` without a second repository.
+ */
+function createAstropressPublicConfig(): string {
+  return [
+    `import { defineConfig } from "astro/config";`,
+    `import { fileURLToPath } from "node:url";`,
+    `import { createAstropressViteIntegration, createAstropressPublicSiteIntegration } from "astropress/integration";`,
+    ``,
+    `const viteIntegration = createAstropressViteIntegration({`,
+    `  localRuntimeModulesPath: fileURLToPath(`,
+    `    new URL("./src/astropress/local-runtime-modules.ts", import.meta.url),`,
+    `  ),`,
+    `});`,
+    ``,
+    `// Production static build. No /ap-admin routes, no security middleware.`,
+    `// See docs/guides/TWO_SITE_DEPLOY.md for the two-site topology rationale.`,
+    `export default defineConfig({`,
+    `  output: "static",`,
+    `  integrations: [createAstropressPublicSiteIntegration()],`,
     `  vite: {`,
     `    plugins: viteIntegration.plugins,`,
     `    resolve: { alias: viteIntegration.aliases },`,
@@ -242,6 +284,12 @@ export function createCiFiles(
     files[".github/workflows/security.yml"] = createSecurityWorkflow();
   }
   files["astro.config.mjs"] = createAstropressConfig(appHost);
+  // Emit a second public-site config so server-output projects can build a
+  // zero-admin static bundle for their production origin — this is the
+  // recommended two-site deployment default.
+  if (!isStaticOnlyHost(appHost)) {
+    files["astro.config.public.mjs"] = createAstropressPublicConfig();
+  }
   const hasAnyDonation = donations && (donations.giveLively || donations.liberapay || donations.pledgeCrypto);
   if (hasAnyDonation) {
     files["src/pages/donate.astro"] = createDonatePage(donations, "https://example.com");
@@ -262,6 +310,43 @@ export function createDeployDoc(
   const serviceOriginNote = dataServices === "none"
     ? ""
     : `- Set \`ASTROPRESS_SERVICE_ORIGIN\` to the Astropress service endpoint for your ${dataServices} setup.\n`;
+
+  const isStatic = appHost === "github-pages" || appHost === "gitlab-pages";
+  const twoSiteBlock = isStatic
+    ? ""
+    : `
+## Two-site deployment (admin + public)
+
+This scaffold emits **two** Astro configs because Astropress is designed to run as a pair
+of sites on separate origins:
+
+| File | Output | Role | Where it deploys |
+|------|--------|------|------------------|
+| \`astro.config.mjs\` | \`server\` | Admin / test environment (editors sign in at \`/ap-admin\`) | \`${deployTarget}\` (this app host) |
+| \`astro.config.public.mjs\` | \`static\` | Public production site (zero admin surface) | A static host such as GitHub Pages, GitLab Pages, or a CDN |
+
+The split is enforced by \`createAstropressPublicSiteIntegration\`, which injects zero
+\`/ap-admin\` routes and no security middleware — so the static bundle literally cannot
+serve admin code even if the CDN is misrouted.
+
+### Build commands
+
+\`\`\`bash
+bun run build           # admin/test bundle (what this app host deploys)
+bun run build:public    # public/prod static bundle (ship dist/ to the prod origin)
+\`\`\`
+
+### Choosing a topology
+
+- **One repo, two configs (default):** simplest to get running. Both builds live
+  in the same repository and the CI pipeline can invoke each one independently.
+- **Two repos:** stronger isolation and better for teams that split admin/editorial
+  ownership from site engineering. See \`docs/guides/TWO_SITE_DEPLOY.md\` for the
+  full walkthrough including a \`repository_dispatch\` webhook recipe.
+
+Either way, the admin host and the public host should run on **different origins**
+(e.g. \`admin.example.com\` vs \`example.com\`) so cookies never cross boundaries.
+`;
 
   return `# Deploy Astropress
 
@@ -295,5 +380,5 @@ ${envList}${serviceOriginNote}## CI
 - The App Host only publishes the Astro web app and admin shell.
 - Content Services hold content, media, sessions, and the Astropress service API.
 - If Content Services are not \`none\`, deployment is incomplete until those service credentials and \`ASTROPRESS_SERVICE_ORIGIN\` are configured.
-`;
+${twoSiteBlock}`;
 }

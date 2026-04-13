@@ -155,19 +155,184 @@ The Astropress CLI is a Rust binary distributed **separately** from the npm
 package. It is not bundled in the `astropress` npm package — the `bin` field
 was intentionally removed.
 
-**For users:** install the CLI independently:
+The CLI has two distribution channels, each with its own audience:
+
+| Channel        | Command for users        | Audience                                  |
+|----------------|--------------------------|-------------------------------------------|
+| crates.io      | `cargo install astropress-cli` | Rust users; builds from source |
+| GitHub Releases| Download pre-built binary| Users without a Rust toolchain            |
+
+A full CLI release publishes to **both** channels from a single git tag
+matching `cli-v*` (e.g. `cli-v0.2.0`).
+
+---
+
+### Publishing the CLI to crates.io
+
+#### One-time setup (first release only)
+
+1. **Claim the crate name.** A maintainer with a crates.io account must
+   publish the initial `0.0.x` version manually so the name is reserved:
+
+   ```sh
+   cargo login                     # paste your crates.io API token
+   cd crates/astropress-cli
+   cargo publish --dry-run         # verify packaging is clean
+   cargo publish                   # actually publish
+   ```
+
+2. **Add co-owners** so the release workflow and other maintainers can
+   publish future versions:
+
+   ```sh
+   cargo owner --add github:<org>:<team> astropress-cli
+   cargo owner --add <other-maintainer-handle> astropress-cli
+   ```
+
+3. **Add the API token to repository secrets.** Create a scoped token on
+   [crates.io → Account Settings → API Tokens](https://crates.io/settings/tokens)
+   with scope `publish-update` restricted to the `astropress-cli` crate.
+   Save it as the `CARGO_REGISTRY_TOKEN` secret under
+   **Settings → Secrets → Actions**.
+
+#### Per-release workflow
+
+1. **Bump the version** in `crates/astropress-cli/Cargo.toml`:
+
+   ```toml
+   [package]
+   name = "astropress-cli"
+   version = "0.2.0"   # bump per semver
+   ```
+
+2. **Run the pre-flight checks locally:**
+
+   ```sh
+   # Rust tests
+   cargo test --manifest-path crates/Cargo.toml
+
+   # Architecture invariants (LOC caps, layering)
+   bun run audit:arch:rust
+
+   # Clippy must be clean — the release build denies warnings
+   cargo clippy --manifest-path crates/Cargo.toml --all-targets -- -D warnings
+
+   # Packaging dry-run — catches missing files, path issues, license errors
+   cargo publish --manifest-path crates/astropress-cli/Cargo.toml --dry-run
+   ```
+
+3. **Commit the version bump and tag:**
+
+   ```sh
+   git commit -am "chore: release astropress-cli v0.2.0"
+   git tag cli-v0.2.0
+   git push origin main --tags
+   ```
+
+4. **Wait for the binary-release CI.** Pushing the `cli-v*` tag triggers
+   `.github/workflows/cli-release.yml`, which builds release binaries for
+   every target in the matrix (`x86_64-unknown-linux-gnu`,
+   `aarch64-unknown-linux-gnu`, `x86_64-apple-darwin`,
+   `aarch64-apple-darwin`, `x86_64-pc-windows-msvc`) and attaches them to
+   a new GitHub Release named from the tag.
+
+   > The current workflow **does not** publish to crates.io — that step
+   > is run manually after the GitHub Release is created. See step 5.
+
+5. **Publish to crates.io from your workstation.** Once the GitHub
+   Release is live, run the cargo publish from the tagged commit:
+
+   ```sh
+   git checkout cli-v0.2.0
+   cargo publish --manifest-path crates/astropress-cli/Cargo.toml
+   ```
+
+   If you'd rather automate this step, append a publish job to
+   `cli-release.yml` that runs after `build`:
+
+   ```yaml
+   publish-crates-io:
+     needs: build
+     runs-on: ubuntu-latest
+     steps:
+       - uses: actions/checkout@v4
+       - uses: dtolnay/rust-toolchain@stable
+       - run: cargo publish --manifest-path crates/astropress-cli/Cargo.toml
+         env:
+           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+   ```
+
+6. **Verify the release** — see the "Verify the CLI release" section below.
+
+---
+
+### Verify the CLI release
 
 ```sh
-cargo install astropress-cli
+# 1. crates.io registry has the new version
+cargo search astropress-cli | head -1
+
+# 2. `cargo install` fetches and builds from crates.io
+cargo install astropress-cli --version 0.2.0 --locked
+astropress-cli --version   # binary name is `astropress-cli`, not `astropress`
+
+# 3. GitHub Release page lists all expected platform artifacts
+gh release view cli-v0.2.0
 ```
 
-Pre-built binaries for each platform are attached to GitHub Releases by the
-`.github/workflows/cli-release.yml` workflow.
+---
 
-**For maintainers:** the CLI release is triggered by pushing a tag matching
-`astropress-cli@*`. The release workflow builds and attaches binaries for
-`x86_64-unknown-linux-gnu`, `x86_64-apple-darwin`, `aarch64-apple-darwin`,
-and `x86_64-pc-windows-msvc`.
+### Cargo packaging notes
+
+- The binary artifact produced by `cargo build --release` is named
+  `astropress-cli` (derived from `[package] name` in `Cargo.toml` since
+  there is no `[[bin]]` override).
+- `cargo publish` uploads only the `crates/astropress-cli/` subtree.
+  Embedded scaffold templates referenced via `include_dir!("../../packages/astropress/templates/…")`
+  are resolved at compile time relative to the source, so they are packed
+  into the uploaded crate tarball automatically.
+- The crate is `license = "MIT"`. Keep the monorepo's root `LICENSE`
+  present; `cargo publish` will refuse if no license file is discoverable
+  for the crate.
+- Versions published to crates.io are immutable. A release that must be
+  withdrawn can be `cargo yank`-ed but not deleted — plan version bumps
+  with that in mind.
+
+---
+
+### Required repository secrets (CLI)
+
+| Secret | Purpose |
+|--------|---------|
+| `CARGO_REGISTRY_TOKEN` | crates.io API token scoped to `publish-update` on `astropress-cli` |
+
+---
+
+### Troubleshooting CLI publishing
+
+**`cargo publish` fails with "crate X is not allowed to upload data"**
+→ The crates.io token does not have `publish-update` scope for
+`astropress-cli`. Regenerate the token on crates.io with the correct
+scope and update the `CARGO_REGISTRY_TOKEN` secret.
+
+**`cargo publish` fails with "crate already exists"**
+→ `Cargo.toml` version was not bumped. Update it, commit, re-tag.
+
+**CI builds pass but `cargo publish` step fails with "dirty working tree"**
+→ The workflow checked out a commit but some build step modified tracked
+files (e.g. `Cargo.lock`). Add `--allow-dirty` only as a last resort;
+prefer committing the regenerated file to the tag.
+
+**`cargo install astropress-cli` builds but the binary is missing**
+→ The binary name is `astropress-cli` (not `astropress`). Run
+`astropress-cli --help`. If a different name is desired long-term, add a
+`[[bin]] name = "astropress"` section to `Cargo.toml` and bump a new
+version — downstream users' shell history will need to change.
+
+**MSRV mismatch on older toolchains**
+→ `rust-version = "1.82"` is pinned in `Cargo.toml`. Users on older
+toolchains see a clear error from `cargo install`; they need to run
+`rustup update stable`.
 
 ---
 

@@ -60,6 +60,22 @@ describe("project scaffold — additional provider/host combinations", () => {
     expect(scaffold.ciFiles[".github/workflows/deploy-astropress.yml"]).toContain("NETLIFY_AUTH_TOKEN");
   });
 
+  it("server-output hosts emit a second public-site astro config and build:public script", () => {
+    const scaffold = createAstropressProjectScaffold({ appHost: "vercel", dataServices: "supabase" });
+    expect(scaffold.ciFiles["astro.config.public.mjs"]).toBeDefined();
+    expect(scaffold.ciFiles["astro.config.public.mjs"]).toContain("createAstropressPublicSiteIntegration");
+    expect(scaffold.ciFiles["astro.config.public.mjs"]).toContain('output: "static"');
+    expect(scaffold.ciFiles["astro.config.public.mjs"]).not.toContain("AdminApp");
+    expect(scaffold.packageScripts["build:public"]).toBe("astro build --config astro.config.public.mjs");
+    expect(scaffold.deployDoc).toContain("Two-site deployment");
+  });
+
+  it("static-only hosts do not emit a duplicate public-site config (they are already static)", () => {
+    const scaffold = createAstropressProjectScaffold({ appHost: "github-pages", dataServices: "none" });
+    expect(scaffold.ciFiles["astro.config.public.mjs"]).toBeUndefined();
+    expect(scaffold.packageScripts["build:public"]).toBeUndefined();
+  });
+
   it("render-web appHost produces render-web CI workflow with RENDER_DEPLOY_HOOK_URL", () => {
     const scaffold = createAstropressProjectScaffold({ appHost: "render-web", dataServices: "appwrite" });
     expect(scaffold.packageScripts["deploy:render-web"]).toContain("astro build");

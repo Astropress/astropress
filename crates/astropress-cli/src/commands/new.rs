@@ -6,7 +6,8 @@ use crate::cli_config::env::{
 };
 use super::import_common::bootstrap_content_services;
 use super::new_wizard::prompt_all_features;
-use crate::feature_stubs::{feature_config_stubs, feature_env_stubs, print_stack_summary};
+use crate::feature_stubs::{feature_config_stubs, feature_env_stubs};
+use crate::stack_summary::print_stack_summary;
 use crate::service_docs::build_services_doc;
 use crate::features::AllFeatures;
 use crate::js_bridge::loaders::load_project_scaffold;

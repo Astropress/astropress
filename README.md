@@ -4,9 +4,9 @@
 
 # Astropress
 
-**Your website, fully yours.**
+**Your website launchpad.**
 
-A free, open-source website builder for individuals and small organizations —  
+A low-carbon, free, open-source full-spectrum website builder for individuals and small organizations —  
 with a beautiful admin panel, AI-ready scaffolding, and zero vendor lock-in.
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
@@ -23,13 +23,15 @@ with a beautiful admin panel, AI-ready scaffolding, and zero vendor lock-in.
 
 ## What is Astropress?
 
-Astropress gives you everything you need to run a real website — a clean editing dashboard, pages and blog posts, media uploads, contact forms, redirects, multilingual support, and more — without paying for subscriptions, storing your data on someone else's servers, or needing a developer on call.
+Astropress gives you everything you need to run a real website — a clean editing dashboard, pages and blog posts, media uploads, contact forms, redirects, multilingual support, and more — without forced payments for subscriptions, locking your data into someone else's servers, or needing a top engineer just to add functionality almost every individual or org would need.
 
-You own your content. You choose where it lives. You can export everything at any time.
+Own your content. Choose where it lives. Export at any time. Launch your initiative!
 
-It works equally well as a **static site** (free hosting on GitHub Pages or Netlify) or a **dynamic site** (on Cloudflare, Render, or your own server). Switch between them without rewriting anything.
+It works equally well to build **static sites** (with free hosting on, e.g, GitHub Pages or Netlify) or **dynamic sites** (on Cloudflare, Render, or your own server). Switch between them without rewriting anything.
 
-**Designed to be built with AI.** Ask Claude, ChatGPT, Cursor, or any AI coding assistant to scaffold your site, add features, or customise the design. Astropress ships an [MCP server](./packages/astropress-mcp/) and a machine-readable [`llms.txt`](./llms.txt) so AI tools understand the codebase out of the box.
+Importing content from Wordpress or Wix, or even subscription lists from Mailchimp is easy. Add an issue if there are other platforms you want to escape the orbit of or hosting providers that can support ordinary people who just want to get to work on their dreams without becoming full-stack web developers.
+
+**Designed to work with AI.** Ask Claude, Codex, Cursor, or any AI coding assistant to scaffold your site, add features, or customise the design. Astropress ships an [MCP server](./packages/astropress-mcp/) and a machine-readable [`llms.txt`](./llms.txt) so AI tools understand the codebase out of the box.
 
 ---
 
@@ -45,10 +47,11 @@ It works equally well as a **static site** (free hosting on GitHub Pages or Netl
 | **Redirects** | Manage URL changes without breaking links |
 | **User accounts** | Invite editors and authors with role-based access |
 | **Multilingual** | Publish in multiple languages from the same admin |
-| **Import from WordPress** | Bring your existing content over in one step |
-| **Privacy-first** | No forced third-party analytics. No telemetry. Your data stays yours |
+| **Import from WordPress or Wix** | Bring your existing content over in one step |
+| **Privacy-first** | No forced third-party analytics. No opt-out telemetry. Your data stays yours |
 | **Accessibility** | WCAG 2.2 AA compliant admin UI, tested with axe and screen readers |
-
+| **Open-Source Plugins** | Whether building a course, hosting events, or setting up shop: just add a new service |
+| **Reasonably Secure** | SHA-512 password hashing, Zero-Trust Architecture/Defense-in-Depth inspirations, separate admin/test site from production domain |
 ---
 
 ## Get started

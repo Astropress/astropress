@@ -21,6 +21,7 @@ const repoRoot = path.resolve(new URL("../..", import.meta.url).pathname);
 const featuresRoot = path.join(repoRoot, "tooling", "bdd");
 const astropressPackageRoot = path.join(repoRoot, "packages", "astropress");
 const nexusPackageRoot = path.join(repoRoot, "packages", "astropress-nexus");
+const cratesRoot = path.join(repoRoot, "crates");
 
 function walkFeatureFiles(root: string, files: string[] = []) {
   for (const entry of readdirSync(root)) {
@@ -61,9 +62,10 @@ function readFeatureScenarios() {
 }
 
 async function runStep(step: VerificationGroup["steps"][number]) {
+  const defaultCwd = step.command === "cargo" ? cratesRoot : repoRoot;
   await new Promise<void>((resolve, reject) => {
     const child = spawn(step.command, step.args, {
-      cwd: step.cwd ?? repoRoot,
+      cwd: step.cwd ?? defaultCwd,
       stdio: "inherit",
       env: process.env,
     });
@@ -414,7 +416,7 @@ const verificationGroups: VerificationGroup[] = [
       },
       {
         command: "cargo",
-        args: ["test", "listmonk_generates_env_stubs", "listmonk_generates_setup_doc"],
+        args: ["test", "--", "listmonk_generates_env_stubs", "listmonk_services_doc_covers_setup"],
       },
     ],
   },
@@ -1209,7 +1211,6 @@ const verificationGroups: VerificationGroup[] = [
       {
         command: "cargo",
         args: ["test", "scaffolds_new_project_from_example"],
-        cwd: repoRoot,
       },
     ],
   },
@@ -1293,7 +1294,7 @@ const verificationGroups: VerificationGroup[] = [
     steps: [
       {
         command: "cargo",
-        args: ["test", "add_analytics", "add_email", "add_forum", "add_notify", "add_schedule", "add_commerce", "add_chat", "add_to_nonexistent", "add_with_unknown"],
+        args: ["test", "--", "add_analytics", "add_email", "add_forum", "add_notify", "add_schedule", "add_commerce", "add_chat", "add_to_nonexistent", "add_with_unknown"],
       },
     ],
   },
@@ -1314,7 +1315,7 @@ const verificationGroups: VerificationGroup[] = [
     steps: [
       {
         command: "cargo",
-        args: ["test", "migrate_rallly", "migrate_medusa", "migrate_flarum", "migrate_ntfy", "migrate_keystatic", "migrate_umami", "migrate_same_tool", "migrate_incompatible", "migrate_unknown", "migrate_dry_run"],
+        args: ["test", "--", "migrate_rallly", "migrate_medusa", "migrate_flarum", "migrate_ntfy", "migrate_keystatic", "migrate_umami", "migrate_same_tool", "migrate_incompatible", "migrate_unknown", "migrate_dry_run"],
       },
     ],
   },

@@ -127,6 +127,8 @@ body {
   border: 0;
   border-radius: 0.5rem;
   padding: 0.5rem 0.8rem;
+  min-height: 2.75rem;
+  min-width: 2.75rem;
   font: inherit;
   cursor: pointer;
 }
@@ -141,6 +143,7 @@ body {
   font-weight: 700;
   font-size: 0.88rem;
   padding: 0.4rem 0.9rem;
+  min-height: 2.75rem;
   border-radius: 999px;
   border: 0;
   cursor: pointer;
@@ -186,7 +189,7 @@ body {
 
 .admin-shell {
   display: grid;
-  grid-template-columns: 17rem minmax(0, 1fr);
+  grid-template-columns: 1fr;
   min-height: calc(100vh - 66px);
 }
 
@@ -194,10 +197,20 @@ body {
   padding: 1.15rem 0.9rem;
   background: var(--sidebar-bg);
   color: var(--sidebar-text);
-  display: flex;
+  display: none;
   flex-direction: column;
   gap: 0.2rem;
   border-right: 1px solid rgba(255, 255, 255, 0.05);
+  position: fixed;
+  inset: 0 auto 0 0;
+  width: min(17rem, 85vw);
+  z-index: 100;
+  overflow-y: auto;
+}
+
+.sidebar[data-open] {
+  display: flex;
+  flex-direction: column;
 }
 
 .sidebar-label {
@@ -243,7 +256,7 @@ body {
 }
 
 main {
-  padding: 1.5rem 1.65rem 2rem;
+  padding: 1rem 1rem 1.5rem;
   max-width: 86rem;
 }
 
@@ -302,7 +315,7 @@ html[data-theme="dark"] .panel {
 }
 
 .grid.two {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: 1fr;
 }
 
 .stat {
@@ -365,7 +378,8 @@ th {
   align-items: center;
   justify-content: center;
   gap: 0.45rem;
-  min-height: 2.5rem;
+  min-height: 2.75rem;
+  min-width: 2.75rem;
   padding: 0.65rem 0.95rem;
   border-radius: 999px;
   text-decoration: none;
@@ -412,7 +426,8 @@ th {
 .admin-button.small,
 .admin-button-secondary.small,
 .admin-button-ghost.small {
-  min-height: 2.1rem;
+  min-height: 2.75rem;
+  min-width: 2.75rem;
   padding: 0.45rem 0.75rem;
   font-size: 0.84rem;
 }
@@ -442,7 +457,7 @@ th {
 }
 
 .admin-form-grid.columns-3 {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: 1fr;
 }
 
 .admin-field {
@@ -502,7 +517,7 @@ th {
 }
 
 .admin-subgrid.two {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: 1fr;
 }
 
 .admin-actions-row {
@@ -588,9 +603,10 @@ html[data-theme="dark"] ap-notice[type="error"] {
   border-color: #5c1f1f;
 }
 
-/* Mobile nav toggle — hidden on desktop */
+/* Mobile nav toggle — hidden on desktop via min-width block below */
 .nav-toggle {
-  display: none;
+  display: inline-flex;
+  align-items: center;
   background: transparent;
   border: 1px solid rgba(255, 255, 255, 0.25);
   border-radius: 0.4rem;
@@ -606,9 +622,9 @@ html[data-theme="dark"] ap-notice[type="error"] {
   outline-offset: 2px;
 }
 
-/* Close button inside sidebar — hidden on desktop */
+/* Close button inside sidebar — hidden on desktop via min-width block below */
 .nav-close {
-  display: none;
+  display: block;
   background: transparent;
   border: none;
   color: var(--sidebar-muted);
@@ -647,49 +663,43 @@ html[data-theme="dark"] ap-notice[type="error"] {
   font-size: 0.9rem;
 }
 
-@media (max-width: 900px) {
+/* Desktop layout — progressive enhancement from the mobile-first defaults above */
+@media (min-width: 56.25rem) {
+  .admin-shell {
+    grid-template-columns: 17rem minmax(0, 1fr);
+  }
+
+  .sidebar {
+    display: flex;
+    position: static;
+    inset: auto;
+    width: auto;
+    z-index: auto;
+    overflow-y: visible;
+  }
+
   .nav-toggle {
-    display: inline-flex;
-    align-items: center;
+    display: none;
   }
 
   .nav-close {
-    display: block;
-  }
-
-  /* Sidebar hidden by default on mobile; shown when data-open is set */
-  .sidebar {
     display: none;
-    position: fixed;
-    inset: 0 auto 0 0;
-    width: min(17rem, 85vw);
-    z-index: 100;
-    overflow-y: auto;
-  }
-
-  .sidebar[data-open] {
-    display: flex;
-    flex-direction: column;
-  }
-
-  .admin-shell {
-    grid-template-columns: 1fr;
   }
 
   main {
-    padding: 1rem 1rem 1.5rem;
+    padding: 1.5rem 1.65rem 2rem;
   }
 
   .grid.two {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .admin-form-grid.columns-3 {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   .admin-subgrid.two {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
@@ -701,8 +711,8 @@ html[data-theme="dark"] ap-notice[type="error"] {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 2rem;
-  height: 2rem;
+  min-width: 2.75rem;
+  min-height: 2.75rem;
   border-radius: 50%;
   border: 1px solid var(--line);
   background: var(--panel);
@@ -806,4 +816,26 @@ html[data-theme="dark"] ap-notice[type="error"] {
   border: 1px solid var(--line);
   color: inherit;
   text-decoration: none;
+}
+
+/* WCAG 2.3.3 — suppress all transforms and transitions when the user requests
+ * reduced motion. Keeps background-color swaps usable as focus/hover feedback. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .admin-button:hover,
+  .admin-button:focus-visible,
+  .admin-button-secondary:hover,
+  .admin-button-secondary:focus-visible,
+  .admin-button-ghost:hover,
+  .admin-button-ghost:focus-visible {
+    transform: none;
+  }
 }
