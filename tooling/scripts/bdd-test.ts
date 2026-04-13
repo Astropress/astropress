@@ -1299,6 +1299,21 @@ const verificationGroups: VerificationGroup[] = [
     ],
   },
   {
+    label: "astropress add --docs scenarios",
+    scenarios: [
+      "astropress add --docs starlight scaffolds an Astro + Starlight docs site",
+      "astropress add --docs vitepress scaffolds a VitePress docs site",
+      "astropress add --docs mdbook scaffolds an mdBook docs site",
+      "astropress add --docs with an unknown generator returns a clear error",
+    ],
+    steps: [
+      {
+        command: "cargo",
+        args: ["test", "--", "add_docs_starlight", "add_docs_vitepress", "add_docs_mdbook", "add_docs_unknown"],
+      },
+    ],
+  },
+  {
     label: "astropress migrate command scenarios",
     scenarios: [
       "astropress migrate --from rallly --to calcom generates a migration guide",

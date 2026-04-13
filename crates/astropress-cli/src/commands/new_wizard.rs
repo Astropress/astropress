@@ -6,7 +6,7 @@
 
 use crate::features::{
     AllFeatures, CmsChoice, CommunityChoice, CommerceChoice, CourseChoice,
-    DonationChoices, EmailChoice, FormsChoice, SearchChoice,
+    DocsChoice, DonationChoices, EmailChoice, FormsChoice, SearchChoice,
 };
 use crate::providers::AnalyticsProvider;
 
@@ -184,7 +184,7 @@ pub(crate) fn prompt_all_features() -> AllFeatures {
     AllFeatures {
         cms, email, transactional_email, commerce, community, search, courses, forms,
         donations, forum, chat, payments, notify, schedule, video, podcast, events,
-        status, knowledge_base, crm, sso, job_board, analytics, ab_testing, heatmap,
-        enable_api,
+        status, knowledge_base, crm, sso, docs: DocsChoice::None, job_board,
+        analytics, ab_testing, heatmap, enable_api,
     }
 }

@@ -4,9 +4,9 @@
 
 use crate::features::{
     AllFeatures, ChatChoice, CmsChoice, CommerceChoice, CommunityChoice, CourseChoice, CrmChoice,
-    EmailChoice, EventChoice, FormsChoice, ForumChoice, KnowledgeBaseChoice, NotifyChoice,
-    PaymentChoice, PodcastChoice, ScheduleChoice, SearchChoice, SsoChoice, StatusChoice,
-    TransactionalEmailChoice, VideoChoice,
+    DocsChoice, EmailChoice, EventChoice, FormsChoice, ForumChoice, KnowledgeBaseChoice,
+    NotifyChoice, PaymentChoice, PodcastChoice, ScheduleChoice, SearchChoice, SsoChoice,
+    StatusChoice, TransactionalEmailChoice, VideoChoice,
 };
 use crate::providers::{AbTestingProvider, AnalyticsProvider, HeatmapProvider};
 
@@ -202,6 +202,16 @@ pub(crate) fn parse_add_features(args: &[String]) -> Result<AllFeatures, String>
                     "payload"   => CmsChoice::Payload,
                     other => return Err(format!(
                         "Unknown CMS `{other}`. Use: keystatic, payload."
+                    )),
+                };
+            }
+            "--docs" => {
+                f.docs = match value.as_str() {
+                    "starlight"          => DocsChoice::Starlight,
+                    "vitepress"          => DocsChoice::VitePress,
+                    "mdbook" | "md-book" => DocsChoice::MdBook,
+                    other => return Err(format!(
+                        "Unknown docs generator `{other}`. Use: starlight, vitepress, mdbook."
                     )),
                 };
             }
