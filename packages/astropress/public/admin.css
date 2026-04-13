@@ -502,6 +502,13 @@ th {
   background: var(--panel);
 }
 
+.admin-table-shell thead th {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--panel);
+}
+
 .admin-kicker {
   margin: 0 0 0.55rem;
   color: var(--muted);
