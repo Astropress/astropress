@@ -82,6 +82,38 @@ describe("project scaffold — additional provider/host combinations", () => {
     expect(scaffold.ciFiles[".github/workflows/deploy-astropress.yml"]).toContain("RENDER_DEPLOY_HOOK_URL");
   });
 
+  it("fly-io appHost produces fly-io deploy script and flyctl CI step", () => {
+    const scaffold = createAstropressProjectScaffold({ appHost: "fly-io", dataServices: "supabase" });
+    expect(scaffold.packageScripts["deploy:fly-io"]).toContain("flyctl deploy");
+    expect(scaffold.ciFiles[".github/workflows/deploy-astropress.yml"]).toContain("FLY_API_TOKEN");
+    expect(scaffold.ciFiles[".github/workflows/deploy-astropress.yml"]).toContain("flyctl");
+  });
+
+  it("coolify appHost produces coolify deploy script and webhook CI step", () => {
+    const scaffold = createAstropressProjectScaffold({ appHost: "coolify", dataServices: "supabase" });
+    expect(scaffold.packageScripts["deploy:coolify"]).toContain("astro build");
+    expect(scaffold.ciFiles[".github/workflows/deploy-astropress.yml"]).toContain("COOLIFY_WEBHOOK_URL");
+  });
+
+  it("digitalocean appHost produces digitalocean deploy script and doctl CI step", () => {
+    const scaffold = createAstropressProjectScaffold({ appHost: "digitalocean", dataServices: "supabase" });
+    expect(scaffold.packageScripts["deploy:digitalocean"]).toContain("doctl");
+    expect(scaffold.ciFiles[".github/workflows/deploy-astropress.yml"]).toContain("DIGITALOCEAN_ACCESS_TOKEN");
+  });
+
+  it("railway appHost produces railway deploy script with RAILWAY_TOKEN CI step", () => {
+    const scaffold = createAstropressProjectScaffold({ appHost: "railway", dataServices: "supabase" });
+    expect(scaffold.packageScripts["deploy:railway"]).toContain("railway up");
+    expect(scaffold.ciFiles[".github/workflows/deploy-astropress.yml"]).toContain("RAILWAY_TOKEN");
+    expect(scaffold.ciFiles[".github/workflows/deploy-astropress.yml"]).toContain("@railway/cli");
+  });
+
+  it("turso dataServices produces TURSO env example keys", () => {
+    const scaffold = createAstropressProjectScaffold({ appHost: "vercel", dataServices: "turso" });
+    expect(scaffold.envExample.TURSO_DATABASE_URL).toContain("libsql://");
+    expect(scaffold.envExample.TURSO_AUTH_TOKEN).toBeDefined();
+  });
+
   it("null-like dataServices defaults to github-pages appHost", () => {
     const scaffold = createAstropressProjectScaffold({ appHost: "github-pages", dataServices: "none" });
     expect(scaffold.appHost).toBe("github-pages");
@@ -203,6 +235,12 @@ describe("project scaffold", () => {
     const scaffold = createAstropressProjectScaffold({ abTesting: "unleash" } as Parameters<typeof createAstropressProjectScaffold>[0]);
     expect(scaffold.envExample.UNLEASH_URL).toBeDefined();
     expect(scaffold.envExample.UNLEASH_CLIENT_KEY).toBeDefined();
+  });
+
+  it("flagsmith ab-testing produces correct env example keys", () => {
+    const scaffold = createAstropressProjectScaffold({ abTesting: "flagsmith" } as Parameters<typeof createAstropressProjectScaffold>[0]);
+    expect(scaffold.envExample.FLAGSMITH_API_URL).toBeDefined();
+    expect(scaffold.envExample.FLAGSMITH_ENVIRONMENT_KEY).toBeDefined();
   });
 
   it("openreplay heatmap produces correct env example keys", () => {
