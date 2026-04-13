@@ -4,6 +4,7 @@ import { applyAstropressSecurityHeaders } from "../src/security-headers";
 import { resolveAstropressAdminUiConfig } from "../src/admin-ui";
 import { getAdminBootstrapConfig } from "../src/runtime-env";
 import { peekCmsConfig } from "../src/config";
+import { getRecentAdminItems } from "../src/admin-recent";
 
 interface NavItem {
   href?: string;
@@ -36,6 +37,7 @@ const adminSiteName = siteName ?? adminUi.branding.shellName;
 const { bootstrapDisabled } = getAdminBootstrapConfig(Astro.locals);
 applyAstropressSecurityHeaders(Astro.response.headers, { area: "admin", allowInlineStyles: true, forceHsts: Astro.url.protocol === "https:" });
 const hasFundraising = !!(peekCmsConfig()?.donations);
+const recentItems = await getRecentAdminItems(Astro.locals, role);
 
 const pluginNavItems: NavItem[] = (peekCmsConfig()?.plugins ?? [])
   .flatMap((p) => p.navItems ?? [])
@@ -208,6 +210,20 @@ const navItems: NavItem[] = [
               </a>
             );
           })}
+        {recentItems.length > 0 && (
+          <>
+            <p class="sidebar-group-label">Recent</p>
+            {recentItems.map((item) => (
+              <a
+                href={item.editHref}
+                class="sidebar-child sidebar-recent-item"
+                title={item.title}
+              >
+                {item.title.length > 28 ? item.title.slice(0, 26) + "\u2026" : item.title}
+              </a>
+            ))}
+          </>
+        )}
       </nav>
       <main id="admin-main" tabindex="-1">
         <section class="page-header">
