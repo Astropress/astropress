@@ -5,11 +5,12 @@
 //! The human-readable stack summary printed at the end of `astropress new`
 //! lives in `stack_summary.rs`.
 
+use crate::docs_stubs::docs_config_stubs;
 use crate::features::{
     AllFeatures, ChatChoice, CmsChoice, CommerceChoice, CommunityChoice, CourseChoice,
-    CrmChoice, EmailChoice, EventChoice, FormsChoice, ForumChoice, KnowledgeBaseChoice,
-    NotifyChoice, PaymentChoice, PodcastChoice, ScheduleChoice, SearchChoice,
-    SsoChoice, StatusChoice, TransactionalEmailChoice, VideoChoice,
+    CrmChoice, DocsChoice, EmailChoice, EventChoice, FormsChoice, ForumChoice,
+    KnowledgeBaseChoice, NotifyChoice, PaymentChoice, PodcastChoice, ScheduleChoice,
+    SearchChoice, SsoChoice, StatusChoice, TransactionalEmailChoice, VideoChoice,
 };
 use crate::service_docs::service_compose_stubs;
 
@@ -180,6 +181,18 @@ pub(crate) fn feature_env_stubs(f: &AllFeatures) -> String {
             "ZITADEL_DOMAIN=replace-me.zitadel.cloud",
             "ZITADEL_CLIENT_ID=replace-me", "ZITADEL_CLIENT_SECRET=replace-me"]);
     }
+    match f.docs {
+        DocsChoice::Starlight => lines.push(
+            "# Starlight docs site (MIT, Astro team) — see docs/README.md to build",
+        ),
+        DocsChoice::VitePress => lines.push(
+            "# VitePress docs site (MIT, Vue team) — see docs/README.md to build",
+        ),
+        DocsChoice::MdBook => lines.push(
+            "# mdBook docs site (MPL-2.0, Rust project) — see docs/README.md to build",
+        ),
+        DocsChoice::None => {}
+    }
 
     if lines.is_empty() { String::new() }
     else { format!("\n# Optional integrations\n{}\n", lines.join("\n")) }
@@ -192,6 +205,9 @@ pub(crate) fn feature_config_stubs(f: &AllFeatures) -> Vec<(&'static str, &'stat
 
     // Per-service docker-compose + .env.example files
     files.extend(service_compose_stubs(f));
+
+    // Docs-site generator stubs (Starlight / VitePress / mdBook).
+    files.extend(docs_config_stubs(f));
 
     match f.cms {
         CmsChoice::Keystatic => files.push((

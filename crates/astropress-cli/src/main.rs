@@ -4,6 +4,7 @@ use std::process::ExitCode;
 
 mod cli_config;
 mod commands;
+mod docs_stubs;
 mod feature_stubs;
 mod features;
 mod js_bridge;
