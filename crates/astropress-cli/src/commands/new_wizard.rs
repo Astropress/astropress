@@ -31,7 +31,7 @@ pub(crate) fn prompt_all_features() -> AllFeatures {
         "Keystatic            — git-backed JSON/YAML; zero server; use for small teams that\n\
          \x20                     prefer editing content files directly in the repo",
         "Payload              — TypeScript-first, local-first; use when you want full\n\
-         \x20                     schema control in code  ⚠ needs a Node server (Fly.io free)",
+         \x20                     schema control in code  ⚠ needs a separate Node server",
     ]).default(0).interact().unwrap_or(0) {
         1 => CmsChoice::Keystatic,
         2 => CmsChoice::Payload,
@@ -44,8 +44,8 @@ pub(crate) fn prompt_all_features() -> AllFeatures {
         .default(false).interact().unwrap_or(false)
     {
         let _ = Select::with_theme(t).with_prompt("Email provider").items(&[
-            "Listmonk  — MIT; self-hosted subscriber lists + campaigns; use when you need full\n\
-             \x20           ownership of your list and want to send newsletters (Fly.io free)",
+            "Listmonk  — MIT; self-hosted subscriber lists + campaigns; use when you need\n\
+             \x20           full ownership of your list and want to send newsletters",
         ]).default(0).interact().unwrap_or(0);
         EmailChoice::Listmonk
     } else { EmailChoice::None };
@@ -57,13 +57,13 @@ pub(crate) fn prompt_all_features() -> AllFeatures {
     {
         match Select::with_theme(t).with_prompt("Analytics provider").items(&[
             "Umami      — MIT; ~1 KB; pageviews, bounce rate, custom events\n\
-             \x20           no funnels / heatmaps / session replay  (Fly.io free)",
+             \x20           no funnels / heatmaps / session replay",
             "Plausible  — AGPL; ~1 KB; pageviews, bounce rate, conversion goals\n\
-             \x20           no funnels / heatmaps / session replay  ⚠ cloud $9/mo; self-host free",
+             \x20           no funnels / heatmaps / session replay",
             "Matomo     — GPL; bounce rate, conversion goals, funnels, heatmaps, session replay\n\
-             \x20           (heatmaps & replay via free built-in plugins)  ⚠ cloud $23/mo; self-host free",
+             \x20           (heatmaps & replay via free built-in plugins)",
             "PostHog    — MIT; bounce rate, funnels, heatmaps, session replay, A/B testing\n\
-             \x20           all built-in, no plugins needed; ~70 KB script  (generous free tier, then paid)",
+             \x20           all built-in, no plugins needed; ~70 KB script",
             "Custom     — I'll configure manually",
         ]).default(0).interact().unwrap_or(0) {
             1 => AnalyticsProvider::Plausible,
@@ -81,9 +81,9 @@ pub(crate) fn prompt_all_features() -> AllFeatures {
     {
         match Select::with_theme(t).with_prompt("Commerce platform").items(&[
             "Medusa    — MIT; headless commerce with Stripe + product catalog; use when you need\n\
-             \x20          a full cart + checkout flow  ⚠ needs a Node server (Fly.io free)",
+             \x20          a full cart + checkout flow  ⚠ needs a separate Node server",
             "Vendure   — MIT; TypeScript-first headless commerce; GraphQL API; use when you want\n\
-             \x20          full type safety + plugin architecture  ⚠ needs a Node server (Fly.io free)",
+             \x20          full type safety + plugin architecture  ⚠ needs a separate Node server",
         ]).default(0).interact().unwrap_or(0) {
             1 => CommerceChoice::Vendure,
             _ => CommerceChoice::Medusa,
@@ -99,7 +99,7 @@ pub(crate) fn prompt_all_features() -> AllFeatures {
             "Giscus    — MIT; GitHub Discussions as comments; zero server; use when your\n\
              \x20          readers are likely to have GitHub accounts",
             "Remark42  — MIT; self-hosted; no social login required; use for broader or\n\
-             \x20          non-developer audiences  (Fly.io free)",
+             \x20          non-developer audiences",
         ]).default(0).interact().unwrap_or(0) {
             1 => CommunityChoice::Remark42,
             _ => CommunityChoice::Giscus,
@@ -115,7 +115,7 @@ pub(crate) fn prompt_all_features() -> AllFeatures {
             "Pagefind      — Apache 2.0; static index at deploy time; zero server; use for\n\
              \x20              content-heavy sites that want instant client-side search (<10 KB on page)",
             "Meilisearch   — MIT; typo-tolerant full-text search API; use when you need\n\
-             \x20              real-time search across frequently updated content  (Fly.io free)",
+             \x20              real-time search across frequently updated content",
         ]).default(0).interact().unwrap_or(0) {
             1 => SearchChoice::Meilisearch,
             _ => SearchChoice::Pagefind,
@@ -129,7 +129,7 @@ pub(crate) fn prompt_all_features() -> AllFeatures {
     {
         let _ = Select::with_theme(t).with_prompt("LMS provider").items(&[
             "Frappe LMS  — MIT; Python; progress tracking + certificates; use when you need\n\
-             \x20            structured learning paths with quizzes  (Fly.io free)",
+             \x20            structured learning paths with quizzes",
         ]).default(0).interact().unwrap_or(0);
         CourseChoice::FrappeLms
     } else { CourseChoice::None };
@@ -141,11 +141,9 @@ pub(crate) fn prompt_all_features() -> AllFeatures {
     {
         match Select::with_theme(t).with_prompt("Forms provider").items(&[
             "Formbricks  — MIT community edition; survey + testimonial collection, REST API;\n\
-             \x20            use when you need NPS surveys, onboarding flows, or social proof\n\
-             \x20            collection  (formbricks.com free tier or self-host)",
+             \x20            use when you need NPS surveys, onboarding flows, or social proof",
             "Typebot     — AGPL 3.0; visual chatbot + conversational form builder;\n\
-             \x20            use when you want interactive flows embedded on any page\n\
-             \x20            (typebot.io free tier or self-host)",
+             \x20            use when you want interactive flows embedded on any page",
         ]).default(0).interact().unwrap_or(0) {
             1 => FormsChoice::Typebot,
             _ => FormsChoice::Formbricks,
@@ -160,9 +158,9 @@ pub(crate) fn prompt_all_features() -> AllFeatures {
         let selected = MultiSelect::with_theme(t)
             .with_prompt("Donation providers (space to toggle, enter to confirm)")
             .items(&[
-                "Polar         — dev/OSS-focused; paid posts + sponsorships + issue funding (polar.sh free tier)",
+                "Polar         — dev/OSS-focused; paid posts + sponsorships + issue funding",
                 "GiveLively    — fiat widget for US nonprofits (free, HTTPS widget embed)",
-                "Liberapay     — recurring fiat donations; no external JS; OSS-friendly (liberapay.com free)",
+                "Liberapay     — recurring fiat donations; no external JS; OSS-friendly",
                 "PledgeCrypto  — crypto donations with automatic carbon offsets per transaction",
             ])
             .interact()

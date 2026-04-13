@@ -31,46 +31,46 @@ pub(crate) fn print_stack_summary(f: &AllFeatures, app_host: Option<AppHost>) {
     match f.cms {
         CmsChoice::BuiltIn   => println!("    Content       Astropress built-in (SQLite / D1 / Supabase)"),
         CmsChoice::Keystatic => println!("    Content       Keystatic          → git-backed, zero server"),
-        CmsChoice::Payload   => println!("    Content       Payload            ⚠ needs a Node server (Fly.io free)"),
+        CmsChoice::Payload   => println!("    Content       Payload            ⚠ needs a separate Node server"),
     }
-    if f.email == EmailChoice::Listmonk                       { println!("    Email         Listmonk           → Fly.io (free)"); }
-    if f.transactional_email == TransactionalEmailChoice::Brevo   { println!("    Txn email     Brevo              → SaaS free (300/day); no server needed"); }
-    if f.transactional_email == TransactionalEmailChoice::Postal  { println!("    Txn email     Postal             → Fly.io (free)  ⚠ dedicated IP for deliverability"); }
+    if f.email == EmailChoice::Listmonk                       { println!("    Email         Listmonk           → self-hosted"); }
+    if f.transactional_email == TransactionalEmailChoice::Brevo   { println!("    Txn email     Brevo              → SaaS (300 emails/day free); no server needed"); }
+    if f.transactional_email == TransactionalEmailChoice::Postal  { println!("    Txn email     Postal             → self-hosted  ⚠ dedicated IP for deliverability"); }
     match f.analytics {
-        AnalyticsProvider::Umami     => println!("    Analytics     Umami              → Fly.io (free)"),
-        AnalyticsProvider::Plausible => println!("    Analytics     Plausible          ⚠ cloud $9/mo; self-host free"),
-        AnalyticsProvider::Matomo    => println!("    Analytics     Matomo             ⚠ cloud $23/mo; self-host free"),
-        AnalyticsProvider::PostHog   => println!("    Analytics     PostHog            → free tier, then paid"),
+        AnalyticsProvider::Umami     => println!("    Analytics     Umami              → self-hosted or cloud"),
+        AnalyticsProvider::Plausible => println!("    Analytics     Plausible          → self-hosted or cloud"),
+        AnalyticsProvider::Matomo    => println!("    Analytics     Matomo             → self-hosted or cloud"),
+        AnalyticsProvider::PostHog   => println!("    Analytics     PostHog            → self-hosted or cloud"),
         AnalyticsProvider::Custom    => println!("    Analytics     Custom"),
         AnalyticsProvider::None      => {}
     }
-    if f.commerce    == CommerceChoice::Medusa       { println!("    Storefront    Medusa             → Fly.io (free)  ⚠ needs Node server"); }
-    if f.commerce    == CommerceChoice::Vendure      { println!("    Storefront    Vendure            → Fly.io (free)  ⚠ needs Node server"); }
-    if f.courses == CourseChoice::FrappeLms           { println!("    Courses       Frappe LMS         → Fly.io (free)"); }
-    if f.forms == FormsChoice::Formbricks             { println!("    Forms         Formbricks         → formbricks.com (free tier)"); }
-    if f.forms == FormsChoice::Typebot                { println!("    Forms         Typebot            → typebot.io (free tier) or self-host"); }
-    if f.donations.polar        { println!("    Donations     Polar              → polar.sh (Apache 2.0, free tier)"); }
-    if f.donations.give_lively  { println!("    Donations     GiveLively         → givelively.org (free for nonprofits)"); }
-    if f.donations.liberapay    { println!("    Donations     Liberapay          → liberapay.com (free, OSS-friendly)"); }
-    if f.donations.pledge_crypto { println!("    Donations     PledgeCrypto       → pledgecrypto.com (free; auto carbon offsets)"); }
-    if f.payments    == PaymentChoice::HyperSwitch   { println!("    Payments      HyperSwitch        → Fly.io (free); provider fees apply"); }
-    if f.forum       == ForumChoice::Flarum          { println!("    Forum         Flarum             → Fly.io (free)"); }
-    if f.forum       == ForumChoice::Discourse       { println!("    Forum         Discourse          → Fly.io (free)  ⚠ heavier: needs Redis + Postgres"); }
-    if f.search      == SearchChoice::Meilisearch    { println!("    Search        Meilisearch        → Fly.io (free)"); }
-    if f.chat        == ChatChoice::Tiledesk         { println!("    Live chat     Tiledesk           → Fly.io (free)"); }
-    if f.notify      == NotifyChoice::Ntfy           { println!("    Push notify   ntfy               → ntfy.sh (free) or self-host"); }
-    if f.notify      == NotifyChoice::Gotify         { println!("    Push notify   Gotify             → Fly.io (free)"); }
-    if f.schedule    == ScheduleChoice::Rallly       { println!("    Scheduling    Rallly             → Fly.io (free)"); }
-    if f.schedule    == ScheduleChoice::CalCom       { println!("    Scheduling    Cal.com            → Fly.io (free)  ⚠ needs Postgres"); }
+    if f.commerce    == CommerceChoice::Medusa       { println!("    Storefront    Medusa             → self-hosted  ⚠ needs a separate Node server"); }
+    if f.commerce    == CommerceChoice::Vendure      { println!("    Storefront    Vendure            → self-hosted  ⚠ needs a separate Node server"); }
+    if f.courses == CourseChoice::FrappeLms           { println!("    Courses       Frappe LMS         → self-hosted"); }
+    if f.forms == FormsChoice::Formbricks             { println!("    Forms         Formbricks         → self-hosted or cloud"); }
+    if f.forms == FormsChoice::Typebot                { println!("    Forms         Typebot            → self-hosted or cloud"); }
+    if f.donations.polar        { println!("    Donations     Polar              → polar.sh (SaaS)"); }
+    if f.donations.give_lively  { println!("    Donations     GiveLively         → givelively.org (free for US nonprofits)"); }
+    if f.donations.liberapay    { println!("    Donations     Liberapay          → liberapay.com (SaaS, OSS-friendly)"); }
+    if f.donations.pledge_crypto { println!("    Donations     PledgeCrypto       → pledgecrypto.com (auto carbon offsets)"); }
+    if f.payments    == PaymentChoice::HyperSwitch   { println!("    Payments      HyperSwitch        → self-hosted; provider fees apply"); }
+    if f.forum       == ForumChoice::Flarum          { println!("    Forum         Flarum             → self-hosted"); }
+    if f.forum       == ForumChoice::Discourse       { println!("    Forum         Discourse          → self-hosted  ⚠ heavier: needs Redis + Postgres"); }
+    if f.search      == SearchChoice::Meilisearch    { println!("    Search        Meilisearch        → self-hosted"); }
+    if f.chat        == ChatChoice::Tiledesk         { println!("    Live chat     Tiledesk           → self-hosted"); }
+    if f.notify      == NotifyChoice::Ntfy           { println!("    Push notify   ntfy               → self-hosted or cloud"); }
+    if f.notify      == NotifyChoice::Gotify         { println!("    Push notify   Gotify             → self-hosted"); }
+    if f.schedule    == ScheduleChoice::Rallly       { println!("    Scheduling    Rallly             → self-hosted"); }
+    if f.schedule    == ScheduleChoice::CalCom       { println!("    Scheduling    Cal.com            → self-hosted  ⚠ needs Postgres"); }
     match f.community {
         CommunityChoice::Giscus   => println!("    Comments      Giscus             → zero server (GitHub Discussions)"),
-        CommunityChoice::Remark42 => println!("    Comments      Remark42           → Fly.io (free)"),
+        CommunityChoice::Remark42 => println!("    Comments      Remark42           → self-hosted"),
         CommunityChoice::None     => {}
     }
     if f.search      == SearchChoice::Pagefind      { println!("    Search        Pagefind           → zero server, built at deploy time"); }
     match f.ab_testing {
-        AbTestingProvider::GrowthBook => println!("    A/B testing   GrowthBook         → free cloud tier"),
-        AbTestingProvider::Unleash    => println!("    A/B testing   Unleash            ⚠ cloud $80/mo; self-host free"),
+        AbTestingProvider::GrowthBook => println!("    A/B testing   GrowthBook         → self-hosted or cloud"),
+        AbTestingProvider::Unleash    => println!("    A/B testing   Unleash            → self-hosted or cloud  ⚠ cloud is expensive"),
         AbTestingProvider::Custom     => println!("    A/B testing   Custom"),
         AbTestingProvider::None       => {}
     }
@@ -79,15 +79,15 @@ pub(crate) fn print_stack_summary(f: &AllFeatures, app_host: Option<AppHost>) {
         HeatmapProvider::Custom     => println!("    Replays       Custom"),
         HeatmapProvider::None       => {}
     }
-    if f.video == VideoChoice::PeerTube               { println!("    Video         PeerTube           → Fly.io (free)"); }
-    if f.podcast == PodcastChoice::Castopod           { println!("    Podcast       Castopod           → Fly.io (free)"); }
-    if f.events == EventChoice::HiEvents              { println!("    Events        Hi.Events          → self-host free"); }
-    if f.events == EventChoice::Pretix                { println!("    Events        Pretix             → Fly.io (free)"); }
-    if f.status == StatusChoice::UptimeKuma           { println!("    Status page   Uptime Kuma        → Fly.io (free)"); }
-    if f.knowledge_base == KnowledgeBaseChoice::BookStack { println!("    Knowledge base BookStack        → Fly.io (free)"); }
-    if f.crm == CrmChoice::Twenty                     { println!("    CRM           Twenty             → Fly.io (free)"); }
-    if f.sso == SsoChoice::Authentik                  { println!("    SSO           Authentik          → Fly.io (free)"); }
-    if f.sso == SsoChoice::Zitadel                    { println!("    SSO           Zitadel            → zitadel.com (free tier) or self-host"); }
+    if f.video == VideoChoice::PeerTube               { println!("    Video         PeerTube           → self-hosted"); }
+    if f.podcast == PodcastChoice::Castopod           { println!("    Podcast       Castopod           → self-hosted"); }
+    if f.events == EventChoice::HiEvents              { println!("    Events        Hi.Events          → self-hosted"); }
+    if f.events == EventChoice::Pretix                { println!("    Events        Pretix             → self-hosted"); }
+    if f.status == StatusChoice::UptimeKuma           { println!("    Status page   Uptime Kuma        → self-hosted"); }
+    if f.knowledge_base == KnowledgeBaseChoice::BookStack { println!("    Knowledge base BookStack        → self-hosted"); }
+    if f.crm == CrmChoice::Twenty                     { println!("    CRM           Twenty             → self-hosted"); }
+    if f.sso == SsoChoice::Authentik                  { println!("    SSO           Authentik          → self-hosted"); }
+    if f.sso == SsoChoice::Zitadel                    { println!("    SSO           Zitadel            → self-hosted or cloud"); }
     match f.docs {
         DocsChoice::Starlight => println!("    Docs site     Starlight (MIT)    → docs/; static output, WCAG AA"),
         DocsChoice::VitePress => println!("    Docs site     VitePress (MIT)    → docs/; static output, local search"),
