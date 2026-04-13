@@ -37,6 +37,20 @@ export type ContentItem = {
   [key: string]: unknown;
 };
 
+export type JobStatus = "queued" | "running" | "completed" | "failed";
+
+export type JobEntry = {
+  id: string;
+  siteId: string;
+  kind: "import:wordpress";
+  status: JobStatus;
+  queuedAt: string;
+  startedAt?: string;
+  completedAt?: string;
+  result?: unknown;
+  error?: string;
+};
+
 export type AggregateMetrics = {
   siteCount: number;
   reachableSites: number;

@@ -1,8 +1,9 @@
 import { Hono } from "hono";
 import type { NexusConfig, FanOutResult, ContentItem } from "./types.js";
 import { SiteRegistry } from "./registry.js";
-import { checkSiteHealth, proxySiteRequest } from "./site-client.js";
+import { checkSiteHealth, proxySiteRequest, postSiteRequest } from "./site-client.js";
 import { getAggregateMetrics } from "./metrics-cache.js";
+import { createJob, getJob, listJobs, updateJob } from "./jobs.js";
 
 export type NexusAppOptions = {
   config: NexusConfig;
@@ -163,6 +164,63 @@ export function createNexusApp(options: NexusAppOptions): Hono {
     const sites = registry.getAll();
     const metrics = await getAggregateMetrics(sites);
     return c.json(metrics);
+  });
+
+  // ── POST /jobs/import/wordpress — queue async import on a member site ─────
+  app.post("/jobs/import/wordpress", async (c) => {
+    let body: Record<string, unknown>;
+    try {
+      body = await c.req.json() as Record<string, unknown>;
+    } catch {
+      return c.json({ error: "Request body must be valid JSON." }, 422);
+    }
+
+    const siteId = typeof body.siteId === "string" ? body.siteId.trim() : "";
+    const exportFile = typeof body.exportFile === "string" ? body.exportFile.trim() : "";
+
+    if (!siteId) return c.json({ error: "siteId is required." }, 422);
+    if (!exportFile) return c.json({ error: "exportFile is required." }, 422);
+
+    const site = registry.get(siteId);
+    if (!site) return c.json({ error: `Site '${siteId}' not found` }, 404);
+
+    const job = createJob(siteId, "import:wordpress");
+
+    // Fire and forget — update job status as import runs in background
+    void (async () => {
+      updateJob(job.id, { status: "running", startedAt: new Date().toISOString() });
+      const result = await postSiteRequest(site, "import/wordpress", { exportFile });
+      if (result.ok) {
+        updateJob(job.id, {
+          status: "completed",
+          completedAt: new Date().toISOString(),
+          result: result.body,
+        });
+      } else {
+        updateJob(job.id, {
+          status: "failed",
+          completedAt: new Date().toISOString(),
+          error: String((result.body as Record<string, unknown>).error ?? "import failed"),
+        });
+      }
+    })();
+
+    return c.json({ jobId: job.id, status: "queued" }, 202);
+  });
+
+  // ── GET /jobs — list all jobs ─────────────────────────────────────────────
+  app.get("/jobs", (c) => {
+    const url = new URL(c.req.url);
+    const limit = Math.min(Number(url.searchParams.get("limit") ?? "50"), 200);
+    const offset = Number(url.searchParams.get("offset") ?? "0");
+    return c.json(listJobs(limit, offset));
+  });
+
+  // ── GET /jobs/:id — poll job status ──────────────────────────────────────
+  app.get("/jobs/:id", (c) => {
+    const job = getJob(c.req.param("id"));
+    if (!job) return c.json({ error: "Job not found" }, 404);
+    return c.json(job);
   });
 
   return app;

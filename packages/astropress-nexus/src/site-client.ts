@@ -46,6 +46,41 @@ export async function checkSiteHealth(site: SiteEntry): Promise<SiteHealth> {
   }
 }
 
+export async function postSiteRequest(
+  site: SiteEntry,
+  path: string,
+  body: unknown,
+): Promise<{ ok: boolean; status: number; body: unknown }> {
+  const url = new URL(`${site.baseUrl}/ap-api/v1/${path}`);
+
+  try {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), PROXY_TIMEOUT_MS);
+
+    const res = await fetch(url.toString(), {
+      method: "POST",
+      headers: { ...buildHeaders(site.token), "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+      signal: controller.signal,
+    }).finally(() => clearTimeout(timer));
+
+    let resBody: unknown;
+    try {
+      resBody = await res.json();
+    } catch {
+      resBody = {};
+    }
+
+    return { ok: res.ok, status: res.status, body: resBody };
+  } catch (err) {
+    return {
+      ok: false,
+      status: 502,
+      body: { error: err instanceof Error ? err.message : "gateway error" },
+    };
+  }
+}
+
 export async function proxySiteRequest(
   site: SiteEntry,
   path: string,
