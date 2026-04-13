@@ -130,8 +130,11 @@
     "zod": ">=4.0.0"
   },
   "dependencies": {
+    "@noble/hashes": "^2.0.1",
+    "@noble/post-quantum": "^0.6.0",
     "htmlparser2": "^9.1.0",
     "image-size": "^2.0.2",
+    "nodemailer": "^7.0.10",
     "sanitize-html": "^2.17.0"
   },
   "devDependencies": {
@@ -171,5 +174,8 @@
   "bugs": {
     "url": "https://github.com/astropress/astropress/issues"
   },
-  "homepage": "https://astropress.diy/docs"
+  "homepage": "https://astropress.diy/docs",
+  "engines": {
+    "node": ">=24.8.0"
+  }
 }
