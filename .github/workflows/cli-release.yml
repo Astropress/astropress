@@ -87,12 +87,17 @@ jobs:
     name: Publish to crates.io
     needs: release
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write  # required for crates.io trusted publishing (OIDC)
     steps:
       - uses: actions/checkout@v4
 
       - uses: dtolnay/rust-toolchain@stable
 
+      - uses: rust-lang/crates-io-auth-action@v1
+        # Exchanges the GitHub OIDC token for a short-lived crates.io token
+        # and sets CARGO_REGISTRY_TOKEN automatically. No secret needed.
+        # astropress-cli must be registered as a trusted publisher on crates.io first.
+
       - name: Publish astropress-cli
         run: cargo publish --manifest-path crates/astropress-cli/Cargo.toml
-        env:
-          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
