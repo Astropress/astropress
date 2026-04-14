@@ -1,0 +1,10 @@
+name: Astropress CodeQL
+
+queries:
+  - uses: security-and-quality
+
+paths-ignore:
+  - "**/dist/**"
+  - "**/coverage/**"
+  - "**/node_modules/**"
+  - "crates/target/**"

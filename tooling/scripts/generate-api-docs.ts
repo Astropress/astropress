@@ -251,7 +251,10 @@ if (CHECK_MODE) {
   }
   const existing = readFileSync(OUT_FILE, "utf8");
   // Strip the Generated date line before comparing so date changes don't fail the check
-  const normalize = (s: string) => s.replace(/^Generated: .+$/m, "Generated: <date>").trim();
+  const normalize = (s: string) => s
+    .replace(/\r\n/g, "\n")
+    .replace(/^Generated: .+$/m, "Generated: <date>")
+    .trim();
   if (normalize(existing) !== normalize(output)) {
     console.error("docs:api:check failed — docs/reference/API_REFERENCE.md is stale. Run `bun run docs:api`.");
     process.exit(1);
