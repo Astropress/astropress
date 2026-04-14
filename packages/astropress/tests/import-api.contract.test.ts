@@ -13,11 +13,11 @@ const mocks = vi.hoisted(() => ({
   importWordPress: vi.fn(),
 }));
 
-vi.mock("astropress/local-runtime-modules", () => ({
+vi.mock("@astropress-diy/astropress/local-runtime-modules", () => ({
   loadLocalAdminStore: mocks.loadLocalAdminStore,
 }));
 
-vi.mock("astropress/import/wordpress", () => ({
+vi.mock("@astropress-diy/astropress/import/wordpress", () => ({
   createAstropressWordPressImportSource: () => ({
     importWordPress: mocks.importWordPress,
   }),
