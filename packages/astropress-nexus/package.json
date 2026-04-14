@@ -31,5 +31,6 @@
   "engines": {
     "node": ">=24.8.0"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "homepage": "https://astropress.diy"
 }

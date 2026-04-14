@@ -497,7 +497,7 @@
   "bugs": {
     "url": "https://github.com/astropress/astropress/issues"
   },
-  "homepage": "https://astropress.diy/docs",
+  "homepage": "https://astropress.diy",
   "engines": {
     "node": ">=24.8.0"
   }
