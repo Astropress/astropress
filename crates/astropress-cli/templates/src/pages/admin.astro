@@ -1,0 +1,42 @@
+---
+import SiteLayout from "../components/SiteLayout.astro";
+---
+
+<SiteLayout
+  title="Astropress Admin Model"
+  description="Astropress treats the admin as the product surface for editors, not as a sidecar to a static site generator."
+  heading="The admin is the center of the editing workflow."
+  currentPath="/admin"
+>
+  <section class="panel-grid">
+    <article class="panel">
+      <h2>Editor workflow</h2>
+      <p>
+        Editors work in the admin to create, review, schedule, revise, and publish content. They do not need Git to
+        do normal editorial work.
+      </p>
+    </article>
+    <article class="panel">
+      <h2>Core surfaces</h2>
+      <p>
+        Pages, posts, media, redirects, comments, users, translations, settings, and revisions are all intended to be
+        managed from one bounded admin surface.
+      </p>
+    </article>
+    <article class="panel">
+      <h2>Provider neutrality</h2>
+      <p>
+        Editors should not have to learn provider-specific runtime differences just to update content. Adapters absorb
+        those differences behind stable contracts.
+      </p>
+    </article>
+  </section>
+
+  <section class="panel">
+    <h2>What Astropress is trying to avoid</h2>
+    <p>
+      The project is intentionally not drifting toward a universal website builder. The goal is a simpler, more
+      operable publishing app for clearly bounded sites.
+    </p>
+  </section>
+</SiteLayout>

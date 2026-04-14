@@ -6,7 +6,7 @@ use include_dir::{include_dir, Dir};
 use crate::utils::io_error;
 
 pub(crate) static SCAFFOLD_TEMPLATE: Dir<'static> =
-    include_dir!("$CARGO_MANIFEST_DIR/../../examples/github-pages");
+    include_dir!("$CARGO_MANIFEST_DIR/templates");
 
 pub(crate) fn write_embedded_template(dest: &Path) -> Result<(), String> {
     write_embedded_dir(&SCAFFOLD_TEMPLATE, dest)

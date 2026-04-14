@@ -1,0 +1,37 @@
+---
+import SiteLayout from "../components/SiteLayout.astro";
+---
+
+<SiteLayout
+  title="Astropress WordPress Migration"
+  description="Astropress supports WordPress migration as a staged import workflow with typed artifacts, reports, and operator review."
+  heading="WordPress migration is supported as a staged workflow, not a fake one-click promise."
+  currentPath="/wordpress"
+>
+  <section class="panel-grid">
+    <article class="panel">
+      <h2>What the importer does today</h2>
+      <p>
+        It inspects WordPress exports, builds an inventory and import plan, stages content, media, comments, users,
+        taxonomies, and redirects as artifacts, and records remediation candidates for anything that needs manual
+        review.
+      </p>
+    </article>
+    <article class="panel">
+      <h2>What it does not claim</h2>
+      <p>
+        Astropress does not present the current importer as a fully automatic hosted migration into every runtime. If a
+        source site has shortcode or page-builder debt, the artifacts and reports should make that debt explicit.
+      </p>
+    </article>
+  </section>
+
+  <section class="panel">
+    <h2>CLI workflow</h2>
+    <ol>
+      <li><code>astropress import wordpress --source export.xml</code></li>
+      <li>Review the generated inventory, plan, report, and remediation artifacts.</li>
+      <li>Optionally add <code>--artifact-dir</code>, <code>--download-media</code>, <code>--apply-local</code>, or <code>--resume</code>.</li>
+    </ol>
+  </section>
+</SiteLayout>

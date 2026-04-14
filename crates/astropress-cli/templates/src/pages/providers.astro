@@ -1,0 +1,87 @@
+---
+import SiteLayout from "../components/SiteLayout.astro";
+---
+
+<SiteLayout
+  title="Astropress Hosting Matrix"
+  description="Astropress separates the choice of app host from the choice of content, auth, media, and service endpoints so users do not confuse where the Astro app runs with where Astropress services live."
+  heading="Choose the app host separately from the content services."
+  currentPath="/providers"
+>
+  <section class="status-table">
+    <h2>App host options</h2>
+    <table>
+      <tbody>
+        <tr>
+          <th scope="row">GitHub Pages</th>
+          <td><span class="badge badge-supported">Supported</span></td>
+          <td>Static-only host for prerendered Astro output.</td>
+        </tr>
+        <tr>
+          <th scope="row">Cloudflare Pages</th>
+          <td><span class="badge badge-supported">Supported</span></td>
+          <td>Static output plus Workers-backed runtime paths.</td>
+        </tr>
+        <tr>
+          <th scope="row">Vercel / Netlify / Render Web</th>
+          <td><span class="badge badge-supported">Supported</span></td>
+          <td>Free-tier Astro app hosts for SSR or admin-backed deployments.</td>
+        </tr>
+        <tr>
+          <th scope="row">GitLab Pages / Firebase Hosting / Render Static</th>
+          <td><span class="badge badge-preview">Preview</span></td>
+          <td>Good static hosting options, but less validated in Astropress today.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="status-table">
+    <h2>Content services options</h2>
+    <table>
+      <tbody>
+        <tr>
+          <th scope="row">Cloudflare D1 / R2 / Workers</th>
+          <td><span class="badge badge-supported">Supported</span></td>
+          <td>One-provider path where Astropress keeps app hosting and content services aligned.</td>
+        </tr>
+        <tr>
+          <th scope="row">Supabase</th>
+          <td><span class="badge badge-supported">Supported</span></td>
+          <td>Database, storage, and auth services. The Astro app still needs a separate app host.</td>
+        </tr>
+        <tr>
+          <th scope="row">Firebase / Appwrite</th>
+          <td><span class="badge badge-preview">Preview</span></td>
+          <td>Clear service-layer choices in the setup matrix, but not first-party hosted runtime adapters yet.</td>
+        </tr>
+        <tr>
+          <th scope="row">PocketBase / Nhost / Neon</th>
+          <td><span class="badge badge-preview">Preview</span></td>
+          <td>Named options in the setup matrix, but not first-party hosted runtime adapters yet.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="panel">
+    <h2>Good combinations today</h2>
+    <ul>
+      <li><strong>GitHub Pages + no hosted data services</strong>: static Astro output only.</li>
+      <li><strong>Cloudflare Pages + Cloudflare D1/R2</strong>: Astro app host and content services on one operational stack.</li>
+      <li><strong>Vercel + Supabase</strong>: Astro app host on Vercel, content/auth/media services on Supabase.</li>
+      <li><strong>Netlify + Supabase</strong>: similar split, different app host.</li>
+      <li><strong>Render Web + Firebase or Appwrite</strong>: Node app host plus a separate services platform.</li>
+    </ul>
+  </section>
+
+  <section class="panel">
+    <h2>Selection rule</h2>
+    <p>
+      First choose the <strong>App Host</strong>, meaning where the Astro web app runs. Then choose
+      <strong> Content Services</strong>, meaning where Astropress stores content, media, auth, sessions, and the
+      service API behind admin actions.
+      Do not treat Supabase or Firebase as app hosts, and do not treat GitHub Pages as a database platform.
+    </p>
+  </section>
+</SiteLayout>
