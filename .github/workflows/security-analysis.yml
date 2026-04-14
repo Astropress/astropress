@@ -18,7 +18,7 @@ jobs:
       contents: read
       security-events: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: returntocorp/semgrep-action@v1
         with:
           config: >-
@@ -27,4 +27,3 @@ jobs:
             p/typescript
             p/javascript
             p/nodejs
-
