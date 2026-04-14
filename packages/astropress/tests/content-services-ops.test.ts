@@ -17,7 +17,6 @@ describe("content services operations", () => {
       env: {
         ASTROPRESS_CONTENT_SERVICES: "supabase",
         SUPABASE_URL: "https://demo.supabase.co",
-        SUPABASE_ANON_KEY: "anon",
         SUPABASE_SERVICE_ROLE_KEY: "service",
         ASTROPRESS_SERVICE_ORIGIN: "https://demo.supabase.co/functions/v1/astropress",
       },

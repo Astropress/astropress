@@ -114,7 +114,6 @@ describe("hosted provider contracts", () => {
   it("creates Supabase and Runway hosted adapters with package-owned remote api defaults", async () => {
     const supabaseConfig = readDirectSupabaseHostedConfig({
       SUPABASE_URL: "https://demo.supabase.co",
-      SUPABASE_ANON_KEY: "anon",
       SUPABASE_SERVICE_ROLE_KEY: "service",
     });
     const runwayConfig = readDirectRunwayHostedConfig({
@@ -178,12 +177,10 @@ describe("hosted provider contracts", () => {
     expect(
       readAstropressSupabaseHostedConfig({
         SUPABASE_URL: "https://example.supabase.co",
-        SUPABASE_ANON_KEY: "anon",
         SUPABASE_SERVICE_ROLE_KEY: "service",
       }),
     ).toEqual({
       url: "https://example.supabase.co",
-      anonKey: "anon",
       serviceRoleKey: "service",
       apiBaseUrl: "https://example.supabase.co/functions/v1/astropress",
     });
@@ -272,7 +269,6 @@ describe("hosted provider contracts", () => {
     const supabase = createAstropressSupabaseHostedAdapter({
       env: {
         SUPABASE_URL: "https://example.supabase.co",
-        SUPABASE_ANON_KEY: "anon",
         SUPABASE_SERVICE_ROLE_KEY: "service",
       },
       ...hostedStores,
@@ -366,7 +362,6 @@ describe("hosted provider contracts", () => {
     const supabase = createAstropressHostedAdapter({
       env: {
         SUPABASE_URL: "https://selector.supabase.co",
-        SUPABASE_ANON_KEY: "anon",
         SUPABASE_SERVICE_ROLE_KEY: "service",
       },
       ...hostedStores,

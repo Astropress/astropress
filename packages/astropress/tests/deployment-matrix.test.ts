@@ -54,7 +54,7 @@ describe("deployment matrix — Fly.io preview pairs", () => {
   it("fly-io + supabase includes Supabase env keys", () => {
     const entry = getAstropressDeploymentMatrixEntry({ appHost: "fly-io", dataServices: "supabase" });
     expect(entry?.requiredEnvKeys).toContain("SUPABASE_URL");
-    expect(entry?.requiredEnvKeys).toContain("SUPABASE_ANON_KEY");
+    expect(entry?.requiredEnvKeys).toContain("SUPABASE_SERVICE_ROLE_KEY");
   });
 });
 
