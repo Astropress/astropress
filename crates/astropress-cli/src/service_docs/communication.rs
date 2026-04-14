@@ -106,9 +106,7 @@ pub(super) const COMPOSE_GOTIFY: &str = concat!(
     "volumes:\n",
     "  gotify_data:\n",
 );
-pub(super) const ENV_GOTIFY: &str = concat!(
-    "GOTIFY_ADMIN_PASS=change-me\n",
-);
+pub(super) const ENV_GOTIFY: &str = "GOTIFY_ADMIN_PASS=change-me\n";
 
 
 // ── Tiledesk ──────────────────────────────────────────────────────────────────
