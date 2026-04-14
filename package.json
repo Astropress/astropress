@@ -18,6 +18,8 @@
     "audit:bundle": "bun run tooling/scripts/bundle-audit.ts",
     "test": "bun run audit:arch && bun run audit:arch:rust && bun run bdd:lint && bun run bdd:test && bun run --filter astropress test",
     "test:coverage": "bun run --filter astropress test:coverage",
+    "test:cli:smoke": "cargo test doctor_ --manifest-path crates/astropress-cli/Cargo.toml && cargo test parses_top_level_commands --manifest-path crates/astropress-cli/Cargo.toml && cargo test deploy_target_prefers_explicit_env_target --manifest-path crates/astropress-cli/Cargo.toml && cargo test bootstraps_and_verifies_content_services --manifest-path crates/astropress-cli/Cargo.toml",
+    "test:prepush": "bun run audit:arch && bun run audit:arch:rust && bun run bdd:lint && bun run docs:api:check && bun run --filter astropress test tests/runtime-env.test.ts tests/runtime-admin-auth.test.ts tests/cloudflare-adapter-security.test.ts tests/project-env.test.ts tests/content-services-ops.test.ts tests/hosted-provider.contract.test.ts tests/provider-targets.test.ts && bun run test:cli:smoke && bun run test:example && bun run repo:clean",
     "test:acceptance": "bun run tooling/scripts/run-playwright.ts --project=example-a11y --project=admin-harness-a11y --project=admin-harness-mobile --project=admin-harness-mobile-iphonese --project=admin-harness-mobile-galaxys5 --project=admin-harness-a11y-interactions --project=admin-harness-crud --project=viewport-375 --project=viewport-768 --project=viewport-1280",
     "build:example:clean": "bun run tooling/scripts/run-with-temp-data.ts bun run --filter astropress-example-gh-pages build",
     "check:example:clean": "bun run tooling/scripts/run-with-temp-data.ts bun run --filter astropress-example-gh-pages check",

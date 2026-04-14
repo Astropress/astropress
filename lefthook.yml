@@ -38,13 +38,7 @@ pre-push:
   parallel: true
   commands:
     gates:
-      run: bun run audit:arch && bun run audit:arch:rust && bun run bdd:test
-
-    coverage:
-      run: bun run test:coverage
-
-    test-cli:
-      run: bun run test:cli
+      run: bun run test:prepush
 
     sweep-tmp:
       # Reclaim /tmp before pre-push gates fire — test runs leave per-case
