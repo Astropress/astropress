@@ -28,6 +28,7 @@ jobs:
       - run: bun install --frozen-lockfile
 
       - uses: changesets/action@v1
+        id: changesets
         with:
           publish: bun run release
           version: bun run version
@@ -38,3 +39,18 @@ jobs:
           # No NPM_TOKEN — npm uses the OIDC token from id-token: write above.
           # Each package (astropress, astropress-mcp, astropress-nexus) must be
           # registered as a trusted publisher on npmjs.com before this works.
+
+      - name: Tag CLI release if version not yet tagged
+        if: steps.changesets.outputs.published == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION=$(grep '^version' crates/astropress-cli/Cargo.toml | head -1 | sed 's/version = "\(.*\)"/\1/')
+          TAG="cli-v${VERSION}"
+          if git ls-remote --tags origin "refs/tags/${TAG}" | grep -q "${TAG}"; then
+            echo "Tag ${TAG} already exists — skipping CLI release"
+          else
+            git tag "${TAG}"
+            git push origin "${TAG}"
+            echo "Pushed ${TAG} — cli-release.yml will build and publish"
+          fi
