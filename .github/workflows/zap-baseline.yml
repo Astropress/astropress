@@ -14,8 +14,12 @@ jobs:
       security-events: write
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24.8"
       - uses: oven-sh/setup-bun@v2
       - run: bun install
+      - run: bun run --filter astropress build
       - run: bun run test:example
       - run: bun run --filter astropress-example-gh-pages build
       - run: python3 -m http.server 4173 --directory examples/github-pages/dist >/tmp/astropress-http.log 2>&1 &
