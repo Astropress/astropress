@@ -1,0 +1,25 @@
+{
+  "name": "astropress-example-gh-pages",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "check": "astro check",
+    "test": "vitest run --passWithNoTests",
+    "lint": "bunx biome check src",
+    "format": "bunx biome format --write src",
+    "doctor:strict": "astropress doctor --strict",
+    "prepare": "bunx lefthook install"
+  },
+  "dependencies": {
+    "astro": "6.1.1",
+    "astropress": "workspace:*"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.8",
+    "lefthook": "^1.13.0",
+    "typescript": "5.9.3",
+    "vitest": "^3"
+  }
+}

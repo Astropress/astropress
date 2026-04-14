@@ -1,0 +1,92 @@
+---
+import SiteLayout from "../components/SiteLayout.astro";
+---
+
+<SiteLayout
+  title="Astropress Overview"
+  description="Astropress is an opinionated web app framework for relatively simple sites that need a real admin, a clear content model, and low-ops hosting options."
+  heading="A real admin for simple sites, without inheriting all of WordPress."
+  currentPath="/"
+>
+  <Fragment slot="hero">
+    <p>
+      Astropress is aimed at editorial, informational, campaign, brochure, and blog sites for individuals and small
+      organizations. It is not a drag-and-drop builder and it is not trying to model arbitrary business workflows.
+    </p>
+    <div class="action-row">
+      <a class="primary" href="/docs">Read the getting started guide</a>
+      <a href="/admin">See the admin model</a>
+    </div>
+  </Fragment>
+
+  <section class="panel-grid">
+    <article class="panel">
+      <h2>What Astropress is</h2>
+      <p>
+        A database-backed web app framework with provider-neutral runtime adapters, a non-technical admin surface, and
+        static output where static output actually makes sense.
+      </p>
+    </article>
+    <article class="panel">
+      <h2>Who it fits</h2>
+      <p>
+        Teams that want pages, posts, media, redirects, comments, users, revisions, and localization in one bounded
+        system instead of plugin sprawl.
+      </p>
+    </article>
+    <article class="panel">
+      <h2>What it avoids</h2>
+      <p>
+        Site-builder abstraction layers, page-builder lock-in, always-on PHP hosting, and any requirement that editors
+        learn Git just to publish content.
+      </p>
+    </article>
+  </section>
+
+  <section class="panel">
+    <h2>Deployment model</h2>
+    <p>
+      Astropress no longer treats hosting as one overloaded provider choice. It separates the <strong>App Host</strong>
+      from the <strong>Content Services</strong> layer. For example, you can run the Astro app on Vercel or Netlify while
+      keeping content, media, and auth services on Supabase. Or you can keep both layers on Cloudflare.
+    </p>
+  </section>
+
+  <section class="status-table">
+    <h2>Current maturity</h2>
+    <table>
+      <tbody>
+        <tr>
+          <th scope="row">Local SQLite runtime</th>
+          <td><span class="badge badge-supported">Supported</span></td>
+          <td>Reference path for local development and the strongest validated flow today.</td>
+        </tr>
+        <tr>
+          <th scope="row">GitHub Pages public deploy</th>
+          <td><span class="badge badge-supported">Supported</span></td>
+          <td>Good fit for public docs and static output, not the canonical write runtime.</td>
+        </tr>
+        <tr>
+          <th scope="row">WordPress staged import</th>
+          <td><span class="badge badge-supported">Supported</span></td>
+          <td>Creates typed inventory, plan, report, and artifact sets for operator-reviewed migration work.</td>
+        </tr>
+        <tr>
+          <th scope="row">Split hosting matrix</th>
+          <td><span class="badge badge-supported">Supported</span></td>
+          <td>App Host and Content Services are now chosen separately in the CLI and docs.</td>
+        </tr>
+        <tr>
+          <th scope="row">Hosted adapters beyond Cloudflare and Supabase</th>
+          <td><span class="badge badge-preview">Preview</span></td>
+          <td>Firebase, Appwrite, and several host combinations are exposed in the matrix, but not all have first-party runtime adapters yet.</td>
+        </tr>
+        <tr>
+          <th scope="row">One-step hosted migration</th>
+          <td><span class="badge badge-limited">Not yet</span></td>
+          <td>WordPress import is not presented as a one-click persisted hosted migration.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+</SiteLayout>

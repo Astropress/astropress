@@ -4,6 +4,9 @@ version = "0.0.1"
 edition = "2021"
 rust-version = "1.82"
 description = "Astropress CLI for project scaffolding, WordPress import, sync, and deployment."
+homepage = "https://astropress.diy"
+repository = "https://github.com/astropress/astropress"
+documentation = "https://astropress.diy/docs/reference/api"
 license = "MIT"
 
 [dependencies]

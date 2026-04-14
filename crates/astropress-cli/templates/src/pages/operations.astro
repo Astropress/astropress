@@ -1,0 +1,36 @@
+---
+import SiteLayout from "../components/SiteLayout.astro";
+---
+
+<SiteLayout
+  title="Astropress Operations"
+  description="Astropress ships local operational guidance for doctor checks, backup and restore, and secret management. Hosted recovery remains an explicit limitation."
+  heading="Use doctor, backup, and restore as first-class operational workflows."
+  currentPath="/operations"
+>
+  <section class="panel-grid">
+    <article class="panel">
+      <h2>Core checks</h2>
+      <p>
+        Run <code>astropress doctor</code> before local launches and before releases. It should catch missing secrets,
+        weak defaults, missing local data paths, and missing <code>ASTROPRESS_APP_HOST</code>,
+        <code> ASTROPRESS_CONTENT_SERVICES</code>, or <code>ASTROPRESS_SERVICE_ORIGIN</code> settings early.
+      </p>
+    </article>
+    <article class="panel">
+      <h2>Backup and restore</h2>
+      <p>
+        Use <code>astropress backup</code> and <code>astropress restore</code> for local content and config snapshots.
+        Treat hosted restore and rollback procedures as explicit follow-up work, not solved problems.
+      </p>
+    </article>
+  </section>
+
+  <section class="panel">
+    <h2>Release honesty</h2>
+    <p>
+      Astropress should document operational gaps plainly. Hosted secret rotation, hosted rollback procedures, and
+      staging-backed incident drills are still limitations rather than marketing bullets.
+    </p>
+  </section>
+</SiteLayout>
