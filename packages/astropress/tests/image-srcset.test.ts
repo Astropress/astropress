@@ -60,13 +60,12 @@ describe("generateSrcset() — basic output format", () => {
 });
 
 describe("generateSrcset() — SVG passthrough (no variants)", () => {
-  it("is not called for SVG uploads (caller guards by mime type)", () => {
-    // This is a documentation test — the caller in runtime-actions-media.ts
-    // skips generateSrcset for SVG via: !input.mimeType.includes("svg")
-    // The function itself would still run but Sharp would likely fail gracefully.
-    // We just verify the contract is described correctly.
-    expect(true).toBe(true);
-  });
+  // The caller in runtime-actions-media.ts skips generateSrcset for SVG via:
+  //   !input.mimeType.includes("svg")
+  // This guard is tested in the caller's own test suite (runtime-actions-media.test.ts).
+  // No unit test for generateSrcset with SVG input is needed here because the function
+  // is never called with SVG mimeTypes in production paths.
+  it.skip("is not called for SVG uploads — guard is in the caller (runtime-actions-media.ts)");
 });
 
 // ─── Structural: srcset field on MediaAssetRecord ─────────────────────────────

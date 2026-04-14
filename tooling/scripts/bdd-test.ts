@@ -1351,7 +1351,7 @@ const verificationGroups: VerificationGroup[] = [
     steps: [
       {
         command: "bun",
-        args: ["run", "--filter", "astropress", "test", "--", "settings-tabs"],
+        args: ["test", "--", "settings-tabs"],
         cwd: astropressPackageRoot,
       },
     ],
@@ -1365,7 +1365,7 @@ const verificationGroups: VerificationGroup[] = [
     steps: [
       {
         command: "bun",
-        args: ["run", "--filter", "astropress", "test", "--", "delete-undo"],
+        args: ["test", "--", "delete-undo"],
         cwd: astropressPackageRoot,
       },
     ],
@@ -1381,7 +1381,7 @@ const verificationGroups: VerificationGroup[] = [
     steps: [
       {
         command: "bun",
-        args: ["run", "--filter", "astropress", "test", "--", "command-palette"],
+        args: ["test", "--", "command-palette"],
         cwd: astropressPackageRoot,
       },
     ],
