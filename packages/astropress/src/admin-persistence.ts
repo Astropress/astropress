@@ -23,6 +23,9 @@ import type {
   AuthorRecord,
   TaxonomyTerm,
   Actor,
+  TestimonialSubmission,
+  TestimonialSubmissionInput,
+  TestimonialStatus,
 } from "./persistence-types";
 import type { SiteSettings } from "./site-settings";
 
@@ -227,6 +230,16 @@ export declare function submitContact(input: {
 }): { ok: true; submission: ContactSubmission };
 
 export declare function getContactSubmissions(): ContactSubmission[];
+
+export declare function submitTestimonial(input: TestimonialSubmissionInput): { ok: true; id: string };
+
+export declare function getTestimonials(status?: TestimonialStatus): TestimonialSubmission[];
+
+export declare function moderateTestimonial(
+  id: string,
+  status: TestimonialStatus,
+  actor: Actor,
+): { ok: true } | { ok: false; error: string };
 
 // ── Translations ─────────────────────────────────────────────────────────────
 

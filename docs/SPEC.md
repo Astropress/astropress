@@ -54,6 +54,7 @@ The canonical source of truth is a database-backed content store, not git.
 | `cms_route_aliases` | Alternate URL paths for route variants |
 | `cms_route_revisions` | Revision history for structured routes |
 | `contact_submissions` | Public contact form submissions |
+| `testimonial_submissions` | Testimonial submissions from Formbricks / Typebot webhooks |
 | `rate_limits` | Per-key request rate limiting |
 | `api_tokens` | Hashed API tokens with scopes and expiry |
 | `schema_migrations` | Migration bookkeeping with rollback SQL |
@@ -158,6 +159,7 @@ The REST API runs at `/ap-api/v1/` when `config.api.enabled` is `true`.
 | GET | `/ap-api/v1/metrics` | content:read |
 | GET | `/ap-api/v1/search?q=` | content:read |
 | POST | `/ap-api/v1/import/wordpress` | import:write |
+| POST | `/ap-api/v1/testimonials/ingest` | (no bearer auth; admin server only; optional HMAC-SHA256 via `X-Formbricks-Signature` / `X-Typebot-Signature`) |
 | GET | `/ap-api/v1/openapi.json` | (no auth) |
 | GET | `/ap-api/v1/og-image/[slug].png` | (no auth) |
 

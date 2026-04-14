@@ -137,16 +137,18 @@ pub(crate) fn prompt_all_features() -> AllFeatures {
         CourseChoice::FrappeLms
     } else { CourseChoice::None };
 
-    // ── forms / surveys / testimonials ────────────────────────────────────
+    // ── forms / surveys / testimonials / referrals ───────────────────────
     let forms = if Confirm::with_theme(t)
-        .with_prompt("Add forms / surveys / testimonials?")
+        .with_prompt("Add forms / surveys / testimonials / referrals?")
         .default(false).interact().unwrap_or(false)
     {
         match Select::with_theme(t).with_prompt("Forms provider").items(&[
             "Formbricks  — MIT community edition; survey + testimonial collection, REST API;\n\
-             \x20            use when you need NPS surveys, onboarding flows, or social proof",
+             \x20            use when you need NPS surveys, onboarding flows, or social proof\n\
+             \x20            — also suitable for referral capture and post-purchase NPS",
             "Typebot     — AGPL 3.0; visual chatbot + conversational form builder;\n\
-             \x20            use when you want interactive flows embedded on any page",
+             \x20            use when you want interactive flows embedded on any page\n\
+             \x20            — also suitable for conversational referral flows",
         ]).default(0).interact().unwrap_or(0) {
             1 => FormsChoice::Typebot,
             _ => FormsChoice::Formbricks,

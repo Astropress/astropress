@@ -8,7 +8,7 @@ export type { AstropressPublicSiteOptions } from "./src/public-site-integration"
 // Core configuration seam
 export { registerCms, getCmsConfig, dispatchPluginContentEvent, dispatchPluginMediaEvent, validateContentFields } from "./src/config";
 export type { AstropressPlugin, AstropressContentEvent, AstropressMediaEvent, FieldDefinition, ContentTypeDefinition } from "./src/config";
-export type { CmsConfig } from "./src/config";
+export type { CmsConfig, TestimonialsConfig } from "./src/config";
 export {
   ASTROPRESS_ADMIN_APP_NAME,
   ASTROPRESS_ADMIN_PRODUCT_NAME,
@@ -216,6 +216,10 @@ export type {
   ContentRecord,
   ContentRevision,
   ContactSubmission,
+  TestimonialStatus,
+  TestimonialSource,
+  TestimonialSubmission,
+  TestimonialSubmissionInput,
   InviteRequest,
   PasswordResetRequest,
   ManagedAdminUser,
@@ -343,6 +347,7 @@ export {
   suspendRuntimeAdminUser,
   unsuspendRuntimeAdminUser,
 } from "./src/runtime-admin-actions";
+export { moderateRuntimeTestimonial } from "./src/runtime-mutation-store";
 
 // Admin auth
 export {
@@ -374,6 +379,7 @@ export {
   buildAuthorsPageModel,
   buildTaxonomiesPageModel,
   buildCommentsPageModel,
+  buildTestimonialsPageModel,
   buildTranslationsPageModel,
   buildSettingsPageModel,
   buildSystemPageModel,

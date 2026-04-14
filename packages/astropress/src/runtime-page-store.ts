@@ -69,6 +69,7 @@ function createStaticReadStore(): D1AdminReadStore {
     },
     submissions: {
       getContactSubmissions: async () => [],
+      getTestimonials: async () => [],
     },
     translations: {
       getEffectiveTranslationState: async (_route: string, fallback = "not_started") => fallback,
@@ -129,6 +130,7 @@ function createFallbackReadStore(localAdminStore: Awaited<ReturnType<typeof safe
     },
     submissions: {
       getContactSubmissions: async () => localAdminStore.getContactSubmissions(),
+      getTestimonials: async (status?) => localAdminStore.getTestimonials(status),
     },
     translations: {
       getEffectiveTranslationState: async (route: string, fallback = "not_started") =>
@@ -191,7 +193,10 @@ async function getReadStore(locals?: App.Locals | null) {
       getContentState: wf(d1.content.getContentState, fb.content.getContentState),
       getContentRevisions: wf(d1.content.getContentRevisions, fb.content.getContentRevisions),
     },
-    submissions: { getContactSubmissions: wf(d1.submissions.getContactSubmissions, fb.submissions.getContactSubmissions) },
+    submissions: {
+      getContactSubmissions: wf(d1.submissions.getContactSubmissions, fb.submissions.getContactSubmissions),
+      getTestimonials: wf(d1.submissions.getTestimonials, fb.submissions.getTestimonials),
+    },
     translations: { getEffectiveTranslationState: wf(d1.translations.getEffectiveTranslationState, fb.translations.getEffectiveTranslationState) },
     settings: { getSettings: wf(d1.settings.getSettings, fb.settings.getSettings) },
     rateLimits: {
@@ -280,6 +285,10 @@ export async function getRuntimeContactSubmissions(locals?: App.Locals | null) {
 
 export async function getRuntimeMediaAssets(locals?: App.Locals | null) {
   return (await getReadStore(locals)).media.listMediaAssets();
+}
+
+export async function getRuntimeTestimonials(status?: import("./persistence-types").TestimonialStatus, locals?: App.Locals | null) {
+  return (await getReadStore(locals)).submissions.getTestimonials(status);
 }
 
 // ─── Mutation store — extracted to runtime-mutation-store.ts ─────────────────

@@ -327,6 +327,25 @@ CREATE TABLE IF NOT EXISTS contact_submissions (
   submitted_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE IF NOT EXISTS testimonial_submissions (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  email TEXT NOT NULL,
+  company TEXT,
+  role TEXT,
+  before_state TEXT,
+  transformation TEXT,
+  specific_result TEXT,
+  consent_to_publish INTEGER NOT NULL DEFAULT 0,
+  status TEXT NOT NULL DEFAULT 'pending',
+  source TEXT NOT NULL DEFAULT 'formbricks',
+  submitted_at TEXT NOT NULL,
+  approved_at TEXT
+);
+
+CREATE INDEX IF NOT EXISTS idx_testimonial_status ON testimonial_submissions(status);
+CREATE INDEX IF NOT EXISTS idx_testimonial_submitted ON testimonial_submissions(submitted_at DESC);
+
 CREATE TABLE IF NOT EXISTS rate_limits (
   key TEXT PRIMARY KEY,
   count INTEGER NOT NULL,

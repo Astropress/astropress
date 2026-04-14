@@ -37,6 +37,7 @@ const adminSiteName = siteName ?? adminUi.branding.shellName;
 const { bootstrapDisabled } = getAdminBootstrapConfig(Astro.locals);
 applyAstropressSecurityHeaders(Astro.response.headers, { area: "admin", allowInlineStyles: true, forceHsts: Astro.url.protocol === "https:" });
 const hasFundraising = !!(peekCmsConfig()?.donations);
+const hasTestimonials = !!(peekCmsConfig()?.testimonials);
 const recentItems = await getRecentAdminItems(Astro.locals, role);
 
 const pluginNavItems: NavItem[] = (peekCmsConfig()?.plugins ?? [])
@@ -62,6 +63,7 @@ const navItems: NavItem[] = [
   { href: "/ap-admin/settings", label: adminUi.navigation.settings, adminOnly: true },
   { href: "/ap-admin/services", label: adminUi.navigation.services, adminOnly: true },
   ...(hasFundraising ? [{ href: "/ap-admin/fundraising", label: adminUi.navigation.fundraising, adminOnly: true as const }] : []),
+  ...(hasTestimonials ? [{ href: "/ap-admin/testimonials", label: adminUi.navigation.testimonials, adminOnly: true as const }] : []),
   ...(hasCms ? [{ href: "/ap-admin/cms", label: adminUi.navigation.cms }] : []),
   ...(hasHostPanel ? [{ href: "/ap-admin/host", label: adminUi.navigation.host, adminOnly: true as const }] : []),
   ...pluginNavItems,

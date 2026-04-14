@@ -12,6 +12,9 @@ import type {
   MediaAsset,
   RedirectRule,
   TaxonomyTerm,
+  TestimonialSubmission,
+  TestimonialSubmissionInput,
+  TestimonialStatus,
 } from "./persistence-types";
 import type { SiteSettings } from "./site-settings";
 import { createD1ContentReadPart, createD1SchedulingPart } from "./d1-store-content";
@@ -33,6 +36,9 @@ export type {
   RedirectRule,
   TaxonomyTerm,
   SiteSettings,
+  TestimonialSubmission,
+  TestimonialSubmissionInput,
+  TestimonialStatus,
 };
 
 export interface D1AdminReadStore {
@@ -67,6 +73,7 @@ export interface D1AdminReadStore {
   };
   submissions: {
     getContactSubmissions(): Promise<ContactSubmission[]>;
+    getTestimonials(status?: TestimonialStatus): Promise<TestimonialSubmission[]>;
   };
   translations: {
     getEffectiveTranslationState(route: string, fallback?: string): Promise<string>;
@@ -103,6 +110,8 @@ export interface D1AdminMutationStore {
       ok: true;
       submission: ContactSubmission;
     }>;
+    submitTestimonial(input: TestimonialSubmissionInput): Promise<{ ok: true; id: string }>;
+    moderateTestimonial(id: string, status: TestimonialStatus, actorEmail: string): Promise<{ ok: true } | { ok: false; error: string }>;
   };
   comments: {
     submitPublicComment(input: {

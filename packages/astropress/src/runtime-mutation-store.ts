@@ -4,6 +4,7 @@
 import { createD1AdminMutationStore } from "./d1-admin-store";
 import { safeLoadLocalAdminStore } from "./admin-store-dispatch";
 import { getCloudflareBindings } from "./runtime-env";
+import type { TestimonialSubmissionInput, TestimonialStatus } from "./persistence-types";
 
 function createStaticMutationStore() {
   return {
@@ -14,6 +15,13 @@ function createStaticMutationStore() {
           id: crypto.randomUUID(),
           ...input,
         },
+      }),
+      submitTestimonial: async (input: TestimonialSubmissionInput) => ({
+        ok: true as const,
+        id: `testimonial-${crypto.randomUUID()}`,
+      }),
+      moderateTestimonial: async (_id: string, _status: TestimonialStatus, _actorEmail: string) => ({
+        ok: true as const,
       }),
     },
     comments: {
@@ -57,6 +65,10 @@ async function getMutationStore(locals?: App.Locals | null) {
     submissions: {
       submitContact: async (input: { name: string; email: string; message: string; submittedAt: string }) =>
         localAdminStore.submitContact(input),
+      submitTestimonial: async (input: TestimonialSubmissionInput) =>
+        localAdminStore.submitTestimonial(input),
+      moderateTestimonial: async (id: string, status: TestimonialStatus, actorEmail: string) =>
+        localAdminStore.moderateTestimonial(id, status, { email: actorEmail, role: "admin", name: actorEmail }),
     },
     comments: {
       submitPublicComment: async (input: {
@@ -99,4 +111,20 @@ export async function submitRuntimePublicComment(
   locals?: App.Locals | null,
 ) {
   return (await getMutationStore(locals)).comments.submitPublicComment(input);
+}
+
+export async function submitRuntimeTestimonial(
+  input: TestimonialSubmissionInput,
+  locals?: App.Locals | null,
+) {
+  return (await getMutationStore(locals)).submissions.submitTestimonial(input);
+}
+
+export async function moderateRuntimeTestimonial(
+  id: string,
+  status: TestimonialStatus,
+  actor: { email: string; role: string; name: string },
+  locals?: App.Locals | null,
+) {
+  return (await getMutationStore(locals)).submissions.moderateTestimonial(id, status, actor.email);
 }

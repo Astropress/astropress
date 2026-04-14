@@ -162,6 +162,7 @@ fn formbricks_env_stubs() {
     let s = feature_env_stubs(&f);
     assert!(s.contains("FORMBRICKS_API_KEY"));
     assert!(s.contains("FORMBRICKS_ENVIRONMENT_ID"));
+    assert!(s.contains("FORMBRICKS_WEBHOOK_SECRET"));
 }
 
 #[test]
@@ -170,6 +171,7 @@ fn typebot_generates_env_stubs() {
     let s = feature_env_stubs(&f);
     assert!(s.contains("TYPEBOT_URL"));
     assert!(s.contains("TYPEBOT_API_TOKEN"));
+    assert!(s.contains("TYPEBOT_WEBHOOK_SECRET"));
 }
 
 // ── donations ─────────────────────────────────────────────────────────

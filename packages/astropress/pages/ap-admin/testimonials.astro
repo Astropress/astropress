@@ -1,0 +1,225 @@
+---
+import AdminLayout from "astropress/components/AdminLayout.astro";
+import AuditTrail from "astropress/components/AuditTrail.astro";
+import CsrfInput from "astropress/components/CsrfInput.astro";
+import { buildTestimonialsPageModel } from "astropress";
+
+const adminUser = Astro.locals.adminUser;
+const model = await buildTestimonialsPageModel(Astro.locals);
+const { pending, approved, featured, auditEvents } = model.data;
+const tab = Astro.url.searchParams.get("tab") ?? "pending";
+const wasSaved = Astro.url.searchParams.get("saved") === "1";
+const errorMessage = Astro.url.searchParams.get("error") === "1" ? Astro.url.searchParams.get("message") : "";
+
+const activeList = tab === "approved" ? approved : tab === "featured" ? featured : pending;
+---
+
+<AdminLayout
+  title="Testimonials | Astropress Admin"
+  heading="Testimonials"
+  currentPath="/ap-admin/testimonials"
+  description="Review and moderate testimonial submissions."
+  role={adminUser!.role}
+  userName={adminUser!.name}
+>
+  {model.warnings.length > 0 && <ap-notice type="info">Some testimonial data is temporarily unavailable. This page is showing partial results.</ap-notice>}
+  {wasSaved && <ap-notice type="success" dismiss-after="6000">The testimonial was updated successfully.</ap-notice>}
+  {errorMessage && <ap-notice type="error">{errorMessage}</ap-notice>}
+
+  <div class="admin-subgrid two summary-grid">
+    <section class="panel stat summary-card">
+      <span>Total submitted</span>
+      <strong>{pending.length + approved.length + featured.length}</strong>
+      <span>All testimonial submissions across statuses.</span>
+    </section>
+    <section class="panel stat summary-card">
+      <span>Pending review</span>
+      <strong>{pending.length}</strong>
+      <span>Submissions awaiting a moderation decision.</span>
+    </section>
+  </div>
+
+  <section class="panel testimonials-panel">
+    <div class="section-header">
+      <div>
+        <p class="admin-kicker">Moderation</p>
+        <h2>Testimonial Queue</h2>
+      </div>
+    </div>
+
+    <nav class="tab-nav" aria-label="Testimonial status tabs">
+      <a href="?tab=pending" class:list={["tab-link", { active: tab === "pending" }]}>
+        Pending ({pending.length})
+      </a>
+      <a href="?tab=approved" class:list={["tab-link", { active: tab === "approved" }]}>
+        Approved ({approved.length})
+      </a>
+      <a href="?tab=featured" class:list={["tab-link", { active: tab === "featured" }]}>
+        Featured ({featured.length})
+      </a>
+    </nav>
+
+    <div class="admin-table-shell">
+      {activeList.length === 0 ? (
+        <p class="empty-state">No {tab} testimonials.</p>
+      ) : (
+        <table aria-label={`${tab} testimonials`}>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Company</th>
+              <th>Role</th>
+              <th>Specific Result</th>
+              <th>Consent</th>
+              <th>Source</th>
+              <th>Submitted</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {activeList.map((t) => (
+              <tr>
+                <td>{t.name}</td>
+                <td>{t.company ?? "—"}</td>
+                <td>{t.role ?? "—"}</td>
+                <td class="result-cell">{t.specificResult ?? "—"}</td>
+                <td>{t.consentToPublish ? "Yes" : "No"}</td>
+                <td><span class="admin-chip">{t.source}</span></td>
+                <td>{t.submittedAt.slice(0, 10)}</td>
+                <td class="action-cell">
+                  {tab === "pending" && (
+                    <>
+                      <form method="post" action="/ap-admin/actions/testimonial-moderate" class="testimonial-action">
+                        <CsrfInput token={Astro.locals.csrfToken} />
+                        <input type="hidden" name="testimonialId" value={t.id} />
+                        <input type="hidden" name="status" value="approved" />
+                        <button type="submit" class="admin-button small">Approve</button>
+                      </form>
+                      <form method="post" action="/ap-admin/actions/testimonial-moderate" class="testimonial-action">
+                        <CsrfInput token={Astro.locals.csrfToken} />
+                        <input type="hidden" name="testimonialId" value={t.id} />
+                        <input type="hidden" name="status" value="rejected" />
+                        <button type="submit" class="admin-button-ghost small reject">Reject</button>
+                      </form>
+                    </>
+                  )}
+                  {tab === "approved" && (
+                    <>
+                      <form method="post" action="/ap-admin/actions/testimonial-moderate" class="testimonial-action">
+                        <CsrfInput token={Astro.locals.csrfToken} />
+                        <input type="hidden" name="testimonialId" value={t.id} />
+                        <input type="hidden" name="status" value="featured" />
+                        <button type="submit" class="admin-button small">Feature</button>
+                      </form>
+                      <form method="post" action="/ap-admin/actions/testimonial-moderate" class="testimonial-action">
+                        <CsrfInput token={Astro.locals.csrfToken} />
+                        <input type="hidden" name="testimonialId" value={t.id} />
+                        <input type="hidden" name="status" value="rejected" />
+                        <button type="submit" class="admin-button-ghost small reject">Reject</button>
+                      </form>
+                    </>
+                  )}
+                  {tab === "featured" && (
+                    <form method="post" action="/ap-admin/actions/testimonial-moderate" class="testimonial-action">
+                      <CsrfInput token={Astro.locals.csrfToken} />
+                      <input type="hidden" name="testimonialId" value={t.id} />
+                      <input type="hidden" name="status" value="approved" />
+                      <button type="submit" class="admin-button-ghost small">Unfeature</button>
+                    </form>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+    </div>
+  </section>
+
+  <AuditTrail events={auditEvents.filter((event) => event.targetType === "testimonial").slice(0, 5)} />
+</AdminLayout>
+
+<style>
+  .summary-grid,
+  .testimonials-panel {
+    margin-bottom: 1rem;
+  }
+
+  .summary-card span:first-child {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    font-weight: 700;
+  }
+
+  .summary-card span:last-child {
+    color: var(--muted);
+    font-size: 0.9rem;
+  }
+
+  .testimonials-panel {
+    display: grid;
+    gap: 1rem;
+  }
+
+  .tab-nav {
+    display: flex;
+    gap: 0.25rem;
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 0;
+    margin-bottom: 1rem;
+  }
+
+  .tab-link {
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    color: var(--muted);
+    text-decoration: none;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+  }
+
+  .tab-link:hover {
+    color: var(--text);
+  }
+
+  .tab-link.active {
+    color: var(--text);
+    border-bottom-color: var(--accent);
+    font-weight: 600;
+  }
+
+  .result-cell {
+    max-width: 18rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .action-cell {
+    display: flex;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+  }
+
+  .testimonial-action {
+    display: inline-flex;
+  }
+
+  .reject {
+    border-color: color-mix(in srgb, var(--danger) 50%, var(--line));
+    color: var(--danger);
+  }
+
+  .reject:hover {
+    background: color-mix(in srgb, var(--danger) 10%, transparent);
+  }
+
+  .empty-state {
+    padding: 2rem;
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.9rem;
+  }
+</style>

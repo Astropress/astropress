@@ -34,6 +34,28 @@ export interface PledgeCryptoConfig {
   partnerKey: string;
 }
 
+/**
+ * Testimonials and referral capture.
+ *
+ * Astropress is a two-site framework: admin server and public static site run on
+ * separate origins. Collection flows through Formbricks or Typebot — the widget
+ * runs on the tool's origin, the user submits there, and the tool webhooks to
+ * /ap-api/v1/testimonials/ingest on the admin server. The admin server URL goes
+ * in the tool's webhook config, never in public HTML.
+ */
+export interface TestimonialsConfig {
+  /** The collection tool in use. */
+  type: "formbricks" | "typebot";
+  /** Self-hosted instance URL. When set, surfaces the tool's admin as an iframe in /ap-admin/services/testimonials. */
+  url?: string;
+  /** Public embed key (Formbricks environment ID or Typebot bot ID) for the widget snippet. */
+  embedKey?: string;
+  /** HMAC-SHA256 secret for webhook signature verification. Required in production. */
+  webhookSecret?: string;
+  /** Admin sidebar label override. Default: "Testimonials". */
+  label?: string;
+}
+
 export interface DonationsConfig {
   /** GiveLively widget for fiat donations (US nonprofits). */
   giveLively?: GiveLivelyConfig;

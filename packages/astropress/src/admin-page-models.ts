@@ -14,6 +14,7 @@ import {
   getRuntimeRedirectRules,
   getRuntimeSettings,
   getRuntimeTags,
+  getRuntimeTestimonials,
   getRuntimeTranslationState,
   listRuntimeContentStates,
 } from "./runtime-page-store";
@@ -99,6 +100,16 @@ export async function buildUsersPageModel(locals: AdminLocals, role: AdminRole) 
     users: await withFallback(warnings, "User records are temporarily unavailable.", () => getRuntimeAdminUsers(locals), []),
     auditEvents: await withFallback(warnings, "Access audit history is temporarily unavailable.", () => getRuntimeAuditEvents(locals), []),
   }));
+}
+
+export async function buildTestimonialsPageModel(locals: AdminLocals) {
+  const warnings: string[] = [];
+  return ok({
+    pending: await withFallback(warnings, "Pending testimonials are temporarily unavailable.", () => getRuntimeTestimonials("pending", locals), []),
+    approved: await withFallback(warnings, "Approved testimonials are temporarily unavailable.", () => getRuntimeTestimonials("approved", locals), []),
+    featured: await withFallback(warnings, "Featured testimonials are temporarily unavailable.", () => getRuntimeTestimonials("featured", locals), []),
+    auditEvents: await withFallback(warnings, "Testimonial audit history is temporarily unavailable.", () => getRuntimeAuditEvents(locals), []),
+  }, warnings);
 }
 
 export async function buildCommentsPageModel(locals: AdminLocals) {

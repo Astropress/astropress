@@ -237,7 +237,8 @@ describe("ZTA P4: no implicit trust — explicit authorization on every request"
     ).filter(
       (f) =>
         !f.endsWith("openapi.json.ts") && // OpenAPI spec is intentionally public
-        !f.includes("og-image"), // OG image endpoint is read-only public (accessed by social media scrapers)
+        !f.includes("og-image") && // OG image endpoint is read-only public (accessed by social media scrapers)
+        !f.includes("testimonials/ingest"), // Webhook receiver: authenticated via HMAC-SHA256, not Bearer token
     );
 
     for (const file of apiPages) {

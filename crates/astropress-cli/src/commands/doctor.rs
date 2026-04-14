@@ -153,6 +153,19 @@ pub(crate) fn inspect_project_health(project_dir: &Path) -> Result<DoctorReport,
         ));
     }
 
+    if (env_values.contains_key("FORMBRICKS_URL")
+        || env_values.contains_key("FORMBRICKS_API_KEY")
+        || env_values.contains_key("TYPEBOT_URL"))
+        && !env_values.contains_key("FORMBRICKS_WEBHOOK_SECRET")
+        && !env_values.contains_key("TYPEBOT_WEBHOOK_SECRET")
+    {
+        warnings.push(
+            "FORMBRICKS_WEBHOOK_SECRET / TYPEBOT_WEBHOOK_SECRET is not set. \
+             The testimonials ingest endpoint accepts any POST without it. Required before production."
+                .into(),
+        );
+    }
+
     if launch_plan.runtime.mode == "local" {
         if !data_dir_existed {
             warnings.push(format!(

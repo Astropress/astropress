@@ -36,8 +36,9 @@ pub(super) fn append_more_services(doc: &mut String, f: &AllFeatures) {
 
     if f.forms == FormsChoice::Typebot {
         doc.push_str(concat!(
-            "### Typebot (conversational forms)\n\n",
+            "### Typebot (conversational forms + testimonials + referrals)\n\n",
             "> Free cloud tier at <https://typebot.io> — recommended for most users.\n\n",
+            "Webhook URL (configure in Typebot): `https://<admin-server>/ap-api/v1/testimonials/ingest`\n\n",
             "```sh\n",
             "cd typebot\n",
             "cp .env.typebot.example .env.typebot\n",
@@ -49,8 +50,9 @@ pub(super) fn append_more_services(doc: &mut String, f: &AllFeatures) {
 
     if f.forms == FormsChoice::Formbricks {
         doc.push_str(concat!(
-            "### Formbricks (surveys + NPS + testimonials)\n\n",
+            "### Formbricks (surveys + NPS + testimonials + referrals)\n\n",
             "> Free cloud tier at <https://formbricks.com> — recommended for most users.\n\n",
+            "Webhook URL (configure in Formbricks): `https://<admin-server>/ap-api/v1/testimonials/ingest`\n\n",
             "```sh\n",
             "cd formbricks\n",
             "cp .env.formbricks.example .env.formbricks\n",

@@ -65,6 +65,9 @@ export interface LocalAdminStoreModule extends AdminStoreAdapter {
   // Submissions
   getContactSubmissions: AdminStoreAdapter["submissions"]["getContactSubmissions"];
   submitContact: AdminStoreAdapter["submissions"]["submitContact"];
+  getTestimonials: AdminStoreAdapter["submissions"]["getTestimonials"];
+  submitTestimonial: AdminStoreAdapter["submissions"]["submitTestimonial"];
+  moderateTestimonial: AdminStoreAdapter["submissions"]["moderateTestimonial"];
   // Translations
   updateTranslationState: AdminStoreAdapter["translations"]["updateTranslationState"];
   getEffectiveTranslationState: AdminStoreAdapter["translations"]["getEffectiveTranslationState"];

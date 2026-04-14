@@ -162,7 +162,7 @@ pub(super) const ENV_HYPERSWITCH: &str = concat!(
 // ── Typebot ───────────────────────────────────────────────────────────────────
 
 pub(super) const COMPOSE_TYPEBOT: &str = concat!(
-    "# Typebot — conversational forms + chatbot builder (AGPL 3.0).\n",
+    "# Typebot — conversational forms + testimonials + referral capture (AGPL 3.0).\n",
     "# Free cloud tier at https://typebot.io (recommended for most users).\n",
     "# Usage: cp .env.typebot.example .env.typebot && docker compose --env-file .env.typebot up -d\n",
     "services:\n",
@@ -218,13 +218,15 @@ pub(super) const ENV_TYPEBOT: &str = concat!(
     "ENCRYPTION_SECRET=change-me-32-char-random-string\n",
     "TYPEBOT_BUILDER_URL=https://typebot.yourdomain.com\n",
     "TYPEBOT_VIEWER_URL=https://bot.yourdomain.com\n",
+    "# Webhook URL (configure in Typebot): https://<admin-server>/ap-api/v1/testimonials/ingest\n",
+    "TYPEBOT_WEBHOOK_SECRET=change-me\n",
 );
 
 
 // ── Formbricks ────────────────────────────────────────────────────────────────
 
 pub(super) const COMPOSE_FORMBRICKS: &str = concat!(
-    "# Formbricks — surveys + NPS + testimonials (MIT community edition).\n",
+    "# Formbricks — surveys + NPS + testimonials + referral capture (MIT community edition).\n",
     "# Free cloud tier at https://formbricks.com (recommended for most users).\n",
     "# Usage: cp .env.formbricks.example .env.formbricks && docker compose --env-file .env.formbricks up -d\n",
     "services:\n",
@@ -265,5 +267,7 @@ pub(super) const ENV_FORMBRICKS: &str = concat!(
     "NEXTAUTH_SECRET=change-me-32-char-random-string\n",
     "ENCRYPTION_KEY=change-me-32-char-random-string\n",
     "FORMBRICKS_URL=https://forms.yourdomain.com\n",
+    "# Webhook URL (configure in Formbricks): https://<admin-server>/ap-api/v1/testimonials/ingest\n",
+    "FORMBRICKS_WEBHOOK_SECRET=change-me\n",
 );
 

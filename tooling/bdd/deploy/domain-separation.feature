@@ -31,3 +31,14 @@ Feature: Admin and production domain separation
     When each hook is invoked with a route spy
     Then createAstropressAdminAppIntegration still injects all admin routes
     And createAstropressPublicSiteIntegration injects zero admin routes
+
+  Scenario: Testimonials ingest endpoint is not injected by the public site integration
+    Given a site built with createAstropressPublicSiteIntegration
+    When the static build completes
+    Then no injected route pattern contains the string "testimonials"
+    And no injected route pattern contains the string "ap-api"
+
+  Scenario: Testimonials ingest endpoint is injected by the admin integration
+    Given a site built with createAstropressAdminAppIntegration
+    When the integration is configured
+    Then routes matching /ap-api/v1/testimonials/ingest are injected

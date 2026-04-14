@@ -7,6 +7,10 @@ import type {
   ManagedAdminUser,
   MediaAsset,
   RedirectRule,
+  TestimonialSubmission,
+  TestimonialSubmissionInput,
+  TestimonialStatus,
+  TestimonialSource,
 } from "./persistence-types";
 import type { SiteSettings } from "./site-settings";
 import { defaultSiteSettings } from "./site-settings";
@@ -182,6 +186,52 @@ export function createD1OperationsReadPart(db: D1DatabaseLike): Omit<D1AdminRead
           submittedAt: row.submitted_at,
         }));
       },
+      async getTestimonials(status?: TestimonialStatus): Promise<TestimonialSubmission[]> {
+        const rows = (
+          await db
+            .prepare(
+              `
+                SELECT id, name, email, company, role, before_state, transformation,
+                       specific_result, consent_to_publish, status, source, submitted_at, approved_at
+                FROM testimonial_submissions
+                WHERE (? IS NULL OR status = ?)
+                ORDER BY submitted_at DESC, id DESC
+              `,
+            )
+            .bind(status ?? null, status ?? null)
+            .all<{
+              id: string;
+              name: string;
+              email: string;
+              company: string | null;
+              role: string | null;
+              before_state: string | null;
+              transformation: string | null;
+              specific_result: string | null;
+              consent_to_publish: number;
+              status: string;
+              source: string;
+              submitted_at: string;
+              approved_at: string | null;
+            }>()
+        ).results;
+
+        return rows.map((row) => ({
+          id: row.id,
+          name: row.name,
+          email: row.email,
+          company: row.company ?? undefined,
+          role: row.role ?? undefined,
+          beforeState: row.before_state ?? undefined,
+          transformation: row.transformation ?? undefined,
+          specificResult: row.specific_result ?? undefined,
+          consentToPublish: row.consent_to_publish === 1,
+          status: row.status as TestimonialStatus,
+          source: row.source as TestimonialSource,
+          submittedAt: row.submitted_at,
+          approvedAt: row.approved_at ?? undefined,
+        }));
+      },
     },
     translations: {
       async getEffectiveTranslationState(route: string, fallback = "not_started"): Promise<string> {
@@ -277,6 +327,49 @@ export function createD1OperationsReadPart(db: D1DatabaseLike): Omit<D1AdminRead
 export function createD1OperationsMutationPart(db: D1DatabaseLike): Pick<D1AdminMutationStore, "submissions" | "comments" | "rateLimits"> {
   return {
     submissions: {
+      async submitTestimonial(input: TestimonialSubmissionInput): Promise<{ ok: true; id: string }> {
+        const id = `testimonial-${crypto.randomUUID()}`;
+        await db
+          .prepare(
+            `
+              INSERT INTO testimonial_submissions
+                (id, name, email, company, role, before_state, transformation,
+                 specific_result, consent_to_publish, status, source, submitted_at)
+              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?)
+            `,
+          )
+          .bind(
+            id,
+            input.name,
+            input.email,
+            input.company ?? null,
+            input.role ?? null,
+            input.beforeState ?? null,
+            input.transformation ?? null,
+            input.specificResult ?? null,
+            input.consentToPublish ? 1 : 0,
+            input.source,
+            input.submittedAt,
+          )
+          .run();
+        return { ok: true as const, id };
+      },
+      async moderateTestimonial(id: string, status: TestimonialStatus, actorEmail: string): Promise<{ ok: true } | { ok: false; error: string }> {
+        const approvedStatuses: TestimonialStatus[] = ["approved", "featured"];
+        const approvedAtExpr = approvedStatuses.includes(status)
+          ? "CASE WHEN approved_at IS NULL THEN CURRENT_TIMESTAMP ELSE approved_at END"
+          : "approved_at";
+        const result = await db
+          .prepare(
+            `UPDATE testimonial_submissions SET status = ?, approved_at = ${approvedAtExpr} WHERE id = ?`,
+          )
+          .bind(status, id)
+          .run();
+        if (!result.meta.changes) {
+          return { ok: false as const, error: "Testimonial not found" };
+        }
+        return { ok: true as const };
+      },
       async submitContact(input): Promise<{ ok: true; submission: ContactSubmission }> {
         const submission: ContactSubmission = {
           id: `contact-${crypto.randomUUID()}`,

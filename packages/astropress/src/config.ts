@@ -8,6 +8,7 @@ import type {
   AnalyticsConfig,
   AstropressApiConfig,
   DonationsConfig,
+  TestimonialsConfig,
 } from "./config-service-types.js";
 
 export type {
@@ -18,6 +19,7 @@ export type {
   GiveLivelyConfig,
   LiberapayConfig,
   PledgeCryptoConfig,
+  TestimonialsConfig,
 } from "./config-service-types.js";
 
 // ─── Main config ─────────────────────────────────────────────────────────────
@@ -164,6 +166,13 @@ export interface CmsConfig {
    * Multiple providers can be enabled simultaneously.
    */
   donations?: DonationsConfig;
+
+  /**
+   * Optional testimonials and referral capture via Formbricks or Typebot.
+   * When configured, a "Testimonials" entry appears in the admin sidebar and
+   * the /ap-api/v1/testimonials/ingest webhook endpoint becomes active.
+   */
+  testimonials?: TestimonialsConfig;
 
   /**
    * Optional A/B testing / feature flag integration.

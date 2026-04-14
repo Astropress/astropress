@@ -67,13 +67,15 @@ pub(crate) fn feature_env_stubs(f: &AllFeatures) -> String {
             "FRAPPE_LMS_URL=http://localhost:8000", "FRAPPE_LMS_API_KEY=replace-me"]);
     }
     if f.forms == FormsChoice::Formbricks {
-        lines.extend(&["# Formbricks (forms + surveys + testimonials — MIT community edition)",
+        lines.extend(&["# Formbricks (forms + surveys + testimonials + referrals — MIT community edition)",
             "FORMBRICKS_URL=http://localhost:3000", "FORMBRICKS_API_KEY=replace-me",
-            "FORMBRICKS_ENVIRONMENT_ID=replace-me"]);
+            "FORMBRICKS_ENVIRONMENT_ID=replace-me",
+            "FORMBRICKS_WEBHOOK_SECRET=replace-me"]);
     }
     if f.forms == FormsChoice::Typebot {
-        lines.extend(&["# Typebot (conversational forms + chatbot flows — AGPL 3.0)",
-            "TYPEBOT_URL=https://typebot.io", "TYPEBOT_API_TOKEN=replace-me"]);
+        lines.extend(&["# Typebot (conversational forms + testimonials + referrals — AGPL 3.0)",
+            "TYPEBOT_URL=https://typebot.io", "TYPEBOT_API_TOKEN=replace-me",
+            "TYPEBOT_WEBHOOK_SECRET=replace-me"]);
     }
     if f.donations.polar {
         lines.extend(&["# Polar (donations / sponsorships)",

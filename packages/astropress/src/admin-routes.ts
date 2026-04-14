@@ -46,6 +46,8 @@ const adminRouteDefinitions = [
   { pattern: "/ap-admin/actions/author-delete", entrypoint: "actions/author-delete.ts", kind: "action" },
   { pattern: "/ap-admin/actions/author-save", entrypoint: "actions/author-save.ts", kind: "action" },
   { pattern: "/ap-admin/actions/comment-moderate", entrypoint: "actions/comment-moderate.ts", kind: "action" },
+  { pattern: "/ap-admin/testimonials", entrypoint: "testimonials.astro", kind: "page" },
+  { pattern: "/ap-admin/actions/testimonial-moderate", entrypoint: "actions/testimonial-moderate.ts", kind: "action" },
   { pattern: "/ap-admin/actions/content-create", entrypoint: "actions/content-create.ts", kind: "action" },
   { pattern: "/ap-admin/actions/content-save", entrypoint: "actions/content-save.ts", kind: "action" },
   { pattern: "/ap-admin/actions/media-delete", entrypoint: "actions/media-delete.ts", kind: "action" },

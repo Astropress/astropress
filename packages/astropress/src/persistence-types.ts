@@ -22,9 +22,41 @@ export interface AuditEvent {
   actorEmail: string;
   actorRole: AdminRole;
   summary: string;
-  targetType: "auth" | "content" | "redirect" | "comment";
+  targetType: "auth" | "content" | "redirect" | "comment" | "testimonial";
   targetId: string;
   createdAt: string;
+}
+
+export type TestimonialStatus = "pending" | "approved" | "rejected" | "featured";
+export type TestimonialSource = "formbricks" | "typebot";
+
+export interface TestimonialSubmission {
+  id: string;
+  name: string;
+  email: string;
+  company?: string;
+  role?: string;
+  beforeState?: string;
+  transformation?: string;
+  specificResult?: string;
+  consentToPublish: boolean;
+  status: TestimonialStatus;
+  source: TestimonialSource;
+  submittedAt: string;
+  approvedAt?: string;
+}
+
+export interface TestimonialSubmissionInput {
+  name: string;
+  email: string;
+  company?: string;
+  role?: string;
+  beforeState?: string;
+  transformation?: string;
+  specificResult?: string;
+  consentToPublish: boolean;
+  source: TestimonialSource;
+  submittedAt: string;
 }
 
 export interface RedirectRule {
@@ -223,6 +255,9 @@ export interface ContentRepository {
 export interface SubmissionRepository {
   submitContact: PersistenceModule["submitContact"];
   getContactSubmissions: PersistenceModule["getContactSubmissions"];
+  submitTestimonial: PersistenceModule["submitTestimonial"];
+  getTestimonials: PersistenceModule["getTestimonials"];
+  moderateTestimonial: PersistenceModule["moderateTestimonial"];
 }
 
 export interface TranslationRepository {

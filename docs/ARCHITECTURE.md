@@ -1,5 +1,9 @@
 # Architecture
 
+> **Two-site model:** Admin server and public static site run on separate origins.
+> Public visitors never make browser requests to the admin server.
+> See [TWO_SITE_DEPLOY.md](./guides/TWO_SITE_DEPLOY.md).
+
 ## The core problem: a package that doesn't know its runtime
 
 Astropress ships as an npm package (`astropress`) that contains all admin pages, components, and business logic. Those admin pages need to call the database. But the database is **not the package's responsibility** — it belongs to the host application.

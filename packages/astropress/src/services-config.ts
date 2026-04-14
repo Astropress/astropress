@@ -16,7 +16,7 @@
  * ```
  */
 
-export type ServiceProvider = "cms" | "shop" | "community" | "email";
+export type ServiceProvider = "cms" | "shop" | "community" | "email" | "testimonials";
 
 export type AstropressServiceConfig = {
   /** Identifier for this service category. One of the four supported providers. */
@@ -68,4 +68,22 @@ export function unregisterAstropressService(provider: ServiceProvider): void {
 /** Remove all registered services (useful in tests). */
 export function clearAstropressServices(): void {
   registeredServices.length = 0;
+}
+
+/**
+ * Register the testimonials service if a URL is configured.
+ * When `config.url` is set, the tool's admin panel is embedded as an iframe
+ * in /ap-admin/services/testimonials. Has no effect when `url` is absent.
+ */
+export function registerTestimonialsServiceIfConfigured(config: { type: string; url?: string; label?: string }): void {
+  if (!config.url) return;
+  registerAstropressService({
+    provider: "testimonials",
+    label: config.label ?? (config.type === "typebot" ? "Typebot" : "Formbricks"),
+    description: config.type === "typebot"
+      ? "Conversational testimonial and referral capture flows."
+      : "Survey and testimonial collection with referral support.",
+    proxyTarget: config.url,
+    adminPath: "/ap-admin/services/testimonials",
+  });
 }

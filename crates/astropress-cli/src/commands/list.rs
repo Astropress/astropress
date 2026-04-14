@@ -62,7 +62,7 @@ pub(crate) fn list_tools() {
     println!("  --schedule           rallly, calcom");
     println!("  --notify             ntfy, gotify");
     println!("  --courses            frappe-lms");
-    println!("  --forms              formbricks, typebot");
+    println!("  --forms / --testimonials  formbricks, typebot  (surveys · testimonials · referrals)");
     println!("  --donations          polar, give-lively, liberapay, pledge-crypto");
     println!("  --video              peertube");
     println!("  --podcast            castopod");

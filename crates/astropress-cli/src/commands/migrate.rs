@@ -74,9 +74,9 @@ const TOOLS: &[MigrationTool] = &[
         description: "Self-hosted; no social login required (MIT)" },
     // ── forms ─────────────────────────────────────────────────────────────
     MigrationTool { slug: "formbricks", name: "Formbricks", category: "forms",
-        description: "Surveys + testimonials + NPS flows (MIT community edition)" },
+        description: "Surveys + testimonials + referral capture + NPS flows (MIT community edition)" },
     MigrationTool { slug: "typebot",    name: "Typebot",    category: "forms",
-        description: "Conversational form + chatbot builder (AGPL 3.0)" },
+        description: "Conversational testimonial and referral capture flows (AGPL 3.0)" },
     // ── video ─────────────────────────────────────────────────────────────
     MigrationTool { slug: "peertube",  name: "PeerTube",  category: "video",
         description: "Self-hosted video with embeds + ActivityPub (AGPL 3.0)" },
