@@ -134,7 +134,7 @@ pub(crate) fn scaffold_new_project(
     Ok(features)
 }
 
-pub(crate) fn run_post_scaffold_setup(project_dir: &Path, features: &AllFeatures) -> Result<(), String> {
+pub(crate) fn run_post_scaffold_setup(project_dir: &Path, features: &AllFeatures, app_host: Option<crate::providers::AppHost>, data_services: Option<crate::providers::DataServices>) -> Result<(), String> {
     println!("\nInstalling dependencies...");
     std::process::Command::new("bun")
         .arg("install").current_dir(project_dir).status()
@@ -165,7 +165,12 @@ pub(crate) fn run_post_scaffold_setup(project_dir: &Path, features: &AllFeatures
     // One-time opt-in consent prompt + project_created event.
     // No-op if suppressed (ASTROPRESS_TELEMETRY=0, DO_NOT_TRACK, CI), plain mode,
     // or the user has already answered the consent question.
-    crate::telemetry::post_new_wizard(features, env!("CARGO_PKG_VERSION"));
+    crate::telemetry::post_new_wizard(
+        features,
+        env!("CARGO_PKG_VERSION"),
+        app_host.map(|h| h.as_str()).unwrap_or("none"),
+        data_services.map(|d| d.as_str()).unwrap_or("none"),
+    );
 
     Ok(())
 }

@@ -8,60 +8,60 @@ Grade scale: `A+ / A / B / C / D / F`
 
 | # | Rubric | Grade |
 |---|--------|-------|
-| 1 | Spec Fidelity | A |
-| 2 | Architecture Quality | A+ |
-| 3 | Test Quality | A+ |
-| 4 | Security Posture | A+ |
-| 5 | Accessibility | A+ |
-| 6 | Performance | A |
-| 7 | Developer Ergonomics | A+ |
-| 8 | Browser / Web API Usage | A+ |
-| 9 | Web Components | A+ |
-| 10 | Spec Coherence (WC First-Class) | A+ |
-| 11 | CI/CD Pipeline | A+ |
-| 12 | Dependency Management | A |
-| 13 | Documentation | A+ |
-| 14 | Observability / Logging | A |
-| 15 | API Design | A+ |
-| 16 | Error Handling | A+ |
-| 17 | TypeScript Quality | A+ |
-| 18 | AI Drivability | A+ |
-| 19 | Internationalization (i18n) | A+ |
-| 20 | SEO Tooling | A |
-| 21 | AEO Tooling | A+ |
-| 22 | First-Party Data | A |
-| 23 | Content Modeling Flexibility | A |
-| 24 | Schema Migration Safety | A |
-| 25 | Caching Strategy | A |
-| 26 | Plugin / Extension API | A |
-| 27 | Image Optimization | A |
-| 28 | Real-Time Collaboration | A |
-| 29 | Privacy by Design | A+ |
-| 30 | Open Source Health | A+ |
-| 31 | Data Portability | A |
-| 32 | Upgrade Path / Migration DX | A |
-| 33 | Import / Migration Tooling | A |
-| 34 | Content Scheduling | A |
-| 35 | E2E Hosted Provider Testing | B |
-| 36 | CLI UX Quality | A+ |
-| 37 | Email Delivery | A+ |
-| 38 | Search / Discovery | A |
-| 39 | Admin CRUD E2E | A+ |
-| 40 | Disaster Recovery | A |
-| 41 | Monitoring Integration | A |
-| 42 | Upgrade Path E2E | A |
-| 43 | System Honesty | A+ |
-| 44 | Multi-site Gateway (astropress-nexus) | A+ |
-| 45 | Scaffold Quality Carryover | A+ |
-| 46 | Mobile-Firstness / Responsive Design | A |
-| 47 | Admin Panel UX Quality | A |
-| 48 | Nexus UX Quality | A+ |
-| 49 | UX Writing & Microcopy | A+ |
-| 50 | Information Architecture | A+ |
-| 51 | Navigation Design | A+ |
-| 52 | Interaction Design & Motion | A |
-| 53 | Cross-Platform Support | A |
-| 54 | Test Artifact Cleanup | A+ |
+| 1 | Spec Fidelity | |
+| 2 | Architecture Quality | |
+| 3 | Test Quality | |
+| 4 | Security Posture | |
+| 5 | Accessibility | |
+| 6 | Performance | |
+| 7 | Developer Ergonomics | |
+| 8 | Browser / Web API Usage | |
+| 9 | Web Components | |
+| 10 | Spec Coherence (WC First-Class) | |
+| 11 | CI/CD Pipeline | |
+| 12 | Dependency Management | |
+| 13 | Documentation | |
+| 14 | Observability / Logging | |
+| 15 | API Design | |
+| 16 | Error Handling | |
+| 17 | TypeScript Quality | |
+| 18 | AI Drivability | |
+| 19 | Internationalization (i18n) | |
+| 20 | SEO Tooling | |
+| 21 | AEO Tooling | |
+| 22 | First-Party Data | |
+| 23 | Content Modeling Flexibility | |
+| 24 | Schema Migration Safety | |
+| 25 | Caching Strategy | |
+| 26 | Plugin / Extension API | |
+| 27 | Image Optimization | |
+| 28 | Real-Time Collaboration | |
+| 29 | Privacy by Design | |
+| 30 | Open Source Health | |
+| 31 | Data Portability | |
+| 32 | Upgrade Path / Migration DX | |
+| 33 | Import / Migration Tooling | |
+| 34 | Content Scheduling | |
+| 35 | E2E Hosted Provider Testing | |
+| 36 | CLI UX Quality | |
+| 37 | Email Delivery | |
+| 38 | Search / Discovery | |
+| 39 | Admin CRUD E2E | |
+| 40 | Disaster Recovery | |
+| 41 | Monitoring Integration | |
+| 42 | Upgrade Path E2E | |
+| 43 | System Honesty | |
+| 44 | Multi-site Gateway (astropress-nexus) | |
+| 45 | Scaffold Quality Carryover | |
+| 46 | Mobile-Firstness / Responsive Design | |
+| 47 | Admin Panel UX Quality | |
+| 48 | Nexus UX Quality | |
+| 49 | UX Writing & Microcopy | |
+| 50 | Information Architecture | |
+| 51 | Navigation Design | |
+| 52 | Interaction Design & Motion | |
+| 53 | Cross-Platform Support | |
+| 54 | Test Artifact Cleanup | |
 
 ## Known gaps
 
@@ -69,23 +69,13 @@ Grade scale: `A+ / A / B / C / D / F`
 - **Rubric 46–52:** UX rubrics added 2026-04-12 — no independent user research or usability testing has been conducted
 - **Rubric 53:** Windows, macOS, and Linux now have CI smoke coverage and shell parity, but BSD remains best-effort rather than verified support
 
-## Grade changes (2026-04-14 audit)
+## Grade changes
 
-| Rubric | Old | New | Reason |
-|--------|-----|-----|--------|
-| 37 — Email Delivery | A | A+ | Runtime, CLI, and docs now share one canonical `mock | resend | smtp` contract with passing tests |
-| 43 — System Honesty | A | A+ | Public docs, BDD text, and user-facing crypto/readiness claims are checked against a canonical truth source in CI |
-| 44 — Multi-site Gateway | A | A+ | `astropress-nexus` now includes a tested operator dashboard, detail pages, and bulk refresh/redeploy actions |
-| 48 — Nexus UX Quality | A | A+ | Nexus now has a real operator UI with search, per-site actions, degraded-state surfacing, and responsive cards |
-| 49 — UX Writing & Microcopy | A | A+ | `docs/UX_WRITING.md` and `bun run audit:microcopy` now enforce higher-signal user-facing copy |
-| 51 — Navigation Design | A | A+ | Command palette, keyboard shortcut help, recent-item nav, breadcrumbs coverage, and mobile nav behavior are now tested |
-| 54 — Test Artifact Cleanup | B | A+ | Example/admin-harness verification now runs inside temp data roots and CI fails if the repo is left dirty |
+_No grades recorded yet — pending fresh evaluation._
 
 ---
 
 ## Rubric 43 — System Honesty
-
-**Grade: A+**
 
 Measures whether the repo's public claims, CLI output, and failure reporting match the implementation instead of presenting a cleaner story than the code can actually prove.
 
@@ -318,8 +308,6 @@ Measures the quality of transitions, feedback loops, loading states, and micro-i
 
 ## Rubric 53 — Cross-Platform Support
 
-**Grade: A**
-
 Measures whether the developer workflow, CLI, release artifacts, and test matrix are genuinely portable across Windows, macOS, Linux, and BSD-family systems.
 
 ### Evidence
@@ -342,8 +330,6 @@ Measures whether the developer workflow, CLI, release artifacts, and test matrix
 ---
 
 ## Rubric 54 — Test Artifact Cleanup
-
-**Grade: B**
 
 Measures whether automated tests and local verification runs clean up their temporary directories, generated databases, and repo-local artifacts so reruns do not leave avoidable residue behind.
 

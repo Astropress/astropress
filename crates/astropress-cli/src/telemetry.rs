@@ -132,13 +132,13 @@ pub(crate) fn run_telemetry_command(action: TelemetryAction) {
 /// Called at the end of `run_post_scaffold_setup`. Asks for consent once (if
 /// not already answered and not suppressed), then fires a `project_created`
 /// event if the user opts in.
-pub(crate) fn post_new_wizard(features: &AllFeatures, cli_version: &str) {
+pub(crate) fn post_new_wizard(features: &AllFeatures, cli_version: &str, app_host: &str, data_services: &str) {
     if is_telemetry_suppressed() || crate::tui::is_plain() {
         return;
     }
     let opted_in = ask_telemetry_consent();
     if opted_in {
-        let _ = send_project_created(features, cli_version);
+        let _ = send_project_created(features, cli_version, app_host, data_services);
     }
 }
 
@@ -281,13 +281,15 @@ fn ask_telemetry_consent() -> bool {
 // Fire-and-forget sends
 // ---------------------------------------------------------------------------
 
-fn send_project_created(f: &AllFeatures, version: &str) -> Result<(), String> {
+fn send_project_created(f: &AllFeatures, version: &str, app_host: &str, data_services: &str) -> Result<(), String> {
     // Debug representations of enums produce clean variant names ("HyperSwitch",
     // "Postiz", etc.) — no paths, no content, no credentials.
     let payload = serde_json::json!({
-        "event":   "project_created",
-        "version": version,
-        "os":      std::env::consts::OS,
+        "event":        "project_created",
+        "version":      version,
+        "os":           std::env::consts::OS,
+        "app_host":     app_host,
+        "data_services": data_services,
         "features": {
             "cms":                 format!("{:?}", f.cms),
             "analytics":           format!("{:?}", f.analytics),
