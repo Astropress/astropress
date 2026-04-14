@@ -3,6 +3,7 @@ use std::path::Path;
 use std::process::Command as ProcessCommand;
 
 use serde::{Deserialize, Serialize};
+use url::Url;
 
 use crate::providers::{AppHost, DataServices, LocalProvider};
 use crate::cli_config::env::{merge_env_overrides, read_env_file};
@@ -98,12 +99,32 @@ pub(crate) struct ContentServicesReport {
     pub(crate) manifest_file: Option<String>,
 }
 
+fn file_url_from_path(path: &Path) -> Result<String, String> {
+    #[cfg(windows)]
+    let normalized_path = {
+        let raw = path.to_string_lossy();
+        let normalized = raw
+            .strip_prefix(r"\\?\UNC\")
+            .map(|value| format!(r"\\{value}"))
+            .or_else(|| raw.strip_prefix(r"\\?\").map(ToOwned::to_owned))
+            .unwrap_or_else(|| raw.into_owned());
+        std::path::PathBuf::from(normalized)
+    };
+
+    #[cfg(not(windows))]
+    let normalized_path = path.to_path_buf();
+
+    Url::from_file_path(&normalized_path)
+        .map(|url| url.into())
+        .map_err(|()| format!("Cannot convert path into a file URL: {}", normalized_path.display()))
+}
+
 pub(crate) fn package_module_import(module_path: &str, project_dir: Option<&Path>) -> Result<String, String> {
     let src_root = crate::find_astropress_src(project_dir)
         .ok_or_else(|| "Cannot locate astropress package. Run `bun install` in your project directory.".to_string())?;
     let full_path = src_root.join(module_path);
     let canonical = full_path.canonicalize().map_err(crate::io_error)?;
-    Ok(format!("file://{}", canonical.display()))
+    file_url_from_path(&canonical)
 }
 
 pub(crate) fn load_project_env_contract(project_dir: &Path) -> Result<ProjectEnvContract, String> {
