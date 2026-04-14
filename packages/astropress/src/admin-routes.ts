@@ -83,7 +83,7 @@ const adminRouteDefinitions = [
  *
  * @example
  * ```ts
- * import { ASTROPRESS_ADMIN_BASE_PATH } from "astropress";
+ * import { ASTROPRESS_ADMIN_BASE_PATH } from "@astropress-diy/astropress";
  *
  * const adminUrl = `${siteUrl}${ASTROPRESS_ADMIN_BASE_PATH}`; // "https://example.com/ap-admin"
  * ```
@@ -108,7 +108,7 @@ export function resolveAstropressAdminRouteEntrypoints(basePath: string) {
  *
  * @example
  * ```ts
- * import { createAstropressAdminRouteInjectionPlan } from "astropress";
+ * import { createAstropressAdminRouteInjectionPlan } from "@astropress-diy/astropress";
  *
  * const routes = createAstropressAdminRouteInjectionPlan("src/pages");
  * for (const route of routes) {

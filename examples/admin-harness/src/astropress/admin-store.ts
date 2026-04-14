@@ -1,4 +1,4 @@
-import { createAstropressAdminStoreModule } from "astropress/integration";
+import { createAstropressAdminStoreModule } from "@astropress-diy/astropress/integration";
 
 import { sqliteAdminStore } from "./runtime.ts";
 

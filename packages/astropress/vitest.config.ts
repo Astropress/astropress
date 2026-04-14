@@ -11,14 +11,14 @@ export default defineConfig({
       ".js": [".ts", ".js"],
     },
     alias: [
-      // Exact-match only so subpath imports like "astropress/api-middleware.js" fall through
+      // Exact-match only so subpath imports like "@astropress-diy/astropress/api-middleware.js" fall through
       // to the alias rules below (required for page-handler test imports).
-      { find: /^astropress$/, replacement: fileURLToPath(new URL("./index.ts", import.meta.url)) },
+      { find: /^@astropress-diy\/astropress$/, replacement: fileURLToPath(new URL("./index.ts", import.meta.url)) },
       // Explicit aliases for subpaths used by pages/ap-api/v1/* handlers
-      { find: /^astropress\/local-runtime-modules(?:\.js)?$/, replacement: fileURLToPath(new URL("./src/local-runtime-modules.ts", import.meta.url)) },
-      { find: /^astropress\/api-middleware(?:\.js)?$/, replacement: fileURLToPath(new URL("./src/api-middleware.ts", import.meta.url)) },
-      { find: /^astropress\/platform-contracts(?:\.js)?$/, replacement: fileURLToPath(new URL("./src/platform-contracts.ts", import.meta.url)) },
-      { find: /^astropress\/import\/wordpress(?:\.js)?$/, replacement: fileURLToPath(new URL("./src/import/wordpress.ts", import.meta.url)) },
+      { find: /^@astropress-diy\/astropress\/local-runtime-modules(?:\.js)?$/, replacement: fileURLToPath(new URL("./src/local-runtime-modules.ts", import.meta.url)) },
+      { find: /^@astropress-diy\/astropress\/api-middleware(?:\.js)?$/, replacement: fileURLToPath(new URL("./src/api-middleware.ts", import.meta.url)) },
+      { find: /^@astropress-diy\/astropress\/platform-contracts(?:\.js)?$/, replacement: fileURLToPath(new URL("./src/platform-contracts.ts", import.meta.url)) },
+      { find: /^@astropress-diy\/astropress\/import\/wordpress(?:\.js)?$/, replacement: fileURLToPath(new URL("./src/import/wordpress.ts", import.meta.url)) },
       { find: "cloudflare:workers", replacement: fileURLToPath(new URL("./src/cloudflare-workers-stub.ts", import.meta.url)) },
     ],
   },

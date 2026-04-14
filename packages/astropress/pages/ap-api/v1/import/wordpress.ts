@@ -1,8 +1,8 @@
 import type { APIRoute } from "astro";
-import { withApiRequest, jsonOk, apiErrors } from "astropress/api-middleware.js";
-import { loadLocalAdminStore } from "astropress/local-runtime-modules.js";
-import { getCmsConfig } from "astropress";
-import { createAstropressWordPressImportSource } from "astropress/import/wordpress.js";
+import { withApiRequest, jsonOk, apiErrors } from "@astropress-diy/astropress/api-middleware.js";
+import { loadLocalAdminStore } from "@astropress-diy/astropress/local-runtime-modules.js";
+import { getCmsConfig } from "@astropress-diy/astropress";
+import { createAstropressWordPressImportSource } from "@astropress-diy/astropress/import/wordpress.js";
 
 export const POST: APIRoute = async (context) => {
   if (!getCmsConfig().api?.enabled) {

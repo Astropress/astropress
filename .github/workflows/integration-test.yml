@@ -19,6 +19,6 @@ jobs:
       - name: Install dependencies
         run: bun install
       - name: Build package (required for node:sqlite exports)
-        run: bun run --filter astropress build
+        run: bun run --filter "@astropress-diy/astropress" build
       - name: D1 local integration tests
-        run: bun run --filter astropress test --reporter=verbose tests/d1-local-integration.test.ts
+        run: bun run --filter "@astropress-diy/astropress" test --reporter=verbose tests/d1-local-integration.test.ts

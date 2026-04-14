@@ -25,7 +25,7 @@ import {
   readAstropressSupabaseHostedConfig,
   readAstropressTursoHostedConfig,
   resolveAstropressHostedProvider,
-} from "astropress";
+} from "@astropress-diy/astropress";
 import {
   createAstropressAppwriteHostedAdapter as createDirectAppwriteHostedAdapter,
   readAstropressAppwriteHostedConfig as readDirectAppwriteHostedConfig,

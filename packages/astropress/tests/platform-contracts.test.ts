@@ -7,7 +7,7 @@ import {
   type MediaAssetRecord,
   type RevisionRecord,
   type AuthUser,
-} from "astropress";
+} from "@astropress-diy/astropress";
 
 function createInMemoryAdapter(): AstropressPlatformAdapter {
   const records = new Map<string, ContentStoreRecord>();

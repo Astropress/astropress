@@ -1,7 +1,7 @@
 import type { APIRoute } from "astro";
-import { moderateRuntimeTestimonial } from "astropress";
-import { withAdminFormAction } from "astropress";
-import type { TestimonialStatus } from "astropress";
+import { moderateRuntimeTestimonial } from "@astropress-diy/astropress";
+import { withAdminFormAction } from "@astropress-diy/astropress";
+import type { TestimonialStatus } from "@astropress-diy/astropress";
 
 export const POST: APIRoute = async (context) =>
   withAdminFormAction(context, { failurePath: "/ap-admin/testimonials" }, async ({ actor, formData, locals, redirect, fail }) => {

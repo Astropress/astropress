@@ -1,5 +1,5 @@
 import type { APIRoute } from "astro";
-import { invalidateAstropressAdminSlugCache, saveRuntimeSettings, withAdminFormAction } from "astropress";
+import { invalidateAstropressAdminSlugCache, saveRuntimeSettings, withAdminFormAction } from "@astropress-diy/astropress";
 
 const RESERVED_SLUGS = new Set(["", "api", "assets", "_astro", "cdn-cgi"]);
 const VALID_SLUG = /^[a-z0-9][a-z0-9-]*[a-z0-9]$|^[a-z0-9]$/;

@@ -4,9 +4,9 @@ import { fileURLToPath } from "node:url";
 
 import { DatabaseSync } from "node:sqlite";
 
-import { createAstropressSqliteAdminRuntime } from "astropress/sqlite-admin-runtime";
-import { createAstropressSqliteSeedToolkit, readAstropressSqliteSchemaSql } from "astropress/sqlite-bootstrap";
-import type { RedirectRuleSeed, SeededComment } from "astropress/sqlite-bootstrap";
+import { createAstropressSqliteAdminRuntime } from "@astropress-diy/astropress/sqlite-admin-runtime";
+import { createAstropressSqliteSeedToolkit, readAstropressSqliteSchemaSql } from "@astropress-diy/astropress/sqlite-bootstrap";
+import type { RedirectRuleSeed, SeededComment } from "@astropress-diy/astropress/sqlite-bootstrap";
 
 const workspaceRoot = fileURLToPath(new URL("../../", import.meta.url));
 const configuredDataDirectory = process.env.ASTROPRESS_DATA_ROOT?.trim();

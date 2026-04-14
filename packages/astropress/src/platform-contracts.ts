@@ -337,7 +337,7 @@ export interface AstropressPlatformAdapter {
  *
  * @example
  * ```ts
- * import { normalizeProviderCapabilities } from "astropress";
+ * import { normalizeProviderCapabilities } from "@astropress-diy/astropress";
  *
  * const caps = normalizeProviderCapabilities({ name: "sqlite", database: true });
  * // { name: "sqlite", database: true, staticPublishing: false, hostedAdmin: false, ... }
@@ -367,7 +367,7 @@ export function normalizeProviderCapabilities(
  *
  * @example
  * ```ts
- * import { assertProviderContract, createAstropressSqliteAdapter } from "astropress";
+ * import { assertProviderContract, createAstropressSqliteAdapter } from "@astropress-diy/astropress";
  *
  * const adapter = createAstropressSqliteAdapter({ db });
  * assertProviderContract(adapter); // throws if adapter is incomplete

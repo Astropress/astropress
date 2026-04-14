@@ -1,5 +1,5 @@
 import type { APIRoute } from "astro";
-import { requireAdminFormAction } from "astropress";
+import { requireAdminFormAction } from "@astropress-diy/astropress";
 import { parseWordPressExport } from "../../../src/import/wordpress-xml.js";
 import { applyImportToLocalRuntime } from "../../../src/import/wordpress-apply.js";
 import { parseWixExport } from "../../../src/import/wix.js";

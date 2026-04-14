@@ -17,9 +17,9 @@
  */
 
 import type { APIRoute } from "astro";
-import { withApiRequest, jsonOk, apiErrors } from "astropress/api-middleware.js";
-import { loadLocalAdminStore } from "astropress/local-runtime-modules.js";
-import { getCmsConfig } from "astropress";
+import { withApiRequest, jsonOk, apiErrors } from "@astropress-diy/astropress/api-middleware.js";
+import { loadLocalAdminStore } from "@astropress-diy/astropress/local-runtime-modules.js";
+import { getCmsConfig } from "@astropress-diy/astropress";
 import { listRuntimeContentStates } from "../../src/runtime-page-store.js";
 
 const startTime = Date.now();

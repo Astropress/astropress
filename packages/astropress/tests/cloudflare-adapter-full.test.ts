@@ -1,7 +1,7 @@
 import { DatabaseSync } from "node:sqlite";
 
 import { beforeEach, describe, expect, it } from "vitest";
-import { createAstropressCloudflareAdapter, registerCms } from "astropress";
+import { createAstropressCloudflareAdapter, registerCms } from "@astropress-diy/astropress";
 import { SqliteBackedD1Database, createSeededCloudflareDatabase } from "./helpers/provider-test-fixtures.js";
 import { makeDb, STANDARD_CMS_CONFIG } from "./helpers/make-db.js";
 

@@ -58,7 +58,7 @@ async function main() {
       rule: "no-js-in-src",
       message:
         "Committed .js file inside packages/astropress/src/ or at packages/astropress/index.js. " +
-        "Run `bun run --filter astropress build` to emit into dist/ instead and delete the stray .js.",
+        "Run `bun run --filter @astropress-diy/astropress build` to emit into dist/ instead and delete the stray .js.",
     });
   }
 
