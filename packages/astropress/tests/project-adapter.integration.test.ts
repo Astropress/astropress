@@ -21,26 +21,8 @@ describe("project adapter integration", () => {
         dbPath: join(workspace, "project-adapter.sqlite"),
       },
     });
-    const hostedAdapter = createAstropressProjectAdapter({
-      env: {
-        ASTROPRESS_RUNTIME_MODE: "hosted",
-        ASTROPRESS_HOSTED_PROVIDER: "runway",
-        RUNWAY_API_TOKEN: "token",
-        RUNWAY_PROJECT_ID: "project-adapter-runway",
-      },
-      hosted: {
-        content: localAdapter.content,
-        media: localAdapter.media,
-        revisions: localAdapter.revisions,
-        auth: localAdapter.auth,
-      },
-    });
 
     expect(localAdapter.capabilities.name).toBe("supabase");
-    expect(hostedAdapter.capabilities.name).toBe("runway");
-    expect(await hostedAdapter.preview?.create({ recordId: "project-adapter" })).toEqual({
-      url: "https://runway.example/project-adapter-runway/preview",
-    });
 
     await rm(workspace, { recursive: true, force: true });
   });

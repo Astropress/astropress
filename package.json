@@ -34,6 +34,7 @@
     "dev:example": "bun run --filter astropress-example-gh-pages dev",
     "audit:carbon": "bunx size-limit --config tooling/size-limit.json && bun run tooling/scripts/carbon-audit.ts --domains-only",
     "audit:aeo": "bun run tooling/scripts/audit-aeo.ts",
+    "audit:providers": "bun run tooling/scripts/audit-providers.ts",
     "check:version": "bun run tooling/scripts/check-version-bump.ts",
     "docs:api": "bun run tooling/scripts/generate-api-docs.ts",
     "docs:api:check": "bun run tooling/scripts/generate-api-docs.ts --check",

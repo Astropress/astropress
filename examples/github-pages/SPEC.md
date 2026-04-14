@@ -28,4 +28,4 @@ The GitHub Pages example is responsible for:
 - a public example site
 - docs pointing to the org-level and repo-level specs
 - a documented host runtime implementation example
-- explanation of how the same content model can target GitHub Pages, Cloudflare, Supabase, and Runway
+- explanation of how the same content model can target GitHub Pages, Cloudflare, and Supabase

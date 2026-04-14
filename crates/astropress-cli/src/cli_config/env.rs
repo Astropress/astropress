@@ -89,7 +89,7 @@ pub(crate) fn migrate_env_map(
             let app_host = match value.as_str() {
                 "cloudflare" => "cloudflare-pages",
                 "github-pages" | "vercel" | "netlify" | "render-static" | "render-web"
-                | "gitlab-pages" | "runway" | "custom" => value.as_str(),
+                | "gitlab-pages" | "custom" => value.as_str(),
                 _ => "",
             };
             if !app_host.is_empty() {
@@ -108,11 +108,6 @@ pub(crate) fn migrate_env_map(
             env_values.insert(
                 "ASTROPRESS_SERVICE_ORIGIN".into(),
                 format!("{}/functions/astropress", endpoint.trim_end_matches('/')),
-            );
-        } else if let Some(project_id) = env_values.get("RUNWAY_PROJECT_ID").cloned() {
-            env_values.insert(
-                "ASTROPRESS_SERVICE_ORIGIN".into(),
-                format!("https://runway.example/{project_id}/astropress-api"),
             );
         }
     }

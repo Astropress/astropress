@@ -12,8 +12,6 @@ import {
   createAstropressNhostHostedAdapter,
   createAstropressPocketbaseAdapter,
   createAstropressPocketbaseHostedAdapter,
-  createAstropressRunwayAdapter,
-  createAstropressRunwayHostedAdapter,
   createAstropressSupabaseAdapter,
   createAstropressSupabaseHostedAdapter,
   createAstropressTursoHostedAdapter,
@@ -21,7 +19,6 @@ import {
   readAstropressNeonHostedConfig,
   readAstropressNhostHostedConfig,
   readAstropressPocketbaseHostedConfig,
-  readAstropressRunwayHostedConfig,
   readAstropressSupabaseHostedConfig,
   readAstropressTursoHostedConfig,
   resolveAstropressHostedProvider,
@@ -35,10 +32,6 @@ import {
   readAstropressPocketbaseHostedConfig as readDirectPocketbaseHostedConfig,
 } from "../src/adapters/pocketbase.js";
 import {
-  createAstropressRunwayHostedAdapter as createDirectRunwayHostedAdapter,
-  readAstropressRunwayHostedConfig as readDirectRunwayHostedConfig,
-} from "../src/adapters/runway.js";
-import {
   createAstropressSupabaseHostedAdapter as createDirectSupabaseHostedAdapter,
   readAstropressSupabaseHostedConfig as readDirectSupabaseHostedConfig,
 } from "../src/adapters/supabase.js";
@@ -46,37 +39,6 @@ import { createAstropressLocalAdapter } from "../src/adapters/local.js";
 import { createHostedStores } from "./helpers/provider-test-fixtures.js";
 
 describe("hosted provider contracts", () => {
-  it("lets Supabase and Runway use explicit hosted store modules", async () => {
-    const supabaseHosted = createAstropressHostedPlatformAdapter({
-      providerName: "supabase",
-      ...createHostedStores(),
-    });
-    const supabase = createAstropressSupabaseAdapter({
-      backingAdapter: supabaseHosted,
-    });
-    const runway = createAstropressRunwayAdapter({
-      backingAdapter: supabaseHosted,
-    });
-
-    await supabase.content.save({
-      id: "hosted-remote-post",
-      kind: "post",
-      slug: "hosted-remote-post",
-      status: "published",
-      title: "Hosted remote post",
-    });
-
-    expect(await runway.content.get("hosted-remote-post")).toMatchObject({
-      slug: "hosted-remote-post",
-      title: "Hosted remote post",
-    });
-    expect(await supabase.auth.signIn("admin@example.com", "password")).toMatchObject({
-      email: "admin@example.com",
-      role: "admin",
-    });
-    expect(runway.capabilities.name).toBe("runway");
-  });
-
   it("lets Appwrite and PocketBase use explicit hosted store modules", async () => {
     const hosted = createAstropressHostedPlatformAdapter({
       providerName: "custom",
@@ -111,35 +73,22 @@ describe("hosted provider contracts", () => {
     });
   });
 
-  it("creates Supabase and Runway hosted adapters with package-owned remote api defaults", async () => {
+  it("creates Supabase hosted adapters with package-owned remote api defaults", async () => {
     const supabaseConfig = readDirectSupabaseHostedConfig({
       SUPABASE_URL: "https://demo.supabase.co",
       SUPABASE_SERVICE_ROLE_KEY: "service",
-    });
-    const runwayConfig = readDirectRunwayHostedConfig({
-      RUNWAY_API_TOKEN: "token",
-      RUNWAY_PROJECT_ID: "project-123",
     });
 
     const supabase = createDirectSupabaseHostedAdapter({
       config: supabaseConfig,
       fetchImpl: async () => new Response(JSON.stringify([]), { status: 200 }),
     });
-    const runway = createDirectRunwayHostedAdapter({
-      config: runwayConfig,
-      fetchImpl: async () => new Response(JSON.stringify([]), { status: 200 }),
-    });
 
     expect(supabaseConfig.apiBaseUrl).toContain("demo.supabase.co/functions/v1/astropress");
-    expect(runwayConfig.apiBaseUrl).toContain("runway.example/project-123/astropress-api");
     expect((await supabase.preview?.create({ recordId: "hello" }))?.url).toContain(
       "demo.supabase.co/preview/preview/hello",
     );
-    expect((await runway.preview?.create({ recordId: "hello" }))?.url).toContain(
-      "runway.example/project-123/preview/preview/hello",
-    );
     expect(supabase.capabilities.hostedAdmin).toBe(true);
-    expect(runway.capabilities.serverRuntime).toBe(true);
   });
 
   it("creates Appwrite and PocketBase hosted adapters with package-owned remote api defaults", async () => {
@@ -183,17 +132,6 @@ describe("hosted provider contracts", () => {
       url: "https://example.supabase.co",
       serviceRoleKey: "service",
       apiBaseUrl: "https://example.supabase.co/functions/v1/astropress",
-    });
-    expect(
-      readAstropressRunwayHostedConfig({
-        RUNWAY_API_TOKEN: "token",
-        RUNWAY_PROJECT_ID: "project-123",
-      }),
-    ).toEqual({
-      apiToken: "token",
-      projectId: "project-123",
-      apiBaseUrl: "https://runway.example/project-123/astropress-api",
-      previewBaseUrl: "https://runway.example/project-123",
     });
     expect(
       readAstropressAppwriteHostedConfig({
@@ -258,7 +196,6 @@ describe("hosted provider contracts", () => {
 
   it("guards hosted provider config and builds hosted adapters with preview URLs", async () => {
     expect(() => readAstropressSupabaseHostedConfig({})).toThrow(/SUPABASE_URL/);
-    expect(() => readAstropressRunwayHostedConfig({})).toThrow(/RUNWAY_API_TOKEN/);
     expect(() => readAstropressAppwriteHostedConfig({})).toThrow(/APPWRITE_ENDPOINT/);
     expect(() => readAstropressPocketbaseHostedConfig({})).toThrow(/POCKETBASE_URL/);
     expect(() => readAstropressNhostHostedConfig({})).toThrow(/NHOST_SUBDOMAIN/);
@@ -270,13 +207,6 @@ describe("hosted provider contracts", () => {
       env: {
         SUPABASE_URL: "https://example.supabase.co",
         SUPABASE_SERVICE_ROLE_KEY: "service",
-      },
-      ...hostedStores,
-    });
-    const runway = createAstropressRunwayHostedAdapter({
-      env: {
-        RUNWAY_API_TOKEN: "token",
-        RUNWAY_PROJECT_ID: "project-123",
       },
       ...hostedStores,
     });
@@ -326,14 +256,8 @@ describe("hosted provider contracts", () => {
       title: "Hosted config post",
     });
 
-    expect(await runway.content.get("hosted-config-post")).toMatchObject({
-      slug: "hosted-config-post",
-    });
     expect(await supabase.preview?.create({ recordId: "hosted-config-post" })).toEqual({
       url: "https://example.supabase.co/preview",
-    });
-    expect(await runway.preview?.create({ recordId: "hosted-config-post" })).toEqual({
-      url: "https://runway.example/project-123/preview",
     });
     expect(await appwrite.preview?.create({ recordId: "hosted-config-post" })).toEqual({
       url: "https://cloud.appwrite.io/v1/console/project-project-123/preview",
@@ -350,7 +274,6 @@ describe("hosted provider contracts", () => {
 
   it("selects hosted providers from explicit options or env", async () => {
     expect(resolveAstropressHostedProvider(undefined)).toBe("supabase");
-    expect(resolveAstropressHostedProvider("runway")).toBe("runway");
     expect(resolveAstropressHostedProvider("appwrite")).toBe("appwrite");
     expect(resolveAstropressHostedProvider("pocketbase")).toBe("pocketbase");
     expect(resolveAstropressHostedProvider("nhost")).toBe("nhost");
@@ -367,17 +290,6 @@ describe("hosted provider contracts", () => {
       ...hostedStores,
     });
 
-    const runway = createAstropressHostedAdapter({
-      provider: "runway",
-      env: {
-        RUNWAY_API_TOKEN: "token",
-        RUNWAY_PROJECT_ID: "selector-runway",
-      },
-      content: hostedStores.content,
-      media: hostedStores.media,
-      revisions: hostedStores.revisions,
-      auth: hostedStores.auth,
-    });
     const appwrite = createAstropressHostedAdapter({
       provider: "appwrite",
       env: {
@@ -437,7 +349,6 @@ describe("hosted provider contracts", () => {
     });
 
     expect(supabase.capabilities.name).toBe("supabase");
-    expect(runway.capabilities.name).toBe("runway");
     expect(appwrite.capabilities.objectStorage).toBe(true);
     expect(pocketbase.capabilities.database).toBe(true);
     expect(nhost.capabilities.name).toBe("nhost");
@@ -445,9 +356,6 @@ describe("hosted provider contracts", () => {
     expect(turso.capabilities.name).toBe("turso");
     expect(await supabase.preview?.create({ recordId: "x" })).toEqual({
       url: "https://selector.supabase.co/preview",
-    });
-    expect(await runway.preview?.create({ recordId: "x" })).toEqual({
-      url: "https://runway.example/selector-runway/preview",
     });
     expect(await appwrite.preview?.create({ recordId: "x" })).toEqual({
       url: "https://cloud.appwrite.io/v1/console/project-selector-appwrite/preview",
@@ -468,22 +376,7 @@ describe("hosted provider contracts", () => {
       workspaceRoot: await mkdtemp(join(tmpdir(), "astropress-local-env-")),
       dbPath: join(tmpdir(), `astropress-local-env-${Date.now()}.sqlite`),
     });
-    const hostedRunway = createAstropressHostedAdapter({
-      env: {
-        ASTROPRESS_HOSTED_PROVIDER: "runway",
-        RUNWAY_API_TOKEN: "token",
-        RUNWAY_PROJECT_ID: "env-map-runway",
-      },
-      content: localSupabase.content,
-      media: localSupabase.media,
-      revisions: localSupabase.revisions,
-      auth: localSupabase.auth,
-    });
 
     expect(localSupabase.capabilities.name).toBe("supabase");
-    expect(hostedRunway.capabilities.name).toBe("runway");
-    expect(await hostedRunway.preview?.create({ recordId: "env-map" })).toEqual({
-      url: "https://runway.example/env-map-runway/preview",
-    });
   });
 });

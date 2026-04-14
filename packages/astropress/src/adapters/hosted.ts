@@ -17,10 +17,6 @@ import {
   type AstropressPocketbaseHostedAdapterOptions,
 } from "./pocketbase";
 import {
-  createAstropressRunwayHostedAdapter,
-  type AstropressRunwayHostedAdapterOptions,
-} from "./runway";
-import {
   createAstropressSupabaseHostedAdapter,
   type AstropressSupabaseHostedAdapterOptions,
 } from "./supabase";
@@ -31,7 +27,6 @@ import {
 
 export type AstropressHostedProviderKind =
   | "supabase"
-  | "runway"
   | "appwrite"
   | "pocketbase"
   | "nhost"
@@ -42,7 +37,6 @@ export type AstropressHostedAdapterOptions =
   | ({ provider?: "supabase"; env?: Record<string, string | undefined> } & AstropressSupabaseHostedAdapterOptions)
   | ({ provider: "appwrite"; env?: Record<string, string | undefined> } & AstropressAppwriteHostedAdapterOptions)
   | ({ provider: "pocketbase"; env?: Record<string, string | undefined> } & AstropressPocketbaseHostedAdapterOptions)
-  | ({ provider: "runway"; env?: Record<string, string | undefined> } & AstropressRunwayHostedAdapterOptions)
   | ({ provider: "nhost"; env?: Record<string, string | undefined> } & AstropressNhostHostedAdapterOptions)
   | ({ provider: "neon"; env?: Record<string, string | undefined> } & AstropressNeonHostedAdapterOptions)
   | ({ provider: "turso"; env?: Record<string, string | undefined> } & AstropressTursoHostedAdapterOptions);
@@ -61,12 +55,6 @@ export function createAstropressHostedAdapter(
   const provider = resolveAstropressHostedProvider(
     options.provider ?? resolveAstropressHostedProviderFromEnv(options.env ?? process.env),
   );
-
-  if (provider === "runway") {
-    return createAstropressRunwayHostedAdapter(
-      options as Extract<AstropressHostedAdapterOptions, { provider: "runway" }>,
-    );
-  }
 
   if (provider === "appwrite") {
     return createAstropressAppwriteHostedAdapter(

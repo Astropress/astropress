@@ -591,7 +591,6 @@ and exposes it as `capabilities.hostPanel` for admin-role navigation.
 | Local / GitHub Pages + SQLite | SQLite file | Last `astropress backup` snapshot | < 5 min |
 | Cloudflare Pages + D1 | Cloudflare D1 | D1 time-travel (30 days) | < 15 min |
 | Supabase | PostgreSQL | Point-in-time recovery (up to 7 days on Pro) | < 30 min |
-| Runway | Managed SQLite | Provider snapshot schedule | < 30 min |
 
 ### Failure runbooks
 

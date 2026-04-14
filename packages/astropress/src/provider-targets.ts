@@ -61,23 +61,6 @@ const firstPartyProviderTargets: Record<ProviderKind, FirstPartyProviderTarget> 
       gitSync: true,
     }),
   },
-  runway: {
-    id: "runway",
-    label: "Runway",
-    runtime: "app-platform",
-    canonicalDeploySurface: "runway-app",
-    adminSurface: "astropress",
-    capabilities: normalizeProviderCapabilities({
-      name: "runway",
-      staticPublishing: false,
-      hostedAdmin: true,
-      previewEnvironments: true,
-      serverRuntime: true,
-      database: true,
-      objectStorage: true,
-      gitSync: true,
-    }),
-  },
   custom: {
     id: "custom",
     label: "Custom Adapter",

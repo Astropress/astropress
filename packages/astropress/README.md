@@ -26,7 +26,6 @@ Open `http://localhost:4321/ap-admin` and log in.
 | `cloudflare-pages` | `cloudflare` | D1 + R2; full edge deployment |
 | `vercel` or `netlify` | `supabase` | Postgres + Storage |
 | `render-web` | `appwrite` | Self-hosted backend services |
-| `runway` | `runway` | Bundled managed path |
 
 ## Adapter status
 
@@ -35,7 +34,6 @@ Open `http://localhost:4321/ap-admin` and log in.
 | SQLite (local) | Full — reference implementation |
 | Cloudflare D1 + R2 | Full |
 | Supabase (Postgres + Storage) | Full |
-| Runway | Full |
 | Appwrite | Full |
 | Neon | Full |
 | Turso | Full |

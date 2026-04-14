@@ -1,0 +1,133 @@
+{
+  "_comment": "Source of truth for all hosting providers and data services supported by Astropress. Every entry in AstropressAppHost and AstropressDataServices must appear here. audit:providers (tooling/scripts/audit-providers.ts) enforces this. To add a new provider: add it here first with a verified URL, then add it to the type system.",
+  "appHosts": [
+    {
+      "id": "github-pages",
+      "label": "GitHub Pages",
+      "url": "https://pages.github.com",
+      "notes": "Free static hosting for public repos. No server runtime."
+    },
+    {
+      "id": "cloudflare-pages",
+      "label": "Cloudflare Pages",
+      "url": "https://pages.cloudflare.com",
+      "notes": "Free tier. Static + edge runtime via Workers. D1 and R2 available."
+    },
+    {
+      "id": "vercel",
+      "label": "Vercel",
+      "url": "https://vercel.com",
+      "notes": "Hobby tier is free but non-commercial only. Pro required for commercial use."
+    },
+    {
+      "id": "netlify",
+      "label": "Netlify",
+      "url": "https://netlify.com",
+      "notes": "Free tier available. Serverless functions supported."
+    },
+    {
+      "id": "render-static",
+      "label": "Render Static Site",
+      "url": "https://render.com",
+      "notes": "Free static site hosting on Render."
+    },
+    {
+      "id": "render-web",
+      "label": "Render Web Service",
+      "url": "https://render.com",
+      "notes": "Paid web service tier. Node runtime."
+    },
+    {
+      "id": "gitlab-pages",
+      "label": "GitLab Pages",
+      "url": "https://docs.gitlab.com/ee/user/project/pages/",
+      "notes": "Free static hosting for GitLab repos. No server runtime."
+    },
+    {
+      "id": "fly-io",
+      "label": "Fly.io",
+      "url": "https://fly.io",
+      "notes": "Usage-based billing. Docker/VM-based. Deploy with flyctl."
+    },
+    {
+      "id": "coolify",
+      "label": "Coolify",
+      "url": "https://coolify.io",
+      "notes": "Open-source self-hosted PaaS. Deploy via git push or Docker Compose."
+    },
+    {
+      "id": "digitalocean",
+      "label": "DigitalOcean App Platform",
+      "url": "https://www.digitalocean.com/products/app-platform",
+      "notes": "Paid. Managed container and static hosting."
+    },
+    {
+      "id": "railway",
+      "label": "Railway",
+      "url": "https://railway.com",
+      "notes": "Usage-based billing. No ongoing free tier (trial credits only). Container platform."
+    },
+    {
+      "id": "custom",
+      "label": "Custom App Host",
+      "url": null,
+      "notes": "User-supplied hosting environment."
+    }
+  ],
+  "dataServices": [
+    {
+      "id": "none",
+      "label": "No Hosted Content Services",
+      "url": null,
+      "notes": "Static path. No hosted Astropress admin backend."
+    },
+    {
+      "id": "cloudflare",
+      "label": "Cloudflare D1 / R2 / Workers",
+      "url": "https://developers.cloudflare.com/d1/",
+      "notes": "D1 (SQLite-edge database), R2 (object storage), Workers (runtime). Free tier available."
+    },
+    {
+      "id": "supabase",
+      "label": "Supabase",
+      "url": "https://supabase.com",
+      "notes": "Hosted Postgres, object storage, and auth. Free tier available. Server-side only — use service role key."
+    },
+    {
+      "id": "appwrite",
+      "label": "Appwrite",
+      "url": "https://appwrite.io",
+      "notes": "Open-source BaaS: database, storage, auth, and functions. Cloud and self-hosted."
+    },
+    {
+      "id": "pocketbase",
+      "label": "PocketBase",
+      "url": "https://pocketbase.io",
+      "notes": "Single-binary open-source BaaS. Self-hosted. SQLite-backed."
+    },
+    {
+      "id": "neon",
+      "label": "Neon",
+      "url": "https://neon.tech",
+      "notes": "Serverless Postgres. Database only — no object storage or auth."
+    },
+    {
+      "id": "nhost",
+      "label": "Nhost",
+      "url": "https://nhost.io",
+      "notes": "Open-source BaaS built on Hasura, PostgreSQL, and MinIO. Cloud and self-hosted."
+    },
+    {
+      "id": "turso",
+      "label": "Turso (LibSQL)",
+      "url": "https://turso.tech",
+      "notes": "Distributed SQLite (LibSQL protocol). Database only — no object storage or auth."
+    },
+    {
+      "id": "custom",
+      "label": "Custom Content Services",
+      "url": null,
+      "notes": "User-supplied data, auth, and storage implementation."
+    }
+  ]
+}

@@ -25,7 +25,7 @@ pub(crate) fn print_help() {
     println!("  astropress db rollback [--project-dir <dir>] [--target local|d1] [--dry-run]");
     println!("  astropress sync export [--project-dir <dir>] [--out <snapshot-dir>]");
     println!("  astropress sync import --from <snapshot-dir> [--project-dir <dir>]");
-    println!("  astropress deploy [--project-dir <dir>] [--app-host <host>] [--target github-pages|cloudflare|vercel|netlify|render-static|render-web|gitlab-pages|runway|custom]");
+    println!("  astropress deploy [--project-dir <dir>] [--app-host <host>] [--target github-pages|cloudflare|vercel|netlify|render-static|render-web|gitlab-pages|custom]");
     println!();
     println!("  astropress list tools      (alias: ls tools)      List all tools by category");
     println!("  astropress list providers  (alias: ls providers)  List supported hosts and data services with pairings");

@@ -45,7 +45,7 @@ First published version of `AstropressProviderContract`. Covers:
 - `astropress/adapters/sqlite` — local SQLite runtime (Node.js / Bun)
 - `astropress/adapters/cloudflare` — Cloudflare D1 + R2
 - `astropress/adapters/supabase` — Supabase (PostgreSQL + Storage)
-- `astropress/adapters/appwrite`, `pocketbase`, `neon`, `nhost`, `runway`
+- `astropress/adapters/appwrite`, `pocketbase`, `neon`, `nhost`, `turso`
 
 ### Deploy targets
 
