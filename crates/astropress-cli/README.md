@@ -100,7 +100,7 @@ astropress deploy --target github-pages
 astropress deploy --target cloudflare
 ```
 
-Supported targets: `github-pages`, `cloudflare`, `vercel`, `netlify`, `render-static`, `render-web`, `gitlab-pages`, `fly-io`, `coolify`, `digitalocean`, `railway`, `runway`, `custom`.
+Supported targets: `github-pages`, `cloudflare`, `vercel`, `netlify`, `render-static`, `render-web`, `gitlab-pages`, `fly-io`, `coolify`, `digitalocean`, `railway`, `custom`.
 
 ### `backup` / `restore`
 

@@ -11,13 +11,11 @@ import { createLocalBootstrapSecrets } from "./project-scaffold-passphrase";
 
 export function deriveLegacyProvider(dataServices: AstropressDataServices): AstropressScaffoldProvider {
   if (dataServices === "supabase") return "supabase";
-  if (dataServices === "runway") return "runway";
   return "sqlite";
 }
 
 export function defaultAdminDbPath(provider: AstropressScaffoldProvider) {
   if (provider === "supabase") return ".data/supabase-admin.sqlite";
-  if (provider === "runway") return ".data/runway-admin.sqlite";
   return ".data/admin.sqlite";
 }
 
@@ -30,7 +28,6 @@ export function defaultServiceOrigin(dataServices: AstropressDataServices) {
     case "supabase": return "https://your-project.supabase.co/functions/v1/astropress";
     case "appwrite": return "https://cloud.appwrite.io/v1/functions/astropress";
     case "cloudflare": return "https://your-project.pages.dev/api/astropress";
-    case "runway": return "https://runway.example/your-project/astropress-api";
     case "pocketbase": return "https://your-pocketbase.example.com/api/astropress";
     case "nhost": return "https://your-subdomain.nhost.run/v1/functions/astropress";
     case "neon": return "https://your-service.example.com/astropress";
@@ -78,8 +75,6 @@ export function buildDataServiceExample(dataServices: AstropressDataServices): R
       return { ASTROPRESS_SERVICE_ORIGIN: serviceOrigin, APPWRITE_ENDPOINT: "https://cloud.appwrite.io/v1", APPWRITE_PROJECT_ID: "replace-me", APPWRITE_API_KEY: "replace-me" };
     case "cloudflare":
       return { ASTROPRESS_SERVICE_ORIGIN: serviceOrigin, CLOUDFLARE_ACCOUNT_ID: "replace-me", CLOUDFLARE_API_TOKEN: "replace-me" };
-    case "runway":
-      return { ASTROPRESS_SERVICE_ORIGIN: serviceOrigin, RUNWAY_API_TOKEN: "replace-me", RUNWAY_PROJECT_ID: "replace-me" };
     case "pocketbase":
       return { ASTROPRESS_SERVICE_ORIGIN: serviceOrigin, POCKETBASE_URL: "https://your-pocketbase.example.com", POCKETBASE_EMAIL: "replace-me", POCKETBASE_PASSWORD: "replace-me" };
     case "nhost":

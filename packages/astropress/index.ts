@@ -159,16 +159,6 @@ export type {
   AstropressPocketbaseHostedAdapterOptions,
   AstropressPocketbaseHostedConfig,
 } from "./src/adapters/pocketbase";
-export { createAstropressRunwayAdapter } from "./src/adapters/runway.js";
-export {
-  createAstropressRunwayHostedAdapter,
-  readAstropressRunwayHostedConfig,
-} from "./src/adapters/runway.js";
-export type {
-  AstropressRunwayAdapterOptions,
-  AstropressRunwayHostedAdapterOptions,
-  AstropressRunwayHostedConfig,
-} from "./src/adapters/runway";
 export { createAstropressTursoAdapter } from "./src/adapters/turso.js";
 export {
   createAstropressTursoHostedAdapter,

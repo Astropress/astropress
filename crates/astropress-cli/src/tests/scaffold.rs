@@ -69,30 +69,25 @@ fn reads_provider_and_db_path_from_env() {
     let root = temp_dir("env-config");
     fs::write(
         root.join(".env"),
-        "ASTROPRESS_LOCAL_PROVIDER=runway\nADMIN_DB_PATH=.data/custom-runway.sqlite\n",
+        "ASTROPRESS_LOCAL_PROVIDER=supabase\nADMIN_DB_PATH=.data/custom-supabase.sqlite\n",
     )
     .unwrap();
 
     let env_values = read_env_file(&root).unwrap();
     assert_eq!(
         env_values.get("ASTROPRESS_LOCAL_PROVIDER"),
-        Some(&"runway".to_string())
+        Some(&"supabase".to_string())
     );
     let project_env = load_project_env_contract(&root).unwrap();
-    assert_eq!(project_env.local_provider, "runway");
-    assert_eq!(project_env.deploy_target, "runway");
-    assert_eq!(project_env.hosted_provider, "runway");
-    assert_eq!(project_env.app_host, "runway");
-    assert_eq!(project_env.data_services, "runway");
-    assert_eq!(project_env.content_services, "runway");
-    assert_eq!(project_env.admin_db_path, ".data/custom-runway.sqlite");
+    assert_eq!(project_env.local_provider, "supabase");
+    assert_eq!(project_env.admin_db_path, ".data/custom-supabase.sqlite");
     assert_eq!(
         resolve_local_provider(&root, None).unwrap(),
-        LocalProvider::Runway
+        LocalProvider::Supabase
     );
     assert_eq!(
-        resolve_admin_db_path(&root, LocalProvider::Runway).unwrap(),
-        ".data/custom-runway.sqlite"
+        resolve_admin_db_path(&root, LocalProvider::Supabase).unwrap(),
+        ".data/custom-supabase.sqlite"
     );
 }
 
@@ -160,7 +155,7 @@ fn project_runtime_plan_exposes_local_runtime_selection() {
 #[test]
 fn explicit_provider_overrides_env_provider() {
     let root = temp_dir("env-provider-override");
-    fs::write(root.join(".env"), "ASTROPRESS_LOCAL_PROVIDER=runway\n").unwrap();
+    fs::write(root.join(".env"), "ASTROPRESS_LOCAL_PROVIDER=supabase\n").unwrap();
 
     assert_eq!(
         resolve_local_provider(&root, Some(LocalProvider::Supabase)).unwrap(),
@@ -185,11 +180,11 @@ fn deploy_target_prefers_explicit_env_target() {
     let root = temp_dir("deploy-target-env");
     fs::write(
         root.join(".env"),
-        "ASTROPRESS_LOCAL_PROVIDER=sqlite\nASTROPRESS_DEPLOY_TARGET=runway\n",
+        "ASTROPRESS_LOCAL_PROVIDER=sqlite\nASTROPRESS_DEPLOY_TARGET=netlify\n",
     )
     .unwrap();
 
-    assert_eq!(resolve_deploy_target(&root, None).unwrap(), "runway");
+    assert_eq!(resolve_deploy_target(&root, None).unwrap(), "netlify");
 }
 
 #[test]

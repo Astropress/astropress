@@ -188,6 +188,30 @@ imports to `.js` so the emitted ESM works under Node. Consumers point at
 Never commit `.js` files into `packages/astropress/src/`. The `no-js-in-src` arch-lint
 rule will catch this.
 
+## No speculative features
+
+**Never add a provider, integration, external service, or hosting target that the user has not explicitly named.**
+
+This rule exists because language models fill gaps with plausible-sounding completions. A hallucinated provider looks identical to a real one in code — it gets exported, documented, tested, and shipped. The only defence is a hard rule and an automated check.
+
+### What this covers
+
+- **App hosts and data services**: every ID in `AstropressAppHost` and `AstropressDataServices` must have a corresponding entry in `tooling/verified-providers.json` with a real URL. The `audit:providers` script enforces this in CI.
+- **Third-party integrations**: do not add support for an analytics provider, email service, search engine, or other third-party tool unless the user explicitly names it.
+- **Adapter files**: do not create `src/adapters/<name>.ts` for a service that has not been explicitly requested.
+- **CLI wizard options**: do not add a provider to the `astropress new` prompt unless it exists in `verified-providers.json`.
+
+### How to add a new provider
+
+1. Verify the service exists at a real public URL.
+2. Add it to `tooling/verified-providers.json` with the verified URL and accurate notes.
+3. Run `bun run audit:providers` — it must pass before any code changes.
+4. Add the adapter, type union entry, and tests.
+
+### Why this rule exists
+
+The fictional "Runway" hosting provider was added without being requested and without a real URL (`runway.example`). It reached the public type system, adapter layer, CLI wizard, docs, and tests before being caught. Both the TypeScript honesty audit and the evaluation rubric failed to detect it because they checked text claims, not whether referenced entities existed. The `audit:providers` script is the structural fix.
+
 ## Honesty requirements
 
 `tooling/scripts/audit-honesty.ts` verifies that `README.md`,

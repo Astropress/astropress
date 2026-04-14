@@ -8,7 +8,7 @@
 
 Astropress ships as an npm package (`astropress`) that contains all admin pages, components, and business logic. Those admin pages need to call the database. But the database is **not the package's responsibility** — it belongs to the host application.
 
-The host app might use SQLite (for local dev and GitHub Pages), Cloudflare D1, Supabase, Runway, or something else entirely. The package cannot bundle all of these — and shouldn't.
+The host app might use SQLite (for local dev and GitHub Pages), Cloudflare D1, Supabase, or something else entirely. The package cannot bundle all of these — and shouldn't.
 
 ## The Vite alias seam
 

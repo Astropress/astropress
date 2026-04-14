@@ -58,13 +58,6 @@ const deploymentMatrixEntries: AstropressDeploymentMatrixEntry[] = [
     requiredEnvKeys: ["ASTROPRESS_SERVICE_ORIGIN", "APPWRITE_ENDPOINT", "APPWRITE_PROJECT_ID", "APPWRITE_API_KEY"],
   },
   {
-    appHost: "runway",
-    dataServices: "runway",
-    supportLevel: "supported",
-    notes: "Bundled Runway path for Astro app hosting and managed services.",
-    requiredEnvKeys: ["ASTROPRESS_SERVICE_ORIGIN", "RUNWAY_API_TOKEN", "RUNWAY_PROJECT_ID"],
-  },
-  {
     appHost: "github-pages",
     dataServices: "supabase",
     supportLevel: "preview",

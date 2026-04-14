@@ -4,7 +4,7 @@ Astropress is designed around a **two-site deployment topology**:
 
 | Site | Astro output | Integration | Typical host | Purpose |
 |------|--------------|-------------|--------------|---------|
-| **Admin / test** | `server` | `createAstropressAdminAppIntegration()` | Cloudflare, Vercel, Netlify, Render, Runway, or a private VM | Authoring surface. Editors sign in to `/ap-admin`, write content, and preview changes. |
+| **Admin / test** | `server` | `createAstropressAdminAppIntegration()` | Cloudflare, Vercel, Netlify, Render, or a private VM | Authoring surface. Editors sign in to `/ap-admin`, write content, and preview changes. |
 | **Public / production** | `static` | `createAstropressPublicSiteIntegration()` | GitHub Pages, GitLab Pages, Cloudflare Pages, any static host | The domain your readers see. Zero admin surface, zero auth, zero dynamic routes. |
 
 The two sites can live in the **same repository** (two `astro.config.*.mjs` files) or in **two separate repositories** wired together by a build hook.

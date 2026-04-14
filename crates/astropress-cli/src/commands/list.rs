@@ -18,7 +18,6 @@ pub(crate) fn list_tools() {
     println!("  nhost          Nhost — GraphQL + Postgres, open-source Firebase alternative");
     println!("  pocketbase     PocketBase — single binary, self-hosted");
     println!("  appwrite       Appwrite — self-hosted BaaS");
-    println!("  runway         Runway — managed platform");
     println!("  custom         Bring your own adapter");
     println!();
 
@@ -35,7 +34,6 @@ pub(crate) fn list_tools() {
     println!("  coolify            Coolify — self-hosted PaaS");
     println!("  digitalocean       DigitalOcean App Platform — managed container hosting");
     println!("  railway            Railway — container platform  ⚠ paid, usage-based billing");
-    println!("  runway             Runway — managed platform");
     println!("  custom             Any custom deployment target");
     println!();
 
@@ -103,9 +101,6 @@ pub(crate) fn list_providers() {
     println!("    digitalocean       DigitalOcean App Platform: managed container hosting");
     println!("    railway            Railway: container platform  ⚠ paid — usage-based billing, no free tier");
     println!();
-    println!("  Managed — single-provider, fully hosted");
-    println!("    runway             Runway: managed Astropress platform");
-    println!();
     println!("  Bring your own");
     println!("    custom             Any target — supply your own deploy script");
     println!();
@@ -132,10 +127,6 @@ pub(crate) fn list_providers() {
     println!("  Built-in (default)");
     println!("    none               SQLite: local file, zero sign-up, works offline (pairs with github-pages)");
     println!();
-    println!("  Managed");
-    println!("    runway             Runway: managed database included with Runway hosting");
-    println!();
-
     // ── Recommended pairings ──────────────────────────────────────────────────
     println!("Recommended pairings   (best-supported host + data combinations)");
     println!();
@@ -146,7 +137,6 @@ pub(crate) fn list_providers() {
     println!("  vercel           + supabase     Serverless + Postgres — generous free tiers");
     println!("  netlify          + supabase     Serverless + Postgres — generous free tiers");
     println!("  render-web       + supabase     Server + Postgres — persistent runtime, always-on");
-    println!("  runway           + runway       Fully managed — one provider handles everything");
     println!();
     println!("Preview pairings   (work but are not yet verified end-to-end in CI)");
     println!();

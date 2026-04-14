@@ -133,15 +133,8 @@ pub(crate) fn deploy_script_for_target(
                 Err("The project does not define a Railway deploy or build script.".into())
             }
         }
-        "runway" => {
-            if manifest.scripts.contains_key("deploy:runway") {
-                Ok("deploy:runway")
-            } else {
-                Err("The project does not define a `deploy:runway` script.".into())
-            }
-        }
         other => Err(format!(
-            "Unsupported deploy target `{other}`. Use github-pages, cloudflare, vercel, netlify, render-static, render-web, gitlab-pages, fly-io, coolify, digitalocean, railway, runway, or custom."
+            "Unsupported deploy target `{other}`. Use github-pages, cloudflare, vercel, netlify, render-static, render-web, gitlab-pages, fly-io, coolify, digitalocean, railway, or custom."
         )),
     }
 }
@@ -188,7 +181,7 @@ pub(crate) fn deploy_project(
             "deploy/gitlab-pages.js",
             "createAstropressGitLabPagesDeployTarget",
         ),
-        "runway" | "custom" => ("deploy/custom.js", "createAstropressCustomDeployTarget"),
+        "custom" => ("deploy/custom.js", "createAstropressCustomDeployTarget"),
         _ => ("deploy/custom.js", "createAstropressCustomDeployTarget"),
     };
     let deploy_module = package_module_import(module_path, Some(project_dir))?;

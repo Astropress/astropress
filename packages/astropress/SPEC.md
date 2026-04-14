@@ -55,14 +55,14 @@ The package should reduce host-specific glue over time by replacing temporary se
 
 - `astropress/adapters/sqlite` is a first-party SQLite-backed adapter, not a placeholder capability shim
 - `astropress/hosted-platform-adapter` is the package-owned assembly surface for hosted provider runtimes built from explicit stores
-- `astropress/adapters/local` chooses the local SQLite-backed provider runtime for sqlite, Supabase, or Runway
-- `astropress/adapters/hosted` chooses the hosted provider runtime for Supabase or Runway
+- `astropress/adapters/local` chooses the local SQLite-backed provider runtime for sqlite or Supabase
+- `astropress/adapters/hosted` chooses the hosted provider runtime for Supabase and other hosted providers
 - `astropress/adapters/project` chooses local or hosted runtime mode from the project env contract
 - `astropress/project-launch` converts the project env and runtime mode into one launch/bootstrap plan
 - `astropress/import/wordpress` owns a staged WordPress import pipeline with typed inspection, plan generation, artifact output, remediation reporting, and resumable media download state
 - provider selectors must support explicit env maps as well as ambient process env
-- `astropress/adapters/supabase-sqlite` and `astropress/adapters/runway-sqlite` provide Node-only provider-local runtimes backed by the packaged SQLite adapter
-- Supabase and Runway hosted config loading and runtime guards are package-owned, not host-app glue
+- `astropress/adapters/supabase-sqlite` provides a Node-only provider-local runtime backed by the packaged SQLite adapter
+- Supabase hosted config loading and runtime guards are package-owned, not host-app glue
 - `astropress/sqlite-bootstrap` owns the packaged schema/bootstrap path for local admin databases
 - `astropress/sqlite-admin-runtime` owns the packaged Node SQLite admin runtime
 - Node-only runtime entry points stay on explicit subpaths and must not leak through the root package API into Cloudflare builds
@@ -74,7 +74,7 @@ The package should reduce host-specific glue over time by replacing temporary se
 - support non-technical editors
 - target individuals and small organizations running relatively simple sites
 - do not drift into a generic site-builder product model
-- support GitHub Pages, Cloudflare, Supabase, and Runway through stable contracts
+- support GitHub Pages, Cloudflare, and Supabase through stable contracts
 - keep published entry points stable once consumers adopt them
 
 ## Session Secret Rotation

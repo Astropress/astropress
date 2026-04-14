@@ -36,8 +36,6 @@ function requiredEnvKeysForContentServices(contentServices: string) {
       return ["ASTROPRESS_SERVICE_ORIGIN", "NHOST_SUBDOMAIN", "NHOST_REGION", "NHOST_ADMIN_SECRET"];
     case "neon":
       return ["ASTROPRESS_SERVICE_ORIGIN", "NEON_DATABASE_URL"];
-    case "runway":
-      return ["ASTROPRESS_SERVICE_ORIGIN", "RUNWAY_API_TOKEN", "RUNWAY_PROJECT_ID"];
     case "turso":
       return ["ASTROPRESS_SERVICE_ORIGIN", "TURSO_DATABASE_URL", "TURSO_AUTH_TOKEN"];
     default:

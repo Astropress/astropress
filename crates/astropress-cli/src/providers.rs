@@ -8,7 +8,6 @@ pub(crate) enum PackageManager {
 pub(crate) enum LocalProvider {
     Sqlite,
     Supabase,
-    Runway,
 }
 
 impl LocalProvider {
@@ -16,9 +15,8 @@ impl LocalProvider {
         match value {
             "sqlite" => Ok(Self::Sqlite),
             "supabase" => Ok(Self::Supabase),
-            "runway" => Ok(Self::Runway),
             other => Err(format!(
-                "Unsupported local provider `{other}`. Use sqlite, supabase, or runway."
+                "Unsupported local provider `{other}`. Use sqlite or supabase."
             )),
         }
     }
@@ -27,7 +25,6 @@ impl LocalProvider {
         match self {
             Self::Sqlite => "sqlite",
             Self::Supabase => "supabase",
-            Self::Runway => "runway",
         }
     }
 
@@ -35,7 +32,6 @@ impl LocalProvider {
         match self {
             Self::Sqlite => ".data/admin.sqlite",
             Self::Supabase => ".data/supabase-admin.sqlite",
-            Self::Runway => ".data/runway-admin.sqlite",
         }
     }
 }
@@ -53,7 +49,6 @@ pub(crate) enum AppHost {
     Coolify,
     DigitalOcean,
     Railway,
-    Runway,
     Custom,
 }
 
@@ -71,10 +66,9 @@ impl AppHost {
             "coolify" => Ok(Self::Coolify),
             "digitalocean" => Ok(Self::DigitalOcean),
             "railway" => Ok(Self::Railway),
-            "runway" => Ok(Self::Runway),
             "custom" => Ok(Self::Custom),
             other => Err(format!(
-                "Unsupported app host `{other}`. Use github-pages, cloudflare-pages, vercel, netlify, render-static, render-web, gitlab-pages, fly-io, coolify, digitalocean, railway, runway, or custom."
+                "Unsupported app host `{other}`. Use github-pages, cloudflare-pages, vercel, netlify, render-static, render-web, gitlab-pages, fly-io, coolify, digitalocean, railway, or custom."
             )),
         }
     }
@@ -92,7 +86,6 @@ impl AppHost {
             Self::Coolify => "coolify",
             Self::DigitalOcean => "digitalocean",
             Self::Railway => "railway",
-            Self::Runway => "runway",
             Self::Custom => "custom",
         }
     }
@@ -115,7 +108,6 @@ pub(crate) enum DataServices {
     Neon,
     Nhost,
     Turso,
-    Runway,
     Custom,
 }
 
@@ -130,10 +122,9 @@ impl DataServices {
             "neon" => Ok(Self::Neon),
             "nhost" => Ok(Self::Nhost),
             "turso" => Ok(Self::Turso),
-            "runway" => Ok(Self::Runway),
             "custom" => Ok(Self::Custom),
             other => Err(format!(
-                "Unsupported data services `{other}`. Use none, cloudflare, supabase, appwrite, pocketbase, neon, nhost, turso, runway, or custom."
+                "Unsupported data services `{other}`. Use none, cloudflare, supabase, appwrite, pocketbase, neon, nhost, turso, or custom."
             )),
         }
     }
@@ -148,7 +139,6 @@ impl DataServices {
             Self::Neon => "neon",
             Self::Nhost => "nhost",
             Self::Turso => "turso",
-            Self::Runway => "runway",
             Self::Custom => "custom",
         }
     }
@@ -156,7 +146,6 @@ impl DataServices {
     pub(crate) fn default_local_provider(self) -> LocalProvider {
         match self {
             Self::Supabase => LocalProvider::Supabase,
-            Self::Runway => LocalProvider::Runway,
             _ => LocalProvider::Sqlite,
         }
     }
@@ -368,8 +357,7 @@ pub(crate) fn deployment_support_level(app_host: &str, data_services: &str) -> &
         | ("cloudflare-pages", "cloudflare")
         | ("vercel", "supabase")
         | ("netlify", "supabase")
-        | ("render-web", "supabase")
-        | ("runway", "runway") => "supported",
+        | ("render-web", "supabase") => "supported",
         ("github-pages", "supabase")
         | ("render-web", "appwrite")
         | ("gitlab-pages", "supabase")
