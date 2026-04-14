@@ -77,6 +77,17 @@ The package should reduce host-specific glue over time by replacing temporary se
 - support GitHub Pages, Cloudflare, Supabase, and Runway through stable contracts
 - keep published entry points stable once consumers adopt them
 
+## Session Secret Rotation
+
+Astropress supports single-step session secret rotation without a schema change.
+
+- `SESSION_SECRET` signs newly created package/runtime-managed admin sessions
+- `SESSION_SECRET_PREV`, when present, is accepted only for validating or revoking pre-rotation sessions
+- `CLOUDFLARE_SESSION_SECRET` signs newly created Cloudflare adapter sessions
+- `CLOUDFLARE_SESSION_SECRET_PREV`, when present, is accepted only for validating or revoking pre-rotation Cloudflare sessions
+
+The package must never write new sessions with a previous secret. Previous secrets exist only as a temporary compatibility window during rotation.
+
 ## Extraction Goal
 
 Consuming apps should eventually depend only on published Astropress package entry points, not repo-relative source paths.

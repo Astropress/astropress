@@ -11,7 +11,7 @@
  *       after a successful-result check in action handlers.
  *   H3. schedule-publish reads the content state before confirming
  *       `?scheduled=1` — prevents phantom schedule confirmations.
- *   H4. `delivered: true` appears only in the Resend HTTP-200 success branch
+ *   H4. `delivered: true` appears only in explicit provider-success branches
  *       of transactional-email.ts.
  *   H5. releaseLock returns a boolean (or Promise<boolean>), not void — callers
  *       can inspect the result rather than assuming success.
@@ -120,21 +120,24 @@ describe("H3: schedule-publish validates content exists before scheduling", () =
 });
 
 // ---------------------------------------------------------------------------
-// H4 — `delivered: true` only in the Resend HTTP-200 success branch
+// H4 — `delivered: true` only in explicit provider-success branches
 // ---------------------------------------------------------------------------
 
-describe("H4: delivered: true set only in Resend success branch", () => {
-  it("transactional-email.ts has exactly one `delivered: true` — in the Resend 200 branch", () => {
+describe("H4: delivered: true set only in provider success branches", () => {
+  it("transactional-email.ts sets `delivered: true` only in Resend and SMTP success branches", () => {
     const src = readSource(path.join(srcRoot, "transactional-email.ts"));
 
-    // Count occurrences of `delivered: true`
     const matches = [...src.matchAll(/delivered:\s*true/g)];
-    expect(matches.length).toBe(1);
+    expect(matches.length).toBe(2);
 
-    // That one occurrence must be preceded by `response.ok` check (the Resend success branch)
-    const deliveredTruePos = src.indexOf("delivered: true");
-    const responseOkPos = src.lastIndexOf("response.ok", deliveredTruePos);
-    expect(responseOkPos, "delivered: true must be inside the response.ok success branch")
+    const resendDeliveredPos = src.indexOf("delivered: true");
+    const smtpDeliveredPos = src.indexOf("delivered: true", resendDeliveredPos + 1);
+    const responseOkPos = src.lastIndexOf("response.ok", resendDeliveredPos);
+    const smtpSendPos = src.lastIndexOf("transporter.sendMail", smtpDeliveredPos);
+
+    expect(responseOkPos, "first delivered: true must be inside the response.ok success branch")
+      .toBeGreaterThan(-1);
+    expect(smtpSendPos, "second delivered: true must follow transporter.sendMail success")
       .toBeGreaterThan(-1);
   });
 

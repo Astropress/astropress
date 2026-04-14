@@ -215,21 +215,38 @@ Before any real deployment:
 
 ## Secret rotation
 
-**SESSION_SECRET** — 12-hour window rotation (no hard logout):
+Astropress supports a two-phase session-secret rotation window.
 
-1. Set `SESSION_SECRET_PREV` to the current secret value
-2. Deploy the new `SESSION_SECRET`
-3. After 12 hours, remove `SESSION_SECRET_PREV`
+### Package/runtime-managed sessions
 
-**CLOUDFLARE_SESSION_SECRET** — invalidates all D1 sessions immediately.
-To minimize disruption, revoke sessions first:
+1. Deploy the new secret as `SESSION_SECRET`
+2. Keep the previous secret in `SESSION_SECRET_PREV`
+3. Wait for old sessions to expire naturally, or revoke them explicitly once the migration window is complete
+4. Remove `SESSION_SECRET_PREV` in a follow-up deploy
+
+During the rotation window:
+- existing sessions signed with `SESSION_SECRET_PREV` remain valid
+- all newly created sessions are signed only with `SESSION_SECRET`
+
+If you use the advanced root-secret override instead of `SESSION_SECRET`, the same pattern applies with `ASTROPRESS_ROOT_SECRET` and `ASTROPRESS_ROOT_SECRET_PREV`.
+
+### Cloudflare adapter sessions
+
+1. Deploy the new secret as `CLOUDFLARE_SESSION_SECRET`
+2. Keep the previous secret in `CLOUDFLARE_SESSION_SECRET_PREV`
+3. Wait for old sessions to expire naturally, or revoke them explicitly once the migration window is complete
+4. Remove `CLOUDFLARE_SESSION_SECRET_PREV` in a follow-up deploy
+
+During the rotation window:
+- existing sessions signed with `CLOUDFLARE_SESSION_SECRET_PREV` remain valid
+- all newly created sessions are signed only with `CLOUDFLARE_SESSION_SECRET`
+
+To revoke all active sessions immediately:
 
 ```sql
 UPDATE admin_sessions SET revoked_at = CURRENT_TIMESTAMP
 WHERE revoked_at IS NULL;
 ```
-
-Then deploy the new secret.
 
 ## Schema migrations
 
@@ -530,7 +547,7 @@ WHERE created_at < datetime('now', '-365 days');
    UPDATE admin_sessions SET revoked_at = CURRENT_TIMESTAMP
    WHERE revoked_at IS NULL;
    ```
-2. Rotate `SESSION_SECRET` and `CLOUDFLARE_SESSION_SECRET`
+2. Rotate `SESSION_SECRET` / `SESSION_SECRET_PREV` and `CLOUDFLARE_SESSION_SECRET` / `CLOUDFLARE_SESSION_SECRET_PREV`
 3. Audit `admin_sessions` and `audit_events` for suspicious activity
 4. Reset affected passwords, deactivate unknown accounts
 

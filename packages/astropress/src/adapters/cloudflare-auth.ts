@@ -8,6 +8,22 @@ const logger = createLogger("Cloudflare");
 
 export type AstropressCloudflareSeedUser = AuthUser & { password: string };
 
+function getConfiguredSecrets(...values: Array<string | undefined>) {
+  const seen = new Set<string>();
+  const configured: string[] = [];
+
+  for (const value of values) {
+    const trimmed = value?.trim();
+    if (!trimmed || seen.has(trimmed)) {
+      continue;
+    }
+    seen.add(trimmed);
+    configured.push(trimmed);
+  }
+
+  return configured;
+}
+
 export function resolveCloudflareSessionSecret(): string {
   const secret = process.env.CLOUDFLARE_SESSION_SECRET ?? "cloudflare-adapter-session-secret";
   if (secret === "cloudflare-adapter-session-secret") {
@@ -23,6 +39,13 @@ export function resolveCloudflareSessionSecret(): string {
     );
   }
   return secret;
+}
+
+export function resolveCloudflareSessionSecretCandidates(): string[] {
+  return getConfiguredSecrets(
+    resolveCloudflareSessionSecret(),
+    process.env.CLOUDFLARE_SESSION_SECRET_PREV,
+  );
 }
 
 export const CLOUDFLARE_SESSION_TTL_MS = 12 * 60 * 60 * 1000;
@@ -43,7 +66,10 @@ export async function cleanupExpiredCloudflareSessions(db: D1DatabaseLike) {
 export async function getLiveCloudflareSessionRow(db: D1DatabaseLike, sessionId: string) {
   await cleanupExpiredCloudflareSessions(db);
 
-  const sessionCandidates = [sessionId, await createSessionTokenDigest(sessionId, resolveCloudflareSessionSecret())];
+  const sessionCandidates = [sessionId];
+  for (const secret of resolveCloudflareSessionSecretCandidates()) {
+    sessionCandidates.push(await createSessionTokenDigest(sessionId, secret));
+  }
   let row: { id: string; last_active_at: string; email: string; role: AuthUser["role"] } | null = null;
 
   for (const candidate of sessionCandidates) {
@@ -138,12 +164,12 @@ export function createD1CloudflareAuthStore(db: D1DatabaseLike): AuthStore {
       return { id: sessionId, email: row.email, role: row.role };
     },
     async signOut(sessionId) {
-      const digest = await createSessionTokenDigest(sessionId, resolveCloudflareSessionSecret());
       const revokeStmt = `UPDATE admin_sessions SET revoked_at = CURRENT_TIMESTAMP WHERE id = ? AND revoked_at IS NULL`;
-      await db.batch([
-        db.prepare(revokeStmt).bind(sessionId),
-        db.prepare(revokeStmt).bind(digest),
-      ]);
+      const statements = [db.prepare(revokeStmt).bind(sessionId)];
+      for (const secret of resolveCloudflareSessionSecretCandidates()) {
+        statements.push(db.prepare(revokeStmt).bind(await createSessionTokenDigest(sessionId, secret)));
+      }
+      await db.batch(statements);
     },
     async getSession(sessionId) {
       const row = await getLiveCloudflareSessionRow(db, sessionId);

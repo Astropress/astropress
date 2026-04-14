@@ -134,7 +134,7 @@ describe("Subscriber endpoint forwards to Listmonk API via newsletterAdapter", (
     vi.spyOn(globalThis, "fetch").mockRejectedValueOnce(new Error("ECONNREFUSED"));
     const result = await newsletterAdapter.subscribe("user@example.com", makeLocals(listmonkEnv));
     expect(result).toMatchObject({ ok: false });
-    expect(result.error).toContain("Network error");
+    expect(result.error).toContain("could not be reached");
   });
 });
 

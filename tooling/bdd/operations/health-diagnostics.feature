@@ -19,3 +19,9 @@ Feature: Project health diagnostics
     Given an Astropress project with all required environment variables and paths set
     When the operator runs "astropress doctor"
     Then the CLI reports no warnings and exits with code 0
+
+  Scenario: Session secret rotation keeps existing sessions valid during a two-phase deploy
+    Given an Astropress project with a current session secret and a previous session secret
+    When an operator deploys the new current secret while retaining the previous secret
+    Then sessions signed with the previous secret remain valid until they expire or are revoked
+    And all newly created sessions are signed only with the current secret

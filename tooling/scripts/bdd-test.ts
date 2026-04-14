@@ -195,6 +195,7 @@ const verificationGroups: VerificationGroup[] = [
       "Doctor reports missing local secrets and data-path warnings",
       "Doctor exits with a non-zero code in strict mode when warnings are present",
       "Doctor reports a clean bill of health for a fully configured project",
+      "Session secret rotation keeps existing sessions valid during a two-phase deploy",
     ],
     steps: [
       {
@@ -208,6 +209,17 @@ const verificationGroups: VerificationGroup[] = [
       {
         command: "cargo",
         args: ["test", "bootstraps_and_verifies_content_services"],
+      },
+      {
+        command: "bunx",
+        args: [
+          "vitest",
+          "run",
+          "tests/runtime-env.test.ts",
+          "tests/runtime-admin-auth.test.ts",
+          "tests/cloudflare-adapter-security.test.ts",
+        ],
+        cwd: astropressPackageRoot,
       },
     ],
   },
@@ -460,13 +472,19 @@ const verificationGroups: VerificationGroup[] = [
       "Choosing Chatwoot generates live chat env entries",
       // Payments
       "Choosing HyperSwitch generates payment router env entries",
-      "HyperSwitch env stubs document supported payment providers",
+      "HyperSwitch env stubs name both API keys and all six regions",
+      "HyperSwitch SERVICES.md connector table covers all payment regions",
+      "HyperSwitch scaffolds a Unified Checkout component",
       // Push notifications
       "Choosing ntfy generates push notification env entries",
       // Scheduling
       "Choosing Rallly generates scheduling env entries",
       // Job board
       "Choosing job board scaffolds a content type stub",
+      // Social cross-posting
+      "Choosing Postiz generates social cross-posting env entries",
+      "Choosing Mixpost generates social scheduling env entries",
+      "Postiz SERVICES.md section covers all supported platforms",
       // Smart defaults
       "PostHog selected for analytics pre-selects PostHog for session replay",
       // Plain mode
@@ -480,6 +498,10 @@ const verificationGroups: VerificationGroup[] = [
       {
         command: "cargo",
         args: ["test", "features::tests"],
+      },
+      {
+        command: "cargo",
+        args: ["test", "features::tests_services"],
       },
       {
         command: "cargo",
@@ -946,6 +968,8 @@ const verificationGroups: VerificationGroup[] = [
       "Public integration is a valid AstroIntegration",
       "Public integration accepts a buildHookSecret option",
       "Admin integration is unaffected by the new public integration",
+      "Testimonials ingest endpoint is not injected by the public site integration",
+      "Testimonials ingest endpoint is injected by the admin integration",
     ],
     steps: [
       {

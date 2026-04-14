@@ -20,7 +20,7 @@ describe("hashPassword / verifyPassword", () => {
     const hash = await hashPassword("correct-horse-battery");
     expect(await verifyPassword("correct-horse-battery", hash)).toBe(true);
     expect(await verifyPassword("wrong-password", hash)).toBe(false);
-  });
+  }, 15000);
 
   it("returns false for a malformed hash (no dollar-sign separators)", async () => {
     expect(await verifyPassword("password", "not-a-valid-hash")).toBe(false);

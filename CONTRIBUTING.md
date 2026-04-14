@@ -5,13 +5,13 @@
 | Tool | Version | Install |
 |------|---------|---------|
 | Bun | 1.3.10 | `curl -fsSL https://bun.sh/install | bash` |
-| Node.js | 22+ | `curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh \| bash` then `nvm install 22 && nvm use 22 && nvm alias default 22` |
+| Node.js | 24.8+ | `curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh \| bash` then `nvm install 24 && nvm use 24 && nvm alias default 24` |
 | Rust | 1.82+ | `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh` |
 | Playwright browsers | latest | `npx playwright install --with-deps chromium` |
 
 Alternatively, open the repo in VS Code and select **Reopen in Container** — the devcontainer handles all prerequisites automatically.
 
-Or run the bundled installer, which provisions all of the above (Bun, nvm + Node 20, Rust, Playwright browsers) and then runs the test suite:
+Or run the bundled installer from a local checkout, which provisions all of the above (Bun, Node 24.8+, Rust, Playwright browsers) and then runs the test suite:
 
 ```bash
 bash tooling/scripts/install.sh           # macOS / Linux / *BSD
@@ -129,4 +129,5 @@ Run `bun run bdd:lint` to validate feature file syntax.
 1. `bun run test` — all tests pass
 2. `bun run audit:arch` — no boundary violations
 3. `bunx biome check packages/astropress/src` — zero lint errors
-4. Open the PR; CI runs the full gate automatically
+4. If the proposed code was substantially AI-generated, run a fresh evaluation pass against `docs/reference/EVALUATION.md` before submitting so the PR includes an up-to-date quality assessment.
+5. Open the PR; CI runs the full gate automatically

@@ -56,27 +56,26 @@ Importing content from Wordpress or Wix, or even subscription lists from Mailchi
 
 ## Get started
 
-### One-line installer (macOS / Linux)
+### Dev installer (macOS / Linux / Windows)
 
-The installer sets up all prerequisites (Node.js via nvm, Bun, Rust) and then creates your site:
-
-```bash
-bash <(curl -fsSL https://raw.githubusercontent.com/astropress/astropress/main/tooling/scripts/install.sh)
-```
-
-Or clone the repo first and run it locally:
+The bundled installer bootstraps the Astropress repo for local development. It expects a checked-out copy of this repository:
 
 ```bash
 git clone https://github.com/astropress/astropress.git
+cd astropress
 bash astropress/tooling/scripts/install.sh
 ```
 
 ### On Windows
 
 ```powershell
-# In PowerShell (run as Administrator if needed)
+# In PowerShell from the cloned repo
+git clone https://github.com/astropress/astropress.git
+cd astropress
 pwsh tooling/scripts/install.ps1
 ```
+
+Both installers provision Bun, Node.js `24.8+`, Rust, and Playwright, then run the local verification suite unless you pass `--skip-tests`.
 
 ### Then scaffold your site
 

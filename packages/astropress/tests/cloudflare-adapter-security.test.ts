@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createAstropressCloudflareAdapter } from "../src/adapters/cloudflare.js";
 import { SqliteBackedD1Database } from "./helpers/provider-test-fixtures.js";
-import { hashPassword } from "../src/crypto-utils.js";
+import { createSessionTokenDigest, hashPassword } from "../src/crypto-utils.js";
 import { makeDb } from "./helpers/make-db.js";
 
 describe("cloudflare adapter security defaults", () => {
@@ -91,6 +91,60 @@ describe("cloudflare session secret", () => {
 
     await adapter.auth.signOut(session!.id);
     expect(await adapter.auth.getSession(session!.id)).toBeNull();
+
+    db.close();
+  });
+
+  it("keeps sessions valid when CLOUDFLARE_SESSION_SECRET_PREV is present during rotation", async () => {
+    process.env.CLOUDFLARE_SESSION_SECRET = "old-cloudflare-secret";
+
+    const db = makeDb();
+    db.prepare("INSERT INTO admin_users (email, role, password_hash, name, active) VALUES (?, ?, ?, 'Admin', 1)").run(
+      "admin@example.com",
+      "admin",
+      await hashPassword("correctpass"),
+    );
+
+    const d1 = new SqliteBackedD1Database(db);
+    const adapter = createAstropressCloudflareAdapter({ db: d1 });
+
+    const session = await adapter.auth.signIn("admin@example.com", "correctpass");
+    expect(session).not.toBeNull();
+
+    process.env.CLOUDFLARE_SESSION_SECRET = "new-cloudflare-secret";
+    process.env.CLOUDFLARE_SESSION_SECRET_PREV = "old-cloudflare-secret";
+
+    await expect(adapter.auth.getSession(session!.id)).resolves.toMatchObject({
+      email: "admin@example.com",
+      role: "admin",
+    });
+
+    await adapter.auth.signOut(session!.id);
+    expect(await adapter.auth.getSession(session!.id)).toBeNull();
+
+    db.close();
+  });
+
+  it("signs rotated Cloudflare sessions with the current secret, not the previous one", async () => {
+    process.env.CLOUDFLARE_SESSION_SECRET = "new-cloudflare-secret";
+    process.env.CLOUDFLARE_SESSION_SECRET_PREV = "old-cloudflare-secret";
+
+    const db = makeDb();
+    db.prepare("INSERT INTO admin_users (email, role, password_hash, name, active) VALUES (?, ?, ?, 'Admin', 1)").run(
+      "admin@example.com",
+      "admin",
+      await hashPassword("correctpass"),
+    );
+
+    const d1 = new SqliteBackedD1Database(db);
+    const adapter = createAstropressCloudflareAdapter({ db: d1 });
+
+    const session = await adapter.auth.signIn("admin@example.com", "correctpass");
+    expect(session).not.toBeNull();
+
+    const stored = db.prepare("SELECT id FROM admin_sessions LIMIT 1").get() as { id: string };
+    expect(stored.id).toBe(await createSessionTokenDigest(session!.id, "new-cloudflare-secret"));
+    expect(stored.id).not.toBe(await createSessionTokenDigest(session!.id, "old-cloudflare-secret"));
 
     db.close();
   });

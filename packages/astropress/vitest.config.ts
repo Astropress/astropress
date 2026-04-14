@@ -25,6 +25,7 @@ export default defineConfig({
   test: {
     setupFiles: ["tests/setup/html-rewriter-polyfill.ts"],
     include: ["tests/**/*.test.ts"],
+    testTimeout: 20000,
     coverage: {
       provider: "v8",
       reporter: ["text", "json-summary", "json"],

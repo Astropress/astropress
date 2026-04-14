@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Astropress local dev installer — macOS / Linux / FreeBSD / OpenBSD
-# Run from the repo root: bash scripts/install.sh
+# Run from the repo root: bash tooling/scripts/install.sh
 # Pass --skip-tests to skip the test suite after bootstrap.
 set -euo pipefail
 
@@ -80,8 +80,8 @@ else
   ok "python3 installed"
 fi
 
-# ─── 2. Node 20+ (via nvm) ───────────────────────────────────────────────────
-section "Node.js 20+"
+# ─── 2. Node 24.8+ (via nvm) ─────────────────────────────────────────────────
+section "Node.js 24.8+"
 NVM_DIR="${NVM_DIR:-$HOME/.nvm}"
 if [[ -s "$NVM_DIR/nvm.sh" ]]; then
   # shellcheck source=/dev/null
@@ -91,11 +91,11 @@ fi
 NODE_OK=false
 if has node; then
   NODE_MAJOR="$(node -e 'process.stdout.write(String(process.versions.node.split(".")[0]))')"
-  if [[ "$NODE_MAJOR" -ge 22 ]]; then
+  if [[ "$NODE_MAJOR" -ge 24 ]]; then
     ok "node $(node --version) already installed"
     NODE_OK=true
   else
-    warn "node $(node --version) is too old (need 22+ for node:sqlite)"
+    warn "node $(node --version) is too old (need 24.8+)"
   fi
 fi
 
@@ -107,10 +107,10 @@ if [[ "$NODE_OK" == false ]]; then
     # shellcheck source=/dev/null
     source "$NVM_DIR/nvm.sh"
   fi
-  info "Installing Node 22 LTS via nvm…"
-  nvm install 22
-  nvm use 22
-  nvm alias default 22
+  info "Installing Node 24 via nvm…"
+  nvm install 24
+  nvm use 24
+  nvm alias default 24
   ok "node $(node --version) installed"
 fi
 
@@ -201,9 +201,9 @@ ASTROPRESS_LOCAL_PROVIDER=sqlite
 
 # ── Session + auth ───────────────────────────────────────────────────────────
 # IMPORTANT: change before deploying to any shared/hosted environment
-ASTROPRESS_SESSION_SECRET=${SESSION_SECRET}
-ASTROPRESS_ADMIN_PASSWORD=admin123
-ASTROPRESS_EDITOR_PASSWORD=editor123
+SESSION_SECRET=${SESSION_SECRET}
+ADMIN_PASSWORD=admin123
+EDITOR_PASSWORD=editor123
 
 # ── Email — mock mode by default (preview shown in server logs) ───────────────
 EMAIL_DELIVERY_MODE=mock

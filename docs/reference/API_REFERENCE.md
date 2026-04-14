@@ -3,7 +3,7 @@
 Auto-generated from TypeScript source via the TypeScript compiler API.
 Run `bun run docs:api` to regenerate.
 
-Generated: 2026-04-13
+Generated: 2026-04-14
 
 ---
 
@@ -348,7 +348,7 @@ function getRuntimeEnv(name: string): string | undefined
 
 #### `isProductionRuntime`
 ```ts
-function isProductionRuntime(): any
+function isProductionRuntime(): boolean
 ```
 
 #### `getCloudflareBindings`
@@ -368,17 +368,17 @@ function getNewsletterConfig(locals: Locals | null | undefined): { mode: string;
 
 #### `getTransactionalEmailConfig`
 ```ts
-function getTransactionalEmailConfig(locals: Locals | null | undefined): { mode: string; apiKey: string | undefined; from: string | undefined; contactDestination: string | undefined; }
+function getTransactionalEmailConfig(locals: Locals | null | undefined): { mode: string; resendApiKey: string | undefined; resendFrom: string | undefined; smtpHost: string | undefined; smtpPort: string | undefined; smtpUsername: string | undefined; smtpPassword: string | undefined; smtpFrom: string | undefined; contactDestination: string | undefined; }
 ```
 
 #### `getAdminBootstrapConfig`
 ```ts
-function getAdminBootstrapConfig(locals: Locals | null | undefined): { adminPassword: string | undefined; editorPassword: string | undefined; bootstrapDisabled: boolean; adminDbPath: string | undefined; sessionSecret: string | undefined; }
+function getAdminBootstrapConfig(locals: Locals | null | undefined): { adminPassword: string | undefined; editorPassword: string | undefined; bootstrapDisabled: boolean; adminDbPath: string | undefined; rootSecret: string; rootSecretPrevious: string; sessionSecret: string | undefined; sessionSecretPrevious: string | undefined; }
 ```
 
 #### `getLoginSecurityConfig`
 ```ts
-function getLoginSecurityConfig(locals: Locals | null | undefined): { maxLoginAttempts: number; secureCookies: any; turnstileSiteKey: string | undefined; turnstileSecretKey: string | undefined; }
+function getLoginSecurityConfig(locals: Locals | null | undefined): { maxLoginAttempts: number; secureCookies: boolean; turnstileSiteKey: string | undefined; turnstileSecretKey: string | undefined; }
 ```
 
 #### `getTurnstileSiteKey`
@@ -706,6 +706,11 @@ function suspendRuntimeAdminUser(email: string, actor: Actor, locals: Locals | n
 function unsuspendRuntimeAdminUser(email: string, actor: Actor, locals: Locals | null | undefined): Promise<unknown>
 ```
 
+#### `moderateRuntimeTestimonial`
+```ts
+function moderateRuntimeTestimonial(id: string, status: TestimonialStatus, actor: { email: string; role: string; name: string; }, locals: Locals | null | undefined): Promise<{ ok: true; } | { ok: false; error: string; }>
+```
+
 #### `getRuntimeSessionUser`
 ```ts
 function getRuntimeSessionUser(sessionToken: string | null | undefined, locals: Locals | null | undefined): Promise<SessionUser | null>
@@ -819,6 +824,11 @@ function buildTaxonomiesPageModel(locals: Locals, role: AdminRole): Promise<Admi
 #### `buildCommentsPageModel`
 ```ts
 function buildCommentsPageModel(locals: Locals): Promise<AdminPageResult<{ comments: CommentRecord[]; auditEvents: AuditEvent[]; }>>
+```
+
+#### `buildTestimonialsPageModel`
+```ts
+function buildTestimonialsPageModel(locals: Locals): Promise<AdminPageResult<{ pending: TestimonialSubmission[]; approved: TestimonialSubmission[]; featured: TestimonialSubmission[]; auditEvents: AuditEvent[]; }>>
 ```
 
 #### `buildTranslationsPageModel`
@@ -1130,6 +1140,7 @@ function runAstropressDbMigrationsForCli(input: AstropressDbMigrateInput): Astro
 - `interface FieldDefinition`
 - `interface ContentTypeDefinition`
 - `interface CmsConfig`
+- `interface TestimonialsConfig`
 - `type AstropressAdminNavKey`
 - `interface AstropressResolvedAdminUiConfig`
 - `type AstropressAdminRouteDefinition`
@@ -1226,6 +1237,10 @@ function runAstropressDbMigrationsForCli(input: AstropressDbMigrateInput): Astro
 - `interface ContentRecord`
 - `interface ContentRevision`
 - `interface ContactSubmission`
+- `type TestimonialStatus`
+- `type TestimonialSource`
+- `interface TestimonialSubmission`
+- `interface TestimonialSubmissionInput`
 - `interface InviteRequest`
 - `interface PasswordResetRequest`
 - `interface ManagedAdminUser`

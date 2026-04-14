@@ -239,7 +239,7 @@ All are light DOM, zero-dependency, attribute-driven, and progressively enhanced
 - **CSRF**: `isTrustedRequestOrigin()` checks Origin + Referer headers
 - **Cookies**: `__Host-` prefix with Secure flag
 - **CSP**: area-aware (public / admin / auth / api) with appropriate strictness per area
-- **Sessions**: KMAC256-digested at rest, TTL-enforced, server-side revocable
+- **Sessions**: KMAC256-digested at rest, TTL-enforced, server-side revocable, and rotation-compatible via one current secret plus one optional previous secret
 - **Rate limiting**: per-key with configurable windows
 - **HTML sanitization**: custom allowlist parser; force-adds `rel="noopener noreferrer"`
 - **API tokens**: hashed at rest; raw token shown once on creation
@@ -247,6 +247,14 @@ All are light DOM, zero-dependency, attribute-driven, and progressively enhanced
 - **ZTA**: `withAdminFormAction` / `requireAdminFormAction` enforced on all admin actions
 - **Privacy**: comment emails KMAC256-digested; no IP storage; no default analytics; DNT/GPC honored
 - **Scanning**: ZAP baseline, CodeQL, Semgrep, Gitleaks in CI
+
+### Session secret rotation contract
+
+- `SESSION_SECRET` is the active signing secret for package/runtime-managed admin sessions
+- `SESSION_SECRET_PREV`, when set, is accepted for session lookup and revocation but never used for new session writes
+- `CLOUDFLARE_SESSION_SECRET` is the active signing secret for the Cloudflare adapter
+- `CLOUDFLARE_SESSION_SECRET_PREV`, when set, is accepted for Cloudflare session lookup and revocation but never used for new session writes
+- Rotation is a two-phase deploy: first ship current + previous secret together, then remove the previous secret after old sessions age out or are explicitly revoked
 
 ## Plugin / Extension API
 

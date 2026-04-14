@@ -1,6 +1,6 @@
 # Astropress Evaluation
 
-**Baseline (as of 2026-04-14, updated):** 1540+ Vitest tests · 159 Rust CLI tests · 10 Playwright specs across 70 acceptance checks · 334 BDD scenarios · security audit clean
+**Baseline (as of 2026-04-14, updated):** 1650+ Vitest tests · 170 Rust CLI tests · 10 Playwright specs across 70 acceptance checks · 359 BDD scenarios · security audit clean
 
 ## Grades
 

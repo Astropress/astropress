@@ -5,7 +5,7 @@ description: >-
   UX, and cross-platform support — updated 2026-04-14.
 ---
 
-**Baseline (as of 2026-04-14, updated):** 1540+ Vitest tests · 159 Rust CLI tests · 10 Playwright specs across 70 acceptance checks · 334 BDD scenarios · security audit clean
+**Baseline (as of 2026-04-14, updated):** 1650+ Vitest tests · 170 Rust CLI tests · 10 Playwright specs across 70 acceptance checks · 359 BDD scenarios · security audit clean
 
 ## Grades
 
@@ -91,6 +91,10 @@ description: >-
 | GitHub readiness | **Yes** | The repo has the expected open-source hygiene, enforced docs/readiness audits, cross-platform smoke lanes, and clean-worktree verification in CI |
 | Production readiness | **Yes, with caveats** | The core stack is production-capable for the verified Node 24 / Linux-macOS-Windows matrix, but hosted-provider live E2E remains incomplete and BSD is not a verified target |
 | Cross-platform readiness | **Yes for mainstream OSes** | Linux, macOS, and Windows have install/release coverage and CI smoke lanes; BSD is documented as best-effort pending native runner verification |
+
+## Project handoff
+
+Every new project created with `astropress new` receives an `EVALUATION.md` project evaluation card generated from the same 54-rubric framework. That card is intended to be carried forward and updated by downstream Astropress projects, especially when major PRs are substantially AI-generated.
 
 ## Rubric 43 — System Honesty
 

@@ -1,3 +1,4 @@
+use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
 use crate::js_bridge::loaders::{
@@ -5,6 +6,17 @@ use crate::js_bridge::loaders::{
 };
 use crate::cli_config::env::read_env_file;
 use crate::providers::deployment_support_level;
+
+fn get_env_value<'a>(
+    env_values: &'a BTreeMap<String, String>,
+    canonical_key: &str,
+    legacy_keys: &[&str],
+) -> Option<&'a str> {
+    env_values
+        .get(canonical_key)
+        .map(String::as_str)
+        .or_else(|| legacy_keys.iter().find_map(|key| env_values.get(*key).map(String::as_str)))
+}
 
 pub(crate) struct DoctorReport {
     pub(crate) project_dir: PathBuf,
@@ -36,37 +48,31 @@ pub(crate) fn inspect_project_health(project_dir: &Path) -> Result<DoctorReport,
         );
     }
 
-    if env_values
-        .get("SESSION_SECRET")
+    if get_env_value(&env_values, "SESSION_SECRET", &["ASTROPRESS_SESSION_SECRET"])
         .is_none_or(|value| value.trim().is_empty())
     {
         warnings.push("SESSION_SECRET is missing or empty.".into());
-    } else if env_values
-        .get("SESSION_SECRET")
+    } else if get_env_value(&env_values, "SESSION_SECRET", &["ASTROPRESS_SESSION_SECRET"])
         .is_some_and(|value| value.trim().len() < 24)
     {
         warnings.push("SESSION_SECRET is present but shorter than 24 characters.".into());
     }
 
-    if env_values
-        .get("ADMIN_PASSWORD")
+    if get_env_value(&env_values, "ADMIN_PASSWORD", &["ASTROPRESS_ADMIN_PASSWORD"])
         .is_none_or(|value| value.trim().is_empty())
     {
         warnings.push("ADMIN_PASSWORD is missing or empty.".into());
-    } else if env_values
-        .get("ADMIN_PASSWORD")
+    } else if get_env_value(&env_values, "ADMIN_PASSWORD", &["ASTROPRESS_ADMIN_PASSWORD"])
         .is_some_and(|value| value.starts_with("local-admin-"))
     {
         warnings.push("ADMIN_PASSWORD still uses the scaffold-style local default.".into());
     }
 
-    if env_values
-        .get("EDITOR_PASSWORD")
+    if get_env_value(&env_values, "EDITOR_PASSWORD", &["ASTROPRESS_EDITOR_PASSWORD"])
         .is_none_or(|value| value.trim().is_empty())
     {
         warnings.push("EDITOR_PASSWORD is missing or empty.".into());
-    } else if env_values
-        .get("EDITOR_PASSWORD")
+    } else if get_env_value(&env_values, "EDITOR_PASSWORD", &["ASTROPRESS_EDITOR_PASSWORD"])
         .is_some_and(|value| value.starts_with("local-editor-"))
     {
         warnings.push("EDITOR_PASSWORD still uses the scaffold-style local default.".into());

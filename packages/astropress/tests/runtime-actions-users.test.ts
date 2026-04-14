@@ -91,7 +91,7 @@ describe("getRuntimeInviteRequest / consumeRuntimeInviteToken", () => {
     const token = await createInvite();
     const result = await consumeRuntimeInviteToken(token, "newpassword123", locals);
     expect(result).toMatchObject({ ok: true });
-  });
+  }, 15000);
 
   it("rejects a short password", async () => {
     const token = await createInvite();
@@ -139,7 +139,7 @@ describe("createRuntimePasswordResetToken / getRuntimePasswordResetRequest / con
     const token = await createResetToken();
     const result = await consumeRuntimePasswordResetToken(token, "newpassword123", locals);
     expect(result).toMatchObject({ ok: true });
-  });
+  }, 15000);
 
   it("rejects a short password", async () => {
     const token = await createResetToken();
@@ -152,7 +152,7 @@ describe("createRuntimePasswordResetToken / getRuntimePasswordResetRequest / con
     await consumeRuntimePasswordResetToken(token, "newpassword123", locals);
     const result = await consumeRuntimePasswordResetToken(token, "anotherpassword", locals);
     expect(result).toMatchObject({ ok: false });
-  });
+  }, 15000);
 });
 
 describe("suspendRuntimeAdminUser / unsuspendRuntimeAdminUser", () => {

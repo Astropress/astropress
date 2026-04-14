@@ -43,24 +43,57 @@ export interface RuntimeBindings {
   ADMIN_BOOTSTRAP_DISABLED?: string;
   ADMIN_DB_PATH?: string;
   ASTROPRESS_ROOT_SECRET?: string;
+  ASTROPRESS_ROOT_SECRET_PREV?: string;
   SESSION_SECRET?: string;
+  SESSION_SECRET_PREV?: string;
+  CLOUDFLARE_SESSION_SECRET?: string;
+  CLOUDFLARE_SESSION_SECRET_PREV?: string;
   LOCAL_IMAGE_ROOT?: string;
   LOGIN_MAX_ATTEMPTS?: string;
 }
 
 type StringRuntimeKey = Exclude<keyof RuntimeBindings, "DB" | "MEDIA_BUCKET">;
 
-function importMetaEnv() {
-  return import.meta.env as Record<string, string | undefined>;
+const LEGACY_RUNTIME_KEY_ALIASES: Partial<Record<StringRuntimeKey, string[]>> = {
+  SESSION_SECRET: ["ASTROPRESS_SESSION_SECRET"],
+  ADMIN_PASSWORD: ["ASTROPRESS_ADMIN_PASSWORD"],
+  EDITOR_PASSWORD: ["ASTROPRESS_EDITOR_PASSWORD"],
+};
+
+function importMetaEnv(): Record<string, string | undefined> {
+  return ((import.meta as ImportMeta & {
+    env?: Record<string, string | undefined>;
+  }).env ?? {});
+}
+
+function getRuntimeEnvValue(key: string) {
+  return process.env[key] ?? importMetaEnv()[key];
+}
+
+function getUniqueConfiguredValues(...values: Array<string | undefined>) {
+  const seen = new Set<string>();
+  const configured: string[] = [];
+
+  for (const value of values) {
+    const trimmed = value?.trim();
+    if (!trimmed || seen.has(trimmed)) {
+      continue;
+    }
+    seen.add(trimmed);
+    configured.push(trimmed);
+  }
+
+  return configured;
 }
 
 export function getRuntimeEnv(name: keyof RuntimeBindings | string) {
   const key = String(name);
-  return importMetaEnv()[key] ?? process.env[key];
+  return getRuntimeEnvValue(key);
 }
 
 export function isProductionRuntime() {
-  return import.meta.env.PROD;
+  const value = getRuntimeEnvValue("PROD");
+  return value === true || value === "true" || value === "1";
 }
 
 export function getCloudflareBindings(locals?: App.Locals | null): RuntimeBindings {
@@ -85,7 +118,20 @@ export function getCloudflareBindings(locals?: App.Locals | null): RuntimeBindin
 
 export function getStringRuntimeValue(name: StringRuntimeKey, locals?: App.Locals | null) {
   const bindings = getCloudflareBindings(locals);
-  return bindings[name] ?? getRuntimeEnv(name);
+  const value = bindings[name] ?? getRuntimeEnv(name);
+  if (value != null) {
+    return value;
+  }
+
+  const aliases = LEGACY_RUNTIME_KEY_ALIASES[name] ?? [];
+  for (const alias of aliases) {
+    const aliasValue = getRuntimeEnv(alias);
+    if (aliasValue != null) {
+      return aliasValue;
+    }
+  }
+
+  return undefined;
 }
 
 export function getNewsletterConfig(locals?: App.Locals | null) {
@@ -114,22 +160,35 @@ export function getTransactionalEmailConfig(locals?: App.Locals | null) {
 }
 
 export function getAstropressRootSecret(locals?: App.Locals | null) {
-  return getStringRuntimeValue("ASTROPRESS_ROOT_SECRET", locals)
-    ?? getStringRuntimeValue("SESSION_SECRET", locals)
-    ?? "astropress-dev-root-secret";
+  return getAstropressRootSecretCandidates(locals)[0] ?? "astropress-dev-root-secret";
+}
+
+export function getAstropressRootSecretCandidates(locals?: App.Locals | null) {
+  const currentRootSecret = getStringRuntimeValue("ASTROPRESS_ROOT_SECRET", locals);
+  const currentSessionSecret = getStringRuntimeValue("SESSION_SECRET", locals);
+  const previousRootSecret = getStringRuntimeValue("ASTROPRESS_ROOT_SECRET_PREV", locals);
+  const previousSessionSecret = getStringRuntimeValue("SESSION_SECRET_PREV", locals);
+
+  return getUniqueConfiguredValues(
+    currentRootSecret ?? currentSessionSecret,
+    previousRootSecret ?? previousSessionSecret,
+  );
 }
 
 export function getAdminBootstrapConfig(locals?: App.Locals | null) {
   const isPlaywright = Boolean(getRuntimeEnv("PLAYWRIGHT_E2E_MODE") ?? getRuntimeEnv("PLAYWRIGHT"));
   const adminPassword = getStringRuntimeValue("ADMIN_PASSWORD", locals) ?? (isPlaywright ? "ap-e2e-admin-password" : undefined);
   const editorPassword = getStringRuntimeValue("EDITOR_PASSWORD", locals) ?? (isPlaywright ? "ap-e2e-editor-password" : undefined);
+  const rootSecretCandidates = getAstropressRootSecretCandidates(locals);
   return {
     adminPassword,
     editorPassword,
     bootstrapDisabled: getStringRuntimeValue("ADMIN_BOOTSTRAP_DISABLED", locals) === "1",
     adminDbPath: getStringRuntimeValue("ADMIN_DB_PATH", locals),
-    rootSecret: getAstropressRootSecret(locals),
+    rootSecret: rootSecretCandidates[0] ?? "astropress-dev-root-secret",
+    rootSecretPrevious: rootSecretCandidates[1],
     sessionSecret: getStringRuntimeValue("SESSION_SECRET", locals),
+    sessionSecretPrevious: getStringRuntimeValue("SESSION_SECRET_PREV", locals),
   };
 }
 

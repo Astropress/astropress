@@ -1,5 +1,5 @@
 # Astropress local dev installer — Windows (PowerShell 5.1 / 7+)
-# Run from the repo root:  powershell -ExecutionPolicy Bypass -File scripts\install.ps1
+# Run from the repo root: pwsh tooling/scripts/install.ps1
 # Pass -SkipTests to bypass the test suite after bootstrap.
 [CmdletBinding()]
 param(
@@ -71,8 +71,8 @@ if (has python) {
     ok "Python installed"
 }
 
-# ─── 2. Node 20+ ─────────────────────────────────────────────────────────────
-$NodeMsiVersion = "22.14.0"   # Node 22 LTS (Active LTS; required for node:sqlite)
+# ─── 2. Node 24.8+ ───────────────────────────────────────────────────────────
+$NodeMsiVersion = "24.8.0"
 
 function Install-NodeViaMsi {
     param($Version)
@@ -90,21 +90,21 @@ function Install-NodeViaMsi {
     Remove-Item $msiPath -ErrorAction SilentlyContinue
 }
 
-section "Node.js 20+"
+section "Node.js 24.8+"
 $NodeOk = $false
 if (has node) {
     $nodever = node -e "process.stdout.write(process.version)"
     $nodeMajor = [int]($nodever.TrimStart("v").Split(".")[0])
-    if ($nodeMajor -ge 22) {
+    if ($nodeMajor -ge 24) {
         ok "node $nodever already installed"
         $NodeOk = $true
     } else {
-        warn "node $nodever is too old (need 22+ for node:sqlite)"
+        warn "node $nodever is too old (need 24.8+)"
     }
 }
 if (-not $NodeOk) {
     if ($HasWinget -or $HasScoop -or $HasChoco) {
-        Install-Package "OpenJS.NodeJS.LTS" "nodejs-lts" "nodejs-lts" "Node.js 22 LTS"
+        Install-Package "OpenJS.NodeJS" "nodejs" "nodejs" "Node.js 24.8+"
     } else {
         info "No package manager found — falling back to direct .msi download"
         Install-NodeViaMsi $NodeMsiVersion
@@ -199,9 +199,9 @@ ASTROPRESS_LOCAL_PROVIDER=sqlite
 
 # ── Session + auth ───────────────────────────────────────────────────────────
 # IMPORTANT: change before deploying to any shared/hosted environment
-ASTROPRESS_SESSION_SECRET=$SessionSecret
-ASTROPRESS_ADMIN_PASSWORD=admin123
-ASTROPRESS_EDITOR_PASSWORD=editor123
+SESSION_SECRET=$SessionSecret
+ADMIN_PASSWORD=admin123
+EDITOR_PASSWORD=editor123
 
 # ── Email — mock mode by default (preview shown in server logs) ───────────────
 EMAIL_DELIVERY_MODE=mock

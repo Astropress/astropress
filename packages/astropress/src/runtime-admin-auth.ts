@@ -2,7 +2,7 @@ import { createSessionTokenDigest, verifyPassword } from "./crypto-utils";
 import type { D1DatabaseLike } from "./d1-database";
 import { loadLocalAdminAuth } from "./local-runtime-modules";
 import type { SessionUser } from "./persistence-types";
-import { getAdminBootstrapConfig, getCloudflareBindings } from "./runtime-env";
+import { getAdminBootstrapConfig, getAstropressRootSecretCandidates, getCloudflareBindings } from "./runtime-env";
 import { withLocalStoreFallback } from "./admin-store-dispatch";
 
 const SESSION_TTL_MS = 12 * 60 * 60 * 1000;
@@ -32,8 +32,7 @@ async function getLiveD1SessionRow(db: D1DatabaseLike, sessionToken: string | nu
   await cleanupExpiredSessions(db);
 
   const sessionCandidates = [sessionToken];
-  const sessionSecret = getAdminBootstrapConfig(locals).rootSecret?.trim();
-  if (sessionSecret) {
+  for (const sessionSecret of getAstropressRootSecretCandidates(locals)) {
     sessionCandidates.unshift(await createSessionTokenDigest(sessionToken, sessionSecret));
   }
 
@@ -217,8 +216,7 @@ export async function revokeRuntimeSession(sessionToken: string | null | undefin
       }
 
       const sessionCandidates = [sessionToken];
-      const sessionSecret = getAdminBootstrapConfig(locals).rootSecret?.trim();
-      if (sessionSecret) {
+      for (const sessionSecret of getAstropressRootSecretCandidates(locals)) {
         sessionCandidates.unshift(await createSessionTokenDigest(sessionToken, sessionSecret));
       }
 

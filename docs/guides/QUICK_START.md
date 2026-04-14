@@ -5,12 +5,14 @@ Get a working astropress site with an admin panel in under 5 minutes.
 ## Prerequisites
 
 - [Bun](https://bun.sh) 1.3+
-- Node.js 22+ (required for `node:sqlite`, used by the Astropress CLI)
+- Node.js 24.8+ (required for the supported Astropress runtime and CLI toolchain)
 
-The bundled installer provisions all prerequisites automatically:
+The bundled repo installer provisions all prerequisites automatically from a local checkout:
 
 ```bash
-bash <(curl -fsSL https://raw.githubusercontent.com/astropress/astropress/main/tooling/scripts/install.sh)
+git clone https://github.com/astropress/astropress.git
+cd astropress
+bash tooling/scripts/install.sh
 ```
 
 ## 1. Scaffold a new project
