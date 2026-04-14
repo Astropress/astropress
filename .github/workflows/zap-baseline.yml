@@ -19,7 +19,7 @@ jobs:
       - run: bun run test:example
       - run: bun run --filter astropress-example-gh-pages build
       - run: python3 -m http.server 4173 --directory examples/github-pages/dist >/tmp/astropress-http.log 2>&1 &
-      - uses: zaproxy/action-baseline@v0.12.0
+      - uses: zaproxy/action-baseline@v0.15.0
         with:
           target: "http://127.0.0.1:4173"
           cmd_options: "-a -l WARN"
