@@ -35,7 +35,7 @@ export default defineConfig({
     poolOptions: isCi && isCoverageRun ? { forks: { singleFork: true } } : undefined,
     coverage: {
       provider: "v8",
-      reporter: ["text", "json-summary", "json"],
+      reporter: ["text", "json-summary"],
       reportsDirectory: "./coverage",
       include: [
         "src/admin-action-utils.ts",

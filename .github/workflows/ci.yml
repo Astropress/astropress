@@ -85,7 +85,6 @@ jobs:
         with:
           bun-version: ${{ matrix.bun }}
       - run: bun install
-      - run: bun run --filter "@astropress-diy/astropress" test
       - run: bun run test:coverage
       - run: bun run repo:clean
 
