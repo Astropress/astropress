@@ -11,11 +11,15 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
-      id-token: write
+      id-token: write  # required for npm trusted publishing (OIDC)
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24.8"
 
       - uses: oven-sh/setup-bun@v2
         with:
@@ -25,10 +29,12 @@ jobs:
 
       - uses: changesets/action@v1
         with:
-          publish: bun run release -- --provenance
+          publish: bun run release
           version: bun run version
           title: "chore: version packages"
           commit: "chore: version packages"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          # No NPM_TOKEN — npm uses the OIDC token from id-token: write above.
+          # Each package (astropress, astropress-mcp, astropress-nexus) must be
+          # registered as a trusted publisher on npmjs.com before this works.
