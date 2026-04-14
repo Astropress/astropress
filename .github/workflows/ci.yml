@@ -26,6 +26,7 @@ jobs:
       - run: bunx biome check --reporter=github packages/astropress/src packages/astropress/tests packages/astropress/web-components
       - run: cargo clippy --manifest-path crates/astropress-cli/Cargo.toml -- -D warnings
       - run: bun run audit:arch:rust
+      - run: bun run audit:tooling-types
       - run: bun run audit:aeo
       - run: bun run audit:providers
       - run: bun run audit:cli-docs
