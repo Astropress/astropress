@@ -17,9 +17,8 @@ pub(super) const COMPOSE_UPTIME_KUMA: &str = concat!(
     "volumes:\n",
     "  uptime_kuma_data:\n",
 );
-pub(super) const ENV_UPTIME_KUMA: &str = concat!(
-    "# No env vars needed — configure via the web UI after first launch.\n",
-);
+pub(super) const ENV_UPTIME_KUMA: &str =
+    "# No env vars needed — configure via the web UI after first launch.\n";
 
 
 // ── Twenty CRM ────────────────────────────────────────────────────────────────
