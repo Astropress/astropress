@@ -10,7 +10,7 @@ import { execSync } from "node:child_process";
 import { readFileSync, existsSync } from "node:fs";
 import { resolve } from "node:path";
 
-const ROOT = resolve(import.meta.dir, "..");
+const ROOT = resolve(import.meta.dir, "..", "..");
 const PKG_PATH = resolve(ROOT, "packages/astropress/package.json");
 const CHANGELOG_PATH = resolve(ROOT, "packages/astropress/CHANGELOG.md");
 const BASE_BRANCH = process.env.BASE_BRANCH ?? "main";

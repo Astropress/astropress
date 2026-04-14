@@ -13,5 +13,6 @@ export default defineConfig({
   vite: {
     plugins: viteIntegration.plugins,
     resolve: { alias: viteIntegration.aliases },
+    build: { rollupOptions: { external: ["sharp"] } },
   },
 });

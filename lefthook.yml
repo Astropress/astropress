@@ -45,3 +45,11 @@ pre-push:
 
     test-cli:
       run: bun run test:cli
+
+    sweep-tmp:
+      # Reclaim /tmp before pre-push gates fire — test runs leave per-case
+      # tmpdirs and the sandbox is small (typically tmpfs ≤ 1G). Anything
+      # untouched for an hour is from a prior crashed run, safe to delete.
+      run: |
+        find /tmp -maxdepth 1 \( -name 'astropress-cli-*' -o -name 'astropress-*' \) \
+          -mmin +60 -exec rm -rf {} + 2>/dev/null || true

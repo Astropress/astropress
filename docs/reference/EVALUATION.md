@@ -62,6 +62,7 @@ Grade scale: `A+ / A / B / C / D / F`
 | 52 | Interaction Design & Motion | |
 | 53 | Cross-Platform Support | |
 | 54 | Test Artifact Cleanup | |
+| 55 | Minimalism | |
 
 ## Known gaps
 
@@ -343,3 +344,25 @@ Measures whether automated tests and local verification runs clean up their temp
 
 - Repo-level smoke commands such as `bun run test:example` and some docs/example verification paths can still leave generated `.data/` directories in the worktree
 - There is no CI assertion that the repo stays clean after the verification suite finishes
+
+---
+
+## Rubric 55 — Minimalism
+
+Measures whether the codebase contains only what is needed to do the job — no speculative abstractions, no dead code, no premature generality, no helpers written for a single caller, no config options that nothing reads.
+
+### Criteria
+
+- Every exported symbol has at least one call site outside its own file
+- No utility functions whose entire body could be inlined at the one place they're called
+- No feature flags, environment checks, or backwards-compatibility shims for scenarios that no longer exist
+- LOC per file stays within arch-lint limits without needing exceptions
+- No commented-out code blocks committed to the repo
+- No `_unused` parameters or renamed-to-suppress-warning variables
+- Abstractions exist to serve two or more concrete callers, not to anticipate future ones
+
+### What would improve this
+
+- An automated dead-export lint (e.g. `ts-prune` or `knip`) run in CI
+- Periodic `bun run audit:arch` line-count review to catch files creeping toward the 600-line ceiling
+- A contributing guideline that explicitly forbids one-off helpers and speculative config fields

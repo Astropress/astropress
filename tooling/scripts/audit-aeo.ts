@@ -11,7 +11,7 @@
 import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 
-const componentsRoot = path.resolve(import.meta.dirname, "../packages/astropress/components");
+const componentsRoot = path.resolve(import.meta.dirname, "../../packages/astropress/components");
 
 const requiredComponents: Array<{ name: string; file: string; checks: string[] }> = [
   {
@@ -78,7 +78,7 @@ auditComponent(contentLayoutComponent.name, contentLayoutComponent.file, content
 // Verify AeoMetadata types are exported from platform-contracts
 const contractsPath = path.resolve(
   import.meta.dirname,
-  "../packages/astropress/src/platform-contracts.ts"
+  "../../packages/astropress/src/platform-contracts.ts"
 );
 if (!existsSync(contractsPath)) {
   failures.push("MISSING: platform-contracts.ts");

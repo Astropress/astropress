@@ -1,8 +1,8 @@
 [
   {
-    "name": "Example site JS (total)",
-    "path": "examples/github-pages/dist/**/*.js",
-    "limit": "10 KB",
+    "name": "Example site CSS (total)",
+    "path": "../examples/github-pages/dist/**/*.css",
+    "limit": "20 KB",
     "gzip": true
   }
 ]
