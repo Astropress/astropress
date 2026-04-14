@@ -54,8 +54,6 @@ Importing content from Wordpress or Wix, or even subscription lists from Mailchi
 | **Reasonably Secure** | Argon2id password hashing, KMAC256 token hardening, ML-DSA-65 webhook signatures, and security headers by default |
 ---
 
-Security note: Astropress now uses Argon2id for passwords, KMAC256 for token and privacy digests, and ML-DSA-65 for outbound webhook signatures. Hosted-provider live E2E remains incomplete.
-
 ## Get started
 
 ### One-line installer (macOS / Linux)
@@ -144,9 +142,8 @@ Astropress runs on the platforms you already use. Pick any combination:
 | [Web Components](./docs/reference/WEB_COMPONENTS.md) | Built-in UI elements, screen reader guide |
 | [Design System](./docs/reference/DESIGN_SYSTEM.md) | CSS tokens, contrast ratios, adding admin pages |
 | [API Reference](./docs/reference/API_REFERENCE.md) | REST API endpoints, authentication, scopes |
-| [Compatibility](./docs/COMPATIBILITY.md) | OS support tiers, verified commands, shell coverage |
-| [Architecture](./docs/ARCHITECTURE.md) | Provider seam, schema ERD, security model |
-| [Hosted E2E Setup](./HOSTED_E2E_SETUP.md) | What maintainer-owned provider accounts and secrets are required for live hosted testing |
+| [Compatibility](./docs/reference/COMPATIBILITY.md) | OS support tiers, verified commands, shell coverage |
+| [Architecture](./docs/reference/ARCHITECTURE.md) | Provider seam, schema ERD, security model |
 | [Contributing](./CONTRIBUTING.md) | Local setup, test commands, PR checklist |
 | [Security](./SECURITY.md) | Vulnerability reporting, response SLA |
 

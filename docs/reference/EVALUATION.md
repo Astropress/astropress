@@ -66,7 +66,7 @@ Grade scale: `A+ / A / B / C / D / F`
 
 ## Known gaps
 
-- **Rubric 35:** Live hosted-provider coverage still depends on maintainer-owned accounts, seeded projects, and teardown automation; see `HOSTED_E2E_SETUP.md`
+- **Rubric 35:** Live hosted-provider coverage still depends on maintainer-owned accounts, seeded projects, and teardown automation
 - **Rubric 46–52:** UX rubrics added 2026-04-12 — no independent user research or usability testing has been conducted
 - **Rubric 53:** Windows, macOS, and Linux now have CI smoke coverage and shell parity, but BSD remains best-effort rather than verified support
 
@@ -84,7 +84,7 @@ Measures whether the repo's public claims, CLI output, and failure reporting mat
 
 - README, docs, BDD text, and user-facing crypto/readiness wording are audited by `bun run audit:honesty`
 - User-facing fallback copy is audited by `bun run audit:microcopy`
-- `HOSTED_E2E_SETUP.md` explicitly states that hosted-provider E2E is not `A+` yet and why
+- The evaluation `Known gaps` section explicitly states that hosted-provider E2E is not `A+` yet and why
 - The compatibility matrix now states Linux/macOS/Windows as verified and BSD as best-effort
 - Security docs now describe the actual crypto stack: Argon2id password hashing, KMAC256 token/privacy digests, and ML-DSA-65 webhook signatures
 

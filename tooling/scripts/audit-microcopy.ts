@@ -11,9 +11,11 @@ const bannedPhrases = [
   "Network error. Please try again.",
 ];
 const allowedFiles = new Set([
-  "docs/EVALUATION.md",
+  "tooling/scripts/audit-microcopy.ts",   // defines the banned phrases themselves
+  "docs/reference/EVALUATION.md",         // describes banned phrases as UX criteria examples
   "packages/docs/src/content/docs/contributing/evaluation.mdx",
   "docs/UX_WRITING.md",
+  "AGENTS.md",                            // documents the audit rules for contributors
 ]);
 
 function isAuditableFile(file: string) {
