@@ -10,7 +10,7 @@ export function createAstropressVitestLocalRuntimePlugins(localRuntimeModulesPat
       name: "astropress-local-runtime-modules-replacer",
       enforce: "pre",
       resolveId(id) {
-        if (/local-runtime-modules(?:\.ts)?$/.test(id)) {
+        if (/local-runtime-modules(?:\.[jt]s)?$/.test(id)) {
           return localRuntimeModulesPath;
         }
       },
@@ -24,7 +24,7 @@ export function createAstropressVitestLocalRuntimePlugins(localRuntimeModulesPat
           /(?:astropress[\\/]packages[\\/]astropress|node_modules[\\/](?:\.bun[\\/].*?[\\/]node_modules[\\/])?astropress)[\\/]src/.test(
             importer,
           ) &&
-          /local-runtime-modules(?:\.ts)?$/.test(id)
+          /local-runtime-modules(?:\.[jt]s)?$/.test(id)
         ) {
           return localRuntimeModulesPath;
         }

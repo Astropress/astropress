@@ -28,7 +28,11 @@ function normalizeRuntimeRequest(id: string): string {
 }
 
 export function isAstropressLocalRuntimeModuleRequest(id: string, localRuntimeModulesPath: string): boolean {
-  if (id === "./local-runtime-modules" || id === "./local-runtime-modules.ts") {
+  if (
+    id === "./local-runtime-modules" ||
+    id === "./local-runtime-modules.ts" ||
+    id === "./local-runtime-modules.js"
+  ) {
     return true;
   }
 
@@ -37,7 +41,10 @@ export function isAstropressLocalRuntimeModuleRequest(id: string, localRuntimeMo
   return (
     normalized === normalizedLocalRuntimeModulesPath ||
     normalized.endsWith("/local-runtime-modules") ||
-    normalized.endsWith("/local-runtime-modules.ts")
+    normalized.endsWith("/local-runtime-modules.ts") ||
+    // Compiled dist files import the .js form; Vite passes the raw import
+    // string to resolveId, so we must match it before Vite resolves it.
+    normalized.endsWith("/local-runtime-modules.js")
   );
 }
 
@@ -69,11 +76,11 @@ export function createAstropressViteAliases(
 ): AstropressViteAlias[] {
   const aliases: AstropressViteAlias[] = [
     {
-      find: /\/local-runtime-modules(?:\.ts)?$/,
+      find: /\/local-runtime-modules(?:\.[jt]s)?$/,
       replacement: options.localRuntimeModulesPath,
     },
     {
-      find: /^\.\/local-runtime-modules(?:\.ts)?$/,
+      find: /^\.\/local-runtime-modules(?:\.[jt]s)?$/,
       replacement: options.localRuntimeModulesPath,
     },
   ];

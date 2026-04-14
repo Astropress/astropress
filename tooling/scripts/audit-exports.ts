@@ -11,7 +11,6 @@ import { join } from "node:path";
 
 const root = process.cwd();
 const INDEX_TS = join(root, "packages/astropress/index.ts");
-const ADAPTERS_SRC = join(root, "packages/astropress/src/adapters");
 const TESTS_DIR = join(root, "packages/astropress/tests");
 
 interface AdapterExport {

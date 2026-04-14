@@ -15,6 +15,7 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v6
+      - uses: actions/checkout@v6
         with:
           ref: ${{ github.head_ref }}
           # Use a PAT or the default token — default token is sufficient for

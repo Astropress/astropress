@@ -18,6 +18,8 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-node@v6
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
         with:
           node-version: "24.8"
       - uses: oven-sh/setup-bun@v2
@@ -25,10 +27,16 @@ jobs:
       - run: bun run --filter "@astropress-diy/astropress" build
       - run: bun run test:example
       - run: bun run --filter astropress-example-gh-pages build
-      - run: python3 -m http.server 4173 --directory examples/github-pages/dist >/tmp/astropress-http.log 2>&1 &
-      - uses: zaproxy/action-baseline@v0.12.0
-        with:
-          target: "http://127.0.0.1:4173"
-          cmd_options: "-a -l WARN"
-          fail_action: true
-          allow_issue_writing: false
+      - name: Start static server with security headers
+        run: node tooling/scripts/serve-static-with-security-headers.mjs examples/github-pages/dist 4173 >/tmp/astropress-http.log 2>&1 &
+      - name: Run ZAP baseline scan
+        run: |
+          # ZAP runs as uid 'zap' (1000) inside the container; the workspace is
+          # owned by the runner.  Pre-create output files so the container can
+          # write to them without needing write permission on the directory itself.
+          touch zap-report.json zap-report.md zap-report.html
+          chmod a+w zap-report.json zap-report.md zap-report.html
+          docker pull ghcr.io/zaproxy/zaproxy:stable -q
+          docker run --network=host -v "$PWD:/zap/wrk/:rw" -t ghcr.io/zaproxy/zaproxy:stable \
+            zap-baseline.py -t http://127.0.0.1:4173 -J zap-report.json -w zap-report.md -r zap-report.html -a -l WARN \
+            -c /zap/wrk/.github/zap-rules.conf

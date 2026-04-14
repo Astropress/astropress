@@ -1,6 +1,10 @@
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "vitest/config";
 
+const isCi = process.env.CI === "true";
+const isCoverageRun = process.argv.includes("--coverage");
+const isSingleForkCoverageRun = isCi && isCoverageRun;
+
 export default defineConfig({
   resolve: {
     // Prefer .ts over .js for extensionless imports so v8 coverage tracks
@@ -26,9 +30,14 @@ export default defineConfig({
     setupFiles: ["tests/setup/html-rewriter-polyfill.ts"],
     include: ["tests/**/*.test.ts"],
     testTimeout: 20000,
+    hookTimeout: 60000,
+    unstubGlobals: true,
+    pool: isSingleForkCoverageRun ? "forks" : undefined,
+    maxWorkers: isSingleForkCoverageRun ? 1 : undefined,
+    isolate: isSingleForkCoverageRun ? false : undefined,
     coverage: {
       provider: "v8",
-      reporter: ["text", "json-summary", "json"],
+      reporter: ["text", "json-summary"],
       reportsDirectory: "./coverage",
       include: [
         "src/admin-action-utils.ts",

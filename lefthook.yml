@@ -24,8 +24,11 @@ pre-commit:
     verify-signing:
       run: |
         # Commits to main require a GPG or SSH signature (enforced by the
-        # GitHub branch ruleset). Catch mis-configuration before git does,
-        # so the error message explains how to fix it.
+        # GitHub branch ruleset). Verify both that config is correct AND that
+        # the key can actually produce a signature right now, so a silent
+        # failure (agent not running, wrong passphrase, etc.) is caught before
+        # the commit rather than discovered after a push is rejected.
+        # the commit rather than discovered after a push is rejected.
         gpgsign=$(git config --get commit.gpgsign 2>/dev/null || true)
         if [ "$gpgsign" != "true" ]; then
           echo ""
@@ -52,6 +55,33 @@ pre-commit:
           echo ""
           exit 1
         fi
+        # Perform a live test-sign to confirm the key is accessible right now.
+        # This catches 'agent not running' and similar silent failures that
+        # would otherwise produce an unsigned commit without any error.
+        if [ "$gpg_format" = "ssh" ]; then
+          key_file="$signingkey"
+          # Strip leading ~ manually in POSIX sh
+          case "$key_file" in
+            "~/"*) key_file="$HOME/${key_file#~/}" ;;
+          esac
+          if ! printf 'test' | ssh-keygen -Y sign -f "$key_file" -n git - >/dev/null 2>&1; then
+            echo ""
+            echo "❌  SSH signing key is configured but could not sign."
+            echo "    Is your SSH agent running and does it have the key loaded?"
+            echo "    Check: ssh-add -l"
+            echo "    Load:  ssh-add $key_file"
+            echo ""
+            exit 1
+          fi
+        else
+          if ! printf 'test' | gpg --sign --batch --quiet --output /dev/null 2>/dev/null; then
+            echo ""
+            echo "❌  GPG key is configured but could not sign."
+            echo "    Is gpg-agent running?  gpgconf --launch gpg-agent"
+            echo ""
+            exit 1
+          fi
+        fi
 
 commit-msg:
   commands:
@@ -71,6 +101,52 @@ pre-push:
   commands:
     gates:
       run: bun run test:prepush
+
+    verify-commits-signed:
+      run: |
+        # Walk every commit that is about to be pushed and reject the push if
+        # any of them lack a signature.  git log --format="%G?" returns:
+        #   G  good signature          U  unknown key (sig present)
+        #   X  expired sig             Y  expired key
+        #   E  key not in allowedSigners (SSH, sig present but unverified)
+        #   N  NO signature at all  ← the only value we must reject
+        #
+        # Note: E is normal for SSH-signed commits when gpg.ssh.allowedSignersFile
+        # is not configured in CI; the signature still exists, we just can't
+        # verify trust.  We only block N.
+        current_branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || true)
+        upstream=$(git rev-parse --abbrev-ref "@{upstream}" 2>/dev/null || true)
+        if [ -n "$upstream" ]; then
+          commits=$(git rev-list "${upstream}..HEAD" 2>/dev/null || true)
+        else
+          commits=$(git rev-list HEAD --not --remotes 2>/dev/null || true)
+        fi
+        if [ -z "$commits" ]; then
+          exit 0
+        fi
+        unsigned=""
+        for commit in $commits; do
+          sig=$(git log --format="%G?" -1 "$commit" 2>/dev/null || echo "N")
+          if [ "$sig" = "N" ]; then
+            unsigned="$unsigned\n  $(git log --format='%h %s' -1 "$commit")"
+          fi
+        done
+        if [ -n "$unsigned" ]; then
+          echo ""
+          echo "❌  The following commits are not signed:"
+          printf "%b\n" "$unsigned"
+          echo ""
+          echo "    Re-sign the range with:"
+          echo "    git rebase --exec 'git commit --amend -S --no-edit' \\"
+          if [ -n "$upstream" ]; then
+            echo "      ${upstream}..HEAD"
+          else
+            echo "      \$(git rev-list HEAD --not --remotes | tail -1)^..HEAD"
+          fi
+          echo ""
+          exit 1
+        fi
+        echo "✔ All pushed commits carry a signature."
 
     sweep-tmp:
       # Reclaim /tmp before pre-push gates fire — test runs leave per-case
