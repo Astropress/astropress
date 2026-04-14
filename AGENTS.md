@@ -191,6 +191,53 @@ rule will catch this.
 ## Honesty requirements
 
 `tooling/scripts/audit-honesty.ts` verifies that `README.md`,
-`docs/EVALUATION.md`, and `packages/docs/src/content/docs/contributing/evaluation.mdx`
+`docs/reference/EVALUATION.md`, and `packages/docs/src/content/docs/contributing/evaluation.mdx`
 all mention Argon2id, KMAC256, and ML-DSA-65. If you rename these algorithms or
 remove the mentions, update `tooling/readiness-truth.json` to match.
+
+## Signing setup
+
+**All commits to `main` must be signed.** This is enforced by the GitHub branch
+ruleset (`required_signatures`) and caught early by the `verify-signing` pre-commit
+hook in `lefthook.yml`.
+
+### One-time local setup
+
+**GPG key (traditional):**
+```sh
+gpg --list-secret-keys --keyid-format=long   # find your key ID (e.g. 3AA5C34371567BD2)
+git config --global user.signingkey 3AA5C34371567BD2
+git config --global commit.gpgsign true
+```
+Upload the public key to GitHub: Settings → SSH and GPG keys → New GPG key.
+
+**SSH key (simpler if you already use SSH for GitHub):**
+```sh
+git config --global gpg.format ssh
+git config --global user.signingkey ~/.ssh/id_ed25519.pub   # or your key path
+git config --global commit.gpgsign true
+```
+Upload the same public key to GitHub: Settings → SSH and GPG keys → New signing key
+(separate from the authentication key).
+
+### Verify a commit is signed
+```sh
+git log --show-signature -1
+```
+Look for `gpg: Good signature` or `Good "git" signature`.
+
+### GitHub repo hardening applied
+The `Astropress/astropress` repository has the following security settings active.
+To inspect or update them use `gh api repos/Astropress/astropress/rulesets/14968184`.
+
+| Setting | Value |
+|---------|-------|
+| Required signatures | ✓ enforced on default branch |
+| Required status checks | `lint`, `test-unit (1.3.10)`, `test-unit (latest)`, `test-cli` |
+| Linear history | ✓ (no merge commits) |
+| Force push | ✗ blocked |
+| Branch deletion | ✗ blocked |
+| Web commit signoff | ✓ required |
+| Secret scanning | ✓ enabled |
+| Secret scanning push protection | ✓ enabled |
+| Dependabot security updates | ✓ enabled |

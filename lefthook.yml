@@ -21,6 +21,38 @@ pre-commit:
           exit 1
         fi
 
+    verify-signing:
+      run: |
+        # Commits to main require a GPG or SSH signature (enforced by the
+        # GitHub branch ruleset). Catch mis-configuration before git does,
+        # so the error message explains how to fix it.
+        gpgsign=$(git config --get commit.gpgsign 2>/dev/null || true)
+        if [ "$gpgsign" != "true" ]; then
+          echo ""
+          echo "❌  Commit signing is not configured locally."
+          echo "    GitHub requires signed commits on main."
+          echo ""
+          echo "    GPG key:  git config --global commit.gpgsign true"
+          echo "              git config --global user.signingkey <KEY-ID>"
+          echo ""
+          echo "    SSH key:  git config --global gpg.format ssh"
+          echo "              git config --global user.signingkey /path/to/key.pub"
+          echo "              git config --global commit.gpgsign true"
+          echo ""
+          echo "    See AGENTS.md § Signing setup for full instructions."
+          exit 1
+        fi
+        signingkey=$(git config --get user.signingkey 2>/dev/null || true)
+        gpg_format=$(git config --get gpg.format 2>/dev/null || echo "openpgp")
+        if [ -z "$signingkey" ] && [ "$gpg_format" = "openpgp" ]; then
+          echo ""
+          echo "❌  commit.gpgsign is true but user.signingkey is not set."
+          echo "    Find your key ID: gpg --list-secret-keys --keyid-format=long"
+          echo "    Then: git config --global user.signingkey <KEY-ID>"
+          echo ""
+          exit 1
+        fi
+
 commit-msg:
   commands:
     format:
