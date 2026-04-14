@@ -13,7 +13,8 @@ mod ops;
 
 pub(crate) use help::print_help;
 
-use misc::{parse_add_command, parse_migrate_command};
+use misc::{parse_add_command, parse_migrate_command, parse_telemetry_command};
+use crate::telemetry::TelemetryAction;
 
 /// How the page crawler should operate after a live-site import.
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
@@ -145,6 +146,7 @@ pub(crate) enum Command {
         to: String,
         dry_run: bool,
     },
+    Telemetry { action: TelemetryAction },
     ListTools,
     ListProviders,
     Help,
@@ -236,6 +238,7 @@ pub(crate) fn parse_command(args: &[String]) -> Result<Command, String> {
         [command, ..] if command == "list" || command == "ls" => {
             Err("Unsupported list subcommand. Use `astropress list tools` or `astropress list providers`.".into())
         }
+        [command, rest @ ..] if command == "telemetry" => parse_telemetry_command(rest),
         [command, ..] => Err(format!("Unsupported astropress command: `{command}`.")),
     }
 }

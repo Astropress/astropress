@@ -3,6 +3,8 @@ use std::path::PathBuf;
 
 use serde::{Deserialize, Serialize};
 
+use crate::features::AllFeatures;
+
 // ---------------------------------------------------------------------------
 // Config
 // ---------------------------------------------------------------------------
@@ -39,6 +41,104 @@ fn write_telemetry_config(config: &TelemetryConfig) {
     }
     if let Ok(json) = serde_json::to_string_pretty(config) {
         let _ = fs::write(path, format!("{json}\n"));
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Suppression check — checked before any prompt or send
+// ---------------------------------------------------------------------------
+
+/// Returns true if telemetry must be silent regardless of stored preference.
+/// Order: explicit env var → EFF DNT spec → standard CI env vars.
+fn is_telemetry_suppressed() -> bool {
+    // ASTROPRESS_TELEMETRY=0 / false / disabled
+    if matches!(
+        std::env::var("ASTROPRESS_TELEMETRY").as_deref(),
+        Ok("0") | Ok("false") | Ok("disabled")
+    ) {
+        return true;
+    }
+    // EFF Do Not Track spec (https://www.eff.org/dnt-policy)
+    if matches!(std::env::var("DO_NOT_TRACK").as_deref(), Ok("1")) {
+        return true;
+    }
+    // Standard CI environment variables — never prompt or send in CI
+    if std::env::var("CI").is_ok()
+        || std::env::var("GITHUB_ACTIONS").is_ok()
+        || std::env::var("GITLAB_CI").is_ok()
+        || std::env::var("CIRCLECI").is_ok()
+    {
+        return true;
+    }
+    false
+}
+
+// ---------------------------------------------------------------------------
+// `astropress telemetry` subcommand
+// ---------------------------------------------------------------------------
+
+#[derive(Debug, PartialEq, Eq)]
+pub(crate) enum TelemetryAction {
+    Status,
+    Enable,
+    Disable,
+}
+
+pub(crate) fn run_telemetry_command(action: TelemetryAction) {
+    match action {
+        TelemetryAction::Status => {
+            if is_telemetry_suppressed() {
+                println!("Telemetry: disabled (environment variable override)");
+                println!("  Unset ASTROPRESS_TELEMETRY / DO_NOT_TRACK / CI to allow opt-in.");
+            } else {
+                match read_telemetry_config().telemetry {
+                    Some(true)  => println!("Telemetry: enabled"),
+                    Some(false) => println!("Telemetry: disabled"),
+                    None => println!(
+                        "Telemetry: not yet answered  \
+                        (run `astropress new` to be prompted, or use `astropress telemetry enable`)"
+                    ),
+                }
+            }
+            println!("  Config: ~/.astropress/config.json");
+            println!(
+                "  Schema: \
+                https://github.com/Astropress/astropress/blob/main/docs/TELEMETRY.md"
+            );
+        }
+        TelemetryAction::Enable => {
+            let mut c = read_telemetry_config();
+            c.telemetry = Some(true);
+            write_telemetry_config(&c);
+            println!("Telemetry enabled. Thank you.");
+            println!(
+                "  Schema: \
+                https://github.com/Astropress/astropress/blob/main/docs/TELEMETRY.md"
+            );
+        }
+        TelemetryAction::Disable => {
+            let mut c = read_telemetry_config();
+            c.telemetry = Some(false);
+            write_telemetry_config(&c);
+            println!("Telemetry disabled. No data will be sent.");
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Post-`astropress new` consent + event
+// ---------------------------------------------------------------------------
+
+/// Called at the end of `run_post_scaffold_setup`. Asks for consent once (if
+/// not already answered and not suppressed), then fires a `project_created`
+/// event if the user opts in.
+pub(crate) fn post_new_wizard(features: &AllFeatures, cli_version: &str) {
+    if is_telemetry_suppressed() || crate::tui::is_plain() {
+        return;
+    }
+    let opted_in = ask_telemetry_consent();
+    if opted_in {
+        let _ = send_project_created(features, cli_version);
     }
 }
 
@@ -138,21 +238,36 @@ fn collect_issues() -> Vec<String> {
 }
 
 // ---------------------------------------------------------------------------
-// Telemetry consent
+// Telemetry consent prompt (shared by new wizard + import feedback)
 // ---------------------------------------------------------------------------
 
 fn ask_telemetry_consent() -> bool {
+    // Env-var suppression takes precedence over everything.
+    if is_telemetry_suppressed() {
+        return false;
+    }
+
     let config = read_telemetry_config();
 
-    // Already opted in or out — respect the stored preference.
+    // Already opted in or out — respect the stored preference silently.
     if let Some(opted_in) = config.telemetry {
         return opted_in;
     }
 
-    // Not yet asked — prompt.
+    // Not yet asked — show an explanatory block, then a y/N prompt.
+    println!();
+    println!("Help improve Astropress? You can share anonymous usage data");
+    println!("(feature selections, OS, CLI version — no paths, no content, no credentials).");
+    println!(
+        "  Full schema:  \
+        https://github.com/Astropress/astropress/blob/main/docs/TELEMETRY.md"
+    );
+    println!("  Change later: astropress telemetry disable");
+    println!();
+
     let result = dialoguer::Confirm::with_theme(&dialoguer::theme::ColorfulTheme::default())
-        .with_prompt("Share feedback anonymously to improve AstroPress?")
-        .default(false)
+        .with_prompt("Share anonymous usage data?")
+        .default(false)   // N is default — user must explicitly choose Y to opt in
         .interact();
 
     let opted_in = result.unwrap_or(false);
@@ -163,8 +278,58 @@ fn ask_telemetry_consent() -> bool {
 }
 
 // ---------------------------------------------------------------------------
-// Anonymous telemetry POST
+// Fire-and-forget sends
 // ---------------------------------------------------------------------------
+
+fn send_project_created(f: &AllFeatures, version: &str) -> Result<(), String> {
+    // Debug representations of enums produce clean variant names ("HyperSwitch",
+    // "Postiz", etc.) — no paths, no content, no credentials.
+    let payload = serde_json::json!({
+        "event":   "project_created",
+        "version": version,
+        "os":      std::env::consts::OS,
+        "features": {
+            "cms":                 format!("{:?}", f.cms),
+            "analytics":           format!("{:?}", f.analytics),
+            "payments":            format!("{:?}", f.payments),
+            "social":              format!("{:?}", f.social),
+            "commerce":            format!("{:?}", f.commerce),
+            "email":               format!("{:?}", f.email),
+            "transactional_email": format!("{:?}", f.transactional_email),
+            "forum":               format!("{:?}", f.forum),
+            "chat":                format!("{:?}", f.chat),
+            "notify":              format!("{:?}", f.notify),
+            "schedule":            format!("{:?}", f.schedule),
+            "video":               format!("{:?}", f.video),
+            "podcast":             format!("{:?}", f.podcast),
+            "events":              format!("{:?}", f.events),
+            "sso":                 format!("{:?}", f.sso),
+            "crm":                 format!("{:?}", f.crm),
+            "knowledge_base":      format!("{:?}", f.knowledge_base),
+            "search":              format!("{:?}", f.search),
+            "courses":             format!("{:?}", f.courses),
+            "forms":               format!("{:?}", f.forms),
+            "status":              format!("{:?}", f.status),
+            "ab_testing":          format!("{:?}", f.ab_testing),
+            "heatmap":             format!("{:?}", f.heatmap),
+            "docs":                format!("{:?}", f.docs),
+            "job_board":           f.job_board,
+            "enable_api":          f.enable_api,
+        }
+    });
+    let json = serde_json::to_string(&payload).map_err(|e| e.to_string())?;
+    let _ = std::process::Command::new("curl")
+        .args([
+            "-s", "-X", "POST",
+            "-H", "Content-Type: application/json",
+            "-d", &json,
+            "https://telemetry.astropress.diy/project-created",
+        ])
+        .stdout(std::process::Stdio::null())
+        .stderr(std::process::Stdio::null())
+        .spawn();
+    Ok(())
+}
 
 #[derive(Serialize)]
 struct TelemetryPayload<'a> {
@@ -176,7 +341,6 @@ struct TelemetryPayload<'a> {
 }
 
 fn send_telemetry_report(summary: &ImportSummary, issues: &[String]) -> Result<(), String> {
-    // Fire-and-forget via curl subprocess so we don't need an async runtime.
     // Payload: source, issues[], postCount, warningCount, platform.
     // No URLs, no content, no credentials.
     let payload = TelemetryPayload {

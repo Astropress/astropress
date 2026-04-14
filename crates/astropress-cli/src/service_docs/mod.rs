@@ -22,7 +22,7 @@ use crate::features::{
     AllFeatures, ChatChoice, CmsChoice, CommerceChoice, CommunityChoice, CourseChoice,
     CrmChoice, EmailChoice, EventChoice, FormsChoice, ForumChoice, KnowledgeBaseChoice,
     NotifyChoice, PaymentChoice, PodcastChoice, ScheduleChoice, SearchChoice,
-    SocialChoice, SsoChoice, StatusChoice, TransactionalEmailChoice, VideoChoice,
+    SocialChoice, SsoChoice, StatusChoice, VideoChoice,
 };
 use crate::providers::AbTestingProvider;
 
@@ -163,7 +163,7 @@ pub(crate) fn service_compose_stubs(f: &AllFeatures) -> Vec<(&'static str, &'sta
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::features::AllFeatures;
+    use crate::features::{AllFeatures, TransactionalEmailChoice};
 
     fn with_listmonk() -> AllFeatures {
         AllFeatures { email: EmailChoice::Listmonk, ..AllFeatures::defaults() }

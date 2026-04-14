@@ -40,7 +40,7 @@ pub(crate) fn scaffold_new_project(
     app_host: Option<AppHost>,
     data_services: Option<DataServices>,
     options: ScaffoldOptions,
-) -> Result<(), String> {
+) -> Result<AllFeatures, String> {
     let ScaffoldOptions { analytics_flag, ab_testing_flag, heatmap_flag, enable_api_flag, yes_defaults_flag } = options;
     if project_dir.exists() {
         let mut entries = fs::read_dir(project_dir).map_err(crate::io_error)?;
@@ -131,10 +131,10 @@ pub(crate) fn scaffold_new_project(
     println!("App host: {}  |  Content services: {}", scaffold.app_host, scaffold.content_services);
     print_stack_summary(&features, app_host);
 
-    Ok(())
+    Ok(features)
 }
 
-pub(crate) fn run_post_scaffold_setup(project_dir: &Path) -> Result<(), String> {
+pub(crate) fn run_post_scaffold_setup(project_dir: &Path, features: &AllFeatures) -> Result<(), String> {
     println!("\nInstalling dependencies...");
     std::process::Command::new("bun")
         .arg("install").current_dir(project_dir).status()
@@ -161,6 +161,11 @@ pub(crate) fn run_post_scaffold_setup(project_dir: &Path) -> Result<(), String> 
     println!("└──────────────────────────────────────────────────────┘");
     println!();
     println!("Run:  cd {} && astropress dev", project_dir.display());
+
+    // One-time opt-in consent prompt + project_created event.
+    // No-op if suppressed (ASTROPRESS_TELEMETRY=0, DO_NOT_TRACK, CI), plain mode,
+    // or the user has already answered the consent question.
+    crate::telemetry::post_new_wizard(features, env!("CARGO_PKG_VERSION"));
 
     Ok(())
 }

@@ -5,6 +5,7 @@
 use std::path::PathBuf;
 
 use super::Command;
+use crate::telemetry::TelemetryAction;
 
 pub(super) fn parse_add_command(args: &[String]) -> Result<Command, String> {
     let mut project_dir = std::env::current_dir().unwrap_or_else(|_| PathBuf::from("."));
@@ -72,4 +73,15 @@ pub(super) fn parse_migrate_command(args: &[String]) -> Result<Command, String> 
     let to   = to.ok_or_else(|| "Usage: `astropress migrate --from <tool> --to <tool>`.".to_string())?;
 
     Ok(Command::Migrate { project_dir, from, to, dry_run })
+}
+
+pub(super) fn parse_telemetry_command(args: &[String]) -> Result<Command, String> {
+    match args.first().map(|s| s.as_str()) {
+        Some("status") | None => Ok(Command::Telemetry { action: TelemetryAction::Status }),
+        Some("enable")        => Ok(Command::Telemetry { action: TelemetryAction::Enable }),
+        Some("disable")       => Ok(Command::Telemetry { action: TelemetryAction::Disable }),
+        Some(other) => Err(format!(
+            "Unknown telemetry subcommand `{other}`. Use: status, enable, disable."
+        )),
+    }
 }

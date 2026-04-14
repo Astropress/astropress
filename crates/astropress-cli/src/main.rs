@@ -38,6 +38,7 @@ use commands::add::{add_integrations, parse_add_features};
 use commands::list::{list_providers, list_tools};
 use commands::migrate::{run_migrate, MigrateOptions};
 use commands::new::{scaffold_new_project, run_post_scaffold_setup};
+use telemetry::run_telemetry_command;
 use commands::services::{bootstrap_content_services, print_content_services_report, verify_content_services};
 use commands::upgrade::{apply_upgrade, check_upgrade_compatibility, print_upgrade_check_report};
 
@@ -71,7 +72,7 @@ fn main() -> ExitCode {
             enable_api,
             yes_defaults,
         }) => match scaffold_new_project(&project_dir, use_local_package, provider, app_host, data_services, commands::new::ScaffoldOptions { analytics_flag: analytics, ab_testing_flag: ab_testing, heatmap_flag: heatmap, enable_api_flag: enable_api, yes_defaults_flag: yes_defaults })
-            .and_then(|()| run_post_scaffold_setup(&project_dir))
+            .and_then(|features| run_post_scaffold_setup(&project_dir, &features))
         {
             Ok(()) => ExitCode::SUCCESS,
             Err(error) => fail(error),
@@ -269,6 +270,10 @@ fn main() -> ExitCode {
                 Ok(()) => ExitCode::SUCCESS,
                 Err(error) => fail(error),
             }
+        }
+        Ok(Command::Telemetry { action }) => {
+            run_telemetry_command(action);
+            ExitCode::SUCCESS
         }
         Ok(Command::ListTools) => {
             list_tools();
