@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getFirstPartyProviderTarget, listFirstPartyProviderTargets } from "astropress";
+import { getFirstPartyProviderTarget, listFirstPartyProviderTargets } from "@astropress-diy/astropress";
 
 describe("provider targets", () => {
   it("includes the required first-party providers for v1", () => {

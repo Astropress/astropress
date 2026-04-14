@@ -5,7 +5,7 @@ import {
   type AstropressPlatformAdapter,
   type AstropressCmsConfig,
   type AstropressHostPanelCapability,
-} from "astropress";
+} from "@astropress-diy/astropress";
 
 function createTestAdapter(hostPanel?: AstropressHostPanelCapability): AstropressPlatformAdapter {
   return assertProviderContract({

@@ -1,6 +1,6 @@
 import type { APIRoute } from "astro";
-import { withAdminFormAction } from "astropress";
-import { createRuntimeCategory, createRuntimeTag, updateRuntimeCategory, updateRuntimeTag } from "astropress";
+import { withAdminFormAction } from "@astropress-diy/astropress";
+import { createRuntimeCategory, createRuntimeTag, updateRuntimeCategory, updateRuntimeTag } from "@astropress-diy/astropress";
 export const POST: APIRoute = async (context) =>
   withAdminFormAction(context, { failurePath: "/ap-admin/taxonomies", requireAdmin: true }, async ({ actor, formData, locals, redirect, fail }) => {
     const kind = (formData.get("kind") as string | null) === "tag" ? "tag" : "category";

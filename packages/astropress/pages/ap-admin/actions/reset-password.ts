@@ -4,8 +4,8 @@ import {
   createAstropressSecureRedirect,
   createRuntimePasswordResetToken,
   isTrustedRequestOrigin,
-} from "astropress";
-import { sendPasswordResetEmail } from "astropress";
+} from "@astropress-diy/astropress";
+import { sendPasswordResetEmail } from "@astropress-diy/astropress";
 
 export const POST: APIRoute = async ({ request, locals }) => {
   if (!isTrustedRequestOrigin(request)) {

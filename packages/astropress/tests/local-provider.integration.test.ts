@@ -7,7 +7,7 @@ import {
   createAstropressCloudflareAdapter,
   createAstropressRunwayAdapter,
   createAstropressSupabaseAdapter,
-} from "astropress";
+} from "@astropress-diy/astropress";
 import { createAstropressLocalAdapter } from "../src/adapters/local.js";
 import { createAstropressRunwaySqliteAdapter } from "../src/adapters/runway-sqlite.js";
 import { createAstropressSqliteAdapter } from "../src/adapters/sqlite.js";

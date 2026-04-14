@@ -19,10 +19,10 @@
  */
 
 import type { APIRoute } from "astro";
-import { withApiRequest, jsonOk, apiErrors } from "astropress/api-middleware.js";
-import { loadLocalAdminStore } from "astropress/local-runtime-modules.js";
-import { searchRuntimeContentStates } from "astropress";
-import { getCmsConfig } from "astropress";
+import { withApiRequest, jsonOk, apiErrors } from "@astropress-diy/astropress/api-middleware.js";
+import { loadLocalAdminStore } from "@astropress-diy/astropress/local-runtime-modules.js";
+import { searchRuntimeContentStates } from "@astropress-diy/astropress";
+import { getCmsConfig } from "@astropress-diy/astropress";
 
 export const GET: APIRoute = async (context) => {
   if (!getCmsConfig().api?.enabled) {

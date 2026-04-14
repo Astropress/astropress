@@ -3,9 +3,9 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "astropress": ["./index.ts"],
-      "astropress/components/*": ["./components/*"],
-      "astropress/*": ["./src/*"]
+      "@astropress-diy/astropress": ["./index.ts"],
+      "@astropress-diy/astropress/components/*": ["./components/*"],
+      "@astropress-diy/astropress/*": ["./src/*"]
     }
   },
   "include": ["src/**/*", "index.ts", "components/**/*", "bin/**/*"]

@@ -66,7 +66,7 @@ function finalizeRecommendation(
  *
  * @example
  * ```ts
- * import { recommendAstropressProvider } from "astropress";
+ * import { recommendAstropressProvider } from "@astropress-diy/astropress";
  *
  * const rec = recommendAstropressProvider({ existingPlatform: "supabase" });
  * console.log(rec.appHost);       // "vercel"

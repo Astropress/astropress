@@ -1,7 +1,7 @@
 import type { APIRoute } from "astro";
-import { withAdminFormAction } from "astropress";
-import { createListmonkOps } from "astropress/newsletter-adapter";
-import { getNewsletterConfig } from "astropress/runtime-env";
+import { withAdminFormAction } from "@astropress-diy/astropress";
+import { createListmonkOps } from "@astropress-diy/astropress/newsletter-adapter";
+import { getNewsletterConfig } from "@astropress-diy/astropress/runtime-env";
 
 export const POST: APIRoute = async (context) =>
   withAdminFormAction(context, { failurePath: "/ap-admin/subscribers", requireAdmin: true }, async ({ formData, locals, redirect, fail }) => {

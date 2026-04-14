@@ -1,4 +1,4 @@
-import { createAstropressPasswordAuthModule } from "astropress/integration";
+import { createAstropressPasswordAuthModule } from "@astropress-diy/astropress/integration";
 
 import { authenticatePersistedAdminUser } from "./runtime.ts";
 

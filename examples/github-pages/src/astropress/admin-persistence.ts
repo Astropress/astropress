@@ -1,4 +1,4 @@
-import { createAstropressCmsRegistryModule } from "astropress/integration";
+import { createAstropressCmsRegistryModule } from "@astropress-diy/astropress/integration";
 
 import { sqliteCmsRegistryModule } from "./runtime.ts";
 

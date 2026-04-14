@@ -1,5 +1,5 @@
 import type { APIRoute } from "astro";
-import { withAdminFormAction } from "astropress";
+import { withAdminFormAction } from "@astropress-diy/astropress";
 import { purgeUserData } from "../../../src/admin-action-user-purge.js";
 
 /**

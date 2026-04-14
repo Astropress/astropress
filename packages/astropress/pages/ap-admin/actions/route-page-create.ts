@@ -1,7 +1,7 @@
 import type { APIRoute } from "astro";
-import { withAdminFormAction } from "astropress";
-import { createRuntimeStructuredPageRoute } from "astropress";
-import { getCmsConfig } from "astropress";
+import { withAdminFormAction } from "@astropress-diy/astropress";
+import { createRuntimeStructuredPageRoute } from "@astropress-diy/astropress";
+import { getCmsConfig } from "@astropress-diy/astropress";
 
 function buildDefaultSections(title: string, summary: string, path: string) {
   return {

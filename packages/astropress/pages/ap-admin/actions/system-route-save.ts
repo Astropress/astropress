@@ -1,6 +1,6 @@
 import type { APIRoute } from "astro";
-import { withAdminFormAction } from "astropress";
-import { saveRuntimeSystemRoute } from "astropress";
+import { withAdminFormAction } from "@astropress-diy/astropress";
+import { saveRuntimeSystemRoute } from "@astropress-diy/astropress";
 
 function splitLines(value: FormDataEntryValue | null) {
   return String(value ?? "")

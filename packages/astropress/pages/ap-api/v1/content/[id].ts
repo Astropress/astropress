@@ -1,8 +1,8 @@
 import type { APIRoute } from "astro";
-import { withApiRequest, jsonOk, jsonOkWithEtag, apiErrors } from "astropress/api-middleware.js";
-import { loadLocalAdminStore } from "astropress/local-runtime-modules.js";
-import { getRuntimeContentState, saveRuntimeContentState } from "astropress";
-import { getCmsConfig } from "astropress";
+import { withApiRequest, jsonOk, jsonOkWithEtag, apiErrors } from "@astropress-diy/astropress/api-middleware.js";
+import { loadLocalAdminStore } from "@astropress-diy/astropress/local-runtime-modules.js";
+import { getRuntimeContentState, saveRuntimeContentState } from "@astropress-diy/astropress";
+import { getCmsConfig } from "@astropress-diy/astropress";
 
 function buildApiCtx(store: Awaited<ReturnType<typeof loadLocalAdminStore>>, config: ReturnType<typeof getCmsConfig>) {
   return {

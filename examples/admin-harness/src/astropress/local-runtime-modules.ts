@@ -1,5 +1,5 @@
-import type { LocalAdminAuthModule, LocalAdminStoreModule, LocalCmsRegistryModule } from "astropress";
-import { defineAstropressHostRuntimeModules } from "astropress/integration";
+import type { LocalAdminAuthModule, LocalAdminStoreModule, LocalCmsRegistryModule } from "@astropress-diy/astropress";
+import { defineAstropressHostRuntimeModules } from "@astropress-diy/astropress/integration";
 
 export const hostRuntimeModules = defineAstropressHostRuntimeModules({
   async loadLocalAdminStore() {

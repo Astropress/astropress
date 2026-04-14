@@ -27,7 +27,7 @@ vi.mock("astropress/local-runtime-modules", () => ({
 
 // Partial mock of the astropress main module — keep getCmsConfig/registerCms real,
 // replace the runtime content functions so tests don't hit real SQLite for writes.
-vi.mock("astropress", async (importOriginal) => {
+vi.mock("@astropress-diy/astropress", async (importOriginal) => {
   const actual = await importOriginal<typeof import("../index.js")>();
   return {
     ...actual,

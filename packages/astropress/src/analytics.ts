@@ -74,7 +74,7 @@ export function resolveAnalyticsSnippet(config?: AnalyticsConfig | null): string
  * @example
  * ```astro
  * ---
- * import { resolveAnalyticsSnippet, requestOptedOutOfTracking } from "astropress/analytics";
+ * import { resolveAnalyticsSnippet, requestOptedOutOfTracking } from "@astropress-diy/astropress/analytics";
  * const snippet = requestOptedOutOfTracking(Astro.request)
  *   ? ""
  *   : resolveAnalyticsSnippet(config.analytics);

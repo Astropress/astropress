@@ -1,6 +1,6 @@
 import type { APIRoute } from "astro";
-import { withAdminFormAction } from "astropress";
-import { saveRuntimeSettings } from "astropress";
+import { withAdminFormAction } from "@astropress-diy/astropress";
+import { saveRuntimeSettings } from "@astropress-diy/astropress";
 export const POST: APIRoute = async (context) =>
   withAdminFormAction(context, { failurePath: "/ap-admin/settings", requireAdmin: true }, async ({ actor, formData, locals, redirect, fail }) => {
     const siteTitle = formData.get("siteTitle") as string | null;

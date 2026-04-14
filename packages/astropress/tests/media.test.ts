@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getRuntimeMediaResolutionOptions, resolveMediaUrl, resolveRuntimeMediaUrl } from "astropress";
+import { getRuntimeMediaResolutionOptions, resolveMediaUrl, resolveRuntimeMediaUrl } from "@astropress-diy/astropress";
 
 const sampleRecord = {
   id: "img-001",

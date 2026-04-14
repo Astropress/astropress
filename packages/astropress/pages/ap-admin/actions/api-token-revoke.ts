@@ -1,6 +1,6 @@
 import type { APIRoute } from "astro";
-import { withAdminFormAction } from "astropress";
-import { loadLocalAdminStore } from "astropress/local-runtime-modules.js";
+import { withAdminFormAction } from "@astropress-diy/astropress";
+import { loadLocalAdminStore } from "@astropress-diy/astropress/local-runtime-modules.js";
 
 export const POST: APIRoute = async (context) =>
   withAdminFormAction(context, { failurePath: "/ap-admin/api-tokens", requireAdmin: true }, async ({ formData, redirect, fail }) => {

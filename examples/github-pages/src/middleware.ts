@@ -1,5 +1,5 @@
-import { createAstropressSecurityMiddleware } from "astropress/integration";
-import { registerCms } from "astropress";
+import { createAstropressSecurityMiddleware } from "@astropress-diy/astropress/integration";
+import { registerCms } from "@astropress-diy/astropress";
 
 // Register CMS — edit siteUrl and templateKeys to match your site.
 // See: docs/guides/QUICK_START.md

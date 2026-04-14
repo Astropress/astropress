@@ -1,5 +1,5 @@
 import type { APIRoute } from "astro";
-import { consumeRuntimeInviteToken, createAstropressSecureRedirect, isTrustedRequestOrigin } from "astropress";
+import { consumeRuntimeInviteToken, createAstropressSecureRedirect, isTrustedRequestOrigin } from "@astropress-diy/astropress";
 
 export const POST: APIRoute = async ({ request, locals }) => {
   if (!isTrustedRequestOrigin(request)) {
