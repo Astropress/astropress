@@ -1,7 +1,5 @@
 <div align="center">
 
-<img src="https://raw.githubusercontent.com/astropress/astropress/main/docs/assets/logo.svg" alt="Astropress" width="200" />
-
 # Astropress
 
 **Your website launchpad.**
