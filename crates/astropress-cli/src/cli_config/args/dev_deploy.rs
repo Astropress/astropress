@@ -43,7 +43,7 @@ pub(super) fn parse_dev_command(args: &[String]) -> Result<Command, String> {
             }
             value => {
                 if positional_project_dir.is_some() {
-                    return Err("Usage: `astropress dev [project-dir] [--provider sqlite|supabase|runway] [--app-host <host>] [--content-services <services>]`.".into());
+                    return Err("Usage: `astropress dev [project-dir] [--provider sqlite|supabase] [--app-host <host>] [--content-services <services>]`.".into());
                 }
                 positional_project_dir = Some(PathBuf::from(value));
             }

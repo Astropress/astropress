@@ -7,7 +7,6 @@ export type AstropressDataServices =
   | "neon"
   | "nhost"
   | "turso"
-  | "runway"
   | "custom";
 
 export interface AstropressDataServiceTarget {
@@ -82,7 +81,7 @@ const dataServiceTargets: Record<AstropressDataServices, AstropressDataServiceTa
     providesDatabase: true,
     providesObjectStorage: true,
     providesAuth: true,
-    notes: "Supabase-like backend services option behind a separate Astro app host.",
+    notes: "Open-source BaaS built on Hasura, PostgreSQL, and MinIO. Provides database, object storage, and auth. Requires a separate Astro app host.",
   },
   turso: {
     id: "turso",
@@ -92,15 +91,6 @@ const dataServiceTargets: Record<AstropressDataServices, AstropressDataServiceTa
     providesObjectStorage: false,
     providesAuth: false,
     notes: "Distributed SQLite-wire database (LibSQL). Auth and storage must be handled separately.",
-  },
-  runway: {
-    id: "runway",
-    label: "Runway",
-    kind: "app-platform",
-    providesDatabase: true,
-    providesObjectStorage: true,
-    providesAuth: true,
-    notes: "Bundled platform path with Astro app hosting and managed runtime expectations.",
   },
   custom: {
     id: "custom",

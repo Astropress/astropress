@@ -41,7 +41,7 @@ export type ActionResult<T> =
   | { ok: true; data: T }
   | { ok: false; error: string; code?: string };
 
-export type ProviderKind = "github-pages" | "cloudflare" | "supabase" | "runway" | "custom";
+export type ProviderKind = "github-pages" | "cloudflare" | "supabase" | "custom";
 
 /** Configuration for the editorial CMS panel embedded in the admin. */
 export interface AstropressCmsConfig {

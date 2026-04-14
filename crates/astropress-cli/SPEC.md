@@ -48,8 +48,8 @@ The CLI must support:
 ## Current Runtime State
 
 - `astropress new` should scaffold local SQLite defaults for a working non-technical admin flow
-- `astropress new --provider sqlite|supabase|runway` should scaffold a matching local provider default for a working non-technical admin flow
-- `astropress dev --provider sqlite|supabase|runway` should seed the packaged SQLite-backed provider runtime before launching the local site
+- `astropress new --provider sqlite|supabase` should scaffold a matching local provider default for a working non-technical admin flow
+- `astropress dev --provider sqlite|supabase` should seed the packaged SQLite-backed provider runtime before launching the local site
 - `astropress import wordpress` should stage typed import artifacts and support resumable media download orchestration rather than performing only structural inspection
 - `astropress backup`, `astropress restore`, `astropress sync export`, `astropress sync import`, and GitHub Pages deploy should invoke the packaged Astropress workflow modules instead of reimplementing those workflows directly in Rust
 - `astropress doctor` should expose the package-owned runtime/secret/path health contract for operators

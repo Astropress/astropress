@@ -63,10 +63,12 @@ Grade scale: `A+ / A / B / C / D / F`
 | 53 | Cross-Platform Support | |
 | 54 | Test Artifact Cleanup | |
 | 55 | Minimalism | |
+| 56 | Verified Providers / No Speculative Features | |
 
 ## Known gaps
 
 - **Rubric 35:** Live hosted-provider coverage still depends on maintainer-owned accounts, seeded projects, and teardown automation
+- **Rubric 56:** The fictional "Runway" provider was removed in 2026-04-14 after being identified as a hallucinated entry — `audit:providers` now enforces that all provider IDs are verified against `tooling/verified-providers.json`
 - **Rubric 46–52:** UX rubrics added 2026-04-12 — no independent user research or usability testing has been conducted
 - **Rubric 53:** Windows, macOS, and Linux now have CI smoke coverage and shell parity, but BSD remains best-effort rather than verified support
 
@@ -366,3 +368,30 @@ Measures whether the codebase contains only what is needed to do the job — no 
 - An automated dead-export lint (e.g. `ts-prune` or `knip`) run in CI
 - Periodic `bun run audit:arch` line-count review to catch files creeping toward the 600-line ceiling
 - A contributing guideline that explicitly forbids one-off helpers and speculative config fields
+
+---
+
+## Rubric 56 — Verified Providers / No Speculative Features
+
+Measures whether every hosting provider, data service, and third-party integration referenced in the codebase corresponds to a real, publicly available service that was explicitly requested — not a plausible-sounding invention.
+
+### Why this rubric exists
+
+The fictional "Runway" hosting provider was present in the type system, adapter layer, CLI wizard, deployment matrix, README, and tests for an extended period. It was not requested, had no real URL (`runway.example`), and was never caught by the existing honesty audit because that audit checked text claims, not whether referenced entities actually existed. Two independent AI coding agents both missed it across multiple evaluation runs with cleared context.
+
+The root cause is that language models fill gaps with plausible-sounding completions. A hallucinated provider is indistinguishable from a real one in code.
+
+### Evidence
+
+- `tooling/verified-providers.json` is the source of truth: every `AstropressAppHost` and `AstropressDataServices` ID must have a corresponding entry with a verified URL
+- `bun run audit:providers` (CI-enforced) compares the TypeScript type unions against `verified-providers.json` and fails if any ID is unverified
+- `AGENTS.md` contains an explicit "No speculative features" rule: no provider, integration, or service enters the type system without being explicitly named by the user and verified against a real public URL
+- The `audit:providers` check runs in the `lint` CI job alongside `audit:honesty`, `audit:security`, and `audit:aeo`
+
+### Criteria for A+
+
+- Every ID in `AstropressAppHost` has a verified entry in `verified-providers.json` with a real URL — `audit:providers` passes
+- Every ID in `AstropressDataServices` has a verified entry in `verified-providers.json` with a real URL — `audit:providers` passes
+- No adapter file exists without a corresponding verified-providers entry
+- The AGENTS.md no-speculative-features rule is present and up to date
+- Zero hallucinated providers or integrations in the git history since this rubric was introduced

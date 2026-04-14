@@ -10,7 +10,6 @@ export type AstropressAppHost =
   | "coolify"
   | "digitalocean"
   | "railway"
-  | "runway"
   | "custom";
 
 export interface AstropressAppHostTarget {
@@ -45,7 +44,7 @@ const appHostTargets: Record<AstropressAppHost, AstropressAppHostTarget> = {
     runtime: "serverless",
     supportsStatic: true,
     supportsServerRuntime: true,
-    notes: "Good fit for Astro static or SSR deployments on the Hobby tier.",
+    notes: "Serverless functions and static hosting. Hobby tier is free but non-commercial; Pro required for commercial projects.",
   },
   netlify: {
     id: "netlify",
@@ -53,7 +52,7 @@ const appHostTargets: Record<AstropressAppHost, AstropressAppHostTarget> = {
     runtime: "serverless",
     supportsStatic: true,
     supportsServerRuntime: true,
-    notes: "Good fit for Astro static or function-backed deployments on the free tier.",
+    notes: "Serverless functions and static hosting. Free tier available for personal and commercial use.",
   },
   "render-static": {
     id: "render-static",
@@ -110,14 +109,6 @@ const appHostTargets: Record<AstropressAppHost, AstropressAppHostTarget> = {
     supportsStatic: true,
     supportsServerRuntime: true,
     notes: "Railway container platform for Node web service deployments. Paid — usage-based billing, no free tier.",
-  },
-  runway: {
-    id: "runway",
-    label: "Runway",
-    runtime: "app-platform",
-    supportsStatic: true,
-    supportsServerRuntime: true,
-    notes: "Bundled app-platform path for Astro app hosting and operational workflows.",
   },
   custom: {
     id: "custom",

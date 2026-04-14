@@ -23,7 +23,6 @@ pub(crate) fn print_stack_summary(f: &AllFeatures, app_host: Option<AppHost>) {
         Some(AppHost::Coolify)         => "Coolify               (self-hosted PaaS)",
         Some(AppHost::DigitalOcean)    => "DigitalOcean App Platform",
         Some(AppHost::Railway)         => "Railway               ⚠ paid — usage-based billing, no free tier",
-        Some(AppHost::Runway)          => "Runway                (paid)",
         Some(AppHost::Custom) | None   => "custom / TBD",
     };
     println!();

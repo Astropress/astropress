@@ -26,8 +26,7 @@ function resolveExistingPlatform(dataServices: string): AstropressExistingPlatfo
   if (
     dataServices === "cloudflare" ||
     dataServices === "supabase" ||
-    dataServices === "appwrite" ||
-    dataServices === "runway"
+    dataServices === "appwrite"
   ) {
     return dataServices;
   }

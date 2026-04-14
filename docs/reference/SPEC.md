@@ -72,7 +72,6 @@ Astropress treats providers as interchangeable adapters behind stable contracts.
 | SQLite (local) | `astropress/adapters/sqlite` | Full — reference implementation |
 | Cloudflare D1 + R2 | `astropress/adapters/cloudflare` | Full |
 | Supabase (Postgres + Storage) | `astropress/adapters/supabase` | Full |
-| Runway | `astropress/adapters/runway` | Full |
 | Appwrite | `astropress/adapters/appwrite` | Full |
 | PocketBase | `astropress/adapters/pocketbase` | Full hosted adapter |
 | Nhost | `astropress/adapters/nhost` | Full-stack hosted adapter |

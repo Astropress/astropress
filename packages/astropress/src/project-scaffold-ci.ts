@@ -55,9 +55,6 @@ export function createPackageScripts(appHost: AstropressAppHost) {
       // Coolify deploys via git push / webhooks — no CLI deploy step needed.
       scripts["deploy:coolify"] = "astro build";
       break;
-    case "runway":
-      scripts["deploy:runway"] = "astro build";
-      break;
     case "custom":
       scripts["deploy:custom"] = "astro build";
       break;
@@ -101,8 +98,6 @@ function gitHubActionsDeployWorkflow(appHost: AstropressAppHost, requiredEnvKeys
     deployStep = `      - uses: digitalocean/action-doctl@v2\n        with:\n          token: \${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}\n      - run: doctl apps create-deployment \${{ secrets.DO_APP_ID }}`;
   } else if (appHost === "coolify") {
     deployStep = `      - run: |\n          # Coolify deploys automatically on git push via webhooks.\n          # If you've configured a manual deploy hook, set COOLIFY_WEBHOOK_URL as a secret.\n          if [ -n "\${COOLIFY_WEBHOOK_URL}" ]; then\n            curl -fsSL -X POST "\${COOLIFY_WEBHOOK_URL}"\n          else\n            echo "Build completed. Push to your Coolify-connected branch to trigger a deploy."\n          fi\n        env:\n          COOLIFY_WEBHOOK_URL: \${{ secrets.COOLIFY_WEBHOOK_URL }}`;
-  } else if (appHost === "runway") {
-    deployStep = `      - run: echo "Build completed. Finish the Runway publish step with your normal platform workflow."`;
   }
 
   return `name: Deploy Astropress\n\non:\n  push:\n    branches:\n      - main\n  workflow_dispatch:\n\njobs:\n  deploy:\n    runs-on: ubuntu-latest\n    steps:\n${install.join("\n")}\n      - run: echo '${envComment.replace(/'/g, "'\\''")}'\n${deployStep}\n`;

@@ -104,23 +104,3 @@ describe("hosted platform adapter", () => {
   });
 });
 
-describe("createAstropressHostedAdapter — env fallback", () => {
-  it("falls back to process.env when no env option is provided", () => {
-    // Set enough process.env to resolve a runway adapter without real credentials
-    const savedProvider = process.env.ASTROPRESS_HOSTED_PROVIDER;
-    const savedToken = process.env.RUNWAY_API_TOKEN;
-    const savedProject = process.env.RUNWAY_PROJECT_ID;
-    process.env.ASTROPRESS_HOSTED_PROVIDER = "runway";
-    process.env.RUNWAY_API_TOKEN = "test-token";
-    process.env.RUNWAY_PROJECT_ID = "test-project";
-    try {
-      // No options.env provided → should fall back to process.env
-      const adapter = createAstropressHostedAdapter({} as Parameters<typeof createAstropressHostedAdapter>[0]);
-      expect(adapter.capabilities.name).toBe("runway");
-    } finally {
-      process.env.ASTROPRESS_HOSTED_PROVIDER = savedProvider;
-      process.env.RUNWAY_API_TOKEN = savedToken;
-      process.env.RUNWAY_PROJECT_ID = savedProject;
-    }
-  });
-});
