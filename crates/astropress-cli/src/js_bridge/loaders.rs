@@ -275,6 +275,7 @@ pub(crate) fn resolve_deploy_target(
     Ok(load_project_launch_plan(project_dir, None, None, None)?.deploy_target)
 }
 
+#[allow(clippy::too_many_arguments)]
 pub(crate) fn load_project_scaffold(
     provider: LocalProvider,
     app_host: Option<AppHost>,
