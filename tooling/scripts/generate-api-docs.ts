@@ -59,7 +59,7 @@ const checker = program.getTypeChecker();
 
 function getJsDoc(symbol: ts.Symbol): string {
   const parts = symbol.getDocumentationComment(checker);
-  return ts.displayPartsToString(parts).replace(/\n+/g, " ").trim();
+  return ts.displayPartsToString(parts).replace(/[\r\n]+/g, " ").trim();
 }
 
 function formatTypeStr(type: ts.Type, node?: ts.Node): string {

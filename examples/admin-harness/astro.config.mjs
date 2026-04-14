@@ -31,6 +31,14 @@ export default defineConfig({
         },
       ],
     },
+    ssr: {
+      // Allow Vite to process astropress source through its plugin pipeline so
+      // the astropress-local-runtime-modules plugin can redirect
+      // `./local-runtime-modules` imports to the host's implementation.
+      // Without this, Vite SSR-externalizes the package and Node resolves
+      // local-runtime-modules to the dist stub that throws `unavailable()`.
+      noExternal: ["@astropress-diy/astropress"],
+    },
     server: {
       fs: {
         allow: [astropressRoot],

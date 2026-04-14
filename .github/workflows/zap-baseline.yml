@@ -31,4 +31,5 @@ jobs:
         run: |
           docker pull ghcr.io/zaproxy/zaproxy:stable -q
           docker run --network=host -v "$PWD:/zap/wrk/:rw" -t ghcr.io/zaproxy/zaproxy:stable \
-            zap-baseline.py -t http://127.0.0.1:4173 -J zap-report.json -w zap-report.md -r zap-report.html -a -l WARN
+            zap-baseline.py -t http://127.0.0.1:4173 -J zap-report.json -w zap-report.md -r zap-report.html -a -l WARN \
+            -c /zap/wrk/.github/zap-rules.conf
