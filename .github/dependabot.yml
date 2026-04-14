@@ -6,6 +6,12 @@ updates:
       interval: "weekly"
       day: "monday"
     open-pull-requests-limit: 5
+    commit-message:
+      prefix: "chore"
+      prefix-development: "chore"
+      include: "scope"
+    labels:
+      - "dependencies"
     groups:
       astro:
         patterns:
@@ -21,13 +27,28 @@ updates:
           - "@playwright/*"
           - "axe-core*"
           - "@axe-core/*"
+      biome:
+        patterns:
+          - "@biomejs/*"
+      changesets:
+        patterns:
+          - "@changesets/*"
 
   - package-ecosystem: "cargo"
-    directory: "/crates/astropress-cli"
+    directory: "/crates"
     schedule:
       interval: "weekly"
       day: "monday"
     open-pull-requests-limit: 3
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+    labels:
+      - "dependencies"
+    groups:
+      cargo-all:
+        patterns:
+          - "*"
 
   - package-ecosystem: "github-actions"
     directory: "/"
@@ -35,3 +56,12 @@ updates:
       interval: "weekly"
       day: "monday"
     open-pull-requests-limit: 5
+    commit-message:
+      prefix: "ci"
+      include: "scope"
+    labels:
+      - "dependencies"
+    groups:
+      actions-all:
+        patterns:
+          - "*"
