@@ -13,13 +13,13 @@
     "prepare": "bunx lefthook install"
   },
   "dependencies": {
-    "astro": "6.1.1",
+    "astro": "6.1.6",
     "@astropress-diy/astropress": "workspace:*"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.8",
     "lefthook": "^1.13.0",
-    "typescript": "5.9.3",
-    "vitest": "^3"
+    "typescript": "6.0.2",
+    "vitest": "^4.1.4"
   }
 }

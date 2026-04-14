@@ -8,12 +8,12 @@
     "check": "astro check"
   },
   "dependencies": {
-    "astro": "6.1.1",
+    "astro": "6.1.6",
     "@astropress-diy/astropress": "workspace:*"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.8",
     "@types/node": "^24.3.0",
-    "typescript": "5.9.3"
+    "typescript": "6.0.2"
   }
 }
