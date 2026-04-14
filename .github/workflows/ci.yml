@@ -4,6 +4,9 @@ on:
   push:
   pull_request:
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
 jobs:
   lint:
     runs-on: ubuntu-latest
@@ -25,6 +28,20 @@ jobs:
       - run: bun run audit:arch:rust
       - run: bun run audit:aeo
       - run: bun run audit:providers
+      - run: bun run audit:cli-docs
+      - run: bun run audit:env-contract
+      - run: bun run audit:exports
+      - run: bun run audit:crypto
+      - run: bun run audit:web-components
+      - run: bun run audit:navigation
+      - run: bun run audit:interaction
+      - run: bun run audit:error-handling
+      - run: bun run audit:caching
+      - run: bun run audit:nexus
+      - run: bun run audit:developer-ergonomics
+      - run: bun run audit:dead-exports
+      - run: bun run audit:bdd-wiring
+      - run: bun run audit:no-stub-tests
       - run: bun run docs:api:check
       - run: bun run docs:check
       - run: bun run repo:clean

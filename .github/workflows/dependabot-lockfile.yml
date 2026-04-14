@@ -1,0 +1,37 @@
+name: Regenerate bun.lock for Dependabot
+
+on:
+  pull_request:
+    branches: [main]
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
+jobs:
+  update-lockfile:
+    if: github.actor == 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+          # Use a PAT or the default token — default token is sufficient for
+          # pushing to Dependabot branches since they're in the same repo.
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.3.10"
+
+      - name: Regenerate bun.lock
+        run: bun install
+
+      - name: Commit updated lockfile if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add bun.lock
+          git diff --staged --quiet && echo "bun.lock unchanged" || \
+            git commit -m "chore: regenerate bun.lock [skip ci]" && git push
