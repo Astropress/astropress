@@ -73,7 +73,7 @@ export function buildDataServiceExample(dataServices: AstropressDataServices): R
   const serviceOrigin = defaultServiceOrigin(dataServices);
   switch (dataServices) {
     case "supabase":
-      return { ASTROPRESS_SERVICE_ORIGIN: serviceOrigin, SUPABASE_URL: "https://your-project.supabase.co", SUPABASE_ANON_KEY: "replace-me", SUPABASE_SERVICE_ROLE_KEY: "replace-me" };
+      return { ASTROPRESS_SERVICE_ORIGIN: serviceOrigin, SUPABASE_URL: "https://your-project.supabase.co", SUPABASE_SERVICE_ROLE_KEY: "replace-me" };
     case "appwrite":
       return { ASTROPRESS_SERVICE_ORIGIN: serviceOrigin, APPWRITE_ENDPOINT: "https://cloud.appwrite.io/v1", APPWRITE_PROJECT_ID: "replace-me", APPWRITE_API_KEY: "replace-me" };
     case "cloudflare":

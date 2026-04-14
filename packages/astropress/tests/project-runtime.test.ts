@@ -31,7 +31,6 @@ describe("project runtime", () => {
         ASTROPRESS_RUNTIME_MODE: "hosted",
         ASTROPRESS_HOSTED_PROVIDER: "supabase",
         SUPABASE_URL: "https://runtime.supabase.co",
-        SUPABASE_ANON_KEY: "anon",
         SUPABASE_SERVICE_ROLE_KEY: "service",
       },
       hosted: {
