@@ -8,7 +8,6 @@ import { FULL_STACK_CAPABILITIES } from "./adapter-record-helpers";
 
 export interface AstropressSupabaseHostedConfig {
   url: string;
-  anonKey: string;
   serviceRoleKey: string;
   apiBaseUrl: string;
 }
@@ -34,18 +33,16 @@ export function readAstropressSupabaseHostedConfig(
   env: Record<string, string | undefined> = process.env,
 ): AstropressSupabaseHostedConfig {
   const url = env.SUPABASE_URL?.trim();
-  const anonKey = env.SUPABASE_ANON_KEY?.trim();
   const serviceRoleKey = env.SUPABASE_SERVICE_ROLE_KEY?.trim();
 
-  if (!url || !anonKey || !serviceRoleKey) {
+  if (!url || !serviceRoleKey) {
     throw new Error(
-      "Supabase hosted config requires SUPABASE_URL, SUPABASE_ANON_KEY, and SUPABASE_SERVICE_ROLE_KEY.",
+      "Supabase hosted config requires SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY.",
     );
   }
 
   return {
     url,
-    anonKey,
     serviceRoleKey,
     apiBaseUrl: `${url.replace(/\/$/, "")}/functions/v1/astropress`,
   };
