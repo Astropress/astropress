@@ -126,7 +126,7 @@ const tools: Tool[] = [
 ];
 
 const server = new Server(
-  { name: "astropress-mcp", version: "0.0.1" },
+  { name: "@astropress-diy/mcp", version: "0.0.1" },
   { capabilities: { tools: {} } },
 );
 

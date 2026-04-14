@@ -1,5 +1,5 @@
 import type { APIRoute } from "astro";
-import { listRuntimeContentStates } from "astropress";
+import { listRuntimeContentStates } from "@astropress-diy/astropress";
 
 /**
  * GET /sitemap.xml

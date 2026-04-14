@@ -1,6 +1,6 @@
 import { defineConfig } from "astro/config";
 import { fileURLToPath } from "node:url";
-import { createAstropressAdminAppIntegration, createAstropressViteIntegration } from "astropress/integration";
+import { createAstropressAdminAppIntegration, createAstropressViteIntegration } from "@astropress-diy/astropress/integration";
 
 const astropressRoot = fileURLToPath(new URL("../../packages/astropress", import.meta.url));
 const localRuntimeModulesPath = fileURLToPath(new URL("./src/astropress/local-runtime-modules.ts", import.meta.url));
@@ -30,6 +30,14 @@ export default defineConfig({
           replacement: fileURLToPath(new URL("../../packages/astropress/index.ts", import.meta.url)),
         },
       ],
+    },
+    ssr: {
+      // Allow Vite to process astropress source through its plugin pipeline so
+      // the astropress-local-runtime-modules plugin can redirect
+      // `./local-runtime-modules` imports to the host's implementation.
+      // Without this, Vite SSR-externalizes the package and Node resolves
+      // local-runtime-modules to the dist stub that throws `unavailable()`.
+      noExternal: ["@astropress-diy/astropress"],
     },
     server: {
       fs: {

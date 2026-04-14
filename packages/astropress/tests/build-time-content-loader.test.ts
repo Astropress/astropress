@@ -5,7 +5,7 @@ import {
   type AstropressPlatformAdapter,
   type ContentStoreRecord,
   type ContentListOptions,
-} from "astropress";
+} from "@astropress-diy/astropress";
 import { createAstropressBuildTimeLoader } from "../src/build-time-content-loader";
 
 function makeTestRecord(

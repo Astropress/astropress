@@ -1,5 +1,5 @@
 import type { APIRoute } from "astro";
-import { withAdminFormAction } from "astropress";
+import { withAdminFormAction } from "@astropress-diy/astropress";
 import { withLocalStoreFallback } from "../../../src/admin-store-dispatch.js";
 import { createD1LocksOps } from "../../../src/d1-locks.js";
 

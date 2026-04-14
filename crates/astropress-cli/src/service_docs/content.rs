@@ -67,9 +67,7 @@ pub(super) const COMPOSE_MEILISEARCH: &str = concat!(
     "volumes:\n",
     "  meili_data:\n",
 );
-pub(super) const ENV_MEILISEARCH: &str = concat!(
-    "MEILI_MASTER_KEY=change-me-long-random-string\n",
-);
+pub(super) const ENV_MEILISEARCH: &str = "MEILI_MASTER_KEY=change-me-long-random-string\n";
 
 
 // ── Typesense ─────────────────────────────────────────────────────────────────
@@ -93,9 +91,7 @@ pub(super) const COMPOSE_TYPESENSE: &str = concat!(
     "volumes:\n",
     "  typesense_data:\n",
 );
-pub(super) const ENV_TYPESENSE: &str = concat!(
-    "TYPESENSE_API_KEY=change-me-long-random-string\n",
-);
+pub(super) const ENV_TYPESENSE: &str = "TYPESENSE_API_KEY=change-me-long-random-string\n";
 
 
 // ── Flarum ────────────────────────────────────────────────────────────────────

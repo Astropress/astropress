@@ -1,37 +1,13 @@
-import { mkdtemp, rm } from "node:fs/promises";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { createAstropressProjectRuntimePlan } from "../src/project-runtime.js";
 
 describe("project runtime", () => {
-  it("builds a local runtime plan from project env", async () => {
-    const workspace = await mkdtemp(join(tmpdir(), "astropress-project-runtime-local-"));
-    const plan = createAstropressProjectRuntimePlan({
-      env: {
-        ASTROPRESS_RUNTIME_MODE: "local",
-        ASTROPRESS_LOCAL_PROVIDER: "runway",
-      },
-      local: {
-        workspaceRoot: workspace,
-        dbPath: join(workspace, "runtime.sqlite"),
-      },
-    });
-
-    expect(plan.mode).toBe("local");
-    expect(plan.env.localProvider).toBe("runway");
-    expect(plan.adapter.capabilities.name).toBe("runway");
-
-    await rm(workspace, { recursive: true, force: true });
-  });
-
   it("builds a hosted runtime plan from project env", async () => {
     const plan = createAstropressProjectRuntimePlan({
       env: {
         ASTROPRESS_RUNTIME_MODE: "hosted",
         ASTROPRESS_HOSTED_PROVIDER: "supabase",
         SUPABASE_URL: "https://runtime.supabase.co",
-        SUPABASE_ANON_KEY: "anon",
         SUPABASE_SERVICE_ROLE_KEY: "service",
       },
       hosted: {

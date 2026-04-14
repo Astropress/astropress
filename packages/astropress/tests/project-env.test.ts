@@ -33,16 +33,10 @@ describe("project env", () => {
     expect(resolveAstropressLocalProviderFromEnv({ ASTROPRESS_LOCAL_PROVIDER: "supabase" })).toBe(
       "supabase",
     );
-    expect(resolveAstropressLocalProviderFromEnv({ ASTROPRESS_DATA_SERVICES: "runway" })).toBe(
-      "runway",
-    );
   });
 
   it("resolves hosted provider defaults", () => {
     expect(resolveAstropressHostedProviderFromEnv({})).toBe("supabase");
-    expect(resolveAstropressHostedProviderFromEnv({ ASTROPRESS_HOSTED_PROVIDER: "runway" })).toBe(
-      "runway",
-    );
     expect(resolveAstropressHostedProviderFromEnv({ ASTROPRESS_HOSTED_PROVIDER: "nhost" })).toBe(
       "nhost",
     );
@@ -100,17 +94,12 @@ describe("project env", () => {
         ASTROPRESS_DATA_SERVICES: "supabase",
       }).adminDbPath,
     ).toBe(".data/supabase-admin.sqlite");
-    expect(
-      resolveAstropressProjectEnvContract({
-        ASTROPRESS_DATA_SERVICES: "runway",
-      }).adminDbPath,
-    ).toBe(".data/runway-admin.sqlite");
   });
 });
 
 describe("resolveAstropressAppHostFromEnv — additional branches", () => {
   it("returns each explicit ASTROPRESS_APP_HOST value verbatim", () => {
-    const hosts = ["render-web", "gitlab-pages", "render-static", "runway", "netlify", "custom"] as const;
+    const hosts = ["render-web", "gitlab-pages", "render-static", "netlify", "custom"] as const;
     for (const host of hosts) {
       expect(resolveAstropressAppHostFromEnv({ ASTROPRESS_APP_HOST: host })).toBe(host);
     }
@@ -132,10 +121,6 @@ describe("resolveAstropressAppHostFromEnv — additional branches", () => {
     expect(resolveAstropressAppHostFromEnv({ ASTROPRESS_HOSTED_PROVIDER: "nhost" })).toBe("render-web");
     expect(resolveAstropressAppHostFromEnv({ ASTROPRESS_HOSTED_PROVIDER: "neon" })).toBe("render-web");
     expect(resolveAstropressAppHostFromEnv({ ASTROPRESS_HOSTED_PROVIDER: "turso" })).toBe("render-web");
-  });
-
-  it("maps legacy ASTROPRESS_HOSTED_PROVIDER=runway → runway via data-services chain", () => {
-    expect(resolveAstropressAppHostFromEnv({ ASTROPRESS_HOSTED_PROVIDER: "runway" })).toBe("runway");
   });
 
   it("maps ASTROPRESS_DEPLOY_TARGET=github-pages → github-pages via legacy deploy target mapper", () => {
@@ -168,9 +153,6 @@ describe("resolveAstropressAppHostFromEnv — additional branches", () => {
     expect(resolveAstropressAppHostFromEnv({ ASTROPRESS_DEPLOY_TARGET: "gitlab-pages" })).toBe("gitlab-pages");
   });
 
-  it("maps ASTROPRESS_DEPLOY_TARGET=runway → runway via legacy deploy target mapper", () => {
-    expect(resolveAstropressAppHostFromEnv({ ASTROPRESS_DEPLOY_TARGET: "runway" })).toBe("runway");
-  });
 });
 
 describe("resolveAstropressHostedProviderFromEnv — additional branches", () => {
@@ -219,21 +201,6 @@ describe("resolveAstropressServiceOriginFromEnv — additional branches", () => 
     ).toBeNull();
   });
 
-  it("returns runway service origin from RUNWAY_PROJECT_ID", () => {
-    expect(
-      resolveAstropressServiceOriginFromEnv({
-        ASTROPRESS_DATA_SERVICES: "runway",
-        RUNWAY_PROJECT_ID: "my-runway-proj",
-      }),
-    ).toBe("https://runway.example/my-runway-proj/astropress-api");
-  });
-
-  it("returns null when runway is selected but RUNWAY_PROJECT_ID is absent", () => {
-    expect(
-      resolveAstropressServiceOriginFromEnv({ ASTROPRESS_DATA_SERVICES: "runway" }),
-    ).toBeNull();
-  });
-
   it("returns null when supabase is selected but SUPABASE_URL is absent", () => {
     expect(
       resolveAstropressServiceOriginFromEnv({ ASTROPRESS_DATA_SERVICES: "supabase" }),
@@ -276,7 +243,7 @@ describe("resolveDataServicesFromLegacyEnv — cloudflare via DEPLOY_TARGET (lin
 
 describe("resolveAstropressDeployTarget — explicit target values", () => {
   it("returns each explicit ASTROPRESS_DEPLOY_TARGET value verbatim", () => {
-    const targets = ["render-static", "render-web", "gitlab-pages", "netlify", "runway", "custom"] as const;
+    const targets = ["render-static", "render-web", "gitlab-pages", "netlify", "custom"] as const;
     for (const target of targets) {
       expect(resolveAstropressDeployTarget({ ASTROPRESS_DEPLOY_TARGET: target })).toBe(target);
     }

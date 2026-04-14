@@ -10,8 +10,7 @@ export type AstropressExistingPlatform =
   | "none"
   | "cloudflare"
   | "supabase"
-  | "appwrite"
-  | "runway";
+  | "appwrite";
 
 export interface AstropressProviderChoiceInput {
   existingPlatform?: AstropressExistingPlatform;
@@ -27,7 +26,7 @@ export interface AstropressProviderChoiceRecommendation {
   rationale: string;
   requiredEnvKeys: string[];
   deployTarget: AstropressDeployTargetEnv;
-  canonicalProvider: "cloudflare" | "supabase" | "appwrite" | "runway";
+  canonicalProvider: "cloudflare" | "supabase" | "appwrite";
   publicDeployTarget: AstropressDeployTargetEnv;
 }
 
@@ -52,8 +51,7 @@ function finalizeRecommendation(
     canonicalProvider:
       dataServices === "cloudflare" ||
       dataServices === "supabase" ||
-      dataServices === "appwrite" ||
-      dataServices === "runway"
+      dataServices === "appwrite"
         ? dataServices
         : "cloudflare",
     publicDeployTarget: deployTarget,
@@ -66,7 +64,7 @@ function finalizeRecommendation(
  *
  * @example
  * ```ts
- * import { recommendAstropressProvider } from "astropress";
+ * import { recommendAstropressProvider } from "@astropress-diy/astropress";
  *
  * const rec = recommendAstropressProvider({ existingPlatform: "supabase" });
  * console.log(rec.appHost);       // "vercel"
@@ -95,14 +93,6 @@ export function recommendAstropressProvider(
       wantsStaticMirror ? "github-pages" : "render-web",
       "appwrite",
       "Appwrite is already the content-services platform, so Astropress should keep Appwrite for data, auth, media, and the Astropress service API while choosing a separate Astro app host.",
-    );
-  }
-
-  if (existingPlatform === "runway") {
-    return finalizeRecommendation(
-      "runway",
-      "runway",
-      "Runway remains the best fit when the project already expects a bundled app-host and services platform workflow.",
     );
   }
 

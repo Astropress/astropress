@@ -6,67 +6,69 @@
 
 Grade scale: `A+ / A / B / C / D / F`
 
-| # | Rubric | Grade |
-|---|--------|-------|
-| 1 | Spec Fidelity | |
-| 2 | Architecture Quality | |
-| 3 | Test Quality | |
-| 4 | Security Posture | |
-| 5 | Accessibility | |
-| 6 | Performance | |
-| 7 | Developer Ergonomics | |
-| 8 | Browser / Web API Usage | |
-| 9 | Web Components | |
-| 10 | Spec Coherence (WC First-Class) | |
-| 11 | CI/CD Pipeline | |
-| 12 | Dependency Management | |
-| 13 | Documentation | |
-| 14 | Observability / Logging | |
-| 15 | API Design | |
-| 16 | Error Handling | |
-| 17 | TypeScript Quality | |
-| 18 | AI Drivability | |
-| 19 | Internationalization (i18n) | |
-| 20 | SEO Tooling | |
-| 21 | AEO Tooling | |
-| 22 | First-Party Data | |
-| 23 | Content Modeling Flexibility | |
-| 24 | Schema Migration Safety | |
-| 25 | Caching Strategy | |
-| 26 | Plugin / Extension API | |
-| 27 | Image Optimization | |
-| 28 | Real-Time Collaboration | |
-| 29 | Privacy by Design | |
-| 30 | Open Source Health | |
-| 31 | Data Portability | |
-| 32 | Upgrade Path / Migration DX | |
-| 33 | Import / Migration Tooling | |
-| 34 | Content Scheduling | |
-| 35 | E2E Hosted Provider Testing | |
-| 36 | CLI UX Quality | |
-| 37 | Email Delivery | |
-| 38 | Search / Discovery | |
-| 39 | Admin CRUD E2E | |
-| 40 | Disaster Recovery | |
-| 41 | Monitoring Integration | |
-| 42 | Upgrade Path E2E | |
-| 43 | System Honesty | |
-| 44 | Multi-site Gateway (astropress-nexus) | |
-| 45 | Scaffold Quality Carryover | |
-| 46 | Mobile-Firstness / Responsive Design | |
-| 47 | Admin Panel UX Quality | |
-| 48 | Nexus UX Quality | |
-| 49 | UX Writing & Microcopy | |
-| 50 | Information Architecture | |
-| 51 | Navigation Design | |
-| 52 | Interaction Design & Motion | |
-| 53 | Cross-Platform Support | |
-| 54 | Test Artifact Cleanup | |
-| 55 | Minimalism | |
+| # | Rubric | Grade | Evidence |
+|---|--------|-------|----------|
+| 1 | Spec Fidelity | | `bun run bdd:test` — 359 BDD scenarios; `bun run bdd:lint` validates scenario completeness |
+| 2 | Architecture Quality | | `audit:arch` passes (CI-enforced LOC limits, file structure constraints); `audit:arch:rust` passes |
+| 3 | Test Quality | | 1650+ Vitest tests (`bun run test`), 170 Rust CLI tests (`test:cli`), 10 Playwright specs across 70 acceptance checks |
+| 4 | Security Posture | | `audit:security` passes; `zta-invariants.test.ts`, `security-headers.test.ts`, `cloudflare-adapter-security.test.ts` |
+| 5 | Accessibility | | `test:accessibility` (axe-core static build); `test:accessibility:browser` and `test:accessibility:admin-harness` (Playwright) |
+| 6 | Performance | | `audit:bundle` passes; `audit:carbon` passes; Lighthouse CI on preview deploys |
+| 7 | Developer Ergonomics | | `audit:developer-ergonomics` passes (CI-enforced: quick-start docs, scaffold test, doctor command, --help, admin UX test, docs:api:check) |
+| 8 | Browser / Web API Usage | | `audit:web-components` passes (CI-enforced: no XMLHttpRequest, fetch-only, proper cleanup patterns) |
+| 9 | Web Components | | `audit:web-components` passes (CI-enforced: ap- naming, connectedCallback/disconnectedCallback, cleanup mechanism, index export) |
+| 10 | Spec Coherence (WC First-Class) | | `audit:web-components` passes (CI-enforced: all 8 components verified against WC spec requirements) |
+| 11 | CI/CD Pipeline | | All CI jobs defined in `.github/workflows/ci.yml`; `repo:clean` asserts clean worktree at end of each job |
+| 12 | Dependency Management | | `audit:deps` (`bun audit`) passes in lint job |
+| 13 | Documentation | | `docs:api:check` passes (API docs generated and verified); `docs:check` passes in CI and platform-smoke |
+| 14 | Observability / Logging | | `monitoring.test.ts`; (self-assessed beyond that — no dedicated observability audit) |
+| 15 | API Design | | `api-routes.test.ts`, `api-endpoints.test.ts`; (self-assessed — no dedicated API design audit) |
+| 16 | Error Handling | | `audit:error-handling` passes (CI-enforced: admin-action typed results, no naked re-throws, cache-purge non-fatal failures) |
+| 17 | TypeScript Quality | | `typescript-quality.test.ts`; `bunx biome check` passes in lint job |
+| 18 | AI Drivability | | (self-assessed — no automated backing; circular risk: AI graded itself) |
+| 19 | Internationalization (i18n) | | `locale-links.test.ts`; (self-assessed beyond that — no i18n test suite) |
+| 20 | SEO Tooling | | `audit:aeo` passes; `aeo-metadata.test.ts` |
+| 21 | AEO Tooling | | `audit:aeo` passes; `aeo-metadata.test.ts` — see Rubric 21 section for full feature list |
+| 22 | First-Party Data | | `global-privacy-baseline.test.ts`, `privacy-invariants.test.ts` |
+| 23 | Content Modeling Flexibility | | `content-modeling.test.ts`; (self-assessed — no dedicated modeling audit) |
+| 24 | Schema Migration Safety | | `db-migrate-ops.test.ts`, `d1-migrate-ops.test.ts` |
+| 25 | Caching Strategy | | `audit:caching` passes (CI-enforced: Cloudflare Cache API strategy, generic webhook strategy, non-fatal failures, security-headers layer) |
+| 26 | Plugin / Extension API | | `plugin-api.test.ts` |
+| 27 | Image Optimization | | `image-srcset.test.ts`, `html-optimization.test.ts`; `test:static-site` includes image checks |
+| 28 | Real-Time Collaboration | | `content-locking.test.ts`; (self-assessed — no real-time infra visible beyond locking) |
+| 29 | Privacy by Design | | `privacy-invariants.test.ts`, `global-privacy-baseline.test.ts` |
+| 30 | Open Source Health | | `check:version` passes; (self-assessed for hygiene beyond versioning) |
+| 31 | Data Portability | | `data-portability.test.ts` |
+| 32 | Upgrade Path / Migration DX | | `upgrade-path-e2e.test.ts` |
+| 33 | Import / Migration Tooling | | `wordpress-import.contract.test.ts`, `wordpress-import-branches.test.ts`, `import-api.contract.test.ts` |
+| 34 | Content Scheduling | | `content-scheduling.test.ts`, `d1-content-scheduling.test.ts` |
+| 35 | E2E Hosted Provider Testing | | `hosted-provider.contract.test.ts`, `cloudflare-provider.integration.test.ts`; see Known gaps — live credentials not available in CI |
+| 36 | CLI UX Quality | | `audit:cli-docs` passes (CI-enforced command coverage); 170 Rust CLI tests; (UX quality self-assessed — no UX test suite) |
+| 37 | Email Delivery | | `transactional-email.test.ts`, `newsletter-adapter.test.ts` |
+| 38 | Search / Discovery | | `content-search.test.ts` |
+| 39 | Admin CRUD E2E | | Playwright `admin-harness-crud` project in `test:acceptance` CI |
+| 40 | Disaster Recovery | | `disaster-recovery.test.ts` |
+| 41 | Monitoring Integration | | `monitoring.test.ts` |
+| 42 | Upgrade Path E2E | | `upgrade-path-e2e.test.ts` |
+| 43 | System Honesty | | `audit:honesty`, `audit:microcopy`, `audit:providers`, `audit:cli-docs`, `audit:env-contract`, `audit:crypto`, `audit:bdd-wiring`, `audit:no-stub-tests` — all CI-enforced |
+| 44 | Multi-site Gateway (astropress-nexus) | | `audit:nexus` passes (CI-enforced: package structure, export coverage, BDD scenario wiring, auth middleware); `audit:bdd-wiring` passes |
+| 45 | Scaffold Quality Carryover | | `project-scaffold.test.ts`; (self-assessed for quality dimensions — no scaffold quality CI) |
+| 46 | Mobile-Firstness / Responsive Design | | Playwright `viewport-375`, `viewport-768`, `viewport-1280` projects in `test:acceptance` CI |
+| 47 | Admin Panel UX Quality | | Playwright `admin-harness-crud` project; (UX quality self-assessed — no task-completion benchmarks) |
+| 48 | Nexus UX Quality | | `audit:nexus` passes (CI-enforced: structured error responses with human-readable fields, Bearer token auth middleware verified) |
+| 49 | UX Writing & Microcopy | | `audit:microcopy` passes (CI-enforced); (completeness self-assessed) |
+| 50 | Information Architecture | | `audit:navigation` passes (CI-enforced: AstropressAdminNavKey required keys, breadcrumb presence) |
+| 51 | Navigation Design | | `audit:navigation` passes (CI-enforced: skip-link, aria-current, Escape key, required nav structure) |
+| 52 | Interaction Design & Motion | | `audit:interaction` passes (CI-enforced: @keyframes, prefers-reduced-motion, dialog animation, aria-live, dismiss timing) |
+| 53 | Cross-Platform Support | | `platform-smoke` CI matrix runs on `ubuntu-latest`, `macos-latest`, `windows-latest` |
+| 54 | Test Artifact Cleanup | | `repo:clean` (`assert-clean-worktree.ts`) runs at end of every CI job; Rust uses `TestDir` RAII |
+| 55 | Minimalism | | `audit:arch` enforces per-file LOC limits; `audit:dead-exports` passes (CI-enforced: all runtime exports have consumers — no orphaned exports) |
+| 56 | Verified Providers / No Speculative Features | | `audit:providers` passes (CI-enforced); `AGENTS.md` no-speculative-features rule |
 
 ## Known gaps
 
 - **Rubric 35:** Live hosted-provider coverage still depends on maintainer-owned accounts, seeded projects, and teardown automation
+- **Rubric 56:** The fictional "Runway" provider was removed in 2026-04-14 after being identified as a hallucinated entry — `audit:providers` now enforces that all provider IDs are verified against `tooling/verified-providers.json`
 - **Rubric 46–52:** UX rubrics added 2026-04-12 — no independent user research or usability testing has been conducted
 - **Rubric 53:** Windows, macOS, and Linux now have CI smoke coverage and shell parity, but BSD remains best-effort rather than verified support
 
@@ -366,3 +368,30 @@ Measures whether the codebase contains only what is needed to do the job — no 
 - An automated dead-export lint (e.g. `ts-prune` or `knip`) run in CI
 - Periodic `bun run audit:arch` line-count review to catch files creeping toward the 600-line ceiling
 - A contributing guideline that explicitly forbids one-off helpers and speculative config fields
+
+---
+
+## Rubric 56 — Verified Providers / No Speculative Features
+
+Measures whether every hosting provider, data service, and third-party integration referenced in the codebase corresponds to a real, publicly available service that was explicitly requested — not a plausible-sounding invention.
+
+### Why this rubric exists
+
+The fictional "Runway" hosting provider was present in the type system, adapter layer, CLI wizard, deployment matrix, README, and tests for an extended period. It was not requested, had no real URL (`runway.example`), and was never caught by the existing honesty audit because that audit checked text claims, not whether referenced entities actually existed. Two independent AI coding agents both missed it across multiple evaluation runs with cleared context.
+
+The root cause is that language models fill gaps with plausible-sounding completions. A hallucinated provider is indistinguishable from a real one in code.
+
+### Evidence
+
+- `tooling/verified-providers.json` is the source of truth: every `AstropressAppHost` and `AstropressDataServices` ID must have a corresponding entry with a verified URL
+- `bun run audit:providers` (CI-enforced) compares the TypeScript type unions against `verified-providers.json` and fails if any ID is unverified
+- `AGENTS.md` contains an explicit "No speculative features" rule: no provider, integration, or service enters the type system without being explicitly named by the user and verified against a real public URL
+- The `audit:providers` check runs in the `lint` CI job alongside `audit:honesty`, `audit:security`, and `audit:aeo`
+
+### Criteria for A+
+
+- Every ID in `AstropressAppHost` has a verified entry in `verified-providers.json` with a real URL — `audit:providers` passes
+- Every ID in `AstropressDataServices` has a verified entry in `verified-providers.json` with a real URL — `audit:providers` passes
+- No adapter file exists without a corresponding verified-providers entry
+- The AGENTS.md no-speculative-features rule is present and up to date
+- Zero hallucinated providers or integrations in the git history since this rubric was introduced

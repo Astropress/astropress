@@ -1,0 +1,31 @@
+pre-commit:
+  parallel: true
+  commands:
+    biome:
+      glob: "src/**/*.{ts,js,astro,json}"
+      run: bunx biome check --no-errors-on-unmatched {staged_files}
+      stage_fixed: true
+    no-secrets:
+      run: |
+        if git diff --cached --name-only | grep -qE '(^|/)\.env(\.|$)'; then
+          echo "Refusing to commit .env files — remove them from staging."
+          exit 1
+        fi
+
+pre-push:
+  commands:
+    test:
+      run: bun run test
+
+commit-msg:
+  commands:
+    format:
+      run: |
+        msg=$(head -1 {1})
+        echo "$msg" | grep -qE '^(Merge|Revert|fixup!|squash!)' && exit 0
+        if ! echo "$msg" | grep -qE '^(feat|fix|chore|docs|test|refactor|perf|ci|build|revert)(\(.+\))?: .{1,72}$'; then
+          echo "Commit message must follow conventional commits format:"
+          echo "  type(scope)?: subject   (max 72 chars)"
+          echo "  Types: feat fix chore docs test refactor perf ci build revert"
+          exit 1
+        fi

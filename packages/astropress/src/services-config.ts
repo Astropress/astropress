@@ -4,7 +4,7 @@
  *
  * @example
  * ```ts
- * import { registerAstropressService } from "astropress/services-config";
+ * import { registerAstropressService } from "@astropress-diy/astropress/services-config";
  *
  * registerAstropressService({
  *   provider: "cms",

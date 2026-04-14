@@ -17,17 +17,12 @@ pub(crate) enum CmsChoice { BuiltIn, Keystatic, Payload }
 #[derive(Debug, Clone, Copy, PartialEq, Eq)] pub(crate) enum CourseChoice            { None, FrappeLms }
 #[derive(Debug, Clone, Copy, PartialEq, Eq)] pub(crate) enum FormsChoice             { None, Formbricks, Typebot }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub(crate) struct DonationChoices {
     pub polar: bool,
     pub give_lively: bool,
     pub liberapay: bool,
     pub pledge_crypto: bool,
-}
-impl Default for DonationChoices {
-    fn default() -> Self {
-        Self { polar: false, give_lively: false, liberapay: false, pledge_crypto: false }
-    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)] pub(crate) enum ForumChoice             { None, Flarum, Discourse }

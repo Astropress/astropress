@@ -1,12 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { getFirstPartyProviderTarget, listFirstPartyProviderTargets } from "astropress";
+import { getFirstPartyProviderTarget, listFirstPartyProviderTargets } from "@astropress-diy/astropress";
 
 describe("provider targets", () => {
   it("includes the required first-party providers for v1", () => {
     const providers = listFirstPartyProviderTargets().map((provider) => provider.id);
 
     expect(providers).toEqual(
-      expect.arrayContaining(["github-pages", "cloudflare", "supabase", "runway"]),
+      expect.arrayContaining(["github-pages", "cloudflare", "supabase"]),
     );
   });
 
@@ -19,8 +19,8 @@ describe("provider targets", () => {
     expect(provider.capabilities.gitSync).toBe(true);
   });
 
-  it("describes cloudflare, supabase, and runway as admin-capable runtimes", () => {
-    for (const providerId of ["cloudflare", "supabase", "runway"] as const) {
+  it("describes cloudflare and supabase as admin-capable runtimes", () => {
+    for (const providerId of ["cloudflare", "supabase"] as const) {
       const provider = getFirstPartyProviderTarget(providerId);
       expect(provider.adminSurface).toBe("astropress");
       expect(provider.capabilities.hostedAdmin).toBe(true);

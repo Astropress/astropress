@@ -21,13 +21,13 @@ const mocks = vi.hoisted(() => ({
 }));
 
 // Mock the local-runtime-modules alias so loadLocalAdminStore is injectable
-vi.mock("astropress/local-runtime-modules", () => ({
+vi.mock("@astropress-diy/astropress/local-runtime-modules", () => ({
   loadLocalAdminStore: mocks.loadLocalAdminStore,
 }));
 
 // Partial mock of the astropress main module — keep getCmsConfig/registerCms real,
 // replace the runtime content functions so tests don't hit real SQLite for writes.
-vi.mock("astropress", async (importOriginal) => {
+vi.mock("@astropress-diy/astropress", async (importOriginal) => {
   const actual = await importOriginal<typeof import("../index.js")>();
   return {
     ...actual,

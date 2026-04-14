@@ -1,6 +1,6 @@
 import type { APIRoute } from "astro";
-import { createRuntimeAuthor, updateRuntimeAuthor } from "astropress";
-import { withAdminFormAction } from "astropress";
+import { createRuntimeAuthor, updateRuntimeAuthor } from "@astropress-diy/astropress";
+import { withAdminFormAction } from "@astropress-diy/astropress";
 
 export const POST: APIRoute = async (context) =>
   withAdminFormAction(context, { failurePath: "/ap-admin/authors", requireAdmin: true }, async ({ actor, formData, locals, redirect, fail }) => {

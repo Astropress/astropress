@@ -8,6 +8,9 @@ on:
   schedule:
     - cron: "0 5 * * 1"
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
 jobs:
   analyze:
     runs-on: ubuntu-latest
@@ -22,10 +25,11 @@ jobs:
           - javascript-typescript
           - rust
     steps:
-      - uses: actions/checkout@v4
-      - uses: github/codeql-action/init@v3
+      - uses: actions/checkout@v5
+      - uses: github/codeql-action/init@v4
         with:
           languages: ${{ matrix.language }}
+          config-file: ./.github/codeql/codeql-config.yml
       - uses: oven-sh/setup-bun@v2
         if: matrix.language == 'javascript-typescript'
       - uses: dtolnay/rust-toolchain@stable
@@ -34,5 +38,5 @@ jobs:
         if: matrix.language == 'javascript-typescript'
       - run: cargo build --locked --manifest-path crates/Cargo.toml
         if: matrix.language == 'rust'
-      - uses: github/codeql-action/autobuild@v3
-      - uses: github/codeql-action/analyze@v3
+      - uses: github/codeql-action/autobuild@v4
+      - uses: github/codeql-action/analyze@v4

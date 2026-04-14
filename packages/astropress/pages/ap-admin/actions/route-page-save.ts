@@ -1,7 +1,7 @@
 import type { APIRoute } from "astro";
-import { withAdminFormAction } from "astropress";
-import { saveRuntimeStructuredPageRoute } from "astropress";
-import { getCmsConfig } from "astropress";
+import { withAdminFormAction } from "@astropress-diy/astropress";
+import { saveRuntimeStructuredPageRoute } from "@astropress-diy/astropress";
+import { getCmsConfig } from "@astropress-diy/astropress";
 
 function parseJson<T>(value: FormDataEntryValue | null, fallback: T) {
   try {

@@ -261,21 +261,6 @@ function createAstropressPocketbaseHostedAdapter(options: AstropressPocketbaseHo
 function readAstropressPocketbaseHostedConfig(env: Record<string, string | undefined>): AstropressPocketbaseHostedConfig
 ```
 
-#### `createAstropressRunwayAdapter`
-```ts
-function createAstropressRunwayAdapter(options: AstropressRunwayAdapterOptions): AstropressPlatformAdapter
-```
-
-#### `createAstropressRunwayHostedAdapter`
-```ts
-function createAstropressRunwayHostedAdapter(options: AstropressRunwayHostedAdapterOptions): AstropressPlatformAdapter
-```
-
-#### `readAstropressRunwayHostedConfig`
-```ts
-function readAstropressRunwayHostedConfig(env: Record<string, string | undefined>): AstropressRunwayHostedConfig
-```
-
 #### `createAstropressTursoAdapter`
 ```ts
 function createAstropressTursoAdapter(options: AstropressTursoAdapterOptions): AstropressPlatformAdapter
@@ -1211,9 +1196,6 @@ function runAstropressDbMigrationsForCli(input: AstropressDbMigrateInput): Astro
 - `type AstropressPocketbaseAdapterOptions`
 - `interface AstropressPocketbaseHostedAdapterOptions`
 - `interface AstropressPocketbaseHostedConfig`
-- `type AstropressRunwayAdapterOptions`
-- `interface AstropressRunwayHostedAdapterOptions`
-- `interface AstropressRunwayHostedConfig`
 - `type AstropressTursoAdapterOptions`
 - `interface AstropressTursoHostedAdapterOptions`
 - `interface AstropressTursoHostedConfig`

@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 
 import type { APIRoute } from "astro";
 
-import { guessMediaMimeType } from "astropress/local-media-storage";
+import { guessMediaMimeType } from "@astropress-diy/astropress/local-media-storage";
 
 const configuredDataDirectory = process.env.ASTROPRESS_DATA_ROOT?.trim();
 const localImageRoot = process.env.ASTROPRESS_LOCAL_IMAGE_ROOT?.trim();

@@ -2,7 +2,7 @@ import { defineConfig } from "astro/config";
 import starlight from "@astrojs/starlight";
 
 export default defineConfig({
-  // Set base: "/astropress/" if deploying to a GitHub Pages subpath.
+  site: "https://docs.astropress.diy",
   integrations: [
     starlight({
       title: "Astropress",

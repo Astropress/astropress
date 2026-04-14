@@ -30,7 +30,7 @@ export interface AstropressContentLoader {
  * ```ts
  * // astro.config.mjs (public site project)
  * import { defineCollection } from "astro:content";
- * import { createAstropressBuildTimeLoader } from "astropress";
+ * import { createAstropressBuildTimeLoader } from "@astropress-diy/astropress";
  * import { adapter } from "./src/astropress/local-runtime-modules";
  *
  * const loader = createAstropressBuildTimeLoader(adapter);

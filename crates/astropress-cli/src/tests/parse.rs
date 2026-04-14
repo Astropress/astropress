@@ -94,9 +94,9 @@ fn parses_top_level_commands() {
         })
     ));
     assert!(matches!(
-        parse_command(&strings(&["dev", "--provider", "runway"])),
+        parse_command(&strings(&["dev", "--provider", "supabase"])),
         Ok(Command::Dev {
-            provider: Some(LocalProvider::Runway),
+            provider: Some(LocalProvider::Supabase),
             ..
         })
     ));

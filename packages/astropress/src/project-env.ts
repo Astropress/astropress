@@ -1,10 +1,9 @@
 import type { AstropressAppHost } from "./app-host-targets";
 import type { AstropressDataServices } from "./data-service-targets";
 
-export type AstropressLocalProviderEnv = "sqlite" | "supabase" | "runway";
+export type AstropressLocalProviderEnv = "sqlite" | "supabase";
 export type AstropressHostedProviderEnv =
   | "supabase"
-  | "runway"
   | "appwrite"
   | "pocketbase"
   | "nhost"
@@ -18,7 +17,6 @@ export type AstropressDeployTargetEnv =
   | "render-static"
   | "render-web"
   | "gitlab-pages"
-  | "runway"
   | "custom";
 export type AstropressAppHostEnv = AstropressAppHost;
 export type AstropressDataServicesEnv = AstropressDataServices;
@@ -51,8 +49,6 @@ function mapLegacyDeployTargetToAppHost(target?: string | null): AstropressAppHo
       return "render-web";
     case "gitlab-pages":
       return "gitlab-pages";
-    case "runway":
-      return "runway";
     case "custom":
       return "custom";
     default:
@@ -68,9 +64,6 @@ function resolveDataServicesFromLegacyEnv(
   env: Record<string, string | undefined>,
 ): AstropressDataServicesEnv {
   const hostedProvider = env.ASTROPRESS_HOSTED_PROVIDER?.trim();
-  if (hostedProvider === "runway") {
-    return "runway";
-  }
   if (hostedProvider === "appwrite") {
     return "appwrite";
   }
@@ -94,9 +87,6 @@ function resolveDataServicesFromLegacyEnv(
   if (localProvider === "supabase") {
     return "supabase";
   }
-  if (localProvider === "runway") {
-    return "runway";
-  }
   if (env.ASTROPRESS_DEPLOY_TARGET?.trim() === "cloudflare") {
     return "cloudflare";
   }
@@ -115,7 +105,6 @@ export function resolveAstropressAppHostFromEnv(
     explicitHost === "render-static" ||
     explicitHost === "render-web" ||
     explicitHost === "gitlab-pages" ||
-    explicitHost === "runway" ||
     explicitHost === "custom"
   ) {
     return explicitHost;
@@ -140,9 +129,6 @@ export function resolveAstropressAppHostFromEnv(
   ) {
     return "render-web";
   }
-  if (dataServices === "runway") {
-    return "runway";
-  }
   return "github-pages";
 }
 
@@ -162,7 +148,6 @@ export function resolveAstropressDataServicesFromEnv(
     explicitServices === "neon" ||
     explicitServices === "nhost" ||
     explicitServices === "turso" ||
-    explicitServices === "runway" ||
     explicitServices === "custom"
   ) {
     return explicitServices;
@@ -200,11 +185,6 @@ export function resolveAstropressServiceOriginFromEnv(
     return subdomain && region ? `https://${subdomain}.${region}.nhost.run/v1/functions/astropress` : null;
   }
 
-  if (dataServices === "runway") {
-    const projectId = env.RUNWAY_PROJECT_ID?.trim();
-    return projectId ? `https://runway.example/${projectId}/astropress-api` : null;
-  }
-
   return null;
 }
 
@@ -212,16 +192,13 @@ export function resolveAstropressLocalProviderFromEnv(
   env: Record<string, string | undefined> = process.env,
 ): AstropressLocalProviderEnv {
   const provider = env.ASTROPRESS_LOCAL_PROVIDER?.trim();
-  if (provider === "supabase" || provider === "runway") {
+  if (provider === "supabase") {
     return provider;
   }
 
   const dataServices = resolveAstropressDataServicesFromEnv(env);
   if (dataServices === "supabase") {
     return "supabase";
-  }
-  if (dataServices === "runway") {
-    return "runway";
   }
   return "sqlite";
 }
@@ -230,9 +207,6 @@ export function resolveAstropressHostedProviderFromEnv(
   env: Record<string, string | undefined> = process.env,
 ): AstropressHostedProviderEnv {
   const provider = env.ASTROPRESS_HOSTED_PROVIDER?.trim();
-  if (provider === "runway") {
-    return "runway";
-  }
   if (provider === "appwrite") {
     return "appwrite";
   }
@@ -253,9 +227,6 @@ export function resolveAstropressHostedProviderFromEnv(
   }
 
   const dataServices = resolveAstropressDataServicesFromEnv(env);
-  if (dataServices === "runway") {
-    return "runway";
-  }
   if (dataServices === "appwrite") {
     return "appwrite";
   }
@@ -286,7 +257,6 @@ export function resolveAstropressDeployTarget(
     explicitTarget === "render-static" ||
     explicitTarget === "render-web" ||
     explicitTarget === "gitlab-pages" ||
-    explicitTarget === "runway" ||
     explicitTarget === "custom"
   ) {
     return explicitTarget;
@@ -301,10 +271,10 @@ export function resolveAstropressDeployTarget(
  *
  * @example
  * ```ts
- * import { resolveAstropressProjectEnvContract } from "astropress";
+ * import { resolveAstropressProjectEnvContract } from "@astropress-diy/astropress";
  *
  * const env = resolveAstropressProjectEnvContract(process.env);
- * console.log(env.localProvider);  // "sqlite" | "supabase" | "runway"
+ * console.log(env.localProvider);  // "sqlite" | "supabase"
  * console.log(env.appHost);        // "vercel" | "github-pages" | ...
  * console.log(env.adminDbPath);    // ".data/admin.sqlite"
  * ```
@@ -317,9 +287,7 @@ export function resolveAstropressProjectEnvContract(
     env.ADMIN_DB_PATH?.trim() ||
     (localProvider === "supabase"
       ? ".data/supabase-admin.sqlite"
-      : localProvider === "runway"
-        ? ".data/runway-admin.sqlite"
-        : ".data/admin.sqlite");
+      : ".data/admin.sqlite");
 
   return {
     localProvider,

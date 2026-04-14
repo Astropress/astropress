@@ -34,21 +34,21 @@ const deploymentMatrixEntries: AstropressDeploymentMatrixEntry[] = [
     dataServices: "supabase",
     supportLevel: "supported",
     notes: "Astro app on Vercel with Supabase handling database, storage, and auth services.",
-    requiredEnvKeys: ["ASTROPRESS_SERVICE_ORIGIN", "SUPABASE_URL", "SUPABASE_ANON_KEY", "SUPABASE_SERVICE_ROLE_KEY"],
+    requiredEnvKeys: ["ASTROPRESS_SERVICE_ORIGIN", "SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY"],
   },
   {
     appHost: "netlify",
     dataServices: "supabase",
     supportLevel: "supported",
     notes: "Astro app on Netlify with Supabase for data, media, and auth services.",
-    requiredEnvKeys: ["ASTROPRESS_SERVICE_ORIGIN", "SUPABASE_URL", "SUPABASE_ANON_KEY", "SUPABASE_SERVICE_ROLE_KEY"],
+    requiredEnvKeys: ["ASTROPRESS_SERVICE_ORIGIN", "SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY"],
   },
   {
     appHost: "render-web",
     dataServices: "supabase",
     supportLevel: "supported",
     notes: "Node-hosted Astro app on Render backed by Supabase services.",
-    requiredEnvKeys: ["ASTROPRESS_SERVICE_ORIGIN", "SUPABASE_URL", "SUPABASE_ANON_KEY", "SUPABASE_SERVICE_ROLE_KEY"],
+    requiredEnvKeys: ["ASTROPRESS_SERVICE_ORIGIN", "SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY"],
   },
   {
     appHost: "render-web",
@@ -58,25 +58,18 @@ const deploymentMatrixEntries: AstropressDeploymentMatrixEntry[] = [
     requiredEnvKeys: ["ASTROPRESS_SERVICE_ORIGIN", "APPWRITE_ENDPOINT", "APPWRITE_PROJECT_ID", "APPWRITE_API_KEY"],
   },
   {
-    appHost: "runway",
-    dataServices: "runway",
-    supportLevel: "supported",
-    notes: "Bundled Runway path for Astro app hosting and managed services.",
-    requiredEnvKeys: ["ASTROPRESS_SERVICE_ORIGIN", "RUNWAY_API_TOKEN", "RUNWAY_PROJECT_ID"],
-  },
-  {
     appHost: "github-pages",
     dataServices: "supabase",
     supportLevel: "preview",
     notes: "Static public site with Supabase-hosted admin/services handled separately.",
-    requiredEnvKeys: ["ASTROPRESS_SERVICE_ORIGIN", "SUPABASE_URL", "SUPABASE_ANON_KEY", "SUPABASE_SERVICE_ROLE_KEY"],
+    requiredEnvKeys: ["ASTROPRESS_SERVICE_ORIGIN", "SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY"],
   },
   {
     appHost: "gitlab-pages",
     dataServices: "supabase",
     supportLevel: "preview",
     notes: "Static public site on GitLab Pages with separate Supabase-hosted services.",
-    requiredEnvKeys: ["ASTROPRESS_SERVICE_ORIGIN", "SUPABASE_URL", "SUPABASE_ANON_KEY", "SUPABASE_SERVICE_ROLE_KEY"],
+    requiredEnvKeys: ["ASTROPRESS_SERVICE_ORIGIN", "SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY"],
   },
   {
     appHost: "vercel",
@@ -97,7 +90,7 @@ const deploymentMatrixEntries: AstropressDeploymentMatrixEntry[] = [
     dataServices: "supabase",
     supportLevel: "preview",
     notes: "Cloudflare-hosted Astro app with Supabase-hosted data and auth services.",
-    requiredEnvKeys: ["ASTROPRESS_SERVICE_ORIGIN", "SUPABASE_URL", "SUPABASE_ANON_KEY", "SUPABASE_SERVICE_ROLE_KEY"],
+    requiredEnvKeys: ["ASTROPRESS_SERVICE_ORIGIN", "SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY"],
   },
   // ── Fly.io ──────────────────────────────────────────────────────────────────
   {
@@ -112,7 +105,7 @@ const deploymentMatrixEntries: AstropressDeploymentMatrixEntry[] = [
     dataServices: "supabase",
     supportLevel: "preview",
     notes: "Fly.io Node app with Supabase for data, media, and auth.",
-    requiredEnvKeys: ["ASTROPRESS_SERVICE_ORIGIN", "SUPABASE_URL", "SUPABASE_ANON_KEY", "SUPABASE_SERVICE_ROLE_KEY"],
+    requiredEnvKeys: ["ASTROPRESS_SERVICE_ORIGIN", "SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY"],
   },
   {
     appHost: "fly-io",
@@ -141,7 +134,7 @@ const deploymentMatrixEntries: AstropressDeploymentMatrixEntry[] = [
     dataServices: "supabase",
     supportLevel: "preview",
     notes: "Coolify-hosted Node app with Supabase for data and auth.",
-    requiredEnvKeys: ["ASTROPRESS_SERVICE_ORIGIN", "SUPABASE_URL", "SUPABASE_ANON_KEY", "SUPABASE_SERVICE_ROLE_KEY"],
+    requiredEnvKeys: ["ASTROPRESS_SERVICE_ORIGIN", "SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY"],
   },
   {
     appHost: "coolify",
@@ -156,7 +149,7 @@ const deploymentMatrixEntries: AstropressDeploymentMatrixEntry[] = [
     dataServices: "supabase",
     supportLevel: "preview",
     notes: "DigitalOcean App Platform with Supabase for data, media, and auth.",
-    requiredEnvKeys: ["ASTROPRESS_SERVICE_ORIGIN", "SUPABASE_URL", "SUPABASE_ANON_KEY", "SUPABASE_SERVICE_ROLE_KEY"],
+    requiredEnvKeys: ["ASTROPRESS_SERVICE_ORIGIN", "SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY"],
   },
   {
     appHost: "digitalocean",
@@ -215,7 +208,7 @@ const deploymentMatrixEntries: AstropressDeploymentMatrixEntry[] = [
     dataServices: "supabase",
     supportLevel: "preview",
     notes: "Railway Node app with Supabase for data, media, and auth. Paid — usage-based billing.",
-    requiredEnvKeys: ["ASTROPRESS_SERVICE_ORIGIN", "SUPABASE_URL", "SUPABASE_ANON_KEY", "SUPABASE_SERVICE_ROLE_KEY"],
+    requiredEnvKeys: ["ASTROPRESS_SERVICE_ORIGIN", "SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY"],
   },
   {
     appHost: "railway",

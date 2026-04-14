@@ -1,7 +1,7 @@
 import { existsSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it, vi } from "vitest";
-import { createAstropressPublicSiteIntegration } from "astropress";
+import { createAstropressPublicSiteIntegration } from "@astropress-diy/astropress";
 import { createAstropressSitemapIntegration } from "../src/public-site-integration";
 import { injectAstropressAdminRoutes, listAstropressAdminRoutes } from "../src/admin-routes";
 

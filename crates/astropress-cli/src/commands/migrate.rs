@@ -181,8 +181,8 @@ fn build_migration_guide(from: &MigrationTool, to: &MigrationTool) -> String {
         to_slug = to.slug,
         from_desc = from.description,
         to_desc = to.description,
-        from_env_hint = format!("{}_*", from.slug.to_uppercase().replace('-', "_")),
-        to_env_hint   = format!("{}_*", to.slug.to_uppercase().replace('-', "_")),
+        from_env_hint = format_args!("{}_*", from.slug.to_uppercase().replace('-', "_")),
+        to_env_hint   = format_args!("{}_*", to.slug.to_uppercase().replace('-', "_")),
     )
 }
 

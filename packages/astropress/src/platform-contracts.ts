@@ -41,7 +41,7 @@ export type ActionResult<T> =
   | { ok: true; data: T }
   | { ok: false; error: string; code?: string };
 
-export type ProviderKind = "github-pages" | "cloudflare" | "supabase" | "runway" | "custom";
+export type ProviderKind = "github-pages" | "cloudflare" | "supabase" | "custom";
 
 /** Configuration for the editorial CMS panel embedded in the admin. */
 export interface AstropressCmsConfig {
@@ -337,7 +337,7 @@ export interface AstropressPlatformAdapter {
  *
  * @example
  * ```ts
- * import { normalizeProviderCapabilities } from "astropress";
+ * import { normalizeProviderCapabilities } from "@astropress-diy/astropress";
  *
  * const caps = normalizeProviderCapabilities({ name: "sqlite", database: true });
  * // { name: "sqlite", database: true, staticPublishing: false, hostedAdmin: false, ... }
@@ -367,7 +367,7 @@ export function normalizeProviderCapabilities(
  *
  * @example
  * ```ts
- * import { assertProviderContract, createAstropressSqliteAdapter } from "astropress";
+ * import { assertProviderContract, createAstropressSqliteAdapter } from "@astropress-diy/astropress";
  *
  * const adapter = createAstropressSqliteAdapter({ db });
  * assertProviderContract(adapter); // throws if adapter is incomplete

@@ -32,7 +32,7 @@ export interface AstropressPublicSiteOptions {
  * @example
  * ```ts
  * // astro.config.mjs (public site project)
- * import { createAstropressPublicSiteIntegration } from "astropress";
+ * import { createAstropressPublicSiteIntegration } from "@astropress-diy/astropress";
  *
  * export default defineConfig({
  *   integrations: [createAstropressPublicSiteIntegration()],
@@ -94,7 +94,7 @@ export interface AstropressSitemapOptions {
  * @example
  * ```ts
  * // astro.config.mjs
- * import { createAstropressSitemapIntegration } from "astropress";
+ * import { createAstropressSitemapIntegration } from "@astropress-diy/astropress";
  *
  * export default defineConfig({
  *   integrations: [

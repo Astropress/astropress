@@ -1,7 +1,5 @@
 <div align="center">
 
-<img src="https://raw.githubusercontent.com/astropress/astropress/main/docs/assets/logo.svg" alt="Astropress" width="200" />
-
 # Astropress
 
 **Your website launchpad.**
@@ -125,7 +123,7 @@ Astropress runs on the platforms you already use. Pick any combination:
 | **Cloudflare Pages** | Cloudflare D1 + R2 | Fast global edge, free tier |
 | **Vercel / Netlify** | Supabase | Developer-friendly deploys |
 | **Render** | Appwrite | Full backend on one platform |
-| **Runway** | Runway | All-in-one managed option |
+| **Fly.io / Railway** | Neon / Turso | Container hosting + serverless SQL |
 
 ---
 

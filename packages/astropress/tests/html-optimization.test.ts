@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { optimizeImageLoading } from "astropress";
+import { optimizeImageLoading } from "@astropress-diy/astropress";
 
 describe("optimizeImageLoading()", () => {
   it("adds loading='lazy' to images without a loading attribute", () => {

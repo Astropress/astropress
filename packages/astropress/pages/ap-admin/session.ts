@@ -1,5 +1,5 @@
 import type { APIRoute, AstroCookies } from "astro";
-import { getLoginSecurityConfig } from "astropress";
+import { getLoginSecurityConfig } from "@astropress-diy/astropress";
 import {
   createAstropressSecureRedirect,
   authenticateRuntimeAdminUser,
@@ -8,10 +8,10 @@ import {
   recordRuntimeLogout,
   recordRuntimeSuccessfulLogin,
   revokeRuntimeSession,
-} from "astropress";
-import { isTrustedRequestOrigin } from "astropress";
-import { peekRuntimeRateLimit, recordRuntimeFailedAttempt } from "astropress";
-import { verifyTurnstileToken } from "astropress";
+} from "@astropress-diy/astropress";
+import { isTrustedRequestOrigin } from "@astropress-diy/astropress";
+import { peekRuntimeRateLimit, recordRuntimeFailedAttempt } from "@astropress-diy/astropress";
+import { verifyTurnstileToken } from "@astropress-diy/astropress";
 
 const LEGACY_SESSION_COOKIE = "ff_admin_session";
 const LOCAL_SESSION_COOKIE = "astropress_admin_session";

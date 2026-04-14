@@ -3,7 +3,7 @@ import {
   type LocalAdminAuthModule,
   type LocalAdminStoreModule,
   type LocalCmsRegistryModule,
-} from "astropress";
+} from "@astropress-diy/astropress";
 
 export const hostRuntimeModules = defineAstropressHostRuntimeModules({
   async loadLocalAdminStore() {
@@ -16,10 +16,10 @@ export const hostRuntimeModules = defineAstropressHostRuntimeModules({
     return (await import("./admin-persistence")) as unknown as LocalCmsRegistryModule;
   },
   async loadLocalMediaStorage() {
-    return import("astropress/local-media-storage");
+    return import("@astropress-diy/astropress/local-media-storage");
   },
   async loadLocalImageStorage() {
-    return import("astropress/local-image-storage");
+    return import("@astropress-diy/astropress/local-image-storage");
   },
 });
 

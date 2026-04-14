@@ -48,12 +48,6 @@ describe("project scaffold — additional provider/host combinations", () => {
     expect(scaffold.ciFiles[".github/workflows/deploy-astropress.yml"]).toBeUndefined();
   });
 
-  it("runway appHost produces runway deploy script and CI workflow", () => {
-    const scaffold = createAstropressProjectScaffold({ appHost: "runway", dataServices: "runway" });
-    expect(scaffold.packageScripts["deploy:runway"]).toContain("astro build");
-    expect(scaffold.ciFiles[".github/workflows/deploy-astropress.yml"]).toContain("Runway");
-  });
-
   it("netlify appHost produces netlify deploy script and CI workflow", () => {
     const scaffold = createAstropressProjectScaffold({ appHost: "netlify", dataServices: "none" });
     expect(scaffold.packageScripts["deploy:netlify"]).toContain("netlify deploy");
@@ -134,12 +128,6 @@ describe("project scaffold — additional provider/host combinations", () => {
     expect(scaffold.provider).toBe("supabase");
   });
 
-  it("infers appHost=runway from dataServices=runway when appHost omitted", () => {
-    const scaffold = createAstropressProjectScaffold({ dataServices: "runway" } as Parameters<typeof createAstropressProjectScaffold>[0]);
-    expect(scaffold.appHost).toBe("runway");
-    expect(scaffold.dataServices).toBe("runway");
-  });
-
   it("infers appHost=render-web from dataServices=pocketbase when appHost omitted", () => {
     const scaffold = createAstropressProjectScaffold({ dataServices: "pocketbase" } as Parameters<typeof createAstropressProjectScaffold>[0]);
     expect(scaffold.appHost).toBe("render-web");
@@ -149,11 +137,6 @@ describe("project scaffold — additional provider/host combinations", () => {
   it("derives dataServices from legacyProvider=supabase when dataServices omitted", () => {
     const scaffold = createAstropressProjectScaffold({ legacyProvider: "supabase" } as Parameters<typeof createAstropressProjectScaffold>[0]);
     expect(scaffold.dataServices).toBe("supabase");
-  });
-
-  it("derives dataServices from legacyProvider=runway when dataServices omitted", () => {
-    const scaffold = createAstropressProjectScaffold({ legacyProvider: "runway" } as Parameters<typeof createAstropressProjectScaffold>[0]);
-    expect(scaffold.dataServices).toBe("runway");
   });
 
   it("defaults dataServices to none when no dataServices or legacyProvider set", () => {
@@ -261,7 +244,6 @@ describe("project scaffold", () => {
 
   it("returns service-specific remote examples", () => {
     const supabase = createAstropressProjectScaffold("supabase");
-    const runway = createAstropressProjectScaffold("runway");
 
     expect(supabase.appHost).toBe("vercel");
     expect(supabase.dataServices).toBe("supabase");
@@ -272,8 +254,5 @@ describe("project scaffold", () => {
     expect(supabase.envExample.ASTROPRESS_DATA_SERVICES).toBeUndefined();
     expect(supabase.localEnv.ASTROPRESS_DEPLOY_TARGET).toBeUndefined();
     expect(supabase.packageScripts["deploy:vercel"]).toContain("vercel deploy");
-    expect(runway.envExample.RUNWAY_API_TOKEN).toBe("replace-me");
-    expect(runway.envExample.ASTROPRESS_DATA_SERVICES).toBeUndefined();
-    expect(runway.localEnv.ASTROPRESS_DEPLOY_TARGET).toBeUndefined();
   });
 });

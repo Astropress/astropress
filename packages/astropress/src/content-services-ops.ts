@@ -27,7 +27,7 @@ function requiredEnvKeysForContentServices(contentServices: string) {
     case "cloudflare":
       return ["ASTROPRESS_SERVICE_ORIGIN", "CLOUDFLARE_ACCOUNT_ID", "CLOUDFLARE_API_TOKEN"];
     case "supabase":
-      return ["ASTROPRESS_SERVICE_ORIGIN", "SUPABASE_URL", "SUPABASE_ANON_KEY", "SUPABASE_SERVICE_ROLE_KEY"];
+      return ["ASTROPRESS_SERVICE_ORIGIN", "SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY"];
     case "appwrite":
       return ["ASTROPRESS_SERVICE_ORIGIN", "APPWRITE_ENDPOINT", "APPWRITE_PROJECT_ID", "APPWRITE_API_KEY"];
     case "pocketbase":
@@ -36,8 +36,6 @@ function requiredEnvKeysForContentServices(contentServices: string) {
       return ["ASTROPRESS_SERVICE_ORIGIN", "NHOST_SUBDOMAIN", "NHOST_REGION", "NHOST_ADMIN_SECRET"];
     case "neon":
       return ["ASTROPRESS_SERVICE_ORIGIN", "NEON_DATABASE_URL"];
-    case "runway":
-      return ["ASTROPRESS_SERVICE_ORIGIN", "RUNWAY_API_TOKEN", "RUNWAY_PROJECT_ID"];
     case "turso":
       return ["ASTROPRESS_SERVICE_ORIGIN", "TURSO_DATABASE_URL", "TURSO_AUTH_TOKEN"];
     default:

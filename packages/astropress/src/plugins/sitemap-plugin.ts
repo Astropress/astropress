@@ -9,7 +9,7 @@ import type { AstropressPlugin } from "../config";
  *
  * Usage:
  * ```ts
- * import { createSitemapPlugin } from "astropress/plugins/sitemap";
+ * import { createSitemapPlugin } from "@astropress-diy/astropress/plugins/sitemap";
  *
  * registerCms({
  *   plugins: [createSitemapPlugin({ purgeUrl: process.env.SITEMAP_PURGE_URL })],

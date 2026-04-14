@@ -1,6 +1,6 @@
 import type { APIRoute } from "astro";
-import { withAdminFormAction } from "astropress";
-import { restoreRuntimeRevision } from "astropress";
+import { withAdminFormAction } from "@astropress-diy/astropress";
+import { restoreRuntimeRevision } from "@astropress-diy/astropress";
 
 export const POST: APIRoute = async (context) =>
   withAdminFormAction(context, { failurePath: "/ap-admin/posts" }, async ({ actor, formData, locals, redirect, fail }) => {

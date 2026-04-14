@@ -24,12 +24,9 @@ describe("provider choice", () => {
     expect(recommendation.publicDeployTarget).toBe("github-pages");
   });
 
-  it("keeps the chosen data-services platform when Supabase or Runway is already selected", () => {
+  it("keeps the chosen data-services platform when Supabase is already selected", () => {
     expect(recommendAstropressProvider({ existingPlatform: "supabase" }).dataServices).toBe(
       "supabase",
-    );
-    expect(recommendAstropressProvider({ existingPlatform: "runway" }).dataServices).toBe(
-      "runway",
     );
   });
 

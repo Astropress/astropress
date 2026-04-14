@@ -188,9 +188,80 @@ imports to `.js` so the emitted ESM works under Node. Consumers point at
 Never commit `.js` files into `packages/astropress/src/`. The `no-js-in-src` arch-lint
 rule will catch this.
 
+## No speculative features
+
+**Never add a provider, integration, external service, or hosting target that the user has not explicitly named.**
+
+This rule exists because language models fill gaps with plausible-sounding completions. A hallucinated provider looks identical to a real one in code — it gets exported, documented, tested, and shipped. The only defence is a hard rule and an automated check.
+
+### What this covers
+
+- **App hosts and data services**: every ID in `AstropressAppHost` and `AstropressDataServices` must have a corresponding entry in `tooling/verified-providers.json` with a real URL. The `audit:providers` script enforces this in CI.
+- **Third-party integrations**: do not add support for an analytics provider, email service, search engine, or other third-party tool unless the user explicitly names it.
+- **Adapter files**: do not create `src/adapters/<name>.ts` for a service that has not been explicitly requested.
+- **CLI wizard options**: do not add a provider to the `astropress new` prompt unless it exists in `verified-providers.json`.
+
+### How to add a new provider
+
+1. Verify the service exists at a real public URL.
+2. Add it to `tooling/verified-providers.json` with the verified URL and accurate notes.
+3. Run `bun run audit:providers` — it must pass before any code changes.
+4. Add the adapter, type union entry, and tests.
+
+### Why this rule exists
+
+The fictional "Runway" hosting provider was added without being requested and without a real URL (`runway.example`). It reached the public type system, adapter layer, CLI wizard, docs, and tests before being caught. Both the TypeScript honesty audit and the evaluation rubric failed to detect it because they checked text claims, not whether referenced entities existed. The `audit:providers` script is the structural fix.
+
 ## Honesty requirements
 
 `tooling/scripts/audit-honesty.ts` verifies that `README.md`,
-`docs/EVALUATION.md`, and `packages/docs/src/content/docs/contributing/evaluation.mdx`
+`docs/reference/EVALUATION.md`, and `packages/docs/src/content/docs/contributing/evaluation.mdx`
 all mention Argon2id, KMAC256, and ML-DSA-65. If you rename these algorithms or
 remove the mentions, update `tooling/readiness-truth.json` to match.
+
+## Signing setup
+
+**All commits to `main` must be signed.** This is enforced by the GitHub branch
+ruleset (`required_signatures`) and caught early by the `verify-signing` pre-commit
+hook in `lefthook.yml`.
+
+### One-time local setup
+
+**GPG key (traditional):**
+```sh
+gpg --list-secret-keys --keyid-format=long   # find your key ID (e.g. 3AA5C34371567BD2)
+git config --global user.signingkey 3AA5C34371567BD2
+git config --global commit.gpgsign true
+```
+Upload the public key to GitHub: Settings → SSH and GPG keys → New GPG key.
+
+**SSH key (simpler if you already use SSH for GitHub):**
+```sh
+git config --global gpg.format ssh
+git config --global user.signingkey ~/.ssh/id_ed25519.pub   # or your key path
+git config --global commit.gpgsign true
+```
+Upload the same public key to GitHub: Settings → SSH and GPG keys → New signing key
+(separate from the authentication key).
+
+### Verify a commit is signed
+```sh
+git log --show-signature -1
+```
+Look for `gpg: Good signature` or `Good "git" signature`.
+
+### GitHub repo hardening applied
+The `Astropress/astropress` repository has the following security settings active.
+To inspect or update them use `gh api repos/Astropress/astropress/rulesets/14968184`.
+
+| Setting | Value |
+|---------|-------|
+| Required signatures | ✓ enforced on default branch |
+| Required status checks | `lint`, `test-unit (1.3.10)`, `test-unit (latest)`, `test-cli` |
+| Linear history | ✓ (no merge commits) |
+| Force push | ✗ blocked |
+| Branch deletion | ✗ blocked |
+| Web commit signoff | ✓ required |
+| Secret scanning | ✓ enabled |
+| Secret scanning push protection | ✓ enabled |
+| Dependabot security updates | ✓ enabled |

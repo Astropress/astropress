@@ -1,4 +1,4 @@
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { describe, expect, it } from "vitest";
@@ -89,6 +89,27 @@ describe("tooling integration", () => {
     await expect(hostRuntimeModules.loadLocalAdminAuth()).resolves.toEqual({});
   });
 
+  it("admin-harness astro config declares ssr.noExternal for @astropress-diy/astropress", () => {
+    // Regression guard for the SSR-externalization bug fixed in ci/audit-scripts-and-workflow-hardening.
+    //
+    // When output:"server" is set, Vite SSR-externalizes workspace packages by
+    // default, which means the astropress-local-runtime-modules Vite plugin is
+    // never called for imports inside the package. As a result,
+    // `./local-runtime-modules` in admin-store-dispatch.ts resolves to the dist
+    // stub that throws `unavailable()`, breaking all admin CRUD form submissions.
+    //
+    // The fix is ssr.noExternal:["@astropress-diy/astropress"] in the harness
+    // Vite config. This test prevents accidental removal.
+    const configPath = path.resolve(import.meta.dirname, "../../../examples/admin-harness/astro.config.mjs");
+    const source = readFileSync(configPath, "utf8");
+    expect(
+      source,
+      "examples/admin-harness/astro.config.mjs must declare ssr.noExternal for @astropress-diy/astropress " +
+        "so the Vite plugin pipeline intercepts ./local-runtime-modules imports inside the package. " +
+        "Without this, admin CRUD form submissions silently fail with 'Local runtime modules are only available…'.",
+    ).toMatch(/noExternal[^}]*@astropress-diy\/astropress/s);
+  });
+
   it("loads the emitted runtime js entrypoints cleanly", async () => {
     const runtimeEntryPoints = [
       "../src/platform-contracts.js",
@@ -108,9 +129,7 @@ describe("tooling integration", () => {
       "../src/adapters/hosted.js",
       "../src/adapters/cloudflare.js",
       "../src/adapters/supabase.js",
-      "../src/adapters/runway.js",
       "../src/adapters/supabase-sqlite.js",
-      "../src/adapters/runway-sqlite.js",
       "../src/adapters/local.js",
       "../src/adapters/project.js",
       "../src/admin-app-integration.js",
