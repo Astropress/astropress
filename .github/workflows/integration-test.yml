@@ -4,6 +4,9 @@ on:
   push:
   pull_request:
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
 jobs:
   d1-local-integration:
     name: D1 local integration tests (no credentials required)
