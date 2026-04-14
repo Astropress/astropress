@@ -1,6 +1,6 @@
 import { defineConfig } from "astro/config";
 import { fileURLToPath } from "node:url";
-import { createAstropressViteIntegration } from "astropress/integration";
+import { createAstropressViteIntegration } from "@astropress-diy/astropress/integration";
 
 const viteIntegration = createAstropressViteIntegration({
   localRuntimeModulesPath: fileURLToPath(

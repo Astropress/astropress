@@ -3,7 +3,7 @@ import {
   createAstropressLocalRuntimeModulePlugin,
   createAstropressViteAliases,
   isAstropressLocalRuntimeModuleRequest,
-} from "astropress";
+} from "@astropress-diy/astropress";
 
 describe("vite runtime alias helpers", () => {
   const localRuntimeModulesPath = "/tmp/site/src/astropress/local-runtime-modules.ts";

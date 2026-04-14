@@ -181,7 +181,7 @@ function mergeWithDefaults() {
  *
  * @example
  * ```ts
- * import { resolveAstropressAdminUiConfig } from "astropress";
+ * import { resolveAstropressAdminUiConfig } from "@astropress-diy/astropress";
  *
  * const { branding, labels, navigation } = resolveAstropressAdminUiConfig();
  * console.log(branding.appName); // "Astropress" or host-overridden value

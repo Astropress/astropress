@@ -3,7 +3,7 @@ import {
   type LocalAdminAuthModule,
   type LocalAdminStoreModule,
   type LocalCmsRegistryModule,
-} from "astropress";
+} from "@astropress-diy/astropress";
 
 export const hostRuntimeModules = defineAstropressHostRuntimeModules({
   async loadLocalAdminStore() {

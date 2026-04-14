@@ -301,7 +301,7 @@ export function resolveAstropressDeployTarget(
  *
  * @example
  * ```ts
- * import { resolveAstropressProjectEnvContract } from "astropress";
+ * import { resolveAstropressProjectEnvContract } from "@astropress-diy/astropress";
  *
  * const env = resolveAstropressProjectEnvContract(process.env);
  * console.log(env.localProvider);  // "sqlite" | "supabase" | "runway"

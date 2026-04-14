@@ -1,5 +1,5 @@
 import { defineMiddleware } from "astro:middleware";
-import { registerCms } from "astropress";
+import { registerCms } from "@astropress-diy/astropress";
 
 registerCms({
   templateKeys: ["content", "campaign", "landing"],

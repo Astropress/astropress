@@ -540,7 +540,7 @@ export function createNexusApp(options: NexusAppOptions): Hono {
         fetch(site.deployHookUrl!, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ siteId: site.id, source: "astropress-nexus" }),
+          body: JSON.stringify({ siteId: site.id, source: "@astropress-diy/nexus" }),
         })),
     );
 

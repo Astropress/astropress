@@ -1,7 +1,7 @@
 import type { APIRoute } from "astro";
-import { withAdminFormAction } from "astropress";
-import { loadLocalAdminStore } from "astropress/local-runtime-modules.js";
-import type { WebhookEvent } from "astropress/platform-contracts.js";
+import { withAdminFormAction } from "@astropress-diy/astropress";
+import { loadLocalAdminStore } from "@astropress-diy/astropress/local-runtime-modules.js";
+import type { WebhookEvent } from "@astropress-diy/astropress/platform-contracts.js";
 
 const VALID_EVENTS: WebhookEvent[] = [
   "content.published",

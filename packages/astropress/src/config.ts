@@ -261,7 +261,7 @@ export interface CmsConfig {
    *
    * @example
    * ```ts
-   * import type { AstropressPlugin } from "astropress";
+   * import type { AstropressPlugin } from "@astropress-diy/astropress";
    *
    * const searchPlugin: AstropressPlugin = {
    *   name: "search-indexer",
@@ -334,7 +334,7 @@ function getConfigStore(): AstropressGlobalWithConfig {
  * @example
  * ```ts
  * // src/site/cms-registration.ts
- * import { registerCms } from "astropress";
+ * import { registerCms } from "@astropress-diy/astropress";
  * import seedPages from "../content/pages.json";
  *
  * registerCms({
@@ -357,7 +357,7 @@ export function registerCms(config: CmsConfig): void {
  *
  * @example
  * ```ts
- * import { getCmsConfig } from "astropress";
+ * import { getCmsConfig } from "@astropress-diy/astropress";
  * const { siteUrl } = getCmsConfig();
  * ```
  */

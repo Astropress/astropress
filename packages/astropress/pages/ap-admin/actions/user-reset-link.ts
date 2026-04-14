@@ -1,7 +1,7 @@
 import type { APIRoute } from "astro";
-import { createRuntimePasswordResetToken } from "astropress";
-import { withAdminFormAction } from "astropress";
-import { sendPasswordResetEmail } from "astropress";
+import { createRuntimePasswordResetToken } from "@astropress-diy/astropress";
+import { withAdminFormAction } from "@astropress-diy/astropress";
+import { sendPasswordResetEmail } from "@astropress-diy/astropress";
 
 export const POST: APIRoute = async (context) =>
   withAdminFormAction(context, { failurePath: "/ap-admin/users", requireAdmin: true }, async ({ actor, formData, locals, request, redirect, fail }) => {

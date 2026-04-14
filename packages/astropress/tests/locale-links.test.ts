@@ -5,7 +5,7 @@ import {
   getLocaleSwitchTargets,
   registerCms,
   sanitizeCanonicalUrl,
-} from "astropress";
+} from "@astropress-diy/astropress";
 
 beforeEach(() => {
   registerCms({

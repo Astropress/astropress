@@ -8,7 +8,7 @@
  */
 import { describe, expect, it } from "vitest";
 
-import { sanitizeHtml } from "astropress";
+import { sanitizeHtml } from "@astropress-diy/astropress";
 
 describe("html-sanitization.feature: sanitizeHtml() allowlist contract", () => {
   it("strips <script> tags", async () => {

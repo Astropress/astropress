@@ -253,7 +253,7 @@ else
   info "Running Rust CLI tests…"
   cargo test
   info "Running Vitest suite…"
-  bun run --filter astropress test
+  bun run --filter "@astropress-diy/astropress" test
   info "Running coverage gate…"
   bun run test:coverage
   if [[ "$SKIP_PLAYWRIGHT" != true ]]; then

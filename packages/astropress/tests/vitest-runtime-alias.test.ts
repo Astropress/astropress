@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createAstropressVitestLocalRuntimePlugins } from "astropress";
+import { createAstropressVitestLocalRuntimePlugins } from "@astropress-diy/astropress";
 
 describe("vitest runtime alias helpers", () => {
   it("creates the local module replacement and external source rewrite plugins", () => {

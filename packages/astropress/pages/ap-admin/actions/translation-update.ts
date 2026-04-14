@@ -1,7 +1,7 @@
 import type { APIRoute } from "astro";
-import { withAdminFormAction } from "astropress";
-import { updateRuntimeTranslationState } from "astropress";
-import { appendQueryParam, resolveSafeReturnPath } from "astropress";
+import { withAdminFormAction } from "@astropress-diy/astropress";
+import { updateRuntimeTranslationState } from "@astropress-diy/astropress";
+import { appendQueryParam, resolveSafeReturnPath } from "@astropress-diy/astropress";
 
 export const POST: APIRoute = async (context) => {
   const fallbackPath = "/ap-admin/translations";

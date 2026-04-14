@@ -1,6 +1,6 @@
 import type { APIRoute } from "astro";
-import { withAdminFormAction } from "astropress";
-import { runMailchimpImport } from "astropress/admin-action-mailchimp-import";
+import { withAdminFormAction } from "@astropress-diy/astropress";
+import { runMailchimpImport } from "@astropress-diy/astropress/admin-action-mailchimp-import";
 
 export const POST: APIRoute = async (context) =>
   withAdminFormAction(

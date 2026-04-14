@@ -125,7 +125,7 @@ function createAstropressConfig(appHost: AstropressAppHost): string {
   return [
     `import { defineConfig } from "astro/config";`,
     `import { fileURLToPath } from "node:url";`,
-    `import { createAstropressViteIntegration${adminImport} } from "astropress/integration";`,
+    `import { createAstropressViteIntegration${adminImport} } from "@astropress-diy/astropress/integration";`,
     ``,
     `const viteIntegration = createAstropressViteIntegration({`,
     `  localRuntimeModulesPath: fileURLToPath(`,
@@ -153,7 +153,7 @@ function createAstropressPublicConfig(): string {
   return [
     `import { defineConfig } from "astro/config";`,
     `import { fileURLToPath } from "node:url";`,
-    `import { createAstropressViteIntegration, createAstropressPublicSiteIntegration } from "astropress/integration";`,
+    `import { createAstropressViteIntegration, createAstropressPublicSiteIntegration } from "@astropress-diy/astropress/integration";`,
     ``,
     `const viteIntegration = createAstropressViteIntegration({`,
     `  localRuntimeModulesPath: fileURLToPath(`,
@@ -251,9 +251,9 @@ function createDonatePage(donations: AstropressDonationsProviders, siteUrl: stri
   if (donations.pledgeCrypto) providers.push("pledgeCrypto");
 
   const imports = [
-    `import { resolveDonationSnippets } from "astropress/donations";`,
-    `import { requestOptedOutOfTracking } from "astropress/analytics";`,
-    `import { getCmsConfig } from "astropress";`,
+    `import { resolveDonationSnippets } from "@astropress-diy/astropress/donations";`,
+    `import { requestOptedOutOfTracking } from "@astropress-diy/astropress/analytics";`,
+    `import { getCmsConfig } from "@astropress-diy/astropress";`,
   ];
 
   const enabledProviders = providers.map((p) => `"${p}"`).join(", ");

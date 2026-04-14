@@ -1,6 +1,6 @@
 import { defineConfig } from "astro/config";
 import { fileURLToPath } from "node:url";
-import { createAstropressAdminAppIntegration, createAstropressViteIntegration } from "astropress/integration";
+import { createAstropressAdminAppIntegration, createAstropressViteIntegration } from "@astropress-diy/astropress/integration";
 
 const astropressRoot = fileURLToPath(new URL("../../packages/astropress", import.meta.url));
 const localRuntimeModulesPath = fileURLToPath(new URL("./src/astropress/local-runtime-modules.ts", import.meta.url));

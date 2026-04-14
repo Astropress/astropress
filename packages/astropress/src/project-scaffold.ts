@@ -100,7 +100,7 @@ function resolveProfile(
  *
  * @example
  * ```ts
- * import { createAstropressProjectScaffold } from "astropress";
+ * import { createAstropressProjectScaffold } from "@astropress-diy/astropress";
  *
  * const scaffold = createAstropressProjectScaffold({ appHost: "vercel", dataServices: "supabase" });
  * // scaffold.localEnv  — object of env vars to write to .env

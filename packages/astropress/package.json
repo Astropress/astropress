@@ -1,117 +1,438 @@
 {
-  "name": "astropress",
+  "name": "@astropress-diy/astropress",
   "version": "0.0.1",
   "description": "Low-carbon Astro web app framework for relatively simple sites run by individuals and small organizations.",
   "type": "module",
   "exports": {
-    ".": { "types": "./index.ts", "default": "./dist/index.js" },
+    ".": {
+      "types": "./index.ts",
+      "default": "./dist/index.js"
+    },
     "./components/*": "./components/*.astro",
-    "./platform-contracts": { "types": "./src/platform-contracts.ts", "default": "./dist/src/platform-contracts.js" },
-    "./project-env": { "types": "./src/project-env.ts", "default": "./dist/src/project-env.js" },
-    "./project-runtime": { "types": "./src/project-runtime.ts", "default": "./dist/src/project-runtime.js" },
-    "./project-launch": { "types": "./src/project-launch.ts", "default": "./dist/src/project-launch.js" },
-    "./project-scaffold": { "types": "./src/project-scaffold.ts", "default": "./dist/src/project-scaffold.js" },
-    "./provider-choice": { "types": "./src/provider-choice.ts", "default": "./dist/src/provider-choice.js" },
-    "./app-host-targets": { "types": "./src/app-host-targets.ts", "default": "./dist/src/app-host-targets.js" },
-    "./data-service-targets": { "types": "./src/data-service-targets.ts", "default": "./dist/src/data-service-targets.js" },
-    "./deployment-matrix": { "types": "./src/deployment-matrix.ts", "default": "./dist/src/deployment-matrix.js" },
-    "./admin-routes": { "types": "./src/admin-routes.ts", "default": "./dist/src/admin-routes.js" },
-    "./admin-ui": { "types": "./src/admin-ui.ts", "default": "./dist/src/admin-ui.js" },
-    "./hosted-api-adapter": { "types": "./src/hosted-api-adapter.ts", "default": "./dist/src/hosted-api-adapter.js" },
-    "./hosted-platform-adapter": { "types": "./src/hosted-platform-adapter.ts", "default": "./dist/src/hosted-platform-adapter.js" },
-    "./provider-targets": { "types": "./src/provider-targets.ts", "default": "./dist/src/provider-targets.js" },
-    "./sqlite-bootstrap": { "types": "./src/sqlite-bootstrap.ts", "default": "./dist/src/sqlite-bootstrap.js" },
-    "./sqlite-admin-runtime": { "types": "./src/sqlite-admin-runtime.ts", "default": "./dist/src/sqlite-admin-runtime.js" },
-    "./adapters/sqlite": { "types": "./src/adapters/sqlite.ts", "default": "./dist/src/adapters/sqlite.js" },
-    "./adapters/local": { "types": "./src/adapters/local.ts", "default": "./dist/src/adapters/local.js" },
-    "./adapters/hosted": { "types": "./src/adapters/hosted.ts", "default": "./dist/src/adapters/hosted.js" },
-    "./adapters/project": { "types": "./src/adapters/project.ts", "default": "./dist/src/adapters/project.js" },
-    "./adapters/cloudflare": { "types": "./src/adapters/cloudflare.ts", "default": "./dist/src/adapters/cloudflare.js" },
-    "./adapters/supabase": { "types": "./src/adapters/supabase.ts", "default": "./dist/src/adapters/supabase.js" },
-    "./adapters/appwrite": { "types": "./src/adapters/appwrite.ts", "default": "./dist/src/adapters/appwrite.js" },
-    "./adapters/pocketbase": { "types": "./src/adapters/pocketbase.ts", "default": "./dist/src/adapters/pocketbase.js" },
-    "./adapters/neon": { "types": "./src/adapters/neon.ts", "default": "./dist/src/adapters/neon.js" },
-    "./adapters/nhost": { "types": "./src/adapters/nhost.ts", "default": "./dist/src/adapters/nhost.js" },
-    "./adapters/supabase-sqlite": { "types": "./src/adapters/supabase-sqlite.ts", "default": "./dist/src/adapters/supabase-sqlite.js" },
-    "./adapters/runway": { "types": "./src/adapters/runway.ts", "default": "./dist/src/adapters/runway.js" },
-    "./adapters/runway-sqlite": { "types": "./src/adapters/runway-sqlite.ts", "default": "./dist/src/adapters/runway-sqlite.js" },
-    "./adapters/turso": { "types": "./src/adapters/turso.ts", "default": "./dist/src/adapters/turso.js" },
-    "./deploy/github-pages": { "types": "./src/deploy/github-pages.ts", "default": "./dist/src/deploy/github-pages.js" },
-    "./deploy/cloudflare-pages": { "types": "./src/deploy/cloudflare-pages.ts", "default": "./dist/src/deploy/cloudflare-pages.js" },
-    "./deploy/vercel": { "types": "./src/deploy/vercel.ts", "default": "./dist/src/deploy/vercel.js" },
-    "./deploy/netlify": { "types": "./src/deploy/netlify.ts", "default": "./dist/src/deploy/netlify.js" },
-    "./deploy/render": { "types": "./src/deploy/render.ts", "default": "./dist/src/deploy/render.js" },
-    "./deploy/gitlab-pages": { "types": "./src/deploy/gitlab-pages.ts", "default": "./dist/src/deploy/gitlab-pages.js" },
-    "./deploy/custom": { "types": "./src/deploy/custom.ts", "default": "./dist/src/deploy/custom.js" },
-    "./content-services-ops": { "types": "./src/content-services-ops.ts", "default": "./dist/src/content-services-ops.js" },
-    "./db-migrate-ops": { "types": "./src/db-migrate-ops.ts", "default": "./dist/src/db-migrate-ops.js" },
-    "./d1-migrate-ops": { "types": "./src/d1-migrate-ops.ts", "default": "./dist/src/d1-migrate-ops.js" },
-    "./import/wordpress": { "types": "./src/import/wordpress.ts", "default": "./dist/src/import/wordpress.js" },
-    "./sync/git": { "types": "./src/sync/git.ts", "default": "./dist/src/sync/git.js" },
-    "./integration": { "types": "./src/integration.ts", "default": "./dist/src/integration.js" },
-    "./cloudflare-vite-integration": { "types": "./src/cloudflare-vite-integration.ts", "default": "./dist/src/cloudflare-vite-integration.js" },
-    "./vite-integration": { "types": "./src/vite-integration.ts", "default": "./dist/src/vite-integration.js" },
-    "./vite-runtime-alias": { "types": "./src/vite-runtime-alias.ts", "default": "./dist/src/vite-runtime-alias.js" },
-    "./vitest-runtime-alias": { "types": "./src/vitest-runtime-alias.ts", "default": "./dist/src/vitest-runtime-alias.js" },
-    "./host-runtime-modules": { "types": "./src/host-runtime-modules.ts", "default": "./dist/src/host-runtime-modules.js" },
-    "./host-runtime-factories": { "types": "./src/host-runtime-factories.ts", "default": "./dist/src/host-runtime-factories.js" },
-    "./admin-store-adapter-factory": { "types": "./src/admin-store-adapter-factory.ts", "default": "./dist/src/admin-store-adapter-factory.js" },
-    "./auth-repository-factory": { "types": "./src/auth-repository-factory.ts", "default": "./dist/src/auth-repository-factory.js" },
-    "./content-repository-factory": { "types": "./src/content-repository-factory.ts", "default": "./dist/src/content-repository-factory.js" },
-    "./cms-route-registry-factory": { "types": "./src/cms-route-registry-factory.ts", "default": "./dist/src/cms-route-registry-factory.js" },
-    "./local-media-repository-factory": { "types": "./src/local-media-repository-factory.ts", "default": "./dist/src/local-media-repository-factory.js" },
-    "./redirect-repository-factory": { "types": "./src/redirect-repository-factory.ts", "default": "./dist/src/redirect-repository-factory.js" },
-    "./taxonomy-repository-factory": { "types": "./src/taxonomy-repository-factory.ts", "default": "./dist/src/taxonomy-repository-factory.js" },
-    "./author-repository-factory": { "types": "./src/author-repository-factory.ts", "default": "./dist/src/author-repository-factory.js" },
-    "./comment-repository-factory": { "types": "./src/comment-repository-factory.ts", "default": "./dist/src/comment-repository-factory.js" },
-    "./submission-repository-factory": { "types": "./src/submission-repository-factory.ts", "default": "./dist/src/submission-repository-factory.js" },
-    "./user-repository-factory": { "types": "./src/user-repository-factory.ts", "default": "./dist/src/user-repository-factory.js" },
-    "./settings-repository-factory": { "types": "./src/settings-repository-factory.ts", "default": "./dist/src/settings-repository-factory.js" },
-    "./translation-repository-factory": { "types": "./src/translation-repository-factory.ts", "default": "./dist/src/translation-repository-factory.js" },
-    "./rate-limit-repository-factory": { "types": "./src/rate-limit-repository-factory.ts", "default": "./dist/src/rate-limit-repository-factory.js" },
-    "./local-runtime-modules": { "types": "./src/local-runtime-modules.ts", "default": "./dist/src/local-runtime-modules.js" },
-    "./cloudflare-workers-stub": { "types": "./src/cloudflare-workers-stub.ts", "default": "./dist/src/cloudflare-workers-stub.js" },
-    "./cloudflare-local-runtime-stubs": { "types": "./src/cloudflare-local-runtime-stubs.ts", "default": "./dist/src/cloudflare-local-runtime-stubs.js" },
-    "./cloudflare-sqlite-adapter-stub": { "types": "./src/cloudflare-sqlite-adapter-stub.ts", "default": "./dist/src/cloudflare-sqlite-adapter-stub.js" },
-    "./cloudflare-sqlite-admin-runtime-stub": { "types": "./src/cloudflare-sqlite-admin-runtime-stub.ts", "default": "./dist/src/cloudflare-sqlite-admin-runtime-stub.js" },
-    "./cloudflare-sqlite-bootstrap-stub": { "types": "./src/cloudflare-sqlite-bootstrap-stub.ts", "default": "./dist/src/cloudflare-sqlite-bootstrap-stub.js" },
-    "./cloudflare-local-image-storage-stub": { "types": "./src/cloudflare-local-image-storage-stub.ts", "default": "./dist/src/cloudflare-local-image-storage-stub.js" },
-    "./cloudflare-local-media-storage-stub": { "types": "./src/cloudflare-local-media-storage-stub.ts", "default": "./dist/src/cloudflare-local-media-storage-stub.js" },
-    "./services-config": { "types": "./src/services-config.ts", "default": "./dist/src/services-config.js" },
-    "./admin-dashboard": { "types": "./src/admin-dashboard.ts", "default": "./dist/src/admin-dashboard.js" },
-    "./admin-page-models": { "types": "./src/admin-page-models.ts", "default": "./dist/src/admin-page-models.js" },
-    "./runtime-page-store": { "types": "./src/runtime-page-store.ts", "default": "./dist/src/runtime-page-store.js" },
-    "./runtime-admin-actions": { "types": "./src/runtime-admin-actions.ts", "default": "./dist/src/runtime-admin-actions.js" },
-    "./runtime-admin-auth": { "types": "./src/runtime-admin-auth.ts", "default": "./dist/src/runtime-admin-auth.js" },
-    "./runtime-route-registry": { "types": "./src/runtime-route-registry.ts", "default": "./dist/src/runtime-route-registry.js" },
-    "./runtime-env": { "types": "./src/runtime-env.ts", "default": "./dist/src/runtime-env.js" },
-    "./runtime-media-storage": { "types": "./src/runtime-media-storage.ts", "default": "./dist/src/runtime-media-storage.js" },
-    "./media": { "types": "./src/media.ts", "default": "./dist/src/media.js" },
-    "./site-settings": { "types": "./src/site-settings.ts", "default": "./dist/src/site-settings.js" },
-    "./seeded-content-type": { "types": "./src/seeded-content-type.ts", "default": "./dist/src/seeded-content-type.js" },
-    "./transactional-email": { "types": "./src/transactional-email.ts", "default": "./dist/src/transactional-email.js" },
-    "./newsletter-adapter": { "types": "./src/newsletter-adapter.ts", "default": "./dist/src/newsletter-adapter.js" },
-    "./admin-action-mailchimp-import": { "types": "./src/admin-action-mailchimp-import.ts", "default": "./dist/src/admin-action-mailchimp-import.js" },
-    "./runtime-actions-restore": { "types": "./src/runtime-actions-restore.ts", "default": "./dist/src/runtime-actions-restore.js" },
-    "./admin-recent": { "types": "./src/admin-recent.ts", "default": "./dist/src/admin-recent.js" },
-    "./turnstile": { "types": "./src/turnstile.ts", "default": "./dist/src/turnstile.js" },
-    "./local-image-storage": { "types": "./src/local-image-storage.ts", "default": "./dist/src/local-image-storage.js" },
-    "./local-media-storage": { "types": "./src/local-media-storage.ts", "default": "./dist/src/local-media-storage.js" },
-    "./web-components": { "types": "./web-components/index.ts", "default": "./web-components/index.ts" },
-    "./web-components/admin-nav": { "types": "./web-components/admin-nav.ts", "default": "./web-components/admin-nav.ts" },
-    "./web-components/notice": { "types": "./web-components/notice.ts", "default": "./web-components/notice.ts" },
-    "./web-components/theme-toggle": { "types": "./web-components/theme-toggle.ts", "default": "./web-components/theme-toggle.ts" },
-    "./web-components/confirm-dialog": { "types": "./web-components/confirm-dialog.ts", "default": "./web-components/confirm-dialog.ts" },
-    "./web-components/command-palette": { "types": "./web-components/command-palette.ts", "default": "./web-components/command-palette.ts" },
-    "./web-components/html-editor": { "types": "./web-components/html-editor.ts", "default": "./web-components/html-editor.ts" },
-    "./web-components/ap-stale-tab-warning": { "types": "./web-components/ap-stale-tab-warning.ts", "default": "./web-components/ap-stale-tab-warning.ts" },
-    "./web-components/ap-lock-indicator": { "types": "./web-components/ap-lock-indicator.ts", "default": "./web-components/ap-lock-indicator.ts" },
-    "./api-middleware": { "types": "./src/api-middleware.ts", "default": "./dist/src/api-middleware.js" },
-    "./api-routes": { "types": "./src/api-routes.ts", "default": "./dist/src/api-routes.js" },
-    "./analytics": { "types": "./src/analytics.ts", "default": "./dist/src/analytics.js" },
-    "./donations": { "types": "./src/donations.ts", "default": "./dist/src/donations.js" },
-    "./runtime-health": { "types": "./src/runtime-health.ts", "default": "./dist/src/runtime-health.js" },
-    "./runtime-logger": { "types": "./src/runtime-logger.ts", "default": "./dist/src/runtime-logger.js" }
+    "./platform-contracts": {
+      "types": "./src/platform-contracts.ts",
+      "default": "./dist/src/platform-contracts.js"
+    },
+    "./project-env": {
+      "types": "./src/project-env.ts",
+      "default": "./dist/src/project-env.js"
+    },
+    "./project-runtime": {
+      "types": "./src/project-runtime.ts",
+      "default": "./dist/src/project-runtime.js"
+    },
+    "./project-launch": {
+      "types": "./src/project-launch.ts",
+      "default": "./dist/src/project-launch.js"
+    },
+    "./project-scaffold": {
+      "types": "./src/project-scaffold.ts",
+      "default": "./dist/src/project-scaffold.js"
+    },
+    "./provider-choice": {
+      "types": "./src/provider-choice.ts",
+      "default": "./dist/src/provider-choice.js"
+    },
+    "./app-host-targets": {
+      "types": "./src/app-host-targets.ts",
+      "default": "./dist/src/app-host-targets.js"
+    },
+    "./data-service-targets": {
+      "types": "./src/data-service-targets.ts",
+      "default": "./dist/src/data-service-targets.js"
+    },
+    "./deployment-matrix": {
+      "types": "./src/deployment-matrix.ts",
+      "default": "./dist/src/deployment-matrix.js"
+    },
+    "./admin-routes": {
+      "types": "./src/admin-routes.ts",
+      "default": "./dist/src/admin-routes.js"
+    },
+    "./admin-ui": {
+      "types": "./src/admin-ui.ts",
+      "default": "./dist/src/admin-ui.js"
+    },
+    "./hosted-api-adapter": {
+      "types": "./src/hosted-api-adapter.ts",
+      "default": "./dist/src/hosted-api-adapter.js"
+    },
+    "./hosted-platform-adapter": {
+      "types": "./src/hosted-platform-adapter.ts",
+      "default": "./dist/src/hosted-platform-adapter.js"
+    },
+    "./provider-targets": {
+      "types": "./src/provider-targets.ts",
+      "default": "./dist/src/provider-targets.js"
+    },
+    "./sqlite-bootstrap": {
+      "types": "./src/sqlite-bootstrap.ts",
+      "default": "./dist/src/sqlite-bootstrap.js"
+    },
+    "./sqlite-admin-runtime": {
+      "types": "./src/sqlite-admin-runtime.ts",
+      "default": "./dist/src/sqlite-admin-runtime.js"
+    },
+    "./adapters/sqlite": {
+      "types": "./src/adapters/sqlite.ts",
+      "default": "./dist/src/adapters/sqlite.js"
+    },
+    "./adapters/local": {
+      "types": "./src/adapters/local.ts",
+      "default": "./dist/src/adapters/local.js"
+    },
+    "./adapters/hosted": {
+      "types": "./src/adapters/hosted.ts",
+      "default": "./dist/src/adapters/hosted.js"
+    },
+    "./adapters/project": {
+      "types": "./src/adapters/project.ts",
+      "default": "./dist/src/adapters/project.js"
+    },
+    "./adapters/cloudflare": {
+      "types": "./src/adapters/cloudflare.ts",
+      "default": "./dist/src/adapters/cloudflare.js"
+    },
+    "./adapters/supabase": {
+      "types": "./src/adapters/supabase.ts",
+      "default": "./dist/src/adapters/supabase.js"
+    },
+    "./adapters/appwrite": {
+      "types": "./src/adapters/appwrite.ts",
+      "default": "./dist/src/adapters/appwrite.js"
+    },
+    "./adapters/pocketbase": {
+      "types": "./src/adapters/pocketbase.ts",
+      "default": "./dist/src/adapters/pocketbase.js"
+    },
+    "./adapters/neon": {
+      "types": "./src/adapters/neon.ts",
+      "default": "./dist/src/adapters/neon.js"
+    },
+    "./adapters/nhost": {
+      "types": "./src/adapters/nhost.ts",
+      "default": "./dist/src/adapters/nhost.js"
+    },
+    "./adapters/supabase-sqlite": {
+      "types": "./src/adapters/supabase-sqlite.ts",
+      "default": "./dist/src/adapters/supabase-sqlite.js"
+    },
+    "./adapters/runway": {
+      "types": "./src/adapters/runway.ts",
+      "default": "./dist/src/adapters/runway.js"
+    },
+    "./adapters/runway-sqlite": {
+      "types": "./src/adapters/runway-sqlite.ts",
+      "default": "./dist/src/adapters/runway-sqlite.js"
+    },
+    "./adapters/turso": {
+      "types": "./src/adapters/turso.ts",
+      "default": "./dist/src/adapters/turso.js"
+    },
+    "./deploy/github-pages": {
+      "types": "./src/deploy/github-pages.ts",
+      "default": "./dist/src/deploy/github-pages.js"
+    },
+    "./deploy/cloudflare-pages": {
+      "types": "./src/deploy/cloudflare-pages.ts",
+      "default": "./dist/src/deploy/cloudflare-pages.js"
+    },
+    "./deploy/vercel": {
+      "types": "./src/deploy/vercel.ts",
+      "default": "./dist/src/deploy/vercel.js"
+    },
+    "./deploy/netlify": {
+      "types": "./src/deploy/netlify.ts",
+      "default": "./dist/src/deploy/netlify.js"
+    },
+    "./deploy/render": {
+      "types": "./src/deploy/render.ts",
+      "default": "./dist/src/deploy/render.js"
+    },
+    "./deploy/gitlab-pages": {
+      "types": "./src/deploy/gitlab-pages.ts",
+      "default": "./dist/src/deploy/gitlab-pages.js"
+    },
+    "./deploy/custom": {
+      "types": "./src/deploy/custom.ts",
+      "default": "./dist/src/deploy/custom.js"
+    },
+    "./content-services-ops": {
+      "types": "./src/content-services-ops.ts",
+      "default": "./dist/src/content-services-ops.js"
+    },
+    "./db-migrate-ops": {
+      "types": "./src/db-migrate-ops.ts",
+      "default": "./dist/src/db-migrate-ops.js"
+    },
+    "./d1-migrate-ops": {
+      "types": "./src/d1-migrate-ops.ts",
+      "default": "./dist/src/d1-migrate-ops.js"
+    },
+    "./import/wordpress": {
+      "types": "./src/import/wordpress.ts",
+      "default": "./dist/src/import/wordpress.js"
+    },
+    "./sync/git": {
+      "types": "./src/sync/git.ts",
+      "default": "./dist/src/sync/git.js"
+    },
+    "./integration": {
+      "types": "./src/integration.ts",
+      "default": "./dist/src/integration.js"
+    },
+    "./cloudflare-vite-integration": {
+      "types": "./src/cloudflare-vite-integration.ts",
+      "default": "./dist/src/cloudflare-vite-integration.js"
+    },
+    "./vite-integration": {
+      "types": "./src/vite-integration.ts",
+      "default": "./dist/src/vite-integration.js"
+    },
+    "./vite-runtime-alias": {
+      "types": "./src/vite-runtime-alias.ts",
+      "default": "./dist/src/vite-runtime-alias.js"
+    },
+    "./vitest-runtime-alias": {
+      "types": "./src/vitest-runtime-alias.ts",
+      "default": "./dist/src/vitest-runtime-alias.js"
+    },
+    "./host-runtime-modules": {
+      "types": "./src/host-runtime-modules.ts",
+      "default": "./dist/src/host-runtime-modules.js"
+    },
+    "./host-runtime-factories": {
+      "types": "./src/host-runtime-factories.ts",
+      "default": "./dist/src/host-runtime-factories.js"
+    },
+    "./admin-store-adapter-factory": {
+      "types": "./src/admin-store-adapter-factory.ts",
+      "default": "./dist/src/admin-store-adapter-factory.js"
+    },
+    "./auth-repository-factory": {
+      "types": "./src/auth-repository-factory.ts",
+      "default": "./dist/src/auth-repository-factory.js"
+    },
+    "./content-repository-factory": {
+      "types": "./src/content-repository-factory.ts",
+      "default": "./dist/src/content-repository-factory.js"
+    },
+    "./cms-route-registry-factory": {
+      "types": "./src/cms-route-registry-factory.ts",
+      "default": "./dist/src/cms-route-registry-factory.js"
+    },
+    "./local-media-repository-factory": {
+      "types": "./src/local-media-repository-factory.ts",
+      "default": "./dist/src/local-media-repository-factory.js"
+    },
+    "./redirect-repository-factory": {
+      "types": "./src/redirect-repository-factory.ts",
+      "default": "./dist/src/redirect-repository-factory.js"
+    },
+    "./taxonomy-repository-factory": {
+      "types": "./src/taxonomy-repository-factory.ts",
+      "default": "./dist/src/taxonomy-repository-factory.js"
+    },
+    "./author-repository-factory": {
+      "types": "./src/author-repository-factory.ts",
+      "default": "./dist/src/author-repository-factory.js"
+    },
+    "./comment-repository-factory": {
+      "types": "./src/comment-repository-factory.ts",
+      "default": "./dist/src/comment-repository-factory.js"
+    },
+    "./submission-repository-factory": {
+      "types": "./src/submission-repository-factory.ts",
+      "default": "./dist/src/submission-repository-factory.js"
+    },
+    "./user-repository-factory": {
+      "types": "./src/user-repository-factory.ts",
+      "default": "./dist/src/user-repository-factory.js"
+    },
+    "./settings-repository-factory": {
+      "types": "./src/settings-repository-factory.ts",
+      "default": "./dist/src/settings-repository-factory.js"
+    },
+    "./translation-repository-factory": {
+      "types": "./src/translation-repository-factory.ts",
+      "default": "./dist/src/translation-repository-factory.js"
+    },
+    "./rate-limit-repository-factory": {
+      "types": "./src/rate-limit-repository-factory.ts",
+      "default": "./dist/src/rate-limit-repository-factory.js"
+    },
+    "./local-runtime-modules": {
+      "types": "./src/local-runtime-modules.ts",
+      "default": "./dist/src/local-runtime-modules.js"
+    },
+    "./cloudflare-workers-stub": {
+      "types": "./src/cloudflare-workers-stub.ts",
+      "default": "./dist/src/cloudflare-workers-stub.js"
+    },
+    "./cloudflare-local-runtime-stubs": {
+      "types": "./src/cloudflare-local-runtime-stubs.ts",
+      "default": "./dist/src/cloudflare-local-runtime-stubs.js"
+    },
+    "./cloudflare-sqlite-adapter-stub": {
+      "types": "./src/cloudflare-sqlite-adapter-stub.ts",
+      "default": "./dist/src/cloudflare-sqlite-adapter-stub.js"
+    },
+    "./cloudflare-sqlite-admin-runtime-stub": {
+      "types": "./src/cloudflare-sqlite-admin-runtime-stub.ts",
+      "default": "./dist/src/cloudflare-sqlite-admin-runtime-stub.js"
+    },
+    "./cloudflare-sqlite-bootstrap-stub": {
+      "types": "./src/cloudflare-sqlite-bootstrap-stub.ts",
+      "default": "./dist/src/cloudflare-sqlite-bootstrap-stub.js"
+    },
+    "./cloudflare-local-image-storage-stub": {
+      "types": "./src/cloudflare-local-image-storage-stub.ts",
+      "default": "./dist/src/cloudflare-local-image-storage-stub.js"
+    },
+    "./cloudflare-local-media-storage-stub": {
+      "types": "./src/cloudflare-local-media-storage-stub.ts",
+      "default": "./dist/src/cloudflare-local-media-storage-stub.js"
+    },
+    "./services-config": {
+      "types": "./src/services-config.ts",
+      "default": "./dist/src/services-config.js"
+    },
+    "./admin-dashboard": {
+      "types": "./src/admin-dashboard.ts",
+      "default": "./dist/src/admin-dashboard.js"
+    },
+    "./admin-page-models": {
+      "types": "./src/admin-page-models.ts",
+      "default": "./dist/src/admin-page-models.js"
+    },
+    "./runtime-page-store": {
+      "types": "./src/runtime-page-store.ts",
+      "default": "./dist/src/runtime-page-store.js"
+    },
+    "./runtime-admin-actions": {
+      "types": "./src/runtime-admin-actions.ts",
+      "default": "./dist/src/runtime-admin-actions.js"
+    },
+    "./runtime-admin-auth": {
+      "types": "./src/runtime-admin-auth.ts",
+      "default": "./dist/src/runtime-admin-auth.js"
+    },
+    "./runtime-route-registry": {
+      "types": "./src/runtime-route-registry.ts",
+      "default": "./dist/src/runtime-route-registry.js"
+    },
+    "./runtime-env": {
+      "types": "./src/runtime-env.ts",
+      "default": "./dist/src/runtime-env.js"
+    },
+    "./runtime-media-storage": {
+      "types": "./src/runtime-media-storage.ts",
+      "default": "./dist/src/runtime-media-storage.js"
+    },
+    "./media": {
+      "types": "./src/media.ts",
+      "default": "./dist/src/media.js"
+    },
+    "./site-settings": {
+      "types": "./src/site-settings.ts",
+      "default": "./dist/src/site-settings.js"
+    },
+    "./seeded-content-type": {
+      "types": "./src/seeded-content-type.ts",
+      "default": "./dist/src/seeded-content-type.js"
+    },
+    "./transactional-email": {
+      "types": "./src/transactional-email.ts",
+      "default": "./dist/src/transactional-email.js"
+    },
+    "./newsletter-adapter": {
+      "types": "./src/newsletter-adapter.ts",
+      "default": "./dist/src/newsletter-adapter.js"
+    },
+    "./admin-action-mailchimp-import": {
+      "types": "./src/admin-action-mailchimp-import.ts",
+      "default": "./dist/src/admin-action-mailchimp-import.js"
+    },
+    "./runtime-actions-restore": {
+      "types": "./src/runtime-actions-restore.ts",
+      "default": "./dist/src/runtime-actions-restore.js"
+    },
+    "./admin-recent": {
+      "types": "./src/admin-recent.ts",
+      "default": "./dist/src/admin-recent.js"
+    },
+    "./turnstile": {
+      "types": "./src/turnstile.ts",
+      "default": "./dist/src/turnstile.js"
+    },
+    "./local-image-storage": {
+      "types": "./src/local-image-storage.ts",
+      "default": "./dist/src/local-image-storage.js"
+    },
+    "./local-media-storage": {
+      "types": "./src/local-media-storage.ts",
+      "default": "./dist/src/local-media-storage.js"
+    },
+    "./web-components": {
+      "types": "./web-components/index.ts",
+      "default": "./web-components/index.ts"
+    },
+    "./web-components/admin-nav": {
+      "types": "./web-components/admin-nav.ts",
+      "default": "./web-components/admin-nav.ts"
+    },
+    "./web-components/notice": {
+      "types": "./web-components/notice.ts",
+      "default": "./web-components/notice.ts"
+    },
+    "./web-components/theme-toggle": {
+      "types": "./web-components/theme-toggle.ts",
+      "default": "./web-components/theme-toggle.ts"
+    },
+    "./web-components/confirm-dialog": {
+      "types": "./web-components/confirm-dialog.ts",
+      "default": "./web-components/confirm-dialog.ts"
+    },
+    "./web-components/command-palette": {
+      "types": "./web-components/command-palette.ts",
+      "default": "./web-components/command-palette.ts"
+    },
+    "./web-components/html-editor": {
+      "types": "./web-components/html-editor.ts",
+      "default": "./web-components/html-editor.ts"
+    },
+    "./web-components/ap-stale-tab-warning": {
+      "types": "./web-components/ap-stale-tab-warning.ts",
+      "default": "./web-components/ap-stale-tab-warning.ts"
+    },
+    "./web-components/ap-lock-indicator": {
+      "types": "./web-components/ap-lock-indicator.ts",
+      "default": "./web-components/ap-lock-indicator.ts"
+    },
+    "./api-middleware": {
+      "types": "./src/api-middleware.ts",
+      "default": "./dist/src/api-middleware.js"
+    },
+    "./api-routes": {
+      "types": "./src/api-routes.ts",
+      "default": "./dist/src/api-routes.js"
+    },
+    "./analytics": {
+      "types": "./src/analytics.ts",
+      "default": "./dist/src/analytics.js"
+    },
+    "./donations": {
+      "types": "./src/donations.ts",
+      "default": "./dist/src/donations.js"
+    },
+    "./runtime-health": {
+      "types": "./src/runtime-health.ts",
+      "default": "./dist/src/runtime-health.js"
+    },
+    "./runtime-logger": {
+      "types": "./src/runtime-logger.ts",
+      "default": "./dist/src/runtime-logger.js"
+    }
   },
   "files": [
     "components",
