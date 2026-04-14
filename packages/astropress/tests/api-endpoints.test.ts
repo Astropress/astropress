@@ -21,7 +21,7 @@ const mocks = vi.hoisted(() => ({
 }));
 
 // Mock the local-runtime-modules alias so loadLocalAdminStore is injectable
-vi.mock("astropress/local-runtime-modules", () => ({
+vi.mock("@astropress-diy/astropress/local-runtime-modules", () => ({
   loadLocalAdminStore: mocks.loadLocalAdminStore,
 }));
 
