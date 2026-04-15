@@ -8,7 +8,7 @@ A low-carbon, free, open-source site builder and web framework for static sites,
 with a built-in admin panel, AI-ready scaffolding, and zero vendor lock-in.
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
-[![npm](https://img.shields.io/npm/v/astropress?color=orange&label=npm)](https://www.npmjs.com/package/astropress)
+[![npm](https://img.shields.io/npm/v/%40astropress-diy%2Fastropress?color=orange&label=npm)](https://www.npmjs.com/package/@astropress-diy/astropress)
 [![CI](https://img.shields.io/github/actions/workflow/status/astropress/astropress/ci.yml?label=CI&logo=github)](https://github.com/astropress/astropress/actions)
 [![Coverage](https://img.shields.io/badge/coverage-99%25-brightgreen)](#)
 [![Node ≥ 24.8](https://img.shields.io/badge/node-%E2%89%A524.8-brightgreen?logo=node.js&logoColor=white)](https://nodejs.org)
