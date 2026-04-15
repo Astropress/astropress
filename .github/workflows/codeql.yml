@@ -26,8 +26,10 @@ jobs:
           - rust
     steps:
       - uses: actions/checkout@v6
-      - uses: github/codeql-action/init@v4
-      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        if: matrix.language == 'javascript-typescript'
+        with:
+          node-version: "24.8"
       - uses: github/codeql-action/init@v4
         with:
           languages: ${{ matrix.language }}

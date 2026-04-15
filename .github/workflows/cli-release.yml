@@ -38,7 +38,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v6
-      - uses: actions/checkout@v6
 
       - uses: dtolnay/rust-toolchain@stable
         with:
@@ -94,7 +93,6 @@ jobs:
     permissions:
       id-token: write  # required for crates.io trusted publishing (OIDC)
     steps:
-      - uses: actions/checkout@v6
       - uses: actions/checkout@v6
 
       - uses: dtolnay/rust-toolchain@stable
