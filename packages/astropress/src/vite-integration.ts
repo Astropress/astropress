@@ -1,5 +1,6 @@
 import {
   createAstropressLocalRuntimeModulePlugin,
+  createAstropressPackageResolverPlugin,
   createAstropressViteAliases,
   type AstropressViteAlias,
   type AstropressVitePlugin,
@@ -14,8 +15,14 @@ export type AstropressViteIntegration = {
 export function createAstropressViteIntegration(
   options: AstropressViteRuntimeAliasOptions,
 ): AstropressViteIntegration {
+  const plugins: AstropressVitePlugin[] = [
+    createAstropressLocalRuntimeModulePlugin(options.localRuntimeModulesPath),
+  ];
+  if (options.astropressPackageRoot) {
+    plugins.push(createAstropressPackageResolverPlugin(options.astropressPackageRoot));
+  }
   return {
-    plugins: [createAstropressLocalRuntimeModulePlugin(options.localRuntimeModulesPath)],
+    plugins,
     aliases: createAstropressViteAliases(options),
   };
 }

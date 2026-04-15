@@ -1,6 +1,6 @@
 ---
 import { buildAstropressAdminDocumentTitle, resolveAstropressAdminUiConfig } from "astropress";
-import TurnstileField from "astropress/components/TurnstileField.astro";
+import TurnstileField from "@astropress-diy/astropress/components/TurnstileField.astro";
 
 const hasError = Astro.url.searchParams.get("error") === "1";
 const isRateLimited = Astro.url.searchParams.get("ratelimited") === "1";
