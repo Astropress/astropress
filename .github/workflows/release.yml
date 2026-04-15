@@ -12,6 +12,7 @@ jobs:
     name: Publish to npm
     runs-on: ubuntu-latest
     permissions:
+      actions: write
       contents: write
       pull-requests: write
       id-token: write  # required for npm trusted publishing (OIDC)
@@ -46,7 +47,7 @@ jobs:
           # Each package (astropress, astropress-mcp, astropress-nexus) must be
           # registered as a trusted publisher on npmjs.com before this works.
 
-      - name: Tag CLI release if version not yet tagged
+      - name: Tag and dispatch CLI release
         if: steps.changesets.outputs.published == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -54,9 +55,12 @@ jobs:
           VERSION=$(grep '^version' crates/astropress-cli/Cargo.toml | head -1 | sed 's/version = "\(.*\)"/\1/')
           TAG="cli-v${VERSION}"
           if git ls-remote --tags origin "refs/tags/${TAG}" | grep -q "${TAG}"; then
-            echo "Tag ${TAG} already exists — skipping CLI release"
+            echo "Tag ${TAG} already exists"
           else
             git tag "${TAG}"
             git push origin "${TAG}"
-            echo "Pushed ${TAG} — cli-release.yml will build and publish"
+            echo "Pushed ${TAG}"
           fi
+
+          gh workflow run cli-release.yml --ref "${TAG}"
+          echo "Dispatched cli-release.yml for ${TAG}"
