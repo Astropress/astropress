@@ -67,6 +67,23 @@ beforeEach(() => {
 });
 
 // ---------------------------------------------------------------------------
+// Helper: locals whose D1 DB always throws — forces withSafeRouteRegistryFallback
+// to catch the error and invoke the local-registry fallback arrow.
+// ---------------------------------------------------------------------------
+
+function makeFailingLocals(): App.Locals {
+  const throwingStmt = {
+    bind: () => throwingStmt,
+    first: async (): Promise<never> => { throw new Error("Simulated D1 failure"); },
+    all: async (): Promise<never> => { throw new Error("Simulated D1 failure"); },
+    run: async (): Promise<never> => { throw new Error("Simulated D1 failure"); },
+  };
+  return {
+    runtime: { env: { DB: { prepare: () => throwingStmt } } },
+  } as unknown as App.Locals;
+}
+
+// ---------------------------------------------------------------------------
 // Helpers for seeding routes
 // ---------------------------------------------------------------------------
 
@@ -165,6 +182,13 @@ describe("getRuntimeSystemRoute", () => {
   it("returns null when locals are null (no registry)", async () => {
     const route = await getRuntimeSystemRoute("/anything", null);
     expect(route).toBeNull();
+  });
+
+  it("falls back to local registry when D1 query throws", async () => {
+    mockLoadLocalCmsRegistry.mockResolvedValueOnce(mockLocalRegistry);
+    mockLocalRegistry.getSystemRoute.mockResolvedValueOnce({ path: "/contact", title: "Local Contact", renderStrategy: "structured_sections" as const });
+    const route = await getRuntimeSystemRoute("/contact", makeFailingLocals());
+    expect(route).toMatchObject({ title: "Local Contact" });
   });
 });
 
@@ -285,6 +309,13 @@ describe("listRuntimeStructuredPageRoutes", () => {
     const routes = await listRuntimeStructuredPageRoutes(locals);
     expect(routes.find((r) => r.path === "/no-key")).toBeUndefined();
   });
+
+  it("falls back to local registry when D1 query throws", async () => {
+    mockLoadLocalCmsRegistry.mockResolvedValueOnce(mockLocalRegistry);
+    mockLocalRegistry.listStructuredPageRoutes.mockResolvedValueOnce([{ path: "/local-page" }] as any);
+    const routes = await listRuntimeStructuredPageRoutes(makeFailingLocals());
+    expect(routes).toEqual([{ path: "/local-page" }]);
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -308,6 +339,13 @@ describe("getRuntimeStructuredPageRoute", () => {
     expect(route).not.toBeNull();
     expect(route!.path).toBe("/about");
     expect(route!.templateKey).toBe("content");
+  });
+
+  it("falls back to local registry when D1 query throws", async () => {
+    mockLoadLocalCmsRegistry.mockResolvedValueOnce(mockLocalRegistry);
+    mockLocalRegistry.getStructuredPageRoute.mockResolvedValueOnce({ path: "/about", title: "Local About" } as any);
+    const route = await getRuntimeStructuredPageRoute("/about", makeFailingLocals());
+    expect(route).toMatchObject({ title: "Local About" });
   });
 });
 
@@ -549,6 +587,13 @@ describe("getRuntimeArchiveRoute", () => {
     mockLoadLocalCmsRegistry.mockResolvedValueOnce(mockLocalRegistry);
     const route = await getRuntimeArchiveRoute("/blog", null);
     expect(route).toBeNull(); // mock returns null
+  });
+
+  it("falls back to local registry when D1 query throws", async () => {
+    mockLoadLocalCmsRegistry.mockResolvedValueOnce(mockLocalRegistry);
+    mockLocalRegistry.getArchiveRoute.mockResolvedValueOnce({ path: "/blog", title: "Local Blog" } as any);
+    const route = await getRuntimeArchiveRoute("/blog", makeFailingLocals());
+    expect(route).toMatchObject({ title: "Local Blog" });
   });
 });
 

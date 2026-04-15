@@ -212,6 +212,14 @@ describe("updateRuntimeMediaAsset", () => {
     const result = await updateRuntimeMediaAsset({ id: "   " }, actor, locals);
     expect(result).toMatchObject({ ok: false });
   });
+
+  it("omitting title and altText binds empty strings", async () => {
+    const result = await updateRuntimeMediaAsset({ id: "asset-1" }, actor, locals);
+    expect(result).toMatchObject({ ok: true });
+    const row = db.prepare("SELECT title, alt_text FROM media_assets WHERE id = 'asset-1'").get() as { title: string; alt_text: string };
+    expect(row.title).toBe("");
+    expect(row.alt_text).toBe("");
+  });
 });
 
 describe("deleteRuntimeMediaAsset", () => {
@@ -341,6 +349,65 @@ describe("createRuntimeMediaAsset — thumbnail and srcset", () => {
     if (result.ok) {
       expect(result.thumbnailUrl).toBeUndefined();
     }
+  });
+
+  it("srcset variant callback — stores each variant and returns its public path", async () => {
+    mockImageSize.mockReturnValue({ width: 600, height: 400 });
+
+    const variantAsset = {
+      ok: true as const,
+      asset: {
+        id: "asset-srcset-400",
+        publicPath: "/images/uploads/photo-400w.webp",
+        r2Key: null,
+        mimeType: "image/webp",
+        fileSize: 512,
+        altText: "",
+        title: "photo-400w.webp",
+        storedFilename: "photo-400w.webp",
+      },
+    };
+
+    mockStoreMedia
+      .mockResolvedValueOnce(baseAsset)    // main image
+      .mockResolvedValueOnce(variantAsset); // variant via callback
+
+    // Make generateSrcset invoke the callback so the arrow function body is exercised
+    mockGenerateSrcset.mockImplementation(async (_bytes: Uint8Array, _basePath: string | null, storeVariant: (f: string, b: Uint8Array) => Promise<string | null>) => {
+      const path = await storeVariant("photo-400w.webp", new Uint8Array([0x52, 0x49, 0x46]));
+      return path ? `${path} 400w` : null;
+    });
+
+    const result = await createRuntimeMediaAsset(
+      { filename: "photo.jpg", bytes: new Uint8Array([0xff, 0xd8]), mimeType: "image/jpeg" },
+      actor,
+      locals,
+    );
+
+    expect(result.ok).toBe(true);
+    // Two storage calls: main image + one variant via the callback
+    expect(mockStoreMedia).toHaveBeenCalledTimes(2);
+  });
+
+  it("srcset variant callback — returns null when variant storage fails", async () => {
+    mockImageSize.mockReturnValue({ width: 600, height: 400 });
+
+    mockStoreMedia
+      .mockResolvedValueOnce(baseAsset)
+      .mockResolvedValueOnce({ ok: false as const, error: "Variant storage failed" });
+
+    mockGenerateSrcset.mockImplementation(async (_bytes: Uint8Array, _basePath: string | null, storeVariant: (f: string, b: Uint8Array) => Promise<string | null>) => {
+      return await storeVariant("photo-400w.webp", new Uint8Array([0x52]));
+    });
+
+    const result = await createRuntimeMediaAsset(
+      { filename: "photo.jpg", bytes: new Uint8Array([0xff, 0xd8]), mimeType: "image/jpeg" },
+      actor,
+      locals,
+    );
+
+    expect(result.ok).toBe(true);
+    expect(mockStoreMedia).toHaveBeenCalledTimes(2);
   });
 
   it("SVG uploads skip srcset generation", async () => {

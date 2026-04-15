@@ -6,7 +6,7 @@
  * sanitizeHtml() is part of the public rendering contract and must remain
  * available alongside optimizeImageLoading().
  */
-import { describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { sanitizeHtml } from "@astropress-diy/astropress";
 
@@ -134,5 +134,36 @@ describe("html-sanitization.feature: sanitizeHtml() allowlist contract", () => {
     const output = await sanitizeHtml(input);
     expect(output).not.toContain("srcset=");
     expect(output).toContain("probe");
+  });
+});
+
+describe("html-sanitization.feature: sanitizeHtml() sanitize-html library fallback (no HTMLRewriter)", () => {
+  let saved: typeof globalThis.HTMLRewriter;
+
+  beforeEach(() => {
+    saved = globalThis.HTMLRewriter;
+    // @ts-expect-error — intentionally removing the polyfill to test the library fallback path
+    delete globalThis.HTMLRewriter;
+  });
+
+  afterEach(() => {
+    globalThis.HTMLRewriter = saved;
+  });
+
+  it("strips <script> tags via library fallback", async () => {
+    const output = await sanitizeHtml('<p>Hello</p><script>alert(1)</script>');
+    expect(output).not.toContain("<script");
+    expect(output).toContain("<p>Hello</p>");
+  });
+
+  it("strips event handler attributes via library fallback", async () => {
+    const output = await sanitizeHtml('<a href="/donate" onclick="steal()">Donate</a>');
+    expect(output).not.toContain("onclick");
+    expect(output).toContain("Donate");
+  });
+
+  it("adds rel=noopener noreferrer to links via library fallback", async () => {
+    const output = await sanitizeHtml('<a href="/page">Link</a>');
+    expect(output).toContain('rel="noopener noreferrer"');
   });
 });

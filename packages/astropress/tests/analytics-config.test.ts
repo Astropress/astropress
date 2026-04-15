@@ -317,16 +317,27 @@ describe("resolveAnalyticsSnippet", () => {
     expect(snippet).toContain('src="https://plausible.io/js/script.js"');
   });
 
-  it("matomo: produces tracker script with site ID", () => {
+  it("matomo: produces tracker script with site ID (url with trailing slash)", () => {
     const snippet = resolveAnalyticsSnippet({
       type: "matomo",
       mode: "snippet-only",
-      url: "https://matomo.example.com",
+      url: "https://matomo.example.com/",
       siteId: "5",
     });
     expect(snippet).toContain("matomo.php");
     expect(snippet).toContain("'5'");
     expect(snippet).toContain("matomo.example.com");
+  });
+
+  it("matomo: appends trailing slash when url lacks one", () => {
+    const snippet = resolveAnalyticsSnippet({
+      type: "matomo",
+      mode: "snippet-only",
+      url: "https://matomo.example.com",
+      siteId: "7",
+    });
+    expect(snippet).toContain("matomo.example.com/");
+    expect(snippet).toContain("'7'");
   });
 
   it("posthog: produces posthog init script", () => {
