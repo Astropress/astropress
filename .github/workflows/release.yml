@@ -44,6 +44,9 @@ jobs:
           # GitHub API commits are GitHub-signed and avoid local hook failures
           # on the runner when Changesets creates the version PR commit.
           commitMode: github-api
+          # npm is the install path for these packages; GitHub release UI entries
+          # add no user value. Git tags are still created for traceability.
+          createGithubReleases: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # No NPM_TOKEN — npm uses the OIDC token from id-token: write above.

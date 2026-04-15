@@ -60,7 +60,8 @@ Use `astropress list tools` and `astropress list providers` for the CLI view. Th
 |---|---|---|
 | **App hosts** | GitHub Pages, Cloudflare Pages, Vercel, Netlify, Render Static, Render Web, GitLab Pages, Fly.io, Coolify, DigitalOcean App Platform, Railway | Static deploys, server-backed deploys, or self-hosted/container deploy paths generated into `DEPLOY.md` and scaffold CI files |
 | **Content/data services** | Built-in SQLite, Cloudflare D1 + R2, Supabase, Neon, Nhost, PocketBase, Appwrite, Turso, custom adapter | Keep Astropress content local, move it to a hosted service, or wire in a custom runtime adapter without changing the admin surface |
-| **Import sources** | WordPress XML, Wix export/crawl | Stage migrations into reviewable artifacts before applying them locally |
+| **Import sources** | WordPress XML, Wix export/crawl, Mailchimp subscriber lists | Stage migrations into reviewable artifacts before applying them locally |
+| **Multisite** | [Astropress Nexus](./packages/astropress-nexus/) | A single control plane over multiple Astropress sites — shared auth, cross-site search, and a unified admin gateway |
 | **Docs sites** | Starlight, VitePress, mdBook | Generate a docs area alongside the site with a matching scaffold and docs-specific build scripts |
 | **Analytics** | Umami, Plausible, Matomo, PostHog, custom | Add privacy-first analytics, dashboards, and optional replay/heatmap support |
 | **A/B testing and flags** | GrowthBook, Unleash, Flagsmith, custom | Feature flags, experiments, and release controls from the same project scaffold |
