@@ -1,7 +1,7 @@
 {
   "name": "@astropress-diy/nexus",
-  "version": "0.0.2",
-  "description": "Multi-site gateway for Astropress \u2014 a single control plane over multiple Astropress sites",
+  "version": "0.0.3",
+  "description": "Multi-site gateway for Astropress — a single control plane over multiple Astropress sites",
   "type": "module",
   "bin": {
     "astropress-nexus": "./dist/server.js"
