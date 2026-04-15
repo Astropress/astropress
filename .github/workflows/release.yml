@@ -3,6 +3,7 @@ name: Release
 on:
   push:
     branches: [main]
+  workflow_dispatch:
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
@@ -11,6 +12,8 @@ jobs:
   release:
     name: Publish to npm
     runs-on: ubuntu-latest
+    outputs:
+      published: ${{ steps.changesets.outputs.published }}
     permissions:
       actions: write
       contents: write
@@ -41,6 +44,9 @@ jobs:
           # GitHub API commits are GitHub-signed and avoid local hook failures
           # on the runner when Changesets creates the version PR commit.
           commitMode: github-api
+          # npm is the install path for these packages; GitHub release UI entries
+          # add no user value. Git tags are still created for traceability.
+          createGithubReleases: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # No NPM_TOKEN — npm uses the OIDC token from id-token: write above.
@@ -64,3 +70,20 @@ jobs:
 
           gh workflow run cli-release.yml --ref "${TAG}"
           echo "Dispatched cli-release.yml for ${TAG}"
+
+  publish-cli-crate:
+    name: Publish CLI crate
+    needs: release
+    if: ${{ github.event_name == 'workflow_dispatch' || needs.release.outputs.published == 'true' }}
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: rust-lang/crates-io-auth-action@v1
+
+      - name: Publish astropress-cli
+        run: cargo publish --manifest-path crates/astropress-cli/Cargo.toml
