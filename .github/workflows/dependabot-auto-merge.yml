@@ -15,7 +15,6 @@ jobs:
       - name: Fetch dependabot metadata
         id: meta
         uses: dependabot/fetch-metadata@v3
-        uses: dependabot/fetch-metadata@v3
 
       - name: Auto-merge patch and minor updates
         if: |
