@@ -12,6 +12,7 @@
   ],
   "scripts": {
     "build": "tsc --project tsconfig.json",
+    "prepublishOnly": "bun run build",
     "start": "node dist/server.js"
   },
   "dependencies": {
@@ -25,5 +26,12 @@
     "node": ">=24.8.0"
   },
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Astropress/astropress"
+  },
+  "bugs": {
+    "url": "https://github.com/Astropress/astropress/issues"
+  },
   "homepage": "https://astropress.diy"
 }
