@@ -42,7 +42,7 @@ pub(super) fn prompt_more_features() -> MoreFeatures {
         .with_prompt("Add payment processing?")
         .default(false).interact().unwrap_or(false)
     {
-        let _ = Select::with_theme(t).with_prompt("Payment router").items(&[
+        let _ = Select::with_theme(t).with_prompt("Payment router").items([
             "HyperSwitch  — Apache 2.0; Rust; made by Juspay (India); one self-hosted service\n\
              \x20             that routes to any provider you configure in the dashboard:\n\
              \x20             • East Africa:   M-Pesa / Daraja (STK Push)\n\
@@ -64,7 +64,7 @@ pub(super) fn prompt_more_features() -> MoreFeatures {
         .with_prompt("Add a forum / community discussion space?")
         .default(false).interact().unwrap_or(false)
     {
-        match Select::with_theme(t).with_prompt("Forum software").items(&[
+        match Select::with_theme(t).with_prompt("Forum software").items([
             "Flarum     — MIT; PHP; lightweight REST API; use when you need async threaded\n\
              \x20           discussion and Giscus is too developer-centric",
             "Discourse  — GPL 2.0; Ruby; mature platform with plugins, moderation tools,\n\
@@ -80,7 +80,7 @@ pub(super) fn prompt_more_features() -> MoreFeatures {
         .with_prompt("Add live chat / customer support?")
         .default(false).interact().unwrap_or(false)
     {
-        match Select::with_theme(t).with_prompt("Chat provider").items(&[
+        match Select::with_theme(t).with_prompt("Chat provider").items([
             "Tiledesk  — Apache 2.0; live chat + chatbot + helpdesk; REST + webhook API;\n\
              \x20          use when you need real-time support or sales chat with chatbot flows",
             "Chatwoot  — MIT; omnichannel support (email, live chat, social DMs); webhook\n\
@@ -96,7 +96,7 @@ pub(super) fn prompt_more_features() -> MoreFeatures {
         .with_prompt("Add push notifications?")
         .default(false).interact().unwrap_or(false)
     {
-        match Select::with_theme(t).with_prompt("Notifications").items(&[
+        match Select::with_theme(t).with_prompt("Notifications").items([
             "ntfy      — Apache 2.0; pub/sub HTTP push; single Go binary; use for order updates,\n\
              \x20          release pings, or fan alerts",
             "Gotify    — MIT; simple self-hosted push; REST API + WebSocket; use when you want\n\
@@ -112,7 +112,7 @@ pub(super) fn prompt_more_features() -> MoreFeatures {
         .with_prompt("Add scheduling / availability polls?")
         .default(false).interact().unwrap_or(false)
     {
-        match Select::with_theme(t).with_prompt("Scheduling").items(&[
+        match Select::with_theme(t).with_prompt("Scheduling").items([
             "Rallly    — MIT; availability polling (open-source Doodle); use for\n\
              \x20          group scheduling without requiring accounts",
             "Cal.com   — AGPL 3.0; full booking system; calendar integrations; use when you need\n\
@@ -128,7 +128,7 @@ pub(super) fn prompt_more_features() -> MoreFeatures {
         .with_prompt("Add self-hosted video?")
         .default(false).interact().unwrap_or(false)
     {
-        let _ = Select::with_theme(t).with_prompt("Video provider").items(&[
+        let _ = Select::with_theme(t).with_prompt("Video provider").items([
             "PeerTube  — AGPL 3.0; self-hosted video with embeds + ActivityPub federation;\n\
              \x20          use when you want to host video without YouTube dependency",
         ]).default(0).interact().unwrap_or(0);
@@ -140,7 +140,7 @@ pub(super) fn prompt_more_features() -> MoreFeatures {
         .with_prompt("Add podcast hosting?")
         .default(false).interact().unwrap_or(false)
     {
-        let _ = Select::with_theme(t).with_prompt("Podcast provider").items(&[
+        let _ = Select::with_theme(t).with_prompt("Podcast provider").items([
             "Castopod  — AGPL 3.0; self-hosted podcast hosting; RSS feed, embeddable player,\n\
              \x20          ActivityPub federation; use when you run a podcast alongside your site\n\
              \x20        ",
@@ -153,7 +153,7 @@ pub(super) fn prompt_more_features() -> MoreFeatures {
         .with_prompt("Add event management / ticketing?")
         .default(false).interact().unwrap_or(false)
     {
-        match Select::with_theme(t).with_prompt("Events platform").items(&[
+        match Select::with_theme(t).with_prompt("Events platform").items([
             "Hi.Events  — AGPL 3.0; event pages, RSVP, ticket sales; use for community orgs\n\
              \x20           and nonprofits running public events",
             "Pretix     — Apache 2.0; established ticketing with seating charts and complex\n\
@@ -169,7 +169,7 @@ pub(super) fn prompt_more_features() -> MoreFeatures {
         .with_prompt("Add transactional email?  (password resets, order confirmations, notifications)")
         .default(false).interact().unwrap_or(false)
     {
-        match Select::with_theme(t).with_prompt("Transactional email").items(&[
+        match Select::with_theme(t).with_prompt("Transactional email").items([
             "Resend  — MIT SDK; developer-first API; built-in SPF/DKIM/DMARC;\n\
              \x20        use when you want the simplest integration (resend.com)",
             "SMTP    — bring your own relay (Brevo SMTP, Postal, SES, Postmark SMTP,\n\
@@ -186,7 +186,7 @@ pub(super) fn prompt_more_features() -> MoreFeatures {
         .with_prompt("Add uptime monitoring + status page?")
         .default(false).interact().unwrap_or(false)
     {
-        let _ = Select::with_theme(t).with_prompt("Status / uptime").items(&[
+        let _ = Select::with_theme(t).with_prompt("Status / uptime").items([
             "Uptime Kuma  — MIT; self-hosted uptime monitor with a public status page;\n\
              \x20             use to show service health to your users",
         ]).default(0).interact().unwrap_or(0);
@@ -198,7 +198,7 @@ pub(super) fn prompt_more_features() -> MoreFeatures {
         .with_prompt("Add a knowledge base / wiki?")
         .default(false).interact().unwrap_or(false)
     {
-        let _ = Select::with_theme(t).with_prompt("Knowledge base").items(&[
+        let _ = Select::with_theme(t).with_prompt("Knowledge base").items([
             "BookStack  — MIT; structured wiki and docs with shelves, books, and chapters;\n\
              \x20           use for a public help center or internal documentation",
         ]).default(0).interact().unwrap_or(0);
@@ -210,7 +210,7 @@ pub(super) fn prompt_more_features() -> MoreFeatures {
         .with_prompt("Add a CRM?  (track contacts, donors, or leads)")
         .default(false).interact().unwrap_or(false)
     {
-        let _ = Select::with_theme(t).with_prompt("CRM").items(&[
+        let _ = Select::with_theme(t).with_prompt("CRM").items([
             "Twenty  — AGPL 3.0; modern open-source CRM; use for nonprofits tracking donors\n\
              \x20        and volunteers, or businesses tracking leads",
         ]).default(0).interact().unwrap_or(0);
@@ -222,7 +222,7 @@ pub(super) fn prompt_more_features() -> MoreFeatures {
         .with_prompt("Add SSO / identity provider?  (unified login for staff across services)")
         .default(false).interact().unwrap_or(false)
     {
-        match Select::with_theme(t).with_prompt("Identity provider").items(&[
+        match Select::with_theme(t).with_prompt("Identity provider").items([
             "Authentik  — MIT; social login, MFA, LDAP; use when multiple self-hosted services\n\
              \x20           need a single sign-on",
             "Zitadel    — Apache 2.0; hosted-or-self-hosted; use when you need fine-grained\n\
@@ -238,7 +238,7 @@ pub(super) fn prompt_more_features() -> MoreFeatures {
         .with_prompt("Add social media cross-posting?  (schedule posts to LinkedIn, Bluesky, Mastodon, etc.)")
         .default(false).interact().unwrap_or(false)
     {
-        match Select::with_theme(t).with_prompt("Social cross-posting").items(&[
+        match Select::with_theme(t).with_prompt("Social cross-posting").items([
             "Postiz    — AGPL 3.0; LinkedIn, Bluesky, Mastodon, Twitter/X, Instagram,\n\
              \x20          TikTok, Pinterest, Reddit, Threads, Facebook, YouTube;\n\
              \x20          scheduling dashboard + AI caption assistant",
@@ -261,7 +261,7 @@ pub(super) fn prompt_more_features() -> MoreFeatures {
         .with_prompt("Add A/B testing / feature flags?")
         .default(false).interact().unwrap_or(false)
     {
-        match Select::with_theme(t).with_prompt("A/B testing provider").items(&[
+        match Select::with_theme(t).with_prompt("A/B testing provider").items([
             "GrowthBook  — MIT; feature flags + experiments; use when you want data-driven\n\
              \x20            rollouts without a full analytics platform",
             "Unleash     — Apache 2.0; enterprise feature toggles; use when you need audit\n\
@@ -286,7 +286,7 @@ pub(super) fn prompt_more_features() -> MoreFeatures {
         .with_prompt("Add session replay / heatmaps?  (skip if you chose Matomo — it includes these via built-in plugins)")
         .default(false).interact().unwrap_or(false)
     {
-        match Select::with_theme(t).with_prompt("Session replay provider").items(&[
+        match Select::with_theme(t).with_prompt("Session replay provider").items([
             "PostHog   — MIT; session replay + heatmaps built-in; choose this if PostHog was\n\
              \x20          selected for analytics — same script, no extra deploy",
             "Custom    — I'll wire it myself  (or Matomo plugins are already configured)",
