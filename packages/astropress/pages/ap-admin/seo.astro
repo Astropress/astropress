@@ -40,7 +40,7 @@ const rowsMissingMetadata = rows.filter((row) => row.missingMetadata).length;
 
 {model.status !== "forbidden" ? (
   <AdminLayout
-    title="SEO | Astropress Admin"
+    title="SEO"
     heading="SEO"
     currentPath="/ap-admin/seo"
     description="Review SEO metadata across pages, posts, archives, and system routes."
@@ -131,7 +131,7 @@ const rowsMissingMetadata = rows.filter((row) => row.missingMetadata).length;
   </AdminLayout>
 ) : (
   <AdminLayout
-    title="Forbidden | Astropress Admin"
+    title="Forbidden"
     heading="Forbidden"
     currentPath="/ap-admin/posts"
     description="This action requires an admin account."
