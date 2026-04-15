@@ -9,11 +9,17 @@ vi.mock("../src/runtime-env.js", async (importOriginal) => {
   };
 });
 
-import {
-  sendContactNotification,
-  sendPasswordResetEmail,
-  sendUserInviteEmail,
-} from "../src/transactional-email.js";
+vi.mock("../src/runtime-env", async (importOriginal) => {
+  const original = await importOriginal<typeof import("../src/runtime-env.js")>();
+  return {
+    ...original,
+    isProductionRuntime: vi.fn().mockReturnValue(false),
+  };
+});
+
+let sendContactNotification: typeof import("../src/transactional-email.js").sendContactNotification;
+let sendPasswordResetEmail: typeof import("../src/transactional-email.js").sendPasswordResetEmail;
+let sendUserInviteEmail: typeof import("../src/transactional-email.js").sendUserInviteEmail;
 
 // Shared symbol used by registerCms/peekCmsConfig
 const CMS_CONFIG_KEY = Symbol.for("astropress.cms-config");
@@ -31,7 +37,14 @@ function clearCmsConfig() {
 }
 
 beforeEach(() => {
+  vi.resetModules();
   vi.mocked(isProductionRuntime).mockReturnValue(false);
+});
+
+beforeEach(async () => {
+  ({ sendContactNotification, sendPasswordResetEmail, sendUserInviteEmail } = await import(
+    "../src/transactional-email.js"
+  ));
 });
 
 afterEach(() => {

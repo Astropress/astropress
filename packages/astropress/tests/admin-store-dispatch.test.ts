@@ -2,7 +2,9 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { makeLocals } from "./helpers/make-locals.js";
 import { makeDb } from "./helpers/make-db.js";
-import { withLocalStoreFallback, withSafeLocalStoreFallback } from "../src/admin-store-dispatch";
+
+let withLocalStoreFallback: typeof import("../src/admin-store-dispatch.js").withLocalStoreFallback;
+let withSafeLocalStoreFallback: typeof import("../src/admin-store-dispatch.js").withSafeLocalStoreFallback;
 
 const { mockLoadLocalAdminStore } = vi.hoisted(() => ({
   mockLoadLocalAdminStore: vi.fn(),
@@ -12,7 +14,13 @@ vi.mock("../src/local-runtime-modules", () => ({
   loadLocalAdminStore: mockLoadLocalAdminStore,
 }));
 
-beforeEach(() => {
+vi.mock("../src/local-runtime-modules.js", () => ({
+  loadLocalAdminStore: mockLoadLocalAdminStore,
+}));
+
+beforeEach(async () => {
+  vi.resetModules();
+  ({ withLocalStoreFallback, withSafeLocalStoreFallback } = await import("../src/admin-store-dispatch.js"));
   mockLoadLocalAdminStore.mockReset();
 });
 

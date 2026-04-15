@@ -4,17 +4,16 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { registerCms } from "../src/config";
 import { makeLocals } from "./helpers/make-locals.js";
 import { makeDb, STANDARD_ACTOR } from "./helpers/make-db.js";
-import {
-  createRuntimeStructuredPageRoute,
-  getRuntimeArchiveRoute,
-  getRuntimeStructuredPageRoute,
-  getRuntimeSystemRoute,
-  listRuntimeStructuredPageRoutes,
-  listRuntimeSystemRoutes,
-  saveRuntimeArchiveRoute,
-  saveRuntimeStructuredPageRoute,
-  saveRuntimeSystemRoute,
-} from "../src/runtime-route-registry";
+
+let createRuntimeStructuredPageRoute: typeof import("../src/runtime-route-registry.js").createRuntimeStructuredPageRoute;
+let getRuntimeArchiveRoute: typeof import("../src/runtime-route-registry.js").getRuntimeArchiveRoute;
+let getRuntimeStructuredPageRoute: typeof import("../src/runtime-route-registry.js").getRuntimeStructuredPageRoute;
+let getRuntimeSystemRoute: typeof import("../src/runtime-route-registry.js").getRuntimeSystemRoute;
+let listRuntimeStructuredPageRoutes: typeof import("../src/runtime-route-registry.js").listRuntimeStructuredPageRoutes;
+let listRuntimeSystemRoutes: typeof import("../src/runtime-route-registry.js").listRuntimeSystemRoutes;
+let saveRuntimeArchiveRoute: typeof import("../src/runtime-route-registry.js").saveRuntimeArchiveRoute;
+let saveRuntimeStructuredPageRoute: typeof import("../src/runtime-route-registry.js").saveRuntimeStructuredPageRoute;
+let saveRuntimeSystemRoute: typeof import("../src/runtime-route-registry.js").saveRuntimeSystemRoute;
 
 // ---------------------------------------------------------------------------
 // Mock local CMS registry — by default throws (mimicking real test env where
@@ -44,6 +43,10 @@ vi.mock("../src/local-runtime-modules", () => ({
   loadLocalCmsRegistry: mockLoadLocalCmsRegistry,
 }));
 
+vi.mock("../src/local-runtime-modules.js", () => ({
+  loadLocalCmsRegistry: mockLoadLocalCmsRegistry,
+}));
+
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
@@ -53,7 +56,19 @@ const actor = STANDARD_ACTOR;
 let db: DatabaseSync;
 let locals: App.Locals;
 
-beforeEach(() => {
+beforeEach(async () => {
+  vi.resetModules();
+  ({
+    createRuntimeStructuredPageRoute,
+    getRuntimeArchiveRoute,
+    getRuntimeStructuredPageRoute,
+    getRuntimeSystemRoute,
+    listRuntimeStructuredPageRoutes,
+    listRuntimeSystemRoutes,
+    saveRuntimeArchiveRoute,
+    saveRuntimeStructuredPageRoute,
+    saveRuntimeSystemRoute,
+  } = await import("../src/runtime-route-registry.js"));
   db = makeDb();
   locals = makeLocals(db);
 

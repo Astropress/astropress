@@ -4,11 +4,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { registerCms } from "../src/config";
 import { makeLocals } from "./helpers/make-locals.js";
 import { makeDb, STANDARD_ACTOR, STANDARD_CMS_CONFIG } from "./helpers/make-db.js";
-import {
-  createRuntimeMediaAsset,
-  deleteRuntimeMediaAsset,
-  updateRuntimeMediaAsset,
-} from "../src/runtime-actions-media";
+
+let createRuntimeMediaAsset: typeof import("../src/runtime-actions-media.js").createRuntimeMediaAsset;
+let deleteRuntimeMediaAsset: typeof import("../src/runtime-actions-media.js").deleteRuntimeMediaAsset;
+let updateRuntimeMediaAsset: typeof import("../src/runtime-actions-media.js").updateRuntimeMediaAsset;
 
 const { mockStoreMedia, mockDeleteMedia, mockImageSize, mockSharp, mockGenerateSrcset } = vi.hoisted(() => ({
   mockStoreMedia: vi.fn(),
@@ -19,6 +18,11 @@ const { mockStoreMedia, mockDeleteMedia, mockImageSize, mockSharp, mockGenerateS
 }));
 
 vi.mock("../src/runtime-media-storage", () => ({
+  storeRuntimeMediaObject: mockStoreMedia,
+  deleteRuntimeMediaObject: mockDeleteMedia,
+}));
+
+vi.mock("../src/runtime-media-storage.js", () => ({
   storeRuntimeMediaObject: mockStoreMedia,
   deleteRuntimeMediaObject: mockDeleteMedia,
 }));
@@ -40,7 +44,11 @@ const actor = STANDARD_ACTOR;
 let db: DatabaseSync;
 let locals: App.Locals;
 
-beforeEach(() => {
+beforeEach(async () => {
+  vi.resetModules();
+  ({ createRuntimeMediaAsset, deleteRuntimeMediaAsset, updateRuntimeMediaAsset } = await import(
+    "../src/runtime-actions-media.js"
+  ));
   db = makeDb();
   locals = makeLocals(db);
   registerCms(STANDARD_CMS_CONFIG);
