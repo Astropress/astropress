@@ -1,6 +1,6 @@
 {
   "name": "@astropress-diy/mcp",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "MCP server for Astropress \u2014 lets AI agents read and write content via the REST API",
   "type": "module",
   "bin": {
@@ -19,7 +19,7 @@
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
-    "typescript": "^5.7.0"
+    "typescript": "^6.0.2"
   },
   "engines": {
     "node": ">=24.8.0"

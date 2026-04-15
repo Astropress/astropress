@@ -8,7 +8,9 @@ use crate::features::{
     KnowledgeBaseChoice, NotifyChoice, PaymentChoice, PodcastChoice, ScheduleChoice,
     SearchChoice, SocialChoice, SsoChoice, StatusChoice, TransactionalEmailChoice, VideoChoice,
 };
-use crate::providers::{AbTestingProvider, AnalyticsProvider, AppHost, HeatmapProvider};
+use crate::providers::{
+    AbTestingProvider, AnalyticsProvider, AppHost, DataServices, HeatmapProvider,
+};
 
 pub(crate) fn print_stack_summary(f: &AllFeatures, app_host: Option<AppHost>) {
     let host = match app_host {
@@ -105,4 +107,36 @@ pub(crate) fn print_stack_summary(f: &AllFeatures, app_host: Option<AppHost>) {
     if f.job_board  { println!("    Job board     content type       → see content-types.example.ts"); }
     if f.enable_api { println!("    REST API      enabled            → /ap-api/v1/* (Bearer token)"); }
     println!("  ─────────────────────────────────────────────────────");
+}
+
+pub(crate) fn free_first_hosting_note(
+    app_host: Option<AppHost>,
+    data_services: Option<DataServices>,
+) -> &'static str {
+    match (app_host, data_services) {
+        (Some(AppHost::GithubPages), None | Some(DataServices::None)) => {
+            "Free-first path: GitHub Pages + the built-in local SQLite flow keeps the public site static and zero infrastructure."
+        }
+        (Some(AppHost::CloudflarePages), Some(DataServices::Cloudflare)) => {
+            "Free-first path: Cloudflare Pages + D1/R2 is the supported edge setup and stays on Cloudflare's free tiers to start."
+        }
+        (Some(AppHost::Vercel), Some(DataServices::Supabase)) => {
+            "Free-first path: Vercel + Supabase is the supported server-backed setup with generous free tiers on both sides."
+        }
+        (Some(AppHost::Netlify), Some(DataServices::Supabase)) => {
+            "Free-first path: Netlify + Supabase is the supported server-backed setup with generous free tiers on both sides."
+        }
+        (Some(AppHost::Railway), _) => {
+            "Railway has no free tier. For a free-first deployment, switch to GitHub Pages + built-in SQLite, Cloudflare Pages + D1/R2, or Vercel/Netlify + Supabase."
+        }
+        _ => {
+            "Free-first defaults: GitHub Pages + built-in SQLite for static sites, Cloudflare Pages + D1/R2 for edge-backed sites, or Vercel/Netlify + Supabase for server-backed sites."
+        }
+    }
+}
+
+pub(crate) fn selected_services_note(has_services_doc: bool) -> Option<&'static str> {
+    has_services_doc.then_some(
+        "SERVICES.md lists the selected external tools in deployment order, prefers free cloud tiers or self-hosted defaults where possible, and marks paid-only paths with ⚠.",
+    )
 }

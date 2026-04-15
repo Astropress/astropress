@@ -230,4 +230,64 @@ describe("admin action utils", () => {
 
     expect(response.headers.get("Location")).toBe("/ap-admin/posts/existing?error=1&message=Already+exists");
   });
+
+  it("uses secure cookie name when PROD env is set", async () => {
+    process.env.PROD = "true";
+    try {
+      const { requireAdminFormAction } = await import("@astropress-diy/astropress");
+      const context = makeContext({ _csrf: "csrf-token" });
+      context.cookies.get = vi.fn((name: string) =>
+        name === "__Host-astropress_admin_session" ? { value: "session-token" } : undefined,
+      );
+      const result = await requireAdminFormAction(context, { failurePath: "/ap-admin/posts" });
+      expect(result.ok).toBe(true);
+    } finally {
+      delete process.env.PROD;
+    }
+  });
+
+  it("falls back to legacy cookie when primary session cookie is absent", async () => {
+    const { requireAdminFormAction } = await import("@astropress-diy/astropress");
+    const context = makeContext({ _csrf: "csrf-token" });
+    // Return undefined for the primary cookie names, a value only for the legacy name
+    context.cookies.get = vi.fn((name: string) =>
+      name === "ff_admin_session" ? { value: "session-token" } : undefined,
+    );
+    const result = await requireAdminFormAction(context, { failurePath: "/ap-admin/posts" });
+    expect(result.ok).toBe(true);
+  });
+
+  it("rejects when csrf token resolves to null and not in harness mode", async () => {
+    mocks.getRuntimeCsrfToken.mockResolvedValue(null);
+    mocks.getRuntimeEnv.mockReturnValue(undefined); // not harness mode
+    const { requireAdminFormAction } = await import("@astropress-diy/astropress");
+    const result = await requireAdminFormAction(makeContext({ _csrf: "anything" }), {
+      failurePath: "/ap-admin/posts",
+    });
+    expect(result.ok).toBe(false);
+  });
+
+  it("rejects when in harness mode but csrfToken is absent from locals", async () => {
+    mocks.getRuntimeCsrfToken.mockResolvedValue(null);
+    mocks.getRuntimeEnv.mockImplementation((name: string) =>
+      name === "PLAYWRIGHT_E2E_MODE" ? "admin-harness" : undefined,
+    );
+    const { requireAdminFormAction } = await import("@astropress-diy/astropress");
+    const context = makeContext({ _csrf: "any" });
+    // locals has adminUser but no csrfToken — triggers csrfToken ?? null path
+    context.locals = {
+      adminUser: { email: "admin@example.com", role: "admin", name: "Admin" },
+    } as App.Locals;
+    const result = await requireAdminFormAction(context, { failurePath: "/ap-admin/posts" });
+    expect(result.ok).toBe(false); // expectedToken = null → CSRF check fails
+  });
+
+  it("treats a missing _csrf form field as an empty string", async () => {
+    const { requireAdminFormAction } = await import("@astropress-diy/astropress");
+    // Submit form with no _csrf field; empty string won't match "csrf-token"
+    const result = await requireAdminFormAction(makeContext({}), {
+      failurePath: "/ap-admin/posts",
+    });
+    expect(result.ok).toBe(false);
+  });
 });

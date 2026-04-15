@@ -1,6 +1,6 @@
 {
   "name": "@astropress-diy/nexus",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Multi-site gateway for Astropress \u2014 a single control plane over multiple Astropress sites",
   "type": "module",
   "bin": {
@@ -24,8 +24,8 @@
     "hono": "^4.6.0"
   },
   "devDependencies": {
-    "typescript": "^5.7.0",
-    "vitest": "^3.2.4",
+    "typescript": "^6.0.2",
+    "vitest": "^4.1.4",
     "@types/node": "^22.0.0"
   },
   "engines": {

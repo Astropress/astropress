@@ -87,6 +87,11 @@ describe("getRuntimeInviteRequest / consumeRuntimeInviteToken", () => {
     expect(request).toBeNull();
   });
 
+  it("returns null for a blank token", async () => {
+    const request = await getRuntimeInviteRequest("   ", locals);
+    expect(request).toBeNull();
+  });
+
   it("consumes an invite token and sets password", async () => {
     const token = await createInvite();
     const result = await consumeRuntimeInviteToken(token, "newpassword123", locals);
@@ -173,6 +178,11 @@ describe("suspendRuntimeAdminUser / unsuspendRuntimeAdminUser", () => {
     expect(result).toMatchObject({ ok: false });
   });
 
+  it("returns not-ok for blank email on suspend", async () => {
+    const result = await suspendRuntimeAdminUser("   ", actor, locals);
+    expect(result).toMatchObject({ ok: false });
+  });
+
   it("restores a suspended user", async () => {
     db.prepare("UPDATE admin_users SET active = 0 WHERE email = 'editor@test.local'").run();
     const result = await unsuspendRuntimeAdminUser("editor@test.local", actor, locals);
@@ -183,6 +193,11 @@ describe("suspendRuntimeAdminUser / unsuspendRuntimeAdminUser", () => {
 
   it("returns not-ok for already-active user on unsuspend", async () => {
     const result = await unsuspendRuntimeAdminUser("editor@test.local", actor, locals);
+    expect(result).toMatchObject({ ok: false });
+  });
+
+  it("returns not-ok for blank email on unsuspend", async () => {
+    const result = await unsuspendRuntimeAdminUser("   ", actor, locals);
     expect(result).toMatchObject({ ok: false });
   });
 });

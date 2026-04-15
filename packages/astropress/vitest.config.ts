@@ -3,6 +3,7 @@ import { defineConfig } from "vitest/config";
 
 const isCi = process.env.CI === "true";
 const isCoverageRun = process.argv.includes("--coverage");
+const isSingleForkCoverageRun = isCi && isCoverageRun;
 
 export default defineConfig({
   resolve: {
@@ -31,8 +32,9 @@ export default defineConfig({
     testTimeout: 20000,
     hookTimeout: 60000,
     unstubGlobals: true,
-    pool: isCi && isCoverageRun ? "forks" : undefined,
-    poolOptions: isCi && isCoverageRun ? { forks: { singleFork: true } } : undefined,
+    pool: isSingleForkCoverageRun ? "forks" : undefined,
+    maxWorkers: isSingleForkCoverageRun ? 1 : undefined,
+    isolate: isSingleForkCoverageRun ? false : undefined,
     coverage: {
       provider: "v8",
       reporter: ["text", "json-summary"],

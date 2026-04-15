@@ -25,7 +25,7 @@ pub(crate) fn prompt_all_features() -> AllFeatures {
     let t = &ColorfulTheme::default();
 
     // ── content backend (always a choice, no y/n — every project needs one) ──
-    let cms = match Select::with_theme(t).with_prompt("Content backend").items(&[
+    let cms = match Select::with_theme(t).with_prompt("Content backend").items([
         "AstroPress built-in  — SQLite / Cloudflare D1 / Supabase; use for most projects;\n\
          \x20                     full admin panel + REST API included",
         "Keystatic            — git-backed JSON/YAML; zero server; use for small teams that\n\
@@ -43,7 +43,7 @@ pub(crate) fn prompt_all_features() -> AllFeatures {
         .with_prompt("Add email / newsletter?")
         .default(false).interact().unwrap_or(false)
     {
-        let _ = Select::with_theme(t).with_prompt("Email provider").items(&[
+        let _ = Select::with_theme(t).with_prompt("Email provider").items([
             "Listmonk  — MIT; self-hosted subscriber lists + campaigns; use when you need\n\
              \x20           full ownership of your list and want to send newsletters",
         ]).default(0).interact().unwrap_or(0);
@@ -55,7 +55,7 @@ pub(crate) fn prompt_all_features() -> AllFeatures {
         .with_prompt("Add analytics?")
         .default(false).interact().unwrap_or(false)
     {
-        match Select::with_theme(t).with_prompt("Analytics provider").items(&[
+        match Select::with_theme(t).with_prompt("Analytics provider").items([
             "Umami      — MIT; ~1 KB; pageviews, bounce rate, custom events\n\
              \x20           no funnels / heatmaps / session replay",
             "Plausible  — AGPL; ~1 KB; pageviews, bounce rate, conversion goals\n\
@@ -79,7 +79,7 @@ pub(crate) fn prompt_all_features() -> AllFeatures {
         .with_prompt("Add a storefront / e-commerce?")
         .default(false).interact().unwrap_or(false)
     {
-        match Select::with_theme(t).with_prompt("Commerce platform").items(&[
+        match Select::with_theme(t).with_prompt("Commerce platform").items([
             "Medusa    — MIT; headless commerce with Stripe + product catalog; use when you need\n\
              \x20          a full cart + checkout flow  ⚠ needs a separate Node server",
             "Vendure   — MIT; TypeScript-first headless commerce; GraphQL API; use when you want\n\
@@ -95,7 +95,7 @@ pub(crate) fn prompt_all_features() -> AllFeatures {
         .with_prompt("Add comments?")
         .default(true).interact().unwrap_or(true)
     {
-        match Select::with_theme(t).with_prompt("Comments provider").items(&[
+        match Select::with_theme(t).with_prompt("Comments provider").items([
             "Giscus    — MIT; GitHub Discussions as comments; zero server; use when your\n\
              \x20          readers are likely to have GitHub accounts",
             "Remark42  — MIT; self-hosted; no social login required; use for broader or\n\
@@ -111,7 +111,7 @@ pub(crate) fn prompt_all_features() -> AllFeatures {
         .with_prompt("Add client-side search?")
         .default(false).interact().unwrap_or(false)
     {
-        match Select::with_theme(t).with_prompt("Search").items(&[
+        match Select::with_theme(t).with_prompt("Search").items([
             "Pagefind      — Apache 2.0; static index at deploy time; zero server; use for\n\
              \x20              content-heavy sites that want instant client-side search (<10 KB on page)",
             "Meilisearch   — MIT; typo-tolerant full-text search API; use when you need\n\
@@ -130,7 +130,7 @@ pub(crate) fn prompt_all_features() -> AllFeatures {
         .with_prompt("Add courses / LMS?")
         .default(false).interact().unwrap_or(false)
     {
-        let _ = Select::with_theme(t).with_prompt("LMS provider").items(&[
+        let _ = Select::with_theme(t).with_prompt("LMS provider").items([
             "Frappe LMS  — MIT; Python; progress tracking + certificates; use when you need\n\
              \x20            structured learning paths with quizzes",
         ]).default(0).interact().unwrap_or(0);
@@ -142,7 +142,7 @@ pub(crate) fn prompt_all_features() -> AllFeatures {
         .with_prompt("Add forms / surveys / testimonials / referrals?")
         .default(false).interact().unwrap_or(false)
     {
-        match Select::with_theme(t).with_prompt("Forms provider").items(&[
+        match Select::with_theme(t).with_prompt("Forms provider").items([
             "Formbricks  — MIT community edition; survey + testimonial collection, REST API;\n\
              \x20            use when you need NPS surveys, onboarding flows, or social proof\n\
              \x20            — also suitable for referral capture and post-purchase NPS",
@@ -162,7 +162,7 @@ pub(crate) fn prompt_all_features() -> AllFeatures {
     {
         let selected = MultiSelect::with_theme(t)
             .with_prompt("Donation providers (space to toggle, enter to confirm)")
-            .items(&[
+            .items([
                 "Polar         — dev/OSS-focused; paid posts + sponsorships + issue funding",
                 "GiveLively    — fiat widget for US nonprofits (free, HTTPS widget embed)",
                 "Liberapay     — recurring fiat donations; no external JS; OSS-friendly",
@@ -183,7 +183,7 @@ pub(crate) fn prompt_all_features() -> AllFeatures {
         .with_prompt("Add a docs site?")
         .default(false).interact().unwrap_or(false)
     {
-        match Select::with_theme(t).with_prompt("Docs generator").items(&[
+        match Select::with_theme(t).with_prompt("Docs generator").items([
             "Starlight  — MIT; Astro-based; WCAG AA out of the box, keyboard nav,\n\
              \x20           prefers-reduced-motion, built-in Pagefind search. Use when\n\
              \x20           you want a polished reference site with zero accessibility work.",

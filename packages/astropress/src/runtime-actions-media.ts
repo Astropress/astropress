@@ -34,7 +34,6 @@ async function generateThumbnail(
   bytes: Uint8Array,
   width: number,
 ): Promise<Uint8Array | null> {
-  if (width <= 400) return null;
   try {
     const sharp = (await import("sharp")).default;
     const output = await sharp(Buffer.from(bytes)).resize({ width: 400 }).webp().toBuffer();
@@ -127,7 +126,7 @@ export async function createRuntimeMediaAsset(
             locals,
           );
           if (thumbStored.ok) {
-            thumbnailUrl = thumbStored.asset.publicPath ?? null;
+            thumbnailUrl = thumbStored.asset.publicPath;
           }
         }
       }
@@ -141,7 +140,7 @@ export async function createRuntimeMediaAsset(
             { ...input, filename: variantFilename, bytes: variantBytes, mimeType: "image/webp" },
             locals,
           );
-          return variantStored.ok ? (variantStored.asset.publicPath ?? null) : null;
+          return variantStored.ok ? variantStored.asset.publicPath : null;
         });
       }
 

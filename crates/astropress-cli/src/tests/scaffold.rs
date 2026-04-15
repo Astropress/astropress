@@ -38,6 +38,7 @@ fn scaffolds_new_project_from_example() {
         "ASTROPRESS_SERVICE_ORIGIN=https://your-project.supabase.co/functions/v1/astropress"
     ));
     assert!(!env_example.contains("ASTROPRESS_HOSTED_PROVIDER="));
+    assert!(!env_example.contains("SUPABASE_ANON_KEY="));
     assert!(env_example.contains("SUPABASE_SERVICE_ROLE_KEY=replace-me"));
     assert!(env_example.contains(
         "ADMIN_PASSWORD=replace-with-a-generated-local-admin-password"

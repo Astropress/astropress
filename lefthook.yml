@@ -28,6 +28,7 @@ pre-commit:
         # the key can actually produce a signature right now, so a silent
         # failure (agent not running, wrong passphrase, etc.) is caught before
         # the commit rather than discovered after a push is rejected.
+        # the commit rather than discovered after a push is rejected.
         gpgsign=$(git config --get commit.gpgsign 2>/dev/null || true)
         if [ "$gpgsign" != "true" ]; then
           echo ""
@@ -81,11 +82,45 @@ pre-commit:
             exit 1
           fi
         fi
+        # Also reject creating new commits on top of unsigned branch history.
+        # GitHub checks the full PR range against the default branch, not just
+        # the newest commit, so local hooks must do the same.
+        default_ref=""
+        if git symbolic-ref -q refs/remotes/origin/HEAD >/dev/null 2>&1; then
+          default_ref=$(git symbolic-ref --short refs/remotes/origin/HEAD)
+        elif git rev-parse --verify origin/main >/dev/null 2>&1; then
+          default_ref="origin/main"
+        elif git rev-parse --verify main >/dev/null 2>&1; then
+          default_ref="main"
+        fi
+        if [ -n "$default_ref" ]; then
+          unsigned=""
+          commits=$(git rev-list "${default_ref}..HEAD" 2>/dev/null || true)
+          for commit in $commits; do
+            sig=$(git log --format="%G?" -1 "$commit" 2>/dev/null || echo "N")
+            if [ "$sig" = "N" ]; then
+              unsigned="$unsigned\n  $(git log --format='%h %s' -1 "$commit")"
+            fi
+          done
+          if [ -n "$unsigned" ]; then
+            echo ""
+            echo "❌  This branch already contains unsigned commits relative to ${default_ref}:"
+            printf "%b\n" "$unsigned"
+            echo ""
+            echo "    Re-sign them before creating more commits on top:"
+            echo "    git rebase --rebase-merges --exec 'git commit --amend -S --no-edit --no-verify' ${default_ref}"
+            echo ""
+            exit 1
+          fi
+        fi
 
 commit-msg:
   commands:
     format:
       run: |
+        if [ -d .git/rebase-merge ] || [ -d .git/rebase-apply ]; then
+          exit 0
+        fi
         msg=$(head -1 {1})
         echo "$msg" | grep -qE '^(Merge|Revert|fixup!|squash!)' && exit 0
         if ! echo "$msg" | grep -qE '^(feat|fix|chore|docs|test|refactor|perf|ci|build|revert)(\(.+\))?: .{1,72}$'; then
@@ -103,8 +138,10 @@ pre-push:
 
     verify-commits-signed:
       run: |
-        # Walk every commit that is about to be pushed and reject the push if
-        # any of them lack a signature.  git log --format="%G?" returns:
+        # Walk every commit in the PR range and reject the push if any of them
+        # lack a signature. GitHub evaluates the full default-branch diff, not
+        # only commits newer than the branch upstream. git log --format="%G?"
+        # returns:
         #   G  good signature          U  unknown key (sig present)
         #   X  expired sig             Y  expired key
         #   E  key not in allowedSigners (SSH, sig present but unverified)
@@ -113,10 +150,16 @@ pre-push:
         # Note: E is normal for SSH-signed commits when gpg.ssh.allowedSignersFile
         # is not configured in CI; the signature still exists, we just can't
         # verify trust.  We only block N.
-        current_branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || true)
-        upstream=$(git rev-parse --abbrev-ref "@{upstream}" 2>/dev/null || true)
-        if [ -n "$upstream" ]; then
-          commits=$(git rev-list "${upstream}..HEAD" 2>/dev/null || true)
+        default_ref=""
+        if git symbolic-ref -q refs/remotes/origin/HEAD >/dev/null 2>&1; then
+          default_ref=$(git symbolic-ref --short refs/remotes/origin/HEAD)
+        elif git rev-parse --verify origin/main >/dev/null 2>&1; then
+          default_ref="origin/main"
+        elif git rev-parse --verify main >/dev/null 2>&1; then
+          default_ref="main"
+        fi
+        if [ -n "$default_ref" ]; then
+          commits=$(git rev-list "${default_ref}..HEAD" 2>/dev/null || true)
         else
           commits=$(git rev-list HEAD --not --remotes 2>/dev/null || true)
         fi
@@ -136,11 +179,11 @@ pre-push:
           printf "%b\n" "$unsigned"
           echo ""
           echo "    Re-sign the range with:"
-          echo "    git rebase --exec 'git commit --amend -S --no-edit' \\"
-          if [ -n "$upstream" ]; then
-            echo "      ${upstream}..HEAD"
+          echo "    git rebase --rebase-merges --exec 'git commit --amend -S --no-edit --no-verify' \\"
+          if [ -n "$default_ref" ]; then
+            echo "      ${default_ref}"
           else
-            echo "      \$(git rev-list HEAD --not --remotes | tail -1)^..HEAD"
+            echo "      \$(git rev-list HEAD --not --remotes | tail -1)^"
           fi
           echo ""
           exit 1

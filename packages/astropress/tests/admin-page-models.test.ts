@@ -25,6 +25,7 @@ import {
   buildSettingsPageModel,
   buildSystemPageModel,
   buildTaxonomiesPageModel,
+  buildTestimonialsPageModel,
   buildTranslationsPageModel,
   buildUsersPageModel,
   buildAdminDashboardPageModel,
@@ -187,6 +188,26 @@ describe("buildCommentsPageModel", () => {
 });
 
 // ---------------------------------------------------------------------------
+// buildTestimonialsPageModel
+// ---------------------------------------------------------------------------
+
+describe("buildTestimonialsPageModel", () => {
+  it("returns ok with empty testimonial lists", async () => {
+    const result = await buildTestimonialsPageModel(locals);
+    expect(result.status).toBe("ok");
+    expect(Array.isArray(result.data.pending)).toBe(true);
+    expect(Array.isArray(result.data.approved)).toBe(true);
+    expect(Array.isArray(result.data.featured)).toBe(true);
+  });
+
+  it("returns partial when testimonials query fails", async () => {
+    vi.spyOn(runtimePageStore, "getRuntimeTestimonials").mockRejectedValueOnce(new Error("fail"));
+    const result = await buildTestimonialsPageModel(locals);
+    expect(result.status).toBe("partial");
+  });
+});
+
+// ---------------------------------------------------------------------------
 // buildMediaPageModel
 // ---------------------------------------------------------------------------
 
@@ -277,6 +298,16 @@ describe("buildSystemPageModel", () => {
     expect(Array.isArray(result.data.systemRoutes)).toBe(true);
     expect(result.data.routeMap instanceof Map).toBe(true);
   });
+
+  it("populates routeMap from non-empty system routes", async () => {
+    const settings = JSON.stringify({ templateKey: "content", alternateLinks: [] });
+    db.prepare(`INSERT INTO cms_route_groups (id, kind, render_strategy, canonical_locale, canonical_path) VALUES ('g-sys-login', 'system', 'structured_sections', 'en', '/ap-admin/login')`).run();
+    db.prepare(`INSERT INTO cms_route_variants (id, group_id, locale, path, status, title, settings_json, updated_by) VALUES ('v-sys-login', 'g-sys-login', 'en', '/ap-admin/login', 'published', 'Login', ?, 'admin@test.local')`).run(settings);
+
+    const result = await buildSystemPageModel(locals, adminRole);
+    expect(result.status).toBe("ok");
+    expect(result.data.routeMap.has("/ap-admin/login")).toBe(true);
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -325,15 +356,29 @@ describe("buildArchivesIndexPageModel", () => {
     expect(archive?.title).toBe("Blog Archive Title");
   });
 
-  it("returns partial when archive route lookup fails (withSettledMap)", async () => {
-    vi.spyOn(runtimePageStore, "getRuntimeAuditEvents").mockRejectedValueOnce(new Error("audit fail"));
-    // withSettledMap catches individual failures; getRuntimeArchiveRoute itself is separate
-    // Trigger via a spy on getRuntimeArchiveRoute through runtime-route-registry
-    const { getRuntimeArchiveRoute } = await import("../src/runtime-route-registry");
-    vi.spyOn({ getRuntimeArchiveRoute }, "getRuntimeArchiveRoute").mockRejectedValueOnce(new Error("archive fail"));
-    // The main partial trigger: this just exercises the ok path with archive data
+  it("returns partial when archive route lookup fails (withSettledMap fallback)", async () => {
+    vi.spyOn(runtimeRouteRegistry, "getRuntimeArchiveRoute").mockRejectedValueOnce(new Error("archive fail"));
     const result = await buildArchivesIndexPageModel(locals, adminRole);
-    expect(["ok", "partial"]).toContain(result.status);
+    expect(result.status).toBe("partial");
+    // withSettledMap fallback returns the raw archive config entry
+    expect(result.data.archiveList.every((a: any) => "slug" in a)).toBe(true);
+  });
+
+  it("groups multiple archives of the same kind together", async () => {
+    registerCms({
+      templateKeys: ["content"],
+      siteUrl: "https://example.com",
+      seedPages: [],
+      archives: [
+        { title: "Blog", kind: "posts", slug: "blog", legacyUrl: "/blog", listingItems: [] },
+        { title: "News", kind: "posts", slug: "news", legacyUrl: "/news", listingItems: [] },
+      ],
+      translationStatus: [],
+    });
+    const result = await buildArchivesIndexPageModel(locals, adminRole);
+    expect(result.status).toBe("ok");
+    expect(result.data.archivesByKind["posts"].length).toBe(2);
+    expect(result.data.kindCounts.find((k: { kind: string }) => k.kind === "posts")?.count).toBe(2);
   });
 });
 
@@ -359,6 +404,14 @@ describe("buildPagesIndexPageModel", () => {
     vi.spyOn(runtimePageStore, "listRuntimeContentStates").mockRejectedValueOnce(new Error("fail"));
     const result = await buildPagesIndexPageModel(locals, adminRole);
     expect(result.status).toBe("partial");
+  });
+
+  it("returns partial when archive route lookup fails (withSettledMap fallback)", async () => {
+    vi.spyOn(runtimeRouteRegistry, "getRuntimeArchiveRoute").mockRejectedValueOnce(new Error("archive fail"));
+    const result = await buildPagesIndexPageModel(locals, adminRole);
+    expect(result.status).toBe("partial");
+    // withSettledMap fallback sets runtime: null for the failed archive
+    expect(result.data.archiveRows.every((r: any) => r.runtime === null)).toBe(true);
   });
 });
 
@@ -479,6 +532,12 @@ describe("buildSeoPageModel", () => {
     expect(result.status).toBe("partial");
   });
 
+  it("returns partial when archive route lookup fails (withSettledMap fallback)", async () => {
+    vi.spyOn(runtimeRouteRegistry, "getRuntimeArchiveRoute").mockRejectedValueOnce(new Error("archive fail"));
+    const result = await buildSeoPageModel(locals, adminRole);
+    expect(result.status).toBe("partial");
+  });
+
   it("shows em-dash placeholder when seo fields are absent on a page record", async () => {
     vi.spyOn(runtimePageStore, "listRuntimeContentStates").mockResolvedValueOnce([
       {
@@ -502,6 +561,31 @@ describe("buildSeoPageModel", () => {
     expect(row?.type).toBe("Page");
     expect(row?.seoTitle).toBe("—");
     expect(row?.metaDescription).toBe("—");
+  });
+
+  it("flags missingMetadata when seoTitle is present but metaDescription is absent", async () => {
+    vi.spyOn(runtimePageStore, "listRuntimeContentStates").mockResolvedValueOnce([
+      {
+        slug: "services",
+        legacyUrl: "/services",
+        title: "Services",
+        kind: "post",
+        templateKey: "content",
+        seoTitle: "Services SEO Title",
+        metaDescription: undefined,
+        status: "published",
+        listingItems: [],
+        paginationLinks: [],
+        sourceHtmlPath: "runtime://content/services",
+        updatedAt: "2025-01-01",
+      },
+    ]);
+    const result = await buildSeoPageModel(locals, adminRole);
+    expect(result.status).toMatch(/ok|partial/);
+    const row = result.data.rows.find((r: { path: string }) => r.path === "/services");
+    expect(row?.type).toBe("Post");
+    expect(row?.seoTitle).toBe("Services SEO Title");
+    expect(row?.missingMetadata).toBe(true);
   });
 
   it("shows correct seo fields for archives with varying amounts of metadata in the database", async () => {

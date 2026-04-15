@@ -16,11 +16,11 @@ jobs:
       pull-requests: write
       id-token: write  # required for npm trusted publishing (OIDC)
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
-      - uses: actions/setup-node@v5
+      - uses: actions/setup-node@v6
         with:
           node-version: "24.8"
 
@@ -37,6 +37,9 @@ jobs:
           version: bun run version
           title: "chore: version packages"
           commit: "chore: version packages"
+          # GitHub API commits are GitHub-signed and avoid local hook failures
+          # on the runner when Changesets creates the version PR commit.
+          commitMode: github-api
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # No NPM_TOKEN — npm uses the OIDC token from id-token: write above.
