@@ -7,7 +7,7 @@ use crate::cli_config::env::{
 use super::import_common::bootstrap_content_services;
 use super::new_wizard::prompt_all_features;
 use crate::feature_stubs::{feature_config_stubs, feature_env_stubs};
-use crate::stack_summary::print_stack_summary;
+use crate::stack_summary::{free_first_hosting_note, print_stack_summary, selected_services_note};
 use crate::service_docs::build_services_doc;
 use crate::features::AllFeatures;
 use crate::js_bridge::loaders::load_project_scaffold;
@@ -161,6 +161,13 @@ pub(crate) fn run_post_scaffold_setup(project_dir: &Path, features: &AllFeatures
     println!("└──────────────────────────────────────────────────────┘");
     println!();
     println!("Run:  cd {} && astropress dev", project_dir.display());
+    println!("Deploy guide: {}", project_dir.join("DEPLOY.md").display());
+    if let Some(note) = selected_services_note(project_dir.join("SERVICES.md").exists()) {
+        println!("Service guide: {}", project_dir.join("SERVICES.md").display());
+        println!("{note}");
+    }
+    println!("{}", free_first_hosting_note(app_host, data_services));
+    println!("Catalogues: `astropress list providers` and `astropress list tools`");
 
     // One-time opt-in consent prompt + project_created event.
     // No-op if suppressed (ASTROPRESS_TELEMETRY=0, DO_NOT_TRACK, CI), plain mode,
@@ -184,6 +191,7 @@ fn astropress_package_version() -> Result<String, String> {
 mod tests {
     use super::*;
     use crate::features::{AllFeatures, CmsChoice};
+    use crate::providers::{AppHost, DataServices};
 
     #[test]
     fn defaults_have_api_disabled_and_no_observability() {
@@ -231,5 +239,21 @@ mod tests {
         assert!(Some(f.analytics.as_str()).filter(|s| *s != "none").is_none());
         assert!(Some(f.ab_testing.as_str()).filter(|s| *s != "none").is_none());
         assert!(Some(f.heatmap.as_str()).filter(|s| *s != "none").is_none());
+    }
+
+    #[test]
+    fn free_first_note_points_railway_users_back_to_free_hosts() {
+        let note = free_first_hosting_note(Some(AppHost::Railway), Some(DataServices::Supabase));
+        assert!(note.contains("no free tier"));
+        assert!(note.contains("GitHub Pages"));
+        assert!(note.contains("Vercel/Netlify + Supabase"));
+    }
+
+    #[test]
+    fn services_note_explains_free_first_guidance() {
+        let note = selected_services_note(true).expect("expected services note");
+        assert!(note.contains("SERVICES.md"));
+        assert!(note.contains("free cloud tiers"));
+        assert!(selected_services_note(false).is_none());
     }
 }

@@ -6,8 +6,8 @@ Astropress is a **web application development framework** built on Astro. It shi
 admin panel, a REST API, and a SQLite runtime that host applications compose into their own sites.
 
 It is **not** a CMS or a hosted service. `registerCms()` is the framework's configuration API —
-not a CMS product declaration. Never describe Astropress as a CMS or a site builder in docs or
-user-facing copy.
+not a CMS product declaration. Describing Astropress as a site builder is allowed in docs or
+user-facing copy when that framing fits the audience, but do not describe it as a CMS.
 
 ## Package structure
 

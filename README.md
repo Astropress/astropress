@@ -4,8 +4,8 @@
 
 **Your website launchpad.**
 
-A low-carbon, free, open-source full-spectrum website builder for individuals and small organizations —  
-with a beautiful admin panel, AI-ready scaffolding, and zero vendor lock-in.
+A low-carbon, free, open-source site builder and web framework for static sites, dynamic sites, and web apps —  
+with a built-in admin panel, AI-ready scaffolding, and zero vendor lock-in.
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
 [![npm](https://img.shields.io/npm/v/astropress?color=orange&label=npm)](https://www.npmjs.com/package/astropress)
@@ -51,6 +51,41 @@ Importing content from Wordpress or Wix, or even subscription lists from Mailchi
 | **Open-Source Plugins** | Whether building a course, hosting events, or setting up shop: just add a new service |
 | **Reasonably Secure** | Argon2id password hashing, KMAC256 token hardening, ML-DSA-65 webhook signatures, and security headers by default |
 ---
+
+## Supported categories and tools
+
+Use `astropress list tools` and `astropress list providers` for the CLI view. This is the current high-level support surface.
+
+| Category | Supported tools | What affordance you get |
+|---|---|---|
+| **App hosts** | GitHub Pages, Cloudflare Pages, Vercel, Netlify, Render Static, Render Web, GitLab Pages, Fly.io, Coolify, DigitalOcean App Platform, Railway | Static deploys, server-backed deploys, or self-hosted/container deploy paths generated into `DEPLOY.md` and scaffold CI files |
+| **Content/data services** | Built-in SQLite, Cloudflare D1 + R2, Supabase, Neon, Nhost, PocketBase, Appwrite, Turso, custom adapter | Keep Astropress content local, move it to a hosted service, or wire in a custom runtime adapter without changing the admin surface |
+| **Import sources** | WordPress XML, Wix export/crawl | Stage migrations into reviewable artifacts before applying them locally |
+| **Docs sites** | Starlight, VitePress, mdBook | Generate a docs area alongside the site with a matching scaffold and docs-specific build scripts |
+| **Analytics** | Umami, Plausible, Matomo, PostHog, custom | Add privacy-first analytics, dashboards, and optional replay/heatmap support |
+| **A/B testing and flags** | GrowthBook, Unleash, Flagsmith, custom | Feature flags, experiments, and release controls from the same project scaffold |
+| **Forms and surveys** | Formbricks, Typebot | Surveys, testimonial capture, and embeddable workflows with generated env/config stubs |
+| **Email and newsletters** | Listmonk, Resend, generic SMTP | Newsletter delivery, transactional email, and SMTP relay support |
+| **Comments, forums, chat** | Giscus, Remark42, Flarum, Discourse, Tiledesk, Chatwoot | Community threads, forums, and live support surfaces that can be embedded or linked from the admin |
+| **Search** | Pagefind, Meilisearch, Typesense | Zero-server static search or self-hosted full-text search backends |
+| **Scheduling and events** | Rallly, Cal.com, Hi.Events, Pretix | Polls, booking flows, event listings, and ticketing integrations |
+| **Commerce, payments, donations** | Medusa, Vendure, HyperSwitch, Polar, GiveLively, Liberapay, PledgeCrypto | Storefronts, payment orchestration, and donor flows without locking the site into one vendor |
+| **Identity and operations** | Authentik, Zitadel, Uptime Kuma, Twenty, BookStack | SSO, status pages, CRM, and internal knowledge-base extensions |
+| **Media and publishing** | PeerTube, Castopod, Postiz, Mixpost | Self-hosted video, podcast publishing, and social publishing workflows |
+
+## Deployment paths
+
+These are the current host + data-service paths the codebase treats as the main tracks:
+
+| Support level | Pairings |
+|---|---|
+| **Supported** | `github-pages + none`, `cloudflare-pages + cloudflare`, `vercel + supabase`, `netlify + supabase`, `render-web + supabase` |
+| **Preview** | `github-pages + supabase`, `gitlab-pages + supabase`, `cloudflare-pages + supabase`, `vercel/netlify/render-web + appwrite`, `fly-io + none/supabase/appwrite/turso`, `coolify + none/supabase/turso`, `digitalocean + supabase/appwrite/turso`, `vercel/netlify/render-web/cloudflare-pages + turso`, `railway + none/supabase/appwrite/turso` |
+
+For a free-first starting point, the cleanest paths are:
+- `github-pages + none` for static publishing with local authoring
+- `cloudflare-pages + cloudflare` for an edge-backed setup
+- `vercel + supabase` or `netlify + supabase` for a server-backed setup on free tiers
 
 ## Get started
 
