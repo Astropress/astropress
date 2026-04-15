@@ -57,13 +57,13 @@ jobs:
       - name: Rename binary (Unix)
         if: matrix.os != 'windows-latest'
         run: |
-          mv crates/target/${{ matrix.target }}/release/astropress ${{ matrix.artifact }}
+          mv crates/target/${{ matrix.target }}/release/astropress-cli ${{ matrix.artifact }}
           chmod +x ${{ matrix.artifact }}
 
       - name: Rename binary (Windows)
         if: matrix.os == 'windows-latest'
         shell: pwsh
-        run: Move-Item crates\target\${{ matrix.target }}\release\astropress.exe ${{ matrix.artifact }}
+        run: Move-Item crates\target\${{ matrix.target }}\release\astropress-cli.exe ${{ matrix.artifact }}
 
       - name: Upload artifact
         uses: actions/upload-artifact@v7
