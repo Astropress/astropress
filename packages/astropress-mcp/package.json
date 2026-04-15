@@ -1,7 +1,7 @@
 {
   "name": "@astropress-diy/mcp",
-  "version": "0.0.2",
-  "description": "MCP server for Astropress \u2014 lets AI agents read and write content via the REST API",
+  "version": "0.0.3",
+  "description": "MCP server for Astropress — lets AI agents read and write content via the REST API",
   "type": "module",
   "bin": {
     "astropress-mcp": "./dist/server.js"
