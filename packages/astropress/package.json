@@ -483,10 +483,10 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/astropress/astropress"
+    "url": "https://github.com/Astropress/astropress"
   },
   "bugs": {
-    "url": "https://github.com/astropress/astropress/issues"
+    "url": "https://github.com/Astropress/astropress/issues"
   },
   "homepage": "https://astropress.diy",
   "engines": {

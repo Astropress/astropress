@@ -1,12 +1,13 @@
 import { serve } from "@hono/node-server";
 import { createNexusApp } from "./app.js";
 import { loadConfigFromFile } from "./registry.js";
+import type { NexusConfig } from "./types.js";
 
 const configPath = process.env.NEXUS_CONFIG ?? "nexus.config.json";
 const authToken = process.env.NEXUS_AUTH_TOKEN;
 const port = Number(process.env.PORT ?? 4330);
 
-let config;
+let config: NexusConfig;
 try {
   config = loadConfigFromFile(configPath);
 } catch (err) {
