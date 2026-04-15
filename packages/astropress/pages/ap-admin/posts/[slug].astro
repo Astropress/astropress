@@ -438,7 +438,7 @@ if (model.status === "not_found") {
   </AdminLayout>
 ) : (
   <AdminLayout
-    title={adminUser?.role !== "admin" && contentType === "page" ? "Forbidden | Astropress Admin" : "Not Found | Astropress Admin"}
+    title={adminUser?.role !== "admin" && contentType === "page" ? "Forbidden" : "Not Found"}
     heading={adminUser?.role !== "admin" && contentType === "page" ? "Forbidden" : "Not Found"}
     currentPath="/ap-admin/posts"
     description={adminUser?.role !== "admin" && contentType === "page" ? "This action requires an admin account." : "The requested content record could not be found."}

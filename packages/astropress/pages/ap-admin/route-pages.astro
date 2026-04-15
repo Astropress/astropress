@@ -16,7 +16,7 @@ const slugError = Astro.url.searchParams.get("error");
 
 {model.status !== "forbidden" ? (
   <AdminLayout
-    title="Route Table | Astropress Admin"
+    title="Route Table"
     heading="Route Table"
     currentPath="/ap-admin/route-pages"
     description="Technical inventory of route-backed structured pages. Normal page editing should start from Pages."
@@ -117,7 +117,7 @@ const slugError = Astro.url.searchParams.get("error");
   </AdminLayout>
 ) : (
   <AdminLayout
-    title="Forbidden | Astropress Admin"
+    title="Forbidden"
     heading="Forbidden"
     currentPath="/ap-admin/posts"
     description="This action requires an admin account."

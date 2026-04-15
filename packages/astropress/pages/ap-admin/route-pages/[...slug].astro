@@ -180,7 +180,7 @@ if (model.status === "not_found") {
   </AdminLayout>
 ) : (
   <AdminLayout
-    title={adminUser?.role !== "admin" ? "Forbidden | Astropress Admin" : "Not Found | Astropress Admin"}
+    title={adminUser?.role !== "admin" ? "Forbidden" : "Not Found"}
     heading={adminUser?.role !== "admin" ? "Forbidden" : "Not Found"}
     currentPath="/ap-admin/route-pages"
     description={adminUser?.role !== "admin" ? "This action requires an admin account." : "The requested route page could not be found."}
