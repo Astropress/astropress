@@ -1,6 +1,6 @@
 ---
-import AdminLayout from "astropress/components/AdminLayout.astro";
-import { getAstropressService, type ServiceProvider } from "astropress/services-config";
+import AdminLayout from "@astropress-diy/astropress/components/AdminLayout.astro";
+import { getAstropressService, type ServiceProvider } from "@astropress-diy/astropress/services-config";
 
 const adminUser = Astro.locals.adminUser;
 if (adminUser?.role !== "admin") {

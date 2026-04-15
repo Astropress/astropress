@@ -8,7 +8,9 @@
       "types": "./index.ts",
       "default": "./dist/index.js"
     },
+    "./package.json": "./package.json",
     "./components/*": "./components/*.astro",
+    "./components/*.astro": "./components/*.astro",
     "./platform-contracts": {
       "types": "./src/platform-contracts.ts",
       "default": "./dist/src/platform-contracts.js"
