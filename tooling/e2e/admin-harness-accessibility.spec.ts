@@ -22,9 +22,7 @@ test.describe("Feature: package-owned admin accessibility coverage", () => {
       await expectStylesheetsLoaded(page);
       await expectNoDoubleTitleSuffix(page);
       await expectKeyboardFocusMoves(page);
-      // color-contrast is a pre-existing issue on authenticated admin pages; will be
-      // addressed during the admin panel UX testing pass.
-      await expectNoAxeViolations(page, { ignoreRules: ["color-contrast"] });
+      await expectNoAxeViolations(page);
     });
   }
 
