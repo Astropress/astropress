@@ -1,6 +1,52 @@
-import type { AstropressSqliteSeedToolkitOptions, SqliteDatabaseLike } from "./sqlite-bootstrap.js";
+import type { AstropressSqliteSeedToolkitOptions, SqliteDatabaseLike, SystemRouteSeed, ArchiveSeedRecord, MarketingRouteSeedRecord } from "./sqlite-bootstrap.js";
 import { getCmsConfig } from "./config.js";
 import { hashPasswordSync, guessMimeType } from "./sqlite-seed-helpers.js";
+
+/** Build bind params for a system route variant insert. */
+function systemRouteVariantParams(route: SystemRouteSeed) {
+  return [
+    route.variantId, route.groupId, route.path, route.title,
+    route.summary ?? null, route.bodyHtml ?? null, route.settingsJson ?? null,
+    route.title, route.metaDescription ?? route.summary ?? route.title,
+    route.robotsDirective ?? null, "seed-import",
+  ];
+}
+
+/** Build the revision snapshot JSON for a system route. */
+function systemRouteSnapshot(route: SystemRouteSeed) {
+  return JSON.stringify({
+    path: route.path, title: route.title, summary: route.summary ?? "",
+    bodyHtml: route.bodyHtml ?? "", settings: route.settingsJson ? JSON.parse(route.settingsJson) : null,
+    renderStrategy: route.renderStrategy,
+  });
+}
+
+/** Build bind params for an archive route variant insert. */
+function archiveVariantParams(archive: ArchiveSeedRecord, variantId: string, groupId: string) {
+  return [
+    variantId, groupId, archive.legacyUrl, archive.title, archive.summary ?? null,
+    archive.seoTitle ?? archive.title, archive.metaDescription ?? archive.summary ?? "",
+    archive.canonicalUrlOverride ?? null, archive.robotsDirective ?? null, "seed-import",
+  ];
+}
+
+/** Resolve a marketing route's locale from config or fallback. */
+function resolveMarketingLocale(pagePath: string): string {
+  let configLocales: readonly string[];
+  try { configLocales = getCmsConfig().locales ?? ["en", "es"]; } catch { configLocales = ["en", "es"]; }
+  return configLocales.find((l) => pagePath.startsWith(`/${l}/`)) ?? (configLocales[0] ?? "en");
+}
+
+/** Build bind params for a marketing route variant insert. */
+function marketingVariantParams(page: MarketingRouteSeedRecord, variantId: string, groupId: string, locale: string) {
+  return [
+    variantId, groupId, locale, page.path, page.title, page.summary,
+    JSON.stringify(page.sections),
+    JSON.stringify({ templateKey: page.templateKey, alternateLinks: page.alternateLinks ?? [] }),
+    page.seoTitle, page.metaDescription, page.ogImage ?? null,
+    page.canonicalUrlOverride ?? null, page.robotsDirective ?? null, "seed-import",
+  ];
+}
 
 export function seedBootstrapUsers(options: AstropressSqliteSeedToolkitOptions, db: SqliteDatabaseLike) {
   const upsert = db.prepare(`
@@ -146,34 +192,11 @@ export function seedSystemRoutes(options: AstropressSqliteSeedToolkitOptions, db
   let count = 0;
   for (const route of options.systemRoutes) {
     insertGroup.run(route.groupId, route.renderStrategy, route.path);
-    const result = insertVariant.run(
-      route.variantId,
-      route.groupId,
-      route.path,
-      route.title,
-      route.summary ?? null,
-      route.bodyHtml ?? null,
-      route.settingsJson ?? null,
-      route.title,
-      route.metaDescription ?? route.summary ?? route.title,
-      route.robotsDirective ?? null,
-      "seed-import",
-    ) as { changes?: number };
+    const result = insertVariant.run(...systemRouteVariantParams(route)) as { changes?: number };
     count += result.changes ?? 1;
     insertRevision.run(
-      `revision:${route.variantId}:seed`,
-      route.variantId,
-      route.path,
-      JSON.stringify({
-        path: route.path,
-        title: route.title,
-        summary: route.summary ?? "",
-        bodyHtml: route.bodyHtml ?? "",
-        settings: route.settingsJson ? JSON.parse(route.settingsJson) : null,
-        renderStrategy: route.renderStrategy,
-      }),
-      "Imported baseline",
-      "seed-import",
+      `revision:${route.variantId}:seed`, route.variantId, route.path,
+      systemRouteSnapshot(route), "Imported baseline", "seed-import",
     );
   }
   return count;
@@ -210,18 +233,7 @@ export function seedArchiveRoutes(options: AstropressSqliteSeedToolkitOptions, d
     const groupId = `archive:${baseId}`;
     const variantId = `variant:archive:${baseId}:en`;
     insertGroup.run(groupId, archive.legacyUrl);
-    const result = insertVariant.run(
-      variantId,
-      groupId,
-      archive.legacyUrl,
-      archive.title,
-      archive.summary ?? null,
-      archive.seoTitle ?? archive.title,
-      archive.metaDescription ?? archive.summary ?? "",
-      archive.canonicalUrlOverride ?? null,
-      archive.robotsDirective ?? null,
-      "seed-import",
-    ) as { changes?: number };
+    const result = insertVariant.run(...archiveVariantParams(archive, variantId, groupId)) as { changes?: number };
     count += result.changes ?? 1;
   }
   return count;
@@ -258,29 +270,12 @@ export function seedMarketingRoutes(options: AstropressSqliteSeedToolkitOptions,
 
   let count = 0;
   for (const page of options.marketingRoutes) {
-    let configLocales: readonly string[];
-    try { configLocales = getCmsConfig().locales ?? ["en", "es"]; } catch { configLocales = ["en", "es"]; }
-    const locale = configLocales.find((l) => page.path.startsWith(`/${l}/`)) ?? (configLocales[0] ?? "en");
+    const locale = resolveMarketingLocale(page.path);
     const baseId = page.path.replace(/^\//, "").replaceAll("/", ":");
     const groupId = `page:${baseId}`;
     const variantId = `variant:page:${baseId}:${locale}`;
     insertGroup.run(groupId, locale, page.path);
-    const result = insertVariant.run(
-      variantId,
-      groupId,
-      locale,
-      page.path,
-      page.title,
-      page.summary,
-      JSON.stringify(page.sections),
-      JSON.stringify({ templateKey: page.templateKey, alternateLinks: page.alternateLinks ?? [] }),
-      page.seoTitle,
-      page.metaDescription,
-      page.ogImage ?? null,
-      page.canonicalUrlOverride ?? null,
-      page.robotsDirective ?? null,
-      "seed-import",
-    ) as { changes?: number };
+    const result = insertVariant.run(...marketingVariantParams(page, variantId, groupId, locale)) as { changes?: number };
     count += result.changes ?? 1;
   }
   return count;

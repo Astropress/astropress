@@ -102,33 +102,28 @@ export async function replaceD1ContentAssignments(
   }
 }
 
+/** Extract baseline field values from a page record into a flat tuple for SQL binding. */
+function baselineFields(pageRecord: PageRecord) {
+  const status = pageRecord.status ?? "published";
+  const body = pageRecord.body ?? null;
+  const seoTitle = pageRecord.seoTitle ?? pageRecord.title;
+  const metaDesc = pageRecord.metaDescription ?? pageRecord.summary ?? "";
+  const excerpt = pageRecord.summary ?? null;
+  return { status, body, seoTitle, metaDesc, excerpt };
+}
+
 export async function ensureD1BaselineRevision(db: D1DatabaseLike, pageRecord: PageRecord) {
-  await db
-    .prepare(
-      `
-        INSERT INTO content_overrides (
-          slug, title, status, body, seo_title, meta_description, excerpt, og_title,
-          og_description, og_image, canonical_url_override, robots_directive, updated_at, updated_by
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, ?)
-        ON CONFLICT(slug) DO NOTHING
-      `,
-    )
-    .bind(
-      pageRecord.slug,
-      pageRecord.title,
-      pageRecord.status ?? "published",
-      pageRecord.body ?? null,
-      pageRecord.seoTitle ?? pageRecord.title,
-      pageRecord.metaDescription ?? pageRecord.summary ?? "",
-      pageRecord.summary ?? null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      "seed-import",
-    )
-    .run();
+  const f = baselineFields(pageRecord);
+  await db.prepare(`
+    INSERT INTO content_overrides (
+      slug, title, status, body, seo_title, meta_description, excerpt, og_title,
+      og_description, og_image, canonical_url_override, robots_directive, updated_at, updated_by
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, ?)
+    ON CONFLICT(slug) DO NOTHING
+  `).bind(
+    pageRecord.slug, pageRecord.title, f.status, f.body, f.seoTitle, f.metaDesc,
+    f.excerpt, null, null, null, null, null, "seed-import",
+  ).run();
 
   const existing = await db
     .prepare("SELECT id FROM content_revisions WHERE slug = ? AND source = 'imported' LIMIT 1")
@@ -140,36 +135,17 @@ export async function ensureD1BaselineRevision(db: D1DatabaseLike, pageRecord: P
     return;
   }
 
-  await db
-    .prepare(
-      `
-        INSERT INTO content_revisions (
-          id, slug, title, status, body, seo_title, meta_description, excerpt,
-          og_title, og_description, og_image, author_ids, category_ids, tag_ids, canonical_url_override, robots_directive, source, created_at, created_by
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'imported', ?, ?)
-      `,
-    )
-    .bind(
-      `revision-${crypto.randomUUID()}`,
-      pageRecord.slug,
-      pageRecord.title,
-      pageRecord.status ?? "published",
-      pageRecord.body ?? null,
-      pageRecord.seoTitle ?? pageRecord.title,
-      pageRecord.metaDescription ?? pageRecord.summary ?? "",
-      pageRecord.summary ?? null,
-      null,
-      null,
-      null,
-      "[]",
-      "[]",
-      "[]",
-      null,
-      null,
-      "imported-baseline",
-      "seed-import",
-    )
-    .run();
+  await db.prepare(`
+    INSERT INTO content_revisions (
+      id, slug, title, status, body, seo_title, meta_description, excerpt,
+      og_title, og_description, og_image, author_ids, category_ids, tag_ids,
+      canonical_url_override, robots_directive, source, created_at, created_by
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'imported', ?, ?)
+  `).bind(
+    `revision-${crypto.randomUUID()}`, pageRecord.slug, pageRecord.title, f.status, f.body,
+    f.seoTitle, f.metaDesc, f.excerpt, null, null, null, "[]", "[]", "[]", null, null,
+    "imported-baseline", "seed-import",
+  ).run();
 }
 
 export function mapContentState(pageRecord: PageRecord, override: ContentOverride) {
