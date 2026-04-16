@@ -45,10 +45,21 @@ export async function expectNoDoubleTitleSuffix(page: Page): Promise<void> {
   }
 }
 
+/**
+ * Asserts zero WCAG 2.2 AA axe violations.
+ *
+ * Tags checked: wcag2a, wcag2aa, wcag21a, wcag21aa, wcag22aa, best-practice.
+ * This is the enforced standard — all admin and public pages must pass.
+ *
+ * Achievable WCAG 2.2 AAA criteria (2.4.10 section headings, 3.2.5 change on
+ * request, 1.4.8 visual presentation) are met by design through the admin CSS
+ * and layout components, but not enforced by axe because full AAA compliance
+ * is not recommended by W3C for entire sites.
+ */
 export async function expectNoAxeViolations(page: Page, options?: { ignoreRules?: string[] }) {
   const ignoreRules = new Set(options?.ignoreRules ?? []);
   const results = await new AxeBuilder({ page })
-    .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
+    .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa", "best-practice"])
     .analyze();
 
   const violations = results.violations
