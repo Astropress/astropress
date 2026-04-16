@@ -223,7 +223,7 @@ async function main() {
         if (matches) complexity += matches.length;
       }
       // Count ternary ? (but not ?. optional chaining or ?? nullish coalescing)
-      const ternaryCount = (body.match(/[^?]\?[^?.?]/g) || []).length;
+      const ternaryCount = (body.match(/[^?]\?[^?.]/g) || []).length;
       complexity += ternaryCount;
 
       if (complexity >= COMPLEXITY_ERROR) {

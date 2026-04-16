@@ -127,6 +127,23 @@ const verificationGroups: VerificationGroup[] = [
     ],
   },
   {
+    label: "WCAG 2.2 AA accessibility compliance",
+    scenarios: [
+      "All static admin routes pass axe WCAG 2.2 AA audit",
+      "All public example routes pass axe WCAG 2.2 AA audit",
+      "Admin panel meets keyboard navigation requirements",
+      "Admin pages have correct heading hierarchy",
+      "Form controls have accessible names",
+      "Color contrast meets WCAG 2.2 AA thresholds",
+    ],
+    steps: [
+      {
+        command: "bun",
+        args: ["run", "test:accessibility:admin-harness"],
+      },
+    ],
+  },
+  {
     label: "project bootstrap scenarios",
     scenarios: [
       "A developer running astropress new gets pre-filled environment variables for their chosen provider",
