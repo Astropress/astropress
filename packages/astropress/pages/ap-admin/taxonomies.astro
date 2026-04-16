@@ -223,9 +223,7 @@ if (model.status === "forbidden") {
     <AuditTrail
       events={auditEvents.filter((event) => event.action.startsWith("category.") || event.action.startsWith("tag.")).slice(0, 5)}
     />
-    {wasDeleted && restoreId && (
-      <script>{`(function(){var t=document.querySelector('[data-undo-toast]');if(t)setTimeout(function(){t.remove();},8000);})();`}</script>
-    )}
+    {/* Undo toast auto-dismisses via CSS animation (ap-toast-out in admin.css) */}
   </AdminLayout>
 ) : (
   <AdminLayout

@@ -1391,6 +1391,7 @@ const verificationGroups: VerificationGroup[] = [
     scenarios: [
       "Deleting a resource shows an undo toast",
       "Clicking Undo restores the deleted resource",
+      "Undo toast auto-dismisses with CSS animation instead of JavaScript",
     ],
     steps: [
       {
@@ -1428,6 +1429,8 @@ const verificationGroups: VerificationGroup[] = [
       "Topbar shows a collapse arrow button to the left of sign out",
       "Clicking the arrow reveals the utility panel with three buttons",
       "Theme toggle uses SVG icons instead of Unicode characters",
+      "Utility panel uses native popover instead of JavaScript toggle",
+      "Scroll button points down at page top and up after scrolling",
     ],
     steps: [
       {

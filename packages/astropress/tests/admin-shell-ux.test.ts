@@ -16,10 +16,32 @@ describe("admin shell ux invariants", () => {
     expect(adminLayout).toContain("<kbd>Ctrl</kbd>+<kbd>K</kbd>");
   });
 
-  it("has collapsible utility panel with toggle button", () => {
+  it("has collapsible utility panel using native popover", () => {
     expect(adminLayout).toContain('class="topbar-panel-toggle"');
     expect(adminLayout).toContain('id="topbar-utility-panel"');
-    expect(adminLayout).toContain('aria-controls="topbar-utility-panel"');
+    expect(adminLayout).toContain('popovertarget="topbar-utility-panel"');
+    // Uses native popover attribute, not JS hidden toggle
+    expect(adminLayout).toContain('popover>');
+  });
+
+  it("has a scroll-to-top/bottom button in the utility panel", () => {
+    expect(adminLayout).toContain('id="scroll-toggle"');
+    expect(adminLayout).toContain('class="scroll-toggle-icon"');
+    expect(adminLayout).toContain("Scroll to bottom");
+  });
+
+  it("uses CSS animation for undo toast auto-dismiss instead of JS setTimeout", () => {
+    expect(adminCss).toContain("ap-toast-out");
+    expect(adminCss).toContain("animation:");
+
+    const authorsPage = readFileSync(path.join(root, "pages", "ap-admin", "authors.astro"), "utf8");
+    const taxonomiesPage = readFileSync(path.join(root, "pages", "ap-admin", "taxonomies.astro"), "utf8");
+    expect(authorsPage).not.toContain("setTimeout");
+    expect(taxonomiesPage).not.toContain("setTimeout");
+  });
+
+  it("sets scroll-behavior: smooth on html element", () => {
+    expect(adminCss).toContain("scroll-behavior: smooth");
   });
 
   it("theme toggle uses SVG icons instead of Unicode", () => {

@@ -3,6 +3,10 @@
  * Extracted from AdminLayout.astro so browsers can cache it across all admin pages.
  */
 
+html {
+  scroll-behavior: smooth;
+}
+
 :root {
   color-scheme: light;
   --bg: #f4f6f8;
@@ -175,12 +179,29 @@ body {
 }
 
 .topbar-utility-panel {
+  /* Native popover: positioned near the toggle via anchor-like placement */
   display: flex;
   align-items: center;
   gap: 0.4rem;
+  position: fixed;
+  inset: auto;
+  top: 0.5rem;
+  right: 5rem;
+  margin: 0;
+  padding: 0.35rem;
+  background: var(--topbar-bg);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 0.6rem;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+  z-index: 100;
 }
-.topbar-utility-panel[hidden] {
-  display: none;
+
+/* Scroll-to-top/bottom button arrow rotation */
+.scroll-toggle-icon {
+  transition: transform 300ms ease;
+}
+.scroll-toggle-icon.pointing-up {
+  transform: rotate(180deg);
 }
 
 .topbar-utility-btn {
@@ -877,10 +898,13 @@ html[data-theme="dark"] ap-notice[type="error"] {
   align-items: center;
   gap: 1rem;
   z-index: 200;
-  animation: ap-toast-in 0.2s ease;
+  animation: ap-toast-in 0.2s ease, ap-toast-out 0.4s ease 7.6s forwards;
 }
 @keyframes ap-toast-in {
   from { opacity: 0; transform: translateX(-50%) translateY(8px); }
+}
+@keyframes ap-toast-out {
+  to { opacity: 0; transform: translateX(-50%) translateY(8px); pointer-events: none; visibility: hidden; }
 }
 .undo-btn {
   background: none;

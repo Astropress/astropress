@@ -11,3 +11,8 @@ Feature: Undo toast after deleting admin resources
     When I click the Undo button
     Then the restore action clears the deleted_at timestamp
     And I am redirected back to the authors page with restored=1
+
+  Scenario: Undo toast auto-dismisses with CSS animation instead of JavaScript
+    Given an undo toast is visible after deleting a resource
+    When 8 seconds have elapsed
+    Then the toast fades out using CSS animation without JavaScript setTimeout
