@@ -73,6 +73,10 @@ Use `astropress list tools` and `astropress list providers` for the CLI view. Th
 | **Commerce, payments, donations** | Medusa, Vendure, HyperSwitch, Polar, GiveLively, Liberapay, PledgeCrypto | Storefronts, payment orchestration, and donor flows without locking the site into one vendor |
 | **Identity and operations** | Authentik, Zitadel, Uptime Kuma, Twenty, BookStack | SSO, status pages, CRM, and internal knowledge-base extensions |
 | **Media and publishing** | PeerTube, Castopod, Postiz, Mixpost | Self-hosted video, podcast publishing, and social publishing workflows |
+| **Request: migrate from a platform** | CMS, site builder, subscriber list | Open an adapter request to describe what you're migrating from |
+| **Request: add hosting/data service** | Deploy or store content somewhere new | Open an adapter request to include provider docs and free tier info |
+| **Request: add external tool** | Analytics, email, donations, A/B testing, search | Open a feature request to add the `integration` label |
+| **Not sure where to request?** | Any new platform or tool | Open a blank issue where maintainers will help route it |  
 
 ## Deployment paths
 
