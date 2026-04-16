@@ -1401,6 +1401,43 @@ const verificationGroups: VerificationGroup[] = [
     ],
   },
   {
+    label: "destructive action confirmation dialogs",
+    scenarios: [
+      "Authors page shows confirm dialog before deleting an author",
+      "Taxonomies page shows confirm dialog before deleting a category",
+      "Taxonomies page shows confirm dialog before deleting a tag",
+      "Media page shows confirm dialog before deleting an asset",
+      "Webhooks page shows confirm dialog before deleting a webhook",
+      "API Tokens page shows confirm dialog before revoking a token",
+      "Users page uses styled dialog instead of browser confirm for suspend",
+      "Users page uses styled dialog instead of browser confirm for GDPR purge",
+      "Subscriber detail uses styled dialog instead of browser confirm",
+      "Form submit buttons show loading state to prevent double submission",
+    ],
+    steps: [
+      {
+        command: "bunx",
+        args: ["vitest", "run", "tests/admin-safety.test.ts", "tests/admin-shell-ux.test.ts"],
+        cwd: astropressPackageRoot,
+      },
+    ],
+  },
+  {
+    label: "collapsible header utility panel",
+    scenarios: [
+      "Topbar shows a collapse arrow button to the left of sign out",
+      "Clicking the arrow reveals the utility panel with three buttons",
+      "Theme toggle uses SVG icons instead of Unicode characters",
+    ],
+    steps: [
+      {
+        command: "bunx",
+        args: ["vitest", "run", "tests/admin-shell-ux.test.ts"],
+        cwd: astropressPackageRoot,
+      },
+    ],
+  },
+  {
     label: "Admin command palette",
     scenarios: [
       "Pressing Ctrl+K opens the command palette",
