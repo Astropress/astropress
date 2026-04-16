@@ -1,8 +1,12 @@
 import type { APIRoute } from "astro";
-import { consumeRuntimeInviteToken, createAstropressSecureRedirect, isTrustedRequestOrigin } from "@astropress-diy/astropress";
+import {
+  consumeRuntimeInviteToken,
+  createAstropressSecureRedirect,
+  isTrustedStrictRequestOrigin,
+} from "@astropress-diy/astropress";
 
 export const POST: APIRoute = async ({ request, locals }) => {
-  if (!isTrustedRequestOrigin(request)) {
+  if (!isTrustedStrictRequestOrigin(request)) {
     return createAstropressSecureRedirect("/ap-admin/accept-invite?error=1&message=Invalid+request+origin", 302, {
       forceHsts: request.url.startsWith("https://"),
     });

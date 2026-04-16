@@ -143,3 +143,22 @@ export function isTrustedRequestOrigin(request: Request): boolean {
 
   return true;
 }
+
+export function isTrustedStrictRequestOrigin(request: Request): boolean {
+  const requestUrl = parseOrigin(request.url);
+  if (!requestUrl) {
+    return false;
+  }
+
+  const origin = parseOrigin(request.headers.get("origin"));
+  if (origin) {
+    return origin.origin === requestUrl.origin;
+  }
+
+  const referer = parseOrigin(request.headers.get("referer"));
+  if (referer) {
+    return referer.origin === requestUrl.origin;
+  }
+
+  return false;
+}

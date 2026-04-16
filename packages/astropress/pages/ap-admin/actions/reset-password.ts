@@ -3,12 +3,12 @@ import {
   consumeRuntimePasswordResetToken,
   createAstropressSecureRedirect,
   createRuntimePasswordResetToken,
-  isTrustedRequestOrigin,
+  isTrustedStrictRequestOrigin,
 } from "@astropress-diy/astropress";
 import { sendPasswordResetEmail } from "@astropress-diy/astropress";
 
 export const POST: APIRoute = async ({ request, locals }) => {
-  if (!isTrustedRequestOrigin(request)) {
+  if (!isTrustedStrictRequestOrigin(request)) {
     return createAstropressSecureRedirect("/ap-admin/reset-password?error=1&message=Invalid+request+origin", 302, {
       forceHsts: request.url.startsWith("https://"),
     });

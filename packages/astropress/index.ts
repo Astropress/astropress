@@ -263,6 +263,7 @@ export {
   createAstropressSecureRedirect,
   createAstropressSecurityHeaders,
   isTrustedRequestOrigin,
+  isTrustedStrictRequestOrigin,
 } from "./src/security-headers.js";
 export type { AstropressSecurityArea, AstropressSecurityHeadersOptions } from "./src/security-headers";
 export { createAstropressSecurityMiddleware, resolveAstropressSecurityArea } from "./src/security-middleware.js";

@@ -6,6 +6,7 @@ import {
   createAstropressSecureRedirect,
   createAstropressSecurityHeaders,
   isTrustedRequestOrigin,
+  isTrustedStrictRequestOrigin,
 } from "../src/security-headers.js";
 import { resolveAstropressSecurityArea } from "../src/security-middleware.js";
 
@@ -135,6 +136,25 @@ describe("security headers", () => {
         }),
       ),
     ).toBe(true); // parseOrigin throws → null → falls through to referer → no referer → return true
+  });
+
+  it("strict origin checks reject requests with no origin or referer headers", () => {
+    expect(
+      isTrustedStrictRequestOrigin(
+        new Request("https://example.com/ap-admin/save", {
+          method: "POST",
+        }),
+      ),
+    ).toBe(false);
+
+    expect(
+      isTrustedStrictRequestOrigin(
+        new Request("https://example.com/ap-admin/save", {
+          method: "POST",
+          headers: { origin: "https://example.com" },
+        }),
+      ),
+    ).toBe(true);
   });
 
   it("uses SAMEORIGIN when frameAncestors option is not 'none'", () => {
