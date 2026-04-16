@@ -113,6 +113,23 @@ describe("destructive actions use confirm dialogs", () => {
     expect(src).toContain("data-confirm-trigger");
     expect(src).toContain('id="confirm-revoke-token"');
   });
+
+  it("users page uses styled dialog instead of window.confirm()", () => {
+    const src = readFileSync(path.join(adminPagesRoot, "users.astro"), "utf8");
+    expect(src).not.toContain("window.confirm");
+    expect(src).not.toMatch(/data-confirm="/);
+    expect(src).toContain("ap-confirm-dialog");
+    expect(src).toContain('id="confirm-suspend-user"');
+    expect(src).toContain('id="confirm-purge-user"');
+  });
+
+  it("subscriber detail uses styled dialog instead of window.confirm()", () => {
+    const src = readFileSync(path.join(adminPagesRoot, "subscribers", "[id].astro"), "utf8");
+    expect(src).not.toContain("window.confirm");
+    expect(src).not.toMatch(/data-confirm="/);
+    expect(src).toContain("ap-confirm-dialog");
+    expect(src).toContain('id="confirm-delete-subscriber"');
+  });
 });
 
 // ---------------------------------------------------------------------------

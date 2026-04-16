@@ -106,11 +106,17 @@ if (model.status === "forbidden") {
                           </form>
                         ) : (
                           <>
-                            <form method="post" action="/ap-admin/actions/user-suspend" class="admin-inline-form">
-                              <CsrfInput token={Astro.locals.csrfToken} />
-                              <input type="hidden" name="email" value={user.email} />
-                              <button type="submit" data-confirm="Suspend this user?" class="admin-button-ghost small danger-ghost">Suspend</button>
-                            </form>
+                            <button
+                              type="button"
+                              class="admin-button-ghost small danger-ghost"
+                              data-confirm-trigger
+                              data-dialog-id="confirm-suspend-user"
+                              data-field-name="email"
+                              data-field-value={user.email}
+                              data-text-suspend-email={user.email}
+                            >
+                              Suspend
+                            </button>
                             <form method="post" action="/ap-admin/actions/user-reset-link" class="admin-inline-form">
                               <CsrfInput token={Astro.locals.csrfToken} />
                               <input type="hidden" name="email" value={user.email} />
@@ -193,12 +199,58 @@ if (model.status === "forbidden") {
           </label>
         </div>
         <div class="form-group form-actions">
-          <button type="submit" class="admin-button danger" data-confirm="This will permanently erase all personal data for this email. This cannot be undone. Continue?">
+          <button type="button" class="admin-button danger" id="purge-trigger">
             Purge &amp; Download Report
           </button>
         </div>
       </form>
     </section>
+
+    <ap-confirm-dialog>
+      <dialog id="confirm-suspend-user" class="confirm-modal" aria-labelledby="confirm-suspend-user-title">
+        <div class="modal-content">
+          <h2 id="confirm-suspend-user-title">Suspend user?</h2>
+          <p>Are you sure you want to suspend <strong id="suspend-email"></strong>?</p>
+          <p>Suspended users cannot sign in until unsuspended.</p>
+          <div class="modal-actions">
+            <button type="button" class="admin-button-ghost small secondary-button" data-dialog-close>Cancel</button>
+            <form method="post" action="/ap-admin/actions/user-suspend" style="display:inline;">
+              <CsrfInput token={Astro.locals.csrfToken} />
+              <input type="hidden" name="email" value="" />
+              <button type="submit" class="admin-button small delete-button">Suspend User</button>
+            </form>
+          </div>
+        </div>
+      </dialog>
+    </ap-confirm-dialog>
+
+    <dialog id="confirm-purge-user" class="confirm-modal" aria-labelledby="confirm-purge-user-title">
+      <div class="modal-content">
+        <h2 id="confirm-purge-user-title">Purge all personal data?</h2>
+        <p>This will permanently erase all personal data for this email. Sessions will be revoked, audit logs anonymised, comments and submissions deleted.</p>
+        <p class="dialog-warning">This action cannot be undone.</p>
+        <div class="modal-actions">
+          <button type="button" class="admin-button-ghost small secondary-button" id="purge-cancel">Cancel</button>
+          <button type="submit" form="gdpr-purge-form" class="admin-button small delete-button">Purge &amp; Download</button>
+        </div>
+      </div>
+    </dialog>
+
+    <script>
+      import "../../web-components/confirm-dialog";
+
+      const purgeTrigger = document.getElementById("purge-trigger");
+      const purgeDialog = document.getElementById("confirm-purge-user") as HTMLDialogElement | null;
+      const purgeCancel = document.getElementById("purge-cancel");
+      if (purgeTrigger && purgeDialog) {
+        purgeTrigger.addEventListener("click", () => {
+          const emailInput = document.getElementById("purge-email") as HTMLInputElement | null;
+          if (emailInput && !emailInput.reportValidity()) return;
+          purgeDialog.showModal();
+        });
+        purgeCancel?.addEventListener("click", () => purgeDialog.close());
+      }
+    </script>
   </AdminLayout>
 ) : (
   <AdminLayout
