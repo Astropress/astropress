@@ -315,62 +315,18 @@ export interface CmsConfig {
   };
 }
 
-const CMS_CONFIG_KEY = Symbol.for("astropress.cms-config");
+import { setStoreConfig, getCmsConfigOrThrow, peekCmsConfig as _peekStore } from "./config-store.js";
 
-type AstropressGlobalWithConfig = typeof globalThis & {
-  [CMS_CONFIG_KEY]?: CmsConfig | null;
-};
-
-function getConfigStore(): AstropressGlobalWithConfig {
-  return globalThis as AstropressGlobalWithConfig;
-}
-
-/**
- * Register the astropress configuration for this host application.
- *
- * Call once at startup — typically in `src/middleware.ts` or imported by the
- * admin layout — before any other astropress function is invoked.
- *
- * @example
- * ```ts
- * // src/site/cms-registration.ts
- * import { registerCms } from "@astropress-diy/astropress";
- * import seedPages from "../content/pages.json";
- *
- * registerCms({
- *   siteUrl: "https://example.com",
- *   templateKeys: ["home", "about", "content"],
- *   seedPages,
- *   archives: [],
- *   translationStatus: [],
- * });
- * ```
- */
 export function registerCms(config: CmsConfig): void {
-  getConfigStore()[CMS_CONFIG_KEY] = config;
+  setStoreConfig(config);
 }
 
-/**
- * Retrieve the registered astropress configuration.
- *
- * Throws if `registerCms()` has not been called yet.
- *
- * @example
- * ```ts
- * import { getCmsConfig } from "@astropress-diy/astropress";
- * const { siteUrl } = getCmsConfig();
- * ```
- */
 export function getCmsConfig(): CmsConfig {
-  const config = getConfigStore()[CMS_CONFIG_KEY] ?? null;
-  if (!config) {
-    throw new Error("Astropress not initialized — call registerCms() before using astropress.");
-  }
-  return config;
+  return getCmsConfigOrThrow();
 }
 
 export function peekCmsConfig(): CmsConfig | null {
-  return getConfigStore()[CMS_CONFIG_KEY] ?? null;
+  return _peekStore();
 }
 
 // ─── Plugin dispatch — extracted to plugin-dispatch.ts ───────────────────────

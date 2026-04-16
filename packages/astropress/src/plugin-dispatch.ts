@@ -1,7 +1,7 @@
 // ─── Plugin Dispatch ──────────────────────────────────────────────────────────
 // Extracted from config.ts to keep that file under the 400-line limit.
 
-import { peekCmsConfig } from "./config";
+import { peekCmsConfig } from "./config-store";
 import type { AstropressContentEvent, AstropressMediaEvent } from "./cms-plugins";
 
 /**
