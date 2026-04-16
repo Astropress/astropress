@@ -17,3 +17,8 @@ Feature: Admin panel navigation and route ownership
     Given a host project installs AstroPress from a local file path
     When the developer visits /ap-admin
     Then the full admin route inventory is available identical to a production install
+
+  Scenario: All admin panel routes are reachable without source-level import aliases
+    Given the astropress package is configured without monorepo Vite aliases
+    When the dev server starts and every /ap-admin route is requested
+    Then every route returns HTTP 200 and has stylesheets loaded

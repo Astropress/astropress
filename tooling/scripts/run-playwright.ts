@@ -48,11 +48,19 @@ async function waitForServer(url: string, timeoutMs = 120_000) {
 }
 
 async function warmRoutes(baseUrl: string, paths: string[]) {
+  const failures: string[] = [];
   for (const path of paths) {
+    // Follow redirects (some admin routes redirect for feature-gating reasons).
     const response = await fetch(`${baseUrl}${path}`);
     if (!response.ok) {
-      throw new Error(`Failed warming ${baseUrl}${path}: ${response.status}`);
+      failures.push(`${path}: HTTP ${response.status}`);
     }
+  }
+  if (failures.length > 0) {
+    throw new Error(
+      `Route warming failed — ${failures.length} route(s) did not return OK:\n` +
+      failures.map((f) => `  - ${f}`).join("\n"),
+    );
   }
 }
 
@@ -171,11 +179,34 @@ async function main() {
       servers.push(harnessServer);
       process.env.PLAYWRIGHT_ADMIN_BASE_URL = `http://127.0.0.1:${adminPort}`;
       await waitForServer(`${process.env.PLAYWRIGHT_ADMIN_BASE_URL}/ap-admin`);
+      // Warm all static admin routes before Playwright tests run so that first-visit
+      // latency doesn't cause flaky timeouts. Feature-gated routes (cms, fundraising,
+      // host) redirect to /ap-admin when not configured — that's expected and OK.
       await warmRoutes(process.env.PLAYWRIGHT_ADMIN_BASE_URL, [
         "/ap-admin",
         "/ap-admin/posts",
+        "/ap-admin/posts/new",
+        "/ap-admin/pages",
         "/ap-admin/comments",
         "/ap-admin/redirects",
+        "/ap-admin/users",
+        "/ap-admin/media",
+        "/ap-admin/archives",
+        "/ap-admin/authors",
+        "/ap-admin/taxonomies",
+        "/ap-admin/seo",
+        "/ap-admin/settings",
+        "/ap-admin/services",
+        "/ap-admin/system",
+        "/ap-admin/api-tokens",
+        "/ap-admin/translations",
+        "/ap-admin/route-pages",
+        "/ap-admin/webhooks",
+        "/ap-admin/cms",
+        "/ap-admin/fundraising",
+        "/ap-admin/host",
+        "/ap-admin/login",
+        "/ap-admin/reset-password",
       ]);
     }
 
