@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 
-import { expectNoAxeViolations, expectStylesheetsLoaded } from "./helpers/accessibility";
+import { expectNoAxeViolations, expectNoDoubleTitleSuffix, expectStylesheetsLoaded } from "./helpers/accessibility";
 
 // Routes that were previously uncovered (73% of admin routes had zero Playwright
 // coverage). Each test navigates to the route, verifies the primary heading renders,
@@ -36,6 +36,9 @@ test.describe("Feature: admin panel smoke coverage — all static routes load wi
 
       // CSS loaded — guards against CSP blocking inline styles or missing stylesheet link.
       await expectStylesheetsLoaded(page);
+
+      // Title not double-suffixed — guards against composition boundary bug.
+      await expectNoDoubleTitleSuffix(page);
 
       // Axe clean — no WCAG regressions.
       await expectNoAxeViolations(page);

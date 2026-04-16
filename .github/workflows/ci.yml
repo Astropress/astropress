@@ -47,6 +47,14 @@ jobs:
       - run: bun run audit:bdd-wiring
       - run: bun run audit:no-stub-tests
       - run: bun run audit:evaluation-integrity
+      - run: bun run audit:observability
+      - run: bun run audit:api-design
+      - run: bun run audit:ai-drivability
+      - run: bun run audit:i18n
+      - run: bun run audit:content-modeling
+      - run: bun run audit:collaboration
+      - run: bun run audit:oss-health
+      - run: bun run audit:scaffold-quality
       - run: bun run docs:api:check
       - run: bun run docs:check
       - run: bun run repo:clean
