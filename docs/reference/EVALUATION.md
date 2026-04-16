@@ -64,6 +64,10 @@ Grade scale: `A+ / A / B / C / D / F`
 | 54 | Test Artifact Cleanup | | `repo:clean` (`assert-clean-worktree.ts`) runs at end of every CI job; Rust uses `TestDir` RAII |
 | 55 | Minimalism | | `audit:arch` enforces per-file LOC limits; `audit:dead-exports` passes (CI-enforced: all runtime exports have consumers — no orphaned exports) |
 | 56 | Verified Providers / No Speculative Features | | `audit:providers` passes (CI-enforced); `AGENTS.md` no-speculative-features rule |
+| 57 | User-Facing Visual Integrity | | `audit:security-policy-integrity` passes (CI-enforced: no hardcoded CSP booleans); Playwright `expectStylesheetsLoaded` on all admin routes |
+| 58 | Composition Boundary Hygiene | | `audit:title-composition` passes (CI-enforced: no pre-formatted title props across all pages and examples) |
+| 59 | User-Facing Route Coverage | | `audit:user-facing-route-coverage` passes (CI-enforced: zero uncovered static routes per surface — admin, public) |
+| 60 | Consumer-Safe Packaging | | `audit:consumer-packaging` passes (CI-enforced: no bare imports); `test:consumer-smoke` and `test:tarball-smoke` verify all routes return HTTP 200 from npm install |
 
 ## Known gaps
 
@@ -71,6 +75,7 @@ Grade scale: `A+ / A / B / C / D / F`
 - **Rubric 56:** The fictional "Runway" provider was removed in 2026-04-14 after being identified as a hallucinated entry — `audit:providers` now enforces that all provider IDs are verified against `tooling/verified-providers.json`
 - **Rubric 46–52:** UX rubrics added 2026-04-12 — no independent user research or usability testing has been conducted
 - **Rubric 53:** Windows, macOS, and Linux now have CI smoke coverage and shell parity, but BSD remains best-effort rather than verified support
+- **Rubrics 57–60:** Added 2026-04-16 after PR 26 exposed four independent bug classes across 33+ admin pages — audits are CI-enforced but visual regression testing (screenshot diff) is not yet in place
 
 ## Grade changes
 
@@ -395,3 +400,97 @@ The root cause is that language models fill gaps with plausible-sounding complet
 - No adapter file exists without a corresponding verified-providers entry
 - The AGENTS.md no-speculative-features rule is present and up to date
 - Zero hallucinated providers or integrations in the git history since this rubric was introduced
+
+---
+
+## Rubric 57 — User-Facing Visual Integrity
+
+Measures whether security policies (CSP, CORS, etc.) are configured so that user-facing pages render correctly in every environment — production builds, dev mode, and npm-consumer installs — without relaxing security in production.
+
+### Why this rubric exists
+
+The PR 26 bug chain started with `allowInlineStyles: true` hardcoded in AdminLayout.astro, which weakened production CSP for all admin pages. Separately, the security middleware entrypoint omitted the flag entirely, which blocked Vite's inline `<style>` injection in dev mode — producing an unstyled login page that passed all DOM-based tests but was visually broken.
+
+The root cause is that security-policy flags have a dev/prod split that must be expressed as `import.meta.env.DEV`, never as a literal boolean. Hardcoding `true` weakens production; hardcoding `false` breaks development.
+
+### Criteria
+
+- No hardcoded `allowInlineStyles: true` or `false` outside of type definitions and tests — `audit:security-policy-integrity` passes
+- Every user-facing Playwright spec asserts `expectStylesheetsLoaded(page)` — CSS actually renders, not just DOM presence
+- Security middleware entrypoints use `import.meta.env.DEV` for all environment-dependent policy relaxations
+- The same page must pass both a dev-mode visual check (Playwright with Vite) and a production CSP audit
+
+### What would improve this
+
+- Automated visual regression tests (screenshot diff) on key pages across dev and production modes
+- CSP-Report-Only monitoring in staging to catch policy violations before they break users
+
+---
+
+## Rubric 58 — Composition Boundary Hygiene
+
+Measures whether components that format or wrap values receive raw inputs, not pre-formatted ones — preventing double-application of formatting, suffixes, or transformations.
+
+### Why this rubric exists
+
+33 admin pages passed `title="Dashboard | Astropress Admin"` to `<AdminLayout>`, which internally calls `buildAstropressAdminDocumentTitle(title)` to append `" | Astropress Admin"`. The result was `"Dashboard | Astropress Admin | Astropress Admin"` in every browser tab. The bug persisted undetected because no test inspected the actual `<title>` content.
+
+This is a general pattern: whenever a parent component applies formatting (title suffix, breadcrumb prefix, meta tag wrapper), the child must pass the raw value. The audit must cover all layout components and all page types — admin, public, and examples.
+
+### Criteria
+
+- No `.astro` page passes a `title=` prop containing a brand/site suffix — `audit:title-composition` passes
+- No non-layout page has a hardcoded `<title>` tag with a brand suffix
+- Layout components are the single source of truth for document title formatting
+- The audit covers packages/astropress/pages/, packages/astropress/components/, and examples/
+
+### What would improve this
+
+- Playwright assertion on `document.title` in key routes to verify the formatted output is correct (not just that the input is raw)
+- TypeScript branded type for raw titles (e.g. `RawPageTitle`) that prevents passing a formatted string at compile time
+
+---
+
+## Rubric 59 — User-Facing Route Coverage
+
+Measures whether every static route that renders HTML to a user has at least one automated test that visits it, verifies it returns HTTP 200, and checks its primary content.
+
+### Why this rubric exists
+
+Before PR 26, 73% of admin routes had zero Playwright or smoke-test coverage. Bugs affecting title formatting, CSP, and import resolution went undetected across dozens of pages because no test ever navigated to them. The admin route coverage audit caught this for `/ap-admin/` routes, but the same gap can occur on public pages, auth flows, and example sites.
+
+### Criteria
+
+- Every static admin route is covered by Playwright or HTTP smoke test — `audit:admin-route-coverage` passes
+- Every static public route (example site) is covered by Playwright — `audit:user-facing-route-coverage` passes
+- Zero uncovered static routes allowed on any surface
+- Dynamic routes (containing `[param]`) are excluded from mandatory coverage but should have representative instances in smoke tests
+
+### What would improve this
+
+- Automatic route discovery from the Astro build manifest (instead of .astro file walking) to catch programmatic routes
+- Per-route assertion that the page's `<h1>` matches its intended heading (catches silent redirects and 500-to-fallback scenarios)
+
+---
+
+## Rubric 60 — Consumer-Safe Packaging
+
+Measures whether the package works correctly when installed from npm (not just within the monorepo workspace), and whether all published source files use import paths that resolve outside the workspace.
+
+### Why this rubric exists
+
+Admin pages used `from "astropress/..."` (bare imports) which resolved correctly in the monorepo via Vite aliases, but broke with a 500 error for real npm consumers. Vite 7's module runner does not invoke `resolveId` plugins for bare specifiers imported from within `node_modules`, so the published pages must use the scoped package name `@astropress-diy/astropress/...` directly.
+
+This class of bug is invisible to workspace-based tests. The only way to catch it is to test the actual packaged artifact.
+
+### Criteria
+
+- No bare `from "astropress/"` imports in published pages or components — `audit:consumer-packaging` passes
+- `test:consumer-smoke` boots the npm-consumer-smoke example and asserts HTTP 200 on all admin routes
+- `test:tarball-smoke` packs the tarball, installs it in a fresh project, and verifies all routes
+- Package exports map in `package.json` covers all public entry points (components, subpath exports)
+
+### What would improve this
+
+- Automated `npm pack --dry-run` size check to catch accidentally bundled dev dependencies
+- Import-map verification: parse every published `.astro` file's imports and verify each resolves against the package exports map

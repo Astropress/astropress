@@ -1,8 +1,8 @@
 ---
 title: Quality evaluation
 description: >-
-  56-rubric quality assessment covering architecture, security, accessibility,
-  UX, cross-platform support, and provider verification — updated 2026-04-14.
+  60-rubric quality assessment covering architecture, security, accessibility,
+  UX, cross-platform support, consumer packaging, and provider verification — updated 2026-04-16.
 ---
 
 **Baseline (as of 2026-04-14, updated):** 1650+ Vitest tests · 170 Rust CLI tests · 10 Playwright specs across 70 acceptance checks · 359 BDD scenarios · security audit clean
@@ -67,6 +67,10 @@ description: >-
 | 54 | Test Artifact Cleanup | A+ |
 | 55 | Minimalism | A |
 | 56 | Verified Providers / No Speculative Features | A+ |
+| 57 | User-Facing Visual Integrity | A |
+| 58 | Composition Boundary Hygiene | A |
+| 59 | User-Facing Route Coverage | A+ |
+| 60 | Consumer-Safe Packaging | A |
 
 ## Key gaps
 
@@ -74,6 +78,7 @@ description: >-
 - **Rubric 56 (A+):** The fictional "Runway" provider was removed 2026-04-14; `audit:providers` now enforces all provider IDs are verified against `tooling/verified-providers.json`
 - **Rubric 46–52:** UX rubrics added 2026-04-12 — A grades are engineering-observed baselines; no independent user research or usability testing has been conducted
 - **Rubric 53:** Windows, macOS, and Linux now have CI smoke coverage and shell parity, but BSD remains best-effort rather than verified support
+- **Rubrics 57–60:** Added 2026-04-16 after PR 26 exposed four independent bug classes across 33+ admin pages — audits are CI-enforced but visual regression testing is not yet in place
 
 ## Grade changes (2026-04-14 audit)
 
