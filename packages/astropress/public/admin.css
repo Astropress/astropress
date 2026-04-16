@@ -938,6 +938,78 @@ html[data-theme="dark"] ap-notice[type="error"] {
   font-size: 0.9rem;
 }
 
+/* ── Shared confirm dialog styles ──────────────────────────────────────────
+ * Used by <ap-confirm-dialog> on redirects, comments, authors, taxonomies,
+ * media, webhooks, api-tokens, users, and subscribers pages. */
+.confirm-modal {
+  border: none;
+  border-radius: 1rem;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  max-width: 400px;
+  padding: 0;
+  backdrop-filter: blur(4px);
+}
+.confirm-modal::backdrop {
+  background: rgba(0, 0, 0, 0.5);
+}
+.modal-content {
+  padding: 1.75rem;
+}
+.modal-content h2 {
+  margin: 0 0 1rem;
+  font-size: 1.25rem;
+  color: var(--text);
+}
+.modal-content p {
+  margin: 0 0 0.75rem;
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+.modal-content p:last-of-type {
+  margin-bottom: 1.5rem;
+}
+.dialog-context {
+  background: var(--bg);
+  padding: 0.75rem;
+  border-radius: 0.6rem;
+  font-family: "Monaco", monospace;
+  font-size: 0.85rem;
+  color: var(--text);
+  word-break: break-all;
+}
+.dialog-warning {
+  color: var(--danger);
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+.modal-actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+}
+.modal-actions .secondary-button {
+  padding: 0;
+}
+.modal-actions .secondary-button:hover {
+  background: var(--accent-soft);
+}
+
+/* ── Shared breadcrumb navigation ─────────────────────────────────────────
+ * Used by subscriber detail, import source, post/archive/route-page editors. */
+.breadcrumb {
+  font-size: 0.875rem;
+  color: var(--text-muted, #374151);
+  margin-bottom: 1.5rem;
+}
+.breadcrumb a {
+  color: var(--accent, #6366f1);
+  text-decoration: none;
+}
+.breadcrumb a:hover {
+  text-decoration: underline;
+}
+
 /* ── Dialog entrance / exit ────────────────────────────────────────────────
  * Uses @starting-style (Chrome 117+, Firefox 129+, Safari 17.5+) to animate
  * <dialog> elements in and out without JavaScript. The allow-discrete keyword

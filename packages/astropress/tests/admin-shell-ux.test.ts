@@ -31,4 +31,16 @@ describe("admin shell ux invariants", () => {
     expect(importPage).toContain('<nav class="breadcrumb" aria-label="breadcrumb">');
     expect(subscriberPage).toContain('<nav class="breadcrumb" aria-label="breadcrumb">');
   });
+
+  it("ships shared confirm-dialog styles in admin.css", () => {
+    expect(adminCss).toContain(".confirm-modal");
+    expect(adminCss).toContain(".modal-content");
+    expect(adminCss).toContain(".modal-actions");
+    expect(adminCss).toContain(".dialog-warning");
+  });
+
+  it("ships shared breadcrumb styles in admin.css", () => {
+    expect(adminCss).toContain(".breadcrumb");
+    expect(adminCss).toContain(".breadcrumb a");
+  });
 });
