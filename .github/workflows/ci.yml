@@ -42,6 +42,7 @@ jobs:
       - run: bun run audit:dead-exports
       - run: bun run audit:bdd-wiring
       - run: bun run audit:no-stub-tests
+      - run: bun run audit:evaluation-integrity
       - run: bun run docs:api:check
       - run: bun run docs:check
       - run: bun run repo:clean

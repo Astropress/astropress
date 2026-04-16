@@ -68,6 +68,7 @@ Grade scale: `A+ / A / B / C / D / F`
 | 58 | Composition Boundary Hygiene | | `audit:title-composition` passes (CI-enforced: no pre-formatted title props across all pages and examples) |
 | 59 | User-Facing Route Coverage | | `audit:user-facing-route-coverage` passes (CI-enforced: zero uncovered static routes per surface — admin, public) |
 | 60 | Consumer-Safe Packaging | | `audit:consumer-packaging` passes (CI-enforced: no bare imports); `test:consumer-smoke` and `test:tarball-smoke` verify all routes return HTTP 200 from npm install |
+| 61 | Meta-Evaluation | | `audit:evaluation-integrity` passes (CI-enforced: all referenced audits exist, CI-enforced claims verified, rubric count parity, self-assessed ratio tracked) |
 
 ## Known gaps
 
@@ -494,3 +495,42 @@ This class of bug is invisible to workspace-based tests. The only way to catch i
 
 - Automated `npm pack --dry-run` size check to catch accidentally bundled dev dependencies
 - Import-map verification: parse every published `.astro` file's imports and verify each resolves against the package exports map
+
+---
+
+## Rubric 61 — Meta-Evaluation
+
+Measures whether the evaluation framework itself is trustworthy: are the claims machine-verified, are the audits real, and can the framework detect its own decay?
+
+### Why this rubric exists
+
+An evaluation framework that can't verify its own integrity is theater. Specific failure modes:
+
+- **Phantom audits:** EVALUATION.md references an audit script but the script was deleted or renamed — the rubric silently claims coverage it doesn't have.
+- **CI lip service:** A rubric says "CI-enforced" but the audit never appears in `ci.yml` — it only runs if someone remembers to invoke it locally.
+- **Stale grades:** The public docs site shows different rubric counts or grades than the reference EVALUATION.md — consumers see a different evaluation than contributors.
+- **Self-assessment creep:** More rubrics become "self-assessed" over time, eroding the automated backing ratio without anyone noticing.
+
+### Evidence
+
+- `bun run audit:evaluation-integrity` (CI-enforced) verifies:
+  1. Every `audit:*` script referenced in EVALUATION.md exists in `package.json`
+  2. Every `audit:*` script in `package.json` points to a file that exists on disk
+  3. Every audit claimed as "CI-enforced" actually appears in `ci.yml`
+  4. Self-assessed rubrics are counted and surfaced as warnings
+  5. Rubric count in `evaluation.mdx` (docs site) matches `EVALUATION.md` (reference)
+  6. No rubric has an empty evidence column without a self-assessed marker
+
+### Criteria
+
+- Zero phantom audits (referenced scripts that don't exist)
+- Zero false CI-enforced claims (audits not in `ci.yml`)
+- Zero rubrics with no evidence and no self-assessed declaration
+- Rubric count parity between reference doc and public docs site
+- Self-assessed ratio is tracked and reported (not required to be zero, but regression is visible)
+
+### What would improve this
+
+- Mutation testing on audit scripts (inject known violations, verify the audit catches them)
+- Automated grade reconciliation between EVALUATION.md and evaluation.mdx
+- A "coverage of coverage" metric: what fraction of the codebase's user-facing behavior is addressable by at least one rubric
