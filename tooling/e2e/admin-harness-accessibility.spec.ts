@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 
-import { expectKeyboardFocusMoves, expectNoAxeViolations, expectStylesheetsLoaded } from "./helpers/accessibility";
+import { expectKeyboardFocusMoves, expectNoAxeViolations, expectNoDoubleTitleSuffix, expectStylesheetsLoaded } from "./helpers/accessibility";
 
 const routes = [
   { path: "/ap-admin", heading: "Dashboard" },
@@ -20,6 +20,7 @@ test.describe("Feature: package-owned admin accessibility coverage", () => {
       // Regression guard: CSP must not block stylesheets (e.g. allowInlineStyles omitted
       // from middleware causes unstyled login/auth pages in dev mode).
       await expectStylesheetsLoaded(page);
+      await expectNoDoubleTitleSuffix(page);
       await expectKeyboardFocusMoves(page);
       await expectNoAxeViolations(page);
     });

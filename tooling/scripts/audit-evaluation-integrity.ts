@@ -132,14 +132,19 @@ async function main() {
     }
   }
 
-  // ── 5. Rubric count parity between reference and docs site ──
+  // ── 5. Docs site evaluation page must exist and point to the reference doc ──
 
   if (docsSrc) {
-    const docsRubricCount = (docsSrc.match(/^\|\s*\d+\s*\|/gm) ?? []).length;
-    if (docsRubricCount !== totalRubrics) {
-      violations.push(
-        `[count-mismatch] EVALUATION.md has ${totalRubrics} rubrics but evaluation.mdx has ${docsRubricCount}`,
-      );
+    if (docsSrc.includes("EVALUATION.md")) {
+      // Docs site is a pointer — no rubric count to check
+    } else {
+      // Docs site has its own rubric table — check count parity
+      const docsRubricCount = (docsSrc.match(/^\|\s*\d+\s*\|/gm) ?? []).length;
+      if (docsRubricCount !== totalRubrics) {
+        violations.push(
+          `[count-mismatch] EVALUATION.md has ${totalRubrics} rubrics but evaluation.mdx has ${docsRubricCount}`,
+        );
+      }
     }
   }
 

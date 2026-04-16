@@ -23,6 +23,28 @@ export async function expectStylesheetsLoaded(page: Page): Promise<void> {
   expect(loaded, "Page has no loaded stylesheets — CSS may be blocked by CSP or a link tag is missing").toBe(true);
 }
 
+/**
+ * Asserts that document.title does not contain a double brand suffix.
+ * Catches the composition boundary bug where a page passes a pre-formatted title
+ * to a layout component that appends the suffix again.
+ */
+export async function expectNoDoubleTitleSuffix(page: Page): Promise<void> {
+  const title = await page.title();
+  const separators = ["|", "—", "–", "-"];
+  for (const sep of separators) {
+    const parts = title.split(sep).map((s) => s.trim().toLowerCase());
+    const seen = new Set<string>();
+    for (const part of parts) {
+      if (part && seen.has(part)) {
+        throw new Error(
+          `document.title has duplicate segment "${part}" — likely a double-suffix bug. Full title: "${title}"`,
+        );
+      }
+      seen.add(part);
+    }
+  }
+}
+
 export async function expectNoAxeViolations(page: Page, options?: { ignoreRules?: string[] }) {
   const ignoreRules = new Set(options?.ignoreRules ?? []);
   const results = await new AxeBuilder({ page })
