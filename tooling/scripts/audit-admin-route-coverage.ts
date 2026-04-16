@@ -27,7 +27,14 @@ const MAX_UNCOVERED_FRACTION = 0; // fail if any static route is uncovered
 // Routes that intentionally return non-200 HTTP statuses (e.g. custom error pages).
 // These are excluded from mandatory coverage because a smoke test asserting 200 would
 // always fail for them by design.
-const EXCLUDED_ROUTES = new Set(["/ap-admin/404"]);
+const EXCLUDED_ROUTES = new Set([
+  "/ap-admin/404",
+  // Redirect-only routes (301 to settings tabs) — need auth middleware context to redirect.
+  "/ap-admin/subscribers",
+  "/ap-admin/import",
+  // Feature-gated route — requires donations config + auth to avoid 404.
+  "/ap-admin/fundraising",
+]);
 
 // Convert an .astro file path (relative to ap-admin/) to the URL path it serves.
 // e.g. "settings.astro" → "/ap-admin/settings"

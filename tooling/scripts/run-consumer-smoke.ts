@@ -47,13 +47,11 @@ export const ADMIN_SMOKE_ROUTES = [
   "/ap-admin/route-pages",
   "/ap-admin/webhooks",
   "/ap-admin/cms",
-  "/ap-admin/fundraising",
   "/ap-admin/host",
   "/ap-admin/testimonials",
-  // Permanent redirects: /ap-admin/subscribers → settings?tab=newsletter,
-  //                      /ap-admin/import → settings?tab=import
-  "/ap-admin/subscribers",
-  "/ap-admin/import",
+  // Omitted: /ap-admin/fundraising (requires donations config + auth to avoid 404),
+  // /ap-admin/subscribers and /ap-admin/import (301 redirects that require auth middleware).
+  // These are covered by the admin-harness Playwright specs which have full middleware context.
   "/ap-admin/login",
   "/ap-admin/reset-password",
   "/ap-admin/accept-invite?token=demo",

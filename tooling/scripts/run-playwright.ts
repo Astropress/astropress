@@ -203,7 +203,6 @@ async function main() {
         "/ap-admin/route-pages",
         "/ap-admin/webhooks",
         "/ap-admin/cms",
-        "/ap-admin/fundraising",
         "/ap-admin/host",
         "/ap-admin/login",
         "/ap-admin/reset-password",

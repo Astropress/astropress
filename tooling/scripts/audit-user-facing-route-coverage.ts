@@ -41,7 +41,12 @@ const SURFACES: RouteSurface[] = [
     name: "admin",
     pagesDir: join(root, "packages/astropress/pages/ap-admin"),
     routePrefix: "/ap-admin",
-    excludedRoutes: new Set(["/ap-admin/404"]),
+    excludedRoutes: new Set([
+      "/ap-admin/404",
+      "/ap-admin/subscribers",  // 301 redirect, needs auth middleware
+      "/ap-admin/import",       // 301 redirect, needs auth middleware
+      "/ap-admin/fundraising",  // feature-gated, needs donations config + auth
+    ]),
   },
   {
     name: "public (github-pages example)",
