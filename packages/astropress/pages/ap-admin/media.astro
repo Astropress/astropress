@@ -73,6 +73,9 @@ const errorMessage = Astro.url.searchParams.get("error") === "1" ? Astro.url.sea
       </div>
     </div>
     <div class="media-grid">
+      {mediaWithResolvedUrls.length === 0 && (
+        <p class="admin-empty-state">No media assets yet. Use the upload form above to add images.</p>
+      )}
       {mediaWithResolvedUrls.map((asset: any) => (
         <div class="media-card">
           <img src={asset.resolvedUrl} alt={asset.altText || asset.title || asset.id} loading="lazy" />

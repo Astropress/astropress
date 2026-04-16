@@ -54,6 +54,9 @@ const errorMessage = Astro.url.searchParams.get("error") === "1" ? Astro.url.sea
           </tr>
         </thead>
         <tbody>
+          {comments.length === 0 && (
+            <tr><td colspan="5" class="admin-empty-state">No comments to moderate. Comments will appear here when visitors leave them on your posts.</td></tr>
+          )}
           {comments.map((comment) => (
             <tr>
               <td>{comment.author}</td>
