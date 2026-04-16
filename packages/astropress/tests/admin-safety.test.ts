@@ -74,6 +74,48 @@ describe("admin markup safety", () => {
 });
 
 // ---------------------------------------------------------------------------
+// destructive actions use confirm dialogs
+// ---------------------------------------------------------------------------
+
+describe("destructive actions use confirm dialogs", () => {
+  it("authors page uses ap-confirm-dialog for deletion", () => {
+    const src = readFileSync(path.join(adminPagesRoot, "authors.astro"), "utf8");
+    expect(src).toContain("ap-confirm-dialog");
+    expect(src).toContain("data-confirm-trigger");
+    expect(src).toContain('id="confirm-delete-author"');
+  });
+
+  it("taxonomies page uses ap-confirm-dialog for category and tag deletion", () => {
+    const src = readFileSync(path.join(adminPagesRoot, "taxonomies.astro"), "utf8");
+    expect(src).toContain("ap-confirm-dialog");
+    expect(src).toContain("data-confirm-trigger");
+    expect(src).toContain('id="confirm-delete-category"');
+    expect(src).toContain('id="confirm-delete-tag"');
+  });
+
+  it("media page uses ap-confirm-dialog for deletion", () => {
+    const src = readFileSync(path.join(adminPagesRoot, "media.astro"), "utf8");
+    expect(src).toContain("ap-confirm-dialog");
+    expect(src).toContain("data-confirm-trigger");
+    expect(src).toContain('id="confirm-delete-media"');
+  });
+
+  it("webhooks page uses ap-confirm-dialog for deletion", () => {
+    const src = readFileSync(path.join(adminPagesRoot, "webhooks.astro"), "utf8");
+    expect(src).toContain("ap-confirm-dialog");
+    expect(src).toContain("data-confirm-trigger");
+    expect(src).toContain('id="confirm-delete-webhook"');
+  });
+
+  it("api-tokens page uses ap-confirm-dialog for revocation", () => {
+    const src = readFileSync(path.join(adminPagesRoot, "api-tokens.astro"), "utf8");
+    expect(src).toContain("ap-confirm-dialog");
+    expect(src).toContain("data-confirm-trigger");
+    expect(src).toContain('id="confirm-revoke-token"');
+  });
+});
+
+// ---------------------------------------------------------------------------
 // ap-stale-tab-warning BroadcastChannel logic
 // ---------------------------------------------------------------------------
 
