@@ -93,7 +93,8 @@
   "overrides": {
     "yaml": "^2.8.3",
     "vite": "^7.3.2",
-    "astro": "^5.0.0"
+    "astro": "^5.0.0",
+    "hono": "^4.12.14"
   },
   "browserslist": [
     "Chrome >= 108",
