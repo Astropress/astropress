@@ -30,6 +30,13 @@ describe("admin shell ux invariants", () => {
   it("renders breadcrumbs on deep admin pages", () => {
     expect(importPage).toContain('<nav class="breadcrumb" aria-label="breadcrumb">');
     expect(subscriberPage).toContain('<nav class="breadcrumb" aria-label="breadcrumb">');
+
+    const postEditor = readFileSync(path.join(root, "pages", "ap-admin", "posts", "[slug].astro"), "utf8");
+    const archiveEditor = readFileSync(path.join(root, "pages", "ap-admin", "archives", "[...slug].astro"), "utf8");
+    const routePageEditor = readFileSync(path.join(root, "pages", "ap-admin", "route-pages", "[...slug].astro"), "utf8");
+    expect(postEditor).toContain('<nav class="breadcrumb" aria-label="breadcrumb">');
+    expect(archiveEditor).toContain('<nav class="breadcrumb" aria-label="breadcrumb">');
+    expect(routePageEditor).toContain('<nav class="breadcrumb" aria-label="breadcrumb">');
   });
 
   it("ships shared confirm-dialog styles in admin.css", () => {
