@@ -123,4 +123,24 @@ describe("createAstropressSecurityMiddleware", () => {
     // API area: Cache-Control must be no-store
     expect(response.headers.get("cache-control")).toBe("private, no-store");
   });
+
+  // Regression: /ap-admin/login is classified as "auth", which previously received
+  // style-src 'self' (no unsafe-inline). In Vite dev mode Astro injects inline
+  // <style> blocks, so the middleware must opt into allowInlineStyles: DEV to
+  // avoid an unstyled login page during development.
+  it("auth-area routes do NOT include unsafe-inline in style-src by default", async () => {
+    const middleware = createAstropressSecurityMiddleware();
+    const response = await middleware({ url: new URL("http://localhost/ap-admin/login") }, makeNext());
+    const csp = response.headers.get("content-security-policy") ?? "";
+    expect(csp).toContain("style-src 'self'");
+    expect(csp).not.toContain("'unsafe-inline'");
+  });
+
+  it("auth-area routes include unsafe-inline in style-src when allowInlineStyles is true", async () => {
+    const middleware = createAstropressSecurityMiddleware({ allowInlineStyles: true });
+    const loginResponse = await middleware({ url: new URL("http://localhost/ap-admin/login") }, makeNext());
+    const resetResponse = await middleware({ url: new URL("http://localhost/ap-admin/reset-password") }, makeNext());
+    expect(loginResponse.headers.get("content-security-policy")).toContain("'unsafe-inline'");
+    expect(resetResponse.headers.get("content-security-policy")).toContain("'unsafe-inline'");
+  });
 });
