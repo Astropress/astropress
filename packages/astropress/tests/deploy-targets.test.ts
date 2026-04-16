@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -13,10 +13,10 @@ import { prepareAstropressDeployment } from "../src/deploy/shared";
 import { createAstropressVercelDeployTarget } from "../src/deploy/vercel";
 
 // ---------------------------------------------------------------------------
-// Helpers
+// Helpers — each test gets its own temp directory to avoid cleanup races
 // ---------------------------------------------------------------------------
 
-const testRoot = join(tmpdir(), "astropress-deploy-test");
+let testRoot: string;
 
 function makeBuildDir(name: string): string {
   const dir = join(testRoot, name);
@@ -27,7 +27,7 @@ function makeBuildDir(name: string): string {
 }
 
 beforeEach(() => {
-  mkdirSync(testRoot, { recursive: true });
+  testRoot = mkdtempSync(join(tmpdir(), "astropress-deploy-test-"));
 });
 
 afterEach(() => {
