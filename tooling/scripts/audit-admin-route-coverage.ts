@@ -6,7 +6,7 @@
  *   - A page.goto() call in tooling/e2e/*.spec.ts (Playwright browser coverage), OR
  *   - An entry in ADMIN_SMOKE_ROUTES in tooling/scripts/run-consumer-smoke.ts (HTTP smoke)
  *
- * Fails if more than 10% of static admin routes have zero coverage in both sources.
+ * Fails if any static admin route has zero coverage in both sources.
  * This prevents the 73% coverage gap that existed before this audit was introduced.
  *
  * Dynamic route files (containing [param] or [...param]) are excluded from mandatory
@@ -22,7 +22,7 @@ const ADMIN_PAGES_DIR = join(root, "packages/astropress/pages/ap-admin");
 const E2E_DIR = join(root, "tooling/e2e");
 const SMOKE_SCRIPT = join(root, "tooling/scripts/run-consumer-smoke.ts");
 
-const MAX_UNCOVERED_FRACTION = 0.10; // fail if >10% of static routes are uncovered
+const MAX_UNCOVERED_FRACTION = 0; // fail if any static route is uncovered
 
 // Routes that intentionally return non-200 HTTP statuses (e.g. custom error pages).
 // These are excluded from mandatory coverage because a smoke test asserting 200 would

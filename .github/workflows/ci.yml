@@ -129,6 +129,8 @@ jobs:
       - run: bun run test:consumer-smoke
       - run: bun run audit:consumer-packaging
       - run: bun run audit:admin-route-coverage
+      - run: bun run audit:title-composition
+      - run: bun run audit:security-policy-integrity
 
   # Packs the npm tarball, installs it in a fresh copy of npm-consumer-smoke, and
   # verifies every admin route. This is the publish-time safety net: catches bugs
@@ -164,6 +166,9 @@ jobs:
       - run: bun run test:admin-harness
       - run: bun run audit:consumer-packaging
       - run: bun run audit:admin-route-coverage
+      - run: bun run audit:title-composition
+      - run: bun run audit:security-policy-integrity
+      - run: bun run audit:user-facing-route-coverage
       - run: bun run bdd:lint
       - run: bun run bdd:test
       - run: cd packages/astropress-mcp && bun run build
