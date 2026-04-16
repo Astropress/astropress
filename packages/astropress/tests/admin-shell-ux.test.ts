@@ -16,6 +16,20 @@ describe("admin shell ux invariants", () => {
     expect(adminLayout).toContain("<kbd>Ctrl</kbd>+<kbd>K</kbd>");
   });
 
+  it("has collapsible utility panel with toggle button", () => {
+    expect(adminLayout).toContain('class="topbar-panel-toggle"');
+    expect(adminLayout).toContain('id="topbar-utility-panel"');
+    expect(adminLayout).toContain('aria-controls="topbar-utility-panel"');
+  });
+
+  it("theme toggle uses SVG icons instead of Unicode", () => {
+    const themeToggle = readFileSync(path.join(root, "web-components", "theme-toggle.ts"), "utf8");
+    expect(themeToggle).toContain("<svg");
+    expect(themeToggle).not.toContain('"\\u2600"');
+    expect(themeToggle).not.toContain('"☀"');
+    expect(themeToggle).not.toContain('"☾"');
+  });
+
   it("keeps reduced-motion handling in the shared stylesheet", () => {
     expect(adminCss).toContain("@media (prefers-reduced-motion: reduce)");
     expect(adminCss).toContain(".skeleton { animation: none;");

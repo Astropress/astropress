@@ -113,53 +113,59 @@ const navItems: NavItem[] = [
         </button>
         <span>{adminUi.labels.signedInAsPrefix} {userName}</span>
         <span class="role-chip">{role}</span>
-        <ap-theme-toggle label-dark={adminUi.labels.themeToggleDark} label-light={adminUi.labels.themeToggleLight}>
-          <button
-            type="button"
-            class="theme-toggle-admin"
-            id="admin-theme-toggle"
-            aria-pressed="false"
-            aria-label={adminUi.labels.themeToggleDark}
-            title={adminUi.labels.themeToggleDark}
-          >
-            <span class="theme-toggle-icon" aria-hidden="true"></span>
-          </button>
-        </ap-theme-toggle>
-        <select
-          class="locale-select"
-          aria-label={adminUi.labels.changeLanguage}
-          title={adminUi.labels.changeLanguage}
-          data-locale-select
-        >
-          <option value="en">English</option>
-          <option value="es">Español</option>
-          <option value="fr">Français</option>
-          <option value="de">Deutsch</option>
-          <option value="pt">Português</option>
-          <option value="ja">日本語</option>
-        </select>
-        <script>
-          {`(function () {
-            var sel = document.querySelector('[data-locale-select]');
-            if (!sel) return;
-            var stored = localStorage.getItem('ap-admin-locale') || 'en';
-            sel.value = stored;
-            document.documentElement.lang = stored;
-            sel.addEventListener('change', function () {
-              localStorage.setItem('ap-admin-locale', sel.value);
-              document.documentElement.lang = sel.value;
-            });
-          })();`}
-        </script>
         <button
           type="button"
-          class="help-popover-trigger"
-          popovertarget="admin-keyboard-shortcuts"
-          aria-label="Keyboard shortcuts"
-          title="Keyboard shortcuts"
+          class="topbar-panel-toggle"
+          aria-expanded="false"
+          aria-controls="topbar-utility-panel"
+          aria-label="Toggle utility panel"
         >
-          <span aria-hidden="true">?</span>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"></polyline></svg>
         </button>
+        <div id="topbar-utility-panel" class="topbar-utility-panel" hidden>
+          <ap-theme-toggle label-dark={adminUi.labels.themeToggleDark} label-light={adminUi.labels.themeToggleLight}>
+            <button
+              type="button"
+              class="topbar-utility-btn"
+              aria-pressed="false"
+              aria-label={adminUi.labels.themeToggleDark}
+              title={adminUi.labels.themeToggleDark}
+            >
+              <span class="theme-toggle-icon" aria-hidden="true"></span>
+            </button>
+          </ap-theme-toggle>
+          <button
+            type="button"
+            class="topbar-utility-btn"
+            aria-label={adminUi.labels.changeLanguage}
+            title={adminUi.labels.changeLanguage}
+            data-locale-toggle
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+          </button>
+          <select
+            class="locale-select"
+            aria-label={adminUi.labels.changeLanguage}
+            data-locale-select
+            hidden
+          >
+            <option value="en">English</option>
+            <option value="es">Español</option>
+            <option value="fr">Français</option>
+            <option value="de">Deutsch</option>
+            <option value="pt">Português</option>
+            <option value="ja">日本語</option>
+          </select>
+          <button
+            type="button"
+            class="topbar-utility-btn"
+            popovertarget="admin-keyboard-shortcuts"
+            aria-label="Keyboard shortcuts"
+            title="Keyboard shortcuts"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2" ry="2"></rect><path d="M6 8h.01M10 8h.01M14 8h.01M18 8h.01M8 12h.01M12 12h.01M16 12h.01M8 16h8"></path></svg>
+          </button>
+        </div>
         <div
           id="admin-keyboard-shortcuts"
           popover
@@ -183,6 +189,37 @@ const navItems: NavItem[] = [
         <form method="post" action="/ap-admin/session?logout=1">
           <button type="submit">{adminUi.labels.signOut}</button>
         </form>
+        <script>
+          {`(function () {
+            var toggle = document.querySelector('.topbar-panel-toggle');
+            var panel = document.getElementById('topbar-utility-panel');
+            if (!toggle || !panel) return;
+            toggle.addEventListener('click', function () {
+              var expanded = panel.hidden;
+              panel.hidden = !expanded;
+              toggle.setAttribute('aria-expanded', String(expanded));
+              toggle.style.transform = expanded ? 'rotate(180deg)' : '';
+            });
+
+            var sel = document.querySelector('[data-locale-select]');
+            if (!sel) return;
+            var stored = localStorage.getItem('ap-admin-locale') || 'en';
+            sel.value = stored;
+            document.documentElement.lang = stored;
+            sel.addEventListener('change', function () {
+              localStorage.setItem('ap-admin-locale', sel.value);
+              document.documentElement.lang = sel.value;
+            });
+
+            var localeBtn = document.querySelector('[data-locale-toggle]');
+            if (localeBtn && sel) {
+              localeBtn.addEventListener('click', function () {
+                sel.hidden = !sel.hidden;
+                if (!sel.hidden) sel.focus();
+              });
+            }
+          })();`}
+        </script>
       </div>
     </header>
     <ap-admin-nav>

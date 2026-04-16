@@ -155,35 +155,57 @@ body {
   background: #15803d;
 }
 
-.theme-toggle-admin {
+.topbar-panel-toggle {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 2.8rem;
-  height: 2.8rem;
+  width: 2.75rem;
+  height: 2.75rem;
   padding: 0;
-  background: rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.14);
   color: white;
+  border: 0;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: transform 200ms ease;
+}
+.topbar-panel-toggle:hover,
+.topbar-panel-toggle:focus-visible {
+  background: rgba(255, 255, 255, 0.24);
+}
+
+.topbar-utility-panel {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.topbar-utility-panel[hidden] {
+  display: none;
+}
+
+.topbar-utility-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  padding: 0;
+  background: rgba(255, 255, 255, 0.14);
+  color: white;
+  border: 0;
+  border-radius: 0.5rem;
+  cursor: pointer;
+}
+.topbar-utility-btn:hover,
+.topbar-utility-btn:focus-visible {
+  background: rgba(255, 255, 255, 0.24);
 }
 
 .theme-toggle-icon {
-  font-size: 1.35rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   line-height: 1;
-}
-
-.lang-toggle-admin {
-  background: rgba(255, 255, 255, 0.14);
-  color: rgba(255, 255, 255, 0.7);
-  font-size: 0.75rem;
-  font-weight: 600;
-  letter-spacing: 0.05em;
-  padding: 0.4rem 0.6rem;
-  border-radius: 0.4rem;
-  cursor: not-allowed;
-}
-
-.lang-toggle-admin:disabled {
-  opacity: 0.6;
 }
 
 .admin-shell {
@@ -730,23 +752,6 @@ html[data-theme="dark"] ap-notice[type="error"] {
  * Uses the native HTML Popover API (zero JS) for the keyboard shortcuts panel.
  * The `popover` attribute auto-wires toggle behavior via `popovertarget`.
  * ────────────────────────────────────────────────────────────────────────────── */
-.help-popover-trigger {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 2.75rem;
-  min-height: 2.75rem;
-  border-radius: 50%;
-  border: 1px solid var(--line);
-  background: var(--panel);
-  color: var(--muted);
-  font-size: 0.9rem;
-  font-weight: 700;
-  cursor: pointer;
-  padding: 0;
-  line-height: 1;
-}
-
 .keyboard-shortcuts-popover {
   position: fixed;
   inset-block-start: 4rem;
