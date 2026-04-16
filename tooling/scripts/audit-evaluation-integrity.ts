@@ -25,7 +25,7 @@ const root = process.cwd();
 const EVALUATION_MD = join(root, "docs/reference/EVALUATION.md");
 const PACKAGE_JSON = join(root, "package.json");
 const CI_YML = join(root, ".github/workflows/ci.yml");
-const DOCS_EVAL_MDX = join(root, "packages/docs/src/content/docs/contributing/evaluation.mdx");
+// Docs site evaluation page was removed — evaluation is maintainer-only in docs/reference/EVALUATION.md.
 
 async function fileExists(path: string): Promise<boolean> {
   try {
@@ -45,7 +45,6 @@ async function main() {
     scripts: Record<string, string>;
   };
   const ciSrc = await readFile(CI_YML, "utf8");
-  const docsSrc = await readFile(DOCS_EVAL_MDX, "utf8").catch(() => null);
 
   // ── 1. Audit scripts referenced in EVALUATION.md exist in package.json ──
 
@@ -129,22 +128,6 @@ async function main() {
         `[no-evidence] Rubric #${num} (${name}) has no evidence and no self-assessed marker`,
       );
       emptyEvidenceCount++;
-    }
-  }
-
-  // ── 5. Docs site evaluation page must exist and point to the reference doc ──
-
-  if (docsSrc) {
-    if (docsSrc.includes("EVALUATION.md")) {
-      // Docs site is a pointer — no rubric count to check
-    } else {
-      // Docs site has its own rubric table — check count parity
-      const docsRubricCount = (docsSrc.match(/^\|\s*\d+\s*\|/gm) ?? []).length;
-      if (docsRubricCount !== totalRubrics) {
-        violations.push(
-          `[count-mismatch] EVALUATION.md has ${totalRubrics} rubrics but evaluation.mdx has ${docsRubricCount}`,
-        );
-      }
     }
   }
 

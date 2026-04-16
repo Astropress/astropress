@@ -20,7 +20,6 @@ const truthPath = join(root, "tooling/readiness-truth.json");
 const requiredFiles = [
   "README.md",
   "docs/reference/EVALUATION.md",
-  "packages/docs/src/content/docs/contributing/evaluation.mdx",
 ];
 const auditableExtensions = new Set([".md", ".mdx", ".ts", ".tsx", ".astro", ".feature", ".rs", ".yml", ".yaml"]);
 
