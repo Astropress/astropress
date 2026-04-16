@@ -82,6 +82,118 @@ function isUsableToken(expiresAt: string, consumedAt: string | null, active: boo
   return !consumedAt && active && Date.parse(expiresAt) >= now;
 }
 
+function resolveValidSession(
+  sessionToken: string | null | undefined,
+  deps: AstropressAuthRepositoryInput,
+): AstropressAuthSessionRow | null {
+  if (!sessionToken) {
+    return null;
+  }
+
+  deps.cleanupExpiredSessions();
+  const row = deps.findLiveSessionById(sessionToken);
+  if (!row) {
+    return null;
+  }
+
+  const lastActiveAt = Date.parse(row.lastActiveAt);
+  if (!Number.isFinite(lastActiveAt) || deps.now() - lastActiveAt > deps.sessionTtlMs) {
+    deps.revokeSessionById(sessionToken);
+    return null;
+  }
+
+  deps.touchSession(sessionToken);
+  return row;
+}
+
+function resolveUsableInviteToken(
+  rawToken: string,
+  deps: AstropressAuthRepositoryInput,
+): AstropressInviteTokenRecord | null {
+  const trimmedToken = rawToken.trim();
+  if (!trimmedToken) {
+    return null;
+  }
+
+  const row = deps.findInviteTokenByHash(deps.hashOpaqueToken(trimmedToken));
+  if (!row || !isUsableToken(row.expiresAt, row.acceptedAt, row.active, deps.now())) {
+    return null;
+  }
+
+  return row;
+}
+
+function resolveUsablePasswordResetToken(
+  rawToken: string,
+  deps: AstropressAuthRepositoryInput,
+): AstropressPasswordResetTokenRecord | null {
+  const trimmedToken = rawToken.trim();
+  if (!trimmedToken) {
+    return null;
+  }
+
+  const row = deps.findPasswordResetTokenByHash(deps.hashOpaqueToken(trimmedToken));
+  if (!row || !isUsableToken(row.expiresAt, row.consumedAt, row.active, deps.now())) {
+    return null;
+  }
+
+  return row;
+}
+
+function validatePasswordInput(password: string) {
+  const trimmedPassword = password.trim();
+  if (trimmedPassword.length < 12) {
+    return { ok: false as const, trimmedPassword: "" };
+  }
+  return { ok: true as const, trimmedPassword };
+}
+
+function buildResetUrl(rawToken: string): string {
+  return `/ap-admin/reset-password` + `?token=${encodeURIComponent(rawToken)}`;
+}
+
+function issuePasswordResetToken(
+  email: string,
+  actor: Actor | undefined,
+  deps: AstropressAuthRepositoryInput,
+) {
+  const normalizedEmail = email.trim().toLowerCase();
+  if (!normalizedEmail) {
+    return { ok: false as const, error: "Email is required." };
+  }
+
+  const user = deps.findPasswordResetUserByEmail(normalizedEmail);
+  if (!user) {
+    return actor
+      ? { ok: false as const, error: "That admin user could not be found." }
+      : { ok: true as const, resetUrl: null as string | null };
+  }
+
+  deps.consumePasswordResetTokensForUser(user.id);
+
+  const rawToken = deps.randomId();
+  const tokenId = `reset-${deps.randomId()}`;
+  const expiresAt = new Date(deps.now() + 60 * 60 * 1000).toISOString();
+  deps.insertPasswordResetToken({
+    tokenId,
+    userId: user.id,
+    tokenHash: deps.hashOpaqueToken(rawToken),
+    expiresAt,
+    requestedBy: actor?.email ?? null,
+  });
+
+  if (actor) {
+    deps.recordAuthAudit({
+      actor,
+      action: "auth.password_reset_issue",
+      summary: `Issued a password reset link for ${normalizedEmail}.`,
+      targetId: normalizedEmail,
+    });
+  }
+
+  return { ok: true as const, resetUrl: buildResetUrl(rawToken) };
+}
+
 export function createAstropressAuthRepository(
   input: AstropressAuthRepositoryInput,
 ): AuthRepository & { authenticatePersistedAdminUser(email: string, password: string): Promise<SessionUser | null> } {
@@ -117,44 +229,12 @@ export function createAstropressAuthRepository(
       return sessionToken;
     },
     getSessionUser(sessionToken) {
-      if (!sessionToken) {
-        return null;
-      }
-
-      input.cleanupExpiredSessions();
-      const row = input.findLiveSessionById(sessionToken);
-      if (!row) {
-        return null;
-      }
-
-      const lastActiveAt = Date.parse(row.lastActiveAt);
-      if (!Number.isFinite(lastActiveAt) || input.now() - lastActiveAt > input.sessionTtlMs) {
-        input.revokeSessionById(sessionToken);
-        return null;
-      }
-
-      input.touchSession(sessionToken);
-      return mapSessionUser(row);
+      const row = resolveValidSession(sessionToken, input);
+      return row ? mapSessionUser(row) : null;
     },
     getCsrfToken(sessionToken) {
-      if (!sessionToken) {
-        return null;
-      }
-
-      input.cleanupExpiredSessions();
-      const row = input.findLiveSessionById(sessionToken);
-      if (!row) {
-        return null;
-      }
-
-      const lastActiveAt = Date.parse(row.lastActiveAt);
-      if (!Number.isFinite(lastActiveAt) || input.now() - lastActiveAt > input.sessionTtlMs) {
-        input.revokeSessionById(sessionToken);
-        return null;
-      }
-
-      input.touchSession(sessionToken);
-      return row.csrfToken;
+      const row = resolveValidSession(sessionToken, input);
+      return row ? row.csrfToken : null;
     },
     revokeSession(sessionToken) {
       if (!sessionToken) {
@@ -163,50 +243,11 @@ export function createAstropressAuthRepository(
       input.revokeSessionById(sessionToken);
     },
     createPasswordResetToken(email, actor) {
-      const normalizedEmail = email.trim().toLowerCase();
-      if (!normalizedEmail) {
-        return { ok: false as const, error: "Email is required." };
-      }
-
-      const user = input.findPasswordResetUserByEmail(normalizedEmail);
-      if (!user) {
-        return actor
-          ? { ok: false as const, error: "That admin user could not be found." }
-          : { ok: true as const, resetUrl: null as string | null };
-      }
-
-      input.consumePasswordResetTokensForUser(user.id);
-
-      const rawToken = input.randomId();
-      const tokenId = `reset-${input.randomId()}`;
-      const expiresAt = new Date(input.now() + 60 * 60 * 1000).toISOString();
-      input.insertPasswordResetToken({
-        tokenId,
-        userId: user.id,
-        tokenHash: input.hashOpaqueToken(rawToken),
-        expiresAt,
-        requestedBy: actor?.email ?? null,
-      });
-
-      if (actor) {
-        input.recordAuthAudit({
-          actor,
-          action: "auth.password_reset_issue",
-          summary: `Issued a password reset link for ${normalizedEmail}.`,
-          targetId: normalizedEmail,
-        });
-      }
-
-      return { ok: true as const, resetUrl: `/ap-admin/reset-password?token=${encodeURIComponent(rawToken)}` };
+      return issuePasswordResetToken(email, actor, input);
     },
     getInviteRequest(rawToken) {
-      const trimmedToken = rawToken.trim();
-      if (!trimmedToken) {
-        return null;
-      }
-
-      const row = input.findInviteTokenByHash(input.hashOpaqueToken(trimmedToken));
-      if (!row || !isUsableToken(row.expiresAt, row.acceptedAt, row.active, input.now())) {
+      const row = resolveUsableInviteToken(rawToken, input);
+      if (!row) {
         return null;
       }
 
@@ -218,13 +259,8 @@ export function createAstropressAuthRepository(
       };
     },
     getPasswordResetRequest(rawToken) {
-      const trimmedToken = rawToken.trim();
-      if (!trimmedToken) {
-        return null;
-      }
-
-      const row = input.findPasswordResetTokenByHash(input.hashOpaqueToken(trimmedToken));
-      if (!row || !isUsableToken(row.expiresAt, row.consumedAt, row.active, input.now())) {
+      const row = resolveUsablePasswordResetToken(rawToken, input);
+      if (!row) {
         return null;
       }
 
@@ -236,22 +272,17 @@ export function createAstropressAuthRepository(
       } as PasswordResetRequest;
     },
     consumeInviteToken(rawToken, password) {
-      const trimmedPassword = password.trim();
-      if (trimmedPassword.length < 12) {
+      const pw = validatePasswordInput(password);
+      if (!pw.ok) {
         return { ok: false as const, error: "Password must be at least 12 characters." };
       }
 
-      const request = this.getInviteRequest(rawToken);
-      if (!request) {
+      const row = resolveUsableInviteToken(rawToken, input);
+      if (!row) {
         return { ok: false as const, error: "That invitation link is invalid or has expired." };
       }
 
-      const row = input.findInviteTokenByHash(input.hashOpaqueToken(rawToken.trim()));
-      if (!row || !isUsableToken(row.expiresAt, row.acceptedAt, row.active, input.now())) {
-        return { ok: false as const, error: "That invitation link is invalid or has expired." };
-      }
-
-      input.updateAdminUserPassword(row.userId, input.hashPassword(trimmedPassword));
+      input.updateAdminUserPassword(row.userId, input.hashPassword(pw.trimmedPassword));
       input.acceptInvitesForUser(row.userId);
       input.recordAuthAudit({
         actor: { email: row.email, role: row.role, name: row.name },
@@ -270,22 +301,17 @@ export function createAstropressAuthRepository(
       };
     },
     consumePasswordResetToken(rawToken, password) {
-      const trimmedPassword = password.trim();
-      if (trimmedPassword.length < 12) {
+      const pw = validatePasswordInput(password);
+      if (!pw.ok) {
         return { ok: false as const, error: "Password must be at least 12 characters." };
       }
 
-      const request = this.getPasswordResetRequest(rawToken);
-      if (!request) {
+      const row = resolveUsablePasswordResetToken(rawToken, input);
+      if (!row) {
         return { ok: false as const, error: "That password reset link is invalid or has expired." };
       }
 
-      const row = input.findPasswordResetTokenByHash(input.hashOpaqueToken(rawToken.trim()));
-      if (!row || !isUsableToken(row.expiresAt, row.consumedAt, row.active, input.now())) {
-        return { ok: false as const, error: "That password reset link is invalid or has expired." };
-      }
-
-      input.updateAdminUserPassword(row.userId, input.hashPassword(trimmedPassword));
+      input.updateAdminUserPassword(row.userId, input.hashPassword(pw.trimmedPassword));
       input.markPasswordResetTokenConsumed(row.id);
       input.revokeSessionsForUser(row.userId);
       input.recordAuthAudit({

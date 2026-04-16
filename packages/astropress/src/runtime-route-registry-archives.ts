@@ -1,3 +1,4 @@
+import type { D1DatabaseLike } from "./d1-database";
 import { getCloudflareBindings } from "./runtime-env";
 import { normalizePath } from "./admin-normalizers";
 import { recordD1Audit } from "./d1-audit";
@@ -65,6 +66,82 @@ export async function getRuntimeArchiveRoute(pathname: string, locals?: App.Loca
   );
 }
 
+function validateArchiveRouteInput(input: {
+  title: string;
+  summary?: string;
+  seoTitle?: string;
+  metaDescription?: string;
+  canonicalUrlOverride?: string;
+  robotsDirective?: string;
+}) {
+  const title = input.title.trim();
+  if (!title) {
+    return { ok: false as const, error: "A title is required." } as const;
+  }
+
+  const summary = input.summary?.trim() || null;
+  const seoTitle = input.seoTitle?.trim() || title;
+  const metaDescription = input.metaDescription?.trim() || summary || "";
+  const canonicalUrlOverride = input.canonicalUrlOverride?.trim() || null;
+  const robotsDirective = input.robotsDirective?.trim() || null;
+
+  return { ok: true as const, title, summary, seoTitle, metaDescription, canonicalUrlOverride, robotsDirective };
+}
+
+async function persistArchiveRouteChanges(
+  db: D1DatabaseLike,
+  routeId: string,
+  normalizedPath: string,
+  validated: { title: string; summary: string | null; seoTitle: string; metaDescription: string; canonicalUrlOverride: string | null; robotsDirective: string | null },
+  revisionNote: string | undefined,
+  actor: Actor,
+  locals: App.Locals | null | undefined,
+) {
+  await db
+    .prepare(
+      `
+        UPDATE cms_route_variants
+        SET title = ?, summary = ?, seo_title = ?, meta_description = ?, canonical_url_override = ?, robots_directive = ?,
+            updated_at = CURRENT_TIMESTAMP, updated_by = ?
+        WHERE id = ?
+      `,
+    )
+    .bind(validated.title, validated.summary, validated.seoTitle, validated.metaDescription, validated.canonicalUrlOverride, validated.robotsDirective, actor.email, routeId)
+    .run();
+
+  await db
+    .prepare(
+      `
+        INSERT INTO cms_route_revisions (id, variant_id, route_path, locale, snapshot_json, revision_note, created_by)
+        VALUES (?, ?, ?, 'en', ?, ?, ?)
+      `,
+    )
+    .bind(
+      `revision:${routeId}:${crypto.randomUUID()}`,
+      routeId,
+      normalizedPath,
+      JSON.stringify({ path: normalizedPath, title: validated.title, summary: validated.summary, seoTitle: validated.seoTitle, metaDescription: validated.metaDescription, canonicalUrlOverride: validated.canonicalUrlOverride, robotsDirective: validated.robotsDirective }),
+      revisionNote?.trim() || null,
+      actor.email,
+    )
+    .run();
+
+  await recordD1Audit(locals, actor, "archive.update", "content", normalizedPath, `Updated archive route ${normalizedPath}.`);
+
+  return {
+    ok: true as const,
+    route: {
+      path: normalizedPath,
+      title: validated.title,
+      summary: validated.summary ?? undefined,
+      seoTitle: validated.seoTitle,
+      metaDescription: validated.metaDescription,
+      canonicalUrlOverride: validated.canonicalUrlOverride ?? undefined,
+      robotsDirective: validated.robotsDirective ?? undefined,
+    } satisfies RuntimeArchiveRouteRecord,
+  };
+}
+
 export async function saveRuntimeArchiveRoute(
   pathname: string,
   input: {
@@ -107,58 +184,10 @@ export async function saveRuntimeArchiveRoute(
     return { ok: false as const, error: "The selected archive route could not be found." };
   }
 
-  const title = input.title.trim();
-  if (!title) {
-    return { ok: false as const, error: "A title is required." };
+  const validated = validateArchiveRouteInput(input);
+  if (!validated.ok) {
+    return validated;
   }
 
-  const summary = input.summary?.trim() || null;
-  const seoTitle = input.seoTitle?.trim() || title;
-  const metaDescription = input.metaDescription?.trim() || summary || "";
-  const canonicalUrlOverride = input.canonicalUrlOverride?.trim() || null;
-  const robotsDirective = input.robotsDirective?.trim() || null;
-
-  await db
-    .prepare(
-      `
-        UPDATE cms_route_variants
-        SET title = ?, summary = ?, seo_title = ?, meta_description = ?, canonical_url_override = ?, robots_directive = ?,
-            updated_at = CURRENT_TIMESTAMP, updated_by = ?
-        WHERE id = ?
-      `,
-    )
-    .bind(title, summary, seoTitle, metaDescription, canonicalUrlOverride, robotsDirective, actor.email, route.id)
-    .run();
-
-  await db
-    .prepare(
-      `
-        INSERT INTO cms_route_revisions (id, variant_id, route_path, locale, snapshot_json, revision_note, created_by)
-        VALUES (?, ?, ?, 'en', ?, ?, ?)
-      `,
-    )
-    .bind(
-      `revision:${route.id}:${crypto.randomUUID()}`,
-      route.id,
-      normalizedPath,
-      JSON.stringify({ path: normalizedPath, title, summary, seoTitle, metaDescription, canonicalUrlOverride, robotsDirective }),
-      input.revisionNote?.trim() || null,
-      actor.email,
-    )
-    .run();
-
-  await recordD1Audit(locals, actor, "archive.update", "content", normalizedPath, `Updated archive route ${normalizedPath}.`);
-
-  return {
-    ok: true as const,
-    route: {
-      path: normalizedPath,
-      title,
-      summary: summary ?? undefined,
-      seoTitle,
-      metaDescription,
-      canonicalUrlOverride: canonicalUrlOverride ?? undefined,
-      robotsDirective: robotsDirective ?? undefined,
-    } satisfies RuntimeArchiveRouteRecord,
-  };
+  return persistArchiveRouteChanges(db, route.id, normalizedPath, validated, input.revisionNote, actor, locals);
 }

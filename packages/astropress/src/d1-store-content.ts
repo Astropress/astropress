@@ -231,6 +231,31 @@ export function createD1SchedulingPart(db: D1DatabaseLike) {
   };
 }
 
+function mergeContentOverride(
+  pageRecord: PageRecord,
+  override: ContentOverride | null,
+  assignments: { authorIds: number[]; categoryIds: number[]; tagIds: number[] },
+): ContentRecord {
+  return {
+    ...pageRecord,
+    title: override?.title ?? pageRecord.title,
+    status: override?.status ?? (pageRecord.status ?? "published"),
+    scheduledAt: override?.scheduledAt,
+    body: override?.body ?? pageRecord.body,
+    authorIds: assignments.authorIds,
+    categoryIds: assignments.categoryIds,
+    tagIds: assignments.tagIds,
+    seoTitle: override?.seoTitle ?? pageRecord.seoTitle ?? pageRecord.title,
+    metaDescription: override?.metaDescription ?? pageRecord.metaDescription ?? pageRecord.summary ?? "",
+    excerpt: override?.excerpt ?? pageRecord.summary,
+    ogTitle: override?.ogTitle,
+    ogDescription: override?.ogDescription,
+    ogImage: override?.ogImage,
+    canonicalUrlOverride: override?.canonicalUrlOverride,
+    robotsDirective: override?.robotsDirective,
+  };
+}
+
 export function createD1ContentReadPart(db: D1DatabaseLike): D1AdminReadStore["content"] {
   return {
     async listContentStates() {
@@ -246,24 +271,7 @@ export function createD1ContentReadPart(db: D1DatabaseLike): D1AdminReadStore["c
 
       const override = await getPersistedContentOverride(db, pageRecord.slug);
       const assignments = await getD1ContentAssignmentIds(db, pageRecord.slug);
-      return {
-        ...pageRecord,
-        title: override?.title ?? pageRecord.title,
-        status: override?.status ?? (pageRecord.status ?? "published"),
-        scheduledAt: override?.scheduledAt,
-        body: override?.body ?? pageRecord.body,
-        authorIds: assignments.authorIds,
-        categoryIds: assignments.categoryIds,
-        tagIds: assignments.tagIds,
-        seoTitle: override?.seoTitle ?? pageRecord.seoTitle ?? pageRecord.title,
-        metaDescription: override?.metaDescription ?? pageRecord.metaDescription ?? pageRecord.summary ?? "",
-        excerpt: override?.excerpt ?? pageRecord.summary,
-        ogTitle: override?.ogTitle,
-        ogDescription: override?.ogDescription,
-        ogImage: override?.ogImage,
-        canonicalUrlOverride: override?.canonicalUrlOverride,
-        robotsDirective: override?.robotsDirective,
-      };
+      return mergeContentOverride(pageRecord, override, assignments);
     },
     async getContentRevisions(slug: string): Promise<ContentRevision[] | null> {
       const pageRecord = await findPageRecord(db, slug);

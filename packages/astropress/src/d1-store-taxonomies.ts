@@ -126,69 +126,66 @@ export function createD1AuthorsMutationPart(db: D1DatabaseLike): D1AdminMutation
   };
 }
 
+function validateTaxonomyInput(
+  input: { name: string; slug?: string; id?: number },
+  kind: "category" | "tag",
+  requireId: boolean,
+): { ok: true; name: string; slug: string } | { ok: false; error: string } {
+  const name = input.name.trim();
+  const slug = slugify(input.slug?.trim() || name);
+  if (requireId && !input.id) {
+    return { ok: false, error: `${kind} id, name, and slug are required.` };
+  }
+  if (!name || !slug) {
+    return { ok: false, error: `${kind} name and slug are required.` };
+  }
+  return { ok: true, name, slug };
+}
+
+async function upsertTaxonomyTerm(
+  db: D1DatabaseLike,
+  table: "categories" | "tags",
+  kind: "category" | "tag",
+  input: { name: string; slug?: string; description?: string; id?: number },
+  mode: "create" | "update",
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  const validated = validateTaxonomyInput(input, kind, mode === "update");
+  if (!validated.ok) {
+    return { ok: false as const, error: validated.error };
+  }
+  const desc = input.description?.trim() ?? "";
+  try {
+    if (mode === "create") {
+      await db.prepare(`INSERT INTO ${table} (slug, name, description) VALUES (?, ?, ?)`).bind(validated.slug, validated.name, desc).run();
+    } else {
+      await db
+        .prepare(`UPDATE ${table} SET slug = ?, name = ?, description = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND deleted_at IS NULL`)
+        .bind(validated.slug, validated.name, desc, input.id)
+        .run();
+    }
+  } catch {
+    return { ok: false as const, error: `That ${kind} name or slug is already in use.` };
+  }
+  return { ok: true as const };
+}
+
 export function createD1TaxonomiesMutationPart(db: D1DatabaseLike): D1AdminMutationStore["taxonomies"] {
   return {
     async createCategory(input) {
-      const name = input.name.trim();
-      const slug = slugify(input.slug?.trim() || name);
-      if (!name || !slug) {
-        return { ok: false as const, error: "category name and slug are required." };
-      }
-      try {
-        await db.prepare("INSERT INTO categories (slug, name, description) VALUES (?, ?, ?)").bind(slug, name, input.description?.trim() ?? "").run();
-      } catch {
-        return { ok: false as const, error: "That category name or slug is already in use." };
-      }
-      return { ok: true as const };
+      return upsertTaxonomyTerm(db, "categories", "category", input, "create");
     },
     async updateCategory(input) {
-      const name = input.name.trim();
-      const slug = slugify(input.slug?.trim() || name);
-      if (!input.id || !name || !slug) {
-        return { ok: false as const, error: "category id, name, and slug are required." };
-      }
-      try {
-        await db
-          .prepare("UPDATE categories SET slug = ?, name = ?, description = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND deleted_at IS NULL")
-          .bind(slug, name, input.description?.trim() ?? "", input.id)
-          .run();
-      } catch {
-        return { ok: false as const, error: "That category name or slug is already in use." };
-      }
-      return { ok: true as const };
+      return upsertTaxonomyTerm(db, "categories", "category", input, "update");
     },
     async deleteCategory(id) {
       await db.prepare("UPDATE categories SET deleted_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND deleted_at IS NULL").bind(id).run();
       return { ok: true as const };
     },
     async createTag(input) {
-      const name = input.name.trim();
-      const slug = slugify(input.slug?.trim() || name);
-      if (!name || !slug) {
-        return { ok: false as const, error: "tag name and slug are required." };
-      }
-      try {
-        await db.prepare("INSERT INTO tags (slug, name, description) VALUES (?, ?, ?)").bind(slug, name, input.description?.trim() ?? "").run();
-      } catch {
-        return { ok: false as const, error: "That tag name or slug is already in use." };
-      }
-      return { ok: true as const };
+      return upsertTaxonomyTerm(db, "tags", "tag", input, "create");
     },
     async updateTag(input) {
-      const name = input.name.trim();
-      const slug = slugify(input.slug?.trim() || name);
-      if (!input.id || !name || !slug) {
-        return { ok: false as const, error: "tag id, name, and slug are required." };
-      }
-      try {
-        await db
-          .prepare("UPDATE tags SET slug = ?, name = ?, description = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND deleted_at IS NULL")
-          .bind(slug, name, input.description?.trim() ?? "", input.id)
-          .run();
-      } catch {
-        return { ok: false as const, error: "That tag name or slug is already in use." };
-      }
-      return { ok: true as const };
+      return upsertTaxonomyTerm(db, "tags", "tag", input, "update");
     },
     async deleteTag(id) {
       await db.prepare("UPDATE tags SET deleted_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND deleted_at IS NULL").bind(id).run();

@@ -82,30 +82,148 @@ export async function updateRuntimeMediaAsset(
   );
 }
 
+function isResponsiveImageFormat(mimeType: string): boolean {
+  return mimeType.startsWith("image/") && !mimeType.includes("svg");
+}
+
+async function generateAndStoreThumbnail(
+  input: { filename: string; bytes: Uint8Array; mimeType: string; title?: string; altText?: string },
+  storedFilename: string,
+  width: number,
+  locals?: App.Locals | null,
+): Promise<string | null> {
+  if (width <= 400) return null;
+  const thumbBytes = await generateThumbnail(input.bytes, width);
+  if (!thumbBytes) return null;
+  const basename = storedFilename.replace(/\.[^.]+$/, "");
+  const thumbFilename = `${basename}-thumb.webp`;
+  const thumbStored = await storeRuntimeMediaObject(
+    { ...input, filename: thumbFilename, bytes: thumbBytes, mimeType: "image/webp" },
+    locals,
+  );
+  return thumbStored.ok ? thumbStored.asset.publicPath : null;
+}
+
+async function generateAndStoreSrcset(
+  input: { filename: string; bytes: Uint8Array; mimeType: string; title?: string; altText?: string },
+  publicPath: string,
+  locals?: App.Locals | null,
+): Promise<string | null> {
+  const { generateSrcset } = await import("./local-image-storage.js");
+  return generateSrcset(input.bytes, publicPath, async (variantFilename, variantBytes) => {
+    const variantStored = await storeRuntimeMediaObject(
+      { ...input, filename: variantFilename, bytes: variantBytes, mimeType: "image/webp" },
+      locals,
+    );
+    return variantStored.ok ? variantStored.asset.publicPath : null;
+  });
+}
+
+function checkUploadSize(bytes: Uint8Array): { ok: true } | { ok: false; error: string } {
+  const maxUploadBytes = peekCmsConfig()?.maxUploadBytes ?? 10 * 1024 * 1024;
+  if (bytes.length > maxUploadBytes) {
+    const limitMib = (maxUploadBytes / (1024 * 1024)).toFixed(1);
+    return { ok: false, error: `File too large — maximum upload size is ${limitMib} MiB` };
+  }
+  return { ok: true };
+}
+
+async function processImageVariants(
+  input: { filename: string; bytes: Uint8Array; mimeType: string; title?: string; altText?: string },
+  stored: { storedFilename: string; publicPath: string },
+  imageDimensions: { width: number; height: number } | null,
+  locals?: App.Locals | null,
+): Promise<{ thumbnailUrl: string | null; srcset: string | null }> {
+  let thumbnailUrl: string | null = null;
+  let srcset: string | null = null;
+  if (imageDimensions) {
+    thumbnailUrl = await generateAndStoreThumbnail(input, stored.storedFilename, imageDimensions.width, locals);
+  }
+  if (imageDimensions && isResponsiveImageFormat(input.mimeType)) {
+    srcset = await generateAndStoreSrcset(input, stored.publicPath, locals);
+  }
+  return { thumbnailUrl, srcset };
+}
+
+function buildMediaInsertParams(
+  stored: { id: string; publicPath: string; r2Key: string; mimeType: string; fileSize: number; altText: string; title: string },
+  actor: Actor,
+  imageDimensions: { width: number; height: number } | null,
+  thumbnailUrl: string | null,
+  srcset: string | null,
+) {
+  return [
+    stored.id, null, stored.publicPath, stored.r2Key, stored.mimeType, stored.fileSize,
+    stored.altText, stored.title, actor.email,
+    imageDimensions ? imageDimensions.width : null,
+    imageDimensions ? imageDimensions.height : null,
+    thumbnailUrl, srcset,
+  ];
+}
+
+function buildMediaCreateResult(
+  storedId: string,
+  imageDimensions: { width: number; height: number } | null,
+  thumbnailUrl: string | null,
+  srcset: string | null,
+) {
+  return {
+    ok: true as const,
+    id: storedId,
+    width: imageDimensions ? imageDimensions.width : undefined,
+    height: imageDimensions ? imageDimensions.height : undefined,
+    thumbnailUrl: thumbnailUrl ?? undefined,
+    srcset: srcset ?? undefined,
+  };
+}
+
+type MediaAssetInput = {
+  filename: string;
+  bytes: Uint8Array;
+  mimeType: string;
+  title?: string;
+  altText?: string;
+};
+
+async function insertMediaAssetRecord(
+  db: { prepare: (sql: string) => { bind: (...args: unknown[]) => { run: () => Promise<unknown> } } },
+  stored: { id: string; publicPath: string; r2Key: string; mimeType: string; fileSize: number; altText: string; title: string },
+  actor: Actor,
+  imageDimensions: { width: number; height: number } | null,
+  thumbnailUrl: string | null,
+  srcset: string | null,
+): Promise<void> {
+  await db
+    .prepare(
+      `
+        INSERT INTO media_assets (
+          id, source_url, local_path, r2_key, mime_type, file_size, alt_text, title, uploaded_by,
+          width, height, thumbnail_url, srcset
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `,
+    )
+    .bind(...buildMediaInsertParams(stored, actor, imageDimensions, thumbnailUrl, srcset))
+    .run();
+}
+
+async function detectImageDimensionsForMime(bytes: Uint8Array, mimeType: string) {
+  if (mimeType.startsWith("image/")) {
+    return detectImageDimensions(bytes);
+  }
+  return null;
+}
+
 export async function createRuntimeMediaAsset(
-  input: {
-    filename: string;
-    bytes: Uint8Array;
-    mimeType: string;
-    title?: string;
-    altText?: string;
-  },
+  input: MediaAssetInput,
   actor: Actor,
   locals?: App.Locals | null,
 ) {
-  const maxUploadBytes = peekCmsConfig()?.maxUploadBytes ?? 10 * 1024 * 1024;
-  if (input.bytes.length > maxUploadBytes) {
-    const limitMib = (maxUploadBytes / (1024 * 1024)).toFixed(1);
-    return { ok: false as const, error: `File too large — maximum upload size is ${limitMib} MiB` };
+  const sizeCheck = checkUploadSize(input.bytes);
+  if (!sizeCheck.ok) {
+    return { ok: false as const, error: sizeCheck.error };
   }
 
-  // Detect image dimensions for image uploads (MIME type starts with "image/")
-  let imageDimensions: { width: number; height: number } | null = null;
-  let thumbnailUrl: string | null = null;
-
-  if (input.mimeType.startsWith("image/")) {
-    imageDimensions = await detectImageDimensions(input.bytes);
-  }
+  const imageDimensions = await detectImageDimensionsForMime(input.bytes, input.mimeType);
 
   return withLocalStoreFallback(
     locals,
@@ -115,60 +233,8 @@ export async function createRuntimeMediaAsset(
         return stored;
       }
 
-      // Generate and store thumbnail for large images when Sharp is available
-      if (imageDimensions && imageDimensions.width > 400) {
-        const thumbBytes = await generateThumbnail(input.bytes, imageDimensions.width);
-        if (thumbBytes) {
-          const basename = stored.asset.storedFilename.replace(/\.[^.]+$/, "");
-          const thumbFilename = `${basename}-thumb.webp`;
-          const thumbStored = await storeRuntimeMediaObject(
-            { ...input, filename: thumbFilename, bytes: thumbBytes, mimeType: "image/webp" },
-            locals,
-          );
-          if (thumbStored.ok) {
-            thumbnailUrl = thumbStored.asset.publicPath;
-          }
-        }
-      }
-
-      // Generate responsive srcset variants (400w, 800w, 1200w WebP) for image uploads
-      let srcset: string | null = null;
-      if (imageDimensions && input.mimeType.startsWith("image/") && !input.mimeType.includes("svg")) {
-        const { generateSrcset } = await import("./local-image-storage.js");
-        srcset = await generateSrcset(input.bytes, stored.asset.publicPath, async (variantFilename, variantBytes) => {
-          const variantStored = await storeRuntimeMediaObject(
-            { ...input, filename: variantFilename, bytes: variantBytes, mimeType: "image/webp" },
-            locals,
-          );
-          return variantStored.ok ? variantStored.asset.publicPath : null;
-        });
-      }
-
-      await db
-        .prepare(
-          `
-            INSERT INTO media_assets (
-              id, source_url, local_path, r2_key, mime_type, file_size, alt_text, title, uploaded_by,
-              width, height, thumbnail_url, srcset
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-          `,
-        )
-        .bind(
-          stored.asset.id,
-          null,
-          stored.asset.publicPath,
-          stored.asset.r2Key,
-          stored.asset.mimeType,
-          stored.asset.fileSize,
-          stored.asset.altText,
-          stored.asset.title,
-          actor.email,
-          imageDimensions?.width ?? null,
-          imageDimensions?.height ?? null,
-          thumbnailUrl,
-          srcset,
-        )
-        .run();
+      const { thumbnailUrl, srcset } = await processImageVariants(input, stored.asset, imageDimensions, locals);
+      await insertMediaAssetRecord(db, stored.asset, actor, imageDimensions, thumbnailUrl, srcset);
 
       await recordD1Audit(locals, actor, "media.upload", "content", stored.asset.id, `Uploaded media asset ${stored.asset.storedFilename}.`);
       await dispatchPluginMediaEvent({
@@ -178,14 +244,7 @@ export async function createRuntimeMediaAsset(
         size: stored.asset.fileSize,
         actor: actor.email,
       });
-      return {
-        ok: true as const,
-        id: stored.asset.id,
-        width: imageDimensions?.width ?? undefined,
-        height: imageDimensions?.height ?? undefined,
-        thumbnailUrl: thumbnailUrl ?? undefined,
-        srcset: srcset ?? undefined,
-      };
+      return buildMediaCreateResult(stored.asset.id, imageDimensions, thumbnailUrl, srcset);
     },
     /* v8 ignore next 1 */
     (localStore) => localStore.createMediaAsset(input, actor),

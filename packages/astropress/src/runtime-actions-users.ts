@@ -9,6 +9,16 @@ import { getAstropressRootSecret } from "./runtime-env";
 // ─── Password reset — extracted to runtime-actions-password-reset.ts ──────────
 export { createRuntimePasswordResetToken, getRuntimePasswordResetRequest, consumeRuntimePasswordResetToken } from "./runtime-actions-password-reset";
 
+function normalizeRole(role: string): "admin" | "editor" | "" {
+  if (role === "admin") return "admin";
+  if (role === "editor") return "editor";
+  return "";
+}
+
+function isValidEmailFormat(email: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
 async function hashOpaqueToken(token: string) {
   return createKmacDigest(token, getAstropressRootSecret(), "invite-token");
 }
@@ -59,13 +69,13 @@ export async function inviteRuntimeAdminUser(
     async (db) => {
       const name = input.name.trim();
       const email = normalizeEmail(input.email);
-      const role = input.role === "admin" ? "admin" : input.role === "editor" ? "editor" : "";
+      const role = normalizeRole(input.role);
 
       if (!name || !email || !role) {
         return { ok: false as const, error: "Name, email, and role are required." };
       }
 
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      if (!isValidEmailFormat(email)) {
         return { ok: false as const, error: "Enter a valid email address." };
       }
 

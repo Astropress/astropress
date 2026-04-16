@@ -138,12 +138,7 @@ function createAstropressConfig(appHost: AstropressAppHost): string {
   ].join("\n");
 }
 
-/**
- * Public-site Astro config for the prod static deploy. Ships zero admin
- * routes — only `/sitemap.xml`, `/robots.txt`, and `/llms.txt`. Emitted
- * alongside the admin config so server-output hosts can publish a safe
- * static bundle via `bun run build:public` without a second repository.
- */
+/** Public-site Astro config for the prod static deploy (zero admin routes). */
 function createAstropressPublicConfig(): string {
   return [
     `import { defineConfig } from "astro/config";`,

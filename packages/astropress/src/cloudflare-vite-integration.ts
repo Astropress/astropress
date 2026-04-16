@@ -16,6 +16,41 @@ export type AstropressCloudflareViteIntegrationOptions = {
   cloudflareSqliteBootstrapStubPath?: string;
 };
 
+type ResolvedStubPaths = {
+  localImageStorage: string;
+  localMediaStorage: string;
+  sqliteAdapter: string;
+  sqliteAdminRuntime: string;
+  sqliteBootstrap: string;
+  localRuntimeStubs: string;
+};
+
+type ResolveIdEntry = { check: (id: string, localRuntimeModulesPath: string) => boolean; stubKey: keyof ResolvedStubPaths };
+
+const aliasPatterns: Array<{ find: string | RegExp; stubKey: keyof ResolvedStubPaths }> = [
+  { find: "astropress/local-image-storage", stubKey: "localImageStorage" },
+  { find: /^.*\/local-image-storage(?:\.[cm]?[jt]s)?$/, stubKey: "localImageStorage" },
+  { find: "astropress/local-media-storage", stubKey: "localMediaStorage" },
+  { find: /^.*\/local-media-storage(?:\.[cm]?[jt]s)?$/, stubKey: "localMediaStorage" },
+  { find: "astropress/adapters/sqlite", stubKey: "sqliteAdapter" },
+  { find: /^.*\/adapters\/sqlite(?:\.[cm]?[jt]s)?$/, stubKey: "sqliteAdapter" },
+  { find: "astropress/sqlite-admin-runtime", stubKey: "sqliteAdminRuntime" },
+  { find: /^.*\/sqlite-admin-runtime(?:\.[cm]?[jt]s)?$/, stubKey: "sqliteAdminRuntime" },
+  { find: "astropress/sqlite-bootstrap", stubKey: "sqliteBootstrap" },
+  { find: /^.*\/sqlite-bootstrap(?:\.[cm]?[jt]s)?$/, stubKey: "sqliteBootstrap" },
+  { find: /^\.\/local-runtime-modules(?:\.ts)?$/, stubKey: "localRuntimeStubs" },
+  { find: /^.*\/local-runtime-modules(?:\.ts)?$/, stubKey: "localRuntimeStubs" },
+];
+
+const resolveIdEntries: ResolveIdEntry[] = [
+  { check: (id) => isPackageStorageModuleRequest(id, "local-image-storage"), stubKey: "localImageStorage" },
+  { check: (id) => isPackageStorageModuleRequest(id, "local-media-storage"), stubKey: "localMediaStorage" },
+  { check: (id) => isSqliteAdapterRequest(id), stubKey: "sqliteAdapter" },
+  { check: (id) => isSqliteAdminRuntimeRequest(id), stubKey: "sqliteAdminRuntime" },
+  { check: (id) => isSqliteBootstrapRequest(id), stubKey: "sqliteBootstrap" },
+  { check: (id, lrm) => isLocalRuntimeModuleRequest(id, lrm), stubKey: "localRuntimeStubs" },
+];
+
 function isLocalRuntimeModuleRequest(id: string, localRuntimeModulesPath: string): boolean {
   if (
     id === "./local-runtime-modules" ||
@@ -82,109 +117,44 @@ function normalizeImportId(id: string): string {
   return normalized;
 }
 
+function resolveStubPaths(options: AstropressCloudflareViteIntegrationOptions): ResolvedStubPaths {
+  return {
+    localImageStorage: options.cloudflareLocalImageStorageStubPath ?? "astropress/cloudflare-local-image-storage-stub",
+    localMediaStorage: options.cloudflareLocalMediaStorageStubPath ?? "astropress/cloudflare-local-media-storage-stub",
+    sqliteAdapter: options.cloudflareSqliteAdapterStubPath ?? "astropress/cloudflare-sqlite-adapter-stub",
+    sqliteAdminRuntime: options.cloudflareSqliteAdminRuntimeStubPath ?? "astropress/cloudflare-sqlite-admin-runtime-stub",
+    sqliteBootstrap: options.cloudflareSqliteBootstrapStubPath ?? "astropress/cloudflare-sqlite-bootstrap-stub",
+    localRuntimeStubs: options.cloudflareLocalRuntimeStubsPath ?? "astropress/cloudflare-local-runtime-stubs",
+  };
+}
+
+function resolvePluginId(normalizedId: string, localRuntimeModulesPath: string, stubs: ResolvedStubPaths): string | null {
+  const match = resolveIdEntries.find((entry) => entry.check(normalizedId, localRuntimeModulesPath));
+  return match ? stubs[match.stubKey] : null;
+}
+
+function buildAliases(
+  stubs: ResolvedStubPaths,
+  localRuntimeModulesPath: string,
+): Array<{ find: string | RegExp; replacement: string }> {
+  const aliases = aliasPatterns.map((entry) => ({ find: entry.find, replacement: stubs[entry.stubKey] }));
+  aliases.push({ find: localRuntimeModulesPath, replacement: stubs.localRuntimeStubs });
+  return aliases;
+}
+
 export function createAstropressCloudflareViteIntegration(
   localRuntimeModulesPath: string,
   options: AstropressCloudflareViteIntegrationOptions = {},
 ): AstropressCloudflareViteIntegration {
-  const cloudflareLocalRuntimeStubsPath =
-    options.cloudflareLocalRuntimeStubsPath ?? "astropress/cloudflare-local-runtime-stubs";
-  const cloudflareLocalImageStorageStubPath =
-    options.cloudflareLocalImageStorageStubPath ?? "astropress/cloudflare-local-image-storage-stub";
-  const cloudflareLocalMediaStorageStubPath =
-    options.cloudflareLocalMediaStorageStubPath ?? "astropress/cloudflare-local-media-storage-stub";
-  const cloudflareSqliteAdapterStubPath =
-    options.cloudflareSqliteAdapterStubPath ?? "astropress/cloudflare-sqlite-adapter-stub";
-  const cloudflareSqliteAdminRuntimeStubPath =
-    options.cloudflareSqliteAdminRuntimeStubPath ?? "astropress/cloudflare-sqlite-admin-runtime-stub";
-  const cloudflareSqliteBootstrapStubPath =
-    options.cloudflareSqliteBootstrapStubPath ?? "astropress/cloudflare-sqlite-bootstrap-stub";
+  const stubs = resolveStubPaths(options);
 
   return {
-    aliases: [
-      {
-        find: "astropress/local-image-storage",
-        replacement: cloudflareLocalImageStorageStubPath,
-      },
-      {
-        find: /^.*\/local-image-storage(?:\.[cm]?[jt]s)?$/,
-        replacement: cloudflareLocalImageStorageStubPath,
-      },
-      {
-        find: "astropress/local-media-storage",
-        replacement: cloudflareLocalMediaStorageStubPath,
-      },
-      {
-        find: /^.*\/local-media-storage(?:\.[cm]?[jt]s)?$/,
-        replacement: cloudflareLocalMediaStorageStubPath,
-      },
-      {
-        find: "astropress/adapters/sqlite",
-        replacement: cloudflareSqliteAdapterStubPath,
-      },
-      {
-        find: /^.*\/adapters\/sqlite(?:\.[cm]?[jt]s)?$/,
-        replacement: cloudflareSqliteAdapterStubPath,
-      },
-      {
-        find: "astropress/sqlite-admin-runtime",
-        replacement: cloudflareSqliteAdminRuntimeStubPath,
-      },
-      {
-        find: /^.*\/sqlite-admin-runtime(?:\.[cm]?[jt]s)?$/,
-        replacement: cloudflareSqliteAdminRuntimeStubPath,
-      },
-      {
-        find: "astropress/sqlite-bootstrap",
-        replacement: cloudflareSqliteBootstrapStubPath,
-      },
-      {
-        find: /^.*\/sqlite-bootstrap(?:\.[cm]?[jt]s)?$/,
-        replacement: cloudflareSqliteBootstrapStubPath,
-      },
-      {
-        find: /^\.\/local-runtime-modules(?:\.ts)?$/,
-        replacement: cloudflareLocalRuntimeStubsPath,
-      },
-      {
-        find: /^.*\/local-runtime-modules(?:\.ts)?$/,
-        replacement: cloudflareLocalRuntimeStubsPath,
-      },
-      {
-        find: localRuntimeModulesPath,
-        replacement: cloudflareLocalRuntimeStubsPath,
-      },
-    ],
+    aliases: buildAliases(stubs, localRuntimeModulesPath),
     plugin: {
       name: "astropress-cloudflare-local-runtime-stubs",
       enforce: "pre",
       resolveId(id) {
-        const normalizedId = normalizeImportId(id);
-
-        if (isPackageStorageModuleRequest(normalizedId, "local-image-storage")) {
-          return cloudflareLocalImageStorageStubPath;
-        }
-
-        if (isPackageStorageModuleRequest(normalizedId, "local-media-storage")) {
-          return cloudflareLocalMediaStorageStubPath;
-        }
-
-        if (isSqliteAdapterRequest(normalizedId)) {
-          return cloudflareSqliteAdapterStubPath;
-        }
-
-        if (isSqliteAdminRuntimeRequest(normalizedId)) {
-          return cloudflareSqliteAdminRuntimeStubPath;
-        }
-
-        if (isSqliteBootstrapRequest(normalizedId)) {
-          return cloudflareSqliteBootstrapStubPath;
-        }
-
-        if (isLocalRuntimeModuleRequest(normalizedId, localRuntimeModulesPath)) {
-          return cloudflareLocalRuntimeStubsPath;
-        }
-
-        return null;
+        return resolvePluginId(normalizeImportId(id), localRuntimeModulesPath, stubs);
       },
     },
   };
