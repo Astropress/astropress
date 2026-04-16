@@ -208,14 +208,6 @@ async function main() {
 
     const content = await readFile(file, "utf8");
 
-    // Split into top-level function bodies (rough heuristic: lines between
-    // function/method declarations). Not a full AST parse but sufficient for
-    // catching obvious high-complexity functions.
-    const funcPattern = /^(?:export\s+)?(?:async\s+)?function\s+(\w+)|(?:const|let)\s+(\w+)\s*=\s*(?:async\s+)?\(/gm;
-    let match: RegExpExecArray | null;
-    let lastFuncName = "";
-    let lastFuncStart = 0;
-
     const measureComplexity = (name: string, body: string) => {
       let complexity = 1;
       // Count branching keywords/operators
