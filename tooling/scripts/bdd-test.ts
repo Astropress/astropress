@@ -1391,7 +1391,7 @@ const verificationGroups: VerificationGroup[] = [
     scenarios: [
       "Deleting a resource shows an undo toast",
       "Clicking Undo restores the deleted resource",
-      "Undo toast auto-dismisses with CSS animation instead of JavaScript",
+      "Undo toast disappears after a few seconds",
     ],
     steps: [
       {
@@ -1404,16 +1404,16 @@ const verificationGroups: VerificationGroup[] = [
   {
     label: "destructive action confirmation dialogs",
     scenarios: [
-      "Authors page shows confirm dialog before deleting an author",
-      "Taxonomies page shows confirm dialog before deleting a category",
-      "Taxonomies page shows confirm dialog before deleting a tag",
-      "Media page shows confirm dialog before deleting an asset",
-      "Webhooks page shows confirm dialog before deleting a webhook",
-      "API Tokens page shows confirm dialog before revoking a token",
-      "Users page uses styled dialog instead of browser confirm for suspend",
-      "Users page uses styled dialog instead of browser confirm for GDPR purge",
-      "Subscriber detail uses styled dialog instead of browser confirm",
-      "Form submit buttons show loading state to prevent double submission",
+      "Admin confirms before deleting an author",
+      "Admin confirms before deleting a category",
+      "Admin confirms before deleting a tag",
+      "Admin confirms before deleting a media asset",
+      "Admin confirms before deleting a webhook",
+      "Admin confirms before revoking an API token",
+      "Admin confirms before suspending a user",
+      "Admin confirms before purging user data",
+      "Admin confirms before removing a subscriber",
+      "Submitting a form disables the button to prevent duplicate actions",
     ],
     steps: [
       {
@@ -1424,13 +1424,13 @@ const verificationGroups: VerificationGroup[] = [
     ],
   },
   {
-    label: "collapsible header utility panel",
+    label: "header utility panel",
     scenarios: [
-      "Topbar shows a collapse arrow button to the left of sign out",
-      "Clicking the arrow reveals the utility panel with three buttons",
-      "Theme toggle uses SVG icons instead of Unicode characters",
-      "Utility panel uses native popover instead of JavaScript toggle",
-      "Scroll button points down at page top and up after scrolling",
+      "Topbar keeps utility controls behind a single toggle",
+      "Opening the toggle reveals four utility buttons",
+      "Theme toggle icon reflects the mode it will switch to",
+      "Panel closes when I click outside or press Escape",
+      "Scroll button takes me to the bottom or back to the top",
     ],
     steps: [
       {

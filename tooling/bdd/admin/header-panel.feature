@@ -1,33 +1,32 @@
-Feature: Collapsible header utility panel
+Feature: Header utility panel for quick-access controls
+  As an admin using the panel daily
+  I want theme, language, keyboard, and scroll controls tucked away
+  So that the topbar stays clean while the tools remain one click away
 
-  Scenario: Topbar shows a collapse arrow button to the left of sign out
+  Scenario: Topbar keeps utility controls behind a single toggle
     Given I am signed in as an admin
     When I view any admin page
-    Then the topbar contains a button with a left arrow icon
-    And the theme toggle, language select, and keyboard shortcut button are hidden in the panel
+    Then the topbar shows a toggle button to the left of sign out
+    And the theme, language, keyboard shortcut, and scroll controls are hidden until I open it
 
-  Scenario: Clicking the arrow reveals the utility panel with three buttons
+  Scenario: Opening the toggle reveals four utility buttons
     Given I am signed in as an admin
-    When I click the collapse arrow button
-    Then a panel slides out containing theme, language, and keyboard shortcut buttons
+    When I click the utility panel toggle
+    Then a panel appears with buttons for theme, language, keyboard shortcuts, and scroll
 
-  Scenario: Theme toggle uses SVG icons instead of Unicode characters
-    Given I am signed in as an admin
-    When the utility panel is visible
-    Then the theme toggle shows an SVG sun icon in dark mode
-    And the theme toggle shows an SVG moon icon in light mode
+  Scenario: Theme toggle icon reflects the mode it will switch to
+    Given I am viewing the admin panel in dark mode
+    When I open the utility panel
+    Then the theme button shows a sun icon indicating it will switch to light mode
 
-  Scenario: Utility panel uses native popover instead of JavaScript toggle
-    Given I am signed in as an admin
-    When I view any admin page
-    Then the utility panel has a popover attribute
-    And no JavaScript is needed to show or hide the panel
+  Scenario: Panel closes when I click outside or press Escape
+    Given the utility panel is open
+    When I click outside the panel or press Escape
+    Then the panel closes
 
-  Scenario: Scroll button points down at page top and up after scrolling
-    Given I am signed in as an admin
-    And I am at the top of a long admin page
-    When I view the utility panel
+  Scenario: Scroll button takes me to the bottom or back to the top
+    Given I am signed in as an admin on a long page
+    When I open the utility panel at the top of the page
     Then the scroll button arrow points down
-    When I scroll down the page
-    Then the scroll button arrow rotates to point up
-    And clicking it scrolls to the top of the page
+    When I scroll down the page and reopen the panel
+    Then the scroll button arrow points up and clicking it returns me to the top
