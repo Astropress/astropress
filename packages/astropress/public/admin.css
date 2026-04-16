@@ -159,6 +159,12 @@ body {
   background: #15803d;
 }
 
+/* ── Utility panel (native <details> toggle, inline in topbar flex) ───────── */
+.topbar-panel-details {
+  display: inline-flex;
+  align-items: center;
+}
+
 .topbar-panel-toggle {
   display: inline-flex;
   align-items: center;
@@ -171,29 +177,22 @@ body {
   border: 0;
   border-radius: 0.5rem;
   cursor: pointer;
+  list-style: none;
   transition: transform 200ms ease;
 }
+.topbar-panel-toggle::-webkit-details-marker { display: none; }
 .topbar-panel-toggle:hover,
 .topbar-panel-toggle:focus-visible {
   background: rgba(255, 255, 255, 0.24);
 }
+.topbar-panel-details[open] > .topbar-panel-toggle {
+  transform: rotate(180deg);
+}
 
 .topbar-utility-panel {
-  /* Native popover: positioned near the toggle via anchor-like placement */
   display: flex;
   align-items: center;
   gap: 0.4rem;
-  position: fixed;
-  inset: auto;
-  top: 0.5rem;
-  right: 5rem;
-  margin: 0;
-  padding: 0.35rem;
-  background: var(--topbar-bg);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 0.6rem;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
-  z-index: 100;
 }
 
 /* Scroll-to-top/bottom button arrow rotation */

@@ -14,15 +14,26 @@ Feature: Header utility panel for quick-access controls
     When I click the utility panel toggle
     Then a panel appears with buttons for theme, language, keyboard shortcuts, and scroll
 
-  Scenario: Theme toggle icon reflects the mode it will switch to
-    Given I am viewing the admin panel in dark mode
+  Scenario: Panel sits inside the topbar without covering other header items
+    Given I am signed in as an admin
     When I open the utility panel
-    Then the theme button shows a sun icon indicating it will switch to light mode
+    Then the panel appears inline between the toggle and the sign-out button
+    And the sign-out button and site name remain visible
+
+  Scenario: Clicking the toggle again closes the panel
+    Given the utility panel is open
+    When I click the toggle button again
+    Then the panel closes
 
   Scenario: Panel closes when I click outside or press Escape
     Given the utility panel is open
     When I click outside the panel or press Escape
     Then the panel closes
+
+  Scenario: Theme toggle icon reflects the mode it will switch to
+    Given I am viewing the admin panel in dark mode
+    When I open the utility panel
+    Then the theme button shows a sun icon indicating it will switch to light mode
 
   Scenario: Scroll button takes me to the bottom or back to the top
     Given I am signed in as an admin on a long page

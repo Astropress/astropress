@@ -16,12 +16,18 @@ describe("admin shell ux invariants", () => {
     expect(adminLayout).toContain("<kbd>Ctrl</kbd>+<kbd>K</kbd>");
   });
 
-  it("has collapsible utility panel using native popover", () => {
+  it("has collapsible utility panel using native details/summary", () => {
+    expect(adminLayout).toContain('class="topbar-panel-details"');
     expect(adminLayout).toContain('class="topbar-panel-toggle"');
     expect(adminLayout).toContain('id="topbar-utility-panel"');
-    expect(adminLayout).toContain('popovertarget="topbar-utility-panel"');
-    // Uses native popover attribute, not JS hidden toggle
-    expect(adminLayout).toContain('popover>');
+    // <details>/<summary> gives native toggle without JS; panel stays inline in topbar flex
+    expect(adminLayout).toContain("<details");
+    expect(adminLayout).toContain("<summary");
+  });
+
+  it("utility panel sits inline in the topbar, not as a fixed overlay", () => {
+    // No position:fixed on the panel — it flows inside the topbar flex row
+    expect(adminCss).not.toMatch(/\.topbar-utility-panel\s*\{[^}]*position:\s*fixed/);
   });
 
   it("has a scroll-to-top/bottom button in the utility panel", () => {

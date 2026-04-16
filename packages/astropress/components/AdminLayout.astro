@@ -113,15 +113,11 @@ const navItems: NavItem[] = [
         </button>
         <span>{adminUi.labels.signedInAsPrefix} {userName}</span>
         <span class="role-chip">{role}</span>
-        <button
-          type="button"
-          class="topbar-panel-toggle"
-          popovertarget="topbar-utility-panel"
-          aria-label="Toggle utility panel"
-        >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"></polyline></svg>
-        </button>
-        <div id="topbar-utility-panel" class="topbar-utility-panel" popover>
+        <details class="topbar-panel-details" id="topbar-utility-details">
+          <summary class="topbar-panel-toggle" aria-label="Toggle utility panel">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"></polyline></svg>
+          </summary>
+          <div id="topbar-utility-panel" class="topbar-utility-panel">
           <ap-theme-toggle label-dark={adminUi.labels.themeToggleDark} label-light={adminUi.labels.themeToggleLight}>
             <button
               type="button"
@@ -174,6 +170,7 @@ const navItems: NavItem[] = [
             <svg class="scroll-toggle-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>
           </button>
         </div>
+        </details>
         <div
           id="admin-keyboard-shortcuts"
           popover
@@ -216,6 +213,17 @@ const navItems: NavItem[] = [
                   if (!sel.hidden) sel.focus();
                 });
               }
+            }
+
+            // Utility panel: close on click-outside and Escape (details element has no native light-dismiss).
+            var details = document.getElementById('topbar-utility-details');
+            if (details) {
+              document.addEventListener('click', function (e) {
+                if (details.open && !details.contains(e.target)) details.removeAttribute('open');
+              });
+              document.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape' && details.open) { details.removeAttribute('open'); e.stopPropagation(); }
+              });
             }
 
             // Scroll toggle: down-arrow at top, up-arrow after scroll.

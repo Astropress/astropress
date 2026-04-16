@@ -1428,8 +1428,10 @@ const verificationGroups: VerificationGroup[] = [
     scenarios: [
       "Topbar keeps utility controls behind a single toggle",
       "Opening the toggle reveals four utility buttons",
-      "Theme toggle icon reflects the mode it will switch to",
+      "Panel sits inside the topbar without covering other header items",
+      "Clicking the toggle again closes the panel",
       "Panel closes when I click outside or press Escape",
+      "Theme toggle icon reflects the mode it will switch to",
       "Scroll button takes me to the bottom or back to the top",
     ],
     steps: [
