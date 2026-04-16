@@ -19,7 +19,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import net from "node:net";
 
-import { ADMIN_SMOKE_ROUTES } from "./run-consumer-smoke.ts";
+import { ADMIN_SMOKE_ROUTES } from "./run-consumer-smoke.js";
 
 type ServerHandle = { process: ChildProcess };
 

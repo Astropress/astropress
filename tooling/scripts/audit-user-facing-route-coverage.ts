@@ -75,7 +75,7 @@ async function walkAstroFiles(dir: string): Promise<string[]> {
     for (const entry of entries) {
       if (entry.isFile() && entry.name.endsWith(".astro")) {
         // Return relative path from dir
-        const fullPath = join(entry.parentPath ?? entry.path, entry.name);
+        const fullPath = join(entry.parentPath, entry.name);
         files.push(relative(dir, fullPath));
       }
     }

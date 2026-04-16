@@ -74,7 +74,7 @@ async function walkFiles(dir: string): Promise<string[]> {
     for (const entry of entries) {
       if (!entry.isFile()) continue;
       const ext = entry.name.slice(entry.name.lastIndexOf("."));
-      if (EXTENSIONS.has(ext)) files.push(join(entry.parentPath ?? entry.path, entry.name));
+      if (EXTENSIONS.has(ext)) files.push(join(entry.parentPath, entry.name));
     }
   } catch { /* dir may not exist */ }
   return files.sort();

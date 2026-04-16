@@ -33,7 +33,7 @@ async function walkFiles(dir: string): Promise<string[]> {
       if (!entry.isFile()) continue;
       const ext = entry.name.slice(entry.name.lastIndexOf("."));
       if (EXTENSIONS.has(ext)) {
-        const fullPath = join(entry.parentPath ?? entry.path, entry.name);
+        const fullPath = join(entry.parentPath, entry.name);
         files.push(fullPath);
       }
     }

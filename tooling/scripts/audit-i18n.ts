@@ -4,7 +4,7 @@
 // exported symbols, BDD scenario file, and test file all exist as expected.
 
 import { readFile, access } from "node:fs/promises";
-import { join, relative } from "node:path";
+import { join } from "node:path";
 
 const root = process.cwd();
 

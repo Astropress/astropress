@@ -56,7 +56,7 @@ async function walkAstroFiles(dir: string): Promise<string[]> {
     const entries = await readdir(dir, { recursive: true, withFileTypes: true });
     for (const entry of entries) {
       if (entry.isFile() && entry.name.endsWith(".astro")) {
-        files.push(join(entry.parentPath ?? entry.path, entry.name));
+        files.push(join(entry.parentPath, entry.name));
       }
     }
   } catch { /* dir not found */ }

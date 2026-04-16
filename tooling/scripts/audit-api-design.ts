@@ -38,7 +38,7 @@ async function walkHandlerFiles(dir: string): Promise<string[]> {
       if (!entry.isFile()) continue;
       const ext = entry.name.slice(entry.name.lastIndexOf("."));
       if (HANDLER_EXTENSIONS.has(ext)) {
-        const filePath = join(entry.parentPath ?? entry.path, entry.name);
+        const filePath = join(entry.parentPath, entry.name);
         files.push(filePath);
       }
     }
