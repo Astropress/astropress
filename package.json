@@ -76,7 +76,7 @@
     "repo:clean": "bun run tooling/scripts/assert-clean-worktree.ts",
     "stress:sqlite": "bun run tooling/scripts/stress-sqlite-writes.ts",
     "release": "bun run --filter @astropress-diy/astropress release",
-    "version": "bun run --filter @astropress-diy/astropress version",
+    "version": "bun run --filter @astropress-diy/astropress version && bun run tooling/scripts/sync-cargo-version.ts",
     "prepare": "lefthook install"
   },
   "devDependencies": {
