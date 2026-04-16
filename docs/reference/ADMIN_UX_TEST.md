@@ -81,8 +81,8 @@ Report the route, what you did, and what happened vs what you expected.
 6. GDPR purge — **check: strong confirmation dialog (mentions "Cannot be undone")**
 
 ### Known gaps to watch for
-- Suspend/unsuspend use browser `confirm()` instead of styled dialog
-- No loading state on invitation send
+- ~~Suspend/unsuspend use browser `confirm()` instead of styled dialog~~ **Fixed**
+- ~~No loading state on invitation send~~ **Fixed** — generic submit handler
 
 ---
 
@@ -104,13 +104,13 @@ Test each of these for confirmation dialogs:
 |--------|------|----------|
 | Delete redirect | /ap-admin/redirects | Styled `<dialog>` with Cancel/Delete |
 | Reject comment | /ap-admin/comments | Styled `<dialog>` with Cancel/Reject |
-| Suspend user | /ap-admin/users | Browser confirm() (known gap — should be styled) |
-| Purge user | /ap-admin/users | Browser confirm() with strong warning |
-| Delete author | /ap-admin/authors | **Missing — no confirmation (bug)** |
-| Delete taxonomy | /ap-admin/taxonomies | **Missing — no confirmation (bug)** |
-| Delete media | /ap-admin/media | **Missing — no confirmation (bug)** |
-| Delete webhook | /ap-admin/webhooks | **Missing — no confirmation (bug)** |
-| Revoke API token | /ap-admin/api-tokens | **Missing — no confirmation (bug)** |
+| Suspend user | /ap-admin/users | Styled `<dialog>` with Cancel/Suspend |
+| Purge user | /ap-admin/users | Styled `<dialog>` with strong warning |
+| Delete author | /ap-admin/authors | Styled `<dialog>` with Cancel/Delete Author |
+| Delete taxonomy | /ap-admin/taxonomies | Styled `<dialog>` with Cancel/Delete (separate for categories and tags) |
+| Delete media | /ap-admin/media | Styled `<dialog>` with Cancel/Delete Asset |
+| Delete webhook | /ap-admin/webhooks | Styled `<dialog>` showing webhook URL |
+| Revoke API token | /ap-admin/api-tokens | Styled `<dialog>` warning integrations will stop |
 
 ---
 
@@ -170,12 +170,12 @@ Resize browser to 375px width (or use device emulation).
 
 From the code-level audit:
 
-| Priority | Issue | Pages affected |
-|----------|-------|---------------|
-| High | No confirmation on delete for authors, taxonomies, media, webhooks, API tokens | 5 pages |
-| High | No loading/disabled state on form submission buttons | All forms |
-| Medium | Inconsistent confirmation dialogs (styled `<dialog>` vs browser `confirm()`) | users, subscribers |
-| Medium | No file upload progress indicator | media |
-| Medium | Missing breadcrumbs on post/archive/route-page editors | 3 pages |
-| Low | No client-side field validation display (`.field-error` CSS exists but unused) | All forms |
-| Low | CMS/Host iframe panels don't collapse fully on mobile | 2 pages |
+| Priority | Issue | Pages affected | Status |
+|----------|-------|---------------|--------|
+| ~~High~~ | ~~No confirmation on delete for authors, taxonomies, media, webhooks, API tokens~~ | ~~5 pages~~ | **Fixed** — styled `<ap-confirm-dialog>` on all 5 pages |
+| ~~High~~ | ~~No loading/disabled state on form submission buttons~~ | ~~All forms~~ | **Fixed** — generic submit handler disables button + appends ellipsis |
+| ~~Medium~~ | ~~Inconsistent confirmation dialogs (styled `<dialog>` vs browser `confirm()`)~~ | ~~users, subscribers~~ | **Fixed** — migrated to `<ap-confirm-dialog>`; `window.confirm()` removed |
+| Medium | No file upload progress indicator | media | Open |
+| ~~Medium~~ | ~~Missing breadcrumbs on post/archive/route-page editors~~ | ~~3 pages~~ | **Fixed** — breadcrumbs added using shared `.breadcrumb` CSS |
+| Low | No client-side field validation display (`.field-error` CSS exists but unused) | All forms | Open |
+| Low | CMS/Host iframe panels don't collapse fully on mobile | 2 pages | Open |
