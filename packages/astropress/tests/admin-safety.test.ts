@@ -64,10 +64,10 @@ describe("admin markup safety", () => {
 
     expect(adminLayout).toContain('class="skip-link"');
     expect(adminLayout).toContain('aria-label="Admin sections"');
-    expect(loginPage).toContain('<input type="email" name="email" autocomplete="email" required />');
-    expect(loginPage).toContain('<input type="password" name="password" autocomplete="current-password" required />');
-    expect(invitePage).toContain('<input type="password" name="password" autocomplete="new-password" minlength="12" required />');
-    expect(invitePage).toContain('<input type="password" name="confirmPassword" autocomplete="new-password" minlength="12" required />');
+    expect(loginPage).toContain('type="email" name="email" autocomplete="email" required');
+    expect(loginPage).toContain('type="password" name="password" autocomplete="current-password" required');
+    expect(invitePage).toContain('type="password" name="password" autocomplete="new-password" minlength="12" required');
+    expect(invitePage).toContain('type="password" name="confirmPassword" autocomplete="new-password" minlength="12" required');
     expect(resetPage).toContain('<input type="email" name="email" autocomplete="email" required />');
     expect(resetPage).toContain('<input type="password" name="password" autocomplete="new-password" minlength="12" required />');
   });

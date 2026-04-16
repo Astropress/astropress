@@ -175,7 +175,7 @@ From the code-level audit:
 | ~~High~~ | ~~No confirmation on delete for authors, taxonomies, media, webhooks, API tokens~~ | ~~5 pages~~ | **Fixed** — styled `<ap-confirm-dialog>` on all 5 pages |
 | ~~High~~ | ~~No loading/disabled state on form submission buttons~~ | ~~All forms~~ | **Fixed** — generic submit handler disables button + appends ellipsis |
 | ~~Medium~~ | ~~Inconsistent confirmation dialogs (styled `<dialog>` vs browser `confirm()`)~~ | ~~users, subscribers~~ | **Fixed** — migrated to `<ap-confirm-dialog>`; `window.confirm()` removed |
-| Medium | No file upload progress indicator | media | Open |
+| ~~Medium~~ | ~~No file upload progress indicator~~ | ~~media~~ | **Fixed** — shimmer progress bar shown on form submit |
 | ~~Medium~~ | ~~Missing breadcrumbs on post/archive/route-page editors~~ | ~~3 pages~~ | **Fixed** — breadcrumbs added using shared `.breadcrumb` CSS |
-| Low | No client-side field validation display (`.field-error` CSS exists but unused) | All forms | Open |
-| Low | CMS/Host iframe panels don't collapse fully on mobile | 2 pages | Open |
+| ~~Low~~ | ~~No client-side field validation display (`.field-error` CSS exists but unused)~~ | ~~All forms~~ | **Fixed** — `data-error-*` attributes on auth forms; progressive enhancement JS in AdminLayout |
+| ~~Low~~ | ~~CMS/Host iframe panels don't collapse fully on mobile~~ | ~~2 pages~~ | **Fixed** — mobile media query on services/[provider] (auto height, stacked toolbar) |

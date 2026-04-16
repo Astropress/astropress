@@ -50,7 +50,7 @@ const errorMessage = Astro.url.searchParams.get("error") === "1" ? Astro.url.sea
       <CsrfInput token={Astro.locals.csrfToken} />
       <label class="admin-field">
         <span>File</span>
-        <input aria-label="Media file" type="file" name="file" accept="image/*" required class="admin-input" />
+        <input aria-label="Media file" type="file" name="file" accept="image/*" required data-error-required="Please select an image file" class="admin-input" />
       </label>
       <label class="admin-field">
         <span>Title</span>
@@ -61,6 +61,10 @@ const errorMessage = Astro.url.searchParams.get("error") === "1" ? Astro.url.sea
         <input aria-label="Media alt text" type="text" name="altText" class="admin-input" />
       </label>
       <button type="submit" class="admin-button">Upload media</button>
+      <div class="upload-progress" hidden aria-live="polite">
+        <div class="upload-progress__bar"></div>
+        <span class="upload-progress__text">Uploading file...</span>
+      </div>
     </form>
   </section>
 
@@ -258,4 +262,35 @@ const errorMessage = Astro.url.searchParams.get("error") === "1" ? Astro.url.sea
     border-color: color-mix(in srgb, var(--danger) 50%, var(--line));
     color: var(--danger);
   }
+
+  .upload-progress {
+    grid-column: 1 / -1;
+    margin-top: 0.25rem;
+  }
+  .upload-progress__bar {
+    height: 4px;
+    border-radius: 2px;
+    background: linear-gradient(90deg, var(--accent) 25%, var(--accent-soft, #e0e7ff) 50%, var(--accent) 75%);
+    background-size: 200% 100%;
+    animation: ap-upload-shimmer 1.4s ease infinite;
+  }
+  .upload-progress__text {
+    display: block;
+    font-size: 0.82rem;
+    color: var(--muted);
+    margin-top: 0.35rem;
+  }
+  @keyframes ap-upload-shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
 </style>
+<script>
+  const uploadForm = document.querySelector<HTMLFormElement>(".upload-form");
+  const progress = uploadForm?.querySelector<HTMLElement>(".upload-progress");
+  if (uploadForm && progress) {
+    uploadForm.addEventListener("submit", () => {
+      progress.hidden = false;
+    });
+  }
+</script>
