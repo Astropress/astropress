@@ -290,4 +290,25 @@ describe("admin action utils", () => {
     });
     expect(result.ok).toBe(false);
   });
+
+  it("unknown option keys like requireRole do NOT enforce admin-only access (regression for #35)", async () => {
+    // Simulates the old publish.ts bug: passing { requireRole: "admin" } instead of { requireAdmin: true }.
+    // The guard must not silently ignore unknown keys — this test proves that only requireAdmin works.
+    mocks.getRuntimeSessionUser.mockResolvedValue({
+      email: "editor@example.com",
+      role: "editor",
+      name: "Editor User",
+    });
+    const { requireAdminFormAction } = await import("@astropress-diy/astropress");
+
+    const result = await requireAdminFormAction(makeContext({ _csrf: "csrf-token" }), {
+      failurePath: "/ap-admin",
+      // @ts-expect-error — deliberately testing the wrong key to prove it doesn't guard
+      requireRole: "admin",
+    });
+
+    // Without requireAdmin: true, an editor session passes the guard — this is the bug.
+    // The fix is in publish.ts (use requireAdmin: true), not here. This test documents the footgun.
+    expect(result.ok).toBe(true);
+  });
 });
