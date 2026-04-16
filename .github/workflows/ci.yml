@@ -112,6 +112,40 @@ jobs:
       - run: bun run test:accessibility
       - run: bun run test:acceptance
 
+  # Boots examples/npm-consumer-smoke (workspace:* but WITHOUT monorepo source aliases)
+  # and fetches every admin route. Catches 500s and import-resolution failures that
+  # are invisible to the workspace-aliased admin-harness. Also runs packaging audits.
+  test-consumer:
+    runs-on: ubuntu-latest
+    needs: test-unit
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24.8"
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install
+      - run: bun run --filter "@astropress-diy/astropress" build
+      - run: bun run test:consumer-smoke
+      - run: bun run audit:consumer-packaging
+      - run: bun run audit:admin-route-coverage
+
+  # Packs the npm tarball, installs it in a fresh copy of npm-consumer-smoke, and
+  # verifies every admin route. This is the publish-time safety net: catches bugs
+  # in compiled .astro pages (e.g. bare astropress/ imports) that only manifest
+  # for real npm consumers, not workspace builds.
+  test-tarball-smoke:
+    runs-on: ubuntu-latest
+    needs: test-unit
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24.8"
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install
+      - run: bun run test:tarball-smoke
+
   test-build:
     runs-on: ubuntu-latest
     needs: test-unit
@@ -128,6 +162,8 @@ jobs:
       - run: bun run test:static-site
       - run: bun run audit:carbon
       - run: bun run test:admin-harness
+      - run: bun run audit:consumer-packaging
+      - run: bun run audit:admin-route-coverage
       - run: bun run bdd:lint
       - run: bun run bdd:test
       - run: cd packages/astropress-mcp && bun run build

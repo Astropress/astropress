@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 
-import { expectKeyboardFocusMoves, expectNoAxeViolations } from "./helpers/accessibility";
+import { expectKeyboardFocusMoves, expectNoAxeViolations, expectStylesheetsLoaded } from "./helpers/accessibility";
 
 const routes = [
   { path: "/ap-admin", heading: "Dashboard" },
@@ -17,6 +17,9 @@ test.describe("Feature: package-owned admin accessibility coverage", () => {
     test(`Scenario: ${route.path} is keyboard reachable and axe clean`, async ({ page }) => {
       await page.goto(route.path, { waitUntil: "networkidle" });
       await expect(page.getByRole("heading", { level: 1, name: route.heading })).toBeVisible();
+      // Regression guard: CSP must not block stylesheets (e.g. allowInlineStyles omitted
+      // from middleware causes unstyled login/auth pages in dev mode).
+      await expectStylesheetsLoaded(page);
       await expectKeyboardFocusMoves(page);
       await expectNoAxeViolations(page);
     });

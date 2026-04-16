@@ -81,6 +81,13 @@ export default defineConfig({
       },
     },
     {
+      name: "admin-harness-smoke",
+      testMatch: /admin-harness-smoke\.spec\.ts/,
+      use: {
+        baseURL: process.env.PLAYWRIGHT_ADMIN_BASE_URL ?? "http://127.0.0.1:4325",
+      },
+    },
+    {
       name: "viewport-375",
       testMatch: /admin-harness-mobile\.spec\.ts/,
       use: {

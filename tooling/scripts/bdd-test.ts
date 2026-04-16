@@ -240,6 +240,19 @@ const verificationGroups: VerificationGroup[] = [
     ],
   },
   {
+    label: "npm consumer admin route reachability",
+    scenarios: [
+      "All admin panel routes are reachable without source-level import aliases",
+    ],
+    steps: [
+      {
+        command: "bun",
+        args: ["run", "test:consumer-smoke"],
+        cwd: repoRoot,
+      },
+    ],
+  },
+  {
     label: "hosted provider selection scenarios",
     scenarios: [
       "A developer can switch to a hosted database provider without modifying any application code",
