@@ -341,6 +341,18 @@ const navItems: NavItem[] = [
           const btn = (e.currentTarget as HTMLFormElement).querySelector<HTMLButtonElement>(".publish-btn");
           if (btn) { btn.textContent = "Publishing\u2026"; btn.disabled = true; }
         });
+
+        // Generic form submit loading state — disable button and append ellipsis to prevent double submission.
+        document.querySelectorAll<HTMLFormElement>("form:not(.publish-form)").forEach((form) => {
+          form.addEventListener("submit", () => {
+            const btn = form.querySelector<HTMLButtonElement>('button[type="submit"]');
+            if (!btn || btn.disabled) return;
+            btn.disabled = true;
+            const original = btn.textContent?.trim() ?? "";
+            btn.textContent = original + "\u2026";
+            setTimeout(() => { btn.disabled = false; btn.textContent = original; }, 8000);
+          });
+        });
       })();
     </script>
   <style>

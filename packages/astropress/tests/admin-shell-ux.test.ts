@@ -39,6 +39,12 @@ describe("admin shell ux invariants", () => {
     expect(adminCss).toContain(".dialog-warning");
   });
 
+  it("wires generic form submit loading state in admin layout", () => {
+    expect(adminLayout).toContain("btn.disabled = true");
+    expect(adminLayout).toContain('button[type="submit"]');
+    expect(adminLayout).toContain("\\u2026");
+  });
+
   it("ships shared breadcrumb styles in admin.css", () => {
     expect(adminCss).toContain(".breadcrumb");
     expect(adminCss).toContain(".breadcrumb a");
