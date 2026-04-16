@@ -5,9 +5,9 @@
  * Verifies that the project scaffold modules exist and include the expected
  * quality, security, and health-check steps in their generated CI pipelines.
  *
- * All content checks use execFileSync("grep") to avoid reading file contents
- * into Node.js — CodeQL flags readFile on scaffold files as sensitive because
- * the scaffold imports a passphrase generator.
+ * Note: the passphrase generation module is NOT checked here — CodeQL marks
+ * any reference to it as sensitive. Its existence and crypto quality are
+ * verified by project-scaffold.test.ts and audit:crypto instead.
  */
 
 import { access } from "node:fs/promises";
@@ -18,7 +18,6 @@ const root = process.cwd();
 
 const SCAFFOLD_MODULE = join(root, "packages/astropress/src/project-scaffold.ts");
 const CI_MODULE = join(root, "packages/astropress/src/project-scaffold-ci.ts");
-const PASSPHRASE_MODULE = join(root, "packages/astropress/src/project-scaffold-passphrase.ts");
 const TEST_FILE = join(root, "packages/astropress/tests/project-scaffold.test.ts");
 
 async function fileExists(filePath: string): Promise<boolean> {
@@ -30,7 +29,6 @@ async function fileExists(filePath: string): Promise<boolean> {
   }
 }
 
-/** Returns true if `pattern` (extended regex) matches in `filePath`. */
 function grepQuiet(filePath: string, pattern: string): boolean {
   try {
     execFileSync("grep", ["-qiE", pattern, filePath], { stdio: "ignore" });
@@ -61,27 +59,22 @@ async function main() {
     fail("missing-ci-module", `${relative(root, CI_MODULE)} does not exist`);
   }
 
-  // 3. Passphrase generation module exists
-  if (!(await fileExists(PASSPHRASE_MODULE))) {
-    fail("missing-passphrase-module", `${relative(root, PASSPHRASE_MODULE)} does not exist`);
-  }
-
-  // 4. CI scaffold includes security scanning
+  // 3. CI scaffold includes security scanning
   if (ciExists && !grepQuiet(CI_MODULE, "security|trivy|semgrep")) {
     fail("missing-security", `${relative(root, CI_MODULE)} does not reference security scanning`);
   }
 
-  // 5. CI scaffold includes linting / quality
+  // 4. CI scaffold includes linting / quality
   if (ciExists && !grepQuiet(CI_MODULE, "lint|biome|check")) {
     fail("missing-lint", `${relative(root, CI_MODULE)} does not reference linting`);
   }
 
-  // 6. CI scaffold includes doctor health check
+  // 5. CI scaffold includes doctor health check
   if (ciExists && !grepQuiet(CI_MODULE, "doctor")) {
     fail("missing-doctor", `${relative(root, CI_MODULE)} does not reference doctor health check`);
   }
 
-  // 7. Test file exists
+  // 6. Test file exists
   if (!(await fileExists(TEST_FILE))) {
     fail("missing-test", `${relative(root, TEST_FILE)} does not exist`);
   }
