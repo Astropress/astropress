@@ -339,17 +339,17 @@ const pageTitle = meta ? `Import from ${meta.label}` : "Import";
 
     <style>
       .import-wizard { max-width: 680px; }
-      .breadcrumb { font-size: 0.875rem; color: var(--text-muted, #6b7280); margin-bottom: 1.5rem; }
+      .breadcrumb { font-size: 0.875rem; color: var(--text-muted, #4b5563); margin-bottom: 1.5rem; }
       .breadcrumb a { color: var(--accent, #6366f1); text-decoration: none; }
       .breadcrumb a:hover { text-decoration: underline; }
       .wizard-section { margin-bottom: 2rem; padding: 1.25rem; border: 1px solid var(--border, #e5e7eb); border-radius: 8px; background: var(--surface, #fff); }
       .wizard-section-title { margin: 0 0 1rem; font-size: 1rem; font-weight: 600; }
-      .hint { font-size: 0.875rem; color: var(--text-muted, #6b7280); margin: 0 0 0.75rem; }
+      .hint { font-size: 0.875rem; color: var(--text-muted, #4b5563); margin: 0 0 0.75rem; }
       .field-label { display: block; font-size: 0.875rem; font-weight: 500; margin-bottom: 0.375rem; }
       .file-input, .text-input { width: 100%; padding: 0.5rem 0.75rem; border: 1px solid var(--border, #e5e7eb); border-radius: 6px; font-size: 0.9375rem; background: var(--input-bg, #f9fafb); }
       .text-input--short { width: auto; max-width: 120px; }
       .source-tabs { display: flex; gap: 0; border: 1px solid var(--border, #e5e7eb); border-radius: 6px; overflow: hidden; margin-bottom: 1rem; width: fit-content; }
-      .tab-btn { padding: 0.375rem 0.875rem; font-size: 0.875rem; border: none; background: none; cursor: pointer; color: var(--text-muted, #6b7280); }
+      .tab-btn { padding: 0.375rem 0.875rem; font-size: 0.875rem; border: none; background: none; cursor: pointer; color: var(--text-muted, #4b5563); }
       .tab-btn--active { background: var(--accent, #6366f1); color: #fff; font-weight: 500; }
       .tab-panel { }
       .tab-panel--hidden { display: none; }
@@ -360,7 +360,7 @@ const pageTitle = meta ? `Import from ${meta.label}` : "Import";
       .copy-btn { padding: 0.375rem 0.875rem; border: 1px solid var(--border, #e5e7eb); border-radius: 6px; font-size: 0.875rem; cursor: pointer; background: var(--surface, #fff); }
       .copy-btn:hover { background: var(--accent-muted, #e0e7ff); border-color: var(--accent, #6366f1); }
       .import-status { border: 1px solid var(--border, #e5e7eb); border-radius: 6px; padding: 1rem; min-height: 4rem; background: var(--code-bg-light, #f8f9fa); }
-      .status-idle { color: var(--text-muted, #6b7280); font-size: 0.9375rem; margin: 0; }
+      .status-idle { color: var(--text-muted, #4b5563); font-size: 0.9375rem; margin: 0; }
       .status-running { color: var(--accent, #6366f1); font-size: 0.9375rem; margin: 0; }
       .status-success { color: var(--success, #16a34a); font-size: 0.9375rem; margin: 0 0 0.5rem; font-weight: 500; }
       .status-error { color: var(--error, #dc2626); font-size: 0.9375rem; margin: 0; }
@@ -371,7 +371,7 @@ const pageTitle = meta ? `Import from ${meta.label}` : "Import";
       .run-btn { padding: 0.5rem 1.25rem; background: var(--accent, #6366f1); color: #fff; border: none; border-radius: 6px; font-size: 0.9375rem; font-weight: 500; cursor: pointer; }
       .run-btn:hover:not(:disabled) { background: var(--accent-dark, #4f46e5); }
       .run-btn:disabled { opacity: 0.6; cursor: not-allowed; }
-      .run-hint { font-size: 0.875rem; color: var(--text-muted, #6b7280); }
+      .run-hint { font-size: 0.875rem; color: var(--text-muted, #4b5563); }
       .cli-details { flex: 1; }
       .cli-summary { font-size: 0.875rem; color: var(--accent, #6366f1); cursor: pointer; }
     </style>
