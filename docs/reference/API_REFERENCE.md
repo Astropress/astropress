@@ -3,7 +3,7 @@
 Auto-generated from TypeScript source via the TypeScript compiler API.
 Run `bun run docs:api` to regenerate.
 
-Generated: 2026-04-14
+Generated: 2026-04-16
 
 ---
 
@@ -944,6 +944,11 @@ function createAstropressLocalRuntimeModulePlugin(localRuntimeModulesPath: strin
 #### `createAstropressViteAliases`
 ```ts
 function createAstropressViteAliases(options: AstropressViteRuntimeAliasOptions): AstropressViteAlias[]
+```
+
+#### `createAstropressPackageResolverPlugin`
+```ts
+function createAstropressPackageResolverPlugin(astropressPackageRoot: string): AstropressVitePlugin
 ```
 
 #### `createAstropressVitestLocalRuntimePlugins`
