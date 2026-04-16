@@ -80,13 +80,16 @@ describe("auth", () => {
     expiredDb.prepare("INSERT INTO admin_users (email, password_hash, role, name, active) VALUES (?, ?, ?, ?, 1)").run(
       "expired@test.local", makePasswordHash("password"), "admin", "Expired",
     );
+    let clockOffset = 0;
     const expiredRuntime = createAstropressSqliteAdminRuntime({
       getDatabase: () => expiredDb,
       sessionTtlMs: 1,
-      now: () => Date.now() + 100_000,
+      now: () => Date.now() + clockOffset,
     });
     const user = await expiredRuntime.authenticatePersistedAdminUser("expired@test.local", "password");
     const token = expiredRuntime.sqliteAdminStore.auth.createSession(user!, {});
+    // Session created under real clock; now advance past the 1ms TTL
+    clockOffset = 100_000;
     expect(expiredRuntime.sqliteAdminStore.auth.getSessionUser(token)).toBeNull();
     expiredDb.close();
   });
@@ -191,13 +194,16 @@ describe("auth", () => {
     expiredDb.prepare("INSERT INTO admin_users (email, password_hash, role, name, active) VALUES (?, ?, ?, ?, 1)").run(
       "expired2@test.local", makePasswordHash("password"), "admin", "Expired2",
     );
+    let clockOffset = 0;
     const expiredRuntime = createAstropressSqliteAdminRuntime({
       getDatabase: () => expiredDb,
       sessionTtlMs: 1,
-      now: () => Date.now() + 100_000,
+      now: () => Date.now() + clockOffset,
     });
     const user = await expiredRuntime.authenticatePersistedAdminUser("expired2@test.local", "password");
     const token = expiredRuntime.sqliteAdminStore.auth.createSession(user!, {});
+    // Session created under real clock; now advance past the 1ms TTL
+    clockOffset = 100_000;
     expect(expiredRuntime.sqliteAdminStore.auth.getCsrfToken(token)).toBeNull();
     expiredDb.close();
   });

@@ -94,12 +94,15 @@ describe("ApThemeToggle", () => {
   });
 
   it("persists theme to localStorage on toggle", () => {
+    const spy = vi.spyOn(Storage.prototype, "setItem");
     const el = makeToggle();
     document.body.appendChild(el);
     document.documentElement.setAttribute("data-theme", "light");
 
     el.querySelector<HTMLButtonElement>("button")!.click(); // → dark
-    expect(localStorage.getItem("theme")).toBe("dark");
+    expect(spy).toHaveBeenCalledWith("theme", "dark");
+    expect(window.localStorage.getItem("theme")).toBe("dark");
+    spy.mockRestore();
   });
 
   it("updates aria-label to reflect the opposite action", () => {
