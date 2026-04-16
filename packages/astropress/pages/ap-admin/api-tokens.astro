@@ -60,7 +60,7 @@ const ALL_SCOPES = ["content:read", "content:write", "media:read", "media:write"
           </label>
         ))}
       </fieldset>
-      <button type="submit" class="admin-btn admin-btn-primary">Create Token</button>
+      <button type="submit" class="admin-button">Create Token</button>
     </form>
   </section>
 
@@ -87,13 +87,13 @@ const ALL_SCOPES = ["content:read", "content:write", "media:read", "media:write"
               <td>{token.scopes.join(", ")}</td>
               <td>{token.createdAt ? new Date(token.createdAt).toLocaleDateString() : "—"}</td>
               <td>{token.lastUsedAt ? new Date(token.lastUsedAt).toLocaleDateString() : "Never"}</td>
-              <td>{token.revokedAt ? <span style="color: var(--color-danger, red);">Revoked</span> : <span style="color: var(--color-success, green);">Active</span>}</td>
+              <td>{token.revokedAt ? <span style="color: var(--danger, #991b1b);">Revoked</span> : <span style="color: #14532d;">Active</span>}</td>
               <td>
                 {!token.revokedAt && (
                   <form method="post" action="/ap-admin/actions/api-token-revoke" style="display:inline;">
                     <CsrfInput token={Astro.locals.csrfToken} />
                     <input type="hidden" name="id" value={token.id} />
-                    <button type="submit" class="admin-btn admin-btn-danger">Revoke</button>
+                    <button type="submit" class="admin-button-danger">Revoke</button>
                   </form>
                 )}
               </td>

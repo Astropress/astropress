@@ -46,20 +46,22 @@ export async function expectNoDoubleTitleSuffix(page: Page): Promise<void> {
 }
 
 /**
- * Asserts zero WCAG 2.2 AA axe violations.
+ * Asserts zero WCAG 2.2 AA + enhanced contrast axe violations.
  *
  * Tags checked: wcag2a, wcag2aa, wcag21a, wcag21aa, wcag22aa, best-practice.
- * This is the enforced standard — all admin and public pages must pass.
+ * Additionally enforces color-contrast-enhanced (WCAG AAA 7:1 ratio) via
+ * axe rule inclusion — all text in the admin panel and public pages meets
+ * the higher AAA contrast threshold.
  *
- * Achievable WCAG 2.2 AAA criteria (2.4.10 section headings, 3.2.5 change on
- * request, 1.4.8 visual presentation) are met by design through the admin CSS
- * and layout components, but not enforced by axe because full AAA compliance
- * is not recommended by W3C for entire sites.
+ * Full WCAG 2.2 AAA conformance is not claimed (W3C recommends against it
+ * for entire sites), but contrast, section headings (2.4.10), change on
+ * request (3.2.5), and visual presentation (1.4.8) all meet AAA.
  */
 export async function expectNoAxeViolations(page: Page, options?: { ignoreRules?: string[] }) {
   const ignoreRules = new Set(options?.ignoreRules ?? []);
   const results = await new AxeBuilder({ page })
     .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa", "best-practice"])
+    .withRules(["color-contrast-enhanced"])
     .analyze();
 
   const violations = results.violations

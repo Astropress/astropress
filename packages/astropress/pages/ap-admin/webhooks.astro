@@ -62,7 +62,7 @@ const ALL_EVENTS = ["content.published", "content.updated", "content.deleted", "
           </label>
         ))}
       </fieldset>
-      <button type="submit" class="admin-btn admin-btn-primary">Register Webhook</button>
+      <button type="submit" class="admin-button">Register Webhook</button>
     </form>
   </section>
 
@@ -92,7 +92,7 @@ const ALL_EVENTS = ["content.published", "content.updated", "content.deleted", "
                 <form method="post" action="/ap-admin/actions/webhook-delete" style="display:inline;">
                   <CsrfInput token={Astro.locals.csrfToken} />
                   <input type="hidden" name="id" value={wh.id} />
-                  <button type="submit" class="admin-btn admin-btn-danger">Delete</button>
+                  <button type="submit" class="admin-button-danger">Delete</button>
                 </form>
               </td>
             </tr>
