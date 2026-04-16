@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, afterEach } from "vitest";
 import { ApHtmlEditor } from "../../web-components/html-editor";
 
 function stubDialog(dialog: HTMLDialogElement) {
@@ -68,7 +68,7 @@ describe("ApHtmlEditor", () => {
   });
 
   it("syncs initial body to iframe srcdoc on connect", () => {
-    const { editor, iframe } = makeEditor("<p>Hello</p>");
+    const { iframe } = makeEditor("<p>Hello</p>");
     expect(iframe.srcdoc).toContain("<p>Hello</p>");
     expect(iframe.srcdoc).toContain("<!doctype html>");
   });
@@ -110,7 +110,7 @@ describe("ApHtmlEditor", () => {
   });
 
   it("inserts link wrapping selection after URL dialog submit", () => {
-    const { editor, toolbar, urlDialog, urlField, urlForm } = makeEditor("click here");
+    const { editor, toolbar, urlField, urlForm } = makeEditor("click here");
     editor.setSelectionRange(0, 10); // select "click here"
     toolbar.querySelector<HTMLButtonElement>('[data-cmd="createLink"]')!.click();
 

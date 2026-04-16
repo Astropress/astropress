@@ -6,7 +6,6 @@ import {
 } from "./deployment-matrix";
 import {
   deriveLegacyProvider,
-  defaultAdminDbPath,
   appHostToDeployTarget,
   baseLocalEnv,
   baseEnvExample,

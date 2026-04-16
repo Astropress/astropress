@@ -4,7 +4,7 @@ import {
   splitCsvRows, slugify, lastPathSegment, normalizeWixImageUrl,
   scrapeImageUrls, cleanWixHtml, guessExtension, guessMimeTypeWix, splitTermList,
 } from "./wix-csv.js";
-import { applyWixImportToLocalRuntime, fileSizeOrNull } from "./wix-apply.js";
+import { applyWixImportToLocalRuntime } from "./wix-apply.js";
 import type { WixParsedBundle } from "./wix-apply.js";
 
 type DownloadState = {

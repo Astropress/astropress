@@ -43,7 +43,7 @@ describe("prepareAstropressDeployment", () => {
     const buildDir = makeBuildDir("build-shared");
     const outputDir = join(testRoot, "output-shared");
 
-    const result = await prepareAstropressDeployment(
+    await prepareAstropressDeployment(
       { buildDir, projectName: "my-site" },
       { provider: "test-provider", outputDir },
     );

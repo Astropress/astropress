@@ -381,20 +381,20 @@ describe("GET /ap-api/v1/webhooks + POST /ap-api/v1/webhooks", () => {
 
 describe("GET /ap-api/v1/openapi.json", () => {
   it("returns 200 with a valid OpenAPI 3.1 JSON object", async () => {
-    const res = await openapiGET(ctx(req("GET", "/ap-api/v1/openapi.json")));
+    const res = await openapiGET();
     expect(res.status).toBe(200);
     const body = await res.json() as { openapi: string };
     expect(body.openapi).toBe("3.1.0");
   });
 
   it("includes securitySchemes with BearerAuth", async () => {
-    const res = await openapiGET(ctx(req("GET", "/ap-api/v1/openapi.json")));
+    const res = await openapiGET();
     const body = await res.json() as { components: { securitySchemes: Record<string, unknown> } };
     expect(body.components.securitySchemes.BearerAuth).toBeDefined();
   });
 
   it("includes all /ap-api/v1/* paths", async () => {
-    const res = await openapiGET(ctx(req("GET", "/ap-api/v1/openapi.json")));
+    const res = await openapiGET();
     const body = await res.json() as { paths: Record<string, unknown> };
     const paths = Object.keys(body.paths);
     expect(paths).toContain("/content");
@@ -408,7 +408,7 @@ describe("GET /ap-api/v1/openapi.json", () => {
 
   it("does not require Authorization header", async () => {
     // No token provided — openapi endpoint has no auth check
-    const res = await openapiGET(ctx(req("GET", "/ap-api/v1/openapi.json")));
+    const res = await openapiGET();
     expect(res.status).toBe(200);
   });
 });

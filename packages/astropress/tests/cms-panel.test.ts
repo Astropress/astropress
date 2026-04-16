@@ -187,8 +187,8 @@ describe("Host nav visibility rules", () => {
     const roleEditor = "editor";
 
     // CMS nav has no adminOnly restriction
-    expect(hasCms && roleAdmin !== undefined).toBe(true);
-    expect(hasCms && roleEditor !== undefined).toBe(true);
+    expect(hasCms && roleAdmin.length > 0).toBe(true);
+    expect(hasCms && roleEditor.length > 0).toBe(true);
   });
 
   it("cms nav is hidden when no cms is configured", () => {

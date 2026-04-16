@@ -12,7 +12,6 @@ import {
   createAstropressNhostHostedAdapter,
   createAstropressPocketbaseAdapter,
   createAstropressPocketbaseHostedAdapter,
-  createAstropressSupabaseAdapter,
   createAstropressSupabaseHostedAdapter,
   createAstropressTursoHostedAdapter,
   readAstropressAppwriteHostedConfig,

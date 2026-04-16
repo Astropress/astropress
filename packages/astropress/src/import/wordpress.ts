@@ -8,7 +8,7 @@ import type {
   ImportSource,
 } from "../platform-contracts";
 import { parseWordPressExport, detectUnsupportedPatterns } from "./wordpress-xml.js";
-import { applyImportToLocalRuntime, fileSizeOrNull, resolveLocalAdminDbPath } from "./wordpress-apply.js";
+import { applyImportToLocalRuntime, fileSizeOrNull } from "./wordpress-apply.js";
 import type { ParsedBundle } from "./wordpress-xml.js";
 
 export interface AstropressWordPressImportSourceOptions {

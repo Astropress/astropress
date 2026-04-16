@@ -103,7 +103,7 @@ async function main() {
 
       // Also block super:: imports across commands (e.g. super::new inside commands/dev)
       const superCommandPattern = /use\s+super::(?:new|dev|deploy|import_wordpress|import_wix|backup_restore|doctor|services|config|sync)\b/g;
-      while ((match = superCommandPattern.exec(content)) !== null) {
+      while (superCommandPattern.exec(content) !== null) {
         violations.push({
           file: display,
           rule: "command-isolation",
