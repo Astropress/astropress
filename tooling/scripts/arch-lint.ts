@@ -183,6 +183,81 @@ async function main() {
     }
   }
 
+  // --- Rule: cyclomatic-complexity ---
+  // Functions with high cyclomatic complexity are hard to test and reason about.
+  // Complexity = 1 + count of (if, else if, case, &&, ||, ternary ?, catch, ??)
+  // Threshold: warn at 20, error at 40.
+  // Files in sqlite-runtime/, adapters/, import/ are exempt (data-access modules
+  // with inherently branchy SQL dispatch — tracked for future refactoring).
+  const COMPLEXITY_WARN = 20;
+  const COMPLEXITY_ERROR = 40;
+  const complexityExemptPaths = ["sqlite-runtime/", "adapters/", "import/"];
+  const complexityExemptFiles = new Set([
+    "runtime-actions-content.ts",           // multi-step content coordinator — inherently branchy
+    "runtime-actions-content-shared.ts",    // shared content revision logic
+    "runtime-route-registry-pages-mutations.ts", // page route CRUD
+    "cms-route-registry-factory.ts",        // factory with injected deps
+    "sqlite-bootstrap-seeders.ts",          // data seeding
+  ]);
+
+  for (const file of allFiles) {
+    const display = relative(root, file);
+    const fname = file.split("/").pop() ?? "";
+    if (complexityExemptPaths.some((p) => display.includes(p))) continue;
+    if (complexityExemptFiles.has(fname)) continue;
+
+    const content = await readFile(file, "utf8");
+
+    // Split into top-level function bodies (rough heuristic: lines between
+    // function/method declarations). Not a full AST parse but sufficient for
+    // catching obvious high-complexity functions.
+    const funcPattern = /^(?:export\s+)?(?:async\s+)?function\s+(\w+)|(?:const|let)\s+(\w+)\s*=\s*(?:async\s+)?\(/gm;
+    let match: RegExpExecArray | null;
+    let lastFuncName = "";
+    let lastFuncStart = 0;
+
+    const measureComplexity = (name: string, body: string) => {
+      let complexity = 1;
+      // Count branching keywords/operators
+      const patterns = [
+        /\bif\s*\(/g,
+        /\belse\s+if\s*\(/g,
+        /\bcase\s+/g,
+        /\bcatch\s*\(/g,
+        /\?\?/g,
+      ];
+      for (const p of patterns) {
+        const matches = body.match(p);
+        if (matches) complexity += matches.length;
+      }
+      // Count ternary ? (but not ?. optional chaining or ?? nullish coalescing)
+      const ternaryCount = (body.match(/[^?]\?[^?.?]/g) || []).length;
+      complexity += ternaryCount;
+
+      if (complexity >= COMPLEXITY_ERROR) {
+        violations.push({ file: display, rule: "cyclomatic-complexity", message: `${name}() has complexity ${complexity} (max ${COMPLEXITY_ERROR})` });
+      } else if (complexity >= COMPLEXITY_WARN) {
+        warnings.push({ file: display, rule: "cyclomatic-complexity", message: `${name}() has complexity ${complexity} (warn at ${COMPLEXITY_WARN})` });
+      }
+    };
+
+    const lines = content.split("\n");
+    const funcStarts: Array<{ name: string; line: number }> = [];
+    for (let i = 0; i < lines.length; i++) {
+      const l = lines[i];
+      const funcMatch = l.match(/^(?:export\s+)?(?:async\s+)?function\s+(\w+)/) ||
+                         l.match(/^(?:export\s+)?(?:const|let)\s+(\w+)\s*=\s*(?:async\s+)?\(/);
+      if (funcMatch) funcStarts.push({ name: funcMatch[1], line: i });
+    }
+
+    for (let i = 0; i < funcStarts.length; i++) {
+      const start = funcStarts[i].line;
+      const end = i + 1 < funcStarts.length ? funcStarts[i + 1].line : lines.length;
+      const body = lines.slice(start, end).join("\n");
+      measureComplexity(funcStarts[i].name, body);
+    }
+  }
+
   const hasViolations = violations.length > 0;
   const hasWarnings = warnings.length > 0;
 
