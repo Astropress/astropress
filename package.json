@@ -57,6 +57,7 @@
     "audit:title-composition": "bun run tooling/scripts/audit-title-composition.ts",
     "audit:security-policy-integrity": "bun run tooling/scripts/audit-security-policy-integrity.ts",
     "audit:user-facing-route-coverage": "bun run tooling/scripts/audit-user-facing-route-coverage.ts",
+    "audit:evaluation-integrity": "bun run tooling/scripts/audit-evaluation-integrity.ts",
     "check:version": "bun run tooling/scripts/check-version-bump.ts",
     "docs:api": "bun run tooling/scripts/generate-api-docs.ts",
     "docs:api:check": "bun run tooling/scripts/generate-api-docs.ts --check",
