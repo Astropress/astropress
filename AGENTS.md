@@ -214,9 +214,9 @@ The fictional "Runway" hosting provider was added without being requested and wi
 
 ## Honesty requirements
 
-`tooling/scripts/audit-honesty.ts` verifies that `README.md`,
-`docs/reference/EVALUATION.md`, and `packages/docs/src/content/docs/contributing/evaluation.mdx`
-all mention Argon2id, KMAC256, and ML-DSA-65. If you rename these algorithms or
+`tooling/scripts/audit-honesty.ts` verifies that `README.md` and
+`docs/reference/EVALUATION.md`
+both mention Argon2id, KMAC256, and ML-DSA-65. If you rename these algorithms or
 remove the mentions, update `tooling/readiness-truth.json` to match.
 
 ## Signing setup
