@@ -12,8 +12,11 @@
  *   4. CI scaffold references security scanning (trivy / semgrep)
  *   5. CI scaffold references linting (biome / lint / check)
  *   6. CI scaffold references doctor health check
- *   7. Passphrase generator uses EFF wordlist or crypto APIs
- *   8. Test file project-scaffold.test.ts exists
+ *   7. Test file project-scaffold.test.ts exists
+ *
+ * Note: passphrase crypto-quality is verified by project-scaffold.test.ts and
+ * audit:crypto, not here — reading the passphrase module triggers CodeQL
+ * clear-text-logging alerts because it generates secrets.
  */
 
 import { access, readFile } from "node:fs/promises";
@@ -93,21 +96,7 @@ async function main() {
     }
   }
 
-  // 7. Passphrase uses EFF wordlist or crypto APIs
-  // Use child_process grep instead of readFile to avoid CodeQL taint-tracking the
-  // file contents (the module generates secrets, so readFile triggers clear-text-logging).
-  if (passphraseExists) {
-    const { execSync } = await import("node:child_process");
-    try {
-      execSync(`grep -qiE 'eff|crypto|getRandomValues' ${PASSPHRASE_MODULE}`, { stdio: "ignore" });
-    } catch {
-      violations.push(
-        "[weak-passphrase] passphrase module does not reference EFF wordlist or crypto APIs",
-      );
-    }
-  }
-
-  // 8. Test file exists
+  // 7. Test file exists
   const testExists = await fileExists(TEST_FILE);
   if (!testExists) {
     violations.push(
