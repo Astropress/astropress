@@ -51,6 +51,11 @@ if (model.status === "not_found") {
     role={adminUser!.role}
     userName={adminUser!.name}
   >
+    <nav class="breadcrumb" aria-label="breadcrumb">
+      <a href={listPath}>{contentType === "page" ? "Pages" : "Posts"}</a>
+      <span aria-hidden="true"> / </span>
+      <span aria-current="page">{pageRecord.title || slug}</span>
+    </nav>
     {model.warnings.length > 0 && <ap-notice type="info">Some editor data is temporarily unavailable. This page is showing partial results.</ap-notice>}
     <div class="toolbar">
       <a href={listPath} class="admin-button-secondary">{contentType === "page" ? "Back to pages" : "Back to posts"}</a>

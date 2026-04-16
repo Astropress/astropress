@@ -34,6 +34,11 @@ if (model.status === "not_found") {
     role={adminUser!.role}
     userName={adminUser!.name}
   >
+    <nav class="breadcrumb" aria-label="breadcrumb">
+      <a href="/ap-admin/route-pages">Route Pages</a>
+      <span aria-hidden="true"> / </span>
+      <span aria-current="page">{pageRecord.title || routePath}</span>
+    </nav>
     {model.warnings.length > 0 && <p class="notice">Some route-page data is temporarily unavailable. This page is showing partial results.</p>}
     <div class="toolbar">
       <a href="/ap-admin/pages" class="admin-button-secondary">Back to pages</a>

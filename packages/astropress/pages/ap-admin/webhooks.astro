@@ -62,7 +62,7 @@ const ALL_EVENTS = ["content.published", "content.updated", "content.deleted", "
           </label>
         ))}
       </fieldset>
-      <button type="submit" class="admin-btn admin-btn-primary">Register Webhook</button>
+      <button type="submit" class="admin-button">Register Webhook</button>
     </form>
   </section>
 
@@ -89,11 +89,17 @@ const ALL_EVENTS = ["content.published", "content.updated", "content.deleted", "
               <td>{wh.createdAt ? new Date(wh.createdAt).toLocaleDateString() : "—"}</td>
               <td>{wh.lastFiredAt ? new Date(wh.lastFiredAt).toLocaleDateString() : "Never"}</td>
               <td>
-                <form method="post" action="/ap-admin/actions/webhook-delete" style="display:inline;">
-                  <CsrfInput token={Astro.locals.csrfToken} />
-                  <input type="hidden" name="id" value={wh.id} />
-                  <button type="submit" class="admin-btn admin-btn-danger">Delete</button>
-                </form>
+                <button
+                  type="button"
+                  class="admin-button-ghost small delete-button"
+                  data-confirm-trigger
+                  data-dialog-id="confirm-delete-webhook"
+                  data-field-name="id"
+                  data-field-value={wh.id}
+                  data-text-webhook-url={wh.url}
+                >
+                  Delete
+                </button>
               </td>
             </tr>
           ))}
@@ -101,4 +107,24 @@ const ALL_EVENTS = ["content.published", "content.updated", "content.deleted", "
       </table>
     )}
   </section>
+  <ap-confirm-dialog>
+    <dialog id="confirm-delete-webhook" class="confirm-modal" aria-labelledby="confirm-delete-webhook-title">
+      <div class="modal-content">
+        <h2 id="confirm-delete-webhook-title">Delete webhook?</h2>
+        <p>Are you sure you want to delete the webhook for <strong id="webhook-url"></strong>?</p>
+        <p class="dialog-warning">This action cannot be undone.</p>
+        <div class="modal-actions">
+          <button type="button" class="admin-button-ghost small secondary-button" data-dialog-close>Cancel</button>
+          <form method="post" action="/ap-admin/actions/webhook-delete" style="display:inline;">
+            <CsrfInput token={Astro.locals.csrfToken} />
+            <input type="hidden" name="id" value="" />
+            <button type="submit" class="admin-button small delete-button">Delete Webhook</button>
+          </form>
+        </div>
+      </div>
+    </dialog>
+  </ap-confirm-dialog>
+  <script>
+    import "../../web-components/confirm-dialog";
+  </script>
 </AdminLayout>

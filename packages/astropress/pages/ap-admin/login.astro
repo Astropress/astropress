@@ -60,11 +60,11 @@ const adminUi = resolveAstropressAdminUiConfig();
         <form method="post" action="/ap-admin/session">
           <label>
             <span>{adminUi.labels.loginEmailLabel}</span>
-            <input type="email" name="email" autocomplete="email" required />
+            <input type="email" name="email" autocomplete="email" required data-error-required="Email is required" data-error-type="Enter a valid email address" />
           </label>
           <label>
             <span>{adminUi.labels.loginPasswordLabel}</span>
-            <input type="password" name="password" autocomplete="current-password" required />
+            <input type="password" name="password" autocomplete="current-password" required data-error-required="Password is required" />
           </label>
           <TurnstileField />
           <button type="submit">{adminUi.labels.loginSubmit}</button>

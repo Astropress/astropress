@@ -77,18 +77,20 @@ describe("ApThemeToggle", () => {
     expect(button.getAttribute("aria-pressed")).toBe("false");
   });
 
-  it("updates icon text content on toggle", () => {
+  it("updates icon SVG on toggle", () => {
     const el = makeToggle();
     document.body.appendChild(el);
     document.documentElement.setAttribute("data-theme", "light");
     const button = el.querySelector<HTMLButtonElement>("button")!;
     const icon = el.querySelector<HTMLElement>(".theme-toggle-icon")!;
 
-    button.click(); // → dark
-    expect(icon.textContent).toBe("☀");
+    button.click(); // → dark — shows sun SVG (click to go light)
+    expect(icon.innerHTML).toContain("<svg");
+    expect(icon.innerHTML).toContain("circle cx");
 
-    button.click(); // → light
-    expect(icon.textContent).toBe("☾");
+    button.click(); // → light — shows moon SVG (click to go dark)
+    expect(icon.innerHTML).toContain("<svg");
+    expect(icon.innerHTML).toContain("12.79");
   });
 
   it("persists theme to localStorage on toggle", () => {

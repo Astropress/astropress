@@ -42,7 +42,7 @@ for (const htmlFile of htmlFiles) {
   const result = await (dom.window as typeof dom.window & { axe: typeof axe }).axe.run(dom.window.document, {
     runOnly: {
       type: "tag",
-      values: ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"],
+      values: ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa", "best-practice"],
     },
   });
 

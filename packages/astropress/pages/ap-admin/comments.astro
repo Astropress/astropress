@@ -54,6 +54,9 @@ const errorMessage = Astro.url.searchParams.get("error") === "1" ? Astro.url.sea
           </tr>
         </thead>
         <tbody>
+          {comments.length === 0 && (
+            <tr><td colspan="5" class="admin-empty-state">No comments to moderate. Comments will appear here when visitors leave them on your posts.</td></tr>
+          )}
           {comments.map((comment) => (
             <tr>
               <td>{comment.author}</td>
@@ -159,55 +162,6 @@ const errorMessage = Astro.url.searchParams.get("error") === "1" ? Astro.url.sea
     background: color-mix(in srgb, var(--danger) 10%, transparent);
   }
 
-  .confirm-modal {
-    border: none;
-    border-radius: 1rem;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-    max-width: 400px;
-    padding: 0;
-    backdrop-filter: blur(4px);
-  }
-
-  .confirm-modal::backdrop {
-    background: rgba(0, 0, 0, 0.5);
-  }
-
-  .modal-content {
-    padding: 1.75rem;
-  }
-
-  .modal-content h2 {
-    margin: 0 0 1rem;
-    font-size: 1.25rem;
-    color: var(--text);
-  }
-
-  .modal-content p {
-    margin: 0 0 0.75rem;
-    color: var(--text-muted);
-    font-size: 0.95rem;
-    line-height: 1.6;
-  }
-
-  .modal-content p:last-of-type {
-    margin-bottom: 1.5rem;
-  }
-
-  .dialog-context {
-    background: var(--bg);
-    padding: 0.75rem;
-    border-radius: 0.6rem;
-    font-family: "Monaco", monospace;
-    font-size: 0.85rem;
-    color: var(--text);
-    word-break: break-all;
-  }
-
-  .modal-actions {
-    display: flex;
-    gap: 0.75rem;
-    justify-content: flex-end;
-  }
 
   .secondary-button {
     padding: 0;

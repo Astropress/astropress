@@ -61,11 +61,11 @@ const adminUi = resolveAstropressAdminUiConfig();
               <input type="hidden" name="token" value={token} />
               <label>
                 <span>New password</span>
-                <input type="password" name="password" autocomplete="new-password" minlength="12" required />
+                <input type="password" name="password" autocomplete="new-password" minlength="12" required data-error-required="Password is required" data-error-minlength="Password must be at least 12 characters" />
               </label>
               <label>
                 <span>Confirm new password</span>
-                <input type="password" name="confirmPassword" autocomplete="new-password" minlength="12" required />
+                <input type="password" name="confirmPassword" autocomplete="new-password" minlength="12" required data-error-required="Please confirm your password" data-error-minlength="Password must be at least 12 characters" />
               </label>
                 <button type="submit">{adminUi.labels.acceptInvitationSubmit}</button>
               </form>

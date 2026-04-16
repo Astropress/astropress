@@ -101,4 +101,29 @@ if (!service) {
     grid-template-rows: 1fr;
     overflow: hidden;
   }
+
+  @media (max-width: 600px) {
+    .service-host {
+      height: auto;
+      min-height: 60vh;
+    }
+
+    .service-host__toolbar {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 0.5rem;
+    }
+
+    .service-host__toolbar a {
+      text-align: center;
+    }
+
+    .service-host__frame {
+      min-height: 55vh;
+    }
+
+    :global(#admin-main) {
+      overflow: auto;
+    }
+  }
 </style>

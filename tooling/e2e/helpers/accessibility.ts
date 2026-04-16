@@ -45,16 +45,23 @@ export async function expectNoDoubleTitleSuffix(page: Page): Promise<void> {
   }
 }
 
-// color-contrast is temporarily ignored across all admin specs — the admin CSS has
-// pre-existing contrast issues that will be fixed during the admin panel UX pass.
-// Remove this once admin.css contrast is fixed.
-// Pre-existing a11y issues to fix during admin panel UX pass. Remove entries as fixed.
-const GLOBAL_IGNORE_RULES = ["color-contrast", "select-name"];
-
+/**
+ * Asserts zero WCAG 2.2 AA + enhanced contrast axe violations.
+ *
+ * Tags checked: wcag2a, wcag2aa, wcag21a, wcag21aa, wcag22aa, best-practice.
+ * Additionally enforces color-contrast-enhanced (WCAG AAA 7:1 ratio) via
+ * axe rule inclusion — all text in the admin panel and public pages meets
+ * the higher AAA contrast threshold.
+ *
+ * Full WCAG 2.2 AAA conformance is not claimed (W3C recommends against it
+ * for entire sites), but contrast, section headings (2.4.10), change on
+ * request (3.2.5), and visual presentation (1.4.8) all meet AAA.
+ */
 export async function expectNoAxeViolations(page: Page, options?: { ignoreRules?: string[] }) {
-  const ignoreRules = new Set([...GLOBAL_IGNORE_RULES, ...(options?.ignoreRules ?? [])]);
+  const ignoreRules = new Set(options?.ignoreRules ?? []);
   const results = await new AxeBuilder({ page })
-    .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
+    .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa", "best-practice"])
+    .withRules(["color-contrast-enhanced"])
     .analyze();
 
   const violations = results.violations

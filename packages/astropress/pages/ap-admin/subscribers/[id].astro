@@ -111,16 +111,34 @@ const wasDeleted = Astro.url.searchParams.get("deleted") === "1";
           <p class="danger-zone__desc">
             This permanently removes the subscriber from Listmonk. This action cannot be undone.
           </p>
-          <form
-            method="post"
-            action="/ap-admin/actions/subscriber-delete"
-            class="delete-form"
-            data-confirm="Remove this subscriber? This cannot be undone."
+          <button
+            type="button"
+            class="delete-btn"
+            data-confirm-trigger
+            data-dialog-id="confirm-delete-subscriber"
+            data-field-name="id"
+            data-field-value={String(subscriber.id)}
+            data-text-subscriber-email={subscriber.email}
           >
-            <input type="hidden" name="id" value={String(subscriber.id)} />
-            <button type="submit" class="delete-btn">Remove subscriber</button>
-          </form>
+            Remove subscriber
+          </button>
         </div>
+        <ap-confirm-dialog>
+          <dialog id="confirm-delete-subscriber" class="confirm-modal" aria-labelledby="confirm-delete-subscriber-title">
+            <div class="modal-content">
+              <h2 id="confirm-delete-subscriber-title">Remove subscriber?</h2>
+              <p>Are you sure you want to remove <strong id="subscriber-email"></strong>?</p>
+              <p class="dialog-warning">This action cannot be undone.</p>
+              <div class="modal-actions">
+                <button type="button" class="admin-button-ghost small secondary-button" data-dialog-close>Cancel</button>
+                <form method="post" action="/ap-admin/actions/subscriber-delete" style="display:inline;">
+                  <input type="hidden" name="id" value="" />
+                  <button type="submit" class="admin-button small delete-button">Remove Subscriber</button>
+                </form>
+              </div>
+            </div>
+          </dialog>
+        </ap-confirm-dialog>
       </div>
     )}
 
@@ -129,35 +147,27 @@ const wasDeleted = Astro.url.searchParams.get("deleted") === "1";
     )}
 
     <style>
-      .breadcrumb { font-size: 0.875rem; color: var(--text-muted, #6b7280); margin-bottom: 1.5rem; }
-      .breadcrumb a { color: var(--accent, #6366f1); text-decoration: none; }
-      .breadcrumb a:hover { text-decoration: underline; }
       .subscriber-detail { max-width: 560px; }
       .detail-card { border: 1px solid var(--border, #e5e7eb); border-radius: 8px; background: var(--surface, #fff); padding: 1.25rem; margin-bottom: 1.5rem; }
       .detail-list { margin: 0; }
       .detail-row { display: flex; gap: 1rem; padding: 0.625rem 0; border-bottom: 1px solid var(--border, #e5e7eb); }
       .detail-row:last-child { border-bottom: none; }
-      .detail-row dt { width: 140px; flex-shrink: 0; font-size: 0.875rem; font-weight: 500; color: var(--text-muted, #6b7280); padding-top: 0.0625rem; }
+      .detail-row dt { width: 140px; flex-shrink: 0; font-size: 0.875rem; font-weight: 500; color: var(--text-muted, #374151); padding-top: 0.0625rem; }
       .detail-row dd { margin: 0; font-size: 0.9375rem; }
       .detail-email { font-weight: 500; word-break: break-all; }
-      .muted { color: var(--text-muted, #6b7280); font-size: 0.875rem; }
+      .muted { color: var(--text-muted, #374151); font-size: 0.875rem; }
       .status-badge { display: inline-block; padding: 0.125rem 0.5rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 500; text-transform: capitalize; background: var(--status-bg, #f3f4f6); }
       .status-badge--enabled, .status-badge--subscribed { background: #dcfce7; color: #166534; }
       .status-badge--disabled, .status-badge--unsubscribed { background: #fee2e2; color: #991b1b; }
       .status-badge--blocklisted { background: #fef3c7; color: #92400e; }
       .danger-zone { border: 1px solid #fca5a5; border-radius: 8px; padding: 1.25rem; background: #fff7f7; }
       .danger-zone__title { margin: 0 0 0.5rem; font-size: 0.9375rem; font-weight: 600; color: #991b1b; }
-      .danger-zone__desc { font-size: 0.875rem; color: #6b7280; margin: 0 0 1rem; }
+      .danger-zone__desc { font-size: 0.875rem; color: #374151; margin: 0 0 1rem; }
       .delete-btn { padding: 0.5rem 1rem; background: #dc2626; color: #fff; border: none; border-radius: 6px; font-size: 0.875rem; font-weight: 500; cursor: pointer; }
       .delete-btn:hover { background: #b91c1c; }
     </style>
     <script>
-      document.querySelectorAll<HTMLFormElement>("form[data-confirm]").forEach((form) => {
-        form.addEventListener("submit", (e) => {
-          const msg = form.dataset.confirm ?? "Are you sure?";
-          if (!window.confirm(msg)) e.preventDefault();
-        });
-      });
+      import "../../../web-components/confirm-dialog";
     </script>
   </AdminLayout>
 ) : (
