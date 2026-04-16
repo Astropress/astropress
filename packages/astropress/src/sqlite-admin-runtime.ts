@@ -66,7 +66,7 @@ export function createAstropressSqliteAdminRuntime(options: AstropressSqliteAdmi
 
   const { sqliteContentRepository, sqliteSubmissionRepository, sqliteSchedulingRepository } = createSqliteContentStore(getDb, randomId);
 
-  const { sqliteCmsRouteRegistry, sqliteCmsRegistryModule } = createSqliteRoutesStore(getDb, randomId);
+  const { sqliteCmsRegistryModule } = createSqliteRoutesStore(getDb, randomId);
 
   const { sqliteAuthorRepository, sqliteTaxonomyRepository } = createSqliteCatalogStore(getDb);
   const { sqliteRateLimitRepository, sqliteMediaRepository } = createSqliteAssetsStore(getDb, now);

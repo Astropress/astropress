@@ -36,10 +36,6 @@ function makeFetchMock(handler: (url: string) => { ok: boolean; status: number; 
   });
 }
 
-function networkError(): Response {
-  throw new Error("network error");
-}
-
 // ─── Helper: call Hono app directly ──────────────────────────────────────────
 
 async function callApp(

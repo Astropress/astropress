@@ -1,5 +1,5 @@
 ---
-import AdminLayout from "astropress/components/AdminLayout.astro";
+import AdminLayout from "@astropress-diy/astropress/components/AdminLayout.astro";
 
 const adminUser = Astro.locals.adminUser;
 
@@ -28,7 +28,7 @@ const cmsLabel = cmsConfig.label ?? cmsConfig.type.charAt(0).toUpperCase() + cms
 ---
 
 <AdminLayout
-  title={`${cmsLabel} | Astropress Admin`}
+  title={cmsLabel}
   heading={cmsLabel}
   currentPath="/ap-admin/cms"
   description={`Editorial CMS panel — ${cmsLabel}`}

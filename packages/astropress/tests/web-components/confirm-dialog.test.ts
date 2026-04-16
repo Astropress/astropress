@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, afterEach } from "vitest";
 import { ApConfirmDialog } from "../../web-components/confirm-dialog";
 
 // jsdom doesn't implement showModal/close — provide minimal stubs

@@ -1,7 +1,7 @@
 ---
-import AdminLayout from "astropress/components/AdminLayout.astro";
-import AuditTrail from "astropress/components/AuditTrail.astro";
-import CsrfInput from "astropress/components/CsrfInput.astro";
+import AdminLayout from "@astropress-diy/astropress/components/AdminLayout.astro";
+import AuditTrail from "@astropress-diy/astropress/components/AuditTrail.astro";
+import CsrfInput from "@astropress-diy/astropress/components/CsrfInput.astro";
 import { buildPostRevisionsPageModel } from "astropress";
 
 export const prerender = false;
@@ -96,7 +96,7 @@ if (model.status === "not_found") {
   </AdminLayout>
 ) : (
   <AdminLayout
-    title="Not Found | Astropress Admin"
+    title="Not Found"
     heading="Not Found"
     currentPath="/ap-admin/posts"
     description="The requested revision history could not be found."

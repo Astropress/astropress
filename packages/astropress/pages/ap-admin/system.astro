@@ -1,6 +1,6 @@
 ---
-import AdminLayout from "astropress/components/AdminLayout.astro";
-import CsrfInput from "astropress/components/CsrfInput.astro";
+import AdminLayout from "@astropress-diy/astropress/components/AdminLayout.astro";
+import CsrfInput from "@astropress-diy/astropress/components/CsrfInput.astro";
 import { buildSystemPageModel } from "astropress";
 
 const adminUser = Astro.locals.adminUser;
@@ -19,7 +19,7 @@ const sitemapPage = routeMap.get("/sitemap.xml");
 
 {model.status !== "forbidden" ? (
   <AdminLayout
-    title="System | Astropress Admin"
+    title="System"
     heading="System"
     currentPath="/ap-admin/system"
     description="Admin-owned system routes and generated public outputs."
@@ -142,7 +142,7 @@ const sitemapPage = routeMap.get("/sitemap.xml");
   </AdminLayout>
 ) : (
   <AdminLayout
-    title="Forbidden | Astropress Admin"
+    title="Forbidden"
     heading="Forbidden"
     currentPath=""
     description="This action requires an admin account."

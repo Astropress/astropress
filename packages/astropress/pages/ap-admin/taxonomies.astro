@@ -1,7 +1,7 @@
 ---
-import AdminLayout from "astropress/components/AdminLayout.astro";
-import AuditTrail from "astropress/components/AuditTrail.astro";
-import CsrfInput from "astropress/components/CsrfInput.astro";
+import AdminLayout from "@astropress-diy/astropress/components/AdminLayout.astro";
+import AuditTrail from "@astropress-diy/astropress/components/AuditTrail.astro";
+import CsrfInput from "@astropress-diy/astropress/components/CsrfInput.astro";
 import { buildTaxonomiesPageModel } from "astropress";
 
 const adminUser = Astro.locals.adminUser;
@@ -20,7 +20,7 @@ if (model.status === "forbidden") {
 
 {model.status !== "forbidden" ? (
   <AdminLayout
-    title="Taxonomies | Astropress Admin"
+    title="Taxonomies"
     heading="Taxonomies"
     currentPath="/ap-admin/taxonomies"
     description="Manage reusable categories and tags for future editorial workflows."
@@ -180,7 +180,7 @@ if (model.status === "forbidden") {
   </AdminLayout>
 ) : (
   <AdminLayout
-    title="Forbidden | Astropress Admin"
+    title="Forbidden"
     heading="Forbidden"
     currentPath=""
     description="This action requires an admin account."

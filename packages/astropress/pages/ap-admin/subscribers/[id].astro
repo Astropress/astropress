@@ -1,7 +1,7 @@
 ---
-import AdminLayout from "astropress/components/AdminLayout.astro";
-import { createListmonkOps } from "astropress/newsletter-adapter";
-import { getNewsletterConfig } from "astropress/runtime-env";
+import AdminLayout from "@astropress-diy/astropress/components/AdminLayout.astro";
+import { createListmonkOps } from "@astropress-diy/astropress/newsletter-adapter";
+import { getNewsletterConfig } from "@astropress-diy/astropress/runtime-env";
 
 const adminUser = Astro.locals.adminUser;
 
@@ -53,7 +53,7 @@ const wasDeleted = Astro.url.searchParams.get("deleted") === "1";
 
 {adminUser?.role === "admin" ? (
   <AdminLayout
-    title={subscriber ? `${subscriber.email} — Subscribers — Astropress Admin` : "Subscriber — Astropress Admin"}
+    title={subscriber ? `${subscriber.email} — Subscribers` : "Subscriber"}
     heading={subscriber ? subscriber.email : "Subscriber"}
     description="View and manage this newsletter subscriber."
     role={adminUser.role}
@@ -162,7 +162,7 @@ const wasDeleted = Astro.url.searchParams.get("deleted") === "1";
   </AdminLayout>
 ) : (
   <AdminLayout
-    title="Forbidden — Astropress Admin"
+    title="Forbidden"
     heading="Access denied"
     description="You do not have permission to view this page."
     role={adminUser?.role ?? "editor"}

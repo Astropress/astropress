@@ -1,5 +1,4 @@
-import { DatabaseSync } from "node:sqlite";
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import { verifyMlDsaMessage } from "../src/crypto-primitives.js";
 import { createWebhookStore } from "../src/sqlite-runtime/webhooks.js";

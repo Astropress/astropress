@@ -1,6 +1,6 @@
 ---
-import AdminLayout from "astropress/components/AdminLayout.astro";
-import { getAstropressService, type ServiceProvider } from "astropress/services-config";
+import AdminLayout from "@astropress-diy/astropress/components/AdminLayout.astro";
+import { getAstropressService, type ServiceProvider } from "@astropress-diy/astropress/services-config";
 
 const adminUser = Astro.locals.adminUser;
 if (adminUser?.role !== "admin") {
@@ -17,7 +17,7 @@ if (!service) {
 
 {!service ? (
   <AdminLayout
-    title="Service not configured | Astropress Admin"
+    title="Service not configured"
     heading="Service not configured"
     currentPath="/ap-admin/services"
     description="This service integration is not registered."
@@ -36,7 +36,7 @@ if (!service) {
   </AdminLayout>
 ) : (
   <AdminLayout
-    title={`${service.label} | Astropress Admin`}
+    title={service.label}
     heading={service.label}
     currentPath="/ap-admin/services"
     description={service.description}

@@ -1,9 +1,9 @@
 ---
-import AdminLayout from "astropress/components/AdminLayout.astro";
-import CsrfInput from "astropress/components/CsrfInput.astro";
+import AdminLayout from "@astropress-diy/astropress/components/AdminLayout.astro";
+import CsrfInput from "@astropress-diy/astropress/components/CsrfInput.astro";
 import { buildSettingsPageModel } from "astropress";
-import { createListmonkOps } from "astropress/newsletter-adapter";
-import { getNewsletterConfig } from "astropress/runtime-env";
+import { createListmonkOps } from "@astropress-diy/astropress/newsletter-adapter";
+import { getNewsletterConfig } from "@astropress-diy/astropress/runtime-env";
 
 const adminUser = Astro.locals.adminUser;
 const model = await buildSettingsPageModel(Astro.locals, adminUser!.role);
@@ -70,7 +70,7 @@ if (model.status === "forbidden") {
 
 {model.status !== "forbidden" ? (
   <AdminLayout
-    title="Settings | Astropress Admin"
+    title="Settings"
     heading="Settings"
     currentPath="/ap-admin/settings"
     description="Configure site-wide settings, newsletter, and content import."
@@ -419,7 +419,7 @@ if (model.status === "forbidden") {
   </AdminLayout>
 ) : (
   <AdminLayout
-    title="Forbidden | Astropress Admin"
+    title="Forbidden"
     heading="Forbidden"
     currentPath=""
     description="This action requires an admin account."

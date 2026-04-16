@@ -6,7 +6,6 @@ import type {
   RevisionStore,
 } from "../src/platform-contracts";
 import { createAstropressHostedPlatformAdapter } from "../src/hosted-platform-adapter.js";
-import { createAstropressHostedAdapter } from "../src/adapters/hosted.js";
 
 describe("hosted platform adapter", () => {
   it("assembles a hosted provider from explicit store modules", async () => {

@@ -63,7 +63,6 @@ export default defineConfig({
           collapsed: true,
           items: [
             { label: "Publishing to npm", slug: "contributing/publishing" },
-            { label: "Quality evaluation", slug: "contributing/evaluation" },
           ],
         },
       ],

@@ -35,7 +35,7 @@ const documentTitle = buildAstropressAdminDocumentTitle(title);
 const adminUi = resolveAstropressAdminUiConfig();
 const adminSiteName = siteName ?? adminUi.branding.shellName;
 const { bootstrapDisabled } = getAdminBootstrapConfig(Astro.locals);
-applyAstropressSecurityHeaders(Astro.response.headers, { area: "admin", allowInlineStyles: true, forceHsts: Astro.url.protocol === "https:" });
+applyAstropressSecurityHeaders(Astro.response.headers, { area: "admin", allowInlineStyles: import.meta.env.DEV, forceHsts: Astro.url.protocol === "https:" });
 const hasFundraising = !!(peekCmsConfig()?.donations);
 const hasTestimonials = !!(peekCmsConfig()?.testimonials);
 const recentItems = await getRecentAdminItems(Astro.locals, role);

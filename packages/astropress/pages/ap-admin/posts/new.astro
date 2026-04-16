@@ -1,13 +1,13 @@
 ---
-import AdminLayout from "astropress/components/AdminLayout.astro";
-import CsrfInput from "astropress/components/CsrfInput.astro";
+import AdminLayout from "@astropress-diy/astropress/components/AdminLayout.astro";
+import CsrfInput from "@astropress-diy/astropress/components/CsrfInput.astro";
 
 const adminUser = Astro.locals.adminUser;
 const errorMessage = Astro.url.searchParams.get("error") === "1" ? Astro.url.searchParams.get("message") : "";
 ---
 
 <AdminLayout
-  title="New Post | Astropress Admin"
+  title="New Post"
   heading="New Post"
   currentPath="/ap-admin/posts"
   description="Create a new blog post draft."

@@ -1,7 +1,7 @@
 ---
-import AdminLayout from "astropress/components/AdminLayout.astro";
-import AuditTrail from "astropress/components/AuditTrail.astro";
-import CsrfInput from "astropress/components/CsrfInput.astro";
+import AdminLayout from "@astropress-diy/astropress/components/AdminLayout.astro";
+import AuditTrail from "@astropress-diy/astropress/components/AuditTrail.astro";
+import CsrfInput from "@astropress-diy/astropress/components/CsrfInput.astro";
 import { buildMediaPageModel } from "astropress";
 
 const adminUser = Astro.locals.adminUser;
@@ -13,7 +13,7 @@ const errorMessage = Astro.url.searchParams.get("error") === "1" ? Astro.url.sea
 ---
 
 <AdminLayout
-  title="Media | Astropress Admin"
+  title="Media"
   heading="Media"
   currentPath="/ap-admin/media"
   description="Media management with familiar grid and list affordances."

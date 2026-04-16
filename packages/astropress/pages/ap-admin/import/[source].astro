@@ -1,5 +1,5 @@
 ---
-import AdminLayout from "astropress/components/AdminLayout.astro";
+import AdminLayout from "@astropress-diy/astropress/components/AdminLayout.astro";
 
 const adminUser = Astro.locals.adminUser;
 const { source } = Astro.params;
@@ -42,7 +42,7 @@ const sourceMeta: Record<ImportSource, { label: string; description: string; fil
 };
 
 const meta = isValidSource(source) ? sourceMeta[source] : null;
-const pageTitle = meta ? `Import from ${meta.label} — Astropress Admin` : "Import — Astropress Admin";
+const pageTitle = meta ? `Import from ${meta.label}` : "Import";
 ---
 
 {adminUser?.role === "admin" && isValidSource(source) && meta ? (
@@ -378,7 +378,7 @@ const pageTitle = meta ? `Import from ${meta.label} — Astropress Admin` : "Imp
   </AdminLayout>
 ) : adminUser?.role !== "admin" ? (
   <AdminLayout
-    title="Forbidden — Astropress Admin"
+    title="Forbidden"
     heading="Access denied"
     description="You do not have permission to view this page."
     role={adminUser?.role ?? "editor"}
@@ -389,7 +389,7 @@ const pageTitle = meta ? `Import from ${meta.label} — Astropress Admin` : "Imp
   </AdminLayout>
 ) : (
   <AdminLayout
-    title="Not found — Astropress Admin"
+    title="Not found"
     heading="Unknown import source"
     description="The requested import source is not supported."
     role={adminUser?.role ?? "editor"}

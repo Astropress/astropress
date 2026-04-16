@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from "vitest";
 import { runD1Migrations, rollbackD1LastMigration } from "../src/d1-migrate-ops.js";
 import type { D1DatabaseLike, D1PreparedStatement, D1Result } from "../src/d1-database.js";
 import path from "node:path";
-import { mkdtempSync, writeFileSync, mkdirSync } from "node:fs";
+import { mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 
 // ── Minimal D1 mock backed by an in-memory SQLite ──────────────────────────

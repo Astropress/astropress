@@ -1,6 +1,6 @@
 ---
-import AdminLayout from "astropress/components/AdminLayout.astro";
-import { getAstropressServices } from "astropress/services-config";
+import AdminLayout from "@astropress-diy/astropress/components/AdminLayout.astro";
+import { getAstropressServices } from "@astropress-diy/astropress/services-config";
 
 const adminUser = Astro.locals.adminUser;
 if (adminUser?.role !== "admin") {
@@ -30,7 +30,7 @@ const DEFAULT_SERVICE_DOCS: Record<string, { docs: string; badge: string }> = {
 ---
 
 <AdminLayout
-  title="Services | Astropress Admin"
+  title="Services"
   heading="Services"
   currentPath="/ap-admin/services"
   description="Manage integrated headless services: CMS, commerce, community, and email."

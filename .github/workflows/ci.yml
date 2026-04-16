@@ -46,6 +46,15 @@ jobs:
       - run: bun run audit:dead-exports
       - run: bun run audit:bdd-wiring
       - run: bun run audit:no-stub-tests
+      - run: bun run audit:evaluation-integrity
+      - run: bun run audit:observability
+      - run: bun run audit:api-design
+      - run: bun run audit:ai-drivability
+      - run: bun run audit:i18n
+      - run: bun run audit:content-modeling
+      - run: bun run audit:collaboration
+      - run: bun run audit:oss-health
+      - run: bun run audit:scaffold-quality
       - run: bun run docs:api:check
       - run: bun run docs:check
       - run: bun run repo:clean
@@ -123,6 +132,42 @@ jobs:
       - run: bun run test:accessibility
       - run: bun run test:acceptance
 
+  # Boots examples/npm-consumer-smoke (workspace:* but WITHOUT monorepo source aliases)
+  # and fetches every admin route. Catches 500s and import-resolution failures that
+  # are invisible to the workspace-aliased admin-harness. Also runs packaging audits.
+  test-consumer:
+    runs-on: ubuntu-latest
+    needs: test-unit
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24.8"
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install
+      - run: bun run --filter "@astropress-diy/astropress" build
+      - run: bun run test:consumer-smoke
+      - run: bun run audit:consumer-packaging
+      - run: bun run audit:admin-route-coverage
+      - run: bun run audit:title-composition
+      - run: bun run audit:security-policy-integrity
+
+  # Packs the npm tarball, installs it in a fresh copy of npm-consumer-smoke, and
+  # verifies every admin route. This is the publish-time safety net: catches bugs
+  # in compiled .astro pages (e.g. bare astropress/ imports) that only manifest
+  # for real npm consumers, not workspace builds.
+  test-tarball-smoke:
+    runs-on: ubuntu-latest
+    needs: test-unit
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24.8"
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install
+      - run: bun run test:tarball-smoke
+
   test-build:
     runs-on: ubuntu-latest
     needs: test-unit
@@ -139,6 +184,11 @@ jobs:
       - run: bun run test:static-site
       - run: bun run audit:carbon
       - run: bun run test:admin-harness
+      - run: bun run audit:consumer-packaging
+      - run: bun run audit:admin-route-coverage
+      - run: bun run audit:title-composition
+      - run: bun run audit:security-policy-integrity
+      - run: bun run audit:user-facing-route-coverage
       - run: bun run bdd:lint
       - run: bun run bdd:test
       - run: cd packages/astropress-mcp && bun run build

@@ -414,6 +414,7 @@ export {
   isAstropressLocalRuntimeModuleRequest,
   createAstropressLocalRuntimeModulePlugin,
   createAstropressViteAliases,
+  createAstropressPackageResolverPlugin,
 } from "./src/vite-runtime-alias";
 export type {
   AstropressViteRuntimeAliasOptions,

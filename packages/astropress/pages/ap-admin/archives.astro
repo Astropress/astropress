@@ -1,5 +1,5 @@
 ---
-import AdminLayout from "astropress/components/AdminLayout.astro";
+import AdminLayout from "@astropress-diy/astropress/components/AdminLayout.astro";
 import { buildArchivesIndexPageModel } from "astropress";
 
 const adminUser = Astro.locals.adminUser;
@@ -12,7 +12,7 @@ const { archiveList, kindCounts, totalArchives, totalItems } = model.data;
 
 {model.status !== "forbidden" ? (
 <AdminLayout
-  title="Archives - Astropress Admin"
+  title="Archives"
   heading="Archives"
   description="Owner-editable metadata for public archive landing pages."
   role={adminUser!.role}
@@ -103,7 +103,7 @@ const { archiveList, kindCounts, totalArchives, totalItems } = model.data;
 </AdminLayout>
 ) : (
   <AdminLayout
-    title="Forbidden | Astropress Admin"
+    title="Forbidden"
     heading="Forbidden"
     description="This action requires an admin account."
     role={adminUser!.role}

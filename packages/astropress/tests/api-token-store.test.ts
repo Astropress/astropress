@@ -1,4 +1,3 @@
-import { DatabaseSync } from "node:sqlite";
 import { describe, expect, it } from "vitest";
 
 import { createApiTokenStore } from "../src/sqlite-runtime/api-tokens.js";

@@ -5,7 +5,6 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { readdirSync } from "node:fs";
 import { defaultSiteSettings } from "./site-settings";
-import { getCmsConfig } from "./config";
 import { ensureLegacySchemaCompatibility } from "./sqlite-schema-compat.js";
 import { buildTableImportStatements, buildTableImportSql } from "./sqlite-seed-helpers.js";
 import {

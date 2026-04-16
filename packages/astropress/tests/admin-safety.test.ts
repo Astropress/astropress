@@ -1,6 +1,6 @@
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import path from "node:path";
-import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
+import { describe, expect, it } from "vitest";
 
 const adminPagesRoot = path.resolve(import.meta.dirname, "../pages/ap-admin");
 const scriptsRoot = path.resolve(import.meta.dirname, "../../../tooling/scripts");

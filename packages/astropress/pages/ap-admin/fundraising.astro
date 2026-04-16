@@ -1,5 +1,5 @@
 ---
-import AdminLayout from "astropress/components/AdminLayout.astro";
+import AdminLayout from "@astropress-diy/astropress/components/AdminLayout.astro";
 import { peekCmsConfig } from "astropress";
 
 const adminUser = Astro.locals.adminUser;
@@ -57,7 +57,7 @@ const providers: ProviderCard[] = [
 ---
 
 <AdminLayout
-  title="Fundraising | Astropress Admin"
+  title="Fundraising"
   heading="Fundraising"
   currentPath="/ap-admin/fundraising"
   description="Configured donation providers for this site"

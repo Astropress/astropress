@@ -1,5 +1,5 @@
 ---
-import AdminLayout from "astropress/components/AdminLayout.astro";
+import AdminLayout from "@astropress-diy/astropress/components/AdminLayout.astro";
 import { buildPostsIndexPageModel } from "astropress";
 import { isSeededPostRecord } from "astropress";
 
@@ -125,7 +125,7 @@ function paginationHref(targetPage: number) {
 ---
 
 <AdminLayout
-  title="Posts | Astropress Admin"
+  title="Posts"
   heading="Posts"
   currentPath="/ap-admin/posts"
   description="Published and draft blog posts managed through the post editor."

@@ -1,7 +1,7 @@
 ---
-import AdminLayout from "astropress/components/AdminLayout.astro";
-import AuditTrail from "astropress/components/AuditTrail.astro";
-import CsrfInput from "astropress/components/CsrfInput.astro";
+import AdminLayout from "@astropress-diy/astropress/components/AdminLayout.astro";
+import AuditTrail from "@astropress-diy/astropress/components/AuditTrail.astro";
+import CsrfInput from "@astropress-diy/astropress/components/CsrfInput.astro";
 import { buildUsersPageModel } from "astropress";
 
 const adminUser = Astro.locals.adminUser;
@@ -22,7 +22,7 @@ if (model.status === "forbidden") {
 
 {model.status !== "forbidden" ? (
   <AdminLayout
-    title="Users - Astropress Admin"
+    title="Users"
     heading="Users"
     description="Manage team members, roles, and access state."
     role={adminUser!.role}
@@ -202,7 +202,7 @@ if (model.status === "forbidden") {
   </AdminLayout>
 ) : (
   <AdminLayout
-    title="Forbidden | Astropress Admin"
+    title="Forbidden"
     heading="Forbidden"
     currentPath=""
     description="This action requires an admin account."

@@ -25,7 +25,6 @@ const listmonkEnv = {
 
 describe("NEWSLETTER_DELIVERY_MODE defaults to listmonk in production", () => {
   it("returns listmonk when PROD is true and no mode is set", () => {
-    const locals = makeLocals({});
     // Simulate production by having no env override — the function checks
     // isProductionRuntime() which reads import.meta.env.PROD. In tests that
     // is false, so we verify the explicit listmonk path instead via locals.

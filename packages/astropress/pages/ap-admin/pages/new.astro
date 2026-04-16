@@ -1,6 +1,6 @@
 ---
-import AdminLayout from "astropress/components/AdminLayout.astro";
-import CsrfInput from "astropress/components/CsrfInput.astro";
+import AdminLayout from "@astropress-diy/astropress/components/AdminLayout.astro";
+import CsrfInput from "@astropress-diy/astropress/components/CsrfInput.astro";
 
 const adminUser = Astro.locals.adminUser;
 
@@ -13,7 +13,7 @@ const errorMessage = Astro.url.searchParams.get("error") === "1" ? Astro.url.sea
 
 {adminUser?.role === "admin" ? (
   <AdminLayout
-    title="New Page | Astropress Admin"
+    title="New Page"
     heading="New Page"
     currentPath="/ap-admin/pages"
     description="Create a new public page using the route-backed page model."
@@ -71,7 +71,7 @@ const errorMessage = Astro.url.searchParams.get("error") === "1" ? Astro.url.sea
   </AdminLayout>
 ) : (
   <AdminLayout
-    title="Forbidden | Astropress Admin"
+    title="Forbidden"
     heading="Forbidden"
     currentPath="/ap-admin/posts"
     description="This action requires an admin account."

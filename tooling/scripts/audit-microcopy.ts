@@ -12,8 +12,8 @@ const bannedPhrases = [
 ];
 const allowedFiles = new Set([
   "tooling/scripts/audit-microcopy.ts",   // defines the banned phrases themselves
+  "tooling/scripts/audit-ai-drivability.ts", // checks API for banned error messages
   "docs/reference/EVALUATION.md",         // describes banned phrases as UX criteria examples
-  "packages/docs/src/content/docs/contributing/evaluation.mdx",
   "docs/UX_WRITING.md",
   "AGENTS.md",                            // documents the audit rules for contributors
 ]);
