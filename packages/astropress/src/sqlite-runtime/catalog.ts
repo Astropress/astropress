@@ -4,6 +4,10 @@ import { slugifyTerm, type AstropressSqliteDatabaseLike } from "./utils";
 import { recordAudit } from "./audit-log";
 import type { SessionUser, Actor } from "../persistence-types";
 
+const SQL_INSERT_AUTHOR = "INSERT INTO authors (slug, name, bio) VALUES (?, ?, ?)";
+const SQL_UPDATE_AUTHOR = "UPDATE authors SET slug = ?, name = ?, bio = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND deleted_at IS NULL";
+const SQL_DELETE_AUTHOR = "UPDATE authors SET deleted_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND deleted_at IS NULL";
+
 export function createSqliteCatalogStore(getDb: () => AstropressSqliteDatabaseLike) {
 
   function listAuthors() {
@@ -33,14 +37,7 @@ export function createSqliteCatalogStore(getDb: () => AstropressSqliteDatabaseLi
     slugifyTerm,
     createAuthor({ slug, name, bio }: { slug: string; name: string; bio?: string }) {
       try {
-        getDb()
-          .prepare(
-            `
-              INSERT INTO authors (slug, name, bio)
-              VALUES (?, ?, ?)
-            `,
-          )
-          .run(slug, name, bio);
+        getDb().prepare(SQL_INSERT_AUTHOR).run(slug, name, bio);
         return true;
       } catch {
         return false;
@@ -48,27 +45,14 @@ export function createSqliteCatalogStore(getDb: () => AstropressSqliteDatabaseLi
     },
     updateAuthor({ id, slug, name, bio }: { id: number; slug: string; name: string; bio?: string }) {
       try {
-        const result = getDb()
-          .prepare(
-            `
-              UPDATE authors
-              SET slug = ?, name = ?, bio = ?, updated_at = CURRENT_TIMESTAMP
-              WHERE id = ?
-                AND deleted_at IS NULL
-            `,
-          )
-          .run(slug, name, bio, id);
+        const result = getDb().prepare(SQL_UPDATE_AUTHOR).run(slug, name, bio, id);
         return result.changes > 0;
       } catch {
         return false;
       }
     },
     deleteAuthor(id: number) {
-      return (
-        getDb()
-          .prepare("UPDATE authors SET deleted_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND deleted_at IS NULL")
-          .run(id).changes > 0
-      );
+      return getDb().prepare(SQL_DELETE_AUTHOR).run(id).changes > 0;
     },
     recordAuthorAudit({ actor, action, summary, targetId }: { actor: Actor; action: string; summary: string; targetId: string }) {
       recordAudit(getDb(), actor, action, summary, "content", targetId);

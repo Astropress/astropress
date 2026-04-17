@@ -10,25 +10,91 @@ import type { SessionUser, Actor } from "../persistence-types";
 type CommentStatus = "pending" | "approved" | "rejected";
 type CommentPolicy = "legacy-readonly" | "disabled" | "open-moderated";
 
+const SQL_GET_REDIRECT = "SELECT deleted_at FROM redirect_rules WHERE source_path = ? LIMIT 1";
+const SQL_UPSERT_REDIRECT = `INSERT INTO redirect_rules (source_path, target_path, status_code, created_by, deleted_at) VALUES (?, ?, ?, ?, NULL) ON CONFLICT(source_path) DO UPDATE SET target_path = excluded.target_path, status_code = excluded.status_code, created_by = excluded.created_by, deleted_at = NULL`;
+const SQL_SOFT_DELETE_REDIRECT = "UPDATE redirect_rules SET deleted_at = CURRENT_TIMESTAMP WHERE source_path = ? AND deleted_at IS NULL";
+const SQL_UPSERT_SETTINGS = `INSERT INTO site_settings (id, site_title, site_tagline, donation_url, newsletter_enabled, comments_default_policy, admin_slug, updated_at, updated_by) VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, ?) ON CONFLICT(id) DO UPDATE SET site_title = excluded.site_title, site_tagline = excluded.site_tagline, donation_url = excluded.donation_url, newsletter_enabled = excluded.newsletter_enabled, comments_default_policy = excluded.comments_default_policy, admin_slug = excluded.admin_slug, updated_at = CURRENT_TIMESTAMP, updated_by = excluded.updated_by`;
+const SQL_GET_COMMENT_ROUTE = "SELECT route FROM comments WHERE id = ? LIMIT 1";
+const SQL_UPDATE_COMMENT_STATUS = "UPDATE comments SET status = ? WHERE id = ?";
+const SQL_INSERT_COMMENT = `INSERT INTO comments (id, author, email, body, route, status, policy, submitted_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
+const SQL_READ_TRANSLATION = "SELECT state FROM translation_overrides WHERE route = ? LIMIT 1";
+const SQL_UPSERT_TRANSLATION = "INSERT INTO translation_overrides (route, state, updated_at, updated_by) VALUES (?, ?, CURRENT_TIMESTAMP, ?) ON CONFLICT(route) DO UPDATE SET state = excluded.state, updated_at = CURRENT_TIMESTAMP, updated_by = excluded.updated_by";
+
+function queryRedirectRules(getDb: () => AstropressSqliteDatabaseLike) {
+  const rows = getDb()
+    .prepare(
+      `
+        SELECT source_path, target_path, status_code
+        FROM redirect_rules
+        WHERE deleted_at IS NULL
+        ORDER BY source_path ASC
+      `,
+    )
+    .all() as Array<{ source_path: string; target_path: string; status_code: 301 | 302 }>;
+
+  return rows.map((row) => ({
+    sourcePath: row.source_path,
+    targetPath: row.target_path,
+    statusCode: row.status_code,
+  }));
+}
+
+function queryComments(getDb: () => AstropressSqliteDatabaseLike) {
+  const rows = getDb()
+    .prepare(
+      `
+        SELECT id, author, email, body, route, status, policy, submitted_at
+        FROM comments
+        ORDER BY
+          CASE status WHEN 'pending' THEN 0 WHEN 'approved' THEN 1 ELSE 2 END,
+          datetime(submitted_at) DESC,
+          id DESC
+      `,
+    )
+    .all() as Array<{
+    id: string;
+    author: string;
+    email: string | null;
+    body: string | null;
+    route: string;
+    status: CommentStatus;
+    policy: CommentPolicy;
+    submitted_at: string;
+  }>;
+
+  return rows.map((row) => ({
+    id: row.id,
+    author: row.author,
+    email: row.email ?? undefined,
+    body: row.body ?? undefined,
+    route: row.route,
+    status: row.status,
+    policy: row.policy,
+    submittedAt: row.submitted_at,
+  }));
+}
+
+function insertComment(getDb: () => AstropressSqliteDatabaseLike, comment: { id: string; author: string; email?: string; body?: string; route: string; status: CommentStatus; policy: CommentPolicy; submittedAt?: string }) {
+  const submittedAt = comment.submittedAt ?? new Date().toISOString();
+  getDb()
+    .prepare(SQL_INSERT_COMMENT)
+    .run(
+      comment.id,
+      comment.author,
+      comment.email ?? null,
+      comment.body ?? null,
+      comment.route,
+      comment.status,
+      comment.policy,
+      submittedAt,
+    );
+  return submittedAt;
+}
+
 export function createSqliteSettingsStore(getDb: () => AstropressSqliteDatabaseLike) {
 
   function getRedirectRules() {
-    const rows = getDb()
-      .prepare(
-        `
-          SELECT source_path, target_path, status_code
-          FROM redirect_rules
-          WHERE deleted_at IS NULL
-          ORDER BY source_path ASC
-        `,
-      )
-      .all() as Array<{ source_path: string; target_path: string; status_code: 301 | 302 }>;
-
-    return rows.map((row) => ({
-      sourcePath: row.source_path,
-      targetPath: row.target_path,
-      statusCode: row.status_code,
-    }));
+    return queryRedirectRules(getDb);
   }
 
   const sqliteRedirectRepository = createAstropressRedirectRepository({
@@ -36,29 +102,19 @@ export function createSqliteSettingsStore(getDb: () => AstropressSqliteDatabaseL
     normalizePath,
     getExistingRedirect(sourcePath: string) {
       const existing = getDb()
-        .prepare("SELECT deleted_at FROM redirect_rules WHERE source_path = ? LIMIT 1")
+        .prepare(SQL_GET_REDIRECT)
         .get(sourcePath) as { deleted_at: string | null } | undefined;
       return existing ? { deletedAt: existing.deleted_at } : null;
     },
     upsertRedirect({ sourcePath, targetPath, statusCode, actor }: { sourcePath: string; targetPath: string; statusCode: 301 | 302; actor: Actor }) {
       getDb()
-        .prepare(
-          `
-            INSERT INTO redirect_rules (source_path, target_path, status_code, created_by, deleted_at)
-            VALUES (?, ?, ?, ?, NULL)
-            ON CONFLICT(source_path) DO UPDATE SET
-              target_path = excluded.target_path,
-              status_code = excluded.status_code,
-              created_by = excluded.created_by,
-              deleted_at = NULL
-          `,
-        )
+        .prepare(SQL_UPSERT_REDIRECT)
         .run(sourcePath, targetPath, statusCode, actor.email);
     },
     markRedirectDeleted(sourcePath: string) {
       return (
         getDb()
-          .prepare("UPDATE redirect_rules SET deleted_at = CURRENT_TIMESTAMP WHERE source_path = ? AND deleted_at IS NULL")
+          .prepare(SQL_SOFT_DELETE_REDIRECT)
           .run(sourcePath).changes > 0
       );
     },
@@ -68,71 +124,20 @@ export function createSqliteSettingsStore(getDb: () => AstropressSqliteDatabaseL
   });
 
   function getComments() {
-    const rows = getDb()
-      .prepare(
-        `
-          SELECT id, author, email, body, route, status, policy, submitted_at
-          FROM comments
-          ORDER BY
-            CASE status WHEN 'pending' THEN 0 WHEN 'approved' THEN 1 ELSE 2 END,
-            datetime(submitted_at) DESC,
-            id DESC
-        `,
-      )
-      .all() as Array<{
-      id: string;
-      author: string;
-      email: string | null;
-      body: string | null;
-      route: string;
-      status: CommentStatus;
-      policy: CommentPolicy;
-      submitted_at: string;
-    }>;
-
-    return rows.map((row) => ({
-      id: row.id,
-      author: row.author,
-      email: row.email ?? undefined,
-      body: row.body ?? undefined,
-      route: row.route,
-      status: row.status,
-      policy: row.policy,
-      submittedAt: row.submitted_at,
-    }));
+    return queryComments(getDb);
   }
 
   const sqliteCommentRepository = createAstropressCommentRepository({
     getComments,
     getCommentRoute(commentId: string) {
-      const comment = getDb().prepare("SELECT route FROM comments WHERE id = ? LIMIT 1").get(commentId) as
-        | { route: string }
-        | undefined;
+      const comment = getDb().prepare(SQL_GET_COMMENT_ROUTE).get(commentId) as { route: string } | undefined;
       return comment?.route ?? null;
     },
     updateCommentStatus(commentId: string, nextStatus: CommentStatus) {
-      return getDb().prepare("UPDATE comments SET status = ? WHERE id = ?").run(nextStatus, commentId).changes > 0;
+      return getDb().prepare(SQL_UPDATE_COMMENT_STATUS).run(nextStatus, commentId).changes > 0;
     },
     insertPublicComment(comment: { id: string; author: string; email?: string; body?: string; route: string; status: CommentStatus; policy: CommentPolicy; submittedAt?: string }) {
-      const submittedAt = comment.submittedAt ?? new Date().toISOString();
-      getDb()
-        .prepare(
-          `
-            INSERT INTO comments (id, author, email, body, route, status, policy, submitted_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-          `,
-        )
-        .run(
-          comment.id,
-          comment.author,
-          comment.email ?? null,
-          comment.body ?? null,
-          comment.route,
-          comment.status,
-          comment.policy,
-          submittedAt,
-        );
-      return submittedAt;
+      return insertComment(getDb, comment);
     },
     recordCommentAudit({ actor, action, summary, targetId }: { actor: Actor; action: string; summary: string; targetId: string }) {
       recordAudit(getDb(), actor, action, summary, "comment", targetId);
@@ -141,24 +146,11 @@ export function createSqliteSettingsStore(getDb: () => AstropressSqliteDatabaseL
 
   const sqliteTranslationRepository = createAstropressTranslationRepository({
     readTranslationState(route: string) {
-      const row = getDb().prepare("SELECT state FROM translation_overrides WHERE route = ? LIMIT 1").get(route) as
-        | { state: string }
-        | undefined;
+      const row = getDb().prepare(SQL_READ_TRANSLATION).get(route) as { state: string } | undefined;
       return row?.state;
     },
     persistTranslationState(route: string, state: string, actor: Actor) {
-      getDb()
-        .prepare(
-          `
-            INSERT INTO translation_overrides (route, state, updated_at, updated_by)
-            VALUES (?, ?, CURRENT_TIMESTAMP, ?)
-            ON CONFLICT(route) DO UPDATE SET
-              state = excluded.state,
-              updated_at = CURRENT_TIMESTAMP,
-              updated_by = excluded.updated_by
-          `,
-        )
-        .run(route, state, actor.email);
+      getDb().prepare(SQL_UPSERT_TRANSLATION).run(route, state, actor.email);
     },
     recordTranslationAudit({ actor, route, state }: { actor: Actor; route: string; state: string }) {
       recordAudit(getDb(), actor, "translation.update", `Updated translation state for ${route} to ${state}.`, "content", route);
@@ -204,22 +196,7 @@ export function createSqliteSettingsStore(getDb: () => AstropressSqliteDatabaseL
     getSettings,
     persistSettings(updated: SiteSettings, actor: Actor) {
       getDb()
-        .prepare(
-          `
-            INSERT INTO site_settings (
-              id, site_title, site_tagline, donation_url, newsletter_enabled, comments_default_policy, admin_slug, updated_at, updated_by
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, ?)
-            ON CONFLICT(id) DO UPDATE SET
-              site_title = excluded.site_title,
-              site_tagline = excluded.site_tagline,
-              donation_url = excluded.donation_url,
-              newsletter_enabled = excluded.newsletter_enabled,
-              comments_default_policy = excluded.comments_default_policy,
-              admin_slug = excluded.admin_slug,
-              updated_at = CURRENT_TIMESTAMP,
-              updated_by = excluded.updated_by
-          `,
-        )
+        .prepare(SQL_UPSERT_SETTINGS)
         .run(
           1,
           updated.siteTitle,

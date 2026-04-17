@@ -179,6 +179,21 @@ async function stageArtifacts(
   return { artifacts, downloadedMedia: downloadOutcome.downloadedMedia, failedMedia: downloadOutcome.failedMedia };
 }
 
+function resolveImportOverrides(input: { includeComments?: boolean; includeUsers?: boolean; includeMedia?: boolean; downloadMedia?: boolean; artifactDir?: string; applyLocal?: boolean }) {
+  return {
+    includeComments: input.includeComments ?? true,
+    includeUsers: input.includeUsers ?? true,
+    includeMedia: input.includeMedia ?? true,
+    downloadMedia: input.downloadMedia ?? false,
+    artifactDir: input.artifactDir,
+    applyLocal: input.applyLocal ?? false,
+  };
+}
+
+function resolveImportStatus(plan: AstropressWordPressImportPlan, failedMedia: AstropressWordPressImportReport["failedMedia"]): AstropressWordPressImportReport["status"] {
+  return plan.reviewRequired || failedMedia.length > 0 ? "completed_with_warnings" : "completed";
+}
+
 export function createAstropressWordPressImportSource(
   options: AstropressWordPressImportSourceOptions = {},
 ): ImportSource {
@@ -188,38 +203,18 @@ export function createAstropressWordPressImportSource(
       return inventory;
     },
     async planWordPressImport(input) {
-      return buildImportPlan(input.inventory, {
-        includeComments: input.includeComments ?? true,
-        includeUsers: input.includeUsers ?? true,
-        includeMedia: input.includeMedia ?? true,
-        downloadMedia: input.downloadMedia ?? false,
-        artifactDir: input.artifactDir,
-        applyLocal: input.applyLocal ?? false,
-      });
+      return buildImportPlan(input.inventory, resolveImportOverrides(input));
     },
     async importWordPress(input) {
       const { bundle, inventory } = await parseImportInput({ ...input, sourceUrl: input.sourceUrl ?? options.sourceUrl });
-      const plan = input.plan ?? buildImportPlan(inventory, {
-        includeComments: input.includeComments ?? true,
-        includeUsers: input.includeUsers ?? true,
-        includeMedia: input.includeMedia ?? true,
-        downloadMedia: input.downloadMedia ?? false,
-        artifactDir: input.artifactDir,
-        applyLocal: input.applyLocal ?? false,
-      });
+      const plan = input.plan ?? buildImportPlan(inventory, resolveImportOverrides(input));
 
       const artifactsOutcome = plan.artifactDir
         ? await stageArtifacts(plan.artifactDir, inventory, plan, bundle, input.resumeFrom)
         : { artifacts: undefined, downloadedMedia: 0, failedMedia: [] };
 
       const localApply = plan.applyLocal
-        ? await applyImportToLocalRuntime({
-          bundle,
-          artifactDir: plan.artifactDir,
-          workspaceRoot: input.workspaceRoot ?? process.cwd(),
-          adminDbPath: input.adminDbPath,
-          plan,
-        })
+        ? await applyImportToLocalRuntime({ bundle, artifactDir: plan.artifactDir, workspaceRoot: input.workspaceRoot ?? process.cwd(), adminDbPath: input.adminDbPath, plan })
         : undefined;
 
       if (plan.applyLocal && plan.artifactDir) {
@@ -232,17 +227,16 @@ export function createAstropressWordPressImportSource(
         const reportFile = path.join(plan.artifactDir, "import-report.json");
         await writeJsonArtifact(reportFile, {
           generatedAt: new Date().toISOString(),
-          status: plan.reviewRequired || artifactsOutcome.failedMedia.length > 0 ? "completed_with_warnings" : "completed",
+          status: resolveImportStatus(plan, artifactsOutcome.failedMedia),
           counts: bundle.entityCounts,
           mediaErrors: artifactsOutcome.failedMedia.map((f) => ({ id: f.id, sourceUrl: f.sourceUrl, reason: f.reason })),
-          manualReviewFlags: bundle.remediationCandidates,
-          warnings: plan.manualTasks,
+          manualReviewFlags: bundle.remediationCandidates, warnings: plan.manualTasks,
         });
         artifactsOutcome.artifacts.reportFile = reportFile;
       }
 
       return {
-        status: plan.reviewRequired || artifactsOutcome.failedMedia.length > 0 ? "completed_with_warnings" : "completed",
+        status: resolveImportStatus(plan, artifactsOutcome.failedMedia),
         importedRecords: bundle.contentRecords.length,
         importedMedia: plan.includeMedia ? bundle.mediaAssets.length : 0,
         importedComments: plan.includeComments ? bundle.comments.length : 0,
@@ -250,15 +244,10 @@ export function createAstropressWordPressImportSource(
         importedRedirects: bundle.redirects.length,
         downloadedMedia: artifactsOutcome.downloadedMedia,
         failedMedia: artifactsOutcome.failedMedia,
-        reviewRequired: plan.reviewRequired,
-        manualTasks: plan.manualTasks,
-        plan,
-        inventory,
-        artifacts: artifactsOutcome.artifacts,
-        localApply,
+        reviewRequired: plan.reviewRequired, manualTasks: plan.manualTasks,
+        plan, inventory, artifacts: artifactsOutcome.artifacts, localApply,
         warnings: [...new Set([
-          ...inventory.warnings,
-          ...plan.manualTasks,
+          ...inventory.warnings, ...plan.manualTasks,
           ...(localApply ? [`Applied WordPress import into local SQLite runtime at ${localApply.adminDbPath}.`] : []),
           ...artifactsOutcome.failedMedia.map((e) => `Media download failed for ${e.id}: ${e.reason}`),
         ])],
@@ -266,10 +255,8 @@ export function createAstropressWordPressImportSource(
     },
     async resumeWordPressImport(input) {
       return this.importWordPress({
-        ...input,
-        sourceUrl: input.sourceUrl ?? options.sourceUrl,
-        artifactDir: input.artifactDir,
-        resumeFrom: path.join(input.artifactDir, "download-state.json"),
+        ...input, sourceUrl: input.sourceUrl ?? options.sourceUrl,
+        artifactDir: input.artifactDir, resumeFrom: path.join(input.artifactDir, "download-state.json"),
       });
     },
   };

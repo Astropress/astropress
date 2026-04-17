@@ -2,6 +2,74 @@ import type { AstropressSqliteSeedToolkitOptions, SqliteDatabaseLike, SystemRout
 import { getCmsConfig } from "./config.js";
 import { hashPasswordSync, guessMimeType } from "./sqlite-seed-helpers.js";
 
+const SQL_SEED_SITE_SETTINGS = `
+  INSERT INTO site_settings (
+    id, site_title, site_tagline, donation_url, newsletter_enabled, comments_default_policy, updated_by
+  ) VALUES (?, ?, ?, ?, ?, ?, ?)
+  ON CONFLICT(id) DO NOTHING
+`;
+const SQL_SEED_SYSTEM_GROUP = `
+  INSERT INTO cms_route_groups (id, kind, render_strategy, canonical_locale, canonical_path)
+  VALUES (?, 'system', ?, 'en', ?)
+  ON CONFLICT(id) DO UPDATE SET
+    render_strategy = excluded.render_strategy,
+    canonical_path = excluded.canonical_path,
+    updated_at = CURRENT_TIMESTAMP
+`;
+const SQL_SEED_SYSTEM_VARIANT = `
+  INSERT INTO cms_route_variants (
+    id, group_id, locale, path, status, title, summary, body_html, sections_json, settings_json,
+    seo_title, meta_description, og_title, og_description, og_image, canonical_url_override,
+    robots_directive, updated_at, updated_by
+  ) VALUES (?, ?, 'en', ?, 'published', ?, ?, ?, NULL, ?, ?, ?, NULL, NULL, NULL, NULL, ?, CURRENT_TIMESTAMP, ?)
+  ON CONFLICT(id) DO UPDATE SET
+    path = excluded.path, title = excluded.title, summary = excluded.summary,
+    body_html = excluded.body_html, settings_json = excluded.settings_json,
+    seo_title = excluded.seo_title, meta_description = excluded.meta_description,
+    robots_directive = excluded.robots_directive,
+    updated_at = CURRENT_TIMESTAMP, updated_by = excluded.updated_by
+`;
+const SQL_SEED_SYSTEM_REVISION = `
+  INSERT INTO cms_route_revisions (id, variant_id, route_path, locale, snapshot_json, revision_note, created_by)
+  VALUES (?, ?, ?, 'en', ?, ?, ?)
+  ON CONFLICT(id) DO NOTHING
+`;
+const SQL_SEED_ARCHIVE_GROUP = `
+  INSERT INTO cms_route_groups (id, kind, render_strategy, canonical_locale, canonical_path)
+  VALUES (?, 'archive', 'archive_listing', 'en', ?)
+  ON CONFLICT(id) DO UPDATE SET canonical_path = excluded.canonical_path, updated_at = CURRENT_TIMESTAMP
+`;
+const SQL_SEED_ARCHIVE_VARIANT = `
+  INSERT INTO cms_route_variants (
+    id, group_id, locale, path, status, title, summary, body_html, sections_json, settings_json,
+    seo_title, meta_description, og_title, og_description, og_image, canonical_url_override,
+    robots_directive, updated_at, updated_by
+  ) VALUES (?, ?, 'en', ?, 'published', ?, ?, NULL, NULL, NULL, ?, ?, NULL, NULL, NULL, ?, ?, CURRENT_TIMESTAMP, ?)
+  ON CONFLICT(id) DO UPDATE SET
+    title = excluded.title, summary = excluded.summary, seo_title = excluded.seo_title,
+    meta_description = excluded.meta_description, canonical_url_override = excluded.canonical_url_override,
+    robots_directive = excluded.robots_directive, updated_at = CURRENT_TIMESTAMP, updated_by = excluded.updated_by
+`;
+const SQL_SEED_MARKETING_GROUP = `
+  INSERT INTO cms_route_groups (id, kind, render_strategy, canonical_locale, canonical_path)
+  VALUES (?, 'page', 'structured_sections', ?, ?)
+  ON CONFLICT(id) DO UPDATE SET
+    canonical_locale = excluded.canonical_locale, canonical_path = excluded.canonical_path, updated_at = CURRENT_TIMESTAMP
+`;
+const SQL_SEED_MARKETING_VARIANT = `
+  INSERT INTO cms_route_variants (
+    id, group_id, locale, path, status, title, summary, body_html, sections_json, settings_json,
+    seo_title, meta_description, og_title, og_description, og_image, canonical_url_override,
+    robots_directive, updated_at, updated_by
+  ) VALUES (?, ?, ?, ?, 'published', ?, ?, NULL, ?, ?, ?, ?, NULL, NULL, ?, ?, ?, CURRENT_TIMESTAMP, ?)
+  ON CONFLICT(id) DO UPDATE SET
+    title = excluded.title, summary = excluded.summary, sections_json = excluded.sections_json,
+    settings_json = excluded.settings_json, seo_title = excluded.seo_title,
+    meta_description = excluded.meta_description, og_image = excluded.og_image,
+    canonical_url_override = excluded.canonical_url_override, robots_directive = excluded.robots_directive,
+    updated_at = CURRENT_TIMESTAMP, updated_by = excluded.updated_by
+`;
+
 /** Build bind params for a system route variant insert. */
 function systemRouteVariantParams(route: SystemRouteSeed) {
   return [
@@ -139,12 +207,7 @@ export function seedComments(options: AstropressSqliteSeedToolkitOptions, db: Sq
 }
 
 export function seedSiteSettings(options: AstropressSqliteSeedToolkitOptions, db: SqliteDatabaseLike) {
-  const result = db.prepare(`
-    INSERT INTO site_settings (
-      id, site_title, site_tagline, donation_url, newsletter_enabled, comments_default_policy, updated_by
-    ) VALUES (?, ?, ?, ?, ?, ?, ?)
-    ON CONFLICT(id) DO NOTHING
-  `).run(
+  const result = db.prepare(SQL_SEED_SITE_SETTINGS).run(
     1,
     options.siteSettings.siteTitle,
     options.siteSettings.siteTagline,
@@ -157,37 +220,9 @@ export function seedSiteSettings(options: AstropressSqliteSeedToolkitOptions, db
 }
 
 export function seedSystemRoutes(options: AstropressSqliteSeedToolkitOptions, db: SqliteDatabaseLike) {
-  const insertGroup = db.prepare(`
-    INSERT INTO cms_route_groups (id, kind, render_strategy, canonical_locale, canonical_path)
-    VALUES (?, 'system', ?, 'en', ?)
-    ON CONFLICT(id) DO UPDATE SET
-      render_strategy = excluded.render_strategy,
-      canonical_path = excluded.canonical_path,
-      updated_at = CURRENT_TIMESTAMP
-  `);
-  const insertVariant = db.prepare(`
-    INSERT INTO cms_route_variants (
-      id, group_id, locale, path, status, title, summary, body_html, sections_json, settings_json,
-      seo_title, meta_description, og_title, og_description, og_image, canonical_url_override,
-      robots_directive, updated_at, updated_by
-    ) VALUES (?, ?, 'en', ?, 'published', ?, ?, ?, NULL, ?, ?, ?, NULL, NULL, NULL, NULL, ?, CURRENT_TIMESTAMP, ?)
-    ON CONFLICT(id) DO UPDATE SET
-      path = excluded.path,
-      title = excluded.title,
-      summary = excluded.summary,
-      body_html = excluded.body_html,
-      settings_json = excluded.settings_json,
-      seo_title = excluded.seo_title,
-      meta_description = excluded.meta_description,
-      robots_directive = excluded.robots_directive,
-      updated_at = CURRENT_TIMESTAMP,
-      updated_by = excluded.updated_by
-  `);
-  const insertRevision = db.prepare(`
-    INSERT INTO cms_route_revisions (id, variant_id, route_path, locale, snapshot_json, revision_note, created_by)
-    VALUES (?, ?, ?, 'en', ?, ?, ?)
-    ON CONFLICT(id) DO NOTHING
-  `);
+  const insertGroup = db.prepare(SQL_SEED_SYSTEM_GROUP);
+  const insertVariant = db.prepare(SQL_SEED_SYSTEM_VARIANT);
+  const insertRevision = db.prepare(SQL_SEED_SYSTEM_REVISION);
 
   let count = 0;
   for (const route of options.systemRoutes) {
@@ -203,29 +238,8 @@ export function seedSystemRoutes(options: AstropressSqliteSeedToolkitOptions, db
 }
 
 export function seedArchiveRoutes(options: AstropressSqliteSeedToolkitOptions, db: SqliteDatabaseLike) {
-  const insertGroup = db.prepare(`
-    INSERT INTO cms_route_groups (id, kind, render_strategy, canonical_locale, canonical_path)
-    VALUES (?, 'archive', 'archive_listing', 'en', ?)
-    ON CONFLICT(id) DO UPDATE SET
-      canonical_path = excluded.canonical_path,
-      updated_at = CURRENT_TIMESTAMP
-  `);
-  const insertVariant = db.prepare(`
-    INSERT INTO cms_route_variants (
-      id, group_id, locale, path, status, title, summary, body_html, sections_json, settings_json,
-      seo_title, meta_description, og_title, og_description, og_image, canonical_url_override,
-      robots_directive, updated_at, updated_by
-    ) VALUES (?, ?, 'en', ?, 'published', ?, ?, NULL, NULL, NULL, ?, ?, NULL, NULL, NULL, ?, ?, CURRENT_TIMESTAMP, ?)
-    ON CONFLICT(id) DO UPDATE SET
-      title = excluded.title,
-      summary = excluded.summary,
-      seo_title = excluded.seo_title,
-      meta_description = excluded.meta_description,
-      canonical_url_override = excluded.canonical_url_override,
-      robots_directive = excluded.robots_directive,
-      updated_at = CURRENT_TIMESTAMP,
-      updated_by = excluded.updated_by
-  `);
+  const insertGroup = db.prepare(SQL_SEED_ARCHIVE_GROUP);
+  const insertVariant = db.prepare(SQL_SEED_ARCHIVE_VARIANT);
 
   let count = 0;
   for (const archive of options.archiveRoutes) {
@@ -240,33 +254,8 @@ export function seedArchiveRoutes(options: AstropressSqliteSeedToolkitOptions, d
 }
 
 export function seedMarketingRoutes(options: AstropressSqliteSeedToolkitOptions, db: SqliteDatabaseLike) {
-  const insertGroup = db.prepare(`
-    INSERT INTO cms_route_groups (id, kind, render_strategy, canonical_locale, canonical_path)
-    VALUES (?, 'page', 'structured_sections', ?, ?)
-    ON CONFLICT(id) DO UPDATE SET
-      canonical_locale = excluded.canonical_locale,
-      canonical_path = excluded.canonical_path,
-      updated_at = CURRENT_TIMESTAMP
-  `);
-  const insertVariant = db.prepare(`
-    INSERT INTO cms_route_variants (
-      id, group_id, locale, path, status, title, summary, body_html, sections_json, settings_json,
-      seo_title, meta_description, og_title, og_description, og_image, canonical_url_override,
-      robots_directive, updated_at, updated_by
-    ) VALUES (?, ?, ?, ?, 'published', ?, ?, NULL, ?, ?, ?, ?, NULL, NULL, ?, ?, ?, CURRENT_TIMESTAMP, ?)
-    ON CONFLICT(id) DO UPDATE SET
-      title = excluded.title,
-      summary = excluded.summary,
-      sections_json = excluded.sections_json,
-      settings_json = excluded.settings_json,
-      seo_title = excluded.seo_title,
-      meta_description = excluded.meta_description,
-      og_image = excluded.og_image,
-      canonical_url_override = excluded.canonical_url_override,
-      robots_directive = excluded.robots_directive,
-      updated_at = CURRENT_TIMESTAMP,
-      updated_by = excluded.updated_by
-  `);
+  const insertGroup = db.prepare(SQL_SEED_MARKETING_GROUP);
+  const insertVariant = db.prepare(SQL_SEED_MARKETING_VARIANT);
 
   let count = 0;
   for (const page of options.marketingRoutes) {

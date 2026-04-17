@@ -18,9 +18,38 @@ interface Actor {
 
 type D1Like = ReturnType<typeof getCloudflareBindings>["DB"];
 
+const SQL_CHECK_VARIANT_PATH = `SELECT v.id FROM cms_route_variants v WHERE v.path = ? LIMIT 1`;
+const SQL_FIND_STRUCTURED_ROUTE = `
+  SELECT v.id
+  FROM cms_route_variants v
+  INNER JOIN cms_route_groups g ON g.id = v.group_id
+  WHERE g.kind = 'page' AND g.render_strategy = 'structured_sections' AND v.path = ?
+  LIMIT 1
+`;
+const SQL_UPDATE_ROUTE_VARIANT = `
+  UPDATE cms_route_variants
+  SET title = ?, summary = ?, seo_title = ?, meta_description = ?, canonical_url_override = ?, robots_directive = ?,
+      og_image = ?, sections_json = ?, settings_json = ?, updated_at = CURRENT_TIMESTAMP, updated_by = ?
+  WHERE id = ?
+`;
+const SQL_INSERT_ROUTE_REVISION = `
+  INSERT INTO cms_route_revisions (id, variant_id, route_path, locale, snapshot_json, revision_note, created_by)
+  VALUES (?, ?, ?, ?, ?, ?, ?)
+`;
+const SQL_INSERT_ROUTE_GROUP = `
+  INSERT INTO cms_route_groups (id, kind, render_strategy, canonical_locale, canonical_path)
+  VALUES (?, 'page', 'structured_sections', ?, ?)
+`;
+const SQL_INSERT_NEW_ROUTE_VARIANT = `
+  INSERT INTO cms_route_variants (
+    id, group_id, locale, path, status, title, summary, sections_json, settings_json,
+    seo_title, meta_description, og_image, canonical_url_override, robots_directive, updated_by
+  ) VALUES (?, ?, ?, ?, 'published', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+`;
+
 /** Check if a variant path already exists. */
 async function isVariantPathTaken(db: NonNullable<D1Like>, normalizedPath: string): Promise<boolean> {
-  const existing = await db.prepare(`SELECT v.id FROM cms_route_variants v WHERE v.path = ? LIMIT 1`).bind(normalizedPath).first<{ id: string }>();
+  const existing = await db.prepare(SQL_CHECK_VARIANT_PATH).bind(normalizedPath).first<{ id: string }>();
   return !!existing;
 }
 
@@ -121,15 +150,7 @@ export async function saveRuntimeStructuredPageRoute(
   }
 
   const route = await db
-    .prepare(
-      `
-        SELECT v.id
-        FROM cms_route_variants v
-        INNER JOIN cms_route_groups g ON g.id = v.group_id
-        WHERE g.kind = 'page' AND g.render_strategy = 'structured_sections' AND v.path = ?
-        LIMIT 1
-      `,
-    )
+    .prepare(SQL_FIND_STRUCTURED_ROUTE)
     .bind(normalizedPath)
     .first<{ id: string }>();
 
@@ -142,20 +163,12 @@ export async function saveRuntimeStructuredPageRoute(
     return { ok: false as const, error: "A title is required." };
   }
 
-  await db.prepare(`
-    UPDATE cms_route_variants
-    SET title = ?, summary = ?, seo_title = ?, meta_description = ?, canonical_url_override = ?, robots_directive = ?,
-        og_image = ?, sections_json = ?, settings_json = ?, updated_at = CURRENT_TIMESTAMP, updated_by = ?
-    WHERE id = ?
-  `).bind(
+  await db.prepare(SQL_UPDATE_ROUTE_VARIANT).bind(
     f.title, f.summary, f.seoTitle, f.metaDescription, f.canonicalUrlOverride, f.robotsDirective,
     f.ogImage, f.sectionsJson, f.settingsJson, actor.email, route.id,
   ).run();
 
-  await db.prepare(`
-    INSERT INTO cms_route_revisions (id, variant_id, route_path, locale, snapshot_json, revision_note, created_by)
-    VALUES (?, ?, ?, ?, ?, ?, ?)
-  `).bind(
+  await db.prepare(SQL_INSERT_ROUTE_REVISION).bind(
     `revision:${route.id}:${crypto.randomUUID()}`, route.id, normalizedPath,
     localeFromPath(normalizedPath), buildRouteSnapshot(normalizedPath, f, input),
     input.revisionNote?.trim() || null, actor.email,
@@ -207,25 +220,14 @@ export async function createRuntimeStructuredPageRoute(
   const variantId = `route-variant:${crypto.randomUUID()}`;
   const locale = localeFromPath(normalizedPath);
 
-  await db.prepare(`
-    INSERT INTO cms_route_groups (id, kind, render_strategy, canonical_locale, canonical_path)
-    VALUES (?, 'page', 'structured_sections', ?, ?)
-  `).bind(groupId, locale, normalizedPath).run();
+  await db.prepare(SQL_INSERT_ROUTE_GROUP).bind(groupId, locale, normalizedPath).run();
 
-  await db.prepare(`
-    INSERT INTO cms_route_variants (
-      id, group_id, locale, path, status, title, summary, sections_json, settings_json,
-      seo_title, meta_description, og_image, canonical_url_override, robots_directive, updated_by
-    ) VALUES (?, ?, ?, ?, 'published', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `).bind(
+  await db.prepare(SQL_INSERT_NEW_ROUTE_VARIANT).bind(
     variantId, groupId, locale, normalizedPath, f.title, f.summary, f.sectionsJson, f.settingsJson,
     f.seoTitle, f.metaDescription, f.ogImage, f.canonicalUrlOverride, f.robotsDirective, actor.email,
   ).run();
 
-  await db.prepare(`
-    INSERT INTO cms_route_revisions (id, variant_id, route_path, locale, snapshot_json, revision_note, created_by)
-    VALUES (?, ?, ?, ?, ?, ?, ?)
-  `).bind(
+  await db.prepare(SQL_INSERT_ROUTE_REVISION).bind(
     `revision:${variantId}:${crypto.randomUUID()}`, variantId, normalizedPath, locale,
     buildRouteSnapshot(normalizedPath, f, input), input.revisionNote?.trim() || "Created route page.", actor.email,
   ).run();

@@ -5,6 +5,22 @@ import type { D1DatabaseLike } from "./d1-database";
 
 export type ContentStatus = "draft" | "review" | "published" | "archived";
 
+const SQL_UPSERT_BASELINE_OVERRIDE = `
+  INSERT INTO content_overrides (
+    slug, title, status, body, seo_title, meta_description, excerpt, og_title,
+    og_description, og_image, canonical_url_override, robots_directive, updated_at, updated_by
+  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, ?)
+  ON CONFLICT(slug) DO NOTHING
+`;
+const SQL_CHECK_IMPORTED_REVISION = "SELECT id FROM content_revisions WHERE slug = ? AND source = 'imported' LIMIT 1";
+const SQL_INSERT_BASELINE_REVISION = `
+  INSERT INTO content_revisions (
+    id, slug, title, status, body, seo_title, meta_description, excerpt,
+    og_title, og_description, og_image, author_ids, category_ids, tag_ids,
+    canonical_url_override, robots_directive, source, created_at, created_by
+  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'imported', ?, ?)
+`;
+
 export interface PageRecord {
   slug: string;
   legacyUrl: string;
@@ -114,19 +130,13 @@ function baselineFields(pageRecord: PageRecord) {
 
 export async function ensureD1BaselineRevision(db: D1DatabaseLike, pageRecord: PageRecord) {
   const f = baselineFields(pageRecord);
-  await db.prepare(`
-    INSERT INTO content_overrides (
-      slug, title, status, body, seo_title, meta_description, excerpt, og_title,
-      og_description, og_image, canonical_url_override, robots_directive, updated_at, updated_by
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, ?)
-    ON CONFLICT(slug) DO NOTHING
-  `).bind(
+  await db.prepare(SQL_UPSERT_BASELINE_OVERRIDE).bind(
     pageRecord.slug, pageRecord.title, f.status, f.body, f.seoTitle, f.metaDesc,
     f.excerpt, null, null, null, null, null, "seed-import",
   ).run();
 
   const existing = await db
-    .prepare("SELECT id FROM content_revisions WHERE slug = ? AND source = 'imported' LIMIT 1")
+    .prepare(SQL_CHECK_IMPORTED_REVISION)
     .bind(pageRecord.slug)
     .first<{ id: string }>();
 
@@ -135,13 +145,7 @@ export async function ensureD1BaselineRevision(db: D1DatabaseLike, pageRecord: P
     return;
   }
 
-  await db.prepare(`
-    INSERT INTO content_revisions (
-      id, slug, title, status, body, seo_title, meta_description, excerpt,
-      og_title, og_description, og_image, author_ids, category_ids, tag_ids,
-      canonical_url_override, robots_directive, source, created_at, created_by
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'imported', ?, ?)
-  `).bind(
+  await db.prepare(SQL_INSERT_BASELINE_REVISION).bind(
     `revision-${crypto.randomUUID()}`, pageRecord.slug, pageRecord.title, f.status, f.body,
     f.seoTitle, f.metaDesc, f.excerpt, null, null, null, "[]", "[]", "[]", null, null,
     "imported-baseline", "seed-import",

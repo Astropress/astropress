@@ -69,19 +69,9 @@ async function main() {
     const lines = content.split("\n").length;
 
     // --- Rule: LOC limits ---
-    // Exempt: known-large stable files (schema bootstrap, public barrel, import workers, sqlite runtime)
     const LOC_WARN = 400;
     const LOC_ERROR = 600;
-    const locExempt = new Set([
-      "sqlite-bootstrap.ts",
-      "index.ts",
-      "project-scaffold.ts",          // CLI scaffolding — intentionally verbose
-      "cms-route-registry-factory.ts", // factory with injected deps — stable
-      "auth-repository-factory.ts",
-      "runtime-actions-content.ts",   // complex multi-step content coordinator
-    ]);
-    const locExemptDirs = ["sqlite-runtime/", "import/", "adapters/"];
-    const isLocExempt = locExempt.has(filename) || locExemptDirs.some((d) => display.includes(d));
+    const isLocExempt = false; // No exemptions — all files must be under 400 lines
 
     if (!isLocExempt) {
       if (lines > LOC_ERROR) {
@@ -187,24 +177,12 @@ async function main() {
   // Functions with high cyclomatic complexity are hard to test and reason about.
   // Complexity = 1 + count of (if, else if, case, &&, ||, ternary ?, catch, ??)
   // Threshold: warn at 20, error at 40.
-  // Files in sqlite-runtime/, adapters/, import/ are exempt (data-access modules
-  // with inherently branchy SQL dispatch — tracked for future refactoring).
+  // No exemptions — all functions must be under complexity 40 (error) / 20 (warn)
   const COMPLEXITY_WARN = 20;
   const COMPLEXITY_ERROR = 40;
-  const complexityExemptPaths = ["sqlite-runtime/", "adapters/", "import/"];
-  const complexityExemptFiles = new Set([
-    "runtime-actions-content.ts",           // multi-step content coordinator — inherently branchy
-    "runtime-actions-content-shared.ts",    // shared content revision logic
-    "runtime-route-registry-pages-mutations.ts", // page route CRUD
-    "cms-route-registry-factory.ts",        // factory with injected deps
-    "sqlite-bootstrap-seeders.ts",          // data seeding
-  ]);
 
   for (const file of allFiles) {
     const display = relative(root, file);
-    const fname = file.split("/").pop() ?? "";
-    if (complexityExemptPaths.some((p) => display.includes(p))) continue;
-    if (complexityExemptFiles.has(fname)) continue;
 
     const content = await readFile(file, "utf8");
 

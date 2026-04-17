@@ -118,6 +118,18 @@ export interface AstropressCmsRouteRegistryFactoryInput {
   }): void;
 }
 
+type StructuredPageInput = {
+  title: string; summary?: string; seoTitle?: string; metaDescription?: string;
+  canonicalUrlOverride?: string; robotsDirective?: string; ogImage?: string;
+  templateKey: string; alternateLinks?: Array<{ hreflang: string; href: string }>;
+  sections?: Record<string, unknown> | null; revisionNote?: string;
+};
+
+type ArchiveRouteInput = {
+  title: string; summary?: string; seoTitle?: string; metaDescription?: string;
+  canonicalUrlOverride?: string; robotsDirective?: string; revisionNote?: string;
+};
+
 /** Normalize structured page input fields, centralising branchy fallback logic. */
 function normalizeStructuredInput(rawInput: {
   title: string;
@@ -160,18 +172,6 @@ function normalizeArchiveInput(rawInput: {
   const robotsDirective = rawInput.robotsDirective?.trim() || null;
   return { title, summary, seoTitle, metaDescription, canonicalUrlOverride, robotsDirective };
 }
-
-type StructuredPageInput = {
-  title: string; summary?: string; seoTitle?: string; metaDescription?: string;
-  canonicalUrlOverride?: string; robotsDirective?: string; ogImage?: string;
-  templateKey: string; alternateLinks?: Array<{ hreflang: string; href: string }>;
-  sections?: Record<string, unknown> | null; revisionNote?: string;
-};
-
-type ArchiveRouteInput = {
-  title: string; summary?: string; seoTitle?: string; metaDescription?: string;
-  canonicalUrlOverride?: string; robotsDirective?: string; revisionNote?: string;
-};
 
 function doSaveSystemRoute(
   ctx: AstropressCmsRouteRegistryFactoryInput, pathname: string,

@@ -15,6 +15,34 @@ import {
   validateContentTypeFields,
 } from "./runtime-actions-content-shared";
 
+type D1Like = import("./d1-database").D1DatabaseLike;
+
+interface SaveContentInput {
+  title: string; status: string; scheduledAt?: string; body?: string;
+  authorIds?: number[]; categoryIds?: number[]; tagIds?: number[];
+  seoTitle: string; metaDescription: string; excerpt?: string;
+  ogTitle?: string; ogDescription?: string; ogImage?: string;
+  canonicalUrlOverride?: string; robotsDirective?: string; revisionNote?: string;
+  lastKnownUpdatedAt?: string; metadata?: Record<string, unknown>;
+}
+
+interface RevisionRow {
+  title: string; status: ContentStatus; scheduled_at: string | null; body: string | null;
+  seo_title: string; meta_description: string; excerpt: string | null;
+  og_title: string | null; og_description: string | null; og_image: string | null;
+  author_ids: string | null; category_ids: string | null; tag_ids: string | null;
+  canonical_url_override: string | null; robots_directive: string | null; revision_note: string | null;
+}
+
+const SQL_DETECT_CONFLICT = "SELECT updated_at FROM content_overrides WHERE slug = ?";
+
+const INSERT_REVISION_SQL = `INSERT INTO content_revisions (id, slug, title, status, scheduled_at, body, seo_title, meta_description, excerpt, og_title, og_description, og_image, author_ids, category_ids, tag_ids, canonical_url_override, robots_directive, revision_note, source, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'reviewed', ?)`;
+const UPSERT_CONTENT_OVERRIDE_SQL = `INSERT INTO content_overrides (slug, title, status, body, seo_title, meta_description, excerpt, og_title, og_description, og_image, scheduled_at, canonical_url_override, robots_directive, metadata, updated_at, updated_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, ?) ON CONFLICT(slug) DO UPDATE SET title = excluded.title, status = excluded.status, body = excluded.body, seo_title = excluded.seo_title, meta_description = excluded.meta_description, excerpt = excluded.excerpt, og_title = excluded.og_title, og_description = excluded.og_description, og_image = excluded.og_image, scheduled_at = excluded.scheduled_at, canonical_url_override = excluded.canonical_url_override, robots_directive = excluded.robots_directive, metadata = excluded.metadata, updated_at = CURRENT_TIMESTAMP, updated_by = excluded.updated_by`;
+const UPSERT_CONTENT_OVERRIDE_NO_META_SQL = `INSERT INTO content_overrides (slug, title, status, body, seo_title, meta_description, excerpt, og_title, og_description, og_image, scheduled_at, canonical_url_override, robots_directive, updated_at, updated_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, ?) ON CONFLICT(slug) DO UPDATE SET title = excluded.title, status = excluded.status, body = excluded.body, seo_title = excluded.seo_title, meta_description = excluded.meta_description, excerpt = excluded.excerpt, og_title = excluded.og_title, og_description = excluded.og_description, og_image = excluded.og_image, scheduled_at = excluded.scheduled_at, canonical_url_override = excluded.canonical_url_override, robots_directive = excluded.robots_directive, updated_at = CURRENT_TIMESTAMP, updated_by = excluded.updated_by`;
+const SQL_INSERT_CONTENT_ENTRY = `INSERT INTO content_entries (slug, legacy_url, title, kind, template_key, source_html_path, updated_at, body, summary, seo_title, meta_description, og_title, og_description, og_image) VALUES (?, ?, ?, 'post', 'content', ?, CURRENT_TIMESTAMP, ?, ?, ?, ?, ?, ?, ?)`;
+const SQL_INSERT_CREATE_OVERRIDE = `INSERT INTO content_overrides (slug, title, status, body, seo_title, meta_description, excerpt, og_title, og_description, og_image, canonical_url_override, robots_directive, updated_at, updated_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, ?)`;
+const SQL_SELECT_REVISION = `SELECT title, status, scheduled_at, body, seo_title, meta_description, excerpt, og_title, og_description, og_image, author_ids, category_ids, tag_ids, canonical_url_override, robots_directive, revision_note FROM content_revisions WHERE slug = ? AND id = ? LIMIT 1`;
+
 function trimOrNull(value: string | undefined | null): string | null {
   return value?.trim() || null;
 }
@@ -51,6 +79,10 @@ function normalizeLegacyUrl(legacyUrl: string | undefined, slug: string): string
   return raw.startsWith("/") ? raw : `/${raw}`;
 }
 
+function serializeMetadata(metadata: Record<string, unknown>): string | null {
+  return Object.keys(metadata).length > 0 ? JSON.stringify(metadata) : null;
+}
+
 function nullsToUndefined<T extends Record<string, unknown>>(obj: T): { [K in keyof T]: Exclude<T[K], null> | undefined } {
   const result = {} as Record<string, unknown>;
   for (const [key, value] of Object.entries(obj)) {
@@ -59,35 +91,13 @@ function nullsToUndefined<T extends Record<string, unknown>>(obj: T): { [K in ke
   return result as { [K in keyof T]: Exclude<T[K], null> | undefined };
 }
 
-function serializeMetadata(metadata: Record<string, unknown>): string | null {
-  return Object.keys(metadata).length > 0 ? JSON.stringify(metadata) : null;
-}
-
-type D1Like = import("./d1-database").D1DatabaseLike;
-
 async function detectConflict(db: D1Like, slug: string, lastKnownUpdatedAt: string) {
-  const row = await db.prepare("SELECT updated_at FROM content_overrides WHERE slug = ?").bind(slug).first<{ updated_at: string }>();
+  const row = await db.prepare(SQL_DETECT_CONFLICT).bind(slug).first<{ updated_at: string }>();
   if (row && row.updated_at !== lastKnownUpdatedAt) {
     return { ok: false as const, error: "This record was modified by another editor after you opened it. Reload to see the latest version.", conflict: true as const };
   }
   return null;
 }
-
-interface RevisionRow {
-  title: string; status: ContentStatus; scheduled_at: string | null; body: string | null;
-  seo_title: string; meta_description: string; excerpt: string | null;
-  og_title: string | null; og_description: string | null; og_image: string | null;
-  author_ids: string | null; category_ids: string | null; tag_ids: string | null;
-  canonical_url_override: string | null; robots_directive: string | null; revision_note: string | null;
-}
-
-const INSERT_REVISION_SQL = `
-  INSERT INTO content_revisions (
-    id, slug, title, status, scheduled_at, body, seo_title, meta_description, excerpt,
-    og_title, og_description, og_image, author_ids, category_ids, tag_ids,
-    canonical_url_override, robots_directive, revision_note, source, created_by
-  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'reviewed', ?)
-`;
 
 async function insertContentRevision(db: D1Like, slug: string, r: {
   title: string; status: string; scheduledAt?: string | null; body: string;
@@ -104,60 +114,8 @@ async function insertContentRevision(db: D1Like, slug: string, r: {
   ).run();
 }
 
-const UPSERT_CONTENT_OVERRIDE_SQL = `
-  INSERT INTO content_overrides (
-    slug, title, status, body, seo_title, meta_description, excerpt, og_title,
-    og_description, og_image, scheduled_at, canonical_url_override, robots_directive, metadata, updated_at, updated_by
-  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, ?)
-  ON CONFLICT(slug) DO UPDATE SET
-    title = excluded.title, status = excluded.status, body = excluded.body,
-    seo_title = excluded.seo_title, meta_description = excluded.meta_description,
-    excerpt = excluded.excerpt, og_title = excluded.og_title, og_description = excluded.og_description,
-    og_image = excluded.og_image, scheduled_at = excluded.scheduled_at,
-    canonical_url_override = excluded.canonical_url_override, robots_directive = excluded.robots_directive,
-    metadata = excluded.metadata, updated_at = CURRENT_TIMESTAMP, updated_by = excluded.updated_by
-`;
-
-const UPSERT_CONTENT_OVERRIDE_NO_META_SQL = `
-  INSERT INTO content_overrides (
-    slug, title, status, body, seo_title, meta_description, excerpt, og_title,
-    og_description, og_image, scheduled_at, canonical_url_override, robots_directive, updated_at, updated_by
-  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, ?)
-  ON CONFLICT(slug) DO UPDATE SET
-    title = excluded.title, status = excluded.status, body = excluded.body,
-    seo_title = excluded.seo_title, meta_description = excluded.meta_description,
-    excerpt = excluded.excerpt, og_title = excluded.og_title, og_description = excluded.og_description,
-    og_image = excluded.og_image, scheduled_at = excluded.scheduled_at,
-    canonical_url_override = excluded.canonical_url_override, robots_directive = excluded.robots_directive,
-    updated_at = CURRENT_TIMESTAMP, updated_by = excluded.updated_by
-`;
-
 export async function saveRuntimeContentState(
-  slug: string,
-  input: {
-    title: string;
-    status: string;
-    scheduledAt?: string;
-    body?: string;
-    authorIds?: number[];
-    categoryIds?: number[];
-    tagIds?: number[];
-    seoTitle: string;
-    metaDescription: string;
-    excerpt?: string;
-    ogTitle?: string;
-    ogDescription?: string;
-    ogImage?: string;
-    canonicalUrlOverride?: string;
-    robotsDirective?: string;
-    revisionNote?: string;
-    /** ISO timestamp from when the editor loaded the record. Used for optimistic conflict detection. */
-    lastKnownUpdatedAt?: string;
-    /** Custom field values for the content type. Validated against `contentTypes` in `registerCms()`. */
-    metadata?: Record<string, unknown>;
-  },
-  actor: Actor,
-  locals?: App.Locals | null,
+  slug: string, input: SaveContentInput, actor: Actor, locals?: App.Locals | null,
 ) {
   return withLocalStoreFallback(
     locals,
@@ -285,12 +243,7 @@ export async function createRuntimeContentRecord(
       }
 
       try {
-        await db.prepare(`
-          INSERT INTO content_entries (
-            slug, legacy_url, title, kind, template_key, source_html_path, updated_at, body, summary,
-            seo_title, meta_description, og_title, og_description, og_image
-          ) VALUES (?, ?, ?, 'post', 'content', ?, CURRENT_TIMESTAMP, ?, ?, ?, ?, ?, ?, ?)
-        `).bind(
+        await db.prepare(SQL_INSERT_CONTENT_ENTRY).bind(
           slug, legacyUrl, title, `runtime://content/${slug}`, body, summary,
           seoTitle, metaDescription, seo.ogTitle, seo.ogDescription, seo.ogImage,
         ).run();
@@ -301,12 +254,7 @@ export async function createRuntimeContentRecord(
 
       const createSeo = { ...seo, excerpt: seo.excerpt || summary || null };
 
-      await db.prepare(`
-        INSERT INTO content_overrides (
-          slug, title, status, body, seo_title, meta_description, excerpt, og_title,
-          og_description, og_image, canonical_url_override, robots_directive, updated_at, updated_by
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, ?)
-      `).bind(
+      await db.prepare(SQL_INSERT_CREATE_OVERRIDE).bind(
         slug, title, status, body, seoTitle, metaDescription, createSeo.excerpt,
         createSeo.ogTitle, createSeo.ogDescription, createSeo.ogImage,
         createSeo.canonicalUrlOverride, createSeo.robotsDirective, actor.email,
@@ -349,12 +297,7 @@ export async function restoreRuntimeRevision(slug: string, revisionId: string, a
 
       await ensureD1BaselineRevision(db, pageRecord);
 
-      const revision = await db.prepare(`
-        SELECT title, status, scheduled_at, body, seo_title, meta_description, excerpt, og_title,
-               og_description, og_image, author_ids, category_ids, tag_ids,
-               canonical_url_override, robots_directive, revision_note
-        FROM content_revisions WHERE slug = ? AND id = ? LIMIT 1
-      `).bind(pageRecord.slug, revisionId).first<RevisionRow>();
+      const revision = await db.prepare(SQL_SELECT_REVISION).bind(pageRecord.slug, revisionId).first<RevisionRow>();
 
       if (!revision) {
         return { ok: false as const, error: "Revision not found." };
