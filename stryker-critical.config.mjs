@@ -16,7 +16,7 @@ export default {
   ],
   testRunner: "command",
   commandRunner: {
-    command: "cd packages/astropress && npx vitest run --reporter=dot",
+    command: "bash -c 'cd packages/astropress && bun run vitest run --reporter=dot'",
   },
   coverageAnalysis: "off",
   ignorePatterns: [
@@ -31,7 +31,8 @@ export default {
   reporters: ["clear-text"],
   incremental: true,
   incrementalFile: ".stryker-incremental.json",
-  concurrency: "50%",
+  concurrency: "1%",
+  maxTestRunnerReuse: 0,
   timeoutMS: 120000,
   thresholds: { high: 90, low: 70, break: 60 },
 };
