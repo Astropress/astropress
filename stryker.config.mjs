@@ -1,7 +1,7 @@
 /** @type {import('@stryker-mutator/api/core').PartialStrykerOptions} */
 
 // Full-suite mutation testing — mutates ALL source files.
-// Weekly CI runs the full suite. Developers can run focused subsets:
+// Uses the command runner to work with Bun-managed node_modules.
 //
 //   bun run test:mutants                          # full suite (CI default)
 //   bun run test:mutants:critical                 # security/auth/API only (~5 min)
@@ -11,20 +11,35 @@ export default {
   mutate: [
     "packages/astropress/src/**/*.ts",
     "!packages/astropress/src/**/*.d.ts",
-    "!packages/astropress/src/**/index.ts",        // barrel re-exports, no logic
-    "!packages/astropress/src/persistence-types.ts", // pure type file
-    "!packages/astropress/src/config-service-types.ts", // pure type file
+    "!packages/astropress/src/**/index.ts",
+    "!packages/astropress/src/persistence-types.ts",
+    "!packages/astropress/src/config-service-types.ts",
   ],
-  testRunner: "vitest",
-  vitest: {
-    configFile: "packages/astropress/vitest.config.ts",
+  testRunner: "command",
+  commandRunner: {
+    command: "cd packages/astropress && npx vitest run --reporter=dot",
   },
+  coverageAnalysis: "off",
+  ignorePatterns: [
+    "crates/target",
+    ".git",
+    "dist",
+    ".astro",
+    "coverage",
+    "test-results",
+    "playwright-report",
+    ".data",
+    "reports",
+    "examples/*/dist",
+    "examples/*/.astro",
+    "packages/docs/dist",
+    "packages/docs/.astro",
+  ],
   reporters: ["clear-text", "html", "json"],
   htmlReporter: { fileName: "reports/mutation/index.html" },
   jsonReporter: { fileName: "reports/mutation/report.json" },
   incremental: true,
   incrementalFile: ".stryker-incremental.json",
-  concurrency: 4,
-  timeoutMS: 60000,
+  timeoutMS: 120000,
   thresholds: { high: 80, low: 60, break: 50 },
 };
