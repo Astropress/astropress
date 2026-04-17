@@ -3,7 +3,16 @@ name: Mutation Testing
 on:
   schedule:
     - cron: "0 6 * * 1" # Monday 6am UTC
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      scope:
+        description: "Scope: full (all source) or critical (security paths only)"
+        required: false
+        default: "full"
+        type: choice
+        options:
+          - full
+          - critical
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
@@ -12,7 +21,7 @@ jobs:
   stryker:
     name: Stryker (TypeScript)
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 120
     steps:
       - uses: actions/checkout@v6
 
@@ -26,7 +35,13 @@ jobs:
 
       - run: bun install --frozen-lockfile
 
-      - run: npx stryker run
+      - name: Run Stryker (full suite)
+        if: inputs.scope != 'critical'
+        run: npx stryker run
+
+      - name: Run Stryker (critical paths only)
+        if: inputs.scope == 'critical'
+        run: npx stryker run --configFile stryker-critical.config.mjs
 
       - uses: actions/upload-artifact@v4
         if: always()
@@ -37,7 +52,7 @@ jobs:
   cargo-mutants:
     name: cargo-mutants (Rust)
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v6
 
@@ -45,7 +60,8 @@ jobs:
 
       - run: cargo install cargo-mutants
 
-      - run: cargo mutants --package astropress-cli --timeout 30
+      - name: Run cargo-mutants (full crate)
+        run: cargo mutants --package astropress-cli --timeout 60
         working-directory: crates
 
       - uses: actions/upload-artifact@v4

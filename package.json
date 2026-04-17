@@ -76,6 +76,8 @@
     "repo:clean": "bun run tooling/scripts/assert-clean-worktree.ts",
     "stress:sqlite": "bun run tooling/scripts/stress-sqlite-writes.ts",
     "test:mutants": "npx stryker run",
+    "test:mutants:critical": "npx stryker run --configFile stryker-critical.config.mjs",
+    "test:mutants:file": "npx stryker run",
     "test:mutants:rust": "cargo mutants --package astropress-cli --timeout 30 --manifest-path crates/Cargo.toml",
     "release": "bun run --filter @astropress-diy/astropress release",
     "version": "bun run --filter @astropress-diy/astropress version && bun run tooling/scripts/sync-cargo-version.ts",
