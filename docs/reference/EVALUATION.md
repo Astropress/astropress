@@ -1,6 +1,6 @@
 # Astropress Evaluation
 
-**Baseline (as of 2026-04-14, updated):** 1650+ Vitest tests · 170 Rust CLI tests · 10 Playwright specs across 70 acceptance checks · 359 BDD scenarios · security audit clean
+**Baseline (as of 2026-04-17, updated):** 1700+ Vitest tests · 172 Rust CLI tests · 10 Playwright specs across 70 acceptance checks · 384 BDD scenarios · security audit clean · mutation testing (Stryker + cargo-mutants) on critical paths
 
 ## Grades
 
@@ -69,6 +69,8 @@ Grade scale: `A+ / A / B / C / D / F`
 | 59 | User-Facing Route Coverage | A+ | `audit:user-facing-route-coverage` passes (CI-enforced: zero uncovered static routes per surface — admin, public) |
 | 60 | Consumer-Safe Packaging | A+ | `audit:consumer-packaging` passes (CI-enforced: no bare imports); `test:consumer-smoke` and `test:tarball-smoke` verify all routes return HTTP 200 from npm install |
 | 61 | Meta-Evaluation | A+ | `audit:evaluation-integrity` passes (CI-enforced: all referenced audits exist, CI-enforced claims verified, rubric count parity, self-assessed ratio tracked) |
+| 62 | Mutation Testing Coverage | A | `stryker.config.mjs` targets security, auth, content, API middleware; weekly CI workflow (`mutation-test.yml`); `cargo mutants` for Rust CLI; `test:mutants` and `test:mutants:rust` scripts |
+| 63 | Test Resilience | A | Brittle expired-session clock-mock fixed (#42); deploy-targets per-test `mkdtempSync` isolation (#44); localStorage spy pattern; no timing-dependent assertions in critical paths |
 
 ## Known gaps
 

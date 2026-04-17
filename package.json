@@ -75,12 +75,16 @@
     "docs:check": "bun run --filter astropress-docs check",
     "repo:clean": "bun run tooling/scripts/assert-clean-worktree.ts",
     "stress:sqlite": "bun run tooling/scripts/stress-sqlite-writes.ts",
+    "test:mutants": "npx stryker run",
+    "test:mutants:rust": "cargo mutants --package astropress-cli --timeout 30 --manifest-path crates/Cargo.toml",
     "release": "bun run --filter @astropress-diy/astropress release",
     "version": "bun run --filter @astropress-diy/astropress version && bun run tooling/scripts/sync-cargo-version.ts",
     "prepare": "lefthook install"
   },
   "devDependencies": {
     "@astropress-diy/astropress": "workspace:*",
+    "@stryker-mutator/core": "^8.7.1",
+    "@stryker-mutator/vitest-runner": "^8.7.1",
     "@axe-core/playwright": "^4.11.1",
     "@playwright/test": "^1.59.1",
     "@size-limit/file": "^12.0.1",
