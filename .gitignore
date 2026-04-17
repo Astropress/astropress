@@ -24,3 +24,4 @@ playwright-report/
 **/.data/*.sqlite-wal
 packages/astropress/.data/
 examples/admin-harness/.data/
+.data/
