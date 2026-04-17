@@ -37,11 +37,13 @@ jobs:
 
       - name: Run Stryker (full suite)
         if: inputs.scope != 'critical'
-        run: npx stryker run
+        run: npx stryker run ../../stryker.config.mjs
+        working-directory: packages/astropress
 
       - name: Run Stryker (critical paths only)
         if: inputs.scope == 'critical'
-        run: npx stryker run --configFile stryker-critical.config.mjs
+        run: npx stryker run ../../stryker-critical.config.mjs
+        working-directory: packages/astropress
 
       - uses: actions/upload-artifact@v4
         if: always()

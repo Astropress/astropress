@@ -1,38 +1,28 @@
 /** @type {import('@stryker-mutator/api/core').PartialStrykerOptions} */
 
 // Focused mutation testing — security-critical paths only.
-// Fast enough to run during development (~5 min).
-//
+// Run from packages/astropress/:
+//   cd packages/astropress && node ../../node_modules/.bin/stryker run ../../stryker-critical.config.mjs
+// Or from repo root:
 //   bun run test:mutants:critical
 //
 export default {
+  plugins: ["@stryker-mutator/vitest-runner"],
   mutate: [
-    "packages/astropress/src/security-*.ts",
-    "packages/astropress/src/runtime-admin-auth.ts",
-    "packages/astropress/src/admin-action-utils.ts",
-    "packages/astropress/src/api-middleware.ts",
-    "packages/astropress/src/content-modeling.ts",
-    "packages/astropress/src/admin-normalizers.ts",
+    "src/security-*.ts",
+    "src/runtime-admin-auth.ts",
+    "src/admin-action-utils.ts",
+    "src/api-middleware.ts",
+    "src/content-modeling.ts",
+    "src/admin-normalizers.ts",
   ],
-  testRunner: "command",
-  commandRunner: {
-    command: "bash -c 'cd packages/astropress && bun run vitest run --reporter=dot'",
-  },
-  coverageAnalysis: "off",
-  ignorePatterns: [
-    "crates/target",
-    ".git",
-    "dist",
-    ".astro",
-    "coverage",
-    ".data",
-    "reports",
-  ],
+  testRunner: "vitest",
+  coverageAnalysis: "all",
+  vitest: { related: false },
   reporters: ["clear-text"],
+  inPlace: true,
   incremental: true,
   incrementalFile: ".stryker-incremental.json",
-  concurrency: "1%",
-  maxTestRunnerReuse: 0,
   timeoutMS: 120000,
   thresholds: { high: 90, low: 70, break: 60 },
 };
