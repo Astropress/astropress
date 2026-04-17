@@ -3,7 +3,7 @@
 Auto-generated from TypeScript source via the TypeScript compiler API.
 Run `bun run docs:api` to regenerate.
 
-Generated: 2026-04-16
+Generated: 2026-04-17
 
 ---
 
@@ -533,12 +533,12 @@ function listRuntimeSystemRoutes(locals: Locals | null | undefined): Promise<Run
 
 #### `saveRuntimeArchiveRoute`
 ```ts
-function saveRuntimeArchiveRoute(pathname: string, input: { title: string; summary?: string | undefined; seoTitle?: string | undefined; metaDescription?: string | undefined; canonicalUrlOverride?: string | undefined; robotsDirective?: string | undefined; revisionNote?: string | undefined; }, actor: Actor, locals: Locals | null | undefined): Promise<{ ok: true; route: RuntimeArchiveRouteRecord; } | { ok: false; error: string; }>
+function saveRuntimeArchiveRoute(pathname: string, input: { title: string; summary?: string | undefined; seoTitle?: string | undefined; metaDescription?: string | undefined; canonicalUrlOverride?: string | undefined; robotsDirective?: string | undefined; revisionNote?: string | undefined; }, actor: Actor, locals: Locals | null | undefined): Promise<{ ok: true; route: RuntimeArchiveRouteRecord; } | { readonly ok: false; readonly error: "A title is required."; title?: undefined; summary?: undefined; seoTitle?: undefined; metaDescription?: undefined; canonicalUrlOverride?: undefined; robotsDirective?: undefined; } | { ok: true; route: { path: string; title: string; summary: string | undefined; seoTitle: string; metaDescription: string; canonicalUrlOverride: string | undefined; robotsDirective: string | undefined; }; } | { ok: false; error: string; }>
 ```
 
 #### `saveRuntimeSystemRoute`
 ```ts
-function saveRuntimeSystemRoute(pathname: string, input: { title: string; summary?: string | undefined; bodyHtml?: string | undefined; settings?: Record<string, unknown> | null | undefined; revisionNote?: string | undefined; }, actor: Actor, locals: Locals | null | undefined): Promise<{ ok: true; route: RuntimeSystemRouteRecord; } | { ok: false; error: string; }>
+function saveRuntimeSystemRoute(pathname: string, input: { title: string; summary?: string | undefined; bodyHtml?: string | undefined; settings?: Record<string, unknown> | null | undefined; revisionNote?: string | undefined; }, actor: Actor, locals: Locals | null | undefined): Promise<{ ok: true; route: RuntimeSystemRouteRecord; } | { readonly ok: false; readonly error: "A title is required."; title?: undefined; summary?: undefined; bodyHtml?: undefined; settingsJson?: undefined; } | { ok: true; route: { path: string; title: string; summary: string | undefined; bodyHtml: string | undefined; settings: Record<string, unknown> | null; renderStrategy: "structured_sections" | "generated_text" | "generated_xml"; }; } | { ok: false; error: string; }>
 ```
 
 #### `createRuntimeStructuredPageRoute`
@@ -558,7 +558,7 @@ function createRuntimeContentRecord(input: { title: string; slug: string; legacy
 
 #### `saveRuntimeContentState`
 ```ts
-function saveRuntimeContentState(slug: string, input: { title: string; status: string; scheduledAt?: string | undefined; body?: string | undefined; authorIds?: number[] | undefined; categoryIds?: number[] | undefined; tagIds?: number[] | undefined; seoTitle: string; metaDescription: string; excerpt?: string | undefined; ogTitle?: string | undefined; ogDescription?: string | undefined; ogImage?: string | undefined; canonicalUrlOverride?: string | undefined; robotsDirective?: string | undefined; revisionNote?: string | undefined; lastKnownUpdatedAt?: string | undefined; metadata?: Record<string, unknown> | undefined; }, actor: Actor, locals: Locals | null | undefined): Promise<unknown>
+function saveRuntimeContentState(slug: string, input: SaveContentInput, actor: Actor, locals: Locals | null | undefined): Promise<unknown>
 ```
 
 #### `restoreRuntimeRevision`
@@ -618,7 +618,7 @@ function consumeRuntimePasswordResetToken(rawToken: string, password: string, lo
 
 #### `createRuntimeMediaAsset`
 ```ts
-function createRuntimeMediaAsset(input: { filename: string; bytes: Uint8Array<ArrayBufferLike>; mimeType: string; title?: string | undefined; altText?: string | undefined; }, actor: Actor, locals: Locals | null | undefined): Promise<unknown>
+function createRuntimeMediaAsset(input: MediaAssetInput, actor: Actor, locals: Locals | null | undefined): Promise<unknown>
 ```
 
 #### `updateRuntimeMediaAsset`
@@ -1063,7 +1063,7 @@ function verifyPassword(password: string, storedHash: string): Promise<boolean>
 
 #### `readLocalImageAsset`
 ```ts
-function readLocalImageAsset(publicPath: string): { ok: false; error: string; asset?: undefined; } | { ok: true; asset: { diskPath: string; bytes: ArrayBuffer; mimeType: string; }; error?: undefined; }
+function readLocalImageAsset(publicPath: string): { ok: false; error: string; asset?: undefined; } | { ok: true; asset: { diskPath: string; bytes: ArrayBuffer; mimeType: string; }; readonly error?: undefined; }
 ```
 
 #### `resolveLocalImageDiskPath`
