@@ -82,7 +82,7 @@ Grade scale: `A+ / A / B / C / D / F`
 
 ## Grade changes
 
-_No grades recorded yet — pending fresh evaluation._
+**2026-04-18** — Full evaluation run: all 40 `audit:*` scripts pass, 0 vulnerabilities (`bun audit`), 1856 Vitest tests passing, 100% mutation score on `stryker-critical.config.mjs` (699/699 mutants killed + 1 timeout). No grade changes from current table — all rubrics hold at their recorded grade.
 
 ---
 
