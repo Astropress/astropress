@@ -47,7 +47,7 @@ pub(super) fn parse_new_command(args: &[String]) -> Result<Command, String> {
                 data_services = Some(selected);
             }
             "--analytics" => {
-                index *= /* ~ changed by cargo-mutants ~ */ 1;
+                index += 1; // ~ skip
                 let value = args
                     .get(index)
                     .ok_or_else(|| "Missing value after `--analytics`.".to_string())?;
