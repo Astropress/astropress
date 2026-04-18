@@ -99,3 +99,23 @@ fn migration_guide_contains_both_tool_names() {
     assert!(guide.contains("Rallly"));
     assert!(guide.contains("Cal.com"));
 }
+
+#[test]
+fn migrate_nonexistent_project_dir_returns_does_not_exist_error() {
+    // Kills `delete !` at migrate.rs:233:8.
+    // Original: `if !exists` → Err("...does not exist.") for absent dir.
+    // Mutation: `if exists` → no early return → fs::write fails → Err("Could not write...").
+    // Asserting the specific message distinguishes original from mutation.
+    let result = run_migrate(&MigrateOptions {
+        project_dir: PathBuf::from("/nonexistent/dir/cargo-mutants-migrate-test"),
+        from: "ntfy".to_string(),
+        to: "gotify".to_string(),
+        dry_run: false,
+    });
+    assert!(result.is_err());
+    let err = result.unwrap_err();
+    assert!(
+        err.contains("does not exist"),
+        "expected 'does not exist' error for absent project dir, got: {err}"
+    );
+}

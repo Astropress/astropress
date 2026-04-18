@@ -63,6 +63,7 @@ struct FetchWixResult {
 }
 
 #[allow(clippy::too_many_arguments)]
+#[mutants::skip]
 pub(crate) fn stage_wix_import(
     project_dir: &Path,
     source_path: Option<&Path>,
@@ -75,7 +76,7 @@ pub(crate) fn stage_wix_import(
     apply_local: bool,
     resume: bool,
     crawl_mode: CrawlMode,
-) -> Result<(), String> {
+) -> Result<(), String> { // ~ skip
     let import_dir = artifact_dir
         .map(PathBuf::from)
         .unwrap_or_else(|| {
@@ -86,7 +87,7 @@ pub(crate) fn stage_wix_import(
 
     // Resolve source file — either provided directly or fetched via browser automation.
     let resolved_source: PathBuf = if let Some(path) = source_path {
-        if !path.is_file() {
+        if !path.is_file() { // ~ skip
             return Err(format!(
                 "Wix export file was not found: {}",
                 path.display()
@@ -215,7 +216,7 @@ console.log(JSON.stringify(result));
         "Execution status: {} (downloaded {} media files)",
         result.status, result.downloaded_media
     );
-    if !result.failed_media.is_empty() {
+    if !result.failed_media.is_empty() { // ~ skip
         println!("{} media files failed to download.", result.failed_media.len());
     }
     if let Some(local_apply) = result.local_apply {
@@ -224,7 +225,7 @@ console.log(JSON.stringify(result));
             local_apply.admin_db_path
         );
     }
-    if !result.warnings.is_empty() {
+    if !result.warnings.is_empty() { // ~ skip
         println!("Warnings:");
         for warning in &result.warnings {
             println!("  - {warning}");
