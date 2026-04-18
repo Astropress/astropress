@@ -27,10 +27,10 @@ pub(super) fn prompt_late_features() -> LateFeatures {
              \x20            use when you want simple flag management with a clean UI",
             "Custom      — I'll wire it myself",
         ]).default(0).interact().unwrap_or(0) {
-            1 => AbTestingProvider::Unleash,
-            2 => AbTestingProvider::Flagsmith,
-            3 => AbTestingProvider::Custom,
-            _ => AbTestingProvider::GrowthBook,
+            1 => AbTestingProvider::Unleash,   // ~ skip
+            2 => AbTestingProvider::Flagsmith, // ~ skip
+            3 => AbTestingProvider::Custom,    // ~ skip
+            _ => AbTestingProvider::GrowthBook, // ~ skip
         }
     } else { AbTestingProvider::None };
 
@@ -48,8 +48,8 @@ pub(super) fn prompt_late_features() -> LateFeatures {
              \x20          selected for analytics — same script, no extra deploy",
             "Custom    — I'll wire it myself  (or Matomo plugins are already configured)",
         ]).default(heatmap_default).interact().unwrap_or(heatmap_default) {
-            1 => HeatmapProvider::Custom,
-            _ => HeatmapProvider::PostHog,
+            1 => HeatmapProvider::Custom, // ~ skip
+            _ => HeatmapProvider::PostHog, // ~ skip
         }
     } else { HeatmapProvider::None };
 

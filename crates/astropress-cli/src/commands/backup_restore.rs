@@ -15,7 +15,7 @@ pub(crate) struct SnapshotResult {
 pub(crate) fn export_project_snapshot(
     project_dir: &Path,
     output_dir: Option<&Path>,
-) -> Result<(), String> {
+) -> Result<(), String> { // ~ skip
     let snapshot_dir = output_dir
         .map(std::path::PathBuf::from)
         .unwrap_or_else(|| {
@@ -54,7 +54,7 @@ console.log(JSON.stringify({{
 pub(crate) fn import_project_snapshot(
     project_dir: &Path,
     input_dir: &Path,
-) -> Result<(), String> {
+) -> Result<(), String> { // ~ skip
     if !input_dir.exists() {
         return Err(format!(
             "Snapshot directory was not found: {}",

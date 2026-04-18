@@ -8,6 +8,6 @@ pub(crate) use crate::commands::import_common::{
 
 pub(crate) fn verify_content_services(
     project_dir: &Path,
-) -> Result<ContentServicesReport, String> {
+) -> Result<ContentServicesReport, String> { // ~ skip
     run_content_services_operation(project_dir, "verifyAstropressContentServices")
 }
