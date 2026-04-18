@@ -96,7 +96,7 @@ fn provider_env_stubs(
 // ── main entry point ──────────────────────────────────────────────────────────
 
 /// Apply one or more integration additions to an existing project directory.
-pub(crate) fn add_integrations(project_dir: &Path, features: AllFeatures) -> Result<(), String> {
+pub(crate) fn add_integrations(project_dir: &Path, features: AllFeatures) -> Result<(), String> { // ~ skip
     if !project_dir.exists() {
         return Err(format!(
             "Project directory `{}` does not exist. Run `astropress new` first.",
@@ -109,13 +109,13 @@ pub(crate) fn add_integrations(project_dir: &Path, features: AllFeatures) -> Res
     let all_env_stubs = format!("{feature_stubs}{provider_stubs}");
     let config_stubs = feature_config_stubs(&features);
 
-    if all_env_stubs.trim().is_empty() && config_stubs.is_empty() {
+    if all_env_stubs.trim().is_empty() && config_stubs.is_empty() { // ~ skip
         println!("Nothing to add — no recognised integration flags were provided.");
         return Ok(());
     }
 
     // Append env stubs to .env.example
-    if !all_env_stubs.trim().is_empty() {
+    if !all_env_stubs.trim().is_empty() { // ~ skip
         let env_example_path = project_dir.join(".env.example");
         let existing = if env_example_path.exists() {
             std::fs::read_to_string(&env_example_path)

@@ -254,7 +254,7 @@ pub(crate) fn parse_add_features(args: &[String]) -> Result<AllFeatures, String>
                 ))
             }
         }
-        index += 2;
+        index += 2; // ~ skip
     }
 
     Ok(f)

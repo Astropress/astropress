@@ -6,6 +6,7 @@ use crate::features::{
     ChatChoice, CommerceChoice, DocsChoice, EmailChoice, ForumChoice, NotifyChoice,
     ScheduleChoice,
 };
+use crate::providers::{AbTestingProvider, AnalyticsProvider, HeatmapProvider};
 
 fn args(s: &[&str]) -> Vec<String> {
     s.iter().map(|s| s.to_string()).collect()
@@ -254,4 +255,57 @@ fn add_docs_none_generates_no_docs_files() {
             "default AllFeatures should not emit docs/ stubs, got `{path}`"
         );
     }
+}
+
+#[test]
+fn heatmap_posthog_without_analytics_posthog_emits_posthog_stubs() {
+    // heatmap=PostHog, analytics=None → stubs must contain PostHog key
+    // (the `analytics != PostHog` guard prevents duplication when both are PostHog)
+    let stubs = provider_env_stubs(
+        AnalyticsProvider::None,
+        AbTestingProvider::None,
+        HeatmapProvider::PostHog,
+    );
+    assert!(
+        stubs.contains("PUBLIC_POSTHOG_KEY"),
+        "expected PUBLIC_POSTHOG_KEY in stubs when heatmap=posthog and analytics=none, got: {stubs}"
+    );
+}
+
+#[test]
+fn heatmap_posthog_with_analytics_posthog_does_not_duplicate_stubs() {
+    // When both heatmap and analytics are PostHog, PostHog stubs should only come
+    // from analytics, not duplicated by heatmap.
+    let stubs = provider_env_stubs(
+        AnalyticsProvider::PostHog,
+        AbTestingProvider::None,
+        HeatmapProvider::PostHog,
+    );
+    let count = stubs.matches("PUBLIC_POSTHOG_KEY").count();
+    assert!(count <= 1, "expected at most 1 PUBLIC_POSTHOG_KEY, found {count} in: {stubs}");
+}
+
+#[test]
+fn add_integrations_writes_env_stubs_to_env_example() {
+    // Exercises the `if all_env_stubs.is_empty() && config_stubs.is_empty()` guard (L112)
+    // and the `if !all_env_stubs.is_empty()` write block (L118).
+    // analytics=Umami produces env stubs but no config files — so with `&&` → `||` mutation
+    // the function exits early without writing; with `delete !` mutation it skips the write block.
+    let tmp = std::env::temp_dir().join("ap_add_integrations_test");
+    std::fs::create_dir_all(&tmp).unwrap();
+    std::fs::write(tmp.join(".env.example"), "# existing content\n").unwrap();
+
+    let features = AllFeatures {
+        analytics: AnalyticsProvider::Umami,
+        ..AllFeatures::defaults()
+    };
+    add_integrations(&tmp, features).unwrap();
+
+    let content = std::fs::read_to_string(tmp.join(".env.example")).unwrap();
+    assert!(content.contains("PUBLIC_UMAMI_SCRIPT_URL"),
+        "expected Umami env vars appended to .env.example, got: {content}");
+    assert!(content.contains("# existing content"),
+        "original .env.example content must be preserved, got: {content}");
+
+    std::fs::remove_dir_all(&tmp).ok();
 }
