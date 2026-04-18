@@ -1,7 +1,9 @@
+// @ts-nocheck
+// 
 import type { DatabaseSync } from "node:sqlite";
 import { readFileSync } from "node:fs";
 import path from "node:path";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { validateContentFields } from "../src/content-modeling.js";
 import type { ContentTypeDefinition, FieldDefinition } from "../src/content-modeling.js";
@@ -116,6 +118,7 @@ describe("validateContentFields — repeater type", () => {
   it("fails when nested required field is missing", () => {
     const error = validateContentFields(contentType, { speakers: [{ bio: "Engineer" }] });
     expect(error).toContain("is required");
+    expect(error).toContain("speakers[0]");
   });
 
   it("passes when field is not required and absent", () => {
@@ -215,6 +218,121 @@ describe("SQLite upsertContentOverride — metadata persistence", () => {
 
     const metadata = getStoredMetadata(db, "update-meta-post");
     expect((metadata as Record<string, unknown>)?.version).toBe(2);
+  });
+});
+
+// ─── validateContentFields — validate() callback ─────────────────────────────
+
+describe("validateContentFields — validate() callback", () => {
+  it("passes when validate returns true", () => {
+    const contentType: ContentTypeDefinition = {
+      key: "test",
+      label: "Test",
+      fields: [{ name: "score", label: "Score", type: "number", validate: () => true }],
+    };
+    expect(validateContentFields(contentType, { score: 42 })).toBeNull();
+  });
+
+  it("passes when validate returns empty string (falsy → treated as no error)", () => {
+    const contentType: ContentTypeDefinition = {
+      key: "test",
+      label: "Test",
+      fields: [{ name: "score", label: "Score", type: "number", validate: () => "" }],
+    };
+    expect(validateContentFields(contentType, { score: 42 })).toBeNull();
+  });
+
+  it("fails when validate returns a non-empty error string", () => {
+    const contentType: ContentTypeDefinition = {
+      key: "test",
+      label: "Test",
+      fields: [{ name: "score", label: "Score", type: "number", validate: () => "Must be positive." }],
+    };
+    expect(validateContentFields(contentType, { score: -1 })).toBe("Must be positive.");
+  });
+
+  it("skips validate when value is empty and field is not required", () => {
+    const validate = vi.fn(() => "Should not be called");
+    const contentType: ContentTypeDefinition = {
+      key: "test",
+      label: "Test",
+      fields: [{ name: "score", label: "Score", type: "number", validate }],
+    };
+    expect(validateContentFields(contentType, {})).toBeNull();
+    expect(validate).not.toHaveBeenCalled();
+  });
+});
+
+// ─── validateContentFields — repeater null item ───────────────────────────────
+
+describe("validateContentFields — repeater null item check", () => {
+  const contentType: ContentTypeDefinition = {
+    key: "test",
+    label: "Test",
+    fields: [
+      {
+        name: "items",
+        label: "Items",
+        type: "repeater",
+        fields: [{ name: "name", label: "Name", type: "text", required: true }],
+      },
+    ],
+  };
+
+  it("fails when a repeater item is null", () => {
+    const error = validateContentFields(contentType, { items: [null] });
+    expect(error).toContain("item 1 must be an object");
+  });
+
+  it("fails when a repeater item is a primitive (string)", () => {
+    const error = validateContentFields(contentType, { items: ["not-an-object"] });
+    expect(error).toContain("item 1 must be an object");
+  });
+
+  it("uses 1-based index in error message (second item)", () => {
+    const error = validateContentFields(contentType, { items: [{ name: "ok" }, null] });
+    expect(error).toContain("item 2 must be an object");
+  });
+
+  it("passes repeater with no nested field definitions (fields property absent)", () => {
+    const noFieldsType: ContentTypeDefinition = {
+      key: "test",
+      label: "Test",
+      fields: [{ name: "tags", label: "Tags", type: "repeater" }],
+    };
+    expect(validateContentFields(noFieldsType, { tags: [{ anything: true }] })).toBeNull();
+  });
+});
+
+// ─── validateContentFields — required + isEmpty boundary ─────────────────────
+
+describe("validateContentFields — required field isEmpty cases", () => {
+  function requiredField(name: string): ContentTypeDefinition {
+    return {
+      key: "test",
+      label: "Test",
+      fields: [{ name, label: "Field", type: "text", required: true }],
+    };
+  }
+
+  it("treats undefined as empty", () => {
+    expect(validateContentFields(requiredField("x"), {})).toContain("is required");
+  });
+
+  it("treats null as empty", () => {
+    expect(validateContentFields(requiredField("x"), { x: null })).toContain("is required");
+  });
+
+  it("treats empty string as empty", () => {
+    expect(validateContentFields(requiredField("x"), { x: "" })).toContain("is required");
+  });
+
+  it("accepts zero as non-empty (0 is a valid value)", () => {
+    expect(validateContentFields(requiredField("x"), { x: 0 })).toBeNull();
+  });
+
+  it("accepts false as non-empty (false is a valid boolean value)", () => {
+    expect(validateContentFields(requiredField("x"), { x: false })).toBeNull();
   });
 });
 

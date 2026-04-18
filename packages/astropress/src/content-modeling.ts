@@ -148,12 +148,13 @@ export function validateContentFields(
             if (typeof item !== "object" || item === null) {
               return `"${field.label}" item ${i + 1} must be an object.`;
             }
+            const nestedKey = `${field.name}[${i}]`;
             const nestedError = validateContentFields(
-              { key: `${field.name}[${i}]`, label: field.label, fields: field.fields },
+              { key: nestedKey, label: field.label, fields: field.fields },
               item,
             );
             if (nestedError) {
-              return nestedError;
+              return `${nestedKey}: ${nestedError}`;
             }
           }
         }

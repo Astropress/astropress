@@ -28,10 +28,10 @@ export function normalizeEmail(value: string) {
 
 export function slugify(value: string) {
   return value
-    .trim()
     .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
+    .replace(/[^a-z0-9]/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .replace(/-{2,}/g, "-");
 }
 
 /** Alias for slugify — used for content post slugs. */
@@ -41,16 +41,11 @@ export function parseIdList(value: string | null | undefined): number[] {
   if (!value) {
     return [];
   }
-
-  try {
-    const parsed = JSON.parse(value) as unknown;
-    if (!Array.isArray(parsed)) {
-      return [];
-    }
-    return parsed.map((entry) => Number(entry)).filter((entry) => Number.isInteger(entry) && entry > 0);
-  } catch {
+  const parsed = JSON.parse(value) as unknown;
+  if (!Array.isArray(parsed)) {
     return [];
   }
+  return parsed.map((entry) => Number(entry)).filter((entry) => Number.isInteger(entry) && entry > 0);
 }
 
 export function serializeIdList(values: number[]) {

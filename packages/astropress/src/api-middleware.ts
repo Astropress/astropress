@@ -88,9 +88,9 @@ function resolveCorsOrigin(request: Request): string | null {
   const corsConfig = peekCmsConfig()?.api?.cors;
   if (!corsConfig) return null;
   const { origin } = corsConfig;
+  const requestOrigin = request.headers.get("Origin");
+  if (requestOrigin === null) return null;
   if (origin === "*") return "*";
-  const requestOrigin = request.headers.get("Origin") ?? "";
-  if (!requestOrigin) return null;
   if (Array.isArray(origin)) {
     return origin.includes(requestOrigin) ? requestOrigin : null;
   }
@@ -135,19 +135,15 @@ export async function withApiRequest(
   const preflight = handleCorsPreflightRequest(request);
   if (preflight) return preflight;
 
-  const authHeader = request.headers.get("Authorization") ?? "";
-  if (!authHeader.startsWith("Bearer ")) {
+  const authHeader = request.headers.get("Authorization");
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
     return applyCorsHeaders(
       API_ERROR_SHAPES.unauthorized("Missing or invalid Authorization header. Use: Authorization: Bearer <token>"),
       request,
     );
   }
 
-  const rawToken = authHeader.slice(7).trim();
-  if (!rawToken) {
-    return applyCorsHeaders(API_ERROR_SHAPES.unauthorized("Bearer token is empty."), request);
-  }
-
+  const [, rawToken] = authHeader.split("Bearer ");
   const result = await ctx.apiTokens.verify(rawToken);
   if (!result.valid) {
     return applyCorsHeaders(API_ERROR_SHAPES.unauthorized(result.reason), request);

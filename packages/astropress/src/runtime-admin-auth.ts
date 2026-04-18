@@ -5,14 +5,14 @@ import type { SessionUser } from "./persistence-types";
 import { getAdminBootstrapConfig, getAstropressRootSecretCandidates, getCloudflareBindings } from "./runtime-env";
 import { withLocalStoreFallback } from "./admin-store-dispatch";
 
-const SESSION_TTL_MS = 12 * 60 * 60 * 1000;
+export const SESSION_TTL_MS = 12 * 60 * 60 * 1000;
 
 function getD1(locals?: App.Locals | null): D1DatabaseLike | undefined {
   return getCloudflareBindings(locals).DB;
 }
 
 async function cleanupExpiredSessions(db: D1DatabaseLike) {
-  await db
+  const result = await db
     .prepare(
       `
         UPDATE admin_sessions
@@ -22,6 +22,7 @@ async function cleanupExpiredSessions(db: D1DatabaseLike) {
       `,
     )
     .run();
+  return result.meta.changes;
 }
 
 async function getLiveD1SessionRow(db: D1DatabaseLike, sessionToken: string | null | undefined, locals?: App.Locals | null) {
@@ -161,7 +162,7 @@ export async function createRuntimeSession(
 
       const sessionToken = crypto.randomUUID();
       const csrfToken = crypto.randomUUID();
-      const sessionSecret = getAdminBootstrapConfig(locals).rootSecret?.trim();
+      const sessionSecret = getAdminBootstrapConfig(locals).rootSecret;
       const storedSessionId = sessionSecret
         ? await createSessionTokenDigest(sessionToken, sessionSecret)
         : sessionToken;
@@ -276,3 +277,5 @@ export async function recordRuntimeSuccessfulLogin(actor: SessionUser, locals?: 
 export async function recordRuntimeLogout(actor: SessionUser, locals?: App.Locals | null) {
   return recordRuntimeAudit("auth.logout", `${actor.name} signed out.`, actor, locals);
 }
+
+export const _recordRuntimeAuditEvent = recordRuntimeAudit;

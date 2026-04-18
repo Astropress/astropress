@@ -8,11 +8,7 @@ export interface AstropressSecurityHeadersOptions {
   reportUri?: string;
 }
 
-function parseOrigin(value: string | null): URL | null {
-  if (!value) {
-    return null;
-  }
-
+function parseOrigin(value: string): URL | null {
   try {
     return new URL(value);
   } catch {
@@ -131,13 +127,17 @@ export function isTrustedRequestOrigin(request: Request): boolean {
     return false;
   }
 
-  const origin = parseOrigin(request.headers.get("origin"));
-  if (origin) {
+  const rawOrigin = request.headers.get("origin");
+  if (rawOrigin !== null) {
+    const origin = parseOrigin(rawOrigin);
+    if (origin === null) return false;
     return origin.origin === requestUrl.origin;
   }
 
-  const referer = parseOrigin(request.headers.get("referer"));
-  if (referer) {
+  const rawReferer = request.headers.get("referer");
+  if (rawReferer !== null) {
+    const referer = parseOrigin(rawReferer);
+    if (referer === null) return false;
     return referer.origin === requestUrl.origin;
   }
 
