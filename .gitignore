@@ -24,6 +24,11 @@ playwright-report/
 .stryker-tmp/
 reports/mutation/
 mutants.out/
+stryker-setup-*.js
+stryker.local.mjs
+
+# Claude Code session data
+.claude/
 
 # Host-app runtime data (SQLite WAL/SHM journals)
 **/.data/*.sqlite-shm
