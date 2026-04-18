@@ -184,3 +184,90 @@ pub(super) fn append_mid_services(doc: &mut String, f: &AllFeatures) {
     }
 
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::features::AllFeatures;
+
+    #[test]
+    fn community_remark42_appended() {
+        let mut f = AllFeatures::defaults();
+        f.community = CommunityChoice::Remark42;
+        let mut doc = String::new();
+        append_mid_services(&mut doc, &f);
+        assert!(doc.contains("Remark42"));
+    }
+
+    #[test]
+    fn forum_flarum_appended() {
+        let mut f = AllFeatures::defaults();
+        f.forum = ForumChoice::Flarum;
+        let mut doc = String::new();
+        append_mid_services(&mut doc, &f);
+        assert!(doc.contains("Flarum"));
+    }
+
+    #[test]
+    fn forum_discourse_appended() {
+        let mut f = AllFeatures::defaults();
+        f.forum = ForumChoice::Discourse;
+        let mut doc = String::new();
+        append_mid_services(&mut doc, &f);
+        assert!(doc.contains("Discourse"));
+    }
+
+    #[test]
+    fn chat_tiledesk_appended() {
+        let mut f = AllFeatures::defaults();
+        f.chat = ChatChoice::Tiledesk;
+        let mut doc = String::new();
+        append_mid_services(&mut doc, &f);
+        assert!(doc.contains("Tiledesk"));
+    }
+
+    #[test]
+    fn chat_chatwoot_appended() {
+        let mut f = AllFeatures::defaults();
+        f.chat = ChatChoice::Chatwoot;
+        let mut doc = String::new();
+        append_mid_services(&mut doc, &f);
+        assert!(doc.contains("Chatwoot"));
+    }
+
+    #[test]
+    fn payments_hyperswitch_appended() {
+        let mut f = AllFeatures::defaults();
+        f.payments = PaymentChoice::HyperSwitch;
+        let mut doc = String::new();
+        append_mid_services(&mut doc, &f);
+        assert!(doc.contains("HyperSwitch"));
+    }
+
+    #[test]
+    fn schedule_rallly_appended() {
+        let mut f = AllFeatures::defaults();
+        f.schedule = ScheduleChoice::Rallly;
+        let mut doc = String::new();
+        append_mid_services(&mut doc, &f);
+        assert!(doc.contains("Rallly"));
+    }
+
+    #[test]
+    fn schedule_calcom_appended() {
+        let mut f = AllFeatures::defaults();
+        f.schedule = ScheduleChoice::CalCom;
+        let mut doc = String::new();
+        append_mid_services(&mut doc, &f);
+        assert!(doc.contains("Cal.com"));
+    }
+
+    #[test]
+    fn notify_gotify_appended() {
+        let mut f = AllFeatures::defaults();
+        f.notify = NotifyChoice::Gotify;
+        let mut doc = String::new();
+        append_mid_services(&mut doc, &f);
+        assert!(doc.contains("Gotify"));
+    }
+}
