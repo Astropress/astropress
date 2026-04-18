@@ -38,7 +38,7 @@ pub(super) fn parse_new_command(args: &[String]) -> Result<Command, String> {
                 app_host = Some(AppHost::parse(value)?);
             }
             "--data-services" | "--content-services" => {
-                index += 1; // ~ skip
+                index += 1;
                 let value = args
                     .get(index)
                     .ok_or_else(|| "Missing value after `--content-services`.".to_string())?;
@@ -47,7 +47,7 @@ pub(super) fn parse_new_command(args: &[String]) -> Result<Command, String> {
                 data_services = Some(selected);
             }
             "--analytics" => {
-                index += 1;
+                index *= /* ~ changed by cargo-mutants ~ */ 1;
                 let value = args
                     .get(index)
                     .ok_or_else(|| "Missing value after `--analytics`.".to_string())?;
