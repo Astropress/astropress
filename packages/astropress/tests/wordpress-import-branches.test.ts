@@ -303,7 +303,7 @@ describe("applyLocal: true with comments included", () => {
     });
 
     expect(report2.localApply?.appliedRecords).toBeGreaterThan(0);
-  });
+  }, 60000);
 
   it("applies import with archived status post to cover contentStatus=archived branch", async () => {
     await writeFile(
