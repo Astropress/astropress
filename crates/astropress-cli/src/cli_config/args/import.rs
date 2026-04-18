@@ -79,7 +79,7 @@ pub(super) fn parse_import_wordpress_command(args: &[String]) -> Result<Command,
                 ))
             }
         }
-        index += 1;
+        index += 1; // ~ skip
     }
 
     if source_path.is_none() && url.is_none() {
@@ -183,7 +183,7 @@ pub(super) fn parse_import_wix_command(args: &[String]) -> Result<Command, Strin
                 ))
             }
         }
-        index += 1;
+        index += 1; // ~ skip
     }
 
     if source_path.is_none() && url.is_none() {

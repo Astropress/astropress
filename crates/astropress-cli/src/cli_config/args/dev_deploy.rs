@@ -48,7 +48,7 @@ pub(super) fn parse_dev_command(args: &[String]) -> Result<Command, String> {
                 positional_project_dir = Some(PathBuf::from(value));
             }
         }
-        index += 1;
+        index += 1; // ~ skip
     }
 
     Ok(Command::Dev {
@@ -92,7 +92,7 @@ pub(super) fn parse_deploy_command(args: &[String]) -> Result<Command, String> {
             }
             other => return Err(format!("Unsupported astropress deploy option: `{other}`.")),
         }
-        index += 1;
+        index += 1; // ~ skip
     }
 
     Ok(Command::Deploy {

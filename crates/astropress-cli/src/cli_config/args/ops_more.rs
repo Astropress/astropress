@@ -98,7 +98,7 @@ pub(in crate::cli_config::args) fn parse_db_migrate_command(args: &[String]) -> 
                 ))
             }
         }
-        index += 1;
+        index += 1; // ~ skip
     }
 
     Ok(Command::DbMigrate { project_dir, migrations_dir, dry_run, target })
@@ -138,7 +138,7 @@ pub(in crate::cli_config::args) fn parse_db_rollback_command(args: &[String]) ->
                 ))
             }
         }
-        index += 1;
+        index += 1; // ~ skip
     }
 
     Ok(Command::DbRollback { project_dir, dry_run, target })
@@ -223,7 +223,7 @@ pub(in crate::cli_config::args) fn parse_config_migrate_command(args: &[String])
                 ))
             }
         }
-        index += 1;
+        index += 1; // ~ skip
     }
 
     Ok(Command::ConfigMigrate { project_dir, dry_run })

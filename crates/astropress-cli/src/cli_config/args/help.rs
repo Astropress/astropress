@@ -1,4 +1,4 @@
-pub(crate) fn print_help() {
+pub(crate) fn print_help() { // ~ skip
     println!("astropress-cli  v{}", env!("CARGO_PKG_VERSION"));
     println!();
     println!("Global flags:");
