@@ -95,17 +95,40 @@ if (model.status === "forbidden") {
                       <button type="submit" class="admin-button small">Update</button>
                     </form>
                   </details>
-                  <form method="post" action="/ap-admin/actions/taxonomy-delete" class="admin-inline-form">
-                    <CsrfInput token={Astro.locals.csrfToken} />
-                    <input type="hidden" name="kind" value="category" />
-                    <input type="hidden" name="id" value={term.id} />
-                    <button type="submit" class="admin-button-ghost small delete-button">Delete</button>
-                  </form>
+                  <button
+                    type="button"
+                    class="admin-button-ghost small delete-button"
+                    data-confirm-trigger
+                    data-dialog-id="confirm-delete-category"
+                    data-field-name="id"
+                    data-field-value={term.id}
+                    data-text-category-name={term.name}
+                  >
+                    Delete
+                  </button>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
+        <ap-confirm-dialog>
+          <dialog id="confirm-delete-category" class="confirm-modal" aria-labelledby="confirm-delete-category-title">
+            <div class="modal-content">
+              <h2 id="confirm-delete-category-title">Delete category?</h2>
+              <p>Are you sure you want to delete <strong id="category-name"></strong>?</p>
+              <p class="dialog-warning">This action cannot be undone.</p>
+              <div class="modal-actions">
+                <button type="button" class="admin-button-ghost small secondary-button" data-dialog-close>Cancel</button>
+                <form method="post" action="/ap-admin/actions/taxonomy-delete" style="display:inline;">
+                  <CsrfInput token={Astro.locals.csrfToken} />
+                  <input type="hidden" name="kind" value="category" />
+                  <input type="hidden" name="id" value="" />
+                  <button type="submit" class="admin-button small delete-button">Delete Category</button>
+                </form>
+              </div>
+            </div>
+          </dialog>
+        </ap-confirm-dialog>
       </section>
 
       <section class="panel">
@@ -158,25 +181,49 @@ if (model.status === "forbidden") {
                       <button type="submit" class="admin-button small">Update</button>
                     </form>
                   </details>
-                  <form method="post" action="/ap-admin/actions/taxonomy-delete" class="admin-inline-form">
-                    <CsrfInput token={Astro.locals.csrfToken} />
-                    <input type="hidden" name="kind" value="tag" />
-                    <input type="hidden" name="id" value={term.id} />
-                    <button type="submit" class="admin-button-ghost small delete-button">Delete</button>
-                  </form>
+                  <button
+                    type="button"
+                    class="admin-button-ghost small delete-button"
+                    data-confirm-trigger
+                    data-dialog-id="confirm-delete-tag"
+                    data-field-name="id"
+                    data-field-value={term.id}
+                    data-text-tag-name={term.name}
+                  >
+                    Delete
+                  </button>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
+        <ap-confirm-dialog>
+          <dialog id="confirm-delete-tag" class="confirm-modal" aria-labelledby="confirm-delete-tag-title">
+            <div class="modal-content">
+              <h2 id="confirm-delete-tag-title">Delete tag?</h2>
+              <p>Are you sure you want to delete <strong id="tag-name"></strong>?</p>
+              <p class="dialog-warning">This action cannot be undone.</p>
+              <div class="modal-actions">
+                <button type="button" class="admin-button-ghost small secondary-button" data-dialog-close>Cancel</button>
+                <form method="post" action="/ap-admin/actions/taxonomy-delete" style="display:inline;">
+                  <CsrfInput token={Astro.locals.csrfToken} />
+                  <input type="hidden" name="kind" value="tag" />
+                  <input type="hidden" name="id" value="" />
+                  <button type="submit" class="admin-button small delete-button">Delete Tag</button>
+                </form>
+              </div>
+            </div>
+          </dialog>
+        </ap-confirm-dialog>
       </section>
     </div>
+    <script>
+      import "../../web-components/confirm-dialog";
+    </script>
     <AuditTrail
       events={auditEvents.filter((event) => event.action.startsWith("category.") || event.action.startsWith("tag.")).slice(0, 5)}
     />
-    {wasDeleted && restoreId && (
-      <script>{`(function(){var t=document.querySelector('[data-undo-toast]');if(t)setTimeout(function(){t.remove();},8000);})();`}</script>
-    )}
+    {/* Undo toast auto-dismisses via CSS animation (ap-toast-out in admin.css) */}
   </AdminLayout>
 ) : (
   <AdminLayout

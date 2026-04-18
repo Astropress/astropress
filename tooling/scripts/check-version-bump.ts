@@ -64,3 +64,19 @@ if (!changelog.includes(currentVersion)) {
 }
 
 console.log(`✓ check:version — version ${currentVersion} documented in CHANGELOG.md`);
+
+// Verify Cargo.toml is in sync with the npm package version
+const CARGO_PATH = resolve(ROOT, "crates/astropress-cli/Cargo.toml");
+if (existsSync(CARGO_PATH)) {
+  const cargoToml = readFileSync(CARGO_PATH, "utf-8");
+  const cargoMatch = cargoToml.match(/^version\s*=\s*"([^"]+)"/m);
+  const cargoVersion = cargoMatch?.[1];
+  if (cargoVersion && cargoVersion !== currentVersion) {
+    console.error(
+      `✗ check:version — Cargo.toml version (${cargoVersion}) does not match package.json (${currentVersion}). ` +
+      `Run 'bun run version' to sync.`
+    );
+    process.exit(1);
+  }
+  console.log(`✓ check:version — Cargo.toml version in sync (${cargoVersion})`);
+}

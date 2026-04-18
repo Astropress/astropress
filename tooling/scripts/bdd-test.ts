@@ -127,6 +127,23 @@ const verificationGroups: VerificationGroup[] = [
     ],
   },
   {
+    label: "WCAG 2.2 AA accessibility compliance",
+    scenarios: [
+      "All static admin routes pass axe WCAG 2.2 AA audit",
+      "All public example routes pass axe WCAG 2.2 AA audit",
+      "Admin panel meets keyboard navigation requirements",
+      "Admin pages have correct heading hierarchy",
+      "Form controls have accessible names",
+      "Color contrast meets WCAG 2.2 AA thresholds",
+    ],
+    steps: [
+      {
+        command: "bun",
+        args: ["run", "test:accessibility:admin-harness"],
+      },
+    ],
+  },
+  {
     label: "project bootstrap scenarios",
     scenarios: [
       "A developer running astropress new gets pre-filled environment variables for their chosen provider",
@@ -1374,11 +1391,53 @@ const verificationGroups: VerificationGroup[] = [
     scenarios: [
       "Deleting a resource shows an undo toast",
       "Clicking Undo restores the deleted resource",
+      "Undo toast disappears after a few seconds",
     ],
     steps: [
       {
         command: "bun",
         args: ["test", "--", "delete-undo"],
+        cwd: astropressPackageRoot,
+      },
+    ],
+  },
+  {
+    label: "destructive action confirmation dialogs",
+    scenarios: [
+      "Admin confirms before deleting an author",
+      "Admin confirms before deleting a category",
+      "Admin confirms before deleting a tag",
+      "Admin confirms before deleting a media asset",
+      "Admin confirms before deleting a webhook",
+      "Admin confirms before revoking an API token",
+      "Admin confirms before suspending a user",
+      "Admin confirms before purging user data",
+      "Admin confirms before removing a subscriber",
+      "Submitting a form disables the button to prevent duplicate actions",
+    ],
+    steps: [
+      {
+        command: "bunx",
+        args: ["vitest", "run", "tests/admin-safety.test.ts", "tests/admin-shell-ux.test.ts"],
+        cwd: astropressPackageRoot,
+      },
+    ],
+  },
+  {
+    label: "header utility panel",
+    scenarios: [
+      "Topbar keeps utility controls behind a single toggle",
+      "Opening the toggle reveals four utility buttons",
+      "Panel sits inside the topbar without covering other header items",
+      "Clicking the toggle again closes the panel",
+      "Panel closes when I click outside or press Escape",
+      "Theme toggle icon reflects the mode it will switch to",
+      "Scroll button takes me to the bottom or back to the top",
+    ],
+    steps: [
+      {
+        command: "bunx",
+        args: ["vitest", "run", "tests/admin-shell-ux.test.ts"],
         cwd: astropressPackageRoot,
       },
     ],

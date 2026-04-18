@@ -116,7 +116,7 @@ const DEFAULT_SERVICE_DOCS: Record<string, { docs: string; badge: string }> = {
   }
 
   .service-card--inactive {
-    opacity: 0.72;
+    color: var(--muted, #374151);
   }
 
   .service-card__header {
@@ -127,6 +127,7 @@ const DEFAULT_SERVICE_DOCS: Record<string, { docs: string; badge: string }> = {
 
   .service-name {
     font-size: 1.05rem;
+    color: var(--text, #17212c);
   }
 
   .service-badge {
@@ -137,12 +138,12 @@ const DEFAULT_SERVICE_DOCS: Record<string, { docs: string; badge: string }> = {
     padding: 0.2em 0.55em;
     border-radius: 0.4em;
     background: var(--accent-soft);
-    color: var(--accent-strong);
+    color: var(--text, #17212c);
   }
 
   .service-description {
     margin: 0;
-    color: var(--muted);
+    color: var(--text, #17212c);
     font-size: 0.92rem;
     line-height: 1.55;
   }

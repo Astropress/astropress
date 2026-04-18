@@ -64,12 +64,71 @@ describe("admin markup safety", () => {
 
     expect(adminLayout).toContain('class="skip-link"');
     expect(adminLayout).toContain('aria-label="Admin sections"');
-    expect(loginPage).toContain('<input type="email" name="email" autocomplete="email" required />');
-    expect(loginPage).toContain('<input type="password" name="password" autocomplete="current-password" required />');
-    expect(invitePage).toContain('<input type="password" name="password" autocomplete="new-password" minlength="12" required />');
-    expect(invitePage).toContain('<input type="password" name="confirmPassword" autocomplete="new-password" minlength="12" required />');
+    expect(loginPage).toContain('type="email" name="email" autocomplete="email" required');
+    expect(loginPage).toContain('type="password" name="password" autocomplete="current-password" required');
+    expect(invitePage).toContain('type="password" name="password" autocomplete="new-password" minlength="12" required');
+    expect(invitePage).toContain('type="password" name="confirmPassword" autocomplete="new-password" minlength="12" required');
     expect(resetPage).toContain('<input type="email" name="email" autocomplete="email" required />');
     expect(resetPage).toContain('<input type="password" name="password" autocomplete="new-password" minlength="12" required />');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// destructive actions use confirm dialogs
+// ---------------------------------------------------------------------------
+
+describe("destructive actions use confirm dialogs", () => {
+  it("authors page uses ap-confirm-dialog for deletion", () => {
+    const src = readFileSync(path.join(adminPagesRoot, "authors.astro"), "utf8");
+    expect(src).toContain("ap-confirm-dialog");
+    expect(src).toContain("data-confirm-trigger");
+    expect(src).toContain('id="confirm-delete-author"');
+  });
+
+  it("taxonomies page uses ap-confirm-dialog for category and tag deletion", () => {
+    const src = readFileSync(path.join(adminPagesRoot, "taxonomies.astro"), "utf8");
+    expect(src).toContain("ap-confirm-dialog");
+    expect(src).toContain("data-confirm-trigger");
+    expect(src).toContain('id="confirm-delete-category"');
+    expect(src).toContain('id="confirm-delete-tag"');
+  });
+
+  it("media page uses ap-confirm-dialog for deletion", () => {
+    const src = readFileSync(path.join(adminPagesRoot, "media.astro"), "utf8");
+    expect(src).toContain("ap-confirm-dialog");
+    expect(src).toContain("data-confirm-trigger");
+    expect(src).toContain('id="confirm-delete-media"');
+  });
+
+  it("webhooks page uses ap-confirm-dialog for deletion", () => {
+    const src = readFileSync(path.join(adminPagesRoot, "webhooks.astro"), "utf8");
+    expect(src).toContain("ap-confirm-dialog");
+    expect(src).toContain("data-confirm-trigger");
+    expect(src).toContain('id="confirm-delete-webhook"');
+  });
+
+  it("api-tokens page uses ap-confirm-dialog for revocation", () => {
+    const src = readFileSync(path.join(adminPagesRoot, "api-tokens.astro"), "utf8");
+    expect(src).toContain("ap-confirm-dialog");
+    expect(src).toContain("data-confirm-trigger");
+    expect(src).toContain('id="confirm-revoke-token"');
+  });
+
+  it("users page uses styled dialog instead of window.confirm()", () => {
+    const src = readFileSync(path.join(adminPagesRoot, "users.astro"), "utf8");
+    expect(src).not.toContain("window.confirm");
+    expect(src).not.toMatch(/data-confirm="/);
+    expect(src).toContain("ap-confirm-dialog");
+    expect(src).toContain('id="confirm-suspend-user"');
+    expect(src).toContain('id="confirm-purge-user"');
+  });
+
+  it("subscriber detail uses styled dialog instead of window.confirm()", () => {
+    const src = readFileSync(path.join(adminPagesRoot, "subscribers", "[id].astro"), "utf8");
+    expect(src).not.toContain("window.confirm");
+    expect(src).not.toMatch(/data-confirm="/);
+    expect(src).toContain("ap-confirm-dialog");
+    expect(src).toContain('id="confirm-delete-subscriber"');
   });
 });
 

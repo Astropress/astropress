@@ -90,12 +90,12 @@ test.describe("Feature: admin nav mobile sidebar (<ap-admin-nav>)", () => {
 
   test("Scenario: top bar controls stay touch-friendly on narrow viewports", async ({ page }) => {
     const navToggle = page.locator("[data-nav-toggle]");
-    const shortcutsButton = page.getByRole("button", { name: "Keyboard shortcuts" });
+    const panelToggle = page.locator("summary.topbar-panel-toggle");
     const signOutButton = page.getByRole("button", { name: "Sign out" });
 
-    const shortcutsBox = await shortcutsButton.boundingBox();
-    expect(shortcutsBox?.width ?? 0).toBeGreaterThanOrEqual(44);
-    expect(shortcutsBox?.height ?? 0).toBeGreaterThanOrEqual(44);
+    const panelToggleBox = await panelToggle.boundingBox();
+    expect(panelToggleBox?.width ?? 0).toBeGreaterThanOrEqual(44);
+    expect(panelToggleBox?.height ?? 0).toBeGreaterThanOrEqual(44);
     const signOutBox = await signOutButton.boundingBox();
     expect(signOutBox?.width ?? 0).toBeGreaterThanOrEqual(44);
     expect(signOutBox?.height ?? 0).toBeGreaterThanOrEqual(44);
@@ -105,6 +105,13 @@ test.describe("Feature: admin nav mobile sidebar (<ap-admin-nav>)", () => {
       expect(navBox?.width ?? 0).toBeGreaterThanOrEqual(44);
       expect(navBox?.height ?? 0).toBeGreaterThanOrEqual(44);
     }
+
+    // Open panel and verify utility buttons are also touch-friendly
+    await panelToggle.click();
+    const shortcutsButton = page.getByRole("button", { name: "Keyboard shortcuts" });
+    const shortcutsBox = await shortcutsButton.boundingBox();
+    expect(shortcutsBox?.width ?? 0).toBeGreaterThanOrEqual(44);
+    expect(shortcutsBox?.height ?? 0).toBeGreaterThanOrEqual(44);
   });
 
   test("Scenario: Escape is no-op when sidebar is already closed", async ({ page }) => {

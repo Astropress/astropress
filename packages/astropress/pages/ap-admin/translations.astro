@@ -63,7 +63,7 @@ const stateCounts = rows.reduce<Record<string, number>>((accumulator, entry) => 
               ))}
             </select>
           </label>
-          <button type="submit" class="admin-button">Apply</button>
+          <button type="submit" class="admin-button">Apply filter</button>
         </form>
       </div>
       <p><strong>{filteredRows.length} of {rows.length} localized routes</strong></p>
@@ -96,14 +96,14 @@ const stateCounts = rows.reduce<Record<string, number>>((accumulator, entry) => 
                     <form method="post" action="/ap-admin/actions/translation-update" class="translation-update">
                       <CsrfInput token={Astro.locals.csrfToken} />
                       <input type="hidden" name="route" value={entry.route} />
-                      <select class="admin-select" name="state" required>
+                      <select class="admin-select" name="state" required aria-label={`Translation state for ${entry.route}`}>
                         {validStates.map((state) => (
                           <option value={state} selected={effectiveState === state}>
                             {state}
                           </option>
                         ))}
                       </select>
-                      <button type="submit" class="admin-button-ghost small">Update</button>
+                      <button type="submit" class="admin-button-ghost small">Save state</button>
                     </form>
                   </td>
                 </tr>

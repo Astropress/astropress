@@ -13,6 +13,7 @@ with a built-in admin panel, AI-ready scaffolding, and zero vendor lock-in.
 [![Coverage](https://img.shields.io/badge/coverage-99%25-brightgreen)](#)
 [![Node ≥ 24.8](https://img.shields.io/badge/node-%E2%89%A524.8-brightgreen?logo=node.js&logoColor=white)](https://nodejs.org)
 [![Bun 1.3](https://img.shields.io/badge/bun-1.3-f472b6?logo=bun&logoColor=white)](https://bun.sh)
+[![WCAG 2.2 AA](https://img.shields.io/badge/WCAG_2.2-AA-4c1?logo=w3c&logoColor=white)](./docs/reference/EVALUATION.md)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-blueviolet.svg)](./CONTRIBUTING.md)
 
 </div>

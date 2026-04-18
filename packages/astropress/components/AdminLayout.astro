@@ -113,53 +113,64 @@ const navItems: NavItem[] = [
         </button>
         <span>{adminUi.labels.signedInAsPrefix} {userName}</span>
         <span class="role-chip">{role}</span>
-        <ap-theme-toggle label-dark={adminUi.labels.themeToggleDark} label-light={adminUi.labels.themeToggleLight}>
+        <details class="topbar-panel-details" id="topbar-utility-details">
+          <summary class="topbar-panel-toggle" aria-label="Toggle utility panel">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"></polyline></svg>
+          </summary>
+          <div id="topbar-utility-panel" class="topbar-utility-panel">
+          <ap-theme-toggle label-dark={adminUi.labels.themeToggleDark} label-light={adminUi.labels.themeToggleLight}>
+            <button
+              type="button"
+              class="topbar-utility-btn"
+              aria-pressed="false"
+              aria-label={adminUi.labels.themeToggleDark}
+              title={adminUi.labels.themeToggleDark}
+            >
+              <span class="theme-toggle-icon" aria-hidden="true"></span>
+            </button>
+          </ap-theme-toggle>
           <button
             type="button"
-            class="theme-toggle-admin"
-            id="admin-theme-toggle"
-            aria-pressed="false"
-            aria-label={adminUi.labels.themeToggleDark}
-            title={adminUi.labels.themeToggleDark}
+            class="topbar-utility-btn"
+            aria-label={adminUi.labels.changeLanguage}
+            title={adminUi.labels.changeLanguage}
+            data-locale-toggle
           >
-            <span class="theme-toggle-icon" aria-hidden="true"></span>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
           </button>
-        </ap-theme-toggle>
-        <select
-          class="locale-select"
-          aria-label={adminUi.labels.changeLanguage}
-          title={adminUi.labels.changeLanguage}
-          data-locale-select
-        >
-          <option value="en">English</option>
-          <option value="es">Español</option>
-          <option value="fr">Français</option>
-          <option value="de">Deutsch</option>
-          <option value="pt">Português</option>
-          <option value="ja">日本語</option>
-        </select>
-        <script>
-          {`(function () {
-            var sel = document.querySelector('[data-locale-select]');
-            if (!sel) return;
-            var stored = localStorage.getItem('ap-admin-locale') || 'en';
-            sel.value = stored;
-            document.documentElement.lang = stored;
-            sel.addEventListener('change', function () {
-              localStorage.setItem('ap-admin-locale', sel.value);
-              document.documentElement.lang = sel.value;
-            });
-          })();`}
-        </script>
-        <button
-          type="button"
-          class="help-popover-trigger"
-          popovertarget="admin-keyboard-shortcuts"
-          aria-label="Keyboard shortcuts"
-          title="Keyboard shortcuts"
-        >
-          <span aria-hidden="true">?</span>
-        </button>
+          <select
+            class="locale-select"
+            aria-label={adminUi.labels.changeLanguage}
+            data-locale-select
+            hidden
+          >
+            <option value="en">English</option>
+            <option value="es">Español</option>
+            <option value="fr">Français</option>
+            <option value="de">Deutsch</option>
+            <option value="pt">Português</option>
+            <option value="ja">日本語</option>
+          </select>
+          <button
+            type="button"
+            class="topbar-utility-btn"
+            popovertarget="admin-keyboard-shortcuts"
+            aria-label="Keyboard shortcuts"
+            title="Keyboard shortcuts"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2" ry="2"></rect><path d="M6 8h.01M10 8h.01M14 8h.01M18 8h.01M8 12h.01M12 12h.01M16 12h.01M8 16h8"></path></svg>
+          </button>
+          <button
+            type="button"
+            class="topbar-utility-btn"
+            id="scroll-toggle"
+            aria-label="Scroll to bottom"
+            title="Scroll to bottom"
+          >
+            <svg class="scroll-toggle-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>
+          </button>
+        </div>
+        </details>
         <div
           id="admin-keyboard-shortcuts"
           popover
@@ -183,6 +194,63 @@ const navItems: NavItem[] = [
         <form method="post" action="/ap-admin/session?logout=1">
           <button type="submit">{adminUi.labels.signOut}</button>
         </form>
+        <script>
+          {`(function () {
+            // Locale: persist and apply stored preference.
+            var sel = document.querySelector('[data-locale-select]');
+            if (sel) {
+              var stored = localStorage.getItem('ap-admin-locale') || 'en';
+              sel.value = stored;
+              document.documentElement.lang = stored;
+              sel.addEventListener('change', function () {
+                localStorage.setItem('ap-admin-locale', sel.value);
+                document.documentElement.lang = sel.value;
+              });
+              var localeBtn = document.querySelector('[data-locale-toggle]');
+              if (localeBtn) {
+                localeBtn.addEventListener('click', function () {
+                  sel.hidden = !sel.hidden;
+                  if (!sel.hidden) sel.focus();
+                });
+              }
+            }
+
+            // Utility panel: close on click-outside and Escape (details element has no native light-dismiss).
+            var details = document.getElementById('topbar-utility-details');
+            if (details) {
+              document.addEventListener('click', function (e) {
+                if (details.open && !details.contains(e.target)) details.removeAttribute('open');
+              });
+              document.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape' && details.open) { details.removeAttribute('open'); e.stopPropagation(); }
+              });
+            }
+
+            // Scroll toggle: down-arrow at top, up-arrow after scroll.
+            var scrollBtn = document.getElementById('scroll-toggle');
+            var scrollIcon = scrollBtn && scrollBtn.querySelector('.scroll-toggle-icon');
+            if (scrollBtn && scrollIcon) {
+              var atTop = true;
+              function updateScrollState() {
+                var scrolled = window.scrollY > 100;
+                if (scrolled !== !atTop) {
+                  atTop = !scrolled;
+                  scrollIcon.classList.toggle('pointing-up', scrolled);
+                  scrollBtn.setAttribute('aria-label', atTop ? 'Scroll to bottom' : 'Scroll to top');
+                  scrollBtn.setAttribute('title', atTop ? 'Scroll to bottom' : 'Scroll to top');
+                }
+              }
+              window.addEventListener('scroll', updateScrollState, { passive: true });
+              scrollBtn.addEventListener('click', function () {
+                if (atTop) {
+                  window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'smooth' });
+                } else {
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }
+              });
+            }
+          })();`}
+        </script>
       </div>
     </header>
     <ap-admin-nav>
@@ -341,13 +409,25 @@ const navItems: NavItem[] = [
           const btn = (e.currentTarget as HTMLFormElement).querySelector<HTMLButtonElement>(".publish-btn");
           if (btn) { btn.textContent = "Publishing\u2026"; btn.disabled = true; }
         });
+
+        // Generic form submit loading state — disable button and append ellipsis to prevent double submission.
+        document.querySelectorAll<HTMLFormElement>("form:not(.publish-form)").forEach((form) => {
+          form.addEventListener("submit", () => {
+            const btn = form.querySelector<HTMLButtonElement>('button[type="submit"]');
+            if (!btn || btn.disabled) return;
+            btn.disabled = true;
+            const original = btn.textContent?.trim() ?? "";
+            btn.textContent = original + "\u2026";
+            setTimeout(() => { btn.disabled = false; btn.textContent = original; }, 8000);
+          });
+        });
       })();
     </script>
   <style>
     .ap-admin-footer {
       padding: 0.5rem 1.5rem;
       font-size: 0.75rem;
-      color: var(--color-text-muted, #6b7280);
+      color: var(--color-text-muted, #374151);
       border-top: 1px solid var(--color-border, #e5e7eb);
       display: flex;
       gap: 0.5rem;
@@ -361,7 +441,7 @@ const navItems: NavItem[] = [
       text-decoration: underline;
     }
     .ap-admin-footer__sep {
-      color: var(--color-text-muted, #6b7280);
+      color: var(--color-text-muted, #374151);
     }
   </style>
   </body>

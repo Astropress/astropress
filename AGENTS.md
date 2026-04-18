@@ -93,6 +93,19 @@ Violations fail CI. Do not introduce them.
 | `dependency-direction` | `d1-store-*.ts` files must not import from `runtime-*.ts` (adapter layer cannot depend on runtime layer) |
 | `dispatch-containment` | `loadLocalAdminStore()` only in `admin-store-dispatch.ts` (and its exempt stubs). Use `withAdminStore()` everywhere else |
 | `utility-uniqueness` | `normalizeEmail` and `normalizePath` may only be *defined* in `admin-normalizers.ts` (or received as injected parameters in factory files) |
+| `cyclomatic-complexity` | Non-exempt functions: warn at 20, error at 40. Exempt: `sqlite-runtime/`, `adapters/`, `import/`, and named files in `complexityExemptFiles` |
+
+## Dependency graph rules (`.dependency-cruiser.cjs`)
+
+`bun run audit:deps:graph` enforces import boundaries with dependency-cruiser:
+
+| Rule | Constraint |
+|------|-----------|
+| `adapter-no-runtime-import` | `d1-*` and `adapters/` must not import `runtime-*` (except `runtime-env`, `runtime-logger`, `runtime-health`) |
+| `pages-no-direct-sqlite` | Admin pages must not import `sqlite-runtime/` directly — use the store dispatch seam |
+| `no-test-in-source` | Source files must not import from test files |
+| `tooling-no-source-import` | Tooling scripts must not import package source |
+| `no-circular` | Circular dependencies in `src/` are warned (not blocked) |
 
 ## Rust arch-lint rules (`tooling/scripts/rust-arch-lint.ts`)
 

@@ -6,6 +6,8 @@ test.describe("Feature: authenticated admin interaction flows", () => {
   test("Scenario: keyboard shortcut help opens from the top bar", async ({ page }) => {
     await page.goto("/ap-admin", { waitUntil: "networkidle" });
 
+    // Open the utility panel first (keyboard shortcuts button is inside the details panel)
+    await page.locator("summary.topbar-panel-toggle").click();
     await page.getByRole("button", { name: "Keyboard shortcuts" }).click();
     await expect(page.getByRole("dialog", { name: "Keyboard shortcuts" })).toBeVisible();
     await expect(page.getByText("Open command palette")).toBeVisible();

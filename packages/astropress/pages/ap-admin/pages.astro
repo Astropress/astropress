@@ -123,7 +123,7 @@ const structuredExplanation = "Structured pages are route-backed pages assembled
               <option value="archive" selected={selectedKind === "archive"}>Archive</option>
             </select>
           </label>
-          <button type="submit" class="admin-button">Apply</button>
+          <button type="submit" class="admin-button">Apply filters</button>
         </form>
       </div>
       <div class="admin-table-shell">
@@ -139,6 +139,9 @@ const structuredExplanation = "Structured pages are route-backed pages assembled
             </tr>
           </thead>
           <tbody>
+            {filteredRows.length === 0 && (
+              <tr><td colspan="2" class="admin-empty-state">No pages match the current filters. <a href="/ap-admin/pages">Clear filters</a> or <a href="/ap-admin/pages/new">create a new page</a>.</td></tr>
+            )}
             {filteredRows.map((row) => (
               <tr>
                 <td>
@@ -295,7 +298,7 @@ const structuredExplanation = "Structured pages are route-backed pages assembled
 
   .status-published {
     background: #e7f5eb;
-    color: #1f6b3a;
+    color: #14532d;
   }
 
   .status-review,

@@ -3,31 +3,35 @@
  * Extracted from AdminLayout.astro so browsers can cache it across all admin pages.
  */
 
+html {
+  scroll-behavior: smooth;
+}
+
 :root {
   color-scheme: light;
   --bg: #f4f6f8;
   --panel: #ffffff;
   --text: #17212c;
-  --muted: #5e6b78;
+  --muted: #374151;
   --line: #d8dee5;
-  --accent: #0d5c63;
+  --accent: #094a50;
   --accent-soft: #e6f4f2;
   --sidebar-bg: #15202b;
   --sidebar-text: rgba(255, 255, 255, 0.9);
-  --sidebar-muted: rgba(255, 255, 255, 0.80);
+  --sidebar-muted: rgba(255, 255, 255, 0.92);
   --topbar-bg: #0f1720;
   --surface-subtle: #f8fafb;
-  --button-primary-bg: #0d5c63;
+  --button-primary-bg: #094a50;
   --button-primary-text: #ffffff;
-  --button-primary-hover: #0f6d75;
+  --button-primary-hover: #0b5960;
   --button-secondary-bg: #e6f4f2;
-  --button-secondary-text: #0d5c63;
+  --button-secondary-text: #094a50;
   --button-secondary-hover: #d7edea;
   --button-ghost-bg: transparent;
   --button-ghost-text: var(--text);
   --button-ghost-border: var(--line);
   --button-ghost-hover: #edf1f5;
-  --danger: #c0392b;
+  --danger: #991b1b;
 }
 
 html[data-theme="dark"] {
@@ -155,36 +159,73 @@ body {
   background: #15803d;
 }
 
-.theme-toggle-admin {
+/* ── Utility panel (native <details> toggle, inline in topbar flex) ───────── */
+.topbar-panel-details {
+  display: inline-flex;
+  align-items: center;
+}
+
+.topbar-panel-toggle {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 2.8rem;
-  height: 2.8rem;
+  width: 2.75rem;
+  height: 2.75rem;
   padding: 0;
-  background: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.14);
   color: white;
+  border: 0;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  list-style: none;
+  transition: transform 200ms ease;
+}
+.topbar-panel-toggle::-webkit-details-marker { display: none; }
+.topbar-panel-toggle:hover,
+.topbar-panel-toggle:focus-visible {
+  background: rgba(255, 255, 255, 0.24);
+}
+.topbar-panel-details[open] > .topbar-panel-toggle {
+  transform: rotate(180deg);
+}
+
+.topbar-utility-panel {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+/* Scroll-to-top/bottom button arrow rotation */
+.scroll-toggle-icon {
+  transition: transform 300ms ease;
+}
+.scroll-toggle-icon.pointing-up {
+  transform: rotate(180deg);
+}
+
+.topbar-utility-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  padding: 0;
+  background: rgba(255, 255, 255, 0.14);
+  color: white;
+  border: 0;
+  border-radius: 0.5rem;
+  cursor: pointer;
+}
+.topbar-utility-btn:hover,
+.topbar-utility-btn:focus-visible {
+  background: rgba(255, 255, 255, 0.24);
 }
 
 .theme-toggle-icon {
-  font-size: 1.35rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   line-height: 1;
-}
-
-.lang-toggle-admin {
-  background: rgba(255, 255, 255, 0.1);
-  color: rgba(255, 255, 255, 0.6);
-  font-size: 0.75rem;
-  font-weight: 600;
-  letter-spacing: 0.05em;
-  padding: 0.4rem 0.6rem;
-  border-radius: 0.4rem;
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.lang-toggle-admin:disabled {
-  opacity: 0.6;
 }
 
 .admin-shell {
@@ -483,12 +524,29 @@ th {
   box-sizing: border-box;
 }
 
+.admin-input::placeholder,
+.admin-textarea::placeholder {
+  color: var(--muted);
+  opacity: 0.7;
+}
+
 .admin-input:focus,
 .admin-select:focus,
 .admin-textarea:focus {
   outline: 2px solid color-mix(in srgb, var(--accent) 55%, transparent);
   outline-offset: 1px;
   border-color: var(--accent);
+}
+
+.admin-empty-state {
+  padding: 2rem 1.5rem;
+  text-align: center;
+  color: var(--muted);
+  font-style: italic;
+}
+
+.admin-empty-state a {
+  color: var(--accent);
 }
 
 .admin-table-shell {
@@ -714,23 +772,6 @@ html[data-theme="dark"] ap-notice[type="error"] {
  * Uses the native HTML Popover API (zero JS) for the keyboard shortcuts panel.
  * The `popover` attribute auto-wires toggle behavior via `popovertarget`.
  * ────────────────────────────────────────────────────────────────────────────── */
-.help-popover-trigger {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 2.75rem;
-  min-height: 2.75rem;
-  border-radius: 50%;
-  border: 1px solid var(--line);
-  background: var(--panel);
-  color: var(--muted);
-  font-size: 0.9rem;
-  font-weight: 700;
-  cursor: pointer;
-  padding: 0;
-  line-height: 1;
-}
-
 .keyboard-shortcuts-popover {
   position: fixed;
   inset-block-start: 4rem;
@@ -856,10 +897,13 @@ html[data-theme="dark"] ap-notice[type="error"] {
   align-items: center;
   gap: 1rem;
   z-index: 200;
-  animation: ap-toast-in 0.2s ease;
+  animation: ap-toast-in 0.2s ease, ap-toast-out 0.4s ease 7.6s forwards;
 }
 @keyframes ap-toast-in {
   from { opacity: 0; transform: translateX(-50%) translateY(8px); }
+}
+@keyframes ap-toast-out {
+  to { opacity: 0; transform: translateX(-50%) translateY(8px); pointer-events: none; visibility: hidden; }
 }
 .undo-btn {
   background: none;
@@ -920,6 +964,78 @@ html[data-theme="dark"] ap-notice[type="error"] {
   text-align: center;
   color: var(--text-muted, #64748b);
   font-size: 0.9rem;
+}
+
+/* ── Shared confirm dialog styles ──────────────────────────────────────────
+ * Used by <ap-confirm-dialog> on redirects, comments, authors, taxonomies,
+ * media, webhooks, api-tokens, users, and subscribers pages. */
+.confirm-modal {
+  border: none;
+  border-radius: 1rem;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  max-width: 400px;
+  padding: 0;
+  backdrop-filter: blur(4px);
+}
+.confirm-modal::backdrop {
+  background: rgba(0, 0, 0, 0.5);
+}
+.modal-content {
+  padding: 1.75rem;
+}
+.modal-content h2 {
+  margin: 0 0 1rem;
+  font-size: 1.25rem;
+  color: var(--text);
+}
+.modal-content p {
+  margin: 0 0 0.75rem;
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+.modal-content p:last-of-type {
+  margin-bottom: 1.5rem;
+}
+.dialog-context {
+  background: var(--bg);
+  padding: 0.75rem;
+  border-radius: 0.6rem;
+  font-family: "Monaco", monospace;
+  font-size: 0.85rem;
+  color: var(--text);
+  word-break: break-all;
+}
+.dialog-warning {
+  color: var(--danger);
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+.modal-actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+}
+.modal-actions .secondary-button {
+  padding: 0;
+}
+.modal-actions .secondary-button:hover {
+  background: var(--accent-soft);
+}
+
+/* ── Shared breadcrumb navigation ─────────────────────────────────────────
+ * Used by subscriber detail, import source, post/archive/route-page editors. */
+.breadcrumb {
+  font-size: 0.875rem;
+  color: var(--text-muted, #374151);
+  margin-bottom: 1.5rem;
+}
+.breadcrumb a {
+  color: var(--accent, #6366f1);
+  text-decoration: none;
+}
+.breadcrumb a:hover {
+  text-decoration: underline;
 }
 
 /* ── Dialog entrance / exit ────────────────────────────────────────────────
