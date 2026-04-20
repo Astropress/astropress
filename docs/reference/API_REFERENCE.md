@@ -1332,21 +1332,21 @@ function reportAstropressError(error: unknown, context: string): Promise<void>
 
 ### Types & Interfaces
 
+- `type ApiScope`
+- `type ApiTokenId`
+- `interface ApiTokenRecord`
+- `interface ApiTokenStore`
 - `type ContentId` — A content record ID — prevents mixing with media or user IDs.
 - `type MediaAssetId` — A media asset ID — prevents mixing with content or user IDs.
 - `type AdminUserId` — An admin user ID — prevents mixing with content or media IDs.
-- `type ApiTokenId` — An API token ID — prevents mixing with other ID types.
 - `type AuditEventId` — An audit event ID — prevents mixing with content or user IDs.
 - `type ActionResult` — Standard discriminated union for all repository / action operation results.
-- `type ApiScope`
-- `interface ApiTokenRecord`
-- `interface ApiTokenStore`
 - `type WebhookEvent`
 - `interface WebhookRecord`
 - `interface WebhookStore`
 - `interface FaqItem` — A single FAQ item for AEO-optimised FAQPage JSON-LD.
 - `interface HowToStep` — A single step in a HowTo guide for AEO-optimised HowTo JSON-LD.
-- `interface AeoMetadata` — AEO (Answer Engine Optimisation) metadata that can be stored in a content record's `metadata` field to trigger automatic JSON-LD rendering via AstropressContentLayout.
+- `interface AeoMetadata`
 
 ---
 
@@ -1471,25 +1471,6 @@ function resolveAstropressSqliteSchemaPath(): string
 function readAstropressSqliteSchemaSql(): string
 ```
 
-#### `runAstropressMigrations`
-```ts
-function runAstropressMigrations(db: SqliteDatabaseLike, migrationsDir: string): { applied: string[]; skipped: string[]; }
-```
-
-Run incremental SQL migrations from a directory against a live SQLite database. Migration files must be named with a numeric prefix (e.g. `0001_add_column.sql`). They are applied in lexicographic order. Applied migrations are recorded in `schema_migrations` so they are never re-run.
-
-#### `checkSchemaVersionAhead`
-```ts
-function checkSchemaVersionAhead(db: SqliteDatabaseLike, frameworkBaseline: number): { isAhead: boolean; dbCount: number; frameworkCount: number; } | null
-```
-
-Checks whether the database `schema_migrations` table has more entries than the framework's known baseline.
-
-#### `rollbackAstropressLastMigrationWithOptions`
-```ts
-function rollbackAstropressLastMigrationWithOptions(db: SqliteDatabaseLike, options: { dryRun?: boolean | undefined; }): AstropressRollbackResult
-```
-
 #### `createAstropressSqliteSeedToolkit`
 ```ts
 function createAstropressSqliteSeedToolkit<TableName>(options: AstropressSqliteSeedToolkitOptions<TableName>): AstropressSqliteSeedToolkit<TableName>
@@ -1500,30 +1481,45 @@ function createAstropressSqliteSeedToolkit<TableName>(options: AstropressSqliteS
 function createDefaultAstropressSqliteSeedToolkit(): AstropressSqliteSeedToolkit<"comments" | "admin_users" | "media_assets" | "redirect_rules" | "site_settings" | "cms_route_groups" | "cms_route_variants" | "cms_route_aliases" | "cms_route_revisions">
 ```
 
+#### `checkSchemaVersionAhead`
+```ts
+function checkSchemaVersionAhead(db: SqliteDatabaseLike, frameworkBaseline: number): { isAhead: boolean; dbCount: number; frameworkCount: number; } | null
+```
+
+#### `rollbackAstropressLastMigrationWithOptions`
+```ts
+function rollbackAstropressLastMigrationWithOptions(db: SqliteDatabaseLike, options: { dryRun?: boolean | undefined; }): AstropressRollbackResult
+```
+
+#### `runAstropressMigrations`
+```ts
+function runAstropressMigrations(db: SqliteDatabaseLike, migrationsDir: string): { applied: string[]; skipped: string[]; }
+```
+
 ### Types & Interfaces
 
-- `interface SqliteStatementLike`
-- `interface SqliteDatabaseLike`
+- `interface ArchiveSeedRecord`
+- `interface AstropressRollbackResult`
+- `type AstropressRollbackStatus`
+- `interface AstropressSqliteSeedToolkit`
+- `interface AstropressSqliteSeedToolkitOptions`
+- `interface BootstrapUserSeed`
+- `interface MarketingRouteSeedRecord`
 - `interface MediaSeedRecord`
 - `interface RedirectRuleSeed`
 - `interface SeededComment`
-- `interface BootstrapUserSeed`
-- `interface SystemRouteSeed`
-- `interface ArchiveSeedRecord`
-- `interface MarketingRouteSeedRecord`
-- `interface SiteSettingsSeed`
 - `interface SeedDatabaseOptions`
-- `interface SeedSummary`
 - `interface SeedImportStatement`
-- `interface AstropressSqliteSeedToolkitOptions`
-- `interface AstropressSqliteSeedToolkit`
-- `type AstropressRollbackStatus`
-- `interface AstropressRollbackResult`
+- `interface SeedSummary`
+- `interface SiteSettingsSeed`
+- `interface SqliteDatabaseLike`
+- `interface SqliteStatementLike`
+- `interface SystemRouteSeed`
 
 ### Constants & Re-exports
 
 - `const defaultSeedImportTables: readonly ["admin_users", "media_assets", "redirect_rules", "comments", "site_settings", "cms_route_groups", "cms_route_variants", "cms_route_aliases", "cms_route_revisions"]`
-- `const ASTROPRESS_FRAMEWORK_MIGRATION_BASELINE: 1` — The number of framework-owned migrations Astropress applies during bootstrapping. Used by `checkSchemaVersionAhead` to detect host-app migrations.
+- `const ASTROPRESS_FRAMEWORK_MIGRATION_BASELINE: 1`
 
 ---
 

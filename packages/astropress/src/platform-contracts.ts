@@ -1,5 +1,3 @@
-// ─── WordPress import contracts ───────────────────────────────────────────────
-// Extracted to keep this file under the 400-line limit.
 export type {
 	AstropressWordPressImportEntityCount,
 	AstropressWordPressImportInventory,
@@ -9,17 +7,16 @@ export type {
 	AstropressWordPressImportReport,
 	ImportSource,
 } from "./wordpress-import-contracts.js";
-import type {
-	AstropressWordPressImportInventory,
-	AstropressWordPressImportPlan,
-	AstropressWordPressImportReport,
-	ImportSource,
-} from "./wordpress-import-contracts.js";
+
+export type {
+	ApiScope,
+	ApiTokenId,
+	ApiTokenRecord,
+	ApiTokenStore,
+} from "./platform-contracts-helpers";
+import type { ApiTokenStore } from "./platform-contracts-helpers";
 
 // ─── Branded types for key identifiers ───────────────────────────────────────
-// Branded types prevent accidental mixing of IDs from different domains.
-// Use `id as ContentId` to brand a plain string; use `String(id)` to unwrap.
-
 /** A content record ID — prevents mixing with media or user IDs. */
 export type ContentId = string & { readonly __brand: "ContentId" };
 
@@ -28,9 +25,6 @@ export type MediaAssetId = string & { readonly __brand: "MediaAssetId" };
 
 /** An admin user ID — prevents mixing with content or media IDs. */
 export type AdminUserId = string & { readonly __brand: "AdminUserId" };
-
-/** An API token ID — prevents mixing with other ID types. */
-export type ApiTokenId = string & { readonly __brand: "ApiTokenId" };
 
 /** An audit event ID — prevents mixing with content or user IDs. */
 export type AuditEventId = string & { readonly __brand: "AuditEventId" };
@@ -49,7 +43,6 @@ export type ProviderKind =
 
 /** Configuration for the editorial CMS panel embedded in the admin. */
 export interface AstropressCmsConfig {
-	/** The CMS system in use. */
 	type:
 		| "payload"
 		| "sanity"
@@ -60,27 +53,16 @@ export interface AstropressCmsConfig {
 		| "storyblok"
 		| "keystatic"
 		| "custom";
-	/**
-	 * How to surface the CMS panel.
-	 * "iframe" — embed the CMS URL in a full-screen iframe (best for self-hosted CMSes).
-	 * "link"   — show a branded "Open [CMS]" button that opens a new tab.
-	 */
 	mode: "iframe" | "link";
-	/** The base URL of the CMS admin (e.g. "http://localhost:3000" for self-hosted Payload). */
 	url: string;
-	/** Override the display label shown in the sidebar and on the panel page. */
 	label?: string;
-	/** Custom iframe allow attribute (e.g. "clipboard-write; fullscreen"). */
 	iframeAllow?: string;
 }
 
 /** Database provider infrastructure panel declaration. */
 export interface AstropressHostPanelCapability {
-	/** How to surface the provider panel. */
 	mode: "iframe" | "link";
-	/** The URL of the provider's admin panel. */
 	url: string;
-	/** Label shown in the admin sidebar (e.g. "Supabase Studio"). */
 	label: string;
 }
 
@@ -93,16 +75,7 @@ export interface ProviderCapabilities {
 	database: boolean;
 	objectStorage: boolean;
 	gitSync: boolean;
-	/**
-	 * Optional link to the database provider's own infrastructure panel
-	 * (e.g. Supabase Studio, PocketBase admin).
-	 * When declared, a "Host" nav item is shown to admin-role users.
-	 */
 	hostPanel?: AstropressHostPanelCapability;
-	/**
-	 * Optional configuration for a deploy hook so the Publish button can
-	 * trigger a new static build without leaving the admin panel.
-	 */
 	deployHook?: {
 		type:
 			| "cloudflare-pages"
@@ -110,45 +83,8 @@ export interface ProviderCapabilities {
 			| "netlify"
 			| "render"
 			| "github-actions";
-		/** Env var names that must be set for the hook to be active. */
 		configuredViaEnv: string[];
 	};
-}
-
-// ─── API Token Store ─────────────────────────────────────────────────────────
-
-export type ApiScope =
-	| "content:read"
-	| "content:write"
-	| "media:read"
-	| "media:write"
-	| "settings:read"
-	| "webhooks:manage"
-	| "import:write";
-
-export interface ApiTokenRecord {
-	id: string;
-	label: string;
-	scopes: ApiScope[];
-	createdAt: string;
-	expiresAt?: string | null;
-	lastUsedAt?: string | null;
-	revokedAt?: string | null;
-}
-
-export interface ApiTokenStore {
-	create(input: {
-		label: string;
-		scopes: ApiScope[];
-		expiresAt?: string;
-	}): Promise<{ record: ApiTokenRecord; rawToken: string }>;
-	list(): Promise<ApiTokenRecord[]>;
-	verify(
-		rawToken: string,
-	): Promise<
-		{ valid: true; record: ApiTokenRecord } | { valid: false; reason: string }
-	>;
-	revoke(id: string): Promise<void>;
 }
 
 // ─── Webhook Store ────────────────────────────────────────────────────────────
@@ -211,26 +147,15 @@ export interface FaqItem {
 export interface HowToStep {
 	name: string;
 	text: string;
-	/** Optional URL pointing to an image illustrating this step. */
 	imageUrl?: string;
 }
 
-/**
- * AEO (Answer Engine Optimisation) metadata that can be stored in a content record's
- * `metadata` field to trigger automatic JSON-LD rendering via AstropressContentLayout.
- */
 export interface AeoMetadata {
-	/** FAQ items — automatically renders AstropressFaqJsonLd (FAQPage schema). */
 	faqItems?: FaqItem[];
-	/** How-to steps — automatically renders AstropressHowToJsonLd (HowTo schema). */
 	howToSteps?: HowToStep[];
-	/** CSS selectors for speakable sections — renders AstropressSpeakableJsonLd. */
 	speakableCssSelectors?: string[];
-	/** How-to title override (defaults to the content record title). */
 	howToName?: string;
-	/** How-to description. */
 	howToDescription?: string;
-	/** ISO 8601 duration for the HowTo total time (e.g. "PT30M"). */
 	howToTotalTime?: string;
 }
 
@@ -239,7 +164,6 @@ export interface ContentStoreRecord {
 	kind: ReadableContentKind;
 	slug: string;
 	status: "draft" | "published" | "archived";
-	/** ISO 8601 datetime. When set and status is draft, content is scheduled for auto-publish. */
 	scheduledAt?: string | null;
 	locale?: string | null;
 	title?: string | null;
@@ -248,15 +172,10 @@ export interface ContentStoreRecord {
 }
 
 export interface ContentListOptions {
-	/** Filter by status. "published" is the default for build-time usage. */
 	status?: "published" | "draft" | "archived" | "all";
-	/** Filter by locale code (e.g. "en", "fr"). */
 	locale?: string;
-	/** Maximum number of records to return. */
 	limit?: number;
-	/** Number of records to skip (for pagination). */
 	offset?: number;
-	/** Full-text search query. Only applied when search.enabled is true in CmsConfig. */
 	query?: string;
 }
 
@@ -279,13 +198,9 @@ export interface MediaAssetRecord {
 	bytes?: Uint8Array;
 	publicUrl?: string | null;
 	metadata?: Record<string, unknown>;
-	/** Width in pixels — populated for image uploads when dimension detection succeeds. */
 	width?: number;
-	/** Height in pixels — populated for image uploads when dimension detection succeeds. */
 	height?: number;
-	/** Public URL of the 400px-wide WebP thumbnail; set when the upload was an image wider than 400px. */
 	thumbnailUrl?: string;
-	/** Responsive srcset string with 400w/800w/1200w WebP variants; auto-generated at upload time for images wider than 400px. */
 	srcset?: string;
 }
 
@@ -337,10 +252,6 @@ export interface DeployTarget {
 		projectName: string;
 		environment?: string;
 	}): Promise<{ url?: string; deploymentId?: string }>;
-	/**
-	 * Trigger a new build/deployment without requiring a local build directory.
-	 * Used by the admin Publish button to kick off a CI/CD rebuild.
-	 */
 	triggerBuild?(options?: {
 		environment?: string;
 	}): Promise<{ buildId?: string; statusUrl?: string }>;

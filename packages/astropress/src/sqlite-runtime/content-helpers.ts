@@ -1,5 +1,10 @@
 import type { ContentRecord } from "../persistence-types";
-import { type PageRecord, parseIdList } from "./utils";
+import {
+	type AstropressSqliteDatabaseLike,
+	type PageRecord,
+	parseIdList,
+	serializeIdList,
+} from "./utils";
 
 export type ContentStatus = "draft" | "review" | "published" | "archived";
 
@@ -148,4 +153,201 @@ export function mapRevisionRow(row: RevisionRow) {
 		revisionNote: row.revision_note ?? undefined,
 		createdBy: row.created_by ?? undefined,
 	};
+}
+
+/* ── SQL constants, RevisionInput, and baseline helpers ── */
+
+export {
+	SQL_LIST_REVISIONS_FOR_SLUG,
+	type RevisionInput,
+	buildBaselineOverrideParams,
+	buildBaselineRevisionParams,
+	ensureBaselineRevisionImpl,
+} from "./content-sql";
+import {
+	type RevisionInput,
+	SQL_INSERT_ENTRY,
+	SQL_INSERT_REVISION_CONTENT,
+	SQL_UPSERT_OVERRIDE,
+} from "./content-sql";
+
+export function queryCustomContentEntries(
+	getDb: () => AstropressSqliteDatabaseLike,
+) {
+	return getDb()
+		.prepare(
+			`
+        SELECT slug, legacy_url, title, kind, template_key, source_html_path, updated_at, body, summary,
+               seo_title, meta_description, og_title, og_description, og_image
+        FROM content_entries
+        ORDER BY datetime(updated_at) DESC, slug ASC
+      `,
+		)
+		.all() as ContentEntryRow[];
+}
+
+export function queryContentAssignmentIds(
+	getDb: () => AstropressSqliteDatabaseLike,
+	slug: string,
+) {
+	const db = getDb();
+	const authorIds = (
+		db
+			.prepare(
+				"SELECT author_id FROM content_authors WHERE slug = ? ORDER BY author_id ASC",
+			)
+			.all(slug) as Array<{ author_id: number }>
+	).map((row) => row.author_id);
+	const categoryIds = (
+		db
+			.prepare(
+				"SELECT category_id FROM content_categories WHERE slug = ? ORDER BY category_id ASC",
+			)
+			.all(slug) as Array<{ category_id: number }>
+	).map((row) => row.category_id);
+	const tagIds = (
+		db
+			.prepare(
+				"SELECT tag_id FROM content_tags WHERE slug = ? ORDER BY tag_id ASC",
+			)
+			.all(slug) as Array<{ tag_id: number }>
+	).map((row) => row.tag_id);
+	return { authorIds, categoryIds, tagIds };
+}
+
+export function replaceAssignments(
+	getDb: () => AstropressSqliteDatabaseLike,
+	slug: string,
+	input: { authorIds?: number[]; categoryIds?: number[]; tagIds?: number[] },
+) {
+	const db = getDb();
+	db.prepare("DELETE FROM content_authors WHERE slug = ?").run(slug);
+	db.prepare("DELETE FROM content_categories WHERE slug = ?").run(slug);
+	db.prepare("DELETE FROM content_tags WHERE slug = ?").run(slug);
+
+	for (const authorId of input.authorIds ?? []) {
+		db.prepare(
+			"INSERT OR IGNORE INTO content_authors (slug, author_id) VALUES (?, ?)",
+		).run(slug, authorId);
+	}
+	for (const categoryId of input.categoryIds ?? []) {
+		db.prepare(
+			"INSERT OR IGNORE INTO content_categories (slug, category_id) VALUES (?, ?)",
+		).run(slug, categoryId);
+	}
+	for (const tagId of input.tagIds ?? []) {
+		db.prepare(
+			"INSERT OR IGNORE INTO content_tags (slug, tag_id) VALUES (?, ?)",
+		).run(slug, tagId);
+	}
+}
+
+export function upsertOverride(
+	getDb: () => AstropressSqliteDatabaseLike,
+	slug: string,
+	override: {
+		title: string;
+		status: string;
+		body?: string | null;
+		seoTitle: string;
+		metaDescription: string;
+		excerpt?: string | null;
+		ogTitle?: string | null;
+		ogDescription?: string | null;
+		ogImage?: string | null;
+		scheduledAt?: string | null;
+		canonicalUrlOverride?: string | null;
+		robotsDirective?: string | null;
+		metadata?: Record<string, unknown> | null;
+	},
+	actor: { email: string },
+) {
+	getDb()
+		.prepare(SQL_UPSERT_OVERRIDE)
+		.run(
+			slug,
+			override.title,
+			override.status,
+			override.body ?? null,
+			override.seoTitle,
+			override.metaDescription,
+			override.excerpt ?? null,
+			override.ogTitle ?? null,
+			override.ogDescription ?? null,
+			override.ogImage ?? null,
+			override.scheduledAt ?? null,
+			override.canonicalUrlOverride ?? null,
+			override.robotsDirective ?? null,
+			override.metadata ? JSON.stringify(override.metadata) : null,
+			actor.email,
+		);
+}
+
+export function insertRevision(
+	getDb: () => AstropressSqliteDatabaseLike,
+	randomId: () => string,
+	slug: string,
+	revision: RevisionInput,
+	actor: { email: string },
+) {
+	getDb()
+		.prepare(SQL_INSERT_REVISION_CONTENT)
+		.run(
+			`revision-${randomId()}`,
+			slug,
+			revision.title,
+			revision.status,
+			revision.scheduledAt ?? null,
+			revision.body ?? null,
+			revision.seoTitle,
+			revision.metaDescription,
+			revision.excerpt ?? null,
+			revision.ogTitle ?? null,
+			revision.ogDescription ?? null,
+			revision.ogImage ?? null,
+			serializeIdList(revision.authorIds),
+			serializeIdList(revision.categoryIds),
+			serializeIdList(revision.tagIds),
+			revision.canonicalUrlOverride ?? null,
+			revision.robotsDirective ?? null,
+			revision.revisionNote ?? null,
+			actor.email,
+		);
+}
+
+export function tryInsertContentEntry(
+	getDb: () => AstropressSqliteDatabaseLike,
+	entry: {
+		slug: string;
+		legacyUrl: string;
+		title: string;
+		body: string;
+		summary: string;
+		seoTitle: string;
+		metaDescription: string;
+		ogTitle?: string | null;
+		ogDescription?: string | null;
+		ogImage?: string | null;
+	},
+): boolean {
+	try {
+		getDb()
+			.prepare(SQL_INSERT_ENTRY)
+			.run(
+				entry.slug,
+				entry.legacyUrl,
+				entry.title,
+				`runtime://content/${entry.slug}`,
+				entry.body,
+				entry.summary,
+				entry.seoTitle,
+				entry.metaDescription,
+				entry.ogTitle ?? null,
+				entry.ogDescription ?? null,
+				entry.ogImage ?? null,
+			);
+		return true;
+	} catch {
+		return false;
+	}
 }
