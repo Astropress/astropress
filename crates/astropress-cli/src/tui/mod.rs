@@ -10,7 +10,11 @@ pub(crate) fn set_plain(plain: bool) {
 
 pub(crate) fn is_plain() -> bool {
     use std::io::IsTerminal;
-    PLAIN_MODE.load(Ordering::Relaxed) || !std::io::stdout().is_terminal()
+    // In test builds stdout may be a real terminal (e.g. when cargo test inherits the
+    // parent's pts). Treat it as non-terminal so tests don't create live spinners, which
+    // would cause stdout contention when the full suite runs in parallel.
+    let stdout_is_not_terminal = cfg!(test) || !std::io::stdout().is_terminal();
+    PLAIN_MODE.load(Ordering::Relaxed) || stdout_is_not_terminal
 }
 
 /// Show a spinner while in interactive mode, or just print the message in plain mode.
