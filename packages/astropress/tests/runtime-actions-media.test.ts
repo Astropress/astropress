@@ -9,15 +9,12 @@ import {
 } from "./helpers/make-db.js";
 import { makeLocals } from "./helpers/make-locals.js";
 
-let createRuntimeMediaAsset: typeof import(
-	"../src/runtime-actions-media.js",
-).createRuntimeMediaAsset;
-let deleteRuntimeMediaAsset: typeof import(
-	"../src/runtime-actions-media.js",
-).deleteRuntimeMediaAsset;
-let updateRuntimeMediaAsset: typeof import(
-	"../src/runtime-actions-media.js",
-).updateRuntimeMediaAsset;
+// biome-ignore format: single-line typeof import required for esbuild/oxc compatibility
+let createRuntimeMediaAsset: typeof import("../src/runtime-actions-media.js").createRuntimeMediaAsset;
+// biome-ignore format: single-line typeof import required for esbuild/oxc compatibility
+let deleteRuntimeMediaAsset: typeof import("../src/runtime-actions-media.js").deleteRuntimeMediaAsset;
+// biome-ignore format: single-line typeof import required for esbuild/oxc compatibility
+let updateRuntimeMediaAsset: typeof import("../src/runtime-actions-media.js").updateRuntimeMediaAsset;
 
 const {
 	mockStoreMedia,

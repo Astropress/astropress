@@ -27,15 +27,12 @@ vi.mock("../src/runtime-env", async (importOriginal) => {
 	};
 });
 
-let sendContactNotification: typeof import(
-	"../src/transactional-email.js",
-).sendContactNotification;
-let sendPasswordResetEmail: typeof import(
-	"../src/transactional-email.js",
-).sendPasswordResetEmail;
-let sendUserInviteEmail: typeof import(
-	"../src/transactional-email.js",
-).sendUserInviteEmail;
+// biome-ignore format: single-line typeof import required for esbuild/oxc compatibility
+let sendContactNotification: typeof import("../src/transactional-email.js").sendContactNotification;
+// biome-ignore format: single-line typeof import required for esbuild/oxc compatibility
+let sendPasswordResetEmail: typeof import("../src/transactional-email.js").sendPasswordResetEmail;
+// biome-ignore format: single-line typeof import required for esbuild/oxc compatibility
+let sendUserInviteEmail: typeof import("../src/transactional-email.js").sendUserInviteEmail;
 
 // Shared symbol used by registerCms/peekCmsConfig
 const CMS_CONFIG_KEY = Symbol.for("astropress.cms-config");

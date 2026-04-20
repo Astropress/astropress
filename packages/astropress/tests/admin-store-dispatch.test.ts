@@ -3,12 +3,10 @@ import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { makeDb } from "./helpers/make-db.js";
 import { makeLocals } from "./helpers/make-locals.js";
 
-let withLocalStoreFallback: typeof import(
-	"../src/admin-store-dispatch.js",
-).withLocalStoreFallback;
-let withSafeLocalStoreFallback: typeof import(
-	"../src/admin-store-dispatch.js",
-).withSafeLocalStoreFallback;
+// biome-ignore format: single-line typeof import required for esbuild/oxc compatibility
+let withLocalStoreFallback: typeof import("../src/admin-store-dispatch.js").withLocalStoreFallback;
+// biome-ignore format: single-line typeof import required for esbuild/oxc compatibility
+let withSafeLocalStoreFallback: typeof import("../src/admin-store-dispatch.js").withSafeLocalStoreFallback;
 
 const { mockLoadLocalAdminStore } = vi.hoisted(() => ({
 	mockLoadLocalAdminStore: vi.fn(),

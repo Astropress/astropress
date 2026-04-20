@@ -11,30 +11,22 @@ import {
 	vi,
 } from "vitest";
 
-let authenticateRuntimeAdminUser: typeof import(
-	"../src/runtime-admin-auth.js",
-).authenticateRuntimeAdminUser;
-let createRuntimeSession: typeof import(
-	"../src/runtime-admin-auth.js",
-).createRuntimeSession;
-let getRuntimeCsrfToken: typeof import(
-	"../src/runtime-admin-auth.js",
-).getRuntimeCsrfToken;
-let getRuntimeSessionUser: typeof import(
-	"../src/runtime-admin-auth.js",
-).getRuntimeSessionUser;
-let recordRuntimeSuccessfulLogin: typeof import(
-	"../src/runtime-admin-auth.js",
-).recordRuntimeSuccessfulLogin;
-let recordRuntimeLogout: typeof import(
-	"../src/runtime-admin-auth.js",
-).recordRuntimeLogout;
-let revokeRuntimeSession: typeof import(
-	"../src/runtime-admin-auth.js",
-).revokeRuntimeSession;
-let _recordRuntimeAuditEvent: typeof import(
-	"../src/runtime-admin-auth.js",
-)._recordRuntimeAuditEvent;
+// biome-ignore format: single-line typeof import required for esbuild/oxc compatibility
+let authenticateRuntimeAdminUser: typeof import("../src/runtime-admin-auth.js").authenticateRuntimeAdminUser;
+// biome-ignore format: single-line typeof import required for esbuild/oxc compatibility
+let createRuntimeSession: typeof import("../src/runtime-admin-auth.js").createRuntimeSession;
+// biome-ignore format: single-line typeof import required for esbuild/oxc compatibility
+let getRuntimeCsrfToken: typeof import("../src/runtime-admin-auth.js").getRuntimeCsrfToken;
+// biome-ignore format: single-line typeof import required for esbuild/oxc compatibility
+let getRuntimeSessionUser: typeof import("../src/runtime-admin-auth.js").getRuntimeSessionUser;
+// biome-ignore format: single-line typeof import required for esbuild/oxc compatibility
+let recordRuntimeSuccessfulLogin: typeof import("../src/runtime-admin-auth.js").recordRuntimeSuccessfulLogin;
+// biome-ignore format: single-line typeof import required for esbuild/oxc compatibility
+let recordRuntimeLogout: typeof import("../src/runtime-admin-auth.js").recordRuntimeLogout;
+// biome-ignore format: single-line typeof import required for esbuild/oxc compatibility
+let revokeRuntimeSession: typeof import("../src/runtime-admin-auth.js").revokeRuntimeSession;
+// biome-ignore format: single-line typeof import required for esbuild/oxc compatibility
+let _recordRuntimeAuditEvent: typeof import("../src/runtime-admin-auth.js")._recordRuntimeAuditEvent;
 
 // Mock the local-runtime-modules so the fallback path doesn't throw.
 const { localStoreMock, localAuthMock } = vi.hoisted(() => ({

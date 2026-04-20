@@ -5,33 +5,24 @@ import { registerCms } from "../src/config";
 import { STANDARD_ACTOR, makeDb } from "./helpers/make-db.js";
 import { makeLocals } from "./helpers/make-locals.js";
 
-let createRuntimeStructuredPageRoute: typeof import(
-	"../src/runtime-route-registry.js",
-).createRuntimeStructuredPageRoute;
-let getRuntimeArchiveRoute: typeof import(
-	"../src/runtime-route-registry.js",
-).getRuntimeArchiveRoute;
-let getRuntimeStructuredPageRoute: typeof import(
-	"../src/runtime-route-registry.js",
-).getRuntimeStructuredPageRoute;
-let getRuntimeSystemRoute: typeof import(
-	"../src/runtime-route-registry.js",
-).getRuntimeSystemRoute;
-let listRuntimeStructuredPageRoutes: typeof import(
-	"../src/runtime-route-registry.js",
-).listRuntimeStructuredPageRoutes;
-let listRuntimeSystemRoutes: typeof import(
-	"../src/runtime-route-registry.js",
-).listRuntimeSystemRoutes;
-let saveRuntimeArchiveRoute: typeof import(
-	"../src/runtime-route-registry.js",
-).saveRuntimeArchiveRoute;
-let saveRuntimeStructuredPageRoute: typeof import(
-	"../src/runtime-route-registry.js",
-).saveRuntimeStructuredPageRoute;
-let saveRuntimeSystemRoute: typeof import(
-	"../src/runtime-route-registry.js",
-).saveRuntimeSystemRoute;
+// biome-ignore format: single-line typeof import required for esbuild/oxc compatibility
+let createRuntimeStructuredPageRoute: typeof import("../src/runtime-route-registry.js").createRuntimeStructuredPageRoute;
+// biome-ignore format: single-line typeof import required for esbuild/oxc compatibility
+let getRuntimeArchiveRoute: typeof import("../src/runtime-route-registry.js").getRuntimeArchiveRoute;
+// biome-ignore format: single-line typeof import required for esbuild/oxc compatibility
+let getRuntimeStructuredPageRoute: typeof import("../src/runtime-route-registry.js").getRuntimeStructuredPageRoute;
+// biome-ignore format: single-line typeof import required for esbuild/oxc compatibility
+let getRuntimeSystemRoute: typeof import("../src/runtime-route-registry.js").getRuntimeSystemRoute;
+// biome-ignore format: single-line typeof import required for esbuild/oxc compatibility
+let listRuntimeStructuredPageRoutes: typeof import("../src/runtime-route-registry.js").listRuntimeStructuredPageRoutes;
+// biome-ignore format: single-line typeof import required for esbuild/oxc compatibility
+let listRuntimeSystemRoutes: typeof import("../src/runtime-route-registry.js").listRuntimeSystemRoutes;
+// biome-ignore format: single-line typeof import required for esbuild/oxc compatibility
+let saveRuntimeArchiveRoute: typeof import("../src/runtime-route-registry.js").saveRuntimeArchiveRoute;
+// biome-ignore format: single-line typeof import required for esbuild/oxc compatibility
+let saveRuntimeStructuredPageRoute: typeof import("../src/runtime-route-registry.js").saveRuntimeStructuredPageRoute;
+// biome-ignore format: single-line typeof import required for esbuild/oxc compatibility
+let saveRuntimeSystemRoute: typeof import("../src/runtime-route-registry.js").saveRuntimeSystemRoute;
 
 // ---------------------------------------------------------------------------
 // Mock local CMS registry — by default throws (mimicking real test env where

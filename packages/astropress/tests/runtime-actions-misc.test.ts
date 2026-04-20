@@ -8,21 +8,16 @@ import {
 } from "./helpers/make-db.js";
 import { makeLocals } from "./helpers/make-locals.js";
 
-let createRuntimeRedirectRule: typeof import(
-	"../src/runtime-actions-misc.js",
-).createRuntimeRedirectRule;
-let deleteRuntimeRedirectRule: typeof import(
-	"../src/runtime-actions-misc.js",
-).deleteRuntimeRedirectRule;
-let moderateRuntimeComment: typeof import(
-	"../src/runtime-actions-misc.js",
-).moderateRuntimeComment;
-let saveRuntimeSettings: typeof import(
-	"../src/runtime-actions-misc.js",
-).saveRuntimeSettings;
-let updateRuntimeTranslationState: typeof import(
-	"../src/runtime-actions-misc.js",
-).updateRuntimeTranslationState;
+// biome-ignore format: single-line typeof import required for esbuild/oxc compatibility
+let createRuntimeRedirectRule: typeof import("../src/runtime-actions-misc.js").createRuntimeRedirectRule;
+// biome-ignore format: single-line typeof import required for esbuild/oxc compatibility
+let deleteRuntimeRedirectRule: typeof import("../src/runtime-actions-misc.js").deleteRuntimeRedirectRule;
+// biome-ignore format: single-line typeof import required for esbuild/oxc compatibility
+let moderateRuntimeComment: typeof import("../src/runtime-actions-misc.js").moderateRuntimeComment;
+// biome-ignore format: single-line typeof import required for esbuild/oxc compatibility
+let saveRuntimeSettings: typeof import("../src/runtime-actions-misc.js").saveRuntimeSettings;
+// biome-ignore format: single-line typeof import required for esbuild/oxc compatibility
+let updateRuntimeTranslationState: typeof import("../src/runtime-actions-misc.js").updateRuntimeTranslationState;
 let registerCms: typeof import("../src/config.js").registerCms;
 
 const actor = STANDARD_ACTOR;
