@@ -19,6 +19,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 
 mod doctor;
 mod parse;
+mod parse_more;
 mod scaffold;
 
 fn strings(values: &[&str]) -> Vec<String> {
