@@ -45,7 +45,7 @@ export async function prepareAstropressDeployment(
 	return {
 		deploymentId: `${options.provider}:${input.projectName}:${Date.now()}`,
 		url: options.baseUrl
-			? `${options.baseUrl.replace(/\/+$/, "")}/${input.projectName}/` // codeql[js/polynomial-redos] false positive: anchored /\/+$/ is linear
+			? `${options.baseUrl.replace(/\/+$/, "")}/${input.projectName}/` // lgtm[js/polynomial-redos] anchored, linear
 			: undefined,
 	};
 }

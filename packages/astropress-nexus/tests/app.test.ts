@@ -417,7 +417,7 @@ describe("POST /actions/redeploy", () => {
 	it("triggers deploy hooks for selected sites and redirects back to dashboard", async () => {
 		vi.spyOn(globalThis, "fetch").mockImplementation(
 			makeFetchMock((url) =>
-				url.includes("deploy.example.com") // audit-ok: test mock matching by URL substring, not a security check
+				url.includes("deploy.example.com") // lgtm[js/incomplete-url-substring-sanitization] audit-ok: test mock routing, not a security check
 					? { ok: true, status: 202, body: {} }
 					: { ok: true, status: 200, body: {} },
 			),

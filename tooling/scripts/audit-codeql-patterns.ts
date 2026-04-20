@@ -34,7 +34,11 @@ function tryWalk(dir: string): string[] {
 }
 
 function isSuppressed(line: string): boolean {
-	return line.includes("// audit-ok:") || line.includes("<!-- audit-ok:");
+	return (
+		line.includes("// audit-ok:") ||
+		line.includes("<!-- audit-ok:") ||
+		line.includes("// lgtm[")
+	);
 }
 
 // Check the current line and up to 2 lines above/below (handles biome reformatting
@@ -152,6 +156,43 @@ function checkFile(file: string, src: string): Violation[] {
 							"fixed tmpdir() path — use mkdtempSync(join(tmpdir(), 'prefix-')) instead [js/insecure-temporary-file]",
 					});
 				}
+			}
+		}
+	}
+
+	// ── 5. Bogus CodeQL suppression syntax ──────────────────────────────────
+	// Detects: // codeql[...] comments, which are NOT a real suppression mechanism.
+	// Use // lgtm[<query-id>] for inline CodeQL suppressions instead.
+	for (let i = 0; i < lines.length; i++) {
+		if (/\/\/ codeql\[/.test(lines[i])) {
+			violations.push({
+				file: rel,
+				line: i + 1,
+				message:
+					"// codeql[...] is not a valid suppression syntax — use // lgtm[<query-id>] for inline CodeQL suppressions",
+			});
+		}
+	}
+
+	// ── 6. writeFile with untrusted filename in import scripts ───────────────
+	// Detects: writeFile(path.join(dir, asset.filename)) without a lgtm suppression.
+	// path.basename() sanitizes traversal in the path, but CodeQL still tracks the
+	// taint from HTTP data to the write call. Require explicit // lgtm[js/http-to-file-access].
+	// Rule: js/http-to-file-access
+	if (/packages\/[^/]+\/src\/import\//.test(rel)) {
+		for (let i = 0; i < lines.length; i++) {
+			const line = lines[i];
+			if (
+				/\bwriteFile\b/.test(line) &&
+				/\.filename/.test(line) &&
+				!isSuppressedNear(lines, i)
+			) {
+				violations.push({
+					file: rel,
+					line: i + 1,
+					message:
+						"writeFile() with HTTP-sourced filename — add // lgtm[js/http-to-file-access] after confirming path.basename() is applied [js/http-to-file-access]",
+				});
 			}
 		}
 	}

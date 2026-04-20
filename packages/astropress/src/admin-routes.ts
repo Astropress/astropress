@@ -297,7 +297,7 @@ export function listAstropressAdminRoutes(): AstropressAdminRouteDefinition[] {
 }
 
 export function resolveAstropressAdminRouteEntrypoints(basePath: string) {
-	// codeql[js/polynomial-redos] false positive: anchored /\/+$/ is linear — no overlap between \/+ and end anchor
+	// lgtm[js/polynomial-redos] anchored /\/+$/ is linear — \/+ cannot overlap with the end anchor
 	const normalizedBasePath = basePath.replace(/\/+$/, "");
 	return listAstropressAdminRoutes().map((route) => ({
 		...route,

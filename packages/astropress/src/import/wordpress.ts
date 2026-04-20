@@ -63,6 +63,7 @@ async function downloadMediaAssets(
 		try {
 			const response = await fetch(asset.sourceUrl);
 			if (!response.ok) throw new Error(`HTTP ${response.status}`);
+			// lgtm[js/http-to-file-access] assetTarget uses path.basename() to strip traversal from the HTTP-supplied filename
 			await writeFile(
 				assetTarget,
 				new Uint8Array(await response.arrayBuffer()),
