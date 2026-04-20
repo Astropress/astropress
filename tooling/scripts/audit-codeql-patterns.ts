@@ -175,18 +175,19 @@ function checkFile(file: string, src: string): Violation[] {
 	}
 
 	// ── 6. writeFile with untrusted filename in import scripts ───────────────
-	// Detects: writeFile(path.join(dir, asset.filename)) without a lgtm suppression.
-	// path.basename() sanitizes traversal in the path, but CodeQL still tracks the
-	// taint from HTTP data to the write call. Require explicit // lgtm[js/http-to-file-access].
+	// Detects: writeFile(...) calls where asset.filename appears within 4 lines
+	// (the call and its arguments are typically split across lines). path.basename()
+	// sanitizes path traversal but CodeQL still taint-tracks the write itself.
+	// Require explicit // lgtm[js/http-to-file-access] near the call.
 	// Rule: js/http-to-file-access
 	if (/packages\/[^/]+\/src\/import\//.test(rel)) {
 		for (let i = 0; i < lines.length; i++) {
-			const line = lines[i];
-			if (
-				/\bwriteFile\b/.test(line) &&
-				/\.filename/.test(line) &&
-				!isSuppressedNear(lines, i)
-			) {
+			if (!/\bwriteFile\b/.test(lines[i])) continue;
+			// Check whether .filename appears on this line or the next 3 (typical arg span)
+			const callWindow = lines
+				.slice(i, Math.min(lines.length, i + 4))
+				.join("\n");
+			if (/\.filename/.test(callWindow) && !isSuppressedNear(lines, i)) {
 				violations.push({
 					file: rel,
 					line: i + 1,
