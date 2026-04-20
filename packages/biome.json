@@ -10,6 +10,9 @@
       "suspicious": {
         "noExplicitAny": "error"
       },
+      "correctness": {
+        "noUnusedImports": "error"
+      },
       "style": {
         "useConsistentArrayType": "error",
         "useShorthandAssign": "error"
