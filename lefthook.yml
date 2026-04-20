@@ -6,17 +6,60 @@ pre-commit:
       run: bunx biome check --no-errors-on-unmatched {staged_files}
       stage_fixed: true
 
+    biome-full:
+      glob: "packages/**/*.{ts,js,astro,json}"
+      run: bunx biome check packages/astropress/src packages/astropress/tests packages/astropress/web-components
+
     audit-arch:
       glob: "packages/**/*.ts"
       run: bun run audit:arch
+
+    ci-audits:
+      glob: "packages/**/*.{ts,js,astro,json}"
+      run: >-
+        bun run audit:deps &&
+        bun run audit:security &&
+        bun run audit:honesty &&
+        bun run audit:microcopy &&
+        bun run check:version &&
+        bun run audit:arch:rust &&
+        bun run audit:deps:graph &&
+        bun run audit:tooling-types &&
+        bun run audit:aeo &&
+        bun run audit:providers &&
+        bun run audit:cli-docs &&
+        bun run audit:env-contract &&
+        bun run audit:exports &&
+        bun run audit:crypto &&
+        bun run audit:web-components &&
+        bun run audit:navigation &&
+        bun run audit:interaction &&
+        bun run audit:error-handling &&
+        bun run audit:caching &&
+        bun run audit:nexus &&
+        bun run audit:developer-ergonomics &&
+        bun run audit:dead-exports &&
+        bun run audit:bdd-wiring &&
+        bun run audit:no-stub-tests &&
+        bun run audit:evaluation-integrity &&
+        bun run audit:observability &&
+        bun run audit:api-design &&
+        bun run audit:ai-drivability &&
+        bun run audit:i18n &&
+        bun run audit:content-modeling &&
+        bun run audit:collaboration &&
+        bun run audit:oss-health &&
+        bun run audit:scaffold-quality &&
+        bun run docs:api:check &&
+        bun run docs:check
 
     bdd-lint:
       glob: "tooling/bdd/**/*.feature"
       run: bun run bdd:lint
 
-    rust-unused-imports:
+    rust-clippy:
       glob: "crates/**/*.rs"
-      run: cd {root}/crates && cargo clippy -p astropress-cli -- -D unused_imports -D dead_code
+      run: cd {root}/crates && cargo clippy -p astropress-cli -- -D warnings
 
     no-secrets:
       run: |
@@ -31,7 +74,6 @@ pre-commit:
         # GitHub branch ruleset). Verify both that config is correct AND that
         # the key can actually produce a signature right now, so a silent
         # failure (agent not running, wrong passphrase, etc.) is caught before
-        # the commit rather than discovered after a push is rejected.
         # the commit rather than discovered after a push is rejected.
         gpgsign=$(git config --get commit.gpgsign 2>/dev/null || true)
         if [ "$gpgsign" != "true" ]; then
