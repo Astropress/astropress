@@ -21,7 +21,7 @@
     "test": "bun run audit:arch && bun run audit:arch:rust && bun run bdd:lint && bun run bdd:test && bun run --filter @astropress-diy/astropress test",
     "test:coverage": "bun run --filter @astropress-diy/astropress test:coverage",
     "test:cli:smoke": "cargo test doctor_ --manifest-path crates/astropress-cli/Cargo.toml && cargo test parses_top_level_commands --manifest-path crates/astropress-cli/Cargo.toml && cargo test deploy_target_prefers_explicit_env_target --manifest-path crates/astropress-cli/Cargo.toml && cargo test bootstraps_and_verifies_content_services --manifest-path crates/astropress-cli/Cargo.toml",
-    "test:prepush": "bun run --filter @astropress-diy/astropress test:coverage:fast && cargo test --manifest-path crates/astropress-cli/Cargo.toml && bun run test:example && bun run repo:clean",
+    "test:prepush": "bun run --filter @astropress-diy/astropress test:coverage:fast && cargo test --offline --manifest-path crates/astropress-cli/Cargo.toml && bun run test:example && bun run repo:clean",
     "test:acceptance": "bun run tooling/scripts/run-playwright.ts --project=example-a11y --project=admin-harness-a11y --project=admin-harness-mobile --project=admin-harness-mobile-iphonese --project=admin-harness-mobile-galaxys5 --project=admin-harness-a11y-interactions --project=admin-harness-crud --project=admin-harness-smoke --project=viewport-375 --project=viewport-768 --project=viewport-1280",
     "test:consumer-smoke": "bun run tooling/scripts/run-consumer-smoke.ts",
     "test:tarball-smoke": "bun run tooling/scripts/run-tarball-smoke.ts",
