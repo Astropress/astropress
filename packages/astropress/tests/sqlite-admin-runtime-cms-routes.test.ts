@@ -320,7 +320,8 @@ describe("media", () => {
 			testDb.close();
 		} finally {
 			if (prev === undefined)
-				process.env.ASTROPRESS_LOCAL_IMAGE_ROOT = undefined;
+				// biome-ignore lint/performance/noDelete: = undefined keeps the key in Bun, causing getLocalUploadsDir to return "undefined/uploads" and create a stray directory
+				delete process.env.ASTROPRESS_LOCAL_IMAGE_ROOT;
 			else process.env.ASTROPRESS_LOCAL_IMAGE_ROOT = prev;
 		}
 	});

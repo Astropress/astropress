@@ -270,6 +270,28 @@ function checkFile(file: string, src: string): Violation[] {
 		}
 	}
 
+	// ── 9. process.env.X = undefined in test files (Bun env-string bug) ────────
+	// In Bun, `process.env.X = undefined` does NOT delete the key — it sets it to
+	// the string "undefined". Code that reads the env var later (e.g. after a
+	// finally-block cleanup) will see "undefined" as a truthy string, causing
+	// wrong paths and unintended side-effects like creating directories named
+	// "undefined/". Use `delete process.env.X` to actually unset the variable.
+	if (/\/tests\//.test(rel) && file.endsWith(".ts")) {
+		for (let i = 0; i < lines.length; i++) {
+			if (
+				/process\.env\.\w+\s*=\s*undefined\b/.test(lines[i]) &&
+				!isSuppressedNear(lines, i)
+			) {
+				violations.push({
+					file: rel,
+					line: i + 1,
+					message:
+						"process.env.X = undefined sets the key to the string \"undefined\" in Bun — use `delete process.env.X` (with biome-ignore lint/performance/noDelete: comment) to actually unset it",
+				});
+			}
+		}
+	}
+
 	return violations;
 }
 
