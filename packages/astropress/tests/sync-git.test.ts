@@ -1,4 +1,10 @@
-import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
+import {
+	existsSync,
+	mkdirSync,
+	mkdtempSync,
+	rmSync,
+	writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
@@ -9,7 +15,7 @@ import { createAstropressGitSyncAdapter } from "../src/sync/git";
 // Helpers
 // ---------------------------------------------------------------------------
 
-const testRoot = join(tmpdir(), "astropress-git-sync-test");
+let testRoot: string;
 
 function makeDir(name: string): string {
 	const dir = join(testRoot, name);
@@ -26,7 +32,7 @@ function writeFiles(dir: string, files: Record<string, string>) {
 }
 
 beforeEach(() => {
-	mkdirSync(testRoot, { recursive: true });
+	testRoot = mkdtempSync(join(tmpdir(), "astropress-git-sync-test-"));
 });
 
 afterEach(() => {

@@ -57,7 +57,7 @@ async function downloadMediaAssets(
 	let downloadedMedia = 0;
 
 	for (const asset of mediaAssets) {
-		const assetTarget = path.join(downloadsDir, asset.filename);
+		const assetTarget = path.join(downloadsDir, path.basename(asset.filename));
 		if (completed.has(asset.id) && (await fileSizeOrNull(assetTarget)) !== null)
 			continue;
 		try {

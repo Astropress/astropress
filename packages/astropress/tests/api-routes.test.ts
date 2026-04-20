@@ -1,6 +1,8 @@
 // @ts-nocheck
 //
-import { mkdirSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
@@ -286,8 +288,7 @@ describe("runAstropressMigrations", () => {
 	it("applies .sql files from a directory in lexicographic order", () => {
 		const db = makeDb();
 
-		const tmpDir = `/tmp/astropress-migration-test-${Date.now()}`;
-		mkdirSync(tmpDir, { recursive: true });
+		const tmpDir = mkdtempSync(join(tmpdir(), "astropress-migration-test-"));
 		writeFileSync(
 			`${tmpDir}/0001_create_foo.sql`,
 			"CREATE TABLE IF NOT EXISTS foo (id INTEGER PRIMARY KEY);",
@@ -325,8 +326,9 @@ describe("runAstropressMigrations", () => {
 	it("records applied migrations in schema_migrations table", () => {
 		const db = makeDb();
 
-		const tmpDir = `/tmp/astropress-migration-record-test-${Date.now()}`;
-		mkdirSync(tmpDir, { recursive: true });
+		const tmpDir = mkdtempSync(
+			join(tmpdir(), "astropress-migration-record-test-"),
+		);
 		writeFileSync(
 			`${tmpDir}/0001_test.sql`,
 			"CREATE TABLE IF NOT EXISTS test_tbl (id INTEGER PRIMARY KEY);",

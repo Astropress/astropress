@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import { unlinkSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import {
@@ -89,7 +90,7 @@ export function buildLocalMediaDescriptor(input: {
 			.replace(/[^a-z0-9]+/gi, "-")
 			.replace(/^-|-$/g, "")
 			.toLowerCase() || "upload";
-	const id = `media-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+	const id = `media-${randomUUID()}`;
 	const storedFilename = `${baseName}-${id}${extension}`;
 	const diskPath = path.join(uploadsDir, storedFilename);
 	const publicPath = `/images/uploads/${storedFilename}`;

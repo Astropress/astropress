@@ -13,7 +13,7 @@ const { testUploadsDir } = vi.hoisted(() => {
 	const { join } = require("node:path") as typeof import("node:path");
 	// eslint-disable-next-line @typescript-eslint/no-require-imports
 	const { tmpdir } = require("node:os") as typeof import("node:os");
-	return { testUploadsDir: join(tmpdir(), "astropress-media-test-suite") };
+	return { testUploadsDir: join(tmpdir(), "astropress-media-test-suite") }; // audit-ok: path used inside vi.mock() for mocking only, no real file created here
 });
 
 vi.mock("../src/local-image-storage", () => ({

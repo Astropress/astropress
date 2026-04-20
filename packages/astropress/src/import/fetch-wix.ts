@@ -154,10 +154,16 @@ async function attemptWixExport(
 
 		// 5. Check for 2FA / error — only if still on signin domain
 		const postLoginUrl = page.url();
-		if (
-			postLoginUrl.includes("signin") ||
-			!postLoginUrl.includes("manage.wix.com")
-		) {
+		let isOnWixManage = false;
+		try {
+			const parsed = new URL(postLoginUrl);
+			isOnWixManage =
+				parsed.hostname === "manage.wix.com" ||
+				parsed.hostname.endsWith(".manage.wix.com");
+		} catch {
+			// malformed URL — treat as not on manage.wix.com
+		}
+		if (postLoginUrl.includes("signin") || !isOnWixManage) {
 			if (postLoginUrl.includes("/signin/verification")) {
 				throw new WixTwoFactorRequiredError();
 			}

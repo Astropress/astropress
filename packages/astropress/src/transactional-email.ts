@@ -186,7 +186,7 @@ export async function sendPasswordResetEmail(
 			to: email,
 			subject: `Reset your ${siteName} admin password`,
 			text: `Use this link to reset your ${siteName} admin password: ${resetUrl}`,
-			html: `<p>Use the link below to reset your ${siteName} admin password.</p><p><a href="${resetUrl}">${resetUrl}</a></p>`,
+			html: `<p>Use the link below to reset your ${siteName} admin password.</p><p><a href="${escapeHtml(resetUrl)}">${escapeHtml(resetUrl)}</a></p>`,
 		},
 		locals,
 	);
@@ -203,7 +203,7 @@ export async function sendUserInviteEmail(
 			to: email,
 			subject: `Accept your ${siteName} admin invitation`,
 			text: `Use this link to accept your ${siteName} admin invitation and set your password: ${inviteUrl}`,
-			html: `<p>You have been invited to the ${siteName} admin.</p><p>Use the link below to accept the invitation and set your password.</p><p><a href="${inviteUrl}">${inviteUrl}</a></p>`,
+			html: `<p>You have been invited to the ${siteName} admin.</p><p>Use the link below to accept the invitation and set your password.</p><p><a href="${escapeHtml(inviteUrl)}">${escapeHtml(inviteUrl)}</a></p>`,
 		},
 		locals,
 	);

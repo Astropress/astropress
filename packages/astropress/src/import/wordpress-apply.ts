@@ -184,7 +184,7 @@ async function importMediaAssets(
 	const upsertMedia = db.prepare(SQL_UPSERT_MEDIA);
 	for (const asset of bundle.mediaAssets) {
 		const downloadedPath = artifactDir
-			? path.join(artifactDir, "downloads", asset.filename)
+			? path.join(artifactDir, "downloads", path.basename(asset.filename))
 			: undefined;
 		const hasDownloadedFile = downloadedPath
 			? (await fileSizeOrNull(downloadedPath)) !== null

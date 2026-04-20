@@ -199,7 +199,7 @@ async function downloadWixMedia(
 			const response = await fetch(asset.sourceUrl);
 			if (!response.ok) throw new Error(`HTTP ${response.status}`);
 			await writeFile(
-				path.join(downloadsDir, asset.filename),
+				path.join(downloadsDir, path.basename(asset.filename)),
 				Buffer.from(await response.arrayBuffer()),
 			);
 			state.completed.push(asset.id);

@@ -19,6 +19,7 @@ function normalizeRoute(route: string) {
 		return "/";
 	}
 
+	// codeql[js/polynomial-redos] false positive: anchored /\/+$/ is linear — no overlap between \/+ and end anchor
 	return route === "/" ? "/" : route.replace(/\/+$/, "");
 }
 

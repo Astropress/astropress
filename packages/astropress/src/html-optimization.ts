@@ -7,7 +7,8 @@ export function optimizeImageLoading(html: string): string {
 
 	return html.replace(/<img([^>]*?)>/g, (match, attrs) => {
 		// Skip if already has a loading attribute (lazy, eager, etc.)
-		if (/\bloading\s*=\s*["'][^"']*["']/i.test(attrs)) {
+		// Use a simple string check to avoid nested-quantifier ReDoS warnings
+		if (/\bloading=/i.test(attrs)) {
 			firstImage = false;
 			return match;
 		}

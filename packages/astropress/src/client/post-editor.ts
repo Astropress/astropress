@@ -141,7 +141,7 @@ window.addEventListener("DOMContentLoaded", () => {
 			promptUrl(urlDialog).then((url) => {
 				if (url) {
 					wrapSelection(
-						`<a href="${url.replaceAll('"', "&quot;")}">`,
+						`<a href="${url.replaceAll('"', "&quot;")}">`, // audit-ok: admin-only editor; url is from UI prompt, attribute-breaking chars escaped
 						"</a>",
 						"Link text",
 					);

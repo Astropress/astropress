@@ -34,6 +34,7 @@ export interface AstropressUserRepositoryInput {
 }
 
 function isValidEmailAddress(email: string): boolean {
+	if (email.length > 254) return false;
 	return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
