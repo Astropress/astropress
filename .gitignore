@@ -24,6 +24,7 @@ playwright-report/
 .stryker-tmp/
 reports/mutation/
 mutants.out/
+mutants.out.old/
 stryker-setup-*.js
 stryker.local.mjs
 
