@@ -463,6 +463,7 @@
   "scripts": {
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
+    "test:coverage:fast": "vitest run --coverage --reporter=dot --coverage.reporter=text",
     "test:watch": "vitest",
     "build": "tsc -p tsconfig.build.json --noCheck && bun ../../tooling/scripts/add-js-ext.ts dist && cp src/sqlite-schema.sql dist/src/sqlite-schema.sql",
     "release": "changeset publish",
