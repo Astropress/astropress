@@ -11,138 +11,157 @@
 import { parseDocument } from "htmlparser2";
 
 type ElementHandlerCallback = {
-  element?: (el: PolyfillElement) => void;
-  text?: (chunk: { text: string }) => void;
+	element?: (el: PolyfillElement) => void;
+	text?: (chunk: { text: string }) => void;
 };
 
 class PolyfillElement {
-  tagName: string;
-  private _attribs: Map<string, string>;
-  _removed = false;
-  _keepContent = false;
+	tagName: string;
+	private _attribs: Map<string, string>;
+	_removed = false;
+	_keepContent = false;
 
-  constructor(tagName: string, attribs: Record<string, string>) {
-    this.tagName = tagName.toLowerCase();
-    this._attribs = new Map(Object.entries(attribs));
-  }
+	constructor(tagName: string, attribs: Record<string, string>) {
+		this.tagName = tagName.toLowerCase();
+		this._attribs = new Map(Object.entries(attribs));
+	}
 
-  get attributes(): Iterable<[string, string]> {
-    return this._attribs.entries();
-  }
+	get attributes(): Iterable<[string, string]> {
+		return this._attribs.entries();
+	}
 
-  remove() {
-    this._removed = true;
-    this._keepContent = false;
-  }
+	remove() {
+		this._removed = true;
+		this._keepContent = false;
+	}
 
-  removeAndKeepContent() {
-    this._removed = true;
-    this._keepContent = true;
-  }
+	removeAndKeepContent() {
+		this._removed = true;
+		this._keepContent = true;
+	}
 
-  removeAttribute(name: string) {
-    this._attribs.delete(name);
-  }
+	removeAttribute(name: string) {
+		this._attribs.delete(name);
+	}
 
-  setAttribute(name: string, value: string) {
-    this._attribs.set(name, value);
-  }
+	setAttribute(name: string, value: string) {
+		this._attribs.set(name, value);
+	}
 
-  serializeOpenTag(): string {
-    const attrs = [...this._attribs.entries()]
-      .map(([k, v]) => ` ${k}="${v.replaceAll('"', "&quot;")}"`)
-      .join("");
-    return `<${this.tagName}${attrs}>`;
-  }
+	serializeOpenTag(): string {
+		const attrs = [...this._attribs.entries()]
+			.map(([k, v]) => ` ${k}="${v.replaceAll('"', "&quot;")}"`)
+			.join("");
+		return `<${this.tagName}${attrs}>`;
+	}
 }
 
-const voidTagSet = new Set(["area", "base", "br", "col", "embed", "hr", "img", "input",
-  "link", "meta", "param", "source", "track", "wbr"]);
+const voidTagSet = new Set([
+	"area",
+	"base",
+	"br",
+	"col",
+	"embed",
+	"hr",
+	"img",
+	"input",
+	"link",
+	"meta",
+	"param",
+	"source",
+	"track",
+	"wbr",
+]);
 
 function escapeText(s: string): string {
-  return s.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
+	return s
+		.replaceAll("&", "&amp;")
+		.replaceAll("<", "&lt;")
+		.replaceAll(">", "&gt;");
 }
 
 function walkNode(
-  node: Record<string, unknown>,
-  handlers: ElementHandlerCallback[],
+	node: Record<string, unknown>,
+	handlers: ElementHandlerCallback[],
 ): string {
-  const type = node.type as string | undefined;
+	const type = node.type as string | undefined;
 
-  if (type === "text") {
-    const text = (node.data as string) ?? "";
-    if (handlers.some((h) => h.text)) {
-      // text handlers are informational in our sanitizer; we don't use them
-    }
-    return escapeText(text);
-  }
+	if (type === "text") {
+		const text = (node.data as string) ?? "";
+		if (handlers.some((h) => h.text)) {
+			// text handlers are informational in our sanitizer; we don't use them
+		}
+		return escapeText(text);
+	}
 
-  if (type === "comment" || type === "directive" || type === "cdata") {
-    return "";
-  }
+	if (type === "comment" || type === "directive" || type === "cdata") {
+		return "";
+	}
 
-  const children = (Array.isArray(node.children)
-    ? (node.children as Array<Record<string, unknown>>)
-    : []);
+	const children = Array.isArray(node.children)
+		? (node.children as Array<Record<string, unknown>>)
+		: [];
 
-  if (!node.name) {
-    // Root / document node
-    return children.map((c) => walkNode(c, handlers)).join("");
-  }
+	if (!node.name) {
+		// Root / document node
+		return children.map((c) => walkNode(c, handlers)).join("");
+	}
 
-  const attribs = (node.attribs && typeof node.attribs === "object"
-    ? (node.attribs as Record<string, string>)
-    : {});
+	const attribs =
+		node.attribs && typeof node.attribs === "object"
+			? (node.attribs as Record<string, string>)
+			: {};
 
-  const el = new PolyfillElement(node.name as string, attribs);
+	const el = new PolyfillElement(node.name as string, attribs);
 
-  for (const handler of handlers) {
-    handler.element?.(el);
-  }
+	for (const handler of handlers) {
+		handler.element?.(el);
+	}
 
-  if (el._removed && !el._keepContent) {
-    return "";
-  }
+	if (el._removed && !el._keepContent) {
+		return "";
+	}
 
-  const innerHtml = children.map((c) => walkNode(c, handlers)).join("");
+	const innerHtml = children.map((c) => walkNode(c, handlers)).join("");
 
-  if (el._removed && el._keepContent) {
-    return innerHtml;
-  }
+	if (el._removed && el._keepContent) {
+		return innerHtml;
+	}
 
-  const tag = el.tagName;
-  if (voidTagSet.has(tag)) {
-    return el.serializeOpenTag();
-  }
+	const tag = el.tagName;
+	if (voidTagSet.has(tag)) {
+		return el.serializeOpenTag();
+	}
 
-  return `${el.serializeOpenTag()}${innerHtml}</${tag}>`;
+	return `${el.serializeOpenTag()}${innerHtml}</${tag}>`;
 }
 
 class PolyfillHTMLRewriter {
-  private _handlers: ElementHandlerCallback[] = [];
+	private _handlers: ElementHandlerCallback[] = [];
 
-  on(_selector: string, handler: ElementHandlerCallback): this {
-    this._handlers.push(handler);
-    return this;
-  }
+	on(_selector: string, handler: ElementHandlerCallback): this {
+		this._handlers.push(handler);
+		return this;
+	}
 
-  transform(response: Response): { text(): Promise<string> } {
-    const handlers = this._handlers;
-    return {
-      text: async () => {
-        const html = await response.text();
-        const doc = parseDocument(html, {
-          decodeEntities: false,
-          lowerCaseTags: true,
-          lowerCaseAttributeNames: true,
-        });
-        return walkNode(doc as unknown as Record<string, unknown>, handlers);
-      },
-    };
-  }
+	transform(response: Response): { text(): Promise<string> } {
+		const handlers = this._handlers;
+		return {
+			text: async () => {
+				const html = await response.text();
+				const doc = parseDocument(html, {
+					decodeEntities: false,
+					lowerCaseTags: true,
+					lowerCaseAttributeNames: true,
+				});
+				return walkNode(doc as unknown as Record<string, unknown>, handlers);
+			},
+		};
+	}
 }
 
 // Install the polyfill only when HTMLRewriter isn't already available (i.e. not in Bun)
 if (typeof globalThis.HTMLRewriter === "undefined") {
-  (globalThis as unknown as Record<string, unknown>).HTMLRewriter = PolyfillHTMLRewriter;
+	(globalThis as unknown as Record<string, unknown>).HTMLRewriter =
+		PolyfillHTMLRewriter;
 }

@@ -9,21 +9,24 @@ let cachedAdminSlug: string | null = null;
 let cachedAdminSlugAt = 0;
 
 export function invalidateAstropressAdminSlugCache() {
-  cachedAdminSlug = null;
+	cachedAdminSlug = null;
 }
 
 export async function resolveAstropressAdminSlug(locals: APIContext["locals"]) {
-  const now = Date.now();
-  if (cachedAdminSlug !== null && now - cachedAdminSlugAt < ADMIN_SLUG_CACHE_TTL_MS) {
-    return cachedAdminSlug;
-  }
+	const now = Date.now();
+	if (
+		cachedAdminSlug !== null &&
+		now - cachedAdminSlugAt < ADMIN_SLUG_CACHE_TTL_MS
+	) {
+		return cachedAdminSlug;
+	}
 
-  try {
-    const settings = await getRuntimeSettings(locals);
-    cachedAdminSlug = settings.adminSlug || DEFAULT_ADMIN_SLUG;
-    cachedAdminSlugAt = now;
-    return cachedAdminSlug;
-  } catch {
-    return DEFAULT_ADMIN_SLUG;
-  }
+	try {
+		const settings = await getRuntimeSettings(locals);
+		cachedAdminSlug = settings.adminSlug || DEFAULT_ADMIN_SLUG;
+		cachedAdminSlugAt = now;
+		return cachedAdminSlug;
+	} catch {
+		return DEFAULT_ADMIN_SLUG;
+	}
 }

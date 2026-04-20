@@ -3,7 +3,7 @@
 Auto-generated from TypeScript source via the TypeScript compiler API.
 Run `bun run docs:api` to regenerate.
 
-Generated: 2026-04-17
+Generated: 2026-04-20
 
 ---
 
@@ -523,12 +523,12 @@ function getRuntimeSystemRoute(pathname: string, locals: Locals | null | undefin
 
 #### `listRuntimeStructuredPageRoutes`
 ```ts
-function listRuntimeStructuredPageRoutes(locals: Locals | null | undefined): Promise<RuntimeStructuredPageRouteRecord[]>
+function listRuntimeStructuredPageRoutes(locals: Locals | null | undefined): Promise<RuntimeStructuredPageRouteRecord[] | ({ path: string; title: string; summary: string | undefined; seoTitle: string | undefined; metaDescription: string | undefined; canonicalUrlOverride: string | undefined; robotsDirective: string | undefined; ogImage: string | undefined; templateKey: string; alternateLinks: { hreflang: string; href: string; }[]; sections: Record<string, unknown> | null; updatedAt: string; } | null)[]>
 ```
 
 #### `listRuntimeSystemRoutes`
 ```ts
-function listRuntimeSystemRoutes(locals: Locals | null | undefined): Promise<RuntimeSystemRouteRecord[]>
+function listRuntimeSystemRoutes(locals: Locals | null | undefined): Promise<(RuntimeSystemRouteRecord | null)[]>
 ```
 
 #### `saveRuntimeArchiveRoute`
@@ -743,7 +743,7 @@ function buildAdminDashboardPageModel(locals: Locals, role: AdminRole): Promise<
 
 #### `buildPagesIndexPageModel`
 ```ts
-function buildPagesIndexPageModel(locals: Locals, role: AdminRole): Promise<AdminPageResult<{ contentStates: ContentRecord[]; routePages: RuntimeStructuredPageRouteRecord[]; archiveRows: any[]; }>>
+function buildPagesIndexPageModel(locals: Locals, role: AdminRole): Promise<AdminPageResult<{ contentStates: ContentRecord[]; routePages: any; archiveRows: unknown[]; }>>
 ```
 
 #### `buildPostsIndexPageModel`
@@ -763,7 +763,7 @@ function buildPostRevisionsPageModel(locals: Locals, slug: string): Promise<Admi
 
 #### `buildRouteTablePageModel`
 ```ts
-function buildRouteTablePageModel(locals: Locals, role: AdminRole): Promise<AdminPageResult<{ routePages: RuntimeStructuredPageRouteRecord[]; settings: SiteSettings; }>>
+function buildRouteTablePageModel(locals: Locals, role: AdminRole): Promise<AdminPageResult<{ routePages: RuntimeStructuredPageRouteRecord[] | ({ path: string; title: string; summary: string | undefined; seoTitle: string | undefined; metaDescription: string | undefined; canonicalUrlOverride: string | undefined; robotsDirective: string | undefined; ogImage: string | undefined; templateKey: string; alternateLinks: { hreflang: string; href: string; }[]; sections: Record<string, unknown> | null; updatedAt: string; } | null)[]; settings: SiteSettings; }>>
 ```
 
 #### `buildRoutePageEditorModel`
@@ -773,7 +773,7 @@ function buildRoutePageEditorModel(locals: Locals, routePath: string, role: Admi
 
 #### `buildArchivesIndexPageModel`
 ```ts
-function buildArchivesIndexPageModel(locals: Locals, role: AdminRole): Promise<AdminPageResult<{ archiveList: any[]; archivesByKind: Record<string, any[]>; kindCounts: { kind: string; count: number; }[]; totalArchives: number; totalItems: number; }>>
+function buildArchivesIndexPageModel(locals: Locals, role: AdminRole): Promise<AdminPageResult<{ archiveList: unknown[]; archivesByKind: Record<string, unknown[]>; kindCounts: { kind: string; count: number; }[]; totalArchives: number; totalItems: number; }>>
 ```
 
 #### `buildArchiveEditorModel`
@@ -783,7 +783,7 @@ function buildArchiveEditorModel(locals: Locals, archivePath: string, role: Admi
 
 #### `buildSeoPageModel`
 ```ts
-function buildSeoPageModel(locals: Locals, role: AdminRole): Promise<AdminPageResult<{ rows: any[]; }>>
+function buildSeoPageModel(locals: Locals, role: AdminRole): Promise<AdminPageResult<{ rows: unknown[]; }>>
 ```
 
 #### `buildMediaPageModel`
@@ -818,7 +818,7 @@ function buildTestimonialsPageModel(locals: Locals): Promise<AdminPageResult<{ p
 
 #### `buildTranslationsPageModel`
 ```ts
-function buildTranslationsPageModel(locals: Locals, role: AdminRole): Promise<AdminPageResult<{ rows: any[]; }>>
+function buildTranslationsPageModel(locals: Locals, role: AdminRole): Promise<AdminPageResult<{ rows: unknown[]; }>>
 ```
 
 #### `buildSettingsPageModel`
@@ -828,7 +828,7 @@ function buildSettingsPageModel(locals: Locals, role: AdminRole): Promise<AdminP
 
 #### `buildSystemPageModel`
 ```ts
-function buildSystemPageModel(locals: Locals, role: AdminRole): Promise<AdminPageResult<{ systemRoutes: RuntimeSystemRouteRecord[]; routeMap: Map<string, RuntimeSystemRouteRecord>; }>>
+function buildSystemPageModel(locals: Locals, role: AdminRole): Promise<AdminPageResult<{ systemRoutes: never[]; routeMap: Map<string, unknown>; }>>
 ```
 
 #### `buildUsersPageModel`

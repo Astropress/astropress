@@ -4,5 +4,5 @@ import { createAstropressSecurityMiddleware } from "./security-middleware.js";
 // Allow them so the admin UI renders correctly during local development.
 // Production builds extract all styles to external files, so this flag is false there.
 export const onRequest = createAstropressSecurityMiddleware({
-  allowInlineStyles: import.meta.env.DEV,
+	allowInlineStyles: import.meta.env.DEV,
 });

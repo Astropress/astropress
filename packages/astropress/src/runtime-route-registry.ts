@@ -4,7 +4,11 @@
 //   runtime-route-registry-pages.ts     (listRuntimeStructuredPageRoutes, getRuntimeStructuredPageRoute,
 //                                         saveRuntimeStructuredPageRoute, createRuntimeStructuredPageRoute)
 //   runtime-route-registry-archives.ts  (getRuntimeArchiveRoute, saveRuntimeArchiveRoute)
-export type { RuntimeSystemRouteRecord, RuntimeArchiveRouteRecord, RuntimeStructuredPageRouteRecord } from "./runtime-route-registry-dispatch";
+export type {
+	RuntimeSystemRouteRecord,
+	RuntimeArchiveRouteRecord,
+	RuntimeStructuredPageRouteRecord,
+} from "./runtime-route-registry-dispatch";
 export * from "./runtime-route-registry-system";
 export * from "./runtime-route-registry-pages";
 export * from "./runtime-route-registry-archives";

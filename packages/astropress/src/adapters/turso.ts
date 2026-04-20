@@ -1,17 +1,18 @@
-import {
-  type AstropressPlatformAdapter,
-} from "../platform-contracts";
-import { type AstropressInMemoryPlatformAdapterOptions } from "../in-memory-platform-adapter";
 import { createAstropressHostedPlatformAdapter } from "../hosted-platform-adapter";
+import type { AstropressInMemoryPlatformAdapterOptions } from "../in-memory-platform-adapter";
+import type { AstropressPlatformAdapter } from "../platform-contracts";
 
 export interface AstropressTursoHostedConfig {
-  databaseUrl: string;
-  authToken: string;
-  apiBaseUrl: string;
+	databaseUrl: string;
+	authToken: string;
+	apiBaseUrl: string;
 }
 
-export type AstropressTursoAdapterOptions = Omit<AstropressInMemoryPlatformAdapterOptions, "capabilities"> & {
-  backingAdapter?: AstropressPlatformAdapter;
+export type AstropressTursoAdapterOptions = Omit<
+	AstropressInMemoryPlatformAdapterOptions,
+	"capabilities"
+> & {
+	backingAdapter?: AstropressPlatformAdapter;
 };
 
 /**
@@ -21,79 +22,87 @@ export type AstropressTursoAdapterOptions = Omit<AstropressInMemoryPlatformAdapt
  * a hosted admin panel, or preview environments. Pair Turso with a server-side host
  * (Vercel, Netlify, Fly.io) for the app and a storage service for media uploads.
  */
-export function createAstropressTursoAdapter(options: AstropressTursoAdapterOptions = {}) {
-  return createAstropressHostedPlatformAdapter({
-    ...options,
-    providerName: "turso",
-    defaultCapabilities: {
-      hostedAdmin: false,
-      previewEnvironments: false,
-      serverRuntime: true,
-      database: true,
-      objectStorage: false,
-      gitSync: false,
-      ...options.defaultCapabilities,
-    },
-  });
+export function createAstropressTursoAdapter(
+	options: AstropressTursoAdapterOptions = {},
+) {
+	return createAstropressHostedPlatformAdapter({
+		...options,
+		providerName: "turso",
+		defaultCapabilities: {
+			hostedAdmin: false,
+			previewEnvironments: false,
+			serverRuntime: true,
+			database: true,
+			objectStorage: false,
+			gitSync: false,
+			...options.defaultCapabilities,
+		},
+	});
 }
 
-export interface AstropressTursoHostedAdapterOptions extends AstropressTursoAdapterOptions {
-  config?: AstropressTursoHostedConfig;
-  env?: Record<string, string | undefined>;
+export interface AstropressTursoHostedAdapterOptions
+	extends AstropressTursoAdapterOptions {
+	config?: AstropressTursoHostedConfig;
+	env?: Record<string, string | undefined>;
 }
 
 export function readAstropressTursoHostedConfig(
-  env: Record<string, string | undefined> = process.env,
+	env: Record<string, string | undefined> = process.env,
 ): AstropressTursoHostedConfig {
-  const databaseUrl = env.TURSO_DATABASE_URL?.trim();
+	const databaseUrl = env.TURSO_DATABASE_URL?.trim();
 
-  if (!databaseUrl) {
-    throw new Error(
-      "Turso hosted config requires TURSO_DATABASE_URL (your Turso database URL).",
-    );
-  }
+	if (!databaseUrl) {
+		throw new Error(
+			"Turso hosted config requires TURSO_DATABASE_URL (your Turso database URL).",
+		);
+	}
 
-  if (!databaseUrl.startsWith("libsql://") && !databaseUrl.startsWith("https://")) {
-    throw new Error(
-      "Turso TURSO_DATABASE_URL must be a libsql:// or https:// connection string.",
-    );
-  }
+	if (
+		!databaseUrl.startsWith("libsql://") &&
+		!databaseUrl.startsWith("https://")
+	) {
+		throw new Error(
+			"Turso TURSO_DATABASE_URL must be a libsql:// or https:// connection string.",
+		);
+	}
 
-  const authToken = env.TURSO_AUTH_TOKEN?.trim();
+	const authToken = env.TURSO_AUTH_TOKEN?.trim();
 
-  if (!authToken) {
-    throw new Error(
-      "Turso hosted config requires TURSO_AUTH_TOKEN.",
-    );
-  }
+	if (!authToken) {
+		throw new Error("Turso hosted config requires TURSO_AUTH_TOKEN.");
+	}
 
-  const dbName = databaseUrl.replace(/^libsql:\/\//, "").replace(/^https:\/\//, "").split(".")[0] ?? "";
-  const apiBaseUrl = `https://app.turso.tech/databases/${dbName}`;
+	const dbName =
+		databaseUrl
+			.replace(/^libsql:\/\//, "")
+			.replace(/^https:\/\//, "")
+			.split(".")[0] ?? "";
+	const apiBaseUrl = `https://app.turso.tech/databases/${dbName}`;
 
-  return { databaseUrl, authToken, apiBaseUrl };
+	return { databaseUrl, authToken, apiBaseUrl };
 }
 
 export function createAstropressTursoHostedAdapter(
-  options: AstropressTursoHostedAdapterOptions = {},
+	options: AstropressTursoHostedAdapterOptions = {},
 ) {
-  const config = options.config ?? readAstropressTursoHostedConfig(options.env);
+	const config = options.config ?? readAstropressTursoHostedConfig(options.env);
 
-  return createAstropressHostedPlatformAdapter({
-    ...options,
-    providerName: "turso",
-    defaultCapabilities: {
-      ...options.defaultCapabilities,
-      hostedAdmin: false,
-      previewEnvironments: false,
-      serverRuntime: true,
-      database: true,
-      objectStorage: false,
-      gitSync: false,
-      hostPanel: options.defaultCapabilities?.hostPanel ?? {
-        mode: "link",
-        url: config.apiBaseUrl,
-        label: "Turso Dashboard",
-      },
-    },
-  });
+	return createAstropressHostedPlatformAdapter({
+		...options,
+		providerName: "turso",
+		defaultCapabilities: {
+			...options.defaultCapabilities,
+			hostedAdmin: false,
+			previewEnvironments: false,
+			serverRuntime: true,
+			database: true,
+			objectStorage: false,
+			gitSync: false,
+			hostPanel: options.defaultCapabilities?.hostPanel ?? {
+				mode: "link",
+				url: config.apiBaseUrl,
+				label: "Turso Dashboard",
+			},
+		},
+	});
 }

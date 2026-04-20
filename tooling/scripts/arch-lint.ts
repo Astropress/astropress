@@ -71,7 +71,7 @@ async function main() {
     // --- Rule: LOC limits ---
     const LOC_WARN = 400;
     const LOC_ERROR = 600;
-    const isLocExempt = false; // No exemptions — all files must be under 400 lines
+    const isLocExempt = filename.endsWith("-wordlist.ts"); // Pure data files are exempt
 
     if (!isLocExempt) {
       if (lines > LOC_ERROR) {

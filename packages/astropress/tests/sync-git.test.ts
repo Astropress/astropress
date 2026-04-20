@@ -12,25 +12,25 @@ import { createAstropressGitSyncAdapter } from "../src/sync/git";
 const testRoot = join(tmpdir(), "astropress-git-sync-test");
 
 function makeDir(name: string): string {
-  const dir = join(testRoot, name);
-  mkdirSync(dir, { recursive: true });
-  return dir;
+	const dir = join(testRoot, name);
+	mkdirSync(dir, { recursive: true });
+	return dir;
 }
 
 function writeFiles(dir: string, files: Record<string, string>) {
-  for (const [rel, content] of Object.entries(files)) {
-    const fullPath = join(dir, rel);
-    mkdirSync(join(dir, rel, ".."), { recursive: true });
-    writeFileSync(fullPath, content, "utf8");
-  }
+	for (const [rel, content] of Object.entries(files)) {
+		const fullPath = join(dir, rel);
+		mkdirSync(join(dir, rel, ".."), { recursive: true });
+		writeFileSync(fullPath, content, "utf8");
+	}
 }
 
 beforeEach(() => {
-  mkdirSync(testRoot, { recursive: true });
+	mkdirSync(testRoot, { recursive: true });
 });
 
 afterEach(() => {
-  rmSync(testRoot, { recursive: true, force: true });
+	rmSync(testRoot, { recursive: true, force: true });
 });
 
 // ---------------------------------------------------------------------------
@@ -38,73 +38,76 @@ afterEach(() => {
 // ---------------------------------------------------------------------------
 
 describe("createAstropressGitSyncAdapter — exportSnapshot", () => {
-  it("copies included entries to target dir and returns file count", async () => {
-    const projectDir = makeDir("project-export");
-    writeFiles(projectDir, {
-      "package.json": '{"name":"test"}',
-      "src/index.ts": "export {}",
-      "src/utils.ts": "export const x = 1;",
-    });
+	it("copies included entries to target dir and returns file count", async () => {
+		const projectDir = makeDir("project-export");
+		writeFiles(projectDir, {
+			"package.json": '{"name":"test"}',
+			"src/index.ts": "export {}",
+			"src/utils.ts": "export const x = 1;",
+		});
 
-    const adapter = createAstropressGitSyncAdapter({
-      projectDir,
-      include: ["package.json", "src"],
-    });
+		const adapter = createAstropressGitSyncAdapter({
+			projectDir,
+			include: ["package.json", "src"],
+		});
 
-    const targetDir = makeDir("snapshot-export");
-    const result = await adapter.exportSnapshot(targetDir);
+		const targetDir = makeDir("snapshot-export");
+		const result = await adapter.exportSnapshot(targetDir);
 
-    expect(existsSync(join(targetDir, "package.json"))).toBe(true);
-    expect(existsSync(join(targetDir, "src", "index.ts"))).toBe(true);
-    expect(existsSync(join(targetDir, "src", "utils.ts"))).toBe(true);
-    expect(result.fileCount).toBe(3); // package.json + 2 src files
-    expect(result.targetDir).toContain("snapshot-export");
-  });
+		expect(existsSync(join(targetDir, "package.json"))).toBe(true);
+		expect(existsSync(join(targetDir, "src", "index.ts"))).toBe(true);
+		expect(existsSync(join(targetDir, "src", "utils.ts"))).toBe(true);
+		expect(result.fileCount).toBe(3); // package.json + 2 src files
+		expect(result.targetDir).toContain("snapshot-export");
+	});
 
-  it("skips missing entries without error", async () => {
-    const projectDir = makeDir("project-missing");
-    writeFiles(projectDir, { "package.json": "{}" });
+	it("skips missing entries without error", async () => {
+		const projectDir = makeDir("project-missing");
+		writeFiles(projectDir, { "package.json": "{}" });
 
-    const adapter = createAstropressGitSyncAdapter({
-      projectDir,
-      include: ["package.json", "does-not-exist"],
-    });
+		const adapter = createAstropressGitSyncAdapter({
+			projectDir,
+			include: ["package.json", "does-not-exist"],
+		});
 
-    const targetDir = makeDir("snapshot-missing");
-    const result = await adapter.exportSnapshot(targetDir);
+		const targetDir = makeDir("snapshot-missing");
+		const result = await adapter.exportSnapshot(targetDir);
 
-    expect(result.fileCount).toBe(1);
-    expect(existsSync(join(targetDir, "does-not-exist"))).toBe(false);
-  });
+		expect(result.fileCount).toBe(1);
+		expect(existsSync(join(targetDir, "does-not-exist"))).toBe(false);
+	});
 
-  it("overwrites an existing snapshot (idempotent)", async () => {
-    const projectDir = makeDir("project-idem");
-    writeFiles(projectDir, { "package.json": '{"v":1}' });
+	it("overwrites an existing snapshot (idempotent)", async () => {
+		const projectDir = makeDir("project-idem");
+		writeFiles(projectDir, { "package.json": '{"v":1}' });
 
-    const adapter = createAstropressGitSyncAdapter({ projectDir, include: ["package.json"] });
-    const targetDir = makeDir("snapshot-idem");
+		const adapter = createAstropressGitSyncAdapter({
+			projectDir,
+			include: ["package.json"],
+		});
+		const targetDir = makeDir("snapshot-idem");
 
-    await adapter.exportSnapshot(targetDir);
-    // Second export should not throw
-    await expect(adapter.exportSnapshot(targetDir)).resolves.toBeDefined();
-    expect(existsSync(join(targetDir, "package.json"))).toBe(true);
-  });
+		await adapter.exportSnapshot(targetDir);
+		// Second export should not throw
+		await expect(adapter.exportSnapshot(targetDir)).resolves.toBeDefined();
+		expect(existsSync(join(targetDir, "package.json"))).toBe(true);
+	});
 
-  it("uses default include entries when not specified", async () => {
-    const projectDir = makeDir("project-default");
-    writeFiles(projectDir, {
-      "package.json": "{}",
-      "astro.config.mjs": "export default {}",
-    });
+	it("uses default include entries when not specified", async () => {
+		const projectDir = makeDir("project-default");
+		writeFiles(projectDir, {
+			"package.json": "{}",
+			"astro.config.mjs": "export default {}",
+		});
 
-    const adapter = createAstropressGitSyncAdapter({ projectDir });
-    const targetDir = makeDir("snapshot-default");
-    const result = await adapter.exportSnapshot(targetDir);
+		const adapter = createAstropressGitSyncAdapter({ projectDir });
+		const targetDir = makeDir("snapshot-default");
+		const result = await adapter.exportSnapshot(targetDir);
 
-    // Only entries that exist in projectDir should be copied
-    expect(existsSync(join(targetDir, "package.json"))).toBe(true);
-    expect(result.fileCount).toBeGreaterThanOrEqual(2);
-  });
+		// Only entries that exist in projectDir should be copied
+		expect(existsSync(join(targetDir, "package.json"))).toBe(true);
+		expect(result.fileCount).toBeGreaterThanOrEqual(2);
+	});
 });
 
 // ---------------------------------------------------------------------------
@@ -112,57 +115,60 @@ describe("createAstropressGitSyncAdapter — exportSnapshot", () => {
 // ---------------------------------------------------------------------------
 
 describe("createAstropressGitSyncAdapter — importSnapshot", () => {
-  it("copies snapshot entries back to project dir", async () => {
-    const projectDir = makeDir("project-import");
-    const snapshotDir = makeDir("snapshot-for-import");
+	it("copies snapshot entries back to project dir", async () => {
+		const projectDir = makeDir("project-import");
+		const snapshotDir = makeDir("snapshot-for-import");
 
-    writeFiles(snapshotDir, {
-      "package.json": '{"restored":true}',
-      "src/index.ts": "// restored",
-    });
+		writeFiles(snapshotDir, {
+			"package.json": '{"restored":true}',
+			"src/index.ts": "// restored",
+		});
 
-    const adapter = createAstropressGitSyncAdapter({
-      projectDir,
-      include: ["package.json", "src"],
-    });
+		const adapter = createAstropressGitSyncAdapter({
+			projectDir,
+			include: ["package.json", "src"],
+		});
 
-    const result = await adapter.importSnapshot(snapshotDir);
+		const result = await adapter.importSnapshot(snapshotDir);
 
-    expect(existsSync(join(projectDir, "package.json"))).toBe(true);
-    expect(existsSync(join(projectDir, "src", "index.ts"))).toBe(true);
-    expect(result.fileCount).toBe(2);
-    expect(result.sourceDir).toContain("snapshot-for-import");
-  });
+		expect(existsSync(join(projectDir, "package.json"))).toBe(true);
+		expect(existsSync(join(projectDir, "src", "index.ts"))).toBe(true);
+		expect(result.fileCount).toBe(2);
+		expect(result.sourceDir).toContain("snapshot-for-import");
+	});
 
-  it("replaces existing files in project dir", async () => {
-    const projectDir = makeDir("project-replace");
-    writeFiles(projectDir, { "package.json": '{"old":true}' });
+	it("replaces existing files in project dir", async () => {
+		const projectDir = makeDir("project-replace");
+		writeFiles(projectDir, { "package.json": '{"old":true}' });
 
-    const snapshotDir = makeDir("snapshot-replace");
-    writeFiles(snapshotDir, { "package.json": '{"new":true}' });
+		const snapshotDir = makeDir("snapshot-replace");
+		writeFiles(snapshotDir, { "package.json": '{"new":true}' });
 
-    const adapter = createAstropressGitSyncAdapter({
-      projectDir,
-      include: ["package.json"],
-    });
+		const adapter = createAstropressGitSyncAdapter({
+			projectDir,
+			include: ["package.json"],
+		});
 
-    await adapter.importSnapshot(snapshotDir);
+		await adapter.importSnapshot(snapshotDir);
 
-    const content = require("node:fs").readFileSync(join(projectDir, "package.json"), "utf8");
-    expect(JSON.parse(content).new).toBe(true);
-  });
+		const content = require("node:fs").readFileSync(
+			join(projectDir, "package.json"),
+			"utf8",
+		);
+		expect(JSON.parse(content).new).toBe(true);
+	});
 
-  it("skips missing entries in snapshot without error", async () => {
-    const projectDir = makeDir("project-skip");
-    const snapshotDir = makeDir("snapshot-skip");
-    writeFiles(snapshotDir, { "package.json": "{}" });
+	it("skips missing entries in snapshot without error", async () => {
+		const projectDir = makeDir("project-skip");
+		const snapshotDir = makeDir("snapshot-skip");
+		writeFiles(snapshotDir, { "package.json": "{}" });
 
-    const adapter = createAstropressGitSyncAdapter({
-      projectDir,
-      include: ["package.json", "missing-entry"],
-    });
+		const adapter = createAstropressGitSyncAdapter({
+			projectDir,
+			include: ["package.json", "missing-entry"],
+		});
 
-    const result = await adapter.importSnapshot(snapshotDir);
-    expect(result.fileCount).toBe(1);
-  });
+		const result = await adapter.importSnapshot(snapshotDir);
+		expect(result.fileCount).toBe(1);
+	});
 });

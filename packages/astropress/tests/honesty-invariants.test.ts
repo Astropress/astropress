@@ -22,24 +22,27 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 
 const srcRoot = path.resolve(import.meta.dirname, "../src");
-const actionsRoot = path.resolve(import.meta.dirname, "../pages/ap-admin/actions");
+const actionsRoot = path.resolve(
+	import.meta.dirname,
+	"../pages/ap-admin/actions",
+);
 
 function readSource(filePath: string): string {
-  return readFileSync(filePath, "utf8");
+	return readFileSync(filePath, "utf8");
 }
 
 function listFiles(root: string, ext: string): string[] {
-  const results: string[] = [];
-  for (const entry of readdirSync(root)) {
-    const full = path.join(root, entry);
-    const stat = statSync(full);
-    if (stat.isDirectory()) {
-      results.push(...listFiles(full, ext));
-    } else if (full.endsWith(ext)) {
-      results.push(full);
-    }
-  }
-  return results.sort();
+	const results: string[] = [];
+	for (const entry of readdirSync(root)) {
+		const full = path.join(root, entry);
+		const stat = statSync(full);
+		if (stat.isDirectory()) {
+			results.push(...listFiles(full, ext));
+		} else if (full.endsWith(ext)) {
+			results.push(full);
+		}
+	}
+	return results.sort();
 }
 
 // ---------------------------------------------------------------------------
@@ -47,18 +50,18 @@ function listFiles(root: string, ext: string): string[] {
 // ---------------------------------------------------------------------------
 
 describe("H1: EmailResult has a delivered field", () => {
-  it("transactional-email.ts defines `delivered: boolean` on EmailResult", () => {
-    const src = readSource(path.join(srcRoot, "transactional-email.ts"));
-    // The interface must declare `delivered: boolean`
-    expect(src).toMatch(/delivered:\s*boolean/);
-  });
+	it("transactional-email.ts defines `delivered: boolean` on EmailResult", () => {
+		const src = readSource(path.join(srcRoot, "transactional-email.ts"));
+		// The interface must declare `delivered: boolean`
+		expect(src).toMatch(/delivered:\s*boolean/);
+	});
 
-  it("transactional-email.ts EmailResult interface includes both ok and delivered", () => {
-    const src = readSource(path.join(srcRoot, "transactional-email.ts"));
-    expect(src).toMatch(/interface EmailResult/);
-    expect(src).toMatch(/ok:\s*boolean/);
-    expect(src).toMatch(/delivered:\s*boolean/);
-  });
+	it("transactional-email.ts EmailResult interface includes both ok and delivered", () => {
+		const src = readSource(path.join(srcRoot, "transactional-email.ts"));
+		expect(src).toMatch(/interface EmailResult/);
+		expect(src).toMatch(/ok:\s*boolean/);
+		expect(src).toMatch(/delivered:\s*boolean/);
+	});
 });
 
 // ---------------------------------------------------------------------------
@@ -66,31 +69,40 @@ describe("H1: EmailResult has a delivered field", () => {
 // ---------------------------------------------------------------------------
 
 describe("H2: success-redirect params only appear after success checks", () => {
-  const SUCCESS_PARAMS = ["?saved=1", "?scheduled=1", "?ok=1"];
+	const SUCCESS_PARAMS = ["?saved=1", "?scheduled=1", "?ok=1"];
 
-  it("every action file containing a success redirect also contains a fail/error guard", () => {
-    const actionFiles = listFiles(actionsRoot, ".ts");
-    const violations: string[] = [];
+	it("every action file containing a success redirect also contains a fail/error guard", () => {
+		const actionFiles = listFiles(actionsRoot, ".ts");
+		const violations: string[] = [];
 
-    for (const file of actionFiles) {
-      const src = readSource(file);
-      const hasSuccessRedirect = SUCCESS_PARAMS.some((param) => src.includes(param));
-      if (!hasSuccessRedirect) continue;
+		for (const file of actionFiles) {
+			const src = readSource(file);
+			const hasSuccessRedirect = SUCCESS_PARAMS.some((param) =>
+				src.includes(param),
+			);
+			if (!hasSuccessRedirect) continue;
 
-      // Must also have a failure path (fail(), return fail, or early return before the redirect)
-      const hasFail = src.includes("fail(") || src.includes("return fail") || src.includes("fail(\"");
-      const hasGuard = hasFail
-        || src.includes("if (!") // early-return guard pattern
-        || src.includes("withAdminFormAction") // withAdminFormAction wraps fail
-        || src.includes("requireAdminFormAction");
+			// Must also have a failure path (fail(), return fail, or early return before the redirect)
+			const hasFail =
+				src.includes("fail(") ||
+				src.includes("return fail") ||
+				src.includes('fail("');
+			const hasGuard =
+				hasFail ||
+				src.includes("if (!") || // early-return guard pattern
+				src.includes("withAdminFormAction") || // withAdminFormAction wraps fail
+				src.includes("requireAdminFormAction");
 
-      if (!hasGuard) {
-        violations.push(path.basename(file));
-      }
-    }
+			if (!hasGuard) {
+				violations.push(path.basename(file));
+			}
+		}
 
-    expect(violations, `Action files with success redirects but no failure guards: ${violations.join(", ")}`).toHaveLength(0);
-  });
+		expect(
+			violations,
+			`Action files with success redirects but no failure guards: ${violations.join(", ")}`,
+		).toHaveLength(0);
+	});
 });
 
 // ---------------------------------------------------------------------------
@@ -98,25 +110,31 @@ describe("H2: success-redirect params only appear after success checks", () => {
 // ---------------------------------------------------------------------------
 
 describe("H3: schedule-publish validates content exists before scheduling", () => {
-  it("schedule-publish.ts calls getContentState before the ?scheduled=1 redirect", () => {
-    const src = readSource(path.join(actionsRoot, "schedule-publish.ts"));
+	it("schedule-publish.ts calls getContentState before the ?scheduled=1 redirect", () => {
+		const src = readSource(path.join(actionsRoot, "schedule-publish.ts"));
 
-    // Both calls must exist
-    expect(src, "must call getContentState to verify content exists").toMatch(/getContentState\(/);
-    expect(src, "must redirect to ?scheduled=1 on success").toMatch(/\?scheduled=1/);
+		// Both calls must exist
+		expect(src, "must call getContentState to verify content exists").toMatch(
+			/getContentState\(/,
+		);
+		expect(src, "must redirect to ?scheduled=1 on success").toMatch(
+			/\?scheduled=1/,
+		);
 
-    // getContentState must appear before the redirect
-    const getContentStatePos = src.indexOf("getContentState(");
-    const scheduledRedirectPos = src.indexOf("?scheduled=1");
-    expect(getContentStatePos, "getContentState must precede ?scheduled=1 redirect")
-      .toBeLessThan(scheduledRedirectPos);
-  });
+		// getContentState must appear before the redirect
+		const getContentStatePos = src.indexOf("getContentState(");
+		const scheduledRedirectPos = src.indexOf("?scheduled=1");
+		expect(
+			getContentStatePos,
+			"getContentState must precede ?scheduled=1 redirect",
+		).toBeLessThan(scheduledRedirectPos);
+	});
 
-  it("schedule-publish.ts returns early when content is not found", () => {
-    const src = readSource(path.join(actionsRoot, "schedule-publish.ts"));
-    // Must fail if existing is falsy — prevents phantom confirmations
-    expect(src).toMatch(/if\s*\(!existing\)/);
-  });
+	it("schedule-publish.ts returns early when content is not found", () => {
+		const src = readSource(path.join(actionsRoot, "schedule-publish.ts"));
+		// Must fail if existing is falsy — prevents phantom confirmations
+		expect(src).toMatch(/if\s*\(!existing\)/);
+	});
 });
 
 // ---------------------------------------------------------------------------
@@ -124,29 +142,39 @@ describe("H3: schedule-publish validates content exists before scheduling", () =
 // ---------------------------------------------------------------------------
 
 describe("H4: delivered: true set only in provider success branches", () => {
-  it("transactional-email.ts sets `delivered: true` only in Resend and SMTP success branches", () => {
-    const src = readSource(path.join(srcRoot, "transactional-email.ts"));
+	it("transactional-email.ts sets `delivered: true` only in Resend and SMTP success branches", () => {
+		const src = readSource(path.join(srcRoot, "transactional-email.ts"));
 
-    const matches = [...src.matchAll(/delivered:\s*true/g)];
-    expect(matches.length).toBe(2);
+		const matches = [...src.matchAll(/delivered:\s*true/g)];
+		expect(matches.length).toBe(2);
 
-    const resendDeliveredPos = src.indexOf("delivered: true");
-    const smtpDeliveredPos = src.indexOf("delivered: true", resendDeliveredPos + 1);
-    const responseOkPos = src.lastIndexOf("response.ok", resendDeliveredPos);
-    const smtpSendPos = src.lastIndexOf("transporter.sendMail", smtpDeliveredPos);
+		const resendDeliveredPos = src.indexOf("delivered: true");
+		const smtpDeliveredPos = src.indexOf(
+			"delivered: true",
+			resendDeliveredPos + 1,
+		);
+		const responseOkPos = src.lastIndexOf("response.ok", resendDeliveredPos);
+		const smtpSendPos = src.lastIndexOf(
+			"transporter.sendMail",
+			smtpDeliveredPos,
+		);
 
-    expect(responseOkPos, "first delivered: true must be inside the response.ok success branch")
-      .toBeGreaterThan(-1);
-    expect(smtpSendPos, "second delivered: true must follow transporter.sendMail success")
-      .toBeGreaterThan(-1);
-  });
+		expect(
+			responseOkPos,
+			"first delivered: true must be inside the response.ok success branch",
+		).toBeGreaterThan(-1);
+		expect(
+			smtpSendPos,
+			"second delivered: true must follow transporter.sendMail success",
+		).toBeGreaterThan(-1);
+	});
 
-  it("non-Resend code paths set delivered: false", () => {
-    const src = readSource(path.join(srcRoot, "transactional-email.ts"));
-    // mock-mode path and error paths all use `delivered: false`
-    const falseCounts = [...src.matchAll(/delivered:\s*false/g)].length;
-    expect(falseCounts).toBeGreaterThanOrEqual(3); // mock, error, unconfigured
-  });
+	it("non-Resend code paths set delivered: false", () => {
+		const src = readSource(path.join(srcRoot, "transactional-email.ts"));
+		// mock-mode path and error paths all use `delivered: false`
+		const falseCounts = [...src.matchAll(/delivered:\s*false/g)].length;
+		expect(falseCounts).toBeGreaterThanOrEqual(3); // mock, error, unconfigured
+	});
 });
 
 // ---------------------------------------------------------------------------
@@ -154,17 +182,17 @@ describe("H4: delivered: true set only in provider success branches", () => {
 // ---------------------------------------------------------------------------
 
 describe("H5: releaseLock returns boolean, not void", () => {
-  it("sqlite locks releaseLock returns boolean (not void)", () => {
-    const src = readSource(path.join(srcRoot, "sqlite-runtime/locks.ts"));
-    // Must declare return type boolean or Promise<boolean>
-    expect(src).toMatch(/releaseLock[^:]*:[^{]*boolean/);
-    // Must NOT use void return type for releaseLock
-    expect(src).not.toMatch(/releaseLock[^:]*:[^{]*void/);
-  });
+	it("sqlite locks releaseLock returns boolean (not void)", () => {
+		const src = readSource(path.join(srcRoot, "sqlite-runtime/locks.ts"));
+		// Must declare return type boolean or Promise<boolean>
+		expect(src).toMatch(/releaseLock[^:]*:[^{]*boolean/);
+		// Must NOT use void return type for releaseLock
+		expect(src).not.toMatch(/releaseLock[^:]*:[^{]*void/);
+	});
 
-  it("d1 locks releaseLock returns Promise<boolean> (not void)", () => {
-    const src = readSource(path.join(srcRoot, "d1-locks.ts"));
-    expect(src).toMatch(/releaseLock[^:]*:[^{]*Promise<boolean>/);
-    expect(src).not.toMatch(/releaseLock[^:]*:[^{]*Promise<void>/);
-  });
+	it("d1 locks releaseLock returns Promise<boolean> (not void)", () => {
+		const src = readSource(path.join(srcRoot, "d1-locks.ts"));
+		expect(src).toMatch(/releaseLock[^:]*:[^{]*Promise<boolean>/);
+		expect(src).not.toMatch(/releaseLock[^:]*:[^{]*Promise<void>/);
+	});
 });

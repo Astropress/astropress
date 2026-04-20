@@ -16,14 +16,14 @@ import { withLocalStoreFallback } from "./admin-store-dispatch";
 import { createD1PurgeOps } from "./d1-purge";
 
 export interface UserPurgeResult {
-  ok: boolean;
-  email: string;
-  revokedSessions: number;
-  anonymisedAuditEvents: number;
-  deletedComments: number;
-  deletedContactSubmissions: number;
-  adminUserAction: "suspended" | "deleted" | "not_found";
-  error?: string;
+	ok: boolean;
+	email: string;
+	revokedSessions: number;
+	anonymisedAuditEvents: number;
+	deletedComments: number;
+	deletedContactSubmissions: number;
+	adminUserAction: "suspended" | "deleted" | "not_found";
+	error?: string;
 }
 
 /**
@@ -37,40 +37,42 @@ export interface UserPurgeResult {
  *                delete the admin user record instead of suspending it.
  */
 export async function purgeUserData(
-  email: string,
-  locals: App.Locals,
-  options: { deleteAccount?: boolean } = {},
+	email: string,
+	locals: App.Locals,
+	options: { deleteAccount?: boolean } = {},
 ): Promise<UserPurgeResult> {
-  if (!email || !email.includes("@")) {
-    return {
-      ok: false,
-      email,
-      revokedSessions: 0,
-      anonymisedAuditEvents: 0,
-      deletedComments: 0,
-      deletedContactSubmissions: 0,
-      adminUserAction: "not_found",
-      error: "Invalid email address",
-    };
-  }
+	if (!email || !email.includes("@")) {
+		return {
+			ok: false,
+			email,
+			revokedSessions: 0,
+			anonymisedAuditEvents: 0,
+			deletedComments: 0,
+			deletedContactSubmissions: 0,
+			adminUserAction: "not_found",
+			error: "Invalid email address",
+		};
+	}
 
-  return withLocalStoreFallback(
-    locals,
-    async (db) => createD1PurgeOps(db).purgeUserData(email, options),
-    async (store) => {
-      if (store.purgeUserData) {
-        return store.purgeUserData(email, options);
-      }
-      // Fallback: return zero counts if local store doesn't wire purge ops
-      return {
-        ok: true,
-        email,
-        revokedSessions: 0,
-        anonymisedAuditEvents: 0,
-        deletedComments: 0,
-        deletedContactSubmissions: 0,
-        adminUserAction: (options.deleteAccount ? "deleted" : "suspended") as UserPurgeResult["adminUserAction"],
-      };
-    },
-  );
+	return withLocalStoreFallback(
+		locals,
+		async (db) => createD1PurgeOps(db).purgeUserData(email, options),
+		async (store) => {
+			if (store.purgeUserData) {
+				return store.purgeUserData(email, options);
+			}
+			// Fallback: return zero counts if local store doesn't wire purge ops
+			return {
+				ok: true,
+				email,
+				revokedSessions: 0,
+				anonymisedAuditEvents: 0,
+				deletedComments: 0,
+				deletedContactSubmissions: 0,
+				adminUserAction: (options.deleteAccount
+					? "deleted"
+					: "suspended") as UserPurgeResult["adminUserAction"],
+			};
+		},
+	);
 }

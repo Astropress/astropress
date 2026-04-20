@@ -1,48 +1,59 @@
-import { createAstropressRedirectRepository } from "../redirect-repository-factory";
 import { createAstropressCommentRepository } from "../comment-repository-factory";
-import { createAstropressTranslationRepository } from "../translation-repository-factory";
+import type { Actor, SessionUser } from "../persistence-types";
+import { createAstropressRedirectRepository } from "../redirect-repository-factory";
 import { createAstropressSettingsRepository } from "../settings-repository-factory";
-import { defaultSiteSettings, type SiteSettings } from "../site-settings";
-import { normalizePath, type AstropressSqliteDatabaseLike } from "./utils";
+import { type SiteSettings, defaultSiteSettings } from "../site-settings";
+import { createAstropressTranslationRepository } from "../translation-repository-factory";
 import { recordAudit } from "./audit-log";
-import type { SessionUser, Actor } from "../persistence-types";
+import { type AstropressSqliteDatabaseLike, normalizePath } from "./utils";
 
 type CommentStatus = "pending" | "approved" | "rejected";
 type CommentPolicy = "legacy-readonly" | "disabled" | "open-moderated";
 
-const SQL_GET_REDIRECT = "SELECT deleted_at FROM redirect_rules WHERE source_path = ? LIMIT 1";
-const SQL_UPSERT_REDIRECT = `INSERT INTO redirect_rules (source_path, target_path, status_code, created_by, deleted_at) VALUES (?, ?, ?, ?, NULL) ON CONFLICT(source_path) DO UPDATE SET target_path = excluded.target_path, status_code = excluded.status_code, created_by = excluded.created_by, deleted_at = NULL`;
-const SQL_SOFT_DELETE_REDIRECT = "UPDATE redirect_rules SET deleted_at = CURRENT_TIMESTAMP WHERE source_path = ? AND deleted_at IS NULL";
-const SQL_UPSERT_SETTINGS = `INSERT INTO site_settings (id, site_title, site_tagline, donation_url, newsletter_enabled, comments_default_policy, admin_slug, updated_at, updated_by) VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, ?) ON CONFLICT(id) DO UPDATE SET site_title = excluded.site_title, site_tagline = excluded.site_tagline, donation_url = excluded.donation_url, newsletter_enabled = excluded.newsletter_enabled, comments_default_policy = excluded.comments_default_policy, admin_slug = excluded.admin_slug, updated_at = CURRENT_TIMESTAMP, updated_by = excluded.updated_by`;
+const SQL_GET_REDIRECT =
+	"SELECT deleted_at FROM redirect_rules WHERE source_path = ? LIMIT 1";
+const SQL_UPSERT_REDIRECT =
+	"INSERT INTO redirect_rules (source_path, target_path, status_code, created_by, deleted_at) VALUES (?, ?, ?, ?, NULL) ON CONFLICT(source_path) DO UPDATE SET target_path = excluded.target_path, status_code = excluded.status_code, created_by = excluded.created_by, deleted_at = NULL";
+const SQL_SOFT_DELETE_REDIRECT =
+	"UPDATE redirect_rules SET deleted_at = CURRENT_TIMESTAMP WHERE source_path = ? AND deleted_at IS NULL";
+const SQL_UPSERT_SETTINGS =
+	"INSERT INTO site_settings (id, site_title, site_tagline, donation_url, newsletter_enabled, comments_default_policy, admin_slug, updated_at, updated_by) VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, ?) ON CONFLICT(id) DO UPDATE SET site_title = excluded.site_title, site_tagline = excluded.site_tagline, donation_url = excluded.donation_url, newsletter_enabled = excluded.newsletter_enabled, comments_default_policy = excluded.comments_default_policy, admin_slug = excluded.admin_slug, updated_at = CURRENT_TIMESTAMP, updated_by = excluded.updated_by";
 const SQL_GET_COMMENT_ROUTE = "SELECT route FROM comments WHERE id = ? LIMIT 1";
 const SQL_UPDATE_COMMENT_STATUS = "UPDATE comments SET status = ? WHERE id = ?";
-const SQL_INSERT_COMMENT = `INSERT INTO comments (id, author, email, body, route, status, policy, submitted_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
-const SQL_READ_TRANSLATION = "SELECT state FROM translation_overrides WHERE route = ? LIMIT 1";
-const SQL_UPSERT_TRANSLATION = "INSERT INTO translation_overrides (route, state, updated_at, updated_by) VALUES (?, ?, CURRENT_TIMESTAMP, ?) ON CONFLICT(route) DO UPDATE SET state = excluded.state, updated_at = CURRENT_TIMESTAMP, updated_by = excluded.updated_by";
+const SQL_INSERT_COMMENT =
+	"INSERT INTO comments (id, author, email, body, route, status, policy, submitted_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+const SQL_READ_TRANSLATION =
+	"SELECT state FROM translation_overrides WHERE route = ? LIMIT 1";
+const SQL_UPSERT_TRANSLATION =
+	"INSERT INTO translation_overrides (route, state, updated_at, updated_by) VALUES (?, ?, CURRENT_TIMESTAMP, ?) ON CONFLICT(route) DO UPDATE SET state = excluded.state, updated_at = CURRENT_TIMESTAMP, updated_by = excluded.updated_by";
 
 function queryRedirectRules(getDb: () => AstropressSqliteDatabaseLike) {
-  const rows = getDb()
-    .prepare(
-      `
+	const rows = getDb()
+		.prepare(
+			`
         SELECT source_path, target_path, status_code
         FROM redirect_rules
         WHERE deleted_at IS NULL
         ORDER BY source_path ASC
       `,
-    )
-    .all() as Array<{ source_path: string; target_path: string; status_code: 301 | 302 }>;
+		)
+		.all() as Array<{
+		source_path: string;
+		target_path: string;
+		status_code: 301 | 302;
+	}>;
 
-  return rows.map((row) => ({
-    sourcePath: row.source_path,
-    targetPath: row.target_path,
-    statusCode: row.status_code,
-  }));
+	return rows.map((row) => ({
+		sourcePath: row.source_path,
+		targetPath: row.target_path,
+		statusCode: row.status_code,
+	}));
 }
 
 function queryComments(getDb: () => AstropressSqliteDatabaseLike) {
-  const rows = getDb()
-    .prepare(
-      `
+	const rows = getDb()
+		.prepare(
+			`
         SELECT id, author, email, body, route, status, policy, submitted_at
         FROM comments
         ORDER BY
@@ -50,168 +61,238 @@ function queryComments(getDb: () => AstropressSqliteDatabaseLike) {
           datetime(submitted_at) DESC,
           id DESC
       `,
-    )
-    .all() as Array<{
-    id: string;
-    author: string;
-    email: string | null;
-    body: string | null;
-    route: string;
-    status: CommentStatus;
-    policy: CommentPolicy;
-    submitted_at: string;
-  }>;
+		)
+		.all() as Array<{
+		id: string;
+		author: string;
+		email: string | null;
+		body: string | null;
+		route: string;
+		status: CommentStatus;
+		policy: CommentPolicy;
+		submitted_at: string;
+	}>;
 
-  return rows.map((row) => ({
-    id: row.id,
-    author: row.author,
-    email: row.email ?? undefined,
-    body: row.body ?? undefined,
-    route: row.route,
-    status: row.status,
-    policy: row.policy,
-    submittedAt: row.submitted_at,
-  }));
+	return rows.map((row) => ({
+		id: row.id,
+		author: row.author,
+		email: row.email ?? undefined,
+		body: row.body ?? undefined,
+		route: row.route,
+		status: row.status,
+		policy: row.policy,
+		submittedAt: row.submitted_at,
+	}));
 }
 
-function insertComment(getDb: () => AstropressSqliteDatabaseLike, comment: { id: string; author: string; email?: string; body?: string; route: string; status: CommentStatus; policy: CommentPolicy; submittedAt?: string }) {
-  const submittedAt = comment.submittedAt ?? new Date().toISOString();
-  getDb()
-    .prepare(SQL_INSERT_COMMENT)
-    .run(
-      comment.id,
-      comment.author,
-      comment.email ?? null,
-      comment.body ?? null,
-      comment.route,
-      comment.status,
-      comment.policy,
-      submittedAt,
-    );
-  return submittedAt;
+function insertComment(
+	getDb: () => AstropressSqliteDatabaseLike,
+	comment: {
+		id: string;
+		author: string;
+		email?: string;
+		body?: string;
+		route: string;
+		status: CommentStatus;
+		policy: CommentPolicy;
+		submittedAt?: string;
+	},
+) {
+	const submittedAt = comment.submittedAt ?? new Date().toISOString();
+	getDb()
+		.prepare(SQL_INSERT_COMMENT)
+		.run(
+			comment.id,
+			comment.author,
+			comment.email ?? null,
+			comment.body ?? null,
+			comment.route,
+			comment.status,
+			comment.policy,
+			submittedAt,
+		);
+	return submittedAt;
 }
 
-export function createSqliteSettingsStore(getDb: () => AstropressSqliteDatabaseLike) {
+export function createSqliteSettingsStore(
+	getDb: () => AstropressSqliteDatabaseLike,
+) {
+	function getRedirectRules() {
+		return queryRedirectRules(getDb);
+	}
 
-  function getRedirectRules() {
-    return queryRedirectRules(getDb);
-  }
+	const sqliteRedirectRepository = createAstropressRedirectRepository({
+		getRedirectRules,
+		normalizePath,
+		getExistingRedirect(sourcePath: string) {
+			const existing = getDb().prepare(SQL_GET_REDIRECT).get(sourcePath) as
+				| { deleted_at: string | null }
+				| undefined;
+			return existing ? { deletedAt: existing.deleted_at } : null;
+		},
+		upsertRedirect({
+			sourcePath,
+			targetPath,
+			statusCode,
+			actor,
+		}: {
+			sourcePath: string;
+			targetPath: string;
+			statusCode: 301 | 302;
+			actor: Actor;
+		}) {
+			getDb()
+				.prepare(SQL_UPSERT_REDIRECT)
+				.run(sourcePath, targetPath, statusCode, actor.email);
+		},
+		markRedirectDeleted(sourcePath: string) {
+			return (
+				getDb().prepare(SQL_SOFT_DELETE_REDIRECT).run(sourcePath).changes > 0
+			);
+		},
+		recordRedirectAudit({
+			actor,
+			action,
+			summary,
+			targetId,
+		}: { actor: Actor; action: string; summary: string; targetId: string }) {
+			recordAudit(getDb(), actor, action, summary, "redirect", targetId);
+		},
+	});
 
-  const sqliteRedirectRepository = createAstropressRedirectRepository({
-    getRedirectRules,
-    normalizePath,
-    getExistingRedirect(sourcePath: string) {
-      const existing = getDb()
-        .prepare(SQL_GET_REDIRECT)
-        .get(sourcePath) as { deleted_at: string | null } | undefined;
-      return existing ? { deletedAt: existing.deleted_at } : null;
-    },
-    upsertRedirect({ sourcePath, targetPath, statusCode, actor }: { sourcePath: string; targetPath: string; statusCode: 301 | 302; actor: Actor }) {
-      getDb()
-        .prepare(SQL_UPSERT_REDIRECT)
-        .run(sourcePath, targetPath, statusCode, actor.email);
-    },
-    markRedirectDeleted(sourcePath: string) {
-      return (
-        getDb()
-          .prepare(SQL_SOFT_DELETE_REDIRECT)
-          .run(sourcePath).changes > 0
-      );
-    },
-    recordRedirectAudit({ actor, action, summary, targetId }: { actor: Actor; action: string; summary: string; targetId: string }) {
-      recordAudit(getDb(), actor, action, summary, "redirect", targetId);
-    },
-  });
+	function getComments() {
+		return queryComments(getDb);
+	}
 
-  function getComments() {
-    return queryComments(getDb);
-  }
+	const sqliteCommentRepository = createAstropressCommentRepository({
+		getComments,
+		getCommentRoute(commentId: string) {
+			const comment = getDb().prepare(SQL_GET_COMMENT_ROUTE).get(commentId) as
+				| { route: string }
+				| undefined;
+			return comment?.route ?? null;
+		},
+		updateCommentStatus(commentId: string, nextStatus: CommentStatus) {
+			return (
+				getDb().prepare(SQL_UPDATE_COMMENT_STATUS).run(nextStatus, commentId)
+					.changes > 0
+			);
+		},
+		insertPublicComment(comment: {
+			id: string;
+			author: string;
+			email?: string;
+			body?: string;
+			route: string;
+			status: CommentStatus;
+			policy: CommentPolicy;
+			submittedAt?: string;
+		}) {
+			return insertComment(getDb, comment);
+		},
+		recordCommentAudit({
+			actor,
+			action,
+			summary,
+			targetId,
+		}: { actor: Actor; action: string; summary: string; targetId: string }) {
+			recordAudit(getDb(), actor, action, summary, "comment", targetId);
+		},
+	});
 
-  const sqliteCommentRepository = createAstropressCommentRepository({
-    getComments,
-    getCommentRoute(commentId: string) {
-      const comment = getDb().prepare(SQL_GET_COMMENT_ROUTE).get(commentId) as { route: string } | undefined;
-      return comment?.route ?? null;
-    },
-    updateCommentStatus(commentId: string, nextStatus: CommentStatus) {
-      return getDb().prepare(SQL_UPDATE_COMMENT_STATUS).run(nextStatus, commentId).changes > 0;
-    },
-    insertPublicComment(comment: { id: string; author: string; email?: string; body?: string; route: string; status: CommentStatus; policy: CommentPolicy; submittedAt?: string }) {
-      return insertComment(getDb, comment);
-    },
-    recordCommentAudit({ actor, action, summary, targetId }: { actor: Actor; action: string; summary: string; targetId: string }) {
-      recordAudit(getDb(), actor, action, summary, "comment", targetId);
-    },
-  });
+	const sqliteTranslationRepository = createAstropressTranslationRepository({
+		readTranslationState(route: string) {
+			const row = getDb().prepare(SQL_READ_TRANSLATION).get(route) as
+				| { state: string }
+				| undefined;
+			return row?.state;
+		},
+		persistTranslationState(route: string, state: string, actor: Actor) {
+			getDb().prepare(SQL_UPSERT_TRANSLATION).run(route, state, actor.email);
+		},
+		recordTranslationAudit({
+			actor,
+			route,
+			state,
+		}: { actor: Actor; route: string; state: string }) {
+			recordAudit(
+				getDb(),
+				actor,
+				"translation.update",
+				`Updated translation state for ${route} to ${state}.`,
+				"content",
+				route,
+			);
+		},
+	});
 
-  const sqliteTranslationRepository = createAstropressTranslationRepository({
-    readTranslationState(route: string) {
-      const row = getDb().prepare(SQL_READ_TRANSLATION).get(route) as { state: string } | undefined;
-      return row?.state;
-    },
-    persistTranslationState(route: string, state: string, actor: Actor) {
-      getDb().prepare(SQL_UPSERT_TRANSLATION).run(route, state, actor.email);
-    },
-    recordTranslationAudit({ actor, route, state }: { actor: Actor; route: string; state: string }) {
-      recordAudit(getDb(), actor, "translation.update", `Updated translation state for ${route} to ${state}.`, "content", route);
-    },
-  });
-
-  function getSettings(): SiteSettings {
-    const row = getDb()
-      .prepare(
-        `
+	function getSettings(): SiteSettings {
+		const row = getDb()
+			.prepare(
+				`
           SELECT site_title, site_tagline, donation_url, newsletter_enabled, comments_default_policy, admin_slug
           FROM site_settings
           WHERE id = 1
           LIMIT 1
         `,
-      )
-      .get() as
-      | {
-          site_title: string;
-          site_tagline: string;
-          donation_url: string;
-          newsletter_enabled: number;
-          comments_default_policy: SiteSettings["commentsDefaultPolicy"];
-          admin_slug: string;
-        }
-      | undefined;
+			)
+			.get() as
+			| {
+					site_title: string;
+					site_tagline: string;
+					donation_url: string;
+					newsletter_enabled: number;
+					comments_default_policy: SiteSettings["commentsDefaultPolicy"];
+					admin_slug: string;
+			  }
+			| undefined;
 
-    if (!row) {
-      return { ...defaultSiteSettings };
-    }
+		if (!row) {
+			return { ...defaultSiteSettings };
+		}
 
-    return {
-      siteTitle: row.site_title,
-      siteTagline: row.site_tagline,
-      donationUrl: row.donation_url,
-      newsletterEnabled: row.newsletter_enabled === 1,
-      commentsDefaultPolicy: row.comments_default_policy,
-      adminSlug: row.admin_slug ?? "ap-admin",
-    };
-  }
+		return {
+			siteTitle: row.site_title,
+			siteTagline: row.site_tagline,
+			donationUrl: row.donation_url,
+			newsletterEnabled: row.newsletter_enabled === 1,
+			commentsDefaultPolicy: row.comments_default_policy,
+			adminSlug: row.admin_slug ?? "ap-admin",
+		};
+	}
 
-  const sqliteSettingsRepository = createAstropressSettingsRepository({
-    getSettings,
-    persistSettings(updated: SiteSettings, actor: Actor) {
-      getDb()
-        .prepare(SQL_UPSERT_SETTINGS)
-        .run(
-          1,
-          updated.siteTitle,
-          updated.siteTagline,
-          updated.donationUrl,
-          updated.newsletterEnabled ? 1 : 0,
-          updated.commentsDefaultPolicy,
-          updated.adminSlug,
-          actor.email,
-        );
-    },
-    recordSettingsAudit(actor: Actor) {
-      recordAudit(getDb(), actor, "settings.update", "Updated site settings.", "auth", "site-settings");
-    },
-  });
+	const sqliteSettingsRepository = createAstropressSettingsRepository({
+		getSettings,
+		persistSettings(updated: SiteSettings, actor: Actor) {
+			getDb()
+				.prepare(SQL_UPSERT_SETTINGS)
+				.run(
+					1,
+					updated.siteTitle,
+					updated.siteTagline,
+					updated.donationUrl,
+					updated.newsletterEnabled ? 1 : 0,
+					updated.commentsDefaultPolicy,
+					updated.adminSlug,
+					actor.email,
+				);
+		},
+		recordSettingsAudit(actor: Actor) {
+			recordAudit(
+				getDb(),
+				actor,
+				"settings.update",
+				"Updated site settings.",
+				"auth",
+				"site-settings",
+			);
+		},
+	});
 
-  return { sqliteRedirectRepository, sqliteCommentRepository, sqliteTranslationRepository, sqliteSettingsRepository };
+	return {
+		sqliteRedirectRepository,
+		sqliteCommentRepository,
+		sqliteTranslationRepository,
+		sqliteSettingsRepository,
+	};
 }

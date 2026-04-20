@@ -57,102 +57,106 @@
  */
 
 const FOCUSABLE = [
-  "a[href]",
-  "button:not([disabled])",
-  "input:not([disabled])",
-  "select:not([disabled])",
-  "textarea:not([disabled])",
-  '[tabindex]:not([tabindex="-1"])',
+	"a[href]",
+	"button:not([disabled])",
+	"input:not([disabled])",
+	"select:not([disabled])",
+	"textarea:not([disabled])",
+	'[tabindex]:not([tabindex="-1"])',
 ].join(", ");
 
 export class ApConfirmDialog extends HTMLElement {
-  private _dialog: HTMLDialogElement | null = null;
-  private _abortController: AbortController | null = null;
-  private _triggerElement: HTMLElement | null = null;
+	private _dialog: HTMLDialogElement | null = null;
+	private _abortController: AbortController | null = null;
+	private _triggerElement: HTMLElement | null = null;
 
-  connectedCallback() {
-    this._dialog = this.querySelector<HTMLDialogElement>("dialog");
-    this._abortController = new AbortController();
-    const { signal } = this._abortController;
+	connectedCallback() {
+		this._dialog = this.querySelector<HTMLDialogElement>("dialog");
+		this._abortController = new AbortController();
+		const { signal } = this._abortController;
 
-    // Close triggers inside this element
-    this.querySelectorAll<HTMLElement>("[data-dialog-close]").forEach((btn) => {
-      btn.addEventListener("click", () => this._dialog?.close(), { signal });
-    });
+		// Close triggers inside this element
+		for (const btn of this.querySelectorAll<HTMLElement>(
+			"[data-dialog-close]",
+		)) {
+			btn.addEventListener("click", () => this._dialog?.close(), { signal });
+		}
 
-    // Restore focus to the trigger element when the dialog closes
-    this._dialog?.addEventListener(
-      "close",
-      () => {
-        this._triggerElement?.focus();
-        this._triggerElement = null;
-      },
-      { signal },
-    );
+		// Restore focus to the trigger element when the dialog closes
+		this._dialog?.addEventListener(
+			"close",
+			() => {
+				this._triggerElement?.focus();
+				this._triggerElement = null;
+			},
+			{ signal },
+		);
 
-    // Triggers anywhere in the document that target this dialog
-    const dialogId = this._dialog?.id;
-    if (!dialogId) {
-      return;
-    }
+		// Triggers anywhere in the document that target this dialog
+		const dialogId = this._dialog?.id;
+		if (!dialogId) {
+			return;
+		}
 
-    document.addEventListener(
-      "click",
-      (event) => {
-        const target = event.target;
-        if (!(target instanceof Element)) {
-          return;
-        }
-        const trigger = target.closest<HTMLElement>("[data-confirm-trigger]");
-        if (!trigger || trigger.getAttribute("data-dialog-id") !== dialogId) {
-          return;
-        }
-        this._openFromTrigger(trigger);
-      },
-      { signal },
-    );
-  }
+		document.addEventListener(
+			"click",
+			(event) => {
+				const target = event.target;
+				if (!(target instanceof Element)) {
+					return;
+				}
+				const trigger = target.closest<HTMLElement>("[data-confirm-trigger]");
+				if (!trigger || trigger.getAttribute("data-dialog-id") !== dialogId) {
+					return;
+				}
+				this._openFromTrigger(trigger);
+			},
+			{ signal },
+		);
+	}
 
-  disconnectedCallback() {
-    this._abortController?.abort();
-    this._abortController = null;
-  }
+	disconnectedCallback() {
+		this._abortController?.abort();
+		this._abortController = null;
+	}
 
-  private _openFromTrigger(trigger: HTMLElement) {
-    if (!this._dialog) {
-      return;
-    }
+	private _openFromTrigger(trigger: HTMLElement) {
+		if (!this._dialog) {
+			return;
+		}
 
-    // Track the element that opened the dialog so focus can be restored on close
-    this._triggerElement = trigger;
+		// Track the element that opened the dialog so focus can be restored on close
+		this._triggerElement = trigger;
 
-    // Set text nodes: data-text-[elementId] → element.textContent
-    for (const attr of Array.from(trigger.attributes)) {
-      if (attr.name.startsWith("data-text-")) {
-        const elementId = attr.name.slice("data-text-".length);
-        const el = this._dialog.querySelector(`#${elementId}`);
-        if (el) {
-          el.textContent = attr.value;
-        }
-      }
-    }
+		// Set text nodes: data-text-[elementId] → element.textContent
+		for (const attr of Array.from(trigger.attributes)) {
+			if (attr.name.startsWith("data-text-")) {
+				const elementId = attr.name.slice("data-text-".length);
+				const el = this._dialog.querySelector(`#${elementId}`);
+				if (el) {
+					el.textContent = attr.value;
+				}
+			}
+		}
 
-    // Set form field: data-field-name + data-field-value → input[name].value
-    const fieldName = trigger.getAttribute("data-field-name");
-    const fieldValue = trigger.getAttribute("data-field-value") ?? "";
-    if (fieldName) {
-      const input = this._dialog.querySelector<HTMLInputElement>(`input[name="${fieldName}"]`);
-      if (input) {
-        input.value = fieldValue;
-      }
-    }
+		// Set form field: data-field-name + data-field-value → input[name].value
+		const fieldName = trigger.getAttribute("data-field-name");
+		const fieldValue = trigger.getAttribute("data-field-value") ?? "";
+		if (fieldName) {
+			const input = this._dialog.querySelector<HTMLInputElement>(
+				`input[name="${fieldName}"]`,
+			);
+			if (input) {
+				input.value = fieldValue;
+			}
+		}
 
-    this._dialog.showModal();
+		this._dialog.showModal();
 
-    // Move focus to the first focusable element inside the dialog
-    const firstFocusable = this._dialog.querySelector<HTMLElement>(FOCUSABLE);
-    firstFocusable?.focus();
-  }
+		// Move focus to the first focusable element inside the dialog
+		const firstFocusable = this._dialog.querySelector<HTMLElement>(FOCUSABLE);
+		firstFocusable?.focus();
+	}
 }
 
 customElements.define("ap-confirm-dialog", ApConfirmDialog);

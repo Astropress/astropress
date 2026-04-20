@@ -1,21 +1,26 @@
 // @vitest-environment jsdom
-import { describe, expect, it, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import "../../web-components/admin-nav";
 
 describe("ap-admin-nav", () => {
-  function buildNav(): { root: HTMLElement; toggle: HTMLButtonElement; close: HTMLButtonElement; sidebar: HTMLElement } {
-    const toggle = document.createElement("button");
-    toggle.type = "button";
-    toggle.setAttribute("data-nav-toggle", "");
-    toggle.setAttribute("aria-label", "Open navigation");
-    toggle.setAttribute("aria-expanded", "false");
-    toggle.setAttribute("data-label-open", "Open navigation");
-    toggle.setAttribute("data-label-close", "Close navigation");
-    toggle.textContent = "☰";
-    document.body.appendChild(toggle);
+	function buildNav(): {
+		root: HTMLElement;
+		toggle: HTMLButtonElement;
+		close: HTMLButtonElement;
+		sidebar: HTMLElement;
+	} {
+		const toggle = document.createElement("button");
+		toggle.type = "button";
+		toggle.setAttribute("data-nav-toggle", "");
+		toggle.setAttribute("aria-label", "Open navigation");
+		toggle.setAttribute("aria-expanded", "false");
+		toggle.setAttribute("data-label-open", "Open navigation");
+		toggle.setAttribute("data-label-close", "Close navigation");
+		toggle.textContent = "☰";
+		document.body.appendChild(toggle);
 
-    const root = document.createElement("ap-admin-nav") as HTMLElement;
-    root.innerHTML = `
+		const root = document.createElement("ap-admin-nav") as HTMLElement;
+		root.innerHTML = `
       <div>
         <nav
           data-nav-sidebar
@@ -26,63 +31,69 @@ describe("ap-admin-nav", () => {
         </nav>
       </div>
     `;
-    document.body.appendChild(root);
-    return {
-      root,
-      toggle,
-      close: root.querySelector("[data-nav-close]") as HTMLButtonElement,
-      sidebar: root.querySelector("[data-nav-sidebar]") as HTMLElement,
-    };
-  }
+		document.body.appendChild(root);
+		return {
+			root,
+			toggle,
+			close: root.querySelector("[data-nav-close]") as HTMLButtonElement,
+			sidebar: root.querySelector("[data-nav-sidebar]") as HTMLElement,
+		};
+	}
 
-  beforeEach(() => {
-    document.body.innerHTML = "";
-  });
+	beforeEach(() => {
+		document.body.innerHTML = "";
+	});
 
-  it("sidebar does not have data-open initially", () => {
-    const { sidebar } = buildNav();
-    expect(sidebar.hasAttribute("data-open")).toBe(false);
-  });
+	it("sidebar does not have data-open initially", () => {
+		const { sidebar } = buildNav();
+		expect(sidebar.hasAttribute("data-open")).toBe(false);
+	});
 
-  it("clicking toggle button opens the sidebar", () => {
-    const { toggle, sidebar } = buildNav();
-    toggle.click();
-    expect(sidebar.hasAttribute("data-open")).toBe(true);
-    expect(toggle.getAttribute("aria-expanded")).toBe("true");
-    expect(toggle.getAttribute("aria-label")).toBe("Close navigation");
-  });
+	it("clicking toggle button opens the sidebar", () => {
+		const { toggle, sidebar } = buildNav();
+		toggle.click();
+		expect(sidebar.hasAttribute("data-open")).toBe(true);
+		expect(toggle.getAttribute("aria-expanded")).toBe("true");
+		expect(toggle.getAttribute("aria-label")).toBe("Close navigation");
+	});
 
-  it("clicking close button closes the sidebar", () => {
-    const { toggle, close, sidebar } = buildNav();
-    toggle.click();
-    expect(sidebar.hasAttribute("data-open")).toBe(true);
-    close.click();
-    expect(sidebar.hasAttribute("data-open")).toBe(false);
-    expect(toggle.getAttribute("aria-expanded")).toBe("false");
-    expect(toggle.getAttribute("aria-label")).toBe("Open navigation");
-  });
+	it("clicking close button closes the sidebar", () => {
+		const { toggle, close, sidebar } = buildNav();
+		toggle.click();
+		expect(sidebar.hasAttribute("data-open")).toBe(true);
+		close.click();
+		expect(sidebar.hasAttribute("data-open")).toBe(false);
+		expect(toggle.getAttribute("aria-expanded")).toBe("false");
+		expect(toggle.getAttribute("aria-label")).toBe("Open navigation");
+	});
 
-  it("Escape key closes the sidebar when open", () => {
-    const { toggle, sidebar } = buildNav();
-    toggle.click();
-    expect(sidebar.hasAttribute("data-open")).toBe(true);
-    document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
-    expect(sidebar.hasAttribute("data-open")).toBe(false);
-    expect(toggle.getAttribute("aria-expanded")).toBe("false");
-  });
+	it("Escape key closes the sidebar when open", () => {
+		const { toggle, sidebar } = buildNav();
+		toggle.click();
+		expect(sidebar.hasAttribute("data-open")).toBe(true);
+		document.dispatchEvent(
+			new KeyboardEvent("keydown", { key: "Escape", bubbles: true }),
+		);
+		expect(sidebar.hasAttribute("data-open")).toBe(false);
+		expect(toggle.getAttribute("aria-expanded")).toBe("false");
+	});
 
-  it("Escape key does nothing when sidebar is already closed", () => {
-    const { sidebar } = buildNav();
-    document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
-    expect(sidebar.hasAttribute("data-open")).toBe(false);
-  });
+	it("Escape key does nothing when sidebar is already closed", () => {
+		const { sidebar } = buildNav();
+		document.dispatchEvent(
+			new KeyboardEvent("keydown", { key: "Escape", bubbles: true }),
+		);
+		expect(sidebar.hasAttribute("data-open")).toBe(false);
+	});
 
-  it("disconnecting removes event listeners (no error on Escape after remove)", () => {
-    const { root, toggle } = buildNav();
-    toggle.click();
-    root.remove();
-    expect(() => {
-      document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
-    }).not.toThrow();
-  });
+	it("disconnecting removes event listeners (no error on Escape after remove)", () => {
+		const { root, toggle } = buildNav();
+		toggle.click();
+		root.remove();
+		expect(() => {
+			document.dispatchEvent(
+				new KeyboardEvent("keydown", { key: "Escape", bubbles: true }),
+			);
+		}).not.toThrow();
+	});
 });
