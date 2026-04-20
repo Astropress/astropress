@@ -10,6 +10,10 @@ pre-commit:
       glob: "packages/**/*.{ts,js,astro,json}"
       run: bunx @biomejs/biome@1 check packages/astropress/src packages/astropress/tests packages/astropress/web-components
 
+    staged-tests:
+      glob: "packages/astropress/{src,tests,web-components}/**/*.ts"
+      run: bun run test:staged
+
     audit-arch:
       glob: "packages/**/*.ts"
       run: bun run audit:arch
