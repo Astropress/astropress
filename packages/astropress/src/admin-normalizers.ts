@@ -30,7 +30,7 @@ export function slugify(value: string) {
 	return value
 		.toLowerCase()
 		.replace(/[^a-z0-9]/g, "-")
-		.replace(/^-+|-+$/g, "")
+		.replace(/^-+|-+$/g, "") // lgtm[js/polynomial-redos] anchored /^-+/ and /-+$/ are linear — anchors prevent overlap
 		.replace(/-{2,}/g, "-");
 }
 

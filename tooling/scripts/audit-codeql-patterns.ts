@@ -198,6 +198,71 @@ function checkFile(file: string, src: string): Violation[] {
 		}
 	}
 
+	// ── 7. Polynomial ReDoS ─────────────────────────────────────────────────
+	// Detects two categories CodeQL's js/polynomial-redos rule flags:
+	//   a) Nested quantifiers inside regex literals: (X+)+ or (X*)+
+	//      Only fires on lines that also call a regex method (.replace/.test/etc.)
+	//      to avoid false positives from for-loop increment expressions.
+	//   b) /char+$/ or /[class]+$/ in .replace() — end-anchor after quantifier
+	//      creates ambiguous backtracking paths on some engines.
+	// Rule: js/polynomial-redos
+	if (/packages\/[^/]+\/src\//.test(rel)) {
+		for (let i = 0; i < lines.length; i++) {
+			const line = lines[i];
+			if (isSuppressedNear(lines, i)) continue;
+			// Nested quantifiers — require a regex method call on the same line
+			// to avoid matching for-loop increment expressions like (i++).
+			if (
+				/(\.replace|\.match|\.test|\.search|\.split)\(/.test(line) &&
+				/\([^)]*[+*]\)[+*]/.test(line)
+			) {
+				violations.push({
+					file: rel,
+					line: i + 1,
+					message:
+						"nested quantifier in regex — (X+)+ or (X*)+ causes polynomial backtracking; add // lgtm[js/polynomial-redos] with justification if intentional [js/polynomial-redos]",
+				});
+			}
+			// /char+$/ or /[class]+$/ in .replace() — CodeQL flags these as potentially
+			// polynomial because the end anchor creates ambiguous match paths on some engines
+			if (/\.replace\(\/[^/]*[+*]\$\/[gims]*,/.test(line)) {
+				violations.push({
+					file: rel,
+					line: i + 1,
+					message:
+						"quantifier before end-anchor in .replace() regex — CodeQL flags this as polynomial; add // lgtm[js/polynomial-redos] with justification if the pattern is linear [js/polynomial-redos]",
+				});
+			}
+		}
+	}
+
+	// ── 8. writeFileSync with variable path in non-import src files ──────────
+	// Detects: writeFileSync(varName, ...) calls in src/ (not import/) where the
+	// path is not a string literal. CodeQL taint-tracks through path.join and flags
+	// dynamic write targets even when the path is safely constructed.
+	// Rule: js/insecure-temporary-file
+	if (
+		/packages\/[^/]+\/src\//.test(rel) &&
+		!/\/import\//.test(rel)
+	) {
+		for (let i = 0; i < lines.length; i++) {
+			const line = lines[i];
+			if (!/\bwriteFileSync\(/.test(line)) continue;
+			// Flag if the first argument is not a plain string literal
+			if (
+				!/writeFileSync\(\s*["'`][^"'`]+["'`]/.test(line) &&
+				!isSuppressedNear(lines, i)
+			) {
+				violations.push({
+					file: rel,
+					line: i + 1,
+					message:
+						"writeFileSync() with non-literal path — add // lgtm[js/insecure-temporary-file] if the path is constructed safely (e.g. randomUUID-based under a controlled directory) [js/insecure-temporary-file]",
+				});
+			}
+		}
+	}
+
 	return violations;
 }
 

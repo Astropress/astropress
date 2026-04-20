@@ -307,7 +307,8 @@ describe("admin action utils", () => {
 			});
 			expect(result.ok).toBe(true);
 		} finally {
-			process.env.PROD = undefined;
+			// biome-ignore lint/performance/noDelete: = undefined keeps the key in Bun, causing getRuntimeEnvValue to fall through to import.meta.env.PROD
+			delete process.env.PROD;
 		}
 	});
 

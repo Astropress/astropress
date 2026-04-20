@@ -121,7 +121,7 @@ async function generateAndStoreThumbnail(
 	if (width <= 400) return null;
 	const thumbBytes = await generateThumbnail(input.bytes, width);
 	if (!thumbBytes) return null;
-	const basename = storedFilename.replace(/\.[^.]+$/, "");
+	const basename = storedFilename.replace(/\.[^.]+$/, ""); // lgtm[js/polynomial-redos] [^.]+$ is a negated class — cannot overlap with ., so no backtracking
 	const thumbFilename = `${basename}-thumb.webp`;
 	const thumbStored = await storeRuntimeMediaObject(
 		{
