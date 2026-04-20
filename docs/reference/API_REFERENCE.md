@@ -743,7 +743,7 @@ function buildAdminDashboardPageModel(locals: Locals, role: AdminRole): Promise<
 
 #### `buildPagesIndexPageModel`
 ```ts
-function buildPagesIndexPageModel(locals: Locals, role: AdminRole): Promise<AdminPageResult<{ contentStates: ContentRecord[]; routePages: any; archiveRows: unknown[]; }>>
+function buildPagesIndexPageModel(locals: Locals, role: AdminRole): Promise<AdminPageResult<{ contentStates: ContentRecord[]; routePages: RuntimeStructuredPageRouteRecord[] | ({ path: string; title: string; summary: string | undefined; seoTitle: string | undefined; metaDescription: string | undefined; canonicalUrlOverride: string | undefined; robotsDirective: string | undefined; ogImage: string | undefined; templateKey: string; alternateLinks: { hreflang: string; href: string; }[]; sections: Record<string, unknown> | null; updatedAt: string; } | null)[]; archiveRows: unknown[]; }>>
 ```
 
 #### `buildPostsIndexPageModel`

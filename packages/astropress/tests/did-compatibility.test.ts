@@ -244,7 +244,7 @@ describe("DID readiness: the AuthStore interface contract is the correct extensi
 		const authStoreInterface =
 			contracts.match(/export interface AuthStore \{[\s\S]*?\}/)?.[0] ?? "";
 		// Count the method signatures
-		const methods = [...authStoreInterface.matchAll(/^\s{2}\w+\s*\(/gm)].map(
+		const methods = [...authStoreInterface.matchAll(/^\s+\w+\s*\(/gm)].map(
 			(m) => m[0].trim(),
 		);
 		expect(

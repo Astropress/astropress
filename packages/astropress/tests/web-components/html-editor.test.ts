@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it } from "vitest";
+import "../../web-components/html-editor";
 import type { ApHtmlEditor } from "../../web-components/html-editor";
 
 function stubDialog(dialog: HTMLDialogElement) {

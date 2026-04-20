@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import "../../web-components/theme-toggle";
 import type { ApThemeToggle } from "../../web-components/theme-toggle";
 
 // jsdom does not implement window.matchMedia — stub it for all tests in this file

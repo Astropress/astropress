@@ -13,12 +13,12 @@ import {
 	getRuntimeTags,
 	getRuntimeTranslationState,
 	listRuntimeContentStates,
-	listRuntimeStructuredPageRoutes,
-	listRuntimeSystemRoutes,
 } from "./runtime-page-store";
 import {
 	getRuntimeArchiveRoute,
 	getRuntimeStructuredPageRoute,
+	listRuntimeStructuredPageRoutes,
+	listRuntimeSystemRoutes,
 } from "./runtime-route-registry";
 import { isSeededPostRecord } from "./seeded-content-type";
 

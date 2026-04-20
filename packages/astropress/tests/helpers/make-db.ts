@@ -18,7 +18,7 @@ export const STANDARD_ACTOR = {
 
 /** Minimal registerCms config used across runtime action tests. */
 export const STANDARD_CMS_CONFIG = {
-	templateKeys: ["content"],
+	templateKeys: ["content", "hero"],
 	siteUrl: "https://example.com",
 	seedPages: [],
 	archives: [],

@@ -1,7 +1,8 @@
 import type { DatabaseSync } from "node:sqlite";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { registerCms } from "../src/config.js";
 import { createAstropressSqliteAdminRuntime } from "../src/sqlite-admin-runtime.js";
-import { makeDb } from "./helpers/make-db.js";
+import { STANDARD_CMS_CONFIG, makeDb } from "./helpers/make-db.js";
 import {
 	type RuntimeFixture,
 	createRuntimeFixture,
@@ -11,6 +12,7 @@ import {
 let fixture: RuntimeFixture;
 
 beforeAll(() => {
+	registerCms(STANDARD_CMS_CONFIG);
 	fixture = createRuntimeFixture();
 });
 

@@ -47,12 +47,14 @@ describe("cloudflare adapter security defaults", () => {
 describe("cloudflare session secret", () => {
 	beforeEach(() => {
 		vi.spyOn(console, "warn").mockImplementation(() => {});
-		process.env.CLOUDFLARE_SESSION_SECRET = undefined;
+		// biome-ignore lint/performance/noDelete: = undefined sets the string "undefined", not actual unset
+		delete process.env.CLOUDFLARE_SESSION_SECRET;
 	});
 
 	afterEach(() => {
 		vi.restoreAllMocks();
-		process.env.CLOUDFLARE_SESSION_SECRET = undefined;
+		// biome-ignore lint/performance/noDelete: = undefined sets the string "undefined", not actual unset
+		delete process.env.CLOUDFLARE_SESSION_SECRET;
 	});
 
 	it("emits console.warn when using the default hardcoded secret", async () => {
