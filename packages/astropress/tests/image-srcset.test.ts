@@ -65,7 +65,6 @@ describe("generateSrcset() — SVG passthrough (no variants)", () => {
   // This guard is tested in the caller's own test suite (runtime-actions-media.test.ts).
   // No unit test for generateSrcset with SVG input is needed here because the function
   // is never called with SVG mimeTypes in production paths.
-  it.skip("is not called for SVG uploads — guard is in the caller (runtime-actions-media.ts)");
 });
 
 // ─── Structural: srcset field on MediaAssetRecord ─────────────────────────────

@@ -421,6 +421,7 @@ describe("createRuntimeMediaAsset — thumbnail and srcset", () => {
   });
 
   it("SVG uploads skip srcset generation", async () => {
+    // Guard lives in this caller (!input.mimeType.includes("svg")), not in generateSrcset itself.
     mockImageSize.mockReturnValue({ width: 800, height: 600 });
     mockStoreMedia.mockResolvedValue({ ...baseAsset, asset: { ...baseAsset.asset, mimeType: "image/svg+xml" } });
 
