@@ -921,3 +921,22 @@ fn services_verify_exit_code_succeeds_for_other_levels() {
     assert_eq!(crate::services_verify_exit_code("configured"), std::process::ExitCode::SUCCESS);
     assert_eq!(crate::services_verify_exit_code("partial"), std::process::ExitCode::SUCCESS);
 }
+
+#[test]
+fn dev_unknown_flag_returns_error() {
+    // Kills `replace match guard value.starts_with("--") with false` at dev_deploy.rs:41.
+    // With false, unknown flags like "--bogus" are silently treated as project_dir.
+    // Original: guard true → Err("Unsupported..."). Mutation: guard false → Ok(New{..}).
+    let result = parse_command(&strings(&["dev", "--bogus-unknown-flag"]));
+    assert!(result.is_err(), "unknown dev flag must return an error, got: {result:?}");
+    assert!(result.unwrap_err().contains("Unsupported"));
+}
+
+#[test]
+fn new_unknown_flag_returns_error() {
+    // Kills `replace match guard value.starts_with("--") with false` at new.rs:70.
+    // Same pattern: unknown flags must error, not silently become project_dir.
+    let result = parse_command(&strings(&["new", "--bogus-unknown-flag"]));
+    assert!(result.is_err(), "unknown new flag must return an error, got: {result:?}");
+    assert!(result.unwrap_err().contains("Unsupported"));
+}
