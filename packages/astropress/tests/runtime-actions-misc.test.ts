@@ -1,29 +1,39 @@
 import { DatabaseSync } from "node:sqlite";
-import { beforeEach, describe, expect, it } from "vitest";
+import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { registerCms } from "../src/config";
 import { makeLocals } from "./helpers/make-locals.js";
 import { makeDb, STANDARD_ACTOR, STANDARD_CMS_CONFIG } from "./helpers/make-db.js";
-import {
-  createRuntimeRedirectRule,
-  deleteRuntimeRedirectRule,
-  moderateRuntimeComment,
-  saveRuntimeSettings,
-  updateRuntimeTranslationState,
-} from "../src/runtime-actions-misc";
+
+let createRuntimeRedirectRule: typeof import("../src/runtime-actions-misc.js").createRuntimeRedirectRule;
+let deleteRuntimeRedirectRule: typeof import("../src/runtime-actions-misc.js").deleteRuntimeRedirectRule;
+let moderateRuntimeComment: typeof import("../src/runtime-actions-misc.js").moderateRuntimeComment;
+let saveRuntimeSettings: typeof import("../src/runtime-actions-misc.js").saveRuntimeSettings;
+let updateRuntimeTranslationState: typeof import("../src/runtime-actions-misc.js").updateRuntimeTranslationState;
+let registerCms: typeof import("../src/config.js").registerCms;
 
 const actor = STANDARD_ACTOR;
 
 let db: DatabaseSync;
 let locals: App.Locals;
 
-beforeEach(() => {
+beforeEach(async () => {
+  vi.resetModules();
+  vi.doUnmock("../src/local-runtime-modules");
+  vi.doUnmock("../src/local-runtime-modules.js");
+
+  ([{ createRuntimeRedirectRule, deleteRuntimeRedirectRule, moderateRuntimeComment, saveRuntimeSettings, updateRuntimeTranslationState }, { registerCms }] =
+    await Promise.all([import("../src/runtime-actions-misc.js"), import("../src/config.js")]));
+
   db = makeDb();
   locals = makeLocals(db);
   registerCms(STANDARD_CMS_CONFIG);
 
   db.prepare("INSERT INTO redirect_rules (source_path, target_path, status_code, created_by) VALUES (?, ?, ?, ?)").run("/existing", "/dest", 301, "admin@test.local");
   db.prepare("INSERT INTO comments (id, route, author, body, status) VALUES (?, ?, ?, ?, ?)").run("c-1", "/page", "Bob", "Hello", "pending");
+});
+
+afterAll(() => {
+  vi.resetModules();
 });
 
 describe("updateRuntimeTranslationState", () => {
