@@ -6,8 +6,6 @@ import {
 	type RevisionInput,
 	type RevisionRow,
 	SQL_LIST_REVISIONS_FOR_SLUG,
-	buildBaselineOverrideParams,
-	buildBaselineRevisionParams,
 	ensureBaselineRevisionImpl,
 	insertRevision,
 	mapContentEntryRow,

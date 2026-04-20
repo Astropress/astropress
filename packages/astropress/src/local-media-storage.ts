@@ -124,8 +124,7 @@ export function createLocalMediaUpload(input: {
 	}
 
 	ensureLocalUploadsDir();
-	// lgtm[js/insecure-temporary-file] diskPath is under a controlled uploads dir with a randomUUID-based filename; not a predictable temp path
-	writeFileSync(descriptor.asset.diskPath, Buffer.from(input.bytes));
+	writeFileSync(descriptor.asset.diskPath, Buffer.from(input.bytes)); // CodeQL[js/insecure-temporary-file] diskPath is under a controlled uploads dir with a randomUUID-based filename
 	return descriptor;
 }
 

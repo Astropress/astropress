@@ -8,7 +8,6 @@ import { getCloudflareBindings } from "./runtime-env";
 import {
 	type SeededContentRecord,
 	createFallbackReadStore,
-	createStaticReadStore,
 	normalizeContentStatus,
 } from "./runtime-page-store-helpers";
 

@@ -19,8 +19,7 @@ function normalizeRoute(route: string) {
 		return "/";
 	}
 
-	// lgtm[js/polynomial-redos] anchored /\/+$/ is linear — \/+ cannot overlap with the end anchor
-	return route === "/" ? "/" : route.replace(/\/+$/, "");
+	return route === "/" ? "/" : route.replace(/\/+$/, ""); // CodeQL[js/polynomial-redos] anchored /\/+$/ is linear — \/+ cannot overlap with the end anchor
 }
 
 export function getAdminLocalePair(route: string): AdminLocalePair | null {

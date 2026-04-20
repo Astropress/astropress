@@ -92,7 +92,7 @@ export async function generateSrcset(
 		const parts: string[] = [];
 
 		const basename = originalPublicPath
-			.replace(/\.[^.]+$/, "") // lgtm[js/polynomial-redos] [^.]+$ is a negated class — cannot overlap with ., so no backtracking
+			.replace(/\.[^.]+$/, "") // CodeQL[js/polynomial-redos] [^.]+ is a negated class — cannot overlap with ., so no backtracking
 			.replace(/^\/images\/uploads\//, "")
 			.replace(/^\/images\//, "");
 

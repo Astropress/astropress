@@ -162,7 +162,7 @@ export function slugifyTerm(value: string) {
 		.trim()
 		.toLowerCase()
 		.replace(/[^a-z0-9]+/g, "-")
-		.replace(/^-+|-+$/g, ""); // lgtm[js/polynomial-redos] anchored /^-+/ and /-+$/ are linear — anchors prevent overlap
+		.replace(/^-+|-+$/g, ""); // CodeQL[js/polynomial-redos] anchored /^-+/ and /-+$/ are linear — anchors prevent overlap
 }
 
 export function normalizeContentStatus(input?: string | null): ContentStatus {

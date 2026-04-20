@@ -33,7 +33,6 @@ import {
 import {
 	type AstropressSqliteDatabaseLike,
 	localeFromPath,
-	normalizeStructuredTemplateKey,
 	normalizeSystemRoutePath,
 	parseSystemSettings,
 } from "./utils";

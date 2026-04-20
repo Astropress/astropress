@@ -13,7 +13,6 @@ import type {
 	TestimonialSubmissionInput,
 } from "./persistence-types";
 import type { SiteSettings } from "./site-settings";
-import { defaultSiteSettings } from "./site-settings";
 
 export type CommentPolicy = "legacy-readonly" | "disabled" | "open-moderated";
 

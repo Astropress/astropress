@@ -37,7 +37,7 @@ function isSuppressed(line: string): boolean {
 	return (
 		line.includes("// audit-ok:") ||
 		line.includes("<!-- audit-ok:") ||
-		line.includes("// lgtm[")
+		line.includes("// CodeQL[")
 	);
 }
 
@@ -161,15 +161,25 @@ function checkFile(file: string, src: string): Violation[] {
 	}
 
 	// ── 5. Bogus CodeQL suppression syntax ──────────────────────────────────
-	// Detects: // codeql[...] comments, which are NOT a real suppression mechanism.
-	// Use // lgtm[<query-id>] for inline CodeQL suppressions instead.
+	// Detects: // codeql[...] (wrong case) and // lgtm[...] (deprecated LGTM.com syntax)
+	// both of which do NOT suppress GitHub Advanced Security alerts.
+	// The correct format is // CodeQL[js/rule-id] (capital C, capital QL).
 	for (let i = 0; i < lines.length; i++) {
-		if (/\/\/ codeql\[/.test(lines[i])) {
+		const line = lines[i];
+		if (/\/\/ codeql\[/.test(line)) {
 			violations.push({
 				file: rel,
 				line: i + 1,
 				message:
-					"// codeql[...] is not a valid suppression syntax — use // lgtm[<query-id>] for inline CodeQL suppressions",
+					"// codeql[...] is wrong case — use // CodeQL[js/rule-id] (capital C, capital QL) for GitHub Advanced Security suppressions",
+			});
+		}
+		if (/\/\/ lgtm\[/.test(line)) {
+			violations.push({
+				file: rel,
+				line: i + 1,
+				message:
+					"// lgtm[...] is deprecated LGTM.com syntax and does NOT suppress GitHub Advanced Security — use // CodeQL[js/rule-id] instead",
 			});
 		}
 	}
@@ -178,7 +188,7 @@ function checkFile(file: string, src: string): Violation[] {
 	// Detects: writeFile(...) calls where asset.filename appears within 4 lines
 	// (the call and its arguments are typically split across lines). path.basename()
 	// sanitizes path traversal but CodeQL still taint-tracks the write itself.
-	// Require explicit // lgtm[js/http-to-file-access] near the call.
+	// Require explicit // CodeQL[js/http-to-file-access] near the call.
 	// Rule: js/http-to-file-access
 	if (/packages\/[^/]+\/src\/import\//.test(rel)) {
 		for (let i = 0; i < lines.length; i++) {
@@ -192,7 +202,7 @@ function checkFile(file: string, src: string): Violation[] {
 					file: rel,
 					line: i + 1,
 					message:
-						"writeFile() with HTTP-sourced filename — add // lgtm[js/http-to-file-access] after confirming path.basename() is applied [js/http-to-file-access]",
+						"writeFile() with HTTP-sourced filename — add // CodeQL[js/http-to-file-access] after confirming path.basename() is applied [js/http-to-file-access]",
 				});
 			}
 		}
@@ -220,7 +230,7 @@ function checkFile(file: string, src: string): Violation[] {
 					file: rel,
 					line: i + 1,
 					message:
-						"nested quantifier in regex — (X+)+ or (X*)+ causes polynomial backtracking; add // lgtm[js/polynomial-redos] with justification if intentional [js/polynomial-redos]",
+						"nested quantifier in regex — (X+)+ or (X*)+ causes polynomial backtracking; add // CodeQL[js/polynomial-redos] with justification if intentional [js/polynomial-redos]",
 				});
 			}
 			// /char+$/ or /[class]+$/ in .replace() — CodeQL flags these as potentially
@@ -230,7 +240,7 @@ function checkFile(file: string, src: string): Violation[] {
 					file: rel,
 					line: i + 1,
 					message:
-						"quantifier before end-anchor in .replace() regex — CodeQL flags this as polynomial; add // lgtm[js/polynomial-redos] with justification if the pattern is linear [js/polynomial-redos]",
+						"quantifier before end-anchor in .replace() regex — CodeQL flags this as polynomial; add // CodeQL[js/polynomial-redos] with justification if the pattern is linear [js/polynomial-redos]",
 				});
 			}
 		}
@@ -241,10 +251,7 @@ function checkFile(file: string, src: string): Violation[] {
 	// path is not a string literal. CodeQL taint-tracks through path.join and flags
 	// dynamic write targets even when the path is safely constructed.
 	// Rule: js/insecure-temporary-file
-	if (
-		/packages\/[^/]+\/src\//.test(rel) &&
-		!/\/import\//.test(rel)
-	) {
+	if (/packages\/[^/]+\/src\//.test(rel) && !/\/import\//.test(rel)) {
 		for (let i = 0; i < lines.length; i++) {
 			const line = lines[i];
 			if (!/\bwriteFileSync\(/.test(line)) continue;
@@ -257,7 +264,7 @@ function checkFile(file: string, src: string): Violation[] {
 					file: rel,
 					line: i + 1,
 					message:
-						"writeFileSync() with non-literal path — add // lgtm[js/insecure-temporary-file] if the path is constructed safely (e.g. randomUUID-based under a controlled directory) [js/insecure-temporary-file]",
+						"writeFileSync() with non-literal path — add // CodeQL[js/insecure-temporary-file] if the path is constructed safely (e.g. randomUUID-based under a controlled directory) [js/insecure-temporary-file]",
 				});
 			}
 		}
