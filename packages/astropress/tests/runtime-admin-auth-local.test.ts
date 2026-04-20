@@ -1,18 +1,16 @@
 // @ts-nocheck
-// 
+//
 // Tests for runtime-admin-auth.ts when no D1 database is present (local store fallback paths).
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import {
-  authenticateRuntimeAdminUser,
-  createRuntimeSession,
-  getRuntimeCsrfToken,
-  getRuntimeSessionUser,
-  recordRuntimeSuccessfulLogin,
-  recordRuntimeLogout,
-  revokeRuntimeSession,
-  _recordRuntimeAuditEvent,
-} from "../src/runtime-admin-auth.js";
+let authenticateRuntimeAdminUser: typeof import("../src/runtime-admin-auth.js").authenticateRuntimeAdminUser;
+let createRuntimeSession: typeof import("../src/runtime-admin-auth.js").createRuntimeSession;
+let getRuntimeCsrfToken: typeof import("../src/runtime-admin-auth.js").getRuntimeCsrfToken;
+let getRuntimeSessionUser: typeof import("../src/runtime-admin-auth.js").getRuntimeSessionUser;
+let recordRuntimeSuccessfulLogin: typeof import("../src/runtime-admin-auth.js").recordRuntimeSuccessfulLogin;
+let recordRuntimeLogout: typeof import("../src/runtime-admin-auth.js").recordRuntimeLogout;
+let revokeRuntimeSession: typeof import("../src/runtime-admin-auth.js").revokeRuntimeSession;
+let _recordRuntimeAuditEvent: typeof import("../src/runtime-admin-auth.js")._recordRuntimeAuditEvent;
 
 // Mock the local-runtime-modules so the fallback path doesn't throw.
 const { localStoreMock, localAuthMock } = vi.hoisted(() => ({
@@ -29,6 +27,11 @@ const { localStoreMock, localAuthMock } = vi.hoisted(() => ({
   },
 }));
 
+vi.mock("../src/local-runtime-modules", () => ({
+  loadLocalAdminStore: vi.fn().mockResolvedValue(localStoreMock),
+  loadLocalAdminAuth: vi.fn().mockResolvedValue(localAuthMock),
+}));
+
 vi.mock("../src/local-runtime-modules.js", () => ({
   loadLocalAdminStore: vi.fn().mockResolvedValue(localStoreMock),
   loadLocalAdminAuth: vi.fn().mockResolvedValue(localAuthMock),
@@ -36,6 +39,31 @@ vi.mock("../src/local-runtime-modules.js", () => ({
 
 // Pass locals=undefined so getCloudflareBindings returns no DB → uses local store.
 const NO_DB_LOCALS = undefined;
+
+beforeEach(async () => {
+  vi.resetModules();
+  ({
+    authenticateRuntimeAdminUser,
+    createRuntimeSession,
+    getRuntimeCsrfToken,
+    getRuntimeSessionUser,
+    recordRuntimeSuccessfulLogin,
+    recordRuntimeLogout,
+    revokeRuntimeSession,
+    _recordRuntimeAuditEvent,
+  } = await import("../src/runtime-admin-auth.js"));
+  localStoreMock.createSession.mockReset();
+  localStoreMock.getSessionUser.mockReset();
+  localStoreMock.getCsrfToken.mockReset();
+  localStoreMock.revokeSession.mockReset();
+  localStoreMock.recordSuccessfulLogin.mockReset();
+  localStoreMock.recordLogout.mockReset();
+  localAuthMock.authenticateAdminUser.mockReset();
+});
+
+afterAll(() => {
+  vi.resetModules();
+});
 
 afterEach(() => {
   vi.clearAllMocks();

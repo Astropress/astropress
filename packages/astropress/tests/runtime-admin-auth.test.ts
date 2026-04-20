@@ -561,19 +561,34 @@ describe("session TTL boundary", () => {
       "INSERT INTO admin_users (id, email, role, password_hash, name, active) VALUES (?, ?, ?, ?, ?, 1)",
     ).run(1, "admin@example.com", "admin", await hashPassword("pass"), "Admin");
 
-    // Insert session using a JS Date (affected by fake clock).
     const rawToken = crypto.randomUUID();
-    const lastActiveAt = new Date(t0).toISOString();
     db.prepare(
       "INSERT INTO admin_sessions (id, user_id, csrf_token, last_active_at) VALUES (?, ?, ?, ?)",
-    ).run(rawToken, 1, crypto.randomUUID(), lastActiveAt);
+    ).run(rawToken, 1, crypto.randomUUID(), new Date(t0).toISOString());
 
-    // Advance to exactly the TTL boundary — session must still be valid (> not >=).
     vi.setSystemTime(t0 + SESSION_TTL_MS);
     const atBoundary = await getRuntimeSessionUser(rawToken, locals);
     expect(atBoundary).not.toBeNull();
+    db.close();
+  });
 
-    // One millisecond past TTL — session must expire.
+  it("expires a session one millisecond past SESSION_TTL_MS", async () => {
+    // Uses a fresh DB so last_active_at is never refreshed before the expiry check.
+    // Splitting from the boundary test avoids CURRENT_TIMESTAMP second-granularity
+    // drift making (fake_ttl+1 - real_updated_ts) fall below SESSION_TTL_MS in CI.
+    vi.useFakeTimers();
+    const t0 = Date.now();
+
+    const { db, locals } = makeLocals();
+    db.prepare(
+      "INSERT INTO admin_users (id, email, role, password_hash, name, active) VALUES (?, ?, ?, ?, ?, 1)",
+    ).run(1, "admin@example.com", "admin", await hashPassword("pass"), "Admin");
+
+    const rawToken = crypto.randomUUID();
+    db.prepare(
+      "INSERT INTO admin_sessions (id, user_id, csrf_token, last_active_at) VALUES (?, ?, ?, ?)",
+    ).run(rawToken, 1, crypto.randomUUID(), new Date(t0).toISOString());
+
     vi.setSystemTime(t0 + SESSION_TTL_MS + 1);
     const pastBoundary = await getRuntimeSessionUser(rawToken, locals);
     expect(pastBoundary).toBeNull();
