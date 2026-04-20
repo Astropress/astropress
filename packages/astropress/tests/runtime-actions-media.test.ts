@@ -1,5 +1,5 @@
 import { DatabaseSync } from "node:sqlite";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { registerCms } from "../src/config";
 import { makeLocals } from "./helpers/make-locals.js";
@@ -65,6 +65,8 @@ beforeEach(async () => {
   // Default: srcset returns null (avoids undefined binding to SQLite parameter)
   mockGenerateSrcset.mockResolvedValue(null);
 });
+
+afterAll(() => { vi.resetModules(); });
 
 describe("createRuntimeMediaAsset", () => {
   it("rejects a file that exceeds the configured maxUploadBytes limit", async () => {

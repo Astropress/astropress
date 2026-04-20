@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { makeFormRequest } from "./helpers/make-request.js";
 
@@ -63,6 +63,8 @@ describe("admin action utils", () => {
     });
     mocks.getRuntimeEnv.mockReturnValue(undefined);
   });
+
+  afterAll(() => { vi.resetModules(); });
 
   it("redirects unauthenticated requests to login", async () => {
     mocks.getRuntimeSessionUser.mockResolvedValue(null);

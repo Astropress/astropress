@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi, beforeEach } from "vitest";
+import { afterAll, afterEach, describe, expect, it, vi, beforeEach } from "vitest";
 import { isProductionRuntime } from "../src/runtime-env.js";
 
 vi.mock("../src/runtime-env.js", async (importOriginal) => {
@@ -46,6 +46,8 @@ beforeEach(async () => {
     "../src/transactional-email.js"
   ));
 });
+
+afterAll(() => { vi.resetModules(); });
 
 afterEach(() => {
   clearCmsConfig();

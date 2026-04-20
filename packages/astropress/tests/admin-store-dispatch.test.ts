@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { makeLocals } from "./helpers/make-locals.js";
 import { makeDb } from "./helpers/make-db.js";
@@ -22,6 +22,10 @@ beforeEach(async () => {
   vi.resetModules();
   ({ withLocalStoreFallback, withSafeLocalStoreFallback } = await import("../src/admin-store-dispatch.js"));
   mockLoadLocalAdminStore.mockReset();
+});
+
+afterAll(() => {
+  vi.resetModules();
 });
 
 describe("withLocalStoreFallback", () => {

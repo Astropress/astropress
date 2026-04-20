@@ -1,9 +1,11 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterAll, afterEach, describe, expect, it, vi } from "vitest";
 
 async function importRuntimeEnv() {
   vi.resetModules();
   return import("../src/runtime-env.js");
 }
+
+afterAll(() => { vi.resetModules(); });
 
 describe("runtime env login security config", () => {
   afterEach(() => {

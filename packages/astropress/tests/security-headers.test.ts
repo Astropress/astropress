@@ -1,6 +1,6 @@
 // @ts-nocheck
 // 
-import { describe, expect, it, vi } from "vitest";
+import { afterAll, describe, expect, it, vi } from "vitest";
 
 import {
   applyCacheHeaders,
@@ -11,6 +11,8 @@ import {
 } from "../src/security-headers.js";
 import { resolveAstropressSecurityArea } from "../src/security-middleware.js";
 import { onRequest } from "../src/security-middleware-entrypoint.js";
+
+afterAll(() => { vi.resetModules(); });
 
 describe("security headers", () => {
   it("builds a CSP that forbids inline scripts and framing by default", () => {

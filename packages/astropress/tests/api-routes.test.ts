@@ -1,7 +1,7 @@
 // @ts-nocheck
 // 
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 
 import { apiRouteDefinitions, injectApiRoutes } from "../src/api-routes.js";
@@ -443,6 +443,8 @@ describe("CORS preflight and response headers", () => {
   beforeEach(() => {
     vi.resetModules();
   });
+
+  afterAll(() => { vi.resetModules(); });
 
   it("handleCorsPreflightRequest returns null for non-OPTIONS requests", () => {
     const req = new Request("http://localhost/ap-api/v1/content", { method: "GET" });
@@ -897,6 +899,8 @@ describe("CORS header behaviour (mutation kills)", () => {
   beforeEach(() => {
     vi.resetModules();
   });
+
+  afterAll(() => { vi.resetModules(); });
 
   it("does not set CORS headers when api.cors is missing from config", async () => {
     // Kills L88 OptionalChaining: ?.api?.cors → ?.api.cors

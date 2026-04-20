@@ -1,5 +1,5 @@
 import { DatabaseSync } from "node:sqlite";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { registerCms } from "../src/config";
 import { makeLocals } from "./helpers/make-locals.js";
@@ -80,6 +80,8 @@ beforeEach(async () => {
     translationStatus: [],
   });
 });
+
+afterAll(() => { vi.resetModules(); });
 
 // ---------------------------------------------------------------------------
 // Helper: locals whose D1 DB always throws — forces withSafeRouteRegistryFallback
