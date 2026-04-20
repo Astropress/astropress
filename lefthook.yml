@@ -59,7 +59,7 @@ pre-commit:
 
     rust-clippy:
       glob: "crates/**/*.rs"
-      run: cd {root}/crates && cargo clippy --offline -p astropress-cli -- -D warnings
+      run: cargo clippy --offline -p astropress-cli --manifest-path crates/Cargo.toml -- -D warnings
 
     no-secrets:
       run: |

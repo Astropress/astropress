@@ -150,3 +150,7 @@ pub(crate) fn add_integrations(project_dir: &Path, features: AllFeatures) -> Res
 #[cfg(test)]
 #[path = "add_tests.rs"]
 mod tests;
+
+#[cfg(test)]
+#[path = "add_tests_more.rs"]
+mod tests_more;

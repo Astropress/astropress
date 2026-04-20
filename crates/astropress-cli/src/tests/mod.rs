@@ -18,8 +18,11 @@ use std::sync::Once;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 mod doctor;
+mod doctor_more;
 mod parse;
 mod parse_more;
+mod parse_more2;
+mod parse_extra;
 mod scaffold;
 
 fn strings(values: &[&str]) -> Vec<String> {

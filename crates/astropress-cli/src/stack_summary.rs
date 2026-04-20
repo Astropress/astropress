@@ -153,3 +153,7 @@ mod tests;
 #[cfg(test)]
 #[path = "stack_summary_tests_more.rs"]
 mod tests_more;
+
+#[cfg(test)]
+#[path = "stack_summary_tests_more2.rs"]
+mod tests_more2;
