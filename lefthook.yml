@@ -14,6 +14,10 @@ pre-commit:
       glob: "tooling/bdd/**/*.feature"
       run: bun run bdd:lint
 
+    rust-unused-imports:
+      glob: "crates/**/*.rs"
+      run: cd {root}/crates && cargo clippy -p astropress-cli -- -D unused_imports -D dead_code
+
     no-secrets:
       run: |
         if git diff --cached --name-only | grep -qE '(^|/)\.env(\.|$)'; then
