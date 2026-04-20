@@ -25,57 +25,60 @@ const PAGES_DIR = join(root, "packages/astropress/pages");
 const COMPONENTS_DIR = join(root, "packages/astropress/components");
 
 async function walkAstroFiles(dir: string): Promise<string[]> {
-  const files: string[] = [];
-  try {
-    const entries = await readdir(dir, { recursive: true });
-    for (const entry of entries) {
-      if (entry.endsWith(".astro") || entry.endsWith(".ts")) {
-        files.push(join(dir, entry));
-      }
-    }
-  } catch {
-    // Directory may not exist (e.g. pre-build)
-  }
-  return files.sort();
+	const files: string[] = [];
+	try {
+		const entries = await readdir(dir, { recursive: true });
+		for (const entry of entries) {
+			if (entry.endsWith(".astro") || entry.endsWith(".ts")) {
+				files.push(join(dir, entry));
+			}
+		}
+	} catch {
+		// Directory may not exist (e.g. pre-build)
+	}
+	return files.sort();
 }
 
 async function main() {
-  const violations: string[] = [];
+	const violations: string[] = [];
 
-  const pagesFiles = await walkAstroFiles(PAGES_DIR);
-  const componentsFiles = await walkAstroFiles(COMPONENTS_DIR);
-  const allFiles = [...pagesFiles, ...componentsFiles];
+	const pagesFiles = await walkAstroFiles(PAGES_DIR);
+	const componentsFiles = await walkAstroFiles(COMPONENTS_DIR);
+	const allFiles = [...pagesFiles, ...componentsFiles];
 
-  for (const filePath of allFiles) {
-    const relPath = relative(root, filePath);
-    const src = await readFile(filePath, "utf8");
+	for (const filePath of allFiles) {
+		const relPath = relative(root, filePath);
+		const src = await readFile(filePath, "utf8");
 
-    // Rule 1: no bare `from "astropress/` — must be `@astropress-diy/astropress/`
-    // Match: from "astropress/X" or from 'astropress/X'
-    const bareImportPattern = /from\s+["']astropress\/[^"']/g;
-    for (const m of src.matchAll(bareImportPattern)) {
-      const snippet = src.slice(m.index ?? 0, (m.index ?? 0) + 60).split("\n")[0];
-      violations.push(
-        `[bare-import] ${relPath}: bare "astropress/" import — use "@astropress-diy/astropress/" instead\n    → ${snippet}`,
-      );
-    }
+		// Rule 1: no bare `from "astropress/` — must be `@astropress-diy/astropress/`
+		// Match: from "astropress/X" or from 'astropress/X'
+		const bareImportPattern = /from\s+["']astropress\/[^"']/g;
+		for (const m of src.matchAll(bareImportPattern)) {
+			const snippet = src
+				.slice(m.index ?? 0, (m.index ?? 0) + 60)
+				.split("\n")[0];
+			violations.push(
+				`[bare-import] ${relPath}: bare "astropress/" import — use "@astropress-diy/astropress/" instead\n    → ${snippet}`,
+			);
+		}
+	}
 
-  }
+	if (violations.length > 0) {
+		console.error(
+			`consumer-packaging audit failed — ${violations.length} issue(s) in ${allFiles.length} files:\n`,
+		);
+		for (const v of violations) {
+			console.error(`  - ${v}`);
+		}
+		process.exit(1);
+	}
 
-  if (violations.length > 0) {
-    console.error(`consumer-packaging audit failed — ${violations.length} issue(s) in ${allFiles.length} files:\n`);
-    for (const v of violations) {
-      console.error(`  - ${v}`);
-    }
-    process.exit(1);
-  }
-
-  console.log(
-    `consumer-packaging audit passed — ${allFiles.length} files scanned, no bare imports or cross-package paths.`,
-  );
+	console.log(
+		`consumer-packaging audit passed — ${allFiles.length} files scanned, no bare imports or cross-package paths.`,
+	);
 }
 
 main().catch((err) => {
-  console.error("consumer-packaging audit failed:", err);
-  process.exit(1);
+	console.error("consumer-packaging audit failed:", err);
+	process.exit(1);
 });

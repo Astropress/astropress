@@ -286,7 +286,7 @@ function checkFile(file: string, src: string): Violation[] {
 					file: rel,
 					line: i + 1,
 					message:
-						"process.env.X = undefined sets the key to the string \"undefined\" in Bun — use `delete process.env.X` (with biome-ignore lint/performance/noDelete: comment) to actually unset it",
+						'process.env.X = undefined sets the key to the string "undefined" in Bun — use `delete process.env.X` (with biome-ignore lint/performance/noDelete: comment) to actually unset it',
 				});
 			}
 		}
