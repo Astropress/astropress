@@ -45,15 +45,19 @@ type ApprovedSuppression = {
 
 const APPROVED: ApprovedSuppression[] = [
 	{
-		file: "packages/astropress/src/local-media-storage.ts",
-		linePattern: /audit-ok:.*writePath derives only from randomUUID/,
-		contentPattern: /writeFileSync/,
+		file: "packages/astropress/src/import/download-media.ts",
+		linePattern: /lgtm\[js\/http-to-file-access\]/,
+		contentPattern: /writeFile/,
 		rubric:
-			"Local audit check 8 flags any writeFileSync with a non-literal path. " +
-			"writePath = path.join(uploadsDir, id) where id = 'media-' + randomUUID(), " +
-			"generated before any user-input processing. No user data flows into the path. " +
-			"Code fix is already applied (UUID-first pattern). audit-ok is for the local " +
-			"pattern matcher only, not a CodeQL suppression.",
+			"js/http-to-file-access has zero concrete sanitizers in the default CodeQL JS library " +
+			"(the Sanitizer class is abstract with no implementations). Writing HTTP response bytes " +
+			"to disk is the entire purpose of downloadMediaToFile; removing this makes the feature " +
+			"impossible. Code fix evaluated: structural re-encoding (sharp) would still taint the " +
+			"write because CodeQL tracks data flow through library transforms. Alternatives named: " +
+			"models-as-data barrier (no extensible predicate exists for this rule), image re-encoding " +
+			"(taint still tracked through transform output). Mitigations present: validateMediaSourceUrl " +
+			"enforces http/https-only and blocks private/loopback IPs; content-type allowlist; 50 MB " +
+			"size cap; path.basename() prevents traversal; source URLs from operator-provided exports.",
 	},
 	{
 		file: "packages/astropress-nexus/src/app.ts",

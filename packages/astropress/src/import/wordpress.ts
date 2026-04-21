@@ -7,7 +7,7 @@ import type {
 	AstropressWordPressImportReport,
 	ImportSource,
 } from "../platform-contracts";
-import { downloadMedia } from "./download-media.js";
+import { downloadMediaToFile } from "./download-media.js";
 import {
 	applyImportToLocalRuntime,
 	fileSizeOrNull,
@@ -62,8 +62,7 @@ async function downloadMediaAssets(
 		if (completed.has(asset.id) && (await fileSizeOrNull(assetTarget)) !== null)
 			continue;
 		try {
-			const mediaBytes = await downloadMedia(asset.sourceUrl);
-			await writeFile(assetTarget, mediaBytes);
+			await downloadMediaToFile(asset.sourceUrl, assetTarget);
 			completed.add(asset.id);
 			downloadedMedia += 1;
 		} catch (error) {

@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, rmSync } from "node:fs";
+import { existsSync, mkdirSync, rmSync, statSync } from "node:fs";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // ---------------------------------------------------------------------------
@@ -189,6 +189,18 @@ describe("createLocalMediaUpload", () => {
 		expect(result.ok).toBe(true);
 		if (!result.ok) return;
 		expect(existsSync(result.asset.diskPath)).toBe(true);
+	});
+
+	it("writes file with owner-only permissions (mode 0o600)", () => {
+		const result = createLocalMediaUpload({
+			filename: "perm.png",
+			bytes: validPng,
+		});
+		expect(result.ok).toBe(true);
+		if (!result.ok) return;
+		const stat = statSync(result.asset.diskPath);
+		// Mode includes file type bits; mask to permission bits only
+		expect(stat.mode & 0o777).toBe(0o600);
 	});
 
 	it("propagates validation errors without writing to disk", () => {

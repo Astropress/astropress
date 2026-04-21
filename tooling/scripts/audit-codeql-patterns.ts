@@ -273,25 +273,56 @@ function checkFile(file: string, src: string): Violation[] {
 		}
 	}
 
-	// ── 8. writeFileSync with variable path in non-import src files ──────────
-	// Detects: writeFileSync(varName, ...) calls in src/ (not import/) where the
-	// path is not a string literal. CodeQL taint-tracks through path.join and flags
-	// dynamic write targets even when the path is safely constructed.
+	// ── 8. writeFileSync without secure mode in non-import src files ─────────
+	// CodeQL's js/insecure-temporary-file checks isSecureMode(): writeFileSync
+	// without an explicit mode defaults to 0666 (world-readable/writable), which
+	// fails the check. Always pass { mode: 0o600 } for owner-only access.
 	// Rule: js/insecure-temporary-file
 	if (/packages\/[^/]+\/src\//.test(rel) && !/\/import\//.test(rel)) {
 		for (let i = 0; i < lines.length; i++) {
 			const line = lines[i];
 			if (!/\bwriteFileSync\(/.test(line)) continue;
-			// Flag if the first argument is not a plain string literal
 			if (
 				!/writeFileSync\(\s*["'`][^"'`]+["'`]/.test(line) &&
 				!isSuppressedNear(lines, i)
 			) {
+				// Check for mode in this line or next 3 (multi-line call)
+				const callWindow = lines
+					.slice(i, Math.min(lines.length, i + 4))
+					.join("\n");
+				if (!/0o600|0o400/.test(callWindow)) {
+					violations.push({
+						file: rel,
+						line: i + 1,
+						message:
+							"writeFileSync() with variable path and no secure mode — add { mode: 0o600 } as the third argument to prevent world-readable files (CodeQL js/insecure-temporary-file checks isSecureMode())",
+					});
+				}
+			}
+		}
+	}
+
+	// ── 11. Raw fetch() in import scripts without downloadMedia ─────────────
+	// Import scripts must use downloadMedia/downloadMediaToFile from
+	// import/download-media.ts which validates URL scheme, blocks SSRF,
+	// and enforces content-type/size limits. Direct fetch() calls bypass
+	// all of these controls. download-media.ts itself is exempt (it IS
+	// the validated helper). page-crawler.ts fetches HTML pages not media
+	// binary files, so it is also exempt from this check.
+	// Rule: js/http-to-file-access
+	if (
+		/packages\/[^/]+\/src\/import\//.test(rel) &&
+		!rel.endsWith("download-media.ts") &&
+		!rel.endsWith("page-crawler.ts")
+	) {
+		for (let i = 0; i < lines.length; i++) {
+			const line = lines[i];
+			if (/\bfetch\(/.test(line) && !isSuppressedNear(lines, i)) {
 				violations.push({
 					file: rel,
 					line: i + 1,
 					message:
-						"writeFileSync() with non-literal path — add // audit-ok: <reason> if the path is constructed safely (e.g. randomUUID-based under a controlled uploads directory) [js/insecure-temporary-file]",
+						"raw fetch() in import script — use downloadMedia() or downloadMediaToFile() from import/download-media.ts which enforces URL validation, SSRF prevention, content-type allowlist, and size limits [js/http-to-file-access]",
 				});
 			}
 		}

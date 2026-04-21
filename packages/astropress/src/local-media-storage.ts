@@ -128,8 +128,7 @@ export function createLocalMediaUpload(input: {
 
 	ensureLocalUploadsDir();
 	const writePath = path.join(uploadsDir, id);
-	// audit-ok: writePath derives only from randomUUID (id), generated before any user-input processing
-	writeFileSync(writePath, Buffer.from(input.bytes));
+	writeFileSync(writePath, Buffer.from(input.bytes), { mode: 0o600 });
 	return descriptor;
 }
 
