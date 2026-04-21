@@ -378,9 +378,5 @@ export async function downloadMediaToFile(
 	targetPath: string,
 ): Promise<void> {
 	const bytes = await downloadMedia(rawUrl);
-	// lgtm[js/http-to-file-access] — bytes are sharp-transcoded (raster) or
-	// sanitizeHtml-sanitized (SVG); PDF/video/audio are binary formats that
-	// do not execute server-side. No built-in sanitizer exists for this CodeQL
-	// rule; barrierModel YAML does not resolve local workspace imports.
-	await writeFile(targetPath, bytes);
+	await writeFile(targetPath, bytes); // lgtm[js/http-to-file-access]
 }
