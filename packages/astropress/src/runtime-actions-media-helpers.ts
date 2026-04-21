@@ -62,7 +62,7 @@ export async function generateAndStoreThumbnail(
 	if (width <= 400) return null;
 	const thumbBytes = await generateThumbnail(input.bytes, width);
 	if (!thumbBytes) return null;
-	// codeql[js/polynomial-redos] [^.]+ is a negated class — cannot overlap with ., so no backtracking
+	// audit-ok: [^.]+ is a negated class — cannot overlap with ., so no backtracking; codeql[js/polynomial-redos]
 	const basename = storedFilename.replace(/\.[^.]+$/, "");
 	const thumbFilename = `${basename}-thumb.webp`;
 	const thumbStored = await storeRuntimeMediaObject(

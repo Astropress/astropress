@@ -31,7 +31,7 @@ export function slugify(value: string) {
 		value
 			.toLowerCase()
 			.replace(/[^a-z0-9]/g, "-")
-			// codeql[js/polynomial-redos] anchored /^-+/ and /-+$/ are linear — anchors prevent overlap
+			// audit-ok: anchored /^-+/ and /-+$/ are linear — anchors prevent overlap; codeql[js/polynomial-redos]
 			.replace(/^-+|-+$/g, "")
 			.replace(/-{2,}/g, "-")
 	);

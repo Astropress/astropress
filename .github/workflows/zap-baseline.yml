@@ -27,6 +27,10 @@ jobs:
       - run: bun run --filter astropress-example-gh-pages build
       - name: Start static server with security headers
         run: node tooling/scripts/serve-static-with-security-headers.mjs examples/github-pages/dist 4173 >/tmp/astropress-http.log 2>&1 &
+      - name: Wait for static server to be ready
+        run: timeout 30 sh -c 'until curl -sf http://127.0.0.1:4173/ > /dev/null; do sleep 1; done'
+      - name: Pull ZAP image
+        run: docker pull ghcr.io/zaproxy/zaproxy:stable -q
       - name: Run ZAP baseline scan
         run: |
           # ZAP runs as uid 'zap' (1000) inside the container; the workspace is
@@ -34,7 +38,9 @@ jobs:
           # write to them without needing write permission on the directory itself.
           touch zap-report.json zap-report.md zap-report.html
           chmod a+w zap-report.json zap-report.md zap-report.html
-          docker pull ghcr.io/zaproxy/zaproxy:stable -q
-          docker run --network=host -v "$PWD:/zap/wrk/:rw" -t ghcr.io/zaproxy/zaproxy:stable \
+          # -z "-port 7070" avoids port-8080 conflicts common on GH Actions runners.
+          # -i (no TTY) avoids pseudo-TTY allocation failures in non-interactive CI.
+          docker run --network=host -v "$PWD:/zap/wrk/:rw" ghcr.io/zaproxy/zaproxy:stable \
             zap-baseline.py -t http://127.0.0.1:4173 -J zap-report.json -w zap-report.md -r zap-report.html -a -l WARN \
+            -z "-port 7070" \
             -c /zap/wrk/.github/zap-rules.conf

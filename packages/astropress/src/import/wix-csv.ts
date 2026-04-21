@@ -62,7 +62,7 @@ export function slugify(text: string): string {
 			.toLowerCase()
 			.replace(/[^\w\s-]/g, "")
 			.replace(/[\s_]+/g, "-")
-			// codeql[js/polynomial-redos] anchored /^-+/ and /-+$/ are linear — anchors prevent overlap
+			// audit-ok: anchored /^-+/ and /-+$/ are linear — anchors prevent overlap; codeql[js/polynomial-redos]
 			.replace(/^-+|-+$/g, "") || "unknown"
 	);
 }

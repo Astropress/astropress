@@ -34,11 +34,7 @@ function tryWalk(dir: string): string[] {
 }
 
 function isSuppressed(line: string): boolean {
-	return (
-		line.includes("// audit-ok:") ||
-		line.includes("<!-- audit-ok:") ||
-		line.includes("// codeql[")
-	);
+	return line.includes("// audit-ok:") || line.includes("<!-- audit-ok:");
 }
 
 // Check the flagged line and the line directly before it.
@@ -210,24 +206,30 @@ function checkFile(file: string, src: string): Violation[] {
 			const callWindow = lines
 				.slice(i, Math.min(lines.length, i + 4))
 				.join("\n");
-			if (/\.filename/.test(callWindow) && !isSuppressedInWindow(lines, i - 1, i + 4)) {
+			if (
+				/\.filename/.test(callWindow) &&
+				!isSuppressedInWindow(lines, i - 1, i + 4)
+			) {
 				violations.push({
 					file: rel,
 					line: i + 1,
 					message:
-						"writeFile() with HTTP-sourced filename — add // codeql[js/http-to-file-access] after confirming path.basename() is applied [js/http-to-file-access]",
+						"writeFile() with HTTP-sourced filename — add // audit-ok: <reason> after confirming path.basename() sanitizes the filename [js/http-to-file-access]",
 				});
 			}
 		}
 	}
 
 	// ── 7. Polynomial ReDoS ─────────────────────────────────────────────────
-	// Detects two categories CodeQL's js/polynomial-redos rule flags:
+	// Detects three categories CodeQL's js/polynomial-redos rule flags:
 	//   a) Nested quantifiers inside regex literals: (X+)+ or (X*)+
 	//      Only fires on lines that also call a regex method (.replace/.test/etc.)
 	//      to avoid false positives from for-loop increment expressions.
 	//   b) /char+$/ or /[class]+$/ in .replace() — end-anchor after quantifier
 	//      creates ambiguous backtracking paths on some engines.
+	//   c) Lazy quantifier on a negated character class: [^x]*? — the ? is
+	//      redundant (the class can never overlap with the delimiter) but CodeQL
+	//      still flags it as a potential super-linear path.
 	// Rule: js/polynomial-redos
 	if (/packages\/[^/]+\/src\//.test(rel)) {
 		for (let i = 0; i < lines.length; i++) {
@@ -243,7 +245,7 @@ function checkFile(file: string, src: string): Violation[] {
 					file: rel,
 					line: i + 1,
 					message:
-						"nested quantifier in regex — (X+)+ or (X*)+ causes polynomial backtracking; add // codeql[js/polynomial-redos] with justification if intentional [js/polynomial-redos]",
+						"nested quantifier in regex — (X+)+ or (X*)+ causes polynomial backtracking; use a while-loop or add // audit-ok: with justification if provably linear [js/polynomial-redos]",
 				});
 			}
 			// /char+$/ or /[class]+$/ in .replace() — CodeQL flags these as potentially
@@ -253,7 +255,27 @@ function checkFile(file: string, src: string): Violation[] {
 					file: rel,
 					line: i + 1,
 					message:
-						"quantifier before end-anchor in .replace() regex — CodeQL flags this as polynomial; add // codeql[js/polynomial-redos] with justification if the pattern is linear [js/polynomial-redos]",
+						"quantifier before end-anchor in .replace() regex — use a while-loop, or add // audit-ok: with justification if the pattern is provably linear [js/polynomial-redos]",
+				});
+			}
+			// Lazy quantifier on a NEGATED character class: [^x]*? or [^abc]+?
+			// The lazy ? is redundant on a negated class (it can never match its own
+			// delimiter) but CodeQL still flags it as a super-linear path.
+			// Fix: remove the ? — greedy and lazy behave identically on negated classes.
+			// Positive classes like [\s\S]*? are intentionally excluded; CodeQL does not
+			// flag those and lazy-any-char is a common cross-line match pattern.
+			if (
+				(/(\.replace|\.match|\.test|\.search|\.split|new RegExp)\(/.test(
+					line,
+				) ||
+					/=\s*\/[^/]/.test(line)) && // also catches const RE = /pat/ assignments
+				/\[\^[^\]]*\][*+]\?/.test(line) // audit-ok: testing source text for negated-class lazy-quantifier pattern
+			) {
+				violations.push({
+					file: rel,
+					line: i + 1,
+					message:
+						"lazy quantifier on negated character class ([^x]* ?) — remove the ? (greedy and lazy are identical here) to eliminate CodeQL's polynomial-redos flag [js/polynomial-redos]",
 				});
 			}
 		}
@@ -277,7 +299,7 @@ function checkFile(file: string, src: string): Violation[] {
 					file: rel,
 					line: i + 1,
 					message:
-						"writeFileSync() with non-literal path — add // codeql[js/insecure-temporary-file] if the path is constructed safely (e.g. randomUUID-based under a controlled directory) [js/insecure-temporary-file]",
+						"writeFileSync() with non-literal path — add // audit-ok: <reason> if the path is constructed safely (e.g. randomUUID-based under a controlled uploads directory) [js/insecure-temporary-file]",
 				});
 			}
 		}
@@ -305,12 +327,15 @@ function checkFile(file: string, src: string): Violation[] {
 		}
 	}
 
-	// ── 10. execSync with template literal interpolation in tooling scripts ────
-	// Detects: execSync() with a template literal containing ${var} in tooling/ where a variable is
-	// interpolated into a shell command string. CodeQL flags this as
-	// js/shell-command-injection-more-sources / js/indirect-uncontrolled-command-line
-	// even in internal tooling because the variable may originate from env or args.
-	if (/tooling\/scripts\//.test(rel)) {
+	// ── 10. execSync with template literal interpolation ────────────────────
+	// Detects: execSync() with a template literal containing ${var} in tooling/
+	// scripts or packages/src/ where a variable is interpolated into a shell
+	// command string. CodeQL flags this as js/shell-command-injection-from-
+	// environment / js/indirect-uncontrolled-command-line even when the variable
+	// is a known-safe internal value.
+	// Fix: use execFileSync("cmd", [arg]) to pass arguments as an array,
+	// bypassing the shell entirely.
+	if (/tooling\/scripts\//.test(rel) || /packages\/[^/]+\/src\//.test(rel)) {
 		for (let i = 0; i < lines.length; i++) {
 			const line = lines[i];
 			if (
@@ -321,7 +346,7 @@ function checkFile(file: string, src: string): Violation[] {
 					file: rel,
 					line: i + 1,
 					message:
-						"execSync() with template literal interpolation — add // codeql[js/shell-command-injection-from-environment,js/indirect-command-line-injection] inline if the values are trusted internal inputs",
+						"execSync() with template literal interpolation — replace with execFileSync('cmd', [arg]) to avoid shell injection; or add // audit-ok: with justification if the value is a hardcoded constant [js/shell-command-injection-from-environment]",
 				});
 			}
 		}
