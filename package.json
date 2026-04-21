@@ -9,6 +9,7 @@
 		"audit:deps": "bun audit",
 		"audit:security": "bun run tooling/scripts/security-audit.ts",
 		"audit:codeql-patterns": "bun run tooling/scripts/audit-codeql-patterns.ts",
+		"check:pr-ghas": "bun run tooling/scripts/check-pr-ghas.ts",
 		"audit:honesty": "bun run tooling/scripts/audit-honesty.ts",
 		"audit:microcopy": "bun run tooling/scripts/audit-microcopy.ts",
 		"audit:arch": "bun run tooling/scripts/arch-lint.ts",

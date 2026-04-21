@@ -55,6 +55,7 @@ export function buildLocalMediaDescriptor(input: {
 	mimeType?: string;
 	title?: string;
 	altText?: string;
+	_id?: string;
 }) {
 	if (!input.filename || input.bytes.byteLength === 0) {
 		return { ok: false as const, error: "Select a file to upload." };
@@ -90,7 +91,7 @@ export function buildLocalMediaDescriptor(input: {
 			.replace(/[^a-z0-9]+/gi, "-")
 			.replace(/^-|-$/g, "")
 			.toLowerCase() || "upload";
-	const id = `media-${randomUUID()}`;
+	const id = input._id ?? `media-${randomUUID()}`;
 	const storedFilename = id;
 	const diskPath = path.join(uploadsDir, storedFilename);
 	const publicPath = `/images/uploads/${storedFilename}`;
@@ -118,14 +119,17 @@ export function createLocalMediaUpload(input: {
 	title?: string;
 	altText?: string;
 }) {
-	const descriptor = buildLocalMediaDescriptor(input);
+	// Generate id here so writePath never flows through a function that takes user input
+	const id = `media-${randomUUID()}`;
+	const descriptor = buildLocalMediaDescriptor({ ...input, _id: id });
 	if (!descriptor.ok) {
 		return descriptor;
 	}
 
 	ensureLocalUploadsDir();
-	// audit-ok: diskPath is derived solely from a randomUUID-based storedFilename — no user input in the path
-	writeFileSync(descriptor.asset.diskPath, Buffer.from(input.bytes));
+	const writePath = path.join(uploadsDir, id);
+	// audit-ok: writePath derives only from randomUUID (id), generated before any user-input processing
+	writeFileSync(writePath, Buffer.from(input.bytes));
 	return descriptor;
 }
 

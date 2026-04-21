@@ -66,7 +66,7 @@ async function downloadMediaAssets(
 			await writeFile(
 				assetTarget,
 				// audit-ok: assetTarget uses path.basename() to strip traversal from the HTTP-supplied filename; bytes intentionally written from the import response
-				new Uint8Array(await response.arrayBuffer()), // codeql[js/http-to-file-access]
+				new Uint8Array(await response.arrayBuffer()), // lgtm[js/http-to-file-access]
 			);
 			completed.add(asset.id);
 			downloadedMedia += 1;
