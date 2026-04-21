@@ -59,10 +59,9 @@ const APPROVED: ApprovedSuppression[] = [
 			"reader/player, not in disk storage. No code fix is possible for these: " +
 			"transcoding requires format-specific encoders not available as deps, and " +
 			"rejecting them would break legitimate import functionality. Alternatives " +
-			"considered: barrierModel YAML (.codeql/extensions/http-to-file-barriers.yml " +
-			"— implemented but CodeQL models-as-data package resolution does not apply to " +
-			"same-repo local workspace imports); custom QL Sanitizer extension (not " +
-			"feasible without CodeQL QL dev toolchain in CI). Mitigations present: " +
+			"considered: barrierModel YAML (tried; CodeQL models-as-data package resolution " +
+			"does not apply to same-repo local workspace imports — removed as non-functional); " +
+			"custom QL Sanitizer extension (not feasible without CodeQL QL dev toolchain in CI). Mitigations present: " +
 			"validateMediaSourceUrl enforces http/https-only and blocks private/loopback " +
 			"IPs; content-type allowlist; 50 MB size cap; path.basename() prevents " +
 			"traversal; source URLs from operator-controlled export files only.",
