@@ -42,10 +42,15 @@ export async function prepareAstropressDeployment(
 		"utf8",
 	);
 
+	const baseUrl = options.baseUrl ?? "";
+	let end = baseUrl.length;
+	while (end > 0 && baseUrl[end - 1] === "/") end--;
+	const trimmedBaseUrl = baseUrl.slice(0, end);
+
 	return {
 		deploymentId: `${options.provider}:${input.projectName}:${Date.now()}`,
 		url: options.baseUrl
-			? `${options.baseUrl.replace(/\/+$/, "")}/${input.projectName}/` // codeql[js/polynomial-redos] \/+ matches only '/' chars — linear, cannot backtrack past the end anchor
+			? `${trimmedBaseUrl}/${input.projectName}/`
 			: undefined,
 	};
 }

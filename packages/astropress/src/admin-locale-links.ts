@@ -19,7 +19,10 @@ function normalizeRoute(route: string) {
 		return "/";
 	}
 
-	return route === "/" ? "/" : route.replace(/\/+$/, ""); // codeql[js/polynomial-redos] \/+ matches only '/' chars — linear, cannot backtrack past the end anchor
+	if (route === "/") return "/";
+	let end = route.length;
+	while (end > 0 && route[end - 1] === "/") end--;
+	return end > 0 ? route.slice(0, end) : "/";
 }
 
 export function getAdminLocalePair(route: string): AdminLocalePair | null {

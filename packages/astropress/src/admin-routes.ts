@@ -297,7 +297,9 @@ export function listAstropressAdminRoutes(): AstropressAdminRouteDefinition[] {
 }
 
 export function resolveAstropressAdminRouteEntrypoints(basePath: string) {
-	const normalizedBasePath = basePath.replace(/\/+$/, ""); // codeql[js/polynomial-redos] \/+ matches only '/' chars — linear, cannot backtrack past the end anchor
+	let end = basePath.length;
+	while (end > 0 && basePath[end - 1] === "/") end--;
+	const normalizedBasePath = basePath.slice(0, end);
 	return listAstropressAdminRoutes().map((route) => ({
 		...route,
 		entrypoint: `${normalizedBasePath}/${route.entrypoint}`,

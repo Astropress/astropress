@@ -6,7 +6,7 @@
  * discipline — every version bump must be accompanied by a changelog entry.
  */
 
-import { execSync } from "node:child_process";
+import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
@@ -18,7 +18,7 @@ const BASE_BRANCH = process.env.BASE_BRANCH ?? "main";
 function getFileAtRef(ref: string, filePath: string): string | null {
 	try {
 		const relPath = filePath.replace(`${ROOT}/`, "");
-		return execSync(`git show ${ref}:${relPath}`, { cwd: ROOT }).toString(); // codeql[js/shell-command-injection-from-environment,js/indirect-command-line-injection] ref/relPath are internal git refs — not user-controlled
+		return execFileSync("git", ["show", `${ref}:${relPath}`], { cwd: ROOT }).toString();
 	} catch {
 		return null;
 	}
