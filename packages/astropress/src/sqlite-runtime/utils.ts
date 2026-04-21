@@ -158,14 +158,13 @@ export function normalizePath(value: string) {
 }
 
 export function slugifyTerm(value: string) {
-	return (
-		value
-			.trim()
-			.toLowerCase()
-			.replace(/[^a-z0-9]+/g, "-")
-			// audit-ok: anchored /^-+/ and /-+$/ are linear — anchors prevent overlap; codeql[js/polynomial-redos]
-			.replace(/^-+|-+$/g, "")
-	);
+	return value
+		.trim()
+		.toLowerCase()
+		.replace(/[^a-z0-9]+/g, "-")
+		.split("-")
+		.filter(Boolean)
+		.join("-");
 }
 
 export function normalizeContentStatus(input?: string | null): ContentStatus {

@@ -27,14 +27,12 @@ export function normalizeEmail(value: string) {
 }
 
 export function slugify(value: string) {
-	return (
-		value
-			.toLowerCase()
-			.replace(/[^a-z0-9]/g, "-")
-			// audit-ok: anchored /^-+/ and /-+$/ are linear — anchors prevent overlap; codeql[js/polynomial-redos]
-			.replace(/^-+|-+$/g, "")
-			.replace(/-{2,}/g, "-")
-	);
+	return value
+		.toLowerCase()
+		.replace(/[^a-z0-9]/g, "-")
+		.split("-")
+		.filter(Boolean)
+		.join("-");
 }
 
 /** Alias for slugify — used for content post slugs. */

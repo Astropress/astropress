@@ -224,8 +224,7 @@ async function attemptWordPressExport(
 
 		// Still on login page without 2FA = wrong credentials
 		const currentUrl = page.url();
-		// audit-ok: Playwright page.url() is trusted browser state; checks path segment, not hostname
-		if (currentUrl.includes("wp-login.php")) {
+		if (new URL(currentUrl).pathname.endsWith("wp-login.php")) {
 			throw new InvalidCredentialsError();
 		}
 

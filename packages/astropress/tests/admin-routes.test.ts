@@ -90,27 +90,28 @@ describe("admin routes", () => {
 
 	it("resolves entrypoints from a package pages directory", () => {
 		const routeEntrypoints = resolveAstropressAdminRouteEntrypoints(
-			"/tmp/astropress/pages/ap-admin/", // audit-ok: literal path string used as test data, no file I/O
+			"/fake/astropress/pages/ap-admin/",
 		);
 
 		expect(routeEntrypoints[0]).toEqual({
 			pattern: "/ap-admin",
-			entrypoint: "/tmp/astropress/pages/ap-admin/index.astro", // audit-ok: expected value in assertion, no file I/O
+			entrypoint: "/fake/astropress/pages/ap-admin/index.astro",
 			kind: "page",
 		});
 		expect(routeEntrypoints.at(-1)).toEqual({
 			pattern: "/ap-admin/actions/user-purge",
-			entrypoint: "/tmp/astropress/pages/ap-admin/actions/user-purge.ts", // audit-ok: expected value in assertion, no file I/O
+			entrypoint: "/fake/astropress/pages/ap-admin/actions/user-purge.ts",
 			kind: "action",
 		});
 	});
 
 	it("builds an injection plan from the same canonical route inventory", () => {
-		// These use /tmp/astropress as a fake base path (no file I/O — tests route string construction only)
 		expect(
-			createAstropressAdminRouteInjectionPlan("/tmp/astropress/pages/ap-admin"), // audit-ok: no file I/O, fake path used in test assertion
+			createAstropressAdminRouteInjectionPlan(
+				"/fake/astropress/pages/ap-admin",
+			),
 		).toEqual(
-			resolveAstropressAdminRouteEntrypoints("/tmp/astropress/pages/ap-admin"), // audit-ok: no file I/O, fake path used in test assertion
+			resolveAstropressAdminRouteEntrypoints("/fake/astropress/pages/ap-admin"),
 		);
 	});
 
@@ -119,7 +120,7 @@ describe("admin routes", () => {
 			typeof createAstropressAdminRouteInjectionPlan
 		> = [];
 		const plan = injectAstropressAdminRoutes(
-			"/tmp/astropress/pages/ap-admin", // audit-ok: literal path string used as test data, no file I/O
+			"/fake/astropress/pages/ap-admin",
 			(route) => {
 				injectedRoutes.push(route);
 			},

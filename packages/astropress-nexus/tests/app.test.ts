@@ -417,7 +417,7 @@ describe("POST /actions/redeploy", () => {
 	it("triggers deploy hooks for selected sites and redirects back to dashboard", async () => {
 		vi.spyOn(globalThis, "fetch").mockImplementation(
 			makeFetchMock((url) =>
-				new URL(url).hostname === "deploy.example.com" // codeql[js/incomplete-url-substring-sanitization] test mock routing — exact hostname comparison via new URL()
+				new URL(url).hostname === "deploy.example.com" // audit-ok: test mock routing — uses new URL().hostname (exact equality), not a substring check; codeql[js/incomplete-url-substring-sanitization]
 					? { ok: true, status: 202, body: {} }
 					: { ok: true, status: 200, body: {} },
 			),

@@ -91,8 +91,10 @@ export async function generateSrcset(
 		const widths = [400, 800, 1200] as const;
 		const parts: string[] = [];
 
-		const basename = originalPublicPath
-			.replace(/\.[^.]+$/, "") // audit-ok: [^.]+ is a negated class — cannot overlap with ., so no backtracking; codeql[js/polynomial-redos]
+		const dot = originalPublicPath.lastIndexOf(".");
+		const noExt =
+			dot > 0 ? originalPublicPath.slice(0, dot) : originalPublicPath;
+		const basename = noExt
 			.replace(/^\/images\/uploads\//, "")
 			.replace(/^\/images\//, "");
 

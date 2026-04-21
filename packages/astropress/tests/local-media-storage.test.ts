@@ -10,10 +10,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const { testUploadsDir } = vi.hoisted(() => {
 	// eslint-disable-next-line @typescript-eslint/no-require-imports
+	const { mkdtempSync } = require("node:fs") as typeof import("node:fs");
+	// eslint-disable-next-line @typescript-eslint/no-require-imports
 	const { join } = require("node:path") as typeof import("node:path");
 	// eslint-disable-next-line @typescript-eslint/no-require-imports
 	const { tmpdir } = require("node:os") as typeof import("node:os");
-	return { testUploadsDir: join(tmpdir(), "astropress-media-test-suite") }; // audit-ok: path used inside vi.mock() for mocking only, no real file created here
+	return { testUploadsDir: mkdtempSync(join(tmpdir(), "astropress-media-")) };
 });
 
 vi.mock("../src/local-image-storage", () => ({
