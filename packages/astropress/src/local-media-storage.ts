@@ -9,6 +9,15 @@ import {
 
 const uploadsDir = getLocalUploadsDir();
 
+const MIME_EXT: Record<string, string> = {
+	"image/jpeg": ".jpg",
+	"image/png": ".png",
+	"image/webp": ".webp",
+	"image/gif": ".gif",
+	"image/avif": ".avif",
+	"image/svg+xml": ".svg",
+};
+
 const allowedMimeTypes = new Set([
 	"image/jpeg",
 	"image/png",
@@ -90,8 +99,9 @@ export function buildLocalMediaDescriptor(input: {
 			.replace(/[^a-z0-9]+/gi, "-")
 			.replace(/^-|-$/g, "")
 			.toLowerCase() || "upload";
+	const safeExt = MIME_EXT[guessedMime] ?? ".bin";
 	const id = `media-${randomUUID()}`;
-	const storedFilename = `${baseName}-${id}${extension}`;
+	const storedFilename = `${id}${safeExt}`;
 	const diskPath = path.join(uploadsDir, storedFilename);
 	const publicPath = `/images/uploads/${storedFilename}`;
 
@@ -124,8 +134,8 @@ export function createLocalMediaUpload(input: {
 	}
 
 	ensureLocalUploadsDir();
-	// audit-ok: diskPath is under a controlled uploads dir with a randomUUID-based filename
-	writeFileSync(descriptor.asset.diskPath, Buffer.from(input.bytes)); // codeql[js/insecure-temporary-file]
+	// audit-ok: diskPath is derived solely from a randomUUID-based storedFilename — no user input in the path
+	writeFileSync(descriptor.asset.diskPath, Buffer.from(input.bytes));
 	return descriptor;
 }
 

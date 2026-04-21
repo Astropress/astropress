@@ -278,6 +278,21 @@ function checkFile(file: string, src: string): Violation[] {
 						"lazy quantifier on negated character class ([^x]* ?) — remove the ? (greedy and lazy are identical here) to eliminate CodeQL's polynomial-redos flag [js/polynomial-redos]",
 				});
 			}
+			// ── 7d. Unbounded greedy [^>] in .replace() ──────────────────────
+			// [^>]* or [^>]+ without a length bound in .replace() creates O(n²)
+			// backtracking on non-matching HTML input (e.g. /<img([^>]*)>/).
+			// Fix: add a bound like [^>]{0,2048}. Rule: js/polynomial-redos
+			if (
+				/\.replace\(/.test(line) &&
+				/\[\^>[^\]]*\][*+](?!\?)(?!\{)/.test(line) // audit-ok: testing source text for unbounded [^>] greedy quantifier
+			) {
+				violations.push({
+					file: rel,
+					line: i + 1,
+					message:
+						"unbounded [^>]* or [^>]+ in .replace() — add a length bound (e.g. [^>]{0,2048}) to prevent O(n²) backtracking on non-matching input [js/polynomial-redos]",
+				});
+			}
 		}
 	}
 
