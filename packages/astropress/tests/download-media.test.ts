@@ -1,8 +1,26 @@
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
 	downloadMedia,
 	validateMediaSourceUrl,
 } from "../src/import/download-media.js";
+
+// ---------------------------------------------------------------------------
+// Sharp mock — must be hoisted so the module sees the mock on first import.
+// sharpMock is the constructor spy; toBufferMock is the instance method spy.
+// ---------------------------------------------------------------------------
+
+const { sharpMock, toBufferMock } = vi.hoisted(() => {
+	const toBufferMock = vi.fn(async () => Buffer.from([0xaa, 0xbb]));
+	const sharpMock = vi.fn(() => ({ toBuffer: toBufferMock }));
+	return { sharpMock, toBufferMock };
+});
+
+vi.mock("sharp", () => ({ default: sharpMock }));
+
+beforeEach(() => {
+	sharpMock.mockClear();
+	toBufferMock.mockClear();
+});
 
 describe("validateMediaSourceUrl", () => {
 	it("accepts http URLs", () => {
@@ -130,21 +148,110 @@ describe("downloadMedia", () => {
 		vi.unstubAllGlobals();
 	});
 
-	it("returns bytes for valid image response", async () => {
-		const jpeg = new Uint8Array([0xff, 0xd8, 0xff, 0xe0]);
+	it("transcodes image/jpeg through sharp and returns its output", async () => {
+		const rawJpeg = new Uint8Array([0xff, 0xd8, 0xff, 0xe0]);
 		vi.stubGlobal(
 			"fetch",
 			vi.fn(
 				async () =>
-					new Response(jpeg, {
+					new Response(rawJpeg, {
 						status: 200,
 						headers: { "content-type": "image/jpeg" },
 					}),
 			),
 		);
 		const bytes = await downloadMedia("https://example.com/photo.jpg");
+		expect(sharpMock).toHaveBeenCalledOnce();
 		expect(bytes).toBeInstanceOf(Uint8Array);
-		expect(bytes.length).toBe(4);
+		// Returns sharp's re-encoded output, not the raw HTTP bytes
+		expect(Array.from(bytes)).toEqual([0xaa, 0xbb]);
+		vi.unstubAllGlobals();
+	});
+
+	it("transcodes image/png through sharp", async () => {
+		vi.stubGlobal(
+			"fetch",
+			vi.fn(
+				async () =>
+					new Response(new Uint8Array([0x89, 0x50, 0x4e, 0x47]), {
+						status: 200,
+						headers: { "content-type": "image/png" },
+					}),
+			),
+		);
+		await downloadMedia("https://example.com/photo.png");
+		expect(sharpMock).toHaveBeenCalledOnce();
+		vi.unstubAllGlobals();
+	});
+
+	it("passes image/svg+xml through without transcoding", async () => {
+		vi.stubGlobal(
+			"fetch",
+			vi.fn(
+				async () =>
+					new Response("<svg></svg>", {
+						status: 200,
+						headers: { "content-type": "image/svg+xml" },
+					}),
+			),
+		);
+		const bytes = await downloadMedia("https://example.com/icon.svg");
+		expect(sharpMock).not.toHaveBeenCalled();
+		expect(bytes).toBeInstanceOf(Uint8Array);
+		vi.unstubAllGlobals();
+	});
+
+	it("passes video/mp4 through without transcoding", async () => {
+		vi.stubGlobal(
+			"fetch",
+			vi.fn(
+				async () =>
+					new Response(new Uint8Array(8), {
+						status: 200,
+						headers: { "content-type": "video/mp4" },
+					}),
+			),
+		);
+		const bytes = await downloadMedia("https://example.com/clip.mp4");
+		expect(sharpMock).not.toHaveBeenCalled();
+		expect(bytes.length).toBe(8);
+		vi.unstubAllGlobals();
+	});
+
+	it("passes application/pdf through without transcoding", async () => {
+		vi.stubGlobal(
+			"fetch",
+			vi.fn(
+				async () =>
+					new Response(new Uint8Array(16), {
+						status: 200,
+						headers: { "content-type": "application/pdf" },
+					}),
+			),
+		);
+		const bytes = await downloadMedia("https://example.com/doc.pdf");
+		expect(sharpMock).not.toHaveBeenCalled();
+		expect(bytes.length).toBe(16);
+		vi.unstubAllGlobals();
+	});
+
+	it("propagates sharp decode errors for corrupt image data", async () => {
+		toBufferMock.mockRejectedValueOnce(
+			new Error("Input buffer contains unsupported image format"),
+		);
+		vi.stubGlobal(
+			"fetch",
+			vi.fn(
+				async () =>
+					new Response(new Uint8Array([0x00, 0x00]), {
+						status: 200,
+						headers: { "content-type": "image/jpeg" },
+					}),
+			),
+		);
+		await expect(
+			downloadMedia("https://example.com/corrupt.jpg"),
+		).rejects.toThrow("Input buffer contains unsupported image format");
 		vi.unstubAllGlobals();
 	});
 

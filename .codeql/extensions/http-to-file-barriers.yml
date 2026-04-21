@@ -1,0 +1,9 @@
+extensions:
+  - addsTo:
+      pack: codeql/javascript-all
+      extensible: barrierModel
+    data:
+      # downloadMedia re-encodes transcodable images via sharp (pixel-level decode+encode)
+      # and validates URL, content-type, and size before returning. Declaring its return
+      # value as a barrier stops CodeQL from tracking raw fetch bytes into writeFile.
+      - ["@astropress-diy/astropress", "Member[downloadMedia].ReturnValue", "http-to-file-access"]

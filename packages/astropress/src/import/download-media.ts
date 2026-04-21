@@ -1,4 +1,5 @@
 import { writeFile } from "node:fs/promises";
+import sharp from "sharp";
 
 const ALLOWED_CONTENT_TYPES = [
 	"image/jpeg",
@@ -22,6 +23,19 @@ const MAX_MEDIA_BYTES = 50 * 1024 * 1024;
 const PRIVATE_HOST_RE =
 	/^(localhost|127\.\d+\.\d+\.\d+|::1|0\.0\.0\.0|10\.\d+\.\d+\.\d+|172\.(1[6-9]|2\d|3[01])\.\d+\.\d+|192\.168\.\d+\.\d+|169\.254\.\d+\.\d+|fd[0-9a-f]{2}:|fc[0-9a-f]{2}:)/i;
 
+// Image types sharp can decode and re-encode at pixel level.
+// Re-encoding validates format integrity, strips metadata, and defeats polyglot files.
+// Non-image types (SVG, PDF, video, audio) pass through untransformed.
+const TRANSCODABLE_TYPES = new Set([
+	"image/jpeg",
+	"image/png",
+	"image/gif",
+	"image/webp",
+	"image/avif",
+	"image/bmp",
+	"image/tiff",
+]);
+
 export function validateMediaSourceUrl(rawUrl: string): URL {
 	let parsed: URL;
 	try {
@@ -38,6 +52,17 @@ export function validateMediaSourceUrl(rawUrl: string): URL {
 		);
 	}
 	return parsed;
+}
+
+async function transcodeImageBytes(
+	bytes: Uint8Array,
+	mimeType: string,
+): Promise<Uint8Array> {
+	if (!TRANSCODABLE_TYPES.has(mimeType)) {
+		return bytes;
+	}
+	const buf = await sharp(Buffer.from(bytes)).toBuffer();
+	return new Uint8Array(buf);
 }
 
 export async function downloadMedia(rawUrl: string): Promise<Uint8Array> {
@@ -67,7 +92,7 @@ export async function downloadMedia(rawUrl: string): Promise<Uint8Array> {
 			`Blocked: download size ${bytes.length} exceeds ${MAX_MEDIA_BYTES} bytes`,
 		);
 	}
-	return bytes;
+	return transcodeImageBytes(bytes, contentType);
 }
 
 export async function downloadMediaToFile(
@@ -75,5 +100,5 @@ export async function downloadMediaToFile(
 	targetPath: string,
 ): Promise<void> {
 	const bytes = await downloadMedia(rawUrl);
-	await writeFile(targetPath, bytes); // lgtm[js/http-to-file-access]
+	await writeFile(targetPath, bytes);
 }
