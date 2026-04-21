@@ -6,7 +6,11 @@ import { DatabaseSync } from "node:sqlite";
 import { describe, expect, it, vi } from "vitest";
 import { createAstropressWordPressImportSource } from "../src/import/wordpress.js";
 
-const JPEG_MAGIC = new Uint8Array([0xff, 0xd8, 0xff, 0xe0, 0x00, 0x10]);
+// SVG passes through downloadMedia without sharp transcoding, so no real
+// image data is needed — the contract test verifies pipeline flow, not format.
+const SVG_BYTES = new TextEncoder().encode(
+	"<svg xmlns='http://www.w3.org/2000/svg'/>",
+);
 
 describe("wordpress import contract", () => {
 	it("parses WXR content into staged import artifacts and redirects", async () => {
@@ -14,9 +18,9 @@ describe("wordpress import contract", () => {
 			"fetch",
 			vi.fn(async (url: string) => {
 				if (typeof url === "string" && url.startsWith("https://example.org/")) {
-					return new Response(JPEG_MAGIC, {
+					return new Response(SVG_BYTES, {
 						status: 200,
-						headers: { "content-type": "image/jpeg" },
+						headers: { "content-type": "image/svg+xml" },
 					});
 				}
 				throw new Error(`Unexpected fetch in test: ${url}`);
