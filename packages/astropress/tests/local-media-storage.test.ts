@@ -79,7 +79,7 @@ describe("buildLocalMediaDescriptor", () => {
 		expect(result.asset.fileSize).toBe(1024);
 		expect(result.asset.publicPath).toMatch(/^\/images\/uploads\//);
 		expect(result.asset.r2Key).toMatch(/^uploads\//);
-		expect(result.asset.storedFilename).toMatch(/\.png$/);
+		expect(result.asset.storedFilename).toMatch(/^media-[0-9a-f-]{36}$/);
 	});
 
 	it("uses provided title and altText", () => {

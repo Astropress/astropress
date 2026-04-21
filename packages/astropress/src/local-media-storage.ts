@@ -9,15 +9,6 @@ import {
 
 const uploadsDir = getLocalUploadsDir();
 
-const MIME_EXT: Record<string, string> = {
-	"image/jpeg": ".jpg",
-	"image/png": ".png",
-	"image/webp": ".webp",
-	"image/gif": ".gif",
-	"image/avif": ".avif",
-	"image/svg+xml": ".svg",
-};
-
 const allowedMimeTypes = new Set([
 	"image/jpeg",
 	"image/png",
@@ -99,9 +90,8 @@ export function buildLocalMediaDescriptor(input: {
 			.replace(/[^a-z0-9]+/gi, "-")
 			.replace(/^-|-$/g, "")
 			.toLowerCase() || "upload";
-	const safeExt = MIME_EXT[guessedMime] ?? ".bin";
 	const id = `media-${randomUUID()}`;
-	const storedFilename = `${id}${safeExt}`;
+	const storedFilename = id;
 	const diskPath = path.join(uploadsDir, storedFilename);
 	const publicPath = `/images/uploads/${storedFilename}`;
 
@@ -113,7 +103,7 @@ export function buildLocalMediaDescriptor(input: {
 			diskPath,
 			publicPath,
 			r2Key: `uploads/${storedFilename}`,
-			mimeType: input.mimeType || guessMediaMimeType(storedFilename),
+			mimeType: guessedMime,
 			fileSize: input.bytes.byteLength,
 			title: input.title?.trim() || baseName,
 			altText: input.altText?.trim() ?? "",
