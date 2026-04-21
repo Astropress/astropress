@@ -5,21 +5,24 @@ import {
 } from "../src/import/download-media.js";
 
 // ---------------------------------------------------------------------------
-// Sharp mock — must be hoisted so the module sees the mock on first import.
-// sharpMock is the constructor spy; toBufferMock is the instance method spy.
+// Mock the TS wrapper (not sharp's native addon directly). With isolate:false
+// in CI (CI=true + --coverage), the native .node binary is already loaded by
+// the time this file's vi.mock() fires and cannot be replaced. Mocking the
+// pure-TS wrapper avoids that constraint. vi.hoisted() is required so the
+// reference is available inside the factory, which is hoisted above imports.
 // ---------------------------------------------------------------------------
 
-const { sharpMock, toBufferMock } = vi.hoisted(() => {
-	const toBufferMock = vi.fn(async () => Buffer.from([0xaa, 0xbb]));
-	const sharpMock = vi.fn(() => ({ toBuffer: toBufferMock }));
-	return { sharpMock, toBufferMock };
+const { transcodeViaSharpMock } = vi.hoisted(() => {
+	const transcodeViaSharpMock = vi.fn(async () => Buffer.from([0xaa, 0xbb]));
+	return { transcodeViaSharpMock };
 });
 
-vi.mock("sharp", () => ({ default: sharpMock }));
+vi.mock("../src/import/sharp-transcode.js", () => ({
+	transcodeViaSharp: transcodeViaSharpMock,
+}));
 
 beforeEach(() => {
-	sharpMock.mockClear();
-	toBufferMock.mockClear();
+	transcodeViaSharpMock.mockClear();
 });
 
 describe("validateMediaSourceUrl", () => {
@@ -161,7 +164,7 @@ describe("downloadMedia", () => {
 			),
 		);
 		const bytes = await downloadMedia("https://example.com/photo.jpg");
-		expect(sharpMock).toHaveBeenCalledOnce();
+		expect(transcodeViaSharpMock).toHaveBeenCalledOnce();
 		expect(bytes).toBeInstanceOf(Uint8Array);
 		// Returns sharp's re-encoded output, not the raw HTTP bytes
 		expect(Array.from(bytes)).toEqual([0xaa, 0xbb]);
@@ -180,7 +183,7 @@ describe("downloadMedia", () => {
 			),
 		);
 		await downloadMedia("https://example.com/photo.png");
-		expect(sharpMock).toHaveBeenCalledOnce();
+		expect(transcodeViaSharpMock).toHaveBeenCalledOnce();
 		vi.unstubAllGlobals();
 	});
 
@@ -199,7 +202,7 @@ describe("downloadMedia", () => {
 			),
 		);
 		const bytes = await downloadMedia("https://example.com/icon.svg");
-		expect(sharpMock).not.toHaveBeenCalled();
+		expect(transcodeViaSharpMock).not.toHaveBeenCalled();
 		const text = new TextDecoder().decode(bytes);
 		expect(text).toContain("circle");
 		vi.unstubAllGlobals();
@@ -272,7 +275,7 @@ describe("downloadMedia", () => {
 			),
 		);
 		const bytes = await downloadMedia("https://example.com/clip.mp4");
-		expect(sharpMock).not.toHaveBeenCalled();
+		expect(transcodeViaSharpMock).not.toHaveBeenCalled();
 		expect(bytes.length).toBe(8);
 		vi.unstubAllGlobals();
 	});
@@ -289,13 +292,13 @@ describe("downloadMedia", () => {
 			),
 		);
 		const bytes = await downloadMedia("https://example.com/doc.pdf");
-		expect(sharpMock).not.toHaveBeenCalled();
+		expect(transcodeViaSharpMock).not.toHaveBeenCalled();
 		expect(bytes.length).toBe(16);
 		vi.unstubAllGlobals();
 	});
 
 	it("propagates sharp decode errors for corrupt image data", async () => {
-		toBufferMock.mockRejectedValueOnce(
+		transcodeViaSharpMock.mockRejectedValueOnce(
 			new Error("Input buffer contains unsupported image format"),
 		);
 		vi.stubGlobal(

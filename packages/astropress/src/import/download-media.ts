@@ -1,6 +1,6 @@
 import { writeFile } from "node:fs/promises";
 import sanitizeHtml from "sanitize-html";
-import sharp from "sharp";
+import { transcodeViaSharp } from "./sharp-transcode.js";
 
 const ALLOWED_CONTENT_TYPES = [
 	"image/jpeg",
@@ -339,7 +339,7 @@ async function transcodeImageBytes(
 	if (!TRANSCODABLE_TYPES.has(mimeType)) {
 		return bytes;
 	}
-	const buf = await sharp(Buffer.from(bytes)).toBuffer();
+	const buf = await transcodeViaSharp(Buffer.from(bytes));
 	return new Uint8Array(buf);
 }
 
