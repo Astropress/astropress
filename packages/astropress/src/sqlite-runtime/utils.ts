@@ -158,11 +158,14 @@ export function normalizePath(value: string) {
 }
 
 export function slugifyTerm(value: string) {
-	return value
-		.trim()
-		.toLowerCase()
-		.replace(/[^a-z0-9]+/g, "-")
-		.replace(/^-+|-+$/g, ""); // CodeQL[js/polynomial-redos] anchored /^-+/ and /-+$/ are linear — anchors prevent overlap
+	return (
+		value
+			.trim()
+			.toLowerCase()
+			.replace(/[^a-z0-9]+/g, "-")
+			// codeql[js/polynomial-redos] anchored /^-+/ and /-+$/ are linear — anchors prevent overlap
+			.replace(/^-+|-+$/g, "")
+	);
 }
 
 export function normalizeContentStatus(input?: string | null): ContentStatus {

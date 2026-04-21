@@ -37,18 +37,14 @@ function isSuppressed(line: string): boolean {
 	return (
 		line.includes("// audit-ok:") ||
 		line.includes("<!-- audit-ok:") ||
-		line.includes("// CodeQL[")
+		line.includes("// codeql[")
 	);
 }
 
-// Check the current line and up to 2 lines above/below (handles biome reformatting
-// trailing comments onto the next line)
+// Check the current line and up to 2 lines before (GitHub CodeQL requires the
+// suppression comment on a standalone line directly before the flagged code).
 function isSuppressedNear(lines: string[], i: number): boolean {
-	for (
-		let j = Math.max(0, i - 1);
-		j <= Math.min(lines.length - 1, i + 2);
-		j++
-	) {
+	for (let j = Math.max(0, i - 2); j <= i; j++) {
 		if (isSuppressed(lines[j])) return true;
 	}
 	return false;
@@ -161,25 +157,27 @@ function checkFile(file: string, src: string): Violation[] {
 	}
 
 	// ── 5. Bogus CodeQL suppression syntax ──────────────────────────────────
-	// Detects: // codeql[...] (wrong case) and // lgtm[...] (deprecated LGTM.com syntax)
-	// both of which do NOT suppress GitHub Advanced Security alerts.
-	// The correct format is // CodeQL[js/rule-id] (capital C, capital QL).
+	// Detects: // codeql[...] (wrong case — capital C/QL) and // lgtm[...]
+	// (deprecated LGTM.com syntax), both of which do NOT suppress GitHub
+	// Advanced Security alerts.
+	// The correct format is // codeql[js/rule-id] (all lowercase) on a
+	// standalone line directly before the flagged code.
 	for (let i = 0; i < lines.length; i++) {
 		const line = lines[i];
-		if (/\/\/ codeql\[/.test(line)) {
+		if (/^\s*\/\/ CodeQL\[/.test(line)) {
 			violations.push({
 				file: rel,
 				line: i + 1,
 				message:
-					"// codeql[...] is wrong case — use // CodeQL[js/rule-id] (capital C, capital QL) for GitHub Advanced Security suppressions",
+					"// CodeQL[...] (capital C/QL) is wrong case — use // codeql[js/rule-id] (all lowercase) on a standalone line before the flagged code",
 			});
 		}
-		if (/\/\/ lgtm\[/.test(line)) {
+		if (/^\s*\/\/ lgtm\[/.test(line)) {
 			violations.push({
 				file: rel,
 				line: i + 1,
 				message:
-					"// lgtm[...] is deprecated LGTM.com syntax and does NOT suppress GitHub Advanced Security — use // CodeQL[js/rule-id] instead",
+					"// lgtm[...] is deprecated LGTM.com syntax and does NOT suppress GitHub Advanced Security — use // codeql[js/rule-id] instead",
 			});
 		}
 	}
@@ -188,7 +186,7 @@ function checkFile(file: string, src: string): Violation[] {
 	// Detects: writeFile(...) calls where asset.filename appears within 4 lines
 	// (the call and its arguments are typically split across lines). path.basename()
 	// sanitizes path traversal but CodeQL still taint-tracks the write itself.
-	// Require explicit // CodeQL[js/http-to-file-access] near the call.
+	// Require explicit // codeql[js/http-to-file-access] near the call.
 	// Rule: js/http-to-file-access
 	if (/packages\/[^/]+\/src\/import\//.test(rel)) {
 		for (let i = 0; i < lines.length; i++) {
@@ -202,7 +200,7 @@ function checkFile(file: string, src: string): Violation[] {
 					file: rel,
 					line: i + 1,
 					message:
-						"writeFile() with HTTP-sourced filename — add // CodeQL[js/http-to-file-access] after confirming path.basename() is applied [js/http-to-file-access]",
+						"writeFile() with HTTP-sourced filename — add // codeql[js/http-to-file-access] after confirming path.basename() is applied [js/http-to-file-access]",
 				});
 			}
 		}
@@ -230,7 +228,7 @@ function checkFile(file: string, src: string): Violation[] {
 					file: rel,
 					line: i + 1,
 					message:
-						"nested quantifier in regex — (X+)+ or (X*)+ causes polynomial backtracking; add // CodeQL[js/polynomial-redos] with justification if intentional [js/polynomial-redos]",
+						"nested quantifier in regex — (X+)+ or (X*)+ causes polynomial backtracking; add // codeql[js/polynomial-redos] with justification if intentional [js/polynomial-redos]",
 				});
 			}
 			// /char+$/ or /[class]+$/ in .replace() — CodeQL flags these as potentially
@@ -240,7 +238,7 @@ function checkFile(file: string, src: string): Violation[] {
 					file: rel,
 					line: i + 1,
 					message:
-						"quantifier before end-anchor in .replace() regex — CodeQL flags this as polynomial; add // CodeQL[js/polynomial-redos] with justification if the pattern is linear [js/polynomial-redos]",
+						"quantifier before end-anchor in .replace() regex — CodeQL flags this as polynomial; add // codeql[js/polynomial-redos] with justification if the pattern is linear [js/polynomial-redos]",
 				});
 			}
 		}
@@ -264,7 +262,7 @@ function checkFile(file: string, src: string): Violation[] {
 					file: rel,
 					line: i + 1,
 					message:
-						"writeFileSync() with non-literal path — add // CodeQL[js/insecure-temporary-file] if the path is constructed safely (e.g. randomUUID-based under a controlled directory) [js/insecure-temporary-file]",
+						"writeFileSync() with non-literal path — add // codeql[js/insecure-temporary-file] if the path is constructed safely (e.g. randomUUID-based under a controlled directory) [js/insecure-temporary-file]",
 				});
 			}
 		}
@@ -292,6 +290,29 @@ function checkFile(file: string, src: string): Violation[] {
 		}
 	}
 
+	// ── 10. execSync with template literal interpolation in tooling scripts ────
+	// Detects: execSync() with a template literal containing ${var} in tooling/ where a variable is
+	// interpolated into a shell command string. CodeQL flags this as
+	// js/shell-command-injection-more-sources / js/indirect-uncontrolled-command-line
+	// even in internal tooling because the variable may originate from env or args.
+	if (/tooling\/scripts\//.test(rel)) {
+		for (let i = 0; i < lines.length; i++) {
+			const line = lines[i];
+			// audit-ok: regex literal for detection, not an actual execSync call
+			if (
+				/\bexecSync\(`[^`]*\$\{/.test(line) &&
+				!isSuppressedNear(lines, i)
+			) {
+				violations.push({
+					file: rel,
+					line: i + 1,
+					message:
+						"execSync() with template literal interpolation — add // codeql[js/shell-command-injection-more-sources] on the line before if the values are trusted internal inputs [js/shell-command-injection-more-sources]",
+				});
+			}
+		}
+	}
+
 	return violations;
 }
 
@@ -301,6 +322,7 @@ function main(): void {
 		join(root, "packages/astropress/tests"),
 		join(root, "packages/astropress-nexus/src"),
 		join(root, "packages/astropress-nexus/tests"),
+		join(root, "tooling/scripts"),
 	];
 
 	const allFiles = srcRoots

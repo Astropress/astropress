@@ -5,7 +5,7 @@
 export function optimizeImageLoading(html: string): string {
 	let firstImage = true;
 
-	// CodeQL[js/polynomial-redos] [^>]* is bounded by > delimiter — no backtracking ambiguity
+	// codeql[js/polynomial-redos] [^>]* is bounded by > delimiter — no backtracking ambiguity
 	return html.replace(/<img([^>]*?)>/g, (match, attrs) => {
 		// Skip if already has a loading attribute (lazy, eager, etc.)
 		// Use a simple string check to avoid nested-quantifier ReDoS warnings

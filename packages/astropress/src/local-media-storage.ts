@@ -124,7 +124,8 @@ export function createLocalMediaUpload(input: {
 	}
 
 	ensureLocalUploadsDir();
-	writeFileSync(descriptor.asset.diskPath, Buffer.from(input.bytes)); // CodeQL[js/insecure-temporary-file] diskPath is under a controlled uploads dir with a randomUUID-based filename
+	// codeql[js/insecure-temporary-file] diskPath is under a controlled uploads dir with a randomUUID-based filename
+	writeFileSync(descriptor.asset.diskPath, Buffer.from(input.bytes));
 	return descriptor;
 }
 

@@ -198,7 +198,7 @@ async function downloadWixMedia(
 		try {
 			const response = await fetch(asset.sourceUrl);
 			if (!response.ok) throw new Error(`HTTP ${response.status}`);
-			// CodeQL[js/http-to-file-access] path.basename() strips traversal from the HTTP-supplied filename
+			// codeql[js/http-to-file-access] path.basename() strips traversal from the HTTP-supplied filename
 			await writeFile(
 				path.join(downloadsDir, path.basename(asset.filename)),
 				Buffer.from(await response.arrayBuffer()),

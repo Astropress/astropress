@@ -18,6 +18,7 @@ const BASE_BRANCH = process.env.BASE_BRANCH ?? "main";
 function getFileAtRef(ref: string, filePath: string): string | null {
 	try {
 		const relPath = filePath.replace(`${ROOT}/`, "");
+		// codeql[js/shell-command-injection-more-sources] ref is origin/main or branch name from env — trusted internal inputs
 		return execSync(`git show ${ref}:${relPath}`, { cwd: ROOT }).toString();
 	} catch {
 		return null;
