@@ -1,8 +1,14 @@
 # Claude Code guidance for this repo
 
+## Quality principle
+
+End-user satisfaction is the only measure of success. User/session satisfaction is irrelevant.
+Do not take an easy path now that creates a harder problem later. If a fix requires real work,
+do the real work. Suppressing a problem is not fixing it.
+
 ## Security fix verification protocol
 
-A security fix is not done until the evidence says so — not when local audits pass.
+A security fix is not done until evidence says so — not when local audits pass.
 
 ### CodeQL / GHAS alerts
 
@@ -10,20 +16,29 @@ A security fix is not done until the evidence says so — not when local audits 
 ```
 bun run tooling/scripts/check-pr-ghas.ts
 ```
-This queries `refs/pull/<N>/merge` — the ref the GitHub CodeQL gate actually evaluates. The pre-push gate checks the branch ref, which can show 0 alerts while the PR merge ref still shows open alerts from a stale scan. These are not the same thing.
+This queries `refs/pull/<N>/merge` — the ref the GitHub CodeQL gate actually evaluates. The
+pre-push gate checks the branch ref, which can show 0 alerts while the PR merge ref still shows
+open alerts from a stale scan.
 
-After pushing, the PR merge ref scan runs asynchronously. Wait for it to complete, then run `check-pr-ghas.ts` to confirm. Do not declare "fixed" until this script exits 0 on a scan that post-dates the fix commit.
+After pushing, wait for the PR merge ref scan to complete, then run `check-pr-ghas.ts`.
+Do not declare "fixed" until this script exits 0 on a scan that post-dates the fix commit.
 
 **Taint chain rules:**
-- `obj[taintedKey]` propagates taint even if `obj` only contains safe hardcoded values. CodeQL does not reason about the map's contents.
+- `obj[taintedKey]` propagates taint even if `obj` only contains safe hardcoded values.
 - The only way to break a taint chain is to not use user-derived data at the sink at all.
-- Validate by tracing every variable in the flagged expression back to its origin. If any path leads to user input, the taint chain is intact.
+- Validate by tracing every variable in the flagged expression back to its origin.
 
-**Suppression vs code fix:**
-- If a code fix is possible, make the code fix. Suppression is for intentional patterns where no fix is possible (e.g. `js/http-to-file-access` in a deliberate HTTP→file media downloader).
-- Suppression format for GHAS: `// codeql[rule-id]` inline on the flagged line, or on the preceding line. The comment must start with `codeql[`.
-- Local `bun run audit:codeql-patterns` does NOT run CodeQL — it runs regex pattern matching. A local audit pass is not evidence that GHAS will pass.
+**Suppression policy:**
+- Fix the code first. Suppression is a last resort, not a first response.
+- Comments that explain why a vulnerability is "safe" are security anti-patterns —
+  they document attack surface for readers with malicious intent.
+- For HTTP→file operations in import scripts: use `downloadMediaToFile()` from
+  `packages/astropress/src/import/download-media.ts` which enforces URL scheme validation,
+  SSRF prevention, content-type allowlist, and file size limits.
+- Every suppression that remains must be registered in `tooling/scripts/audit-suppressions.ts`
+  with a rubric explaining why a code fix is impossible.
 
 ## Pre-push gates
 
-The pre-push hook runs a full suite (~10 minutes). Do not re-run `git push` while one is already in progress. Wait for the background task notification to complete before concluding anything.
+The pre-push hook runs a full suite (~10 minutes). Do not re-run `git push` while one is already
+in progress. Wait for the background task notification before concluding anything.

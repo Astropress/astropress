@@ -7,6 +7,7 @@ import type {
 	AstropressWordPressImportReport,
 	ImportSource,
 } from "../platform-contracts";
+import { downloadMedia } from "./download-media.js";
 import {
 	applyImportToLocalRuntime,
 	fileSizeOrNull,
@@ -61,13 +62,8 @@ async function downloadMediaAssets(
 		if (completed.has(asset.id) && (await fileSizeOrNull(assetTarget)) !== null)
 			continue;
 		try {
-			const response = await fetch(asset.sourceUrl);
-			if (!response.ok) throw new Error(`HTTP ${response.status}`);
-			await writeFile(
-				assetTarget,
-				// audit-ok: assetTarget uses path.basename() to strip traversal from the HTTP-supplied filename; bytes intentionally written from the import response
-				new Uint8Array(await response.arrayBuffer()), // lgtm[js/http-to-file-access]
-			);
+			const mediaBytes = await downloadMedia(asset.sourceUrl);
+			await writeFile(assetTarget, mediaBytes);
 			completed.add(asset.id);
 			downloadedMedia += 1;
 		} catch (error) {

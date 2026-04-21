@@ -24,6 +24,7 @@ pre-commit:
         bun run audit:deps &&
         bun run audit:security &&
         bun run audit:codeql-patterns &&
+        bun run audit:suppressions &&
         bun run audit:honesty &&
         bun run audit:microcopy &&
         bun run check:version &&

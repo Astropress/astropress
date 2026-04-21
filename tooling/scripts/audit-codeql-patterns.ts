@@ -107,21 +107,21 @@ function checkFile(file: string, src: string): Violation[] {
 	}
 
 	// ── 3. Unsafe URL interpolation in HTML href attributes ───────────────────
-	// Detects: href="${someVar}" in template literals without escapeHtml wrapping.
+	// Detects: href="${someVar}" in template literals without proper HTML encoding.
 	// Rule: js/html-constructed-from-input
+	// Accepted safe patterns: escapeHtml(url) or encodeHref(url) wrapping the interpolation.
 	if (/packages\/[^/]+\/src\//.test(rel) && !rel.includes("/web-components/")) {
 		for (let i = 0; i < lines.length; i++) {
 			const line = lines[i];
-			// Template literal with href="${...}" where the interpolation isn't already escaped
 			if (
-				/href=["'`]\${(?!escapeHtml\()/.test(line) &&
+				/href=["'`]\${(?!escapeHtml\()(?!encodeHref\()/.test(line) &&
 				!isSuppressedNear(lines, i)
 			) {
 				violations.push({
 					file: rel,
 					line: i + 1,
 					message:
-						"URL interpolated into href without escapeHtml() — wrap with escapeHtml() to prevent HTML injection [js/html-constructed-from-input]",
+						"URL interpolated into href without HTML encoding — wrap with escapeHtml() or encodeHref() to prevent HTML injection [js/html-constructed-from-input]",
 				});
 			}
 		}
@@ -166,55 +166,32 @@ function checkFile(file: string, src: string): Violation[] {
 		}
 	}
 
-	// ── 5. Bogus CodeQL suppression syntax ──────────────────────────────────
-	// Detects wrong-case suppression comments (capital CodeQL) and deprecated
-	// lgtm comments — both do NOT suppress GitHub
-	// Advanced Security alerts.
-	// The correct format is // codeql[js/rule-id] (all lowercase) either
-	// inline on the flagged line or on the line directly before it.
-	// Lookbehind (?<!["'`]) avoids false positives inside string literals.
-	for (let i = 0; i < lines.length; i++) {
-		const line = lines[i];
-		if (/(?<!["'`])\/\/ CodeQL\[/.test(line)) {
-			violations.push({
-				file: rel,
-				line: i + 1,
-				message:
-					"// CodeQL[...] (capital C/QL) is wrong case — use // codeql[js/rule-id] (all lowercase) inline on the flagged line or directly before it",
-			});
-		}
-		if (/^\s*\/\/ lgtm\[/.test(line)) {
-			violations.push({
-				file: rel,
-				line: i + 1,
-				message:
-					"// lgtm[...] is deprecated LGTM.com syntax and does NOT suppress GitHub Advanced Security — use // codeql[js/rule-id] instead",
-			});
-		}
-	}
-
-	// ── 6. writeFile with untrusted filename in import scripts ───────────────
+	// ── 6. writeFile with HTTP-sourced bytes in import scripts ─────────────────
 	// Detects: writeFile(...) calls where asset.filename appears within 4 lines
-	// (the call and its arguments are typically split across lines). path.basename()
-	// sanitizes path traversal but CodeQL still taint-tracks the write itself.
-	// Require explicit // codeql[js/http-to-file-access] near the call.
+	// without using the validated downloadMedia/downloadMediaToFile helpers.
+	// The helpers enforce URL scheme validation, SSRF prevention, content-type
+	// allowlist, and file size limits before any bytes are written.
 	// Rule: js/http-to-file-access
 	if (/packages\/[^/]+\/src\/import\//.test(rel)) {
 		for (let i = 0; i < lines.length; i++) {
 			if (!/\bwriteFile\b/.test(lines[i])) continue;
-			// Check whether .filename appears on this line or the next 3 (typical arg span)
 			const callWindow = lines
 				.slice(i, Math.min(lines.length, i + 4))
 				.join("\n");
+			// Only flag if the bytes written come directly from fetch (not from downloadMedia)
+			const fetchWindow = lines
+				.slice(Math.max(0, i - 10), i + 4)
+				.join("\n");
 			if (
 				/\.filename/.test(callWindow) &&
+				!/downloadMedia|downloadMediaToFile/.test(fetchWindow) &&
 				!isSuppressedInWindow(lines, i - 1, i + 4)
 			) {
 				violations.push({
 					file: rel,
 					line: i + 1,
 					message:
-						"writeFile() with HTTP-sourced filename — add // audit-ok: <reason> after confirming path.basename() sanitizes the filename [js/http-to-file-access]",
+						"writeFile() in import script with HTTP-sourced filename — use downloadMediaToFile() from import/download-media.ts which validates URL scheme, blocks SSRF, and enforces content-type/size limits [js/http-to-file-access]",
 				});
 			}
 		}

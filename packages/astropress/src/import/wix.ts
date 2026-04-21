@@ -1,5 +1,6 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { downloadMediaToFile } from "./download-media.js";
 import { applyWixImportToLocalRuntime } from "./wix-apply.js";
 import type { WixParsedBundle } from "./wix-apply.js";
 import {
@@ -196,12 +197,9 @@ async function downloadWixMedia(
 	for (const asset of assets) {
 		if (completedSet.has(asset.id)) continue;
 		try {
-			const response = await fetch(asset.sourceUrl);
-			if (!response.ok) throw new Error(`HTTP ${response.status}`);
-			await writeFile(
+			await downloadMediaToFile(
+				asset.sourceUrl,
 				path.join(downloadsDir, path.basename(asset.filename)),
-				// audit-ok: path.basename() strips traversal from the HTTP-supplied filename; bytes intentionally written from the import response
-				Buffer.from(await response.arrayBuffer()), // lgtm[js/http-to-file-access]
 			);
 			state.completed.push(asset.id);
 			downloadedMedia++;

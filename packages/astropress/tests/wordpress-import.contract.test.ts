@@ -3,11 +3,25 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { DatabaseSync } from "node:sqlite";
 
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { createAstropressWordPressImportSource } from "../src/import/wordpress.js";
+
+const JPEG_MAGIC = new Uint8Array([0xff, 0xd8, 0xff, 0xe0, 0x00, 0x10]);
 
 describe("wordpress import contract", () => {
 	it("parses WXR content into staged import artifacts and redirects", async () => {
+		vi.stubGlobal(
+			"fetch",
+			vi.fn(async (url: string) => {
+				if (typeof url === "string" && url.startsWith("https://example.org/")) {
+					return new Response(JPEG_MAGIC, {
+						status: 200,
+						headers: { "content-type": "image/jpeg" },
+					});
+				}
+				throw new Error(`Unexpected fetch in test: ${url}`);
+			}),
+		);
 		const workspace = await mkdtemp(
 			join(tmpdir(), "astropress-wordpress-import-"),
 		);
@@ -56,7 +70,7 @@ describe("wordpress import contract", () => {
 				"<wp:status>inherit</wp:status>",
 				"<wp:post_type>attachment</wp:post_type>",
 				"<wp:post_parent>101</wp:post_parent>",
-				"<wp:attachment_url>data:text/plain;base64,aGVsbG8=</wp:attachment_url>",
+				"<wp:attachment_url>https://example.org/wp-content/uploads/2024/01/hero.png</wp:attachment_url>",
 				"</item>",
 				"</channel>",
 				"</rss>",
@@ -178,6 +192,7 @@ describe("wordpress import contract", () => {
 		);
 
 		await rm(workspace, { recursive: true, force: true });
+		vi.unstubAllGlobals();
 	});
 
 	it("can apply staged imports into the local sqlite runtime idempotently", async () => {
@@ -194,7 +209,7 @@ describe("wordpress import contract", () => {
 				"<channel>",
 				"<wp:author><wp:author_id>7</wp:author_id><wp:author_login><![CDATA[admin]]></wp:author_login><wp:author_display_name><![CDATA[Admin Person]]></wp:author_display_name></wp:author>",
 				'<item><title><![CDATA[Hello World]]></title><link>https://example.org/blog/hello-world/</link><content:encoded><![CDATA[<p>Intro</p>]]></content:encoded><excerpt:encoded><![CDATA[A short summary]]></excerpt:encoded><wp:post_id>101</wp:post_id><wp:post_name>hello-world</wp:post_name><wp:status>publish</wp:status><wp:post_type>post</wp:post_type><category domain="category" nicename="news"><![CDATA[News]]></category><category domain="post_tag" nicename="featured"><![CDATA[Featured]]></category><wp:postmeta><wp:meta_key>_wp_old_slug</wp:meta_key><wp:meta_value>hello-old</wp:meta_value></wp:postmeta><wp:comment><wp:comment_id>1</wp:comment_id><wp:comment_author><![CDATA[Pat Reader]]></wp:comment_author><wp:comment_content><![CDATA[Nice post]]></wp:comment_content><wp:comment_approved>1</wp:comment_approved></wp:comment></item>',
-				"<item><title><![CDATA[Hero Image]]></title><link>https://example.org/wp-content/uploads/2024/01/hero.png</link><wp:post_id>201</wp:post_id><wp:post_name>hero-image</wp:post_name><wp:status>inherit</wp:status><wp:post_type>attachment</wp:post_type><wp:post_parent>101</wp:post_parent><wp:attachment_url>data:text/plain;base64,aGVsbG8=</wp:attachment_url></item>",
+				"<item><title><![CDATA[Hero Image]]></title><link>https://example.org/wp-content/uploads/2024/01/hero.png</link><wp:post_id>201</wp:post_id><wp:post_name>hero-image</wp:post_name><wp:status>inherit</wp:status><wp:post_type>attachment</wp:post_type><wp:post_parent>101</wp:post_parent><wp:attachment_url>https://example.org/wp-content/uploads/2024/01/hero.png</wp:attachment_url></item>",
 				"</channel>",
 				"</rss>",
 			].join(""),

@@ -1,3 +1,11 @@
+function encodeHref(url: string): string {
+	return url
+		.replace(/&/g, "&amp;")
+		.replace(/"/g, "&quot;")
+		.replace(/</g, "&lt;")
+		.replace(/>/g, "&gt;");
+}
+
 function buildPreviewDocument(html: string) {
 	return [
 		"<!doctype html>",
@@ -139,12 +147,8 @@ window.addEventListener("DOMContentLoaded", () => {
 			wrapSelection("<ul>\n  <li>", "</li>\n</ul>", "List item");
 		} else if (cmd === "createLink") {
 			promptUrl(urlDialog).then((url) => {
-				if (url) {
-					wrapSelection(
-						`<a href="${url.replaceAll('"', "&quot;")}">`, // audit-ok: admin-only editor; url is from UI prompt, attribute-breaking chars escaped
-						"</a>",
-						"Link text",
-					);
+				if (url && /^(https?:\/\/|\/)/i.test(url)) {
+					wrapSelection(`<a href="${encodeHref(url)}">`, "</a>", "Link text");
 				}
 			});
 		}
