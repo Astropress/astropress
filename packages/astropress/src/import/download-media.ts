@@ -1,4 +1,5 @@
 import { writeFile } from "node:fs/promises";
+import sanitizeHtml from "sanitize-html";
 import sharp from "sharp";
 
 const ALLOWED_CONTENT_TYPES = [
@@ -23,9 +24,7 @@ const MAX_MEDIA_BYTES = 50 * 1024 * 1024;
 const PRIVATE_HOST_RE =
 	/^(localhost|127\.\d+\.\d+\.\d+|::1|0\.0\.0\.0|10\.\d+\.\d+\.\d+|172\.(1[6-9]|2\d|3[01])\.\d+\.\d+|192\.168\.\d+\.\d+|169\.254\.\d+\.\d+|fd[0-9a-f]{2}:|fc[0-9a-f]{2}:)/i;
 
-// Image types sharp can decode and re-encode at pixel level.
-// Re-encoding validates format integrity, strips metadata, and defeats polyglot files.
-// Non-image types (SVG, PDF, video, audio) pass through untransformed.
+// Raster image types that sharp can decode and re-encode at pixel level.
 const TRANSCODABLE_TYPES = new Set([
 	"image/jpeg",
 	"image/png",
@@ -35,6 +34,271 @@ const TRANSCODABLE_TYPES = new Set([
 	"image/bmp",
 	"image/tiff",
 ]);
+
+// Safe SVG elements — explicitly excludes script, foreignObject, iframe, object, embed.
+const SVG_ALLOWED_TAGS = [
+	"svg",
+	"g",
+	"defs",
+	"symbol",
+	"use",
+	"switch",
+	"path",
+	"circle",
+	"rect",
+	"line",
+	"polyline",
+	"polygon",
+	"ellipse",
+	"text",
+	"tspan",
+	"textPath",
+	"linearGradient",
+	"radialGradient",
+	"stop",
+	"pattern",
+	"clipPath",
+	"mask",
+	"marker",
+	"image",
+	"a",
+	"title",
+	"desc",
+	"metadata",
+	"animate",
+	"animateTransform",
+	"animateMotion",
+	"set",
+	"filter",
+	"feBlend",
+	"feColorMatrix",
+	"feFlood",
+	"feGaussianBlur",
+	"feComposite",
+	"feMerge",
+	"feMergeNode",
+	"feOffset",
+	"feTurbulence",
+	"feDisplacementMap",
+	"feDiffuseLighting",
+	"feSpecularLighting",
+	"fePointLight",
+	"feSpotLight",
+	"feDistantLight",
+	"feFuncA",
+	"feFuncR",
+	"feFuncG",
+	"feFuncB",
+	"feComponentTransfer",
+	"feMorphology",
+	"feConvolveMatrix",
+	"feImage",
+	"feTile",
+];
+
+// Safe SVG attributes — no on* event handlers, no srcdoc.
+// sanitize-html blocks javascript:/data: in href/src by default (allowedSchemes).
+const SVG_ALLOWED_ATTRS = [
+	// Core
+	"id",
+	"class",
+	"style",
+	"lang",
+	"tabindex",
+	// Presentation
+	"fill",
+	"fill-opacity",
+	"fill-rule",
+	"stroke",
+	"stroke-dasharray",
+	"stroke-dashoffset",
+	"stroke-linecap",
+	"stroke-linejoin",
+	"stroke-miterlimit",
+	"stroke-opacity",
+	"stroke-width",
+	"opacity",
+	"visibility",
+	"display",
+	"overflow",
+	"clip-rule",
+	"clip-path",
+	"mask",
+	"filter",
+	"color",
+	"color-interpolation",
+	"color-interpolation-filters",
+	"color-rendering",
+	"image-rendering",
+	"shape-rendering",
+	"text-rendering",
+	"vector-effect",
+	"paint-order",
+	// Geometry
+	"d",
+	"cx",
+	"cy",
+	"r",
+	"rx",
+	"ry",
+	"x",
+	"y",
+	"x1",
+	"y1",
+	"x2",
+	"y2",
+	"width",
+	"height",
+	"points",
+	"pathLength",
+	// Transform
+	"transform",
+	"transform-origin",
+	// SVG structural
+	"viewBox",
+	"xmlns",
+	"version",
+	"preserveAspectRatio",
+	"baseProfile",
+	"contentScriptType",
+	"contentStyleType",
+	// Links (schemes restricted to http/https by allowedSchemes)
+	"href",
+	"xlink:href",
+	"xlink:title",
+	"xlink:type",
+	// Referencing
+	"clip-path",
+	"mask",
+	"marker",
+	"marker-start",
+	"marker-mid",
+	"marker-end",
+	"markerWidth",
+	"markerHeight",
+	"markerUnits",
+	"orient",
+	"refX",
+	"refY",
+	// Gradient / pattern
+	"gradientUnits",
+	"gradientTransform",
+	"spreadMethod",
+	"patternUnits",
+	"patternTransform",
+	"patternContentUnits",
+	"offset",
+	"stop-color",
+	"stop-opacity",
+	// Text
+	"text-anchor",
+	"dominant-baseline",
+	"baseline-shift",
+	"font-size",
+	"font-family",
+	"font-weight",
+	"font-style",
+	"font-variant",
+	"font-stretch",
+	"letter-spacing",
+	"word-spacing",
+	"text-decoration",
+	"writing-mode",
+	"glyph-orientation-horizontal",
+	"glyph-orientation-vertical",
+	"dy",
+	"dx",
+	"rotate",
+	"lengthAdjust",
+	"textLength",
+	"startOffset",
+	"method",
+	"spacing",
+	// Clip / mask
+	"clipPathUnits",
+	"maskUnits",
+	"maskContentUnits",
+	// Filter
+	"in",
+	"in2",
+	"result",
+	"type",
+	"values",
+	"mode",
+	"operator",
+	"stdDeviation",
+	"k1",
+	"k2",
+	"k3",
+	"k4",
+	"order",
+	"kernelMatrix",
+	"bias",
+	"divisor",
+	"edgeMode",
+	"kernelUnitLength",
+	"preserveAlpha",
+	"radius",
+	"baseFrequency",
+	"numOctaves",
+	"seed",
+	"stitchTiles",
+	"xChannelSelector",
+	"yChannelSelector",
+	"scale",
+	"amplitude",
+	"exponent",
+	"intercept",
+	"slope",
+	"tableValues",
+	"azimuth",
+	"elevation",
+	"pointsAtX",
+	"pointsAtY",
+	"pointsAtZ",
+	"specularExponent",
+	"specularConstant",
+	"limitingConeAngle",
+	"diffuseConstant",
+	"surfaceScale",
+	"primitiveUnits",
+	"x",
+	"y",
+	"width",
+	"height",
+	// Animation
+	"attributeName",
+	"attributeType",
+	"from",
+	"to",
+	"by",
+	"dur",
+	"begin",
+	"end",
+	"repeatCount",
+	"repeatDur",
+	"calcMode",
+	"keyTimes",
+	"keySplines",
+	"keyPoints",
+	"path",
+	"additive",
+	"accumulate",
+	"restart",
+	"fill",
+	"min",
+	"max",
+	"syncBase",
+	"syncOffset",
+	"syncTolerance",
+	"syncMaster",
+	"currentSyncPoint",
+	"type",
+	// Symbol / use
+	"symbol",
+	"use",
+	"href",
+];
 
 export function validateMediaSourceUrl(rawUrl: string): URL {
 	let parsed: URL;
@@ -54,10 +318,24 @@ export function validateMediaSourceUrl(rawUrl: string): URL {
 	return parsed;
 }
 
+function sanitizeSvgBytes(bytes: Uint8Array): Uint8Array {
+	const text = new TextDecoder().decode(bytes);
+	const sanitized = sanitizeHtml(text, {
+		allowedTags: SVG_ALLOWED_TAGS,
+		allowedAttributes: { "*": SVG_ALLOWED_ATTRS },
+		allowedSchemes: ["http", "https"],
+		disallowedTagsMode: "discard",
+	});
+	return new TextEncoder().encode(sanitized);
+}
+
 async function transcodeImageBytes(
 	bytes: Uint8Array,
 	mimeType: string,
 ): Promise<Uint8Array> {
+	if (mimeType === "image/svg+xml") {
+		return sanitizeSvgBytes(bytes);
+	}
 	if (!TRANSCODABLE_TYPES.has(mimeType)) {
 		return bytes;
 	}
@@ -100,5 +378,9 @@ export async function downloadMediaToFile(
 	targetPath: string,
 ): Promise<void> {
 	const bytes = await downloadMedia(rawUrl);
-	await writeFile(targetPath, bytes); // lgtm[js/http-to-file-access]
+	// lgtm[js/http-to-file-access] — bytes are sharp-transcoded (raster) or
+	// sanitizeHtml-sanitized (SVG); PDF/video/audio are binary formats that
+	// do not execute server-side. No built-in sanitizer exists for this CodeQL
+	// rule; barrierModel YAML does not resolve local workspace imports.
+	await writeFile(targetPath, bytes);
 }

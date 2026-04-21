@@ -49,19 +49,23 @@ const APPROVED: ApprovedSuppression[] = [
 		linePattern: /lgtm\[js\/http-to-file-access\]/,
 		contentPattern: /writeFile/,
 		rubric:
-			"Code fix applied: raster images (JPEG/PNG/GIF/WebP/AVIF/BMP/TIFF) are piped " +
-			"through sharp decode+encode before writeFile — the bytes on disk are sharp's " +
-			"pixel-level output, not raw HTTP response bytes. SVG/PDF/video/audio cannot be " +
-			"transcoded and pass through; these types cannot execute as code on disk. " +
-			"Alternatives considered: barrierModel YAML (implemented in " +
-			".codeql/extensions/http-to-file-barriers.yml but CodeQL's models-as-data " +
-			"package resolution does not apply to same-repo local workspace imports, only " +
-			"external npm packages); custom QL Sanitizer extension (not feasible without " +
-			"CodeQL QL dev toolchain in CI). Mitigations present: validateMediaSourceUrl " +
-			"enforces http/https-only and blocks private/loopback IPs; content-type " +
-			"allowlist rejects non-media types; 50 MB size cap; path.basename() prevents " +
-			"traversal; sharp transcoding validates format integrity and strips metadata " +
-			"for all raster image types.",
+			"Code fixes applied: (1) raster images (JPEG/PNG/GIF/WebP/AVIF/BMP/TIFF) are " +
+			"piped through sharp decode+encode — bytes on disk are sharp pixel output, not " +
+			"raw HTTP bytes; (2) SVG is sanitized via sanitize-html with an explicit " +
+			"element/attribute allowlist that excludes script, foreignObject, and all on* " +
+			"event handlers, with allowedSchemes blocking javascript:/data: in hrefs. " +
+			"Remaining raw-byte types: PDF, video/mp4, video/webm, audio/* — these are " +
+			"binary formats with no server-side execution surface; risk is in the client " +
+			"reader/player, not in disk storage. No code fix is possible for these: " +
+			"transcoding requires format-specific encoders not available as deps, and " +
+			"rejecting them would break legitimate import functionality. Alternatives " +
+			"considered: barrierModel YAML (.codeql/extensions/http-to-file-barriers.yml " +
+			"— implemented but CodeQL models-as-data package resolution does not apply to " +
+			"same-repo local workspace imports); custom QL Sanitizer extension (not " +
+			"feasible without CodeQL QL dev toolchain in CI). Mitigations present: " +
+			"validateMediaSourceUrl enforces http/https-only and blocks private/loopback " +
+			"IPs; content-type allowlist; 50 MB size cap; path.basename() prevents " +
+			"traversal; source URLs from operator-controlled export files only.",
 	},
 	{
 		file: "packages/astropress-nexus/src/app.ts",

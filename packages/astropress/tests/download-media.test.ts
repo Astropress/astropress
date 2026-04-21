@@ -184,20 +184,79 @@ describe("downloadMedia", () => {
 		vi.unstubAllGlobals();
 	});
 
-	it("passes image/svg+xml through without transcoding", async () => {
+	it("sanitizes image/svg+xml without calling sharp", async () => {
 		vi.stubGlobal(
 			"fetch",
 			vi.fn(
 				async () =>
-					new Response("<svg></svg>", {
-						status: 200,
-						headers: { "content-type": "image/svg+xml" },
-					}),
+					new Response(
+						'<svg xmlns="http://www.w3.org/2000/svg"><circle r="5"/></svg>',
+						{
+							status: 200,
+							headers: { "content-type": "image/svg+xml" },
+						},
+					),
 			),
 		);
 		const bytes = await downloadMedia("https://example.com/icon.svg");
 		expect(sharpMock).not.toHaveBeenCalled();
-		expect(bytes).toBeInstanceOf(Uint8Array);
+		const text = new TextDecoder().decode(bytes);
+		expect(text).toContain("circle");
+		vi.unstubAllGlobals();
+	});
+
+	it("strips script tags from SVG", async () => {
+		vi.stubGlobal(
+			"fetch",
+			vi.fn(
+				async () =>
+					new Response(
+						'<svg xmlns="http://www.w3.org/2000/svg"><script>alert(1)</script><circle r="5"/></svg>',
+						{ status: 200, headers: { "content-type": "image/svg+xml" } },
+					),
+			),
+		);
+		const bytes = await downloadMedia("https://example.com/malicious.svg");
+		const text = new TextDecoder().decode(bytes);
+		expect(text).not.toContain("<script");
+		expect(text).not.toContain("alert(1)");
+		expect(text).toContain("circle");
+		vi.unstubAllGlobals();
+	});
+
+	it("strips on* event handlers from SVG", async () => {
+		vi.stubGlobal(
+			"fetch",
+			vi.fn(
+				async () =>
+					new Response(
+						'<svg xmlns="http://www.w3.org/2000/svg"><circle r="5" onload="alert(1)"/></svg>',
+						{ status: 200, headers: { "content-type": "image/svg+xml" } },
+					),
+			),
+		);
+		const bytes = await downloadMedia("https://example.com/handler.svg");
+		const text = new TextDecoder().decode(bytes);
+		expect(text).not.toContain("onload");
+		expect(text).not.toContain("alert(1)");
+		vi.unstubAllGlobals();
+	});
+
+	it("strips foreignObject from SVG", async () => {
+		vi.stubGlobal(
+			"fetch",
+			vi.fn(
+				async () =>
+					new Response(
+						'<svg xmlns="http://www.w3.org/2000/svg"><foreignObject><div>hi</div></foreignObject></svg>',
+						{ status: 200, headers: { "content-type": "image/svg+xml" } },
+					),
+			),
+		);
+		const bytes = await downloadMedia("https://example.com/foreign.svg");
+		const text = new TextDecoder().decode(bytes);
+		expect(text).not.toContain("foreignObject");
+		expect(text).not.toContain("<div>");
 		vi.unstubAllGlobals();
 	});
 
