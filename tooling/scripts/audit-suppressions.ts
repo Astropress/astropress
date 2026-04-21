@@ -45,6 +45,25 @@ type ApprovedSuppression = {
 
 const APPROVED: ApprovedSuppression[] = [
 	{
+		file: "packages/astropress/src/import/download-media.ts",
+		linePattern: /lgtm\[js\/http-to-file-access\]/,
+		contentPattern: /writeFile/,
+		rubric:
+			"Code fix applied: raster images (JPEG/PNG/GIF/WebP/AVIF/BMP/TIFF) are piped " +
+			"through sharp decode+encode before writeFile — the bytes on disk are sharp's " +
+			"pixel-level output, not raw HTTP response bytes. SVG/PDF/video/audio cannot be " +
+			"transcoded and pass through; these types cannot execute as code on disk. " +
+			"Alternatives considered: barrierModel YAML (implemented in " +
+			".codeql/extensions/http-to-file-barriers.yml but CodeQL's models-as-data " +
+			"package resolution does not apply to same-repo local workspace imports, only " +
+			"external npm packages); custom QL Sanitizer extension (not feasible without " +
+			"CodeQL QL dev toolchain in CI). Mitigations present: validateMediaSourceUrl " +
+			"enforces http/https-only and blocks private/loopback IPs; content-type " +
+			"allowlist rejects non-media types; 50 MB size cap; path.basename() prevents " +
+			"traversal; sharp transcoding validates format integrity and strips metadata " +
+			"for all raster image types.",
+	},
+	{
 		file: "packages/astropress-nexus/src/app.ts",
 		linePattern: /audit-ok:.*detailHref built from encodeURIComponent/,
 		contentPattern: /detailHref/,
