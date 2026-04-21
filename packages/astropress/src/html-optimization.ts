@@ -5,7 +5,7 @@
 export function optimizeImageLoading(html: string): string {
 	let firstImage = true;
 
-	const IMG_TAG_RE = /<img([^>]*)>/g;
+	const IMG_TAG_RE = /<img([^>]{0,2048})>/g;
 	return html.replace(IMG_TAG_RE, (match, attrs) => {
 		// Skip if already has a loading attribute (lazy, eager, etc.)
 		// Use a simple string check to avoid nested-quantifier ReDoS warnings

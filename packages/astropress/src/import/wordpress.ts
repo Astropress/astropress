@@ -65,7 +65,8 @@ async function downloadMediaAssets(
 			if (!response.ok) throw new Error(`HTTP ${response.status}`);
 			await writeFile(
 				assetTarget,
-				new Uint8Array(await response.arrayBuffer()), // audit-ok: assetTarget uses path.basename() to strip traversal from the HTTP-supplied filename; bytes intentionally written from the import response; codeql[js/http-to-file-access]
+				// audit-ok: assetTarget uses path.basename() to strip traversal from the HTTP-supplied filename; bytes intentionally written from the import response
+				new Uint8Array(await response.arrayBuffer()), // codeql[js/http-to-file-access]
 			);
 			completed.add(asset.id);
 			downloadedMedia += 1;
