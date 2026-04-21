@@ -45,7 +45,7 @@ export async function prepareAstropressDeployment(
 	return {
 		deploymentId: `${options.provider}:${input.projectName}:${Date.now()}`,
 		url: options.baseUrl
-			? `${options.baseUrl.replace(/\/+$/, "")}/${input.projectName}/` // CodeQL[js/polynomial-redos] anchored /\/+$/ is linear — \/+ cannot overlap with the end anchor
+			? `${options.baseUrl.replace(/\/+$/, "")}/${input.projectName}/` // codeql[js/polynomial-redos] \/+ matches only '/' chars — linear, cannot backtrack past the end anchor
 			: undefined,
 	};
 }

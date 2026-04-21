@@ -41,10 +41,24 @@ function isSuppressed(line: string): boolean {
 	);
 }
 
-// Check the current line and up to 2 lines before (GitHub CodeQL requires the
-// suppression comment on a standalone line directly before the flagged code).
+// Check the flagged line and the line directly before it.
+// GitHub Advanced Security recognises // codeql[...] either inline on the
+// flagged line OR on the immediately preceding standalone line — nothing further.
 function isSuppressedNear(lines: string[], i: number): boolean {
-	for (let j = Math.max(0, i - 2); j <= i; j++) {
+	for (let j = Math.max(0, i - 1); j <= i; j++) {
+		if (isSuppressed(lines[j])) return true;
+	}
+	return false;
+}
+
+// Wider suppression window for multi-line constructs (e.g. writeFile spread
+// across several lines). Checks all lines from start to end inclusive.
+function isSuppressedInWindow(
+	lines: string[],
+	start: number,
+	end: number,
+): boolean {
+	for (let j = Math.max(0, start); j <= Math.min(lines.length - 1, end); j++) {
 		if (isSuppressed(lines[j])) return true;
 	}
 	return false;
@@ -157,19 +171,20 @@ function checkFile(file: string, src: string): Violation[] {
 	}
 
 	// ── 5. Bogus CodeQL suppression syntax ──────────────────────────────────
-	// Detects: // codeql[...] (wrong case — capital C/QL) and // lgtm[...]
-	// (deprecated LGTM.com syntax), both of which do NOT suppress GitHub
+	// Detects wrong-case suppression comments (capital CodeQL) and deprecated
+	// lgtm comments — both do NOT suppress GitHub
 	// Advanced Security alerts.
-	// The correct format is // codeql[js/rule-id] (all lowercase) on a
-	// standalone line directly before the flagged code.
+	// The correct format is // codeql[js/rule-id] (all lowercase) either
+	// inline on the flagged line or on the line directly before it.
+	// Lookbehind (?<!["'`]) avoids false positives inside string literals.
 	for (let i = 0; i < lines.length; i++) {
 		const line = lines[i];
-		if (/^\s*\/\/ CodeQL\[/.test(line)) {
+		if (/(?<!["'`])\/\/ CodeQL\[/.test(line)) {
 			violations.push({
 				file: rel,
 				line: i + 1,
 				message:
-					"// CodeQL[...] (capital C/QL) is wrong case — use // codeql[js/rule-id] (all lowercase) on a standalone line before the flagged code",
+					"// CodeQL[...] (capital C/QL) is wrong case — use // codeql[js/rule-id] (all lowercase) inline on the flagged line or directly before it",
 			});
 		}
 		if (/^\s*\/\/ lgtm\[/.test(line)) {
@@ -195,7 +210,7 @@ function checkFile(file: string, src: string): Violation[] {
 			const callWindow = lines
 				.slice(i, Math.min(lines.length, i + 4))
 				.join("\n");
-			if (/\.filename/.test(callWindow) && !isSuppressedNear(lines, i)) {
+			if (/\.filename/.test(callWindow) && !isSuppressedInWindow(lines, i - 1, i + 4)) {
 				violations.push({
 					file: rel,
 					line: i + 1,
@@ -233,7 +248,7 @@ function checkFile(file: string, src: string): Violation[] {
 			}
 			// /char+$/ or /[class]+$/ in .replace() — CodeQL flags these as potentially
 			// polynomial because the end anchor creates ambiguous match paths on some engines
-			if (/\.replace\(\/[^/]*[+*]\$\/[gims]*,/.test(line)) {
+			if (/\.replace\(\/(?:[^/\\]|\\.)*[+*]\$\/[gims]*,/.test(line)) {
 				violations.push({
 					file: rel,
 					line: i + 1,
@@ -298,16 +313,15 @@ function checkFile(file: string, src: string): Violation[] {
 	if (/tooling\/scripts\//.test(rel)) {
 		for (let i = 0; i < lines.length; i++) {
 			const line = lines[i];
-			// audit-ok: regex literal for detection, not an actual execSync call
 			if (
-				/\bexecSync\(`[^`]*\$\{/.test(line) &&
+				/\bexecSync\(`[^`]*\$\{/.test(line) && // audit-ok: regex literal for detection, not an actual execSync call
 				!isSuppressedNear(lines, i)
 			) {
 				violations.push({
 					file: rel,
 					line: i + 1,
 					message:
-						"execSync() with template literal interpolation — add // codeql[js/shell-command-injection-more-sources] on the line before if the values are trusted internal inputs [js/shell-command-injection-more-sources]",
+						"execSync() with template literal interpolation — add // codeql[js/shell-command-injection-from-environment,js/indirect-command-line-injection] inline if the values are trusted internal inputs",
 				});
 			}
 		}
