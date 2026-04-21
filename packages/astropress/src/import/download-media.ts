@@ -75,6 +75,5 @@ export async function downloadMediaToFile(
 	targetPath: string,
 ): Promise<void> {
 	const bytes = await downloadMedia(rawUrl);
-	// lgtm[js/http-to-file-access]
-	await writeFile(targetPath, bytes);
+	await writeFile(targetPath, bytes); // lgtm[js/http-to-file-access]
 }
