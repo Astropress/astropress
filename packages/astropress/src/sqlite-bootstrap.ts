@@ -20,10 +20,12 @@ import {
 	type SeedSummary,
 	type SeededComment,
 	type SiteSettingsSeed,
+	type SqliteDatabaseConstructor,
 	type SqliteDatabaseLike,
 	type SqliteStatementLike,
 	type SystemRouteSeed,
 	defaultSeedImportTables,
+	loadSqliteDatabase,
 } from "./sqlite-bootstrap-helpers";
 import {
 	seedArchiveRoutes,
@@ -63,17 +65,6 @@ export type {
 };
 
 export { defaultSeedImportTables };
-
-type SqliteDatabaseConstructor = new (filename: string) => SqliteDatabaseLike;
-
-async function loadSqliteDatabase(): Promise<SqliteDatabaseConstructor> {
-	if ("Bun" in globalThis) {
-		const module = await import("bun:sqlite");
-		return module.Database as unknown as SqliteDatabaseConstructor;
-	}
-	const module = await import("node:sqlite");
-	return module.DatabaseSync as unknown as SqliteDatabaseConstructor;
-}
 
 const SqliteDatabase = await loadSqliteDatabase();
 
