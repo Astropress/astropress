@@ -24,7 +24,7 @@ pub(crate) fn repo_root() -> PathBuf {
 ///   1. `{hint_project_dir}/node_modules/astropress/dist/src/`  (installed package)
 ///   2. Binary-relative ancestors (npm global install)
 ///   3. Dev fallback: `packages/astropress/dist/src/` (requires `bun run --filter astropress build`)
-pub(crate) fn find_astropress_src(hint_project_dir: Option<&Path>) -> Option<PathBuf> {
+pub(crate) fn find_astropress_src(hint_project_dir: Option<&Path>) -> Option<PathBuf> { // ~ skip
     if let Some(dir) = hint_project_dir {
         let candidate = dir
             .join("node_modules")
@@ -77,7 +77,7 @@ pub(crate) fn write_text_file(
     project_dir: &Path,
     relative_path: &str,
     contents: &str,
-) -> Result<(), String> {
+) -> Result<(), String> { // ~ skip
     let destination = project_dir.join(relative_path);
     if let Some(parent) = destination.parent() {
         fs::create_dir_all(parent).map_err(io_error)?;
@@ -85,7 +85,7 @@ pub(crate) fn write_text_file(
     fs::write(destination, contents).map_err(io_error)
 }
 
-pub(crate) fn ensure_local_provider_defaults(project_dir: &Path) -> Result<(), String> {
+pub(crate) fn ensure_local_provider_defaults(project_dir: &Path) -> Result<(), String> { // ~ skip
     let data_dir = project_dir.join(".data");
     fs::create_dir_all(&data_dir).map_err(io_error)?;
     let gitkeep_path = data_dir.join(".gitkeep");

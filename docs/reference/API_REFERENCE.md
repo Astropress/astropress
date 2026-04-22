@@ -528,22 +528,22 @@ function getRuntimeSystemRoute(pathname: string, locals: Locals | null | undefin
 
 #### `listRuntimeStructuredPageRoutes`
 ```ts
-function listRuntimeStructuredPageRoutes(locals: Locals | null | undefined): Promise<RuntimeStructuredPageRouteRecord[]>
+function listRuntimeStructuredPageRoutes(locals: Locals | null | undefined): Promise<RuntimeStructuredPageRouteRecord[] | ({ path: string; title: string; summary: string | undefined; seoTitle: string | undefined; metaDescription: string | undefined; canonicalUrlOverride: string | undefined; robotsDirective: string | undefined; ogImage: string | undefined; templateKey: string; alternateLinks: { hreflang: string; href: string; }[]; sections: Record<string, unknown> | null; updatedAt: string; } | null)[]>
 ```
 
 #### `listRuntimeSystemRoutes`
 ```ts
-function listRuntimeSystemRoutes(locals: Locals | null | undefined): Promise<RuntimeSystemRouteRecord[]>
+function listRuntimeSystemRoutes(locals: Locals | null | undefined): Promise<(RuntimeSystemRouteRecord | null)[]>
 ```
 
 #### `saveRuntimeArchiveRoute`
 ```ts
-function saveRuntimeArchiveRoute(pathname: string, input: { title: string; summary?: string | undefined; seoTitle?: string | undefined; metaDescription?: string | undefined; canonicalUrlOverride?: string | undefined; robotsDirective?: string | undefined; revisionNote?: string | undefined; }, actor: Actor, locals: Locals | null | undefined): Promise<{ ok: true; route: RuntimeArchiveRouteRecord; } | { ok: false; error: string; }>
+function saveRuntimeArchiveRoute(pathname: string, input: { title: string; summary?: string | undefined; seoTitle?: string | undefined; metaDescription?: string | undefined; canonicalUrlOverride?: string | undefined; robotsDirective?: string | undefined; revisionNote?: string | undefined; }, actor: Actor, locals: Locals | null | undefined): Promise<{ ok: true; route: RuntimeArchiveRouteRecord; } | { readonly ok: false; readonly error: "A title is required."; title?: undefined; summary?: undefined; seoTitle?: undefined; metaDescription?: undefined; canonicalUrlOverride?: undefined; robotsDirective?: undefined; } | { ok: true; route: { path: string; title: string; summary: string | undefined; seoTitle: string; metaDescription: string; canonicalUrlOverride: string | undefined; robotsDirective: string | undefined; }; } | { ok: false; error: string; }>
 ```
 
 #### `saveRuntimeSystemRoute`
 ```ts
-function saveRuntimeSystemRoute(pathname: string, input: { title: string; summary?: string | undefined; bodyHtml?: string | undefined; settings?: Record<string, unknown> | null | undefined; revisionNote?: string | undefined; }, actor: Actor, locals: Locals | null | undefined): Promise<{ ok: true; route: RuntimeSystemRouteRecord; } | { ok: false; error: string; }>
+function saveRuntimeSystemRoute(pathname: string, input: { title: string; summary?: string | undefined; bodyHtml?: string | undefined; settings?: Record<string, unknown> | null | undefined; revisionNote?: string | undefined; }, actor: Actor, locals: Locals | null | undefined): Promise<{ ok: true; route: RuntimeSystemRouteRecord; } | { readonly ok: false; readonly error: "A title is required."; title?: undefined; summary?: undefined; bodyHtml?: undefined; settingsJson?: undefined; } | { ok: true; route: { path: string; title: string; summary: string | undefined; bodyHtml: string | undefined; settings: Record<string, unknown> | null; renderStrategy: "structured_sections" | "generated_text" | "generated_xml"; }; } | { ok: false; error: string; }>
 ```
 
 #### `createRuntimeStructuredPageRoute`
@@ -563,7 +563,7 @@ function createRuntimeContentRecord(input: { title: string; slug: string; legacy
 
 #### `saveRuntimeContentState`
 ```ts
-function saveRuntimeContentState(slug: string, input: { title: string; status: string; scheduledAt?: string | undefined; body?: string | undefined; authorIds?: number[] | undefined; categoryIds?: number[] | undefined; tagIds?: number[] | undefined; seoTitle: string; metaDescription: string; excerpt?: string | undefined; ogTitle?: string | undefined; ogDescription?: string | undefined; ogImage?: string | undefined; canonicalUrlOverride?: string | undefined; robotsDirective?: string | undefined; revisionNote?: string | undefined; lastKnownUpdatedAt?: string | undefined; metadata?: Record<string, unknown> | undefined; }, actor: Actor, locals: Locals | null | undefined): Promise<unknown>
+function saveRuntimeContentState(slug: string, input: SaveContentInput, actor: Actor, locals: Locals | null | undefined): Promise<unknown>
 ```
 
 #### `restoreRuntimeRevision`
@@ -623,7 +623,7 @@ function consumeRuntimePasswordResetToken(rawToken: string, password: string, lo
 
 #### `createRuntimeMediaAsset`
 ```ts
-function createRuntimeMediaAsset(input: { filename: string; bytes: Uint8Array<ArrayBufferLike>; mimeType: string; title?: string | undefined; altText?: string | undefined; }, actor: Actor, locals: Locals | null | undefined): Promise<unknown>
+function createRuntimeMediaAsset(input: MediaAssetInput, actor: Actor, locals: Locals | null | undefined): Promise<unknown>
 ```
 
 #### `updateRuntimeMediaAsset`
@@ -748,7 +748,7 @@ function buildAdminDashboardPageModel(locals: Locals, role: AdminRole): Promise<
 
 #### `buildPagesIndexPageModel`
 ```ts
-function buildPagesIndexPageModel(locals: Locals, role: AdminRole): Promise<AdminPageResult<{ contentStates: ContentRecord[]; routePages: RuntimeStructuredPageRouteRecord[]; archiveRows: any[]; }>>
+function buildPagesIndexPageModel(locals: Locals, role: AdminRole): Promise<AdminPageResult<{ contentStates: ContentRecord[]; routePages: RuntimeStructuredPageRouteRecord[] | ({ path: string; title: string; summary: string | undefined; seoTitle: string | undefined; metaDescription: string | undefined; canonicalUrlOverride: string | undefined; robotsDirective: string | undefined; ogImage: string | undefined; templateKey: string; alternateLinks: { hreflang: string; href: string; }[]; sections: Record<string, unknown> | null; updatedAt: string; } | null)[]; archiveRows: unknown[]; }>>
 ```
 
 #### `buildPostsIndexPageModel`
@@ -768,7 +768,7 @@ function buildPostRevisionsPageModel(locals: Locals, slug: string): Promise<Admi
 
 #### `buildRouteTablePageModel`
 ```ts
-function buildRouteTablePageModel(locals: Locals, role: AdminRole): Promise<AdminPageResult<{ routePages: RuntimeStructuredPageRouteRecord[]; settings: SiteSettings; }>>
+function buildRouteTablePageModel(locals: Locals, role: AdminRole): Promise<AdminPageResult<{ routePages: RuntimeStructuredPageRouteRecord[] | ({ path: string; title: string; summary: string | undefined; seoTitle: string | undefined; metaDescription: string | undefined; canonicalUrlOverride: string | undefined; robotsDirective: string | undefined; ogImage: string | undefined; templateKey: string; alternateLinks: { hreflang: string; href: string; }[]; sections: Record<string, unknown> | null; updatedAt: string; } | null)[]; settings: SiteSettings; }>>
 ```
 
 #### `buildRoutePageEditorModel`
@@ -778,7 +778,7 @@ function buildRoutePageEditorModel(locals: Locals, routePath: string, role: Admi
 
 #### `buildArchivesIndexPageModel`
 ```ts
-function buildArchivesIndexPageModel(locals: Locals, role: AdminRole): Promise<AdminPageResult<{ archiveList: any[]; archivesByKind: Record<string, any[]>; kindCounts: { kind: string; count: number; }[]; totalArchives: number; totalItems: number; }>>
+function buildArchivesIndexPageModel(locals: Locals, role: AdminRole): Promise<AdminPageResult<{ archiveList: unknown[]; archivesByKind: Record<string, unknown[]>; kindCounts: { kind: string; count: number; }[]; totalArchives: number; totalItems: number; }>>
 ```
 
 #### `buildArchiveEditorModel`
@@ -788,7 +788,7 @@ function buildArchiveEditorModel(locals: Locals, archivePath: string, role: Admi
 
 #### `buildSeoPageModel`
 ```ts
-function buildSeoPageModel(locals: Locals, role: AdminRole): Promise<AdminPageResult<{ rows: any[]; }>>
+function buildSeoPageModel(locals: Locals, role: AdminRole): Promise<AdminPageResult<{ rows: unknown[]; }>>
 ```
 
 #### `buildMediaPageModel`
@@ -823,7 +823,7 @@ function buildTestimonialsPageModel(locals: Locals): Promise<AdminPageResult<{ p
 
 #### `buildTranslationsPageModel`
 ```ts
-function buildTranslationsPageModel(locals: Locals, role: AdminRole): Promise<AdminPageResult<{ rows: any[]; }>>
+function buildTranslationsPageModel(locals: Locals, role: AdminRole): Promise<AdminPageResult<{ rows: unknown[]; }>>
 ```
 
 #### `buildSettingsPageModel`
@@ -833,7 +833,7 @@ function buildSettingsPageModel(locals: Locals, role: AdminRole): Promise<AdminP
 
 #### `buildSystemPageModel`
 ```ts
-function buildSystemPageModel(locals: Locals, role: AdminRole): Promise<AdminPageResult<{ systemRoutes: RuntimeSystemRouteRecord[]; routeMap: Map<string, RuntimeSystemRouteRecord>; }>>
+function buildSystemPageModel(locals: Locals, role: AdminRole): Promise<AdminPageResult<{ systemRoutes: never[]; routeMap: Map<string, unknown>; }>>
 ```
 
 #### `buildUsersPageModel`
@@ -1068,7 +1068,7 @@ function verifyPassword(password: string, storedHash: string): Promise<boolean>
 
 #### `readLocalImageAsset`
 ```ts
-function readLocalImageAsset(publicPath: string): { ok: false; error: string; asset?: undefined; } | { ok: true; asset: { diskPath: string; bytes: ArrayBuffer; mimeType: string; }; error?: undefined; }
+function readLocalImageAsset(publicPath: string): { ok: false; error: string; asset?: undefined; } | { ok: true; asset: { diskPath: string; bytes: ArrayBuffer; mimeType: string; }; readonly error?: undefined; }
 ```
 
 #### `resolveLocalImageDiskPath`
@@ -1337,21 +1337,21 @@ function reportAstropressError(error: unknown, context: string): Promise<void>
 
 ### Types & Interfaces
 
+- `type ApiScope`
+- `type ApiTokenId`
+- `interface ApiTokenRecord`
+- `interface ApiTokenStore`
 - `type ContentId` — A content record ID — prevents mixing with media or user IDs.
 - `type MediaAssetId` — A media asset ID — prevents mixing with content or user IDs.
 - `type AdminUserId` — An admin user ID — prevents mixing with content or media IDs.
-- `type ApiTokenId` — An API token ID — prevents mixing with other ID types.
 - `type AuditEventId` — An audit event ID — prevents mixing with content or user IDs.
 - `type ActionResult` — Standard discriminated union for all repository / action operation results.
-- `type ApiScope`
-- `interface ApiTokenRecord`
-- `interface ApiTokenStore`
 - `type WebhookEvent`
 - `interface WebhookRecord`
 - `interface WebhookStore`
 - `interface FaqItem` — A single FAQ item for AEO-optimised FAQPage JSON-LD.
 - `interface HowToStep` — A single step in a HowTo guide for AEO-optimised HowTo JSON-LD.
-- `interface AeoMetadata` — AEO (Answer Engine Optimisation) metadata that can be stored in a content record's `metadata` field to trigger automatic JSON-LD rendering via AstropressContentLayout.
+- `interface AeoMetadata`
 
 ---
 
@@ -1476,25 +1476,6 @@ function resolveAstropressSqliteSchemaPath(): string
 function readAstropressSqliteSchemaSql(): string
 ```
 
-#### `runAstropressMigrations`
-```ts
-function runAstropressMigrations(db: SqliteDatabaseLike, migrationsDir: string): { applied: string[]; skipped: string[]; }
-```
-
-Run incremental SQL migrations from a directory against a live SQLite database. Migration files must be named with a numeric prefix (e.g. `0001_add_column.sql`). They are applied in lexicographic order. Applied migrations are recorded in `schema_migrations` so they are never re-run.
-
-#### `checkSchemaVersionAhead`
-```ts
-function checkSchemaVersionAhead(db: SqliteDatabaseLike, frameworkBaseline: number): { isAhead: boolean; dbCount: number; frameworkCount: number; } | null
-```
-
-Checks whether the database `schema_migrations` table has more entries than the framework's known baseline.
-
-#### `rollbackAstropressLastMigrationWithOptions`
-```ts
-function rollbackAstropressLastMigrationWithOptions(db: SqliteDatabaseLike, options: { dryRun?: boolean | undefined; }): AstropressRollbackResult
-```
-
 #### `createAstropressSqliteSeedToolkit`
 ```ts
 function createAstropressSqliteSeedToolkit<TableName>(options: AstropressSqliteSeedToolkitOptions<TableName>): AstropressSqliteSeedToolkit<TableName>
@@ -1505,30 +1486,45 @@ function createAstropressSqliteSeedToolkit<TableName>(options: AstropressSqliteS
 function createDefaultAstropressSqliteSeedToolkit(): AstropressSqliteSeedToolkit<"comments" | "admin_users" | "media_assets" | "redirect_rules" | "site_settings" | "cms_route_groups" | "cms_route_variants" | "cms_route_aliases" | "cms_route_revisions">
 ```
 
+#### `checkSchemaVersionAhead`
+```ts
+function checkSchemaVersionAhead(db: SqliteDatabaseLike, frameworkBaseline: number): { isAhead: boolean; dbCount: number; frameworkCount: number; } | null
+```
+
+#### `rollbackAstropressLastMigrationWithOptions`
+```ts
+function rollbackAstropressLastMigrationWithOptions(db: SqliteDatabaseLike, options: { dryRun?: boolean | undefined; }): AstropressRollbackResult
+```
+
+#### `runAstropressMigrations`
+```ts
+function runAstropressMigrations(db: SqliteDatabaseLike, migrationsDir: string): { applied: string[]; skipped: string[]; }
+```
+
 ### Types & Interfaces
 
-- `interface SqliteStatementLike`
-- `interface SqliteDatabaseLike`
+- `interface ArchiveSeedRecord`
+- `interface AstropressRollbackResult`
+- `type AstropressRollbackStatus`
+- `interface AstropressSqliteSeedToolkit`
+- `interface AstropressSqliteSeedToolkitOptions`
+- `interface BootstrapUserSeed`
+- `interface MarketingRouteSeedRecord`
 - `interface MediaSeedRecord`
 - `interface RedirectRuleSeed`
 - `interface SeededComment`
-- `interface BootstrapUserSeed`
-- `interface SystemRouteSeed`
-- `interface ArchiveSeedRecord`
-- `interface MarketingRouteSeedRecord`
-- `interface SiteSettingsSeed`
 - `interface SeedDatabaseOptions`
-- `interface SeedSummary`
 - `interface SeedImportStatement`
-- `interface AstropressSqliteSeedToolkitOptions`
-- `interface AstropressSqliteSeedToolkit`
-- `type AstropressRollbackStatus`
-- `interface AstropressRollbackResult`
+- `interface SeedSummary`
+- `interface SiteSettingsSeed`
+- `interface SqliteDatabaseLike`
+- `interface SqliteStatementLike`
+- `interface SystemRouteSeed`
 
 ### Constants & Re-exports
 
 - `const defaultSeedImportTables: readonly ["admin_users", "media_assets", "redirect_rules", "comments", "site_settings", "cms_route_groups", "cms_route_variants", "cms_route_aliases", "cms_route_revisions"]`
-- `const ASTROPRESS_FRAMEWORK_MIGRATION_BASELINE: 1` — The number of framework-owned migrations Astropress applies during bootstrapping. Used by `checkSchemaVersionAhead` to detect host-app migrations.
+- `const ASTROPRESS_FRAMEWORK_MIGRATION_BASELINE: 1`
 
 ---
 

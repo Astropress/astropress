@@ -1,76 +1,122 @@
-import { readdirSync, readFileSync, statSync } from "node:fs";
+import { readFileSync, readdirSync, statSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 
 const adminPagesRoot = path.resolve(import.meta.dirname, "../pages/ap-admin");
-const scriptsRoot = path.resolve(import.meta.dirname, "../../../tooling/scripts");
+const scriptsRoot = path.resolve(
+	import.meta.dirname,
+	"../../../tooling/scripts",
+);
 
 function listAstroFiles(root: string, files: string[] = []) {
-  for (const entry of readdirSync(root)) {
-    const fullPath = path.join(root, entry);
-    const stats = statSync(fullPath);
-    if (stats.isDirectory()) {
-      listAstroFiles(fullPath, files);
-      continue;
-    }
-    if (fullPath.endsWith(".astro")) {
-      files.push(fullPath);
-    }
-  }
-  return files.sort();
+	for (const entry of readdirSync(root)) {
+		const fullPath = path.join(root, entry);
+		const stats = statSync(fullPath);
+		if (stats.isDirectory()) {
+			listAstroFiles(fullPath, files);
+			continue;
+		}
+		if (fullPath.endsWith(".astro")) {
+			files.push(fullPath);
+		}
+	}
+	return files.sort();
 }
 
 describe("admin markup safety", () => {
-  it("does not ship inline event handler attributes in admin templates", () => {
-    for (const astroFile of listAstroFiles(adminPagesRoot)) {
-      const source = readFileSync(astroFile, "utf8");
-      expect(source).not.toMatch(/\son[a-z]+=/);
-    }
-  });
+	it("does not ship inline event handler attributes in admin templates", () => {
+		for (const astroFile of listAstroFiles(adminPagesRoot)) {
+			const source = readFileSync(astroFile, "utf8");
+			expect(source).not.toMatch(/\son[a-z]+=/);
+		}
+	});
 
-  it("does not use contenteditable in admin templates", () => {
-    for (const astroFile of listAstroFiles(adminPagesRoot)) {
-      const source = readFileSync(astroFile, "utf8");
-      expect(source).not.toContain("contenteditable=");
-    }
-  });
+	it("does not use contenteditable in admin templates", () => {
+		for (const astroFile of listAstroFiles(adminPagesRoot)) {
+			const source = readFileSync(astroFile, "utf8");
+			expect(source).not.toContain("contenteditable=");
+		}
+	});
 
-  it("labels admin dialogs accessibly and previews rich HTML inside a sandboxed iframe", () => {
-    const commentsPage = readFileSync(path.join(adminPagesRoot, "comments.astro"), "utf8");
-    const redirectsPage = readFileSync(path.join(adminPagesRoot, "redirects.astro"), "utf8");
-    const postEditorPage = readFileSync(path.join(adminPagesRoot, "posts/[slug].astro"), "utf8");
+	it("labels admin dialogs accessibly and previews rich HTML inside a sandboxed iframe", () => {
+		const commentsPage = readFileSync(
+			path.join(adminPagesRoot, "comments.astro"),
+			"utf8",
+		);
+		const redirectsPage = readFileSync(
+			path.join(adminPagesRoot, "redirects.astro"),
+			"utf8",
+		);
+		const postEditorPage = readFileSync(
+			path.join(adminPagesRoot, "posts/[slug].astro"),
+			"utf8",
+		);
 
-    expect(commentsPage).toContain('<dialog id="reject-dialog" class="confirm-modal" aria-labelledby="reject-dialog-title">');
-    expect(redirectsPage).toContain('<dialog id="confirm-dialog" class="confirm-modal" aria-labelledby="confirm-dialog-title">');
-    expect(postEditorPage).toContain("<iframe");
-    expect(postEditorPage).toContain('sandbox=""');
-    expect(postEditorPage).not.toContain("set:html={pageRecord.body}");
-  });
+		expect(commentsPage).toContain(
+			'<dialog id="reject-dialog" class="confirm-modal" aria-labelledby="reject-dialog-title">',
+		);
+		expect(redirectsPage).toContain(
+			'<dialog id="confirm-dialog" class="confirm-modal" aria-labelledby="confirm-dialog-title">',
+		);
+		expect(postEditorPage).toContain("<iframe");
+		expect(postEditorPage).toContain('sandbox=""');
+		expect(postEditorPage).not.toContain("set:html={pageRecord.body}");
+	});
 
-  it("does not suppress color-contrast in any axe audit script", () => {
-    const auditScripts = readdirSync(scriptsRoot).filter((f) => f.endsWith(".ts"));
-    for (const script of auditScripts) {
-      const src = readFileSync(path.join(scriptsRoot, script), "utf8");
-      expect(src, `${script} must not suppress color-contrast`).not.toContain('disableRules(["color-contrast"])');
-      expect(src, `${script} must not suppress color-contrast`).not.toContain("disableRules(['color-contrast'])");
-    }
-  });
+	it("does not suppress color-contrast in any axe audit script", () => {
+		const auditScripts = readdirSync(scriptsRoot).filter((f) =>
+			f.endsWith(".ts"),
+		);
+		for (const script of auditScripts) {
+			const src = readFileSync(path.join(scriptsRoot, script), "utf8");
+			expect(src, `${script} must not suppress color-contrast`).not.toContain(
+				'disableRules(["color-contrast"])',
+			);
+			expect(src, `${script} must not suppress color-contrast`).not.toContain(
+				"disableRules(['color-contrast'])",
+			);
+		}
+	});
 
-  it("keeps core auth/admin accessibility affordances in place", () => {
-    const adminLayout = readFileSync(path.resolve(import.meta.dirname, "../components/AdminLayout.astro"), "utf8");
-    const loginPage = readFileSync(path.join(adminPagesRoot, "login.astro"), "utf8");
-    const invitePage = readFileSync(path.join(adminPagesRoot, "accept-invite.astro"), "utf8");
-    const resetPage = readFileSync(path.join(adminPagesRoot, "reset-password.astro"), "utf8");
+	it("keeps core auth/admin accessibility affordances in place", () => {
+		const adminLayout = readFileSync(
+			path.resolve(import.meta.dirname, "../components/AdminLayout.astro"),
+			"utf8",
+		);
+		const loginPage = readFileSync(
+			path.join(adminPagesRoot, "login.astro"),
+			"utf8",
+		);
+		const invitePage = readFileSync(
+			path.join(adminPagesRoot, "accept-invite.astro"),
+			"utf8",
+		);
+		const resetPage = readFileSync(
+			path.join(adminPagesRoot, "reset-password.astro"),
+			"utf8",
+		);
 
-    expect(adminLayout).toContain('class="skip-link"');
-    expect(adminLayout).toContain('aria-label="Admin sections"');
-    expect(loginPage).toContain('type="email" name="email" autocomplete="email" required');
-    expect(loginPage).toContain('type="password" name="password" autocomplete="current-password" required');
-    expect(invitePage).toContain('type="password" name="password" autocomplete="new-password" minlength="12" required');
-    expect(invitePage).toContain('type="password" name="confirmPassword" autocomplete="new-password" minlength="12" required');
-    expect(resetPage).toContain('<input type="email" name="email" autocomplete="email" required />');
-    expect(resetPage).toContain('<input type="password" name="password" autocomplete="new-password" minlength="12" required />');
-  });
+		expect(adminLayout).toContain('class="skip-link"');
+		expect(adminLayout).toContain('aria-label="Admin sections"');
+		expect(loginPage).toContain(
+			'type="email" name="email" autocomplete="email" required',
+		);
+		expect(loginPage).toContain(
+			'type="password" name="password" autocomplete="current-password" required',
+		);
+		expect(invitePage).toContain(
+			'type="password" name="password" autocomplete="new-password" minlength="12" required',
+		);
+		expect(invitePage).toContain(
+			'type="password" name="confirmPassword" autocomplete="new-password" minlength="12" required',
+		);
+		expect(resetPage).toContain(
+			'<input type="email" name="email" autocomplete="email" required />',
+		);
+		expect(resetPage).toContain(
+			'<input type="password" name="password" autocomplete="new-password" minlength="12" required />',
+		);
+	});
 });
 
 // ---------------------------------------------------------------------------
@@ -78,58 +124,73 @@ describe("admin markup safety", () => {
 // ---------------------------------------------------------------------------
 
 describe("destructive actions use confirm dialogs", () => {
-  it("authors page uses ap-confirm-dialog for deletion", () => {
-    const src = readFileSync(path.join(adminPagesRoot, "authors.astro"), "utf8");
-    expect(src).toContain("ap-confirm-dialog");
-    expect(src).toContain("data-confirm-trigger");
-    expect(src).toContain('id="confirm-delete-author"');
-  });
+	it("authors page uses ap-confirm-dialog for deletion", () => {
+		const src = readFileSync(
+			path.join(adminPagesRoot, "authors.astro"),
+			"utf8",
+		);
+		expect(src).toContain("ap-confirm-dialog");
+		expect(src).toContain("data-confirm-trigger");
+		expect(src).toContain('id="confirm-delete-author"');
+	});
 
-  it("taxonomies page uses ap-confirm-dialog for category and tag deletion", () => {
-    const src = readFileSync(path.join(adminPagesRoot, "taxonomies.astro"), "utf8");
-    expect(src).toContain("ap-confirm-dialog");
-    expect(src).toContain("data-confirm-trigger");
-    expect(src).toContain('id="confirm-delete-category"');
-    expect(src).toContain('id="confirm-delete-tag"');
-  });
+	it("taxonomies page uses ap-confirm-dialog for category and tag deletion", () => {
+		const src = readFileSync(
+			path.join(adminPagesRoot, "taxonomies.astro"),
+			"utf8",
+		);
+		expect(src).toContain("ap-confirm-dialog");
+		expect(src).toContain("data-confirm-trigger");
+		expect(src).toContain('id="confirm-delete-category"');
+		expect(src).toContain('id="confirm-delete-tag"');
+	});
 
-  it("media page uses ap-confirm-dialog for deletion", () => {
-    const src = readFileSync(path.join(adminPagesRoot, "media.astro"), "utf8");
-    expect(src).toContain("ap-confirm-dialog");
-    expect(src).toContain("data-confirm-trigger");
-    expect(src).toContain('id="confirm-delete-media"');
-  });
+	it("media page uses ap-confirm-dialog for deletion", () => {
+		const src = readFileSync(path.join(adminPagesRoot, "media.astro"), "utf8");
+		expect(src).toContain("ap-confirm-dialog");
+		expect(src).toContain("data-confirm-trigger");
+		expect(src).toContain('id="confirm-delete-media"');
+	});
 
-  it("webhooks page uses ap-confirm-dialog for deletion", () => {
-    const src = readFileSync(path.join(adminPagesRoot, "webhooks.astro"), "utf8");
-    expect(src).toContain("ap-confirm-dialog");
-    expect(src).toContain("data-confirm-trigger");
-    expect(src).toContain('id="confirm-delete-webhook"');
-  });
+	it("webhooks page uses ap-confirm-dialog for deletion", () => {
+		const src = readFileSync(
+			path.join(adminPagesRoot, "webhooks.astro"),
+			"utf8",
+		);
+		expect(src).toContain("ap-confirm-dialog");
+		expect(src).toContain("data-confirm-trigger");
+		expect(src).toContain('id="confirm-delete-webhook"');
+	});
 
-  it("api-tokens page uses ap-confirm-dialog for revocation", () => {
-    const src = readFileSync(path.join(adminPagesRoot, "api-tokens.astro"), "utf8");
-    expect(src).toContain("ap-confirm-dialog");
-    expect(src).toContain("data-confirm-trigger");
-    expect(src).toContain('id="confirm-revoke-token"');
-  });
+	it("api-tokens page uses ap-confirm-dialog for revocation", () => {
+		const src = readFileSync(
+			path.join(adminPagesRoot, "api-tokens.astro"),
+			"utf8",
+		);
+		expect(src).toContain("ap-confirm-dialog");
+		expect(src).toContain("data-confirm-trigger");
+		expect(src).toContain('id="confirm-revoke-token"');
+	});
 
-  it("users page uses styled dialog instead of window.confirm()", () => {
-    const src = readFileSync(path.join(adminPagesRoot, "users.astro"), "utf8");
-    expect(src).not.toContain("window.confirm");
-    expect(src).not.toMatch(/data-confirm="/);
-    expect(src).toContain("ap-confirm-dialog");
-    expect(src).toContain('id="confirm-suspend-user"');
-    expect(src).toContain('id="confirm-purge-user"');
-  });
+	it("users page uses styled dialog instead of window.confirm()", () => {
+		const src = readFileSync(path.join(adminPagesRoot, "users.astro"), "utf8");
+		expect(src).not.toContain("window.confirm");
+		expect(src).not.toMatch(/data-confirm="/);
+		expect(src).toContain("ap-confirm-dialog");
+		expect(src).toContain('id="confirm-suspend-user"');
+		expect(src).toContain('id="confirm-purge-user"');
+	});
 
-  it("subscriber detail uses styled dialog instead of window.confirm()", () => {
-    const src = readFileSync(path.join(adminPagesRoot, "subscribers", "[id].astro"), "utf8");
-    expect(src).not.toContain("window.confirm");
-    expect(src).not.toMatch(/data-confirm="/);
-    expect(src).toContain("ap-confirm-dialog");
-    expect(src).toContain('id="confirm-delete-subscriber"');
-  });
+	it("subscriber detail uses styled dialog instead of window.confirm()", () => {
+		const src = readFileSync(
+			path.join(adminPagesRoot, "subscribers", "[id].astro"),
+			"utf8",
+		);
+		expect(src).not.toContain("window.confirm");
+		expect(src).not.toMatch(/data-confirm="/);
+		expect(src).toContain("ap-confirm-dialog");
+		expect(src).toContain('id="confirm-delete-subscriber"');
+	});
 });
 
 // ---------------------------------------------------------------------------
@@ -137,47 +198,59 @@ describe("destructive actions use confirm dialogs", () => {
 // ---------------------------------------------------------------------------
 
 describe("ap-stale-tab-warning web component", () => {
-  it("source file exists and exports ApStaleTabWarning class", () => {
-    const wcPath = path.resolve(import.meta.dirname, "../web-components/ap-stale-tab-warning.ts");
-    const source = readFileSync(wcPath, "utf8");
-    expect(source).toContain("export class ApStaleTabWarning");
-    expect(source).toContain("BroadcastChannel");
-    expect(source).toContain("astropress-editor");
-    expect(source).toContain("customElements.define");
-    expect(source).toContain('"ap-stale-tab-warning"');
-  });
+	it("source file exists and exports ApStaleTabWarning class", () => {
+		const wcPath = path.resolve(
+			import.meta.dirname,
+			"../web-components/ap-stale-tab-warning.ts",
+		);
+		const source = readFileSync(wcPath, "utf8");
+		expect(source).toContain("export class ApStaleTabWarning");
+		expect(source).toContain("BroadcastChannel");
+		expect(source).toContain("astropress-editor");
+		expect(source).toContain("customElements.define");
+		expect(source).toContain('"ap-stale-tab-warning"');
+	});
 
-  it("broadcasts editing message on connectedCallback with unique tab id", () => {
-    const wcPath = path.resolve(import.meta.dirname, "../web-components/ap-stale-tab-warning.ts");
-    const source = readFileSync(wcPath, "utf8");
-    // Must post { type: "editing", slug, id } on connect
-    expect(source).toContain('"editing"');
-    expect(source).toContain("crypto.randomUUID()");
-    // Must post { type: "left", slug, id } on disconnect
-    expect(source).toContain('"left"');
-    expect(source).toContain("disconnectedCallback");
-  });
+	it("broadcasts editing message on connectedCallback with unique tab id", () => {
+		const wcPath = path.resolve(
+			import.meta.dirname,
+			"../web-components/ap-stale-tab-warning.ts",
+		);
+		const source = readFileSync(wcPath, "utf8");
+		// Must post { type: "editing", slug, id } on connect
+		expect(source).toContain('"editing"');
+		expect(source).toContain("crypto.randomUUID()");
+		// Must post { type: "left", slug, id } on disconnect
+		expect(source).toContain('"left"');
+		expect(source).toContain("disconnectedCallback");
+	});
 
-  it("shows stale-tab warning when another editing message arrives for the same slug", () => {
-    const wcPath = path.resolve(import.meta.dirname, "../web-components/ap-stale-tab-warning.ts");
-    const source = readFileSync(wcPath, "utf8");
-    // Must render a role="alert" warning element
-    expect(source).toContain('role", "alert"');
-    expect(source).toContain("Another tab is editing this post");
-  });
+	it("shows stale-tab warning when another editing message arrives for the same slug", () => {
+		const wcPath = path.resolve(
+			import.meta.dirname,
+			"../web-components/ap-stale-tab-warning.ts",
+		);
+		const source = readFileSync(wcPath, "utf8");
+		// Must render a role="alert" warning element
+		expect(source).toContain('role", "alert"');
+		expect(source).toContain("Another tab is editing this post");
+	});
 
-  it("shows stale-session warning when page open time exceeds TTL", () => {
-    const wcPath = path.resolve(import.meta.dirname, "../web-components/ap-stale-tab-warning.ts");
-    const source = readFileSync(wcPath, "utf8");
-    expect(source).toContain("This page has been open over an hour");
-    expect(source).toContain("session-ttl-ms");
-  });
+	it("shows stale-session warning when page open time exceeds TTL", () => {
+		const wcPath = path.resolve(
+			import.meta.dirname,
+			"../web-components/ap-stale-tab-warning.ts",
+		);
+		const source = readFileSync(wcPath, "utf8");
+		expect(source).toContain("This page has been open over an hour");
+		expect(source).toContain("session-ttl-ms");
+	});
 
-  it("subpath export exists in package.json", () => {
-    const pkgPath = path.resolve(import.meta.dirname, "../package.json");
-    const pkg = JSON.parse(readFileSync(pkgPath, "utf8"));
-    expect(pkg.exports["./web-components/ap-stale-tab-warning"]).toBeDefined();
-  });
+	it("subpath export exists in package.json", () => {
+		const pkgPath = path.resolve(import.meta.dirname, "../package.json");
+		const pkg = JSON.parse(readFileSync(pkgPath, "utf8"));
+		expect(pkg.exports["./web-components/ap-stale-tab-warning"]).toBeDefined();
+	});
 });
 
 // ---------------------------------------------------------------------------
@@ -185,35 +258,47 @@ describe("ap-stale-tab-warning web component", () => {
 // ---------------------------------------------------------------------------
 
 describe("post editor custom field auto-generation", () => {
-  it("post editor uses peekCmsConfig to find registered content types", () => {
-    const editorPath = path.resolve(import.meta.dirname, "../pages/ap-admin/posts/[slug].astro");
-    const source = readFileSync(editorPath, "utf8");
-    expect(source).toContain("peekCmsConfig");
-    expect(source).toContain("contentTypes");
-    expect(source).toContain("data-ap-custom-fields");
-  });
+	it("post editor uses peekCmsConfig to find registered content types", () => {
+		const editorPath = path.resolve(
+			import.meta.dirname,
+			"../pages/ap-admin/posts/[slug].astro",
+		);
+		const source = readFileSync(editorPath, "utf8");
+		expect(source).toContain("peekCmsConfig");
+		expect(source).toContain("contentTypes");
+		expect(source).toContain("data-ap-custom-fields");
+	});
 
-  it("post editor generates text input with metadata. prefix for text fields", () => {
-    const editorPath = path.resolve(import.meta.dirname, "../pages/ap-admin/posts/[slug].astro");
-    const source = readFileSync(editorPath, "utf8");
-    // Input name pattern must be metadata.{field.name}
-    expect(source).toContain('`metadata.${field.name}`');
-    expect(source).toContain('type="text"');
-    expect(source).toContain('type="checkbox"');
-  });
+	it("post editor generates text input with metadata. prefix for text fields", () => {
+		const editorPath = path.resolve(
+			import.meta.dirname,
+			"../pages/ap-admin/posts/[slug].astro",
+		);
+		const source = readFileSync(editorPath, "utf8");
+		// Input name pattern must be metadata.{field.name}
+		expect(source).toContain("`metadata.${field.name}`");
+		expect(source).toContain('type="text"');
+		expect(source).toContain('type="checkbox"');
+	});
 
-  it("post editor generates select inputs for select-type fields", () => {
-    const editorPath = path.resolve(import.meta.dirname, "../pages/ap-admin/posts/[slug].astro");
-    const source = readFileSync(editorPath, "utf8");
-    expect(source).toContain("field.type === \"select\"");
-    expect(source).toContain("<select");
-  });
+	it("post editor generates select inputs for select-type fields", () => {
+		const editorPath = path.resolve(
+			import.meta.dirname,
+			"../pages/ap-admin/posts/[slug].astro",
+		);
+		const source = readFileSync(editorPath, "utf8");
+		expect(source).toContain('field.type === "select"');
+		expect(source).toContain("<select");
+	});
 
-  it("post editor marks required fields with asterisk in label", () => {
-    const editorPath = path.resolve(import.meta.dirname, "../pages/ap-admin/posts/[slug].astro");
-    const source = readFileSync(editorPath, "utf8");
-    expect(source).toContain("field.required");
-    // Required fields get an asterisk in the label
-    expect(source).toContain('" *"');
-  });
+	it("post editor marks required fields with asterisk in label", () => {
+		const editorPath = path.resolve(
+			import.meta.dirname,
+			"../pages/ap-admin/posts/[slug].astro",
+		);
+		const source = readFileSync(editorPath, "utf8");
+		expect(source).toContain("field.required");
+		// Required fields get an asterisk in the label
+		expect(source).toContain('" *"');
+	});
 });

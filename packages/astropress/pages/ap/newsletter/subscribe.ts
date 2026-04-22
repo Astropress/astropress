@@ -1,6 +1,6 @@
 import type { APIRoute } from "astro";
-import { newsletterAdapter } from "../../../src/newsletter-adapter.js";
 import { recordD1Audit } from "../../../src/d1-audit.js";
+import { newsletterAdapter } from "../../../src/newsletter-adapter.js";
 
 const SIMPLE_EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const JSON_HEADERS = { "Content-Type": "application/json" };
@@ -22,43 +22,62 @@ const JSON_HEADERS = { "Content-Type": "application/json" };
  *   - "mock"      — always succeeds; used in development
  */
 export const POST: APIRoute = async ({ request, locals }) => {
-  let email: string | undefined;
+	let email: string | undefined;
 
-  const contentType = request.headers.get("content-type") ?? "";
-  if (contentType.includes("application/json")) {
-    try {
-      const body = await request.json() as Record<string, unknown>;
-      email = typeof body.email === "string" ? body.email.trim() : undefined;
-    } catch {
-      return new Response(JSON.stringify({ ok: false, error: "Invalid JSON body." }), { status: 400, headers: JSON_HEADERS });
-    }
-  } else {
-    const formData = await request.formData().catch(() => null);
-    email = formData ? (String(formData.get("email") ?? "")).trim() : undefined;
-  }
+	const contentType = request.headers.get("content-type") ?? "";
+	if (contentType.includes("application/json")) {
+		try {
+			const body = (await request.json()) as Record<string, unknown>;
+			email = typeof body.email === "string" ? body.email.trim() : undefined;
+		} catch {
+			return new Response(
+				JSON.stringify({ ok: false, error: "Invalid JSON body." }),
+				{ status: 400, headers: JSON_HEADERS },
+			);
+		}
+	} else {
+		const formData = await request.formData().catch(() => null);
+		email = formData ? String(formData.get("email") ?? "").trim() : undefined;
+	}
 
-  if (!email || !SIMPLE_EMAIL_PATTERN.test(email)) {
-    return new Response(JSON.stringify({ ok: false, error: "A valid email address is required." }), { status: 400, headers: JSON_HEADERS });
-  }
+	if (!email || !SIMPLE_EMAIL_PATTERN.test(email)) {
+		return new Response(
+			JSON.stringify({
+				ok: false,
+				error: "A valid email address is required.",
+			}),
+			{ status: 400, headers: JSON_HEADERS },
+		);
+	}
 
-  const result = await newsletterAdapter.subscribe(email, locals);
+	const result = await newsletterAdapter.subscribe(email, locals);
 
-  if (!result.ok) {
-    return new Response(JSON.stringify({ ok: false, error: result.error ?? "Subscription failed." }), { status: 422, headers: JSON_HEADERS });
-  }
+	if (!result.ok) {
+		return new Response(
+			JSON.stringify({
+				ok: false,
+				error: result.error ?? "Subscription failed.",
+			}),
+			{ status: 422, headers: JSON_HEADERS },
+		);
+	}
 
-  // Record a conversion audit event for first-party analytics (GDPR Art. 6(1)(f))
-  const utmSource = new URL(request.url).searchParams.get("utm_source") ?? undefined;
-  await recordD1Audit(
-    locals,
-    { email: "public", role: "editor" as const, name: "Public visitor" },
-    "newsletter.subscribe",
-    "newsletter",
-    email,
-    `Newsletter subscription from ${utmSource ?? "direct"}`,
-  ).catch(() => {
-    // Non-fatal: audit failure must not break the subscription response
-  });
+	// Record a conversion audit event for first-party analytics (GDPR Art. 6(1)(f))
+	const utmSource =
+		new URL(request.url).searchParams.get("utm_source") ?? undefined;
+	await recordD1Audit(
+		locals,
+		{ email: "public", role: "editor" as const, name: "Public visitor" },
+		"newsletter.subscribe",
+		"newsletter",
+		email,
+		`Newsletter subscription from ${utmSource ?? "direct"}`,
+	).catch(() => {
+		// Non-fatal: audit failure must not break the subscription response
+	});
 
-  return new Response(JSON.stringify({ ok: true }), { status: 200, headers: JSON_HEADERS });
+	return new Response(JSON.stringify({ ok: true }), {
+		status: 200,
+		headers: JSON_HEADERS,
+	});
 };

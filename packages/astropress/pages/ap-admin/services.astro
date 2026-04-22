@@ -4,28 +4,28 @@ import { getAstropressServices } from "@astropress-diy/astropress/services-confi
 
 const adminUser = Astro.locals.adminUser;
 if (adminUser?.role !== "admin") {
-  Astro.response.status = 403;
+	Astro.response.status = 403;
 }
 
 const services = getAstropressServices();
 
 const DEFAULT_SERVICE_DOCS: Record<string, { docs: string; badge: string }> = {
-  cms: {
-    docs: "https://payloadcms.com/docs",
-    badge: "MIT · Payload / Keystatic / Directus",
-  },
-  shop: {
-    docs: "https://docs.medusajs.com",
-    badge: "MIT · Medusa / Vendure",
-  },
-  community: {
-    docs: "https://remark42.com/docs",
-    badge: "MIT · Giscus / Remark42",
-  },
-  email: {
-    docs: "https://listmonk.app/docs",
-    badge: "MIT · Listmonk / Keila",
-  },
+	cms: {
+		docs: "https://payloadcms.com/docs",
+		badge: "MIT · Payload / Keystatic / Directus",
+	},
+	shop: {
+		docs: "https://docs.medusajs.com",
+		badge: "MIT · Medusa / Vendure",
+	},
+	community: {
+		docs: "https://remark42.com/docs",
+		badge: "MIT · Giscus / Remark42",
+	},
+	email: {
+		docs: "https://listmonk.app/docs",
+		badge: "MIT · Listmonk / Keila",
+	},
 };
 ---
 

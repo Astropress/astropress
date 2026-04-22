@@ -5,7 +5,7 @@ import { loadLocalAdminStore } from "@astropress-diy/astropress/local-runtime-mo
 
 const adminUser = Astro.locals.adminUser;
 if (!adminUser || adminUser.role !== "admin") {
-  return Astro.redirect("/ap-admin?error=insufficient-permissions");
+	return Astro.redirect("/ap-admin?error=insufficient-permissions");
 }
 
 const store = await loadLocalAdminStore();
@@ -13,10 +13,22 @@ const tokens = store.apiTokens ? await store.apiTokens.list() : [];
 
 const wasCreated = Astro.url.searchParams.get("created") === "1";
 const wasRevoked = Astro.url.searchParams.get("revoked") === "1";
-const createdRawToken = wasCreated ? Astro.url.searchParams.get("rawToken") : null;
-const errorMessage = Astro.url.searchParams.get("error") === "1" ? Astro.url.searchParams.get("message") : null;
+const createdRawToken = wasCreated
+	? Astro.url.searchParams.get("rawToken")
+	: null;
+const errorMessage =
+	Astro.url.searchParams.get("error") === "1"
+		? Astro.url.searchParams.get("message")
+		: null;
 
-const ALL_SCOPES = ["content:read", "content:write", "media:read", "media:write", "settings:read", "webhooks:manage"] as const;
+const ALL_SCOPES = [
+	"content:read",
+	"content:write",
+	"media:read",
+	"media:write",
+	"settings:read",
+	"webhooks:manage",
+] as const;
 ---
 
 <AdminLayout

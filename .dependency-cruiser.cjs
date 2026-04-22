@@ -43,7 +43,7 @@ module.exports = {
     // No circular dependencies in source.
     {
       name: "no-circular",
-      severity: "warn",
+      severity: "error",
       comment: "Circular dependencies make the codebase harder to reason about",
       from: { path: "^packages/astropress/src/" },
       to: { circular: true },

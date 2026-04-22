@@ -22,7 +22,7 @@ pub(super) fn parse_add_command(args: &[String]) -> Result<Command, String> {
 
     while index < args.len() {
         feature_args.push(args[index].clone());
-        index += 1;
+        index += 1; // ~ skip
     }
 
     Ok(Command::Add { project_dir, feature_args })
@@ -54,7 +54,7 @@ pub(super) fn parse_migrate_command(args: &[String]) -> Result<Command, String> 
                 );
             }
             "--to" => {
-                index += 1;
+                index += 1; // ~ skip
                 to = Some(
                     args.get(index)
                         .ok_or_else(|| "Missing value after `--to`.".to_string())?
@@ -66,7 +66,7 @@ pub(super) fn parse_migrate_command(args: &[String]) -> Result<Command, String> 
             }
             other => return Err(format!("Unsupported astropress migrate option: `{other}`.")),
         }
-        index += 1;
+        index += 1; // ~ skip
     }
 
     let from = from.ok_or_else(|| "Usage: `astropress migrate --from <tool> --to <tool>`.".to_string())?;

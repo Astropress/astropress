@@ -6,34 +6,40 @@ const adminUser = Astro.locals.adminUser;
 const selectedType = Astro.url.searchParams.get("type") ?? "all";
 const missingOnly = Astro.url.searchParams.get("missing") === "1";
 const sortKey = Astro.url.searchParams.get("sort") ?? "path";
-const model = await buildSeoPageModel(Astro.locals, adminUser!.role);
+const model = await buildSeoPageModel(Astro.locals, adminUser?.role);
 
 if (model.status === "forbidden") {
-  Astro.response.status = 403;
+	Astro.response.status = 403;
 }
 const rows = model.data.rows;
 const sortedRows = [...rows].sort((left, right) => {
-  if (sortKey === "status") {
-    if (left.missingMetadata === right.missingMetadata) {
-      return left.path.localeCompare(right.path);
-    }
-    return Number(left.missingMetadata) - Number(right.missingMetadata);
-  }
+	if (sortKey === "status") {
+		if (left.missingMetadata === right.missingMetadata) {
+			return left.path.localeCompare(right.path);
+		}
+		return Number(left.missingMetadata) - Number(right.missingMetadata);
+	}
 
-  if (sortKey === "title") {
-    return left.label.localeCompare(right.label);
-  }
+	if (sortKey === "title") {
+		return left.label.localeCompare(right.label);
+	}
 
-  if (sortKey === "type") {
-    return left.type.localeCompare(right.type) || left.path.localeCompare(right.path);
-  }
+	if (sortKey === "type") {
+		return (
+			left.type.localeCompare(right.type) || left.path.localeCompare(right.path)
+		);
+	}
 
-  return left.path.localeCompare(right.path);
+	return left.path.localeCompare(right.path);
 });
-const visibleRows = sortedRows.filter((row) => (selectedType === "all" || row.type === selectedType) && (!missingOnly || row.missingMetadata));
+const visibleRows = sortedRows.filter(
+	(row) =>
+		(selectedType === "all" || row.type === selectedType) &&
+		(!missingOnly || row.missingMetadata),
+);
 const countsByType = rows.reduce<Record<string, number>>((accumulator, row) => {
-  accumulator[row.type] = (accumulator[row.type] ?? 0) + 1;
-  return accumulator;
+	accumulator[row.type] = (accumulator[row.type] ?? 0) + 1;
+	return accumulator;
 }, {});
 const rowsMissingMetadata = rows.filter((row) => row.missingMetadata).length;
 ---

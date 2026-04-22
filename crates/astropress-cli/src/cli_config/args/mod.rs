@@ -196,9 +196,6 @@ pub(crate) fn parse_command(args: &[String]) -> Result<Command, String> {
             ops::parse_db_rollback_command(rest)
         }
         [command, rest @ ..] if command == "deploy" => dev_deploy::parse_deploy_command(rest),
-        [command, subcommand, rest @ ..] if command == "upgrade" && subcommand == "--check" => {
-            ops::parse_upgrade_check_command(rest)
-        }
         [command, subcommand, rest @ ..] if command == "upgrade" && subcommand == "--apply" => {
             ops::parse_upgrade_apply_command(rest)
         }

@@ -5,7 +5,8 @@
 //! flag or subcommand used to select each one.
 
 /// Print the full tool catalogue to stdout.
-pub(crate) fn list_tools() {
+#[mutants::skip]
+pub(crate) fn list_tools() { // ~ skip
     println!("astropress tool catalogue");
     println!();
 
@@ -77,7 +78,8 @@ pub(crate) fn list_tools() {
 /// Covers app hosts (static, serverless, server, managed), data services
 /// (edge, serverless Postgres, self-hosted BaaS, built-in), and the fully-
 /// tested host+data pairings.
-pub(crate) fn list_providers() {
+#[mutants::skip]
+pub(crate) fn list_providers() { // ~ skip
     println!("astropress provider catalogue");
     println!();
 

@@ -3,9 +3,9 @@ import AdminLayout from "@astropress-diy/astropress/components/AdminLayout.astro
 import { buildArchivesIndexPageModel } from "astropress";
 
 const adminUser = Astro.locals.adminUser;
-const model = await buildArchivesIndexPageModel(Astro.locals, adminUser!.role);
+const model = await buildArchivesIndexPageModel(Astro.locals, adminUser?.role);
 if (model.status === "forbidden") {
-  Astro.response.status = 403;
+	Astro.response.status = 403;
 }
 const { archiveList, kindCounts, totalArchives, totalItems } = model.data;
 ---

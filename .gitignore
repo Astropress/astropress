@@ -24,6 +24,11 @@ playwright-report/
 **/.stryker-incremental.json
 **/stryker-setup-*.js
 **/reports/mutation/
+mutants.out.old/
+stryker.local.mjs
+
+# Claude Code session data
+.claude/
 
 # Host-app runtime data (SQLite WAL/SHM journals)
 **/.data/*.sqlite-shm
@@ -31,9 +36,6 @@ playwright-report/
 packages/astropress/.data/
 examples/admin-harness/.data/
 .data/
-
-# Claude Code session data
-.claude/
 
 # Cargo mutants output
 crates/mutants.out/

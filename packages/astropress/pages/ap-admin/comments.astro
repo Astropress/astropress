@@ -8,7 +8,10 @@ const adminUser = Astro.locals.adminUser;
 const model = await buildCommentsPageModel(Astro.locals);
 const { comments, auditEvents } = model.data;
 const wasSaved = Astro.url.searchParams.get("saved") === "1";
-const errorMessage = Astro.url.searchParams.get("error") === "1" ? Astro.url.searchParams.get("message") : "";
+const errorMessage =
+	Astro.url.searchParams.get("error") === "1"
+		? Astro.url.searchParams.get("message")
+		: "";
 ---
 
 <AdminLayout

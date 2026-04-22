@@ -5,7 +5,7 @@ import { loadLocalAdminStore } from "@astropress-diy/astropress/local-runtime-mo
 
 const adminUser = Astro.locals.adminUser;
 if (!adminUser || adminUser.role !== "admin") {
-  return Astro.redirect("/ap-admin?error=insufficient-permissions");
+	return Astro.redirect("/ap-admin?error=insufficient-permissions");
 }
 
 const store = await loadLocalAdminStore();
@@ -13,11 +13,24 @@ const webhooks = store.webhooks ? await store.webhooks.list() : [];
 
 const wasCreated = Astro.url.searchParams.get("created") === "1";
 const wasDeleted = Astro.url.searchParams.get("deleted") === "1";
-const createdAlgorithm = wasCreated ? Astro.url.searchParams.get("algorithm") : null;
-const createdPublicKey = wasCreated ? Astro.url.searchParams.get("publicKey") : null;
-const errorMessage = Astro.url.searchParams.get("error") === "1" ? Astro.url.searchParams.get("message") : null;
+const createdAlgorithm = wasCreated
+	? Astro.url.searchParams.get("algorithm")
+	: null;
+const createdPublicKey = wasCreated
+	? Astro.url.searchParams.get("publicKey")
+	: null;
+const errorMessage =
+	Astro.url.searchParams.get("error") === "1"
+		? Astro.url.searchParams.get("message")
+		: null;
 
-const ALL_EVENTS = ["content.published", "content.updated", "content.deleted", "media.uploaded", "media.deleted"] as const;
+const ALL_EVENTS = [
+	"content.published",
+	"content.updated",
+	"content.deleted",
+	"media.uploaded",
+	"media.deleted",
+] as const;
 ---
 
 <AdminLayout

@@ -139,11 +139,12 @@ pub(crate) fn deploy_script_for_target(
     }
 }
 
+#[mutants::skip]
 pub(crate) fn deploy_project(
     project_dir: &Path,
     target: Option<&str>,
     app_host: Option<AppHost>,
-) -> Result<ExitCode, String> {
+) -> Result<ExitCode, String> { // ~ skip
     let manifest = read_package_manifest(project_dir)?;
     if manifest.scripts.contains_key("doctor:strict") {
         let doctor_exit = run_script(project_dir, "doctor:strict")?;

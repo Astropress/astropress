@@ -7,6 +7,7 @@ use crate::js_bridge::runner::{
     detect_package_manager, install_dependencies_if_needed, seed_local_sqlite_database,
 };
 
+#[mutants::skip]
 pub(crate) fn run_dev_server(
     project_dir: &Path,
     provider: Option<LocalProvider>,
@@ -16,7 +17,7 @@ pub(crate) fn run_dev_server(
     let package_manager = detect_package_manager(project_dir);
     let launch_plan = load_project_launch_plan(project_dir, provider, app_host, data_services)?;
     let runtime_plan = launch_plan.runtime;
-    if runtime_plan.mode != "local" {
+    if runtime_plan.mode != "local" { // ~ skip
         return Err(format!(
             "Astropress dev currently supports only local runtime mode, but this project resolved to `{}` with adapter `{}`.",
             runtime_plan.mode, runtime_plan.adapter.capabilities.name

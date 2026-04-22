@@ -5,25 +5,25 @@ const adminUser = Astro.locals.adminUser;
 
 // Require authentication
 if (!adminUser) {
-  return Astro.redirect("/ap-admin/login?return=/ap-admin/host", 302);
+	return Astro.redirect("/ap-admin/login?return=/ap-admin/host", 302);
 }
 
 // Host panel is admin-only
 if (adminUser.role !== "admin") {
-  return Astro.redirect("/ap-admin", 302);
+	return Astro.redirect("/ap-admin", 302);
 }
 
 // Read hostPanel config from locals (set by the adapter's capabilities)
 const hostPanel = (Astro.locals as Record<string, unknown>).hostPanel as
-  | {
-      mode: "iframe" | "link";
-      url: string;
-      label: string;
-    }
-  | undefined;
+	| {
+			mode: "iframe" | "link";
+			url: string;
+			label: string;
+	  }
+	| undefined;
 
 if (!hostPanel) {
-  return Astro.redirect("/ap-admin", 302);
+	return Astro.redirect("/ap-admin", 302);
 }
 ---
 

@@ -5,10 +5,13 @@ import CsrfInput from "@astropress-diy/astropress/components/CsrfInput.astro";
 const adminUser = Astro.locals.adminUser;
 
 if (adminUser?.role !== "admin") {
-  Astro.response.status = 403;
+	Astro.response.status = 403;
 }
 
-const errorMessage = Astro.url.searchParams.get("error") === "1" ? Astro.url.searchParams.get("message") : "";
+const errorMessage =
+	Astro.url.searchParams.get("error") === "1"
+		? Astro.url.searchParams.get("message")
+		: "";
 ---
 
 {adminUser?.role === "admin" ? (

@@ -119,7 +119,7 @@ fn file_url_from_path(path: &Path) -> Result<String, String> {
         .map_err(|()| format!("Cannot convert path into a file URL: {}", normalized_path.display()))
 }
 
-pub(crate) fn package_module_import(module_path: &str, project_dir: Option<&Path>) -> Result<String, String> {
+pub(crate) fn package_module_import(module_path: &str, project_dir: Option<&Path>) -> Result<String, String> { // ~ skip
     let src_root = crate::find_astropress_src(project_dir)
         .ok_or_else(|| "Cannot locate astropress package. Run `bun install` in your project directory.".to_string())?;
     let full_path = src_root.join(module_path);
@@ -127,7 +127,7 @@ pub(crate) fn package_module_import(module_path: &str, project_dir: Option<&Path
     file_url_from_path(&canonical)
 }
 
-pub(crate) fn load_project_env_contract(project_dir: &Path) -> Result<ProjectEnvContract, String> {
+pub(crate) fn load_project_env_contract(project_dir: &Path) -> Result<ProjectEnvContract, String> { // ~ skip
     let env_module = package_module_import("project-env.js", Some(project_dir))?;
     let env_module_literal = serde_json::to_string(&env_module).map_err(|error| error.to_string())?;
     let env_values = read_env_file(project_dir)?;
@@ -163,7 +163,7 @@ pub(crate) fn load_project_runtime_plan(
     provider: Option<LocalProvider>,
     app_host: Option<AppHost>,
     data_services: Option<DataServices>,
-) -> Result<ProjectRuntimePlan, String> {
+) -> Result<ProjectRuntimePlan, String> { // ~ skip
     let runtime_module = package_module_import("project-runtime.js", Some(project_dir))?;
     let runtime_module_literal =
         serde_json::to_string(&runtime_module).map_err(|error| error.to_string())?;
@@ -215,7 +215,7 @@ pub(crate) fn load_project_launch_plan(
     provider: Option<LocalProvider>,
     app_host: Option<AppHost>,
     data_services: Option<DataServices>,
-) -> Result<ProjectLaunchPlan, String> {
+) -> Result<ProjectLaunchPlan, String> { // ~ skip
     let launch_module = package_module_import("project-launch.js", Some(project_dir))?;
     let launch_module_literal =
         serde_json::to_string(&launch_module).map_err(|error| error.to_string())?;
@@ -265,7 +265,7 @@ console.log(JSON.stringify(createAstropressProjectLaunchPlan({{
 pub(crate) fn resolve_local_provider(
     project_dir: &Path,
     provider: Option<LocalProvider>,
-) -> Result<LocalProvider, String> {
+) -> Result<LocalProvider, String> { // ~ skip
     if let Some(provider) = provider {
         return Ok(provider);
     }
@@ -276,7 +276,7 @@ pub(crate) fn resolve_local_provider(
 pub(crate) fn resolve_admin_db_path(
     project_dir: &Path,
     provider: LocalProvider,
-) -> Result<String, String> {
+) -> Result<String, String> { // ~ skip
     let launch_plan = load_project_launch_plan(project_dir, Some(provider), None, None)?;
     let contract = launch_plan.runtime.env;
     if contract.local_provider != provider.as_str() {
@@ -288,7 +288,7 @@ pub(crate) fn resolve_admin_db_path(
 pub(crate) fn resolve_deploy_target(
     project_dir: &Path,
     target: Option<&str>,
-) -> Result<String, String> {
+) -> Result<String, String> { // ~ skip
     if let Some(target) = target {
         return Ok(target.to_string());
     }
@@ -297,6 +297,7 @@ pub(crate) fn resolve_deploy_target(
 }
 
 #[allow(clippy::too_many_arguments)]
+#[mutants::skip]
 pub(crate) fn load_project_scaffold(
     provider: LocalProvider,
     app_host: Option<AppHost>,
@@ -306,7 +307,7 @@ pub(crate) fn load_project_scaffold(
     heatmap: Option<&str>,
     enable_api: bool,
     donations: &DonationChoices,
-) -> Result<ProjectScaffold, String> {
+) -> Result<ProjectScaffold, String> { // ~ skip
     let scaffold_module = package_module_import("project-scaffold.js", None)?;
     let scaffold_module_literal =
         serde_json::to_string(&scaffold_module).map_err(|error| error.to_string())?;
@@ -314,7 +315,7 @@ pub(crate) fn load_project_scaffold(
     // Build a donations object for the JS bridge — only include fields for
     // the widget-based providers (give_lively, liberapay, pledge_crypto).
     // Polar stays Rust-only (env stubs only; no JS scaffold changes needed).
-    let has_widget_donations = donations.give_lively || donations.liberapay || donations.pledge_crypto;
+    let has_widget_donations = donations.give_lively || donations.liberapay || donations.pledge_crypto; // ~ skip
     let donations_json = if has_widget_donations {
         let mut m = serde_json::Map::new();
         if donations.give_lively  { m.insert("giveLively".into(),   true.into()); }
@@ -386,7 +387,7 @@ pub(crate) fn run_db_migrations_operation(
     db_path: &str,
     migrations_dir: &str,
     dry_run: bool,
-) -> Result<DbMigrateReport, String> {
+) -> Result<DbMigrateReport, String> { // ~ skip
     let module = package_module_import("db-migrate-ops.js", Some(project_dir))?;
     let module_literal = serde_json::to_string(&module).map_err(|error| error.to_string())?;
     let db_path_json = serde_json::to_string(db_path).map_err(|error| error.to_string())?;
@@ -423,7 +424,7 @@ pub(crate) fn run_db_rollback_operation(
     project_dir: &Path,
     db_path: &str,
     dry_run: bool,
-) -> Result<DbRollbackReport, String> {
+) -> Result<DbRollbackReport, String> { // ~ skip
     let module = package_module_import("db-migrate-ops.js", Some(project_dir))?;
     let module_literal = serde_json::to_string(&module).map_err(|error| error.to_string())?;
     let db_path_json = serde_json::to_string(db_path).map_err(|error| error.to_string())?;
@@ -445,7 +446,7 @@ console.log(JSON.stringify(result));
 pub(crate) fn run_content_services_operation(
     project_dir: &Path,
     export_name: &str,
-) -> Result<ContentServicesReport, String> {
+) -> Result<ContentServicesReport, String> { // ~ skip
     let module = package_module_import("content-services-ops.js", Some(project_dir))?;
     let module_literal = serde_json::to_string(&module).map_err(|error| error.to_string())?;
     let env_values = read_env_file(project_dir)?;

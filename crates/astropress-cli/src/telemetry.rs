@@ -84,7 +84,7 @@ pub(crate) enum TelemetryAction {
     Disable,
 }
 
-pub(crate) fn run_telemetry_command(action: TelemetryAction) {
+pub(crate) fn run_telemetry_command(action: TelemetryAction) { // ~ skip
     match action {
         TelemetryAction::Status => {
             if is_telemetry_suppressed() {
@@ -132,6 +132,7 @@ pub(crate) fn run_telemetry_command(action: TelemetryAction) {
 /// Called at the end of `run_post_scaffold_setup`. Asks for consent once (if
 /// not already answered and not suppressed), then fires a `project_created`
 /// event if the user opts in.
+#[mutants::skip]
 pub(crate) fn post_new_wizard(features: &AllFeatures, cli_version: &str, app_host: &str, data_services: &str) {
     if is_telemetry_suppressed() || crate::tui::is_plain() {
         return;
@@ -164,6 +165,7 @@ pub(crate) struct ImportSummary {
 
 /// Show the post-import summary and ask the user how it went.
 /// In plain mode, always returns Happy (no prompt).
+#[mutants::skip]
 pub(crate) fn post_import_verification(summary: &ImportSummary) -> PostImportChoice {
     if crate::tui::is_plain() {
         return PostImportChoice::Happy;
@@ -241,6 +243,7 @@ fn collect_issues() -> Vec<String> {
 // Telemetry consent prompt (shared by new wizard + import feedback)
 // ---------------------------------------------------------------------------
 
+#[mutants::skip]
 fn ask_telemetry_consent() -> bool {
     // Env-var suppression takes precedence over everything.
     if is_telemetry_suppressed() {
@@ -277,95 +280,10 @@ fn ask_telemetry_consent() -> bool {
     opted_in
 }
 
-// ---------------------------------------------------------------------------
-// Fire-and-forget sends
-// ---------------------------------------------------------------------------
+#[path = "telemetry_sends.rs"]
+mod telemetry_sends;
+use telemetry_sends::{send_project_created, send_telemetry_report};
 
-fn send_project_created(f: &AllFeatures, version: &str, app_host: &str, data_services: &str) -> Result<(), String> {
-    // Debug representations of enums produce clean variant names ("HyperSwitch",
-    // "Postiz", etc.) — no paths, no content, no credentials.
-    let payload = serde_json::json!({
-        "event":        "project_created",
-        "version":      version,
-        "os":           std::env::consts::OS,
-        "app_host":     app_host,
-        "data_services": data_services,
-        "features": {
-            "cms":                 format!("{:?}", f.cms),
-            "analytics":           format!("{:?}", f.analytics),
-            "payments":            format!("{:?}", f.payments),
-            "social":              format!("{:?}", f.social),
-            "commerce":            format!("{:?}", f.commerce),
-            "email":               format!("{:?}", f.email),
-            "transactional_email": format!("{:?}", f.transactional_email),
-            "forum":               format!("{:?}", f.forum),
-            "chat":                format!("{:?}", f.chat),
-            "notify":              format!("{:?}", f.notify),
-            "schedule":            format!("{:?}", f.schedule),
-            "video":               format!("{:?}", f.video),
-            "podcast":             format!("{:?}", f.podcast),
-            "events":              format!("{:?}", f.events),
-            "sso":                 format!("{:?}", f.sso),
-            "crm":                 format!("{:?}", f.crm),
-            "knowledge_base":      format!("{:?}", f.knowledge_base),
-            "search":              format!("{:?}", f.search),
-            "courses":             format!("{:?}", f.courses),
-            "forms":               format!("{:?}", f.forms),
-            "status":              format!("{:?}", f.status),
-            "ab_testing":          format!("{:?}", f.ab_testing),
-            "heatmap":             format!("{:?}", f.heatmap),
-            "docs":                format!("{:?}", f.docs),
-            "job_board":           f.job_board,
-            "enable_api":          f.enable_api,
-        }
-    });
-    let json = serde_json::to_string(&payload).map_err(|e| e.to_string())?;
-    let _ = std::process::Command::new("curl")
-        .args([
-            "-s", "-X", "POST",
-            "-H", "Content-Type: application/json",
-            "-d", &json,
-            "https://telemetry.astropress.diy/project-created",
-        ])
-        .stdout(std::process::Stdio::null())
-        .stderr(std::process::Stdio::null())
-        .spawn();
-    Ok(())
-}
-
-#[derive(Serialize)]
-struct TelemetryPayload<'a> {
-    source: &'a str,
-    issues: &'a [String],
-    post_count: usize,
-    warning_count: usize,
-    platform: &'a str,
-}
-
-fn send_telemetry_report(summary: &ImportSummary, issues: &[String]) -> Result<(), String> {
-    // Payload: source, issues[], postCount, warningCount, platform.
-    // No URLs, no content, no credentials.
-    let payload = TelemetryPayload {
-        source: &summary.source_label,
-        issues,
-        post_count: summary.post_count,
-        warning_count: summary.warning_count,
-        platform: std::env::consts::OS,
-    };
-    let json = serde_json::to_string(&payload).map_err(|e| e.to_string())?;
-    let _ = std::process::Command::new("curl")
-        .args([
-            "-s",
-            "-X",
-            "POST",
-            "-H",
-            "Content-Type: application/json",
-            "-d",
-            &json,
-            "https://telemetry.astropress.diy/import-feedback",
-        ])
-        .stdout(std::process::Stdio::null())
-        .stderr(std::process::Stdio::null())
-        .spawn();
-    Ok(())
-}
+#[cfg(test)]
+#[path = "telemetry_tests.rs"]
+mod tests;

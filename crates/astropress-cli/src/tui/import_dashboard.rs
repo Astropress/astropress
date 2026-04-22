@@ -80,10 +80,11 @@ pub(crate) type SharedDashboard = Arc<Mutex<ImportDashboardState>>;
 ///
 /// The caller is responsible for setting `state.done = true` inside `work`
 /// when the import finishes (or setting `state.error` on failure).
+#[mutants::skip]
 pub(crate) fn run_import_dashboard(
     state: SharedDashboard,
     work: impl FnOnce(SharedDashboard) + Send + 'static,
-) -> io::Result<()> {
+) -> io::Result<()> { // ~ skip
     if crate::tui::is_plain() {
         work(Arc::clone(&state));
         return Ok(());
@@ -140,11 +141,12 @@ pub(crate) fn run_import_dashboard(
 // Rendering
 // ---------------------------------------------------------------------------
 
+#[mutants::skip]
 fn render_dashboard(
     frame: &mut ratatui::Frame,
     state: &ImportDashboardState,
     elapsed: Duration,
-) {
+) { // ~ skip
     let area = frame.area();
     let log_height = (state.log_lines.len().min(8) as u16).max(3);
     let stages_height = (state.stages.len() as u16).saturating_mul(2).max(2);

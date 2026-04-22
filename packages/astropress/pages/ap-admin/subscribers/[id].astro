@@ -6,17 +6,17 @@ import { getNewsletterConfig } from "@astropress-diy/astropress/runtime-env";
 const adminUser = Astro.locals.adminUser;
 
 if (!adminUser || adminUser.role !== "admin") {
-  Astro.response.status = 403;
+	Astro.response.status = 403;
 }
 
 const { id } = Astro.params as { id: string };
 
 interface SubscriberDetail {
-  id: string | number;
-  email: string;
-  name: string;
-  status: string;
-  createdAt: string;
+	id: string | number;
+	email: string;
+	name: string;
+	status: string;
+	createdAt: string;
 }
 
 let subscriber: SubscriberDetail | null = null;
@@ -24,28 +24,29 @@ let listSupported = false;
 let errorMessage = "";
 
 if (adminUser?.role === "admin") {
-  try {
-    const cfg = getNewsletterConfig(Astro.locals);
-    if (
-      cfg.mode === "listmonk" &&
-      cfg.listmonkApiUrl &&
-      cfg.listmonkApiUsername &&
-      cfg.listmonkApiPassword &&
-      cfg.listmonkListId
-    ) {
-      listSupported = true;
-      const ops = createListmonkOps({
-        apiUrl: cfg.listmonkApiUrl,
-        apiUsername: cfg.listmonkApiUsername,
-        apiPassword: cfg.listmonkApiPassword,
-        listId: Number(cfg.listmonkListId),
-      });
-      const result = await ops.getSubscriber(id);
-      subscriber = result.subscriber as SubscriberDetail;
-    }
-  } catch (e) {
-    errorMessage = "Could not load subscriber. The subscriber may not exist, or your LISTMONK_* environment variables may be misconfigured.";
-  }
+	try {
+		const cfg = getNewsletterConfig(Astro.locals);
+		if (
+			cfg.mode === "listmonk" &&
+			cfg.listmonkApiUrl &&
+			cfg.listmonkApiUsername &&
+			cfg.listmonkApiPassword &&
+			cfg.listmonkListId
+		) {
+			listSupported = true;
+			const ops = createListmonkOps({
+				apiUrl: cfg.listmonkApiUrl,
+				apiUsername: cfg.listmonkApiUsername,
+				apiPassword: cfg.listmonkApiPassword,
+				listId: Number(cfg.listmonkListId),
+			});
+			const result = await ops.getSubscriber(id);
+			subscriber = result.subscriber as SubscriberDetail;
+		}
+	} catch (e) {
+		errorMessage =
+			"Could not load subscriber. The subscriber may not exist, or your LISTMONK_* environment variables may be misconfigured.";
+	}
 }
 
 const wasDeleted = Astro.url.searchParams.get("deleted") === "1";

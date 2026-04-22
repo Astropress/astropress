@@ -1,30 +1,48 @@
-import type { APIRoute } from "astro";
 import { withAdminFormAction } from "@astropress-diy/astropress";
 import { updateRuntimeTranslationState } from "@astropress-diy/astropress";
-import { appendQueryParam, resolveSafeReturnPath } from "@astropress-diy/astropress";
+import {
+	appendQueryParam,
+	resolveSafeReturnPath,
+} from "@astropress-diy/astropress";
+import type { APIRoute } from "astro";
 
 export const POST: APIRoute = async (context) => {
-  const fallbackPath = "/ap-admin/translations";
-  const refererPath = resolveSafeReturnPath(context.request.headers.get("referer"), fallbackPath);
+	const fallbackPath = "/ap-admin/translations";
+	const refererPath = resolveSafeReturnPath(
+		context.request.headers.get("referer"),
+		fallbackPath,
+	);
 
-  return withAdminFormAction(
-    context,
-    { failurePath: refererPath, unexpectedMessage: "Translation state could not be updated. Reload the page and retry the status change." },
-    async ({ actor, formData, locals, redirect, fail }) => {
-      const returnPath = resolveSafeReturnPath(formData.get("returnPath") as string | null, refererPath);
-      const route = formData.get("route") as string | null;
-      const state = formData.get("state") as string | null;
+	return withAdminFormAction(
+		context,
+		{
+			failurePath: refererPath,
+			unexpectedMessage:
+				"Translation state could not be updated. Reload the page and retry the status change.",
+		},
+		async ({ actor, formData, locals, redirect, fail }) => {
+			const returnPath = resolveSafeReturnPath(
+				formData.get("returnPath") as string | null,
+				refererPath,
+			);
+			const route = formData.get("route") as string | null;
+			const state = formData.get("state") as string | null;
 
-      if (!route || !state) {
-        return fail("Route and state are required", returnPath);
-      }
+			if (!route || !state) {
+				return fail("Route and state are required", returnPath);
+			}
 
-      const result = await updateRuntimeTranslationState(route, state, actor, locals);
-      if (!result.ok) {
-        return fail(result.error, returnPath);
-      }
+			const result = await updateRuntimeTranslationState(
+				route,
+				state,
+				actor,
+				locals,
+			);
+			if (!result.ok) {
+				return fail(result.error, returnPath);
+			}
 
-      return redirect(appendQueryParam(returnPath, "saved", "1"));
-    },
-  );
+			return redirect(appendQueryParam(returnPath, "saved", "1"));
+		},
+	);
 };

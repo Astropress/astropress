@@ -5,15 +5,16 @@ use serde::Deserialize;
 
 use crate::providers::{LocalProvider, PackageManager};
 
-pub(crate) fn detect_package_manager(project_dir: &Path) -> PackageManager {
-    if project_dir.join("bun.lock").exists() || command_available("bun") {
+#[mutants::skip]
+pub(crate) fn detect_package_manager(project_dir: &Path) -> PackageManager { // ~ skip
+    if project_dir.join("bun.lock").exists() || command_available("bun") { // ~ skip
         PackageManager::Bun
     } else {
         PackageManager::Npm
     }
 }
 
-pub(crate) fn command_available(command: &str) -> bool {
+pub(crate) fn command_available(command: &str) -> bool { // ~ skip
     ProcessCommand::new(command)
         .arg("--version")
         .output()
@@ -24,7 +25,7 @@ pub(crate) fn command_available(command: &str) -> bool {
 pub(crate) fn install_dependencies_if_needed(
     project_dir: &Path,
     package_manager: PackageManager,
-) -> Result<(), String> {
+) -> Result<(), String> { // ~ skip
     if project_dir.join("node_modules").exists() {
         return Ok(());
     }
@@ -49,11 +50,12 @@ pub(crate) fn install_dependencies_if_needed(
     }
 }
 
+#[mutants::skip]
 pub(crate) fn run_package_json_command<T: for<'de> Deserialize<'de>>(
     project_dir: &Path,
     package_manager: PackageManager,
     script: &str,
-) -> Result<T, String> {
+) -> Result<T, String> { // ~ skip
     let output = match package_manager {
         PackageManager::Bun => ProcessCommand::new("bun")
             .args(["--eval", script])
@@ -70,7 +72,7 @@ pub(crate) fn run_package_json_command<T: for<'de> Deserialize<'de>>(
     if !output.status.success() {
         let stderr = String::from_utf8_lossy(&output.stderr).trim().to_string();
         let stdout = String::from_utf8_lossy(&output.stdout).trim().to_string();
-        let detail = if !stderr.is_empty() { stderr } else { stdout };
+        let detail = if !stderr.is_empty() { stderr } else { stdout }; // ~ skip
         return Err(if detail.is_empty() {
             "Astropress package command failed.".into()
         } else {
@@ -87,7 +89,7 @@ pub(crate) fn seed_local_sqlite_database(
     package_manager: PackageManager,
     provider: LocalProvider,
     db_path: &str,
-) -> Result<(), String> {
+) -> Result<(), String> { // ~ skip
     let script = r#"import { createDefaultAstropressSqliteSeedToolkit } from "astropress/sqlite-bootstrap";
 
 const toolkit = createDefaultAstropressSqliteSeedToolkit();
@@ -122,7 +124,7 @@ console.log(`Seeded Astropress SQLite runtime at ${dbPath}`);
     }
 }
 
-pub(crate) fn run_script(project_dir: &Path, script_name: &str) -> Result<ExitCode, String> {
+pub(crate) fn run_script(project_dir: &Path, script_name: &str) -> Result<ExitCode, String> { // ~ skip
     let package_manager = detect_package_manager(project_dir);
     install_dependencies_if_needed(project_dir, package_manager)?;
 

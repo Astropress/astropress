@@ -12,15 +12,31 @@ export const prerender = false;
 const adminUser = Astro.locals.adminUser;
 const slug = Astro.params.slug ?? "";
 const model = await buildPostEditorPageModel(Astro.locals, slug);
-const { pageRecord, authors, categories, tags, auditEvents, englishOwnerRecord, localizedRouteRecord, effectiveTranslationState } = model.data;
+const {
+	pageRecord,
+	authors,
+	categories,
+	tags,
+	auditEvents,
+	englishOwnerRecord,
+	localizedRouteRecord,
+	effectiveTranslationState,
+} = model.data;
 const wasSaved = Astro.url.searchParams.get("saved") === "1";
-const errorMessage = Astro.url.searchParams.get("error") === "1" ? Astro.url.searchParams.get("message") : "";
+const errorMessage =
+	Astro.url.searchParams.get("error") === "1"
+		? Astro.url.searchParams.get("message")
+		: "";
 const contentType = pageRecord ? getSeededAdminContentType(pageRecord) : "post";
 const contentLabel = contentType === "page" ? "Page" : "Post";
 const listPath = contentType === "page" ? "/ap-admin/pages" : "/ap-admin/posts";
 const localePair = pageRecord ? getAdminLocalePair(pageRecord.legacyUrl) : null;
-const englishEditorHref = englishOwnerRecord ? `/ap-admin/posts/${englishOwnerRecord.slug}` : undefined;
-const localizedEditorHref = localizedRouteRecord ? `/ap-admin/route-pages${localizedRouteRecord.path}` : undefined;
+const englishEditorHref = englishOwnerRecord
+	? `/ap-admin/posts/${englishOwnerRecord.slug}`
+	: undefined;
+const localizedEditorHref = localizedRouteRecord
+	? `/ap-admin/route-pages${localizedRouteRecord.path}`
+	: undefined;
 const publicHref = pageRecord?.legacyUrl || "/";
 const publicStatus = pageRecord?.status ?? "published";
 
@@ -28,17 +44,18 @@ const publicStatus = pageRecord?.status ?? "published";
 // Used to auto-generate custom field inputs in the editor.
 const registeredContentTypes = peekCmsConfig()?.contentTypes ?? [];
 const registeredContentType = pageRecord
-  ? registeredContentTypes.find((ct) => ct.key === pageRecord.templateKey) ?? null
-  : null;
+	? (registeredContentTypes.find((ct) => ct.key === pageRecord.templateKey) ??
+		null)
+	: null;
 const customFields = registeredContentType?.fields ?? [];
 const currentMetadata = (pageRecord?.metadata ?? {}) as Record<string, unknown>;
 
 if (adminUser?.role !== "admin" && contentType === "page") {
-  Astro.response.status = 403;
+	Astro.response.status = 403;
 }
 
 if (model.status === "not_found") {
-  Astro.response.status = 404;
+	Astro.response.status = 404;
 }
 ---
 

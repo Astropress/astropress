@@ -4,19 +4,19 @@ import AuditTrail from "@astropress-diy/astropress/components/AuditTrail.astro";
 import { buildAdminDashboardPageModel } from "astropress";
 
 const adminUser = Astro.locals.adminUser;
-const model = await buildAdminDashboardPageModel(Astro.locals, adminUser!.role);
+const model = await buildAdminDashboardPageModel(Astro.locals, adminUser?.role);
 const {
-  comments,
-  redirectRules,
-  routePages,
-  posts,
-  pages,
-  reviewPosts,
-  scheduledPosts,
-  recentAuditEvents,
-  recentActivity,
-  translationNeedsAttention,
-  supportSurfaceLinks,
+	comments,
+	redirectRules,
+	routePages,
+	posts,
+	pages,
+	reviewPosts,
+	scheduledPosts,
+	recentAuditEvents,
+	recentActivity,
+	translationNeedsAttention,
+	supportSurfaceLinks,
 } = model.data;
 ---
 

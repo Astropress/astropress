@@ -5,20 +5,26 @@ import { buildTranslationsPageModel } from "astropress";
 import { translationStates } from "astropress";
 
 const adminUser = Astro.locals.adminUser;
-const model = await buildTranslationsPageModel(Astro.locals, adminUser!.role);
+const model = await buildTranslationsPageModel(Astro.locals, adminUser?.role);
 if (model.status === "forbidden") {
-  Astro.response.status = 403;
+	Astro.response.status = 403;
 }
 
 const wasSaved = Astro.url.searchParams.get("saved") === "1";
 const validStates = [...translationStates];
 const selectedState = Astro.url.searchParams.get("state") ?? "all";
 const rows = model.data.rows;
-const filteredRows = rows.filter((entry) => selectedState === "all" || entry.effectiveState === selectedState);
-const stateCounts = rows.reduce<Record<string, number>>((accumulator, entry) => {
-  accumulator[entry.effectiveState] = (accumulator[entry.effectiveState] ?? 0) + 1;
-  return accumulator;
-}, {});
+const filteredRows = rows.filter(
+	(entry) => selectedState === "all" || entry.effectiveState === selectedState,
+);
+const stateCounts = rows.reduce<Record<string, number>>(
+	(accumulator, entry) => {
+		accumulator[entry.effectiveState] =
+			(accumulator[entry.effectiveState] ?? 0) + 1;
+		return accumulator;
+	},
+	{},
+);
 ---
 
 {model.status !== "forbidden" ? (

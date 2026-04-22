@@ -4,12 +4,15 @@ import CsrfInput from "@astropress-diy/astropress/components/CsrfInput.astro";
 import { buildSystemPageModel } from "astropress";
 
 const adminUser = Astro.locals.adminUser;
-const model = await buildSystemPageModel(Astro.locals, adminUser!.role);
+const model = await buildSystemPageModel(Astro.locals, adminUser?.role);
 const { routeMap } = model.data;
 if (model.status === "forbidden") {
-  Astro.response.status = 403;
+	Astro.response.status = 403;
 }
-const errorMessage = Astro.url.searchParams.get("error") === "1" ? Astro.url.searchParams.get("message") : "";
+const errorMessage =
+	Astro.url.searchParams.get("error") === "1"
+		? Astro.url.searchParams.get("message")
+		: "";
 const wasSaved = Astro.url.searchParams.get("saved") === "1";
 
 const errorPage = routeMap.get("/500");

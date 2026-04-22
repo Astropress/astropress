@@ -7,21 +7,32 @@ import { getAdminLocalePair } from "astropress";
 export const prerender = false;
 
 const adminUser = Astro.locals.adminUser;
-const slugSegments = Array.isArray(Astro.params.slug) ? Astro.params.slug : Astro.params.slug ? [Astro.params.slug] : [];
+const slugSegments = Array.isArray(Astro.params.slug)
+	? Astro.params.slug
+	: Astro.params.slug
+		? [Astro.params.slug]
+		: [];
 const routePath = `/${slugSegments.join("/")}`;
-const model = await buildRoutePageEditorModel(Astro.locals, routePath, adminUser!.role);
+const model = await buildRoutePageEditorModel(
+	Astro.locals,
+	routePath,
+	adminUser?.role,
+);
 const { pageRecord, englishOwner, effectiveTranslationState } = model.data;
 const wasSaved = Astro.url.searchParams.get("saved") === "1";
-const errorMessage = Astro.url.searchParams.get("error") === "1" ? Astro.url.searchParams.get("message") : "";
+const errorMessage =
+	Astro.url.searchParams.get("error") === "1"
+		? Astro.url.searchParams.get("message")
+		: "";
 const localePair = getAdminLocalePair(routePath);
 const localizedRoutePath = localePair?.localizedRoute;
 
 if (model.status === "forbidden") {
-  Astro.response.status = 403;
+	Astro.response.status = 403;
 }
 
 if (model.status === "not_found") {
-  Astro.response.status = 404;
+	Astro.response.status = 404;
 }
 ---
 

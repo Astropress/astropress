@@ -1,25 +1,32 @@
-export type { FieldDefinition, ContentTypeDefinition } from "./content-modeling.js";
+export type {
+	FieldDefinition,
+	ContentTypeDefinition,
+} from "./content-modeling.js";
 export { validateContentFields } from "./content-modeling.js";
-export type { AstropressContentEvent, AstropressMediaEvent, AstropressPlugin } from "./cms-plugins.js";
+export type {
+	AstropressContentEvent,
+	AstropressMediaEvent,
+	AstropressPlugin,
+} from "./cms-plugins.js";
 import type { AstropressPlugin } from "./cms-plugins.js";
-import type { ContentTypeDefinition } from "./content-modeling.js";
 import type {
-  AbTestingConfig,
-  AnalyticsConfig,
-  AstropressApiConfig,
-  DonationsConfig,
-  TestimonialsConfig,
+	AbTestingConfig,
+	AnalyticsConfig,
+	AstropressApiConfig,
+	DonationsConfig,
+	TestimonialsConfig,
 } from "./config-service-types.js";
+import type { ContentTypeDefinition } from "./content-modeling.js";
 
 export type {
-  AbTestingConfig,
-  AnalyticsConfig,
-  AstropressApiConfig,
-  DonationsConfig,
-  GiveLivelyConfig,
-  LiberapayConfig,
-  PledgeCryptoConfig,
-  TestimonialsConfig,
+	AbTestingConfig,
+	AnalyticsConfig,
+	AstropressApiConfig,
+	DonationsConfig,
+	GiveLivelyConfig,
+	LiberapayConfig,
+	PledgeCryptoConfig,
+	TestimonialsConfig,
 } from "./config-service-types.js";
 
 // ─── Main config ─────────────────────────────────────────────────────────────
@@ -32,346 +39,312 @@ export type {
  */
 
 export interface CmsConfig {
-  /** Template keys that are valid for structured page routes (e.g. "home", "impact"). */
-  templateKeys: readonly string[];
+	/** Template keys that are valid for structured page routes (e.g. "home", "impact"). */
+	templateKeys: readonly string[];
 
-  /** Canonical base URL of the site, e.g. "https://example.com". Used for sitemap, canonical tags, etc. */
-  siteUrl: string;
+	/** Canonical base URL of the site, e.g. "https://example.com". Used for sitemap, canonical tags, etc. */
+	siteUrl: string;
 
-  /** Human-readable site name used in transactional emails and admin UI. Defaults to "Astropress". */
-  siteName?: string;
+	/** Human-readable site name used in transactional emails and admin UI. Defaults to "Astropress". */
+	siteName?: string;
 
-  /**
-   * Seeded content records loaded from the host site's pages.json.
-   * Typed loosely so the framework does not need to know the host's full page schema.
-   */
-  seedPages: ReadonlyArray<Record<string, unknown>>;
+	/**
+	 * Seeded content records loaded from the host site's pages.json.
+	 * Typed loosely so the framework does not need to know the host's full page schema.
+	 */
+	seedPages: ReadonlyArray<Record<string, unknown>>;
 
-  /**
-   * Archive sources loaded from the host site's archives.json.
-   * Used to build archive index and SEO pages in the admin.
-   */
-  archives: ReadonlyArray<{
-    slug: string;
-    title: string;
-    kind: string;
-    legacyUrl: string;
-    listingItems?: ReadonlyArray<Record<string, unknown>>;
-  }>;
+	/**
+	 * Archive sources loaded from the host site's archives.json.
+	 * Used to build archive index and SEO pages in the admin.
+	 */
+	archives: ReadonlyArray<{
+		slug: string;
+		title: string;
+		kind: string;
+		legacyUrl: string;
+		listingItems?: ReadonlyArray<Record<string, unknown>>;
+	}>;
 
-  /**
-   * Translation status entries from the host site's translation-status.json.
-   * Used to build the translation dashboard and SEO page.
-   */
-  translationStatus: ReadonlyArray<{
-    route: string;
-    translationState: string;
-    englishSourceUrl: string;
-    locale: string;
-  }>;
+	/**
+	 * Translation status entries from the host site's translation-status.json.
+	 * Used to build the translation dashboard and SEO page.
+	 */
+	translationStatus: ReadonlyArray<{
+		route: string;
+		translationState: string;
+		englishSourceUrl: string;
+		locale: string;
+	}>;
 
-  /**
-   * Optional admin-shell customization. Hosts can rename labels and swap simple
-   * brand assets without forking Astropress admin templates.
-   */
-  admin?: {
-    branding?: {
-      appName?: string;
-      productName?: string;
-      shellName?: string;
-      logoSrc?: string;
-      logoHref?: string;
-      logoAlt?: string;
-      faviconHref?: string;
-      stylesheetHref?: string;
-    };
-    labels?: {
-      sidebarTitle?: string;
-      signedInAsPrefix?: string;
-      signOut?: string;
-      themeToggleDark?: string;
-      themeToggleLight?: string;
-      languageToggle?: string;
-      languageToggleTitle?: string;
-      loginHeading?: string;
-      loginDescription?: string;
-      loginSubmit?: string;
-      loginEmailLabel?: string;
-      loginPasswordLabel?: string;
-      forgotPassword?: string;
-      invalidCredentials?: string;
-      rateLimited?: string;
-      challengeRequired?: string;
-      passwordResetSuccess?: string;
-      invitationAcceptedSuccess?: string;
-      acceptInvitationHeading?: string;
-      acceptInvitationDescription?: string;
-      acceptInvitationSubmit?: string;
-      resetPasswordRequestHeading?: string;
-      resetPasswordRequestDescription?: string;
-      resetPasswordTokenHeading?: string;
-      resetPasswordTokenDescription?: string;
-      resetPasswordRequestSubmit?: string;
-      resetPasswordTokenSubmit?: string;
-      backToLogin?: string;
-    };
-    navigation?: Partial<Record<
-      | "dashboard"
-      | "contentGroup"
-      | "pages"
-      | "posts"
-      | "authors"
-      | "taxonomies"
-      | "routePages"
-      | "archives"
-      | "users"
-      | "media"
-      | "comments"
-      | "redirects"
-      | "translations"
-      | "seo"
-      | "system"
-      | "settings",
-      string
-    >>;
-  };
+	/**
+	 * Optional admin-shell customization. Hosts can rename labels and swap simple
+	 * brand assets without forking Astropress admin templates.
+	 */
+	admin?: {
+		branding?: {
+			appName?: string;
+			productName?: string;
+			shellName?: string;
+			logoSrc?: string;
+			logoHref?: string;
+			logoAlt?: string;
+			faviconHref?: string;
+			stylesheetHref?: string;
+		};
+		labels?: {
+			sidebarTitle?: string;
+			signedInAsPrefix?: string;
+			signOut?: string;
+			themeToggleDark?: string;
+			themeToggleLight?: string;
+			languageToggle?: string;
+			languageToggleTitle?: string;
+			loginHeading?: string;
+			loginDescription?: string;
+			loginSubmit?: string;
+			loginEmailLabel?: string;
+			loginPasswordLabel?: string;
+			forgotPassword?: string;
+			invalidCredentials?: string;
+			rateLimited?: string;
+			challengeRequired?: string;
+			passwordResetSuccess?: string;
+			invitationAcceptedSuccess?: string;
+			acceptInvitationHeading?: string;
+			acceptInvitationDescription?: string;
+			acceptInvitationSubmit?: string;
+			resetPasswordRequestHeading?: string;
+			resetPasswordRequestDescription?: string;
+			resetPasswordTokenHeading?: string;
+			resetPasswordTokenDescription?: string;
+			resetPasswordRequestSubmit?: string;
+			resetPasswordTokenSubmit?: string;
+			backToLogin?: string;
+		};
+		navigation?: Partial<
+			Record<
+				| "dashboard"
+				| "contentGroup"
+				| "pages"
+				| "posts"
+				| "authors"
+				| "taxonomies"
+				| "routePages"
+				| "archives"
+				| "users"
+				| "media"
+				| "comments"
+				| "redirects"
+				| "translations"
+				| "seo"
+				| "system"
+				| "settings",
+				string
+			>
+		>;
+	};
 
-  /**
-   * Optional list of locale prefixes used in URL paths (e.g. ["en", "es", "fr"]).
-   *
-   * When set, `localeFromPath("/es/my-post/")` will return `"es"` for any prefix
-   * in this list, and fall back to the first entry (or `"en"`) for unmatched paths.
-   *
-   * When unset, the default is `["en", "es"]` (backwards-compatible behaviour).
-   *
-   * @example
-   * ```ts
-   * registerCms({
-   *   locales: ["en", "es", "fr", "de"],
-   *   // ...
-   * });
-   * ```
-   */
-  locales?: readonly string[];
+	/**
+	 * Optional list of locale prefixes used in URL paths (e.g. ["en", "es", "fr"]).
+	 *
+	 * When set, `localeFromPath("/es/my-post/")` will return `"es"` for any prefix
+	 * in this list, and fall back to the first entry (or `"en"`) for unmatched paths.
+	 *
+	 * When unset, the default is `["en", "es"]` (backwards-compatible behaviour).
+	 *
+	 * @example
+	 * ```ts
+	 * registerCms({
+	 *   locales: ["en", "es", "fr", "de"],
+	 *   // ...
+	 * });
+	 * ```
+	 */
+	locales?: readonly string[];
 
-  /**
-   * Optional analytics / heatmap integration.
-   * When configured, an "Analytics" entry appears in the admin services sidebar.
-   */
-  analytics?: AnalyticsConfig;
+	/**
+	 * Optional analytics / heatmap integration.
+	 * When configured, an "Analytics" entry appears in the admin services sidebar.
+	 */
+	analytics?: AnalyticsConfig;
 
-  /**
-   * Optional donation / fundraising integrations.
-   * When configured, a "Fundraising" entry appears in the admin sidebar.
-   * Multiple providers can be enabled simultaneously.
-   */
-  donations?: DonationsConfig;
+	/**
+	 * Optional donation / fundraising integrations.
+	 * When configured, a "Fundraising" entry appears in the admin sidebar.
+	 * Multiple providers can be enabled simultaneously.
+	 */
+	donations?: DonationsConfig;
 
-  /**
-   * Optional testimonials and referral capture via Formbricks or Typebot.
-   * When configured, a "Testimonials" entry appears in the admin sidebar and
-   * the /ap-api/v1/testimonials/ingest webhook endpoint becomes active.
-   */
-  testimonials?: TestimonialsConfig;
+	/**
+	 * Optional testimonials and referral capture via Formbricks or Typebot.
+	 * When configured, a "Testimonials" entry appears in the admin sidebar and
+	 * the /ap-api/v1/testimonials/ingest webhook endpoint becomes active.
+	 */
+	testimonials?: TestimonialsConfig;
 
-  /**
-   * Optional A/B testing / feature flag integration.
-   * When configured, an "A/B Testing" entry appears in the admin services sidebar.
-   */
-  abTesting?: AbTestingConfig;
+	/**
+	 * Optional A/B testing / feature flag integration.
+	 * When configured, an "A/B Testing" entry appears in the admin services sidebar.
+	 */
+	abTesting?: AbTestingConfig;
 
-  /**
-   * Optional REST API configuration.
-   * When api.enabled is true, /ap-api/v1/* endpoints are active and
-   * API Tokens + Webhooks appear in the admin sidebar.
-   * Default: disabled (all /ap-api/* routes return 404).
-   */
-  api?: AstropressApiConfig;
+	/**
+	 * Optional REST API configuration.
+	 * When api.enabled is true, /ap-api/v1/* endpoints are active and
+	 * API Tokens + Webhooks appear in the admin sidebar.
+	 * Default: disabled (all /ap-api/* routes return 404).
+	 */
+	api?: AstropressApiConfig;
 
-  /**
-   * Cache lifetime in seconds for public (non-admin, non-API) pages.
-   *
-   * Sets `Cache-Control: public, max-age=<publicCacheTtl>, s-maxage=<publicCacheTtl * 12>`.
-   * Defaults to 300 (5 minutes) with a CDN TTL of 3600 (1 hour).
-   *
-   * @example
-   * ```ts
-   * registerCms({ publicCacheTtl: 600, ... });
-   * // → Cache-Control: public, max-age=600, s-maxage=7200
-   * ```
-   */
-  publicCacheTtl?: number;
+	/**
+	 * Cache lifetime in seconds for public (non-admin, non-API) pages.
+	 *
+	 * Sets `Cache-Control: public, max-age=<publicCacheTtl>, s-maxage=<publicCacheTtl * 12>`.
+	 * Defaults to 300 (5 minutes) with a CDN TTL of 3600 (1 hour).
+	 *
+	 * @example
+	 * ```ts
+	 * registerCms({ publicCacheTtl: 600, ... });
+	 * // → Cache-Control: public, max-age=600, s-maxage=7200
+	 * ```
+	 */
+	publicCacheTtl?: number;
 
-  /**
-   * Maximum number of days to retain audit log entries.
-   *
-   * When set, the audit log writer prunes records older than this many days on each write,
-   * keeping the `audit_events` table bounded without a separate cron job.
-   * Defaults to `90` when unset. Set to `0` to disable automatic pruning.
-   *
-   * @example
-   * ```ts
-   * registerCms({ auditRetentionDays: 30, ... }); // keep 30 days of audit history
-   * ```
-   */
-  auditRetentionDays?: number;
+	/**
+	 * Maximum number of days to retain audit log entries.
+	 *
+	 * When set, the audit log writer prunes records older than this many days on each write,
+	 * keeping the `audit_events` table bounded without a separate cron job.
+	 * Defaults to `90` when unset. Set to `0` to disable automatic pruning.
+	 *
+	 * @example
+	 * ```ts
+	 * registerCms({ auditRetentionDays: 30, ... }); // keep 30 days of audit history
+	 * ```
+	 */
+	auditRetentionDays?: number;
 
-  /**
-   * Maximum allowed size of a single media upload in bytes.
-   *
-   * When set, the admin media-upload action rejects files larger than this value
-   * before reading the full body, returning a descriptive error to the user.
-   * Defaults to `10 * 1024 * 1024` (10 MiB) when unset.
-   *
-   * @example
-   * ```ts
-   * registerCms({ maxUploadBytes: 5 * 1024 * 1024, ... }); // 5 MiB
-   * ```
-   */
-  maxUploadBytes?: number;
+	/**
+	 * Maximum allowed size of a single media upload in bytes.
+	 *
+	 * When set, the admin media-upload action rejects files larger than this value
+	 * before reading the full body, returning a descriptive error to the user.
+	 * Defaults to `10 * 1024 * 1024` (10 MiB) when unset.
+	 *
+	 * @example
+	 * ```ts
+	 * registerCms({ maxUploadBytes: 5 * 1024 * 1024, ... }); // 5 MiB
+	 * ```
+	 */
+	maxUploadBytes?: number;
 
-  /**
-   * Optional content type definitions that add typed, validated custom fields to content records.
-   *
-   * When a content type is defined for a `templateKey`, its field values are read from and written to
-   * the `metadata` JSON column, and are validated by `saveRuntimeContentState` before persisting.
-   *
-   * @example
-   * ```ts
-   * registerCms({
-   *   contentTypes: [
-   *     {
-   *       key: "event",
-   *       label: "Event",
-   *       fields: [
-   *         { name: "eventDate", label: "Event Date", type: "date", required: true },
-   *         { name: "venue", label: "Venue", type: "text" },
-   *       ],
-   *     },
-   *   ],
-   *   // ...
-   * });
-   * ```
-   */
-  contentTypes?: readonly ContentTypeDefinition[];
+	/**
+	 * Optional content type definitions that add typed, validated custom fields to content records.
+	 *
+	 * When a content type is defined for a `templateKey`, its field values are read from and written to
+	 * the `metadata` JSON column, and are validated by `saveRuntimeContentState` before persisting.
+	 *
+	 * @example
+	 * ```ts
+	 * registerCms({
+	 *   contentTypes: [
+	 *     {
+	 *       key: "event",
+	 *       label: "Event",
+	 *       fields: [
+	 *         { name: "eventDate", label: "Event Date", type: "date", required: true },
+	 *         { name: "venue", label: "Venue", type: "text" },
+	 *       ],
+	 *     },
+	 *   ],
+	 *   // ...
+	 * });
+	 * ```
+	 */
+	contentTypes?: readonly ContentTypeDefinition[];
 
-  /**
-   * Optional list of plugins that extend Astropress with lifecycle hooks
-   * or additional admin navigation items.
-   *
-   * @example
-   * ```ts
-   * import type { AstropressPlugin } from "@astropress-diy/astropress";
-   *
-   * const searchPlugin: AstropressPlugin = {
-   *   name: "search-indexer",
-   *   async onContentSave({ slug, status }) {
-   *     if (status === "published") {
-   *       await searchIndex.upsert(slug);
-   *     }
-   *   },
-   * };
-   *
-   * registerCms({ ..., plugins: [searchPlugin] });
-   * ```
-   */
-  plugins?: readonly AstropressPlugin[];
+	/**
+	 * Optional list of plugins that extend Astropress with lifecycle hooks
+	 * or additional admin navigation items.
+	 *
+	 * @example
+	 * ```ts
+	 * import type { AstropressPlugin } from "@astropress-diy/astropress";
+	 *
+	 * const searchPlugin: AstropressPlugin = {
+	 *   name: "search-indexer",
+	 *   async onContentSave({ slug, status }) {
+	 *     if (status === "published") {
+	 *       await searchIndex.upsert(slug);
+	 *     }
+	 *   },
+	 * };
+	 *
+	 * registerCms({ ..., plugins: [searchPlugin] });
+	 * ```
+	 */
+	plugins?: readonly AstropressPlugin[];
 
-  /**
-   * Optional CDN purge webhook URL.
-   * When set, Astropress will POST `{ slug, purgedAt }` to this URL after content is published.
-   * Supports Cloudflare deploy hooks, Vercel deploy hooks, and Netlify build hooks.
-   *
-   * For Cloudflare Cache API purging, set `CLOUDFLARE_ZONE_ID` and `CLOUDFLARE_API_TOKEN`
-   * environment variables instead of (or in addition to) this webhook URL.
-   *
-   * @example
-   * ```ts
-   * registerCms({
-   *   cdnPurgeWebhook: process.env.NETLIFY_BUILD_HOOK_URL,
-   * });
-   * ```
-   */
-  cdnPurgeWebhook?: string;
+	/**
+	 * Optional CDN purge webhook URL.
+	 * When set, Astropress will POST `{ slug, purgedAt }` to this URL after content is published.
+	 * Supports Cloudflare deploy hooks, Vercel deploy hooks, and Netlify build hooks.
+	 *
+	 * For Cloudflare Cache API purging, set `CLOUDFLARE_ZONE_ID` and `CLOUDFLARE_API_TOKEN`
+	 * environment variables instead of (or in addition to) this webhook URL.
+	 *
+	 * @example
+	 * ```ts
+	 * registerCms({
+	 *   cdnPurgeWebhook: process.env.NETLIFY_BUILD_HOOK_URL,
+	 * });
+	 * ```
+	 */
+	cdnPurgeWebhook?: string;
 
-  /**
-   * Optional full-text search configuration.
-   * When `enabled` is true, an FTS5 virtual table is created for `content_overrides`
-   * and the REST API accepts `?q=` for full-text search.
-   */
-  search?: {
-    /** Enable SQLite FTS5 full-text search on content. Default: false. */
-    enabled?: boolean;
-  };
+	/**
+	 * Optional full-text search configuration.
+	 * When `enabled` is true, an FTS5 virtual table is created for `content_overrides`
+	 * and the REST API accepts `?q=` for full-text search.
+	 */
+	search?: {
+		/** Enable SQLite FTS5 full-text search on content. Default: false. */
+		enabled?: boolean;
+	};
 
-  /**
-   * Optional monitoring / observability configuration.
-   * When `prometheusEnabled` is true, an unauthenticated Prometheus text format
-   * endpoint is exposed at GET /ap/metrics.
-   */
-  monitoring?: {
-    /** Expose Prometheus text format metrics at GET /ap/metrics. Default: false. */
-    prometheusEnabled?: boolean;
-  };
+	/**
+	 * Optional monitoring / observability configuration.
+	 * When `prometheusEnabled` is true, an unauthenticated Prometheus text format
+	 * endpoint is exposed at GET /ap/metrics.
+	 */
+	monitoring?: {
+		/** Expose Prometheus text format metrics at GET /ap/metrics. Default: false. */
+		prometheusEnabled?: boolean;
+	};
 }
 
-const CMS_CONFIG_KEY = Symbol.for("astropress.cms-config");
+import {
+	peekCmsConfig as _peekStore,
+	getCmsConfigOrThrow,
+	setStoreConfig,
+} from "./config-store.js";
 
-type AstropressGlobalWithConfig = typeof globalThis & {
-  [CMS_CONFIG_KEY]?: CmsConfig | null;
-};
-
-function getConfigStore(): AstropressGlobalWithConfig {
-  return globalThis as AstropressGlobalWithConfig;
-}
-
-/**
- * Register the astropress configuration for this host application.
- *
- * Call once at startup — typically in `src/middleware.ts` or imported by the
- * admin layout — before any other astropress function is invoked.
- *
- * @example
- * ```ts
- * // src/site/cms-registration.ts
- * import { registerCms } from "@astropress-diy/astropress";
- * import seedPages from "../content/pages.json";
- *
- * registerCms({
- *   siteUrl: "https://example.com",
- *   templateKeys: ["home", "about", "content"],
- *   seedPages,
- *   archives: [],
- *   translationStatus: [],
- * });
- * ```
- */
 export function registerCms(config: CmsConfig): void {
-  getConfigStore()[CMS_CONFIG_KEY] = config;
+	setStoreConfig(config);
 }
 
-/**
- * Retrieve the registered astropress configuration.
- *
- * Throws if `registerCms()` has not been called yet.
- *
- * @example
- * ```ts
- * import { getCmsConfig } from "@astropress-diy/astropress";
- * const { siteUrl } = getCmsConfig();
- * ```
- */
 export function getCmsConfig(): CmsConfig {
-  const config = getConfigStore()[CMS_CONFIG_KEY] ?? null;
-  if (!config) {
-    throw new Error("Astropress not initialized — call registerCms() before using astropress.");
-  }
-  return config;
+	return getCmsConfigOrThrow();
 }
 
 export function peekCmsConfig(): CmsConfig | null {
-  return getConfigStore()[CMS_CONFIG_KEY] ?? null;
+	return _peekStore();
 }
 
 // ─── Plugin dispatch — extracted to plugin-dispatch.ts ───────────────────────
-export { dispatchPluginContentEvent, dispatchPluginMediaEvent, reportAstropressError } from "./plugin-dispatch";
+export {
+	dispatchPluginContentEvent,
+	dispatchPluginMediaEvent,
+	reportAstropressError,
+} from "./plugin-dispatch";

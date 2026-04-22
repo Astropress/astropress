@@ -162,3 +162,38 @@ Grade scale: A+ / A / B / C / D / F
         version = env!("CARGO_PKG_VERSION")
     )
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn rubric_is_non_empty() {
+        let rubric = build_evaluation_rubric();
+        assert!(!rubric.is_empty());
+    }
+
+    #[test]
+    fn rubric_contains_project_evaluation_card_heading() {
+        let rubric = build_evaluation_rubric();
+        assert!(rubric.contains("Project Evaluation Card"));
+    }
+
+    #[test]
+    fn rubric_contains_all_54_rubrics() {
+        let rubric = build_evaluation_rubric();
+        assert!(rubric.contains("| 54 |"));
+    }
+
+    #[test]
+    fn rubric_contains_grade_scale() {
+        let rubric = build_evaluation_rubric();
+        assert!(rubric.contains("Grade scale"));
+    }
+
+    #[test]
+    fn rubric_contains_spec_fidelity() {
+        let rubric = build_evaluation_rubric();
+        assert!(rubric.contains("Spec Fidelity"));
+    }
+}

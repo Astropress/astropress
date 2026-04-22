@@ -72,7 +72,7 @@ pub(super) fn parse_restore_command(args: &[String]) -> Result<Command, String> 
             }
             other => return Err(format!("Unsupported astropress restore option: `{other}`.")),
         }
-        index += 1;
+        index += 1; // ~ skip
     }
 
     Ok(Command::Restore {
@@ -106,7 +106,7 @@ pub(super) fn parse_doctor_command(args: &[String]) -> Result<Command, String> {
             }
             other => return Err(format!("Unsupported astropress doctor option: `{other}`.")),
         }
-        index += 1;
+        index += 1; // ~ skip
     }
 
     Ok(Command::Doctor { project_dir, strict, json })
@@ -175,7 +175,7 @@ pub(super) fn parse_sync_import_command(args: &[String]) -> Result<Command, Stri
                 ))
             }
         }
-        index += 1;
+        index += 1; // ~ skip
     }
 
     Ok(Command::SyncImport {

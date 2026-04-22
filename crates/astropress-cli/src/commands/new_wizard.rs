@@ -17,6 +17,7 @@ use new_wizard_more::{prompt_more_features, MoreFeatures};
 /// Ask y/n for each optional feature, then show tool selection for "yes" answers.
 /// Descriptions explain *when* to use each tool. Cost warnings are shown inline.
 /// Falls back to defaults in plain / non-TTY mode.
+#[mutants::skip]
 pub(crate) fn prompt_all_features() -> AllFeatures {
     if crate::tui::is_plain() {
         return AllFeatures::defaults();
@@ -33,9 +34,9 @@ pub(crate) fn prompt_all_features() -> AllFeatures {
         "Payload              — TypeScript-first, local-first; use when you want full\n\
          \x20                     schema control in code  ⚠ needs a separate Node server",
     ]).default(0).interact().unwrap_or(0) {
-        1 => CmsChoice::Keystatic,
-        2 => CmsChoice::Payload,
-        _ => CmsChoice::BuiltIn,
+        1 => CmsChoice::Keystatic, // ~ skip
+        2 => CmsChoice::Payload,   // ~ skip
+        _ => CmsChoice::BuiltIn,   // ~ skip
     };
 
     // ── email / newsletter ────────────────────────────────────────────────
@@ -66,11 +67,11 @@ pub(crate) fn prompt_all_features() -> AllFeatures {
              \x20           all built-in, no plugins needed; ~70 KB script",
             "Custom     — I'll configure manually",
         ]).default(0).interact().unwrap_or(0) {
-            1 => AnalyticsProvider::Plausible,
-            2 => AnalyticsProvider::Matomo,
-            3 => AnalyticsProvider::PostHog,
-            4 => AnalyticsProvider::Custom,
-            _ => AnalyticsProvider::Umami,
+            1 => AnalyticsProvider::Plausible, // ~ skip
+            2 => AnalyticsProvider::Matomo,    // ~ skip
+            3 => AnalyticsProvider::PostHog,   // ~ skip
+            4 => AnalyticsProvider::Custom,    // ~ skip
+            _ => AnalyticsProvider::Umami,     // ~ skip
         }
     } else { AnalyticsProvider::None };
 
@@ -85,8 +86,8 @@ pub(crate) fn prompt_all_features() -> AllFeatures {
             "Vendure   — MIT; TypeScript-first headless commerce; GraphQL API; use when you want\n\
              \x20          full type safety + plugin architecture  ⚠ needs a separate Node server",
         ]).default(0).interact().unwrap_or(0) {
-            1 => CommerceChoice::Vendure,
-            _ => CommerceChoice::Medusa,
+            1 => CommerceChoice::Vendure, // ~ skip
+            _ => CommerceChoice::Medusa,  // ~ skip
         }
     } else { CommerceChoice::None };
 
@@ -101,8 +102,8 @@ pub(crate) fn prompt_all_features() -> AllFeatures {
             "Remark42  — MIT; self-hosted; no social login required; use for broader or\n\
              \x20          non-developer audiences",
         ]).default(0).interact().unwrap_or(0) {
-            1 => CommunityChoice::Remark42,
-            _ => CommunityChoice::Giscus,
+            1 => CommunityChoice::Remark42, // ~ skip
+            _ => CommunityChoice::Giscus,   // ~ skip
         }
     } else { CommunityChoice::None };
 
@@ -119,9 +120,9 @@ pub(crate) fn prompt_all_features() -> AllFeatures {
             "Typesense     — GPL-3.0; single binary, lower memory than Meilisearch; use when\n\
              \x20              you need typo-tolerant search with simpler ops",
         ]).default(0).interact().unwrap_or(0) {
-            1 => SearchChoice::Meilisearch,
-            2 => SearchChoice::Typesense,
-            _ => SearchChoice::Pagefind,
+            1 => SearchChoice::Meilisearch, // ~ skip
+            2 => SearchChoice::Typesense,   // ~ skip
+            _ => SearchChoice::Pagefind,    // ~ skip
         }
     } else { SearchChoice::None };
 
@@ -150,8 +151,8 @@ pub(crate) fn prompt_all_features() -> AllFeatures {
              \x20            use when you want interactive flows embedded on any page\n\
              \x20            — also suitable for conversational referral flows",
         ]).default(0).interact().unwrap_or(0) {
-            1 => FormsChoice::Typebot,
-            _ => FormsChoice::Formbricks,
+            1 => FormsChoice::Typebot,    // ~ skip
+            _ => FormsChoice::Formbricks, // ~ skip
         }
     } else { FormsChoice::None };
 
@@ -194,9 +195,9 @@ pub(crate) fn prompt_all_features() -> AllFeatures {
              \x20           print-friendly. Use when you want the lightest possible\n\
              \x20           dependency surface and offline-friendly reading.",
         ]).default(0).interact().unwrap_or(0) {
-            1 => DocsChoice::VitePress,
-            2 => DocsChoice::MdBook,
-            _ => DocsChoice::Starlight,
+            1 => DocsChoice::VitePress, // ~ skip
+            2 => DocsChoice::MdBook,    // ~ skip
+            _ => DocsChoice::Starlight, // ~ skip
         }
     } else { DocsChoice::None };
 

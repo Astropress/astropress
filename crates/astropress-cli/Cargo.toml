@@ -19,6 +19,7 @@ indicatif = "0.18"
 ratatui = "0.30"
 crossterm = "0.29"
 url = "2"
+mutants = "0.0.3"
 
 [lints.rust]
 unused_imports = "warn"

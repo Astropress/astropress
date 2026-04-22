@@ -1,25 +1,28 @@
 ---
 import AdminLayout from "@astropress-diy/astropress/components/AdminLayout.astro";
 import CsrfInput from "@astropress-diy/astropress/components/CsrfInput.astro";
-import { buildSettingsPageModel } from "astropress";
 import { createListmonkOps } from "@astropress-diy/astropress/newsletter-adapter";
 import { getNewsletterConfig } from "@astropress-diy/astropress/runtime-env";
+import { buildSettingsPageModel } from "astropress";
 
 const adminUser = Astro.locals.adminUser;
-const model = await buildSettingsPageModel(Astro.locals, adminUser!.role);
+const model = await buildSettingsPageModel(Astro.locals, adminUser?.role);
 const { settings } = model.data;
 const wasSaved = Astro.url.searchParams.get("saved") === "1";
-const errorMessage = Astro.url.searchParams.get("error") === "1" ? Astro.url.searchParams.get("message") : "";
+const errorMessage =
+	Astro.url.searchParams.get("error") === "1"
+		? Astro.url.searchParams.get("message")
+		: "";
 
 const activeTab = Astro.url.searchParams.get("tab") ?? "general";
 
 // Newsletter tab data (only fetched when on that tab)
 interface SubscriberRow {
-  id: string | number;
-  email: string;
-  name: string;
-  status: string;
-  createdAt: string;
+	id: string | number;
+	email: string;
+	name: string;
+	status: string;
+	createdAt: string;
 }
 let subscribers: SubscriberRow[] = [];
 let subTotal = 0;
@@ -30,29 +33,34 @@ const subQuery = Astro.url.searchParams.get("q") ?? "";
 const perPage = 25;
 
 if (activeTab === "newsletter" && adminUser?.role === "admin") {
-  try {
-    const cfg = getNewsletterConfig(Astro.locals);
-    if (
-      cfg.mode === "listmonk" &&
-      cfg.listmonkApiUrl &&
-      cfg.listmonkApiUsername &&
-      cfg.listmonkApiPassword &&
-      cfg.listmonkListId
-    ) {
-      listSupported = true;
-      const ops = createListmonkOps({
-        apiUrl: cfg.listmonkApiUrl,
-        apiUsername: cfg.listmonkApiUsername,
-        apiPassword: cfg.listmonkApiPassword,
-        listId: Number(cfg.listmonkListId),
-      });
-      const result = await ops.listSubscribers({ page: subPage, perPage, query: subQuery });
-      subscribers = result.subscribers as SubscriberRow[];
-      subTotal = result.total;
-    }
-  } catch {
-    subError = "Could not load subscriber list. Check your LISTMONK_* environment variables.";
-  }
+	try {
+		const cfg = getNewsletterConfig(Astro.locals);
+		if (
+			cfg.mode === "listmonk" &&
+			cfg.listmonkApiUrl &&
+			cfg.listmonkApiUsername &&
+			cfg.listmonkApiPassword &&
+			cfg.listmonkListId
+		) {
+			listSupported = true;
+			const ops = createListmonkOps({
+				apiUrl: cfg.listmonkApiUrl,
+				apiUsername: cfg.listmonkApiUsername,
+				apiPassword: cfg.listmonkApiPassword,
+				listId: Number(cfg.listmonkListId),
+			});
+			const result = await ops.listSubscribers({
+				page: subPage,
+				perPage,
+				query: subQuery,
+			});
+			subscribers = result.subscribers as SubscriberRow[];
+			subTotal = result.total;
+		}
+	} catch {
+		subError =
+			"Could not load subscriber list. Check your LISTMONK_* environment variables.";
+	}
 }
 
 const subTotalPages = Math.ceil(subTotal / perPage);
@@ -64,7 +72,7 @@ const wasImported = importedCount !== null;
 const subWasDeleted = Astro.url.searchParams.get("deleted") === "1";
 
 if (model.status === "forbidden") {
-  Astro.response.status = 403;
+	Astro.response.status = 403;
 }
 ---
 

@@ -12,78 +12,94 @@ import { createAstropressVercelDeployTarget } from "../src/deploy/vercel.js";
 import { createAstropressGitSyncAdapter } from "../src/sync/git.js";
 
 describe("deploy and sync contracts", () => {
-  it("deploys a build directory to the github pages target", async () => {
-    const workspace = await mkdtemp(join(tmpdir(), "astropress-gh-pages-"));
-    const buildDir = join(workspace, "dist");
-    const outputDir = join(workspace, "deployments");
-    await mkdir(buildDir, { recursive: true });
-    await writeFile(join(buildDir, "index.html"), "<h1>Astropress</h1>");
+	it("deploys a build directory to the github pages target", async () => {
+		const workspace = await mkdtemp(join(tmpdir(), "astropress-gh-pages-"));
+		const buildDir = join(workspace, "dist");
+		const outputDir = join(workspace, "deployments");
+		await mkdir(buildDir, { recursive: true });
+		await writeFile(join(buildDir, "index.html"), "<h1>Astropress</h1>");
 
-    const target = createAstropressGitHubPagesDeployTarget({
-      outputDir,
-      baseUrl: "https://example.com/docs",
-    });
+		const target = createAstropressGitHubPagesDeployTarget({
+			outputDir,
+			baseUrl: "https://example.com/docs",
+		});
 
-    const result = await target.deploy({
-      buildDir,
-      projectName: "demo-site",
-    });
+		const result = await target.deploy({
+			buildDir,
+			projectName: "demo-site",
+		});
 
-    expect(result.url).toBe("https://example.com/docs/demo-site/");
-    expect(await readFile(join(outputDir, "demo-site", "index.html"), "utf8")).toContain("Astropress");
-    expect(await readFile(join(outputDir, "demo-site", ".astropress-deploy.json"), "utf8")).toContain(
-      "\"provider\": \"github-pages\"",
-    );
+		expect(result.url).toBe("https://example.com/docs/demo-site/");
+		expect(
+			await readFile(join(outputDir, "demo-site", "index.html"), "utf8"),
+		).toContain("Astropress");
+		expect(
+			await readFile(
+				join(outputDir, "demo-site", ".astropress-deploy.json"),
+				"utf8",
+			),
+		).toContain('"provider": "github-pages"');
 
-    await rm(workspace, { recursive: true, force: true });
-  });
+		await rm(workspace, { recursive: true, force: true });
+	});
 
-  it("prepares build directories for the other app-host deploy targets", async () => {
-    const workspace = await mkdtemp(join(tmpdir(), "astropress-host-deploys-"));
-    const buildDir = join(workspace, "dist");
-    await mkdir(buildDir, { recursive: true });
-    await writeFile(join(buildDir, "index.html"), "<h1>Astropress</h1>");
+	it("prepares build directories for the other app-host deploy targets", async () => {
+		const workspace = await mkdtemp(join(tmpdir(), "astropress-host-deploys-"));
+		const buildDir = join(workspace, "dist");
+		await mkdir(buildDir, { recursive: true });
+		await writeFile(join(buildDir, "index.html"), "<h1>Astropress</h1>");
 
-    for (const [factory, provider] of [
-      [createAstropressCloudflarePagesDeployTarget, "cloudflare-pages"],
-      [createAstropressVercelDeployTarget, "vercel"],
-      [createAstropressNetlifyDeployTarget, "netlify"],
-      [createAstropressRenderDeployTarget, "render-web"],
-      [createAstropressGitLabPagesDeployTarget, "gitlab-pages"],
-    ] as const) {
-      const outputDir = join(workspace, provider);
-      const target = factory({ outputDir } as never);
-      const result = await target.deploy({
-        buildDir,
-        projectName: "demo-site",
-      });
+		for (const [factory, provider] of [
+			[createAstropressCloudflarePagesDeployTarget, "cloudflare-pages"],
+			[createAstropressVercelDeployTarget, "vercel"],
+			[createAstropressNetlifyDeployTarget, "netlify"],
+			[createAstropressRenderDeployTarget, "render-web"],
+			[createAstropressGitLabPagesDeployTarget, "gitlab-pages"],
+		] as const) {
+			const outputDir = join(workspace, provider);
+			const target = factory({ outputDir } as never);
+			const result = await target.deploy({
+				buildDir,
+				projectName: "demo-site",
+			});
 
-      expect(result.deploymentId).toContain("demo-site");
-      expect(await readFile(join(outputDir, "demo-site", ".astropress-deploy.json"), "utf8")).toContain(
-        provider,
-      );
-    }
+			expect(result.deploymentId).toContain("demo-site");
+			expect(
+				await readFile(
+					join(outputDir, "demo-site", ".astropress-deploy.json"),
+					"utf8",
+				),
+			).toContain(provider);
+		}
 
-    await rm(workspace, { recursive: true, force: true });
-  });
+		await rm(workspace, { recursive: true, force: true });
+	});
 
-  it("round-trips a project snapshot through git sync", async () => {
-    const workspace = await mkdtemp(join(tmpdir(), "astropress-sync-"));
-    const projectDir = join(workspace, "project");
-    const snapshotDir = join(workspace, "snapshot");
-    await mkdir(join(projectDir, "src"), { recursive: true });
-    await writeFile(join(projectDir, "package.json"), '{"name":"demo"}');
-    await writeFile(join(projectDir, "src", "index.ts"), "export const demo = true;");
+	it("round-trips a project snapshot through git sync", async () => {
+		const workspace = await mkdtemp(join(tmpdir(), "astropress-sync-"));
+		const projectDir = join(workspace, "project");
+		const snapshotDir = join(workspace, "snapshot");
+		await mkdir(join(projectDir, "src"), { recursive: true });
+		await writeFile(join(projectDir, "package.json"), '{"name":"demo"}');
+		await writeFile(
+			join(projectDir, "src", "index.ts"),
+			"export const demo = true;",
+		);
 
-    const sync = createAstropressGitSyncAdapter({ projectDir });
-    const exported = await sync.exportSnapshot(snapshotDir);
-    await writeFile(join(projectDir, "src", "index.ts"), "export const demo = false;");
-    const imported = await sync.importSnapshot(snapshotDir);
+		const sync = createAstropressGitSyncAdapter({ projectDir });
+		const exported = await sync.exportSnapshot(snapshotDir);
+		await writeFile(
+			join(projectDir, "src", "index.ts"),
+			"export const demo = false;",
+		);
+		const imported = await sync.importSnapshot(snapshotDir);
 
-    expect(exported.fileCount).toBeGreaterThan(0);
-    expect(imported.fileCount).toBe(exported.fileCount);
-    expect(await readFile(join(projectDir, "src", "index.ts"), "utf8")).toContain("demo = true");
+		expect(exported.fileCount).toBeGreaterThan(0);
+		expect(imported.fileCount).toBe(exported.fileCount);
+		expect(
+			await readFile(join(projectDir, "src", "index.ts"), "utf8"),
+		).toContain("demo = true");
 
-    await rm(workspace, { recursive: true, force: true });
-  });
+		await rm(workspace, { recursive: true, force: true });
+	});
 });

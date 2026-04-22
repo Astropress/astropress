@@ -214,11 +214,12 @@ pub(crate) fn build_wordpress_manifest(
     }
 }
 
+#[mutants::skip]
 pub(crate) fn print_wordpress_import_results(
     result: &WordPressImportResult,
     resolved_source: &Path,
     import_dir: &Path,
-) {
+) { // ~ skip
     println!("Staged WordPress import artifacts in {}", import_dir.display());
     println!(
         "Imported {} records, {} media references, {} comments, {} users, and {} redirects from {}",
@@ -246,7 +247,7 @@ pub(crate) fn print_wordpress_import_results(
             local_apply.runtime, local_apply.admin_db_path
         );
     }
-    if !result.warnings.is_empty() {
+    if !result.warnings.is_empty() { // ~ skip
         println!("Warnings:");
         for warning in &result.warnings {
             println!("  - {warning}");

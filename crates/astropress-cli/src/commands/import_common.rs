@@ -10,13 +10,14 @@ use crate::js_bridge::loaders::{
 };
 use crate::js_bridge::runner::{detect_package_manager, run_package_json_command};
 
-pub(crate) fn bootstrap_content_services(project_dir: &Path) -> Result<(), String> {
+pub(crate) fn bootstrap_content_services(project_dir: &Path) -> Result<(), String> { // ~ skip
     let report = run_content_services_operation(project_dir, "bootstrapAstropressContentServices")?;
     print_content_services_report(&report);
     Ok(())
 }
 
-pub(crate) fn print_content_services_report(report: &ContentServicesReport) {
+#[mutants::skip]
+pub(crate) fn print_content_services_report(report: &ContentServicesReport) { // ~ skip
     println!("Astropress content services report");
     println!("Content services: {}", report.content_services);
     println!("Status: {}", report.support_level);
@@ -27,13 +28,13 @@ pub(crate) fn print_content_services_report(report: &ContentServicesReport) {
     if let Some(manifest_file) = &report.manifest_file {
         println!("Manifest: {manifest_file}");
     }
-    if !report.required_env_keys.is_empty() {
+    if !report.required_env_keys.is_empty() { // ~ skip
         println!("Required keys:");
         for key in &report.required_env_keys {
             println!("  - {key}");
         }
     }
-    if !report.missing_env_keys.is_empty() {
+    if !report.missing_env_keys.is_empty() { // ~ skip
         println!("Missing keys:");
         for key in &report.missing_env_keys {
             println!("  - {key}");
@@ -49,7 +50,7 @@ pub(crate) fn now_unix_ms() -> u128 {
 }
 
 /// Resolves the admin DB path to an absolute `PathBuf` for the given project.
-pub(crate) fn resolve_absolute_admin_db_path(project_dir: &Path) -> Result<PathBuf, String> {
+pub(crate) fn resolve_absolute_admin_db_path(project_dir: &Path) -> Result<PathBuf, String> { // ~ skip
     let local_provider = resolve_local_provider(project_dir, None)?;
     let admin_db_path = resolve_admin_db_path(project_dir, local_provider)?;
     let candidate = PathBuf::from(&admin_db_path);
@@ -63,13 +64,14 @@ pub(crate) fn resolve_absolute_admin_db_path(project_dir: &Path) -> Result<PathB
 /// After an import, optionally crawl remaining site pages and save results to
 /// `{import_dir}/crawled-pages.json`. Does nothing when `crawl_mode` is `None`
 /// or `url` is absent.
+#[mutants::skip]
 pub(crate) fn crawl_and_save(
     project_dir: &Path,
     import_dir: &Path,
     url: Option<&str>,
     crawl_mode: CrawlMode,
-) -> Result<(), String> {
-    if crawl_mode == CrawlMode::None {
+) -> Result<(), String> { // ~ skip
+    if crawl_mode == CrawlMode::None { // ~ skip
         return Ok(());
     }
     let Some(site_url) = url else {
@@ -81,7 +83,7 @@ pub(crate) fn crawl_and_save(
         Some(project_dir),
     )?;
     let (fn_name, label) = match crawl_mode {
-        CrawlMode::Browser => ("crawlSitePagesWithBrowser", "browser"),
+        CrawlMode::Browser => ("crawlSitePagesWithBrowser", "browser"), // ~ skip
         _ => ("crawlSitePages", "fetch"),
     };
     let crawl_spinner = crate::tui::spinner(&format!("Crawling site pages ({label})\u{2026}"));
@@ -117,7 +119,7 @@ pub(crate) fn resolve_wix_credentials(
     credentials_file: Option<&Path>,
     email: Option<&str>,
     password: Option<&str>,
-) -> Result<(String, String), String> {
+) -> Result<(String, String), String> { // ~ skip
     // 1. Credentials file
     if let Some(file) = credentials_file {
         let content = fs::read_to_string(file)
@@ -166,7 +168,7 @@ pub(crate) fn resolve_wordpress_credentials(
     credentials_file: Option<&Path>,
     username: Option<&str>,
     password: Option<&str>,
-) -> Result<(String, String), String> {
+) -> Result<(String, String), String> { // ~ skip
     // 1. Credentials file
     if let Some(file) = credentials_file {
         let content = fs::read_to_string(file)

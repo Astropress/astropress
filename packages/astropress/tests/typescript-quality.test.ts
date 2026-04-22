@@ -5,91 +5,101 @@
  */
 
 import { describe, expect, it } from "vitest";
-import type {
-  ContentId,
-  MediaAssetId,
-  AdminUserId,
-  ApiTokenId,
-  AuditEventId,
-  ActionResult,
-} from "../src/platform-contracts";
 import { adminLabels } from "../src/admin-ui.js";
 import type { AdminLabelKey, AdminLocale } from "../src/admin-ui.js";
+import type {
+	ActionResult,
+	AdminUserId,
+	ApiTokenId,
+	AuditEventId,
+	ContentId,
+	MediaAssetId,
+} from "../src/platform-contracts";
 
 describe("Branded ID types", () => {
-  it("ContentId is exported from platform-contracts", () => {
-    // Type-level test: if this compiles, the type is exported and assignable
-    const id = "record-123" as ContentId;
-    expect(id).toBe("record-123");
-  });
+	it("ContentId is exported from platform-contracts", () => {
+		// Type-level test: if this compiles, the type is exported and assignable
+		const id = "record-123" as ContentId;
+		expect(id).toBe("record-123");
+	});
 
-  it("MediaAssetId is exported from platform-contracts", () => {
-    const id = "asset-456" as MediaAssetId;
-    expect(id).toBe("asset-456");
-  });
+	it("MediaAssetId is exported from platform-contracts", () => {
+		const id = "asset-456" as MediaAssetId;
+		expect(id).toBe("asset-456");
+	});
 
-  it("AdminUserId is exported from platform-contracts", () => {
-    const id = "user-789" as AdminUserId;
-    expect(id).toBe("user-789");
-  });
+	it("AdminUserId is exported from platform-contracts", () => {
+		const id = "user-789" as AdminUserId;
+		expect(id).toBe("user-789");
+	});
 
-  it("ApiTokenId is exported from platform-contracts", () => {
-    const id = "token-abc" as ApiTokenId;
-    expect(id).toBe("token-abc");
-  });
+	it("ApiTokenId is exported from platform-contracts", () => {
+		const id = "token-abc" as ApiTokenId;
+		expect(id).toBe("token-abc");
+	});
 
-  it("AuditEventId is exported from platform-contracts", () => {
-    const id = "event-def" as AuditEventId;
-    expect(id).toBe("event-def");
-  });
+	it("AuditEventId is exported from platform-contracts", () => {
+		const id = "event-def" as AuditEventId;
+		expect(id).toBe("event-def");
+	});
 
-  it("branded string is still a string at runtime", () => {
-    const id = "record-123" as ContentId;
-    expect(typeof id).toBe("string");
-    expect(String(id)).toBe("record-123");
-  });
+	it("branded string is still a string at runtime", () => {
+		const id = "record-123" as ContentId;
+		expect(typeof id).toBe("string");
+		expect(String(id)).toBe("record-123");
+	});
 });
 
 describe("ActionResult discriminated union", () => {
-  it("ok result carries data", () => {
-    const result: ActionResult<{ title: string }> = { ok: true, data: { title: "Hello" } };
-    if (result.ok) {
-      expect(result.data.title).toBe("Hello");
-    }
-    expect(result.ok).toBe(true);
-  });
+	it("ok result carries data", () => {
+		const result: ActionResult<{ title: string }> = {
+			ok: true,
+			data: { title: "Hello" },
+		};
+		if (result.ok) {
+			expect(result.data.title).toBe("Hello");
+		}
+		expect(result.ok).toBe(true);
+	});
 
-  it("error result carries error string", () => {
-    const result: ActionResult<never> = { ok: false, error: "Not found", code: "not_found" };
-    if (!result.ok) {
-      expect(result.error).toBe("Not found");
-      expect(result.code).toBe("not_found");
-    }
-    expect(result.ok).toBe(false);
-  });
+	it("error result carries error string", () => {
+		const result: ActionResult<never> = {
+			ok: false,
+			error: "Not found",
+			code: "not_found",
+		};
+		if (!result.ok) {
+			expect(result.error).toBe("Not found");
+			expect(result.code).toBe("not_found");
+		}
+		expect(result.ok).toBe(false);
+	});
 
-  it("error result code is optional", () => {
-    const result: ActionResult<string> = { ok: false, error: "Validation failed" };
-    if (!result.ok) {
-      expect(result.code).toBeUndefined();
-    }
-  });
+	it("error result code is optional", () => {
+		const result: ActionResult<string> = {
+			ok: false,
+			error: "Validation failed",
+		};
+		if (!result.ok) {
+			expect(result.code).toBeUndefined();
+		}
+	});
 
-  it("discriminant narrows type correctly", () => {
-    function getResult(succeed: boolean): ActionResult<number> {
-      if (succeed) return { ok: true, data: 42 };
-      return { ok: false, error: "Failed" };
-    }
+	it("discriminant narrows type correctly", () => {
+		function getResult(succeed: boolean): ActionResult<number> {
+			if (succeed) return { ok: true, data: 42 };
+			return { ok: false, error: "Failed" };
+		}
 
-    const ok = getResult(true);
-    const fail = getResult(false);
+		const ok = getResult(true);
+		const fail = getResult(false);
 
-    expect(ok.ok).toBe(true);
-    if (ok.ok) expect(ok.data).toBe(42);
+		expect(ok.ok).toBe(true);
+		if (ok.ok) expect(ok.data).toBe(42);
 
-    expect(fail.ok).toBe(false);
-    if (!fail.ok) expect(fail.error).toBe("Failed");
-  });
+		expect(fail.ok).toBe(false);
+		if (!fail.ok) expect(fail.error).toBe("Failed");
+	});
 });
 
 // ─── Admin i18n label map ─────────────────────────────────────────────────────
@@ -100,33 +110,35 @@ const ALL_LOCALES: AdminLocale[] = ["en", "es", "fr", "de", "pt", "ja"];
 const EXPECTED_KEYS = Object.keys(adminLabels.en) as AdminLabelKey[];
 
 describe("admin i18n label map", () => {
-  it("has at least 30 label keys", () => {
-    expect(EXPECTED_KEYS.length).toBeGreaterThanOrEqual(30);
-  });
+	it("has at least 30 label keys", () => {
+		expect(EXPECTED_KEYS.length).toBeGreaterThanOrEqual(30);
+	});
 
-  for (const locale of ALL_LOCALES) {
-    it(`locale '${locale}' has all required keys`, () => {
-      const localeKeys = Object.keys(adminLabels[locale]);
-      for (const key of EXPECTED_KEYS) {
-        expect(localeKeys, `locale '${locale}' missing key '${key}'`).toContain(key);
-      }
-    });
+	for (const locale of ALL_LOCALES) {
+		it(`locale '${locale}' has all required keys`, () => {
+			const localeKeys = Object.keys(adminLabels[locale]);
+			for (const key of EXPECTED_KEYS) {
+				expect(localeKeys, `locale '${locale}' missing key '${key}'`).toContain(
+					key,
+				);
+			}
+		});
 
-    it(`locale '${locale}' has no empty string values`, () => {
-      for (const [key, value] of Object.entries(adminLabels[locale])) {
-        expect(value, `locale '${locale}' key '${key}' is empty`).not.toBe("");
-      }
-    });
-  }
+		it(`locale '${locale}' has no empty string values`, () => {
+			for (const [key, value] of Object.entries(adminLabels[locale])) {
+				expect(value, `locale '${locale}' key '${key}' is empty`).not.toBe("");
+			}
+		});
+	}
 
-  it("required keys include navigation and content action labels", () => {
-    const keys = new Set(EXPECTED_KEYS);
-    expect(keys.has("navDashboard")).toBe(true);
-    expect(keys.has("navPosts")).toBe(true);
-    expect(keys.has("navMedia")).toBe(true);
-    expect(keys.has("createPost")).toBe(true);
-    expect(keys.has("changeLanguage")).toBe(true);
-    expect(keys.has("confirmDelete")).toBe(true);
-    expect(keys.has("approveComment")).toBe(true);
-  });
+	it("required keys include navigation and content action labels", () => {
+		const keys = new Set(EXPECTED_KEYS);
+		expect(keys.has("navDashboard")).toBe(true);
+		expect(keys.has("navPosts")).toBe(true);
+		expect(keys.has("navMedia")).toBe(true);
+		expect(keys.has("createPost")).toBe(true);
+		expect(keys.has("changeLanguage")).toBe(true);
+		expect(keys.has("confirmDelete")).toBe(true);
+		expect(keys.has("approveComment")).toBe(true);
+	});
 });
