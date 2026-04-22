@@ -27,7 +27,7 @@
       "name": "astropress-example-admin-harness",
       "dependencies": {
         "@astropress-diy/astropress": "workspace:*",
-        "astro": "^6.1.8",
+        "astro": "6.1.8",
       },
       "devDependencies": {
         "@astrojs/check": "^0.9.8",
@@ -39,7 +39,7 @@
       "name": "astropress-example-gh-pages",
       "dependencies": {
         "@astropress-diy/astropress": "workspace:*",
-        "astro": "^6.1.8",
+        "astro": "6.1.8",
       },
       "devDependencies": {
         "@astrojs/check": "^0.9.8",
@@ -52,7 +52,7 @@
       "name": "astropress-example-npm-consumer-smoke",
       "dependencies": {
         "@astropress-diy/astropress": "workspace:*",
-        "astro": "^6.1.8",
+        "astro": "6.1.8",
       },
       "devDependencies": {
         "@astrojs/check": "^0.9.8",
