@@ -80,7 +80,7 @@
 		"stress:sqlite": "bun run tooling/scripts/stress-sqlite-writes.ts",
 		"test:mutants": "cd packages/astropress && node ../../node_modules/.bin/stryker run ../../stryker.config.mjs",
 		"test:mutants:critical": "cd packages/astropress && node ../../node_modules/.bin/stryker run ../../stryker-critical.config.mjs",
-		"test:mutants:sync": "cd packages/astropress && node ../../node_modules/.bin/stryker run --mutate 'src/sync/git.ts,src/sqlite-bootstrap-helpers.ts' ../../stryker.config.mjs",
+		"test:mutants:sync": "cd packages/astropress && node ../../node_modules/.bin/stryker run ../../stryker-sync.config.mjs",
 		"test:mutants:rust": "cargo mutants --package astropress-cli --timeout 30 --manifest-path crates/Cargo.toml",
 		"release": "bun run --filter @astropress-diy/astropress release",
 		"version": "bun run --filter @astropress-diy/astropress version && bun run tooling/scripts/sync-cargo-version.ts",

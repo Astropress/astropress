@@ -39,3 +39,4 @@ examples/admin-harness/.data/
 
 # Cargo mutants output
 crates/mutants.out/
+.stryker-incremental-sync.json
