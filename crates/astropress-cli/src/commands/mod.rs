@@ -1,4 +1,5 @@
 pub(crate) mod add;
+pub(crate) mod auth;
 pub(crate) mod backup_restore;
 pub(crate) mod completions;
 pub(crate) mod config;

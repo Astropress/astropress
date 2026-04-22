@@ -468,3 +468,42 @@ console.log(JSON.stringify(result));
     );
     run_package_json_command(project_dir, detect_package_manager(project_dir), &script)
 }
+
+#[derive(Debug, Deserialize)]
+pub(crate) struct AuthRevokeReport {
+    #[serde(rename = "sessionsRevoked")]
+    pub(crate) sessions_revoked: u32,
+    #[serde(rename = "tokensRevoked")]
+    pub(crate) tokens_revoked: u32,
+}
+
+pub(crate) fn run_auth_emergency_revoke_operation(
+    project_dir: &Path,
+    db_path: &str,
+    scope: &str,
+    user_email: Option<&str>,
+) -> Result<AuthRevokeReport, String> {
+    let module = package_module_import("auth-emergency-revoke-ops.js", Some(project_dir))?;
+    let module_literal = serde_json::to_string(&module).map_err(|error| error.to_string())?;
+    let db_path_json = serde_json::to_string(db_path).map_err(|error| error.to_string())?;
+    let scope_json = serde_json::to_string(scope).map_err(|error| error.to_string())?;
+    let user_email_json = match user_email {
+        Some(email) => serde_json::to_string(email).map_err(|error| error.to_string())?,
+        None => "undefined".to_string(),
+    };
+    let script = format!(
+        r#"import {{ runAuthEmergencyRevokeForCli }} from {module};
+const result = runAuthEmergencyRevokeForCli({{
+  dbPath: {db_path},
+  scope: {scope},
+  userEmail: {user_email},
+}});
+console.log(JSON.stringify(result));
+"#,
+        module = module_literal,
+        db_path = db_path_json,
+        scope = scope_json,
+        user_email = user_email_json,
+    );
+    run_package_json_command(project_dir, detect_package_manager(project_dir), &script)
+}

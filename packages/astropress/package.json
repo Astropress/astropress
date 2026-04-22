@@ -155,6 +155,10 @@
       "types": "./src/content-services-ops.ts",
       "default": "./dist/src/content-services-ops.js"
     },
+    "./auth-emergency-revoke-ops": {
+      "types": "./src/auth-emergency-revoke-ops.ts",
+      "default": "./dist/src/auth-emergency-revoke-ops.js"
+    },
     "./db-migrate-ops": {
       "types": "./src/db-migrate-ops.ts",
       "default": "./dist/src/db-migrate-ops.js"
