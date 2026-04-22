@@ -55,7 +55,7 @@ def main() -> int:
         osvdb_key = f"OSVDB-{osvdb_id}" if osvdb_id else ""
         if osvdb_key in suppressed:
             continue
-        # Flag anything nikto marks as high severity or any OSVDB finding not suppressed
+        # Fail on every unsuppressed finding — for a static Astro build there should be none
         failures.append(f"  [{osvdb_key or 'finding'}] {description}")
 
     if failures:

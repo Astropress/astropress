@@ -79,6 +79,7 @@ jobs:
           templates: http/misconfiguration,http/technologies,http/exposures
           sarif-export: nuclei-results.sarif
           github-report: true
+          fail_on_severity: critical,high
 
       - name: Upload nuclei SARIF to GitHub Security tab
         uses: github/codeql-action/upload-sarif@v3
