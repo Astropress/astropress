@@ -30,3 +30,10 @@ playwright-report/
 **/.data/*.sqlite-wal
 packages/astropress/.data/
 examples/admin-harness/.data/
+.data/
+
+# Claude Code session data
+.claude/
+
+# Cargo mutants output
+crates/mutants.out/
