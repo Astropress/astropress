@@ -6,6 +6,7 @@ import {
   createAstropressSecureRedirect,
   createAstropressSecurityHeaders,
   isTrustedRequestOrigin,
+  isTrustedStrictRequestOrigin,
 } from "../src/security-headers.js";
 import { resolveAstropressSecurityArea } from "../src/security-middleware.js";
 
@@ -183,6 +184,71 @@ describe("security headers", () => {
       applyCacheHeaders(headers, area, 600);
       expect(headers.get("Cache-Control"), `area: ${area}`).toBe("private, no-store");
     }
+  });
+
+  it("isTrustedStrictRequestOrigin accepts same-origin origin header", () => {
+    expect(
+      isTrustedStrictRequestOrigin(
+        new Request("https://example.com/ap-admin/actions/accept-invite", {
+          method: "POST",
+          headers: { origin: "https://example.com" },
+        }),
+      ),
+    ).toBe(true);
+  });
+
+  it("isTrustedStrictRequestOrigin rejects cross-origin origin header", () => {
+    expect(
+      isTrustedStrictRequestOrigin(
+        new Request("https://example.com/ap-admin/actions/accept-invite", {
+          method: "POST",
+          headers: { origin: "https://attacker.example" },
+        }),
+      ),
+    ).toBe(false);
+  });
+
+  it("isTrustedStrictRequestOrigin accepts same-origin referer when origin absent", () => {
+    expect(
+      isTrustedStrictRequestOrigin(
+        new Request("https://example.com/ap-admin/actions/reset-password", {
+          method: "POST",
+          headers: { referer: "https://example.com/ap-admin/reset-password" },
+        }),
+      ),
+    ).toBe(true);
+  });
+
+  it("isTrustedStrictRequestOrigin rejects cross-origin referer", () => {
+    expect(
+      isTrustedStrictRequestOrigin(
+        new Request("https://example.com/ap-admin/actions/reset-password", {
+          method: "POST",
+          headers: { referer: "https://attacker.example/page" },
+        }),
+      ),
+    ).toBe(false);
+  });
+
+  it("isTrustedStrictRequestOrigin rejects requests with neither origin nor referer", () => {
+    expect(
+      isTrustedStrictRequestOrigin(
+        new Request("https://example.com/ap-admin/actions/accept-invite", {
+          method: "POST",
+        }),
+      ),
+    ).toBe(false);
+  });
+
+  it("isTrustedStrictRequestOrigin rejects invalid URL in origin header", () => {
+    expect(
+      isTrustedStrictRequestOrigin(
+        new Request("https://example.com/ap-admin/actions/accept-invite", {
+          method: "POST",
+          headers: { origin: "not-a-valid-url" },
+        }),
+      ),
+    ).toBe(false);
   });
 
   it("classifies public, auth, admin, and action routes for middleware application", () => {
