@@ -8,9 +8,12 @@
  *   3. Every CI-enforced audit is actually referenced in .github/workflows/ci.yml
  *   4. Self-assessed rubrics are flagged and counted — the ratio of automated to
  *      self-assessed must not regress
- *   5. The rubric count in docs/evaluation.mdx matches docs/reference/EVALUATION.md
- *   6. No rubric in the table has an empty Evidence column AND no "self-assessed" marker
+ *   5. No rubric in the table has an empty Evidence column AND no "self-assessed" marker
  *      (every rubric must declare how it's backed)
+ *
+ * Note: the docs-site evaluation.mdx parity check (originally criterion 5) was removed
+ * when the public docs site evaluation page was deprecated in favour of
+ * docs/reference/EVALUATION.md as the single source of truth.
  *
  * Why this exists: an evaluation framework that can't verify its own integrity is
  * theater. Audits that are referenced but don't exist, CI claims that aren't enforced,

@@ -518,8 +518,7 @@ An evaluation framework that can't verify its own integrity is theater. Specific
   2. Every `audit:*` script in `package.json` points to a file that exists on disk
   3. Every audit claimed as "CI-enforced" actually appears in `ci.yml`
   4. Self-assessed rubrics are counted and surfaced as warnings
-  5. Rubric count in `evaluation.mdx` (docs site) matches `EVALUATION.md` (reference)
-  6. No rubric has an empty evidence column without a self-assessed marker
+  5. No rubric has an empty evidence column without a self-assessed marker
 
 ### Criteria
 

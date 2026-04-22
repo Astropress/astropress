@@ -39,6 +39,8 @@ async function walkAstroFiles(dir: string): Promise<string[]> {
   return files.sort();
 }
 
+const PKG_JSON = join(root, "packages/astropress/package.json");
+
 async function main() {
   const violations: string[] = [];
 
@@ -59,7 +61,39 @@ async function main() {
         `[bare-import] ${relPath}: bare "astropress/" import — use "@astropress-diy/astropress/" instead\n    → ${snippet}`,
       );
     }
+  }
 
+  // Rule 2: package.json exports map — every non-glob TypeScript source entry must exist on disk
+  // Glob entries (containing "*") are skipped; they resolve at build time.
+  const pkgSrc = await readFile(PKG_JSON, "utf8");
+  const pkg = JSON.parse(pkgSrc) as { exports?: Record<string, unknown> };
+  const exportsMap = pkg.exports ?? {};
+  const pkgDir = join(root, "packages/astropress");
+
+  for (const [exportKey, exportValue] of Object.entries(exportsMap)) {
+    if (exportKey.includes("*")) continue; // glob entry — skip
+
+    // Collect all string values from the condition object (or the value itself)
+    const paths: string[] = [];
+    if (typeof exportValue === "string") {
+      paths.push(exportValue);
+    } else if (exportValue && typeof exportValue === "object") {
+      for (const v of Object.values(exportValue as Record<string, unknown>)) {
+        if (typeof v === "string") paths.push(v);
+      }
+    }
+
+    for (const p of paths) {
+      if (p.includes("*")) continue; // glob value — skip
+      const abs = join(pkgDir, p);
+      try {
+        await readFile(abs);
+      } catch {
+        violations.push(
+          `[missing-export] package.json exports "${exportKey}" → "${p}" does not exist on disk`,
+        );
+      }
+    }
   }
 
   if (violations.length > 0) {
@@ -71,7 +105,7 @@ async function main() {
   }
 
   console.log(
-    `consumer-packaging audit passed — ${allFiles.length} files scanned, no bare imports or cross-package paths.`,
+    `consumer-packaging audit passed — ${allFiles.length} files scanned, no bare imports. Exports map validated.`,
   );
 }
 
