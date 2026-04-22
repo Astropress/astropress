@@ -1,4 +1,4 @@
-import { DatabaseSync } from "node:sqlite";
+import type { DatabaseSync } from "node:sqlite";
 import { SqliteBackedD1Database } from "./provider-test-fixtures.js";
 
 /**
@@ -10,7 +10,7 @@ import { SqliteBackedD1Database } from "./provider-test-fixtures.js";
  * than duplicating the cast inline.
  */
 export function makeLocals(db: DatabaseSync): App.Locals {
-  return {
-    runtime: { env: { DB: new SqliteBackedD1Database(db) } },
-  } as unknown as App.Locals;
+	return {
+		runtime: { env: { DB: new SqliteBackedD1Database(db) } },
+	} as unknown as App.Locals;
 }

@@ -1,210 +1,257 @@
 interface EmailResult {
-  ok: boolean;
-  /** true only when the email was actually transmitted to the delivery provider */
-  delivered: boolean;
-  error?: string;
-  preview?: {
-    to: string;
-    subject: string;
-    html: string;
-  };
+	ok: boolean;
+	/** true only when the email was actually transmitted to the delivery provider */
+	delivered: boolean;
+	error?: string;
+	preview?: {
+		to: string;
+		subject: string;
+		html: string;
+	};
 }
 
 interface EmailMessage {
-  to: string;
-  subject: string;
-  html: string;
-  text?: string;
+	to: string;
+	subject: string;
+	html: string;
+	text?: string;
 }
 
-import { getTransactionalEmailConfig, isProductionRuntime } from "./runtime-env";
-import { peekCmsConfig } from "./config";
 import nodemailer from "nodemailer";
+import { peekCmsConfig } from "./config";
+import {
+	getTransactionalEmailConfig,
+	isProductionRuntime,
+} from "./runtime-env";
 
 function escapeHtml(str: string): string {
-  return str
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
+	return str
+		.replace(/&/g, "&amp;")
+		.replace(/</g, "&lt;")
+		.replace(/>/g, "&gt;")
+		.replace(/"/g, "&quot;")
+		.replace(/'/g, "&#39;");
 }
 
 function isMockMode(locals?: App.Locals | null) {
-  return getTransactionalEmailConfig(locals).mode === "mock";
+	return getTransactionalEmailConfig(locals).mode === "mock";
 }
 
-async function sendResendEmail(message: EmailMessage, locals?: App.Locals | null): Promise<EmailResult> {
-  const { resendApiKey: apiKey, resendFrom: from } = getTransactionalEmailConfig(locals);
+async function sendResendEmail(
+	message: EmailMessage,
+	locals?: App.Locals | null,
+): Promise<EmailResult> {
+	const { resendApiKey: apiKey, resendFrom: from } =
+		getTransactionalEmailConfig(locals);
 
-  if (!apiKey || !from) {
-    if (isProductionRuntime()) {
-      return { ok: false, delivered: false, error: "Transactional email is not configured." };
-    }
+	if (!apiKey || !from) {
+		if (isProductionRuntime()) {
+			return {
+				ok: false,
+				delivered: false,
+				error: "Transactional email is not configured.",
+			};
+		}
 
-    return {
-      ok: true,
-      delivered: false,
-      preview: {
-        to: message.to,
-        subject: message.subject,
-        html: message.html,
-      },
-    };
-  }
+		return {
+			ok: true,
+			delivered: false,
+			preview: {
+				to: message.to,
+				subject: message.subject,
+				html: message.html,
+			},
+		};
+	}
 
-  const response = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      from,
-      to: [message.to],
-      subject: message.subject,
-      html: message.html,
-      text: message.text,
-    }),
-  });
+	const response = await fetch("https://api.resend.com/emails", {
+		method: "POST",
+		headers: {
+			Authorization: `Bearer ${apiKey}`,
+			"Content-Type": "application/json",
+		},
+		body: JSON.stringify({
+			from,
+			to: [message.to],
+			subject: message.subject,
+			html: message.html,
+			text: message.text,
+		}),
+	});
 
-  if (!response.ok) {
-    const errorBody = await response.text();
-    return {
-      ok: false,
-      delivered: false,
-      error: `Resend error: ${errorBody || response.statusText}`,
-    };
-  }
+	if (!response.ok) {
+		const errorBody = await response.text();
+		return {
+			ok: false,
+			delivered: false,
+			error: `Resend error: ${errorBody || response.statusText}`,
+		};
+	}
 
-  return { ok: true, delivered: true };
+	return { ok: true, delivered: true };
 }
 
-async function sendSmtpEmail(message: EmailMessage, locals?: App.Locals | null): Promise<EmailResult> {
-  const config = getTransactionalEmailConfig(locals);
-  const host = config.smtpHost;
-  const from = config.smtpFrom;
-  const port = Number.parseInt(config.smtpPort ?? "587", 10);
+async function sendSmtpEmail(
+	message: EmailMessage,
+	locals?: App.Locals | null,
+): Promise<EmailResult> {
+	const config = getTransactionalEmailConfig(locals);
+	const host = config.smtpHost;
+	const from = config.smtpFrom;
+	const port = Number.parseInt(config.smtpPort ?? "587", 10);
 
-  if (!host || !from || !port) {
-    if (isProductionRuntime()) {
-      return { ok: false, delivered: false, error: "SMTP transactional email is not configured." };
-    }
+	if (!host || !from || !port) {
+		if (isProductionRuntime()) {
+			return {
+				ok: false,
+				delivered: false,
+				error: "SMTP transactional email is not configured.",
+			};
+		}
 
-    return {
-      ok: true,
-      delivered: false,
-      preview: {
-        to: message.to,
-        subject: message.subject,
-        html: message.html,
-      },
-    };
-  }
+		return {
+			ok: true,
+			delivered: false,
+			preview: {
+				to: message.to,
+				subject: message.subject,
+				html: message.html,
+			},
+		};
+	}
 
-  try {
-    const transporter = nodemailer.createTransport({
-      host,
-      port,
-      secure: port === 465,
-      auth: config.smtpUsername || config.smtpPassword
-        ? {
-            user: config.smtpUsername,
-            pass: config.smtpPassword,
-          }
-        : undefined,
-    });
+	try {
+		const transporter = nodemailer.createTransport({
+			host,
+			port,
+			secure: port === 465,
+			auth:
+				config.smtpUsername || config.smtpPassword
+					? {
+							user: config.smtpUsername,
+							pass: config.smtpPassword,
+						}
+					: undefined,
+		});
 
-    await transporter.sendMail({
-      from,
-      to: message.to,
-      subject: message.subject,
-      html: message.html,
-      text: message.text,
-    });
+		await transporter.sendMail({
+			from,
+			to: message.to,
+			subject: message.subject,
+			html: message.html,
+			text: message.text,
+		});
 
-    return { ok: true, delivered: true };
-  } catch (error) {
-    return {
-      ok: false,
-      delivered: false,
-      error: error instanceof Error ? error.message : "SMTP delivery failed.",
-    };
-  }
+		return { ok: true, delivered: true };
+	} catch (error) {
+		return {
+			ok: false,
+			delivered: false,
+			error: error instanceof Error ? error.message : "SMTP delivery failed.",
+		};
+	}
 }
 
-export async function sendTransactionalEmail(message: EmailMessage, locals?: App.Locals | null): Promise<EmailResult> {
-  if (isMockMode(locals)) {
-    return {
-      ok: true,
-      delivered: false,
-      preview: {
-        to: message.to,
-        subject: message.subject,
-        html: message.html,
-      },
-    };
-  }
+export async function sendTransactionalEmail(
+	message: EmailMessage,
+	locals?: App.Locals | null,
+): Promise<EmailResult> {
+	if (isMockMode(locals)) {
+		return {
+			ok: true,
+			delivered: false,
+			preview: {
+				to: message.to,
+				subject: message.subject,
+				html: message.html,
+			},
+		};
+	}
 
-  if (getTransactionalEmailConfig(locals).mode === "smtp") {
-    return sendSmtpEmail(message, locals);
-  }
+	if (getTransactionalEmailConfig(locals).mode === "smtp") {
+		return sendSmtpEmail(message, locals);
+	}
 
-  return sendResendEmail(message, locals);
+	return sendResendEmail(message, locals);
 }
 
-export async function sendPasswordResetEmail(email: string, resetUrl: string, locals?: App.Locals | null): Promise<EmailResult> {
-  const siteName = escapeHtml(peekCmsConfig()?.siteName ?? "Astropress");
-  return sendTransactionalEmail({
-    to: email,
-    subject: `Reset your ${siteName} admin password`,
-    text: `Use this link to reset your ${siteName} admin password: ${resetUrl}`,
-    html: `<p>Use the link below to reset your ${siteName} admin password.</p><p><a href="${resetUrl}">${resetUrl}</a></p>`,
-  }, locals);
+export async function sendPasswordResetEmail(
+	email: string,
+	resetUrl: string,
+	locals?: App.Locals | null,
+): Promise<EmailResult> {
+	const siteName = escapeHtml(peekCmsConfig()?.siteName ?? "Astropress");
+	return sendTransactionalEmail(
+		{
+			to: email,
+			subject: `Reset your ${siteName} admin password`,
+			text: `Use this link to reset your ${siteName} admin password: ${resetUrl}`,
+			html: `<p>Use the link below to reset your ${siteName} admin password.</p><p><a href="${escapeHtml(resetUrl)}">${escapeHtml(resetUrl)}</a></p>`,
+		},
+		locals,
+	);
 }
 
-export async function sendUserInviteEmail(email: string, inviteUrl: string, locals?: App.Locals | null): Promise<EmailResult> {
-  const siteName = escapeHtml(peekCmsConfig()?.siteName ?? "Astropress");
-  return sendTransactionalEmail({
-    to: email,
-    subject: `Accept your ${siteName} admin invitation`,
-    text: `Use this link to accept your ${siteName} admin invitation and set your password: ${inviteUrl}`,
-    html: `<p>You have been invited to the ${siteName} admin.</p><p>Use the link below to accept the invitation and set your password.</p><p><a href="${inviteUrl}">${inviteUrl}</a></p>`,
-  }, locals);
+export async function sendUserInviteEmail(
+	email: string,
+	inviteUrl: string,
+	locals?: App.Locals | null,
+): Promise<EmailResult> {
+	const siteName = escapeHtml(peekCmsConfig()?.siteName ?? "Astropress");
+	return sendTransactionalEmail(
+		{
+			to: email,
+			subject: `Accept your ${siteName} admin invitation`,
+			text: `Use this link to accept your ${siteName} admin invitation and set your password: ${inviteUrl}`,
+			html: `<p>You have been invited to the ${siteName} admin.</p><p>Use the link below to accept the invitation and set your password.</p><p><a href="${escapeHtml(inviteUrl)}">${escapeHtml(inviteUrl)}</a></p>`,
+		},
+		locals,
+	);
 }
 
-export async function sendContactNotification(input: {
-  name: string;
-  email: string;
-  message: string;
-  submittedAt: string;
-}, locals?: App.Locals | null): Promise<EmailResult> {
-  const { contactDestination: destination } = getTransactionalEmailConfig(locals);
-  const safeName = escapeHtml(input.name);
-  const safeEmail = escapeHtml(input.email);
-  const safeMessage = escapeHtml(input.message);
-  const safeSubmittedAt = escapeHtml(input.submittedAt);
+export async function sendContactNotification(
+	input: {
+		name: string;
+		email: string;
+		message: string;
+		submittedAt: string;
+	},
+	locals?: App.Locals | null,
+): Promise<EmailResult> {
+	const { contactDestination: destination } =
+		getTransactionalEmailConfig(locals);
+	const safeName = escapeHtml(input.name);
+	const safeEmail = escapeHtml(input.email);
+	const safeMessage = escapeHtml(input.message);
+	const safeSubmittedAt = escapeHtml(input.submittedAt);
 
-  if (!destination) {
-    if (isProductionRuntime()) {
-      return { ok: false, delivered: false, error: "Contact notification email is not configured." };
-    }
+	if (!destination) {
+		if (isProductionRuntime()) {
+			return {
+				ok: false,
+				delivered: false,
+				error: "Contact notification email is not configured.",
+			};
+		}
 
-    return {
-      ok: true,
-      delivered: false,
-      preview: {
-        to: "admin-preview@example.local",
-        subject: `Preview contact submission from ${safeName}`,
-        html: `<p>${safeName} (${safeEmail}) submitted a contact request.</p><p>${safeMessage}</p>`,
-      },
-    };
-  }
+		return {
+			ok: true,
+			delivered: false,
+			preview: {
+				to: "admin-preview@example.local",
+				subject: `Preview contact submission from ${safeName}`,
+				html: `<p>${safeName} (${safeEmail}) submitted a contact request.</p><p>${safeMessage}</p>`,
+			},
+		};
+	}
 
-  return sendTransactionalEmail({
-    to: destination,
-    subject: `${escapeHtml(peekCmsConfig()?.siteName ?? "Astropress")} contact submission from ${safeName}`,
-    text: `${input.name} <${input.email}> submitted a contact request at ${input.submittedAt}\n\n${input.message}`,
-    html: `<p><strong>${safeName}</strong> &lt;${safeEmail}&gt; submitted a contact request at ${safeSubmittedAt}.</p><p>${safeMessage}</p>`,
-  }, locals);
+	return sendTransactionalEmail(
+		{
+			to: destination,
+			subject: `${escapeHtml(peekCmsConfig()?.siteName ?? "Astropress")} contact submission from ${safeName}`,
+			text: `${input.name} <${input.email}> submitted a contact request at ${input.submittedAt}\n\n${input.message}`,
+			html: `<p><strong>${safeName}</strong> &lt;${safeEmail}&gt; submitted a contact request at ${safeSubmittedAt}.</p><p>${safeMessage}</p>`,
+		},
+		locals,
+	);
 }

@@ -5,130 +5,153 @@ import AxeBuilder from "@axe-core/playwright";
 import { chromium } from "playwright";
 
 type RouteAudit = {
-  path: string;
-  heading: string;
+	path: string;
+	heading: string;
 };
 
 const auditedRoutes: RouteAudit[] = [
-  { path: "/ap-admin", heading: "Dashboard" },
-  { path: "/ap-admin/posts", heading: "Posts" },
-  { path: "/ap-admin/posts/hello-world", heading: "Edit Post" },
-  { path: "/ap-admin/comments", heading: "Comments" },
-  { path: "/ap-admin/redirects", heading: "Redirects" },
-  { path: "/ap-admin/login", heading: "Admin Login" },
-  { path: "/ap-admin/reset-password", heading: "Reset password" },
-  { path: "/ap-admin/accept-invite?token=demo", heading: "Accept invitation" },
+	{ path: "/ap-admin", heading: "Dashboard" },
+	{ path: "/ap-admin/posts", heading: "Posts" },
+	{ path: "/ap-admin/posts/hello-world", heading: "Edit Post" },
+	{ path: "/ap-admin/comments", heading: "Comments" },
+	{ path: "/ap-admin/redirects", heading: "Redirects" },
+	{ path: "/ap-admin/login", heading: "Admin Login" },
+	{ path: "/ap-admin/reset-password", heading: "Reset password" },
+	{ path: "/ap-admin/accept-invite?token=demo", heading: "Accept invitation" },
 ];
 
 async function waitForServer(url: string, timeoutMs = 60_000) {
-  const startedAt = Date.now();
-  while (Date.now() - startedAt < timeoutMs) {
-    try {
-      const response = await fetch(url);
-      if (response.ok) {
-        return;
-      }
-    } catch {}
-    await new Promise((resolve) => setTimeout(resolve, 500));
-  }
+	const startedAt = Date.now();
+	while (Date.now() - startedAt < timeoutMs) {
+		try {
+			const response = await fetch(url);
+			if (response.ok) {
+				return;
+			}
+		} catch {}
+		await new Promise((resolve) => setTimeout(resolve, 500));
+	}
 
-  throw new Error(`Timed out waiting for ${url}`);
+	throw new Error(`Timed out waiting for ${url}`);
 }
 
 async function waitForDevServerUrl(
-  getOutput: () => string,
-  timeoutMs = 30_000,
+	getOutput: () => string,
+	timeoutMs = 30_000,
 ) {
-  const startedAt = Date.now();
-  while (Date.now() - startedAt < timeoutMs) {
-    const match = getOutput().match(/http:\/\/127\.0\.0\.1:(\d+)\//);
-    if (match) {
-      return `http://127.0.0.1:${match[1]}`;
-    }
-    await new Promise((resolve) => setTimeout(resolve, 250));
-  }
+	const startedAt = Date.now();
+	while (Date.now() - startedAt < timeoutMs) {
+		const match = getOutput().match(/http:\/\/127\.0\.0\.1:(\d+)\//);
+		if (match) {
+			return `http://127.0.0.1:${match[1]}`;
+		}
+		await new Promise((resolve) => setTimeout(resolve, 250));
+	}
 
-  throw new Error("Timed out waiting for Astro dev server URL");
+	throw new Error("Timed out waiting for Astro dev server URL");
 }
 
 async function main() {
-  const root = process.cwd();
-  const harnessRoot = path.join(root, "examples/admin-harness");
-  const devServer = spawn(
-    "bun",
-    ["run", "dev", "--", "--host", "127.0.0.1", "--port", "4325"],
-    {
-      cwd: harnessRoot,
-      stdio: ["ignore", "pipe", "pipe"],
-      env: {
-        ...process.env,
-        PLAYWRIGHT_E2E_MODE: "admin-harness",
-      },
-    },
-  );
+	const root = process.cwd();
+	const harnessRoot = path.join(root, "examples/admin-harness");
+	const devServer = spawn(
+		"bun",
+		["run", "dev", "--", "--host", "127.0.0.1", "--port", "4325"],
+		{
+			cwd: harnessRoot,
+			stdio: ["ignore", "pipe", "pipe"],
+			env: {
+				...process.env,
+				PLAYWRIGHT_E2E_MODE: "admin-harness",
+			},
+		},
+	);
 
-  let serverOutput = "";
-  devServer.stdout.on("data", (chunk) => {
-    serverOutput += String(chunk);
-  });
-  devServer.stderr.on("data", (chunk) => {
-    serverOutput += String(chunk);
-  });
+	let serverOutput = "";
+	devServer.stdout.on("data", (chunk) => {
+		serverOutput += String(chunk);
+	});
+	devServer.stderr.on("data", (chunk) => {
+		serverOutput += String(chunk);
+	});
 
-  try {
-    const baseUrl = await waitForDevServerUrl(() => serverOutput);
-    await waitForServer(`${baseUrl}/`);
+	try {
+		const baseUrl = await waitForDevServerUrl(() => serverOutput);
+		await waitForServer(`${baseUrl}/`);
 
-    const browser = await chromium.launch({ headless: true });
-    try {
-      const context = await browser.newContext({
-        viewport: { width: 1440, height: 960 },
-      });
-      const page = await context.newPage();
+		const browser = await chromium.launch({ headless: true });
+		try {
+			const context = await browser.newContext({
+				viewport: { width: 1440, height: 960 },
+			});
+			const page = await context.newPage();
 
-      for (const route of auditedRoutes) {
-        const targetUrl = `${baseUrl}${route.path}`;
-        const response = await page.goto(targetUrl, { waitUntil: "networkidle" });
-        if (!response || !response.ok()) {
-          throw new Error(`Failed to load ${targetUrl}: ${response?.status() ?? "no response"}`);
-        }
+			for (const route of auditedRoutes) {
+				const targetUrl = `${baseUrl}${route.path}`;
+				const response = await page.goto(targetUrl, {
+					waitUntil: "networkidle",
+				});
+				if (!response || !response.ok()) {
+					throw new Error(
+						`Failed to load ${targetUrl}: ${response?.status() ?? "no response"}`,
+					);
+				}
 
-        const heading = page.getByRole("heading", { level: 1, name: route.heading });
-        if ((await heading.count()) === 0) {
-          throw new Error(`Missing expected h1 "${route.heading}" on ${route.path}`);
-        }
+				const heading = page.getByRole("heading", {
+					level: 1,
+					name: route.heading,
+				});
+				if ((await heading.count()) === 0) {
+					throw new Error(
+						`Missing expected h1 "${route.heading}" on ${route.path}`,
+					);
+				}
 
-        await page.keyboard.press("Tab");
-        const activeTag = await page.evaluate(() => document.activeElement?.tagName ?? "");
-        if (!activeTag) {
-          throw new Error(`Keyboard focus did not move on ${route.path}`);
-        }
+				await page.keyboard.press("Tab");
+				const activeTag = await page.evaluate(
+					() => document.activeElement?.tagName ?? "",
+				);
+				if (!activeTag) {
+					throw new Error(`Keyboard focus did not move on ${route.path}`);
+				}
 
-        const axe = await new AxeBuilder({ page })
-          .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa", "best-practice"])
-          .analyze();
+				const axe = await new AxeBuilder({ page })
+					.withTags([
+						"wcag2a",
+						"wcag2aa",
+						"wcag21a",
+						"wcag21aa",
+						"wcag22aa",
+						"best-practice",
+					])
+					.analyze();
 
-        if (axe.violations.length > 0) {
-          const details = axe.violations
-            .map((violation) => `${violation.id}: ${violation.help} (${violation.nodes.length} nodes)`)
-            .join("\n");
-          throw new Error(`Axe violations found on ${route.path}\n${details}`);
-        }
-      }
+				if (axe.violations.length > 0) {
+					const details = axe.violations
+						.map(
+							(violation) =>
+								`${violation.id}: ${violation.help} (${violation.nodes.length} nodes)`,
+						)
+						.join("\n");
+					throw new Error(`Axe violations found on ${route.path}\n${details}`);
+				}
+			}
 
-      console.log(`Admin harness browser audit passed for ${auditedRoutes.length} routes.`);
-      await context.close();
-    } finally {
-      await browser.close();
-    }
-  } finally {
-    devServer.kill("SIGTERM");
-    await new Promise((resolve) => devServer.once("exit", resolve));
-    if (serverOutput.includes("error")) {
-      // Keep server logs available on failures without making successful runs noisy.
-      process.stderr.write(serverOutput);
-    }
-  }
+			console.log(
+				`Admin harness browser audit passed for ${auditedRoutes.length} routes.`,
+			);
+			await context.close();
+		} finally {
+			await browser.close();
+		}
+	} finally {
+		devServer.kill("SIGTERM");
+		await new Promise((resolve) => devServer.once("exit", resolve));
+		if (serverOutput.includes("error")) {
+			// Keep server logs available on failures without making successful runs noisy.
+			process.stderr.write(serverOutput);
+		}
+	}
 }
 
 await main();

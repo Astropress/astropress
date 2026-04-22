@@ -42,22 +42,36 @@ use telemetry::run_telemetry_command;
 use commands::services::{bootstrap_content_services, print_content_services_report, verify_content_services};
 use commands::upgrade::{apply_upgrade, check_upgrade_compatibility, print_upgrade_check_report};
 
+fn doctor_strict_exit_code(strict: bool, warnings: &[String]) -> ExitCode {
+    if strict && !warnings.is_empty() { ExitCode::from(1) } else { ExitCode::SUCCESS }
+}
+
+fn services_verify_exit_code(support_level: &str) -> ExitCode {
+    if support_level == "missing-config" { ExitCode::from(1) } else { ExitCode::SUCCESS }
+}
+
+fn wants_version(raw_args: &[String]) -> bool {
+    raw_args.iter().any(|a| a == "--version" || a == "-V")
+}
+
+fn strip_tui_flags(raw_args: Vec<String>) -> (bool, Vec<String>) {
+    let plain = raw_args.iter().any(|a| a == "--plain" || a == "--no-tui");
+    let args = raw_args.into_iter().filter(|a| a != "--plain" && a != "--no-tui").collect();
+    (plain, args)
+}
+
 fn main() -> ExitCode {
     let raw_args = std::env::args().skip(1).collect::<Vec<_>>();
 
     // Handle --version / -V before any other parsing.
-    if raw_args.iter().any(|a| a == "--version" || a == "-V") {
+    if wants_version(&raw_args) {
         println!("{}", env!("CARGO_PKG_VERSION"));
         return ExitCode::SUCCESS;
     }
 
     // Strip global --plain / --no-tui before subcommand parsing.
-    let plain = raw_args.iter().any(|a| a == "--plain" || a == "--no-tui");
+    let (plain, args) = strip_tui_flags(raw_args);
     tui::set_plain(plain);
-    let args: Vec<String> = raw_args
-        .into_iter()
-        .filter(|a| a != "--plain" && a != "--no-tui")
-        .collect();
 
     match parse_command(&args) {
         Ok(Command::New {
@@ -163,11 +177,7 @@ fn main() -> ExitCode {
                 } else {
                     print_doctor_report(&report);
                 }
-                if strict && !report.warnings.is_empty() {
-                    ExitCode::from(1)
-                } else {
-                    ExitCode::SUCCESS
-                }
+                doctor_strict_exit_code(strict, &report.warnings)
             }
             Err(error) => fail(error),
         },
@@ -195,11 +205,7 @@ fn main() -> ExitCode {
             match verify_content_services(&project_dir) {
                 Ok(report) => {
                     print_content_services_report(&report);
-                    if report.support_level == "missing-config" {
-                        ExitCode::from(1)
-                    } else {
-                        ExitCode::SUCCESS
-                    }
+                    services_verify_exit_code(&report.support_level)
                 }
                 Err(error) => fail(error),
             }
@@ -296,7 +302,7 @@ fn main() -> ExitCode {
     }
 }
 
-fn fail(message: String) -> ExitCode {
+fn fail(message: String) -> ExitCode { // ~ skip
     eprintln!("{message}");
     ExitCode::from(1)
 }

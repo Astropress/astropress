@@ -27,23 +27,22 @@ const cargoToml = readFileSync(CARGO_PATH, "utf-8");
 const versionRe = /^version\s*=\s*"([^"]+)"/m;
 const match = cargoToml.match(versionRe);
 if (!match) {
-  console.error("Could not find version field in Cargo.toml");
-  process.exit(1);
+	console.error("Could not find version field in Cargo.toml");
+	process.exit(1);
 }
 
 const cargoVersion = match[1];
 
 if (cargoVersion === npmVersion) {
-  console.log(`sync-cargo-version: already in sync (${npmVersion})`);
-  process.exit(0);
+	console.log(`sync-cargo-version: already in sync (${npmVersion})`);
+	process.exit(0);
 }
 
 if (checkOnly) {
-  console.error(
-    `sync-cargo-version: version mismatch — npm is ${npmVersion}, Cargo.toml is ${cargoVersion}. ` +
-    `Run 'bun run version' to sync.`,
-  );
-  process.exit(1);
+	console.error(
+		`sync-cargo-version: version mismatch — npm is ${npmVersion}, Cargo.toml is ${cargoVersion}. Run 'bun run version' to sync.`,
+	);
+	process.exit(1);
 }
 
 const updated = cargoToml.replace(versionRe, `version = "${npmVersion}"`);

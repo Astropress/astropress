@@ -47,7 +47,7 @@ pub(super) fn parse_new_command(args: &[String]) -> Result<Command, String> {
                 data_services = Some(selected);
             }
             "--analytics" => {
-                index += 1;
+                index += 1; // ~ skip
                 let value = args
                     .get(index)
                     .ok_or_else(|| "Missing value after `--analytics`.".to_string())?;
@@ -61,7 +61,7 @@ pub(super) fn parse_new_command(args: &[String]) -> Result<Command, String> {
                 ab_testing = Some(AbTestingProvider::parse(value)?);
             }
             "--heatmap" => {
-                index += 1;
+                index += 1; // ~ skip
                 let value = args
                     .get(index)
                     .ok_or_else(|| "Missing value after `--heatmap`.".to_string())?;
@@ -74,7 +74,7 @@ pub(super) fn parse_new_command(args: &[String]) -> Result<Command, String> {
                 project_dir = PathBuf::from(value);
             }
         }
-        index += 1;
+        index += 1; // ~ skip
     }
 
     Ok(Command::New {

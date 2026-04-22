@@ -4,8 +4,10 @@ import { loadLocalAdminStore } from "./local-runtime-modules";
 import { getCloudflareBindings } from "./runtime-env";
 
 /** Returns the D1 database binding from request locals, or undefined if not available. */
-export function getAdminDb(locals?: App.Locals | null): D1DatabaseLike | undefined {
-  return getCloudflareBindings(locals).DB;
+export function getAdminDb(
+	locals?: App.Locals | null,
+): D1DatabaseLike | undefined {
+	return getCloudflareBindings(locals).DB;
 }
 
 /**
@@ -16,16 +18,16 @@ export function getAdminDb(locals?: App.Locals | null): D1DatabaseLike | undefin
  * eliminating the repeated `if (!db) { loadLocalAdminStore() }` pattern.
  */
 export async function withLocalStoreFallback<T>(
-  locals: App.Locals | null | undefined,
-  onD1: (db: D1DatabaseLike) => Promise<T>,
-  onLocal: (store: LocalAdminStoreModule) => Promise<T>,
+	locals: App.Locals | null | undefined,
+	onD1: (db: D1DatabaseLike) => Promise<T>,
+	onLocal: (store: LocalAdminStoreModule) => Promise<T>,
 ): Promise<T> {
-  const db = getCloudflareBindings(locals).DB;
-  if (!db) {
-    const localStore = await loadLocalAdminStore();
-    return onLocal(localStore);
-  }
-  return onD1(db);
+	const db = getCloudflareBindings(locals).DB;
+	if (!db) {
+		const localStore = await loadLocalAdminStore();
+		return onLocal(localStore);
+	}
+	return onD1(db);
 }
 
 /**
@@ -33,12 +35,12 @@ export async function withLocalStoreFallback<T>(
  * Used in read-only contexts where a missing local store should fall back to static data.
  */
 export async function safeLoadLocalAdminStore(): Promise<LocalAdminStoreModule | null> {
-  /* v8 ignore next 6 */
-  try {
-    return await loadLocalAdminStore();
-  } catch {
-    return null;
-  }
+	/* v8 ignore next 6 */
+	try {
+		return await loadLocalAdminStore();
+	} catch {
+		return null;
+	}
 }
 
 /**
@@ -46,20 +48,20 @@ export async function safeLoadLocalAdminStore(): Promise<LocalAdminStoreModule |
  * Used in read-only contexts where a missing local store should return a static fallback.
  */
 export async function withSafeLocalStoreFallback<T>(
-  locals: App.Locals | null | undefined,
-  onD1: (db: D1DatabaseLike) => Promise<T>,
-  onLocal: (store: LocalAdminStoreModule | null) => Promise<T>,
+	locals: App.Locals | null | undefined,
+	onD1: (db: D1DatabaseLike) => Promise<T>,
+	onLocal: (store: LocalAdminStoreModule | null) => Promise<T>,
 ): Promise<T> {
-  const db = getCloudflareBindings(locals).DB;
-  if (!db) {
-    let localStore: LocalAdminStoreModule | null = null;
-    /* v8 ignore next 6 */
-    try {
-      localStore = await loadLocalAdminStore();
-    } catch {
-      // local store unavailable — onLocal receives null and handles fallback
-    }
-    return onLocal(localStore);
-  }
-  return onD1(db);
+	const db = getCloudflareBindings(locals).DB;
+	if (!db) {
+		let localStore: LocalAdminStoreModule | null = null;
+		/* v8 ignore next 6 */
+		try {
+			localStore = await loadLocalAdminStore();
+		} catch {
+			// local store unavailable — onLocal receives null and handles fallback
+		}
+		return onLocal(localStore);
+	}
+	return onD1(db);
 }

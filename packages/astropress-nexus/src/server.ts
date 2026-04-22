@@ -9,15 +9,15 @@ const port = Number(process.env.PORT ?? 4330);
 
 let config: NexusConfig;
 try {
-  config = loadConfigFromFile(configPath);
+	config = loadConfigFromFile(configPath);
 } catch (err) {
-  console.error(`Failed to load nexus config from ${configPath}:`, err);
-  process.exit(1);
+	console.error(`Failed to load nexus config from ${configPath}:`, err);
+	process.exit(1);
 }
 
 const app = createNexusApp({ config, authToken });
 
 serve({ fetch: app.fetch, port }, () => {
-  console.log(`astropress-nexus listening on http://localhost:${port}`);
-  console.log(`  ${config.sites.length} site(s) registered`);
+	console.log(`astropress-nexus listening on http://localhost:${port}`);
+	console.log(`  ${config.sites.length} site(s) registered`);
 });

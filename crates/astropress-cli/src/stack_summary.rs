@@ -12,7 +12,7 @@ use crate::providers::{
     AbTestingProvider, AnalyticsProvider, AppHost, DataServices, HeatmapProvider,
 };
 
-pub(crate) fn print_stack_summary(f: &AllFeatures, app_host: Option<AppHost>) {
+pub(crate) fn format_stack_summary(f: &AllFeatures, app_host: Option<AppHost>) -> String {
     let host = match app_host {
         Some(AppHost::GithubPages)     => "GitHub Pages          (free, static)",
         Some(AppHost::CloudflarePages) => "Cloudflare Pages      (free, edge CDN)",
@@ -27,86 +27,91 @@ pub(crate) fn print_stack_summary(f: &AllFeatures, app_host: Option<AppHost>) {
         Some(AppHost::Railway)         => "Railway               ⚠ paid — usage-based billing, no free tier",
         Some(AppHost::Custom) | None   => "custom / TBD",
     };
-    println!();
-    println!("  ─────────────────────────────────────────────────────");
-    println!("    Your stack");
-    println!("  ─────────────────────────────────────────────────────");
-    println!("    Site          {host}");
-    println!("    Admin panel   Astropress built-in");
+    let mut out = String::new();
+    out.push_str("\n  ─────────────────────────────────────────────────────\n");
+    out.push_str("    Your stack\n");
+    out.push_str("  ─────────────────────────────────────────────────────\n");
+    out.push_str(&format!("    Site          {host}\n"));
+    out.push_str("    Admin panel   Astropress built-in\n");
     match f.cms {
-        CmsChoice::BuiltIn   => println!("    Content       Astropress built-in (SQLite / D1 / Supabase)"),
-        CmsChoice::Keystatic => println!("    Content       Keystatic          → git-backed, zero server"),
-        CmsChoice::Payload   => println!("    Content       Payload            ⚠ needs a separate Node server"),
+        CmsChoice::BuiltIn   => out.push_str("    Content       Astropress built-in (SQLite / D1 / Supabase)\n"),
+        CmsChoice::Keystatic => out.push_str("    Content       Keystatic          → git-backed, zero server\n"),
+        CmsChoice::Payload   => out.push_str("    Content       Payload            ⚠ needs a separate Node server\n"),
     }
-    if f.email == EmailChoice::Listmonk                       { println!("    Email         Listmonk           → self-hosted"); }
-    if f.transactional_email == TransactionalEmailChoice::Resend  { println!("    Txn email     Resend             → SaaS; built-in SPF/DKIM/DMARC"); }
-    if f.transactional_email == TransactionalEmailChoice::Smtp    { println!("    Txn email     SMTP               → generic relay (Postal, Brevo SMTP, SES, etc.)"); }
+    if f.email == EmailChoice::Listmonk                       { out.push_str("    Email         Listmonk           → self-hosted\n"); }
+    if f.transactional_email == TransactionalEmailChoice::Resend  { out.push_str("    Txn email     Resend             → SaaS; built-in SPF/DKIM/DMARC\n"); }
+    if f.transactional_email == TransactionalEmailChoice::Smtp    { out.push_str("    Txn email     SMTP               → generic relay (Postal, Brevo SMTP, SES, etc.)\n"); }
     match f.analytics {
-        AnalyticsProvider::Umami     => println!("    Analytics     Umami              → self-hosted or cloud"),
-        AnalyticsProvider::Plausible => println!("    Analytics     Plausible          → self-hosted or cloud"),
-        AnalyticsProvider::Matomo    => println!("    Analytics     Matomo             → self-hosted or cloud"),
-        AnalyticsProvider::PostHog   => println!("    Analytics     PostHog            → self-hosted or cloud"),
-        AnalyticsProvider::Custom    => println!("    Analytics     Custom"),
+        AnalyticsProvider::Umami     => out.push_str("    Analytics     Umami              → self-hosted or cloud\n"),
+        AnalyticsProvider::Plausible => out.push_str("    Analytics     Plausible          → self-hosted or cloud\n"),
+        AnalyticsProvider::Matomo    => out.push_str("    Analytics     Matomo             → self-hosted or cloud\n"),
+        AnalyticsProvider::PostHog   => out.push_str("    Analytics     PostHog            → self-hosted or cloud\n"),
+        AnalyticsProvider::Custom    => out.push_str("    Analytics     Custom\n"),
         AnalyticsProvider::None      => {}
     }
-    if f.commerce    == CommerceChoice::Medusa       { println!("    Storefront    Medusa             → self-hosted  ⚠ needs a separate Node server"); }
-    if f.commerce    == CommerceChoice::Vendure      { println!("    Storefront    Vendure            → self-hosted  ⚠ needs a separate Node server"); }
-    if f.courses == CourseChoice::FrappeLms           { println!("    Courses       Frappe LMS         → self-hosted"); }
-    if f.forms == FormsChoice::Formbricks             { println!("    Forms         Formbricks         → self-hosted or cloud"); }
-    if f.forms == FormsChoice::Typebot                { println!("    Forms         Typebot            → self-hosted or cloud"); }
-    if f.donations.polar        { println!("    Donations     Polar              → polar.sh (SaaS)"); }
-    if f.donations.give_lively  { println!("    Donations     GiveLively         → givelively.org (free for US nonprofits)"); }
-    if f.donations.liberapay    { println!("    Donations     Liberapay          → liberapay.com (SaaS, OSS-friendly)"); }
-    if f.donations.pledge_crypto { println!("    Donations     PledgeCrypto       → pledgecrypto.com (auto carbon offsets)"); }
-    if f.payments    == PaymentChoice::HyperSwitch   { println!("    Payments      HyperSwitch        → self-hosted router + Unified Checkout Web SDK"); }
-    if f.forum       == ForumChoice::Flarum          { println!("    Forum         Flarum             → self-hosted"); }
-    if f.forum       == ForumChoice::Discourse       { println!("    Forum         Discourse          → self-hosted  ⚠ heavier: needs Redis + Postgres"); }
-    if f.search      == SearchChoice::Meilisearch    { println!("    Search        Meilisearch        → self-hosted"); }
-    if f.search      == SearchChoice::Typesense      { println!("    Search        Typesense          → self-hosted"); }
-    if f.chat        == ChatChoice::Tiledesk         { println!("    Live chat     Tiledesk           → self-hosted"); }
-    if f.chat        == ChatChoice::Chatwoot         { println!("    Live chat     Chatwoot           → self-hosted"); }
-    if f.notify      == NotifyChoice::Ntfy           { println!("    Push notify   ntfy               → self-hosted or cloud"); }
-    if f.notify      == NotifyChoice::Gotify         { println!("    Push notify   Gotify             → self-hosted"); }
-    if f.schedule    == ScheduleChoice::Rallly       { println!("    Scheduling    Rallly             → self-hosted"); }
-    if f.schedule    == ScheduleChoice::CalCom       { println!("    Scheduling    Cal.com            → self-hosted  ⚠ needs Postgres"); }
+    if f.commerce    == CommerceChoice::Medusa       { out.push_str("    Storefront    Medusa             → self-hosted  ⚠ needs a separate Node server\n"); }
+    if f.commerce    == CommerceChoice::Vendure      { out.push_str("    Storefront    Vendure            → self-hosted  ⚠ needs a separate Node server\n"); }
+    if f.courses == CourseChoice::FrappeLms           { out.push_str("    Courses       Frappe LMS         → self-hosted\n"); }
+    if f.forms == FormsChoice::Formbricks             { out.push_str("    Forms         Formbricks         → self-hosted or cloud\n"); }
+    if f.forms == FormsChoice::Typebot                { out.push_str("    Forms         Typebot            → self-hosted or cloud\n"); }
+    if f.donations.polar        { out.push_str("    Donations     Polar              → polar.sh (SaaS)\n"); }
+    if f.donations.give_lively  { out.push_str("    Donations     GiveLively         → givelively.org (free for US nonprofits)\n"); }
+    if f.donations.liberapay    { out.push_str("    Donations     Liberapay          → liberapay.com (SaaS, OSS-friendly)\n"); }
+    if f.donations.pledge_crypto { out.push_str("    Donations     PledgeCrypto       → pledgecrypto.com (auto carbon offsets)\n"); }
+    if f.payments    == PaymentChoice::HyperSwitch   { out.push_str("    Payments      HyperSwitch        → self-hosted router + Unified Checkout Web SDK\n"); }
+    if f.forum       == ForumChoice::Flarum          { out.push_str("    Forum         Flarum             → self-hosted\n"); }
+    if f.forum       == ForumChoice::Discourse       { out.push_str("    Forum         Discourse          → self-hosted  ⚠ heavier: needs Redis + Postgres\n"); }
+    if f.search      == SearchChoice::Meilisearch    { out.push_str("    Search        Meilisearch        → self-hosted\n"); }
+    if f.search      == SearchChoice::Typesense      { out.push_str("    Search        Typesense          → self-hosted\n"); }
+    if f.chat        == ChatChoice::Tiledesk         { out.push_str("    Live chat     Tiledesk           → self-hosted\n"); }
+    if f.chat        == ChatChoice::Chatwoot         { out.push_str("    Live chat     Chatwoot           → self-hosted\n"); }
+    if f.notify      == NotifyChoice::Ntfy           { out.push_str("    Push notify   ntfy               → self-hosted or cloud\n"); }
+    if f.notify      == NotifyChoice::Gotify         { out.push_str("    Push notify   Gotify             → self-hosted\n"); }
+    if f.schedule    == ScheduleChoice::Rallly       { out.push_str("    Scheduling    Rallly             → self-hosted\n"); }
+    if f.schedule    == ScheduleChoice::CalCom       { out.push_str("    Scheduling    Cal.com            → self-hosted  ⚠ needs Postgres\n"); }
     match f.community {
-        CommunityChoice::Giscus   => println!("    Comments      Giscus             → zero server (GitHub Discussions)"),
-        CommunityChoice::Remark42 => println!("    Comments      Remark42           → self-hosted"),
+        CommunityChoice::Giscus   => out.push_str("    Comments      Giscus             → zero server (GitHub Discussions)\n"),
+        CommunityChoice::Remark42 => out.push_str("    Comments      Remark42           → self-hosted\n"),
         CommunityChoice::None     => {}
     }
-    if f.search      == SearchChoice::Pagefind      { println!("    Search        Pagefind           → zero server, built at deploy time"); }
+    if f.search      == SearchChoice::Pagefind      { out.push_str("    Search        Pagefind           → zero server, built at deploy time\n"); }
     match f.ab_testing {
-        AbTestingProvider::GrowthBook => println!("    A/B testing   GrowthBook         → self-hosted or cloud"),
-        AbTestingProvider::Unleash    => println!("    A/B testing   Unleash            → self-hosted or cloud  ⚠ cloud is expensive"),
-        AbTestingProvider::Flagsmith  => println!("    A/B testing   Flagsmith          → self-hosted or cloud"),
-        AbTestingProvider::Custom     => println!("    A/B testing   Custom"),
+        AbTestingProvider::GrowthBook => out.push_str("    A/B testing   GrowthBook         → self-hosted or cloud\n"),
+        AbTestingProvider::Unleash    => out.push_str("    A/B testing   Unleash            → self-hosted or cloud  ⚠ cloud is expensive\n"),
+        AbTestingProvider::Flagsmith  => out.push_str("    A/B testing   Flagsmith          → self-hosted or cloud\n"),
+        AbTestingProvider::Custom     => out.push_str("    A/B testing   Custom\n"),
         AbTestingProvider::None       => {}
     }
     match f.heatmap {
-        HeatmapProvider::PostHog    => println!("    Replays       PostHog            → same script as analytics"),
-        HeatmapProvider::Custom     => println!("    Replays       Custom"),
+        HeatmapProvider::PostHog    => out.push_str("    Replays       PostHog            → same script as analytics\n"),
+        HeatmapProvider::Custom     => out.push_str("    Replays       Custom\n"),
         HeatmapProvider::None       => {}
     }
-    if f.video == VideoChoice::PeerTube               { println!("    Video         PeerTube           → self-hosted"); }
-    if f.podcast == PodcastChoice::Castopod           { println!("    Podcast       Castopod           → self-hosted"); }
-    if f.events == EventChoice::HiEvents              { println!("    Events        Hi.Events          → self-hosted"); }
-    if f.events == EventChoice::Pretix                { println!("    Events        Pretix             → self-hosted"); }
-    if f.status == StatusChoice::UptimeKuma           { println!("    Status page   Uptime Kuma        → self-hosted"); }
-    if f.knowledge_base == KnowledgeBaseChoice::BookStack { println!("    Knowledge base BookStack        → self-hosted"); }
-    if f.crm == CrmChoice::Twenty                     { println!("    CRM           Twenty             → self-hosted"); }
-    if f.sso == SsoChoice::Authentik                  { println!("    SSO           Authentik          → self-hosted"); }
-    if f.sso == SsoChoice::Zitadel                    { println!("    SSO           Zitadel            → self-hosted or cloud"); }
-    if f.social == SocialChoice::Postiz               { println!("    Social        Postiz             → self-hosted; LinkedIn/Bluesky/Mastodon/X + 8 more"); }
-    if f.social == SocialChoice::Mixpost              { println!("    Social        Mixpost            → self-hosted; Twitter/X/Facebook/Instagram/LinkedIn + Mastodon"); }
+    if f.video == VideoChoice::PeerTube               { out.push_str("    Video         PeerTube           → self-hosted\n"); }
+    if f.podcast == PodcastChoice::Castopod           { out.push_str("    Podcast       Castopod           → self-hosted\n"); }
+    if f.events == EventChoice::HiEvents              { out.push_str("    Events        Hi.Events          → self-hosted\n"); }
+    if f.events == EventChoice::Pretix                { out.push_str("    Events        Pretix             → self-hosted\n"); }
+    if f.status == StatusChoice::UptimeKuma           { out.push_str("    Status page   Uptime Kuma        → self-hosted\n"); }
+    if f.knowledge_base == KnowledgeBaseChoice::BookStack { out.push_str("    Knowledge base BookStack        → self-hosted\n"); }
+    if f.crm == CrmChoice::Twenty                     { out.push_str("    CRM           Twenty             → self-hosted\n"); }
+    if f.sso == SsoChoice::Authentik                  { out.push_str("    SSO           Authentik          → self-hosted\n"); }
+    if f.sso == SsoChoice::Zitadel                    { out.push_str("    SSO           Zitadel            → self-hosted or cloud\n"); }
+    if f.social == SocialChoice::Postiz               { out.push_str("    Social        Postiz             → self-hosted; LinkedIn/Bluesky/Mastodon/X + 8 more\n"); }
+    if f.social == SocialChoice::Mixpost              { out.push_str("    Social        Mixpost            → self-hosted; Twitter/X/Facebook/Instagram/LinkedIn + Mastodon\n"); }
     match f.docs {
-        DocsChoice::Starlight => println!("    Docs site     Starlight (MIT)    → docs/; static output, WCAG AA"),
-        DocsChoice::VitePress => println!("    Docs site     VitePress (MIT)    → docs/; static output, local search"),
-        DocsChoice::MdBook    => println!("    Docs site     mdBook (MPL-2.0)   → docs/; static output, zero JS framework"),
+        DocsChoice::Starlight => out.push_str("    Docs site     Starlight (MIT)    → docs/; static output, WCAG AA\n"),
+        DocsChoice::VitePress => out.push_str("    Docs site     VitePress (MIT)    → docs/; static output, local search\n"),
+        DocsChoice::MdBook    => out.push_str("    Docs site     mdBook (MPL-2.0)   → docs/; static output, zero JS framework\n"),
         DocsChoice::None      => {}
     }
-    if f.job_board  { println!("    Job board     content type       → see content-types.example.ts"); }
-    if f.enable_api { println!("    REST API      enabled            → /ap-api/v1/* (Bearer token)"); }
-    println!("  ─────────────────────────────────────────────────────");
+    if f.job_board  { out.push_str("    Job board     content type       → see content-types.example.ts\n"); }
+    if f.enable_api { out.push_str("    REST API      enabled            → /ap-api/v1/* (Bearer token)\n"); }
+    out.push_str("  ─────────────────────────────────────────────────────\n");
+    out
+}
+
+pub(crate) fn print_stack_summary(f: &AllFeatures, app_host: Option<AppHost>) {
+    print!("{}", format_stack_summary(f, app_host));
 }
 
 pub(crate) fn free_first_hosting_note(
@@ -140,3 +145,15 @@ pub(crate) fn selected_services_note(has_services_doc: bool) -> Option<&'static 
         "SERVICES.md lists the selected external tools in deployment order, prefers free cloud tiers or self-hosted defaults where possible, and marks paid-only paths with ⚠.",
     )
 }
+
+#[cfg(test)]
+#[path = "stack_summary_tests.rs"]
+mod tests;
+
+#[cfg(test)]
+#[path = "stack_summary_tests_more.rs"]
+mod tests_more;
+
+#[cfg(test)]
+#[path = "stack_summary_tests_more2.rs"]
+mod tests_more2;

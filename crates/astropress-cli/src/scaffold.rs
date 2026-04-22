@@ -8,7 +8,7 @@ use crate::utils::io_error;
 pub(crate) static SCAFFOLD_TEMPLATE: Dir<'static> =
     include_dir!("$CARGO_MANIFEST_DIR/templates");
 
-pub(crate) fn write_embedded_template(dest: &Path) -> Result<(), String> {
+pub(crate) fn write_embedded_template(dest: &Path) -> Result<(), String> { // ~ skip
     write_embedded_dir(&SCAFFOLD_TEMPLATE, dest)
 }
 

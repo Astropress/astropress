@@ -227,3 +227,36 @@ fn exports_and_imports_project_snapshots() {
         "updated"
     );
 }
+
+#[test]
+fn migrate_project_config_updates_package_json_scripts() {
+    use crate::cli_config::env::read_package_manifest;
+    let root = temp_dir("config-migrate-pkg");
+    // Write a package.json with a legacy --data-services flag
+    fs::write(
+        root.join("package.json"),
+        r#"{"name":"test","private":false,"scripts":{"dev":"astropress dev --data-services supabase"},"dependencies":{}}"#,
+    ).unwrap();
+
+    let changed = migrate_project_config(&root, false).unwrap();
+    assert!(changed >= 1, "expected >= 1 changes for package.json migration, got {changed}");
+
+    let manifest = read_package_manifest(&root).unwrap();
+    assert!(manifest.scripts["dev"].contains("--content-services"),
+        "expected --content-services in migrated script, got: {}", manifest.scripts["dev"]);
+}
+
+#[test]
+fn migrate_project_config_dry_run_does_not_write_package_json() {
+    let root = temp_dir("config-dry-run-pkg");
+    let original_pkg = r#"{"name":"test","private":false,"scripts":{"dev":"astropress dev --data-services supabase"},"dependencies":{}}"#;
+    fs::write(root.join("package.json"), original_pkg).unwrap();
+
+    let changed = migrate_project_config(&root, true).unwrap();
+    assert!(changed >= 1, "expected >= 1 changes reported even in dry run, got {changed}");
+
+    // dry_run=true must not modify the file
+    let on_disk = fs::read_to_string(root.join("package.json")).unwrap();
+    assert!(on_disk.contains("--data-services"),
+        "dry run must not rewrite package.json, got: {on_disk}");
+}

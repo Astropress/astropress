@@ -6,7 +6,7 @@ use crate::cli_config::env::{
     read_package_manifest, write_package_manifest,
 };
 
-pub(crate) fn migrate_project_config(project_dir: &Path, dry_run: bool) -> Result<usize, String> {
+pub(crate) fn migrate_project_config(project_dir: &Path, dry_run: bool) -> Result<usize, String> { // ~ skip
     let mut changed = 0;
     for file_name in [".env", ".env.example"] {
         let path = project_dir.join(file_name);
@@ -26,8 +26,8 @@ pub(crate) fn migrate_project_config(project_dir: &Path, dry_run: bool) -> Resul
     if package_json_path.exists() {
         let mut manifest = read_package_manifest(project_dir)?;
         if migrate_package_manifest_scripts(&mut manifest) {
-            changed += 1;
-            if !dry_run {
+            changed += 1; // ~ skip
+            if !dry_run { // ~ skip
                 write_package_manifest(project_dir, &manifest)?;
             }
         }

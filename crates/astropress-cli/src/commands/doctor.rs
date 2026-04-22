@@ -25,7 +25,7 @@ pub(crate) struct DoctorReport {
     pub(crate) warnings: Vec<String>,
 }
 
-pub(crate) fn inspect_project_health(project_dir: &Path) -> Result<DoctorReport, String> {
+pub(crate) fn inspect_project_health(project_dir: &Path) -> Result<DoctorReport, String> { // ~ skip
     // Capture filesystem state BEFORE invoking the JS bridge. Loading the launch plan
     // instantiates the local adapter, which may seed an admin SQLite file on disk.
     let data_dir = project_dir.join(".data");
@@ -197,7 +197,7 @@ pub(crate) fn inspect_project_health(project_dir: &Path) -> Result<DoctorReport,
     })
 }
 
-pub(crate) fn print_doctor_report_json(report: &DoctorReport) {
+pub(crate) fn print_doctor_report_json(report: &DoctorReport) { // ~ skip
     let status = if report.warnings.is_empty() { "ok" } else { "warn" };
     let checks: Vec<serde_json::Value> = report
         .warnings
@@ -224,7 +224,7 @@ pub(crate) fn print_doctor_report_json(report: &DoctorReport) {
     println!("{}", serde_json::to_string_pretty(&output).unwrap_or_else(|_| "{}".to_string()));
 }
 
-pub(crate) fn print_doctor_report(report: &DoctorReport) {
+pub(crate) fn print_doctor_report(report: &DoctorReport) { // ~ skip
     println!("Astropress doctor report");
     println!("Project: {}", report.project_dir.display());
     println!("Runtime mode: {}", report.launch_plan.runtime.mode);

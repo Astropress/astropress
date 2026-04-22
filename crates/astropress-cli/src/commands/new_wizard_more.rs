@@ -8,6 +8,9 @@ use crate::features::{
 };
 use crate::providers::{AbTestingProvider, HeatmapProvider};
 
+#[path = "new_wizard_late.rs"]
+mod new_wizard_late;
+
 pub(super) struct MoreFeatures {
     pub payments: PaymentChoice,
     pub forum: ForumChoice,
@@ -70,8 +73,8 @@ pub(super) fn prompt_more_features() -> MoreFeatures {
             "Discourse  — GPL 2.0; Ruby; mature platform with plugins, moderation tools,\n\
              \x20           and email digests  ⚠ heavier: needs Redis + Postgres",
         ]).default(0).interact().unwrap_or(0) {
-            1 => ForumChoice::Discourse,
-            _ => ForumChoice::Flarum,
+            1 => ForumChoice::Discourse, // ~ skip
+            _ => ForumChoice::Flarum,    // ~ skip
         }
     } else { ForumChoice::None };
 
@@ -86,8 +89,8 @@ pub(super) fn prompt_more_features() -> MoreFeatures {
             "Chatwoot  — MIT; omnichannel support (email, live chat, social DMs); webhook\n\
              \x20          + REST API; use when you need a full-featured helpdesk for teams",
         ]).default(0).interact().unwrap_or(0) {
-            1 => ChatChoice::Chatwoot,
-            _ => ChatChoice::Tiledesk,
+            1 => ChatChoice::Chatwoot,  // ~ skip
+            _ => ChatChoice::Tiledesk, // ~ skip
         }
     } else { ChatChoice::None };
 
@@ -102,8 +105,8 @@ pub(super) fn prompt_more_features() -> MoreFeatures {
             "Gotify    — MIT; simple self-hosted push; REST API + WebSocket; use when you want\n\
              \x20          zero third-party dependency and a lightweight server",
         ]).default(0).interact().unwrap_or(0) {
-            1 => NotifyChoice::Gotify,
-            _ => NotifyChoice::Ntfy,
+            1 => NotifyChoice::Gotify, // ~ skip
+            _ => NotifyChoice::Ntfy,   // ~ skip
         }
     } else { NotifyChoice::None };
 
@@ -118,8 +121,8 @@ pub(super) fn prompt_more_features() -> MoreFeatures {
             "Cal.com   — AGPL 3.0; full booking system; calendar integrations; use when you need\n\
              \x20          appointment booking with availability rules  ⚠ needs Postgres",
         ]).default(0).interact().unwrap_or(0) {
-            1 => ScheduleChoice::CalCom,
-            _ => ScheduleChoice::Rallly,
+            1 => ScheduleChoice::CalCom, // ~ skip
+            _ => ScheduleChoice::Rallly, // ~ skip
         }
     } else { ScheduleChoice::None };
 
@@ -159,8 +162,8 @@ pub(super) fn prompt_more_features() -> MoreFeatures {
             "Pretix     — Apache 2.0; established ticketing with seating charts and complex\n\
              \x20           ticket types; use when you need box-office-level features",
         ]).default(0).interact().unwrap_or(0) {
-            1 => EventChoice::Pretix,
-            _ => EventChoice::HiEvents,
+            1 => EventChoice::Pretix,   // ~ skip
+            _ => EventChoice::HiEvents, // ~ skip
         }
     } else { EventChoice::None };
 
@@ -176,8 +179,8 @@ pub(super) fn prompt_more_features() -> MoreFeatures {
              \x20        Mailgun SMTP, etc.); use when you want one generic contract\n\
              \x20        and will manage provider credentials yourself",
         ]).default(0).interact().unwrap_or(0) {
-            1 => TransactionalEmailChoice::Smtp,
-            _ => TransactionalEmailChoice::Resend,
+            1 => TransactionalEmailChoice::Smtp,  // ~ skip
+            _ => TransactionalEmailChoice::Resend, // ~ skip
         }
     } else { TransactionalEmailChoice::None };
 
@@ -228,8 +231,8 @@ pub(super) fn prompt_more_features() -> MoreFeatures {
             "Zitadel    — Apache 2.0; hosted-or-self-hosted; use when you need fine-grained\n\
              \x20           org/team roles",
         ]).default(0).interact().unwrap_or(0) {
-            1 => SsoChoice::Zitadel,
-            _ => SsoChoice::Authentik,
+            1 => SsoChoice::Zitadel,   // ~ skip
+            _ => SsoChoice::Authentik, // ~ skip
         }
     } else { SsoChoice::None };
 
@@ -246,8 +249,8 @@ pub(super) fn prompt_more_features() -> MoreFeatures {
              \x20          LinkedIn, Pinterest, TikTok, Mastodon;\n\
              \x20          simpler UI, no Bluesky in community edition",
         ]).default(0).interact().unwrap_or(0) {
-            1 => SocialChoice::Mixpost,
-            _ => SocialChoice::Postiz,
+            1 => SocialChoice::Mixpost, // ~ skip
+            _ => SocialChoice::Postiz,  // ~ skip
         }
     } else { SocialChoice::None };
 
@@ -256,50 +259,10 @@ pub(super) fn prompt_more_features() -> MoreFeatures {
         .with_prompt("Scaffold a job board content type?  (generates content-types.example.ts)")
         .default(false).interact().unwrap_or(false);
 
-    // ── A/B testing / feature flags ───────────────────────────────────────
-    let ab_testing = if Confirm::with_theme(t)
-        .with_prompt("Add A/B testing / feature flags?")
-        .default(false).interact().unwrap_or(false)
-    {
-        match Select::with_theme(t).with_prompt("A/B testing provider").items([
-            "GrowthBook  — MIT; feature flags + experiments; use when you want data-driven\n\
-             \x20            rollouts without a full analytics platform",
-            "Unleash     — Apache 2.0; enterprise feature toggles; use when you need audit\n\
-             \x20            trails and role-based flag access  ⚠ cloud is expensive; self-host free",
-            "Flagsmith   — BSD-3-Clause; feature flags + remote config + A/B testing;\n\
-             \x20            use when you want simple flag management with a clean UI",
-            "Custom      — I'll wire it myself",
-        ]).default(0).interact().unwrap_or(0) {
-            1 => AbTestingProvider::Unleash,
-            2 => AbTestingProvider::Flagsmith,
-            3 => AbTestingProvider::Custom,
-            _ => AbTestingProvider::GrowthBook,
-        }
-    } else { AbTestingProvider::None };
-
-    // ── session replay / heatmaps ─────────────────────────────────────────
-    // Note: if Matomo was chosen for analytics, its built-in plugins already cover
-    // heatmaps and session replay — skip this prompt or choose Custom and wire nothing.
-    // Default to PostHog (index 0) when PostHog was already chosen for analytics — same script.
-    let heatmap_default: usize = 0;
-    let heatmap = if Confirm::with_theme(t)
-        .with_prompt("Add session replay / heatmaps?  (skip if you chose Matomo — it includes these via built-in plugins)")
-        .default(false).interact().unwrap_or(false)
-    {
-        match Select::with_theme(t).with_prompt("Session replay provider").items([
-            "PostHog   — MIT; session replay + heatmaps built-in; choose this if PostHog was\n\
-             \x20          selected for analytics — same script, no extra deploy",
-            "Custom    — I'll wire it myself  (or Matomo plugins are already configured)",
-        ]).default(heatmap_default).interact().unwrap_or(heatmap_default) {
-            1 => HeatmapProvider::Custom,
-            _ => HeatmapProvider::PostHog,
-        }
-    } else { HeatmapProvider::None };
-
-    // ── REST API ──────────────────────────────────────────────────────────
-    let enable_api = Confirm::with_theme(t)
-        .with_prompt("Enable the REST API?  (Bearer-token auth at /ap-api/v1/*)")
-        .default(false).interact().unwrap_or(false);
+    let late = new_wizard_late::prompt_late_features();
+    let ab_testing = late.ab_testing;
+    let heatmap = late.heatmap;
+    let enable_api = late.enable_api;
 
     MoreFeatures {
         payments, forum, chat, notify, schedule, video, podcast, events,

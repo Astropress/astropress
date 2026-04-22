@@ -5,16 +5,19 @@
  * The real Request object means formData() is a genuine async method with no mocking required.
  */
 export function makeFormRequest(
-  fields: Record<string, string> = {},
-  options: { url?: string; headers?: Headers } = {},
+	fields: Record<string, string> = {},
+	options: { url?: string; headers?: Headers } = {},
 ): Request {
-  const fd = new FormData();
-  for (const [key, value] of Object.entries(fields)) {
-    fd.set(key, value);
-  }
-  return new Request(options.url ?? "https://example.com/ap-admin/actions/content-save", {
-    method: "POST",
-    body: fd,
-    headers: options.headers,
-  });
+	const fd = new FormData();
+	for (const [key, value] of Object.entries(fields)) {
+		fd.set(key, value);
+	}
+	return new Request(
+		options.url ?? "https://example.com/ap-admin/actions/content-save",
+		{
+			method: "POST",
+			body: fd,
+			headers: options.headers,
+		},
+	);
 }

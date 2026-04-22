@@ -12,52 +12,62 @@
  *   - On desktop (≥901px) no state is managed; sidebar is always visible via CSS.
  */
 export class ApAdminNav extends HTMLElement {
-  private _abortController: AbortController | null = null;
+	private _abortController: AbortController | null = null;
 
-  connectedCallback() {
-    this._abortController = new AbortController();
-    const { signal } = this._abortController;
+	connectedCallback() {
+		this._abortController = new AbortController();
+		const { signal } = this._abortController;
 
-    const root = this.ownerDocument;
-    const toggle = root.querySelector<HTMLButtonElement>("[data-nav-toggle]");
-    const close = this.querySelector<HTMLButtonElement>("[data-nav-close]");
-    const sidebar = this.querySelector<HTMLElement>("[data-nav-sidebar]");
+		const root = this.ownerDocument;
+		const toggle = root.querySelector<HTMLButtonElement>("[data-nav-toggle]");
+		const close = this.querySelector<HTMLButtonElement>("[data-nav-close]");
+		const sidebar = this.querySelector<HTMLElement>("[data-nav-sidebar]");
 
-    if (!toggle || !sidebar) return;
+		if (!toggle || !sidebar) return;
 
-    toggle.addEventListener("click", () => this._open(toggle, sidebar), { signal });
+		toggle.addEventListener("click", () => this._open(toggle, sidebar), {
+			signal,
+		});
 
-    if (close) {
-      close.addEventListener("click", () => this._close(toggle, sidebar), { signal });
-    }
+		if (close) {
+			close.addEventListener("click", () => this._close(toggle, sidebar), {
+				signal,
+			});
+		}
 
-    document.addEventListener(
-      "keydown",
-      (e) => {
-        if (e.key === "Escape" && sidebar.hasAttribute("data-open")) {
-          this._close(toggle, sidebar);
-          toggle.focus();
-        }
-      },
-      { signal },
-    );
-  }
+		document.addEventListener(
+			"keydown",
+			(e) => {
+				if (e.key === "Escape" && sidebar.hasAttribute("data-open")) {
+					this._close(toggle, sidebar);
+					toggle.focus();
+				}
+			},
+			{ signal },
+		);
+	}
 
-  disconnectedCallback() {
-    this._abortController?.abort();
-  }
+	disconnectedCallback() {
+		this._abortController?.abort();
+	}
 
-  private _open(toggle: HTMLButtonElement, sidebar: HTMLElement) {
-    sidebar.setAttribute("data-open", "");
-    toggle.setAttribute("aria-expanded", "true");
-    toggle.setAttribute("aria-label", toggle.getAttribute("data-label-close") ?? "Close navigation");
-  }
+	private _open(toggle: HTMLButtonElement, sidebar: HTMLElement) {
+		sidebar.setAttribute("data-open", "");
+		toggle.setAttribute("aria-expanded", "true");
+		toggle.setAttribute(
+			"aria-label",
+			toggle.getAttribute("data-label-close") ?? "Close navigation",
+		);
+	}
 
-  private _close(toggle: HTMLButtonElement, sidebar: HTMLElement) {
-    sidebar.removeAttribute("data-open");
-    toggle.setAttribute("aria-expanded", "false");
-    toggle.setAttribute("aria-label", toggle.getAttribute("data-label-open") ?? "Open navigation");
-  }
+	private _close(toggle: HTMLButtonElement, sidebar: HTMLElement) {
+		sidebar.removeAttribute("data-open");
+		toggle.setAttribute("aria-expanded", "false");
+		toggle.setAttribute(
+			"aria-label",
+			toggle.getAttribute("data-label-open") ?? "Open navigation",
+		);
+	}
 }
 
 customElements.define("ap-admin-nav", ApAdminNav);

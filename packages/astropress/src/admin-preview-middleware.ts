@@ -8,14 +8,14 @@
  */
 
 export interface AdminPreviewRequest {
-  url: URL;
-  headers: Headers;
-  cookies?: { get(name: string): { value?: string } | undefined };
+	url: URL;
+	headers: Headers;
+	cookies?: { get(name: string): { value?: string } | undefined };
 }
 
 export interface AdminPreviewContext {
-  sessionCookie?: string;
-  isPreviewPath: boolean;
+	sessionCookie?: string;
+	isPreviewPath: boolean;
 }
 
 /**
@@ -23,17 +23,19 @@ export interface AdminPreviewContext {
  * Returns the content slug to preview, or null if this is not a preview request.
  */
 export function resolvePreviewPath(url: URL): { slug: string } | null {
-  const match = url.pathname.match(/^\/ap-admin\/preview\/(.+)$/);
-  if (!match) {
-    return null;
-  }
-  return { slug: match[1] };
+	const match = url.pathname.match(/^\/ap-admin\/preview\/(.+)$/);
+	if (!match) {
+		return null;
+	}
+	return { slug: match[1] };
 }
 
 /**
  * Build a redirect URL for the admin login page, preserving the return path.
  */
 export function buildPreviewLoginRedirect(requestUrl: URL): string {
-  const returnPath = encodeURIComponent(requestUrl.pathname + requestUrl.search);
-  return `/ap-admin/login?return=${returnPath}`;
+	const returnPath = encodeURIComponent(
+		requestUrl.pathname + requestUrl.search,
+	);
+	return `/ap-admin/login?return=${returnPath}`;
 }

@@ -323,6 +323,32 @@ mod tests {
     }
 
     #[test]
+    fn app_host_deploy_target_cloudflare_pages() {
+        assert_eq!(AppHost::CloudflarePages.deploy_target(), "cloudflare");
+    }
+
+    #[test]
+    fn app_host_deploy_target_non_cloudflare_uses_as_str() {
+        assert_eq!(AppHost::Vercel.deploy_target(), "vercel");
+        assert_eq!(AppHost::Netlify.deploy_target(), "netlify");
+        assert_eq!(AppHost::GithubPages.deploy_target(), "github-pages");
+    }
+
+    #[test]
+    fn data_services_supabase_default_local_provider_is_supabase() {
+        assert_eq!(DataServices::Supabase.default_local_provider(), LocalProvider::Supabase);
+    }
+
+    #[test]
+    fn data_services_non_supabase_default_local_provider_is_sqlite() {
+        assert_eq!(DataServices::Cloudflare.default_local_provider(), LocalProvider::Sqlite);
+        assert_eq!(DataServices::None.default_local_provider(), LocalProvider::Sqlite);
+        assert_eq!(DataServices::Appwrite.default_local_provider(), LocalProvider::Sqlite);
+        assert_eq!(DataServices::Neon.default_local_provider(), LocalProvider::Sqlite);
+        assert_eq!(DataServices::Custom.default_local_provider(), LocalProvider::Sqlite);
+    }
+
+    #[test]
     fn app_host_railway_round_trips() {
         assert_eq!(AppHost::parse("railway").unwrap(), AppHost::Railway);
         assert_eq!(AppHost::Railway.as_str(), "railway");
@@ -348,6 +374,28 @@ mod tests {
         // Railway has no officially tested end-to-end path — must not be "supported".
         assert_ne!(deployment_support_level("railway", "supabase"), "supported");
         assert_ne!(deployment_support_level("railway", "none"), "supported");
+    }
+
+    #[test]
+    fn deployment_support_level_supported_combos() {
+        assert_eq!(deployment_support_level("github-pages", "none"), "supported");
+        assert_eq!(deployment_support_level("cloudflare-pages", "cloudflare"), "supported");
+        assert_eq!(deployment_support_level("vercel", "supabase"), "supported");
+        assert_eq!(deployment_support_level("netlify", "supabase"), "supported");
+        assert_eq!(deployment_support_level("render-web", "supabase"), "supported");
+    }
+
+    #[test]
+    fn deployment_support_level_preview_combos() {
+        assert_eq!(deployment_support_level("github-pages", "supabase"), "preview");
+        assert_eq!(deployment_support_level("fly-io", "supabase"), "preview");
+        assert_eq!(deployment_support_level("cloudflare-pages", "turso"), "preview");
+    }
+
+    #[test]
+    fn deployment_support_level_unsupported_combos() {
+        assert_eq!(deployment_support_level("custom", "custom"), "unsupported");
+        assert_eq!(deployment_support_level("unknown", "none"), "unsupported");
     }
 }
 

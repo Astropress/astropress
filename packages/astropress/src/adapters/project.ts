@@ -1,47 +1,47 @@
 import type { AstropressPlatformAdapter } from "../platform-contracts";
 import { resolveAstropressProjectEnvContract } from "../project-env";
 import {
-  createAstropressHostedAdapter,
-  type AstropressHostedAdapterOptions,
+	type AstropressHostedAdapterOptions,
+	createAstropressHostedAdapter,
 } from "./hosted";
 import {
-  createAstropressLocalAdapter,
-  type AstropressLocalAdapterOptions,
+	type AstropressLocalAdapterOptions,
+	createAstropressLocalAdapter,
 } from "./local";
 
 export type AstropressProjectAdapterMode = "local" | "hosted";
 
 export interface AstropressProjectAdapterOptions {
-  mode?: AstropressProjectAdapterMode;
-  env?: Record<string, string | undefined>;
-  local?: AstropressLocalAdapterOptions;
-  hosted?: AstropressHostedAdapterOptions;
+	mode?: AstropressProjectAdapterMode;
+	env?: Record<string, string | undefined>;
+	local?: AstropressLocalAdapterOptions;
+	hosted?: AstropressHostedAdapterOptions;
 }
 
 export function resolveAstropressProjectAdapterMode(
-  env: Record<string, string | undefined> = process.env,
+	env: Record<string, string | undefined> = process.env,
 ): AstropressProjectAdapterMode {
-  return env.ASTROPRESS_RUNTIME_MODE?.trim() === "hosted" ? "hosted" : "local";
+	return env.ASTROPRESS_RUNTIME_MODE?.trim() === "hosted" ? "hosted" : "local";
 }
 
 export function createAstropressProjectAdapter(
-  options: AstropressProjectAdapterOptions = {},
+	options: AstropressProjectAdapterOptions = {},
 ): AstropressPlatformAdapter {
-  const env = options.env ?? process.env;
-  const mode = options.mode ?? resolveAstropressProjectAdapterMode(env);
-  const projectEnv = resolveAstropressProjectEnvContract(env);
+	const env = options.env ?? process.env;
+	const mode = options.mode ?? resolveAstropressProjectAdapterMode(env);
+	const projectEnv = resolveAstropressProjectEnvContract(env);
 
-  if (mode === "hosted") {
-    return createAstropressHostedAdapter({
-      env,
-      provider: options.hosted?.provider ?? projectEnv.hostedProvider,
-      ...options.hosted,
-    } as AstropressHostedAdapterOptions);
-  }
+	if (mode === "hosted") {
+		return createAstropressHostedAdapter({
+			env,
+			provider: options.hosted?.provider ?? projectEnv.hostedProvider,
+			...options.hosted,
+		} as AstropressHostedAdapterOptions);
+	}
 
-  return createAstropressLocalAdapter({
-    env,
-    provider: options.local?.provider ?? projectEnv.localProvider,
-    ...options.local,
-  });
+	return createAstropressLocalAdapter({
+		env,
+		provider: options.local?.provider ?? projectEnv.localProvider,
+		...options.local,
+	});
 }

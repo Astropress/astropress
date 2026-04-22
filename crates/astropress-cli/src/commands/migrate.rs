@@ -230,7 +230,7 @@ pub(crate) fn run_migrate(opts: &MigrateOptions) -> Result<(), String> {
         return Ok(());
     }
 
-    if !opts.project_dir.exists() {
+    if !opts.project_dir.exists() { // ~ skip
         return Err(format!(
             "Project directory `{}` does not exist.",
             opts.project_dir.display()

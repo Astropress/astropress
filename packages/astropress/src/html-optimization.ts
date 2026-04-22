@@ -3,29 +3,31 @@
  * This optimizes performance by deferring off-viewport image loads.
  */
 export function optimizeImageLoading(html: string): string {
-  let firstImage = true;
+	let firstImage = true;
 
-  return html.replace(/<img([^>]*?)>/g, (match, attrs) => {
-    // Skip if already has a loading attribute (lazy, eager, etc.)
-    if (/\bloading\s*=\s*["'][^"']*["']/i.test(attrs)) {
-      firstImage = false;
-      return match;
-    }
+	const IMG_TAG_RE = /<img([^>]{0,2048})>/g;
+	return html.replace(IMG_TAG_RE, (match, attrs) => {
+		// Skip if already has a loading attribute (lazy, eager, etc.)
+		// Use a simple string check to avoid nested-quantifier ReDoS warnings
+		if (/\bloading=/i.test(attrs)) {
+			firstImage = false;
+			return match;
+		}
 
-    // Don't lazy load images marked as high-priority (fetchpriority attribute)
-    if (attrs.includes("fetchpriority")) {
-      firstImage = false;
-      return match;
-    }
+		// Don't lazy load images marked as high-priority (fetchpriority attribute)
+		if (attrs.includes("fetchpriority")) {
+			firstImage = false;
+			return match;
+		}
 
-    // Don't lazy load the first image in the body (likely hero/LCP)
-    if (firstImage) {
-      firstImage = false;
-      return match;
-    }
+		// Don't lazy load the first image in the body (likely hero/LCP)
+		if (firstImage) {
+			firstImage = false;
+			return match;
+		}
 
-    firstImage = false;
-    // Add loading="lazy" to optimize off-viewport images
-    return `<img${attrs} loading="lazy">`;
-  });
+		firstImage = false;
+		// Add loading="lazy" to optimize off-viewport images
+		return `<img${attrs} loading="lazy">`;
+	});
 }

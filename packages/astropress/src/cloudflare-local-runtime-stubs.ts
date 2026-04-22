@@ -1,25 +1,25 @@
 function unavailable(): never {
-  throw new Error(
-    "Local runtime fallbacks are unavailable in the Cloudflare build. Configure the required Cloudflare bindings instead.",
-  );
+	throw new Error(
+		"Local runtime fallbacks are unavailable in the Cloudflare build. Configure the required Cloudflare bindings instead.",
+	);
 }
 
 export async function loadLocalAdminStore() {
-  unavailable();
+	unavailable();
 }
 
 export async function loadLocalAdminAuth() {
-  unavailable();
+	unavailable();
 }
 
 export async function loadLocalImageStorage() {
-  unavailable();
+	unavailable();
 }
 
 export async function loadLocalMediaStorage() {
-  unavailable();
+	unavailable();
 }
 
 export async function loadLocalCmsRegistry() {
-  unavailable();
+	unavailable();
 }

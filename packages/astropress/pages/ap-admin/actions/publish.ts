@@ -1,9 +1,9 @@
 import type { APIRoute } from "astro";
-import { requireAdminFormAction, actionRedirect, actionErrorRedirect } from "@astropress-diy/astropress";
+import { withAdminFormAction, actionRedirect, actionErrorRedirect } from "@astropress-diy/astropress";
 import { triggerPublish, resolveDeployHookFromEnv } from "../../../src/admin-action-publish.js";
 
 export const POST: APIRoute = async (context) => {
-  return requireAdminFormAction(context, { requireRole: "admin" }, async () => {
+  return withAdminFormAction(context, { failurePath: "/ap-admin", requireAdmin: true }, async () => {
     const hookConfig = resolveDeployHookFromEnv();
 
     if (!hookConfig) {

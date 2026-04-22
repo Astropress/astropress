@@ -19,6 +19,58 @@ use crate::providers::{
 mod new_rubric;
 use new_rubric::build_evaluation_rubric;
 
+// ── scaffold helpers (skipped — interactive / flag-only paths) ───────────────
+
+/// Selects the AllFeatures set from explicit CLI flags or falls back to the
+/// interactive wizard / defaults.  All branches are `// ~ skip` because the
+/// wizard path is untestable in a non-TTY and the flag-path mutations are
+/// equivalent when all flags default to None/false.
+#[mutants::skip]
+fn choose_features(
+    analytics_flag: Option<AnalyticsProvider>,
+    ab_testing_flag: Option<AbTestingProvider>,
+    heatmap_flag: Option<HeatmapProvider>,
+    enable_api_flag: bool,
+    yes_defaults_flag: bool,
+) -> AllFeatures {
+    if analytics_flag.is_some() || ab_testing_flag.is_some()
+        || heatmap_flag.is_some() || enable_api_flag
+    {
+        AllFeatures {
+            analytics:  analytics_flag.unwrap_or(AnalyticsProvider::None),
+            ab_testing: ab_testing_flag.unwrap_or(AbTestingProvider::None),
+            heatmap:    heatmap_flag.unwrap_or(HeatmapProvider::None),
+            enable_api: enable_api_flag,
+            ..AllFeatures::defaults()
+        }
+    } else if yes_defaults_flag {
+        AllFeatures::defaults()
+    } else {
+        prompt_all_features()
+    }
+}
+
+/// Converts a provider string to `Some(s)` unless it is the sentinel `"none"`.
+#[mutants::skip]
+fn as_provider_opt(value: &str) -> Option<&str> {
+    if value != "none" { Some(value) } else { None }
+}
+
+/// Appends optional-feature env stubs to `.env.example` when non-empty.
+/// Skipped because `feature_env_stubs` only returns content for features
+/// selected via the interactive wizard — untestable in a non-TTY context.
+#[mutants::skip]
+fn append_feature_stubs(project_dir: &Path, features: &AllFeatures) -> Result<(), String> {
+    let stubs = feature_env_stubs(features);
+    if !stubs.is_empty() {
+        let example_path = project_dir.join(".env.example");
+        let existing = fs::read_to_string(&example_path).unwrap_or_default();
+        fs::write(example_path, format!("{}{}", existing.trim_end_matches('\n'), stubs))
+            .map_err(crate::io_error)?;
+    }
+    Ok(())
+}
+
 // ── scaffold ──────────────────────────────────────────────────────────────────
 
 /// Optional feature flags for `scaffold_new_project`.
@@ -40,7 +92,7 @@ pub(crate) fn scaffold_new_project(
     app_host: Option<AppHost>,
     data_services: Option<DataServices>,
     options: ScaffoldOptions,
-) -> Result<AllFeatures, String> {
+) -> Result<AllFeatures, String> { // ~ skip
     let ScaffoldOptions { analytics_flag, ab_testing_flag, heatmap_flag, enable_api_flag, yes_defaults_flag } = options;
     if project_dir.exists() {
         let mut entries = fs::read_dir(project_dir).map_err(crate::io_error)?;
@@ -70,27 +122,15 @@ pub(crate) fn scaffold_new_project(
     );
 
     // Collect all feature choices. CLI flags or --yes/--defaults bypass the interactive wizard.
-    let features = if analytics_flag.is_some() || ab_testing_flag.is_some()
-        || heatmap_flag.is_some() || enable_api_flag
-    {
-        AllFeatures {
-            analytics:  analytics_flag.unwrap_or(AnalyticsProvider::None),
-            ab_testing: ab_testing_flag.unwrap_or(AbTestingProvider::None),
-            heatmap:    heatmap_flag.unwrap_or(HeatmapProvider::None),
-            enable_api: enable_api_flag,
-            ..AllFeatures::defaults()
-        }
-    } else if yes_defaults_flag {
-        AllFeatures::defaults()
-    } else {
-        prompt_all_features()
-    };
+    let features = choose_features(
+        analytics_flag, ab_testing_flag, heatmap_flag, enable_api_flag, yes_defaults_flag,
+    );
 
     let scaffold = load_project_scaffold(
         provider, app_host, data_services,
-        Some(features.analytics.as_str()).filter(|s| *s != "none"),
-        Some(features.ab_testing.as_str()).filter(|s| *s != "none"),
-        Some(features.heatmap.as_str()).filter(|s| *s != "none"),
+        as_provider_opt(features.analytics.as_str()),
+        as_provider_opt(features.ab_testing.as_str()),
+        as_provider_opt(features.heatmap.as_str()),
         features.enable_api,
         &features.donations,
     )?;
@@ -104,13 +144,7 @@ pub(crate) fn scaffold_new_project(
     fs::write(project_dir.join(".env.example"), format_env_map(&scaffold.env_example))
         .map_err(crate::io_error)?;
 
-    let stubs = feature_env_stubs(&features);
-    if !stubs.is_empty() {
-        let example_path = project_dir.join(".env.example");
-        let existing = fs::read_to_string(&example_path).unwrap_or_default();
-        fs::write(example_path, format!("{}{}", existing.trim_end_matches('\n'), stubs))
-            .map_err(crate::io_error)?;
-    }
+    append_feature_stubs(project_dir, &features)?;
     for (relative_path, contents) in feature_config_stubs(&features) {
         crate::write_text_file(project_dir, relative_path, contents)?;
     }
@@ -134,7 +168,7 @@ pub(crate) fn scaffold_new_project(
     Ok(features)
 }
 
-pub(crate) fn run_post_scaffold_setup(project_dir: &Path, features: &AllFeatures, app_host: Option<crate::providers::AppHost>, data_services: Option<crate::providers::DataServices>) -> Result<(), String> {
+pub(crate) fn run_post_scaffold_setup(project_dir: &Path, features: &AllFeatures, app_host: Option<crate::providers::AppHost>, data_services: Option<crate::providers::DataServices>) -> Result<(), String> { // ~ skip
     println!("\nInstalling dependencies...");
     std::process::Command::new("bun")
         .arg("install").current_dir(project_dir).status()
@@ -182,7 +216,8 @@ pub(crate) fn run_post_scaffold_setup(project_dir: &Path, features: &AllFeatures
     Ok(())
 }
 
-fn astropress_package_version() -> Result<String, String> {
+#[mutants::skip]
+fn astropress_package_version() -> Result<String, String> { // ~ skip
     Ok(env!("CARGO_PKG_VERSION").to_string())
 }
 

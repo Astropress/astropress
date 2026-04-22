@@ -1,9 +1,12 @@
 import type { AstropressPlatformAdapter } from "./platform-contracts";
-import type { ContentStoreRecord, ReadableContentKind } from "./platform-contracts";
+import type {
+	ContentStoreRecord,
+	ReadableContentKind,
+} from "./platform-contracts";
 
 export interface AstropressBuildTimeLoaderOptions {
-  /** Locale to filter content by. Defaults to all locales. */
-  locale?: string;
+	/** Locale to filter content by. Defaults to all locales. */
+	locale?: string;
 }
 
 /**
@@ -11,13 +14,13 @@ export interface AstropressBuildTimeLoaderOptions {
  * build time and returns them for use in Astro content collections.
  */
 export interface AstropressContentLoader {
-  /**
-   * Fetch all records of this kind from the provider.
-   * By default, only "published" records are returned.
-   */
-  load(): Promise<ContentStoreRecord[]>;
-  /** The content kind this loader targets. */
-  readonly kind: ReadableContentKind;
+	/**
+	 * Fetch all records of this kind from the provider.
+	 * By default, only "published" records are returned.
+	 */
+	load(): Promise<ContentStoreRecord[]>;
+	/** The content kind this loader targets. */
+	readonly kind: ReadableContentKind;
 }
 
 /**
@@ -42,27 +45,27 @@ export interface AstropressContentLoader {
  * ```
  */
 export function createAstropressBuildTimeLoader(
-  provider: AstropressPlatformAdapter,
-  options: AstropressBuildTimeLoaderOptions = {},
+	provider: AstropressPlatformAdapter,
+	options: AstropressBuildTimeLoaderOptions = {},
 ): {
-  posts(): AstropressContentLoader;
-  pages(): AstropressContentLoader;
+	posts(): AstropressContentLoader;
+	pages(): AstropressContentLoader;
 } {
-  function makeLoader(kind: "post" | "page"): AstropressContentLoader {
-    return {
-      kind,
-      async load() {
-        const records = await provider.content.list(kind, {
-          status: "published",
-          locale: options.locale,
-        });
-        return records;
-      },
-    };
-  }
+	function makeLoader(kind: "post" | "page"): AstropressContentLoader {
+		return {
+			kind,
+			async load() {
+				const records = await provider.content.list(kind, {
+					status: "published",
+					locale: options.locale,
+				});
+				return records;
+			},
+		};
+	}
 
-  return {
-    posts: () => makeLoader("post"),
-    pages: () => makeLoader("page"),
-  };
+	return {
+		posts: () => makeLoader("post"),
+		pages: () => makeLoader("page"),
+	};
 }

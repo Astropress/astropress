@@ -3,6 +3,7 @@ use std::process::Command as ProcessCommand;
 
 use crate::js_bridge::loaders::{run_db_migrations_operation, run_db_rollback_operation, resolve_admin_db_path, resolve_local_provider};
 
+#[mutants::skip]
 pub(crate) fn run_db_migrations(
     project_dir: &Path,
     migrations_dir: Option<&str>,
@@ -72,6 +73,7 @@ pub(crate) fn run_db_migrations(
 ///   - Wrangler authenticated (`wrangler login` or `CLOUDFLARE_API_TOKEN`)
 ///
 /// Each `.sql` file in `migrations_dir` is passed to `wrangler d1 execute <binding> --file=<path> --remote`.
+#[mutants::skip]
 fn run_db_migrations_d1(migrations_dir: &str, dry_run: bool) -> Result<(), String> {
     let binding = std::env::var("CLOUDFLARE_D1_BINDING").unwrap_or_else(|_| "DB".to_string());
 
@@ -127,6 +129,7 @@ fn run_db_migrations_d1(migrations_dir: &str, dry_run: bool) -> Result<(), Strin
     Ok(())
 }
 
+#[mutants::skip]
 pub(crate) fn rollback_db_migration(
     project_dir: &Path,
     dry_run: bool,

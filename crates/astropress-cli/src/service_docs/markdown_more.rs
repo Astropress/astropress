@@ -245,3 +245,7 @@ pub(super) fn append_more_services(doc: &mut String, f: &AllFeatures) {
         ));
     }
 }
+
+#[cfg(test)]
+#[path = "markdown_more_tests.rs"]
+mod tests;

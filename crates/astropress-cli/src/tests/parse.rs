@@ -172,3 +172,122 @@ fn parses_top_level_commands() {
         Ok(Command::Migrate { dry_run: true, .. })
     ));
 }
+
+#[test]
+fn parses_backup_field_values() {
+    let cmd = parse_command(&strings(&["backup", "--project-dir", "/my/proj", "--out", "/out/dir"])).unwrap();
+    if let Command::Backup { project_dir, output_dir } = cmd {
+        assert_eq!(project_dir, std::path::PathBuf::from("/my/proj"));
+        assert_eq!(output_dir, Some(std::path::PathBuf::from("/out/dir")));
+    } else {
+        panic!("Expected Backup command");
+    }
+}
+
+#[test]
+fn parses_restore_field_values() {
+    let cmd = parse_command(&strings(&["restore", "--project-dir", "/proj", "--from", "/snap"])).unwrap();
+    if let Command::Restore { project_dir, input_dir } = cmd {
+        assert_eq!(project_dir, std::path::PathBuf::from("/proj"));
+        assert_eq!(input_dir, std::path::PathBuf::from("/snap"));
+    } else {
+        panic!("Expected Restore command");
+    }
+}
+
+#[test]
+fn parses_sync_export_field_values() {
+    let cmd = parse_command(&strings(&["sync", "export", "--project-dir", "/p", "--out", "/o"])).unwrap();
+    if let Command::SyncExport { project_dir, output_dir } = cmd {
+        assert_eq!(project_dir, std::path::PathBuf::from("/p"));
+        assert_eq!(output_dir, Some(std::path::PathBuf::from("/o")));
+    } else {
+        panic!("Expected SyncExport command");
+    }
+}
+
+#[test]
+fn parses_sync_import_field_values() {
+    let cmd = parse_command(&strings(&["sync", "import", "--project-dir", "/p", "--from", "/snap"])).unwrap();
+    if let Command::SyncImport { project_dir, input_dir } = cmd {
+        assert_eq!(project_dir, std::path::PathBuf::from("/p"));
+        assert_eq!(input_dir, std::path::PathBuf::from("/snap"));
+    } else {
+        panic!("Expected SyncImport command");
+    }
+}
+
+#[test]
+fn parses_db_migrate_field_values() {
+    let cmd = parse_command(&strings(&["db", "migrate", "--project-dir", "/db", "--migrations-dir", "/mig", "--target", "d1"])).unwrap();
+    if let Command::DbMigrate { project_dir, migrations_dir, target, .. } = cmd {
+        assert_eq!(project_dir, std::path::PathBuf::from("/db"));
+        assert_eq!(migrations_dir, Some("/mig".to_string()));
+        assert_eq!(target, "d1");
+    } else {
+        panic!("Expected DbMigrate command");
+    }
+}
+
+#[test]
+fn parses_db_rollback_field_values() {
+    let cmd = parse_command(&strings(&["db", "rollback", "--project-dir", "/db", "--target", "d1"])).unwrap();
+    if let Command::DbRollback { project_dir, target, .. } = cmd {
+        assert_eq!(project_dir, std::path::PathBuf::from("/db"));
+        assert_eq!(target, "d1");
+    } else {
+        panic!("Expected DbRollback command");
+    }
+}
+
+#[test]
+fn parses_services_bootstrap_field_values() {
+    let cmd = parse_command(&strings(&["services", "bootstrap", "--project-dir", "/svc"])).unwrap();
+    if let Command::ServicesBootstrap { project_dir } = cmd {
+        assert_eq!(project_dir, std::path::PathBuf::from("/svc"));
+    } else {
+        panic!("Expected ServicesBootstrap command");
+    }
+}
+
+#[test]
+fn parses_services_verify_field_values() {
+    let cmd = parse_command(&strings(&["services", "verify", "--project-dir", "/svc"])).unwrap();
+    if let Command::ServicesVerify { project_dir } = cmd {
+        assert_eq!(project_dir, std::path::PathBuf::from("/svc"));
+    } else {
+        panic!("Expected ServicesVerify command");
+    }
+}
+
+#[test]
+fn parses_upgrade_check_field_values() {
+    let cmd = parse_command(&strings(&["upgrade", "--check", "--project-dir", "/up"])).unwrap();
+    if let Command::UpgradeCheck { project_dir } = cmd {
+        assert_eq!(project_dir, std::path::PathBuf::from("/up"));
+    } else {
+        panic!("Expected UpgradeCheck command");
+    }
+}
+
+#[test]
+fn parses_upgrade_apply_field_values() {
+    let cmd = parse_command(&strings(&["upgrade", "--apply", "--project-dir", "/up"])).unwrap();
+    if let Command::UpgradeApply { project_dir } = cmd {
+        assert_eq!(project_dir, std::path::PathBuf::from("/up"));
+    } else {
+        panic!("Expected UpgradeApply command");
+    }
+}
+
+#[test]
+fn parses_config_migrate_field_values() {
+    let cmd = parse_command(&strings(&["config", "migrate", "--project-dir", "/cfg"])).unwrap();
+    if let Command::ConfigMigrate { project_dir, dry_run } = cmd {
+        assert_eq!(project_dir, std::path::PathBuf::from("/cfg"));
+        assert!(!dry_run);
+    } else {
+        panic!("Expected ConfigMigrate command");
+    }
+}
+
