@@ -1,0 +1,111 @@
+name: Security Tool Suite
+
+# Kali/Parrot/BlackArch security tools that complement the existing ZAP DAST and
+# Semgrep SAST scans. Each tool is standard on offensive-security distros and is
+# intentionally run here so that the same checks an external pen-tester would run are
+# baked into every push.
+#
+# Tools:
+#   nikto   — HTTP server misconfiguration, dangerous files, outdated headers
+#   nuclei  — Template-based CVE and misconfiguration scanner (projectdiscovery suite)
+#   whatweb — Technology fingerprinting; detects unintended version/server leakage
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
+jobs:
+  toolsuite:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24.8"
+
+      - uses: oven-sh/setup-bun@v2
+
+      - run: bun install
+
+      - run: bun run --filter "@astropress-diy/astropress" build
+
+      - run: bun run test:example
+
+      - run: bun run --filter astropress-example-gh-pages build
+
+      - name: Start static server with security headers
+        run: node tooling/scripts/serve-static-with-security-headers.mjs examples/github-pages/dist 4173 >/tmp/astropress-http.log 2>&1 &
+
+      - name: Wait for static server to be ready
+        run: timeout 30 sh -c 'until curl -sf http://127.0.0.1:4173/ > /dev/null; do sleep 1; done'
+
+      # ── nikto ──────────────────────────────────────────────────────────────────
+      # Scans for HTTP server misconfigurations, dangerous default files, outdated
+      # headers, and insecure HTTP methods. Standard Kali / Parrot / BlackArch tool.
+      - name: Pull nikto image
+        run: docker pull securecodebox/nikto -q
+
+      - name: Run nikto
+        run: |
+          touch nikto-report.json
+          chmod a+w nikto-report.json
+          docker run --rm --network=host \
+            -v "$PWD:/output:rw" \
+            securecodebox/nikto \
+            -h http://127.0.0.1:4173 \
+            -Format json -output /output/nikto-report.json \
+            -nointeractive || true
+
+      - name: Evaluate nikto report
+        run: python3 tooling/scripts/parse-nikto-report.py nikto-report.json
+
+      # ── nuclei ─────────────────────────────────────────────────────────────────
+      # Template-based scanner covering CVEs, misconfigurations, and technology
+      # exposure checks. Part of the ProjectDiscovery suite, default in Kali.
+      - name: Run nuclei
+        uses: projectdiscovery/nuclei-action@v2
+        with:
+          target: http://127.0.0.1:4173
+          templates: http/misconfiguration,http/technologies,http/exposures
+          sarif-export: nuclei-results.sarif
+          github-report: true
+
+      - name: Upload nuclei SARIF to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: nuclei-results.sarif
+          category: nuclei
+
+      # ── whatweb ────────────────────────────────────────────────────────────────
+      # Fingerprints technology stack and detects server/version string leakage in
+      # headers or HTML. Default tool on Kali, Parrot, and BlackArch.
+      - name: Install whatweb
+        run: sudo apt-get install -qq whatweb
+
+      - name: Run whatweb
+        run: whatweb --log-json=whatweb-report.json http://127.0.0.1:4173 || true
+
+      - name: Evaluate whatweb report
+        run: python3 tooling/scripts/parse-whatweb-report.py whatweb-report.json
+
+      # ── Artifacts ──────────────────────────────────────────────────────────────
+      - name: Upload security scan artifacts
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: security-toolsuite-reports
+          path: |
+            nikto-report.json
+            nuclei-results.sarif
+            whatweb-report.json
