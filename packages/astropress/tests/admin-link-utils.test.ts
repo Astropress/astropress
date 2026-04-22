@@ -10,6 +10,12 @@ describe("resolveSafeAdminHref", () => {
     expect(resolveSafeAdminHref(baseUrl, "   ", ["/ap-admin/accept-invite"])).toBeNull();
   });
 
+  it("returns null for empty or whitespace-only values even when baseUrl path is allowlisted", () => {
+    const baseOnAllowedPath = new URL("https://example.com/ap-admin/accept-invite");
+    expect(resolveSafeAdminHref(baseOnAllowedPath, "", ["/ap-admin/accept-invite"])).toBeNull();
+    expect(resolveSafeAdminHref(baseOnAllowedPath, "   ", ["/ap-admin/accept-invite"])).toBeNull();
+  });
+
   it("returns a relative href for a same-origin allowlisted relative path", () => {
     expect(
       resolveSafeAdminHref(baseUrl, "/ap-admin/accept-invite?token=abc", ["/ap-admin/accept-invite"]),

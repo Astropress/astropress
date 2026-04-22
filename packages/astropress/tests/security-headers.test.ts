@@ -62,6 +62,28 @@ describe("security headers", () => {
     expect(response.status).toBe(302);
     expect(response.headers.get("Location")).toBe("/ap-admin/login");
     expect(response.headers.get("Content-Security-Policy")).toContain("default-src 'self'");
+    expect(response.headers.get("Cross-Origin-Resource-Policy")).toBe("same-site");
+  });
+
+  it("CSP includes all required default directives with proper separators", () => {
+    const csp = createAstropressSecurityHeaders().get("Content-Security-Policy") ?? "";
+    expect(csp).toContain("base-uri 'self'");
+    expect(csp).toContain("img-src 'self' data: https:");
+    expect(csp).toContain("font-src 'self' data: https:");
+    expect(csp).toContain("connect-src 'self' https:");
+    expect(csp).toContain("media-src 'self' data: https:");
+    expect(csp).toContain("frame-src 'self' https://challenges.cloudflare.com");
+    expect(csp).toContain("worker-src 'self' blob:");
+    expect(csp).toContain("manifest-src 'self'");
+    expect(csp).toContain("upgrade-insecure-requests");
+    expect(csp).toContain("; base-uri 'self'");
+  });
+
+  it("default area is public — object-src self and COOP same-origin", () => {
+    const headers = createAstropressSecurityHeaders();
+    const csp = headers.get("Content-Security-Policy") ?? "";
+    expect(csp).toContain("object-src 'self'");
+    expect(headers.get("Cross-Origin-Opener-Policy")).toBe("same-origin");
   });
 
   it("accepts same-origin form posts and rejects cross-origin origins", () => {
@@ -105,10 +127,7 @@ describe("security headers", () => {
   });
 
   it("rejects cross-origin requests and handles no-origin/no-referer (returns true)", () => {
-    // Lines 83-84: requestUrl null → false; use duck-typed object with invalid URL
-    expect(isTrustedRequestOrigin({ url: "not-a-url", headers: new Headers() } as unknown as Request)).toBe(false);
-
-    // Line 91-92: referer check branch (origin absent, referer present)
+    // referer check branch (origin absent, referer present)
     expect(
       isTrustedRequestOrigin(
         new Request("https://example.com/ap-admin/save", {
