@@ -74,6 +74,7 @@
     "docs:build": "bun run --filter astropress-docs build",
     "docs:check": "bun run --filter astropress-docs check",
     "repo:clean": "bun run tooling/scripts/assert-clean-worktree.ts",
+    "check:pr-ghas": "bun run tooling/scripts/check-pr-ghas.ts",
     "stress:sqlite": "bun run tooling/scripts/stress-sqlite-writes.ts",
     "release": "bun run --filter @astropress-diy/astropress release",
     "version": "bun run --filter @astropress-diy/astropress version && bun run tooling/scripts/sync-cargo-version.ts",
