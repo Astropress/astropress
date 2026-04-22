@@ -178,3 +178,52 @@ describe("createAstropressGitSyncAdapter — importSnapshot", () => {
 		expect(result.fileCount).toBe(1);
 	});
 });
+
+// ---------------------------------------------------------------------------
+// SQLite WAL checkpoint + reflink logging
+// ---------------------------------------------------------------------------
+
+describe("createAstropressGitSyncAdapter — SQLite + reflink", () => {
+	it("copies a .sqlite file without throwing, warning on checkpoint failure", async () => {
+		// A plain text file named .sqlite exercises the checkpoint path without
+		// a real database — checkpoint will fail gracefully and warn, then the
+		// copy proceeds normally.
+		const projectDir = makeDir("project-sqlite");
+		writeFiles(projectDir, { "db/admin.sqlite": "not-a-real-db" });
+
+		const warnings: string[] = [];
+		const adapter = createAstropressGitSyncAdapter({
+			projectDir,
+			include: ["db"],
+			logger: { info: () => {}, warn: (msg) => warnings.push(msg) },
+		});
+
+		const targetDir = makeDir("snapshot-sqlite");
+		const result = await adapter.exportSnapshot(targetDir);
+
+		expect(result.fileCount).toBe(1);
+		expect(existsSync(join(targetDir, "db", "admin.sqlite"))).toBe(true);
+		// A warning should have been emitted because the file is not a real SQLite DB
+		expect(warnings.length).toBeGreaterThan(0);
+		expect(warnings[0]).toContain("admin.sqlite");
+	});
+
+	it("logs whether reflink was used via the logger", async () => {
+		const projectDir = makeDir("project-log");
+		writeFiles(projectDir, { "src/index.ts": "export {}" });
+
+		const infos: string[] = [];
+		const adapter = createAstropressGitSyncAdapter({
+			projectDir,
+			include: ["src"],
+			logger: { info: (msg) => infos.push(msg), warn: () => {} },
+		});
+
+		const targetDir = makeDir("snapshot-log");
+		await adapter.exportSnapshot(targetDir);
+
+		expect(infos.length).toBe(1);
+		// Should mention either reflink or standard copy
+		expect(infos[0]).toMatch(/copy-on-write|standard copy/);
+	});
+});
