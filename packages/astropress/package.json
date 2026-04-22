@@ -457,7 +457,7 @@
 		"@changesets/cli": "^2.29.7",
 		"@vitest/coverage-v8": "^4.1.4",
 		"schema-dts": "^2.0.0",
-		"typescript": "6.0.2",
+		"typescript": "6.0.3",
 		"vitest": "^4.1.4"
 	},
 	"scripts": {
