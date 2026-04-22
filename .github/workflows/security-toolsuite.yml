@@ -75,10 +75,11 @@ jobs:
       - name: Run nuclei
         uses: projectdiscovery/nuclei-action@v3
         with:
-          target: http://127.0.0.1:4173
-          templates: http/misconfiguration,http/technologies,http/exposures
-          sarif-export: nuclei-results.sarif
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          args: >-
+            -target http://127.0.0.1:4173
+            -t http/misconfiguration,http/technologies,http/exposures
+            -se nuclei-results.sarif
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload nuclei SARIF to GitHub Security tab
         uses: github/codeql-action/upload-sarif@v3
