@@ -82,6 +82,89 @@ function isUsableToken(expiresAt: string, consumedAt: string | null, active: boo
   return !consumedAt && active && Date.parse(expiresAt) >= now;
 }
 
+function getLiveSessionRow(
+  sessionToken: string | null | undefined,
+  input: AstropressAuthRepositoryInput,
+): AstropressAuthSessionRow | null {
+  if (!sessionToken) return null;
+  input.cleanupExpiredSessions();
+  const row = input.findLiveSessionById(sessionToken);
+  if (!row) return null;
+  const lastActiveAt = Date.parse(row.lastActiveAt);
+  if (!Number.isFinite(lastActiveAt) || input.now() - lastActiveAt > input.sessionTtlMs) {
+    input.revokeSessionById(sessionToken);
+    return null;
+  }
+  input.touchSession(sessionToken);
+  return row;
+}
+
+function isPasswordLongEnough(password: string): boolean {
+  return password.trim().length >= 12;
+}
+
+function userNotFoundPasswordResetResult(actor: Actor | null | undefined): { ok: false; error: string } | { ok: true; resetUrl: null } {
+  if (actor) {
+    return { ok: false as const, error: "That admin user could not be found." };
+  }
+  return { ok: true as const, resetUrl: null };
+}
+
+function doConsumeInviteToken(
+  rawToken: string,
+  password: string,
+  input: AstropressAuthRepositoryInput,
+): ReturnType<AuthRepository["consumeInviteToken"]> {
+  const trimmedPassword = password.trim();
+  if (!isPasswordLongEnough(password)) {
+    return { ok: false as const, error: "Password must be at least 12 characters." };
+  }
+
+  const row = input.findInviteTokenByHash(input.hashOpaqueToken(rawToken.trim()));
+  if (!row || !isUsableToken(row.expiresAt, row.acceptedAt, row.active, input.now())) {
+    return { ok: false as const, error: "That invitation link is invalid or has expired." };
+  }
+
+  input.updateAdminUserPassword(row.userId, input.hashPassword(trimmedPassword));
+  input.acceptInvitesForUser(row.userId);
+  input.recordAuthAudit({
+    actor: { email: row.email, role: row.role, name: row.name },
+    action: "auth.invite_accept",
+    summary: `${row.email} accepted an admin invitation.`,
+    targetId: row.email,
+  });
+
+  return { ok: true as const, user: { email: row.email, role: row.role, name: row.name } };
+}
+
+function doConsumePasswordResetToken(
+  rawToken: string,
+  password: string,
+  input: AstropressAuthRepositoryInput,
+): ReturnType<AuthRepository["consumePasswordResetToken"]> {
+  const trimmedPassword = password.trim();
+  if (!isPasswordLongEnough(password)) {
+    return { ok: false as const, error: "Password must be at least 12 characters." };
+  }
+
+  const row = input.findPasswordResetTokenByHash(input.hashOpaqueToken(rawToken.trim()));
+  if (!row || !isUsableToken(row.expiresAt, row.consumedAt, row.active, input.now())) {
+    return { ok: false as const, error: "That password reset link is invalid or has expired." };
+  }
+
+  input.updateAdminUserPassword(row.userId, input.hashPassword(trimmedPassword));
+  input.markPasswordResetTokenConsumed(row.id);
+  input.revokeSessionsForUser(row.userId);
+  input.recordAuthAudit({
+    actor: { email: row.email, role: row.role, name: row.name },
+    action: "auth.password_reset_complete",
+    summary: `${row.email} completed a password reset.`,
+    targetId: row.email,
+  });
+
+  return { ok: true as const, user: { email: row.email, role: row.role, name: row.name } };
+}
+
 export function createAstropressAuthRepository(
   input: AstropressAuthRepositoryInput,
 ): AuthRepository & { authenticatePersistedAdminUser(email: string, password: string): Promise<SessionUser | null> } {
@@ -117,44 +200,12 @@ export function createAstropressAuthRepository(
       return sessionToken;
     },
     getSessionUser(sessionToken) {
-      if (!sessionToken) {
-        return null;
-      }
-
-      input.cleanupExpiredSessions();
-      const row = input.findLiveSessionById(sessionToken);
-      if (!row) {
-        return null;
-      }
-
-      const lastActiveAt = Date.parse(row.lastActiveAt);
-      if (!Number.isFinite(lastActiveAt) || input.now() - lastActiveAt > input.sessionTtlMs) {
-        input.revokeSessionById(sessionToken);
-        return null;
-      }
-
-      input.touchSession(sessionToken);
-      return mapSessionUser(row);
+      const row = getLiveSessionRow(sessionToken, input);
+      return row ? mapSessionUser(row) : null;
     },
     getCsrfToken(sessionToken) {
-      if (!sessionToken) {
-        return null;
-      }
-
-      input.cleanupExpiredSessions();
-      const row = input.findLiveSessionById(sessionToken);
-      if (!row) {
-        return null;
-      }
-
-      const lastActiveAt = Date.parse(row.lastActiveAt);
-      if (!Number.isFinite(lastActiveAt) || input.now() - lastActiveAt > input.sessionTtlMs) {
-        input.revokeSessionById(sessionToken);
-        return null;
-      }
-
-      input.touchSession(sessionToken);
-      return row.csrfToken;
+      const row = getLiveSessionRow(sessionToken, input);
+      return row ? row.csrfToken : null;
     },
     revokeSession(sessionToken) {
       if (!sessionToken) {
@@ -170,9 +221,7 @@ export function createAstropressAuthRepository(
 
       const user = input.findPasswordResetUserByEmail(normalizedEmail);
       if (!user) {
-        return actor
-          ? { ok: false as const, error: "That admin user could not be found." }
-          : { ok: true as const, resetUrl: null as string | null };
+        return userNotFoundPasswordResetResult(actor);
       }
 
       input.consumePasswordResetTokensForUser(user.id);
@@ -235,75 +284,8 @@ export function createAstropressAuthRepository(
         expiresAt: row.expiresAt,
       } as PasswordResetRequest;
     },
-    consumeInviteToken(rawToken, password) {
-      const trimmedPassword = password.trim();
-      if (trimmedPassword.length < 12) {
-        return { ok: false as const, error: "Password must be at least 12 characters." };
-      }
-
-      const request = this.getInviteRequest(rawToken);
-      if (!request) {
-        return { ok: false as const, error: "That invitation link is invalid or has expired." };
-      }
-
-      const row = input.findInviteTokenByHash(input.hashOpaqueToken(rawToken.trim()));
-      if (!row || !isUsableToken(row.expiresAt, row.acceptedAt, row.active, input.now())) {
-        return { ok: false as const, error: "That invitation link is invalid or has expired." };
-      }
-
-      input.updateAdminUserPassword(row.userId, input.hashPassword(trimmedPassword));
-      input.acceptInvitesForUser(row.userId);
-      input.recordAuthAudit({
-        actor: { email: row.email, role: row.role, name: row.name },
-        action: "auth.invite_accept",
-        summary: `${row.email} accepted an admin invitation.`,
-        targetId: row.email,
-      });
-
-      return {
-        ok: true as const,
-        user: {
-          email: row.email,
-          role: row.role,
-          name: row.name,
-        },
-      };
-    },
-    consumePasswordResetToken(rawToken, password) {
-      const trimmedPassword = password.trim();
-      if (trimmedPassword.length < 12) {
-        return { ok: false as const, error: "Password must be at least 12 characters." };
-      }
-
-      const request = this.getPasswordResetRequest(rawToken);
-      if (!request) {
-        return { ok: false as const, error: "That password reset link is invalid or has expired." };
-      }
-
-      const row = input.findPasswordResetTokenByHash(input.hashOpaqueToken(rawToken.trim()));
-      if (!row || !isUsableToken(row.expiresAt, row.consumedAt, row.active, input.now())) {
-        return { ok: false as const, error: "That password reset link is invalid or has expired." };
-      }
-
-      input.updateAdminUserPassword(row.userId, input.hashPassword(trimmedPassword));
-      input.markPasswordResetTokenConsumed(row.id);
-      input.revokeSessionsForUser(row.userId);
-      input.recordAuthAudit({
-        actor: { email: row.email, role: row.role, name: row.name },
-        action: "auth.password_reset_complete",
-        summary: `${row.email} completed a password reset.`,
-        targetId: row.email,
-      });
-
-      return {
-        ok: true as const,
-        user: {
-          email: row.email,
-          role: row.role,
-          name: row.name,
-        },
-      };
-    },
+    consumeInviteToken: (rawToken, password) => doConsumeInviteToken(rawToken, password, input),
+    consumePasswordResetToken: (rawToken, password) => doConsumePasswordResetToken(rawToken, password, input),
     recordSuccessfulLogin(actor) {
       input.recordAuthAudit({
         actor,

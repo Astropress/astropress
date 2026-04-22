@@ -6,6 +6,56 @@ import type { D1AdminReadStore } from "./d1-admin-store";
 
 type ContentStatus = "draft" | "review" | "published" | "archived";
 
+type ContentRevisionRow = {
+  id: string;
+  slug: string;
+  title: string;
+  status: ContentStatus;
+  scheduled_at: string | null;
+  body: string | null;
+  seo_title: string;
+  meta_description: string;
+  excerpt: string | null;
+  og_title: string | null;
+  og_description: string | null;
+  og_image: string | null;
+  author_ids: string | null;
+  category_ids: string | null;
+  tag_ids: string | null;
+  canonical_url_override: string | null;
+  robots_directive: string | null;
+  source: "imported" | "reviewed";
+  created_at: string;
+  revision_note: string | null;
+  created_by: string | null;
+};
+
+function mapContentRevisionRow(row: ContentRevisionRow): ContentRevision {
+  return {
+    id: row.id,
+    slug: row.slug,
+    title: row.title,
+    status: row.status,
+    scheduledAt: row.scheduled_at ?? undefined,
+    body: row.body ?? undefined,
+    authorIds: parseIdList(row.author_ids),
+    categoryIds: parseIdList(row.category_ids),
+    tagIds: parseIdList(row.tag_ids),
+    seoTitle: row.seo_title,
+    metaDescription: row.meta_description,
+    excerpt: row.excerpt ?? undefined,
+    ogTitle: row.og_title ?? undefined,
+    ogDescription: row.og_description ?? undefined,
+    ogImage: row.og_image ?? undefined,
+    canonicalUrlOverride: row.canonical_url_override ?? undefined,
+    robotsDirective: row.robots_directive ?? undefined,
+    source: row.source,
+    createdAt: row.created_at,
+    revisionNote: row.revision_note ?? undefined,
+    createdBy: row.created_by ?? undefined,
+  };
+}
+
 interface PageRecord {
   slug: string;
   legacyUrl: string;
@@ -283,54 +333,10 @@ export function createD1ContentReadPart(db: D1DatabaseLike): D1AdminReadStore["c
             `,
           )
           .bind(pageRecord.slug)
-          .all<{
-            id: string;
-            slug: string;
-            title: string;
-            status: ContentStatus;
-            scheduled_at: string | null;
-            body: string | null;
-            seo_title: string;
-            meta_description: string;
-            excerpt: string | null;
-            og_title: string | null;
-            og_description: string | null;
-            og_image: string | null;
-            author_ids: string | null;
-            category_ids: string | null;
-            tag_ids: string | null;
-            canonical_url_override: string | null;
-            robots_directive: string | null;
-            source: "imported" | "reviewed";
-            created_at: string;
-            revision_note: string | null;
-            created_by: string | null;
-          }>()
+          .all<ContentRevisionRow>()
       ).results;
 
-      return rows.map((row) => ({
-        id: row.id,
-        slug: row.slug,
-        title: row.title,
-        status: row.status,
-        scheduledAt: row.scheduled_at ?? undefined,
-        body: row.body ?? undefined,
-        authorIds: parseIdList(row.author_ids),
-        categoryIds: parseIdList(row.category_ids),
-        tagIds: parseIdList(row.tag_ids),
-        seoTitle: row.seo_title,
-        metaDescription: row.meta_description,
-        excerpt: row.excerpt ?? undefined,
-        ogTitle: row.og_title ?? undefined,
-        ogDescription: row.og_description ?? undefined,
-        ogImage: row.og_image ?? undefined,
-        canonicalUrlOverride: row.canonical_url_override ?? undefined,
-        robotsDirective: row.robots_directive ?? undefined,
-        source: row.source,
-        createdAt: row.created_at,
-        revisionNote: row.revision_note ?? undefined,
-        createdBy: row.created_by ?? undefined,
-      }));
+      return rows.map(mapContentRevisionRow);
     },
   };
 }
