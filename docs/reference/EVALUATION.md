@@ -11,7 +11,7 @@ Grade scale: `A+ / A / B / C / D / F`
 | 1 | Spec Fidelity | A | `bun run bdd:test` — 359 BDD scenarios; `bun run bdd:lint` validates scenario completeness |
 | 2 | Architecture Quality | A+ | `audit:arch` passes (CI-enforced LOC limits, file structure constraints); `audit:arch:rust` passes |
 | 3 | Test Quality | A+ | 1650+ Vitest tests (`bun run test`), 170 Rust CLI tests (`test:cli`), 10 Playwright specs across 70 acceptance checks |
-| 4 | Security Posture | A+ | `audit:security` passes; `zta-invariants.test.ts`, `security-headers.test.ts`, `cloudflare-adapter-security.test.ts` |
+| 4 | Security Posture | A+ | `audit:security` passes; `zta-invariants.test.ts`, `security-headers.test.ts`, `cloudflare-adapter-security.test.ts`; `security-toolsuite.yml` CI (nikto, nuclei, whatweb) |
 | 5 | Accessibility (WCAG 2.2 AA) | A+ | `test:accessibility` (axe-core static build); `test:accessibility:browser` and `test:accessibility:admin-harness` (Playwright); all admin and public routes pass WCAG 2.2 AA + best-practice axe rules with zero violations |
 | 6 | Performance | A | `audit:bundle` passes; `audit:carbon` passes; Lighthouse CI on preview deploys |
 | 7 | Developer Ergonomics | A+ | `audit:developer-ergonomics` passes (CI-enforced: quick-start docs, scaffold test, doctor command, --help, admin UX test, docs:api:check) |
@@ -520,8 +520,7 @@ An evaluation framework that can't verify its own integrity is theater. Specific
   2. Every `audit:*` script in `package.json` points to a file that exists on disk
   3. Every audit claimed as "CI-enforced" actually appears in `ci.yml`
   4. Self-assessed rubrics are counted and surfaced as warnings
-  5. Rubric count in `evaluation.mdx` (docs site) matches `EVALUATION.md` (reference)
-  6. No rubric has an empty evidence column without a self-assessed marker
+  5. No rubric has an empty evidence column without a self-assessed marker
 
 ### Criteria
 

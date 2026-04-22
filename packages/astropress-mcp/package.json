@@ -1,37 +1,35 @@
 {
-  "name": "@astropress-diy/mcp",
-  "version": "0.0.3",
-  "description": "MCP server for Astropress — lets AI agents read and write content via the REST API",
-  "type": "module",
-  "bin": {
-    "astropress-mcp": "./dist/server.js"
-  },
-  "main": "./dist/server.js",
-  "files": [
-    "dist"
-  ],
-  "scripts": {
-    "build": "tsc --project tsconfig.json",
-    "prepublishOnly": "bun run build",
-    "start": "node dist/server.js"
-  },
-  "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.0.0"
-  },
-  "devDependencies": {
-    "@types/node": "^22.0.0",
-    "typescript": "^6.0.2"
-  },
-  "engines": {
-    "node": ">=24.8.0"
-  },
-  "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/Astropress/astropress"
-  },
-  "bugs": {
-    "url": "https://github.com/Astropress/astropress/issues"
-  },
-  "homepage": "https://astropress.diy"
+	"name": "@astropress-diy/mcp",
+	"version": "0.0.3",
+	"description": "MCP server for Astropress — lets AI agents read and write content via the REST API",
+	"type": "module",
+	"bin": {
+		"astropress-mcp": "./dist/server.js"
+	},
+	"main": "./dist/server.js",
+	"files": ["dist"],
+	"scripts": {
+		"build": "tsc --project tsconfig.json",
+		"prepublishOnly": "bun run build",
+		"start": "node dist/server.js"
+	},
+	"dependencies": {
+		"@modelcontextprotocol/sdk": "^1.29.0"
+	},
+	"devDependencies": {
+		"@types/node": "^24.0.0",
+		"typescript": "6.0.3"
+	},
+	"engines": {
+		"node": ">=24.8.0"
+	},
+	"license": "MIT",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/Astropress/astropress"
+	},
+	"bugs": {
+		"url": "https://github.com/Astropress/astropress/issues"
+	},
+	"homepage": "https://astropress.diy"
 }

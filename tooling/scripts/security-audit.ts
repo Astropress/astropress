@@ -117,6 +117,32 @@ async function main() {
 		}
 	}
 
+	// ── ZTA: every action handler must use the admin form wrapper or a strict origin check ──
+	// Pre-auth flows (accept-invite, reset-password) legitimately use isTrustedStrictRequestOrigin
+	// instead of withAdminFormAction because the user has no session yet.
+	const actionsDir = join(root, "packages/astropress/pages/ap-admin/actions");
+	const actionFiles = (await walk(actionsDir)).filter((f) => f.endsWith(".ts"));
+	for (const file of actionFiles) {
+		const content = await readFile(file, "utf8");
+		const hasZtaWrapper = /withAdminFormAction|requireAdminFormAction/.test(content);
+		const hasPreAuthGate = /isTrustedStrictRequestOrigin/.test(content);
+		if (!hasZtaWrapper && !hasPreAuthGate) {
+			violations.push({
+				file: relative(root, file),
+				message: "action handler has no ZTA wrapper (withAdminFormAction/requireAdminFormAction) and no pre-auth origin gate",
+			});
+		}
+	}
+
+	// ── CSRF: admin-action-utils.ts must validate the CSRF token from form data ──
+	const actionUtilsSrc = await readFile(join(root, "packages/astropress/src/admin-action-utils.ts"), "utf8");
+	if (!/_csrf|csrfToken/.test(actionUtilsSrc)) {
+		violations.push({
+			file: "packages/astropress/src/admin-action-utils.ts",
+			message: "CSRF token validation pattern (_csrf / csrfToken) not found — CSRF protection may have been removed",
+		});
+	}
+
 	if (violations.length > 0) {
 		console.error("Security audit failed:");
 		for (const violation of violations) {
@@ -125,7 +151,7 @@ async function main() {
 		process.exit(1);
 	}
 
-	console.log(`Security audit passed for ${auditedFiles.length} source files.`);
+	console.log(`Security audit passed for ${auditedFiles.length} source files, ${actionFiles.length} action handlers.`);
 }
 
 await main();

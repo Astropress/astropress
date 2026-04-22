@@ -1,19 +1,19 @@
 {
-  "name": "astropress-example-admin-harness",
-  "private": true,
-  "type": "module",
-  "scripts": {
-    "dev": "astro dev",
-    "build": "astro build",
-    "check": "astro check"
-  },
-  "dependencies": {
-    "astro": "6.1.6",
-    "@astropress-diy/astropress": "workspace:*"
-  },
-  "devDependencies": {
-    "@astrojs/check": "^0.9.8",
-    "@types/node": "^24.3.0",
-    "typescript": "6.0.2"
-  }
+	"name": "astropress-example-admin-harness",
+	"private": true,
+	"type": "module",
+	"scripts": {
+		"dev": "astro dev",
+		"build": "astro build",
+		"check": "astro check"
+	},
+	"dependencies": {
+		"astro": "6.1.8",
+		"@astropress-diy/astropress": "workspace:*"
+	},
+	"devDependencies": {
+		"@astrojs/check": "^0.9.8",
+		"@types/node": "^24.3.0",
+		"typescript": "6.0.3"
+	}
 }

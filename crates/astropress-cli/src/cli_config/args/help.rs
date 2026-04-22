@@ -31,6 +31,9 @@ pub(crate) fn print_help() { // ~ skip
     println!("  astropress list tools      (alias: ls tools)      List all tools by category");
     println!("  astropress list providers  (alias: ls providers)  List supported hosts and data services with pairings");
     println!("  astropress completions <bash|zsh|fish|powershell> Print shell completion script");
+    println!("  astropress auth emergency-revoke --all [--user <email>] [--project-dir <dir>]");
+    println!("  astropress auth emergency-revoke --sessions-only [--user <email>] [--project-dir <dir>]");
+    println!("  astropress auth emergency-revoke --tokens-only [--project-dir <dir>]");
     println!("  astropress telemetry status   Show whether anonymous usage data sharing is on or off");
     println!("  astropress telemetry enable   Opt in to anonymous usage data sharing");
     println!("  astropress telemetry disable  Opt out of anonymous usage data sharing");

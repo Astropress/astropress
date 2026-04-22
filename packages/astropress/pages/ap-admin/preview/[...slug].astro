@@ -5,26 +5,40 @@ const adminUser = Astro.locals.adminUser;
 
 // Require authentication — preview is gated to admin/editor users
 if (!adminUser) {
-  const returnPath = encodeURIComponent(Astro.url.pathname + Astro.url.search);
-  return Astro.redirect(`/ap-admin/login?return=${returnPath}`, 302);
+	const returnPath = encodeURIComponent(Astro.url.pathname + Astro.url.search);
+	return Astro.redirect(`/ap-admin/login?return=${returnPath}`, 302);
 }
 
 const { slug } = Astro.params;
 const contentSlug = Array.isArray(slug) ? slug.join("/") : (slug ?? "");
 
 // Load the content record (drafts included — this is a preview surface)
-let record: { title?: string | null; body?: string | null; status?: string; kind?: string } | null = null;
+let record: {
+	title?: string | null;
+	body?: string | null;
+	status?: string;
+	kind?: string;
+} | null = null;
 
 try {
-  const provider = (Astro.locals as Record<string, unknown>).provider as
-    | { content: { get(id: string): Promise<{ title?: string | null; body?: string | null; status?: string; kind?: string } | null> } }
-    | undefined;
+	const provider = (Astro.locals as Record<string, unknown>).provider as
+		| {
+				content: {
+					get(id: string): Promise<{
+						title?: string | null;
+						body?: string | null;
+						status?: string;
+						kind?: string;
+					} | null>;
+				};
+		  }
+		| undefined;
 
-  if (provider) {
-    record = await provider.content.get(contentSlug);
-  }
+	if (provider) {
+		record = await provider.content.get(contentSlug);
+	}
 } catch {
-  // Provider not available — show placeholder
+	// Provider not available — show placeholder
 }
 ---
 

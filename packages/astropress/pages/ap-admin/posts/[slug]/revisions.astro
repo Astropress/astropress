@@ -9,25 +9,38 @@ export const prerender = false;
 const adminUser = Astro.locals.adminUser;
 const slug = Astro.params.slug ?? "";
 const model = await buildPostRevisionsPageModel(Astro.locals, slug);
-const { pageRecord, revisions, auditEvents, authors, categories, tags } = model.data;
+const { pageRecord, revisions, auditEvents, authors, categories, tags } =
+	model.data;
 const wasRestored = Astro.url.searchParams.get("restored") === "1";
-const errorMessage = Astro.url.searchParams.get("error") === "1" ? Astro.url.searchParams.get("message") : "";
+const errorMessage =
+	Astro.url.searchParams.get("error") === "1"
+		? Astro.url.searchParams.get("message")
+		: "";
 
-const authorNamesById = new Map(authors.map((author) => [author.id, author.name]));
-const categoryNamesById = new Map(categories.map((term) => [term.id, term.name]));
+const authorNamesById = new Map(
+	authors.map((author) => [author.id, author.name]),
+);
+const categoryNamesById = new Map(
+	categories.map((term) => [term.id, term.name]),
+);
 const tagNamesById = new Map(tags.map((term) => [term.id, term.name]));
 
-function joinAssignmentLabels(ids: number[] | undefined, labelsById: Map<number, string>) {
-  if (!ids || ids.length === 0) {
-    return "—";
-  }
+function joinAssignmentLabels(
+	ids: number[] | undefined,
+	labelsById: Map<number, string>,
+) {
+	if (!ids || ids.length === 0) {
+		return "—";
+	}
 
-  const labels = ids.map((id) => labelsById.get(id)).filter((value): value is string => Boolean(value));
-  return labels.length > 0 ? labels.join(", ") : "—";
+	const labels = ids
+		.map((id) => labelsById.get(id))
+		.filter((value): value is string => Boolean(value));
+	return labels.length > 0 ? labels.join(", ") : "—";
 }
 
 if (model.status === "not_found") {
-  Astro.response.status = 404;
+	Astro.response.status = 404;
 }
 ---
 

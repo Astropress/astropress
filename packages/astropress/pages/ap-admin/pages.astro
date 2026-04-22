@@ -4,63 +4,67 @@ import { buildPagesIndexPageModel } from "astropress";
 import { isSeededPostRecord } from "astropress";
 
 const adminUser = Astro.locals.adminUser;
-const model = await buildPagesIndexPageModel(Astro.locals, adminUser!.role);
+const model = await buildPagesIndexPageModel(Astro.locals, adminUser?.role);
 const { contentStates, routePages, archiveRows } = model.data;
 
 if (model.status === "forbidden") {
-  Astro.response.status = 403;
+	Astro.response.status = 403;
 }
 
 const searchQuery = Astro.url.searchParams.get("q")?.trim().toLowerCase() ?? "";
 const selectedKind = Astro.url.searchParams.get("kind") ?? "all";
 
 const legacyPages = contentStates
-  .filter((record) => !isSeededPostRecord(record))
-  .map((record) => ({
-    title: record.title,
-    path: record.legacyUrl,
-    kind: "Legacy",
-    status: record.status ?? "published",
-    updatedAt: record.updatedAt,
-    editHref: `/ap-admin/posts/${record.slug}`,
-    publicHref: record.legacyUrl,
-    ownerLabel: "Edit page",
-  }));
+	.filter((record) => !isSeededPostRecord(record))
+	.map((record) => ({
+		title: record.title,
+		path: record.legacyUrl,
+		kind: "Legacy",
+		status: record.status ?? "published",
+		updatedAt: record.updatedAt,
+		editHref: `/ap-admin/posts/${record.slug}`,
+		publicHref: record.legacyUrl,
+		ownerLabel: "Edit page",
+	}));
 
 const structuredPages = routePages.map((page) => ({
-  title: page.title,
-  path: page.path,
-  kind: "Structured",
-  status: "published",
-  updatedAt: page.updatedAt,
-  editHref: `/ap-admin/route-pages${page.path}`,
-  publicHref: page.path,
-  ownerLabel: "Edit route page",
+	title: page.title,
+	path: page.path,
+	kind: "Structured",
+	status: "published",
+	updatedAt: page.updatedAt,
+	editHref: `/ap-admin/route-pages${page.path}`,
+	publicHref: page.path,
+	ownerLabel: "Edit route page",
 }));
 
 const archivePages = archiveRows.map(({ archive, runtime }) => ({
-  title: runtime?.title ?? archive.title,
-  path: archive.legacyUrl,
-  kind: "Archive",
-  status: "published",
-  updatedAt: runtime?.updatedAt,
-  editHref: `/ap-admin/archives/${archive.slug}`,
-  publicHref: archive.legacyUrl,
-  ownerLabel: "Edit archive",
+	title: runtime?.title ?? archive.title,
+	path: archive.legacyUrl,
+	kind: "Archive",
+	status: "published",
+	updatedAt: runtime?.updatedAt,
+	editHref: `/ap-admin/archives/${archive.slug}`,
+	publicHref: archive.legacyUrl,
+	ownerLabel: "Edit archive",
 }));
 
-const rows = [...legacyPages, ...structuredPages, ...archivePages].sort((left, right) => left.path.localeCompare(right.path));
+const rows = [...legacyPages, ...structuredPages, ...archivePages].sort(
+	(left, right) => left.path.localeCompare(right.path),
+);
 const filteredRows = rows.filter((row) => {
-  const matchesKind = selectedKind === "all" || row.kind.toLowerCase() === selectedKind;
-  const haystack = `${row.title} ${row.path} ${row.kind}`.toLowerCase();
-  const matchesSearch = !searchQuery || haystack.includes(searchQuery);
-  return matchesKind && matchesSearch;
+	const matchesKind =
+		selectedKind === "all" || row.kind.toLowerCase() === selectedKind;
+	const haystack = `${row.title} ${row.path} ${row.kind}`.toLowerCase();
+	const matchesSearch = !searchQuery || haystack.includes(searchQuery);
+	return matchesKind && matchesSearch;
 });
 const kindCounts = rows.reduce<Record<string, number>>((accumulator, row) => {
-  accumulator[row.kind] = (accumulator[row.kind] ?? 0) + 1;
-  return accumulator;
+	accumulator[row.kind] = (accumulator[row.kind] ?? 0) + 1;
+	return accumulator;
 }, {});
-const structuredExplanation = "Structured pages are route-backed pages assembled from reusable content sections instead of one imported HTML body. They power pages like home, about, donate, and service landing pages.";
+const structuredExplanation =
+	"Structured pages are route-backed pages assembled from reusable content sections instead of one imported HTML body. They power pages like home, about, donate, and service landing pages.";
 ---
 
 {model.status !== "forbidden" ? (

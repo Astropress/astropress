@@ -169,6 +169,13 @@ async function main(): Promise<void> {
 
 		await cp(smokeTemplateDir, tempProjectDir, { recursive: true });
 
+		// Remove bun workspace symlinks — they point back into the monorepo and
+		// become stale after the copy, causing npm to report astro@undefined.
+		await rm(path.join(tempProjectDir, "node_modules"), {
+			recursive: true,
+			force: true,
+		});
+
 		// 4. Rewrite package.json to use the packed tarball instead of workspace:*.
 		const pkgJsonPath = path.join(tempProjectDir, "package.json");
 		const pkgJson = JSON.parse(await readFile(pkgJsonPath, "utf8")) as {
@@ -179,7 +186,11 @@ async function main(): Promise<void> {
 
 		// 5. Install dependencies (uses the tarball, not the workspace symlink).
 		console.log("Installing from tarball…");
-		await runCommand("npm", ["install", "--prefer-offline"], tempProjectDir);
+		await runCommand(
+			"npm",
+			["install", "--prefer-offline", "--legacy-peer-deps"],
+			tempProjectDir,
+		);
 
 		// 6. Boot the dev server.
 		const port = await findAvailablePort(4327);

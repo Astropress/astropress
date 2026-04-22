@@ -6,7 +6,7 @@ import { isSeededPostRecord } from "astropress";
 const adminUser = Astro.locals.adminUser;
 
 if (Astro.url.searchParams.get("type") === "page") {
-  return Astro.redirect("/ap-admin/pages", 302);
+	return Astro.redirect("/ap-admin/pages", 302);
 }
 
 const model = await buildPostsIndexPageModel(Astro.locals);
@@ -24,103 +24,124 @@ const tagFilter = Number(query.get("tag") ?? "");
 const searchFilter = query.get("q")?.trim().toLowerCase() || "";
 const now = Date.now();
 
-const authorNamesById = new Map(authors.map((author) => [author.id, author.name]));
-const categoryNamesById = new Map(categories.map((term) => [term.id, term.name]));
+const authorNamesById = new Map(
+	authors.map((author) => [author.id, author.name]),
+);
+const categoryNamesById = new Map(
+	categories.map((term) => [term.id, term.name]),
+);
 const tagNamesById = new Map(tags.map((term) => [term.id, term.name]));
-const selectedArchive = archives.find((entry) => entry.slug === archiveFilter) ?? null;
-const selectedArchiveRoutes = new Set((selectedArchive?.listingItems ?? []).map((item) => item.href));
+const selectedArchive =
+	archives.find((entry) => entry.slug === archiveFilter) ?? null;
+const selectedArchiveRoutes = new Set(
+	(selectedArchive?.listingItems ?? []).map((item) => item.href),
+);
 
-function joinAssignmentLabels(ids: number[] | undefined, labelsById: Map<number, string>) {
-  if (!ids || ids.length === 0) {
-    return "—";
-  }
+function joinAssignmentLabels(
+	ids: number[] | undefined,
+	labelsById: Map<number, string>,
+) {
+	if (!ids || ids.length === 0) {
+		return "—";
+	}
 
-  const labels = ids.map((id) => labelsById.get(id)).filter((value): value is string => Boolean(value));
-  return labels.length > 0 ? labels.join(", ") : "—";
+	const labels = ids
+		.map((id) => labelsById.get(id))
+		.filter((value): value is string => Boolean(value));
+	return labels.length > 0 ? labels.join(", ") : "—";
 }
 
 function formatScheduledAt(value: string | undefined) {
-  if (!value) {
-    return "—";
-  }
+	if (!value) {
+		return "—";
+	}
 
-  return new Date(value).toLocaleString("en-US", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-  });
+	return new Date(value).toLocaleString("en-US", {
+		year: "numeric",
+		month: "short",
+		day: "numeric",
+		hour: "numeric",
+		minute: "2-digit",
+	});
 }
 
 function getWorkflowLabel(state: (typeof rows)[number]) {
-  const effectiveStatus = state.status || "published";
-  const scheduledAt = state.scheduledAt;
-  const scheduledMs = scheduledAt ? Date.parse(scheduledAt) : NaN;
+	const effectiveStatus = state.status || "published";
+	const scheduledAt = state.scheduledAt;
+	const scheduledMs = scheduledAt ? Date.parse(scheduledAt) : Number.NaN;
 
-  if (scheduledAt && Number.isFinite(scheduledMs) && scheduledMs > now) {
-    return "scheduled";
-  }
+	if (scheduledAt && Number.isFinite(scheduledMs) && scheduledMs > now) {
+		return "scheduled";
+	}
 
-  if (effectiveStatus === "review" || effectiveStatus === "draft") {
-    return "review-needed";
-  }
+	if (effectiveStatus === "review" || effectiveStatus === "draft") {
+		return "review-needed";
+	}
 
-  if (!scheduledAt) {
-    return "unscheduled";
-  }
+	if (!scheduledAt) {
+		return "unscheduled";
+	}
 
-  return "scheduled";
+	return "scheduled";
 }
 
 const PAGE_SIZE = 25;
 const currentPage = Math.max(Number(query.get("page") ?? "1") || 1, 1);
 
 const filteredRows = rows.filter((page) => {
-  const effectiveStatus = page.status || "published";
-  const authorIds = page.authorIds ?? [];
-  const categoryIds = page.categoryIds ?? [];
-  const tagIds = page.tagIds ?? [];
-  const workflowLabel = getWorkflowLabel(page);
-  const matchesArchive =
-    !archiveFilter ||
-    selectedArchiveRoutes.size === 0 ||
-    selectedArchiveRoutes.has(page.legacyUrl);
-  const matchesSearch =
-    searchFilter.length === 0 ||
-    [
-      page.title,
-      page.slug,
-      page.legacyUrl,
-      joinAssignmentLabels(authorIds, authorNamesById),
-      joinAssignmentLabels(categoryIds, categoryNamesById),
-      joinAssignmentLabels(tagIds, tagNamesById),
-      formatScheduledAt(page.scheduledAt),
-      workflowLabel,
-    ]
-      .join(" ")
-      .toLowerCase()
-      .includes(searchFilter);
+	const effectiveStatus = page.status || "published";
+	const authorIds = page.authorIds ?? [];
+	const categoryIds = page.categoryIds ?? [];
+	const tagIds = page.tagIds ?? [];
+	const workflowLabel = getWorkflowLabel(page);
+	const matchesArchive =
+		!archiveFilter ||
+		selectedArchiveRoutes.size === 0 ||
+		selectedArchiveRoutes.has(page.legacyUrl);
+	const matchesSearch =
+		searchFilter.length === 0 ||
+		[
+			page.title,
+			page.slug,
+			page.legacyUrl,
+			joinAssignmentLabels(authorIds, authorNamesById),
+			joinAssignmentLabels(categoryIds, categoryNamesById),
+			joinAssignmentLabels(tagIds, tagNamesById),
+			formatScheduledAt(page.scheduledAt),
+			workflowLabel,
+		]
+			.join(" ")
+			.toLowerCase()
+			.includes(searchFilter);
 
-  return (
-    (!statusFilter || effectiveStatus === statusFilter) &&
-    (!workflowFilter || workflowLabel === workflowFilter) &&
-    matchesArchive &&
-    (!Number.isInteger(authorFilter) || authorFilter <= 0 || authorIds.includes(authorFilter)) &&
-    (!Number.isInteger(categoryFilter) || categoryFilter <= 0 || categoryIds.includes(categoryFilter)) &&
-    (!Number.isInteger(tagFilter) || tagFilter <= 0 || tagIds.includes(tagFilter)) &&
-    matchesSearch
-  );
+	return (
+		(!statusFilter || effectiveStatus === statusFilter) &&
+		(!workflowFilter || workflowLabel === workflowFilter) &&
+		matchesArchive &&
+		(!Number.isInteger(authorFilter) ||
+			authorFilter <= 0 ||
+			authorIds.includes(authorFilter)) &&
+		(!Number.isInteger(categoryFilter) ||
+			categoryFilter <= 0 ||
+			categoryIds.includes(categoryFilter)) &&
+		(!Number.isInteger(tagFilter) ||
+			tagFilter <= 0 ||
+			tagIds.includes(tagFilter)) &&
+		matchesSearch
+	);
 });
 
 const totalPages = Math.max(Math.ceil(filteredRows.length / PAGE_SIZE), 1);
 const safePage = Math.min(currentPage, totalPages);
-const pagedRows = filteredRows.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
+const pagedRows = filteredRows.slice(
+	(safePage - 1) * PAGE_SIZE,
+	safePage * PAGE_SIZE,
+);
 
 function paginationHref(targetPage: number) {
-  const p = new URLSearchParams(query);
-  p.set("page", String(targetPage));
-  return `/ap-admin/posts?${p.toString()}`;
+	const p = new URLSearchParams(query);
+	p.set("page", String(targetPage));
+	return `/ap-admin/posts?${p.toString()}`;
 }
 ---
 

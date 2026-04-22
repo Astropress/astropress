@@ -137,6 +137,68 @@ const APPROVED: ApprovedSuppression[] = [
 			"key in Bun for correct test isolation. Code fix not possible without breaking " +
 			"test teardown on Bun. Lint only — no security impact.",
 	},
+	// API route files: store.apiTokens is typed as optional (ApiTokenStore | undefined) on the
+	// runtime locals type, but is always populated by the API token auth middleware before these
+	// routes are reached. Code fix (null guard returning 503) would change observable behaviour
+	// for a path that cannot be reached in production. Alternatives considered: (1) widening the
+	// withApiRequest signature to accept undefined — breaks callers that rely on the non-optional
+	// type; (2) restructuring middleware to use a narrower locals subtype — requires broader
+	// refactor outside scope of this merge. Mitigation: the API token middleware is registered at
+	// the integration level before any ap-api/* route handler runs.
+	{
+		file: "packages/astropress/pages/ap-api/v1/content.ts",
+		linePattern: /biome-ignore lint\/style\/noNonNullAssertion/,
+		contentPattern: /apiTokens/,
+		rubric: "store.apiTokens always set by API token auth middleware. See block comment above.",
+	},
+	{
+		file: "packages/astropress/pages/ap-api/v1/content/[id].ts",
+		linePattern: /biome-ignore lint\/style\/noNonNullAssertion/,
+		contentPattern: /apiTokens/,
+		rubric: "store.apiTokens always set by API token auth middleware. See block comment above.",
+	},
+	{
+		file: "packages/astropress/pages/ap-api/v1/media.ts",
+		linePattern: /biome-ignore lint\/style\/noNonNullAssertion/,
+		contentPattern: /apiTokens/,
+		rubric: "store.apiTokens always set by API token auth middleware. See block comment above.",
+	},
+	{
+		file: "packages/astropress/pages/ap-api/v1/media/[id].ts",
+		linePattern: /biome-ignore lint\/style\/noNonNullAssertion/,
+		contentPattern: /apiTokens/,
+		rubric: "store.apiTokens always set by API token auth middleware. See block comment above.",
+	},
+	{
+		file: "packages/astropress/pages/ap-api/v1/metrics.ts",
+		linePattern: /biome-ignore lint\/style\/noNonNullAssertion/,
+		contentPattern: /apiTokens/,
+		rubric: "store.apiTokens always set by API token auth middleware. See block comment above.",
+	},
+	{
+		file: "packages/astropress/pages/ap-api/v1/revisions/[recordId].ts",
+		linePattern: /biome-ignore lint\/style\/noNonNullAssertion/,
+		contentPattern: /apiTokens/,
+		rubric: "store.apiTokens always set by API token auth middleware. See block comment above.",
+	},
+	{
+		file: "packages/astropress/pages/ap-api/v1/search.ts",
+		linePattern: /biome-ignore lint\/style\/noNonNullAssertion/,
+		contentPattern: /apiTokens/,
+		rubric: "store.apiTokens always set by API token auth middleware. See block comment above.",
+	},
+	{
+		file: "packages/astropress/pages/ap-api/v1/settings.ts",
+		linePattern: /biome-ignore lint\/style\/noNonNullAssertion/,
+		contentPattern: /apiTokens/,
+		rubric: "store.apiTokens always set by API token auth middleware. See block comment above.",
+	},
+	{
+		file: "packages/astropress/pages/ap-api/v1/webhooks.ts",
+		linePattern: /biome-ignore lint\/style\/noNonNullAssertion/,
+		contentPattern: /apiTokens/,
+		rubric: "store.apiTokens always set by API token auth middleware. See block comment above.",
+	},
 ];
 
 // ── Scanner ──────────────────────────────────────────────────────────────────

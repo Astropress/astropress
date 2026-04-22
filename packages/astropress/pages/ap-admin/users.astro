@@ -3,20 +3,32 @@ import AdminLayout from "@astropress-diy/astropress/components/AdminLayout.astro
 import AuditTrail from "@astropress-diy/astropress/components/AuditTrail.astro";
 import CsrfInput from "@astropress-diy/astropress/components/CsrfInput.astro";
 import { buildUsersPageModel } from "astropress";
+import { resolveSafeAdminHref } from "../../src/admin-link-utils";
 
 const adminUser = Astro.locals.adminUser;
-const model = await buildUsersPageModel(Astro.locals, adminUser!.role);
+const model = await buildUsersPageModel(Astro.locals, adminUser?.role);
 const { users, auditEvents } = model.data;
 const wasCreated = Astro.url.searchParams.get("saved") === "1";
 const userCreatedNoEmail = Astro.url.searchParams.get("user_created") === "1";
 const wasSuspended = Astro.url.searchParams.get("suspended") === "1";
 const wasRestored = Astro.url.searchParams.get("restored") === "1";
-const inviteLink = Astro.url.searchParams.get("invite_link");
-const resetLink = Astro.url.searchParams.get("reset_link");
-const errorMessage = Astro.url.searchParams.get("error") === "1" ? Astro.url.searchParams.get("message") : "";
+const inviteLink = resolveSafeAdminHref(
+	Astro.url,
+	Astro.url.searchParams.get("invite_link"),
+	["/ap-admin/accept-invite"],
+);
+const resetLink = resolveSafeAdminHref(
+	Astro.url,
+	Astro.url.searchParams.get("reset_link"),
+	["/ap-admin/reset-password"],
+);
+const errorMessage =
+	Astro.url.searchParams.get("error") === "1"
+		? Astro.url.searchParams.get("message")
+		: "";
 
 if (model.status === "forbidden") {
-  Astro.response.status = 403;
+	Astro.response.status = 403;
 }
 ---
 

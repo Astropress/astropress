@@ -5,40 +5,54 @@ const adminUser = Astro.locals.adminUser;
 const { source } = Astro.params;
 
 const VALID_SOURCES = ["wordpress", "wix", "crawl"] as const;
-type ImportSource = typeof VALID_SOURCES[number];
+type ImportSource = (typeof VALID_SOURCES)[number];
 
 function isValidSource(s: string | undefined): s is ImportSource {
-  return VALID_SOURCES.includes(s as ImportSource);
+	return VALID_SOURCES.includes(s as ImportSource);
 }
 
 if (!adminUser || adminUser.role !== "admin") {
-  Astro.response.status = 403;
+	Astro.response.status = 403;
 } else if (!isValidSource(source)) {
-  Astro.response.status = 404;
+	Astro.response.status = 404;
 }
 
-const sourceMeta: Record<ImportSource, { label: string; description: string; fileLabel: string; fileHint: string; urlHint: string }> = {
-  wordpress: {
-    label: "WordPress",
-    description: "Import posts, pages, media, authors, and taxonomies from WordPress.",
-    fileLabel: "WordPress XML export file (.xml)",
-    fileHint: "Export via WordPress Admin → Tools → Export → All content.",
-    urlHint: "Provide a live WordPress site URL to trigger an authenticated export download.",
-  },
-  wix: {
-    label: "Wix",
-    description: "Import blog posts, pages, authors, and media from Wix.",
-    fileLabel: "Wix CSV export file (.csv)",
-    fileHint: "Export via Wix Dashboard → Blog → Posts → Export.",
-    urlHint: "Provide a live Wix site URL to trigger an authenticated export download.",
-  },
-  crawl: {
-    label: "Web crawl",
-    description: "Crawl any publicly accessible website and import its pages as content records.",
-    fileLabel: "",
-    fileHint: "",
-    urlHint: "Provide the starting URL of the site to crawl. Only publicly accessible pages are imported.",
-  },
+const sourceMeta: Record<
+	ImportSource,
+	{
+		label: string;
+		description: string;
+		fileLabel: string;
+		fileHint: string;
+		urlHint: string;
+	}
+> = {
+	wordpress: {
+		label: "WordPress",
+		description:
+			"Import posts, pages, media, authors, and taxonomies from WordPress.",
+		fileLabel: "WordPress XML export file (.xml)",
+		fileHint: "Export via WordPress Admin → Tools → Export → All content.",
+		urlHint:
+			"Provide a live WordPress site URL to trigger an authenticated export download.",
+	},
+	wix: {
+		label: "Wix",
+		description: "Import blog posts, pages, authors, and media from Wix.",
+		fileLabel: "Wix CSV export file (.csv)",
+		fileHint: "Export via Wix Dashboard → Blog → Posts → Export.",
+		urlHint:
+			"Provide a live Wix site URL to trigger an authenticated export download.",
+	},
+	crawl: {
+		label: "Web crawl",
+		description:
+			"Crawl any publicly accessible website and import its pages as content records.",
+		fileLabel: "",
+		fileHint: "",
+		urlHint:
+			"Provide the starting URL of the site to crawl. Only publicly accessible pages are imported.",
+	},
 };
 
 const meta = isValidSource(source) ? sourceMeta[source] : null;

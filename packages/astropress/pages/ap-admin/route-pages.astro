@@ -3,10 +3,10 @@ import AdminLayout from "@astropress-diy/astropress/components/AdminLayout.astro
 import { buildRouteTablePageModel } from "astropress";
 
 const adminUser = Astro.locals.adminUser;
-const model = await buildRouteTablePageModel(Astro.locals, adminUser!.role);
+const model = await buildRouteTablePageModel(Astro.locals, adminUser?.role);
 const { routePages, settings } = model.data;
 if (model.status === "forbidden") {
-  Astro.response.status = 403;
+	Astro.response.status = 403;
 }
 const currentAdminSlug = settings.adminSlug || "ap-admin";
 const isDefaultSlug = currentAdminSlug === "ap-admin";

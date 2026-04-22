@@ -5,16 +5,19 @@ import CsrfInput from "@astropress-diy/astropress/components/CsrfInput.astro";
 import { buildAuthorsPageModel } from "astropress";
 
 const adminUser = Astro.locals.adminUser;
-const model = await buildAuthorsPageModel(Astro.locals, adminUser!.role);
+const model = await buildAuthorsPageModel(Astro.locals, adminUser?.role);
 const { authors, auditEvents } = model.data;
 const wasSaved = Astro.url.searchParams.get("saved") === "1";
 const wasDeleted = Astro.url.searchParams.get("deleted") === "1";
 const restoreTable = Astro.url.searchParams.get("restore_table") ?? "";
 const restoreId = Astro.url.searchParams.get("restore_id") ?? "";
-const errorMessage = Astro.url.searchParams.get("error") === "1" ? Astro.url.searchParams.get("message") : "";
+const errorMessage =
+	Astro.url.searchParams.get("error") === "1"
+		? Astro.url.searchParams.get("message")
+		: "";
 
 if (model.status === "forbidden") {
-  Astro.response.status = 403;
+	Astro.response.status = 403;
 }
 ---
 

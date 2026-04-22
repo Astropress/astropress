@@ -834,6 +834,8 @@ const verificationGroups: VerificationGroup[] = [
 			"A bot submitting the contact form without solving CAPTCHA is rejected",
 			"Admin pages use a stricter Content-Security-Policy than public pages",
 			"Comment author email is hashed before storage",
+			"Admin pages do not echo unsafe URLs from query parameters",
+			"Invite and password-reset POST handlers reject requests with no origin evidence",
 		],
 		steps: [
 			{
@@ -846,6 +848,7 @@ const verificationGroups: VerificationGroup[] = [
 					"tests/rate-limit-repository-factory.test.ts",
 					"tests/cloudflare-adapter-security.test.ts",
 					"tests/privacy-invariants.test.ts",
+					"tests/admin-link-utils.test.ts",
 				],
 				cwd: astropressPackageRoot,
 			},
@@ -1580,6 +1583,32 @@ const verificationGroups: VerificationGroup[] = [
 					"migrate_incompatible",
 					"migrate_unknown",
 					"migrate_dry_run",
+				],
+			},
+		],
+	},
+	{
+		label: "auth emergency-revoke CLI scenarios",
+		scenarios: [
+			"--all revokes every active session and API token",
+			"--sessions-only revokes sessions without touching tokens",
+			"--tokens-only revokes API tokens without touching sessions",
+			"--all --user scopes revocation to a single user's sessions",
+			"--all prints a bootstrap password warning",
+			"Running without a scope flag returns a clear usage error",
+		],
+		steps: [
+			{
+				command: "cargo",
+				args: [
+					"test",
+					"--",
+					"auth_emergency_revoke_all_parses",
+					"auth_emergency_revoke_sessions_only_parses",
+					"auth_emergency_revoke_tokens_only_parses",
+					"auth_emergency_revoke_user_scoping_parses",
+					"auth_emergency_revoke_bootstrap_warning_scope",
+					"auth_emergency_revoke_no_scope_returns_error",
 				],
 			},
 		],

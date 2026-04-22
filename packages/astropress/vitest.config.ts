@@ -67,8 +67,10 @@ export default defineConfig({
 			reporter: ["text", "json-summary"],
 			reportsDirectory: "./coverage",
 			include: [
+				"src/admin-link-utils.ts",
 				"src/admin-action-utils.ts",
 				"src/admin-normalizers.ts",
+				"src/security-headers.ts",
 				"src/html-optimization.ts",
 				"src/html-sanitization.ts",
 				"src/locale-links.ts",

@@ -39,6 +39,7 @@ use commands::list::{list_providers, list_tools};
 use commands::migrate::{run_migrate, MigrateOptions};
 use commands::new::{scaffold_new_project, run_post_scaffold_setup};
 use telemetry::run_telemetry_command;
+use commands::auth::run_emergency_revoke;
 use commands::services::{bootstrap_content_services, print_content_services_report, verify_content_services};
 use commands::upgrade::{apply_upgrade, check_upgrade_compatibility, print_upgrade_check_report};
 
@@ -273,6 +274,12 @@ fn main() -> ExitCode {
         }
         Ok(Command::Migrate { project_dir, from, to, dry_run }) => {
             match run_migrate(&MigrateOptions { project_dir, from, to, dry_run }) {
+                Ok(()) => ExitCode::SUCCESS,
+                Err(error) => fail(error),
+            }
+        }
+        Ok(Command::AuthEmergencyRevoke { project_dir, scope, user_email }) => {
+            match run_emergency_revoke(&project_dir, scope, user_email.as_deref()) {
                 Ok(()) => ExitCode::SUCCESS,
                 Err(error) => fail(error),
             }

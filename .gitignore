@@ -19,13 +19,12 @@ target/
 test-results/
 playwright-report/
 
-# Mutation testing
-.stryker-incremental.json
-.stryker-tmp/
-reports/mutation/
-mutants.out/
+# Stryker mutation testing artifacts (generated per-run)
+**/.stryker-tmp/
+**/.stryker-incremental.json
+**/stryker-setup-*.js
+**/reports/mutation/
 mutants.out.old/
-stryker-setup-*.js
 stryker.local.mjs
 
 # Claude Code session data
@@ -37,3 +36,6 @@ stryker.local.mjs
 packages/astropress/.data/
 examples/admin-harness/.data/
 .data/
+
+# Cargo mutants output
+crates/mutants.out/

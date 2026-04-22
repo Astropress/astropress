@@ -153,8 +153,10 @@ export function createAstropressSecureRedirect(
 }
 
 export function isTrustedRequestOrigin(request: Request): boolean {
-	const requestUrl = parseOrigin(request.url);
-	if (!requestUrl) {
+	let requestOrigin: string;
+	try {
+		requestOrigin = new URL(request.url).origin;
+	} catch {
 		return false;
 	}
 
@@ -162,15 +164,38 @@ export function isTrustedRequestOrigin(request: Request): boolean {
 	if (rawOrigin !== null) {
 		const origin = parseOrigin(rawOrigin);
 		if (origin === null) return false;
-		return origin.origin === requestUrl.origin;
+		return origin.origin === requestOrigin;
 	}
 
 	const rawReferer = request.headers.get("referer");
 	if (rawReferer !== null) {
 		const referer = parseOrigin(rawReferer);
 		if (referer === null) return false;
-		return referer.origin === requestUrl.origin;
+		return referer.origin === requestOrigin;
 	}
 
 	return true;
+}
+
+export function isTrustedStrictRequestOrigin(request: Request): boolean {
+	let requestOrigin: string;
+	try {
+		requestOrigin = new URL(request.url).origin;
+	} catch {
+		return false;
+	}
+
+	const origin = parseOrigin(request.headers.get("origin") ?? "");
+	if (request.headers.get("origin") !== null) {
+		if (!origin) return false;
+		return origin.origin === requestOrigin;
+	}
+
+	const referer = parseOrigin(request.headers.get("referer") ?? "");
+	if (request.headers.get("referer") !== null) {
+		if (!referer) return false;
+		return referer.origin === requestOrigin;
+	}
+
+	return false;
 }

@@ -17,6 +17,7 @@ use std::path::{Path, PathBuf};
 use std::sync::Once;
 use std::time::{SystemTime, UNIX_EPOCH};
 
+mod auth;
 mod doctor;
 mod doctor_more;
 mod parse;

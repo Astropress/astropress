@@ -4,6 +4,7 @@ use crate::providers::{
     AbTestingProvider, AnalyticsProvider, AppHost, DataServices, HeatmapProvider, LocalProvider,
 };
 
+mod auth;
 mod dev_deploy;
 mod help;
 mod import;
@@ -12,6 +13,7 @@ mod new;
 mod ops;
 
 pub(crate) use help::print_help;
+pub(crate) use auth::AuthRevokeScope;
 
 use misc::{parse_add_command, parse_migrate_command, parse_telemetry_command};
 use crate::telemetry::TelemetryAction;
@@ -146,6 +148,11 @@ pub(crate) enum Command {
         to: String,
         dry_run: bool,
     },
+    AuthEmergencyRevoke {
+        project_dir: PathBuf,
+        scope: auth::AuthRevokeScope,
+        user_email: Option<String>,
+    },
     Telemetry { action: TelemetryAction },
     ListTools,
     ListProviders,
@@ -234,6 +241,12 @@ pub(crate) fn parse_command(args: &[String]) -> Result<Command, String> {
         }
         [command, ..] if command == "list" || command == "ls" => {
             Err("Unsupported list subcommand. Use `astropress list tools` or `astropress list providers`.".into())
+        }
+        [command, subcommand, rest @ ..] if command == "auth" && subcommand == "emergency-revoke" => {
+            auth::parse_auth_emergency_revoke_command(rest)
+        }
+        [command, ..] if command == "auth" => {
+            Err("Unsupported auth subcommand. Use `astropress auth emergency-revoke`.".into())
         }
         [command, rest @ ..] if command == "telemetry" => parse_telemetry_command(rest),
         [command, ..] => Err(format!("Unsupported astropress command: `{command}`.")),

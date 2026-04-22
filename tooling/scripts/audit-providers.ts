@@ -61,6 +61,15 @@ async function main() {
 		}
 	}
 
+	// ── AGENTS.md must contain the no-speculative-features rule ──
+	const agentsMdPath = join(root, "AGENTS.md");
+	const agentsSrc = await readFile(agentsMdPath, "utf8").catch(() => "");
+	if (!agentsSrc.includes("No speculative features") && !agentsSrc.includes("no-speculative-features")) {
+		violations.push(
+			'AGENTS.md: "No speculative features" rule is missing — contributors must be instructed never to add unverified providers',
+		);
+	}
+
 	if (violations.length > 0) {
 		console.error("provider audit failed:\n");
 		for (const v of violations) {
@@ -70,7 +79,7 @@ async function main() {
 	}
 
 	console.log(
-		`provider audit passed — ${appHostValues.length} app hosts, ${dataServiceValues.length} data services, all verified.`,
+		`provider audit passed — ${appHostValues.length} app hosts, ${dataServiceValues.length} data services, all verified. AGENTS.md no-speculative-features rule present.`,
 	);
 }
 

@@ -29,3 +29,15 @@ Feature: Site security and bot protection
     When the comment repository stores the submission with a site session salt
     Then the stored email field is a 64-character keyed digest
     And the raw email address is not present anywhere in the stored record
+
+  Scenario: Admin pages do not echo unsafe URLs from query parameters
+    Given an attacker crafts a URL with a javascript: or off-site reset_link parameter
+    When an admin loads the reset-password or users page with that crafted URL
+    Then the unsafe URL is not rendered as a clickable link
+    And only same-origin admin paths in the allowed list are surfaced as links
+
+  Scenario: Invite and password-reset POST handlers reject requests with no origin evidence
+    Given a request arrives at an auth POST endpoint without any Origin or Referer header
+    When the server evaluates the request origin
+    Then the server rejects the request with an invalid-origin redirect
+    And requests that include a valid same-origin Origin header are accepted normally

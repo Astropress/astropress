@@ -3,7 +3,7 @@
 Auto-generated from TypeScript source via the TypeScript compiler API.
 Run `bun run docs:api` to regenerate.
 
-Generated: 2026-04-20
+Generated: 2026-04-22
 
 ---
 
@@ -389,6 +389,11 @@ function createAstropressSecurityHeaders(options: AstropressSecurityHeadersOptio
 #### `isTrustedRequestOrigin`
 ```ts
 function isTrustedRequestOrigin(request: Request): boolean
+```
+
+#### `isTrustedStrictRequestOrigin`
+```ts
+function isTrustedStrictRequestOrigin(request: Request): boolean
 ```
 
 #### `createAstropressSecurityMiddleware`

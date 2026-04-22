@@ -9,9 +9,13 @@ const model = await buildTestimonialsPageModel(Astro.locals);
 const { pending, approved, featured, auditEvents } = model.data;
 const tab = Astro.url.searchParams.get("tab") ?? "pending";
 const wasSaved = Astro.url.searchParams.get("saved") === "1";
-const errorMessage = Astro.url.searchParams.get("error") === "1" ? Astro.url.searchParams.get("message") : "";
+const errorMessage =
+	Astro.url.searchParams.get("error") === "1"
+		? Astro.url.searchParams.get("message")
+		: "";
 
-const activeList = tab === "approved" ? approved : tab === "featured" ? featured : pending;
+const activeList =
+	tab === "approved" ? approved : tab === "featured" ? featured : pending;
 ---
 
 <AdminLayout

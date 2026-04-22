@@ -1,17 +1,20 @@
 ---
 import AdminLayout from "@astropress-diy/astropress/components/AdminLayout.astro";
-import { getAstropressService, type ServiceProvider } from "@astropress-diy/astropress/services-config";
+import {
+	type ServiceProvider,
+	getAstropressService,
+} from "@astropress-diy/astropress/services-config";
 
 const adminUser = Astro.locals.adminUser;
 if (adminUser?.role !== "admin") {
-  Astro.response.status = 403;
+	Astro.response.status = 403;
 }
 
 const { provider } = Astro.params as { provider: string };
 const service = getAstropressService(provider as ServiceProvider);
 
 if (!service) {
-  Astro.response.status = 404;
+	Astro.response.status = 404;
 }
 ---
 
