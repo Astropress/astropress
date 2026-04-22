@@ -8,10 +8,91 @@
  * Checks code-scanning alerts introduced on the current branch versus main.
  * Exits non-zero if any open, non-dismissed alerts are present on the branch ref.
  *
- * Requires: gh CLI authenticated (gh auth login)
+ * If gh CLI is not installed, attempts to install it automatically:
+ *   - apt-based systems (Debian/Ubuntu):  apt-get install gh
+ *   - dnf-based systems (Fedora/RHEL):    dnf install gh
+ *   - macOS:                              brew install gh
+ *   - fallback:                           downloads from GitHub releases
+ *
+ * After install, prompts for `gh auth login` if not already authenticated.
  */
 
-import { execFileSync } from "node:child_process";
+import { execFileSync, execSync } from "node:child_process";
+import { existsSync } from "node:fs";
+import { platform } from "node:os";
+
+function ensureGh(): void {
+  try {
+    execFileSync("gh", ["--version"], { stdio: "ignore" });
+    return; // already installed
+  } catch {
+    // not found — fall through to install
+  }
+
+  console.log("gh CLI not found — installing...\n");
+
+  const os = platform();
+
+  if (os === "linux") {
+    // Detect package manager
+    if (existsSync("/usr/bin/apt-get") || existsSync("/usr/bin/apt")) {
+      // Debian/Ubuntu — use the official GitHub CLI apt repo
+      execSync(
+        `type -p curl >/dev/null || (sudo apt-get update && sudo apt-get install -y curl)
+         curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
+         sudo chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg
+         echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
+         sudo apt-get update && sudo apt-get install -y gh`,
+        { stdio: "inherit", shell: "/bin/bash" },
+      );
+    } else if (existsSync("/usr/bin/dnf")) {
+      execSync("sudo dnf install -y gh", { stdio: "inherit" });
+    } else if (existsSync("/usr/bin/yum")) {
+      execSync("sudo yum install -y gh", { stdio: "inherit" });
+    } else if (existsSync("/usr/bin/pacman")) {
+      execSync("sudo pacman -Sy --noconfirm github-cli", { stdio: "inherit" });
+    } else if (existsSync("/usr/bin/zypper")) {
+      execSync("sudo zypper install -y gh", { stdio: "inherit" });
+    } else {
+      installGhViaTarball();
+    }
+  } else if (os === "darwin") {
+    execSync("brew install gh", { stdio: "inherit" });
+  } else {
+    installGhViaTarball();
+  }
+
+  // Verify install succeeded
+  try {
+    const version = execFileSync("gh", ["--version"], { encoding: "utf8" }).trim().split("\n")[0];
+    console.log(`\nInstalled: ${version}\n`);
+  } catch {
+    console.error("gh install appeared to succeed but `gh --version` still fails. Add gh to PATH and retry.");
+    process.exit(1);
+  }
+
+  // Check auth
+  try {
+    execFileSync("gh", ["auth", "status"], { stdio: "ignore" });
+  } catch {
+    console.log("gh is installed but not authenticated. Run:\n\n  gh auth login\n\nthen re-run this script.");
+    process.exit(1);
+  }
+}
+
+function installGhViaTarball(): void {
+  // Fallback: download latest release tarball from GitHub
+  const arch = process.arch === "arm64" ? "arm64" : "amd64";
+  const script = `
+    set -e
+    GH_VERSION=$(curl -s https://api.github.com/repos/cli/cli/releases/latest | grep '"tag_name"' | cut -d'"' -f4 | sed 's/^v//')
+    curl -fsSL "https://github.com/cli/cli/releases/download/v\${GH_VERSION}/gh_\${GH_VERSION}_linux_${arch}.tar.gz" -o /tmp/gh.tar.gz
+    tar -xzf /tmp/gh.tar.gz -C /tmp
+    sudo mv /tmp/gh_\${GH_VERSION}_linux_${arch}/bin/gh /usr/local/bin/gh
+    rm -rf /tmp/gh.tar.gz /tmp/gh_\${GH_VERSION}_linux_${arch}
+  `;
+  execSync(script, { stdio: "inherit", shell: "/bin/bash" });
+}
 
 function gh(args: string[]): unknown {
   const out = execFileSync("gh", ["api", "--paginate", ...args], { encoding: "utf8" });
@@ -40,6 +121,8 @@ interface Alert {
 }
 
 async function main() {
+  ensureGh();
+
   const args = process.argv.slice(2);
   const repoArg = args.indexOf("--repo");
   const branchArg = args.indexOf("--branch");
