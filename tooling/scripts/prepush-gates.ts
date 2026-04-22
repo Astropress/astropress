@@ -76,8 +76,12 @@ function main(): void {
 	]);
 	if (!tier1) process.exit(1);
 
-	// Tier 2 — BDD suite
+	// Tier 2 — BDD suite (requires a fresh dist build so Rust tests use current JS)
 	const tier2 = runTier("── pre-push tier 2: BDD suite ──", [
+		{
+			cmd: "bun",
+			args: ["run", "--filter", "@astropress-diy/astropress", "build"],
+		},
 		{ cmd: "bun", args: ["run", "bdd:test"] },
 	]);
 	if (!tier2) process.exit(1);
