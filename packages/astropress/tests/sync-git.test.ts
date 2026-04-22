@@ -177,6 +177,42 @@ describe("createAstropressGitSyncAdapter — importSnapshot", () => {
 		const result = await adapter.importSnapshot(snapshotDir);
 		expect(result.fileCount).toBe(1);
 	});
+
+	it("removes entries that exist in project but are absent from snapshot", async () => {
+		const projectDir = makeDir("project-extra");
+		writeFiles(projectDir, {
+			"src/stale.ts": "// stale",
+			"src/keep.ts": "// keep",
+		});
+
+		const snapshotDir = makeDir("snapshot-extra");
+		writeFiles(snapshotDir, { "src/keep.ts": "// keep" });
+
+		const adapter = createAstropressGitSyncAdapter({
+			projectDir,
+			include: ["src"],
+		});
+
+		await adapter.importSnapshot(snapshotDir);
+
+		expect(existsSync(join(projectDir, "src", "keep.ts"))).toBe(true);
+		expect(existsSync(join(projectDir, "src", "stale.ts"))).toBe(false);
+	});
+
+	it("returns sourceDir in the result", async () => {
+		const projectDir = makeDir("project-result");
+		const snapshotDir = makeDir("snapshot-result");
+		writeFiles(snapshotDir, { "package.json": "{}" });
+
+		const adapter = createAstropressGitSyncAdapter({
+			projectDir,
+			include: ["package.json"],
+		});
+
+		const result = await adapter.importSnapshot(snapshotDir);
+		expect(result.sourceDir).toContain("snapshot-result");
+		expect(result.fileCount).toBe(1);
+	});
 });
 
 // ---------------------------------------------------------------------------
@@ -224,6 +260,44 @@ describe("createAstropressGitSyncAdapter — SQLite + reflink", () => {
 
 		expect(infos.length).toBe(1);
 		// Should mention either reflink or standard copy
+		expect(infos[0]).toMatch(/copy-on-write|standard copy/);
+	});
+
+	it("does not warn for non-.sqlite files", async () => {
+		const projectDir = makeDir("project-nosqlite");
+		writeFiles(projectDir, {
+			"src/index.ts": "export {}",
+			"src/data.json": "{}",
+		});
+
+		const warnings: string[] = [];
+		const adapter = createAstropressGitSyncAdapter({
+			projectDir,
+			include: ["src"],
+			logger: { info: () => {}, warn: (msg) => warnings.push(msg) },
+		});
+
+		const targetDir = makeDir("snapshot-nosqlite");
+		await adapter.exportSnapshot(targetDir);
+
+		expect(warnings).toHaveLength(0);
+	});
+
+	it("logs importSnapshot copy method", async () => {
+		const projectDir = makeDir("project-import-log");
+		const snapshotDir = makeDir("snapshot-import-log");
+		writeFiles(snapshotDir, { "src/index.ts": "export {}" });
+
+		const infos: string[] = [];
+		const adapter = createAstropressGitSyncAdapter({
+			projectDir,
+			include: ["src"],
+			logger: { info: (msg) => infos.push(msg), warn: () => {} },
+		});
+
+		await adapter.importSnapshot(snapshotDir);
+
+		expect(infos.length).toBe(1);
 		expect(infos[0]).toMatch(/copy-on-write|standard copy/);
 	});
 });
