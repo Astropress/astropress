@@ -1,6 +1,28 @@
 import { describe, expect, it, vi } from "vitest";
 import { createAstropressLocalMediaRepository } from "../src/local-media-repository-factory";
 
+// Mock filesystem ops — this test covers repository orchestration logic only.
+// local-media-storage.test.ts covers the storage layer in isolation. Without
+// this mock, isolate:false coverage runs inherit a deleted temp dir from that
+// test's afterEach, causing ENOENT on the module-level uploadsDir constant.
+vi.mock("../src/local-media-storage", () => ({
+	createLocalMediaUpload: vi.fn(() => ({
+		ok: true as const,
+		asset: {
+			id: "media-test-uuid",
+			storedFilename: "media-test-uuid",
+			diskPath: "/var/astropress-mock/media-test-uuid",
+			publicPath: "/images/uploads/media-test-uuid",
+			r2Key: "media/media-test-uuid",
+			mimeType: "image/png",
+			fileSize: 3,
+			title: "Test",
+			altText: "Alt",
+		},
+	})),
+	deleteLocalMediaUpload: vi.fn(),
+}));
+
 describe("local media repository factory", () => {
 	it("creates and deletes local media through package-owned storage helpers", () => {
 		const insertStoredMediaAsset = vi.fn();
