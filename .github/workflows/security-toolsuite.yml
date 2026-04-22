@@ -73,13 +73,12 @@ jobs:
       # Template-based scanner covering CVEs, misconfigurations, and technology
       # exposure checks. Part of the ProjectDiscovery suite, default in Kali.
       - name: Run nuclei
-        uses: projectdiscovery/nuclei-action@v2
+        uses: projectdiscovery/nuclei-action@v3
         with:
           target: http://127.0.0.1:4173
           templates: http/misconfiguration,http/technologies,http/exposures
           sarif-export: nuclei-results.sarif
-          github-report: true
-          fail_on_severity: critical,high
+          github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload nuclei SARIF to GitHub Security tab
         uses: github/codeql-action/upload-sarif@v3
