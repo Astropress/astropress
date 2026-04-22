@@ -54,8 +54,6 @@ async function copyFileWithReflink(
 
 // Recursive directory copy using COPYFILE_FICLONE (reflink) per file.
 // For .sqlite files, checkpoints WAL first so the main file is self-contained.
-// Returns { fileCount, usedReflink } where usedReflink is true if at least one
-// reflink succeeded (meaning the filesystem supports CoW).
 async function copyTreeWithReflink(
 	src: string,
 	dest: string,
@@ -64,8 +62,6 @@ async function copyTreeWithReflink(
 	const metadata = await stat(src);
 
 	if (!metadata.isDirectory()) {
-		// Before copying a SQLite main file, flush the WAL. If flush succeeded,
-		// the -wal and -shm sidecars are empty/absent and safe to copy as-is.
 		if (src.endsWith(".sqlite")) {
 			await checkpointSqliteWal(src, warn);
 		}
@@ -79,16 +75,36 @@ async function copyTreeWithReflink(
 	let usedReflink = false;
 
 	for (const entry of entries) {
-		const result = await copyTreeWithReflink(
+		const r = await copyTreeWithReflink(
 			join(src, entry.name),
 			join(dest, entry.name),
 			warn,
 		);
-		fileCount += result.fileCount;
-		if (result.usedReflink) usedReflink = true;
+		fileCount += r.fileCount;
+		usedReflink = usedReflink || r.usedReflink;
 	}
 
 	return { fileCount, usedReflink };
+}
+
+async function processIncludes(
+	includes: string[],
+	srcBase: string,
+	destBase: string,
+	warn: (msg: string) => void,
+): Promise<{ fileCount: number; anyReflink: boolean }> {
+	let fileCount = 0;
+	let anyReflink = false;
+	for (const entry of includes) {
+		const src = resolve(srcBase, entry);
+		if (!(await pathExists(src))) continue;
+		const dest = resolve(destBase, entry);
+		await mkdir(dirname(dest), { recursive: true });
+		const r = await copyTreeWithReflink(src, dest, warn);
+		fileCount += r.fileCount;
+		anyReflink = anyReflink || r.usedReflink;
+	}
+	return { fileCount, anyReflink };
 }
 
 export function createAstropressGitSyncAdapter(
@@ -104,27 +120,12 @@ export function createAstropressGitSyncAdapter(
 			const outputDir = resolve(targetDir);
 			await rm(outputDir, { recursive: true, force: true });
 			await mkdir(outputDir, { recursive: true });
-
-			let fileCount = 0;
-			let anyReflink = false;
-
-			for (const entry of include) {
-				const sourcePath = resolve(projectDir, entry);
-				if (!(await pathExists(sourcePath))) {
-					continue;
-				}
-
-				const destinationPath = resolve(outputDir, entry);
-				await mkdir(dirname(destinationPath), { recursive: true });
-				const result = await copyTreeWithReflink(
-					sourcePath,
-					destinationPath,
-					warn,
-				);
-				fileCount += result.fileCount;
-				if (result.usedReflink) anyReflink = true;
-			}
-
+			const { fileCount, anyReflink } = await processIncludes(
+				include,
+				projectDir,
+				outputDir,
+				warn,
+			);
 			log(
 				anyReflink
 					? `Snapshot exported using copy-on-write (reflink): ${fileCount} file(s)`
@@ -134,27 +135,16 @@ export function createAstropressGitSyncAdapter(
 		},
 		async importSnapshot(sourceDir) {
 			const inputDir = resolve(sourceDir);
-			let fileCount = 0;
-			let anyReflink = false;
-
+			// Remove existing entries before restoring, unlike export which starts fresh.
 			for (const entry of include) {
-				const sourcePath = resolve(inputDir, entry);
-				if (!(await pathExists(sourcePath))) {
-					continue;
-				}
-
-				const destinationPath = resolve(projectDir, entry);
-				await rm(destinationPath, { recursive: true, force: true });
-				await mkdir(dirname(destinationPath), { recursive: true });
-				const result = await copyTreeWithReflink(
-					sourcePath,
-					destinationPath,
-					warn,
-				);
-				fileCount += result.fileCount;
-				if (result.usedReflink) anyReflink = true;
+				await rm(resolve(projectDir, entry), { recursive: true, force: true });
 			}
-
+			const { fileCount, anyReflink } = await processIncludes(
+				include,
+				inputDir,
+				projectDir,
+				warn,
+			);
 			log(
 				anyReflink
 					? `Snapshot imported using copy-on-write (reflink): ${fileCount} file(s)`
