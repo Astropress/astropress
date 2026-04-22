@@ -90,15 +90,15 @@
     "dependency-cruiser": "^17.3.10",
     "htmlparser2": "^12.0.0",
     "jsdom": "^26.1.0",
-    "lefthook": "^1.13.6",
+    "lefthook": "^2.1.6",
     "playwright": "^1.59.1",
     "size-limit": "^12.0.1",
-    "typescript": "6.0.2"
+    "typescript": "6.0.3"
   },
   "overrides": {
     "yaml": "^2.8.3",
     "vite": "^7.3.2",
-    "astro": "^6.1.6",
+    "astro": "^6.1.8",
     "hono": "^4.12.14"
   },
   "browserslist": [
