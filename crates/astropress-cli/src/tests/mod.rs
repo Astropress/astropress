@@ -20,6 +20,7 @@ use std::path::{Path, PathBuf};
 use std::sync::Once;
 use std::time::{SystemTime, UNIX_EPOCH};
 
+mod auth;
 mod doctor;
 mod parse;
 mod scaffold;
