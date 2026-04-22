@@ -96,8 +96,8 @@ export function createAstropressGitSyncAdapter(
 ): GitSyncAdapter {
 	const projectDir = resolve(options.projectDir);
 	const include = options.include ?? defaultEntries;
-	const log = options.logger?.info ?? console.log;
-	const warn = options.logger?.warn ?? console.warn;
+	const log = options.logger?.info ?? (() => {});
+	const warn = options.logger?.warn ?? (() => {});
 
 	return {
 		async exportSnapshot(targetDir) {
