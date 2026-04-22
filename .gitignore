@@ -19,6 +19,12 @@ target/
 test-results/
 playwright-report/
 
+# Stryker mutation testing artifacts (generated per-run)
+**/.stryker-tmp/
+**/.stryker-incremental.json
+**/stryker-setup-*.js
+**/reports/mutation/
+
 # Host-app runtime data (SQLite WAL/SHM journals)
 **/.data/*.sqlite-shm
 **/.data/*.sqlite-wal
