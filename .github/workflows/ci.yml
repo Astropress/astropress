@@ -264,6 +264,7 @@ jobs:
           restore-keys: ${{ runner.os }}-bun-
       - run: bun install --frozen-lockfile
       - run: bun run --filter "@astropress-diy/astropress" build
+      - run: npx playwright install --with-deps chromium
       - run: bun run test:admin-harness
       - run: bun run bdd:lint
       - run: bun run bdd:test
