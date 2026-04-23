@@ -138,22 +138,18 @@ async function main(): Promise<void> {
 		console.log("── skipping tiers 2 and 3; running tier 1 only as sanity check");
 	}
 
-	// Tier 1 — targeted tests for committed files (always runs)
-	const tier1: Step = {
-		name: "tier 1 targeted tests",
-		cmd: "bun",
-		args: ["run", "tooling/scripts/staged-tests.ts", "--committed"],
-	};
+	// Previous tier 1 ran `staged-tests --committed` which was effectively a
+	// full Vitest + full `cargo test` on any branch with >25 file changes —
+	// strictly redundant with tier 3's full Vitest suite. Pre-commit already
+	// provides per-commit fail-fast via the same script. Deleted.
 
 	if (docsOnly) {
-		if (!(await runSerial("── tier 1 (targeted) ──", [tier1]))) process.exit(1);
 		console.log(`\nAll pre-push gates passed (docs-only, ${fmtMs(Number(process.hrtime.bigint() - overallStart) / 1e6)}).`);
 		process.exit(0);
 	}
 
-	// Tier 1 + Tier 2 run in parallel — independent of each other.
-	// Tier 2 itself keeps build → bdd:test serial (real ordering dep).
-	const tier2Serial: Step[] = [
+	// Tier 2 — build + BDD. Serial (build produces the dist that bdd:test uses).
+	const tier2: Step[] = [
 		{
 			name: "astropress build",
 			cmd: "bun",
@@ -162,26 +158,7 @@ async function main(): Promise<void> {
 		{ name: "bdd:test", cmd: "bun", args: ["run", "bdd:test"] },
 	];
 
-	const tier12Start = process.hrtime.bigint();
-	console.log("\n── tier 1 (targeted) + tier 2 (BDD) in parallel ──");
-	const [tier1Ok, tier2Ok] = await Promise.all([
-		runAsync(tier1).then((c) => c === 0),
-		(async () => {
-			for (const step of tier2Serial) {
-				if ((await runAsync(step)) !== 0) {
-					console.error(`tier 2 FAILED on "${step.name}"`);
-					return false;
-				}
-			}
-			return true;
-		})(),
-	]);
-	const tier12Elapsed = Number(process.hrtime.bigint() - tier12Start) / 1e6;
-	if (!tier1Ok || !tier2Ok) {
-		console.error(`── tier 1/2 FAILED (${fmtMs(tier12Elapsed)})`);
-		process.exit(1);
-	}
-	console.log(`── tier 1+2 passed (${fmtMs(tier12Elapsed)})`);
+	if (!(await runSerial("── tier 2 (build + BDD) ──", tier2))) process.exit(1);
 
 	// Tier 3 — parallel. Plain vitest (no coverage), Rust smoke, example check.
 	// Coverage thresholds remain enforced in CI.
