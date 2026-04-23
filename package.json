@@ -81,7 +81,9 @@
 		"test:mutants": "cd packages/astropress && node ../../node_modules/.bin/stryker run ../../stryker.config.mjs",
 		"test:mutants:critical": "cd packages/astropress && node ../../node_modules/.bin/stryker run ../../stryker-critical.config.mjs",
 		"test:mutants:sync": "cd packages/astropress && node ../../node_modules/.bin/stryker run ../../stryker-sync.config.mjs",
+		"test:mutants:audit-utils": "node node_modules/.bin/stryker run stryker-audit-utils.config.mjs",
 		"test:mutants:rust": "cargo mutants --package astropress-cli --timeout 30 --manifest-path crates/Cargo.toml",
+		"clean:stryker": "bun run tooling/scripts/kill-stale-stryker.ts",
 		"release": "bun run --filter @astropress-diy/astropress release",
 		"version": "bun run --filter @astropress-diy/astropress version && bun run tooling/scripts/sync-cargo-version.ts",
 		"prepare": "lefthook install"

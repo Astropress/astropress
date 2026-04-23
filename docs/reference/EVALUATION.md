@@ -69,7 +69,7 @@ Grade scale: `A+ / A / B / C / D / F`
 | 59 | User-Facing Route Coverage | A+ | `audit:user-facing-route-coverage` passes (CI-enforced: zero uncovered static routes per surface — admin, public) |
 | 60 | Consumer-Safe Packaging | A+ | `audit:consumer-packaging` passes (CI-enforced: no bare imports); `test:consumer-smoke` and `test:tarball-smoke` verify all routes return HTTP 200 from npm install |
 | 61 | Meta-Evaluation | A+ | `audit:evaluation-integrity` passes (CI-enforced: all referenced audits exist, CI-enforced claims verified, rubric count parity, self-assessed ratio tracked) |
-| 62 | Mutation Testing Coverage | A | `stryker.config.mjs` mutates ALL 195 source files (`src/**/*.ts`); `stryker-critical.config.mjs` for focused dev runs; weekly full-suite CI (`mutation-test.yml`); `cargo mutants` full crate; `test:mutants`, `test:mutants:critical`, `test:mutants:file`, `test:mutants:rust` scripts |
+| 62 | Mutation Testing Coverage | A | `stryker.config.mjs` mutates ALL 195 source files (`src/**/*.ts`); `stryker-critical.config.mjs` uses auth-*/runtime-admin-*/security-* wildcards so new security-critical files are auto-included; `stryker-sync.config.mjs` covers sync/sqlite-bootstrap; `stryker-audit-utils.config.mjs` mutates the shared audit framework (`tooling/lib/audit-utils.ts` + 21 unit tests in `audit-utils.test.ts`); weekly full-suite CI (`mutation-test.yml`); `cargo mutants` full crate; `test:mutants{,:critical,:sync,:audit-utils,:rust}`, plus `clean:stryker` for zombie-worker cleanup |
 | 63 | Test Resilience | A | Brittle expired-session clock-mock fixed (#42); deploy-targets per-test `mkdtempSync` isolation (#44); localStorage spy pattern; no timing-dependent assertions in critical paths |
 
 ## Known gaps

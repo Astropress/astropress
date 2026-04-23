@@ -76,6 +76,16 @@ bun run test:accessibility                # axe static audit
 bun run test:cli                          # Rust CLI tests
 bun run docs:api:check                    # Verify API docs are current
 bun run repo:clean                        # Assert clean worktree (runs in CI)
+
+# Mutation testing (Stryker + cargo-mutants)
+bun run test:mutants                      # Full TS suite (~hours; weekly CI)
+bun run test:mutants:critical             # auth/security/middleware subset
+bun run test:mutants:sync                 # sync + sqlite-bootstrap subset
+bun run test:mutants:audit-utils          # shared audit framework
+bun run test:mutants:rust                 # cargo-mutants on CLI crate
+bun run clean:stryker                     # Kill zombie Stryker workers + sweep .stryker-tmp/
+                                          # (manual; pre-push auto-sweeps sandbox dirs
+                                          #  older than 60 min but never kills processes)
 ```
 
 > **IMPORTANT:** Never use bare `bun test`. Bun's native runner lacks `vi.hoisted`
