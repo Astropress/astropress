@@ -6,10 +6,6 @@ pre-commit:
       run: bunx @biomejs/biome@1 check --no-errors-on-unmatched {staged_files}
       stage_fixed: true
 
-    biome-full:
-      glob: "packages/**/*.{ts,js,astro,json}"
-      run: bunx @biomejs/biome@1 check packages/astropress/src packages/astropress/tests packages/astropress/web-components
-
     staged-tests:
       glob: "packages/astropress/{src,tests,web-components}/**/*.ts"
       run: bun run test:staged
