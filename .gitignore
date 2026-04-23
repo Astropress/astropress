@@ -21,7 +21,7 @@ playwright-report/
 
 # Stryker mutation testing artifacts (generated per-run)
 **/.stryker-tmp/
-**/.stryker-incremental.json
+**/.stryker-incremental*.json
 **/stryker-setup-*.js
 **/reports/mutation/
 mutants.out.old/
@@ -39,4 +39,3 @@ examples/admin-harness/.data/
 
 # Cargo mutants output
 crates/mutants.out/
-.stryker-incremental-sync.json
