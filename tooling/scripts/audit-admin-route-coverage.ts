@@ -14,13 +14,19 @@
  * list already covers representative instances.
  */
 
-import { readFile, readdir } from "node:fs/promises";
 import { join, relative } from "node:path";
+import {
+	AuditReport,
+	fromRoot,
+	listFiles,
+	readText,
+	ROOT,
+	runAudit,
+} from "../lib/audit-utils.js";
 
-const root = process.cwd();
-const ADMIN_PAGES_DIR = join(root, "packages/astropress/pages/ap-admin");
-const E2E_DIR = join(root, "tooling/e2e");
-const SMOKE_SCRIPT = join(root, "tooling/scripts/run-consumer-smoke.ts");
+const ADMIN_PAGES_DIR = fromRoot("packages/astropress/pages/ap-admin");
+const E2E_DIR = fromRoot("tooling/e2e");
+const SMOKE_SCRIPT = fromRoot("tooling/scripts/run-consumer-smoke.ts");
 
 const MAX_UNCOVERED_FRACTION = 0; // fail if any static route is uncovered
 
@@ -56,24 +62,16 @@ function astroFileToRoute(relPath: string): string | null {
 	return route ? `/ap-admin/${route}` : "/ap-admin";
 }
 
-async function walkAstroFiles(dir: string): Promise<string[]> {
-	const files: string[] = [];
-	try {
-		const entries = await readdir(dir, { recursive: true });
-		for (const entry of entries) {
-			if (typeof entry === "string" && entry.endsWith(".astro")) {
-				files.push(entry);
-			}
-		}
-	} catch {
-		// Directory not found
-	}
-	return files.sort();
-}
-
 async function main() {
+	const report = new AuditReport("admin-route-coverage");
+
 	// 1. Collect all static admin routes from .astro files
-	const astroFiles = await walkAstroFiles(ADMIN_PAGES_DIR);
+	const astroFiles = (
+		await listFiles(ADMIN_PAGES_DIR, {
+			recursive: true,
+			extensions: [".astro"],
+		})
+	).sort();
 	const staticRoutes: string[] = [];
 	for (const f of astroFiles) {
 		const route = astroFileToRoute(f);
@@ -91,14 +89,14 @@ async function main() {
 	}
 
 	// 2. Collect routes referenced in Playwright spec files
-	const e2eEntries = await readdir(E2E_DIR).catch(() => [] as string[]);
+	const e2eEntries = await listFiles(E2E_DIR);
 	const specFiles = e2eEntries
 		.filter((f) => f.endsWith(".spec.ts"))
 		.map((f) => join(E2E_DIR, f));
 
 	const playwrightRoutes = new Set<string>();
 	for (const specFile of specFiles) {
-		const src = await readFile(specFile, "utf8");
+		const src = await readText(specFile);
 		// Match page.goto("/ap-admin/...") or page.goto(`/ap-admin/...`)
 		const gotoPattern = /page\.goto\s*\(\s*["'`](\/ap-admin[^"'`?]*)/g;
 		for (const m of src.matchAll(gotoPattern)) {
@@ -108,13 +106,13 @@ async function main() {
 
 	// 3. Collect routes from ADMIN_SMOKE_ROUTES in run-consumer-smoke.ts
 	const smokeRoutes = new Set<string>();
-	try {
-		const smokeSrc = await readFile(SMOKE_SCRIPT, "utf8");
+	const smokeSrc = await readText(SMOKE_SCRIPT);
+	if (smokeSrc) {
 		const routePattern = /"(\/ap-admin[^"?]*)(?:\?[^"]*)?"/g;
 		for (const m of smokeSrc.matchAll(routePattern)) {
 			smokeRoutes.add(m[1]);
 		}
-	} catch {
+	} else {
 		console.warn(
 			"admin-route-coverage: could not read run-consumer-smoke.ts — smoke routes not checked",
 		);
@@ -131,7 +129,7 @@ async function main() {
 	}
 
 	const uncoveredFraction = uncovered.length / filteredRoutes.length;
-	const relSmokeScript = relative(root, SMOKE_SCRIPT);
+	const relSmokeScript = relative(ROOT, SMOKE_SCRIPT);
 
 	console.log(
 		`admin-route-coverage: ${staticRoutes.length} static routes (${EXCLUDED_ROUTES.size} excluded), ${uncovered.length} uncovered`,
@@ -149,23 +147,17 @@ async function main() {
 	}
 
 	if (uncoveredFraction > MAX_UNCOVERED_FRACTION) {
-		console.error(
-			`\nadmin-route-coverage audit FAILED — ${uncovered.length}/${staticRoutes.length} static routes ` +
+		report.add(
+			`${uncovered.length}/${staticRoutes.length} static routes ` +
 				`(${Math.round(uncoveredFraction * 100)}%) have no Playwright or smoke coverage. ` +
-				`Maximum allowed: ${Math.round(MAX_UNCOVERED_FRACTION * 100)}%.`,
+				`Maximum allowed: ${Math.round(MAX_UNCOVERED_FRACTION * 100)}%. ` +
+				`Add the uncovered routes to ADMIN_SMOKE_ROUTES in ${relSmokeScript} or add page.goto() calls in a Playwright spec.`,
 		);
-		console.error(
-			`Add the uncovered routes to ADMIN_SMOKE_ROUTES in ${relSmokeScript} or add page.goto() calls in a Playwright spec.`,
-		);
-		process.exit(1);
 	}
 
-	console.log(
+	report.finish(
 		`\nadmin-route-coverage audit passed — ${filteredRoutes.length - uncovered.length}/${filteredRoutes.length} checkable static routes covered.`,
 	);
 }
 
-main().catch((err) => {
-	console.error("admin-route-coverage audit failed:", err);
-	process.exit(1);
-});
+runAudit("admin-route-coverage", main);

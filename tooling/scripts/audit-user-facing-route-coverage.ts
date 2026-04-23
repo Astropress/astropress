@@ -1,33 +1,17 @@
 /**
  * User-Facing Route Coverage Audit — Rubric 59 (User-Facing Route Coverage)
- *
- * Verifies that every static route that renders HTML to a user has at least one
- * automated test reference. This generalizes audit-admin-route-coverage.ts beyond
- * /ap-admin/ to cover ALL user-facing surfaces:
- *
- *   1. Admin routes (packages/astropress/pages/ap-admin/*.astro)
- *   2. Public routes in examples/github-pages (the reference example site)
- *
- * For each surface, the audit checks whether the route appears in:
- *   - A page.goto() call in any Playwright spec (tooling/e2e/*.spec.ts)
- *   - An entry in ADMIN_SMOKE_ROUTES (tooling/scripts/run-consumer-smoke.ts)
- *   - An entry in the static-site accessibility audit (tooling/e2e/example-accessibility.spec.ts)
- *
- * Fails if any checkable route in any surface has zero coverage.
- *
- * Why this matters: the PR 26 bugs (CSP blocking styles, broken imports, duplicate
- * titles) affected 73% of admin routes and were invisible because no test visited
- * those pages. This audit prevents coverage from silently decaying.
  */
 
-import { readFile, readdir } from "node:fs/promises";
 import { join, relative } from "node:path";
-
-const root = process.cwd();
+import {
+	AuditReport,
+	fromRoot,
+	listFiles,
+	readText,
+	runAudit,
+} from "../lib/audit-utils.js";
 
 const MAX_UNCOVERED_FRACTION = 0;
-
-// ── Route surfaces to audit ──
 
 interface RouteSurface {
 	name: string;
@@ -39,29 +23,25 @@ interface RouteSurface {
 const SURFACES: RouteSurface[] = [
 	{
 		name: "admin",
-		pagesDir: join(root, "packages/astropress/pages/ap-admin"),
+		pagesDir: fromRoot("packages/astropress/pages/ap-admin"),
 		routePrefix: "/ap-admin",
 		excludedRoutes: new Set([
 			"/ap-admin/404",
-			"/ap-admin/subscribers", // 301 redirect, needs auth middleware
-			"/ap-admin/import", // 301 redirect, needs auth middleware
-			"/ap-admin/fundraising", // feature-gated, needs donations config + auth
+			"/ap-admin/subscribers",
+			"/ap-admin/import",
+			"/ap-admin/fundraising",
 		]),
 	},
 	{
 		name: "public (github-pages example)",
-		pagesDir: join(root, "examples/github-pages/src/pages"),
+		pagesDir: fromRoot("examples/github-pages/src/pages"),
 		routePrefix: "",
 		excludedRoutes: new Set<string>(),
 	},
 ];
 
-// ── Coverage sources ──
-
-const E2E_DIR = join(root, "tooling/e2e");
-const SMOKE_SCRIPT = join(root, "tooling/scripts/run-consumer-smoke.ts");
-
-// ── Helpers ──
+const E2E_DIR = fromRoot("tooling/e2e");
+const SMOKE_SCRIPT = fromRoot("tooling/scripts/run-consumer-smoke.ts");
 
 function astroFileToRoute(relPath: string, prefix: string): string | null {
 	if (relPath.includes("[")) return null;
@@ -74,45 +54,26 @@ function astroFileToRoute(relPath: string, prefix: string): string | null {
 }
 
 async function walkAstroFiles(dir: string): Promise<string[]> {
-	const files: string[] = [];
-	try {
-		const entries = await readdir(dir, {
-			recursive: true,
-			withFileTypes: true,
-		});
-		for (const entry of entries) {
-			if (entry.isFile() && entry.name.endsWith(".astro")) {
-				// Return relative path from dir
-				const fullPath = join(entry.parentPath, entry.name);
-				files.push(relative(dir, fullPath));
-			}
-		}
-	} catch {
-		/* dir not found */
-	}
-	return files.sort();
+	const entries = await listFiles(dir, {
+		recursive: true,
+		extensions: [".astro"],
+	});
+	return entries.map((e) => relative(dir, join(dir, e))).sort();
 }
 
 async function collectPlaywrightRoutes(): Promise<Set<string>> {
 	const routes = new Set<string>();
-	let specFiles: string[] = [];
-	try {
-		const entries = await readdir(E2E_DIR);
-		specFiles = entries
-			.filter((f) => f.endsWith(".spec.ts"))
-			.map((f) => join(E2E_DIR, f));
-	} catch {
-		/* no e2e dir */
-	}
+	const entries = await listFiles(E2E_DIR);
+	const specFiles = entries
+		.filter((f) => f.endsWith(".spec.ts"))
+		.map((f) => join(E2E_DIR, f));
 
 	for (const specFile of specFiles) {
-		const src = await readFile(specFile, "utf8");
-		// Match page.goto("/path") or page.goto(`/path`) — any route prefix
+		const src = await readText(specFile);
 		const gotoPattern = /page\.goto\s*\(\s*["'`](\/[^"'`?]*)/g;
 		for (const m of src.matchAll(gotoPattern)) {
 			routes.add(m[1]);
 		}
-		// Also match route objects: { path: "/route" }
 		const pathPattern = /path:\s*["'](\/[^"'?]*)/g;
 		for (const m of src.matchAll(pathPattern)) {
 			routes.add(m[1]);
@@ -123,19 +84,18 @@ async function collectPlaywrightRoutes(): Promise<Set<string>> {
 
 async function collectSmokeRoutes(): Promise<Set<string>> {
 	const routes = new Set<string>();
-	try {
-		const src = await readFile(SMOKE_SCRIPT, "utf8");
+	const src = await readText(SMOKE_SCRIPT);
+	if (src) {
 		const routePattern = /"(\/[^"?]*)(?:\?[^"]*)?"/g;
 		for (const m of src.matchAll(routePattern)) {
 			routes.add(m[1]);
 		}
-	} catch {
-		/* file not found */
 	}
 	return routes;
 }
 
 async function main() {
+	const report = new AuditReport("user-facing-route-coverage");
 	const playwrightRoutes = await collectPlaywrightRoutes();
 	const smokeRoutes = await collectSmokeRoutes();
 	const allCoveredRoutes = new Set([...playwrightRoutes, ...smokeRoutes]);
@@ -171,8 +131,7 @@ async function main() {
 		totalUncovered += uncovered.length;
 	}
 
-	// ── Report ──
-
+	// ── Report (informational output preserved) ──
 	console.log("user-facing-route-coverage audit\n");
 
 	for (const result of surfaceResults) {
@@ -188,45 +147,36 @@ async function main() {
 	);
 
 	// ── Per-surface threshold check ──
-
-	let failed = false;
 	for (const result of surfaceResults) {
 		const fraction = result.uncovered.length / result.total;
 		if (fraction > MAX_UNCOVERED_FRACTION) {
-			console.error(
-				`\n${result.name} surface FAILED — ${result.uncovered.length}/${result.total} routes ` +
+			report.add(
+				`${result.name} surface — ${result.uncovered.length}/${result.total} routes ` +
 					`(${Math.round(fraction * 100)}%) have no test coverage. Maximum allowed: ${Math.round(MAX_UNCOVERED_FRACTION * 100)}%.`,
 			);
-			failed = true;
 		}
 	}
 
 	// ── Global threshold check ──
-
 	if (totalChecked > 0) {
 		const globalFraction = totalUncovered / totalChecked;
 		if (globalFraction > MAX_UNCOVERED_FRACTION) {
-			console.error(
-				`\nGlobal FAILED — ${totalUncovered}/${totalChecked} routes ` +
+			report.add(
+				`Global — ${totalUncovered}/${totalChecked} routes ` +
 					`(${Math.round(globalFraction * 100)}%) uncovered across all surfaces.`,
 			);
-			failed = true;
 		}
 	}
 
-	if (failed) {
+	if (report.failed) {
 		console.error(
 			"\nFix: add uncovered routes to a Playwright spec (page.goto) or to ADMIN_SMOKE_ROUTES.",
 		);
-		process.exit(1);
 	}
 
-	console.log(
+	report.finish(
 		`\nuser-facing-route-coverage audit passed — ${totalChecked - totalUncovered}/${totalChecked} routes covered across ${surfaceResults.length} surface(s).`,
 	);
 }
 
-main().catch((err) => {
-	console.error("user-facing-route-coverage audit failed:", err);
-	process.exit(1);
-});
+runAudit("user-facing-route-coverage", main);

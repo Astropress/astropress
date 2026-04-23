@@ -1,5 +1,11 @@
-import { readFile, readdir } from "node:fs/promises";
 import { join } from "node:path";
+import {
+	AuditReport,
+	fromRoot,
+	listFiles,
+	readText,
+	runAudit,
+} from "../lib/audit-utils.js";
 
 // Rubrics 8 (Browser/Web API Usage), 9 (Web Components), 10 (Spec Coherence — WC First-Class)
 //
@@ -11,22 +17,21 @@ import { join } from "node:path";
 //   5. Does not use XMLHttpRequest — all async I/O must use fetch()
 //   6. Is re-exported from web-components/index.ts — no orphaned component files
 
-const root = process.cwd();
-const WC_DIR = join(root, "packages/astropress/web-components");
+const WC_DIR = fromRoot("packages/astropress/web-components");
 const INDEX_TS = join(WC_DIR, "index.ts");
 
 async function main() {
-	const allFiles = await readdir(WC_DIR);
+	const report = new AuditReport("web-components");
+	const allFiles = await listFiles(WC_DIR);
 	const componentFiles = allFiles.filter(
 		(f) => f.endsWith(".ts") && f !== "index.ts",
 	);
 
-	const indexSrc = await readFile(INDEX_TS, "utf8");
-	const violations: string[] = [];
+	const indexSrc = await readText(INDEX_TS);
 
 	for (const filename of componentFiles) {
 		const filePath = join(WC_DIR, filename);
-		const src = await readFile(filePath, "utf8");
+		const src = await readText(filePath);
 		const label = `web-components/${filename}`;
 
 		// 1. customElements.define with ap- prefix
@@ -34,7 +39,7 @@ async function main() {
 			!src.includes('customElements.define("ap-') &&
 			!src.includes("customElements.define('ap-")
 		) {
-			violations.push(
+			report.add(
 				`${label}: missing customElements.define('ap-...')  — custom element name must use the ap- prefix`,
 			);
 		}
@@ -44,7 +49,7 @@ async function main() {
 			!src.includes("connectedCallback()") &&
 			!src.includes("connectedCallback (){")
 		) {
-			violations.push(
+			report.add(
 				`${label}: missing connectedCallback — required lifecycle hook`,
 			);
 		}
@@ -54,7 +59,7 @@ async function main() {
 			!src.includes("disconnectedCallback()") &&
 			!src.includes("disconnectedCallback (){")
 		) {
-			violations.push(
+			report.add(
 				`${label}: missing disconnectedCallback — required to prevent memory/listener leaks`,
 			);
 		}
@@ -70,43 +75,31 @@ async function main() {
 			!hasClearInterval &&
 			!hasRemoveEventListener
 		) {
-			violations.push(
+			report.add(
 				`${label}: no cleanup mechanism found — use AbortController, clearTimeout, clearInterval, or removeEventListener in disconnectedCallback`,
 			);
 		}
 
 		// 5. No XMLHttpRequest
 		if (src.includes("XMLHttpRequest")) {
-			violations.push(`${label}: XMLHttpRequest found — use fetch() instead`);
+			report.add(`${label}: XMLHttpRequest found — use fetch() instead`);
 		}
 
 		// 6. Exported from index.ts
-		// Strip the .ts extension for the import path check
 		const moduleName = filename.replace(/\.ts$/, "");
 		if (
 			!indexSrc.includes(`"./${moduleName}"`) &&
 			!indexSrc.includes(`'./${moduleName}'`)
 		) {
-			violations.push(
+			report.add(
 				`${label}: not exported from web-components/index.ts — every component file must be re-exported`,
 			);
 		}
 	}
 
-	if (violations.length > 0) {
-		console.error("web-components audit failed:\n");
-		for (const v of violations) {
-			console.error(`  - ${v}`);
-		}
-		process.exit(1);
-	}
-
-	console.log(
+	report.finish(
 		`web-components audit passed — ${componentFiles.length} components: naming, lifecycle, cleanup, fetch-only, and index exports all verified.`,
 	);
 }
 
-main().catch((err) => {
-	console.error("web-components audit failed:", err);
-	process.exit(1);
-});
+runAudit("web-components", main);

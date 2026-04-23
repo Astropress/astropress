@@ -20,11 +20,17 @@
  *   title="Posts — Astropress Admin"       ✗
  */
 
-import { readFile, readdir } from "node:fs/promises";
 import { join, relative } from "node:path";
+import {
+	AuditReport,
+	fromRoot,
+	listFiles,
+	readText,
+	ROOT,
+	runAudit,
+} from "../lib/audit-utils.js";
 
-const root = process.cwd();
-const ADMIN_PAGES_DIR = join(root, "packages/astropress/pages/ap-admin");
+const ADMIN_PAGES_DIR = fromRoot("packages/astropress/pages/ap-admin");
 
 // Suffixes that buildAstropressAdminDocumentTitle appends.
 // Checked case-insensitively to catch minor variations.
@@ -35,28 +41,17 @@ const BANNED_TITLE_SUFFIXES = [
 	"| AstroPress Admin",
 ];
 
-async function walkAstroFiles(dir: string): Promise<string[]> {
-	const files: string[] = [];
-	try {
-		const entries = await readdir(dir, { recursive: true });
-		for (const entry of entries) {
-			if (typeof entry === "string" && entry.endsWith(".astro")) {
-				files.push(join(dir, entry));
-			}
-		}
-	} catch {
-		/* dir not found */
-	}
-	return files.sort();
-}
-
 async function main() {
-	const violations: string[] = [];
-	const files = await walkAstroFiles(ADMIN_PAGES_DIR);
+	const report = new AuditReport("admin-page-titles");
+	const entries = await listFiles(ADMIN_PAGES_DIR, {
+		recursive: true,
+		extensions: [".astro"],
+	});
+	const files = entries.map((e) => join(ADMIN_PAGES_DIR, e)).sort();
 
 	for (const filePath of files) {
-		const relPath = relative(root, filePath);
-		const src = await readFile(filePath, "utf8");
+		const relPath = relative(ROOT, filePath);
+		const src = await readText(filePath);
 		const lines = src.split("\n");
 
 		for (let i = 0; i < lines.length; i++) {
@@ -66,7 +61,7 @@ async function main() {
 
 			for (const suffix of BANNED_TITLE_SUFFIXES) {
 				if (line.toLowerCase().includes(suffix.toLowerCase())) {
-					violations.push(
+					report.add(
 						`[pre-formatted-title] ${relPath}:${i + 1}: title prop already contains "${suffix}" — ` +
 							`buildAstropressAdminDocumentTitle() will append it again\n    → ${line.trim()}`,
 					);
@@ -76,24 +71,18 @@ async function main() {
 		}
 	}
 
-	if (violations.length > 0) {
-		console.error(
-			`admin-page-titles audit failed — ${violations.length} issue(s) in ${files.length} files:\n`,
-		);
-		for (const v of violations) console.error(`  - ${v}`);
+	if (report.failed) {
+		// Preserve the fix hint from the original by emitting after violations list.
+		// AuditReport.finish() handles the error printing + exit.
 		console.error(
 			'\nFix: pass just the section name to <AdminLayout title="Dashboard"> — ' +
 				"buildAstropressAdminDocumentTitle() handles the full document title.",
 		);
-		process.exit(1);
 	}
 
-	console.log(
+	report.finish(
 		`admin-page-titles audit passed — ${files.length} admin pages scanned, no pre-formatted titles.`,
 	);
 }
 
-main().catch((err) => {
-	console.error("admin-page-titles audit failed:", err);
-	process.exit(1);
-});
+runAudit("admin-page-titles", main);

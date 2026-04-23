@@ -17,65 +17,61 @@
  * part of test-consumer before the tarball smoke test.
  */
 
-import { readFile, readdir } from "node:fs/promises";
 import { join, relative } from "node:path";
+import {
+	AuditReport,
+	fileExists,
+	fromRoot,
+	listFiles,
+	readText,
+	ROOT,
+	runAudit,
+} from "../lib/audit-utils.js";
 
-const root = process.cwd();
-const PAGES_DIR = join(root, "packages/astropress/pages");
-const COMPONENTS_DIR = join(root, "packages/astropress/components");
+const PAGES_DIR = fromRoot("packages/astropress/pages");
+const COMPONENTS_DIR = fromRoot("packages/astropress/components");
+const PKG_JSON = fromRoot("packages/astropress/package.json");
 
-async function walkAstroFiles(dir: string): Promise<string[]> {
-	const files: string[] = [];
-	try {
-		const entries = await readdir(dir, { recursive: true });
-		for (const entry of entries) {
-			if (entry.endsWith(".astro") || entry.endsWith(".ts")) {
-				files.push(join(dir, entry));
-			}
-		}
-	} catch {
-		// Directory may not exist (e.g. pre-build)
-	}
-	return files.sort();
+async function collectSources(dir: string): Promise<string[]> {
+	const entries = await listFiles(dir, { recursive: true });
+	return entries
+		.filter((e) => e.endsWith(".astro") || e.endsWith(".ts"))
+		.map((e) => join(dir, e))
+		.sort();
 }
 
-const PKG_JSON = join(root, "packages/astropress/package.json");
-
 async function main() {
-	const violations: string[] = [];
+	const report = new AuditReport("consumer-packaging");
 
-	const pagesFiles = await walkAstroFiles(PAGES_DIR);
-	const componentsFiles = await walkAstroFiles(COMPONENTS_DIR);
+	const pagesFiles = await collectSources(PAGES_DIR);
+	const componentsFiles = await collectSources(COMPONENTS_DIR);
 	const allFiles = [...pagesFiles, ...componentsFiles];
 
 	for (const filePath of allFiles) {
-		const relPath = relative(root, filePath);
-		const src = await readFile(filePath, "utf8");
+		const relPath = relative(ROOT, filePath);
+		const src = await readText(filePath);
 
 		// Rule 1: no bare `from "astropress/` — must be `@astropress-diy/astropress/`
-		// Match: from "astropress/X" or from 'astropress/X'
 		const bareImportPattern = /from\s+["']astropress\/[^"']/g;
 		for (const m of src.matchAll(bareImportPattern)) {
 			const snippet = src
 				.slice(m.index ?? 0, (m.index ?? 0) + 60)
 				.split("\n")[0];
-			violations.push(
+			report.add(
 				`[bare-import] ${relPath}: bare "astropress/" import — use "@astropress-diy/astropress/" instead\n    → ${snippet}`,
 			);
 		}
 	}
 
 	// Rule 2: package.json exports map — every non-glob TypeScript source entry must exist on disk
-	// Glob entries (containing "*") are skipped; they resolve at build time.
-	const pkgSrc = await readFile(PKG_JSON, "utf8");
+	const pkgSrc = await readText(PKG_JSON);
 	const pkg = JSON.parse(pkgSrc) as { exports?: Record<string, unknown> };
 	const exportsMap = pkg.exports ?? {};
-	const pkgDir = join(root, "packages/astropress");
+	const pkgDir = fromRoot("packages/astropress");
 
 	for (const [exportKey, exportValue] of Object.entries(exportsMap)) {
 		if (exportKey.includes("*")) continue; // glob entry — skip
 
-		// Collect all string values from the condition object (or the value itself)
 		const paths: string[] = [];
 		if (typeof exportValue === "string") {
 			paths.push(exportValue);
@@ -88,32 +84,17 @@ async function main() {
 		for (const p of paths) {
 			if (p.includes("*")) continue; // glob value — skip
 			const abs = join(pkgDir, p);
-			try {
-				await readFile(abs);
-			} catch {
-				violations.push(
+			if (!(await fileExists(abs))) {
+				report.add(
 					`[missing-export] package.json exports "${exportKey}" → "${p}" does not exist on disk`,
 				);
 			}
 		}
 	}
 
-	if (violations.length > 0) {
-		console.error(
-			`consumer-packaging audit failed — ${violations.length} issue(s) in ${allFiles.length} files:\n`,
-		);
-		for (const v of violations) {
-			console.error(`  - ${v}`);
-		}
-		process.exit(1);
-	}
-
-	console.log(
+	report.finish(
 		`consumer-packaging audit passed — ${allFiles.length} files scanned, no bare imports. Exports map validated.`,
 	);
 }
 
-main().catch((err) => {
-	console.error("consumer-packaging audit failed:", err);
-	process.exit(1);
-});
+runAudit("consumer-packaging", main);

@@ -7,21 +7,23 @@
 //   3. content-modeling.ts references all required field types
 //   4. content-modeling.test.ts exists
 
-import { access, readFile } from "node:fs/promises";
-import { join, relative } from "node:path";
+import { relative } from "node:path";
+import {
+	AuditReport,
+	fileExists,
+	fromRoot,
+	readText,
+	ROOT,
+	runAudit,
+} from "../lib/audit-utils.js";
 
-const root = process.cwd();
-
-const CONTENT_MODELING_PATH = join(
-	root,
+const CONTENT_MODELING_PATH = fromRoot(
 	"packages/astropress/src/content-modeling.ts",
 );
-const PLATFORM_CONTRACTS_PATH = join(
-	root,
+const PLATFORM_CONTRACTS_PATH = fromRoot(
 	"packages/astropress/src/platform-contracts.ts",
 );
-const TEST_FILE_PATH = join(
-	root,
+const TEST_FILE_PATH = fromRoot(
 	"packages/astropress/tests/content-modeling.test.ts",
 );
 
@@ -36,32 +38,23 @@ const REQUIRED_FIELD_TYPES = [
 	"repeater",
 ];
 
-async function fileExists(filePath: string): Promise<boolean> {
-	try {
-		await access(filePath);
-		return true;
-	} catch {
-		return false;
-	}
-}
-
 async function main() {
-	const violations: string[] = [];
+	const report = new AuditReport("content-modeling");
 
 	// 1. content-modeling.ts exists and exports validateContentFields
 	const contentModelingExists = await fileExists(CONTENT_MODELING_PATH);
-	const contentModelingRel = relative(root, CONTENT_MODELING_PATH);
+	const contentModelingRel = relative(ROOT, CONTENT_MODELING_PATH);
 
 	if (!contentModelingExists) {
-		violations.push(`[missing-file] ${contentModelingRel} does not exist`);
+		report.add(`[missing-file] ${contentModelingRel} does not exist`);
 	} else {
-		const src = await readFile(CONTENT_MODELING_PATH, "utf8");
+		const src = await readText(CONTENT_MODELING_PATH);
 		if (
 			!/export\s+(async\s+)?function\s+validateContentFields|export\s*\{\s*[^}]*\bvalidateContentFields\b/.test(
 				src,
 			)
 		) {
-			violations.push(
+			report.add(
 				`[missing-export] ${contentModelingRel} does not export validateContentFields`,
 			);
 		}
@@ -69,19 +62,19 @@ async function main() {
 
 	// 2. platform-contracts.ts contains ContentStoreRecord with metadata field
 	const platformContractsExists = await fileExists(PLATFORM_CONTRACTS_PATH);
-	const platformContractsRel = relative(root, PLATFORM_CONTRACTS_PATH);
+	const platformContractsRel = relative(ROOT, PLATFORM_CONTRACTS_PATH);
 
 	if (!platformContractsExists) {
-		violations.push(`[missing-file] ${platformContractsRel} does not exist`);
+		report.add(`[missing-file] ${platformContractsRel} does not exist`);
 	} else {
-		const src = await readFile(PLATFORM_CONTRACTS_PATH, "utf8");
+		const src = await readText(PLATFORM_CONTRACTS_PATH);
 		if (!/ContentStoreRecord/.test(src)) {
-			violations.push(
+			report.add(
 				`[missing-interface] ${platformContractsRel} does not contain ContentStoreRecord interface`,
 			);
 		}
 		if (!/metadata/.test(src)) {
-			violations.push(
+			report.add(
 				`[missing-field] ${platformContractsRel} does not contain a metadata field on ContentStoreRecord`,
 			);
 		}
@@ -89,10 +82,10 @@ async function main() {
 
 	// 3. content-modeling.ts references all required field types
 	if (contentModelingExists) {
-		const src = await readFile(CONTENT_MODELING_PATH, "utf8");
+		const src = await readText(CONTENT_MODELING_PATH);
 		for (const fieldType of REQUIRED_FIELD_TYPES) {
 			if (!src.includes(fieldType)) {
-				violations.push(
+				report.add(
 					`[missing-field-type] ${contentModelingRel} does not reference field type "${fieldType}"`,
 				);
 			}
@@ -101,30 +94,22 @@ async function main() {
 
 	// 4. Test file exists
 	const testFileExists = await fileExists(TEST_FILE_PATH);
-	const testFileRel = relative(root, TEST_FILE_PATH);
+	const testFileRel = relative(ROOT, TEST_FILE_PATH);
 
 	if (!testFileExists) {
-		violations.push(`[missing-test] ${testFileRel} does not exist`);
+		report.add(`[missing-test] ${testFileRel} does not exist`);
 	}
 
-	if (violations.length > 0) {
-		console.error(
-			`content-modeling audit failed — ${violations.length} issue(s):\n`,
-		);
-		for (const v of violations) console.error(`  - ${v}`);
+	if (report.failed) {
 		console.error(
 			"\nFix: ensure content-modeling.ts exports validateContentFields, platform-contracts.ts " +
 				"defines ContentStoreRecord with metadata, all field types are supported, and tests exist.",
 		);
-		process.exit(1);
 	}
 
-	console.log(
+	report.finish(
 		"content-modeling audit passed — content modeling subsystem verified.",
 	);
 }
 
-main().catch((err) => {
-	console.error("content-modeling audit failed:", err);
-	process.exit(1);
-});
+runAudit("content-modeling", main);

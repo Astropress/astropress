@@ -11,29 +11,20 @@
  */
 
 import { execFileSync } from "node:child_process";
-import { access } from "node:fs/promises";
-import { join, relative } from "node:path";
+import { relative } from "node:path";
+import {
+	AuditReport,
+	fileExists,
+	fromRoot,
+	ROOT,
+	runAudit,
+} from "../lib/audit-utils.js";
 
-const root = process.cwd();
-
-const SCAFFOLD_MODULE = join(
-	root,
-	"packages/astropress/src/project-scaffold.ts",
-);
-const CI_MODULE = join(root, "packages/astropress/src/project-scaffold-ci.ts");
-const TEST_FILE = join(
-	root,
+const SCAFFOLD_MODULE = fromRoot("packages/astropress/src/project-scaffold.ts");
+const CI_MODULE = fromRoot("packages/astropress/src/project-scaffold-ci.ts");
+const TEST_FILE = fromRoot(
 	"packages/astropress/tests/project-scaffold.test.ts",
 );
-
-async function fileExists(filePath: string): Promise<boolean> {
-	try {
-		await access(filePath);
-		return true;
-	} catch {
-		return false;
-	}
-}
 
 function grepQuiet(filePath: string, pattern: string): boolean {
 	try {
@@ -45,72 +36,56 @@ function grepQuiet(filePath: string, pattern: string): boolean {
 }
 
 async function main() {
-	let failed = false;
-
-	function fail(tag: string, msg: string) {
-		console.error(`  - [${tag}] ${msg}`);
-		failed = true;
-	}
+	const report = new AuditReport("scaffold-quality");
 
 	// 1. Scaffold module exists and exports createAstropressProjectScaffold
 	if (!(await fileExists(SCAFFOLD_MODULE))) {
-		fail(
-			"missing-scaffold",
-			`${relative(root, SCAFFOLD_MODULE)} does not exist`,
+		report.add(
+			`[missing-scaffold] ${relative(ROOT, SCAFFOLD_MODULE)} does not exist`,
 		);
 	} else if (!grepQuiet(SCAFFOLD_MODULE, "createAstropressProjectScaffold")) {
-		fail(
-			"missing-export",
-			`${relative(root, SCAFFOLD_MODULE)} does not export createAstropressProjectScaffold`,
+		report.add(
+			`[missing-export] ${relative(ROOT, SCAFFOLD_MODULE)} does not export createAstropressProjectScaffold`,
 		);
 	}
 
 	// 2. CI scaffold module exists
 	const ciExists = await fileExists(CI_MODULE);
 	if (!ciExists) {
-		fail("missing-ci-module", `${relative(root, CI_MODULE)} does not exist`);
+		report.add(
+			`[missing-ci-module] ${relative(ROOT, CI_MODULE)} does not exist`,
+		);
 	}
 
 	// 3. CI scaffold includes security scanning
 	if (ciExists && !grepQuiet(CI_MODULE, "security|trivy|semgrep")) {
-		fail(
-			"missing-security",
-			`${relative(root, CI_MODULE)} does not reference security scanning`,
+		report.add(
+			`[missing-security] ${relative(ROOT, CI_MODULE)} does not reference security scanning`,
 		);
 	}
 
 	// 4. CI scaffold includes linting / quality
 	if (ciExists && !grepQuiet(CI_MODULE, "lint|biome|check")) {
-		fail(
-			"missing-lint",
-			`${relative(root, CI_MODULE)} does not reference linting`,
+		report.add(
+			`[missing-lint] ${relative(ROOT, CI_MODULE)} does not reference linting`,
 		);
 	}
 
 	// 5. CI scaffold includes doctor health check
 	if (ciExists && !grepQuiet(CI_MODULE, "doctor")) {
-		fail(
-			"missing-doctor",
-			`${relative(root, CI_MODULE)} does not reference doctor health check`,
+		report.add(
+			`[missing-doctor] ${relative(ROOT, CI_MODULE)} does not reference doctor health check`,
 		);
 	}
 
 	// 6. Test file exists
 	if (!(await fileExists(TEST_FILE))) {
-		fail("missing-test", `${relative(root, TEST_FILE)} does not exist`);
+		report.add(`[missing-test] ${relative(ROOT, TEST_FILE)} does not exist`);
 	}
 
-	if (failed) {
-		console.error("\nscaffold-quality audit failed. See issues above.");
-		process.exit(1);
-	}
-
-	console.log(
+	report.finish(
 		"scaffold-quality audit passed — all scaffold modules present with security, quality, and health-check coverage.",
 	);
 }
 
-main().catch((err) => {
-	console.error("scaffold-quality audit failed:", err);
-	process.exit(1);
-});
+runAudit("scaffold-quality", main);

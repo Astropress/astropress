@@ -1,6 +1,12 @@
 import { execFileSync } from "node:child_process";
-import { readFile } from "node:fs/promises";
 import { join } from "node:path";
+import {
+	AuditReport,
+	fromRoot,
+	readText,
+	ROOT,
+	runAudit,
+} from "../lib/audit-utils.js";
 
 type TruthSource = {
 	crypto: {
@@ -15,8 +21,7 @@ type TruthSource = {
 	bannedPhrases: string[];
 };
 
-const root = process.cwd();
-const truthPath = join(root, "tooling/readiness-truth.json");
+const truthPath = fromRoot("tooling/readiness-truth.json");
 const requiredFiles = ["README.md", "docs/reference/EVALUATION.md"];
 const auditableExtensions = new Set([
 	".md",
@@ -30,18 +35,14 @@ const auditableExtensions = new Set([
 	".yaml",
 ]);
 
-// Files that legitimately reference SHA-256 as an external webhook HMAC protocol
-// (Formbricks / Typebot use HMAC-SHA256 for their outbound webhook signatures —
-// Astropress must verify using the algorithm they specify; this is not an internal
-// crypto choice and is not subject to the Argon2id/KMAC256/ML-DSA-65 rules).
 const bannedPhraseAllowlist = new Set([
-	"tooling/scripts/audit-honesty.ts", // defines the allowlist itself
-	"AGENTS.md", // describes the audit rules themselves
-	"docs/guides/TESTIMONIALS.md", // documents third-party webhook HMAC
-	"docs/reference/SPEC.md", // API spec includes third-party webhook endpoints
-	"packages/astropress/pages/ap-api/v1/testimonials/ingest.ts", // WebCrypto HMAC verification (can't change algo name)
-	"packages/astropress/src/config-service-types.ts", // JSDoc for webhook secret config
-	"packages/astropress/tests/zta-invariants.test.ts", // test comment describing webhook auth
+	"tooling/scripts/audit-honesty.ts",
+	"AGENTS.md",
+	"docs/guides/TESTIMONIALS.md",
+	"docs/reference/SPEC.md",
+	"packages/astropress/pages/ap-api/v1/testimonials/ingest.ts",
+	"packages/astropress/src/config-service-types.ts",
+	"packages/astropress/tests/zta-invariants.test.ts",
 ]);
 
 function isAuditableFile(file: string) {
@@ -49,9 +50,10 @@ function isAuditableFile(file: string) {
 }
 
 async function main() {
-	const truth = JSON.parse(await readFile(truthPath, "utf8")) as TruthSource;
+	const report = new AuditReport("honesty");
+	const truth = JSON.parse(await readText(truthPath)) as TruthSource;
 	const trackedFiles = execFileSync("git", ["ls-files"], {
-		cwd: root,
+		cwd: ROOT,
 		encoding: "utf8",
 	})
 		.split("\n")
@@ -61,64 +63,48 @@ async function main() {
 			(file) => !file.startsWith("node_modules/") && isAuditableFile(file),
 		);
 
-	const violations: string[] = [];
-
 	for (const file of trackedFiles) {
 		if (bannedPhraseAllowlist.has(file)) {
 			continue;
 		}
-		const body = await readFile(join(root, file), "utf8");
+		const body = await readText(join(ROOT, file));
 
 		for (const phrase of truth.bannedPhrases) {
 			if (!body.includes(phrase)) {
 				continue;
 			}
-			violations.push(`${file}: banned phrase "${phrase}"`);
+			report.add(`${file}: banned phrase "${phrase}"`);
 		}
 	}
 
 	for (const file of requiredFiles) {
-		const body = await readFile(join(root, file), "utf8");
+		const body = await readText(join(ROOT, file));
 		for (const required of [
 			truth.crypto.passwordHash,
 			truth.crypto.tokenDigest,
 			truth.crypto.webhookSignature,
 		]) {
 			if (!body.includes(required)) {
-				violations.push(`${file}: missing required truth marker "${required}"`);
+				report.add(`${file}: missing required truth marker "${required}"`);
 			}
 		}
 	}
 
-	const readme = await readFile(join(root, "README.md"), "utf8");
+	const readme = await readText(fromRoot("README.md"));
 	if (!readme.includes(truth.docs.readmeSecurityNote)) {
-		violations.push(
+		report.add(
 			"README.md: security note drifted from tooling/readiness-truth.json",
 		);
 	}
 
-	const evaluation = await readFile(
-		join(root, "docs/reference/EVALUATION.md"),
-		"utf8",
-	);
+	const evaluation = await readText(fromRoot("docs/reference/EVALUATION.md"));
 	if (!evaluation.includes(truth.docs.hostedE2EGap)) {
-		violations.push(
+		report.add(
 			"docs/EVALUATION.md: hosted-provider gap wording drifted from tooling/readiness-truth.json",
 		);
 	}
 
-	if (violations.length > 0) {
-		console.error("honesty audit failed:\n");
-		for (const violation of violations) {
-			console.error(`- ${violation}`);
-		}
-		process.exit(1);
-	}
-
-	console.log("honesty audit passed.");
+	report.finish("honesty audit passed.");
 }
 
-main().catch((error) => {
-	console.error("honesty audit failed:", error);
-	process.exit(1);
-});
+runAudit("honesty", main);

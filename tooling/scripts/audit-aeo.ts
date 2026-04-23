@@ -14,15 +14,18 @@
  * Exit 1 — one or more components are missing or malformed.
  */
 
-import { existsSync, readFileSync } from "node:fs";
-import path from "node:path";
+import { join } from "node:path";
+import {
+	AuditReport,
+	fileExists,
+	fromRoot,
+	readText,
+	runAudit,
+} from "../lib/audit-utils.js";
 
-const componentsRoot = path.resolve(
-	import.meta.dirname,
-	"../../packages/astropress/components",
-);
-const pagesRoot = path.resolve(import.meta.dirname, "../../packages/astropress/pages");
-const srcRoot = path.resolve(import.meta.dirname, "../../packages/astropress/src");
+const componentsRoot = fromRoot("packages/astropress/components");
+const pagesRoot = fromRoot("packages/astropress/pages");
+const srcRoot = fromRoot("packages/astropress/src");
 
 const requiredComponents: Array<{
 	name: string;
@@ -67,117 +70,107 @@ const contentLayoutComponent = {
 	],
 };
 
-let exitCode = 0;
-const failures: string[] = [];
-
-function auditComponent(name: string, file: string, checks: string[]): void {
-	const fullPath = path.join(componentsRoot, file);
-	if (!existsSync(fullPath)) {
-		failures.push(`MISSING: ${name} (${file})`);
-		exitCode = 1;
+async function auditComponent(
+	report: AuditReport,
+	name: string,
+	file: string,
+	checks: string[],
+): Promise<void> {
+	const fullPath = join(componentsRoot, file);
+	if (!(await fileExists(fullPath))) {
+		report.add(`MISSING: ${name} (${file})`);
 		return;
 	}
 
-	const source = readFileSync(fullPath, "utf8");
+	const source = await readText(fullPath);
 	for (const check of checks) {
 		if (!source.includes(check)) {
-			failures.push(
+			report.add(
 				`MALFORMED: ${name} (${file}) — missing required string "${check}"`,
 			);
-			exitCode = 1;
 		}
 	}
 }
 
-// Audit the five core AEO JSON-LD components
-for (const component of requiredComponents) {
-	auditComponent(component.name, component.file, component.checks);
-}
+async function main() {
+	const report = new AuditReport("aeo");
 
-// Audit the content layout auto-wiring component
-auditComponent(
-	contentLayoutComponent.name,
-	contentLayoutComponent.file,
-	contentLayoutComponent.checks,
-);
-
-// ── Open Graph + canonical: AstropressSeoHead.astro ──
-const seoHeadPath = path.join(componentsRoot, "AstropressSeoHead.astro");
-if (!existsSync(seoHeadPath)) {
-  failures.push("MISSING: AstropressSeoHead.astro — Open Graph and canonical tags required");
-  exitCode = 1;
-} else {
-  const seoSrc = readFileSync(seoHeadPath, "utf8");
-  for (const token of ["og:title", "og:description", "canonical"]) {
-    if (!seoSrc.includes(token)) {
-      failures.push(`MALFORMED: AstropressSeoHead.astro — missing "${token}"`);
-      exitCode = 1;
-    }
-  }
-}
-
-// ── sitemap.xml endpoint ──
-const sitemapPath = path.join(pagesRoot, "sitemap.xml.ts");
-if (!existsSync(sitemapPath)) {
-  failures.push("MISSING: pages/sitemap.xml.ts — sitemap.xml endpoint required for AEO");
-  exitCode = 1;
-}
-
-// ── llms.txt endpoint (AI crawlers) ──
-// May be .ts or .js (compiled output served alongside source)
-const llmsTsPath = path.join(pagesRoot, "llms.txt.ts");
-const llmsJsPath = path.join(pagesRoot, "llms.txt.js");
-if (!existsSync(llmsTsPath) && !existsSync(llmsJsPath)) {
-  failures.push("MISSING: pages/llms.txt.ts — llms.txt endpoint required for AI crawler AEO");
-  exitCode = 1;
-}
-
-// ── DonateAction JSON-LD in donations.ts ──
-const donationsPath = path.join(srcRoot, "donations.ts");
-if (!existsSync(donationsPath)) {
-  failures.push("MISSING: src/donations.ts — DonateAction JSON-LD generator required");
-  exitCode = 1;
-} else {
-  const donationsSrc = readFileSync(donationsPath, "utf8");
-  if (!donationsSrc.includes("DonateAction")) {
-    failures.push('MALFORMED: src/donations.ts — missing "DonateAction" schema.org type');
-    exitCode = 1;
-  }
-}
-
-// Verify AeoMetadata types are exported from platform-contracts
-const contractsPath = path.resolve(
-	import.meta.dirname,
-	"../../packages/astropress/src/platform-contracts.ts",
-);
-if (!existsSync(contractsPath)) {
-	failures.push("MISSING: platform-contracts.ts");
-	exitCode = 1;
-} else {
-	const contractsSource = readFileSync(contractsPath, "utf8");
-	for (const requiredType of ["AeoMetadata", "FaqItem", "HowToStep"]) {
-		if (!contractsSource.includes(`export interface ${requiredType}`)) {
-			failures.push(
-				`MISSING TYPE: ${requiredType} not exported from platform-contracts.ts`,
-			);
-			exitCode = 1;
-		}
+	// Audit the five core AEO JSON-LD components
+	for (const component of requiredComponents) {
+		await auditComponent(report, component.name, component.file, component.checks);
 	}
-}
 
-if (failures.length === 0) {
-	console.log("✓ audit:aeo — all AEO/SEO components present and structurally valid");
-	console.log(
-		`  Components audited: ${requiredComponents.length + 1} (${requiredComponents.map((c) => c.name).join(", ")}, ${contentLayoutComponent.name})`,
+	// Audit the content layout auto-wiring component
+	await auditComponent(
+		report,
+		contentLayoutComponent.name,
+		contentLayoutComponent.file,
+		contentLayoutComponent.checks,
 	);
-	console.log("  Open Graph + canonical: AstropressSeoHead.astro ✓");
-	console.log("  sitemap.xml ✓  llms.txt ✓  DonateAction ✓");
-	console.log("  AeoMetadata types: FaqItem, HowToStep, AeoMetadata ✓");
-} else {
-	console.error("✗ audit:aeo — AEO component audit FAILED:");
-	for (const failure of failures) {
-		console.error(`  ${failure}`);
+
+	// ── Open Graph + canonical: AstropressSeoHead.astro ──
+	const seoHeadPath = join(componentsRoot, "AstropressSeoHead.astro");
+	if (!(await fileExists(seoHeadPath))) {
+		report.add("MISSING: AstropressSeoHead.astro — Open Graph and canonical tags required");
+	} else {
+		const seoSrc = await readText(seoHeadPath);
+		for (const token of ["og:title", "og:description", "canonical"]) {
+			if (!seoSrc.includes(token)) {
+				report.add(`MALFORMED: AstropressSeoHead.astro — missing "${token}"`);
+			}
+		}
 	}
+
+	// ── sitemap.xml endpoint ──
+	const sitemapPath = join(pagesRoot, "sitemap.xml.ts");
+	if (!(await fileExists(sitemapPath))) {
+		report.add("MISSING: pages/sitemap.xml.ts — sitemap.xml endpoint required for AEO");
+	}
+
+	// ── llms.txt endpoint (AI crawlers) ──
+	// May be .ts or .js (compiled output served alongside source)
+	const llmsTsPath = join(pagesRoot, "llms.txt.ts");
+	const llmsJsPath = join(pagesRoot, "llms.txt.js");
+	if (!(await fileExists(llmsTsPath)) && !(await fileExists(llmsJsPath))) {
+		report.add("MISSING: pages/llms.txt.ts — llms.txt endpoint required for AI crawler AEO");
+	}
+
+	// ── DonateAction JSON-LD in donations.ts ──
+	const donationsPath = join(srcRoot, "donations.ts");
+	if (!(await fileExists(donationsPath))) {
+		report.add("MISSING: src/donations.ts — DonateAction JSON-LD generator required");
+	} else {
+		const donationsSrc = await readText(donationsPath);
+		if (!donationsSrc.includes("DonateAction")) {
+			report.add('MALFORMED: src/donations.ts — missing "DonateAction" schema.org type');
+		}
+	}
+
+	// Verify AeoMetadata types are exported from platform-contracts
+	const contractsPath = fromRoot("packages/astropress/src/platform-contracts.ts");
+	if (!(await fileExists(contractsPath))) {
+		report.add("MISSING: platform-contracts.ts");
+	} else {
+		const contractsSource = await readText(contractsPath);
+		for (const requiredType of ["AeoMetadata", "FaqItem", "HowToStep"]) {
+			if (!contractsSource.includes(`export interface ${requiredType}`)) {
+				report.add(
+					`MISSING TYPE: ${requiredType} not exported from platform-contracts.ts`,
+				);
+			}
+		}
+	}
+
+	if (!report.failed) {
+		console.log(
+			`  Components audited: ${requiredComponents.length + 1} (${requiredComponents.map((c) => c.name).join(", ")}, ${contentLayoutComponent.name})`,
+		);
+		console.log("  Open Graph + canonical: AstropressSeoHead.astro ✓");
+		console.log("  sitemap.xml ✓  llms.txt ✓  DonateAction ✓");
+		console.log("  AeoMetadata types: FaqItem, HowToStep, AeoMetadata ✓");
+	}
+
+	report.finish("✓ audit:aeo — all AEO/SEO components present and structurally valid");
 }
 
-process.exit(exitCode);
+runAudit("aeo", main);
