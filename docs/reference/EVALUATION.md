@@ -53,13 +53,13 @@ Grade scale: `A+ / A / B / C / D / F`
 | 43 | System Honesty | A+ | `audit:honesty`, `audit:microcopy`, `audit:providers`, `audit:cli-docs`, `audit:env-contract`, `audit:crypto`, `audit:bdd-wiring`, `audit:no-stub-tests` — all CI-enforced |
 | 44 | Multi-site Gateway (astropress-nexus) | A+ | `audit:nexus` passes (CI-enforced: package structure, export coverage, BDD scenario wiring, auth middleware); `audit:bdd-wiring` passes |
 | 45 | Scaffold Quality Carryover | A+ | `audit:scaffold-quality` passes (CI-enforced: scaffold modules, security scanning, linting, doctor health check, EFF passphrase generation); `project-scaffold.test.ts` |
-| 46 | Mobile-Firstness / Responsive Design | A | Playwright `viewport-375`, `viewport-768`, `viewport-1280` projects in `test:acceptance` CI |
-| 47 | Admin Panel UX Quality | A | Playwright `admin-harness-crud` project; Playwright smoke coverage on all static admin routes |
-| 48 | Nexus UX Quality | A+ | `audit:nexus` passes (CI-enforced: structured error responses with human-readable fields, Bearer token auth middleware verified) |
+| 46 | Mobile-Firstness / Responsive Design | A+ | `admin-touch-targets.spec.ts` (behavioral: WCAG 2.5.5 — every interactive target ≥ 44×44 px at viewport-375 across all admin routes); Playwright `viewport-375`, `viewport-768`, `viewport-1280` projects in `test:acceptance` CI |
+| 47 | Admin Panel UX Quality | A+ | `admin-heading-hierarchy.spec.ts` (behavioral: exactly one h1 per route, no heading-level skips, icon-only buttons have aria-label, axe `heading-order` rule enforced — not ignored); Playwright `admin-harness-crud` project; smoke coverage on all static admin routes |
+| 48 | Nexus UX Quality | A+ | `nexus-ux.test.ts` (behavioral: structured error responses, no stack-trace leaks, dashboard HTML renders site names + health signals + direct site links, render budget enforced); `audit:nexus` (config-shape verification) |
 | 49 | UX Writing & Microcopy | A+ | `audit:microcopy` passes (CI-enforced) |
-| 50 | Information Architecture | A+ | `audit:navigation` passes (CI-enforced: AstropressAdminNavKey required keys, breadcrumb presence) |
+| 50 | Information Architecture | A+ | `admin-nav-coherence.test.ts` (behavioral: nav structure parsed, unique hrefs, group labels followed only by indented items, every href has a matching admin page file, CLI noun-verb pattern); `audit:navigation` passes |
 | 51 | Navigation Design | A+ | `audit:navigation` passes (CI-enforced: skip-link, aria-current, Escape key, required nav structure) |
-| 52 | Interaction Design & Motion | A | `audit:interaction` passes (CI-enforced: @keyframes, prefers-reduced-motion, dialog animation, aria-live, dismiss timing) |
+| 52 | Interaction Design & Motion | A+ | `admin-interaction-timing.spec.ts` (behavioral: ap-notice dismiss-after auto-removes within window, no dismiss-after stays persistent, 0/bogus dismiss-after stay persistent); `audit:interaction` passes |
 | 53 | Cross-Platform Support | A | `platform-smoke` CI matrix runs on `ubuntu-latest`, `macos-latest`, `windows-latest` |
 | 54 | Test Artifact Cleanup | A+ | `repo:clean` (`assert-clean-worktree.ts`) runs at end of every CI job; Rust uses `TestDir` RAII |
 | 55 | Minimalism | A | `audit:arch` enforces per-file LOC limits; `audit:dead-exports` passes (CI-enforced: all runtime exports have consumers — no orphaned exports) |
