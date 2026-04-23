@@ -1,8 +1,40 @@
 import { execSync, spawn, spawnSync } from "node:child_process";
+import { readdirSync, statSync } from "node:fs";
+import { join } from "node:path";
 
 const root = process.cwd();
 
 type Step = { name: string; cmd: string; args: string[]; cwd?: string };
+
+/**
+ * Returns true if every file under src/ is older than the newest artifact
+ * under dist/. When this holds, rerunning `bun run build` produces the same
+ * output and wastes ~20s. First push after a src/ edit still rebuilds.
+ */
+function isBuildUpToDate(): boolean {
+	const srcDir = join(root, "packages/astropress/src");
+	const distDir = join(root, "packages/astropress/dist");
+	const walkNewest = (dir: string): number => {
+		let newest = 0;
+		try {
+			for (const entry of readdirSync(dir, { withFileTypes: true })) {
+				const full = join(dir, entry.name);
+				if (entry.isDirectory()) {
+					newest = Math.max(newest, walkNewest(full));
+				} else {
+					newest = Math.max(newest, statSync(full).mtimeMs);
+				}
+			}
+		} catch {
+			// missing dir — treat as not-ready
+		}
+		return newest;
+	};
+	const srcNewest = walkNewest(srcDir);
+	const distNewest = walkNewest(distDir);
+	if (srcNewest === 0 || distNewest === 0) return false;
+	return distNewest >= srcNewest;
+}
 
 function fmtMs(ms: number): string {
 	if (ms < 1_000) return `${ms.toFixed(0)}ms`;
@@ -148,40 +180,42 @@ async function main(): Promise<void> {
 		process.exit(0);
 	}
 
-	// Tier 2 — build + BDD. Serial (build produces the dist that bdd:test uses).
-	const tier2: Step[] = [
-		{
-			name: "astropress build",
-			cmd: "bun",
-			args: ["run", "--filter", "@astropress-diy/astropress", "build"],
-		},
+	// Build must come first — bdd:test imports compiled JS from dist/.
+	// Vitest, cli:smoke, and test:example have no dist dependency.
+	// Skip the build if dist/ is already newer than every file in src/.
+	if (isBuildUpToDate()) {
+		console.log("\n── build skipped (dist/ newer than src/; rerun bun run build manually if needed) ──");
+	} else if (
+		!(await runSerial("── build (tier 2 prologue) ──", [
+			{
+				name: "astropress build",
+				cmd: "bun",
+				args: ["run", "--filter", "@astropress-diy/astropress", "build"],
+			},
+		]))
+	) {
+		process.exit(1);
+	}
+
+	// Parallel: bdd:test (long pole, needs dist) + vitest + cli:smoke + test:example.
+	// Merges what was formerly tier 2's bdd:test with tier 3; bdd sets the wall
+	// clock and everything else hides behind it.
+	const parallelSteps: Step[] = [
 		{ name: "bdd:test", cmd: "bun", args: ["run", "bdd:test"] },
-	];
-
-	if (!(await runSerial("── tier 2 (build + BDD) ──", tier2))) process.exit(1);
-
-	// Tier 3 — parallel. Plain vitest (no coverage), Rust smoke, example check.
-	// Coverage thresholds remain enforced in CI.
-	const tier3Parallel: Step[] = [
 		{
 			name: "vitest run (plain)",
 			cmd: "bun",
-			args: [
-				"run",
-				"--filter",
-				"@astropress-diy/astropress",
-				"test",
-			],
+			args: ["run", "--filter", "@astropress-diy/astropress", "test"],
 		},
 		{ name: "test:cli:smoke", cmd: "bun", args: ["run", "test:cli:smoke"] },
 		{ name: "test:example", cmd: "bun", args: ["run", "test:example"] },
 	];
 
-	if (!(await runParallel("── tier 3 parallel ──", tier3Parallel))) process.exit(1);
+	if (!(await runParallel("── tier 2/3 parallel ──", parallelSteps))) process.exit(1);
 
 	// repo:clean must run last — it asserts no residual files from the parallel steps.
 	if (
-		!(await runSerial("── tier 3 final ──", [
+		!(await runSerial("── final gate ──", [
 			{ name: "repo:clean", cmd: "bun", args: ["run", "repo:clean"] },
 		]))
 	) {

@@ -65,8 +65,16 @@ function readFeatureScenarios() {
 
 async function runStep(step: VerificationGroup["steps"][number]) {
 	const defaultCwd = step.command === "cargo" ? cratesRoot : repoRoot;
+	// cargo test does a network index refresh per invocation; --offline
+	// eliminates it. Across ~29 cargo invocations this saves 10-20s total
+	// and makes bdd:test deterministic when offline. If the cache is cold
+	// cargo will fail fast and the user will see a clear error.
+	const args =
+		step.command === "cargo" && !step.args.includes("--offline")
+			? [step.args[0], "--offline", ...step.args.slice(1)]
+			: step.args;
 	await new Promise<void>((resolve, reject) => {
-		const child = spawn(step.command, step.args, {
+		const child = spawn(step.command, args, {
 			cwd: step.cwd ?? defaultCwd,
 			stdio: "inherit",
 			env: process.env,
