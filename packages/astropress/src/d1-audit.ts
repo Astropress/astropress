@@ -12,7 +12,6 @@ export async function recordD1Audit(
 	summary: string,
 ): Promise<void> {
 	const db = getCloudflareBindings(locals).DB;
-	/* v8 ignore next 3 */
 	if (!db) {
 		return;
 	}
