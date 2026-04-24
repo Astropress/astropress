@@ -99,6 +99,7 @@ describe("runIntegrityCheck", () => {
 		expect(result.status).toBe("unavailable");
 		expect(result.mode).toBe("quick");
 		expect(result.messages).toEqual([]);
+		expect(result.messages.length).toBe(0);
 		expect(result.error).toBe("SQLite driver unavailable: driver-load-fail");
 	});
 
@@ -561,6 +562,13 @@ describe("attemptRepair", () => {
 		});
 		expect(insertCalled).toBe(false);
 		expect(result.messages).toContain("Copied 0 row(s) to recovery database");
+		// No "could not be read" message — the empty table must be handled by the
+		// explicit length check, not fall through to the outer catch.
+		expect(
+			result.messages.some((m) =>
+				m.startsWith("Table empty_t could not be read"),
+			),
+		).toBe(false);
 	});
 
 	it("returns failure with messages when recovery DB still fails integrity", async () => {

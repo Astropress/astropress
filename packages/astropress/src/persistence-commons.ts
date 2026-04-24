@@ -7,7 +7,13 @@
 
 import type { ContentOverride } from "./persistence-types";
 
-export type ContentStatus = "draft" | "review" | "published" | "archived";
+const CONTENT_STATUSES = ["draft", "review", "published", "archived"] as const;
+export type ContentStatus = (typeof CONTENT_STATUSES)[number];
+const DEFAULT_STATUS: ContentStatus = "published";
+
+function isContentStatus(value: unknown): value is ContentStatus {
+	return (CONTENT_STATUSES as readonly string[]).includes(value as string);
+}
 
 // ---------------------------------------------------------------------------
 // Slug / path normalization
@@ -34,15 +40,7 @@ export function normalizeRedirectTarget(value: string) {
 }
 
 export function normalizeContentStatus(input?: string | null): ContentStatus {
-	if (
-		input === "draft" ||
-		input === "review" ||
-		input === "archived" ||
-		input === "published"
-	) {
-		return input;
-	}
-	return "published";
+	return isContentStatus(input) ? input : DEFAULT_STATUS;
 }
 
 // ---------------------------------------------------------------------------
@@ -50,10 +48,9 @@ export function normalizeContentStatus(input?: string | null): ContentStatus {
 // ---------------------------------------------------------------------------
 
 export function parseIdList(value: string | null | undefined): number[] {
-	if (!value) return [];
 	let parsed: unknown;
 	try {
-		parsed = JSON.parse(value);
+		parsed = JSON.parse(value ?? "[]");
 	} catch {
 		return [];
 	}
@@ -91,12 +88,8 @@ export function validateContentRecord(record: ContentRecordInput): {
 	if (typeof record.title !== "string" || record.title.trim() === "") {
 		return { ok: false, error: "Content record requires a non-empty title" };
 	}
-	if (
-		record.status !== undefined &&
-		record.status !== null &&
-		typeof record.status === "string" &&
-		!["draft", "review", "published", "archived"].includes(record.status)
-	) {
+	// typeof-string alone discriminates null/undefined/numbers from the set.
+	if (typeof record.status === "string" && !isContentStatus(record.status)) {
 		return { ok: false, error: `Invalid content status: ${record.status}` };
 	}
 	return { ok: true };
@@ -170,20 +163,26 @@ export interface PersistedOverrideRecord extends ContentOverride {
 	metadata?: Record<string, unknown>;
 }
 
+export function parseMetadataJson(
+	raw: string | null | undefined,
+): Record<string, unknown> | undefined {
+	let parsed: unknown;
+	try {
+		parsed = JSON.parse(raw ?? "null");
+	} catch {
+		return undefined;
+	}
+	if (parsed === null || typeof parsed !== "object" || Array.isArray(parsed)) {
+		return undefined;
+	}
+	return parsed as Record<string, unknown>;
+}
+
 export function mapPersistedOverrideRow(
 	row: PersistedOverrideRow | null | undefined,
 ): PersistedOverrideRecord | null {
 	if (!row) return null;
-
-	let metadata: Record<string, unknown> | undefined;
-	if (row.metadata) {
-		try {
-			metadata = JSON.parse(row.metadata) as Record<string, unknown>;
-		} catch {
-			metadata = undefined;
-		}
-	}
-
+	const metadata = parseMetadataJson(row.metadata);
 	return {
 		title: row.title,
 		status: row.status,

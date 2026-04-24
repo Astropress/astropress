@@ -152,14 +152,12 @@ export async function attemptRepair(
 					string,
 					unknown
 				>[];
-				if (rows.length === 0) continue;
-				const columns = Object.keys(rows[0] ?? {});
+				const columns = rows.length > 0 ? Object.keys(rows[0]) : [];
 				if (columns.length === 0) continue;
 				const placeholders = columns.map(() => "?").join(", ");
+				const quoted = columns.map((c) => `"${c}"`).join(", ");
 				const insert = recovery.prepare(
-					`INSERT INTO "${name}" (${columns
-						.map((c) => `"${c}"`)
-						.join(", ")}) VALUES (${placeholders})`,
+					`INSERT INTO "${name}" (${quoted}) VALUES (${placeholders})`,
 				);
 				for (const row of rows) {
 					try {

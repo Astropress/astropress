@@ -375,6 +375,14 @@ pre-push:
     gates:
       run: bun run test:prepush
 
+    # DO NOT REMOVE OR RELAX — closes the gap the pre-commit threshold audit
+    # leaves open. Runs Stryker mutation testing scoped to files changed on
+    # this branch vs. origin/main, so the check is fast (≈ 60s) but still
+    # blocks PRs whose new code scores below the 95% floor. See the script
+    # header for the full rationale.
+    mutation-gate:
+      run: bun run tooling/scripts/prepush-mutation-gate.ts
+
     slow-audits:
       # Whole-repo static audits moved out of pre-commit because they scan far
       # beyond any changed file. Amortized across a push (not per-commit) these

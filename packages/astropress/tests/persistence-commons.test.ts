@@ -8,6 +8,7 @@ import {
 	normalizeRedirectTarget,
 	normalizeSlug,
 	parseIdList,
+	parseMetadataJson,
 	serializeIdList,
 	toContentStoreRecord,
 	toRedirectRecord,
@@ -259,6 +260,32 @@ describe("auditSchemaFields", () => {
 			"summary",
 			"details",
 		]);
+	});
+});
+
+describe("parseMetadataJson", () => {
+	it("returns undefined for null", () => {
+		expect(parseMetadataJson(null)).toBeUndefined();
+	});
+	it("returns undefined for undefined", () => {
+		expect(parseMetadataJson(undefined)).toBeUndefined();
+	});
+	it("returns undefined for malformed JSON", () => {
+		expect(parseMetadataJson("not-json")).toBeUndefined();
+	});
+	it("returns undefined when parsed value is null (literal 'null')", () => {
+		expect(parseMetadataJson("null")).toBeUndefined();
+	});
+	it("returns undefined when parsed value is a primitive", () => {
+		expect(parseMetadataJson("42")).toBeUndefined();
+		expect(parseMetadataJson('"hello"')).toBeUndefined();
+		expect(parseMetadataJson("true")).toBeUndefined();
+	});
+	it("returns undefined when parsed value is an array", () => {
+		expect(parseMetadataJson("[1, 2]")).toBeUndefined();
+	});
+	it("returns the parsed object for a valid JSON object", () => {
+		expect(parseMetadataJson('{"extra": 1}')).toEqual({ extra: 1 });
 	});
 });
 
