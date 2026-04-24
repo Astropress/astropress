@@ -231,18 +231,25 @@ function main(): number {
 	}
 
 	const failures = verdicts.filter((v) => v.status !== "pass");
+	const checkOnly = process.argv.includes("--check-only");
 	if (failures.length === 0) {
-		const nextScores = { ...baseline.scores };
-		for (const v of verdicts) {
-			if (v.score !== null) nextScores[v.file] = v.score;
+		if (checkOnly) {
+			console.log(
+				"\n✓ prepush-mutation-gate: all changed files pass (check-only, baseline not rewritten).\n",
+			);
+		} else {
+			const nextScores = { ...baseline.scores };
+			for (const v of verdicts) {
+				if (v.score !== null) nextScores[v.file] = v.score;
+			}
+			saveBaseline({
+				updatedAt: new Date().toISOString(),
+				scores: nextScores,
+			});
+			console.log(
+				`\n✓ prepush-mutation-gate: all changed files pass. Baseline updated at ${BASELINE_PATH}.\n`,
+			);
 		}
-		saveBaseline({
-			updatedAt: new Date().toISOString(),
-			scores: nextScores,
-		});
-		console.log(
-			`\n✓ prepush-mutation-gate: all changed files pass. Baseline updated at ${BASELINE_PATH}.\n`,
-		);
 		return 0;
 	}
 

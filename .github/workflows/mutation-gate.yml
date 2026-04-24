@@ -1,0 +1,34 @@
+name: Mutation Coverage Gate
+
+on:
+  pull_request:
+    paths:
+      - "packages/astropress/src/**/*.ts"
+      - "tooling/stryker/baseline-scores.json"
+      - "tooling/scripts/prepush-mutation-gate.ts"
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
+jobs:
+  delta-gate:
+    name: Mutation delta gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0 # full history so the script can diff against origin/main
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24.8"
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.3.10"
+
+      - run: bun install --frozen-lockfile
+
+      - name: Run delta mutation gate (check-only)
+        run: bun run tooling/scripts/prepush-mutation-gate.ts --check-only
