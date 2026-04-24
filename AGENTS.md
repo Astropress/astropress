@@ -242,6 +242,44 @@ The fictional "Runway" hosting provider was added without being requested and wi
 both mention Argon2id, KMAC256, and ML-DSA-65. If you rename these algorithms or
 remove the mentions, update `tooling/readiness-truth.json` to match.
 
+## Commit hygiene for security fixes
+
+One-concern-per-commit. When CI surfaces a new security-tooling finding
+(Nuclei, Semgrep, CodeQL), resist the urge to batch multiple fix attempts
+into one commit. The 2026-04-24 Nuclei cycle took 5 commits to close 5
+findings; clean rollback and bisection required each attempt to be its
+own commit.
+
+Good shape:
+- `fix(security): add Header-Name to static server` — one header
+- `fix(ci): suppress <matcher> false positive` — one suppression
+- `fix(ci): fallback SARIF when scanner emits zero` — one CI fix
+
+Bad shape:
+- `fix(security): add all missing headers + suppress false positives + rework Content-Type order` — entangled
+
+If one commit's fix fully supersedes another, squash at the end once the
+resolution is clear, not during the middle of debugging.
+
+## Local CI emulation
+
+Use `tooling/scripts/run-nuclei-local.sh` to run the CI security scan
+against the local github-pages dist without a push cycle. Pass `--no-em`
+to see findings the CI config is currently suppressing.
+
+## Git configuration
+
+Set `fetch.prune = true` globally (or at least in this clone) so stale remote-
+tracking branches disappear automatically after upstream deletion:
+
+```sh
+git config --global fetch.prune true
+```
+
+Without this, `git branch -r` keeps showing merged+deleted branches from other
+PRs until you run `git fetch --prune` manually, which obscures the state of
+your working clone.
+
 ## Signing setup
 
 **All commits to `main` must be signed.** This is enforced by the GitHub branch

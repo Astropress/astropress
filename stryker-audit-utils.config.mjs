@@ -20,7 +20,7 @@ export default {
   },
   reporters: ["clear-text", "json"],
   jsonReporter: { fileName: "reports/mutation/audit-utils.json" },
-  inPlace: true,
+  // inPlace: false (default) — mutate in a sandbox copy, not the real source.
   incremental: true,
   incrementalFile: ".stryker-incremental-audit-utils.json",
   timeoutMS: 60000,

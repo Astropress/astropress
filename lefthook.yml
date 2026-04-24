@@ -14,6 +14,13 @@ pre-commit:
       glob: "packages/**/*.ts"
       run: bun run audit:arch
 
+    stryker-contamination:
+      # Defense-in-depth: Stryker's inPlace:true has been removed from all
+      # configs, but this catches any leaks (stryMutAct_*, stryCov_*,
+      # @ts-nocheck headers, bin/ file-mode drops) that slip into staged
+      # diffs. Runs on every commit; cost is negligible (~50ms).
+      run: bun run tooling/scripts/check-stryker-contamination.ts
+
     # Previous monolithic ci-audits block ran all 37 audits serially on any
     # packages/**/*.ts change (~48s). Split into ~30 parallel commands, each
     # with a narrow glob so most commits fire only 3–5 audits. Slow whole-repo
@@ -205,6 +212,26 @@ pre-commit:
         - "crates/astropress-cli/src/scaffold*.rs"
         - "packages/astropress/bin/**"
       run: bun run audit:scaffold-quality
+
+    audit-playwright-projects:
+      glob: ["tooling/e2e/playwright.config.ts", "package.json"]
+      run: bun run audit:playwright-projects
+
+    audit-mutation-scope:
+      glob:
+        - "packages/astropress/src/auth-*.ts"
+        - "packages/astropress/src/security-*.ts"
+        - "packages/astropress/src/runtime-admin-*.ts"
+        - "stryker*.config.mjs"
+      run: bun run audit:mutation-scope
+
+    audit-ci-sarif-upload:
+      glob: ".github/workflows/*.yml"
+      run: bun run audit:ci-sarif-upload
+
+    audit-nuclei-suppressions:
+      glob: ".github/workflows/*.yml"
+      run: bun run audit:nuclei-suppressions
 
     bdd-lint:
       glob: "tooling/bdd/**/*.feature"

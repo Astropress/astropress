@@ -10,8 +10,13 @@
  *      self-assessed must not regress
  *   5. No rubric in the table has an empty Evidence column AND no "self-assessed" marker
  *      (every rubric must declare how it's backed)
+ *   6. RUBRIC GRADE GUARD — when a rubric grade is raised in this PR, its new
+ *      evidence must reference at least one existing .test.ts / .spec.ts file
+ *      on disk. Catches the 2026-04-23 failure mode where A+ was claimed
+ *      without running the cited tests.
  */
 
+import { spawnSync } from "node:child_process";
 import { join } from "node:path";
 import {
 	AuditReport,
@@ -114,6 +119,11 @@ async function main() {
 		}
 	}
 
+	// ── 6. Rubric grade guard: raised grades must cite a test file that exists.
+	// Compares current EVALUATION.md to origin/main. Skipped if main isn't
+	// locally available (CI, fresh checkout — the PR itself has CI coverage).
+	await checkGradeRaises(evalSrc, report);
+
 	// ── Report ──
 	const automatedPct =
 		totalRubrics > 0 ? Math.round((automatedCount / totalRubrics) * 100) : 0;
@@ -143,6 +153,84 @@ async function main() {
 		`\nevaluation-integrity audit passed — ${totalRubrics} rubrics verified, ` +
 			`${automatedCount} automated, ${ciEnforcedAudits.size} CI-enforced claims confirmed.`,
 	);
+}
+
+const GRADE_ORDER: Record<string, number> = { F: 0, D: 1, C: 2, B: 3, A: 4, "A+": 5 };
+
+function parseRubricMap(src: string): Map<string, { grade: string; evidence: string }> {
+	const rubrics = new Map<string, { grade: string; evidence: string }>();
+	const linePattern = /^\|\s*(\d+)\s*\|[^|]+\|\s*([A-F][+-]?)\s*\|([^|]*)\|/gm;
+	for (const m of src.matchAll(linePattern)) {
+		const num = m[1];
+		const grade = m[2].trim();
+		const evidence = m[3]?.trim() ?? "";
+		rubrics.set(num, { grade, evidence });
+	}
+	return rubrics;
+}
+
+async function checkGradeRaises(currentSrc: string, report: AuditReport): Promise<void> {
+	// Fetch the main version of EVALUATION.md. If unavailable, skip silently.
+	const show = spawnSync(
+		"git",
+		["show", "origin/main:docs/reference/EVALUATION.md"],
+		{ encoding: "utf8" },
+	);
+	if (show.status !== 0 || !show.stdout) return;
+	const mainSrc = show.stdout;
+	const before = parseRubricMap(mainSrc);
+	const now = parseRubricMap(currentSrc);
+
+	const raised: Array<{ num: string; from: string; to: string; evidence: string }> = [];
+	for (const [num, next] of now) {
+		const prev = before.get(num);
+		if (!prev) continue; // new rubric — skip grade-raise logic
+		const prevRank = GRADE_ORDER[prev.grade] ?? -1;
+		const nextRank = GRADE_ORDER[next.grade] ?? -1;
+		if (nextRank > prevRank) {
+			raised.push({ num, from: prev.grade, to: next.grade, evidence: next.evidence });
+		}
+	}
+
+	for (const r of raised) {
+		// Evidence must cite at least one .test.ts / .spec.ts that exists on disk
+		const testFiles: string[] = [];
+		const pattern = /[\w.\\/\-]+?\.(?:test|spec)\.ts/g;
+		for (const m of r.evidence.matchAll(pattern)) testFiles.push(m[0]);
+		if (testFiles.length === 0) {
+			report.add(
+				`[grade-raise-no-test] Rubric #${r.num} grade rose ${r.from}→${r.to} but its evidence ` +
+					`cites no .test.ts / .spec.ts file. A grade upgrade must be backed by a behavioral ` +
+					`test that actually ran. Evidence: ${r.evidence.slice(0, 180)}...`,
+			);
+			continue;
+		}
+		let foundAnyOnDisk = false;
+		for (const file of testFiles) {
+			// Tolerate both package-relative and repo-relative paths
+			const candidates = [
+				fromRoot(file),
+				fromRoot("packages/astropress", file),
+				fromRoot("packages/astropress/tests", file),
+				fromRoot("packages/astropress-nexus/tests", file),
+				fromRoot("tooling/e2e", file),
+			];
+			for (const candidate of candidates) {
+				if (await fileExists(candidate)) {
+					foundAnyOnDisk = true;
+					break;
+				}
+			}
+			if (foundAnyOnDisk) break;
+		}
+		if (!foundAnyOnDisk) {
+			report.add(
+				`[grade-raise-missing-test] Rubric #${r.num} grade rose ${r.from}→${r.to} but none of ` +
+					`its cited test files exist on disk: ${testFiles.join(", ")}. The rubric grade is ` +
+					`ahead of the actual implementation.`,
+			);
+		}
+	}
 }
 
 runAudit("evaluation-integrity", main);
