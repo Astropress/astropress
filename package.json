@@ -71,6 +71,8 @@
 		"audit:scaffold-quality": "bun run tooling/scripts/audit-scaffold-quality.ts",
 		"audit:playwright-projects": "bun run tooling/scripts/audit-playwright-projects.ts",
 		"audit:mutation-scope": "bun run tooling/scripts/audit-mutation-scope.ts",
+		"audit:ci-sarif-upload": "bun run tooling/scripts/audit-ci-sarif-upload.ts",
+		"audit:nuclei-suppressions": "bun run tooling/scripts/audit-nuclei-suppressions.ts",
 		"check:version": "bun run tooling/scripts/check-version-bump.ts",
 		"docs:api": "bun run tooling/scripts/generate-api-docs.ts",
 		"docs:api:check": "bun run tooling/scripts/generate-api-docs.ts --check",

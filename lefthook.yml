@@ -225,6 +225,14 @@ pre-commit:
         - "stryker*.config.mjs"
       run: bun run audit:mutation-scope
 
+    audit-ci-sarif-upload:
+      glob: ".github/workflows/*.yml"
+      run: bun run audit:ci-sarif-upload
+
+    audit-nuclei-suppressions:
+      glob: ".github/workflows/*.yml"
+      run: bun run audit:nuclei-suppressions
+
     bdd-lint:
       glob: "tooling/bdd/**/*.feature"
       run: bun run bdd:lint
