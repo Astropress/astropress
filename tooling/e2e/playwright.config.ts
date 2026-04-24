@@ -122,6 +122,14 @@ export default defineConfig({
       },
     },
     {
+      name: "admin-perf-timing",
+      testMatch: /admin-perf-timing\.spec\.ts/,
+      retries: 1,
+      use: {
+        baseURL: process.env.PLAYWRIGHT_ADMIN_BASE_URL ?? "http://127.0.0.1:4325",
+      },
+    },
+    {
       name: "viewport-768",
       testMatch: /admin-harness-mobile\.spec\.ts/,
       use: {

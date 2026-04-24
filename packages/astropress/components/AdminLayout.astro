@@ -1,72 +1,161 @@
 ---
 import { buildAstropressAdminDocumentTitle } from "../src/admin-branding";
-import { applyAstropressSecurityHeaders } from "../src/security-headers";
-import { resolveAstropressAdminUiConfig } from "../src/admin-ui";
-import { getAdminBootstrapConfig } from "../src/runtime-env";
-import { peekCmsConfig } from "../src/config";
 import { getRecentAdminItems } from "../src/admin-recent";
+import { resolveAstropressAdminUiConfig } from "../src/admin-ui";
+import { peekCmsConfig } from "../src/config";
+import { getAdminBootstrapConfig } from "../src/runtime-env";
+import { applyAstropressSecurityHeaders } from "../src/security-headers";
 
 interface NavItem {
-  href?: string;
-  label: string;
-  adminOnly?: boolean;
-  isGroupLabel?: boolean;
-  indent?: boolean;
+	href?: string;
+	label: string;
+	adminOnly?: boolean;
+	isGroupLabel?: boolean;
+	indent?: boolean;
 }
 
 interface Props {
-  title: string;
-  heading: string;
-  currentPath: string;
-  description?: string;
-  role: "admin" | "editor";
-  userName: string;
-  siteName?: string;
-  /** When true, shows the CMS nav item linking to /ap-admin/cms. */
-  hasCms?: boolean;
-  /** When true, shows the Host nav item (admin-only) linking to /ap-admin/host. */
-  hasHostPanel?: boolean;
-  /** When true, shows the Publish button in the topbar (admin-only). */
-  canPublish?: boolean;
+	title: string;
+	heading: string;
+	currentPath: string;
+	description?: string;
+	role: "admin" | "editor";
+	userName: string;
+	siteName?: string;
+	/** When true, shows the CMS nav item linking to /ap-admin/cms. */
+	hasCms?: boolean;
+	/** When true, shows the Host nav item (admin-only) linking to /ap-admin/host. */
+	hasHostPanel?: boolean;
+	/** When true, shows the Publish button in the topbar (admin-only). */
+	canPublish?: boolean;
 }
 
-const { title, heading, currentPath, description = "", role, userName, siteName, hasCms = false, hasHostPanel = false, canPublish = false } = Astro.props;
+const {
+	title,
+	heading,
+	currentPath,
+	description = "",
+	role,
+	userName,
+	siteName,
+	hasCms = false,
+	hasHostPanel = false,
+	canPublish = false,
+} = Astro.props;
 const documentTitle = buildAstropressAdminDocumentTitle(title);
 const adminUi = resolveAstropressAdminUiConfig();
 const adminSiteName = siteName ?? adminUi.branding.shellName;
 const { bootstrapDisabled } = getAdminBootstrapConfig(Astro.locals);
-applyAstropressSecurityHeaders(Astro.response.headers, { area: "admin", allowInlineStyles: import.meta.env.DEV, forceHsts: Astro.url.protocol === "https:" });
-const hasFundraising = !!(peekCmsConfig()?.donations);
-const hasTestimonials = !!(peekCmsConfig()?.testimonials);
+applyAstropressSecurityHeaders(Astro.response.headers, {
+	area: "admin",
+	allowInlineStyles: import.meta.env.DEV,
+	forceHsts: Astro.url.protocol === "https:",
+});
+const hasFundraising = !!peekCmsConfig()?.donations;
+const hasTestimonials = !!peekCmsConfig()?.testimonials;
 const recentItems = await getRecentAdminItems(Astro.locals, role);
 
 const pluginNavItems: NavItem[] = (peekCmsConfig()?.plugins ?? [])
-  .flatMap((p) => p.navItems ?? [])
-  .map((item) => ({ href: item.href, label: item.label }));
+	.flatMap((p) => p.navItems ?? [])
+	.map((item) => ({ href: item.href, label: item.label }));
 
 const navItems: NavItem[] = [
-  { href: "/ap-admin", label: adminUi.navigation.dashboard },
-  { href: "", label: adminUi.navigation.contentGroup, isGroupLabel: true },
-  { href: "/ap-admin/pages", label: adminUi.navigation.pages, adminOnly: true, indent: true },
-  { href: "/ap-admin/posts", label: adminUi.navigation.posts, indent: true },
-  { href: "/ap-admin/authors", label: adminUi.navigation.authors, adminOnly: true, indent: true },
-  { href: "/ap-admin/taxonomies", label: adminUi.navigation.taxonomies, adminOnly: true, indent: true },
-  { href: "/ap-admin/route-pages", label: adminUi.navigation.routePages, adminOnly: true, indent: true },
-  { href: "/ap-admin/archives", label: adminUi.navigation.archives, adminOnly: true, indent: true },
-  { href: "/ap-admin/users", label: adminUi.navigation.users, adminOnly: true, indent: true },
-  { href: "/ap-admin/media", label: adminUi.navigation.media },
-  { href: "/ap-admin/comments", label: adminUi.navigation.comments },
-  { href: "/ap-admin/redirects", label: adminUi.navigation.redirects, adminOnly: true },
-  { href: "/ap-admin/translations", label: adminUi.navigation.translations, adminOnly: true },
-  { href: "/ap-admin/seo", label: adminUi.navigation.seo, adminOnly: true },
-  { href: "/ap-admin/system", label: adminUi.navigation.system, adminOnly: true },
-  { href: "/ap-admin/settings", label: adminUi.navigation.settings, adminOnly: true },
-  { href: "/ap-admin/services", label: adminUi.navigation.services, adminOnly: true },
-  ...(hasFundraising ? [{ href: "/ap-admin/fundraising", label: adminUi.navigation.fundraising, adminOnly: true as const }] : []),
-  ...(hasTestimonials ? [{ href: "/ap-admin/testimonials", label: adminUi.navigation.testimonials, adminOnly: true as const }] : []),
-  ...(hasCms ? [{ href: "/ap-admin/cms", label: adminUi.navigation.cms }] : []),
-  ...(hasHostPanel ? [{ href: "/ap-admin/host", label: adminUi.navigation.host, adminOnly: true as const }] : []),
-  ...pluginNavItems,
+	{ href: "/ap-admin", label: adminUi.navigation.dashboard },
+	{ href: "", label: adminUi.navigation.contentGroup, isGroupLabel: true },
+	{
+		href: "/ap-admin/pages",
+		label: adminUi.navigation.pages,
+		adminOnly: true,
+		indent: true,
+	},
+	{ href: "/ap-admin/posts", label: adminUi.navigation.posts, indent: true },
+	{
+		href: "/ap-admin/authors",
+		label: adminUi.navigation.authors,
+		adminOnly: true,
+		indent: true,
+	},
+	{
+		href: "/ap-admin/taxonomies",
+		label: adminUi.navigation.taxonomies,
+		adminOnly: true,
+		indent: true,
+	},
+	{
+		href: "/ap-admin/route-pages",
+		label: adminUi.navigation.routePages,
+		adminOnly: true,
+		indent: true,
+	},
+	{
+		href: "/ap-admin/archives",
+		label: adminUi.navigation.archives,
+		adminOnly: true,
+		indent: true,
+	},
+	{
+		href: "/ap-admin/users",
+		label: adminUi.navigation.users,
+		adminOnly: true,
+		indent: true,
+	},
+	{ href: "/ap-admin/media", label: adminUi.navigation.media },
+	{ href: "/ap-admin/comments", label: adminUi.navigation.comments },
+	{
+		href: "/ap-admin/redirects",
+		label: adminUi.navigation.redirects,
+		adminOnly: true,
+	},
+	{
+		href: "/ap-admin/translations",
+		label: adminUi.navigation.translations,
+		adminOnly: true,
+	},
+	{ href: "/ap-admin/seo", label: adminUi.navigation.seo, adminOnly: true },
+	{
+		href: "/ap-admin/system",
+		label: adminUi.navigation.system,
+		adminOnly: true,
+	},
+	{
+		href: "/ap-admin/settings",
+		label: adminUi.navigation.settings,
+		adminOnly: true,
+	},
+	{
+		href: "/ap-admin/services",
+		label: adminUi.navigation.services,
+		adminOnly: true,
+	},
+	...(hasFundraising
+		? [
+				{
+					href: "/ap-admin/fundraising",
+					label: adminUi.navigation.fundraising,
+					adminOnly: true as const,
+				},
+			]
+		: []),
+	...(hasTestimonials
+		? [
+				{
+					href: "/ap-admin/testimonials",
+					label: adminUi.navigation.testimonials,
+					adminOnly: true as const,
+				},
+			]
+		: []),
+	...(hasCms ? [{ href: "/ap-admin/cms", label: adminUi.navigation.cms }] : []),
+	...(hasHostPanel
+		? [
+				{
+					href: "/ap-admin/host",
+					label: adminUi.navigation.host,
+					adminOnly: true as const,
+				},
+			]
+		: []),
+	...pluginNavItems,
 ];
 ---
 
@@ -343,6 +432,7 @@ const navItems: NavItem[] = [
       import "../web-components/admin-nav";
       import "../web-components/notice";
       import "../web-components/command-palette";
+      import "../web-components/pending-form";
     </script>
     <script>
       // Progressive enhancement: inline form validation with custom messages.

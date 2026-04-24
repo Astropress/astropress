@@ -59,7 +59,7 @@ Grade scale: `A+ / A / B / C / D / F`
 | 49 | UX Writing & Microcopy | A+ | `audit:microcopy` passes (CI-enforced) |
 | 50 | Information Architecture | A+ | `admin-nav-coherence.test.ts` (behavioral: nav structure parsed, unique hrefs, group labels followed only by indented items, every href has a matching admin page file, CLI noun-verb pattern); `audit:navigation` passes |
 | 51 | Navigation Design | A+ | `audit:navigation` passes (CI-enforced: skip-link, aria-current, Escape key, required nav structure) |
-| 52 | Interaction Design & Motion | A+ | `admin-interaction-timing.spec.ts` (behavioral: ap-notice dismiss-after auto-removes within window, no dismiss-after stays persistent, 0/bogus dismiss-after stay persistent); `audit:interaction` passes |
+| 52 | Interaction Design & Motion | A+ | `admin-interaction-timing.spec.ts` (ap-notice dismiss-after auto-removes within window; 0/bogus values stay persistent); `admin-perf-timing.spec.ts` (loading indicator aria-busy flips ≤ 100ms via `<ap-pending-form>`; CLS < 0.25 on 4 admin routes, driven toward 0.1); `tests/web-components/pending-form.test.ts` (9 unit tests on the component; mutation-tested via `stryker-pending-form.config.mjs`); `audit:interaction` passes |
 | 53 | Cross-Platform Support | A | `platform-smoke` CI matrix runs on `ubuntu-latest`, `macos-latest`, `windows-latest` |
 | 54 | Test Artifact Cleanup | A+ | `repo:clean` (`assert-clean-worktree.ts`) runs at end of every CI job; Rust uses `TestDir` RAII |
 | 55 | Minimalism | A | `audit:arch` enforces per-file LOC limits; `audit:dead-exports` passes (CI-enforced: all runtime exports have consumers — no orphaned exports) |
