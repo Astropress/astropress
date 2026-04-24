@@ -26,5 +26,5 @@ export default {
   incrementalFile: "../../.stryker-incremental-sync.json",
   timeoutMS: 120000,
   dryRunTimeoutMinutes: 15,
-  thresholds: { high: 80, low: 60, break: 50 },
+  thresholds: { high: 95, low: 95, break: 95 },
 };

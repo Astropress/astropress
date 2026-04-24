@@ -1,4 +1,5 @@
 import {
+	type SqliteDatabaseConstructor,
 	type SqliteDatabaseLike,
 	loadSqliteDatabase,
 } from "./sqlite-bootstrap-helpers";
@@ -14,15 +15,14 @@ export interface IntegrityCheckResult {
 
 export interface IntegrityCheckOptions {
 	mode?: "quick" | "full";
+	/** Override the SQLite driver loader (used by tests). */
+	loadDb?: () => Promise<SqliteDatabaseConstructor>;
 }
 
 function readPragma(db: SqliteDatabaseLike, mode: "quick" | "full"): string[] {
 	const sql = mode === "full" ? "PRAGMA integrity_check" : "PRAGMA quick_check";
 	const rows = db.prepare(sql).all() as Record<string, unknown>[];
-	return rows.map((row) => {
-		const first = Object.values(row)[0];
-		return typeof first === "string" ? first : String(first);
-	});
+	return rows.map((row) => String(Object.values(row)[0]));
 }
 
 export function runIntegrityCheckOnOpenDatabase(
@@ -32,7 +32,7 @@ export function runIntegrityCheckOnOpenDatabase(
 	const mode = options.mode ?? "quick";
 	try {
 		const messages = readPragma(db, mode);
-		const ok = messages.length === 1 && messages[0]?.toLowerCase() === "ok";
+		const ok = messages.length === 1 && messages[0].toLowerCase() === "ok";
 		return {
 			status: ok ? "ok" : "corrupt",
 			mode,
@@ -48,25 +48,34 @@ export function runIntegrityCheckOnOpenDatabase(
 	}
 }
 
+async function loadDriver(
+	override?: () => Promise<SqliteDatabaseConstructor>,
+): Promise<
+	{ ok: true; ctor: SqliteDatabaseConstructor } | { ok: false; error: string }
+> {
+	try {
+		const ctor = await (override ?? loadSqliteDatabase)();
+		return { ok: true, ctor };
+	} catch (error) {
+		return {
+			ok: false,
+			error: `SQLite driver unavailable: ${error instanceof Error ? error.message : String(error)}`,
+		};
+	}
+}
+
 export async function runIntegrityCheck(
 	sqlitePath: string,
 	options: IntegrityCheckOptions = {},
 ): Promise<IntegrityCheckResult> {
 	const mode = options.mode ?? "quick";
-	let DbClass: Awaited<ReturnType<typeof loadSqliteDatabase>>;
-	try {
-		DbClass = await loadSqliteDatabase();
-	} catch (error) {
-		return {
-			status: "unavailable",
-			mode,
-			messages: [],
-			error: `SQLite driver unavailable: ${error instanceof Error ? error.message : String(error)}`,
-		};
+	const driver = await loadDriver(options.loadDb);
+	if (!driver.ok) {
+		return { status: "unavailable", mode, messages: [], error: driver.error };
 	}
 	let db: SqliteDatabaseLike | undefined;
 	try {
-		db = new DbClass(sqlitePath);
+		db = new driver.ctor(sqlitePath);
 		return runIntegrityCheckOnOpenDatabase(db, { mode });
 	} catch (error) {
 		return {
@@ -89,27 +98,27 @@ export interface RepairResult {
 	error?: string;
 }
 
+export interface RepairOptions {
+	loadDb?: () => Promise<SqliteDatabaseConstructor>;
+}
+
 /**
- * Attempt to reconstruct a corrupt SQLite database by dumping its readable
- * contents into a new file via `.dump`-style iteration and swapping it in.
- *
- * Caller is expected to close any open handles to `sqlitePath` first. The
- * original file is preserved at `<sqlitePath>.corrupt-<timestamp>` on success.
+ * Reconstruct a corrupt SQLite database by dumping its readable contents into
+ * a new file via `.dump`-style iteration and swapping it in. The original is
+ * preserved at `<sqlitePath>.corrupt-<timestamp>` on success.
  */
-export async function attemptRepair(sqlitePath: string): Promise<RepairResult> {
+export async function attemptRepair(
+	sqlitePath: string,
+	options: RepairOptions = {},
+): Promise<RepairResult> {
 	const { renameSync, rmSync } = await import("node:fs");
 	const messages: string[] = [];
-	let DbClass: Awaited<ReturnType<typeof loadSqliteDatabase>>;
-	try {
-		DbClass = await loadSqliteDatabase();
-	} catch (error) {
-		return {
-			repaired: false,
-			mode: "none",
-			messages,
-			error: `SQLite driver unavailable: ${error instanceof Error ? error.message : String(error)}`,
-		};
+
+	const driver = await loadDriver(options.loadDb);
+	if (!driver.ok) {
+		return { repaired: false, mode: "none", messages, error: driver.error };
 	}
+	const DbClass = driver.ctor;
 
 	const recoveryPath = `${sqlitePath}.recovery-${Date.now()}`;
 	const corruptBackupPath = `${sqlitePath}.corrupt-${Date.now()}`;
@@ -124,7 +133,7 @@ export async function attemptRepair(sqlitePath: string): Promise<RepairResult> {
 			.prepare(
 				"SELECT name, sql FROM sqlite_master WHERE type = 'table' AND sql IS NOT NULL",
 			)
-			.all() as Array<{ name: string; sql: string }>;
+			.all() as { name: string; sql: string }[];
 
 		for (const { sql } of tables) {
 			try {
