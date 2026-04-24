@@ -222,7 +222,7 @@ pre-commit:
         - "packages/astropress/src/auth-*.ts"
         - "packages/astropress/src/security-*.ts"
         - "packages/astropress/src/runtime-admin-*.ts"
-        - "stryker*.config.mjs"
+        - "tooling/stryker/stryker*.config.mjs"
       run: bun run audit:mutation-scope
 
     audit-ci-sarif-upload:

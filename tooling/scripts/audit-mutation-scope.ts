@@ -25,11 +25,11 @@ const CRITICAL_PATTERNS: Array<{ prefix: string; label: string }> = [
 ];
 
 const STRYKER_CONFIGS = [
-	"stryker.config.mjs",
-	"stryker-critical.config.mjs",
-	"stryker-sync.config.mjs",
-	"stryker-audit-utils.config.mjs",
-	"stryker-pending-form.config.mjs",
+	"tooling/stryker/stryker.config.mjs",
+	"tooling/stryker/stryker-critical.config.mjs",
+	"tooling/stryker/stryker-sync.config.mjs",
+	"tooling/stryker/stryker-audit-utils.config.mjs",
+	"tooling/stryker/stryker-pending-form.config.mjs",
 ];
 
 function isCovered(srcPath: string, mutateGlobs: string[]): boolean {
