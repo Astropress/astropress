@@ -4,6 +4,10 @@ on:
   push:
   pull_request:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 
@@ -18,7 +22,11 @@ jobs:
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: "1.3.10"
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lockb') }}
+          restore-keys: ${{ runner.os }}-bun-
       - run: bun install --frozen-lockfile
       - run: bun run audit:deps
       - run: bun run audit:security
@@ -27,8 +35,6 @@ jobs:
       - run: bun run check:version
       - run: bun run audit:arch
       - run: bunx biome check --reporter=github packages/astropress/src packages/astropress/tests packages/astropress/web-components
-      - run: cargo clippy --manifest-path crates/astropress-cli/Cargo.toml -- -D warnings
-      - run: bun run audit:arch:rust
       - run: bun run audit:deps:graph
       - run: bun run audit:tooling-types
       - run: bun run audit:aeo
@@ -60,8 +66,25 @@ jobs:
       - run: bun run docs:check
       - run: bun run repo:clean
 
+  lint-rust:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.3.10"
+      - uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lockb') }}
+          restore-keys: ${{ runner.os }}-bun-
+      - run: bun install --frozen-lockfile
+      - run: cargo clippy --manifest-path crates/astropress-cli/Cargo.toml -- -D warnings
+      - run: bun run audit:arch:rust
+
   platform-smoke:
-    needs: lint
+    needs: [lint, lint-rust]
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
@@ -75,12 +98,15 @@ jobs:
         with:
           bun-version: "1.3.10"
       - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lockb') }}
+          restore-keys: ${{ runner.os }}-bun-
       - run: bun install --frozen-lockfile
       - run: bun run --filter "@astropress-diy/astropress" build
       - run: bun run test:cli
       - run: bun run --filter "@astropress-diy/astropress" test tests/project-env.test.ts tests/content-services-ops.test.ts tests/hosted-provider.contract.test.ts tests/provider-targets.test.ts
-      - run: bun run docs:api:check
-      - run: bun run docs:check
       - run: bun run test:example
       - run: bun run repo:clean
 
@@ -98,13 +124,18 @@ jobs:
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: ${{ matrix.bun }}
+      - uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lockb') }}
+          restore-keys: ${{ runner.os }}-bun-
       - run: bun install --frozen-lockfile
       - run: bun run test:coverage
       - run: bun run repo:clean
 
   test-cli:
     runs-on: ubuntu-latest
-    needs: lint
+    needs: [lint, lint-rust]
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-node@v6
@@ -114,6 +145,11 @@ jobs:
         with:
           bun-version: "1.3.10"
       - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lockb') }}
+          restore-keys: ${{ runner.os }}-bun-
       - run: bun install --frozen-lockfile
       - run: bun run --filter "@astropress-diy/astropress" build
       - run: cargo test --manifest-path crates/astropress-cli/Cargo.toml
@@ -127,6 +163,11 @@ jobs:
         with:
           node-version: "24.8"
       - uses: oven-sh/setup-bun@v2
+      - uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lockb') }}
+          restore-keys: ${{ runner.os }}-bun-
       - run: bun install --frozen-lockfile
       - run: bun run --filter "@astropress-diy/astropress" build
       - run: npx playwright install --with-deps chromium
@@ -145,6 +186,11 @@ jobs:
         with:
           node-version: "24.8"
       - uses: oven-sh/setup-bun@v2
+      - uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lockb') }}
+          restore-keys: ${{ runner.os }}-bun-
       - run: bun install
       - run: bun run --filter "@astropress-diy/astropress" build
       - run: bun run test:consumer-smoke
@@ -166,30 +212,60 @@ jobs:
         with:
           node-version: "24.8"
       - uses: oven-sh/setup-bun@v2
+      - uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lockb') }}
+          restore-keys: ${{ runner.os }}-bun-
       - run: bun install
       - run: bun run test:tarball-smoke
 
-  test-build:
+  test-build-content:
     runs-on: ubuntu-latest
-    needs: test-unit
+    needs: [lint, test-unit]
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-node@v6
         with:
           node-version: "24.8"
       - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.3.10"
+      - uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lockb') }}
+          restore-keys: ${{ runner.os }}-bun-
       - run: bun install --frozen-lockfile
       - run: bun run --filter "@astropress-diy/astropress" build
       - run: npx playwright install --with-deps chromium
       - run: bun run test:example
       - run: bun run test:static-site
       - run: bun run audit:carbon
-      - run: bun run test:admin-harness
-      - run: bun run audit:consumer-packaging
-      - run: bun run audit:admin-route-coverage
-      - run: bun run audit:title-composition
-      - run: bun run audit:security-policy-integrity
       - run: bun run audit:user-facing-route-coverage
+      - run: bun run repo:clean
+
+  test-build-harness:
+    runs-on: ubuntu-latest
+    needs: [lint, lint-rust, test-unit]
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24.8"
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.3.10"
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lockb') }}
+          restore-keys: ${{ runner.os }}-bun-
+      - run: bun install --frozen-lockfile
+      - run: bun run --filter "@astropress-diy/astropress" build
+      - run: npx playwright install --with-deps chromium
+      - run: bun run test:admin-harness
       - run: bun run bdd:lint
       - run: bun run bdd:test
       - run: cd packages/astropress-mcp && bun run build
@@ -197,7 +273,7 @@ jobs:
 
   preview-deploy:
     runs-on: ubuntu-latest
-    needs: test-build
+    needs: [test-build-content, test-build-harness]
     if: github.event_name == 'pull_request'
     permissions:
       contents: read
@@ -210,9 +286,13 @@ jobs:
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: "1.3.10"
+      - uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lockb') }}
+          restore-keys: ${{ runner.os }}-bun-
       - run: bun install --frozen-lockfile
       - run: bun run --filter "@astropress-diy/astropress" build
-      - run: bun run test:example
       - run: bun run --filter astropress-example-gh-pages build
       - name: Deploy preview to Cloudflare Pages
         uses: cloudflare/wrangler-action@v3

@@ -10,31 +10,23 @@
  *   5. api-middleware.ts contains no generic/banned error messages
  */
 
-import { access, readFile } from "node:fs/promises";
-import { join } from "node:path";
-
-const root = process.cwd();
-
-async function fileExists(filePath: string): Promise<boolean> {
-	try {
-		await access(filePath);
-		return true;
-	} catch {
-		return false;
-	}
-}
+import {
+	AuditReport,
+	fileExists,
+	fromRoot,
+	readText,
+	runAudit,
+} from "../lib/audit-utils.js";
 
 async function main() {
-	const violations: string[] = [];
+	const report = new AuditReport("ai-drivability");
 
 	// 1. AGENTS.md exists and contains key sections
-	const agentsMdPath = join(root, "AGENTS.md");
+	const agentsMdPath = fromRoot("AGENTS.md");
 	if (!(await fileExists(agentsMdPath))) {
-		violations.push(
-			"[agents-md-missing] AGENTS.md does not exist at repo root",
-		);
+		report.add("[agents-md-missing] AGENTS.md does not exist at repo root");
 	} else {
-		const content = await readFile(agentsMdPath, "utf8");
+		const content = await readText(agentsMdPath);
 		const requiredSections = [
 			"Key contracts",
 			"arch-lint",
@@ -43,7 +35,7 @@ async function main() {
 		];
 		for (const section of requiredSections) {
 			if (!content.includes(section)) {
-				violations.push(
+				report.add(
 					`[agents-md-section] AGENTS.md is missing required section: "${section}"`,
 				);
 			}
@@ -51,52 +43,46 @@ async function main() {
 	}
 
 	// 2. llms.txt exists
-	const llmsTxtPath = join(root, "llms.txt");
+	const llmsTxtPath = fromRoot("llms.txt");
 	if (!(await fileExists(llmsTxtPath))) {
-		violations.push("[llms-txt-missing] llms.txt does not exist at repo root");
+		report.add("[llms-txt-missing] llms.txt does not exist at repo root");
 	}
 
 	// 3. MCP package exists
-	const mcpPkgPath = join(root, "packages/astropress-mcp/package.json");
+	const mcpPkgPath = fromRoot("packages/astropress-mcp/package.json");
 	if (!(await fileExists(mcpPkgPath))) {
-		violations.push(
+		report.add(
 			"[mcp-package-missing] packages/astropress-mcp/package.json does not exist",
 		);
 	}
 
 	// 4. platform-contracts.ts has >= 20 JSDoc comment blocks
-	const contractsPath = join(
-		root,
-		"packages/astropress/src/platform-contracts.ts",
-	);
+	const contractsPath = fromRoot("packages/astropress/src/platform-contracts.ts");
 	if (!(await fileExists(contractsPath))) {
-		violations.push(
+		report.add(
 			"[contracts-missing] packages/astropress/src/platform-contracts.ts does not exist",
 		);
 	} else {
-		const src = await readFile(contractsPath, "utf8");
+		const src = await readText(contractsPath);
 		const lines = src.split("\n");
 		const jsdocLineCount = lines.filter(
 			(line) => /^\s*\/\*\*/.test(line) || /^\s*\*\s/.test(line),
 		).length;
 		if (jsdocLineCount < 20) {
-			violations.push(
+			report.add(
 				`[jsdoc-coverage] packages/astropress/src/platform-contracts.ts has only ${jsdocLineCount} JSDoc lines (need >= 20)`,
 			);
 		}
 	}
 
 	// 5. No generic error messages in api-middleware.ts
-	const middlewarePath = join(
-		root,
-		"packages/astropress/src/api-middleware.ts",
-	);
+	const middlewarePath = fromRoot("packages/astropress/src/api-middleware.ts");
 	if (!(await fileExists(middlewarePath))) {
-		violations.push(
+		report.add(
 			"[middleware-missing] packages/astropress/src/api-middleware.ts does not exist",
 		);
 	} else {
-		const src = await readFile(middlewarePath, "utf8");
+		const src = await readText(middlewarePath);
 		const lines = src.split("\n");
 		const bannedPhrases = [
 			"Something went wrong",
@@ -107,7 +93,7 @@ async function main() {
 		for (let i = 0; i < lines.length; i++) {
 			for (const phrase of bannedPhrases) {
 				if (lines[i].toLowerCase().includes(phrase.toLowerCase())) {
-					violations.push(
+					report.add(
 						`[generic-error] packages/astropress/src/api-middleware.ts:${i + 1}: contains banned phrase "${phrase}"\n    → ${lines[i].trim()}`,
 					);
 				}
@@ -115,21 +101,13 @@ async function main() {
 		}
 	}
 
-	if (violations.length > 0) {
-		console.error(
-			`ai-drivability audit failed — ${violations.length} issue(s):\n`,
-		);
-		for (const v of violations) console.error(`  - ${v}`);
+	if (report.failed) {
 		console.error(
 			"\nFix: ensure AGENTS.md, llms.txt, and MCP package exist; add JSDoc to platform contracts; remove generic error messages.",
 		);
-		process.exit(1);
 	}
 
-	console.log("ai-drivability audit passed — all AI-drivability checks OK.");
+	report.finish("ai-drivability audit passed — all AI-drivability checks OK.");
 }
 
-main().catch((err) => {
-	console.error("ai-drivability audit failed:", err);
-	process.exit(1);
-});
+runAudit("ai-drivability", main);

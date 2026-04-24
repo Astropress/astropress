@@ -6,10 +6,6 @@ pre-commit:
       run: bunx @biomejs/biome@1 check --no-errors-on-unmatched {staged_files}
       stage_fixed: true
 
-    biome-full:
-      glob: "packages/**/*.{ts,js,astro,json}"
-      run: bunx @biomejs/biome@1 check packages/astropress/src packages/astropress/tests packages/astropress/web-components
-
     staged-tests:
       glob: "packages/astropress/{src,tests,web-components}/**/*.ts"
       run: bun run test:staged
@@ -18,46 +14,197 @@ pre-commit:
       glob: "packages/**/*.ts"
       run: bun run audit:arch
 
-    ci-audits:
-      glob: "packages/**/*.{ts,js,astro,json}"
-      run: >-
-        bun run audit:deps &&
-        bun run audit:security &&
-        bun run audit:codeql-patterns &&
-        bun run audit:suppressions &&
-        bun run audit:honesty &&
-        bun run audit:microcopy &&
-        bun run check:version &&
-        bun run audit:arch:rust &&
-        bun run audit:deps:graph &&
-        bun run audit:tooling-types &&
-        bun run audit:aeo &&
-        bun run audit:providers &&
-        bun run audit:cli-docs &&
-        bun run audit:env-contract &&
-        bun run audit:exports &&
-        bun run audit:crypto &&
-        bun run audit:web-components &&
-        bun run audit:navigation &&
-        bun run audit:interaction &&
-        bun run audit:error-handling &&
-        bun run audit:caching &&
-        bun run audit:nexus &&
-        bun run audit:developer-ergonomics &&
-        bun run audit:dead-exports &&
-        bun run audit:bdd-wiring &&
-        bun run audit:no-stub-tests &&
-        bun run audit:evaluation-integrity &&
-        bun run audit:observability &&
-        bun run audit:api-design &&
-        bun run audit:ai-drivability &&
-        bun run audit:i18n &&
-        bun run audit:content-modeling &&
-        bun run audit:collaboration &&
-        bun run audit:oss-health &&
-        bun run audit:scaffold-quality &&
-        bun run docs:api:check &&
-        bun run docs:check
+    # Previous monolithic ci-audits block ran all 37 audits serially on any
+    # packages/**/*.ts change (~48s). Split into ~30 parallel commands, each
+    # with a narrow glob so most commits fire only 3–5 audits. Slow whole-repo
+    # audits (deps:graph, tooling-types, docs:api:check, docs:check) moved to
+    # pre-push where they're amortized across a batch.
+
+    audit-deps:
+      glob: ["package.json", "bun.lock", "packages/*/package.json"]
+      run: bun run audit:deps
+
+    check-version:
+      glob: "packages/astropress/package.json"
+      run: bun run check:version
+
+    audit-arch-rust:
+      glob: "crates/**/*.rs"
+      run: bun run audit:arch:rust
+
+    audit-codeql-patterns:
+      glob: "packages/**/*.{ts,astro}"
+      run: bun run audit:codeql-patterns
+
+    audit-security:
+      glob: "packages/astropress/{src,pages,components}/**/*.{ts,astro}"
+      run: bun run audit:security
+
+    audit-suppressions:
+      glob: "packages/**/*.{ts,astro}"
+      run: bun run audit:suppressions
+
+    audit-honesty:
+      glob: ["packages/**/*.{ts,astro,md}", "README.md", "AGENTS.md", "CHANGELOG.md"]
+      run: bun run audit:honesty
+
+    audit-microcopy:
+      glob: "packages/**/*.{ts,astro}"
+      run: bun run audit:microcopy
+
+    audit-aeo:
+      glob:
+        - "packages/astropress/components/*Aeo*.astro"
+        - "packages/astropress/components/*Seo*.astro"
+        - "packages/astropress/components/AstropressContentLayout.astro"
+        - "packages/astropress/src/aeo-metadata.ts"
+        - "packages/astropress/src/sitemap*.ts"
+        - "packages/astropress/public/llms.txt"
+        - "packages/astropress/components/DonateAction.astro"
+      run: bun run audit:aeo
+
+    audit-providers:
+      glob: ["AGENTS.md", "tooling/verified-providers.json", "packages/astropress/src/provider*.ts"]
+      run: bun run audit:providers
+
+    audit-cli-docs:
+      glob: ["crates/**/*.rs", "crates/**/*.toml", "docs/**/*.md"]
+      run: bun run audit:cli-docs
+
+    audit-env-contract:
+      glob: "packages/astropress/src/**/*.ts"
+      run: bun run audit:env-contract
+
+    audit-exports:
+      glob: ["packages/astropress/src/adapters/**", "packages/astropress/tests/**/*.test.ts"]
+      run: bun run audit:exports
+
+    audit-crypto:
+      glob: "packages/astropress/src/**/*.ts"
+      run: bun run audit:crypto
+
+    audit-web-components:
+      glob: ["packages/astropress/web-components/**/*.ts", "packages/astropress/index.ts"]
+      run: bun run audit:web-components
+
+    audit-navigation:
+      glob:
+        - "packages/astropress/public/admin.css"
+        - "packages/astropress/web-components/admin-nav.ts"
+        - "packages/astropress/src/admin-ui.ts"
+        - "packages/astropress/pages/ap-admin/**"
+        - "crates/astropress-cli/src/cli_config/**"
+      run: bun run audit:navigation
+
+    audit-interaction:
+      glob:
+        - "packages/astropress/public/admin.css"
+        - "packages/astropress/web-components/**/*.ts"
+        - "packages/astropress/pages/**"
+        - "packages/astropress/components/**"
+      run: bun run audit:interaction
+
+    audit-error-handling:
+      glob:
+        - "packages/astropress/src/admin-action*.ts"
+        - "packages/astropress/src/runtime-admin-actions*.ts"
+        - "packages/astropress/src/deploy*.ts"
+        - "packages/astropress/src/cache-purge*.ts"
+      run: bun run audit:error-handling
+
+    audit-caching:
+      glob:
+        - "packages/astropress/src/cache*.ts"
+        - "packages/astropress/src/cloudflare-cache*.ts"
+        - "packages/astropress/src/webhook*.ts"
+        - "packages/astropress/src/security-headers.ts"
+      run: bun run audit:caching
+
+    audit-nexus:
+      glob: "packages/astropress-nexus/**"
+      run: bun run audit:nexus
+
+    audit-developer-ergonomics:
+      glob: ["README.md", "AGENTS.md", "packages/astropress/README.md", "crates/**/*.rs", "packages/astropress/src/scaffold/**"]
+      run: bun run audit:developer-ergonomics
+
+    audit-dead-exports:
+      glob: ["packages/astropress/src/**/*.ts", "packages/astropress/index.ts"]
+      run: bun run audit:dead-exports
+
+    audit-bdd-wiring:
+      glob:
+        - "tooling/bdd/**/*.feature"
+        - "packages/astropress/tests/**/*.test.ts"
+        - "packages/astropress-nexus/tests/**/*.test.ts"
+      run: bun run audit:bdd-wiring
+
+    audit-no-stub-tests:
+      glob: ["packages/**/tests/**/*.test.ts", "crates/**/*.rs"]
+      run: bun run audit:no-stub-tests
+
+    audit-evaluation-integrity:
+      glob:
+        - "docs/reference/EVALUATION.md"
+        - "package.json"
+        - ".github/workflows/ci.yml"
+        - "tooling/scripts/audit-*.ts"
+      run: bun run audit:evaluation-integrity
+
+    audit-observability:
+      glob: "packages/astropress/src/**/*.ts"
+      run: bun run audit:observability
+
+    audit-api-design:
+      glob:
+        - "packages/astropress/src/api-*.ts"
+        - "packages/astropress/src/page-handlers/**"
+        - "packages/astropress/pages/ap-api/**"
+      run: bun run audit:api-design
+
+    audit-ai-drivability:
+      glob: ["AGENTS.md", "packages/astropress/**/llms.txt", "packages/astropress/src/**/*.ts"]
+      run: bun run audit:ai-drivability
+
+    audit-i18n:
+      glob:
+        - "packages/astropress/src/locale-links.ts"
+        - "packages/astropress/src/admin-i18n.ts"
+        - "packages/astropress/src/admin-locale-links.ts"
+        - "packages/astropress/src/translation-state.ts"
+        - "tooling/bdd/admin/i18n.feature"
+      run: bun run audit:i18n
+
+    audit-content-modeling:
+      glob: ["packages/astropress/src/content-modeling.ts", "packages/astropress/src/platform-contracts.ts"]
+      run: bun run audit:content-modeling
+
+    audit-collaboration:
+      glob:
+        - "packages/astropress/src/content-locking*.ts"
+        - "packages/astropress/src/d1-locking*.ts"
+        - "packages/astropress/src/sqlite-locking*.ts"
+        - "packages/astropress/web-components/lock*.ts"
+      run: bun run audit:collaboration
+
+    audit-oss-health:
+      glob:
+        - "LICENSE"
+        - "CONTRIBUTING.md"
+        - "CODE_OF_CONDUCT.md"
+        - "SECURITY.md"
+        - "CHANGELOG.md"
+        - "README.md"
+        - ".github/ISSUE_TEMPLATE/**"
+      run: bun run audit:oss-health
+
+    audit-scaffold-quality:
+      glob:
+        - "packages/astropress/src/scaffold/**"
+        - "crates/astropress-cli/src/doctor*.rs"
+        - "crates/astropress-cli/src/scaffold*.rs"
+        - "packages/astropress/bin/**"
+      run: bun run audit:scaffold-quality
 
     bdd-lint:
       glob: "tooling/bdd/**/*.feature"
@@ -188,6 +335,16 @@ pre-push:
     gates:
       run: bun run test:prepush
 
+    slow-audits:
+      # Whole-repo static audits moved out of pre-commit because they scan far
+      # beyond any changed file. Amortized across a push (not per-commit) these
+      # add ~15–20s to pre-push wall-clock but nothing to pre-commit feedback.
+      run: >-
+        bun run audit:deps:graph &&
+        bun run audit:tooling-types &&
+        bun run docs:api:check &&
+        bun run docs:check
+
     verify-commits-signed:
       run: |
         # Walk every commit in the PR range and reject the push if any of them
@@ -243,9 +400,12 @@ pre-push:
         echo "✔ All pushed commits carry a signature."
 
     sweep-tmp:
-      # Reclaim /tmp before pre-push gates fire — test runs leave per-case
-      # tmpdirs and the sandbox is small (typically tmpfs ≤ 1G). Anything
-      # untouched for an hour is from a prior crashed run, safe to delete.
+      # Reclaim /tmp + .stryker-tmp before pre-push gates fire — test runs
+      # leave per-case tmpdirs and crashed Stryker runs leave sandbox dirs
+      # under .stryker-tmp/. Anything untouched for an hour is from a prior
+      # crashed run, safe to delete. Never kills running processes.
       run: |
         find /tmp -maxdepth 1 \( -name 'astropress-cli-*' -o -name 'astropress-*' \) \
+          -mmin +60 -exec rm -rf {} + 2>/dev/null || true
+        find .stryker-tmp -maxdepth 1 -mindepth 1 -type d -name 'sandbox-*' \
           -mmin +60 -exec rm -rf {} + 2>/dev/null || true

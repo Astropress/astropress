@@ -10,47 +10,32 @@
  *      self-assessed must not regress
  *   5. No rubric in the table has an empty Evidence column AND no "self-assessed" marker
  *      (every rubric must declare how it's backed)
- *
- * Note: the docs-site evaluation.mdx parity check (originally criterion 5) was removed
- * when the public docs site evaluation page was deprecated in favour of
- * docs/reference/EVALUATION.md as the single source of truth.
- *
- * Why this exists: an evaluation framework that can't verify its own integrity is
- * theater. Audits that are referenced but don't exist, CI claims that aren't enforced,
- * and grades that silently diverge between the reference doc and the public site all
- * undermine trust in the evaluation.
  */
 
-import { access, readFile } from "node:fs/promises";
 import { join } from "node:path";
+import {
+	AuditReport,
+	fileExists,
+	fromRoot,
+	readText,
+	runAudit,
+} from "../lib/audit-utils.js";
 
-const root = process.cwd();
-const EVALUATION_MD = join(root, "docs/reference/EVALUATION.md");
-const PACKAGE_JSON = join(root, "package.json");
-const CI_YML = join(root, ".github/workflows/ci.yml");
-// Docs site evaluation page was removed — evaluation is maintainer-only in docs/reference/EVALUATION.md.
-
-async function fileExists(path: string): Promise<boolean> {
-	try {
-		await access(path);
-		return true;
-	} catch {
-		return false;
-	}
-}
+const EVALUATION_MD = fromRoot("docs/reference/EVALUATION.md");
+const PACKAGE_JSON = fromRoot("package.json");
+const CI_YML = fromRoot(".github/workflows/ci.yml");
 
 async function main() {
-	const violations: string[] = [];
+	const report = new AuditReport("evaluation-integrity");
 	const warnings: string[] = [];
 
-	const evalSrc = await readFile(EVALUATION_MD, "utf8");
-	const pkgJson = JSON.parse(await readFile(PACKAGE_JSON, "utf8")) as {
+	const evalSrc = await readText(EVALUATION_MD);
+	const pkgJson = JSON.parse(await readText(PACKAGE_JSON)) as {
 		scripts: Record<string, string>;
 	};
-	const ciSrc = await readFile(CI_YML, "utf8");
+	const ciSrc = await readText(CI_YML);
 
 	// ── 1. Audit scripts referenced in EVALUATION.md exist in package.json ──
-
 	const evalAuditRefs = new Set<string>();
 	const auditRefPattern = /`(audit:[a-z0-9-]+)`/g;
 	for (const m of evalSrc.matchAll(auditRefPattern)) {
@@ -59,25 +44,23 @@ async function main() {
 
 	for (const ref of evalAuditRefs) {
 		if (!pkgJson.scripts[ref]) {
-			violations.push(
+			report.add(
 				`[missing-script] EVALUATION.md references \`${ref}\` but it is not defined in package.json`,
 			);
 		}
 	}
 
 	// ── 2. Every audit:* script in package.json points to a file that exists ──
-
 	const auditScripts = Object.entries(pkgJson.scripts).filter(([name]) =>
 		name.startsWith("audit:"),
 	);
 
 	for (const [name, command] of auditScripts) {
-		// Extract the file path from "bun run tooling/scripts/foo.ts" or similar
 		const fileMatch = command.match(/(tooling\/scripts\/[^\s]+\.ts)/);
 		if (fileMatch) {
-			const scriptPath = join(root, fileMatch[1]);
+			const scriptPath = join(fromRoot(), fileMatch[1]);
 			if (!(await fileExists(scriptPath))) {
-				violations.push(
+				report.add(
 					`[missing-file] package.json script "${name}" points to ${fileMatch[1]} which does not exist`,
 				);
 			}
@@ -85,8 +68,6 @@ async function main() {
 	}
 
 	// ── 3. CI-enforced audits are actually in ci.yml ──
-
-	// Extract audits that EVALUATION.md claims are "CI-enforced"
 	const ciEnforcedPattern = /`(audit:[a-z0-9-]+)`\s+passes\s+\(CI-enforced/g;
 	const ciEnforcedAudits = new Set<string>();
 	for (const m of evalSrc.matchAll(ciEnforcedPattern)) {
@@ -94,21 +75,18 @@ async function main() {
 	}
 
 	for (const audit of ciEnforcedAudits) {
-		// Check if ci.yml contains "bun run audit:foo" or "audit:foo"
 		if (!ciSrc.includes(`bun run ${audit}`)) {
-			violations.push(
+			report.add(
 				`[not-in-ci] EVALUATION.md claims \`${audit}\` is CI-enforced but it does not appear in ci.yml`,
 			);
 		}
 	}
 
 	// ── 4. Count self-assessed vs automated rubrics ──
-
 	const rubricLinePattern = /^\|\s*(\d+)\s*\|([^|]+)\|([^|]*)\|([^|]*)\|/gm;
 	let totalRubrics = 0;
 	let selfAssessedCount = 0;
 	let automatedCount = 0;
-	let emptyEvidenceCount = 0;
 	const selfAssessedRubrics: string[] = [];
 
 	for (const m of evalSrc.matchAll(rubricLinePattern)) {
@@ -129,17 +107,14 @@ async function main() {
 			automatedCount++;
 		}
 
-		// Rule 6: every rubric must have evidence or a self-assessed marker
 		if (!evidence && !m[3]?.trim()) {
-			violations.push(
+			report.add(
 				`[no-evidence] Rubric #${num} (${name}) has no evidence and no self-assessed marker`,
 			);
-			emptyEvidenceCount++;
 		}
 	}
 
 	// ── Report ──
-
 	const automatedPct =
 		totalRubrics > 0 ? Math.round((automatedCount / totalRubrics) * 100) : 0;
 	const selfAssessedPct =
@@ -164,21 +139,10 @@ async function main() {
 		for (const w of warnings) console.warn(`    - ${w}`);
 	}
 
-	if (violations.length > 0) {
-		console.error(
-			`\nevaluation-integrity audit failed — ${violations.length} issue(s):\n`,
-		);
-		for (const v of violations) console.error(`  - ${v}`);
-		process.exit(1);
-	}
-
-	console.log(
+	report.finish(
 		`\nevaluation-integrity audit passed — ${totalRubrics} rubrics verified, ` +
 			`${automatedCount} automated, ${ciEnforcedAudits.size} CI-enforced claims confirmed.`,
 	);
 }
 
-main().catch((err) => {
-	console.error("evaluation-integrity audit failed:", err);
-	process.exit(1);
-});
+runAudit("evaluation-integrity", main);

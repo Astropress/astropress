@@ -177,4 +177,127 @@ describe("createAstropressGitSyncAdapter — importSnapshot", () => {
 		const result = await adapter.importSnapshot(snapshotDir);
 		expect(result.fileCount).toBe(1);
 	});
+
+	it("removes entries that exist in project but are absent from snapshot", async () => {
+		const projectDir = makeDir("project-extra");
+		writeFiles(projectDir, {
+			"src/stale.ts": "// stale",
+			"src/keep.ts": "// keep",
+		});
+
+		const snapshotDir = makeDir("snapshot-extra");
+		writeFiles(snapshotDir, { "src/keep.ts": "// keep" });
+
+		const adapter = createAstropressGitSyncAdapter({
+			projectDir,
+			include: ["src"],
+		});
+
+		await adapter.importSnapshot(snapshotDir);
+
+		expect(existsSync(join(projectDir, "src", "keep.ts"))).toBe(true);
+		expect(existsSync(join(projectDir, "src", "stale.ts"))).toBe(false);
+	});
+
+	it("returns sourceDir in the result", async () => {
+		const projectDir = makeDir("project-result");
+		const snapshotDir = makeDir("snapshot-result");
+		writeFiles(snapshotDir, { "package.json": "{}" });
+
+		const adapter = createAstropressGitSyncAdapter({
+			projectDir,
+			include: ["package.json"],
+		});
+
+		const result = await adapter.importSnapshot(snapshotDir);
+		expect(result.sourceDir).toContain("snapshot-result");
+		expect(result.fileCount).toBe(1);
+	});
+});
+
+// ---------------------------------------------------------------------------
+// SQLite WAL checkpoint + reflink logging
+// ---------------------------------------------------------------------------
+
+describe("createAstropressGitSyncAdapter — SQLite + reflink", () => {
+	it("copies a .sqlite file without throwing, warning on checkpoint failure", async () => {
+		// A plain text file named .sqlite exercises the checkpoint path without
+		// a real database — checkpoint will fail gracefully and warn, then the
+		// copy proceeds normally.
+		const projectDir = makeDir("project-sqlite");
+		writeFiles(projectDir, { "db/admin.sqlite": "not-a-real-db" });
+
+		const warnings: string[] = [];
+		const adapter = createAstropressGitSyncAdapter({
+			projectDir,
+			include: ["db"],
+			logger: { info: () => {}, warn: (msg) => warnings.push(msg) },
+		});
+
+		const targetDir = makeDir("snapshot-sqlite");
+		const result = await adapter.exportSnapshot(targetDir);
+
+		expect(result.fileCount).toBe(1);
+		expect(existsSync(join(targetDir, "db", "admin.sqlite"))).toBe(true);
+		// A warning should have been emitted because the file is not a real SQLite DB
+		expect(warnings.length).toBeGreaterThan(0);
+		expect(warnings[0]).toContain("admin.sqlite");
+	});
+
+	it("logs whether reflink was used via the logger", async () => {
+		const projectDir = makeDir("project-log");
+		writeFiles(projectDir, { "src/index.ts": "export {}" });
+
+		const infos: string[] = [];
+		const adapter = createAstropressGitSyncAdapter({
+			projectDir,
+			include: ["src"],
+			logger: { info: (msg) => infos.push(msg), warn: () => {} },
+		});
+
+		const targetDir = makeDir("snapshot-log");
+		await adapter.exportSnapshot(targetDir);
+
+		expect(infos.length).toBe(1);
+		// Should mention either reflink or standard copy
+		expect(infos[0]).toMatch(/copy-on-write|standard copy/);
+	});
+
+	it("does not warn for non-.sqlite files", async () => {
+		const projectDir = makeDir("project-nosqlite");
+		writeFiles(projectDir, {
+			"src/index.ts": "export {}",
+			"src/data.json": "{}",
+		});
+
+		const warnings: string[] = [];
+		const adapter = createAstropressGitSyncAdapter({
+			projectDir,
+			include: ["src"],
+			logger: { info: () => {}, warn: (msg) => warnings.push(msg) },
+		});
+
+		const targetDir = makeDir("snapshot-nosqlite");
+		await adapter.exportSnapshot(targetDir);
+
+		expect(warnings).toHaveLength(0);
+	});
+
+	it("logs importSnapshot copy method", async () => {
+		const projectDir = makeDir("project-import-log");
+		const snapshotDir = makeDir("snapshot-import-log");
+		writeFiles(snapshotDir, { "src/index.ts": "export {}" });
+
+		const infos: string[] = [];
+		const adapter = createAstropressGitSyncAdapter({
+			projectDir,
+			include: ["src"],
+			logger: { info: (msg) => infos.push(msg), warn: () => {} },
+		});
+
+		await adapter.importSnapshot(snapshotDir);
+
+		expect(infos.length).toBe(1);
+		expect(infos[0]).toMatch(/copy-on-write|standard copy/);
+	});
 });

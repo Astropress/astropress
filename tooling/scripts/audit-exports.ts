@@ -1,5 +1,12 @@
-import { access, readFile, readdir } from "node:fs/promises";
 import { join } from "node:path";
+import {
+	AuditReport,
+	fileExists,
+	fromRoot,
+	listFiles,
+	readText,
+	runAudit,
+} from "../lib/audit-utils.js";
 
 // Verifies that:
 //   1. Every `from "./src/adapters/foo"` path referenced in packages/astropress/index.ts
@@ -9,22 +16,18 @@ import { join } from "node:path";
 //
 // Prevents index.ts from re-exporting symbols from deleted or never-created adapter files.
 
-const root = process.cwd();
-const INDEX_TS = join(root, "packages/astropress/index.ts");
-const TESTS_DIR = join(root, "packages/astropress/tests");
+const INDEX_TS = fromRoot("packages/astropress/index.ts");
+const TESTS_DIR = fromRoot("packages/astropress/tests");
 
 interface AdapterExport {
-	adapterPath: string; // e.g. ./src/adapters/cloudflare
-	resolvedTs: string; // e.g. /abs/path/packages/astropress/src/adapters/cloudflare.ts
+	adapterPath: string;
+	resolvedTs: string;
 	functionNames: string[];
 }
 
-async function parseAdapterExports(indexSrc: string): Promise<AdapterExport[]> {
+function parseAdapterExports(indexSrc: string): AdapterExport[] {
 	const results: AdapterExport[] = [];
 
-	// Match: export { foo, bar } from "./src/adapters/baz"
-	// or:    export { foo, bar } from "./src/adapters/baz.js"
-	// Skip:  export type { ... } from "..."
 	const exportRegex =
 		/^export\s+\{([^}]+)\}\s+from\s+"(\.\/src\/adapters\/[^"]+)"/gm;
 
@@ -33,19 +36,16 @@ async function parseAdapterExports(indexSrc: string): Promise<AdapterExport[]> {
 		const symbolList = m[1];
 		const fromPath = m[2];
 
-		// Skip type-only exports — they have no runtime call sites to test.
 		if (/^export\s+type\s+\{/.test(exportBlock)) continue;
 
-		// Resolve the .ts file path (strip .js extension if present).
 		const cleanPath = fromPath.replace(/\.js$/, "");
-		const resolvedTs = join(root, "packages/astropress", `${cleanPath}.ts`);
+		const resolvedTs = fromRoot("packages/astropress", `${cleanPath}.ts`);
 
-		// Extract individual exported names, filtering out type-prefixed ones.
 		const names = symbolList
 			.split(",")
 			.map((s) => s.trim())
 			.filter((s) => s && !s.startsWith("type "))
-			.filter((s) => /^[a-z]/.test(s)); // adapter functions start with lowercase
+			.filter((s) => /^[a-z]/.test(s));
 
 		if (names.length === 0) continue;
 
@@ -61,72 +61,45 @@ async function parseAdapterExports(indexSrc: string): Promise<AdapterExport[]> {
 }
 
 async function collectTestFiles(dir: string): Promise<string[]> {
-	const entries = await readdir(dir);
+	const entries = await listFiles(dir);
 	return entries.filter((f) => f.endsWith(".test.ts")).map((f) => join(dir, f));
 }
 
-async function fileExists(p: string): Promise<boolean> {
-	try {
-		await access(p);
-		return true;
-	} catch {
-		return false;
-	}
-}
-
 async function main() {
-	const indexSrc = await readFile(INDEX_TS, "utf8");
-	const adapterExports = await parseAdapterExports(indexSrc);
+	const report = new AuditReport("exports");
+	const indexSrc = await readText(INDEX_TS);
+	const adapterExports = parseAdapterExports(indexSrc);
 	const testFiles = await collectTestFiles(TESTS_DIR);
 
-	// Read all test files once for efficient substring search.
 	const testContents = await Promise.all(
-		testFiles.map(async (f) => ({ file: f, src: await readFile(f, "utf8") })),
+		testFiles.map(async (f) => ({ file: f, src: await readText(f) })),
 	);
 
-	const missingFiles: string[] = [];
-	const untestedFunctions: string[] = [];
-
 	for (const { adapterPath, resolvedTs, functionNames } of adapterExports) {
-		// 1. Assert the .ts file exists.
 		if (!(await fileExists(resolvedTs))) {
-			missingFiles.push(
+			report.add(
 				`${adapterPath} — referenced in index.ts but ${resolvedTs} does not exist`,
 			);
-			continue; // no point checking functions if the file is missing
+			continue;
 		}
 
-		// 2. Assert each exported function appears in at least one test file.
 		for (const name of functionNames) {
 			const testedIn = testContents.find(({ src }) => src.includes(name));
 			if (!testedIn) {
-				untestedFunctions.push(
+				report.add(
 					`${name} (from ${adapterPath}) — exported in index.ts but not found in any test file`,
 				);
 			}
 		}
 	}
 
-	const violations = [...missingFiles, ...untestedFunctions];
-
-	if (violations.length > 0) {
-		console.error("exports audit failed:\n");
-		for (const v of violations) {
-			console.error(`  - ${v}`);
-		}
-		process.exit(1);
-	}
-
 	const totalFns = adapterExports.reduce(
 		(n, a) => n + a.functionNames.length,
 		0,
 	);
-	console.log(
+	report.finish(
 		`exports audit passed — ${adapterExports.length} adapter files exist, ${totalFns} exported functions covered by tests.`,
 	);
 }
 
-main().catch((err) => {
-	console.error("exports audit failed:", err);
-	process.exit(1);
-});
+runAudit("exports", main);

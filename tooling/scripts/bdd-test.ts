@@ -1646,9 +1646,48 @@ if (unassignedScenarios.length > 0 || unknownScenarioTitles.length > 0) {
 	process.exit(1);
 }
 
+// Batch every cargo test invocation across all groups into a single up-front
+// call. Each separate cargo invocation carries ~2-5s of cargo/test-harness
+// overhead; consolidating 29 filter calls into 1 saves ~60-140s on bdd:test
+// wall-clock. If any group requests bare `cargo test` (full suite), that
+// subsumes every filtered variant, so we drop the filters entirely.
+//
+// Per-group feedback is preserved through the scenario-label output emitted
+// later in this loop; a test-level failure surfaces in the batched cargo
+// output with the usual --- FAILED line.
+{
+	const cargoFilters = new Set<string>();
+	let needsFullSuite = false;
+	for (const group of verificationGroups) {
+		for (const step of group.steps) {
+			if (step.command !== "cargo") continue;
+			// args[0] is always "test"; everything after is a filter pattern (or
+			// the "--" separator that cargo passes through to the test harness)
+			const filters = step.args.slice(1).filter((arg) => arg !== "--");
+			if (filters.length === 0) {
+				needsFullSuite = true;
+			} else {
+				for (const f of filters) cargoFilters.add(f);
+			}
+		}
+	}
+	const cargoArgs = needsFullSuite
+		? ["test"]
+		: ["test", "--", ...cargoFilters];
+	console.log(
+		`── bdd:test pre-pass: one cargo test invocation covers ${
+			needsFullSuite ? "the full Rust suite" : `${cargoFilters.size} filter(s)`
+		} ──`,
+	);
+	await runStep({ command: "cargo", args: cargoArgs });
+}
+
 for (const group of verificationGroups) {
 	console.log(`Running ${group.label}...`);
 	for (const step of group.steps) {
+		// cargo steps already ran in the pre-pass above; skip them here to
+		// avoid the per-invocation startup overhead.
+		if (step.command === "cargo") continue;
 		await runStep(step);
 	}
 

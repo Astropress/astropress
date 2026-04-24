@@ -168,3 +168,46 @@ export interface AstropressRollbackResult {
 	status: AstropressRollbackStatus;
 	dryRun: boolean;
 }
+
+export type SqliteDatabaseConstructor = new (
+	filename: string,
+) => SqliteDatabaseLike;
+
+export async function loadSqliteDatabase(): Promise<SqliteDatabaseConstructor> {
+	if ("Bun" in globalThis) {
+		const m = await import("bun:sqlite");
+		return m.Database as unknown as SqliteDatabaseConstructor;
+	}
+	const m = await import("node:sqlite");
+	return m.DatabaseSync as unknown as SqliteDatabaseConstructor;
+}
+
+// Checkpoint and truncate the WAL so a subsequent file copy is self-contained.
+// Returns true when the WAL was fully flushed (log page count dropped to 0).
+// On any failure, emits a warning via `warn` and returns false.
+export async function checkpointSqliteWal(
+	sqlitePath: string,
+	warn: (msg: string) => void,
+): Promise<boolean> {
+	let DbClass: SqliteDatabaseConstructor;
+	try {
+		DbClass = await loadSqliteDatabase();
+	} catch (err) {
+		warn(`SQLite WAL checkpoint skipped for ${sqlitePath}: ${String(err)}`);
+		return false;
+	}
+	let db: SqliteDatabaseLike | undefined;
+	try {
+		db = new DbClass(sqlitePath);
+		const row = db.prepare("PRAGMA wal_checkpoint(TRUNCATE)").get() as {
+			log: number;
+			checkpointed: number;
+		} | null;
+		return row != null && row.log === 0;
+	} catch (err) {
+		warn(`SQLite WAL checkpoint failed for ${sqlitePath}: ${String(err)}`);
+		return false;
+	} finally {
+		db?.close();
+	}
+}

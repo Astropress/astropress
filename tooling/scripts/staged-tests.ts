@@ -2,6 +2,10 @@ import { spawnSync } from "node:child_process";
 import { existsSync } from "node:fs";
 import { basename, join } from "node:path";
 
+// Cap on how many source files we'll try to resolve before giving up and
+// letting the full-suite gate (CI or pre-push tier 3) handle it. Above this,
+// the targeted-run advantage evaporates and we should not promote ourselves
+// to a full-suite runner — that duplicates tier 3.
 const THRESHOLD = 25;
 const root = process.cwd();
 const pkgDir = join(root, "packages/astropress");
@@ -94,7 +98,7 @@ function main(): void {
 
 	if (sourceFiles.length > THRESHOLD) {
 		console.log(
-			`── staged-tests: ${sourceFiles.length} source files exceeds threshold (${THRESHOLD}) → full suite ──`,
+			`── staged-tests: ${sourceFiles.length} source files exceeds threshold (${THRESHOLD}) — skipping targeted run; CI / pre-push tier 3 will cover the full suite ──`,
 		);
 	} else {
 		for (const src of sourceFiles) {
@@ -113,20 +117,17 @@ function main(): void {
 
 	let exitCode = 0;
 
+	// Run any directly-edited test files (and web-component tests whose source
+	// was touched) regardless of threshold — those are targeted by definition.
+	// Source-file→test mapping is what gets skipped above THRESHOLD.
 	if (hasTests) {
-		if (sourceFiles.length > THRESHOLD) {
-			console.log("Running: vitest run (full suite)");
-			const code = run("bunx", ["vitest", "run"], pkgDir);
-			if (code !== 0) exitCode = code;
-		} else {
-			const relPaths = testFileList.map((f) => f.replace(`${pkgDir}/`, ""));
-			console.log(
-				`── staged-tests: ${sourceFiles.length} source files → ${testFileList.length} test files ──`,
-			);
-			console.log(`Running: vitest run ${relPaths.join(" ")}`);
-			const code = run("bunx", ["vitest", "run", ...testFileList], pkgDir);
-			if (code !== 0) exitCode = code;
-		}
+		const relPaths = testFileList.map((f) => f.replace(`${pkgDir}/`, ""));
+		console.log(
+			`── staged-tests: ${sourceFiles.length} source files → ${testFileList.length} test files ──`,
+		);
+		console.log(`Running: vitest run ${relPaths.join(" ")}`);
+		const code = run("bunx", ["vitest", "run", ...testFileList], pkgDir);
+		if (code !== 0) exitCode = code;
 	}
 
 	if (hasRust) {

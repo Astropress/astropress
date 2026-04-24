@@ -1,5 +1,12 @@
-import { readFile, readdir } from "node:fs/promises";
 import { join } from "node:path";
+import {
+	AuditReport,
+	fromRoot,
+	listFiles,
+	readText,
+	ROOT,
+	runAudit,
+} from "../lib/audit-utils.js";
 
 // Verifies that the three cryptographic algorithms claimed in docs
 // (Argon2id, KMAC256, ML-DSA-65) are implemented via the correct library
@@ -9,17 +16,12 @@ import { join } from "node:path";
 // invokes the algorithm function/object, then asserts the expected library
 // import is present in that same file. Fails if any call site lacks the import.
 
-const root = process.cwd();
-const SRC_DIR = join(root, "packages/astropress/src");
+const SRC_DIR = fromRoot("packages/astropress/src");
 
 interface CryptoAlgorithm {
-	/** Human-readable name (used in error messages). */
 	name: string;
-	/** The identifier used at call sites (function or object name). */
 	callSiteToken: string;
-	/** The import source the call site must import from. */
 	expectedImportSource: string;
-	/** The imported name from that source. */
 	expectedImportName: string;
 }
 
@@ -45,16 +47,13 @@ const ALGORITHMS: CryptoAlgorithm[] = [
 ];
 
 async function collectSourceFiles(dir: string): Promise<string[]> {
-	const entries = await readdir(dir, { recursive: true });
+	const entries = await listFiles(dir, { recursive: true });
 	return entries
 		.filter((f) => f.endsWith(".ts") && !f.endsWith(".test.ts"))
 		.map((f) => join(dir, f));
 }
 
 function hasCallSite(src: string, token: string): boolean {
-	// Match the token followed by ( or . to distinguish call sites from
-	// string literals, comments that merely mention the algorithm name.
-	// Example: argon2id( or ml_dsa65.keygen
 	const callSiteRe = new RegExp(`\\b${token}\\s*[.(]`);
 	return callSiteRe.test(src);
 }
@@ -64,9 +63,6 @@ function hasImport(
 	importSource: string,
 	importName: string,
 ): boolean {
-	// Match: import { ... importName ... } from "importSource"
-	// or:    import { ... importName ... } from 'importSource'
-	// The source may include a .js suffix variant.
 	const escapedSource = importSource.replace(/[/.-]/g, (c) =>
 		c === "/" ? "\\/" : c === "." ? "\\." : "\\-",
 	);
@@ -77,39 +73,28 @@ function hasImport(
 }
 
 async function main() {
+	const report = new AuditReport("crypto");
 	const sourceFiles = await collectSourceFiles(SRC_DIR);
-	const violations: string[] = [];
 
 	for (const algo of ALGORITHMS) {
 		for (const filePath of sourceFiles) {
-			const src = await readFile(filePath, "utf8");
+			const src = await readText(filePath);
 
 			if (!hasCallSite(src, algo.callSiteToken)) continue;
 
 			if (!hasImport(src, algo.expectedImportSource, algo.expectedImportName)) {
-				const rel = filePath.replace(`${root}/`, "");
-				violations.push(
+				const rel = filePath.replace(`${ROOT}/`, "");
+				report.add(
 					`${algo.name}: ${rel} calls \`${algo.callSiteToken}\` but does not import \`${algo.expectedImportName}\` from "${algo.expectedImportSource}"`,
 				);
 			}
 		}
 	}
 
-	if (violations.length > 0) {
-		console.error("crypto audit failed:\n");
-		for (const v of violations) {
-			console.error(`  - ${v}`);
-		}
-		process.exit(1);
-	}
-
 	const algoNames = ALGORITHMS.map((a) => a.name).join(", ");
-	console.log(
+	report.finish(
 		`crypto audit passed — ${ALGORITHMS.length} algorithms verified (${algoNames}), all call sites import from the correct libraries.`,
 	);
 }
 
-main().catch((err) => {
-	console.error("crypto audit failed:", err);
-	process.exit(1);
-});
+runAudit("crypto", main);

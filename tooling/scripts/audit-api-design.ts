@@ -9,32 +9,25 @@
 //   4. An OpenAPI endpoint exists at ap-api/v1/openapi.json.ts
 //   5. API route handlers use the withApiRequest wrapper
 
-import { readFile, readdir, stat } from "node:fs/promises";
+import { readdir } from "node:fs/promises";
 import { join, relative } from "node:path";
+import {
+	AuditReport,
+	fileExists,
+	fromRoot,
+	readText,
+	ROOT,
+	runAudit,
+} from "../lib/audit-utils.js";
 
-const root = process.cwd();
-
-const API_ROUTES_FILE = join(root, "packages/astropress/src/api-routes.ts");
-const API_MIDDLEWARE_FILE = join(
-	root,
-	"packages/astropress/src/api-middleware.ts",
-);
-const API_HANDLERS_DIR = join(root, "packages/astropress/pages/ap-api");
-const OPENAPI_ENDPOINT = join(
-	root,
+const API_ROUTES_FILE = fromRoot("packages/astropress/src/api-routes.ts");
+const API_MIDDLEWARE_FILE = fromRoot("packages/astropress/src/api-middleware.ts");
+const API_HANDLERS_DIR = fromRoot("packages/astropress/pages/ap-api");
+const OPENAPI_ENDPOINT = fromRoot(
 	"packages/astropress/pages/ap-api/v1/openapi.json.ts",
 );
 
 const HANDLER_EXTENSIONS = new Set([".ts", ".js"]);
-
-async function fileExists(path: string): Promise<boolean> {
-	try {
-		await stat(path);
-		return true;
-	} catch {
-		return false;
-	}
-}
 
 async function walkHandlerFiles(dir: string): Promise<string[]> {
 	const files: string[] = [];
@@ -58,15 +51,15 @@ async function walkHandlerFiles(dir: string): Promise<string[]> {
 }
 
 async function main() {
-	const violations: string[] = [];
+	const report = new AuditReport("api-design");
 
 	// 1. Check api-routes.ts exists and exports apiRouteDefinitions or injectApiRoutes
 	if (!(await fileExists(API_ROUTES_FILE))) {
-		violations.push(
-			`[missing-api-routes] ${relative(root, API_ROUTES_FILE)} does not exist`,
+		report.add(
+			`[missing-api-routes] ${relative(ROOT, API_ROUTES_FILE)} does not exist`,
 		);
 	} else {
-		const src = await readFile(API_ROUTES_FILE, "utf8");
+		const src = await readText(API_ROUTES_FILE);
 		const hasApiRouteDefinitions =
 			/export\s+(const|let|var|function)\s+apiRouteDefinitions\b/.test(src);
 		const hasInjectApiRoutes =
@@ -74,27 +67,27 @@ async function main() {
 				src,
 			);
 		if (!hasApiRouteDefinitions && !hasInjectApiRoutes) {
-			violations.push(
-				`[missing-export] ${relative(root, API_ROUTES_FILE)} must export apiRouteDefinitions or injectApiRoutes`,
+			report.add(
+				`[missing-export] ${relative(ROOT, API_ROUTES_FILE)} must export apiRouteDefinitions or injectApiRoutes`,
 			);
 		}
 	}
 
 	// 2. Check api-middleware.ts exists and exports response helpers
 	if (!(await fileExists(API_MIDDLEWARE_FILE))) {
-		violations.push(
-			`[missing-api-middleware] ${relative(root, API_MIDDLEWARE_FILE)} does not exist`,
+		report.add(
+			`[missing-api-middleware] ${relative(ROOT, API_MIDDLEWARE_FILE)} does not exist`,
 		);
 	} else {
-		const src = await readFile(API_MIDDLEWARE_FILE, "utf8");
+		const src = await readText(API_MIDDLEWARE_FILE);
 		const requiredExports = ["jsonOk", "jsonOkPaginated", "apiErrors"];
 		for (const name of requiredExports) {
 			const pattern = new RegExp(
 				`export\\s+(const|let|var|function|async\\s+function)\\s+${name}\\b`,
 			);
 			if (!pattern.test(src)) {
-				violations.push(
-					`[missing-helper-export] ${relative(root, API_MIDDLEWARE_FILE)} does not export ${name}`,
+				report.add(
+					`[missing-helper-export] ${relative(ROOT, API_MIDDLEWARE_FILE)} does not export ${name}`,
 				);
 			}
 		}
@@ -114,13 +107,13 @@ async function main() {
 	const EXCLUDED_FROM_WRAPPER_CHECK = new Set(["openapi.json.ts", "ingest.ts"]);
 
 	for (const filePath of handlerFiles) {
-		const relPath = relative(root, filePath);
+		const relPath = relative(ROOT, filePath);
 		const fileName = filePath.split("/").pop() ?? "";
 
 		// OG image endpoints return binary PNG, not JSON
 		if (relPath.includes("og-image")) continue;
 
-		const src = await readFile(filePath, "utf8");
+		const src = await readText(filePath);
 		const lines = src.split("\n");
 
 		// 3. Check for bare new Response(JSON.stringify( patterns
@@ -128,7 +121,7 @@ async function main() {
 			for (let i = 0; i < lines.length; i++) {
 				const line = lines[i];
 				if (/new\s+Response\s*\(\s*JSON\.stringify\s*\(/.test(line)) {
-					violations.push(
+					report.add(
 						`[bare-json-response] ${relPath}:${i + 1}: bare new Response(JSON.stringify( — use jsonOk, jsonOkPaginated, jsonOkWithEtag, or apiErrors instead\n    → ${line.trim()}`,
 					);
 				}
@@ -140,7 +133,7 @@ async function main() {
 			!EXCLUDED_FROM_WRAPPER_CHECK.has(fileName) &&
 			!src.includes("withApiRequest")
 		) {
-			violations.push(
+			report.add(
 				`[missing-withApiRequest] ${relPath}: does not use withApiRequest wrapper`,
 			);
 		}
@@ -148,30 +141,22 @@ async function main() {
 
 	// 4. Check OpenAPI endpoint exists
 	if (!(await fileExists(OPENAPI_ENDPOINT))) {
-		violations.push(
-			`[missing-openapi-endpoint] ${relative(root, OPENAPI_ENDPOINT)} does not exist`,
+		report.add(
+			`[missing-openapi-endpoint] ${relative(ROOT, OPENAPI_ENDPOINT)} does not exist`,
 		);
 	}
 
-	if (violations.length > 0) {
-		console.error(
-			`api-design audit failed — ${violations.length} issue(s) in ${handlerFiles.length} handler files:\n`,
-		);
-		for (const v of violations) console.error(`  - ${v}`);
+	if (report.failed) {
 		console.error(
 			"\nFix: ensure api-routes.ts and api-middleware.ts export the required symbols, " +
 				"all ap-api handlers use withApiRequest and shared response helpers, " +
 				"and the OpenAPI endpoint exists.",
 		);
-		process.exit(1);
 	}
 
-	console.log(
+	report.finish(
 		`api-design audit passed — ${handlerFiles.length} handler files scanned, all conventions met.`,
 	);
 }
 
-main().catch((err) => {
-	console.error("api-design audit failed:", err);
-	process.exit(1);
-});
+runAudit("api-design", main);

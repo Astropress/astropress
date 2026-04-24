@@ -17,79 +17,67 @@
  * package source is keyed to import.meta.env.DEV, never a literal boolean.
  */
 
-import { readFile, readdir } from "node:fs/promises";
 import { join, relative } from "node:path";
-
-const root = process.cwd();
+import {
+	AuditReport,
+	fromRoot,
+	listFiles,
+	readText,
+	ROOT,
+	runAudit,
+} from "../lib/audit-utils.js";
 
 // Directories to scan
 const SCAN_DIRS = [
-	join(root, "packages/astropress/src"),
-	join(root, "packages/astropress/components"),
-	join(root, "packages/astropress/pages"),
+	fromRoot("packages/astropress/src"),
+	fromRoot("packages/astropress/components"),
+	fromRoot("packages/astropress/pages"),
 ];
 
-const EXTENSIONS = new Set([".ts", ".astro", ".mjs", ".js"]);
+const EXTENSIONS = [".ts", ".astro", ".mjs", ".js"] as const;
 
 async function walkFiles(dir: string): Promise<string[]> {
-	const files: string[] = [];
-	try {
-		const entries = await readdir(dir, { recursive: true });
-		for (const entry of entries) {
-			const ext = entry.slice(entry.lastIndexOf("."));
-			if (EXTENSIONS.has(ext)) files.push(join(dir, entry));
-		}
-	} catch {
-		/* dir may not exist */
-	}
-	return files.sort();
+	const entries = await listFiles(dir, {
+		recursive: true,
+		extensions: EXTENSIONS,
+	});
+	return entries.map((e) => join(dir, e)).sort();
 }
 
 async function main() {
-	const violations: string[] = [];
+	const report = new AuditReport("csp-inline-styles");
 	const allDirs = await Promise.all(SCAN_DIRS.map((d) => walkFiles(d)));
 	const files = allDirs.flat();
 
 	for (const filePath of files) {
-		const relPath = relative(root, filePath);
-		const src = await readFile(filePath, "utf8");
+		const relPath = relative(ROOT, filePath);
+		const src = await readText(filePath);
 		const lines = src.split("\n");
 
 		for (let i = 0; i < lines.length; i++) {
 			const line = lines[i];
-			// Flag: allowInlineStyles: true (literal boolean — never correct in production)
 			if (/allowInlineStyles\s*:\s*true\b/.test(line)) {
-				violations.push(
+				report.add(
 					`[hardcoded-true] ${relPath}:${i + 1}: allowInlineStyles: true — use import.meta.env.DEV instead\n    → ${line.trim()}`,
 				);
 			}
-			// Flag: allowInlineStyles: false (literal boolean — wrong in middleware entrypoint
-			// because it breaks dev mode; should be import.meta.env.DEV)
 			if (/allowInlineStyles\s*:\s*false\b/.test(line)) {
-				violations.push(
+				report.add(
 					`[hardcoded-false] ${relPath}:${i + 1}: allowInlineStyles: false — use import.meta.env.DEV instead\n    → ${line.trim()}`,
 				);
 			}
 		}
 	}
 
-	if (violations.length > 0) {
-		console.error(
-			`csp-inline-styles audit failed — ${violations.length} issue(s) in ${files.length} files:\n`,
-		);
-		for (const v of violations) console.error(`  - ${v}`);
+	if (report.failed) {
 		console.error(
 			"\nFix: replace allowInlineStyles: true/false with allowInlineStyles: import.meta.env.DEV",
 		);
-		process.exit(1);
 	}
 
-	console.log(
+	report.finish(
 		`csp-inline-styles audit passed — ${files.length} files scanned, no hardcoded allowInlineStyles values.`,
 	);
 }
 
-main().catch((err) => {
-	console.error("csp-inline-styles audit failed:", err);
-	process.exit(1);
-});
+runAudit("csp-inline-styles", main);

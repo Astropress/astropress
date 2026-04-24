@@ -96,6 +96,30 @@ export default defineConfig({
       },
     },
     {
+      name: "admin-touch-targets",
+      testMatch: /admin-touch-targets\.spec\.ts/,
+      use: {
+        viewport: { width: 375, height: 812 },
+        isMobile: true,
+        hasTouch: true,
+        baseURL: process.env.PLAYWRIGHT_ADMIN_BASE_URL ?? "http://127.0.0.1:4325",
+      },
+    },
+    {
+      name: "admin-heading-hierarchy",
+      testMatch: /admin-heading-hierarchy\.spec\.ts/,
+      use: {
+        baseURL: process.env.PLAYWRIGHT_ADMIN_BASE_URL ?? "http://127.0.0.1:4325",
+      },
+    },
+    {
+      name: "admin-interaction-timing",
+      testMatch: /admin-interaction-timing\.spec\.ts/,
+      use: {
+        baseURL: process.env.PLAYWRIGHT_ADMIN_BASE_URL ?? "http://127.0.0.1:4325",
+      },
+    },
+    {
       name: "viewport-768",
       testMatch: /admin-harness-mobile\.spec\.ts/,
       use: {

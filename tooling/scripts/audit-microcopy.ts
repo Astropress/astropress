@@ -1,6 +1,11 @@
 import { execFileSync } from "node:child_process";
-import { readFile } from "node:fs/promises";
 import { join } from "node:path";
+import {
+	AuditReport,
+	readText,
+	ROOT,
+	runAudit,
+} from "../lib/audit-utils.js";
 
 // Rubric 43 / 49 — UX Writing & Microcopy
 //
@@ -8,7 +13,6 @@ import { join } from "node:path";
 //   1. Negative: banned low-signal phrases must not appear in user-facing code
 //   2. Positive: button labels must use verb phrases; non-verb labels flag a violation
 
-const root = process.cwd();
 const auditableExtensions = new Set([
 	".md",
 	".mdx",
@@ -24,16 +28,13 @@ const bannedPhrases = [
 	"Network error. Please try again.",
 ];
 const allowedFiles = new Set([
-	"tooling/scripts/audit-microcopy.ts", // defines the banned phrases themselves
-	"tooling/scripts/audit-ai-drivability.ts", // checks API for banned error messages
-	"docs/reference/EVALUATION.md", // describes banned phrases as UX criteria examples
+	"tooling/scripts/audit-microcopy.ts",
+	"tooling/scripts/audit-ai-drivability.ts",
+	"docs/reference/EVALUATION.md",
 	"docs/UX_WRITING.md",
-	"AGENTS.md", // documents the audit rules for contributors
+	"AGENTS.md",
 ]);
 
-// Button labels that are not verb phrases — Rubric 49 requires "Save draft", not "Submit"
-// These patterns match a <button ...> element whose visible text is ONLY the non-verb word.
-// Multi-word labels like "Submit report" or "OK, got it" are fine.
 const NON_VERB_BUTTON_RE = /<button[^>]*>\s*(Submit|OK|Yes|No)\s*<\/button>/gi;
 
 function isAuditableFile(file: string) {
@@ -41,8 +42,9 @@ function isAuditableFile(file: string) {
 }
 
 async function main() {
+	const report = new AuditReport("microcopy");
 	const trackedFiles = execFileSync("git", ["ls-files"], {
-		cwd: root,
+		cwd: ROOT,
 		encoding: "utf8",
 	})
 		.split("\n")
@@ -52,43 +54,33 @@ async function main() {
 			(file) => !file.startsWith("node_modules/") && isAuditableFile(file),
 		);
 
-	const violations: string[] = [];
-
 	for (const file of trackedFiles) {
 		if (allowedFiles.has(file)) {
 			continue;
 		}
 
-		const body = await readFile(join(root, file), "utf8");
+		const body = await readText(join(ROOT, file));
 
-		// Part 1: banned low-signal phrases
 		for (const phrase of bannedPhrases) {
 			if (body.includes(phrase)) {
-				violations.push(`${file}: low-signal microcopy "${phrase}"`);
+				report.add(`${file}: low-signal microcopy "${phrase}"`);
 			}
 		}
 
-		// Part 2: non-verb button labels in .astro files (admin + components)
-		if (file.endsWith(".astro") && (file.includes("ap-admin") || file.includes("components/"))) {
+		if (
+			file.endsWith(".astro") &&
+			(file.includes("ap-admin") || file.includes("components/"))
+		) {
 			for (const m of body.matchAll(NON_VERB_BUTTON_RE)) {
 				const label = m[1];
-				violations.push(`${file}: button label "${label}" is not a verb phrase — use action words like "Save", "Delete", "Confirm"`);
+				report.add(
+					`${file}: button label "${label}" is not a verb phrase — use action words like "Save", "Delete", "Confirm"`,
+				);
 			}
 		}
 	}
 
-	if (violations.length > 0) {
-		console.error("microcopy audit failed:\n");
-		for (const violation of violations) {
-			console.error(`- ${violation}`);
-		}
-		process.exit(1);
-	}
-
-	console.log("microcopy audit passed.");
+	report.finish("microcopy audit passed.");
 }
 
-await main().catch((error) => {
-	console.error("microcopy audit failed:", error);
-	process.exit(1);
-});
+runAudit("microcopy", main);

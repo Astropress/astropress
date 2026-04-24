@@ -1,12 +1,14 @@
-import { readFile } from "node:fs/promises";
-import { join } from "node:path";
+import {
+	AuditReport,
+	fromRoot,
+	readText,
+	runAudit,
+} from "../lib/audit-utils.js";
 
 // Verifies that every provider ID in the TypeScript type system has a corresponding
 // entry in tooling/verified-providers.json. This prevents hallucinated providers
 // from entering the codebase — any new provider must be added to verified-providers.json
 // first, with a real URL, before it can appear in the type system.
-
-const root = process.cwd();
 
 type VerifiedProvider = { id: string; url: string | null };
 type VerifiedProviders = {
@@ -18,8 +20,7 @@ async function extractTypeUnionValues(
 	filePath: string,
 	typeName: string,
 ): Promise<string[]> {
-	const src = await readFile(filePath, "utf8");
-	// Match: export type FooType = \n  | "a"\n  | "b"\n  ;
+	const src = await readText(filePath);
 	const typeRegex = new RegExp(`export type ${typeName}\\s*=[^;]+;`, "s");
 	const match = src.match(typeRegex);
 	if (!match) return [];
@@ -27,27 +28,26 @@ async function extractTypeUnionValues(
 }
 
 async function main() {
+	const report = new AuditReport("provider");
 	const verified: VerifiedProviders = JSON.parse(
-		await readFile(join(root, "tooling/verified-providers.json"), "utf8"),
+		await readText(fromRoot("tooling/verified-providers.json")),
 	);
 
 	const verifiedHostIds = new Set(verified.appHosts.map((p) => p.id));
 	const verifiedServiceIds = new Set(verified.dataServices.map((p) => p.id));
 
 	const appHostValues = await extractTypeUnionValues(
-		join(root, "packages/astropress/src/app-host-targets.ts"),
+		fromRoot("packages/astropress/src/app-host-targets.ts"),
 		"AstropressAppHost",
 	);
 	const dataServiceValues = await extractTypeUnionValues(
-		join(root, "packages/astropress/src/data-service-targets.ts"),
+		fromRoot("packages/astropress/src/data-service-targets.ts"),
 		"AstropressDataServices",
 	);
 
-	const violations: string[] = [];
-
 	for (const id of appHostValues) {
 		if (!verifiedHostIds.has(id)) {
-			violations.push(
+			report.add(
 				`AstropressAppHost: "${id}" is not in tooling/verified-providers.json — verify it exists before adding`,
 			);
 		}
@@ -55,35 +55,26 @@ async function main() {
 
 	for (const id of dataServiceValues) {
 		if (!verifiedServiceIds.has(id)) {
-			violations.push(
+			report.add(
 				`AstropressDataServices: "${id}" is not in tooling/verified-providers.json — verify it exists before adding`,
 			);
 		}
 	}
 
 	// ── AGENTS.md must contain the no-speculative-features rule ──
-	const agentsMdPath = join(root, "AGENTS.md");
-	const agentsSrc = await readFile(agentsMdPath, "utf8").catch(() => "");
-	if (!agentsSrc.includes("No speculative features") && !agentsSrc.includes("no-speculative-features")) {
-		violations.push(
+	const agentsSrc = await readText(fromRoot("AGENTS.md"));
+	if (
+		!agentsSrc.includes("No speculative features") &&
+		!agentsSrc.includes("no-speculative-features")
+	) {
+		report.add(
 			'AGENTS.md: "No speculative features" rule is missing — contributors must be instructed never to add unverified providers',
 		);
 	}
 
-	if (violations.length > 0) {
-		console.error("provider audit failed:\n");
-		for (const v of violations) {
-			console.error(`  - ${v}`);
-		}
-		process.exit(1);
-	}
-
-	console.log(
+	report.finish(
 		`provider audit passed — ${appHostValues.length} app hosts, ${dataServiceValues.length} data services, all verified. AGENTS.md no-speculative-features rule present.`,
 	);
 }
 
-main().catch((err) => {
-	console.error("provider audit failed:", err);
-	process.exit(1);
-});
+runAudit("provider", main);

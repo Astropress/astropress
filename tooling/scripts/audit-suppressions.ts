@@ -10,31 +10,17 @@
  *
  *   1. CODE FIX EVALUATED: the justification must explain why a code fix
  *      does not resolve the issue (not just why the pattern is safe).
- *      "This is safe because X" is not enough. "No code fix is possible
- *      because Y" is required.
  *
  *   2. ALTERNATIVES NAMED: the justification must name what alternatives
- *      were considered (e.g. "sanitizer not available", "taint is inherent
- *      to the operation", "rule cannot distinguish safe from unsafe here").
+ *      were considered.
  *
  *   3. MITIGATIONS PRESENT: for security suppressions, the justification
- *      must state what mitigations exist even if the suppression remains
- *      (e.g. input validation upstream, restricted execution context).
- *
- * Any suppression NOT in the allowlist below fails the audit. To add a new
- * suppression: evaluate against the rubric, then add an entry here. The
- * entry forces you to commit to a justification in version-controlled code.
- *
- * This script runs in CI via the ci-audits hook.
+ *      must state what mitigations exist even if the suppression remains.
  */
 
 import { execSync } from "node:child_process";
 import { readFileSync } from "node:fs";
-
-// ── Approved suppressions registry ──────────────────────────────────────────
-// Each entry: { file (relative), line, pattern, rubric }
-// rubric must address: (1) why code fix doesn't work, (2) alternatives
-// considered, (3) mitigations present.
+import { AuditReport, runAudit } from "../lib/audit-utils.js";
 
 type ApprovedSuppression = {
 	file: string;
@@ -137,14 +123,6 @@ const APPROVED: ApprovedSuppression[] = [
 			"key in Bun for correct test isolation. Code fix not possible without breaking " +
 			"test teardown on Bun. Lint only — no security impact.",
 	},
-	// API route files: store.apiTokens is typed as optional (ApiTokenStore | undefined) on the
-	// runtime locals type, but is always populated by the API token auth middleware before these
-	// routes are reached. Code fix (null guard returning 503) would change observable behaviour
-	// for a path that cannot be reached in production. Alternatives considered: (1) widening the
-	// withApiRequest signature to accept undefined — breaks callers that rely on the non-optional
-	// type; (2) restructuring middleware to use a narrower locals subtype — requires broader
-	// refactor outside scope of this merge. Mitigation: the API token middleware is registered at
-	// the integration level before any ap-api/* route handler runs.
 	{
 		file: "packages/astropress/pages/ap-api/v1/content.ts",
 		linePattern: /biome-ignore lint\/style\/noNonNullAssertion/,
@@ -221,15 +199,8 @@ function getTrackedFiles(): string[] {
 		);
 }
 
-type Violation = {
-	file: string;
-	line: number;
-	content: string;
-	reason: string;
-};
-
-function audit(): Violation[] {
-	const violations: Violation[] = [];
+async function main() {
+	const report = new AuditReport("suppression");
 	const files = getTrackedFiles();
 
 	for (const rel of files) {
@@ -245,69 +216,40 @@ function audit(): Violation[] {
 			const line = lines[i] as string;
 			if (!SUPPRESSION_RE.test(line)) continue;
 
-			// Check if this line matches an approved entry
 			const approved = APPROVED.find(
 				(a) =>
 					rel === a.file &&
 					a.linePattern.test(line) &&
-					// also check the surrounding context (±8 lines) for the content pattern
 					lines
 						.slice(Math.max(0, i - 8), Math.min(lines.length, i + 9))
 						.some((l) => a.contentPattern.test(l)),
 			);
 
 			if (!approved) {
-				// Check if this is a codeql[] suppression (wrong format — should be lgtm[])
+				const content = line.trim().slice(0, 100);
 				if (/\/\/\s*codeql\[/.test(line)) {
-					violations.push({
-						file: rel,
-						line: i + 1,
-						content: line.trim().slice(0, 100),
-						reason:
-							"codeql[] suppression format is not recognized by CodeQL's JS analysis. " +
-							"Use lgtm[] instead, or make a code fix. If suppression is genuinely needed, " +
-							"add it to the APPROVED registry in audit-suppressions.ts with rubric.",
-					});
+					report.add(
+						`${rel}:${i + 1}\n  Content: ${content}\n  Reason:  codeql[] suppression format is not recognized by CodeQL's JS analysis. Use lgtm[] instead, or make a code fix. If suppression is genuinely needed, add it to the APPROVED registry in audit-suppressions.ts with rubric.`,
+					);
 				} else {
-					violations.push({
-						file: rel,
-						line: i + 1,
-						content: line.trim().slice(0, 100),
-						reason:
-							"Suppression not in approved registry. To add it, evaluate against the rubric: " +
-							"(1) explain why a CODE FIX doesn't work — not just why it's safe; " +
-							"(2) name alternatives considered; (3) state what mitigations exist. " +
-							"Then add an entry to APPROVED in tooling/scripts/audit-suppressions.ts.",
-					});
+					report.add(
+						`${rel}:${i + 1}\n  Content: ${content}\n  Reason:  Suppression not in approved registry. To add it, evaluate against the rubric: (1) explain why a CODE FIX doesn't work — not just why it's safe; (2) name alternatives considered; (3) state what mitigations exist. Then add an entry to APPROVED in tooling/scripts/audit-suppressions.ts.`,
+					);
 				}
 			}
 		}
 	}
 
-	return violations;
+	if (report.failed) {
+		console.error(
+			"\nEvery suppression must be evaluated against the rubric and registered\n" +
+				"in APPROVED in tooling/scripts/audit-suppressions.ts.\n" +
+				"The rubric requires: why a code fix doesn't work (not just why it's safe),\n" +
+				"what alternatives were considered, and what mitigations exist.",
+		);
+	}
+
+	report.finish(`suppression audit passed — ${files.length} files scanned.`);
 }
 
-const violations = audit();
-
-if (violations.length === 0) {
-	const files = getTrackedFiles();
-	console.log(`suppression audit passed — ${files.length} files scanned.`);
-	process.exit(0);
-}
-
-console.error(
-	`\nSuppression audit failed — ${violations.length} violation(s):\n`,
-);
-for (const v of violations) {
-	console.error(`  ${v.file}:${v.line}`);
-	console.error(`  Content: ${v.content}`);
-	console.error(`  Reason:  ${v.reason}`);
-	console.error();
-}
-console.error(
-	"Every suppression must be evaluated against the rubric and registered\n" +
-		"in APPROVED in tooling/scripts/audit-suppressions.ts.\n" +
-		"The rubric requires: why a code fix doesn't work (not just why it's safe),\n" +
-		"what alternatives were considered, and what mitigations exist.",
-);
-process.exit(1);
+runAudit("suppression", main);

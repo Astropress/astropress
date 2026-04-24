@@ -1,5 +1,11 @@
-import { readFile, readdir } from "node:fs/promises";
 import { join } from "node:path";
+import {
+	AuditReport,
+	fromRoot,
+	listFiles,
+	readText,
+	runAudit,
+} from "../lib/audit-utils.js";
 
 // Rubric 16 (Error Handling)
 //
@@ -13,19 +19,16 @@ import { join } from "node:path";
 // deployment metadata objects — they use exception-based error handling (not ok: boolean),
 // which is correct for that interface. Only naked re-throws are checked there.
 
-const root = process.cwd();
-const SRC_DIR = join(root, "packages/astropress/src");
+const SRC_DIR = fromRoot("packages/astropress/src");
 
 async function checkFile(
+	report: AuditReport,
 	filePath: string,
 	label: string,
-	violations: string[],
 	requireOkResult = true,
 ): Promise<void> {
-	const src = await readFile(filePath, "utf8");
+	const src = await readText(filePath);
 
-	// Check for typed result pattern: must have `ok:` somewhere (typed result, not raw throw)
-	// Exempt files that are type-only (no runtime exports at all)
 	if (requireOkResult) {
 		const hasRuntimeExport =
 			/^export (async function|function|const|class)\b/m.test(src);
@@ -39,101 +42,89 @@ async function checkFile(
 				src.includes("ok: false") ||
 				src.includes("ok,") ||
 				src.includes(": boolean") ||
-				// Purge functions return void (acceptable — failures are non-fatal via console.warn)
 				src.includes("Promise<void>");
 			if (!hasOkResult) {
-				violations.push(
+				report.add(
 					`${label}: no typed result pattern found — exported functions must return { ok: boolean } or Promise<void>, not throw at callers`,
 				);
 			}
 		}
 	}
 
-	// Naked re-throw: catch block that only re-throws without handling
-	// Pattern: catch (err) {\n  throw (err|e|error)\n}  (with optional whitespace/comments)
 	if (/catch\s*\([^)]*\)\s*\{\s*throw\s+\w/m.test(src)) {
-		violations.push(
+		report.add(
 			`${label}: naked re-throw detected — catch blocks must handle errors (log, return { ok: false }, or wrap), not blindly re-throw`,
 		);
 	}
 }
 
 async function main() {
-	const violations: string[] = [];
+	const report = new AuditReport("error-handling");
 
 	// 1. admin-action-*.ts files
-	const srcFiles = await readdir(SRC_DIR);
+	const srcFiles = await listFiles(SRC_DIR);
 	const actionFiles = srcFiles.filter(
 		(f) => f.startsWith("admin-action-") && f.endsWith(".ts"),
 	);
 
 	for (const filename of actionFiles) {
-		await checkFile(join(SRC_DIR, filename), `src/${filename}`, violations);
+		await checkFile(report, join(SRC_DIR, filename), `src/${filename}`);
 	}
 
 	// 2. deploy/*.ts files
 	const deployDir = join(SRC_DIR, "deploy");
+	const deployEntries = await listFiles(deployDir);
 	let deployFiles: string[];
-	try {
-		deployFiles = (await readdir(deployDir)).filter((f) => f.endsWith(".ts"));
-	} catch {
-		violations.push(
-			"src/deploy/: directory not found — deploy target implementations are missing",
-		);
-		deployFiles = [];
+	if (deployEntries.length === 0) {
+		// Distinguish empty dir from missing: use listFiles with recursive to probe
+		const probeAll = await listFiles(deployDir, { recursive: true });
+		if (probeAll.length === 0) {
+			report.add(
+				"src/deploy/: directory not found — deploy target implementations are missing",
+			);
+			deployFiles = [];
+		} else {
+			deployFiles = deployEntries.filter((f) => f.endsWith(".ts"));
+		}
+	} else {
+		deployFiles = deployEntries.filter((f) => f.endsWith(".ts"));
 	}
 
 	for (const filename of deployFiles) {
-		// Deploy files implement the DeployTarget interface (typed metadata return, not ok: boolean)
-		// Only enforce no naked re-throws
 		await checkFile(
+			report,
 			join(deployDir, filename),
 			`src/deploy/${filename}`,
-			violations,
 			false,
 		);
 	}
 
 	// 3. cache-purge.ts: failures must be console.warn, not throw
 	const cachePurgePath = join(SRC_DIR, "cache-purge.ts");
-	const cachePurgeSrc = await readFile(cachePurgePath, "utf8").catch(
-		() => null,
-	);
+	const cachePurgeSrc = await readText(cachePurgePath);
 	if (!cachePurgeSrc) {
-		violations.push(
+		report.add(
 			"src/cache-purge.ts: file not found — CDN cache purge strategy is missing",
 		);
 	} else {
-		// Verify all catch blocks use console.warn not throw
 		if (
 			/\.catch\s*\([^)]*\)\s*\{\s*throw/m.test(cachePurgeSrc) ||
 			/catch\s*\([^)]*\)\s*\{\s*throw/m.test(cachePurgeSrc)
 		) {
-			violations.push(
+			report.add(
 				"src/cache-purge.ts: cache purge failure throws an error — CDN failures must be non-fatal (console.warn only)",
 			);
 		}
 		if (!cachePurgeSrc.includes("console.warn")) {
-			violations.push(
+			report.add(
 				"src/cache-purge.ts: no console.warn found — CDN purge failures should be logged, not silently swallowed",
 			);
 		}
 	}
 
-	if (violations.length > 0) {
-		console.error("error-handling audit failed:\n");
-		for (const v of violations) {
-			console.error(`  - ${v}`);
-		}
-		process.exit(1);
-	}
-
-	console.log(
+	report.finish(
 		`error-handling audit passed — ${actionFiles.length} admin-action files, ${deployFiles.length} deploy files, and cache-purge all use safe error patterns.`,
 	);
 }
 
-main().catch((err) => {
-	console.error("error-handling audit failed:", err);
-	process.exit(1);
-});
+runAudit("error-handling", main);
