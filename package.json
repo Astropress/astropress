@@ -41,6 +41,7 @@
 		"audit:carbon": "bunx size-limit --config tooling/size-limit.json && bun run tooling/scripts/carbon-audit.ts --domains-only",
 		"audit:aeo": "bun run tooling/scripts/audit-aeo.ts",
 		"audit:providers": "bun run tooling/scripts/audit-providers.ts",
+		"audit:github-actions-shell": "bun run tooling/scripts/audit-github-actions-shell.ts",
 		"audit:cli-docs": "bun run tooling/scripts/audit-cli-docs.ts",
 		"audit:env-contract": "bun run tooling/scripts/audit-env-contract.ts",
 		"audit:exports": "bun run tooling/scripts/audit-exports.ts",

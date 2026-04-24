@@ -98,6 +98,7 @@ jobs:
       - run: bun run audit:tooling-types
       - run: bun run audit:aeo
       - run: bun run audit:providers
+      - run: bun run audit:github-actions-shell
       - run: bun run audit:cli-docs
       - run: bun run audit:env-contract
       - run: bun run audit:exports
@@ -580,8 +581,10 @@ jobs:
           command: pages deploy examples/github-pages/dist --project-name=astropress-preview --branch=${{ github.head_ref }}
         continue-on-error: true
       - name: Lighthouse CI against preview
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         run: |
-          if [ -n "${{ secrets.CLOUDFLARE_API_TOKEN }}" ]; then
+          if [ -n "$CLOUDFLARE_API_TOKEN" ]; then
             npx @lhci/cli@0.14 autorun --collect.url="https://astropress-preview.pages.dev" --assert.preset=lighthouse:recommended || true
           else
             echo "No Cloudflare credentials — skipping Lighthouse CI preview run"
