@@ -242,6 +242,19 @@ The fictional "Runway" hosting provider was added without being requested and wi
 both mention Argon2id, KMAC256, and ML-DSA-65. If you rename these algorithms or
 remove the mentions, update `tooling/readiness-truth.json` to match.
 
+## Git configuration
+
+Set `fetch.prune = true` globally (or at least in this clone) so stale remote-
+tracking branches disappear automatically after upstream deletion:
+
+```sh
+git config --global fetch.prune true
+```
+
+Without this, `git branch -r` keeps showing merged+deleted branches from other
+PRs until you run `git fetch --prune` manually, which obscures the state of
+your working clone.
+
 ## Signing setup
 
 **All commits to `main` must be signed.** This is enforced by the GitHub branch

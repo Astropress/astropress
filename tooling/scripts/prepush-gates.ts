@@ -1,5 +1,6 @@
 import { execSync, spawn, spawnSync } from "node:child_process";
-import { readdirSync, statSync } from "node:fs";
+import { readdirSync, rmSync, statSync } from "node:fs";
+import { homedir } from "node:os";
 import { join } from "node:path";
 
 const root = process.cwd();
@@ -53,12 +54,36 @@ function runAsync(step: Step): Promise<number> {
 	});
 }
 
+/**
+ * Emit a "still running" heartbeat every 60s while any step in the group is
+ * live. lefthook's `parallel: true` buffers stdout per hook until the hook
+ * returns — without a heartbeat, a 5min gates hook shows no output for 5min
+ * and users resort to pgrep to confirm it's alive. Heartbeat lines cost
+ * nothing and go directly to stderr so they don't contaminate parseable
+ * stdout.
+ */
+function startHeartbeat(label: string): () => void {
+	const start = Date.now();
+	const timer = setInterval(() => {
+		const elapsed = (Date.now() - start) / 1000;
+		const mm = Math.floor(elapsed / 60);
+		const ss = Math.floor(elapsed % 60);
+		process.stderr.write(
+			`[heartbeat] ${label} still running (${mm}m ${ss.toString().padStart(2, "0")}s elapsed)\n`,
+		);
+	}, 60_000);
+	timer.unref();
+	return () => clearInterval(timer);
+}
+
 async function runParallel(label: string, steps: Step[]): Promise<boolean> {
 	console.log(`\n${label}`);
 	const start = process.hrtime.bigint();
+	const stopHeartbeat = startHeartbeat(label);
 	const results = await Promise.all(
 		steps.map(async (step) => ({ step, code: await runAsync(step) })),
 	);
+	stopHeartbeat();
 	const failures = results.filter((r) => r.code !== 0);
 	const elapsed = Number(process.hrtime.bigint() - start) / 1e6;
 	if (failures.length > 0) {
@@ -73,14 +98,17 @@ async function runParallel(label: string, steps: Step[]): Promise<boolean> {
 async function runSerial(label: string, steps: Step[]): Promise<boolean> {
 	console.log(`\n${label}`);
 	const start = process.hrtime.bigint();
+	const stopHeartbeat = startHeartbeat(label);
 	for (const step of steps) {
 		const code = await runAsync(step);
 		if (code !== 0) {
+			stopHeartbeat();
 			const elapsed = Number(process.hrtime.bigint() - start) / 1e6;
 			console.error(`\n${label} FAILED on "${step.name}" (${fmtMs(elapsed)})`);
 			return false;
 		}
 	}
+	stopHeartbeat();
 	const elapsed = Number(process.hrtime.bigint() - start) / 1e6;
 	console.log(`${label} passed (${fmtMs(elapsed)})`);
 	return true;
@@ -158,8 +186,41 @@ function isDocsOnlyPush(): boolean {
 	);
 }
 
+/**
+ * PREPUSH_COLD_CACHE=1 — emulate the CI environment where cargo's registry
+ * cache, node_modules, and packages/astropress/dist are cold. The 2026-04-23
+ * incident was a --offline flag that worked locally but broke CI. Running a
+ * cold-cache push before merging any optimization catches this class of bug
+ * before CI does.
+ *
+ * Opt-in: only runs when PREPUSH_COLD_CACHE=1 (not default — expensive).
+ */
+function maybeColdCacheWipe(): void {
+	if (process.env.PREPUSH_COLD_CACHE !== "1") return;
+	console.log("\n── PREPUSH_COLD_CACHE=1: wiping caches to emulate CI ──");
+	const cargoCache = join(homedir(), ".cargo/registry/cache");
+	const distDir = join(root, "packages/astropress/dist");
+	const strykerTmp = join(root, ".stryker-tmp");
+	const targets = [
+		{ path: distDir, reason: "astropress build output" },
+		{ path: strykerTmp, reason: "Stryker sandbox residue" },
+		{ path: cargoCache, reason: "cargo registry cache" },
+	];
+	for (const t of targets) {
+		try {
+			rmSync(t.path, { recursive: true, force: true });
+			console.log(`  wiped ${t.path} (${t.reason})`);
+		} catch (err) {
+			console.log(`  skipped ${t.path}: ${(err as Error).message}`);
+		}
+	}
+	console.log("── cold-cache wipe complete; gates will pay the fetch/build cost ──");
+}
+
 async function main(): Promise<void> {
 	const overallStart = process.hrtime.bigint();
+
+	maybeColdCacheWipe();
 
 	// Tier 0 — live GHAS alert check for current PR branch
 	if (!checkGhasAlerts()) process.exit(1);
