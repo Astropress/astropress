@@ -88,6 +88,34 @@ jobs:
             -se nuclei-results.sarif
           token: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Ensure nuclei SARIF exists
+        if: always()
+        # Nuclei skips writing the SARIF file when 0 matches are found, which
+        # breaks upload-sarif. Write a minimal empty-results SARIF as fallback
+        # so the upload step still runs and GHAS sees the clean scan result.
+        run: |
+          if [ ! -s nuclei-results.sarif ]; then
+            cat > nuclei-results.sarif <<'JSON'
+          {
+            "$schema": "https://raw.githubusercontent.com/oasis-tcs/sarif-spec/master/Schemata/sarif-schema-2.1.0.json",
+            "version": "2.1.0",
+            "runs": [
+              {
+                "tool": {
+                  "driver": {
+                    "name": "nuclei",
+                    "version": "3.8.0",
+                    "informationUri": "https://github.com/projectdiscovery/nuclei",
+                    "rules": []
+                  }
+                },
+                "results": []
+              }
+            ]
+          }
+          JSON
+          fi
+
       - name: Upload nuclei SARIF to GitHub Security tab
         uses: github/codeql-action/upload-sarif@v4
         if: always()
