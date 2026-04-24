@@ -1,26 +1,35 @@
 #!/usr/bin/env bun
 /**
- * prepush-mutation-gate — delta-based mutation coverage gate.
+ * prepush-mutation-gate — content-hash-aware delta mutation coverage gate.
  *
- * Runs Stryker once over every TypeScript source file changed on this branch
- * vs. origin/main, then checks each file's score against a committed baseline:
+ * For each TypeScript source file changed on this branch vs. origin/main:
+ *   - Compare its current git-blob hash against the hash recorded in
+ *     tooling/stryker/baseline-scores.json.
+ *   - If the hash matches, the file's content hasn't changed since the
+ *     baseline was captured, so the prior score is authoritative — skip
+ *     the Stryker run entirely. This is what keeps the gate fast: only
+ *     files whose content actually moved get mutated.
+ *   - If the hash differs, run Stryker scoped to that one file and check:
+ *       * existing baseline: new score must be >= baseline - 0.5% (tolerance
+ *         for inter-run noise).
+ *       * new file (no baseline entry): new score must be >= 95%.
  *
- *   - If the file is in tooling/stryker/baseline-scores.json: the new score
- *     must be >= baseline - 0.5% (tolerance for inter-run flakiness).
- *   - If the file is new (no baseline entry): the new score must be >= 95%.
- *
- * On pass, the baseline is rewritten with the new per-file scores — commit
- * it to lock in the new floor.
+ * On pass, the baseline is rewritten with the new per-file {score, hash}.
+ * Commit the file to lock in the new floor.
  *
  * IMPORTANT — DO NOT WEAKEN THIS HOOK.
  *
  * The 95% break threshold lives in stryker*.config.mjs and is guarded by
  * audit-stryker-thresholds. This hook is the live complement: it blocks
  * pushes whose *new* code misses the floor and whose *changed* code
- * regresses against its prior score, without demanding that every legacy
- * file already sit at 95%. If this trips, write tests or simplify code.
- * Don't hand-edit baseline-scores.json — the script rewrites it only from
- * a passing run.
+ * regresses against its prior score. The content-hash skip is the *only*
+ * mechanism that keeps it cheap enough to run on every push — do not
+ * replace it with "always run Stryker on every touched file" out of
+ * paranoia. The hash check is trustworthy: identical content produces
+ * identical mutation results.
+ *
+ * If this trips: write tests or simplify code. Do not hand-edit
+ * baseline-scores.json — the script rewrites it only from a passing run.
  */
 
 import { execFileSync } from "node:child_process";
@@ -39,9 +48,14 @@ const TOLERANCE = 0.5;
 const SRC_ROOT = "packages/astropress/src/";
 const BASELINE_PATH = "tooling/stryker/baseline-scores.json";
 
+interface BaselineEntry {
+	score: number;
+	hash: string;
+}
+
 interface Baseline {
 	updatedAt: string;
-	scores: Record<string, number>;
+	scores: Record<string, BaselineEntry>;
 }
 
 function loadBaseline(): Baseline {
@@ -53,6 +67,16 @@ function loadBaseline(): Baseline {
 
 function saveBaseline(b: Baseline): void {
 	writeFileSync(BASELINE_PATH, `${JSON.stringify(b, null, 2)}\n`);
+}
+
+function gitHashObject(path: string): string | null {
+	try {
+		return execFileSync("git", ["hash-object", path], {
+			encoding: "utf8",
+		}).trim();
+	} catch {
+		return null;
+	}
 }
 
 function changedSourceFiles(): string[] {
@@ -90,6 +114,7 @@ function runStryker(
 	mutateTargets: string[],
 	tmpRoot: string,
 ): StrykerReport | null {
+	if (mutateTargets.length === 0) return { files: {} };
 	const configPath = join(tmpRoot, "stryker.config.mjs");
 	const reportPath = join(tmpRoot, "report.json");
 	writeFileSync(
@@ -117,7 +142,7 @@ function runStryker(
 		});
 	} catch {
 		// Break threshold set to 0, so non-zero exit means a real error.
-		// Fall through and try to read the report regardless.
+		// Fall through and read the report regardless.
 	}
 	if (!existsSync(reportPath)) return null;
 	return JSON.parse(readFileSync(reportPath, "utf8")) as StrykerReport;
@@ -140,24 +165,34 @@ function scoreForFile(
 	return (killed.length / scored.length) * 100;
 }
 
+type VerdictStatus =
+	| "pass-hash-skip"
+	| "pass"
+	| "regression"
+	| "new-file-below-floor"
+	| "unscored";
+
 interface Verdict {
 	file: string;
+	hash: string | null;
 	score: number | null;
-	baseline: number | null;
-	status: "pass" | "regression" | "new-file-below-floor" | "unscored";
+	baseline: BaselineEntry | null;
+	status: VerdictStatus;
 }
 
-function judge(
+function judgeScored(
 	file: string,
+	hash: string,
 	score: number | null,
-	baseline: number | null,
+	baseline: BaselineEntry | null,
 ): Verdict {
 	if (score === null) {
-		return { file, score: null, baseline, status: "unscored" };
+		return { file, hash, score: null, baseline, status: "unscored" };
 	}
 	if (baseline === null) {
 		return {
 			file,
+			hash,
 			score,
 			baseline: null,
 			status: score >= FLOOR ? "pass" : "new-file-below-floor",
@@ -165,9 +200,10 @@ function judge(
 	}
 	return {
 		file,
+		hash,
 		score,
 		baseline,
-		status: score + TOLERANCE >= baseline ? "pass" : "regression",
+		status: score + TOLERANCE >= baseline.score ? "pass" : "regression",
 	};
 }
 
@@ -181,10 +217,8 @@ function main(): number {
 	}
 
 	const PREFIX = "packages/astropress/";
-	const mutateTargets = changed
-		.filter((f) => f.startsWith(PREFIX))
-		.map((f) => f.slice(PREFIX.length));
-	if (mutateTargets.length === 0) {
+	const repoRelative = changed.filter((f) => f.startsWith(PREFIX));
+	if (repoRelative.length === 0) {
 		console.log(
 			"prepush-mutation-gate: changed files outside packages/astropress/ — skipping.",
 		);
@@ -193,54 +227,76 @@ function main(): number {
 
 	const baseline = loadBaseline();
 	console.log(
-		`prepush-mutation-gate: ${mutateTargets.length} file(s) to mutate`,
+		`prepush-mutation-gate: ${repoRelative.length} changed file(s); baseline updated ${baseline.updatedAt}`,
 	);
-	console.log(`  baseline last updated: ${baseline.updatedAt}`);
-	for (const t of mutateTargets) console.log(`  - ${t}`);
 
-	const tmp = mkdtempSync(join(tmpdir(), "stryker-prepush-"));
-	let report: StrykerReport | null = null;
-	try {
-		report = runStryker(mutateTargets, tmp);
-	} finally {
-		rmSync(tmp, { recursive: true, force: true });
-	}
-	if (!report) {
-		console.error("prepush-mutation-gate: stryker produced no report.");
-		return 1;
-	}
-
+	// Split into hash-match (skip Stryker) and hash-diff (must run Stryker).
 	const verdicts: Verdict[] = [];
-	for (let i = 0; i < changed.length; i++) {
-		const full = changed[i];
-		if (!full.startsWith(PREFIX)) continue;
-		const target = full.slice(PREFIX.length);
-		const score = scoreForFile(report, target);
-		const prior = baseline.scores[full] ?? null;
-		verdicts.push(judge(full, score, prior));
+	const needsMutation: string[] = [];
+	for (const file of repoRelative) {
+		const hash = gitHashObject(file);
+		const prior = baseline.scores[file] ?? null;
+		if (hash !== null && prior && prior.hash === hash) {
+			verdicts.push({
+				file,
+				hash,
+				score: prior.score,
+				baseline: prior,
+				status: "pass-hash-skip",
+			});
+			console.log(
+				`  = ${file}  hash unchanged → reuse ${prior.score.toFixed(2)}%`,
+			);
+		} else {
+			needsMutation.push(file);
+			console.log(`  ~ ${file}  hash differs → must mutate`);
+		}
 	}
 
-	console.log("\nPer-file results (current / baseline):");
+	if (needsMutation.length > 0) {
+		console.log(
+			`\nRunning Stryker on ${needsMutation.length} file(s) with changed content...`,
+		);
+		const tmp = mkdtempSync(join(tmpdir(), "stryker-prepush-"));
+		let report: StrykerReport | null = null;
+		try {
+			const targets = needsMutation.map((f) => f.slice(PREFIX.length));
+			report = runStryker(targets, tmp);
+		} finally {
+			rmSync(tmp, { recursive: true, force: true });
+		}
+		if (!report) {
+			console.error("prepush-mutation-gate: stryker produced no report.");
+			return 1;
+		}
+		for (const file of needsMutation) {
+			const target = file.slice(PREFIX.length);
+			const score = scoreForFile(report, target);
+			const hash = gitHashObject(file);
+			const prior = baseline.scores[file] ?? null;
+			verdicts.push(judgeScored(file, hash ?? "", score, prior));
+		}
+	}
+
+	console.log("\nResults:");
 	for (const v of verdicts) {
 		const scoreStr = v.score === null ? "unscored" : `${v.score.toFixed(2)}%`;
-		const priorStr = v.baseline === null ? "new" : `${v.baseline.toFixed(2)}%`;
-		const marker = v.status === "pass" ? "✓" : "✖";
+		const priorStr = v.baseline ? `${v.baseline.score.toFixed(2)}%` : "new";
+		const marker = v.status.startsWith("pass") ? "✓" : "✖";
 		console.log(
 			`  ${marker} ${v.file}  ${scoreStr} / ${priorStr}  [${v.status}]`,
 		);
 	}
 
-	const failures = verdicts.filter((v) => v.status !== "pass");
+	const failures = verdicts.filter((v) => !v.status.startsWith("pass"));
 	const checkOnly = process.argv.includes("--check-only");
+
 	if (failures.length === 0) {
-		if (checkOnly) {
-			console.log(
-				"\n✓ prepush-mutation-gate: all changed files pass (check-only, baseline not rewritten).\n",
-			);
-		} else {
-			const nextScores = { ...baseline.scores };
+		if (!checkOnly) {
+			const nextScores: Record<string, BaselineEntry> = { ...baseline.scores };
 			for (const v of verdicts) {
-				if (v.score !== null) nextScores[v.file] = v.score;
+				if (v.score === null || v.hash === null) continue;
+				nextScores[v.file] = { score: v.score, hash: v.hash };
 			}
 			saveBaseline({
 				updatedAt: new Date().toISOString(),
@@ -248,6 +304,10 @@ function main(): number {
 			});
 			console.log(
 				`\n✓ prepush-mutation-gate: all changed files pass. Baseline updated at ${BASELINE_PATH}.\n`,
+			);
+		} else {
+			console.log(
+				"\n✓ prepush-mutation-gate: all changed files pass (check-only, baseline not rewritten).\n",
 			);
 		}
 		return 0;
@@ -257,7 +317,7 @@ function main(): number {
 	for (const v of failures) {
 		if (v.status === "regression") {
 			console.error(
-				`  REGRESSION  ${v.file}: ${v.score?.toFixed(2)}% < baseline ${v.baseline?.toFixed(2)}%`,
+				`  REGRESSION  ${v.file}: ${v.score?.toFixed(2)}% < baseline ${v.baseline?.score.toFixed(2)}%`,
 			);
 		} else if (v.status === "new-file-below-floor") {
 			console.error(

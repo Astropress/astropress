@@ -1,16 +1,49 @@
 {
   "updatedAt": "2026-04-24T22:02:22Z",
   "scores": {
-    "packages/astropress/src/adapters/adapter-record-helpers.ts": 60.38,
-    "packages/astropress/src/admin-normalizers.ts": 100.0,
-    "packages/astropress/src/d1-audit.ts": 20.0,
-    "packages/astropress/src/d1-store-content-helpers.ts": 33.33,
-    "packages/astropress/src/persistence-commons.ts": 98.01,
-    "packages/astropress/src/sqlite-bootstrap.ts": 33.09,
-    "packages/astropress/src/sqlite-integrity.ts": 94.35,
-    "packages/astropress/src/sqlite-runtime/audit-log.ts": 92.0,
-    "packages/astropress/src/sqlite-runtime/content-helpers.ts": 65.59,
-    "packages/astropress/src/sqlite-runtime/utils.ts": 61.67,
-    "packages/astropress/src/sync/git.ts": 41.48
+    "packages/astropress/src/adapters/adapter-record-helpers.ts": {
+      "score": 60.38,
+      "hash": "c412a1997005c4ec6f601de7e1afce93b19294f3"
+    },
+    "packages/astropress/src/admin-normalizers.ts": {
+      "score": 100.0,
+      "hash": "e5f5a081b44bf71b55714bea88dc81675214cbdd"
+    },
+    "packages/astropress/src/d1-audit.ts": {
+      "score": 20.0,
+      "hash": "f400247efce005171e97b9d18a1241d623e25de8"
+    },
+    "packages/astropress/src/d1-store-content-helpers.ts": {
+      "score": 33.33,
+      "hash": "c503d62f6f66357a939b3f6de70f0fefb7d4d580"
+    },
+    "packages/astropress/src/persistence-commons.ts": {
+      "score": 98.01,
+      "hash": "a47521b939d3521e9bdae54d218e94fcf4d9c7ad"
+    },
+    "packages/astropress/src/sqlite-bootstrap.ts": {
+      "score": 33.09,
+      "hash": "e72cccb4ad2e21750b13008eecdf158e83907051"
+    },
+    "packages/astropress/src/sqlite-integrity.ts": {
+      "score": 94.35,
+      "hash": "1d9a108229b7a8e21dd07ef4cfa6f13908abfec5"
+    },
+    "packages/astropress/src/sqlite-runtime/audit-log.ts": {
+      "score": 92.0,
+      "hash": "be8e619120485136f078c0f07caeb8e60228a4fc"
+    },
+    "packages/astropress/src/sqlite-runtime/content-helpers.ts": {
+      "score": 65.59,
+      "hash": "5bc3e98fb1ef82a57fbc923490712a09211e3a93"
+    },
+    "packages/astropress/src/sqlite-runtime/utils.ts": {
+      "score": 61.67,
+      "hash": "ec800e5ef80b7512d741e37b61d2d63f5c32bd94"
+    },
+    "packages/astropress/src/sync/git.ts": {
+      "score": 41.48,
+      "hash": "23b9bc4a3d786af97e882a3a4dc7ed2abd43f5e8"
+    }
   }
 }
