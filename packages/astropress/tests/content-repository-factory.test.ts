@@ -128,6 +128,52 @@ describe("createAstropressContentRepository", () => {
 		});
 	});
 
+	it("rejects a stale save when lastKnownUpdatedAt no longer matches", () => {
+		const repository = createAstropressContentRepository({
+			normalizePath: (value) => value,
+			slugifyTerm: (value) => value,
+			normalizeContentStatus: (value) =>
+				value === "draft" ? "draft" : "published",
+			findContentRecord: () =>
+				baseRecord({ updatedAt: "2026-01-02T03:04:05.000Z" }),
+			listContentRecords: () => [baseRecord()],
+			getPersistedOverride: vi.fn(),
+			getContentAssignments: () => ({
+				authorIds: [],
+				categoryIds: [],
+				tagIds: [],
+			}),
+			ensureBaselineRevision: vi.fn(),
+			listPersistedRevisions: vi.fn(),
+			getPersistedRevision: vi.fn(),
+			upsertContentOverride: vi.fn(),
+			replaceContentAssignments: vi.fn(),
+			insertReviewedRevision: vi.fn(),
+			insertContentEntry: vi.fn(),
+			recordContentAudit: vi.fn(),
+		});
+
+		const result = repository.saveContentState(
+			"about",
+			{
+				title: "Edited",
+				status: "draft",
+				body: "<p>Body</p>",
+				seoTitle: "SEO",
+				metaDescription: "Meta",
+				lastKnownUpdatedAt: "2026-01-01T00:00:00.000Z",
+			},
+			actor,
+		);
+
+		expect(result).toEqual({
+			ok: false,
+			error:
+				"This record was modified by another editor after you opened it. Reload to see the latest version.",
+			conflict: true,
+		});
+	});
+
 	it("creates a new content record", () => {
 		const insertContentEntry = vi.fn(() => true);
 		const findContentRecord = vi

@@ -1,5 +1,9 @@
 import { test, expect } from "@playwright/test";
 
+// journey: admin-post-edit-save
+// journey: admin-media-upload
+// journey: admin-user-invite
+
 test.describe("Feature: admin CRUD golden path", () => {
   test("Scenario: create post — new post appears in editor after submission", async ({ page }) => {
     const slug = `test-post-${Date.now()}`;

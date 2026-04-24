@@ -232,10 +232,14 @@ export declare function saveContentState(
 		canonicalUrlOverride?: string;
 		robotsDirective?: string;
 		revisionNote?: string;
+		lastKnownUpdatedAt?: string;
 		metadata?: Record<string, unknown>;
 	},
 	actor: Actor,
-): { ok: true } | { ok: false; error: string };
+):
+	| { ok: true }
+	| { ok: false; error: string }
+	| { ok: false; error: string; conflict: true };
 
 export declare function restoreRevision(
 	slug: string,
