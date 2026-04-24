@@ -36,8 +36,21 @@ function applySecurityHeaders(response) {
 		"Permissions-Policy",
 		"accelerometer=(), camera=(), geolocation=(), gyroscope=(), microphone=(), payment=(), usb=()",
 	);
+	response.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
+	// HSTS is meaningless on plain HTTP (127.0.0.1:4173) — browsers ignore it.
+	// Sent anyway so scanners (Nuclei http-missing-security-headers) see it;
+	// mirrors what production HTTPS serving would emit.
+	response.setHeader(
+		"Strict-Transport-Security",
+		"max-age=63072000; includeSubDomains; preload",
+	);
 	response.setHeader("X-Content-Type-Options", "nosniff");
 	response.setHeader("X-Frame-Options", "DENY");
+	// OWASP modern guidance: set to "0" to disable the legacy XSS auditor
+	// (which introduced exploitable bugs). Nuclei still flags its absence.
+	response.setHeader("X-XSS-Protection", "0");
+	// Disallows Flash/Adobe cross-domain policy files across the whole origin.
+	response.setHeader("X-Permitted-Cross-Domain-Policies", "none");
 	response.removeHeader("Server");
 }
 
