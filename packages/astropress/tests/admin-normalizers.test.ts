@@ -79,8 +79,8 @@ describe("parseIdList", () => {
 		},
 	);
 
-	it("throws for invalid JSON string (no outer catch)", () => {
-		expect(() => parseIdList("not-json")).toThrow();
+	it("returns empty array for invalid JSON string", () => {
+		expect(parseIdList("not-json")).toEqual([]);
 	});
 
 	it("returns empty array when JSON is a non-array value", () => {

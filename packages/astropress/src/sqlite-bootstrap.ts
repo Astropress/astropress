@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { createLogger } from "./runtime-logger.js";
 import { defaultSiteSettings } from "./site-settings";
 import {
 	type AdminRole,
@@ -20,7 +21,6 @@ import {
 	type SeedSummary,
 	type SeededComment,
 	type SiteSettingsSeed,
-	type SqliteDatabaseConstructor,
 	type SqliteDatabaseLike,
 	type SqliteStatementLike,
 	type SystemRouteSeed,
@@ -37,11 +37,14 @@ import {
 	seedSiteSettings,
 	seedSystemRoutes,
 } from "./sqlite-bootstrap-seeders.js";
+import { runIntegrityCheckOnOpenDatabase } from "./sqlite-integrity.js";
 import { ensureLegacySchemaCompatibility } from "./sqlite-schema-compat.js";
 import {
 	buildTableImportSql,
 	buildTableImportStatements,
 } from "./sqlite-seed-helpers.js";
+
+const integrityLogger = createLogger("sqlite-integrity");
 
 export type {
 	AdminRole,
@@ -128,6 +131,20 @@ export function createAstropressSqliteSeedToolkit<
 			db.prepare("PRAGMA synchronous = NORMAL").get();
 		}
 		db.prepare("PRAGMA foreign_keys = ON").get();
+		if (dbPath !== ":memory:") {
+			const check = runIntegrityCheckOnOpenDatabase(db, { mode: "quick" });
+			if (check.status === "corrupt") {
+				integrityLogger.error("SQLite integrity check failed on open", {
+					dbPath,
+					messages: check.messages,
+				});
+			} else if (check.status === "unavailable") {
+				integrityLogger.warn("SQLite integrity check unavailable on open", {
+					dbPath,
+					error: check.error,
+				});
+			}
+		}
 		return db;
 	}
 

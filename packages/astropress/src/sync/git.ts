@@ -9,6 +9,7 @@ import {
 import { dirname, join, resolve } from "node:path";
 import type { GitSyncAdapter } from "../platform-contracts";
 import { checkpointSqliteWal } from "../sqlite-bootstrap-helpers";
+import { runIntegrityCheck } from "../sqlite-integrity";
 
 export interface AstropressGitSyncAdapterOptions {
 	projectDir: string;
@@ -58,14 +59,38 @@ async function copyTreeWithReflink(
 	src: string,
 	dest: string,
 	warn: (msg: string) => void,
+	options: { preCheckIntegrity?: boolean; postCheckIntegrity?: boolean } = {},
 ): Promise<{ fileCount: number; usedReflink: boolean }> {
 	const metadata = await stat(src);
 
 	if (!metadata.isDirectory()) {
 		if (src.endsWith(".sqlite")) {
+			if (options.preCheckIntegrity) {
+				const check = await runIntegrityCheck(src, { mode: "quick" });
+				if (check.status === "corrupt") {
+					throw new Error(
+						`Refusing to back up corrupt SQLite database at ${src}: ${check.messages.join("; ")}`,
+					);
+				}
+				if (check.status === "unavailable") {
+					warn(
+						`SQLite integrity check unavailable for ${src} before backup: ${check.error}`,
+					);
+				}
+			}
 			await checkpointSqliteWal(src, warn);
 		}
 		const usedReflink = await copyFileWithReflink(src, dest);
+		if (options.postCheckIntegrity && dest.endsWith(".sqlite")) {
+			const check = await runIntegrityCheck(dest, { mode: "quick" });
+			if (check.status !== "ok") {
+				warn(
+					`Restored SQLite database at ${dest} failed integrity check (${check.status}): ${
+						check.messages.join("; ") || check.error || ""
+					}`,
+				);
+			}
+		}
 		return { fileCount: 1, usedReflink };
 	}
 
@@ -79,6 +104,7 @@ async function copyTreeWithReflink(
 			join(src, entry.name),
 			join(dest, entry.name),
 			warn,
+			options,
 		);
 		fileCount += r.fileCount;
 		usedReflink = usedReflink || r.usedReflink;
@@ -92,6 +118,7 @@ async function processIncludes(
 	srcBase: string,
 	destBase: string,
 	warn: (msg: string) => void,
+	options: { preCheckIntegrity?: boolean; postCheckIntegrity?: boolean } = {},
 ): Promise<{ fileCount: number; anyReflink: boolean }> {
 	let fileCount = 0;
 	let anyReflink = false;
@@ -100,7 +127,7 @@ async function processIncludes(
 		if (!(await pathExists(src))) continue;
 		const dest = resolve(destBase, entry);
 		await mkdir(dirname(dest), { recursive: true });
-		const r = await copyTreeWithReflink(src, dest, warn);
+		const r = await copyTreeWithReflink(src, dest, warn, options);
 		fileCount += r.fileCount;
 		anyReflink = anyReflink || r.usedReflink;
 	}
@@ -125,6 +152,7 @@ export function createAstropressGitSyncAdapter(
 				projectDir,
 				outputDir,
 				warn,
+				{ preCheckIntegrity: true },
 			);
 			log(
 				anyReflink
@@ -144,6 +172,9 @@ export function createAstropressGitSyncAdapter(
 				inputDir,
 				projectDir,
 				warn,
+				{
+					postCheckIntegrity: true,
+				},
 			);
 			log(
 				anyReflink

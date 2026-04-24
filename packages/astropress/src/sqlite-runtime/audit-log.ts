@@ -1,4 +1,5 @@
 import { peekCmsConfig } from "../config";
+import { buildAuditEntry } from "../persistence-commons";
 import type { AstropressSqliteDatabaseLike } from "./utils";
 
 export interface AuditEventRecord {
@@ -42,16 +43,24 @@ export function recordAuditEvent(
 	db: AstropressSqliteDatabaseLike,
 	input: RecordAuditEventInput,
 ): void {
+	const entry = buildAuditEntry({
+		actor: { email: input.userEmail },
+		action: input.action,
+		resourceType: input.resourceType,
+		resourceId: input.resourceId,
+		summary: input.summary,
+		details: input.details,
+	});
 	db.prepare(
 		`INSERT INTO audit_events (user_email, action, resource_type, resource_id, summary, details)
      VALUES (?, ?, ?, ?, ?, ?)`,
 	).run(
-		input.userEmail,
-		input.action,
-		input.resourceType,
-		input.resourceId ?? null,
-		input.summary,
-		input.details ? JSON.stringify(input.details) : null,
+		entry.userEmail,
+		entry.action,
+		entry.resourceType,
+		entry.resourceId,
+		entry.summary,
+		entry.details,
 	);
 
 	const retentionDays = peekCmsConfig()?.auditRetentionDays ?? 90;

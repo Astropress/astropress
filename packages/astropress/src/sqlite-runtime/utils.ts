@@ -148,54 +148,12 @@ export function verifyPasswordSync(password: string, storedHash: string) {
 	return verifyArgon2idPassword(password, storedHash);
 }
 
-export function normalizePath(value: string) {
-	const trimmed = value.trim();
-	if (!trimmed) {
-		return "";
-	}
-
-	return trimmed.startsWith("/") ? trimmed : `/${trimmed}`;
-}
-
-export function slugifyTerm(value: string) {
-	return value
-		.trim()
-		.toLowerCase()
-		.replace(/[^a-z0-9]+/g, "-")
-		.split("-")
-		.filter(Boolean)
-		.join("-");
-}
-
-export function normalizeContentStatus(input?: string | null): ContentStatus {
-	if (
-		input === "draft" ||
-		input === "review" ||
-		input === "archived" ||
-		input === "published"
-	) {
-		return input;
-	}
-	return "published";
-}
-
-export function parseIdList(value: string | null | undefined) {
-	if (!value) {
-		return [] as number[];
-	}
-
-	try {
-		const parsed = JSON.parse(value) as unknown;
-		if (!Array.isArray(parsed)) {
-			return [];
-		}
-		return parsed
-			.map((entry) => Number(entry))
-			.filter((entry) => Number.isInteger(entry) && entry > 0);
-	} catch {
-		return [];
-	}
-}
+export { normalizePath } from "../admin-normalizers";
+export {
+	normalizeSlug as slugifyTerm,
+	normalizeContentStatus,
+	parseIdList,
+} from "../persistence-commons";
 
 export function serializeIdList(values: number[] | undefined) {
 	return JSON.stringify(

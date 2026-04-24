@@ -1,3 +1,4 @@
+import { mapPersistedOverrideRow as mapPersistedOverrideRowCommon } from "../persistence-commons";
 import type { ContentRecord } from "../persistence-types";
 import {
 	type AstropressSqliteDatabaseLike,
@@ -99,34 +100,10 @@ export function pageRecordToContentRecord(
 }
 
 export function mapPersistedOverrideRow(row: ContentOverrideRow | undefined) {
-	if (!row) {
-		return null;
-	}
-
-	let metadata: Record<string, unknown> | undefined;
-	if (row.metadata) {
-		try {
-			metadata = JSON.parse(row.metadata) as Record<string, unknown>;
-		} catch {
-			metadata = undefined;
-		}
-	}
-
-	return {
-		title: row.title,
-		status: row.status,
-		scheduledAt: row.scheduled_at ?? undefined,
-		body: row.body ?? undefined,
-		seoTitle: row.seo_title,
-		metaDescription: row.meta_description,
-		excerpt: row.excerpt ?? undefined,
-		ogTitle: row.og_title ?? undefined,
-		ogDescription: row.og_description ?? undefined,
-		ogImage: row.og_image ?? undefined,
-		canonicalUrlOverride: row.canonical_url_override ?? undefined,
-		robotsDirective: row.robots_directive ?? undefined,
-		metadata,
-	};
+	const mapped = mapPersistedOverrideRowCommon(row ?? null);
+	if (!mapped) return null;
+	// Preserve the prior shape where `metadata` is always present (possibly undefined).
+	return { ...mapped, metadata: mapped.metadata };
 }
 
 export function mapRevisionRow(row: RevisionRow) {
