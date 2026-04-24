@@ -1,11 +1,52 @@
 import { execSync, spawn, spawnSync } from "node:child_process";
-import { readdirSync, rmSync, statSync } from "node:fs";
+import {
+	existsSync,
+	readFileSync,
+	readdirSync,
+	rmSync,
+	statSync,
+	writeFileSync,
+} from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
+import { STEP_INPUTS, hashPaths } from "./step-content-hash";
 
 const root = process.cwd();
 
 type Step = { name: string; cmd: string; args: string[]; cwd?: string };
+
+// ---------------------------------------------------------------------------
+// Content-hash short-circuit cache
+// ---------------------------------------------------------------------------
+//
+// Each heavy step declares the set of source paths it depends on (centralised
+// in tooling/scripts/step-content-hash.ts so CI can share the same keys). We
+// remember the last-green hash in .prepush-cache.json and skip any step
+// whose input hash is unchanged since the last successful run.
+
+const CACHE_PATH = join(root, ".prepush-cache.json");
+
+interface CacheEntry {
+	inputHash: string;
+	lastGreenAt: string;
+}
+
+interface Cache {
+	entries: Record<string, CacheEntry>;
+}
+
+function loadCache(): Cache {
+	if (!existsSync(CACHE_PATH)) return { entries: {} };
+	try {
+		return JSON.parse(readFileSync(CACHE_PATH, "utf8")) as Cache;
+	} catch {
+		return { entries: {} };
+	}
+}
+
+function saveCache(c: Cache): void {
+	writeFileSync(CACHE_PATH, `${JSON.stringify(c, null, 2)}\n`);
+}
 
 /**
  * Returns true if every file under src/ is older than the newest artifact
@@ -88,7 +129,8 @@ async function runParallel(label: string, steps: Step[]): Promise<boolean> {
 	const elapsed = Number(process.hrtime.bigint() - start) / 1e6;
 	if (failures.length > 0) {
 		console.error(`\n${label} FAILED (${fmtMs(elapsed)})`);
-		for (const f of failures) console.error(`  - ${f.step.name} exited ${f.code}`);
+		for (const f of failures)
+			console.error(`  - ${f.step.name} exited ${f.code}`);
 		return false;
 	}
 	console.log(`${label} passed (${fmtMs(elapsed)})`);
@@ -115,7 +157,9 @@ async function runSerial(label: string, steps: Step[]): Promise<boolean> {
 }
 
 function checkGhasAlerts(): boolean {
-	const branch = execSync("git branch --show-current", { encoding: "utf8" }).trim();
+	const branch = execSync("git branch --show-current", {
+		encoding: "utf8",
+	}).trim();
 	if (!branch || branch === "main") return true;
 
 	const result = spawnSync(
@@ -140,7 +184,9 @@ function checkGhasAlerts(): boolean {
 		return true;
 	}
 
-	console.error(`\n── GHAS alert check FAILED — open code-scanning alerts on ${branch}:`);
+	console.error(
+		`\n── GHAS alert check FAILED — open code-scanning alerts on ${branch}:`,
+	);
 	console.error(alerts);
 	console.error("Fix or suppress these before pushing.");
 	return false;
@@ -214,7 +260,9 @@ function maybeColdCacheWipe(): void {
 			console.log(`  skipped ${t.path}: ${(err as Error).message}`);
 		}
 	}
-	console.log("── cold-cache wipe complete; gates will pay the fetch/build cost ──");
+	console.log(
+		"── cold-cache wipe complete; gates will pay the fetch/build cost ──",
+	);
 }
 
 async function main(): Promise<void> {
@@ -228,24 +276,26 @@ async function main(): Promise<void> {
 	const docsOnly = isDocsOnlyPush();
 	if (docsOnly) {
 		console.log("\n── docs-only push detected (no .ts/.rs/.astro changes)");
-		console.log("── skipping tiers 2 and 3; running tier 1 only as sanity check");
+		console.log(
+			"── skipping tiers 2 and 3; running tier 1 only as sanity check",
+		);
 	}
 
-	// Previous tier 1 ran `staged-tests --committed` which was effectively a
-	// full Vitest + full `cargo test` on any branch with >25 file changes —
-	// strictly redundant with tier 3's full Vitest suite. Pre-commit already
-	// provides per-commit fail-fast via the same script. Deleted.
-
 	if (docsOnly) {
-		console.log(`\nAll pre-push gates passed (docs-only, ${fmtMs(Number(process.hrtime.bigint() - overallStart) / 1e6)}).`);
+		console.log(
+			`\nAll pre-push gates passed (docs-only, ${fmtMs(Number(process.hrtime.bigint() - overallStart) / 1e6)}).`,
+		);
 		process.exit(0);
 	}
 
+	const cache = loadCache();
+	const forceFull = process.env.PREPUSH_NO_CACHE === "1";
+	if (forceFull)
+		console.log("\n── PREPUSH_NO_CACHE=1: ignoring content-hash cache ──");
+
 	// Build must come first — bdd:test imports compiled JS from dist/.
-	// Vitest, cli:smoke, and test:example have no dist dependency.
-	// Skip the build if dist/ is already newer than every file in src/.
 	if (isBuildUpToDate()) {
-		console.log("\n── build skipped (dist/ newer than src/; rerun bun run build manually if needed) ──");
+		console.log("\n── build skipped (dist/ newer than src/) ──");
 	} else if (
 		!(await runSerial("── build (tier 2 prologue) ──", [
 			{
@@ -258,9 +308,6 @@ async function main(): Promise<void> {
 		process.exit(1);
 	}
 
-	// Parallel: bdd:test (long pole, needs dist) + vitest + cli:smoke + test:example.
-	// Merges what was formerly tier 2's bdd:test with tier 3; bdd sets the wall
-	// clock and everything else hides behind it.
 	const parallelSteps: Step[] = [
 		{ name: "bdd:test", cmd: "bun", args: ["run", "bdd:test"] },
 		{
@@ -272,15 +319,61 @@ async function main(): Promise<void> {
 		{ name: "test:example", cmd: "bun", args: ["run", "test:example"] },
 	];
 
-	if (!(await runParallel("── tier 2/3 parallel ──", parallelSteps))) process.exit(1);
+	// Content-hash short-circuit: for each step, compute the hash of its
+	// declared input paths and skip when it matches the cached last-green hash.
+	const stepHashes: Record<string, string> = {};
+	const toRun: Step[] = [];
+	const skipped: string[] = [];
+	for (const step of parallelSteps) {
+		const inputs = STEP_INPUTS[step.name];
+		if (!inputs || forceFull) {
+			toRun.push(step);
+			continue;
+		}
+		const inputHash = hashPaths(inputs);
+		stepHashes[step.name] = inputHash;
+		const prev = cache.entries[step.name];
+		if (prev && prev.inputHash === inputHash) {
+			skipped.push(`${step.name} (last green ${prev.lastGreenAt})`);
+		} else {
+			toRun.push(step);
+		}
+	}
 
-	// repo:clean must run last — it asserts no residual files from the parallel steps.
-	if (
-		!(await runSerial("── final gate ──", [
-			{ name: "repo:clean", cmd: "bun", args: ["run", "repo:clean"] },
-		]))
-	) {
-		process.exit(1);
+	if (skipped.length > 0) {
+		console.log("\n── content-hash cache ──");
+		for (const s of skipped) console.log(`  skip  ${s}`);
+	}
+
+	if (toRun.length > 0) {
+		if (!(await runParallel("── tier 2/3 parallel ──", toRun))) process.exit(1);
+		// Only mark steps that actually ran green.
+		for (const step of toRun) {
+			const h = stepHashes[step.name];
+			if (h)
+				cache.entries[step.name] = {
+					inputHash: h,
+					lastGreenAt: new Date().toISOString(),
+				};
+		}
+		saveCache(cache);
+	} else {
+		console.log(
+			"\n── tier 2/3 parallel ── all steps cache-hit; nothing to run",
+		);
+	}
+
+	// repo:clean must run last — but can itself cache-hit on an all-hit run
+	// since no step wrote anything. Run it only if something ran, to also
+	// validate the new artifacts.
+	if (toRun.length > 0) {
+		if (
+			!(await runSerial("── final gate ──", [
+				{ name: "repo:clean", cmd: "bun", args: ["run", "repo:clean"] },
+			]))
+		) {
+			process.exit(1);
+		}
 	}
 
 	const totalElapsed = Number(process.hrtime.bigint() - overallStart) / 1e6;

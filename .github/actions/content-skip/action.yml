@@ -1,0 +1,55 @@
+name: Content-hash skip
+description: >
+  Short-circuit a CI job when its declared input paths are unchanged since the
+  last successful run. Computes a stable hash via
+  tooling/scripts/step-content-hash.ts, looks up a sentinel file in
+  actions/cache, and exposes a `cache-hit` output so downstream steps can
+  `if: steps.<id>.outputs.cache-hit != 'true'`.
+
+  Usage:
+    - uses: ./.github/actions/content-skip
+      id: skip
+      with:
+        step: test-unit
+
+    - run: bun run test:coverage
+      if: steps.skip.outputs.cache-hit != 'true'
+
+    - uses: ./.github/actions/content-skip/save
+      if: success() && steps.skip.outputs.cache-hit != 'true'
+      with:
+        step: test-unit
+        hash: ${{ steps.skip.outputs.hash }}
+
+inputs:
+  step:
+    description: "Step name as registered in STEP_INPUTS (step-content-hash.ts)"
+    required: true
+  variant:
+    description: "Optional suffix to partition the cache (e.g. matrix.os, matrix.bun)"
+    required: false
+    default: ""
+
+outputs:
+  cache-hit:
+    description: "'true' if the sentinel was restored, meaning the step can be skipped."
+    value: ${{ steps.restore.outputs.cache-hit }}
+  hash:
+    description: "The content hash used for the cache key."
+    value: ${{ steps.hash.outputs.hash }}
+
+runs:
+  using: composite
+  steps:
+    - id: hash
+      shell: bash
+      run: |
+        h=$(bun run tooling/scripts/step-content-hash.ts "${{ inputs.step }}")
+        echo "hash=$h" >> "$GITHUB_OUTPUT"
+        echo "content-skip: step=${{ inputs.step }} hash=$h"
+
+    - id: restore
+      uses: actions/cache/restore@v5
+      with:
+        path: .ci-cache/${{ inputs.step }}-${{ inputs.variant }}.ok
+        key: content-skip-${{ inputs.step }}-${{ inputs.variant }}-${{ steps.hash.outputs.hash }}

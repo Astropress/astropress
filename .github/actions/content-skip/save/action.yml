@@ -1,0 +1,30 @@
+name: Content-hash skip (save)
+description: >
+  Writes the sentinel file and saves it to actions/cache so the next run
+  with the same inputs hash can skip the step. Must be invoked only after
+  the step exits successfully.
+
+inputs:
+  step:
+    description: "Step name (matches the preceding content-skip invocation)"
+    required: true
+  hash:
+    description: "Hash returned by the preceding content-skip step."
+    required: true
+  variant:
+    description: "Optional suffix used when the skip step was invoked."
+    required: false
+    default: ""
+
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      run: |
+        mkdir -p .ci-cache
+        touch ".ci-cache/${{ inputs.step }}-${{ inputs.variant }}.ok"
+
+    - uses: actions/cache/save@v5
+      with:
+        path: .ci-cache/${{ inputs.step }}-${{ inputs.variant }}.ok
+        key: content-skip-${{ inputs.step }}-${{ inputs.variant }}-${{ inputs.hash }}

@@ -19,9 +19,28 @@ jobs:
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: "1.3.10"
+
+      - name: Content-hash skip check
+        id: skip
+        uses: ./.github/actions/content-skip
+        with:
+          step: d1-local-integration
+
       - name: Install dependencies
+        if: steps.skip.outputs.cache-hit != 'true'
         run: bun install
+
       - name: Build package (required for node:sqlite exports)
+        if: steps.skip.outputs.cache-hit != 'true'
         run: bun run --filter "@astropress-diy/astropress" build
+
       - name: D1 local integration tests
+        if: steps.skip.outputs.cache-hit != 'true'
         run: bun run --filter "@astropress-diy/astropress" test --reporter=verbose tests/d1-local-integration.test.ts
+
+      - name: Save content-hash skip sentinel
+        if: success() && steps.skip.outputs.cache-hit != 'true'
+        uses: ./.github/actions/content-skip/save
+        with:
+          step: d1-local-integration
+          hash: ${{ steps.skip.outputs.hash }}

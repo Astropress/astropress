@@ -39,3 +39,6 @@ examples/admin-harness/.data/
 
 # Cargo mutants output
 crates/mutants.out/
+
+# Prepush gate content-hash cache (per-developer, never committed)
+.prepush-cache.json
