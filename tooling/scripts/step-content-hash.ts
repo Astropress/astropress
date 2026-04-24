@@ -65,6 +65,11 @@ export const STEP_INPUTS: Record<string, string[]> = {
 		"packages/astropress/src",
 		"packages/astropress/tests/d1-local-integration.test.ts",
 	],
+	build: [
+		"packages/astropress/src",
+		"packages/astropress/package.json",
+		"packages/astropress/tsconfig.json",
+	],
 };
 
 function treeIdFor(path: string): string | null {
