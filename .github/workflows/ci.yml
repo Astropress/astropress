@@ -99,6 +99,8 @@ jobs:
       - run: bun run audit:aeo
       - run: bun run audit:providers
       - run: bun run audit:github-actions-shell
+      - run: bun run audit:user-journey-coverage
+      - run: bun run audit:coverage-scope
       - run: bun run audit:cli-docs
       - run: bun run audit:env-contract
       - run: bun run audit:exports
@@ -338,7 +340,7 @@ jobs:
         with:
           name: astropress-dist
           path: packages/astropress/dist
-      - run: npx playwright install --with-deps chromium
+      - run: npx playwright install --with-deps chromium firefox webkit
         if: steps.skip.outputs.cache-hit != 'true'
       - run: bun run test:accessibility
         if: steps.skip.outputs.cache-hit != 'true'
