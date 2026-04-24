@@ -292,12 +292,26 @@ function main(): number {
 	const checkOnly = process.argv.includes("--check-only");
 
 	if (failures.length === 0) {
-		if (!checkOnly) {
-			const nextScores: Record<string, BaselineEntry> = { ...baseline.scores };
-			for (const v of verdicts) {
-				if (v.score === null || v.hash === null) continue;
+		if (checkOnly) {
+			console.log(
+				"\n✓ prepush-mutation-gate: all changed files pass (check-only, baseline not rewritten).\n",
+			);
+			return 0;
+		}
+		// Only rewrite the baseline when a real change is warranted — i.e. at
+		// least one entry's score or hash actually moved. This keeps the
+		// timestamp from marking the worktree dirty on hash-skip-only runs.
+		const nextScores: Record<string, BaselineEntry> = { ...baseline.scores };
+		let dirty = false;
+		for (const v of verdicts) {
+			if (v.score === null || v.hash === null) continue;
+			const prev = nextScores[v.file];
+			if (!prev || prev.score !== v.score || prev.hash !== v.hash) {
 				nextScores[v.file] = { score: v.score, hash: v.hash };
+				dirty = true;
 			}
+		}
+		if (dirty) {
 			saveBaseline({
 				updatedAt: new Date().toISOString(),
 				scores: nextScores,
@@ -307,7 +321,7 @@ function main(): number {
 			);
 		} else {
 			console.log(
-				"\n✓ prepush-mutation-gate: all changed files pass (check-only, baseline not rewritten).\n",
+				"\n✓ prepush-mutation-gate: all changed files pass (hash-skip only; baseline already current).\n",
 			);
 		}
 		return 0;
