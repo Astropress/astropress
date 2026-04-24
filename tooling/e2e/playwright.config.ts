@@ -65,6 +65,8 @@ export default defineConfig({
         baseURL: process.env.PLAYWRIGHT_ADMIN_BASE_URL ?? "http://127.0.0.1:4325",
       },
     },
+    // audit-playwright: local-only — Firefox isn't installed in the CI
+    // image. Run manually with `npx playwright test --project=admin-harness-firefox`.
     {
       name: "admin-harness-firefox",
       testMatch: /admin-harness-accessibility\.spec\.ts/,

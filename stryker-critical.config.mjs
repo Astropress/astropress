@@ -25,7 +25,7 @@ export default {
   coverageAnalysis: "all",
   vitest: { related: false },
   reporters: ["clear-text"],
-  inPlace: true,
+  // inPlace: false (default) — mutate in a sandbox copy, not the real source.
   incremental: true,
   incrementalFile: ".stryker-incremental.json",
   timeoutMS: 120000,

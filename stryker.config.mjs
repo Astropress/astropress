@@ -21,7 +21,8 @@ export default {
   reporters: ["clear-text", "html", "json"],
   htmlReporter: { fileName: "../../reports/mutation/index.html" },
   jsonReporter: { fileName: "../../reports/mutation/report.json" },
-  inPlace: true,
+  // inPlace: false (default) — mutate in a sandbox copy, not the real source.
+  // A SIGKILLed run leaves sandbox dirs to sweep but never corrupts src/.
   incremental: true,
   incrementalFile: "../../.stryker-incremental.json",
   timeoutMS: 120000,
