@@ -25,6 +25,13 @@ const contentTypes = new Map([
 ]);
 
 function applySecurityHeaders(response) {
+	// Content-Type first so it lands at the top of the response-header blob.
+	// The Nuclei http-missing-security-headers:missing-content-type DSL uses
+	// `regex('(?i)^content-type:', header)` in single-line mode — `^` only
+	// matches the start of the whole header string, not each line. Making
+	// Content-Type the first header set guarantees the scanner's regex hits.
+	// Per-file handlers still override this default after applySecurityHeaders.
+	response.setHeader("Content-Type", "application/octet-stream");
 	response.setHeader(
 		"Content-Security-Policy",
 		"default-src 'self'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'; object-src 'none'; img-src 'self' data:; font-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src 'self'",
@@ -55,11 +62,6 @@ function applySecurityHeaders(response) {
 	// log anyone out, but the nuclei http-missing-security-headers template
 	// flags its absence on any 2xx. Emit a no-op value so the scanner is satisfied.
 	response.setHeader("Clear-Site-Data", '"cache"');
-	// Default Content-Type. Specific handlers override this after
-	// applySecurityHeaders() with the correct per-file value. Setting a
-	// default here guarantees Content-Type is never missing even on early
-	// returns.
-	response.setHeader("Content-Type", "application/octet-stream");
 	response.removeHeader("Server");
 }
 
