@@ -309,14 +309,15 @@ async function main(): Promise<void> {
 	}
 
 	const parallelSteps: Step[] = [
+		// Step names match CI job names so local and CI share STEP_INPUTS keys.
 		{ name: "bdd:test", cmd: "bun", args: ["run", "bdd:test"] },
 		{
-			name: "vitest run (plain)",
+			name: "test-unit",
 			cmd: "bun",
 			args: ["run", "--filter", "@astropress-diy/astropress", "test"],
 		},
 		{ name: "test:cli:smoke", cmd: "bun", args: ["run", "test:cli:smoke"] },
-		{ name: "test:example", cmd: "bun", args: ["run", "test:example"] },
+		{ name: "test-build-content", cmd: "bun", args: ["run", "test:example"] },
 	];
 
 	// Content-hash short-circuit: for each step, compute the hash of its

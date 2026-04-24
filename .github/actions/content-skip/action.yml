@@ -2,24 +2,8 @@ name: Content-hash skip
 description: >
   Short-circuit a CI job when its declared input paths are unchanged since the
   last successful run. Computes a stable hash via
-  tooling/scripts/step-content-hash.ts, looks up a sentinel file in
-  actions/cache, and exposes a `cache-hit` output so downstream steps can
-  `if: steps.<id>.outputs.cache-hit != 'true'`.
-
-  Usage:
-    - uses: ./.github/actions/content-skip
-      id: skip
-      with:
-        step: test-unit
-
-    - run: bun run test:coverage
-      if: steps.skip.outputs.cache-hit != 'true'
-
-    - uses: ./.github/actions/content-skip/save
-      if: success() && steps.skip.outputs.cache-hit != 'true'
-      with:
-        step: test-unit
-        hash: ${{ steps.skip.outputs.hash }}
+  tooling/scripts/step-content-hash.ts and looks up a sentinel in actions/cache.
+  Usage examples live in the workflow files under .github/workflows/.
 
 inputs:
   step:

@@ -17,23 +17,17 @@
  */
 
 import { spawnSync } from "node:child_process";
-import { createHash } from "node:crypto";
 
+// Step keys match CI job names so the local prepush gate and the CI jobs
+// share identical cache keys — a step warmed locally also warms CI, and
+// vice-versa when the cache is shared across a team.
 export const STEP_INPUTS: Record<string, string[]> = {
 	"bdd:test": [
 		"tooling/bdd",
 		"tooling/scripts/bdd-test.ts",
 		"packages/astropress/src",
 	],
-	"vitest run (plain)": [
-		"packages/astropress/src",
-		"packages/astropress/tests",
-		"packages/astropress/vitest.config.ts",
-	],
 	"test:cli:smoke": ["crates/astropress-cli", "crates/Cargo.toml"],
-	"test:example": ["examples/github-pages", "packages/astropress/src"],
-
-	// CI-only step aliases (mirror the local ones).
 	"test-unit": [
 		"packages/astropress/src",
 		"packages/astropress/tests",
@@ -80,12 +74,16 @@ function treeIdFor(path: string): string | null {
 	return r.status === 0 ? r.stdout.trim() : null;
 }
 
+/**
+ * Build a stable content ID by concatenating each path's git tree-id (itself
+ * a hash produced by git). No crypto primitive needed — git's own hashes are
+ * already content-addressed, so we just stitch them into a single deterministic
+ * string suitable for a cache key.
+ */
 export function hashPaths(paths: string[]): string {
-	const parts = paths.map((p) => `${p}\t${treeIdFor(p) ?? "MISSING"}`);
-	return createHash("sha256")
-		.update(parts.join("\n"))
-		.digest("hex")
-		.slice(0, 16);
+	return paths
+		.map((p) => (treeIdFor(p) ?? "missing").slice(0, 10))
+		.join("-");
 }
 
 export function hashStep(stepName: string): string | null {
