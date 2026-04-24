@@ -25,15 +25,36 @@ outputs:
 runs:
   using: composite
   steps:
+    - id: validate
+      shell: bash
+      env:
+        STEP_INPUT: ${{ inputs.step }}
+        VARIANT_INPUT: ${{ inputs.variant }}
+      run: |
+        if [[ ! "$STEP_INPUT" =~ ^[A-Za-z0-9._-]+$ ]]; then
+          echo "content-skip: step must contain only letters, numbers, dots, underscores, or hyphens" >&2
+          exit 2
+        fi
+
+        if [[ -n "$VARIANT_INPUT" && ! "$VARIANT_INPUT" =~ ^[A-Za-z0-9._-]+$ ]]; then
+          echo "content-skip: variant must be empty or contain only letters, numbers, dots, underscores, or hyphens" >&2
+          exit 2
+        fi
+
+        echo "step=$STEP_INPUT" >> "$GITHUB_OUTPUT"
+        echo "variant=$VARIANT_INPUT" >> "$GITHUB_OUTPUT"
+
     - id: hash
       shell: bash
+      env:
+        STEP_INPUT: ${{ steps.validate.outputs.step }}
       run: |
-        h=$(bun run tooling/scripts/step-content-hash.ts "${{ inputs.step }}")
+        h=$(bun run tooling/scripts/step-content-hash.ts "$STEP_INPUT")
         echo "hash=$h" >> "$GITHUB_OUTPUT"
-        echo "content-skip: step=${{ inputs.step }} hash=$h"
+        echo "content-skip: step=$STEP_INPUT hash=$h"
 
     - id: restore
       uses: actions/cache/restore@v5
       with:
-        path: .ci-cache/${{ inputs.step }}-${{ inputs.variant }}.ok
-        key: content-skip-${{ inputs.step }}-${{ inputs.variant }}-${{ steps.hash.outputs.hash }}
+        path: .ci-cache/${{ steps.validate.outputs.step }}-${{ steps.validate.outputs.variant }}.ok
+        key: content-skip-${{ steps.validate.outputs.step }}-${{ steps.validate.outputs.variant }}-${{ steps.hash.outputs.hash }}

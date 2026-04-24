@@ -19,12 +19,41 @@ inputs:
 runs:
   using: composite
   steps:
+    - id: validate
+      run: |
+        if [[ ! "$STEP_INPUT" =~ ^[A-Za-z0-9._-]+$ ]]; then
+          echo "content-skip/save: step must contain only letters, numbers, dots, underscores, or hyphens" >&2
+          exit 2
+        fi
+
+        if [[ -n "$VARIANT_INPUT" && ! "$VARIANT_INPUT" =~ ^[A-Za-z0-9._-]+$ ]]; then
+          echo "content-skip/save: variant must be empty or contain only letters, numbers, dots, underscores, or hyphens" >&2
+          exit 2
+        fi
+
+        if [[ ! "$HASH_INPUT" =~ ^[A-Za-z0-9._-]+$ ]]; then
+          echo "content-skip/save: hash must contain only letters, numbers, dots, underscores, or hyphens" >&2
+          exit 2
+        fi
+
+        echo "step=$STEP_INPUT" >> "$GITHUB_OUTPUT"
+        echo "variant=$VARIANT_INPUT" >> "$GITHUB_OUTPUT"
+        echo "hash=$HASH_INPUT" >> "$GITHUB_OUTPUT"
+      shell: bash
+      env:
+        STEP_INPUT: ${{ inputs.step }}
+        VARIANT_INPUT: ${{ inputs.variant }}
+        HASH_INPUT: ${{ inputs.hash }}
+
     - shell: bash
+      env:
+        STEP_INPUT: ${{ steps.validate.outputs.step }}
+        VARIANT_INPUT: ${{ steps.validate.outputs.variant }}
       run: |
         mkdir -p .ci-cache
-        touch ".ci-cache/${{ inputs.step }}-${{ inputs.variant }}.ok"
+        touch ".ci-cache/${STEP_INPUT}-${VARIANT_INPUT}.ok"
 
     - uses: actions/cache/save@v5
       with:
-        path: .ci-cache/${{ inputs.step }}-${{ inputs.variant }}.ok
-        key: content-skip-${{ inputs.step }}-${{ inputs.variant }}-${{ inputs.hash }}
+        path: .ci-cache/${{ steps.validate.outputs.step }}-${{ steps.validate.outputs.variant }}.ok
+        key: content-skip-${{ steps.validate.outputs.step }}-${{ steps.validate.outputs.variant }}-${{ steps.validate.outputs.hash }}
