@@ -47,7 +47,7 @@ export const POST: APIRoute = async (context) =>
 			);
 
 			if (!result.ok) {
-				if (result.conflict) {
+				if ("conflict" in result && result.conflict) {
 					return new Response(
 						JSON.stringify({ error: result.error, conflict: true }),
 						{

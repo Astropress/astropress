@@ -84,6 +84,10 @@ export interface AstropressContentRepositoryInput {
 	}): void;
 }
 
+type SaveContentInput = Parameters<ContentRepository["saveContentState"]>[1] & {
+	lastKnownUpdatedAt?: string;
+};
+
 function detectLocalConflict(
 	record: ContentRecord,
 	lastKnownUpdatedAt: string | undefined,
@@ -214,7 +218,7 @@ export function createAstropressContentRepository(
 
 			return { ok: true as const };
 		},
-		saveContentState(slug, rawInput, actor) {
+		saveContentState(slug, rawInput: SaveContentInput, actor) {
 			const record = input.findContentRecord(slug);
 			if (!record) {
 				return {
