@@ -1,0 +1,16 @@
+{
+  "updatedAt": "2026-04-24T22:02:22Z",
+  "scores": {
+    "packages/astropress/src/adapters/adapter-record-helpers.ts": 60.38,
+    "packages/astropress/src/admin-normalizers.ts": 100.0,
+    "packages/astropress/src/d1-audit.ts": 20.0,
+    "packages/astropress/src/d1-store-content-helpers.ts": 33.33,
+    "packages/astropress/src/persistence-commons.ts": 98.01,
+    "packages/astropress/src/sqlite-bootstrap.ts": 33.09,
+    "packages/astropress/src/sqlite-integrity.ts": 94.35,
+    "packages/astropress/src/sqlite-runtime/audit-log.ts": 92.0,
+    "packages/astropress/src/sqlite-runtime/content-helpers.ts": 65.59,
+    "packages/astropress/src/sqlite-runtime/utils.ts": 61.67,
+    "packages/astropress/src/sync/git.ts": 41.48
+  }
+}
