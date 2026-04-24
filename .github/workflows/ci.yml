@@ -424,6 +424,8 @@ jobs:
 
       - run: bun install
         if: steps.skip.outputs.cache-hit != 'true'
+      - run: npx playwright install --with-deps chromium
+        if: steps.skip.outputs.cache-hit != 'true'
       - run: bun run test:tarball-smoke
         if: steps.skip.outputs.cache-hit != 'true'
 

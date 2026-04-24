@@ -11,9 +11,10 @@
 
 import { type ChildProcess, spawn } from "node:child_process";
 import { mkdtemp, rm } from "node:fs/promises";
-import net from "node:net";
 import { tmpdir } from "node:os";
 import path from "node:path";
+
+import { findAvailablePort } from "./port-helpers.js";
 
 // All static admin routes + representative dynamic routes using seeded data.
 // Keep this list in sync with audit-admin-route-coverage.ts.
@@ -108,18 +109,6 @@ async function stopServer(handle: ServerHandle): Promise<void> {
 	}
 }
 
-async function findAvailablePort(preferred: number): Promise<number> {
-	for (let port = preferred; port < preferred + 20; port++) {
-		const available = await new Promise<boolean>((resolve) => {
-			const s = net.createServer();
-			s.once("error", () => resolve(false));
-			s.listen(port, "127.0.0.1", () => s.close(() => resolve(true)));
-		});
-		if (available) return port;
-	}
-	throw new Error(`No available port starting at ${preferred}`);
-}
-
 async function waitForServer(url: string, timeoutMs = 120_000): Promise<void> {
 	const deadline = Date.now() + timeoutMs;
 	while (Date.now() < deadline) {
@@ -171,7 +160,7 @@ async function main(): Promise<void> {
 			);
 		}
 
-		const port = await findAvailablePort(4326);
+		const port = await findAvailablePort(4326, "consumer smoke");
 		const baseUrl = `http://127.0.0.1:${port}`;
 
 		console.log(`Starting npm-consumer-smoke dev server on port ${port}…`);
@@ -239,4 +228,6 @@ async function main(): Promise<void> {
 	}
 }
 
-await main();
+if (import.meta.main) {
+	await main();
+}

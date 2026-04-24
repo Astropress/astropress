@@ -44,7 +44,9 @@ export const STEP_INPUTS: Record<string, string[]> = {
 		"packages/astropress/src",
 		"packages/astropress/tests",
 		"packages/astropress/web-components",
-		"playwright.config.ts",
+		"tooling/e2e",
+		"tooling/scripts/run-playwright.ts",
+		"tooling/scripts/port-helpers.ts",
 	],
 	"test-build-content": ["examples/github-pages", "packages/astropress/src"],
 	"test-build-harness": [
@@ -53,8 +55,19 @@ export const STEP_INPUTS: Record<string, string[]> = {
 		"packages/astropress/src",
 		"packages/astropress-mcp",
 	],
-	"test-consumer": ["examples/npm-consumer-smoke", "packages/astropress/src"],
-	"test-tarball-smoke": ["examples/npm-consumer-smoke", "packages/astropress"],
+	"test-consumer": [
+		"examples/npm-consumer-smoke",
+		"packages/astropress/src",
+		"tooling/scripts/run-consumer-smoke.ts",
+		"tooling/scripts/port-helpers.ts",
+	],
+	"test-tarball-smoke": [
+		"examples/npm-consumer-smoke",
+		"packages/astropress",
+		"tooling/e2e",
+		"tooling/scripts/run-tarball-smoke.ts",
+		"tooling/scripts/port-helpers.ts",
+	],
 	"d1-local-integration": [
 		"packages/astropress/src",
 		"packages/astropress/tests/d1-local-integration.test.ts",

@@ -1,8 +1,9 @@
 import { type ChildProcess, spawn } from "node:child_process";
 import { mkdtemp, rm } from "node:fs/promises";
-import net from "node:net";
 import { tmpdir } from "node:os";
 import path from "node:path";
+
+import { findAvailablePort } from "./port-helpers.js";
 
 type ServerHandle = {
 	name: string;
@@ -124,29 +125,6 @@ async function stopServer(handle: ServerHandle) {
 	}
 }
 
-async function findAvailablePort(preferredPort: number) {
-	const maxAttempts = 20;
-	for (
-		let port = preferredPort;
-		port < preferredPort + maxAttempts;
-		port += 1
-	) {
-		const available = await new Promise<boolean>((resolve) => {
-			const server = net.createServer();
-			server.once("error", () => resolve(false));
-			server.listen(port, "127.0.0.1", () => {
-				server.close(() => resolve(true));
-			});
-		});
-
-		if (available) {
-			return port;
-		}
-	}
-
-	throw new Error(`Unable to find an open port starting at ${preferredPort}`);
-}
-
 async function main() {
 	const root = process.cwd();
 	const requestedProjects = process.argv.slice(2);
@@ -165,7 +143,7 @@ async function main() {
 				path.join(tmpdir(), "astropress-example-data-"),
 			);
 			tempDataRoots.push(exampleDataRoot);
-			const examplePort = await findAvailablePort(4173);
+			const examplePort = await findAvailablePort(4173, "example");
 			await runCommand(
 				"bun",
 				["run", "--filter", "astropress-example-gh-pages", "build"],
@@ -197,7 +175,7 @@ async function main() {
 				path.join(tmpdir(), "astropress-admin-data-"),
 			);
 			tempDataRoots.push(adminDataRoot);
-			const adminPort = await findAvailablePort(4325);
+			const adminPort = await findAvailablePort(4325, "admin harness");
 			const harnessServer = spawnCommand(
 				"admin-harness",
 				"bun",

@@ -15,10 +15,10 @@
 
 import { type ChildProcess, spawn } from "node:child_process";
 import { cp, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
-import net from "node:net";
 import { tmpdir } from "node:os";
 import path from "node:path";
 
+import { findAvailablePort } from "./port-helpers.js";
 import { ADMIN_SMOKE_ROUTES } from "./run-consumer-smoke.js";
 
 type ServerHandle = { process: ChildProcess };
@@ -70,18 +70,6 @@ async function stopServer(handle: ServerHandle): Promise<void> {
 		}
 		await new Promise((r) => setTimeout(r, 500));
 	}
-}
-
-async function findAvailablePort(preferred: number): Promise<number> {
-	for (let port = preferred; port < preferred + 20; port++) {
-		const available = await new Promise<boolean>((resolve) => {
-			const s = net.createServer();
-			s.once("error", () => resolve(false));
-			s.listen(port, "127.0.0.1", () => s.close(() => resolve(true)));
-		});
-		if (available) return port;
-	}
-	throw new Error(`No available port starting at ${preferred}`);
 }
 
 async function waitForServer(url: string, timeoutMs = 180_000): Promise<void> {
@@ -193,7 +181,7 @@ async function main(): Promise<void> {
 		);
 
 		// 6. Boot the dev server.
-		const port = await findAvailablePort(4327);
+		const port = await findAvailablePort(4327, "tarball smoke");
 		const baseUrl = `http://127.0.0.1:${port}`;
 
 		console.log(`Starting tarball smoke server on port ${port}…`);
@@ -244,6 +232,22 @@ async function main(): Promise<void> {
 
 		console.log(
 			`tarball-smoke passed — all ${ADMIN_SMOKE_ROUTES.length} routes returned HTTP 200 from the packed tarball.`,
+		);
+
+		console.log("\nRunning packed-tarball admin golden paths in Playwright…");
+		await runCommand(
+			"npx",
+			[
+				"playwright",
+				"test",
+				"--config",
+				"tooling/e2e/playwright.config.ts",
+				"--project=admin-harness-crud",
+			],
+			root,
+			{
+				PLAYWRIGHT_ADMIN_BASE_URL: baseUrl,
+			},
 		);
 	} finally {
 		if (server) await stopServer(server);
