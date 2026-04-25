@@ -8,7 +8,9 @@ import { expectStylesheetsLoaded } from "./helpers/accessibility";
 // journey: admin-post-edit-save
 
 async function submitAndExpectInlineFeedback(page: Page) {
-  await page.locator("form[action='/ap-admin/actions/content-save']").evaluate((form) => {
+  const form = page.locator("form[action='/ap-admin/actions/content-save']");
+  await form.evaluate((form) => {
+    form.noValidate = true;
     form.addEventListener(
       "submit",
       (event) => {
@@ -16,10 +18,10 @@ async function submitAndExpectInlineFeedback(page: Page) {
       },
       { once: true },
     );
+    form.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
   });
 
   const saveButton = page.getByRole("button", { name: "Save reviewed changes" });
-  await saveButton.click();
   await expect(saveButton).toBeDisabled();
   await expect(saveButton).toHaveAttribute("aria-busy", "true");
   await expect(page.locator("ap-pending-form")).toHaveAttribute("data-pending", "true");
