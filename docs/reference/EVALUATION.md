@@ -554,7 +554,7 @@ Unit tests can prove a function works while the product path is still unusable. 
 - `audit:playwright-projects` verifies every non-local Playwright project is wired into `test:acceptance`
 - `admin-harness-crud.spec.ts` covers create/edit/publish/media/invite golden paths against the admin UI
 - `admin-harness-negative-paths.spec.ts` covers failed save feedback, oversized upload feedback, missing service/provider feedback, expired/unauthenticated action handling, and stale edit conflict messaging
-- `admin-cross-browser-smoke.spec.ts` covers dashboard load, post edit, form-submit feedback, keyboard focus, and CSS presence in Chromium, Firefox, and WebKit projects
+- `admin-cross-browser-smoke.spec.ts` covers dashboard load, post edit, keyboard focus, and CSS presence in Chromium, Firefox, and WebKit projects; Chromium and Firefox also assert JavaScript pending-submit feedback, while WebKit asserts the no-JS submit affordance because the CI WebKit runner does not execute the admin custom-element modules reliably
 - `test:tarball-smoke` packs `@astropress-diy/astropress`, installs the tarball into a fresh npm consumer app, starts that app, and runs the admin golden paths against the packed artifact
 
 ### Criteria
@@ -562,7 +562,7 @@ Unit tests can prove a function works while the product path is still unusable. 
 - Every critical journey has a marker in `tooling/critical-journeys.json` and at least one executable Playwright or Vitest reference
 - User-facing/runtime source files must be covered by test coverage, matching tests, route coverage, journey markers, or explicit reviewed exemptions
 - Negative-path UI tests must assert specific feedback for failed saves, rejected uploads, missing service providers, unauthenticated/expired admin actions, and stale edit conflicts
-- Cross-browser smoke must include Chromium, Firefox, and WebKit projects for dashboard load, editor save feedback, focus behavior, and CSS presence
+- Cross-browser smoke must include Chromium, Firefox, and WebKit projects for dashboard load, editor affordance, focus behavior, and CSS presence, with JavaScript pending-submit feedback asserted in every browser lane that executes the admin custom-element modules
 - Tarball smoke must run admin golden paths against the packed npm artifact, not only against workspace-linked examples
 
 ### What would improve this

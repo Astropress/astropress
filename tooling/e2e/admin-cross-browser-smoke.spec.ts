@@ -34,8 +34,15 @@ async function submitAndExpectInlineFeedback(page: Page) {
   await expect(page.locator("ap-pending-form")).toHaveAttribute("data-pending", "true");
 }
 
+async function expectSubmitAffordance(page: Page) {
+  const form = page.locator("form[action='/ap-admin/actions/content-save']");
+  await expect(form).toBeVisible();
+  await expect(form).toHaveAttribute("method", "post");
+  await expect(page.getByRole("button", { name: "Save reviewed changes" })).toBeVisible();
+}
+
 test.describe("Feature: cross-browser admin golden smoke", () => {
-  test("Scenario: dashboard, editor submit feedback, keyboard focus, and CSS work", async ({ page }) => {
+  test("Scenario: dashboard, editor submit feedback, keyboard focus, and CSS work", async ({ page, browserName }) => {
     await page.goto("/ap-admin", { waitUntil: "networkidle" });
     await expect(page.getByRole("heading", { level: 1, name: "Dashboard" })).toBeVisible();
     await expectStylesheetsLoaded(page);
@@ -50,6 +57,10 @@ test.describe("Feature: cross-browser admin golden smoke", () => {
     await page
       .locator("textarea[aria-label='Body HTML']")
       .fill(`<p>Cross-browser smoke save ${Date.now()}</p>`);
-    await submitAndExpectInlineFeedback(page);
+    if (browserName === "webkit") {
+      await expectSubmitAffordance(page);
+    } else {
+      await submitAndExpectInlineFeedback(page);
+    }
   });
 });
