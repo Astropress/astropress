@@ -131,9 +131,20 @@ async function main() {
 	const needsExample =
 		requestedProjects.length === 0 ||
 		requestedProjects.some((arg) => arg.includes("example-a11y"));
+	const adminHarnessProjectFragments = [
+		"admin-harness",
+		"admin-cross-browser",
+		"viewport-",
+		"admin-touch-targets",
+		"admin-heading-hierarchy",
+		"admin-interaction-timing",
+		"admin-perf-timing",
+	];
 	const needsAdminHarness =
 		requestedProjects.length === 0 ||
-		requestedProjects.some((arg) => arg.includes("admin-harness"));
+		requestedProjects.some((arg) =>
+			adminHarnessProjectFragments.some((fragment) => arg.includes(fragment)),
+		);
 	const servers: ServerHandle[] = [];
 	const tempDataRoots: string[] = [];
 

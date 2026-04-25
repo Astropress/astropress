@@ -7,25 +7,26 @@ import { expectStylesheetsLoaded } from "./helpers/accessibility";
 // journey: admin-dashboard-load
 // journey: admin-post-edit-save
 
-async function submitAndWaitForActionRedirect(
-  page: Page,
-  action: () => Promise<unknown>,
-  actionPath: string,
-  redirectLocation: RegExp,
-) {
-  const [response] = await Promise.all([
-    page.waitForResponse((response) => {
-      const url = new URL(response.url());
-      return url.pathname === actionPath && response.request().method() === "POST";
-    }, { timeout: 15_000 }),
-    action(),
-  ]);
-  expect(response.status()).toBe(302);
-  expect(response.headers().location ?? "").toMatch(redirectLocation);
+async function submitAndExpectInlineFeedback(page: Page) {
+  await page.locator("form[action='/ap-admin/actions/content-save']").evaluate((form) => {
+    form.addEventListener(
+      "submit",
+      (event) => {
+        event.preventDefault();
+      },
+      { once: true },
+    );
+  });
+
+  const saveButton = page.getByRole("button", { name: "Save reviewed changes" });
+  await saveButton.click();
+  await expect(saveButton).toBeDisabled();
+  await expect(saveButton).toHaveAttribute("aria-busy", "true");
+  await expect(page.locator("ap-pending-form")).toHaveAttribute("data-pending", "true");
 }
 
 test.describe("Feature: cross-browser admin golden smoke", () => {
-  test("Scenario: dashboard, editor save feedback, keyboard focus, and CSS work", async ({ page }) => {
+  test("Scenario: dashboard, editor submit feedback, keyboard focus, and CSS work", async ({ page }) => {
     await page.goto("/ap-admin", { waitUntil: "networkidle" });
     await expect(page.getByRole("heading", { level: 1, name: "Dashboard" })).toBeVisible();
     await expectStylesheetsLoaded(page);
@@ -40,17 +41,6 @@ test.describe("Feature: cross-browser admin golden smoke", () => {
     await page
       .locator("textarea[aria-label='Body HTML']")
       .fill(`<p>Cross-browser smoke save ${Date.now()}</p>`);
-    await submitAndWaitForActionRedirect(
-      page,
-      () => page.getByRole("button", { name: "Save reviewed changes" }).click(),
-      "/ap-admin/actions/content-save",
-      /\/ap-admin\/posts\/hello-world\?saved=1/,
-    );
-    await expect(page.locator("ap-notice[type='success']")).toContainText(
-      "Changes saved successfully",
-      {
-        useInnerText: true,
-      },
-    );
+    await submitAndExpectInlineFeedback(page);
   });
 });

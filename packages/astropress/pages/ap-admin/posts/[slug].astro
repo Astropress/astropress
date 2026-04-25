@@ -83,6 +83,7 @@ if (model.status === "not_found") {
     {errorMessage && <ap-notice type="error">{errorMessage}</ap-notice>}
 
     <ap-html-editor>
+    <ap-pending-form>
     <form method="post" action="/ap-admin/actions/content-save" class="edit-form">
       <CsrfInput token={Astro.locals.csrfToken} />
       <input type="hidden" name="slug" value={pageRecord.slug} />
@@ -432,6 +433,7 @@ if (model.status === "not_found") {
         <a href={listPath} class="admin-button-ghost secondary-button">Cancel</a>
       </div>
     </form>
+    </ap-pending-form>
 
     {/* URL input dialog — replaces window.prompt() for the Insert Link toolbar action */}
     <dialog id="url-input-dialog" class="url-input-dialog" aria-labelledby="url-input-title">
