@@ -1,0 +1,11 @@
+{
+  "_comment": "Authoritative list of GitHub status checks required by the main branch ruleset (id 14968184). Every context here MUST be emitted by a job in .github/workflows/*.yml, and every context configured in the live ruleset MUST appear here. The audit-required-checks audit enforces both directions.",
+  "ruleset_id": 14968184,
+  "branch": "main",
+  "required": [
+    { "context": "lint", "produced_by": "ci.yml#lint" },
+    { "context": "test-unit (1.3.10)", "produced_by": "ci.yml#test-unit matrix bun=1.3.10" },
+    { "context": "test-unit (1.3.11)", "produced_by": "ci.yml#test-unit matrix bun=1.3.11" },
+    { "context": "test-cli", "produced_by": "ci.yml#test-cli" }
+  ]
+}

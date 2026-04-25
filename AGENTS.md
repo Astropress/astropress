@@ -268,6 +268,51 @@ Bad shape:
 If one commit's fix fully supersedes another, squash at the end once the
 resolution is clear, not during the middle of debugging.
 
+## Issue acceptance criteria — properties over proxies
+
+When you file a refactor or cleanup issue, write the acceptance criteria as
+**properties of the resulting code**, not as proxies that approximate the
+property. The proxy is almost always a back-of-envelope guess and creates
+either a false ceiling (PR stops short of fixing the actual problem) or a
+false floor (PR has to do unrelated work to hit a number).
+
+Bad shape (proxy):
+
+> Net LOC reduction ≥ 400 across D1 + SQLite modules.
+
+Good shape (property):
+
+> No dialect-independent SQL string is duplicated between
+> `d1-store-operations-helpers.ts` and `sqlite-runtime/auth-helpers.ts`. No
+> dialect-independent row→domain mapper is duplicated. Single source of
+> truth lives in `persistence-commons.ts`.
+
+The property is what the change is actually trying to enforce. The LOC count
+is just one observable consequence; if the duplication can be removed in
+50 lines, ≥400 punishes a correct fix. If a refactor only shuffles 400
+lines around without removing duplication, the LOC floor lights up green
+on a fake fix.
+
+Issue #56 was the canonical example: PR #61 hit −143 LOC and stopped because
+the proxy said "not done"; the actual duplication was still there. Issue
+re-framed 2026-04-25 around the property; PR #64 then closed it cleanly.
+
+## Toolchain version pins (linters, formatters)
+
+Pin every linter and formatter at a single major in `package.json`
+`devDependencies`, and reference that pin from every invocation site
+(scripts, CI, lefthook). Do not invoke them via bare `bunx <tool>` — that
+resolves to whatever the registry's current `latest` is, which can differ
+from the version your hooks enforce.
+
+The 2026-04-25 push debugging cost two extra commit attempts because
+`bunx biome` (registry-latest, v2.x) returned exit 0 on the same file
+that the `bunx @biomejs/biome@1` lefthook step rejected. Different
+versions enforce different rules.
+
+Current pins:
+- Biome: `@biomejs/biome@1.9.4` (lefthook step + `package.json` devDependency).
+
 ## Local CI emulation
 
 Use `tooling/scripts/run-nuclei-local.sh` to run the CI security scan
@@ -325,7 +370,7 @@ To inspect or update them use `gh api repos/Astropress/astropress/rulesets/14968
 | Setting | Value |
 |---------|-------|
 | Required signatures | ✓ enforced on default branch |
-| Required status checks | `lint`, `test-unit (1.3.10)`, `test-unit (latest)`, `test-cli` |
+| Required status checks | `lint`, `test-unit (1.3.10)`, `test-unit (1.3.11)`, `test-cli` (authoritative list lives in `.github/required-status-checks.json`; drift between the file, the workflows, and the live ruleset is caught by `audit:required-checks`) |
 | Linear history | ✓ (no merge commits) |
 | Force push | ✗ blocked |
 | Branch deletion | ✗ blocked |

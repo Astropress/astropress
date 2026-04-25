@@ -316,8 +316,24 @@ function main(): number {
 				updatedAt: new Date().toISOString(),
 				scores: nextScores,
 			});
+			// Inside a `git push` (lefthook pre-push), writing the baseline file
+			// here makes the worktree dirty, which trips repo:clean later in the
+			// same hook and aborts the push. The user has to re-amend and re-push.
+			// Detect that case and fail loudly with the exact recovery commands,
+			// so the failure message says what to do instead of producing a
+			// misleading repo:clean error 5 minutes later. Outside a push (manual
+			// invocation), the message is still useful as a reminder to commit.
+			const inPush =
+				process.env.LEFTHOOK_PUSH === "1" || process.env.GIT_PUSH === "1";
+			if (inPush) {
+				console.error(
+					`\n✖ prepush-mutation-gate: baseline updated at ${BASELINE_PATH} during a push.\n  The remaining pre-push gates will fail repo:clean because the worktree is now dirty.\n  Recovery:\n    git add ${BASELINE_PATH}\n    git commit --amend --no-edit\n    git push\n`,
+				);
+				return 1;
+			}
 			console.log(
-				`\n✓ prepush-mutation-gate: all changed files pass. Baseline updated at ${BASELINE_PATH}.\n`,
+				`\n✓ prepush-mutation-gate: all changed files pass. Baseline updated at ${BASELINE_PATH}.\n` +
+					`  Remember to commit ${BASELINE_PATH} before pushing — repo:clean will reject a dirty worktree.\n`,
 			);
 		} else {
 			console.log(
