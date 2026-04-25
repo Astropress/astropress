@@ -1,4 +1,13 @@
 import type { D1DatabaseLike } from "./d1-database";
+import {
+	type PersistedAdminUserRow,
+	type PersistedAuditEventRow,
+	SQL_LIST_ADMIN_USERS_WITH_INVITE,
+	SQL_LIST_AUDIT_EVENTS,
+	deriveAdminUserStatus,
+	mapPersistedAdminUserRow,
+	mapPersistedAuditEvent,
+} from "./persistence-commons";
 import type {
 	AuditEvent,
 	CommentRecord,
@@ -14,27 +23,13 @@ import type {
 } from "./persistence-types";
 import type { SiteSettings } from "./site-settings";
 
+export { deriveAdminUserStatus };
+
 export type CommentPolicy = "legacy-readonly" | "disabled" | "open-moderated";
 
-export type AuditEventRow = {
-	id: number;
-	user_email: string;
-	action: string;
-	resource_type: string;
-	resource_id: string | null;
-	summary: string;
-	created_at: string;
-};
+export type AuditEventRow = PersistedAuditEventRow;
 
-export type AdminUserRow = {
-	id: number;
-	email: string;
-	role: "admin" | "editor";
-	name: string;
-	active: number;
-	created_at: string;
-	has_pending_invite: number;
-};
+export type AdminUserRow = PersistedAdminUserRow;
 
 export type CommentRow = {
 	id: string;
@@ -89,18 +84,8 @@ export type SettingsRow = {
 
 /* ── Constants ── */
 
-export const AUDIT_TARGET_TYPES = new Set(["redirect", "comment", "content"]);
-
-export const SQL_AUDIT_EVENTS = `SELECT id, user_email, action, resource_type, resource_id, summary, created_at
-   FROM audit_events ORDER BY datetime(created_at) DESC, id DESC`;
-
-export const SQL_ADMIN_USERS = `SELECT id, email, role, name, active, created_at,
-     EXISTS (SELECT 1 FROM user_invites i
-       WHERE i.user_id = admin_users.id AND i.accepted_at IS NULL
-         AND datetime(i.expires_at) > CURRENT_TIMESTAMP
-     ) AS has_pending_invite
-   FROM admin_users
-   ORDER BY CASE role WHEN 'admin' THEN 0 ELSE 1 END, datetime(created_at) ASC, email ASC`;
+export const SQL_AUDIT_EVENTS = SQL_LIST_AUDIT_EVENTS;
+export const SQL_ADMIN_USERS = SQL_LIST_ADMIN_USERS_WITH_INVITE;
 
 export const SQL_REDIRECT_RULES = `SELECT source_path, target_path, status_code FROM redirect_rules
    WHERE deleted_at IS NULL ORDER BY source_path ASC`;
@@ -143,40 +128,12 @@ export const COMMENT_INSERT_SQL = `INSERT INTO comments (id, author, email, body
 /* ── Row-mapping helpers ── */
 
 export function mapAuditEventRow(row: AuditEventRow): AuditEvent {
-	return {
-		id: `d1-audit-${row.id}`,
-		action: row.action,
-		actorEmail: row.user_email,
-		actorRole: "admin" as const,
-		summary: row.summary,
-		targetType: AUDIT_TARGET_TYPES.has(row.resource_type)
-			? (row.resource_type as AuditEvent["targetType"])
-			: "auth",
-		targetId: row.resource_id ?? `${row.id}`,
-		createdAt: row.created_at,
-	};
+	return mapPersistedAuditEvent({ row, idPrefix: "d1-audit-" });
 }
 
-export function deriveUserStatus(
-	active: number,
-	hasPendingInvite: number,
-): "suspended" | "invited" | "active" {
-	if (active !== 1) return "suspended";
-	if (hasPendingInvite === 1) return "invited";
-	return "active";
-}
+export const deriveUserStatus = deriveAdminUserStatus;
 
-export function mapAdminUserRow(row: AdminUserRow): ManagedAdminUser {
-	return {
-		id: row.id,
-		email: row.email,
-		role: row.role,
-		name: row.name,
-		active: row.active === 1,
-		status: deriveUserStatus(row.active, row.has_pending_invite),
-		createdAt: row.created_at,
-	};
-}
+export const mapAdminUserRow = mapPersistedAdminUserRow;
 
 export function mapCommentRow(row: CommentRow): CommentRecord {
 	return {

@@ -5,7 +5,12 @@
  * each adapter; this module holds only dialect-independent logic.
  */
 
-import type { ContentOverride } from "./persistence-types";
+import type {
+	AdminRole,
+	AuditEvent,
+	ContentOverride,
+	ManagedAdminUser,
+} from "./persistence-types";
 
 const CONTENT_STATUSES = ["draft", "review", "published", "archived"] as const;
 export type ContentStatus = (typeof CONTENT_STATUSES)[number];
@@ -235,6 +240,95 @@ function mapContentRecordKind(record: {
 	kind?: string | null;
 }): "post" | "page" {
 	return record.kind === "post" ? "post" : "page";
+}
+
+// ---------------------------------------------------------------------------
+// Admin-store list queries (audit events + admin users with pending invites)
+// ---------------------------------------------------------------------------
+// Both D1 and the local SQLite runtime accept these statements verbatim
+// (CURRENT_TIMESTAMP, datetime(), CASE WHEN, EXISTS — all in the shared SQLite
+// dialect surface that D1 implements).
+
+export const SQL_LIST_AUDIT_EVENTS =
+	"SELECT id, user_email, action, resource_type, resource_id, summary, created_at FROM audit_events ORDER BY datetime(created_at) DESC, id DESC";
+
+export const SQL_LIST_ADMIN_USERS_WITH_INVITE = `SELECT id, email, role, name, active, created_at, EXISTS (SELECT 1 FROM user_invites i WHERE i.user_id = admin_users.id AND i.accepted_at IS NULL AND datetime(i.expires_at) > CURRENT_TIMESTAMP) AS has_pending_invite FROM admin_users ORDER BY CASE role WHEN 'admin' THEN 0 ELSE 1 END, datetime(created_at) ASC, email ASC`;
+
+export interface PersistedAuditEventRow {
+	id: number;
+	user_email: string;
+	action: string;
+	resource_type: string;
+	resource_id: string | null;
+	summary: string;
+	created_at: string;
+}
+
+const AUDIT_TARGET_TYPES = new Set<AuditEvent["targetType"]>([
+	"redirect",
+	"comment",
+	"content",
+]);
+
+function resolveAuditTargetType(value: string): AuditEvent["targetType"] {
+	return AUDIT_TARGET_TYPES.has(value as AuditEvent["targetType"])
+		? (value as AuditEvent["targetType"])
+		: "auth";
+}
+
+/**
+ * Map an `audit_events` row to an `AuditEvent`. The `idPrefix` distinguishes
+ * the originating store (`d1-audit-` vs `sqlite-audit-`) so concurrent stores
+ * never collide on synthesized IDs.
+ */
+export function mapPersistedAuditEvent(args: {
+	row: PersistedAuditEventRow;
+	idPrefix: string;
+}): AuditEvent {
+	const { row, idPrefix } = args;
+	return {
+		id: `${idPrefix}${row.id}`,
+		action: row.action,
+		actorEmail: row.user_email,
+		actorRole: "admin",
+		summary: row.summary,
+		targetType: resolveAuditTargetType(row.resource_type),
+		targetId: row.resource_id ?? `${row.id}`,
+		createdAt: row.created_at,
+	};
+}
+
+export interface PersistedAdminUserRow {
+	id: number;
+	email: string;
+	role: AdminRole;
+	name: string;
+	active: number;
+	created_at: string;
+	has_pending_invite: number;
+}
+
+export function deriveAdminUserStatus(
+	active: number,
+	hasPendingInvite: number,
+): ManagedAdminUser["status"] {
+	if (active !== 1) return "suspended";
+	if (hasPendingInvite === 1) return "invited";
+	return "active";
+}
+
+export function mapPersistedAdminUserRow(
+	row: PersistedAdminUserRow,
+): ManagedAdminUser {
+	return {
+		id: row.id,
+		email: row.email,
+		role: row.role,
+		name: row.name,
+		active: row.active === 1,
+		status: deriveAdminUserStatus(row.active, row.has_pending_invite),
+		createdAt: row.created_at,
+	};
 }
 
 export function toContentStoreRecord(record: ContentStoreRecordInput) {
