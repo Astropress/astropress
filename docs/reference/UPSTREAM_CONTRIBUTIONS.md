@@ -66,7 +66,7 @@ crates under `crates/`, with neither language owning the repo root. The ideal st
 the workspace, so `package.json` and `bun.lock` must remain at the git root regardless.
 
 **Astropress code:** Root `package.json` and `bun.lock` are forced to stay at the git root despite all
-JS code living in `packages/`. See the layout notes in `README.md` and `docs/ARCHITECTURE.md`.
+JS code living in `packages/`. See the layout notes in `README.md` and `docs/reference/ARCHITECTURE.md`.
 
 **Upstream ask:**
 - Support a `bunfig.toml` field (e.g. `workspaceRoot = "./packages"`) that lets the git root declare

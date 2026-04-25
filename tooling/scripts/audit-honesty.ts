@@ -100,7 +100,7 @@ async function main() {
 	const evaluation = await readText(fromRoot("docs/reference/EVALUATION.md"));
 	if (!evaluation.includes(truth.docs.hostedE2EGap)) {
 		report.add(
-			"docs/EVALUATION.md: hosted-provider gap wording drifted from tooling/readiness-truth.json",
+			"docs/reference/EVALUATION.md: hosted-provider gap wording drifted from tooling/readiness-truth.json",
 		);
 	}
 
