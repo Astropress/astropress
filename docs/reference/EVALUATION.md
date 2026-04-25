@@ -1,6 +1,6 @@
 # Astropress Evaluation
 
-**Baseline (as of 2026-04-17, updated):** 1700+ Vitest tests · 172 Rust CLI tests · 10 Playwright specs across 70 acceptance checks · 384 BDD scenarios · security audit clean · mutation testing (Stryker + cargo-mutants) on critical paths
+**Baseline (as of 2026-04-25, updated):** 2031 Vitest tests across 136 files · 447 Rust CLI tests · 10 Playwright specs across 70 acceptance checks · 392 BDD scenarios across 75 verification groups · 49 `audit:*` scripts · security audit clean · mutation testing (Stryker + cargo-mutants) on critical paths
 
 ## Grades
 
@@ -8,9 +8,9 @@ Grade scale: `A+ / A / B / C / D / F`
 
 | # | Rubric | Grade | Evidence |
 |---|--------|-------|----------|
-| 1 | Spec Fidelity | A | `bun run bdd:test` — 359 BDD scenarios; `bun run bdd:lint` validates scenario completeness |
+| 1 | Spec Fidelity | A | `bun run bdd:test` — 392 BDD scenarios across 75 verification groups; `bun run bdd:lint` validates scenario completeness |
 | 2 | Architecture Quality | A+ | `audit:arch` passes (CI-enforced LOC limits, file structure constraints); `audit:arch:rust` passes |
-| 3 | Test Quality | A+ | 1650+ Vitest tests (`bun run test`), 170 Rust CLI tests (`test:cli`), 10 Playwright specs across 70 acceptance checks |
+| 3 | Test Quality | A+ | 2031 Vitest tests across 136 files (`bun run test`), 447 Rust CLI tests (`test:cli`), 10 Playwright specs across 70 acceptance checks |
 | 4 | Security Posture | A+ | `audit:security` passes; `zta-invariants.test.ts`, `security-headers.test.ts`, `cloudflare-adapter-security.test.ts`; `security-toolsuite.yml` CI (nikto, nuclei, whatweb) |
 | 5 | Accessibility (WCAG 2.2 AA) | A+ | `test:accessibility` (axe-core static build); `test:accessibility:browser` and `test:accessibility:admin-harness` (Playwright); all admin and public routes pass WCAG 2.2 AA + best-practice axe rules with zero violations |
 | 6 | Performance | A | `audit:bundle` passes; `audit:carbon` passes; Lighthouse CI on preview deploys |
@@ -82,6 +82,8 @@ Grade scale: `A+ / A / B / C / D / F`
 - **Rubrics 57–60:** Added 2026-04-16 after PR 26 exposed four independent bug classes across 33+ admin pages — audits are CI-enforced but visual regression testing (screenshot diff) is not yet in place
 
 ## Grade changes
+
+**2026-04-25** — Full evaluation run from scratch: all 49 `audit:*` scripts pass, 0 vulnerabilities (`bun audit`), 2031 Vitest tests passing across 136 files, 447 Rust CLI tests passing, 392 BDD scenarios across 75 verification groups, `docs:api:check` and `docs:check` clean. No grade changes — all rubrics hold at their recorded grade.
 
 **2026-04-18** — Full evaluation run: all 40 `audit:*` scripts pass, 0 vulnerabilities (`bun audit`), 1856 Vitest tests passing, 100% mutation score on `stryker-critical.config.mjs` (699/699 mutants killed + 1 timeout). No grade changes from current table — all rubrics hold at their recorded grade.
 
