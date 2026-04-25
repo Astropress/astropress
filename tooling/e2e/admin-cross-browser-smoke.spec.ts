@@ -8,6 +8,13 @@ import { expectStylesheetsLoaded } from "./helpers/accessibility";
 // journey: admin-post-edit-save
 
 async function submitAndExpectInlineFeedback(page: Page) {
+  await page.waitForFunction(() => !!customElements.get("ap-pending-form"));
+  await page.waitForFunction(() => {
+    const host = document.querySelector("ap-pending-form");
+    const form = document.querySelector("form[action='/ap-admin/actions/content-save']");
+    return host instanceof HTMLElement && form instanceof HTMLFormElement && host.contains(form);
+  });
+
   const form = page.locator("form[action='/ap-admin/actions/content-save']");
   await form.evaluate((form) => {
     form.noValidate = true;
