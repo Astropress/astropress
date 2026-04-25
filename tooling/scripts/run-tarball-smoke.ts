@@ -191,6 +191,7 @@ async function main(): Promise<void> {
 			["astro", "dev", "--host", "127.0.0.1", "--port", String(port)],
 			tempProjectDir,
 			{
+				PLAYWRIGHT_E2E_MODE: "admin-harness",
 				ASTROPRESS_DATA_ROOT: tempDataDir,
 				ASTROPRESS_LOCAL_IMAGE_ROOT: tempDataDir,
 			},
@@ -247,6 +248,7 @@ async function main(): Promise<void> {
 			root,
 			{
 				PLAYWRIGHT_ADMIN_BASE_URL: baseUrl,
+				PLAYWRIGHT_E2E_MODE: "admin-harness",
 			},
 		);
 	} finally {

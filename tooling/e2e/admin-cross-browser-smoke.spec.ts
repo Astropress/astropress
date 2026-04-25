@@ -12,11 +12,8 @@ async function submitAndWaitForUrl(
   action: () => Promise<unknown>,
   url: RegExp,
 ) {
-  await Promise.all([
-    page.waitForURL(url, { waitUntil: "commit" }),
-    action(),
-  ]);
-  await expect(page).toHaveURL(url);
+  await action();
+  await expect(page).toHaveURL(url, { timeout: 15_000 });
 }
 
 test.describe("Feature: cross-browser admin golden smoke", () => {
