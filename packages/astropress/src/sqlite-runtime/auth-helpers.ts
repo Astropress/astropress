@@ -1,3 +1,9 @@
+import {
+	type PersistedAdminUserRow,
+	type PersistedAuditEventRow,
+	SQL_LIST_ADMIN_USERS_WITH_INVITE,
+	SQL_LIST_AUDIT_EVENTS,
+} from "../persistence-commons";
 import type { SessionUser } from "../persistence-types";
 
 export type AdminRole = SessionUser["role"];
@@ -25,24 +31,8 @@ export interface AuthStoreOptions {
 	rootSecret: string;
 }
 
-export type AuditRow = {
-	id: number;
-	user_email: string;
-	action: string;
-	resource_type: string;
-	resource_id: string | null;
-	summary: string;
-	created_at: string;
-};
-export type AdminUserRow = {
-	id: number;
-	email: string;
-	role: AdminRole;
-	name: string;
-	active: number;
-	created_at: string;
-	has_pending_invite: number;
-};
+export type AuditRow = PersistedAuditEventRow;
+export type AdminUserRow = PersistedAdminUserRow;
 export type ActiveAdminRow = {
 	id: number;
 	email: string;
@@ -71,10 +61,9 @@ export type ResetJoinRow = PasswordResetTokenRow & {
 	active: number;
 };
 
-export const SQL_LIST_AUDIT =
-	"SELECT id, user_email, action, resource_type, resource_id, summary, created_at FROM audit_events ORDER BY datetime(created_at) DESC, id DESC";
+export const SQL_LIST_AUDIT = SQL_LIST_AUDIT_EVENTS;
 export const SQL_CLEANUP_SESSIONS = `UPDATE admin_sessions SET revoked_at = CURRENT_TIMESTAMP WHERE revoked_at IS NULL AND last_active_at < datetime('now', '-12 hours')`;
-export const SQL_LIST_USERS = `SELECT id, email, role, name, active, created_at, EXISTS (SELECT 1 FROM user_invites i WHERE i.user_id = admin_users.id AND i.accepted_at IS NULL AND datetime(i.expires_at) > CURRENT_TIMESTAMP) AS has_pending_invite FROM admin_users ORDER BY CASE role WHEN 'admin' THEN 0 ELSE 1 END, datetime(created_at) ASC, email ASC`;
+export const SQL_LIST_USERS = SQL_LIST_ADMIN_USERS_WITH_INVITE;
 export const SQL_FIND_USER =
 	"SELECT id FROM admin_users WHERE email = ? LIMIT 1";
 export const SQL_INSERT_USER =

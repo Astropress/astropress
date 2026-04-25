@@ -1,8 +1,15 @@
 import { describe, expect, it } from "vitest";
 
 import {
+	type PersistedAdminUserRow,
+	type PersistedAuditEventRow,
+	SQL_LIST_ADMIN_USERS_WITH_INVITE,
+	SQL_LIST_AUDIT_EVENTS,
 	auditSchemaFields,
 	buildAuditEntry,
+	deriveAdminUserStatus,
+	mapPersistedAdminUserRow,
+	mapPersistedAuditEvent,
 	mapPersistedOverrideRow,
 	normalizeContentStatus,
 	normalizeRedirectTarget,
@@ -476,5 +483,123 @@ describe("toRedirectRecord", () => {
 			statusCode: 302,
 		});
 		expect(r.metadata).toEqual({ targetPath: "/new", statusCode: 302 });
+	});
+});
+
+describe("SQL_LIST_AUDIT_EVENTS / SQL_LIST_ADMIN_USERS_WITH_INVITE", () => {
+	it("audit-events query orders by created_at desc, id desc", () => {
+		expect(SQL_LIST_AUDIT_EVENTS).toContain("FROM audit_events");
+		expect(SQL_LIST_AUDIT_EVENTS).toMatch(
+			/ORDER BY datetime\(created_at\) DESC, id DESC/,
+		);
+	});
+
+	it("admin-users query joins user_invites for has_pending_invite and orders admins first", () => {
+		expect(SQL_LIST_ADMIN_USERS_WITH_INVITE).toContain("FROM admin_users");
+		expect(SQL_LIST_ADMIN_USERS_WITH_INVITE).toContain("user_invites");
+		expect(SQL_LIST_ADMIN_USERS_WITH_INVITE).toContain("has_pending_invite");
+		expect(SQL_LIST_ADMIN_USERS_WITH_INVITE).toMatch(
+			/CASE role WHEN 'admin' THEN 0 ELSE 1 END/,
+		);
+	});
+});
+
+describe("deriveAdminUserStatus", () => {
+	it("returns 'suspended' when active is not 1", () => {
+		expect(deriveAdminUserStatus(0, 0)).toBe("suspended");
+		expect(deriveAdminUserStatus(0, 1)).toBe("suspended");
+	});
+	it("returns 'invited' when active and has_pending_invite is 1", () => {
+		expect(deriveAdminUserStatus(1, 1)).toBe("invited");
+	});
+	it("returns 'active' when active and no pending invite", () => {
+		expect(deriveAdminUserStatus(1, 0)).toBe("active");
+	});
+});
+
+describe("mapPersistedAdminUserRow", () => {
+	const row: PersistedAdminUserRow = {
+		id: 7,
+		email: "ada@example.test",
+		role: "admin",
+		name: "Ada",
+		active: 1,
+		created_at: "2026-04-25T00:00:00Z",
+		has_pending_invite: 0,
+	};
+
+	it("maps every field and derives boolean active + status", () => {
+		expect(mapPersistedAdminUserRow(row)).toEqual({
+			id: 7,
+			email: "ada@example.test",
+			role: "admin",
+			name: "Ada",
+			active: true,
+			status: "active",
+			createdAt: "2026-04-25T00:00:00Z",
+		});
+	});
+
+	it("propagates 'invited' status when has_pending_invite is 1", () => {
+		expect(
+			mapPersistedAdminUserRow({ ...row, has_pending_invite: 1 }).status,
+		).toBe("invited");
+	});
+
+	it("returns 'suspended' when active is 0 regardless of invite", () => {
+		expect(
+			mapPersistedAdminUserRow({ ...row, active: 0, has_pending_invite: 1 })
+				.status,
+		).toBe("suspended");
+	});
+});
+
+describe("mapPersistedAuditEvent", () => {
+	const baseRow: PersistedAuditEventRow = {
+		id: 42,
+		user_email: "ada@example.test",
+		action: "publish",
+		resource_type: "content",
+		resource_id: "post-1",
+		summary: "Published post",
+		created_at: "2026-04-25T00:00:00Z",
+	};
+
+	it("namespaces id with the supplied prefix to avoid cross-store collisions", () => {
+		expect(
+			mapPersistedAuditEvent({ row: baseRow, idPrefix: "d1-audit-" }).id,
+		).toBe("d1-audit-42");
+		expect(
+			mapPersistedAuditEvent({ row: baseRow, idPrefix: "sqlite-audit-" }).id,
+		).toBe("sqlite-audit-42");
+	});
+
+	it("maps known target types verbatim", () => {
+		for (const t of ["redirect", "comment", "content"] as const) {
+			expect(
+				mapPersistedAuditEvent({
+					row: { ...baseRow, resource_type: t },
+					idPrefix: "x-",
+				}).targetType,
+			).toBe(t);
+		}
+	});
+
+	it("falls back to 'auth' for unknown target types", () => {
+		expect(
+			mapPersistedAuditEvent({
+				row: { ...baseRow, resource_type: "session" },
+				idPrefix: "x-",
+			}).targetType,
+		).toBe("auth");
+	});
+
+	it("falls back to stringified id when resource_id is null", () => {
+		expect(
+			mapPersistedAuditEvent({
+				row: { ...baseRow, resource_id: null },
+				idPrefix: "x-",
+			}).targetId,
+		).toBe("42");
 	});
 });
