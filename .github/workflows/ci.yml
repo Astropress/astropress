@@ -101,6 +101,7 @@ jobs:
       - run: bun run audit:github-actions-shell
       - run: bun run audit:user-journey-coverage
       - run: bun run audit:coverage-scope
+      - run: bun run audit:playwright-projects
       - run: bun run audit:cli-docs
       - run: bun run audit:env-contract
       - run: bun run audit:exports

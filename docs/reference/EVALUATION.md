@@ -71,12 +71,13 @@ Grade scale: `A+ / A / B / C / D / F`
 | 61 | Meta-Evaluation | A+ | `audit:evaluation-integrity` passes (CI-enforced: all referenced audits exist, CI-enforced claims verified, rubric count parity, self-assessed ratio tracked) |
 | 62 | Mutation Testing Coverage | A | `stryker.config.mjs` mutates ALL 195 source files (`src/**/*.ts`); `stryker-critical.config.mjs` uses auth-*/runtime-admin-*/security-* wildcards so new security-critical files are auto-included; `stryker-sync.config.mjs` covers sync/sqlite-bootstrap; `stryker-audit-utils.config.mjs` mutates the shared audit framework (`tooling/lib/audit-utils.ts` + 21 unit tests in `audit-utils.test.ts`); weekly full-suite CI (`mutation-test.yml`); `cargo mutants` full crate; `test:mutants{,:critical,:sync,:audit-utils,:rust}`, plus `clean:stryker` for zombie-worker cleanup |
 | 63 | Test Resilience | A | Brittle expired-session clock-mock fixed (#42); deploy-targets per-test `mkdtempSync` isolation (#44); localStorage spy pattern; no timing-dependent assertions in critical paths |
+| 64 | UX Defense | A+ | `audit:user-journey-coverage` passes (CI-enforced); `audit:coverage-scope` passes (CI-enforced); `audit:playwright-projects` passes (CI-enforced); `admin-harness-negative-paths.spec.ts`, `admin-cross-browser-smoke.spec.ts`, `admin-harness-crud.spec.ts`, and `test:tarball-smoke` cover critical UX golden and failure paths |
 
 ## Known gaps
 
 - **Rubric 35:** Live hosted-provider coverage still depends on maintainer-owned accounts, seeded projects, and teardown automation
 - **Rubric 56:** The fictional "Runway" provider was removed in 2026-04-14 after being identified as a hallucinated entry — `audit:providers` now enforces that all provider IDs are verified against `tooling/verified-providers.json`
-- **Rubric 46–52:** UX rubrics added 2026-04-12 — no independent user research or usability testing has been conducted
+- **Rubrics 46–52 and 64:** UX rubrics added 2026-04-12 and 2026-04-25 — no independent user research or usability testing has been conducted
 - **Rubric 53:** Windows, macOS, and Linux now have CI smoke coverage and shell parity, but BSD remains best-effort rather than verified support
 - **Rubrics 57–60:** Added 2026-04-16 after PR 26 exposed four independent bug classes across 33+ admin pages — audits are CI-enforced but visual regression testing (screenshot diff) is not yet in place
 
@@ -535,3 +536,37 @@ An evaluation framework that can't verify its own integrity is theater. Specific
 - Mutation testing on audit scripts (inject known violations, verify the audit catches them)
 - Automated grade reconciliation between EVALUATION.md and evaluation.mdx
 - A "coverage of coverage" metric: what fraction of the codebase's user-facing behavior is addressable by at least one rubric
+
+---
+
+## Rubric 64 — UX Defense
+
+Measures whether UX protection is structural and hard to bypass: critical user journeys must be declared, executable tests must reference them, user-facing source files must be accounted for, and the packaged npm artifact must exercise the same admin golden paths a consumer would run.
+
+### Why this rubric exists
+
+Unit tests can prove a function works while the product path is still unusable. A UI can lose save feedback, keyboard focus, browser compatibility, or packaged-route behavior even when source-level tests pass. This rubric requires defenses that fail at the journey level, not only at the helper or repository level.
+
+### Evidence
+
+- `audit:user-journey-coverage` fails stale or missing critical journey markers in `tooling/critical-journeys.json`
+- `audit:coverage-scope` requires user-facing and runtime files to be covered by Vitest coverage, a matching test file, a critical journey marker, route coverage, or a reviewed exemption
+- `audit:playwright-projects` verifies every non-local Playwright project is wired into `test:acceptance`
+- `admin-harness-crud.spec.ts` covers create/edit/publish/media/invite golden paths against the admin UI
+- `admin-harness-negative-paths.spec.ts` covers failed save feedback, oversized upload feedback, missing service/provider feedback, expired/unauthenticated action handling, and stale edit conflict messaging
+- `admin-cross-browser-smoke.spec.ts` covers dashboard load, post edit, form-submit feedback, keyboard focus, and CSS presence in Chromium, Firefox, and WebKit projects
+- `test:tarball-smoke` packs `@astropress-diy/astropress`, installs the tarball into a fresh npm consumer app, starts that app, and runs the admin golden paths against the packed artifact
+
+### Criteria
+
+- Every critical journey has a marker in `tooling/critical-journeys.json` and at least one executable Playwright or Vitest reference
+- User-facing/runtime source files must be covered by test coverage, matching tests, route coverage, journey markers, or explicit reviewed exemptions
+- Negative-path UI tests must assert specific feedback for failed saves, rejected uploads, missing service providers, unauthenticated/expired admin actions, and stale edit conflicts
+- Cross-browser smoke must include Chromium, Firefox, and WebKit projects for dashboard load, editor save feedback, focus behavior, and CSS presence
+- Tarball smoke must run admin golden paths against the packed npm artifact, not only against workspace-linked examples
+
+### What would improve this
+
+- Screenshot or visual-diff assertions on the critical journeys
+- Independent user research or moderated usability testing
+- Credential-backed hosted-provider E2E for provider-specific UX, with setup and teardown handled by CI
