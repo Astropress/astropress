@@ -1,4 +1,9 @@
 import type { D1DatabaseLike } from "../d1-database";
+import {
+	normalizeContentStatus as normalizeContentStatusCommon,
+	toContentStoreRecord as toContentStoreRecordCommon,
+	toRedirectRecord as toRedirectRecordCommon,
+} from "../persistence-commons";
 import type { ContentStoreRecord, RevisionRecord } from "../platform-contracts";
 
 const SQL_LIST_TRANSLATIONS =
@@ -28,59 +33,20 @@ export function cloudflareActorEmail() {
 	return "admin@example.com";
 }
 
-export function normalizeContentStatus(status: ContentStoreRecord["status"]) {
-	return status === "archived"
-		? "archived"
-		: status === "draft"
-			? "draft"
-			: "published";
+export function normalizeContentStatus(
+	status: ContentStoreRecord["status"],
+): "draft" | "published" | "archived" {
+	// Adapter writes ContentStoreRecord whose status lacks "review"; collapse
+	// anything unknown to "published" via commons.
+	const normalized = normalizeContentStatusCommon(status);
+	return normalized === "review" ? "draft" : normalized;
 }
 
-export function toContentStoreRecord(record: {
-	slug: string;
-	kind?: string | null;
-	title: string;
-	body?: string;
-	status: "draft" | "review" | "published" | "archived";
-	seoTitle: string;
-	metaDescription: string;
-	updatedAt: string;
-	legacyUrl: string;
-	templateKey: string;
-	summary?: string;
-}) {
-	return {
-		id: record.slug,
-		kind: mapContentRecordKind(record),
-		slug: record.slug,
-		status: record.status === "review" ? "draft" : record.status,
-		title: record.title,
-		body: record.body ?? null,
-		metadata: {
-			seoTitle: record.seoTitle,
-			metaDescription: record.metaDescription,
-			updatedAt: record.updatedAt,
-			legacyUrl: record.legacyUrl,
-			templateKey: record.templateKey,
-			summary: record.summary ?? "",
-		},
-	} satisfies ContentStoreRecord;
-}
+export const toContentStoreRecord = toContentStoreRecordCommon as (
+	record: Parameters<typeof toContentStoreRecordCommon>[0],
+) => ContentStoreRecord;
 
-export function toRedirectRecord(rule: {
-	sourcePath: string;
-	targetPath: string;
-	statusCode: 301 | 302;
-}) {
-	return {
-		id: rule.sourcePath,
-		kind: "redirect" as const,
-		slug: rule.sourcePath,
-		status: "published" as const,
-		title: rule.sourcePath,
-		metadata: { targetPath: rule.targetPath, statusCode: rule.statusCode },
-	};
-}
+export const toRedirectRecord = toRedirectRecordCommon;
 
 export function toTranslationRecord(
 	route: string,

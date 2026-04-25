@@ -10,8 +10,67 @@ concurrency:
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+  # Pinned bun "latest" — upgrade via a PR so a surprise release can't red-line CI
+  # without review. The matrix entry that tests bun@1.3.10 guarantees backward compat;
+  # this entry guards against forward regressions in a controlled way.
+  BUN_LATEST_PINNED: "1.3.11"
 
 jobs:
+  # ---------------------------------------------------------------------------
+  # build — produces packages/astropress/dist once and uploads as an artifact
+  # so the ~20s compile cost is paid once per workflow run, not per downstream
+  # job. Downstream jobs download via `astropress-dist` artifact.
+  # ---------------------------------------------------------------------------
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24.8"
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.3.10"
+      - uses: actions/cache@v5
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lockb') }}
+          restore-keys: ${{ runner.os }}-bun-
+
+      - uses: ./.github/actions/content-skip
+        id: skip
+        with:
+          step: build
+
+      - run: bun install --frozen-lockfile
+        if: steps.skip.outputs.cache-hit != 'true'
+      - run: bun run --filter "@astropress-diy/astropress" build
+        if: steps.skip.outputs.cache-hit != 'true'
+
+      - uses: actions/cache/save@v5
+        if: success() && steps.skip.outputs.cache-hit != 'true'
+        with:
+          path: packages/astropress/dist
+          key: astropress-dist-${{ steps.skip.outputs.hash }}
+
+      - uses: actions/cache/restore@v5
+        if: steps.skip.outputs.cache-hit == 'true'
+        with:
+          path: packages/astropress/dist
+          key: astropress-dist-${{ steps.skip.outputs.hash }}
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: astropress-dist
+          path: packages/astropress/dist
+          retention-days: 1
+
+      - uses: ./.github/actions/content-skip/save
+        if: success() && steps.skip.outputs.cache-hit != 'true'
+        with:
+          step: build
+          hash: ${{ steps.skip.outputs.hash }}
+
   lint:
     runs-on: ubuntu-latest
     steps:
@@ -22,7 +81,7 @@ jobs:
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: "1.3.10"
-      - uses: actions/cache@v4
+      - uses: actions/cache@v5
         with:
           path: ~/.bun/install/cache
           key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lockb') }}
@@ -39,6 +98,10 @@ jobs:
       - run: bun run audit:tooling-types
       - run: bun run audit:aeo
       - run: bun run audit:providers
+      - run: bun run audit:github-actions-shell
+      - run: bun run audit:user-journey-coverage
+      - run: bun run audit:coverage-scope
+      - run: bun run audit:playwright-projects
       - run: bun run audit:cli-docs
       - run: bun run audit:env-contract
       - run: bun run audit:exports
@@ -71,10 +134,13 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: crates
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: "1.3.10"
-      - uses: actions/cache@v4
+      - uses: actions/cache@v5
         with:
           path: ~/.bun/install/cache
           key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lockb') }}
@@ -83,8 +149,31 @@ jobs:
       - run: cargo clippy --manifest-path crates/astropress-cli/Cargo.toml -- -D warnings
       - run: bun run audit:arch:rust
 
+  # Parallel to lint — catches mutation-coverage regressions before the long-pole
+  # tests even start. Uses the content-hash-aware delta script from the pre-push
+  # hook, so it's typically sub-minute.
+  mutation-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24.8"
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.3.10"
+      - uses: actions/cache@v5
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lockb') }}
+          restore-keys: ${{ runner.os }}-bun-
+      - run: bun install --frozen-lockfile
+      - run: bun run tooling/scripts/prepush-mutation-gate.ts --check-only
+
   platform-smoke:
-    needs: [lint, lint-rust]
+    needs: [lint, lint-rust, build]
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
@@ -98,24 +187,52 @@ jobs:
         with:
           bun-version: "1.3.10"
       - uses: dtolnay/rust-toolchain@stable
-      - uses: actions/cache@v4
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: crates
+          key: ${{ matrix.os }}
+      - uses: actions/cache@v5
         with:
           path: ~/.bun/install/cache
           key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lockb') }}
           restore-keys: ${{ runner.os }}-bun-
+
+      - uses: ./.github/actions/content-skip
+        id: skip
+        with:
+          step: test-cli
+          variant: ${{ matrix.os }}
+
       - run: bun install --frozen-lockfile
-      - run: bun run --filter "@astropress-diy/astropress" build
+        if: steps.skip.outputs.cache-hit != 'true'
+      - uses: actions/download-artifact@v4
+        if: steps.skip.outputs.cache-hit != 'true'
+        with:
+          name: astropress-dist
+          path: packages/astropress/dist
       - run: bun run test:cli
+        if: steps.skip.outputs.cache-hit != 'true'
       - run: bun run --filter "@astropress-diy/astropress" test tests/project-env.test.ts tests/content-services-ops.test.ts tests/hosted-provider.contract.test.ts tests/provider-targets.test.ts
+        if: steps.skip.outputs.cache-hit != 'true'
       - run: bun run test:example
+        if: steps.skip.outputs.cache-hit != 'true'
       - run: bun run repo:clean
+        if: steps.skip.outputs.cache-hit != 'true'
+
+      - uses: ./.github/actions/content-skip/save
+        if: success() && steps.skip.outputs.cache-hit != 'true'
+        with:
+          step: test-cli
+          variant: ${{ matrix.os }}
+          hash: ${{ steps.skip.outputs.hash }}
 
   test-unit:
     runs-on: ubuntu-latest
     needs: lint
     strategy:
       matrix:
-        bun: ["1.3.10", "latest"]
+        # Pinned explicit versions — keep both for forward + backward compat.
+        bun: ["1.3.10", "1.3.11"]
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-node@v6
@@ -124,18 +241,35 @@ jobs:
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: ${{ matrix.bun }}
-      - uses: actions/cache@v4
+      - uses: actions/cache@v5
         with:
           path: ~/.bun/install/cache
           key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lockb') }}
           restore-keys: ${{ runner.os }}-bun-
+
+      - uses: ./.github/actions/content-skip
+        id: skip
+        with:
+          step: test-unit
+          variant: bun-${{ matrix.bun }}
+
       - run: bun install --frozen-lockfile
+        if: steps.skip.outputs.cache-hit != 'true'
       - run: bun run test:coverage
+        if: steps.skip.outputs.cache-hit != 'true'
       - run: bun run repo:clean
+        if: steps.skip.outputs.cache-hit != 'true'
+
+      - uses: ./.github/actions/content-skip/save
+        if: success() && steps.skip.outputs.cache-hit != 'true'
+        with:
+          step: test-unit
+          variant: bun-${{ matrix.bun }}
+          hash: ${{ steps.skip.outputs.hash }}
 
   test-cli:
     runs-on: ubuntu-latest
-    needs: [lint, lint-rust]
+    needs: [lint, lint-rust, build]
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-node@v6
@@ -145,59 +279,127 @@ jobs:
         with:
           bun-version: "1.3.10"
       - uses: dtolnay/rust-toolchain@stable
-      - uses: actions/cache@v4
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: crates
+      - uses: actions/cache@v5
         with:
           path: ~/.bun/install/cache
           key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lockb') }}
           restore-keys: ${{ runner.os }}-bun-
+
+      - uses: ./.github/actions/content-skip
+        id: skip
+        with:
+          step: test-cli
+
       - run: bun install --frozen-lockfile
-      - run: bun run --filter "@astropress-diy/astropress" build
+        if: steps.skip.outputs.cache-hit != 'true'
+      - uses: actions/download-artifact@v4
+        if: steps.skip.outputs.cache-hit != 'true'
+        with:
+          name: astropress-dist
+          path: packages/astropress/dist
       - run: cargo test --manifest-path crates/astropress-cli/Cargo.toml
+        if: steps.skip.outputs.cache-hit != 'true'
+
+      - uses: ./.github/actions/content-skip/save
+        if: success() && steps.skip.outputs.cache-hit != 'true'
+        with:
+          step: test-cli
+          hash: ${{ steps.skip.outputs.hash }}
 
   test-e2e:
     runs-on: ubuntu-latest
-    needs: test-unit
+    needs: [test-unit, build]
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-node@v6
         with:
           node-version: "24.8"
       - uses: oven-sh/setup-bun@v2
-      - uses: actions/cache@v4
+      - uses: actions/cache@v5
         with:
           path: ~/.bun/install/cache
           key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lockb') }}
           restore-keys: ${{ runner.os }}-bun-
+      - uses: actions/cache@v5
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('**/bun.lockb') }}
+          restore-keys: ${{ runner.os }}-playwright-
+
+      - uses: ./.github/actions/content-skip
+        id: skip
+        with:
+          step: test-e2e
+
       - run: bun install --frozen-lockfile
-      - run: bun run --filter "@astropress-diy/astropress" build
-      - run: npx playwright install --with-deps chromium
+        if: steps.skip.outputs.cache-hit != 'true'
+      - uses: actions/download-artifact@v4
+        if: steps.skip.outputs.cache-hit != 'true'
+        with:
+          name: astropress-dist
+          path: packages/astropress/dist
+      - run: npx playwright install --with-deps chromium firefox webkit
+        if: steps.skip.outputs.cache-hit != 'true'
       - run: bun run test:accessibility
+        if: steps.skip.outputs.cache-hit != 'true'
       - run: bun run test:acceptance
+        if: steps.skip.outputs.cache-hit != 'true'
+
+      - uses: ./.github/actions/content-skip/save
+        if: success() && steps.skip.outputs.cache-hit != 'true'
+        with:
+          step: test-e2e
+          hash: ${{ steps.skip.outputs.hash }}
 
   # Boots examples/npm-consumer-smoke (workspace:* but WITHOUT monorepo source aliases)
   # and fetches every admin route. Catches 500s and import-resolution failures that
   # are invisible to the workspace-aliased admin-harness. Also runs packaging audits.
   test-consumer:
     runs-on: ubuntu-latest
-    needs: test-unit
+    needs: [test-unit, build]
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-node@v6
         with:
           node-version: "24.8"
       - uses: oven-sh/setup-bun@v2
-      - uses: actions/cache@v4
+      - uses: actions/cache@v5
         with:
           path: ~/.bun/install/cache
           key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lockb') }}
           restore-keys: ${{ runner.os }}-bun-
+
+      - uses: ./.github/actions/content-skip
+        id: skip
+        with:
+          step: test-consumer
+
       - run: bun install
-      - run: bun run --filter "@astropress-diy/astropress" build
+        if: steps.skip.outputs.cache-hit != 'true'
+      - uses: actions/download-artifact@v4
+        if: steps.skip.outputs.cache-hit != 'true'
+        with:
+          name: astropress-dist
+          path: packages/astropress/dist
       - run: bun run test:consumer-smoke
+        if: steps.skip.outputs.cache-hit != 'true'
       - run: bun run audit:consumer-packaging
+        if: steps.skip.outputs.cache-hit != 'true'
       - run: bun run audit:admin-route-coverage
+        if: steps.skip.outputs.cache-hit != 'true'
       - run: bun run audit:title-composition
+        if: steps.skip.outputs.cache-hit != 'true'
       - run: bun run audit:security-policy-integrity
+        if: steps.skip.outputs.cache-hit != 'true'
+
+      - uses: ./.github/actions/content-skip/save
+        if: success() && steps.skip.outputs.cache-hit != 'true'
+        with:
+          step: test-consumer
+          hash: ${{ steps.skip.outputs.hash }}
 
   # Packs the npm tarball, installs it in a fresh copy of npm-consumer-smoke, and
   # verifies every admin route. This is the publish-time safety net: catches bugs
@@ -212,17 +414,35 @@ jobs:
         with:
           node-version: "24.8"
       - uses: oven-sh/setup-bun@v2
-      - uses: actions/cache@v4
+      - uses: actions/cache@v5
         with:
           path: ~/.bun/install/cache
           key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lockb') }}
           restore-keys: ${{ runner.os }}-bun-
-      - run: bun install
-      - run: bun run test:tarball-smoke
 
+      - uses: ./.github/actions/content-skip
+        id: skip
+        with:
+          step: test-tarball-smoke
+
+      - run: bun install
+        if: steps.skip.outputs.cache-hit != 'true'
+      - run: npx playwright install --with-deps chromium
+        if: steps.skip.outputs.cache-hit != 'true'
+      - run: bun run test:tarball-smoke
+        if: steps.skip.outputs.cache-hit != 'true'
+
+      - uses: ./.github/actions/content-skip/save
+        if: success() && steps.skip.outputs.cache-hit != 'true'
+        with:
+          step: test-tarball-smoke
+          hash: ${{ steps.skip.outputs.hash }}
+
+  # Runs in parallel with test-unit (only needs lint) — previously blocked on
+  # test-unit, which doubled the critical path for no logical dependency.
   test-build-content:
     runs-on: ubuntu-latest
-    needs: [lint, test-unit]
+    needs: [lint, build]
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-node@v6
@@ -231,23 +451,53 @@ jobs:
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: "1.3.10"
-      - uses: actions/cache@v4
+      - uses: actions/cache@v5
         with:
           path: ~/.bun/install/cache
           key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lockb') }}
           restore-keys: ${{ runner.os }}-bun-
-      - run: bun install --frozen-lockfile
-      - run: bun run --filter "@astropress-diy/astropress" build
-      - run: npx playwright install --with-deps chromium
-      - run: bun run test:example
-      - run: bun run test:static-site
-      - run: bun run audit:carbon
-      - run: bun run audit:user-facing-route-coverage
-      - run: bun run repo:clean
+      - uses: actions/cache@v5
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('**/bun.lockb') }}
+          restore-keys: ${{ runner.os }}-playwright-
 
+      - uses: ./.github/actions/content-skip
+        id: skip
+        with:
+          step: test-build-content
+
+      - run: bun install --frozen-lockfile
+        if: steps.skip.outputs.cache-hit != 'true'
+      - uses: actions/download-artifact@v4
+        if: steps.skip.outputs.cache-hit != 'true'
+        with:
+          name: astropress-dist
+          path: packages/astropress/dist
+      - run: npx playwright install --with-deps chromium
+        if: steps.skip.outputs.cache-hit != 'true'
+      - run: bun run test:example
+        if: steps.skip.outputs.cache-hit != 'true'
+      - run: bun run test:static-site
+        if: steps.skip.outputs.cache-hit != 'true'
+      - run: bun run audit:carbon
+        if: steps.skip.outputs.cache-hit != 'true'
+      - run: bun run audit:user-facing-route-coverage
+        if: steps.skip.outputs.cache-hit != 'true'
+      - run: bun run repo:clean
+        if: steps.skip.outputs.cache-hit != 'true'
+
+      - uses: ./.github/actions/content-skip/save
+        if: success() && steps.skip.outputs.cache-hit != 'true'
+        with:
+          step: test-build-content
+          hash: ${{ steps.skip.outputs.hash }}
+
+  # Runs in parallel with test-unit — previously blocked on test-unit which
+  # added no dependency value.
   test-build-harness:
     runs-on: ubuntu-latest
-    needs: [lint, lint-rust, test-unit]
+    needs: [lint, lint-rust, build]
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-node@v6
@@ -257,23 +507,54 @@ jobs:
         with:
           bun-version: "1.3.10"
       - uses: dtolnay/rust-toolchain@stable
-      - uses: actions/cache@v4
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: crates
+      - uses: actions/cache@v5
         with:
           path: ~/.bun/install/cache
           key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lockb') }}
           restore-keys: ${{ runner.os }}-bun-
+      - uses: actions/cache@v5
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('**/bun.lockb') }}
+          restore-keys: ${{ runner.os }}-playwright-
+
+      - uses: ./.github/actions/content-skip
+        id: skip
+        with:
+          step: test-build-harness
+
       - run: bun install --frozen-lockfile
-      - run: bun run --filter "@astropress-diy/astropress" build
+        if: steps.skip.outputs.cache-hit != 'true'
+      - uses: actions/download-artifact@v4
+        if: steps.skip.outputs.cache-hit != 'true'
+        with:
+          name: astropress-dist
+          path: packages/astropress/dist
       - run: npx playwright install --with-deps chromium
+        if: steps.skip.outputs.cache-hit != 'true'
       - run: bun run test:admin-harness
+        if: steps.skip.outputs.cache-hit != 'true'
       - run: bun run bdd:lint
+        if: steps.skip.outputs.cache-hit != 'true'
       - run: bun run bdd:test
+        if: steps.skip.outputs.cache-hit != 'true'
       - run: cd packages/astropress-mcp && bun run build
+        if: steps.skip.outputs.cache-hit != 'true'
       - run: bun run repo:clean
+        if: steps.skip.outputs.cache-hit != 'true'
+
+      - uses: ./.github/actions/content-skip/save
+        if: success() && steps.skip.outputs.cache-hit != 'true'
+        with:
+          step: test-build-harness
+          hash: ${{ steps.skip.outputs.hash }}
 
   preview-deploy:
     runs-on: ubuntu-latest
-    needs: [test-build-content, test-build-harness]
+    needs: [test-build-content, test-build-harness, build]
     if: github.event_name == 'pull_request'
     permissions:
       contents: read
@@ -286,13 +567,16 @@ jobs:
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: "1.3.10"
-      - uses: actions/cache@v4
+      - uses: actions/cache@v5
         with:
           path: ~/.bun/install/cache
           key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lockb') }}
           restore-keys: ${{ runner.os }}-bun-
       - run: bun install --frozen-lockfile
-      - run: bun run --filter "@astropress-diy/astropress" build
+      - uses: actions/download-artifact@v4
+        with:
+          name: astropress-dist
+          path: packages/astropress/dist
       - run: bun run --filter astropress-example-gh-pages build
       - name: Deploy preview to Cloudflare Pages
         uses: cloudflare/wrangler-action@v3
@@ -302,8 +586,10 @@ jobs:
           command: pages deploy examples/github-pages/dist --project-name=astropress-preview --branch=${{ github.head_ref }}
         continue-on-error: true
       - name: Lighthouse CI against preview
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         run: |
-          if [ -n "${{ secrets.CLOUDFLARE_API_TOKEN }}" ]; then
+          if [ -n "$CLOUDFLARE_API_TOKEN" ]; then
             npx @lhci/cli@0.14 autorun --collect.url="https://astropress-preview.pages.dev" --assert.preset=lighthouse:recommended || true
           else
             echo "No Cloudflare credentials — skipping Lighthouse CI preview run"

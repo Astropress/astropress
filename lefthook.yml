@@ -222,8 +222,21 @@ pre-commit:
         - "packages/astropress/src/auth-*.ts"
         - "packages/astropress/src/security-*.ts"
         - "packages/astropress/src/runtime-admin-*.ts"
-        - "stryker*.config.mjs"
+        - "tooling/stryker/stryker*.config.mjs"
       run: bun run audit:mutation-scope
+
+    # DO NOT REMOVE — guards against silent erosion of the mutation-coverage
+    # quality bar. If this trips, fix tests or refactor code; do not lower the
+    # threshold. See tooling/scripts/audit-stryker-thresholds.ts header.
+    audit-stryker-thresholds:
+      glob: "tooling/stryker/stryker*.config.mjs"
+      run: bun run tooling/scripts/audit-stryker-thresholds.ts
+
+    # Non-blocking warning: surfaces Stryker disable / v8 ignore / biome-ignore
+    # / @ts-ignore comments so the author considers a code-level fix instead.
+    audit-suppression-warnings:
+      glob: "{packages,tooling}/**/*.{ts,tsx,js,mjs,cjs}"
+      run: bun run tooling/scripts/audit-suppression-warnings.ts {staged_files}
 
     audit-ci-sarif-upload:
       glob: ".github/workflows/*.yml"
@@ -361,6 +374,14 @@ pre-push:
   commands:
     gates:
       run: bun run test:prepush
+
+    # DO NOT REMOVE OR RELAX — closes the gap the pre-commit threshold audit
+    # leaves open. Runs Stryker mutation testing scoped to files changed on
+    # this branch vs. origin/main, so the check is fast (≈ 60s) but still
+    # blocks PRs whose new code scores below the 95% floor. See the script
+    # header for the full rationale.
+    mutation-gate:
+      run: bun run tooling/scripts/prepush-mutation-gate.ts
 
     slow-audits:
       # Whole-repo static audits moved out of pre-commit because they scan far

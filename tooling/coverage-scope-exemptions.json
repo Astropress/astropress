@@ -1,0 +1,14 @@
+{
+  "exemptions": {
+    "packages/astropress/pages/ap-admin/404.astro": "Intentional error surface. Route coverage treats it as a non-200 page by design.",
+    "packages/astropress/pages/ap-admin/fundraising.astro": "Feature-gated by donations configuration. Covered structurally by route audits, not by default harness data.",
+    "packages/astropress/pages/ap-admin/archives/[...slug].astro": "Dynamic archive editor route. Covered by repository and route-registry tests rather than the default Playwright seed.",
+    "packages/astropress/pages/ap-admin/import/index.astro": "Import flows need source-specific fixtures and are covered by BDD and action tests instead of the default admin harness.",
+    "packages/astropress/pages/ap-admin/import/[source].astro": "Import flows need source-specific fixtures and are covered by BDD and action tests instead of the default admin harness.",
+    "packages/astropress/pages/ap-admin/posts/[slug]/revisions.astro": "Revision history is exercised through content save and restore coverage, not a dedicated default-harness journey yet.",
+    "packages/astropress/pages/ap-admin/preview/[...slug].astro": "Preview route depends on runtime preview inputs and is validated through preview middleware and runtime tests.",
+    "packages/astropress/pages/ap-admin/route-pages/[...slug].astro": "Dynamic route-page editor depends on seeded route-page data and is covered by route-registry and CRUD coverage instead.",
+    "packages/astropress/pages/ap-admin/subscribers/index.astro": "Subscriber surfaces depend on optional newsletter integrations and are covered outside the default harness.",
+    "packages/astropress/pages/ap-admin/subscribers/[id].astro": "Subscriber surfaces depend on optional newsletter integrations and are covered outside the default harness."
+  }
+}

@@ -84,6 +84,30 @@ export interface AstropressContentRepositoryInput {
 	}): void;
 }
 
+type SaveContentInput = Parameters<ContentRepository["saveContentState"]>[1] & {
+	lastKnownUpdatedAt?: string;
+};
+
+function detectLocalConflict(
+	record: ContentRecord,
+	lastKnownUpdatedAt: string | undefined,
+) {
+	if (!lastKnownUpdatedAt) {
+		return null;
+	}
+
+	if (record.updatedAt !== lastKnownUpdatedAt) {
+		return {
+			ok: false as const,
+			error:
+				"This record was modified by another editor after you opened it. Reload to see the latest version.",
+			conflict: true as const,
+		};
+	}
+
+	return null;
+}
+
 export function createAstropressContentRepository(
 	input: AstropressContentRepositoryInput,
 ): ContentRepository {
@@ -194,7 +218,7 @@ export function createAstropressContentRepository(
 
 			return { ok: true as const };
 		},
-		saveContentState(slug, rawInput, actor) {
+		saveContentState(slug, rawInput: SaveContentInput, actor) {
 			const record = input.findContentRecord(slug);
 			if (!record) {
 				return {
@@ -218,6 +242,11 @@ export function createAstropressContentRepository(
 					ok: false as const,
 					error: "Title, SEO title, and meta description are required.",
 				};
+			}
+
+			const conflict = detectLocalConflict(record, rawInput.lastKnownUpdatedAt);
+			if (conflict) {
+				return conflict;
 			}
 
 			input.ensureBaselineRevision(record);

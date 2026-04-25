@@ -183,6 +183,13 @@ Coverage thresholds (CI-enforced): **97% statements · 97% lines · 97% function
 The 80% branch threshold exists only for platform-specific branches (e.g. `process.platform === "win32"`).
 All reachable error paths must be tested or the dead code removed.
 
+## A+ quality gates
+
+For user-impacting changes, do not stop at a unit or integration test. Update at least one
+critical journey marker in `tooling/e2e/*.spec.ts` or `packages/astropress/tests/*.test.ts`
+and keep `tooling/critical-journeys.json` in sync. CI now enforces this with
+`bun run audit:user-journey-coverage` and `bun run audit:coverage-scope`.
+
 ## CI gate order
 
 ```

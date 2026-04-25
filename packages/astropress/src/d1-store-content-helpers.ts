@@ -1,7 +1,10 @@
 import type { D1DatabaseLike } from "./d1-database";
+import {
+	type ContentStatus,
+	type PersistedOverrideRow,
+	mapPersistedOverrideRow,
+} from "./persistence-commons";
 import type { ContentOverride, ContentRecord } from "./persistence-types";
-
-type ContentStatus = "draft" | "review" | "published" | "archived";
 
 export interface PageRecord {
 	slug: string;
@@ -26,39 +29,13 @@ export interface PageRecord {
 }
 
 export function mapPersistedOverride(
-	row: {
-		title: string;
-		status: ContentStatus;
-		scheduled_at: string | null;
-		body: string | null;
-		seo_title: string;
-		meta_description: string;
-		excerpt: string | null;
-		og_title: string | null;
-		og_description: string | null;
-		og_image: string | null;
-		canonical_url_override: string | null;
-		robots_directive: string | null;
-	} | null,
+	row: PersistedOverrideRow | null,
 ): ContentOverride | null {
-	if (!row) {
-		return null;
-	}
-
-	return {
-		title: row.title,
-		status: row.status,
-		scheduledAt: row.scheduled_at ?? undefined,
-		body: row.body ?? undefined,
-		seoTitle: row.seo_title,
-		metaDescription: row.meta_description,
-		excerpt: row.excerpt ?? undefined,
-		ogTitle: row.og_title ?? undefined,
-		ogDescription: row.og_description ?? undefined,
-		ogImage: row.og_image ?? undefined,
-		canonicalUrlOverride: row.canonical_url_override ?? undefined,
-		robotsDirective: row.robots_directive ?? undefined,
-	};
+	const mapped = mapPersistedOverrideRow(row);
+	if (!mapped) return null;
+	// D1 schema lacks the metadata column; strip it to keep the return type identical.
+	const { metadata: _metadata, ...rest } = mapped;
+	return rest;
 }
 
 export async function getD1ContentAssignmentIds(

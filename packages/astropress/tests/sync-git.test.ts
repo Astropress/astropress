@@ -283,6 +283,47 @@ describe("createAstropressGitSyncAdapter — SQLite + reflink", () => {
 		expect(warnings).toHaveLength(0);
 	});
 
+	it("warns before export when a .sqlite file fails its integrity check", async () => {
+		// A file named .sqlite that isn't a real DB: the integrity check returns
+		// "unavailable" and git.ts's pre-export gate emits a warning (distinct
+		// from the checkpoint warning).
+		const projectDir = makeDir("project-integrity-export");
+		writeFiles(projectDir, { "db/admin.sqlite": "garbage-not-a-db" });
+
+		const warnings: string[] = [];
+		const adapter = createAstropressGitSyncAdapter({
+			projectDir,
+			include: ["db"],
+			logger: { info: () => {}, warn: (msg) => warnings.push(msg) },
+		});
+		const targetDir = makeDir("snapshot-integrity-export");
+		await adapter.exportSnapshot(targetDir);
+
+		expect(
+			warnings.some((w) =>
+				w.startsWith("SQLite integrity check unavailable for"),
+			),
+		).toBe(true);
+	});
+
+	it("warns after import when the restored .sqlite file fails its integrity check", async () => {
+		const projectDir = makeDir("project-integrity-import");
+		const snapshotDir = makeDir("snapshot-integrity-import");
+		writeFiles(snapshotDir, { "db/admin.sqlite": "garbage-not-a-db" });
+
+		const warnings: string[] = [];
+		const adapter = createAstropressGitSyncAdapter({
+			projectDir,
+			include: ["db"],
+			logger: { info: () => {}, warn: (msg) => warnings.push(msg) },
+		});
+		await adapter.importSnapshot(snapshotDir);
+
+		expect(
+			warnings.some((w) => w.startsWith("Restored SQLite database at")),
+		).toBe(true);
+	});
+
 	it("logs importSnapshot copy method", async () => {
 		const projectDir = makeDir("project-import-log");
 		const snapshotDir = makeDir("snapshot-import-log");

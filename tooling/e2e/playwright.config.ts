@@ -83,9 +83,42 @@ export default defineConfig({
       },
     },
     {
+      name: "admin-harness-negative-paths",
+      testMatch: /admin-harness-negative-paths\.spec\.ts/,
+      use: {
+        baseURL: process.env.PLAYWRIGHT_ADMIN_BASE_URL ?? "http://127.0.0.1:4325",
+      },
+    },
+    {
       name: "admin-harness-smoke",
       testMatch: /admin-harness-smoke\.spec\.ts/,
       use: {
+        baseURL: process.env.PLAYWRIGHT_ADMIN_BASE_URL ?? "http://127.0.0.1:4325",
+      },
+    },
+    {
+      name: "admin-cross-browser-chromium",
+      testMatch: /admin-cross-browser-smoke\.spec\.ts/,
+      use: {
+        ...devices["Desktop Chrome"],
+        browserName: "chromium",
+        baseURL: process.env.PLAYWRIGHT_ADMIN_BASE_URL ?? "http://127.0.0.1:4325",
+      },
+    },
+    {
+      name: "admin-cross-browser-firefox",
+      testMatch: /admin-cross-browser-smoke\.spec\.ts/,
+      use: {
+        ...devices["Desktop Firefox"],
+        baseURL: process.env.PLAYWRIGHT_ADMIN_BASE_URL ?? "http://127.0.0.1:4325",
+      },
+    },
+    {
+      name: "admin-cross-browser-webkit",
+      testMatch: /admin-cross-browser-smoke\.spec\.ts/,
+      use: {
+        ...devices["Desktop Safari"],
+        browserName: "webkit",
         baseURL: process.env.PLAYWRIGHT_ADMIN_BASE_URL ?? "http://127.0.0.1:4325",
       },
     },

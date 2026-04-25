@@ -24,7 +24,7 @@
 		"test:prepush": "bun run tooling/scripts/prepush-gates.ts",
 		"test:staged": "bun run tooling/scripts/staged-tests.ts",
 		"test:committed": "bun run tooling/scripts/staged-tests.ts --committed",
-		"test:acceptance": "bun run tooling/scripts/run-playwright.ts --project=example-a11y --project=admin-harness-a11y --project=admin-harness-mobile --project=admin-harness-mobile-iphonese --project=admin-harness-mobile-galaxys5 --project=admin-harness-a11y-interactions --project=admin-harness-crud --project=admin-harness-smoke --project=viewport-375 --project=viewport-768 --project=viewport-1280 --project=admin-touch-targets --project=admin-heading-hierarchy --project=admin-interaction-timing --project=admin-perf-timing",
+		"test:acceptance": "bun run tooling/scripts/run-playwright.ts --project=example-a11y --project=admin-harness-a11y --project=admin-harness-mobile --project=admin-harness-mobile-iphonese --project=admin-harness-mobile-galaxys5 --project=admin-harness-a11y-interactions --project=admin-harness-crud --project=admin-harness-negative-paths --project=admin-harness-smoke --project=admin-cross-browser-chromium --project=admin-cross-browser-firefox --project=admin-cross-browser-webkit --project=viewport-375 --project=viewport-768 --project=viewport-1280 --project=admin-touch-targets --project=admin-heading-hierarchy --project=admin-interaction-timing --project=admin-perf-timing",
 		"test:consumer-smoke": "bun run tooling/scripts/run-consumer-smoke.ts",
 		"test:tarball-smoke": "bun run tooling/scripts/run-tarball-smoke.ts",
 		"build:example:clean": "bun run tooling/scripts/run-with-temp-data.ts bun run --filter astropress-example-gh-pages build",
@@ -41,6 +41,7 @@
 		"audit:carbon": "bunx size-limit --config tooling/size-limit.json && bun run tooling/scripts/carbon-audit.ts --domains-only",
 		"audit:aeo": "bun run tooling/scripts/audit-aeo.ts",
 		"audit:providers": "bun run tooling/scripts/audit-providers.ts",
+		"audit:github-actions-shell": "bun run tooling/scripts/audit-github-actions-shell.ts",
 		"audit:cli-docs": "bun run tooling/scripts/audit-cli-docs.ts",
 		"audit:env-contract": "bun run tooling/scripts/audit-env-contract.ts",
 		"audit:exports": "bun run tooling/scripts/audit-exports.ts",
@@ -70,6 +71,8 @@
 		"audit:oss-health": "bun run tooling/scripts/audit-oss-health.ts",
 		"audit:scaffold-quality": "bun run tooling/scripts/audit-scaffold-quality.ts",
 		"audit:playwright-projects": "bun run tooling/scripts/audit-playwright-projects.ts",
+		"audit:user-journey-coverage": "bun run tooling/scripts/audit-user-journey-coverage.ts",
+		"audit:coverage-scope": "bun run tooling/scripts/audit-coverage-scope.ts",
 		"audit:mutation-scope": "bun run tooling/scripts/audit-mutation-scope.ts",
 		"audit:ci-sarif-upload": "bun run tooling/scripts/audit-ci-sarif-upload.ts",
 		"audit:nuclei-suppressions": "bun run tooling/scripts/audit-nuclei-suppressions.ts",
@@ -82,11 +85,11 @@
 		"repo:clean": "bun run tooling/scripts/assert-clean-worktree.ts",
 		"check:pr-ghas": "bun run tooling/scripts/check-pr-ghas.ts",
 		"stress:sqlite": "bun run tooling/scripts/stress-sqlite-writes.ts",
-		"test:mutants": "cd packages/astropress && node ../../node_modules/.bin/stryker run ../../stryker.config.mjs",
-		"test:mutants:critical": "cd packages/astropress && node ../../node_modules/.bin/stryker run ../../stryker-critical.config.mjs",
-		"test:mutants:sync": "cd packages/astropress && node ../../node_modules/.bin/stryker run ../../stryker-sync.config.mjs",
-		"test:mutants:audit-utils": "node node_modules/.bin/stryker run stryker-audit-utils.config.mjs",
-		"test:mutants:pending-form": "cd packages/astropress && node ../../node_modules/.bin/stryker run ../../stryker-pending-form.config.mjs",
+		"test:mutants": "cd packages/astropress && node ../../node_modules/.bin/stryker run ../../tooling/stryker/stryker.config.mjs",
+		"test:mutants:critical": "cd packages/astropress && node ../../node_modules/.bin/stryker run ../../tooling/stryker/stryker-critical.config.mjs",
+		"test:mutants:sync": "cd packages/astropress && node ../../node_modules/.bin/stryker run ../../tooling/stryker/stryker-sync.config.mjs",
+		"test:mutants:audit-utils": "node node_modules/.bin/stryker run tooling/stryker/stryker-audit-utils.config.mjs",
+		"test:mutants:pending-form": "cd packages/astropress && node ../../node_modules/.bin/stryker run ../../tooling/stryker/stryker-pending-form.config.mjs",
 		"test:mutants:rust": "cargo mutants --package astropress-cli --timeout 30 --manifest-path crates/Cargo.toml",
 		"clean:stryker": "bun run tooling/scripts/kill-stale-stryker.ts",
 		"release": "bun run --filter @astropress-diy/astropress release",
@@ -115,7 +118,8 @@
 		"yaml": "^2.8.3",
 		"vite": "^7.3.2",
 		"astro": "^6.1.8",
-		"hono": "^4.12.14"
+		"hono": "^4.12.14",
+		"postcss": "^8.5.10"
 	},
 	"browserslist": [
 		"Chrome >= 108",
@@ -125,5 +129,11 @@
 	],
 	"engines": {
 		"node": ">=24.8.0"
+	},
+	"dependencies": {
+		"@astrojs/starlight": "^0.38.4",
+		"astro": "^6.1.8",
+		"sanitize-html": "^2.17.3",
+		"vitest": "^4.1.5"
 	}
 }

@@ -23,6 +23,12 @@ open alerts from a stale scan.
 After pushing, wait for the PR merge ref scan to complete, then run `check-pr-ghas.ts`.
 Do not declare "fixed" until this script exits 0 on a scan that post-dates the fix commit.
 
+### GitHub Actions shell safety
+
+Do not interpolate `${{ inputs.* }}`, `${{ github.* }}`, or `${{ secrets.* }}` directly inside
+any `run:` block. Put the value in step `env:` first, then reference the quoted shell variable.
+`bun run audit:github-actions-shell` enforces this.
+
 **Taint chain rules:**
 - `obj[taintedKey]` propagates taint even if `obj` only contains safe hardcoded values.
 - The only way to break a taint chain is to not use user-derived data at the sink at all.
@@ -42,3 +48,13 @@ Do not declare "fixed" until this script exits 0 on a scan that post-dates the f
 
 The pre-push hook runs a full suite (~10 minutes). Do not re-run `git push` while one is already
 in progress. Wait for the background task notification before concluding anything.
+
+## Final PR verification loop
+
+Before calling a CI or security fix done:
+
+1. Run the local audits and targeted tests for the files you changed.
+2. Push the branch and wait for the PR checks to update.
+3. Confirm the originally failing check is green.
+4. Run `bun run check:pr-ghas` against the PR merge ref.
+5. Only then declare the branch fixed.

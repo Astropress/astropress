@@ -1,0 +1,98 @@
+{
+  "journeys": [
+    {
+      "id": "admin-dashboard-load",
+      "marker": "admin-dashboard-load",
+      "files": [
+        "packages/astropress/pages/ap-admin/index.astro"
+      ]
+    },
+    {
+      "id": "admin-post-edit-save",
+      "marker": "admin-post-edit-save",
+      "files": [
+        "packages/astropress/pages/ap-admin/posts/[slug].astro",
+        "packages/astropress/pages/ap-admin/actions/content-save.ts",
+        "packages/astropress/src/runtime-actions-content.ts",
+        "packages/astropress/src/content-repository-factory.ts"
+      ]
+    },
+    {
+      "id": "admin-media-upload",
+      "marker": "admin-media-upload",
+      "files": [
+        "packages/astropress/pages/ap-admin/media.astro",
+        "packages/astropress/pages/ap-admin/actions/media-upload.ts",
+        "packages/astropress/src/runtime-actions-media.ts"
+      ]
+    },
+    {
+      "id": "admin-user-invite",
+      "marker": "admin-user-invite",
+      "files": [
+        "packages/astropress/pages/ap-admin/users.astro",
+        "packages/astropress/src/runtime-actions-users.ts"
+      ]
+    },
+    {
+      "id": "admin-failed-save-feedback",
+      "marker": "admin-failed-save-feedback",
+      "files": [
+        "packages/astropress/pages/ap-admin/posts/[slug].astro",
+        "packages/astropress/pages/ap-admin/actions/content-save.ts",
+        "packages/astropress/src/runtime-actions-content.ts"
+      ]
+    },
+    {
+      "id": "admin-oversized-upload-feedback",
+      "marker": "admin-oversized-upload-feedback",
+      "files": [
+        "packages/astropress/pages/ap-admin/media.astro",
+        "packages/astropress/pages/ap-admin/actions/media-upload.ts",
+        "packages/astropress/src/runtime-actions-media.ts"
+      ]
+    },
+    {
+      "id": "admin-missing-service-provider",
+      "marker": "admin-missing-service-provider",
+      "files": [
+        "packages/astropress/pages/ap-admin/services.astro",
+        "packages/astropress/pages/ap-admin/services/[provider].astro"
+      ]
+    },
+    {
+      "id": "admin-expired-reset-link",
+      "marker": "admin-expired-reset-link",
+      "files": [
+        "packages/astropress/pages/ap-admin/reset-password.astro"
+      ]
+    },
+    {
+      "id": "admin-invalid-admin-action-token",
+      "marker": "admin-invalid-admin-action-token",
+      "files": [
+        "packages/astropress/src/admin-action-utils.ts",
+        "packages/astropress/pages/ap-admin/actions/content-save.ts"
+      ]
+    },
+    {
+      "id": "admin-stale-edit-conflict",
+      "marker": "admin-stale-edit-conflict",
+      "files": [
+        "packages/astropress/pages/ap-admin/actions/content-save.ts",
+        "packages/astropress/src/runtime-actions-content.ts",
+        "packages/astropress/src/content-repository-factory.ts",
+        "packages/astropress/pages/ap-admin/posts/[slug].astro"
+      ]
+    },
+    {
+      "id": "admin-cross-browser-smoke",
+      "marker": "admin-cross-browser-smoke",
+      "files": [
+        "packages/astropress/pages/ap-admin/index.astro",
+        "packages/astropress/pages/ap-admin/posts/[slug].astro",
+        "packages/astropress/components/AdminLayout.astro"
+      ]
+    }
+  ]
+}

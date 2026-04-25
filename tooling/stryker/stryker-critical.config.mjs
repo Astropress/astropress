@@ -29,5 +29,5 @@ export default {
   incremental: true,
   incrementalFile: ".stryker-incremental.json",
   timeoutMS: 120000,
-  thresholds: { high: 90, low: 70, break: 60 },
+  thresholds: { high: 95, low: 95, break: 95 },
 };

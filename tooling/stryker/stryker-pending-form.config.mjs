@@ -17,5 +17,5 @@ export default {
 	incremental: true,
 	incrementalFile: "../../.stryker-incremental-pending-form.json",
 	timeoutMS: 30000,
-	thresholds: { high: 90, low: 80, break: 70 },
+	thresholds: { high: 95, low: 95, break: 95 },
 };

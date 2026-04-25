@@ -24,5 +24,5 @@ export default {
   incremental: true,
   incrementalFile: ".stryker-incremental-audit-utils.json",
   timeoutMS: 60000,
-  thresholds: { high: 80, low: 60, break: 50 },
+  thresholds: { high: 95, low: 95, break: 95 },
 };

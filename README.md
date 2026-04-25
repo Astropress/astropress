@@ -98,7 +98,7 @@ The bundled installer bootstraps the Astropress repo for local development. It e
 ```bash
 git clone https://github.com/astropress/astropress.git
 cd astropress
-bash astropress/tooling/scripts/install.sh
+bash tooling/scripts/install.sh
 ```
 
 ### On Windows
@@ -110,7 +110,9 @@ cd astropress
 pwsh tooling/scripts/install.ps1
 ```
 
-Both installers provision Bun, Node.js `24.8+`, Rust, and Playwright, then run the local verification suite unless you pass `--skip-tests`.
+Both installers provision Bun, Node.js `24.8+`, Rust, and Playwright's Chromium, Firefox, and WebKit browser binaries, then run the local verification suite unless you pass `--skip-tests`.
+
+On apt-based Linux distributions, the shell installer also asks Playwright to install browser system dependencies. On other Linux distributions, browser binaries are installed but WebKit may still need distro-specific system libraries; Flatpak WebKitGTK/Epiphany is not a Playwright WebKit replacement. Use the Ubuntu CI lane or a version-pinned `mcr.microsoft.com/playwright:v<same-version>-noble` container matching `npx playwright --version` for WebKit parity when local packages do not match Playwright's supported Linux build.
 
 ### Then scaffold your site
 
