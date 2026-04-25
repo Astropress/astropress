@@ -7,13 +7,21 @@ import { expectStylesheetsLoaded } from "./helpers/accessibility";
 // journey: admin-dashboard-load
 // journey: admin-post-edit-save
 
-async function submitAndWaitForUrl(
+async function submitAndWaitForActionRedirect(
   page: Page,
   action: () => Promise<unknown>,
-  url: RegExp,
+  actionPath: string,
+  redirectLocation: RegExp,
 ) {
-  await Promise.all([page.waitForURL(url, { timeout: 15_000 }), action()]);
-  await expect(page).toHaveURL(url);
+  const [response] = await Promise.all([
+    page.waitForResponse((response) => {
+      const url = new URL(response.url());
+      return url.pathname === actionPath && response.request().method() === "POST";
+    }, { timeout: 15_000 }),
+    action(),
+  ]);
+  expect(response.status()).toBe(302);
+  expect(response.headers().location ?? "").toMatch(redirectLocation);
 }
 
 test.describe("Feature: cross-browser admin golden smoke", () => {
@@ -32,9 +40,10 @@ test.describe("Feature: cross-browser admin golden smoke", () => {
     await page
       .locator("textarea[aria-label='Body HTML']")
       .fill(`<p>Cross-browser smoke save ${Date.now()}</p>`);
-    await submitAndWaitForUrl(
+    await submitAndWaitForActionRedirect(
       page,
       () => page.getByRole("button", { name: "Save reviewed changes" }).click(),
+      "/ap-admin/actions/content-save",
       /\/ap-admin\/posts\/hello-world\?saved=1/,
     );
     await expect(page.locator("ap-notice[type='success']")).toContainText(
