@@ -41,9 +41,11 @@ import { execFileSync, spawnSync } from "node:child_process";
 import {
 	closeSync,
 	existsSync,
+	fstatSync,
 	mkdtempSync,
 	openSync,
 	readFileSync,
+	readSync,
 	rmSync,
 	statSync,
 	writeFileSync,
@@ -134,7 +136,10 @@ function readBranchFileBuffer(
 	// returns file bytes without the Contents API's 1 MB inline limit.
 	return withTempDir((dir) => {
 		const out = path.join(dir, "raw");
-		const fd = openSync(out, "w");
+		// Open read+write so we can read back through the same fd without ever
+		// re-resolving the path. Eliminates the open→close→re-open TOCTOU
+		// (CodeQL js/file-system-race) and is faster (no second open syscall).
+		const fd = openSync(out, "w+");
 		try {
 			const result = spawnSync(
 				"gh",
@@ -153,10 +158,18 @@ function readBranchFileBuffer(
 				}
 				throw new Error(`gh api ${filename}: ${stderr.trim()}`);
 			}
+			const size = fstatSync(fd).size;
+			const buf = Buffer.alloc(size);
+			let read = 0;
+			while (read < size) {
+				const n = readSync(fd, buf, read, size - read, read);
+				if (n === 0) break;
+				read += n;
+			}
+			return buf.subarray(0, read);
 		} finally {
 			closeSync(fd);
 		}
-		return readFileSync(out);
 	});
 }
 
