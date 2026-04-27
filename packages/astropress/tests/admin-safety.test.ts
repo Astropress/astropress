@@ -1,12 +1,10 @@
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
+import { findRepoRoot } from "./_helpers/repo-root";
 
 const adminPagesRoot = path.resolve(import.meta.dirname, "../pages/ap-admin");
-const scriptsRoot = path.resolve(
-	import.meta.dirname,
-	"../../../tooling/scripts",
-);
+const scriptsRoot = path.join(findRepoRoot(), "tooling/scripts");
 
 function listAstroFiles(root: string, files: string[] = []) {
 	for (const entry of readdirSync(root)) {

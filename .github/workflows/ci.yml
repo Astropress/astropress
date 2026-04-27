@@ -93,12 +93,17 @@ jobs:
       - run: bun run audit:microcopy
       - run: bun run check:version
       - run: bun run audit:arch
-      - run: bunx biome check --reporter=github packages/astropress/src packages/astropress/tests packages/astropress/web-components
+      - run: bunx @biomejs/biome@1 check --reporter=github packages/astropress/src packages/astropress/tests packages/astropress/web-components
       - run: bun run audit:deps:graph
       - run: bun run audit:tooling-types
       - run: bun run audit:aeo
       - run: bun run audit:providers
       - run: bun run audit:github-actions-shell
+      - run: bun run audit:required-checks
+        env:
+          GH_TOKEN: ${{ github.token }}
+      - run: bun run audit:baseline-coverage
+      - run: bun run audit:toolchain-pins
       - run: bun run audit:user-journey-coverage
       - run: bun run audit:coverage-scope
       - run: bun run audit:playwright-projects

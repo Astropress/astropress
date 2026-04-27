@@ -33,8 +33,11 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
+import { findRepoRoot } from "./_helpers/repo-root";
 
-const srcRoot = path.resolve(import.meta.dirname, "../src");
+// Source-text invariants — read the canonical repo source, not the
+// Stryker-instrumented sandbox copy (where regex assertions would misfire).
+const srcRoot = path.join(findRepoRoot(), "packages/astropress/src");
 const schema = readFileSync(path.join(srcRoot, "sqlite-schema.sql"), "utf8");
 
 // ---------------------------------------------------------------------------

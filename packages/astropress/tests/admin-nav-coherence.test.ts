@@ -1,7 +1,8 @@
 import { readFileSync, readdirSync } from "node:fs";
-import { dirname, join, resolve } from "node:path";
+import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
+import { findRepoRoot } from "./_helpers/repo-root";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -16,7 +17,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 //   4. No item appears under two different groups
 //   5. CLI verbs follow noun-verb pattern (services bootstrap, db migrate — not migrate-db)
 
-const ROOT = resolve(__dirname, "../../..");
+const ROOT = findRepoRoot(__dirname);
 const ADMIN_LAYOUT = join(
 	ROOT,
 	"packages/astropress/components/AdminLayout.astro",

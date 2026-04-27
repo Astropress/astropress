@@ -20,11 +20,17 @@
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
+import { findRepoRoot } from "./_helpers/repo-root";
 
-const srcRoot = path.resolve(import.meta.dirname, "../src");
-const actionsRoot = path.resolve(
-	import.meta.dirname,
-	"../pages/ap-admin/actions",
+// These are structural source-text invariants — they assert the source code is
+// written a particular way. They must read the canonical repo source, NOT the
+// Stryker-instrumented sandbox copy (where, e.g., `delivered: true` is rewritten
+// for branch tracking and the regex no longer matches).
+const repoRoot = findRepoRoot();
+const srcRoot = path.join(repoRoot, "packages/astropress/src");
+const actionsRoot = path.join(
+	repoRoot,
+	"packages/astropress/pages/ap-admin/actions",
 );
 
 function readSource(filePath: string): string {

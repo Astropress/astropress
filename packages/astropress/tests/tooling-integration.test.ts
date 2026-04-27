@@ -13,6 +13,7 @@ import { defineAstropressHostRuntimeModules } from "../src/host-runtime-modules"
 import { createAstropressViteIntegration } from "../src/vite-integration";
 import { createAstropressLocalRuntimeModulePlugin } from "../src/vite-runtime-alias";
 import { createAstropressVitestLocalRuntimePlugins } from "../src/vitest-runtime-alias";
+import { findRepoRoot } from "./_helpers/repo-root";
 
 const pagesDirectory = path.resolve(import.meta.dirname, "../pages/ap-admin");
 
@@ -122,9 +123,9 @@ describe("tooling integration", () => {
 		//
 		// The fix is ssr.noExternal:["@astropress-diy/astropress"] in the harness
 		// Vite config. This test prevents accidental removal.
-		const configPath = path.resolve(
-			import.meta.dirname,
-			"../../../examples/admin-harness/astro.config.mjs",
+		const configPath = path.join(
+			findRepoRoot(),
+			"examples/admin-harness/astro.config.mjs",
 		);
 		const source = readFileSync(configPath, "utf8");
 		expect(

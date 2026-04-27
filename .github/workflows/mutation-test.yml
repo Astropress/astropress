@@ -1,8 +1,19 @@
 name: Mutation Testing
 
 on:
+  push:
+    # Refresh the shared `.stryker-incremental.json` after every merge to
+    # main. Mondays-only used to leave the cache stale for up to 6 days
+    # after a large refactor; running per-merge keeps it ≤ one diff stale,
+    # which is always a cheap incremental update.
+    branches: [main]
+    paths:
+      - "packages/astropress/src/**"
+      - "packages/astropress/tests/**"
+      - "tooling/stryker/**"
+      - ".github/workflows/mutation-test.yml"
   schedule:
-    - cron: "0 6 * * 1" # Monday 6am UTC
+    - cron: "0 6 * * 1" # Monday 6am UTC — safety net if main has been quiet
   workflow_dispatch:
     inputs:
       scope:
@@ -14,6 +25,13 @@ on:
           - full
           - critical
 
+# Serialize runs that touch the `stryker-state` branch — concurrent runs
+# would race on the lock and one would fail to acquire. Queue rather than
+# cancel so we never skip refreshing the cache after a merge.
+concurrency:
+  group: stryker-state
+  cancel-in-progress: false
+
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 
@@ -21,7 +39,17 @@ jobs:
   stryker:
     name: Stryker (TypeScript)
     runs-on: ubuntu-latest
-    timeout-minutes: 120
+    # 4h11m on a recent cold full run; cap generously above that. Warm-cache
+    # runs after small diffs typically finish in <30 min via the
+    # `stryker-state` shared incremental file.
+    timeout-minutes: 360
+    permissions:
+      # `run-mutants-shared` reads from and pushes to the `stryker-state`
+      # branch via the git refs API; the default GITHUB_TOKEN needs explicit
+      # contents:write to update refs.
+      contents: write
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - uses: actions/checkout@v6
 
@@ -35,10 +63,13 @@ jobs:
 
       - run: bun install --frozen-lockfile
 
-      - name: Run Stryker (full suite)
+      - name: Run Stryker (full suite, shared cache)
         if: inputs.scope != 'critical'
-        run: npx stryker run ../../tooling/stryker/stryker.config.mjs
-        working-directory: packages/astropress
+        # Pulls latest `.stryker-incremental.json` from the `stryker-state`
+        # branch, runs Stryker, pushes the refreshed cache back. Forwards
+        # Stryker's exit code so the threshold gate still fails the job
+        # when the score drops below the configured break.
+        run: bun run tooling/scripts/run-mutants-shared.ts run
 
       - name: Run Stryker (critical paths only)
         if: inputs.scope == 'critical'

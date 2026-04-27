@@ -373,7 +373,7 @@ pre-push:
   parallel: true
   commands:
     gates:
-      run: bun run test:prepush
+      run: bun run tooling/scripts/run-with-timing.ts gates -- bun run test:prepush
 
     # DO NOT REMOVE OR RELAX — closes the gap the pre-commit threshold audit
     # leaves open. Runs Stryker mutation testing scoped to files changed on
@@ -381,17 +381,33 @@ pre-push:
     # blocks PRs whose new code scores below the 95% floor. See the script
     # header for the full rationale.
     mutation-gate:
-      run: bun run tooling/scripts/prepush-mutation-gate.ts
+      # LEFTHOOK_PUSH=1 lets the script detect it's running inside `git push`
+      # so it can fail fast and print exact recovery commands instead of
+      # rewriting baseline-scores.json mid-push (which would later trip
+      # repo:clean and abort with a misleading dirty-worktree error).
+      #
+      # Wrapped in run-with-timing because lefthook's own duration display
+      # uses parallel-queue start time, which under-reports long steps
+      # (a 10-minute Stryker run can read as "0.26 seconds" when other steps
+      # are running in parallel). The wrapper emits real wall-clock duration
+      # to stderr at completion.
+      env:
+        LEFTHOOK_PUSH: "1"
+      run: bun run tooling/scripts/run-with-timing.ts mutation-gate -- bun run tooling/scripts/prepush-mutation-gate.ts
 
     slow-audits:
       # Whole-repo static audits moved out of pre-commit because they scan far
       # beyond any changed file. Amortized across a push (not per-commit) these
       # add ~15–20s to pre-push wall-clock but nothing to pre-commit feedback.
       run: >-
-        bun run audit:deps:graph &&
-        bun run audit:tooling-types &&
-        bun run docs:api:check &&
-        bun run docs:check
+        bun run tooling/scripts/run-with-timing.ts slow-audits -- bash -c '
+          bun run audit:deps:graph &&
+          bun run audit:tooling-types &&
+          bun run audit:baseline-coverage &&
+          bun run audit:toolchain-pins &&
+          bun run docs:api:check &&
+          bun run docs:check
+        '
 
     verify-commits-signed:
       run: |
