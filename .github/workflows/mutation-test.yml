@@ -1,8 +1,19 @@
 name: Mutation Testing
 
 on:
+  push:
+    # Refresh the shared `.stryker-incremental.json` after every merge to
+    # main. Mondays-only used to leave the cache stale for up to 6 days
+    # after a large refactor; running per-merge keeps it ≤ one diff stale,
+    # which is always a cheap incremental update.
+    branches: [main]
+    paths:
+      - "packages/astropress/src/**"
+      - "packages/astropress/tests/**"
+      - "tooling/stryker/**"
+      - ".github/workflows/mutation-test.yml"
   schedule:
-    - cron: "0 6 * * 1" # Monday 6am UTC
+    - cron: "0 6 * * 1" # Monday 6am UTC — safety net if main has been quiet
   workflow_dispatch:
     inputs:
       scope:
@@ -13,6 +24,13 @@ on:
         options:
           - full
           - critical
+
+# Serialize runs that touch the `stryker-state` branch — concurrent runs
+# would race on the lock and one would fail to acquire. Queue rather than
+# cancel so we never skip refreshing the cache after a merge.
+concurrency:
+  group: stryker-state
+  cancel-in-progress: false
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
