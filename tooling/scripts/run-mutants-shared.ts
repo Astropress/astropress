@@ -88,11 +88,6 @@ function gh(
 	return result.stdout;
 }
 
-function ghOk(args: string[]): boolean {
-	const result = spawnSync("gh", args, { stdio: "ignore" });
-	return result.status === 0;
-}
-
 function repoIdent(): RepoIdent {
 	const json = gh(["repo", "view", "--json", "owner,name"]);
 	const data = JSON.parse(json) as { owner: { login: string }; name: string };
