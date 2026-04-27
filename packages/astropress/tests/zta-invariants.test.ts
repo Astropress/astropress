@@ -15,10 +15,14 @@
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
+import { findRepoRoot } from "./_helpers/repo-root";
 
-const pagesRoot = path.resolve(import.meta.dirname, "../pages/ap-admin");
-const actionsRoot = path.resolve(pagesRoot, "actions");
-const srcRoot = path.resolve(import.meta.dirname, "../src");
+// Source-text invariants — read canonical repo source, not the Stryker-instrumented
+// sandbox copy.
+const repoRoot = findRepoRoot();
+const pagesRoot = path.join(repoRoot, "packages/astropress/pages/ap-admin");
+const actionsRoot = path.join(pagesRoot, "actions");
+const srcRoot = path.join(repoRoot, "packages/astropress/src");
 
 // Auth-exempt pages — login flow, not protected by session
 const AUTH_EXEMPT_PAGES = new Set([

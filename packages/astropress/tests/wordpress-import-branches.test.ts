@@ -861,7 +861,10 @@ describe("duplicate slug handling", () => {
 			includeMedia: false,
 		});
 		expect(report2.importedRecords).toBe(1);
-	}, 30000);
+		// 90s, not 30s: this test runs two full importWordPress applyLocal cycles
+		// (parse + SQLite seed + write, ×2). ~6s under plain vitest, but Stryker's
+		// coverage-instrumented dry run adds 3–5× overhead and trips a 30s bound.
+	}, 90000);
 });
 
 describe("importWordPress — error/guard branches", () => {

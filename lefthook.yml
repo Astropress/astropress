@@ -403,6 +403,8 @@ pre-push:
         bun run tooling/scripts/run-with-timing.ts slow-audits -- bash -c '
           bun run audit:deps:graph &&
           bun run audit:tooling-types &&
+          bun run audit:baseline-coverage &&
+          bun run audit:toolchain-pins &&
           bun run docs:api:check &&
           bun run docs:check
         '

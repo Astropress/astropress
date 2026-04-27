@@ -238,6 +238,119 @@ change between Node minor versions.
 
 ---
 
+## Stryker (`stryker-mutator/stryker-js`)
+
+Pain points discovered during the 2026-04-27 full mutation run on
+`chore/process-improvements-from-pr64` (16 876 mutants, 6 h+ runtime, 0.3 % cache
+reuse). The combined effect made a routine baseline refresh effectively unusable
+on a developer machine.
+
+### 9. Incremental cache invalidates whole files on any content change
+
+**Pain point:** Stryker's incremental cache hashes by file content, so a
+formatting-only or import-only edit invalidates every mutant in the file. A
+persistence refactor (Astropress PR #61) renamed an import across 211 src files;
+none of the behavioural mutants on those files actually changed, but Stryker
+marked 16 771 of 16 876 mutants "new" and reused only 51. The next run paid a
+multi-hour cold-start cost.
+
+**Astropress code:** `tooling/stryker/stryker.config.mjs`,
+`.stryker-incremental.json` (gitignored).
+
+**Upstream ask:**
+- Key incremental identity by AST node + mutator + position-within-AST instead
+  of whole-file content hash, so import-only or whitespace-only edits don't
+  invalidate behavioural mutants whose AST surface is unchanged.
+
+---
+
+### 10. `ignoreStatic` is incompatible with `coverageAnalysis: "all"`
+
+**Pain point:** `ignoreStatic: true` is rejected at config-validation time when
+`coverageAnalysis` is `"all"` — but `"all"` is the fastest dry-run mode.
+Switching to `"perTest"` to gain `ignoreStatic`'s ~15 % static-mutant cut adds
+significant per-mutant overhead (see #11).
+
+**Astropress code:** `tooling/stryker/stryker.config.mjs` — we currently set
+`coverageAnalysis: "perTest"` solely to satisfy this constraint.
+
+**Upstream ask:**
+- Make `ignoreStatic` orthogonal to coverage mode. Static-mutant detection is an
+  AST property and doesn't require per-test coverage data.
+
+---
+
+### 11. Per-mutant test transform is repeated, not cached
+
+**Pain point:** Log lines under the `vitest-runner` show `transform 10.79s` on
+every per-mutant test run, even though the mutated source change is a one-line
+edit and the test files themselves are unchanged. Vitest's compiled test modules
+appear to be re-built per mutant.
+
+**Astropress code:** affects every `bun run test:mutants` invocation; visible in
+`/tmp/stryker-run.log` excerpts during the 2026-04-27 run.
+
+**Upstream ask (`@stryker-mutator/vitest-runner`):**
+- Cache compiled test modules across mutants. Only the mutated source module
+  needs re-compilation; downstream test-file transforms can be reused.
+
+---
+
+### 12. Worker SIGSEGV recovery is silent and lossy
+
+**Pain point:** Long runs hit periodic worker SIGSEGV crashes (likely Vitest +
+Node 24 interaction). Stryker spawns a replacement worker, but:
+- No user-facing summary ("N worker crashes recovered, M mutants retried").
+- In-flight mutants on the dead worker are retried from scratch — no checkpoint.
+- The crash event surfaces only via stderr stack trace, easy to miss.
+
+**Astropress code:** observed during `bun run test:mutants` runs; multiple worker
+crashes per multi-hour run.
+
+**Upstream ask:**
+- Persist per-mutant results incrementally as they complete. On worker death,
+  re-run only the unfinished mutants assigned to that worker.
+- Surface a counter in the final report and exit summary: "X workers restarted,
+  Y mutants retried, Z mutants lost (if any)."
+
+---
+
+### 13. No live progress reporting during the mutation phase
+
+**Pain point:** With `clear-text` reporter the mutation phase is silent until
+the run completes. On a 6 h run there is no way to distinguish "still working"
+from "hung" without inspecting `ps` CPU times of the worker processes.
+
+**Astropress code:** every `bun run test:mutants` invocation.
+
+**Upstream ask:**
+- Add a `--progress` flag (or a streaming reporter) that prints
+  "killed/survived/timeout: N/M (P % complete, ETA Y)" every ~30 s during the
+  mutation phase, similar to `cargo test`'s test-counter output.
+
+---
+
+### 14. Incremental cache is local-only by design — no shared-state pattern
+
+**Pain point:** `.stryker-incremental.json` is intended to be gitignored, so
+every machine and CI runner pays first-run cost independently. Multiple
+developers + CI all redo the same work. After Astropress PR #61, every
+contributor would have hit the same 6 h cold-start.
+
+**Astropress code:** `.gitignore` line 24 (`**/.stryker-incremental*.json`); we
+plan to build `tooling/scripts/run-mutants-shared.ts` to wrap Stryker with a
+GitHub-release-asset shared store + lock branch.
+
+**Upstream ask:**
+- Document a "remote state" pattern (analogous to Terraform remote state).
+- Add a `stateUri` config option that fetches the incremental file at run start
+  and pushes it back at run end, with a pluggable backend (S3/GCS/GitHub
+  release/HTTP PUT).
+- Include a lock primitive so two simultaneous runs don't overwrite each
+  other's state.
+
+---
+
 ## Summary table
 
 | Project | Change | Astropress benefit |
@@ -252,3 +365,9 @@ change between Node minor versions.
 | crossterm | BSD terminal support | CLI works on FreeBSD/NetBSD/OpenBSD |
 | ratatui | Graceful non-TUI fallback | CLI degrades cleanly on unsupported terminals |
 | Node.js | Graduate `node:sqlite` to stable | No ExperimentalWarning; stable API contract |
+| Stryker | AST-keyed incremental identity | Import/format edits stop invalidating whole files |
+| Stryker | `ignoreStatic` works with `coverageAnalysis: "all"` | Faster dry-run + static-mutant skip together |
+| Stryker (`vitest-runner`) | Cache compiled test modules across mutants | Eliminate per-mutant transform overhead |
+| Stryker | Checkpoint per-mutant results; surface worker-crash counters | Multi-hour runs survive SIGSEGV without silent loss |
+| Stryker | Live `--progress` reporter | Distinguish "working" from "hung" on long runs |
+| Stryker | Remote-state config + lock for incremental file | Devs + CI share cache; no per-machine cold start |

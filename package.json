@@ -77,6 +77,8 @@
 		"audit:ci-sarif-upload": "bun run tooling/scripts/audit-ci-sarif-upload.ts",
 		"audit:nuclei-suppressions": "bun run tooling/scripts/audit-nuclei-suppressions.ts",
 		"audit:required-checks": "bun run tooling/scripts/audit-required-checks.ts",
+		"audit:baseline-coverage": "bun run tooling/scripts/audit-baseline-coverage.ts",
+		"audit:toolchain-pins": "bun run tooling/scripts/audit-toolchain-pins.ts",
 		"check:version": "bun run tooling/scripts/check-version-bump.ts",
 		"docs:api": "bun run tooling/scripts/generate-api-docs.ts",
 		"docs:api:check": "bun run tooling/scripts/generate-api-docs.ts --check",

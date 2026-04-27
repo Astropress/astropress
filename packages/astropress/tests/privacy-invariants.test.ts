@@ -11,8 +11,11 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
+import { findRepoRoot } from "./_helpers/repo-root";
 
-const srcRoot = path.resolve(import.meta.dirname, "../src");
+// Source-text invariants — read canonical repo source, not the Stryker-instrumented
+// sandbox copy.
+const srcRoot = path.join(findRepoRoot(), "packages/astropress/src");
 const schemaPath = path.resolve(srcRoot, "sqlite-schema.sql");
 const bootstrapPath = path.resolve(srcRoot, "sqlite-bootstrap.ts");
 const securityMiddlewarePath = path.resolve(srcRoot, "security-middleware.ts");
