@@ -89,6 +89,7 @@
 		"check:pr-ghas": "bun run tooling/scripts/check-pr-ghas.ts",
 		"stress:sqlite": "bun run tooling/scripts/stress-sqlite-writes.ts",
 		"test:mutants": "cd packages/astropress && node ../../node_modules/.bin/stryker run ../../tooling/stryker/stryker.config.mjs",
+		"test:mutants:shared": "bun run tooling/scripts/run-mutants-shared.ts",
 		"test:mutants:critical": "cd packages/astropress && node ../../node_modules/.bin/stryker run ../../tooling/stryker/stryker-critical.config.mjs",
 		"test:mutants:sync": "cd packages/astropress && node ../../node_modules/.bin/stryker run ../../tooling/stryker/stryker-sync.config.mjs",
 		"test:mutants:audit-utils": "node node_modules/.bin/stryker run tooling/stryker/stryker-audit-utils.config.mjs",
