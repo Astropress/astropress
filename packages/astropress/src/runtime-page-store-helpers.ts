@@ -29,6 +29,7 @@ export function createStaticReadStore(
 	return {
 		audit: {
 			getAuditEvents: async () => [],
+			recordAuditEvent: async () => {},
 		},
 		users: {
 			listAdminUsers: async () => [],
@@ -90,6 +91,8 @@ export function createFallbackReadStore(
 	return {
 		audit: {
 			getAuditEvents: async () => localAdminStore.getAuditEvents(),
+			recordAuditEvent: async (input) =>
+				localAdminStore.recordAuditEvent(input),
 		},
 		users: {
 			listAdminUsers: async () =>

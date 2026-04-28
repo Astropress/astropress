@@ -89,6 +89,7 @@ export type AdminDashboardModel = {
 		count: number;
 		helper: string;
 	}>;
+	latestDeployment: AuditEvent | null;
 };
 
 async function settledValue<T>(promise: Promise<T>, fallback: T) {
@@ -147,6 +148,8 @@ export async function buildAdminDashboardModel(
 		)
 		.slice(0, 5);
 	const recentAuditEvents = auditEvents.slice(0, 6);
+	const latestDeployment =
+		auditEvents.find((event) => event.targetType === "deployment") ?? null;
 	const recentActivity = (
 		role === "admin"
 			? [
@@ -260,5 +263,6 @@ export async function buildAdminDashboardModel(
 		seoNeedsAttention,
 		archiveRoutes,
 		supportSurfaceLinks,
+		latestDeployment,
 	};
 }

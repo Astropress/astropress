@@ -450,6 +450,9 @@ if (model.status === "forbidden") {
   }
   .settings-tab {
     padding: 0.625rem 1.25rem;
+    min-height: 2.75rem;
+    display: inline-flex;
+    align-items: center;
     font-size: 0.9375rem;
     font-weight: 500;
     text-decoration: none;
@@ -478,8 +481,20 @@ if (model.status === "forbidden") {
   .summary-card span:last-child { color: var(--muted); font-size: 0.9rem; }
   .settings-section { display: grid; gap: 1rem; }
   .settings-section h2 { margin: 0; font-size: 1.1rem; }
-  .checkbox-label { display: flex; align-items: center; gap: 0.6rem; font-weight: 600; }
-  input[type="checkbox"] { width: 1.2rem; height: 1.2rem; cursor: pointer; }
+  .checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-weight: 600;
+    min-height: 2.75rem;
+    padding: 0.4rem 0;
+  }
+  input[type="checkbox"] {
+    width: 2.75rem;
+    height: 2.75rem;
+    cursor: pointer;
+    accent-color: var(--accent, #6366f1);
+  }
   .checkbox-label span { font-weight: normal; }
   .actions { margin-top: 1rem; }
 

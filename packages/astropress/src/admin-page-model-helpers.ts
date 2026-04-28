@@ -96,5 +96,6 @@ export function emptyDashboardModel(): AdminDashboardModel {
 		seoNeedsAttention: 0,
 		archiveRoutes: [],
 		supportSurfaceLinks: [],
+		latestDeployment: null,
 	};
 }
