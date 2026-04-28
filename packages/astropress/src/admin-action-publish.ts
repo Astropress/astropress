@@ -9,6 +9,10 @@
  * - Render: POST to deploy hook URL
  */
 
+import { withLocalStoreFallback } from "./admin-store-dispatch";
+import { recordD1Audit } from "./d1-audit";
+import type { Actor } from "./persistence-types";
+
 export interface PublishTriggerResult {
 	ok: boolean;
 	buildId?: string;
@@ -162,6 +166,52 @@ export async function triggerPublish(
 		default:
 			return { ok: false, error: `Unknown deploy hook type: ${config.type}` };
 	}
+}
+
+export interface PublishAuditPayload {
+	hookType: DeployHookType;
+	result: PublishTriggerResult;
+}
+
+/**
+ * Persist a trusted audit record describing a publish trigger. The dashboard
+ * surfaces the latest record so editors can see the most recent build status
+ * without trusting query-string state from the redirect.
+ */
+export async function recordPublishAudit(
+	locals: App.Locals | null | undefined,
+	actor: Actor,
+	payload: PublishAuditPayload,
+): Promise<void> {
+	const { hookType, result } = payload;
+	const action = result.ok ? "deployment.trigger" : "deployment.failure";
+	const summary = result.ok
+		? `Triggered ${hookType} publish${result.buildId ? ` (build ${result.buildId})` : ""}.`
+		: `${hookType} publish failed: ${result.error ?? "Unknown error"}`;
+	const resourceId = result.buildId ?? hookType;
+
+	await withLocalStoreFallback(
+		locals,
+		async () => {
+			await recordD1Audit(
+				locals,
+				actor,
+				action,
+				"deployment",
+				resourceId,
+				summary,
+			);
+		},
+		async (store) => {
+			await store.recordAuditEvent({
+				userEmail: actor.email,
+				action,
+				resourceType: "deployment",
+				resourceId,
+				summary,
+			});
+		},
+	);
 }
 
 /**
