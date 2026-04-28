@@ -217,10 +217,19 @@ function main(): number {
 	}
 
 	const PREFIX = "packages/astropress/";
-	const repoRelative = changed.filter((f) => f.startsWith(PREFIX));
+	// Pure-type files excluded from `tooling/stryker/stryker.config.mjs` (no
+	// runtime code → Stryker produces no mutants → score is null). Skip them
+	// here so a typedef-only change doesn't fail the gate as "UNSCORED".
+	const TYPE_ONLY_FILES = new Set<string>([
+		`${PREFIX}src/persistence-types.ts`,
+		`${PREFIX}src/config-service-types.ts`,
+	]);
+	const repoRelative = changed
+		.filter((f) => f.startsWith(PREFIX))
+		.filter((f) => !TYPE_ONLY_FILES.has(f));
 	if (repoRelative.length === 0) {
 		console.log(
-			"prepush-mutation-gate: changed files outside packages/astropress/ — skipping.",
+			"prepush-mutation-gate: changed files outside packages/astropress/ (or are type-only) — skipping.",
 		);
 		return 0;
 	}
