@@ -351,6 +351,28 @@ const documentTitleResolved = matchedNavItem
               });
             }
 
+            // Sidebar group disclosures: persist open/closed state per-group
+            // in localStorage so collapsed groups stay collapsed across pages.
+            // Server SSR auto-opens the group containing the current page; the
+            // user override (if any) takes precedence after first interaction.
+            try {
+              var storeKey = 'astropress_admin_nav_groups_v1';
+              var raw = window.localStorage.getItem(storeKey);
+              var state = raw ? JSON.parse(raw) : {};
+              var groupEls = document.querySelectorAll('details[data-nav-group]');
+              groupEls.forEach(function (el) {
+                var key = el.getAttribute('data-nav-group');
+                if (!key) return;
+                if (Object.prototype.hasOwnProperty.call(state, key)) {
+                  if (state[key]) el.setAttribute('open', ''); else el.removeAttribute('open');
+                }
+                el.addEventListener('toggle', function () {
+                  state[key] = el.hasAttribute('open');
+                  try { window.localStorage.setItem(storeKey, JSON.stringify(state)); } catch (e) { /* quota / disabled — OK */ }
+                });
+              });
+            } catch (e) { /* localStorage disabled — OK, server SSR still picks the right group */ }
+
             // Down-arrow in the utility bar: scroll the page to the bottom.
             var scrollDownBtn = document.getElementById('scroll-to-bottom-btn');
             if (scrollDownBtn) {
@@ -402,26 +424,73 @@ const documentTitleResolved = matchedNavItem
         >
           <span aria-hidden="true">✕</span>
         </button>
-        <p class="sidebar-label">{adminUi.labels.sidebarTitle}</p>
-        {navItems
-          .filter((item) => (item.adminOnly ? role === "admin" : true))
-          .map((item) => {
+        {/*
+          Render the flat navItems list as a stack of leaves (before the first
+          group label) followed by collapsible <details> sections — one per
+          group. Each section auto-opens when it contains the current page so
+          the active leaf is always visible. A small client script persists
+          per-group open/closed state in localStorage so user preference
+          survives page navigation.
+        */}
+        {(() => {
+          const visible = navItems.filter((item) =>
+            item.adminOnly ? role === "admin" : true,
+          );
+          type Group = { label: string; key: string; items: NavItem[] };
+          const preamble: NavItem[] = [];
+          const groups: Group[] = [];
+          for (const item of visible) {
             if (item.isGroupLabel) {
-              return <p class="sidebar-group-label">{item.label}</p>;
+              groups.push({
+                label: item.label,
+                key: item.label.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
+                items: [],
+              });
+              continue;
             }
-            return (
-              <a
-                href={item.href}
-                aria-current={currentPath === item.href ? "page" : undefined}
-                class={item.indent ? "sidebar-child" : ""}
-              >
-                {item.label}
-              </a>
-            );
-          })}
+            if (groups.length === 0) {
+              preamble.push(item);
+            } else {
+              groups[groups.length - 1].items.push(item);
+            }
+          }
+          const isInGroup = (g: Group): boolean =>
+            g.items.some((it) => it.href === currentPath);
+          return (
+            <>
+              {preamble.map((item) => (
+                <a
+                  href={item.href}
+                  aria-current={currentPath === item.href ? "page" : undefined}
+                  class={item.indent ? "sidebar-child" : ""}
+                >
+                  {item.label}
+                </a>
+              ))}
+              {groups.map((g) => (
+                <details
+                  class="sidebar-group"
+                  data-nav-group={g.key}
+                  open={isInGroup(g) || undefined}
+                >
+                  <summary class="sidebar-group-label">{g.label}</summary>
+                  {g.items.map((item) => (
+                    <a
+                      href={item.href}
+                      aria-current={currentPath === item.href ? "page" : undefined}
+                      class={item.indent ? "sidebar-child" : ""}
+                    >
+                      {item.label}
+                    </a>
+                  ))}
+                </details>
+              ))}
+            </>
+          );
+        })()}
         {recentItems.length > 0 && (
-          <>
-            <p class="sidebar-group-label">{tLayout("layout.recent")}</p>
+          <details class="sidebar-group" data-nav-group="recent" open>
+            <summary class="sidebar-group-label">{tLayout("layout.recent")}</summary>
             {recentItems.map((item) => (
               <a
                 href={item.editHref}
@@ -431,7 +500,7 @@ const documentTitleResolved = matchedNavItem
                 {item.title.length > 28 ? item.title.slice(0, 26) + "\u2026" : item.title}
               </a>
             ))}
-          </>
+          </details>
         )}
       </nav>
       <main id="admin-main" tabindex="-1">
