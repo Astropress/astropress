@@ -60,7 +60,7 @@ describe("cloudflare session secret", () => {
 	it("emits console.warn when using the default hardcoded secret", async () => {
 		const db = makeDb();
 		db.prepare(
-			"INSERT INTO admin_users (email, role, password_hash, name, active) VALUES (?, ?, ?, 'Admin', 1)",
+			"INSERT INTO admin_users (email, role, password_hash, name, active, is_admin) VALUES (?, ?, ?, 'Admin', 1, CASE WHEN ?2='admin' THEN 1 ELSE 0 END)",
 		).run("admin@example.com", "admin", await hashPassword("correctpass"));
 		const d1 = new SqliteBackedD1Database(db);
 		const adapter = createAstropressCloudflareAdapter({ db: d1 });
@@ -78,7 +78,7 @@ describe("cloudflare session secret", () => {
 		process.env.CLOUDFLARE_SESSION_SECRET = "my-long-random-secret-value";
 		const db = makeDb();
 		db.prepare(
-			"INSERT INTO admin_users (email, role, password_hash, name, active) VALUES (?, ?, ?, 'Admin', 1)",
+			"INSERT INTO admin_users (email, role, password_hash, name, active, is_admin) VALUES (?, ?, ?, 'Admin', 1, CASE WHEN ?2='admin' THEN 1 ELSE 0 END)",
 		).run("admin@example.com", "admin", await hashPassword("correctpass"));
 		const d1 = new SqliteBackedD1Database(db);
 		const adapter = createAstropressCloudflareAdapter({ db: d1 });
@@ -92,7 +92,7 @@ describe("cloudflare session secret", () => {
 
 		const db = makeDb();
 		db.prepare(
-			"INSERT INTO admin_users (email, role, password_hash, name, active) VALUES (?, ?, ?, 'Admin', 1)",
+			"INSERT INTO admin_users (email, role, password_hash, name, active, is_admin) VALUES (?, ?, ?, 'Admin', 1, CASE WHEN ?2='admin' THEN 1 ELSE 0 END)",
 		).run("admin@example.com", "admin", await hashPassword("correctpass"));
 
 		const d1 = new SqliteBackedD1Database(db);
@@ -119,7 +119,7 @@ describe("cloudflare session secret", () => {
 
 		const db = makeDb();
 		db.prepare(
-			"INSERT INTO admin_users (email, role, password_hash, name, active) VALUES (?, ?, ?, 'Admin', 1)",
+			"INSERT INTO admin_users (email, role, password_hash, name, active, is_admin) VALUES (?, ?, ?, 'Admin', 1, CASE WHEN ?2='admin' THEN 1 ELSE 0 END)",
 		).run("admin@example.com", "admin", await hashPassword("correctpass"));
 
 		const d1 = new SqliteBackedD1Database(db);
@@ -151,7 +151,7 @@ describe("cloudflare session secret", () => {
 
 		const db = makeDb();
 		db.prepare(
-			"INSERT INTO admin_users (email, role, password_hash, name, active) VALUES (?, ?, ?, 'Admin', 1)",
+			"INSERT INTO admin_users (email, role, password_hash, name, active, is_admin) VALUES (?, ?, ?, 'Admin', 1, CASE WHEN ?2='admin' THEN 1 ELSE 0 END)",
 		).run("admin@example.com", "admin", await hashPassword("correctpass"));
 
 		const d1 = new SqliteBackedD1Database(db);

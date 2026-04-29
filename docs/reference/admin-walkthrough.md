@@ -171,7 +171,62 @@ but reviewers should still smoke them when admin templates change.
 
 ---
 
-## 7. After a UI-touching PR is merged
+## 7. Access control (`/ap-admin/access`)
+
+The Access page is the admin-only break-glass surface for the ABAC engine.
+Authorization is decided server-side by `requiresAccess(Astro, "<action>")` at
+the page level and `requireAction: "<action>"` at the form-action level — the
+nav-level filter is a UI mirror, not a security boundary.
+
+- [ ] Sign in as `admin@example.com`. The **Access** leaf appears in the
+      sidebar; sign in as `editor@example.com` and confirm it is hidden
+      (the leaf has `requiredAction: "roles:manage"` so non-admins never
+      see it). Even if you guess the URL, the page redirects to
+      `/ap-admin?error=insufficient-permissions&reason=...` and the deny is
+      logged to `audit_events` with `action='access:deny'`.
+- [ ] **Users tab** — every admin user lists with a checkbox per role.
+      Toggling a checkbox auto-submits the form (data-access-role-toggle
+      script wiring; no inline event handlers). The "Direct grants"
+      column shows a count badge and an "Add grant" disclosure that
+      surfaces a datalist of every action registered through
+      `listAccessActions()`.
+- [ ] **Last-admin safeguard** — confirm the warning notice appears when
+      only one active admin remains. Try to demote yourself: the action
+      handler refuses with the safeguard's message via the URL `message=`
+      param, surfaced into the AdminLayout aria-live region.
+- [ ] **Roles tab** — the Editor / Author / Moderator / Translator
+      starter roles are listed and marked with a "System" badge. Their
+      name fields are read-only (system roles cannot be renamed) but
+      description is editable. Create a custom role; add a policy
+      (action picker datalist + allow/deny + priority); verify it
+      appears under the role and that **Remove** drops it. Delete the
+      custom role; verify the row disappears. Try to delete a system
+      role — the server refuses with a banner.
+- [ ] **My Permissions tab** — for an admin viewer the table shows the
+      computed effective policies (admins still bypass evaluation but
+      the snapshot is rendered for transparency). For an editor with one
+      role assigned, the rows reflect the role's bundled policies plus
+      any direct grants, with the source column tagging each row as
+      `Role: <name>` or `Direct grant`.
+
+Authorization model invariants (worth re-reading before reviewing any
+PR that touches the access surface):
+
+- `subject.isAdmin` is the canonical break-glass flag. The legacy
+  `AuthUser.role` enum is now display-only and derived from `isAdmin`;
+  do not branch on it for authorization decisions.
+- DENY beats ALLOW regardless of priority. Priority orders matched
+  reasons within an effect tier; it does not flip safety.
+- Plugins register their own actions via the action registry —
+  `listAccessActions()` is the single source of truth for the role
+  builder + direct-grant picker.
+- Every `engine.can()` deny that hits a page guard or form action
+  writes to `audit_events` (action='access:deny', resource_type='access',
+  resource_id=<action id>, summary=<engine reason>).
+
+---
+
+## 8. After a UI-touching PR is merged
 
 - [ ] `bun run tooling/scripts/run-playwright.ts --project=admin-harness-a11y`
 - [ ] `bun run tooling/scripts/run-playwright.ts --project=admin-touch-targets`

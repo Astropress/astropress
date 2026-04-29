@@ -232,29 +232,34 @@ export interface RevisionStore {
  * holds arbitrary subject metadata referenced by ABAC condition expressions
  * (team, region, MFA tier, etc.).
  *
- * The legacy `role: "admin" | "editor"` field is retained as a derived
- * compat shim while the access PR sweep migrates call sites — readers
- * should prefer `isAdmin` and `engine.can()` for authorization decisions.
- * The field is removed by the terminal access-PR migration.
+ * @deprecated - The `role: "admin" | "editor"` field is retained as a
+ * derived display shim during the .astro sweep. Authorization decisions
+ * must use `isAdmin` plus `engine.can()`. Removal is tracked as Phase 5-B.
  */
 export interface AuthUser {
 	id: string;
 	email: string;
-	role: "admin" | "editor";
 	/**
-	 * ABAC break-glass flag. Defaults to `role === "admin"` when an adapter
-	 * has not yet been migrated to populate this field directly.
+	 * ABAC break-glass flag. Admins bypass policy evaluation. This is the
+	 * canonical authorization signal — derive everything else from it.
 	 */
-	isAdmin?: boolean;
+	isAdmin: boolean;
+	/**
+	 * @deprecated Display-only legacy enum derived from `isAdmin`. Do not
+	 * branch on this for authorization — use `isAdmin` and `engine.can()`.
+	 * Optional so adapters can stop populating it once their .astro
+	 * consumers stop reading it.
+	 */
+	role?: "admin" | "editor";
 	/** Custom role IDs the user holds. Defaults to []. */
 	roles?: readonly string[];
 	/** Arbitrary subject attributes referenced by ABAC conditions. Defaults to {}. */
 	attributes?: Readonly<Record<string, string | number | boolean | null>>;
 }
 
-/** Resolve isAdmin with the legacy-role fallback so older adapters still work. */
+/** Returns whether the user has the break-glass admin flag set. */
 export function isAuthUserAdmin(user: AuthUser): boolean {
-	return user.isAdmin ?? user.role === "admin";
+	return user.isAdmin === true;
 }
 
 export interface AuthStore {

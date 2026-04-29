@@ -154,8 +154,8 @@ export async function createSeededCloudflareDatabase() {
 	db.prepare(
 		`
       INSERT INTO admin_users (
-        email, password_hash, role, name, active
-      ) VALUES (?, ?, ?, ?, ?)
+        email, password_hash, role, name, active, is_admin
+      ) VALUES (?, ?, ?, ?, ?, 1)
     `,
 	).run(
 		"admin@example.com",
