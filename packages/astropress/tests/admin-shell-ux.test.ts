@@ -2,20 +2,17 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 
+// Admin shell invariants: AdminLayout.astro + admin.css + theme toggle.
+// Page-specific concerns (breadcrumbs, confirm dialogs, post editor) live
+// in their own focused test files so changes to a single page's markup
+// only invalidate the relevant suite under stryker incremental.
+
 const root = path.resolve(import.meta.dirname, "..");
 const adminLayout = readFileSync(
 	path.join(root, "components", "AdminLayout.astro"),
 	"utf8",
 );
 const adminCss = readFileSync(path.join(root, "public", "admin.css"), "utf8");
-const importPage = readFileSync(
-	path.join(root, "pages", "ap-admin", "import", "[source].astro"),
-	"utf8",
-);
-const subscriberPage = readFileSync(
-	path.join(root, "pages", "ap-admin", "subscribers", "[id].astro"),
-	"utf8",
-);
 
 describe("admin shell ux invariants", () => {
 	it("ships a viewport meta tag and keyboard shortcuts popover in the shared admin layout", () => {
@@ -93,32 +90,6 @@ describe("admin shell ux invariants", () => {
 		expect(adminCss).toContain("min-width: 2.75rem;");
 	});
 
-	it("renders breadcrumbs on deep admin pages", () => {
-		// Breadcrumb nav must include class="breadcrumb" plus a localised aria-label.
-		// After the i18n hardening pass the aria-label is provided via t(...) — we
-		// match on the class and the presence of an aria-label attribute rather
-		// than the literal English string.
-		const breadcrumbRe = /<nav\s+class="breadcrumb"\s+aria-label=/;
-		expect(importPage).toMatch(breadcrumbRe);
-		expect(subscriberPage).toMatch(breadcrumbRe);
-
-		const postEditor = readFileSync(
-			path.join(root, "pages", "ap-admin", "posts", "[slug].astro"),
-			"utf8",
-		);
-		const archiveEditor = readFileSync(
-			path.join(root, "pages", "ap-admin", "archives", "[...slug].astro"),
-			"utf8",
-		);
-		const routePageEditor = readFileSync(
-			path.join(root, "pages", "ap-admin", "route-pages", "[...slug].astro"),
-			"utf8",
-		);
-		expect(postEditor).toMatch(breadcrumbRe);
-		expect(archiveEditor).toMatch(breadcrumbRe);
-		expect(routePageEditor).toMatch(breadcrumbRe);
-	});
-
 	it("ships shared confirm-dialog styles in admin.css", () => {
 		expect(adminCss).toContain(".confirm-modal");
 		expect(adminCss).toContain(".modal-content");
@@ -130,10 +101,5 @@ describe("admin shell ux invariants", () => {
 		expect(adminLayout).toContain("btn.disabled = true");
 		expect(adminLayout).toContain('button[type="submit"]');
 		expect(adminLayout).toContain("\\u2026");
-	});
-
-	it("ships shared breadcrumb styles in admin.css", () => {
-		expect(adminCss).toContain(".breadcrumb");
-		expect(adminCss).toContain(".breadcrumb a");
 	});
 });

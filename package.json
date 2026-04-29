@@ -12,6 +12,7 @@
 		"audit:suppressions": "bun run tooling/scripts/audit-suppressions.ts",
 		"audit:honesty": "bun run tooling/scripts/audit-honesty.ts",
 		"audit:microcopy": "bun run tooling/scripts/audit-microcopy.ts",
+		"audit:test-fanout": "bun run tooling/scripts/audit-test-fanout.ts",
 		"audit:arch": "bun run tooling/scripts/arch-lint.ts",
 		"audit:arch:rust": "bun run tooling/scripts/rust-arch-lint.ts",
 		"audit:deps:graph": "npx depcruise --config .dependency-cruiser.cjs packages/astropress/src",

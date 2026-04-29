@@ -59,6 +59,10 @@ pre-commit:
       glob: "packages/**/*.{ts,astro}"
       run: bun run audit:microcopy
 
+    audit-test-fanout:
+      glob: "packages/**/*.test.ts"
+      run: bun run audit:test-fanout
+
     audit-aeo:
       glob:
         - "packages/astropress/components/*Aeo*.astro"
