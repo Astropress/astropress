@@ -1,4 +1,5 @@
 import type { APIRoute } from "astro";
+import { logAccessDeny } from "./access/audit-deny.js";
 import { getAccessContext } from "./access/index.js";
 import { isAuthUserAdmin } from "./platform-contracts.js";
 import {
@@ -109,6 +110,13 @@ export async function requireAdminFormAction(
 		const access = await getAccessContext({ locals: context.locals });
 		const decision = access?.can(options.requireAction);
 		if (!decision || decision.decision === "deny") {
+			if (decision) {
+				await logAccessDeny(context.locals, {
+					subjectEmail: access?.subject.email ?? sessionUser.email,
+					action: options.requireAction,
+					decision,
+				});
+			}
 			return {
 				ok: false,
 				response: actionErrorRedirect(

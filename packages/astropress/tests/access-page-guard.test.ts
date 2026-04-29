@@ -108,7 +108,7 @@ describe("requiresAccess", () => {
 		expect(calls).toHaveLength(0);
 	});
 
-	test("redirects with forbidden path on deny", async () => {
+	test("redirects with forbidden path on deny — appends the engine reason for the UI banner", async () => {
 		const { astro, calls } = fakeAstro({
 			email: "editor@example.com",
 			role: "editor",
@@ -116,7 +116,9 @@ describe("requiresAccess", () => {
 		});
 		const result = await requiresAccess(astro, "users:invite");
 		expect(result).not.toBeNull();
-		expect(calls[0]?.path).toBe("/ap-admin?error=insufficient-permissions");
+		expect(calls[0]?.path).toMatch(
+			/^\/ap-admin\?error=insufficient-permissions&reason=/,
+		);
 	});
 
 	test("redirects to login when no admin user", async () => {

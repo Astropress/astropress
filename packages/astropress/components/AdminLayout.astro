@@ -751,6 +751,22 @@ const documentTitleResolved = matchedNavItem
           if (liveRegion) liveRegion.textContent = storedError;
         }
 
+        // Surface access-deny redirects from requiresAccess() page guard.
+        // The guard sets ?error=insufficient-permissions&reason=<encoded reason>
+        // and form actions set ?error=1&message=<encoded message> — both
+        // map to the shared action-error live region.
+        {
+          const params = new URLSearchParams(window.location.search);
+          const error = params.get("error");
+          const messageParam = params.get("message") ?? params.get("reason");
+          if (error && messageParam) {
+            const liveRegion = document.querySelector<HTMLElement>("[aria-live='assertive'][data-action-error]");
+            if (liveRegion && !liveRegion.textContent) {
+              liveRegion.textContent = messageParam;
+            }
+          }
+        }
+
         // Optimistic publish button — disable and relabel on submit; page navigation completes naturally.
         document.querySelector(".publish-form")?.addEventListener("submit", (e) => {
           const btn = (e.currentTarget as HTMLFormElement).querySelector<HTMLButtonElement>(".publish-btn");

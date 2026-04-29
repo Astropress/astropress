@@ -18,6 +18,7 @@
  * UI mirror — never rely on hiding a leaf as a security control.
  */
 
+import { logAccessDeny } from "./audit-deny";
 import { getAccessContext } from "./request-context";
 import type { Env, Resource } from "./types";
 
@@ -51,7 +52,14 @@ export async function requiresAccess(
 
 	const decision = access.can(action, options.resource, options.env);
 	if (decision.decision === "deny") {
-		return astro.redirect(options.forbiddenPath ?? DEFAULT_FORBIDDEN_PATH);
+		await logAccessDeny(astro.locals, {
+			subjectEmail: access.subject.email,
+			action,
+			decision,
+		});
+		const reason = encodeURIComponent(decision.reason);
+		const fallback = `${DEFAULT_FORBIDDEN_PATH}&reason=${reason}`;
+		return astro.redirect(options.forbiddenPath ?? fallback);
 	}
 
 	return null;
