@@ -18,7 +18,7 @@
 // the 6–7 band is "tightly-related cluster", and ≥8 starts being where edits
 // cause cache fan-out we'd notice on a long-running branch.
 
-import { readFileSync, readdirSync, statSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 
 import { AuditReport, fromRoot, runAudit } from "../lib/audit-utils.js";

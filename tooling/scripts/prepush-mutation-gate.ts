@@ -47,6 +47,16 @@ const FLOOR = 95;
 const TOLERANCE = 0.5;
 const SRC_ROOT = "packages/astropress/src/";
 const BASELINE_PATH = "tooling/stryker/baseline-scores.json";
+// File-level checkpoint state. The reporter at tooling/stryker/checkpoint-reporter.mjs
+// writes per-mutant lines to PROGRESS_JSONL during a stryker run; the
+// wrapper here computes per-file completion from those lines and persists
+// hashed completion verdicts to PROGRESS_FILES across runs. A SIGKILLed
+// stryker run leaves both files behind so the next attempt can skip every
+// fully-mutated file and only re-run the ones whose mutants weren't all
+// captured before the crash.
+const PROGRESS_JSONL = ".stryker-progress.jsonl";
+const PROGRESS_FILES = ".stryker-mutation-gate-progress.json";
+const REPORTER_PATH = "tooling/stryker/checkpoint-reporter.mjs";
 
 interface BaselineEntry {
 	score: number;
@@ -56,6 +66,18 @@ interface BaselineEntry {
 interface Baseline {
 	updatedAt: string;
 	scores: Record<string, BaselineEntry>;
+}
+
+interface ProgressEntry {
+	hash: string;
+	score: number;
+	mutantCount: number;
+}
+
+interface ProgressFile {
+	branch: string;
+	startedAt: string;
+	files: Record<string, ProgressEntry>;
 }
 
 function loadBaseline(): Baseline {
@@ -77,6 +99,130 @@ function gitHashObject(path: string): string | null {
 	} catch {
 		return null;
 	}
+}
+
+function currentBranch(): string {
+	try {
+		return execFileSync("git", ["rev-parse", "--abbrev-ref", "HEAD"], {
+			encoding: "utf8",
+		}).trim();
+	} catch {
+		return "unknown";
+	}
+}
+
+function loadProgressFiles(): ProgressFile | null {
+	if (!existsSync(PROGRESS_FILES)) return null;
+	try {
+		return JSON.parse(readFileSync(PROGRESS_FILES, "utf8")) as ProgressFile;
+	} catch {
+		return null;
+	}
+}
+
+function saveProgressFiles(p: ProgressFile): void {
+	writeFileSync(PROGRESS_FILES, `${JSON.stringify(p, null, 2)}\n`);
+}
+
+function clearCheckpoint(): void {
+	for (const path of [PROGRESS_JSONL, PROGRESS_FILES]) {
+		if (existsSync(path)) rmSync(path);
+	}
+}
+
+interface JsonlMutant {
+	type: "mutant";
+	session: string;
+	fileName: string;
+	id: string;
+	status: string;
+}
+interface JsonlManifest {
+	type: "manifest";
+	session: string;
+	files: Record<string, number>;
+}
+
+// Parse the multi-session JSONL emitted by checkpoint-reporter.mjs and
+// return the per-file mutant counts + status counts for fully-completed
+// files (count >= manifest count for the session that introduced them).
+//
+// "Fully-completed" is decided per-session: each manifest line opens a
+// session, subsequent mutant lines belong to it. A file is complete when
+// its mutant count for that session matches the manifest. Files that
+// re-appear in a later session (because a previous run crashed mid-file)
+// are counted from their newest session — older partial counts discarded.
+function parseProgressJsonl(): Map<
+	string,
+	{ mutantCount: number; statusCounts: Record<string, number> }
+> {
+	if (!existsSync(PROGRESS_JSONL)) return new Map();
+	const lines = readFileSync(PROGRESS_JSONL, "utf8")
+		.split("\n")
+		.filter(Boolean);
+
+	// Walk sessions in order; finalize each session's per-file completion
+	// before moving to the next.
+	type Session = {
+		manifest: Record<string, number>;
+		mutants: Map<string, JsonlMutant[]>;
+	};
+	const sessions: Session[] = [];
+	let cur: Session | null = null;
+	for (const line of lines) {
+		let parsed: JsonlMutant | JsonlManifest;
+		try {
+			parsed = JSON.parse(line);
+		} catch {
+			continue;
+		}
+		if (parsed.type === "manifest") {
+			cur = { manifest: parsed.files, mutants: new Map() };
+			sessions.push(cur);
+		} else if (parsed.type === "mutant" && cur) {
+			const existing = cur.mutants.get(parsed.fileName) ?? [];
+			existing.push(parsed);
+			cur.mutants.set(parsed.fileName, existing);
+		}
+	}
+
+	// Latest-session-wins: for each file, take the most recent session's
+	// counts (a re-run supersedes any partial prior progress).
+	const latest = new Map<
+		string,
+		{ mutants: JsonlMutant[]; expected: number }
+	>();
+	for (const s of sessions) {
+		for (const [file, muts] of s.mutants) {
+			latest.set(file, { mutants: muts, expected: s.manifest[file] ?? 0 });
+		}
+	}
+
+	const out = new Map<
+		string,
+		{ mutantCount: number; statusCounts: Record<string, number> }
+	>();
+	for (const [file, { mutants, expected }] of latest) {
+		// File counts only when every mutant from the manifest landed —
+		// otherwise the file is considered partial and won't be skipped
+		// on next run.
+		if (expected === 0 || mutants.length < expected) continue;
+		const statusCounts: Record<string, number> = {};
+		for (const m of mutants) {
+			statusCounts[m.status] = (statusCounts[m.status] ?? 0) + 1;
+		}
+		out.set(file, { mutantCount: mutants.length, statusCounts });
+	}
+	return out;
+}
+
+function scoreFromStatusCounts(counts: Record<string, number>): number | null {
+	const scored = Object.entries(counts)
+		.filter(([k]) => k !== "Ignored" && k !== "NoCoverage")
+		.reduce((a, [, v]) => a + v, 0);
+	if (scored === 0) return 100;
+	const killed = (counts.Killed ?? 0) + (counts.Timeout ?? 0);
+	return (killed / scored) * 100;
 }
 
 function changedSourceFiles(): string[] {
@@ -117,15 +263,18 @@ function runStryker(
 	if (mutateTargets.length === 0) return { files: {} };
 	const configPath = join(tmpRoot, "stryker.config.mjs");
 	const reportPath = join(tmpRoot, "report.json");
+	// Stryker runs from packages/astropress/, so the reporter plugin needs
+	// to be referenced as a path relative to that directory.
+	const reporterPath = `../../${REPORTER_PATH}`;
 	writeFileSync(
 		configPath,
 		`export default {
-  plugins: ["@stryker-mutator/vitest-runner"],
+  plugins: ["@stryker-mutator/vitest-runner", ${JSON.stringify(reporterPath)}],
   mutate: ${JSON.stringify(mutateTargets)},
   testRunner: "vitest",
   coverageAnalysis: "all",
   vitest: { related: true },
-  reporters: ["clear-text", "json"],
+  reporters: ["clear-text", "json", "checkpoint"],
   jsonReporter: { fileName: ${JSON.stringify(reportPath)} },
   incremental: false,
   timeoutMS: 120000,
@@ -142,7 +291,8 @@ function runStryker(
 		});
 	} catch {
 		// Break threshold set to 0, so non-zero exit means a real error.
-		// Fall through and read the report regardless.
+		// Fall through and read the report regardless. The JSONL written by
+		// checkpoint-reporter is preserved either way.
 	}
 	if (!existsSync(reportPath)) return null;
 	return JSON.parse(readFileSync(reportPath, "utf8")) as StrykerReport;
@@ -235,16 +385,34 @@ function main(): number {
 	}
 
 	const baseline = loadBaseline();
+	const branch = currentBranch();
+	const progress = loadProgressFiles();
+	// Discard checkpoint state from a different branch — switching branches
+	// invalidates per-file mutation results because main may have evolved.
+	const progressFiles =
+		progress?.branch === branch
+			? progress.files
+			: ({} as Record<string, ProgressEntry>);
 	console.log(
 		`prepush-mutation-gate: ${repoRelative.length} changed file(s); baseline updated ${baseline.updatedAt}`,
 	);
+	if (Object.keys(progressFiles).length > 0) {
+		console.log(
+			`  resuming from ${PROGRESS_FILES} (${Object.keys(progressFiles).length} files cached)`,
+		);
+	}
 
-	// Split into hash-match (skip Stryker) and hash-diff (must run Stryker).
+	// Split into three buckets:
+	//  * hash matches committed baseline → skip stryker, score from baseline
+	//  * hash matches checkpoint progress → skip stryker, score from checkpoint
+	//  * neither → must run stryker
 	const verdicts: Verdict[] = [];
 	const needsMutation: string[] = [];
+	const checkpointVerdicts: Verdict[] = [];
 	for (const file of repoRelative) {
 		const hash = gitHashObject(file);
 		const prior = baseline.scores[file] ?? null;
+		const cached = progressFiles[file] ?? null;
 		if (hash !== null && prior && prior.hash === hash) {
 			verdicts.push({
 				file,
@@ -254,13 +422,21 @@ function main(): number {
 				status: "pass-hash-skip",
 			});
 			console.log(
-				`  = ${file}  hash unchanged → reuse ${prior.score.toFixed(2)}%`,
+				`  = ${file}  baseline hash unchanged → reuse ${prior.score.toFixed(2)}%`,
+			);
+		} else if (hash !== null && cached && cached.hash === hash) {
+			// Resume hit: use the cached score, judge it against the baseline
+			// so a regression introduced by the cached run still fails the gate.
+			checkpointVerdicts.push(judgeScored(file, hash, cached.score, prior));
+			console.log(
+				`  ↻ ${file}  checkpoint hash matches → reuse ${cached.score.toFixed(2)}%`,
 			);
 		} else {
 			needsMutation.push(file);
-			console.log(`  ~ ${file}  hash differs → must mutate`);
+			console.log(`  ~ ${file}  must mutate`);
 		}
 	}
+	verdicts.push(...checkpointVerdicts);
 
 	if (needsMutation.length > 0) {
 		console.log(
@@ -274,8 +450,36 @@ function main(): number {
 		} finally {
 			rmSync(tmp, { recursive: true, force: true });
 		}
+		// Persist checkpoint progress regardless of whether stryker emitted a
+		// final JSON report — the JSONL written by checkpoint-reporter survives
+		// even on SIGKILL, so we can still record per-file completions.
+		const completed = parseProgressJsonl();
+		const nextProgress: Record<string, ProgressEntry> = { ...progressFiles };
+		for (const [target, info] of completed) {
+			// JSONL fileName is relative to packages/astropress (stryker cwd).
+			const file = `${PREFIX}${target}`;
+			if (!needsMutation.includes(file)) continue;
+			const hash = gitHashObject(file);
+			const score = scoreFromStatusCounts(info.statusCounts);
+			if (hash === null || score === null) continue;
+			nextProgress[file] = { hash, score, mutantCount: info.mutantCount };
+		}
+		if (Object.keys(nextProgress).length > Object.keys(progressFiles).length) {
+			saveProgressFiles({
+				branch,
+				startedAt: progress?.startedAt ?? new Date().toISOString(),
+				files: nextProgress,
+			});
+			console.log(
+				`  checkpoint saved: ${Object.keys(nextProgress).length} file(s) cached at ${PROGRESS_FILES}`,
+			);
+		}
+
 		if (!report) {
-			console.error("prepush-mutation-gate: stryker produced no report.");
+			console.error(
+				"prepush-mutation-gate: stryker produced no report. " +
+					"Per-file checkpoint preserved for the next attempt.",
+			);
 			return 1;
 		}
 		for (const file of needsMutation) {
@@ -301,6 +505,11 @@ function main(): number {
 	const checkOnly = process.argv.includes("--check-only");
 
 	if (failures.length === 0) {
+		// All changed files pass — checkpoint state is now subsumed by the
+		// committed baseline (or by `--check-only` callers who don't write
+		// baseline). Either way, the JSONL/progress files are no longer
+		// useful and we drop them to avoid confusing future runs.
+		clearCheckpoint();
 		if (checkOnly) {
 			console.log(
 				"\n✓ prepush-mutation-gate: all changed files pass (check-only, baseline not rewritten).\n",

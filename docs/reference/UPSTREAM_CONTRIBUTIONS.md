@@ -330,6 +330,107 @@ from "hung" without inspecting `ps` CPU times of the worker processes.
 
 ---
 
+### 14a. No programmatic "skip these mutants" input
+
+**Pain point:** Stryker's incremental cache is the only built-in mechanism
+for skipping work, and it's a black-box state file: external tools cannot
+programmatically tell stryker "treat these mutant IDs as already-decided
+with status X" without writing the full incremental schema (including
+source snapshots, per-test coverage maps, and AST hashes that match
+stryker's internal identity scheme). When a wrapper script needs to drive
+incremental behaviour from its own state — for example, file-level
+checkpoint resume across SIGKILLed pre-push runs — there is no clean
+external API. The only options are (a) reverse-engineer the incremental
+schema (brittle across stryker versions), or (b) prune the `mutate:` list
+to exclude already-decided files (loses mutant-level granularity).
+
+**Astropress code:** `tooling/scripts/prepush-mutation-gate.ts` +
+`tooling/stryker/checkpoint-reporter.mjs` — the gate uses a custom JSONL
+reporter to track per-mutant completion mid-run, then prunes the `mutate:`
+list to skip whole files on resume. We deliberately avoid touching
+`.stryker-incremental.json` to stay version-stable, which costs us
+mutant-level resume granularity.
+
+**Upstream ask:**
+- Add a config option `mutantOverrides: { [fileName]: { [mutantId]: { status, reason } } }`
+  (or a CLI flag accepting a JSON file) that pre-seeds final verdicts for
+  named mutants. Stryker still mutates and matches them against tests for
+  the dry-run, but skips the actual mutation runs.
+- Keep this orthogonal to `incremental: true` so wrappers can drive
+  resume without owning the incremental file format.
+
+---
+
+### 14b. Reporter API doesn't surface covering tests on `MutantResult`
+
+**Pain point:** The `Reporter.onMutantTested(result)` event provides
+`status`, `mutatorName`, `replacement`, `location`, etc. — but the
+`coveredBy` / `killedBy` test ID arrays from `MutantTestCoverage` are not
+re-surfaced on the final `MutantResult`. A wrapper that wants to invalidate
+its checkpoint when a covering test file changes must instead consult the
+final JSON report (only emitted at end of run) or hash every test file in
+the project as a coarse approximation.
+
+**Astropress code:** `tooling/stryker/checkpoint-reporter.mjs` — we record
+mutant status only and rely on `git hash-object` of the source file (not
+the test files) to invalidate checkpoint entries. A test-only edit between
+a crashed run and its resume would silently reuse stale verdicts.
+
+**Upstream ask:**
+- Include `coveredBy: string[]` and `killedBy: string[]` (test IDs) on the
+  `MutantResult` passed to `onMutantTested`, with a separate event or
+  field carrying the test-id → test-file-name map. This lets external
+  reporters write a checkpoint that's resilient to test-file edits.
+
+---
+
+### 14c. Dry-run cannot be skipped on resume
+
+**Pain point:** Every stryker invocation starts with a full dry-run
+(executing the test suite once with no mutations) to verify the baseline
+is green and capture coverage. For a wrapper that has just run stryker
+five minutes earlier and knows neither source nor tests have changed,
+this is pure overhead — typically 15–30 s per invocation, more on large
+suites. There is no flag to skip it ("trust me, baseline is green") even
+when the caller has cryptographic evidence (file-content hashes) that
+nothing has moved.
+
+**Astropress code:** `tooling/scripts/prepush-mutation-gate.ts` — every
+resume after a crash pays this cost, even when the resume is for a single
+file whose work was 90 % done before the SIGKILL.
+
+**Upstream ask:**
+- Add `--skip-dry-run` (or `dryRun: { skip: true, source-hashes: {...} }`
+  config). When set, stryker skips the dry-run and reuses the most recent
+  cached coverage map from the incremental file. If the supplied hashes
+  don't match what's in the incremental file, fall back to a real dry-run
+  (so the flag is safe by default — never silently uses stale coverage).
+
+---
+
+### 14d. Custom reporters can't drop progress files outside stryker's CWD
+
+**Pain point:** Stryker plugins resolve relative paths against the project
+root (`packages/astropress/` in our setup), and there is no documented way
+for a custom reporter to know the *invoking* tool's working directory.
+A wrapper script that wants the reporter to write to a checkpoint file at
+the repo root must either pass the absolute path via env var or compute
+it via `process.cwd()` from within the reporter — both work but are
+under-documented and version-fragile.
+
+**Astropress code:** `tooling/stryker/checkpoint-reporter.mjs` — we
+hardcode the path relative to `process.cwd()` and rely on lefthook to
+invoke from the repo root. A future stryker that runs reporters in worker
+processes (rather than the main process) would silently break this.
+
+**Upstream ask:**
+- Add a documented `repoRoot` (or `originalCwd`) field to the reporter
+  injection context. Custom reporters that write artefacts outside the
+  stryker sandbox should be able to resolve their target path
+  deterministically without env-var conventions.
+
+---
+
 ### 14. Incremental cache is local-only by design — no shared-state pattern
 
 **Pain point:** `.stryker-incremental.json` is intended to be gitignored, so
@@ -370,4 +471,8 @@ GitHub-release-asset shared store + lock branch.
 | Stryker (`vitest-runner`) | Cache compiled test modules across mutants | Eliminate per-mutant transform overhead |
 | Stryker | Checkpoint per-mutant results; surface worker-crash counters | Multi-hour runs survive SIGSEGV without silent loss |
 | Stryker | Live `--progress` reporter | Distinguish "working" from "hung" on long runs |
+| Stryker | `mutantOverrides` config (programmatic skip-list) | External wrappers drive resume without owning the incremental file format |
+| Stryker | `coveredBy` / `killedBy` on reporter `MutantResult` | Custom checkpoint reporters detect test-file edits without rehashing the world |
+| Stryker | `--skip-dry-run` with hash gate | Resume after crash skips the 15–30 s dry-run when hashes prove the baseline is unchanged |
+| Stryker | Documented `repoRoot` in reporter injection context | Custom reporters write checkpoint artefacts outside the sandbox without env-var conventions |
 | Stryker | Remote-state config + lock for incremental file | Devs + CI share cache; no per-machine cold start |
