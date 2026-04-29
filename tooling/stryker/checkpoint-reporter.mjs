@@ -21,7 +21,15 @@
 import { appendFileSync, existsSync, mkdirSync } from "node:fs";
 import { dirname } from "node:path";
 
-const PROGRESS_PATH = ".stryker-progress.jsonl";
+// The wrapper (tooling/scripts/prepush-mutation-gate.ts) sets
+// STRYKER_PROGRESS_PATH to an absolute path under the repo root before
+// invoking stryker. We honour that as the source of truth so the JSONL
+// lands where the wrapper expects to read it. Stryker's own cwd is
+// packages/astropress/, which is *not* where the wrapper looks — relying
+// on a relative path here would silently route the file into the wrong
+// directory. (See UPSTREAM_CONTRIBUTIONS.md item 14d.)
+const PROGRESS_PATH =
+	process.env.STRYKER_PROGRESS_PATH ?? ".stryker-progress.jsonl";
 const PluginKind = { Reporter: "Reporter" };
 
 class CheckpointReporter {

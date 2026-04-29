@@ -284,10 +284,18 @@ function runStryker(
 `,
 	);
 	const strykerBin = join(process.cwd(), "node_modules/.bin/stryker");
+	// Pass the absolute progress path via env so the reporter writes to the
+	// repo root (where the wrapper reads from) rather than stryker's cwd
+	// (packages/astropress/). See UPSTREAM_CONTRIBUTIONS.md item 14d.
+	const progressEnv = {
+		...process.env,
+		STRYKER_PROGRESS_PATH: join(process.cwd(), PROGRESS_JSONL),
+	};
 	try {
 		execFileSync("node", [strykerBin, "run", configPath], {
 			cwd: join(process.cwd(), "packages/astropress"),
 			stdio: "inherit",
+			env: progressEnv,
 		});
 	} catch {
 		// Break threshold set to 0, so non-zero exit means a real error.
