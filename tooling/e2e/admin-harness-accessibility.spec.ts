@@ -12,18 +12,39 @@ const routes = [
   { path: "/ap-admin/accept-invite?token=demo", heading: "Accept invitation" },
 ];
 
+const themes = ["light", "dark"] as const;
+
 test.describe("Feature: package-owned admin accessibility coverage", () => {
-  for (const route of routes) {
-    test(`Scenario: ${route.path} is keyboard reachable and axe clean`, async ({ page }) => {
-      await page.goto(route.path, { waitUntil: "networkidle" });
-      await expect(page.getByRole("heading", { level: 1, name: route.heading })).toBeVisible();
-      // Regression guard: CSP must not block stylesheets (e.g. allowInlineStyles omitted
-      // from middleware causes unstyled login/auth pages in dev mode).
-      await expectStylesheetsLoaded(page);
-      await expectNoDoubleTitleSuffix(page);
-      await expectKeyboardFocusMoves(page);
-      await expectNoAxeViolations(page);
-    });
+  for (const theme of themes) {
+    for (const route of routes) {
+      test(`Scenario: ${route.path} (${theme}) is keyboard reachable and axe clean`, async ({ page, context }) => {
+        // <ap-theme-toggle> reads localStorage["theme"] in connectedCallback and
+        // applies data-theme on <html>. Seeding it before navigation makes every
+        // route render in the requested palette without needing a UI click.
+        await context.addInitScript((value) => {
+          window.localStorage.setItem("theme", value);
+        }, theme);
+
+        await page.goto(route.path, { waitUntil: "networkidle" });
+        await expect(page.getByRole("heading", { level: 1, name: route.heading })).toBeVisible();
+
+        // Belt-and-braces: pages without <ap-theme-toggle> in their template
+        // (or before the WC has connected) won't pick up the localStorage
+        // value on their own. Force the data-theme attribute too so axe sees
+        // the right computed colors.
+        await page.evaluate((value) => {
+          document.documentElement.setAttribute("data-theme", value);
+        }, theme);
+        await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
+
+        // Regression guard: CSP must not block stylesheets (e.g. allowInlineStyles omitted
+        // from middleware causes unstyled login/auth pages in dev mode).
+        await expectStylesheetsLoaded(page);
+        await expectNoDoubleTitleSuffix(page);
+        await expectKeyboardFocusMoves(page);
+        await expectNoAxeViolations(page);
+      });
+    }
   }
 
   test("Scenario: redirects confirmation dialog is keyboard operable", async ({ page }) => {

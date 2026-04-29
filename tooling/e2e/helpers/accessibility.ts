@@ -59,20 +59,33 @@ export async function expectNoDoubleTitleSuffix(page: Page): Promise<void> {
  */
 export async function expectNoAxeViolations(page: Page, options?: { ignoreRules?: string[] }) {
   const ignoreRules = new Set(options?.ignoreRules ?? []);
+  // IMPORTANT: do NOT add `.withRules(...)`. AxeBuilder treats withRules as a
+  // hard restriction — it overrides withTags and disables every rule not
+  // listed, including the WCAG AA `color-contrast` (4.5:1) check. The previous
+  // version of this helper enabled `color-contrast-enhanced` via withRules
+  // and silently lost AA contrast coverage as a side effect.
+  //
+  // We turn AAA contrast on via `options.rules` so it runs in addition to the
+  // tag-driven AA + best-practice rules, never instead of them.
   const results = await new AxeBuilder({ page })
     .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa", "best-practice"])
-    .withRules(["color-contrast-enhanced"])
+    .options({ rules: { "color-contrast-enhanced": { enabled: true } } })
     .analyze();
 
+  // Include offender selectors and the explanation axe attached to each node
+  // so failures are actionable without re-running with a debugger.
   const violations = results.violations
     .filter((violation) => !ignoreRules.has(violation.id))
     .map((violation) => ({
     id: violation.id,
     help: violation.help,
-    nodes: violation.nodes.length,
+    nodes: violation.nodes.map((node) => ({
+      target: node.target,
+      failureSummary: node.failureSummary,
+    })),
     }));
 
-  expect(violations).toEqual([]);
+  expect(violations, JSON.stringify(violations, null, 2)).toEqual([]);
 }
 
 export async function expectKeyboardFocusMoves(page: Page) {

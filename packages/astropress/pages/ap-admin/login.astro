@@ -96,6 +96,9 @@ const adminUi = resolveAstropressAdminUiConfig();
     --line: #d8dee5;
     --error: #a11f36;
     --success: #155239;
+    --button-bg: #0d5c63;
+    --button-text: #ffffff;
+    --button-hover: #0b4d54;
     --surface-glow: radial-gradient(circle at top, #dceef0 0%, var(--bg) 48%, #edf1e8 100%);
   }
 
@@ -104,10 +107,13 @@ const adminUi = resolveAstropressAdminUiConfig();
     --bg: #101815;
     --card: #18231f;
     --text: #edf4ef;
-    --accent: #8fd0a0;
+    --accent: #c1e7cb;
     --line: #31433b;
     --error: #ff9bb0;
     --success: #9de0ae;
+    --button-bg: #c1e7cb;
+    --button-text: #0a1f12;
+    --button-hover: #d0eed8;
     --surface-glow: radial-gradient(circle at top, #203429 0%, #101815 48%, #17211d 100%);
   }
 
@@ -212,15 +218,20 @@ const adminUi = resolveAstropressAdminUiConfig();
     color: var(--text);
   }
 
-  button {
+  button[type="submit"] {
     border: 0;
     border-radius: 0.75rem;
     padding: 0.85rem 1rem;
-    background: var(--accent);
-    color: white;
+    background: var(--button-bg);
+    color: var(--button-text);
     font: inherit;
     font-weight: 700;
     cursor: pointer;
+  }
+
+  button[type="submit"]:hover,
+  button[type="submit"]:focus-visible {
+    background: var(--button-hover);
   }
 
   .error {

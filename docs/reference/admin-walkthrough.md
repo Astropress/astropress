@@ -1,0 +1,177 @@
+# Admin UI walkthrough
+
+A reviewer-facing checklist for manually verifying the Astropress admin shell
+end-to-end. Use this when reviewing PRs that touch admin templates, admin
+styling, the publish flow, or accessibility tooling.
+
+The checklist mirrors what `tooling/e2e/admin-harness-accessibility.spec.ts`,
+`tooling/e2e/admin-touch-targets.spec.ts`, and `tooling/e2e/admin-harness-mobile.spec.ts`
+cover automatically. Use this guide when you want eyes-on confirmation, or to
+exercise an interaction the test suite cannot model.
+
+---
+
+## 1. Boot the admin harness
+
+```
+bun install
+bun run --filter astropress-example-admin-harness dev
+```
+
+The dev server prints `Local http://127.0.0.1:4321/`. Sign in at
+`http://127.0.0.1:4321/ap-admin/login` with:
+
+- `admin@example.com` / `password` (admin role)
+- `editor@example.com` / `password` (editor role)
+
+Reset the seeded database between sessions:
+
+```
+rm -rf examples/admin-harness/.data/admin-harness.sqlite
+```
+
+To exercise the publish flow's success path you also need a deploy hook
+configured in the env. The simplest non-destructive option:
+
+```
+CF_PAGES_DEPLOY_HOOK_URL=https://httpbin.org/post bun run --filter astropress-example-admin-harness dev
+```
+
+---
+
+## 2. Theme + contrast (#39, #58, dark-mode regression)
+
+- [ ] Click the moon/sun toggle in the topbar utility panel. Repeat on every
+      route below — the colour palette must invert immediately and persist
+      across navigations (the choice is stored in `localStorage["theme"]`).
+- [ ] On `/ap-admin/login`, confirm the **Sign in** button has high contrast
+      against its background in **both** themes. The known-bad combination was
+      white text on a pale-green button (~1.79:1) — it must read as a clearly
+      readable filled button in dark mode.
+- [ ] On `/ap-admin/reset-password` and `/ap-admin/accept-invite?token=demo`,
+      confirm the same for the form submit buttons.
+- [ ] On `/ap-admin`, confirm the **Sign out** button (top-right of the
+      topbar) is readable in dark mode — it should not be near-grey on
+      near-grey.
+- [ ] Confirm the footer links (`Report an issue`, `Astropress`) are clearly
+      readable in dark mode. They previously inherited a hardcoded `#374151`
+      against the dark `#0f1317` background.
+- [ ] Confirm the bootstrap-credentials banner ("change your password") link
+      is readable against the info-banner background in both themes.
+- [ ] Confirm sidebar group labels (`Workspace`, `Content`, `Recent`) are
+      legible in dark mode.
+
+Automated coverage: `tooling/e2e/admin-harness-accessibility.spec.ts` runs
+axe AA contrast plus AAA `color-contrast-enhanced` against every admin route
+in light and dark themes. If a colour change breaks contrast, the spec will
+fail before the PR can land.
+
+---
+
+## 3. Touch targets at 375 px (#58)
+
+Open DevTools, switch to mobile emulation at 375 × 812 (iPhone SE).
+
+For each of the seven admin routes — `/ap-admin`, `/ap-admin/posts`,
+`/ap-admin/pages`, `/ap-admin/media`, `/ap-admin/redirects`,
+`/ap-admin/comments`, `/ap-admin/settings` — confirm:
+
+- [ ] Skip-link reaches at least 44 px tall when focused (Tab from the page
+      load).
+- [ ] Footer links feel comfortably tappable (no hairline targets).
+- [ ] Settings tabs (`General`, `Newsletter`, `Import`) on
+      `/ap-admin/settings` are at least 44 px tall.
+- [ ] Post-row title links on `/ap-admin/posts` are at least 44 px tall.
+- [ ] The newsletter checkbox on `/ap-admin/settings` is large enough to tap
+      without precision (≈ 44 × 44).
+
+Automated coverage: `tooling/e2e/admin-touch-targets.spec.ts` uses
+`toEqual([])` (strict) — every interactive element on each admin route must
+meet WCAG 2.5.5 (AAA) at viewport-375. Per-route baselines were removed once
+issue #58 closed.
+
+---
+
+## 4. Publish flow + deployment indicator (#39)
+
+The publish action is wired to whichever deploy hook env var is set. With no
+hook, the action records a `deployment.failure` event; with a hook, it records
+`deployment.trigger`.
+
+Failure path:
+
+- [ ] Start the dev server **without** any deploy-hook env var.
+- [ ] On `/ap-admin`, click **Publish** in the topbar.
+- [ ] Confirm the redirect lands back on `/ap-admin` and the "Latest
+      Deployment" dashboard panel renders a red **Failed** pill with a
+      summary like `cloudflare-pages publish failed: …`.
+- [ ] Reload the page — the same record persists, sourced from the trusted
+      audit log rather than the redirect query string.
+
+Success path:
+
+- [ ] Restart the dev server with
+      `CF_PAGES_DEPLOY_HOOK_URL=https://httpbin.org/post`.
+- [ ] Click **Publish**. The button reads `Publishing…` while the hook is
+      called, then the redirect lands on `/ap-admin` with the success notice.
+- [ ] The "Latest Deployment" panel now shows a green **Triggered** pill,
+      timestamp, and actor email.
+- [ ] Reload — the trusted record is still there.
+
+Test coverage:
+- Unit: `packages/astropress/tests/publish-audit.test.ts` (D1 path).
+- Integration: dashboard panel renders from the same `recentAuditEvents` array
+  the audit-trail uses, so any drift in `targetType: "deployment"` filtering
+  surfaces on the next dashboard render.
+
+---
+
+## 5. Action surfaces
+
+For each interactive surface listed below, confirm the listed behaviour. The
+admin shell's progressive-enhancement script disables form buttons on submit
+to prevent double-submission — verify this fires.
+
+- [ ] **Sign out** (`form action="/ap-admin/session?logout=1"`) — clicking
+      logs out and bounces to `/ap-admin/login`. Button momentarily disables.
+- [ ] **Theme toggle** — keyboard accessible (Tab + Enter), persists across
+      reloads, syncs across all `<ap-theme-toggle>` instances on the page.
+- [ ] **Command palette** (Ctrl+K / Cmd+K) — opens a dialog, search filters
+      nav items, Esc closes.
+- [ ] **Keyboard shortcuts popover** (`?` key) — opens a popover listing the
+      shortcuts.
+- [ ] **Locale select** (globe icon in topbar utility panel) — choosing a
+      locale updates `<html lang="…">` and persists to localStorage.
+
+---
+
+## 6. Editor + listing flows
+
+These are the most user-facing flows; the e2e suite covers the happy paths
+but reviewers should still smoke them when admin templates change.
+
+- [ ] `/ap-admin/posts` — table loads, pagination works, status chips render,
+      title link opens the editor at `/ap-admin/posts/<slug>`.
+- [ ] `/ap-admin/posts/hello-world` — edit body, click **Save draft** /
+      **Publish**, `<ap-notice type="success">` appears with the result.
+- [ ] **Open media library** in the post editor — modal opens, Esc closes,
+      focus returns to the trigger button.
+- [ ] `/ap-admin/redirects` — confirm-delete dialog opens, Cancel restores
+      focus and dismisses without deleting.
+- [ ] `/ap-admin/comments` — reject-comment dialog stays axe-clean and
+      restores focus on cancel.
+- [ ] `/ap-admin/settings` — change a value (e.g. site title), submit, return
+      to the same tab with the success notice and the new value persisted.
+
+---
+
+## 7. After a UI-touching PR is merged
+
+- [ ] `bun run tooling/scripts/run-playwright.ts --project=admin-harness-a11y`
+- [ ] `bun run tooling/scripts/run-playwright.ts --project=admin-touch-targets`
+- [ ] `bun run --filter astropress-example-admin-harness check` (Astro type
+      check against the consumer harness — catches template prop drift)
+
+If any new admin template introduces its own `<style>` block (rather than
+using `admin.css`), add it to `admin-harness-accessibility.spec.ts` so dark-
+and light-mode contrast are gated automatically.

@@ -39,13 +39,13 @@ html[data-theme="dark"] {
   --bg: #0f1317;
   --panel: #171d23;
   --text: #edf2f7;
-  --muted: #9eabb8;
+  --muted: #c0cad5;
   --line: #2a3440;
-  --accent: #aebdd0;
+  --accent: #c8d4e3;
   --accent-soft: #212b35;
   --sidebar-bg: #121921;
   --sidebar-text: rgba(237, 242, 247, 0.92);
-  --sidebar-muted: rgba(158, 171, 184, 0.95);
+  --sidebar-muted: #d0d8e1;
   --topbar-bg: #0c1117;
   --surface-subtle: #141b22;
   --button-primary-bg: #d7e1ee;
@@ -75,8 +75,8 @@ body {
   position: absolute;
   left: 1rem;
   top: -3rem;
-  background: var(--accent);
-  color: white;
+  background: var(--button-primary-bg);
+  color: var(--button-primary-text);
   padding: 0.85rem 1rem;
   display: inline-flex;
   align-items: center;
@@ -138,6 +138,13 @@ body {
   min-width: 2.75rem;
   font: inherit;
   cursor: pointer;
+  background: var(--button-primary-bg);
+  color: var(--button-primary-text);
+}
+
+.topbar button:hover,
+.topbar button:focus-visible {
+  background: var(--button-primary-hover);
 }
 
 .publish-form {
@@ -655,8 +662,19 @@ ap-notice[type="error"] {
 
 ap-notice[type="info"] {
   background: var(--accent-soft);
-  color: var(--accent);
+  color: var(--text);
   border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent);
+}
+
+ap-notice[type="info"] a {
+  color: var(--text);
+  text-decoration: underline;
+  font-weight: 600;
+}
+
+ap-notice[type="info"] a:hover,
+ap-notice[type="info"] a:focus-visible {
+  text-decoration-thickness: 2px;
 }
 
 html[data-theme="dark"] ap-notice[type="success"] {
