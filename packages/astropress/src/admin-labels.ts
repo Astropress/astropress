@@ -1,7 +1,36 @@
-export type AdminLocale = "en" | "es" | "fr" | "de" | "pt" | "ja";
+export type AdminLocale =
+	| "en"
+	| "es"
+	| "fr"
+	| "de"
+	| "pt"
+	| "ja"
+	| "te"
+	| "hi"
+	| "ny";
 
 export type AdminLabelKey =
 	| "loginHeading"
+	| "loginDescription"
+	| "loginSubmit"
+	| "loginEmailLabel"
+	| "loginPasswordLabel"
+	| "forgotPassword"
+	| "invalidCredentials"
+	| "rateLimited"
+	| "challengeRequired"
+	| "passwordResetSuccess"
+	| "invitationAcceptedSuccess"
+	| "acceptInvitationHeading"
+	| "acceptInvitationDescription"
+	| "acceptInvitationSubmit"
+	| "resetPasswordRequestHeading"
+	| "resetPasswordRequestDescription"
+	| "resetPasswordTokenHeading"
+	| "resetPasswordTokenDescription"
+	| "resetPasswordRequestSubmit"
+	| "resetPasswordTokenSubmit"
+	| "backToLogin"
 	| "themeToggleDark"
 	| "themeToggleLight"
 	| "saveButton"
@@ -10,6 +39,7 @@ export type AdminLabelKey =
 	| "deleteButton"
 	| "cancelButton"
 	| "signOut"
+	| "signedInAsPrefix"
 	| "sidebarTitle"
 	| "createPost"
 	| "editPost"
@@ -19,12 +49,15 @@ export type AdminLabelKey =
 	| "restorePost"
 	| "duplicatePost"
 	| "navDashboard"
+	| "navContentGroup"
 	| "navPosts"
 	| "navPages"
 	| "navMedia"
 	| "navComments"
 	| "navAuthors"
 	| "navTaxonomies"
+	| "navRoutePages"
+	| "navArchives"
 	| "navRedirects"
 	| "navTranslations"
 	| "navSeo"
@@ -33,6 +66,56 @@ export type AdminLabelKey =
 	| "navSystem"
 	| "navApiTokens"
 	| "navWebhooks"
+	| "navServices"
+	| "navFundraising"
+	| "navTestimonials"
+	| "navCms"
+	| "navHost"
+	// Group labels (added in IA restructure)
+	| "navGroupSite"
+	| "navGroupAudience"
+	| "navGroupDiscoverability"
+	| "navGroupIntegrations"
+	| "navGroupAccess"
+	| "navGroupOperations"
+	// Site
+	| "navForms"
+	// Content
+	| "navHeadlessCmsPanel"
+	// Audience
+	| "navSubscribers"
+	| "navNewsletter"
+	| "navEvents"
+	| "navReviews"
+	| "navReferrals"
+	| "navMemberships"
+	| "navCommunity"
+	| "navShop"
+	| "navSocialSyndication"
+	// Discoverability
+	| "navStructuredData"
+	| "navSitemaps"
+	| "navMapsLocal"
+	// Integrations
+	| "navAnalytics"
+	| "navHeatmaps"
+	| "navAbTesting"
+	| "navEmail"
+	| "navLiveChat"
+	| "navImageCdn"
+	| "navSearch"
+	| "navCdnPurge"
+	| "navMonitoring"
+	| "navDeployHooks"
+	| "navPlugins"
+	// Operations
+	| "navData"
+	| "navBackups"
+	// RequiresIntegration stub component
+	| "stubNotConfiguredHeading"
+	| "stubHowToEnable"
+	| "stubSupportedProviders"
+	| "stubLearnMore"
 	| "uploadMedia"
 	| "chooseFile"
 	| "altTextLabel"
@@ -46,9 +129,44 @@ export type AdminLabelKey =
 	| "loadingLabel"
 	| "errorLabel";
 
-export const adminLabels: Record<AdminLocale, Record<AdminLabelKey, string>> = {
+/**
+ * English is the canonical fallback — every key MUST be present.
+ * Other locales are Partial: any missing key falls back to English via
+ * `getAdminLabel()` so adding a new key never produces a runtime "undefined"
+ * leak. Translate incrementally; English is shown otherwise.
+ */
+export const adminLabels: Record<"en", Record<AdminLabelKey, string>> &
+	Record<Exclude<AdminLocale, "en">, Partial<Record<AdminLabelKey, string>>> = {
 	en: {
 		loginHeading: "Sign in to the admin",
+		loginDescription:
+			"Use an approved admin account to manage content, media, redirects, and publishing settings.",
+		loginSubmit: "Sign in",
+		loginEmailLabel: "Email address",
+		loginPasswordLabel: "Password",
+		forgotPassword: "Forgot your password?",
+		invalidCredentials:
+			"That email and password combination was not recognized.",
+		rateLimited:
+			"Too many sign-in attempts were recorded. Wait a minute and try again.",
+		challengeRequired:
+			"Complete the security challenge and try signing in again.",
+		passwordResetSuccess:
+			"Your password was reset successfully. Sign in with the new password.",
+		invitationAcceptedSuccess:
+			"Your invitation was accepted successfully. Sign in with the new password.",
+		acceptInvitationHeading: "Accept invitation",
+		acceptInvitationDescription:
+			"Set a password to activate this invited admin account.",
+		acceptInvitationSubmit: "Accept invitation",
+		resetPasswordRequestHeading: "Reset password",
+		resetPasswordRequestDescription:
+			"Enter your admin email address and Astropress will issue a password reset link if the account exists.",
+		resetPasswordTokenHeading: "Choose a new password",
+		resetPasswordTokenDescription: "Set a new password for this admin account.",
+		resetPasswordRequestSubmit: "Issue reset link",
+		resetPasswordTokenSubmit: "Save new password",
+		backToLogin: "Back to admin login",
 		themeToggleDark: "Switch to dark mode",
 		themeToggleLight: "Switch to light mode",
 		saveButton: "Save",
@@ -57,6 +175,7 @@ export const adminLabels: Record<AdminLocale, Record<AdminLabelKey, string>> = {
 		deleteButton: "Delete",
 		cancelButton: "Cancel",
 		signOut: "Sign out",
+		signedInAsPrefix: "Signed in as",
 		sidebarTitle: "Workspace",
 		createPost: "New post",
 		editPost: "Edit post",
@@ -66,12 +185,15 @@ export const adminLabels: Record<AdminLocale, Record<AdminLabelKey, string>> = {
 		restorePost: "Restore",
 		duplicatePost: "Duplicate",
 		navDashboard: "Dashboard",
+		navContentGroup: "Content",
 		navPosts: "Posts",
 		navPages: "Pages",
 		navMedia: "Media",
 		navComments: "Comments",
 		navAuthors: "Authors",
 		navTaxonomies: "Categories & Tags",
+		navRoutePages: "Route Table",
+		navArchives: "Archives",
 		navRedirects: "Redirects",
 		navTranslations: "Translations",
 		navSeo: "SEO",
@@ -80,22 +202,91 @@ export const adminLabels: Record<AdminLocale, Record<AdminLabelKey, string>> = {
 		navSystem: "System",
 		navApiTokens: "API Tokens",
 		navWebhooks: "Webhooks",
+		navServices: "Services",
+		navFundraising: "Fundraising",
+		navTestimonials: "Testimonials",
+		navCms: "CMS",
+		navHost: "Host",
+		navGroupSite: "Site",
+		navGroupAudience: "Audience",
+		navGroupDiscoverability: "Discoverability",
+		navGroupIntegrations: "Integrations",
+		navGroupAccess: "Access",
+		navGroupOperations: "Operations",
+		navForms: "Forms",
+		navHeadlessCmsPanel: "Headless CMS Panel",
+		navSubscribers: "Subscribers",
+		navNewsletter: "Newsletter",
+		navEvents: "Events",
+		navReviews: "Reviews",
+		navReferrals: "Referrals",
+		navMemberships: "Memberships",
+		navCommunity: "Community",
+		navShop: "Shop",
+		navSocialSyndication: "Social Syndication",
+		navStructuredData: "Structured Data / AEO",
+		navSitemaps: "Sitemaps",
+		navMapsLocal: "Maps & Local",
+		navAnalytics: "Analytics",
+		navHeatmaps: "Heatmaps & Session Replay",
+		navAbTesting: "A/B Testing & Feature Flags",
+		navEmail: "Email",
+		navLiveChat: "Live Chat",
+		navImageCdn: "Image CDN",
+		navSearch: "Search",
+		navCdnPurge: "CDN Purge",
+		navMonitoring: "Monitoring",
+		navDeployHooks: "Deploy Hooks",
+		navPlugins: "Plugins",
+		navData: "Data",
+		navBackups: "Backups",
+		stubNotConfiguredHeading: "Not configured yet",
+		stubHowToEnable: "How to enable",
+		stubSupportedProviders: "Supported providers",
+		stubLearnMore: "Learn more",
 		uploadMedia: "Upload media",
 		chooseFile: "Choose file",
 		altTextLabel: "Alt text",
 		approveComment: "Approve",
 		rejectComment: "Reject",
 		pendingModeration: "Pending moderation",
-		searchPlaceholder: "Search\u2026",
+		searchPlaceholder: "Search…",
 		noResults: "No results found",
 		confirmDelete:
 			"Are you sure you want to delete this? This action cannot be undone.",
 		changeLanguage: "Change language",
-		loadingLabel: "Loading\u2026",
+		loadingLabel: "Loading…",
 		errorLabel: "Action failed",
 	},
 	es: {
-		loginHeading: "Acceder al panel de administraci\u00f3n",
+		loginHeading: "Acceder al panel de administración",
+		loginDescription:
+			"Utiliza una cuenta de administración autorizada para gestionar contenido, medios, redirecciones y publicación.",
+		loginSubmit: "Iniciar sesión",
+		loginEmailLabel: "Correo electrónico",
+		loginPasswordLabel: "Contraseña",
+		forgotPassword: "¿Olvidaste tu contraseña?",
+		invalidCredentials: "El correo y la contraseña no se reconocen.",
+		rateLimited: "Demasiados intentos. Espera un minuto e inténtalo de nuevo.",
+		challengeRequired:
+			"Completa el desafío de seguridad y vuelve a iniciar sesión.",
+		passwordResetSuccess:
+			"Tu contraseña se restableció correctamente. Inicia sesión con la nueva contraseña.",
+		invitationAcceptedSuccess:
+			"Tu invitación se aceptó correctamente. Inicia sesión con la nueva contraseña.",
+		acceptInvitationHeading: "Aceptar invitación",
+		acceptInvitationDescription:
+			"Establece una contraseña para activar esta cuenta de administración invitada.",
+		acceptInvitationSubmit: "Aceptar invitación",
+		resetPasswordRequestHeading: "Restablecer contraseña",
+		resetPasswordRequestDescription:
+			"Introduce tu correo de administración y Astropress emitirá un enlace de restablecimiento si la cuenta existe.",
+		resetPasswordTokenHeading: "Elige una nueva contraseña",
+		resetPasswordTokenDescription:
+			"Establece una nueva contraseña para esta cuenta de administración.",
+		resetPasswordRequestSubmit: "Emitir enlace",
+		resetPasswordTokenSubmit: "Guardar nueva contraseña",
+		backToLogin: "Volver al inicio de sesión",
 		themeToggleDark: "Cambiar a modo oscuro",
 		themeToggleLight: "Cambiar a modo claro",
 		saveButton: "Guardar",
@@ -103,46 +294,82 @@ export const adminLabels: Record<AdminLocale, Record<AdminLabelKey, string>> = {
 		discardButton: "Descartar",
 		deleteButton: "Eliminar",
 		cancelButton: "Cancelar",
-		signOut: "Cerrar sesi\u00f3n",
+		signOut: "Cerrar sesión",
+		signedInAsPrefix: "Sesión iniciada como",
 		sidebarTitle: "Espacio de trabajo",
 		createPost: "Nueva entrada",
 		editPost: "Editar entrada",
-		createPage: "Nueva p\u00e1gina",
-		editPage: "Editar p\u00e1gina",
+		createPage: "Nueva página",
+		editPage: "Editar página",
 		archivePost: "Archivar",
 		restorePost: "Restaurar",
 		duplicatePost: "Duplicar",
 		navDashboard: "Panel",
+		navContentGroup: "Contenido",
 		navPosts: "Entradas",
-		navPages: "P\u00e1ginas",
+		navPages: "Páginas",
 		navMedia: "Medios",
 		navComments: "Comentarios",
 		navAuthors: "Autores",
-		navTaxonomies: "Categor\u00edas y etiquetas",
+		navTaxonomies: "Categorías y etiquetas",
+		navRoutePages: "Tabla de rutas",
+		navArchives: "Archivos",
 		navRedirects: "Redirecciones",
 		navTranslations: "Traducciones",
 		navSeo: "SEO",
 		navUsers: "Usuarios",
-		navSettings: "Configuraci\u00f3n",
+		navSettings: "Configuración",
 		navSystem: "Sistema",
 		navApiTokens: "Tokens de API",
 		navWebhooks: "Webhooks",
+		navServices: "Servicios",
+		navFundraising: "Recaudación",
+		navTestimonials: "Testimonios",
+		navCms: "CMS",
+		navHost: "Hospedaje",
 		uploadMedia: "Subir archivo",
 		chooseFile: "Elegir archivo",
 		altTextLabel: "Texto alternativo",
 		approveComment: "Aprobar",
 		rejectComment: "Rechazar",
-		pendingModeration: "Pendiente de moderaci\u00f3n",
-		searchPlaceholder: "Buscar\u2026",
+		pendingModeration: "Pendiente de moderación",
+		searchPlaceholder: "Buscar…",
 		noResults: "No se encontraron resultados",
 		confirmDelete:
-			"\u00bfSeguro que quieres eliminar esto? Esta acci\u00f3n no se puede deshacer.",
+			"¿Seguro que quieres eliminar esto? Esta acción no se puede deshacer.",
 		changeLanguage: "Cambiar idioma",
-		loadingLabel: "Cargando\u2026",
+		loadingLabel: "Cargando…",
 		errorLabel: "Se produjo un error",
 	},
 	fr: {
-		loginHeading: "Se connecter \u00e0 l'administration",
+		loginHeading: "Se connecter à l'administration",
+		loginDescription:
+			"Utilisez un compte administrateur autorisé pour gérer le contenu, les médias, les redirections et la publication.",
+		loginSubmit: "Se connecter",
+		loginEmailLabel: "Adresse e-mail",
+		loginPasswordLabel: "Mot de passe",
+		forgotPassword: "Mot de passe oublié ?",
+		invalidCredentials: "Adresse e-mail ou mot de passe non reconnu.",
+		rateLimited: "Trop de tentatives. Attendez une minute et réessayez.",
+		challengeRequired:
+			"Complétez la vérification de sécurité puis reconnectez-vous.",
+		passwordResetSuccess:
+			"Mot de passe réinitialisé. Connectez-vous avec le nouveau mot de passe.",
+		invitationAcceptedSuccess:
+			"Invitation acceptée. Connectez-vous avec le nouveau mot de passe.",
+		acceptInvitationHeading: "Accepter l'invitation",
+		acceptInvitationDescription:
+			"Définissez un mot de passe pour activer ce compte administrateur invité.",
+		acceptInvitationSubmit: "Accepter l'invitation",
+		resetPasswordRequestHeading: "Réinitialiser le mot de passe",
+		resetPasswordRequestDescription:
+			"Saisissez votre adresse e-mail administrateur ; Astropress enverra un lien de réinitialisation si le compte existe.",
+		resetPasswordTokenHeading: "Choisir un nouveau mot de passe",
+		resetPasswordTokenDescription:
+			"Définissez un nouveau mot de passe pour ce compte administrateur.",
+		resetPasswordRequestSubmit: "Envoyer le lien",
+		resetPasswordTokenSubmit: "Enregistrer le mot de passe",
+		backToLogin: "Retour à la connexion",
 		themeToggleDark: "Passer en mode sombre",
 		themeToggleLight: "Passer en mode clair",
 		saveButton: "Enregistrer",
@@ -150,7 +377,8 @@ export const adminLabels: Record<AdminLocale, Record<AdminLabelKey, string>> = {
 		discardButton: "Ignorer",
 		deleteButton: "Supprimer",
 		cancelButton: "Annuler",
-		signOut: "Se d\u00e9connecter",
+		signOut: "Se déconnecter",
+		signedInAsPrefix: "Connecté en tant que",
 		sidebarTitle: "Espace de travail",
 		createPost: "Nouvel article",
 		editPost: "Modifier l'article",
@@ -160,44 +388,81 @@ export const adminLabels: Record<AdminLocale, Record<AdminLabelKey, string>> = {
 		restorePost: "Restaurer",
 		duplicatePost: "Dupliquer",
 		navDashboard: "Tableau de bord",
+		navContentGroup: "Contenu",
 		navPosts: "Articles",
 		navPages: "Pages",
-		navMedia: "M\u00e9dias",
+		navMedia: "Médias",
 		navComments: "Commentaires",
 		navAuthors: "Auteurs",
-		navTaxonomies: "Cat\u00e9gories et \u00e9tiquettes",
+		navTaxonomies: "Catégories et étiquettes",
+		navRoutePages: "Table des routes",
+		navArchives: "Archives",
 		navRedirects: "Redirections",
 		navTranslations: "Traductions",
 		navSeo: "SEO",
 		navUsers: "Utilisateurs",
-		navSettings: "Param\u00e8tres",
-		navSystem: "Syst\u00e8me",
+		navSettings: "Paramètres",
+		navSystem: "Système",
 		navApiTokens: "Jetons API",
 		navWebhooks: "Webhooks",
-		uploadMedia: "T\u00e9l\u00e9verser un fichier",
+		navServices: "Services",
+		navFundraising: "Collecte de fonds",
+		navTestimonials: "Témoignages",
+		navCms: "CMS",
+		navHost: "Hébergement",
+		uploadMedia: "Téléverser un fichier",
 		chooseFile: "Choisir un fichier",
 		altTextLabel: "Texte alternatif",
 		approveComment: "Approuver",
 		rejectComment: "Rejeter",
-		pendingModeration: "En attente de mod\u00e9ration",
-		searchPlaceholder: "Rechercher\u2026",
-		noResults: "Aucun r\u00e9sultat trouv\u00e9",
+		pendingModeration: "En attente de modération",
+		searchPlaceholder: "Rechercher…",
+		noResults: "Aucun résultat trouvé",
 		confirmDelete:
-			"Voulez-vous vraiment supprimer ceci\u00a0? Cette action est irr\u00e9versible.",
+			"Voulez-vous vraiment supprimer ceci ? Cette action est irréversible.",
 		changeLanguage: "Changer de langue",
-		loadingLabel: "Chargement\u2026",
+		loadingLabel: "Chargement…",
 		errorLabel: "Une erreur est survenue",
 	},
 	de: {
 		loginHeading: "Beim Admin anmelden",
+		loginDescription:
+			"Verwenden Sie ein freigegebenes Admin-Konto, um Inhalte, Medien, Weiterleitungen und Veröffentlichungen zu verwalten.",
+		loginSubmit: "Anmelden",
+		loginEmailLabel: "E-Mail-Adresse",
+		loginPasswordLabel: "Passwort",
+		forgotPassword: "Passwort vergessen?",
+		invalidCredentials: "E-Mail und Passwort wurden nicht erkannt.",
+		rateLimited:
+			"Zu viele Anmeldeversuche. Warten Sie eine Minute und versuchen Sie es erneut.",
+		challengeRequired:
+			"Schließen Sie die Sicherheitsprüfung ab und melden Sie sich erneut an.",
+		passwordResetSuccess:
+			"Ihr Passwort wurde erfolgreich zurückgesetzt. Melden Sie sich mit dem neuen Passwort an.",
+		invitationAcceptedSuccess:
+			"Ihre Einladung wurde erfolgreich angenommen. Melden Sie sich mit dem neuen Passwort an.",
+		acceptInvitationHeading: "Einladung annehmen",
+		acceptInvitationDescription:
+			"Legen Sie ein Passwort fest, um dieses eingeladene Admin-Konto zu aktivieren.",
+		acceptInvitationSubmit: "Einladung annehmen",
+		resetPasswordRequestHeading: "Passwort zurücksetzen",
+		resetPasswordRequestDescription:
+			"Geben Sie Ihre Admin-E-Mail-Adresse ein. Astropress sendet einen Reset-Link, falls das Konto existiert.",
+		resetPasswordTokenHeading: "Neues Passwort wählen",
+		resetPasswordTokenDescription:
+			"Legen Sie ein neues Passwort für dieses Admin-Konto fest.",
+		resetPasswordRequestSubmit: "Link senden",
+		resetPasswordTokenSubmit: "Passwort speichern",
+		backToLogin: "Zurück zur Anmeldung",
 		themeToggleDark: "Zum Dunkelmodus wechseln",
 		themeToggleLight: "Zum Hellmodus wechseln",
 		saveButton: "Speichern",
-		publishButton: "Ver\u00f6ffentlichen",
+		publishButton: "Veröffentlichen",
 		discardButton: "Verwerfen",
-		deleteButton: "L\u00f6schen",
+		deleteButton: "Löschen",
 		cancelButton: "Abbrechen",
 		signOut: "Abmelden",
+		signedInAsPrefix: "Angemeldet als",
 		sidebarTitle: "Arbeitsbereich",
 		createPost: "Neuer Beitrag",
 		editPost: "Beitrag bearbeiten",
@@ -207,36 +472,69 @@ export const adminLabels: Record<AdminLocale, Record<AdminLabelKey, string>> = {
 		restorePost: "Wiederherstellen",
 		duplicatePost: "Duplizieren",
 		navDashboard: "Dashboard",
-		navPosts: "Beitr\u00e4ge",
+		navContentGroup: "Inhalt",
+		navPosts: "Beiträge",
 		navPages: "Seiten",
 		navMedia: "Medien",
 		navComments: "Kommentare",
 		navAuthors: "Autoren",
 		navTaxonomies: "Kategorien & Tags",
+		navRoutePages: "Routentabelle",
+		navArchives: "Archive",
 		navRedirects: "Weiterleitungen",
-		navTranslations: "\u00dcbersetzungen",
+		navTranslations: "Übersetzungen",
 		navSeo: "SEO",
 		navUsers: "Benutzer",
 		navSettings: "Einstellungen",
 		navSystem: "System",
 		navApiTokens: "API-Token",
 		navWebhooks: "Webhooks",
+		navServices: "Dienste",
+		navFundraising: "Spendenaktionen",
+		navTestimonials: "Stimmen",
+		navCms: "CMS",
+		navHost: "Hosting",
 		uploadMedia: "Datei hochladen",
-		chooseFile: "Datei ausw\u00e4hlen",
+		chooseFile: "Datei auswählen",
 		altTextLabel: "Alternativtext",
 		approveComment: "Genehmigen",
 		rejectComment: "Ablehnen",
 		pendingModeration: "Ausstehende Moderation",
-		searchPlaceholder: "Suchen\u2026",
+		searchPlaceholder: "Suchen…",
 		noResults: "Keine Ergebnisse gefunden",
 		confirmDelete:
-			"M\u00f6chten Sie dies wirklich l\u00f6schen? Diese Aktion kann nicht r\u00fcckg\u00e4ngig gemacht werden.",
-		changeLanguage: "Sprache \u00e4ndern",
-		loadingLabel: "Wird geladen\u2026",
+			"Möchten Sie dies wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.",
+		changeLanguage: "Sprache ändern",
+		loadingLabel: "Wird geladen…",
 		errorLabel: "Ein Fehler ist aufgetreten",
 	},
 	pt: {
-		loginHeading: "Entrar no painel de administra\u00e7\u00e3o",
+		loginHeading: "Entrar no painel de administração",
+		loginDescription:
+			"Use uma conta de administração autorizada para gerenciar conteúdo, mídia, redirecionamentos e publicação.",
+		loginSubmit: "Entrar",
+		loginEmailLabel: "Endereço de e-mail",
+		loginPasswordLabel: "Senha",
+		forgotPassword: "Esqueceu sua senha?",
+		invalidCredentials: "E-mail e senha não reconhecidos.",
+		rateLimited: "Muitas tentativas. Aguarde um minuto e tente novamente.",
+		challengeRequired:
+			"Conclua o desafio de segurança e tente entrar novamente.",
+		passwordResetSuccess: "Sua senha foi redefinida. Entre com a nova senha.",
+		invitationAcceptedSuccess: "Convite aceito. Entre com a nova senha.",
+		acceptInvitationHeading: "Aceitar convite",
+		acceptInvitationDescription:
+			"Defina uma senha para ativar esta conta de administração convidada.",
+		acceptInvitationSubmit: "Aceitar convite",
+		resetPasswordRequestHeading: "Redefinir senha",
+		resetPasswordRequestDescription:
+			"Digite seu e-mail de administração; Astropress enviará um link de redefinição se a conta existir.",
+		resetPasswordTokenHeading: "Escolher nova senha",
+		resetPasswordTokenDescription:
+			"Defina uma nova senha para esta conta de administração.",
+		resetPasswordRequestSubmit: "Enviar link",
+		resetPasswordTokenSubmit: "Salvar nova senha",
+		backToLogin: "Voltar ao login",
 		themeToggleDark: "Mudar para modo escuro",
 		themeToggleLight: "Mudar para modo claro",
 		saveButton: "Salvar",
@@ -245,92 +543,375 @@ export const adminLabels: Record<AdminLocale, Record<AdminLabelKey, string>> = {
 		deleteButton: "Excluir",
 		cancelButton: "Cancelar",
 		signOut: "Sair",
-		sidebarTitle: "\u00c1rea de trabalho",
-		createPost: "Nova publica\u00e7\u00e3o",
-		editPost: "Editar publica\u00e7\u00e3o",
-		createPage: "Nova p\u00e1gina",
-		editPage: "Editar p\u00e1gina",
+		signedInAsPrefix: "Conectado como",
+		sidebarTitle: "Área de trabalho",
+		createPost: "Nova publicação",
+		editPost: "Editar publicação",
+		createPage: "Nova página",
+		editPage: "Editar página",
 		archivePost: "Arquivar",
 		restorePost: "Restaurar",
 		duplicatePost: "Duplicar",
 		navDashboard: "Painel",
-		navPosts: "Publica\u00e7\u00f5es",
-		navPages: "P\u00e1ginas",
-		navMedia: "M\u00eddia",
-		navComments: "Coment\u00e1rios",
+		navContentGroup: "Conteúdo",
+		navPosts: "Publicações",
+		navPages: "Páginas",
+		navMedia: "Mídia",
+		navComments: "Comentários",
 		navAuthors: "Autores",
 		navTaxonomies: "Categorias e tags",
+		navRoutePages: "Tabela de rotas",
+		navArchives: "Arquivos",
 		navRedirects: "Redirecionamentos",
-		navTranslations: "Tradu\u00e7\u00f5es",
+		navTranslations: "Traduções",
 		navSeo: "SEO",
-		navUsers: "Usu\u00e1rios",
-		navSettings: "Configura\u00e7\u00f5es",
+		navUsers: "Usuários",
+		navSettings: "Configurações",
 		navSystem: "Sistema",
 		navApiTokens: "Tokens de API",
 		navWebhooks: "Webhooks",
+		navServices: "Serviços",
+		navFundraising: "Arrecadação",
+		navTestimonials: "Depoimentos",
+		navCms: "CMS",
+		navHost: "Hospedagem",
 		uploadMedia: "Carregar arquivo",
 		chooseFile: "Escolher arquivo",
 		altTextLabel: "Texto alternativo",
 		approveComment: "Aprovar",
 		rejectComment: "Rejeitar",
-		pendingModeration: "Aguardando modera\u00e7\u00e3o",
-		searchPlaceholder: "Pesquisar\u2026",
+		pendingModeration: "Aguardando moderação",
+		searchPlaceholder: "Pesquisar…",
 		noResults: "Nenhum resultado encontrado",
 		confirmDelete:
-			"Tem certeza que quer excluir isso? Esta a\u00e7\u00e3o n\u00e3o pode ser desfeita.",
+			"Tem certeza que quer excluir isso? Esta ação não pode ser desfeita.",
 		changeLanguage: "Alterar idioma",
-		loadingLabel: "Carregando\u2026",
+		loadingLabel: "Carregando…",
 		errorLabel: "Ocorreu um erro",
 	},
 	ja: {
-		loginHeading:
-			"\u7ba1\u7406\u30d1\u30cd\u30eb\u306b\u30b5\u30a4\u30f3\u30a4\u30f3",
-		themeToggleDark:
-			"\u30c0\u30fc\u30af\u30e2\u30fc\u30c9\u306b\u5207\u308a\u66ff\u3048",
-		themeToggleLight:
-			"\u30e9\u30a4\u30c8\u30e2\u30fc\u30c9\u306b\u5207\u308a\u66ff\u3048",
-		saveButton: "\u4fdd\u5b58",
-		publishButton: "\u516c\u958b",
-		discardButton: "\u7834\u68c4",
-		deleteButton: "\u524a\u9664",
-		cancelButton: "\u30ad\u30e3\u30f3\u30bb\u30eb",
-		signOut: "\u30b5\u30a4\u30f3\u30a2\u30a6\u30c8",
-		sidebarTitle: "\u30ef\u30fc\u30af\u30b9\u30da\u30fc\u30b9",
-		createPost: "\u65b0\u3057\u3044\u6295\u7a3f",
-		editPost: "\u6295\u7a3f\u3092\u7de8\u96c6",
-		createPage: "\u65b0\u3057\u3044\u30da\u30fc\u30b8",
-		editPage: "\u30da\u30fc\u30b8\u3092\u7de8\u96c6",
-		archivePost: "\u30a2\u30fc\u30ab\u30a4\u30d6",
-		restorePost: "\u5fa9\u5143",
-		duplicatePost: "\u8907\u88fd",
-		navDashboard: "\u30c0\u30c3\u30b7\u30e5\u30dc\u30fc\u30c9",
-		navPosts: "\u6295\u7a3f",
-		navPages: "\u30da\u30fc\u30b8",
-		navMedia: "\u30e1\u30c7\u30a3\u30a2",
-		navComments: "\u30b3\u30e1\u30f3\u30c8",
-		navAuthors: "\u8457\u8005",
-		navTaxonomies: "\u30ab\u30c6\u30b4\u30ea\u3068\u30bf\u30b0",
-		navRedirects: "\u30ea\u30c0\u30a4\u30ec\u30af\u30c8",
-		navTranslations: "\u7ffb\u8a33",
+		loginHeading: "管理パネルにサインイン",
+		loginDescription:
+			"承認された管理アカウントでコンテンツ、メディア、リダイレクト、公開設定を管理してください。",
+		loginSubmit: "サインイン",
+		loginEmailLabel: "メールアドレス",
+		loginPasswordLabel: "パスワード",
+		forgotPassword: "パスワードをお忘れですか？",
+		invalidCredentials:
+			"メールアドレスとパスワードの組み合わせが正しくありません。",
+		rateLimited:
+			"サインインの試行回数が多すぎます。1分待って再度お試しください。",
+		challengeRequired:
+			"セキュリティチェックを完了してから再度サインインしてください。",
+		passwordResetSuccess:
+			"パスワードがリセットされました。新しいパスワードでサインインしてください。",
+		invitationAcceptedSuccess:
+			"招待が承認されました。新しいパスワードでサインインしてください。",
+		acceptInvitationHeading: "招待を承認",
+		acceptInvitationDescription:
+			"パスワードを設定して、招待された管理アカウントを有効化します。",
+		acceptInvitationSubmit: "招待を承認",
+		resetPasswordRequestHeading: "パスワードのリセット",
+		resetPasswordRequestDescription:
+			"管理者のメールアドレスを入力してください。アカウントが存在する場合、Astropress がリセットリンクを送信します。",
+		resetPasswordTokenHeading: "新しいパスワードを選択",
+		resetPasswordTokenDescription:
+			"この管理アカウントの新しいパスワードを設定します。",
+		resetPasswordRequestSubmit: "リンクを送信",
+		resetPasswordTokenSubmit: "新しいパスワードを保存",
+		backToLogin: "ログインに戻る",
+		themeToggleDark: "ダークモードに切り替え",
+		themeToggleLight: "ライトモードに切り替え",
+		saveButton: "保存",
+		publishButton: "公開",
+		discardButton: "破棄",
+		deleteButton: "削除",
+		cancelButton: "キャンセル",
+		signOut: "サインアウト",
+		signedInAsPrefix: "サインイン中:",
+		sidebarTitle: "ワークスペース",
+		createPost: "新しい投稿",
+		editPost: "投稿を編集",
+		createPage: "新しいページ",
+		editPage: "ページを編集",
+		archivePost: "アーカイブ",
+		restorePost: "復元",
+		duplicatePost: "複製",
+		navDashboard: "ダッシュボード",
+		navContentGroup: "コンテンツ",
+		navPosts: "投稿",
+		navPages: "ページ",
+		navMedia: "メディア",
+		navComments: "コメント",
+		navAuthors: "著者",
+		navTaxonomies: "カテゴリとタグ",
+		navRoutePages: "ルートテーブル",
+		navArchives: "アーカイブ",
+		navRedirects: "リダイレクト",
+		navTranslations: "翻訳",
 		navSeo: "SEO",
-		navUsers: "\u30e6\u30fc\u30b6\u30fc",
-		navSettings: "\u8a2d\u5b9a",
-		navSystem: "\u30b7\u30b9\u30c6\u30e0",
-		navApiTokens: "API\u30c8\u30fc\u30af\u30f3",
+		navUsers: "ユーザー",
+		navSettings: "設定",
+		navSystem: "システム",
+		navApiTokens: "APIトークン",
 		navWebhooks: "Webhook",
-		uploadMedia:
-			"\u30d5\u30a1\u30a4\u30eb\u3092\u30a2\u30c3\u30d7\u30ed\u30fc\u30c9",
-		chooseFile: "\u30d5\u30a1\u30a4\u30eb\u3092\u9078\u629e",
-		altTextLabel: "\u4ee3\u66ff\u30c6\u30ad\u30b9\u30c8",
-		approveComment: "\u627f\u8a8d",
-		rejectComment: "\u5374\u4e0b",
-		pendingModeration: "\u30e2\u30c7\u30ec\u30fc\u30c8\u5f85\u3061",
-		searchPlaceholder: "\u691c\u7d22\u2026",
-		noResults: "\u7d50\u679c\u304c\u898b\u3064\u304b\u308a\u307e\u305b\u3093",
+		navServices: "サービス",
+		navFundraising: "募金",
+		navTestimonials: "推薦の声",
+		navCms: "CMS",
+		navHost: "ホスティング",
+		uploadMedia: "ファイルをアップロード",
+		chooseFile: "ファイルを選択",
+		altTextLabel: "代替テキスト",
+		approveComment: "承認",
+		rejectComment: "却下",
+		pendingModeration: "モデレート待ち",
+		searchPlaceholder: "検索…",
+		noResults: "結果が見つかりません",
+		confirmDelete: "本当に削除しますか？この操作は元に戻せません。",
+		changeLanguage: "言語を変更",
+		loadingLabel: "読み込み中…",
+		errorLabel: "エラーが発生しました",
+	},
+	te: {
+		loginHeading: "అడ్మిన్‌లోకి సైన్ ఇన్ చేయండి",
+		loginDescription:
+			"కంటెంట్, మీడియా, రీడైరెక్ట్‌లు, ప్రచురణ సెట్టింగ్‌లను నిర్వహించడానికి ఆమోదిత అడ్మిన్ ఖాతాను ఉపయోగించండి.",
+		loginSubmit: "సైన్ ఇన్",
+		loginEmailLabel: "ఇమెయిల్ చిరునామా",
+		loginPasswordLabel: "పాస్‌వర్డ్",
+		forgotPassword: "పాస్‌వర్డ్ మర్చిపోయారా?",
+		invalidCredentials: "ఆ ఇమెయిల్, పాస్‌వర్డ్ కలయిక గుర్తించబడలేదు.",
+		rateLimited: "చాలా సైన్-ఇన్ ప్రయత్నాలు. ఒక నిమిషం వేచి మళ్ళీ ప్రయత్నించండి.",
+		challengeRequired: "భద్రతా సవాల్‌ని పూర్తి చేసి మళ్ళీ సైన్ ఇన్ ప్రయత్నించండి.",
+		passwordResetSuccess: "మీ పాస్‌వర్డ్ విజయవంతంగా రీసెట్ చేయబడింది. కొత్త పాస్‌వర్డ్‌తో సైన్ ఇన్ చేయండి.",
+		invitationAcceptedSuccess:
+			"మీ ఆహ్వానం విజయవంతంగా ఆమోదించబడింది. కొత్త పాస్‌వర్డ్‌తో సైన్ ఇన్ చేయండి.",
+		acceptInvitationHeading: "ఆహ్వానాన్ని ఆమోదించండి",
+		acceptInvitationDescription: "ఈ ఆహ్వానిత అడ్మిన్ ఖాతాను సక్రియం చేయడానికి పాస్‌వర్డ్ సెట్ చేయండి.",
+		acceptInvitationSubmit: "ఆహ్వానాన్ని ఆమోదించండి",
+		resetPasswordRequestHeading: "పాస్‌వర్డ్ రీసెట్",
+		resetPasswordRequestDescription:
+			"మీ అడ్మిన్ ఇమెయిల్ చిరునామాను నమోదు చేయండి; ఖాతా ఉన్నట్లయితే Astropress రీసెట్ లింక్‌ను పంపుతుంది.",
+		resetPasswordTokenHeading: "కొత్త పాస్‌వర్డ్ ఎంచుకోండి",
+		resetPasswordTokenDescription: "ఈ అడ్మిన్ ఖాతాకు కొత్త పాస్‌వర్డ్ సెట్ చేయండి.",
+		resetPasswordRequestSubmit: "లింక్ పంపండి",
+		resetPasswordTokenSubmit: "కొత్త పాస్‌వర్డ్ సేవ్ చేయండి",
+		backToLogin: "లాగిన్‌కి తిరిగి",
+		themeToggleDark: "డార్క్ మోడ్‌కి మారండి",
+		themeToggleLight: "లైట్ మోడ్‌కి మారండి",
+		saveButton: "సేవ్",
+		publishButton: "ప్రచురించండి",
+		discardButton: "విస్మరించండి",
+		deleteButton: "తొలగించండి",
+		cancelButton: "రద్దు",
+		signOut: "సైన్ అవుట్",
+		signedInAsPrefix: "సైన్ ఇన్:",
+		sidebarTitle: "వర్క్‌స్పేస్",
+		createPost: "కొత్త పోస్ట్",
+		editPost: "పోస్ట్ సవరించండి",
+		createPage: "కొత్త పేజీ",
+		editPage: "పేజీ సవరించండి",
+		archivePost: "ఆర్కైవ్",
+		restorePost: "పునరుద్ధరించండి",
+		duplicatePost: "నకలు",
+		navDashboard: "డాష్‌బోర్డ్",
+		navContentGroup: "కంటెంట్",
+		navPosts: "పోస్ట్‌లు",
+		navPages: "పేజీలు",
+		navMedia: "మీడియా",
+		navComments: "వ్యాఖ్యలు",
+		navAuthors: "రచయితలు",
+		navTaxonomies: "వర్గాలు & ట్యాగ్‌లు",
+		navRoutePages: "రూట్ పట్టిక",
+		navArchives: "ఆర్కైవ్‌లు",
+		navRedirects: "రీడైరెక్ట్‌లు",
+		navTranslations: "అనువాదాలు",
+		navSeo: "ఎస్‌ఈఓ",
+		navUsers: "వినియోగదారులు",
+		navSettings: "సెట్టింగ్‌లు",
+		navSystem: "సిస్టమ్",
+		navApiTokens: "API టోకెన్‌లు",
+		navWebhooks: "Webhooks",
+		navServices: "సేవలు",
+		navFundraising: "విరాళ సేకరణ",
+		navTestimonials: "ప్రశంసలు",
+		navCms: "CMS",
+		navHost: "హోస్టింగ్",
+		uploadMedia: "మీడియా అప్‌లోడ్",
+		chooseFile: "ఫైల్ ఎంచుకోండి",
+		altTextLabel: "ప్రత్యామ్నాయ టెక్స్ట్",
+		approveComment: "ఆమోదించండి",
+		rejectComment: "తిరస్కరించండి",
+		pendingModeration: "మోడరేషన్ పెండింగ్",
+		searchPlaceholder: "శోధన…",
+		noResults: "ఫలితాలు కనుగొనబడలేదు",
+		confirmDelete: "దీన్ని తొలగించాలనుకుంటున్నారా? ఈ చర్యను రద్దు చేయలేరు.",
+		changeLanguage: "భాష మార్చండి",
+		loadingLabel: "లోడ్ అవుతోంది…",
+		errorLabel: "చర్య విఫలమైంది",
+	},
+	hi: {
+		loginHeading: "एडमिन में साइन इन करें",
+		loginDescription:
+			"सामग्री, मीडिया, रीडायरेक्ट और प्रकाशन सेटिंग्स प्रबंधित करने के लिए स्वीकृत एडमिन खाते का उपयोग करें.",
+		loginSubmit: "साइन इन",
+		loginEmailLabel: "ईमेल पता",
+		loginPasswordLabel: "पासवर्ड",
+		forgotPassword: "पासवर्ड भूल गए?",
+		invalidCredentials: "वह ईमेल और पासवर्ड संयोजन पहचाना नहीं गया.",
+		rateLimited: "बहुत अधिक प्रयास. एक मिनट प्रतीक्षा करें और फिर से प्रयास करें.",
+		challengeRequired: "सुरक्षा चुनौती पूरी करें और दोबारा साइन इन करें.",
+		passwordResetSuccess:
+			"आपका पासवर्ड सफलतापूर्वक रीसेट हो गया. नए पासवर्ड से साइन इन करें.",
+		invitationAcceptedSuccess:
+			"आपका निमंत्रण स्वीकार किया गया. नए पासवर्ड से साइन इन करें.",
+		acceptInvitationHeading: "निमंत्रण स्वीकार करें",
+		acceptInvitationDescription:
+			"इस आमंत्रित एडमिन खाते को सक्रिय करने के लिए पासवर्ड सेट करें.",
+		acceptInvitationSubmit: "निमंत्रण स्वीकार करें",
+		resetPasswordRequestHeading: "पासवर्ड रीसेट",
+		resetPasswordRequestDescription:
+			"अपना एडमिन ईमेल पता दर्ज करें; खाता मौजूद होने पर Astropress रीसेट लिंक भेजेगा.",
+		resetPasswordTokenHeading: "नया पासवर्ड चुनें",
+		resetPasswordTokenDescription: "इस एडमिन खाते के लिए नया पासवर्ड सेट करें.",
+		resetPasswordRequestSubmit: "लिंक भेजें",
+		resetPasswordTokenSubmit: "नया पासवर्ड सहेजें",
+		backToLogin: "लॉगिन पर वापस",
+		themeToggleDark: "डार्क मोड पर स्विच करें",
+		themeToggleLight: "लाइट मोड पर स्विच करें",
+		saveButton: "सहेजें",
+		publishButton: "प्रकाशित करें",
+		discardButton: "त्यागें",
+		deleteButton: "मिटाएँ",
+		cancelButton: "रद्द करें",
+		signOut: "साइन आउट",
+		signedInAsPrefix: "साइन इन के रूप में:",
+		sidebarTitle: "वर्कस्पेस",
+		createPost: "नई पोस्ट",
+		editPost: "पोस्ट संपादित करें",
+		createPage: "नया पेज",
+		editPage: "पेज संपादित करें",
+		archivePost: "संग्रहीत करें",
+		restorePost: "पुनर्स्थापित करें",
+		duplicatePost: "नकल",
+		navDashboard: "डैशबोर्ड",
+		navContentGroup: "सामग्री",
+		navPosts: "पोस्ट",
+		navPages: "पृष्ठ",
+		navMedia: "मीडिया",
+		navComments: "टिप्पणियाँ",
+		navAuthors: "लेखक",
+		navTaxonomies: "श्रेणियाँ और टैग",
+		navRoutePages: "रूट तालिका",
+		navArchives: "अभिलेख",
+		navRedirects: "रीडायरेक्ट",
+		navTranslations: "अनुवाद",
+		navSeo: "एसईओ",
+		navUsers: "उपयोगकर्ता",
+		navSettings: "सेटिंग्स",
+		navSystem: "सिस्टम",
+		navApiTokens: "API टोकन",
+		navWebhooks: "Webhooks",
+		navServices: "सेवाएँ",
+		navFundraising: "धन उगाही",
+		navTestimonials: "प्रशंसापत्र",
+		navCms: "CMS",
+		navHost: "होस्टिंग",
+		uploadMedia: "मीडिया अपलोड करें",
+		chooseFile: "फ़ाइल चुनें",
+		altTextLabel: "वैकल्पिक टेक्स्ट",
+		approveComment: "स्वीकृत करें",
+		rejectComment: "अस्वीकार करें",
+		pendingModeration: "मॉडरेशन लंबित",
+		searchPlaceholder: "खोजें…",
+		noResults: "कोई परिणाम नहीं मिला",
 		confirmDelete:
-			"\u672c\u5f53\u306b\u524a\u9664\u3057\u307e\u3059\u304b\uff1f\u3053\u306e\u64cd\u4f5c\u306f\u5143\u306b\u623b\u305b\u307e\u305b\u3093\u3002",
-		changeLanguage: "\u8a00\u8a9e\u3092\u5909\u66f4",
-		loadingLabel: "\u8aad\u307f\u8fbc\u307f\u4e2d\u2026",
-		errorLabel: "\u30a8\u30e9\u30fc\u304c\u767a\u751f\u3057\u307e\u3057\u305f",
+			"क्या आप वाकई इसे मिटाना चाहते हैं? यह क्रिया पूर्ववत नहीं की जा सकती.",
+		changeLanguage: "भाषा बदलें",
+		loadingLabel: "लोड हो रहा है…",
+		errorLabel: "क्रिया विफल",
+	},
+	ny: {
+		loginHeading: "Lowani mu admin",
+		loginDescription:
+			"Gwiritsani ntchito akaunti yovomerezeka kuti muyendetse zinthu, ma media, ma redirect, ndi zofalitsa.",
+		loginSubmit: "Lowani",
+		loginEmailLabel: "Imelo",
+		loginPasswordLabel: "Mawu achinsinsi",
+		forgotPassword: "Mwaiwala mawu achinsinsi?",
+		invalidCredentials: "Imelo ndi mawu achinsinsi sizinazindikiridwe.",
+		rateLimited: "Kuyesayesa kochuluka. Dikirani mphindi imodzi ndikuyesa.",
+		challengeRequired: "Malizani chitetezo ndi kulowanso.",
+		passwordResetSuccess:
+			"Mawu achinsinsi anu asinthidwa. Lowani ndi mawu atsopano.",
+		invitationAcceptedSuccess:
+			"Pempho lanu lalandiridwa. Lowani ndi mawu atsopano.",
+		acceptInvitationHeading: "Landirani pempho",
+		acceptInvitationDescription:
+			"Ikani mawu achinsinsi kuti muyatsanitse akaunti yoyitanidwa.",
+		acceptInvitationSubmit: "Landirani pempho",
+		resetPasswordRequestHeading: "Sinthani mawu achinsinsi",
+		resetPasswordRequestDescription:
+			"Lembani imelo yanu; Astropress idzatumiza ulalo wokongolanso ngati akaunti ilipo.",
+		resetPasswordTokenHeading: "Sankhani mawu atsopano",
+		resetPasswordTokenDescription:
+			"Ikani mawu atsopano achinsinsi pa akaunti iyi.",
+		resetPasswordRequestSubmit: "Tumizani ulalo",
+		resetPasswordTokenSubmit: "Sungani mawu atsopano",
+		backToLogin: "Bwerera ku login",
+		themeToggleDark: "Sinthani ku mtundu wakuda",
+		themeToggleLight: "Sinthani ku mtundu woyera",
+		saveButton: "Sungani",
+		publishButton: "Falitsani",
+		discardButton: "Tayani",
+		deleteButton: "Chotsani",
+		cancelButton: "Letsani",
+		signOut: "Tulukani",
+		signedInAsPrefix: "Walowa monga",
+		sidebarTitle: "Malo ogwirira",
+		createPost: "Positi yatsopano",
+		editPost: "Sinthani positi",
+		createPage: "Tsamba latsopano",
+		editPage: "Sinthani tsamba",
+		archivePost: "Sungani",
+		restorePost: "Bwezerani",
+		duplicatePost: "Pangani kopi",
+		navDashboard: "Dashboard",
+		navContentGroup: "Zinthu",
+		navPosts: "Maposiketi",
+		navPages: "Masamba",
+		navMedia: "Media",
+		navComments: "Ndemanga",
+		navAuthors: "Olemba",
+		navTaxonomies: "Magulu ndi Ma tag",
+		navRoutePages: "Tebulo la mizere",
+		navArchives: "Zosungidwa",
+		navRedirects: "Maredirect",
+		navTranslations: "Matembenuzidwe",
+		navSeo: "SEO",
+		navUsers: "Ogwiritsa",
+		navSettings: "Zokonzekera",
+		navSystem: "Sisitimu",
+		navApiTokens: "Matokeni a API",
+		navWebhooks: "Webhooks",
+		navServices: "Mautumiki",
+		navFundraising: "Kusonkhanitsa ndalama",
+		navTestimonials: "Maumboni",
+		navCms: "CMS",
+		navHost: "Ho hosting",
+		uploadMedia: "Ikani media",
+		chooseFile: "Sankhani fayilo",
+		altTextLabel: "Mawu osankha",
+		approveComment: "Vomerezani",
+		rejectComment: "Kanizani",
+		pendingModeration: "Akudikira kuyendetsedwa",
+		searchPlaceholder: "Sakani…",
+		noResults: "Palibe zotsatira",
+		confirmDelete:
+			"Mukutsimikiza kuchotsa izi? Chochita ichi sichingathe kubwezedwa.",
+		changeLanguage: "Sinthani chinenero",
+		loadingLabel: "Akutsegula…",
+		errorLabel: "Sichinatheke",
 	},
 };

@@ -84,7 +84,16 @@ async function main() {
 			"runtime-actions-content.ts",   // complex multi-step content coordinator
 		]);
 		const locExemptDirs = ["sqlite-runtime/", "import/", "adapters/"];
-		const isLocExempt = locExempt.has(filename) || locExemptDirs.some((d) => display.includes(d)) || filename.endsWith("-wordlist.ts");
+		const isLocExempt =
+			locExempt.has(filename) ||
+			locExemptDirs.some((d) => display.includes(d)) ||
+			filename.endsWith("-wordlist.ts") ||
+			// Translation tables / page-label catalogs are intentionally verbose
+			// (one entry × N locales). Splitting helps no reader; the structure
+			// is uniform and tooling already keys off the exhaustive type union.
+			filename === "admin-labels.ts" ||
+			filename === "admin-page-labels.ts" ||
+			filename === "admin-stub-catalog.ts";
 
 		if (!isLocExempt) {
 			if (lines > LOC_ERROR) {

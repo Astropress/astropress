@@ -1,0 +1,36 @@
+---
+import AdminLayout from "@astropress-diy/astropress/components/AdminLayout.astro";
+import RequiresIntegration from "@astropress-diy/astropress/components/RequiresIntegration.astro";
+import {
+	adminStubs,
+	resolveAdminLocale,
+	resolveAstropressAdminUiConfig,
+} from "astropress";
+
+const adminUser = Astro.locals.adminUser;
+if (!adminUser || adminUser.role !== "admin") {
+	return Astro.redirect("/ap-admin?error=insufficient-permissions");
+}
+
+const locale = resolveAdminLocale(Astro);
+const ui = resolveAstropressAdminUiConfig(locale);
+const stub = adminStubs.shop;
+---
+
+<AdminLayout
+  title={ui.navigation.shop}
+  heading={ui.navigation.shop}
+  currentPath="/ap-admin/shop"
+  description={stub.description}
+  role={adminUser.role}
+  userName={adminUser.name}
+>
+  <RequiresIntegration
+    capability={stub.capability}
+    description={stub.description}
+    configHint={stub.configHint}
+    providers={[...stub.providers]}
+    docsHref={stub.docsHref}
+    locale={locale}
+  />
+</AdminLayout>
