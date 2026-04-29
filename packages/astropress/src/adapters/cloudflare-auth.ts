@@ -146,8 +146,7 @@ export function createFallbackCloudflareAuthStore(
 			const sessionUser: AuthUser = {
 				id: sessionId,
 				email: user.email,
-				role: user.role,
-				isAdmin: user.role === "admin",
+				isAdmin: user.isAdmin,
 			};
 			sessions.set(sessionId, sessionUser);
 			return sessionUser;
@@ -221,7 +220,6 @@ export function createD1CloudflareAuthStore(db: D1DatabaseLike): AuthStore {
 				id: sessionId,
 				email: row.email,
 				isAdmin: row.is_admin === 1,
-				role: row.is_admin === 1 ? "admin" : "editor",
 			};
 		},
 		async signOut(sessionId) {
@@ -244,7 +242,6 @@ export function createD1CloudflareAuthStore(db: D1DatabaseLike): AuthStore {
 				id: sessionId,
 				email: row.email,
 				isAdmin: row.is_admin === 1,
-				role: row.is_admin === 1 ? "admin" : "editor",
 			};
 		},
 	};

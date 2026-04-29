@@ -1,6 +1,11 @@
 ---
 import AdminLayout from "@astropress-diy/astropress/components/AdminLayout.astro";
-import { getPageT, peekCmsConfig, resolveAdminLocale } from "astropress";
+import {
+	getPageT,
+	isAuthUserAdmin,
+	peekCmsConfig,
+	resolveAdminLocale,
+} from "astropress";
 
 const adminUser = Astro.locals.adminUser;
 
@@ -8,7 +13,7 @@ if (!adminUser) {
 	return Astro.redirect("/ap-admin/login?return=/ap-admin/fundraising", 302);
 }
 
-if (adminUser.role !== "admin") {
+if (!isAuthUserAdmin(adminUser)) {
 	return Astro.redirect("/ap-admin", 302);
 }
 
@@ -68,7 +73,6 @@ const providers: ProviderCard[] = [
   heading={t("fundraising.title")}
   currentPath="/ap-admin/fundraising"
   description={t("fundraising.description")}
-  role={adminUser.role}
   userName={adminUser.name}
 >
   <section class="panel fundraising-panel">

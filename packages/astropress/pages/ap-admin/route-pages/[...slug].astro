@@ -47,7 +47,6 @@ if (model.status === "not_found") {
     heading={t("routePageEditor.title")}
     currentPath="/ap-admin/route-pages"
     description={t("routePageEditor.description")}
-    role={adminUser.role}
     userName={adminUser.name}
   >
     <nav class="breadcrumb" aria-label={t("routePageEditor.breadcrumb")}>
@@ -205,7 +204,6 @@ if (model.status === "not_found") {
     heading={adminUser?.role !== "admin" ? t("routePages.forbiddenTitle") : t("routePageEditor.notFoundTitle")}
     currentPath="/ap-admin/route-pages"
     description={adminUser?.role !== "admin" ? t("routePages.forbiddenDesc") : t("routePageEditor.notFoundDesc")}
-    role={adminUser.role}
     userName={adminUser.name}
   >
     {adminUser?.role !== "admin" && (

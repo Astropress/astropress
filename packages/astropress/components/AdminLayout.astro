@@ -29,7 +29,12 @@ interface Props {
 	heading: string;
 	currentPath: string;
 	description?: string;
-	role: "admin" | "editor";
+	/**
+	 * @deprecated Display-only legacy role enum. Optional — derived from the
+	 * access context when omitted. Authorization decisions must use
+	 * access.subject.isAdmin / engine.can() instead.
+	 */
+	role?: "admin" | "editor";
 	userName: string;
 	siteName?: string;
 	/** When true, shows the CMS nav item linking to /ap-admin/cms. */
@@ -65,10 +70,12 @@ applyAstropressSecurityHeaders(Astro.response.headers, {
 });
 const access = await getAccessContext(Astro);
 const isAdminRole = access?.subject.isAdmin ?? role === "admin";
+const displayRole: "admin" | "editor" =
+	role ?? (isAdminRole ? "admin" : "editor");
 const recentItems = await getRecentAdminItems(Astro.locals, {
 	id: access?.subject.id ?? "",
 	email: access?.subject.email ?? "",
-	role,
+	role: displayRole,
 	isAdmin: isAdminRole,
 });
 
@@ -369,7 +376,7 @@ const documentTitleResolved = matchedNavItem
           <span aria-hidden="true">☰</span>
         </button>
         <span>{adminUi.labels.signedInAsPrefix} {userName}</span>
-        <span class="role-chip">{role}</span>
+        <span class="role-chip">{displayRole}</span>
         <details class="topbar-panel-details" id="topbar-utility-details">
           <summary class="topbar-panel-toggle" aria-label={tLayout("layout.toggleUtilityPanel")}>
             <span class="panel-toggle-arrows" aria-hidden="true">

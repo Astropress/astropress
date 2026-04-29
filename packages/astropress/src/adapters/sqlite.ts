@@ -84,7 +84,6 @@ export function createAstropressSqliteAdapter(
 				return {
 					id: sessionId,
 					email: user.email,
-					role: user.role,
 					isAdmin: user.role === "admin",
 				};
 			},
@@ -99,7 +98,6 @@ export function createAstropressSqliteAdapter(
 					? {
 							id: sessionId,
 							email: user.email,
-							role: user.role,
 							isAdmin: user.role === "admin",
 						}
 					: null;

@@ -33,7 +33,7 @@ describe("D1 adapter: auth round-trip via SQLite shim", () => {
 		const session = await adapter.auth.signIn("admin@example.com", "password");
 		expect(session).not.toBeNull();
 		expect(session?.email).toBe("admin@example.com");
-		expect(session?.role).toBe("admin");
+		expect(session?.isAdmin).toBe(true);
 
 		// Retrieve session
 		const retrieved = await adapter.auth.getSession(session?.id);

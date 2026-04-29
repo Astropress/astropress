@@ -26,7 +26,6 @@ const t = getPageT(adminLocale);
     heading={t("routePages.title")}
     currentPath="/ap-admin/route-pages"
     description={t("routePages.description")}
-    role={adminUser.role}
     userName={adminUser.name}
   >
     {model.warnings.length > 0 && <p class="notice">{t("routePages.partialResults")}</p>}
@@ -127,7 +126,6 @@ const t = getPageT(adminLocale);
     heading={t("routePages.forbiddenTitle")}
     currentPath="/ap-admin/posts"
     description={t("routePages.forbiddenDesc")}
-    role={adminUser.role}
     userName={adminUser.name}
   >
     <section class="panel">

@@ -59,7 +59,6 @@ try {
   heading={record?.title ?? "Content Preview"}
   currentPath={Astro.url.pathname}
   description={`Draft preview for /${contentSlug}`}
-  role={adminUser.role}
   userName={adminUser.name}
 >
   {record ? (

@@ -40,7 +40,6 @@ function tCommentPolicy(p: string): string {
   heading="Comments"
   currentPath="/ap-admin/comments"
   description={t("comments.description")}
-  role={adminUser.role}
   userName={adminUser.name}
 >
   {model.warnings.length > 0 && <ap-notice type="info">{t("comments.partialResults")}</ap-notice>}

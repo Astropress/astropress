@@ -66,7 +66,6 @@ const pageTitle = meta ? `Import from ${meta.label}` : "Import";
     title={pageTitle}
     heading={`Import from ${meta.label}`}
     description={meta.description}
-    role={adminUser.role}
     userName={adminUser.name}
     currentPath="/ap-admin/import"
   >
@@ -394,7 +393,6 @@ const pageTitle = meta ? `Import from ${meta.label}` : "Import";
     title="Not found"
     heading="Unknown import source"
     description="The requested import source is not supported."
-    role={adminUser.role}
     userName={adminUser.name}
     currentPath="/ap-admin/import"
   >

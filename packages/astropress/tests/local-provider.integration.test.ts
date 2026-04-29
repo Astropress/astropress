@@ -29,7 +29,7 @@ describe("local provider integration", () => {
 		expect(supabase.capabilities.name).toBe("supabase");
 
 		const user = await sqlite.auth.signIn("admin@example.com", "password");
-		expect(user?.role).toBe("admin");
+		expect(user?.isAdmin).toBe(true);
 		expect(user?.id).toBeTruthy();
 		expect(await sqlite.auth.getSession(user?.id ?? "")).toEqual(user);
 
@@ -108,7 +108,7 @@ describe("local provider integration", () => {
 			"admin@example.com",
 			"password",
 		);
-		expect(supabaseUser?.role).toBe("admin");
+		expect(supabaseUser?.isAdmin).toBe(true);
 
 		const saved = await supabase.content.save({
 			id: "provider-local-post",

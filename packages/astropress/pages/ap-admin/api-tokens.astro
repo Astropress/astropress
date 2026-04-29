@@ -38,7 +38,6 @@ const ALL_SCOPES = [
   heading={t("apiTokens.title")}
   currentPath="/ap-admin/api-tokens"
   description={t("apiTokens.description")}
-  role={adminUser.role}
   userName={adminUser.name}
 >
   {wasRevoked && <p class="notice">{t("apiTokens.revokedSuccess")}</p>}

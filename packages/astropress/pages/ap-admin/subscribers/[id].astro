@@ -55,7 +55,6 @@ const wasDeleted = Astro.url.searchParams.get("deleted") === "1";
     title={subscriber ? `${subscriber.email} — Subscribers` : "Subscriber"}
     heading={subscriber ? subscriber.email : "Subscriber"}
     description="View and manage this newsletter subscriber."
-    role={adminUser.role}
     userName={adminUser.name}
     currentPath="/ap-admin/subscribers"
   >

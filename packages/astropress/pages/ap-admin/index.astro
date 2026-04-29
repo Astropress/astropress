@@ -61,7 +61,6 @@ const deploymentLabel = !latestDeployment
   description={isAdmin
     ? t("dashboard.description")
     : t("dashboard.descriptionEditor")}
-  role={adminUser.role}
   userName={adminUser.name}
 >
   {model.warnings.length > 0 && <p class="notice">{t("dashboard.partialResults")}</p>}

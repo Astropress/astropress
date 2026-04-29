@@ -42,7 +42,6 @@ const knownActions = listAccessActions().map((a) => a.id);
   heading={t("access.title")}
   description={t("access.description")}
   currentPath="/ap-admin/access"
-  role={adminUser.role}
   userName={adminUser.name}
 >
   {model.warnings.length > 0 && <p class="notice">{model.warnings.join(" ")}</p>}

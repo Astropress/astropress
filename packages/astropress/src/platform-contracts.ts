@@ -232,9 +232,9 @@ export interface RevisionStore {
  * holds arbitrary subject metadata referenced by ABAC condition expressions
  * (team, region, MFA tier, etc.).
  *
- * @deprecated - The `role: "admin" | "editor"` field is retained as a
- * derived display shim during the .astro sweep. Authorization decisions
- * must use `isAdmin` plus `engine.can()`. Removal is tracked as Phase 5-B.
+ * Authorization decisions must use `isAdmin` plus `engine.can()`. The
+ * legacy `role: "admin" | "editor"` enum was removed in Phase 5-B; any
+ * lingering reader must derive a display label from `isAdmin` instead.
  */
 export interface AuthUser {
 	id: string;
@@ -244,13 +244,6 @@ export interface AuthUser {
 	 * canonical authorization signal — derive everything else from it.
 	 */
 	isAdmin: boolean;
-	/**
-	 * @deprecated Display-only legacy enum derived from `isAdmin`. Do not
-	 * branch on this for authorization — use `isAdmin` and `engine.can()`.
-	 * Optional so adapters can stop populating it once their .astro
-	 * consumers stop reading it.
-	 */
-	role?: "admin" | "editor";
 	/** Custom role IDs the user holds. Defaults to []. */
 	roles?: readonly string[];
 	/** Arbitrary subject attributes referenced by ABAC conditions. Defaults to {}. */

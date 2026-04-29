@@ -90,7 +90,6 @@ if (model.status === "forbidden") {
     heading={t("settings.title")}
     currentPath="/ap-admin/settings"
     description={t("settings.description")}
-    role={adminUser.role}
     userName={adminUser.name}
   >
     {model.warnings.length > 0 && <p class="notice">{t("settings.partialLoadNotice")}</p>}
@@ -433,7 +432,6 @@ if (model.status === "forbidden") {
     heading="Forbidden"
     currentPath=""
     description={t("pages.forbidden.description")}
-    role={adminUser.role}
     userName={adminUser.name}
   >
     <section class="panel forbidden">

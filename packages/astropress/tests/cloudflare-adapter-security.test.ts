@@ -11,7 +11,7 @@ describe("cloudflare adapter security defaults", () => {
 				{
 					id: "admin-1",
 					email: "admin@example.com",
-					role: "admin",
+					isAdmin: true,
 					password: "password",
 				},
 			],
@@ -29,7 +29,7 @@ describe("cloudflare adapter security defaults", () => {
 				{
 					id: "admin-1",
 					email: "admin@example.com",
-					role: "admin",
+					isAdmin: true,
 					password: "password",
 				},
 			],
@@ -39,7 +39,7 @@ describe("cloudflare adapter security defaults", () => {
 			adapter.auth.signIn("admin@example.com", "password"),
 		).resolves.toMatchObject({
 			email: "admin@example.com",
-			role: "admin",
+			isAdmin: true,
 		});
 	});
 });
@@ -136,7 +136,7 @@ describe("cloudflare session secret", () => {
 
 		await expect(adapter.auth.getSession(session?.id)).resolves.toMatchObject({
 			email: "admin@example.com",
-			role: "admin",
+			isAdmin: true,
 		});
 
 		await adapter.auth.signOut(session?.id);

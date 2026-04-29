@@ -186,7 +186,6 @@ function paginationHref(targetPage: number) {
   heading="Posts"
   currentPath="/ap-admin/posts"
   description={t("posts.description")}
-  role={adminUser.role}
   userName={adminUser.name}
 >
   {model.warnings.length > 0 && <p class="notice">{t("posts.partialResults")}</p>}

@@ -26,7 +26,6 @@ if (!service) {
     heading={t("services.notConfiguredTitle")}
     currentPath="/ap-admin/services"
     description={t("services.notConfiguredDescription")}
-    role={adminUser.role}
     userName={adminUser.name}
   >
     <section class="panel">
@@ -45,7 +44,6 @@ if (!service) {
     heading={service.label}
     currentPath="/ap-admin/services"
     description={service.description}
-    role={adminUser.role}
     userName={adminUser.name}
   >
     <div class="service-host">

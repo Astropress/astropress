@@ -264,15 +264,14 @@ describe("DID readiness: the AuthStore interface contract is the correct extensi
 		expect(contracts).toMatch(/getSession\s*\(\s*sessionId:\s*string\s*\)/);
 	});
 
-	it("AuthUser has email + isAdmin (canonical authorization signal) — a DID auth adapter must populate isAdmin from the DID document or claim; legacy role enum is derived display-only", () => {
+	it("AuthUser has email + isAdmin (canonical authorization signal) — a DID auth adapter must populate isAdmin from the DID document or claim", () => {
 		const authUserInterface =
 			contracts.match(/export interface AuthUser \{[\s\S]*?\}/)?.[0] ?? "";
 		expect(authUserInterface).toMatch(/email:\s*string/);
 		expect(authUserInterface).toMatch(/isAdmin:\s*boolean/);
-		// Legacy role enum stays in the contract as an optional, deprecated
-		// display field — DID adapters can derive it from isAdmin.
-		expect(authUserInterface).toMatch(/role\?:\s*"admin"\s*\|\s*"editor"/);
 		// id is string — a DID adapter would set this to the DID URI (did:key:...)
 		expect(authUserInterface).toMatch(/id:\s*string/);
+		// Legacy role enum was removed in Phase 5-B — must not reappear.
+		expect(authUserInterface).not.toMatch(/\brole\??:\s*"admin"/);
 	});
 });

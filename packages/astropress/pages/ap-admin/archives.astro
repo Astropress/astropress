@@ -20,7 +20,6 @@ const t = getPageT(resolveAdminLocale(Astro));
   title={t("archives.title")}
   heading={t("archives.title")}
   description={t("archives.description")}
-  role={adminUser.role}
   userName={adminUser.name}
   currentPath="/ap-admin/archives"
 >
@@ -110,7 +109,6 @@ const t = getPageT(resolveAdminLocale(Astro));
     title={t("archives.forbiddenTitle")}
     heading={t("archives.forbiddenTitle")}
     description={t("archives.forbiddenDesc")}
-    role={adminUser.role}
     userName={adminUser.name}
     currentPath="/ap-admin/posts"
   >

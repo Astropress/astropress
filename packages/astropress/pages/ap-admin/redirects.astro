@@ -30,7 +30,6 @@ if (model.status === "forbidden") {
     heading="Redirects"
     currentPath="/ap-admin/redirects"
     description={t("redirects.description")}
-    role={adminUser.role}
     userName={adminUser.name}
   >
     {model.warnings.length > 0 && <ap-notice type="info">{t("redirects.partialResults")}</ap-notice>}
@@ -151,7 +150,6 @@ if (model.status === "forbidden") {
     heading="Forbidden"
     currentPath=""
     description={t("pages.forbidden.description")}
-    role={adminUser.role}
     userName={adminUser.name}
   >
     <section class="panel forbidden">

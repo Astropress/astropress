@@ -42,7 +42,6 @@ if (model.status === "not_found") {
     heading={t("archiveEditor.title")}
     currentPath="/ap-admin/archives"
     description={t("archiveEditor.description")}
-    role={adminUser.role}
     userName={adminUser.name}
   >
     <nav class="breadcrumb" aria-label={t("archiveEditor.breadcrumb")}>
@@ -105,7 +104,6 @@ if (model.status === "not_found") {
     heading={adminUser?.role !== "admin" ? t("archiveEditor.forbiddenTitle") : t("archiveEditor.notFoundTitle")}
     currentPath="/ap-admin/archives"
     description={adminUser?.role !== "admin" ? t("archiveEditor.forbiddenDesc") : t("archiveEditor.notFoundDesc")}
-    role={adminUser.role}
     userName={adminUser.name}
   >
     <section class="panel">
