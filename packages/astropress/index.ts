@@ -40,11 +40,13 @@ export type {
 // Access control (ABAC engine + action registry + repository)
 export {
 	actionMatches,
+	createAccessMiddleware,
 	createAccessRepository,
 	createPolicyEngine,
 	evaluate,
 	evaluateCondition,
 	getAccessAction,
+	getAccessContext,
 	listAccessActions,
 	registerAccessAction,
 	resolvePath,
@@ -52,7 +54,9 @@ export {
 	substituteString,
 } from "./src/access/index.js";
 export type {
+	AccessContext,
 	AccessRepository,
+	AccessSnapshot,
 	AccessStore,
 	ActionDefinition,
 	AttributeValue as AccessAttributeValue,
@@ -63,6 +67,7 @@ export type {
 	Env as AccessEnv,
 	EvaluationResult,
 	JsonPolicyEngineOptions,
+	LocalAccessStoreSurface,
 	Policy,
 	PolicyEngine,
 	PolicyLoader,

@@ -47,3 +47,11 @@ export type {
 	UserPolicyRecord,
 	UserRoleAssignment,
 } from "./repository";
+export { getAccessContext } from "./request-context";
+export type {
+	AccessContext,
+	AccessSnapshot,
+	LocalAccessStoreSurface,
+} from "./request-context";
+export { createAccessMiddleware } from "./middleware";
+import "./locals";
