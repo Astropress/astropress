@@ -54,4 +54,6 @@ export type {
 	LocalAccessStoreSurface,
 } from "./request-context";
 export { createAccessMiddleware } from "./middleware";
+export { requiresAccess } from "./page-guard";
+export type { RequiresAccessOptions } from "./page-guard";
 import "./locals";

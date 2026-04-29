@@ -38,8 +38,8 @@ const t = getPageT(resolveAdminLocale(Astro));
     heading={t("translations.title")}
     currentPath="/ap-admin/translations"
     description={t("translations.description")}
-    role={adminUser!.role}
-    userName={adminUser!.name}
+    role={adminUser.role}
+    userName={adminUser.name}
   >
     {model.warnings.length > 0 && <p class="notice">{t("translations.partialResults")}</p>}
     {wasSaved && <p class="notice">{t("translations.savedSuccess")}</p>}
@@ -131,8 +131,8 @@ const t = getPageT(resolveAdminLocale(Astro));
     heading={t("translations.forbiddenTitle")}
     currentPath="/ap-admin/posts"
     description={t("translations.forbiddenDesc")}
-    role={adminUser!.role}
-    userName={adminUser!.name}
+    role={adminUser.role}
+    userName={adminUser.name}
   >
     <section class="panel">
       <p>{t("translations.forbiddenBody")}</p>

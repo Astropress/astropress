@@ -51,8 +51,8 @@ const rowsMissingMetadata = rows.filter((row) => row.missingMetadata).length;
     heading={t("seo.title")}
     currentPath="/ap-admin/seo"
     description={t("seo.description")}
-    role={adminUser!.role}
-    userName={adminUser!.name}
+    role={adminUser.role}
+    userName={adminUser.name}
   >
     {model.warnings.length > 0 && <p class="notice">{t("seo.partialResults")}</p>}
     <div class="admin-subgrid two summary-grid">
@@ -142,8 +142,8 @@ const rowsMissingMetadata = rows.filter((row) => row.missingMetadata).length;
     heading="Forbidden"
     currentPath="/ap-admin/posts"
     description={t("pages.forbidden.description")}
-    role={adminUser!.role}
-    userName={adminUser!.name}
+    role={adminUser.role}
+    userName={adminUser.name}
   >
     <section class="panel">
       <p>{t("pages.forbidden.body")}</p>

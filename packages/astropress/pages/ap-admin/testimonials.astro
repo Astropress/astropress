@@ -40,8 +40,8 @@ const emptyLabel =
   heading={t("testimonials.title")}
   currentPath="/ap-admin/testimonials"
   description={t("testimonials.description")}
-  role={adminUser!.role}
-  userName={adminUser!.name}
+  role={adminUser.role}
+  userName={adminUser.name}
 >
   {model.warnings.length > 0 && <ap-notice type="info">{t("testimonials.partialResults")}</ap-notice>}
   {wasSaved && <ap-notice type="success" dismiss-after="6000">{t("testimonials.savedSuccess")}</ap-notice>}

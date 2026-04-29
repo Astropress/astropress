@@ -32,8 +32,8 @@ if (model.status === "forbidden") {
     heading={t("taxonomies.title")}
     currentPath="/ap-admin/taxonomies"
     description={t("taxonomies.description")}
-    role={adminUser!.role}
-    userName={adminUser!.name}
+    role={adminUser.role}
+    userName={adminUser.name}
   >
     {model.warnings.length > 0 && <p class="notice">{t("taxonomies.partialResults")}</p>}
     {wasSaved && <p class="notice">{t("taxonomies.savedSuccess")}</p>}
@@ -239,8 +239,8 @@ if (model.status === "forbidden") {
     heading={t("taxonomies.forbiddenTitle")}
     currentPath=""
     description={t("pages.forbidden.description")}
-    role={adminUser!.role}
-    userName={adminUser!.name}
+    role={adminUser.role}
+    userName={adminUser.name}
   >
     <section class="panel forbidden">
       <p>{t("pages.forbidden.body")}</p>

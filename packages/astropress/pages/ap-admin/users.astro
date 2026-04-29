@@ -39,8 +39,8 @@ if (model.status === "forbidden") {
     title={t("users.title")}
     heading={t("users.title")}
     description={t("users.description")}
-    role={adminUser!.role}
-    userName={adminUser!.name}
+    role={adminUser.role}
+    userName={adminUser.name}
     currentPath="/ap-admin/users"
   >
     {model.warnings.length > 0 && <p class="notice">{t("users.partialNotice")}</p>}
@@ -270,8 +270,8 @@ if (model.status === "forbidden") {
     heading="Forbidden"
     currentPath=""
     description={t("pages.forbidden.description")}
-    role={adminUser!.role}
-    userName={adminUser!.name}
+    role={adminUser.role}
+    userName={adminUser.name}
   >
     <section class="panel forbidden">
       <p>{t("pages.forbidden.body")}</p>

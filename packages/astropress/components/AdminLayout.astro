@@ -1,4 +1,5 @@
 ---
+import { getAccessContext } from "../src/access/index";
 import { buildAstropressAdminDocumentTitle } from "../src/admin-branding";
 import { resolveAdminLocale } from "../src/admin-locale";
 import { getPageT } from "../src/admin-page-labels";
@@ -12,6 +13,13 @@ interface NavItem {
 	href?: string;
 	label: string;
 	adminOnly?: boolean;
+	/**
+	 * ABAC action ID required to surface this leaf. When set and an access
+	 * context is available, the leaf renders only if `engine.can(action)`
+	 * allows. Server-side `requiresAccess` on the destination page is the
+	 * source of truth; nav filtering is a UI mirror.
+	 */
+	requiredAction?: string;
 	isGroupLabel?: boolean;
 	indent?: boolean;
 }
@@ -55,11 +63,13 @@ applyAstropressSecurityHeaders(Astro.response.headers, {
 	allowInlineStyles: import.meta.env.DEV,
 	forceHsts: Astro.url.protocol === "https:",
 });
+const access = await getAccessContext(Astro);
+const isAdminRole = access?.subject.isAdmin ?? role === "admin";
 const recentItems = await getRecentAdminItems(Astro.locals, {
-	id: "",
-	email: "",
+	id: access?.subject.id ?? "",
+	email: access?.subject.email ?? "",
 	role,
-	isAdmin: role === "admin",
+	isAdmin: isAdminRole,
 });
 
 const pluginNavItems: NavItem[] = (peekCmsConfig()?.plugins ?? [])
@@ -79,119 +89,219 @@ const groupSep = (label: string): NavItem => ({
 const leaf = (
 	href: string,
 	label: string,
-	opts: { adminOnly?: boolean } = {},
-): NavItem => ({ href, label, indent: true, adminOnly: opts.adminOnly });
+	opts: { adminOnly?: boolean; requiredAction?: string } = {},
+): NavItem => ({
+	href,
+	label,
+	indent: true,
+	adminOnly: opts.adminOnly,
+	requiredAction: opts.requiredAction,
+});
 
 const navItems: NavItem[] = [
 	{ href: "/ap-admin", label: adminUi.navigation.dashboard },
 
 	groupSep(adminUi.navigation.groupSite),
-	leaf("/ap-admin/pages", adminUi.navigation.pages, { adminOnly: true }),
+	leaf("/ap-admin/pages", adminUi.navigation.pages, {
+		adminOnly: true,
+		requiredAction: "pages:list",
+	}),
 	leaf("/ap-admin/route-pages", adminUi.navigation.routePages, {
 		adminOnly: true,
+		requiredAction: "routePages:edit",
 	}),
-	leaf("/ap-admin/archives", adminUi.navigation.archives, { adminOnly: true }),
-	leaf("/ap-admin/media", adminUi.navigation.media),
+	leaf("/ap-admin/archives", adminUi.navigation.archives, {
+		adminOnly: true,
+		requiredAction: "archives:edit",
+	}),
+	leaf("/ap-admin/media", adminUi.navigation.media, {
+		requiredAction: "media:list",
+	}),
 	leaf("/ap-admin/redirects", adminUi.navigation.redirects, {
 		adminOnly: true,
+		requiredAction: "redirects:manage",
 	}),
-	leaf("/ap-admin/forms", adminUi.navigation.forms),
+	leaf("/ap-admin/forms", adminUi.navigation.forms, {
+		requiredAction: "forms:view",
+	}),
 
 	groupSep(adminUi.navigation.contentGroup),
-	leaf("/ap-admin/posts", adminUi.navigation.posts),
-	leaf("/ap-admin/authors", adminUi.navigation.authors, { adminOnly: true }),
+	leaf("/ap-admin/posts", adminUi.navigation.posts, {
+		requiredAction: "posts:list",
+	}),
+	leaf("/ap-admin/authors", adminUi.navigation.authors, {
+		adminOnly: true,
+		requiredAction: "authors:manage",
+	}),
 	leaf("/ap-admin/taxonomies", adminUi.navigation.taxonomies, {
 		adminOnly: true,
+		requiredAction: "taxonomies:manage",
 	}),
-	leaf("/ap-admin/cms", adminUi.navigation.headlessCmsPanel),
+	leaf("/ap-admin/cms", adminUi.navigation.headlessCmsPanel, {
+		requiredAction: "settings:edit",
+	}),
 
 	groupSep(adminUi.navigation.groupAudience),
 	leaf("/ap-admin/subscribers", adminUi.navigation.subscribers, {
 		adminOnly: true,
+		requiredAction: "subscribers:view",
 	}),
 	leaf("/ap-admin/newsletter", adminUi.navigation.newsletter, {
 		adminOnly: true,
+		requiredAction: "newsletter:send",
 	}),
-	leaf("/ap-admin/comments", adminUi.navigation.comments),
-	leaf("/ap-admin/events", adminUi.navigation.events, { adminOnly: true }),
+	leaf("/ap-admin/comments", adminUi.navigation.comments, {
+		requiredAction: "comments:moderate",
+	}),
+	leaf("/ap-admin/events", adminUi.navigation.events, {
+		adminOnly: true,
+		requiredAction: "events:manage",
+	}),
 	leaf("/ap-admin/testimonials", adminUi.navigation.testimonials, {
 		adminOnly: true,
+		requiredAction: "testimonials:manage",
 	}),
-	leaf("/ap-admin/reviews", adminUi.navigation.reviews, { adminOnly: true }),
+	leaf("/ap-admin/reviews", adminUi.navigation.reviews, {
+		adminOnly: true,
+		requiredAction: "testimonials:manage",
+	}),
 	leaf("/ap-admin/referrals", adminUi.navigation.referrals, {
 		adminOnly: true,
+		requiredAction: "services:manage",
 	}),
 	leaf("/ap-admin/memberships", adminUi.navigation.memberships, {
 		adminOnly: true,
+		requiredAction: "services:manage",
 	}),
 	leaf("/ap-admin/fundraising", adminUi.navigation.fundraising, {
 		adminOnly: true,
+		requiredAction: "fundraising:manage",
 	}),
 	leaf("/ap-admin/community", adminUi.navigation.community, {
 		adminOnly: true,
+		requiredAction: "services:manage",
 	}),
-	leaf("/ap-admin/shop", adminUi.navigation.shop, { adminOnly: true }),
+	leaf("/ap-admin/shop", adminUi.navigation.shop, {
+		adminOnly: true,
+		requiredAction: "services:manage",
+	}),
 	leaf("/ap-admin/social-syndication", adminUi.navigation.socialSyndication, {
 		adminOnly: true,
+		requiredAction: "services:manage",
 	}),
 
 	groupSep(adminUi.navigation.groupDiscoverability),
-	leaf("/ap-admin/seo", adminUi.navigation.seo, { adminOnly: true }),
+	leaf("/ap-admin/seo", adminUi.navigation.seo, {
+		adminOnly: true,
+		requiredAction: "seo:edit",
+	}),
 	leaf("/ap-admin/structured-data", adminUi.navigation.structuredData, {
 		adminOnly: true,
+		requiredAction: "seo:edit",
 	}),
-	leaf("/ap-admin/sitemaps", adminUi.navigation.sitemaps, { adminOnly: true }),
+	leaf("/ap-admin/sitemaps", adminUi.navigation.sitemaps, {
+		adminOnly: true,
+		requiredAction: "sitemaps:view",
+	}),
 	leaf("/ap-admin/maps-local", adminUi.navigation.mapsLocal, {
 		adminOnly: true,
+		requiredAction: "seo:edit",
 	}),
 	leaf("/ap-admin/translations", adminUi.navigation.translations, {
 		adminOnly: true,
+		requiredAction: "translations:manage",
 	}),
 
 	groupSep(adminUi.navigation.groupIntegrations),
-	leaf("/ap-admin/services", adminUi.navigation.services, { adminOnly: true }),
+	leaf("/ap-admin/services", adminUi.navigation.services, {
+		adminOnly: true,
+		requiredAction: "services:manage",
+	}),
 	leaf("/ap-admin/analytics", adminUi.navigation.analytics, {
 		adminOnly: true,
+		requiredAction: "services:manage",
 	}),
-	leaf("/ap-admin/heatmaps", adminUi.navigation.heatmaps, { adminOnly: true }),
+	leaf("/ap-admin/heatmaps", adminUi.navigation.heatmaps, {
+		adminOnly: true,
+		requiredAction: "services:manage",
+	}),
 	leaf("/ap-admin/ab-testing", adminUi.navigation.abTesting, {
 		adminOnly: true,
+		requiredAction: "services:manage",
 	}),
-	leaf("/ap-admin/email", adminUi.navigation.email, { adminOnly: true }),
+	leaf("/ap-admin/email", adminUi.navigation.email, {
+		adminOnly: true,
+		requiredAction: "services:manage",
+	}),
 	leaf("/ap-admin/live-chat", adminUi.navigation.liveChat, {
 		adminOnly: true,
+		requiredAction: "services:manage",
 	}),
 	leaf("/ap-admin/image-cdn", adminUi.navigation.imageCdn, {
 		adminOnly: true,
+		requiredAction: "services:manage",
 	}),
-	leaf("/ap-admin/search", adminUi.navigation.search, { adminOnly: true }),
+	leaf("/ap-admin/search", adminUi.navigation.search, {
+		adminOnly: true,
+		requiredAction: "services:manage",
+	}),
 	leaf("/ap-admin/cdn-purge", adminUi.navigation.cdnPurge, {
 		adminOnly: true,
+		requiredAction: "settings:edit",
 	}),
 	leaf("/ap-admin/monitoring", adminUi.navigation.monitoring, {
 		adminOnly: true,
+		requiredAction: "services:manage",
 	}),
 	leaf("/ap-admin/api-tokens", adminUi.navigation.apiTokens, {
 		adminOnly: true,
+		requiredAction: "apiTokens:create",
 	}),
-	leaf("/ap-admin/webhooks", adminUi.navigation.webhooks, { adminOnly: true }),
+	leaf("/ap-admin/webhooks", adminUi.navigation.webhooks, {
+		adminOnly: true,
+		requiredAction: "webhooks:manage",
+	}),
 	leaf("/ap-admin/deploy-hooks", adminUi.navigation.deployHooks, {
 		adminOnly: true,
+		requiredAction: "settings:edit",
 	}),
-	leaf("/ap-admin/plugins", adminUi.navigation.plugins, { adminOnly: true }),
+	leaf("/ap-admin/plugins", adminUi.navigation.plugins, {
+		adminOnly: true,
+		requiredAction: "plugins:view",
+	}),
 	...pluginNavItems,
 
 	groupSep(adminUi.navigation.groupAccess),
-	leaf("/ap-admin/users", adminUi.navigation.users, { adminOnly: true }),
+	leaf("/ap-admin/users", adminUi.navigation.users, {
+		adminOnly: true,
+		requiredAction: "users:list",
+	}),
 
 	groupSep(adminUi.navigation.groupOperations),
-	leaf("/ap-admin/system", adminUi.navigation.system, { adminOnly: true }),
+	leaf("/ap-admin/system", adminUi.navigation.system, {
+		adminOnly: true,
+		requiredAction: "system:view",
+	}),
 	...(hasHostPanel
-		? [leaf("/ap-admin/host", adminUi.navigation.host, { adminOnly: true })]
+		? [
+				leaf("/ap-admin/host", adminUi.navigation.host, {
+					adminOnly: true,
+					requiredAction: "host:view",
+				}),
+			]
 		: []),
-	leaf("/ap-admin/data", adminUi.navigation.data, { adminOnly: true }),
-	leaf("/ap-admin/settings", adminUi.navigation.settings, { adminOnly: true }),
-	leaf("/ap-admin/backups", adminUi.navigation.backups, { adminOnly: true }),
+	leaf("/ap-admin/data", adminUi.navigation.data, {
+		adminOnly: true,
+		requiredAction: "data:view",
+	}),
+	leaf("/ap-admin/settings", adminUi.navigation.settings, {
+		adminOnly: true,
+		requiredAction: "settings:edit",
+	}),
+	leaf("/ap-admin/backups", adminUi.navigation.backups, {
+		adminOnly: true,
+		requiredAction: "backups:manage",
+	}),
 ];
 
 // hasCms is kept on Props for backwards compatibility but no longer gates
@@ -235,7 +345,7 @@ const documentTitleResolved = matchedNavItem
         <strong>{adminSiteName}</strong>
       </a>
       <div class="topbar-meta">
-        {canPublish && role === "admin" && (
+        {canPublish && isAdminRole && (
           <form method="post" action="/ap-admin/actions/publish" class="publish-form">
             <button type="submit" class="publish-btn" title="Trigger a new production build">
               Publish
@@ -438,9 +548,19 @@ const documentTitleResolved = matchedNavItem
           survives page navigation.
         */}
         {(() => {
-          const visible = navItems.filter((item) =>
-            item.adminOnly ? role === "admin" : true,
-          );
+          const visible = navItems.filter((item) => {
+            // Group separators always render — their visibility depends on
+            // whether any leaf in the group survives, handled below.
+            if (item.isGroupLabel) return true;
+            // requiredAction is the source of truth when an access context
+            // resolves: nav mirrors what the page guard will allow. Falls
+            // back to the legacy adminOnly check when no engine is wired
+            // (admin-only seen by admin role; everyone else gated by deny).
+            if (item.requiredAction && access) {
+              return access.can(item.requiredAction).decision === "allow";
+            }
+            return item.adminOnly ? isAdminRole : true;
+          });
           type Group = { label: string; key: string; items: NavItem[] };
           const preamble: NavItem[] = [];
           const groups: Group[] = [];

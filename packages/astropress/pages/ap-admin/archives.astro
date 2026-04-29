@@ -20,8 +20,8 @@ const t = getPageT(resolveAdminLocale(Astro));
   title={t("archives.title")}
   heading={t("archives.title")}
   description={t("archives.description")}
-  role={adminUser!.role}
-  userName={adminUser!.name}
+  role={adminUser.role}
+  userName={adminUser.name}
   currentPath="/ap-admin/archives"
 >
   {model.warnings.length > 0 && <p class="notice">{t("archives.partialResults")}</p>}
@@ -110,8 +110,8 @@ const t = getPageT(resolveAdminLocale(Astro));
     title={t("archives.forbiddenTitle")}
     heading={t("archives.forbiddenTitle")}
     description={t("archives.forbiddenDesc")}
-    role={adminUser!.role}
-    userName={adminUser!.name}
+    role={adminUser.role}
+    userName={adminUser.name}
     currentPath="/ap-admin/posts"
   >
     <section class="panel">

@@ -7,11 +7,10 @@ import {
 	resolveAstropressAdminUiConfig,
 } from "astropress";
 
+const guard = await requiresAccess(Astro, "newsletter:send");
+if (guard) return guard;
 const adminUser = Astro.locals.adminUser;
-if (!adminUser || adminUser.role !== "admin") {
-	return Astro.redirect("/ap-admin?error=insufficient-permissions");
-}
-
+if (!adminUser) return Astro.redirect("/ap-admin/login");
 const locale = resolveAdminLocale(Astro);
 const ui = resolveAstropressAdminUiConfig(locale);
 const stub = adminStubs.newsletter;

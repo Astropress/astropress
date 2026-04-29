@@ -36,8 +36,8 @@ const DEFAULT_SERVICE_DOCS: Record<string, { docs: string; badge: string }> = {
   heading={t("services.title")}
   currentPath="/ap-admin/services"
   description={t("services.description")}
-  role={adminUser!.role}
-  userName={adminUser!.name}
+  role={adminUser.role}
+  userName={adminUser.name}
 >
   {services.length === 0 ? (
     <section class="panel empty-services">

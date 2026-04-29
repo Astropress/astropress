@@ -26,8 +26,8 @@ if (!service) {
     heading={t("services.notConfiguredTitle")}
     currentPath="/ap-admin/services"
     description={t("services.notConfiguredDescription")}
-    role={adminUser!.role}
-    userName={adminUser!.name}
+    role={adminUser.role}
+    userName={adminUser.name}
   >
     <section class="panel">
       <p class="admin-kicker">{t("services.notFound")}</p>
@@ -45,8 +45,8 @@ if (!service) {
     heading={service.label}
     currentPath="/ap-admin/services"
     description={service.description}
-    role={adminUser!.role}
-    userName={adminUser!.name}
+    role={adminUser.role}
+    userName={adminUser.name}
   >
     <div class="service-host">
       <div class="service-host__toolbar">

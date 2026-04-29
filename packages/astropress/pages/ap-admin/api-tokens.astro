@@ -4,11 +4,10 @@ import CsrfInput from "@astropress-diy/astropress/components/CsrfInput.astro";
 import { loadLocalAdminStore } from "@astropress-diy/astropress/local-runtime-modules.js";
 import { getPageT, resolveAdminLocale } from "astropress";
 
+const guard = await requiresAccess(Astro, "apiTokens:create");
+if (guard) return guard;
 const adminUser = Astro.locals.adminUser;
-if (!adminUser || adminUser.role !== "admin") {
-	return Astro.redirect("/ap-admin?error=insufficient-permissions");
-}
-
+if (!adminUser) return Astro.redirect("/ap-admin/login");
 const t = getPageT(resolveAdminLocale(Astro));
 
 const store = await loadLocalAdminStore();

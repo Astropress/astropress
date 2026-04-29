@@ -32,8 +32,8 @@ if (model.status === "forbidden") {
     heading={t("authors.title")}
     currentPath="/ap-admin/authors"
     description={t("authors.description")}
-    role={adminUser!.role}
-    userName={adminUser!.name}
+    role={adminUser.role}
+    userName={adminUser.name}
   >
     {model.warnings.length > 0 && <p class="notice">{t("authors.partialResults")}</p>}
     {wasSaved && <p class="notice">{t("authors.savedSuccess")}</p>}
@@ -155,8 +155,8 @@ if (model.status === "forbidden") {
     heading={t("authors.forbiddenTitle")}
     currentPath=""
     description={t("pages.forbidden.description")}
-    role={adminUser!.role}
-    userName={adminUser!.name}
+    role={adminUser.role}
+    userName={adminUser.name}
   >
     <section class="panel forbidden">
       <p>{t("pages.forbidden.body")}</p>

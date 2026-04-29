@@ -4,10 +4,12 @@ import AuditTrail from "@astropress-diy/astropress/components/AuditTrail.astro";
 import {
 	buildAdminDashboardPageModel,
 	getPageT,
+	isAuthUserAdmin,
 	resolveAdminLocale,
 } from "astropress";
 
 const adminUser = Astro.locals.adminUser;
+const isAdmin = !!adminUser && isAuthUserAdmin(adminUser);
 const model = await buildAdminDashboardPageModel(Astro.locals, adminUser);
 const {
 	comments,
@@ -56,11 +58,11 @@ const deploymentLabel = !latestDeployment
   title="Dashboard"
   heading="Dashboard"
   currentPath="/ap-admin"
-  description={adminUser?.role === "admin"
+  description={isAdmin
     ? t("dashboard.description")
     : t("dashboard.descriptionEditor")}
-  role={adminUser!.role}
-  userName={adminUser!.name}
+  role={adminUser.role}
+  userName={adminUser.name}
 >
   {model.warnings.length > 0 && <p class="notice">{t("dashboard.partialResults")}</p>}
   <div class="stats-grid">
@@ -69,7 +71,7 @@ const deploymentLabel = !latestDeployment
       <strong>{posts.filter((record) => (record.status ?? "published") === "published").length}</strong>
       <p>{t("dashboard.publishedPostsDesc")}</p>
     </section>
-    {adminUser?.role === "admin" ? (
+    {isAdmin ? (
       <section class="panel stat stat-card">
         <span class="stat-label">{t("dashboard.publicPages")}</span>
         <strong>{pages.length + routePages.length}</strong>
@@ -92,7 +94,7 @@ const deploymentLabel = !latestDeployment
       <strong>{scheduledPosts.length}</strong>
       <p>{t("dashboard.scheduledPostsDesc")}</p>
     </section>
-    {adminUser?.role === "admin" && (
+    {isAdmin && (
       <>
         <section class="panel stat stat-card">
           <span class="stat-label">{t("dashboard.redirectRules")}</span>
@@ -119,12 +121,12 @@ const deploymentLabel = !latestDeployment
       </div>
       <div class="action-grid compact">
         <a href="/ap-admin/posts/new" class="admin-button">{t("dashboard.newPost")}</a>
-        {adminUser?.role === "admin" && <a href="/ap-admin/pages/new" class="admin-button">{t("dashboard.newPage")}</a>}
-        {adminUser?.role === "admin" && <a href="/ap-admin/authors" class="admin-button-ghost">{t("dashboard.newAuthor")}</a>}
-        {adminUser?.role === "admin" && <a href="/ap-admin/users" class="admin-button-ghost">{t("dashboard.newUser")}</a>}
+        {isAdmin && <a href="/ap-admin/pages/new" class="admin-button">{t("dashboard.newPage")}</a>}
+        {isAdmin && <a href="/ap-admin/authors" class="admin-button-ghost">{t("dashboard.newAuthor")}</a>}
+        {isAdmin && <a href="/ap-admin/users" class="admin-button-ghost">{t("dashboard.newUser")}</a>}
       </div>
     </section>
-    {adminUser?.role === "admin" && (
+    {isAdmin && (
       <section class="panel dashboard-panel support-panel">
         <div class="section-header">
           <div>
@@ -175,7 +177,7 @@ const deploymentLabel = !latestDeployment
       <div class="section-header">
         <div>
           <p class="admin-kicker">{t("dashboard.queue")}</p>
-          <h2>{adminUser?.role === "admin" ? t("dashboard.postReviewQueue") : t("dashboard.editorialQueue")}</h2>
+          <h2>{isAdmin ? t("dashboard.postReviewQueue") : t("dashboard.editorialQueue")}</h2>
           <p>{t("dashboard.postReviewQueueDesc")}</p>
         </div>
         <a href="/ap-admin/posts?workflow=review-needed" class="admin-button-ghost small">{t("common.openQueue")}</a>
@@ -218,7 +220,7 @@ const deploymentLabel = !latestDeployment
     </section>
   </div>
 
-  {adminUser?.role === "admin" && (
+  {isAdmin && (
     <section class="panel dashboard-panel deployment-panel">
       <div class="section-header">
         <div>

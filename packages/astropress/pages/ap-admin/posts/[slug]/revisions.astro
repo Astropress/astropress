@@ -51,8 +51,8 @@ if (model.status === "not_found") {
     heading="Revisions"
     currentPath="/ap-admin/posts"
     description="Reviewed and imported revision history for a representative content record."
-    role={adminUser!.role}
-    userName={adminUser!.name}
+    role={adminUser.role}
+    userName={adminUser.name}
   >
     {model.warnings.length > 0 && <p class="notice">Some revision data is temporarily unavailable. This page is showing partial results.</p>}
     <div class="toolbar">
@@ -114,8 +114,8 @@ if (model.status === "not_found") {
     heading="Not Found"
     currentPath="/ap-admin/posts"
     description="The requested revision history could not be found."
-    role={adminUser!.role}
-    userName={adminUser!.name}
+    role={adminUser.role}
+    userName={adminUser.name}
   >
     <section class="panel">
       <p>The requested revision history could not be found.</p>

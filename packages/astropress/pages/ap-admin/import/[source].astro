@@ -1,7 +1,11 @@
 ---
 import AdminLayout from "@astropress-diy/astropress/components/AdminLayout.astro";
+import { requiresAccess } from "astropress";
 
+const guard = await requiresAccess(Astro, "settings:edit");
+if (guard) return guard;
 const adminUser = Astro.locals.adminUser;
+if (!adminUser) return Astro.redirect("/ap-admin/login");
 const { source } = Astro.params;
 
 const VALID_SOURCES = ["wordpress", "wix", "crawl"] as const;
@@ -11,9 +15,7 @@ function isValidSource(s: string | undefined): s is ImportSource {
 	return VALID_SOURCES.includes(s as ImportSource);
 }
 
-if (!adminUser || adminUser.role !== "admin") {
-	Astro.response.status = 403;
-} else if (!isValidSource(source)) {
+if (!isValidSource(source)) {
 	Astro.response.status = 404;
 }
 
@@ -59,7 +61,7 @@ const meta = isValidSource(source) ? sourceMeta[source] : null;
 const pageTitle = meta ? `Import from ${meta.label}` : "Import";
 ---
 
-{adminUser?.role === "admin" && isValidSource(source) && meta ? (
+{isValidSource(source) && meta ? (
   <AdminLayout
     title={pageTitle}
     heading={`Import from ${meta.label}`}
@@ -387,24 +389,13 @@ const pageTitle = meta ? `Import from ${meta.label}` : "Import";
       .cli-summary { font-size: 0.875rem; color: var(--accent, #6366f1); cursor: pointer; }
     </style>
   </AdminLayout>
-) : adminUser?.role !== "admin" ? (
-  <AdminLayout
-    title="Forbidden"
-    heading="Access denied"
-    description="You do not have permission to view this page."
-    role={adminUser?.role ?? "editor"}
-    userName={adminUser?.name ?? ""}
-    currentPath="/ap-admin/import"
-  >
-    <p>Only admin users can access the import wizard.</p>
-  </AdminLayout>
 ) : (
   <AdminLayout
     title="Not found"
     heading="Unknown import source"
     description="The requested import source is not supported."
-    role={adminUser?.role ?? "editor"}
-    userName={adminUser?.name ?? ""}
+    role={adminUser.role}
+    userName={adminUser.name}
     currentPath="/ap-admin/import"
   >
     <p>Supported sources: <a href="/ap-admin/import/wordpress">WordPress</a>, <a href="/ap-admin/import/wix">Wix</a>, <a href="/ap-admin/import/crawl">Web crawl</a>.</p>

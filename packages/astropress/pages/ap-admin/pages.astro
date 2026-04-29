@@ -107,8 +107,8 @@ const structuredExplanation = t("pages.structuredExplanation");
     heading="Pages"
     currentPath="/ap-admin/pages"
     description={t("pages.description")}
-    role={adminUser!.role}
-    userName={adminUser!.name}
+    role={adminUser.role}
+    userName={adminUser.name}
   >
     {model.warnings.length > 0 && <p class="notice">{t("pages.partialResults")}</p>}
     <div class="toolbar">
@@ -211,8 +211,8 @@ const structuredExplanation = t("pages.structuredExplanation");
     heading="Forbidden"
     currentPath="/ap-admin/posts"
     description={t("pages.forbidden.description")}
-    role={adminUser!.role}
-    userName={adminUser!.name}
+    role={adminUser.role}
+    userName={adminUser.name}
   >
     <section class="panel">
       <p>{t("pages.forbidden.body")}</p>

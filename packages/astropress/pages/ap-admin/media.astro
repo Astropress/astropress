@@ -21,8 +21,8 @@ const t = getPageT(resolveAdminLocale(Astro));
   heading="Media"
   currentPath="/ap-admin/media"
   description={t("media.description")}
-  role={adminUser!.role}
-  userName={adminUser!.name}
+  role={adminUser.role}
+  userName={adminUser.name}
 >
   {model.warnings.length > 0 && <p class="notice">{t("media.partialResults")}</p>}
   {wasSaved && <p class="notice">{t("media.savedSuccess")}</p>}

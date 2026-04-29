@@ -65,8 +65,8 @@ if (model.status === "not_found") {
     heading={`Edit ${contentLabel}`}
     currentPath={listPath}
     description={contentType === "page" ? "Seeded page content and metadata." : "Blog post content, taxonomy, scheduling, and metadata."}
-    role={adminUser!.role}
-    userName={adminUser!.name}
+    role={adminUser.role}
+    userName={adminUser.name}
   >
     <nav class="breadcrumb" aria-label="breadcrumb">
       <a href={listPath}>{contentType === "page" ? "Pages" : "Posts"}</a>
@@ -467,8 +467,8 @@ if (model.status === "not_found") {
     heading={adminUser?.role !== "admin" && contentType === "page" ? "Forbidden" : "Not Found"}
     currentPath="/ap-admin/posts"
     description={adminUser?.role !== "admin" && contentType === "page" ? "This action requires an admin account." : "The requested content record could not be found."}
-    role={adminUser!.role}
-    userName={adminUser!.name}
+    role={adminUser.role}
+    userName={adminUser.name}
   >
     <section class="panel">
       <p>{adminUser?.role !== "admin" && contentType === "page" ? "This action requires an admin account and is hidden from editor-only roles." : "The requested content record could not be found."}</p>
