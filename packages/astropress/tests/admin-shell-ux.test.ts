@@ -23,7 +23,9 @@ describe("admin shell ux invariants", () => {
 			'<meta name="viewport" content="width=device-width, initial-scale=1" />',
 		);
 		expect(adminLayout).toContain('popovertarget="admin-keyboard-shortcuts"');
-		expect(adminLayout).toContain("<h2>Keyboard shortcuts</h2>");
+		expect(adminLayout).toContain(
+			'<h2>{tLayout("layout.keyboardShortcuts")}</h2>',
+		);
 		expect(adminLayout).toContain("<kbd>Ctrl</kbd>+<kbd>K</kbd>");
 	});
 
@@ -44,9 +46,9 @@ describe("admin shell ux invariants", () => {
 	});
 
 	it("has a scroll-to-top/bottom button in the utility panel", () => {
-		expect(adminLayout).toContain('id="scroll-toggle"');
-		expect(adminLayout).toContain('class="scroll-toggle-icon"');
-		expect(adminLayout).toContain("Scroll to bottom");
+		expect(adminLayout).toContain('id="scroll-to-bottom-btn"');
+		expect(adminLayout).toContain('id="scroll-to-top-fab"');
+		expect(adminLayout).toContain('tLayout("layout.scrollToBottom")');
 	});
 
 	it("uses CSS animation for undo toast auto-dismiss instead of JS setTimeout", () => {
@@ -82,8 +84,8 @@ describe("admin shell ux invariants", () => {
 
 	it("keeps reduced-motion handling in the shared stylesheet", () => {
 		expect(adminCss).toContain("@media (prefers-reduced-motion: reduce)");
-		expect(adminCss).toContain(".skeleton { animation: none;");
-		expect(adminCss).toContain(".undo-toast { animation: none; }");
+		expect(adminCss).toMatch(/\.skeleton\s*\{\s*animation:\s*none/);
+		expect(adminCss).toMatch(/\.undo-toast\s*\{\s*animation:\s*none/);
 	});
 
 	it("keeps shared touch targets at 44px or larger", () => {
@@ -92,12 +94,13 @@ describe("admin shell ux invariants", () => {
 	});
 
 	it("renders breadcrumbs on deep admin pages", () => {
-		expect(importPage).toContain(
-			'<nav class="breadcrumb" aria-label="breadcrumb">',
-		);
-		expect(subscriberPage).toContain(
-			'<nav class="breadcrumb" aria-label="breadcrumb">',
-		);
+		// Breadcrumb nav must include class="breadcrumb" plus a localised aria-label.
+		// After the i18n hardening pass the aria-label is provided via t(...) — we
+		// match on the class and the presence of an aria-label attribute rather
+		// than the literal English string.
+		const breadcrumbRe = /<nav\s+class="breadcrumb"\s+aria-label=/;
+		expect(importPage).toMatch(breadcrumbRe);
+		expect(subscriberPage).toMatch(breadcrumbRe);
 
 		const postEditor = readFileSync(
 			path.join(root, "pages", "ap-admin", "posts", "[slug].astro"),
@@ -111,15 +114,9 @@ describe("admin shell ux invariants", () => {
 			path.join(root, "pages", "ap-admin", "route-pages", "[...slug].astro"),
 			"utf8",
 		);
-		expect(postEditor).toContain(
-			'<nav class="breadcrumb" aria-label="breadcrumb">',
-		);
-		expect(archiveEditor).toContain(
-			'<nav class="breadcrumb" aria-label="breadcrumb">',
-		);
-		expect(routePageEditor).toContain(
-			'<nav class="breadcrumb" aria-label="breadcrumb">',
-		);
+		expect(postEditor).toMatch(breadcrumbRe);
+		expect(archiveEditor).toMatch(breadcrumbRe);
+		expect(routePageEditor).toMatch(breadcrumbRe);
 	});
 
 	it("ships shared confirm-dialog styles in admin.css", () => {

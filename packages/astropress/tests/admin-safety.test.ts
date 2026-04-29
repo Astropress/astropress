@@ -95,7 +95,9 @@ describe("admin markup safety", () => {
 		);
 
 		expect(adminLayout).toContain('class="skip-link"');
-		expect(adminLayout).toContain('aria-label="Admin sections"');
+		expect(adminLayout).toContain(
+			'aria-label={tLayout("layout.adminSections")}',
+		);
 		expect(loginPage).toContain(
 			'type="email" name="email" autocomplete="email" required',
 		);
