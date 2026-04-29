@@ -35,3 +35,15 @@ export {
 } from "./action-registry";
 export { createPolicyEngine } from "./engine";
 export type { JsonPolicyEngineOptions } from "./engine";
+export {
+	createAccessRepository,
+	seedStarterRoles,
+} from "./repository";
+export type {
+	AccessRepository,
+	AccessStore,
+	RolePolicyRecord,
+	RoleRecord,
+	UserPolicyRecord,
+	UserRoleAssignment,
+} from "./repository";

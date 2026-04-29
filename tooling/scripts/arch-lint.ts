@@ -125,7 +125,10 @@ async function main() {
 			filename === "runtime-admin-auth.ts" || // auth session management
 			display.includes("sqlite-runtime/") ||
 			display.includes("/adapters/") ||
-			display.includes("/import/");
+			display.includes("/import/") ||
+			// access/repository.ts is the access-control storage layer; it owns
+			// the access_* tables the same way d1-store-* owns content tables.
+			display.includes("/access/repository.ts");
 
 		if (!isSqlAllowed && content.includes(".prepare(")) {
 			violations.push({
