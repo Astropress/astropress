@@ -55,7 +55,12 @@ applyAstropressSecurityHeaders(Astro.response.headers, {
 	allowInlineStyles: import.meta.env.DEV,
 	forceHsts: Astro.url.protocol === "https:",
 });
-const recentItems = await getRecentAdminItems(Astro.locals, role);
+const recentItems = await getRecentAdminItems(Astro.locals, {
+	id: "",
+	email: "",
+	role,
+	isAdmin: role === "admin",
+});
 
 const pluginNavItems: NavItem[] = (peekCmsConfig()?.plugins ?? [])
 	.flatMap((p) => p.navItems ?? [])

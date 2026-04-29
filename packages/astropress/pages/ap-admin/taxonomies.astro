@@ -9,7 +9,7 @@ import {
 } from "astropress";
 
 const adminUser = Astro.locals.adminUser;
-const model = await buildTaxonomiesPageModel(Astro.locals, adminUser?.role);
+const model = await buildTaxonomiesPageModel(Astro.locals, adminUser);
 const { categories, tags, auditEvents } = model.data;
 const wasSaved = Astro.url.searchParams.get("saved") === "1";
 const wasDeleted = Astro.url.searchParams.get("deleted") === "1";

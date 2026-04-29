@@ -1,5 +1,6 @@
 import type { APIContext } from "astro";
 import { buildAdminDashboardModel } from "./admin-dashboard";
+import type { AdminDashboardModel } from "./admin-dashboard";
 import {
 	type AdminPageResult,
 	adminOnlyPage,
@@ -9,6 +10,7 @@ import {
 } from "./admin-page-model-helpers";
 import { getCmsConfig } from "./config";
 import { resolveRuntimeMediaUrl } from "./media";
+import type { AuthUser } from "./platform-contracts";
 import {
 	getRuntimeAdminUsers,
 	getRuntimeAuditEvents,
@@ -53,11 +55,10 @@ export {
 export type { AdminPageResult } from "./admin-page-model-helpers";
 
 type AdminLocals = APIContext["locals"];
-type AdminRole = "admin" | "editor";
 
 export async function buildAdminDashboardPageModel(
 	locals: AdminLocals,
-	role: AdminRole,
+	user: AuthUser | null | undefined,
 ): Promise<AdminPageResult<AdminDashboardModel>> {
 	const warnings: string[] = [];
 	const data = await withFallback(
@@ -66,7 +67,7 @@ export async function buildAdminDashboardPageModel(
 		() =>
 			buildAdminDashboardModel(
 				locals,
-				role,
+				user,
 				getCmsConfig().translationStatus as unknown as Array<{
 					route: string;
 					translationState: string;
@@ -91,10 +92,10 @@ export async function buildAdminDashboardPageModel(
 
 export async function buildAuthorsPageModel(
 	locals: AdminLocals,
-	role: AdminRole,
+	user: AuthUser | null | undefined,
 ) {
 	return adminOnlyPage(
-		role,
+		user,
 		{
 			authors: [],
 			auditEvents: [] as Awaited<ReturnType<typeof getRuntimeAuditEvents>>,
@@ -118,10 +119,10 @@ export async function buildAuthorsPageModel(
 
 export async function buildTaxonomiesPageModel(
 	locals: AdminLocals,
-	role: AdminRole,
+	user: AuthUser | null | undefined,
 ) {
 	return adminOnlyPage(
-		role,
+		user,
 		{
 			categories: [],
 			tags: [],
@@ -152,10 +153,10 @@ export async function buildTaxonomiesPageModel(
 
 export async function buildUsersPageModel(
 	locals: AdminLocals,
-	role: AdminRole,
+	user: AuthUser | null | undefined,
 ) {
 	return adminOnlyPage(
-		role,
+		user,
 		{
 			users: [],
 			auditEvents: [] as Awaited<ReturnType<typeof getRuntimeAuditEvents>>,
@@ -254,10 +255,10 @@ export async function buildMediaPageModel(locals: AdminLocals) {
 
 export async function buildRedirectsPageModel(
 	locals: AdminLocals,
-	role: AdminRole,
+	user: AuthUser | null | undefined,
 ) {
 	return adminOnlyPage(
-		role,
+		user,
 		{
 			redirectRules: [],
 			auditEvents: [] as Awaited<ReturnType<typeof getRuntimeAuditEvents>>,
@@ -281,10 +282,10 @@ export async function buildRedirectsPageModel(
 
 export async function buildSettingsPageModel(
 	locals: AdminLocals,
-	role: AdminRole,
+	user: AuthUser | null | undefined,
 ) {
 	return adminOnlyPage(
-		role,
+		user,
 		{ settings: defaultSiteSettings },
 		async (warnings) => ({
 			settings: await withFallback(
@@ -299,10 +300,10 @@ export async function buildSettingsPageModel(
 
 export async function buildSystemPageModel(
 	locals: AdminLocals,
-	role: AdminRole,
+	user: AuthUser | null | undefined,
 ) {
 	return adminOnlyPage(
-		role,
+		user,
 		{ systemRoutes: [], routeMap: new Map<string, unknown>() },
 		async (warnings) => {
 			const systemRoutes = await withFallback(
@@ -321,10 +322,10 @@ export async function buildSystemPageModel(
 
 export async function buildRouteTablePageModel(
 	locals: AdminLocals,
-	role: AdminRole,
+	user: AuthUser | null | undefined,
 ) {
 	return adminOnlyPage(
-		role,
+		user,
 		{
 			routePages: [] as Awaited<
 				ReturnType<typeof listRuntimeStructuredPageRoutes>

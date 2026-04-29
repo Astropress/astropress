@@ -8,7 +8,7 @@ import {
 import { isSeededPostRecord } from "astropress";
 
 const adminUser = Astro.locals.adminUser;
-const model = await buildPagesIndexPageModel(Astro.locals, adminUser?.role);
+const model = await buildPagesIndexPageModel(Astro.locals, adminUser);
 const { contentStates, routePages, archiveRows } = model.data;
 const adminLocale = resolveAdminLocale(Astro);
 const t = getPageT(adminLocale);

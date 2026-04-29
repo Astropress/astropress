@@ -1,4 +1,6 @@
 import type { APIRoute } from "astro";
+import { getAccessContext } from "./access/index.js";
+import { isAuthUserAdmin } from "./platform-contracts.js";
 import {
 	getRuntimeCsrfToken,
 	getRuntimeSessionUser,
@@ -25,9 +27,17 @@ type GuardOptions = {
 	failurePath: string;
 	loginPath?: string;
 	requireAdmin?: boolean;
+	/**
+	 * ABAC action ID required to run this handler. When set, the access
+	 * engine evaluates `can(requireAction)` against the session subject;
+	 * a deny short-circuits the request with `actionRequiredMessage` (or
+	 * the engine's reason). Admins bypass evaluation by definition.
+	 */
+	requireAction?: string;
 	invalidCsrfMessage?: string;
 	invalidOriginMessage?: string;
 	adminRequiredMessage?: string;
+	actionDeniedMessage?: string;
 	unexpectedMessage?: string;
 };
 
@@ -84,7 +94,7 @@ export async function requireAdminFormAction(
 		};
 	}
 
-	if (options.requireAdmin && sessionUser.role !== "admin") {
+	if (options.requireAdmin && !isAuthUserAdmin(sessionUser)) {
 		return {
 			ok: false,
 			response: actionErrorRedirect(
@@ -93,6 +103,22 @@ export async function requireAdminFormAction(
 					"This action requires an admin account.",
 			),
 		};
+	}
+
+	if (options.requireAction) {
+		const access = await getAccessContext({ locals: context.locals });
+		const decision = access?.can(options.requireAction);
+		if (!decision || decision.decision === "deny") {
+			return {
+				ok: false,
+				response: actionErrorRedirect(
+					options.failurePath,
+					options.actionDeniedMessage ??
+						decision?.reason ??
+						"You do not have permission to perform this action.",
+				),
+			};
+		}
 	}
 
 	if (!isTrustedRequestOrigin(context.request)) {

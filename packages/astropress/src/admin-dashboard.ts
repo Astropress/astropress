@@ -5,6 +5,8 @@ import type {
 	ContentRecord as PersistedContentRecord,
 	RedirectRule,
 } from "./persistence-types";
+import { isAuthUserAdmin } from "./platform-contracts";
+import type { AuthUser } from "./platform-contracts";
 import type { SeededContentRecordLike } from "./seeded-content-type";
 
 type TranslationEntry = {
@@ -102,10 +104,11 @@ async function settledValue<T>(promise: Promise<T>, fallback: T) {
 
 export async function buildAdminDashboardModel(
 	locals: APIContext["locals"],
-	role: "admin" | "editor",
+	user: AuthUser | null | undefined,
 	translationStatus: TranslationEntry[],
 	deps: DashboardDeps,
 ): Promise<AdminDashboardModel> {
+	const isAdmin = !!user && isAuthUserAdmin(user);
 	const [
 		auditEvents,
 		comments,
@@ -151,7 +154,7 @@ export async function buildAdminDashboardModel(
 	const latestDeployment =
 		auditEvents.find((event) => event.targetType === "deployment") ?? null;
 	const recentActivity = (
-		role === "admin"
+		isAdmin
 			? [
 					...contentStates.map((record) => ({
 						title: record.title,
@@ -180,22 +183,21 @@ export async function buildAdminDashboardModel(
 		)
 		.slice(0, 6);
 
-	const translationEntries =
-		role === "admin"
-			? await settledValue(
-					Promise.all(
-						translationStatus.map(async (entry) => ({
-							route: entry.route,
-							state: await deps.getRuntimeTranslationState(
-								entry.route,
-								entry.translationState,
-								locals,
-							),
-						})),
-					),
-					[] as Array<{ route: string; state: string }>,
-				)
-			: [];
+	const translationEntries = isAdmin
+		? await settledValue(
+				Promise.all(
+					translationStatus.map(async (entry) => ({
+						route: entry.route,
+						state: await deps.getRuntimeTranslationState(
+							entry.route,
+							entry.translationState,
+							locals,
+						),
+					})),
+				),
+				[] as Array<{ route: string; state: string }>,
+			)
+		: [];
 
 	const translationNeedsAttention = translationEntries.filter(
 		(entry) => entry.state !== "published",
@@ -207,17 +209,16 @@ export async function buildAdminDashboardModel(
 		...routePages.filter((route) => !route.seoTitle || !route.metaDescription),
 	].length;
 
-	const archiveRoutes: ArchiveRoute[] =
-		role === "admin"
-			? await settledValue(
-					Promise.all([
-						deps.getRuntimeArchiveRoute("/author", locals),
-						deps.getRuntimeArchiveRoute("/category", locals),
-						deps.getRuntimeArchiveRoute("/tag", locals),
-					]),
-					[null, null, null] as [ArchiveRoute, ArchiveRoute, ArchiveRoute],
-				)
-			: [];
+	const archiveRoutes: ArchiveRoute[] = isAdmin
+		? await settledValue(
+				Promise.all([
+					deps.getRuntimeArchiveRoute("/author", locals),
+					deps.getRuntimeArchiveRoute("/category", locals),
+					deps.getRuntimeArchiveRoute("/tag", locals),
+				]),
+				[null, null, null] as [ArchiveRoute, ArchiveRoute, ArchiveRoute],
+			)
+		: [];
 
 	const supportSurfaceLinks = [
 		{

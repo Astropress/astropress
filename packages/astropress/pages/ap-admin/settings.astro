@@ -15,7 +15,7 @@ function format(template: string, params: Record<string, string | number>) {
 }
 
 const adminUser = Astro.locals.adminUser;
-const model = await buildSettingsPageModel(Astro.locals, adminUser?.role);
+const model = await buildSettingsPageModel(Astro.locals, adminUser);
 const { settings } = model.data;
 const wasSaved = Astro.url.searchParams.get("saved") === "1";
 const errorMessage =

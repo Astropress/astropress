@@ -11,6 +11,8 @@ import {
 	ok,
 	withFallback,
 } from "./admin-page-model-helpers";
+import { isAuthUserAdmin } from "./platform-contracts";
+import type { AuthUser } from "./platform-contracts";
 import {
 	getRuntimeInviteRequest,
 	getRuntimePasswordResetRequest,
@@ -31,7 +33,6 @@ import {
 } from "./runtime-route-registry";
 
 type AdminLocals = APIContext["locals"];
-type AdminRole = "admin" | "editor";
 
 export async function buildPostEditorPageModel(
 	locals: AdminLocals,
@@ -202,7 +203,7 @@ export async function buildPostRevisionsPageModel(
 export async function buildRoutePageEditorModel(
 	locals: AdminLocals,
 	routePath: string,
-	role: AdminRole,
+	user: AuthUser | null | undefined,
 ): Promise<
 	AdminPageResult<{
 		pageRecord: Awaited<ReturnType<typeof getRuntimeStructuredPageRoute>>;
@@ -217,7 +218,7 @@ export async function buildRoutePageEditorModel(
 		englishOwner: null,
 		effectiveTranslationState: undefined,
 	};
-	if (role !== "admin") {
+	if (!user || !isAuthUserAdmin(user)) {
 		return forbidden(empty);
 	}
 
@@ -264,10 +265,10 @@ export async function buildRoutePageEditorModel(
 export async function buildArchiveEditorModel(
 	locals: AdminLocals,
 	archivePath: string,
-	role: AdminRole,
+	user: AuthUser | null | undefined,
 ) {
 	const empty = { archive: null };
-	if (role !== "admin") {
+	if (!user || !isAuthUserAdmin(user)) {
 		return forbidden(empty);
 	}
 

@@ -9,7 +9,7 @@ import {
 } from "astropress";
 
 const adminUser = Astro.locals.adminUser;
-const model = await buildTranslationsPageModel(Astro.locals, adminUser?.role);
+const model = await buildTranslationsPageModel(Astro.locals, adminUser);
 if (model.status === "forbidden") {
 	Astro.response.status = 403;
 }

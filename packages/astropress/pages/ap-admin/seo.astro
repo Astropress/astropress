@@ -6,7 +6,7 @@ const adminUser = Astro.locals.adminUser;
 const selectedType = Astro.url.searchParams.get("type") ?? "all";
 const missingOnly = Astro.url.searchParams.get("missing") === "1";
 const sortKey = Astro.url.searchParams.get("sort") ?? "path";
-const model = await buildSeoPageModel(Astro.locals, adminUser?.role);
+const model = await buildSeoPageModel(Astro.locals, adminUser);
 const t = getPageT(resolveAdminLocale(Astro));
 
 if (model.status === "forbidden") {

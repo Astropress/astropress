@@ -8,7 +8,7 @@ import {
 } from "astropress";
 
 const adminUser = Astro.locals.adminUser;
-const model = await buildAdminDashboardPageModel(Astro.locals, adminUser?.role);
+const model = await buildAdminDashboardPageModel(Astro.locals, adminUser);
 const {
 	comments,
 	redirectRules,

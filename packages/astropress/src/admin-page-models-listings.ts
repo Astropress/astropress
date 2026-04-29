@@ -7,6 +7,8 @@ import {
 	withSettledMap,
 } from "./admin-page-model-helpers";
 import { getCmsConfig } from "./config";
+import { isAuthUserAdmin } from "./platform-contracts";
+import type { AuthUser } from "./platform-contracts";
 import {
 	getRuntimeAuthors,
 	getRuntimeCategories,
@@ -23,11 +25,10 @@ import {
 import { isSeededPostRecord } from "./seeded-content-type";
 
 type AdminLocals = APIContext["locals"];
-type AdminRole = "admin" | "editor";
 
 export async function buildArchivesIndexPageModel(
 	locals: AdminLocals,
-	role: AdminRole,
+	user: AuthUser | null | undefined,
 ) {
 	const empty = {
 		archiveList: [] as unknown[],
@@ -36,7 +37,7 @@ export async function buildArchivesIndexPageModel(
 		totalArchives: 0,
 		totalItems: 0,
 	};
-	if (role !== "admin") {
+	if (!user || !isAuthUserAdmin(user)) {
 		return forbidden(empty);
 	}
 
@@ -93,7 +94,7 @@ export async function buildArchivesIndexPageModel(
 
 export async function buildPagesIndexPageModel(
 	locals: AdminLocals,
-	role: AdminRole,
+	user: AuthUser | null | undefined,
 ) {
 	const empty = {
 		contentStates: [] as Awaited<ReturnType<typeof listRuntimeContentStates>>,
@@ -102,7 +103,7 @@ export async function buildPagesIndexPageModel(
 		>,
 		archiveRows: [] as unknown[],
 	};
-	if (role !== "admin") {
+	if (!user || !isAuthUserAdmin(user)) {
 		return forbidden(empty);
 	}
 
@@ -200,10 +201,10 @@ export async function buildPostsIndexPageModel(locals: AdminLocals) {
 
 export async function buildTranslationsPageModel(
 	locals: AdminLocals,
-	role: AdminRole,
+	user: AuthUser | null | undefined,
 ) {
 	const empty = { rows: [] as unknown[] };
-	if (role !== "admin") {
+	if (!user || !isAuthUserAdmin(user)) {
 		return forbidden(empty);
 	}
 
@@ -262,9 +263,12 @@ export async function buildTranslationsPageModel(
 	return ok({ rows }, warnings);
 }
 
-export async function buildSeoPageModel(locals: AdminLocals, role: AdminRole) {
+export async function buildSeoPageModel(
+	locals: AdminLocals,
+	user: AuthUser | null | undefined,
+) {
 	const empty = { rows: [] as unknown[] };
-	if (role !== "admin") {
+	if (!user || !isAuthUserAdmin(user)) {
 		return forbidden(empty);
 	}
 

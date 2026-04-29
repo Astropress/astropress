@@ -35,8 +35,18 @@ import { makeLocals } from "./helpers/make-locals.js";
 // Helpers
 // ---------------------------------------------------------------------------
 
-const adminRole = "admin" as const;
-const editorRole = "editor" as const;
+const adminRole = {
+	id: "1",
+	email: "admin@example.com",
+	role: "admin" as const,
+	isAdmin: true,
+};
+const editorRole = {
+	id: "2",
+	email: "editor@example.com",
+	role: "editor" as const,
+	isAdmin: false,
+};
 
 let db: DatabaseSync;
 let locals: App.Locals;

@@ -8,7 +8,7 @@ import { resolveSafeAdminHref } from "../../src/admin-link-utils";
 const t = getPageT(resolveAdminLocale(Astro));
 
 const adminUser = Astro.locals.adminUser;
-const model = await buildUsersPageModel(Astro.locals, adminUser?.role);
+const model = await buildUsersPageModel(Astro.locals, adminUser);
 const { users, auditEvents } = model.data;
 const wasCreated = Astro.url.searchParams.get("saved") === "1";
 const userCreatedNoEmail = Astro.url.searchParams.get("user_created") === "1";
