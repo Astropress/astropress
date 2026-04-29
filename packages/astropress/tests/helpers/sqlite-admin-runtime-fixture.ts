@@ -30,7 +30,7 @@ export function createRuntimeFixture(): RuntimeFixture {
 
 	// Active admin user (correct password)
 	db.prepare(
-		"INSERT INTO admin_users (email, password_hash, role, name, active) VALUES (?, ?, ?, ?, 1)",
+		"INSERT INTO admin_users (email, password_hash, role, name, active, is_admin) VALUES (?1, ?2, ?3, ?4, 1, CASE WHEN ?3 = 'admin' THEN 1 ELSE 0 END)",
 	).run(
 		"admin@test.local",
 		makePasswordHash("correct-password"),
@@ -40,7 +40,7 @@ export function createRuntimeFixture(): RuntimeFixture {
 
 	// Suspended user (active=0)
 	db.prepare(
-		"INSERT INTO admin_users (email, password_hash, role, name, active) VALUES (?, ?, ?, ?, 0)",
+		"INSERT INTO admin_users (email, password_hash, role, name, active, is_admin) VALUES (?1, ?2, ?3, ?4, 0, CASE WHEN ?3 = 'admin' THEN 1 ELSE 0 END)",
 	).run(
 		"suspended@test.local",
 		makePasswordHash("x"),
@@ -50,7 +50,7 @@ export function createRuntimeFixture(): RuntimeFixture {
 
 	// User with pending invite (for listAdminUsers invited-status branch)
 	db.prepare(
-		"INSERT INTO admin_users (email, password_hash, role, name, active) VALUES (?, ?, ?, ?, 1)",
+		"INSERT INTO admin_users (email, password_hash, role, name, active, is_admin) VALUES (?1, ?2, ?3, ?4, 1, CASE WHEN ?3 = 'admin' THEN 1 ELSE 0 END)",
 	).run("invited@test.local", makePasswordHash("x"), "editor", "Invited User");
 	const invitedUserId = (
 		db
@@ -68,7 +68,7 @@ export function createRuntimeFixture(): RuntimeFixture {
 
 	// User with malformed password hash (for verifyPasswordSync malformed-hash branch)
 	db.prepare(
-		"INSERT INTO admin_users (email, password_hash, role, name, active) VALUES (?, ?, ?, ?, 1)",
+		"INSERT INTO admin_users (email, password_hash, role, name, active, is_admin) VALUES (?1, ?2, ?3, ?4, 1, CASE WHEN ?3 = 'admin' THEN 1 ELSE 0 END)",
 	).run(
 		"malformed@test.local",
 		"not-a-valid-hash",

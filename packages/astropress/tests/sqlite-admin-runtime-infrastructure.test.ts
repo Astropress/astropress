@@ -250,7 +250,7 @@ describe("settings additional branches", () => {
 		const freshDb = makeDb();
 		freshDb
 			.prepare(
-				"INSERT INTO admin_users (email, password_hash, role, name, active) VALUES (?, ?, ?, ?, 1)",
+				"INSERT INTO admin_users (email, password_hash, role, name, active, is_admin) VALUES (?1, ?2, ?3, ?4, 1, CASE WHEN ?3 = 'admin' THEN 1 ELSE 0 END)",
 			)
 			.run("fresh@test.local", makePasswordHash("password"), "admin", "Fresh");
 		const freshRuntime = createAstropressSqliteAdminRuntime({

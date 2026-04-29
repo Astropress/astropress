@@ -80,7 +80,7 @@ beforeEach(() => {
 
 	// Seed minimal data
 	db.prepare(
-		"INSERT INTO admin_users (email, password_hash, role, name, active) VALUES (?, ?, ?, ?, ?)",
+		"INSERT INTO admin_users (email, password_hash, role, name, active, is_admin) VALUES (?1, ?2, ?3, ?4, ?5, CASE WHEN ?3 = 'admin' THEN 1 ELSE 0 END)",
 	).run("admin@test.local", "hash", "admin", "Admin", 1);
 	db.prepare(
 		`INSERT INTO content_entries (slug, legacy_url, title, kind, template_key, source_html_path, body, summary, seo_title, meta_description)

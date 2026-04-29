@@ -498,8 +498,12 @@ describe("SQL_LIST_AUDIT_EVENTS / SQL_LIST_ADMIN_USERS_WITH_INVITE", () => {
 		expect(SQL_LIST_ADMIN_USERS_WITH_INVITE).toContain("FROM admin_users");
 		expect(SQL_LIST_ADMIN_USERS_WITH_INVITE).toContain("user_invites");
 		expect(SQL_LIST_ADMIN_USERS_WITH_INVITE).toContain("has_pending_invite");
+		// Admins (is_admin=1) sort first; Phase 5-C derives the role display
+		// label from is_admin, so the ORDER BY no longer references the role
+		// column.
+		expect(SQL_LIST_ADMIN_USERS_WITH_INVITE).toMatch(/ORDER BY is_admin DESC/);
 		expect(SQL_LIST_ADMIN_USERS_WITH_INVITE).toMatch(
-			/CASE role WHEN 'admin' THEN 0 ELSE 1 END/,
+			/CASE WHEN is_admin = 1 THEN 'admin' ELSE 'editor' END AS role/,
 		);
 	});
 });

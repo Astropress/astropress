@@ -41,7 +41,7 @@ describe("runtime admin auth secret rotation", () => {
 
 		const { db, locals } = makeLocals();
 		db.prepare(
-			"INSERT INTO admin_users (email, role, password_hash, name, active) VALUES (?, ?, ?, ?, 1)",
+			"INSERT INTO admin_users (email, role, password_hash, name, active, is_admin) VALUES (?1, ?2, ?3, ?4, 1, CASE WHEN ?2 = 'admin' THEN 1 ELSE 0 END)",
 		).run(
 			"admin@example.com",
 			"admin",
@@ -74,7 +74,7 @@ describe("runtime admin auth secret rotation", () => {
 
 		const { db, locals } = makeLocals();
 		db.prepare(
-			"INSERT INTO admin_users (id, email, role, password_hash, name, active) VALUES (?, ?, ?, ?, ?, 1)",
+			"INSERT INTO admin_users (id, email, role, password_hash, name, active, is_admin) VALUES (?1, ?2, ?3, ?4, ?5, 1, CASE WHEN ?3 = 'admin' THEN 1 ELSE 0 END)",
 		).run(
 			1,
 			"admin@example.com",
@@ -120,7 +120,7 @@ describe("authenticateRuntimeAdminUser", () => {
 		opts: { active?: number } = {},
 	) {
 		db.prepare(
-			"INSERT INTO admin_users (id, email, role, password_hash, name, active) VALUES (?, ?, ?, ?, ?, ?)",
+			"INSERT INTO admin_users (id, email, role, password_hash, name, active, is_admin) VALUES (?1, ?2, ?3, ?4, ?5, ?6, CASE WHEN ?3 = 'admin' THEN 1 ELSE 0 END)",
 		).run(
 			1,
 			"admin@example.com",
@@ -188,7 +188,7 @@ describe("authenticateRuntimeAdminUser", () => {
 		// Seed user with empty email so that if the !normalizedEmail guard is removed,
 		// the DB lookup would find this user and return a non-null result.
 		db.prepare(
-			"INSERT INTO admin_users (id, email, role, password_hash, name, active) VALUES (?, ?, ?, ?, ?, 1)",
+			"INSERT INTO admin_users (id, email, role, password_hash, name, active, is_admin) VALUES (?1, ?2, ?3, ?4, ?5, 1, CASE WHEN ?3 = 'admin' THEN 1 ELSE 0 END)",
 		).run(99, "", "editor", await hashPassword("secret"), "Empty Email User");
 		const result = await authenticateRuntimeAdminUser("", "secret", locals);
 		expect(result).toBeNull();
@@ -200,7 +200,7 @@ describe("authenticateRuntimeAdminUser", () => {
 		// Seed user whose password hash is for "" so that if the !password guard is removed,
 		// verifyPassword("", hash) returns true and a non-null result escapes.
 		db.prepare(
-			"INSERT INTO admin_users (id, email, role, password_hash, name, active) VALUES (?, ?, ?, ?, ?, 1)",
+			"INSERT INTO admin_users (id, email, role, password_hash, name, active, is_admin) VALUES (?1, ?2, ?3, ?4, ?5, 1, CASE WHEN ?3 = 'admin' THEN 1 ELSE 0 END)",
 		).run(
 			2,
 			"emptypass@example.com",
@@ -238,7 +238,7 @@ describe("getRuntimeCsrfToken", () => {
 	it("returns the csrf_token for a valid session", async () => {
 		const { db, locals } = makeLocals();
 		db.prepare(
-			"INSERT INTO admin_users (id, email, role, password_hash, name, active) VALUES (?, ?, ?, ?, ?, 1)",
+			"INSERT INTO admin_users (id, email, role, password_hash, name, active, is_admin) VALUES (?1, ?2, ?3, ?4, ?5, 1, CASE WHEN ?3 = 'admin' THEN 1 ELSE 0 END)",
 		).run(1, "admin@example.com", "admin", await hashPassword("pass"), "Admin");
 		db.prepare(
 			"INSERT INTO admin_sessions (id, user_id, csrf_token, ip_address, user_agent) VALUES (?, ?, ?, ?, ?)",
@@ -281,7 +281,7 @@ describe("createRuntimeSession session storage", () => {
 
 		const { db, locals } = makeLocals();
 		db.prepare(
-			"INSERT INTO admin_users (id, email, role, password_hash, name, active) VALUES (?, ?, ?, ?, ?, 1)",
+			"INSERT INTO admin_users (id, email, role, password_hash, name, active, is_admin) VALUES (?1, ?2, ?3, ?4, ?5, 1, CASE WHEN ?3 = 'admin' THEN 1 ELSE 0 END)",
 		).run(1, "admin@example.com", "admin", await hashPassword("pass"), "Admin");
 
 		const sessionToken = await createRuntimeSession(
@@ -304,7 +304,7 @@ describe("createRuntimeSession session storage", () => {
 	it("stores ip_address and user_agent metadata in the session row", async () => {
 		const { db, locals } = makeLocals();
 		db.prepare(
-			"INSERT INTO admin_users (id, email, role, password_hash, name, active) VALUES (?, ?, ?, ?, ?, 1)",
+			"INSERT INTO admin_users (id, email, role, password_hash, name, active, is_admin) VALUES (?1, ?2, ?3, ?4, ?5, 1, CASE WHEN ?3 = 'admin' THEN 1 ELSE 0 END)",
 		).run(1, "admin@example.com", "admin", await hashPassword("pass"), "Admin");
 
 		await createRuntimeSession(
@@ -331,7 +331,7 @@ describe("session TTL expiry", () => {
 	it("revokes and returns null for session with non-parseable last_active_at", async () => {
 		const { db, locals } = makeLocals();
 		db.prepare(
-			"INSERT INTO admin_users (id, email, role, password_hash, name, active) VALUES (?, ?, ?, ?, ?, 1)",
+			"INSERT INTO admin_users (id, email, role, password_hash, name, active, is_admin) VALUES (?1, ?2, ?3, ?4, ?5, 1, CASE WHEN ?3 = 'admin' THEN 1 ELSE 0 END)",
 		).run(1, "admin@example.com", "admin", await hashPassword("pass"), "Admin");
 		// 'zzzinvalid' sorts after any valid ISO date, so cleanupExpiredSessions won't revoke it
 		db.prepare(
@@ -355,7 +355,7 @@ describe("session TTL expiry", () => {
 
 		const { db, locals } = makeLocals();
 		db.prepare(
-			"INSERT INTO admin_users (id, email, role, password_hash, name, active) VALUES (?, ?, ?, ?, ?, 1)",
+			"INSERT INTO admin_users (id, email, role, password_hash, name, active, is_admin) VALUES (?1, ?2, ?3, ?4, ?5, 1, CASE WHEN ?3 = 'admin' THEN 1 ELSE 0 END)",
 		).run(1, "admin@example.com", "admin", await hashPassword("pass"), "Admin");
 		db.prepare(
 			"INSERT INTO admin_sessions (id, user_id, csrf_token, ip_address, user_agent) VALUES (?, ?, ?, ?, ?)",
@@ -386,7 +386,7 @@ describe("session last_active_at refresh on access", () => {
 
 		const { db, locals } = makeLocals();
 		db.prepare(
-			"INSERT INTO admin_users (id, email, role, password_hash, name, active) VALUES (?, ?, ?, ?, ?, 1)",
+			"INSERT INTO admin_users (id, email, role, password_hash, name, active, is_admin) VALUES (?1, ?2, ?3, ?4, ?5, 1, CASE WHEN ?3 = 'admin' THEN 1 ELSE 0 END)",
 		).run(1, "admin@example.com", "admin", await hashPassword("pass"), "Admin");
 
 		const sessionToken = await createRuntimeSession(
@@ -536,7 +536,7 @@ describe("getRuntimeSessionUser", () => {
 	it("returns null for a revoked session", async () => {
 		const { db, locals } = makeLocals();
 		db.prepare(
-			"INSERT INTO admin_users (id, email, role, password_hash, name, active) VALUES (?, ?, ?, ?, ?, 1)",
+			"INSERT INTO admin_users (id, email, role, password_hash, name, active, is_admin) VALUES (?1, ?2, ?3, ?4, ?5, 1, CASE WHEN ?3 = 'admin' THEN 1 ELSE 0 END)",
 		).run(1, "admin@example.com", "admin", await hashPassword("pass"), "Admin");
 
 		const sessionToken = await createRuntimeSession(
@@ -554,7 +554,7 @@ describe("getRuntimeSessionUser", () => {
 	it("returns null for inactive user even with valid session", async () => {
 		const { db, locals } = makeLocals();
 		db.prepare(
-			"INSERT INTO admin_users (id, email, role, password_hash, name, active) VALUES (?, ?, ?, ?, ?, 1)",
+			"INSERT INTO admin_users (id, email, role, password_hash, name, active, is_admin) VALUES (?1, ?2, ?3, ?4, ?5, 1, CASE WHEN ?3 = 'admin' THEN 1 ELSE 0 END)",
 		).run(1, "admin@example.com", "admin", await hashPassword("pass"), "Admin");
 
 		const sessionToken = await createRuntimeSession(
@@ -609,7 +609,7 @@ describe("session candidate lookup order", () => {
 
 		const { db, locals } = makeLocals();
 		db.prepare(
-			"INSERT INTO admin_users (id, email, role, password_hash, name, active) VALUES (?, ?, ?, ?, ?, 1)",
+			"INSERT INTO admin_users (id, email, role, password_hash, name, active, is_admin) VALUES (?1, ?2, ?3, ?4, ?5, 1, CASE WHEN ?3 = 'admin' THEN 1 ELSE 0 END)",
 		).run(1, "admin@example.com", "admin", await hashPassword("pass"), "Admin");
 
 		const sessionToken = await createRuntimeSession(
@@ -636,7 +636,7 @@ describe("revokeRuntimeSession raw-token inclusion", () => {
 
 		const { db, locals } = makeLocals();
 		db.prepare(
-			"INSERT INTO admin_users (id, email, role, password_hash, name, active) VALUES (?, ?, ?, ?, ?, 1)",
+			"INSERT INTO admin_users (id, email, role, password_hash, name, active, is_admin) VALUES (?1, ?2, ?3, ?4, ?5, 1, CASE WHEN ?3 = 'admin' THEN 1 ELSE 0 END)",
 		).run(1, "admin@example.com", "admin", await hashPassword("pass"), "Admin");
 
 		// Insert session row directly with raw UUID so we know the exact stored id.
@@ -670,7 +670,7 @@ describe("session TTL boundary", () => {
 
 		const { db, locals } = makeLocals();
 		db.prepare(
-			"INSERT INTO admin_users (id, email, role, password_hash, name, active) VALUES (?, ?, ?, ?, ?, 1)",
+			"INSERT INTO admin_users (id, email, role, password_hash, name, active, is_admin) VALUES (?1, ?2, ?3, ?4, ?5, 1, CASE WHEN ?3 = 'admin' THEN 1 ELSE 0 END)",
 		).run(1, "admin@example.com", "admin", await hashPassword("pass"), "Admin");
 
 		const rawToken = crypto.randomUUID();
@@ -693,7 +693,7 @@ describe("session TTL boundary", () => {
 
 		const { db, locals } = makeLocals();
 		db.prepare(
-			"INSERT INTO admin_users (id, email, role, password_hash, name, active) VALUES (?, ?, ?, ?, ?, 1)",
+			"INSERT INTO admin_users (id, email, role, password_hash, name, active, is_admin) VALUES (?1, ?2, ?3, ?4, ?5, 1, CASE WHEN ?3 = 'admin' THEN 1 ELSE 0 END)",
 		).run(1, "admin@example.com", "admin", await hashPassword("pass"), "Admin");
 
 		const rawToken = crypto.randomUUID();
@@ -718,7 +718,7 @@ describe("cleanupExpiredSessions bulk revoke", () => {
 		// With no-op: stale rows are never revoked_at-stamped even after a valid lookup.
 		const { db, locals } = makeLocals();
 		db.prepare(
-			"INSERT INTO admin_users (id, email, role, password_hash, name, active) VALUES (?, ?, ?, ?, ?, 1)",
+			"INSERT INTO admin_users (id, email, role, password_hash, name, active, is_admin) VALUES (?1, ?2, ?3, ?4, ?5, 1, CASE WHEN ?3 = 'admin' THEN 1 ELSE 0 END)",
 		).run(1, "admin@example.com", "admin", await hashPassword("pass"), "Admin");
 
 		// Insert two stale sessions (last active 13 hours ago) directly into DB.

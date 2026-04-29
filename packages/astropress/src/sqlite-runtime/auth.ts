@@ -112,7 +112,9 @@ export function createSqliteAuthStore(
 			name,
 		}: { email: string; passwordHash: string; role: AdminRole; name: string }) {
 			try {
-				getDb().prepare(SQL_INSERT_USER).run(email, passwordHash, role, name);
+				getDb()
+					.prepare(SQL_INSERT_USER)
+					.run(email, passwordHash, name, role === "admin" ? 1 : 0);
 				return true;
 			} catch {
 				return false;
