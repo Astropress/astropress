@@ -71,20 +71,26 @@ body {
   margin: 0;
 }
 
+/* Hide off-screen via translateY rather than `top: -Npx` so growing the link's
+ * box (via padding/min-height for #58 touch-target compliance) can never push
+ * its bottom edge back into the viewport. */
 .skip-link {
   position: absolute;
   left: 1rem;
-  top: -3rem;
+  top: 0;
   background: var(--button-primary-bg);
   color: var(--button-primary-text);
   padding: 0.85rem 1rem;
   display: inline-flex;
   align-items: center;
   min-height: 2.75rem;
+  transform: translateY(-150%);
+  transition: transform 80ms ease-out;
+  z-index: 200;
 }
 
 .skip-link:focus {
-  top: 5rem;
+  transform: translateY(5rem);
 }
 
 .topbar {

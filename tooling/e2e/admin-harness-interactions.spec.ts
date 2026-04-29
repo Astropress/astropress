@@ -13,6 +13,34 @@ test.describe("Feature: authenticated admin interaction flows", () => {
     await expect(page.getByText("Open command palette")).toBeVisible();
   });
 
+  test("Scenario: scroll-toggle button — scrolls to bottom, then back to top", async ({ page }) => {
+    await page.setViewportSize({ width: 1024, height: 720 });
+    await page.goto("/ap-admin", { waitUntil: "networkidle" });
+
+    // The page must actually be scrollable for this assertion to be meaningful.
+    const scrollMeta = await page.evaluate(() => ({
+      scrollHeight: document.documentElement.scrollHeight,
+      clientHeight: document.documentElement.clientHeight,
+    }));
+    expect(scrollMeta.scrollHeight).toBeGreaterThan(scrollMeta.clientHeight + 100);
+
+    await page.locator("summary.topbar-panel-toggle").click();
+    const scrollBtn = page.locator("#scroll-toggle");
+    await scrollBtn.click();
+    await expect
+      .poll(async () => page.evaluate(() => window.scrollY), { timeout: 3000 })
+      .toBeGreaterThan(scrollMeta.scrollHeight - scrollMeta.clientHeight - 5);
+
+    // Re-open the utility panel if it auto-closed when the page scrolled.
+    if (!(await scrollBtn.isVisible())) {
+      await page.locator("summary.topbar-panel-toggle").click();
+    }
+    await scrollBtn.click();
+    await expect
+      .poll(async () => page.evaluate(() => window.scrollY), { timeout: 3000 })
+      .toBeLessThan(5);
+  });
+
   test("Scenario: create redirect — new row appears in list and page is axe-clean", async ({ page }) => {
     await page.goto("/ap-admin/redirects", { waitUntil: "networkidle" });
 
