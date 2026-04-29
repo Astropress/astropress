@@ -12,6 +12,7 @@
 // Allowlist is deliberately tiny. If a new exemption is needed, add it here
 // with a comment explaining why translation is impossible at that callsite.
 
+import type { Dirent } from "node:fs";
 import { readFile, readdir } from "node:fs/promises";
 import { join } from "node:path";
 
@@ -30,9 +31,9 @@ interface Finding {
 }
 
 async function walkAstroFiles(dir: string, out: string[]): Promise<void> {
-	let entries: Awaited<ReturnType<typeof readdir>>;
+	let entries: Dirent[];
 	try {
-		entries = await readdir(dir, { withFileTypes: true });
+		entries = (await readdir(dir, { withFileTypes: true })) as Dirent[];
 	} catch {
 		return;
 	}

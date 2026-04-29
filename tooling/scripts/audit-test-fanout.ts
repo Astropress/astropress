@@ -18,6 +18,7 @@
 // the 6–7 band is "tightly-related cluster", and ≥8 starts being where edits
 // cause cache fan-out we'd notice on a long-running branch.
 
+import type { Dirent } from "node:fs";
 import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 
@@ -80,9 +81,9 @@ interface FanoutResult {
 }
 
 function walkTests(dir: string, out: string[]): void {
-	let entries: ReturnType<typeof readdirSync>;
+	let entries: Dirent[];
 	try {
-		entries = readdirSync(dir, { withFileTypes: true });
+		entries = readdirSync(dir, { withFileTypes: true }) as Dirent[];
 	} catch {
 		return;
 	}
