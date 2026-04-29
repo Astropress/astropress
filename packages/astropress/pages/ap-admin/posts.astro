@@ -1,7 +1,43 @@
 ---
 import AdminLayout from "@astropress-diy/astropress/components/AdminLayout.astro";
-import { buildPostsIndexPageModel } from "astropress";
+import {
+	buildPostsIndexPageModel,
+	getPageT,
+	resolveAdminLocale,
+} from "astropress";
 import { isSeededPostRecord } from "astropress";
+
+const adminLocale = resolveAdminLocale(Astro);
+const t = getPageT(adminLocale);
+function format(template: string, params: Record<string, string | number>) {
+	return template.replace(/\{(\w+)\}/g, (_, k) => String(params[k] ?? ""));
+}
+function tStatus(status: string): string {
+	switch (status) {
+		case "published":
+			return t("common.published");
+		case "draft":
+			return t("common.draft");
+		case "archived":
+			return t("common.archived");
+		case "review":
+			return t("common.inReview");
+		default:
+			return status;
+	}
+}
+function tWorkflow(label: string): string {
+	switch (label) {
+		case "scheduled":
+			return t("common.scheduled");
+		case "review-needed":
+			return t("common.needsReview");
+		case "unscheduled":
+			return t("common.unscheduled");
+		default:
+			return label.replace("-", " ");
+	}
+}
 
 const adminUser = Astro.locals.adminUser;
 
@@ -56,7 +92,7 @@ function formatScheduledAt(value: string | undefined) {
 		return "—";
 	}
 
-	return new Date(value).toLocaleString("en-US", {
+	return new Date(value).toLocaleString(adminLocale, {
 		year: "numeric",
 		month: "short",
 		day: "numeric",
@@ -149,92 +185,92 @@ function paginationHref(targetPage: number) {
   title="Posts"
   heading="Posts"
   currentPath="/ap-admin/posts"
-  description="Published and draft blog posts managed through the post editor."
+  description={t("posts.description")}
   role={adminUser!.role}
   userName={adminUser!.name}
 >
-  {model.warnings.length > 0 && <p class="notice">Some post index data is temporarily unavailable. This page is showing partial results.</p>}
+  {model.warnings.length > 0 && <p class="notice">{t("posts.partialResults")}</p>}
   <div class="toolbar">
-    <a href="/ap-admin/posts/new" class="admin-button">New post</a>
-    <a href="/blog" class="admin-button-secondary">Open public blog</a>
+    <a href="/ap-admin/posts/new" class="admin-button">{t("dashboard.newPost")}</a>
+    <a href="/blog" class="admin-button-secondary">{t("posts.openPublicBlog")}</a>
   </div>
   <div class="admin-subgrid two summary-grid">
     <section class="panel stat summary-card">
-      <span>Visible posts</span>
+      <span>{t("posts.visiblePosts")}</span>
       <strong>{filteredRows.length}</strong>
-      <span>Posts in the current filtered view.</span>
+      <span>{t("posts.visiblePostsDesc")}</span>
     </section>
     <section class="panel stat summary-card">
-      <span>Review queue</span>
+      <span>{t("posts.reviewQueue")}</span>
       <strong>{rows.filter((record) => (record.status ?? "published") === "review" || (record.status ?? "published") === "draft").length}</strong>
-      <span>Draft and in-review posts waiting for editorial work.</span>
+      <span>{t("posts.reviewQueueDesc")}</span>
     </section>
   </div>
   <section class="panel post-search-panel">
       <div class="section-header">
       <div>
-        <p class="admin-kicker">Post Workflow</p>
-        <h2>Blog Post List</h2>
-        <p>Search once, then narrow to the exact editorial slice you need.</p>
+        <p class="admin-kicker">{t("posts.workflow")}</p>
+        <h2>{t("posts.blogPostList")}</h2>
+        <p>{t("posts.searchOnce")}</p>
       </div>
       <div class="filter-shortcuts">
-        <a href="/ap-admin/posts?workflow=review-needed" class="admin-button-ghost small">Needs review</a>
-        <a href="/ap-admin/posts?workflow=scheduled" class="admin-button-ghost small">Scheduled</a>
-        <a href="/ap-admin/posts?status=published" class="admin-button-ghost small">Published</a>
+        <a href="/ap-admin/posts?workflow=review-needed" class="admin-button-ghost small">{t("common.needsReview")}</a>
+        <a href="/ap-admin/posts?workflow=scheduled" class="admin-button-ghost small">{t("common.scheduled")}</a>
+        <a href="/ap-admin/posts?status=published" class="admin-button-ghost small">{t("common.published")}</a>
       </div>
     </div>
-    <form method="get" class="search-shell" aria-label="Content filters">
+    <form method="get" class="search-shell" aria-label={t("posts.contentFilters")}>
       <div class="search-row">
         <label class="search-field">
-          <span class="sr-only">Search posts</span>
-          <input type="search" name="q" value={searchFilter} placeholder="Search title, slug, route, or assignment" aria-label="Search posts" />
+          <span class="sr-only">{t("posts.searchPosts")}</span>
+          <input type="search" name="q" value={searchFilter} placeholder={t("posts.searchPlaceholder")} aria-label={t("posts.searchPosts")} />
         </label>
-        <button type="submit" class="admin-button">Search posts</button>
-        <a href="/ap-admin/posts" class="admin-button-ghost">Clear filters</a>
+        <button type="submit" class="admin-button">{t("posts.searchPosts")}</button>
+        <a href="/ap-admin/posts" class="admin-button-ghost">{t("common.clearFilters")}</a>
       </div>
       <div class="filters">
         <label>
-          <span>Status</span>
+          <span>{t("common.status")}</span>
           <select name="status">
-            <option value="">All statuses</option>
-            <option value="published" selected={statusFilter === "published"}>Published</option>
-            <option value="review" selected={statusFilter === "review"}>In Review</option>
-            <option value="draft" selected={statusFilter === "draft"}>Draft</option>
-            <option value="archived" selected={statusFilter === "archived"}>Archived</option>
+            <option value="">{t("common.allStatuses")}</option>
+            <option value="published" selected={statusFilter === "published"}>{t("common.published")}</option>
+            <option value="review" selected={statusFilter === "review"}>{t("common.inReview")}</option>
+            <option value="draft" selected={statusFilter === "draft"}>{t("common.draft")}</option>
+            <option value="archived" selected={statusFilter === "archived"}>{t("common.archived")}</option>
           </select>
         </label>
         <label>
-          <span>Workflow</span>
+          <span>{t("posts.workflowFilter")}</span>
           <select name="workflow">
-            <option value="">All workflow states</option>
-            <option value="scheduled" selected={workflowFilter === "scheduled"}>Scheduled</option>
-            <option value="review-needed" selected={workflowFilter === "review-needed"}>Needs review</option>
-            <option value="unscheduled" selected={workflowFilter === "unscheduled"}>Unscheduled</option>
+            <option value="">{t("posts.allWorkflowStates")}</option>
+            <option value="scheduled" selected={workflowFilter === "scheduled"}>{t("common.scheduled")}</option>
+            <option value="review-needed" selected={workflowFilter === "review-needed"}>{t("common.needsReview")}</option>
+            <option value="unscheduled" selected={workflowFilter === "unscheduled"}>{t("common.unscheduled")}</option>
           </select>
         </label>
         {selectedArchive && <input type="hidden" name="archive" value={selectedArchive.slug} />}
         <label>
-          <span>Author</span>
+          <span>{t("common.author")}</span>
           <select name="author">
-            <option value="">All authors</option>
+            <option value="">{t("common.allAuthors")}</option>
             {authors.map((author) => (
               <option value={author.id} selected={authorFilter === author.id}>{author.name}</option>
             ))}
           </select>
         </label>
         <label>
-          <span>Category</span>
+          <span>{t("common.category")}</span>
           <select name="category">
-            <option value="">All categories</option>
+            <option value="">{t("common.allCategories")}</option>
             {categories.map((term) => (
               <option value={term.id} selected={categoryFilter === term.id}>{term.name}</option>
             ))}
           </select>
         </label>
         <label>
-          <span>Tag</span>
+          <span>{t("posts.tag")}</span>
           <select name="tag">
-            <option value="">All tags</option>
+            <option value="">{t("common.allTags")}</option>
             {tags.map((term) => (
               <option value={term.id} selected={tagFilter === term.id}>{term.name}</option>
             ))}
@@ -244,20 +280,20 @@ function paginationHref(targetPage: number) {
     </form>
     {selectedArchive && (
       <p class="field-note">
-        Archive filter: <strong>{selectedArchive.title}</strong>
+        {t("posts.archiveFilter")} <strong>{selectedArchive.title}</strong>
       </p>
     )}
-    <p class="field-note">{filteredRows.length} posts matched the current filters. Showing page {safePage} of {totalPages}.</p>
+    <p class="field-note">{format(t("posts.matchedSummary"), { count: filteredRows.length, page: safePage, total: totalPages })}</p>
     <div class="admin-table-shell">
-      <table aria-label="Content list">
+      <table aria-label={t("posts.contentList")}>
         <thead>
           <tr>
-            <th>Title</th>
-            <th>Status</th>
-            <th>Workflow</th>
-            <th>Scheduled</th>
-            <th>Authors</th>
-            <th>Categories</th>
+            <th>{t("common.title")}</th>
+            <th>{t("common.status")}</th>
+            <th>{t("posts.workflowFilter")}</th>
+            <th>{t("posts.tableScheduled")}</th>
+            <th>{t("posts.authors")}</th>
+            <th>{t("posts.categories")}</th>
           </tr>
         </thead>
         <tbody>
@@ -271,8 +307,8 @@ function paginationHref(targetPage: number) {
                     <span>{page.legacyUrl}</span>
                   </div>
                 </td>
-                <td>{page.status || "published"}</td>
-                <td><span class={`workflow-chip ${workflowLabel}`}>{workflowLabel.replace("-", " ")}</span></td>
+                <td>{tStatus(page.status || "published")}</td>
+                <td><span class={`workflow-chip ${workflowLabel}`}>{tWorkflow(workflowLabel)}</span></td>
                 <td>{formatScheduledAt(page.scheduledAt)}</td>
                 <td>{joinAssignmentLabels(page.authorIds, authorNamesById)}</td>
                 <td>{joinAssignmentLabels(page.categoryIds, categoryNamesById)}</td>
@@ -281,22 +317,22 @@ function paginationHref(targetPage: number) {
           })}
           {pagedRows.length === 0 && (
             <tr>
-              <td colspan="6">No content records matched the current filters.</td>
+              <td colspan="6">{t("posts.noMatched")}</td>
             </tr>
           )}
         </tbody>
       </table>
     </div>
     {totalPages > 1 && (
-      <nav aria-label="pagination" class="pagination-nav">
+      <nav aria-label={t("posts.pagination")} class="pagination-nav">
         {safePage > 1
-          ? <a href={paginationHref(safePage - 1)} class="admin-button-ghost" rel="prev" aria-label="Previous page">← Previous</a>
-          : <span class="admin-button-ghost disabled" aria-disabled="true">← Previous</span>
+          ? <a href={paginationHref(safePage - 1)} class="admin-button-ghost" rel="prev" aria-label={t("posts.previousPage")}>{t("posts.previous")}</a>
+          : <span class="admin-button-ghost disabled" aria-disabled="true">{t("posts.previous")}</span>
         }
-        <span class="page-counter" aria-current="page">Page {safePage} of {totalPages}</span>
+        <span class="page-counter" aria-current="page">{format(t("posts.pageOf"), { page: safePage, total: totalPages })}</span>
         {safePage < totalPages
-          ? <a href={paginationHref(safePage + 1)} class="admin-button-ghost" rel="next" aria-label="Next page">Next →</a>
-          : <span class="admin-button-ghost disabled" aria-disabled="true">Next →</span>
+          ? <a href={paginationHref(safePage + 1)} class="admin-button-ghost" rel="next" aria-label={t("posts.nextPage")}>{t("posts.next")}</a>
+          : <span class="admin-button-ghost disabled" aria-disabled="true">{t("posts.next")}</span>
         }
       </nav>
     )}

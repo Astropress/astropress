@@ -31,7 +31,10 @@ function parseSteps(lines: string[]): Step[] {
 		const stepStartUses = line.match(/^\s*-\s+uses:\s*(\S+)/);
 		if (stepStart) {
 			if (current) steps.push(current);
-			current = { lineIndex: i, name: stepStart[1].trim().replace(/["']/g, "") };
+			current = {
+				lineIndex: i,
+				name: stepStart[1].trim().replace(/["']/g, ""),
+			};
 			inRun = false;
 			continue;
 		}
@@ -62,7 +65,7 @@ function parseSteps(lines: string[]): Step[] {
 			inRun = false;
 		}
 		if (inRun) {
-			current.runBody = (current.runBody ?? "") + line + "\n";
+			current.runBody = `${(current.runBody ?? "") + line}\n`;
 		}
 	}
 	if (current) steps.push(current);
@@ -76,7 +79,7 @@ function hasPrecedingFallback(steps: Step[], upload: Step): boolean {
 		if (step.lineIndex >= upload.lineIndex) break;
 		const nameLower = step.name.toLowerCase();
 		if (/ensure.*sarif|sarif.*exists|fallback/.test(nameLower)) return true;
-		if (step.runBody && step.runBody.includes(sarif)) {
+		if (step.runBody?.includes(sarif)) {
 			if (/touch\b|cat\s*>\s*|echo\b|>\s*\S+\.sarif|cp\s/.test(step.runBody)) {
 				return true;
 			}
@@ -93,7 +96,9 @@ async function main() {
 			(f) => f.endsWith(".yml") || f.endsWith(".yaml"),
 		);
 	} catch {
-		report.finish("ci-sarif-upload audit skipped — no .github/workflows directory");
+		report.finish(
+			"ci-sarif-upload audit skipped — no .github/workflows directory",
+		);
 	}
 
 	let uploadSarifCount = 0;
@@ -113,10 +118,7 @@ async function main() {
 			}
 			if (!hasPrecedingFallback(steps, step)) {
 				report.add(
-					`${file}:${step.lineIndex + 1}: upload-sarif "${step.name}" references ${step.sarifFile} ` +
-						`but no preceding step creates/touches it. A producing tool that skips its SARIF on zero ` +
-						`findings will fail the upload. Add an "Ensure SARIF exists" step that synthesizes an ` +
-						`empty-results SARIF when ${step.sarifFile} is missing.`,
+					`${file}:${step.lineIndex + 1}: upload-sarif "${step.name}" references ${step.sarifFile} but no preceding step creates/touches it. A producing tool that skips its SARIF on zero findings will fail the upload. Add an "Ensure SARIF exists" step that synthesizes an empty-results SARIF when ${step.sarifFile} is missing.`,
 				);
 			}
 		}

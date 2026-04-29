@@ -2,6 +2,7 @@
 import TurnstileField from "@astropress-diy/astropress/components/TurnstileField.astro";
 import {
 	buildAstropressAdminDocumentTitle,
+	resolveAdminLocale,
 	resolveAstropressAdminUiConfig,
 } from "astropress";
 
@@ -10,11 +11,12 @@ const isRateLimited = Astro.url.searchParams.get("ratelimited") === "1";
 const requiresChallenge = Astro.url.searchParams.get("challenge") === "1";
 const wasReset = Astro.url.searchParams.get("reset") === "1";
 const invitationAccepted = Astro.url.searchParams.get("invited") === "1";
-const adminUi = resolveAstropressAdminUiConfig();
+const adminLocale = resolveAdminLocale(Astro);
+const adminUi = resolveAstropressAdminUiConfig(adminLocale);
 ---
 
 <!doctype html>
-<html lang="en">
+<html lang={adminLocale}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />

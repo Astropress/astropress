@@ -11,11 +11,11 @@
 import { join, relative } from "node:path";
 import {
 	AuditReport,
+	ROOT,
 	fileExists,
 	fromRoot,
 	listFiles,
 	readText,
-	ROOT,
 	runAudit,
 } from "../lib/audit-utils.js";
 

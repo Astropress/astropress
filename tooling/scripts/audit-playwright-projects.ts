@@ -29,7 +29,11 @@ async function main() {
 	// Match the `name: "foo"` lines inside the projects array. Capture the
 	// preceding 3 lines to detect the local-only opt-out marker.
 	const lines = configSrc.split("\n");
-	const projects: Array<{ name: string; localOnly: boolean; lineNumber: number }> = [];
+	const projects: Array<{
+		name: string;
+		localOnly: boolean;
+		lineNumber: number;
+	}> = [];
 	for (let i = 0; i < lines.length; i++) {
 		const nameMatch = lines[i].match(/^\s*name:\s*"([^"]+)"/);
 		if (!nameMatch) continue;
@@ -41,7 +45,7 @@ async function main() {
 
 	if (projects.length === 0) {
 		report.add(
-			"tooling/e2e/playwright.config.ts: no `name: \"...\"` entries detected — cannot audit",
+			'tooling/e2e/playwright.config.ts: no `name: "..."` entries detected — cannot audit',
 		);
 		report.finish("playwright-projects audit unreachable");
 	}
@@ -58,10 +62,7 @@ async function main() {
 		if (localOnly) continue;
 		if (!wiredProjects.has(name)) {
 			report.add(
-				`playwright.config.ts:${lineNumber}: project "${name}" is declared but not in ` +
-					`test:acceptance. Either add --project=${name} to the script in package.json, or ` +
-					`tag it with \`// audit-playwright: local-only\` above the object if it's not ` +
-					`meant to run in CI.`,
+				`playwright.config.ts:${lineNumber}: project "${name}" is declared but not in test:acceptance. Either add --project=${name} to the script in package.json, or tag it with \`// audit-playwright: local-only\` above the object if it's not meant to run in CI.`,
 			);
 		}
 	}
@@ -71,8 +72,7 @@ async function main() {
 	for (const wired of wiredProjects) {
 		if (!projectNames.has(wired)) {
 			report.add(
-				`package.json test:acceptance references --project=${wired} but no such project ` +
-					`exists in playwright.config.ts. Remove the stale --project arg or add the project.`,
+				`package.json test:acceptance references --project=${wired} but no such project exists in playwright.config.ts. Remove the stale --project arg or add the project.`,
 			);
 		}
 	}

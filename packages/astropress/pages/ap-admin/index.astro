@@ -1,7 +1,11 @@
 ---
 import AdminLayout from "@astropress-diy/astropress/components/AdminLayout.astro";
 import AuditTrail from "@astropress-diy/astropress/components/AuditTrail.astro";
-import { buildAdminDashboardPageModel } from "astropress";
+import {
+	buildAdminDashboardPageModel,
+	getPageT,
+	resolveAdminLocale,
+} from "astropress";
 
 const adminUser = Astro.locals.adminUser;
 const model = await buildAdminDashboardPageModel(Astro.locals, adminUser?.role);
@@ -19,12 +23,33 @@ const {
 	supportSurfaceLinks,
 	latestDeployment,
 } = model.data;
+const adminLocale = resolveAdminLocale(Astro);
+const t = getPageT(adminLocale);
+const formatDateTime = (value: string | number | Date) =>
+	new Date(value).toLocaleString(adminLocale);
+const statusLabel = (status: string | null | undefined): string => {
+	const key = status ?? "published";
+	if (key === "draft") return t("common.draft");
+	if (key === "published") return t("common.published");
+	if (key === "scheduled") return t("common.scheduled");
+	if (key === "review") return t("common.statusReview");
+	if (key === "pending") return t("common.statusPending");
+	if (key === "archived") return t("common.archived");
+	return key;
+};
+const kindLabel = (kind: string | null | undefined): string => {
+	if (kind === "post") return t("common.kindPost");
+	if (kind === "page") return t("common.kindPage");
+	if (kind === "routePage" || kind === "route-page")
+		return t("common.kindRoutePage");
+	return kind ?? "";
+};
 const deploymentSucceeded = latestDeployment?.action === "deployment.trigger";
 const deploymentLabel = !latestDeployment
-	? "No publish recorded"
+	? t("dashboard.deployNoRecord")
 	: deploymentSucceeded
-		? "Triggered"
-		: "Failed";
+		? t("dashboard.deployTriggered")
+		: t("dashboard.deployFailed");
 ---
 
 <AdminLayout
@@ -32,52 +57,52 @@ const deploymentLabel = !latestDeployment
   heading="Dashboard"
   currentPath="/ap-admin"
   description={adminUser?.role === "admin"
-    ? "Editorial overview, page health, and admin queues."
-    : "Editorial overview for blog posts, comments, and media work."}
+    ? t("dashboard.description")
+    : t("dashboard.descriptionEditor")}
   role={adminUser!.role}
   userName={adminUser!.name}
 >
-  {model.warnings.length > 0 && <p class="notice">Some dashboard data is temporarily unavailable. This page is showing partial results.</p>}
+  {model.warnings.length > 0 && <p class="notice">{t("dashboard.partialResults")}</p>}
   <div class="stats-grid">
     <section class="panel stat stat-card">
-      <span class="stat-label">Published posts</span>
+      <span class="stat-label">{t("dashboard.publishedPosts")}</span>
       <strong>{posts.filter((record) => (record.status ?? "published") === "published").length}</strong>
-      <p>Blog posts currently live on the public site.</p>
+      <p>{t("dashboard.publishedPostsDesc")}</p>
     </section>
     {adminUser?.role === "admin" ? (
       <section class="panel stat stat-card">
-        <span class="stat-label">Public pages</span>
+        <span class="stat-label">{t("dashboard.publicPages")}</span>
         <strong>{pages.length + routePages.length}</strong>
-        <p>Legacy and route-backed public pages editable in admin.</p>
+        <p>{t("dashboard.publicPagesDesc")}</p>
       </section>
     ) : (
       <section class="panel stat stat-card">
-        <span class="stat-label">Pending comments</span>
+        <span class="stat-label">{t("dashboard.pendingComments")}</span>
         <strong>{comments.filter((comment) => comment.status === "pending").length}</strong>
-        <p>Comments still waiting for moderation.</p>
+        <p>{t("dashboard.pendingCommentsDesc")}</p>
       </section>
     )}
     <section class="panel stat stat-card">
-      <span class="stat-label">Needs review</span>
+      <span class="stat-label">{t("common.needsReview")}</span>
       <strong>{reviewPosts.length}</strong>
-      <p>Posts waiting for editorial attention.</p>
+      <p>{t("dashboard.needsReviewDesc")}</p>
     </section>
     <section class="panel stat stat-card">
-      <span class="stat-label">Scheduled posts</span>
+      <span class="stat-label">{t("dashboard.scheduledPosts")}</span>
       <strong>{scheduledPosts.length}</strong>
-      <p>Upcoming blog posts with a future publish time.</p>
+      <p>{t("dashboard.scheduledPostsDesc")}</p>
     </section>
     {adminUser?.role === "admin" && (
       <>
         <section class="panel stat stat-card">
-          <span class="stat-label">Redirect rules</span>
+          <span class="stat-label">{t("dashboard.redirectRules")}</span>
           <strong>{redirectRules.length}</strong>
-          <p>Active redirects currently managed in admin.</p>
+          <p>{t("dashboard.redirectRulesDesc")}</p>
         </section>
         <section class="panel stat stat-card">
-          <span class="stat-label">Translation follow-up</span>
+          <span class="stat-label">{t("dashboard.translationFollowup")}</span>
           <strong>{translationNeedsAttention}</strong>
-          <p>Localized routes that still need attention before publication.</p>
+          <p>{t("dashboard.translationFollowupDesc")}</p>
         </section>
       </>
     )}
@@ -87,32 +112,32 @@ const deploymentLabel = !latestDeployment
     <section class="panel dashboard-panel action-panel">
       <div class="section-header">
         <div>
-          <p class="admin-kicker">Create</p>
-          <h2>Start New Work</h2>
-          <p>Create new content quickly, then use the sidebar for the full editing surfaces.</p>
+          <p class="admin-kicker">{t("dashboard.create")}</p>
+          <h2>{t("dashboard.startNewWork")}</h2>
+          <p>{t("dashboard.startNewWorkDesc")}</p>
         </div>
       </div>
       <div class="action-grid compact">
-        <a href="/ap-admin/posts/new" class="admin-button">New post</a>
-        {adminUser?.role === "admin" && <a href="/ap-admin/pages/new" class="admin-button">New page</a>}
-        {adminUser?.role === "admin" && <a href="/ap-admin/authors" class="admin-button-ghost">New author</a>}
-        {adminUser?.role === "admin" && <a href="/ap-admin/users" class="admin-button-ghost">New user</a>}
+        <a href="/ap-admin/posts/new" class="admin-button">{t("dashboard.newPost")}</a>
+        {adminUser?.role === "admin" && <a href="/ap-admin/pages/new" class="admin-button">{t("dashboard.newPage")}</a>}
+        {adminUser?.role === "admin" && <a href="/ap-admin/authors" class="admin-button-ghost">{t("dashboard.newAuthor")}</a>}
+        {adminUser?.role === "admin" && <a href="/ap-admin/users" class="admin-button-ghost">{t("dashboard.newUser")}</a>}
       </div>
     </section>
     {adminUser?.role === "admin" && (
       <section class="panel dashboard-panel support-panel">
         <div class="section-header">
           <div>
-            <h2>Support Surfaces</h2>
-            <p>Metadata, route health, and system outputs.</p>
+            <h2>{t("dashboard.supportSurfaces")}</h2>
+            <p>{t("dashboard.supportSurfacesDesc")}</p>
           </div>
         </div>
         <div class="support-grid">
           {supportSurfaceLinks.map((entry) => (
             <a href={entry.href} class="support-card">
-              <strong>{entry.label}</strong>
+              <strong>{t(entry.labelKey as never)}</strong>
               <span>{entry.count}</span>
-              <small>{entry.helper}</small>
+              <small>{t(entry.helperKey as never)}</small>
             </a>
           ))}
         </div>
@@ -124,11 +149,11 @@ const deploymentLabel = !latestDeployment
     <section class="panel dashboard-panel">
       <div class="section-header">
         <div>
-          <p class="admin-kicker">Queue</p>
-          <h2>Scheduled Soon</h2>
-          <p>The next posts queued to go live.</p>
+          <p class="admin-kicker">{t("dashboard.queue")}</p>
+          <h2>{t("dashboard.scheduledSoon")}</h2>
+          <p>{t("dashboard.scheduledSoonDesc")}</p>
         </div>
-        <a href="/ap-admin/posts?workflow=scheduled" class="admin-button-ghost small">View scheduled</a>
+        <a href="/ap-admin/posts?workflow=scheduled" class="admin-button-ghost small">{t("dashboard.viewScheduled")}</a>
       </div>
       {scheduledPosts.length > 0 ? (
         <ul class="queue-list">
@@ -136,24 +161,24 @@ const deploymentLabel = !latestDeployment
             <li>
               <div class="queue-copy">
                 <strong>{record.title}</strong>
-                <span>{record.scheduledAt ? new Date(record.scheduledAt).toLocaleString() : "Unscheduled"}</span>
+                <span>{record.scheduledAt ? formatDateTime(record.scheduledAt) : t("common.unscheduled")}</span>
               </div>
-              <a href={`/ap-admin/posts/${record.slug}`} class="admin-button-ghost small">Open</a>
+              <a href={`/ap-admin/posts/${record.slug}`} class="admin-button-ghost small">{t("dashboard.open")}</a>
             </li>
           ))}
         </ul>
       ) : (
-        <p class="empty-copy">No future scheduled posts are currently queued.</p>
+        <p class="empty-copy">{t("dashboard.noFutureScheduled")}</p>
       )}
     </section>
     <section class="panel dashboard-panel">
       <div class="section-header">
         <div>
-          <p class="admin-kicker">Queue</p>
-          <h2>{adminUser?.role === "admin" ? "Post Review Queue" : "Editorial Queue"}</h2>
-          <p>Draft and review items waiting for an editor pass.</p>
+          <p class="admin-kicker">{t("dashboard.queue")}</p>
+          <h2>{adminUser?.role === "admin" ? t("dashboard.postReviewQueue") : t("dashboard.editorialQueue")}</h2>
+          <p>{t("dashboard.postReviewQueueDesc")}</p>
         </div>
-        <a href="/ap-admin/posts?workflow=review-needed" class="admin-button-ghost small">Open queue</a>
+        <a href="/ap-admin/posts?workflow=review-needed" class="admin-button-ghost small">{t("common.openQueue")}</a>
       </div>
       {reviewPosts.length > 0 ? (
         <ul class="queue-list">
@@ -161,22 +186,22 @@ const deploymentLabel = !latestDeployment
             <li>
               <div class="queue-copy">
                 <strong>{record.title}</strong>
-                <span>{record.status ?? "published"}</span>
+                <span>{statusLabel(record.status)}</span>
               </div>
-              <a href={`/ap-admin/posts/${record.slug}`} class="admin-button-ghost small">Review</a>
+              <a href={`/ap-admin/posts/${record.slug}`} class="admin-button-ghost small">{t("dashboard.review")}</a>
             </li>
           ))}
         </ul>
       ) : (
-        <p class="empty-copy">Nothing is currently waiting for editorial review.</p>
+        <p class="empty-copy">{t("dashboard.nothingWaiting")}</p>
       )}
     </section>
     <section class="panel dashboard-panel wide-panel">
       <div class="section-header">
         <div>
-          <p class="admin-kicker">Recent Activity</p>
-          <h2>Recently Updated</h2>
-          <p>Recent changes with direct editor entry points.</p>
+          <p class="admin-kicker">{t("dashboard.recentActivity")}</p>
+          <h2>{t("dashboard.recentlyUpdated")}</h2>
+          <p>{t("dashboard.recentlyUpdatedDesc")}</p>
         </div>
       </div>
       <ul class="queue-list">
@@ -184,9 +209,9 @@ const deploymentLabel = !latestDeployment
           <li>
             <div class="queue-copy">
               <strong>{record.title}</strong>
-              <span>{record.kind} · {record.updatedAt ? new Date(record.updatedAt).toLocaleString() : "Unknown update time"}</span>
+              <span>{kindLabel(record.kind)} · {record.updatedAt ? formatDateTime(record.updatedAt) : t("common.unknownUpdateTime")}</span>
             </div>
-            <a href={record.editHref} class="admin-button-ghost small">Open</a>
+            <a href={record.editHref} class="admin-button-ghost small">{t("dashboard.open")}</a>
           </li>
         ))}
       </ul>
@@ -197,9 +222,9 @@ const deploymentLabel = !latestDeployment
     <section class="panel dashboard-panel deployment-panel">
       <div class="section-header">
         <div>
-          <p class="admin-kicker">Publish</p>
-          <h2>Latest Deployment</h2>
-          <p>Trusted record of the most recent build trigger sourced from the audit log.</p>
+          <p class="admin-kicker">{t("dashboard.publish")}</p>
+          <h2>{t("dashboard.latestDeployment")}</h2>
+          <p>{t("dashboard.latestDeploymentDesc")}</p>
         </div>
       </div>
       {latestDeployment ? (
@@ -208,13 +233,13 @@ const deploymentLabel = !latestDeployment
           <div class="deployment-meta">
             <strong>{latestDeployment.summary}</strong>
             <span>
-              {new Date(latestDeployment.createdAt).toLocaleString()} ·
-              by {latestDeployment.actorEmail}
+              {formatDateTime(latestDeployment.createdAt)} ·
+              {" "}{t("dashboard.deployBy")} {latestDeployment.actorEmail}
             </span>
           </div>
         </div>
       ) : (
-        <p class="empty-copy">No publish has been triggered yet. Use the Publish button in the topbar to start a build.</p>
+        <p class="empty-copy">{t("dashboard.noPublishYet")}</p>
       )}
     </section>
   )}

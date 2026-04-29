@@ -45,7 +45,10 @@ test.describe("Rubric 47: heading hierarchy + button labelling", () => {
 			});
 
 			const h1Count = headingLevels.filter((l) => l === 1).length;
-			expect(h1Count, `${route} must have exactly one <h1>, found ${h1Count}`).toBe(1);
+			expect(
+				h1Count,
+				`${route} must have exactly one <h1>, found ${h1Count}`,
+			).toBe(1);
 
 			let previous = 0;
 			for (const level of headingLevels) {
@@ -58,7 +61,9 @@ test.describe("Rubric 47: heading hierarchy + button labelling", () => {
 			}
 		});
 
-		test(`Scenario: ${route} icon-only buttons have aria-label`, async ({ page }) => {
+		test(`Scenario: ${route} icon-only buttons have aria-label`, async ({
+			page,
+		}) => {
 			await page.goto(route, { waitUntil: "domcontentloaded" });
 
 			const offenders = await page.evaluate(() => {
@@ -71,12 +76,16 @@ test.describe("Rubric 47: heading hierarchy + button labelling", () => {
 					if (rect.width === 0 && rect.height === 0) continue;
 					const text = (btn.textContent ?? "").trim();
 					const ariaLabel = btn.getAttribute("aria-label")?.trim() ?? "";
-					const ariaLabelledBy = btn.getAttribute("aria-labelledby")?.trim() ?? "";
+					const ariaLabelledBy =
+						btn.getAttribute("aria-labelledby")?.trim() ?? "";
 					const title = btn.getAttribute("title")?.trim() ?? "";
 					// Icon-only: text content is empty or purely a single symbol/codepoint
 					const isIconOnly = text.length === 0 || text.length === 1;
 					const hasAccessibleName =
-						text.length >= 2 || ariaLabel.length > 0 || ariaLabelledBy.length > 0 || title.length > 0;
+						text.length >= 2 ||
+						ariaLabel.length > 0 ||
+						ariaLabelledBy.length > 0 ||
+						title.length > 0;
 					if (isIconOnly && !hasAccessibleName) {
 						results.push({
 							outerHtml: btn.outerHTML.slice(0, 120),
@@ -95,7 +104,9 @@ test.describe("Rubric 47: heading hierarchy + button labelling", () => {
 			).toEqual([]);
 		});
 
-		test(`Scenario: ${route} passes axe heading-order (not ignored)`, async ({ page }) => {
+		test(`Scenario: ${route} passes axe heading-order (not ignored)`, async ({
+			page,
+		}) => {
 			await page.goto(route, { waitUntil: "domcontentloaded" });
 			// Note: heading-order is NOT in the ignore list — Rubric 47 A+ requires it to be enforced.
 			await expectNoAxeViolations(page);

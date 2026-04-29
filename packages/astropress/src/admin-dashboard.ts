@@ -84,10 +84,10 @@ export type AdminDashboardModel = {
 	seoNeedsAttention: number;
 	archiveRoutes: ArchiveRoute[];
 	supportSurfaceLinks: Array<{
-		label: string;
+		labelKey: string;
+		helperKey: string;
 		href: string;
 		count: number;
-		helper: string;
 	}>;
 	latestDeployment: AuditEvent | null;
 };
@@ -221,28 +221,28 @@ export async function buildAdminDashboardModel(
 
 	const supportSurfaceLinks = [
 		{
-			label: "Translations",
+			labelKey: "dashboard.translations",
+			helperKey: "dashboard.translationsDesc",
 			href: "/ap-admin/translations",
 			count: translationNeedsAttention,
-			helper: "Localized routes not yet published.",
 		},
 		{
-			label: "SEO",
+			labelKey: "dashboard.seo",
+			helperKey: "dashboard.seoDesc",
 			href: "/ap-admin/seo?missing=1",
 			count: seoNeedsAttention,
-			helper: "Pages or routes missing dedicated metadata.",
 		},
 		{
-			label: "Archives",
+			labelKey: "dashboard.archives",
+			helperKey: "dashboard.archivesDesc",
 			href: "/ap-admin/archives",
 			count: archiveRoutes.filter(Boolean).length,
-			helper: "Archive landing pages with separate owner editors.",
 		},
 		{
-			label: "System",
+			labelKey: "dashboard.system",
+			helperKey: "dashboard.systemDesc",
 			href: "/ap-admin/system",
 			count: systemRoutes.length,
-			helper: "500 page and generated public outputs.",
 		},
 	];
 

@@ -1,8 +1,12 @@
 ---
 import AdminLayout from "@astropress-diy/astropress/components/AdminLayout.astro";
 import CsrfInput from "@astropress-diy/astropress/components/CsrfInput.astro";
-import { buildTranslationsPageModel } from "astropress";
-import { translationStates } from "astropress";
+import {
+	buildTranslationsPageModel,
+	getPageT,
+	resolveAdminLocale,
+	translationStates,
+} from "astropress";
 
 const adminUser = Astro.locals.adminUser;
 const model = await buildTranslationsPageModel(Astro.locals, adminUser?.role);
@@ -25,43 +29,44 @@ const stateCounts = rows.reduce<Record<string, number>>(
 	},
 	{},
 );
+const t = getPageT(resolveAdminLocale(Astro));
 ---
 
 {model.status !== "forbidden" ? (
   <AdminLayout
-    title="Translations"
-    heading="Translations"
+    title={t("translations.title")}
+    heading={t("translations.title")}
     currentPath="/ap-admin/translations"
-    description="Translation coverage and state. Edit content inside the owning page or route editor."
+    description={t("translations.description")}
     role={adminUser!.role}
     userName={adminUser!.name}
   >
-    {model.warnings.length > 0 && <p class="notice">Some translation records are temporarily unavailable. This page is showing partial results.</p>}
-    {wasSaved && <p class="notice">Translation state updated successfully.</p>}
+    {model.warnings.length > 0 && <p class="notice">{t("translations.partialResults")}</p>}
+    {wasSaved && <p class="notice">{t("translations.savedSuccess")}</p>}
     <div class="admin-subgrid two summary-grid">
       <section class="panel stat summary-card">
-        <span>Localized routes</span>
+        <span>{t("translations.localizedRoutes")}</span>
         <strong>{rows.length}</strong>
-        <span>Spanish routes currently tracked in translation coverage.</span>
+        <span>{t("translations.localizedRoutesDesc")}</span>
       </section>
       <section class="panel stat summary-card">
-        <span>Published translations</span>
+        <span>{t("translations.publishedTranslations")}</span>
         <strong>{stateCounts.published ?? 0}</strong>
-        <span>Routes that are ready and publicly published in Spanish.</span>
+        <span>{t("translations.publishedTranslationsDesc")}</span>
       </section>
     </div>
     <section class="panel translations-panel">
       <div class="section-header">
         <div>
-          <p class="admin-kicker">Coverage</p>
-          <h2>Translation Coverage</h2>
-          <p>Use this screen to triage untranslated routes, then jump into the owning editor to make content changes.</p>
+          <p class="admin-kicker">{t("translations.coverageKicker")}</p>
+          <h2>{t("translations.coverageHeading")}</h2>
+          <p>{t("translations.coverageDesc")}</p>
         </div>
         <form method="get" class="translation-filter">
           <label>
-            <span class="sr-only">Filter translations by state</span>
-            <select class="admin-select" name="state" aria-label="Filter translations by state">
-              <option value="all" selected={selectedState === "all"}>All states</option>
+            <span class="sr-only">{t("translations.filterAria")}</span>
+            <select class="admin-select" name="state" aria-label={t("translations.filterAria")}>
+              <option value="all" selected={selectedState === "all"}>{t("translations.allStates")}</option>
               {validStates.map((state) => (
                 <option value={state} selected={selectedState === state}>
                   {state}
@@ -69,20 +74,20 @@ const stateCounts = rows.reduce<Record<string, number>>(
               ))}
             </select>
           </label>
-          <button type="submit" class="admin-button">Apply filter</button>
+          <button type="submit" class="admin-button">{t("translations.applyFilter")}</button>
         </form>
       </div>
-      <p><strong>{filteredRows.length} of {rows.length} localized routes</strong></p>
+      <p><strong>{filteredRows.length} {t("translations.summaryOf")} {rows.length} {t("translations.summaryRoutes")}</strong></p>
       <div class="admin-table-shell">
-        <table aria-label="Translation coverage">
+        <table aria-label={t("translations.tableAria")}>
           <thead>
             <tr>
-              <th>Route</th>
-              <th>Locale</th>
-              <th>English source</th>
-              <th>Status</th>
-              <th>Edit</th>
-              <th>Update</th>
+              <th>{t("translations.route")}</th>
+              <th>{t("translations.locale")}</th>
+              <th>{t("translations.englishSource")}</th>
+              <th>{t("common.status")}</th>
+              <th>{t("translations.edit")}</th>
+              <th>{t("translations.update")}</th>
             </tr>
           </thead>
           <tbody>
@@ -95,21 +100,21 @@ const stateCounts = rows.reduce<Record<string, number>>(
                   <td><code>{entry.englishSourceUrl}</code></td>
                   <td><span class="admin-chip">{effectiveState}</span></td>
                   <td class="edit-links">
-                    {entry.englishEditHref && <a href={entry.englishEditHref} class="admin-button-ghost small">Edit EN</a>}
-                    {entry.localizedEditHref && <a href={entry.localizedEditHref} class="admin-button-ghost small">Edit locale</a>}
+                    {entry.englishEditHref && <a href={entry.englishEditHref} class="admin-button-ghost small">{t("translations.editEn")}</a>}
+                    {entry.localizedEditHref && <a href={entry.localizedEditHref} class="admin-button-ghost small">{t("translations.editLocale")}</a>}
                   </td>
                   <td>
                     <form method="post" action="/ap-admin/actions/translation-update" class="translation-update">
                       <CsrfInput token={Astro.locals.csrfToken} />
                       <input type="hidden" name="route" value={entry.route} />
-                      <select class="admin-select" name="state" required aria-label={`Translation state for ${entry.route}`}>
+                      <select class="admin-select" name="state" required aria-label={`${t("translations.translationStateForRoute")} ${entry.route}`}>
                         {validStates.map((state) => (
                           <option value={state} selected={effectiveState === state}>
                             {state}
                           </option>
                         ))}
                       </select>
-                      <button type="submit" class="admin-button-ghost small">Save state</button>
+                      <button type="submit" class="admin-button-ghost small">{t("translations.saveState")}</button>
                     </form>
                   </td>
                 </tr>
@@ -122,15 +127,15 @@ const stateCounts = rows.reduce<Record<string, number>>(
   </AdminLayout>
 ) : (
   <AdminLayout
-    title="Forbidden"
-    heading="Forbidden"
+    title={t("translations.forbiddenTitle")}
+    heading={t("translations.forbiddenTitle")}
     currentPath="/ap-admin/posts"
-    description="This action requires an admin account."
+    description={t("translations.forbiddenDesc")}
     role={adminUser!.role}
     userName={adminUser!.name}
   >
     <section class="panel">
-      <p>This action requires an admin account and is hidden from editor-only roles.</p>
+      <p>{t("translations.forbiddenBody")}</p>
     </section>
   </AdminLayout>
 )}

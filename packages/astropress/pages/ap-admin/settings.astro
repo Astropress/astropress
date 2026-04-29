@@ -3,7 +3,16 @@ import AdminLayout from "@astropress-diy/astropress/components/AdminLayout.astro
 import CsrfInput from "@astropress-diy/astropress/components/CsrfInput.astro";
 import { createListmonkOps } from "@astropress-diy/astropress/newsletter-adapter";
 import { getNewsletterConfig } from "@astropress-diy/astropress/runtime-env";
-import { buildSettingsPageModel } from "astropress";
+import {
+	buildSettingsPageModel,
+	getPageT,
+	resolveAdminLocale,
+} from "astropress";
+
+const t = getPageT(resolveAdminLocale(Astro));
+function format(template: string, params: Record<string, string | number>) {
+	return template.replace(/\{(\w+)\}/g, (_, k) => String(params[k] ?? ""));
+}
 
 const adminUser = Astro.locals.adminUser;
 const model = await buildSettingsPageModel(Astro.locals, adminUser?.role);
@@ -58,8 +67,7 @@ if (activeTab === "newsletter" && adminUser?.role === "admin") {
 			subTotal = result.total;
 		}
 	} catch {
-		subError =
-			"Could not load subscriber list. Check your LISTMONK_* environment variables.";
+		subError = t("settings.subErrorLoadingList");
 	}
 }
 
@@ -78,83 +86,82 @@ if (model.status === "forbidden") {
 
 {model.status !== "forbidden" ? (
   <AdminLayout
-    title="Settings"
-    heading="Settings"
+    title={t("settings.title")}
+    heading={t("settings.title")}
     currentPath="/ap-admin/settings"
-    description="Configure site-wide settings, newsletter, and content import."
+    description={t("settings.description")}
     role={adminUser!.role}
     userName={adminUser!.name}
   >
-    {model.warnings.length > 0 && <p class="notice">Settings could not be fully loaded. This page is showing safe fallback values.</p>}
-    {wasSaved && <p class="notice">Settings saved successfully.</p>}
+    {model.warnings.length > 0 && <p class="notice">{t("settings.partialLoadNotice")}</p>}
+    {wasSaved && <p class="notice">{t("settings.savedNotice")}</p>}
     {errorMessage && <p class="error-notice">{errorMessage}</p>}
 
-    <nav class="settings-tabs" role="tablist" aria-label="Settings sections">
+    <nav class="settings-tabs" role="tablist" aria-label={t("settings.tabsLabel")}>
       <a
         href="/ap-admin/settings?tab=general"
         role="tab"
         aria-selected={activeTab === "general" ? "true" : "false"}
         class={`settings-tab${activeTab === "general" ? " settings-tab--active" : ""}`}
-      >General</a>
+      >{t("settings.tabGeneral")}</a>
       <a
         href="/ap-admin/settings?tab=newsletter"
         role="tab"
         aria-selected={activeTab === "newsletter" ? "true" : "false"}
         class={`settings-tab${activeTab === "newsletter" ? " settings-tab--active" : ""}`}
-      >Newsletter</a>
+      >{t("settings.tabNewsletter")}</a>
       <a
         href="/ap-admin/settings?tab=import"
         role="tab"
         aria-selected={activeTab === "import" ? "true" : "false"}
         class={`settings-tab${activeTab === "import" ? " settings-tab--active" : ""}`}
-      >Import</a>
+      >{t("settings.tabImport")}</a>
     </nav>
 
-    {/* ── General tab ─────────────────────────────────────────────────── */}
     {activeTab === "general" && (
       <form method="post" action="/ap-admin/actions/settings-save" class="settings-form">
         <CsrfInput token={Astro.locals.csrfToken} />
 
         <div class="admin-subgrid two summary-grid">
           <section class="panel stat summary-card">
-            <span>Donation destination</span>
+            <span>{t("settings.donationDestination")}</span>
             <strong>1</strong>
-            <span>Primary site-wide donation URL configured here.</span>
+            <span>{t("settings.donationDestinationDesc")}</span>
           </section>
           <section class="panel stat summary-card">
-            <span>Newsletter state</span>
-            <strong>{settings.newsletterEnabled ? "On" : "Off"}</strong>
-            <span>Controls newsletter collection across public signup surfaces.</span>
+            <span>{t("settings.newsletterState")}</span>
+            <strong>{settings.newsletterEnabled ? t("settings.on") : t("settings.off")}</strong>
+            <span>{t("settings.newsletterStateDesc")}</span>
           </section>
         </div>
 
         <section class="panel settings-section">
           <div class="section-header">
             <div>
-              <p class="admin-kicker">Brand</p>
-              <h2>Site Identity</h2>
-              <p>Global naming and branding copy used across the public site.</p>
+              <p class="admin-kicker">{t("settings.brandKicker")}</p>
+              <h2>{t("settings.siteIdentity")}</h2>
+              <p>{t("settings.siteIdentityDesc")}</p>
             </div>
           </div>
           <label class="admin-field">
-            <span>Site title</span>
+            <span>{t("settings.siteTitle")}</span>
             <input
               type="text"
               name="siteTitle"
               value={settings.siteTitle}
               required
-              aria-label="Site title"
+              aria-label={t("settings.siteTitle")}
               class="admin-input"
             />
           </label>
           <label class="admin-field">
-            <span>Site tagline</span>
+            <span>{t("settings.siteTagline")}</span>
             <input
               type="text"
               name="siteTagline"
               value={settings.siteTagline}
               required
-              aria-label="Site tagline"
+              aria-label={t("settings.siteTagline")}
               class="admin-input"
             />
           </label>
@@ -163,9 +170,9 @@ if (model.status === "forbidden") {
         <section class="panel settings-section">
           <div class="section-header">
             <div>
-              <p class="admin-kicker">Engagement</p>
-              <h2>Newsletter</h2>
-              <p>Enable or disable newsletter collection across public signup surfaces.</p>
+              <p class="admin-kicker">{t("settings.engagementKicker")}</p>
+              <h2>{t("settings.newsletter")}</h2>
+              <p>{t("settings.newsletterDesc")}</p>
             </div>
           </div>
           <label class="checkbox-label">
@@ -174,26 +181,26 @@ if (model.status === "forbidden") {
               name="newsletterEnabled"
               value="1"
               checked={settings.newsletterEnabled}
-              aria-label="Enable newsletter signup"
+              aria-label={t("settings.enableNewsletter")}
             />
-            <span>Enable newsletter signup</span>
+            <span>{t("settings.enableNewsletter")}</span>
           </label>
         </section>
 
         <details class="settings-details">
           <summary class="settings-summary">
-            <span class="admin-kicker">Fundraising</span>
-            Donation settings
+            <span class="admin-kicker">{t("settings.fundraisingKicker")}</span>
+            {t("settings.donationSettings")}
           </summary>
           <section class="panel settings-section settings-details-panel">
             <label class="admin-field">
-              <span>Donation URL</span>
+              <span>{t("settings.donationUrl")}</span>
               <input
                 type="url"
                 name="donationUrl"
                 value={settings.donationUrl}
                 required
-                aria-label="Donation URL"
+                aria-label={t("settings.donationUrl")}
                 class="admin-input"
               />
             </label>
@@ -202,49 +209,48 @@ if (model.status === "forbidden") {
 
         <details class="settings-details">
           <summary class="settings-summary">
-            <span class="admin-kicker">Moderation</span>
-            Comment settings
+            <span class="admin-kicker">{t("settings.moderationKicker")}</span>
+            {t("settings.commentSettings")}
           </summary>
           <section class="panel settings-section settings-details-panel">
             <label class="admin-field">
-              <span>Default comment policy</span>
-              <select name="commentsDefaultPolicy" required aria-label="Default comment policy" class="admin-select">
-                <option value="disabled" selected={settings.commentsDefaultPolicy === "disabled"}>Disabled</option>
-                <option value="legacy-readonly" selected={settings.commentsDefaultPolicy === "legacy-readonly"}>Legacy (read-only)</option>
-                <option value="open-moderated" selected={settings.commentsDefaultPolicy === "open-moderated"}>Open (moderated)</option>
+              <span>{t("settings.defaultCommentPolicy")}</span>
+              <select name="commentsDefaultPolicy" required aria-label={t("settings.defaultCommentPolicy")} class="admin-select">
+                <option value="disabled" selected={settings.commentsDefaultPolicy === "disabled"}>{t("settings.commentDisabled")}</option>
+                <option value="legacy-readonly" selected={settings.commentsDefaultPolicy === "legacy-readonly"}>{t("settings.commentLegacy")}</option>
+                <option value="open-moderated" selected={settings.commentsDefaultPolicy === "open-moderated"}>{t("settings.commentOpenModerated")}</option>
               </select>
             </label>
           </section>
         </details>
 
         <div class="actions admin-actions-row">
-          <button type="submit" class="admin-button">Save settings</button>
+          <button type="submit" class="admin-button">{t("settings.saveButton")}</button>
         </div>
       </form>
     )}
 
-    {/* ── Newsletter tab ───────────────────────────────────────────────── */}
     {activeTab === "newsletter" && (
       <div class="tab-panel-content">
-        {subWasDeleted && <p class="notice">Subscriber removed successfully.</p>}
-        {wasImported && <p class="notice">Import complete — {importedCount} subscriber{importedCount === "1" ? "" : "s"} added to Listmonk.</p>}
+        {subWasDeleted && <p class="notice">{t("settings.subscriberRemoved")}</p>}
+        {wasImported && <p class="notice">{format(t("settings.importComplete"), { count: importedCount ?? "" })}</p>}
         {subError && <p class="error-notice">{subError}</p>}
 
         <section class="panel settings-section">
           <div class="section-header">
             <div>
-              <p class="admin-kicker">Subscribers</p>
-              <h2>Newsletter subscribers</h2>
-              <p>Subscribers are managed via Listmonk. Configure <code>LISTMONK_*</code> environment variables to enable list management.</p>
+              <p class="admin-kicker">{t("settings.subscribersKicker")}</p>
+              <h2>{t("settings.newsletterSubscribers")}</h2>
+              <p>{t("settings.subscribersDescBefore")}<code>LISTMONK_*</code>{t("settings.subscribersDescAfter")}</p>
             </div>
           </div>
 
           {!listSupported && !subError && (
             <div class="notice">
-              <p>Subscriber list management requires Listmonk. Configure these environment variables to enable it:</p>
+              <p>{t("settings.listmonkRequiresEnv")}</p>
               <ul>
                 <li><code>NEWSLETTER_DELIVERY=listmonk</code></li>
-                <li><code>LISTMONK_API_URL</code> — e.g. <code>http://localhost:9000</code></li>
+                <li><code>LISTMONK_API_URL</code> — <code>http://localhost:9000</code></li>
                 <li><code>LISTMONK_API_USERNAME</code></li>
                 <li><code>LISTMONK_API_PASSWORD</code></li>
                 <li><code>LISTMONK_LIST_ID</code></li>
@@ -256,34 +262,41 @@ if (model.status === "forbidden") {
             <div class="subscribers-panel">
               <form method="get" action="/ap-admin/settings" class="search-form" role="search">
                 <input type="hidden" name="tab" value="newsletter" />
-                <label for="sub-search" class="visually-hidden">Search subscribers</label>
+                <label for="sub-search" class="visually-hidden">{t("settings.searchSubscribers")}</label>
                 <input
                   id="sub-search"
                   type="search"
                   name="q"
                   value={subQuery}
-                  placeholder="Search by email or name…"
+                  placeholder={t("settings.searchSubscribersPlaceholder")}
                   class="search-input"
                   autocomplete="off"
                 />
-                <button type="submit" class="search-btn">Search</button>
-                {subQuery && <a href="/ap-admin/settings?tab=newsletter" class="clear-btn">Clear</a>}
+                <button type="submit" class="search-btn">{t("settings.searchButton")}</button>
+                {subQuery && <a href="/ap-admin/settings?tab=newsletter" class="clear-btn">{t("settings.clearButton")}</a>}
               </form>
 
               <p class="sub-count">
-                {subTotal === 0 ? "No subscribers found." : `${subTotal} subscriber${subTotal === 1 ? "" : "s"}`}
-                {subQuery ? ` matching "${subQuery}"` : ""}
+                {subTotal === 0
+                  ? t("settings.noSubscribersFound")
+                  : format(
+                      subTotal === 1
+                        ? t("settings.subscriberCountSingular")
+                        : t("settings.subscriberCountPlural"),
+                      { count: subTotal },
+                    )}
+                {subQuery ? format(t("settings.matching"), { query: subQuery }) : ""}
               </p>
 
               {subscribers.length > 0 && (
                 <table class="sub-table">
                   <thead>
                     <tr>
-                      <th scope="col">Email</th>
-                      <th scope="col">Name</th>
-                      <th scope="col">Status</th>
-                      <th scope="col">Subscribed</th>
-                      <th scope="col"><span class="visually-hidden">Actions</span></th>
+                      <th scope="col">{t("settings.colEmail")}</th>
+                      <th scope="col">{t("settings.colName")}</th>
+                      <th scope="col">{t("common.status")}</th>
+                      <th scope="col">{t("settings.colSubscribed")}</th>
+                      <th scope="col"><span class="visually-hidden">{t("common.actions")}</span></th>
                     </tr>
                   </thead>
                   <tbody>
@@ -296,7 +309,7 @@ if (model.status === "forbidden") {
                         </td>
                         <td class="date-cell">{sub.createdAt ? new Date(sub.createdAt).toLocaleDateString() : "—"}</td>
                         <td class="actions-cell">
-                          <a href={`/ap-admin/subscribers/${sub.id}`} class="action-link">View</a>
+                          <a href={`/ap-admin/subscribers/${sub.id}`} class="action-link">{t("settings.viewAction")}</a>
                         </td>
                       </tr>
                     ))}
@@ -305,14 +318,14 @@ if (model.status === "forbidden") {
               )}
 
               {subTotalPages > 1 && (
-                <nav class="pagination" aria-label="Subscriber pages">
+                <nav class="pagination" aria-label={t("settings.subscriberPagesLabel")}>
                   {subPrevPage ? (
-                    <a href={`/ap-admin/settings?tab=newsletter&page=${subPrevPage}${subQuery ? `&q=${encodeURIComponent(subQuery)}` : ""}`} rel="prev" class="page-link">&larr; Previous</a>
-                  ) : <span class="page-link page-link--disabled">&larr; Previous</span>}
-                  <span class="page-info">Page {subPage} of {subTotalPages}</span>
+                    <a href={`/ap-admin/settings?tab=newsletter&page=${subPrevPage}${subQuery ? `&q=${encodeURIComponent(subQuery)}` : ""}`} rel="prev" class="page-link">&larr; {t("settings.previous")}</a>
+                  ) : <span class="page-link page-link--disabled">&larr; {t("settings.previous")}</span>}
+                  <span class="page-info">{format(t("settings.pageInfo"), { page: subPage, total: subTotalPages })}</span>
                   {subNextPage ? (
-                    <a href={`/ap-admin/settings?tab=newsletter&page=${subNextPage}${subQuery ? `&q=${encodeURIComponent(subQuery)}` : ""}`} rel="next" class="page-link">Next &rarr;</a>
-                  ) : <span class="page-link page-link--disabled">Next &rarr;</span>}
+                    <a href={`/ap-admin/settings?tab=newsletter&page=${subNextPage}${subQuery ? `&q=${encodeURIComponent(subQuery)}` : ""}`} rel="next" class="page-link">{t("settings.next")} &rarr;</a>
+                  ) : <span class="page-link page-link--disabled">{t("settings.next")} &rarr;</span>}
                 </nav>
               )}
             </div>
@@ -322,12 +335,10 @@ if (model.status === "forbidden") {
         <section class="panel settings-section">
           <div class="section-header">
             <div>
-              <p class="admin-kicker">Migration</p>
-              <h2>Import from Mailchimp</h2>
+              <p class="admin-kicker">{t("settings.migrationKicker")}</p>
+              <h2>{t("settings.importMailchimp")}</h2>
               <p>
-                Export your Mailchimp audience as a CSV (Mailchimp dashboard → Audience → Export as CSV),
-                then upload it here to bulk-import subscribers into Listmonk.
-                Required columns: <code>Email Address</code>. Optional: <code>First Name</code>, <code>Last Name</code>.
+                {t("settings.importMailchimpDescBefore")}<code>Email Address</code>{t("settings.importMailchimpDescOptional")}<code>First Name</code>, <code>Last Name</code>.
               </p>
             </div>
           </div>
@@ -341,20 +352,20 @@ if (model.status === "forbidden") {
           >
             <CsrfInput token={Astro.locals.csrfToken} />
             <label class="admin-field">
-              <span>Mailchimp audience CSV</span>
+              <span>{t("settings.mailchimpFile")}</span>
               <input
                 type="file"
                 name="mailchimp_csv"
                 accept=".csv,text/csv"
                 required
-                aria-label="Mailchimp audience CSV file"
+                aria-label={t("settings.mailchimpFileAria")}
                 class="admin-input"
               />
             </label>
             <div class="actions admin-actions-row">
-              <button type="submit" class="admin-button" id="mailchimp-submit-btn">Import subscribers</button>
+              <button type="submit" class="admin-button" id="mailchimp-submit-btn" data-uploading-label={t("settings.uploading")}>{t("settings.importSubscribersBtn")}</button>
             </div>
-            <div class="import-skeleton-area" id="mailchimp-skeleton" hidden aria-live="polite" aria-label="Importing subscribers…">
+            <div class="import-skeleton-area" id="mailchimp-skeleton" hidden aria-live="polite" aria-label={t("settings.importingAria")}>
               <div class="skeleton skeleton-row"></div>
               <div class="skeleton skeleton-row" style="width:80%"></div>
               <div class="skeleton skeleton-row" style="width:60%"></div>
@@ -364,7 +375,10 @@ if (model.status === "forbidden") {
             document.getElementById("mailchimp-import-form")?.addEventListener("submit", () => {
               const btn = document.getElementById("mailchimp-submit-btn") as HTMLButtonElement | null;
               const skeleton = document.getElementById("mailchimp-skeleton");
-              if (btn) { btn.disabled = true; btn.textContent = "Uploading…"; }
+              if (btn) {
+                btn.disabled = true;
+                btn.textContent = btn.dataset.uploadingLabel ?? "Uploading…";
+              }
               if (skeleton) skeleton.hidden = false;
             });
           </script>
@@ -372,54 +386,42 @@ if (model.status === "forbidden") {
       </div>
     )}
 
-    {/* ── Import tab ──────────────────────────────────────────────────── */}
     {activeTab === "import" && (
       <div class="tab-panel-content">
         <section class="panel settings-section">
           <div class="section-header">
             <div>
-              <p class="admin-kicker">Content migration</p>
-              <h2>Import content</h2>
-              <p>Import content from another platform. Imports are non-destructive — existing content is not modified unless you explicitly apply changes.</p>
+              <p class="admin-kicker">{t("settings.contentMigrationKicker")}</p>
+              <h2>{t("settings.importContent")}</h2>
+              <p>{t("settings.importContentDesc")}</p>
             </div>
           </div>
 
           <div class="source-grid">
             <a href="/ap-admin/import/wordpress" class="source-card">
               <div class="source-icon" aria-hidden="true">WP</div>
-              <h3 class="source-name">WordPress</h3>
-              <p class="source-desc">
-                Import from a WordPress XML export file or a live WordPress site URL.
-                Imports posts, pages, media, authors, and taxonomies.
-              </p>
-              <span class="source-action">Set up WordPress import &rarr;</span>
+              <h3 class="source-name">{t("settings.wordpress")}</h3>
+              <p class="source-desc">{t("settings.wordpressDesc")}</p>
+              <span class="source-action">{t("settings.setupWordpressImport")}</span>
             </a>
 
             <a href="/ap-admin/import/wix" class="source-card">
               <div class="source-icon" aria-hidden="true">WX</div>
-              <h3 class="source-name">Wix</h3>
-              <p class="source-desc">
-                Import from a Wix CSV export or a live Wix site URL.
-                Imports blog posts, pages, authors, and media.
-              </p>
-              <span class="source-action">Set up Wix import &rarr;</span>
+              <h3 class="source-name">{t("settings.wix")}</h3>
+              <p class="source-desc">{t("settings.wixDesc")}</p>
+              <span class="source-action">{t("settings.setupWixImport")}</span>
             </a>
 
             <a href="/ap-admin/import/crawl" class="source-card">
               <div class="source-icon" aria-hidden="true">CR</div>
-              <h3 class="source-name">Web crawl</h3>
-              <p class="source-desc">
-                Crawl any publicly accessible website and import its pages as content
-                records. Useful for static sites without an export format.
-              </p>
-              <span class="source-action">Set up crawl import &rarr;</span>
+              <h3 class="source-name">{t("settings.webCrawl")}</h3>
+              <p class="source-desc">{t("settings.webCrawlDesc")}</p>
+              <span class="source-action">{t("settings.setupCrawlImport")}</span>
             </a>
           </div>
 
           <p class="import-note">
-            All imports run as CLI commands under the hood. The CLI is available via
-            <code>cargo install astropress-cli</code>. This wizard generates the
-            correct command for your configuration.
+            {t("settings.importNoteBefore")}<code>cargo install astropress-cli</code>{t("settings.importNoteAfter")}
           </p>
         </section>
       </div>
@@ -430,12 +432,12 @@ if (model.status === "forbidden") {
     title="Forbidden"
     heading="Forbidden"
     currentPath=""
-    description="This action requires an admin account."
+    description={t("pages.forbidden.description")}
     role={adminUser!.role}
     userName={adminUser!.name}
   >
     <section class="panel forbidden">
-      <p>This action requires an admin account and is hidden from editor-only roles.</p>
+      <p>{t("pages.forbidden.body")}</p>
     </section>
   </AdminLayout>
 )}

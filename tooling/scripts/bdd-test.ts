@@ -1671,9 +1671,7 @@ if (unassignedScenarios.length > 0 || unknownScenarioTitles.length > 0) {
 			}
 		}
 	}
-	const cargoArgs = needsFullSuite
-		? ["test"]
-		: ["test", "--", ...cargoFilters];
+	const cargoArgs = needsFullSuite ? ["test"] : ["test", "--", ...cargoFilters];
 	console.log(
 		`── bdd:test pre-pass: one cargo test invocation covers ${
 			needsFullSuite ? "the full Rust suite" : `${cargoFilters.size} filter(s)`

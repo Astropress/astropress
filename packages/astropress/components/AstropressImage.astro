@@ -52,48 +52,52 @@
  */
 
 interface Props {
-  src: string;
-  alt: string;
-  width: number;
-  height: number;
-  srcset?: string;
-  sizes?: string;
-  loading?: "lazy" | "eager";
-  decoding?: "async" | "sync" | "auto";
-  fetchpriority?: "high" | "low" | "auto";
-  class?: string;
-  style?: string;
-  /**
-   * Optional MediaAssetRecord used to auto-populate `srcset` and `sizes` from
-   * variants generated at upload time (400w/800w/1200w WebP). When both this
-   * and an explicit `srcset` prop are provided, the explicit prop wins.
-   */
-  mediaAsset?: { srcset?: string; width?: number; height?: number };
+	src: string;
+	alt: string;
+	width: number;
+	height: number;
+	srcset?: string;
+	sizes?: string;
+	loading?: "lazy" | "eager";
+	decoding?: "async" | "sync" | "auto";
+	fetchpriority?: "high" | "low" | "auto";
+	class?: string;
+	style?: string;
+	/**
+	 * Optional MediaAssetRecord used to auto-populate `srcset` and `sizes` from
+	 * variants generated at upload time (400w/800w/1200w WebP). When both this
+	 * and an explicit `srcset` prop are provided, the explicit prop wins.
+	 */
+	mediaAsset?: { srcset?: string; width?: number; height?: number };
 }
 
 const {
-  src,
-  alt,
-  width,
-  height,
-  srcset: explicitSrcset,
-  sizes: explicitSizes,
-  loading = "lazy",
-  decoding = "async",
-  fetchpriority,
-  class: className,
-  style: extraStyle,
-  mediaAsset,
+	src,
+	alt,
+	width,
+	height,
+	srcset: explicitSrcset,
+	sizes: explicitSizes,
+	loading = "lazy",
+	decoding = "async",
+	fetchpriority,
+	class: className,
+	style: extraStyle,
+	mediaAsset,
 } = Astro.props;
 
 // Auto-resolve srcset and sizes from mediaAsset when not explicitly provided
 const srcset = explicitSrcset ?? mediaAsset?.srcset;
-const defaultSizes = srcset ? "(max-width: 480px) 400px, (max-width: 960px) 800px, 1200px" : undefined;
+const defaultSizes = srcset
+	? "(max-width: 480px) 400px, (max-width: 960px) 800px, 1200px"
+	: undefined;
 const sizes = explicitSizes ?? (srcset ? defaultSizes : undefined);
 
 // Reserve layout space before the image loads to prevent CLS.
 const aspectRatioStyle = `aspect-ratio: ${width} / ${height};`;
-const combinedStyle = extraStyle ? `${aspectRatioStyle} ${extraStyle}` : aspectRatioStyle;
+const combinedStyle = extraStyle
+	? `${aspectRatioStyle} ${extraStyle}`
+	: aspectRatioStyle;
 ---
 
 <img

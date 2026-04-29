@@ -52,7 +52,9 @@ async function collectPlaywrightRoutes(): Promise<Set<string>> {
 	for (const entry of entries) {
 		if (!entry.endsWith(".spec.ts")) continue;
 		const source = await readText(join(E2E_DIR, entry));
-		for (const match of source.matchAll(/page\.goto\s*\(\s*["'`](\/ap-admin[^"'`?]*)/g)) {
+		for (const match of source.matchAll(
+			/page\.goto\s*\(\s*["'`](\/ap-admin[^"'`?]*)/g,
+		)) {
 			routes.add(match[1]);
 		}
 		for (const match of source.matchAll(/path:\s*["'](\/ap-admin[^"'?]*)/g)) {
@@ -79,7 +81,10 @@ async function collectMatchingTestBasenames(): Promise<Set<string>> {
 	});
 	for (const entry of entries) {
 		if (!entry.endsWith(".test.ts")) continue;
-		const base = entry.split("/").pop()?.replace(/\.test\.ts$/, "");
+		const base = entry
+			.split("/")
+			.pop()
+			?.replace(/\.test\.ts$/, "");
 		if (base) basenames.add(base);
 	}
 	return basenames;
@@ -88,7 +93,9 @@ async function collectMatchingTestBasenames(): Promise<Set<string>> {
 async function main() {
 	const report = new AuditReport("coverage-scope");
 	const vitestConfig = await readText(VITEST_CONFIG_PATH);
-	const coverageIncludes = new Set(extractQuotedEntries(vitestConfig, "include"));
+	const coverageIncludes = new Set(
+		extractQuotedEntries(vitestConfig, "include"),
+	);
 	const journeyManifest = JSON.parse(
 		await readText(JOURNEY_MANIFEST_PATH),
 	) as JourneyManifest;
@@ -118,12 +125,16 @@ async function main() {
 		extensions: [".astro"],
 	});
 	for (const entry of adminAstroFiles) {
-		candidateFiles.add(`packages/astropress/pages/ap-admin/${entry.replace(/\\/g, "/")}`);
+		candidateFiles.add(
+			`packages/astropress/pages/ap-admin/${entry.replace(/\\/g, "/")}`,
+		);
 	}
 
 	for (const [file, reason] of Object.entries(exemptions.exemptions)) {
 		if (!reason.trim()) {
-			report.add(`${EXEMPTIONS_PATH}: exemption for ${file} is missing a reason.`);
+			report.add(
+				`${EXEMPTIONS_PATH}: exemption for ${file} is missing a reason.`,
+			);
 		}
 		if (!candidateFiles.has(file)) {
 			report.add(
@@ -134,21 +145,26 @@ async function main() {
 
 	for (const file of [...candidateFiles].sort()) {
 		if (exemptions.exemptions[file]) continue;
-		if (coverageIncludes.has(file.replace("packages/astropress/", ""))) continue;
+		if (coverageIncludes.has(file.replace("packages/astropress/", "")))
+			continue;
 		if (journeyCoveredFiles.has(file)) continue;
 
 		if (file.endsWith(".astro")) {
 			const relPath = file.replace("packages/astropress/pages/ap-admin/", "");
 			const route = astroFileToRoute(relPath);
-			if (route && (playwrightRoutes.has(route) || smokeRoutes.has(route))) continue;
+			if (route && (playwrightRoutes.has(route) || smokeRoutes.has(route)))
+				continue;
 		}
 
-		const baseName = file.split("/").pop()?.replace(/\.(astro|ts)$/, "") ?? "";
+		const baseName =
+			file
+				.split("/")
+				.pop()
+				?.replace(/\.(astro|ts)$/, "") ?? "";
 		if (matchingTestBasenames.has(baseName)) continue;
 
 		report.add(
-			`${file} is in the user-facing coverage scope but has no Vitest coverage include, ` +
-				`matching test basename, critical journey mapping, or reviewed exemption.`,
+			`${file} is in the user-facing coverage scope but has no Vitest coverage include, matching test basename, critical journey mapping, or reviewed exemption.`,
 		);
 	}
 

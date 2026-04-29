@@ -124,22 +124,29 @@ async function main() {
 	const actionFiles = (await walk(actionsDir)).filter((f) => f.endsWith(".ts"));
 	for (const file of actionFiles) {
 		const content = await readFile(file, "utf8");
-		const hasZtaWrapper = /withAdminFormAction|requireAdminFormAction/.test(content);
+		const hasZtaWrapper = /withAdminFormAction|requireAdminFormAction/.test(
+			content,
+		);
 		const hasPreAuthGate = /isTrustedStrictRequestOrigin/.test(content);
 		if (!hasZtaWrapper && !hasPreAuthGate) {
 			violations.push({
 				file: relative(root, file),
-				message: "action handler has no ZTA wrapper (withAdminFormAction/requireAdminFormAction) and no pre-auth origin gate",
+				message:
+					"action handler has no ZTA wrapper (withAdminFormAction/requireAdminFormAction) and no pre-auth origin gate",
 			});
 		}
 	}
 
 	// ── CSRF: admin-action-utils.ts must validate the CSRF token from form data ──
-	const actionUtilsSrc = await readFile(join(root, "packages/astropress/src/admin-action-utils.ts"), "utf8");
+	const actionUtilsSrc = await readFile(
+		join(root, "packages/astropress/src/admin-action-utils.ts"),
+		"utf8",
+	);
 	if (!/_csrf|csrfToken/.test(actionUtilsSrc)) {
 		violations.push({
 			file: "packages/astropress/src/admin-action-utils.ts",
-			message: "CSRF token validation pattern (_csrf / csrfToken) not found — CSRF protection may have been removed",
+			message:
+				"CSRF token validation pattern (_csrf / csrfToken) not found — CSRF protection may have been removed",
 		});
 	}
 
@@ -151,7 +158,9 @@ async function main() {
 		process.exit(1);
 	}
 
-	console.log(`Security audit passed for ${auditedFiles.length} source files, ${actionFiles.length} action handlers.`);
+	console.log(
+		`Security audit passed for ${auditedFiles.length} source files, ${actionFiles.length} action handlers.`,
+	);
 }
 
 await main();

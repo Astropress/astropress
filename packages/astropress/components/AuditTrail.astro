@@ -1,12 +1,14 @@
 ---
 import type { AuditEvent } from "astropress";
+import { getPageT, resolveAdminLocale } from "astropress";
 
 interface Props {
-  events: AuditEvent[];
-  heading?: string;
+	events: AuditEvent[];
+	heading?: string;
 }
 
-const { events, heading = "Recent Audit Trail" } = Astro.props;
+const t = getPageT(resolveAdminLocale(Astro));
+const { events, heading = t("audit.recentTrail") } = Astro.props;
 ---
 
 <section class="panel audit-trail">
@@ -21,7 +23,7 @@ const { events, heading = "Recent Audit Trail" } = Astro.props;
       ))}
     </ul>
   ) : (
-    <p>No audit events have been recorded in this session yet.</p>
+    <p>{t("audit.empty")}</p>
   )}
 </section>
 

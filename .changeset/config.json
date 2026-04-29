@@ -1,9 +1,9 @@
 {
-  "changelog": "@changesets/cli/changelog",
-  "commit": false,
-  "linked": [],
-  "access": "public",
-  "baseBranch": "main",
-  "updateInternalDependencies": "patch",
-  "ignore": []
+	"changelog": "@changesets/cli/changelog",
+	"commit": false,
+	"linked": [],
+	"access": "public",
+	"baseBranch": "main",
+	"updateInternalDependencies": "patch",
+	"ignore": []
 }

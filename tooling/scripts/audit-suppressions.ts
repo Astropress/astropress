@@ -127,55 +127,64 @@ const APPROVED: ApprovedSuppression[] = [
 		file: "packages/astropress/pages/ap-api/v1/content.ts",
 		linePattern: /biome-ignore lint\/style\/noNonNullAssertion/,
 		contentPattern: /apiTokens/,
-		rubric: "store.apiTokens always set by API token auth middleware. See block comment above.",
+		rubric:
+			"store.apiTokens always set by API token auth middleware. See block comment above.",
 	},
 	{
 		file: "packages/astropress/pages/ap-api/v1/content/[id].ts",
 		linePattern: /biome-ignore lint\/style\/noNonNullAssertion/,
 		contentPattern: /apiTokens/,
-		rubric: "store.apiTokens always set by API token auth middleware. See block comment above.",
+		rubric:
+			"store.apiTokens always set by API token auth middleware. See block comment above.",
 	},
 	{
 		file: "packages/astropress/pages/ap-api/v1/media.ts",
 		linePattern: /biome-ignore lint\/style\/noNonNullAssertion/,
 		contentPattern: /apiTokens/,
-		rubric: "store.apiTokens always set by API token auth middleware. See block comment above.",
+		rubric:
+			"store.apiTokens always set by API token auth middleware. See block comment above.",
 	},
 	{
 		file: "packages/astropress/pages/ap-api/v1/media/[id].ts",
 		linePattern: /biome-ignore lint\/style\/noNonNullAssertion/,
 		contentPattern: /apiTokens/,
-		rubric: "store.apiTokens always set by API token auth middleware. See block comment above.",
+		rubric:
+			"store.apiTokens always set by API token auth middleware. See block comment above.",
 	},
 	{
 		file: "packages/astropress/pages/ap-api/v1/metrics.ts",
 		linePattern: /biome-ignore lint\/style\/noNonNullAssertion/,
 		contentPattern: /apiTokens/,
-		rubric: "store.apiTokens always set by API token auth middleware. See block comment above.",
+		rubric:
+			"store.apiTokens always set by API token auth middleware. See block comment above.",
 	},
 	{
 		file: "packages/astropress/pages/ap-api/v1/revisions/[recordId].ts",
 		linePattern: /biome-ignore lint\/style\/noNonNullAssertion/,
 		contentPattern: /apiTokens/,
-		rubric: "store.apiTokens always set by API token auth middleware. See block comment above.",
+		rubric:
+			"store.apiTokens always set by API token auth middleware. See block comment above.",
 	},
 	{
 		file: "packages/astropress/pages/ap-api/v1/search.ts",
 		linePattern: /biome-ignore lint\/style\/noNonNullAssertion/,
 		contentPattern: /apiTokens/,
-		rubric: "store.apiTokens always set by API token auth middleware. See block comment above.",
+		rubric:
+			"store.apiTokens always set by API token auth middleware. See block comment above.",
 	},
 	{
 		file: "packages/astropress/pages/ap-api/v1/settings.ts",
 		linePattern: /biome-ignore lint\/style\/noNonNullAssertion/,
 		contentPattern: /apiTokens/,
-		rubric: "store.apiTokens always set by API token auth middleware. See block comment above.",
+		rubric:
+			"store.apiTokens always set by API token auth middleware. See block comment above.",
 	},
 	{
 		file: "packages/astropress/pages/ap-api/v1/webhooks.ts",
 		linePattern: /biome-ignore lint\/style\/noNonNullAssertion/,
 		contentPattern: /apiTokens/,
-		rubric: "store.apiTokens always set by API token auth middleware. See block comment above.",
+		rubric:
+			"store.apiTokens always set by API token auth middleware. See block comment above.",
 	},
 ];
 

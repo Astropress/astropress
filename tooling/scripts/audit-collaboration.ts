@@ -117,7 +117,9 @@ async function main() {
 	}
 
 	// 7. Content-locking test file exists
-	const testPath = fromRoot("packages/astropress/tests/content-locking.test.ts");
+	const testPath = fromRoot(
+		"packages/astropress/tests/content-locking.test.ts",
+	);
 	if (!(await fileExists(testPath))) {
 		report.add(
 			"[missing-test] packages/astropress/tests/content-locking.test.ts does not exist — " +

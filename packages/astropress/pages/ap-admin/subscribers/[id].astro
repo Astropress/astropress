@@ -2,8 +2,10 @@
 import AdminLayout from "@astropress-diy/astropress/components/AdminLayout.astro";
 import { createListmonkOps } from "@astropress-diy/astropress/newsletter-adapter";
 import { getNewsletterConfig } from "@astropress-diy/astropress/runtime-env";
+import { resolveAdminLocale } from "astropress";
 
 const adminUser = Astro.locals.adminUser;
+const adminLocale = resolveAdminLocale(Astro);
 
 if (!adminUser || adminUser.role !== "admin") {
 	Astro.response.status = 403;
@@ -97,7 +99,7 @@ const wasDeleted = Astro.url.searchParams.get("deleted") === "1";
             <div class="detail-row">
               <dt>Subscribed</dt>
               <dd class="muted">
-                {subscriber.createdAt ? new Date(subscriber.createdAt).toLocaleString() : "—"}
+                {subscriber.createdAt ? new Date(subscriber.createdAt).toLocaleString(adminLocale) : "—"}
               </dd>
             </div>
             <div class="detail-row">

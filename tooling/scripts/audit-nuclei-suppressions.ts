@@ -62,7 +62,9 @@ async function main() {
 					continue;
 				}
 				if (
-					/suppress|false positive|exclude|skip|noisy|upstream bug|template bug/i.test(prev)
+					/suppress|false positive|exclude|skip|noisy|upstream bug|template bug/i.test(
+						prev,
+					)
 				) {
 					hasRationale = true;
 					break;
@@ -70,10 +72,7 @@ async function main() {
 			}
 			if (!hasRationale) {
 				report.add(
-					`${file}:${i + 1}: Nuclei suppression flag (${line.trim().slice(0, 80)}...) ` +
-						`has no rationale comment within the 10 preceding lines. Add a comment ` +
-						`explaining why the matcher is suppressed (e.g., "# upstream template bug: ...", ` +
-						`"# false positive: ...", or "# we verify via <alternative check>").`,
+					`${file}:${i + 1}: Nuclei suppression flag (${line.trim().slice(0, 80)}...) has no rationale comment within the 10 preceding lines. Add a comment explaining why the matcher is suppressed (e.g., "# upstream template bug: ...", "# false positive: ...", or "# we verify via <alternative check>").`,
 				);
 			}
 		}

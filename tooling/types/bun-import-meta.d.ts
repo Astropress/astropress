@@ -1,3 +1,3 @@
 interface ImportMeta {
-  readonly dir: string;
+	readonly dir: string;
 }

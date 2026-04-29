@@ -1,8 +1,12 @@
 ---
 import AdminLayout from "@astropress-diy/astropress/components/AdminLayout.astro";
 import CsrfInput from "@astropress-diy/astropress/components/CsrfInput.astro";
-import { buildRoutePageEditorModel } from "astropress";
-import { getAdminLocalePair } from "astropress";
+import {
+	buildRoutePageEditorModel,
+	getAdminLocalePair,
+	getPageT,
+	resolveAdminLocale,
+} from "astropress";
 
 export const prerender = false;
 
@@ -26,6 +30,7 @@ const errorMessage =
 		: "";
 const localePair = getAdminLocalePair(routePath);
 const localizedRoutePath = localePair?.localizedRoute;
+const t = getPageT(resolveAdminLocale(Astro));
 
 if (model.status === "forbidden") {
 	Astro.response.status = 403;
@@ -38,25 +43,25 @@ if (model.status === "not_found") {
 
 {pageRecord && model.status !== "forbidden" ? (
   <AdminLayout
-    title={`Edit Route Table Record | ${pageRecord.title}`}
-    heading="Edit Route Table Record"
+    title={`${t("routePageEditor.titlePrefix")} | ${pageRecord.title}`}
+    heading={t("routePageEditor.title")}
     currentPath="/ap-admin/route-pages"
-    description="Technical editing for route-backed structured pages. Use Pages for the normal editorial entry point."
+    description={t("routePageEditor.description")}
     role={adminUser!.role}
     userName={adminUser!.name}
   >
-    <nav class="breadcrumb" aria-label="breadcrumb">
-      <a href="/ap-admin/route-pages">Route Pages</a>
+    <nav class="breadcrumb" aria-label={t("routePageEditor.breadcrumb")}>
+      <a href="/ap-admin/route-pages">{t("routePageEditor.routePagesLink")}</a>
       <span aria-hidden="true"> / </span>
       <span aria-current="page">{pageRecord.title || routePath}</span>
     </nav>
-    {model.warnings.length > 0 && <p class="notice">Some route-page data is temporarily unavailable. This page is showing partial results.</p>}
+    {model.warnings.length > 0 && <p class="notice">{t("routePageEditor.partialResults")}</p>}
     <div class="toolbar">
-      <a href="/ap-admin/pages" class="admin-button-secondary">Back to pages</a>
-      <a href={pageRecord.path} target="_blank" rel="noreferrer" class="admin-button-ghost">Open public page</a>
-      <a href="/ap-admin/route-pages" class="admin-button-ghost">Open route table</a>
+      <a href="/ap-admin/pages" class="admin-button-secondary">{t("routePages.backToPages")}</a>
+      <a href={pageRecord.path} target="_blank" rel="noreferrer" class="admin-button-ghost">{t("routePageEditor.openPublicPage")}</a>
+      <a href="/ap-admin/route-pages" class="admin-button-ghost">{t("routePageEditor.openRouteTable")}</a>
     </div>
-    {(wasSaved || Astro.url.searchParams.get("created") === "1") && <p class="notice">Route page saved successfully.</p>}
+    {(wasSaved || Astro.url.searchParams.get("created") === "1") && <p class="notice">{t("routePageEditor.savedSuccess")}</p>}
     {errorMessage && <p class="error-notice">{errorMessage}</p>}
 
     <form method="post" action="/ap-admin/actions/route-page-save" class="edit-form">
@@ -67,50 +72,50 @@ if (model.status === "not_found") {
       <section class="panel">
         <div class="section-header">
           <div>
-            <h2>General</h2>
-            <p>Public route identity, summary copy, and metadata defaults for this structured page.</p>
+            <h2>{t("routePageEditor.general")}</h2>
+            <p>{t("routePageEditor.generalDesc")}</p>
           </div>
         </div>
-        <p class="field-note">Public route: <a href={pageRecord.path} target="_blank" rel="noreferrer">{pageRecord.path}</a> · Template: <strong>{pageRecord.templateKey}</strong></p>
+        <p class="field-note">{t("routePageEditor.publicRoute")} <a href={pageRecord.path} target="_blank" rel="noreferrer">{pageRecord.path}</a> · {t("routePageEditor.templateLabel")} <strong>{pageRecord.templateKey}</strong></p>
         <label class="admin-field">
-          <span>Title</span>
-          <input type="text" aria-label="Route page title" name="title" value={pageRecord.title} required class="admin-input" />
+          <span>{t("routePageEditor.titleField")}</span>
+          <input type="text" aria-label={t("routePageEditor.titleFieldAria")} name="title" value={pageRecord.title} required class="admin-input" />
         </label>
         <label class="admin-field">
-          <span>Summary</span>
-          <textarea aria-label="Route page summary" rows="3" name="summary" class="admin-textarea">{pageRecord.summary ?? ""}</textarea>
+          <span>{t("routePageEditor.summary")}</span>
+          <textarea aria-label={t("routePageEditor.summaryAria")} rows="3" name="summary" class="admin-textarea">{pageRecord.summary ?? ""}</textarea>
         </label>
         <label class="admin-field">
-          <span>Canonical URL</span>
-          <input type="url" aria-label="Canonical URL" name="canonicalUrlOverride" value={pageRecord.canonicalUrlOverride ?? ""} class="admin-input" />
+          <span>{t("routePageEditor.canonicalUrl")}</span>
+          <input type="url" aria-label={t("routePageEditor.canonicalUrl")} name="canonicalUrlOverride" value={pageRecord.canonicalUrlOverride ?? ""} class="admin-input" />
         </label>
         <label class="admin-field">
-          <span>Robots</span>
-          <input type="text" aria-label="Robots directive" name="robotsDirective" value={pageRecord.robotsDirective ?? ""} class="admin-input" />
+          <span>{t("routePageEditor.robots")}</span>
+          <input type="text" aria-label={t("routePageEditor.robotsAria")} name="robotsDirective" value={pageRecord.robotsDirective ?? ""} class="admin-input" />
         </label>
         <label class="admin-field">
-          <span>OG Image</span>
-          <input type="text" aria-label="OG image" name="ogImage" value={pageRecord.ogImage ?? ""} class="admin-input" />
+          <span>{t("routePageEditor.ogImage")}</span>
+          <input type="text" aria-label={t("routePageEditor.ogImageAria")} name="ogImage" value={pageRecord.ogImage ?? ""} class="admin-input" />
         </label>
       </section>
 
       <section class="panel">
         <div class="section-header">
           <div>
-            <h2>Owner & Locale</h2>
-            <p>Jump back to the main owner editor or switch to the linked locale record from here.</p>
+            <h2>{t("routePageEditor.ownerLocale")}</h2>
+            <p>{t("routePageEditor.ownerLocaleDesc")}</p>
           </div>
         </div>
-        <p class="field-note">This technical route record belongs to the main Pages workflow.</p>
+        <p class="field-note">{t("routePageEditor.belongsToPagesWorkflow")}</p>
         <div class="editor-links">
-          <a href="/ap-admin/pages" class="admin-button-ghost small">Open Pages index</a>
-          <a href={pageRecord.path} target="_blank" rel="noreferrer" class="admin-button-ghost small">Open public route</a>
-          {englishOwner && <a href={`/ap-admin/posts/${englishOwner.slug}`} class="admin-button-ghost small">Edit English owner</a>}
+          <a href="/ap-admin/pages" class="admin-button-ghost small">{t("routePageEditor.openPagesIndex")}</a>
+          <a href={pageRecord.path} target="_blank" rel="noreferrer" class="admin-button-ghost small">{t("routePageEditor.openPublicRoute")}</a>
+          {englishOwner && <a href={`/ap-admin/posts/${englishOwner.slug}`} class="admin-button-ghost small">{t("routePageEditor.editEnglishOwner")}</a>}
           {localePair?.englishRoute && localePair.englishRoute !== routePath && !englishOwner && (
-            <a href={`/ap-admin/route-pages${localePair.englishRoute}`} class="admin-button-ghost small">Edit English variant</a>
+            <a href={`/ap-admin/route-pages${localePair.englishRoute}`} class="admin-button-ghost small">{t("routePageEditor.editEnglishVariant")}</a>
           )}
           {localizedRoutePath && localizedRoutePath !== routePath && (
-            <a href={`/ap-admin/route-pages${localizedRoutePath}`} class="admin-button-ghost small">Edit Spanish variant</a>
+            <a href={`/ap-admin/route-pages${localizedRoutePath}`} class="admin-button-ghost small">{t("routePageEditor.editSpanishVariant")}</a>
           )}
         </div>
         {localizedRoutePath && (
@@ -118,17 +123,17 @@ if (model.status === "not_found") {
             <input type="hidden" name="route" value={localizedRoutePath} />
             <input type="hidden" name="returnPath" value={`/ap-admin/route-pages${pageRecord.path}`} />
             <label class="admin-field">
-              <span>Translation state</span>
-              <select name="state" aria-label="Translation state" class="admin-select">
-                <option value="not_started" selected={effectiveTranslationState === "not_started"}>Not started</option>
-                <option value="partial" selected={effectiveTranslationState === "partial"}>Partial</option>
-                <option value="fallback_en" selected={effectiveTranslationState === "fallback_en"}>Fallback to English</option>
-                <option value="translated" selected={effectiveTranslationState === "translated"}>Translated</option>
-                <option value="reviewed" selected={effectiveTranslationState === "reviewed"}>Reviewed</option>
-                <option value="published" selected={effectiveTranslationState === "published"}>Published</option>
+              <span>{t("routePageEditor.translationState")}</span>
+              <select name="state" aria-label={t("routePageEditor.translationState")} class="admin-select">
+                <option value="not_started" selected={effectiveTranslationState === "not_started"}>{t("routePageEditor.stateNotStarted")}</option>
+                <option value="partial" selected={effectiveTranslationState === "partial"}>{t("routePageEditor.statePartial")}</option>
+                <option value="fallback_en" selected={effectiveTranslationState === "fallback_en"}>{t("routePageEditor.stateFallbackEn")}</option>
+                <option value="translated" selected={effectiveTranslationState === "translated"}>{t("routePageEditor.stateTranslated")}</option>
+                <option value="reviewed" selected={effectiveTranslationState === "reviewed"}>{t("routePageEditor.stateReviewed")}</option>
+                <option value="published" selected={effectiveTranslationState === "published"}>{t("routePageEditor.statePublished")}</option>
               </select>
             </label>
-            <button type="submit" formaction="/ap-admin/actions/translation-update" formmethod="post" class="admin-button small">Update translation state</button>
+            <button type="submit" formaction="/ap-admin/actions/translation-update" formmethod="post" class="admin-button small">{t("routePageEditor.updateTranslationState")}</button>
           </div>
         )}
       </section>
@@ -136,25 +141,25 @@ if (model.status === "not_found") {
       <section class="panel">
         <div class="section-header">
           <div>
-            <h2>SEO</h2>
-            <p>Search-facing title and description for the route-backed page.</p>
+            <h2>{t("routePageEditor.seoHeading")}</h2>
+            <p>{t("routePageEditor.seoDesc")}</p>
           </div>
         </div>
         <label class="admin-field">
-          <span>SEO Title</span>
-          <input type="text" aria-label="SEO title" name="seoTitle" value={pageRecord.seoTitle ?? pageRecord.title} class="admin-input" />
+          <span>{t("routePageEditor.seoTitle")}</span>
+          <input type="text" aria-label={t("routePageEditor.seoTitleAria")} name="seoTitle" value={pageRecord.seoTitle ?? pageRecord.title} class="admin-input" />
         </label>
         <label class="admin-field">
-          <span>Meta Description</span>
-          <textarea aria-label="Meta description" rows="3" name="metaDescription" class="admin-textarea">{pageRecord.metaDescription ?? pageRecord.summary ?? ""}</textarea>
+          <span>{t("routePageEditor.metaDescription")}</span>
+          <textarea aria-label={t("routePageEditor.metaDescriptionAria")} rows="3" name="metaDescription" class="admin-textarea">{pageRecord.metaDescription ?? pageRecord.summary ?? ""}</textarea>
         </label>
       </section>
 
       <section class="panel">
         <div class="section-header">
           <div>
-            <h2>Alternate Links</h2>
-            <p>Hreflang mapping for linked English and Spanish route variants.</p>
+            <h2>{t("routePageEditor.alternateLinks")}</h2>
+            <p>{t("routePageEditor.alternateLinksDesc")}</p>
           </div>
         </div>
         {pageRecord.alternateLinks.length > 0 && (
@@ -164,48 +169,48 @@ if (model.status === "not_found") {
             ))}
           </p>
         )}
-        <textarea aria-label="Alternate links JSON" rows="6" name="alternateLinksJson" class="admin-textarea code-field">{JSON.stringify(pageRecord.alternateLinks, null, 2)}</textarea>
+        <textarea aria-label={t("routePageEditor.alternateLinksJsonAria")} rows="6" name="alternateLinksJson" class="admin-textarea code-field">{JSON.stringify(pageRecord.alternateLinks, null, 2)}</textarea>
       </section>
 
       <section class="panel">
         <div class="section-header">
           <div>
-            <h2>Sections JSON</h2>
-            <p>Structured section payload for the marketing page renderer.</p>
+            <h2>{t("routePageEditor.sectionsJson")}</h2>
+            <p>{t("routePageEditor.sectionsJsonDesc")}</p>
           </div>
         </div>
-        <p class="field-note">This slice uses structured JSON editing for registry-backed marketing pages.</p>
-        <textarea aria-label="Sections JSON" rows="20" name="sectionsJson" class="admin-textarea code-field">{JSON.stringify(pageRecord.sections ?? {}, null, 2)}</textarea>
+        <p class="field-note">{t("routePageEditor.sectionsJsonNote")}</p>
+        <textarea aria-label={t("routePageEditor.sectionsJsonAria")} rows="20" name="sectionsJson" class="admin-textarea code-field">{JSON.stringify(pageRecord.sections ?? {}, null, 2)}</textarea>
       </section>
 
       <section class="panel">
         <div class="section-header">
           <div>
-            <h2>Revision Note</h2>
-            <p>Summarize the change so the route revision history stays understandable.</p>
+            <h2>{t("routePageEditor.revisionNote")}</h2>
+            <p>{t("routePageEditor.revisionNoteDesc")}</p>
           </div>
         </div>
-        <input type="text" aria-label="Revision note" name="revisionNote" placeholder="Summarize this change" class="admin-input" />
+        <input type="text" aria-label={t("routePageEditor.revisionNoteAria")} name="revisionNote" placeholder={t("routePageEditor.revisionNotePlaceholder")} class="admin-input" />
       </section>
 
       <div class="form-actions">
-        <button type="submit" class="admin-button">Save route page</button>
-        <a href="/ap-admin/route-pages" class="admin-button-ghost secondary-button">Back to route table</a>
+        <button type="submit" class="admin-button">{t("routePageEditor.saveRoutePage")}</button>
+        <a href="/ap-admin/route-pages" class="admin-button-ghost secondary-button">{t("routePageEditor.backToRouteTable")}</a>
       </div>
     </form>
   </AdminLayout>
 ) : (
   <AdminLayout
-    title={adminUser?.role !== "admin" ? "Forbidden" : "Not Found"}
-    heading={adminUser?.role !== "admin" ? "Forbidden" : "Not Found"}
+    title={adminUser?.role !== "admin" ? t("routePages.forbiddenTitle") : t("routePageEditor.notFoundTitle")}
+    heading={adminUser?.role !== "admin" ? t("routePages.forbiddenTitle") : t("routePageEditor.notFoundTitle")}
     currentPath="/ap-admin/route-pages"
-    description={adminUser?.role !== "admin" ? "This action requires an admin account." : "The requested route page could not be found."}
+    description={adminUser?.role !== "admin" ? t("routePages.forbiddenDesc") : t("routePageEditor.notFoundDesc")}
     role={adminUser!.role}
     userName={adminUser!.name}
   >
     {adminUser?.role !== "admin" && (
       <section class="panel">
-        <p>This action requires an admin account and is hidden from editor-only roles.</p>
+        <p>{t("routePages.forbiddenBody")}</p>
       </section>
     )}
   </AdminLayout>

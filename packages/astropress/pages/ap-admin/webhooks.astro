@@ -2,11 +2,14 @@
 import AdminLayout from "@astropress-diy/astropress/components/AdminLayout.astro";
 import CsrfInput from "@astropress-diy/astropress/components/CsrfInput.astro";
 import { loadLocalAdminStore } from "@astropress-diy/astropress/local-runtime-modules.js";
+import { getPageT, resolveAdminLocale } from "astropress";
 
 const adminUser = Astro.locals.adminUser;
 if (!adminUser || adminUser.role !== "admin") {
 	return Astro.redirect("/ap-admin?error=insufficient-permissions");
 }
+
+const t = getPageT(resolveAdminLocale(Astro));
 
 const store = await loadLocalAdminStore();
 const webhooks = store.webhooks ? await store.webhooks.list() : [];
@@ -34,20 +37,20 @@ const ALL_EVENTS = [
 ---
 
 <AdminLayout
-  title="Webhooks"
-  heading="Webhooks"
+  title={t("webhooks.title")}
+  heading={t("webhooks.title")}
   currentPath="/ap-admin/webhooks"
-  description="Register webhook endpoints to receive real-time event notifications."
+  description={t("webhooks.description")}
   role={adminUser.role}
   userName={adminUser.name}
 >
-  {wasDeleted && <p class="notice">Webhook deleted successfully.</p>}
+  {wasDeleted && <p class="notice">{t("webhooks.deletedSuccess")}</p>}
   {errorMessage && <p class="error-notice">{errorMessage}</p>}
 
   {wasCreated && createdAlgorithm && createdPublicKey && (
     <div class="panel notice" style="border-left: 4px solid var(--color-success, green); padding: 1rem;">
-      <strong>Webhook created.</strong> Copy this verification bundle now — it will not be shown again.
-      Use it to verify the <code>X-Astropress-Signature</code> header on incoming webhook requests.
+      <strong>{t("webhooks.created")}</strong> {t("webhooks.copyBundle")}
+      {t("webhooks.useToVerify")} <code>X-Astropress-Signature</code> {t("webhooks.headerSuffix")}
       <br />
       <code style="word-break: break-all; font-size: 0.9em;">{JSON.stringify({ algorithm: createdAlgorithm, publicKey: createdPublicKey })}</code>
     </div>
@@ -56,18 +59,18 @@ const ALL_EVENTS = [
   <section class="panel">
     <div class="section-header">
       <div>
-        <p class="admin-kicker">Register</p>
-        <h2>New Webhook</h2>
+        <p class="admin-kicker">{t("webhooks.registerKicker")}</p>
+        <h2>{t("webhooks.newWebhook")}</h2>
       </div>
     </div>
     <form method="post" action="/ap-admin/actions/webhook-create" class="admin-form-grid">
       <CsrfInput token={Astro.locals.csrfToken} />
       <label class="admin-field">
-        <span>Endpoint URL</span>
+        <span>{t("webhooks.endpointUrl")}</span>
         <input type="url" name="url" placeholder="https://your-server.com/hooks" required class="admin-input" />
       </label>
       <fieldset class="admin-field">
-        <legend>Events</legend>
+        <legend>{t("webhooks.events")}</legend>
         {ALL_EVENTS.map((event) => (
           <label class="admin-checkbox">
             <input type="checkbox" name="events" value={event} />
@@ -75,23 +78,23 @@ const ALL_EVENTS = [
           </label>
         ))}
       </fieldset>
-      <button type="submit" class="admin-button">Register Webhook</button>
+      <button type="submit" class="admin-button">{t("webhooks.registerButton")}</button>
     </form>
   </section>
 
   <section class="panel">
-    <h2>Active Webhooks</h2>
+    <h2>{t("webhooks.activeWebhooks")}</h2>
     {webhooks.length === 0 ? (
-      <p>No webhooks yet. Register one above.</p>
+      <p>{t("webhooks.noWebhooks")}</p>
     ) : (
       <table class="admin-table">
         <thead>
           <tr>
-            <th>URL</th>
-            <th>Events</th>
-            <th>Created</th>
-            <th>Last Fired</th>
-            <th>Actions</th>
+            <th>{t("webhooks.colUrl")}</th>
+            <th>{t("webhooks.events")}</th>
+            <th>{t("webhooks.colCreated")}</th>
+            <th>{t("webhooks.colLastFired")}</th>
+            <th>{t("common.actions")}</th>
           </tr>
         </thead>
         <tbody>
@@ -100,7 +103,7 @@ const ALL_EVENTS = [
               <td style="font-family: monospace; font-size: 0.85em; word-break: break-all;">{wh.url}</td>
               <td>{wh.events.join(", ")}</td>
               <td>{wh.createdAt ? new Date(wh.createdAt).toLocaleDateString() : "—"}</td>
-              <td>{wh.lastFiredAt ? new Date(wh.lastFiredAt).toLocaleDateString() : "Never"}</td>
+              <td>{wh.lastFiredAt ? new Date(wh.lastFiredAt).toLocaleDateString() : t("webhooks.never")}</td>
               <td>
                 <button
                   type="button"
@@ -111,7 +114,7 @@ const ALL_EVENTS = [
                   data-field-value={wh.id}
                   data-text-webhook-url={wh.url}
                 >
-                  Delete
+                  {t("webhooks.delete")}
                 </button>
               </td>
             </tr>
@@ -123,15 +126,15 @@ const ALL_EVENTS = [
   <ap-confirm-dialog>
     <dialog id="confirm-delete-webhook" class="confirm-modal" aria-labelledby="confirm-delete-webhook-title">
       <div class="modal-content">
-        <h2 id="confirm-delete-webhook-title">Delete webhook?</h2>
-        <p>Are you sure you want to delete the webhook for <strong id="webhook-url"></strong>?</p>
-        <p class="dialog-warning">This action cannot be undone.</p>
+        <h2 id="confirm-delete-webhook-title">{t("webhooks.confirmTitle")}</h2>
+        <p>{t("webhooks.confirmBody")} <strong id="webhook-url"></strong>?</p>
+        <p class="dialog-warning">{t("webhooks.confirmWarning")}</p>
         <div class="modal-actions">
-          <button type="button" class="admin-button-ghost small secondary-button" data-dialog-close>Cancel</button>
+          <button type="button" class="admin-button-ghost small secondary-button" data-dialog-close>{t("webhooks.cancel")}</button>
           <form method="post" action="/ap-admin/actions/webhook-delete" style="display:inline;">
             <CsrfInput token={Astro.locals.csrfToken} />
             <input type="hidden" name="id" value="" />
-            <button type="submit" class="admin-button small delete-button">Delete Webhook</button>
+            <button type="submit" class="admin-button small delete-button">{t("webhooks.deleteButton")}</button>
           </form>
         </div>
       </div>

@@ -40,8 +40,12 @@ test.describe("Rubric 52: interaction timing", () => {
 		);
 
 		const elapsed = Date.now() - start;
-		expect(elapsed, `notice removed too early (${elapsed}ms)`).toBeGreaterThan(4_900);
-		expect(elapsed, `notice removed too late (${elapsed}ms)`).toBeLessThan(6_500);
+		expect(elapsed, `notice removed too early (${elapsed}ms)`).toBeGreaterThan(
+			4_900,
+		);
+		expect(elapsed, `notice removed too late (${elapsed}ms)`).toBeLessThan(
+			6_500,
+		);
 	});
 
 	test("Scenario: ap-notice without dismiss-after stays persistent after 1s", async ({

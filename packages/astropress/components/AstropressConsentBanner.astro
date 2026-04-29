@@ -20,15 +20,15 @@
  */
 
 interface Props {
-  message?: string;
-  acceptLabel?: string;
-  rejectLabel?: string;
+	message?: string;
+	acceptLabel?: string;
+	rejectLabel?: string;
 }
 
 const {
-  message = "This site uses optional analytics to understand how visitors use it. No personal data is shared with third parties.",
-  acceptLabel = "Accept",
-  rejectLabel = "Decline",
+	message = "This site uses optional analytics to understand how visitors use it. No personal data is shared with third parties.",
+	acceptLabel = "Accept",
+	rejectLabel = "Decline",
 } = Astro.props;
 ---
 

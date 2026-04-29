@@ -42,9 +42,7 @@ async function main() {
 			);
 		}
 		if (!/test/.test(lower)) {
-			report.add(
-				'[missing-section] CONTRIBUTING.md — does not mention "test"',
-			);
+			report.add('[missing-section] CONTRIBUTING.md — does not mention "test"');
 		}
 	}
 

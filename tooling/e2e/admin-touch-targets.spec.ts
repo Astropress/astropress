@@ -90,11 +90,15 @@ test.describe("Rubric 46: touch targets ≥ 44×44 at viewport-375", () => {
 						const rect = el.getBoundingClientRect();
 						if (rect.width === 0 && rect.height === 0) continue;
 						const style = window.getComputedStyle(el);
-						if (style.display === "none" || style.visibility === "hidden") continue;
+						if (style.display === "none" || style.visibility === "hidden")
+							continue;
 						if (rect.width < min || rect.height < min) {
 							results.push({
 								tag: el.tagName.toLowerCase(),
-								text: (el.textContent ?? "").trim().slice(0, 40) || el.getAttribute("aria-label") || "(no label)",
+								text:
+									(el.textContent ?? "").trim().slice(0, 40) ||
+									el.getAttribute("aria-label") ||
+									"(no label)",
 								w: Math.round(rect.width),
 								h: Math.round(rect.height),
 							});

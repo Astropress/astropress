@@ -140,8 +140,14 @@ to prevent double-submission — verify this fires.
       nav items, Esc closes.
 - [ ] **Keyboard shortcuts popover** (`?` key) — opens a popover listing the
       shortcuts.
-- [ ] **Locale select** (globe icon in topbar utility panel) — choosing a
-      locale updates `<html lang="…">` and persists to localStorage.
+- [ ] **Locale select** (compact `EN/ES/FR/…` dropdown in the topbar utility
+      panel) — choosing a locale sets the `astropress_admin_locale` cookie,
+      reloads the page, and the SSR-rendered labels (Sign out, sidebar
+      titles, nav items, etc.) appear in that language. `<html lang>` reflects
+      the choice.
+- [ ] **System-language default** — clear the `astropress_admin_locale`
+      cookie and set browser language to e.g. French; the login page
+      should render in French (Accept-Language drives the initial pick).
 
 ---
 

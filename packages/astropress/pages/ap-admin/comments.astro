@@ -2,7 +2,11 @@
 import AdminLayout from "@astropress-diy/astropress/components/AdminLayout.astro";
 import AuditTrail from "@astropress-diy/astropress/components/AuditTrail.astro";
 import CsrfInput from "@astropress-diy/astropress/components/CsrfInput.astro";
-import { buildCommentsPageModel } from "astropress";
+import {
+	buildCommentsPageModel,
+	getPageT,
+	resolveAdminLocale,
+} from "astropress";
 
 const adminUser = Astro.locals.adminUser;
 const model = await buildCommentsPageModel(Astro.locals);
@@ -12,66 +16,83 @@ const errorMessage =
 	Astro.url.searchParams.get("error") === "1"
 		? Astro.url.searchParams.get("message")
 		: "";
+const t = getPageT(resolveAdminLocale(Astro));
+function tCommentStatus(s: string): string {
+	switch (s) {
+		case "pending":
+			return t("comments.statusPending");
+		case "approved":
+			return t("comments.statusApproved");
+		case "rejected":
+			return t("comments.statusRejected");
+		default:
+			return s;
+	}
+}
+function tCommentPolicy(p: string): string {
+	if (p === "open-moderated") return t("comments.policyOpenModerated");
+	return p;
+}
 ---
 
 <AdminLayout
   title="Comments"
   heading="Comments"
   currentPath="/ap-admin/comments"
-  description="Moderate pending, approved, and rejected comment records."
+  description={t("comments.description")}
   role={adminUser!.role}
   userName={adminUser!.name}
 >
-  {model.warnings.length > 0 && <ap-notice type="info">Some comment data is temporarily unavailable. This page is showing partial results.</ap-notice>}
-  {wasSaved && <ap-notice type="success" dismiss-after="6000">The comment moderation state was updated successfully.</ap-notice>}
+  {model.warnings.length > 0 && <ap-notice type="info">{t("comments.partialResults")}</ap-notice>}
+  {wasSaved && <ap-notice type="success" dismiss-after="6000">{t("comments.savedSuccess")}</ap-notice>}
   {errorMessage && <ap-notice type="error">{errorMessage}</ap-notice>}
   <div class="admin-subgrid two summary-grid">
     <section class="panel stat summary-card">
-      <span>Total comments</span>
+      <span>{t("comments.totalComments")}</span>
       <strong>{comments.length}</strong>
-      <span>Comment records currently available for moderation.</span>
+      <span>{t("comments.totalCommentsDesc")}</span>
     </section>
     <section class="panel stat summary-card">
-      <span>Pending review</span>
+      <span>{t("comments.pendingReview")}</span>
       <strong>{comments.filter((comment) => comment.status === "pending").length}</strong>
-      <span>Comments still waiting for an explicit moderation decision.</span>
+      <span>{t("comments.pendingReviewDesc")}</span>
     </section>
   </div>
   <section class="panel comments-panel">
     <div class="section-header">
       <div>
-        <p class="admin-kicker">Moderation</p>
-        <h2>Moderation Queue</h2>
-        <p>Review public comments and approve or reject them without leaving the queue.</p>
+        <p class="admin-kicker">{t("comments.moderation")}</p>
+        <h2>{t("comments.moderationQueue")}</h2>
+        <p>{t("comments.moderationQueueDesc")}</p>
       </div>
     </div>
     <div class="admin-table-shell">
-      <table aria-label="Comments queue">
+      <table aria-label={t("comments.queueAria")}>
         <thead>
           <tr>
-            <th>Author</th>
-            <th>Route</th>
-            <th>Status</th>
-            <th>Policy</th>
-            <th>Action</th>
+            <th>{t("comments.author")}</th>
+            <th>{t("comments.route")}</th>
+            <th>{t("common.status")}</th>
+            <th>{t("comments.policy")}</th>
+            <th>{t("comments.action")}</th>
           </tr>
         </thead>
         <tbody>
           {comments.length === 0 && (
-            <tr><td colspan="5" class="admin-empty-state">No comments to moderate. Comments will appear here when visitors leave them on your posts.</td></tr>
+            <tr><td colspan="5" class="admin-empty-state">{t("comments.empty")}</td></tr>
           )}
           {comments.map((comment) => (
             <tr>
               <td>{comment.author}</td>
               <td><code>{comment.route}</code></td>
-              <td><span class="admin-chip">{comment.status}</span></td>
-              <td>{comment.policy}</td>
+              <td><span class="admin-chip">{tCommentStatus(comment.status)}</span></td>
+              <td>{tCommentPolicy(comment.policy)}</td>
               <td class="action-cell">
                 <form method="post" action="/ap-admin/actions/comment-moderate" class="comment-action">
                   <CsrfInput token={Astro.locals.csrfToken} />
                   <input type="hidden" name="commentId" value={comment.id} />
                   <input type="hidden" name="status" value="approved" />
-                  <button type="submit" class="admin-button small">Approve</button>
+                  <button type="submit" class="admin-button small">{t("comments.approve")}</button>
                 </form>
                 <button
                   type="button"
@@ -84,7 +105,7 @@ const errorMessage =
                   data-text-reject-author={comment.author}
                   data-text-reject-route={comment.route}
                 >
-                  Reject
+                  {t("comments.reject")}
                 </button>
               </td>
             </tr>
@@ -98,18 +119,18 @@ const errorMessage =
   <ap-confirm-dialog>
     <dialog id="reject-dialog" class="confirm-modal" aria-labelledby="reject-dialog-title">
       <div class="modal-content">
-        <h2 id="reject-dialog-title">Reject comment?</h2>
-        <p>Are you sure you want to reject this comment? It will be removed from the queue.</p>
+        <h2 id="reject-dialog-title">{t("comments.rejectDialogTitle")}</h2>
+        <p>{t("comments.rejectDialogBody")}</p>
         <p class="dialog-context">
           <strong id="reject-author"></strong> on <strong id="reject-route"></strong>
         </p>
         <div class="modal-actions">
-          <button type="button" class="admin-button-ghost small secondary-button" data-dialog-close>Cancel</button>
+          <button type="button" class="admin-button-ghost small secondary-button" data-dialog-close>{t("comments.cancel")}</button>
           <form id="reject-form" method="post" action="/ap-admin/actions/comment-moderate" style="display: inline;">
             <CsrfInput token={Astro.locals.csrfToken} />
             <input type="hidden" name="commentId" value="" />
             <input type="hidden" name="status" value="rejected" />
-            <button type="submit" class="admin-button small reject-button">Reject</button>
+            <button type="submit" class="admin-button small reject-button">{t("comments.reject")}</button>
           </form>
         </div>
       </div>

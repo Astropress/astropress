@@ -1,22 +1,22 @@
 {
-  "crypto": {
-    "passwordHash": "Argon2id",
-    "tokenDigest": "KMAC256",
-    "webhookSignature": "ML-DSA-65"
-  },
-  "docs": {
-    "readmeSecurityNote": "Argon2id password hashing, KMAC256 token hardening, ML-DSA-65 webhook signatures",
-    "hostedE2EGap": "Live hosted-provider coverage still depends on maintainer-owned accounts, seeded projects, and teardown automation"
-  },
-  "bannedPhrases": [
-    "SHA-256",
-    "SHA256",
-    "sha256",
-    "PBKDF2",
-    "signing secret",
-    "fully tested",
-    "production-ready",
-    "GitHub-ready",
-    "github-ready"
-  ]
+	"crypto": {
+		"passwordHash": "Argon2id",
+		"tokenDigest": "KMAC256",
+		"webhookSignature": "ML-DSA-65"
+	},
+	"docs": {
+		"readmeSecurityNote": "Argon2id password hashing, KMAC256 token hardening, ML-DSA-65 webhook signatures",
+		"hostedE2EGap": "Live hosted-provider coverage still depends on maintainer-owned accounts, seeded projects, and teardown automation"
+	},
+	"bannedPhrases": [
+		"SHA-256",
+		"SHA256",
+		"sha256",
+		"PBKDF2",
+		"signing secret",
+		"fully tested",
+		"production-ready",
+		"GitHub-ready",
+		"github-ready"
+	]
 }

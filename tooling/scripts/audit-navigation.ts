@@ -19,10 +19,14 @@ import {
 } from "../lib/audit-utils.js";
 
 const ADMIN_CSS = fromRoot("packages/astropress/public/admin.css");
-const ADMIN_NAV_WC = fromRoot("packages/astropress/web-components/admin-nav.ts");
+const ADMIN_NAV_WC = fromRoot(
+	"packages/astropress/web-components/admin-nav.ts",
+);
 const ADMIN_UI_TS = fromRoot("packages/astropress/src/admin-ui.ts");
 const PAGES_DIR = fromRoot("packages/astropress/pages");
-const CLI_ARGS_MOD = fromRoot("crates/astropress-cli/src/cli_config/args/mod.rs");
+const CLI_ARGS_MOD = fromRoot(
+	"crates/astropress-cli/src/cli_config/args/mod.rs",
+);
 
 const REQUIRED_CLI_NOUN_VERBS: readonly [string, string][] = [
 	["services", "bootstrap"],
@@ -92,7 +96,9 @@ async function main() {
 
 	for (const key of REQUIRED_NAV_KEYS) {
 		if (!adminUiSrc.includes(`"${key}"`) && !adminUiSrc.includes(`'${key}'`)) {
-			report.add(`admin-ui.ts: AstropressAdminNavKey missing required key "${key}"`);
+			report.add(
+				`admin-ui.ts: AstropressAdminNavKey missing required key "${key}"`,
+			);
 		}
 	}
 
@@ -112,9 +118,12 @@ async function main() {
 		for (const [noun, verb] of REQUIRED_CLI_NOUN_VERBS) {
 			const hasNounVerb =
 				cliArgsSrc.includes(`"${noun}" && subcommand == "${verb}"`) ||
-				(cliArgsSrc.includes(`command == "${noun}"`) && cliArgsSrc.includes(`"${verb}"`));
+				(cliArgsSrc.includes(`command == "${noun}"`) &&
+					cliArgsSrc.includes(`"${verb}"`));
 			if (!hasNounVerb) {
-				report.add(`CLI: expected "${noun} ${verb}" noun-verb command not found in args/mod.rs`);
+				report.add(
+					`CLI: expected "${noun} ${verb}" noun-verb command not found in args/mod.rs`,
+				);
 			}
 		}
 		if (

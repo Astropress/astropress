@@ -2,6 +2,7 @@
 import {
 	buildAcceptInvitePageModel,
 	buildAstropressAdminDocumentTitle,
+	resolveAdminLocale,
 	resolveAstropressAdminUiConfig,
 } from "astropress";
 
@@ -12,11 +13,12 @@ const errorMessage =
 	"That invitation link is invalid or has expired.";
 const model = await buildAcceptInvitePageModel(Astro.locals, token);
 const { inviteRequest } = model.data;
-const adminUi = resolveAstropressAdminUiConfig();
+const adminLocale = resolveAdminLocale(Astro);
+const adminUi = resolveAstropressAdminUiConfig(adminLocale);
 ---
 
 <!doctype html>
-<html lang="en">
+<html lang={adminLocale}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />

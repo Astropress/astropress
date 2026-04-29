@@ -1,11 +1,46 @@
 ---
 import AdminLayout from "@astropress-diy/astropress/components/AdminLayout.astro";
-import { buildPagesIndexPageModel } from "astropress";
+import {
+	buildPagesIndexPageModel,
+	getPageT,
+	resolveAdminLocale,
+} from "astropress";
 import { isSeededPostRecord } from "astropress";
 
 const adminUser = Astro.locals.adminUser;
 const model = await buildPagesIndexPageModel(Astro.locals, adminUser?.role);
 const { contentStates, routePages, archiveRows } = model.data;
+const adminLocale = resolveAdminLocale(Astro);
+const t = getPageT(adminLocale);
+function format(template: string, params: Record<string, string | number>) {
+	return template.replace(/\{(\w+)\}/g, (_, k) => String(params[k] ?? ""));
+}
+function tKind(kind: string): string {
+	switch (kind) {
+		case "Legacy":
+			return t("pages.kindLegacy");
+		case "Structured":
+			return t("pages.kindStructured");
+		case "Archive":
+			return t("pages.kindArchive");
+		default:
+			return kind;
+	}
+}
+function tStatus(status: string): string {
+	switch (status) {
+		case "published":
+			return t("common.published");
+		case "draft":
+			return t("common.draft");
+		case "archived":
+			return t("common.archived");
+		case "review":
+			return t("common.inReview");
+		default:
+			return status;
+	}
+}
 
 if (model.status === "forbidden") {
 	Astro.response.status = 403;
@@ -24,7 +59,7 @@ const legacyPages = contentStates
 		updatedAt: record.updatedAt,
 		editHref: `/ap-admin/posts/${record.slug}`,
 		publicHref: record.legacyUrl,
-		ownerLabel: "Edit page",
+		ownerLabel: t("pages.editPageRow"),
 	}));
 
 const structuredPages = routePages.map((page) => ({
@@ -35,7 +70,7 @@ const structuredPages = routePages.map((page) => ({
 	updatedAt: page.updatedAt,
 	editHref: `/ap-admin/route-pages${page.path}`,
 	publicHref: page.path,
-	ownerLabel: "Edit route page",
+	ownerLabel: t("pages.editRoutePage"),
 }));
 
 const archivePages = archiveRows.map(({ archive, runtime }) => ({
@@ -46,7 +81,7 @@ const archivePages = archiveRows.map(({ archive, runtime }) => ({
 	updatedAt: runtime?.updatedAt,
 	editHref: `/ap-admin/archives/${archive.slug}`,
 	publicHref: archive.legacyUrl,
-	ownerLabel: "Edit archive",
+	ownerLabel: t("pages.editArchive"),
 }));
 
 const rows = [...legacyPages, ...structuredPages, ...archivePages].sort(
@@ -63,8 +98,7 @@ const kindCounts = rows.reduce<Record<string, number>>((accumulator, row) => {
 	accumulator[row.kind] = (accumulator[row.kind] ?? 0) + 1;
 	return accumulator;
 }, {});
-const structuredExplanation =
-	"Structured pages are route-backed pages assembled from reusable content sections instead of one imported HTML body. They power pages like home, about, donate, and service landing pages.";
+const structuredExplanation = t("pages.structuredExplanation");
 ---
 
 {model.status !== "forbidden" ? (
@@ -72,79 +106,79 @@ const structuredExplanation =
     title="Pages"
     heading="Pages"
     currentPath="/ap-admin/pages"
-    description="All human-facing public pages that are not blog posts."
+    description={t("pages.description")}
     role={adminUser!.role}
     userName={adminUser!.name}
   >
-    {model.warnings.length > 0 && <p class="notice">Some page index data is temporarily unavailable. This page is showing partial results.</p>}
+    {model.warnings.length > 0 && <p class="notice">{t("pages.partialResults")}</p>}
     <div class="toolbar">
-      <a href="/ap-admin/pages/new" class="admin-button">New page</a>
-      <a href="/ap-admin/route-pages" class="admin-button-secondary">Open route table</a>
+      <a href="/ap-admin/pages/new" class="admin-button">{t("dashboard.newPage")}</a>
+      <a href="/ap-admin/route-pages" class="admin-button-secondary">{t("pages.openRouteTable")}</a>
     </div>
     <div class="admin-subgrid two summary-grid">
       <section class="panel stat summary-card">
-        <span>All pages</span>
+        <span>{t("pages.allPages")}</span>
         <strong>{rows.length}</strong>
-        <span>Public HTML pages currently managed through admin.</span>
+        <span>{t("pages.allPagesDesc")}</span>
       </section>
       <section class="panel stat summary-card">
-        <span>Structured pages</span>
+        <span>{t("pages.structuredPages")}</span>
         <strong>{kindCounts.Structured ?? 0}</strong>
-        <span>Route-backed pages that use the structured page system.</span>
+        <span>{t("pages.structuredPagesDesc")}</span>
       </section>
     </div>
     <section class="panel page-index-panel">
       <div class="section-header">
         <div>
-          <p class="admin-kicker">Public Page Ownership</p>
-          <h2>Page Index</h2>
-          <p>Use this index to manage public pages. Open Route Table only when you need technical route details.</p>
+          <p class="admin-kicker">{t("pages.publicPageOwnership")}</p>
+          <h2>{t("pages.pageIndex")}</h2>
+          <p>{t("pages.useThisIndex")}</p>
         </div>
       </div>
       <div class="page-notes">
         <div class="note-card">
-          <strong>Structured pages</strong>
+          <strong>{t("pages.structuredPages")}</strong>
           <p>{structuredExplanation}</p>
         </div>
         <div class="note-card">
-          <strong>Page types in this list</strong>
-          <p><strong>Legacy</strong> pages come from imported content. <strong>Structured</strong> pages use reusable sections. <strong>Archive</strong> pages are listing routes such as author, category, and tag archives.</p>
+          <strong>{t("pages.pageTypesInList")}</strong>
+          <p><strong>{t("pages.kindLegacy")}</strong> {t("pages.legacyExplanation")} <strong>{t("pages.kindStructured")}</strong> {t("pages.structuredExplanation2")} <strong>{t("pages.kindArchive")}</strong> {t("pages.archiveExplanation")}</p>
         </div>
       </div>
       <div class="list-toolbar">
-        <p><strong>{filteredRows.length} of {rows.length} public pages</strong></p>
+        <p><strong>{format(t("pages.ofPagesSummary"), { filtered: filteredRows.length, total: rows.length })}</strong></p>
         <form method="get" class="filter-form">
           <label>
-            <span class="sr-only">Search pages</span>
-            <input class="admin-input" type="search" name="q" value={Astro.url.searchParams.get("q") ?? ""} placeholder="Search title or path" aria-label="Search pages" />
+            <span class="sr-only">{t("pages.searchPages")}</span>
+            <input class="admin-input" type="search" name="q" value={Astro.url.searchParams.get("q") ?? ""} placeholder={t("pages.searchPlaceholder")} aria-label={t("pages.searchPages")} />
           </label>
           <label>
-            <span class="sr-only">Filter by page kind</span>
-            <select class="admin-select" name="kind" aria-label="Filter pages by kind">
-              <option value="all" selected={selectedKind === "all"}>All kinds</option>
-              <option value="legacy" selected={selectedKind === "legacy"}>Legacy</option>
-              <option value="structured" selected={selectedKind === "structured"}>Structured</option>
-              <option value="archive" selected={selectedKind === "archive"}>Archive</option>
+            <span class="sr-only">{t("pages.filterByKind")}</span>
+            <select class="admin-select" name="kind" aria-label={t("pages.filterByKindAria")}>
+              <option value="all" selected={selectedKind === "all"}>{t("pages.allKinds")}</option>
+              <option value="legacy" selected={selectedKind === "legacy"}>{t("pages.kindLegacy")}</option>
+              <option value="structured" selected={selectedKind === "structured"}>{t("pages.kindStructured")}</option>
+              <option value="archive" selected={selectedKind === "archive"}>{t("pages.kindArchive")}</option>
             </select>
           </label>
-          <button type="submit" class="admin-button">Apply filters</button>
+          <button type="submit" class="admin-button">{t("common.applyFilters")}</button>
         </form>
       </div>
       <div class="admin-table-shell">
-        <table aria-label="Pages list">
+        <table aria-label={t("pages.pagesList")}>
           <thead>
             <tr>
-              <th>Title</th>
-              <th>Path</th>
-              <th>Kind</th>
-              <th>Status</th>
-              <th>Updated</th>
-              <th>Actions</th>
+              <th>{t("common.title")}</th>
+              <th>{t("common.path")}</th>
+              <th>{t("pages.kind")}</th>
+              <th>{t("common.status")}</th>
+              <th>{t("common.updated")}</th>
+              <th>{t("common.actions")}</th>
             </tr>
           </thead>
           <tbody>
             {filteredRows.length === 0 && (
-              <tr><td colspan="2" class="admin-empty-state">No pages match the current filters. <a href="/ap-admin/pages">Clear filters</a> or <a href="/ap-admin/pages/new">create a new page</a>.</td></tr>
+              <tr><td colspan="2" class="admin-empty-state">{t("pages.noMatch")} <a href="/ap-admin/pages">{t("common.clearFilters")}</a> {t("pages.noMatchOr")} <a href="/ap-admin/pages/new">{t("pages.createNewPage")}</a>.</td></tr>
             )}
             {filteredRows.map((row) => (
               <tr>
@@ -155,13 +189,13 @@ const structuredExplanation =
                   </div>
                 </td>
                 <td><code>{row.path}</code></td>
-                <td><span class={`kind-chip kind-${row.kind.toLowerCase()}`}>{row.kind}</span></td>
-                <td><span class={`status-chip status-${row.status.toLowerCase().replace(/\s+/g, "-")}`}>{row.status}</span></td>
-                <td>{row.updatedAt ? new Date(row.updatedAt).toLocaleString() : "Seeded"}</td>
+                <td><span class={`kind-chip kind-${row.kind.toLowerCase()}`}>{tKind(row.kind)}</span></td>
+                <td><span class={`status-chip status-${row.status.toLowerCase().replace(/\s+/g, "-")}`}>{tStatus(row.status)}</span></td>
+                <td>{row.updatedAt ? new Date(row.updatedAt).toLocaleString(adminLocale) : t("pages.seeded")}</td>
                 <td>
                   <div class="row-actions">
                     <a href={row.editHref} class="admin-button-ghost small">{row.ownerLabel}</a>
-                    <a href={row.publicHref} target="_blank" rel="noreferrer" class="admin-button-ghost small">Open page</a>
+                    <a href={row.publicHref} target="_blank" rel="noreferrer" class="admin-button-ghost small">{t("pages.openPage")}</a>
                   </div>
                 </td>
               </tr>
@@ -176,12 +210,12 @@ const structuredExplanation =
     title="Forbidden"
     heading="Forbidden"
     currentPath="/ap-admin/posts"
-    description="This action requires an admin account."
+    description={t("pages.forbidden.description")}
     role={adminUser!.role}
     userName={adminUser!.name}
   >
     <section class="panel">
-      <p>This action requires an admin account and is hidden from editor-only roles.</p>
+      <p>{t("pages.forbidden.body")}</p>
     </section>
   </AdminLayout>
 )}

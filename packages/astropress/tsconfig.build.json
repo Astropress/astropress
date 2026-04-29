@@ -1,14 +1,14 @@
 {
-  "compilerOptions": {
-    "target": "esnext",
-    "module": "preserve",
-    "declaration": false,
-    "sourceMap": false,
-    "outDir": "./dist",
-    "rootDir": ".",
-    "skipLibCheck": true,
-    "isolatedModules": true
-  },
-  "include": ["src/**/*.ts", "index.ts"],
-  "exclude": ["**/*.d.ts"]
+	"compilerOptions": {
+		"target": "esnext",
+		"module": "preserve",
+		"declaration": false,
+		"sourceMap": false,
+		"outDir": "./dist",
+		"rootDir": ".",
+		"skipLibCheck": true,
+		"isolatedModules": true
+	},
+	"include": ["src/**/*.ts", "index.ts"],
+	"exclude": ["**/*.d.ts"]
 }

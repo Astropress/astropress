@@ -1,14 +1,14 @@
-import { createAstropressSecurityMiddleware } from "@astropress-diy/astropress/integration";
 import { registerCms } from "@astropress-diy/astropress";
+import { createAstropressSecurityMiddleware } from "@astropress-diy/astropress/integration";
 
 // Register CMS — edit siteUrl and templateKeys to match your site.
 // See: docs/guides/QUICK_START.md
 registerCms({
-  siteUrl: import.meta.env.SITE ?? "https://example.com",
-  templateKeys: [],
-  seedPages: [],
-  archives: [],
-  translationStatus: [],
+	siteUrl: import.meta.env.SITE ?? "https://example.com",
+	templateKeys: [],
+	seedPages: [],
+	archives: [],
+	translationStatus: [],
 });
 
 // Applies security headers on every response:

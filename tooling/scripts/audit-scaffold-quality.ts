@@ -14,9 +14,9 @@ import { execFileSync } from "node:child_process";
 import { relative } from "node:path";
 import {
 	AuditReport,
+	ROOT,
 	fileExists,
 	fromRoot,
-	ROOT,
 	runAudit,
 } from "../lib/audit-utils.js";
 

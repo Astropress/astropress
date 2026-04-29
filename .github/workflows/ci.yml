@@ -126,6 +126,7 @@ jobs:
       - run: bun run audit:api-design
       - run: bun run audit:ai-drivability
       - run: bun run audit:i18n
+      - run: bun run audit:admin-i18n-leaks
       - run: bun run audit:content-modeling
       - run: bun run audit:collaboration
       - run: bun run audit:oss-health

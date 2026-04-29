@@ -14,27 +14,27 @@
  */
 
 interface SeoRecord {
-  slug?: string;
-  title?: string;
-  seoTitle?: string;
-  metaDescription?: string;
-  excerpt?: string;
-  ogTitle?: string;
-  ogDescription?: string;
-  ogImage?: string;
-  canonicalUrlOverride?: string;
-  robotsDirective?: string;
-  kind?: string | null;
+	slug?: string;
+	title?: string;
+	seoTitle?: string;
+	metaDescription?: string;
+	excerpt?: string;
+	ogTitle?: string;
+	ogDescription?: string;
+	ogImage?: string;
+	canonicalUrlOverride?: string;
+	robotsDirective?: string;
+	kind?: string | null;
 }
 
 interface Props {
-  record: SeoRecord;
-  /** The origin of the site, e.g. "https://example.com". Used to build canonical URLs. */
-  siteOrigin?: string;
-  /** Site name for og:site_name. */
-  siteName?: string;
-  /** Twitter handle, e.g. "@mysite". */
-  twitterSite?: string;
+	record: SeoRecord;
+	/** The origin of the site, e.g. "https://example.com". Used to build canonical URLs. */
+	siteOrigin?: string;
+	/** Site name for og:site_name. */
+	siteName?: string;
+	/** Twitter handle, e.g. "@mysite". */
+	twitterSite?: string;
 }
 
 const { record, siteOrigin, siteName, twitterSite } = Astro.props;
@@ -50,20 +50,25 @@ const ogDescription = record.ogDescription || description;
  * `/ap-api/v1/og-image/{slug}.png?title={title}&site={siteName}` — the
  * framework's built-in SVG-based social card generator.
  */
-const ogImageFallbackParams = record.slug && siteOrigin
-  ? `?title=${encodeURIComponent(pageTitle)}${siteName ? `&site=${encodeURIComponent(siteName)}` : ""}`
-  : null;
-const ogImage = record.ogImage
-  ?? (record.slug && ogImageFallbackParams
-    ? `${siteOrigin ?? ""}/ap-api/v1/og-image/${record.slug}.png${ogImageFallbackParams}`
-    : undefined);
+const ogImageFallbackParams =
+	record.slug && siteOrigin
+		? `?title=${encodeURIComponent(pageTitle)}${siteName ? `&site=${encodeURIComponent(siteName)}` : ""}`
+		: null;
+const ogImage =
+	record.ogImage ??
+	(record.slug && ogImageFallbackParams
+		? `${siteOrigin ?? ""}/ap-api/v1/og-image/${record.slug}.png${ogImageFallbackParams}`
+		: undefined);
 
 let canonicalHref: string | undefined;
 if (record.canonicalUrlOverride) {
-  canonicalHref = record.canonicalUrlOverride;
+	canonicalHref = record.canonicalUrlOverride;
 } else if (siteOrigin && record.slug) {
-  const basePath = record.kind === "post" || record.kind == null ? `/blog/${record.slug}/` : `/${record.slug}/`;
-  canonicalHref = `${siteOrigin}${basePath}`;
+	const basePath =
+		record.kind === "post" || record.kind == null
+			? `/blog/${record.slug}/`
+			: `/${record.slug}/`;
+	canonicalHref = `${siteOrigin}${basePath}`;
 }
 
 const robotsContent = record.robotsDirective;

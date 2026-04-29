@@ -9,14 +9,16 @@
  * script injection (</script> and <script are replaced with Unicode escapes).
  */
 interface Props {
-  /** A valid Schema.org JSON-LD object or array of objects. */
-  data: Record<string, unknown> | Array<Record<string, unknown>>;
+	/** A valid Schema.org JSON-LD object or array of objects. */
+	data: Record<string, unknown> | Array<Record<string, unknown>>;
 }
 
 const { data } = Astro.props;
 
 // Escape </script> sequences to prevent breaking out of the script tag.
-const json = JSON.stringify(data).replace(/<\/(script)/gi, "<\\/$1").replace(/<(script)/gi, "<$1");
+const json = JSON.stringify(data)
+	.replace(/<\/(script)/gi, "<\\/$1")
+	.replace(/<(script)/gi, "<$1");
 ---
 
 <script type="application/ld+json" set:html={json}></script>

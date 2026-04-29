@@ -77,11 +77,11 @@ async function main() {
 		const locExempt = new Set([
 			"sqlite-bootstrap.ts",
 			"index.ts",
-			"project-scaffold.ts",          // CLI scaffolding — intentionally verbose
-			"project-scaffold-ci.ts",       // CI scaffolding — mirrors project-scaffold.ts pattern
+			"project-scaffold.ts", // CLI scaffolding — intentionally verbose
+			"project-scaffold-ci.ts", // CI scaffolding — mirrors project-scaffold.ts pattern
 			"cms-route-registry-factory.ts", // factory with injected deps — stable
 			"auth-repository-factory.ts",
-			"runtime-actions-content.ts",   // complex multi-step content coordinator
+			"runtime-actions-content.ts", // complex multi-step content coordinator
 		]);
 		const locExemptDirs = ["sqlite-runtime/", "import/", "adapters/"];
 		const isLocExempt =
@@ -237,9 +237,9 @@ async function main() {
 			//   - SQL ? placeholders in template strings
 			//   - Regex quantifiers like (?:, [x]?, )? inside regex literals
 			const stripped = body
-				.replace(/`[^`]*`/g, "``")                           // strip template string contents
-				.replace(/"(?:[^"\\]|\\.)*"/g, '""')                  // strip double-quoted string contents
-				.replace(/'(?:[^'\\]|\\.)*'/g, "''")                  // strip single-quoted string contents
+				.replace(/`[^`]*`/g, "``") // strip template string contents
+				.replace(/"(?:[^"\\]|\\.)*"/g, '""') // strip double-quoted string contents
+				.replace(/'(?:[^'\\]|\\.)*'/g, "''") // strip single-quoted string contents
 				.replace(/\/(?:[^\n/\\]|\\.)+\/[gimsuy]*/g, "/r/"); // strip regex literal contents
 			const ternaryCount = (stripped.match(/[^?]\?[^?.:]/g) || []).length;
 			complexity += ternaryCount;

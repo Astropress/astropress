@@ -9,7 +9,7 @@
 
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join, relative } from "node:path";
-import { AuditReport, fromRoot, ROOT, runAudit } from "../lib/audit-utils.js";
+import { AuditReport, ROOT, fromRoot, runAudit } from "../lib/audit-utils.js";
 
 type Violation = { file: string; line: number; message: string };
 
@@ -154,9 +154,7 @@ function checkFile(file: string, src: string): Violation[] {
 			const callWindow = lines
 				.slice(i, Math.min(lines.length, i + 4))
 				.join("\n");
-			const fetchWindow = lines
-				.slice(Math.max(0, i - 10), i + 4)
-				.join("\n");
+			const fetchWindow = lines.slice(Math.max(0, i - 10), i + 4).join("\n");
 			if (
 				/\.filename/.test(callWindow) &&
 				!/downloadMedia|downloadMediaToFile/.test(fetchWindow) &&

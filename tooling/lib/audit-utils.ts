@@ -26,7 +26,9 @@ export async function fileContains(
 ): Promise<boolean> {
 	const src = await readText(path);
 	if (!src) return false;
-	return typeof pattern === "string" ? src.includes(pattern) : pattern.test(src);
+	return typeof pattern === "string"
+		? src.includes(pattern)
+		: pattern.test(src);
 }
 
 export interface ListFilesOptions {
@@ -47,7 +49,8 @@ export async function listFiles(
 	}
 	const { extensions, exclude } = opts;
 	return entries.filter((entry) => {
-		if (extensions && !extensions.some((ext) => entry.endsWith(ext))) return false;
+		if (extensions && !extensions.some((ext) => entry.endsWith(ext)))
+			return false;
 		if (exclude?.includes(entry)) return false;
 		return true;
 	});
@@ -76,7 +79,9 @@ export class AuditReport {
 	 */
 	finish(successMessage: string): never {
 		if (this.violations.length > 0) {
-			console.error(`${this.name} audit failed — ${this.violations.length} issue(s):\n`);
+			console.error(
+				`${this.name} audit failed — ${this.violations.length} issue(s):\n`,
+			);
 			for (const v of this.violations) console.error(`  - ${v}`);
 			process.exit(1);
 		}

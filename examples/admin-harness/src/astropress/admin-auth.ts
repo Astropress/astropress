@@ -2,4 +2,6 @@ import { createAstropressPasswordAuthModule } from "@astropress-diy/astropress/i
 
 import { authenticatePersistedAdminUser } from "./runtime.ts";
 
-export const hostRuntimeAdminAuth = createAstropressPasswordAuthModule(authenticatePersistedAdminUser);
+export const hostRuntimeAdminAuth = createAstropressPasswordAuthModule(
+	authenticatePersistedAdminUser,
+);

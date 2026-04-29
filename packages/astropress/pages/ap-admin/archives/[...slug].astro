@@ -1,7 +1,11 @@
 ---
 import AdminLayout from "@astropress-diy/astropress/components/AdminLayout.astro";
 import CsrfInput from "@astropress-diy/astropress/components/CsrfInput.astro";
-import { buildArchiveEditorModel } from "astropress";
+import {
+	buildArchiveEditorModel,
+	getPageT,
+	resolveAdminLocale,
+} from "astropress";
 
 export const prerender = false;
 
@@ -21,6 +25,7 @@ const errorMessage =
 	Astro.url.searchParams.get("error") === "1"
 		? Astro.url.searchParams.get("message")
 		: "";
+const t = getPageT(resolveAdminLocale(Astro));
 
 if (model.status === "forbidden") {
 	Astro.response.status = 403;
@@ -33,78 +38,78 @@ if (model.status === "not_found") {
 
 {archive && model.status !== "forbidden" ? (
   <AdminLayout
-    title={`Edit Archive | ${archive.title}`}
-    heading="Edit Archive"
+    title={`${t("archiveEditor.title")} | ${archive.title}`}
+    heading={t("archiveEditor.title")}
     currentPath="/ap-admin/archives"
-    description="Editable metadata for public archive routes. Use Posts to manage the content that appears inside the archive."
+    description={t("archiveEditor.description")}
     role={adminUser!.role}
     userName={adminUser!.name}
   >
-    <nav class="breadcrumb" aria-label="breadcrumb">
-      <a href="/ap-admin/archives">Archives</a>
+    <nav class="breadcrumb" aria-label={t("archiveEditor.breadcrumb")}>
+      <a href="/ap-admin/archives">{t("archiveEditor.archivesLink")}</a>
       <span aria-hidden="true"> / </span>
       <span aria-current="page">{archive.title || slugValue}</span>
     </nav>
-    {model.warnings.length > 0 && <p class="notice">Some archive data is temporarily unavailable. This page is showing partial results.</p>}
+    {model.warnings.length > 0 && <p class="notice">{t("archiveEditor.partialResults")}</p>}
     <div class="toolbar">
-      <a href="/ap-admin/archives">Back to archives</a>
-      <a href={archive.path} target="_blank" rel="noreferrer">Open public archive</a>
-      <a href="/ap-admin/posts">Manage archive content in posts</a>
+      <a href="/ap-admin/archives">{t("archiveEditor.backToArchives")}</a>
+      <a href={archive.path} target="_blank" rel="noreferrer">{t("archiveEditor.openPublicArchive")}</a>
+      <a href="/ap-admin/posts">{t("archiveEditor.manageInPosts")}</a>
     </div>
-    {wasSaved && <p class="notice">Archive route updated successfully.</p>}
+    {wasSaved && <p class="notice">{t("archiveEditor.savedSuccess")}</p>}
     {errorMessage && <p class="error-notice">{errorMessage}</p>}
     <form method="post" action="/ap-admin/actions/archive-save" class="archive-form">
       <CsrfInput token={Astro.locals.csrfToken} />
       <input type="hidden" name="path" value={archive.path} />
       <section class="panel">
-        <h3>Archive Metadata</h3>
-        <p class="field-note">Public archive route: <a href={archive.path} target="_blank" rel="noreferrer">{archive.path}</a></p>
+        <h3>{t("archiveEditor.metadataHeading")}</h3>
+        <p class="field-note">{t("archiveEditor.publicArchiveRoute")} <a href={archive.path} target="_blank" rel="noreferrer">{archive.path}</a></p>
         <label>
-          <span>Title</span>
+          <span>{t("archiveEditor.titleField")}</span>
           <input type="text" name="title" value={archive.title} required />
         </label>
         <label>
-          <span>Summary</span>
+          <span>{t("archiveEditor.summary")}</span>
           <textarea name="summary" rows="5">{archive.summary ?? ""}</textarea>
         </label>
         <label>
-          <span>SEO Title</span>
+          <span>{t("archiveEditor.seoTitle")}</span>
           <input type="text" name="seoTitle" value={archive.seoTitle ?? archive.title} />
         </label>
         <label>
-          <span>Meta Description</span>
+          <span>{t("archiveEditor.metaDescription")}</span>
           <textarea name="metaDescription" rows="4">{archive.metaDescription ?? ""}</textarea>
         </label>
         <label>
-          <span>Canonical URL Override</span>
+          <span>{t("archiveEditor.canonicalUrlOverride")}</span>
           <input type="url" name="canonicalUrlOverride" value={archive.canonicalUrlOverride ?? ""} />
         </label>
         <label>
-          <span>Robots Directive</span>
+          <span>{t("archiveEditor.robotsDirective")}</span>
           <input type="text" name="robotsDirective" value={archive.robotsDirective ?? ""} />
         </label>
         <label>
-          <span>Revision Note</span>
-          <input type="text" name="revisionNote" placeholder="Summarize this change" />
+          <span>{t("archiveEditor.revisionNote")}</span>
+          <input type="text" name="revisionNote" placeholder={t("archiveEditor.revisionNotePlaceholder")} />
         </label>
       </section>
       <div class="form-actions">
-        <button type="submit">Save archive metadata</button>
-        <a href="/ap-admin/archives" class="secondary-button">Cancel</a>
+        <button type="submit">{t("archiveEditor.saveArchive")}</button>
+        <a href="/ap-admin/archives" class="secondary-button">{t("archiveEditor.cancel")}</a>
       </div>
     </form>
   </AdminLayout>
 ) : (
   <AdminLayout
-    title={adminUser?.role !== "admin" ? "Forbidden" : "Not Found"}
-    heading={adminUser?.role !== "admin" ? "Forbidden" : "Not Found"}
+    title={adminUser?.role !== "admin" ? t("archiveEditor.forbiddenTitle") : t("archiveEditor.notFoundTitle")}
+    heading={adminUser?.role !== "admin" ? t("archiveEditor.forbiddenTitle") : t("archiveEditor.notFoundTitle")}
     currentPath="/ap-admin/archives"
-    description={adminUser?.role !== "admin" ? "This action requires an admin account." : "The requested archive route could not be found."}
+    description={adminUser?.role !== "admin" ? t("archiveEditor.forbiddenDesc") : t("archiveEditor.notFoundDesc")}
     role={adminUser!.role}
     userName={adminUser!.name}
   >
     <section class="panel">
-      <p>{adminUser?.role !== "admin" ? "This action requires an admin account and is hidden from editor-only roles." : "The requested archive route could not be found."}</p>
+      <p>{adminUser?.role !== "admin" ? t("archiveEditor.forbiddenBody") : t("archiveEditor.notFoundDesc")}</p>
     </section>
   </AdminLayout>
 )}

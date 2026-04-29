@@ -1,26 +1,32 @@
 ---
 interface NavLink {
-  href: string;
-  label: string;
+	href: string;
+	label: string;
 }
 
 interface Props {
-  title: string;
-  description: string;
-  heading: string;
-  eyebrow?: string;
-  currentPath: string;
+	title: string;
+	description: string;
+	heading: string;
+	eyebrow?: string;
+	currentPath: string;
 }
 
-const { title, description, heading, eyebrow = "Astropress", currentPath } = Astro.props;
+const {
+	title,
+	description,
+	heading,
+	eyebrow = "Astropress",
+	currentPath,
+} = Astro.props;
 
 const navLinks: NavLink[] = [
-  { href: "/", label: "Overview" },
-  { href: "/docs", label: "Getting Started" },
-  { href: "/providers", label: "Hosting" },
-  { href: "/wordpress", label: "WordPress" },
-  { href: "/operations", label: "Operations" },
-  { href: "/admin", label: "Admin" },
+	{ href: "/", label: "Overview" },
+	{ href: "/docs", label: "Getting Started" },
+	{ href: "/providers", label: "Hosting" },
+	{ href: "/wordpress", label: "WordPress" },
+	{ href: "/operations", label: "Operations" },
+	{ href: "/admin", label: "Admin" },
 ];
 ---
 
