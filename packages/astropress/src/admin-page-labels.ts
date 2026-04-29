@@ -9143,6 +9143,44 @@ export const pageLabels = {
 		hi: "समस्या रिपोर्ट करें या सुविधा सुझाएँ",
 		ny: "Tipatseni vuto kapena kupatsa lingaliro",
 	},
+	"access.title": { en: "Access" },
+	"access.description": {
+		en: "Manage roles, role assignments, direct user grants, and view your effective permissions.",
+	},
+	"access.tabUsers": { en: "Users" },
+	"access.tabRoles": { en: "Roles" },
+	"access.tabMyPermissions": { en: "My Permissions" },
+	"access.usersHeading": { en: "User access" },
+	"access.usersDescription": {
+		en: "Assign roles, view direct grants, and ensure at least one break-glass admin remains.",
+	},
+	"access.usersColumnUser": { en: "User" },
+	"access.usersColumnRoles": { en: "Roles" },
+	"access.usersColumnDirectGrants": { en: "Direct grants" },
+	"access.usersColumnAdmin": { en: "Admin" },
+	"access.usersIsAdminBadge": { en: "Admin" },
+	"access.usersDirectGrantsBadge": { en: "Direct grants" },
+	"access.lastAdminWarning": {
+		en: "Only one active admin remains. Grant another user the Admin flag before changing this one to keep break-glass access.",
+	},
+	"access.assignRoleSubmit": { en: "Assign" },
+	"access.revokeRoleSubmit": { en: "Revoke" },
+	"access.directGrantsHeading": { en: "Direct grants" },
+	"access.directGrantsDescription": {
+		en: "Per-user policy overrides outside the role bundles. Use sparingly — they create permission sprawl that's harder to audit.",
+	},
+	"access.directGrantActionLabel": { en: "Action" },
+	"access.directGrantEffectLabel": { en: "Effect" },
+	"access.directGrantAllow": { en: "Allow" },
+	"access.directGrantDeny": { en: "Deny" },
+	"access.directGrantAddSubmit": { en: "Add grant" },
+	"access.directGrantRemoveSubmit": { en: "Remove" },
+	"access.rolesPlaceholder": {
+		en: "Roles management UI ships in the next access PR.",
+	},
+	"access.myPermissionsPlaceholder": {
+		en: "Effective-policies view ships in the next access PR.",
+	},
 } as const satisfies Record<string, LocaleMap>;
 
 /**
@@ -9151,7 +9189,7 @@ export const pageLabels = {
  */
 export function getPageT(locale: AdminLocale): (key: PageLabelKey) => string {
 	return (key) => {
-		const entry = pageLabels[key];
+		const entry = pageLabels[key] as LocaleMap;
 		return entry[locale] ?? entry.en;
 	};
 }

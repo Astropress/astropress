@@ -54,6 +54,18 @@ export {
 	seedStarterRoles,
 	substituteString,
 } from "./src/access/index.js";
+export {
+	addRuntimeUserDirectGrant,
+	assertNotLastActiveAdmin,
+	assignRuntimeUserRole,
+	removeRuntimeUserDirectGrant,
+	revokeRuntimeUserRole,
+} from "./src/runtime-actions-access.js";
+export { buildAccessPageModel } from "./src/admin-page-models-access.js";
+export type {
+	AccessPageModel,
+	AccessPageTab,
+} from "./src/admin-page-models-access";
 export type {
 	AccessContext,
 	AccessRepository,

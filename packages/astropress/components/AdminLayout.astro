@@ -276,6 +276,10 @@ const navItems: NavItem[] = [
 		adminOnly: true,
 		requiredAction: "users:list",
 	}),
+	leaf("/ap-admin/access", adminUi.navigation.access, {
+		adminOnly: true,
+		requiredAction: "roles:manage",
+	}),
 
 	groupSep(adminUi.navigation.groupOperations),
 	leaf("/ap-admin/system", adminUi.navigation.system, {

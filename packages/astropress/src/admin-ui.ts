@@ -38,6 +38,7 @@ export type AstropressAdminNavKey =
 	| "routePages"
 	| "archives"
 	| "users"
+	| "access"
 	| "media"
 	| "comments"
 	| "redirects"
@@ -194,6 +195,7 @@ const defaultAdminUiConfig: AstropressResolvedAdminUiConfig = {
 		routePages: "Route Table",
 		archives: "Archives",
 		users: "Users",
+		access: "Access",
 		media: "Media",
 		comments: "Comments",
 		redirects: "Redirects",
@@ -388,6 +390,7 @@ function applyTranslations(
 			routePages: tr("navRoutePages", merged.navigation.routePages),
 			archives: tr("navArchives", merged.navigation.archives),
 			users: tr("navUsers", merged.navigation.users),
+			access: tr("navAccess", merged.navigation.access),
 			media: tr("navMedia", merged.navigation.media),
 			comments: tr("navComments", merged.navigation.comments),
 			redirects: tr("navRedirects", merged.navigation.redirects),

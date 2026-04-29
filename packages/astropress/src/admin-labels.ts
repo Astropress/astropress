@@ -62,6 +62,7 @@ export type AdminLabelKey =
 	| "navTranslations"
 	| "navSeo"
 	| "navUsers"
+	| "navAccess"
 	| "navSettings"
 	| "navSystem"
 	| "navApiTokens"
@@ -198,6 +199,7 @@ export const adminLabels: Record<"en", Record<AdminLabelKey, string>> &
 		navTranslations: "Translations",
 		navSeo: "SEO",
 		navUsers: "Users",
+		navAccess: "Access",
 		navSettings: "Settings",
 		navSystem: "System",
 		navApiTokens: "API Tokens",
@@ -317,6 +319,7 @@ export const adminLabels: Record<"en", Record<AdminLabelKey, string>> &
 		navRedirects: "Redirecciones",
 		navTranslations: "Traducciones",
 		navSeo: "SEO",
+		navAccess: "Acceso",
 		navUsers: "Usuarios",
 		navSettings: "Configuración",
 		navSystem: "Sistema",
@@ -399,6 +402,7 @@ export const adminLabels: Record<"en", Record<AdminLabelKey, string>> &
 		navArchives: "Archives",
 		navRedirects: "Redirections",
 		navTranslations: "Traductions",
+		navAccess: "Accès",
 		navSeo: "SEO",
 		navUsers: "Utilisateurs",
 		navSettings: "Paramètres",
@@ -482,6 +486,7 @@ export const adminLabels: Record<"en", Record<AdminLabelKey, string>> &
 		navRoutePages: "Routentabelle",
 		navArchives: "Archive",
 		navRedirects: "Weiterleitungen",
+		navAccess: "Zugriff",
 		navTranslations: "Übersetzungen",
 		navSeo: "SEO",
 		navUsers: "Benutzer",
@@ -562,6 +567,7 @@ export const adminLabels: Record<"en", Record<AdminLabelKey, string>> &
 		navTaxonomies: "Categorias e tags",
 		navRoutePages: "Tabela de rotas",
 		navArchives: "Arquivos",
+		navAccess: "Acesso",
 		navRedirects: "Redirecionamentos",
 		navTranslations: "Traduções",
 		navSeo: "SEO",
@@ -646,6 +652,7 @@ export const adminLabels: Record<"en", Record<AdminLabelKey, string>> &
 		navAuthors: "著者",
 		navTaxonomies: "カテゴリとタグ",
 		navRoutePages: "ルートテーブル",
+		navAccess: "アクセス",
 		navArchives: "アーカイブ",
 		navRedirects: "リダイレクト",
 		navTranslations: "翻訳",
@@ -723,6 +730,7 @@ export const adminLabels: Record<"en", Record<AdminLabelKey, string>> &
 		navComments: "వ్యాఖ్యలు",
 		navAuthors: "రచయితలు",
 		navTaxonomies: "వర్గాలు & ట్యాగ్‌లు",
+		navAccess: "యాక్సెస్",
 		navRoutePages: "రూట్ పట్టిక",
 		navArchives: "ఆర్కైవ్‌లు",
 		navRedirects: "రీడైరెక్ట్‌లు",
@@ -802,6 +810,7 @@ export const adminLabels: Record<"en", Record<AdminLabelKey, string>> &
 		navMedia: "मीडिया",
 		navComments: "टिप्पणियाँ",
 		navAuthors: "लेखक",
+		navAccess: "एक्सेस",
 		navTaxonomies: "श्रेणियाँ और टैग",
 		navRoutePages: "रूट तालिका",
 		navArchives: "अभिलेख",
@@ -883,6 +892,7 @@ export const adminLabels: Record<"en", Record<AdminLabelKey, string>> &
 		navPages: "Masamba",
 		navMedia: "Media",
 		navComments: "Ndemanga",
+		navAccess: "Mwayi",
 		navAuthors: "Olemba",
 		navTaxonomies: "Magulu ndi Ma tag",
 		navRoutePages: "Tebulo la mizere",
