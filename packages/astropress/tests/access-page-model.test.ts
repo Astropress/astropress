@@ -37,11 +37,11 @@ beforeEach(() => {
 	db = makeDb();
 	locals = makeLocals(db);
 	db.prepare(
-		"INSERT INTO admin_users (email, password_hash, role, name, active, is_admin) VALUES (?, ?, ?, ?, ?, ?)",
-	).run("admin@test.local", "hash", "admin", "Admin", 1, 1);
+		"INSERT INTO admin_users (email, password_hash, name, active, is_admin) VALUES (?, ?, ?, ?, ?)",
+	).run("admin@test.local", "hash", "Admin", 1, 1);
 	db.prepare(
-		"INSERT INTO admin_users (email, password_hash, role, name, active, is_admin) VALUES (?, ?, ?, ?, ?, ?)",
-	).run("editor@test.local", "hash", "editor", "Editor", 1, 0);
+		"INSERT INTO admin_users (email, password_hash, name, active, is_admin) VALUES (?, ?, ?, ?, ?)",
+	).run("editor@test.local", "hash", "Editor", 1, 0);
 	const repo = createAccessRepository(db as never);
 	seedStarterRoles(repo);
 });

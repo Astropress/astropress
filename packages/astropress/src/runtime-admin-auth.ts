@@ -60,7 +60,9 @@ async function getLiveD1SessionRow(
 		row = await db
 			.prepare(
 				`
-          SELECT s.id, s.csrf_token, s.last_active_at, u.email, u.role, u.name
+          SELECT s.id, s.csrf_token, s.last_active_at, u.email,
+                 CASE WHEN u.is_admin = 1 THEN 'admin' ELSE 'editor' END AS role,
+                 u.name
           FROM admin_sessions s
           JOIN admin_users u ON u.id = s.user_id
           WHERE s.id = ?
@@ -135,7 +137,9 @@ export async function authenticateRuntimeAdminUser(
 	const row = await db
 		.prepare(
 			`
-        SELECT email, password_hash, role, name
+        SELECT email, password_hash,
+               CASE WHEN is_admin = 1 THEN 'admin' ELSE 'editor' END AS role,
+               name
         FROM admin_users
         WHERE email = ?
           AND active = 1

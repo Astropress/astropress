@@ -10,14 +10,12 @@ CREATE TABLE IF NOT EXISTS schema_migrations (
 -- is_admin replaces the legacy 'role' enum: admins bypass policy evaluation
 -- (break-glass) and own everything. Every other permission flows through the
 -- ABAC tables below (roles, role_policies, user_roles, user_policies,
--- user_attributes). The legacy 'role' column is kept for one release cycle
--- so the migration script can read it; it is dropped by the access PR's
--- terminal migration once the sweep across call sites is complete.
+-- user_attributes). The legacy 'role' enum was dropped by the terminal
+-- access-PR migration; runtime derives a display label from is_admin.
 CREATE TABLE IF NOT EXISTS admin_users (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   email TEXT NOT NULL UNIQUE,
   password_hash TEXT NOT NULL,
-  role TEXT,
   is_admin INTEGER NOT NULL DEFAULT 0,
   name TEXT NOT NULL,
   active INTEGER NOT NULL DEFAULT 1,

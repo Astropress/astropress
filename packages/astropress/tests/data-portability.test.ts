@@ -6,8 +6,8 @@ import { makeDb } from "./helpers/make-db.js";
 
 function seedUser(db: DatabaseSync, email: string, name = "Test User") {
 	db.prepare(
-		`INSERT INTO admin_users (email, password_hash, role, name, is_admin)
-     VALUES (?, 'hash', 'editor', ?, 0)`,
+		`INSERT INTO admin_users (email, password_hash, name, is_admin)
+     VALUES (?, 'hash', ?, 0)`,
 	).run(email, name);
 	const row = db
 		.prepare("SELECT id FROM admin_users WHERE email = ? LIMIT 1")

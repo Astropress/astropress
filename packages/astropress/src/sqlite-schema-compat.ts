@@ -230,9 +230,8 @@ export function ensureLegacySchemaCompatibility(db: SqliteDatabaseLike) {
 
 	// ABAC migration: existing DBs may have admin_users with the old
 	// 'role TEXT NOT NULL CHECK(...)' column and no is_admin column. Add
-	// is_admin if missing and backfill from the legacy role enum. The role
-	// column is intentionally retained until the runtime sweep finishes;
-	// the terminal access-PR migration drops it.
+	// is_admin if missing and backfill from the legacy role enum, then
+	// drop the role column entirely (terminal access-PR migration).
 	const adminUserColumns = new Set(getTableColumns(db, "admin_users"));
 	if (adminUserColumns.size > 0 && !adminUserColumns.has("is_admin")) {
 		db.exec(
@@ -244,32 +243,33 @@ export function ensureLegacySchemaCompatibility(db: SqliteDatabaseLike) {
 		}
 	}
 
-	// SQLite NOT NULL CHECK constraints on the legacy role column block new
-	// admin_users inserts that omit role. Some host apps will start writing
-	// only is_admin once they update; rebuild the table without the CHECK if
-	// it's still in place. Idempotent: only fires when the legacy CHECK is
-	// detected in the table SQL.
-	const adminUsersSql = getTableSql(db, "admin_users") ?? "";
-	if (
-		adminUsersSql.includes("CHECK(role IN") ||
-		adminUsersSql.includes("CHECK (role IN")
-	) {
+	// Terminal access-PR migration: rebuild admin_users without the legacy
+	// `role` column. Fires when the column is still present after the
+	// is_admin backfill above. Idempotent: only runs when role exists.
+	// Tolerates legacy v0.0.1 schemas that never had `active` or
+	// `created_at` columns by selecting safe defaults for missing columns.
+	const refreshedAdminColumns = new Set(getTableColumns(db, "admin_users"));
+	if (refreshedAdminColumns.has("role")) {
+		const activeExpr = refreshedAdminColumns.has("active") ? "active" : "1";
+		const createdAtExpr = refreshedAdminColumns.has("created_at")
+			? "created_at"
+			: "CURRENT_TIMESTAMP";
+		const nameExpr = refreshedAdminColumns.has("name") ? "name" : "email";
 		db.exec(`
       PRAGMA foreign_keys = OFF;
       CREATE TABLE admin_users__migrated (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         email TEXT NOT NULL UNIQUE,
         password_hash TEXT NOT NULL,
-        role TEXT,
         is_admin INTEGER NOT NULL DEFAULT 0,
         name TEXT NOT NULL,
         active INTEGER NOT NULL DEFAULT 1,
         created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
       );
-      INSERT INTO admin_users__migrated (id, email, password_hash, role, is_admin, name, active, created_at)
-        SELECT id, email, password_hash, role,
-               CASE WHEN role = 'admin' THEN 1 ELSE 0 END,
-               name, active, created_at
+      INSERT INTO admin_users__migrated (id, email, password_hash, is_admin, name, active, created_at)
+        SELECT id, email, password_hash,
+               CASE WHEN is_admin = 1 OR role = 'admin' THEN 1 ELSE 0 END,
+               ${nameExpr}, ${activeExpr}, ${createdAtExpr}
         FROM admin_users;
       DROP TABLE admin_users;
       ALTER TABLE admin_users__migrated RENAME TO admin_users;

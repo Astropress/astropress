@@ -543,7 +543,7 @@ describe("cloudflare adapter — content.list() branch coverage", () => {
 		const db = await createSeededCloudflareDatabase();
 		// Insert an inactive user (active=0) to cover the ternary false branch
 		db.prepare(
-			"INSERT INTO admin_users (email, password_hash, role, name, active, is_admin) VALUES (?1, ?2, ?3, ?4, ?5, CASE WHEN ?3 = 'admin' THEN 1 ELSE 0 END)",
+			"INSERT INTO admin_users (email, password_hash, name, active, is_admin) VALUES (?1, ?2, ?4, ?5, CASE WHEN ?3 = 'admin' THEN 1 ELSE 0 END)",
 		).run(
 			"inactive@example.com",
 			"placeholder-hash",

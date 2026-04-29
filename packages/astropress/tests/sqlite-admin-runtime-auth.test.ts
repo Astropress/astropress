@@ -117,7 +117,7 @@ describe("auth", () => {
 		const expiredDb = makeDb();
 		expiredDb
 			.prepare(
-				"INSERT INTO admin_users (email, password_hash, role, name, active, is_admin) VALUES (?1, ?2, ?3, ?4, 1, CASE WHEN ?3 = 'admin' THEN 1 ELSE 0 END)",
+				"INSERT INTO admin_users (email, password_hash, name, active, is_admin) VALUES (?1, ?2, ?4, 1, CASE WHEN ?3 = 'admin' THEN 1 ELSE 0 END)",
 			)
 			.run(
 				"expired@test.local",
@@ -299,7 +299,7 @@ describe("auth", () => {
 		const expiredDb = makeDb();
 		expiredDb
 			.prepare(
-				"INSERT INTO admin_users (email, password_hash, role, name, active, is_admin) VALUES (?1, ?2, ?3, ?4, 1, CASE WHEN ?3 = 'admin' THEN 1 ELSE 0 END)",
+				"INSERT INTO admin_users (email, password_hash, name, active, is_admin) VALUES (?1, ?2, ?4, 1, CASE WHEN ?3 = 'admin' THEN 1 ELSE 0 END)",
 			)
 			.run(
 				"expired2@test.local",

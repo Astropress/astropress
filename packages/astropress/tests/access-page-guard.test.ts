@@ -80,10 +80,10 @@ describe("requiresAccess", () => {
 		inst.exec(SCHEMA);
 		db = inst as unknown as DbHandle;
 		db.prepare(
-			"INSERT INTO admin_users (email, password_hash, name, is_admin, role) VALUES (?, 'h', 'Admin', 1, 'admin')",
+			"INSERT INTO admin_users (email, password_hash, name, is_admin) VALUES (?, 'h', 'Admin', 1)",
 		).run("admin@example.com");
 		db.prepare(
-			"INSERT INTO admin_users (email, password_hash, name, is_admin, role) VALUES (?, 'h', 'Editor', 0, 'editor')",
+			"INSERT INTO admin_users (email, password_hash, name, is_admin) VALUES (?, 'h', 'Editor', 0)",
 		).run("editor@example.com");
 		const repo = createAccessRepository(db as never);
 		seedStarterRoles(repo);
