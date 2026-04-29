@@ -55,6 +55,10 @@
 			"types": "./src/admin-ui.ts",
 			"default": "./dist/src/admin-ui.js"
 		},
+		"./access": {
+			"types": "./src/access/index.ts",
+			"default": "./dist/src/access/index.js"
+		},
 		"./hosted-api-adapter": {
 			"types": "./src/hosted-api-adapter.ts",
 			"default": "./dist/src/hosted-api-adapter.js"

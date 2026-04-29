@@ -36,6 +36,36 @@ export type {
 	StubEntry,
 	StubProvider,
 } from "./src/admin-stub-catalog";
+
+// Access control (ABAC engine + action registry)
+export {
+	actionMatches,
+	createPolicyEngine,
+	evaluate,
+	evaluateCondition,
+	getAccessAction,
+	listAccessActions,
+	registerAccessAction,
+	resolvePath,
+	substituteString,
+} from "./src/access/index.js";
+export type {
+	ActionDefinition,
+	AttributeValue as AccessAttributeValue,
+	BindingContext,
+	Condition,
+	Decision,
+	Effect,
+	Env as AccessEnv,
+	EvaluationResult,
+	JsonPolicyEngineOptions,
+	Policy,
+	PolicyEngine,
+	PolicyLoader,
+	PolicySource,
+	Resource as AccessResource,
+	Subject as AccessSubject,
+} from "./src/access/index";
 export type {
 	AstropressAdminNavKey,
 	AstropressResolvedAdminUiConfig,
