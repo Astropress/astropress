@@ -119,6 +119,20 @@ describe("buildAccessPageModel", () => {
 		expect(result.data.userDirectGrantCounts[editorRow.id]).toBe(1);
 	});
 
+	it("returns each role's policies grouped by role id — the Roles tab renders them inline", async () => {
+		const repo = createAccessRepository(db as never);
+		const editor = repo.listRoles().find((r) => r.name === "Editor");
+		if (!editor) throw new Error("Editor role missing in seed");
+		const result = await buildAccessPageModel(locals, adminUser, {
+			tab: "roles",
+		});
+		expect(result.data.activeTab).toBe("roles");
+		expect(result.data.rolePoliciesMap[editor.id]).toBeDefined();
+		expect(result.data.rolePoliciesMap[editor.id]?.length ?? 0).toBeGreaterThan(
+			0,
+		);
+	});
+
 	it("computes the active subject's effective policies for the My Permissions tab", async () => {
 		const result = await buildAccessPageModel(locals, adminUser, {
 			tab: "my-permissions",

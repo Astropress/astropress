@@ -13,7 +13,11 @@
  */
 
 import { randomUUID } from "node:crypto";
-import type { UserPolicyRecord } from "./access/index";
+import type {
+	RolePolicyRecord,
+	RoleRecord,
+	UserPolicyRecord,
+} from "./access/index";
 import type { Condition, Effect } from "./access/index";
 import { getAdminDb, withLocalStoreFallback } from "./admin-store-dispatch";
 import type { D1DatabaseLike } from "./d1-database";
@@ -203,4 +207,183 @@ async function checkLastAdminAgainstD1(
 		};
 	}
 	return { ok: true as const, data: undefined };
+}
+
+// ─── Role CRUD ───────────────────────────────────────────────────────────────
+
+export async function createRuntimeRole(
+	locals: App.Locals | null | undefined,
+	input: { name: string; description?: string },
+): Promise<ActionResult<RoleRecord>> {
+	const trimmedName = input.name.trim();
+	if (!trimmedName) {
+		return { ok: false as const, error: "Role name is required." };
+	}
+	const id = randomUUID();
+	const description = (input.description ?? "").trim();
+	const now = new Date().toISOString();
+	return withLocalStoreFallback<ActionResult<RoleRecord>>(
+		locals,
+		async (db) => {
+			await db
+				.prepare(
+					"INSERT INTO access_roles (id, name, description, is_system, created_at, updated_at) VALUES (?, ?, ?, 0, ?, ?)",
+				)
+				.bind(id, trimmedName, description, now, now)
+				.run();
+			return {
+				ok: true as const,
+				data: {
+					id,
+					name: trimmedName,
+					description,
+					isSystem: false,
+					createdAt: now,
+					updatedAt: now,
+				},
+			};
+		},
+		async () => ({
+			ok: false as const,
+			error: "Local admin store does not yet expose role management.",
+		}),
+	);
+}
+
+export async function updateRuntimeRole(
+	locals: App.Locals | null | undefined,
+	input: { id: string; name?: string; description?: string },
+): Promise<ActionResult<{ id: string }>> {
+	const trimmedName = input.name?.trim();
+	const description = input.description?.trim();
+	if (trimmedName !== undefined && trimmedName === "") {
+		return { ok: false as const, error: "Role name cannot be empty." };
+	}
+	const now = new Date().toISOString();
+	return withLocalStoreFallback<ActionResult<{ id: string }>>(
+		locals,
+		async (db) => {
+			if (trimmedName !== undefined) {
+				await db
+					.prepare(
+						"UPDATE access_roles SET name = ?, updated_at = ? WHERE id = ? AND is_system = 0",
+					)
+					.bind(trimmedName, now, input.id)
+					.run();
+			}
+			if (description !== undefined) {
+				await db
+					.prepare(
+						"UPDATE access_roles SET description = ?, updated_at = ? WHERE id = ?",
+					)
+					.bind(description, now, input.id)
+					.run();
+			}
+			return { ok: true as const, data: { id: input.id } };
+		},
+		async () => ({
+			ok: false as const,
+			error: "Local admin store does not yet expose role management.",
+		}),
+	);
+}
+
+export async function deleteRuntimeRole(
+	locals: App.Locals | null | undefined,
+	input: { id: string },
+): Promise<ActionResult<{ id: string }>> {
+	return withLocalStoreFallback<ActionResult<{ id: string }>>(
+		locals,
+		async (db) => {
+			const row = await db
+				.prepare("SELECT is_system FROM access_roles WHERE id = ?")
+				.bind(input.id)
+				.first<{ is_system: number }>();
+			if (row && row.is_system === 1) {
+				return {
+					ok: false as const,
+					error: "System roles cannot be deleted.",
+				};
+			}
+			await db
+				.prepare("DELETE FROM access_roles WHERE id = ? AND is_system = 0")
+				.bind(input.id)
+				.run();
+			return { ok: true as const, data: { id: input.id } };
+		},
+		async () => ({
+			ok: false as const,
+			error: "Local admin store does not yet expose role management.",
+		}),
+	);
+}
+
+export async function addRuntimeRolePolicy(
+	locals: App.Locals | null | undefined,
+	input: {
+		roleId: string;
+		effect: Effect;
+		action: string;
+		condition?: Condition | null;
+		priority?: number;
+	},
+): Promise<ActionResult<RolePolicyRecord>> {
+	const id = randomUUID();
+	const conditionJson = input.condition
+		? JSON.stringify(input.condition)
+		: null;
+	const priority = input.priority ?? 0;
+	return withLocalStoreFallback<ActionResult<RolePolicyRecord>>(
+		locals,
+		async (db) => {
+			await db
+				.prepare(
+					"INSERT INTO access_role_policies (id, role_id, effect, action, condition_json, priority) VALUES (?, ?, ?, ?, ?, ?)",
+				)
+				.bind(
+					id,
+					input.roleId,
+					input.effect,
+					input.action,
+					conditionJson,
+					priority,
+				)
+				.run();
+			return {
+				ok: true as const,
+				data: {
+					id,
+					roleId: input.roleId,
+					effect: input.effect,
+					action: input.action,
+					condition: input.condition ?? null,
+					priority,
+				},
+			};
+		},
+		async () => ({
+			ok: false as const,
+			error: "Local admin store does not yet expose role management.",
+		}),
+	);
+}
+
+export async function removeRuntimeRolePolicy(
+	locals: App.Locals | null | undefined,
+	input: { policyId: string },
+): Promise<ActionResult<{ id: string }>> {
+	return withLocalStoreFallback<ActionResult<{ id: string }>>(
+		locals,
+		async (db) => {
+			await db
+				.prepare("DELETE FROM access_role_policies WHERE id = ?")
+				.bind(input.policyId)
+				.run();
+			return { ok: true as const, data: { id: input.policyId } };
+		},
+		async () => ({
+			ok: false as const,
+			error: "Local admin store does not yet expose role management.",
+		}),
+	);
 }

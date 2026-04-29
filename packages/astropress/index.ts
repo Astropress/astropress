@@ -55,11 +55,16 @@ export {
 	substituteString,
 } from "./src/access/index.js";
 export {
+	addRuntimeRolePolicy,
 	addRuntimeUserDirectGrant,
 	assertNotLastActiveAdmin,
 	assignRuntimeUserRole,
+	createRuntimeRole,
+	deleteRuntimeRole,
+	removeRuntimeRolePolicy,
 	removeRuntimeUserDirectGrant,
 	revokeRuntimeUserRole,
+	updateRuntimeRole,
 } from "./src/runtime-actions-access.js";
 export { buildAccessPageModel } from "./src/admin-page-models-access.js";
 export type {

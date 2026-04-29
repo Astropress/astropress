@@ -8,7 +8,7 @@
 import type { APIContext } from "astro";
 import { loadAccessTabDataFromD1 } from "./access/d1-access-page-store";
 import { getAccessContext } from "./access/index";
-import type { Policy, RoleRecord } from "./access/index";
+import type { Policy, RolePolicyRecord, RoleRecord } from "./access/index";
 import {
 	type AdminPageResult,
 	forbidden,
@@ -29,6 +29,7 @@ export interface AccessPageModel {
 	roles: RoleRecord[];
 	userRoleMap: Record<number, string[]>;
 	userDirectGrantCounts: Record<number, number>;
+	rolePoliciesMap: Record<string, RolePolicyRecord[]>;
 	activeAdminCount: number;
 	viewerPolicies: readonly Policy[];
 }
@@ -48,6 +49,7 @@ const EMPTY_MODEL: AccessPageModel = {
 	roles: [],
 	userRoleMap: {},
 	userDirectGrantCounts: {},
+	rolePoliciesMap: {},
 	activeAdminCount: 0,
 	viewerPolicies: [],
 };
@@ -77,6 +79,7 @@ export async function buildAccessPageModel(
 			roles: [] as RoleRecord[],
 			userRoleMap: {},
 			userDirectGrantCounts: {},
+			rolePoliciesMap: {} as Record<string, RolePolicyRecord[]>,
 			activeAdminCount: 0,
 		},
 	);
@@ -94,6 +97,7 @@ export async function buildAccessPageModel(
 			roles: tabData.roles,
 			userRoleMap: tabData.userRoleMap,
 			userDirectGrantCounts: tabData.userDirectGrantCounts,
+			rolePoliciesMap: tabData.rolePoliciesMap,
 			activeAdminCount: tabData.activeAdminCount,
 			viewerPolicies,
 		},
@@ -109,6 +113,7 @@ async function loadAccessTabData(locals: App.Locals) {
 			roles: [],
 			userRoleMap: {},
 			userDirectGrantCounts: {},
+			rolePoliciesMap: {},
 			activeAdminCount: 0,
 		}),
 	);

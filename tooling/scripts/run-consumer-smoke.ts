@@ -35,6 +35,7 @@ export const ADMIN_SMOKE_ROUTES = [
 	"/ap-admin/comments",
 	"/ap-admin/redirects",
 	"/ap-admin/users",
+	"/ap-admin/access",
 	"/ap-admin/media",
 	"/ap-admin/archives",
 	"/ap-admin/authors",

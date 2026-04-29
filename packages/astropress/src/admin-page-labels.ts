@@ -9175,12 +9175,36 @@ export const pageLabels = {
 	"access.directGrantDeny": { en: "Deny" },
 	"access.directGrantAddSubmit": { en: "Add grant" },
 	"access.directGrantRemoveSubmit": { en: "Remove" },
-	"access.rolesPlaceholder": {
-		en: "Roles management UI ships in the next access PR.",
+	"access.rolesHeading": { en: "Roles" },
+	"access.rolesDescription": {
+		en: "Roles bundle policies. Assign roles to users on the Users tab; refine policies here.",
 	},
-	"access.myPermissionsPlaceholder": {
-		en: "Effective-policies view ships in the next access PR.",
+	"access.rolesCreateHeading": { en: "Create role" },
+	"access.rolesNameLabel": { en: "Name" },
+	"access.rolesDescriptionLabel": { en: "Description" },
+	"access.rolesCreateSubmit": { en: "Create role" },
+	"access.rolesUpdateSubmit": { en: "Save" },
+	"access.rolesDeleteSubmit": { en: "Delete role" },
+	"access.rolesSystemBadge": { en: "System" },
+	"access.rolesPolicyHeading": { en: "Policies" },
+	"access.rolesPolicyEmpty": { en: "No policies bound to this role." },
+	"access.rolesPolicyAddHeading": { en: "Add policy" },
+	"access.rolesPolicyPriorityLabel": { en: "Priority" },
+	"access.rolesPolicyAddSubmit": { en: "Add policy" },
+	"access.rolesPolicyRemoveSubmit": { en: "Remove" },
+	"access.myPermissionsHeading": { en: "My permissions" },
+	"access.myPermissionsDescription": {
+		en: "Effective policies for your subject — union of role bundles plus direct grants. Admin bypasses evaluation but the snapshot is shown for transparency.",
 	},
+	"access.myPermissionsEmpty": {
+		en: "No policies attached to your subject.",
+	},
+	"access.myPermissionsActionColumn": { en: "Action" },
+	"access.myPermissionsEffectColumn": { en: "Effect" },
+	"access.myPermissionsSourceColumn": { en: "Source" },
+	"access.myPermissionsConditionColumn": { en: "Condition" },
+	"access.myPermissionsSourceDirect": { en: "Direct grant" },
+	"access.myPermissionsSourceRole": { en: "Role" },
 } as const satisfies Record<string, LocaleMap>;
 
 /**
