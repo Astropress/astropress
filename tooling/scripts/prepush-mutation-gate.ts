@@ -181,7 +181,14 @@ function parseProgressJsonl(): Map<
 			sessions.push(cur);
 		} else if (parsed.type === "mutant" && cur) {
 			const existing = cur.mutants.get(parsed.fileName) ?? [];
-			existing.push(parsed);
+			// Dedupe by mutant id within a session — stryker emits a fresh
+			// onMutantTested event when a worker SIGSEGVs and the mutant is
+			// retried on a new worker. Keep only the latest entry per id so
+			// per-file completion counts and status totals reflect actual
+			// distinct mutants, not retry storms.
+			const idx = existing.findIndex((m) => m.id === parsed.id);
+			if (idx >= 0) existing[idx] = parsed;
+			else existing.push(parsed);
 			cur.mutants.set(parsed.fileName, existing);
 		}
 	}
