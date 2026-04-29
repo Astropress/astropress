@@ -114,6 +114,7 @@ export type {
 export {
 	normalizeProviderCapabilities,
 	assertProviderContract,
+	isAuthUserAdmin,
 } from "./src/platform-contracts";
 export type {
 	ProviderKind,
