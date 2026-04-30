@@ -2,7 +2,7 @@
 import AdminLayout from "@astropress-diy/astropress/components/AdminLayout.astro";
 import CsrfInput from "@astropress-diy/astropress/components/CsrfInput.astro";
 import { loadLocalAdminStore } from "@astropress-diy/astropress/local-runtime-modules.js";
-import { getPageT, resolveAdminLocale } from "astropress";
+import { getPageT, requiresAccess, resolveAdminLocale } from "astropress";
 
 const guard = await requiresAccess(Astro, "webhooks:manage");
 if (guard) return guard;

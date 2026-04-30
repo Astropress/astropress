@@ -58,7 +58,7 @@ registerCms({
 const injectHarnessLocals = defineMiddleware(async ({ locals }, next) => {
 	locals.adminUser = {
 		email: "admin@example.com",
-		role: "admin",
+		isAdmin: true,
 		name: "Admin Harness",
 	};
 	locals.csrfToken = "harness-csrf-token";
