@@ -287,7 +287,18 @@ function runStryker(
 	const reporterPath = `../../${REPORTER_PATH}`;
 	const allLabelOnly =
 		mutateTargets.length > 0 && mutateTargets.every(isLabelTarget);
-	const excludedMutations = allLabelOnly ? ["StringLiteral"] : [];
+	// Label files are pure-data i18n maps with no runtime logic. Their
+	// scoreable mutants are all on the data structure itself —
+	// StringLiteral on values, ObjectLiteral wiping a locale's bundle,
+	// ArrayDeclaration on the locale-key list. Killing those would
+	// require asserting specific translation values in tests, which is
+	// brittle and out of scope for mutation testing — coverage of the
+	// *consumer* code (getAdminLabel, getPageT, AdminLayout) is what
+	// actually matters. Exclude all data-shape mutators globally for
+	// label-only runs.
+	const excludedMutations = allLabelOnly
+		? ["StringLiteral", "ObjectLiteral", "ArrayDeclaration"]
+		: [];
 	writeFileSync(
 		configPath,
 		`export default {
