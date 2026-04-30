@@ -405,6 +405,9 @@ function main(): number {
 	// Pure-type files excluded from `tooling/stryker/stryker.config.mjs` (no
 	// runtime code → Stryker produces no mutants → score is null). Skip them
 	// here so a typedef-only change doesn't fail the gate as "UNSCORED".
+	// Mirror audit-baseline-coverage's EXCLUDE_FILE_PATTERNS so changes to
+	// any auto-exempt file (barrel index.ts, .d.ts, hardcoded types) don't
+	// reach Stryker.
 	const TYPE_ONLY_FILES = new Set<string>([
 		`${PREFIX}src/persistence-types.ts`,
 		`${PREFIX}src/config-service-types.ts`,
@@ -412,9 +415,13 @@ function main(): number {
 		`${PREFIX}src/access/locals.ts`,
 		`${PREFIX}src/admin-stub-catalog.ts`,
 	]);
+	const isExempt = (f: string): boolean =>
+		TYPE_ONLY_FILES.has(f) ||
+		f.endsWith(".d.ts") ||
+		f.endsWith("/index.ts");
 	const repoRelative = changed
 		.filter((f) => f.startsWith(PREFIX))
-		.filter((f) => !TYPE_ONLY_FILES.has(f));
+		.filter((f) => !isExempt(f));
 	if (repoRelative.length === 0) {
 		console.log(
 			"prepush-mutation-gate: changed files outside packages/astropress/ (or are type-only) — skipping.",
