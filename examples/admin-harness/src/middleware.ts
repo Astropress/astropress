@@ -57,6 +57,7 @@ registerCms({
 
 const injectHarnessLocals = defineMiddleware(async ({ locals }, next) => {
 	locals.adminUser = {
+		id: "harness-admin",
 		email: "admin@example.com",
 		isAdmin: true,
 		name: "Admin Harness",

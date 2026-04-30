@@ -4,6 +4,7 @@ import CsrfInput from "@astropress-diy/astropress/components/CsrfInput.astro";
 import {
 	buildArchiveEditorModel,
 	getPageT,
+	isAuthUserAdmin,
 	resolveAdminLocale,
 } from "astropress";
 
@@ -17,8 +18,9 @@ const archivePath = `/${slugValue}`;
 const model = await buildArchiveEditorModel(
 	Astro.locals,
 	archivePath,
-	adminUser?.role,
+	adminUser,
 );
+const isForbidden = !adminUser || !isAuthUserAdmin(adminUser);
 const { archive } = model.data;
 const wasSaved = Astro.url.searchParams.get("saved") === "1";
 const errorMessage =
@@ -100,14 +102,14 @@ if (model.status === "not_found") {
   </AdminLayout>
 ) : (
   <AdminLayout
-    title={adminUser?.role !== "admin" ? t("archiveEditor.forbiddenTitle") : t("archiveEditor.notFoundTitle")}
-    heading={adminUser?.role !== "admin" ? t("archiveEditor.forbiddenTitle") : t("archiveEditor.notFoundTitle")}
+    title={isForbidden ? t("archiveEditor.forbiddenTitle") : t("archiveEditor.notFoundTitle")}
+    heading={isForbidden ? t("archiveEditor.forbiddenTitle") : t("archiveEditor.notFoundTitle")}
     currentPath="/ap-admin/archives"
-    description={adminUser?.role !== "admin" ? t("archiveEditor.forbiddenDesc") : t("archiveEditor.notFoundDesc")}
+    description={isForbidden ? t("archiveEditor.forbiddenDesc") : t("archiveEditor.notFoundDesc")}
     userName={adminUser.name}
   >
     <section class="panel">
-      <p>{adminUser?.role !== "admin" ? t("archiveEditor.forbiddenBody") : t("archiveEditor.notFoundDesc")}</p>
+      <p>{isForbidden ? t("archiveEditor.forbiddenBody") : t("archiveEditor.notFoundDesc")}</p>
     </section>
   </AdminLayout>
 )}

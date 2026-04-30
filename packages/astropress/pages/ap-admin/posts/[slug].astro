@@ -3,7 +3,7 @@ import AdminLayout from "@astropress-diy/astropress/components/AdminLayout.astro
 import AuditTrail from "@astropress-diy/astropress/components/AuditTrail.astro";
 import CsrfInput from "@astropress-diy/astropress/components/CsrfInput.astro";
 import { buildPostEditorPageModel } from "astropress";
-import { getAdminLocalePair } from "astropress";
+import { getAdminLocalePair, isAuthUserAdmin } from "astropress";
 import { getSeededAdminContentType } from "astropress";
 import { peekCmsConfig } from "../../../src/config.js";
 
@@ -50,7 +50,8 @@ const registeredContentType = pageRecord
 const customFields = registeredContentType?.fields ?? [];
 const currentMetadata = (pageRecord?.metadata ?? {}) as Record<string, unknown>;
 
-if (adminUser?.role !== "admin" && contentType === "page") {
+const isAdmin = !!adminUser && isAuthUserAdmin(adminUser);
+if (!isAdmin && contentType === "page") {
 	Astro.response.status = 403;
 }
 
@@ -59,7 +60,7 @@ if (model.status === "not_found") {
 }
 ---
 
-{pageRecord && !(adminUser?.role !== "admin" && contentType === "page") ? (
+{pageRecord && !(!isAdmin && contentType === "page") ? (
   <AdminLayout
     title={`Edit ${contentLabel} | ${pageRecord.title}`}
     heading={`Edit ${contentLabel}`}
@@ -323,7 +324,7 @@ if (model.status === "not_found") {
               {localizedEditorHref && <a href={localizedEditorHref} class="admin-button-ghost small">Edit Spanish variant</a>}
               <a href="/ap-admin/translations" class="admin-button-ghost small">Open translation coverage</a>
             </div>
-            {adminUser?.role === "admin" && localePair.localizedRoute ? (
+            {isAdmin && localePair.localizedRoute ? (
               <div class="translation-inline-form">
                 <input type="hidden" name="route" value={localePair.localizedRoute} />
                 <input type="hidden" name="returnPath" value={`/ap-admin/posts/${pageRecord.slug}`} />
@@ -462,14 +463,14 @@ if (model.status === "not_found") {
   </AdminLayout>
 ) : (
   <AdminLayout
-    title={adminUser?.role !== "admin" && contentType === "page" ? "Forbidden" : "Not Found"}
-    heading={adminUser?.role !== "admin" && contentType === "page" ? "Forbidden" : "Not Found"}
+    title={!isAdmin && contentType === "page" ? "Forbidden" : "Not Found"}
+    heading={!isAdmin && contentType === "page" ? "Forbidden" : "Not Found"}
     currentPath="/ap-admin/posts"
-    description={adminUser?.role !== "admin" && contentType === "page" ? "This action requires an admin account." : "The requested content record could not be found."}
+    description={!isAdmin && contentType === "page" ? "This action requires an admin account." : "The requested content record could not be found."}
     userName={adminUser.name}
   >
     <section class="panel">
-      <p>{adminUser?.role !== "admin" && contentType === "page" ? "This action requires an admin account and is hidden from editor-only roles." : "The requested content record could not be found."}</p>
+      <p>{!isAdmin && contentType === "page" ? "This action requires an admin account and is hidden from editor-only roles." : "The requested content record could not be found."}</p>
     </section>
   </AdminLayout>
 )}

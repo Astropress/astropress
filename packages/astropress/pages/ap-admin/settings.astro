@@ -6,6 +6,7 @@ import { getNewsletterConfig } from "@astropress-diy/astropress/runtime-env";
 import {
 	buildSettingsPageModel,
 	getPageT,
+	isAuthUserAdmin,
 	resolveAdminLocale,
 } from "astropress";
 
@@ -41,7 +42,7 @@ const subPage = Number(Astro.url.searchParams.get("page") ?? "1");
 const subQuery = Astro.url.searchParams.get("q") ?? "";
 const perPage = 25;
 
-if (activeTab === "newsletter" && adminUser?.role === "admin") {
+if (activeTab === "newsletter" && adminUser && isAuthUserAdmin(adminUser)) {
 	try {
 		const cfg = getNewsletterConfig(Astro.locals);
 		if (

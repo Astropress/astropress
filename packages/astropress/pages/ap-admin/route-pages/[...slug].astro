@@ -5,6 +5,7 @@ import {
 	buildRoutePageEditorModel,
 	getAdminLocalePair,
 	getPageT,
+	isAuthUserAdmin,
 	resolveAdminLocale,
 } from "astropress";
 
@@ -20,8 +21,9 @@ const routePath = `/${slugSegments.join("/")}`;
 const model = await buildRoutePageEditorModel(
 	Astro.locals,
 	routePath,
-	adminUser?.role,
+	adminUser,
 );
+const isForbidden = !adminUser || !isAuthUserAdmin(adminUser);
 const { pageRecord, englishOwner, effectiveTranslationState } = model.data;
 const wasSaved = Astro.url.searchParams.get("saved") === "1";
 const errorMessage =
@@ -200,13 +202,13 @@ if (model.status === "not_found") {
   </AdminLayout>
 ) : (
   <AdminLayout
-    title={adminUser?.role !== "admin" ? t("routePages.forbiddenTitle") : t("routePageEditor.notFoundTitle")}
-    heading={adminUser?.role !== "admin" ? t("routePages.forbiddenTitle") : t("routePageEditor.notFoundTitle")}
+    title={isForbidden ? t("routePages.forbiddenTitle") : t("routePageEditor.notFoundTitle")}
+    heading={isForbidden ? t("routePages.forbiddenTitle") : t("routePageEditor.notFoundTitle")}
     currentPath="/ap-admin/route-pages"
-    description={adminUser?.role !== "admin" ? t("routePages.forbiddenDesc") : t("routePageEditor.notFoundDesc")}
+    description={isForbidden ? t("routePages.forbiddenDesc") : t("routePageEditor.notFoundDesc")}
     userName={adminUser.name}
   >
-    {adminUser?.role !== "admin" && (
+    {isForbidden && (
       <section class="panel">
         <p>{t("routePages.forbiddenBody")}</p>
       </section>

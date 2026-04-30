@@ -1,10 +1,11 @@
 ---
 import AdminLayout from "@astropress-diy/astropress/components/AdminLayout.astro";
 import CsrfInput from "@astropress-diy/astropress/components/CsrfInput.astro";
+import { isAuthUserAdmin } from "astropress";
 
 const adminUser = Astro.locals.adminUser;
 
-if (adminUser?.role !== "admin") {
+if (!adminUser || !isAuthUserAdmin(adminUser)) {
 	Astro.response.status = 403;
 }
 
@@ -14,7 +15,7 @@ const errorMessage =
 		: "";
 ---
 
-{adminUser?.role === "admin" ? (
+{adminUser && isAuthUserAdmin(adminUser) ? (
   <AdminLayout
     title="New Page"
     heading="New Page"

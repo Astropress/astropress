@@ -1,10 +1,10 @@
 ---
 import AdminLayout from "@astropress-diy/astropress/components/AdminLayout.astro";
 import { getAstropressServices } from "@astropress-diy/astropress/services-config";
-import { getPageT, resolveAdminLocale } from "astropress";
+import { getPageT, isAuthUserAdmin, resolveAdminLocale } from "astropress";
 
 const adminUser = Astro.locals.adminUser;
-if (adminUser?.role !== "admin") {
+if (!adminUser || !isAuthUserAdmin(adminUser)) {
 	Astro.response.status = 403;
 }
 
