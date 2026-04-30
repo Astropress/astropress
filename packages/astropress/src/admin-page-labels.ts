@@ -9154,6 +9154,17 @@ export const pageLabels = {
 		hi: "समस्या रिपोर्ट करें या सुविधा सुझाएँ",
 		ny: "Tipatseni vuto kapena kupatsa lingaliro",
 	},
+	"footer.docs": {
+		en: "Documentation",
+		es: "Documentación",
+		fr: "Documentation",
+		de: "Dokumentation",
+		pt: "Documentação",
+		ja: "ドキュメント",
+		te: "డాక్యుమెంటేషన్",
+		hi: "दस्तावेज़",
+		ny: "Zikalata",
+	},
 	"access.title": { en: "Access" },
 	"access.description": {
 		en: "Manage roles, role assignments, direct user grants, and view your effective permissions.",
