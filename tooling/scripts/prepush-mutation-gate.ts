@@ -259,8 +259,51 @@ function changedSourceFiles(): string[] {
 	return [];
 }
 
+// Returns the new-side line ranges that changed in `file` vs the base ref.
+// Used to scope Stryker's `mutate` directive to changed lines only — a
+// 1200-line file with 8 lines changed mutates ~8 lines instead of 1200.
+// Returns null when the diff is unavailable (fall back to whole-file).
+function changedLineRanges(file: string): Array<[number, number]> | null {
+	const refs = ["origin/main", "HEAD~1"];
+	for (const ref of refs) {
+		try {
+			execFileSync("git", ["rev-parse", "--verify", ref], { stdio: "pipe" });
+			const diff = execFileSync(
+				"git",
+				["diff", "--unified=0", `${ref}...HEAD`, "--", file],
+				{ encoding: "utf8" },
+			);
+			const ranges: Array<[number, number]> = [];
+			// Hunk header: "@@ -<old>,<oldlen> +<new>,<newlen> @@"; newlen omitted when 1.
+			for (const line of diff.split("\n")) {
+				const m = line.match(/^@@ -\d+(?:,\d+)? \+(\d+)(?:,(\d+))? @@/);
+				if (!m) continue;
+				const start = Number(m[1]);
+				const len = m[2] === undefined ? 1 : Number(m[2]);
+				if (len === 0) continue; // Pure deletion; nothing to mutate on new side.
+				ranges.push([start, start + len - 1]);
+			}
+			return ranges;
+		} catch {
+			// Try next ref.
+		}
+	}
+	return null;
+}
+
 interface StrykerReport {
 	files: Record<string, { mutants: Array<{ status: string }> }>;
+}
+
+// Label files (i18n string maps) generate thousands of StringLiteral mutants
+// that no test can kill — translation values aren't asserted by name. When
+// the entire run targets only label files, exclude StringLiteral globally;
+// when mixed, keep them so the non-label files retain literal-mutant
+// coverage. Pattern matches the i18n-style label module shape we ship.
+function isLabelTarget(target: string): boolean {
+	return /(?:^|\/)(?:admin(?:-page)?-labels|admin-page-labels)\.ts(?::|$)/.test(
+		target,
+	);
 }
 
 function runStryker(
@@ -273,18 +316,26 @@ function runStryker(
 	// Stryker runs from packages/astropress/, so the reporter plugin needs
 	// to be referenced as a path relative to that directory.
 	const reporterPath = `../../${REPORTER_PATH}`;
+	const allLabelOnly =
+		mutateTargets.length > 0 && mutateTargets.every(isLabelTarget);
+	const excludedMutations = allLabelOnly ? ["StringLiteral"] : [];
 	writeFileSync(
 		configPath,
 		`export default {
   plugins: ["@stryker-mutator/vitest-runner", ${JSON.stringify(reporterPath)}],
   mutate: ${JSON.stringify(mutateTargets)},
   testRunner: "vitest",
-  coverageAnalysis: "all",
+  coverageAnalysis: "perTest",
   vitest: { related: true },
+  ignoreStatic: true,
+  concurrency: 4,
   reporters: ["clear-text", "json", "checkpoint"],
   jsonReporter: { fileName: ${JSON.stringify(reportPath)} },
-  incremental: false,
-  timeoutMS: 120000,
+  incremental: true,
+  incrementalFile: "../../.stryker-incremental.json",
+  timeoutMS: 15000,
+  timeoutFactor: 2,
+  mutator: { excludedMutations: ${JSON.stringify(excludedMutations)} },
   dryRunTimeoutMinutes: 15,
   thresholds: { high: 95, low: 95, break: 0 },
 };
@@ -453,6 +504,14 @@ function main(): number {
 	}
 	verdicts.push(...checkpointVerdicts);
 
+	// Track which files we mutated as a slice (only changed lines) vs.
+	// whole-file. Slice scores are NOT comparable to whole-file baseline
+	// scores — a 4-mutant slice with 1 survivor scores 75%, but the
+	// whole-file baseline score over 1000 mutants might be 96%. We
+	// judge slices against FLOOR only (treat as "new file") and we do
+	// NOT overwrite the per-file whole-file baseline from a slice run.
+	const slicedFiles = new Set<string>();
+
 	if (needsMutation.length > 0) {
 		console.log(
 			`\nRunning Stryker on ${needsMutation.length} file(s) with changed content...`,
@@ -460,7 +519,31 @@ function main(): number {
 		const tmp = mkdtempSync(join(tmpdir(), "stryker-prepush-"));
 		let report: StrykerReport | null = null;
 		try {
-			const targets = needsMutation.map((f) => f.slice(PREFIX.length));
+			// Tier-3 scoping: when git can give us the changed line ranges, mutate
+			// only those lines (Stryker syntax: "src/foo.ts:120-145"). On a 1200-
+			// line file with 8 lines changed this drops the mutant count by
+			// >90% while preserving the safety guarantee — newly written code is
+			// still tested. Falls back to whole-file when ranges are unavailable
+			// (rename, new file, missing ref). Multiple ranges per file are
+			// emitted as separate entries; Stryker merges them.
+			const targets: string[] = [];
+			for (const file of needsMutation) {
+				const rel = file.slice(PREFIX.length);
+				const ranges = changedLineRanges(file);
+				if (ranges === null || ranges.length === 0) {
+					targets.push(rel);
+					continue;
+				}
+				slicedFiles.add(file);
+				for (const [start, end] of ranges) {
+					targets.push(`${rel}:${start}-${end}`);
+				}
+			}
+			if (slicedFiles.size > 0) {
+				console.log(
+					`  diff-line scoping: ${slicedFiles.size} file(s) mutated on changed lines only`,
+				);
+			}
 			report = runStryker(targets, tmp);
 		} finally {
 			rmSync(tmp, { recursive: true, force: true });
@@ -502,7 +585,12 @@ function main(): number {
 			const score = scoreForFile(report, target);
 			const hash = gitHashObject(file);
 			const prior = baseline.scores[file] ?? null;
-			verdicts.push(judgeScored(file, hash ?? "", score, prior));
+			// Slice scores aren't comparable to whole-file baseline scores (a
+			// 4-mutant slice with 1 survivor is 75% but says nothing about a
+			// 1000-mutant whole-file 96% baseline). Treat sliced files as
+			// "baseline-less" → judge against FLOOR only.
+			const judgePrior = slicedFiles.has(file) ? null : prior;
+			verdicts.push(judgeScored(file, hash ?? "", score, judgePrior));
 		}
 	}
 
@@ -538,6 +626,13 @@ function main(): number {
 		let dirty = false;
 		for (const v of verdicts) {
 			if (v.score === null || v.hash === null) continue;
+			// Slice scores cover only the changed lines; never overwrite a
+			// whole-file baseline with one. Hash-skip stays correct because the
+			// existing whole-file score remains tied to its hash. If the slice
+			// passes FLOOR but the whole-file baseline is stale, the next
+			// baseline-coverage run rewrites it; the prepush gate isn't its
+			// source of truth.
+			if (slicedFiles.has(v.file)) continue;
 			const prev = nextScores[v.file];
 			if (!prev || prev.score !== v.score || prev.hash !== v.hash) {
 				nextScores[v.file] = { score: v.score, hash: v.hash };
