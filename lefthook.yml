@@ -244,6 +244,15 @@ pre-commit:
       glob: "tooling/stryker/stryker*.config.mjs"
       run: bun run tooling/scripts/audit-stryker-thresholds.ts
 
+    # DO NOT REMOVE — partner to audit-stryker-thresholds. The thresholds audit
+    # locks the BREAK percentage in stryker config; this one locks the per-file
+    # baseline-scores.json so a commit can't silently lower a floor (whether
+    # by hand-edit or by an automated rebaseline that captured a methodology
+    # drift as the new truth). See tooling/scripts/audit-baseline-floor.ts.
+    audit-baseline-floor:
+      glob: "tooling/stryker/baseline-scores.json"
+      run: bun run tooling/scripts/audit-baseline-floor.ts
+
     # Non-blocking warning: surfaces Stryker disable / v8 ignore / biome-ignore
     # / @ts-ignore comments so the author considers a code-level fix instead.
     audit-suppression-warnings:
