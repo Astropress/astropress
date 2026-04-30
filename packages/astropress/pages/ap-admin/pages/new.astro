@@ -1,10 +1,11 @@
 ---
 import AdminLayout from "@astropress-diy/astropress/components/AdminLayout.astro";
 import CsrfInput from "@astropress-diy/astropress/components/CsrfInput.astro";
+import { isAuthUserAdmin } from "astropress";
 
 const adminUser = Astro.locals.adminUser;
 
-if (adminUser?.role !== "admin") {
+if (!adminUser || !isAuthUserAdmin(adminUser)) {
 	Astro.response.status = 403;
 }
 
@@ -14,13 +15,12 @@ const errorMessage =
 		: "";
 ---
 
-{adminUser?.role === "admin" ? (
+{adminUser && isAuthUserAdmin(adminUser) ? (
   <AdminLayout
     title="New Page"
     heading="New Page"
     currentPath="/ap-admin/pages"
     description="Create a new public page using the route-backed page model."
-    role={adminUser.role}
     userName={adminUser.name}
   >
     {errorMessage && <p class="error-notice">{errorMessage}</p>}
@@ -78,8 +78,7 @@ const errorMessage =
     heading="Forbidden"
     currentPath="/ap-admin/posts"
     description="This action requires an admin account."
-    role={adminUser!.role}
-    userName={adminUser!.name}
+    userName={adminUser.name}
   >
     <section class="panel">
       <p>This action requires an admin account and is hidden from editor-only roles.</p>

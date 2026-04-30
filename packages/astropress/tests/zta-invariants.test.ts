@@ -177,7 +177,10 @@ describe("ZTA P2: least privilege", () => {
 			"utf8",
 		);
 		expect(utils).toContain("requireAdmin");
-		expect(utils).toContain('sessionUser.role !== "admin"');
+		// Break-glass admin gate routes through isAuthUserAdmin (not the
+		// legacy `sessionUser.role !== "admin"` literal) so the access PR
+		// sweep can populate isAdmin from the new admin_users.is_admin column.
+		expect(utils).toContain("isAuthUserAdmin(sessionUser)");
 	});
 
 	it("API token scope is validated per-request, not cached", () => {

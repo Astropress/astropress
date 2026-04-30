@@ -2,7 +2,11 @@
 import AdminLayout from "@astropress-diy/astropress/components/AdminLayout.astro";
 import AuditTrail from "@astropress-diy/astropress/components/AuditTrail.astro";
 import CsrfInput from "@astropress-diy/astropress/components/CsrfInput.astro";
-import { buildTestimonialsPageModel } from "astropress";
+import {
+	buildTestimonialsPageModel,
+	getPageT,
+	resolveAdminLocale,
+} from "astropress";
 
 const adminUser = Astro.locals.adminUser;
 const model = await buildTestimonialsPageModel(Astro.locals);
@@ -13,97 +17,109 @@ const errorMessage =
 	Astro.url.searchParams.get("error") === "1"
 		? Astro.url.searchParams.get("message")
 		: "";
+const t = getPageT(resolveAdminLocale(Astro));
 
 const activeList =
 	tab === "approved" ? approved : tab === "featured" ? featured : pending;
+const tableLabel =
+	tab === "approved"
+		? t("testimonials.tableLabelApproved")
+		: tab === "featured"
+			? t("testimonials.tableLabelFeatured")
+			: t("testimonials.tableLabelPending");
+const emptyLabel =
+	tab === "approved"
+		? t("testimonials.emptyApproved")
+		: tab === "featured"
+			? t("testimonials.emptyFeatured")
+			: t("testimonials.emptyPending");
 ---
 
 <AdminLayout
-  title="Testimonials"
-  heading="Testimonials"
+  title={t("testimonials.title")}
+  heading={t("testimonials.title")}
   currentPath="/ap-admin/testimonials"
-  description="Review and moderate testimonial submissions."
-  role={adminUser!.role}
-  userName={adminUser!.name}
+  description={t("testimonials.description")}
+  userName={adminUser.name}
 >
-  {model.warnings.length > 0 && <ap-notice type="info">Some testimonial data is temporarily unavailable. This page is showing partial results.</ap-notice>}
-  {wasSaved && <ap-notice type="success" dismiss-after="6000">The testimonial was updated successfully.</ap-notice>}
+  {model.warnings.length > 0 && <ap-notice type="info">{t("testimonials.partialResults")}</ap-notice>}
+  {wasSaved && <ap-notice type="success" dismiss-after="6000">{t("testimonials.savedSuccess")}</ap-notice>}
   {errorMessage && <ap-notice type="error">{errorMessage}</ap-notice>}
 
   <div class="admin-subgrid two summary-grid">
     <section class="panel stat summary-card">
-      <span>Total submitted</span>
+      <span>{t("testimonials.totalSubmitted")}</span>
       <strong>{pending.length + approved.length + featured.length}</strong>
-      <span>All testimonial submissions across statuses.</span>
+      <span>{t("testimonials.totalSubmittedDesc")}</span>
     </section>
     <section class="panel stat summary-card">
-      <span>Pending review</span>
+      <span>{t("testimonials.pendingReview")}</span>
       <strong>{pending.length}</strong>
-      <span>Submissions awaiting a moderation decision.</span>
+      <span>{t("testimonials.pendingReviewDesc")}</span>
     </section>
   </div>
 
   <section class="panel testimonials-panel">
     <div class="section-header">
       <div>
-        <p class="admin-kicker">Moderation</p>
-        <h2>Testimonial Queue</h2>
+        <p class="admin-kicker">{t("testimonials.moderationKicker")}</p>
+        <h2>{t("testimonials.queueHeading")}</h2>
       </div>
     </div>
 
-    <nav class="tab-nav" aria-label="Testimonial status tabs">
+    <nav class="tab-nav" aria-label={t("testimonials.tabsLabel")}>
       <a href="?tab=pending" class:list={["tab-link", { active: tab === "pending" }]}>
-        Pending ({pending.length})
+        {t("testimonials.tabPending")} ({pending.length})
       </a>
       <a href="?tab=approved" class:list={["tab-link", { active: tab === "approved" }]}>
-        Approved ({approved.length})
+        {t("testimonials.tabApproved")} ({approved.length})
       </a>
       <a href="?tab=featured" class:list={["tab-link", { active: tab === "featured" }]}>
-        Featured ({featured.length})
+        {t("testimonials.tabFeatured")} ({featured.length})
       </a>
     </nav>
 
     <div class="admin-table-shell">
       {activeList.length === 0 ? (
-        <p class="empty-state">No {tab} testimonials.</p>
+        <p class="empty-state">{emptyLabel}</p>
       ) : (
-        <table aria-label={`${tab} testimonials`}>
+        <table aria-label={tableLabel}>
           <thead>
             <tr>
-              <th>Name</th>
-              <th>Company</th>
-              <th>Role</th>
-              <th>Specific Result</th>
-              <th>Consent</th>
-              <th>Source</th>
-              <th>Submitted</th>
-              <th>Action</th>
+              <th>{t("testimonials.colName")}</th>
+              <th>{t("testimonials.colCompany")}</th>
+              <th>{t("testimonials.colRole")}</th>
+              <th>{t("testimonials.colSpecificResult")}</th>
+              <th>{t("testimonials.colConsent")}</th>
+              <th>{t("testimonials.colSource")}</th>
+              <th>{t("testimonials.colSubmitted")}</th>
+              <th>{t("testimonials.colAction")}</th>
             </tr>
           </thead>
           <tbody>
-            {activeList.map((t) => (
+            {activeList.map((te) => (
               <tr>
-                <td>{t.name}</td>
-                <td>{t.company ?? "—"}</td>
-                <td>{t.role ?? "—"}</td>
-                <td class="result-cell">{t.specificResult ?? "—"}</td>
-                <td>{t.consentToPublish ? "Yes" : "No"}</td>
-                <td><span class="admin-chip">{t.source}</span></td>
-                <td>{t.submittedAt.slice(0, 10)}</td>
+                <td>{te.name}</td>
+                <td>{te.company ?? "—"}</td>
+                <td>{te.role ?? "—"}</td>
+                <td class="result-cell">{te.specificResult ?? "—"}</td>
+                <td>{te.consentToPublish ? t("testimonials.consentYes") : t("testimonials.consentNo")}</td>
+                <td><span class="admin-chip">{te.source}</span></td>
+                <td>{te.submittedAt.slice(0, 10)}</td>
                 <td class="action-cell">
                   {tab === "pending" && (
                     <>
                       <form method="post" action="/ap-admin/actions/testimonial-moderate" class="testimonial-action">
                         <CsrfInput token={Astro.locals.csrfToken} />
-                        <input type="hidden" name="testimonialId" value={t.id} />
+                        <input type="hidden" name="testimonialId" value={te.id} />
                         <input type="hidden" name="status" value="approved" />
-                        <button type="submit" class="admin-button small">Approve</button>
+                        <button type="submit" class="admin-button small">{t("testimonials.approve")}</button>
                       </form>
                       <form method="post" action="/ap-admin/actions/testimonial-moderate" class="testimonial-action">
                         <CsrfInput token={Astro.locals.csrfToken} />
-                        <input type="hidden" name="testimonialId" value={t.id} />
+                        <input type="hidden" name="testimonialId" value={te.id} />
                         <input type="hidden" name="status" value="rejected" />
-                        <button type="submit" class="admin-button-ghost small reject">Reject</button>
+                        <button type="submit" class="admin-button-ghost small reject">{t("testimonials.reject")}</button>
                       </form>
                     </>
                   )}
@@ -111,24 +127,24 @@ const activeList =
                     <>
                       <form method="post" action="/ap-admin/actions/testimonial-moderate" class="testimonial-action">
                         <CsrfInput token={Astro.locals.csrfToken} />
-                        <input type="hidden" name="testimonialId" value={t.id} />
+                        <input type="hidden" name="testimonialId" value={te.id} />
                         <input type="hidden" name="status" value="featured" />
-                        <button type="submit" class="admin-button small">Feature</button>
+                        <button type="submit" class="admin-button small">{t("testimonials.feature")}</button>
                       </form>
                       <form method="post" action="/ap-admin/actions/testimonial-moderate" class="testimonial-action">
                         <CsrfInput token={Astro.locals.csrfToken} />
-                        <input type="hidden" name="testimonialId" value={t.id} />
+                        <input type="hidden" name="testimonialId" value={te.id} />
                         <input type="hidden" name="status" value="rejected" />
-                        <button type="submit" class="admin-button-ghost small reject">Reject</button>
+                        <button type="submit" class="admin-button-ghost small reject">{t("testimonials.reject")}</button>
                       </form>
                     </>
                   )}
                   {tab === "featured" && (
                     <form method="post" action="/ap-admin/actions/testimonial-moderate" class="testimonial-action">
                       <CsrfInput token={Astro.locals.csrfToken} />
-                      <input type="hidden" name="testimonialId" value={t.id} />
+                      <input type="hidden" name="testimonialId" value={te.id} />
                       <input type="hidden" name="status" value="approved" />
-                      <button type="submit" class="admin-button-ghost small">Unfeature</button>
+                      <button type="submit" class="admin-button-ghost small">{t("testimonials.unfeature")}</button>
                     </form>
                   )}
                 </td>

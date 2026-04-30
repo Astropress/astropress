@@ -100,7 +100,11 @@ function createInMemoryAuthStore(seedUsers: AstropressSeedUser[]): AuthStore {
 				return null;
 			}
 
-			const sessionUser = { id: user.id, email: user.email, role: user.role };
+			const sessionUser: AuthUser = {
+				id: user.id,
+				email: user.email,
+				isAdmin: user.isAdmin,
+			};
 			sessions.set(`session:${user.id}`, sessionUser);
 			return sessionUser;
 		},
@@ -128,7 +132,7 @@ export function createAstropressInMemoryPlatformAdapter(
 					{
 						id: "admin-1",
 						email: "admin@example.com",
-						role: "admin",
+						isAdmin: true,
 						password: "password",
 					},
 				],

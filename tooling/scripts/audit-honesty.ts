@@ -2,9 +2,9 @@ import { execFileSync } from "node:child_process";
 import { join } from "node:path";
 import {
 	AuditReport,
+	ROOT,
 	fromRoot,
 	readText,
-	ROOT,
 	runAudit,
 } from "../lib/audit-utils.js";
 

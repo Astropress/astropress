@@ -224,10 +224,35 @@ export interface RevisionStore {
 	append(revision: RevisionRecord): Promise<RevisionRecord>;
 }
 
+/**
+ * Subject identity surfaced to the admin runtime.
+ *
+ * `isAdmin` is the canonical break-glass flag — admins bypass policy
+ * evaluation. `roles` are custom role IDs assigned to the user; `attributes`
+ * holds arbitrary subject metadata referenced by ABAC condition expressions
+ * (team, region, MFA tier, etc.).
+ *
+ * Authorization decisions must use `isAdmin` plus `engine.can()`. The
+ * legacy `role: "admin" | "editor"` enum was removed in Phase 5-B; any
+ * lingering reader must derive a display label from `isAdmin` instead.
+ */
 export interface AuthUser {
 	id: string;
 	email: string;
-	role: "admin" | "editor";
+	/**
+	 * ABAC break-glass flag. Admins bypass policy evaluation. This is the
+	 * canonical authorization signal — derive everything else from it.
+	 */
+	isAdmin: boolean;
+	/** Custom role IDs the user holds. Defaults to []. */
+	roles?: readonly string[];
+	/** Arbitrary subject attributes referenced by ABAC conditions. Defaults to {}. */
+	attributes?: Readonly<Record<string, string | number | boolean | null>>;
+}
+
+/** Returns whether the user has the break-glass admin flag set. */
+export function isAuthUserAdmin(user: AuthUser): boolean {
+	return user.isAdmin === true;
 }
 
 export interface AuthStore {

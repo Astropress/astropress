@@ -278,6 +278,96 @@ const adminRouteDefinitions = [
 		entrypoint: "actions/user-purge.ts",
 		kind: "action",
 	},
+	{ pattern: "/ap-admin/access", entrypoint: "access.astro", kind: "page" },
+	{ pattern: "/ap-admin/forms", entrypoint: "forms.astro", kind: "page" },
+	{
+		pattern: "/ap-admin/newsletter",
+		entrypoint: "newsletter.astro",
+		kind: "page",
+	},
+	{ pattern: "/ap-admin/events", entrypoint: "events.astro", kind: "page" },
+	{ pattern: "/ap-admin/reviews", entrypoint: "reviews.astro", kind: "page" },
+	{
+		pattern: "/ap-admin/referrals",
+		entrypoint: "referrals.astro",
+		kind: "page",
+	},
+	{
+		pattern: "/ap-admin/memberships",
+		entrypoint: "memberships.astro",
+		kind: "page",
+	},
+	{
+		pattern: "/ap-admin/community",
+		entrypoint: "community.astro",
+		kind: "page",
+	},
+	{ pattern: "/ap-admin/shop", entrypoint: "shop.astro", kind: "page" },
+	{
+		pattern: "/ap-admin/social-syndication",
+		entrypoint: "social-syndication.astro",
+		kind: "page",
+	},
+	{
+		pattern: "/ap-admin/structured-data",
+		entrypoint: "structured-data.astro",
+		kind: "page",
+	},
+	{
+		pattern: "/ap-admin/sitemaps",
+		entrypoint: "sitemaps.astro",
+		kind: "page",
+	},
+	{
+		pattern: "/ap-admin/maps-local",
+		entrypoint: "maps-local.astro",
+		kind: "page",
+	},
+	{
+		pattern: "/ap-admin/analytics",
+		entrypoint: "analytics.astro",
+		kind: "page",
+	},
+	{
+		pattern: "/ap-admin/heatmaps",
+		entrypoint: "heatmaps.astro",
+		kind: "page",
+	},
+	{
+		pattern: "/ap-admin/ab-testing",
+		entrypoint: "ab-testing.astro",
+		kind: "page",
+	},
+	{ pattern: "/ap-admin/email", entrypoint: "email.astro", kind: "page" },
+	{
+		pattern: "/ap-admin/live-chat",
+		entrypoint: "live-chat.astro",
+		kind: "page",
+	},
+	{
+		pattern: "/ap-admin/image-cdn",
+		entrypoint: "image-cdn.astro",
+		kind: "page",
+	},
+	{ pattern: "/ap-admin/search", entrypoint: "search.astro", kind: "page" },
+	{
+		pattern: "/ap-admin/cdn-purge",
+		entrypoint: "cdn-purge.astro",
+		kind: "page",
+	},
+	{
+		pattern: "/ap-admin/monitoring",
+		entrypoint: "monitoring.astro",
+		kind: "page",
+	},
+	{
+		pattern: "/ap-admin/deploy-hooks",
+		entrypoint: "deploy-hooks.astro",
+		kind: "page",
+	},
+	{ pattern: "/ap-admin/plugins", entrypoint: "plugins.astro", kind: "page" },
+	{ pattern: "/ap-admin/data", entrypoint: "data.astro", kind: "page" },
+	{ pattern: "/ap-admin/backups", entrypoint: "backups.astro", kind: "page" },
 ] as const satisfies readonly AstropressAdminRouteDefinition[];
 
 /**

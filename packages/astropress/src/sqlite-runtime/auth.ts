@@ -1,5 +1,5 @@
 import { createAstropressAuthRepository } from "../auth-repository-factory";
-import type { Actor } from "../persistence-types";
+import type { Actor, AuditEvent } from "../persistence-types";
 import { createAstropressUserRepository } from "../user-repository-factory";
 import { recordAudit } from "./audit-log";
 import {
@@ -56,12 +56,18 @@ export function createSqliteAuthStore(
 			actorEmail: row.user_email,
 			actorRole: "admin" as const,
 			summary: row.summary,
-			targetType:
-				row.resource_type === "redirect" ||
-				row.resource_type === "comment" ||
-				row.resource_type === "content"
-					? row.resource_type
-					: ("auth" as const),
+			targetType: ((): AuditEvent["targetType"] => {
+				switch (row.resource_type) {
+					case "redirect":
+					case "comment":
+					case "content":
+					case "deployment":
+					case "testimonial":
+						return row.resource_type;
+					default:
+						return "auth";
+				}
+			})(),
 			targetId: row.resource_id ?? `${row.id}`,
 			createdAt: row.created_at,
 		}));
@@ -106,7 +112,9 @@ export function createSqliteAuthStore(
 			name,
 		}: { email: string; passwordHash: string; role: AdminRole; name: string }) {
 			try {
-				getDb().prepare(SQL_INSERT_USER).run(email, passwordHash, role, name);
+				getDb()
+					.prepare(SQL_INSERT_USER)
+					.run(email, passwordHash, name, role === "admin" ? 1 : 0);
 				return true;
 			} catch {
 				return false;

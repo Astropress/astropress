@@ -77,14 +77,23 @@ async function main() {
 		const locExempt = new Set([
 			"sqlite-bootstrap.ts",
 			"index.ts",
-			"project-scaffold.ts",          // CLI scaffolding — intentionally verbose
-			"project-scaffold-ci.ts",       // CI scaffolding — mirrors project-scaffold.ts pattern
+			"project-scaffold.ts", // CLI scaffolding — intentionally verbose
+			"project-scaffold-ci.ts", // CI scaffolding — mirrors project-scaffold.ts pattern
 			"cms-route-registry-factory.ts", // factory with injected deps — stable
 			"auth-repository-factory.ts",
-			"runtime-actions-content.ts",   // complex multi-step content coordinator
+			"runtime-actions-content.ts", // complex multi-step content coordinator
 		]);
 		const locExemptDirs = ["sqlite-runtime/", "import/", "adapters/"];
-		const isLocExempt = locExempt.has(filename) || locExemptDirs.some((d) => display.includes(d)) || filename.endsWith("-wordlist.ts");
+		const isLocExempt =
+			locExempt.has(filename) ||
+			locExemptDirs.some((d) => display.includes(d)) ||
+			filename.endsWith("-wordlist.ts") ||
+			// Translation tables / page-label catalogs are intentionally verbose
+			// (one entry × N locales). Splitting helps no reader; the structure
+			// is uniform and tooling already keys off the exhaustive type union.
+			filename === "admin-labels.ts" ||
+			filename === "admin-page-labels.ts" ||
+			filename === "admin-stub-catalog.ts";
 
 		if (!isLocExempt) {
 			if (lines > LOC_ERROR) {
@@ -116,7 +125,10 @@ async function main() {
 			filename === "runtime-admin-auth.ts" || // auth session management
 			display.includes("sqlite-runtime/") ||
 			display.includes("/adapters/") ||
-			display.includes("/import/");
+			display.includes("/import/") ||
+			// access/repository.ts is the access-control storage layer; it owns
+			// the access_* tables the same way d1-store-* owns content tables.
+			display.includes("/access/repository.ts");
 
 		if (!isSqlAllowed && content.includes(".prepare(")) {
 			violations.push({
@@ -228,9 +240,9 @@ async function main() {
 			//   - SQL ? placeholders in template strings
 			//   - Regex quantifiers like (?:, [x]?, )? inside regex literals
 			const stripped = body
-				.replace(/`[^`]*`/g, "``")                           // strip template string contents
-				.replace(/"(?:[^"\\]|\\.)*"/g, '""')                  // strip double-quoted string contents
-				.replace(/'(?:[^'\\]|\\.)*'/g, "''")                  // strip single-quoted string contents
+				.replace(/`[^`]*`/g, "``") // strip template string contents
+				.replace(/"(?:[^"\\]|\\.)*"/g, '""') // strip double-quoted string contents
+				.replace(/'(?:[^'\\]|\\.)*'/g, "''") // strip single-quoted string contents
 				.replace(/\/(?:[^\n/\\]|\\.)+\/[gimsuy]*/g, "/r/"); // strip regex literal contents
 			const ternaryCount = (stripped.match(/[^?]\?[^?.:]/g) || []).length;
 			complexity += ternaryCount;

@@ -53,6 +53,21 @@ export function createD1OperationsReadPart(
 					.results;
 				return rows.map(mapAuditEventRow);
 			},
+			async recordAuditEvent(input) {
+				await db
+					.prepare(
+						`INSERT INTO audit_events (user_email, action, resource_type, resource_id, summary)
+             VALUES (?, ?, ?, ?, ?)`,
+					)
+					.bind(
+						input.userEmail,
+						input.action,
+						input.resourceType,
+						input.resourceId ?? null,
+						input.summary,
+					)
+					.run();
+			},
 		},
 		users: {
 			async listAdminUsers() {

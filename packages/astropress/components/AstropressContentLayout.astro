@@ -24,21 +24,21 @@
  */
 
 import type { ContentStoreRecord } from "../src/platform-contracts.ts";
+import AstropressBlogPostingJsonLd from "./AstropressBlogPostingJsonLd.astro";
 import AstropressFaqJsonLd from "./AstropressFaqJsonLd.astro";
 import AstropressHowToJsonLd from "./AstropressHowToJsonLd.astro";
 import AstropressSpeakableJsonLd from "./AstropressSpeakableJsonLd.astro";
-import AstropressBlogPostingJsonLd from "./AstropressBlogPostingJsonLd.astro";
 
 interface Props {
-  /** The content record whose metadata drives JSON-LD auto-wiring. */
-  content: ContentStoreRecord;
-  /**
-   * Canonical URL of the page — required when speakableCssSelectors are present.
-   * Falls back to an empty string if not provided (valid for local dev, not ideal for prod).
-   */
-  canonicalUrl?: string;
-  /** Optional HTML lang attribute (e.g. "en", "fr"). */
-  lang?: string;
+	/** The content record whose metadata drives JSON-LD auto-wiring. */
+	content: ContentStoreRecord;
+	/**
+	 * Canonical URL of the page — required when speakableCssSelectors are present.
+	 * Falls back to an empty string if not provided (valid for local dev, not ideal for prod).
+	 */
+	canonicalUrl?: string;
+	/** Optional HTML lang attribute (e.g. "en", "fr"). */
+	lang?: string;
 }
 
 const { content, canonicalUrl = "", lang = "en" } = Astro.props;
@@ -49,19 +49,24 @@ const meta = (content.metadata ?? {}) as Record<string, unknown>;
 const isBlogPost = content.kind === "post";
 const siteOrigin = canonicalUrl ? new URL(canonicalUrl).origin : undefined;
 
-const faqItems = Array.isArray(meta.faqItems) ? (meta.faqItems as { question: string; answer: string }[]) : null;
+const faqItems = Array.isArray(meta.faqItems)
+	? (meta.faqItems as { question: string; answer: string }[])
+	: null;
 
 const howToSteps = Array.isArray(meta.howToSteps)
-  ? (meta.howToSteps as { name: string; text: string; imageUrl?: string }[])
-  : null;
+	? (meta.howToSteps as { name: string; text: string; imageUrl?: string }[])
+	: null;
 
 const speakableSelectors = Array.isArray(meta.speakableCssSelectors)
-  ? (meta.speakableCssSelectors as string[])
-  : null;
+	? (meta.speakableCssSelectors as string[])
+	: null;
 
-const howToName = typeof meta.howToName === "string" ? meta.howToName : (content.title ?? "");
-const howToDescription = typeof meta.howToDescription === "string" ? meta.howToDescription : undefined;
-const howToTotalTime = typeof meta.howToTotalTime === "string" ? meta.howToTotalTime : undefined;
+const howToName =
+	typeof meta.howToName === "string" ? meta.howToName : (content.title ?? "");
+const howToDescription =
+	typeof meta.howToDescription === "string" ? meta.howToDescription : undefined;
+const howToTotalTime =
+	typeof meta.howToTotalTime === "string" ? meta.howToTotalTime : undefined;
 ---
 
 {isBlogPost && (

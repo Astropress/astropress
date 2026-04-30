@@ -37,7 +37,9 @@ async function getD1InviteToken(rawToken: string, locals?: App.Locals | null) {
 		.prepare(
 			`
         SELECT i.id, i.user_id, i.expires_at, i.accepted_at,
-               u.email, u.name, u.role, u.active
+               u.email, u.name,
+               CASE WHEN u.is_admin = 1 THEN 'admin' ELSE 'editor' END AS role,
+               u.active
         FROM user_invites i
         JOIN admin_users u ON u.id = i.user_id
         WHERE i.token_hash = ?
@@ -105,11 +107,16 @@ export async function inviteRuntimeAdminUser(
 			await db
 				.prepare(
 					`
-            INSERT INTO admin_users (email, password_hash, role, name, active)
-            VALUES (?, ?, ?, ?, 1)
+            INSERT INTO admin_users (email, password_hash, name, active, is_admin)
+            VALUES (?, ?, ?, 1, ?)
           `,
 				)
-				.bind(email, await hashPassword(crypto.randomUUID()), role, name)
+				.bind(
+					email,
+					await hashPassword(crypto.randomUUID()),
+					name,
+					role === "admin" ? 1 : 0,
+				)
 				.run();
 
 			const user = await db

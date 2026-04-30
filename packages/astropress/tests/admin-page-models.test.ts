@@ -35,8 +35,18 @@ import { makeLocals } from "./helpers/make-locals.js";
 // Helpers
 // ---------------------------------------------------------------------------
 
-const adminRole = "admin" as const;
-const editorRole = "editor" as const;
+const adminRole = {
+	id: "1",
+	email: "admin@example.com",
+	role: "admin" as const,
+	isAdmin: true,
+};
+const editorRole = {
+	id: "2",
+	email: "editor@example.com",
+	role: "editor" as const,
+	isAdmin: false,
+};
 
 let db: DatabaseSync;
 let locals: App.Locals;
@@ -70,7 +80,7 @@ beforeEach(() => {
 
 	// Seed minimal data
 	db.prepare(
-		"INSERT INTO admin_users (email, password_hash, role, name, active) VALUES (?, ?, ?, ?, ?)",
+		"INSERT INTO admin_users (email, password_hash, name, active, is_admin) VALUES (?1, ?2, ?4, ?5, CASE WHEN ?3 = 'admin' THEN 1 ELSE 0 END)",
 	).run("admin@test.local", "hash", "admin", "Admin", 1);
 	db.prepare(
 		`INSERT INTO content_entries (slug, legacy_url, title, kind, template_key, source_html_path, body, summary, seo_title, meta_description)

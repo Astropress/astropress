@@ -64,6 +64,10 @@ async function getReadStore(locals?: App.Locals | null) {
 	return {
 		audit: {
 			getAuditEvents: wf(d1.audit.getAuditEvents, fb.audit.getAuditEvents),
+			recordAuditEvent: wf(
+				d1.audit.recordAuditEvent,
+				fb.audit.recordAuditEvent,
+			),
 		},
 		users: {
 			listAdminUsers: wf(d1.users.listAdminUsers, fb.users.listAdminUsers),

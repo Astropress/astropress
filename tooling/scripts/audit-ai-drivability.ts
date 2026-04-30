@@ -57,7 +57,9 @@ async function main() {
 	}
 
 	// 4. platform-contracts.ts has >= 20 JSDoc comment blocks
-	const contractsPath = fromRoot("packages/astropress/src/platform-contracts.ts");
+	const contractsPath = fromRoot(
+		"packages/astropress/src/platform-contracts.ts",
+	);
 	if (!(await fileExists(contractsPath))) {
 		report.add(
 			"[contracts-missing] packages/astropress/src/platform-contracts.ts does not exist",

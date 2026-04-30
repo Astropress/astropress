@@ -29,7 +29,7 @@ describe("cloudflare provider integration", () => {
 		expect(cloudflare.capabilities.objectStorage).toBe(true);
 
 		const user = await cloudflare.auth.signIn("admin@example.com", "password");
-		expect(user?.role).toBe("admin");
+		expect(user?.isAdmin).toBe(true);
 		expect(user?.id).toHaveLength(36);
 		const storedSession = db
 			.prepare("SELECT id FROM admin_sessions LIMIT 1")
@@ -37,7 +37,7 @@ describe("cloudflare provider integration", () => {
 		expect(storedSession.id).not.toBe(user?.id);
 		expect(await cloudflare.auth.getSession(user?.id)).toMatchObject({
 			email: "admin@example.com",
-			role: "admin",
+			isAdmin: true,
 		});
 		expect(await cloudflare.content.get("cloudflare-post")).toMatchObject({
 			slug: "cloudflare-post",

@@ -104,9 +104,12 @@ describe("ActionResult discriminated union", () => {
 
 // ─── Admin i18n label map ─────────────────────────────────────────────────────
 
-const ALL_LOCALES: AdminLocale[] = ["en", "es", "fr", "de", "pt", "ja"];
+// Derive the locale set from the runtime keys of adminLabels — guarantees
+// every locale defined in the source is exercised here. (Previously this
+// was a hardcoded en/es/fr/de/pt/ja list which silently skipped te/hi/ny.)
+const ALL_LOCALES = Object.keys(adminLabels) as AdminLocale[];
 
-// Derive the expected key list from the English locale (the authoritative source)
+// English is the authoritative key source; every other locale must match.
 const EXPECTED_KEYS = Object.keys(adminLabels.en) as AdminLabelKey[];
 
 describe("admin i18n label map", () => {
@@ -114,14 +117,39 @@ describe("admin i18n label map", () => {
 		expect(EXPECTED_KEYS.length).toBeGreaterThanOrEqual(30);
 	});
 
+	it("locale set covers every AdminLocale union member", () => {
+		// If you add a new locale to the AdminLocale union, this assertion
+		// will fail until you also add an entry to the adminLabels map.
+		const expected: AdminLocale[] = [
+			"en",
+			"es",
+			"fr",
+			"de",
+			"pt",
+			"ja",
+			"te",
+			"hi",
+			"ny",
+		];
+		for (const loc of expected) {
+			expect(
+				ALL_LOCALES,
+				`AdminLocale '${loc}' missing from adminLabels`,
+			).toContain(loc);
+		}
+	});
+
 	for (const locale of ALL_LOCALES) {
 		it(`locale '${locale}' has all required keys`, () => {
-			const localeKeys = Object.keys(adminLabels[locale]);
-			for (const key of EXPECTED_KEYS) {
-				expect(localeKeys, `locale '${locale}' missing key '${key}'`).toContain(
-					key,
-				);
-			}
+			const localeKeys = new Set(Object.keys(adminLabels[locale]));
+			// Report ALL missing keys, not just the first one — early failure
+			// hid the true scope of the gap on previous runs (one error said
+			// "missing navGroupSite", reality was 37 missing keys).
+			const missing = EXPECTED_KEYS.filter((k) => !localeKeys.has(k));
+			expect(
+				missing,
+				`locale '${locale}' missing ${missing.length} key(s): ${missing.join(", ")}`,
+			).toEqual([]);
 		});
 
 		it(`locale '${locale}' has no empty string values`, () => {

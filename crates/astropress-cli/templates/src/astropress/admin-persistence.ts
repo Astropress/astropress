@@ -2,4 +2,6 @@ import { createAstropressCmsRegistryModule } from "@astropress-diy/astropress/in
 
 import { sqliteCmsRegistryModule } from "./runtime.ts";
 
-export const hostRuntimeCmsRegistry = createAstropressCmsRegistryModule(sqliteCmsRegistryModule);
+export const hostRuntimeCmsRegistry = createAstropressCmsRegistryModule(
+	sqliteCmsRegistryModule,
+);

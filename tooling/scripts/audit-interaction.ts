@@ -35,16 +35,16 @@ async function main() {
 			"admin.css: missing prefers-reduced-motion media query — required by WCAG 2.3.3 for users who prefer no motion",
 		);
 	}
-	if (
-		!adminCss.includes("@starting-style") &&
-		!/dialog\s*\{/.test(adminCss)
-	) {
+	if (!adminCss.includes("@starting-style") && !/dialog\s*\{/.test(adminCss)) {
 		report.add(
 			"admin.css: no dialog animation found (@starting-style or dialog transition) — dialogs must animate in/out",
 		);
 	}
 
-	const wcFiles = await listFiles(WC_DIR, { extensions: [".ts"], exclude: ["index.ts"] });
+	const wcFiles = await listFiles(WC_DIR, {
+		extensions: [".ts"],
+		exclude: ["index.ts"],
+	});
 	let ariaLiveCount = 0;
 	for (const filename of wcFiles) {
 		const src = await readText(join(WC_DIR, filename));
@@ -59,7 +59,8 @@ async function main() {
 	const noticeSrc = await readText(join(WC_DIR, "notice.ts"));
 	if (noticeSrc) {
 		const hasDismissAttr = noticeSrc.includes("dismiss-after");
-		const hasParseInt = noticeSrc.includes("parseInt") || noticeSrc.includes("Number(");
+		const hasParseInt =
+			noticeSrc.includes("parseInt") || noticeSrc.includes("Number(");
 		const hasPositiveGuard =
 			noticeSrc.includes("> 0") ||
 			noticeSrc.includes(">= 1") ||

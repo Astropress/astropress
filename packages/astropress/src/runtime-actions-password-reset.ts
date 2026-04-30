@@ -30,7 +30,9 @@ async function getD1PasswordResetToken(
 		.prepare(
 			`
         SELECT t.id, t.user_id, t.expires_at, t.consumed_at,
-               u.email, u.name, u.role, u.active
+               u.email, u.name,
+               CASE WHEN u.is_admin = 1 THEN 'admin' ELSE 'editor' END AS role,
+               u.active
         FROM password_reset_tokens t
         JOIN admin_users u ON u.id = t.user_id
         WHERE t.token_hash = ?
@@ -77,7 +79,9 @@ export async function createRuntimePasswordResetToken(
 			const user = await db
 				.prepare(
 					`
-            SELECT id, email, role, name
+            SELECT id, email,
+                   CASE WHEN is_admin = 1 THEN 'admin' ELSE 'editor' END AS role,
+                   name
             FROM admin_users
             WHERE email = ?
               AND active = 1

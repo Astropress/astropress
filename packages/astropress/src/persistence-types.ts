@@ -22,9 +22,24 @@ export interface AuditEvent {
 	actorEmail: string;
 	actorRole: AdminRole;
 	summary: string;
-	targetType: "auth" | "content" | "redirect" | "comment" | "testimonial";
+	targetType:
+		| "auth"
+		| "content"
+		| "redirect"
+		| "comment"
+		| "testimonial"
+		| "deployment";
 	targetId: string;
 	createdAt: string;
+}
+
+export interface RecordAuditEventInput {
+	userEmail: string;
+	action: string;
+	resourceType: string;
+	resourceId?: string | null;
+	summary: string;
+	details?: Record<string, unknown> | null;
 }
 
 export type TestimonialStatus =
@@ -203,6 +218,7 @@ export interface AuthRepository {
 
 export interface AuditRepository {
 	getAuditEvents: PersistenceModule["getPersistedAuditEvents"];
+	recordAuditEvent: (input: RecordAuditEventInput) => void | Promise<void>;
 }
 
 export interface UserRepository {

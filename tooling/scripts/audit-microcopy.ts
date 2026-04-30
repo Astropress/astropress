@@ -1,11 +1,6 @@
 import { execFileSync } from "node:child_process";
 import { join } from "node:path";
-import {
-	AuditReport,
-	readText,
-	ROOT,
-	runAudit,
-} from "../lib/audit-utils.js";
+import { AuditReport, ROOT, readText, runAudit } from "../lib/audit-utils.js";
 
 // Rubric 43 / 49 — UX Writing & Microcopy
 //

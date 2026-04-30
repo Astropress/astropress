@@ -39,6 +39,14 @@ pre-commit:
       glob: "crates/**/*.rs"
       run: bun run audit:arch:rust
 
+    # Catch TypeScript errors in tooling/ scripts at commit time, not at
+    # pre-push (where they used to live, costing devs the entire pre-push
+    # wall-clock to discover a trivial type error). Scoped to tooling/**/*.ts
+    # so unrelated edits don't trigger it.
+    audit-tooling-types:
+      glob: "tooling/**/*.ts"
+      run: bun run audit:tooling-types
+
     audit-codeql-patterns:
       glob: "packages/**/*.{ts,astro}"
       run: bun run audit:codeql-patterns
@@ -58,6 +66,10 @@ pre-commit:
     audit-microcopy:
       glob: "packages/**/*.{ts,astro}"
       run: bun run audit:microcopy
+
+    audit-test-fanout:
+      glob: "packages/**/*.test.ts"
+      run: bun run audit:test-fanout
 
     audit-aeo:
       glob:
@@ -232,6 +244,15 @@ pre-commit:
       glob: "tooling/stryker/stryker*.config.mjs"
       run: bun run tooling/scripts/audit-stryker-thresholds.ts
 
+    # DO NOT REMOVE — partner to audit-stryker-thresholds. The thresholds audit
+    # locks the BREAK percentage in stryker config; this one locks the per-file
+    # baseline-scores.json so a commit can't silently lower a floor (whether
+    # by hand-edit or by an automated rebaseline that captured a methodology
+    # drift as the new truth). See tooling/scripts/audit-baseline-floor.ts.
+    audit-baseline-floor:
+      glob: "tooling/stryker/baseline-scores.json"
+      run: bun run tooling/scripts/audit-baseline-floor.ts
+
     # Non-blocking warning: surfaces Stryker disable / v8 ignore / biome-ignore
     # / @ts-ignore comments so the author considers a code-level fix instead.
     audit-suppression-warnings:
@@ -371,9 +392,14 @@ commit-msg:
 
 pre-push:
   parallel: true
+  # lefthook 2.x doesn't support fail_fast on parallel groups, so we wrap
+  # each command with run-with-peer-abort.ts which polls a sentinel file
+  # keyed by parent PID. The first failing command writes the sentinel;
+  # peers see it and SIGTERM their children. Sentinels live in /tmp so
+  # they self-evaporate on reboot — no cleanup hook needed.
   commands:
     gates:
-      run: bun run tooling/scripts/run-with-timing.ts gates -- bun run test:prepush
+      run: bun run tooling/scripts/run-with-peer-abort.ts gates -- bun run tooling/scripts/run-with-timing.ts gates -- bun run test:prepush
 
     # DO NOT REMOVE OR RELAX — closes the gap the pre-commit threshold audit
     # leaves open. Runs Stryker mutation testing scoped to files changed on
@@ -393,17 +419,32 @@ pre-push:
       # to stderr at completion.
       env:
         LEFTHOOK_PUSH: "1"
-      run: bun run tooling/scripts/run-with-timing.ts mutation-gate -- bun run tooling/scripts/prepush-mutation-gate.ts
+      # mutation-gate populates baseline-scores.json for new src files as a
+      # side effect; audit:baseline-coverage checks every src file has an
+      # entry. Running both in parallel races: a push that adds new src
+      # files + correctly populates them via the gate would still fail the
+      # audit because audit checks before the gate writes. Sequence them
+      # in one bash invocation so coverage runs against the just-updated
+      # baseline.
+      run: >-
+        bun run tooling/scripts/run-with-peer-abort.ts mutation-gate --
+        bun run tooling/scripts/run-with-timing.ts mutation-gate -- bash -c '
+          bun run tooling/scripts/prepush-mutation-gate.ts &&
+          bun run audit:baseline-coverage
+        '
 
     slow-audits:
       # Whole-repo static audits moved out of pre-commit because they scan far
       # beyond any changed file. Amortized across a push (not per-commit) these
       # add ~15–20s to pre-push wall-clock but nothing to pre-commit feedback.
+      # audit:tooling-types and audit:baseline-coverage moved out:
+      #   - audit:tooling-types runs in pre-commit (catches TS errors fast)
+      #   - audit:baseline-coverage runs sequentially after mutation-gate
+      #     above (avoids the new-file race).
       run: >-
+        bun run tooling/scripts/run-with-peer-abort.ts slow-audits --
         bun run tooling/scripts/run-with-timing.ts slow-audits -- bash -c '
           bun run audit:deps:graph &&
-          bun run audit:tooling-types &&
-          bun run audit:baseline-coverage &&
           bun run audit:toolchain-pins &&
           bun run docs:api:check &&
           bun run docs:check

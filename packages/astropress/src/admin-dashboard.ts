@@ -5,6 +5,8 @@ import type {
 	ContentRecord as PersistedContentRecord,
 	RedirectRule,
 } from "./persistence-types";
+import { isAuthUserAdmin } from "./platform-contracts";
+import type { AuthUser } from "./platform-contracts";
 import type { SeededContentRecordLike } from "./seeded-content-type";
 
 type TranslationEntry = {
@@ -84,11 +86,12 @@ export type AdminDashboardModel = {
 	seoNeedsAttention: number;
 	archiveRoutes: ArchiveRoute[];
 	supportSurfaceLinks: Array<{
-		label: string;
+		labelKey: string;
+		helperKey: string;
 		href: string;
 		count: number;
-		helper: string;
 	}>;
+	latestDeployment: AuditEvent | null;
 };
 
 async function settledValue<T>(promise: Promise<T>, fallback: T) {
@@ -101,10 +104,11 @@ async function settledValue<T>(promise: Promise<T>, fallback: T) {
 
 export async function buildAdminDashboardModel(
 	locals: APIContext["locals"],
-	role: "admin" | "editor",
+	user: AuthUser | null | undefined,
 	translationStatus: TranslationEntry[],
 	deps: DashboardDeps,
 ): Promise<AdminDashboardModel> {
+	const isAdmin = !!user && isAuthUserAdmin(user);
 	const [
 		auditEvents,
 		comments,
@@ -147,8 +151,10 @@ export async function buildAdminDashboardModel(
 		)
 		.slice(0, 5);
 	const recentAuditEvents = auditEvents.slice(0, 6);
+	const latestDeployment =
+		auditEvents.find((event) => event.targetType === "deployment") ?? null;
 	const recentActivity = (
-		role === "admin"
+		isAdmin
 			? [
 					...contentStates.map((record) => ({
 						title: record.title,
@@ -177,22 +183,21 @@ export async function buildAdminDashboardModel(
 		)
 		.slice(0, 6);
 
-	const translationEntries =
-		role === "admin"
-			? await settledValue(
-					Promise.all(
-						translationStatus.map(async (entry) => ({
-							route: entry.route,
-							state: await deps.getRuntimeTranslationState(
-								entry.route,
-								entry.translationState,
-								locals,
-							),
-						})),
-					),
-					[] as Array<{ route: string; state: string }>,
-				)
-			: [];
+	const translationEntries = isAdmin
+		? await settledValue(
+				Promise.all(
+					translationStatus.map(async (entry) => ({
+						route: entry.route,
+						state: await deps.getRuntimeTranslationState(
+							entry.route,
+							entry.translationState,
+							locals,
+						),
+					})),
+				),
+				[] as Array<{ route: string; state: string }>,
+			)
+		: [];
 
 	const translationNeedsAttention = translationEntries.filter(
 		(entry) => entry.state !== "published",
@@ -204,42 +209,41 @@ export async function buildAdminDashboardModel(
 		...routePages.filter((route) => !route.seoTitle || !route.metaDescription),
 	].length;
 
-	const archiveRoutes: ArchiveRoute[] =
-		role === "admin"
-			? await settledValue(
-					Promise.all([
-						deps.getRuntimeArchiveRoute("/author", locals),
-						deps.getRuntimeArchiveRoute("/category", locals),
-						deps.getRuntimeArchiveRoute("/tag", locals),
-					]),
-					[null, null, null] as [ArchiveRoute, ArchiveRoute, ArchiveRoute],
-				)
-			: [];
+	const archiveRoutes: ArchiveRoute[] = isAdmin
+		? await settledValue(
+				Promise.all([
+					deps.getRuntimeArchiveRoute("/author", locals),
+					deps.getRuntimeArchiveRoute("/category", locals),
+					deps.getRuntimeArchiveRoute("/tag", locals),
+				]),
+				[null, null, null] as [ArchiveRoute, ArchiveRoute, ArchiveRoute],
+			)
+		: [];
 
 	const supportSurfaceLinks = [
 		{
-			label: "Translations",
+			labelKey: "dashboard.translations",
+			helperKey: "dashboard.translationsDesc",
 			href: "/ap-admin/translations",
 			count: translationNeedsAttention,
-			helper: "Localized routes not yet published.",
 		},
 		{
-			label: "SEO",
+			labelKey: "dashboard.seo",
+			helperKey: "dashboard.seoDesc",
 			href: "/ap-admin/seo?missing=1",
 			count: seoNeedsAttention,
-			helper: "Pages or routes missing dedicated metadata.",
 		},
 		{
-			label: "Archives",
+			labelKey: "dashboard.archives",
+			helperKey: "dashboard.archivesDesc",
 			href: "/ap-admin/archives",
 			count: archiveRoutes.filter(Boolean).length,
-			helper: "Archive landing pages with separate owner editors.",
 		},
 		{
-			label: "System",
+			labelKey: "dashboard.system",
+			helperKey: "dashboard.systemDesc",
 			href: "/ap-admin/system",
 			count: systemRoutes.length,
-			helper: "500 page and generated public outputs.",
 		},
 	];
 
@@ -260,5 +264,6 @@ export async function buildAdminDashboardModel(
 		seoNeedsAttention,
 		archiveRoutes,
 		supportSurfaceLinks,
+		latestDeployment,
 	};
 }

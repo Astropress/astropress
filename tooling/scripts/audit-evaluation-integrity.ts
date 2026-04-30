@@ -155,9 +155,18 @@ async function main() {
 	);
 }
 
-const GRADE_ORDER: Record<string, number> = { F: 0, D: 1, C: 2, B: 3, A: 4, "A+": 5 };
+const GRADE_ORDER: Record<string, number> = {
+	F: 0,
+	D: 1,
+	C: 2,
+	B: 3,
+	A: 4,
+	"A+": 5,
+};
 
-function parseRubricMap(src: string): Map<string, { grade: string; evidence: string }> {
+function parseRubricMap(
+	src: string,
+): Map<string, { grade: string; evidence: string }> {
 	const rubrics = new Map<string, { grade: string; evidence: string }>();
 	const linePattern = /^\|\s*(\d+)\s*\|[^|]+\|\s*([A-F][+-]?)\s*\|([^|]*)\|/gm;
 	for (const m of src.matchAll(linePattern)) {
@@ -169,7 +178,10 @@ function parseRubricMap(src: string): Map<string, { grade: string; evidence: str
 	return rubrics;
 }
 
-async function checkGradeRaises(currentSrc: string, report: AuditReport): Promise<void> {
+async function checkGradeRaises(
+	currentSrc: string,
+	report: AuditReport,
+): Promise<void> {
 	// Fetch the main version of EVALUATION.md. If unavailable, skip silently.
 	const show = spawnSync(
 		"git",
@@ -181,14 +193,24 @@ async function checkGradeRaises(currentSrc: string, report: AuditReport): Promis
 	const before = parseRubricMap(mainSrc);
 	const now = parseRubricMap(currentSrc);
 
-	const raised: Array<{ num: string; from: string; to: string; evidence: string }> = [];
+	const raised: Array<{
+		num: string;
+		from: string;
+		to: string;
+		evidence: string;
+	}> = [];
 	for (const [num, next] of now) {
 		const prev = before.get(num);
 		if (!prev) continue; // new rubric — skip grade-raise logic
 		const prevRank = GRADE_ORDER[prev.grade] ?? -1;
 		const nextRank = GRADE_ORDER[next.grade] ?? -1;
 		if (nextRank > prevRank) {
-			raised.push({ num, from: prev.grade, to: next.grade, evidence: next.evidence });
+			raised.push({
+				num,
+				from: prev.grade,
+				to: next.grade,
+				evidence: next.evidence,
+			});
 		}
 	}
 
@@ -199,9 +221,7 @@ async function checkGradeRaises(currentSrc: string, report: AuditReport): Promis
 		for (const m of r.evidence.matchAll(pattern)) testFiles.push(m[0]);
 		if (testFiles.length === 0) {
 			report.add(
-				`[grade-raise-no-test] Rubric #${r.num} grade rose ${r.from}→${r.to} but its evidence ` +
-					`cites no .test.ts / .spec.ts file. A grade upgrade must be backed by a behavioral ` +
-					`test that actually ran. Evidence: ${r.evidence.slice(0, 180)}...`,
+				`[grade-raise-no-test] Rubric #${r.num} grade rose ${r.from}→${r.to} but its evidence cites no .test.ts / .spec.ts file. A grade upgrade must be backed by a behavioral test that actually ran. Evidence: ${r.evidence.slice(0, 180)}...`,
 			);
 			continue;
 		}
@@ -225,9 +245,7 @@ async function checkGradeRaises(currentSrc: string, report: AuditReport): Promis
 		}
 		if (!foundAnyOnDisk) {
 			report.add(
-				`[grade-raise-missing-test] Rubric #${r.num} grade rose ${r.from}→${r.to} but none of ` +
-					`its cited test files exist on disk: ${testFiles.join(", ")}. The rubric grade is ` +
-					`ahead of the actual implementation.`,
+				`[grade-raise-missing-test] Rubric #${r.num} grade rose ${r.from}→${r.to} but none of its cited test files exist on disk: ${testFiles.join(", ")}. The rubric grade is ahead of the actual implementation.`,
 			);
 		}
 	}

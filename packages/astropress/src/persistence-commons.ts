@@ -252,7 +252,7 @@ function mapContentRecordKind(record: {
 export const SQL_LIST_AUDIT_EVENTS =
 	"SELECT id, user_email, action, resource_type, resource_id, summary, created_at FROM audit_events ORDER BY datetime(created_at) DESC, id DESC";
 
-export const SQL_LIST_ADMIN_USERS_WITH_INVITE = `SELECT id, email, role, name, active, created_at, EXISTS (SELECT 1 FROM user_invites i WHERE i.user_id = admin_users.id AND i.accepted_at IS NULL AND datetime(i.expires_at) > CURRENT_TIMESTAMP) AS has_pending_invite FROM admin_users ORDER BY CASE role WHEN 'admin' THEN 0 ELSE 1 END, datetime(created_at) ASC, email ASC`;
+export const SQL_LIST_ADMIN_USERS_WITH_INVITE = `SELECT id, email, CASE WHEN is_admin = 1 THEN 'admin' ELSE 'editor' END AS role, name, active, created_at, EXISTS (SELECT 1 FROM user_invites i WHERE i.user_id = admin_users.id AND i.accepted_at IS NULL AND datetime(i.expires_at) > CURRENT_TIMESTAMP) AS has_pending_invite FROM admin_users ORDER BY is_admin DESC, datetime(created_at) ASC, email ASC`;
 
 export interface PersistedAuditEventRow {
 	id: number;

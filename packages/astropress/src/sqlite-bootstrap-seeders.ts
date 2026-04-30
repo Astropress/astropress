@@ -173,21 +173,21 @@ export function seedBootstrapUsers(
 	db: SqliteDatabaseLike,
 ) {
 	const upsert = db.prepare(`
-    INSERT INTO admin_users (email, password_hash, role, name, active)
-    VALUES (?, ?, ?, ?, 1)
+    INSERT INTO admin_users (email, password_hash, name, active, is_admin)
+    VALUES (?, ?, ?, 1, ?)
     ON CONFLICT(email) DO UPDATE SET
       password_hash = excluded.password_hash,
-      role = excluded.role,
       name = excluded.name,
-      active = 1
+      active = 1,
+      is_admin = excluded.is_admin
   `);
 	let count = 0;
 	for (const user of options.loadBootstrapUsers()) {
 		const result = upsert.run(
 			user.email.toLowerCase(),
 			hashPasswordSync(user.password),
-			user.role,
 			user.name,
+			user.role === "admin" ? 1 : 0,
 		) as { changes?: number };
 		count += result.changes ?? 1;
 	}

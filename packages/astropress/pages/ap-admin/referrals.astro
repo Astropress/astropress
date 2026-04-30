@@ -1,0 +1,35 @@
+---
+import AdminLayout from "@astropress-diy/astropress/components/AdminLayout.astro";
+import RequiresIntegration from "@astropress-diy/astropress/components/RequiresIntegration.astro";
+import {
+	adminStubs,
+	requiresAccess,
+	resolveAdminLocale,
+	resolveAstropressAdminUiConfig,
+} from "astropress";
+
+const guard = await requiresAccess(Astro, "services:manage");
+if (guard) return guard;
+const adminUser = Astro.locals.adminUser;
+if (!adminUser) return Astro.redirect("/ap-admin/login");
+const locale = resolveAdminLocale(Astro);
+const ui = resolveAstropressAdminUiConfig(locale);
+const stub = adminStubs.referrals;
+---
+
+<AdminLayout
+  title={ui.navigation.referrals}
+  heading={ui.navigation.referrals}
+  currentPath="/ap-admin/referrals"
+  description={stub.description}
+  userName={adminUser.name}
+>
+  <RequiresIntegration
+    capability={stub.capability}
+    description={stub.description}
+    configHint={stub.configHint}
+    providers={[...stub.providers]}
+    docsHref={stub.docsHref}
+    locale={locale}
+  />
+</AdminLayout>

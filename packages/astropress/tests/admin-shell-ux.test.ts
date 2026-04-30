@@ -2,20 +2,17 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 
+// Admin shell invariants: AdminLayout.astro + admin.css + theme toggle.
+// Page-specific concerns (breadcrumbs, confirm dialogs, post editor) live
+// in their own focused test files so changes to a single page's markup
+// only invalidate the relevant suite under stryker incremental.
+
 const root = path.resolve(import.meta.dirname, "..");
 const adminLayout = readFileSync(
 	path.join(root, "components", "AdminLayout.astro"),
 	"utf8",
 );
 const adminCss = readFileSync(path.join(root, "public", "admin.css"), "utf8");
-const importPage = readFileSync(
-	path.join(root, "pages", "ap-admin", "import", "[source].astro"),
-	"utf8",
-);
-const subscriberPage = readFileSync(
-	path.join(root, "pages", "ap-admin", "subscribers", "[id].astro"),
-	"utf8",
-);
 
 describe("admin shell ux invariants", () => {
 	it("ships a viewport meta tag and keyboard shortcuts popover in the shared admin layout", () => {
@@ -23,7 +20,9 @@ describe("admin shell ux invariants", () => {
 			'<meta name="viewport" content="width=device-width, initial-scale=1" />',
 		);
 		expect(adminLayout).toContain('popovertarget="admin-keyboard-shortcuts"');
-		expect(adminLayout).toContain("<h2>Keyboard shortcuts</h2>");
+		expect(adminLayout).toContain(
+			'<h2>{tLayout("layout.keyboardShortcuts")}</h2>',
+		);
 		expect(adminLayout).toContain("<kbd>Ctrl</kbd>+<kbd>K</kbd>");
 	});
 
@@ -44,9 +43,9 @@ describe("admin shell ux invariants", () => {
 	});
 
 	it("has a scroll-to-top/bottom button in the utility panel", () => {
-		expect(adminLayout).toContain('id="scroll-toggle"');
-		expect(adminLayout).toContain('class="scroll-toggle-icon"');
-		expect(adminLayout).toContain("Scroll to bottom");
+		expect(adminLayout).toContain('id="scroll-to-bottom-btn"');
+		expect(adminLayout).toContain('id="scroll-to-top-fab"');
+		expect(adminLayout).toContain('tLayout("layout.scrollToBottom")');
 	});
 
 	it("uses CSS animation for undo toast auto-dismiss instead of JS setTimeout", () => {
@@ -82,44 +81,13 @@ describe("admin shell ux invariants", () => {
 
 	it("keeps reduced-motion handling in the shared stylesheet", () => {
 		expect(adminCss).toContain("@media (prefers-reduced-motion: reduce)");
-		expect(adminCss).toContain(".skeleton { animation: none;");
-		expect(adminCss).toContain(".undo-toast { animation: none; }");
+		expect(adminCss).toMatch(/\.skeleton\s*\{\s*animation:\s*none/);
+		expect(adminCss).toMatch(/\.undo-toast\s*\{\s*animation:\s*none/);
 	});
 
 	it("keeps shared touch targets at 44px or larger", () => {
 		expect(adminCss).toContain("min-height: 2.75rem;");
 		expect(adminCss).toContain("min-width: 2.75rem;");
-	});
-
-	it("renders breadcrumbs on deep admin pages", () => {
-		expect(importPage).toContain(
-			'<nav class="breadcrumb" aria-label="breadcrumb">',
-		);
-		expect(subscriberPage).toContain(
-			'<nav class="breadcrumb" aria-label="breadcrumb">',
-		);
-
-		const postEditor = readFileSync(
-			path.join(root, "pages", "ap-admin", "posts", "[slug].astro"),
-			"utf8",
-		);
-		const archiveEditor = readFileSync(
-			path.join(root, "pages", "ap-admin", "archives", "[...slug].astro"),
-			"utf8",
-		);
-		const routePageEditor = readFileSync(
-			path.join(root, "pages", "ap-admin", "route-pages", "[...slug].astro"),
-			"utf8",
-		);
-		expect(postEditor).toContain(
-			'<nav class="breadcrumb" aria-label="breadcrumb">',
-		);
-		expect(archiveEditor).toContain(
-			'<nav class="breadcrumb" aria-label="breadcrumb">',
-		);
-		expect(routePageEditor).toContain(
-			'<nav class="breadcrumb" aria-label="breadcrumb">',
-		);
 	});
 
 	it("ships shared confirm-dialog styles in admin.css", () => {
@@ -133,10 +101,5 @@ describe("admin shell ux invariants", () => {
 		expect(adminLayout).toContain("btn.disabled = true");
 		expect(adminLayout).toContain('button[type="submit"]');
 		expect(adminLayout).toContain("\\u2026");
-	});
-
-	it("ships shared breadcrumb styles in admin.css", () => {
-		expect(adminCss).toContain(".breadcrumb");
-		expect(adminCss).toContain(".breadcrumb a");
 	});
 });

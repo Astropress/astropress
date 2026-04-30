@@ -2,11 +2,13 @@
 import AdminLayout from "@astropress-diy/astropress/components/AdminLayout.astro";
 import AuditTrail from "@astropress-diy/astropress/components/AuditTrail.astro";
 import CsrfInput from "@astropress-diy/astropress/components/CsrfInput.astro";
-import { buildUsersPageModel } from "astropress";
+import { buildUsersPageModel, getPageT, resolveAdminLocale } from "astropress";
 import { resolveSafeAdminHref } from "../../src/admin-link-utils";
 
+const t = getPageT(resolveAdminLocale(Astro));
+
 const adminUser = Astro.locals.adminUser;
-const model = await buildUsersPageModel(Astro.locals, adminUser?.role);
+const model = await buildUsersPageModel(Astro.locals, adminUser);
 const { users, auditEvents } = model.data;
 const wasCreated = Astro.url.searchParams.get("saved") === "1";
 const userCreatedNoEmail = Astro.url.searchParams.get("user_created") === "1";
@@ -34,56 +36,55 @@ if (model.status === "forbidden") {
 
 {model.status !== "forbidden" ? (
   <AdminLayout
-    title="Users"
-    heading="Users"
-    description="Manage team members, roles, and access state."
-    role={adminUser!.role}
-    userName={adminUser!.name}
+    title={t("users.title")}
+    heading={t("users.title")}
+    description={t("users.description")}
+    userName={adminUser.name}
     currentPath="/ap-admin/users"
   >
-    {model.warnings.length > 0 && <p class="notice">Some user-management data is temporarily unavailable. This page is showing partial results.</p>}
-    {wasCreated && <p class="notice">The invitation was issued successfully.</p>}
-    {userCreatedNoEmail && <p class="notice">User created. Email delivery is in preview mode — no invitation email was sent. Use the link below to share the invite manually.</p>}
-    {wasSuspended && <p class="notice">The admin user was suspended successfully.</p>}
-    {wasRestored && <p class="notice">The admin user was restored successfully.</p>}
-    {inviteLink && <p class="notice">Invitation link: <a href={inviteLink}>{inviteLink}</a></p>}
-    {resetLink && <p class="notice">Password reset link issued: <a href={resetLink}>{resetLink}</a></p>}
+    {model.warnings.length > 0 && <p class="notice">{t("users.partialNotice")}</p>}
+    {wasCreated && <p class="notice">{t("users.invitationIssued")}</p>}
+    {userCreatedNoEmail && <p class="notice">{t("users.userCreatedNoEmail")}</p>}
+    {wasSuspended && <p class="notice">{t("users.userSuspended")}</p>}
+    {wasRestored && <p class="notice">{t("users.userRestored")}</p>}
+    {inviteLink && <p class="notice">{t("users.invitationLink")}<a href={inviteLink}>{inviteLink}</a></p>}
+    {resetLink && <p class="notice">{t("users.resetLinkPrefix")}<a href={resetLink}>{resetLink}</a></p>}
     {errorMessage && <p class="error-notice">{errorMessage}</p>}
     <div class="notice intro-notice">
-      User management is admin-only. New accounts are invited first and set their own password through a single-use link.
+      {t("users.intro")}
     </div>
 
     <div class="admin-subgrid two summary-grid">
       <section class="panel stat summary-card">
-        <span>Total users</span>
+        <span>{t("users.totalUsers")}</span>
         <strong>{users.length}</strong>
-        <span>Managed admin and editor accounts.</span>
+        <span>{t("users.totalUsersDesc")}</span>
       </section>
       <section class="panel stat summary-card">
-        <span>Pending invites</span>
+        <span>{t("users.pendingInvites")}</span>
         <strong>{users.filter((user) => user.status === "invited").length}</strong>
-        <span>Invitations that have not been accepted yet.</span>
+        <span>{t("users.pendingInvitesDesc")}</span>
       </section>
     </div>
 
     <section class="panel users-panel">
       <div class="section-header">
         <div>
-          <p class="admin-kicker">Access Control</p>
-          <h2>Current Users</h2>
-          <p>Manage roles, suspend access, and issue one-time reset links from the same table.</p>
+          <p class="admin-kicker">{t("users.accessControlKicker")}</p>
+          <h2>{t("users.currentUsers")}</h2>
+          <p>{t("users.currentUsersDesc")}</p>
         </div>
       </div>
       <div class="admin-table-shell">
-        <table aria-label="Admin users">
+        <table aria-label={t("users.adminUsersAria")}>
           <thead>
             <tr>
-              <th>Name</th>
-              <th>Email</th>
-              <th>Role</th>
-              <th>Joined</th>
-              <th>Status</th>
-              <th>Actions</th>
+              <th>{t("users.colName")}</th>
+              <th>{t("users.colEmail")}</th>
+              <th>{t("users.colRole")}</th>
+              <th>{t("users.colJoined")}</th>
+              <th>{t("common.status")}</th>
+              <th>{t("common.actions")}</th>
             </tr>
           </thead>
           <tbody>
@@ -101,11 +102,11 @@ if (model.status === "forbidden") {
                     <td class="muted-cell">{user.createdAt.slice(0, 10)}</td>
                     <td>
                       {isSuspended ? (
-                        <span class="status-chip suspended">Suspended</span>
+                        <span class="status-chip suspended">{t("users.statusSuspended")}</span>
                       ) : isInvited ? (
-                        <span class="status-chip invited">Invited</span>
+                        <span class="status-chip invited">{t("users.statusInvited")}</span>
                       ) : (
-                        <span class="status-chip active">Active</span>
+                        <span class="status-chip active">{t("users.statusActive")}</span>
                       )}
                     </td>
                     <td>
@@ -114,7 +115,7 @@ if (model.status === "forbidden") {
                           <form method="post" action="/ap-admin/actions/user-unsuspend" class="admin-inline-form">
                             <CsrfInput token={Astro.locals.csrfToken} />
                             <input type="hidden" name="email" value={user.email} />
-                            <button type="submit" class="admin-button small">Unsuspend</button>
+                            <button type="submit" class="admin-button small">{t("users.unsuspend")}</button>
                           </form>
                         ) : (
                           <>
@@ -127,12 +128,12 @@ if (model.status === "forbidden") {
                               data-field-value={user.email}
                               data-text-suspend-email={user.email}
                             >
-                              Suspend
+                              {t("users.suspend")}
                             </button>
                             <form method="post" action="/ap-admin/actions/user-reset-link" class="admin-inline-form">
                               <CsrfInput token={Astro.locals.csrfToken} />
                               <input type="hidden" name="email" value={user.email} />
-                              <button type="submit" class="admin-button-ghost small">Reset Link</button>
+                              <button type="submit" class="admin-button-ghost small">{t("users.resetLinkBtn")}</button>
                             </form>
                           </>
                         )}
@@ -150,69 +151,67 @@ if (model.status === "forbidden") {
     <section class="panel invite-panel">
       <div class="section-header">
         <div>
-          <p class="admin-kicker">Create Access</p>
-          <h2>Invite User</h2>
-          <p>Invite a team member and let them set their password from a single-use link.</p>
+          <p class="admin-kicker">{t("users.createAccessKicker")}</p>
+          <h2>{t("users.inviteUser")}</h2>
+          <p>{t("users.inviteUserDesc")}</p>
         </div>
       </div>
       <form method="post" action="/ap-admin/actions/user-invite" class="form-grid admin-form-grid columns-3">
         <CsrfInput token={Astro.locals.csrfToken} />
         <div class="form-group admin-field">
-          <label for="invite-name">Full Name</label>
+          <label for="invite-name">{t("users.fullName")}</label>
           <input type="text" id="invite-name" name="name" required class="admin-input" />
         </div>
         <div class="form-group admin-field">
-          <label for="invite-email">Email</label>
+          <label for="invite-email">{t("users.email")}</label>
           <input type="email" id="invite-email" name="email" required class="admin-input" />
         </div>
         <div class="form-group admin-field">
-          <label for="invite-role">Role</label>
+          <label for="invite-role">{t("users.role")}</label>
           <select id="invite-role" name="role" required class="admin-select">
-            <option value="editor">Editor</option>
-            <option value="admin">Admin</option>
+            <option value="editor">{t("users.roleEditor")}</option>
+            <option value="admin">{t("users.roleAdmin")}</option>
           </select>
         </div>
         <div class="form-group form-actions">
-          <button type="submit" class="admin-button">Send Invitation</button>
+          <button type="submit" class="admin-button">{t("users.sendInvitation")}</button>
         </div>
       </form>
       <p class="invite-note">
-        The invited user receives a single-use setup link. In non-production mode, the link is echoed above for local review.
+        {t("users.inviteNote")}
       </p>
     </section>
 
     <AuditTrail
       events={auditEvents.filter((event) => event.action.startsWith("user.") || event.action.startsWith("auth.")).slice(0, 6)}
-      heading="User And Access Audit"
+      heading={t("users.userAndAccessAudit")}
     />
 
     <section class="panel gdpr-panel">
       <div class="section-header">
         <div>
-          <p class="admin-kicker">GDPR / Right of Erasure</p>
-          <h2>Purge User Data</h2>
+          <p class="admin-kicker">{t("users.gdprKicker")}</p>
+          <h2>{t("users.purgeUserData")}</h2>
           <p>
-            Permanently remove all personal data associated with an email address. This action revokes sessions,
-            anonymises audit log entries, deletes comments and contact submissions, and suspends or deletes the
-            admin account. A JSON export of all affected records is downloaded for your data-subject-request records.
+            {t("users.purgeUserDataDesc")}
           </p>
         </div>
       </div>
       <form method="post" action="/ap-admin/actions/user-purge" class="form-grid admin-form-grid columns-3" id="gdpr-purge-form">
         <CsrfInput token={Astro.locals.csrfToken} />
         <div class="form-group admin-field">
-          <label for="purge-email">Email address to purge</label>
+          <label for="purge-email">{t("users.purgeEmailLabel")}</label>
           <input type="email" id="purge-email" name="email" required class="admin-input" />
         </div>
         <div class="form-group admin-field admin-field--checkbox">
           <label>
             <input type="checkbox" name="deleteAccount" value="1" />
-            Permanently delete admin account (instead of suspending)
+            {t("users.purgeDeleteCheckbox")}
           </label>
         </div>
         <div class="form-group form-actions">
           <button type="button" class="admin-button danger" id="purge-trigger">
-            Purge &amp; Download Report
+            {t("users.purgeAndDownload")}
           </button>
         </div>
       </form>
@@ -221,15 +220,15 @@ if (model.status === "forbidden") {
     <ap-confirm-dialog>
       <dialog id="confirm-suspend-user" class="confirm-modal" aria-labelledby="confirm-suspend-user-title">
         <div class="modal-content">
-          <h2 id="confirm-suspend-user-title">Suspend user?</h2>
-          <p>Are you sure you want to suspend <strong id="suspend-email"></strong>?</p>
-          <p>Suspended users cannot sign in until unsuspended.</p>
+          <h2 id="confirm-suspend-user-title">{t("users.confirmSuspendTitle")}</h2>
+          <p>{t("users.confirmSuspendBefore")}<strong id="suspend-email"></strong>{t("users.confirmSuspendAfter")}</p>
+          <p>{t("users.confirmSuspendNote")}</p>
           <div class="modal-actions">
-            <button type="button" class="admin-button-ghost small secondary-button" data-dialog-close>Cancel</button>
+            <button type="button" class="admin-button-ghost small secondary-button" data-dialog-close>{t("users.cancel")}</button>
             <form method="post" action="/ap-admin/actions/user-suspend" style="display:inline;">
               <CsrfInput token={Astro.locals.csrfToken} />
               <input type="hidden" name="email" value="" />
-              <button type="submit" class="admin-button small delete-button">Suspend User</button>
+              <button type="submit" class="admin-button small delete-button">{t("users.suspendUserBtn")}</button>
             </form>
           </div>
         </div>
@@ -238,12 +237,12 @@ if (model.status === "forbidden") {
 
     <dialog id="confirm-purge-user" class="confirm-modal" aria-labelledby="confirm-purge-user-title">
       <div class="modal-content">
-        <h2 id="confirm-purge-user-title">Purge all personal data?</h2>
-        <p>This will permanently erase all personal data for this email. Sessions will be revoked, audit logs anonymised, comments and submissions deleted.</p>
-        <p class="dialog-warning">This action cannot be undone.</p>
+        <h2 id="confirm-purge-user-title">{t("users.confirmPurgeTitle")}</h2>
+        <p>{t("users.confirmPurgeDesc")}</p>
+        <p class="dialog-warning">{t("users.confirmPurgeWarning")}</p>
         <div class="modal-actions">
-          <button type="button" class="admin-button-ghost small secondary-button" id="purge-cancel">Cancel</button>
-          <button type="submit" form="gdpr-purge-form" class="admin-button small delete-button">Purge &amp; Download</button>
+          <button type="button" class="admin-button-ghost small secondary-button" id="purge-cancel">{t("users.cancel")}</button>
+          <button type="submit" form="gdpr-purge-form" class="admin-button small delete-button">{t("users.purgeAndDownloadShort")}</button>
         </div>
       </div>
     </dialog>
@@ -269,12 +268,11 @@ if (model.status === "forbidden") {
     title="Forbidden"
     heading="Forbidden"
     currentPath=""
-    description="This action requires an admin account."
-    role={adminUser!.role}
-    userName={adminUser!.name}
+    description={t("pages.forbidden.description")}
+    userName={adminUser.name}
   >
     <section class="panel forbidden">
-      <p>This action requires an admin account and is hidden from editor-only roles.</p>
+      <p>{t("pages.forbidden.body")}</p>
     </section>
   </AdminLayout>
 )}

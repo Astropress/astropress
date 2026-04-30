@@ -37,6 +37,9 @@ const EXCLUDE_FILE_PATTERNS: ((path: string) => boolean)[] = [
 	(p) => p.endsWith("/index.ts"),
 	(p) => p === `${SRC_ROOT}/persistence-types.ts`,
 	(p) => p === `${SRC_ROOT}/config-service-types.ts`,
+	(p) => p === `${SRC_ROOT}/access/types.ts`,
+	(p) => p === `${SRC_ROOT}/access/locals.ts`,
+	(p) => p === `${SRC_ROOT}/admin-stub-catalog.ts`,
 ];
 
 interface BaselineEntry {

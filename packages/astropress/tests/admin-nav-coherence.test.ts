@@ -63,22 +63,41 @@ function parseNavItems(source: string): ParsedNavItem[] {
 	if (end < 0) throw new Error("navItems array is not terminated");
 	const block = source.slice(opener + 1, end);
 
+	// Single ordered scan over the navItems array body — preserves source
+	// order across the three supported entry forms:
+	//   { href: "...", label: ..., ... }   — literal object entries
+	//   leaf("/href", labelExpr, { ... })  — leaf() helper
+	//   groupSep(labelExpr)                — group separator
+	const combinedRe =
+		/\{\s*href:\s*"([^"]*)"[^}]*\}|\bleaf\(\s*"([^"]+)"\s*,|\bgroupSep\(/g;
 	const items: ParsedNavItem[] = [];
-	// Match top-level object literals only — lines starting with "{ href:"
-	const entryRe = /\{\s*href:\s*"([^"]*)"[^}]*\}/g;
-	for (const match of block.matchAll(entryRe)) {
+	for (const match of block.matchAll(combinedRe)) {
 		const body = match[0];
-		const hrefMatch = body.match(/href:\s*"([^"]*)"/);
-		const indent = /indent:\s*true/.test(body);
-		const isGroupLabel = /isGroupLabel:\s*true/.test(body);
-		// Label may be a static string or an expression; capture static text when present
-		const labelMatch = body.match(/label:\s*"([^"]+)"/);
-		items.push({
-			href: hrefMatch?.[1] ?? "",
-			label: labelMatch?.[1] ?? "(dynamic)",
-			indent,
-			isGroupLabel,
-		});
+		if (body.startsWith("groupSep(")) {
+			items.push({
+				href: "",
+				label: "(dynamic)",
+				indent: false,
+				isGroupLabel: true,
+			});
+		} else if (body.startsWith("leaf(")) {
+			items.push({
+				href: match[2] ?? "",
+				label: "(dynamic)",
+				indent: true,
+				isGroupLabel: false,
+			});
+		} else {
+			const indent = /indent:\s*true/.test(body);
+			const isGroupLabel = /isGroupLabel:\s*true/.test(body);
+			const labelMatch = body.match(/label:\s*"([^"]+)"/);
+			items.push({
+				href: match[1] ?? "",
+				label: labelMatch?.[1] ?? "(dynamic)",
+				indent,
+				isGroupLabel,
+			});
+		}
 	}
 	return items;
 }
@@ -104,24 +123,21 @@ describe("Rubric 50: admin nav structure coherence", () => {
 		expect(duplicates, `duplicate hrefs: ${duplicates.join(", ")}`).toEqual([]);
 	});
 
-	it("group labels are followed only by indented items until the next flat item", () => {
-		// Walk the list; after a group label, every subsequent item must be indent:true
-		// until a non-indent item is encountered, which ends the group.
+	it("group labels are followed only by indented items until the next group label or flat item", () => {
+		// Walk the list; after a group label, every subsequent item must be
+		// indent:true until either (a) a non-indent flat item appears, or
+		// (b) another group label opens — which implicitly closes the
+		// previous group. (The collapsible-nav-groups refactor switched to
+		// back-to-back group transitions with no flat item between them.)
 		const violations: string[] = [];
 		let inGroup: string | null = null;
 		for (const item of items) {
 			if (item.isGroupLabel) {
-				if (inGroup) {
-					violations.push(
-						`group "${inGroup}" was not terminated before group "${item.label}"`,
-					);
-				}
 				inGroup = item.label;
 				continue;
 			}
 			if (inGroup) {
 				if (!item.indent) {
-					// leaving the group
 					inGroup = null;
 				}
 			} else {

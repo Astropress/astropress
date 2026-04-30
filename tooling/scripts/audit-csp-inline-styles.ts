@@ -20,10 +20,10 @@
 import { join, relative } from "node:path";
 import {
 	AuditReport,
+	ROOT,
 	fromRoot,
 	listFiles,
 	readText,
-	ROOT,
 	runAudit,
 } from "../lib/audit-utils.js";
 

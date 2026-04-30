@@ -2,12 +2,13 @@
 import AdminLayout from "@astropress-diy/astropress/components/AdminLayout.astro";
 import { createListmonkOps } from "@astropress-diy/astropress/newsletter-adapter";
 import { getNewsletterConfig } from "@astropress-diy/astropress/runtime-env";
+import { requiresAccess, resolveAdminLocale } from "astropress";
 
+const guard = await requiresAccess(Astro, "subscribers:view");
+if (guard) return guard;
 const adminUser = Astro.locals.adminUser;
-
-if (!adminUser || adminUser.role !== "admin") {
-	Astro.response.status = 403;
-}
+if (!adminUser) return Astro.redirect("/ap-admin/login");
+const adminLocale = resolveAdminLocale(Astro);
 
 const { id } = Astro.params as { id: string };
 
@@ -23,41 +24,37 @@ let subscriber: SubscriberDetail | null = null;
 let listSupported = false;
 let errorMessage = "";
 
-if (adminUser?.role === "admin") {
-	try {
-		const cfg = getNewsletterConfig(Astro.locals);
-		if (
-			cfg.mode === "listmonk" &&
-			cfg.listmonkApiUrl &&
-			cfg.listmonkApiUsername &&
-			cfg.listmonkApiPassword &&
-			cfg.listmonkListId
-		) {
-			listSupported = true;
-			const ops = createListmonkOps({
-				apiUrl: cfg.listmonkApiUrl,
-				apiUsername: cfg.listmonkApiUsername,
-				apiPassword: cfg.listmonkApiPassword,
-				listId: Number(cfg.listmonkListId),
-			});
-			const result = await ops.getSubscriber(id);
-			subscriber = result.subscriber as SubscriberDetail;
-		}
-	} catch (e) {
-		errorMessage =
-			"Could not load subscriber. The subscriber may not exist, or your LISTMONK_* environment variables may be misconfigured.";
+try {
+	const cfg = getNewsletterConfig(Astro.locals);
+	if (
+		cfg.mode === "listmonk" &&
+		cfg.listmonkApiUrl &&
+		cfg.listmonkApiUsername &&
+		cfg.listmonkApiPassword &&
+		cfg.listmonkListId
+	) {
+		listSupported = true;
+		const ops = createListmonkOps({
+			apiUrl: cfg.listmonkApiUrl,
+			apiUsername: cfg.listmonkApiUsername,
+			apiPassword: cfg.listmonkApiPassword,
+			listId: Number(cfg.listmonkListId),
+		});
+		const result = await ops.getSubscriber(id);
+		subscriber = result.subscriber as SubscriberDetail;
 	}
+} catch (e) {
+	errorMessage =
+		"Could not load subscriber. The subscriber may not exist, or your LISTMONK_* environment variables may be misconfigured.";
 }
 
 const wasDeleted = Astro.url.searchParams.get("deleted") === "1";
 ---
 
-{adminUser?.role === "admin" ? (
   <AdminLayout
     title={subscriber ? `${subscriber.email} — Subscribers` : "Subscriber"}
     heading={subscriber ? subscriber.email : "Subscriber"}
     description="View and manage this newsletter subscriber."
-    role={adminUser.role}
     userName={adminUser.name}
     currentPath="/ap-admin/subscribers"
   >
@@ -97,7 +94,7 @@ const wasDeleted = Astro.url.searchParams.get("deleted") === "1";
             <div class="detail-row">
               <dt>Subscribed</dt>
               <dd class="muted">
-                {subscriber.createdAt ? new Date(subscriber.createdAt).toLocaleString() : "—"}
+                {subscriber.createdAt ? new Date(subscriber.createdAt).toLocaleString(adminLocale) : "—"}
               </dd>
             </div>
             <div class="detail-row">
@@ -171,15 +168,3 @@ const wasDeleted = Astro.url.searchParams.get("deleted") === "1";
       import "../../../web-components/confirm-dialog";
     </script>
   </AdminLayout>
-) : (
-  <AdminLayout
-    title="Forbidden"
-    heading="Access denied"
-    description="You do not have permission to view this page."
-    role={adminUser?.role ?? "editor"}
-    userName={adminUser?.name ?? ""}
-    currentPath="/ap-admin/subscribers"
-  >
-    <p>Only admin users can access subscriber management.</p>
-  </AdminLayout>
-)}

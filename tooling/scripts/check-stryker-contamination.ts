@@ -12,7 +12,10 @@ import { execSync, spawnSync } from "node:child_process";
 
 // Stryker instrumentation markers. Nothing legitimate imports or defines
 // functions with these exact names — they're hashed per-run sandbox IDs.
-const CONTAMINATION_MARKERS = [/stryMutAct_[0-9a-z]{5,}/, /stryCov_[0-9a-z]{5,}/];
+const CONTAMINATION_MARKERS = [
+	/stryMutAct_[0-9a-z]{5,}/,
+	/stryCov_[0-9a-z]{5,}/,
+];
 
 // New // @ts-nocheck on any file — Stryker adds this to prevent TypeScript
 // from choking on the injected instrumentation. If a human legitimately
@@ -51,20 +54,20 @@ function checkFileModes(): string[] {
 	for (const line of (result.stdout ?? "").split("\n")) {
 		if (!line) continue;
 		// Format: :<src-mode> <dst-mode> <src-sha> <dst-sha> <status> <path>
-		const match = line.match(
-			/^:(\d{6}) (\d{6}) \S+ \S+ [A-Z]\s+(\S+)/,
-		);
+		const match = line.match(/^:(\d{6}) (\d{6}) \S+ \S+ [A-Z]\s+(\S+)/);
 		if (!match) continue;
 		const srcMode = match[1];
 		const dstMode = match[2];
 		const path = match[3];
 		// Flip from exec (100755) to non-exec (100644) on any file under
 		// **/bin/ is never intentional outside a dedicated commit.
-		if (srcMode === "100755" && dstMode === "100644" && /(^|\/)bin\//.test(path)) {
+		if (
+			srcMode === "100755" &&
+			dstMode === "100644" &&
+			/(^|\/)bin\//.test(path)
+		) {
 			violations.push(
-				`  ${path}: executable bit dropped (100755 → 100644). This usually happens when a ` +
-					`tool writes the file without preserving mode. Re-chmod and re-stage: ` +
-					`\`chmod +x ${path} && git add ${path}\``,
+				`  ${path}: executable bit dropped (100755 → 100644). This usually happens when a tool writes the file without preserving mode. Re-chmod and re-stage: \`chmod +x ${path} && git add ${path}\``,
 			);
 		}
 	}
@@ -90,18 +93,14 @@ function main(): void {
 		for (const marker of CONTAMINATION_MARKERS) {
 			if (marker.test(addedLines)) {
 				violations.push(
-					`  ${file.path}: staged diff contains Stryker instrumentation (${marker}). ` +
-						`A crashed mutation run corrupted the source. Restore with \`git checkout -- ${file.path}\` ` +
-						`then re-stage the real change.`,
+					`  ${file.path}: staged diff contains Stryker instrumentation (${marker}). A crashed mutation run corrupted the source. Restore with \`git checkout -- ${file.path}\` then re-stage the real change.`,
 				);
 				break;
 			}
 		}
 		if (TS_NOCHECK_MARKER.test(file.body)) {
 			violations.push(
-				`  ${file.path}: staged diff adds // @ts-nocheck. If intentional, justify inline and ` +
-					`add the filename to tooling/readiness-truth.json allowlist. If accidental (Stryker ` +
-					`leak), restore with \`git checkout -- ${file.path}\`.`,
+				`  ${file.path}: staged diff adds // @ts-nocheck. If intentional, justify inline and add the filename to tooling/readiness-truth.json allowlist. If accidental (Stryker leak), restore with \`git checkout -- ${file.path}\`.`,
 			);
 		}
 	}

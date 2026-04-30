@@ -13,15 +13,17 @@ import { readdir } from "node:fs/promises";
 import { join, relative } from "node:path";
 import {
 	AuditReport,
+	ROOT,
 	fileExists,
 	fromRoot,
 	readText,
-	ROOT,
 	runAudit,
 } from "../lib/audit-utils.js";
 
 const API_ROUTES_FILE = fromRoot("packages/astropress/src/api-routes.ts");
-const API_MIDDLEWARE_FILE = fromRoot("packages/astropress/src/api-middleware.ts");
+const API_MIDDLEWARE_FILE = fromRoot(
+	"packages/astropress/src/api-middleware.ts",
+);
 const API_HANDLERS_DIR = fromRoot("packages/astropress/pages/ap-api");
 const OPENAPI_ENDPOINT = fromRoot(
 	"packages/astropress/pages/ap-api/v1/openapi.json.ts",

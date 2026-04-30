@@ -94,9 +94,7 @@ function treeIdFor(path: string): string | null {
  * string suitable for a cache key.
  */
 export function hashPaths(paths: string[]): string {
-	return paths
-		.map((p) => (treeIdFor(p) ?? "missing").slice(0, 10))
-		.join("-");
+	return paths.map((p) => (treeIdFor(p) ?? "missing").slice(0, 10)).join("-");
 }
 
 export function hashStep(stepName: string): string | null {

@@ -34,35 +34,37 @@
  */
 
 interface Props {
-  /** Canonical URL of the page (required for the WebPage @id) */
-  url: string;
-  /** CSS selectors identifying speakable sections */
-  cssSelectors?: string[];
-  /** XPath expressions identifying speakable sections (fallback) */
-  xpaths?: string[];
+	/** Canonical URL of the page (required for the WebPage @id) */
+	url: string;
+	/** CSS selectors identifying speakable sections */
+	cssSelectors?: string[];
+	/** XPath expressions identifying speakable sections (fallback) */
+	xpaths?: string[];
 }
 
 const { url, cssSelectors, xpaths } = Astro.props;
 
 const speakable: Record<string, unknown> = {
-  "@type": "SpeakableSpecification",
+	"@type": "SpeakableSpecification",
 };
 if (cssSelectors && cssSelectors.length > 0) {
-  speakable.cssSelector = cssSelectors;
+	speakable.cssSelector = cssSelectors;
 }
 if (xpaths && xpaths.length > 0) {
-  speakable.xpath = xpaths;
+	speakable.xpath = xpaths;
 }
 
 const jsonLd = {
-  "@context": "https://schema.org",
-  "@type": "WebPage",
-  "@id": url,
-  speakable,
-  url,
+	"@context": "https://schema.org",
+	"@type": "WebPage",
+	"@id": url,
+	speakable,
+	url,
 };
 
-const json = JSON.stringify(jsonLd).replace(/<\/(script)/gi, "<\\/$1").replace(/<(script)/gi, "<$1");
+const json = JSON.stringify(jsonLd)
+	.replace(/<\/(script)/gi, "<\\/$1")
+	.replace(/<(script)/gi, "<$1");
 ---
 
 <script type="application/ld+json" set:html={json}></script>

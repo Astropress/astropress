@@ -44,6 +44,7 @@ export function createAstropressAdminStoreModule(
 	return {
 		audit: {
 			getAuditEvents: (...args) => store().audit.getAuditEvents(...args),
+			recordAuditEvent: (...args) => store().audit.recordAuditEvent(...args),
 		},
 		auth: {
 			createSession: (...args) => store().auth.createSession(...args),
@@ -155,6 +156,7 @@ export function createAstropressAdminStoreModule(
 			store().auth.recordSuccessfulLogin(...args),
 		recordLogout: (...args) => store().auth.recordLogout(...args),
 		getAuditEvents: (...args) => store().audit.getAuditEvents(...args),
+		recordAuditEvent: (...args) => store().audit.recordAuditEvent(...args),
 		listAdminUsers: (...args) => store().users.listAdminUsers(...args),
 		inviteAdminUser: (...args) => store().users.inviteAdminUser(...args),
 		suspendAdminUser: (...args) => store().users.suspendAdminUser(...args),

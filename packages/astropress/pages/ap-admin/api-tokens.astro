@@ -2,11 +2,13 @@
 import AdminLayout from "@astropress-diy/astropress/components/AdminLayout.astro";
 import CsrfInput from "@astropress-diy/astropress/components/CsrfInput.astro";
 import { loadLocalAdminStore } from "@astropress-diy/astropress/local-runtime-modules.js";
+import { getPageT, requiresAccess, resolveAdminLocale } from "astropress";
 
+const guard = await requiresAccess(Astro, "apiTokens:create");
+if (guard) return guard;
 const adminUser = Astro.locals.adminUser;
-if (!adminUser || adminUser.role !== "admin") {
-	return Astro.redirect("/ap-admin?error=insufficient-permissions");
-}
+if (!adminUser) return Astro.redirect("/ap-admin/login");
+const t = getPageT(resolveAdminLocale(Astro));
 
 const store = await loadLocalAdminStore();
 const tokens = store.apiTokens ? await store.apiTokens.list() : [];
@@ -32,19 +34,18 @@ const ALL_SCOPES = [
 ---
 
 <AdminLayout
-  title="API Tokens"
-  heading="API Tokens"
+  title={t("apiTokens.title")}
+  heading={t("apiTokens.title")}
   currentPath="/ap-admin/api-tokens"
-  description="Manage API tokens for programmatic access."
-  role={adminUser.role}
+  description={t("apiTokens.description")}
   userName={adminUser.name}
 >
-  {wasRevoked && <p class="notice">Token revoked successfully.</p>}
+  {wasRevoked && <p class="notice">{t("apiTokens.revokedSuccess")}</p>}
   {errorMessage && <p class="error-notice">{errorMessage}</p>}
 
   {wasCreated && createdRawToken && (
     <div class="panel notice" style="border-left: 4px solid var(--color-success, green); padding: 1rem;">
-      <strong>Token created.</strong> Copy this token now — it will not be shown again.
+      <strong>{t("apiTokens.created")}</strong> {t("apiTokens.copyNow")}
       <br />
       <code style="word-break: break-all; font-size: 0.9em;">{createdRawToken}</code>
     </div>
@@ -53,18 +54,18 @@ const ALL_SCOPES = [
   <section class="panel">
     <div class="section-header">
       <div>
-        <p class="admin-kicker">Create Token</p>
-        <h2>New API Token</h2>
+        <p class="admin-kicker">{t("apiTokens.createKicker")}</p>
+        <h2>{t("apiTokens.newToken")}</h2>
       </div>
     </div>
     <form method="post" action="/ap-admin/actions/api-token-create" class="admin-form-grid">
       <CsrfInput token={Astro.locals.csrfToken} />
       <label class="admin-field">
-        <span>Label</span>
-        <input type="text" name="label" placeholder="e.g. AI assistant" required class="admin-input" />
+        <span>{t("apiTokens.label")}</span>
+        <input type="text" name="label" placeholder={t("apiTokens.labelPlaceholder")} required class="admin-input" />
       </label>
       <fieldset class="admin-field">
-        <legend>Scopes</legend>
+        <legend>{t("apiTokens.scopes")}</legend>
         {ALL_SCOPES.map((scope) => (
           <label class="admin-checkbox">
             <input type="checkbox" name="scopes" value={scope} />
@@ -72,24 +73,24 @@ const ALL_SCOPES = [
           </label>
         ))}
       </fieldset>
-      <button type="submit" class="admin-button">Create Token</button>
+      <button type="submit" class="admin-button">{t("apiTokens.createButton")}</button>
     </form>
   </section>
 
   <section class="panel">
-    <h2>Existing Tokens</h2>
+    <h2>{t("apiTokens.existingTokens")}</h2>
     {tokens.length === 0 ? (
-      <p>No tokens yet. Create one above.</p>
+      <p>{t("apiTokens.noTokens")}</p>
     ) : (
       <table class="admin-table">
         <thead>
           <tr>
-            <th>Label</th>
-            <th>Scopes</th>
-            <th>Created</th>
-            <th>Last Used</th>
-            <th>Status</th>
-            <th>Actions</th>
+            <th>{t("apiTokens.label")}</th>
+            <th>{t("apiTokens.scopes")}</th>
+            <th>{t("apiTokens.colCreated")}</th>
+            <th>{t("apiTokens.colLastUsed")}</th>
+            <th>{t("common.status")}</th>
+            <th>{t("common.actions")}</th>
           </tr>
         </thead>
         <tbody>
@@ -98,8 +99,8 @@ const ALL_SCOPES = [
               <td>{token.label}</td>
               <td>{token.scopes.join(", ")}</td>
               <td>{token.createdAt ? new Date(token.createdAt).toLocaleDateString() : "—"}</td>
-              <td>{token.lastUsedAt ? new Date(token.lastUsedAt).toLocaleDateString() : "Never"}</td>
-              <td>{token.revokedAt ? <span style="color: var(--danger, #991b1b);">Revoked</span> : <span style="color: #14532d;">Active</span>}</td>
+              <td>{token.lastUsedAt ? new Date(token.lastUsedAt).toLocaleDateString() : t("apiTokens.never")}</td>
+              <td>{token.revokedAt ? <span style="color: var(--danger, #991b1b);">{t("apiTokens.revoked")}</span> : <span style="color: #14532d;">{t("apiTokens.active")}</span>}</td>
               <td>
                 {!token.revokedAt && (
                   <button
@@ -111,7 +112,7 @@ const ALL_SCOPES = [
                     data-field-value={token.id}
                     data-text-token-label={token.label}
                   >
-                    Revoke
+                    {t("apiTokens.revoke")}
                   </button>
                 )}
               </td>
@@ -124,15 +125,15 @@ const ALL_SCOPES = [
   <ap-confirm-dialog>
     <dialog id="confirm-revoke-token" class="confirm-modal" aria-labelledby="confirm-revoke-token-title">
       <div class="modal-content">
-        <h2 id="confirm-revoke-token-title">Revoke API token?</h2>
-        <p>Are you sure you want to revoke <strong id="token-label"></strong>?</p>
-        <p class="dialog-warning">Revoked tokens cannot be restored. Any integrations using this token will stop working.</p>
+        <h2 id="confirm-revoke-token-title">{t("apiTokens.confirmTitle")}</h2>
+        <p>{t("apiTokens.confirmBody")} <strong id="token-label"></strong>?</p>
+        <p class="dialog-warning">{t("apiTokens.confirmWarning")}</p>
         <div class="modal-actions">
-          <button type="button" class="admin-button-ghost small secondary-button" data-dialog-close>Cancel</button>
+          <button type="button" class="admin-button-ghost small secondary-button" data-dialog-close>{t("apiTokens.cancel")}</button>
           <form method="post" action="/ap-admin/actions/api-token-revoke" style="display:inline;">
             <CsrfInput token={Astro.locals.csrfToken} />
             <input type="hidden" name="id" value="" />
-            <button type="submit" class="admin-button small delete-button">Revoke Token</button>
+            <button type="submit" class="admin-button small delete-button">{t("apiTokens.revokeButton")}</button>
           </form>
         </div>
       </div>

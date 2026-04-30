@@ -13,8 +13,8 @@ describe("admin routes", () => {
 		const routes = listAstropressAdminRoutes();
 
 		expect(ASTROPRESS_ADMIN_BASE_PATH).toBe("/ap-admin");
-		expect(routes).toHaveLength(67);
-		expect(routes.filter((route) => route.kind === "page")).toHaveLength(32);
+		expect(routes).toHaveLength(93);
+		expect(routes.filter((route) => route.kind === "page")).toHaveLength(58);
 		expect(routes.filter((route) => route.kind === "action")).toHaveLength(34);
 		expect(routes.filter((route) => route.kind === "endpoint")).toHaveLength(1);
 		expect(routes.map((route) => route.pattern)).toEqual([
@@ -85,6 +85,32 @@ describe("admin routes", () => {
 			"/ap-admin/actions/webhook-delete",
 			"/ap-admin/actions/schedule-publish",
 			"/ap-admin/actions/user-purge",
+			"/ap-admin/access",
+			"/ap-admin/forms",
+			"/ap-admin/newsletter",
+			"/ap-admin/events",
+			"/ap-admin/reviews",
+			"/ap-admin/referrals",
+			"/ap-admin/memberships",
+			"/ap-admin/community",
+			"/ap-admin/shop",
+			"/ap-admin/social-syndication",
+			"/ap-admin/structured-data",
+			"/ap-admin/sitemaps",
+			"/ap-admin/maps-local",
+			"/ap-admin/analytics",
+			"/ap-admin/heatmaps",
+			"/ap-admin/ab-testing",
+			"/ap-admin/email",
+			"/ap-admin/live-chat",
+			"/ap-admin/image-cdn",
+			"/ap-admin/search",
+			"/ap-admin/cdn-purge",
+			"/ap-admin/monitoring",
+			"/ap-admin/deploy-hooks",
+			"/ap-admin/plugins",
+			"/ap-admin/data",
+			"/ap-admin/backups",
 		]);
 	});
 
@@ -99,9 +125,9 @@ describe("admin routes", () => {
 			kind: "page",
 		});
 		expect(routeEntrypoints.at(-1)).toEqual({
-			pattern: "/ap-admin/actions/user-purge",
-			entrypoint: "/fake/astropress/pages/ap-admin/actions/user-purge.ts",
-			kind: "action",
+			pattern: "/ap-admin/backups",
+			entrypoint: "/fake/astropress/pages/ap-admin/backups.astro",
+			kind: "page",
 		});
 	});
 
@@ -127,6 +153,6 @@ describe("admin routes", () => {
 		);
 
 		expect(injectedRoutes).toEqual(plan);
-		expect(injectedRoutes).toHaveLength(67);
+		expect(injectedRoutes).toHaveLength(93);
 	});
 });

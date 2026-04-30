@@ -5,6 +5,7 @@ import {
 } from "@astropress-diy/astropress";
 import type { APIRoute } from "astro";
 import {
+	recordPublishAudit,
 	resolveDeployHookFromEnv,
 	triggerPublish,
 } from "../../../src/admin-action-publish.js";
@@ -13,7 +14,7 @@ export const POST: APIRoute = async (context) => {
 	return withAdminFormAction(
 		context,
 		{ failurePath: "/ap-admin", requireAdmin: true },
-		async () => {
+		async ({ actor, locals }) => {
 			const hookConfig = resolveDeployHookFromEnv();
 
 			if (!hookConfig) {
@@ -24,6 +25,10 @@ export const POST: APIRoute = async (context) => {
 			}
 
 			const result = await triggerPublish(hookConfig);
+			await recordPublishAudit(locals, actor, {
+				hookType: hookConfig.type,
+				result,
+			});
 
 			if (!result.ok) {
 				return actionErrorRedirect(

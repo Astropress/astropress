@@ -79,14 +79,14 @@ export async function getLiveCloudflareSessionRow(
 		id: string;
 		last_active_at: string;
 		email: string;
-		role: AuthUser["role"];
+		is_admin: number;
 	} | null = null;
 
 	for (const candidate of sessionCandidates) {
 		row = await db
 			.prepare(
 				`
-          SELECT s.id, s.last_active_at, u.email, u.role
+          SELECT s.id, s.last_active_at, u.email, u.is_admin
           FROM admin_sessions s
           JOIN admin_users u ON u.id = s.user_id
           WHERE s.id = ?
@@ -100,7 +100,7 @@ export async function getLiveCloudflareSessionRow(
 				id: string;
 				last_active_at: string;
 				email: string;
-				role: AuthUser["role"];
+				is_admin: number;
 			}>();
 		if (row) break;
 	}
@@ -143,7 +143,11 @@ export function createFallbackCloudflareAuthStore(
 			const user = users.get(email.trim().toLowerCase());
 			if (!user || user.password !== password) return null;
 			const sessionId = `cloudflare-session:${user.id}`;
-			const sessionUser = { id: sessionId, email: user.email, role: user.role };
+			const sessionUser: AuthUser = {
+				id: sessionId,
+				email: user.email,
+				isAdmin: user.isAdmin,
+			};
 			sessions.set(sessionId, sessionUser);
 			return sessionUser;
 		},
@@ -173,13 +177,13 @@ export function createD1CloudflareAuthStore(db: D1DatabaseLike): AuthStore {
 		async signIn(email, password) {
 			const row = await db
 				.prepare(
-					"SELECT id, email, role, password_hash FROM admin_users WHERE email = ? AND active = 1 LIMIT 1",
+					"SELECT id, email, is_admin, password_hash FROM admin_users WHERE email = ? AND active = 1 LIMIT 1",
 				)
 				.bind(email.trim().toLowerCase())
 				.first<{
 					id: number;
 					email: string;
-					role: AuthUser["role"];
+					is_admin: number;
 					password_hash: string;
 				}>();
 
@@ -212,7 +216,11 @@ export function createD1CloudflareAuthStore(db: D1DatabaseLike): AuthStore {
 					),
 			]);
 
-			return { id: sessionId, email: row.email, role: row.role };
+			return {
+				id: sessionId,
+				email: row.email,
+				isAdmin: row.is_admin === 1,
+			};
 		},
 		async signOut(sessionId) {
 			const revokeStmt =
@@ -230,7 +238,11 @@ export function createD1CloudflareAuthStore(db: D1DatabaseLike): AuthStore {
 		async getSession(sessionId) {
 			const row = await getLiveCloudflareSessionRow(db, sessionId);
 			if (!row) return null;
-			return { id: sessionId, email: row.email, role: row.role };
+			return {
+				id: sessionId,
+				email: row.email,
+				isAdmin: row.is_admin === 1,
+			};
 		},
 	};
 }

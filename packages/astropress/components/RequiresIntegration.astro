@@ -1,0 +1,134 @@
+---
+/**
+ * Empty-state shown when an admin leaf has no backing integration configured.
+ *
+ * Renders the capability name, a short description, the supported providers
+ * with vendor links, and a copy-paste registerCms snippet so the operator can
+ * enable the feature without leaving the page.
+ */
+import { getAdminLabel } from "astropress";
+import type { AdminLocale } from "astropress";
+
+interface Provider {
+	name: string;
+	href?: string;
+	tag?: "Recommended" | "Self-hosted" | "OSS" | "SaaS";
+}
+
+interface Props {
+	capability: string;
+	description: string;
+	configHint: string;
+	providers: Provider[];
+	docsHref?: string;
+	locale: AdminLocale;
+}
+
+const { capability, description, configHint, providers, docsHref, locale } =
+	Astro.props;
+
+const tHeading = getAdminLabel("stubNotConfiguredHeading", locale);
+const tHowTo = getAdminLabel("stubHowToEnable", locale);
+const tProviders = getAdminLabel("stubSupportedProviders", locale);
+const tLearnMore = getAdminLabel("stubLearnMore", locale);
+---
+
+<section class="panel stub-panel" aria-labelledby="stub-heading">
+  <header>
+    <span class="stub-eyebrow">{tHeading}</span>
+    <h2 id="stub-heading">{capability}</h2>
+    <p>{description}</p>
+  </header>
+
+  <div class="stub-grid">
+    <section aria-labelledby="stub-howto">
+      <h3 id="stub-howto">{tHowTo}</h3>
+      <pre><code>{configHint}</code></pre>
+      {docsHref && (
+        <p>
+          <a href={docsHref} rel="noopener">{tLearnMore}</a>
+        </p>
+      )}
+    </section>
+
+    <section aria-labelledby="stub-providers">
+      <h3 id="stub-providers">{tProviders}</h3>
+      <ul class="stub-providers">
+        {providers.map((p) => (
+          <li>
+            {p.href ? (
+              <a href={p.href} rel="noopener">{p.name}</a>
+            ) : (
+              <span>{p.name}</span>
+            )}
+            {p.tag && <span class={`stub-tag stub-tag-${p.tag.toLowerCase().replace(/[^a-z]/g, "")}`}>{p.tag}</span>}
+          </li>
+        ))}
+      </ul>
+    </section>
+  </div>
+</section>
+
+<style>
+  .stub-panel {
+    display: grid;
+    gap: 1.5rem;
+  }
+  .stub-eyebrow {
+    display: inline-block;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--ap-color-muted, #6b7280);
+    margin-bottom: 0.25rem;
+  }
+  .stub-panel h2 {
+    margin: 0 0 0.5rem 0;
+  }
+  .stub-grid {
+    display: grid;
+    gap: 1.5rem;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+  @media (max-width: 720px) {
+    .stub-grid { grid-template-columns: minmax(0, 1fr); }
+  }
+  .stub-grid h3 {
+    font-size: 0.95rem;
+    margin: 0 0 0.5rem 0;
+  }
+  .stub-grid pre {
+    background: var(--ap-color-code-bg, #0f172a);
+    color: var(--ap-color-code-fg, #e2e8f0);
+    padding: 0.85rem 1rem;
+    border-radius: 6px;
+    overflow-x: auto;
+    font-size: 0.85rem;
+    line-height: 1.5;
+  }
+  .stub-providers {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    gap: 0.45rem;
+  }
+  .stub-providers li {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .stub-tag {
+    font-size: 0.7rem;
+    padding: 0.1rem 0.5rem;
+    border-radius: 9999px;
+    background: var(--ap-color-pill-bg, #e5e7eb);
+    color: var(--ap-color-pill-fg, #374151);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .stub-tag-recommended {
+    background: var(--ap-color-pill-good-bg, #dcfce7);
+    color: var(--ap-color-pill-good-fg, #166534);
+  }
+</style>

@@ -1,5 +1,6 @@
 ---
 import AdminLayout from "@astropress-diy/astropress/components/AdminLayout.astro";
+import { isAuthUserAdmin } from "astropress";
 
 const adminUser = Astro.locals.adminUser;
 
@@ -9,7 +10,7 @@ if (!adminUser) {
 }
 
 // Host panel is admin-only
-if (adminUser.role !== "admin") {
+if (!isAuthUserAdmin(adminUser)) {
 	return Astro.redirect("/ap-admin", 302);
 }
 
@@ -32,7 +33,6 @@ if (!hostPanel) {
   heading={hostPanel.label}
   currentPath="/ap-admin/host"
   description={`Database provider infrastructure panel — ${hostPanel.label}`}
-  role={adminUser.role}
   userName={adminUser.name}
   hasHostPanel={true}
 >

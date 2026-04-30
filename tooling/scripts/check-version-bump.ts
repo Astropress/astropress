@@ -18,7 +18,9 @@ const BASE_BRANCH = process.env.BASE_BRANCH ?? "main";
 function getFileAtRef(ref: string, filePath: string): string | null {
 	try {
 		const relPath = filePath.replace(`${ROOT}/`, "");
-		return execFileSync("git", ["show", `${ref}:${relPath}`], { cwd: ROOT }).toString();
+		return execFileSync("git", ["show", `${ref}:${relPath}`], {
+			cwd: ROOT,
+		}).toString();
 	} catch {
 		return null;
 	}

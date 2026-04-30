@@ -81,7 +81,11 @@ export function createAstropressSqliteAdapter(
 				if (!user) return null;
 				const sessionId = runtime.sqliteAdminStore.auth.createSession(user, {});
 				runtime.sqliteAdminStore.auth.recordSuccessfulLogin(user);
-				return { id: sessionId, email: user.email, role: user.role };
+				return {
+					id: sessionId,
+					email: user.email,
+					isAdmin: user.role === "admin",
+				};
 			},
 			async signOut(sessionId) {
 				const user = runtime.sqliteAdminStore.auth.getSessionUser(sessionId);
@@ -91,7 +95,11 @@ export function createAstropressSqliteAdapter(
 			async getSession(sessionId) {
 				const user = runtime.sqliteAdminStore.auth.getSessionUser(sessionId);
 				return user
-					? { id: sessionId, email: user.email, role: user.role }
+					? {
+							id: sessionId,
+							email: user.email,
+							isAdmin: user.role === "admin",
+						}
 					: null;
 			},
 		},

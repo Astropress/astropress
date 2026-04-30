@@ -17,7 +17,9 @@ import {
 //   4. src/security-headers.ts exists (cache-related response headers are configured there)
 
 const CACHE_PURGE = fromRoot("packages/astropress/src/cache-purge.ts");
-const SECURITY_HEADERS = fromRoot("packages/astropress/src/security-headers.ts");
+const SECURITY_HEADERS = fromRoot(
+	"packages/astropress/src/security-headers.ts",
+);
 
 async function main() {
 	const report = new AuditReport("caching");

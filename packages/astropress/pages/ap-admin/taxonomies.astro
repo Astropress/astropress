@@ -2,10 +2,14 @@
 import AdminLayout from "@astropress-diy/astropress/components/AdminLayout.astro";
 import AuditTrail from "@astropress-diy/astropress/components/AuditTrail.astro";
 import CsrfInput from "@astropress-diy/astropress/components/CsrfInput.astro";
-import { buildTaxonomiesPageModel } from "astropress";
+import {
+	buildTaxonomiesPageModel,
+	getPageT,
+	resolveAdminLocale,
+} from "astropress";
 
 const adminUser = Astro.locals.adminUser;
-const model = await buildTaxonomiesPageModel(Astro.locals, adminUser?.role);
+const model = await buildTaxonomiesPageModel(Astro.locals, adminUser);
 const { categories, tags, auditEvents } = model.data;
 const wasSaved = Astro.url.searchParams.get("saved") === "1";
 const wasDeleted = Astro.url.searchParams.get("deleted") === "1";
@@ -15,6 +19,7 @@ const errorMessage =
 	Astro.url.searchParams.get("error") === "1"
 		? Astro.url.searchParams.get("message")
 		: "";
+const t = getPageT(resolveAdminLocale(Astro));
 
 if (model.status === "forbidden") {
 	Astro.response.status = 403;
@@ -23,61 +28,60 @@ if (model.status === "forbidden") {
 
 {model.status !== "forbidden" ? (
   <AdminLayout
-    title="Taxonomies"
-    heading="Taxonomies"
+    title={t("taxonomies.title")}
+    heading={t("taxonomies.title")}
     currentPath="/ap-admin/taxonomies"
-    description="Manage reusable categories and tags for future editorial workflows."
-    role={adminUser!.role}
-    userName={adminUser!.name}
+    description={t("taxonomies.description")}
+    userName={adminUser.name}
   >
-    {model.warnings.length > 0 && <p class="notice">Some taxonomy data is temporarily unavailable. This page is showing partial results.</p>}
-    {wasSaved && <p class="notice">The taxonomy term was saved successfully.</p>}
+    {model.warnings.length > 0 && <p class="notice">{t("taxonomies.partialResults")}</p>}
+    {wasSaved && <p class="notice">{t("taxonomies.savedSuccess")}</p>}
     {wasDeleted && restoreId && (
       <div class="undo-toast" role="status" aria-live="polite" data-undo-toast>
-        Taxonomy term deleted.
+        {t("taxonomies.deletedToast")}
         <form method="post" action="/ap-admin/actions/restore" style="display:contents">
           <input type="hidden" name="_csrf" value={Astro.locals.csrfToken} />
           <input type="hidden" name="table" value={restoreTable} />
           <input type="hidden" name="id" value={restoreId} />
           <input type="hidden" name="return_to" value="/ap-admin/taxonomies" />
-          <button type="submit" class="undo-btn">Undo</button>
+          <button type="submit" class="undo-btn">{t("taxonomies.undo")}</button>
         </form>
       </div>
     )}
-    {wasDeleted && !restoreId && <p class="notice">The taxonomy term was deleted successfully.</p>}
+    {wasDeleted && !restoreId && <p class="notice">{t("taxonomies.deletedSuccess")}</p>}
     {errorMessage && <p class="error-notice">{errorMessage}</p>}
 
     <div class="taxonomy-grid">
       <section class="panel">
         <div class="section-header">
           <div>
-            <h2>Categories</h2>
-            <p>Group posts into durable archive families and editorial buckets.</p>
+            <h2>{t("taxonomies.categories")}</h2>
+            <p>{t("taxonomies.categoriesDesc")}</p>
           </div>
         </div>
         <form class="stack-form" method="post" action="/ap-admin/actions/taxonomy-save">
           <CsrfInput token={Astro.locals.csrfToken} />
           <input type="hidden" name="kind" value="category" />
           <label class="admin-field">
-            <span>Category name</span>
-            <input aria-label="Category name" type="text" name="name" placeholder="Programs" class="admin-input" />
+            <span>{t("taxonomies.categoryName")}</span>
+            <input aria-label={t("taxonomies.categoryName")} type="text" name="name" placeholder="Programs" class="admin-input" />
           </label>
           <label class="admin-field">
-            <span>Slug</span>
-            <input aria-label="Category slug" type="text" name="slug" placeholder="programs" class="admin-input" />
+            <span>{t("taxonomies.slug")}</span>
+            <input aria-label={t("taxonomies.categorySlug")} type="text" name="slug" placeholder="programs" class="admin-input" />
           </label>
           <label class="admin-field">
-            <span>Description</span>
-            <textarea aria-label="Category description" name="description" rows="2" class="admin-textarea"></textarea>
+            <span>{t("taxonomies.descriptionField")}</span>
+            <textarea aria-label={t("taxonomies.categoryDescription")} name="description" rows="2" class="admin-textarea"></textarea>
           </label>
-          <button type="submit" class="admin-button">Save category</button>
+          <button type="submit" class="admin-button">{t("taxonomies.saveCategory")}</button>
         </form>
-        <table aria-label="Categories">
+        <table aria-label={t("taxonomies.categories")}>
           <thead>
             <tr>
-              <th>Name</th>
-              <th>Slug</th>
-              <th>Actions</th>
+              <th>{t("taxonomies.thName")}</th>
+              <th>{t("taxonomies.thSlug")}</th>
+              <th>{t("common.actions")}</th>
             </tr>
           </thead>
           <tbody>
@@ -87,15 +91,15 @@ if (model.status === "forbidden") {
                 <td>{term.slug}</td>
                 <td class="actions">
                   <details>
-                    <summary class="edit-summary">Edit</summary>
+                    <summary class="edit-summary">{t("taxonomies.edit")}</summary>
                     <form method="post" action="/ap-admin/actions/taxonomy-save" class="inline-form">
                       <CsrfInput token={Astro.locals.csrfToken} />
                       <input type="hidden" name="kind" value="category" />
                       <input type="hidden" name="id" value={term.id} />
-                      <input aria-label={`Category name ${term.slug}`} type="text" name="name" value={term.name} class="admin-input" />
-                      <input aria-label={`Category slug ${term.slug}`} type="text" name="slug" value={term.slug} class="admin-input" />
-                      <textarea aria-label={`Category description ${term.slug}`} name="description" rows="2" class="admin-textarea">{term.description || ""}</textarea>
-                      <button type="submit" class="admin-button small">Update</button>
+                      <input aria-label={`${t("taxonomies.categoryName")} ${term.slug}`} type="text" name="name" value={term.name} class="admin-input" />
+                      <input aria-label={`${t("taxonomies.categorySlug")} ${term.slug}`} type="text" name="slug" value={term.slug} class="admin-input" />
+                      <textarea aria-label={`${t("taxonomies.categoryDescription")} ${term.slug}`} name="description" rows="2" class="admin-textarea">{term.description || ""}</textarea>
+                      <button type="submit" class="admin-button small">{t("taxonomies.update")}</button>
                     </form>
                   </details>
                   <button
@@ -107,7 +111,7 @@ if (model.status === "forbidden") {
                     data-field-value={term.id}
                     data-text-category-name={term.name}
                   >
-                    Delete
+                    {t("taxonomies.delete")}
                   </button>
                 </td>
               </tr>
@@ -117,16 +121,16 @@ if (model.status === "forbidden") {
         <ap-confirm-dialog>
           <dialog id="confirm-delete-category" class="confirm-modal" aria-labelledby="confirm-delete-category-title">
             <div class="modal-content">
-              <h2 id="confirm-delete-category-title">Delete category?</h2>
-              <p>Are you sure you want to delete <strong id="category-name"></strong>?</p>
-              <p class="dialog-warning">This action cannot be undone.</p>
+              <h2 id="confirm-delete-category-title">{t("taxonomies.deleteCategoryDialogTitle")}</h2>
+              <p>{t("taxonomies.deleteConfirmPrefix")}<strong id="category-name"></strong>{t("taxonomies.deleteConfirmSuffix")}</p>
+              <p class="dialog-warning">{t("taxonomies.deleteWarning")}</p>
               <div class="modal-actions">
-                <button type="button" class="admin-button-ghost small secondary-button" data-dialog-close>Cancel</button>
+                <button type="button" class="admin-button-ghost small secondary-button" data-dialog-close>{t("taxonomies.cancel")}</button>
                 <form method="post" action="/ap-admin/actions/taxonomy-delete" style="display:inline;">
                   <CsrfInput token={Astro.locals.csrfToken} />
                   <input type="hidden" name="kind" value="category" />
                   <input type="hidden" name="id" value="" />
-                  <button type="submit" class="admin-button small delete-button">Delete Category</button>
+                  <button type="submit" class="admin-button small delete-button">{t("taxonomies.deleteCategory")}</button>
                 </form>
               </div>
             </div>
@@ -137,33 +141,33 @@ if (model.status === "forbidden") {
       <section class="panel">
         <div class="section-header">
           <div>
-            <h2>Tags</h2>
-            <p>Capture lighter-weight topical labels without creating a whole category family.</p>
+            <h2>{t("taxonomies.tags")}</h2>
+            <p>{t("taxonomies.tagsDesc")}</p>
           </div>
         </div>
         <form class="stack-form" method="post" action="/ap-admin/actions/taxonomy-save">
           <CsrfInput token={Astro.locals.csrfToken} />
           <input type="hidden" name="kind" value="tag" />
           <label class="admin-field">
-            <span>Tag name</span>
-            <input aria-label="Tag name" type="text" name="name" placeholder="Volunteer Stories" class="admin-input" />
+            <span>{t("taxonomies.tagName")}</span>
+            <input aria-label={t("taxonomies.tagName")} type="text" name="name" placeholder="Volunteer Stories" class="admin-input" />
           </label>
           <label class="admin-field">
-            <span>Slug</span>
-            <input aria-label="Tag slug" type="text" name="slug" placeholder="volunteer-stories" class="admin-input" />
+            <span>{t("taxonomies.slug")}</span>
+            <input aria-label={t("taxonomies.tagSlug")} type="text" name="slug" placeholder="volunteer-stories" class="admin-input" />
           </label>
           <label class="admin-field">
-            <span>Description</span>
-            <textarea aria-label="Tag description" name="description" rows="2" class="admin-textarea"></textarea>
+            <span>{t("taxonomies.descriptionField")}</span>
+            <textarea aria-label={t("taxonomies.tagDescription")} name="description" rows="2" class="admin-textarea"></textarea>
           </label>
-          <button type="submit" class="admin-button">Save tag</button>
+          <button type="submit" class="admin-button">{t("taxonomies.saveTag")}</button>
         </form>
-        <table aria-label="Tags">
+        <table aria-label={t("taxonomies.tags")}>
           <thead>
             <tr>
-              <th>Name</th>
-              <th>Slug</th>
-              <th>Actions</th>
+              <th>{t("taxonomies.thName")}</th>
+              <th>{t("taxonomies.thSlug")}</th>
+              <th>{t("common.actions")}</th>
             </tr>
           </thead>
           <tbody>
@@ -173,15 +177,15 @@ if (model.status === "forbidden") {
                 <td>{term.slug}</td>
                 <td class="actions">
                   <details>
-                    <summary class="edit-summary">Edit</summary>
+                    <summary class="edit-summary">{t("taxonomies.edit")}</summary>
                     <form method="post" action="/ap-admin/actions/taxonomy-save" class="inline-form">
                       <CsrfInput token={Astro.locals.csrfToken} />
                       <input type="hidden" name="kind" value="tag" />
                       <input type="hidden" name="id" value={term.id} />
-                      <input aria-label={`Tag name ${term.slug}`} type="text" name="name" value={term.name} class="admin-input" />
-                      <input aria-label={`Tag slug ${term.slug}`} type="text" name="slug" value={term.slug} class="admin-input" />
-                      <textarea aria-label={`Tag description ${term.slug}`} name="description" rows="2" class="admin-textarea">{term.description || ""}</textarea>
-                      <button type="submit" class="admin-button small">Update</button>
+                      <input aria-label={`${t("taxonomies.tagName")} ${term.slug}`} type="text" name="name" value={term.name} class="admin-input" />
+                      <input aria-label={`${t("taxonomies.tagSlug")} ${term.slug}`} type="text" name="slug" value={term.slug} class="admin-input" />
+                      <textarea aria-label={`${t("taxonomies.tagDescription")} ${term.slug}`} name="description" rows="2" class="admin-textarea">{term.description || ""}</textarea>
+                      <button type="submit" class="admin-button small">{t("taxonomies.update")}</button>
                     </form>
                   </details>
                   <button
@@ -193,7 +197,7 @@ if (model.status === "forbidden") {
                     data-field-value={term.id}
                     data-text-tag-name={term.name}
                   >
-                    Delete
+                    {t("taxonomies.delete")}
                   </button>
                 </td>
               </tr>
@@ -203,16 +207,16 @@ if (model.status === "forbidden") {
         <ap-confirm-dialog>
           <dialog id="confirm-delete-tag" class="confirm-modal" aria-labelledby="confirm-delete-tag-title">
             <div class="modal-content">
-              <h2 id="confirm-delete-tag-title">Delete tag?</h2>
-              <p>Are you sure you want to delete <strong id="tag-name"></strong>?</p>
-              <p class="dialog-warning">This action cannot be undone.</p>
+              <h2 id="confirm-delete-tag-title">{t("taxonomies.deleteTagDialogTitle")}</h2>
+              <p>{t("taxonomies.deleteConfirmPrefix")}<strong id="tag-name"></strong>{t("taxonomies.deleteConfirmSuffix")}</p>
+              <p class="dialog-warning">{t("taxonomies.deleteWarning")}</p>
               <div class="modal-actions">
-                <button type="button" class="admin-button-ghost small secondary-button" data-dialog-close>Cancel</button>
+                <button type="button" class="admin-button-ghost small secondary-button" data-dialog-close>{t("taxonomies.cancel")}</button>
                 <form method="post" action="/ap-admin/actions/taxonomy-delete" style="display:inline;">
                   <CsrfInput token={Astro.locals.csrfToken} />
                   <input type="hidden" name="kind" value="tag" />
                   <input type="hidden" name="id" value="" />
-                  <button type="submit" class="admin-button small delete-button">Delete Tag</button>
+                  <button type="submit" class="admin-button small delete-button">{t("taxonomies.deleteTag")}</button>
                 </form>
               </div>
             </div>
@@ -230,15 +234,14 @@ if (model.status === "forbidden") {
   </AdminLayout>
 ) : (
   <AdminLayout
-    title="Forbidden"
-    heading="Forbidden"
+    title={t("taxonomies.forbiddenTitle")}
+    heading={t("taxonomies.forbiddenTitle")}
     currentPath=""
-    description="This action requires an admin account."
-    role={adminUser!.role}
-    userName={adminUser!.name}
+    description={t("pages.forbidden.description")}
+    userName={adminUser.name}
   >
     <section class="panel forbidden">
-      <p>This action requires an admin account and is hidden from editor-only roles.</p>
+      <p>{t("pages.forbidden.body")}</p>
     </section>
   </AdminLayout>
 )}

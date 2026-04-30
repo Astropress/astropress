@@ -10,10 +10,10 @@
 import { relative } from "node:path";
 import {
 	AuditReport,
+	ROOT,
 	fileExists,
 	fromRoot,
 	readText,
-	ROOT,
 	runAudit,
 } from "../lib/audit-utils.js";
 

@@ -1,0 +1,412 @@
+---
+import AdminLayout from "@astropress-diy/astropress/components/AdminLayout.astro";
+import {
+	type AccessPageTab,
+	buildAccessPageModel,
+	getPageT,
+	listAccessActions,
+	requiresAccess,
+	resolveAdminLocale,
+} from "astropress";
+
+const guard = await requiresAccess(Astro, "users:list");
+if (guard) return guard;
+const adminUser = Astro.locals.adminUser;
+if (!adminUser) return Astro.redirect("/ap-admin/login");
+
+const tabParam = Astro.url.searchParams.get("tab") as AccessPageTab | null;
+const model = await buildAccessPageModel(Astro.locals, adminUser, {
+	tab: tabParam ?? undefined,
+});
+const adminLocale = resolveAdminLocale(Astro);
+const t = getPageT(adminLocale);
+
+const {
+	activeTab,
+	users,
+	roles,
+	userRoleMap,
+	userDirectGrantCounts,
+	rolePoliciesMap,
+	activeAdminCount,
+	viewerPolicies,
+} = model.data;
+
+const csrfToken = Astro.locals.csrfToken ?? "";
+const lastAdminWarning = activeAdminCount <= 1;
+const knownActions = listAccessActions().map((a) => a.id);
+---
+
+<AdminLayout
+  title={t("access.title")}
+  heading={t("access.title")}
+  description={t("access.description")}
+  currentPath="/ap-admin/access"
+  userName={adminUser.name}
+>
+  {model.warnings.length > 0 && <p class="notice">{model.warnings.join(" ")}</p>}
+  {lastAdminWarning && <p class="warning-notice">{t("access.lastAdminWarning")}</p>}
+
+  <nav class="tabs" role="tablist" aria-label="Access tabs">
+    <a
+      role="tab"
+      aria-selected={activeTab === "users" ? "true" : "false"}
+      class={`tab-link${activeTab === "users" ? " tab-link--active" : ""}`}
+      href="/ap-admin/access?tab=users"
+    >
+      {t("access.tabUsers")}
+    </a>
+    <a
+      role="tab"
+      aria-selected={activeTab === "roles" ? "true" : "false"}
+      class={`tab-link${activeTab === "roles" ? " tab-link--active" : ""}`}
+      href="/ap-admin/access?tab=roles"
+    >
+      {t("access.tabRoles")}
+    </a>
+    <a
+      role="tab"
+      aria-selected={activeTab === "my-permissions" ? "true" : "false"}
+      class={`tab-link${activeTab === "my-permissions" ? " tab-link--active" : ""}`}
+      href="/ap-admin/access?tab=my-permissions"
+    >
+      {t("access.tabMyPermissions")}
+    </a>
+  </nav>
+
+  {activeTab === "users" && (
+    <section class="panel">
+      <h2>{t("access.usersHeading")}</h2>
+      <p class="muted">{t("access.usersDescription")}</p>
+
+      <table class="access-users">
+        <thead>
+          <tr>
+            <th scope="col">{t("access.usersColumnUser")}</th>
+            <th scope="col">{t("access.usersColumnAdmin")}</th>
+            <th scope="col">{t("access.usersColumnRoles")}</th>
+            <th scope="col">{t("access.usersColumnDirectGrants")}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {users.map((u) => {
+            const assigned = new Set(userRoleMap[u.id] ?? []);
+            const grantCount = userDirectGrantCounts[u.id] ?? 0;
+            return (
+              <tr>
+                <td>
+                  <strong>{u.email}</strong>
+                  <br />
+                  <span class="muted">{u.name}</span>
+                </td>
+                <td>
+                  {/* is_admin display only — the toggle action lives in
+                      the next phase so the last-admin safeguard wiring
+                      lands with the action handler. */}
+                  {/* The user's role enum is the legacy compat field;
+                      the canonical admin flag is access.subject.isAdmin
+                      after the access PR sweep completes. */}
+                  {u.role === "admin" ? <span class="badge badge--admin">{t("access.usersIsAdminBadge")}</span> : <span class="muted">—</span>}
+                </td>
+                <td>
+                  <ul class="role-checkbox-list">
+                    {roles.map((r) => (
+                      <li>
+                        <form
+                          method="post"
+                          action={
+                            assigned.has(r.id)
+                              ? "/ap-admin/actions/access-revoke-role"
+                              : "/ap-admin/actions/access-assign-role"
+                          }
+                          class="role-checkbox-form"
+                        >
+                          <input type="hidden" name="_csrf" value={csrfToken} />
+                          <input type="hidden" name="userId" value={String(u.id)} />
+                          <input type="hidden" name="roleId" value={r.id} />
+                          <label class="role-checkbox">
+                            <input
+                              type="checkbox"
+                              checked={assigned.has(r.id)}
+                              data-access-role-toggle
+                              aria-label={`${assigned.has(r.id) ? "Revoke" : "Assign"} ${r.name}`}
+                            />
+                            <span>{r.name}</span>
+                          </label>
+                        </form>
+                      </li>
+                    ))}
+                  </ul>
+                </td>
+                <td>
+                  {grantCount > 0 ? (
+                    <span class="badge badge--grants">{grantCount} {t("access.usersDirectGrantsBadge")}</span>
+                  ) : (
+                    <span class="muted">—</span>
+                  )}
+                  <details class="grant-details">
+                    <summary>{t("access.directGrantAddSubmit")}</summary>
+                    <form method="post" action="/ap-admin/actions/access-grant-direct" class="grant-form">
+                      <input type="hidden" name="_csrf" value={csrfToken} />
+                      <input type="hidden" name="userId" value={String(u.id)} />
+                      <label>
+                        {t("access.directGrantActionLabel")}
+                        <input
+                          type="text"
+                          name="action"
+                          list={`access-actions-${u.id}`}
+                          required
+                        />
+                      </label>
+                      <datalist id={`access-actions-${u.id}`}>
+                        {knownActions.map((id) => (
+                          <option value={id}></option>
+                        ))}
+                      </datalist>
+                      <label>
+                        {t("access.directGrantEffectLabel")}
+                        <select name="effect">
+                          <option value="allow">{t("access.directGrantAllow")}</option>
+                          <option value="deny">{t("access.directGrantDeny")}</option>
+                        </select>
+                      </label>
+                      <button type="submit" class="admin-button small">{t("access.directGrantAddSubmit")}</button>
+                    </form>
+                  </details>
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </section>
+  )}
+
+  {activeTab === "roles" && (
+    <section class="panel">
+      <h2>{t("access.rolesHeading")}</h2>
+      <p class="muted">{t("access.rolesDescription")}</p>
+
+      <ul class="role-list">
+        {roles.map((r) => {
+          const policies = rolePoliciesMap[r.id] ?? [];
+          return (
+            <li class="role-card">
+              <header class="role-card__header">
+                <div>
+                  <strong>{r.name}</strong>
+                  {r.isSystem && <span class="badge">{t("access.rolesSystemBadge")}</span>}
+                </div>
+              </header>
+              <form
+                method="post"
+                action="/ap-admin/actions/access-role-update"
+                class="role-edit-form"
+              >
+                <input type="hidden" name="_csrf" value={csrfToken} />
+                <input type="hidden" name="roleId" value={r.id} />
+                <label>
+                  {t("access.rolesNameLabel")}
+                  <input type="text" name="name" value={r.name} disabled={r.isSystem} required />
+                </label>
+                <label>
+                  {t("access.rolesDescriptionLabel")}
+                  <input type="text" name="description" value={r.description ?? ""} />
+                </label>
+                <button type="submit" class="admin-button small">{t("access.rolesUpdateSubmit")}</button>
+              </form>
+
+              <h3 class="role-card__subheading">{t("access.rolesPolicyHeading")}</h3>
+              {policies.length === 0 ? (
+                <p class="muted">{t("access.rolesPolicyEmpty")}</p>
+              ) : (
+                <ul class="role-policy-list">
+                  {policies.map((p) => (
+                    <li class="role-policy-row">
+                      <span class={`badge ${p.effect === "deny" ? "badge--deny" : "badge--allow"}`}>
+                        {p.effect === "deny" ? t("access.directGrantDeny") : t("access.directGrantAllow")}
+                      </span>
+                      <code class="role-policy-action">{p.action}</code>
+                      <span class="muted role-policy-priority">#{p.priority}</span>
+                      <form
+                        method="post"
+                        action="/ap-admin/actions/access-role-remove-policy"
+                        class="role-policy-remove"
+                      >
+                        <input type="hidden" name="_csrf" value={csrfToken} />
+                        <input type="hidden" name="policyId" value={p.id} />
+                        <button type="submit" class="admin-button small">{t("access.rolesPolicyRemoveSubmit")}</button>
+                      </form>
+                    </li>
+                  ))}
+                </ul>
+              )}
+
+              <details class="role-card__add">
+                <summary>{t("access.rolesPolicyAddHeading")}</summary>
+                <form
+                  method="post"
+                  action="/ap-admin/actions/access-role-add-policy"
+                  class="role-policy-add-form"
+                >
+                  <input type="hidden" name="_csrf" value={csrfToken} />
+                  <input type="hidden" name="roleId" value={r.id} />
+                  <label>
+                    {t("access.directGrantActionLabel")}
+                    <input type="text" name="action" list={`role-actions-${r.id}`} required />
+                  </label>
+                  <datalist id={`role-actions-${r.id}`}>
+                    {knownActions.map((id) => (
+                      <option value={id}></option>
+                    ))}
+                  </datalist>
+                  <label>
+                    {t("access.directGrantEffectLabel")}
+                    <select name="effect">
+                      <option value="allow">{t("access.directGrantAllow")}</option>
+                      <option value="deny">{t("access.directGrantDeny")}</option>
+                    </select>
+                  </label>
+                  <label>
+                    {t("access.rolesPolicyPriorityLabel")}
+                    <input type="number" name="priority" value="0" />
+                  </label>
+                  <button type="submit" class="admin-button small">{t("access.rolesPolicyAddSubmit")}</button>
+                </form>
+              </details>
+
+              {!r.isSystem && (
+                <form
+                  method="post"
+                  action="/ap-admin/actions/access-role-delete"
+                  class="role-card__delete"
+                >
+                  <input type="hidden" name="_csrf" value={csrfToken} />
+                  <input type="hidden" name="roleId" value={r.id} />
+                  <button type="submit" class="admin-button small admin-button--danger">{t("access.rolesDeleteSubmit")}</button>
+                </form>
+              )}
+            </li>
+          );
+        })}
+      </ul>
+
+      <section class="panel panel--inset">
+        <h3>{t("access.rolesCreateHeading")}</h3>
+        <form
+          method="post"
+          action="/ap-admin/actions/access-role-create"
+          class="role-create-form"
+        >
+          <input type="hidden" name="_csrf" value={csrfToken} />
+          <label>
+            {t("access.rolesNameLabel")}
+            <input type="text" name="name" required />
+          </label>
+          <label>
+            {t("access.rolesDescriptionLabel")}
+            <input type="text" name="description" />
+          </label>
+          <button type="submit" class="admin-button small">{t("access.rolesCreateSubmit")}</button>
+        </form>
+      </section>
+    </section>
+  )}
+
+  {activeTab === "my-permissions" && (
+    <section class="panel">
+      <h2>{t("access.myPermissionsHeading")}</h2>
+      <p class="muted">{t("access.myPermissionsDescription")}</p>
+
+      {viewerPolicies.length === 0 ? (
+        <p class="muted">{t("access.myPermissionsEmpty")}</p>
+      ) : (
+        <table class="access-permissions">
+          <thead>
+            <tr>
+              <th scope="col">{t("access.myPermissionsActionColumn")}</th>
+              <th scope="col">{t("access.myPermissionsEffectColumn")}</th>
+              <th scope="col">{t("access.myPermissionsSourceColumn")}</th>
+              <th scope="col">{t("access.myPermissionsConditionColumn")}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {viewerPolicies.map((p) => (
+              <tr>
+                <td><code>{p.action}</code></td>
+                <td>
+                  <span class={`badge ${p.effect === "deny" ? "badge--deny" : "badge--allow"}`}>
+                    {p.effect === "deny" ? t("access.directGrantDeny") : t("access.directGrantAllow")}
+                  </span>
+                </td>
+                <td>
+                  {p.source?.kind === "role"
+                    ? `${t("access.myPermissionsSourceRole")}: ${p.source.roleName}`
+                    : t("access.myPermissionsSourceDirect")}
+                </td>
+                <td>
+                  {p.condition ? (
+                    <code class="condition-snippet">{JSON.stringify(p.condition)}</code>
+                  ) : (
+                    <span class="muted">—</span>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+    </section>
+  )}
+
+  <style>
+    .tabs { display: flex; gap: 0.5rem; border-bottom: 1px solid var(--border, #e5e7eb); margin-bottom: 1.25rem; }
+    .tab-link { padding: 0.5rem 0.875rem; text-decoration: none; color: var(--text-muted, #374151); border-bottom: 2px solid transparent; font-size: 0.9375rem; }
+    .tab-link--active { color: var(--accent, #6366f1); border-bottom-color: var(--accent, #6366f1); font-weight: 500; }
+    .access-users { width: 100%; border-collapse: collapse; font-size: 0.9375rem; }
+    .access-users th, .access-users td { padding: 0.625rem 0.75rem; vertical-align: top; border-bottom: 1px solid var(--border, #e5e7eb); text-align: left; }
+    .role-checkbox-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.25rem; }
+    .role-checkbox-form { display: inline; margin: 0; }
+    .role-checkbox { display: inline-flex; align-items: center; gap: 0.375rem; cursor: pointer; }
+    .role-checkbox input { cursor: pointer; }
+    .badge { display: inline-block; padding: 0.125rem 0.5rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 500; background: var(--status-bg, #f3f4f6); }
+    .badge--admin { background: #fef3c7; color: #92400e; }
+    .badge--grants { background: #dbeafe; color: #1e40af; }
+    .grant-details { margin-top: 0.375rem; }
+    .grant-details summary { cursor: pointer; font-size: 0.8125rem; color: var(--accent, #6366f1); }
+    .grant-form { display: flex; flex-direction: column; gap: 0.375rem; padding: 0.5rem 0; max-width: 18rem; }
+    .grant-form label { display: flex; flex-direction: column; gap: 0.25rem; font-size: 0.8125rem; }
+    .grant-form input, .grant-form select { padding: 0.375rem 0.5rem; border: 1px solid var(--border, #e5e7eb); border-radius: 4px; font-size: 0.875rem; }
+    .warning-notice { padding: 0.75rem 1rem; background: #fef3c7; border: 1px solid #fcd34d; border-radius: 6px; color: #92400e; font-size: 0.9375rem; margin: 0 0 1rem; }
+    .role-list { list-style: none; padding: 0; margin: 0 0 1rem; display: flex; flex-direction: column; gap: 0.875rem; }
+    .role-card { padding: 0.875rem 1rem; background: var(--surface, #fff); border: 1px solid var(--border, #e5e7eb); border-radius: 6px; display: flex; flex-direction: column; gap: 0.625rem; }
+    .role-card__header { display: flex; align-items: center; gap: 0.5rem; }
+    .role-card__header > div { display: flex; align-items: center; gap: 0.5rem; }
+    .role-card__subheading { font-size: 0.875rem; margin: 0.25rem 0 0; }
+    .role-edit-form, .role-create-form, .role-policy-add-form { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: flex-end; }
+    .role-edit-form label, .role-create-form label, .role-policy-add-form label { display: flex; flex-direction: column; gap: 0.25rem; font-size: 0.8125rem; }
+    .role-edit-form input, .role-create-form input, .role-policy-add-form input, .role-policy-add-form select { padding: 0.375rem 0.5rem; border: 1px solid var(--border, #e5e7eb); border-radius: 4px; font-size: 0.875rem; }
+    .role-policy-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.375rem; }
+    .role-policy-row { display: flex; align-items: center; gap: 0.5rem; font-size: 0.875rem; }
+    .role-policy-action { font-family: ui-monospace, monospace; }
+    .role-policy-priority { font-size: 0.75rem; }
+    .role-policy-remove { margin-left: auto; }
+    .role-card__add { margin-top: 0.25rem; }
+    .role-card__add summary { cursor: pointer; font-size: 0.8125rem; color: var(--accent, #6366f1); }
+    .role-card__delete { align-self: flex-start; }
+    .panel--inset { margin-top: 1rem; }
+    .badge--allow { background: #dcfce7; color: #166534; }
+    .badge--deny { background: #fee2e2; color: #991b1b; }
+    .access-permissions { width: 100%; border-collapse: collapse; font-size: 0.9375rem; }
+    .access-permissions th, .access-permissions td { padding: 0.5rem 0.75rem; vertical-align: top; border-bottom: 1px solid var(--border, #e5e7eb); text-align: left; }
+    .condition-snippet { font-family: ui-monospace, monospace; font-size: 0.75rem; }
+  </style>
+
+  <script>
+    document.querySelectorAll<HTMLInputElement>("[data-access-role-toggle]").forEach((el) => {
+      el.addEventListener("change", () => {
+        el.form?.requestSubmit();
+      });
+    });
+  </script>
+</AdminLayout>

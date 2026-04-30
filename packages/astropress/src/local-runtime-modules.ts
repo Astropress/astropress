@@ -31,6 +31,7 @@ export interface LocalAdminStoreModule extends AdminStoreAdapter {
 	recordLogout: AdminStoreAdapter["auth"]["recordLogout"];
 	// Audit
 	getAuditEvents: AdminStoreAdapter["audit"]["getAuditEvents"];
+	recordAuditEvent: AdminStoreAdapter["audit"]["recordAuditEvent"];
 	// Users
 	listAdminUsers: AdminStoreAdapter["users"]["listAdminUsers"];
 	inviteAdminUser: AdminStoreAdapter["users"]["inviteAdminUser"];

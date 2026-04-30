@@ -2,6 +2,8 @@
 // Extracted from admin-page-models.ts to keep that file under the 400-line limit.
 
 import type { AdminDashboardModel } from "./admin-dashboard";
+import { isAuthUserAdmin } from "./platform-contracts";
+import type { AuthUser } from "./platform-contracts";
 
 type Status = "ok" | "partial" | "forbidden" | "not_found";
 
@@ -34,14 +36,19 @@ export function notFound<T>(
 	return result("not_found", data, warnings);
 }
 
-type AdminRole = "admin" | "editor";
-
+/**
+ * Admin-only break-glass page guard. Returns `forbidden(empty)` when the
+ * subject is not an admin (per `isAuthUserAdmin`); otherwise builds the
+ * page model. Use this for pages whose entire surface is admin-only —
+ * per-action authorization on individual operations should go through
+ * `Astro.locals.access.can(...)`.
+ */
 export async function adminOnlyPage<T>(
-	role: AdminRole,
+	user: AuthUser | null | undefined,
 	empty: T,
 	build: (warnings: string[]) => Promise<T>,
 ): Promise<AdminPageResult<T>> {
-	if (role !== "admin") return forbidden(empty);
+	if (!user || !isAuthUserAdmin(user)) return forbidden(empty);
 	const warnings: string[] = [];
 	return ok(await build(warnings), warnings);
 }
@@ -96,5 +103,6 @@ export function emptyDashboardModel(): AdminDashboardModel {
 		seoNeedsAttention: 0,
 		archiveRoutes: [],
 		supportSurfaceLinks: [],
+		latestDeployment: null,
 	};
 }

@@ -24,6 +24,7 @@ import type {
 	ContentRevision,
 	ManagedAdminUser,
 	MediaAsset,
+	RecordAuditEventInput,
 	RedirectRule,
 	TaxonomyTerm,
 	TestimonialStatus,
@@ -55,6 +56,7 @@ export type {
 export interface D1AdminReadStore {
 	audit: {
 		getAuditEvents(): Promise<AuditEvent[]>;
+		recordAuditEvent(input: RecordAuditEventInput): Promise<void>;
 	};
 	users: {
 		listAdminUsers(): Promise<ManagedAdminUser[]>;

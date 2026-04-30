@@ -1,15 +1,10 @@
 import { createAstropressAdminStoreAdapter } from "./admin-store-adapter-factory";
 import { peekCmsConfig } from "./config";
-import type {
-	Actor,
-	AdminStoreAdapter,
-	ContentRecord,
-	SessionUser,
-} from "./persistence-types";
+import type { AdminStoreAdapter, SessionUser } from "./persistence-types";
 import { getAstropressRootSecret } from "./runtime-env";
-import type { SiteSettings } from "./site-settings";
 import { createApiTokenStore } from "./sqlite-runtime/api-tokens";
 import { createSqliteAssetsStore } from "./sqlite-runtime/assets";
+import { recordAuditEvent } from "./sqlite-runtime/audit-log";
 import { createSqliteAuthStore } from "./sqlite-runtime/auth";
 import { createSqliteCatalogStore } from "./sqlite-runtime/catalog";
 import { createSqliteContentStore } from "./sqlite-runtime/content";
@@ -111,6 +106,7 @@ export function createAstropressSqliteAdminRuntime(
 			},
 			audit: {
 				getAuditEvents: getPersistedAuditEvents,
+				recordAuditEvent: (input) => recordAuditEvent(getDb(), input),
 			},
 			users: {
 				listAdminUsers: sqliteUserRepository.listAdminUsers,

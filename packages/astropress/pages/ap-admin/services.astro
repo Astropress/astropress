@@ -1,13 +1,15 @@
 ---
 import AdminLayout from "@astropress-diy/astropress/components/AdminLayout.astro";
 import { getAstropressServices } from "@astropress-diy/astropress/services-config";
+import { getPageT, isAuthUserAdmin, resolveAdminLocale } from "astropress";
 
 const adminUser = Astro.locals.adminUser;
-if (adminUser?.role !== "admin") {
+if (!adminUser || !isAuthUserAdmin(adminUser)) {
 	Astro.response.status = 403;
 }
 
 const services = getAstropressServices();
+const t = getPageT(resolveAdminLocale(Astro));
 
 const DEFAULT_SERVICE_DOCS: Record<string, { docs: string; badge: string }> = {
 	cms: {
@@ -30,20 +32,19 @@ const DEFAULT_SERVICE_DOCS: Record<string, { docs: string; badge: string }> = {
 ---
 
 <AdminLayout
-  title="Services"
-  heading="Services"
+  title={t("services.title")}
+  heading={t("services.title")}
   currentPath="/ap-admin/services"
-  description="Manage integrated headless services: CMS, commerce, community, and email."
-  role={adminUser!.role}
-  userName={adminUser!.name}
+  description={t("services.description")}
+  userName={adminUser.name}
 >
   {services.length === 0 ? (
     <section class="panel empty-services">
       <div class="section-header">
         <div>
-          <p class="admin-kicker">No services configured</p>
-          <h2>Add integrations to your project</h2>
-          <p>Register optional headless services to access their admin UIs from this tab. Available integrations:</p>
+          <p class="admin-kicker">{t("services.emptyKicker")}</p>
+          <h2>{t("services.emptyHeading")}</h2>
+          <p>{t("services.emptyIntro")}</p>
         </div>
       </div>
       <div class="service-grid">
@@ -54,20 +55,20 @@ const DEFAULT_SERVICE_DOCS: Record<string, { docs: string; badge: string }> = {
               <strong class="service-name">{provider.charAt(0).toUpperCase() + provider.slice(1)}</strong>
             </div>
             <p class="service-description">
-              {provider === "cms" && "Headless CMS — content modelling, editorial UI, media management."}
-              {provider === "shop" && "Headless commerce — products, cart, orders, fulfilment."}
-              {provider === "community" && "Comments and community — Giscus (zero server) or Remark42 (self-hosted)."}
-              {provider === "email" && "Newsletter and campaigns — Listmonk (self-hosted, MIT)."}
+              {provider === "cms" && t("services.cmsDescription")}
+              {provider === "shop" && t("services.shopDescription")}
+              {provider === "community" && t("services.communityDescription")}
+              {provider === "email" && t("services.emailDescription")}
             </p>
             <a href={DEFAULT_SERVICE_DOCS[provider].docs} target="_blank" rel="noreferrer" class="admin-button-ghost small">
-              View docs ↗
+              {t("services.viewDocs")}
             </a>
           </div>
         ))}
       </div>
       <p class="setup-note">
-        Call <code>registerAstropressService(&#123;&#125;)</code> in your Astro integration or <code>astro.config.mjs</code> to enable a service.
-        See <a href="https://github.com/withastro/astropress" target="_blank" rel="noreferrer">the docs</a> for setup guides.
+        {t("services.setupNoteBefore")} <code>registerAstropressService(&#123;&#125;)</code> {t("services.setupNoteMiddle")} <code>astro.config.mjs</code> {t("services.setupNoteAfter")}
+        {t("services.seeDocsBefore")} <a href="https://github.com/withastro/astropress" target="_blank" rel="noreferrer">{t("services.seeDocsLink")}</a> {t("services.seeDocsAfter")}
       </p>
     </section>
   ) : (
@@ -79,7 +80,7 @@ const DEFAULT_SERVICE_DOCS: Record<string, { docs: string; badge: string }> = {
             <strong class="service-name">{service.label}</strong>
           </div>
           <p class="service-description">{service.description}</p>
-          <span class="open-label">Open admin →</span>
+          <span class="open-label">{t("services.openAdmin")}</span>
         </a>
       ))}
     </div>

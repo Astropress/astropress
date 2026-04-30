@@ -7,14 +7,88 @@ CREATE TABLE IF NOT EXISTS schema_migrations (
 );
 
 -- Admin users
+-- is_admin replaces the legacy 'role' enum: admins bypass policy evaluation
+-- (break-glass) and own everything. Every other permission flows through the
+-- ABAC tables below (roles, role_policies, user_roles, user_policies,
+-- user_attributes). The legacy 'role' enum was dropped by the terminal
+-- access-PR migration; runtime derives a display label from is_admin.
 CREATE TABLE IF NOT EXISTS admin_users (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   email TEXT NOT NULL UNIQUE,
   password_hash TEXT NOT NULL,
-  role TEXT NOT NULL CHECK(role IN ('admin', 'editor')),
+  is_admin INTEGER NOT NULL DEFAULT 0,
   name TEXT NOT NULL,
   active INTEGER NOT NULL DEFAULT 1,
   created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ABAC: custom roles. Admins create / rename / delete these. Two seeded
+-- starter roles ('Editor', 'Author') are inserted by the bootstrap migration
+-- — admins can edit or delete them at will. The 'Admin' role is hardcoded
+-- on admin_users.is_admin and does NOT live in this table.
+CREATE TABLE IF NOT EXISTS access_roles (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL UNIQUE,
+  description TEXT NOT NULL DEFAULT '',
+  is_system INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ABAC: policies attached to a role. Effect is 'allow' or 'deny'. Action is
+-- a colon-namespaced pattern: exact ('posts:edit'), namespace wildcard
+-- ('posts:*'), or global ('*'). condition_json is a serialized Condition
+-- tree; null means unconditional. Higher priority is reported first in
+-- audit reasons; DENY beats ALLOW regardless.
+CREATE TABLE IF NOT EXISTS access_role_policies (
+  id TEXT PRIMARY KEY,
+  role_id TEXT NOT NULL,
+  effect TEXT NOT NULL CHECK(effect IN ('allow', 'deny')),
+  action TEXT NOT NULL,
+  condition_json TEXT,
+  priority INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY(role_id) REFERENCES access_roles(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_access_role_policies_role_id ON access_role_policies(role_id);
+
+-- ABAC: which users hold which roles. A user can hold multiple roles.
+CREATE TABLE IF NOT EXISTS access_user_roles (
+  user_id INTEGER NOT NULL,
+  role_id TEXT NOT NULL,
+  granted_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  granted_by TEXT,
+  PRIMARY KEY (user_id, role_id),
+  FOREIGN KEY(user_id) REFERENCES admin_users(id) ON DELETE CASCADE,
+  FOREIGN KEY(role_id) REFERENCES access_roles(id) ON DELETE CASCADE
+);
+
+-- ABAC: direct user policies — fine-grained grants attached to a single
+-- user, bypassing the role layer. Use sparingly; the admin UI surfaces a
+-- badge on user rows that have any direct grants so the sprawl is visible.
+CREATE TABLE IF NOT EXISTS access_user_policies (
+  id TEXT PRIMARY KEY,
+  user_id INTEGER NOT NULL,
+  effect TEXT NOT NULL CHECK(effect IN ('allow', 'deny')),
+  action TEXT NOT NULL,
+  condition_json TEXT,
+  priority INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  granted_by TEXT,
+  FOREIGN KEY(user_id) REFERENCES admin_users(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_access_user_policies_user_id ON access_user_policies(user_id);
+
+-- ABAC: arbitrary subject attributes (team, region, language, MFA tier...).
+-- Conditions reference these via user.attributes.<key> in policy expressions.
+CREATE TABLE IF NOT EXISTS access_user_attributes (
+  user_id INTEGER NOT NULL,
+  key TEXT NOT NULL,
+  value TEXT NOT NULL,
+  PRIMARY KEY (user_id, key),
+  FOREIGN KEY(user_id) REFERENCES admin_users(id) ON DELETE CASCADE
 );
 
 -- Admin sessions (opaque token-based, server-side revocable)

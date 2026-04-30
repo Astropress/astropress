@@ -26,6 +26,8 @@ playwright-report/
 **/reports/mutation/
 mutants.out.old/
 stryker.local.mjs
+.stryker-progress.jsonl
+.stryker-mutation-gate-progress.json
 
 # Claude Code session data
 .claude/

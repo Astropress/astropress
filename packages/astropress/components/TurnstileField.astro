@@ -2,8 +2,8 @@
 import { getTurnstileSiteKey } from "astropress";
 
 interface Props {
-  locals?: App.Locals | null;
-  theme?: "light" | "dark" | "auto";
+	locals?: App.Locals | null;
+	theme?: "light" | "dark" | "auto";
 }
 
 const { locals = Astro.locals, theme = "light" } = Astro.props;

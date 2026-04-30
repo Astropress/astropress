@@ -1,45 +1,49 @@
 ---
 import AdminLayout from "@astropress-diy/astropress/components/AdminLayout.astro";
-import { buildArchivesIndexPageModel } from "astropress";
+import {
+	buildArchivesIndexPageModel,
+	getPageT,
+	resolveAdminLocale,
+} from "astropress";
 
 const adminUser = Astro.locals.adminUser;
-const model = await buildArchivesIndexPageModel(Astro.locals, adminUser?.role);
+const model = await buildArchivesIndexPageModel(Astro.locals, adminUser);
 if (model.status === "forbidden") {
 	Astro.response.status = 403;
 }
 const { archiveList, kindCounts, totalArchives, totalItems } = model.data;
+const t = getPageT(resolveAdminLocale(Astro));
 ---
 
 {model.status !== "forbidden" ? (
 <AdminLayout
-  title="Archives"
-  heading="Archives"
-  description="Owner-editable metadata for public archive landing pages."
-  role={adminUser!.role}
-  userName={adminUser!.name}
+  title={t("archives.title")}
+  heading={t("archives.title")}
+  description={t("archives.description")}
+  userName={adminUser.name}
   currentPath="/ap-admin/archives"
 >
-  {model.warnings.length > 0 && <p class="notice">Some archive metadata is temporarily unavailable. This page is showing partial results.</p>}
+  {model.warnings.length > 0 && <p class="notice">{t("archives.partialResults")}</p>}
   <div class="toolbar">
-    <a href="/ap-admin/pages" class="admin-button-secondary">Back to pages</a>
-    <a href="/ap-admin/posts" class="admin-button-ghost">Manage posts in archive families</a>
+    <a href="/ap-admin/pages" class="admin-button-secondary">{t("archives.backToPages")}</a>
+    <a href="/ap-admin/posts" class="admin-button-ghost">{t("archives.managePosts")}</a>
   </div>
   <div class="grid two">
     <div class="panel stat">
       <strong>{totalArchives}</strong>
-      <p>Total Archives</p>
+      <p>{t("archives.totalArchives")}</p>
     </div>
     <div class="panel stat">
       <strong>{totalItems}</strong>
-      <p>Total Listing Items</p>
+      <p>{t("archives.totalListingItems")}</p>
     </div>
   </div>
 
   <section class="panel section-space">
     <div class="section-header">
       <div>
-        <h2>Archives by Kind</h2>
-        <p>Each archive kind has its own owner-edited landing pages.</p>
+        <h2>{t("archives.archivesByKind")}</h2>
+        <p>{t("archives.archivesByKindDesc")}</p>
       </div>
     </div>
     <div class="grid two">
@@ -57,18 +61,18 @@ const { archiveList, kindCounts, totalArchives, totalItems } = model.data;
   <section class="panel section-space overflow-table">
     <div class="section-header">
       <div>
-        <h2>All Archives</h2>
-        <p>Edit archive metadata here. Use Posts for the entries that appear inside each archive.</p>
+        <h2>{t("archives.allArchives")}</h2>
+        <p>{t("archives.allArchivesDesc")}</p>
       </div>
     </div>
     <table>
       <thead>
         <tr>
-          <th>Title</th>
-          <th>Kind</th>
-          <th>Slug</th>
-          <th class="right">Items</th>
-          <th>Actions</th>
+          <th>{t("common.title")}</th>
+          <th>{t("archives.kind")}</th>
+          <th>{t("archives.slug")}</th>
+          <th class="right">{t("archives.items")}</th>
+          <th>{t("common.actions")}</th>
         </tr>
       </thead>
       <tbody>
@@ -85,8 +89,8 @@ const { archiveList, kindCounts, totalArchives, totalItems } = model.data;
               <td class="right muted">{archive.listingItems?.length || 0}</td>
               <td>
                 <div class="row-actions">
-                  <a href={`/ap-admin/archives/${archive.slug}`} class="admin-button-ghost small">Edit archive</a>
-                  <a href={archive.legacyUrl} target="_blank" rel="noreferrer" class="admin-button-ghost small">Open archive</a>
+                  <a href={`/ap-admin/archives/${archive.slug}`} class="admin-button-ghost small">{t("archives.editArchive")}</a>
+                  <a href={archive.legacyUrl} target="_blank" rel="noreferrer" class="admin-button-ghost small">{t("archives.openArchive")}</a>
                 </div>
               </td>
             </tr>
@@ -97,21 +101,19 @@ const { archiveList, kindCounts, totalArchives, totalItems } = model.data;
   </section>
 
   <p class="archive-note">
-    <strong>Note:</strong> Archive metadata is edited here. Use the archive editor for
-    public titles and SEO, and use Posts to manage the individual content that appears inside each archive.
+    <strong>{t("archives.noteStrong")}</strong> {t("archives.noteBody")}
   </p>
 </AdminLayout>
 ) : (
   <AdminLayout
-    title="Forbidden"
-    heading="Forbidden"
-    description="This action requires an admin account."
-    role={adminUser!.role}
-    userName={adminUser!.name}
+    title={t("archives.forbiddenTitle")}
+    heading={t("archives.forbiddenTitle")}
+    description={t("archives.forbiddenDesc")}
+    userName={adminUser.name}
     currentPath="/ap-admin/posts"
   >
     <section class="panel">
-      <p>This action requires an admin account and is hidden from editor-only roles.</p>
+      <p>{t("archives.forbiddenBody")}</p>
     </section>
   </AdminLayout>
 )}

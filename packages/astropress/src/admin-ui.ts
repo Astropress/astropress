@@ -1,4 +1,8 @@
-import { adminLabels } from "./admin-labels";
+import {
+	type AdminLabelKey,
+	type AdminLocale,
+	adminLabels,
+} from "./admin-labels";
 import { peekCmsConfig } from "./config";
 export type { AdminLocale, AdminLabelKey } from "./admin-labels";
 export { adminLabels } from "./admin-labels";
@@ -34,6 +38,7 @@ export type AstropressAdminNavKey =
 	| "routePages"
 	| "archives"
 	| "users"
+	| "access"
 	| "media"
 	| "comments"
 	| "redirects"
@@ -45,7 +50,49 @@ export type AstropressAdminNavKey =
 	| "fundraising"
 	| "testimonials"
 	| "cms"
-	| "host";
+	| "host"
+	// Group labels
+	| "groupSite"
+	| "groupAudience"
+	| "groupDiscoverability"
+	| "groupIntegrations"
+	| "groupAccess"
+	| "groupOperations"
+	// Site
+	| "forms"
+	// Content
+	| "headlessCmsPanel"
+	// Audience
+	| "subscribers"
+	| "newsletter"
+	| "events"
+	| "reviews"
+	| "referrals"
+	| "memberships"
+	| "community"
+	| "shop"
+	| "socialSyndication"
+	// Discoverability
+	| "structuredData"
+	| "sitemaps"
+	| "mapsLocal"
+	// Integrations
+	| "analytics"
+	| "heatmaps"
+	| "abTesting"
+	| "email"
+	| "liveChat"
+	| "imageCdn"
+	| "search"
+	| "cdnPurge"
+	| "monitoring"
+	| "apiTokens"
+	| "webhooks"
+	| "deployHooks"
+	| "plugins"
+	// Operations
+	| "data"
+	| "backups";
 
 export interface AstropressResolvedAdminUiConfig {
 	branding: {
@@ -148,6 +195,7 @@ const defaultAdminUiConfig: AstropressResolvedAdminUiConfig = {
 		routePages: "Route Table",
 		archives: "Archives",
 		users: "Users",
+		access: "Access",
 		media: "Media",
 		comments: "Comments",
 		redirects: "Redirects",
@@ -160,6 +208,41 @@ const defaultAdminUiConfig: AstropressResolvedAdminUiConfig = {
 		testimonials: "Testimonials",
 		cms: "CMS",
 		host: "Host",
+		groupSite: "Site",
+		groupAudience: "Audience",
+		groupDiscoverability: "Discoverability",
+		groupIntegrations: "Integrations",
+		groupAccess: "Access",
+		groupOperations: "Operations",
+		forms: "Forms",
+		headlessCmsPanel: "Headless CMS Panel",
+		subscribers: "Subscribers",
+		newsletter: "Newsletter",
+		events: "Events",
+		reviews: "Reviews",
+		referrals: "Referrals",
+		memberships: "Memberships",
+		community: "Community",
+		shop: "Shop",
+		socialSyndication: "Social Syndication",
+		structuredData: "Structured Data / AEO",
+		sitemaps: "Sitemaps",
+		mapsLocal: "Maps & Local",
+		analytics: "Analytics",
+		heatmaps: "Heatmaps & Session Replay",
+		abTesting: "A/B Testing & Feature Flags",
+		email: "Email",
+		liveChat: "Live Chat",
+		imageCdn: "Image CDN",
+		search: "Search",
+		cdnPurge: "CDN Purge",
+		monitoring: "Monitoring",
+		apiTokens: "API Tokens",
+		webhooks: "Webhooks",
+		deployHooks: "Deploy Hooks",
+		plugins: "Plugins",
+		data: "Data",
+		backups: "Backups",
 	},
 };
 
@@ -195,17 +278,181 @@ function mergeWithDefaults() {
  * console.log(branding.appName); // "Astropress" or host-overridden value
  * ```
  */
-export function resolveAstropressAdminUiConfig(): AstropressResolvedAdminUiConfig {
+export function resolveAstropressAdminUiConfig(
+	locale?: AdminLocale,
+): AstropressResolvedAdminUiConfig {
 	const merged = mergeWithDefaults();
+	const translated = locale ? applyTranslations(merged, locale) : merged;
 	return {
 		branding: {
-			...merged.branding,
-			shellName: merged.branding.shellName || merged.branding.productName,
-			logoAlt: merged.branding.logoAlt || merged.branding.productName,
-			logoHref: merged.branding.logoHref || "/ap-admin",
-			stylesheetHref: merged.branding.stylesheetHref || null,
+			...translated.branding,
+			shellName:
+				translated.branding.shellName || translated.branding.productName,
+			logoAlt: translated.branding.logoAlt || translated.branding.productName,
+			logoHref: translated.branding.logoHref || "/ap-admin",
+			stylesheetHref: translated.branding.stylesheetHref || null,
 		},
-		labels: merged.labels,
-		navigation: merged.navigation,
+		labels: translated.labels,
+		navigation: translated.navigation,
+	};
+}
+
+function applyTranslations(
+	merged: AstropressResolvedAdminUiConfig,
+	locale: AdminLocale,
+): AstropressResolvedAdminUiConfig {
+	// Pull every value through getAdminLabel so missing keys fall back to
+	// English instead of "undefined" — this is the i18n leak guard.
+	const tr = (key: AdminLabelKey, fallback: string): string =>
+		getAdminLabel(key, locale) || fallback;
+	return {
+		branding: merged.branding,
+		labels: {
+			...merged.labels,
+			sidebarTitle: tr("sidebarTitle", merged.labels.sidebarTitle),
+			signedInAsPrefix: tr("signedInAsPrefix", merged.labels.signedInAsPrefix),
+			signOut: tr("signOut", merged.labels.signOut),
+			themeToggleDark: tr("themeToggleDark", merged.labels.themeToggleDark),
+			themeToggleLight: tr("themeToggleLight", merged.labels.themeToggleLight),
+			loginHeading: tr("loginHeading", merged.labels.loginHeading),
+			loginDescription: tr("loginDescription", merged.labels.loginDescription),
+			loginSubmit: tr("loginSubmit", merged.labels.loginSubmit),
+			loginEmailLabel: tr("loginEmailLabel", merged.labels.loginEmailLabel),
+			loginPasswordLabel: tr(
+				"loginPasswordLabel",
+				merged.labels.loginPasswordLabel,
+			),
+			forgotPassword: tr("forgotPassword", merged.labels.forgotPassword),
+			invalidCredentials: tr(
+				"invalidCredentials",
+				merged.labels.invalidCredentials,
+			),
+			rateLimited: tr("rateLimited", merged.labels.rateLimited),
+			challengeRequired: tr(
+				"challengeRequired",
+				merged.labels.challengeRequired,
+			),
+			passwordResetSuccess: tr(
+				"passwordResetSuccess",
+				merged.labels.passwordResetSuccess,
+			),
+			invitationAcceptedSuccess: tr(
+				"invitationAcceptedSuccess",
+				merged.labels.invitationAcceptedSuccess,
+			),
+			acceptInvitationHeading: tr(
+				"acceptInvitationHeading",
+				merged.labels.acceptInvitationHeading,
+			),
+			acceptInvitationDescription: tr(
+				"acceptInvitationDescription",
+				merged.labels.acceptInvitationDescription,
+			),
+			acceptInvitationSubmit: tr(
+				"acceptInvitationSubmit",
+				merged.labels.acceptInvitationSubmit,
+			),
+			resetPasswordRequestHeading: tr(
+				"resetPasswordRequestHeading",
+				merged.labels.resetPasswordRequestHeading,
+			),
+			resetPasswordRequestDescription: tr(
+				"resetPasswordRequestDescription",
+				merged.labels.resetPasswordRequestDescription,
+			),
+			resetPasswordTokenHeading: tr(
+				"resetPasswordTokenHeading",
+				merged.labels.resetPasswordTokenHeading,
+			),
+			resetPasswordTokenDescription: tr(
+				"resetPasswordTokenDescription",
+				merged.labels.resetPasswordTokenDescription,
+			),
+			resetPasswordRequestSubmit: tr(
+				"resetPasswordRequestSubmit",
+				merged.labels.resetPasswordRequestSubmit,
+			),
+			resetPasswordTokenSubmit: tr(
+				"resetPasswordTokenSubmit",
+				merged.labels.resetPasswordTokenSubmit,
+			),
+			backToLogin: tr("backToLogin", merged.labels.backToLogin),
+			changeLanguage: tr("changeLanguage", merged.labels.changeLanguage),
+		},
+		navigation: {
+			...merged.navigation,
+			dashboard: tr("navDashboard", merged.navigation.dashboard),
+			contentGroup: tr("navContentGroup", merged.navigation.contentGroup),
+			pages: tr("navPages", merged.navigation.pages),
+			posts: tr("navPosts", merged.navigation.posts),
+			authors: tr("navAuthors", merged.navigation.authors),
+			taxonomies: tr("navTaxonomies", merged.navigation.taxonomies),
+			routePages: tr("navRoutePages", merged.navigation.routePages),
+			archives: tr("navArchives", merged.navigation.archives),
+			users: tr("navUsers", merged.navigation.users),
+			access: tr("navAccess", merged.navigation.access),
+			media: tr("navMedia", merged.navigation.media),
+			comments: tr("navComments", merged.navigation.comments),
+			redirects: tr("navRedirects", merged.navigation.redirects),
+			translations: tr("navTranslations", merged.navigation.translations),
+			seo: tr("navSeo", merged.navigation.seo),
+			system: tr("navSystem", merged.navigation.system),
+			settings: tr("navSettings", merged.navigation.settings),
+			services: tr("navServices", merged.navigation.services),
+			fundraising: tr("navFundraising", merged.navigation.fundraising),
+			testimonials: tr("navTestimonials", merged.navigation.testimonials),
+			cms: tr("navCms", merged.navigation.cms),
+			host: tr("navHost", merged.navigation.host),
+			groupSite: tr("navGroupSite", merged.navigation.groupSite),
+			groupAudience: tr("navGroupAudience", merged.navigation.groupAudience),
+			groupDiscoverability: tr(
+				"navGroupDiscoverability",
+				merged.navigation.groupDiscoverability,
+			),
+			groupIntegrations: tr(
+				"navGroupIntegrations",
+				merged.navigation.groupIntegrations,
+			),
+			groupAccess: tr("navGroupAccess", merged.navigation.groupAccess),
+			groupOperations: tr(
+				"navGroupOperations",
+				merged.navigation.groupOperations,
+			),
+			forms: tr("navForms", merged.navigation.forms),
+			headlessCmsPanel: tr(
+				"navHeadlessCmsPanel",
+				merged.navigation.headlessCmsPanel,
+			),
+			subscribers: tr("navSubscribers", merged.navigation.subscribers),
+			newsletter: tr("navNewsletter", merged.navigation.newsletter),
+			events: tr("navEvents", merged.navigation.events),
+			reviews: tr("navReviews", merged.navigation.reviews),
+			referrals: tr("navReferrals", merged.navigation.referrals),
+			memberships: tr("navMemberships", merged.navigation.memberships),
+			community: tr("navCommunity", merged.navigation.community),
+			shop: tr("navShop", merged.navigation.shop),
+			socialSyndication: tr(
+				"navSocialSyndication",
+				merged.navigation.socialSyndication,
+			),
+			structuredData: tr("navStructuredData", merged.navigation.structuredData),
+			sitemaps: tr("navSitemaps", merged.navigation.sitemaps),
+			mapsLocal: tr("navMapsLocal", merged.navigation.mapsLocal),
+			analytics: tr("navAnalytics", merged.navigation.analytics),
+			heatmaps: tr("navHeatmaps", merged.navigation.heatmaps),
+			abTesting: tr("navAbTesting", merged.navigation.abTesting),
+			email: tr("navEmail", merged.navigation.email),
+			liveChat: tr("navLiveChat", merged.navigation.liveChat),
+			imageCdn: tr("navImageCdn", merged.navigation.imageCdn),
+			search: tr("navSearch", merged.navigation.search),
+			cdnPurge: tr("navCdnPurge", merged.navigation.cdnPurge),
+			monitoring: tr("navMonitoring", merged.navigation.monitoring),
+			apiTokens: tr("navApiTokens", merged.navigation.apiTokens),
+			webhooks: tr("navWebhooks", merged.navigation.webhooks),
+			deployHooks: tr("navDeployHooks", merged.navigation.deployHooks),
+			plugins: tr("navPlugins", merged.navigation.plugins),
+			data: tr("navData", merged.navigation.data),
+			backups: tr("navBackups", merged.navigation.backups),
+		},
 	};
 }

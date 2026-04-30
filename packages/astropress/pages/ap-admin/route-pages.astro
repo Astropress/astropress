@@ -1,9 +1,13 @@
 ---
 import AdminLayout from "@astropress-diy/astropress/components/AdminLayout.astro";
-import { buildRouteTablePageModel } from "astropress";
+import {
+	buildRouteTablePageModel,
+	getPageT,
+	resolveAdminLocale,
+} from "astropress";
 
 const adminUser = Astro.locals.adminUser;
-const model = await buildRouteTablePageModel(Astro.locals, adminUser?.role);
+const model = await buildRouteTablePageModel(Astro.locals, adminUser);
 const { routePages, settings } = model.data;
 if (model.status === "forbidden") {
 	Astro.response.status = 403;
@@ -12,38 +16,39 @@ const currentAdminSlug = settings.adminSlug || "ap-admin";
 const isDefaultSlug = currentAdminSlug === "ap-admin";
 const slugSaved = Astro.url.searchParams.get("slugSaved") === "1";
 const slugError = Astro.url.searchParams.get("error");
+const adminLocale = resolveAdminLocale(Astro);
+const t = getPageT(adminLocale);
 ---
 
 {model.status !== "forbidden" ? (
   <AdminLayout
-    title="Route Table"
-    heading="Route Table"
+    title={t("routePages.title")}
+    heading={t("routePages.title")}
     currentPath="/ap-admin/route-pages"
-    description="Technical inventory of route-backed structured pages. Normal page editing should start from Pages."
-    role={adminUser!.role}
-    userName={adminUser!.name}
+    description={t("routePages.description")}
+    userName={adminUser.name}
   >
-    {model.warnings.length > 0 && <p class="notice">Some route-table data is temporarily unavailable. This page is showing partial results.</p>}
+    {model.warnings.length > 0 && <p class="notice">{t("routePages.partialResults")}</p>}
 
     <section class="panel admin-slug-panel">
       <div class="section-header">
         <div>
-          <p class="admin-kicker">Security</p>
-          <h2>Admin URL</h2>
+          <p class="admin-kicker">{t("routePages.securityKicker")}</p>
+          <h2>{t("routePages.adminUrlHeading")}</h2>
           <p>
-            The admin area is accessible at <code>/{currentAdminSlug}/</code>. Changing it to a unique path makes it harder for bots to find your login page.
+            {t("routePages.adminUrlIntroPrefix")} <code>/{currentAdminSlug}/</code>. {t("routePages.adminUrlIntroSuffix")}
           </p>
         </div>
       </div>
 
       {isDefaultSlug && (
         <div class="slug-warning" role="alert">
-          <strong>You are using the default admin path <code>/ap-admin/</code>.</strong> Automated bots routinely target this path. Change it to a unique value to reduce unwanted login attempts.
+          <strong>{t("routePages.defaultSlugWarningStrong")} <code>/ap-admin/</code>.</strong> {t("routePages.defaultSlugWarningRest")}
         </div>
       )}
 
       {slugSaved && (
-        <p class="slug-success">Admin URL updated. You are now at <code>/{currentAdminSlug}/route-pages</code>.</p>
+        <p class="slug-success">{t("routePages.slugSavedPrefix")} <code>/{currentAdminSlug}/route-pages</code>.</p>
       )}
 
       {slugError && (
@@ -53,7 +58,7 @@ const slugError = Astro.url.searchParams.get("error");
       <form method="post" action="/ap-admin/actions/admin-slug-save" class="slug-form">
         <input type="hidden" name="_csrf" value={Astro.locals.csrfToken ?? ""} />
         <div class="slug-field">
-          <label for="adminSlug">Admin URL prefix</label>
+          <label for="adminSlug">{t("routePages.adminUrlPrefixLabel")}</label>
           <div class="slug-input-row">
             <span class="slug-prefix">your-site.com/</span>
             <input
@@ -63,15 +68,15 @@ const slugError = Astro.url.searchParams.get("error");
               value={currentAdminSlug}
               required
               pattern="[a-z0-9][a-z0-9\-]*[a-z0-9]|[a-z0-9]"
-              title="Lowercase letters, numbers, and hyphens only. Cannot start or end with a hyphen."
+              title={t("routePages.slugInputTitle")}
               class="admin-input slug-input"
             />
             <span class="slug-suffix">/</span>
           </div>
-          <p class="field-note">Lowercase letters, numbers, and hyphens only. Avoid generic paths like <code>admin</code> or <code>cms</code>.</p>
+          <p class="field-note">{t("routePages.slugFieldNote")} <code>admin</code> {t("routePages.slugFieldNoteOr")} <code>cms</code>.</p>
         </div>
         <div class="form-actions">
-          <button type="submit" class="admin-button">Save admin URL</button>
+          <button type="submit" class="admin-button">{t("routePages.saveAdminUrl")}</button>
         </div>
       </form>
     </section>
@@ -79,22 +84,22 @@ const slugError = Astro.url.searchParams.get("error");
     <section class="panel route-table-panel">
       <div class="section-header">
         <div>
-          <p class="admin-kicker">Technical Inventory</p>
-          <h2>Structured Route Inventory</h2>
-          <p>Use this screen for technical route review. Normal editorial work should still start from Pages.</p>
+          <p class="admin-kicker">{t("routePages.technicalInventory")}</p>
+          <h2>{t("routePages.structuredRouteInventory")}</h2>
+          <p>{t("routePages.structuredRouteDesc")}</p>
         </div>
-        <a href="/ap-admin/pages" class="admin-button-secondary">Back to pages</a>
+        <a href="/ap-admin/pages" class="admin-button-secondary">{t("routePages.backToPages")}</a>
       </div>
       <div class="admin-table-shell">
-        <table aria-label="Route pages list">
+        <table aria-label={t("routePages.tableAria")}>
           <thead>
             <tr>
-              <th>Title</th>
-              <th>Path</th>
-              <th>Template</th>
-              <th>Owner Editor</th>
-              <th>Public View</th>
-              <th>Updated</th>
+              <th>{t("common.title")}</th>
+              <th>{t("common.path")}</th>
+              <th>{t("routePages.template")}</th>
+              <th>{t("routePages.ownerEditor")}</th>
+              <th>{t("routePages.publicView")}</th>
+              <th>{t("common.updated")}</th>
             </tr>
           </thead>
           <tbody>
@@ -105,9 +110,9 @@ const slugError = Astro.url.searchParams.get("error");
                 </td>
                 <td><code>{page.path}</code></td>
                 <td><span class="admin-chip">{page.templateKey}</span></td>
-                <td><a href="/ap-admin/pages" class="admin-button-ghost small">Pages</a></td>
-                <td><a href={page.path} target="_blank" rel="noreferrer" class="admin-button-ghost small">Open route</a></td>
-                <td>{page.updatedAt ? new Date(page.updatedAt).toLocaleString() : "Seeded"}</td>
+                <td><a href="/ap-admin/pages" class="admin-button-ghost small">{t("routePages.pages")}</a></td>
+                <td><a href={page.path} target="_blank" rel="noreferrer" class="admin-button-ghost small">{t("routePages.openRoute")}</a></td>
+                <td>{page.updatedAt ? new Date(page.updatedAt).toLocaleString(adminLocale) : t("routePages.seeded")}</td>
               </tr>
             ))}
           </tbody>
@@ -117,15 +122,14 @@ const slugError = Astro.url.searchParams.get("error");
   </AdminLayout>
 ) : (
   <AdminLayout
-    title="Forbidden"
-    heading="Forbidden"
+    title={t("routePages.forbiddenTitle")}
+    heading={t("routePages.forbiddenTitle")}
     currentPath="/ap-admin/posts"
-    description="This action requires an admin account."
-    role={adminUser!.role}
-    userName={adminUser!.name}
+    description={t("routePages.forbiddenDesc")}
+    userName={adminUser.name}
   >
     <section class="panel">
-      <p>This action requires an admin account and is hidden from editor-only roles.</p>
+      <p>{t("routePages.forbiddenBody")}</p>
     </section>
   </AdminLayout>
 )}
