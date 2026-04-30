@@ -91,7 +91,7 @@ test.describe("Admin i18n: chrome must change between English and Telugu", () =>
 				{
 					name: "astropress_admin_locale",
 					value: "te",
-					url: "http://localhost:4321",
+					url: page.url(),
 				},
 			]);
 			await page.goto(route, { waitUntil: "domcontentloaded" });

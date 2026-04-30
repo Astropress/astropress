@@ -21,7 +21,7 @@ const staticRoutes: Array<{ path: string; heading: string }> = [
 	{ path: "/ap-admin/system", heading: "System" },
 	{ path: "/ap-admin/api-tokens", heading: "API Tokens" },
 	{ path: "/ap-admin/authors", heading: "Authors" },
-	{ path: "/ap-admin/taxonomies", heading: "Taxonomies" },
+	{ path: "/ap-admin/taxonomies", heading: "Categories & Tags" },
 	{ path: "/ap-admin/translations", heading: "Translations" },
 	{ path: "/ap-admin/archives", heading: "Archives" },
 	{ path: "/ap-admin/route-pages", heading: "Route Table" },
