@@ -7,7 +7,8 @@ export type AdminLocale =
 	| "ja"
 	| "te"
 	| "hi"
-	| "ny";
+	| "ny"
+	| "ar";
 
 export type AdminLabelKey =
 	| "loginHeading"

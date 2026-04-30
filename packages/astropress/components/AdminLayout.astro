@@ -1,7 +1,7 @@
 ---
 import { getAccessContext } from "../src/access/index";
 import { buildAstropressAdminDocumentTitle } from "../src/admin-branding";
-import { resolveAdminLocale } from "../src/admin-locale";
+import { localeDirection, resolveAdminLocale } from "../src/admin-locale";
 import { getPageT } from "../src/admin-page-labels";
 import { getRecentAdminItems } from "../src/admin-recent";
 import { resolveAstropressAdminUiConfig } from "../src/admin-ui";
@@ -59,6 +59,7 @@ const {
 } = Astro.props;
 const documentTitle = buildAstropressAdminDocumentTitle(title);
 const adminLocale = resolveAdminLocale(Astro);
+const adminDir = localeDirection(adminLocale);
 const adminUi = resolveAstropressAdminUiConfig(adminLocale);
 const tLayout = getPageT(adminLocale);
 const adminSiteName = siteName ?? adminUi.branding.shellName;
@@ -341,7 +342,7 @@ const documentTitleResolved = isOnMatchedNavRoute
 ---
 
 <!doctype html>
-<html lang={adminLocale}>
+<html lang={adminLocale} dir={adminDir}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />

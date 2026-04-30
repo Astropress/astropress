@@ -12,7 +12,18 @@ const SUPPORTED_LOCALES: ReadonlyArray<AdminLocale> = [
 	"te",
 	"hi",
 	"ny",
+	"ar",
 ];
+
+const RTL_LOCALES: ReadonlySet<AdminLocale> = new Set(["ar"]);
+
+export function isRtlLocale(locale: AdminLocale): boolean {
+	return RTL_LOCALES.has(locale);
+}
+
+export function localeDirection(locale: AdminLocale): "ltr" | "rtl" {
+	return isRtlLocale(locale) ? "rtl" : "ltr";
+}
 
 function isAdminLocale(value: string): value is AdminLocale {
 	return (SUPPORTED_LOCALES as ReadonlyArray<string>).includes(value);

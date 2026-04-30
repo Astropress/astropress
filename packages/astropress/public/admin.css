@@ -76,7 +76,7 @@ body {
  * its bottom edge back into the viewport. */
 .skip-link {
 	position: absolute;
-	left: 1rem;
+	inset-inline-start: 1rem;
 	top: 0;
 	background: var(--button-primary-bg);
 	color: var(--button-primary-text);
@@ -250,7 +250,7 @@ body {
    2.5.5 touch-target guidance. */
 .scroll-to-top-fab {
 	position: fixed;
-	right: 1.25rem;
+	inset-inline-end: 1.25rem;
 	bottom: 1.25rem;
 	width: 2.75rem;
 	height: 2.75rem;
@@ -362,9 +362,10 @@ body {
 	display: none;
 	flex-direction: column;
 	gap: 0.2rem;
-	border-right: 1px solid rgba(255, 255, 255, 0.05);
+	border-inline-end: 1px solid rgba(255, 255, 255, 0.05);
 	position: fixed;
-	inset: 0 auto 0 0;
+	inset-block: 0;
+	inset-inline-start: 0;
 	width: min(17rem, 85vw);
 	z-index: 100;
 	overflow-y: auto;
@@ -434,7 +435,7 @@ body {
 }
 
 .sidebar a.sidebar-child {
-	padding-left: 1.5rem;
+	padding-inline-start: 1.5rem;
 	font-weight: 500;
 	font-size: 0.9rem;
 }
@@ -532,7 +533,7 @@ th,
 td {
 	padding: 0.82rem 0.78rem;
 	border-bottom: 1px solid var(--line);
-	text-align: left;
+	text-align: start;
 	vertical-align: top;
 }
 

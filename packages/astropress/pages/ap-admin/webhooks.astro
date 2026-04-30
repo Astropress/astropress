@@ -46,7 +46,7 @@ const ALL_EVENTS = [
   {errorMessage && <p class="error-notice">{errorMessage}</p>}
 
   {wasCreated && createdAlgorithm && createdPublicKey && (
-    <div class="panel notice" style="border-left: 4px solid var(--color-success, green); padding: 1rem;">
+    <div class="panel notice" style="border-inline-start: 4px solid var(--color-success, green); padding: 1rem;">
       <strong>{t("webhooks.created")}</strong> {t("webhooks.copyBundle")}
       {t("webhooks.useToVerify")} <code>X-Astropress-Signature</code> {t("webhooks.headerSuffix")}
       <br />
