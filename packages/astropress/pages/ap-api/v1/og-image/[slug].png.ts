@@ -62,7 +62,6 @@ export const GET: APIRoute = ({ request }) => {
 	const bg = url.searchParams.get("bg") ?? "1e3a5f";
 	const fg = url.searchParams.get("fg") ?? "ffffff";
 
-	const safeTitle = escapeXml(title);
 	const safeSite = escapeXml(site);
 	const safeBg = /^[0-9a-fA-F]{3,6}$/.test(bg) ? bg : "1e3a5f";
 	const safeFg = /^[0-9a-fA-F]{3,6}$/.test(fg) ? fg : "ffffff";

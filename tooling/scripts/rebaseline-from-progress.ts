@@ -23,7 +23,7 @@
  */
 
 import { execFileSync } from "node:child_process";
-import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { readFileSync, writeFileSync } from "node:fs";
 
 const INCREMENTAL_PATH = ".stryker-incremental.json";
 const BASELINE_PATH = "tooling/stryker/baseline-scores.json";
@@ -76,20 +76,28 @@ function scoreFromMutants(mutants: IncrementalMutant[]): number | null {
 	return (killed.length / scoreable.length) * 100;
 }
 
+function readJsonOrNull<T>(path: string): T | null {
+	try {
+		return JSON.parse(readFileSync(path, "utf8")) as T;
+	} catch (err) {
+		if ((err as NodeJS.ErrnoException).code === "ENOENT") return null;
+		throw err;
+	}
+}
+
 function main(): number {
-	if (!existsSync(INCREMENTAL_PATH)) {
+	const cache = readJsonOrNull<IncrementalCache>(INCREMENTAL_PATH);
+	if (cache === null) {
 		console.error(
 			`rebaseline-from-progress: missing ${INCREMENTAL_PATH}\n  Run a Stryker pass first.`,
 		);
 		return 1;
 	}
-	const cache = JSON.parse(
-		readFileSync(INCREMENTAL_PATH, "utf8"),
-	) as IncrementalCache;
 
-	const baseline: Baseline = existsSync(BASELINE_PATH)
-		? (JSON.parse(readFileSync(BASELINE_PATH, "utf8")) as Baseline)
-		: { updatedAt: "never", scores: {} };
+	const baseline: Baseline = readJsonOrNull<Baseline>(BASELINE_PATH) ?? {
+		updatedAt: "never",
+		scores: {},
+	};
 
 	const nextScores: Record<string, BaselineEntry> = { ...baseline.scores };
 	const updates: Array<{

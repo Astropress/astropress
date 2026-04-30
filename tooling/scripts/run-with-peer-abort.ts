@@ -17,17 +17,25 @@
  *   - If it succeeds, do not touch the sentinel — peers may still be
  *     running successfully.
  *
+ * Sentinel location: `${HOME}/.cache/astropress-lefthook-peer/failure-<ppid>`.
+ * The directory is created with mode 0o700 so only the current user can read
+ * or replace its contents — coordination via /tmp is unsafe because a local
+ * attacker could pre-create a symlink at the predictable PID-derived path
+ * to redirect or hijack writes (CodeQL js/insecure-temporary-file).
+ *
  * Stale sentinels from prior pushes are not a concern: ppid is unique per
- * lefthook invocation, and /tmp is wiped on reboot. The very rare case of
- * ppid reuse within a /tmp lifetime would just cause one bogus abort —
- * harmless and self-correcting (the user re-pushes).
+ * lefthook invocation. The very rare case of ppid reuse within the cache
+ * dir's lifetime would just cause one bogus abort — harmless and
+ * self-correcting (the user re-pushes).
  *
  * Usage:
  *   bun run tooling/scripts/run-with-peer-abort.ts <label> -- <cmd> [args...]
  */
 
 import { spawn } from "node:child_process";
-import { existsSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, writeFileSync } from "node:fs";
+import { homedir } from "node:os";
+import { join } from "node:path";
 
 const argv = process.argv.slice(2);
 const sep = argv.indexOf("--");
@@ -45,7 +53,9 @@ if (!cmd) {
 	process.exit(2);
 }
 
-const sentinel = `/tmp/lefthook-peer-failure-${process.ppid}`;
+const sentinelDir = join(homedir(), ".cache", "astropress-lefthook-peer");
+mkdirSync(sentinelDir, { recursive: true, mode: 0o700 });
+const sentinel = join(sentinelDir, `failure-${process.ppid}`);
 
 // Pre-flight: peer already failed before we even started? Bail.
 if (existsSync(sentinel)) {

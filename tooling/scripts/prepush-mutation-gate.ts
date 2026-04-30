@@ -223,7 +223,7 @@ function parseProgressJsonl(): Map<
 	return out;
 }
 
-function scoreFromStatusCounts(counts: Record<string, number>): number | null {
+function scoreFromStatusCounts(counts: Record<string, number>): number {
 	const scored = Object.entries(counts)
 		.filter(([k]) => k !== "Ignored" && k !== "NoCoverage")
 		.reduce((a, [, v]) => a + v, 0);
@@ -505,8 +505,8 @@ function main(): number {
 			const file = `${PREFIX}${target}`;
 			if (!needsMutation.includes(file)) continue;
 			const hash = gitHashObject(file);
+			if (hash === null) continue;
 			const score = scoreFromStatusCounts(info.statusCounts);
-			if (hash === null || score === null) continue;
 			nextProgress[file] = { hash, score, mutantCount: info.mutantCount };
 		}
 		if (Object.keys(nextProgress).length > Object.keys(progressFiles).length) {
