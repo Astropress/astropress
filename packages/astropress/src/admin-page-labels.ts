@@ -5566,6 +5566,17 @@ export const pageLabels = {
 		hi: "रूट तालिका रिकॉर्ड संपादित करें",
 		ny: "Konzani Mbiri ya Tebulo la Njira",
 	},
+	"routePageEditor.titlePrefix": {
+		en: "Edit Route Page",
+		es: "Editar página de ruta",
+		fr: "Modifier la page de route",
+		de: "Routenseite bearbeiten",
+		pt: "Editar página de rota",
+		ja: "ルートページを編集",
+		te: "మార్గ పేజీని సవరించండి",
+		hi: "रूट पेज संपादित करें",
+		ny: "Konzani Tsamba la Njira",
+	},
 	"routePageEditor.description": {
 		en: "Technical editing for route-backed structured pages. Use Pages for the normal editorial entry point.",
 		es: "Edición técnica para páginas estructuradas con rutas. Usa Páginas como punto de entrada editorial normal.",
@@ -9213,7 +9224,13 @@ export const pageLabels = {
  */
 export function getPageT(locale: AdminLocale): (key: PageLabelKey) => string {
 	return (key) => {
-		const entry = pageLabels[key] as LocaleMap;
-		return entry[locale] ?? entry.en;
+		const entry = pageLabels[key] as LocaleMap | undefined;
+		// Missing keys must never throw at render time. A typo or a freshly
+		// added <h1> with no catalog entry would otherwise crash SSR (e.g.
+		// `Cannot read properties of undefined (reading 'en')`), and in dev
+		// mode Astro's error overlay then sticks across navigations and
+		// silently breaks click-driven Playwright tests on subsequent pages.
+		if (!entry) return key;
+		return entry[locale] ?? entry.en ?? key;
 	};
 }
