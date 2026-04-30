@@ -1,8 +1,9 @@
 declare namespace App {
 	interface Locals {
 		adminUser?: {
+			id: string;
 			email: string;
-			role: "admin" | "editor";
+			isAdmin: boolean;
 			name: string;
 		};
 		csrfToken?: string;
