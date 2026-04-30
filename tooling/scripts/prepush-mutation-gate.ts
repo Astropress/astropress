@@ -408,6 +408,9 @@ function main(): number {
 	const TYPE_ONLY_FILES = new Set<string>([
 		`${PREFIX}src/persistence-types.ts`,
 		`${PREFIX}src/config-service-types.ts`,
+		`${PREFIX}src/access/types.ts`,
+		`${PREFIX}src/access/locals.ts`,
+		`${PREFIX}src/admin-stub-catalog.ts`,
 	]);
 	const repoRelative = changed
 		.filter((f) => f.startsWith(PREFIX))
