@@ -925,7 +925,7 @@ export const adminLabels: Record<AdminLocale, Record<AdminLabelKey, string>> = {
 		navSettings: "సెట్టింగ్‌లు",
 		navSystem: "సిస్టమ్",
 		navApiTokens: "API టోకెన్‌లు",
-		navWebhooks: "Webhooks",
+		navWebhooks: "వెబ్‌హుక్‌లు",
 		navServices: "సేవలు",
 		navFundraising: "విరాళ సేకరణ",
 		navTestimonials: "ప్రశంసలు",
