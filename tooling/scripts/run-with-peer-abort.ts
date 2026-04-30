@@ -53,18 +53,37 @@ if (existsSync(sentinel)) {
 	process.exit(130);
 }
 
-const child = spawn(cmd, cmdArgs, { stdio: "inherit" });
+// detached:true puts the child in its own process group so we can signal
+// the entire tree (playwright server, stryker workers, dev servers spawned
+// indirectly) by sending to -pid. Without this, SIGTERM/SIGKILL only hits
+// the immediate child and grandchildren leak, leaving lefthook hung.
+const child = spawn(cmd, cmdArgs, { stdio: "inherit", detached: true });
+const childPid = child.pid;
+
+const killGroup = (signal: NodeJS.Signals) => {
+	if (childPid === undefined) return;
+	try {
+		process.kill(-childPid, signal);
+	} catch {
+		// group may already be gone — fall back to single-pid kill
+		try {
+			child.kill(signal);
+		} catch {
+			// best-effort
+		}
+	}
+};
 
 let aborted = false;
 const poll = setInterval(() => {
 	if (existsSync(sentinel) && !aborted) {
 		aborted = true;
 		console.error(`✖  ${label}: peer failed; aborting.`);
-		// Graceful first, hard kill if it lingers past 5s.
-		child.kill("SIGTERM");
-		setTimeout(() => {
-			if (!child.killed) child.kill("SIGKILL");
-		}, 5000);
+		killGroup("SIGTERM");
+		// Don't wait for SIGTERM acknowledgement — escalate, then exit
+		// regardless of whether grandchildren are still cleaning up.
+		setTimeout(() => killGroup("SIGKILL"), 2000);
+		setTimeout(() => process.exit(130), 4000);
 	}
 }, 2000);
 

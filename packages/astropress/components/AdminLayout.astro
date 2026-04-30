@@ -322,14 +322,20 @@ void hasCms;
 
 // Derive the heading + document title from the matched nav item so SSR
 // localisation flows through to every admin page without each page having
-// to translate its own "Pages" / "Posts" / "Settings" prop. Pages that don't
-// map to a nav entry (Forbidden, 404, etc.) keep the prop value.
+// to translate its own "Pages" / "Posts" / "Settings" prop. Editor pages
+// (e.g. /ap-admin/posts/[slug]) pass currentPath=<list-path> for nav
+// highlighting but their actual pathname differs — in that case keep the
+// prop heading ("Edit Post") rather than the nav label ("Posts").
 const matchedNavItem = navItems.find(
 	(item) => item.href && item.href === currentPath && !item.isGroupLabel,
 );
-const localisedHeading = matchedNavItem?.label ?? heading;
-const localisedTitle = matchedNavItem?.label ?? title;
-const documentTitleResolved = matchedNavItem
+const isOnMatchedNavRoute =
+	!!matchedNavItem?.href && Astro.url.pathname === matchedNavItem.href;
+const localisedHeading =
+	isOnMatchedNavRoute && matchedNavItem ? matchedNavItem.label : heading;
+const localisedTitle =
+	isOnMatchedNavRoute && matchedNavItem ? matchedNavItem.label : title;
+const documentTitleResolved = isOnMatchedNavRoute
 	? buildAstropressAdminDocumentTitle(localisedTitle)
 	: documentTitle;
 ---
