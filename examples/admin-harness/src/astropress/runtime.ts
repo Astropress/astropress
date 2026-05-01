@@ -71,7 +71,39 @@ const seedToolkit = createAstropressSqliteSeedToolkit({
 	comments,
 	systemRoutes: [],
 	archiveRoutes: [],
-	marketingRoutes: [],
+	marketingRoutes: [
+		{
+			path: "/welcome",
+			title: "Welcome",
+			summary: "Demo structured page so the section editor flow is reachable from /pages.",
+			seoTitle: "Welcome",
+			metaDescription: "Demo structured page so the section editor flow is reachable from /pages.",
+			templateKey: "landing",
+			sections: {
+				sections: [
+					{
+						id: "demo-hero",
+						kind: "hero",
+						headline: "Welcome to your admin",
+						subhead: "Edit this page to see the section editor in action.",
+						alignment: "center",
+						primaryCta: { label: "Get started", href: "#" },
+					},
+					{
+						id: "demo-grid",
+						kind: "feature-grid",
+						heading: "What you can do",
+						columns: 3,
+						items: [
+							{ title: "Compose", body: "Mix and match reusable sections." },
+							{ title: "Preview", body: "See changes live as you edit." },
+							{ title: "Translate", body: "Localise for every supported audience." },
+						],
+					},
+				],
+			},
+		},
+	],
 	siteSettings: {
 		siteTitle: "Astropress Admin Harness",
 		siteTagline: "Seeded admin verification target",

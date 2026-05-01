@@ -156,6 +156,14 @@ export default defineConfig({
 			},
 		},
 		{
+			name: "admin-pre-alpha-walkthrough",
+			testMatch: /admin-pre-alpha-walkthrough\.spec\.ts/,
+			use: {
+				baseURL:
+					process.env.PLAYWRIGHT_ADMIN_BASE_URL ?? "http://127.0.0.1:4325",
+			},
+		},
+		{
 			name: "admin-heading-hierarchy",
 			testMatch: /admin-heading-hierarchy\.spec\.ts/,
 			use: {

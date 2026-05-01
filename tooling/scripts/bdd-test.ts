@@ -162,6 +162,32 @@ const verificationGroups: VerificationGroup[] = [
 		],
 	},
 	{
+		label: "pre-alpha walkthrough fixes",
+		scenarios: [
+			"Live preview stylesheet is served as text/css",
+			"Section editor is reachable from the Pages list for structured pages",
+			"Section editor card heading reads \"Sections\" not \"Sections JSON\"",
+			"New page creates without filling SEO fields",
+			"Admin URL warning leaves whitespace around inline code tokens",
+			"Operator switches admin to Arabic and the page emits dir=rtl with bidi-plaintext",
+			"Add-section dialog renders all four templates",
+			"Add-section dialog renders all eight section kinds with localised labels",
+			"Live preview iframe references the served sections stylesheet",
+			"Mobile topbar wraps so brand and identity do not overlap at 375px",
+			"Mobile hamburger toggle is visible at 375px and meets WCAG 2.5.5",
+		],
+		steps: [
+			{
+				command: "bun",
+				args: [
+					"run",
+					"tooling/scripts/run-playwright.ts",
+					"--project=admin-pre-alpha-walkthrough",
+				],
+			},
+		],
+	},
+	{
 		label: "page templates scenarios",
 		scenarios: [
 			"Blank template produces no sections",

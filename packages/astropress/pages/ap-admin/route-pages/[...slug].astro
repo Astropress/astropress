@@ -97,6 +97,43 @@ if (model.status === "not_found") {
       <section class="panel">
         <div class="section-header">
           <div>
+            <h2>{t("routePageEditor.sectionsHeading")}</h2>
+            <p>{t("routePageEditor.sectionsHeadingDesc")}</p>
+          </div>
+        </div>
+        <p class="field-note">{t("routePageEditor.sectionsJsonNote")}</p>
+        <div class="ap-editor-split">
+          <ap-section-editor
+            class="ap-section-editor"
+            data-label-templates={templateLabels}
+            data-label-fields={fieldLabels}
+          >
+            <script type="application/json" data-section-editor-state set:html={sectionEditorState}></script>
+            <input type="hidden" id="sections-payload-input" name="sectionsJson" data-section-editor-input />
+            <div data-section-editor-list class="ap-section-editor__list"></div>
+            <div class="ap-section-editor__footer">
+              <button type="button" class="admin-button" data-section-editor-add>
+                {t("routePageEditor.addSection")}
+              </button>
+            </div>
+            <dialog data-section-editor-add-dialog class="ap-section-editor__dialog" aria-labelledby="ap-section-editor-add-title">
+              <div class="ap-section-editor__dialog-inner">
+                <h3 id="ap-section-editor-add-title">{t("routePageEditor.addSectionDialogTitle")}</h3>
+                <h4>{t("routePageEditor.startFromTemplate")}</h4>
+                <div data-section-editor-templates class="ap-section-editor__picks"></div>
+                <h4>{t("routePageEditor.orPickSectionType")}</h4>
+                <div data-section-editor-kinds class="ap-section-editor__picks"></div>
+                <button type="button" class="admin-button-ghost" data-section-editor-close>{t("routePageEditor.dialogClose")}</button>
+              </div>
+            </dialog>
+          </ap-section-editor>
+          <ap-page-preview for="sections-payload-input" stylesheet="/sections.css" class="ap-page-preview"></ap-page-preview>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="section-header">
+          <div>
             <h2>{t("routePageEditor.general")}</h2>
             <p>{t("routePageEditor.generalDesc")}</p>
           </div>
@@ -195,43 +232,6 @@ if (model.status === "not_found") {
           </p>
         )}
         <textarea aria-label={t("routePageEditor.alternateLinksJsonAria")} rows="6" name="alternateLinksJson" class="admin-textarea code-field">{JSON.stringify(pageRecord.alternateLinks, null, 2)}</textarea>
-      </section>
-
-      <section class="panel">
-        <div class="section-header">
-          <div>
-            <h2>{t("routePageEditor.sectionsJson")}</h2>
-            <p>{t("routePageEditor.sectionsJsonDesc")}</p>
-          </div>
-        </div>
-        <p class="field-note">{t("routePageEditor.sectionsJsonNote")}</p>
-        <div class="ap-editor-split">
-          <ap-section-editor
-            class="ap-section-editor"
-            data-label-templates={templateLabels}
-            data-label-fields={fieldLabels}
-          >
-            <script type="application/json" data-section-editor-state set:html={sectionEditorState}></script>
-            <input type="hidden" id="sections-payload-input" name="sectionsJson" data-section-editor-input />
-            <div data-section-editor-list class="ap-section-editor__list"></div>
-            <div class="ap-section-editor__footer">
-              <button type="button" class="admin-button" data-section-editor-add>
-                + Add section
-              </button>
-            </div>
-            <dialog data-section-editor-add-dialog class="ap-section-editor__dialog" aria-labelledby="ap-section-editor-add-title">
-              <div class="ap-section-editor__dialog-inner">
-                <h3 id="ap-section-editor-add-title">Add a section</h3>
-                <h4>Start from a template</h4>
-                <div data-section-editor-templates class="ap-section-editor__picks"></div>
-                <h4>Or pick a section type</h4>
-                <div data-section-editor-kinds class="ap-section-editor__picks"></div>
-                <button type="button" class="admin-button-ghost" data-section-editor-close>Close</button>
-              </div>
-            </dialog>
-          </ap-section-editor>
-          <ap-page-preview for="sections-payload-input" stylesheet="/sections.css" class="ap-page-preview"></ap-page-preview>
-        </div>
       </section>
 
       <section class="panel">

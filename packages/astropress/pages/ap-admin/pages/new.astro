@@ -1,9 +1,10 @@
 ---
 import AdminLayout from "@astropress-diy/astropress/components/AdminLayout.astro";
 import CsrfInput from "@astropress-diy/astropress/components/CsrfInput.astro";
-import { isAuthUserAdmin } from "astropress";
+import { getPageT, isAuthUserAdmin, resolveAdminLocale } from "astropress";
 
 const adminUser = Astro.locals.adminUser;
+const t = getPageT(resolveAdminLocale(Astro));
 
 if (!adminUser || !isAuthUserAdmin(adminUser)) {
 	Astro.response.status = 403;
@@ -17,10 +18,10 @@ const errorMessage =
 
 {adminUser && isAuthUserAdmin(adminUser) ? (
   <AdminLayout
-    title="New Page"
-    heading="New Page"
+    title={t("pagesNew.title")}
+    heading={t("pagesNew.heading")}
     currentPath="/ap-admin/pages"
-    description="Create a new public page using the route-backed page model."
+    description={t("pagesNew.description")}
     userName={adminUser.name}
   >
     {errorMessage && <p class="error-notice">{errorMessage}</p>}
@@ -31,57 +32,57 @@ const errorMessage =
       <section class="panel">
         <div class="section-header">
           <div>
-            <h2>General</h2>
-            <p>Create a route-backed public page that will be edited through the Pages workflow.</p>
+            <h2>{t("pagesNew.generalHeading")}</h2>
+            <p>{t("pagesNew.generalDesc")}</p>
           </div>
         </div>
         <label class="admin-field">
-          <span>Title</span>
-          <input type="text" name="title" aria-label="Page title" required class="admin-input" />
+          <span>{t("pagesNew.titleField")}</span>
+          <input type="text" name="title" aria-label={t("pagesNew.titleAria")} required class="admin-input" />
         </label>
         <label class="admin-field">
-          <span>Public path</span>
-          <input type="text" name="path" aria-label="Public path" placeholder="/new-page" required class="admin-input" />
+          <span>{t("pagesNew.publicPath")}</span>
+          <input type="text" name="path" aria-label={t("pagesNew.publicPathAria")} placeholder="/new-page" required class="admin-input" />
         </label>
         <label class="admin-field">
-          <span>Summary</span>
-          <textarea name="summary" aria-label="Page summary" rows="3" class="admin-textarea"></textarea>
+          <span>{t("pagesNew.summaryField")}</span>
+          <textarea name="summary" aria-label={t("pagesNew.summaryAria")} rows="3" class="admin-textarea"></textarea>
         </label>
       </section>
 
       <section class="panel">
         <div class="section-header">
           <div>
-            <h2>SEO</h2>
-            <p>Add the search-facing metadata you want this page to launch with.</p>
+            <h2>{t("pagesNew.seoHeading")}</h2>
+            <p>{t("pagesNew.seoDescOptional")}</p>
           </div>
         </div>
         <label class="admin-field">
-          <span>SEO Title</span>
-          <input type="text" name="seoTitle" aria-label="SEO title" required class="admin-input" />
+          <span>{t("pagesNew.seoTitleField")} <em class="admin-field__hint">{t("pagesNew.optionalHint")}</em></span>
+          <input type="text" name="seoTitle" aria-label={t("pagesNew.seoTitleAria")} class="admin-input" />
         </label>
         <label class="admin-field">
-          <span>Meta Description</span>
-          <textarea name="metaDescription" aria-label="Meta description" rows="3" required class="admin-textarea"></textarea>
+          <span>{t("pagesNew.metaDescriptionField")} <em class="admin-field__hint">{t("pagesNew.optionalHint")}</em></span>
+          <textarea name="metaDescription" aria-label={t("pagesNew.metaDescriptionAria")} rows="3" class="admin-textarea"></textarea>
         </label>
       </section>
 
       <div class="form-actions">
-        <button type="submit" class="admin-button">Create page</button>
-        <a href="/ap-admin/pages" class="admin-button-ghost secondary-button">Cancel</a>
+        <button type="submit" class="admin-button">{t("pagesNew.createPage")}</button>
+        <a href="/ap-admin/pages" class="admin-button-ghost secondary-button">{t("pagesNew.cancel")}</a>
       </div>
     </form>
   </AdminLayout>
 ) : (
   <AdminLayout
-    title="Forbidden"
-    heading="Forbidden"
+    title={t("pagesNew.forbiddenTitle")}
+    heading={t("pagesNew.forbiddenHeading")}
     currentPath="/ap-admin/posts"
-    description="This action requires an admin account."
-    userName={adminUser.name}
+    description={t("pagesNew.forbiddenDesc")}
+    userName={adminUser?.name}
   >
     <section class="panel">
-      <p>This action requires an admin account and is hidden from editor-only roles.</p>
+      <p>{t("pagesNew.forbiddenBody")}</p>
     </section>
   </AdminLayout>
 )}

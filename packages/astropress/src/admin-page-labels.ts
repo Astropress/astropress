@@ -21,6 +21,7 @@ export const pageLabels = {
 	// ── Shared cross-page strings ────────────────────────────────────────────
 	"common.search": {
 		en: "Search",
+		ar: "Search", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Buscar",
 		fr: "Rechercher",
 		de: "Suchen",
@@ -32,6 +33,7 @@ export const pageLabels = {
 	},
 	"common.title": {
 		en: "Title",
+		ar: "Title", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Título",
 		fr: "Titre",
 		de: "Titel",
@@ -43,6 +45,7 @@ export const pageLabels = {
 	},
 	"common.status": {
 		en: "Status",
+		ar: "Status", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Estado",
 		fr: "Statut",
 		de: "Status",
@@ -54,6 +57,7 @@ export const pageLabels = {
 	},
 	"common.actions": {
 		en: "Actions",
+		ar: "Actions", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Acciones",
 		fr: "Actions",
 		de: "Aktionen",
@@ -65,6 +69,7 @@ export const pageLabels = {
 	},
 	"common.updated": {
 		en: "Updated",
+		ar: "Updated", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Actualizado",
 		fr: "Mis à jour",
 		de: "Aktualisiert",
@@ -76,6 +81,7 @@ export const pageLabels = {
 	},
 	"common.path": {
 		en: "Path",
+		ar: "Path", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Ruta",
 		fr: "Chemin",
 		de: "Pfad",
@@ -87,6 +93,7 @@ export const pageLabels = {
 	},
 	"common.author": {
 		en: "Author",
+		ar: "Author", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Autor",
 		fr: "Auteur",
 		de: "Autor",
@@ -98,6 +105,7 @@ export const pageLabels = {
 	},
 	"common.category": {
 		en: "Category",
+		ar: "Category", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Categoría",
 		fr: "Catégorie",
 		de: "Kategorie",
@@ -109,6 +117,7 @@ export const pageLabels = {
 	},
 	"common.allStatuses": {
 		en: "All statuses",
+		ar: "All statuses", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Todos los estados",
 		fr: "Tous les statuts",
 		de: "Alle Status",
@@ -120,6 +129,7 @@ export const pageLabels = {
 	},
 	"common.allAuthors": {
 		en: "All authors",
+		ar: "All authors", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Todos los autores",
 		fr: "Tous les auteurs",
 		de: "Alle Autoren",
@@ -131,6 +141,7 @@ export const pageLabels = {
 	},
 	"common.allCategories": {
 		en: "All categories",
+		ar: "All categories", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Todas las categorías",
 		fr: "Toutes les catégories",
 		de: "Alle Kategorien",
@@ -142,6 +153,7 @@ export const pageLabels = {
 	},
 	"common.allTags": {
 		en: "All tags",
+		ar: "All tags", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Todas las etiquetas",
 		fr: "Toutes les étiquettes",
 		de: "Alle Tags",
@@ -153,6 +165,7 @@ export const pageLabels = {
 	},
 	"common.clearFilters": {
 		en: "Clear filters",
+		ar: "Clear filters", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Limpiar filtros",
 		fr: "Effacer les filtres",
 		de: "Filter zurücksetzen",
@@ -164,6 +177,7 @@ export const pageLabels = {
 	},
 	"common.applyFilters": {
 		en: "Apply filters",
+		ar: "Apply filters", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Aplicar filtros",
 		fr: "Appliquer les filtres",
 		de: "Filter anwenden",
@@ -175,6 +189,7 @@ export const pageLabels = {
 	},
 	"common.draft": {
 		en: "Draft",
+		ar: "Draft", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Borrador",
 		fr: "Brouillon",
 		de: "Entwurf",
@@ -186,6 +201,7 @@ export const pageLabels = {
 	},
 	"common.published": {
 		en: "Published",
+		ar: "Published", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Publicado",
 		fr: "Publié",
 		de: "Veröffentlicht",
@@ -197,6 +213,7 @@ export const pageLabels = {
 	},
 	"common.archived": {
 		en: "Archived",
+		ar: "Archived", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Archivado",
 		fr: "Archivé",
 		de: "Archiviert",
@@ -208,6 +225,7 @@ export const pageLabels = {
 	},
 	"common.scheduled": {
 		en: "Scheduled",
+		ar: "Scheduled", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Programado",
 		fr: "Planifié",
 		de: "Geplant",
@@ -219,6 +237,7 @@ export const pageLabels = {
 	},
 	"common.inReview": {
 		en: "In Review",
+		ar: "In Review", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "En revisión",
 		fr: "En révision",
 		de: "In Prüfung",
@@ -230,6 +249,7 @@ export const pageLabels = {
 	},
 	"common.unscheduled": {
 		en: "Unscheduled",
+		ar: "Unscheduled", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Sin programar",
 		fr: "Non planifié",
 		de: "Ungeplant",
@@ -241,6 +261,7 @@ export const pageLabels = {
 	},
 	"common.kindPost": {
 		en: "post",
+		ar: "post", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "publicación",
 		fr: "article",
 		de: "Beitrag",
@@ -252,6 +273,7 @@ export const pageLabels = {
 	},
 	"common.kindPage": {
 		en: "page",
+		ar: "page", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "página",
 		fr: "page",
 		de: "Seite",
@@ -263,6 +285,7 @@ export const pageLabels = {
 	},
 	"common.kindRoutePage": {
 		en: "route page",
+		ar: "route page", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "página de ruta",
 		fr: "page de route",
 		de: "Routenseite",
@@ -274,6 +297,7 @@ export const pageLabels = {
 	},
 	"common.statusReview": {
 		en: "review",
+		ar: "review", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "revisión",
 		fr: "révision",
 		de: "Prüfung",
@@ -285,6 +309,7 @@ export const pageLabels = {
 	},
 	"common.statusPending": {
 		en: "pending",
+		ar: "pending", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "pendiente",
 		fr: "en attente",
 		de: "ausstehend",
@@ -296,6 +321,7 @@ export const pageLabels = {
 	},
 	"common.needsReview": {
 		en: "Needs review",
+		ar: "Needs review", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Requiere revisión",
 		fr: "À réviser",
 		de: "Prüfung nötig",
@@ -307,6 +333,7 @@ export const pageLabels = {
 	},
 	"common.viewAll": {
 		en: "View all",
+		ar: "View all", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Ver todo",
 		fr: "Tout afficher",
 		de: "Alle anzeigen",
@@ -318,6 +345,7 @@ export const pageLabels = {
 	},
 	"common.openQueue": {
 		en: "Open queue",
+		ar: "Open queue", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Abrir cola",
 		fr: "Ouvrir la file",
 		de: "Warteschlange öffnen",
@@ -329,6 +357,7 @@ export const pageLabels = {
 	},
 	"common.openEditor": {
 		en: "Open editor",
+		ar: "Open editor", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Abrir editor",
 		fr: "Ouvrir l'éditeur",
 		de: "Editor öffnen",
@@ -342,6 +371,7 @@ export const pageLabels = {
 	// ── Bootstrap-credentials banner (shown on every page) ───────────────────
 	"banner.bootstrap.before": {
 		en: "You're using default bootstrap credentials —",
+		ar: "You're using default bootstrap credentials —", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Estás usando credenciales de arranque predeterminadas —",
 		fr: "Vous utilisez les identifiants par défaut —",
 		de: "Sie verwenden Standard-Bootstrap-Anmeldedaten —",
@@ -353,6 +383,7 @@ export const pageLabels = {
 	},
 	"banner.bootstrap.link": {
 		en: "change your password",
+		ar: "change your password", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "cambia tu contraseña",
 		fr: "changez votre mot de passe",
 		de: "ändern Sie Ihr Passwort",
@@ -364,6 +395,7 @@ export const pageLabels = {
 	},
 	"banner.bootstrap.after": {
 		en: "before deploying to a live server.",
+		ar: "before deploying to a live server.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "antes de desplegar a un servidor en vivo.",
 		fr: "avant tout déploiement en production.",
 		de: "bevor Sie auf einen Live-Server deployen.",
@@ -377,6 +409,7 @@ export const pageLabels = {
 	// ── Dashboard ────────────────────────────────────────────────────────────
 	"dashboard.description": {
 		en: "Editorial overview, page health, and admin queues.",
+		ar: "Editorial overview, page health, and admin queues.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Vista editorial, salud de páginas y colas de administración.",
 		fr: "Vue éditoriale, santé des pages et files d'administration.",
 		de: "Redaktionelle Übersicht, Seitenzustand und Admin-Warteschlangen.",
@@ -388,6 +421,7 @@ export const pageLabels = {
 	},
 	"dashboard.publishedPosts": {
 		en: "Published posts",
+		ar: "Published posts", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Entradas publicadas",
 		fr: "Articles publiés",
 		de: "Veröffentlichte Beiträge",
@@ -399,6 +433,7 @@ export const pageLabels = {
 	},
 	"dashboard.publishedPostsDesc": {
 		en: "Blog posts currently live on the public site.",
+		ar: "Blog posts currently live on the public site.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Entradas del blog actualmente publicadas en el sitio público.",
 		fr: "Articles de blog actuellement publiés sur le site public.",
 		de: "Blogbeiträge, die derzeit auf der öffentlichen Site live sind.",
@@ -410,6 +445,7 @@ export const pageLabels = {
 	},
 	"dashboard.publicPages": {
 		en: "Public pages",
+		ar: "Public pages", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Páginas públicas",
 		fr: "Pages publiques",
 		de: "Öffentliche Seiten",
@@ -421,6 +457,7 @@ export const pageLabels = {
 	},
 	"dashboard.publicPagesDesc": {
 		en: "Legacy and route-backed public pages editable in admin.",
+		ar: "Legacy and route-backed public pages editable in admin.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Páginas públicas heredadas y de rutas editables en administración.",
 		fr: "Pages publiques héritées et basées sur les routes, modifiables dans l'administration.",
 		de: "Alte und routenbasierte öffentliche Seiten, im Admin bearbeitbar.",
@@ -432,6 +469,7 @@ export const pageLabels = {
 	},
 	"dashboard.needsReviewDesc": {
 		en: "Posts waiting for editorial attention.",
+		ar: "Posts waiting for editorial attention.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Entradas esperando atención editorial.",
 		fr: "Articles en attente d'attention éditoriale.",
 		de: "Beiträge, die redaktionelle Aufmerksamkeit benötigen.",
@@ -443,6 +481,7 @@ export const pageLabels = {
 	},
 	"dashboard.scheduledPosts": {
 		en: "Scheduled posts",
+		ar: "Scheduled posts", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Entradas programadas",
 		fr: "Articles planifiés",
 		de: "Geplante Beiträge",
@@ -454,6 +493,7 @@ export const pageLabels = {
 	},
 	"dashboard.scheduledPostsDesc": {
 		en: "Upcoming blog posts with a future publish time.",
+		ar: "Upcoming blog posts with a future publish time.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Próximas entradas con fecha de publicación futura.",
 		fr: "Articles à venir avec une date de publication future.",
 		de: "Kommende Blogbeiträge mit zukünftigem Veröffentlichungszeitpunkt.",
@@ -465,6 +505,7 @@ export const pageLabels = {
 	},
 	"dashboard.redirectRules": {
 		en: "Redirect rules",
+		ar: "Redirect rules", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Reglas de redirección",
 		fr: "Règles de redirection",
 		de: "Weiterleitungsregeln",
@@ -476,6 +517,7 @@ export const pageLabels = {
 	},
 	"dashboard.redirectRulesDesc": {
 		en: "Active redirects currently managed in admin.",
+		ar: "Active redirects currently managed in admin.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Redirecciones activas actualmente gestionadas en administración.",
 		fr: "Redirections actives gérées dans l'administration.",
 		de: "Aktive Weiterleitungen, die im Admin verwaltet werden.",
@@ -487,6 +529,7 @@ export const pageLabels = {
 	},
 	"dashboard.translationFollowup": {
 		en: "Translation follow-up",
+		ar: "Translation follow-up", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Seguimiento de traducciones",
 		fr: "Suivi des traductions",
 		de: "Übersetzungs-Nachverfolgung",
@@ -498,6 +541,7 @@ export const pageLabels = {
 	},
 	"dashboard.translationFollowupDesc": {
 		en: "Localized routes that still need attention before publication.",
+		ar: "Localized routes that still need attention before publication.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Rutas localizadas que aún requieren atención antes de publicar.",
 		fr: "Routes localisées nécessitant encore une intervention avant publication.",
 		de: "Lokalisierte Routen, die vor der Veröffentlichung noch Aufmerksamkeit benötigen.",
@@ -509,6 +553,7 @@ export const pageLabels = {
 	},
 	"dashboard.create": {
 		en: "Create",
+		ar: "Create", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Crear",
 		fr: "Créer",
 		de: "Erstellen",
@@ -520,6 +565,7 @@ export const pageLabels = {
 	},
 	"dashboard.startNewWork": {
 		en: "Start New Work",
+		ar: "Start New Work", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Iniciar nuevo trabajo",
 		fr: "Démarrer un nouveau travail",
 		de: "Neue Arbeit starten",
@@ -531,6 +577,7 @@ export const pageLabels = {
 	},
 	"dashboard.startNewWorkDesc": {
 		en: "Create new content quickly, then use the sidebar for the full editing surfaces.",
+		ar: "Create new content quickly, then use the sidebar for the full editing surfaces.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Crea nuevo contenido rápidamente y usa la barra lateral para superficies de edición completas.",
 		fr: "Créez rapidement du nouveau contenu, puis utilisez la barre latérale pour l'édition complète.",
 		de: "Erstellen Sie schnell neue Inhalte und nutzen Sie die Seitenleiste für die vollständige Bearbeitung.",
@@ -542,6 +589,7 @@ export const pageLabels = {
 	},
 	"dashboard.newPost": {
 		en: "New post",
+		ar: "New post", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Nueva entrada",
 		fr: "Nouvel article",
 		de: "Neuer Beitrag",
@@ -553,6 +601,7 @@ export const pageLabels = {
 	},
 	"dashboard.newPage": {
 		en: "New page",
+		ar: "New page", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Nueva página",
 		fr: "Nouvelle page",
 		de: "Neue Seite",
@@ -564,6 +613,7 @@ export const pageLabels = {
 	},
 	"dashboard.newAuthor": {
 		en: "New author",
+		ar: "New author", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Nuevo autor",
 		fr: "Nouvel auteur",
 		de: "Neuer Autor",
@@ -575,6 +625,7 @@ export const pageLabels = {
 	},
 	"dashboard.newUser": {
 		en: "New user",
+		ar: "New user", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Nuevo usuario",
 		fr: "Nouvel utilisateur",
 		de: "Neuer Benutzer",
@@ -586,6 +637,7 @@ export const pageLabels = {
 	},
 	"dashboard.supportSurfaces": {
 		en: "Support Surfaces",
+		ar: "Support Surfaces", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Superficies de soporte",
 		fr: "Surfaces de support",
 		de: "Unterstützungsbereiche",
@@ -597,6 +649,7 @@ export const pageLabels = {
 	},
 	"dashboard.supportSurfacesDesc": {
 		en: "Metadata, route health, and system outputs.",
+		ar: "Metadata, route health, and system outputs.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Metadatos, salud de rutas y salidas del sistema.",
 		fr: "Métadonnées, santé des routes et sorties système.",
 		de: "Metadaten, Routenzustand und Systemausgaben.",
@@ -608,6 +661,7 @@ export const pageLabels = {
 	},
 	"dashboard.translations": {
 		en: "Translations",
+		ar: "Translations", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Traducciones",
 		fr: "Traductions",
 		de: "Übersetzungen",
@@ -619,6 +673,7 @@ export const pageLabels = {
 	},
 	"dashboard.translationsDesc": {
 		en: "Localized routes not yet published.",
+		ar: "Localized routes not yet published.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Rutas localizadas aún no publicadas.",
 		fr: "Routes localisées non encore publiées.",
 		de: "Lokalisierte Routen, die noch nicht veröffentlicht sind.",
@@ -630,6 +685,7 @@ export const pageLabels = {
 	},
 	"dashboard.seo": {
 		en: "SEO",
+		ar: "SEO", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "SEO",
 		fr: "SEO",
 		de: "SEO",
@@ -641,6 +697,7 @@ export const pageLabels = {
 	},
 	"dashboard.seoDesc": {
 		en: "Pages or routes missing dedicated metadata.",
+		ar: "Pages or routes missing dedicated metadata.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Páginas o rutas sin metadatos dedicados.",
 		fr: "Pages ou routes sans métadonnées dédiées.",
 		de: "Seiten oder Routen ohne dedizierte Metadaten.",
@@ -652,6 +709,7 @@ export const pageLabels = {
 	},
 	"dashboard.archives": {
 		en: "Archives",
+		ar: "Archives", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Archivos",
 		fr: "Archives",
 		de: "Archive",
@@ -663,6 +721,7 @@ export const pageLabels = {
 	},
 	"dashboard.archivesDesc": {
 		en: "Archive landing pages with separate owner editors.",
+		ar: "Archive landing pages with separate owner editors.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Páginas de archivo con editores de propietario separados.",
 		fr: "Pages d'archives avec éditeurs propriétaires séparés.",
 		de: "Archiv-Landingpages mit separaten Eigentümer-Editoren.",
@@ -674,6 +733,7 @@ export const pageLabels = {
 	},
 	"dashboard.system": {
 		en: "System",
+		ar: "System", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Sistema",
 		fr: "Système",
 		de: "System",
@@ -685,6 +745,7 @@ export const pageLabels = {
 	},
 	"dashboard.systemDesc": {
 		en: "500 page and generated public outputs.",
+		ar: "500 page and generated public outputs.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Página 500 y salidas públicas generadas.",
 		fr: "Page 500 et sorties publiques générées.",
 		de: "500-Seite und generierte öffentliche Ausgaben.",
@@ -696,6 +757,7 @@ export const pageLabels = {
 	},
 	"dashboard.queue": {
 		en: "Queue",
+		ar: "Queue", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Cola",
 		fr: "File",
 		de: "Warteschlange",
@@ -707,6 +769,7 @@ export const pageLabels = {
 	},
 	"dashboard.scheduledSoon": {
 		en: "Scheduled Soon",
+		ar: "Scheduled Soon", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Programado pronto",
 		fr: "Bientôt planifié",
 		de: "Bald geplant",
@@ -718,6 +781,7 @@ export const pageLabels = {
 	},
 	"dashboard.scheduledSoonDesc": {
 		en: "The next posts queued to go live.",
+		ar: "The next posts queued to go live.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Las próximas entradas en cola para publicarse.",
 		fr: "Les prochains articles en file pour publication.",
 		de: "Die nächsten Beiträge in der Warteschlange zur Veröffentlichung.",
@@ -729,6 +793,7 @@ export const pageLabels = {
 	},
 	"dashboard.viewScheduled": {
 		en: "View scheduled",
+		ar: "View scheduled", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Ver programados",
 		fr: "Voir les planifiés",
 		de: "Geplante anzeigen",
@@ -740,6 +805,7 @@ export const pageLabels = {
 	},
 	"dashboard.noFutureScheduled": {
 		en: "No future scheduled posts are currently queued.",
+		ar: "No future scheduled posts are currently queued.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "No hay entradas programadas en cola actualmente.",
 		fr: "Aucun article futur n'est actuellement planifié.",
 		de: "Derzeit sind keine zukünftig geplanten Beiträge in der Warteschlange.",
@@ -751,6 +817,7 @@ export const pageLabels = {
 	},
 	"dashboard.postReviewQueue": {
 		en: "Post Review Queue",
+		ar: "Post Review Queue", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Cola de revisión de entradas",
 		fr: "File de révision des articles",
 		de: "Beitrags-Prüfungswarteschlange",
@@ -762,6 +829,7 @@ export const pageLabels = {
 	},
 	"dashboard.postReviewQueueDesc": {
 		en: "Draft and review items waiting for an editor pass.",
+		ar: "Draft and review items waiting for an editor pass.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Borradores y elementos en revisión esperando una pasada del editor.",
 		fr: "Brouillons et éléments en révision en attente d'une revue éditeur.",
 		de: "Entwürfe und Prüfungselemente, die auf einen Editor-Durchgang warten.",
@@ -773,6 +841,7 @@ export const pageLabels = {
 	},
 	"dashboard.recentActivity": {
 		en: "Recent Activity",
+		ar: "Recent Activity", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Actividad reciente",
 		fr: "Activité récente",
 		de: "Letzte Aktivitäten",
@@ -784,6 +853,7 @@ export const pageLabels = {
 	},
 	"dashboard.recentlyUpdated": {
 		en: "Recently Updated",
+		ar: "Recently Updated", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Actualizado recientemente",
 		fr: "Récemment mis à jour",
 		de: "Kürzlich aktualisiert",
@@ -795,6 +865,7 @@ export const pageLabels = {
 	},
 	"dashboard.recentlyUpdatedDesc": {
 		en: "Recent changes with direct editor entry points.",
+		ar: "Recent changes with direct editor entry points.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Cambios recientes con accesos directos al editor.",
 		fr: "Modifications récentes avec accès direct à l'éditeur.",
 		de: "Kürzliche Änderungen mit direkten Editor-Einstiegspunkten.",
@@ -806,6 +877,7 @@ export const pageLabels = {
 	},
 	"dashboard.publish": {
 		en: "Publish",
+		ar: "Publish", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Publicar",
 		fr: "Publier",
 		de: "Veröffentlichen",
@@ -817,6 +889,7 @@ export const pageLabels = {
 	},
 	"dashboard.latestDeployment": {
 		en: "Latest Deployment",
+		ar: "Latest Deployment", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Despliegue más reciente",
 		fr: "Dernier déploiement",
 		de: "Letztes Deployment",
@@ -828,6 +901,7 @@ export const pageLabels = {
 	},
 	"dashboard.latestDeploymentDesc": {
 		en: "Trusted record of the most recent build trigger sourced from the audit log.",
+		ar: "Trusted record of the most recent build trigger sourced from the audit log.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Registro confiable del último disparador de compilación obtenido del registro de auditoría.",
 		fr: "Enregistrement fiable du dernier déclencheur de build issu du journal d'audit.",
 		de: "Vertrauenswürdiger Eintrag des letzten Build-Auslösers aus dem Audit-Protokoll.",
@@ -839,6 +913,7 @@ export const pageLabels = {
 	},
 	"dashboard.noPublishYet": {
 		en: "No publish has been triggered yet. Use the Publish button in the topbar to start a build.",
+		ar: "No publish has been triggered yet. Use the Publish button in the topbar to start a build.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Aún no se ha activado ninguna publicación. Usa el botón Publicar en la barra superior para iniciar una compilación.",
 		fr: "Aucune publication n'a encore été déclenchée. Utilisez le bouton Publier dans la barre supérieure pour lancer un build.",
 		de: "Bisher wurde keine Veröffentlichung ausgelöst. Nutzen Sie den Publish-Button in der oberen Leiste, um einen Build zu starten.",
@@ -851,6 +926,7 @@ export const pageLabels = {
 
 	"dashboard.descriptionEditor": {
 		en: "Editorial overview for blog posts, comments, and media work.",
+		ar: "Editorial overview for blog posts, comments, and media work.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Vista editorial para entradas, comentarios y trabajo de medios.",
 		fr: "Vue éditoriale pour les articles, commentaires et travail média.",
 		de: "Redaktionelle Übersicht für Beiträge, Kommentare und Medienarbeit.",
@@ -862,6 +938,7 @@ export const pageLabels = {
 	},
 	"dashboard.pendingComments": {
 		en: "Pending comments",
+		ar: "Pending comments", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Comentarios pendientes",
 		fr: "Commentaires en attente",
 		de: "Ausstehende Kommentare",
@@ -873,6 +950,7 @@ export const pageLabels = {
 	},
 	"dashboard.pendingCommentsDesc": {
 		en: "Comments still waiting for moderation.",
+		ar: "Comments still waiting for moderation.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Comentarios aún en espera de moderación.",
 		fr: "Commentaires en attente de modération.",
 		de: "Kommentare, die noch auf Moderation warten.",
@@ -884,6 +962,7 @@ export const pageLabels = {
 	},
 	"dashboard.editorialQueue": {
 		en: "Editorial Queue",
+		ar: "Editorial Queue", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Cola editorial",
 		fr: "File éditoriale",
 		de: "Redaktionswarteschlange",
@@ -895,6 +974,7 @@ export const pageLabels = {
 	},
 	"dashboard.open": {
 		en: "Open",
+		ar: "Open", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Abrir",
 		fr: "Ouvrir",
 		de: "Öffnen",
@@ -906,6 +986,7 @@ export const pageLabels = {
 	},
 	"dashboard.review": {
 		en: "Review",
+		ar: "Review", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Revisar",
 		fr: "Réviser",
 		de: "Prüfen",
@@ -917,6 +998,7 @@ export const pageLabels = {
 	},
 	"dashboard.nothingWaiting": {
 		en: "Nothing is currently waiting for editorial review.",
+		ar: "Nothing is currently waiting for editorial review.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Nada está actualmente en espera de revisión editorial.",
 		fr: "Rien n'est actuellement en attente de révision éditoriale.",
 		de: "Derzeit wartet nichts auf eine redaktionelle Prüfung.",
@@ -928,6 +1010,7 @@ export const pageLabels = {
 	},
 	"dashboard.partialResults": {
 		en: "Some dashboard data is temporarily unavailable. This page is showing partial results.",
+		ar: "Some dashboard data is temporarily unavailable. This page is showing partial results.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Algunos datos del panel no están disponibles temporalmente. Esta página muestra resultados parciales.",
 		fr: "Certaines données du tableau de bord sont temporairement indisponibles. Cette page affiche des résultats partiels.",
 		de: "Einige Dashboard-Daten sind vorübergehend nicht verfügbar. Diese Seite zeigt Teilergebnisse.",
@@ -939,6 +1022,7 @@ export const pageLabels = {
 	},
 	"dashboard.deployNoRecord": {
 		en: "No publish recorded",
+		ar: "No publish recorded", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Sin publicaciones registradas",
 		fr: "Aucune publication enregistrée",
 		de: "Keine Veröffentlichung erfasst",
@@ -950,6 +1034,7 @@ export const pageLabels = {
 	},
 	"dashboard.deployTriggered": {
 		en: "Triggered",
+		ar: "Triggered", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Activado",
 		fr: "Déclenché",
 		de: "Ausgelöst",
@@ -961,6 +1046,7 @@ export const pageLabels = {
 	},
 	"dashboard.deployFailed": {
 		en: "Failed",
+		ar: "Failed", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Falló",
 		fr: "Échec",
 		de: "Fehlgeschlagen",
@@ -972,6 +1058,7 @@ export const pageLabels = {
 	},
 	"dashboard.deployBy": {
 		en: "by",
+		ar: "by", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "por",
 		fr: "par",
 		de: "von",
@@ -983,6 +1070,7 @@ export const pageLabels = {
 	},
 	"common.unknownUpdateTime": {
 		en: "Unknown update time",
+		ar: "Unknown update time", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Hora de actualización desconocida",
 		fr: "Heure de mise à jour inconnue",
 		de: "Aktualisierungszeit unbekannt",
@@ -996,6 +1084,7 @@ export const pageLabels = {
 	// ── Posts list ──────────────────────────────────────────────────────────
 	"posts.description": {
 		en: "Published and draft blog posts managed through the post editor.",
+		ar: "Published and draft blog posts managed through the post editor.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Entradas publicadas y en borrador gestionadas mediante el editor.",
 		fr: "Articles publiés et brouillons gérés via l'éditeur d'article.",
 		de: "Veröffentlichte und Entwurfs-Blogbeiträge, verwaltet über den Beitragseditor.",
@@ -1007,6 +1096,7 @@ export const pageLabels = {
 	},
 	"posts.partialResults": {
 		en: "Some post index data is temporarily unavailable. This page is showing partial results.",
+		ar: "Some post index data is temporarily unavailable. This page is showing partial results.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Algunos datos del índice de entradas no están disponibles temporalmente. Esta página muestra resultados parciales.",
 		fr: "Certaines données de l'index des articles sont temporairement indisponibles. Cette page affiche des résultats partiels.",
 		de: "Einige Beitrags-Index-Daten sind vorübergehend nicht verfügbar. Diese Seite zeigt Teilergebnisse.",
@@ -1018,6 +1108,7 @@ export const pageLabels = {
 	},
 	"posts.openPublicBlog": {
 		en: "Open public blog",
+		ar: "Open public blog", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Abrir blog público",
 		fr: "Ouvrir le blog public",
 		de: "Öffentliches Blog öffnen",
@@ -1029,6 +1120,7 @@ export const pageLabels = {
 	},
 	"posts.visiblePosts": {
 		en: "Visible posts",
+		ar: "Visible posts", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Entradas visibles",
 		fr: "Articles visibles",
 		de: "Sichtbare Beiträge",
@@ -1040,6 +1132,7 @@ export const pageLabels = {
 	},
 	"posts.visiblePostsDesc": {
 		en: "Posts in the current filtered view.",
+		ar: "Posts in the current filtered view.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Entradas en la vista filtrada actual.",
 		fr: "Articles dans la vue filtrée actuelle.",
 		de: "Beiträge in der aktuell gefilterten Ansicht.",
@@ -1051,6 +1144,7 @@ export const pageLabels = {
 	},
 	"posts.reviewQueue": {
 		en: "Review queue",
+		ar: "Review queue", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Cola de revisión",
 		fr: "File de révision",
 		de: "Prüfungswarteschlange",
@@ -1062,6 +1156,7 @@ export const pageLabels = {
 	},
 	"posts.reviewQueueDesc": {
 		en: "Draft and in-review posts waiting for editorial work.",
+		ar: "Draft and in-review posts waiting for editorial work.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Entradas en borrador y revisión en espera de trabajo editorial.",
 		fr: "Articles en brouillon et en révision en attente de travail éditorial.",
 		de: "Entwurfs- und Prüfungsbeiträge, die auf redaktionelle Arbeit warten.",
@@ -1073,6 +1168,7 @@ export const pageLabels = {
 	},
 	"posts.workflow": {
 		en: "Post Workflow",
+		ar: "Post Workflow", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Flujo de entradas",
 		fr: "Flux des articles",
 		de: "Beitragsablauf",
@@ -1084,6 +1180,7 @@ export const pageLabels = {
 	},
 	"posts.blogPostList": {
 		en: "Blog Post List",
+		ar: "Blog Post List", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Lista de entradas",
 		fr: "Liste des articles",
 		de: "Blogbeitragsliste",
@@ -1095,6 +1192,7 @@ export const pageLabels = {
 	},
 	"posts.searchOnce": {
 		en: "Search once, then narrow to the exact editorial slice you need.",
+		ar: "Search once, then narrow to the exact editorial slice you need.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Busca una vez y luego limita al fragmento editorial exacto que necesitas.",
 		fr: "Cherchez une fois, puis affinez à la tranche éditoriale exacte dont vous avez besoin.",
 		de: "Einmal suchen, dann auf den genauen redaktionellen Ausschnitt einschränken.",
@@ -1106,6 +1204,7 @@ export const pageLabels = {
 	},
 	"posts.searchPlaceholder": {
 		en: "Search title, slug, route, or assignment",
+		ar: "Search title, slug, route, or assignment", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Buscar título, slug, ruta o asignación",
 		fr: "Rechercher titre, slug, route ou assignation",
 		de: "Titel, Slug, Route oder Zuweisung suchen",
@@ -1117,6 +1216,7 @@ export const pageLabels = {
 	},
 	"posts.searchPosts": {
 		en: "Search posts",
+		ar: "Search posts", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Buscar entradas",
 		fr: "Rechercher des articles",
 		de: "Beiträge suchen",
@@ -1128,6 +1228,7 @@ export const pageLabels = {
 	},
 	"posts.workflowFilter": {
 		en: "Workflow",
+		ar: "Workflow", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Flujo",
 		fr: "Flux",
 		de: "Ablauf",
@@ -1139,6 +1240,7 @@ export const pageLabels = {
 	},
 	"posts.allWorkflowStates": {
 		en: "All workflow states",
+		ar: "All workflow states", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Todos los estados de flujo",
 		fr: "Tous les états de flux",
 		de: "Alle Ablaufstatus",
@@ -1150,6 +1252,7 @@ export const pageLabels = {
 	},
 	"posts.tag": {
 		en: "Tag",
+		ar: "Tag", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Etiqueta",
 		fr: "Étiquette",
 		de: "Tag",
@@ -1161,6 +1264,7 @@ export const pageLabels = {
 	},
 	"posts.archiveFilter": {
 		en: "Archive filter:",
+		ar: "Archive filter:", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Filtro de archivo:",
 		fr: "Filtre d'archive :",
 		de: "Archivfilter:",
@@ -1172,6 +1276,7 @@ export const pageLabels = {
 	},
 	"posts.matchedSummary": {
 		en: "{count} posts matched the current filters. Showing page {page} of {total}.",
+		ar: "{count} posts matched the current filters. Showing page {page} of {total}.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "{count} entradas coincidieron con los filtros actuales. Mostrando página {page} de {total}.",
 		fr: "{count} articles correspondent aux filtres actuels. Page {page} sur {total}.",
 		de: "{count} Beiträge entsprechen den aktuellen Filtern. Seite {page} von {total}.",
@@ -1183,6 +1288,7 @@ export const pageLabels = {
 	},
 	"posts.contentFilters": {
 		en: "Content filters",
+		ar: "Content filters", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Filtros de contenido",
 		fr: "Filtres de contenu",
 		de: "Inhaltsfilter",
@@ -1194,6 +1300,7 @@ export const pageLabels = {
 	},
 	"posts.contentList": {
 		en: "Content list",
+		ar: "Content list", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Lista de contenido",
 		fr: "Liste de contenu",
 		de: "Inhaltsliste",
@@ -1205,6 +1312,7 @@ export const pageLabels = {
 	},
 	"posts.tableScheduled": {
 		en: "Scheduled",
+		ar: "Scheduled", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Programado",
 		fr: "Planifié",
 		de: "Geplant",
@@ -1216,6 +1324,7 @@ export const pageLabels = {
 	},
 	"posts.authors": {
 		en: "Authors",
+		ar: "Authors", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Autores",
 		fr: "Auteurs",
 		de: "Autoren",
@@ -1227,6 +1336,7 @@ export const pageLabels = {
 	},
 	"posts.categories": {
 		en: "Categories",
+		ar: "Categories", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Categorías",
 		fr: "Catégories",
 		de: "Kategorien",
@@ -1238,6 +1348,7 @@ export const pageLabels = {
 	},
 	"posts.noMatched": {
 		en: "No content records matched the current filters.",
+		ar: "No content records matched the current filters.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Ningún registro de contenido coincidió con los filtros actuales.",
 		fr: "Aucun enregistrement de contenu ne correspond aux filtres actuels.",
 		de: "Keine Inhaltsdatensätze entsprechen den aktuellen Filtern.",
@@ -1249,6 +1360,7 @@ export const pageLabels = {
 	},
 	"posts.previous": {
 		en: "← Previous",
+		ar: "← Previous", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "← Anterior",
 		fr: "← Précédent",
 		de: "← Zurück",
@@ -1260,6 +1372,7 @@ export const pageLabels = {
 	},
 	"posts.next": {
 		en: "Next →",
+		ar: "Next →", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Siguiente →",
 		fr: "Suivant →",
 		de: "Weiter →",
@@ -1271,6 +1384,7 @@ export const pageLabels = {
 	},
 	"posts.previousPage": {
 		en: "Previous page",
+		ar: "Previous page", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Página anterior",
 		fr: "Page précédente",
 		de: "Vorherige Seite",
@@ -1282,6 +1396,7 @@ export const pageLabels = {
 	},
 	"posts.nextPage": {
 		en: "Next page",
+		ar: "Next page", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Siguiente página",
 		fr: "Page suivante",
 		de: "Nächste Seite",
@@ -1293,6 +1408,7 @@ export const pageLabels = {
 	},
 	"posts.pageOf": {
 		en: "Page {page} of {total}",
+		ar: "Page {page} of {total}", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Página {page} de {total}",
 		fr: "Page {page} sur {total}",
 		de: "Seite {page} von {total}",
@@ -1304,6 +1420,7 @@ export const pageLabels = {
 	},
 	"posts.pagination": {
 		en: "pagination",
+		ar: "pagination", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "paginación",
 		fr: "pagination",
 		de: "Seitennavigation",
@@ -1317,6 +1434,7 @@ export const pageLabels = {
 	// ── Pages list ──────────────────────────────────────────────────────────
 	"pages.description": {
 		en: "All human-facing public pages that are not blog posts.",
+		ar: "All human-facing public pages that are not blog posts.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Todas las páginas públicas que no son entradas de blog.",
 		fr: "Toutes les pages publiques qui ne sont pas des articles de blog.",
 		de: "Alle öffentlichen Seiten, die keine Blogbeiträge sind.",
@@ -1328,6 +1446,7 @@ export const pageLabels = {
 	},
 	"pages.partialResults": {
 		en: "Some page index data is temporarily unavailable. This page is showing partial results.",
+		ar: "Some page index data is temporarily unavailable. This page is showing partial results.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Algunos datos del índice de páginas no están disponibles temporalmente. Esta página muestra resultados parciales.",
 		fr: "Certaines données de l'index des pages sont temporairement indisponibles. Cette page affiche des résultats partiels.",
 		de: "Einige Seiten-Index-Daten sind vorübergehend nicht verfügbar. Diese Seite zeigt Teilergebnisse.",
@@ -1339,6 +1458,7 @@ export const pageLabels = {
 	},
 	"pages.openRouteTable": {
 		en: "Open route table",
+		ar: "Open route table", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Abrir tabla de rutas",
 		fr: "Ouvrir la table des routes",
 		de: "Routentabelle öffnen",
@@ -1350,6 +1470,7 @@ export const pageLabels = {
 	},
 	"pages.allPages": {
 		en: "All pages",
+		ar: "All pages", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Todas las páginas",
 		fr: "Toutes les pages",
 		de: "Alle Seiten",
@@ -1361,6 +1482,7 @@ export const pageLabels = {
 	},
 	"pages.allPagesDesc": {
 		en: "Public HTML pages currently managed through admin.",
+		ar: "Public HTML pages currently managed through admin.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Páginas HTML públicas gestionadas actualmente desde administración.",
 		fr: "Pages HTML publiques actuellement gérées via l'administration.",
 		de: "Öffentliche HTML-Seiten, derzeit über das Admin verwaltet.",
@@ -1372,6 +1494,7 @@ export const pageLabels = {
 	},
 	"pages.structuredPages": {
 		en: "Structured pages",
+		ar: "Structured pages", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Páginas estructuradas",
 		fr: "Pages structurées",
 		de: "Strukturierte Seiten",
@@ -1383,6 +1506,7 @@ export const pageLabels = {
 	},
 	"pages.structuredPagesDesc": {
 		en: "Route-backed pages that use the structured page system.",
+		ar: "Route-backed pages that use the structured page system.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Páginas basadas en rutas que usan el sistema de páginas estructuradas.",
 		fr: "Pages basées sur des routes utilisant le système de pages structurées.",
 		de: "Routenbasierte Seiten, die das strukturierte Seitensystem verwenden.",
@@ -1394,6 +1518,7 @@ export const pageLabels = {
 	},
 	"pages.publicPageOwnership": {
 		en: "Public Page Ownership",
+		ar: "Public Page Ownership", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Propiedad de páginas públicas",
 		fr: "Propriété des pages publiques",
 		de: "Eigentümerschaft öffentlicher Seiten",
@@ -1405,6 +1530,7 @@ export const pageLabels = {
 	},
 	"pages.pageIndex": {
 		en: "Page Index",
+		ar: "Page Index", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Índice de páginas",
 		fr: "Index des pages",
 		de: "Seitenindex",
@@ -1416,6 +1542,7 @@ export const pageLabels = {
 	},
 	"pages.useThisIndex": {
 		en: "Use this index to manage public pages. Open Route Table only when you need technical route details.",
+		ar: "Use this index to manage public pages. Open Route Table only when you need technical route details.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Usa este índice para gestionar páginas públicas. Abre la tabla de rutas solo cuando necesites detalles técnicos.",
 		fr: "Utilisez cet index pour gérer les pages publiques. Ouvrez la table des routes uniquement pour les détails techniques.",
 		de: "Verwenden Sie diesen Index, um öffentliche Seiten zu verwalten. Öffnen Sie die Routentabelle nur für technische Details.",
@@ -1427,6 +1554,7 @@ export const pageLabels = {
 	},
 	"pages.structuredExplanation": {
 		en: "Structured pages are route-backed pages assembled from reusable content sections instead of one imported HTML body. They power pages like home, about, donate, and service landing pages.",
+		ar: "Structured pages are route-backed pages assembled from reusable content sections instead of one imported HTML body. They power pages like home, about, donate, and service landing pages.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Las páginas estructuradas son páginas basadas en rutas formadas por secciones de contenido reutilizables en lugar de un solo cuerpo HTML importado. Impulsan páginas como inicio, acerca, donar y páginas de servicio.",
 		fr: "Les pages structurées sont des pages basées sur des routes assemblées à partir de sections de contenu réutilisables au lieu d'un seul corps HTML importé. Elles alimentent des pages telles que l'accueil, à propos, faire un don et les pages de service.",
 		de: "Strukturierte Seiten sind routenbasierte Seiten, die aus wiederverwendbaren Inhaltsabschnitten statt aus einem importierten HTML-Body zusammengesetzt werden. Sie betreiben Seiten wie Startseite, Über, Spenden und Service-Landingpages.",
@@ -1438,6 +1566,7 @@ export const pageLabels = {
 	},
 	"pages.pageTypesInList": {
 		en: "Page types in this list",
+		ar: "Page types in this list", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Tipos de página en esta lista",
 		fr: "Types de page dans cette liste",
 		de: "Seitentypen in dieser Liste",
@@ -1449,6 +1578,7 @@ export const pageLabels = {
 	},
 	"pages.kindLegacy": {
 		en: "Legacy",
+		ar: "Legacy", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Heredada",
 		fr: "Héritée",
 		de: "Alt",
@@ -1460,6 +1590,7 @@ export const pageLabels = {
 	},
 	"pages.kindStructured": {
 		en: "Structured",
+		ar: "Structured", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Estructurada",
 		fr: "Structurée",
 		de: "Strukturiert",
@@ -1471,6 +1602,7 @@ export const pageLabels = {
 	},
 	"pages.kindArchive": {
 		en: "Archive",
+		ar: "Archive", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Archivo",
 		fr: "Archive",
 		de: "Archiv",
@@ -1482,6 +1614,7 @@ export const pageLabels = {
 	},
 	"pages.legacyExplanation": {
 		en: "pages come from imported content.",
+		ar: "pages come from imported content.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "páginas provienen de contenido importado.",
 		fr: "pages proviennent de contenu importé.",
 		de: "Seiten stammen aus importiertem Inhalt.",
@@ -1493,6 +1626,7 @@ export const pageLabels = {
 	},
 	"pages.structuredExplanation2": {
 		en: "pages use reusable sections.",
+		ar: "pages use reusable sections.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "páginas usan secciones reutilizables.",
 		fr: "pages utilisent des sections réutilisables.",
 		de: "Seiten verwenden wiederverwendbare Abschnitte.",
@@ -1504,6 +1638,7 @@ export const pageLabels = {
 	},
 	"pages.archiveExplanation": {
 		en: "pages are listing routes such as author, category, and tag archives.",
+		ar: "pages are listing routes such as author, category, and tag archives.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "páginas son rutas de listado como archivos de autor, categoría y etiquetas.",
 		fr: "pages sont des routes de listage comme les archives d'auteur, de catégorie et d'étiquette.",
 		de: "Seiten sind Listen-Routen wie Autoren-, Kategorie- und Tag-Archive.",
@@ -1515,6 +1650,7 @@ export const pageLabels = {
 	},
 	"pages.ofPagesSummary": {
 		en: "{filtered} of {total} public pages",
+		ar: "{filtered} of {total} public pages", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "{filtered} de {total} páginas públicas",
 		fr: "{filtered} sur {total} pages publiques",
 		de: "{filtered} von {total} öffentlichen Seiten",
@@ -1526,6 +1662,7 @@ export const pageLabels = {
 	},
 	"pages.searchPages": {
 		en: "Search pages",
+		ar: "Search pages", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Buscar páginas",
 		fr: "Rechercher des pages",
 		de: "Seiten suchen",
@@ -1537,6 +1674,7 @@ export const pageLabels = {
 	},
 	"pages.searchPlaceholder": {
 		en: "Search title or path",
+		ar: "Search title or path", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Buscar título o ruta",
 		fr: "Rechercher titre ou chemin",
 		de: "Titel oder Pfad suchen",
@@ -1548,6 +1686,7 @@ export const pageLabels = {
 	},
 	"pages.filterByKind": {
 		en: "Filter by page kind",
+		ar: "Filter by page kind", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Filtrar por tipo de página",
 		fr: "Filtrer par type de page",
 		de: "Nach Seitentyp filtern",
@@ -1559,6 +1698,7 @@ export const pageLabels = {
 	},
 	"pages.filterByKindAria": {
 		en: "Filter pages by kind",
+		ar: "Filter pages by kind", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Filtrar páginas por tipo",
 		fr: "Filtrer les pages par type",
 		de: "Seiten nach Typ filtern",
@@ -1570,6 +1710,7 @@ export const pageLabels = {
 	},
 	"pages.allKinds": {
 		en: "All kinds",
+		ar: "All kinds", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Todos los tipos",
 		fr: "Tous les types",
 		de: "Alle Typen",
@@ -1581,6 +1722,7 @@ export const pageLabels = {
 	},
 	"pages.kind": {
 		en: "Kind",
+		ar: "Kind", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Tipo",
 		fr: "Type",
 		de: "Typ",
@@ -1592,6 +1734,7 @@ export const pageLabels = {
 	},
 	"pages.pagesList": {
 		en: "Pages list",
+		ar: "Pages list", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Lista de páginas",
 		fr: "Liste des pages",
 		de: "Seitenliste",
@@ -1603,6 +1746,7 @@ export const pageLabels = {
 	},
 	"pages.noMatch": {
 		en: "No pages match the current filters.",
+		ar: "No pages match the current filters.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Ninguna página coincide con los filtros actuales.",
 		fr: "Aucune page ne correspond aux filtres actuels.",
 		de: "Keine Seiten entsprechen den aktuellen Filtern.",
@@ -1614,6 +1758,7 @@ export const pageLabels = {
 	},
 	"pages.noMatchOr": {
 		en: "or",
+		ar: "or", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "o",
 		fr: "ou",
 		de: "oder",
@@ -1625,6 +1770,7 @@ export const pageLabels = {
 	},
 	"pages.createNewPage": {
 		en: "create a new page",
+		ar: "create a new page", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "crear una nueva página",
 		fr: "créer une nouvelle page",
 		de: "neue Seite erstellen",
@@ -1636,6 +1782,7 @@ export const pageLabels = {
 	},
 	"pages.editArchive": {
 		en: "Edit archive",
+		ar: "Edit archive", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Editar archivo",
 		fr: "Modifier l'archive",
 		de: "Archiv bearbeiten",
@@ -1647,6 +1794,7 @@ export const pageLabels = {
 	},
 	"pages.editPageRow": {
 		en: "Edit page",
+		ar: "Edit page", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Editar página",
 		fr: "Modifier la page",
 		de: "Seite bearbeiten",
@@ -1658,6 +1806,7 @@ export const pageLabels = {
 	},
 	"pages.editRoutePage": {
 		en: "Edit route page",
+		ar: "Edit route page", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Editar página de ruta",
 		fr: "Modifier la page de route",
 		de: "Routenseite bearbeiten",
@@ -1669,6 +1818,7 @@ export const pageLabels = {
 	},
 	"pages.openPage": {
 		en: "Open page",
+		ar: "Open page", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Abrir página",
 		fr: "Ouvrir la page",
 		de: "Seite öffnen",
@@ -1680,6 +1830,7 @@ export const pageLabels = {
 	},
 	"pages.seeded": {
 		en: "Seeded",
+		ar: "Seeded", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Sembrado",
 		fr: "Initialisé",
 		de: "Vorinstalliert",
@@ -1691,6 +1842,7 @@ export const pageLabels = {
 	},
 	"pages.forbidden.description": {
 		en: "This action requires an admin account.",
+		ar: "This action requires an admin account.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Esta acción requiere una cuenta de administración.",
 		fr: "Cette action nécessite un compte administrateur.",
 		de: "Diese Aktion erfordert ein Admin-Konto.",
@@ -1702,6 +1854,7 @@ export const pageLabels = {
 	},
 	"pages.forbidden.body": {
 		en: "This action requires an admin account and is hidden from editor-only roles.",
+		ar: "This action requires an admin account and is hidden from editor-only roles.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Esta acción requiere una cuenta de administración y está oculta para roles solo de editor.",
 		fr: "Cette action nécessite un compte administrateur et est masquée pour les rôles éditeur uniquement.",
 		de: "Diese Aktion erfordert ein Admin-Konto und ist für reine Editor-Rollen ausgeblendet.",
@@ -1715,6 +1868,7 @@ export const pageLabels = {
 	// ── Media library ───────────────────────────────────────────────────────
 	"media.description": {
 		en: "Media management with familiar grid and list affordances.",
+		ar: "Media management with familiar grid and list affordances.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Gestión de medios con vista en cuadrícula y lista familiares.",
 		fr: "Gestion des médias avec affichages en grille et en liste familiers.",
 		de: "Medienverwaltung mit vertrauten Raster- und Listenansichten.",
@@ -1726,6 +1880,7 @@ export const pageLabels = {
 	},
 	"media.partialResults": {
 		en: "Some media data is temporarily unavailable. This page is showing partial results.",
+		ar: "Some media data is temporarily unavailable. This page is showing partial results.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Algunos datos de medios no están disponibles temporalmente. Esta página muestra resultados parciales.",
 		fr: "Certaines données médias sont temporairement indisponibles. Cette page affiche des résultats partiels.",
 		de: "Einige Mediendaten sind vorübergehend nicht verfügbar. Diese Seite zeigt Teilergebnisse.",
@@ -1737,6 +1892,7 @@ export const pageLabels = {
 	},
 	"media.savedSuccess": {
 		en: "The media library was updated successfully.",
+		ar: "The media library was updated successfully.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "La biblioteca de medios se actualizó correctamente.",
 		fr: "La bibliothèque média a été mise à jour avec succès.",
 		de: "Die Medienbibliothek wurde erfolgreich aktualisiert.",
@@ -1748,6 +1904,7 @@ export const pageLabels = {
 	},
 	"media.deletedSuccess": {
 		en: "The media asset was deleted successfully.",
+		ar: "The media asset was deleted successfully.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "El recurso de medios se eliminó correctamente.",
 		fr: "Le média a été supprimé avec succès.",
 		de: "Das Medien-Asset wurde erfolgreich gelöscht.",
@@ -1759,6 +1916,7 @@ export const pageLabels = {
 	},
 	"media.totalAssets": {
 		en: "Total assets",
+		ar: "Total assets", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Recursos totales",
 		fr: "Total des médias",
 		de: "Gesamte Assets",
@@ -1770,6 +1928,7 @@ export const pageLabels = {
 	},
 	"media.totalAssetsDesc": {
 		en: "Images currently available in the media library.",
+		ar: "Images currently available in the media library.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Imágenes actualmente disponibles en la biblioteca de medios.",
 		fr: "Images actuellement disponibles dans la bibliothèque médias.",
 		de: "Bilder, die derzeit in der Medienbibliothek verfügbar sind.",
@@ -1781,6 +1940,7 @@ export const pageLabels = {
 	},
 	"media.missingAlt": {
 		en: "Missing alt text",
+		ar: "Missing alt text", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Falta texto alternativo",
 		fr: "Texte alternatif manquant",
 		de: "Alternativtext fehlt",
@@ -1792,6 +1952,7 @@ export const pageLabels = {
 	},
 	"media.missingAltDesc": {
 		en: "Assets that still need accessible alternative text.",
+		ar: "Assets that still need accessible alternative text.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Recursos que aún necesitan texto alternativo accesible.",
 		fr: "Médias qui ont encore besoin d'un texte alternatif accessible.",
 		de: "Assets, die noch zugänglichen Alternativtext benötigen.",
@@ -1803,6 +1964,7 @@ export const pageLabels = {
 	},
 	"media.addAssets": {
 		en: "Add Assets",
+		ar: "Add Assets", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Añadir recursos",
 		fr: "Ajouter des médias",
 		de: "Assets hinzufügen",
@@ -1814,6 +1976,7 @@ export const pageLabels = {
 	},
 	"media.uploadMedia": {
 		en: "Upload Media",
+		ar: "Upload Media", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Subir medios",
 		fr: "Téléverser un média",
 		de: "Medien hochladen",
@@ -1825,6 +1988,7 @@ export const pageLabels = {
 	},
 	"media.uploadDesc": {
 		en: "Add a new image asset, then update its title and alt text from the asset table below.",
+		ar: "Add a new image asset, then update its title and alt text from the asset table below.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Agrega un nuevo recurso de imagen y luego actualiza su título y texto alternativo en la tabla siguiente.",
 		fr: "Ajoutez un nouveau média image, puis mettez à jour son titre et son texte alternatif dans le tableau ci-dessous.",
 		de: "Fügen Sie ein neues Bild-Asset hinzu und aktualisieren Sie Titel und Alt-Text in der Tabelle unten.",
@@ -1836,6 +2000,7 @@ export const pageLabels = {
 	},
 	"media.file": {
 		en: "File",
+		ar: "File", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Archivo",
 		fr: "Fichier",
 		de: "Datei",
@@ -1847,6 +2012,7 @@ export const pageLabels = {
 	},
 	"media.altText": {
 		en: "Alt text",
+		ar: "Alt text", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Texto alternativo",
 		fr: "Texte alternatif",
 		de: "Alternativtext",
@@ -1858,6 +2024,7 @@ export const pageLabels = {
 	},
 	"media.uploadButton": {
 		en: "Upload media",
+		ar: "Upload media", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Subir medios",
 		fr: "Téléverser",
 		de: "Medien hochladen",
@@ -1869,6 +2036,7 @@ export const pageLabels = {
 	},
 	"media.uploading": {
 		en: "Uploading file...",
+		ar: "Uploading file...", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Subiendo archivo...",
 		fr: "Téléversement…",
 		de: "Datei wird hochgeladen…",
@@ -1880,6 +2048,7 @@ export const pageLabels = {
 	},
 	"media.browse": {
 		en: "Browse",
+		ar: "Browse", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Explorar",
 		fr: "Parcourir",
 		de: "Durchsuchen",
@@ -1891,6 +2060,7 @@ export const pageLabels = {
 	},
 	"media.libraryGrid": {
 		en: "Library Grid",
+		ar: "Library Grid", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Cuadrícula de la biblioteca",
 		fr: "Grille de la bibliothèque",
 		de: "Bibliotheksraster",
@@ -1902,6 +2072,7 @@ export const pageLabels = {
 	},
 	"media.libraryGridDesc": {
 		en: "Quick scan of current assets and the filenames editors are most likely to recognize.",
+		ar: "Quick scan of current assets and the filenames editors are most likely to recognize.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Vista rápida de los recursos actuales y los nombres de archivo que los editores reconocerán.",
 		fr: "Aperçu rapide des médias actuels et des noms de fichier que les éditeurs reconnaissent.",
 		de: "Schneller Überblick über aktuelle Assets und Dateinamen, die Editoren am ehesten erkennen.",
@@ -1913,6 +2084,7 @@ export const pageLabels = {
 	},
 	"media.noAssets": {
 		en: "No media assets yet. Use the upload form above to add images.",
+		ar: "No media assets yet. Use the upload form above to add images.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Aún no hay recursos de medios. Usa el formulario de arriba para añadir imágenes.",
 		fr: "Aucun média pour le moment. Utilisez le formulaire ci-dessus pour ajouter des images.",
 		de: "Noch keine Medien-Assets. Verwenden Sie das Formular oben, um Bilder hinzuzufügen.",
@@ -1924,6 +2096,7 @@ export const pageLabels = {
 	},
 	"media.metadata": {
 		en: "Metadata",
+		ar: "Metadata", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Metadatos",
 		fr: "Métadonnées",
 		de: "Metadaten",
@@ -1935,6 +2108,7 @@ export const pageLabels = {
 	},
 	"media.libraryList": {
 		en: "Library List",
+		ar: "Library List", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Lista de la biblioteca",
 		fr: "Liste de la bibliothèque",
 		de: "Bibliotheksliste",
@@ -1946,6 +2120,7 @@ export const pageLabels = {
 	},
 	"media.libraryListDesc": {
 		en: "Update metadata and remove assets from the detailed asset table below.",
+		ar: "Update metadata and remove assets from the detailed asset table below.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Actualiza metadatos y elimina recursos desde la tabla detallada de abajo.",
 		fr: "Mettez à jour les métadonnées et supprimez les médias depuis le tableau détaillé ci-dessous.",
 		de: "Aktualisieren Sie Metadaten und entfernen Sie Assets aus der detaillierten Tabelle unten.",
@@ -1957,6 +2132,7 @@ export const pageLabels = {
 	},
 	"media.preview": {
 		en: "Preview",
+		ar: "Preview", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Vista previa",
 		fr: "Aperçu",
 		de: "Vorschau",
@@ -1968,6 +2144,7 @@ export const pageLabels = {
 	},
 	"media.titleAlt": {
 		en: "Title / Alt",
+		ar: "Title / Alt", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Título / Alt",
 		fr: "Titre / Alt",
 		de: "Titel / Alt",
@@ -1979,6 +2156,7 @@ export const pageLabels = {
 	},
 	"media.localPath": {
 		en: "Local Path",
+		ar: "Local Path", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Ruta local",
 		fr: "Chemin local",
 		de: "Lokaler Pfad",
@@ -1990,6 +2168,7 @@ export const pageLabels = {
 	},
 	"media.r2Key": {
 		en: "R2 Key",
+		ar: "R2 Key", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Clave R2",
 		fr: "Clé R2",
 		de: "R2-Schlüssel",
@@ -2001,6 +2180,7 @@ export const pageLabels = {
 	},
 	"media.sourceUrl": {
 		en: "Source URL",
+		ar: "Source URL", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "URL de origen",
 		fr: "URL source",
 		de: "Quell-URL",
@@ -2012,6 +2192,7 @@ export const pageLabels = {
 	},
 	"media.noAlt": {
 		en: "No alt text yet",
+		ar: "No alt text yet", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Sin texto alternativo",
 		fr: "Aucun texte alternatif",
 		de: "Noch kein Alt-Text",
@@ -2023,6 +2204,7 @@ export const pageLabels = {
 	},
 	"media.saveMetadata": {
 		en: "Save metadata",
+		ar: "Save metadata", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Guardar metadatos",
 		fr: "Enregistrer les métadonnées",
 		de: "Metadaten speichern",
@@ -2034,6 +2216,7 @@ export const pageLabels = {
 	},
 	"media.delete": {
 		en: "Delete",
+		ar: "Delete", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Eliminar",
 		fr: "Supprimer",
 		de: "Löschen",
@@ -2045,6 +2228,7 @@ export const pageLabels = {
 	},
 	"media.deleteDialogTitle": {
 		en: "Delete media asset?",
+		ar: "Delete media asset?", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "¿Eliminar el recurso de medios?",
 		fr: "Supprimer ce média ?",
 		de: "Medien-Asset löschen?",
@@ -2056,6 +2240,7 @@ export const pageLabels = {
 	},
 	"media.deleteDialogBody": {
 		en: "Are you sure you want to delete this media asset?",
+		ar: "Are you sure you want to delete this media asset?", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "¿Seguro que quieres eliminar este recurso de medios?",
 		fr: "Voulez-vous vraiment supprimer ce média ?",
 		de: "Möchten Sie dieses Medien-Asset wirklich löschen?",
@@ -2067,6 +2252,7 @@ export const pageLabels = {
 	},
 	"media.deleteWarning": {
 		en: "This action cannot be undone.",
+		ar: "This action cannot be undone.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Esta acción no se puede deshacer.",
 		fr: "Cette action est irréversible.",
 		de: "Diese Aktion kann nicht rückgängig gemacht werden.",
@@ -2078,6 +2264,7 @@ export const pageLabels = {
 	},
 	"media.cancel": {
 		en: "Cancel",
+		ar: "Cancel", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Cancelar",
 		fr: "Annuler",
 		de: "Abbrechen",
@@ -2089,6 +2276,7 @@ export const pageLabels = {
 	},
 	"media.deleteAsset": {
 		en: "Delete Asset",
+		ar: "Delete Asset", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Eliminar recurso",
 		fr: "Supprimer le média",
 		de: "Asset löschen",
@@ -2100,6 +2288,7 @@ export const pageLabels = {
 	},
 	"media.assets": {
 		en: "Media assets",
+		ar: "Media assets", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Recursos de medios",
 		fr: "Médias",
 		de: "Medien-Assets",
@@ -2111,6 +2300,7 @@ export const pageLabels = {
 	},
 	"media.id": {
 		en: "ID",
+		ar: "ID", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "ID",
 		fr: "ID",
 		de: "ID",
@@ -2122,6 +2312,7 @@ export const pageLabels = {
 	},
 	"media.fileAria": {
 		en: "Media file",
+		ar: "Media file", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Archivo de medios",
 		fr: "Fichier média",
 		de: "Mediendatei",
@@ -2133,6 +2324,7 @@ export const pageLabels = {
 	},
 	"media.titleAria": {
 		en: "Media title",
+		ar: "Media title", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Título del medio",
 		fr: "Titre du média",
 		de: "Medien-Titel",
@@ -2144,6 +2336,7 @@ export const pageLabels = {
 	},
 	"media.altAria": {
 		en: "Media alt text",
+		ar: "Media alt text", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Texto alternativo del medio",
 		fr: "Texte alternatif du média",
 		de: "Medien-Alternativtext",
@@ -2155,6 +2348,7 @@ export const pageLabels = {
 	},
 	"media.fileRequired": {
 		en: "Please select an image file",
+		ar: "Please select an image file", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Selecciona un archivo de imagen",
 		fr: "Veuillez sélectionner un fichier image",
 		de: "Bitte wählen Sie eine Bilddatei aus",
@@ -2168,6 +2362,7 @@ export const pageLabels = {
 	// ── Comments ────────────────────────────────────────────────────────────
 	"comments.description": {
 		en: "Moderate pending, approved, and rejected comment records.",
+		ar: "Moderate pending, approved, and rejected comment records.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Modera comentarios pendientes, aprobados y rechazados.",
 		fr: "Modérez les commentaires en attente, approuvés et rejetés.",
 		de: "Moderieren Sie ausstehende, genehmigte und abgelehnte Kommentare.",
@@ -2179,6 +2374,7 @@ export const pageLabels = {
 	},
 	"comments.partialResults": {
 		en: "Some comment data is temporarily unavailable. This page is showing partial results.",
+		ar: "Some comment data is temporarily unavailable. This page is showing partial results.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Algunos datos de comentarios no están disponibles temporalmente. Esta página muestra resultados parciales.",
 		fr: "Certaines données de commentaire sont temporairement indisponibles. Cette page affiche des résultats partiels.",
 		de: "Einige Kommentardaten sind vorübergehend nicht verfügbar. Diese Seite zeigt Teilergebnisse.",
@@ -2190,6 +2386,7 @@ export const pageLabels = {
 	},
 	"comments.savedSuccess": {
 		en: "The comment moderation state was updated successfully.",
+		ar: "The comment moderation state was updated successfully.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "El estado de moderación del comentario se actualizó correctamente.",
 		fr: "L'état de modération du commentaire a été mis à jour avec succès.",
 		de: "Der Moderationsstatus des Kommentars wurde erfolgreich aktualisiert.",
@@ -2201,6 +2398,7 @@ export const pageLabels = {
 	},
 	"comments.totalComments": {
 		en: "Total comments",
+		ar: "Total comments", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Comentarios totales",
 		fr: "Total des commentaires",
 		de: "Gesamtzahl Kommentare",
@@ -2212,6 +2410,7 @@ export const pageLabels = {
 	},
 	"comments.totalCommentsDesc": {
 		en: "Comment records currently available for moderation.",
+		ar: "Comment records currently available for moderation.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Registros de comentarios actualmente disponibles para moderación.",
 		fr: "Enregistrements de commentaires actuellement disponibles pour modération.",
 		de: "Kommentardatensätze, die derzeit zur Moderation verfügbar sind.",
@@ -2223,6 +2422,7 @@ export const pageLabels = {
 	},
 	"comments.pendingReview": {
 		en: "Pending review",
+		ar: "Pending review", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Pendiente de revisión",
 		fr: "En attente de révision",
 		de: "Ausstehende Prüfung",
@@ -2234,6 +2434,7 @@ export const pageLabels = {
 	},
 	"comments.pendingReviewDesc": {
 		en: "Comments still waiting for an explicit moderation decision.",
+		ar: "Comments still waiting for an explicit moderation decision.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Comentarios aún en espera de una decisión explícita de moderación.",
 		fr: "Commentaires en attente d'une décision de modération explicite.",
 		de: "Kommentare, die noch auf eine ausdrückliche Moderationsentscheidung warten.",
@@ -2245,6 +2446,7 @@ export const pageLabels = {
 	},
 	"comments.moderation": {
 		en: "Moderation",
+		ar: "Moderation", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Moderación",
 		fr: "Modération",
 		de: "Moderation",
@@ -2256,6 +2458,7 @@ export const pageLabels = {
 	},
 	"comments.moderationQueue": {
 		en: "Moderation Queue",
+		ar: "Moderation Queue", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Cola de moderación",
 		fr: "File de modération",
 		de: "Moderations-Warteschlange",
@@ -2267,6 +2470,7 @@ export const pageLabels = {
 	},
 	"comments.moderationQueueDesc": {
 		en: "Review public comments and approve or reject them without leaving the queue.",
+		ar: "Review public comments and approve or reject them without leaving the queue.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Revisa comentarios públicos y apruébalos o recházalos sin salir de la cola.",
 		fr: "Examinez les commentaires publics et approuvez ou rejetez sans quitter la file.",
 		de: "Prüfen Sie öffentliche Kommentare und genehmigen oder lehnen Sie sie ohne Verlassen der Warteschlange ab.",
@@ -2278,6 +2482,7 @@ export const pageLabels = {
 	},
 	"comments.queueAria": {
 		en: "Comments queue",
+		ar: "Comments queue", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Cola de comentarios",
 		fr: "File des commentaires",
 		de: "Kommentar-Warteschlange",
@@ -2289,6 +2494,7 @@ export const pageLabels = {
 	},
 	"comments.author": {
 		en: "Author",
+		ar: "Author", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Autor",
 		fr: "Auteur",
 		de: "Autor",
@@ -2300,6 +2506,7 @@ export const pageLabels = {
 	},
 	"comments.route": {
 		en: "Route",
+		ar: "Route", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Ruta",
 		fr: "Route",
 		de: "Route",
@@ -2311,6 +2518,7 @@ export const pageLabels = {
 	},
 	"comments.policy": {
 		en: "Policy",
+		ar: "Policy", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Política",
 		fr: "Politique",
 		de: "Richtlinie",
@@ -2322,6 +2530,7 @@ export const pageLabels = {
 	},
 	"comments.action": {
 		en: "Action",
+		ar: "Action", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Acción",
 		fr: "Action",
 		de: "Aktion",
@@ -2333,6 +2542,7 @@ export const pageLabels = {
 	},
 	"comments.empty": {
 		en: "No comments to moderate. Comments will appear here when visitors leave them on your posts.",
+		ar: "No comments to moderate. Comments will appear here when visitors leave them on your posts.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "No hay comentarios para moderar. Los comentarios aparecerán aquí cuando los visitantes los dejen en tus entradas.",
 		fr: "Aucun commentaire à modérer. Les commentaires apparaîtront ici lorsque des visiteurs en laisseront sur vos articles.",
 		de: "Keine Kommentare zum Moderieren. Kommentare erscheinen hier, sobald Besucher sie hinterlassen.",
@@ -2344,6 +2554,7 @@ export const pageLabels = {
 	},
 	"comments.approve": {
 		en: "Approve",
+		ar: "Approve", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Aprobar",
 		fr: "Approuver",
 		de: "Genehmigen",
@@ -2355,6 +2566,7 @@ export const pageLabels = {
 	},
 	"comments.reject": {
 		en: "Reject",
+		ar: "Reject", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Rechazar",
 		fr: "Rejeter",
 		de: "Ablehnen",
@@ -2366,6 +2578,7 @@ export const pageLabels = {
 	},
 	"comments.rejectDialogTitle": {
 		en: "Reject comment?",
+		ar: "Reject comment?", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "¿Rechazar comentario?",
 		fr: "Rejeter le commentaire ?",
 		de: "Kommentar ablehnen?",
@@ -2377,6 +2590,7 @@ export const pageLabels = {
 	},
 	"comments.rejectDialogBody": {
 		en: "Are you sure you want to reject this comment? It will be removed from the queue.",
+		ar: "Are you sure you want to reject this comment? It will be removed from the queue.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "¿Seguro que quieres rechazar este comentario? Se eliminará de la cola.",
 		fr: "Voulez-vous vraiment rejeter ce commentaire ? Il sera retiré de la file.",
 		de: "Möchten Sie diesen Kommentar wirklich ablehnen? Er wird aus der Warteschlange entfernt.",
@@ -2388,6 +2602,7 @@ export const pageLabels = {
 	},
 	"comments.cancel": {
 		en: "Cancel",
+		ar: "Cancel", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Cancelar",
 		fr: "Annuler",
 		de: "Abbrechen",
@@ -2399,6 +2614,7 @@ export const pageLabels = {
 	},
 	"comments.statusPending": {
 		en: "pending",
+		ar: "pending", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "pendiente",
 		fr: "en attente",
 		de: "ausstehend",
@@ -2410,6 +2626,7 @@ export const pageLabels = {
 	},
 	"comments.statusApproved": {
 		en: "approved",
+		ar: "approved", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "aprobado",
 		fr: "approuvé",
 		de: "genehmigt",
@@ -2421,6 +2638,7 @@ export const pageLabels = {
 	},
 	"comments.statusRejected": {
 		en: "rejected",
+		ar: "rejected", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "rechazado",
 		fr: "rejeté",
 		de: "abgelehnt",
@@ -2432,6 +2650,7 @@ export const pageLabels = {
 	},
 	"comments.policyOpenModerated": {
 		en: "open-moderated",
+		ar: "open-moderated", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "abierto-moderado",
 		fr: "ouvert-modéré",
 		de: "offen-moderiert",
@@ -2445,6 +2664,7 @@ export const pageLabels = {
 	// ── Redirects ───────────────────────────────────────────────────────────
 	"redirects.description": {
 		en: "Reviewed redirect rules are manageable as product data.",
+		ar: "Reviewed redirect rules are manageable as product data.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Las reglas de redirección revisadas son gestionables como datos de producto.",
 		fr: "Les règles de redirection révisées sont gérables comme des données produit.",
 		de: "Geprüfte Weiterleitungsregeln sind als Produktdaten verwaltbar.",
@@ -2456,6 +2676,7 @@ export const pageLabels = {
 	},
 	"redirects.partialResults": {
 		en: "Some redirect data is temporarily unavailable. This page is showing partial results.",
+		ar: "Some redirect data is temporarily unavailable. This page is showing partial results.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Algunos datos de redirección no están disponibles temporalmente. Esta página muestra resultados parciales.",
 		fr: "Certaines données de redirection sont temporairement indisponibles. Cette page affiche des résultats partiels.",
 		de: "Einige Weiterleitungsdaten sind vorübergehend nicht verfügbar. Diese Seite zeigt Teilergebnisse.",
@@ -2467,6 +2688,7 @@ export const pageLabels = {
 	},
 	"redirects.addRule": {
 		en: "Add rule",
+		ar: "Add rule", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Añadir regla",
 		fr: "Ajouter une règle",
 		de: "Regel hinzufügen",
@@ -2478,6 +2700,7 @@ export const pageLabels = {
 	},
 	"redirects.create": {
 		en: "Create Redirect",
+		ar: "Create Redirect", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Crear redirección",
 		fr: "Créer une redirection",
 		de: "Weiterleitung erstellen",
@@ -2489,6 +2712,7 @@ export const pageLabels = {
 	},
 	"redirects.newRule": {
 		en: "New Redirect Rule",
+		ar: "New Redirect Rule", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Nueva regla de redirección",
 		fr: "Nouvelle règle de redirection",
 		de: "Neue Weiterleitungsregel",
@@ -2500,6 +2724,7 @@ export const pageLabels = {
 	},
 	"redirects.newRuleDesc": {
 		en: "Add reviewed redirects as product data so old URLs stay intentional.",
+		ar: "Add reviewed redirects as product data so old URLs stay intentional.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Añade redirecciones revisadas como datos de producto para mantener intencionales las URL antiguas.",
 		fr: "Ajoutez des redirections révisées en tant que données produit pour que les anciennes URL restent intentionnelles.",
 		de: "Fügen Sie geprüfte Weiterleitungen als Produktdaten hinzu, damit alte URLs absichtlich bleiben.",
@@ -2511,6 +2736,7 @@ export const pageLabels = {
 	},
 	"redirects.legacyPath": {
 		en: "Legacy path",
+		ar: "Legacy path", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Ruta heredada",
 		fr: "Chemin hérité",
 		de: "Alter Pfad",
@@ -2522,6 +2748,7 @@ export const pageLabels = {
 	},
 	"redirects.targetPath": {
 		en: "Target path",
+		ar: "Target path", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Ruta destino",
 		fr: "Chemin cible",
 		de: "Zielpfad",
@@ -2533,6 +2760,7 @@ export const pageLabels = {
 	},
 	"redirects.statusCode": {
 		en: "Status code",
+		ar: "Status code", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Código de estado",
 		fr: "Code de statut",
 		de: "Statuscode",
@@ -2544,6 +2772,7 @@ export const pageLabels = {
 	},
 	"redirects.saveRule": {
 		en: "Save rule",
+		ar: "Save rule", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Guardar regla",
 		fr: "Enregistrer la règle",
 		de: "Regel speichern",
@@ -2555,6 +2784,7 @@ export const pageLabels = {
 	},
 	"redirects.inventory": {
 		en: "Redirect Inventory",
+		ar: "Redirect Inventory", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Inventario de redirecciones",
 		fr: "Inventaire des redirections",
 		de: "Weiterleitungs-Inventar",
@@ -2566,6 +2796,7 @@ export const pageLabels = {
 	},
 	"redirects.reviewedRules": {
 		en: "Reviewed Redirect Rules",
+		ar: "Reviewed Redirect Rules", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Reglas de redirección revisadas",
 		fr: "Règles de redirection révisées",
 		de: "Geprüfte Weiterleitungsregeln",
@@ -2577,6 +2808,7 @@ export const pageLabels = {
 	},
 	"redirects.reviewedRulesDesc": {
 		en: "Delete only when a route is intentionally retired or replaced elsewhere.",
+		ar: "Delete only when a route is intentionally retired or replaced elsewhere.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Elimina solo cuando una ruta se retira intencionalmente o se reemplaza en otro lugar.",
 		fr: "Supprimez uniquement lorsqu'une route est intentionnellement retirée ou remplacée ailleurs.",
 		de: "Nur löschen, wenn eine Route absichtlich entfernt oder anderswo ersetzt wird.",
@@ -2588,6 +2820,7 @@ export const pageLabels = {
 	},
 	"redirects.legacy": {
 		en: "Legacy",
+		ar: "Legacy", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Heredado",
 		fr: "Hérité",
 		de: "Alt",
@@ -2599,6 +2832,7 @@ export const pageLabels = {
 	},
 	"redirects.target": {
 		en: "Target",
+		ar: "Target", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Destino",
 		fr: "Cible",
 		de: "Ziel",
@@ -2610,6 +2844,7 @@ export const pageLabels = {
 	},
 	"redirects.delete": {
 		en: "Delete",
+		ar: "Delete", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Eliminar",
 		fr: "Supprimer",
 		de: "Löschen",
@@ -2621,6 +2856,7 @@ export const pageLabels = {
 	},
 	"redirects.copy": {
 		en: "Copy",
+		ar: "Copy", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Copiar",
 		fr: "Copier",
 		de: "Kopieren",
@@ -2632,6 +2868,7 @@ export const pageLabels = {
 	},
 	"redirects.empty": {
 		en: "No redirects yet. Add one above.",
+		ar: "No redirects yet. Add one above.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Aún no hay redirecciones. Añade una arriba.",
 		fr: "Aucune redirection pour le moment. Ajoutez-en une ci-dessus.",
 		de: "Noch keine Weiterleitungen. Fügen Sie oben eine hinzu.",
@@ -2643,6 +2880,7 @@ export const pageLabels = {
 	},
 	"redirects.deleteDialogTitle": {
 		en: "Delete redirect rule?",
+		ar: "Delete redirect rule?", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "¿Eliminar regla de redirección?",
 		fr: "Supprimer la règle de redirection ?",
 		de: "Weiterleitungsregel löschen?",
@@ -2654,6 +2892,7 @@ export const pageLabels = {
 	},
 	"redirects.deleteDialogBody": {
 		en: "Are you sure you want to delete this redirect rule?",
+		ar: "Are you sure you want to delete this redirect rule?", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "¿Seguro que quieres eliminar esta regla de redirección?",
 		fr: "Voulez-vous vraiment supprimer cette règle de redirection ?",
 		de: "Möchten Sie diese Weiterleitungsregel wirklich löschen?",
@@ -2665,6 +2904,7 @@ export const pageLabels = {
 	},
 	"redirects.deleteWarning": {
 		en: "This action cannot be undone.",
+		ar: "This action cannot be undone.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Esta acción no se puede deshacer.",
 		fr: "Cette action est irréversible.",
 		de: "Diese Aktion kann nicht rückgängig gemacht werden.",
@@ -2676,6 +2916,7 @@ export const pageLabels = {
 	},
 	"redirects.cancel": {
 		en: "Cancel",
+		ar: "Cancel", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Cancelar",
 		fr: "Annuler",
 		de: "Abbrechen",
@@ -2687,6 +2928,7 @@ export const pageLabels = {
 	},
 	"redirects.deleteRule": {
 		en: "Delete rule",
+		ar: "Delete rule", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Eliminar regla",
 		fr: "Supprimer la règle",
 		de: "Regel löschen",
@@ -2698,6 +2940,7 @@ export const pageLabels = {
 	},
 	"redirects.savedSuccess": {
 		en: "The reviewed redirect rule was added successfully.",
+		ar: "The reviewed redirect rule was added successfully.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "La regla de redirección revisada se añadió correctamente.",
 		fr: "La règle de redirection révisée a été ajoutée avec succès.",
 		de: "Die geprüfte Weiterleitungsregel wurde erfolgreich hinzugefügt.",
@@ -2709,6 +2952,7 @@ export const pageLabels = {
 	},
 	"redirects.deletedSuccess": {
 		en: "The redirect rule was deleted successfully.",
+		ar: "The redirect rule was deleted successfully.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "La regla de redirección se eliminó correctamente.",
 		fr: "La règle de redirection a été supprimée avec succès.",
 		de: "Die Weiterleitungsregel wurde erfolgreich gelöscht.",
@@ -2720,6 +2964,7 @@ export const pageLabels = {
 	},
 	"redirects.tableAria": {
 		en: "Redirect rules",
+		ar: "Redirect rules", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Reglas de redirección",
 		fr: "Règles de redirection",
 		de: "Weiterleitungsregeln",
@@ -2733,6 +2978,7 @@ export const pageLabels = {
 	// ── Audit trail (shared component) ──────────────────────────────────────
 	"audit.recentTrail": {
 		en: "Recent Audit Trail",
+		ar: "Recent Audit Trail", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Registro de auditoría reciente",
 		fr: "Journal d'audit récent",
 		de: "Aktuelles Audit-Protokoll",
@@ -2744,6 +2990,7 @@ export const pageLabels = {
 	},
 	"audit.empty": {
 		en: "No audit events have been recorded in this session yet.",
+		ar: "No audit events have been recorded in this session yet.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Aún no se han registrado eventos de auditoría en esta sesión.",
 		fr: "Aucun événement d'audit n'a été enregistré dans cette session.",
 		de: "In dieser Sitzung wurden noch keine Audit-Ereignisse erfasst.",
@@ -2755,6 +3002,7 @@ export const pageLabels = {
 	},
 	"audit.mediaAudit": {
 		en: "Media Audit",
+		ar: "Media Audit", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Auditoría de medios",
 		fr: "Audit des médias",
 		de: "Medien-Audit",
@@ -2768,6 +3016,7 @@ export const pageLabels = {
 	// ── Authors ─────────────────────────────────────────────────────────────
 	"authors.title": {
 		en: "Authors",
+		ar: "Authors", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Autores",
 		fr: "Auteurs",
 		de: "Autoren",
@@ -2779,6 +3028,7 @@ export const pageLabels = {
 	},
 	"authors.description": {
 		en: "Manage reusable author records for editorial attribution.",
+		ar: "Manage reusable author records for editorial attribution.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Gestiona registros de autor reutilizables para atribución editorial.",
 		fr: "Gérez les fiches d'auteur réutilisables pour l'attribution éditoriale.",
 		de: "Verwalten Sie wiederverwendbare Autorendatensätze für die redaktionelle Zuordnung.",
@@ -2790,6 +3040,7 @@ export const pageLabels = {
 	},
 	"authors.partialResults": {
 		en: "Some author data is temporarily unavailable. This page is showing partial results.",
+		ar: "Some author data is temporarily unavailable. This page is showing partial results.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Algunos datos de autor no están disponibles temporalmente. Esta página muestra resultados parciales.",
 		fr: "Certaines données d'auteur sont temporairement indisponibles. Cette page affiche des résultats partiels.",
 		de: "Einige Autorendaten sind vorübergehend nicht verfügbar. Diese Seite zeigt Teilergebnisse.",
@@ -2801,6 +3052,7 @@ export const pageLabels = {
 	},
 	"authors.savedSuccess": {
 		en: "The author record was saved successfully.",
+		ar: "The author record was saved successfully.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "El registro de autor se guardó correctamente.",
 		fr: "La fiche d'auteur a été enregistrée avec succès.",
 		de: "Der Autorendatensatz wurde erfolgreich gespeichert.",
@@ -2812,6 +3064,7 @@ export const pageLabels = {
 	},
 	"authors.deletedSuccess": {
 		en: "The author record was deleted successfully.",
+		ar: "The author record was deleted successfully.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "El registro de autor se eliminó correctamente.",
 		fr: "La fiche d'auteur a été supprimée avec succès.",
 		de: "Der Autorendatensatz wurde erfolgreich gelöscht.",
@@ -2823,6 +3076,7 @@ export const pageLabels = {
 	},
 	"authors.deletedToast": {
 		en: "Author deleted.",
+		ar: "Author deleted.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Autor eliminado.",
 		fr: "Auteur supprimé.",
 		de: "Autor gelöscht.",
@@ -2834,6 +3088,7 @@ export const pageLabels = {
 	},
 	"authors.undo": {
 		en: "Undo",
+		ar: "Undo", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Deshacer",
 		fr: "Annuler",
 		de: "Rückgängig",
@@ -2845,6 +3100,7 @@ export const pageLabels = {
 	},
 	"authors.newAuthor": {
 		en: "New Author",
+		ar: "New Author", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Nuevo autor",
 		fr: "Nouvel auteur",
 		de: "Neuer Autor",
@@ -2856,6 +3112,7 @@ export const pageLabels = {
 	},
 	"authors.newAuthorDesc": {
 		en: "Create reusable attribution records for posts and legacy content.",
+		ar: "Create reusable attribution records for posts and legacy content.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Crea registros de atribución reutilizables para publicaciones y contenido heredado.",
 		fr: "Créez des fiches d'attribution réutilisables pour les articles et le contenu hérité.",
 		de: "Erstellen Sie wiederverwendbare Zuordnungsdatensätze für Beiträge und Bestandsinhalte.",
@@ -2867,6 +3124,7 @@ export const pageLabels = {
 	},
 	"authors.authorName": {
 		en: "Author name",
+		ar: "Author name", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Nombre del autor",
 		fr: "Nom de l'auteur",
 		de: "Autorenname",
@@ -2878,6 +3136,7 @@ export const pageLabels = {
 	},
 	"authors.slug": {
 		en: "Slug",
+		ar: "Slug", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Slug",
 		fr: "Slug",
 		de: "Slug",
@@ -2889,6 +3148,7 @@ export const pageLabels = {
 	},
 	"authors.authorSlug": {
 		en: "Author slug",
+		ar: "Author slug", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Slug del autor",
 		fr: "Slug de l'auteur",
 		de: "Autoren-Slug",
@@ -2900,6 +3160,7 @@ export const pageLabels = {
 	},
 	"authors.bio": {
 		en: "Bio",
+		ar: "Bio", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Biografía",
 		fr: "Bio",
 		de: "Bio",
@@ -2911,6 +3172,7 @@ export const pageLabels = {
 	},
 	"authors.authorBio": {
 		en: "Author bio",
+		ar: "Author bio", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Biografía del autor",
 		fr: "Bio de l'auteur",
 		de: "Autorenbiografie",
@@ -2922,6 +3184,7 @@ export const pageLabels = {
 	},
 	"authors.bioPlaceholder": {
 		en: "Short author biography",
+		ar: "Short author biography", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Biografía breve del autor",
 		fr: "Brève biographie de l'auteur",
 		de: "Kurze Autorenbiografie",
@@ -2933,6 +3196,7 @@ export const pageLabels = {
 	},
 	"authors.saveAuthor": {
 		en: "Save author",
+		ar: "Save author", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Guardar autor",
 		fr: "Enregistrer l'auteur",
 		de: "Autor speichern",
@@ -2944,6 +3208,7 @@ export const pageLabels = {
 	},
 	"authors.listDesc": {
 		en: "Edit author details inline and remove records that are no longer needed.",
+		ar: "Edit author details inline and remove records that are no longer needed.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Edita los detalles del autor en línea y elimina los registros que ya no se necesitan.",
 		fr: "Modifiez les détails de l'auteur en ligne et supprimez les fiches qui ne sont plus nécessaires.",
 		de: "Bearbeiten Sie Autorendetails inline und entfernen Sie nicht mehr benötigte Datensätze.",
@@ -2955,6 +3220,7 @@ export const pageLabels = {
 	},
 	"authors.tableAria": {
 		en: "Authors",
+		ar: "Authors", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Autores",
 		fr: "Auteurs",
 		de: "Autoren",
@@ -2966,6 +3232,7 @@ export const pageLabels = {
 	},
 	"authors.thName": {
 		en: "Name",
+		ar: "Name", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Nombre",
 		fr: "Nom",
 		de: "Name",
@@ -2977,6 +3244,7 @@ export const pageLabels = {
 	},
 	"authors.thSlug": {
 		en: "Slug",
+		ar: "Slug", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Slug",
 		fr: "Slug",
 		de: "Slug",
@@ -2988,6 +3256,7 @@ export const pageLabels = {
 	},
 	"authors.thBio": {
 		en: "Bio",
+		ar: "Bio", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Biografía",
 		fr: "Bio",
 		de: "Bio",
@@ -2999,6 +3268,7 @@ export const pageLabels = {
 	},
 	"authors.edit": {
 		en: "Edit",
+		ar: "Edit", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Editar",
 		fr: "Modifier",
 		de: "Bearbeiten",
@@ -3010,6 +3280,7 @@ export const pageLabels = {
 	},
 	"authors.update": {
 		en: "Update",
+		ar: "Update", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Actualizar",
 		fr: "Mettre à jour",
 		de: "Aktualisieren",
@@ -3021,6 +3292,7 @@ export const pageLabels = {
 	},
 	"authors.delete": {
 		en: "Delete",
+		ar: "Delete", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Eliminar",
 		fr: "Supprimer",
 		de: "Löschen",
@@ -3032,6 +3304,7 @@ export const pageLabels = {
 	},
 	"authors.ariaName": {
 		en: "Name",
+		ar: "Name", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Nombre",
 		fr: "Nom",
 		de: "Name",
@@ -3043,6 +3316,7 @@ export const pageLabels = {
 	},
 	"authors.ariaSlug": {
 		en: "Slug",
+		ar: "Slug", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Slug",
 		fr: "Slug",
 		de: "Slug",
@@ -3054,6 +3328,7 @@ export const pageLabels = {
 	},
 	"authors.ariaBio": {
 		en: "Bio",
+		ar: "Bio", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Biografía",
 		fr: "Bio",
 		de: "Bio",
@@ -3065,6 +3340,7 @@ export const pageLabels = {
 	},
 	"authors.deleteDialogTitle": {
 		en: "Delete author?",
+		ar: "Delete author?", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "¿Eliminar autor?",
 		fr: "Supprimer l'auteur ?",
 		de: "Autor löschen?",
@@ -3076,6 +3352,7 @@ export const pageLabels = {
 	},
 	"authors.deleteConfirmPrefix": {
 		en: "Are you sure you want to delete ",
+		ar: "Are you sure you want to delete ", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "¿Seguro que quieres eliminar ",
 		fr: "Voulez-vous vraiment supprimer ",
 		de: "Möchten Sie wirklich ",
@@ -3087,6 +3364,7 @@ export const pageLabels = {
 	},
 	"authors.deleteConfirmSuffix": {
 		en: "?",
+		ar: "?", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "?",
 		fr: " ?",
 		de: " löschen?",
@@ -3098,6 +3376,7 @@ export const pageLabels = {
 	},
 	"authors.deleteWarning": {
 		en: "This action cannot be undone.",
+		ar: "This action cannot be undone.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Esta acción no se puede deshacer.",
 		fr: "Cette action est irréversible.",
 		de: "Diese Aktion kann nicht rückgängig gemacht werden.",
@@ -3109,6 +3388,7 @@ export const pageLabels = {
 	},
 	"authors.cancel": {
 		en: "Cancel",
+		ar: "Cancel", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Cancelar",
 		fr: "Annuler",
 		de: "Abbrechen",
@@ -3120,6 +3400,7 @@ export const pageLabels = {
 	},
 	"authors.deleteAuthor": {
 		en: "Delete Author",
+		ar: "Delete Author", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Eliminar autor",
 		fr: "Supprimer l'auteur",
 		de: "Autor löschen",
@@ -3131,6 +3412,7 @@ export const pageLabels = {
 	},
 	"authors.forbiddenTitle": {
 		en: "Forbidden",
+		ar: "Forbidden", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Prohibido",
 		fr: "Interdit",
 		de: "Verboten",
@@ -3144,6 +3426,7 @@ export const pageLabels = {
 	// ── Taxonomies ──────────────────────────────────────────────────────────
 	"taxonomies.title": {
 		en: "Taxonomies",
+		ar: "Taxonomies", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Taxonomías",
 		fr: "Taxonomies",
 		de: "Taxonomien",
@@ -3155,6 +3438,7 @@ export const pageLabels = {
 	},
 	"taxonomies.description": {
 		en: "Manage reusable categories and tags for future editorial workflows.",
+		ar: "Manage reusable categories and tags for future editorial workflows.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Gestiona categorías y etiquetas reutilizables para futuros flujos editoriales.",
 		fr: "Gérez les catégories et étiquettes réutilisables pour les futurs flux éditoriaux.",
 		de: "Verwalten Sie wiederverwendbare Kategorien und Tags für künftige redaktionelle Abläufe.",
@@ -3166,6 +3450,7 @@ export const pageLabels = {
 	},
 	"taxonomies.partialResults": {
 		en: "Some taxonomy data is temporarily unavailable. This page is showing partial results.",
+		ar: "Some taxonomy data is temporarily unavailable. This page is showing partial results.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Algunos datos de taxonomía no están disponibles temporalmente. Esta página muestra resultados parciales.",
 		fr: "Certaines données de taxonomie sont temporairement indisponibles. Cette page affiche des résultats partiels.",
 		de: "Einige Taxonomiedaten sind vorübergehend nicht verfügbar. Diese Seite zeigt Teilergebnisse.",
@@ -3177,6 +3462,7 @@ export const pageLabels = {
 	},
 	"taxonomies.savedSuccess": {
 		en: "The taxonomy term was saved successfully.",
+		ar: "The taxonomy term was saved successfully.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "El término de taxonomía se guardó correctamente.",
 		fr: "Le terme de taxonomie a été enregistré avec succès.",
 		de: "Der Taxonomiebegriff wurde erfolgreich gespeichert.",
@@ -3188,6 +3474,7 @@ export const pageLabels = {
 	},
 	"taxonomies.deletedSuccess": {
 		en: "The taxonomy term was deleted successfully.",
+		ar: "The taxonomy term was deleted successfully.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "El término de taxonomía se eliminó correctamente.",
 		fr: "Le terme de taxonomie a été supprimé avec succès.",
 		de: "Der Taxonomiebegriff wurde erfolgreich gelöscht.",
@@ -3199,6 +3486,7 @@ export const pageLabels = {
 	},
 	"taxonomies.deletedToast": {
 		en: "Taxonomy term deleted.",
+		ar: "Taxonomy term deleted.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Término de taxonomía eliminado.",
 		fr: "Terme de taxonomie supprimé.",
 		de: "Taxonomiebegriff gelöscht.",
@@ -3210,6 +3498,7 @@ export const pageLabels = {
 	},
 	"taxonomies.undo": {
 		en: "Undo",
+		ar: "Undo", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Deshacer",
 		fr: "Annuler",
 		de: "Rückgängig",
@@ -3221,6 +3510,7 @@ export const pageLabels = {
 	},
 	"taxonomies.categories": {
 		en: "Categories",
+		ar: "Categories", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Categorías",
 		fr: "Catégories",
 		de: "Kategorien",
@@ -3232,6 +3522,7 @@ export const pageLabels = {
 	},
 	"taxonomies.categoriesDesc": {
 		en: "Group posts into durable archive families and editorial buckets.",
+		ar: "Group posts into durable archive families and editorial buckets.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Agrupa publicaciones en familias de archivo duraderas y cubos editoriales.",
 		fr: "Regroupez les articles en familles d'archives durables et en groupes éditoriaux.",
 		de: "Gruppieren Sie Beiträge in dauerhafte Archivfamilien und redaktionelle Sammelgruppen.",
@@ -3243,6 +3534,7 @@ export const pageLabels = {
 	},
 	"taxonomies.categoryName": {
 		en: "Category name",
+		ar: "Category name", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Nombre de categoría",
 		fr: "Nom de catégorie",
 		de: "Kategoriename",
@@ -3254,6 +3546,7 @@ export const pageLabels = {
 	},
 	"taxonomies.categorySlug": {
 		en: "Category slug",
+		ar: "Category slug", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Slug de categoría",
 		fr: "Slug de catégorie",
 		de: "Kategorie-Slug",
@@ -3265,6 +3558,7 @@ export const pageLabels = {
 	},
 	"taxonomies.categoryDescription": {
 		en: "Category description",
+		ar: "Category description", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Descripción de categoría",
 		fr: "Description de catégorie",
 		de: "Kategoriebeschreibung",
@@ -3276,6 +3570,7 @@ export const pageLabels = {
 	},
 	"taxonomies.saveCategory": {
 		en: "Save category",
+		ar: "Save category", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Guardar categoría",
 		fr: "Enregistrer la catégorie",
 		de: "Kategorie speichern",
@@ -3287,6 +3582,7 @@ export const pageLabels = {
 	},
 	"taxonomies.tags": {
 		en: "Tags",
+		ar: "Tags", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Etiquetas",
 		fr: "Étiquettes",
 		de: "Tags",
@@ -3298,6 +3594,7 @@ export const pageLabels = {
 	},
 	"taxonomies.tagsDesc": {
 		en: "Capture lighter-weight topical labels without creating a whole category family.",
+		ar: "Capture lighter-weight topical labels without creating a whole category family.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Captura etiquetas temáticas más ligeras sin crear toda una familia de categorías.",
 		fr: "Capturez des étiquettes thématiques plus légères sans créer toute une famille de catégories.",
 		de: "Erfassen Sie leichtere Themenkennzeichnungen, ohne eine ganze Kategorienfamilie zu erstellen.",
@@ -3309,6 +3606,7 @@ export const pageLabels = {
 	},
 	"taxonomies.tagName": {
 		en: "Tag name",
+		ar: "Tag name", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Nombre de etiqueta",
 		fr: "Nom d'étiquette",
 		de: "Tag-Name",
@@ -3320,6 +3618,7 @@ export const pageLabels = {
 	},
 	"taxonomies.tagSlug": {
 		en: "Tag slug",
+		ar: "Tag slug", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Slug de etiqueta",
 		fr: "Slug d'étiquette",
 		de: "Tag-Slug",
@@ -3331,6 +3630,7 @@ export const pageLabels = {
 	},
 	"taxonomies.tagDescription": {
 		en: "Tag description",
+		ar: "Tag description", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Descripción de etiqueta",
 		fr: "Description d'étiquette",
 		de: "Tag-Beschreibung",
@@ -3342,6 +3642,7 @@ export const pageLabels = {
 	},
 	"taxonomies.saveTag": {
 		en: "Save tag",
+		ar: "Save tag", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Guardar etiqueta",
 		fr: "Enregistrer l'étiquette",
 		de: "Tag speichern",
@@ -3353,6 +3654,7 @@ export const pageLabels = {
 	},
 	"taxonomies.slug": {
 		en: "Slug",
+		ar: "Slug", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Slug",
 		fr: "Slug",
 		de: "Slug",
@@ -3364,6 +3666,7 @@ export const pageLabels = {
 	},
 	"taxonomies.descriptionField": {
 		en: "Description",
+		ar: "Description", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Descripción",
 		fr: "Description",
 		de: "Beschreibung",
@@ -3375,6 +3678,7 @@ export const pageLabels = {
 	},
 	"taxonomies.thName": {
 		en: "Name",
+		ar: "Name", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Nombre",
 		fr: "Nom",
 		de: "Name",
@@ -3386,6 +3690,7 @@ export const pageLabels = {
 	},
 	"taxonomies.thSlug": {
 		en: "Slug",
+		ar: "Slug", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Slug",
 		fr: "Slug",
 		de: "Slug",
@@ -3397,6 +3702,7 @@ export const pageLabels = {
 	},
 	"taxonomies.edit": {
 		en: "Edit",
+		ar: "Edit", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Editar",
 		fr: "Modifier",
 		de: "Bearbeiten",
@@ -3408,6 +3714,7 @@ export const pageLabels = {
 	},
 	"taxonomies.update": {
 		en: "Update",
+		ar: "Update", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Actualizar",
 		fr: "Mettre à jour",
 		de: "Aktualisieren",
@@ -3419,6 +3726,7 @@ export const pageLabels = {
 	},
 	"taxonomies.delete": {
 		en: "Delete",
+		ar: "Delete", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Eliminar",
 		fr: "Supprimer",
 		de: "Löschen",
@@ -3430,6 +3738,7 @@ export const pageLabels = {
 	},
 	"taxonomies.cancel": {
 		en: "Cancel",
+		ar: "Cancel", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Cancelar",
 		fr: "Annuler",
 		de: "Abbrechen",
@@ -3441,6 +3750,7 @@ export const pageLabels = {
 	},
 	"taxonomies.deleteWarning": {
 		en: "This action cannot be undone.",
+		ar: "This action cannot be undone.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Esta acción no se puede deshacer.",
 		fr: "Cette action est irréversible.",
 		de: "Diese Aktion kann nicht rückgängig gemacht werden.",
@@ -3452,6 +3762,7 @@ export const pageLabels = {
 	},
 	"taxonomies.deleteConfirmPrefix": {
 		en: "Are you sure you want to delete ",
+		ar: "Are you sure you want to delete ", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "¿Seguro que quieres eliminar ",
 		fr: "Voulez-vous vraiment supprimer ",
 		de: "Möchten Sie wirklich ",
@@ -3463,6 +3774,7 @@ export const pageLabels = {
 	},
 	"taxonomies.deleteConfirmSuffix": {
 		en: "?",
+		ar: "?", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "?",
 		fr: " ?",
 		de: " löschen?",
@@ -3474,6 +3786,7 @@ export const pageLabels = {
 	},
 	"taxonomies.deleteCategoryDialogTitle": {
 		en: "Delete category?",
+		ar: "Delete category?", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "¿Eliminar categoría?",
 		fr: "Supprimer la catégorie ?",
 		de: "Kategorie löschen?",
@@ -3485,6 +3798,7 @@ export const pageLabels = {
 	},
 	"taxonomies.deleteCategory": {
 		en: "Delete Category",
+		ar: "Delete Category", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Eliminar categoría",
 		fr: "Supprimer la catégorie",
 		de: "Kategorie löschen",
@@ -3496,6 +3810,7 @@ export const pageLabels = {
 	},
 	"taxonomies.deleteTagDialogTitle": {
 		en: "Delete tag?",
+		ar: "Delete tag?", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "¿Eliminar etiqueta?",
 		fr: "Supprimer l'étiquette ?",
 		de: "Tag löschen?",
@@ -3507,6 +3822,7 @@ export const pageLabels = {
 	},
 	"taxonomies.deleteTag": {
 		en: "Delete Tag",
+		ar: "Delete Tag", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Eliminar etiqueta",
 		fr: "Supprimer l'étiquette",
 		de: "Tag löschen",
@@ -3518,6 +3834,7 @@ export const pageLabels = {
 	},
 	"taxonomies.forbiddenTitle": {
 		en: "Forbidden",
+		ar: "Forbidden", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Prohibido",
 		fr: "Interdit",
 		de: "Verboten",
@@ -3531,6 +3848,7 @@ export const pageLabels = {
 	// ── Footer (shared) ─────────────────────────────────────────────────────
 	"layout.skipToContent": {
 		en: "Skip to admin content",
+		ar: "Skip to admin content", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Saltar al contenido de administración",
 		fr: "Passer au contenu d'administration",
 		de: "Zum Admin-Inhalt springen",
@@ -3542,6 +3860,7 @@ export const pageLabels = {
 	},
 	"layout.openNavigation": {
 		en: "Open navigation",
+		ar: "Open navigation", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Abrir navegación",
 		fr: "Ouvrir la navigation",
 		de: "Navigation öffnen",
@@ -3553,6 +3872,7 @@ export const pageLabels = {
 	},
 	"layout.closeNavigation": {
 		en: "Close navigation",
+		ar: "Close navigation", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Cerrar navegación",
 		fr: "Fermer la navigation",
 		de: "Navigation schließen",
@@ -3564,6 +3884,7 @@ export const pageLabels = {
 	},
 	"layout.toggleUtilityPanel": {
 		en: "Toggle utility panel",
+		ar: "Toggle utility panel", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Alternar panel de utilidades",
 		fr: "Basculer le panneau utilitaire",
 		de: "Hilfsbereich umschalten",
@@ -3575,6 +3896,7 @@ export const pageLabels = {
 	},
 	"layout.keyboardShortcuts": {
 		en: "Keyboard shortcuts",
+		ar: "Keyboard shortcuts", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Atajos de teclado",
 		fr: "Raccourcis clavier",
 		de: "Tastaturkürzel",
@@ -3586,6 +3908,7 @@ export const pageLabels = {
 	},
 	"layout.scrollToBottom": {
 		en: "Scroll to bottom",
+		ar: "Scroll to bottom", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Desplazarse al final",
 		fr: "Aller en bas",
 		de: "Nach unten scrollen",
@@ -3597,6 +3920,7 @@ export const pageLabels = {
 	},
 	"layout.scrollToTop": {
 		en: "Scroll to top",
+		ar: "Scroll to top", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Desplazarse al inicio",
 		fr: "Aller en haut",
 		de: "Nach oben scrollen",
@@ -3608,6 +3932,7 @@ export const pageLabels = {
 	},
 	"layout.adminSections": {
 		en: "Admin sections",
+		ar: "Admin sections", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Secciones de administración",
 		fr: "Sections d'administration",
 		de: "Admin-Bereiche",
@@ -3619,6 +3944,7 @@ export const pageLabels = {
 	},
 	"layout.recent": {
 		en: "Recent",
+		ar: "Recent", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Reciente",
 		fr: "Récent",
 		de: "Zuletzt",
@@ -3630,6 +3956,7 @@ export const pageLabels = {
 	},
 	"layout.commandPalette": {
 		en: "Command palette",
+		ar: "Command palette", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Paleta de comandos",
 		fr: "Palette de commandes",
 		de: "Befehlspalette",
@@ -3641,6 +3968,7 @@ export const pageLabels = {
 	},
 	"layout.commandPaletteResults": {
 		en: "Command palette results",
+		ar: "Command palette results", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Resultados de la paleta de comandos",
 		fr: "Résultats de la palette de commandes",
 		de: "Ergebnisse der Befehlspalette",
@@ -3652,6 +3980,7 @@ export const pageLabels = {
 	},
 	"layout.searchAdminPages": {
 		en: "Search admin pages",
+		ar: "Search admin pages", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Buscar páginas de administración",
 		fr: "Rechercher dans les pages d'administration",
 		de: "Admin-Seiten suchen",
@@ -3663,6 +3992,7 @@ export const pageLabels = {
 	},
 	"layout.shortcutSaveDraft": {
 		en: "Save draft",
+		ar: "Save draft", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Guardar borrador",
 		fr: "Enregistrer le brouillon",
 		de: "Entwurf speichern",
@@ -3674,6 +4004,7 @@ export const pageLabels = {
 	},
 	"layout.shortcutPublish": {
 		en: "Publish / submit form",
+		ar: "Publish / submit form", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Publicar / enviar formulario",
 		fr: "Publier / soumettre le formulaire",
 		de: "Veröffentlichen / Formular absenden",
@@ -3685,6 +4016,7 @@ export const pageLabels = {
 	},
 	"layout.shortcutEscape": {
 		en: "Close dialog or panel",
+		ar: "Close dialog or panel", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Cerrar diálogo o panel",
 		fr: "Fermer la boîte de dialogue ou le panneau",
 		de: "Dialog oder Panel schließen",
@@ -3696,6 +4028,7 @@ export const pageLabels = {
 	},
 	"layout.shortcutTab": {
 		en: "Move to next field",
+		ar: "Move to next field", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Ir al siguiente campo",
 		fr: "Aller au champ suivant",
 		de: "Zum nächsten Feld",
@@ -3707,6 +4040,7 @@ export const pageLabels = {
 	},
 	"layout.shortcutShiftTab": {
 		en: "Move to previous field",
+		ar: "Move to previous field", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Ir al campo anterior",
 		fr: "Aller au champ précédent",
 		de: "Zum vorherigen Feld",
@@ -3718,6 +4052,7 @@ export const pageLabels = {
 	},
 	"layout.shortcutHelp": {
 		en: "Show this help panel",
+		ar: "Show this help panel", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Mostrar este panel de ayuda",
 		fr: "Afficher ce panneau d'aide",
 		de: "Diese Hilfe anzeigen",
@@ -3729,6 +4064,7 @@ export const pageLabels = {
 	},
 	"layout.shortcutCmd": {
 		en: "Open command palette",
+		ar: "Open command palette", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Abrir paleta de comandos",
 		fr: "Ouvrir la palette de commandes",
 		de: "Befehlspalette öffnen",
@@ -3740,6 +4076,7 @@ export const pageLabels = {
 	},
 	"layout.goTo": {
 		en: "Go to…",
+		ar: "Go to…", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Ir a…",
 		fr: "Aller à…",
 		de: "Wechseln zu…",
@@ -3752,6 +4089,7 @@ export const pageLabels = {
 	// ANCHOR-BATCH-B: settings + users
 	"settings.title": {
 		en: "Settings",
+		ar: "Settings", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Configuración",
 		fr: "Paramètres",
 		de: "Einstellungen",
@@ -3763,6 +4101,7 @@ export const pageLabels = {
 	},
 	"settings.description": {
 		en: "Configure site-wide settings, newsletter, and content import.",
+		ar: "Configure site-wide settings, newsletter, and content import.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Configure los ajustes del sitio, el boletín y la importación de contenido.",
 		fr: "Configurez les paramètres du site, la newsletter et l'importation de contenu.",
 		de: "Konfigurieren Sie websiteweite Einstellungen, Newsletter und Inhaltsimport.",
@@ -3774,6 +4113,7 @@ export const pageLabels = {
 	},
 	"settings.partialLoadNotice": {
 		en: "Settings could not be fully loaded. This page is showing safe fallback values.",
+		ar: "Settings could not be fully loaded. This page is showing safe fallback values.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "No se pudieron cargar todos los ajustes. Esta página muestra valores seguros de respaldo.",
 		fr: "Les paramètres n'ont pas pu être entièrement chargés. Cette page affiche des valeurs de repli sûres.",
 		de: "Die Einstellungen konnten nicht vollständig geladen werden. Diese Seite zeigt sichere Ersatzwerte.",
@@ -3785,6 +4125,7 @@ export const pageLabels = {
 	},
 	"settings.savedNotice": {
 		en: "Settings saved successfully.",
+		ar: "Settings saved successfully.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Configuración guardada con éxito.",
 		fr: "Paramètres enregistrés avec succès.",
 		de: "Einstellungen erfolgreich gespeichert.",
@@ -3796,6 +4137,7 @@ export const pageLabels = {
 	},
 	"settings.tabsLabel": {
 		en: "Settings sections",
+		ar: "Settings sections", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Secciones de configuración",
 		fr: "Sections des paramètres",
 		de: "Einstellungsbereiche",
@@ -3807,6 +4149,7 @@ export const pageLabels = {
 	},
 	"settings.tabGeneral": {
 		en: "General",
+		ar: "General", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "General",
 		fr: "Général",
 		de: "Allgemein",
@@ -3818,6 +4161,7 @@ export const pageLabels = {
 	},
 	"settings.tabNewsletter": {
 		en: "Newsletter",
+		ar: "Newsletter", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Boletín",
 		fr: "Newsletter",
 		de: "Newsletter",
@@ -3829,6 +4173,7 @@ export const pageLabels = {
 	},
 	"settings.tabImport": {
 		en: "Import",
+		ar: "Import", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Importar",
 		fr: "Importer",
 		de: "Importieren",
@@ -3840,6 +4185,7 @@ export const pageLabels = {
 	},
 	"settings.donationDestination": {
 		en: "Donation destination",
+		ar: "Donation destination", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Destino de donación",
 		fr: "Destination de don",
 		de: "Spendenziel",
@@ -3851,6 +4197,7 @@ export const pageLabels = {
 	},
 	"settings.donationDestinationDesc": {
 		en: "Primary site-wide donation URL configured here.",
+		ar: "Primary site-wide donation URL configured here.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "URL principal de donación de todo el sitio configurada aquí.",
 		fr: "URL principale de don à l'échelle du site configurée ici.",
 		de: "Hier konfigurierte primäre, websiteweite Spenden-URL.",
@@ -3862,6 +4209,7 @@ export const pageLabels = {
 	},
 	"settings.newsletterState": {
 		en: "Newsletter state",
+		ar: "Newsletter state", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Estado del boletín",
 		fr: "État de la newsletter",
 		de: "Newsletter-Status",
@@ -3873,6 +4221,7 @@ export const pageLabels = {
 	},
 	"settings.newsletterStateDesc": {
 		en: "Controls newsletter collection across public signup surfaces.",
+		ar: "Controls newsletter collection across public signup surfaces.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Controla la recolección del boletín en las superficies públicas de registro.",
 		fr: "Contrôle la collecte de la newsletter sur les surfaces d'inscription publiques.",
 		de: "Steuert die Newsletter-Erfassung auf öffentlichen Anmeldeflächen.",
@@ -3884,6 +4233,7 @@ export const pageLabels = {
 	},
 	"settings.on": {
 		en: "On",
+		ar: "On", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Activado",
 		fr: "Activé",
 		de: "Ein",
@@ -3895,6 +4245,7 @@ export const pageLabels = {
 	},
 	"settings.off": {
 		en: "Off",
+		ar: "Off", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Desactivado",
 		fr: "Désactivé",
 		de: "Aus",
@@ -3906,6 +4257,7 @@ export const pageLabels = {
 	},
 	"settings.brandKicker": {
 		en: "Brand",
+		ar: "Brand", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Marca",
 		fr: "Marque",
 		de: "Marke",
@@ -3917,6 +4269,7 @@ export const pageLabels = {
 	},
 	"settings.siteIdentity": {
 		en: "Site Identity",
+		ar: "Site Identity", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Identidad del sitio",
 		fr: "Identité du site",
 		de: "Website-Identität",
@@ -3928,6 +4281,7 @@ export const pageLabels = {
 	},
 	"settings.siteIdentityDesc": {
 		en: "Global naming and branding copy used across the public site.",
+		ar: "Global naming and branding copy used across the public site.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Nombres globales y textos de marca utilizados en todo el sitio público.",
 		fr: "Noms globaux et textes de marque utilisés sur tout le site public.",
 		de: "Globale Namen und Markentexte, die auf der gesamten öffentlichen Website verwendet werden.",
@@ -3939,6 +4293,7 @@ export const pageLabels = {
 	},
 	"settings.siteTitle": {
 		en: "Site title",
+		ar: "Site title", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Título del sitio",
 		fr: "Titre du site",
 		de: "Website-Titel",
@@ -3950,6 +4305,7 @@ export const pageLabels = {
 	},
 	"settings.siteTagline": {
 		en: "Site tagline",
+		ar: "Site tagline", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Eslogan del sitio",
 		fr: "Slogan du site",
 		de: "Website-Slogan",
@@ -3961,6 +4317,7 @@ export const pageLabels = {
 	},
 	"settings.engagementKicker": {
 		en: "Engagement",
+		ar: "Engagement", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Interacción",
 		fr: "Engagement",
 		de: "Engagement",
@@ -3972,6 +4329,7 @@ export const pageLabels = {
 	},
 	"settings.newsletter": {
 		en: "Newsletter",
+		ar: "Newsletter", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Boletín",
 		fr: "Newsletter",
 		de: "Newsletter",
@@ -3983,6 +4341,7 @@ export const pageLabels = {
 	},
 	"settings.newsletterDesc": {
 		en: "Enable or disable newsletter collection across public signup surfaces.",
+		ar: "Enable or disable newsletter collection across public signup surfaces.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Active o desactive la recolección del boletín en las superficies públicas de registro.",
 		fr: "Activez ou désactivez la collecte de la newsletter sur les surfaces d'inscription publiques.",
 		de: "Aktivieren oder deaktivieren Sie die Newsletter-Erfassung auf öffentlichen Anmeldeflächen.",
@@ -3994,6 +4353,7 @@ export const pageLabels = {
 	},
 	"settings.enableNewsletter": {
 		en: "Enable newsletter signup",
+		ar: "Enable newsletter signup", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Activar registro al boletín",
 		fr: "Activer l'inscription à la newsletter",
 		de: "Newsletter-Anmeldung aktivieren",
@@ -4005,6 +4365,7 @@ export const pageLabels = {
 	},
 	"settings.fundraisingKicker": {
 		en: "Fundraising",
+		ar: "Fundraising", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Recaudación de fondos",
 		fr: "Collecte de fonds",
 		de: "Spendensammlung",
@@ -4016,6 +4377,7 @@ export const pageLabels = {
 	},
 	"settings.donationSettings": {
 		en: "Donation settings",
+		ar: "Donation settings", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Configuración de donaciones",
 		fr: "Paramètres de don",
 		de: "Spendeneinstellungen",
@@ -4027,6 +4389,7 @@ export const pageLabels = {
 	},
 	"settings.donationUrl": {
 		en: "Donation URL",
+		ar: "Donation URL", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "URL de donación",
 		fr: "URL de don",
 		de: "Spenden-URL",
@@ -4038,6 +4401,7 @@ export const pageLabels = {
 	},
 	"settings.moderationKicker": {
 		en: "Moderation",
+		ar: "Moderation", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Moderación",
 		fr: "Modération",
 		de: "Moderation",
@@ -4049,6 +4413,7 @@ export const pageLabels = {
 	},
 	"settings.commentSettings": {
 		en: "Comment settings",
+		ar: "Comment settings", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Configuración de comentarios",
 		fr: "Paramètres des commentaires",
 		de: "Kommentareinstellungen",
@@ -4060,6 +4425,7 @@ export const pageLabels = {
 	},
 	"settings.defaultCommentPolicy": {
 		en: "Default comment policy",
+		ar: "Default comment policy", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Política de comentarios predeterminada",
 		fr: "Politique de commentaires par défaut",
 		de: "Standard-Kommentarrichtlinie",
@@ -4071,6 +4437,7 @@ export const pageLabels = {
 	},
 	"settings.commentDisabled": {
 		en: "Disabled",
+		ar: "Disabled", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Desactivado",
 		fr: "Désactivé",
 		de: "Deaktiviert",
@@ -4082,6 +4449,7 @@ export const pageLabels = {
 	},
 	"settings.commentLegacy": {
 		en: "Legacy (read-only)",
+		ar: "Legacy (read-only)", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Heredado (solo lectura)",
 		fr: "Hérité (lecture seule)",
 		de: "Legacy (schreibgeschützt)",
@@ -4093,6 +4461,7 @@ export const pageLabels = {
 	},
 	"settings.commentOpenModerated": {
 		en: "Open (moderated)",
+		ar: "Open (moderated)", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Abierto (moderado)",
 		fr: "Ouvert (modéré)",
 		de: "Offen (moderiert)",
@@ -4104,6 +4473,7 @@ export const pageLabels = {
 	},
 	"settings.saveButton": {
 		en: "Save settings",
+		ar: "Save settings", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Guardar configuración",
 		fr: "Enregistrer les paramètres",
 		de: "Einstellungen speichern",
@@ -4115,6 +4485,7 @@ export const pageLabels = {
 	},
 	"settings.subscriberRemoved": {
 		en: "Subscriber removed successfully.",
+		ar: "Subscriber removed successfully.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Suscriptor eliminado con éxito.",
 		fr: "Abonné supprimé avec succès.",
 		de: "Abonnent erfolgreich entfernt.",
@@ -4126,6 +4497,7 @@ export const pageLabels = {
 	},
 	"settings.importComplete": {
 		en: "Import complete — {count} added to Listmonk.",
+		ar: "Import complete — {count} added to Listmonk.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Importación completada — {count} añadidos a Listmonk.",
 		fr: "Importation terminée — {count} ajoutés à Listmonk.",
 		de: "Import abgeschlossen — {count} zu Listmonk hinzugefügt.",
@@ -4137,6 +4509,7 @@ export const pageLabels = {
 	},
 	"settings.subscribersKicker": {
 		en: "Subscribers",
+		ar: "Subscribers", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Suscriptores",
 		fr: "Abonnés",
 		de: "Abonnenten",
@@ -4148,6 +4521,7 @@ export const pageLabels = {
 	},
 	"settings.newsletterSubscribers": {
 		en: "Newsletter subscribers",
+		ar: "Newsletter subscribers", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Suscriptores del boletín",
 		fr: "Abonnés à la newsletter",
 		de: "Newsletter-Abonnenten",
@@ -4159,6 +4533,7 @@ export const pageLabels = {
 	},
 	"settings.subscribersDescBefore": {
 		en: "Subscribers are managed via Listmonk. Configure ",
+		ar: "Subscribers are managed via Listmonk. Configure ", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Los suscriptores se gestionan a través de Listmonk. Configure ",
 		fr: "Les abonnés sont gérés via Listmonk. Configurez ",
 		de: "Abonnenten werden über Listmonk verwaltet. Konfigurieren Sie ",
@@ -4170,6 +4545,7 @@ export const pageLabels = {
 	},
 	"settings.subscribersDescAfter": {
 		en: " environment variables to enable list management.",
+		ar: " environment variables to enable list management.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: " variables de entorno para habilitar la gestión de listas.",
 		fr: " des variables d'environnement pour activer la gestion des listes.",
 		de: " Umgebungsvariablen, um die Listenverwaltung zu aktivieren.",
@@ -4181,6 +4557,7 @@ export const pageLabels = {
 	},
 	"settings.listmonkRequiresEnv": {
 		en: "Subscriber list management requires Listmonk. Configure these environment variables to enable it:",
+		ar: "Subscriber list management requires Listmonk. Configure these environment variables to enable it:", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "La gestión de listas de suscriptores requiere Listmonk. Configure estas variables de entorno para activarla:",
 		fr: "La gestion des listes d'abonnés nécessite Listmonk. Configurez ces variables d'environnement pour l'activer :",
 		de: "Die Verwaltung der Abonnentenliste erfordert Listmonk. Konfigurieren Sie diese Umgebungsvariablen, um sie zu aktivieren:",
@@ -4192,6 +4569,7 @@ export const pageLabels = {
 	},
 	"settings.searchSubscribers": {
 		en: "Search subscribers",
+		ar: "Search subscribers", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Buscar suscriptores",
 		fr: "Rechercher des abonnés",
 		de: "Abonnenten suchen",
@@ -4203,6 +4581,7 @@ export const pageLabels = {
 	},
 	"settings.searchSubscribersPlaceholder": {
 		en: "Search by email or name…",
+		ar: "Search by email or name…", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Buscar por correo o nombre…",
 		fr: "Rechercher par e-mail ou nom…",
 		de: "Nach E-Mail oder Name suchen…",
@@ -4214,6 +4593,7 @@ export const pageLabels = {
 	},
 	"settings.searchButton": {
 		en: "Search",
+		ar: "Search", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Buscar",
 		fr: "Rechercher",
 		de: "Suchen",
@@ -4225,6 +4605,7 @@ export const pageLabels = {
 	},
 	"settings.clearButton": {
 		en: "Clear",
+		ar: "Clear", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Limpiar",
 		fr: "Effacer",
 		de: "Leeren",
@@ -4236,6 +4617,7 @@ export const pageLabels = {
 	},
 	"settings.noSubscribersFound": {
 		en: "No subscribers found.",
+		ar: "No subscribers found.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "No se encontraron suscriptores.",
 		fr: "Aucun abonné trouvé.",
 		de: "Keine Abonnenten gefunden.",
@@ -4247,6 +4629,7 @@ export const pageLabels = {
 	},
 	"settings.subscriberCountSingular": {
 		en: "{count} subscriber",
+		ar: "{count} subscriber", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "{count} suscriptor",
 		fr: "{count} abonné",
 		de: "{count} Abonnent",
@@ -4258,6 +4641,7 @@ export const pageLabels = {
 	},
 	"settings.subscriberCountPlural": {
 		en: "{count} subscribers",
+		ar: "{count} subscribers", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "{count} suscriptores",
 		fr: "{count} abonnés",
 		de: "{count} Abonnenten",
@@ -4280,6 +4664,7 @@ export const pageLabels = {
 	},
 	"settings.colEmail": {
 		en: "Email",
+		ar: "Email", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Correo electrónico",
 		fr: "E-mail",
 		de: "E-Mail",
@@ -4291,6 +4676,7 @@ export const pageLabels = {
 	},
 	"settings.colName": {
 		en: "Name",
+		ar: "Name", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Nombre",
 		fr: "Nom",
 		de: "Name",
@@ -4302,6 +4688,7 @@ export const pageLabels = {
 	},
 	"settings.colSubscribed": {
 		en: "Subscribed",
+		ar: "Subscribed", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Suscrito",
 		fr: "Abonné",
 		de: "Abonniert",
@@ -4313,6 +4700,7 @@ export const pageLabels = {
 	},
 	"settings.viewAction": {
 		en: "View",
+		ar: "View", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Ver",
 		fr: "Voir",
 		de: "Anzeigen",
@@ -4324,6 +4712,7 @@ export const pageLabels = {
 	},
 	"settings.subscriberPagesLabel": {
 		en: "Subscriber pages",
+		ar: "Subscriber pages", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Páginas de suscriptores",
 		fr: "Pages des abonnés",
 		de: "Abonnentenseiten",
@@ -4335,6 +4724,7 @@ export const pageLabels = {
 	},
 	"settings.previous": {
 		en: "Previous",
+		ar: "Previous", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Anterior",
 		fr: "Précédent",
 		de: "Zurück",
@@ -4346,6 +4736,7 @@ export const pageLabels = {
 	},
 	"settings.next": {
 		en: "Next",
+		ar: "Next", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Siguiente",
 		fr: "Suivant",
 		de: "Weiter",
@@ -4357,6 +4748,7 @@ export const pageLabels = {
 	},
 	"settings.pageInfo": {
 		en: "Page {page} of {total}",
+		ar: "Page {page} of {total}", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Página {page} de {total}",
 		fr: "Page {page} sur {total}",
 		de: "Seite {page} von {total}",
@@ -4368,6 +4760,7 @@ export const pageLabels = {
 	},
 	"settings.migrationKicker": {
 		en: "Migration",
+		ar: "Migration", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Migración",
 		fr: "Migration",
 		de: "Migration",
@@ -4379,6 +4772,7 @@ export const pageLabels = {
 	},
 	"settings.importMailchimp": {
 		en: "Import from Mailchimp",
+		ar: "Import from Mailchimp", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Importar desde Mailchimp",
 		fr: "Importer depuis Mailchimp",
 		de: "Aus Mailchimp importieren",
@@ -4390,6 +4784,7 @@ export const pageLabels = {
 	},
 	"settings.importMailchimpDescBefore": {
 		en: "Export your Mailchimp audience as a CSV (Mailchimp dashboard → Audience → Export as CSV), then upload it here to bulk-import subscribers into Listmonk. Required columns: ",
+		ar: "Export your Mailchimp audience as a CSV (Mailchimp dashboard → Audience → Export as CSV), then upload it here to bulk-import subscribers into Listmonk. Required columns: ", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Exporte su audiencia de Mailchimp como CSV (panel de Mailchimp → Audiencia → Exportar como CSV), luego cárguelo aquí para importar masivamente suscriptores a Listmonk. Columnas requeridas: ",
 		fr: "Exportez votre audience Mailchimp au format CSV (tableau de bord Mailchimp → Audience → Exporter en CSV), puis téléchargez-le ici pour importer en masse des abonnés dans Listmonk. Colonnes requises : ",
 		de: "Exportieren Sie Ihre Mailchimp-Zielgruppe als CSV (Mailchimp-Dashboard → Zielgruppe → Als CSV exportieren) und laden Sie sie dann hier hoch, um Abonnenten in großen Mengen in Listmonk zu importieren. Erforderliche Spalten: ",
@@ -4401,6 +4796,7 @@ export const pageLabels = {
 	},
 	"settings.importMailchimpDescOptional": {
 		en: ". Optional: ",
+		ar: ". Optional: ", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: ". Opcionales: ",
 		fr: ". Facultatives : ",
 		de: ". Optional: ",
@@ -4412,6 +4808,7 @@ export const pageLabels = {
 	},
 	"settings.mailchimpFile": {
 		en: "Mailchimp audience CSV",
+		ar: "Mailchimp audience CSV", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "CSV de audiencia de Mailchimp",
 		fr: "CSV d'audience Mailchimp",
 		de: "Mailchimp-Zielgruppen-CSV",
@@ -4423,6 +4820,7 @@ export const pageLabels = {
 	},
 	"settings.mailchimpFileAria": {
 		en: "Mailchimp audience CSV file",
+		ar: "Mailchimp audience CSV file", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Archivo CSV de audiencia de Mailchimp",
 		fr: "Fichier CSV d'audience Mailchimp",
 		de: "Mailchimp-Zielgruppen-CSV-Datei",
@@ -4434,6 +4832,7 @@ export const pageLabels = {
 	},
 	"settings.importSubscribersBtn": {
 		en: "Import subscribers",
+		ar: "Import subscribers", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Importar suscriptores",
 		fr: "Importer les abonnés",
 		de: "Abonnenten importieren",
@@ -4445,6 +4844,7 @@ export const pageLabels = {
 	},
 	"settings.uploading": {
 		en: "Uploading…",
+		ar: "Uploading…", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Subiendo…",
 		fr: "Téléversement…",
 		de: "Wird hochgeladen…",
@@ -4456,6 +4856,7 @@ export const pageLabels = {
 	},
 	"settings.importingAria": {
 		en: "Importing subscribers…",
+		ar: "Importing subscribers…", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Importando suscriptores…",
 		fr: "Importation des abonnés…",
 		de: "Abonnenten werden importiert…",
@@ -4467,6 +4868,7 @@ export const pageLabels = {
 	},
 	"settings.contentMigrationKicker": {
 		en: "Content migration",
+		ar: "Content migration", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Migración de contenido",
 		fr: "Migration de contenu",
 		de: "Inhaltsmigration",
@@ -4478,6 +4880,7 @@ export const pageLabels = {
 	},
 	"settings.importContent": {
 		en: "Import content",
+		ar: "Import content", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Importar contenido",
 		fr: "Importer du contenu",
 		de: "Inhalt importieren",
@@ -4489,6 +4892,7 @@ export const pageLabels = {
 	},
 	"settings.importContentDesc": {
 		en: "Import content from another platform. Imports are non-destructive — existing content is not modified unless you explicitly apply changes.",
+		ar: "Import content from another platform. Imports are non-destructive — existing content is not modified unless you explicitly apply changes.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Importe contenido de otra plataforma. Las importaciones no son destructivas: el contenido existente no se modifica a menos que aplique cambios explícitamente.",
 		fr: "Importez du contenu depuis une autre plateforme. Les importations sont non destructives — le contenu existant n'est pas modifié sauf si vous appliquez explicitement les changements.",
 		de: "Importieren Sie Inhalte von einer anderen Plattform. Importe sind nicht destruktiv — bestehende Inhalte werden nicht geändert, sofern Sie die Änderungen nicht ausdrücklich anwenden.",
@@ -4500,6 +4904,7 @@ export const pageLabels = {
 	},
 	"settings.wordpress": {
 		en: "WordPress",
+		ar: "WordPress", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "WordPress",
 		fr: "WordPress",
 		de: "WordPress",
@@ -4511,6 +4916,7 @@ export const pageLabels = {
 	},
 	"settings.wordpressDesc": {
 		en: "Import from a WordPress XML export file or a live WordPress site URL. Imports posts, pages, media, authors, and taxonomies.",
+		ar: "Import from a WordPress XML export file or a live WordPress site URL. Imports posts, pages, media, authors, and taxonomies.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Importe desde un archivo XML de exportación de WordPress o una URL de sitio WordPress en vivo. Importa publicaciones, páginas, medios, autores y taxonomías.",
 		fr: "Importez depuis un fichier d'export XML WordPress ou une URL de site WordPress en direct. Importe les articles, pages, médias, auteurs et taxonomies.",
 		de: "Aus einer WordPress-XML-Exportdatei oder einer Live-WordPress-Website-URL importieren. Importiert Beiträge, Seiten, Medien, Autoren und Taxonomien.",
@@ -4522,6 +4928,7 @@ export const pageLabels = {
 	},
 	"settings.setupWordpressImport": {
 		en: "Set up WordPress import →",
+		ar: "Set up WordPress import →", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Configurar importación de WordPress →",
 		fr: "Configurer l'import WordPress →",
 		de: "WordPress-Import einrichten →",
@@ -4533,6 +4940,7 @@ export const pageLabels = {
 	},
 	"settings.wix": {
 		en: "Wix",
+		ar: "Wix", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Wix",
 		fr: "Wix",
 		de: "Wix",
@@ -4544,6 +4952,7 @@ export const pageLabels = {
 	},
 	"settings.wixDesc": {
 		en: "Import from a Wix CSV export or a live Wix site URL. Imports blog posts, pages, authors, and media.",
+		ar: "Import from a Wix CSV export or a live Wix site URL. Imports blog posts, pages, authors, and media.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Importe desde una exportación CSV de Wix o una URL de sitio Wix en vivo. Importa publicaciones de blog, páginas, autores y medios.",
 		fr: "Importez depuis un export CSV Wix ou une URL de site Wix en direct. Importe les articles de blog, pages, auteurs et médias.",
 		de: "Aus einem Wix-CSV-Export oder einer Live-Wix-Website-URL importieren. Importiert Blogbeiträge, Seiten, Autoren und Medien.",
@@ -4555,6 +4964,7 @@ export const pageLabels = {
 	},
 	"settings.setupWixImport": {
 		en: "Set up Wix import →",
+		ar: "Set up Wix import →", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Configurar importación de Wix →",
 		fr: "Configurer l'import Wix →",
 		de: "Wix-Import einrichten →",
@@ -4566,6 +4976,7 @@ export const pageLabels = {
 	},
 	"settings.webCrawl": {
 		en: "Web crawl",
+		ar: "Web crawl", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Rastreo web",
 		fr: "Exploration Web",
 		de: "Webcrawl",
@@ -4577,6 +4988,7 @@ export const pageLabels = {
 	},
 	"settings.webCrawlDesc": {
 		en: "Crawl any publicly accessible website and import its pages as content records. Useful for static sites without an export format.",
+		ar: "Crawl any publicly accessible website and import its pages as content records. Useful for static sites without an export format.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Rastree cualquier sitio web público e importe sus páginas como registros de contenido. Útil para sitios estáticos sin un formato de exportación.",
 		fr: "Explorez tout site web publiquement accessible et importez ses pages comme enregistrements de contenu. Utile pour les sites statiques sans format d'export.",
 		de: "Crawlen Sie eine öffentlich zugängliche Website und importieren Sie ihre Seiten als Inhaltsdatensätze. Nützlich für statische Websites ohne Exportformat.",
@@ -4588,6 +5000,7 @@ export const pageLabels = {
 	},
 	"settings.setupCrawlImport": {
 		en: "Set up crawl import →",
+		ar: "Set up crawl import →", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Configurar importación por rastreo →",
 		fr: "Configurer l'import par exploration →",
 		de: "Crawl-Import einrichten →",
@@ -4599,6 +5012,7 @@ export const pageLabels = {
 	},
 	"settings.importNoteBefore": {
 		en: "All imports run as CLI commands under the hood. The CLI is available via ",
+		ar: "All imports run as CLI commands under the hood. The CLI is available via ", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Todas las importaciones se ejecutan como comandos CLI internamente. La CLI está disponible vía ",
 		fr: "Toutes les importations s'exécutent en tant que commandes CLI en interne. La CLI est disponible via ",
 		de: "Alle Importe werden intern als CLI-Befehle ausgeführt. Die CLI ist verfügbar über ",
@@ -4610,6 +5024,7 @@ export const pageLabels = {
 	},
 	"settings.importNoteAfter": {
 		en: ". This wizard generates the correct command for your configuration.",
+		ar: ". This wizard generates the correct command for your configuration.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: ". Este asistente genera el comando correcto para su configuración.",
 		fr: ". Cet assistant génère la commande correcte pour votre configuration.",
 		de: ". Dieser Assistent erzeugt den passenden Befehl für Ihre Konfiguration.",
@@ -4621,6 +5036,7 @@ export const pageLabels = {
 	},
 	"settings.subErrorLoadingList": {
 		en: "Could not load subscriber list. Check your LISTMONK_* environment variables.",
+		ar: "Could not load subscriber list. Check your LISTMONK_* environment variables.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "No se pudo cargar la lista de suscriptores. Verifique sus variables de entorno LISTMONK_*.",
 		fr: "Impossible de charger la liste des abonnés. Vérifiez vos variables d'environnement LISTMONK_*.",
 		de: "Abonnentenliste konnte nicht geladen werden. Überprüfen Sie Ihre LISTMONK_*-Umgebungsvariablen.",
@@ -4632,6 +5048,7 @@ export const pageLabels = {
 	},
 	"users.title": {
 		en: "Users",
+		ar: "Users", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Usuarios",
 		fr: "Utilisateurs",
 		de: "Benutzer",
@@ -4643,6 +5060,7 @@ export const pageLabels = {
 	},
 	"users.description": {
 		en: "Manage team members, roles, and access state.",
+		ar: "Manage team members, roles, and access state.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Gestione miembros del equipo, roles y estado de acceso.",
 		fr: "Gérez les membres de l'équipe, les rôles et l'état d'accès.",
 		de: "Verwalten Sie Teammitglieder, Rollen und Zugriffsstatus.",
@@ -4654,6 +5072,7 @@ export const pageLabels = {
 	},
 	"users.partialNotice": {
 		en: "Some user-management data is temporarily unavailable. This page is showing partial results.",
+		ar: "Some user-management data is temporarily unavailable. This page is showing partial results.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Algunos datos de gestión de usuarios no están disponibles temporalmente. Esta página muestra resultados parciales.",
 		fr: "Certaines données de gestion des utilisateurs sont temporairement indisponibles. Cette page affiche des résultats partiels.",
 		de: "Einige Benutzerverwaltungsdaten sind vorübergehend nicht verfügbar. Diese Seite zeigt Teilergebnisse.",
@@ -4665,6 +5084,7 @@ export const pageLabels = {
 	},
 	"users.invitationIssued": {
 		en: "The invitation was issued successfully.",
+		ar: "The invitation was issued successfully.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "La invitación se emitió con éxito.",
 		fr: "L'invitation a été émise avec succès.",
 		de: "Die Einladung wurde erfolgreich ausgestellt.",
@@ -4676,6 +5096,7 @@ export const pageLabels = {
 	},
 	"users.userCreatedNoEmail": {
 		en: "User created. Email delivery is in preview mode — no invitation email was sent. Use the link below to share the invite manually.",
+		ar: "User created. Email delivery is in preview mode — no invitation email was sent. Use the link below to share the invite manually.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Usuario creado. La entrega de correo está en modo de vista previa: no se envió correo de invitación. Use el enlace de abajo para compartir la invitación manualmente.",
 		fr: "Utilisateur créé. La distribution d'e-mails est en mode aperçu : aucun e-mail d'invitation n'a été envoyé. Utilisez le lien ci-dessous pour partager l'invitation manuellement.",
 		de: "Benutzer erstellt. E-Mail-Zustellung befindet sich im Vorschaumodus — keine Einladungs-E-Mail wurde gesendet. Verwenden Sie den unten stehenden Link, um die Einladung manuell zu teilen.",
@@ -4687,6 +5108,7 @@ export const pageLabels = {
 	},
 	"users.userSuspended": {
 		en: "The admin user was suspended successfully.",
+		ar: "The admin user was suspended successfully.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "El usuario administrador fue suspendido con éxito.",
 		fr: "L'utilisateur administrateur a été suspendu avec succès.",
 		de: "Der Admin-Benutzer wurde erfolgreich gesperrt.",
@@ -4698,6 +5120,7 @@ export const pageLabels = {
 	},
 	"users.userRestored": {
 		en: "The admin user was restored successfully.",
+		ar: "The admin user was restored successfully.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "El usuario administrador fue restaurado con éxito.",
 		fr: "L'utilisateur administrateur a été restauré avec succès.",
 		de: "Der Admin-Benutzer wurde erfolgreich wiederhergestellt.",
@@ -4709,6 +5132,7 @@ export const pageLabels = {
 	},
 	"users.invitationLink": {
 		en: "Invitation link: ",
+		ar: "Invitation link: ", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Enlace de invitación: ",
 		fr: "Lien d'invitation : ",
 		de: "Einladungslink: ",
@@ -4720,6 +5144,7 @@ export const pageLabels = {
 	},
 	"users.resetLinkPrefix": {
 		en: "Password reset link issued: ",
+		ar: "Password reset link issued: ", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Enlace de restablecimiento de contraseña emitido: ",
 		fr: "Lien de réinitialisation du mot de passe émis : ",
 		de: "Link zum Zurücksetzen des Passworts ausgestellt: ",
@@ -4731,6 +5156,7 @@ export const pageLabels = {
 	},
 	"users.intro": {
 		en: "User management is admin-only. New accounts are invited first and set their own password through a single-use link.",
+		ar: "User management is admin-only. New accounts are invited first and set their own password through a single-use link.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "La gestión de usuarios es solo para administradores. Las cuentas nuevas se invitan primero y configuran su propia contraseña a través de un enlace de un solo uso.",
 		fr: "La gestion des utilisateurs est réservée aux administrateurs. Les nouveaux comptes sont d'abord invités et définissent leur propre mot de passe via un lien à usage unique.",
 		de: "Die Benutzerverwaltung ist nur für Administratoren. Neue Konten werden zuerst eingeladen und legen ihr eigenes Passwort über einen Einmal-Link fest.",
@@ -4742,6 +5168,7 @@ export const pageLabels = {
 	},
 	"users.totalUsers": {
 		en: "Total users",
+		ar: "Total users", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Usuarios totales",
 		fr: "Utilisateurs totaux",
 		de: "Gesamtnutzer",
@@ -4753,6 +5180,7 @@ export const pageLabels = {
 	},
 	"users.totalUsersDesc": {
 		en: "Managed admin and editor accounts.",
+		ar: "Managed admin and editor accounts.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Cuentas de administrador y editor gestionadas.",
 		fr: "Comptes administrateur et éditeur gérés.",
 		de: "Verwaltete Admin- und Editor-Konten.",
@@ -4764,6 +5192,7 @@ export const pageLabels = {
 	},
 	"users.pendingInvites": {
 		en: "Pending invites",
+		ar: "Pending invites", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Invitaciones pendientes",
 		fr: "Invitations en attente",
 		de: "Ausstehende Einladungen",
@@ -4775,6 +5204,7 @@ export const pageLabels = {
 	},
 	"users.pendingInvitesDesc": {
 		en: "Invitations that have not been accepted yet.",
+		ar: "Invitations that have not been accepted yet.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Invitaciones que aún no han sido aceptadas.",
 		fr: "Invitations qui n'ont pas encore été acceptées.",
 		de: "Einladungen, die noch nicht angenommen wurden.",
@@ -4786,6 +5216,7 @@ export const pageLabels = {
 	},
 	"users.accessControlKicker": {
 		en: "Access Control",
+		ar: "Access Control", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Control de acceso",
 		fr: "Contrôle d'accès",
 		de: "Zugriffskontrolle",
@@ -4797,6 +5228,7 @@ export const pageLabels = {
 	},
 	"users.currentUsers": {
 		en: "Current Users",
+		ar: "Current Users", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Usuarios actuales",
 		fr: "Utilisateurs actuels",
 		de: "Aktuelle Benutzer",
@@ -4808,6 +5240,7 @@ export const pageLabels = {
 	},
 	"users.currentUsersDesc": {
 		en: "Manage roles, suspend access, and issue one-time reset links from the same table.",
+		ar: "Manage roles, suspend access, and issue one-time reset links from the same table.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Gestione roles, suspenda accesos y emita enlaces de restablecimiento de un solo uso desde la misma tabla.",
 		fr: "Gérez les rôles, suspendez l'accès et émettez des liens de réinitialisation à usage unique depuis le même tableau.",
 		de: "Verwalten Sie Rollen, sperren Sie den Zugriff und geben Sie Einmal-Reset-Links in derselben Tabelle aus.",
@@ -4819,6 +5252,7 @@ export const pageLabels = {
 	},
 	"users.adminUsersAria": {
 		en: "Admin users",
+		ar: "Admin users", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Usuarios administradores",
 		fr: "Utilisateurs administrateurs",
 		de: "Admin-Benutzer",
@@ -4830,6 +5264,7 @@ export const pageLabels = {
 	},
 	"users.colName": {
 		en: "Name",
+		ar: "Name", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Nombre",
 		fr: "Nom",
 		de: "Name",
@@ -4841,6 +5276,7 @@ export const pageLabels = {
 	},
 	"users.colEmail": {
 		en: "Email",
+		ar: "Email", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Correo electrónico",
 		fr: "E-mail",
 		de: "E-Mail",
@@ -4852,6 +5288,7 @@ export const pageLabels = {
 	},
 	"users.colRole": {
 		en: "Role",
+		ar: "Role", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Rol",
 		fr: "Rôle",
 		de: "Rolle",
@@ -4863,6 +5300,7 @@ export const pageLabels = {
 	},
 	"users.colJoined": {
 		en: "Joined",
+		ar: "Joined", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Se unió",
 		fr: "A rejoint",
 		de: "Beigetreten",
@@ -4874,6 +5312,7 @@ export const pageLabels = {
 	},
 	"users.statusSuspended": {
 		en: "Suspended",
+		ar: "Suspended", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Suspendido",
 		fr: "Suspendu",
 		de: "Gesperrt",
@@ -4885,6 +5324,7 @@ export const pageLabels = {
 	},
 	"users.statusInvited": {
 		en: "Invited",
+		ar: "Invited", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Invitado",
 		fr: "Invité",
 		de: "Eingeladen",
@@ -4896,6 +5336,7 @@ export const pageLabels = {
 	},
 	"users.statusActive": {
 		en: "Active",
+		ar: "Active", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Activo",
 		fr: "Actif",
 		de: "Aktiv",
@@ -4907,6 +5348,7 @@ export const pageLabels = {
 	},
 	"users.unsuspend": {
 		en: "Unsuspend",
+		ar: "Unsuspend", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Reactivar",
 		fr: "Réactiver",
 		de: "Entsperren",
@@ -4918,6 +5360,7 @@ export const pageLabels = {
 	},
 	"users.suspend": {
 		en: "Suspend",
+		ar: "Suspend", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Suspender",
 		fr: "Suspendre",
 		de: "Sperren",
@@ -4929,6 +5372,7 @@ export const pageLabels = {
 	},
 	"users.resetLinkBtn": {
 		en: "Reset Link",
+		ar: "Reset Link", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Enlace de restablecimiento",
 		fr: "Lien de réinitialisation",
 		de: "Reset-Link",
@@ -4940,6 +5384,7 @@ export const pageLabels = {
 	},
 	"users.createAccessKicker": {
 		en: "Create Access",
+		ar: "Create Access", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Crear acceso",
 		fr: "Créer un accès",
 		de: "Zugang erstellen",
@@ -4951,6 +5396,7 @@ export const pageLabels = {
 	},
 	"users.inviteUser": {
 		en: "Invite User",
+		ar: "Invite User", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Invitar usuario",
 		fr: "Inviter un utilisateur",
 		de: "Benutzer einladen",
@@ -4962,6 +5408,7 @@ export const pageLabels = {
 	},
 	"users.inviteUserDesc": {
 		en: "Invite a team member and let them set their password from a single-use link.",
+		ar: "Invite a team member and let them set their password from a single-use link.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Invite a un miembro del equipo y permita que establezca su contraseña desde un enlace de un solo uso.",
 		fr: "Invitez un membre de l'équipe et laissez-le définir son mot de passe via un lien à usage unique.",
 		de: "Laden Sie ein Teammitglied ein und lassen Sie es sein Passwort über einen Einmal-Link festlegen.",
@@ -4973,6 +5420,7 @@ export const pageLabels = {
 	},
 	"users.fullName": {
 		en: "Full Name",
+		ar: "Full Name", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Nombre completo",
 		fr: "Nom complet",
 		de: "Vollständiger Name",
@@ -4984,6 +5432,7 @@ export const pageLabels = {
 	},
 	"users.email": {
 		en: "Email",
+		ar: "Email", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Correo electrónico",
 		fr: "E-mail",
 		de: "E-Mail",
@@ -4995,6 +5444,7 @@ export const pageLabels = {
 	},
 	"users.role": {
 		en: "Role",
+		ar: "Role", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Rol",
 		fr: "Rôle",
 		de: "Rolle",
@@ -5006,6 +5456,7 @@ export const pageLabels = {
 	},
 	"users.roleEditor": {
 		en: "Editor",
+		ar: "Editor", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Editor",
 		fr: "Éditeur",
 		de: "Editor",
@@ -5017,6 +5468,7 @@ export const pageLabels = {
 	},
 	"users.roleAdmin": {
 		en: "Admin",
+		ar: "Admin", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Administrador",
 		fr: "Admin",
 		de: "Admin",
@@ -5028,6 +5480,7 @@ export const pageLabels = {
 	},
 	"users.sendInvitation": {
 		en: "Send Invitation",
+		ar: "Send Invitation", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Enviar invitación",
 		fr: "Envoyer l'invitation",
 		de: "Einladung senden",
@@ -5039,6 +5492,7 @@ export const pageLabels = {
 	},
 	"users.inviteNote": {
 		en: "The invited user receives a single-use setup link. In non-production mode, the link is echoed above for local review.",
+		ar: "The invited user receives a single-use setup link. In non-production mode, the link is echoed above for local review.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "El usuario invitado recibe un enlace de configuración de un solo uso. En modo no productivo, el enlace se muestra arriba para revisión local.",
 		fr: "L'utilisateur invité reçoit un lien de configuration à usage unique. En mode non production, le lien est affiché ci-dessus pour une vérification locale.",
 		de: "Der eingeladene Benutzer erhält einen Einmal-Einrichtungslink. Im Nicht-Produktionsmodus wird der Link oben zur lokalen Überprüfung angezeigt.",
@@ -5050,6 +5504,7 @@ export const pageLabels = {
 	},
 	"users.userAndAccessAudit": {
 		en: "User And Access Audit",
+		ar: "User And Access Audit", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Auditoría de usuario y acceso",
 		fr: "Audit utilisateur et accès",
 		de: "Benutzer- und Zugriffsprüfung",
@@ -5061,6 +5516,7 @@ export const pageLabels = {
 	},
 	"users.gdprKicker": {
 		en: "GDPR / Right of Erasure",
+		ar: "GDPR / Right of Erasure", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "GDPR / Derecho de supresión",
 		fr: "GDPR / Droit à l'effacement",
 		de: "GDPR / Recht auf Löschung",
@@ -5072,6 +5528,7 @@ export const pageLabels = {
 	},
 	"users.purgeUserData": {
 		en: "Purge User Data",
+		ar: "Purge User Data", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Eliminar datos del usuario",
 		fr: "Purger les données utilisateur",
 		de: "Benutzerdaten löschen",
@@ -5083,6 +5540,7 @@ export const pageLabels = {
 	},
 	"users.purgeUserDataDesc": {
 		en: "Permanently remove all personal data associated with an email address. This action revokes sessions, anonymises audit log entries, deletes comments and contact submissions, and suspends or deletes the admin account. A JSON export of all affected records is downloaded for your data-subject-request records.",
+		ar: "Permanently remove all personal data associated with an email address. This action revokes sessions, anonymises audit log entries, deletes comments and contact submissions, and suspends or deletes the admin account. A JSON export of all affected records is downloaded for your data-subject-request records.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Elimina permanentemente todos los datos personales asociados a una dirección de correo. Esta acción revoca sesiones, anonimiza entradas del registro de auditoría, elimina comentarios y envíos de contacto, y suspende o elimina la cuenta admin. Se descarga una exportación JSON de todos los registros afectados para sus solicitudes de datos.",
 		fr: "Supprime définitivement toutes les données personnelles associées à une adresse e-mail. Cette action révoque les sessions, anonymise les entrées du journal d'audit, supprime les commentaires et envois de contact, et suspend ou supprime le compte admin. Un export JSON de tous les enregistrements concernés est téléchargé pour vos demandes de personnes concernées.",
 		de: "Entfernt dauerhaft alle persönlichen Daten, die mit einer E-Mail-Adresse verknüpft sind. Diese Aktion widerruft Sitzungen, anonymisiert Audit-Log-Einträge, löscht Kommentare und Kontaktanfragen und sperrt oder löscht das Admin-Konto. Ein JSON-Export aller betroffenen Datensätze wird für Ihre Betroffenenanfragen heruntergeladen.",
@@ -5094,6 +5552,7 @@ export const pageLabels = {
 	},
 	"users.purgeEmailLabel": {
 		en: "Email address to purge",
+		ar: "Email address to purge", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Correo electrónico a eliminar",
 		fr: "Adresse e-mail à purger",
 		de: "Zu löschende E-Mail-Adresse",
@@ -5105,6 +5564,7 @@ export const pageLabels = {
 	},
 	"users.purgeDeleteCheckbox": {
 		en: "Permanently delete admin account (instead of suspending)",
+		ar: "Permanently delete admin account (instead of suspending)", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Eliminar permanentemente la cuenta admin (en lugar de suspender)",
 		fr: "Supprimer définitivement le compte admin (au lieu de suspendre)",
 		de: "Admin-Konto dauerhaft löschen (statt zu sperren)",
@@ -5116,6 +5576,7 @@ export const pageLabels = {
 	},
 	"users.purgeAndDownload": {
 		en: "Purge & Download Report",
+		ar: "Purge & Download Report", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Eliminar y descargar informe",
 		fr: "Purger et télécharger le rapport",
 		de: "Löschen & Bericht herunterladen",
@@ -5127,6 +5588,7 @@ export const pageLabels = {
 	},
 	"users.confirmSuspendTitle": {
 		en: "Suspend user?",
+		ar: "Suspend user?", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "¿Suspender usuario?",
 		fr: "Suspendre l'utilisateur ?",
 		de: "Benutzer sperren?",
@@ -5138,6 +5600,7 @@ export const pageLabels = {
 	},
 	"users.confirmSuspendBefore": {
 		en: "Are you sure you want to suspend ",
+		ar: "Are you sure you want to suspend ", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "¿Está seguro de que desea suspender ",
 		fr: "Êtes-vous sûr de vouloir suspendre ",
 		de: "Möchten Sie wirklich sperren ",
@@ -5149,6 +5612,7 @@ export const pageLabels = {
 	},
 	"users.confirmSuspendAfter": {
 		en: "?",
+		ar: "?", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "?",
 		fr: " ?",
 		de: "?",
@@ -5160,6 +5624,7 @@ export const pageLabels = {
 	},
 	"users.confirmSuspendNote": {
 		en: "Suspended users cannot sign in until unsuspended.",
+		ar: "Suspended users cannot sign in until unsuspended.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Los usuarios suspendidos no pueden iniciar sesión hasta que se reactiven.",
 		fr: "Les utilisateurs suspendus ne peuvent pas se connecter tant qu'ils ne sont pas réactivés.",
 		de: "Gesperrte Benutzer können sich erst nach Entsperrung anmelden.",
@@ -5171,6 +5636,7 @@ export const pageLabels = {
 	},
 	"users.cancel": {
 		en: "Cancel",
+		ar: "Cancel", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Cancelar",
 		fr: "Annuler",
 		de: "Abbrechen",
@@ -5182,6 +5648,7 @@ export const pageLabels = {
 	},
 	"users.suspendUserBtn": {
 		en: "Suspend User",
+		ar: "Suspend User", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Suspender usuario",
 		fr: "Suspendre l'utilisateur",
 		de: "Benutzer sperren",
@@ -5193,6 +5660,7 @@ export const pageLabels = {
 	},
 	"users.confirmPurgeTitle": {
 		en: "Purge all personal data?",
+		ar: "Purge all personal data?", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "¿Eliminar todos los datos personales?",
 		fr: "Purger toutes les données personnelles ?",
 		de: "Alle persönlichen Daten löschen?",
@@ -5204,6 +5672,7 @@ export const pageLabels = {
 	},
 	"users.confirmPurgeDesc": {
 		en: "This will permanently erase all personal data for this email. Sessions will be revoked, audit logs anonymised, comments and submissions deleted.",
+		ar: "This will permanently erase all personal data for this email. Sessions will be revoked, audit logs anonymised, comments and submissions deleted.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Esto borrará permanentemente todos los datos personales de este correo. Las sesiones se revocarán, los registros de auditoría se anonimizarán y los comentarios y envíos se eliminarán.",
 		fr: "Cela effacera définitivement toutes les données personnelles de cet e-mail. Les sessions seront révoquées, les journaux d'audit anonymisés, les commentaires et envois supprimés.",
 		de: "Dies löscht dauerhaft alle persönlichen Daten dieser E-Mail. Sitzungen werden widerrufen, Audit-Logs anonymisiert, Kommentare und Einsendungen gelöscht.",
@@ -5215,6 +5684,7 @@ export const pageLabels = {
 	},
 	"users.confirmPurgeWarning": {
 		en: "This action cannot be undone.",
+		ar: "This action cannot be undone.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Esta acción no se puede deshacer.",
 		fr: "Cette action ne peut pas être annulée.",
 		de: "Diese Aktion kann nicht rückgängig gemacht werden.",
@@ -5226,6 +5696,7 @@ export const pageLabels = {
 	},
 	"users.purgeAndDownloadShort": {
 		en: "Purge & Download",
+		ar: "Purge & Download", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Eliminar y descargar",
 		fr: "Purger et télécharger",
 		de: "Löschen & Herunterladen",
@@ -5238,6 +5709,7 @@ export const pageLabels = {
 	// ANCHOR-BATCH-C: route-pages + archives + translations
 	"routePages.title": {
 		en: "Route Table",
+		ar: "Route Table", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Tabla de rutas",
 		fr: "Table de routes",
 		de: "Routentabelle",
@@ -5249,6 +5721,7 @@ export const pageLabels = {
 	},
 	"routePages.description": {
 		en: "Technical inventory of route-backed structured pages. Normal page editing should start from Pages.",
+		ar: "Technical inventory of route-backed structured pages. Normal page editing should start from Pages.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Inventario técnico de páginas estructuradas con rutas. La edición normal debe iniciarse desde Páginas.",
 		fr: "Inventaire technique des pages structurées basées sur des routes. L'édition normale doit commencer depuis Pages.",
 		de: "Technische Bestandsaufnahme routenbasierter strukturierter Seiten. Reguläre Bearbeitung sollte über Seiten beginnen.",
@@ -5260,6 +5733,7 @@ export const pageLabels = {
 	},
 	"routePages.partialResults": {
 		en: "Some route-table data is temporarily unavailable. This page is showing partial results.",
+		ar: "Some route-table data is temporarily unavailable. This page is showing partial results.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Algunos datos de la tabla de rutas no están disponibles temporalmente. Esta página muestra resultados parciales.",
 		fr: "Certaines données de la table de routes sont temporairement indisponibles. Cette page affiche des résultats partiels.",
 		de: "Einige Routentabellendaten sind vorübergehend nicht verfügbar. Diese Seite zeigt Teilergebnisse.",
@@ -5271,6 +5745,7 @@ export const pageLabels = {
 	},
 	"routePages.securityKicker": {
 		en: "Security",
+		ar: "Security", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Seguridad",
 		fr: "Sécurité",
 		de: "Sicherheit",
@@ -5282,6 +5757,7 @@ export const pageLabels = {
 	},
 	"routePages.adminUrlHeading": {
 		en: "Admin URL",
+		ar: "Admin URL", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "URL de administración",
 		fr: "URL d'administration",
 		de: "Admin-URL",
@@ -5293,6 +5769,7 @@ export const pageLabels = {
 	},
 	"routePages.adminUrlIntroPrefix": {
 		en: "The admin area is accessible at",
+		ar: "The admin area is accessible at", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "El área de administración está disponible en",
 		fr: "L'espace d'administration est accessible à",
 		de: "Der Admin-Bereich ist erreichbar unter",
@@ -5304,6 +5781,7 @@ export const pageLabels = {
 	},
 	"routePages.adminUrlIntroSuffix": {
 		en: "Changing it to a unique path makes it harder for bots to find your login page.",
+		ar: "Changing it to a unique path makes it harder for bots to find your login page.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Cambiarla a una ruta única dificulta que los bots encuentren tu página de inicio de sesión.",
 		fr: "La remplacer par un chemin unique complique la tâche des bots pour trouver votre page de connexion.",
 		de: "Eine eindeutige Adresse erschwert Bots das Auffinden Ihrer Anmeldeseite.",
@@ -5315,6 +5793,7 @@ export const pageLabels = {
 	},
 	"routePages.defaultSlugWarningStrong": {
 		en: "You are using the default admin path",
+		ar: "You are using the default admin path", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Estás usando la ruta de administración predeterminada",
 		fr: "Vous utilisez le chemin d'administration par défaut",
 		de: "Sie verwenden den Standard-Admin-Pfad",
@@ -5326,6 +5805,7 @@ export const pageLabels = {
 	},
 	"routePages.defaultSlugWarningRest": {
 		en: "Automated bots routinely target this path. Change it to a unique value to reduce unwanted login attempts.",
+		ar: "Automated bots routinely target this path. Change it to a unique value to reduce unwanted login attempts.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Los bots automatizados atacan habitualmente esta ruta. Cámbiala a un valor único para reducir intentos de inicio de sesión no deseados.",
 		fr: "Les bots automatisés ciblent régulièrement ce chemin. Changez-le en une valeur unique pour réduire les tentatives de connexion indésirables.",
 		de: "Automatisierte Bots greifen diesen Pfad regelmäßig an. Wählen Sie einen eindeutigen Wert, um unerwünschte Anmeldeversuche zu reduzieren.",
@@ -5337,6 +5817,7 @@ export const pageLabels = {
 	},
 	"routePages.slugSavedPrefix": {
 		en: "Admin URL updated. You are now at",
+		ar: "Admin URL updated. You are now at", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "URL de administración actualizada. Ahora estás en",
 		fr: "URL d'administration mise à jour. Vous êtes maintenant sur",
 		de: "Admin-URL aktualisiert. Sie befinden sich jetzt unter",
@@ -5348,6 +5829,7 @@ export const pageLabels = {
 	},
 	"routePages.adminUrlPrefixLabel": {
 		en: "Admin URL prefix",
+		ar: "Admin URL prefix", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Prefijo de URL de administración",
 		fr: "Préfixe de l'URL d'administration",
 		de: "Präfix der Admin-URL",
@@ -5359,6 +5841,7 @@ export const pageLabels = {
 	},
 	"routePages.slugInputTitle": {
 		en: "Lowercase letters, numbers, and hyphens only. Cannot start or end with a hyphen.",
+		ar: "Lowercase letters, numbers, and hyphens only. Cannot start or end with a hyphen.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Solo letras minúsculas, números y guiones. No puede empezar ni terminar con guion.",
 		fr: "Lettres minuscules, chiffres et tirets uniquement. Ne peut pas commencer ni se terminer par un tiret.",
 		de: "Nur Kleinbuchstaben, Zahlen und Bindestriche. Darf nicht mit einem Bindestrich beginnen oder enden.",
@@ -5370,6 +5853,7 @@ export const pageLabels = {
 	},
 	"routePages.slugFieldNote": {
 		en: "Lowercase letters, numbers, and hyphens only. Avoid generic paths like",
+		ar: "Lowercase letters, numbers, and hyphens only. Avoid generic paths like", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Solo letras minúsculas, números y guiones. Evita rutas genéricas como",
 		fr: "Lettres minuscules, chiffres et tirets uniquement. Évitez les chemins génériques comme",
 		de: "Nur Kleinbuchstaben, Zahlen und Bindestriche. Vermeiden Sie generische Pfade wie",
@@ -5381,6 +5865,7 @@ export const pageLabels = {
 	},
 	"routePages.slugFieldNoteOr": {
 		en: "or",
+		ar: "or", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "o",
 		fr: "ou",
 		de: "oder",
@@ -5392,6 +5877,7 @@ export const pageLabels = {
 	},
 	"routePages.saveAdminUrl": {
 		en: "Save admin URL",
+		ar: "Save admin URL", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Guardar URL de administración",
 		fr: "Enregistrer l'URL d'administration",
 		de: "Admin-URL speichern",
@@ -5403,6 +5889,7 @@ export const pageLabels = {
 	},
 	"routePages.technicalInventory": {
 		en: "Technical Inventory",
+		ar: "Technical Inventory", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Inventario técnico",
 		fr: "Inventaire technique",
 		de: "Technisches Inventar",
@@ -5414,6 +5901,7 @@ export const pageLabels = {
 	},
 	"routePages.structuredRouteInventory": {
 		en: "Structured Route Inventory",
+		ar: "Structured Route Inventory", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Inventario de rutas estructuradas",
 		fr: "Inventaire des routes structurées",
 		de: "Bestandsaufnahme strukturierter Routen",
@@ -5425,6 +5913,7 @@ export const pageLabels = {
 	},
 	"routePages.structuredRouteDesc": {
 		en: "Use this screen for technical route review. Normal editorial work should still start from Pages.",
+		ar: "Use this screen for technical route review. Normal editorial work should still start from Pages.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Usa esta pantalla para la revisión técnica de rutas. El trabajo editorial normal debe iniciarse en Páginas.",
 		fr: "Utilisez cet écran pour la revue technique des routes. Le travail éditorial normal doit toujours commencer depuis Pages.",
 		de: "Nutzen Sie diese Ansicht für technische Routenprüfungen. Reguläre redaktionelle Arbeit sollte weiterhin über Seiten beginnen.",
@@ -5436,6 +5925,7 @@ export const pageLabels = {
 	},
 	"routePages.backToPages": {
 		en: "Back to pages",
+		ar: "Back to pages", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Volver a páginas",
 		fr: "Retour aux pages",
 		de: "Zurück zu Seiten",
@@ -5447,6 +5937,7 @@ export const pageLabels = {
 	},
 	"routePages.tableAria": {
 		en: "Route pages list",
+		ar: "Route pages list", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Lista de páginas de rutas",
 		fr: "Liste des pages de route",
 		de: "Liste der Routenseiten",
@@ -5458,6 +5949,7 @@ export const pageLabels = {
 	},
 	"routePages.template": {
 		en: "Template",
+		ar: "Template", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Plantilla",
 		fr: "Modèle",
 		de: "Vorlage",
@@ -5469,6 +5961,7 @@ export const pageLabels = {
 	},
 	"routePages.ownerEditor": {
 		en: "Owner Editor",
+		ar: "Owner Editor", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Editor propietario",
 		fr: "Éditeur propriétaire",
 		de: "Eigentümer-Editor",
@@ -5480,6 +5973,7 @@ export const pageLabels = {
 	},
 	"routePages.publicView": {
 		en: "Public View",
+		ar: "Public View", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Vista pública",
 		fr: "Vue publique",
 		de: "Öffentliche Ansicht",
@@ -5491,6 +5985,7 @@ export const pageLabels = {
 	},
 	"routePages.pages": {
 		en: "Pages",
+		ar: "Pages", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Páginas",
 		fr: "Pages",
 		de: "Seiten",
@@ -5502,6 +5997,7 @@ export const pageLabels = {
 	},
 	"routePages.openRoute": {
 		en: "Open route",
+		ar: "Open route", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Abrir ruta",
 		fr: "Ouvrir la route",
 		de: "Route öffnen",
@@ -5513,6 +6009,7 @@ export const pageLabels = {
 	},
 	"routePages.seeded": {
 		en: "Seeded",
+		ar: "Seeded", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Sembrado",
 		fr: "Initialisé",
 		de: "Vorbefüllt",
@@ -5524,6 +6021,7 @@ export const pageLabels = {
 	},
 	"routePages.forbiddenTitle": {
 		en: "Forbidden",
+		ar: "Forbidden", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Prohibido",
 		fr: "Interdit",
 		de: "Verboten",
@@ -5535,6 +6033,7 @@ export const pageLabels = {
 	},
 	"routePages.forbiddenDesc": {
 		en: "This action requires an admin account.",
+		ar: "This action requires an admin account.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Esta acción requiere una cuenta de administración.",
 		fr: "Cette action nécessite un compte administrateur.",
 		de: "Diese Aktion erfordert ein Admin-Konto.",
@@ -5546,6 +6045,7 @@ export const pageLabels = {
 	},
 	"routePages.forbiddenBody": {
 		en: "This action requires an admin account and is hidden from editor-only roles.",
+		ar: "This action requires an admin account and is hidden from editor-only roles.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Esta acción requiere una cuenta de administración y está oculta para roles solo de editor.",
 		fr: "Cette action nécessite un compte administrateur et est masquée pour les rôles éditeur uniquement.",
 		de: "Diese Aktion erfordert ein Admin-Konto und ist für reine Editor-Rollen ausgeblendet.",
@@ -5557,6 +6057,7 @@ export const pageLabels = {
 	},
 	"routePageEditor.title": {
 		en: "Edit Route Table Record",
+		ar: "Edit Route Table Record", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Editar registro de tabla de rutas",
 		fr: "Modifier l'entrée de la table de routes",
 		de: "Routentabelleneintrag bearbeiten",
@@ -5568,6 +6069,7 @@ export const pageLabels = {
 	},
 	"routePageEditor.titlePrefix": {
 		en: "Edit Route Page",
+		ar: "Edit Route Page", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Editar página de ruta",
 		fr: "Modifier la page de route",
 		de: "Routenseite bearbeiten",
@@ -5579,6 +6081,7 @@ export const pageLabels = {
 	},
 	"routePageEditor.description": {
 		en: "Technical editing for route-backed structured pages. Use Pages for the normal editorial entry point.",
+		ar: "Technical editing for route-backed structured pages. Use Pages for the normal editorial entry point.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Edición técnica para páginas estructuradas con rutas. Usa Páginas como punto de entrada editorial normal.",
 		fr: "Édition technique des pages structurées basées sur des routes. Utilisez Pages comme point d'entrée éditorial normal.",
 		de: "Technische Bearbeitung routenbasierter strukturierter Seiten. Nutzen Sie Seiten als normalen redaktionellen Einstieg.",
@@ -5590,6 +6093,7 @@ export const pageLabels = {
 	},
 	"routePageEditor.breadcrumb": {
 		en: "breadcrumb",
+		ar: "breadcrumb", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "ruta de navegación",
 		fr: "fil d'Ariane",
 		de: "Brotkrumen",
@@ -5601,6 +6105,7 @@ export const pageLabels = {
 	},
 	"routePageEditor.routePagesLink": {
 		en: "Route Pages",
+		ar: "Route Pages", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Páginas de rutas",
 		fr: "Pages de route",
 		de: "Routenseiten",
@@ -5612,6 +6117,7 @@ export const pageLabels = {
 	},
 	"routePageEditor.partialResults": {
 		en: "Some route-page data is temporarily unavailable. This page is showing partial results.",
+		ar: "Some route-page data is temporarily unavailable. This page is showing partial results.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Algunos datos de la página de ruta no están disponibles temporalmente. Esta página muestra resultados parciales.",
 		fr: "Certaines données de la page de route sont temporairement indisponibles. Cette page affiche des résultats partiels.",
 		de: "Einige Routenseiten-Daten sind vorübergehend nicht verfügbar. Diese Seite zeigt Teilergebnisse.",
@@ -5623,6 +6129,7 @@ export const pageLabels = {
 	},
 	"routePageEditor.openPublicPage": {
 		en: "Open public page",
+		ar: "Open public page", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Abrir página pública",
 		fr: "Ouvrir la page publique",
 		de: "Öffentliche Seite öffnen",
@@ -5634,6 +6141,7 @@ export const pageLabels = {
 	},
 	"routePageEditor.openRouteTable": {
 		en: "Open route table",
+		ar: "Open route table", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Abrir tabla de rutas",
 		fr: "Ouvrir la table de routes",
 		de: "Routentabelle öffnen",
@@ -5645,6 +6153,7 @@ export const pageLabels = {
 	},
 	"routePageEditor.savedSuccess": {
 		en: "Route page saved successfully.",
+		ar: "Route page saved successfully.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Página de ruta guardada con éxito.",
 		fr: "Page de route enregistrée avec succès.",
 		de: "Routenseite erfolgreich gespeichert.",
@@ -5656,6 +6165,7 @@ export const pageLabels = {
 	},
 	"routePageEditor.general": {
 		en: "General",
+		ar: "General", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "General",
 		fr: "Général",
 		de: "Allgemein",
@@ -5667,6 +6177,7 @@ export const pageLabels = {
 	},
 	"routePageEditor.generalDesc": {
 		en: "Public route identity, summary copy, and metadata defaults for this structured page.",
+		ar: "Public route identity, summary copy, and metadata defaults for this structured page.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Identidad pública de la ruta, copia de resumen y metadatos predeterminados para esta página estructurada.",
 		fr: "Identité publique de la route, texte de résumé et métadonnées par défaut pour cette page structurée.",
 		de: "Öffentliche Routenidentität, Zusammenfassungstext und Metadaten-Standardwerte für diese strukturierte Seite.",
@@ -5678,6 +6189,7 @@ export const pageLabels = {
 	},
 	"routePageEditor.publicRoute": {
 		en: "Public route:",
+		ar: "Public route:", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Ruta pública:",
 		fr: "Route publique :",
 		de: "Öffentliche Route:",
@@ -5689,6 +6201,7 @@ export const pageLabels = {
 	},
 	"routePageEditor.templateLabel": {
 		en: "Template:",
+		ar: "Template:", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Plantilla:",
 		fr: "Modèle :",
 		de: "Vorlage:",
@@ -5700,6 +6213,7 @@ export const pageLabels = {
 	},
 	"routePageEditor.titleField": {
 		en: "Title",
+		ar: "Title", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Título",
 		fr: "Titre",
 		de: "Titel",
@@ -5711,6 +6225,7 @@ export const pageLabels = {
 	},
 	"routePageEditor.titleFieldAria": {
 		en: "Route page title",
+		ar: "Route page title", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Título de la página de ruta",
 		fr: "Titre de la page de route",
 		de: "Titel der Routenseite",
@@ -5722,6 +6237,7 @@ export const pageLabels = {
 	},
 	"routePageEditor.summary": {
 		en: "Summary",
+		ar: "Summary", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Resumen",
 		fr: "Résumé",
 		de: "Zusammenfassung",
@@ -5733,6 +6249,7 @@ export const pageLabels = {
 	},
 	"routePageEditor.summaryAria": {
 		en: "Route page summary",
+		ar: "Route page summary", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Resumen de la página de ruta",
 		fr: "Résumé de la page de route",
 		de: "Zusammenfassung der Routenseite",
@@ -5744,6 +6261,7 @@ export const pageLabels = {
 	},
 	"routePageEditor.canonicalUrl": {
 		en: "Canonical URL",
+		ar: "Canonical URL", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "URL canónica",
 		fr: "URL canonique",
 		de: "Kanonische URL",
@@ -5755,6 +6273,7 @@ export const pageLabels = {
 	},
 	"routePageEditor.robots": {
 		en: "Robots",
+		ar: "Robots", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Robots",
 		fr: "Robots",
 		de: "Robots",
@@ -5766,6 +6285,7 @@ export const pageLabels = {
 	},
 	"routePageEditor.robotsAria": {
 		en: "Robots directive",
+		ar: "Robots directive", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Directiva de robots",
 		fr: "Directive robots",
 		de: "Robots-Direktive",
@@ -5777,6 +6297,7 @@ export const pageLabels = {
 	},
 	"routePageEditor.ogImage": {
 		en: "OG Image",
+		ar: "OG Image", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Imagen OG",
 		fr: "Image OG",
 		de: "OG-Bild",
@@ -5788,6 +6309,7 @@ export const pageLabels = {
 	},
 	"routePageEditor.ogImageAria": {
 		en: "OG image",
+		ar: "OG image", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Imagen OG",
 		fr: "Image OG",
 		de: "OG-Bild",
@@ -5799,6 +6321,7 @@ export const pageLabels = {
 	},
 	"routePageEditor.ownerLocale": {
 		en: "Owner & Locale",
+		ar: "Owner & Locale", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Propietario y configuración regional",
 		fr: "Propriétaire et locale",
 		de: "Eigentümer & Sprache",
@@ -5810,6 +6333,7 @@ export const pageLabels = {
 	},
 	"routePageEditor.ownerLocaleDesc": {
 		en: "Jump back to the main owner editor or switch to the linked locale record from here.",
+		ar: "Jump back to the main owner editor or switch to the linked locale record from here.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Vuelve al editor principal del propietario o cambia al registro de la configuración regional vinculada desde aquí.",
 		fr: "Revenez à l'éditeur propriétaire principal ou passez à l'enregistrement de la locale liée depuis ici.",
 		de: "Springen Sie zurück zum Hauptbesitzer-Editor oder wechseln Sie hier zum verknüpften Sprachdatensatz.",
@@ -5821,6 +6345,7 @@ export const pageLabels = {
 	},
 	"routePageEditor.belongsToPagesWorkflow": {
 		en: "This technical route record belongs to the main Pages workflow.",
+		ar: "This technical route record belongs to the main Pages workflow.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Este registro técnico de ruta pertenece al flujo de trabajo principal de Páginas.",
 		fr: "Cet enregistrement technique de route appartient au flux de travail principal Pages.",
 		de: "Dieser technische Routendatensatz gehört zum Haupt-Workflow von Seiten.",
@@ -5832,6 +6357,7 @@ export const pageLabels = {
 	},
 	"routePageEditor.openPagesIndex": {
 		en: "Open Pages index",
+		ar: "Open Pages index", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Abrir índice de páginas",
 		fr: "Ouvrir l'index des pages",
 		de: "Seitenindex öffnen",
@@ -5843,6 +6369,7 @@ export const pageLabels = {
 	},
 	"routePageEditor.openPublicRoute": {
 		en: "Open public route",
+		ar: "Open public route", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Abrir ruta pública",
 		fr: "Ouvrir la route publique",
 		de: "Öffentliche Route öffnen",
@@ -5854,6 +6381,7 @@ export const pageLabels = {
 	},
 	"routePageEditor.editEnglishOwner": {
 		en: "Edit English owner",
+		ar: "Edit English owner", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Editar propietario en inglés",
 		fr: "Modifier le propriétaire anglais",
 		de: "Englischen Eigentümer bearbeiten",
@@ -5865,6 +6393,7 @@ export const pageLabels = {
 	},
 	"routePageEditor.editEnglishVariant": {
 		en: "Edit English variant",
+		ar: "Edit English variant", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Editar variante en inglés",
 		fr: "Modifier la variante anglaise",
 		de: "Englische Variante bearbeiten",
@@ -5876,6 +6405,7 @@ export const pageLabels = {
 	},
 	"routePageEditor.editSpanishVariant": {
 		en: "Edit Spanish variant",
+		ar: "Edit Spanish variant", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Editar variante en español",
 		fr: "Modifier la variante espagnole",
 		de: "Spanische Variante bearbeiten",
@@ -5887,6 +6417,7 @@ export const pageLabels = {
 	},
 	"routePageEditor.translationState": {
 		en: "Translation state",
+		ar: "Translation state", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Estado de traducción",
 		fr: "État de traduction",
 		de: "Übersetzungsstatus",
@@ -5898,6 +6429,7 @@ export const pageLabels = {
 	},
 	"routePageEditor.stateNotStarted": {
 		en: "Not started",
+		ar: "Not started", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "No iniciado",
 		fr: "Non commencé",
 		de: "Nicht begonnen",
@@ -5909,6 +6441,7 @@ export const pageLabels = {
 	},
 	"routePageEditor.statePartial": {
 		en: "Partial",
+		ar: "Partial", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Parcial",
 		fr: "Partiel",
 		de: "Teilweise",
@@ -5920,6 +6453,7 @@ export const pageLabels = {
 	},
 	"routePageEditor.stateFallbackEn": {
 		en: "Fallback to English",
+		ar: "Fallback to English", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Recurrir al inglés",
 		fr: "Revenir à l'anglais",
 		de: "Rückfall auf Englisch",
@@ -5931,6 +6465,7 @@ export const pageLabels = {
 	},
 	"routePageEditor.stateTranslated": {
 		en: "Translated",
+		ar: "Translated", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Traducido",
 		fr: "Traduit",
 		de: "Übersetzt",
@@ -5942,6 +6477,7 @@ export const pageLabels = {
 	},
 	"routePageEditor.stateReviewed": {
 		en: "Reviewed",
+		ar: "Reviewed", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Revisado",
 		fr: "Révisé",
 		de: "Überprüft",
@@ -5953,6 +6489,7 @@ export const pageLabels = {
 	},
 	"routePageEditor.statePublished": {
 		en: "Published",
+		ar: "Published", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Publicado",
 		fr: "Publié",
 		de: "Veröffentlicht",
@@ -5964,6 +6501,7 @@ export const pageLabels = {
 	},
 	"routePageEditor.updateTranslationState": {
 		en: "Update translation state",
+		ar: "Update translation state", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Actualizar estado de traducción",
 		fr: "Mettre à jour l'état de traduction",
 		de: "Übersetzungsstatus aktualisieren",
@@ -5975,6 +6513,7 @@ export const pageLabels = {
 	},
 	"routePageEditor.seoHeading": {
 		en: "SEO",
+		ar: "SEO", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "SEO",
 		fr: "SEO",
 		de: "SEO",
@@ -5986,6 +6525,7 @@ export const pageLabels = {
 	},
 	"routePageEditor.seoDesc": {
 		en: "Search-facing title and description for the route-backed page.",
+		ar: "Search-facing title and description for the route-backed page.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Título y descripción orientados a buscadores para la página con ruta.",
 		fr: "Titre et description orientés recherche pour la page basée sur la route.",
 		de: "Such-orientierter Titel und Beschreibung für die routenbasierte Seite.",
@@ -5997,6 +6537,7 @@ export const pageLabels = {
 	},
 	"routePageEditor.seoTitle": {
 		en: "SEO Title",
+		ar: "SEO Title", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Título SEO",
 		fr: "Titre SEO",
 		de: "SEO-Titel",
@@ -6008,6 +6549,7 @@ export const pageLabels = {
 	},
 	"routePageEditor.seoTitleAria": {
 		en: "SEO title",
+		ar: "SEO title", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Título SEO",
 		fr: "Titre SEO",
 		de: "SEO-Titel",
@@ -6019,6 +6561,7 @@ export const pageLabels = {
 	},
 	"routePageEditor.metaDescription": {
 		en: "Meta Description",
+		ar: "Meta Description", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Meta descripción",
 		fr: "Méta-description",
 		de: "Meta-Beschreibung",
@@ -6030,6 +6573,7 @@ export const pageLabels = {
 	},
 	"routePageEditor.metaDescriptionAria": {
 		en: "Meta description",
+		ar: "Meta description", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Meta descripción",
 		fr: "Méta-description",
 		de: "Meta-Beschreibung",
@@ -6041,6 +6585,7 @@ export const pageLabels = {
 	},
 	"routePageEditor.alternateLinks": {
 		en: "Alternate Links",
+		ar: "Alternate Links", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Enlaces alternativos",
 		fr: "Liens alternatifs",
 		de: "Alternative Links",
@@ -6052,6 +6597,7 @@ export const pageLabels = {
 	},
 	"routePageEditor.alternateLinksDesc": {
 		en: "Hreflang mapping for linked English and Spanish route variants.",
+		ar: "Hreflang mapping for linked English and Spanish route variants.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Asignación hreflang para las variantes de ruta vinculadas en inglés y español.",
 		fr: "Mappage hreflang pour les variantes de route anglaise et espagnole liées.",
 		de: "Hreflang-Zuordnung für verknüpfte englische und spanische Routenvarianten.",
@@ -6063,6 +6609,7 @@ export const pageLabels = {
 	},
 	"routePageEditor.alternateLinksJsonAria": {
 		en: "Alternate links JSON",
+		ar: "Alternate links JSON", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "JSON de enlaces alternativos",
 		fr: "JSON des liens alternatifs",
 		de: "Alternative Links JSON",
@@ -6074,6 +6621,7 @@ export const pageLabels = {
 	},
 	"routePageEditor.sectionsJson": {
 		en: "Sections JSON",
+		ar: "Sections JSON", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "JSON de secciones",
 		fr: "JSON des sections",
 		de: "Abschnitts-JSON",
@@ -6085,6 +6633,7 @@ export const pageLabels = {
 	},
 	"routePageEditor.sectionsJsonDesc": {
 		en: "Structured section payload for the marketing page renderer.",
+		ar: "Structured section payload for the marketing page renderer.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Carga útil de sección estructurada para el renderizador de la página de marketing.",
 		fr: "Charge utile de section structurée pour le rendu de la page marketing.",
 		de: "Strukturierte Abschnittsdaten für den Marketing-Seitenrenderer.",
@@ -6096,6 +6645,7 @@ export const pageLabels = {
 	},
 	"routePageEditor.sectionsJsonNote": {
 		en: "This slice uses structured JSON editing for registry-backed marketing pages.",
+		ar: "This slice uses structured JSON editing for registry-backed marketing pages.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Este sector utiliza edición JSON estructurada para páginas de marketing basadas en el registro.",
 		fr: "Cette section utilise l'édition JSON structurée pour les pages marketing basées sur le registre.",
 		de: "Dieser Bereich verwendet strukturierte JSON-Bearbeitung für registry-gestützte Marketingseiten.",
@@ -6107,6 +6657,7 @@ export const pageLabels = {
 	},
 	"routePageEditor.sectionsJsonAria": {
 		en: "Sections JSON",
+		ar: "Sections JSON", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "JSON de secciones",
 		fr: "JSON des sections",
 		de: "Abschnitts-JSON",
@@ -6118,6 +6669,7 @@ export const pageLabels = {
 	},
 	"routePageEditor.revisionNote": {
 		en: "Revision Note",
+		ar: "Revision Note", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Nota de revisión",
 		fr: "Note de révision",
 		de: "Revisionsnotiz",
@@ -6129,6 +6681,7 @@ export const pageLabels = {
 	},
 	"routePageEditor.revisionNoteDesc": {
 		en: "Summarize the change so the route revision history stays understandable.",
+		ar: "Summarize the change so the route revision history stays understandable.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Resume el cambio para que el historial de revisiones de la ruta siga siendo comprensible.",
 		fr: "Résumez la modification pour que l'historique des révisions de route reste compréhensible.",
 		de: "Fassen Sie die Änderung zusammen, damit die Routenrevisionshistorie verständlich bleibt.",
@@ -6140,6 +6693,7 @@ export const pageLabels = {
 	},
 	"routePageEditor.revisionNoteAria": {
 		en: "Revision note",
+		ar: "Revision note", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Nota de revisión",
 		fr: "Note de révision",
 		de: "Revisionsnotiz",
@@ -6151,6 +6705,7 @@ export const pageLabels = {
 	},
 	"routePageEditor.revisionNotePlaceholder": {
 		en: "Summarize this change",
+		ar: "Summarize this change", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Resume este cambio",
 		fr: "Résumez ce changement",
 		de: "Fassen Sie diese Änderung zusammen",
@@ -6162,6 +6717,7 @@ export const pageLabels = {
 	},
 	"routePageEditor.saveRoutePage": {
 		en: "Save route page",
+		ar: "Save route page", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Guardar página de ruta",
 		fr: "Enregistrer la page de route",
 		de: "Routenseite speichern",
@@ -6173,6 +6729,7 @@ export const pageLabels = {
 	},
 	"routePageEditor.backToRouteTable": {
 		en: "Back to route table",
+		ar: "Back to route table", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Volver a la tabla de rutas",
 		fr: "Retour à la table de routes",
 		de: "Zurück zur Routentabelle",
@@ -6184,6 +6741,7 @@ export const pageLabels = {
 	},
 	"routePageEditor.notFoundTitle": {
 		en: "Not Found",
+		ar: "Not Found", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "No encontrado",
 		fr: "Introuvable",
 		de: "Nicht gefunden",
@@ -6195,6 +6753,7 @@ export const pageLabels = {
 	},
 	"routePageEditor.notFoundDesc": {
 		en: "The requested route page could not be found.",
+		ar: "The requested route page could not be found.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "No se pudo encontrar la página de ruta solicitada.",
 		fr: "La page de route demandée est introuvable.",
 		de: "Die angeforderte Routenseite wurde nicht gefunden.",
@@ -6206,6 +6765,7 @@ export const pageLabels = {
 	},
 	"archives.title": {
 		en: "Archives",
+		ar: "Archives", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Archivos",
 		fr: "Archives",
 		de: "Archive",
@@ -6217,6 +6777,7 @@ export const pageLabels = {
 	},
 	"archives.description": {
 		en: "Owner-editable metadata for public archive landing pages.",
+		ar: "Owner-editable metadata for public archive landing pages.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Metadatos editables por el propietario para páginas públicas de aterrizaje de archivos.",
 		fr: "Métadonnées modifiables par le propriétaire pour les pages d'atterrissage publiques d'archives.",
 		de: "Vom Eigentümer editierbare Metadaten für öffentliche Archiv-Landingpages.",
@@ -6228,6 +6789,7 @@ export const pageLabels = {
 	},
 	"archives.partialResults": {
 		en: "Some archive metadata is temporarily unavailable. This page is showing partial results.",
+		ar: "Some archive metadata is temporarily unavailable. This page is showing partial results.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Algunos metadatos de archivo no están disponibles temporalmente. Esta página muestra resultados parciales.",
 		fr: "Certaines métadonnées d'archive sont temporairement indisponibles. Cette page affiche des résultats partiels.",
 		de: "Einige Archiv-Metadaten sind vorübergehend nicht verfügbar. Diese Seite zeigt Teilergebnisse.",
@@ -6239,6 +6801,7 @@ export const pageLabels = {
 	},
 	"archives.backToPages": {
 		en: "Back to pages",
+		ar: "Back to pages", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Volver a páginas",
 		fr: "Retour aux pages",
 		de: "Zurück zu Seiten",
@@ -6250,6 +6813,7 @@ export const pageLabels = {
 	},
 	"archives.managePosts": {
 		en: "Manage posts in archive families",
+		ar: "Manage posts in archive families", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Gestionar publicaciones en familias de archivos",
 		fr: "Gérer les publications dans les familles d'archives",
 		de: "Beiträge in Archivfamilien verwalten",
@@ -6261,6 +6825,7 @@ export const pageLabels = {
 	},
 	"archives.totalArchives": {
 		en: "Total Archives",
+		ar: "Total Archives", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Archivos totales",
 		fr: "Total d'archives",
 		de: "Gesamtarchive",
@@ -6272,6 +6837,7 @@ export const pageLabels = {
 	},
 	"archives.totalListingItems": {
 		en: "Total Listing Items",
+		ar: "Total Listing Items", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Total de elementos del listado",
 		fr: "Total des éléments de la liste",
 		de: "Gesamtlistenelemente",
@@ -6283,6 +6849,7 @@ export const pageLabels = {
 	},
 	"archives.archivesByKind": {
 		en: "Archives by Kind",
+		ar: "Archives by Kind", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Archivos por tipo",
 		fr: "Archives par type",
 		de: "Archive nach Art",
@@ -6294,6 +6861,7 @@ export const pageLabels = {
 	},
 	"archives.archivesByKindDesc": {
 		en: "Each archive kind has its own owner-edited landing pages.",
+		ar: "Each archive kind has its own owner-edited landing pages.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Cada tipo de archivo tiene sus propias páginas de aterrizaje editadas por el propietario.",
 		fr: "Chaque type d'archive possède ses propres pages d'atterrissage modifiées par le propriétaire.",
 		de: "Jede Archivart hat eigene, vom Eigentümer bearbeitete Landingpages.",
@@ -6305,6 +6873,7 @@ export const pageLabels = {
 	},
 	"archives.allArchives": {
 		en: "All Archives",
+		ar: "All Archives", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Todos los archivos",
 		fr: "Toutes les archives",
 		de: "Alle Archive",
@@ -6316,6 +6885,7 @@ export const pageLabels = {
 	},
 	"archives.allArchivesDesc": {
 		en: "Edit archive metadata here. Use Posts for the entries that appear inside each archive.",
+		ar: "Edit archive metadata here. Use Posts for the entries that appear inside each archive.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Edita los metadatos de archivo aquí. Usa Publicaciones para las entradas que aparecen dentro de cada archivo.",
 		fr: "Modifiez ici les métadonnées d'archive. Utilisez Publications pour les entrées qui apparaissent dans chaque archive.",
 		de: "Bearbeiten Sie hier die Archiv-Metadaten. Verwenden Sie Beiträge für die Einträge in jedem Archiv.",
@@ -6327,6 +6897,7 @@ export const pageLabels = {
 	},
 	"archives.kind": {
 		en: "Kind",
+		ar: "Kind", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Tipo",
 		fr: "Type",
 		de: "Art",
@@ -6338,6 +6909,7 @@ export const pageLabels = {
 	},
 	"archives.slug": {
 		en: "Slug",
+		ar: "Slug", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Slug",
 		fr: "Slug",
 		de: "Slug",
@@ -6349,6 +6921,7 @@ export const pageLabels = {
 	},
 	"archives.items": {
 		en: "Items",
+		ar: "Items", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Elementos",
 		fr: "Éléments",
 		de: "Elemente",
@@ -6360,6 +6933,7 @@ export const pageLabels = {
 	},
 	"archives.editArchive": {
 		en: "Edit archive",
+		ar: "Edit archive", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Editar archivo",
 		fr: "Modifier l'archive",
 		de: "Archiv bearbeiten",
@@ -6371,6 +6945,7 @@ export const pageLabels = {
 	},
 	"archives.openArchive": {
 		en: "Open archive",
+		ar: "Open archive", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Abrir archivo",
 		fr: "Ouvrir l'archive",
 		de: "Archiv öffnen",
@@ -6382,6 +6957,7 @@ export const pageLabels = {
 	},
 	"archives.noteStrong": {
 		en: "Note:",
+		ar: "Note:", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Nota:",
 		fr: "Remarque :",
 		de: "Hinweis:",
@@ -6393,6 +6969,7 @@ export const pageLabels = {
 	},
 	"archives.noteBody": {
 		en: "Archive metadata is edited here. Use the archive editor for public titles and SEO, and use Posts to manage the individual content that appears inside each archive.",
+		ar: "Archive metadata is edited here. Use the archive editor for public titles and SEO, and use Posts to manage the individual content that appears inside each archive.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Los metadatos de archivo se editan aquí. Usa el editor de archivos para títulos públicos y SEO, y usa Publicaciones para gestionar el contenido individual que aparece dentro de cada archivo.",
 		fr: "Les métadonnées d'archive sont modifiées ici. Utilisez l'éditeur d'archive pour les titres publics et le SEO, et utilisez Publications pour gérer le contenu individuel qui apparaît dans chaque archive.",
 		de: "Archiv-Metadaten werden hier bearbeitet. Verwenden Sie den Archiv-Editor für öffentliche Titel und SEO und Beiträge, um die einzelnen Inhalte in jedem Archiv zu verwalten.",
@@ -6404,6 +6981,7 @@ export const pageLabels = {
 	},
 	"archives.forbiddenTitle": {
 		en: "Forbidden",
+		ar: "Forbidden", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Prohibido",
 		fr: "Interdit",
 		de: "Verboten",
@@ -6415,6 +6993,7 @@ export const pageLabels = {
 	},
 	"archives.forbiddenDesc": {
 		en: "This action requires an admin account.",
+		ar: "This action requires an admin account.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Esta acción requiere una cuenta de administración.",
 		fr: "Cette action nécessite un compte administrateur.",
 		de: "Diese Aktion erfordert ein Admin-Konto.",
@@ -6426,6 +7005,7 @@ export const pageLabels = {
 	},
 	"archives.forbiddenBody": {
 		en: "This action requires an admin account and is hidden from editor-only roles.",
+		ar: "This action requires an admin account and is hidden from editor-only roles.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Esta acción requiere una cuenta de administración y está oculta para roles solo de editor.",
 		fr: "Cette action nécessite un compte administrateur et est masquée pour les rôles éditeur uniquement.",
 		de: "Diese Aktion erfordert ein Admin-Konto und ist für reine Editor-Rollen ausgeblendet.",
@@ -6437,6 +7017,7 @@ export const pageLabels = {
 	},
 	"archiveEditor.title": {
 		en: "Edit Archive",
+		ar: "Edit Archive", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Editar archivo",
 		fr: "Modifier l'archive",
 		de: "Archiv bearbeiten",
@@ -6448,6 +7029,7 @@ export const pageLabels = {
 	},
 	"archiveEditor.description": {
 		en: "Editable metadata for public archive routes. Use Posts to manage the content that appears inside the archive.",
+		ar: "Editable metadata for public archive routes. Use Posts to manage the content that appears inside the archive.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Metadatos editables para rutas públicas de archivo. Usa Publicaciones para gestionar el contenido que aparece dentro del archivo.",
 		fr: "Métadonnées modifiables pour les routes d'archives publiques. Utilisez Publications pour gérer le contenu qui apparaît dans l'archive.",
 		de: "Editierbare Metadaten für öffentliche Archivrouten. Verwenden Sie Beiträge, um die im Archiv erscheinenden Inhalte zu verwalten.",
@@ -6459,6 +7041,7 @@ export const pageLabels = {
 	},
 	"archiveEditor.breadcrumb": {
 		en: "breadcrumb",
+		ar: "breadcrumb", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "ruta de navegación",
 		fr: "fil d'Ariane",
 		de: "Brotkrumen",
@@ -6470,6 +7053,7 @@ export const pageLabels = {
 	},
 	"archiveEditor.archivesLink": {
 		en: "Archives",
+		ar: "Archives", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Archivos",
 		fr: "Archives",
 		de: "Archive",
@@ -6481,6 +7065,7 @@ export const pageLabels = {
 	},
 	"archiveEditor.partialResults": {
 		en: "Some archive data is temporarily unavailable. This page is showing partial results.",
+		ar: "Some archive data is temporarily unavailable. This page is showing partial results.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Algunos datos del archivo no están disponibles temporalmente. Esta página muestra resultados parciales.",
 		fr: "Certaines données d'archive sont temporairement indisponibles. Cette page affiche des résultats partiels.",
 		de: "Einige Archivdaten sind vorübergehend nicht verfügbar. Diese Seite zeigt Teilergebnisse.",
@@ -6492,6 +7077,7 @@ export const pageLabels = {
 	},
 	"archiveEditor.backToArchives": {
 		en: "Back to archives",
+		ar: "Back to archives", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Volver a archivos",
 		fr: "Retour aux archives",
 		de: "Zurück zu Archiven",
@@ -6503,6 +7089,7 @@ export const pageLabels = {
 	},
 	"archiveEditor.openPublicArchive": {
 		en: "Open public archive",
+		ar: "Open public archive", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Abrir archivo público",
 		fr: "Ouvrir l'archive publique",
 		de: "Öffentliches Archiv öffnen",
@@ -6514,6 +7101,7 @@ export const pageLabels = {
 	},
 	"archiveEditor.manageInPosts": {
 		en: "Manage archive content in posts",
+		ar: "Manage archive content in posts", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Gestionar el contenido del archivo en publicaciones",
 		fr: "Gérer le contenu de l'archive dans les publications",
 		de: "Archivinhalte in Beiträgen verwalten",
@@ -6525,6 +7113,7 @@ export const pageLabels = {
 	},
 	"archiveEditor.savedSuccess": {
 		en: "Archive route updated successfully.",
+		ar: "Archive route updated successfully.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Ruta de archivo actualizada con éxito.",
 		fr: "Route d'archive mise à jour avec succès.",
 		de: "Archivroute erfolgreich aktualisiert.",
@@ -6536,6 +7125,7 @@ export const pageLabels = {
 	},
 	"archiveEditor.metadataHeading": {
 		en: "Archive Metadata",
+		ar: "Archive Metadata", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Metadatos del archivo",
 		fr: "Métadonnées d'archive",
 		de: "Archiv-Metadaten",
@@ -6547,6 +7137,7 @@ export const pageLabels = {
 	},
 	"archiveEditor.publicArchiveRoute": {
 		en: "Public archive route:",
+		ar: "Public archive route:", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Ruta pública del archivo:",
 		fr: "Route publique de l'archive :",
 		de: "Öffentliche Archivroute:",
@@ -6558,6 +7149,7 @@ export const pageLabels = {
 	},
 	"archiveEditor.titleField": {
 		en: "Title",
+		ar: "Title", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Título",
 		fr: "Titre",
 		de: "Titel",
@@ -6569,6 +7161,7 @@ export const pageLabels = {
 	},
 	"archiveEditor.summary": {
 		en: "Summary",
+		ar: "Summary", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Resumen",
 		fr: "Résumé",
 		de: "Zusammenfassung",
@@ -6580,6 +7173,7 @@ export const pageLabels = {
 	},
 	"archiveEditor.seoTitle": {
 		en: "SEO Title",
+		ar: "SEO Title", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Título SEO",
 		fr: "Titre SEO",
 		de: "SEO-Titel",
@@ -6591,6 +7185,7 @@ export const pageLabels = {
 	},
 	"archiveEditor.metaDescription": {
 		en: "Meta Description",
+		ar: "Meta Description", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Meta descripción",
 		fr: "Méta-description",
 		de: "Meta-Beschreibung",
@@ -6602,6 +7197,7 @@ export const pageLabels = {
 	},
 	"archiveEditor.canonicalUrlOverride": {
 		en: "Canonical URL Override",
+		ar: "Canonical URL Override", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Anulación de URL canónica",
 		fr: "Remplacement de l'URL canonique",
 		de: "Kanonische URL überschreiben",
@@ -6613,6 +7209,7 @@ export const pageLabels = {
 	},
 	"archiveEditor.robotsDirective": {
 		en: "Robots Directive",
+		ar: "Robots Directive", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Directiva de robots",
 		fr: "Directive robots",
 		de: "Robots-Direktive",
@@ -6624,6 +7221,7 @@ export const pageLabels = {
 	},
 	"archiveEditor.revisionNote": {
 		en: "Revision Note",
+		ar: "Revision Note", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Nota de revisión",
 		fr: "Note de révision",
 		de: "Revisionsnotiz",
@@ -6635,6 +7233,7 @@ export const pageLabels = {
 	},
 	"archiveEditor.revisionNotePlaceholder": {
 		en: "Summarize this change",
+		ar: "Summarize this change", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Resume este cambio",
 		fr: "Résumez ce changement",
 		de: "Fassen Sie diese Änderung zusammen",
@@ -6646,6 +7245,7 @@ export const pageLabels = {
 	},
 	"archiveEditor.saveArchive": {
 		en: "Save archive metadata",
+		ar: "Save archive metadata", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Guardar metadatos del archivo",
 		fr: "Enregistrer les métadonnées d'archive",
 		de: "Archiv-Metadaten speichern",
@@ -6657,6 +7257,7 @@ export const pageLabels = {
 	},
 	"archiveEditor.cancel": {
 		en: "Cancel",
+		ar: "Cancel", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Cancelar",
 		fr: "Annuler",
 		de: "Abbrechen",
@@ -6668,6 +7269,7 @@ export const pageLabels = {
 	},
 	"archiveEditor.notFoundTitle": {
 		en: "Not Found",
+		ar: "Not Found", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "No encontrado",
 		fr: "Introuvable",
 		de: "Nicht gefunden",
@@ -6679,6 +7281,7 @@ export const pageLabels = {
 	},
 	"archiveEditor.notFoundDesc": {
 		en: "The requested archive route could not be found.",
+		ar: "The requested archive route could not be found.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "No se pudo encontrar la ruta de archivo solicitada.",
 		fr: "La route d'archive demandée est introuvable.",
 		de: "Die angeforderte Archivroute wurde nicht gefunden.",
@@ -6690,6 +7293,7 @@ export const pageLabels = {
 	},
 	"archiveEditor.forbiddenTitle": {
 		en: "Forbidden",
+		ar: "Forbidden", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Prohibido",
 		fr: "Interdit",
 		de: "Verboten",
@@ -6701,6 +7305,7 @@ export const pageLabels = {
 	},
 	"archiveEditor.forbiddenDesc": {
 		en: "This action requires an admin account.",
+		ar: "This action requires an admin account.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Esta acción requiere una cuenta de administración.",
 		fr: "Cette action nécessite un compte administrateur.",
 		de: "Diese Aktion erfordert ein Admin-Konto.",
@@ -6712,6 +7317,7 @@ export const pageLabels = {
 	},
 	"archiveEditor.forbiddenBody": {
 		en: "This action requires an admin account and is hidden from editor-only roles.",
+		ar: "This action requires an admin account and is hidden from editor-only roles.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Esta acción requiere una cuenta de administración y está oculta para roles solo de editor.",
 		fr: "Cette action nécessite un compte administrateur et est masquée pour les rôles éditeur uniquement.",
 		de: "Diese Aktion erfordert ein Admin-Konto und ist für reine Editor-Rollen ausgeblendet.",
@@ -6723,6 +7329,7 @@ export const pageLabels = {
 	},
 	"translations.title": {
 		en: "Translations",
+		ar: "Translations", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Traducciones",
 		fr: "Traductions",
 		de: "Übersetzungen",
@@ -6734,6 +7341,7 @@ export const pageLabels = {
 	},
 	"translations.description": {
 		en: "Translation coverage and state. Edit content inside the owning page or route editor.",
+		ar: "Translation coverage and state. Edit content inside the owning page or route editor.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Cobertura y estado de traducción. Edita el contenido dentro de la página propietaria o el editor de rutas.",
 		fr: "Couverture et état des traductions. Modifiez le contenu dans la page propriétaire ou l'éditeur de route.",
 		de: "Übersetzungsabdeckung und -status. Inhalte im Besitzer- oder Routen-Editor bearbeiten.",
@@ -6745,6 +7353,7 @@ export const pageLabels = {
 	},
 	"translations.partialResults": {
 		en: "Some translation records are temporarily unavailable. This page is showing partial results.",
+		ar: "Some translation records are temporarily unavailable. This page is showing partial results.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Algunos registros de traducción no están disponibles temporalmente. Esta página muestra resultados parciales.",
 		fr: "Certaines entrées de traduction sont temporairement indisponibles. Cette page affiche des résultats partiels.",
 		de: "Einige Übersetzungseinträge sind vorübergehend nicht verfügbar. Diese Seite zeigt Teilergebnisse.",
@@ -6756,6 +7365,7 @@ export const pageLabels = {
 	},
 	"translations.savedSuccess": {
 		en: "Translation state updated successfully.",
+		ar: "Translation state updated successfully.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Estado de traducción actualizado con éxito.",
 		fr: "État de traduction mis à jour avec succès.",
 		de: "Übersetzungsstatus erfolgreich aktualisiert.",
@@ -6767,6 +7377,7 @@ export const pageLabels = {
 	},
 	"translations.localizedRoutes": {
 		en: "Localized routes",
+		ar: "Localized routes", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Rutas localizadas",
 		fr: "Routes localisées",
 		de: "Lokalisierte Routen",
@@ -6778,6 +7389,7 @@ export const pageLabels = {
 	},
 	"translations.localizedRoutesDesc": {
 		en: "Spanish routes currently tracked in translation coverage.",
+		ar: "Spanish routes currently tracked in translation coverage.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Rutas en español que se siguen actualmente en la cobertura de traducción.",
 		fr: "Routes espagnoles actuellement suivies dans la couverture de traduction.",
 		de: "Aktuell in der Übersetzungsabdeckung verfolgte spanische Routen.",
@@ -6789,6 +7401,7 @@ export const pageLabels = {
 	},
 	"translations.publishedTranslations": {
 		en: "Published translations",
+		ar: "Published translations", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Traducciones publicadas",
 		fr: "Traductions publiées",
 		de: "Veröffentlichte Übersetzungen",
@@ -6800,6 +7413,7 @@ export const pageLabels = {
 	},
 	"translations.publishedTranslationsDesc": {
 		en: "Routes that are ready and publicly published in Spanish.",
+		ar: "Routes that are ready and publicly published in Spanish.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Rutas listas y publicadas públicamente en español.",
 		fr: "Routes prêtes et publiées publiquement en espagnol.",
 		de: "Routen, die bereit und öffentlich auf Spanisch veröffentlicht sind.",
@@ -6811,6 +7425,7 @@ export const pageLabels = {
 	},
 	"translations.coverageKicker": {
 		en: "Coverage",
+		ar: "Coverage", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Cobertura",
 		fr: "Couverture",
 		de: "Abdeckung",
@@ -6822,6 +7437,7 @@ export const pageLabels = {
 	},
 	"translations.coverageHeading": {
 		en: "Translation Coverage",
+		ar: "Translation Coverage", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Cobertura de traducción",
 		fr: "Couverture de traduction",
 		de: "Übersetzungsabdeckung",
@@ -6833,6 +7449,7 @@ export const pageLabels = {
 	},
 	"translations.coverageDesc": {
 		en: "Use this screen to triage untranslated routes, then jump into the owning editor to make content changes.",
+		ar: "Use this screen to triage untranslated routes, then jump into the owning editor to make content changes.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Usa esta pantalla para clasificar las rutas sin traducir y luego salta al editor propietario para hacer cambios de contenido.",
 		fr: "Utilisez cet écran pour trier les routes non traduites, puis accédez à l'éditeur propriétaire pour modifier le contenu.",
 		de: "Nutzen Sie diesen Bildschirm, um nicht übersetzte Routen zu sichten, und springen Sie dann in den Besitzer-Editor, um Inhalte zu ändern.",
@@ -6844,6 +7461,7 @@ export const pageLabels = {
 	},
 	"translations.filterAria": {
 		en: "Filter translations by state",
+		ar: "Filter translations by state", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Filtrar traducciones por estado",
 		fr: "Filtrer les traductions par état",
 		de: "Übersetzungen nach Status filtern",
@@ -6855,6 +7473,7 @@ export const pageLabels = {
 	},
 	"translations.allStates": {
 		en: "All states",
+		ar: "All states", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Todos los estados",
 		fr: "Tous les états",
 		de: "Alle Status",
@@ -6866,6 +7485,7 @@ export const pageLabels = {
 	},
 	"translations.applyFilter": {
 		en: "Apply filter",
+		ar: "Apply filter", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Aplicar filtro",
 		fr: "Appliquer le filtre",
 		de: "Filter anwenden",
@@ -6877,6 +7497,7 @@ export const pageLabels = {
 	},
 	"translations.summaryOf": {
 		en: "of",
+		ar: "of", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "de",
 		fr: "sur",
 		de: "von",
@@ -6888,6 +7509,7 @@ export const pageLabels = {
 	},
 	"translations.summaryRoutes": {
 		en: "localized routes",
+		ar: "localized routes", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "rutas localizadas",
 		fr: "routes localisées",
 		de: "lokalisierte Routen",
@@ -6899,6 +7521,7 @@ export const pageLabels = {
 	},
 	"translations.tableAria": {
 		en: "Translation coverage",
+		ar: "Translation coverage", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Cobertura de traducción",
 		fr: "Couverture de traduction",
 		de: "Übersetzungsabdeckung",
@@ -6910,6 +7533,7 @@ export const pageLabels = {
 	},
 	"translations.route": {
 		en: "Route",
+		ar: "Route", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Ruta",
 		fr: "Route",
 		de: "Route",
@@ -6921,6 +7545,7 @@ export const pageLabels = {
 	},
 	"translations.locale": {
 		en: "Locale",
+		ar: "Locale", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Configuración regional",
 		fr: "Locale",
 		de: "Sprache",
@@ -6932,6 +7557,7 @@ export const pageLabels = {
 	},
 	"translations.englishSource": {
 		en: "English source",
+		ar: "English source", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Fuente en inglés",
 		fr: "Source anglaise",
 		de: "Englische Quelle",
@@ -6943,6 +7569,7 @@ export const pageLabels = {
 	},
 	"translations.edit": {
 		en: "Edit",
+		ar: "Edit", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Editar",
 		fr: "Modifier",
 		de: "Bearbeiten",
@@ -6954,6 +7581,7 @@ export const pageLabels = {
 	},
 	"translations.update": {
 		en: "Update",
+		ar: "Update", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Actualizar",
 		fr: "Mettre à jour",
 		de: "Aktualisieren",
@@ -6965,6 +7593,7 @@ export const pageLabels = {
 	},
 	"translations.editEn": {
 		en: "Edit EN",
+		ar: "Edit EN", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Editar EN",
 		fr: "Modifier EN",
 		de: "EN bearbeiten",
@@ -6976,6 +7605,7 @@ export const pageLabels = {
 	},
 	"translations.editLocale": {
 		en: "Edit locale",
+		ar: "Edit locale", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Editar idioma",
 		fr: "Modifier la locale",
 		de: "Sprache bearbeiten",
@@ -6987,6 +7617,7 @@ export const pageLabels = {
 	},
 	"translations.translationStateForRoute": {
 		en: "Translation state for",
+		ar: "Translation state for", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Estado de traducción para",
 		fr: "État de traduction pour",
 		de: "Übersetzungsstatus für",
@@ -6998,6 +7629,7 @@ export const pageLabels = {
 	},
 	"translations.saveState": {
 		en: "Save state",
+		ar: "Save state", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Guardar estado",
 		fr: "Enregistrer l'état",
 		de: "Status speichern",
@@ -7009,6 +7641,7 @@ export const pageLabels = {
 	},
 	"translations.forbiddenTitle": {
 		en: "Forbidden",
+		ar: "Forbidden", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Prohibido",
 		fr: "Interdit",
 		de: "Verboten",
@@ -7020,6 +7653,7 @@ export const pageLabels = {
 	},
 	"translations.forbiddenDesc": {
 		en: "This action requires an admin account.",
+		ar: "This action requires an admin account.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Esta acción requiere una cuenta de administración.",
 		fr: "Cette action nécessite un compte administrateur.",
 		de: "Diese Aktion erfordert ein Admin-Konto.",
@@ -7031,6 +7665,7 @@ export const pageLabels = {
 	},
 	"translations.forbiddenBody": {
 		en: "This action requires an admin account and is hidden from editor-only roles.",
+		ar: "This action requires an admin account and is hidden from editor-only roles.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Esta acción requiere una cuenta de administración y está oculta para roles solo de editor.",
 		fr: "Cette action nécessite un compte administrateur et est masquée pour les rôles éditeur uniquement.",
 		de: "Diese Aktion erfordert ein Admin-Konto und ist für reine Editor-Rollen ausgeblendet.",
@@ -7043,6 +7678,7 @@ export const pageLabels = {
 	// ANCHOR-BATCH-D: seo + system + api-tokens + webhooks
 	"seo.title": {
 		en: "SEO",
+		ar: "SEO", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "SEO",
 		fr: "SEO",
 		de: "SEO",
@@ -7054,6 +7690,7 @@ export const pageLabels = {
 	},
 	"seo.description": {
 		en: "Review SEO metadata across pages, posts, archives, and system routes.",
+		ar: "Review SEO metadata across pages, posts, archives, and system routes.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Revisa los metadatos de SEO en páginas, publicaciones, archivos y rutas del sistema.",
 		fr: "Examinez les métadonnées SEO sur les pages, articles, archives et routes système.",
 		de: "Prüfen Sie SEO-Metadaten für Seiten, Beiträge, Archive und Systemrouten.",
@@ -7065,6 +7702,7 @@ export const pageLabels = {
 	},
 	"seo.partialResults": {
 		en: "Some SEO records are temporarily unavailable. This page is showing partial results.",
+		ar: "Some SEO records are temporarily unavailable. This page is showing partial results.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Algunos registros de SEO no están disponibles temporalmente. Esta página muestra resultados parciales.",
 		fr: "Certains enregistrements SEO sont temporairement indisponibles. Cette page affiche des résultats partiels.",
 		de: "Einige SEO-Datensätze sind vorübergehend nicht verfügbar. Diese Seite zeigt Teilergebnisse.",
@@ -7076,6 +7714,7 @@ export const pageLabels = {
 	},
 	"seo.indexedRecords": {
 		en: "Indexed SEO records",
+		ar: "Indexed SEO records", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Registros SEO indexados",
 		fr: "Enregistrements SEO indexés",
 		de: "Indexierte SEO-Datensätze",
@@ -7087,6 +7726,7 @@ export const pageLabels = {
 	},
 	"seo.indexedRecordsDesc": {
 		en: "Pages, posts, archives, structured pages, and system routes.",
+		ar: "Pages, posts, archives, structured pages, and system routes.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Páginas, publicaciones, archivos, páginas estructuradas y rutas del sistema.",
 		fr: "Pages, articles, archives, pages structurées et routes système.",
 		de: "Seiten, Beiträge, Archive, strukturierte Seiten und Systemrouten.",
@@ -7098,6 +7738,7 @@ export const pageLabels = {
 	},
 	"seo.needsMetadata": {
 		en: "Needs metadata",
+		ar: "Needs metadata", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Necesita metadatos",
 		fr: "Métadonnées requises",
 		de: "Metadaten fehlen",
@@ -7109,6 +7750,7 @@ export const pageLabels = {
 	},
 	"seo.needsMetadataDesc": {
 		en: "Items still missing a dedicated SEO title or meta description.",
+		ar: "Items still missing a dedicated SEO title or meta description.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Elementos que aún carecen de un título SEO o meta descripción dedicados.",
 		fr: "Éléments dépourvus d'un titre SEO ou d'une méta-description dédiés.",
 		de: "Elemente, denen noch ein dedizierter SEO-Titel oder eine Meta-Beschreibung fehlt.",
@@ -7120,6 +7762,7 @@ export const pageLabels = {
 	},
 	"seo.triageKicker": {
 		en: "Triage",
+		ar: "Triage", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Triaje",
 		fr: "Tri",
 		de: "Triage",
@@ -7131,6 +7774,7 @@ export const pageLabels = {
 	},
 	"seo.triageHeading": {
 		en: "SEO Triage",
+		ar: "SEO Triage", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Triaje de SEO",
 		fr: "Tri SEO",
 		de: "SEO-Triage",
@@ -7142,6 +7786,7 @@ export const pageLabels = {
 	},
 	"seo.triageDesc": {
 		en: "Filter by record family, isolate missing metadata, then jump into the owning editor.",
+		ar: "Filter by record family, isolate missing metadata, then jump into the owning editor.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Filtra por familia de registros, aísla los metadatos faltantes y salta al editor correspondiente.",
 		fr: "Filtrez par famille d'enregistrements, isolez les métadonnées manquantes, puis accédez à l'éditeur correspondant.",
 		de: "Filtern Sie nach Datensatzfamilie, isolieren Sie fehlende Metadaten und springen Sie in den zuständigen Editor.",
@@ -7153,6 +7798,7 @@ export const pageLabels = {
 	},
 	"seo.sortRowsAria": {
 		en: "Sort SEO rows",
+		ar: "Sort SEO rows", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Ordenar filas de SEO",
 		fr: "Trier les lignes SEO",
 		de: "SEO-Zeilen sortieren",
@@ -7164,6 +7810,7 @@ export const pageLabels = {
 	},
 	"seo.sortByPath": {
 		en: "Sort by path",
+		ar: "Sort by path", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Ordenar por ruta",
 		fr: "Trier par chemin",
 		de: "Nach Pfad sortieren",
@@ -7175,6 +7822,7 @@ export const pageLabels = {
 	},
 	"seo.sortByTitle": {
 		en: "Sort by title",
+		ar: "Sort by title", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Ordenar por título",
 		fr: "Trier par titre",
 		de: "Nach Titel sortieren",
@@ -7186,6 +7834,7 @@ export const pageLabels = {
 	},
 	"seo.sortByType": {
 		en: "Sort by type",
+		ar: "Sort by type", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Ordenar por tipo",
 		fr: "Trier par type",
 		de: "Nach Typ sortieren",
@@ -7197,6 +7846,7 @@ export const pageLabels = {
 	},
 	"seo.sortByStatus": {
 		en: "Sort by status",
+		ar: "Sort by status", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Ordenar por estado",
 		fr: "Trier par statut",
 		de: "Nach Status sortieren",
@@ -7208,6 +7858,7 @@ export const pageLabels = {
 	},
 	"seo.apply": {
 		en: "Apply",
+		ar: "Apply", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Aplicar",
 		fr: "Appliquer",
 		de: "Anwenden",
@@ -7219,6 +7870,7 @@ export const pageLabels = {
 	},
 	"seo.ofIndexed": {
 		en: "of",
+		ar: "of", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "de",
 		fr: "sur",
 		de: "von",
@@ -7230,6 +7882,7 @@ export const pageLabels = {
 	},
 	"seo.indexedItems": {
 		en: "indexed items",
+		ar: "indexed items", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "elementos indexados",
 		fr: "éléments indexés",
 		de: "indexierte Elemente",
@@ -7241,6 +7894,7 @@ export const pageLabels = {
 	},
 	"seo.filterAll": {
 		en: "All",
+		ar: "All", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Todos",
 		fr: "Tous",
 		de: "Alle",
@@ -7252,6 +7906,7 @@ export const pageLabels = {
 	},
 	"seo.filterPages": {
 		en: "Pages",
+		ar: "Pages", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Páginas",
 		fr: "Pages",
 		de: "Seiten",
@@ -7263,6 +7918,7 @@ export const pageLabels = {
 	},
 	"seo.filterPosts": {
 		en: "Posts",
+		ar: "Posts", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Publicaciones",
 		fr: "Articles",
 		de: "Beiträge",
@@ -7274,6 +7930,7 @@ export const pageLabels = {
 	},
 	"seo.filterStructured": {
 		en: "Structured",
+		ar: "Structured", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Estructuradas",
 		fr: "Structurées",
 		de: "Strukturiert",
@@ -7285,6 +7942,7 @@ export const pageLabels = {
 	},
 	"seo.filterArchives": {
 		en: "Archives",
+		ar: "Archives", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Archivos",
 		fr: "Archives",
 		de: "Archive",
@@ -7296,6 +7954,7 @@ export const pageLabels = {
 	},
 	"seo.filterSystem": {
 		en: "System",
+		ar: "System", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Sistema",
 		fr: "Système",
 		de: "System",
@@ -7307,6 +7966,7 @@ export const pageLabels = {
 	},
 	"seo.missingOnly": {
 		en: "Missing metadata only",
+		ar: "Missing metadata only", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Solo metadatos faltantes",
 		fr: "Uniquement métadonnées manquantes",
 		de: "Nur fehlende Metadaten",
@@ -7318,6 +7978,7 @@ export const pageLabels = {
 	},
 	"seo.overview": {
 		en: "SEO metadata overview",
+		ar: "SEO metadata overview", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Resumen de metadatos SEO",
 		fr: "Aperçu des métadonnées SEO",
 		de: "SEO-Metadaten-Übersicht",
@@ -7329,6 +7990,7 @@ export const pageLabels = {
 	},
 	"seo.tableAria": {
 		en: "SEO metadata",
+		ar: "SEO metadata", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Metadatos SEO",
 		fr: "Métadonnées SEO",
 		de: "SEO-Metadaten",
@@ -7340,6 +8002,7 @@ export const pageLabels = {
 	},
 	"seo.colType": {
 		en: "Type",
+		ar: "Type", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Tipo",
 		fr: "Type",
 		de: "Typ",
@@ -7351,6 +8014,7 @@ export const pageLabels = {
 	},
 	"seo.colSeoTitle": {
 		en: "SEO Title",
+		ar: "SEO Title", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Título SEO",
 		fr: "Titre SEO",
 		de: "SEO-Titel",
@@ -7362,6 +8026,7 @@ export const pageLabels = {
 	},
 	"seo.colMetaDescription": {
 		en: "Meta Description",
+		ar: "Meta Description", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Meta descripción",
 		fr: "Méta-description",
 		de: "Meta-Beschreibung",
@@ -7373,6 +8038,7 @@ export const pageLabels = {
 	},
 	"seo.colEdit": {
 		en: "Edit",
+		ar: "Edit", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Editar",
 		fr: "Modifier",
 		de: "Bearbeiten",
@@ -7384,6 +8050,7 @@ export const pageLabels = {
 	},
 	"seo.needsWork": {
 		en: "Needs work",
+		ar: "Needs work", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Requiere trabajo",
 		fr: "À compléter",
 		de: "Überarbeitung nötig",
@@ -7395,6 +8062,7 @@ export const pageLabels = {
 	},
 	"seo.ready": {
 		en: "Ready",
+		ar: "Ready", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Listo",
 		fr: "Prêt",
 		de: "Bereit",
@@ -7406,6 +8074,7 @@ export const pageLabels = {
 	},
 	"seo.edit": {
 		en: "Edit",
+		ar: "Edit", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Editar",
 		fr: "Modifier",
 		de: "Bearbeiten",
@@ -7417,6 +8086,7 @@ export const pageLabels = {
 	},
 	"system.title": {
 		en: "System",
+		ar: "System", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Sistema",
 		fr: "Système",
 		de: "System",
@@ -7428,6 +8098,7 @@ export const pageLabels = {
 	},
 	"system.description": {
 		en: "Admin-owned system routes and generated public outputs.",
+		ar: "Admin-owned system routes and generated public outputs.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Rutas de sistema gestionadas por administradores y salidas públicas generadas.",
 		fr: "Routes système gérées par l'administrateur et sorties publiques générées.",
 		de: "Vom Admin verwaltete Systemrouten und generierte öffentliche Ausgaben.",
@@ -7439,6 +8110,7 @@ export const pageLabels = {
 	},
 	"system.partialResults": {
 		en: "Some system-route data is temporarily unavailable. This page is showing partial results.",
+		ar: "Some system-route data is temporarily unavailable. This page is showing partial results.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Algunos datos de rutas del sistema no están disponibles temporalmente. Esta página muestra resultados parciales.",
 		fr: "Certaines données de routes système sont temporairement indisponibles. Cette page affiche des résultats partiels.",
 		de: "Einige Systemrouten-Daten sind vorübergehend nicht verfügbar. Diese Seite zeigt Teilergebnisse.",
@@ -7450,6 +8122,7 @@ export const pageLabels = {
 	},
 	"system.backToPages": {
 		en: "Back to pages",
+		ar: "Back to pages", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Volver a páginas",
 		fr: "Retour aux pages",
 		de: "Zurück zu Seiten",
@@ -7461,6 +8134,7 @@ export const pageLabels = {
 	},
 	"system.open500": {
 		en: "Open 500 page",
+		ar: "Open 500 page", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Abrir página 500",
 		fr: "Ouvrir la page 500",
 		de: "500-Seite öffnen",
@@ -7472,6 +8146,7 @@ export const pageLabels = {
 	},
 	"system.openRobots": {
 		en: "Open robots.txt",
+		ar: "Open robots.txt", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Abrir robots.txt",
 		fr: "Ouvrir robots.txt",
 		de: "robots.txt öffnen",
@@ -7483,6 +8158,7 @@ export const pageLabels = {
 	},
 	"system.openSitemap": {
 		en: "Open sitemap.xml",
+		ar: "Open sitemap.xml", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Abrir sitemap.xml",
 		fr: "Ouvrir sitemap.xml",
 		de: "sitemap.xml öffnen",
@@ -7494,6 +8170,7 @@ export const pageLabels = {
 	},
 	"system.savedSuccess": {
 		en: "System route updated successfully.",
+		ar: "System route updated successfully.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Ruta del sistema actualizada correctamente.",
 		fr: "Route système mise à jour avec succès.",
 		de: "Systemroute erfolgreich aktualisiert.",
@@ -7505,6 +8182,7 @@ export const pageLabels = {
 	},
 	"system.errorSurfaceKicker": {
 		en: "Error Surface",
+		ar: "Error Surface", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Superficie de error",
 		fr: "Surface d'erreur",
 		de: "Fehleroberfläche",
@@ -7516,6 +8194,7 @@ export const pageLabels = {
 	},
 	"system.errorPageHeading": {
 		en: "500 Page",
+		ar: "500 Page", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Página 500",
 		fr: "Page 500",
 		de: "500-Seite",
@@ -7527,6 +8206,7 @@ export const pageLabels = {
 	},
 	"system.errorPageDesc": {
 		en: "Editor-owned content and CTA settings for the public error page.",
+		ar: "Editor-owned content and CTA settings for the public error page.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Contenido gestionado por editores y configuración de CTA para la página de error pública.",
 		fr: "Contenu géré par l'éditeur et paramètres CTA pour la page d'erreur publique.",
 		de: "Vom Editor verwaltete Inhalte und CTA-Einstellungen für die öffentliche Fehlerseite.",
@@ -7538,6 +8218,7 @@ export const pageLabels = {
 	},
 	"system.publicRoute": {
 		en: "Public route:",
+		ar: "Public route:", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Ruta pública:",
 		fr: "Route publique :",
 		de: "Öffentliche Route:",
@@ -7549,6 +8230,7 @@ export const pageLabels = {
 	},
 	"system.generatedPublicOutput": {
 		en: "Generated public output:",
+		ar: "Generated public output:", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Salida pública generada:",
 		fr: "Sortie publique générée :",
 		de: "Generierte öffentliche Ausgabe:",
@@ -7560,6 +8242,7 @@ export const pageLabels = {
 	},
 	"system.fieldTitle": {
 		en: "Title",
+		ar: "Title", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Título",
 		fr: "Titre",
 		de: "Titel",
@@ -7571,6 +8254,7 @@ export const pageLabels = {
 	},
 	"system.fieldSummary": {
 		en: "Summary",
+		ar: "Summary", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Resumen",
 		fr: "Résumé",
 		de: "Zusammenfassung",
@@ -7582,6 +8266,7 @@ export const pageLabels = {
 	},
 	"system.fieldBody": {
 		en: "Body",
+		ar: "Body", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Cuerpo",
 		fr: "Corps",
 		de: "Inhalt",
@@ -7593,6 +8278,7 @@ export const pageLabels = {
 	},
 	"system.fieldButtonLabel": {
 		en: "Button label",
+		ar: "Button label", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Etiqueta del botón",
 		fr: "Libellé du bouton",
 		de: "Schaltflächenbeschriftung",
@@ -7604,6 +8290,7 @@ export const pageLabels = {
 	},
 	"system.fieldButtonHref": {
 		en: "Button href",
+		ar: "Button href", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Enlace del botón (href)",
 		fr: "Lien du bouton (href)",
 		de: "Button-Link (href)",
@@ -7615,6 +8302,7 @@ export const pageLabels = {
 	},
 	"system.fieldContactHref": {
 		en: "Contact href",
+		ar: "Contact href", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Enlace de contacto (href)",
 		fr: "Lien de contact (href)",
 		de: "Kontakt-Link (href)",
@@ -7626,6 +8314,7 @@ export const pageLabels = {
 	},
 	"system.fieldRevisionNote": {
 		en: "Revision note",
+		ar: "Revision note", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Nota de revisión",
 		fr: "Note de révision",
 		de: "Revisionsnotiz",
@@ -7637,6 +8326,7 @@ export const pageLabels = {
 	},
 	"system.revisionPlaceholder": {
 		en: "Summarize this change",
+		ar: "Summarize this change", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Resume este cambio",
 		fr: "Résumez ce changement",
 		de: "Fassen Sie diese Änderung zusammen",
@@ -7648,6 +8338,7 @@ export const pageLabels = {
 	},
 	"system.errorPageDefaultTitle": {
 		en: "Request could not be completed",
+		ar: "Request could not be completed", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "No se pudo completar la solicitud",
 		fr: "La requête n'a pas pu être traitée",
 		de: "Anfrage konnte nicht abgeschlossen werden",
@@ -7659,6 +8350,7 @@ export const pageLabels = {
 	},
 	"system.errorPageDefaultButton": {
 		en: "Go to homepage",
+		ar: "Go to homepage", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Ir a la página de inicio",
 		fr: "Aller à l'accueil",
 		de: "Zur Startseite",
@@ -7670,6 +8362,7 @@ export const pageLabels = {
 	},
 	"system.save500": {
 		en: "Save 500 page",
+		ar: "Save 500 page", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Guardar página 500",
 		fr: "Enregistrer la page 500",
 		de: "500-Seite speichern",
@@ -7681,6 +8374,7 @@ export const pageLabels = {
 	},
 	"system.crawlerOutputKicker": {
 		en: "Crawler Output",
+		ar: "Crawler Output", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Salida del rastreador",
 		fr: "Sortie du robot d'exploration",
 		de: "Crawler-Ausgabe",
@@ -7692,6 +8386,7 @@ export const pageLabels = {
 	},
 	"system.robotsHeading": {
 		en: "robots.txt",
+		ar: "robots.txt", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "robots.txt",
 		fr: "robots.txt",
 		de: "robots.txt",
@@ -7703,6 +8398,7 @@ export const pageLabels = {
 	},
 	"system.robotsDesc": {
 		en: "Managed generated output for crawler rules and sitemap discovery.",
+		ar: "Managed generated output for crawler rules and sitemap discovery.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Salida generada y administrada para reglas de rastreadores y descubrimiento de sitemap.",
 		fr: "Sortie générée et gérée pour les règles des robots et la découverte du sitemap.",
 		de: "Verwaltete generierte Ausgabe für Crawler-Regeln und Sitemap-Erkennung.",
@@ -7714,6 +8410,7 @@ export const pageLabels = {
 	},
 	"system.saveRobots": {
 		en: "Save robots.txt",
+		ar: "Save robots.txt", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Guardar robots.txt",
 		fr: "Enregistrer robots.txt",
 		de: "robots.txt speichern",
@@ -7725,6 +8422,7 @@ export const pageLabels = {
 	},
 	"system.robotsDefaultTitle": {
 		en: "Robots",
+		ar: "Robots", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Robots",
 		fr: "Robots",
 		de: "Robots",
@@ -7736,6 +8434,7 @@ export const pageLabels = {
 	},
 	"system.generatedSitemapKicker": {
 		en: "Generated Sitemap",
+		ar: "Generated Sitemap", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Sitemap generado",
 		fr: "Sitemap généré",
 		de: "Generiertes Sitemap",
@@ -7747,6 +8446,7 @@ export const pageLabels = {
 	},
 	"system.sitemapHeading": {
 		en: "sitemap.xml",
+		ar: "sitemap.xml", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "sitemap.xml",
 		fr: "sitemap.xml",
 		de: "sitemap.xml",
@@ -7758,6 +8458,7 @@ export const pageLabels = {
 	},
 	"system.sitemapDesc": {
 		en: "Control exclusions and extra canonical URLs for the generated sitemap.",
+		ar: "Control exclusions and extra canonical URLs for the generated sitemap.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Controla las exclusiones y las URLs canónicas adicionales para el sitemap generado.",
 		fr: "Contrôlez les exclusions et les URL canoniques supplémentaires pour le sitemap généré.",
 		de: "Steuern Sie Ausschlüsse und zusätzliche kanonische URLs für das generierte Sitemap.",
@@ -7769,6 +8470,7 @@ export const pageLabels = {
 	},
 	"system.fieldExcludedPaths": {
 		en: "Excluded paths",
+		ar: "Excluded paths", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Rutas excluidas",
 		fr: "Chemins exclus",
 		de: "Ausgeschlossene Pfade",
@@ -7780,6 +8482,7 @@ export const pageLabels = {
 	},
 	"system.fieldExtraUrls": {
 		en: "Extra canonical URLs",
+		ar: "Extra canonical URLs", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "URLs canónicas adicionales",
 		fr: "URL canoniques supplémentaires",
 		de: "Zusätzliche kanonische URLs",
@@ -7791,6 +8494,7 @@ export const pageLabels = {
 	},
 	"system.saveSitemap": {
 		en: "Save sitemap.xml",
+		ar: "Save sitemap.xml", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Guardar sitemap.xml",
 		fr: "Enregistrer sitemap.xml",
 		de: "sitemap.xml speichern",
@@ -7802,6 +8506,7 @@ export const pageLabels = {
 	},
 	"system.sitemapDefaultTitle": {
 		en: "Sitemap",
+		ar: "Sitemap", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Sitemap",
 		fr: "Sitemap",
 		de: "Sitemap",
@@ -7813,6 +8518,7 @@ export const pageLabels = {
 	},
 	"system.forbiddenBody": {
 		en: "This action requires an admin account and is hidden from editor-only roles.",
+		ar: "This action requires an admin account and is hidden from editor-only roles.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Esta acción requiere una cuenta de administración y está oculta para roles solo de editor.",
 		fr: "Cette action nécessite un compte administrateur et est masquée pour les rôles éditeur uniquement.",
 		de: "Diese Aktion erfordert ein Admin-Konto und ist für reine Editor-Rollen ausgeblendet.",
@@ -7824,6 +8530,7 @@ export const pageLabels = {
 	},
 	"apiTokens.title": {
 		en: "API Tokens",
+		ar: "API Tokens", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Tokens de API",
 		fr: "Jetons API",
 		de: "API-Token",
@@ -7835,6 +8542,7 @@ export const pageLabels = {
 	},
 	"apiTokens.description": {
 		en: "Manage API tokens for programmatic access.",
+		ar: "Manage API tokens for programmatic access.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Gestiona los tokens de API para acceso programático.",
 		fr: "Gérez les jetons API pour un accès programmatique.",
 		de: "Verwalten Sie API-Token für den programmgesteuerten Zugriff.",
@@ -7846,6 +8554,7 @@ export const pageLabels = {
 	},
 	"apiTokens.revokedSuccess": {
 		en: "Token revoked successfully.",
+		ar: "Token revoked successfully.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Token revocado correctamente.",
 		fr: "Jeton révoqué avec succès.",
 		de: "Token erfolgreich widerrufen.",
@@ -7857,6 +8566,7 @@ export const pageLabels = {
 	},
 	"apiTokens.created": {
 		en: "Token created.",
+		ar: "Token created.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Token creado.",
 		fr: "Jeton créé.",
 		de: "Token erstellt.",
@@ -7868,6 +8578,7 @@ export const pageLabels = {
 	},
 	"apiTokens.copyNow": {
 		en: "Copy this token now — it will not be shown again.",
+		ar: "Copy this token now — it will not be shown again.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Copia este token ahora; no se mostrará de nuevo.",
 		fr: "Copiez ce jeton maintenant — il ne sera plus affiché.",
 		de: "Kopieren Sie diesen Token jetzt — er wird nicht erneut angezeigt.",
@@ -7879,6 +8590,7 @@ export const pageLabels = {
 	},
 	"apiTokens.createKicker": {
 		en: "Create Token",
+		ar: "Create Token", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Crear token",
 		fr: "Créer un jeton",
 		de: "Token erstellen",
@@ -7890,6 +8602,7 @@ export const pageLabels = {
 	},
 	"apiTokens.newToken": {
 		en: "New API Token",
+		ar: "New API Token", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Nuevo token de API",
 		fr: "Nouveau jeton API",
 		de: "Neues API-Token",
@@ -7901,6 +8614,7 @@ export const pageLabels = {
 	},
 	"apiTokens.label": {
 		en: "Label",
+		ar: "Label", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Etiqueta",
 		fr: "Libellé",
 		de: "Beschriftung",
@@ -7912,6 +8626,7 @@ export const pageLabels = {
 	},
 	"apiTokens.labelPlaceholder": {
 		en: "e.g. AI assistant",
+		ar: "e.g. AI assistant", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "p. ej. asistente de IA",
 		fr: "p. ex. assistant IA",
 		de: "z. B. KI-Assistent",
@@ -7923,6 +8638,7 @@ export const pageLabels = {
 	},
 	"apiTokens.scopes": {
 		en: "Scopes",
+		ar: "Scopes", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Ámbitos",
 		fr: "Portées",
 		de: "Bereiche",
@@ -7934,6 +8650,7 @@ export const pageLabels = {
 	},
 	"apiTokens.createButton": {
 		en: "Create Token",
+		ar: "Create Token", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Crear token",
 		fr: "Créer un jeton",
 		de: "Token erstellen",
@@ -7945,6 +8662,7 @@ export const pageLabels = {
 	},
 	"apiTokens.existingTokens": {
 		en: "Existing Tokens",
+		ar: "Existing Tokens", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Tokens existentes",
 		fr: "Jetons existants",
 		de: "Vorhandene Token",
@@ -7956,6 +8674,7 @@ export const pageLabels = {
 	},
 	"apiTokens.noTokens": {
 		en: "No tokens yet. Create one above.",
+		ar: "No tokens yet. Create one above.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Aún no hay tokens. Crea uno arriba.",
 		fr: "Aucun jeton pour le moment. Créez-en un ci-dessus.",
 		de: "Noch keine Token. Erstellen Sie oben einen.",
@@ -7967,6 +8686,7 @@ export const pageLabels = {
 	},
 	"apiTokens.colCreated": {
 		en: "Created",
+		ar: "Created", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Creado",
 		fr: "Créé",
 		de: "Erstellt",
@@ -7978,6 +8698,7 @@ export const pageLabels = {
 	},
 	"apiTokens.colLastUsed": {
 		en: "Last Used",
+		ar: "Last Used", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Último uso",
 		fr: "Dernière utilisation",
 		de: "Zuletzt verwendet",
@@ -7989,6 +8710,7 @@ export const pageLabels = {
 	},
 	"apiTokens.never": {
 		en: "Never",
+		ar: "Never", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Nunca",
 		fr: "Jamais",
 		de: "Nie",
@@ -8000,6 +8722,7 @@ export const pageLabels = {
 	},
 	"apiTokens.revoked": {
 		en: "Revoked",
+		ar: "Revoked", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Revocado",
 		fr: "Révoqué",
 		de: "Widerrufen",
@@ -8011,6 +8734,7 @@ export const pageLabels = {
 	},
 	"apiTokens.active": {
 		en: "Active",
+		ar: "Active", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Activo",
 		fr: "Actif",
 		de: "Aktiv",
@@ -8022,6 +8746,7 @@ export const pageLabels = {
 	},
 	"apiTokens.revoke": {
 		en: "Revoke",
+		ar: "Revoke", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Revocar",
 		fr: "Révoquer",
 		de: "Widerrufen",
@@ -8033,6 +8758,7 @@ export const pageLabels = {
 	},
 	"apiTokens.confirmTitle": {
 		en: "Revoke API token?",
+		ar: "Revoke API token?", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "¿Revocar el token de API?",
 		fr: "Révoquer le jeton API ?",
 		de: "API-Token widerrufen?",
@@ -8044,6 +8770,7 @@ export const pageLabels = {
 	},
 	"apiTokens.confirmBody": {
 		en: "Are you sure you want to revoke",
+		ar: "Are you sure you want to revoke", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "¿Seguro que quieres revocar",
 		fr: "Êtes-vous sûr de vouloir révoquer",
 		de: "Möchten Sie wirklich widerrufen",
@@ -8055,6 +8782,7 @@ export const pageLabels = {
 	},
 	"apiTokens.confirmWarning": {
 		en: "Revoked tokens cannot be restored. Any integrations using this token will stop working.",
+		ar: "Revoked tokens cannot be restored. Any integrations using this token will stop working.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Los tokens revocados no se pueden restaurar. Las integraciones que usen este token dejarán de funcionar.",
 		fr: "Les jetons révoqués ne peuvent pas être restaurés. Toutes les intégrations utilisant ce jeton cesseront de fonctionner.",
 		de: "Widerrufene Token können nicht wiederhergestellt werden. Alle Integrationen, die dieses Token verwenden, funktionieren nicht mehr.",
@@ -8066,6 +8794,7 @@ export const pageLabels = {
 	},
 	"apiTokens.cancel": {
 		en: "Cancel",
+		ar: "Cancel", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Cancelar",
 		fr: "Annuler",
 		de: "Abbrechen",
@@ -8077,6 +8806,7 @@ export const pageLabels = {
 	},
 	"apiTokens.revokeButton": {
 		en: "Revoke Token",
+		ar: "Revoke Token", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Revocar token",
 		fr: "Révoquer le jeton",
 		de: "Token widerrufen",
@@ -8088,6 +8818,7 @@ export const pageLabels = {
 	},
 	"webhooks.title": {
 		en: "Webhooks",
+		ar: "Webhooks", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Webhooks",
 		fr: "Webhooks",
 		de: "Webhooks",
@@ -8099,6 +8830,7 @@ export const pageLabels = {
 	},
 	"webhooks.description": {
 		en: "Register webhook endpoints to receive real-time event notifications.",
+		ar: "Register webhook endpoints to receive real-time event notifications.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Registra los endpoints de webhook para recibir notificaciones de eventos en tiempo real.",
 		fr: "Enregistrez des points de terminaison de webhook pour recevoir des notifications d'événements en temps réel.",
 		de: "Registrieren Sie Webhook-Endpunkte, um Ereignisbenachrichtigungen in Echtzeit zu erhalten.",
@@ -8110,6 +8842,7 @@ export const pageLabels = {
 	},
 	"webhooks.deletedSuccess": {
 		en: "Webhook deleted successfully.",
+		ar: "Webhook deleted successfully.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Webhook eliminado correctamente.",
 		fr: "Webhook supprimé avec succès.",
 		de: "Webhook erfolgreich gelöscht.",
@@ -8121,6 +8854,7 @@ export const pageLabels = {
 	},
 	"webhooks.created": {
 		en: "Webhook created.",
+		ar: "Webhook created.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Webhook creado.",
 		fr: "Webhook créé.",
 		de: "Webhook erstellt.",
@@ -8132,6 +8866,7 @@ export const pageLabels = {
 	},
 	"webhooks.copyBundle": {
 		en: "Copy this verification bundle now — it will not be shown again.",
+		ar: "Copy this verification bundle now — it will not be shown again.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Copia este paquete de verificación ahora; no se mostrará de nuevo.",
 		fr: "Copiez ce paquet de vérification maintenant — il ne sera plus affiché.",
 		de: "Kopieren Sie dieses Verifizierungspaket jetzt — es wird nicht erneut angezeigt.",
@@ -8143,6 +8878,7 @@ export const pageLabels = {
 	},
 	"webhooks.useToVerify": {
 		en: "Use it to verify the",
+		ar: "Use it to verify the", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Úsalo para verificar el",
 		fr: "Utilisez-le pour vérifier l'en-tête",
 		de: "Verwenden Sie es, um den Header",
@@ -8154,6 +8890,7 @@ export const pageLabels = {
 	},
 	"webhooks.headerSuffix": {
 		en: "header on incoming webhook requests.",
+		ar: "header on incoming webhook requests.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "encabezado en las solicitudes entrantes de webhook.",
 		fr: "des requêtes webhook entrantes.",
 		de: "bei eingehenden Webhook-Anfragen zu prüfen.",
@@ -8165,6 +8902,7 @@ export const pageLabels = {
 	},
 	"webhooks.registerKicker": {
 		en: "Register",
+		ar: "Register", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Registrar",
 		fr: "Enregistrer",
 		de: "Registrieren",
@@ -8176,6 +8914,7 @@ export const pageLabels = {
 	},
 	"webhooks.newWebhook": {
 		en: "New Webhook",
+		ar: "New Webhook", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Nuevo webhook",
 		fr: "Nouveau webhook",
 		de: "Neuer Webhook",
@@ -8187,6 +8926,7 @@ export const pageLabels = {
 	},
 	"webhooks.endpointUrl": {
 		en: "Endpoint URL",
+		ar: "Endpoint URL", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "URL del endpoint",
 		fr: "URL du point de terminaison",
 		de: "Endpunkt-URL",
@@ -8198,6 +8938,7 @@ export const pageLabels = {
 	},
 	"webhooks.events": {
 		en: "Events",
+		ar: "Events", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Eventos",
 		fr: "Événements",
 		de: "Ereignisse",
@@ -8209,6 +8950,7 @@ export const pageLabels = {
 	},
 	"webhooks.registerButton": {
 		en: "Register Webhook",
+		ar: "Register Webhook", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Registrar webhook",
 		fr: "Enregistrer le webhook",
 		de: "Webhook registrieren",
@@ -8220,6 +8962,7 @@ export const pageLabels = {
 	},
 	"webhooks.activeWebhooks": {
 		en: "Active Webhooks",
+		ar: "Active Webhooks", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Webhooks activos",
 		fr: "Webhooks actifs",
 		de: "Aktive Webhooks",
@@ -8231,6 +8974,7 @@ export const pageLabels = {
 	},
 	"webhooks.noWebhooks": {
 		en: "No webhooks yet. Register one above.",
+		ar: "No webhooks yet. Register one above.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Aún no hay webhooks. Registra uno arriba.",
 		fr: "Aucun webhook pour le moment. Enregistrez-en un ci-dessus.",
 		de: "Noch keine Webhooks. Registrieren Sie oben einen.",
@@ -8242,6 +8986,7 @@ export const pageLabels = {
 	},
 	"webhooks.colUrl": {
 		en: "URL",
+		ar: "URL", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "URL",
 		fr: "URL",
 		de: "URL",
@@ -8253,6 +8998,7 @@ export const pageLabels = {
 	},
 	"webhooks.colCreated": {
 		en: "Created",
+		ar: "Created", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Creado",
 		fr: "Créé",
 		de: "Erstellt",
@@ -8264,6 +9010,7 @@ export const pageLabels = {
 	},
 	"webhooks.colLastFired": {
 		en: "Last Fired",
+		ar: "Last Fired", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Último disparo",
 		fr: "Dernier déclenchement",
 		de: "Zuletzt ausgelöst",
@@ -8275,6 +9022,7 @@ export const pageLabels = {
 	},
 	"webhooks.never": {
 		en: "Never",
+		ar: "Never", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Nunca",
 		fr: "Jamais",
 		de: "Nie",
@@ -8286,6 +9034,7 @@ export const pageLabels = {
 	},
 	"webhooks.delete": {
 		en: "Delete",
+		ar: "Delete", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Eliminar",
 		fr: "Supprimer",
 		de: "Löschen",
@@ -8297,6 +9046,7 @@ export const pageLabels = {
 	},
 	"webhooks.confirmTitle": {
 		en: "Delete webhook?",
+		ar: "Delete webhook?", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "¿Eliminar el webhook?",
 		fr: "Supprimer le webhook ?",
 		de: "Webhook löschen?",
@@ -8308,6 +9058,7 @@ export const pageLabels = {
 	},
 	"webhooks.confirmBody": {
 		en: "Are you sure you want to delete the webhook for",
+		ar: "Are you sure you want to delete the webhook for", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "¿Seguro que quieres eliminar el webhook de",
 		fr: "Êtes-vous sûr de vouloir supprimer le webhook pour",
 		de: "Möchten Sie den Webhook wirklich löschen für",
@@ -8319,6 +9070,7 @@ export const pageLabels = {
 	},
 	"webhooks.confirmWarning": {
 		en: "This action cannot be undone.",
+		ar: "This action cannot be undone.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Esta acción no se puede deshacer.",
 		fr: "Cette action est irréversible.",
 		de: "Diese Aktion kann nicht rückgängig gemacht werden.",
@@ -8330,6 +9082,7 @@ export const pageLabels = {
 	},
 	"webhooks.cancel": {
 		en: "Cancel",
+		ar: "Cancel", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Cancelar",
 		fr: "Annuler",
 		de: "Abbrechen",
@@ -8341,6 +9094,7 @@ export const pageLabels = {
 	},
 	"webhooks.deleteButton": {
 		en: "Delete Webhook",
+		ar: "Delete Webhook", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Eliminar webhook",
 		fr: "Supprimer le webhook",
 		de: "Webhook löschen",
@@ -8353,6 +9107,7 @@ export const pageLabels = {
 	// ANCHOR-BATCH-E: services + fundraising + testimonials
 	"services.title": {
 		en: "Services",
+		ar: "Services", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Servicios",
 		fr: "Services",
 		de: "Dienste",
@@ -8364,6 +9119,7 @@ export const pageLabels = {
 	},
 	"services.description": {
 		en: "Manage integrated headless services: CMS, commerce, community, and email.",
+		ar: "Manage integrated headless services: CMS, commerce, community, and email.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Gestiona los servicios headless integrados: CMS, comercio, comunidad y correo.",
 		fr: "Gérez les services headless intégrés : CMS, commerce, communauté et e-mail.",
 		de: "Integrierte Headless-Dienste verwalten: CMS, Commerce, Community und E-Mail.",
@@ -8375,6 +9131,7 @@ export const pageLabels = {
 	},
 	"services.emptyKicker": {
 		en: "No services configured",
+		ar: "No services configured", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Ningún servicio configurado",
 		fr: "Aucun service configuré",
 		de: "Keine Dienste konfiguriert",
@@ -8386,6 +9143,7 @@ export const pageLabels = {
 	},
 	"services.emptyHeading": {
 		en: "Add integrations to your project",
+		ar: "Add integrations to your project", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Añade integraciones a tu proyecto",
 		fr: "Ajoutez des intégrations à votre projet",
 		de: "Integrationen zu Ihrem Projekt hinzufügen",
@@ -8397,6 +9155,7 @@ export const pageLabels = {
 	},
 	"services.emptyIntro": {
 		en: "Register optional headless services to access their admin UIs from this tab. Available integrations:",
+		ar: "Register optional headless services to access their admin UIs from this tab. Available integrations:", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Registra servicios headless opcionales para acceder a sus paneles de administración desde esta pestaña. Integraciones disponibles:",
 		fr: "Enregistrez des services headless optionnels pour accéder à leurs interfaces d'administration depuis cet onglet. Intégrations disponibles :",
 		de: "Registrieren Sie optionale Headless-Dienste, um ihre Admin-Oberflächen von dieser Registerkarte aus zu erreichen. Verfügbare Integrationen:",
@@ -8408,6 +9167,7 @@ export const pageLabels = {
 	},
 	"services.cmsDescription": {
 		en: "Headless CMS — content modelling, editorial UI, media management.",
+		ar: "Headless CMS — content modelling, editorial UI, media management.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "CMS headless — modelado de contenido, interfaz editorial, gestión de medios.",
 		fr: "CMS headless — modélisation de contenu, interface éditoriale, gestion des médias.",
 		de: "Headless-CMS – Inhaltsmodellierung, redaktionelle Oberfläche, Medienverwaltung.",
@@ -8419,6 +9179,7 @@ export const pageLabels = {
 	},
 	"services.shopDescription": {
 		en: "Headless commerce — products, cart, orders, fulfilment.",
+		ar: "Headless commerce — products, cart, orders, fulfilment.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Comercio headless — productos, carrito, pedidos, cumplimiento.",
 		fr: "Commerce headless — produits, panier, commandes, traitement.",
 		de: "Headless-Commerce – Produkte, Warenkorb, Bestellungen, Fulfilment.",
@@ -8430,6 +9191,7 @@ export const pageLabels = {
 	},
 	"services.communityDescription": {
 		en: "Comments and community — Giscus (zero server) or Remark42 (self-hosted).",
+		ar: "Comments and community — Giscus (zero server) or Remark42 (self-hosted).", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Comentarios y comunidad — Giscus (sin servidor) o Remark42 (autoalojado).",
 		fr: "Commentaires et communauté — Giscus (sans serveur) ou Remark42 (auto-hébergé).",
 		de: "Kommentare und Community – Giscus (ohne Server) oder Remark42 (selbst gehostet).",
@@ -8441,6 +9203,7 @@ export const pageLabels = {
 	},
 	"services.emailDescription": {
 		en: "Newsletter and campaigns — Listmonk (self-hosted, MIT).",
+		ar: "Newsletter and campaigns — Listmonk (self-hosted, MIT).", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Boletín y campañas — Listmonk (autoalojado, MIT).",
 		fr: "Newsletter et campagnes — Listmonk (auto-hébergé, MIT).",
 		de: "Newsletter und Kampagnen – Listmonk (selbst gehostet, MIT).",
@@ -8452,6 +9215,7 @@ export const pageLabels = {
 	},
 	"services.viewDocs": {
 		en: "View docs ↗",
+		ar: "View docs ↗", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Ver documentación ↗",
 		fr: "Voir la documentation ↗",
 		de: "Dokumentation anzeigen ↗",
@@ -8463,6 +9227,7 @@ export const pageLabels = {
 	},
 	"services.setupNoteBefore": {
 		en: "Call",
+		ar: "Call", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Llama a",
 		fr: "Appelez",
 		de: "Rufen Sie",
@@ -8474,6 +9239,7 @@ export const pageLabels = {
 	},
 	"services.setupNoteMiddle": {
 		en: "in your Astro integration or",
+		ar: "in your Astro integration or", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "en tu integración de Astro o",
 		fr: "dans votre intégration Astro ou",
 		de: "in Ihrer Astro-Integration oder",
@@ -8485,6 +9251,7 @@ export const pageLabels = {
 	},
 	"services.setupNoteAfter": {
 		en: "to enable a service.",
+		ar: "to enable a service.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "para habilitar un servicio.",
 		fr: "pour activer un service.",
 		de: "um einen Dienst zu aktivieren.",
@@ -8496,6 +9263,7 @@ export const pageLabels = {
 	},
 	"services.seeDocsBefore": {
 		en: "See",
+		ar: "See", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Consulta",
 		fr: "Consultez",
 		de: "Siehe",
@@ -8507,6 +9275,7 @@ export const pageLabels = {
 	},
 	"services.seeDocsLink": {
 		en: "the docs",
+		ar: "the docs", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "la documentación",
 		fr: "la documentation",
 		de: "die Dokumentation",
@@ -8518,6 +9287,7 @@ export const pageLabels = {
 	},
 	"services.seeDocsAfter": {
 		en: "for setup guides.",
+		ar: "for setup guides.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "para guías de configuración.",
 		fr: "pour les guides de configuration.",
 		de: "für Einrichtungsanleitungen.",
@@ -8529,6 +9299,7 @@ export const pageLabels = {
 	},
 	"services.openAdmin": {
 		en: "Open admin →",
+		ar: "Open admin →", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Abrir administración →",
 		fr: "Ouvrir l'administration →",
 		de: "Verwaltung öffnen →",
@@ -8540,6 +9311,7 @@ export const pageLabels = {
 	},
 	"services.notConfiguredTitle": {
 		en: "Service not configured",
+		ar: "Service not configured", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Servicio no configurado",
 		fr: "Service non configuré",
 		de: "Dienst nicht konfiguriert",
@@ -8551,6 +9323,7 @@ export const pageLabels = {
 	},
 	"services.notConfiguredDescription": {
 		en: "This service integration is not registered.",
+		ar: "This service integration is not registered.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Esta integración de servicio no está registrada.",
 		fr: "Cette intégration de service n'est pas enregistrée.",
 		de: "Diese Dienstintegration ist nicht registriert.",
@@ -8562,6 +9335,7 @@ export const pageLabels = {
 	},
 	"services.notFound": {
 		en: "Not found",
+		ar: "Not found", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "No encontrado",
 		fr: "Introuvable",
 		de: "Nicht gefunden",
@@ -8573,6 +9347,7 @@ export const pageLabels = {
 	},
 	"services.notRegisteredBefore": {
 		en: "There is no service registered for provider",
+		ar: "There is no service registered for provider", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "No hay ningún servicio registrado para el proveedor",
 		fr: "Aucun service n'est enregistré pour le fournisseur",
 		de: "Für den Anbieter ist kein Dienst registriert",
@@ -8584,6 +9359,7 @@ export const pageLabels = {
 	},
 	"services.notRegisteredAfter": {
 		en: "Register it by calling",
+		ar: "Register it by calling", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Regístralo llamando a",
 		fr: "Enregistrez-le en appelant",
 		de: "Registrieren Sie ihn, indem Sie",
@@ -8595,6 +9371,7 @@ export const pageLabels = {
 	},
 	"services.notRegisteredEnd": {
 		en: "in your Astro config.",
+		ar: "in your Astro config.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "en tu configuración de Astro.",
 		fr: "dans votre configuration Astro.",
 		de: "in Ihrer Astro-Konfiguration aufrufen.",
@@ -8606,6 +9383,7 @@ export const pageLabels = {
 	},
 	"services.backToServices": {
 		en: "Back to Services",
+		ar: "Back to Services", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Volver a Servicios",
 		fr: "Retour aux services",
 		de: "Zurück zu den Diensten",
@@ -8617,6 +9395,7 @@ export const pageLabels = {
 	},
 	"services.allServices": {
 		en: "← All services",
+		ar: "← All services", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "← Todos los servicios",
 		fr: "← Tous les services",
 		de: "← Alle Dienste",
@@ -8628,6 +9407,7 @@ export const pageLabels = {
 	},
 	"services.openInNewTab": {
 		en: "Open in new tab ↗",
+		ar: "Open in new tab ↗", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Abrir en pestaña nueva ↗",
 		fr: "Ouvrir dans un nouvel onglet ↗",
 		de: "In neuem Tab öffnen ↗",
@@ -8639,6 +9419,7 @@ export const pageLabels = {
 	},
 	"services.adminFrameTitle": {
 		en: "admin",
+		ar: "admin", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "administración",
 		fr: "administration",
 		de: "Verwaltung",
@@ -8650,6 +9431,7 @@ export const pageLabels = {
 	},
 	"fundraising.title": {
 		en: "Fundraising",
+		ar: "Fundraising", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Recaudación",
 		fr: "Collecte de fonds",
 		de: "Fundraising",
@@ -8661,6 +9443,7 @@ export const pageLabels = {
 	},
 	"fundraising.description": {
 		en: "Configured donation providers for this site",
+		ar: "Configured donation providers for this site", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Proveedores de donaciones configurados para este sitio",
 		fr: "Fournisseurs de dons configurés pour ce site",
 		de: "Konfigurierte Spendenanbieter für diese Website",
@@ -8672,6 +9455,7 @@ export const pageLabels = {
 	},
 	"fundraising.kicker": {
 		en: "Donation Providers",
+		ar: "Donation Providers", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Proveedores de donaciones",
 		fr: "Fournisseurs de dons",
 		de: "Spendenanbieter",
@@ -8683,6 +9467,7 @@ export const pageLabels = {
 	},
 	"fundraising.intro": {
 		en: "The following donation providers are enabled. Widgets appear on your",
+		ar: "The following donation providers are enabled. Widgets appear on your", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Los siguientes proveedores de donaciones están habilitados. Los widgets aparecen en tu",
 		fr: "Les fournisseurs de dons suivants sont activés. Les widgets apparaissent sur votre",
 		de: "Die folgenden Spendenanbieter sind aktiviert. Widgets erscheinen auf Ihrer",
@@ -8694,6 +9479,7 @@ export const pageLabels = {
 	},
 	"fundraising.donatePageLink": {
 		en: "/donate page",
+		ar: "/donate page", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "página /donate",
 		fr: "page /donate",
 		de: "/donate-Seite",
@@ -8705,6 +9491,7 @@ export const pageLabels = {
 	},
 	"fundraising.giveLivelyDescription": {
 		en: "Fiat donations for US nonprofits. Widget embedded on your /donate page.",
+		ar: "Fiat donations for US nonprofits. Widget embedded on your /donate page.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Donaciones en dinero fiat para organizaciones sin fines de lucro de EE. UU. Widget integrado en tu página /donate.",
 		fr: "Dons en monnaie fiduciaire pour les organisations à but non lucratif américaines. Widget intégré à votre page /donate.",
 		de: "Fiat-Spenden für US-amerikanische Non-Profits. Widget in Ihre /donate-Seite eingebettet.",
@@ -8716,6 +9503,7 @@ export const pageLabels = {
 	},
 	"fundraising.liberapayDescription": {
 		en: "Recurring fiat donations. Static button on your /donate page — no external scripts.",
+		ar: "Recurring fiat donations. Static button on your /donate page — no external scripts.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Donaciones fiat recurrentes. Botón estático en tu página /donate, sin scripts externos.",
 		fr: "Dons fiat récurrents. Bouton statique sur votre page /donate — pas de scripts externes.",
 		de: "Wiederkehrende Fiat-Spenden. Statische Schaltfläche auf Ihrer /donate-Seite – ohne externe Skripte.",
@@ -8727,6 +9515,7 @@ export const pageLabels = {
 	},
 	"fundraising.pledgeCryptoDescription": {
 		en: "Crypto donations with automatic carbon offsets per transaction.",
+		ar: "Crypto donations with automatic carbon offsets per transaction.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Donaciones en cripto con compensaciones de carbono automáticas por transacción.",
 		fr: "Dons en cryptomonnaie avec compensations carbone automatiques par transaction.",
 		de: "Krypto-Spenden mit automatischen CO2-Kompensationen pro Transaktion.",
@@ -8738,6 +9527,7 @@ export const pageLabels = {
 	},
 	"fundraising.configured": {
 		en: "Configured",
+		ar: "Configured", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Configurado",
 		fr: "Configuré",
 		de: "Konfiguriert",
@@ -8749,6 +9539,7 @@ export const pageLabels = {
 	},
 	"fundraising.needsConfig": {
 		en: "Needs config",
+		ar: "Needs config", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Necesita configuración",
 		fr: "Configuration requise",
 		de: "Konfiguration nötig",
@@ -8760,6 +9551,7 @@ export const pageLabels = {
 	},
 	"fundraising.viewDonatePage": {
 		en: "View /donate page",
+		ar: "View /donate page", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Ver página /donate",
 		fr: "Voir la page /donate",
 		de: "/donate-Seite anzeigen",
@@ -8771,6 +9563,7 @@ export const pageLabels = {
 	},
 	"testimonials.title": {
 		en: "Testimonials",
+		ar: "Testimonials", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Testimonios",
 		fr: "Témoignages",
 		de: "Referenzen",
@@ -8782,6 +9575,7 @@ export const pageLabels = {
 	},
 	"testimonials.description": {
 		en: "Review and moderate testimonial submissions.",
+		ar: "Review and moderate testimonial submissions.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Revisa y modera las publicaciones de testimonios.",
 		fr: "Examinez et modérez les soumissions de témoignages.",
 		de: "Eingereichte Referenzen prüfen und moderieren.",
@@ -8793,6 +9587,7 @@ export const pageLabels = {
 	},
 	"testimonials.partialResults": {
 		en: "Some testimonial data is temporarily unavailable. This page is showing partial results.",
+		ar: "Some testimonial data is temporarily unavailable. This page is showing partial results.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Algunos datos de testimonios no están disponibles temporalmente. Esta página muestra resultados parciales.",
 		fr: "Certaines données de témoignages sont temporairement indisponibles. Cette page affiche des résultats partiels.",
 		de: "Einige Referenzdaten sind vorübergehend nicht verfügbar. Diese Seite zeigt Teilergebnisse.",
@@ -8804,6 +9599,7 @@ export const pageLabels = {
 	},
 	"testimonials.savedSuccess": {
 		en: "The testimonial was updated successfully.",
+		ar: "The testimonial was updated successfully.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "El testimonio se actualizó correctamente.",
 		fr: "Le témoignage a été mis à jour avec succès.",
 		de: "Die Referenz wurde erfolgreich aktualisiert.",
@@ -8815,6 +9611,7 @@ export const pageLabels = {
 	},
 	"testimonials.totalSubmitted": {
 		en: "Total submitted",
+		ar: "Total submitted", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Total enviado",
 		fr: "Total soumis",
 		de: "Insgesamt eingereicht",
@@ -8826,6 +9623,7 @@ export const pageLabels = {
 	},
 	"testimonials.totalSubmittedDesc": {
 		en: "All testimonial submissions across statuses.",
+		ar: "All testimonial submissions across statuses.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Todas las publicaciones de testimonios en todos los estados.",
 		fr: "Toutes les soumissions de témoignages, tous statuts confondus.",
 		de: "Alle Referenzeinreichungen über alle Status hinweg.",
@@ -8837,6 +9635,7 @@ export const pageLabels = {
 	},
 	"testimonials.pendingReview": {
 		en: "Pending review",
+		ar: "Pending review", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Pendiente de revisión",
 		fr: "En attente d'examen",
 		de: "Prüfung ausstehend",
@@ -8848,6 +9647,7 @@ export const pageLabels = {
 	},
 	"testimonials.pendingReviewDesc": {
 		en: "Submissions awaiting a moderation decision.",
+		ar: "Submissions awaiting a moderation decision.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Publicaciones a la espera de una decisión de moderación.",
 		fr: "Soumissions en attente d'une décision de modération.",
 		de: "Einreichungen, die auf eine Moderationsentscheidung warten.",
@@ -8859,6 +9659,7 @@ export const pageLabels = {
 	},
 	"testimonials.moderationKicker": {
 		en: "Moderation",
+		ar: "Moderation", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Moderación",
 		fr: "Modération",
 		de: "Moderation",
@@ -8870,6 +9671,7 @@ export const pageLabels = {
 	},
 	"testimonials.queueHeading": {
 		en: "Testimonial Queue",
+		ar: "Testimonial Queue", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Cola de testimonios",
 		fr: "File de témoignages",
 		de: "Referenz-Warteschlange",
@@ -8881,6 +9683,7 @@ export const pageLabels = {
 	},
 	"testimonials.tabsLabel": {
 		en: "Testimonial status tabs",
+		ar: "Testimonial status tabs", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Pestañas de estado de testimonios",
 		fr: "Onglets de statut des témoignages",
 		de: "Tabs für Referenzstatus",
@@ -8892,6 +9695,7 @@ export const pageLabels = {
 	},
 	"testimonials.tabPending": {
 		en: "Pending",
+		ar: "Pending", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Pendientes",
 		fr: "En attente",
 		de: "Ausstehend",
@@ -8903,6 +9707,7 @@ export const pageLabels = {
 	},
 	"testimonials.tabApproved": {
 		en: "Approved",
+		ar: "Approved", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Aprobados",
 		fr: "Approuvés",
 		de: "Genehmigt",
@@ -8914,6 +9719,7 @@ export const pageLabels = {
 	},
 	"testimonials.tabFeatured": {
 		en: "Featured",
+		ar: "Featured", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Destacados",
 		fr: "À la une",
 		de: "Hervorgehoben",
@@ -8925,6 +9731,7 @@ export const pageLabels = {
 	},
 	"testimonials.emptyPending": {
 		en: "No pending testimonials.",
+		ar: "No pending testimonials.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "No hay testimonios pendientes.",
 		fr: "Aucun témoignage en attente.",
 		de: "Keine ausstehenden Referenzen.",
@@ -8936,6 +9743,7 @@ export const pageLabels = {
 	},
 	"testimonials.emptyApproved": {
 		en: "No approved testimonials.",
+		ar: "No approved testimonials.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "No hay testimonios aprobados.",
 		fr: "Aucun témoignage approuvé.",
 		de: "Keine genehmigten Referenzen.",
@@ -8947,6 +9755,7 @@ export const pageLabels = {
 	},
 	"testimonials.emptyFeatured": {
 		en: "No featured testimonials.",
+		ar: "No featured testimonials.", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "No hay testimonios destacados.",
 		fr: "Aucun témoignage à la une.",
 		de: "Keine hervorgehobenen Referenzen.",
@@ -8958,6 +9767,7 @@ export const pageLabels = {
 	},
 	"testimonials.tableLabelPending": {
 		en: "pending testimonials",
+		ar: "pending testimonials", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "testimonios pendientes",
 		fr: "témoignages en attente",
 		de: "ausstehende Referenzen",
@@ -8969,6 +9779,7 @@ export const pageLabels = {
 	},
 	"testimonials.tableLabelApproved": {
 		en: "approved testimonials",
+		ar: "approved testimonials", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "testimonios aprobados",
 		fr: "témoignages approuvés",
 		de: "genehmigte Referenzen",
@@ -8980,6 +9791,7 @@ export const pageLabels = {
 	},
 	"testimonials.tableLabelFeatured": {
 		en: "featured testimonials",
+		ar: "featured testimonials", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "testimonios destacados",
 		fr: "témoignages à la une",
 		de: "hervorgehobene Referenzen",
@@ -8991,6 +9803,7 @@ export const pageLabels = {
 	},
 	"testimonials.colName": {
 		en: "Name",
+		ar: "Name", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Nombre",
 		fr: "Nom",
 		de: "Name",
@@ -9002,6 +9815,7 @@ export const pageLabels = {
 	},
 	"testimonials.colCompany": {
 		en: "Company",
+		ar: "Company", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Empresa",
 		fr: "Entreprise",
 		de: "Unternehmen",
@@ -9013,6 +9827,7 @@ export const pageLabels = {
 	},
 	"testimonials.colRole": {
 		en: "Role",
+		ar: "Role", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Cargo",
 		fr: "Rôle",
 		de: "Rolle",
@@ -9024,6 +9839,7 @@ export const pageLabels = {
 	},
 	"testimonials.colSpecificResult": {
 		en: "Specific Result",
+		ar: "Specific Result", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Resultado específico",
 		fr: "Résultat spécifique",
 		de: "Konkretes Ergebnis",
@@ -9035,6 +9851,7 @@ export const pageLabels = {
 	},
 	"testimonials.colConsent": {
 		en: "Consent",
+		ar: "Consent", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Consentimiento",
 		fr: "Consentement",
 		de: "Einwilligung",
@@ -9046,6 +9863,7 @@ export const pageLabels = {
 	},
 	"testimonials.colSource": {
 		en: "Source",
+		ar: "Source", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Fuente",
 		fr: "Source",
 		de: "Quelle",
@@ -9057,6 +9875,7 @@ export const pageLabels = {
 	},
 	"testimonials.colSubmitted": {
 		en: "Submitted",
+		ar: "Submitted", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Enviado",
 		fr: "Soumis",
 		de: "Eingereicht",
@@ -9068,6 +9887,7 @@ export const pageLabels = {
 	},
 	"testimonials.colAction": {
 		en: "Action",
+		ar: "Action", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Acción",
 		fr: "Action",
 		de: "Aktion",
@@ -9079,6 +9899,7 @@ export const pageLabels = {
 	},
 	"testimonials.consentYes": {
 		en: "Yes",
+		ar: "Yes", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Sí",
 		fr: "Oui",
 		de: "Ja",
@@ -9090,6 +9911,7 @@ export const pageLabels = {
 	},
 	"testimonials.consentNo": {
 		en: "No",
+		ar: "No", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "No",
 		fr: "Non",
 		de: "Nein",
@@ -9101,6 +9923,7 @@ export const pageLabels = {
 	},
 	"testimonials.approve": {
 		en: "Approve",
+		ar: "Approve", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Aprobar",
 		fr: "Approuver",
 		de: "Genehmigen",
@@ -9112,6 +9935,7 @@ export const pageLabels = {
 	},
 	"testimonials.reject": {
 		en: "Reject",
+		ar: "Reject", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Rechazar",
 		fr: "Rejeter",
 		de: "Ablehnen",
@@ -9123,6 +9947,7 @@ export const pageLabels = {
 	},
 	"testimonials.feature": {
 		en: "Feature",
+		ar: "Feature", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Destacar",
 		fr: "Mettre à la une",
 		de: "Hervorheben",
@@ -9134,6 +9959,7 @@ export const pageLabels = {
 	},
 	"testimonials.unfeature": {
 		en: "Unfeature",
+		ar: "Unfeature", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Quitar destacado",
 		fr: "Retirer de la une",
 		de: "Hervorhebung entfernen",
@@ -9145,6 +9971,7 @@ export const pageLabels = {
 	},
 	"footer.reportIssue": {
 		en: "Report issue or suggest feature",
+		ar: "Report issue or suggest feature", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Informar problema o sugerir función",
 		fr: "Signaler un problème ou suggérer une fonctionnalité",
 		de: "Problem melden oder Funktion vorschlagen",
@@ -9156,6 +9983,7 @@ export const pageLabels = {
 	},
 	"footer.docs": {
 		en: "Documentation",
+		ar: "Documentation", // TODO(i18n-ar): native-speaker review (issue #76)
 		es: "Documentación",
 		fr: "Documentation",
 		de: "Dokumentation",
@@ -9168,6 +9996,7 @@ export const pageLabels = {
 	"access.title": { en: "Access" },
 	"access.description": {
 		en: "Manage roles, role assignments, direct user grants, and view your effective permissions.",
+		ar: "Manage roles, role assignments, direct user grants, and view your effective permissions.", // TODO(i18n-ar): native-speaker review (issue #76)
 	},
 	"access.tabUsers": { en: "Users" },
 	"access.tabRoles": { en: "Roles" },
@@ -9175,6 +10004,7 @@ export const pageLabels = {
 	"access.usersHeading": { en: "User access" },
 	"access.usersDescription": {
 		en: "Assign roles, view direct grants, and ensure at least one break-glass admin remains.",
+		ar: "Assign roles, view direct grants, and ensure at least one break-glass admin remains.", // TODO(i18n-ar): native-speaker review (issue #76)
 	},
 	"access.usersColumnUser": { en: "User" },
 	"access.usersColumnRoles": { en: "Roles" },
@@ -9184,12 +10014,14 @@ export const pageLabels = {
 	"access.usersDirectGrantsBadge": { en: "Direct grants" },
 	"access.lastAdminWarning": {
 		en: "Only one active admin remains. Grant another user the Admin flag before changing this one to keep break-glass access.",
+		ar: "Only one active admin remains. Grant another user the Admin flag before changing this one to keep break-glass access.", // TODO(i18n-ar): native-speaker review (issue #76)
 	},
 	"access.assignRoleSubmit": { en: "Assign" },
 	"access.revokeRoleSubmit": { en: "Revoke" },
 	"access.directGrantsHeading": { en: "Direct grants" },
 	"access.directGrantsDescription": {
 		en: "Per-user policy overrides outside the role bundles. Use sparingly — they create permission sprawl that's harder to audit.",
+		ar: "Per-user policy overrides outside the role bundles. Use sparingly — they create permission sprawl that's harder to audit.", // TODO(i18n-ar): native-speaker review (issue #76)
 	},
 	"access.directGrantActionLabel": { en: "Action" },
 	"access.directGrantEffectLabel": { en: "Effect" },
@@ -9200,6 +10032,7 @@ export const pageLabels = {
 	"access.rolesHeading": { en: "Roles" },
 	"access.rolesDescription": {
 		en: "Roles bundle policies. Assign roles to users on the Users tab; refine policies here.",
+		ar: "Roles bundle policies. Assign roles to users on the Users tab; refine policies here.", // TODO(i18n-ar): native-speaker review (issue #76)
 	},
 	"access.rolesCreateHeading": { en: "Create role" },
 	"access.rolesNameLabel": { en: "Name" },
@@ -9217,9 +10050,11 @@ export const pageLabels = {
 	"access.myPermissionsHeading": { en: "My permissions" },
 	"access.myPermissionsDescription": {
 		en: "Effective policies for your subject — union of role bundles plus direct grants. Admin bypasses evaluation but the snapshot is shown for transparency.",
+		ar: "Effective policies for your subject — union of role bundles plus direct grants. Admin bypasses evaluation but the snapshot is shown for transparency.", // TODO(i18n-ar): native-speaker review (issue #76)
 	},
 	"access.myPermissionsEmpty": {
 		en: "No policies attached to your subject.",
+		ar: "No policies attached to your subject.", // TODO(i18n-ar): native-speaker review (issue #76)
 	},
 	"access.myPermissionsActionColumn": { en: "Action" },
 	"access.myPermissionsEffectColumn": { en: "Effect" },
@@ -9227,6 +10062,378 @@ export const pageLabels = {
 	"access.myPermissionsConditionColumn": { en: "Condition" },
 	"access.myPermissionsSourceDirect": { en: "Direct grant" },
 	"access.myPermissionsSourceRole": { en: "Role" },
+	"pagesNew.title": {
+		en: "New Page",
+		es: "Nueva página",
+		fr: "Nouvelle page",
+		de: "Neue Seite",
+		pt: "Nova página",
+		ja: "新規ページ",
+		te: "కొత్త పేజీ",
+		hi: "नया पृष्ठ",
+		ny: "Tsamba latsopano",
+		ar: "صفحة جديدة",
+	},
+	"pagesNew.heading": {
+		en: "New Page",
+		es: "Nueva página",
+		fr: "Nouvelle page",
+		de: "Neue Seite",
+		pt: "Nova página",
+		ja: "新規ページ",
+		te: "కొత్త పేజీ",
+		hi: "नया पृष्ठ",
+		ny: "Tsamba latsopano",
+		ar: "صفحة جديدة",
+	},
+	"pagesNew.description": {
+		en: "Create a new public page using the route-backed page model.",
+		es: "Cree una nueva página pública con el modelo de página basado en rutas.",
+		fr: "Créez une nouvelle page publique avec le modèle de page basé sur les routes.",
+		de: "Erstellen Sie eine neue öffentliche Seite mit dem routenbasierten Seitenmodell.",
+		pt: "Crie uma nova página pública usando o modelo de página baseado em rotas.",
+		ja: "ルートベースのページモデルを使用して新しい公開ページを作成します。",
+		te: "మార్గ-ఆధారిత పేజీ నమూనాను ఉపయోగించి కొత్త పబ్లిక్ పేజీని సృష్టించండి.",
+		hi: "रूट-समर्थित पृष्ठ मॉडल का उपयोग करके एक नया सार्वजनिक पृष्ठ बनाएं।",
+		ny: "Pangani tsamba latsopano lapagulu pogwiritsa ntchito mtundu wa tsamba lokhazikika pa njira.",
+		ar: "أنشئ صفحة عامة جديدة باستخدام نموذج الصفحة المستند إلى المسارات.",
+	},
+	"pagesNew.generalHeading": {
+		en: "General",
+		es: "General",
+		fr: "Général",
+		de: "Allgemein",
+		pt: "Geral",
+		ja: "一般",
+		te: "సాధారణ",
+		hi: "सामान्य",
+		ny: "Zonse",
+		ar: "عام",
+	},
+	"pagesNew.generalDesc": {
+		en: "Create a route-backed public page that will be edited through the Pages workflow.",
+		es: "Cree una página pública basada en rutas que se editará desde el flujo de Páginas.",
+		fr: "Créez une page publique basée sur les routes qui sera modifiée via le flux Pages.",
+		de: "Erstellen Sie eine routengestützte öffentliche Seite, die über den Seiten-Workflow bearbeitet wird.",
+		pt: "Crie uma página pública baseada em rotas que será editada pelo fluxo de Páginas.",
+		ja: "Pagesワークフローで編集される、ルートベースの公開ページを作成します。",
+		te: "Pages వర్క్‌ఫ్లో ద్వారా సవరించబడే మార్గ-ఆధారిత పబ్లిక్ పేజీని సృష్టించండి.",
+		hi: "एक रूट-समर्थित सार्वजनिक पृष्ठ बनाएं जिसे Pages वर्कफ़्लो के माध्यम से संपादित किया जाएगा।",
+		ny: "Pangani tsamba lapagulu lokhazikika pa njira lomwe lidzasinthidwa kudzera mu Pages workflow.",
+		ar: "أنشئ صفحة عامة مستندة إلى مسار يتم تحريرها من خلال سير عمل الصفحات.",
+	},
+	"pagesNew.titleField": {
+		en: "Title",
+		es: "Título",
+		fr: "Titre",
+		de: "Titel",
+		pt: "Título",
+		ja: "タイトル",
+		te: "శీర్షిక",
+		hi: "शीर्षक",
+		ny: "Mutu",
+		ar: "العنوان",
+	},
+	"pagesNew.titleAria": {
+		en: "Page title",
+		es: "Título de la página",
+		fr: "Titre de la page",
+		de: "Seitentitel",
+		pt: "Título da página",
+		ja: "ページタイトル",
+		te: "పేజీ శీర్షిక",
+		hi: "पृष्ठ शीर्षक",
+		ny: "Mutu wa tsamba",
+		ar: "عنوان الصفحة",
+	},
+	"pagesNew.publicPath": {
+		en: "Public path",
+		es: "Ruta pública",
+		fr: "Chemin public",
+		de: "Öffentlicher Pfad",
+		pt: "Caminho público",
+		ja: "公開パス",
+		te: "పబ్లిక్ మార్గం",
+		hi: "सार्वजनिक पथ",
+		ny: "Njira yapagulu",
+		ar: "المسار العام",
+	},
+	"pagesNew.publicPathAria": {
+		en: "Public path",
+		es: "Ruta pública",
+		fr: "Chemin public",
+		de: "Öffentlicher Pfad",
+		pt: "Caminho público",
+		ja: "公開パス",
+		te: "పబ్లిక్ మార్గం",
+		hi: "सार्वजनिक पथ",
+		ny: "Njira yapagulu",
+		ar: "المسار العام",
+	},
+	"pagesNew.summaryField": {
+		en: "Summary",
+		es: "Resumen",
+		fr: "Résumé",
+		de: "Zusammenfassung",
+		pt: "Resumo",
+		ja: "概要",
+		te: "సారాంశం",
+		hi: "सारांश",
+		ny: "Chidule",
+		ar: "ملخص",
+	},
+	"pagesNew.summaryAria": {
+		en: "Page summary",
+		es: "Resumen de la página",
+		fr: "Résumé de la page",
+		de: "Seitenzusammenfassung",
+		pt: "Resumo da página",
+		ja: "ページの概要",
+		te: "పేజీ సారాంశం",
+		hi: "पृष्ठ सारांश",
+		ny: "Chidule cha tsamba",
+		ar: "ملخص الصفحة",
+	},
+	"pagesNew.seoHeading": {
+		en: "SEO",
+		es: "SEO",
+		fr: "SEO",
+		de: "SEO",
+		pt: "SEO",
+		ja: "SEO",
+		te: "SEO",
+		hi: "SEO",
+		ny: "SEO",
+		ar: "تحسين محركات البحث",
+	},
+	"pagesNew.seoDescOptional": {
+		en: "Optional. Add the search-facing metadata you want this page to launch with — you can fill these in later from the editor.",
+		es: "Opcional. Añada los metadatos para buscadores con los que quiera lanzar esta página; puede completarlos después desde el editor.",
+		fr: "Facultatif. Ajoutez les métadonnées destinées aux moteurs de recherche pour le lancement — vous pourrez les compléter plus tard depuis l'éditeur.",
+		de: "Optional. Fügen Sie die Suchmaschinen-Metadaten für den Start der Seite hinzu — Sie können sie später im Editor ergänzen.",
+		pt: "Opcional. Adicione os metadados de busca com os quais deseja publicar esta página — você pode preenchê-los depois pelo editor.",
+		ja: "任意です。このページを公開する際の検索向けメタデータを追加します。あとでエディタから入力することもできます。",
+		te: "ఐచ్ఛికం. ఈ పేజీని ప్రారంభించాలనుకుంటున్న శోధన మెటాడేటాను జోడించండి — మీరు తర్వాత ఎడిటర్ నుండి వీటిని పూరించవచ్చు.",
+		hi: "वैकल्पिक। इस पृष्ठ को लॉन्च करने के लिए खोज-संबंधी मेटाडेटा जोड़ें — आप इन्हें बाद में संपादक से भर सकते हैं।",
+		ny: "Si zofunika. Onjezerani metadata ya kufunafuna yomwe mukufuna kuyambitsa tsamba ili nayo — mukhoza kuwadzaza pambuyo pake kuchokera mwa editor.",
+		ar: "اختياري. أضف بيانات البحث الوصفية التي تريد إطلاق الصفحة بها — يمكنك ملؤها لاحقًا من المحرر.",
+	},
+	"pagesNew.seoTitleField": {
+		en: "SEO Title",
+		es: "Título SEO",
+		fr: "Titre SEO",
+		de: "SEO-Titel",
+		pt: "Título SEO",
+		ja: "SEOタイトル",
+		te: "SEO శీర్షిక",
+		hi: "SEO शीर्षक",
+		ny: "Mutu wa SEO",
+		ar: "عنوان تحسين محركات البحث",
+	},
+	"pagesNew.seoTitleAria": {
+		en: "SEO title",
+		es: "Título SEO",
+		fr: "Titre SEO",
+		de: "SEO-Titel",
+		pt: "Título SEO",
+		ja: "SEOタイトル",
+		te: "SEO శీర్షిక",
+		hi: "SEO शीर्षक",
+		ny: "Mutu wa SEO",
+		ar: "عنوان تحسين محركات البحث",
+	},
+	"pagesNew.metaDescriptionField": {
+		en: "Meta Description",
+		es: "Meta descripción",
+		fr: "Méta-description",
+		de: "Meta-Beschreibung",
+		pt: "Meta descrição",
+		ja: "メタディスクリプション",
+		te: "మెటా వివరణ",
+		hi: "मेटा विवरण",
+		ny: "Tanthauzo la Meta",
+		ar: "الوصف التعريفي",
+	},
+	"pagesNew.metaDescriptionAria": {
+		en: "Meta description",
+		es: "Meta descripción",
+		fr: "Méta-description",
+		de: "Meta-Beschreibung",
+		pt: "Meta descrição",
+		ja: "メタディスクリプション",
+		te: "మెటా వివరణ",
+		hi: "मेटा विवरण",
+		ny: "Tanthauzo la Meta",
+		ar: "الوصف التعريفي",
+	},
+	"pagesNew.optionalHint": {
+		en: "(optional)",
+		es: "(opcional)",
+		fr: "(facultatif)",
+		de: "(optional)",
+		pt: "(opcional)",
+		ja: "(任意)",
+		te: "(ఐచ్ఛికం)",
+		hi: "(वैकल्पिक)",
+		ny: "(zosafunika)",
+		ar: "(اختياري)",
+	},
+	"pagesNew.createPage": {
+		en: "Create page",
+		es: "Crear página",
+		fr: "Créer la page",
+		de: "Seite erstellen",
+		pt: "Criar página",
+		ja: "ページを作成",
+		te: "పేజీని సృష్టించండి",
+		hi: "पृष्ठ बनाएं",
+		ny: "Pangani tsamba",
+		ar: "إنشاء صفحة",
+	},
+	"pagesNew.cancel": {
+		en: "Cancel",
+		es: "Cancelar",
+		fr: "Annuler",
+		de: "Abbrechen",
+		pt: "Cancelar",
+		ja: "キャンセル",
+		te: "రద్దు చేయండి",
+		hi: "रद्द करें",
+		ny: "Letsani",
+		ar: "إلغاء",
+	},
+	"pagesNew.forbiddenTitle": {
+		en: "Forbidden",
+		es: "Prohibido",
+		fr: "Interdit",
+		de: "Verboten",
+		pt: "Proibido",
+		ja: "禁止",
+		te: "నిషేధించబడింది",
+		hi: "निषिद्ध",
+		ny: "Zoletsedwa",
+		ar: "ممنوع",
+	},
+	"pagesNew.forbiddenHeading": {
+		en: "Forbidden",
+		es: "Prohibido",
+		fr: "Interdit",
+		de: "Verboten",
+		pt: "Proibido",
+		ja: "禁止",
+		te: "నిషేధించబడింది",
+		hi: "निषिद्ध",
+		ny: "Zoletsedwa",
+		ar: "ممنوع",
+	},
+	"pagesNew.forbiddenDesc": {
+		en: "This action requires an admin account.",
+		es: "Esta acción requiere una cuenta de administrador.",
+		fr: "Cette action nécessite un compte administrateur.",
+		de: "Diese Aktion erfordert ein Administratorkonto.",
+		pt: "Esta ação requer uma conta de administrador.",
+		ja: "この操作には管理者アカウントが必要です。",
+		te: "ఈ చర్యకు అడ్మిన్ ఖాతా అవసరం.",
+		hi: "इस क्रिया के लिए एडमिन खाते की आवश्यकता है।",
+		ny: "Chochita ichi chimafuna akaunti ya woyang'anira.",
+		ar: "يتطلب هذا الإجراء حساب مسؤول.",
+	},
+	"pagesNew.forbiddenBody": {
+		en: "This action requires an admin account and is hidden from editor-only roles.",
+		es: "Esta acción requiere una cuenta de administrador y está oculta para los roles solo de editor.",
+		fr: "Cette action nécessite un compte administrateur et est masquée aux rôles éditeur uniquement.",
+		de: "Diese Aktion erfordert ein Administratorkonto und ist für reine Editor-Rollen ausgeblendet.",
+		pt: "Esta ação requer uma conta de administrador e está oculta para perfis apenas de editor.",
+		ja: "この操作には管理者アカウントが必要で、エディタのみのロールからは表示されません。",
+		te: "ఈ చర్యకు అడ్మిన్ ఖాతా అవసరం మరియు ఎడిటర్-మాత్రమే పాత్రల నుండి దాచబడింది.",
+		hi: "इस क्रिया के लिए एडमिन खाते की आवश्यकता होती है और यह केवल-संपादक भूमिकाओं से छिपी होती है।",
+		ny: "Chochita ichi chimafuna akaunti ya woyang'anira ndipo chimabisidwa kwa maudindo a editor-okha.",
+		ar: "يتطلب هذا الإجراء حساب مسؤول وهو مخفي عن الأدوار المخصصة للمحرر فقط.",
+	},
+	"routePageEditor.sectionsHeading": {
+		en: "Sections",
+		es: "Secciones",
+		fr: "Sections",
+		de: "Abschnitte",
+		pt: "Seções",
+		ja: "セクション",
+		te: "విభాగాలు",
+		hi: "अनुभाग",
+		ny: "Zigawo",
+		ar: "الأقسام",
+	},
+	"routePageEditor.sectionsHeadingDesc": {
+		en: "Build the page by composing reusable sections. Drag to reorder; the live preview updates as you edit.",
+		es: "Construya la página combinando secciones reutilizables. Arrastre para reordenar; la vista previa en vivo se actualiza mientras edita.",
+		fr: "Composez la page à partir de sections réutilisables. Glissez pour réorganiser ; l'aperçu en direct se met à jour pendant que vous éditez.",
+		de: "Erstellen Sie die Seite durch Kombinieren wiederverwendbarer Abschnitte. Per Drag-and-drop neu anordnen; die Live-Vorschau aktualisiert sich beim Bearbeiten.",
+		pt: "Monte a página combinando seções reutilizáveis. Arraste para reordenar; a pré-visualização ao vivo é atualizada durante a edição.",
+		ja: "再利用可能なセクションを組み合わせてページを構築します。ドラッグして並び替え、ライブプレビューが編集に合わせて更新されます。",
+		te: "పునర్వినియోగించదగిన విభాగాలను కంపోజ్ చేయడం ద్వారా పేజీని నిర్మించండి. క్రమాన్ని మార్చడానికి లాగండి; మీరు సవరించేటప్పుడు ప్రత్యక్ష ప్రివ్యూ నవీకరించబడుతుంది.",
+		hi: "पुन: प्रयोज्य अनुभागों को मिलाकर पृष्ठ बनाएं। पुनः क्रमांकित करने के लिए खींचें; आपकी संपादन के साथ-साथ लाइव पूर्वावलोकन अपडेट होता है।",
+		ny: "Pangani tsamba pophatikiza zigawo zogwiritsidwanso ntchito. Kokani kuti musinthe dongosolo; chiwonetsero chamoyo chimasintha pamene mukusintha.",
+		ar: "أنشئ الصفحة من خلال تكوين أقسام قابلة لإعادة الاستخدام. اسحب لإعادة الترتيب؛ يتحدّث المعاينة المباشرة أثناء التحرير.",
+	},
+	"routePageEditor.addSection": {
+		en: "+ Add section",
+		es: "+ Añadir sección",
+		fr: "+ Ajouter une section",
+		de: "+ Abschnitt hinzufügen",
+		pt: "+ Adicionar seção",
+		ja: "+ セクションを追加",
+		te: "+ విభాగాన్ని జోడించండి",
+		hi: "+ अनुभाग जोड़ें",
+		ny: "+ Onjezerani gawo",
+		ar: "+ إضافة قسم",
+	},
+	"routePageEditor.addSectionDialogTitle": {
+		en: "Add a section",
+		es: "Añadir una sección",
+		fr: "Ajouter une section",
+		de: "Abschnitt hinzufügen",
+		pt: "Adicionar uma seção",
+		ja: "セクションを追加",
+		te: "విభాగాన్ని జోడించండి",
+		hi: "एक अनुभाग जोड़ें",
+		ny: "Onjezerani gawo",
+		ar: "إضافة قسم",
+	},
+	"routePageEditor.startFromTemplate": {
+		en: "Start from a template",
+		es: "Comenzar desde una plantilla",
+		fr: "Commencer à partir d'un modèle",
+		de: "Mit einer Vorlage beginnen",
+		pt: "Começar a partir de um modelo",
+		ja: "テンプレートから開始",
+		te: "మూసతో ప్రారంభించండి",
+		hi: "एक टेम्पलेट से शुरू करें",
+		ny: "Yambani ndi template",
+		ar: "ابدأ من قالب",
+	},
+	"routePageEditor.orPickSectionType": {
+		en: "Or pick a section type",
+		es: "O elija un tipo de sección",
+		fr: "Ou choisissez un type de section",
+		de: "Oder wählen Sie einen Abschnittstyp",
+		pt: "Ou escolha um tipo de seção",
+		ja: "またはセクションタイプを選択",
+		te: "లేదా విభాగ రకాన్ని ఎంచుకోండి",
+		hi: "या एक अनुभाग प्रकार चुनें",
+		ny: "Kapena sankhani mtundu wa gawo",
+		ar: "أو اختر نوع قسم",
+	},
+	"routePageEditor.dialogClose": {
+		en: "Close",
+		es: "Cerrar",
+		fr: "Fermer",
+		de: "Schließen",
+		pt: "Fechar",
+		ja: "閉じる",
+		te: "మూసివేయండి",
+		hi: "बंद करें",
+		ny: "Tsekani",
+		ar: "إغلاق",
+	},
 } as const satisfies Record<string, LocaleMap>;
 
 /**
