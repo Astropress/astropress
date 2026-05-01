@@ -434,8 +434,27 @@ function main(): number {
 		`${PREFIX}src/access/locals.ts`,
 		`${PREFIX}src/admin-stub-catalog.ts`,
 	]);
+	/**
+	 * In-source escape hatch for files that are 90% const data (manifests,
+	 * dictionaries, fixture catalogs) and would otherwise drag the new-file
+	 * 95% mutation floor without representing real logic. The marker MUST
+	 * appear in the first 10 lines of the file. Each call site should
+	 * justify the marker in a comment so reviewers can push back when a
+	 * "data-only" claim is hiding actual conditional logic.
+	 */
+	const isMarkedDataOnly = (f: string): boolean => {
+		try {
+			const head = readFileSync(f, "utf8").split("\n").slice(0, 10).join("\n");
+			return head.includes("stryker-disable-file: data-only");
+		} catch {
+			return false;
+		}
+	};
 	const isExempt = (f: string): boolean =>
-		TYPE_ONLY_FILES.has(f) || f.endsWith(".d.ts") || f.endsWith("/index.ts");
+		TYPE_ONLY_FILES.has(f) ||
+		f.endsWith(".d.ts") ||
+		f.endsWith("/index.ts") ||
+		isMarkedDataOnly(f);
 	const repoRelative = changed
 		.filter((f) => f.startsWith(PREFIX))
 		.filter((f) => !isExempt(f));

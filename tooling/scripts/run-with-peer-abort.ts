@@ -33,7 +33,7 @@
  */
 
 import { spawn } from "node:child_process";
-import { existsSync, mkdirSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
 
@@ -57,9 +57,36 @@ const sentinelDir = join(homedir(), ".cache", "astropress-lefthook-peer");
 mkdirSync(sentinelDir, { recursive: true, mode: 0o700 });
 const sentinel = join(sentinelDir, `failure-${process.ppid}`);
 
+/**
+ * Read the sentinel and return the human-readable failure description.
+ * Falls back to a generic message if the sentinel is unparseable — never
+ * throws, since the abort path must be robust.
+ */
+function describePeerFailure(): string {
+	try {
+		const raw = readFileSync(sentinel, "utf8");
+		const parsed = JSON.parse(raw) as {
+			failedLabel?: string;
+			error?: string;
+		};
+		if (parsed?.failedLabel) {
+			// prepush-gates.ts writes per-step logs under <cwd>/.prepush-logs/.
+			// Surface the path so the operator can read the genuine failure
+			// instead of guessing what SIGTERM truncated.
+			const slug = parsed.failedLabel.replace(/[^a-z0-9]+/gi, "-").toLowerCase();
+			const log = join(process.cwd(), ".prepush-logs", `${slug}.log`);
+			const errSuffix = parsed.error ? ` (spawn error: ${parsed.error})` : "";
+			return `peer "${parsed.failedLabel}" failed${errSuffix}\n   full log: ${log}`;
+		}
+	} catch {
+		// fallthrough
+	}
+	return "peer failed";
+}
+
 // Pre-flight: peer already failed before we even started? Bail.
 if (existsSync(sentinel)) {
-	console.error(`⏭  ${label}: peer failed; skipping.`);
+	console.error(`⏭  ${label}: ${describePeerFailure()}; skipping.`);
 	process.exit(130);
 }
 
@@ -88,7 +115,7 @@ let aborted = false;
 const poll = setInterval(() => {
 	if (existsSync(sentinel) && !aborted) {
 		aborted = true;
-		console.error(`✖  ${label}: peer failed; aborting.`);
+		console.error(`✖  ${label}: ${describePeerFailure()}; aborting.`);
 		killGroup("SIGTERM");
 		// Don't wait for SIGTERM acknowledgement — escalate, then exit
 		// regardless of whether grandchildren are still cleaning up.
