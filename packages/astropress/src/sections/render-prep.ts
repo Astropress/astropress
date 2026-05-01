@@ -39,20 +39,12 @@ export interface SectionRenderContext {
 export function collectMediaIds(sections: Section[]): string[] {
 	const ids = new Set<string>();
 	for (const section of sections) {
-		switch (section.kind) {
-			case "hero":
-				if (section.mediaId) ids.add(section.mediaId);
-				break;
-			case "image-text":
-				if (section.mediaId) ids.add(section.mediaId);
-				break;
-			case "gallery":
-				for (const id of section.mediaIds) {
-					if (id) ids.add(id);
-				}
-				break;
-			default:
-				break;
+		if (section.kind === "hero" || section.kind === "image-text") {
+			if (section.mediaId) ids.add(section.mediaId);
+		} else if (section.kind === "gallery") {
+			for (const id of section.mediaIds) {
+				if (id) ids.add(id);
+			}
 		}
 	}
 	return [...ids];
@@ -71,6 +63,10 @@ export function buildMediaUrlMap(
 	return out;
 }
 
+function isApproved(t: TestimonialLike): boolean {
+	return (t.status ?? "approved") === "approved";
+}
+
 export function selectTestimonialsForSection(
 	section: TestimonialsSection,
 	all: TestimonialLike[],
@@ -80,9 +76,7 @@ export function selectTestimonialsForSection(
 		return all.filter((t) => wanted.has(t.id));
 	}
 	if (section.source === "featured") {
-		return all.filter(
-			(t) => t.featured === true && (t.status ?? "approved") === "approved",
-		);
+		return all.filter((t) => t.featured === true && isApproved(t));
 	}
-	return all.filter((t) => (t.status ?? "approved") === "approved");
+	return all.filter(isApproved);
 }

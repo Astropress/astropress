@@ -44,3 +44,4 @@ crates/mutants.out/
 
 # Prepush gate content-hash cache (per-developer, never committed)
 .prepush-cache.json
+.stryker-prepush-last-report.json
