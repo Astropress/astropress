@@ -1401,3 +1401,18 @@ dialog[open] {
 	text-align: center;
 	grid-column: 1 / -1;
 }
+
+/* WCAG 2.5.5 (touch targets ≥ 44×44) — global guards for in-page nav and
+   disclosure widgets across every admin page. Per-page <style> blocks
+   may shrink padding for layout density; these rules ensure the hit area
+   stays compliant on the 375px viewport sweep. */
+[role="tab"],
+.tab-link {
+	min-block-size: 44px;
+	display: inline-flex;
+	align-items: center;
+}
+details > summary {
+	min-block-size: 44px;
+	padding-block: 0.625rem;
+}
