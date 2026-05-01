@@ -56,6 +56,11 @@ function getAdminLabel(key: AdminLabelKey, locale: string | undefined): string
 function resolveAstropressAdminUiConfig(locale: AdminLocale | undefined): AstropressResolvedAdminUiConfig
 ```
 
+#### `getAdminStubPage`
+```ts
+function getAdminStubPage(slug: string): AdminStubPageEntry | undefined
+```
+
 #### `actionMatches`
 ```ts
 function actionMatches(pattern: string, requested: string): boolean
@@ -1287,6 +1292,8 @@ function runAstropressDbMigrationsForCli(input: AstropressDbMigrateInput): Astro
 - `interface CmsConfig`
 - `interface TestimonialsConfig`
 - `type AdminStubKey`
+- `interface AdminStubPageEntry`
+- `type AdminStubPageSlug`
 - `interface StubEntry`
 - `interface StubProvider`
 - `interface AccessPageModel`
@@ -1481,6 +1488,7 @@ function runAstropressDbMigrationsForCli(input: AstropressDbMigrateInput): Astro
 - `const PROVIDER_CONTRACT_VERSION: "0.1"`
 - `const ASTROPRESS_ADMIN_APP_NAME: "Astropress"`
 - `const ASTROPRESS_ADMIN_PRODUCT_NAME: "Astropress Admin"`
+- `ADMIN_STUB_PAGES`
 - `adminStubs`
 - `const ADMIN_LOCALE_COOKIE: "astropress_admin_locale"`
 - `pageLabels`
