@@ -1416,3 +1416,22 @@ details > summary {
 	min-block-size: 44px;
 	padding-block: 0.625rem;
 }
+/* Table-cell action links are the primary touch target on the row.
+   WCAG 2.5.5 needs 44px; TD parent doesn't trigger the inline-flow
+   exemption so the anchor itself must reach the size. */
+td > a {
+	display: inline-flex;
+	min-block-size: 44px;
+	align-items: center;
+}
+/* Native checkbox / radio inputs render at ~13×13 by default. WCAG 2.5.5
+   needs 44×44 — bump them globally in the admin shell so the bounding
+   box matches. The platform-rendered indicator stays centred inside the
+   larger box. */
+input[type="checkbox"],
+input[type="radio"] {
+	inline-size: 44px;
+	block-size: 44px;
+	min-inline-size: 44px;
+	min-block-size: 44px;
+}
