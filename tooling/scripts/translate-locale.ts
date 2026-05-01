@@ -24,15 +24,26 @@ async function main() {
 		);
 		process.exit(1);
 	}
-	// `locale` is interpolated into a RegExp below — restrict it to a strict
-	// BCP-47 primary subtag ([a-z]{2,3}) so user input cannot inject regex
-	// metacharacters or trigger ReDoS. CodeQL js/regex-injection guard.
-	if (!/^[a-z]{2,3}$/.test(locale)) {
+	// `locale` is user-supplied — restrict to an allowlist of supported
+	// admin locale codes so it never reaches a regex sink (CodeQL
+	// js/regex-injection). The script is one-off tooling for the existing
+	// dictionaries; the allowlist matches the SUPPORTED_LOCALES union
+	// declared in packages/astropress/src/admin-locale.ts.
+	const SUPPORTED: Record<string, true> = {
+		en: true, es: true, fr: true, de: true, pt: true,
+		ja: true, te: true, hi: true, ny: true, ar: true,
+	};
+	if (!Object.prototype.hasOwnProperty.call(SUPPORTED, locale)) {
 		console.error(
-			`Invalid locale "${locale}" — must be 2–3 lowercase letters (e.g. "ar", "te").`,
+			`Invalid locale "${locale}" — must be one of: ${Object.keys(SUPPORTED).join(", ")}.`,
 		);
 		process.exit(1);
 	}
+	// `safeLocale` is now a known-static string from the allowlist above —
+	// CodeQL recognises object-key lookup against a hardcoded record as a
+	// taint sanitiser, breaking the user→regex chain entirely.
+	const safeLocale: string = locale;
+	const localePrefix = `${safeLocale}:`;
 	const source = await readFile(filePath, "utf8");
 	// Split into label blocks. Each block looks like:
 	//   "<key>": {
@@ -45,13 +56,17 @@ async function main() {
 	const blockRe = /("[^"]+":\s*\{\n)([\s\S]*?)(\n\s*\},?\n)/g;
 	let added = 0;
 	const out = source.replace(blockRe, (full, head, body, tail) => {
-		const hasLocale = new RegExp(`^\\s*${locale}:\\s*"`, "m").test(body);
+		// Detect the locale via plain string scan so no regex is built
+		// from the (now-allowlisted) locale value.
+		const hasLocale = body
+			.split("\n")
+			.some((line: string) => line.trimStart().startsWith(localePrefix));
 		if (hasLocale) return full;
 		const enMatch = body.match(/^(\s*)en:\s*("(?:[^"\\]|\\.)*")\s*,?/m);
 		if (!enMatch) return full;
 		const indent = enMatch[1] ?? "\t\t";
 		const enValue = enMatch[2];
-		const insertion = `\n${indent}${locale}: ${enValue}, // TODO(i18n-${locale}): native-speaker review (issue #76)`;
+		const insertion = `\n${indent}${safeLocale}: ${enValue}, // TODO(i18n-${safeLocale}): native-speaker review (issue #76)`;
 		const newBody = body.replace(
 			/^(\s*en:\s*"(?:[^"\\]|\\.)*"\s*,?)/m,
 			`$1${insertion}`,
