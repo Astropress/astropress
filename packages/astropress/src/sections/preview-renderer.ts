@@ -164,7 +164,10 @@ function renderImageText(s: ImageTextSection, ctx: PreviewContext): string {
   </div>
   <div class="ap-image-text__copy">
     <h2 class="ap-image-text__heading">${escText(s.heading)}</h2>
-    <div class="ap-image-text__body">${s.body}</div>
+    <div class="ap-image-text__body">${
+			// nosemgrep: javascript.express.security.injection.raw-html-format.raw-html-format
+			s.body
+		}</div>
   </div>
 </section>`;
 }

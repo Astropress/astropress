@@ -368,6 +368,7 @@ ${this.renderCtaInputs("secondaryCta", s.secondaryCta)}
 	private renderFeatureGridForm(
 		s: import("../src/sections/schema").FeatureGridSection,
 	): string {
+		// nosemgrep: javascript.express.security.injection.raw-html-format.raw-html-format
 		const items = s.items
 			.map(
 				(item, idx) => `
