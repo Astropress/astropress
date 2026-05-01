@@ -52,32 +52,93 @@ const ADMIN_PAGES_DIR = fromRoot("packages/astropress/pages/ap-admin");
  * Phase 5 of the integration-honesty rollout will reclassify them.
  * Until then, every entry must be justified — adding a new admin stub
  * without registering it in the manifest is an audit failure.
+ *
+ * `expectedVariant` (when set) drives an additional check: the page
+ * MUST render `<RequiresIntegration variant="<that>">`. This is how
+ * we keep coming-soon pages from drifting back to env-gated copy
+ * without anyone noticing.
  */
-const NON_MANIFEST_STUB_ALLOWLIST: ReadonlyMap<string, string> = new Map([
-	["forms.astro", "groupSite — forms ingestion stub (Phase 5: real)"],
-	["newsletter.astro", "groupAudience — Listmonk env-gated (Phase 4: real)"],
-	["events.astro", "groupAudience — events stub (Phase 5: coming-soon)"],
-	["reviews.astro", "groupAudience — reviews stub (Phase 5: coming-soon)"],
-	["referrals.astro", "groupAudience — referrals stub (Phase 5: coming-soon)"],
-	[
-		"memberships.astro",
-		"groupAudience — memberships stub (Phase 5: coming-soon)",
-	],
-	["community.astro", "groupAudience — community stub (Phase 5: coming-soon)"],
-	["shop.astro", "groupAudience — shop stub (Phase 5: coming-soon)"],
-	[
-		"social-syndication.astro",
-		"groupAudience — social-syndication stub (Phase 5: coming-soon)",
-	],
-	[
-		"structured-data.astro",
-		"groupDiscoverability — structured-data stub (Phase 5)",
-	],
-	["sitemaps.astro", "groupDiscoverability — sitemaps stub (Phase 5)"],
-	["maps-local.astro", "groupDiscoverability — maps-local stub (Phase 5)"],
-	["data.astro", "groupOperations — data stub (Phase 5: re-categorise)"],
-	["backups.astro", "groupOperations — backups stub (Phase 5: re-categorise)"],
-]);
+type AllowlistEntry = {
+	reason: string;
+	expectedVariant?: "coming-soon" | "env-gated";
+};
+const NON_MANIFEST_STUB_ALLOWLIST: ReadonlyMap<string, AllowlistEntry> =
+	new Map([
+		[
+			"forms.astro",
+			{ reason: "groupSite — forms ingestion env-gated stub" },
+		],
+		[
+			"newsletter.astro",
+			{ reason: "groupAudience — Listmonk env-gated (Phase 4: real)" },
+		],
+		[
+			"events.astro",
+			{
+				reason: "groupAudience — events stub (no implementation)",
+				expectedVariant: "coming-soon",
+			},
+		],
+		[
+			"reviews.astro",
+			{
+				reason: "groupAudience — reviews stub (no implementation)",
+				expectedVariant: "coming-soon",
+			},
+		],
+		[
+			"referrals.astro",
+			{
+				reason: "groupAudience — referrals stub (no implementation)",
+				expectedVariant: "coming-soon",
+			},
+		],
+		[
+			"memberships.astro",
+			{
+				reason: "groupAudience — memberships stub (no implementation)",
+				expectedVariant: "coming-soon",
+			},
+		],
+		[
+			"community.astro",
+			{
+				reason: "groupAudience — community stub (no implementation)",
+				expectedVariant: "coming-soon",
+			},
+		],
+		[
+			"shop.astro",
+			{ reason: "groupAudience — shop stub (Phase 4+: real provider)" },
+		],
+		[
+			"social-syndication.astro",
+			{
+				reason: "groupAudience — social-syndication stub (no implementation)",
+				expectedVariant: "coming-soon",
+			},
+		],
+		[
+			"structured-data.astro",
+			{ reason: "groupDiscoverability — structured-data stub (Phase 5)" },
+		],
+		[
+			"sitemaps.astro",
+			{ reason: "groupDiscoverability — sitemaps stub (Phase 5)" },
+		],
+		[
+			"maps-local.astro",
+			{ reason: "groupDiscoverability — maps-local stub (Phase 5)" },
+		],
+		[
+			"data.astro",
+			{ reason: "groupOperations — data stub (Phase 5: re-categorise)" },
+		],
+		[
+			"backups.astro",
+			{ reason: "groupOperations — backups stub (Phase 5: re-categorise)" },
+		],
+	]);
 
 const REQUIRES_INTEGRATION_IMPORT = "RequiresIntegration";
 
@@ -117,12 +178,32 @@ async function main() {
 		if (src === null) continue;
 		if (!src.includes(REQUIRES_INTEGRATION_IMPORT)) continue;
 		if (manifestPages.has(fileName)) continue;
-		if (NON_MANIFEST_STUB_ALLOWLIST.has(fileName)) continue;
-		report.add(
-			`[unregistered-stub] ${relative(ROOT, filePath)}: imports RequiresIntegration but is not in INTEGRATIONS manifest or NON_MANIFEST_STUB_ALLOWLIST. ` +
-				"Either register it in packages/astropress/src/integration-manifest.ts, " +
-				"or add it to the allowlist in tooling/scripts/audit-integration-honesty.ts with a justification.",
-		);
+		const allowlisted = NON_MANIFEST_STUB_ALLOWLIST.get(fileName);
+		if (!allowlisted) {
+			report.add(
+				`[unregistered-stub] ${relative(ROOT, filePath)}: imports RequiresIntegration but is not in INTEGRATIONS manifest or NON_MANIFEST_STUB_ALLOWLIST. ` +
+					"Either register it in packages/astropress/src/integration-manifest.ts, " +
+					"or add it to the allowlist in tooling/scripts/audit-integration-honesty.ts with a justification.",
+			);
+			continue;
+		}
+		// When the allowlist commits to a variant, verify the page renders it.
+		// Coming-soon pages must not silently revert to env-gated copy: the
+		// env-var hint would lie about the integration's existence.
+		if (allowlisted.expectedVariant === "coming-soon") {
+			if (!src.includes('variant="coming-soon"')) {
+				report.add(
+					`[allowlist-variant-drift] ${relative(ROOT, filePath)}: allowlist expects variant="coming-soon" but page renders the default (env-gated) variant. ` +
+						"Add `variant=\"coming-soon\"` + a `roadmapHref` to the RequiresIntegration props, or relax the allowlist entry.",
+				);
+			}
+		} else if (allowlisted.expectedVariant === "env-gated") {
+			if (src.includes('variant="coming-soon"')) {
+				report.add(
+					`[allowlist-variant-drift] ${relative(ROOT, filePath)}: allowlist expects env-gated variant but page renders variant="coming-soon".`,
+				);
+			}
+		}
 	}
 
 	report.finish(
