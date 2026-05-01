@@ -56,4 +56,47 @@ describe("sanitizeIntegrationError", () => {
 		expect(isIntegrationErrorCode("anything-else")).toBe(false);
 		expect(isIntegrationErrorCode(undefined)).toBe(false);
 	});
+
+	it("isIntegrationErrorCode rejects non-string types", () => {
+		expect(isIntegrationErrorCode(123)).toBe(false);
+		expect(isIntegrationErrorCode({})).toBe(false);
+		expect(isIntegrationErrorCode(null)).toBe(false);
+	});
+
+	it("rejects an unknown hint string and falls through to typed code lookup", () => {
+		const code = sanitizeIntegrationError(
+			{ code: "INTEGRATION_VERIFY_FAILED" },
+			"NOT_A_REAL_CODE" as never,
+		);
+		expect(code).toBe("INTEGRATION_VERIFY_FAILED");
+	});
+
+	it("ignores objects whose `code` is not a known IntegrationErrorCode", () => {
+		expect(sanitizeIntegrationError({ code: "garbage-code" })).toBe(
+			"INTEGRATION_UNKNOWN_ERROR",
+		);
+	});
+
+	it("falls through when err is an object without `code` property", () => {
+		expect(sanitizeIntegrationError({ unrelated: true })).toBe(
+			"INTEGRATION_UNKNOWN_ERROR",
+		);
+	});
+
+	it("maps TimeoutError → INTEGRATION_TIMEOUT", () => {
+		const err = new Error("timed out");
+		err.name = "TimeoutError";
+		expect(sanitizeIntegrationError(err)).toBe("INTEGRATION_TIMEOUT");
+	});
+
+	it("non-matching error names fall through to INTEGRATION_UNKNOWN_ERROR", () => {
+		const err = new Error("generic");
+		err.name = "RangeError";
+		expect(sanitizeIntegrationError(err)).toBe("INTEGRATION_UNKNOWN_ERROR");
+	});
+
+	it("null and primitive throws fall through to INTEGRATION_UNKNOWN_ERROR", () => {
+		expect(sanitizeIntegrationError(null)).toBe("INTEGRATION_UNKNOWN_ERROR");
+		expect(sanitizeIntegrationError(42)).toBe("INTEGRATION_UNKNOWN_ERROR");
+	});
 });

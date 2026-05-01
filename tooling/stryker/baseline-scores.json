@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-05-01T20:25:15.610Z",
+  "updatedAt": "2026-05-01T21:09:56.577Z",
   "scores": {
     "packages/astropress/src/adapters/adapter-record-helpers.ts": {
       "score": 66.66666666666666,
@@ -543,7 +543,7 @@
     },
     "packages/astropress/src/admin-routes.ts": {
       "score": 90.47619047619048,
-      "hash": "dd1e728a1f70c6b44c1bf4f1be33d304ec81569a"
+      "hash": "25352f6f756769f8a8a35e05e7bb6bd1ac066725"
     },
     "packages/astropress/src/admin-store-dispatch.ts": {
       "score": 80,
@@ -694,8 +694,8 @@
       "hash": "e303127f4c8540feb2d1c78a9439142f9eae8dda"
     },
     "packages/astropress/src/platform-contracts.ts": {
-      "score": 79.16666666666666,
-      "hash": "333f9bc01e08ab4a6042bd162256120c8379c7b3"
+      "score": 91.66666666666666,
+      "hash": "b92759de53214bb1463d96a8cd1b234e317117ff"
     },
     "packages/astropress/src/project-launch.ts": {
       "score": 58.536585365853654,
@@ -976,6 +976,18 @@
     "packages/astropress/src/integration-manifest.ts": {
       "score": 100,
       "hash": "0b470a6866974605fe1f6d8e6e3152b6840297c9"
+    },
+    "packages/astropress/src/integration-error-sanitizer.ts": {
+      "score": 97.72727272727273,
+      "hash": "70219c1c881bb605caf8d7579aa3e5bba5c5bd38"
+    },
+    "packages/astropress/src/integration-secret-envelope.ts": {
+      "score": 96.96969696969697,
+      "hash": "7254e8991dcb8cf751039ced03810a1dcdaf356b"
+    },
+    "packages/astropress/src/sqlite-runtime/integrations.ts": {
+      "score": 100,
+      "hash": "6634dde6cdb3bd98ddff87aca5f62e0c4230befe"
     }
   }
 }

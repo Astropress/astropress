@@ -86,24 +86,12 @@ function getRandomBytes(length: number): Uint8Array {
 	return crypto.getRandomValues(new Uint8Array(length));
 }
 
-function bytesToBase64Url(bytes: Uint8Array): string {
-	let binary = "";
-	for (const byte of bytes) binary += String.fromCharCode(byte);
-	let encoded = btoa(binary).replace(/\+/g, "-").replace(/\//g, "_");
-	// Strip trailing '=' without a regex quantifier (CodeQL flags `/=+$/`
-	// even though base64 padding is bounded to ≤2 chars). At most two
-	// iterations.
-	while (encoded.endsWith("=")) encoded = encoded.slice(0, -1);
-	return encoded;
+function bytesToB64(bytes: Uint8Array): string {
+	return btoa(String.fromCharCode(...bytes));
 }
 
-function base64UrlToBytes(value: string): Uint8Array {
-	const padded = value.replace(/-/g, "+").replace(/_/g, "/");
-	const padLen = (4 - (padded.length % 4)) % 4;
-	const binary = atob(padded + "=".repeat(padLen));
-	const bytes = new Uint8Array(binary.length);
-	for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-	return bytes;
+function b64ToBytes(value: string): Uint8Array {
+	return Uint8Array.from(atob(value), (c) => c.charCodeAt(0));
 }
 
 function deriveKek(rootSecret: string, wrapSalt: Uint8Array): Uint8Array {
@@ -187,9 +175,9 @@ async function tryUnwrap(
 	ctx: SecretContext,
 ): Promise<Uint8Array | null> {
 	try {
-		const wrapSalt = base64UrlToBytes(sealed.wrap_salt);
-		const wrapIv = base64UrlToBytes(sealed.wrap_iv);
-		const dekWrap = base64UrlToBytes(sealed.dek_wrap);
+		const wrapSalt = b64ToBytes(sealed.wrap_salt);
+		const wrapIv = b64ToBytes(sealed.wrap_iv);
+		const dekWrap = b64ToBytes(sealed.dek_wrap);
 		const kek = deriveKek(rootSecret, wrapSalt);
 		const dek = await aesGcmDecrypt(
 			kek,
@@ -242,11 +230,11 @@ export async function sealIntegrationSecret(
 	return {
 		v: ENVELOPE_VERSION,
 		kid: "current",
-		wrap_salt: bytesToBase64Url(wrapSalt),
-		wrap_iv: bytesToBase64Url(wrapIv),
-		dek_wrap: bytesToBase64Url(dekWrap),
-		data_iv: bytesToBase64Url(dataIv),
-		ciphertext: bytesToBase64Url(ciphertext),
+		wrap_salt: bytesToB64(wrapSalt),
+		wrap_iv: bytesToB64(wrapIv),
+		dek_wrap: bytesToB64(dekWrap),
+		data_iv: bytesToB64(dataIv),
+		ciphertext: bytesToB64(ciphertext),
 	};
 }
 
@@ -276,15 +264,13 @@ export async function openIntegrationSecret<
 		);
 	}
 
-	const order: SealedSecretKid[] =
-		sealed.kid === "current"
-			? ["current", "previous"]
-			: ["previous", "current"];
-
 	let usedKid: SealedSecretKid | null = null;
 	let dek: Uint8Array | null = null;
-	for (const kid of order) {
-		const root = kid === "current" ? rootSecrets.current : rootSecrets.previous;
+	const slots: Array<[SealedSecretKid, string | undefined]> = [
+		["current", rootSecrets.current],
+		["previous", rootSecrets.previous],
+	];
+	for (const [kid, root] of slots) {
 		if (!root) continue;
 		const candidate = await tryUnwrap(root, sealed, ctx);
 		if (candidate) {
@@ -294,7 +280,7 @@ export async function openIntegrationSecret<
 		}
 	}
 
-	if (!dek || !usedKid) {
+	if (!dek) {
 		throw new IntegrationSecretError(
 			"DECRYPT_FAILED",
 			`unable to decrypt integration secret for ${ctx.domain}/${ctx.provider}`,
@@ -305,8 +291,8 @@ export async function openIntegrationSecret<
 	try {
 		plaintextBytes = await aesGcmDecrypt(
 			dek,
-			base64UrlToBytes(sealed.data_iv),
-			base64UrlToBytes(sealed.ciphertext),
+			b64ToBytes(sealed.data_iv),
+			b64ToBytes(sealed.ciphertext),
 			buildAad(CIPHERTEXT_AAD_PREFIX, ctx),
 		);
 	} catch {
@@ -341,7 +327,7 @@ export async function openIntegrationSecret<
 
 	return {
 		fields: parsed as TFields,
-		usedKid,
+		usedKid: usedKid as SealedSecretKid,
 	};
 }
 

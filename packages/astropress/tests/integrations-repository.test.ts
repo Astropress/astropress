@@ -118,6 +118,39 @@ describe("createIntegrationsRepository — status surface", () => {
 	it("disconnect() returns false on missing rows", () => {
 		expect(repo.disconnect("nope", "nope")).toBe(false);
 	});
+
+	it("updateStatus() returns false when no row matches", () => {
+		const updated = repo.updateStatus({
+			domain: "missing",
+			provider: "missing",
+			status: "error",
+			lastCheckAt: NOW,
+			lastError: "INTEGRATION_VERIFY_FAILED",
+		});
+		expect(updated).toBe(false);
+	});
+
+	it("updateStatus() defaults lastError to NULL when omitted", async () => {
+		await repo.connect(
+			{
+				domain: "newsletter",
+				provider: "listmonk",
+				configJson: "{}",
+				secretFields: { apiKey: "k" },
+				now: NOW,
+			},
+			ROOT,
+		);
+		expect(
+			repo.updateStatus({
+				domain: "newsletter",
+				provider: "listmonk",
+				status: "paused",
+				lastCheckAt: "2026-05-02T13:00:00.000Z",
+			}),
+		).toBe(true);
+		expect(repo.findStatus("newsletter", "listmonk")?.lastError).toBeNull();
+	});
 });
 
 describe("createIntegrationsRepository — secret surface", () => {
@@ -244,6 +277,88 @@ describe("createIntegrationsRepository — secret surface", () => {
 			kid: string;
 		};
 		expect(final.kid).toBe("current");
+	});
+
+	it("does NOT reseal when current-key reads succeed (no-op fast path)", async () => {
+		await repo.connect(
+			{
+				domain: "newsletter",
+				provider: "listmonk",
+				configJson: "{}",
+				secretFields: { apiKey: "no-reseal-canary" },
+				now: NOW,
+			},
+			ROOT,
+		);
+		const before = db
+			.prepare("SELECT ciphertext, rotated_at FROM integration_secrets")
+			.get() as { ciphertext: string; rotated_at: string };
+		await repo.findSecret("newsletter", "listmonk", { current: ROOT });
+		const after = db
+			.prepare("SELECT ciphertext, rotated_at FROM integration_secrets")
+			.get() as { ciphertext: string; rotated_at: string };
+		expect(after.ciphertext).toBe(before.ciphertext);
+		expect(after.rotated_at).toBe(before.rotated_at);
+	});
+
+	it("does NOT reseal when current-key reads succeed even with previous supplied", async () => {
+		// Guards the reseal predicate `usedKid === "previous" && rootSecrets.previous`:
+		// supplying previous must not trigger reseal when current already opened it.
+		await repo.connect(
+			{
+				domain: "newsletter",
+				provider: "listmonk",
+				configJson: "{}",
+				secretFields: { apiKey: "no-reseal-with-prev" },
+				now: NOW,
+			},
+			ROOT,
+		);
+		const before = db
+			.prepare("SELECT ciphertext, rotated_at FROM integration_secrets")
+			.get() as { ciphertext: string; rotated_at: string };
+		await repo.findSecret("newsletter", "listmonk", {
+			current: ROOT,
+			previous: PREV,
+		});
+		const after = db
+			.prepare("SELECT ciphertext, rotated_at FROM integration_secrets")
+			.get() as { ciphertext: string; rotated_at: string };
+		expect(after.ciphertext).toBe(before.ciphertext);
+		expect(after.rotated_at).toBe(before.rotated_at);
+	});
+
+	it("does NOT reseal when previous-key opens but rootSecrets.previous is missing", async () => {
+		// Edge case: a stale-labeled row whose plaintext can be opened by the
+		// current key (mislabel). Reseal-on-read should NOT trigger because the
+		// guard requires both `usedKid === "previous"` AND `rootSecrets.previous`.
+		await repo.connect(
+			{
+				domain: "newsletter",
+				provider: "listmonk",
+				configJson: "{}",
+				secretFields: { apiKey: "no-reseal-without-prev" },
+				now: NOW,
+			},
+			ROOT,
+		);
+		// Mislabel without changing the key — open will fall back through
+		// kids and pick the current slot.
+		db.prepare("UPDATE integration_secrets SET kid='previous'").run();
+		const before = db
+			.prepare("SELECT ciphertext FROM integration_secrets")
+			.get() as { ciphertext: string };
+		// Only current is supplied; previous is absent.
+		const fields = await repo.findSecret("newsletter", "listmonk", {
+			current: ROOT,
+		});
+		expect(fields).toEqual({ apiKey: "no-reseal-without-prev" });
+		const after = db
+			.prepare("SELECT ciphertext, kid FROM integration_secrets")
+			.get() as { ciphertext: string; kid: string };
+		// No reseal: ciphertext unchanged, kid unchanged.
+		expect(after.ciphertext).toBe(before.ciphertext);
+		expect(after.kid).toBe("previous");
 	});
 
 	it("listPreviousKidContexts() reports rows still on the previous key", async () => {
