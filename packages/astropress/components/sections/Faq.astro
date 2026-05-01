@@ -1,0 +1,20 @@
+---
+import type { FaqSection } from "../../src/sections/schema";
+interface Props {
+	section: FaqSection;
+}
+const { section } = Astro.props;
+---
+<section class="ap-section ap-faq">
+  {section.heading ? <h2 class="ap-faq__heading">{section.heading}</h2> : null}
+  <ul class="ap-faq__list" role="list">
+    {section.items.map((item) => (
+      <li class="ap-faq__item">
+        <details class="ap-faq__details">
+          <summary class="ap-faq__question">{item.question}</summary>
+          <div class="ap-faq__answer">{item.answer}</div>
+        </details>
+      </li>
+    ))}
+  </ul>
+</section>

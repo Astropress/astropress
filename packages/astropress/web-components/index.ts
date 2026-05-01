@@ -21,3 +21,6 @@ export { ApStaleTabWarning } from "./ap-stale-tab-warning";
 export { ApLockIndicator } from "./ap-lock-indicator";
 export { ApCommandPalette } from "./command-palette";
 export { ApPendingForm } from "./pending-form";
+export { ApSectionEditor } from "./section-editor";
+export { ApMediaPicker } from "./media-picker";
+export { ApPagePreview } from "./page-preview";

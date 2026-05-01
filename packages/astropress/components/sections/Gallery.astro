@@ -1,0 +1,25 @@
+---
+import type { GallerySection } from "../../src/sections/schema";
+interface Props {
+	section: GallerySection;
+	mediaUrls: Record<string, string>;
+}
+const { section, mediaUrls } = Astro.props;
+const items = section.mediaIds
+	.map((id) => ({ id, url: mediaUrls[id] }))
+	.filter((entry) => Boolean(entry.url));
+---
+<section class="ap-section ap-gallery" data-columns={section.columns}>
+  {section.heading ? <h2 class="ap-gallery__heading">{section.heading}</h2> : null}
+  {items.length === 0 ? (
+    <p class="ap-gallery__empty">No images yet.</p>
+  ) : (
+    <ul class="ap-gallery__items" role="list">
+      {items.map((it) => (
+        <li class="ap-gallery__item">
+          <img src={it.url} alt="" loading="lazy" decoding="async" />
+        </li>
+      ))}
+    </ul>
+  )}
+</section>

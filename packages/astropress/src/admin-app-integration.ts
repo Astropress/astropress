@@ -19,24 +19,33 @@ const packageResource = (relativePath: string) =>
 	join(packageRoot, relativePath);
 
 const adminCssSrc = packageResource("public/admin.css");
+const sectionsCssSrc = packageResource("public/sections.css");
 
 export function createAstropressAdminAppIntegration(): AstroIntegration {
 	return {
 		name: "astropress-admin-app",
 		hooks: {
-			// Serve admin.css from the package public directory during development.
+			// Serve admin.css and sections.css from the package public directory
+			// during development. sections.css is loaded by the section-editor
+			// live-preview iframe (see web-components/page-preview.ts).
 			"astro:server:setup": ({ server }) => {
 				server.middlewares.use("/admin.css", (_req, res) => {
 					res.setHeader("Content-Type", "text/css; charset=utf-8");
 					res.setHeader("Cache-Control", "no-cache");
 					createReadStream(adminCssSrc).pipe(res);
 				});
+				server.middlewares.use("/sections.css", (_req, res) => {
+					res.setHeader("Content-Type", "text/css; charset=utf-8");
+					res.setHeader("Cache-Control", "no-cache");
+					createReadStream(sectionsCssSrc).pipe(res);
+				});
 			},
-			// Copy admin.css into the build output for production deployments.
+			// Copy stylesheets into the build output for production deployments.
 			"astro:build:done": async ({ dir }) => {
-				const dest = join(fileURLToPath(dir), "admin.css");
-				await mkdir(fileURLToPath(dir), { recursive: true });
-				await copyFile(adminCssSrc, dest);
+				const outDir = fileURLToPath(dir);
+				await mkdir(outDir, { recursive: true });
+				await copyFile(adminCssSrc, join(outDir, "admin.css"));
+				await copyFile(sectionsCssSrc, join(outDir, "sections.css"));
 			},
 			"astro:config:setup": ({ injectRoute, addMiddleware }) => {
 				const pagesDirectory = packageResource("pages/ap-admin");

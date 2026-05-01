@@ -44,7 +44,7 @@ const ALL_SCOPES = [
   {errorMessage && <p class="error-notice">{errorMessage}</p>}
 
   {wasCreated && createdRawToken && (
-    <div class="panel notice" style="border-left: 4px solid var(--color-success, green); padding: 1rem;">
+    <div class="panel notice" style="border-inline-start: 4px solid var(--color-success, green); padding: 1rem;">
       <strong>{t("apiTokens.created")}</strong> {t("apiTokens.copyNow")}
       <br />
       <code style="word-break: break-all; font-size: 0.9em;">{createdRawToken}</code>

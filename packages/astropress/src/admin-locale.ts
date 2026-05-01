@@ -2,20 +2,30 @@ import type { AdminLocale } from "./admin-labels";
 
 export const ADMIN_LOCALE_COOKIE = "astropress_admin_locale";
 
-const SUPPORTED_LOCALES: ReadonlyArray<AdminLocale> = [
-	"en",
-	"es",
-	"fr",
-	"de",
-	"pt",
-	"ja",
-	"te",
-	"hi",
-	"ny",
-];
+export function isRtlLocale(locale: AdminLocale): boolean {
+	return locale === "ar";
+}
+
+export function localeDirection(locale: AdminLocale): "ltr" | "rtl" {
+	return isRtlLocale(locale) ? "rtl" : "ltr";
+}
 
 function isAdminLocale(value: string): value is AdminLocale {
-	return (SUPPORTED_LOCALES as ReadonlyArray<string>).includes(value);
+	switch (value) {
+		case "en":
+		case "es":
+		case "fr":
+		case "de":
+		case "pt":
+		case "ja":
+		case "te":
+		case "hi":
+		case "ny":
+		case "ar":
+			return true;
+		default:
+			return false;
+	}
 }
 
 /**

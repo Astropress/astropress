@@ -1,6 +1,8 @@
 import { describe, expect, test } from "vitest";
 
 import {
+	isRtlLocale,
+	localeDirection,
 	pickAdminLocaleFromAcceptLanguage,
 	resolveAdminLocale,
 } from "../src/admin-locale";
@@ -78,5 +80,126 @@ describe("resolveAdminLocale", () => {
 		expect(
 			resolveAdminLocale(makeAstro({ cookie: "xx", acceptLanguage: "hi-IN" })),
 		).toBe("hi");
+	});
+
+	test("supports the ar locale via cookie", () => {
+		expect(resolveAdminLocale(makeAstro({ cookie: "ar" }))).toBe("ar");
+	});
+
+	test("supports ar via Accept-Language", () => {
+		expect(resolveAdminLocale(makeAstro({ acceptLanguage: "ar-SA" }))).toBe(
+			"ar",
+		);
+	});
+});
+
+describe("isRtlLocale", () => {
+	test("returns true exactly for ar", () => {
+		expect(isRtlLocale("ar")).toBe(true);
+	});
+	test("returns false for every LTR locale", () => {
+		for (const ltr of [
+			"en",
+			"es",
+			"fr",
+			"de",
+			"pt",
+			"ja",
+			"te",
+			"hi",
+			"ny",
+		] as const) {
+			expect(isRtlLocale(ltr)).toBe(false);
+		}
+	});
+});
+
+describe("localeDirection", () => {
+	test("returns 'rtl' for ar", () => {
+		expect(localeDirection("ar")).toBe("rtl");
+	});
+	test("returns 'ltr' for en", () => {
+		expect(localeDirection("en")).toBe("ltr");
+	});
+	test("returns 'ltr' for every LTR locale in the catalog", () => {
+		for (const ltr of [
+			"en",
+			"es",
+			"fr",
+			"de",
+			"pt",
+			"ja",
+			"te",
+			"hi",
+			"ny",
+		] as const) {
+			expect(localeDirection(ltr)).toBe("ltr");
+		}
+	});
+});
+
+describe("admin-locale — extra branch coverage", () => {
+	test("Accept-Language with no q param defaults to q=1 ordering", () => {
+		expect(pickAdminLocaleFromAcceptLanguage("en, fr")).toBe("en");
+	});
+
+	test("malformed q param falls back to 1", () => {
+		expect(pickAdminLocaleFromAcceptLanguage("fr;q=abc, en;q=0.5")).toBe("fr");
+	});
+
+	test("entries with empty tag are filtered out", () => {
+		expect(pickAdminLocaleFromAcceptLanguage(",,en")).toBe("en");
+	});
+
+	test("returns first supported when ordering is by q descending", () => {
+		expect(pickAdminLocaleFromAcceptLanguage("en;q=0.1,fr;q=0.9")).toBe("fr");
+	});
+
+	test("uppercase region tags are normalised", () => {
+		expect(pickAdminLocaleFromAcceptLanguage("EN-US")).toBe("en");
+	});
+
+	test("resolveAdminLocale ignores cookie object with missing value", () => {
+		const astro = {
+			cookies: { get: () => ({}) },
+			request: { headers: { get: () => "ja-JP" } },
+		};
+		expect(resolveAdminLocale(astro)).toBe("ja");
+	});
+
+	test("resolveAdminLocale falls back to en when no cookies object", () => {
+		const astro = {
+			request: { headers: { get: () => null } },
+		};
+		expect(resolveAdminLocale(astro)).toBe("en");
+	});
+
+	test("isRtlLocale on every supported LTR returns false strictly", () => {
+		for (const l of [
+			"en",
+			"es",
+			"fr",
+			"de",
+			"pt",
+			"ja",
+			"te",
+			"hi",
+			"ny",
+		] as const) {
+			expect(isRtlLocale(l)).toBe(false);
+		}
+	});
+
+	test("localeDirection result is exactly the string 'rtl' for ar (mutation guard)", () => {
+		const d = localeDirection("ar");
+		expect(d).toBe("rtl");
+		expect(d).not.toBe("ltr");
+		expect(d).not.toBe("");
+	});
+
+	test("localeDirection result is exactly 'ltr' for non-ar (mutation guard)", () => {
+		const d = localeDirection("en");
+		expect(d).toBe("ltr");
+		expect(d).not.toBe("rtl");
 	});
 });

@@ -139,6 +139,9 @@ async function main() {
 		"admin-heading-hierarchy",
 		"admin-interaction-timing",
 		"admin-perf-timing",
+		"admin-i18n-no-english-leak",
+		"admin-pre-alpha-walkthrough",
+		"admin-integration-honesty",
 	];
 	const needsAdminHarness =
 		requestedProjects.length === 0 ||

@@ -116,6 +116,67 @@ describe("admin ui", () => {
 		expect(getAdminLabel("signOut", "ja")).toBe("サインアウト");
 	});
 
+	it("exposes locale-aware admin labels in Arabic when locale is ar", () => {
+		restoreConfig(null);
+		expect(getAdminLabel("saveButton", "ar")).toBe("حفظ");
+		expect(getAdminLabel("publishButton", "ar")).toBe("نشر");
+		expect(getAdminLabel("deleteButton", "ar")).toBe("حذف");
+		expect(getAdminLabel("cancelButton", "ar")).toBe("إلغاء");
+		expect(getAdminLabel("signOut", "ar")).toBe("تسجيل الخروج");
+		expect(getAdminLabel("loginHeading", "ar")).toBe(
+			"تسجيل الدخول إلى لوحة الإدارة",
+		);
+		expect(getAdminLabel("loginSubmit", "ar")).toBe("تسجيل الدخول");
+		expect(getAdminLabel("sidebarTitle", "ar")).toBe("مساحة العمل");
+		expect(getAdminLabel("navDashboard", "ar")).toBe("لوحة التحكم");
+		expect(getAdminLabel("navMedia", "ar")).toBe("الوسائط");
+		expect(getAdminLabel("navUsers", "ar")).toBe("المستخدمون");
+		expect(getAdminLabel("navSettings", "ar")).toBe("الإعدادات");
+		expect(getAdminLabel("changeLanguage", "ar")).toBe("تغيير اللغة");
+		expect(getAdminLabel("loadingLabel", "ar")).toBe("جارٍ التحميل…");
+		expect(getAdminLabel("errorLabel", "ar")).toBe("فشل الإجراء");
+	});
+
+	it("BCP-47 ar-SA resolves to ar", () => {
+		restoreConfig(null);
+		expect(getAdminLabel("saveButton", "ar-SA")).toBe("حفظ");
+	});
+
+	it("translates navGroupComingSoon per locale (used by integration-honesty sidebar split)", () => {
+		restoreConfig(null);
+		expect(getAdminLabel("navGroupComingSoon", "en")).toBe("Coming soon");
+		expect(getAdminLabel("navGroupComingSoon", "es")).toBe("Próximamente");
+		expect(getAdminLabel("navGroupComingSoon", "fr")).toBe(
+			"Bientôt disponible",
+		);
+		expect(getAdminLabel("navGroupComingSoon", "ar")).toBe("قريبًا");
+		expect(getAdminLabel("navGroupComingSoon", "ja")).toBe("近日公開");
+	});
+
+	it("translates RequiresIntegration coming-soon strings per locale", () => {
+		restoreConfig(null);
+		expect(getAdminLabel("stubComingSoonHeading", "en")).toBe("Coming soon");
+		expect(getAdminLabel("stubComingSoonBody", "en")).toMatch(/roadmap/i);
+		expect(getAdminLabel("stubComingSoonLink", "en")).toMatch(/GitHub/);
+		expect(getAdminLabel("stubComingSoonHeading", "es")).toBe("Próximamente");
+		expect(getAdminLabel("stubComingSoonHeading", "ja")).toBe("近日公開");
+		expect(getAdminLabel("stubComingSoonHeading", "ar")).toBe("قريبًا");
+		expect(getAdminLabel("stubComingSoonBody", "fr")).not.toBe(
+			adminLabels.en.stubComingSoonBody,
+		);
+	});
+
+	it("Arabic translations are non-empty strings for every key", () => {
+		const arDict = adminLabels.ar;
+		const keys = Object.keys(adminLabels.en) as Array<
+			keyof typeof adminLabels.en
+		>;
+		for (const k of keys) {
+			expect(typeof arDict[k]).toBe("string");
+			expect(arDict[k].length).toBeGreaterThan(0);
+		}
+	});
+
 	it("falls back to English when locale is unknown", () => {
 		restoreConfig(null);
 		expect(getAdminLabel("saveButton", "zz")).toBe(adminLabels.en.saveButton);

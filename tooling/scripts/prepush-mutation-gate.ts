@@ -259,9 +259,11 @@ function changedSourceFiles(): string[] {
 	return [];
 }
 
-
 interface StrykerReport {
-	files: Record<string, { mutants: Array<{ status: string }> }>;
+	files: Record<
+		string,
+		{ mutants: Array<{ status: string; static?: boolean }> }
+	>;
 }
 
 // Label files (i18n string maps) generate thousands of StringLiteral mutants
@@ -351,11 +353,17 @@ function scoreForFile(
 	const key = Object.keys(report.files).find((k) => k.endsWith(mutatePath));
 	if (!key) return null;
 	const mutants = report.files[key].mutants;
+	// Match stryker's `ignoreStatic: true` — static mutants run at module
+	// load and can't be killed by ordinary unit tests. The runner config
+	// excludes them from scoring; mirror that here so survivors-by-design
+	// don't drag the per-file score below baseline.
 	const scored = mutants.filter(
-		(m) => m.status !== "Ignored" && m.status !== "NoCoverage",
+		(m) =>
+			m.status !== "Ignored" && m.status !== "NoCoverage" && m.static !== true,
 	);
 	const killed = mutants.filter(
-		(m) => m.status === "Killed" || m.status === "Timeout",
+		(m) =>
+			(m.status === "Killed" || m.status === "Timeout") && m.static !== true,
 	);
 	if (scored.length === 0) return 100;
 	return (killed.length / scored.length) * 100;
@@ -427,9 +435,7 @@ function main(): number {
 		`${PREFIX}src/admin-stub-catalog.ts`,
 	]);
 	const isExempt = (f: string): boolean =>
-		TYPE_ONLY_FILES.has(f) ||
-		f.endsWith(".d.ts") ||
-		f.endsWith("/index.ts");
+		TYPE_ONLY_FILES.has(f) || f.endsWith(".d.ts") || f.endsWith("/index.ts");
 	const repoRelative = changed
 		.filter((f) => f.startsWith(PREFIX))
 		.filter((f) => !isExempt(f));
@@ -499,10 +505,36 @@ function main(): number {
 			`\nRunning Stryker on ${needsMutation.length} file(s) with changed content...`,
 		);
 		const tmp = mkdtempSync(join(tmpdir(), "stryker-prepush-"));
+		// Persist the latest gate report at a stable path so failing runs can
+		// be re-analysed (which mutants survived which file) without rerunning
+		// stryker. Cleared on success.
+		const stableReportPath = ".stryker-prepush-last-report.json";
 		let report: StrykerReport | null = null;
 		try {
-			const targets = needsMutation.map((f) => f.slice(PREFIX.length));
-			report = runStryker(targets, tmp);
+			// Split label files (pure i18n string maps) from logic files. Label
+			// files need StringLiteral/ObjectLiteral mutators excluded — those
+			// mutants are unkillable by reasonable tests on translation dicts.
+			// runStryker only applies that exclusion when the entire batch is
+			// label files, so we run them as a separate pass.
+			const allTargets = needsMutation.map((f) => f.slice(PREFIX.length));
+			const labelTargets = allTargets.filter(isLabelTarget);
+			const logicTargets = allTargets.filter((t) => !isLabelTarget(t));
+			const merged: StrykerReport = { files: {} };
+			if (logicTargets.length > 0) {
+				const r = runStryker(logicTargets, tmp);
+				if (r) Object.assign(merged.files, r.files);
+			}
+			if (labelTargets.length > 0) {
+				const labelTmp = mkdtempSync(join(tmpdir(), "stryker-prepush-labels-"));
+				try {
+					const r = runStryker(labelTargets, labelTmp);
+					if (r) Object.assign(merged.files, r.files);
+				} finally {
+					rmSync(labelTmp, { recursive: true, force: true });
+				}
+			}
+			report = merged;
+			writeFileSync(stableReportPath, JSON.stringify(report));
 		} finally {
 			rmSync(tmp, { recursive: true, force: true });
 		}

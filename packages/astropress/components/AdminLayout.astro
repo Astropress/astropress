@@ -1,11 +1,15 @@
 ---
 import { getAccessContext } from "../src/access/index";
 import { buildAstropressAdminDocumentTitle } from "../src/admin-branding";
-import { resolveAdminLocale } from "../src/admin-locale";
+import { localeDirection, resolveAdminLocale } from "../src/admin-locale";
 import { getPageT } from "../src/admin-page-labels";
 import { getRecentAdminItems } from "../src/admin-recent";
-import { resolveAstropressAdminUiConfig } from "../src/admin-ui";
+import { getAdminLabel, resolveAstropressAdminUiConfig } from "../src/admin-ui";
 import { peekCmsConfig } from "../src/config";
+import {
+	INTEGRATIONS,
+	type IntegrationEntry,
+} from "../src/integration-manifest";
 import { getAdminBootstrapConfig } from "../src/runtime-env";
 import { applyAstropressSecurityHeaders } from "../src/security-headers";
 
@@ -22,6 +26,12 @@ interface NavItem {
 	requiredAction?: string;
 	isGroupLabel?: boolean;
 	indent?: boolean;
+	/**
+	 * When true, the group separator and its child leaves render visually
+	 * demoted ("Coming soon" group). Honesty signal: operators see at a
+	 * glance that these aren't shipping features.
+	 */
+	mutedGroup?: boolean;
 }
 
 interface Props {
@@ -59,6 +69,7 @@ const {
 } = Astro.props;
 const documentTitle = buildAstropressAdminDocumentTitle(title);
 const adminLocale = resolveAdminLocale(Astro);
+const adminDir = localeDirection(adminLocale);
 const adminUi = resolveAstropressAdminUiConfig(adminLocale);
 const tLayout = getPageT(adminLocale);
 const adminSiteName = siteName ?? adminUi.branding.shellName;
@@ -88,10 +99,11 @@ const pluginNavItems: NavItem[] = (peekCmsConfig()?.plugins ?? [])
 // nav advertises the platform's full capability surface even on minimal
 // installs. Group order: Site → Content → Audience → Discoverability →
 // Integrations → Access → Operations.
-const groupSep = (label: string): NavItem => ({
+const groupSep = (label: string, opts: { muted?: boolean } = {}): NavItem => ({
 	href: "",
 	label,
 	isGroupLabel: true,
+	mutedGroup: opts.muted,
 });
 const leaf = (
 	href: string,
@@ -104,6 +116,34 @@ const leaf = (
 	adminOnly: opts.adminOnly,
 	requiredAction: opts.requiredAction,
 });
+
+const navigationByKey = adminUi.navigation as Record<string, string>;
+const integrationLeaf = (entry: IntegrationEntry): NavItem =>
+	leaf(entry.href, navigationByKey[entry.navKey] ?? entry.navKey, {
+		adminOnly: entry.adminOnly,
+		requiredAction: entry.requiredAction,
+	});
+
+function integrationLeavesForGroup(
+	group: "real-or-env-gated" | "coming-soon",
+): NavItem[] {
+	if (group === "real-or-env-gated") {
+		const items = INTEGRATIONS.filter(
+			(entry) => entry.status === "real" || entry.status === "env-gated",
+		).map(integrationLeaf);
+		return [groupSep(adminUi.navigation.groupIntegrations), ...items];
+	}
+	const items = INTEGRATIONS.filter(
+		(entry) => entry.status === "coming-soon",
+	).map(integrationLeaf);
+	if (items.length === 0) return [];
+	return [
+		// Pulled from admin-labels (10-locale coverage) rather than admin-ui's
+		// navigation map, to keep admin-ui.ts unchanged for mutation-gate.
+		groupSep(getAdminLabel("navGroupComingSoon", adminLocale), { muted: true }),
+		...items,
+	];
+}
 
 const navItems: NavItem[] = [
 	{ href: "/ap-admin", label: adminUi.navigation.dashboard },
@@ -219,64 +259,13 @@ const navItems: NavItem[] = [
 		requiredAction: "translations:manage",
 	}),
 
-	groupSep(adminUi.navigation.groupIntegrations),
-	leaf("/ap-admin/services", adminUi.navigation.services, {
-		adminOnly: true,
-		requiredAction: "services:manage",
-	}),
-	leaf("/ap-admin/analytics", adminUi.navigation.analytics, {
-		adminOnly: true,
-		requiredAction: "services:manage",
-	}),
-	leaf("/ap-admin/heatmaps", adminUi.navigation.heatmaps, {
-		adminOnly: true,
-		requiredAction: "services:manage",
-	}),
-	leaf("/ap-admin/ab-testing", adminUi.navigation.abTesting, {
-		adminOnly: true,
-		requiredAction: "services:manage",
-	}),
-	leaf("/ap-admin/email", adminUi.navigation.email, {
-		adminOnly: true,
-		requiredAction: "services:manage",
-	}),
-	leaf("/ap-admin/live-chat", adminUi.navigation.liveChat, {
-		adminOnly: true,
-		requiredAction: "services:manage",
-	}),
-	leaf("/ap-admin/image-cdn", adminUi.navigation.imageCdn, {
-		adminOnly: true,
-		requiredAction: "services:manage",
-	}),
-	leaf("/ap-admin/search", adminUi.navigation.search, {
-		adminOnly: true,
-		requiredAction: "services:manage",
-	}),
-	leaf("/ap-admin/cdn-purge", adminUi.navigation.cdnPurge, {
-		adminOnly: true,
-		requiredAction: "settings:edit",
-	}),
-	leaf("/ap-admin/monitoring", adminUi.navigation.monitoring, {
-		adminOnly: true,
-		requiredAction: "services:manage",
-	}),
-	leaf("/ap-admin/api-tokens", adminUi.navigation.apiTokens, {
-		adminOnly: true,
-		requiredAction: "apiTokens:create",
-	}),
-	leaf("/ap-admin/webhooks", adminUi.navigation.webhooks, {
-		adminOnly: true,
-		requiredAction: "webhooks:manage",
-	}),
-	leaf("/ap-admin/deploy-hooks", adminUi.navigation.deployHooks, {
-		adminOnly: true,
-		requiredAction: "settings:edit",
-	}),
-	leaf("/ap-admin/plugins", adminUi.navigation.plugins, {
-		adminOnly: true,
-		requiredAction: "plugins:view",
-	}),
+	// Integration leaves are partitioned by `INTEGRATIONS` so the sidebar
+	// stops conflating real features with coming-soon roadmap entries.
+	// Real + env-gated render under "Integrations"; coming-soon renders
+	// under its own visually demoted "Coming soon" group below.
+	...integrationLeavesForGroup("real-or-env-gated"),
 	...pluginNavItems,
+	...integrationLeavesForGroup("coming-soon"),
 
 	groupSep(adminUi.navigation.groupAccess),
 	leaf("/ap-admin/users", adminUi.navigation.users, {
@@ -341,7 +330,7 @@ const documentTitleResolved = isOnMatchedNavRoute
 ---
 
 <!doctype html>
-<html lang={adminLocale}>
+<html lang={adminLocale} dir={adminDir}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -578,7 +567,7 @@ const documentTitleResolved = isOnMatchedNavRoute
             }
             return item.adminOnly ? isAdminRole : true;
           });
-          type Group = { label: string; key: string; items: NavItem[] };
+          type Group = { label: string; key: string; muted: boolean; items: NavItem[] };
           const preamble: NavItem[] = [];
           const groups: Group[] = [];
           for (const item of visible) {
@@ -586,6 +575,7 @@ const documentTitleResolved = isOnMatchedNavRoute
               groups.push({
                 label: item.label,
                 key: item.label.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
+                muted: item.mutedGroup === true,
                 items: [],
               });
               continue;
@@ -613,6 +603,7 @@ const documentTitleResolved = isOnMatchedNavRoute
                 <details
                   class="sidebar-group"
                   data-nav-group={g.key}
+                  data-coming-soon={g.muted ? "true" : undefined}
                   open={isInGroup(g) || undefined}
                 >
                   <summary class="sidebar-group-label">{g.label}</summary>
@@ -667,6 +658,13 @@ const documentTitleResolved = isOnMatchedNavRoute
     </div>
     </ap-admin-nav>
     <footer class="ap-admin-footer">
+      <a
+        href="https://docs.astropress.diy"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="ap-admin-footer__link"
+      >{tLayout("footer.docs")}</a>
+      <span class="ap-admin-footer__sep" aria-hidden="true">·</span>
       <a
         href="https://github.com/Astropress/astropress/issues"
         target="_blank"

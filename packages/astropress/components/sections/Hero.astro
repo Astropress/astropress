@@ -1,0 +1,31 @@
+---
+import type { HeroSection } from "../../src/sections/schema";
+interface Props {
+	section: HeroSection;
+	mediaUrls: Record<string, string>;
+}
+const { section, mediaUrls } = Astro.props;
+const mediaUrl = section.mediaId ? mediaUrls[section.mediaId] : null;
+const align = section.alignment === "center" ? "center" : "start";
+---
+<section class="ap-section ap-hero" data-align={align}>
+  {mediaUrl ? (
+    <div class="ap-hero__media" aria-hidden="true">
+      <img src={mediaUrl} alt="" loading="eager" decoding="async" />
+    </div>
+  ) : null}
+  <div class="ap-hero__inner">
+    <h1 class="ap-hero__headline">{section.headline}</h1>
+    {section.subhead ? <p class="ap-hero__subhead">{section.subhead}</p> : null}
+    {(section.primaryCta || section.secondaryCta) ? (
+      <div class="ap-hero__cta">
+        {section.primaryCta ? (
+          <a class="ap-btn ap-btn--primary" href={section.primaryCta.href}>{section.primaryCta.label}</a>
+        ) : null}
+        {section.secondaryCta ? (
+          <a class="ap-btn ap-btn--secondary" href={section.secondaryCta.href}>{section.secondaryCta.label}</a>
+        ) : null}
+      </div>
+    ) : null}
+  </div>
+</section>

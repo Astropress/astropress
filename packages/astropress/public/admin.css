@@ -76,7 +76,7 @@ body {
  * its bottom edge back into the viewport. */
 .skip-link {
 	position: absolute;
-	left: 1rem;
+	inset-inline-start: 1rem;
 	top: 0;
 	background: var(--button-primary-bg);
 	color: var(--button-primary-text);
@@ -250,7 +250,7 @@ body {
    2.5.5 touch-target guidance. */
 .scroll-to-top-fab {
 	position: fixed;
-	right: 1.25rem;
+	inset-inline-end: 1.25rem;
 	bottom: 1.25rem;
 	width: 2.75rem;
 	height: 2.75rem;
@@ -362,9 +362,10 @@ body {
 	display: none;
 	flex-direction: column;
 	gap: 0.2rem;
-	border-right: 1px solid rgba(255, 255, 255, 0.05);
+	border-inline-end: 1px solid rgba(255, 255, 255, 0.05);
 	position: fixed;
-	inset: 0 auto 0 0;
+	inset-block: 0;
+	inset-inline-start: 0;
 	width: min(17rem, 85vw);
 	z-index: 100;
 	overflow-y: auto;
@@ -424,6 +425,21 @@ body {
 	}
 }
 
+/*
+ * Coming-soon group: visually demoted so operators can tell at a glance
+ * the group lists roadmap entries, not shipping features. Driven by
+ * INTEGRATIONS manifest via data-coming-soon attribute.
+ *
+ * Demotion is italic + regular weight on the group label (NO opacity —
+ * opacity dimming the label fails axe AAA contrast 7:1). The sidebar's
+ * own contrast stays intact; the label visibly differs from solid-bold
+ * "Integrations" siblings, which is the honest signal we want.
+ */
+.sidebar-group[data-coming-soon="true"] > summary.sidebar-group-label {
+	font-style: italic;
+	font-weight: 500;
+}
+
 .sidebar a {
 	color: inherit;
 	text-decoration: none;
@@ -434,7 +450,7 @@ body {
 }
 
 .sidebar a.sidebar-child {
-	padding-left: 1.5rem;
+	padding-inline-start: 1.5rem;
 	font-weight: 500;
 	font-size: 0.9rem;
 }
@@ -532,7 +548,7 @@ th,
 td {
 	padding: 0.82rem 0.78rem;
 	border-bottom: 1px solid var(--line);
-	text-align: left;
+	text-align: start;
 	vertical-align: top;
 }
 
@@ -1314,5 +1330,299 @@ dialog[open] {
 	}
 	.undo-toast {
 		animation: none;
+	}
+}
+
+/* Media picker dialog (rendered into <body> by ap-media-picker) */
+.ap-media-picker__dialog {
+	border: 0;
+	padding: 0;
+	max-inline-size: min(56rem, 95vw);
+	max-block-size: 90vh;
+	border-radius: 0.75rem;
+}
+.ap-media-picker__dialog::backdrop {
+	background: rgba(15, 23, 42, 0.55);
+}
+.ap-media-picker__inner {
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+	padding: 1rem;
+	max-block-size: 90vh;
+	box-sizing: border-box;
+}
+.ap-media-picker__head {
+	display: flex;
+	gap: 0.5rem;
+	align-items: center;
+}
+.ap-media-picker__head h3 {
+	margin: 0;
+	flex: 0 0 auto;
+}
+.ap-media-picker__head input[type="search"] {
+	flex: 1;
+	min-block-size: 44px;
+	padding-inline: 0.75rem;
+	border: 1px solid var(--line);
+	border-radius: 0.375rem;
+}
+.ap-media-picker__head [data-media-picker-close] {
+	min-block-size: 44px;
+	min-inline-size: 44px;
+	border: 0;
+	background: transparent;
+	font-size: 1.5rem;
+	cursor: pointer;
+}
+.ap-media-picker__grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(min(8rem, 100%), 1fr));
+	gap: 0.5rem;
+	overflow-y: auto;
+	padding-block-end: 0.5rem;
+}
+.ap-media-picker__item {
+	display: flex;
+	flex-direction: column;
+	gap: 0.25rem;
+	border: 1px solid var(--line);
+	border-radius: 0.375rem;
+	background: var(--surface);
+	padding: 0.25rem;
+	cursor: pointer;
+	min-block-size: 44px;
+}
+.ap-media-picker__item img {
+	inline-size: 100%;
+	aspect-ratio: 1 / 1;
+	object-fit: cover;
+	border-radius: 0.25rem;
+}
+.ap-media-picker__caption {
+	font-size: 0.75rem;
+	color: var(--muted);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+.ap-media-picker__loading,
+.ap-media-picker__empty,
+.ap-media-picker__error {
+	color: var(--muted);
+	margin: 0;
+	padding: 1rem;
+	text-align: center;
+	grid-column: 1 / -1;
+}
+
+/* WCAG 2.5.5 (touch targets ≥ 44×44) — global guards for in-page nav and
+   disclosure widgets across every admin page. Per-page <style> blocks
+   may shrink padding for layout density; these rules ensure the hit area
+   stays compliant on the 375px viewport sweep. */
+[role="tab"],
+.tab-link {
+	min-block-size: 44px;
+	display: inline-flex;
+	align-items: center;
+}
+details > summary {
+	min-block-size: 44px;
+	padding-block: 0.625rem;
+}
+/* Table-cell action links are the primary touch target on the row.
+   WCAG 2.5.5 needs 44px in both axes; TD parent doesn't trigger the
+   inline-flow exemption so the anchor itself must reach the size. */
+td > a {
+	display: inline-flex;
+	min-block-size: 44px;
+	min-inline-size: 44px;
+	align-items: center;
+	justify-content: flex-start;
+}
+/* Native checkbox / radio inputs render at ~13×13 by default. WCAG 2.5.5
+   needs 44×44 — bump them globally in the admin shell so the bounding
+   box matches. The platform-rendered indicator stays centred inside the
+   larger box. */
+input[type="checkbox"],
+input[type="radio"] {
+	inline-size: 44px;
+	block-size: 44px;
+	min-inline-size: 44px;
+	min-block-size: 44px;
+}
+
+/* Inline <code> tokens in body copy default to a monospace glyph that sits
+   tight against the surrounding text — visually merging with neighbouring
+   words ("like`admin`or`cms`"). Give them breathing room on the inline axis
+   so the prose reads as separate words. */
+p code,
+li code,
+.field-note code,
+.admin-field__hint code {
+	padding-inline: 0.2em;
+	margin-inline: 0.1em;
+	background: var(--code-bg, rgba(15, 23, 42, 0.06));
+	border-radius: 3px;
+	font-size: 0.95em;
+}
+
+/* RTL punctuation — when a primarily-LTR sentence (English placeholder copy
+   not yet translated) renders inside a `dir="rtl"` block, the trailing
+   period jumps to the visual start of the line. `unicode-bidi: plaintext`
+   tells the browser to use the strong directional character at the start of
+   the paragraph to determine direction, fixing the punctuation order without
+   forcing manual bidi marks. */
+html[dir="rtl"] p,
+html[dir="rtl"] .field-note,
+html[dir="rtl"] .stat-card p,
+html[dir="rtl"] .support-card p,
+html[dir="rtl"] .queue-copy span,
+html[dir="rtl"] li {
+	unicode-bidi: plaintext;
+}
+
+/* Section editor — list, footer, and add-section dialog. The web component
+   does not ship its own CSS; styling lives here so admin.css owns the
+   editor's visual identity (matches admin-button, panel, admin-field). */
+.ap-section-editor {
+	display: block;
+}
+.ap-section-editor__list {
+	display: flex;
+	flex-direction: column;
+	gap: 0.6rem;
+	margin-block: 0.75rem;
+}
+.ap-section-editor__empty {
+	color: var(--muted);
+	margin: 0.5rem 0;
+	font-style: italic;
+}
+.ap-section-editor__footer {
+	margin-block-start: 0.5rem;
+}
+.ap-section-editor__dialog {
+	border: none;
+	border-radius: 0.5rem;
+	padding: 0;
+	max-inline-size: min(36rem, 92vw);
+	max-block-size: min(80vh, 40rem);
+	box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
+	background: #fff;
+}
+.ap-section-editor__dialog::backdrop {
+	background: rgba(15, 23, 42, 0.45);
+}
+.ap-section-editor__dialog-inner {
+	padding: 1.25rem 1.35rem 1rem;
+	max-block-size: inherit;
+	overflow-y: auto;
+}
+.ap-section-editor__dialog-inner h3 {
+	margin: 0 0 0.85rem;
+}
+.ap-section-editor__dialog-inner h4 {
+	margin: 1rem 0 0.5rem;
+	font-size: 0.85rem;
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+	color: var(--muted);
+}
+.ap-section-editor__picks {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(min(100%, 14rem), 1fr));
+	gap: 0.5rem;
+}
+.ap-section-editor__pick {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: 0.2rem;
+	padding: 0.7rem 0.85rem;
+	background: var(--panel-bg, #f8fafc);
+	border: 1px solid var(--panel-border, rgba(15, 23, 42, 0.08));
+	border-radius: 0.4rem;
+	text-align: start;
+	font: inherit;
+	color: inherit;
+	cursor: pointer;
+	min-block-size: 44px;
+}
+.ap-section-editor__pick:hover,
+.ap-section-editor__pick:focus-visible {
+	border-color: var(--accent, #0f766e);
+	background: #fff;
+}
+.ap-section-editor__pick strong {
+	font-size: 0.95rem;
+}
+.ap-section-editor__pick span {
+	font-size: 0.85rem;
+	color: var(--muted);
+}
+.ap-editor-split {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr);
+	gap: 1rem;
+}
+@media (min-width: 64rem) {
+	.ap-editor-split {
+		grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+	}
+}
+.ap-page-preview {
+	display: flex;
+	flex-direction: column;
+	min-block-size: 24rem;
+	border: 1px solid var(--panel-border, rgba(15, 23, 42, 0.08));
+	border-radius: 0.4rem;
+	background: #fff;
+	overflow: hidden;
+}
+.ap-page-preview iframe {
+	flex: 1 1 auto;
+	width: 100%;
+	border: 0;
+	background: #fff;
+}
+
+/* Mobile chrome — at viewports under 600px the topbar stacks: brand on the
+   first row, identity + actions on a second row. Without this the brand
+   wordmark and the user identity cluster overlap (375px is the narrowest
+   supported admin viewport). */
+@media (max-width: 600px) {
+	.topbar {
+		flex-wrap: wrap;
+		row-gap: 0.5rem;
+		padding: 0.6rem 0.85rem;
+	}
+	.topbar-meta {
+		flex-wrap: wrap;
+		row-gap: 0.4rem;
+		justify-content: flex-end;
+		flex: 1 1 auto;
+	}
+	.topbar-meta > span,
+	.topbar-meta .role-chip {
+		font-size: 0.85rem;
+	}
+	.topbar-brand {
+		flex: 1 1 100%;
+		font-size: 1rem;
+	}
+	.topbar-brand strong {
+		font-size: 1rem;
+	}
+	/* Hamburger nav-toggle gets a guaranteed 44×44 hit area + visible
+	   contrast under the dark topbar. The desktop rules above 56.25rem
+	   hide it; this scope only applies on narrow viewports. */
+	.nav-toggle {
+		min-inline-size: 44px;
+		min-block-size: 44px;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
 	}
 }

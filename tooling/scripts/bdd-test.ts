@@ -120,6 +120,110 @@ const verificationGroups: VerificationGroup[] = [
 		],
 	},
 	{
+		label: "admin RTL plumbing scenarios",
+		scenarios: [
+			"AdminLocale union includes ar",
+			"localeDirection returns rtl for ar",
+			"Admin layout emits dir attribute on the html element",
+			"Admin CSS uses logical properties for inline-axis spacing",
+		],
+		steps: [
+			{
+				command: "bunx",
+				args: ["vitest", "run", "tests/admin-rtl.test.ts"],
+				cwd: astropressPackageRoot,
+			},
+		],
+	},
+	{
+		label: "page editor scenarios",
+		scenarios: [
+			"Operator picks a landing template and sees pre-filled sections",
+			"Section payload validates structurally before save",
+			"HTML-bearing sections are sanitised at save time",
+			"Preview renderer escapes plain-text fields",
+			"Section editor seeds the hidden input from initial state",
+			"Editing a section field updates the serialised payload",
+		],
+		steps: [
+			{
+				command: "bunx",
+				args: [
+					"vitest",
+					"run",
+					"tests/sections/schema.test.ts",
+					"tests/sections/templates.test.ts",
+					"tests/sections/sanitize.test.ts",
+					"tests/sections/preview-renderer.test.ts",
+					"tests/web-components/section-editor.test.ts",
+				],
+				cwd: astropressPackageRoot,
+			},
+		],
+	},
+	{
+		label: "pre-alpha walkthrough fixes",
+		scenarios: [
+			"Live preview stylesheet is served as text/css",
+			"Section editor is reachable from the Pages list for structured pages",
+			"Section editor card heading reads \"Sections\" not \"Sections JSON\"",
+			"New page creates without filling SEO fields",
+			"Admin URL warning leaves whitespace around inline code tokens",
+			"Operator switches admin to Arabic and the page emits dir=rtl with bidi-plaintext",
+			"Add-section dialog renders all four templates",
+			"Add-section dialog renders all eight section kinds with localised labels",
+			"Live preview iframe references the served sections stylesheet",
+			"Mobile topbar wraps so brand and identity do not overlap at 375px",
+			"Mobile hamburger toggle is visible at 375px and meets WCAG 2.5.5",
+		],
+		steps: [
+			{
+				command: "bun",
+				args: [
+					"run",
+					"tooling/scripts/run-playwright.ts",
+					"--project=admin-pre-alpha-walkthrough",
+				],
+			},
+		],
+	},
+	{
+		label: "integration honesty scenarios",
+		scenarios: [
+			"Sidebar renders a distinct Coming soon group",
+			"Coming-soon leaves are scoped to the muted group",
+			"Real and env-gated leaves stay under Integrations",
+			"Coming-soon pages show roadmap copy, not env-var hints",
+		],
+		steps: [
+			{
+				command: "bun",
+				args: [
+					"run",
+					"tooling/scripts/run-playwright.ts",
+					"--project=admin-integration-honesty",
+				],
+			},
+		],
+	},
+	{
+		label: "page templates scenarios",
+		scenarios: [
+			"Blank template produces no sections",
+			"Landing template instantiates hero feature-grid testimonials cta-banner",
+			"About template includes hero image-text feature-grid cta-banner",
+			"Contact template includes hero image-text faq cta-banner",
+			"Every template round-trips through parseSections",
+		],
+		steps: [
+			{
+				command: "bunx",
+				args: ["vitest", "run", "tests/sections/templates.test.ts"],
+				cwd: astropressPackageRoot,
+			},
+		],
+	},
+	{
 		label: "non-technical admin scenarios",
 		scenarios: [
 			"Admin edits and publishes a post from the admin panel",
