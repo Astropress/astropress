@@ -120,6 +120,65 @@ const verificationGroups: VerificationGroup[] = [
 		],
 	},
 	{
+		label: "admin RTL plumbing scenarios",
+		scenarios: [
+			"AdminLocale union includes ar",
+			"localeDirection returns rtl for ar",
+			"Admin layout emits dir attribute on the html element",
+			"Admin CSS uses logical properties for inline-axis spacing",
+		],
+		steps: [
+			{
+				command: "bunx",
+				args: ["vitest", "run", "tests/admin-rtl.test.ts"],
+				cwd: astropressPackageRoot,
+			},
+		],
+	},
+	{
+		label: "page editor scenarios",
+		scenarios: [
+			"Operator picks a landing template and sees pre-filled sections",
+			"Section payload validates structurally before save",
+			"HTML-bearing sections are sanitised at save time",
+			"Preview renderer escapes plain-text fields",
+			"Section editor seeds the hidden input from initial state",
+			"Editing a section field updates the serialised payload",
+		],
+		steps: [
+			{
+				command: "bunx",
+				args: [
+					"vitest",
+					"run",
+					"tests/sections/schema.test.ts",
+					"tests/sections/templates.test.ts",
+					"tests/sections/sanitize.test.ts",
+					"tests/sections/preview-renderer.test.ts",
+					"tests/web-components/section-editor.test.ts",
+				],
+				cwd: astropressPackageRoot,
+			},
+		],
+	},
+	{
+		label: "page templates scenarios",
+		scenarios: [
+			"Blank template produces no sections",
+			"Landing template instantiates hero feature-grid testimonials cta-banner",
+			"About template includes hero image-text feature-grid cta-banner",
+			"Contact template includes hero image-text faq cta-banner",
+			"Every template round-trips through parseSections",
+		],
+		steps: [
+			{
+				command: "bunx",
+				args: ["vitest", "run", "tests/sections/templates.test.ts"],
+				cwd: astropressPackageRoot,
+			},
+		],
+	},
+	{
 		label: "non-technical admin scenarios",
 		scenarios: [
 			"Admin edits and publishes a post from the admin panel",
