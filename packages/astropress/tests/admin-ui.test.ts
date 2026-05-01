@@ -116,6 +116,43 @@ describe("admin ui", () => {
 		expect(getAdminLabel("signOut", "ja")).toBe("サインアウト");
 	});
 
+	it("exposes locale-aware admin labels in Arabic when locale is ar", () => {
+		restoreConfig(null);
+		expect(getAdminLabel("saveButton", "ar")).toBe("حفظ");
+		expect(getAdminLabel("publishButton", "ar")).toBe("نشر");
+		expect(getAdminLabel("deleteButton", "ar")).toBe("حذف");
+		expect(getAdminLabel("cancelButton", "ar")).toBe("إلغاء");
+		expect(getAdminLabel("signOut", "ar")).toBe("تسجيل الخروج");
+		expect(getAdminLabel("loginHeading", "ar")).toBe(
+			"تسجيل الدخول إلى لوحة الإدارة",
+		);
+		expect(getAdminLabel("loginSubmit", "ar")).toBe("تسجيل الدخول");
+		expect(getAdminLabel("sidebarTitle", "ar")).toBe("مساحة العمل");
+		expect(getAdminLabel("navDashboard", "ar")).toBe("لوحة التحكم");
+		expect(getAdminLabel("navMedia", "ar")).toBe("الوسائط");
+		expect(getAdminLabel("navUsers", "ar")).toBe("المستخدمون");
+		expect(getAdminLabel("navSettings", "ar")).toBe("الإعدادات");
+		expect(getAdminLabel("changeLanguage", "ar")).toBe("تغيير اللغة");
+		expect(getAdminLabel("loadingLabel", "ar")).toBe("جارٍ التحميل…");
+		expect(getAdminLabel("errorLabel", "ar")).toBe("فشل الإجراء");
+	});
+
+	it("BCP-47 ar-SA resolves to ar", () => {
+		restoreConfig(null);
+		expect(getAdminLabel("saveButton", "ar-SA")).toBe("حفظ");
+	});
+
+	it("Arabic translations are non-empty strings for every key", () => {
+		const arDict = adminLabels.ar;
+		const keys = Object.keys(adminLabels.en) as Array<
+			keyof typeof adminLabels.en
+		>;
+		for (const k of keys) {
+			expect(typeof arDict[k]).toBe("string");
+			expect(arDict[k].length).toBeGreaterThan(0);
+		}
+	});
+
 	it("falls back to English when locale is unknown", () => {
 		restoreConfig(null);
 		expect(getAdminLabel("saveButton", "zz")).toBe(adminLabels.en.saveButton);
