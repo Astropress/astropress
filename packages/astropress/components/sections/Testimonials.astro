@@ -1,0 +1,40 @@
+---
+import type { TestimonialsSection } from "../../src/sections/schema";
+
+export interface TestimonialDisplay {
+	id: string;
+	name: string;
+	role?: string;
+	company?: string;
+	quote: string;
+}
+
+interface Props {
+	section: TestimonialsSection;
+	testimonials: TestimonialDisplay[];
+}
+const { section, testimonials } = Astro.props;
+const layout = section.layout === "carousel" ? "carousel" : "grid";
+---
+<section class="ap-section ap-testimonials" data-layout={layout}>
+  {section.heading ? <h2 class="ap-testimonials__heading">{section.heading}</h2> : null}
+  {testimonials.length === 0 ? (
+    <p class="ap-testimonials__empty">No testimonials yet.</p>
+  ) : (
+    <ul class="ap-testimonials__list" role="list">
+      {testimonials.map((t) => (
+        <li class="ap-testimonials__item">
+          <blockquote class="ap-testimonials__quote">{t.quote}</blockquote>
+          <footer class="ap-testimonials__cite">
+            <span class="ap-testimonials__name">{t.name}</span>
+            {(t.role || t.company) ? (
+              <span class="ap-testimonials__meta">
+                {[t.role, t.company].filter(Boolean).join(" — ")}
+              </span>
+            ) : null}
+          </footer>
+        </li>
+      ))}
+    </ul>
+  )}
+</section>

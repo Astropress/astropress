@@ -1,0 +1,22 @@
+---
+import type { FeatureGridSection } from "../../src/sections/schema";
+interface Props {
+	section: FeatureGridSection;
+}
+const { section } = Astro.props;
+---
+<section class="ap-section ap-feature-grid" data-columns={section.columns}>
+  <div class="ap-feature-grid__head">
+    <h2 class="ap-feature-grid__heading">{section.heading}</h2>
+    {section.intro ? <p class="ap-feature-grid__intro">{section.intro}</p> : null}
+  </div>
+  <ul class="ap-feature-grid__items" role="list">
+    {section.items.map((item) => (
+      <li class="ap-feature-grid__item">
+        {item.icon ? <span class="ap-feature-grid__icon" aria-hidden="true">{item.icon}</span> : null}
+        <h3 class="ap-feature-grid__title">{item.title}</h3>
+        <p class="ap-feature-grid__body">{item.body}</p>
+      </li>
+    ))}
+  </ul>
+</section>

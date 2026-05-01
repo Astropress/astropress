@@ -1,0 +1,19 @@
+---
+import type { CtaBannerSection } from "../../src/sections/schema";
+interface Props {
+	section: CtaBannerSection;
+}
+const { section } = Astro.props;
+---
+<section class="ap-section ap-cta" data-tone={section.tone}>
+  <div class="ap-cta__inner">
+    <h2 class="ap-cta__headline">{section.headline}</h2>
+    {section.body ? <p class="ap-cta__body">{section.body}</p> : null}
+    <div class="ap-cta__actions">
+      <a class="ap-btn ap-btn--primary" href={section.primaryCta.href}>{section.primaryCta.label}</a>
+      {section.secondaryCta ? (
+        <a class="ap-btn ap-btn--secondary" href={section.secondaryCta.href}>{section.secondaryCta.label}</a>
+      ) : null}
+    </div>
+  </div>
+</section>

@@ -59,6 +59,10 @@
 			"types": "./src/access/index.ts",
 			"default": "./dist/src/access/index.js"
 		},
+		"./sections": {
+			"types": "./src/sections/index.ts",
+			"default": "./dist/src/sections/index.js"
+		},
 		"./hosted-api-adapter": {
 			"types": "./src/hosted-api-adapter.ts",
 			"default": "./dist/src/hosted-api-adapter.js"

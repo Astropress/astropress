@@ -1,0 +1,61 @@
+---
+import {
+	type TestimonialLike,
+	selectTestimonialsForSection,
+} from "../../src/sections/render-prep";
+/**
+ * Section dispatcher — takes a parsed sections array + render context and
+ * dispatches each section to its kind-specific component.
+ *
+ * The caller is expected to have resolved media URLs and gathered any
+ * testimonials referenced by the sections (see render-prep.ts).
+ */
+import type { Section } from "../../src/sections/schema";
+import CtaBanner from "./CtaBanner.astro";
+import Faq from "./Faq.astro";
+import FeatureGrid from "./FeatureGrid.astro";
+import Gallery from "./Gallery.astro";
+import Hero from "./Hero.astro";
+import ImageText from "./ImageText.astro";
+import RichText from "./RichText.astro";
+import Testimonials from "./Testimonials.astro";
+
+interface Props {
+	sections: Section[];
+	mediaUrls?: Record<string, string>;
+	testimonials?: TestimonialLike[];
+}
+const { sections, mediaUrls = {}, testimonials = [] } = Astro.props;
+---
+<div class="ap-sections">
+  {sections.map((section) => {
+    switch (section.kind) {
+      case "hero":
+        return <Hero section={section} mediaUrls={mediaUrls} />;
+      case "feature-grid":
+        return <FeatureGrid section={section} />;
+      case "testimonials": {
+        const picks = selectTestimonialsForSection(section, testimonials).map((t) => ({
+          id: t.id,
+          name: t.name,
+          role: t.role ?? undefined,
+          company: t.company ?? undefined,
+          quote: t.quote,
+        }));
+        return <Testimonials section={section} testimonials={picks} />;
+      }
+      case "cta-banner":
+        return <CtaBanner section={section} />;
+      case "image-text":
+        return <ImageText section={section} mediaUrls={mediaUrls} />;
+      case "faq":
+        return <Faq section={section} />;
+      case "gallery":
+        return <Gallery section={section} mediaUrls={mediaUrls} />;
+      case "rich-text":
+        return <RichText section={section} />;
+      default:
+        return null;
+    }
+  })}
+</div>

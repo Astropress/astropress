@@ -1,6 +1,10 @@
 import { withAdminFormAction } from "@astropress-diy/astropress";
 import { saveRuntimeStructuredPageRoute } from "@astropress-diy/astropress";
 import { getCmsConfig } from "@astropress-diy/astropress";
+import {
+	parseSectionsFromJson,
+	sanitizeSections,
+} from "@astropress-diy/astropress/sections";
 import type { APIRoute } from "astro";
 
 function parseJson<T>(value: FormDataEntryValue | null, fallback: T) {
@@ -30,6 +34,18 @@ export const POST: APIRoute = async (context) =>
 			}
 
 			const path = String(formData.get("path") ?? "").trim();
+
+			const sectionsRaw = String(formData.get("sectionsJson") ?? "");
+			const parsedSections = parseSectionsFromJson(sectionsRaw);
+			if (!parsedSections.ok) {
+				const first = parsedSections.errors[0];
+				return fail(
+					`Invalid sections payload at ${first.path}: ${first.message}`,
+					`/ap-admin/route-pages${path}`,
+				);
+			}
+			const safeSections = await sanitizeSections(parsedSections.sections);
+
 			const result = await saveRuntimeStructuredPageRoute(
 				path,
 				{
@@ -47,10 +63,10 @@ export const POST: APIRoute = async (context) =>
 						formData.get("alternateLinksJson"),
 						[],
 					),
-					sections: parseJson<Record<string, unknown>>(
-						formData.get("sectionsJson"),
-						{},
-					),
+					sections: { sections: safeSections } as unknown as Record<
+						string,
+						unknown
+					>,
 					revisionNote: String(formData.get("revisionNote") ?? "").trim(),
 				},
 				actor,
