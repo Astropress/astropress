@@ -483,3 +483,36 @@ CREATE TABLE IF NOT EXISTS user_invites (
 
 CREATE INDEX IF NOT EXISTS idx_user_invites_user_id ON user_invites(user_id);
 CREATE INDEX IF NOT EXISTS idx_user_invites_expires_at ON user_invites(expires_at);
+
+CREATE TABLE IF NOT EXISTS connected_integrations (
+  domain        TEXT NOT NULL,
+  provider      TEXT NOT NULL,
+  status        TEXT NOT NULL DEFAULT 'connected'
+                CHECK (status IN ('connected','error','paused')),
+  config_json   TEXT NOT NULL,
+  connected_at  TEXT NOT NULL,
+  last_check_at TEXT,
+  last_error    TEXT,
+  PRIMARY KEY (domain, provider)
+);
+
+CREATE INDEX IF NOT EXISTS idx_connected_integrations_status
+  ON connected_integrations(status);
+
+CREATE TABLE IF NOT EXISTS integration_secrets (
+  domain         TEXT NOT NULL,
+  provider       TEXT NOT NULL,
+  envelope_v     INTEGER NOT NULL,
+  kid            TEXT NOT NULL
+                 CHECK (kid IN ('current','previous')),
+  wrap_salt      TEXT NOT NULL,
+  wrap_iv        TEXT NOT NULL,
+  dek_wrap       TEXT NOT NULL,
+  data_iv        TEXT NOT NULL,
+  ciphertext     TEXT NOT NULL,
+  rotated_at     TEXT NOT NULL,
+  PRIMARY KEY (domain, provider),
+  FOREIGN KEY (domain, provider)
+    REFERENCES connected_integrations(domain, provider)
+    ON DELETE CASCADE
+);
