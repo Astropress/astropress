@@ -1,6 +1,8 @@
 import { execSync, spawn, spawnSync } from "node:child_process";
 import {
+	createWriteStream,
 	existsSync,
+	mkdirSync,
 	readFileSync,
 	readdirSync,
 	rmSync,
@@ -84,14 +86,50 @@ function fmtMs(ms: number): string {
 	return `${(ms / 60_000).toFixed(1)}m`;
 }
 
+/**
+ * Per-step log directory. Each step's stdout+stderr is tee'd here so that when
+ * a peer SIGTERMs the failing step mid-write, the failure scrolls past in the
+ * lefthook terminal but the FILE survives — and we can surface the path so
+ * debugging takes seconds, not "re-run pre-push and hope".
+ */
+const PREPUSH_LOG_DIR = join(root, ".prepush-logs");
+
+function ensureLogDir(): void {
+	if (!existsSync(PREPUSH_LOG_DIR)) {
+		mkdirSync(PREPUSH_LOG_DIR, { recursive: true });
+	}
+}
+
+function logPathFor(stepName: string): string {
+	const safe = stepName.replace(/[^a-z0-9]+/gi, "-").toLowerCase();
+	return join(PREPUSH_LOG_DIR, `${safe}.log`);
+}
+
 function runAsync(step: Step): Promise<number> {
 	return new Promise((resolve, reject) => {
+		ensureLogDir();
+		const file = logPathFor(step.name);
+		const sink = createWriteStream(file, { flags: "w" });
 		const child = spawn(step.cmd, step.args, {
 			cwd: step.cwd ?? root,
-			stdio: "inherit",
+			stdio: ["inherit", "pipe", "pipe"],
+		});
+		// Tee stdout+stderr to both the user's terminal and the per-step log.
+		// `process.stdout.write` is sync-flush in node so SIGTERM mid-stream
+		// still leaves a useful tail on disk.
+		child.stdout?.on("data", (chunk: Buffer) => {
+			process.stdout.write(chunk);
+			sink.write(chunk);
+		});
+		child.stderr?.on("data", (chunk: Buffer) => {
+			process.stderr.write(chunk);
+			sink.write(chunk);
 		});
 		child.on("error", reject);
-		child.on("close", (code) => resolve(code ?? 1));
+		child.on("close", (code) => {
+			sink.end();
+			resolve(code ?? 1);
+		});
 	});
 }
 
@@ -129,8 +167,10 @@ async function runParallel(label: string, steps: Step[]): Promise<boolean> {
 	const elapsed = Number(process.hrtime.bigint() - start) / 1e6;
 	if (failures.length > 0) {
 		console.error(`\n${label} FAILED (${fmtMs(elapsed)})`);
-		for (const f of failures)
+		for (const f of failures) {
 			console.error(`  - ${f.step.name} exited ${f.code}`);
+			console.error(`    full log: ${logPathFor(f.step.name)}`);
+		}
 		return false;
 	}
 	console.log(`${label} passed (${fmtMs(elapsed)})`);
@@ -147,6 +187,7 @@ async function runSerial(label: string, steps: Step[]): Promise<boolean> {
 			stopHeartbeat();
 			const elapsed = Number(process.hrtime.bigint() - start) / 1e6;
 			console.error(`\n${label} FAILED on "${step.name}" (${fmtMs(elapsed)})`);
+			console.error(`  full log: ${logPathFor(step.name)}`);
 			return false;
 		}
 	}
