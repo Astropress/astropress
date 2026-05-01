@@ -328,11 +328,28 @@ export class ApSectionEditor extends HTMLElement {
     <option value="start"${s.alignment === "start" ? " selected" : ""}>${escapeHtml(this.fieldLabel("alignmentStart", "Start"))}</option>
     <option value="center"${s.alignment === "center" ? " selected" : ""}>${escapeHtml(this.fieldLabel("alignmentCenter", "Center"))}</option>
   </select></label>
-<label class="admin-field"><span>${escapeHtml(this.fieldLabel("mediaId", "Media id"))}</span>
-  <input class="admin-input" data-field="mediaId" type="text" value="${escapeHtml(s.mediaId ?? "")}" /></label>
+${this.renderMediaIdField(`media-${s.id}`, s.mediaId ?? "", "mediaId")}
 ${this.renderCtaInputs("primaryCta", s.primaryCta)}
 ${this.renderCtaInputs("secondaryCta", s.secondaryCta)}
 `;
+	}
+
+	private renderMediaIdField(
+		inputId: string,
+		value: string,
+		field: string,
+		multiple = false,
+	): string {
+		return `
+<div class="admin-field">
+  <span>${escapeHtml(this.fieldLabel(field, field === "mediaIds" ? "Media ids" : "Media id"))}</span>
+  <div class="ap-section-card__media-row">
+    <input id="${escapeHtml(inputId)}" class="admin-input" data-field="${escapeHtml(field)}" type="text" value="${escapeHtml(value)}" />
+    <ap-media-picker for="${escapeHtml(inputId)}" multiple="${multiple ? "true" : "false"}">
+      <button type="button" class="admin-button-ghost" data-media-picker-trigger>${escapeHtml(this.fieldLabel("pickMedia", "Pick from library"))}</button>
+    </ap-media-picker>
+  </div>
+</div>`;
 	}
 
 	private renderCtaInputs(prefix: string, cta?: CtaButton): string {
@@ -427,8 +444,7 @@ ${this.renderCtaInputs("secondaryCta", s.secondaryCta)}
   <input class="admin-input" data-field="heading" type="text" value="${escapeHtml(s.heading)}" /></label>
 <label class="admin-field"><span>${escapeHtml(this.fieldLabel("body", "Body (HTML)"))}</span>
   <textarea class="admin-textarea" data-field="body" rows="6">${escapeHtml(s.body)}</textarea></label>
-<label class="admin-field"><span>${escapeHtml(this.fieldLabel("mediaId", "Media id"))}</span>
-  <input class="admin-input" data-field="mediaId" type="text" value="${escapeHtml(s.mediaId)}" /></label>
+${this.renderMediaIdField(`media-${s.id}`, s.mediaId, "mediaId")}
 <label class="admin-field"><span>${escapeHtml(this.fieldLabel("imageSide", "Image side"))}</span>
   <select class="admin-input" data-field="imageSide">
     <option value="start"${s.imageSide === "start" ? " selected" : ""}>${escapeHtml(this.fieldLabel("sideStart", "Start"))}</option>
@@ -465,8 +481,7 @@ ${items}
 		return `
 <label class="admin-field"><span>${escapeHtml(this.fieldLabel("heading", "Heading"))}</span>
   <input class="admin-input" data-field="heading" type="text" value="${escapeHtml(s.heading ?? "")}" /></label>
-<label class="admin-field"><span>${escapeHtml(this.fieldLabel("mediaIds", "Media ids (comma-separated)"))}</span>
-  <input class="admin-input" data-field="mediaIds" type="text" value="${escapeHtml(s.mediaIds.join(", "))}" /></label>
+${this.renderMediaIdField(`media-${s.id}`, s.mediaIds.join(", "), "mediaIds", true)}
 <label class="admin-field"><span>${escapeHtml(this.fieldLabel("columns", "Columns"))}</span>
   <select class="admin-input" data-field="columns">
     ${[2, 3, 4].map((n) => `<option value="${n}"${s.columns === n ? " selected" : ""}>${n}</option>`).join("")}
