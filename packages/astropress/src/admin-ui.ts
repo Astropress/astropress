@@ -56,7 +56,6 @@ export type AstropressAdminNavKey =
 	| "groupAudience"
 	| "groupDiscoverability"
 	| "groupIntegrations"
-	| "groupComingSoon"
 	| "groupAccess"
 	| "groupOperations"
 	// Site
@@ -213,7 +212,6 @@ const defaultAdminUiConfig: AstropressResolvedAdminUiConfig = {
 		groupAudience: "Audience",
 		groupDiscoverability: "Discoverability",
 		groupIntegrations: "Integrations",
-		groupComingSoon: "Coming soon",
 		groupAccess: "Access",
 		groupOperations: "Operations",
 		forms: "Forms",
@@ -414,10 +412,6 @@ function applyTranslations(
 			groupIntegrations: tr(
 				"navGroupIntegrations",
 				merged.navigation.groupIntegrations,
-			),
-			groupComingSoon: tr(
-				"navGroupComingSoon",
-				merged.navigation.groupComingSoon,
 			),
 			groupAccess: tr("navGroupAccess", merged.navigation.groupAccess),
 			groupOperations: tr(
