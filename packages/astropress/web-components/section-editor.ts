@@ -368,22 +368,19 @@ ${this.renderCtaInputs("secondaryCta", s.secondaryCta)}
 	private renderFeatureGridForm(
 		s: import("../src/sections/schema").FeatureGridSection,
 	): string {
-		// nosemgrep: javascript.express.security.injection.raw-html-format.raw-html-format
-		const items = s.items
-			.map(
-				(item, idx) => `
-<fieldset class="ap-section-card__fieldset" data-item-index="${idx}">
-  <legend>${escapeHtml(this.fieldLabel("featureItem", "Feature"))} ${idx + 1}</legend>
-  <label class="admin-field"><span>${escapeHtml(this.fieldLabel("featureTitle", "Title"))}</span>
-    <input class="admin-input" data-field="items[${idx}].title" type="text" value="${escapeHtml(item.title)}" /></label>
-  <label class="admin-field"><span>${escapeHtml(this.fieldLabel("featureBody", "Body"))}</span>
-    <input class="admin-input" data-field="items[${idx}].body" type="text" value="${escapeHtml(item.body)}" /></label>
-  <label class="admin-field"><span>${escapeHtml(this.fieldLabel("featureIcon", "Icon (emoji or symbol)"))}</span>
-    <input class="admin-input" data-field="items[${idx}].icon" type="text" value="${escapeHtml(item.icon ?? "")}" /></label>
-  <button type="button" class="admin-button-secondary" data-action="remove-item" data-item-index="${idx}">${escapeHtml(this.fieldLabel("removeItem", "Remove"))}</button>
-</fieldset>`,
-			)
-			.join("");
+		const renderItem = (
+			item: { title?: string; body?: string; icon?: string },
+			idx: number,
+		): string => {
+			const fLabel = (k: string, fb: string) =>
+				escapeHtml(this.fieldLabel(k, fb));
+			const title = escapeHtml(item.title ?? "");
+			const body = escapeHtml(item.body ?? "");
+			const icon = escapeHtml(item.icon ?? "");
+			// nosemgrep: javascript.express.security.injection.raw-html-format.raw-html-format
+			return `<fieldset class="ap-section-card__fieldset" data-item-index="${idx}"><legend>${fLabel("featureItem", "Feature")} ${idx + 1}</legend><label class="admin-field"><span>${fLabel("featureTitle", "Title")}</span><input class="admin-input" data-field="items[${idx}].title" type="text" value="${title}" /></label><label class="admin-field"><span>${fLabel("featureBody", "Body")}</span><input class="admin-input" data-field="items[${idx}].body" type="text" value="${body}" /></label><label class="admin-field"><span>${fLabel("featureIcon", "Icon (emoji or symbol)")}</span><input class="admin-input" data-field="items[${idx}].icon" type="text" value="${icon}" /></label><button type="button" class="admin-button-secondary" data-action="remove-item" data-item-index="${idx}">${fLabel("removeItem", "Remove")}</button></fieldset>`;
+		};
+		const items = s.items.map(renderItem).join("");
 		return `
 <label class="admin-field"><span>${escapeHtml(this.fieldLabel("heading", "Heading"))}</span>
   <input class="admin-input" data-field="heading" type="text" value="${escapeHtml(s.heading)}" /></label>
