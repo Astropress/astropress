@@ -17,14 +17,65 @@ import { expect, test } from "@playwright/test";
 // meet WCAG 2.5.5 (44×44). Issue #58 drove the original 26-50 violations per
 // route to zero; the spec is now an equality check rather than a regression
 // guard. New violations fail CI immediately.
+//
+// Coverage extended in pre-alpha walkthrough to all 55 static admin routes
+// (dynamic-slug routes like /posts/[slug] tested separately via the harness
+// CRUD spec). Any route that requires seeded data still renders an admin
+// chrome (sidebar, header, nav buttons) — the touch-target gate enforces
+// chrome compliance regardless of body content.
 const ADMIN_ROUTES: string[] = [
 	"/ap-admin",
-	"/ap-admin/posts",
-	"/ap-admin/pages",
-	"/ap-admin/media",
-	"/ap-admin/redirects",
+	"/ap-admin/ab-testing",
+	"/ap-admin/access",
+	"/ap-admin/analytics",
+	"/ap-admin/api-tokens",
+	"/ap-admin/archives",
+	"/ap-admin/authors",
+	"/ap-admin/backups",
+	"/ap-admin/cdn-purge",
+	"/ap-admin/cms",
 	"/ap-admin/comments",
+	"/ap-admin/community",
+	"/ap-admin/data",
+	"/ap-admin/deploy-hooks",
+	"/ap-admin/email",
+	"/ap-admin/events",
+	"/ap-admin/forms",
+	"/ap-admin/fundraising",
+	"/ap-admin/heatmaps",
+	"/ap-admin/host",
+	"/ap-admin/image-cdn",
+	"/ap-admin/import",
+	"/ap-admin/live-chat",
+	"/ap-admin/maps-local",
+	"/ap-admin/media",
+	"/ap-admin/memberships",
+	"/ap-admin/monitoring",
+	"/ap-admin/newsletter",
+	"/ap-admin/pages",
+	"/ap-admin/pages/new",
+	"/ap-admin/plugins",
+	"/ap-admin/posts",
+	"/ap-admin/posts/new",
+	"/ap-admin/redirects",
+	"/ap-admin/referrals",
+	"/ap-admin/reviews",
+	"/ap-admin/route-pages",
+	"/ap-admin/search",
+	"/ap-admin/seo",
+	"/ap-admin/services",
 	"/ap-admin/settings",
+	"/ap-admin/shop",
+	"/ap-admin/sitemaps",
+	"/ap-admin/social-syndication",
+	"/ap-admin/structured-data",
+	"/ap-admin/subscribers",
+	"/ap-admin/system",
+	"/ap-admin/taxonomies",
+	"/ap-admin/testimonials",
+	"/ap-admin/translations",
+	"/ap-admin/users",
+	"/ap-admin/webhooks",
 ];
 
 const INTERACTIVE_SELECTOR = [

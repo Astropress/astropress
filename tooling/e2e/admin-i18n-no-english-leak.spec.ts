@@ -77,12 +77,22 @@ async function snapshotChrome(
 	});
 }
 
-test.describe("Admin i18n: chrome must change between English and Telugu", () => {
+// Locales tested at runtime: te catches non-Latin script leaks. Adding ar
+// here will be possible once the AR translation pass lands (tracked in a
+// follow-up issue) — the existing label catalog falls back to EN for
+// AR until then, which would cause every chrome assertion to fail.
+//
+// The full coverage gate (every locale × every key in the catalog) is
+// enforced statically by tooling/scripts/audit-admin-i18n-leaks.ts.
+const NON_EN_LOCALES = ["te"] as const;
+
+test.describe("Admin i18n: chrome must change between English and target locale", () => {
 	for (const route of ADMIN_ROUTES) {
-		test(`Scenario: ${route} chrome differs in Telugu vs English`, async ({
-			context,
-			page,
-		}) => {
+		for (const locale of NON_EN_LOCALES) {
+			test(`Scenario: ${route} chrome differs in ${locale} vs English`, async ({
+				context,
+				page,
+			}) => {
 			await context.clearCookies();
 			await page.goto(route, { waitUntil: "domcontentloaded" });
 			const en = await snapshotChrome(page);
@@ -90,7 +100,7 @@ test.describe("Admin i18n: chrome must change between English and Telugu", () =>
 			await context.addCookies([
 				{
 					name: "astropress_admin_locale",
-					value: "te",
+					value: locale,
 					url: page.url(),
 				},
 			]);
@@ -152,9 +162,10 @@ test.describe("Admin i18n: chrome must change between English and Telugu", () =>
 				if (TECH_IDENTIFIER.test(enL)) continue;
 				expect(
 					teL,
-					`${route}: stat/support card label[${i}] "${teL}" did not change between EN and TE`,
+					`${route}: stat/support card label[${i}] "${teL}" did not change between EN and ${locale}`,
 				).not.toBe(enL);
 			}
-		});
+			});
+		}
 	}
 });
