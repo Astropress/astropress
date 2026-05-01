@@ -475,7 +475,6 @@
 	"scripts": {
 		"test": "vitest run",
 		"test:coverage": "mkdir -p coverage/.tmp && vitest run --coverage",
-		"test:coverage:fast": "mkdir -p coverage/.tmp && vitest run --coverage --reporter=dot --coverage.reporter=text",
 		"test:watch": "vitest",
 		"build": "tsc -p tsconfig.build.json --noCheck && bun ../../tooling/scripts/add-js-ext.ts dist && cp src/sqlite-schema.sql dist/src/sqlite-schema.sql",
 		"release": "changeset publish",

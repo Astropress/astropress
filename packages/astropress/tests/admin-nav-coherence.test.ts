@@ -2,6 +2,7 @@ import { readFileSync, readdirSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
+import { ADMIN_STUB_PAGES } from "../src/admin-stub-catalog";
 import { findRepoRoot } from "./_helpers/repo-root";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -168,6 +169,13 @@ describe("Rubric 50: admin nav structure coherence", () => {
 			}
 		};
 		walk(ADMIN_PAGES_DIR, "/ap-admin");
+
+		// Slugs handled by the dynamic pages/ap-admin/[stub].astro route are
+		// not present as their own .astro files. Treat each ADMIN_STUB_PAGES
+		// slug as a navigable page for the purpose of this coverage check.
+		for (const slug of Object.keys(ADMIN_STUB_PAGES)) {
+			adminPages.add(`/ap-admin/${slug}`);
+		}
 
 		const missing: string[] = [];
 		for (const item of items) {

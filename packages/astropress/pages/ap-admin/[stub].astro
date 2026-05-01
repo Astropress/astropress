@@ -1,0 +1,82 @@
+---
+/**
+ * Single dynamic route for the 25 admin stub pages whose backing
+ * integrations are not yet wired (or are env-gated and unconfigured).
+ *
+ * Source of truth lives in `ADMIN_STUB_PAGES` (admin-stub-catalog.ts):
+ * each slug there maps to an `adminStubs` entry, a nav-label key, the
+ * ABAC action to enforce, and an optional `coming-soon` variant.
+ *
+ * Astro routes static files under this directory ahead of the dynamic
+ * `[stub]` segment, so any page that becomes "real" (e.g. when Phase 4
+ * wires up Listmonk) just lands as its own .astro file and this route
+ * stops handling that slug. Unknown slugs 404 — a typo cannot silently
+ * render an empty page.
+ */
+import AdminLayout from "@astropress-diy/astropress/components/AdminLayout.astro";
+import RequiresIntegration from "@astropress-diy/astropress/components/RequiresIntegration.astro";
+import {
+	adminStubs,
+	getAdminStubPage,
+	requiresAccess,
+	resolveAdminLocale,
+	resolveAstropressAdminUiConfig,
+} from "astropress";
+
+export const prerender = false;
+
+// `[stub]` makes the file a dynamic-route entrypoint, but admin-routes.ts
+// also injects this file under each of the 25 enumerated static patterns
+// (so the route catalog stays explicit). Either way, the slug is the last
+// path segment.
+const slugFromParam =
+	typeof Astro.params.stub === "string" ? Astro.params.stub : undefined;
+const slugFromPath = Astro.url.pathname
+	.replace(/^\/ap-admin\//, "")
+	.replace(/\/+$/, "");
+const slug = slugFromParam ?? slugFromPath;
+const entry = slug ? getAdminStubPage(slug) : undefined;
+if (!entry) {
+	return new Response("Not found", { status: 404 });
+}
+
+const guard = await requiresAccess(Astro, entry.action);
+if (guard) return guard;
+const adminUser = Astro.locals.adminUser;
+if (!adminUser) return Astro.redirect("/ap-admin/login");
+
+const locale = resolveAdminLocale(Astro);
+const ui = resolveAstropressAdminUiConfig(locale);
+const stub = adminStubs[entry.stubKey];
+const navLabel = (ui.navigation as Record<string, string>)[entry.navKey];
+---
+
+<AdminLayout
+  title={navLabel}
+  heading={navLabel}
+  currentPath={`/ap-admin/${slug}`}
+  description={stub.description}
+  userName={adminUser.name}
+>
+  {entry.variant === "coming-soon" ? (
+    <RequiresIntegration
+      capability={stub.capability}
+      description={stub.description}
+      configHint={stub.configHint}
+      providers={[...stub.providers]}
+      docsHref={stub.docsHref}
+      locale={locale}
+      variant="coming-soon"
+      roadmapHref={entry.roadmapHref}
+    />
+  ) : (
+    <RequiresIntegration
+      capability={stub.capability}
+      description={stub.description}
+      configHint={stub.configHint}
+      providers={[...stub.providers]}
+      docsHref={stub.docsHref}
+      locale={locale}
+    />
+  )}
+</AdminLayout>

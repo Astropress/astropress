@@ -30,9 +30,15 @@ export {
 	getAdminLabel,
 	resolveAstropressAdminUiConfig,
 } from "./src/admin-ui.js";
-export { adminStubs } from "./src/admin-stub-catalog.js";
+export {
+	ADMIN_STUB_PAGES,
+	adminStubs,
+	getAdminStubPage,
+} from "./src/admin-stub-catalog.js";
 export type {
 	AdminStubKey,
+	AdminStubPageEntry,
+	AdminStubPageSlug,
 	StubEntry,
 	StubProvider,
 } from "./src/admin-stub-catalog";
