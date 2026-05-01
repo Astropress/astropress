@@ -94,16 +94,16 @@ function renderTestimonials(
 	ctx: PreviewContext,
 ): string {
 	const all = ctx.testimonials;
-	let picked = all;
+	const isApproved = (t: PreviewContext["testimonials"][number]) =>
+		(t.status ?? "approved") === "approved";
+	let picked: PreviewContext["testimonials"];
 	if (s.source === "ids" && s.ids) {
 		const wanted = new Set(s.ids);
 		picked = all.filter((t) => wanted.has(t.id));
 	} else if (s.source === "featured") {
-		picked = all.filter(
-			(t) => t.featured === true && (t.status ?? "approved") === "approved",
-		);
+		picked = all.filter((t) => t.featured === true && isApproved(t));
 	} else {
-		picked = all.filter((t) => (t.status ?? "approved") === "approved");
+		picked = all.filter(isApproved);
 	}
 	const layout = s.layout === "carousel" ? "carousel" : "grid";
 	return `

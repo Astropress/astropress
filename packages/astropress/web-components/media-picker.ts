@@ -76,12 +76,21 @@ export class ApMediaPicker extends HTMLElement {
 			this.dialog = document.createElement("dialog");
 			this.dialog.className = "ap-media-picker__dialog";
 			this.dialog.setAttribute("aria-label", "Media library");
+			const labelTitle = escapeText(
+				this.getAttribute("data-label-title") ?? "Choose media",
+			);
+			const labelSearch = escapeAttr(
+				this.getAttribute("data-label-search") ?? "Search…",
+			);
+			const labelClose = escapeAttr(
+				this.getAttribute("data-label-close") ?? "Close",
+			);
 			this.dialog.innerHTML = `
 <div class="ap-media-picker__inner">
   <header class="ap-media-picker__head">
-    <h3>${this.getAttribute("data-label-title") ?? "Choose media"}</h3>
-    <input type="search" placeholder="${this.getAttribute("data-label-search") ?? "Search…"}" data-media-picker-search />
-    <button type="button" data-media-picker-close aria-label="${this.getAttribute("data-label-close") ?? "Close"}">×</button>
+    <h3>${labelTitle}</h3>
+    <input type="search" placeholder="${labelSearch}" data-media-picker-search />
+    <button type="button" data-media-picker-close aria-label="${labelClose}">×</button>
   </header>
   <div class="ap-media-picker__grid" role="list" data-media-picker-grid>
     <p class="ap-media-picker__loading">Loading…</p>
@@ -148,7 +157,10 @@ export class ApMediaPicker extends HTMLElement {
 		);
 		if (!grid) return;
 		if (items.length === 0) {
-			grid.innerHTML = `<p class="ap-media-picker__empty">${this.getAttribute("data-label-empty") ?? "No media uploaded yet."}</p>`;
+			const labelEmpty = escapeText(
+				this.getAttribute("data-label-empty") ?? "No media uploaded yet.",
+			);
+			grid.innerHTML = `<p class="ap-media-picker__empty">${labelEmpty}</p>`;
 			return;
 		}
 		grid.innerHTML = items
