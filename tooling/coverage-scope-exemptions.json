@@ -1,6 +1,7 @@
 {
 	"exemptions": {
 		"packages/astropress/pages/ap-admin/404.astro": "Intentional error surface. Route coverage treats it as a non-200 page by design.",
+		"packages/astropress/pages/ap-admin/[stub].astro": "Dynamic coming-soon route consolidating 25 manifest-driven stub pages. Covered structurally by audit:integration-honesty (asserts every coming-soon manifest entry resolves) and admin-routes tests, not by default harness data.",
 		"packages/astropress/pages/ap-admin/fundraising.astro": "Feature-gated by donations configuration. Covered structurally by route audits, not by default harness data.",
 		"packages/astropress/pages/ap-admin/archives/[...slug].astro": "Dynamic archive editor route. Covered by repository and route-registry tests rather than the default Playwright seed.",
 		"packages/astropress/pages/ap-admin/import/index.astro": "Import flows need source-specific fixtures and are covered by BDD and action tests instead of the default admin harness.",

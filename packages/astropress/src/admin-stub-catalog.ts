@@ -424,3 +424,193 @@ export const adminStubs = {
 } as const satisfies Record<string, StubEntry>;
 
 export type AdminStubKey = keyof typeof adminStubs;
+
+/**
+ * Per-route metadata for the 25 admin stub pages rendered through the
+ * dynamic `pages/ap-admin/[stub].astro` route. Each entry binds a URL
+ * slug (the path segment) to:
+ *
+ *   - `stubKey`: which `adminStubs` entry holds the copy/providers.
+ *   - `navKey`:  which `adminUi.navigation` label to render.
+ *   - `action`:  the ABAC action enforced by `requiresAccess` before
+ *                the page renders. Mirrors the per-page guard the
+ *                old hand-written stubs each ran.
+ *   - `variant`: optional. `"coming-soon"` makes RequiresIntegration
+ *                drop env-var hints and surface the roadmap link;
+ *                omitted for env-gated pages whose configHint is the
+ *                whole point. Must agree with the integration manifest
+ *                + `audit:integration-honesty` allowlist.
+ *
+ * Adding a new stub: append here and `audit:integration-honesty` will
+ * verify the slug matches a real `adminStubs` entry. The dynamic route
+ * 404s on unknown slugs so a typo never silently renders.
+ */
+export interface AdminStubPageEntry {
+	readonly stubKey: AdminStubKey;
+	readonly navKey: string;
+	readonly action: string;
+	readonly variant?: "coming-soon";
+	readonly roadmapHref?: string;
+}
+
+const ROADMAP_ISSUE = "https://github.com/Astropress/astropress/issues/76";
+
+export const ADMIN_STUB_PAGES = {
+	// Coming-soon (status="coming-soon" in INTEGRATIONS or allowlist).
+	"social-syndication": {
+		stubKey: "socialSyndication",
+		navKey: "socialSyndication",
+		action: "services:manage",
+		variant: "coming-soon",
+		roadmapHref: ROADMAP_ISSUE,
+	},
+	referrals: {
+		stubKey: "referrals",
+		navKey: "referrals",
+		action: "services:manage",
+		variant: "coming-soon",
+		roadmapHref: ROADMAP_ISSUE,
+	},
+	events: {
+		stubKey: "events",
+		navKey: "events",
+		action: "events:manage",
+		variant: "coming-soon",
+		roadmapHref: ROADMAP_ISSUE,
+	},
+	reviews: {
+		stubKey: "reviews",
+		navKey: "reviews",
+		action: "testimonials:manage",
+		variant: "coming-soon",
+		roadmapHref: ROADMAP_ISSUE,
+	},
+	memberships: {
+		stubKey: "memberships",
+		navKey: "memberships",
+		action: "services:manage",
+		variant: "coming-soon",
+		roadmapHref: ROADMAP_ISSUE,
+	},
+	community: {
+		stubKey: "community",
+		navKey: "community",
+		action: "services:manage",
+		variant: "coming-soon",
+		roadmapHref: ROADMAP_ISSUE,
+	},
+	plugins: {
+		stubKey: "plugins",
+		navKey: "plugins",
+		action: "plugins:view",
+		variant: "coming-soon",
+		roadmapHref: ROADMAP_ISSUE,
+	},
+	heatmaps: {
+		stubKey: "heatmaps",
+		navKey: "heatmaps",
+		action: "services:manage",
+		variant: "coming-soon",
+		roadmapHref: ROADMAP_ISSUE,
+	},
+	email: {
+		stubKey: "email",
+		navKey: "email",
+		action: "services:manage",
+		variant: "coming-soon",
+		roadmapHref: ROADMAP_ISSUE,
+	},
+	"live-chat": {
+		stubKey: "liveChat",
+		navKey: "liveChat",
+		action: "services:manage",
+		variant: "coming-soon",
+		roadmapHref: ROADMAP_ISSUE,
+	},
+	"image-cdn": {
+		stubKey: "imageCdn",
+		navKey: "imageCdn",
+		action: "services:manage",
+		variant: "coming-soon",
+		roadmapHref: ROADMAP_ISSUE,
+	},
+	"deploy-hooks": {
+		stubKey: "deployHooks",
+		navKey: "deployHooks",
+		action: "settings:edit",
+		variant: "coming-soon",
+		roadmapHref: ROADMAP_ISSUE,
+	},
+	// Env-gated (manifest status="env-gated" or unconfigured allowlist).
+	data: {
+		stubKey: "data",
+		navKey: "data",
+		action: "data:view",
+	},
+	backups: {
+		stubKey: "backups",
+		navKey: "backups",
+		action: "backups:manage",
+	},
+	"maps-local": {
+		stubKey: "mapsLocal",
+		navKey: "mapsLocal",
+		action: "seo:edit",
+	},
+	"structured-data": {
+		stubKey: "structuredData",
+		navKey: "structuredData",
+		action: "seo:edit",
+	},
+	shop: {
+		stubKey: "shop",
+		navKey: "shop",
+		action: "services:manage",
+	},
+	sitemaps: {
+		stubKey: "sitemaps",
+		navKey: "sitemaps",
+		action: "sitemaps:view",
+	},
+	newsletter: {
+		stubKey: "newsletter",
+		navKey: "newsletter",
+		action: "newsletter:send",
+	},
+	analytics: {
+		stubKey: "analytics",
+		navKey: "analytics",
+		action: "services:manage",
+	},
+	"ab-testing": {
+		stubKey: "abTesting",
+		navKey: "abTesting",
+		action: "services:manage",
+	},
+	search: {
+		stubKey: "search",
+		navKey: "search",
+		action: "services:manage",
+	},
+	"cdn-purge": {
+		stubKey: "cdnPurge",
+		navKey: "cdnPurge",
+		action: "settings:edit",
+	},
+	monitoring: {
+		stubKey: "monitoring",
+		navKey: "monitoring",
+		action: "services:manage",
+	},
+	forms: {
+		stubKey: "forms",
+		navKey: "forms",
+		action: "forms:view",
+	},
+} as const satisfies Record<string, AdminStubPageEntry>;
+
+export type AdminStubPageSlug = keyof typeof ADMIN_STUB_PAGES;
+
+export function getAdminStubPage(slug: string): AdminStubPageEntry | undefined {
+	return (ADMIN_STUB_PAGES as Record<string, AdminStubPageEntry>)[slug];
+}

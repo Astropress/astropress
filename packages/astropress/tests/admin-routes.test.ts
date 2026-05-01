@@ -126,7 +126,7 @@ describe("admin routes", () => {
 		});
 		expect(routeEntrypoints.at(-1)).toEqual({
 			pattern: "/ap-admin/backups",
-			entrypoint: "/fake/astropress/pages/ap-admin/backups.astro",
+			entrypoint: "/fake/astropress/pages/ap-admin/[stub].astro",
 			kind: "page",
 		});
 	});

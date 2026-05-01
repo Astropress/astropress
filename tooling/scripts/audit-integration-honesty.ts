@@ -1,36 +1,46 @@
 /**
  * Integration Honesty Audit
  *
- * Cross-checks the `INTEGRATIONS` manifest in
- * `packages/astropress/src/integration-manifest.ts` against the actual
- * `.astro` page files under `packages/astropress/pages/ap-admin/` so
- * the sidebar partition can never lie about what's real.
+ * Cross-checks two sources of truth against the actual `.astro` pages
+ * under `packages/astropress/pages/ap-admin/`:
  *
- * Rules enforced (every failure includes the manifest entry that drove
- * the check + a pointer to the offending file):
+ *   1. `INTEGRATIONS` (`packages/astropress/src/integration-manifest.ts`)
+ *      partitions integration leaves into real / env-gated / coming-soon
+ *      so the sidebar cannot lie about what works.
+ *   2. `ADMIN_STUB_PAGES` (`packages/astropress/src/admin-stub-catalog.ts`)
+ *      drives the dynamic `pages/ap-admin/[stub].astro` route and binds
+ *      each stub slug to its `adminStubs` entry, ABAC action, and
+ *      coming-soon variant.
  *
- *   1. Every manifest `href` resolves to an existing .astro page.
- *   2. Every `status: "real"` entry has a page that does NOT import
- *      RequiresIntegration. (A real integration cannot ship a stub.)
- *   3. Every `status: "coming-soon"` entry has a page that DOES import
- *      RequiresIntegration AND passes `variant="coming-soon"`. (An
- *      "on the roadmap" page must say so honestly.)
- *   4. Every `.astro` page under pages/ap-admin/ that imports
- *      RequiresIntegration is either (a) listed in the manifest, or
- *      (b) an env-var-gated feature outside the integration sidebar
- *      group (e.g. `forms.astro`, `subscribers.astro`). The audit
- *      surfaces drift via a hard-coded allowlist of known non-manifest
- *      stubs; new stubs MUST be added to the manifest or the allowlist.
+ * Rules:
  *
- * Why a separate allowlist instead of "every stub is in the manifest":
- * the manifest only owns leaves that *previously* lived under
- * `groupIntegrations`. Pages like `/ap-admin/forms` are stubs but live
- * in the Site group (Phase 5 will re-categorise them). Until then we
- * record them explicitly so accidental new stubs surface as audit
- * failures.
+ *   1. Every manifest `href` resolves either to a static .astro page,
+ *      or is handled by the dynamic [stub].astro route via
+ *      ADMIN_STUB_PAGES.
+ *   2. `status="real"` entries must NOT route through the stub catalog
+ *      (a real integration cannot ship through the stub renderer) and
+ *      their static page must not import RequiresIntegration.
+ *   3. `status="coming-soon"` entries must route through ADMIN_STUB_PAGES
+ *      with `variant="coming-soon"`. (Or, exceptionally, render
+ *      RequiresIntegration variant="coming-soon" themselves.)
+ *   4. Every static .astro page that imports RequiresIntegration must
+ *      either match a manifest entry or appear in
+ *      `NON_MANIFEST_STUB_ALLOWLIST`. The 25 dynamic-route stubs are
+ *      validated through ADMIN_STUB_PAGES instead, so the allowlist
+ *      no longer carries them.
+ *   5. Every `ADMIN_STUB_PAGES` slug references a real `adminStubs`
+ *      entry; coming-soon slugs carry a `roadmapHref`; no two slugs
+ *      share an href with a static page (which would silently mask
+ *      the dynamic route).
  */
 
+import { existsSync } from "node:fs";
 import { join, relative } from "node:path";
+import {
+	ADMIN_STUB_PAGES,
+	type AdminStubPageEntry,
+	adminStubs,
+} from "../../packages/astropress/src/admin-stub-catalog.js";
 import {
 	INTEGRATIONS,
 	type IntegrationEntry,
@@ -45,156 +55,97 @@ import {
 } from "../lib/audit-utils.js";
 
 const ADMIN_PAGES_DIR = fromRoot("packages/astropress/pages/ap-admin");
+const DYNAMIC_STUB_FILE = "[stub].astro";
 
 /**
- * Stub pages that are deliberately NOT in the integration manifest.
- * These live in non-integration sidebar groups (Site/Audience/etc.).
- * Phase 5 of the integration-honesty rollout will reclassify them.
- * Until then, every entry must be justified — adding a new admin stub
- * without registering it in the manifest is an audit failure.
- *
- * `expectedVariant` (when set) drives an additional check: the page
- * MUST render `<RequiresIntegration variant="<that>">`. This is how
- * we keep coming-soon pages from drifting back to env-gated copy
- * without anyone noticing.
+ * Stub pages NOT covered by ADMIN_STUB_PAGES nor INTEGRATIONS — i.e.
+ * static .astro files that still import RequiresIntegration directly.
+ * Empty for now (the migration to [stub].astro absorbed the previous
+ * 14 entries). Kept as an explicit hook so a one-off stub can be
+ * justified without forcing it through the dynamic route.
  */
 type AllowlistEntry = {
 	reason: string;
 	expectedVariant?: "coming-soon" | "env-gated";
 };
 const NON_MANIFEST_STUB_ALLOWLIST: ReadonlyMap<string, AllowlistEntry> =
-	new Map([
-		[
-			"forms.astro",
-			{ reason: "groupSite — forms ingestion env-gated stub" },
-		],
-		[
-			"newsletter.astro",
-			{ reason: "groupAudience — Listmonk env-gated (Phase 4: real)" },
-		],
-		[
-			"events.astro",
-			{
-				reason: "groupAudience — events stub (no implementation)",
-				expectedVariant: "coming-soon",
-			},
-		],
-		[
-			"reviews.astro",
-			{
-				reason: "groupAudience — reviews stub (no implementation)",
-				expectedVariant: "coming-soon",
-			},
-		],
-		[
-			"referrals.astro",
-			{
-				reason: "groupAudience — referrals stub (no implementation)",
-				expectedVariant: "coming-soon",
-			},
-		],
-		[
-			"memberships.astro",
-			{
-				reason: "groupAudience — memberships stub (no implementation)",
-				expectedVariant: "coming-soon",
-			},
-		],
-		[
-			"community.astro",
-			{
-				reason: "groupAudience — community stub (no implementation)",
-				expectedVariant: "coming-soon",
-			},
-		],
-		[
-			"shop.astro",
-			{ reason: "groupAudience — shop stub (Phase 4+: real provider)" },
-		],
-		[
-			"social-syndication.astro",
-			{
-				reason: "groupAudience — social-syndication stub (no implementation)",
-				expectedVariant: "coming-soon",
-			},
-		],
-		[
-			"structured-data.astro",
-			{ reason: "groupDiscoverability — structured-data stub (Phase 5)" },
-		],
-		[
-			"sitemaps.astro",
-			{ reason: "groupDiscoverability — sitemaps stub (Phase 5)" },
-		],
-		[
-			"maps-local.astro",
-			{ reason: "groupDiscoverability — maps-local stub (Phase 5)" },
-		],
-		[
-			"data.astro",
-			{ reason: "groupOperations — data stub (Phase 5: re-categorise)" },
-		],
-		[
-			"backups.astro",
-			{ reason: "groupOperations — backups stub (Phase 5: re-categorise)" },
-		],
-	]);
+	new Map();
 
 const REQUIRES_INTEGRATION_IMPORT = "RequiresIntegration";
 
 function hrefToPagePath(href: string): string {
-	// "/ap-admin/heatmaps" -> "heatmaps.astro"
 	const trimmed = href.replace(/^\/ap-admin\/?/, "");
 	return `${trimmed}.astro`;
 }
 
+function hrefToSlug(href: string): string {
+	return href.replace(/^\/ap-admin\/?/, "");
+}
+
 async function loadPage(filePath: string): Promise<string | null> {
-	try {
-		return await readText(filePath);
-	} catch {
-		return null;
-	}
+	if (!existsSync(filePath)) return null;
+	const text = await readText(filePath);
+	return text === "" ? null : text;
+}
+
+function pageExists(fileName: string): boolean {
+	return existsSync(join(ADMIN_PAGES_DIR, fileName));
 }
 
 async function main() {
 	const report = new AuditReport("integration-honesty");
 
-	// Rule 1+2+3: walk the manifest.
+	// Rules 1–3: walk the manifest, validating each entry against
+	// either a static page or the dynamic stub catalog.
 	for (const entry of INTEGRATIONS) {
 		await checkManifestEntry(entry, report);
 	}
 
-	// Rule 4: walk every admin page, flag stubs not in manifest+allowlist.
-	const manifestPages = new Set(
-		INTEGRATIONS.map((entry) => hrefToPagePath(entry.href)),
+	// Rule 5: validate ADMIN_STUB_PAGES internal coherence.
+	for (const [slug, entry] of Object.entries(ADMIN_STUB_PAGES) as Array<
+		[string, AdminStubPageEntry]
+	>) {
+		validateStubPageEntry(slug, entry, report);
+		// A static page at the same slug masks the dynamic route. If a slug
+		// is meant to be served by [stub].astro, no foo.astro may exist.
+		const staticFile = `${slug}.astro`;
+		if (pageExists(staticFile)) {
+			report.add(
+				`[stub-shadowed] ADMIN_STUB_PAGES slug "${slug}" is masked by static page packages/astropress/pages/ap-admin/${staticFile}. Either delete the static page or remove the slug from ADMIN_STUB_PAGES.`,
+			);
+		}
+	}
+
+	// Rule 4: any static page that still renders RequiresIntegration must
+	// be in the manifest or the allowlist. The dynamic [stub].astro route
+	// is the only place where un-listed stub rendering is permitted.
+	const manifestStaticPages = new Set(
+		INTEGRATIONS.filter(
+			(entry) => !(hrefToSlug(entry.href) in ADMIN_STUB_PAGES),
+		).map((entry) => hrefToPagePath(entry.href)),
 	);
 	const entries = await listFiles(ADMIN_PAGES_DIR, {
 		recursive: false,
 		extensions: [".astro"],
 	});
 	for (const fileName of entries.sort()) {
+		if (fileName === DYNAMIC_STUB_FILE) continue;
 		const filePath = join(ADMIN_PAGES_DIR, fileName);
 		const src = await loadPage(filePath);
 		if (src === null) continue;
 		if (!src.includes(REQUIRES_INTEGRATION_IMPORT)) continue;
-		if (manifestPages.has(fileName)) continue;
+		if (manifestStaticPages.has(fileName)) continue;
 		const allowlisted = NON_MANIFEST_STUB_ALLOWLIST.get(fileName);
 		if (!allowlisted) {
 			report.add(
-				`[unregistered-stub] ${relative(ROOT, filePath)}: imports RequiresIntegration but is not in INTEGRATIONS manifest or NON_MANIFEST_STUB_ALLOWLIST. ` +
-					"Either register it in packages/astropress/src/integration-manifest.ts, " +
-					"or add it to the allowlist in tooling/scripts/audit-integration-honesty.ts with a justification.",
+				`[unregistered-stub] ${relative(ROOT, filePath)}: imports RequiresIntegration but is not in INTEGRATIONS, ADMIN_STUB_PAGES, or NON_MANIFEST_STUB_ALLOWLIST. Either register the slug in packages/astropress/src/admin-stub-catalog.ts (and delete this file so [stub].astro picks it up), add it to INTEGRATIONS, or document an exemption in NON_MANIFEST_STUB_ALLOWLIST.`,
 			);
 			continue;
 		}
-		// When the allowlist commits to a variant, verify the page renders it.
-		// Coming-soon pages must not silently revert to env-gated copy: the
-		// env-var hint would lie about the integration's existence.
 		if (allowlisted.expectedVariant === "coming-soon") {
 			if (!src.includes('variant="coming-soon"')) {
 				report.add(
-					`[allowlist-variant-drift] ${relative(ROOT, filePath)}: allowlist expects variant="coming-soon" but page renders the default (env-gated) variant. ` +
-						"Add `variant=\"coming-soon\"` + a `roadmapHref` to the RequiresIntegration props, or relax the allowlist entry.",
+					`[allowlist-variant-drift] ${relative(ROOT, filePath)}: allowlist expects variant="coming-soon" but page renders the default (env-gated) variant.`,
 				);
 			}
 		} else if (allowlisted.expectedVariant === "env-gated") {
@@ -206,8 +157,19 @@ async function main() {
 		}
 	}
 
+	// The dynamic stub renderer must exist. Without it, every slug 404s.
+	if (!pageExists(DYNAMIC_STUB_FILE)) {
+		report.add(
+			`[missing-dynamic-stub] packages/astropress/pages/ap-admin/${DYNAMIC_STUB_FILE} does not exist; ${
+				Object.keys(ADMIN_STUB_PAGES).length
+			} stub slugs would 404.`,
+		);
+	}
+
 	report.finish(
-		`integration-honesty audit passed — ${INTEGRATIONS.length} manifest entries reconciled with admin pages.`,
+		`integration-honesty audit passed — ${INTEGRATIONS.length} manifest entries + ${
+			Object.keys(ADMIN_STUB_PAGES).length
+		} dynamic-route stubs reconciled.`,
 	);
 }
 
@@ -215,37 +177,96 @@ async function checkManifestEntry(
 	entry: IntegrationEntry,
 	report: AuditReport,
 ): Promise<void> {
-	const fileName = hrefToPagePath(entry.href);
-	const filePath = join(ADMIN_PAGES_DIR, fileName);
-	const src = await loadPage(filePath);
-	if (src === null) {
-		report.add(
-			`[missing-page] ${entry.href} (status=${entry.status}): manifest entry has no backing page at ${relative(ROOT, filePath)}.`,
-		);
-		return;
-	}
-	const importsRequiresIntegration = src.includes(REQUIRES_INTEGRATION_IMPORT);
+	const slug = hrefToSlug(entry.href);
+	const dynamicEntry = (ADMIN_STUB_PAGES as Record<string, AdminStubPageEntry>)[
+		slug
+	];
 
-	if (entry.status === "real" && importsRequiresIntegration) {
-		report.add(
-			`[real-but-stubbed] ${entry.href}: manifest says status="real" but ${relative(ROOT, filePath)} imports RequiresIntegration. ` +
-				'Either implement the page, or change manifest status to "env-gated"/"coming-soon".',
-		);
-	}
-
-	if (entry.status === "coming-soon") {
-		if (!importsRequiresIntegration) {
+	if (entry.status === "real") {
+		if (dynamicEntry) {
 			report.add(
-				`[coming-soon-not-stubbed] ${entry.href}: manifest says status="coming-soon" but ${relative(ROOT, filePath)} does not render RequiresIntegration.`,
+				`[real-but-dynamic] ${entry.href}: manifest says status="real" but slug is registered in ADMIN_STUB_PAGES. Real integrations must have their own static page; remove from ADMIN_STUB_PAGES.`,
 			);
 			return;
 		}
-		if (!src.includes('variant="coming-soon"')) {
+		const fileName = hrefToPagePath(entry.href);
+		const filePath = join(ADMIN_PAGES_DIR, fileName);
+		const src = await loadPage(filePath);
+		if (src === null) {
 			report.add(
-				`[coming-soon-wrong-variant] ${entry.href}: ${relative(ROOT, filePath)} renders RequiresIntegration without variant="coming-soon". ` +
-					"Operators must see roadmap copy, not env-var hints.",
+				`[missing-page] ${entry.href} (status=real): no backing page at ${relative(ROOT, filePath)}.`,
+			);
+			return;
+		}
+		if (src.includes(REQUIRES_INTEGRATION_IMPORT)) {
+			report.add(
+				`[real-but-stubbed] ${entry.href}: manifest says status="real" but ${relative(ROOT, filePath)} imports RequiresIntegration.`,
 			);
 		}
+		return;
+	}
+
+	if (entry.status === "coming-soon") {
+		if (dynamicEntry) {
+			if (dynamicEntry.variant !== "coming-soon") {
+				report.add(
+					`[coming-soon-wrong-variant] ${entry.href}: ADMIN_STUB_PAGES["${slug}"] does not set variant="coming-soon". Add \`variant: "coming-soon"\` + a \`roadmapHref\` so operators see roadmap copy, not env-var hints.`,
+				);
+			}
+			return;
+		}
+		// Fallback: a static page may still serve a coming-soon entry,
+		// provided it renders RequiresIntegration variant="coming-soon".
+		const fileName = hrefToPagePath(entry.href);
+		const filePath = join(ADMIN_PAGES_DIR, fileName);
+		const src = await loadPage(filePath);
+		if (src === null) {
+			report.add(
+				`[missing-page] ${entry.href} (status=coming-soon): no backing page at ${relative(ROOT, filePath)} and not in ADMIN_STUB_PAGES.`,
+			);
+			return;
+		}
+		if (
+			!src.includes(REQUIRES_INTEGRATION_IMPORT) ||
+			!src.includes('variant="coming-soon"')
+		) {
+			report.add(
+				`[coming-soon-wrong-variant] ${entry.href}: ${relative(ROOT, filePath)} does not render RequiresIntegration variant="coming-soon".`,
+			);
+		}
+		return;
+	}
+
+	// env-gated: page may be either a static .astro or routed via
+	// ADMIN_STUB_PAGES. Just verify it resolves.
+	if (dynamicEntry) return;
+	const fileName = hrefToPagePath(entry.href);
+	if (!pageExists(fileName)) {
+		report.add(
+			`[missing-page] ${entry.href} (status=env-gated): no static page at ${fileName} and slug not in ADMIN_STUB_PAGES.`,
+		);
+	}
+}
+
+function validateStubPageEntry(
+	slug: string,
+	entry: AdminStubPageEntry,
+	report: AuditReport,
+): void {
+	if (!(entry.stubKey in adminStubs)) {
+		report.add(
+			`[stub-key-missing] ADMIN_STUB_PAGES["${slug}"].stubKey="${entry.stubKey}" does not match any adminStubs entry.`,
+		);
+	}
+	if (entry.variant === "coming-soon" && !entry.roadmapHref) {
+		report.add(
+			`[stub-missing-roadmap] ADMIN_STUB_PAGES["${slug}"] has variant="coming-soon" but no roadmapHref. Coming-soon pages must surface a roadmap link instead of env-var hints.`,
+		);
+	}
+	if (entry.variant !== "coming-soon" && entry.roadmapHref) {
+		report.add(
+			`[stub-stale-roadmap] ADMIN_STUB_PAGES["${slug}"] has roadmapHref but no variant="coming-soon". Drop the roadmapHref or add the variant.`,
+		);
 	}
 }
 
