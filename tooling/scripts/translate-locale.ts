@@ -24,6 +24,15 @@ async function main() {
 		);
 		process.exit(1);
 	}
+	// `locale` is interpolated into a RegExp below — restrict it to a strict
+	// BCP-47 primary subtag ([a-z]{2,3}) so user input cannot inject regex
+	// metacharacters or trigger ReDoS. CodeQL js/regex-injection guard.
+	if (!/^[a-z]{2,3}$/.test(locale)) {
+		console.error(
+			`Invalid locale "${locale}" — must be 2–3 lowercase letters (e.g. "ar", "te").`,
+		);
+		process.exit(1);
+	}
 	const source = await readFile(filePath, "utf8");
 	// Split into label blocks. Each block looks like:
 	//   "<key>": {
