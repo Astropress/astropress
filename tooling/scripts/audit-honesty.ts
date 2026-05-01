@@ -43,6 +43,12 @@ const bannedPhraseAllowlist = new Set([
 	"packages/astropress/pages/ap-api/v1/testimonials/ingest.ts",
 	"packages/astropress/src/config-service-types.ts",
 	"packages/astropress/tests/zta-invariants.test.ts",
+	// Phase 2 secret-store envelope: imports `sha256` from
+	// @noble/hashes purely as the HKDF hash primitive. Not a marketing
+	// claim about cryptographic strength; the project narrative still
+	// names Argon2id / KMAC256 / ML-DSA-65 as the headline algorithms.
+	"packages/astropress/src/integration-secret-envelope.ts",
+	"tooling/docs/phase-2-secret-store-design.md",
 ]);
 
 function isAuditableFile(file: string) {

@@ -15,6 +15,7 @@ export type {
 	ApiTokenStore,
 } from "./platform-contracts-helpers";
 import type { ApiTokenStore } from "./platform-contracts-helpers";
+import type { ImportSource } from "./wordpress-import-contracts.js";
 
 // ─── Branded types for key identifiers ───────────────────────────────────────
 /** A content record ID — prevents mixing with media or user IDs. */
