@@ -425,6 +425,22 @@ body {
 	}
 }
 
+/*
+ * Coming-soon group: visually demoted so operators can tell at a glance
+ * the group lists roadmap entries, not shipping features. Driven by
+ * INTEGRATIONS manifest via data-coming-soon attribute.
+ */
+.sidebar-group[data-coming-soon="true"] {
+	opacity: 0.6;
+}
+.sidebar-group[data-coming-soon="true"] > summary.sidebar-group-label {
+	font-style: italic;
+}
+.sidebar-group[data-coming-soon="true"] a:hover,
+.sidebar-group[data-coming-soon="true"] a:focus-visible {
+	opacity: 1;
+}
+
 .sidebar a {
 	color: inherit;
 	text-decoration: none;

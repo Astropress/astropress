@@ -78,6 +78,7 @@ export type AdminLabelKey =
 	| "navGroupAudience"
 	| "navGroupDiscoverability"
 	| "navGroupIntegrations"
+	| "navGroupComingSoon"
 	| "navGroupAccess"
 	| "navGroupOperations"
 	// Site
@@ -118,6 +119,9 @@ export type AdminLabelKey =
 	| "stubHowToEnable"
 	| "stubSupportedProviders"
 	| "stubLearnMore"
+	| "stubComingSoonHeading"
+	| "stubComingSoonBody"
+	| "stubComingSoonLink"
 	| "uploadMedia"
 	| "chooseFile"
 	| "altTextLabel"
@@ -214,6 +218,7 @@ export const adminLabels: Record<AdminLocale, Record<AdminLabelKey, string>> = {
 		navGroupAudience: "Audience",
 		navGroupDiscoverability: "Discoverability",
 		navGroupIntegrations: "Integrations",
+		navGroupComingSoon: "Coming soon",
 		navGroupAccess: "Access",
 		navGroupOperations: "Operations",
 		navForms: "Forms",
@@ -247,6 +252,10 @@ export const adminLabels: Record<AdminLocale, Record<AdminLabelKey, string>> = {
 		stubHowToEnable: "How to enable",
 		stubSupportedProviders: "Supported providers",
 		stubLearnMore: "Learn more",
+		stubComingSoonHeading: "Coming soon",
+		stubComingSoonBody:
+			"This integration is on the roadmap but not yet implemented.",
+		stubComingSoonLink: "Track progress on GitHub",
 		uploadMedia: "Upload media",
 		chooseFile: "Choose file",
 		altTextLabel: "Alt text",
@@ -335,6 +344,7 @@ export const adminLabels: Record<AdminLocale, Record<AdminLabelKey, string>> = {
 		navGroupAudience: "Audiencia",
 		navGroupDiscoverability: "Visibilidad",
 		navGroupIntegrations: "Integraciones",
+		navGroupComingSoon: "Próximamente",
 		navGroupAccess: "Acceso",
 		navGroupOperations: "Operaciones",
 		navForms: "Formularios",
@@ -368,6 +378,10 @@ export const adminLabels: Record<AdminLocale, Record<AdminLabelKey, string>> = {
 		stubHowToEnable: "Cómo activarlo",
 		stubSupportedProviders: "Proveedores compatibles",
 		stubLearnMore: "Más información",
+		stubComingSoonHeading: "Próximamente",
+		stubComingSoonBody:
+			"Esta integración está en la hoja de ruta pero aún no está implementada.",
+		stubComingSoonLink: "Sigue el progreso en GitHub",
 		uploadMedia: "Subir archivo",
 		chooseFile: "Elegir archivo",
 		altTextLabel: "Texto alternativo",
@@ -456,6 +470,7 @@ export const adminLabels: Record<AdminLocale, Record<AdminLabelKey, string>> = {
 		navGroupAudience: "Audience",
 		navGroupDiscoverability: "Visibilité",
 		navGroupIntegrations: "Intégrations",
+		navGroupComingSoon: "Bientôt disponible",
 		navGroupAccess: "Accès",
 		navGroupOperations: "Opérations",
 		navForms: "Formulaires",
@@ -489,6 +504,10 @@ export const adminLabels: Record<AdminLocale, Record<AdminLabelKey, string>> = {
 		stubHowToEnable: "Comment l'activer",
 		stubSupportedProviders: "Fournisseurs pris en charge",
 		stubLearnMore: "En savoir plus",
+		stubComingSoonHeading: "Bientôt disponible",
+		stubComingSoonBody:
+			"Cette intégration est sur la feuille de route mais n'est pas encore implémentée.",
+		stubComingSoonLink: "Suivre l'avancement sur GitHub",
 		uploadMedia: "Téléverser un fichier",
 		chooseFile: "Choisir un fichier",
 		altTextLabel: "Texte alternatif",
@@ -578,6 +597,7 @@ export const adminLabels: Record<AdminLocale, Record<AdminLabelKey, string>> = {
 		navGroupAudience: "Zielgruppe",
 		navGroupDiscoverability: "Auffindbarkeit",
 		navGroupIntegrations: "Integrationen",
+		navGroupComingSoon: "Demnächst",
 		navGroupAccess: "Zugriff",
 		navGroupOperations: "Betrieb",
 		navForms: "Formulare",
@@ -611,6 +631,10 @@ export const adminLabels: Record<AdminLocale, Record<AdminLabelKey, string>> = {
 		stubHowToEnable: "So aktivieren Sie es",
 		stubSupportedProviders: "Unterstützte Anbieter",
 		stubLearnMore: "Mehr erfahren",
+		stubComingSoonHeading: "Demnächst",
+		stubComingSoonBody:
+			"Diese Integration steht auf der Roadmap, ist aber noch nicht implementiert.",
+		stubComingSoonLink: "Fortschritt auf GitHub verfolgen",
 		uploadMedia: "Datei hochladen",
 		chooseFile: "Datei auswählen",
 		altTextLabel: "Alternativtext",
@@ -697,6 +721,7 @@ export const adminLabels: Record<AdminLocale, Record<AdminLabelKey, string>> = {
 		navGroupAudience: "Público",
 		navGroupDiscoverability: "Descoberta",
 		navGroupIntegrations: "Integrações",
+		navGroupComingSoon: "Em breve",
 		navGroupAccess: "Acesso",
 		navGroupOperations: "Operações",
 		navForms: "Formulários",
@@ -730,6 +755,10 @@ export const adminLabels: Record<AdminLocale, Record<AdminLabelKey, string>> = {
 		stubHowToEnable: "Como ativar",
 		stubSupportedProviders: "Provedores suportados",
 		stubLearnMore: "Saiba mais",
+		stubComingSoonHeading: "Em breve",
+		stubComingSoonBody:
+			"Esta integração está no roadmap, mas ainda não foi implementada.",
+		stubComingSoonLink: "Acompanhe o progresso no GitHub",
 		uploadMedia: "Carregar arquivo",
 		chooseFile: "Escolher arquivo",
 		altTextLabel: "Texto alternativo",
@@ -820,6 +849,7 @@ export const adminLabels: Record<AdminLocale, Record<AdminLabelKey, string>> = {
 		navGroupAudience: "オーディエンス",
 		navGroupDiscoverability: "発見性",
 		navGroupIntegrations: "連携",
+		navGroupComingSoon: "近日公開",
 		navGroupAccess: "アクセス",
 		navGroupOperations: "運用",
 		navForms: "フォーム",
@@ -853,6 +883,10 @@ export const adminLabels: Record<AdminLocale, Record<AdminLabelKey, string>> = {
 		stubHowToEnable: "有効化する方法",
 		stubSupportedProviders: "対応プロバイダー",
 		stubLearnMore: "詳しく見る",
+		stubComingSoonHeading: "近日公開",
+		stubComingSoonBody:
+			"この連携はロードマップに含まれていますが、まだ実装されていません。",
+		stubComingSoonLink: "GitHub で進捗を確認",
 		uploadMedia: "ファイルをアップロード",
 		chooseFile: "ファイルを選択",
 		altTextLabel: "代替テキスト",
@@ -936,6 +970,7 @@ export const adminLabels: Record<AdminLocale, Record<AdminLabelKey, string>> = {
 		navGroupAudience: "ప్రేక్షకులు",
 		navGroupDiscoverability: "కనుగొనదగినత",
 		navGroupIntegrations: "అనుసంధానాలు",
+		navGroupComingSoon: "త్వరలో",
 		navGroupAccess: "యాక్సెస్",
 		navGroupOperations: "ఆపరేషన్లు",
 		navForms: "ఫారాలు",
@@ -969,6 +1004,9 @@ export const adminLabels: Record<AdminLocale, Record<AdminLabelKey, string>> = {
 		stubHowToEnable: "ఎలా ప్రారంభించాలి",
 		stubSupportedProviders: "మద్దతు ఉన్న ప్రొవైడర్లు",
 		stubLearnMore: "మరింత తెలుసుకోండి",
+		stubComingSoonHeading: "త్వరలో",
+		stubComingSoonBody: "ఈ ఏకీకరణ రోడ్‌మ్యాప్‌లో ఉంది, కానీ ఇంకా అమలు చేయబడలేదు.",
+		stubComingSoonLink: "GitHub లో ప్రోగ్రెస్‌ని ట్రాక్ చేయండి",
 		uploadMedia: "మీడియా అప్‌లోడ్",
 		chooseFile: "ఫైల్ ఎంచుకోండి",
 		altTextLabel: "ప్రత్యామ్నాయ టెక్స్ట్",
@@ -1054,6 +1092,7 @@ export const adminLabels: Record<AdminLocale, Record<AdminLabelKey, string>> = {
 		navGroupAudience: "ऑडियंस",
 		navGroupDiscoverability: "खोज-योग्यता",
 		navGroupIntegrations: "इंटीग्रेशन",
+		navGroupComingSoon: "जल्द आ रहा है",
 		navGroupAccess: "पहुँच",
 		navGroupOperations: "संचालन",
 		navForms: "फ़ॉर्म",
@@ -1087,6 +1126,9 @@ export const adminLabels: Record<AdminLocale, Record<AdminLabelKey, string>> = {
 		stubHowToEnable: "इसे कैसे सक्षम करें",
 		stubSupportedProviders: "समर्थित प्रदाता",
 		stubLearnMore: "और जानें",
+		stubComingSoonHeading: "जल्द आ रहा है",
+		stubComingSoonBody: "यह इंटीग्रेशन रोडमैप में है लेकिन अभी तक लागू नहीं किया गया है।",
+		stubComingSoonLink: "GitHub पर प्रगति देखें",
 		uploadMedia: "मीडिया अपलोड करें",
 		chooseFile: "फ़ाइल चुनें",
 		altTextLabel: "वैकल्पिक टेक्स्ट",
@@ -1174,6 +1216,7 @@ export const adminLabels: Record<AdminLocale, Record<AdminLabelKey, string>> = {
 		navGroupAudience: "Omvera",
 		navGroupDiscoverability: "Kupezeka",
 		navGroupIntegrations: "Kuphatikiza",
+		navGroupComingSoon: "Posachedwapa",
 		navGroupAccess: "Mwayi",
 		navGroupOperations: "Ntchito",
 		navForms: "Mafomu",
@@ -1207,6 +1250,10 @@ export const adminLabels: Record<AdminLocale, Record<AdminLabelKey, string>> = {
 		stubHowToEnable: "Momwe Mungayambitsire",
 		stubSupportedProviders: "Operekera Othandizidwa",
 		stubLearnMore: "Phunzirani Zambiri",
+		stubComingSoonHeading: "Posachedwapa",
+		stubComingSoonBody:
+			"Kuphatikiza uku kuli pa mapu a tsogolo koma sikunakhazikitsidwebe.",
+		stubComingSoonLink: "Tsatirani kupita patsogolo pa GitHub",
 		uploadMedia: "Ikani media",
 		chooseFile: "Sankhani fayilo",
 		altTextLabel: "Mawu osankha",
@@ -1293,6 +1340,7 @@ export const adminLabels: Record<AdminLocale, Record<AdminLabelKey, string>> = {
 		navGroupAudience: "الجمهور",
 		navGroupDiscoverability: "إمكانية الاكتشاف",
 		navGroupIntegrations: "التكاملات",
+		navGroupComingSoon: "قريبًا",
 		navGroupAccess: "الصلاحيات",
 		navGroupOperations: "العمليات",
 		navForms: "النماذج",
@@ -1326,6 +1374,9 @@ export const adminLabels: Record<AdminLocale, Record<AdminLabelKey, string>> = {
 		stubHowToEnable: "كيفية التفعيل",
 		stubSupportedProviders: "المزودون المدعومون",
 		stubLearnMore: "اعرف المزيد",
+		stubComingSoonHeading: "قريبًا",
+		stubComingSoonBody: "هذا التكامل ضمن خارطة الطريق ولكنه لم يُنفَّذ بعد.",
+		stubComingSoonLink: "تابع التقدّم على GitHub",
 		uploadMedia: "رفع وسائط",
 		chooseFile: "اختر ملفًا",
 		altTextLabel: "النص البديل",

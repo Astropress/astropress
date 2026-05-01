@@ -188,6 +188,25 @@ const verificationGroups: VerificationGroup[] = [
 		],
 	},
 	{
+		label: "integration honesty scenarios",
+		scenarios: [
+			"Sidebar renders a distinct Coming soon group",
+			"Coming-soon leaves are scoped to the muted group",
+			"Real and env-gated leaves stay under Integrations",
+			"Coming-soon pages show roadmap copy, not env-var hints",
+		],
+		steps: [
+			{
+				command: "bun",
+				args: [
+					"run",
+					"tooling/scripts/run-playwright.ts",
+					"--project=admin-integration-honesty",
+				],
+			},
+		],
+	},
+	{
 		label: "page templates scenarios",
 		scenarios: [
 			"Blank template produces no sections",

@@ -15,6 +15,16 @@ interface Provider {
 	tag?: "Recommended" | "Self-hosted" | "OSS" | "SaaS";
 }
 
+/**
+ * - "env-gated" (default): the integration is real but unconfigured.
+ *   Show the configHint snippet so the operator can enable it.
+ * - "coming-soon": the integration is on the roadmap but not built.
+ *   Suppress configHint (it would imply a copy-paste fixes things);
+ *   surface a roadmap link instead. Required for any leaf marked
+ *   `status: "coming-soon"` in `integration-manifest.ts`.
+ */
+type Variant = "env-gated" | "coming-soon";
+
 interface Props {
 	capability: string;
 	description: string;
@@ -22,15 +32,32 @@ interface Props {
 	providers: Provider[];
 	docsHref?: string;
 	locale: AdminLocale;
+	variant?: Variant;
+	roadmapHref?: string;
 }
 
-const { capability, description, configHint, providers, docsHref, locale } =
-	Astro.props;
+const {
+	capability,
+	description,
+	configHint,
+	providers,
+	docsHref,
+	locale,
+	variant = "env-gated",
+	roadmapHref,
+} = Astro.props;
 
-const tHeading = getAdminLabel("stubNotConfiguredHeading", locale);
+const tHeading =
+	variant === "coming-soon"
+		? getAdminLabel("stubComingSoonHeading", locale)
+		: getAdminLabel("stubNotConfiguredHeading", locale);
 const tHowTo = getAdminLabel("stubHowToEnable", locale);
 const tProviders = getAdminLabel("stubSupportedProviders", locale);
 const tLearnMore = getAdminLabel("stubLearnMore", locale);
+const tRoadmapBody =
+	variant === "coming-soon" ? getAdminLabel("stubComingSoonBody", locale) : "";
+const tRoadmapLink =
+	variant === "coming-soon" ? getAdminLabel("stubComingSoonLink", locale) : "";
 ---
 
 <section class="panel stub-panel" aria-labelledby="stub-heading">
@@ -41,15 +68,26 @@ const tLearnMore = getAdminLabel("stubLearnMore", locale);
   </header>
 
   <div class="stub-grid">
-    <section aria-labelledby="stub-howto">
-      <h3 id="stub-howto">{tHowTo}</h3>
-      <pre><code>{configHint}</code></pre>
-      {docsHref && (
-        <p>
-          <a href={docsHref} rel="noopener">{tLearnMore}</a>
-        </p>
-      )}
-    </section>
+    {variant === "coming-soon" ? (
+      <section aria-labelledby="stub-roadmap" class="stub-roadmap">
+        <p>{tRoadmapBody}</p>
+        {roadmapHref && (
+          <p>
+            <a href={roadmapHref} rel="noopener" id="stub-roadmap">{tRoadmapLink}</a>
+          </p>
+        )}
+      </section>
+    ) : (
+      <section aria-labelledby="stub-howto">
+        <h3 id="stub-howto">{tHowTo}</h3>
+        <pre><code>{configHint}</code></pre>
+        {docsHref && (
+          <p>
+            <a href={docsHref} rel="noopener">{tLearnMore}</a>
+          </p>
+        )}
+      </section>
+    )}
 
     <section aria-labelledby="stub-providers">
       <h3 id="stub-providers">{tProviders}</h3>
