@@ -355,8 +355,8 @@ function parseImageText(
 		errors.push({ path: `${path}.body`, message: "body required" });
 		return null;
 	}
-	if (!isNonEmptyString(raw.mediaId)) {
-		errors.push({ path: `${path}.mediaId`, message: "mediaId required" });
+	if (typeof raw.mediaId !== "string") {
+		errors.push({ path: `${path}.mediaId`, message: "mediaId must be string" });
 		return null;
 	}
 	return {
