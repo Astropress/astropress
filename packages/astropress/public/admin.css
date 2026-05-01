@@ -429,16 +429,15 @@ body {
  * Coming-soon group: visually demoted so operators can tell at a glance
  * the group lists roadmap entries, not shipping features. Driven by
  * INTEGRATIONS manifest via data-coming-soon attribute.
+ *
+ * Demotion is italic + regular weight on the group label (NO opacity —
+ * opacity dimming the label fails axe AAA contrast 7:1). The sidebar's
+ * own contrast stays intact; the label visibly differs from solid-bold
+ * "Integrations" siblings, which is the honest signal we want.
  */
-.sidebar-group[data-coming-soon="true"] {
-	opacity: 0.6;
-}
 .sidebar-group[data-coming-soon="true"] > summary.sidebar-group-label {
 	font-style: italic;
-}
-.sidebar-group[data-coming-soon="true"] a:hover,
-.sidebar-group[data-coming-soon="true"] a:focus-visible {
-	opacity: 1;
+	font-weight: 500;
 }
 
 .sidebar a {
