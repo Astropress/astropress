@@ -65,12 +65,8 @@ export async function withSafeRouteRegistryFallback<T>(
 }
 
 export function parseSettings(value: string | null) {
-	if (!value) {
-		return null;
-	}
-
 	try {
-		const parsed = JSON.parse(value) as unknown;
+		const parsed = JSON.parse(value ?? "null") as unknown;
 		return parsed && typeof parsed === "object"
 			? (parsed as Record<string, unknown>)
 			: null;
