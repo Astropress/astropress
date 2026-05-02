@@ -646,6 +646,16 @@ function getLoginSecurityConfig(locals: Locals | null | undefined): { maxLoginAt
 function getTurnstileSiteKey(locals: Locals | null | undefined): string | undefined
 ```
 
+#### `getAstropressRootSecret`
+```ts
+function getAstropressRootSecret(locals: Locals | null | undefined): string
+```
+
+#### `getAstropressRootSecretCandidates`
+```ts
+function getAstropressRootSecretCandidates(locals: Locals | null | undefined): string[]
+```
+
 #### `applyAstropressSecurityHeaders`
 ```ts
 function applyAstropressSecurityHeaders(target: Headers, options: AstropressSecurityHeadersOptions): Headers

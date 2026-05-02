@@ -508,6 +508,8 @@ export {
 	getAdminBootstrapConfig,
 	getLoginSecurityConfig,
 	getTurnstileSiteKey,
+	getAstropressRootSecret,
+	getAstropressRootSecretCandidates,
 } from "./src/runtime-env";
 export type {
 	RuntimeBindings,
