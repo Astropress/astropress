@@ -56,6 +56,17 @@ describe("createD1RateLimitPart.checkRateLimit", () => {
 		const part = createD1RateLimitPart(m.db);
 		const ok = await part.checkRateLimit("k", 5, 60_000);
 		expect(ok).toBe(true);
+		// Pin the SELECT-query StringLiteral mutation: the read query MUST be
+		// the rate-limits SELECT, not "" or any other string.
+		expect(
+			m.queries.some(
+				(q) =>
+					q.includes("SELECT") &&
+					q.includes("rate_limits") &&
+					q.includes("window_ms") &&
+					q.includes("LIMIT 1"),
+			),
+		).toBe(true);
 		expect(m.queries.some((q) => q.includes("INSERT INTO rate_limits"))).toBe(
 			true,
 		);
@@ -105,6 +116,29 @@ describe("createD1RateLimitPart.checkRateLimit", () => {
 		const ok = await part.checkRateLimit("k", 5, 60_000);
 		expect(ok).toBe(false);
 	});
+
+	it("treats elapsed === windowMs as still-in-window (boundary)", async () => {
+		// Pins the EqualityOperator mutation `> windowMs` -> `>= windowMs`.
+		// At elapsed exactly equal to windowMs the original returns false
+		// (still in window, increment); the mutant would treat it as expired
+		// and INSERT instead of UPDATE.
+		const now = Date.now();
+		const m = makeDb({
+			count: 2,
+			window_start_ms: now - 60_000,
+			window_ms: 60_000,
+		});
+		const part = createD1RateLimitPart(m.db);
+		await part.checkRateLimit("k", 5, 60_000);
+		expect(
+			m.queries.some((q) =>
+				q.includes("UPDATE rate_limits SET count = count + 1"),
+			),
+		).toBe(true);
+		expect(m.queries.some((q) => q.includes("INSERT INTO rate_limits"))).toBe(
+			false,
+		);
+	});
 });
 
 describe("createD1RateLimitPart.peekRateLimit", () => {
@@ -132,6 +166,28 @@ describe("createD1RateLimitPart.peekRateLimit", () => {
 		const now = Date.now();
 		const m = makeDb({ count: 5, window_start_ms: now - 100 });
 		const part = createD1RateLimitPart(m.db);
+		expect(await part.peekRateLimit("k", 5, 60_000)).toBe(false);
+	});
+
+	it("uses the rate-limits SELECT query (no LIMIT/columns mutation to '')", async () => {
+		const m = makeDb(null);
+		await createD1RateLimitPart(m.db).peekRateLimit("k", 5, 1);
+		expect(
+			m.queries.some(
+				(q) =>
+					q.includes("SELECT") &&
+					q.includes("rate_limits") &&
+					q.includes("LIMIT 1"),
+			),
+		).toBe(true);
+	});
+
+	it("treats elapsed === windowMs as still-in-window (boundary)", async () => {
+		const now = Date.now();
+		const m = makeDb({ count: 5, window_start_ms: now - 60_000 });
+		const part = createD1RateLimitPart(m.db);
+		// At elapsed===windowMs: original returns row.count<max → 5<5=false.
+		// Mutant `>= windowMs` would short-circuit to true (window expired).
 		expect(await part.peekRateLimit("k", 5, 60_000)).toBe(false);
 	});
 });
@@ -165,5 +221,35 @@ describe("createD1RateLimitPart.recordFailedAttempt", () => {
 				q.includes("UPDATE rate_limits SET count = count + 1"),
 			),
 		).toBe(true);
+	});
+
+	it("uses the rate-limits SELECT query (no StringLiteral mutation)", async () => {
+		const m = makeDb(null);
+		await createD1RateLimitPart(m.db).recordFailedAttempt("k", 5, 1);
+		expect(
+			m.queries.some(
+				(q) =>
+					q.includes("SELECT") &&
+					q.includes("rate_limits") &&
+					q.includes("LIMIT 1"),
+			),
+		).toBe(true);
+	});
+
+	it("treats elapsed === windowMs as still-in-window (boundary)", async () => {
+		const now = Date.now();
+		const m = makeDb({ count: 2, window_start_ms: now - 60_000 });
+		const part = createD1RateLimitPart(m.db);
+		await part.recordFailedAttempt("k", 5, 60_000);
+		// At elapsed===windowMs: original UPDATEs (still-in-window).
+		// Mutant `>= windowMs` would INSERT (window expired).
+		expect(
+			m.queries.some((q) =>
+				q.includes("UPDATE rate_limits SET count = count + 1"),
+			),
+		).toBe(true);
+		expect(m.queries.some((q) => q.includes("INSERT INTO rate_limits"))).toBe(
+			false,
+		);
 	});
 });
