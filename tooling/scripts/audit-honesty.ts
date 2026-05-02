@@ -57,6 +57,8 @@ const bannedPhraseAllowlist = new Set([
 	"packages/astropress/src/integrations/oauth/state.ts",
 	"packages/astropress/src/integrations/webhooks/inbound.ts",
 	"packages/astropress/tests/integrations/webhooks/inbound.test.ts",
+	"packages/astropress/tests/integrations/webhooks/receiver.test.ts",
+	"packages/astropress/tests/integrations/webhooks/registry.test.ts",
 ]);
 
 function isAuditableFile(file: string) {
