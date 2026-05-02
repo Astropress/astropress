@@ -19,6 +19,7 @@
  * `INTEGRATIONS`; adding or moving an integration is a single edit here.
  */
 import type { CmsConfig } from "./config";
+import type { IntegrationDomain } from "./integrations/registry";
 
 export type IntegrationStatus = "real" | "env-gated" | "coming-soon";
 
@@ -44,6 +45,12 @@ export interface IntegrationEntry {
 	readonly requiredAction: string;
 	/** Whether the leaf is admin-only. Mirrors AdminLayout `leaf({adminOnly})`. */
 	readonly adminOnly: boolean;
+	/**
+	 * For Phase 3/4-aware leaves: the integration domain whose
+	 * `connected_integrations` rows drive the sidebar status badge.
+	 * Optional — only set on leaves that have a registered provider.
+	 */
+	readonly domain?: IntegrationDomain;
 }
 
 const ROADMAP_ISSUE = "https://github.com/Astropress/astropress/issues/76";
@@ -83,38 +90,58 @@ export const INTEGRATIONS: readonly IntegrationEntry[] = [
 		adminOnly: true,
 	},
 
-	// Env-gated — implementation exists; page surfaces RequiresIntegration
-	// until the matching CmsConfig field is set.
+	// Real — Phase 5 admin pages render IntegrationConnect against the
+	// per-domain provider registry; admin connect actions persist via
+	// the Phase 2 envelope.
 	{
-		href: "/ap-admin/analytics",
-		navKey: "analytics",
-		status: "env-gated",
-		configField: "analytics",
-		requiredAction: "services:manage",
+		href: "/ap-admin/newsletter",
+		navKey: "newsletter",
+		status: "real",
+		domain: "newsletter",
+		requiredAction: "newsletter:send",
 		adminOnly: true,
 	},
 	{
-		href: "/ap-admin/ab-testing",
-		navKey: "abTesting",
-		status: "env-gated",
-		configField: "abTesting",
+		href: "/ap-admin/analytics",
+		navKey: "analytics",
+		status: "real",
+		domain: "analytics",
 		requiredAction: "services:manage",
 		adminOnly: true,
 	},
 	{
 		href: "/ap-admin/search",
 		navKey: "search",
-		status: "env-gated",
-		configField: "search",
+		status: "real",
+		domain: "search",
 		requiredAction: "services:manage",
 		adminOnly: true,
 	},
 	{
 		href: "/ap-admin/cdn-purge",
 		navKey: "cdnPurge",
-		status: "env-gated",
-		configField: "cdnPurgeWebhook",
+		status: "real",
+		domain: "cdn-purge",
 		requiredAction: "settings:edit",
+		adminOnly: true,
+	},
+	{
+		href: "/ap-admin/forms",
+		navKey: "forms",
+		status: "real",
+		domain: "forms",
+		requiredAction: "forms:view",
+		adminOnly: true,
+	},
+
+	// Env-gated — implementation exists; page surfaces RequiresIntegration
+	// until the matching CmsConfig field is set.
+	{
+		href: "/ap-admin/ab-testing",
+		navKey: "abTesting",
+		status: "env-gated",
+		configField: "abTesting",
+		requiredAction: "services:manage",
 		adminOnly: true,
 	},
 	{

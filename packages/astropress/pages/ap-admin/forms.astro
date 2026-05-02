@@ -1,0 +1,48 @@
+---
+import { withLocalStoreFallback } from "@astropress-diy/astropress/admin-store-dispatch.js";
+import AdminLayout from "@astropress-diy/astropress/components/AdminLayout.astro";
+import IntegrationConnect from "@astropress-diy/astropress/components/IntegrationConnect.astro";
+import { getPageT, requiresAccess, resolveAdminLocale } from "astropress";
+
+const guard = await requiresAccess(Astro, "forms:view");
+if (guard) return guard;
+const adminUser = Astro.locals.adminUser;
+if (!adminUser) return Astro.redirect("/ap-admin/login");
+const t = getPageT(resolveAdminLocale(Astro));
+
+interface StatusRow {
+	domain: string;
+	provider: string;
+	status: "connected" | "error" | "paused";
+}
+const statuses = await withLocalStoreFallback<StatusRow[]>(
+	Astro.locals,
+	async () => [],
+	async (store) => (store.integrations?.listStatuses() ?? []) as StatusRow[],
+);
+const inDomain = statuses.filter((s) => s.domain === "forms");
+const connectedIds = inDomain
+	.filter((s) => s.status === "connected")
+	.map((s) => s.provider);
+const statusByProvider: Record<string, StatusRow["status"]> = {};
+for (const s of inDomain) statusByProvider[s.provider] = s.status;
+---
+
+<AdminLayout
+	title={t("forms.title", "Forms")}
+	heading={t("forms.title", "Forms")}
+	currentPath="/ap-admin/forms"
+	description={t(
+		"forms.description",
+		"Connect a forms provider to receive submissions from your site. Submissions land in the existing API tokens path.",
+	)}
+	userName={adminUser.name}
+>
+	<section class="panel">
+		<IntegrationConnect
+			domain="forms"
+			connectedProviderIds={connectedIds}
+			statusByProvider={statusByProvider}
+		/>
+	</section>
+</AdminLayout>
