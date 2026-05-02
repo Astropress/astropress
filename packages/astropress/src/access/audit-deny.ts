@@ -33,11 +33,9 @@ export async function logAccessDeny(
 			async () =>
 				recordD1Audit(
 					locals,
-					{
-						email: input.subjectEmail,
-						role: "editor",
-						name: input.subjectEmail,
-					},
+					// buildAuditEntry only reads actor.email; role/name satisfy the
+					// Actor type but are not persisted.
+					{ email: input.subjectEmail } as never,
 					"access:deny",
 					"access",
 					input.action,
