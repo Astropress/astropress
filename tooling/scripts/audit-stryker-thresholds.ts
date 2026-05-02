@@ -41,6 +41,13 @@ function main(): number {
 	for (const name of entries) {
 		const path = join(STRYKER_DIR, name);
 		const source = readFileSync(path, "utf8");
+		// Configs marked `audit-stryker-thresholds: cache-refresh-only` are
+		// allowed to set break: 0. They exist only to push the shared
+		// .stryker-incremental.json to the stryker-state branch — quality
+		// is enforced by per-file mutation-gate + audit:baseline-* jobs.
+		if (source.includes("audit-stryker-thresholds: cache-refresh-only")) {
+			continue;
+		}
 		const value = extractBreak(source);
 		if (value === null) {
 			missing.push(path);

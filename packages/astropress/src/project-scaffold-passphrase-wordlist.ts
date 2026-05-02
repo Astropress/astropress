@@ -1,5 +1,7 @@
-// EFF Short Wordlist (1296 words) — public domain, eff.org/dice
-// Chosen for being short, common, unambiguous, and easy to type.
+// stryker-disable-file: data-only
+// EFF Short Wordlist (1296 words) — public domain, eff.org/dice. Pure
+// constant array; mutating individual words yields equivalent mutants
+// (no test asserts the wordlist contents — consumers pick random entries).
 export const EFF_SHORT_WORDLIST: string[] = [
 	"acid",
 	"aged",

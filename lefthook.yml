@@ -264,6 +264,32 @@ pre-commit:
       glob: "tooling/stryker/baseline-scores.json"
       run: bun run tooling/scripts/audit-baseline-floor.ts
 
+    # Same lock for the Rust cargo-mutants baseline.
+    audit-baseline-floor-rust:
+      glob: "tooling/cargo-mutants/baseline-scores.json"
+      run: bun run tooling/scripts/audit-baseline-floor-rust.ts
+
+    # Auto-regenerate API_REFERENCE.md when an entry-point file changes,
+    # then re-stage it. Keeps slow-audits' docs:api:check from being the
+    # discovery point — it caused multiple wasted ~10-min pre-push cycles
+    # before this hook existed. The generator is fast (~1s).
+    docs-api-regen:
+      glob:
+        - "packages/astropress/index.ts"
+        - "packages/astropress/src/config.ts"
+        - "packages/astropress/src/platform-contracts.ts"
+        - "packages/astropress/src/api-middleware.ts"
+        - "packages/astropress/src/admin-ui.ts"
+        - "packages/astropress/src/d1-migrate-ops.ts"
+        - "packages/astropress/src/db-migrate-ops.ts"
+        - "packages/astropress/src/sqlite-bootstrap.ts"
+        - "packages/astropress/src/cache-purge.ts"
+        - "packages/astropress/src/transactional-email.ts"
+        - "packages/astropress/src/analytics.ts"
+        - "packages/astropress/src/public-site-integration.ts"
+      run: bun run docs:api && git add docs/reference/API_REFERENCE.md
+      stage_fixed: true
+
     # Non-blocking warning: surfaces Stryker disable / v8 ignore / biome-ignore
     # / @ts-ignore comments so the author considers a code-level fix instead.
     audit-suppression-warnings:
@@ -441,8 +467,21 @@ pre-push:
         bun run tooling/scripts/run-with-peer-abort.ts mutation-gate --
         bun run tooling/scripts/run-with-timing.ts mutation-gate -- bash -c '
           bun run tooling/scripts/prepush-mutation-gate.ts &&
-          bun run audit:baseline-coverage
+          bun run audit:baseline-coverage &&
+          bun run audit:baseline-coverage:rust
         '
+
+    # Rust mutation gate runs in parallel with the TS gate above. Same
+    # content-hash-aware delta model: only files changed since origin/main
+    # are re-mutated; unchanged files reuse their baseline score. The
+    # baseline floor (95% for new files; no regression on existing) is
+    # enforced separately by audit:baseline-floor:rust in slow-audits.
+    mutation-gate-rust:
+      tags: rust mutation
+      run: >-
+        bun run tooling/scripts/run-with-peer-abort.ts mutation-gate-rust --
+        bun run tooling/scripts/run-with-timing.ts mutation-gate-rust --
+        bun run tooling/scripts/prepush-mutation-gate-rust.ts
 
     slow-audits:
       # Whole-repo static audits moved out of pre-commit because they scan far

@@ -428,9 +428,21 @@ function pushState(repo: RepoIdent, lock: LockData): void {
 
 function runMutants(): { exitCode: number; reportFresh: boolean } {
 	const before = existsSync(LOCAL_REPORT) ? statSync(LOCAL_REPORT).mtimeMs : 0;
-	const result = spawnSync("bun", ["run", "test:mutants"], {
-		stdio: "inherit",
-	});
+	// Use the shared-cache config (break: 0). Per-file quality is enforced
+	// by mutation-gate + audit:baseline-* jobs, not by the global threshold
+	// of this cache-refresh run.
+	const result = spawnSync(
+		"node",
+		[
+			"node_modules/.bin/stryker",
+			"run",
+			"../../tooling/stryker/stryker-shared-cache.config.mjs",
+		],
+		{
+			stdio: "inherit",
+			cwd: path.join(process.cwd(), "packages/astropress"),
+		},
+	);
 	const reportFresh =
 		existsSync(LOCAL_REPORT) && statSync(LOCAL_REPORT).mtimeMs > before;
 	return { exitCode: result.status ?? 1, reportFresh };

@@ -40,7 +40,21 @@ const EXCLUDE_FILE_PATTERNS: ((path: string) => boolean)[] = [
 	(p) => p === `${SRC_ROOT}/access/types.ts`,
 	(p) => p === `${SRC_ROOT}/access/locals.ts`,
 	(p) => p === `${SRC_ROOT}/admin-stub-catalog.ts`,
+	// In-source `stryker-disable-file: data-only` marker on pure-data
+	// modules (manifests, wordlists, dictionaries) — same escape hatch
+	// honored by prepush-mutation-gate.ts. The marker MUST appear in
+	// the first 10 lines.
+	(p) => isMarkedDataOnly(p),
 ];
+
+function isMarkedDataOnly(path: string): boolean {
+	try {
+		const head = readFileSync(path, "utf8").split("\n").slice(0, 10).join("\n");
+		return head.includes("stryker-disable-file: data-only");
+	} catch {
+		return false;
+	}
+}
 
 interface BaselineEntry {
 	score: number;

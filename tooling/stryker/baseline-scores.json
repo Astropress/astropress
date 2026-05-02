@@ -837,10 +837,6 @@
       "score": 41.66666666666667,
       "hash": "5812bf51395718e17cf5c0020b0909c84f050f03"
     },
-    "packages/astropress/src/project-scaffold-passphrase-wordlist.ts": {
-      "score": 0,
-      "hash": "0bed2167c4b8ed886fe0119045408779c8d37e85"
-    },
     "packages/astropress/src/site-settings.ts": {
       "score": 28.57142857142857,
       "hash": "5ceec4566ab0ded455a6fbc9197e5e73154094d6"
