@@ -72,6 +72,50 @@ describe("createIntegrationsRepository — status surface", () => {
 		}
 	});
 
+	it("listStatuses() returns rows ordered by (domain, provider) ascending", async () => {
+		// runtime.ts depends on this ordering — getConnectedProvider's
+		// .filter then .find pipeline tolerates any ordering, but the
+		// runtime tests that prove the filter does real work depend on
+		// alphabetically-prior domains arriving first. Pin it here so a
+		// schema change can't silently flip the order.
+		await repo.connect(
+			{
+				domain: "newsletter",
+				provider: "listmonk",
+				configJson: "{}",
+				secretFields: { apiKey: "k1" },
+				now: NOW,
+			},
+			ROOT,
+		);
+		await repo.connect(
+			{
+				domain: "analytics",
+				provider: "plausible",
+				configJson: "{}",
+				secretFields: { apiKey: "k2" },
+				now: NOW,
+			},
+			ROOT,
+		);
+		await repo.connect(
+			{
+				domain: "analytics",
+				provider: "matomo",
+				configJson: "{}",
+				secretFields: { apiKey: "k3" },
+				now: NOW,
+			},
+			ROOT,
+		);
+		const ordered = repo.listStatuses().map((r) => `${r.domain}/${r.provider}`);
+		expect(ordered).toEqual([
+			"analytics/matomo",
+			"analytics/plausible",
+			"newsletter/listmonk",
+		]);
+	});
+
 	it("updateStatus() flips state and records error code", async () => {
 		await repo.connect(
 			{
