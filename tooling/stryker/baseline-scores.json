@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-05-02T13:39:40.853Z",
+  "updatedAt": "2026-05-02T13:59:16.534Z",
   "scores": {
     "packages/astropress/src/adapters/adapter-record-helpers.ts": {
       "score": 66.66666666666666,
@@ -258,8 +258,8 @@
       "hash": "24eb19cbc670e25c975f7824dbedae6ade7bd6a5"
     },
     "packages/astropress/src/newsletter-adapter.ts": {
-      "score": 65,
-      "hash": "e1dfec8a26305e0a03011dc024e003b83b887d0b"
+      "score": 77.19298245614034,
+      "hash": "e7c0311fc30029777fc4f3ff225e93b1b4e16b12"
     },
     "packages/astropress/src/plugin-dispatch.ts": {
       "score": 48.78048780487805,
@@ -1035,7 +1035,7 @@
     },
     "packages/astropress/src/integrations/resolvers/newsletter-resolver.ts": {
       "score": 100,
-      "hash": "4b357c133c16f8f5cedc26d0b000875801673868"
+      "hash": "517059fdf0805cb4c21e76b5c7886b95b936d2d2"
     },
     "packages/astropress/src/integrations/resolvers/analytics-stats-resolver.ts": {
       "score": 96.96969696969697,
