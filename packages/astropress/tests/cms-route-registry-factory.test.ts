@@ -125,4 +125,122 @@ describe("createAstropressCmsRouteRegistry", () => {
 		expect(persistArchiveRoute).toHaveBeenCalled();
 		expect(appendArchiveRouteRevision).toHaveBeenCalled();
 	});
+
+	function makeReadOnlyRegistry(overrides: Record<string, unknown> = {}) {
+		const normalizePath = vi.fn(
+			(p: string) => (p.startsWith("/") ? p : `/${p}`) as string,
+		);
+		const base = {
+			normalizePath,
+			localeFromPath: () => "en",
+			listSystemRoutes: vi.fn(() => [{ path: "/about" }]),
+			getSystemRoute: vi.fn(() => ({ path: "/about", title: "About" })),
+			listStructuredPageRoutes: vi.fn(() => [{ path: "/programs" }]),
+			getStructuredPageRoute: vi.fn(() => ({ path: "/programs" })),
+			getArchiveRoute: vi.fn(() => ({ path: "/blog", title: "Blog" })),
+			listArchiveRoutes: vi.fn(() => [{ path: "/blog" }]),
+			findSystemRouteForUpdate: () => null,
+			persistSystemRoute: vi.fn(),
+			appendSystemRouteRevision: vi.fn(),
+			isRoutePathTaken: () => false,
+			findStructuredRouteForUpdate: () => null,
+			insertStructuredRoute: vi.fn(),
+			persistStructuredRoute: vi.fn(),
+			appendStructuredRouteRevision: vi.fn(),
+			findArchiveRouteForUpdate: () => null,
+			persistArchiveRoute: vi.fn(),
+			appendArchiveRouteRevision: vi.fn(),
+			recordRouteAudit: vi.fn(),
+			...overrides,
+		} as never;
+		return { input: base, registry: createAstropressCmsRouteRegistry(base) };
+	}
+
+	it("listSystemRoutes forwards to input.listSystemRoutes", () => {
+		const { input, registry } = makeReadOnlyRegistry();
+		expect(registry.listSystemRoutes()).toEqual([{ path: "/about" }]);
+		expect(
+			(input as { listSystemRoutes: ReturnType<typeof vi.fn> })
+				.listSystemRoutes,
+		).toHaveBeenCalled();
+	});
+
+	it("getSystemRoute normalizes the path before delegating", () => {
+		const { input, registry } = makeReadOnlyRegistry();
+		const result = registry.getSystemRoute("about");
+		expect(result).toEqual({ path: "/about", title: "About" });
+		const i = input as {
+			normalizePath: ReturnType<typeof vi.fn>;
+			getSystemRoute: ReturnType<typeof vi.fn>;
+		};
+		expect(i.normalizePath).toHaveBeenCalledWith("about");
+		expect(i.getSystemRoute).toHaveBeenCalledWith("/about");
+	});
+
+	it("listStructuredPageRoutes forwards verbatim", () => {
+		const { input, registry } = makeReadOnlyRegistry();
+		expect(registry.listStructuredPageRoutes()).toEqual([
+			{ path: "/programs" },
+		]);
+		expect(
+			(input as { listStructuredPageRoutes: ReturnType<typeof vi.fn> })
+				.listStructuredPageRoutes,
+		).toHaveBeenCalled();
+	});
+
+	it("getStructuredPageRoute normalizes the path before delegating", () => {
+		const { input, registry } = makeReadOnlyRegistry();
+		expect(registry.getStructuredPageRoute("programs")).toEqual({
+			path: "/programs",
+		});
+		const i = input as {
+			normalizePath: ReturnType<typeof vi.fn>;
+			getStructuredPageRoute: ReturnType<typeof vi.fn>;
+		};
+		expect(i.normalizePath).toHaveBeenCalledWith("programs");
+		expect(i.getStructuredPageRoute).toHaveBeenCalledWith("/programs");
+	});
+
+	it("getArchiveRoute normalizes the path before delegating", () => {
+		const { input, registry } = makeReadOnlyRegistry();
+		expect(registry.getArchiveRoute("blog")).toEqual({
+			path: "/blog",
+			title: "Blog",
+		});
+		const i = input as {
+			normalizePath: ReturnType<typeof vi.fn>;
+			getArchiveRoute: ReturnType<typeof vi.fn>;
+		};
+		expect(i.normalizePath).toHaveBeenCalledWith("blog");
+		expect(i.getArchiveRoute).toHaveBeenCalledWith("/blog");
+	});
+
+	it("listArchiveRoutes forwards verbatim", () => {
+		const { input, registry } = makeReadOnlyRegistry();
+		expect(registry.listArchiveRoutes()).toEqual([{ path: "/blog" }]);
+		expect(
+			(input as { listArchiveRoutes: ReturnType<typeof vi.fn> })
+				.listArchiveRoutes,
+		).toHaveBeenCalled();
+	});
+
+	it("saveStructuredPageRoute persists through doSaveStructuredPageRoute", () => {
+		const persistStructuredRoute = vi.fn();
+		const appendStructuredRouteRevision = vi.fn();
+		const recordRouteAudit = vi.fn();
+		const { registry } = makeReadOnlyRegistry({
+			findStructuredRouteForUpdate: () => ({ id: "route-x" }),
+			persistStructuredRoute,
+			appendStructuredRouteRevision,
+			recordRouteAudit,
+		});
+		const result = registry.saveStructuredPageRoute(
+			"/programs",
+			{ title: "Programs", templateKey: "content" },
+			actor,
+		);
+		expect(result.ok).toBe(true);
+		expect(persistStructuredRoute).toHaveBeenCalled();
+		expect(appendStructuredRouteRevision).toHaveBeenCalled();
+	});
 });
