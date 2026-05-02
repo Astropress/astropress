@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-05-02T09:10:18.482Z",
+  "updatedAt": "2026-05-02T09:12:59.775Z",
   "scores": {
     "packages/astropress/src/adapters/adapter-record-helpers.ts": {
       "score": 66.66666666666666,
@@ -1012,6 +1012,10 @@
     "packages/astropress/src/integrations/providers/plausible.ts": {
       "score": 97.43589743589743,
       "hash": "90093e6203a65922f7aebec17bc814b59b2581a1"
+    },
+    "packages/astropress/src/integrations/providers/cloudflare-cdn.ts": {
+      "score": 97.91666666666666,
+      "hash": "c7a429e1bba28fb7a72b462625eacdb0bc2b5d72"
     }
   }
 }
