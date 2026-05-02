@@ -1,0 +1,79 @@
+---
+/**
+ * IntegrationStatusBadge — pure SSR badge that mirrors the status row
+ * of a per-domain integration (Phase 3). Shown next to env-gated /
+ * connectable nav leaves so an operator can see at a glance whether a
+ * provider is `connected`, `error`, `paused`, or `not-connected`.
+ *
+ * The component takes the `status` value verbatim (a discriminated
+ * literal) plus a localised label set, so the caller — typically
+ * `AdminLayout.astro` — owns the i18n surface. This keeps the badge
+ * itself testable without bringing the admin-locale stack into every
+ * rendering site.
+ */
+
+import {
+	type IntegrationStatusBadgeKind,
+	type IntegrationStatusBadgeLabels,
+	integrationStatusBadgeText,
+	integrationStatusBadgeTone,
+} from "../src/integrations/badge-tone";
+
+interface Props {
+	status: IntegrationStatusBadgeKind;
+	labels: IntegrationStatusBadgeLabels;
+}
+
+const { status, labels } = Astro.props;
+const text = integrationStatusBadgeText(status, labels);
+const tone = integrationStatusBadgeTone(status);
+---
+
+<span
+	class:list={["integration-badge", `integration-badge--${tone}`]}
+	data-status={status}
+	role="status"
+	aria-label={text}
+>
+	<span class="integration-badge__dot" aria-hidden="true"></span>
+	<span class="integration-badge__text">{text}</span>
+</span>
+
+<style>
+	.integration-badge {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.25rem;
+		font-size: 0.75rem;
+		line-height: 1;
+		padding: 0.125rem 0.375rem;
+		border-radius: 999px;
+		border: 1px solid var(--ap-border, #d1d5db);
+		background: var(--ap-surface-muted, #f9fafb);
+		color: var(--ap-text, #111827);
+	}
+	.integration-badge__dot {
+		width: 0.5rem;
+		height: 0.5rem;
+		border-radius: 999px;
+		background: currentColor;
+	}
+	.integration-badge--ok {
+		color: var(--ap-success, #047857);
+		border-color: var(--ap-success-border, #a7f3d0);
+		background: var(--ap-success-surface, #ecfdf5);
+	}
+	.integration-badge--err {
+		color: var(--ap-danger, #b91c1c);
+		border-color: var(--ap-danger-border, #fecaca);
+		background: var(--ap-danger-surface, #fef2f2);
+	}
+	.integration-badge--warn {
+		color: var(--ap-warning, #b45309);
+		border-color: var(--ap-warning-border, #fed7aa);
+		background: var(--ap-warning-surface, #fffbeb);
+	}
+	.integration-badge--muted {
+		color: var(--ap-text-muted, #6b7280);
+	}
+</style>

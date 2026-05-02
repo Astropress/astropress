@@ -572,40 +572,15 @@ export const ADMIN_STUB_PAGES = {
 		navKey: "sitemaps",
 		action: "sitemaps:view",
 	},
-	newsletter: {
-		stubKey: "newsletter",
-		navKey: "newsletter",
-		action: "newsletter:send",
-	},
-	analytics: {
-		stubKey: "analytics",
-		navKey: "analytics",
-		action: "services:manage",
-	},
 	"ab-testing": {
 		stubKey: "abTesting",
 		navKey: "abTesting",
 		action: "services:manage",
 	},
-	search: {
-		stubKey: "search",
-		navKey: "search",
-		action: "services:manage",
-	},
-	"cdn-purge": {
-		stubKey: "cdnPurge",
-		navKey: "cdnPurge",
-		action: "settings:edit",
-	},
 	monitoring: {
 		stubKey: "monitoring",
 		navKey: "monitoring",
 		action: "services:manage",
-	},
-	forms: {
-		stubKey: "forms",
-		navKey: "forms",
-		action: "forms:view",
 	},
 } as const satisfies Record<string, AdminStubPageEntry>;
 

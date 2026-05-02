@@ -325,4 +325,11 @@ export interface AdminStoreAdapter {
 	media: MediaRepository;
 	apiTokens?: import("./platform-contracts").ApiTokenStore;
 	webhooks?: import("./platform-contracts").WebhookStore;
+	/**
+	 * Phase 3/4 connected-integrations surface. Optional because legacy
+	 * sqlite hosts that haven't migrated their schema may not expose it
+	 * yet; admin actions guard for `undefined` and surface a typed error
+	 * to the operator.
+	 */
+	integrations?: import("./sqlite-runtime/integrations").IntegrationsRepository;
 }

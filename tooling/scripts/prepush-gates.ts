@@ -234,12 +234,20 @@ function checkGhasAlerts(): boolean {
 }
 
 /**
- * If every file changed vs the default branch is documentation (markdown
- * under any directory or under docs/), the heavy tiers 2+3 gates don't
- * protect against anything the tier 1 targeted test run misses. Opt into
- * the fast-path automatically to unblock docs-only PRs.
+ * Pre-push fast-path: detect when the diff against the default branch
+ * is composed entirely of "test-irrelevant" files — markdown, the
+ * generated `docs/reference/API_REFERENCE.md`, and Stryker baseline
+ * scores. None of these can change runtime behaviour, so the heavy
+ * tiers 2+3 gates don't add signal beyond the tier 1 audits. Opt into
+ * the fast-path automatically to keep doc-fixup and baseline-bump
+ * pushes off the ~6.5min gate budget.
+ *
+ * The allowlist is conservative — anything outside it falls through
+ * to the full gate. The single load-bearing risk is misclassifying a
+ * file that does affect runtime; review every addition here against
+ * "could this break a test if changed in isolation?".
  */
-function isDocsOnlyPush(): boolean {
+function isTestIrrelevantOnlyPush(): boolean {
 	let defaultRef = "origin/main";
 	try {
 		defaultRef =
@@ -269,8 +277,14 @@ function isDocsOnlyPush(): boolean {
 			p.endsWith(".md") ||
 			p.startsWith("docs/") ||
 			p === "CHANGELOG.md" ||
-			p === "README.md",
+			p === "README.md" ||
+			p === "tooling/stryker/baseline-scores.json",
 	);
+}
+
+/** @deprecated kept as an alias to preserve the old log message. */
+function isDocsOnlyPush(): boolean {
+	return isTestIrrelevantOnlyPush();
 }
 
 /**
@@ -310,6 +324,26 @@ async function main(): Promise<void> {
 	const overallStart = process.hrtime.bigint();
 
 	maybeColdCacheWipe();
+
+	// Snapshot the worktree at gate start so the final repo:clean check
+	// can report files that *appeared during* the run (mid-gate edits by
+	// an editor/agent) separately from pre-existing dirt.
+	const snapshotPath = join(root, ".prepush-worktree-snapshot");
+	try {
+		spawnSync(
+			"bun",
+			[
+				"run",
+				"tooling/scripts/assert-clean-worktree.ts",
+				"--snapshot",
+				snapshotPath,
+			],
+			{ stdio: "ignore" },
+		);
+	} catch {
+		// Snapshot is best-effort — if it fails, the final repo:clean
+		// still works without diff context.
+	}
 
 	// Tier 0 — live GHAS alert check for current PR branch
 	if (!checkGhasAlerts()) process.exit(1);
@@ -407,15 +441,33 @@ async function main(): Promise<void> {
 
 	// repo:clean must run last — but can itself cache-hit on an all-hit run
 	// since no step wrote anything. Run it only if something ran, to also
-	// validate the new artifacts.
+	// validate the new artifacts. Pass the gate-start snapshot so a
+	// mid-gate-added file is surfaced clearly instead of conflated with
+	// pre-existing local dirt.
 	if (toRun.length > 0) {
 		if (
 			!(await runSerial("── final gate ──", [
-				{ name: "repo:clean", cmd: "bun", args: ["run", "repo:clean"] },
+				{
+					name: "repo:clean",
+					cmd: "bun",
+					args: [
+						"run",
+						"tooling/scripts/assert-clean-worktree.ts",
+						"--against",
+						snapshotPath,
+					],
+				},
 			]))
 		) {
 			process.exit(1);
 		}
+	}
+
+	// Snapshot file is per-push; clean up so it doesn't linger in the worktree.
+	try {
+		rmSync(snapshotPath, { force: true });
+	} catch {
+		// best-effort
 	}
 
 	const totalElapsed = Number(process.hrtime.bigint() - overallStart) / 1e6;

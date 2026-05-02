@@ -44,82 +44,109 @@ export interface NewsletterAdapter {
 	): Promise<{ ok: boolean; error?: string } | { supported: false }>;
 }
 
+import {
+	type ResolvedNewsletter,
+	resolveNewsletter,
+} from "./integrations/resolvers/newsletter-resolver.js";
 import { getNewsletterConfig } from "./runtime-env";
 import { createLogger } from "./runtime-logger";
 
 const logger = createLogger("Newsletter");
 
-function toBasicAuthToken(value: string) {
-	return btoa(value);
+export function buildListmonkBasicAuthHeader(
+	apiUser: string,
+	apiKey: string,
+): string {
+	return `Basic ${btoa(`${apiUser}:${apiKey}`)}`;
+}
+
+export function buildListmonkSubscribeUrl(baseUrl: string): string {
+	return `${baseUrl}/api/subscribers`;
+}
+
+export interface SubscribeViaListmonkDeps {
+	readonly fetch?: typeof fetch;
+}
+
+/**
+ * Issue a single Listmonk `/api/subscribers` POST against an
+ * already-resolved `{kind: "listmonk", ...}` configuration. Pure
+ * on the resolved value + injected fetch so each response-status
+ * branch is independently mutation-testable.
+ */
+export async function subscribeViaListmonk(
+	resolved: Extract<ResolvedNewsletter, { kind: "listmonk" }>,
+	email: string,
+	deps: SubscribeViaListmonkDeps = {},
+): Promise<{ ok: boolean; error?: string }> {
+	const fetchImpl = deps.fetch ?? fetch;
+	try {
+		const response = await fetchImpl(
+			buildListmonkSubscribeUrl(resolved.baseUrl),
+			{
+				method: "POST",
+				headers: {
+					Authorization: buildListmonkBasicAuthHeader(
+						resolved.apiUser,
+						resolved.apiKey,
+					),
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify({
+					email,
+					name: email,
+					status: "enabled",
+					lists: [Number(resolved.listId)],
+					preconfirm_subscriptions: true,
+				}),
+			},
+		);
+		if (!response.ok) {
+			const body = await response.text();
+			logger.error("Listmonk API error", { status: response.status, body });
+			return {
+				ok: false,
+				error:
+					"Subscription could not be saved. Confirm the list settings and retry.",
+			};
+		}
+		logger.info("Successfully subscribed to Listmonk", { email });
+		return { ok: true };
+	} catch (error) {
+		logger.error("Listmonk subscription error", { error });
+		return {
+			ok: false,
+			error:
+				"The newsletter provider could not be reached. Check the network connection or provider status.",
+		};
+	}
 }
 
 export const newsletterAdapter: NewsletterAdapter = {
 	subscribe: async (email: string, locals?: App.Locals | null) => {
-		const {
-			mode,
-			listmonkApiUrl,
-			listmonkApiUsername,
-			listmonkApiPassword,
-			listmonkListId,
-		} = getNewsletterConfig(locals);
-
-		if (mode === "listmonk") {
-			if (
-				!listmonkApiUrl ||
-				!listmonkApiUsername ||
-				!listmonkApiPassword ||
-				!listmonkListId
-			) {
-				logger.error(
-					"LISTMONK_* environment is incomplete while listmonk delivery is enabled.",
-				);
-				return {
-					ok: false,
-					error: "Newsletter signup is temporarily unavailable.",
-				};
-			}
-			try {
-				const auth = toBasicAuthToken(
-					`${listmonkApiUsername}:${listmonkApiPassword}`,
-				);
-				const response = await fetch(`${listmonkApiUrl}/api/subscribers`, {
-					method: "POST",
-					headers: {
-						Authorization: `Basic ${auth}`,
-						"Content-Type": "application/json",
-					},
-					body: JSON.stringify({
-						email,
-						name: email,
-						status: "enabled",
-						lists: [Number(listmonkListId)],
-						preconfirm_subscriptions: true,
-					}),
-				});
-				if (!response.ok) {
-					const body = await response.text();
-					logger.error("Listmonk API error", { status: response.status, body });
-					return {
-						ok: false,
-						error:
-							"Subscription could not be saved. Confirm the list settings and retry.",
-					};
-				}
-				logger.info("Successfully subscribed to Listmonk", { email });
-				return { ok: true };
-			} catch (error) {
-				logger.error("Listmonk subscription error", { error });
-				return {
-					ok: false,
-					error:
-						"The newsletter provider could not be reached. Check the network connection or provider status.",
-				};
-			}
+		const cfg = getNewsletterConfig(locals);
+		const resolved = resolveNewsletter({
+			env: {
+				NEWSLETTER_DELIVERY_MODE: cfg.mode,
+				LISTMONK_API_URL: cfg.listmonkApiUrl,
+				LISTMONK_API_USERNAME: cfg.listmonkApiUsername,
+				LISTMONK_API_PASSWORD: cfg.listmonkApiPassword,
+				LISTMONK_LIST_ID: cfg.listmonkListId,
+			},
+		});
+		if (resolved.kind === "listmonk") {
+			return subscribeViaListmonk(resolved, email);
 		}
-
-		// Any mode other than "listmonk" (including "mock" and unrecognized values) returns ok
-		// without calling any external API — safe for local dev, CI, and unknown future modes.
-		logger.info("Using mock delivery mode.", { mode });
+		if (resolved.kind === "misconfigured") {
+			logger.error("Newsletter is misconfigured", { reason: resolved.reason });
+			return {
+				ok: false,
+				error:
+					"The newsletter is not fully configured. Check the provider settings and try again.",
+			};
+		}
+		// kind === "mock" — safe for local dev, CI, and unknown future modes.
+		logger.info("Using mock delivery mode.", { mode: cfg.mode });
 		return { ok: true };
 	},
 };

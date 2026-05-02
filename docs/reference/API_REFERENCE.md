@@ -3,7 +3,7 @@
 Auto-generated from TypeScript source via the TypeScript compiler API.
 Run `bun run docs:api` to regenerate.
 
-Generated: 2026-05-01
+Generated: 2026-05-02
 
 ---
 
@@ -14,6 +14,126 @@ Generated: 2026-05-01
 #### `createAstropressPublicSiteIntegration`
 ```ts
 function createAstropressPublicSiteIntegration(options: AstropressPublicSiteOptions): AstroIntegration
+```
+
+#### `registerProvider`
+```ts
+function registerProvider<TFields>(domain: IntegrationDomain, definition: ProviderDefinition<TFields>): RegisteredProvider<TFields>
+```
+
+#### `getProvider`
+```ts
+function getProvider<TFields>(domain: IntegrationDomain, providerId: string): RegisteredProvider<TFields> | undefined
+```
+
+#### `listProviders`
+```ts
+function listProviders(domain: IntegrationDomain): readonly RegisteredProvider<Record<string, string>>[]
+```
+
+#### `connectIntegration`
+```ts
+function connectIntegration<TFields>(repo: IntegrationsRepository, params: ConnectIntegrationParams<TFields>): Promise<ConnectIntegrationResult>
+```
+
+#### `reverifyIntegration`
+```ts
+function reverifyIntegration<TFields>(repo: IntegrationsRepository, provider: RegisteredProvider<TFields>, fields: TFields, now: string, timeoutMs: number): Promise<ConnectIntegrationResult>
+```
+
+#### `runProviderVerify`
+```ts
+function runProviderVerify<TFields>(provider: RegisteredProvider<TFields>, fields: TFields, timeoutMs: number): Promise<{ ok: true; } | { ok: false; code: IntegrationErrorCode; }>
+```
+
+#### `getConnectedProvider`
+```ts
+function getConnectedProvider<TFields>(args: GetConnectedProviderArgs): Promise<ConnectedProvider<TFields> | undefined>
+```
+
+#### `createRequestProviderCache`
+```ts
+function createRequestProviderCache(args: GetConnectedProviderArgs): () => Promise<ConnectedProvider<Record<string, string>> | undefined>
+```
+
+#### `listRegisteredProvidersForDomain`
+```ts
+function listRegisteredProvidersForDomain(domain: IntegrationDomain): readonly { id: string; label: string; }[]
+```
+
+#### `registerListmonk`
+```ts
+function registerListmonk(): RegisteredProvider<{ baseUrl: string; apiUser: string; apiKey: string; }>
+```
+
+#### `verifyListmonk`
+```ts
+function verifyListmonk(fields: { baseUrl: string; apiUser: string; apiKey: string; }, ctx: { signal: AbortSignal; }, deps: ListmonkVerifyDeps): Promise<void>
+```
+
+#### `registerPlausible`
+```ts
+function registerPlausible(): RegisteredProvider<{ host: string; siteId: string; apiKey: string; }>
+```
+
+#### `verifyPlausible`
+```ts
+function verifyPlausible(fields: { host: string; siteId: string; apiKey: string; }, ctx: { signal: AbortSignal; }, deps: PlausibleVerifyDeps): Promise<void>
+```
+
+#### `registerCloudflareCdn`
+```ts
+function registerCloudflareCdn(): RegisteredProvider<{ apiToken: string; zoneId: string; }>
+```
+
+#### `verifyCloudflareCdn`
+```ts
+function verifyCloudflareCdn(fields: { apiToken: string; zoneId: string; }, ctx: { signal: AbortSignal; }, deps: CloudflareCdnVerifyDeps): Promise<void>
+```
+
+#### `classifyCloudflareStatus`
+```ts
+function classifyCloudflareStatus(res: Response): IntegrationErrorCode | null
+```
+
+#### `registerGithubDeploy`
+```ts
+function registerGithubDeploy(): RegisteredProvider<{ accessToken: string; }>
+```
+
+#### `verifyGithubDeploy`
+```ts
+function verifyGithubDeploy(fields: { accessToken: string; }, ctx: { signal: AbortSignal; }, deps: GithubDeployVerifyDeps): Promise<void>
+```
+
+#### `classifyGithubStatus`
+```ts
+function classifyGithubStatus(res: Response): IntegrationErrorCode | null
+```
+
+#### `issueOAuthState`
+```ts
+function issueOAuthState(args: IssueOAuthStateArgs): Promise<IssuedOAuthState>
+```
+
+#### `verifyOAuthState`
+```ts
+function verifyOAuthState(args: VerifyOAuthStateArgs): Promise<VerifyOAuthStateResult>
+```
+
+#### `verifyInboundWebhookSignature`
+```ts
+function verifyInboundWebhookSignature(args: VerifyInboundWebhookArgs): Promise<boolean>
+```
+
+#### `verifyGithubWebhookSignature`
+```ts
+function verifyGithubWebhookSignature(args: { readonly header: string; readonly body: Uint8Array<ArrayBufferLike>; readonly secret: string; }): Promise<boolean>
+```
+
+#### `createIntegrationsRepository`
+```ts
+function createIntegrationsRepository(options: IntegrationsRepositoryOptions): IntegrationsRepository
 ```
 
 #### `registerCms`
@@ -524,6 +644,16 @@ function getLoginSecurityConfig(locals: Locals | null | undefined): { maxLoginAt
 #### `getTurnstileSiteKey`
 ```ts
 function getTurnstileSiteKey(locals: Locals | null | undefined): string | undefined
+```
+
+#### `getAstropressRootSecret`
+```ts
+function getAstropressRootSecret(locals: Locals | null | undefined): string
+```
+
+#### `getAstropressRootSecretCandidates`
+```ts
+function getAstropressRootSecretCandidates(locals: Locals | null | undefined): string[]
 ```
 
 #### `applyAstropressSecurityHeaders`
@@ -1281,9 +1411,106 @@ function verifyAstropressContentServices(input: AstropressContentServicesVerifyI
 function runAstropressDbMigrationsForCli(input: AstropressDbMigrateInput): AstropressDbMigrateReport
 ```
 
+#### `connectIntegrationAction`
+```ts
+function connectIntegrationAction<TFields>(locals: Locals | null | undefined, input: ConnectIntegrationActionInput<TFields>): Promise<RuntimeIntegrationActionResult>
+```
+
+#### `reverifyIntegrationAction`
+```ts
+function reverifyIntegrationAction<TFields>(locals: Locals | null | undefined, domain: IntegrationDomain, providerId: string, fields: TFields): Promise<RuntimeIntegrationActionResult>
+```
+
+#### `disconnectIntegrationAction`
+```ts
+function disconnectIntegrationAction(locals: Locals | null | undefined, domain: IntegrationDomain, providerId: string): Promise<{ ok: true; } | { ok: false; code: "INTEGRATIONS_NOT_AVAILABLE"; }>
+```
+
+#### `registerOAuthProvider`
+```ts
+function registerOAuthProvider(def: OAuthProviderDefinition): OAuthProviderDefinition
+```
+
+#### `getOAuthProvider`
+```ts
+function getOAuthProvider(domain: IntegrationDomain, providerId: string): OAuthProviderDefinition | undefined
+```
+
+#### `listOAuthProviders`
+```ts
+function listOAuthProviders(domain: IntegrationDomain): readonly OAuthProviderDefinition[]
+```
+
+#### `buildAuthorizeRedirect`
+```ts
+function buildAuthorizeRedirect(args: BuildAuthorizeRedirectArgs): Promise<BuildAuthorizeRedirectResult>
+```
+
+#### `buildRedirectUri`
+```ts
+function buildRedirectUri(origin: string, redirectPath: string): string
+```
+
+#### `exchangeCodeForToken`
+```ts
+function exchangeCodeForToken(args: ExchangeCodeForTokenArgs): Promise<OAuthTokenExchangeResult>
+```
+
+#### `registerInboundWebhookProvider`
+```ts
+function registerInboundWebhookProvider(def: InboundWebhookProviderDefinition): InboundWebhookProviderDefinition
+```
+
+#### `getInboundWebhookProvider`
+```ts
+function getInboundWebhookProvider(providerId: string): InboundWebhookProviderDefinition | undefined
+```
+
+#### `listInboundWebhookProviders`
+```ts
+function listInboundWebhookProviders(): readonly InboundWebhookProviderDefinition[]
+```
+
+#### `receiveInboundWebhook`
+```ts
+function receiveInboundWebhook(args: InboundWebhookReceiveArgs): Promise<InboundWebhookReceiveResult>
+```
+
+#### `integrationStatusBadgeTone`
+```ts
+function integrationStatusBadgeTone(status: IntegrationStatusBadgeKind): IntegrationStatusBadgeTone
+```
+
+#### `integrationStatusBadgeText`
+```ts
+function integrationStatusBadgeText(status: IntegrationStatusBadgeKind, labels: IntegrationStatusBadgeLabels): string
+```
+
 ### Types & Interfaces
 
 - `interface AstropressPublicSiteOptions`
+- `type IntegrationDomain`
+- `interface ProviderDefinition`
+- `interface RegisteredProvider`
+- `interface ConnectIntegrationParams`
+- `type ConnectIntegrationResult`
+- `interface ConnectedProvider`
+- `type ListmonkFields`
+- `type PlausibleFields`
+- `type CloudflareCdnFields`
+- `type GithubDeployFields`
+- `interface OAuthStateContext`
+- `interface IssuedOAuthState`
+- `type VerifyOAuthStateResult`
+- `type VerifyOAuthStateErrorCode`
+- `interface IssueOAuthStateArgs`
+- `interface VerifyOAuthStateArgs`
+- `type InboundWebhookAlgorithm`
+- `interface VerifyInboundWebhookArgs`
+- `interface IntegrationsRepository`
+- `interface IntegrationStatusRow`
+- `type IntegrationStatusValue`
+- `interface ConnectIntegrationInput`
 - `interface AstropressPlugin`
 - `interface AstropressContentEvent`
 - `interface AstropressMediaEvent`
@@ -1482,10 +1709,44 @@ function runAstropressDbMigrationsForCli(input: AstropressDbMigrateInput): Astro
 - `interface AstropressContentServicesOperationReport`
 - `interface AstropressDbMigrateInput`
 - `interface AstropressDbMigrateReport`
+- `interface ConnectIntegrationActionInput`
+- `type RuntimeIntegrationActionResult`
+- `interface OAuthProviderDefinition`
+- `interface BuildAuthorizeRedirectArgs`
+- `interface BuildAuthorizeRedirectResult`
+- `interface OAuthTokenSet`
+- `type OAuthTokenExchangeResult`
+- `type OAuthTokenExchangeErrorCode`
+- `interface ExchangeCodeForTokenArgs`
+- `interface InboundWebhookProviderDefinition`
+- `interface InboundWebhookReceiveArgs`
+- `type InboundWebhookReceiveResult`
+- `type IntegrationStatusBadgeKind`
+- `type IntegrationStatusBadgeTone`
+- `interface IntegrationStatusBadgeLabels`
 
 ### Constants & Re-exports
 
 - `const PROVIDER_CONTRACT_VERSION: "0.1"`
+- `IntegrationRegistryError`
+- `const INTEGRATION_DOMAINS: readonly IntegrationDomain[]`
+- `const registerNewsletter: Register`
+- `const registerAnalytics: Register`
+- `const registerAbTesting: Register`
+- `const registerSearch: Register`
+- `const registerCdnPurge: Register`
+- `const registerMonitoring: Register`
+- `const registerForms: Register`
+- `const registerDeployHooks: Register`
+- `const LISTMONK_FIELDS: ZodObject<{ baseUrl: ZodString; apiUser: ZodString; apiKey: ZodString; }, $strip>`
+- `ListmonkVerifyError`
+- `const PLAUSIBLE_FIELDS: ZodObject<{ host: ZodString; siteId: ZodString; apiKey: ZodString; }, $strip>`
+- `PlausibleVerifyError`
+- `const CLOUDFLARE_CDN_FIELDS: ZodObject<{ apiToken: ZodString; zoneId: ZodString; }, $strip>`
+- `CloudflareCdnVerifyError`
+- `const GITHUB_DEPLOY_FIELDS: ZodObject<{ accessToken: ZodString; }, $strip>`
+- `GithubDeployVerifyError`
+- `const DEFAULT_OAUTH_STATE_TTL_MS: 600000`
 - `const ASTROPRESS_ADMIN_APP_NAME: "Astropress"`
 - `const ASTROPRESS_ADMIN_PRODUCT_NAME: "Astropress Admin"`
 - `ADMIN_STUB_PAGES`
@@ -1497,6 +1758,8 @@ function runAstropressDbMigrationsForCli(input: AstropressDbMigrateInput): Astro
 - `const translationStates: readonly ["not_started", "partial", "fallback_en", "translated", "reviewed", "published"]`
 - `const newsletterAdapter: NewsletterAdapter`
 - `const placeholderAdapter: NewsletterAdapter`
+- `OAuthRegistryError`
+- `InboundWebhookRegistryError`
 
 ---
 
@@ -1523,6 +1786,8 @@ function reportAstropressError(error: unknown, context: string): Promise<void>
 - `interface GiveLivelyConfig`
 - `interface LiberapayConfig`
 - `interface PledgeCryptoConfig`
+- `type LegacyIntegrationsConfig` — Provider-shaped fields slated for migration into the per-domain integration registry (Phase 3/4). Defined as a `Pick<>` over `CmsConfig` so the source of truth stays the existing interface — the alias only documents which fields are deprecation-track. Hosts that have admin-connected the matching provider can remove the static-config field and the runtime adapter will read the sealed credentials from `connected_integrations` instead.
+- `type CoreCmsConfig` — The non-deprecation-track fields on `CmsConfig`: template/route shape, content seeds, retention/upload limits, plugins, api surface. Defined as `Omit<CmsConfig, keyof LegacyIntegrationsConfig>` so it stays in lockstep with the canonical interface.
 
 ---
 
@@ -1715,12 +1980,19 @@ function runAstropressMigrations(db: SqliteDatabaseLike, migrationsDir: string):
 
 ### Functions
 
-#### `purgeCdnCache`
+#### `purgeCdnCacheForResolved`
 ```ts
-function purgeCdnCache(slug: string, config: CmsConfig): Promise<void>
+function purgeCdnCacheForResolved(slug: string, resolved: ResolvedCdnPurge, deps: { readonly fetch?: { (input: URL | RequestInfo, init?: RequestInit | undefined): Promise<Response>; (input: string | Request | URL, init?: RequestInit | undefined): Promise<Response>; } | undefined; }): Promise<void>
 ```
 
-Purges CDN cache for a specific content slug after it is published. Supports three purge strategies: 1. Generic webhook — POST `{ slug, purgedAt }` to `config.cdnPurgeWebhook` 2. Cloudflare Cache API — uses CLOUDFLARE_ZONE_ID + CLOUDFLARE_API_TOKEN env vars 3. Both can be active simultaneously (webhook fires after Cloudflare API call) Failures are non-fatal: errors are logged with `console.warn` but never thrown, so a CDN purge failure never blocks a content publish operation.
+Issue a CDN purge for a single content slug against an already-resolved configuration. The split between this function and {@link purgeCdnCache} keeps the imperative I/O branches separate from source resolution — the resolver is unit-tested for every priority/fallback path; this function is unit-tested with mocked fetch for each `kind`. Failures are non-fatal: errors are logged with `console.warn` but never thrown, so a CDN purge failure never blocks a content publish.
+
+#### `purgeCdnCache`
+```ts
+function purgeCdnCache(slug: string, config: CmsConfig, registryFields: { readonly apiToken: string; readonly zoneId: string; } | null | undefined): Promise<void>
+```
+
+Legacy entry point — purges via env (Cloudflare) and/or static `config.cdnPurgeWebhook`. Hosts that have admin-connected a Cloudflare CDN provider via the Phase 4 connect flow should call the registry-aware path instead (resolve via {@link resolveCdnPurge} with `registry` populated, then {@link purgeCdnCacheForResolved}). Backward-compatible: keeps the single-arg `(slug, config)` shape that `runtime-actions-content.ts` and downstream callers already use, so call-sites can migrate incrementally without a flag-day.
 
 ---
 

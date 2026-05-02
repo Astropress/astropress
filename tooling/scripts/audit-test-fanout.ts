@@ -69,6 +69,10 @@ const ALLOWLIST: ReadonlyMap<string, string> = new Map([
 		"git-sync adapter contract — exercises export/import/sqlite paths together",
 	],
 	[
+		"audit-registry.test.ts",
+		"audit/playwright registry contract — must verify all four call sites stay in lockstep",
+	],
+	[
 		"deploy-and-sync.contract.test.ts",
 		"deploy + sync contract — runs all deploy targets through one adapter API",
 	],

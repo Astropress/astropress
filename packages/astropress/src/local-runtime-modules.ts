@@ -91,6 +91,9 @@ export interface LocalAdminStoreModule extends AdminStoreAdapter {
 	// API tokens and webhooks (optional — only present when api.enabled)
 	apiTokens?: AdminStoreAdapter["apiTokens"];
 	webhooks?: AdminStoreAdapter["webhooks"];
+	// Phase 3/4 connected-integrations surface (optional — only present
+	// when the host has applied the connected_integrations migration).
+	integrations?: AdminStoreAdapter["integrations"];
 	// Content scheduling
 	schedulePublish?: AdminStoreAdapter["content"]["schedulePublish"];
 	listScheduled?: AdminStoreAdapter["content"]["listScheduled"];

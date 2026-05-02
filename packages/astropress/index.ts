@@ -5,6 +5,121 @@ export const PROVIDER_CONTRACT_VERSION = "0.1";
 export { createAstropressPublicSiteIntegration } from "./src/public-site-integration.js";
 export type { AstropressPublicSiteOptions } from "./src/public-site-integration";
 
+// Per-domain integration registry (Phase 3) — hosts call
+// `registerNewsletter()` / `registerAnalytics()` / etc. from setup
+// code; admin actions and runtime adapters look providers up by
+// (domain, providerId).
+export {
+	registerProvider,
+	getProvider,
+	listProviders,
+	IntegrationRegistryError,
+	INTEGRATION_DOMAINS,
+} from "./src/integrations/registry.js";
+export type {
+	IntegrationDomain,
+	ProviderDefinition,
+	RegisteredProvider,
+} from "./src/integrations/registry";
+export {
+	registerNewsletter,
+	registerAnalytics,
+	registerAbTesting,
+	registerSearch,
+	registerCdnPurge,
+	registerMonitoring,
+	registerForms,
+	registerDeployHooks,
+} from "./src/integrations/domains.js";
+export {
+	connectIntegration,
+	reverifyIntegration,
+	runProviderVerify,
+} from "./src/integrations/connect-flow.js";
+export type {
+	ConnectIntegrationParams,
+	ConnectIntegrationResult,
+} from "./src/integrations/connect-flow";
+export {
+	getConnectedProvider,
+	createRequestProviderCache,
+	listRegisteredProvidersForDomain,
+} from "./src/integrations/runtime.js";
+export type { ConnectedProvider } from "./src/integrations/runtime";
+
+// Phase 4 push-button providers — hosts call these once at boot to
+// register the corresponding registry entry. Each provider exports
+// its Zod schema and verify() helper so admin pages can drive a
+// connect form against the same shape the registry validates.
+export {
+	registerListmonk,
+	verifyListmonk,
+	LISTMONK_FIELDS,
+	ListmonkVerifyError,
+} from "./src/integrations/providers/listmonk.js";
+export type { ListmonkFields } from "./src/integrations/providers/listmonk";
+export {
+	registerPlausible,
+	verifyPlausible,
+	PLAUSIBLE_FIELDS,
+	PlausibleVerifyError,
+} from "./src/integrations/providers/plausible.js";
+export type { PlausibleFields } from "./src/integrations/providers/plausible";
+export {
+	registerCloudflareCdn,
+	verifyCloudflareCdn,
+	classifyCloudflareStatus,
+	CLOUDFLARE_CDN_FIELDS,
+	CloudflareCdnVerifyError,
+} from "./src/integrations/providers/cloudflare-cdn.js";
+export type { CloudflareCdnFields } from "./src/integrations/providers/cloudflare-cdn";
+export {
+	registerGithubDeploy,
+	verifyGithubDeploy,
+	classifyGithubStatus,
+	GITHUB_DEPLOY_FIELDS,
+	GithubDeployVerifyError,
+} from "./src/integrations/providers/github-deploy.js";
+export type { GithubDeployFields } from "./src/integrations/providers/github-deploy";
+
+// Phase 6 OAuth state-token primitives (state issued at the start of
+// authorization-code flows is HMAC-signed and self-describing).
+export {
+	issueOAuthState,
+	verifyOAuthState,
+	DEFAULT_OAUTH_STATE_TTL_MS,
+} from "./src/integrations/oauth/state.js";
+export type {
+	OAuthStateContext,
+	IssuedOAuthState,
+	VerifyOAuthStateResult,
+	VerifyOAuthStateErrorCode,
+	IssueOAuthStateArgs,
+	VerifyOAuthStateArgs,
+} from "./src/integrations/oauth/state";
+
+// Phase 6 inbound-webhook signature verifier (HMAC over raw request
+// bytes; GitHub-style algorithm-prefixed headers supported).
+export {
+	verifyInboundWebhookSignature,
+	verifyGithubWebhookSignature,
+} from "./src/integrations/webhooks/inbound.js";
+export type {
+	InboundWebhookAlgorithm,
+	VerifyInboundWebhookArgs,
+} from "./src/integrations/webhooks/inbound";
+
+// Phase 2 secret-store repository (status surface + sealed-secret
+// surface). Hosts that need to read connected_integrations from
+// outside the bundled admin actions construct the repo directly.
+export { createIntegrationsRepository } from "./src/sqlite-runtime/integrations.js";
+export type {
+	IntegrationsRepository,
+	IntegrationStatusRow,
+	IntegrationStatusValue,
+	ConnectIntegrationInput,
+} from "./src/sqlite-runtime/integrations";
+
 // Core configuration seam
 export {
 	registerCms,
@@ -393,6 +508,8 @@ export {
 	getAdminBootstrapConfig,
 	getLoginSecurityConfig,
 	getTurnstileSiteKey,
+	getAstropressRootSecret,
+	getAstropressRootSecretCandidates,
 } from "./src/runtime-env";
 export type {
 	RuntimeBindings,
@@ -673,3 +790,67 @@ export type {
 	AstropressDbMigrateInput,
 	AstropressDbMigrateReport,
 } from "./src/db-migrate-ops";
+
+// Phase 3/4 admin-action runtime wrappers — admin endpoints route
+// through these instead of calling the connect-flow primitives
+// directly so they can pull the integrations repo from
+// `loadLocalAdminStore()`.
+export {
+	connectIntegrationAction,
+	reverifyIntegrationAction,
+	disconnectIntegrationAction,
+} from "./src/runtime-actions-integrations.js";
+export type {
+	ConnectIntegrationActionInput,
+	RuntimeIntegrationActionResult,
+} from "./src/runtime-actions-integrations";
+
+// Phase 6 OAuth provider registry + state-token URL builder.
+export {
+	registerOAuthProvider,
+	getOAuthProvider,
+	listOAuthProviders,
+	OAuthRegistryError,
+} from "./src/integrations/oauth/registry.js";
+export type { OAuthProviderDefinition } from "./src/integrations/oauth/registry";
+export {
+	buildAuthorizeRedirect,
+	buildRedirectUri,
+} from "./src/integrations/oauth/start.js";
+export type {
+	BuildAuthorizeRedirectArgs,
+	BuildAuthorizeRedirectResult,
+} from "./src/integrations/oauth/start";
+export { exchangeCodeForToken } from "./src/integrations/oauth/token-exchange.js";
+export type {
+	OAuthTokenSet,
+	OAuthTokenExchangeResult,
+	OAuthTokenExchangeErrorCode,
+	ExchangeCodeForTokenArgs,
+} from "./src/integrations/oauth/token-exchange";
+
+// Phase 6 inbound-webhook provider registry + receiver helper.
+export {
+	registerInboundWebhookProvider,
+	getInboundWebhookProvider,
+	listInboundWebhookProviders,
+	InboundWebhookRegistryError,
+} from "./src/integrations/webhooks/registry.js";
+export type { InboundWebhookProviderDefinition } from "./src/integrations/webhooks/registry";
+export { receiveInboundWebhook } from "./src/integrations/webhooks/receiver.js";
+export type {
+	InboundWebhookReceiveArgs,
+	InboundWebhookReceiveResult,
+} from "./src/integrations/webhooks/receiver";
+
+// IntegrationStatusBadge tone/text mappers (component is in
+// components/IntegrationStatusBadge.astro).
+export {
+	integrationStatusBadgeTone,
+	integrationStatusBadgeText,
+} from "./src/integrations/badge-tone.js";
+export type {
+	IntegrationStatusBadgeKind,
+	IntegrationStatusBadgeTone,
+	IntegrationStatusBadgeLabels,
+} from "./src/integrations/badge-tone";

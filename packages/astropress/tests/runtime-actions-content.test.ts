@@ -581,6 +581,42 @@ describe("purgeCdnCache", () => {
 		);
 	});
 
+	it("uses the registryFields parameter (admin-connected Cloudflare) over env and config", async () => {
+		const { purgeCdnCache } = await import("../src/cache-purge");
+		const requests: { url: string; auth: string | null }[] = [];
+		vi.stubGlobal("fetch", async (url: string, init: RequestInit) => {
+			const headers =
+				init.headers instanceof Headers
+					? init.headers
+					: new Headers(init.headers as Record<string, string>);
+			requests.push({ url, auth: headers.get("authorization") });
+			return new Response(null, { status: 200 });
+		});
+
+		await purgeCdnCache(
+			"slug",
+			{
+				siteUrl: "https://example.com",
+				templateKeys: ["home"],
+				seedPages: [],
+				archives: [],
+				translationStatus: [],
+				cdnPurgeWebhook: "https://hooks.example.com/purge",
+			},
+			{ apiToken: "registry-tok", zoneId: "registry-zone" },
+		);
+		vi.unstubAllGlobals();
+
+		// The Cloudflare call must use the registry token, not anything from env/config.
+		const cf = requests.find((r) =>
+			r.url.startsWith("https://api.cloudflare.com/"),
+		);
+		expect(cf?.auth).toBe("Bearer registry-tok");
+		expect(cf?.url).toBe(
+			"https://api.cloudflare.com/client/v4/zones/registry-zone/purge_cache",
+		);
+	});
+
 	it("does not throw when the webhook returns a non-200 status", async () => {
 		const { purgeCdnCache } = await import("../src/cache-purge");
 		vi.stubGlobal(

@@ -1,0 +1,195 @@
+---
+/**
+ * Renders a connect form for every provider registered against a
+ * given `IntegrationDomain`. Phase 5 admin pages compose this once
+ * and the rest is driven from the registry — adding a new provider
+ * (e.g. `registerNewsletter("mailchimp", { fields: ... })`) makes it
+ * appear automatically.
+ *
+ * The form posts to `/ap-admin/actions/integration-connect` (the
+ * Phase 5 admin action) which routes through
+ * `connectIntegrationAction` → registry → Phase 2 envelope.
+ *
+ * For each provider this renders one `<form>` per provider with one
+ * input per field key. Field keys are derived by introspecting the
+ * provider's Zod schema; in practice every Phase 4 provider uses a
+ * flat `z.object({...})`, so this is sufficient. Sensitive fields
+ * (those whose name contains "key", "secret", "token", "password")
+ * render as `type="password"` so they're at least obscured in the
+ * browser tab.
+ */
+import type {
+	IntegrationDomain,
+	RegisteredProvider,
+} from "../src/integrations/registry";
+import { listProviders } from "../src/integrations/registry";
+import CsrfInput from "./CsrfInput.astro";
+
+interface Props {
+	domain: IntegrationDomain;
+	connectedProviderIds?: ReadonlyArray<string>;
+	statusByProvider?: Readonly<Record<string, "connected" | "error" | "paused">>;
+}
+
+const {
+	domain,
+	connectedProviderIds = [],
+	statusByProvider = {},
+} = Astro.props;
+
+const providers = listProviders(domain);
+const connectedSet = new Set(connectedProviderIds);
+
+function fieldKeysOf(provider: RegisteredProvider): string[] {
+	const schema = provider.fields as unknown as {
+		shape?: Record<string, unknown>;
+		_def?: { shape?: () => Record<string, unknown> };
+	};
+	if (schema.shape && typeof schema.shape === "object") {
+		return Object.keys(schema.shape);
+	}
+	if (schema._def?.shape && typeof schema._def.shape === "function") {
+		const out = schema._def.shape();
+		if (out && typeof out === "object") return Object.keys(out);
+	}
+	return [];
+}
+
+function isSensitive(key: string): boolean {
+	const k = key.toLowerCase();
+	return (
+		k.includes("key") ||
+		k.includes("secret") ||
+		k.includes("token") ||
+		k.includes("password")
+	);
+}
+---
+
+{providers.length === 0 && (
+	<p class="ap-empty">
+		No providers are registered for the <code>{domain}</code> domain yet. Call
+		<code>registerProvider("{domain}", &#123; ... &#125;)</code> from your setup module.
+	</p>
+)}
+
+{providers.map((provider) => {
+	const keys = fieldKeysOf(provider);
+	const isConnected = connectedSet.has(provider.id);
+	const status = statusByProvider[provider.id];
+	return (
+		<section
+			class:list={[
+				"ap-integration-connect",
+				isConnected && "ap-integration-connect--connected",
+				status === "error" && "ap-integration-connect--error",
+			]}
+			data-domain={domain}
+			data-provider-id={provider.id}
+		>
+			<header>
+				<h3>{provider.label}</h3>
+				{isConnected ? (
+					<span class="ap-status">Connected</span>
+				) : (
+					<span class="ap-status ap-status--muted">Not connected</span>
+				)}
+			</header>
+			<form
+				method="POST"
+				action="/ap-admin/actions/integration-connect"
+				class="ap-integration-form"
+			>
+				<CsrfInput />
+				<input type="hidden" name="domain" value={domain} />
+				<input type="hidden" name="providerId" value={provider.id} />
+				{keys.map((key) => (
+					<label>
+						<span>{key}</span>
+						<input
+							name={key}
+							required
+							autocomplete="off"
+							type={isSensitive(key) ? "password" : "text"}
+						/>
+					</label>
+				))}
+				<button type="submit">
+					{isConnected ? "Reconnect" : "Connect"}
+				</button>
+			</form>
+			{isConnected && (
+				<form
+					method="POST"
+					action="/ap-admin/actions/integration-disconnect"
+					class="ap-integration-form ap-integration-form--secondary"
+				>
+					<CsrfInput />
+					<input type="hidden" name="domain" value={domain} />
+					<input type="hidden" name="providerId" value={provider.id} />
+					<button type="submit" class="ap-button-secondary">Disconnect</button>
+				</form>
+			)}
+		</section>
+	);
+})}
+
+<style>
+	.ap-integration-connect {
+		border: 1px solid var(--ap-border, #d1d5db);
+		border-radius: 0.5rem;
+		padding: 1rem;
+		margin-bottom: 1rem;
+		background: var(--ap-surface, #fff);
+	}
+	.ap-integration-connect header {
+		display: flex;
+		justify-content: space-between;
+		align-items: baseline;
+		margin-bottom: 0.75rem;
+	}
+	.ap-integration-connect h3 {
+		margin: 0;
+		font-size: 1rem;
+		font-weight: 600;
+	}
+	.ap-integration-connect--connected {
+		border-color: var(--ap-success-border, #a7f3d0);
+	}
+	.ap-integration-connect--error {
+		border-color: var(--ap-danger-border, #fecaca);
+	}
+	.ap-status {
+		font-size: 0.75rem;
+		padding: 0.125rem 0.375rem;
+		border-radius: 999px;
+		background: var(--ap-success-surface, #ecfdf5);
+		color: var(--ap-success, #047857);
+	}
+	.ap-status--muted {
+		background: var(--ap-surface-muted, #f9fafb);
+		color: var(--ap-text-muted, #6b7280);
+	}
+	.ap-integration-form {
+		display: grid;
+		gap: 0.5rem;
+	}
+	.ap-integration-form--secondary {
+		margin-top: 0.5rem;
+	}
+	.ap-integration-form label {
+		display: grid;
+		gap: 0.25rem;
+		font-size: 0.875rem;
+	}
+	.ap-integration-form input {
+		padding: 0.375rem 0.5rem;
+		border: 1px solid var(--ap-border, #d1d5db);
+		border-radius: 0.25rem;
+		font: inherit;
+	}
+	.ap-empty {
+		color: var(--ap-text-muted, #6b7280);
+		font-style: italic;
+	}
+</style>

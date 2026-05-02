@@ -229,6 +229,17 @@ pre-commit:
       glob: ["tooling/e2e/playwright.config.ts", "package.json"]
       run: bun run audit:playwright-projects
 
+    audit-registry-sync:
+      glob:
+        - "tooling/audit-registry.ts"
+        - "tooling/playwright-registry.ts"
+        - "tooling/scripts/audit-registry-sync.ts"
+        - "package.json"
+        - "lefthook.yml"
+        - ".github/workflows/ci.yml"
+        - "tooling/e2e/playwright.config.ts"
+      run: bun run audit:registry-sync
+
     audit-mutation-scope:
       glob:
         - "packages/astropress/src/auth-*.ts"

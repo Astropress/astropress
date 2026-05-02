@@ -36,6 +36,18 @@ export type {
  *
  * Call registerCms() once at startup (e.g. in src/site/cms-registration.ts imported by
  * middleware or the admin layout) before any astropress function is invoked.
+ *
+ * **Forward-looking note:** the provider-shaped fields on `CmsConfig` —
+ * `analytics`, `newsletter`, `forms`, `abTesting`, `search`,
+ * `cdnPurgeWebhook`, `monitoring`, `donations`, `testimonials` — are
+ * targeted for migration into the per-domain integration registry
+ * (Phase 3/4). The runtime adapters already prefer the registry's
+ * `connected_integrations` row when one is present and fall back to
+ * the static field. The static-config code paths will remain as a
+ * deprecation shim for one cycle so existing
+ * `registerCms({ analytics: ... })` call sites continue to boot. The
+ * intended split is documented by the {@link CoreCmsConfig} and
+ * {@link LegacyIntegrationsConfig} type aliases below.
  */
 
 export interface CmsConfig {
@@ -363,6 +375,35 @@ export interface CmsConfig {
 		prometheusEnabled?: boolean;
 	};
 }
+
+/**
+ * Provider-shaped fields slated for migration into the per-domain
+ * integration registry (Phase 3/4). Defined as a `Pick<>` over
+ * `CmsConfig` so the source of truth stays the existing interface
+ * — the alias only documents which fields are deprecation-track.
+ *
+ * Hosts that have admin-connected the matching provider can remove
+ * the static-config field and the runtime adapter will read the
+ * sealed credentials from `connected_integrations` instead.
+ */
+export type LegacyIntegrationsConfig = Pick<
+	CmsConfig,
+	| "analytics"
+	| "abTesting"
+	| "search"
+	| "cdnPurgeWebhook"
+	| "monitoring"
+	| "donations"
+	| "testimonials"
+>;
+
+/**
+ * The non-deprecation-track fields on `CmsConfig`: template/route
+ * shape, content seeds, retention/upload limits, plugins, api
+ * surface. Defined as `Omit<CmsConfig, keyof LegacyIntegrationsConfig>`
+ * so it stays in lockstep with the canonical interface.
+ */
+export type CoreCmsConfig = Omit<CmsConfig, keyof LegacyIntegrationsConfig>;
 
 import {
 	peekCmsConfig as _peekStore,
