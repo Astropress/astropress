@@ -166,7 +166,7 @@ const verificationGroups: VerificationGroup[] = [
 		scenarios: [
 			"Live preview stylesheet is served as text/css",
 			"Section editor is reachable from the Pages list for structured pages",
-			"Section editor card heading reads \"Sections\" not \"Sections JSON\"",
+			'Section editor card heading reads "Sections" not "Sections JSON"',
 			"New page creates without filling SEO fields",
 			"Admin URL warning leaves whitespace around inline code tokens",
 			"Operator switches admin to Arabic and the page emits dir=rtl with bidi-plaintext",
@@ -1714,6 +1714,72 @@ const verificationGroups: VerificationGroup[] = [
 					"auth_emergency_revoke_bootstrap_warning_scope",
 					"auth_emergency_revoke_no_scope_returns_error",
 				],
+			},
+		],
+	},
+	{
+		label: "integration connect/disconnect/reverify scenarios",
+		scenarios: [
+			"Connecting a provider with valid credentials persists a sealed secret",
+			"Connecting with a missing field returns INTEGRATION_VERIFY_FAILED",
+			"Reverifying a connected provider updates the status row",
+			"Disconnecting a provider removes its row",
+			"Connect on a host without the integrations repo returns INTEGRATIONS_NOT_AVAILABLE",
+		],
+		steps: [
+			{
+				command: "bunx",
+				args: [
+					"vitest",
+					"run",
+					"tests/runtime-actions-integrations.test.ts",
+					"tests/integrations/connect-flow.test.ts",
+				],
+				cwd: astropressPackageRoot,
+			},
+		],
+	},
+	{
+		label: "OAuth state-token + token-exchange scenarios",
+		scenarios: [
+			"Building the authorize redirect issues a state token that verifies under the same rootSecret",
+			"A state token does not verify under a different rootSecret",
+			"Token exchange returns the parsed access token on a 200 response",
+			"Token exchange returns TOKEN_HTTP_ERROR on a 4xx response",
+		],
+		steps: [
+			{
+				command: "bunx",
+				args: [
+					"vitest",
+					"run",
+					"tests/integrations/oauth/start.test.ts",
+					"tests/integrations/oauth/state.test.ts",
+					"tests/integrations/oauth/token-exchange.test.ts",
+				],
+				cwd: astropressPackageRoot,
+			},
+		],
+	},
+	{
+		label: "inbound-webhook signature verification scenarios",
+		scenarios: [
+			"A correctly signed GitHub webhook returns 200 with the event name",
+			"A request to an unregistered provider returns RECEIVER_UNKNOWN_PROVIDER",
+			"A request with no signature header returns RECEIVER_MISSING_SIGNATURE",
+			"A request with a forged signature returns RECEIVER_INVALID_SIGNATURE",
+			"A request whose body has been tampered after signing returns RECEIVER_INVALID_SIGNATURE",
+		],
+		steps: [
+			{
+				command: "bunx",
+				args: [
+					"vitest",
+					"run",
+					"tests/integrations/webhooks/receiver.test.ts",
+					"tests/integrations/webhooks/inbound.test.ts",
+				],
+				cwd: astropressPackageRoot,
 			},
 		],
 	},

@@ -104,7 +104,7 @@ export function registerProvider<TFields extends Record<string, string>>(
 		);
 	}
 	const entry: RegisteredProvider<TFields> = { domain, ...definition };
-	registry.set(k, entry as RegisteredProvider);
+	registry.set(k, entry as unknown as RegisteredProvider);
 	return entry;
 }
 
