@@ -120,6 +120,65 @@ describe("prepareAstropressDeployment", () => {
 
 		// Should still produce a valid deploymentId
 		expect(result.deploymentId).toContain("test-auto:auto-path:");
+
+		// Default path is `<buildDir>/../.astropress/deployments/<provider>/<projectName>`.
+		const expectedTarget = join(
+			buildDir,
+			"..",
+			".astropress",
+			"deployments",
+			"test-auto",
+			"auto-path",
+		);
+		expect(existsSync(join(expectedTarget, "index.html"))).toBe(true);
+		expect(existsSync(join(expectedTarget, ".astropress-deploy.json"))).toBe(
+			true,
+		);
+	});
+
+	it("metadata file is named exactly '.astropress-deploy.json'", async () => {
+		const buildDir = makeBuildDir("build-metaname");
+		const outputDir = join(testRoot, "out-metaname");
+		await prepareAstropressDeployment(
+			{ buildDir, projectName: "p" },
+			{ provider: "x", outputDir },
+		);
+		// readFile of the exact filename must succeed.
+		const meta = JSON.parse(
+			await readFile(join(outputDir, "p", ".astropress-deploy.json"), "utf8"),
+		);
+		expect(meta.preparedAt).toMatch(/^\d{4}-\d{2}-\d{2}T/);
+	});
+
+	it("trims trailing slashes from baseUrl before joining the project path", async () => {
+		const buildDir = makeBuildDir("build-trim");
+		const outputDir = join(testRoot, "out-trim");
+		const result = await prepareAstropressDeployment(
+			{ buildDir, projectName: "p" },
+			{ provider: "x", outputDir, baseUrl: "https://h.example///" },
+		);
+		expect(result.url).toBe("https://h.example/p/");
+	});
+
+	it("leaves a baseUrl without trailing slashes unchanged", async () => {
+		const buildDir = makeBuildDir("build-notrim");
+		const outputDir = join(testRoot, "out-notrim");
+		const result = await prepareAstropressDeployment(
+			{ buildDir, projectName: "p" },
+			{ provider: "x", outputDir, baseUrl: "https://h.example" },
+		);
+		expect(result.url).toBe("https://h.example/p/");
+	});
+
+	it("handles a baseUrl that is ONLY trailing slashes (full trim → empty origin)", async () => {
+		const buildDir = makeBuildDir("build-allslash");
+		const outputDir = join(testRoot, "out-allslash");
+		const result = await prepareAstropressDeployment(
+			{ buildDir, projectName: "p" },
+			{ provider: "x", outputDir, baseUrl: "//" },
+		);
+		// All slashes trimmed -> "" prefix; project segment still appended.
+		expect(result.url).toBe("/p/");
 	});
 
 	it("overwrites an existing deployment (idempotent)", async () => {

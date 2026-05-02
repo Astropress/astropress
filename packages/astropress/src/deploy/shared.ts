@@ -39,18 +39,17 @@ export async function prepareAstropressDeployment(
 	await writeFile(
 		join(targetDir, ".astropress-deploy.json"),
 		`${JSON.stringify(metadata, null, 2)}\n`,
-		"utf8",
 	);
 
-	const baseUrl = options.baseUrl ?? "";
-	let end = baseUrl.length;
-	while (end > 0 && baseUrl[end - 1] === "/") end--;
-	const trimmedBaseUrl = baseUrl.slice(0, end);
+	let url: string | undefined;
+	if (options.baseUrl) {
+		let trimmed = options.baseUrl;
+		while (trimmed.endsWith("/")) trimmed = trimmed.slice(0, -1);
+		url = `${trimmed}/${input.projectName}/`;
+	}
 
 	return {
 		deploymentId: `${options.provider}:${input.projectName}:${Date.now()}`,
-		url: options.baseUrl
-			? `${trimmedBaseUrl}/${input.projectName}/`
-			: undefined,
+		url,
 	};
 }
