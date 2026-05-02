@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-05-02T19:14:05.715Z",
+  "updatedAt": "2026-05-02T19:25:45.261Z",
   "scores": {
     "packages/astropress/src/adapters/adapter-record-helpers.ts": {
       "score": 66.66666666666666,
@@ -74,8 +74,8 @@
       "hash": "76b126e794eac216bbeabd43d966b728ea3b3aeb"
     },
     "packages/astropress/src/app-host-targets.ts": {
-      "score": 0,
-      "hash": "4b516808c7bc6ee38656e8e5d8b471abcfe6df46"
+      "score": 100,
+      "hash": "d095544cff9cbf07496c13fe9b07f5c6bb4cc358"
     },
     "packages/astropress/src/auth-emergency-revoke-ops.ts": {
       "score": 100,
@@ -182,8 +182,8 @@
       "hash": "2b91055be993a862221b781e8ff10f717d1baed2"
     },
     "packages/astropress/src/data-service-targets.ts": {
-      "score": 0,
-      "hash": "2b0b426a2af3d8962321ed883288a0399dcb103f"
+      "score": 100,
+      "hash": "2efec953500a0d38451474b8e2c21f76883a62c4"
     },
     "packages/astropress/src/deploy/shared.ts": {
       "score": 66.66666666666666,
@@ -646,8 +646,8 @@
       "hash": "2d817c7065277e573b0ec433b1868ce745703c18"
     },
     "packages/astropress/src/deployment-matrix.ts": {
-      "score": 5.681818181818182,
-      "hash": "757f3c6a36601447a669ff435f1ced48b8c8c6ae"
+      "score": 100,
+      "hash": "4267d2e514e00f3f151b5ca51125ae2f875f6b6f"
     },
     "packages/astropress/src/donations.ts": {
       "score": 75.9493670886076,
@@ -718,8 +718,8 @@
       "hash": "28294582c7a12e9da074f69cd544ca366df0be0d"
     },
     "packages/astropress/src/provider-targets.ts": {
-      "score": 3.571428571428571,
-      "hash": "13433b55b3687936c1f8500bbe43b7c0308957b5"
+      "score": 100,
+      "hash": "50417469c2383c78c5c05712e7ee9df2d6f8f9cd"
     },
     "packages/astropress/src/rate-limit-repository-factory.ts": {
       "score": 80,
