@@ -1876,12 +1876,19 @@ function runAstropressMigrations(db: SqliteDatabaseLike, migrationsDir: string):
 
 ### Functions
 
+#### `purgeCdnCacheForResolved`
+```ts
+function purgeCdnCacheForResolved(slug: string, resolved: ResolvedCdnPurge, deps: { readonly fetch?: { (input: URL | RequestInfo, init?: RequestInit | undefined): Promise<Response>; (input: string | Request | URL, init?: RequestInit | undefined): Promise<Response>; } | undefined; }): Promise<void>
+```
+
+Issue a CDN purge for a single content slug against an already-resolved configuration. The split between this function and {@link purgeCdnCache} keeps the imperative I/O branches separate from source resolution — the resolver is unit-tested for every priority/fallback path; this function is unit-tested with mocked fetch for each `kind`. Failures are non-fatal: errors are logged with `console.warn` but never thrown, so a CDN purge failure never blocks a content publish.
+
 #### `purgeCdnCache`
 ```ts
 function purgeCdnCache(slug: string, config: CmsConfig): Promise<void>
 ```
 
-Purges CDN cache for a specific content slug after it is published. Supports three purge strategies: 1. Generic webhook — POST `{ slug, purgedAt }` to `config.cdnPurgeWebhook` 2. Cloudflare Cache API — uses CLOUDFLARE_ZONE_ID + CLOUDFLARE_API_TOKEN env vars 3. Both can be active simultaneously (webhook fires after Cloudflare API call) Failures are non-fatal: errors are logged with `console.warn` but never thrown, so a CDN purge failure never blocks a content publish operation.
+Legacy entry point — purges via env (Cloudflare) and/or static `config.cdnPurgeWebhook`. Hosts that have admin-connected a Cloudflare CDN provider via the Phase 4 connect flow should call the registry-aware path instead (resolve via {@link resolveCdnPurge} with `registry` populated, then {@link purgeCdnCacheForResolved}). Backward-compatible: keeps the single-arg `(slug, config)` shape that `runtime-actions-content.ts` and downstream callers already use, so call-sites can migrate incrementally without a flag-day.
 
 ---
 
