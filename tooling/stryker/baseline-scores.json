@@ -1,5 +1,5 @@
 {
-	"updatedAt": "2026-05-02T23:12:27.887Z",
+	"updatedAt": "2026-05-02T23:28:19.459Z",
 	"scores": {
 		"packages/astropress/src/adapters/adapter-record-helpers.ts": {
 			"score": 66.66666666666666,
@@ -438,7 +438,7 @@
 			"hash": "b9ff9dfa9dcc6565c333a1ed57a9bcbf0004e4aa"
 		},
 		"packages/astropress/src/submission-repository-factory.ts": {
-			"score": 75,
+			"score": 100,
 			"hash": "3d2fb3803b139e138093b6e6eb4e0117db69a513"
 		},
 		"packages/astropress/src/sync/git.ts": {
@@ -502,7 +502,7 @@
 			"hash": "6458c2b4e32038d9e59ca3128928f309dafc1ea5"
 		},
 		"packages/astropress/src/adapters/project.ts": {
-			"score": 70,
+			"score": 95,
 			"hash": "ee7f102138d52c553ada845287cd5972d8dcdf7d"
 		},
 		"packages/astropress/src/adapters/supabase-sqlite.ts": {
