@@ -22,12 +22,12 @@ export interface AdminPreviewContext {
  * Resolve the preview path context from a request URL.
  * Returns the content slug to preview, or null if this is not a preview request.
  */
+const PREVIEW_PREFIX = "/ap-admin/preview/";
+
 export function resolvePreviewPath(url: URL): { slug: string } | null {
-	const match = url.pathname.match(/^\/ap-admin\/preview\/(.+)$/);
-	if (!match) {
-		return null;
-	}
-	return { slug: match[1] };
+	if (!url.pathname.startsWith(PREVIEW_PREFIX)) return null;
+	const slug = url.pathname.slice(PREVIEW_PREFIX.length);
+	return slug ? { slug } : null;
 }
 
 /**

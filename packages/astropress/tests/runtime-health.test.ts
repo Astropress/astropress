@@ -45,6 +45,67 @@ describe("runtime health endpoint", () => {
 		expect(body.status).toBe("ok");
 	});
 
+	it("version field falls back to 'unknown' when __ASTROPRESS_VERSION__ is unset (kills StringLiteral mutant on the fallback)", async () => {
+		// Snapshot and clear the global so the catch/return path is taken.
+		const g = globalThis as unknown as Record<string, unknown>;
+		const prev = g.__ASTROPRESS_VERSION__;
+		g.__ASTROPRESS_VERSION__ = undefined;
+		try {
+			const response = await handleHealthRequest(
+				new Request("https://example.com/ap/health"),
+			);
+			const body = (await response.json()) as Record<string, unknown>;
+			expect(body.version).toBe("unknown");
+		} finally {
+			if (prev !== undefined) g.__ASTROPRESS_VERSION__ = prev;
+		}
+	});
+
+	it("version field reflects __ASTROPRESS_VERSION__ when set to a string (kills typeof / try-block / conditional mutants)", async () => {
+		const g = globalThis as unknown as Record<string, unknown>;
+		const prev = g.__ASTROPRESS_VERSION__;
+		g.__ASTROPRESS_VERSION__ = "1.2.3-test";
+		try {
+			const response = await handleHealthRequest(
+				new Request("https://example.com/ap/health"),
+			);
+			const body = (await response.json()) as Record<string, unknown>;
+			expect(body.version).toBe("1.2.3-test");
+		} finally {
+			if (prev === undefined) g.__ASTROPRESS_VERSION__ = undefined;
+			else g.__ASTROPRESS_VERSION__ = prev;
+		}
+	});
+
+	it("version field is 'unknown' when __ASTROPRESS_VERSION__ is a non-string", async () => {
+		// Kills the `typeof pkg === "string"` mutant where the literal is mutated;
+		// only an actual string is accepted.
+		const g = globalThis as unknown as Record<string, unknown>;
+		const prev = g.__ASTROPRESS_VERSION__;
+		g.__ASTROPRESS_VERSION__ = 12345 as unknown as string;
+		try {
+			const response = await handleHealthRequest(
+				new Request("https://example.com/ap/health"),
+			);
+			const body = (await response.json()) as Record<string, unknown>;
+			expect(body.version).toBe("unknown");
+		} finally {
+			if (prev === undefined) g.__ASTROPRESS_VERSION__ = undefined;
+			else g.__ASTROPRESS_VERSION__ = prev;
+		}
+	});
+
+	it("uptime is plausibly small at process start (kills now+start arithmetic mutant)", async () => {
+		const response = await handleHealthRequest(
+			new Request("https://example.com/ap/health"),
+		);
+		const body = (await response.json()) as Record<string, unknown>;
+		const uptime = body.uptime as number;
+		// Original: floor((now - start) / 1000) — single-digit seconds during test.
+		// Mutant `now + start`: enormous (epoch ms summed), > 1e9 / 1000 = 1e6 seconds.
+		expect(uptime).toBeLessThan(1_000_000);
+	});
+
 	it("returns status degraded and 503 when health check throws", async () => {
 		registerHealthCheck(async () => {
 			throw new Error("DB unreachable");
