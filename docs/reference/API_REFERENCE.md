@@ -1786,6 +1786,8 @@ function reportAstropressError(error: unknown, context: string): Promise<void>
 - `interface GiveLivelyConfig`
 - `interface LiberapayConfig`
 - `interface PledgeCryptoConfig`
+- `type LegacyIntegrationsConfig` — Provider-shaped fields slated for migration into the per-domain integration registry (Phase 3/4). Defined as a `Pick<>` over `CmsConfig` so the source of truth stays the existing interface — the alias only documents which fields are deprecation-track. Hosts that have admin-connected the matching provider can remove the static-config field and the runtime adapter will read the sealed credentials from `connected_integrations` instead.
+- `type CoreCmsConfig` — The non-deprecation-track fields on `CmsConfig`: template/route shape, content seeds, retention/upload limits, plugins, api surface. Defined as `Omit<CmsConfig, keyof LegacyIntegrationsConfig>` so it stays in lockstep with the canonical interface.
 
 ---
 
