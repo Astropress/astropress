@@ -1,8 +1,8 @@
 ---
-import { withLocalStoreFallback } from "@astropress-diy/astropress/admin-store-dispatch.js";
 import AdminLayout from "@astropress-diy/astropress/components/AdminLayout.astro";
 import IntegrationConnect from "@astropress-diy/astropress/components/IntegrationConnect.astro";
 import { getPageT, requiresAccess, resolveAdminLocale } from "astropress";
+import { withLocalStoreFallback } from "../../src/admin-store-dispatch.js";
 
 const guard = await requiresAccess(Astro, "newsletter:send");
 if (guard) return guard;
