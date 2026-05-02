@@ -49,6 +49,14 @@ const bannedPhraseAllowlist = new Set([
 	// names Argon2id / KMAC256 / ML-DSA-65 as the headline algorithms.
 	"packages/astropress/src/integration-secret-envelope.ts",
 	"tooling/docs/phase-2-secret-store-design.md",
+	// Phase 6 OAuth state token + inbound webhook verifier:
+	// references HMAC-SHA-256 / SHA-256 / sha256 only as the chosen
+	// keyed-MAC primitive (state-token signature, GitHub-style
+	// webhook header). Same rule as the envelope module — internal
+	// crypto algorithm name, not a marketing claim about strength.
+	"packages/astropress/src/integrations/oauth/state.ts",
+	"packages/astropress/src/integrations/webhooks/inbound.ts",
+	"packages/astropress/tests/integrations/webhooks/inbound.test.ts",
 ]);
 
 function isAuditableFile(file: string) {
