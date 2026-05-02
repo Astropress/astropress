@@ -7,6 +7,10 @@ import { makeLocals } from "./helpers/make-locals.js";
 let withLocalStoreFallback: typeof import("../src/admin-store-dispatch.js").withLocalStoreFallback;
 // biome-ignore format: single-line typeof import required for esbuild/oxc compatibility
 let withSafeLocalStoreFallback: typeof import("../src/admin-store-dispatch.js").withSafeLocalStoreFallback;
+// biome-ignore format: single-line typeof import required for esbuild/oxc compatibility
+let getAdminDb: typeof import("../src/admin-store-dispatch.js").getAdminDb;
+// biome-ignore format: single-line typeof import required for esbuild/oxc compatibility
+let safeLoadLocalAdminStore: typeof import("../src/admin-store-dispatch.js").safeLoadLocalAdminStore;
 
 const { mockLoadLocalAdminStore } = vi.hoisted(() => ({
 	mockLoadLocalAdminStore: vi.fn(),
@@ -22,9 +26,12 @@ vi.mock("../src/local-runtime-modules.js", () => ({
 
 beforeEach(async () => {
 	vi.resetModules();
-	({ withLocalStoreFallback, withSafeLocalStoreFallback } = await import(
-		"../src/admin-store-dispatch.js"
-	));
+	({
+		withLocalStoreFallback,
+		withSafeLocalStoreFallback,
+		getAdminDb,
+		safeLoadLocalAdminStore,
+	} = await import("../src/admin-store-dispatch.js"));
 	mockLoadLocalAdminStore.mockReset();
 });
 
@@ -85,5 +92,56 @@ describe("withSafeLocalStoreFallback", () => {
 		expect(result).toBe("local-safe-result");
 		expect(onLocal).toHaveBeenCalledWith(mockStore);
 		expect(onD1).not.toHaveBeenCalled();
+	});
+
+	it("calls onLocal with null when loadLocalAdminStore throws (catch path)", async () => {
+		mockLoadLocalAdminStore.mockRejectedValueOnce(new Error("module missing"));
+		const onD1 = vi.fn();
+		const onLocal = vi.fn().mockResolvedValue("static-fallback");
+
+		const result = await withSafeLocalStoreFallback(null, onD1, onLocal);
+
+		expect(result).toBe("static-fallback");
+		expect(onLocal).toHaveBeenCalledWith(null);
+		expect(onD1).not.toHaveBeenCalled();
+	});
+});
+
+describe("safeLoadLocalAdminStore", () => {
+	it("returns the loaded module on success", async () => {
+		const mockStore = { listContent: vi.fn() };
+		mockLoadLocalAdminStore.mockResolvedValueOnce(mockStore);
+		expect(await safeLoadLocalAdminStore()).toBe(mockStore);
+	});
+
+	it("returns null when the loader throws (catch path)", async () => {
+		mockLoadLocalAdminStore.mockRejectedValueOnce(new Error("missing"));
+		expect(await safeLoadLocalAdminStore()).toBeNull();
+	});
+});
+
+describe("getAdminDb", () => {
+	it("returns the D1 binding when present in locals.runtime.env.DB", () => {
+		const db = makeDb();
+		const locals = makeLocals(db);
+		const result = getAdminDb(locals);
+		expect(result).toBeDefined();
+		// Same identity as the binding the helper installed.
+		expect(result).toBe(locals.runtime?.env?.DB);
+	});
+
+	it("returns undefined when locals is null", () => {
+		expect(getAdminDb(null)).toBeUndefined();
+	});
+
+	it("returns undefined when locals is undefined (no arg)", () => {
+		expect(getAdminDb()).toBeUndefined();
+	});
+
+	it("returns undefined when locals.runtime.env has no DB binding", () => {
+		const noDbLocals = {
+			runtime: { env: {} },
+		} as unknown as App.Locals;
+		expect(getAdminDb(noDbLocals)).toBeUndefined();
 	});
 });
