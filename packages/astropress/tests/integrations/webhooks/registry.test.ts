@@ -34,9 +34,18 @@ describe("registerInboundWebhookProvider", () => {
 
 	it("rejects duplicate ids with DUPLICATE_PROVIDER", () => {
 		registerInboundWebhookProvider({ ...GITHUB });
-		expect(() => registerInboundWebhookProvider({ ...GITHUB })).toThrow(
-			InboundWebhookRegistryError,
-		);
+		let caught: unknown;
+		try {
+			registerInboundWebhookProvider({ ...GITHUB });
+		} catch (e) {
+			caught = e;
+		}
+		expect(caught).toBeInstanceOf(InboundWebhookRegistryError);
+		const err = caught as InboundWebhookRegistryError;
+		expect(err.name).toBe("InboundWebhookRegistryError");
+		expect(err.code).toBe("DUPLICATE_PROVIDER");
+		expect(err.message).toContain("github");
+		expect(err.message).toContain("already registered");
 	});
 
 	it("listInboundWebhookProviders returns all registered providers", () => {

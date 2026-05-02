@@ -45,9 +45,19 @@ describe("registerOAuthProvider", () => {
 
 	it("rejects duplicate (domain, id) pairs with DUPLICATE_PROVIDER", () => {
 		registerOAuthProvider({ ...GITHUB });
-		expect(() => registerOAuthProvider({ ...GITHUB })).toThrow(
-			OAuthRegistryError,
-		);
+		let caught: unknown;
+		try {
+			registerOAuthProvider({ ...GITHUB });
+		} catch (e) {
+			caught = e;
+		}
+		expect(caught).toBeInstanceOf(OAuthRegistryError);
+		const err = caught as OAuthRegistryError;
+		expect(err.name).toBe("OAuthRegistryError");
+		expect(err.code).toBe("DUPLICATE_PROVIDER");
+		expect(err.message).toContain("github");
+		expect(err.message).toContain("deploy-hooks");
+		expect(err.message).toContain("already registered");
 	});
 
 	it("allows the same providerId across different domains", () => {

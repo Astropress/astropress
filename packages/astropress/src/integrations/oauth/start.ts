@@ -34,8 +34,10 @@ export interface BuildAuthorizeRedirectResult {
 }
 
 export function buildRedirectUri(origin: string, redirectPath: string): string {
+	// charCodeAt at a negative index returns NaN (never === 47), so the
+	// loop self-terminates at end === 0 without an explicit guard.
 	let end = origin.length;
-	while (end > 0 && origin.charCodeAt(end - 1) === 47 /* '/' */) end -= 1;
+	while (origin.charCodeAt(end - 1) === 47 /* '/' */) end -= 1;
 	const trimmedOrigin = origin.slice(0, end);
 	const path = redirectPath.startsWith("/") ? redirectPath : `/${redirectPath}`;
 	return `${trimmedOrigin}${path}`;

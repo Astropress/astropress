@@ -49,6 +49,16 @@ describe("buildRedirectUri", () => {
 			buildRedirectUri("https://x.example", "/ap-admin/oauth/callback/github"),
 		).toBe("https://x.example/ap-admin/oauth/callback/github");
 	});
+
+	it("returns just the prefixed path when origin is empty", () => {
+		// kills end > 0 → end >= 0 / true mutants: distinguishes the
+		// terminating end===0 case from the always-loop variants.
+		expect(buildRedirectUri("", "/cb")).toBe("/cb");
+	});
+
+	it("returns just the prefixed path when origin is only slashes", () => {
+		expect(buildRedirectUri("///", "/cb")).toBe("/cb");
+	});
 });
 
 describe("buildAuthorizeRedirect", () => {

@@ -43,6 +43,15 @@ function withRepo(repo: FakeRepo | null) {
 	);
 }
 
+function withD1Fallback() {
+	// Stub the dispatch helper to take the D1 branch — the action
+	// passes a typed-error fallback as onD1; assert it's invoked and
+	// its return value is propagated.
+	vi.spyOn(adminStoreDispatch, "withLocalStoreFallback").mockImplementation(
+		async (_locals, onD1, _onLocal) => onD1({} as never),
+	);
+}
+
 const FIELDS_SCHEMA = z.object({ apiKey: z.string().min(1) });
 
 beforeEach(() => {
@@ -75,6 +84,20 @@ describe("connectIntegrationAction", () => {
 
 	it("returns INTEGRATIONS_NOT_AVAILABLE when the local admin store has no integrations repo", async () => {
 		withRepo(null);
+		const r = await connectIntegrationAction(null, {
+			domain: "newsletter",
+			providerId: "fake-listmonk",
+			fields: { apiKey: "k" },
+		});
+		expect(r).toEqual({
+			ok: false,
+			status: "error",
+			code: "INTEGRATIONS_NOT_AVAILABLE",
+		});
+	});
+
+	it("returns INTEGRATIONS_NOT_AVAILABLE on the D1 path (no local store)", async () => {
+		withD1Fallback();
 		const r = await connectIntegrationAction(null, {
 			domain: "newsletter",
 			providerId: "fake-listmonk",
@@ -131,6 +154,21 @@ describe("reverifyIntegrationAction", () => {
 		});
 	});
 
+	it("returns INTEGRATIONS_NOT_AVAILABLE on the D1 path (no local store)", async () => {
+		withD1Fallback();
+		const r = await reverifyIntegrationAction(
+			null,
+			"newsletter",
+			"fake-listmonk",
+			{ apiKey: "k" },
+		);
+		expect(r).toEqual({
+			ok: false,
+			status: "error",
+			code: "INTEGRATIONS_NOT_AVAILABLE",
+		});
+	});
+
 	it("calls repo.updateStatus with status='connected' when verify passes (no provider.verify => trivially ok)", async () => {
 		const repo = makeRepo();
 		withRepo(repo);
@@ -159,6 +197,16 @@ describe("disconnectIntegrationAction", () => {
 			ok: false,
 			code: "INTEGRATIONS_NOT_AVAILABLE",
 		});
+	});
+
+	it("returns INTEGRATIONS_NOT_AVAILABLE on the D1 path (no local store)", async () => {
+		withD1Fallback();
+		const r = await disconnectIntegrationAction(
+			null,
+			"newsletter",
+			"fake-listmonk",
+		);
+		expect(r).toEqual({ ok: false, code: "INTEGRATIONS_NOT_AVAILABLE" });
 	});
 
 	it("calls repo.disconnect with the (domain, providerId) pair", async () => {

@@ -54,8 +54,10 @@ interface RawTokenResponse {
 }
 
 function parseTokenResponse(raw: unknown): OAuthTokenSet | null {
-	if (typeof raw !== "object" || raw === null) return null;
-	const r = raw as RawTokenResponse;
+	// `(raw ?? {})` handles null; for primitives, accessing `.access_token`
+	// returns undefined which fails the string check below. No need for
+	// an explicit `typeof !== "object"` guard.
+	const r = (raw ?? {}) as RawTokenResponse;
 	if (typeof r.access_token !== "string" || r.access_token.length === 0) {
 		return null;
 	}
@@ -63,14 +65,17 @@ function parseTokenResponse(raw: unknown): OAuthTokenSet | null {
 		typeof r.token_type === "string" && r.token_type.length > 0
 			? r.token_type
 			: "bearer";
+	// Number.isFinite is strict — only true for actual finite numbers,
+	// so a redundant `typeof === "number"` would just create equivalent
+	// mutants without strengthening the guard.
 	const tokens: OAuthTokenSet = {
 		accessToken: r.access_token,
 		tokenType,
 		...(typeof r.refresh_token === "string" && r.refresh_token.length > 0
 			? { refreshToken: r.refresh_token }
 			: {}),
-		...(typeof r.expires_in === "number" && Number.isFinite(r.expires_in)
-			? { expiresIn: r.expires_in }
+		...(Number.isFinite(r.expires_in)
+			? { expiresIn: r.expires_in as number }
 			: {}),
 		...(typeof r.scope === "string" ? { scope: r.scope } : {}),
 	};
@@ -104,13 +109,11 @@ export async function exchangeCodeForToken(
 	if (!response.ok) {
 		return { ok: false, code: "TOKEN_HTTP_ERROR", status: response.status };
 	}
-	let parsed: unknown;
 	try {
-		parsed = await response.json();
+		const tokens = parseTokenResponse(await response.json());
+		if (!tokens) return { ok: false, code: "TOKEN_MALFORMED" };
+		return { ok: true, tokens };
 	} catch {
 		return { ok: false, code: "TOKEN_MALFORMED" };
 	}
-	const tokens = parseTokenResponse(parsed);
-	if (!tokens) return { ok: false, code: "TOKEN_MALFORMED" };
-	return { ok: true, tokens };
 }
