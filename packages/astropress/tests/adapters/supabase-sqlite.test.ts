@@ -55,6 +55,20 @@ describe("createAstropressSupabaseSqliteAdapter", () => {
 			dbPath: join(workspace, "supabase-admin.sqlite"),
 		});
 		const user = await adapter.auth.signIn("admin@example.com", "password");
-		expect(user).toBeDefined();
+		// The sqlite-backed signIn returns an admin user envelope shaped
+		// { id, email, isAdmin }. The hosted-API path either throws at
+		// config-read time (no SUPABASE_URL) or resolves over fetch — either
+		// way it cannot produce this exact local-sqlite shape with the seed
+		// admin's email and admin role flag.
+		expect(user).toMatchObject({
+			email: "admin@example.com",
+			isAdmin: true,
+		});
+		expect(typeof user?.id).toBe("string");
+		// Distinguishes the sqlite-backed signIn from the in-memory fallback:
+		// sqlite returns a generated session id, while the default in-memory
+		// auth store always returns the seed user's literal id "admin-1".
+		// This kills the ObjectLiteral mutation that drops backingAdapter.
+		expect(user?.id).not.toBe("admin-1");
 	});
 });

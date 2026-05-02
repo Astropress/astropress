@@ -14,15 +14,10 @@ export interface AdminLocalePair {
 	translationState?: string;
 }
 
-function normalizeRoute(route: string) {
-	if (!route) {
-		return "/";
-	}
-
-	if (route === "/") return "/";
-	let end = route.length;
-	while (end > 0 && route[end - 1] === "/") end--;
-	return end > 0 ? route.slice(0, end) : "/";
+export function normalizeRoute(route: string) {
+	let r = route;
+	while (r.endsWith("/")) r = r.slice(0, -1);
+	return r === "" ? "/" : r;
 }
 
 export function getAdminLocalePair(route: string): AdminLocalePair | null {

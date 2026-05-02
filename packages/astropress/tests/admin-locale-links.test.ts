@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from "vitest";
 
-import { getAdminLocalePair } from "../src/admin-locale-links";
+import { getAdminLocalePair, normalizeRoute } from "../src/admin-locale-links";
 import { registerCms } from "../src/config";
 
 const CMS_CONFIG_KEY = Symbol.for("astropress.cms-config");
@@ -96,5 +96,47 @@ describe("getAdminLocalePair", () => {
 		expect(getAdminLocalePair("/es/contacto")?.translationState).toBe(
 			"in_progress",
 		);
+	});
+});
+
+describe("normalizeRoute", () => {
+	it("returns '/' for empty input", () => {
+		expect(normalizeRoute("")).toBe("/");
+	});
+
+	it("returns '/' for undefined-coerced falsy input", () => {
+		// Pins the !route branch — a mutant that drops it would try to
+		// regex-replace on "" and return "" instead.
+		expect(normalizeRoute("")).toBe("/");
+	});
+
+	it("returns '/' for a single slash", () => {
+		expect(normalizeRoute("/")).toBe("/");
+	});
+
+	it("returns '/' for any all-slashes string", () => {
+		// Pins the `trimmed === "" ? "/" : trimmed` ternary — without the
+		// fallback the function would return "" for these inputs.
+		expect(normalizeRoute("//")).toBe("/");
+		expect(normalizeRoute("///")).toBe("/");
+		expect(normalizeRoute("////")).toBe("/");
+	});
+
+	it("strips a single trailing slash", () => {
+		expect(normalizeRoute("/about/")).toBe("/about");
+	});
+
+	it("strips multiple trailing slashes", () => {
+		expect(normalizeRoute("/about///")).toBe("/about");
+	});
+
+	it("returns the route unchanged when there is no trailing slash", () => {
+		expect(normalizeRoute("/about")).toBe("/about");
+		expect(normalizeRoute("/es/sobre")).toBe("/es/sobre");
+	});
+
+	it("does not strip non-trailing slashes", () => {
+		expect(normalizeRoute("/a/b/c")).toBe("/a/b/c");
+		expect(normalizeRoute("/a//b/")).toBe("/a//b");
 	});
 });
