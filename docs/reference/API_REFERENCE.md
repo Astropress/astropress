@@ -61,6 +61,41 @@ function createRequestProviderCache(args: GetConnectedProviderArgs): () => Promi
 function listRegisteredProvidersForDomain(domain: IntegrationDomain): readonly { id: string; label: string; }[]
 ```
 
+#### `registerListmonk`
+```ts
+function registerListmonk(): RegisteredProvider<{ baseUrl: string; apiUser: string; apiKey: string; }>
+```
+
+#### `verifyListmonk`
+```ts
+function verifyListmonk(fields: { baseUrl: string; apiUser: string; apiKey: string; }, ctx: { signal: AbortSignal; }, deps: ListmonkVerifyDeps): Promise<void>
+```
+
+#### `registerPlausible`
+```ts
+function registerPlausible(): RegisteredProvider<{ host: string; siteId: string; apiKey: string; }>
+```
+
+#### `verifyPlausible`
+```ts
+function verifyPlausible(fields: { host: string; siteId: string; apiKey: string; }, ctx: { signal: AbortSignal; }, deps: PlausibleVerifyDeps): Promise<void>
+```
+
+#### `registerCloudflareCdn`
+```ts
+function registerCloudflareCdn(): RegisteredProvider<{ apiToken: string; zoneId: string; }>
+```
+
+#### `verifyCloudflareCdn`
+```ts
+function verifyCloudflareCdn(fields: { apiToken: string; zoneId: string; }, ctx: { signal: AbortSignal; }, deps: CloudflareCdnVerifyDeps): Promise<void>
+```
+
+#### `classifyCloudflareStatus`
+```ts
+function classifyCloudflareStatus(res: Response): IntegrationErrorCode | null
+```
+
 #### `createIntegrationsRepository`
 ```ts
 function createIntegrationsRepository(options: IntegrationsRepositoryOptions): IntegrationsRepository
@@ -1340,6 +1375,9 @@ function runAstropressDbMigrationsForCli(input: AstropressDbMigrateInput): Astro
 - `interface ConnectIntegrationParams`
 - `type ConnectIntegrationResult`
 - `interface ConnectedProvider`
+- `type ListmonkFields`
+- `type PlausibleFields`
+- `type CloudflareCdnFields`
 - `interface IntegrationsRepository`
 - `interface IntegrationStatusRow`
 - `type IntegrationStatusValue`
@@ -1556,6 +1594,12 @@ function runAstropressDbMigrationsForCli(input: AstropressDbMigrateInput): Astro
 - `const registerMonitoring: Register`
 - `const registerForms: Register`
 - `const registerDeployHooks: Register`
+- `const LISTMONK_FIELDS: ZodObject<{ baseUrl: ZodString; apiUser: ZodString; apiKey: ZodString; }, $strip>`
+- `ListmonkVerifyError`
+- `const PLAUSIBLE_FIELDS: ZodObject<{ host: ZodString; siteId: ZodString; apiKey: ZodString; }, $strip>`
+- `PlausibleVerifyError`
+- `const CLOUDFLARE_CDN_FIELDS: ZodObject<{ apiToken: ZodString; zoneId: ZodString; }, $strip>`
+- `CloudflareCdnVerifyError`
 - `const ASTROPRESS_ADMIN_APP_NAME: "Astropress"`
 - `const ASTROPRESS_ADMIN_PRODUCT_NAME: "Astropress Admin"`
 - `ADMIN_STUB_PAGES`

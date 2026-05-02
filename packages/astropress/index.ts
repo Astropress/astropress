@@ -47,6 +47,33 @@ export {
 } from "./src/integrations/runtime.js";
 export type { ConnectedProvider } from "./src/integrations/runtime";
 
+// Phase 4 push-button providers — hosts call these once at boot to
+// register the corresponding registry entry. Each provider exports
+// its Zod schema and verify() helper so admin pages can drive a
+// connect form against the same shape the registry validates.
+export {
+	registerListmonk,
+	verifyListmonk,
+	LISTMONK_FIELDS,
+	ListmonkVerifyError,
+} from "./src/integrations/providers/listmonk.js";
+export type { ListmonkFields } from "./src/integrations/providers/listmonk";
+export {
+	registerPlausible,
+	verifyPlausible,
+	PLAUSIBLE_FIELDS,
+	PlausibleVerifyError,
+} from "./src/integrations/providers/plausible.js";
+export type { PlausibleFields } from "./src/integrations/providers/plausible";
+export {
+	registerCloudflareCdn,
+	verifyCloudflareCdn,
+	classifyCloudflareStatus,
+	CLOUDFLARE_CDN_FIELDS,
+	CloudflareCdnVerifyError,
+} from "./src/integrations/providers/cloudflare-cdn.js";
+export type { CloudflareCdnFields } from "./src/integrations/providers/cloudflare-cdn";
+
 // Phase 2 secret-store repository (status surface + sealed-secret
 // surface). Hosts that need to read connected_integrations from
 // outside the bundled admin actions construct the repo directly.
