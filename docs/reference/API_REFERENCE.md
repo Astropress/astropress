@@ -1885,7 +1885,7 @@ Issue a CDN purge for a single content slug against an already-resolved configur
 
 #### `purgeCdnCache`
 ```ts
-function purgeCdnCache(slug: string, config: CmsConfig): Promise<void>
+function purgeCdnCache(slug: string, config: CmsConfig, registryFields: { readonly apiToken: string; readonly zoneId: string; } | null | undefined): Promise<void>
 ```
 
 Legacy entry point — purges via env (Cloudflare) and/or static `config.cdnPurgeWebhook`. Hosts that have admin-connected a Cloudflare CDN provider via the Phase 4 connect flow should call the registry-aware path instead (resolve via {@link resolveCdnPurge} with `registry` populated, then {@link purgeCdnCacheForResolved}). Backward-compatible: keeps the single-arg `(slug, config)` shape that `runtime-actions-content.ts` and downstream callers already use, so call-sites can migrate incrementally without a flag-day.

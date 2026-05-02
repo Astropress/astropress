@@ -82,9 +82,14 @@ export async function purgeCdnCacheForResolved(
 export async function purgeCdnCache(
 	slug: string,
 	config: CmsConfig,
+	registryFields?: {
+		readonly apiToken: string;
+		readonly zoneId: string;
+	} | null,
 ): Promise<void> {
 	const env = typeof process !== "undefined" ? process.env : undefined;
 	const resolved = resolveCdnPurge({
+		registry: registryFields,
 		env: env
 			? {
 					CLOUDFLARE_API_TOKEN: env.CLOUDFLARE_API_TOKEN,
@@ -93,20 +98,5 @@ export async function purgeCdnCache(
 			: undefined,
 		config: { cdnPurgeWebhook: config.cdnPurgeWebhook },
 	});
-	if (resolved.kind === "none") return;
-	// The legacy mode also fires both Cloudflare AND webhook in
-	// parallel when both are present — preserve that for hosts that
-	// rely on the prior dual-fire behaviour.
-	const tasks: Promise<void>[] = [];
-	tasks.push(purgeCdnCacheForResolved(slug, resolved));
-	if (resolved.kind === "cloudflare" && config.cdnPurgeWebhook) {
-		tasks.push(
-			purgeCdnCacheForResolved(slug, {
-				kind: "webhook",
-				url: config.cdnPurgeWebhook,
-				source: "config",
-			}),
-		);
-	}
-	await Promise.all(tasks);
+	await purgeCdnCacheForResolved(slug, resolved);
 }
