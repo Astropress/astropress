@@ -1,5 +1,5 @@
 {
-	"updatedAt": "2026-05-02T22:53:45.993Z",
+	"updatedAt": "2026-05-02T22:58:59.382Z",
 	"scores": {
 		"packages/astropress/src/adapters/adapter-record-helpers.ts": {
 			"score": 66.66666666666666,
@@ -622,7 +622,7 @@
 			"hash": "30d3ead665c49bae5296e5a035945d076108e69b"
 		},
 		"packages/astropress/src/deploy/custom.ts": {
-			"score": 85.71428571428571,
+			"score": 100,
 			"hash": "5a9b7ddc3f3313d0e250a6d7900ab30ec5c1d07c"
 		},
 		"packages/astropress/src/deploy/github-pages.ts": {
@@ -630,8 +630,8 @@
 			"hash": "430811b88b56d8babe98171451cea0c6e6bff654"
 		},
 		"packages/astropress/src/deploy/gitlab-pages.ts": {
-			"score": 87.5,
-			"hash": "8d440d05d2e8fe9989dcf1de3668140c4944db51"
+			"score": 100,
+			"hash": "ce4b71350166b72372e3a05c720081c813ec763a"
 		},
 		"packages/astropress/src/deploy/netlify.ts": {
 			"score": 100,
@@ -642,7 +642,7 @@
 			"hash": "55afa0e44ca4e805f5cd7ee403f96ab5e3f2bc0c"
 		},
 		"packages/astropress/src/deploy/vercel.ts": {
-			"score": 87.5,
+			"score": 100,
 			"hash": "2d817c7065277e573b0ec433b1868ce745703c18"
 		},
 		"packages/astropress/src/deployment-matrix.ts": {
