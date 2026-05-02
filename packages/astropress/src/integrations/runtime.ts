@@ -49,9 +49,8 @@ export async function getConnectedProvider<
 	args: GetConnectedProviderArgs,
 ): Promise<ConnectedProvider<TFields> | undefined> {
 	const statuses = args.repo.listStatuses();
-	const active = statuses.find(
-		(s) => s.domain === args.domain && s.status === "connected",
-	);
+	const inDomain = statuses.filter((s) => s.domain === args.domain);
+	const active = inDomain.find((s) => s.status === "connected");
 	if (!active) return undefined;
 	const provider = getProvider<TFields>(args.domain, active.provider);
 	if (!provider) return undefined;
@@ -60,7 +59,6 @@ export async function getConnectedProvider<
 		active.provider,
 		args.rootSecrets,
 	);
-	if (!fields) return undefined;
 	const shape = provider.runtimeShape ?? provider.fields;
 	const parsed = shape.safeParse(fields);
 	if (!parsed.success) return undefined;

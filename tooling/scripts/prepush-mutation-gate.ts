@@ -251,7 +251,8 @@ function changedSourceFiles(): string[] {
 			);
 			return out
 				.split("\n")
-				.filter((line) => line.endsWith(".ts") && !line.endsWith(".d.ts"));
+				.filter((line) => line.endsWith(".ts") && !line.endsWith(".d.ts"))
+				.filter((line) => existsSync(line));
 		} catch {
 			// Ref missing — try the next.
 		}

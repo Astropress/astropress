@@ -74,6 +74,109 @@ describe("getConnectedProvider", () => {
 		expect(result).toBeUndefined();
 	});
 
+	it("returns undefined when only a different domain has a connected row", async () => {
+		// Forces the .filter(s.domain === args.domain) predicate to do
+		// real work — without it, a connected newsletter row would mask
+		// our analytics domain's lack of connection.
+		registerProvider("analytics", {
+			id: "plausible",
+			label: "Plausible",
+			fields,
+		});
+		await repo.connect(
+			{
+				domain: "newsletter",
+				provider: "listmonk",
+				configJson: "{}",
+				secretFields: { apiKey: "k" },
+				now: NOW,
+			},
+			ROOT,
+		);
+		const result = await getConnectedProvider({
+			domain: "analytics",
+			repo,
+			rootSecrets: { current: ROOT },
+		});
+		expect(result).toBeUndefined();
+	});
+
+	it("picks the connected row from the requested domain when multiple domains are connected", async () => {
+		registerProvider("analytics", {
+			id: "plausible",
+			label: "Plausible",
+			fields,
+		});
+		await repo.connect(
+			{
+				domain: "newsletter",
+				provider: "listmonk",
+				configJson: "{}",
+				secretFields: { apiKey: "newsletter-key" },
+				now: NOW,
+			},
+			ROOT,
+		);
+		await repo.connect(
+			{
+				domain: "analytics",
+				provider: "plausible",
+				configJson: "{}",
+				secretFields: { apiKey: "analytics-key" },
+				now: NOW,
+			},
+			ROOT,
+		);
+		const result = await getConnectedProvider({
+			domain: "analytics",
+			repo,
+			rootSecrets: { current: ROOT },
+		});
+		expect(result?.providerId).toBe("plausible");
+		expect(result?.fields.apiKey).toBe("analytics-key");
+	});
+
+	it("ignores connected rows from other domains when querying an alphabetically-later domain", async () => {
+		// listStatuses returns rows ORDER BY domain ASC, so without the
+		// .filter(s.domain === args.domain) call the .find(connected)
+		// would latch onto the analytics row first and try to look up
+		// "plausible" under "newsletter" — which is not registered there
+		// and would return undefined. The filter must do real work for
+		// this assertion to pass.
+		registerProvider("analytics", {
+			id: "plausible",
+			label: "Plausible",
+			fields,
+		});
+		await repo.connect(
+			{
+				domain: "analytics",
+				provider: "plausible",
+				configJson: "{}",
+				secretFields: { apiKey: "analytics-key" },
+				now: NOW,
+			},
+			ROOT,
+		);
+		await repo.connect(
+			{
+				domain: "newsletter",
+				provider: "listmonk",
+				configJson: "{}",
+				secretFields: { apiKey: "newsletter-key" },
+				now: NOW,
+			},
+			ROOT,
+		);
+		const result = await getConnectedProvider({
+			domain: "newsletter",
+			repo,
+			rootSecrets: { current: ROOT },
+		});
+		expect(result?.providerId).toBe("listmonk");
+		expect(result?.fields.apiKey).toBe("newsletter-key");
+	});
+
 	it("returns undefined when status is 'error'", async () => {
 		await repo.connect(
 			{
@@ -117,6 +220,31 @@ describe("getConnectedProvider", () => {
 			status: "paused",
 			lastCheckAt: NOW,
 		});
+		const result = await getConnectedProvider({
+			domain: "newsletter",
+			repo,
+			rootSecrets: { current: ROOT },
+		});
+		expect(result).toBeUndefined();
+	});
+
+	it("returns undefined when findSecret returns undefined (status row exists but secret was deleted)", async () => {
+		await repo.connect(
+			{
+				domain: "newsletter",
+				provider: "listmonk",
+				configJson: "{}",
+				secretFields: { apiKey: "k" },
+				now: NOW,
+			},
+			ROOT,
+		);
+		// Wipe the secret row directly while leaving the status row in
+		// place; getConnectedProvider must not return a half-connected
+		// view to the runtime.
+		db.prepare(
+			"DELETE FROM integration_secrets WHERE domain=? AND provider=?",
+		).run("newsletter", "listmonk");
 		const result = await getConnectedProvider({
 			domain: "newsletter",
 			repo,

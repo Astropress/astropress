@@ -47,55 +47,6 @@ export {
 } from "./src/integrations/runtime.js";
 export type { ConnectedProvider } from "./src/integrations/runtime";
 
-// Phase 4 push-button providers — hosts opt in by calling each
-// `register*Provider()` once at boot. Without registration, the
-// provider is invisible to the admin connect UI.
-export {
-	registerListmonkProvider,
-	verifyListmonkConnection,
-	buildListmonkAuthHeader,
-	listmonkFieldsSchema,
-} from "./src/integrations/providers/listmonk.js";
-export type { ListmonkFields } from "./src/integrations/providers/listmonk";
-export {
-	registerPlausibleProvider,
-	verifyPlausibleConnection,
-	plausibleFieldsSchema,
-} from "./src/integrations/providers/plausible.js";
-export type { PlausibleFields } from "./src/integrations/providers/plausible";
-export {
-	registerCloudflareCdnProvider,
-	verifyCloudflareCdnConnection,
-	cloudflareCdnFieldsSchema,
-} from "./src/integrations/providers/cloudflare-cdn.js";
-export type { CloudflareCdnFields } from "./src/integrations/providers/cloudflare-cdn";
-export {
-	registerGithubDeployProvider,
-	verifyGithubDeployConnection,
-	githubDeployFieldsSchema,
-} from "./src/integrations/providers/github-deploy.js";
-export type { GithubDeployFields } from "./src/integrations/providers/github-deploy";
-
-// Phase 6 OAuth state-token issuance + inbound webhook signature
-// verifier. Pure library code; routes/UI deferred.
-export {
-	issueOAuthState,
-	verifyOAuthState,
-} from "./src/integrations/oauth/state.js";
-export type {
-	OAuthStateContext,
-	IssuedState,
-	VerifyStateResult,
-} from "./src/integrations/oauth/state";
-export {
-	verifyInboundWebhookSignature,
-	verifyGithubWebhookSignature,
-} from "./src/integrations/webhooks/inbound.js";
-export type {
-	InboundWebhookAlgorithm,
-	VerifyInboundWebhookArgs,
-} from "./src/integrations/webhooks/inbound";
-
 // Phase 2 secret-store repository (status surface + sealed-secret
 // surface). Hosts that need to read connected_integrations from
 // outside the bundled admin actions construct the repo directly.
