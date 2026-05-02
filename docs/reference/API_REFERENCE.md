@@ -3,7 +3,7 @@
 Auto-generated from TypeScript source via the TypeScript compiler API.
 Run `bun run docs:api` to regenerate.
 
-Generated: 2026-05-01
+Generated: 2026-05-02
 
 ---
 
@@ -14,6 +14,121 @@ Generated: 2026-05-01
 #### `createAstropressPublicSiteIntegration`
 ```ts
 function createAstropressPublicSiteIntegration(options: AstropressPublicSiteOptions): AstroIntegration
+```
+
+#### `registerProvider`
+```ts
+function registerProvider<TFields>(domain: IntegrationDomain, definition: ProviderDefinition<TFields>): RegisteredProvider<TFields>
+```
+
+#### `getProvider`
+```ts
+function getProvider<TFields>(domain: IntegrationDomain, providerId: string): RegisteredProvider<TFields> | undefined
+```
+
+#### `listProviders`
+```ts
+function listProviders(domain: IntegrationDomain): readonly RegisteredProvider<Record<string, string>>[]
+```
+
+#### `connectIntegration`
+```ts
+function connectIntegration<TFields>(repo: IntegrationsRepository, params: ConnectIntegrationParams<TFields>): Promise<ConnectIntegrationResult>
+```
+
+#### `reverifyIntegration`
+```ts
+function reverifyIntegration<TFields>(repo: IntegrationsRepository, provider: RegisteredProvider<TFields>, fields: TFields, now: string, timeoutMs: number): Promise<ConnectIntegrationResult>
+```
+
+#### `runProviderVerify`
+```ts
+function runProviderVerify<TFields>(provider: RegisteredProvider<TFields>, fields: TFields, timeoutMs: number): Promise<{ ok: true; } | { ok: false; code: IntegrationErrorCode; }>
+```
+
+#### `getConnectedProvider`
+```ts
+function getConnectedProvider<TFields>(args: GetConnectedProviderArgs): Promise<ConnectedProvider<TFields> | undefined>
+```
+
+#### `createRequestProviderCache`
+```ts
+function createRequestProviderCache(args: GetConnectedProviderArgs): () => Promise<ConnectedProvider<Record<string, string>> | undefined>
+```
+
+#### `listRegisteredProvidersForDomain`
+```ts
+function listRegisteredProvidersForDomain(domain: IntegrationDomain): readonly { id: string; label: string; }[]
+```
+
+#### `registerListmonkProvider`
+```ts
+function registerListmonkProvider(deps: ListmonkVerifyDeps): RegisteredProvider<{ baseUrl: string; apiUser: string; apiKey: string; }>
+```
+
+#### `verifyListmonkConnection`
+```ts
+function verifyListmonkConnection(fields: { baseUrl: string; apiUser: string; apiKey: string; }, signal: AbortSignal, deps: ListmonkVerifyDeps): Promise<void>
+```
+
+#### `buildListmonkAuthHeader`
+```ts
+function buildListmonkAuthHeader(fields: Pick<{ baseUrl: string; apiUser: string; apiKey: string; }, "apiUser" | "apiKey">): string
+```
+
+#### `registerPlausibleProvider`
+```ts
+function registerPlausibleProvider(deps: PlausibleVerifyDeps): RegisteredProvider<{ apiKey: string; siteId: string; host: string; }>
+```
+
+#### `verifyPlausibleConnection`
+```ts
+function verifyPlausibleConnection(fields: { apiKey: string; siteId: string; host: string; }, signal: AbortSignal, deps: PlausibleVerifyDeps): Promise<void>
+```
+
+#### `registerCloudflareCdnProvider`
+```ts
+function registerCloudflareCdnProvider(deps: CloudflareCdnVerifyDeps): RegisteredProvider<{ apiToken: string; zoneId: string; }>
+```
+
+#### `verifyCloudflareCdnConnection`
+```ts
+function verifyCloudflareCdnConnection(fields: { apiToken: string; zoneId: string; }, signal: AbortSignal, deps: CloudflareCdnVerifyDeps): Promise<void>
+```
+
+#### `registerGithubDeployProvider`
+```ts
+function registerGithubDeployProvider(deps: GithubVerifyDeps): RegisteredProvider<{ accessToken: string; refreshToken?: string | undefined; scope?: string | undefined; tokenType?: string | undefined; }>
+```
+
+#### `verifyGithubDeployConnection`
+```ts
+function verifyGithubDeployConnection(fields: { accessToken: string; refreshToken?: string | undefined; scope?: string | undefined; tokenType?: string | undefined; }, signal: AbortSignal, deps: GithubVerifyDeps): Promise<void>
+```
+
+#### `issueOAuthState`
+```ts
+function issueOAuthState(args: IssueStateArgs): Promise<IssuedState>
+```
+
+#### `verifyOAuthState`
+```ts
+function verifyOAuthState(args: VerifyStateArgs): Promise<VerifyStateResult>
+```
+
+#### `verifyInboundWebhookSignature`
+```ts
+function verifyInboundWebhookSignature(args: VerifyInboundWebhookArgs): Promise<boolean>
+```
+
+#### `verifyGithubWebhookSignature`
+```ts
+function verifyGithubWebhookSignature(args: { header: string; body: Uint8Array<ArrayBufferLike>; secret: string; }): Promise<boolean>
+```
+
+#### `createIntegrationsRepository`
+```ts
+function createIntegrationsRepository(options: IntegrationsRepositoryOptions): IntegrationsRepository
 ```
 
 #### `registerCms`
@@ -1284,6 +1399,25 @@ function runAstropressDbMigrationsForCli(input: AstropressDbMigrateInput): Astro
 ### Types & Interfaces
 
 - `interface AstropressPublicSiteOptions`
+- `type IntegrationDomain`
+- `interface ProviderDefinition`
+- `interface RegisteredProvider`
+- `interface ConnectIntegrationParams`
+- `type ConnectIntegrationResult`
+- `interface ConnectedProvider`
+- `type ListmonkFields`
+- `type PlausibleFields`
+- `type CloudflareCdnFields`
+- `type GithubDeployFields`
+- `interface OAuthStateContext`
+- `interface IssuedState`
+- `type VerifyStateResult`
+- `type InboundWebhookAlgorithm`
+- `interface VerifyInboundWebhookArgs`
+- `interface IntegrationsRepository`
+- `interface IntegrationStatusRow`
+- `type IntegrationStatusValue`
+- `interface ConnectIntegrationInput`
 - `interface AstropressPlugin`
 - `interface AstropressContentEvent`
 - `interface AstropressMediaEvent`
@@ -1486,6 +1620,20 @@ function runAstropressDbMigrationsForCli(input: AstropressDbMigrateInput): Astro
 ### Constants & Re-exports
 
 - `const PROVIDER_CONTRACT_VERSION: "0.1"`
+- `IntegrationRegistryError`
+- `const INTEGRATION_DOMAINS: readonly IntegrationDomain[]`
+- `const registerNewsletter: Register`
+- `const registerAnalytics: Register`
+- `const registerAbTesting: Register`
+- `const registerSearch: Register`
+- `const registerCdnPurge: Register`
+- `const registerMonitoring: Register`
+- `const registerForms: Register`
+- `const registerDeployHooks: Register`
+- `const listmonkFieldsSchema: ZodObject<{ baseUrl: ZodString; apiUser: ZodString; apiKey: ZodString; }, $strip>`
+- `const plausibleFieldsSchema: ZodObject<{ apiKey: ZodString; siteId: ZodString; host: ZodPipe<ZodOptional<ZodString>, ZodTransform<string, string | undefined>>; }, $strip>`
+- `const cloudflareCdnFieldsSchema: ZodObject<{ apiToken: ZodString; zoneId: ZodString; }, $strip>`
+- `const githubDeployFieldsSchema: ZodObject<{ accessToken: ZodString; refreshToken: ZodOptional<ZodString>; scope: ZodOptional<ZodString>; tokenType: ZodOptional<ZodString>; }, $strip>`
 - `const ASTROPRESS_ADMIN_APP_NAME: "Astropress"`
 - `const ASTROPRESS_ADMIN_PRODUCT_NAME: "Astropress Admin"`
 - `ADMIN_STUB_PAGES`
