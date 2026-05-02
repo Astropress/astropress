@@ -1401,6 +1401,81 @@ function verifyAstropressContentServices(input: AstropressContentServicesVerifyI
 function runAstropressDbMigrationsForCli(input: AstropressDbMigrateInput): AstropressDbMigrateReport
 ```
 
+#### `connectIntegrationAction`
+```ts
+function connectIntegrationAction<TFields>(locals: Locals | null | undefined, input: ConnectIntegrationActionInput<TFields>): Promise<RuntimeIntegrationActionResult>
+```
+
+#### `reverifyIntegrationAction`
+```ts
+function reverifyIntegrationAction<TFields>(locals: Locals | null | undefined, domain: IntegrationDomain, providerId: string, fields: TFields): Promise<RuntimeIntegrationActionResult>
+```
+
+#### `disconnectIntegrationAction`
+```ts
+function disconnectIntegrationAction(locals: Locals | null | undefined, domain: IntegrationDomain, providerId: string): Promise<{ ok: true; } | { ok: false; code: "INTEGRATIONS_NOT_AVAILABLE"; }>
+```
+
+#### `registerOAuthProvider`
+```ts
+function registerOAuthProvider(def: OAuthProviderDefinition): OAuthProviderDefinition
+```
+
+#### `getOAuthProvider`
+```ts
+function getOAuthProvider(domain: IntegrationDomain, providerId: string): OAuthProviderDefinition | undefined
+```
+
+#### `listOAuthProviders`
+```ts
+function listOAuthProviders(domain: IntegrationDomain): readonly OAuthProviderDefinition[]
+```
+
+#### `buildAuthorizeRedirect`
+```ts
+function buildAuthorizeRedirect(args: BuildAuthorizeRedirectArgs): Promise<BuildAuthorizeRedirectResult>
+```
+
+#### `buildRedirectUri`
+```ts
+function buildRedirectUri(origin: string, redirectPath: string): string
+```
+
+#### `exchangeCodeForToken`
+```ts
+function exchangeCodeForToken(args: ExchangeCodeForTokenArgs): Promise<OAuthTokenExchangeResult>
+```
+
+#### `registerInboundWebhookProvider`
+```ts
+function registerInboundWebhookProvider(def: InboundWebhookProviderDefinition): InboundWebhookProviderDefinition
+```
+
+#### `getInboundWebhookProvider`
+```ts
+function getInboundWebhookProvider(providerId: string): InboundWebhookProviderDefinition | undefined
+```
+
+#### `listInboundWebhookProviders`
+```ts
+function listInboundWebhookProviders(): readonly InboundWebhookProviderDefinition[]
+```
+
+#### `receiveInboundWebhook`
+```ts
+function receiveInboundWebhook(args: InboundWebhookReceiveArgs): Promise<InboundWebhookReceiveResult>
+```
+
+#### `integrationStatusBadgeTone`
+```ts
+function integrationStatusBadgeTone(status: IntegrationStatusBadgeKind): IntegrationStatusBadgeTone
+```
+
+#### `integrationStatusBadgeText`
+```ts
+function integrationStatusBadgeText(status: IntegrationStatusBadgeKind, labels: IntegrationStatusBadgeLabels): string
+```
+
 ### Types & Interfaces
 
 - `interface AstropressPublicSiteOptions`
@@ -1624,6 +1699,21 @@ function runAstropressDbMigrationsForCli(input: AstropressDbMigrateInput): Astro
 - `interface AstropressContentServicesOperationReport`
 - `interface AstropressDbMigrateInput`
 - `interface AstropressDbMigrateReport`
+- `interface ConnectIntegrationActionInput`
+- `type RuntimeIntegrationActionResult`
+- `interface OAuthProviderDefinition`
+- `interface BuildAuthorizeRedirectArgs`
+- `interface BuildAuthorizeRedirectResult`
+- `interface OAuthTokenSet`
+- `type OAuthTokenExchangeResult`
+- `type OAuthTokenExchangeErrorCode`
+- `interface ExchangeCodeForTokenArgs`
+- `interface InboundWebhookProviderDefinition`
+- `interface InboundWebhookReceiveArgs`
+- `type InboundWebhookReceiveResult`
+- `type IntegrationStatusBadgeKind`
+- `type IntegrationStatusBadgeTone`
+- `interface IntegrationStatusBadgeLabels`
 
 ### Constants & Re-exports
 
@@ -1658,6 +1748,8 @@ function runAstropressDbMigrationsForCli(input: AstropressDbMigrateInput): Astro
 - `const translationStates: readonly ["not_started", "partial", "fallback_en", "translated", "reviewed", "published"]`
 - `const newsletterAdapter: NewsletterAdapter`
 - `const placeholderAdapter: NewsletterAdapter`
+- `OAuthRegistryError`
+- `InboundWebhookRegistryError`
 
 ---
 

@@ -8,6 +8,7 @@ import { recordAuditEvent } from "./sqlite-runtime/audit-log";
 import { createSqliteAuthStore } from "./sqlite-runtime/auth";
 import { createSqliteCatalogStore } from "./sqlite-runtime/catalog";
 import { createSqliteContentStore } from "./sqlite-runtime/content";
+import { createIntegrationsRepository } from "./sqlite-runtime/integrations";
 import { createSqliteLocksOps } from "./sqlite-runtime/locks";
 import { createSqlitePurgeOps } from "./sqlite-runtime/purge";
 import { createSqliteRoutesStore } from "./sqlite-runtime/routes";
@@ -86,6 +87,10 @@ export function createAstropressSqliteAdminRuntime(
 	const sqliteWebhookStore = createWebhookStore(getDb());
 	const sqliteLocksOps = createSqliteLocksOps(getDb);
 	const sqlitePurgeOps = createSqlitePurgeOps(getDb);
+	const sqliteIntegrationsRepository = createIntegrationsRepository({
+		getDb,
+		now: () => new Date(now()).toISOString(),
+	});
 
 	const sqliteAdminStore: AdminStoreAdapter = createAstropressAdminStoreAdapter(
 		"sqlite",
@@ -182,6 +187,7 @@ export function createAstropressSqliteAdminRuntime(
 			},
 			apiTokens: sqliteApiTokenStore,
 			webhooks: sqliteWebhookStore,
+			integrations: sqliteIntegrationsRepository,
 		},
 	);
 

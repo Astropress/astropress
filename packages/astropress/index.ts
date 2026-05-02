@@ -788,3 +788,67 @@ export type {
 	AstropressDbMigrateInput,
 	AstropressDbMigrateReport,
 } from "./src/db-migrate-ops";
+
+// Phase 3/4 admin-action runtime wrappers — admin endpoints route
+// through these instead of calling the connect-flow primitives
+// directly so they can pull the integrations repo from
+// `loadLocalAdminStore()`.
+export {
+	connectIntegrationAction,
+	reverifyIntegrationAction,
+	disconnectIntegrationAction,
+} from "./src/runtime-actions-integrations.js";
+export type {
+	ConnectIntegrationActionInput,
+	RuntimeIntegrationActionResult,
+} from "./src/runtime-actions-integrations";
+
+// Phase 6 OAuth provider registry + state-token URL builder.
+export {
+	registerOAuthProvider,
+	getOAuthProvider,
+	listOAuthProviders,
+	OAuthRegistryError,
+} from "./src/integrations/oauth/registry.js";
+export type { OAuthProviderDefinition } from "./src/integrations/oauth/registry";
+export {
+	buildAuthorizeRedirect,
+	buildRedirectUri,
+} from "./src/integrations/oauth/start.js";
+export type {
+	BuildAuthorizeRedirectArgs,
+	BuildAuthorizeRedirectResult,
+} from "./src/integrations/oauth/start";
+export { exchangeCodeForToken } from "./src/integrations/oauth/token-exchange.js";
+export type {
+	OAuthTokenSet,
+	OAuthTokenExchangeResult,
+	OAuthTokenExchangeErrorCode,
+	ExchangeCodeForTokenArgs,
+} from "./src/integrations/oauth/token-exchange";
+
+// Phase 6 inbound-webhook provider registry + receiver helper.
+export {
+	registerInboundWebhookProvider,
+	getInboundWebhookProvider,
+	listInboundWebhookProviders,
+	InboundWebhookRegistryError,
+} from "./src/integrations/webhooks/registry.js";
+export type { InboundWebhookProviderDefinition } from "./src/integrations/webhooks/registry";
+export { receiveInboundWebhook } from "./src/integrations/webhooks/receiver.js";
+export type {
+	InboundWebhookReceiveArgs,
+	InboundWebhookReceiveResult,
+} from "./src/integrations/webhooks/receiver";
+
+// IntegrationStatusBadge tone/text mappers (component is in
+// components/IntegrationStatusBadge.astro).
+export {
+	integrationStatusBadgeTone,
+	integrationStatusBadgeText,
+} from "./src/integrations/badge-tone.js";
+export type {
+	IntegrationStatusBadgeKind,
+	IntegrationStatusBadgeTone,
+	IntegrationStatusBadgeLabels,
+} from "./src/integrations/badge-tone";
