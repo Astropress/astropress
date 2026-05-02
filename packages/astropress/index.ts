@@ -5,6 +5,108 @@ export const PROVIDER_CONTRACT_VERSION = "0.1";
 export { createAstropressPublicSiteIntegration } from "./src/public-site-integration.js";
 export type { AstropressPublicSiteOptions } from "./src/public-site-integration";
 
+// Per-domain integration registry (Phase 3) — hosts call
+// `registerNewsletter()` / `registerAnalytics()` / etc. from setup
+// code; admin actions and runtime adapters look providers up by
+// (domain, providerId).
+export {
+	registerProvider,
+	getProvider,
+	listProviders,
+	IntegrationRegistryError,
+	INTEGRATION_DOMAINS,
+} from "./src/integrations/registry.js";
+export type {
+	IntegrationDomain,
+	ProviderDefinition,
+	RegisteredProvider,
+} from "./src/integrations/registry";
+export {
+	registerNewsletter,
+	registerAnalytics,
+	registerAbTesting,
+	registerSearch,
+	registerCdnPurge,
+	registerMonitoring,
+	registerForms,
+	registerDeployHooks,
+} from "./src/integrations/domains.js";
+export {
+	connectIntegration,
+	reverifyIntegration,
+	runProviderVerify,
+} from "./src/integrations/connect-flow.js";
+export type {
+	ConnectIntegrationParams,
+	ConnectIntegrationResult,
+} from "./src/integrations/connect-flow";
+export {
+	getConnectedProvider,
+	createRequestProviderCache,
+	listRegisteredProvidersForDomain,
+} from "./src/integrations/runtime.js";
+export type { ConnectedProvider } from "./src/integrations/runtime";
+
+// Phase 4 push-button providers — hosts opt in by calling each
+// `register*Provider()` once at boot. Without registration, the
+// provider is invisible to the admin connect UI.
+export {
+	registerListmonkProvider,
+	verifyListmonkConnection,
+	buildListmonkAuthHeader,
+	listmonkFieldsSchema,
+} from "./src/integrations/providers/listmonk.js";
+export type { ListmonkFields } from "./src/integrations/providers/listmonk";
+export {
+	registerPlausibleProvider,
+	verifyPlausibleConnection,
+	plausibleFieldsSchema,
+} from "./src/integrations/providers/plausible.js";
+export type { PlausibleFields } from "./src/integrations/providers/plausible";
+export {
+	registerCloudflareCdnProvider,
+	verifyCloudflareCdnConnection,
+	cloudflareCdnFieldsSchema,
+} from "./src/integrations/providers/cloudflare-cdn.js";
+export type { CloudflareCdnFields } from "./src/integrations/providers/cloudflare-cdn";
+export {
+	registerGithubDeployProvider,
+	verifyGithubDeployConnection,
+	githubDeployFieldsSchema,
+} from "./src/integrations/providers/github-deploy.js";
+export type { GithubDeployFields } from "./src/integrations/providers/github-deploy";
+
+// Phase 6 OAuth state-token issuance + inbound webhook signature
+// verifier. Pure library code; routes/UI deferred.
+export {
+	issueOAuthState,
+	verifyOAuthState,
+} from "./src/integrations/oauth/state.js";
+export type {
+	OAuthStateContext,
+	IssuedState,
+	VerifyStateResult,
+} from "./src/integrations/oauth/state";
+export {
+	verifyInboundWebhookSignature,
+	verifyGithubWebhookSignature,
+} from "./src/integrations/webhooks/inbound.js";
+export type {
+	InboundWebhookAlgorithm,
+	VerifyInboundWebhookArgs,
+} from "./src/integrations/webhooks/inbound";
+
+// Phase 2 secret-store repository (status surface + sealed-secret
+// surface). Hosts that need to read connected_integrations from
+// outside the bundled admin actions construct the repo directly.
+export { createIntegrationsRepository } from "./src/sqlite-runtime/integrations.js";
+export type {
+	IntegrationsRepository,
+	IntegrationStatusRow,
+	IntegrationStatusValue,
+	ConnectIntegrationInput,
+} from "./src/sqlite-runtime/integrations";
+
 // Core configuration seam
 export {
 	registerCms,
