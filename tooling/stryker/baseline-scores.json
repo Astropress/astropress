@@ -1,5 +1,5 @@
 {
-	"updatedAt": "2026-05-02T22:51:52.738Z",
+	"updatedAt": "2026-05-02T22:53:45.993Z",
 	"scores": {
 		"packages/astropress/src/adapters/adapter-record-helpers.ts": {
 			"score": 66.66666666666666,
@@ -626,7 +626,7 @@
 			"hash": "5a9b7ddc3f3313d0e250a6d7900ab30ec5c1d07c"
 		},
 		"packages/astropress/src/deploy/github-pages.ts": {
-			"score": 83.33333333333334,
+			"score": 100,
 			"hash": "430811b88b56d8babe98171451cea0c6e6bff654"
 		},
 		"packages/astropress/src/deploy/gitlab-pages.ts": {

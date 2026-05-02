@@ -12,6 +12,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { createAstropressCloudflarePagesDeployTarget } from "../src/deploy/cloudflare-pages";
 import { createAstropressCustomDeployTarget } from "../src/deploy/custom";
+import { createAstropressGitHubPagesDeployTarget } from "../src/deploy/github-pages";
 import { createAstropressGitLabPagesDeployTarget } from "../src/deploy/gitlab-pages";
 import { createAstropressNetlifyDeployTarget } from "../src/deploy/netlify";
 import { createAstropressRenderDeployTarget } from "../src/deploy/render";
@@ -315,6 +316,40 @@ describe("createAstropressRenderDeployTarget", () => {
 		const result = await target.deploy({ buildDir, projectName: "p" });
 		expect(result.deploymentId.startsWith("render-static:")).toBe(true);
 		expect(result.deploymentId.startsWith("render-web:")).toBe(false);
+	});
+});
+
+describe("createAstropressGitHubPagesDeployTarget", () => {
+	it("provider field is the literal string 'github-pages'", () => {
+		const target = createAstropressGitHubPagesDeployTarget();
+		expect(target.provider).toBe("github-pages");
+	});
+
+	it("deploys with github-pages provider id and no url when baseUrl is omitted", async () => {
+		const buildDir = makeBuildDir("build-gh");
+		const outputDir = join(testRoot, "out-gh");
+		const target = createAstropressGitHubPagesDeployTarget({ outputDir });
+		const result = await target.deploy({ buildDir, projectName: "gh-site" });
+		expect(result.deploymentId).toContain("github-pages:gh-site:");
+		expect(result.url).toBeUndefined();
+	});
+
+	it("uses explicit baseUrl when provided", async () => {
+		const buildDir = makeBuildDir("build-gh-url");
+		const outputDir = join(testRoot, "out-gh-url");
+		const target = createAstropressGitHubPagesDeployTarget({
+			outputDir,
+			baseUrl: "https://owner.github.io/repo",
+		});
+		const result = await target.deploy({ buildDir, projectName: "gh-url" });
+		expect(result.url).toBe("https://owner.github.io/repo/gh-url/");
+	});
+
+	it("works with no options at all (default-ctor branch)", async () => {
+		const buildDir = makeBuildDir("build-gh-noopts");
+		const target = createAstropressGitHubPagesDeployTarget();
+		const result = await target.deploy({ buildDir, projectName: "gh-noopts" });
+		expect(result.deploymentId).toContain("github-pages:gh-noopts:");
 	});
 });
 
