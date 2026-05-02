@@ -210,6 +210,53 @@ describe("createAstropressRenderDeployTarget", () => {
 		const result = await target.deploy({ buildDir, projectName: "rs-site" });
 		expect(result.deploymentId).toContain("render-static:");
 	});
+
+	it("default baseUrl is the onrender.com host", async () => {
+		const buildDir = makeBuildDir("build-render-baseurl-default");
+		const outputDir = join(testRoot, "out-render-baseurl-default");
+		const target = createAstropressRenderDeployTarget({ outputDir });
+		const result = await target.deploy({ buildDir, projectName: "r-site" });
+		expect(result.url).toBe("https://onrender.com/r-site/");
+	});
+
+	it("explicit baseUrl override is honored", async () => {
+		const buildDir = makeBuildDir("build-render-baseurl-override");
+		const outputDir = join(testRoot, "out-render-baseurl-override");
+		const target = createAstropressRenderDeployTarget({
+			outputDir,
+			baseUrl: "https://custom.example",
+		});
+		const result = await target.deploy({ buildDir, projectName: "r-site" });
+		expect(result.url).toBe("https://custom.example/r-site/");
+	});
+
+	it("works when no options are passed at all (uses render-web default)", async () => {
+		const buildDir = makeBuildDir("build-render-no-opts");
+		const target = createAstropressRenderDeployTarget();
+		const result = await target.deploy({
+			buildDir,
+			projectName: "r-noopts-site",
+		});
+		expect(result.deploymentId).toContain("render-web:");
+		expect(result.url).toBe("https://onrender.com/r-noopts-site/");
+	});
+
+	it("provider field on the target is the literal string 'custom'", () => {
+		const target = createAstropressRenderDeployTarget();
+		expect(target.provider).toBe("custom");
+	});
+
+	it("kind=render-static uses the static deploymentId prefix exactly", async () => {
+		const buildDir = makeBuildDir("build-render-static-prefix");
+		const outputDir = join(testRoot, "out-render-static-prefix");
+		const target = createAstropressRenderDeployTarget({
+			outputDir,
+			kind: "render-static",
+		});
+		const result = await target.deploy({ buildDir, projectName: "p" });
+		expect(result.deploymentId.startsWith("render-static:")).toBe(true);
+		expect(result.deploymentId.startsWith("render-web:")).toBe(false);
+	});
 });
 
 describe("createAstropressGitLabPagesDeployTarget", () => {
