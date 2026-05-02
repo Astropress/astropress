@@ -147,6 +147,38 @@ describe("resolveNewsletter — env-only credentials", () => {
 	});
 });
 
+describe("resolveNewsletter — explicit listmonk + missing config returns misconfigured", () => {
+	it("returns misconfigured when mode=listmonk but LISTMONK_LIST_ID is missing", () => {
+		const r = resolveNewsletter({
+			env: { NEWSLETTER_DELIVERY_MODE: "listmonk" },
+		});
+		expect(r.kind).toBe("misconfigured");
+		if (r.kind === "misconfigured") expect(r.reason).toMatch(/LIST_ID/);
+	});
+
+	it("returns misconfigured when mode=listmonk and listId set but credentials missing and no registry", () => {
+		const r = resolveNewsletter({
+			env: {
+				NEWSLETTER_DELIVERY_MODE: "listmonk",
+				LISTMONK_LIST_ID: "1",
+			},
+		});
+		expect(r.kind).toBe("misconfigured");
+		if (r.kind === "misconfigured") expect(r.reason).toMatch(/credentials/i);
+	});
+
+	it("does NOT return misconfigured when mode=listmonk and registry has credentials (uses registry)", () => {
+		const r = resolveNewsletter({
+			registry: REG,
+			env: {
+				NEWSLETTER_DELIVERY_MODE: "listmonk",
+				LISTMONK_LIST_ID: "1",
+			},
+		});
+		expect(r.kind).toBe("listmonk");
+	});
+});
+
 describe("resolveNewsletter — empty result", () => {
 	it("returns mock when input is entirely empty", () => {
 		expect(resolveNewsletter({})).toEqual({ kind: "mock" });

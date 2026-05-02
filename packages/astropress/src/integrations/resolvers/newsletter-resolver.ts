@@ -33,7 +33,8 @@ export type ResolvedNewsletter =
 			readonly listId: string;
 			readonly credentialSource: NewsletterCredentialSource;
 	  }
-	| { readonly kind: "mock" };
+	| { readonly kind: "mock" }
+	| { readonly kind: "misconfigured"; readonly reason: string };
 
 export interface ResolveNewsletterInput {
 	readonly registry?: {
@@ -61,11 +62,19 @@ export function resolveNewsletter(
 	if (env.NEWSLETTER_DELIVERY_MODE === "mock") {
 		return { kind: "mock" };
 	}
+	const explicitListmonk = env.NEWSLETTER_DELIVERY_MODE === "listmonk";
 	const listId = env.LISTMONK_LIST_ID;
+	const registry = input.registry;
 	if (!nonEmpty(listId)) {
+		if (explicitListmonk) {
+			return {
+				kind: "misconfigured",
+				reason:
+					"LISTMONK_LIST_ID is required when NEWSLETTER_DELIVERY_MODE=listmonk",
+			};
+		}
 		return { kind: "mock" };
 	}
-	const registry = input.registry;
 	if (registry) {
 		return {
 			kind: "listmonk",
@@ -88,6 +97,12 @@ export function resolveNewsletter(
 			apiKey: env.LISTMONK_API_PASSWORD,
 			listId,
 			credentialSource: "env",
+		};
+	}
+	if (explicitListmonk) {
+		return {
+			kind: "misconfigured",
+			reason: "Listmonk mode set but credentials are not fully configured",
 		};
 	}
 	return { kind: "mock" };
