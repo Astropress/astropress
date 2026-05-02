@@ -103,4 +103,146 @@ describe("hosted platform adapter", () => {
 			role: "admin",
 		});
 	});
+
+	it("defaults capabilities (hostedAdmin/serverRuntime/etc) to true when no overrides", () => {
+		const adapter = createAstropressHostedPlatformAdapter({
+			providerName: "supabase",
+		});
+		expect(adapter.capabilities.name).toBe("supabase");
+		expect(adapter.capabilities.hostedAdmin).toBe(true);
+		expect(adapter.capabilities.previewEnvironments).toBe(true);
+		expect(adapter.capabilities.serverRuntime).toBe(true);
+		expect(adapter.capabilities.database).toBe(true);
+		expect(adapter.capabilities.objectStorage).toBe(true);
+		expect(adapter.capabilities.gitSync).toBe(true);
+	});
+
+	it("defaultCapabilities overrides shadow the built-in defaults", () => {
+		const adapter = createAstropressHostedPlatformAdapter({
+			providerName: "supabase",
+			defaultCapabilities: {
+				database: false,
+				objectStorage: false,
+			},
+		});
+		expect(adapter.capabilities.database).toBe(false);
+		expect(adapter.capabilities.objectStorage).toBe(false);
+		// Non-overridden fields keep the built-in defaults.
+		expect(adapter.capabilities.hostedAdmin).toBe(true);
+	});
+
+	it("uses backingAdapter when provided (skips in-memory factory)", async () => {
+		// Marker fields on the backingAdapter must surface in the result.
+		const backingAdapter = {
+			capabilities: {
+				name: "marker-provider",
+				database: true,
+				hostedAdmin: false,
+			},
+			content: {
+				async list() {
+					return ["from-backing"] as never;
+				},
+				async get() {
+					return null;
+				},
+				async save(r: never) {
+					return r;
+				},
+				async delete() {},
+			},
+			media: {
+				async put(a: never) {
+					return a;
+				},
+				async get() {
+					return null;
+				},
+				async delete() {},
+			},
+			revisions: {
+				async list() {
+					return [];
+				},
+				async append(r: never) {
+					return r;
+				},
+			},
+			auth: {
+				async signIn() {
+					return { id: "backing-session", email: "x", role: "admin" } as never;
+				},
+				async signOut() {},
+				async getSession() {
+					return null;
+				},
+			},
+		} as never;
+		const adapter = createAstropressHostedPlatformAdapter({
+			providerName: "supabase",
+			backingAdapter,
+		});
+		// content list must come from backing, not from an in-memory store.
+		expect(await adapter.content.list()).toEqual(["from-backing"]);
+		// signIn comes from backing too.
+		const session = await adapter.auth.signIn("x", "p");
+		expect(session).toMatchObject({ id: "backing-session" });
+	});
+
+	it("merges backing capabilities under the hosted defaults (hosted defaults win)", () => {
+		const backingAdapter = {
+			capabilities: {
+				name: "ignored-by-merge",
+				hostedAdmin: false,
+				database: false,
+			},
+			content: {
+				async list() {
+					return [];
+				},
+				async get() {
+					return null;
+				},
+				async save(r: never) {
+					return r;
+				},
+				async delete() {},
+			},
+			media: {
+				async put(a: never) {
+					return a;
+				},
+				async get() {
+					return null;
+				},
+				async delete() {},
+			},
+			revisions: {
+				async list() {
+					return [];
+				},
+				async append(r: never) {
+					return r;
+				},
+			},
+			auth: {
+				async signIn() {
+					return null;
+				},
+				async signOut() {},
+				async getSession() {
+					return null;
+				},
+			},
+		} as never;
+		const adapter = createAstropressHostedPlatformAdapter({
+			providerName: "supabase",
+			backingAdapter,
+		});
+		// providerName from options wins over the backing's name.
+		expect(adapter.capabilities.name).toBe("supabase");
+		// hosted defaults override backing's `false`.
+		expect(adapter.capabilities.hostedAdmin).toBe(true);
+		expect(adapter.capabilities.database).toBe(true);
+	});
 });
