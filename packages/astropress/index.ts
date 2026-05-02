@@ -73,6 +73,41 @@ export {
 	CloudflareCdnVerifyError,
 } from "./src/integrations/providers/cloudflare-cdn.js";
 export type { CloudflareCdnFields } from "./src/integrations/providers/cloudflare-cdn";
+export {
+	registerGithubDeploy,
+	verifyGithubDeploy,
+	classifyGithubStatus,
+	GITHUB_DEPLOY_FIELDS,
+	GithubDeployVerifyError,
+} from "./src/integrations/providers/github-deploy.js";
+export type { GithubDeployFields } from "./src/integrations/providers/github-deploy";
+
+// Phase 6 OAuth state-token primitives (state issued at the start of
+// authorization-code flows is HMAC-signed and self-describing).
+export {
+	issueOAuthState,
+	verifyOAuthState,
+	DEFAULT_OAUTH_STATE_TTL_MS,
+} from "./src/integrations/oauth/state.js";
+export type {
+	OAuthStateContext,
+	IssuedOAuthState,
+	VerifyOAuthStateResult,
+	VerifyOAuthStateErrorCode,
+	IssueOAuthStateArgs,
+	VerifyOAuthStateArgs,
+} from "./src/integrations/oauth/state";
+
+// Phase 6 inbound-webhook signature verifier (HMAC over raw request
+// bytes; GitHub-style algorithm-prefixed headers supported).
+export {
+	verifyInboundWebhookSignature,
+	verifyGithubWebhookSignature,
+} from "./src/integrations/webhooks/inbound.js";
+export type {
+	InboundWebhookAlgorithm,
+	VerifyInboundWebhookArgs,
+} from "./src/integrations/webhooks/inbound";
 
 // Phase 2 secret-store repository (status surface + sealed-secret
 // surface). Hosts that need to read connected_integrations from

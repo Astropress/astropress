@@ -96,6 +96,41 @@ function verifyCloudflareCdn(fields: { apiToken: string; zoneId: string; }, ctx:
 function classifyCloudflareStatus(res: Response): IntegrationErrorCode | null
 ```
 
+#### `registerGithubDeploy`
+```ts
+function registerGithubDeploy(): RegisteredProvider<{ accessToken: string; }>
+```
+
+#### `verifyGithubDeploy`
+```ts
+function verifyGithubDeploy(fields: { accessToken: string; }, ctx: { signal: AbortSignal; }, deps: GithubDeployVerifyDeps): Promise<void>
+```
+
+#### `classifyGithubStatus`
+```ts
+function classifyGithubStatus(res: Response): IntegrationErrorCode | null
+```
+
+#### `issueOAuthState`
+```ts
+function issueOAuthState(args: IssueOAuthStateArgs): Promise<IssuedOAuthState>
+```
+
+#### `verifyOAuthState`
+```ts
+function verifyOAuthState(args: VerifyOAuthStateArgs): Promise<VerifyOAuthStateResult>
+```
+
+#### `verifyInboundWebhookSignature`
+```ts
+function verifyInboundWebhookSignature(args: VerifyInboundWebhookArgs): Promise<boolean>
+```
+
+#### `verifyGithubWebhookSignature`
+```ts
+function verifyGithubWebhookSignature(args: { readonly header: string; readonly body: Uint8Array<ArrayBufferLike>; readonly secret: string; }): Promise<boolean>
+```
+
 #### `createIntegrationsRepository`
 ```ts
 function createIntegrationsRepository(options: IntegrationsRepositoryOptions): IntegrationsRepository
@@ -1378,6 +1413,15 @@ function runAstropressDbMigrationsForCli(input: AstropressDbMigrateInput): Astro
 - `type ListmonkFields`
 - `type PlausibleFields`
 - `type CloudflareCdnFields`
+- `type GithubDeployFields`
+- `interface OAuthStateContext`
+- `interface IssuedOAuthState`
+- `type VerifyOAuthStateResult`
+- `type VerifyOAuthStateErrorCode`
+- `interface IssueOAuthStateArgs`
+- `interface VerifyOAuthStateArgs`
+- `type InboundWebhookAlgorithm`
+- `interface VerifyInboundWebhookArgs`
 - `interface IntegrationsRepository`
 - `interface IntegrationStatusRow`
 - `type IntegrationStatusValue`
@@ -1600,6 +1644,9 @@ function runAstropressDbMigrationsForCli(input: AstropressDbMigrateInput): Astro
 - `PlausibleVerifyError`
 - `const CLOUDFLARE_CDN_FIELDS: ZodObject<{ apiToken: ZodString; zoneId: ZodString; }, $strip>`
 - `CloudflareCdnVerifyError`
+- `const GITHUB_DEPLOY_FIELDS: ZodObject<{ accessToken: ZodString; }, $strip>`
+- `GithubDeployVerifyError`
+- `const DEFAULT_OAUTH_STATE_TTL_MS: 600000`
 - `const ASTROPRESS_ADMIN_APP_NAME: "Astropress"`
 - `const ASTROPRESS_ADMIN_PRODUCT_NAME: "Astropress Admin"`
 - `ADMIN_STUB_PAGES`
