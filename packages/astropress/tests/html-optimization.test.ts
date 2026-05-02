@@ -46,4 +46,44 @@ describe("optimizeImageLoading()", () => {
 		const html = "<p>No images here.</p>";
 		expect(optimizeImageLoading(html)).toBe(html);
 	});
+
+	it("never appends a second loading attr to an image that already has one (non-first position)", () => {
+		// First img is the LCP candidate; second already has loading=eager.
+		// The loading-check branch must short-circuit so the explicit
+		// loading=eager image never gets a duplicate loading="lazy" appended.
+		const html =
+			'<img src="/hero.jpg"><img src="/explicit.jpg" loading="eager">';
+		const result = optimizeImageLoading(html);
+		// Exactly one `loading=` attribute on the second img, and it's "eager".
+		const matches = result.match(/loading="[^"]*"/g) ?? [];
+		expect(matches).toEqual(['loading="eager"']);
+	});
+
+	it("a leading explicit-loading image still consumes the firstImage slot (kills BooleanLiteral mutant in the loading branch)", () => {
+		// If the loading branch did NOT set firstImage=false, the second img
+		// would be treated as the LCP and skip lazy.
+		const html = '<img src="/hero.jpg" loading="eager"><img src="/next.jpg">';
+		const result = optimizeImageLoading(html);
+		expect(result).toContain('<img src="/next.jpg" loading="lazy">');
+	});
+
+	it("never appends loading='lazy' to a non-first image that has fetchpriority", () => {
+		// fetchpriority=high signals a non-LCP image we explicitly want to
+		// keep eager (e.g. above-the-fold non-hero). Must short-circuit even
+		// when not in the firstImage slot.
+		const html =
+			'<img src="/hero.jpg"><img src="/banner.jpg" fetchpriority="high">';
+		const result = optimizeImageLoading(html);
+		// The fetchpriority image must NOT have loading attribute appended.
+		expect(result).not.toMatch(/fetchpriority="high"\s+loading=/);
+	});
+
+	it("a leading fetchpriority image still consumes the firstImage slot (kills BooleanLiteral mutant in the fetchpriority branch)", () => {
+		// If the fetchpriority branch did NOT set firstImage=false, the
+		// second img would be treated as the LCP and skip lazy.
+		const html =
+			'<img src="/banner.jpg" fetchpriority="high"><img src="/next.jpg">';
+		const result = optimizeImageLoading(html);
+		expect(result).toContain('<img src="/next.jpg" loading="lazy">');
+	});
 });

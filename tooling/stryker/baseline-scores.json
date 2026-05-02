@@ -1,5 +1,5 @@
 {
-	"updatedAt": "2026-05-02T22:46:57.817Z",
+	"updatedAt": "2026-05-02T22:51:52.738Z",
 	"scores": {
 		"packages/astropress/src/adapters/adapter-record-helpers.ts": {
 			"score": 66.66666666666666,
@@ -666,7 +666,7 @@
 			"hash": "abfa169f145e3a7e94173f8b9e34378a0a1c28b8"
 		},
 		"packages/astropress/src/html-optimization.ts": {
-			"score": 70,
+			"score": 100,
 			"hash": "cd3fd2b63db567f3b1d680e6f0c22346ec3c1996"
 		},
 		"packages/astropress/src/html-sanitization.ts": {
