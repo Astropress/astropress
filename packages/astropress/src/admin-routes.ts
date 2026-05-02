@@ -279,10 +279,10 @@ const adminRouteDefinitions = [
 		kind: "action",
 	},
 	{ pattern: "/ap-admin/access", entrypoint: "access.astro", kind: "page" },
-	{ pattern: "/ap-admin/forms", entrypoint: "[stub].astro", kind: "page" },
+	{ pattern: "/ap-admin/forms", entrypoint: "forms.astro", kind: "page" },
 	{
 		pattern: "/ap-admin/newsletter",
-		entrypoint: "[stub].astro",
+		entrypoint: "newsletter.astro",
 		kind: "page",
 	},
 	{ pattern: "/ap-admin/events", entrypoint: "[stub].astro", kind: "page" },
@@ -325,7 +325,7 @@ const adminRouteDefinitions = [
 	},
 	{
 		pattern: "/ap-admin/analytics",
-		entrypoint: "[stub].astro",
+		entrypoint: "analytics.astro",
 		kind: "page",
 	},
 	{
@@ -349,10 +349,10 @@ const adminRouteDefinitions = [
 		entrypoint: "[stub].astro",
 		kind: "page",
 	},
-	{ pattern: "/ap-admin/search", entrypoint: "[stub].astro", kind: "page" },
+	{ pattern: "/ap-admin/search", entrypoint: "search.astro", kind: "page" },
 	{
 		pattern: "/ap-admin/cdn-purge",
-		entrypoint: "[stub].astro",
+		entrypoint: "cdn-purge.astro",
 		kind: "page",
 	},
 	{
