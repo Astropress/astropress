@@ -105,7 +105,16 @@ export type AdminLabelKey =
 	| "stubComingSoonHeading"
 	| "stubComingSoonBody"
 	| "stubComingSoonLink"
-	| "changeLanguage";
+	| "changeLanguage"
+	| "approveComment"
+	| "cancelButton"
+	| "confirmDelete"
+	| "createPost"
+	| "deleteButton"
+	| "errorLabel"
+	| "loadingLabel"
+	| "publishButton"
+	| "saveButton";
 
 /**
  * Every locale must define every AdminLabelKey. This is enforced at the type
@@ -214,6 +223,14 @@ export const adminLabels: Record<AdminLocale, Record<AdminLabelKey, string>> = {
 		confirmDelete:
 			"Are you sure you want to delete this? This action cannot be undone.",
 		changeLanguage: "Change language",
+		approveComment: "Approve",
+		cancelButton: "Cancel",
+		createPost: "New post",
+		deleteButton: "Delete",
+		errorLabel: "Action failed",
+		loadingLabel: "Loading…",
+		publishButton: "Publish",
+		saveButton: "Save",
 	},
 	es: {
 		loginHeading: "Acceder al panel de administración",
@@ -313,6 +330,14 @@ export const adminLabels: Record<AdminLocale, Record<AdminLabelKey, string>> = {
 		confirmDelete:
 			"¿Seguro que quieres eliminar esto? Esta acción no se puede deshacer.",
 		changeLanguage: "Cambiar idioma",
+		approveComment: "Aprobar",
+		cancelButton: "Cancelar",
+		createPost: "Nueva entrada",
+		deleteButton: "Eliminar",
+		errorLabel: "Se produjo un error",
+		loadingLabel: "Cargando…",
+		publishButton: "Publicar",
+		saveButton: "Guardar",
 	},
 	fr: {
 		loginHeading: "Se connecter à l'administration",
@@ -412,6 +437,14 @@ export const adminLabels: Record<AdminLocale, Record<AdminLabelKey, string>> = {
 		confirmDelete:
 			"Voulez-vous vraiment supprimer ceci ? Cette action est irréversible.",
 		changeLanguage: "Changer de langue",
+		approveComment: "Approuver",
+		cancelButton: "Annuler",
+		createPost: "Nouvel article",
+		deleteButton: "Supprimer",
+		errorLabel: "Une erreur est survenue",
+		loadingLabel: "Chargement…",
+		publishButton: "Publier",
+		saveButton: "Enregistrer",
 	},
 	de: {
 		loginHeading: "Beim Admin anmelden",
@@ -512,6 +545,14 @@ export const adminLabels: Record<AdminLocale, Record<AdminLabelKey, string>> = {
 		confirmDelete:
 			"Möchten Sie dies wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.",
 		changeLanguage: "Sprache ändern",
+		approveComment: "Genehmigen",
+		cancelButton: "Abbrechen",
+		createPost: "Neuer Beitrag",
+		deleteButton: "Löschen",
+		errorLabel: "Ein Fehler ist aufgetreten",
+		loadingLabel: "Wird geladen…",
+		publishButton: "Veröffentlichen",
+		saveButton: "Speichern",
 	},
 	pt: {
 		loginHeading: "Entrar no painel de administração",
@@ -609,6 +650,14 @@ export const adminLabels: Record<AdminLocale, Record<AdminLabelKey, string>> = {
 		confirmDelete:
 			"Tem certeza que quer excluir isso? Esta ação não pode ser desfeita.",
 		changeLanguage: "Alterar idioma",
+		approveComment: "Aprovar",
+		cancelButton: "Cancelar",
+		createPost: "Nova publicação",
+		deleteButton: "Excluir",
+		errorLabel: "Ocorreu um erro",
+		loadingLabel: "Carregando…",
+		publishButton: "Publicar",
+		saveButton: "Salvar",
 	},
 	ja: {
 		loginHeading: "管理パネルにサインイン",
@@ -708,6 +757,15 @@ export const adminLabels: Record<AdminLocale, Record<AdminLabelKey, string>> = {
 			"この連携はロードマップに含まれていますが、まだ実装されていません。",
 		stubComingSoonLink: "GitHub で進捗を確認",
 		changeLanguage: "言語を変更",
+		approveComment: "承認",
+		cancelButton: "キャンセル",
+		confirmDelete: "本当に削除しますか？この操作は元に戻せません。",
+		createPost: "新しい投稿",
+		deleteButton: "削除",
+		errorLabel: "エラーが発生しました",
+		loadingLabel: "読み込み中…",
+		publishButton: "公開",
+		saveButton: "保存",
 	},
 	te: {
 		loginHeading: "అడ్మిన్‌లోకి సైన్ ఇన్ చేయండి",
@@ -800,6 +858,15 @@ export const adminLabels: Record<AdminLocale, Record<AdminLabelKey, string>> = {
 		stubComingSoonBody: "ఈ ఏకీకరణ రోడ్‌మ్యాప్‌లో ఉంది, కానీ ఇంకా అమలు చేయబడలేదు.",
 		stubComingSoonLink: "GitHub లో ప్రోగ్రెస్‌ని ట్రాక్ చేయండి",
 		changeLanguage: "భాష మార్చండి",
+		approveComment: "ఆమోదించండి",
+		cancelButton: "రద్దు",
+		confirmDelete: "దీన్ని తొలగించాలనుకుంటున్నారా? ఈ చర్యను రద్దు చేయలేరు.",
+		createPost: "కొత్త పోస్ట్",
+		deleteButton: "తొలగించండి",
+		errorLabel: "చర్య విఫలమైంది",
+		loadingLabel: "లోడ్ అవుతోంది…",
+		publishButton: "ప్రచురించండి",
+		saveButton: "సేవ్",
 	},
 	hi: {
 		loginHeading: "एडमिन में साइन इन करें",
@@ -896,6 +963,14 @@ export const adminLabels: Record<AdminLocale, Record<AdminLabelKey, string>> = {
 		confirmDelete:
 			"क्या आप वाकई इसे मिटाना चाहते हैं? यह क्रिया पूर्ववत नहीं की जा सकती.",
 		changeLanguage: "भाषा बदलें",
+		approveComment: "स्वीकृत करें",
+		cancelButton: "रद्द करें",
+		createPost: "नई पोस्ट",
+		deleteButton: "मिटाएँ",
+		errorLabel: "क्रिया विफल",
+		loadingLabel: "लोड हो रहा है…",
+		publishButton: "प्रकाशित करें",
+		saveButton: "सहेजें",
 	},
 	ny: {
 		loginHeading: "Lowani mu admin",
@@ -994,6 +1069,14 @@ export const adminLabels: Record<AdminLocale, Record<AdminLabelKey, string>> = {
 		confirmDelete:
 			"Mukutsimikiza kuchotsa izi? Chochita ichi sichingathe kubwezedwa.",
 		changeLanguage: "Sinthani chinenero",
+		approveComment: "Vomerezani",
+		cancelButton: "Letsani",
+		createPost: "Positi yatsopano",
+		deleteButton: "Chotsani",
+		errorLabel: "Sichinatheke",
+		loadingLabel: "Akutsegula…",
+		publishButton: "Falitsani",
+		saveButton: "Sungani",
 	},
 	ar: {
 		loginHeading: "تسجيل الدخول إلى لوحة الإدارة",
@@ -1088,5 +1171,14 @@ export const adminLabels: Record<AdminLocale, Record<AdminLabelKey, string>> = {
 		stubComingSoonBody: "هذا التكامل ضمن خارطة الطريق ولكنه لم يُنفَّذ بعد.",
 		stubComingSoonLink: "تابع التقدّم على GitHub",
 		changeLanguage: "تغيير اللغة",
+		approveComment: "موافقة",
+		cancelButton: "إلغاء",
+		confirmDelete: "هل أنت متأكد من الحذف؟ لا يمكن التراجع عن هذا الإجراء.",
+		createPost: "منشور جديد",
+		deleteButton: "حذف",
+		errorLabel: "فشل الإجراء",
+		loadingLabel: "جارٍ التحميل…",
+		publishButton: "نشر",
+		saveButton: "حفظ",
 	},
 };

@@ -46,7 +46,7 @@ function grepLiteralCallSites(): {
 		"bash",
 		[
 			"-c",
-			"grep -rEhn --exclude=admin-labels.ts 'getAdminLabel\\(|\\.labels\\.[a-zA-Z]+|\\btr\\(\"[A-Za-z0-9_]+\"' packages/astropress/{src,components,pages} 2>/dev/null || true",
+			"grep -rEhn --exclude=admin-labels.ts 'getAdminLabel\\(|\\.labels\\.[a-zA-Z]+|\\btr\\(\"[A-Za-z0-9_]+\"|keys\\.has\\(\"[A-Za-z0-9_]+\"' packages/astropress/{src,components,pages,tests} 2>/dev/null || true",
 		],
 		{ encoding: "utf8" },
 	);
@@ -54,10 +54,12 @@ function grepLiteralCallSites(): {
 	const dynamic: string[] = [];
 	const dotLabel = /\.labels\.([a-zA-Z][a-zA-Z0-9_]*)/g;
 	const trCall = /\btr\(\s*"([A-Za-z0-9_]+)"/g;
+	const keysHas = /\bkeys\.has\(\s*"([A-Za-z0-9_]+)"/g;
 	for (const line of out.split("\n")) {
 		if (!line) continue;
 		for (const m of line.matchAll(dotLabel)) staticKeys.add(m[1]);
 		for (const m of line.matchAll(trCall)) staticKeys.add(m[1]);
+		for (const m of line.matchAll(keysHas)) staticKeys.add(m[1]);
 		const literal = line.match(/getAdminLabel\(\s*"([A-Za-z0-9_]+)"/);
 		if (literal) {
 			staticKeys.add(literal[1]);
