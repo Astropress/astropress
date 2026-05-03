@@ -114,7 +114,12 @@ export type AdminLabelKey =
 	| "errorLabel"
 	| "loadingLabel"
 	| "publishButton"
-	| "saveButton";
+	| "saveButton"
+	| "navGroupDiscoverability"
+	| "navGroupIntegrations"
+	| "navGroupOperations"
+	| "navHeadlessCmsPanel"
+	| "navSocialSyndication";
 
 /**
  * Every locale must define every AdminLabelKey. This is enforced at the type
@@ -231,6 +236,11 @@ export const adminLabels: Record<AdminLocale, Record<AdminLabelKey, string>> = {
 		loadingLabel: "Loading…",
 		publishButton: "Publish",
 		saveButton: "Save",
+		navGroupDiscoverability: "Discoverability",
+		navGroupIntegrations: "Integrations",
+		navGroupOperations: "Operations",
+		navHeadlessCmsPanel: "Headless CMS Panel",
+		navSocialSyndication: "Social Syndication",
 	},
 	es: {
 		loginHeading: "Acceder al panel de administración",
@@ -338,6 +348,11 @@ export const adminLabels: Record<AdminLocale, Record<AdminLabelKey, string>> = {
 		loadingLabel: "Cargando…",
 		publishButton: "Publicar",
 		saveButton: "Guardar",
+		navGroupDiscoverability: "Visibilidad",
+		navGroupIntegrations: "Integraciones",
+		navGroupOperations: "Operaciones",
+		navHeadlessCmsPanel: "Panel CMS Headless",
+		navSocialSyndication: "Sindicación social",
 	},
 	fr: {
 		loginHeading: "Se connecter à l'administration",
@@ -445,6 +460,11 @@ export const adminLabels: Record<AdminLocale, Record<AdminLabelKey, string>> = {
 		loadingLabel: "Chargement…",
 		publishButton: "Publier",
 		saveButton: "Enregistrer",
+		navGroupDiscoverability: "Visibilité",
+		navGroupIntegrations: "Intégrations",
+		navGroupOperations: "Opérations",
+		navHeadlessCmsPanel: "Panneau CMS Headless",
+		navSocialSyndication: "Syndication sociale",
 	},
 	de: {
 		loginHeading: "Beim Admin anmelden",
@@ -553,6 +573,11 @@ export const adminLabels: Record<AdminLocale, Record<AdminLabelKey, string>> = {
 		loadingLabel: "Wird geladen…",
 		publishButton: "Veröffentlichen",
 		saveButton: "Speichern",
+		navGroupDiscoverability: "Auffindbarkeit",
+		navGroupIntegrations: "Integrationen",
+		navGroupOperations: "Betrieb",
+		navHeadlessCmsPanel: "Headless-CMS-Panel",
+		navSocialSyndication: "Social-Syndication",
 	},
 	pt: {
 		loginHeading: "Entrar no painel de administração",
@@ -658,6 +683,11 @@ export const adminLabels: Record<AdminLocale, Record<AdminLabelKey, string>> = {
 		loadingLabel: "Carregando…",
 		publishButton: "Publicar",
 		saveButton: "Salvar",
+		navGroupDiscoverability: "Descoberta",
+		navGroupIntegrations: "Integrações",
+		navGroupOperations: "Operações",
+		navHeadlessCmsPanel: "Painel CMS Headless",
+		navSocialSyndication: "Sindicação social",
 	},
 	ja: {
 		loginHeading: "管理パネルにサインイン",
@@ -766,6 +796,11 @@ export const adminLabels: Record<AdminLocale, Record<AdminLabelKey, string>> = {
 		loadingLabel: "読み込み中…",
 		publishButton: "公開",
 		saveButton: "保存",
+		navGroupDiscoverability: "発見性",
+		navGroupIntegrations: "連携",
+		navGroupOperations: "運用",
+		navHeadlessCmsPanel: "ヘッドレスCMSパネル",
+		navSocialSyndication: "ソーシャル配信",
 	},
 	te: {
 		loginHeading: "అడ్మిన్‌లోకి సైన్ ఇన్ చేయండి",
@@ -867,6 +902,11 @@ export const adminLabels: Record<AdminLocale, Record<AdminLabelKey, string>> = {
 		loadingLabel: "లోడ్ అవుతోంది…",
 		publishButton: "ప్రచురించండి",
 		saveButton: "సేవ్",
+		navGroupDiscoverability: "కనుగొనదగినత",
+		navGroupIntegrations: "అనుసంధానాలు",
+		navGroupOperations: "ఆపరేషన్లు",
+		navHeadlessCmsPanel: "హెడ్‌లెస్ CMS ప్యానెల్",
+		navSocialSyndication: "సోషల్ సిండికేషన్",
 	},
 	hi: {
 		loginHeading: "एडमिन में साइन इन करें",
@@ -971,6 +1011,11 @@ export const adminLabels: Record<AdminLocale, Record<AdminLabelKey, string>> = {
 		loadingLabel: "लोड हो रहा है…",
 		publishButton: "प्रकाशित करें",
 		saveButton: "सहेजें",
+		navGroupDiscoverability: "खोज-योग्यता",
+		navGroupIntegrations: "इंटीग्रेशन",
+		navGroupOperations: "संचालन",
+		navHeadlessCmsPanel: "हेडलेस CMS पैनल",
+		navSocialSyndication: "सोशल सिंडिकेशन",
 	},
 	ny: {
 		loginHeading: "Lowani mu admin",
@@ -1077,6 +1122,11 @@ export const adminLabels: Record<AdminLocale, Record<AdminLabelKey, string>> = {
 		loadingLabel: "Akutsegula…",
 		publishButton: "Falitsani",
 		saveButton: "Sungani",
+		navGroupDiscoverability: "Kupezeka",
+		navGroupIntegrations: "Kuphatikiza",
+		navGroupOperations: "Ntchito",
+		navHeadlessCmsPanel: "Gulu la CMS Lopanda Mutu",
+		navSocialSyndication: "Kufalitsa Pa Social",
 	},
 	ar: {
 		loginHeading: "تسجيل الدخول إلى لوحة الإدارة",
@@ -1180,5 +1230,10 @@ export const adminLabels: Record<AdminLocale, Record<AdminLabelKey, string>> = {
 		loadingLabel: "جارٍ التحميل…",
 		publishButton: "نشر",
 		saveButton: "حفظ",
+		navGroupDiscoverability: "إمكانية الاكتشاف",
+		navGroupIntegrations: "التكاملات",
+		navGroupOperations: "العمليات",
+		navHeadlessCmsPanel: "لوحة CMS بدون واجهة",
+		navSocialSyndication: "النشر الاجتماعي",
 	},
 };

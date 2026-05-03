@@ -46,7 +46,7 @@ function grepLiteralCallSites(): {
 		"bash",
 		[
 			"-c",
-			"grep -rEhn --exclude=admin-labels.ts 'getAdminLabel\\(|\\.labels\\.[a-zA-Z]+|\\btr\\(\"[A-Za-z0-9_]+\"|keys\\.has\\(\"[A-Za-z0-9_]+\"' packages/astropress/{src,components,pages,tests} 2>/dev/null || true",
+			'grep -rEhn --exclude=admin-labels.ts \'getAdminLabel\\(|\\.labels\\.[a-zA-Z]+|\\btr\\("[A-Za-z0-9_]+"|keys\\.has\\("[A-Za-z0-9_]+"\' packages/astropress/{src,components,pages,tests} 2>/dev/null || true',
 		],
 		{ encoding: "utf8" },
 	);
@@ -90,6 +90,13 @@ function grepLiteralCallSites(): {
 			dynamic.push(line.trim());
 		}
 	}
+	// Multi-line tr( call: the per-line grep misses tr(\n  "key",\n  fb).
+	// Re-scan admin-ui.ts whole-file to catch the resolver's wrapped calls.
+	const adminUi = readFileSync("packages/astropress/src/admin-ui.ts", "utf8");
+	for (const m of adminUi.matchAll(/\btr\(\s*"([A-Za-z0-9_]+)"/g)) {
+		staticKeys.add(m[1]);
+	}
+
 	return { staticKeys, dynamicCalls: dynamic };
 }
 
