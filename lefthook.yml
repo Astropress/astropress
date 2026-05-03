@@ -287,6 +287,22 @@ pre-commit:
         - "packages/astropress/src/admin-routes.ts"
       run: bun run tooling/scripts/audit-admin-route-drift.ts
 
+    # Block any new admin route lacking a paired test mention with anon-auth
+    # keyword. Combined with admin-routes-auth-matrix.test.ts this catches
+    # routes that ship without a redirect-to-login regression check.
+    audit-route-http-matrix:
+      glob:
+        - "packages/astropress/pages/ap-admin/**/*.{astro,ts}"
+        - "packages/astropress/tests/**/*.ts"
+      run: bun run tooling/scripts/audit-route-http-matrix.ts
+
+    # Block any dynamic-segment admin route without an edge-input test.
+    audit-dynamic-segments:
+      glob:
+        - "packages/astropress/pages/ap-admin/**/*.{astro,ts}"
+        - "packages/astropress/tests/**/*.ts"
+      run: bun run tooling/scripts/audit-dynamic-segments.ts
+
     # Auto-regenerate API_REFERENCE.md when an entry-point file changes,
     # then re-stage it. Keeps slow-audits' docs:api:check from being the
     # discovery point — it caused multiple wasted ~10-min pre-push cycles

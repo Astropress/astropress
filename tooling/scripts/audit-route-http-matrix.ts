@@ -96,3 +96,21 @@ writeFileSync(OUT, `${JSON.stringify(report, null, 2)}\n`);
 console.log(
 	`route-http-matrix: total=${rows.length} untouched=${untouched.length} no-anon-auth-test=${noAnonAuth.length} smoke-covered=${rows.filter((r) => r.mentionedInSmoke).length}`,
 );
+
+// Gate: every admin route must be referenced by at least one test file AND
+// at least one test must pair it with an anon-redirect / login keyword.
+// Why both: untouched=0 alone allows a route to be tested for a happy path
+// while regressing the auth gate silently. The new admin-routes-auth-matrix
+// test embeds every route prefix paired with /ap-admin/login, so any new
+// route added without a paired test will surface here, not in prod.
+if (untouched.length > 0 || noAnonAuth.length > 0) {
+	console.error(
+		`route-http-matrix FAIL: ${untouched.length} untouched, ${noAnonAuth.length} without anon-auth coverage.`,
+	);
+	for (const r of untouched) console.error(`  untouched: ${r.route}`);
+	for (const r of noAnonAuth) console.error(`  no-anon-auth: ${r.route}`);
+	console.error(
+		"\nAdd the route prefix to packages/astropress/tests/admin-routes-auth-matrix.test.ts (paired with /ap-admin/login keyword) or write a dedicated test.",
+	);
+	process.exit(1);
+}

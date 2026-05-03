@@ -76,3 +76,15 @@ writeFileSync(OUT, `${JSON.stringify(report, null, 2)}\n`);
 console.log(
 	`dynamic-segments: total=${findings.length} uncovered=${uncovered.length}`,
 );
+
+// Gate: any dynamic-segment route without a test mention is a 404 risk.
+// Mention the route prefix in admin-routes-auth-matrix.test.ts (or any
+// dedicated test file) to silence.
+if (uncovered.length > 0) {
+	console.error(
+		`dynamic-segments FAIL: ${uncovered.length} dynamic route(s) lack edge-input coverage.`,
+	);
+	for (const f of uncovered)
+		console.error(`  ${f.route} (${f.param}) — file: ${f.file}`);
+	process.exit(1);
+}
