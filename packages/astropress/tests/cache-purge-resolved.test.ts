@@ -174,6 +174,53 @@ describe("purgeCdnCacheForResolved — kind: 'webhook'", () => {
 	});
 });
 
+describe("purgeCdnCacheForResolved — non-2xx with body that fails to read", () => {
+	// Covers the `.catch(() => "")` callback on res.text() — when the upstream
+	// returns non-OK and the body stream itself throws (chunked encoding cut,
+	// gzip decode error, etc.). The warn-log path must still fire with an
+	// empty body string rather than crashing.
+	function makeFetchWithBrokenBody(): typeof fetch {
+		return async () => {
+			const res = new Response(null, { status: 500 });
+			Object.defineProperty(res, "text", {
+				value: () => Promise.reject(new Error("body stream broken")),
+			});
+			return res;
+		};
+	}
+
+	it("logs a warning for cloudflare when res.text() rejects", async () => {
+		const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+		await expect(
+			purgeCdnCacheForResolved(
+				"slug",
+				{
+					kind: "cloudflare",
+					apiToken: "tok",
+					zoneId: "z",
+					source: "registry",
+				},
+				{ fetch: makeFetchWithBrokenBody() },
+			),
+		).resolves.toBeUndefined();
+		expect(warnSpy).toHaveBeenCalled();
+		warnSpy.mockRestore();
+	});
+
+	it("logs a warning for webhook when res.text() rejects", async () => {
+		const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+		await expect(
+			purgeCdnCacheForResolved(
+				"slug",
+				{ kind: "webhook", url: "https://x", source: "config" },
+				{ fetch: makeFetchWithBrokenBody() },
+			),
+		).resolves.toBeUndefined();
+		expect(warnSpy).toHaveBeenCalled();
+		warnSpy.mockRestore();
+	});
+});
+
 describe("purgeCdnCacheForResolved — fetch wiring", () => {
 	let warnSpy: ReturnType<typeof vi.spyOn>;
 	beforeEach(() => {
