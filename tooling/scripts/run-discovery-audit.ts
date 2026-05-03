@@ -88,5 +88,15 @@ const lines = [
 	"",
 ];
 
-writeFileSync("tooling/audit-output/SUMMARY.md", `${lines.join("\n")}\n`);
-console.log("\n→ tooling/audit-output/SUMMARY.md");
+// Only rewrite SUMMARY.md when explicitly asked. The aggregator runs in
+// pre-push slow-audits as a hard gate, but rewriting SUMMARY.md every push
+// dirties the worktree and trips repo:clean. Pass --write-summary for
+// manual / scheduled runs that should refresh the snapshot.
+if (process.argv.includes("--write-summary")) {
+	writeFileSync("tooling/audit-output/SUMMARY.md", `${lines.join("\n")}\n`);
+	console.log("\n→ tooling/audit-output/SUMMARY.md");
+} else {
+	console.log(
+		"\n(skipping SUMMARY.md write; pass --write-summary to refresh)",
+	);
+}
