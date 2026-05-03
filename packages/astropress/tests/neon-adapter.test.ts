@@ -129,4 +129,52 @@ describe("createAstropressNeonHostedAdapter", () => {
 			/DATABASE_URL/,
 		);
 	});
+
+	it("prefers NEON_DATABASE_URL over DATABASE_URL (pins ?? operand order)", () => {
+		const config = readAstropressNeonHostedConfig({
+			NEON_DATABASE_URL: "postgres://neon:pw@neon-host/db",
+			DATABASE_URL: "postgres://other:pw@other-host/db",
+		});
+		expect(config.databaseUrl).toBe("postgres://neon:pw@neon-host/db");
+	});
+
+	it("trims whitespace from NEON_PROJECT_ID (pins .trim() call)", () => {
+		const config = readAstropressNeonHostedConfig({
+			DATABASE_URL: "postgres://u:p@host/db",
+			NEON_PROJECT_ID: "  proj-spaced-id  ",
+		});
+		expect(config.projectId).toBe("proj-spaced-id");
+	});
+
+	it("trims whitespace from NEON_DATABASE_URL (pins .trim() call)", () => {
+		const config = readAstropressNeonHostedConfig({
+			NEON_DATABASE_URL: "  postgres://neon:pw@host/db  ",
+		});
+		expect(config.databaseUrl).toBe("postgres://neon:pw@host/db");
+	});
+
+	it("explicit defaultCapabilities.hostPanel overrides the Neon Console default (pins ?? fallback)", () => {
+		const customPanel = {
+			mode: "iframe" as const,
+			url: "https://my-custom-panel.example",
+			label: "Custom",
+		};
+		const adapter = createAstropressNeonHostedAdapter({
+			env: validEnv,
+			defaultCapabilities: { hostPanel: customPanel },
+		});
+		expect(adapter.capabilities.hostPanel).toEqual(customPanel);
+	});
+
+	it("createAstropressNeonAdapter merges user-supplied defaultCapabilities (pins spread order)", () => {
+		// User overrides hostedAdmin → true. The spread {...options.defaultCapabilities}
+		// AFTER the literal must apply, so hostedAdmin should be true here.
+		const adapter = createAstropressNeonAdapter({
+			defaultCapabilities: { hostedAdmin: true, objectStorage: true },
+		});
+		expect(adapter.capabilities.hostedAdmin).toBe(true);
+		expect(adapter.capabilities.objectStorage).toBe(true);
+		// database: true comes from the literal and is NOT overridden by the spread.
+		expect(adapter.capabilities.database).toBe(true);
+	});
 });
