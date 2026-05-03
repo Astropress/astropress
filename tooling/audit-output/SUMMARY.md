@@ -1,6 +1,6 @@
 # Discovery audit — quality gap inventory
 
-Generated: 2026-05-03T14:24:35.782Z
+Generated: 2026-05-03T14:40:49.676Z
 
 Each row links to the JSON artifact with the full file list. The follow-up sweeping-fix plan consumes these artifacts directly.
 
@@ -10,7 +10,7 @@ Each row links to the JSON artifact with the full file list. The follow-up sweep
 | W2 | Astro check gap | 73/78 `.astro` files have no astro-check (framework pages = 45, components = 28) | [astro-build-gap.json](./astro-build-gap.json) |
 | W3 | Route × auth coverage | 0/102 routes test-untouched; 0 have no anon-auth/redirect test; smoke covers 39 | [route-http-matrix.json](./route-http-matrix.json) |
 | W4 | Dynamic-segment edge cases | 0/10 dynamic routes never mentioned in tests | [dynamic-segments.json](./dynamic-segments.json) |
-| W5 | Admin label coverage | 0/96 label keys are dead (defined, never read); 0 dynamic call sites | [admin-label-coverage.json](./admin-label-coverage.json) |
+| W5 | Admin label coverage | 0/101 label keys are dead (defined, never read); 0 dynamic call sites | [admin-label-coverage.json](./admin-label-coverage.json) |
 | W6 | Mutation blind spots | ignoreStatic=true; 91 files <80%, 17 [80,90), 8 [90,95); 10 high-fanout tests on allowlist | [mutation-blindspots.json](./mutation-blindspots.json) |
 | W7 | v8 coverage scope | only 1 files in vitest `coverage.include`; 0/266 baseline-tracked files unmeasured by v8; 0 files mutation-passing ≥95 with no v8 line/branch threshold | [v8-coverage-scope.json](./v8-coverage-scope.json) |
 | W8 | Source-test pairing | TS: 120 unpaired src / 77 orphan tests (heuristic, includes false positives from path-flattened naming). Rust: 63/89 unpaired (21 are inline-tested) | [source-test-pairing.json](./source-test-pairing.json) |
