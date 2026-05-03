@@ -6,6 +6,7 @@
 	"scripts": {
 		"bdd:lint": "bun run tooling/scripts/bdd-lint.ts",
 		"bdd:test": "bun run tooling/scripts/bdd-test.ts",
+		"audit:discovery": "bun run tooling/scripts/run-discovery-audit.ts",
 		"audit:deps": "bun audit",
 		"audit:security": "bun run tooling/scripts/security-audit.ts",
 		"audit:codeql-patterns": "bun run tooling/scripts/audit-codeql-patterns.ts",
