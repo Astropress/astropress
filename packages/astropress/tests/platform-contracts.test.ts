@@ -5,6 +5,7 @@ import {
 	type MediaAssetRecord,
 	type RevisionRecord,
 	assertProviderContract,
+	isAuthUserAdmin,
 	normalizeProviderCapabilities,
 } from "@astropress-diy/astropress";
 import { describe, expect, it } from "vitest";
@@ -143,6 +144,75 @@ describe("platform contracts", () => {
 				capabilities: { ...normalizeProviderCapabilities({ name: "" }) },
 			}),
 		).toThrow(/must declare a name/i);
+	});
+
+	it("rejects an adapter missing only the content store", () => {
+		const base = createInMemoryAdapter();
+		expect(() =>
+			assertProviderContract({
+				...base,
+				content: undefined,
+			} as unknown as AstropressPlatformAdapter),
+		).toThrow(/missing one or more required stores/i);
+	});
+
+	it("rejects an adapter missing only the media store", () => {
+		const base = createInMemoryAdapter();
+		expect(() =>
+			assertProviderContract({
+				...base,
+				media: undefined,
+			} as unknown as AstropressPlatformAdapter),
+		).toThrow(/missing one or more required stores/i);
+	});
+
+	it("rejects an adapter missing only the revisions store", () => {
+		const base = createInMemoryAdapter();
+		expect(() =>
+			assertProviderContract({
+				...base,
+				revisions: undefined,
+			} as unknown as AstropressPlatformAdapter),
+		).toThrow(/missing one or more required stores/i);
+	});
+
+	it("rejects an adapter missing only the auth store", () => {
+		const base = createInMemoryAdapter();
+		expect(() =>
+			assertProviderContract({
+				...base,
+				auth: undefined,
+			} as unknown as AstropressPlatformAdapter),
+		).toThrow(/missing one or more required stores/i);
+	});
+
+	it("normalizeProviderCapabilities preserves an explicitly-provided hostPanel and deployHook", () => {
+		const result = normalizeProviderCapabilities({
+			name: "custom",
+			hostPanel: { url: "https://panel.example" },
+			deployHook: { url: "https://deploy.example" },
+		});
+		expect(result.hostPanel).toEqual({ url: "https://panel.example" });
+		expect(result.deployHook).toEqual({ url: "https://deploy.example" });
+	});
+
+	describe("isAuthUserAdmin", () => {
+		const base: AuthUser = { id: "u", email: "x@y", role: "admin" };
+		it("returns true when isAdmin === true", () => {
+			expect(isAuthUserAdmin({ ...base, isAdmin: true })).toBe(true);
+		});
+		it("returns false when isAdmin is false", () => {
+			expect(isAuthUserAdmin({ ...base, isAdmin: false })).toBe(false);
+		});
+		it("returns false when isAdmin is undefined", () => {
+			expect(isAuthUserAdmin(base)).toBe(false);
+		});
+		// Pin the strict equality check: isAdmin === true must reject truthy non-true.
+		it("returns false when isAdmin is a truthy non-boolean (1)", () => {
+			expect(
+				isAuthUserAdmin({ ...base, isAdmin: 1 as unknown as boolean }),
+			).toBe(false);
+		});
 	});
 
 	it("supports full content CRUD lifecycle", async () => {
