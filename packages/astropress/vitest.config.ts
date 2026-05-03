@@ -1,9 +1,6 @@
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "vitest/config";
 
-const isCoverageRun = process.argv.includes("--coverage");
-const isSingleForkCoverageRun = isCoverageRun;
-
 export default defineConfig({
 	resolve: {
 		// Prefer .ts over .js for extensionless imports so v8 coverage tracks
@@ -59,9 +56,12 @@ export default defineConfig({
 		testTimeout: 20000,
 		hookTimeout: 60000,
 		unstubGlobals: true,
-		pool: isSingleForkCoverageRun ? "forks" : undefined,
-		maxWorkers: isSingleForkCoverageRun ? 1 : undefined,
-		isolate: isSingleForkCoverageRun ? false : undefined,
+		// Default isolation kept on (no pool/maxWorkers/isolate overrides) so
+		// vi.mock works correctly per file. The previous coverage-mode hack
+		// (pool: forks, maxWorkers: 1, isolate: false) shared module state
+		// across files and silently broke ~5 tests that mock
+		// ../src/local-runtime-modules with different shapes — first import
+		// won, subsequent vi.mock calls were no-ops.
 		coverage: {
 			provider: "v8",
 			reporter: ["text", "json-summary"],
