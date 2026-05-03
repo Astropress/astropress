@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
 	PLAUSIBLE_FIELDS,
@@ -203,6 +203,20 @@ describe("verifyPlausible", () => {
 			expect((err as PlausibleVerifyError).code).toBe(
 				"INTEGRATION_AUTH_REJECTED",
 			);
+		}
+	});
+
+	it("falls back to global fetch when deps.fetch is omitted", async () => {
+		const stub = vi
+			.spyOn(globalThis, "fetch")
+			.mockResolvedValue(new Response(null, { status: 200 }));
+		try {
+			await expect(
+				verifyPlausible(FIELDS, { signal }),
+			).resolves.toBeUndefined();
+			expect(stub).toHaveBeenCalledTimes(1);
+		} finally {
+			stub.mockRestore();
 		}
 	});
 });

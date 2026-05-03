@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
 	LISTMONK_FIELDS,
@@ -209,6 +209,18 @@ describe("verifyListmonk", () => {
 			expect((err as ListmonkVerifyError).code).toBe(
 				"INTEGRATION_AUTH_REJECTED",
 			);
+		}
+	});
+
+	it("falls back to global fetch when deps.fetch is omitted", async () => {
+		const stub = vi
+			.spyOn(globalThis, "fetch")
+			.mockResolvedValue(new Response(null, { status: 200 }));
+		try {
+			await expect(verifyListmonk(FIELDS, { signal })).resolves.toBeUndefined();
+			expect(stub).toHaveBeenCalledTimes(1);
+		} finally {
+			stub.mockRestore();
 		}
 	});
 });
