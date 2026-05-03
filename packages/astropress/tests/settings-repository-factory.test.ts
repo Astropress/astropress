@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { createAstropressSettingsRepository } from "../src/settings-repository-factory";
+import { defaultSiteSettings } from "../src/site-settings";
 
 describe("settings repository factory", () => {
 	it("merges and persists site settings through package-owned repository assembly", () => {
@@ -39,5 +40,26 @@ describe("settings repository factory", () => {
 		});
 		expect(persistSettings).toHaveBeenCalledTimes(1);
 		expect(recordSettingsAudit).toHaveBeenCalledTimes(1);
+	});
+
+	it("falls back to defaultSiteSettings when getSettings returns null", () => {
+		const persistSettings = vi.fn();
+		const recordSettingsAudit = vi.fn();
+		const repository = createAstropressSettingsRepository({
+			getSettings: vi.fn(() => null),
+			persistSettings,
+			recordSettingsAudit,
+		});
+
+		const result = repository.saveSettings(
+			{ siteTitle: "Brand New" },
+			{ email: "admin@example.com", role: "admin", name: "Admin" },
+		);
+
+		expect(result.ok).toBe(true);
+		expect(result.settings).toEqual({
+			...defaultSiteSettings,
+			siteTitle: "Brand New",
+		});
 	});
 });
