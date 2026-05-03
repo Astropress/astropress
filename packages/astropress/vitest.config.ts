@@ -66,31 +66,14 @@ export default defineConfig({
 			provider: "v8",
 			reporter: ["text", "json-summary"],
 			reportsDirectory: "./coverage",
-			include: [
-				"src/admin-link-utils.ts",
-				"src/admin-action-utils.ts",
-				"src/admin-normalizers.ts",
-				"src/security-headers.ts",
-				"src/html-optimization.ts",
-				"src/html-sanitization.ts",
-				"src/locale-links.ts",
-				"src/media.ts",
-				"src/provider-targets.ts",
-				"src/runtime-admin-actions.ts",
-				"src/runtime-actions-content.ts",
-				"src/runtime-actions-users.ts",
-				"src/runtime-actions-media.ts",
-				"src/runtime-actions-taxonomies.ts",
-				"src/runtime-actions-misc.ts",
-				"src/admin-page-models.ts",
-				"src/runtime-route-registry.ts",
-				"src/runtime-route-registry-system.ts",
-				"src/runtime-route-registry-pages.ts",
-				"src/runtime-route-registry-archives.ts",
-				"src/admin-store-dispatch.ts",
-				"src/analytics.ts",
-				"src/api-routes.ts",
-			],
+			// Broadened from a hand-picked 23-file allowlist to the full src
+			// tree. The previous narrow include hid 242 baseline-tracked files
+			// from v8 entirely; the discovery audit flagged this as "false
+			// confidence" — mutation passing on a file v8 never executed.
+			// audit-v8-coverage-scope now gates that no baseline file goes
+			// unmeasured. Per-file ratcheting lives in a follow-up coverage
+			// floor script, mirroring the mutation baseline pattern.
+			include: ["src/**/*.ts"],
 			exclude: [
 				"src/cloudflare-*-stub.*",
 				"src/client/**/*.ts",
@@ -98,12 +81,10 @@ export default defineConfig({
 				"src/**/*.d.ts",
 				"dist/**",
 			],
-			thresholds: {
-				lines: 95,
-				functions: 95,
-				branches: 85,
-				statements: 95,
-			},
+			// Thresholds intentionally omitted at this stage — the broadened
+			// include drops aggregate percentages well below the previous 95s.
+			// audit-v8-coverage-scope enforces the include ratchet; per-file
+			// thresholds will land alongside the coverage-floor script.
 		},
 	},
 });

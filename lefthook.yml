@@ -320,6 +320,14 @@ pre-commit:
         - "packages/astropress/src/d1-*.ts"
       run: bun run tooling/scripts/audit-schema-migration-robustness.ts
 
+    # Block any future narrowing of vitest coverage.include that would drop
+    # baseline-tracked src files out of v8 measurement (false confidence).
+    audit-v8-coverage-scope:
+      glob:
+        - "packages/astropress/vitest.config.ts"
+        - "tooling/stryker/baseline-scores.json"
+      run: bun run tooling/scripts/audit-v8-coverage-scope.ts
+
     # Auto-regenerate API_REFERENCE.md when an entry-point file changes,
     # then re-stage it. Keeps slow-audits' docs:api:check from being the
     # discovery point — it caused multiple wasted ~10-min pre-push cycles
