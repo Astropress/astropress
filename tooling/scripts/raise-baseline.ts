@@ -96,13 +96,10 @@ function runStryker(targets: string[], tmp: string): StrykerReport | null {
 `,
 	);
 	const strykerBin = join(process.cwd(), "node_modules/.bin/stryker");
-	const result = spawnSync("node", [strykerBin, "run", configPath], {
+	spawnSync("node", [strykerBin, "run", configPath], {
 		cwd: join(process.cwd(), "packages/astropress"),
 		stdio: "inherit",
 	});
-	if (result.status !== 0 && result.status !== 0) {
-		// break: 0 → non-zero means error, not threshold.
-	}
 	if (!existsSync(reportPath)) return null;
 	return JSON.parse(readFileSync(reportPath, "utf8")) as StrykerReport;
 }
