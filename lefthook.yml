@@ -337,6 +337,12 @@ pre-commit:
         - "tooling/audit-output/boundary-types-baseline.json"
       run: bun run tooling/scripts/audit-boundary-types.ts
 
+    # Block any unresolved `audit-followup: <id>` markers from accumulating.
+    # The convention pairs every deferred adjacent issue with a marker so it
+    # stays visible in pre-push instead of decaying into invisible TODO sprawl.
+    audit-followup-marker:
+      run: bun run tooling/scripts/audit-followup-marker.ts
+
     # Grandfather-ratchet on src files lacking a *.test.ts companion (and
     # orphan tests with no src target). Counts can shrink, never grow.
     audit-source-test-pairing:
