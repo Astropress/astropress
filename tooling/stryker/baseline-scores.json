@@ -1,5 +1,5 @@
 {
-	"updatedAt": "2026-05-03T10:07:02.595Z",
+	"updatedAt": "2026-05-03T10:13:50.129Z",
 	"scores": {
 		"packages/astropress/src/adapters/adapter-record-helpers.ts": {
 			"score": 66.66666666666666,
@@ -386,7 +386,7 @@
 			"hash": "e72cccb4ad2e21750b13008eecdf158e83907051"
 		},
 		"packages/astropress/src/sqlite-runtime/api-tokens.ts": {
-			"score": 87.17948717948718,
+			"score": 97.14285714285714,
 			"hash": "3116ff2981f758511d151e43fe3ef907e9150cd7"
 		},
 		"packages/astropress/src/sqlite-runtime/assets.ts": {
