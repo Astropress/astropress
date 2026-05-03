@@ -1,0 +1,1342 @@
+{
+  "updatedAt": "2026-05-03T17:13:34.922Z",
+  "note": "Per-file v8 coverage floor — counts may move up, never down. Run --rewrite-baseline after intentionally raising tests.",
+  "floor": 95,
+  "scores": {
+    "packages/astropress/src/access/action-registry.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/access/audit-deny.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/access/condition-evaluator.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/access/d1-access-page-store.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/access/d1-access-store.ts": {
+      "lines": 0,
+      "branches": 0,
+      "functions": 0
+    },
+    "packages/astropress/src/access/engine.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/access/evaluator.ts": {
+      "lines": 100,
+      "branches": 82.75,
+      "functions": 87.5
+    },
+    "packages/astropress/src/access/index.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/access/locals.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/access/middleware.ts": {
+      "lines": 0,
+      "branches": 100,
+      "functions": 0
+    },
+    "packages/astropress/src/access/page-guard.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/access/repository.ts": {
+      "lines": 91.95,
+      "branches": 82.6,
+      "functions": 87.09
+    },
+    "packages/astropress/src/access/request-context.ts": {
+      "lines": 76.92,
+      "branches": 50,
+      "functions": 77.77
+    },
+    "packages/astropress/src/access/types.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/adapters/adapter-record-helpers.ts": {
+      "lines": 95.45,
+      "branches": 92.5,
+      "functions": 88.88
+    },
+    "packages/astropress/src/adapters/appwrite.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/adapters/cloudflare-auth.ts": {
+      "lines": 98.48,
+      "branches": 96.66,
+      "functions": 100
+    },
+    "packages/astropress/src/adapters/cloudflare-helpers.ts": {
+      "lines": 96.87,
+      "branches": 91.42,
+      "functions": 100
+    },
+    "packages/astropress/src/adapters/cloudflare.ts": {
+      "lines": 100,
+      "branches": 98.3,
+      "functions": 100
+    },
+    "packages/astropress/src/adapters/hosted.ts": {
+      "lines": 100,
+      "branches": 94.11,
+      "functions": 100
+    },
+    "packages/astropress/src/adapters/local.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/adapters/neon.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/adapters/nhost.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/adapters/pocketbase.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/adapters/project.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/adapters/sqlite-helpers.ts": {
+      "lines": 51.31,
+      "branches": 32.09,
+      "functions": 35.29
+    },
+    "packages/astropress/src/adapters/sqlite.ts": {
+      "lines": 65.9,
+      "branches": 51.61,
+      "functions": 47.05
+    },
+    "packages/astropress/src/adapters/supabase-sqlite.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/adapters/supabase.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/adapters/turso.ts": {
+      "lines": 100,
+      "branches": 94.11,
+      "functions": 100
+    },
+    "packages/astropress/src/admin-action-mailchimp-import.ts": {
+      "lines": 100,
+      "branches": 90.32,
+      "functions": 100
+    },
+    "packages/astropress/src/admin-action-publish.ts": {
+      "lines": 86.76,
+      "branches": 81.96,
+      "functions": 75
+    },
+    "packages/astropress/src/admin-action-user-purge.ts": {
+      "lines": 0,
+      "branches": 0,
+      "functions": 0
+    },
+    "packages/astropress/src/admin-action-utils.ts": {
+      "lines": 86.66,
+      "branches": 78.57,
+      "functions": 100
+    },
+    "packages/astropress/src/admin-app-integration.ts": {
+      "lines": 54.28,
+      "branches": 33.33,
+      "functions": 50
+    },
+    "packages/astropress/src/admin-branding.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/admin-dashboard.ts": {
+      "lines": 63.63,
+      "branches": 21.21,
+      "functions": 23.52
+    },
+    "packages/astropress/src/admin-i18n.ts": {
+      "lines": 0,
+      "branches": 0,
+      "functions": 0
+    },
+    "packages/astropress/src/admin-labels.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/admin-link-utils.ts": {
+      "lines": 90,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/admin-locale-links.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/admin-locale.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/admin-normalizers.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/admin-page-data.ts": {
+      "lines": 0,
+      "branches": 100,
+      "functions": 0
+    },
+    "packages/astropress/src/admin-page-labels.ts": {
+      "lines": 100,
+      "branches": 60,
+      "functions": 100
+    },
+    "packages/astropress/src/admin-page-model-helpers.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/admin-page-models-access.ts": {
+      "lines": 94.11,
+      "branches": 100,
+      "functions": 85.71
+    },
+    "packages/astropress/src/admin-page-models-editors.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/admin-page-models-listings.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/admin-page-models.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/admin-persistence.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/admin-preview-middleware.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/admin-recent.ts": {
+      "lines": 0,
+      "branches": 0,
+      "functions": 0
+    },
+    "packages/astropress/src/admin-routes.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/admin-slug-cache.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/admin-store-adapter-factory.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/admin-store-dispatch.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/admin-stub-catalog.ts": {
+      "lines": 75,
+      "branches": 100,
+      "functions": 0
+    },
+    "packages/astropress/src/admin-ui.ts": {
+      "lines": 78.57,
+      "branches": 76.19,
+      "functions": 60
+    },
+    "packages/astropress/src/analytics.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/api-middleware.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/api-routes.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/app-host-targets-data.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/app-host-targets.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/auth-emergency-revoke-ops.ts": {
+      "lines": 0,
+      "branches": 0,
+      "functions": 0
+    },
+    "packages/astropress/src/auth-repository-factory.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/auth-repository-helpers.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/author-repository-factory.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/build-time-content-loader.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/cache-purge.ts": {
+      "lines": 100,
+      "branches": 86.66,
+      "functions": 50
+    },
+    "packages/astropress/src/cloudflare-vite-integration.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/cms-plugins.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/cms-route-registry-factory.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/cms-route-registry-helpers.ts": {
+      "lines": 97.46,
+      "branches": 96.15,
+      "functions": 100
+    },
+    "packages/astropress/src/cms-route-registry-types.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/comment-repository-factory.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/config-service-types.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/config-store.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/config.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/content-modeling.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/content-repository-factory.ts": {
+      "lines": 100,
+      "branches": 95.57,
+      "functions": 100
+    },
+    "packages/astropress/src/content-repository-helpers.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/content-services-ops.ts": {
+      "lines": 88.88,
+      "branches": 68.18,
+      "functions": 100
+    },
+    "packages/astropress/src/crypto-primitives.ts": {
+      "lines": 96.55,
+      "branches": 92.85,
+      "functions": 100
+    },
+    "packages/astropress/src/crypto-utils.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/d1-admin-store.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/d1-audit.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/d1-database.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/d1-locks.ts": {
+      "lines": 0,
+      "branches": 0,
+      "functions": 0
+    },
+    "packages/astropress/src/d1-migrate-ops.ts": {
+      "lines": 100,
+      "branches": 95.83,
+      "functions": 100
+    },
+    "packages/astropress/src/d1-purge.ts": {
+      "lines": 0,
+      "branches": 0,
+      "functions": 0
+    },
+    "packages/astropress/src/d1-rate-limit-part.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/d1-store-content-helpers.ts": {
+      "lines": 70,
+      "branches": 61.11,
+      "functions": 50
+    },
+    "packages/astropress/src/d1-store-content.ts": {
+      "lines": 94.73,
+      "branches": 80.85,
+      "functions": 95.23
+    },
+    "packages/astropress/src/d1-store-media.ts": {
+      "lines": 0,
+      "branches": 0,
+      "functions": 0
+    },
+    "packages/astropress/src/d1-store-operations-helpers.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/d1-store-operations.ts": {
+      "lines": 47.5,
+      "branches": 27.27,
+      "functions": 55.55
+    },
+    "packages/astropress/src/d1-store-taxonomies.ts": {
+      "lines": 96.22,
+      "branches": 79.48,
+      "functions": 85.71
+    },
+    "packages/astropress/src/data-service-targets-data.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/data-service-targets.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/db-migrate-ops.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/deploy/cloudflare-pages.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/deploy/custom.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/deploy/github-pages.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/deploy/gitlab-pages.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/deploy/netlify.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/deploy/render.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/deploy/shared.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/deploy/vercel.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/deployment-matrix-data.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/deployment-matrix.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/donations.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/host-runtime-factories.ts": {
+      "lines": 15.62,
+      "branches": 50,
+      "functions": 15.07
+    },
+    "packages/astropress/src/host-runtime-modules.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/hosted-api-adapter.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/hosted-platform-adapter.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/html-optimization.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/html-sanitization.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/import/credentials.ts": {
+      "lines": 80,
+      "branches": 69.76,
+      "functions": 100
+    },
+    "packages/astropress/src/import/download-media.ts": {
+      "lines": 97.43,
+      "branches": 91.66,
+      "functions": 100
+    },
+    "packages/astropress/src/import/fetch-wix.ts": {
+      "lines": 90.76,
+      "branches": 87.5,
+      "functions": 88.88
+    },
+    "packages/astropress/src/import/fetch-wordpress.ts": {
+      "lines": 84.61,
+      "branches": 66.66,
+      "functions": 91.66
+    },
+    "packages/astropress/src/import/page-crawler.ts": {
+      "lines": 50,
+      "branches": 42.55,
+      "functions": 77.77
+    },
+    "packages/astropress/src/import/sharp-transcode.ts": {
+      "lines": 0,
+      "branches": 100,
+      "functions": 0
+    },
+    "packages/astropress/src/import/wix-apply.ts": {
+      "lines": 0,
+      "branches": 0,
+      "functions": 0
+    },
+    "packages/astropress/src/import/wix-csv.ts": {
+      "lines": 0,
+      "branches": 0,
+      "functions": 0
+    },
+    "packages/astropress/src/import/wix.ts": {
+      "lines": 0,
+      "branches": 0,
+      "functions": 0
+    },
+    "packages/astropress/src/import/wordpress-apply.ts": {
+      "lines": 97.91,
+      "branches": 85,
+      "functions": 100
+    },
+    "packages/astropress/src/import/wordpress-xml-helpers.ts": {
+      "lines": 100,
+      "branches": 91.42,
+      "functions": 100
+    },
+    "packages/astropress/src/import/wordpress-xml.ts": {
+      "lines": 100,
+      "branches": 95.65,
+      "functions": 100
+    },
+    "packages/astropress/src/import/wordpress.ts": {
+      "lines": 100,
+      "branches": 92.77,
+      "functions": 100
+    },
+    "packages/astropress/src/in-memory-platform-adapter.ts": {
+      "lines": 32.35,
+      "branches": 38.46,
+      "functions": 31.57
+    },
+    "packages/astropress/src/integration-error-sanitizer.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/integration-manifest.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/integration-secret-envelope.ts": {
+      "lines": 98.61,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/integration.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/integrations/badge-tone.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/integrations/connect-flow.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/integrations/domains.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/integrations/oauth/registry.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/integrations/oauth/start.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/integrations/oauth/state.ts": {
+      "lines": 100,
+      "branches": 97.91,
+      "functions": 100
+    },
+    "packages/astropress/src/integrations/oauth/token-exchange.ts": {
+      "lines": 100,
+      "branches": 95.83,
+      "functions": 100
+    },
+    "packages/astropress/src/integrations/providers/cloudflare-cdn.ts": {
+      "lines": 100,
+      "branches": 94.11,
+      "functions": 100
+    },
+    "packages/astropress/src/integrations/providers/github-deploy.ts": {
+      "lines": 100,
+      "branches": 92.3,
+      "functions": 100
+    },
+    "packages/astropress/src/integrations/providers/listmonk.ts": {
+      "lines": 100,
+      "branches": 92.3,
+      "functions": 100
+    },
+    "packages/astropress/src/integrations/providers/plausible.ts": {
+      "lines": 100,
+      "branches": 92.3,
+      "functions": 100
+    },
+    "packages/astropress/src/integrations/registry.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/integrations/resolvers/analytics-stats-resolver.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/integrations/resolvers/cdn-purge-resolver.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/integrations/resolvers/newsletter-resolver.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/integrations/runtime.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/integrations/webhooks/inbound.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/integrations/webhooks/receiver.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/integrations/webhooks/registry.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/local-image-storage.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/local-media-repository-factory.ts": {
+      "lines": 95.23,
+      "branches": 87.5,
+      "functions": 100
+    },
+    "packages/astropress/src/local-media-storage.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/locale-links.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/media.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/newsletter-adapter.ts": {
+      "lines": 58.13,
+      "branches": 42.85,
+      "functions": 36.36
+    },
+    "packages/astropress/src/persistence-commons.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/persistence-types.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/platform-contracts-helpers.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/platform-contracts.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/plugin-dispatch.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/plugins/sitemap-plugin.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/project-env.ts": {
+      "lines": 99.01,
+      "branches": 99.23,
+      "functions": 100
+    },
+    "packages/astropress/src/project-launch.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/project-runtime.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/project-scaffold-ci-helpers.ts": {
+      "lines": 82.05,
+      "branches": 83.33,
+      "functions": 77.77
+    },
+    "packages/astropress/src/project-scaffold-ci.ts": {
+      "lines": 97.95,
+      "branches": 87.5,
+      "functions": 100
+    },
+    "packages/astropress/src/project-scaffold-env.ts": {
+      "lines": 77.19,
+      "branches": 76.59,
+      "functions": 100
+    },
+    "packages/astropress/src/project-scaffold-passphrase-wordlist.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/project-scaffold-passphrase.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/project-scaffold.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/provider-choice.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/provider-targets-data.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/provider-targets.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/public-site-integration.ts": {
+      "lines": 100,
+      "branches": 55.55,
+      "functions": 100
+    },
+    "packages/astropress/src/rate-limit-repository-factory.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/redirect-repository-factory.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/result.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/return-path.ts": {
+      "lines": 0,
+      "branches": 0,
+      "functions": 0
+    },
+    "packages/astropress/src/runtime-actions-access.ts": {
+      "lines": 84.5,
+      "branches": 81.81,
+      "functions": 68.96
+    },
+    "packages/astropress/src/runtime-actions-content-helpers.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/runtime-actions-content-restore.ts": {
+      "lines": 100,
+      "branches": 91.66,
+      "functions": 100
+    },
+    "packages/astropress/src/runtime-actions-content-shared.ts": {
+      "lines": 93.02,
+      "branches": 59.52,
+      "functions": 92.3
+    },
+    "packages/astropress/src/runtime-actions-content-types.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/runtime-actions-content.ts": {
+      "lines": 98.27,
+      "branches": 97.5,
+      "functions": 100
+    },
+    "packages/astropress/src/runtime-actions-integrations.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/runtime-actions-media-helpers.ts": {
+      "lines": 100,
+      "branches": 97.22,
+      "functions": 100
+    },
+    "packages/astropress/src/runtime-actions-media.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/runtime-actions-misc.ts": {
+      "lines": 97.77,
+      "branches": 91.66,
+      "functions": 100
+    },
+    "packages/astropress/src/runtime-actions-password-reset.ts": {
+      "lines": 95,
+      "branches": 84.61,
+      "functions": 100
+    },
+    "packages/astropress/src/runtime-actions-restore.ts": {
+      "lines": 16.66,
+      "branches": 0,
+      "functions": 33.33
+    },
+    "packages/astropress/src/runtime-actions-taxonomies.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/runtime-actions-users.ts": {
+      "lines": 97.22,
+      "branches": 90.69,
+      "functions": 100
+    },
+    "packages/astropress/src/runtime-admin-actions.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/runtime-admin-auth.ts": {
+      "lines": 100,
+      "branches": 97.36,
+      "functions": 100
+    },
+    "packages/astropress/src/runtime-env.ts": {
+      "lines": 98.07,
+      "branches": 91.52,
+      "functions": 92.85
+    },
+    "packages/astropress/src/runtime-health.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/runtime-logger.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/runtime-media-storage.ts": {
+      "lines": 0,
+      "branches": 0,
+      "functions": 0
+    },
+    "packages/astropress/src/runtime-mutation-store.ts": {
+      "lines": 0,
+      "branches": 0,
+      "functions": 0
+    },
+    "packages/astropress/src/runtime-page-store-helpers.ts": {
+      "lines": 8.69,
+      "branches": 4.76,
+      "functions": 6.52
+    },
+    "packages/astropress/src/runtime-page-store.ts": {
+      "lines": 75,
+      "branches": 22.22,
+      "functions": 86.95
+    },
+    "packages/astropress/src/runtime-route-registry-archives.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/runtime-route-registry-dispatch.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/runtime-route-registry-pages-mutations.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/runtime-route-registry-pages.ts": {
+      "lines": 100,
+      "branches": 96.66,
+      "functions": 100
+    },
+    "packages/astropress/src/runtime-route-registry-system.ts": {
+      "lines": 100,
+      "branches": 95.23,
+      "functions": 100
+    },
+    "packages/astropress/src/runtime-route-registry.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/sections/index.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/sections/preview-renderer.ts": {
+      "lines": 100,
+      "branches": 98.59,
+      "functions": 100
+    },
+    "packages/astropress/src/sections/render-prep.ts": {
+      "lines": 71.42,
+      "branches": 90.9,
+      "functions": 83.33
+    },
+    "packages/astropress/src/sections/sanitize.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/sections/schema.ts": {
+      "lines": 100,
+      "branches": 99.32,
+      "functions": 100
+    },
+    "packages/astropress/src/sections/templates.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/security-headers.ts": {
+      "lines": 96.87,
+      "branches": 95.16,
+      "functions": 100
+    },
+    "packages/astropress/src/security-middleware-entrypoint.ts": {
+      "lines": 0,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/security-middleware.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/seeded-content-type.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/services-config.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/settings-repository-factory.ts": {
+      "lines": 100,
+      "branches": 92.85,
+      "functions": 100
+    },
+    "packages/astropress/src/site-settings.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/sitemap.ts": {
+      "lines": 0,
+      "branches": 0,
+      "functions": 0
+    },
+    "packages/astropress/src/sqlite-admin-runtime.ts": {
+      "lines": 83.33,
+      "branches": 90,
+      "functions": 50
+    },
+    "packages/astropress/src/sqlite-bootstrap-helpers.ts": {
+      "lines": 76.47,
+      "branches": 75,
+      "functions": 100
+    },
+    "packages/astropress/src/sqlite-bootstrap-migrations.ts": {
+      "lines": 95.55,
+      "branches": 79.16,
+      "functions": 100
+    },
+    "packages/astropress/src/sqlite-bootstrap-seeders.ts": {
+      "lines": 58.66,
+      "branches": 6.41,
+      "functions": 61.53
+    },
+    "packages/astropress/src/sqlite-bootstrap.ts": {
+      "lines": 58.73,
+      "branches": 56.09,
+      "functions": 64.7
+    },
+    "packages/astropress/src/sqlite-integrity.ts": {
+      "lines": 100,
+      "branches": 89.74,
+      "functions": 100
+    },
+    "packages/astropress/src/sqlite-runtime/api-tokens.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/sqlite-runtime/assets.ts": {
+      "lines": 100,
+      "branches": 77.77,
+      "functions": 100
+    },
+    "packages/astropress/src/sqlite-runtime/audit-log.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/sqlite-runtime/auth-emergency-revoke.ts": {
+      "lines": 0,
+      "branches": 0,
+      "functions": 0
+    },
+    "packages/astropress/src/sqlite-runtime/auth-helpers.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/sqlite-runtime/auth.ts": {
+      "lines": 96.15,
+      "branches": 92.1,
+      "functions": 100
+    },
+    "packages/astropress/src/sqlite-runtime/catalog.ts": {
+      "lines": 93.75,
+      "branches": 50,
+      "functions": 100
+    },
+    "packages/astropress/src/sqlite-runtime/content-helpers.ts": {
+      "lines": 96.77,
+      "branches": 89.36,
+      "functions": 100
+    },
+    "packages/astropress/src/sqlite-runtime/content-sql.ts": {
+      "lines": 100,
+      "branches": 50,
+      "functions": 100
+    },
+    "packages/astropress/src/sqlite-runtime/content-submissions.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/sqlite-runtime/content.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/sqlite-runtime/integrations.ts": {
+      "lines": 100,
+      "branches": 85.71,
+      "functions": 100
+    },
+    "packages/astropress/src/sqlite-runtime/locks.ts": {
+      "lines": 92,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/sqlite-runtime/purge.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/sqlite-runtime/routes-helpers.ts": {
+      "lines": 100,
+      "branches": 96.87,
+      "functions": 100
+    },
+    "packages/astropress/src/sqlite-runtime/routes.ts": {
+      "lines": 100,
+      "branches": 96.15,
+      "functions": 100
+    },
+    "packages/astropress/src/sqlite-runtime/search.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/sqlite-runtime/settings.ts": {
+      "lines": 100,
+      "branches": 70,
+      "functions": 100
+    },
+    "packages/astropress/src/sqlite-runtime/utils.ts": {
+      "lines": 93.18,
+      "branches": 84.78,
+      "functions": 93.33
+    },
+    "packages/astropress/src/sqlite-runtime/webhooks.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/sqlite-schema-compat.ts": {
+      "lines": 100,
+      "branches": 80.35,
+      "functions": 100
+    },
+    "packages/astropress/src/sqlite-seed-helpers.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/submission-repository-factory.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/sync/git.ts": {
+      "lines": 90.9,
+      "branches": 71.42,
+      "functions": 88.88
+    },
+    "packages/astropress/src/taxonomy-repository-factory.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/transactional-email.ts": {
+      "lines": 61.36,
+      "branches": 35.89,
+      "functions": 87.5
+    },
+    "packages/astropress/src/translation-repository-factory.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/translation-state.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/turnstile.ts": {
+      "lines": 0,
+      "branches": 0,
+      "functions": 0
+    },
+    "packages/astropress/src/user-repository-factory.ts": {
+      "lines": 93.61,
+      "branches": 87.09,
+      "functions": 100
+    },
+    "packages/astropress/src/vite-integration.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/vite-runtime-alias.ts": {
+      "lines": 90.9,
+      "branches": 88.88,
+      "functions": 100
+    },
+    "packages/astropress/src/vitest-runtime-alias.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    },
+    "packages/astropress/src/wordpress-import-contracts.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
+    }
+  }
+}

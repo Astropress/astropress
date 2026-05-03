@@ -337,6 +337,17 @@ pre-commit:
         - "tooling/audit-output/boundary-types-baseline.json"
       run: bun run tooling/scripts/audit-boundary-types.ts
 
+    # Per-file v8 coverage ratchet — lines/branches/functions for every
+    # tracked src file may move up but never down. Seeded baseline lives at
+    # tooling/audit-output/coverage-floor-baseline.json. After intentionally
+    # raising tests, re-run `test:coverage` then
+    # `audit-coverage-floor.ts --rewrite-baseline` to ratchet up.
+    audit-coverage-floor:
+      glob:
+        - "packages/astropress/coverage/coverage-summary.json"
+        - "tooling/audit-output/coverage-floor-baseline.json"
+      run: bun run tooling/scripts/audit-coverage-floor.ts
+
     # Block any unresolved `audit-followup: <id>` markers from accumulating.
     # The convention pairs every deferred adjacent issue with a marker so it
     # stays visible in pre-push instead of decaying into invisible TODO sprawl.

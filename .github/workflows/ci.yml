@@ -289,6 +289,8 @@ jobs:
         if: steps.skip.outputs.cache-hit != 'true'
       - run: bun run test:coverage
         if: steps.skip.outputs.cache-hit != 'true'
+      - run: bun run audit:coverage-floor
+        if: steps.skip.outputs.cache-hit != 'true'
       - run: bun run repo:clean
         if: steps.skip.outputs.cache-hit != 'true'
 
