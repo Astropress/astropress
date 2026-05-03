@@ -497,7 +497,8 @@ pre-push:
           bun run audit:deps:graph &&
           bun run audit:toolchain-pins &&
           bun run docs:api:check &&
-          bun run docs:check
+          bun run docs:check &&
+          bun run tooling/scripts/audit-astro-check.ts
         '
 
     verify-commits-signed:
