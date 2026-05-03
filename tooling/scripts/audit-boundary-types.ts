@@ -15,7 +15,7 @@
  */
 
 import { execFileSync } from "node:child_process";
-import { existsSync, mkdirSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname } from "node:path";
 
 const OUT = "tooling/audit-output/boundary-types.json";
@@ -87,3 +87,67 @@ writeFileSync(OUT, `${JSON.stringify(report, null, 2)}\n`);
 console.log(
 	`boundary-types: ts {casts:${tsCastsOnError.length} record-unk:${tsRecordUnknown.length} unk-arr:${tsUnknownArr.length} env-??:${tsEnvFallback.length} parse-??:${tsJsonParseFallback.length}} rust {Result<,String>:${rustResultString.length} panic:${rustPanic.length} unwrap:${rustUnwrap.length} expect:${rustExpect.length}}`,
 );
+
+// Gate via grandfathered baseline: counts may shrink but never grow. Same
+// pattern as audit-suppressions — locks current weak-typed surface so new
+// code can't add to the pile while incremental cleanup happens.
+const BASELINE = "tooling/audit-output/boundary-types-baseline.json";
+type BaselineShape = {
+	typescript: Record<string, number>;
+	rust: Record<string, number>;
+};
+const current = {
+	typescript: {
+		castsOnCaughtError: tsCastsOnError.length,
+		recordStringUnknown: tsRecordUnknown.length,
+		unknownArray: tsUnknownArr.length,
+		envFallbackChain: tsEnvFallback.length,
+		jsonParseFallbackChain: tsJsonParseFallback.length,
+	},
+	rust: {
+		resultStringErr: rustResultString.length,
+		panicCalls: rustPanic.length,
+		unwrapCalls: rustUnwrap.length,
+		expectCalls: rustExpect.length,
+	},
+};
+
+if (process.argv.includes("--rewrite-baseline")) {
+	writeFileSync(
+		BASELINE,
+		`${JSON.stringify(
+			{
+				updatedAt: new Date().toISOString().slice(0, 10),
+				note: "Grandfathered ceilings — counts may decrease but never increase. Run --rewrite-baseline to ratchet down.",
+				...current,
+			},
+			null,
+			2,
+		)}\n`,
+	);
+	console.log("boundary-types baseline rewritten.");
+	process.exit(0);
+}
+
+const baseline = JSON.parse(readFileSync(BASELINE, "utf8")) as BaselineShape;
+const violations: string[] = [];
+for (const [k, v] of Object.entries(current.typescript)) {
+	const ceiling = baseline.typescript[k] ?? 0;
+	if (v > ceiling)
+		violations.push(`typescript.${k}: ${v} > ceiling ${ceiling}`);
+}
+for (const [k, v] of Object.entries(current.rust)) {
+	const ceiling = baseline.rust[k] ?? 0;
+	if (v > ceiling) violations.push(`rust.${k}: ${v} > ceiling ${ceiling}`);
+}
+
+if (violations.length > 0) {
+	console.error(
+		`boundary-types FAIL: ${violations.length} category/ies exceed grandfathered ceiling.`,
+	);
+	for (const v of violations) console.error(`  ${v}`);
+	console.error(
+		"\nFix the new occurrence(s). Use packages/astropress/src/result.ts (Result/Option) at TS module boundaries, concrete error enums in Rust. Intentional refactor that lowers counts: bun run tooling/scripts/audit-boundary-types.ts --rewrite-baseline.",
+	);
+	process.exit(1);
+}

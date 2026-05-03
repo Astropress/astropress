@@ -1,0 +1,17 @@
+{
+  "updatedAt": "2026-05-03",
+  "note": "Grandfathered ceilings — counts may decrease but never increase. Run --rewrite-baseline to ratchet down.",
+  "typescript": {
+    "castsOnCaughtError": 1,
+    "recordStringUnknown": 97,
+    "unknownArray": 18,
+    "envFallbackChain": 1,
+    "jsonParseFallbackChain": 0
+  },
+  "rust": {
+    "resultStringErr": 84,
+    "panicCalls": 1,
+    "unwrapCalls": 64,
+    "expectCalls": 14
+  }
+}

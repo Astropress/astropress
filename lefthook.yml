@@ -328,6 +328,15 @@ pre-commit:
         - "tooling/stryker/baseline-scores.json"
       run: bun run tooling/scripts/audit-v8-coverage-scope.ts
 
+    # Grandfather-ratchet on weak boundary types (Record<string, unknown>,
+    # Result<T, String>, .unwrap(), etc.). Counts can shrink, never grow.
+    audit-boundary-types:
+      glob:
+        - "packages/astropress/src/**/*.ts"
+        - "crates/astropress-cli/src/**/*.rs"
+        - "tooling/audit-output/boundary-types-baseline.json"
+      run: bun run tooling/scripts/audit-boundary-types.ts
+
     # Auto-regenerate API_REFERENCE.md when an entry-point file changes,
     # then re-stage it. Keeps slow-audits' docs:api:check from being the
     # discovery point — it caused multiple wasted ~10-min pre-push cycles
