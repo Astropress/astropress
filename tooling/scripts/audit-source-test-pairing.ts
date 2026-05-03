@@ -167,3 +167,62 @@ writeFileSync(OUT, `${JSON.stringify(report, null, 2)}\n`);
 console.log(
 	`source-test-pairing: ts unpaired=${ts.unpairedSrc.length} orphan=${ts.orphanTests.length}; rust unpaired=${rust.unpaired.length}/${rust.srcCount} (inline-tested=${rust.intestSrc})`,
 );
+
+// Grandfather ratchet — same pattern as audit-boundary-types. Counts can
+// fall over time, never rise. New src files MUST land with a companion
+// test (or an audit-followup marker if the pairing is genuinely intentional).
+const BASELINE = "tooling/audit-output/source-test-pairing-baseline.json";
+type STBaseline = {
+	typescript: { unpairedSrcCount: number; orphanTestCount: number };
+	rust: { unpairedSrcCount: number };
+};
+const current: STBaseline = {
+	typescript: {
+		unpairedSrcCount: ts.unpairedSrc.length,
+		orphanTestCount: ts.orphanTests.length,
+	},
+	rust: { unpairedSrcCount: rust.unpaired.length },
+};
+
+if (process.argv.includes("--rewrite-baseline")) {
+	writeFileSync(
+		BASELINE,
+		`${JSON.stringify(
+			{
+				updatedAt: new Date().toISOString().slice(0, 10),
+				note: "Grandfathered ceilings — counts may decrease but never increase. Run --rewrite-baseline to ratchet down.",
+				...current,
+			},
+			null,
+			2,
+		)}\n`,
+	);
+	console.log("source-test-pairing baseline rewritten.");
+	process.exit(0);
+}
+
+const baseline = JSON.parse(readFileSync(BASELINE, "utf8")) as STBaseline;
+const violations: string[] = [];
+if (current.typescript.unpairedSrcCount > baseline.typescript.unpairedSrcCount)
+	violations.push(
+		`ts.unpairedSrc: ${current.typescript.unpairedSrcCount} > ceiling ${baseline.typescript.unpairedSrcCount}`,
+	);
+if (current.typescript.orphanTestCount > baseline.typescript.orphanTestCount)
+	violations.push(
+		`ts.orphanTest: ${current.typescript.orphanTestCount} > ceiling ${baseline.typescript.orphanTestCount}`,
+	);
+if (current.rust.unpairedSrcCount > baseline.rust.unpairedSrcCount)
+	violations.push(
+		`rust.unpairedSrc: ${current.rust.unpairedSrcCount} > ceiling ${baseline.rust.unpairedSrcCount}`,
+	);
+
+if (violations.length > 0) {
+	console.error(
+		`source-test-pairing FAIL: ${violations.length} category/ies exceed grandfathered ceiling.`,
+	);
+	for (const v of violations) console.error(`  ${v}`);
+	console.error(
+		"\nFix: pair the new src file with a *.test.ts companion (TS) or add #[cfg(test)] / tests/ companion (Rust). Intentional refactor that lowers counts: bun run tooling/scripts/audit-source-test-pairing.ts --rewrite-baseline.",
+	);
+	process.exit(1);
+}

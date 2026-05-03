@@ -337,6 +337,16 @@ pre-commit:
         - "tooling/audit-output/boundary-types-baseline.json"
       run: bun run tooling/scripts/audit-boundary-types.ts
 
+    # Grandfather-ratchet on src files lacking a *.test.ts companion (and
+    # orphan tests with no src target). Counts can shrink, never grow.
+    audit-source-test-pairing:
+      glob:
+        - "packages/astropress/src/**/*.ts"
+        - "packages/astropress/tests/**/*.ts"
+        - "crates/astropress-cli/src/**/*.rs"
+        - "tooling/audit-output/source-test-pairing-baseline.json"
+      run: bun run tooling/scripts/audit-source-test-pairing.ts
+
     # Auto-regenerate API_REFERENCE.md when an entry-point file changes,
     # then re-stage it. Keeps slow-audits' docs:api:check from being the
     # discovery point — it caused multiple wasted ~10-min pre-push cycles
@@ -566,7 +576,8 @@ pre-push:
           bun run audit:toolchain-pins &&
           bun run docs:api:check &&
           bun run docs:check &&
-          bun run tooling/scripts/audit-astro-check.ts
+          bun run tooling/scripts/audit-astro-check.ts &&
+          bun run tooling/scripts/run-discovery-audit.ts
         '
 
     verify-commits-signed:
