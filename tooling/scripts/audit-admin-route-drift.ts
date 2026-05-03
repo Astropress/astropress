@@ -78,6 +78,56 @@ function main(): void {
 	console.log(
 		`route-drift: onDisk=${report.onDiskCount} registered=${report.registeredCount} unregistered=${report.unregistered} unbacked=${report.unbacked}`,
 	);
+
+	// Gate via baseline file: lock the current set of unregistered entrypoints
+	// (mostly action handlers that legitimately live outside the registry, plus
+	// genuine orphans pending triage) so future commits cannot ADD a new
+	// unregistered .astro/.ts file. Existing entries are grandfathered until the
+	// W1 cleanup pairs each one with a registry decision.
+	const BASELINE = "tooling/audit-output/route-drift-baseline.json";
+	if (process.argv.includes("--rewrite-baseline")) {
+		writeFileSync(
+			BASELINE,
+			`${JSON.stringify(
+				{
+					updatedAt: new Date().toISOString(),
+					unregisteredEntrypoints,
+					unbackedRegistryEntries,
+				},
+				null,
+				2,
+			)}\n`,
+		);
+		console.log(
+			`route-drift baseline rewritten: ${unregisteredEntrypoints.length} grandfathered.`,
+		);
+		return;
+	}
+	let baseline: { unregisteredEntrypoints: string[]; unbackedRegistryEntries: string[] } = {
+		unregisteredEntrypoints: [],
+		unbackedRegistryEntries: [],
+	};
+	if (existsSync(BASELINE)) {
+		baseline = JSON.parse(readFileSync(BASELINE, "utf8"));
+	}
+	const baselineUnreg = new Set(baseline.unregisteredEntrypoints);
+	const baselineUnbacked = new Set(baseline.unbackedRegistryEntries);
+	const newUnregistered = unregisteredEntrypoints.filter(
+		(p) => !baselineUnreg.has(p),
+	);
+	const newUnbacked = unbackedRegistryEntries.filter(
+		(p) => !baselineUnbacked.has(p),
+	);
+	if (newUnregistered.length > 0 || newUnbacked.length > 0) {
+		console.error("route-drift FAIL:");
+		for (const p of newUnregistered)
+			console.error(`  unregistered (new): ${p}`);
+		for (const p of newUnbacked) console.error(`  unbacked (new): ${p}`);
+		console.error(
+			"\nEither register the file in packages/astropress/src/admin-routes.ts, delete it, OR (intentional) run:\n  bun run tooling/scripts/audit-admin-route-drift.ts --rewrite-baseline",
+		);
+		process.exit(1);
+	}
 }
 
 main();

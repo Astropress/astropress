@@ -33,23 +33,31 @@ function grepLiteralCallSites(): {
 	staticKeys: Set<string>;
 	dynamicCalls: string[];
 } {
-	// Two real-world access patterns:
-	//   getAdminLabel("key", locale)  — direct lookup
-	//   adminUi.labels.key / .labels.key — resolved bag (most common)
+	// Three real-world access patterns:
+	//   getAdminLabel("key", locale)         — direct lookup
+	//   adminUi.labels.key / .labels.key     — resolved bag
+	//   tr("key", fallback)                  — local helper inside admin-ui
+	//                                          (parameter typed as AdminLabelKey)
+	// The `tr(` form is the dominant pattern — it produces the resolved bag.
+	// Exclude only admin-labels.ts (declaration site). admin-ui.ts contains the
+	// resolver which calls tr("key", fallback) for every key — those calls ARE
+	// the use sites that pipe labels into the resolved bag.
 	const out = execFileSync(
 		"bash",
 		[
 			"-c",
-			"grep -rEhn 'getAdminLabel\\(|\\.labels\\.[a-zA-Z]+' packages/astropress/{src,components,pages} 2>/dev/null || true",
+			"grep -rEhn --exclude=admin-labels.ts 'getAdminLabel\\(|\\.labels\\.[a-zA-Z]+|\\btr\\(\"[A-Za-z0-9_]+\"' packages/astropress/{src,components,pages} 2>/dev/null || true",
 		],
 		{ encoding: "utf8" },
 	);
 	const staticKeys = new Set<string>();
 	const dynamic: string[] = [];
 	const dotLabel = /\.labels\.([a-zA-Z][a-zA-Z0-9_]*)/g;
+	const trCall = /\btr\(\s*"([A-Za-z0-9_]+)"/g;
 	for (const line of out.split("\n")) {
 		if (!line) continue;
 		for (const m of line.matchAll(dotLabel)) staticKeys.add(m[1]);
+		for (const m of line.matchAll(trCall)) staticKeys.add(m[1]);
 		const literal = line.match(/getAdminLabel\(\s*"([A-Za-z0-9_]+)"/);
 		if (literal) {
 			staticKeys.add(literal[1]);
@@ -61,7 +69,24 @@ function grepLiteralCallSites(): {
 			continue;
 		}
 		// Variable or template-with-substitution = dynamic call site.
-		if (/getAdminLabel\(/.test(line)) dynamic.push(line.trim());
+		// Skip lines that are documentation comments or the declaration itself.
+		const isComment = /^\s*\d+:\s*\*/.test(line);
+		const isDecl = /function\s+getAdminLabel\s*\(/.test(line);
+		// admin-ui.ts internally calls getAdminLabel(key, locale) where `key` is
+		// the typed parameter — TS guarantees a valid AdminLabelKey at every
+		// caller, so this self-call is not a runtime risk and is already
+		// represented by the upstream tr("...") sites.
+		const isSelfCall = /getAdminLabel\(\s*key\s*,/.test(line);
+		if (
+			!isComment &&
+			!isDecl &&
+			!isSelfCall &&
+			/getAdminLabel\(/.test(line) &&
+			!/getAdminLabel\(\s*"/.test(line) &&
+			!/getAdminLabel\(\s*`/.test(line)
+		) {
+			dynamic.push(line.trim());
+		}
 	}
 	return { staticKeys, dynamicCalls: dynamic };
 }
@@ -88,3 +113,25 @@ writeFileSync(OUT, `${JSON.stringify(report, null, 2)}\n`);
 console.log(
 	`label-coverage: defined=${definedKeys.length} static-calls=${staticKeys.size} dead=${unused.length} dynamic-calls=${dynamicCalls.length}`,
 );
+
+// Gate: any dead label key OR any dynamic call site fails.
+// Why dynamic too: a `getAdminLabel(variable)` can silently return the literal
+// key string on miss, masking i18n regressions. Force every call to be statically
+// resolvable so CI knows what's referenced.
+if (unused.length > 0 || dynamicCalls.length > 0) {
+	console.error(
+		`label-coverage FAIL: ${unused.length} dead label key(s), ${dynamicCalls.length} dynamic call site(s).`,
+	);
+	if (unused.length > 0) {
+		console.error("Dead keys (defined in AdminLabelKey but never read):");
+		for (const k of unused) console.error(`  - ${k}`);
+		console.error(
+			"Delete these from packages/astropress/src/admin-labels.ts (union + each per-locale map).",
+		);
+	}
+	if (dynamicCalls.length > 0) {
+		console.error("Dynamic call sites (must be static literal strings):");
+		for (const c of dynamicCalls) console.error(`  - ${c}`);
+	}
+	process.exit(1);
+}

@@ -269,6 +269,24 @@ pre-commit:
       glob: "tooling/cargo-mutants/baseline-scores.json"
       run: bun run tooling/scripts/audit-baseline-floor-rust.ts
 
+    # Block dead admin label keys (defined in AdminLabelKey union but never
+    # read) and dynamic label call sites (silent UI regression risk).
+    audit-admin-labels:
+      glob:
+        - "packages/astropress/src/admin-labels.ts"
+        - "packages/astropress/src/admin-ui.ts"
+        - "packages/astropress/components/**/*.astro"
+        - "packages/astropress/pages/**/*.{astro,ts}"
+      run: bun run tooling/scripts/audit-admin-label-coverage.ts
+
+    # Block admin route registry drift (entrypoint on disk not registered, or
+    # registry entry without backing file).
+    audit-admin-route-drift:
+      glob:
+        - "packages/astropress/pages/ap-admin/**/*.{astro,ts}"
+        - "packages/astropress/src/admin-routes.ts"
+      run: bun run tooling/scripts/audit-admin-route-drift.ts
+
     # Auto-regenerate API_REFERENCE.md when an entry-point file changes,
     # then re-stage it. Keeps slow-audits' docs:api:check from being the
     # discovery point — it caused multiple wasted ~10-min pre-push cycles
