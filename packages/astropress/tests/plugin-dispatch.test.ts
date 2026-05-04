@@ -3,7 +3,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
 	dispatchPluginContentEvent,
 	dispatchPluginMediaEvent,
+	getPluginDispatchStats,
 	reportAstropressError,
+	resetPluginDispatchStats,
 } from "../src/plugin-dispatch";
 
 const CONFIG_KEY = Symbol.for("astropress.cms-config");
@@ -16,10 +18,12 @@ function setPlugins(plugins: unknown[] | null) {
 let errorSpy: ReturnType<typeof vi.spyOn>;
 beforeEach(() => {
 	errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+	resetPluginDispatchStats();
 });
 afterEach(() => {
 	setPlugins(null);
 	vi.restoreAllMocks();
+	resetPluginDispatchStats();
 });
 
 describe("dispatchPluginContentEvent", () => {
@@ -329,5 +333,101 @@ describe("reportAstropressError", () => {
 		await expect(
 			reportAstropressError(new Error("x"), "ctx"),
 		).resolves.toBeUndefined();
+	});
+});
+
+describe("getPluginDispatchStats", () => {
+	it("starts empty", () => {
+		expect(getPluginDispatchStats()).toEqual({});
+	});
+
+	it("records hooksRun for every successful content hook invocation", async () => {
+		setPlugins([
+			{ name: "a", onContentSave: () => {} },
+			{ name: "b", onContentSave: () => {} },
+		]);
+		await dispatchPluginContentEvent("onContentSave", {} as never);
+		await dispatchPluginContentEvent("onContentSave", {} as never);
+		const stats = getPluginDispatchStats();
+		expect(stats.a?.hooksRun).toBe(2);
+		expect(stats.b?.hooksRun).toBe(2);
+		expect(stats.a?.errorsSwallowed).toBe(0);
+	});
+
+	it("records errorsSwallowed when a content hook throws", async () => {
+		setPlugins([
+			{
+				name: "boom",
+				onContentSave: () => {
+					throw new Error("nope");
+				},
+				onError: () => {},
+			},
+		]);
+		await dispatchPluginContentEvent("onContentSave", {} as never);
+		const stats = getPluginDispatchStats();
+		// Plugin "boom" had its onContentSave throw (errorsSwallowed += 1)
+		// and its onError run successfully (hooksRun += 1).
+		expect(stats.boom?.errorsSwallowed).toBe(1);
+		expect(stats.boom?.hooksRun).toBe(1);
+	});
+
+	it("records errorsSwallowed when a media hook throws", async () => {
+		setPlugins([
+			{
+				name: "media-boom",
+				onMediaUpload: () => {
+					throw new Error("nope");
+				},
+				onError: () => {},
+			},
+		]);
+		await dispatchPluginMediaEvent({} as never);
+		expect(getPluginDispatchStats()["media-boom"]).toEqual({
+			hooksRun: 1,
+			errorsSwallowed: 1,
+		});
+	});
+
+	it("records errorsSwallowed when onError itself throws", async () => {
+		setPlugins([
+			{
+				name: "double-fail",
+				onContentSave: () => {
+					throw new Error("hook");
+				},
+				onError: () => {
+					throw new Error("on-error-also-broke");
+				},
+			},
+		]);
+		await dispatchPluginContentEvent("onContentSave", {} as never);
+		const stats = getPluginDispatchStats();
+		// onContentSave threw → errorsSwallowed = 1 from outer catch.
+		// onError threw → errorsSwallowed = 2 from inner catch, hooksRun stays 0.
+		expect(stats["double-fail"]?.errorsSwallowed).toBe(2);
+		expect(stats["double-fail"]?.hooksRun).toBe(0);
+	});
+
+	it("returned object is a snapshot — mutating it does not affect future reads", async () => {
+		setPlugins([{ name: "p", onContentSave: () => {} }]);
+		await dispatchPluginContentEvent("onContentSave", {} as never);
+		const snap = getPluginDispatchStats();
+		snap.p.hooksRun = 99999;
+		expect(getPluginDispatchStats().p?.hooksRun).toBe(1);
+	});
+
+	it("resetPluginDispatchStats clears every entry", async () => {
+		setPlugins([{ name: "p", onContentSave: () => {} }]);
+		await dispatchPluginContentEvent("onContentSave", {} as never);
+		expect(Object.keys(getPluginDispatchStats())).toContain("p");
+		resetPluginDispatchStats();
+		expect(getPluginDispatchStats()).toEqual({});
+	});
+
+	it("does not record stats for plugins whose hook is not a function", async () => {
+		setPlugins([{ name: "skipped", onContentSave: "not-a-fn" }]);
+		await dispatchPluginContentEvent("onContentSave", {} as never);
+		expect(getPluginDispatchStats().skipped).toBeUndefined();
 	});
 });

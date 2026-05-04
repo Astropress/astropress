@@ -21,7 +21,13 @@ describe("local provider integration", () => {
 			dbPath: join(workspace, "admin.sqlite"),
 		});
 		const cloudflare = createAstropressCloudflareAdapter();
-		const supabase = createAstropressSupabaseAdapter();
+		// Bare construction (no backingAdapter, no granular stores) was
+		// previously allowed and silently dropped to in-memory; the adapter
+		// now refuses misconfiguration. Pass the sqlite adapter as the real
+		// backing surface to keep the capability-inspection path honest.
+		const supabase = createAstropressSupabaseAdapter({
+			backingAdapter: sqlite,
+		});
 
 		expect(sqlite.capabilities.name).toBe("sqlite");
 		expect(sqlite.capabilities.database).toBe(true);

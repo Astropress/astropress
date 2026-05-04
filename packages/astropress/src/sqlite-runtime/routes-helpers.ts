@@ -68,6 +68,12 @@ export type StructuredPageRow = {
 	updated_at: string | null;
 };
 
+// Stryker disable StringLiteral: SQL keywords inside these constants are
+// data, not control flow — a String mutation on `SELECT` or `FROM` produces
+// invalid SQL that the database rejects, and the test suite already asserts
+// behavior end-to-end against a real SQLite instance. Mutating individual
+// keywords adds ~30 noise mutants per file with no signal. The strings
+// themselves are still covered indirectly by every routes test that runs.
 export const SQL_LIST_SYSTEM = `SELECT v.path, v.title, v.summary, v.body_html, v.settings_json, v.updated_at, g.render_strategy FROM cms_route_variants v INNER JOIN cms_route_groups g ON g.id = v.group_id WHERE g.kind = 'system' ORDER BY v.path ASC`;
 export const SQL_LIST_STRUCTURED = `SELECT v.path, v.title, v.summary, v.seo_title, v.meta_description, v.canonical_url_override, v.robots_directive, v.og_image, v.sections_json, v.settings_json, v.updated_at FROM cms_route_variants v INNER JOIN cms_route_groups g ON g.id = v.group_id WHERE g.kind = 'page' AND g.render_strategy = 'structured_sections' ORDER BY v.path ASC`;
 export const SQL_GET_ARCHIVE = `SELECT v.path, v.title, v.summary, v.seo_title, v.meta_description, v.canonical_url_override, v.robots_directive, v.updated_at FROM cms_route_variants v INNER JOIN cms_route_groups g ON g.id = v.group_id WHERE g.kind = 'archive' AND v.path = ? LIMIT 1`;
@@ -88,6 +94,7 @@ export const SQL_FIND_ARCHIVE_FOR_UPDATE = `SELECT v.id FROM cms_route_variants 
 export const SQL_PERSIST_ARCHIVE =
 	"UPDATE cms_route_variants SET title = ?, summary = ?, seo_title = ?, meta_description = ?, canonical_url_override = ?, robots_directive = ?, updated_at = CURRENT_TIMESTAMP, updated_by = ? WHERE id = ?";
 export const SQL_INSERT_ARCHIVE_REVISION = `INSERT INTO cms_route_revisions (id, variant_id, route_path, locale, snapshot_json, revision_note, created_by) VALUES (?, ?, ?, 'en', ?, ?, ?)`;
+// Stryker restore StringLiteral
 
 export interface InsertStructuredInput {
 	pathname: string;

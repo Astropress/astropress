@@ -4,6 +4,7 @@ import {
 } from "../hosted-api-adapter";
 import { createAstropressHostedPlatformAdapter } from "../hosted-platform-adapter";
 import type { AstropressInMemoryPlatformAdapterOptions } from "../in-memory-platform-adapter";
+import { stripTrailingSlashes } from "../path-helpers";
 import type { AstropressPlatformAdapter } from "../platform-contracts";
 import { FULL_STACK_CAPABILITIES } from "./adapter-record-helpers";
 
@@ -23,6 +24,22 @@ export type AstropressSupabaseAdapterOptions = Omit<
 export function createAstropressSupabaseAdapter(
 	options: AstropressSupabaseAdapterOptions = {},
 ) {
+	// Reject the misconfiguration that previously routed silently to the
+	// in-memory fallback. Callers must supply a real backingAdapter, or at
+	// least one of the granular stores (auth/content/media/revisions); the
+	// in-memory fallback is a footgun in production and was only catchable
+	// by asserting on the seed user id.
+	if (
+		!options.backingAdapter &&
+		!options.auth &&
+		!options.content &&
+		!options.media &&
+		!options.revisions
+	) {
+		throw new Error(
+			"createAstropressSupabaseAdapter requires backingAdapter or one of auth/content/media/revisions. Pass a real adapter (e.g. createAstropressSqliteAdapter) or use createAstropressSupabaseSqliteAdapter.",
+		);
+	}
 	return createAstropressHostedPlatformAdapter({
 		...options,
 		providerName: "supabase",
@@ -51,7 +68,7 @@ export function readAstropressSupabaseHostedConfig(
 	return {
 		url,
 		serviceRoleKey,
-		apiBaseUrl: `${url.replace(/\/$/, "")}/functions/v1/astropress`,
+		apiBaseUrl: `${stripTrailingSlashes(url)}/functions/v1/astropress`,
 	};
 }
 
@@ -71,7 +88,7 @@ export function createAstropressSupabaseHostedAdapter(
 			providerName: "supabase",
 			apiBaseUrl: config.apiBaseUrl,
 			accessToken: config.serviceRoleKey,
-			previewBaseUrl: `${config.url.replace(/\/$/, "")}/preview`,
+			previewBaseUrl: `${stripTrailingSlashes(config.url)}/preview`,
 			fetchImpl: options.fetchImpl,
 			defaultCapabilities: {
 				...options.defaultCapabilities,
@@ -89,7 +106,7 @@ export function createAstropressSupabaseHostedAdapter(
 		preview: options.preview ?? {
 			async create() {
 				return {
-					url: `${config.url.replace(/\/$/, "")}/preview`,
+					url: `${stripTrailingSlashes(config.url)}/preview`,
 				};
 			},
 		},
