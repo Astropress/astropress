@@ -431,6 +431,47 @@ processes (rather than the main process) would silently break this.
 
 ---
 
+### 14e. No mid-run checkpoint persistence — SIGKILL/Ctrl-C loses everything
+
+**Pain point:** `incremental: true` only writes `.stryker-incremental.json` at the
+end of a successful run. Per-mutant verdicts accumulate in memory throughout the
+mutation phase and are flushed in a single end-of-run write. Consequence: if the
+process is terminated mid-run (SIGKILL, host shutdown, OOM, accidental Ctrl-C, CI
+timeout), every completed mutant verdict is lost — the next invocation restarts
+from the dry-run with zero credit for hours of work. The "incremental" file is
+therefore only useful between *successive* completed runs, never within a single
+interrupted run. This is distinct from #12 (worker-process SIGSEGV recovered by
+the parent stryker process) and from #14a (wrapper-driven external override
+files): both still depend on stryker itself completing the run.
+
+For Astropress this turns a routine 6–12 h `ignoreStatic: false` baseline rebuild
+into an "all-or-nothing" gamble — any host event that kills the process forfeits
+the wall-clock investment, even when 95 % of mutants were already verdicted in
+memory.
+
+**Astropress code:** `tooling/stryker/stryker.config.mjs` (`incremental: true`,
+`incrementalFile: "../../.stryker-incremental.json"`). The file does not exist
+on disk during a multi-hour run; it materialises only at successful completion.
+
+**Upstream ask:**
+- Flush verdicted mutants to `incrementalFile` periodically during the mutation
+  phase (e.g. every N mutants or every K seconds, configurable via
+  `incrementalFlushInterval`). Acquire a file lock + atomic rename so a partial
+  flush never corrupts the file.
+- On startup, if `incrementalFile` exists with a `runState: "in-progress"`
+  marker, reuse those mutant verdicts and resume with the unfinished mutants
+  only.
+- This is genuinely "incremental within a run" — orthogonal to #12 (in-process
+  worker recovery) and #14a (external override input). The three together let
+  any termination mode survive: worker crash → recover in-process; full process
+  death → resume from the flushed file; intentional skip-list → driven by an
+  external wrapper.
+- Cost is bounded: even a 1 s flush cadence on a 21 k-mutant run is cheap
+  relative to the per-mutant test-runner overhead. Document the trade-off and
+  let users tune it.
+
+---
+
 ### 14. Incremental cache is local-only by design — no shared-state pattern
 
 **Pain point:** `.stryker-incremental.json` is intended to be gitignored, so
@@ -474,5 +515,6 @@ GitHub-release-asset shared store + lock branch.
 | Stryker | `mutantOverrides` config (programmatic skip-list) | External wrappers drive resume without owning the incremental file format |
 | Stryker | `coveredBy` / `killedBy` on reporter `MutantResult` | Custom checkpoint reporters detect test-file edits without rehashing the world |
 | Stryker | `--skip-dry-run` with hash gate | Resume after crash skips the 15–30 s dry-run when hashes prove the baseline is unchanged |
+| Stryker | Mid-run flush of `incrementalFile` (resumability) | SIGKILL / OOM / CI timeout mid-run no longer forfeits hours of completed mutant work |
 | Stryker | Documented `repoRoot` in reporter injection context | Custom reporters write checkpoint artefacts outside the sandbox without env-var conventions |
 | Stryker | Remote-state config + lock for incremental file | Devs + CI share cache; no per-machine cold start |
