@@ -174,6 +174,53 @@ fn parses_top_level_commands() {
 }
 
 #[test]
+fn parses_doctor_with_project_dir() {
+    // Exercises the --project-dir advancement (`index += 1`) in
+    // parse_doctor_command. With `-=` the value would not be consumed.
+    let cmd = parse_command(&strings(&["doctor", "--project-dir", "/some/proj"])).unwrap();
+    if let Command::Doctor { project_dir, .. } = cmd {
+        assert_eq!(project_dir.to_string_lossy(), "/some/proj");
+    } else {
+        panic!("expected Command::Doctor");
+    }
+}
+
+#[test]
+fn parses_new_with_analytics_ab_testing_and_heatmap_providers() {
+    // Each flag advances the index forward to consume its value. With a `-=`
+    // mutation, the index would either underflow (debug-panic) or read the
+    // previous arg, producing an "Invalid value" error from the *Provider::parse
+    // call. Matching against the exact provider values catches both patterns.
+    let cmd = parse_command(&strings(&[
+        "new",
+        "demo",
+        "--analytics",
+        "umami",
+        "--ab-testing",
+        "growthbook",
+        "--heatmap",
+        "posthog",
+    ]))
+    .unwrap();
+    let (analytics, ab_testing, heatmap) = match cmd {
+        Command::New { analytics, ab_testing, heatmap, .. } => (analytics, ab_testing, heatmap),
+        _ => panic!("expected Command::New"),
+    };
+    assert!(
+        matches!(analytics, Some(crate::providers::AnalyticsProvider::Umami)),
+        "expected Umami analytics, got {analytics:?}"
+    );
+    assert!(
+        matches!(ab_testing, Some(crate::providers::AbTestingProvider::GrowthBook)),
+        "expected GrowthBook ab-testing, got {ab_testing:?}"
+    );
+    assert!(
+        matches!(heatmap, Some(crate::providers::HeatmapProvider::PostHog)),
+        "expected PostHog heatmap, got {heatmap:?}"
+    );
+}
+
+#[test]
 fn parses_backup_field_values() {
     let cmd = parse_command(&strings(&["backup", "--project-dir", "/my/proj", "--out", "/out/dir"])).unwrap();
     if let Command::Backup { project_dir, output_dir } = cmd {

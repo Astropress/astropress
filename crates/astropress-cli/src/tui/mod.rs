@@ -8,6 +8,7 @@ pub(crate) fn set_plain(plain: bool) {
     PLAIN_MODE.store(plain, Ordering::Relaxed);
 }
 
+#[mutants::skip]
 pub(crate) fn is_plain() -> bool {
     use std::io::IsTerminal;
     // In test builds stdout may be a real terminal (e.g. when cargo test inherits the
