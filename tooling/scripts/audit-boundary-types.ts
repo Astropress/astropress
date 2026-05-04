@@ -114,7 +114,7 @@ const tsJsonParseFallback = splitByPragma(
 );
 
 const rustResultString = splitByPragma(
-	rgLines("Result<.*,\\s*(String|&str)\\b", RUST_GLOB),
+	rgLines("\\bResult<.*,\\s*(String|&str)\\b", RUST_GLOB),
 );
 // Filter unwrap/expect/panic to lines NOT inside tests dir (cheap heuristic).
 const rustPanic = splitByPragma(

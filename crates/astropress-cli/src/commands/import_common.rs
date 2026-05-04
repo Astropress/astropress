@@ -4,13 +4,14 @@ use std::path::{Path, PathBuf};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use crate::cli_config::args::CrawlMode;
+use crate::error::CliResult;
 use crate::js_bridge::loaders::{
     resolve_admin_db_path, resolve_local_provider, run_content_services_operation,
     ContentServicesReport,
 };
 use crate::js_bridge::runner::{detect_package_manager, run_package_json_command};
 
-pub(crate) fn bootstrap_content_services(project_dir: &Path) -> Result<(), String> { // ~ skip
+pub(crate) fn bootstrap_content_services(project_dir: &Path) -> CliResult<()> { // ~ skip
     let report = run_content_services_operation(project_dir, "bootstrapAstropressContentServices")?;
     print_content_services_report(&report);
     Ok(())
@@ -50,7 +51,7 @@ pub(crate) fn now_unix_ms() -> u128 {
 }
 
 /// Resolves the admin DB path to an absolute `PathBuf` for the given project.
-pub(crate) fn resolve_absolute_admin_db_path(project_dir: &Path) -> Result<PathBuf, String> { // ~ skip
+pub(crate) fn resolve_absolute_admin_db_path(project_dir: &Path) -> CliResult<PathBuf> { // ~ skip
     let local_provider = resolve_local_provider(project_dir, None)?;
     let admin_db_path = resolve_admin_db_path(project_dir, local_provider)?;
     let candidate = PathBuf::from(&admin_db_path);
@@ -70,7 +71,7 @@ pub(crate) fn crawl_and_save(
     import_dir: &Path,
     url: Option<&str>,
     crawl_mode: CrawlMode,
-) -> Result<(), String> { // ~ skip
+) -> CliResult<()> { // ~ skip
     if crawl_mode == CrawlMode::None { // ~ skip
         return Ok(());
     }
@@ -119,7 +120,7 @@ pub(crate) fn resolve_wix_credentials(
     credentials_file: Option<&Path>,
     email: Option<&str>,
     password: Option<&str>,
-) -> Result<(String, String), String> { // ~ skip
+) -> CliResult<(String, String)> { // ~ skip
     // 1. Credentials file
     if let Some(file) = credentials_file {
         let content = fs::read_to_string(file)
@@ -168,7 +169,7 @@ pub(crate) fn resolve_wordpress_credentials(
     credentials_file: Option<&Path>,
     username: Option<&str>,
     password: Option<&str>,
-) -> Result<(String, String), String> { // ~ skip
+) -> CliResult<(String, String)> { // ~ skip
     // 1. Credentials file
     if let Some(file) = credentials_file {
         let content = fs::read_to_string(file)

@@ -200,7 +200,7 @@ fn main() -> ExitCode {
         Ok(Command::ServicesBootstrap { project_dir }) => {
             match bootstrap_content_services(&project_dir) {
                 Ok(()) => ExitCode::SUCCESS,
-                Err(error) => fail(error),
+                Err(error) => fail(error.to_string()),
             }
         }
         Ok(Command::ServicesVerify { project_dir }) => {
