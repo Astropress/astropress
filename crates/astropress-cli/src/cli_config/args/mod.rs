@@ -165,9 +165,9 @@ pub(crate) fn parse_command(args: &[String]) -> Result<Command, String> {
         [flag] if flag == "--help" || flag == "-h" || flag == "help" => Ok(Command::Help),
         [command, rest @ ..] if command == "new" || command == "init" => new::parse_new_command(rest),
         [command, rest @ ..] if command == "dev" => dev_deploy::parse_dev_command(rest),
-        [command, rest @ ..] if command == "backup" => ops::parse_backup_command(rest),
-        [command, rest @ ..] if command == "restore" => ops::parse_restore_command(rest),
-        [command, rest @ ..] if command == "doctor" => ops::parse_doctor_command(rest),
+        [command, rest @ ..] if command == "backup" => ops::parse_backup_command(rest).map_err(|e| e.to_string()),
+        [command, rest @ ..] if command == "restore" => ops::parse_restore_command(rest).map_err(|e| e.to_string()),
+        [command, rest @ ..] if command == "doctor" => ops::parse_doctor_command(rest).map_err(|e| e.to_string()),
         [command, subcommand, rest @ ..] if command == "import" && subcommand == "wordpress" => {
             import::parse_import_wordpress_command(rest)
         }
@@ -175,10 +175,10 @@ pub(crate) fn parse_command(args: &[String]) -> Result<Command, String> {
             import::parse_import_wix_command(rest)
         }
         [command, subcommand, rest @ ..] if command == "sync" && subcommand == "export" => {
-            ops::parse_sync_export_command(rest)
+            ops::parse_sync_export_command(rest).map_err(|e| e.to_string())
         }
         [command, subcommand, rest @ ..] if command == "sync" && subcommand == "import" => {
-            ops::parse_sync_import_command(rest)
+            ops::parse_sync_import_command(rest).map_err(|e| e.to_string())
         }
         [command, subcommand, rest @ ..] if command == "services" && subcommand == "bootstrap" => {
             ops::parse_services_bootstrap_command(rest).map_err(|e| e.to_string())
@@ -223,8 +223,8 @@ pub(crate) fn parse_command(args: &[String]) -> Result<Command, String> {
                 Ok(Command::Completions { shell })
             }
         }
-        [command, rest @ ..] if command == "add" => parse_add_command(rest),
-        [command, rest @ ..] if command == "migrate" => parse_migrate_command(rest),
+        [command, rest @ ..] if command == "add" => parse_add_command(rest).map_err(|e| e.to_string()),
+        [command, rest @ ..] if command == "migrate" => parse_migrate_command(rest).map_err(|e| e.to_string()),
         [command, subcommand, rest @ ..] if (command == "list" || command == "ls") && subcommand == "tools" => {
             if let Some(unknown) = rest.first() {
                 Err(format!("Unsupported astropress list tools option: `{unknown}`."))
@@ -248,7 +248,7 @@ pub(crate) fn parse_command(args: &[String]) -> Result<Command, String> {
         [command, ..] if command == "auth" => {
             Err("Unsupported auth subcommand. Use `astropress auth emergency-revoke`.".into())
         }
-        [command, rest @ ..] if command == "telemetry" => parse_telemetry_command(rest),
+        [command, rest @ ..] if command == "telemetry" => parse_telemetry_command(rest).map_err(|e| e.to_string()),
         [command, ..] => Err(format!("Unsupported astropress command: `{command}`.")),
     }
 }

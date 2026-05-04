@@ -6,6 +6,7 @@ use std::env;
 use std::path::PathBuf;
 
 use super::Command;
+use crate::error::CliResult;
 
 #[path = "ops_more.rs"]
 mod ops_more;
@@ -17,7 +18,7 @@ pub(super) use ops_more::{
     parse_upgrade_apply_command, parse_upgrade_check_command,
 };
 
-pub(super) fn parse_backup_command(args: &[String]) -> Result<Command, String> {
+pub(super) fn parse_backup_command(args: &[String]) -> CliResult<Command> {
     let mut project_dir = env::current_dir().unwrap_or_else(|_| PathBuf::from("."));
     let mut output_dir = None;
     let mut index = 0;
@@ -38,7 +39,7 @@ pub(super) fn parse_backup_command(args: &[String]) -> Result<Command, String> {
                     .ok_or_else(|| "Missing value after `--out`.".to_string())?;
                 output_dir = Some(PathBuf::from(value));
             }
-            other => return Err(format!("Unsupported astropress backup option: `{other}`.")),
+            other => return Err(format!("Unsupported astropress backup option: `{other}`.").into()),
         }
         index += 1;
     }
@@ -49,7 +50,7 @@ pub(super) fn parse_backup_command(args: &[String]) -> Result<Command, String> {
     })
 }
 
-pub(super) fn parse_restore_command(args: &[String]) -> Result<Command, String> {
+pub(super) fn parse_restore_command(args: &[String]) -> CliResult<Command> {
     let mut project_dir = env::current_dir().unwrap_or_else(|_| PathBuf::from("."));
     let mut input_dir = None;
     let mut index = 0;
@@ -70,7 +71,7 @@ pub(super) fn parse_restore_command(args: &[String]) -> Result<Command, String> 
                     .ok_or_else(|| "Missing value after `--from`.".to_string())?;
                 input_dir = Some(PathBuf::from(value));
             }
-            other => return Err(format!("Unsupported astropress restore option: `{other}`.")),
+            other => return Err(format!("Unsupported astropress restore option: `{other}`.").into()),
         }
         index += 1; // ~ skip
     }
@@ -83,7 +84,7 @@ pub(super) fn parse_restore_command(args: &[String]) -> Result<Command, String> 
     })
 }
 
-pub(super) fn parse_doctor_command(args: &[String]) -> Result<Command, String> {
+pub(super) fn parse_doctor_command(args: &[String]) -> CliResult<Command> {
     let mut project_dir = env::current_dir().unwrap_or_else(|_| PathBuf::from("."));
     let mut strict = false;
     let mut json = false;
@@ -104,7 +105,7 @@ pub(super) fn parse_doctor_command(args: &[String]) -> Result<Command, String> {
             "--json" => {
                 json = true;
             }
-            other => return Err(format!("Unsupported astropress doctor option: `{other}`.")),
+            other => return Err(format!("Unsupported astropress doctor option: `{other}`.").into()),
         }
         index += 1; // ~ skip
     }
@@ -112,7 +113,7 @@ pub(super) fn parse_doctor_command(args: &[String]) -> Result<Command, String> {
     Ok(Command::Doctor { project_dir, strict, json })
 }
 
-pub(super) fn parse_sync_export_command(args: &[String]) -> Result<Command, String> {
+pub(super) fn parse_sync_export_command(args: &[String]) -> CliResult<Command> {
     let mut project_dir = env::current_dir().unwrap_or_else(|_| PathBuf::from("."));
     let mut output_dir = None;
     let mut index = 0;
@@ -136,7 +137,7 @@ pub(super) fn parse_sync_export_command(args: &[String]) -> Result<Command, Stri
             other => {
                 return Err(format!(
                     "Unsupported astropress sync export option: `{other}`."
-                ))
+                ).into())
             }
         }
         index += 1;
@@ -148,7 +149,7 @@ pub(super) fn parse_sync_export_command(args: &[String]) -> Result<Command, Stri
     })
 }
 
-pub(super) fn parse_sync_import_command(args: &[String]) -> Result<Command, String> {
+pub(super) fn parse_sync_import_command(args: &[String]) -> CliResult<Command> {
     let mut project_dir = env::current_dir().unwrap_or_else(|_| PathBuf::from("."));
     let mut input_dir = None;
     let mut index = 0;
@@ -172,7 +173,7 @@ pub(super) fn parse_sync_import_command(args: &[String]) -> Result<Command, Stri
             other => {
                 return Err(format!(
                     "Unsupported astropress sync import option: `{other}`."
-                ))
+                ).into())
             }
         }
         index += 1; // ~ skip
