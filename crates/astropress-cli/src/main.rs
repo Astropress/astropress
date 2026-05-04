@@ -91,7 +91,7 @@ fn main() -> ExitCode {
             .and_then(|features| run_post_scaffold_setup(&project_dir, &features, app_host, data_services))
         {
             Ok(()) => ExitCode::SUCCESS,
-            Err(error) => fail(error),
+            Err(error) => fail(error.to_string()),
         },
         Ok(Command::Dev {
             project_dir,
