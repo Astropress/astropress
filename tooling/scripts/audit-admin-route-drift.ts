@@ -13,7 +13,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, relative } from "node:path";
 
 const ADMIN_DIR = "packages/astropress/pages/ap-admin";
-const ROUTES_FILE = "packages/astropress/src/admin-routes.ts";
+const ROUTES_FILE = "packages/astropress/src/admin-routes-definitions.ts";
 const OUT = "tooling/audit-output/route-drift.json";
 
 function listFiles(): string[] {
@@ -127,7 +127,7 @@ function main(): void {
 			console.error(`  unregistered (new): ${p}`);
 		for (const p of newUnbacked) console.error(`  unbacked (new): ${p}`);
 		console.error(
-			"\nEither register the file in packages/astropress/src/admin-routes.ts, delete it, OR (intentional) run:\n  bun run tooling/scripts/audit-admin-route-drift.ts --rewrite-baseline",
+			"\nEither register the file in packages/astropress/src/admin-routes-definitions.ts, delete it, OR (intentional) run:\n  bun run tooling/scripts/audit-admin-route-drift.ts --rewrite-baseline",
 		);
 		process.exit(1);
 	}

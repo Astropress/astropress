@@ -3,6 +3,7 @@ import {
 	type AdminLocale,
 	adminLabels,
 } from "./admin-labels";
+import { defaultAdminUiConfig } from "./admin-ui-defaults";
 import { peekCmsConfig } from "./config";
 export type { AdminLocale, AdminLabelKey } from "./admin-labels";
 export { adminLabels } from "./admin-labels";
@@ -136,115 +137,6 @@ export interface AstropressResolvedAdminUiConfig {
 	};
 	navigation: Record<AstropressAdminNavKey, string>;
 }
-
-const defaultAdminUiConfig: AstropressResolvedAdminUiConfig = {
-	branding: {
-		appName: "Astropress",
-		productName: "Astropress Admin",
-		shellName: "Astropress Admin",
-		logoSrc: null,
-		logoHref: "/ap-admin",
-		logoAlt: "Astropress Admin",
-		faviconHref: null,
-		stylesheetHref: null,
-	},
-	labels: {
-		sidebarTitle: "Workspace",
-		signedInAsPrefix: "Signed in as",
-		signOut: "Sign out",
-		themeToggleDark: "Switch to dark mode",
-		themeToggleLight: "Switch to light mode",
-		loginHeading: "Sign in to the admin",
-		loginDescription:
-			"Use an approved admin account to manage content, media, redirects, and publishing settings.",
-		loginSubmit: "Sign in",
-		loginEmailLabel: "Email address",
-		loginPasswordLabel: "Password",
-		forgotPassword: "Forgot your password?",
-		invalidCredentials:
-			"That email and password combination was not recognized.",
-		rateLimited:
-			"Too many sign-in attempts were recorded. Wait a minute and try again.",
-		challengeRequired:
-			"Complete the security challenge and try signing in again.",
-		passwordResetSuccess:
-			"Your password was reset successfully. Sign in with the new password.",
-		invitationAcceptedSuccess:
-			"Your invitation was accepted successfully. Sign in with the new password.",
-		acceptInvitationHeading: "Accept invitation",
-		acceptInvitationDescription:
-			"Set a password to activate this invited admin account.",
-		acceptInvitationSubmit: "Accept invitation",
-		resetPasswordRequestHeading: "Reset password",
-		resetPasswordRequestDescription:
-			"Enter your admin email address and Astropress will issue a password reset link if the account exists.",
-		resetPasswordTokenHeading: "Choose a new password",
-		resetPasswordTokenDescription: "Set a new password for this admin account.",
-		resetPasswordRequestSubmit: "Issue reset link",
-		resetPasswordTokenSubmit: "Save new password",
-		backToLogin: "Back to admin login",
-		changeLanguage: "Change language",
-	},
-	navigation: {
-		dashboard: "Dashboard",
-		contentGroup: "Content",
-		pages: "Pages",
-		posts: "Posts",
-		authors: "Authors",
-		taxonomies: "Categories & Tags",
-		routePages: "Route Table",
-		archives: "Archives",
-		users: "Users",
-		access: "Access",
-		media: "Media",
-		comments: "Comments",
-		redirects: "Redirects",
-		translations: "Translations",
-		seo: "SEO",
-		system: "System",
-		settings: "Settings",
-		services: "Services",
-		fundraising: "Fundraising",
-		testimonials: "Testimonials",
-		cms: "CMS",
-		host: "Host",
-		groupSite: "Site",
-		groupAudience: "Audience",
-		groupDiscoverability: "Discoverability",
-		groupIntegrations: "Integrations",
-		groupAccess: "Access",
-		groupOperations: "Operations",
-		forms: "Forms",
-		headlessCmsPanel: "Headless CMS Panel",
-		subscribers: "Subscribers",
-		newsletter: "Newsletter",
-		events: "Events",
-		reviews: "Reviews",
-		referrals: "Referrals",
-		memberships: "Memberships",
-		community: "Community",
-		shop: "Shop",
-		socialSyndication: "Social Syndication",
-		structuredData: "Structured Data / AEO",
-		sitemaps: "Sitemaps",
-		mapsLocal: "Maps & Local",
-		analytics: "Analytics",
-		heatmaps: "Heatmaps & Session Replay",
-		abTesting: "A/B Testing & Feature Flags",
-		email: "Email",
-		liveChat: "Live Chat",
-		imageCdn: "Image CDN",
-		search: "Search",
-		cdnPurge: "CDN Purge",
-		monitoring: "Monitoring",
-		apiTokens: "API Tokens",
-		webhooks: "Webhooks",
-		deployHooks: "Deploy Hooks",
-		plugins: "Plugins",
-		data: "Data",
-		backups: "Backups",
-	},
-};
 
 function mergeWithDefaults() {
 	const cmsConfig = peekCmsConfig();

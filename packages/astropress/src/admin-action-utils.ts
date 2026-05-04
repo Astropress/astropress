@@ -69,6 +69,49 @@ export function actionErrorRedirect(path: string, message: string): Response {
 	return actionRedirect(url.pathname + url.search);
 }
 
+async function checkActionPermission(
+	context: AdminActionContext,
+	options: GuardOptions,
+	sessionUser: { email: string },
+): Promise<Response | null> {
+	if (!options.requireAction) return null;
+	const access = await getAccessContext({ locals: context.locals });
+	const decision = access?.can(options.requireAction);
+	if (decision && decision.decision !== "deny") return null;
+	if (decision) {
+		await logAccessDeny(context.locals, {
+			subjectEmail: access?.subject.email ?? sessionUser.email,
+			action: options.requireAction,
+			decision,
+		});
+	}
+	return actionErrorRedirect(
+		options.failurePath,
+		options.actionDeniedMessage ??
+			decision?.reason ??
+			"You do not have permission to perform this action.",
+	);
+}
+
+async function checkCsrf(
+	context: AdminActionContext,
+	options: GuardOptions,
+	sessionToken: string | undefined,
+	formData: FormData,
+): Promise<Response | null> {
+	const expectedToken =
+		(await getRuntimeCsrfToken(sessionToken, context.locals)) ??
+		(getRuntimeEnv("PLAYWRIGHT_E2E_MODE") === "admin-harness"
+			? (context.locals.csrfToken ?? null)
+			: null);
+	const submittedToken = String(formData.get("_csrf") ?? "");
+	if (expectedToken && submittedToken === expectedToken) return null;
+	return actionErrorRedirect(
+		options.failurePath,
+		options.invalidCsrfMessage ?? "Invalid security token",
+	);
+}
+
 export async function requireAdminFormAction(
 	context: AdminActionContext,
 	options: GuardOptions,
@@ -106,28 +149,12 @@ export async function requireAdminFormAction(
 		};
 	}
 
-	if (options.requireAction) {
-		const access = await getAccessContext({ locals: context.locals });
-		const decision = access?.can(options.requireAction);
-		if (!decision || decision.decision === "deny") {
-			if (decision) {
-				await logAccessDeny(context.locals, {
-					subjectEmail: access?.subject.email ?? sessionUser.email,
-					action: options.requireAction,
-					decision,
-				});
-			}
-			return {
-				ok: false,
-				response: actionErrorRedirect(
-					options.failurePath,
-					options.actionDeniedMessage ??
-						decision?.reason ??
-						"You do not have permission to perform this action.",
-				),
-			};
-		}
-	}
+	const denyResponse = await checkActionPermission(
+		context,
+		options,
+		sessionUser,
+	);
+	if (denyResponse) return { ok: false, response: denyResponse };
 
 	if (!isTrustedRequestOrigin(context.request)) {
 		return {
@@ -140,22 +167,8 @@ export async function requireAdminFormAction(
 	}
 
 	const formData = await context.request.formData();
-	const expectedToken =
-		(await getRuntimeCsrfToken(sessionToken, context.locals)) ??
-		(getRuntimeEnv("PLAYWRIGHT_E2E_MODE") === "admin-harness"
-			? (context.locals.csrfToken ?? null)
-			: null);
-	const submittedToken = String(formData.get("_csrf") ?? "");
-
-	if (!expectedToken || submittedToken !== expectedToken) {
-		return {
-			ok: false,
-			response: actionErrorRedirect(
-				options.failurePath,
-				options.invalidCsrfMessage ?? "Invalid security token",
-			),
-		};
-	}
+	const csrfFailure = await checkCsrf(context, options, sessionToken, formData);
+	if (csrfFailure) return { ok: false, response: csrfFailure };
 
 	return { ok: true, sessionUser, formData };
 }

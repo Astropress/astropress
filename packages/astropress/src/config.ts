@@ -9,6 +9,7 @@ export type {
 	AstropressPlugin,
 } from "./cms-plugins.js";
 import type { AstropressPlugin } from "./cms-plugins.js";
+import type { CmsAdminConfig } from "./config-admin.js";
 import type {
 	AbTestingConfig,
 	AnalyticsConfig,
@@ -17,6 +18,13 @@ import type {
 	TestimonialsConfig,
 } from "./config-service-types.js";
 import type { ContentTypeDefinition } from "./content-modeling.js";
+
+export type {
+	CmsAdminBranding,
+	CmsAdminConfig,
+	CmsAdminLabels,
+	CmsAdminNavigationKey,
+} from "./config-admin.js";
 
 export type {
 	AbTestingConfig,
@@ -95,109 +103,7 @@ export interface CmsConfig {
 	 * Optional admin-shell customization. Hosts can rename labels and swap simple
 	 * brand assets without forking Astropress admin templates.
 	 */
-	admin?: {
-		branding?: {
-			appName?: string;
-			productName?: string;
-			shellName?: string;
-			logoSrc?: string;
-			logoHref?: string;
-			logoAlt?: string;
-			faviconHref?: string;
-			stylesheetHref?: string;
-		};
-		labels?: {
-			sidebarTitle?: string;
-			signedInAsPrefix?: string;
-			signOut?: string;
-			themeToggleDark?: string;
-			themeToggleLight?: string;
-			languageToggle?: string;
-			languageToggleTitle?: string;
-			loginHeading?: string;
-			loginDescription?: string;
-			loginSubmit?: string;
-			loginEmailLabel?: string;
-			loginPasswordLabel?: string;
-			forgotPassword?: string;
-			invalidCredentials?: string;
-			rateLimited?: string;
-			challengeRequired?: string;
-			passwordResetSuccess?: string;
-			invitationAcceptedSuccess?: string;
-			acceptInvitationHeading?: string;
-			acceptInvitationDescription?: string;
-			acceptInvitationSubmit?: string;
-			resetPasswordRequestHeading?: string;
-			resetPasswordRequestDescription?: string;
-			resetPasswordTokenHeading?: string;
-			resetPasswordTokenDescription?: string;
-			resetPasswordRequestSubmit?: string;
-			resetPasswordTokenSubmit?: string;
-			backToLogin?: string;
-		};
-		navigation?: Partial<
-			Record<
-				| "dashboard"
-				| "contentGroup"
-				| "pages"
-				| "posts"
-				| "authors"
-				| "taxonomies"
-				| "routePages"
-				| "archives"
-				| "users"
-				| "media"
-				| "comments"
-				| "redirects"
-				| "translations"
-				| "seo"
-				| "system"
-				| "settings"
-				| "services"
-				| "fundraising"
-				| "testimonials"
-				| "cms"
-				| "host"
-				| "groupSite"
-				| "groupAudience"
-				| "groupDiscoverability"
-				| "groupIntegrations"
-				| "groupAccess"
-				| "groupOperations"
-				| "forms"
-				| "headlessCmsPanel"
-				| "subscribers"
-				| "newsletter"
-				| "events"
-				| "reviews"
-				| "referrals"
-				| "memberships"
-				| "community"
-				| "shop"
-				| "socialSyndication"
-				| "structuredData"
-				| "sitemaps"
-				| "mapsLocal"
-				| "analytics"
-				| "heatmaps"
-				| "abTesting"
-				| "email"
-				| "liveChat"
-				| "imageCdn"
-				| "search"
-				| "cdnPurge"
-				| "monitoring"
-				| "apiTokens"
-				| "webhooks"
-				| "deployHooks"
-				| "plugins"
-				| "data"
-				| "backups",
-				string
-			>
-		>;
-	};
+	admin?: CmsAdminConfig;
 
 	/**
 	 * Optional list of locale prefixes used in URL paths (e.g. ["en", "es", "fr"]).
