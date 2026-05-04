@@ -19,7 +19,8 @@
  * would add no information (e.g. a logger forwarding payloads it never
  * reads).
  *
- * Discovery + grandfather-baseline gate.
+ * Hardened gate: every category must be 0. Genuine pass-through must
+ * carry a pragma; otherwise the audit fails.
  */
 
 import { execFileSync } from "node:child_process";
@@ -224,14 +225,10 @@ console.log(
 	}`,
 );
 
-// Gate via grandfathered baseline: counts may shrink but never grow. Same
-// pattern as audit-suppressions — locks current weak-typed surface so new
-// code can't add to the pile while incremental cleanup happens.
-const BASELINE = "tooling/audit-output/boundary-types-baseline.json";
-type BaselineShape = {
-	typescript: Record<string, number>;
-	rust: Record<string, number>;
-};
+// Hardened gate: every category must be 0. Genuine pass-through must use
+// `// audit-boundary: opaque-passthrough -- <reason>` directly above the
+// match. Pragma'd sites are tracked separately and do not count toward
+// the ceiling.
 const current = {
 	typescript: {
 		castsOnCaughtError: tsCastsOnError.live.length,
@@ -248,42 +245,21 @@ const current = {
 	},
 };
 
-if (process.argv.includes("--rewrite-baseline")) {
-	writeFileSync(
-		BASELINE,
-		`${JSON.stringify(
-			{
-				updatedAt: new Date().toISOString().slice(0, 10),
-				note: "Grandfathered ceilings — counts may decrease but never increase. Run --rewrite-baseline to ratchet down. Pragma'd opaque-passthrough sites are tracked separately and do not count toward the ceiling.",
-				...current,
-			},
-			null,
-			2,
-		)}\n`,
-	);
-	console.log("boundary-types baseline rewritten.");
-	process.exit(0);
-}
-
-const baseline = JSON.parse(readFileSync(BASELINE, "utf8")) as BaselineShape;
 const violations: string[] = [];
 for (const [k, v] of Object.entries(current.typescript)) {
-	const ceiling = baseline.typescript[k] ?? 0;
-	if (v > ceiling)
-		violations.push(`typescript.${k}: ${v} > ceiling ${ceiling}`);
+	if (v > 0) violations.push(`typescript.${k}: ${v} (must be 0)`);
 }
 for (const [k, v] of Object.entries(current.rust)) {
-	const ceiling = baseline.rust[k] ?? 0;
-	if (v > ceiling) violations.push(`rust.${k}: ${v} > ceiling ${ceiling}`);
+	if (v > 0) violations.push(`rust.${k}: ${v} (must be 0)`);
 }
 
 if (violations.length > 0) {
 	console.error(
-		`boundary-types FAIL: ${violations.length} category/ies exceed grandfathered ceiling.`,
+		`boundary-types FAIL: ${violations.length} category/ies have weak-typed sites.`,
 	);
 	for (const v of violations) console.error(`  ${v}`);
 	console.error(
-		"\nFix the new occurrence(s). Use packages/astropress/src/result.ts (Result/Option) at TS module boundaries, concrete error enums in Rust. Genuine pass-through can use `// audit-boundary: opaque-passthrough -- <reason>` (same line or above). Intentional refactor that lowers counts: bun run tooling/scripts/audit-boundary-types.ts --rewrite-baseline.",
+		"\nFix the new occurrence(s). Use packages/astropress/src/result.ts (Result/Option) at TS module boundaries, concrete error enums in Rust. Genuine pass-through can use `// audit-boundary: opaque-passthrough -- <reason>` (same line or above).",
 	);
 	process.exit(1);
 }
