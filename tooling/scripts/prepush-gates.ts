@@ -278,7 +278,16 @@ function isTestIrrelevantOnlyPush(): boolean {
 			p.startsWith("docs/") ||
 			p === "CHANGELOG.md" ||
 			p === "README.md" ||
-			p === "tooling/stryker/baseline-scores.json",
+			// Ratchet baselines and equivalence catalogs — audits enforce
+			// their integrity at pre-commit, and they don't affect any
+			// runtime path. A push that touches only these files is a
+			// "rebaseline-only" push and need not re-fire the heavy gates.
+			p === "tooling/stryker/baseline-scores.json" ||
+			p === "tooling/stryker/equivalent-mutants.json" ||
+			p === "tooling/audit-output/coverage-floor-baseline.json" ||
+			p === "tooling/audit-output/source-test-pairing-baseline.json" ||
+			p === "tooling/audit-output/boundary-types-baseline.json" ||
+			p === "tooling/cargo-mutants/baseline-scores.json",
 	);
 }
 

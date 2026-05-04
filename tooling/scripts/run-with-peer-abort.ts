@@ -73,7 +73,9 @@ function describePeerFailure(): string {
 			// prepush-gates.ts writes per-step logs under <cwd>/.prepush-logs/.
 			// Surface the path so the operator can read the genuine failure
 			// instead of guessing what SIGTERM truncated.
-			const slug = parsed.failedLabel.replace(/[^a-z0-9]+/gi, "-").toLowerCase();
+			const slug = parsed.failedLabel
+				.replace(/[^a-z0-9]+/gi, "-")
+				.toLowerCase();
 			const log = join(process.cwd(), ".prepush-logs", `${slug}.log`);
 			const errSuffix = parsed.error ? ` (spawn error: ${parsed.error})` : "";
 			return `peer "${parsed.failedLabel}" failed${errSuffix}\n   full log: ${log}`;

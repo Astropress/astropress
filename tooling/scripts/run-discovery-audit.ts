@@ -96,7 +96,5 @@ if (process.argv.includes("--write-summary")) {
 	writeFileSync("tooling/audit-output/SUMMARY.md", `${lines.join("\n")}\n`);
 	console.log("\n→ tooling/audit-output/SUMMARY.md");
 } else {
-	console.log(
-		"\n(skipping SUMMARY.md write; pass --write-summary to refresh)",
-	);
+	console.log("\n(skipping SUMMARY.md write; pass --write-summary to refresh)");
 }

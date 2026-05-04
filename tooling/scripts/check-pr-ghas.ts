@@ -183,7 +183,8 @@ async function main() {
 					? null
 					: detectPrNumber();
 
-	const usePrRef = prNumber !== null && Number.isFinite(prNumber) && prNumber > 0;
+	const usePrRef =
+		prNumber !== null && Number.isFinite(prNumber) && prNumber > 0;
 	const ref = usePrRef ? `refs/pull/${prNumber}/merge` : `refs/heads/${branch}`;
 	const label = usePrRef ? `PR #${prNumber}` : branch;
 	console.log(`Checking GHAS alerts for ${repo} @ ${ref}\n`);

@@ -1,0 +1,5 @@
+{
+	"version": 1,
+	"description": "Catalog of mutants acknowledged as equivalent (semantically identical to the original code, so no test can kill them). Each entry is excluded from the per-file mutation-score denominator. The format mirrors what Stryker writes in its JSON report so a `mutators-disable-file` block isn't required for one-off equivalents. Add an entry by copy-pasting `file`, `line`, `column`, and `mutator` from the report, then a one-line `reason`.",
+	"entries": []
+}

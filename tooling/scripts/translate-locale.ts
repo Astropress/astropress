@@ -30,8 +30,16 @@ async function main() {
 	// dictionaries; the allowlist matches the SUPPORTED_LOCALES union
 	// declared in packages/astropress/src/admin-locale.ts.
 	const SUPPORTED: Record<string, true> = {
-		en: true, es: true, fr: true, de: true, pt: true,
-		ja: true, te: true, hi: true, ny: true, ar: true,
+		en: true,
+		es: true,
+		fr: true,
+		de: true,
+		pt: true,
+		ja: true,
+		te: true,
+		hi: true,
+		ny: true,
+		ar: true,
 	};
 	if (!Object.prototype.hasOwnProperty.call(SUPPORTED, locale)) {
 		console.error(

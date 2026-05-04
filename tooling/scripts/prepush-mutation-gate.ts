@@ -42,6 +42,10 @@ import {
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import {
+	isEquivalentMutant,
+	loadEquivalentMutants,
+} from "./equivalent-mutants";
 
 const FLOOR = 95;
 const TOLERANCE = 0.5;
@@ -260,11 +264,14 @@ function changedSourceFiles(): string[] {
 	return [];
 }
 
+interface StrykerReportMutant {
+	status: string;
+	static?: boolean;
+	mutatorName?: string;
+	location?: { start?: { line?: number; column?: number } };
+}
 interface StrykerReport {
-	files: Record<
-		string,
-		{ mutants: Array<{ status: string; static?: boolean }> }
-	>;
+	files: Record<string, { mutants: StrykerReportMutant[] }>;
 }
 
 // Label files (i18n string maps) generate thousands of StringLiteral mutants
@@ -354,17 +361,21 @@ function scoreForFile(
 	const key = Object.keys(report.files).find((k) => k.endsWith(mutatePath));
 	if (!key) return null;
 	const mutants = report.files[key].mutants;
+	const equivalents = loadEquivalentMutants();
 	// Match stryker's `ignoreStatic: true` — static mutants run at module
 	// load and can't be killed by ordinary unit tests. The runner config
 	// excludes them from scoring; mirror that here so survivors-by-design
-	// don't drag the per-file score below baseline.
-	const scored = mutants.filter(
-		(m) =>
-			m.status !== "Ignored" && m.status !== "NoCoverage" && m.static !== true,
-	);
-	const killed = mutants.filter(
-		(m) =>
-			(m.status === "Killed" || m.status === "Timeout") && m.static !== true,
+	// don't drag the per-file score below baseline. Equivalent mutants
+	// (catalogued in tooling/stryker/equivalent-mutants.json) are excluded
+	// for the same reason: no test can kill them.
+	const isExcluded = (m: StrykerReportMutant): boolean =>
+		m.status === "Ignored" ||
+		m.status === "NoCoverage" ||
+		m.static === true ||
+		isEquivalentMutant(key, m, equivalents);
+	const scored = mutants.filter((m) => !isExcluded(m));
+	const killed = scored.filter(
+		(m) => m.status === "Killed" || m.status === "Timeout",
 	);
 	if (scored.length === 0) return 100;
 	return (killed.length / scored.length) * 100;

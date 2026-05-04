@@ -103,7 +103,10 @@ function main(): void {
 		);
 		return;
 	}
-	let baseline: { unregisteredEntrypoints: string[]; unbackedRegistryEntries: string[] } = {
+	let baseline: {
+		unregisteredEntrypoints: string[];
+		unbackedRegistryEntries: string[];
+	} = {
 		unregisteredEntrypoints: [],
 		unbackedRegistryEntries: [],
 	};

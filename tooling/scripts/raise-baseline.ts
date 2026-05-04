@@ -26,9 +26,19 @@ import {
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import {
+	isEquivalentMutant,
+	loadEquivalentMutants,
+} from "./equivalent-mutants";
 
 const PREFIX = "packages/astropress/";
-const BASELINE_PATH = "tooling/stryker/baseline-scores.json";
+// Anchor every disk path to `git rev-parse --show-toplevel` so the script is
+// safe to run from any cwd (otherwise BASELINE_PATH and the stryker config
+// resolve relative to whatever subdirectory invoked the script).
+const REPO_ROOT = execFileSync("git", ["rev-parse", "--show-toplevel"], {
+	encoding: "utf8",
+}).trim();
+const BASELINE_PATH = join(REPO_ROOT, "tooling/stryker/baseline-scores.json");
 
 interface BaselineEntry {
 	score: number;
@@ -39,11 +49,14 @@ interface Baseline {
 	scores: Record<string, BaselineEntry>;
 }
 
+interface StrykerReportMutant {
+	status: string;
+	static?: boolean;
+	mutatorName?: string;
+	location?: { start?: { line?: number; column?: number } };
+}
 interface StrykerReport {
-	files: Record<
-		string,
-		{ mutants: Array<{ status: string; static?: boolean }> }
-	>;
+	files: Record<string, { mutants: StrykerReportMutant[] }>;
 }
 
 function gitHashObject(path: string): string {
@@ -59,32 +72,66 @@ function loadBaseline(): Baseline {
 
 function saveBaseline(b: Baseline): void {
 	writeFileSync(BASELINE_PATH, `${JSON.stringify(b, null, 2)}\n`);
+	// Pipe through biome so the on-disk shape always matches the formatter's
+	// current opinion. Without this every commit needs `biome --write` first;
+	// pre-commit's biome hook would still catch it but the developer wastes a
+	// round trip. `--no-errors-on-unmatched` keeps the call quiet if biome
+	// happens to be configured to skip JSON in some future config.
+	const result = spawnSync(
+		"bunx",
+		[
+			"@biomejs/biome@1",
+			"format",
+			"--write",
+			"--no-errors-on-unmatched",
+			BASELINE_PATH,
+		],
+		{ stdio: "inherit", cwd: REPO_ROOT },
+	);
+	if (result.status !== 0) {
+		throw new Error(
+			`raise-baseline: biome format failed for ${BASELINE_PATH} (exit ${result.status}).`,
+		);
+	}
 }
 
 function scoreForFile(report: StrykerReport, relMutate: string): number | null {
 	const key = Object.keys(report.files).find((k) => k.endsWith(relMutate));
 	if (!key) return null;
 	const mutants = report.files[key].mutants;
-	const scored = mutants.filter(
-		(m) => m.status !== "Ignored" && m.status !== "NoCoverage" && !m.static,
-	);
+	const equivalents = loadEquivalentMutants();
+	const isExcluded = (m: StrykerReportMutant): boolean =>
+		m.status === "Ignored" ||
+		m.status === "NoCoverage" ||
+		m.static === true ||
+		isEquivalentMutant(key, m, equivalents);
+	const scored = mutants.filter((m) => !isExcluded(m));
 	if (scored.length === 0) return 100;
-	const killed = mutants.filter(
-		(m) => (m.status === "Killed" || m.status === "Timeout") && !m.static,
+	const killed = scored.filter(
+		(m) => m.status === "Killed" || m.status === "Timeout",
 	);
 	return (killed.length / scored.length) * 100;
 }
 
-function runStryker(targets: string[], tmp: string): StrykerReport | null {
+function runStryker(
+	targets: string[],
+	tmp: string,
+	fast = false,
+): StrykerReport | null {
 	const configPath = join(tmp, "stryker.config.mjs");
 	const reportPath = join(tmp, "report.json");
+	// In fast mode coverage analysis is disabled and we trust vitest's
+	// `related: true` filter to only run tests that import the mutated file.
+	// Skipping perTest coverage analysis avoids the upfront vitest run that
+	// otherwise dominates wall-clock for files with focused unit tests.
+	const coverageAnalysis = fast ? "off" : "perTest";
 	writeFileSync(
 		configPath,
 		`export default {
   plugins: ["@stryker-mutator/vitest-runner"],
   mutate: ${JSON.stringify(targets)},
   testRunner: "vitest",
-  coverageAnalysis: "perTest",
+  coverageAnalysis: ${JSON.stringify(coverageAnalysis)},
   vitest: { related: true },
   ignoreStatic: true,
   concurrency: 4,
@@ -95,9 +142,9 @@ function runStryker(targets: string[], tmp: string): StrykerReport | null {
 };
 `,
 	);
-	const strykerBin = join(process.cwd(), "node_modules/.bin/stryker");
+	const strykerBin = join(REPO_ROOT, "node_modules/.bin/stryker");
 	spawnSync("node", [strykerBin, "run", configPath], {
-		cwd: join(process.cwd(), "packages/astropress"),
+		cwd: join(REPO_ROOT, "packages/astropress"),
 		stdio: "inherit",
 	});
 	if (!existsSync(reportPath)) return null;
@@ -105,9 +152,11 @@ function runStryker(targets: string[], tmp: string): StrykerReport | null {
 }
 
 function main(): number {
-	const argv = process.argv.slice(2);
+	const rawArgv = process.argv.slice(2);
+	const fast = rawArgv.includes("--fast");
+	const argv = rawArgv.filter((a) => a !== "--fast");
 	if (argv.length === 0) {
-		console.error("Usage: raise-baseline <file> [more files...]");
+		console.error("Usage: raise-baseline [--fast] <file> [more files...]");
 		return 1;
 	}
 	for (const f of argv) {
@@ -127,7 +176,7 @@ function main(): number {
 		console.log(
 			`raise-baseline: running Stryker on ${targets.length} file(s)...`,
 		);
-		const report = runStryker(targets, tmp);
+		const report = runStryker(targets, tmp, fast);
 		if (!report) {
 			console.error("raise-baseline: Stryker produced no JSON report");
 			return 1;
