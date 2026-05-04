@@ -43,34 +43,65 @@ function tsAudit(): {
 	const testFiles = lines(`find ${TESTS} -name "*.test.ts"`);
 
 	// Build a lookup of every "name token" reachable from a test file path:
-	//   tests/access-action-registry.test.ts → "access-action-registry", "action-registry"
+	//   tests/access-action-registry.test.ts → "access-action-registry", "action-registry", "access"
 	//   tests/sqlite-runtime/audit-log.test.ts → "audit-log", "sqlite-runtime/audit-log"
+	//   tests/appwrite-adapter.test.ts → "appwrite-adapter", "adapter", "appwrite"
 	const testTokens = new Set<string>();
 	for (const t of testFiles) {
 		const base = basename(t, ".test.ts");
 		testTokens.add(base);
-		// Hyphen-segmented name: also add tail tokens (drop one prefix at a time).
 		const parts = base.split("-");
+		// Tail tokens (drop one prefix at a time): "a-b-c" → "b-c", "c"
 		for (let i = 1; i < parts.length; i++) {
 			testTokens.add(parts.slice(i).join("-"));
+		}
+		// Head tokens (drop one suffix at a time): "a-b-c" → "a-b", "a"
+		// Lets `appwrite-adapter.test.ts` pair with `src/adapters/appwrite.ts`.
+		for (let i = parts.length - 1; i >= 1; i--) {
+			testTokens.add(parts.slice(0, i).join("-"));
 		}
 		// Subdir relative to TESTS dir.
 		const rel = t.slice(TESTS.length + 1);
 		testTokens.add(rel.replace(/\.test\.ts$/, ""));
 	}
 
+	// Also collect subdir prefixes from test names: a test named
+	// `deploy-targets.test.ts` covers anything under `src/deploy/` for pairing
+	// purposes (this codebase puts category-level tests at the test root with
+	// the subdir as the leading hyphen-segment).
+	const testSubdirPrefixes = new Set<string>();
+	for (const t of testFiles) {
+		const base = basename(t, ".test.ts");
+		const head = base.split("-")[0];
+		if (head) testSubdirPrefixes.add(head);
+		// Subdir from path: tests/sqlite-runtime/*.test.ts → "sqlite-runtime".
+		const rel = t.slice(TESTS.length + 1);
+		if (rel.includes("/")) testSubdirPrefixes.add(rel.split("/")[0]);
+	}
+
 	// For each src file, generate candidate keys and probe testTokens.
+	// Try all hyphen-substrings (head-trim + tail-trim) plus relative-path
+	// variants and the common-suffix-stripped form. Also accept a subdir-level
+	// match: src `deploy/custom.ts` is paired by any `tests/deploy-*.test.ts`.
 	const unpairedSrc = srcFiles
 		.filter((p) => {
 			const base = basename(p, ".ts");
 			const rel = p.slice(SRC.length + 1).replace(/\.ts$/, "");
-			const candidates = [
+			const candidates = new Set<string>([
 				base,
 				rel,
 				rel.replace(/\//g, "-"),
 				base.replace(/-helpers$|-utils$|-factory$|-impl$|-commons$/, ""),
-			];
-			return !candidates.some((c) => testTokens.has(c));
+			]);
+			const parts = base.split("-");
+			for (let i = 1; i < parts.length; i++)
+				candidates.add(parts.slice(i).join("-"));
+			for (let i = parts.length - 1; i >= 1; i--)
+				candidates.add(parts.slice(0, i).join("-"));
+			if ([...candidates].some((c) => testTokens.has(c))) return false;
+			const subdir = rel.includes("/") ? rel.split("/")[0] : null;
+			if (subdir && testSubdirPrefixes.has(subdir)) return false;
+			return true;
 		})
 		.sort();
 
@@ -88,10 +119,14 @@ function tsAudit(): {
 		.filter((p) => {
 			const base = basename(p, ".test.ts");
 			if (srcKeys.has(base)) return false;
-			// Also tolerate tail-trim: "access-foo" → matches "foo" src.
 			const parts = base.split("-");
+			// Tail-trim: "access-foo" → matches "foo" src.
 			for (let i = 1; i < parts.length; i++) {
 				if (srcKeys.has(parts.slice(i).join("-"))) return false;
+			}
+			// Head-trim: "appwrite-adapter" → matches "appwrite" src.
+			for (let i = parts.length - 1; i >= 1; i--) {
+				if (srcKeys.has(parts.slice(0, i).join("-"))) return false;
 			}
 			return true;
 		})

@@ -1,9 +1,9 @@
 {
-  "updatedAt": "2026-05-03",
+  "updatedAt": "2026-05-04",
   "note": "Grandfathered ceilings — counts may decrease but never increase. Run --rewrite-baseline to ratchet down.",
   "typescript": {
-    "unpairedSrcCount": 120,
-    "orphanTestCount": 77
+    "unpairedSrcCount": 0,
+    "orphanTestCount": 47
   },
   "rust": {
     "unpairedSrcCount": 63
