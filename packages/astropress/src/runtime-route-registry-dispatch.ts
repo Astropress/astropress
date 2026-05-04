@@ -7,6 +7,7 @@ export interface RuntimeSystemRouteRecord {
 	summary?: string;
 	bodyHtml?: string;
 	renderStrategy: "structured_sections" | "generated_text" | "generated_xml";
+	// audit-boundary: opaque-passthrough -- user CMS route-registry config; narrowed at consumer
 	settings: Record<string, unknown> | null;
 	updatedAt?: string;
 }
@@ -33,6 +34,7 @@ export interface RuntimeStructuredPageRouteRecord {
 	ogImage?: string;
 	templateKey: string;
 	alternateLinks: Array<{ hreflang: string; href: string }>;
+	// audit-boundary: opaque-passthrough -- user CMS route-registry config; narrowed at consumer
 	sections: Record<string, unknown> | null;
 	updatedAt?: string;
 }
@@ -67,9 +69,9 @@ export async function withSafeRouteRegistryFallback<T>(
 export function parseSettings(value: string | null) {
 	try {
 		const parsed = JSON.parse(value ?? "null") as unknown;
-		return parsed && typeof parsed === "object"
-			? (parsed as Record<string, unknown>)
-			: null;
+		if (!parsed || typeof parsed !== "object") return null;
+		// audit-boundary: opaque-passthrough -- user CMS route-registry config; narrowed at consumer
+		return parsed as Record<string, unknown>;
 	} catch {
 		return null;
 	}

@@ -169,6 +169,7 @@ export interface ContentStoreRecord {
 	locale?: string | null;
 	title?: string | null;
 	body?: string | null;
+	// audit-boundary: opaque-passthrough -- host runtime contract passthrough; narrowed at consumer
 	metadata?: Record<string, unknown> & AeoMetadata;
 }
 
@@ -198,6 +199,7 @@ export interface MediaAssetRecord {
 	mimeType: string;
 	bytes?: Uint8Array;
 	publicUrl?: string | null;
+	// audit-boundary: opaque-passthrough -- host runtime contract passthrough; narrowed at consumer
 	metadata?: Record<string, unknown>;
 	width?: number;
 	height?: number;
@@ -217,6 +219,7 @@ export interface RevisionRecord {
 	createdAt: string;
 	actorId?: string | null;
 	summary?: string | null;
+	// audit-boundary: opaque-passthrough -- host runtime contract passthrough; narrowed at consumer
 	snapshot: Record<string, unknown>;
 }
 

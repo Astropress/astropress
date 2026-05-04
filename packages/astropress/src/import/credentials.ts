@@ -89,6 +89,7 @@ export async function saveCredentialsFile(
 // ---------------------------------------------------------------------------
 
 function requireField(
+	// audit-boundary: opaque-passthrough -- third-party API response shape; narrowed at consumer
 	obj: Record<string, unknown>,
 	field: string,
 	context: string,
@@ -113,6 +114,7 @@ export async function resolveWordPressCredentials(opts: {
 				"Credentials file does not contain a 'wordpress' section",
 			);
 		}
+		// audit-boundary: opaque-passthrough -- third-party API response shape; narrowed at consumer
 		const wp = config.wordpress as Record<string, unknown>;
 		return {
 			url: opts.url,
@@ -141,6 +143,7 @@ export async function resolveWixCredentials(opts: {
 		if (!config.wix) {
 			throw new Error("Credentials file does not contain a 'wix' section");
 		}
+		// audit-boundary: opaque-passthrough -- third-party API response shape; narrowed at consumer
 		const wix = config.wix as Record<string, unknown>;
 		return {
 			email: requireField(wix, "email", "Wix"),

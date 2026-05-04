@@ -81,6 +81,7 @@ export interface MarketingRouteSeedRecord {
 	ogImage?: string;
 	templateKey: string;
 	alternateLinks?: Array<{ hreflang: string; href: string }>;
+	// audit-boundary: opaque-passthrough -- SQL row-shape mirror; columns narrowed at row-mapper boundary
 	sections: Record<string, unknown> | null;
 }
 

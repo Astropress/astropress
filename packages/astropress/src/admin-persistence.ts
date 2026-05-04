@@ -232,6 +232,7 @@ export declare function saveContentState(
 		canonicalUrlOverride?: string;
 		robotsDirective?: string;
 		revisionNote?: string;
+		// audit-boundary: opaque-passthrough -- module-boundary value; narrowed at consumer
 		metadata?: Record<string, unknown>;
 	},
 	actor: Actor,

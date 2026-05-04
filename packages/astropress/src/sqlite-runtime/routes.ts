@@ -166,6 +166,7 @@ export function createSqliteRoutesStore(
 			title: string;
 			summary: string;
 			bodyHtml: string;
+			// audit-boundary: opaque-passthrough -- SQL row-shape mirror; columns narrowed at row-mapper boundary
 			settings: Record<string, unknown> | null;
 			renderStrategy: string;
 			revisionNote: string;

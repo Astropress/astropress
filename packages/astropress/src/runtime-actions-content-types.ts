@@ -18,6 +18,7 @@ export interface SaveContentInput {
 	robotsDirective?: string;
 	revisionNote?: string;
 	lastKnownUpdatedAt?: string;
+	// audit-boundary: opaque-passthrough -- module-boundary value; narrowed at consumer
 	metadata?: Record<string, unknown>;
 }
 

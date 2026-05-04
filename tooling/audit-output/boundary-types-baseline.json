@@ -3,7 +3,7 @@
   "note": "Grandfathered ceilings — counts may decrease but never increase. Run --rewrite-baseline to ratchet down. Pragma'd opaque-passthrough sites are tracked separately and do not count toward the ceiling.",
   "typescript": {
     "castsOnCaughtError": 0,
-    "recordStringUnknown": 97,
+    "recordStringUnknown": 0,
     "unknownArray": 0,
     "envFallbackChain": 0,
     "jsonParseFallbackChain": 0

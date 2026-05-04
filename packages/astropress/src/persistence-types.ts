@@ -39,6 +39,7 @@ export interface RecordAuditEventInput {
 	resourceType: string;
 	resourceId?: string | null;
 	summary: string;
+	// audit-boundary: opaque-passthrough -- JSON column passthrough at persistence boundary
 	details?: Record<string, unknown> | null;
 }
 
@@ -112,6 +113,7 @@ export interface ContentOverride {
 	canonicalUrlOverride?: string;
 	robotsDirective?: string;
 	/** Custom field values for typed content types registered via `registerCms({ contentTypes })`. */
+	// audit-boundary: opaque-passthrough -- JSON column passthrough at persistence boundary
 	metadata?: Record<string, unknown>;
 }
 

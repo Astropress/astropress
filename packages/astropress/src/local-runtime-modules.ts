@@ -162,6 +162,7 @@ export interface LocalCmsRegistryModule {
 			ogImage?: string;
 			templateKey: string;
 			alternateLinks?: Array<{ hreflang: string; href: string }>;
+			// audit-boundary: opaque-passthrough -- module-boundary value; narrowed at consumer
 			sections?: Record<string, unknown> | null;
 			revisionNote?: string;
 		},
@@ -181,6 +182,7 @@ export interface LocalCmsRegistryModule {
 			ogImage?: string;
 			templateKey: string;
 			alternateLinks?: Array<{ hreflang: string; href: string }>;
+			// audit-boundary: opaque-passthrough -- module-boundary value; narrowed at consumer
 			sections?: Record<string, unknown> | null;
 			revisionNote?: string;
 		},

@@ -133,6 +133,7 @@ export function listSqliteContentRecords(
 }
 
 export function resolveMetaString(
+	// audit-boundary: opaque-passthrough -- SQL row-shape mirror; columns narrowed at row-mapper boundary
 	meta: Record<string, unknown> | null | undefined,
 	key: string,
 ): string | undefined {
@@ -291,6 +292,7 @@ export function deleteSqliteContentRecord(
 }
 
 export function snapshotField(
+	// audit-boundary: opaque-passthrough -- SQL row-shape mirror; columns narrowed at row-mapper boundary
 	snapshot: Record<string, unknown>,
 	key: string,
 	fallback: unknown = null,
@@ -299,6 +301,7 @@ export function snapshotField(
 }
 
 export function buildRevisionParams(
+	// audit-boundary: opaque-passthrough -- SQL row-shape mirror; columns narrowed at row-mapper boundary
 	snapshot: Record<string, unknown>,
 	revision: {
 		id: string;
@@ -341,6 +344,7 @@ export function appendSqliteRevision(
 	revision: {
 		id: string;
 		recordId: string;
+		// audit-boundary: opaque-passthrough -- SQL row-shape mirror; columns narrowed at row-mapper boundary
 		snapshot: Record<string, unknown>;
 		summary?: string | null;
 		createdAt: string;

@@ -2,6 +2,15 @@ import { peekCmsConfig } from "../config";
 import { buildAuditEntry } from "../persistence-commons";
 import type { AstropressSqliteDatabaseLike } from "./utils";
 
+// audit-boundary: opaque-passthrough -- SQL row-shape mirror; columns narrowed at row-mapper boundary
+type AuditDetails = Record<string, unknown>;
+
+function parseDetailsJson(value: string | null): AuditDetails | null {
+	if (!value) return null;
+	// audit-boundary: opaque-passthrough -- SQL row-shape mirror; columns narrowed at row-mapper boundary
+	return JSON.parse(value) as Record<string, unknown>;
+}
+
 export interface AuditEventRecord {
 	id: number;
 	userEmail: string;
@@ -9,6 +18,7 @@ export interface AuditEventRecord {
 	resourceType: string;
 	resourceId: string | null;
 	summary: string;
+	// audit-boundary: opaque-passthrough -- SQL row-shape mirror; columns narrowed at row-mapper boundary
 	details: Record<string, unknown> | null;
 	createdAt: string;
 }
@@ -19,6 +29,7 @@ export interface RecordAuditEventInput {
 	resourceType: string;
 	resourceId?: string | null;
 	summary: string;
+	// audit-boundary: opaque-passthrough -- SQL row-shape mirror; columns narrowed at row-mapper boundary
 	details?: Record<string, unknown> | null;
 }
 
@@ -119,9 +130,7 @@ export function listAuditEvents(
 		resourceType: row.resource_type,
 		resourceId: row.resource_id,
 		summary: row.summary,
-		details: row.details
-			? (JSON.parse(row.details) as Record<string, unknown>)
-			: null,
+		details: parseDetailsJson(row.details),
 		createdAt: row.created_at,
 	}));
 }

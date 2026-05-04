@@ -71,6 +71,7 @@ function normalizeRoutePageInput(input: {
 	ogImage?: string;
 	templateKey: string;
 	alternateLinks?: Array<{ hreflang: string; href: string }>;
+	// audit-boundary: opaque-passthrough -- user CMS route-registry config; narrowed at consumer
 	sections?: Record<string, unknown> | null;
 }) {
 	const title = input.title.trim();
@@ -105,6 +106,7 @@ function buildRouteResult(
 	input: {
 		templateKey: string;
 		alternateLinks?: Array<{ hreflang: string; href: string }>;
+		// audit-boundary: opaque-passthrough -- user CMS route-registry config; narrowed at consumer
 		sections?: Record<string, unknown> | null;
 	},
 ): RuntimeStructuredPageRouteRecord {
@@ -130,6 +132,7 @@ function buildRouteSnapshot(
 	input: {
 		templateKey: string;
 		alternateLinks?: Array<{ hreflang: string; href: string }>;
+		// audit-boundary: opaque-passthrough -- user CMS route-registry config; narrowed at consumer
 		sections?: Record<string, unknown> | null;
 	},
 ) {
@@ -160,6 +163,7 @@ export async function saveRuntimeStructuredPageRoute(
 		ogImage?: string;
 		templateKey: string;
 		alternateLinks?: Array<{ hreflang: string; href: string }>;
+		// audit-boundary: opaque-passthrough -- user CMS route-registry config; narrowed at consumer
 		sections?: Record<string, unknown> | null;
 		revisionNote?: string;
 	},
@@ -253,6 +257,7 @@ export async function createRuntimeStructuredPageRoute(
 		ogImage?: string;
 		templateKey: string;
 		alternateLinks?: Array<{ hreflang: string; href: string }>;
+		// audit-boundary: opaque-passthrough -- user CMS route-registry config; narrowed at consumer
 		sections?: Record<string, unknown> | null;
 		revisionNote?: string;
 	},

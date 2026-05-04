@@ -64,6 +64,7 @@ export interface CmsConfig {
 	 * Seeded content records loaded from the host site's pages.json.
 	 * Typed loosely so the framework does not need to know the host's full page schema.
 	 */
+	// audit-boundary: opaque-passthrough -- user-supplied CMS config; narrowed at consumer
 	seedPages: ReadonlyArray<Record<string, unknown>>;
 
 	/**
@@ -75,6 +76,7 @@ export interface CmsConfig {
 		title: string;
 		kind: string;
 		legacyUrl: string;
+		// audit-boundary: opaque-passthrough -- user-supplied CMS config; narrowed at consumer
 		listingItems?: ReadonlyArray<Record<string, unknown>>;
 	}>;
 

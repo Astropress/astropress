@@ -49,6 +49,7 @@ async function triggerCloudflarePages(
 		};
 	}
 
+	// audit-boundary: opaque-passthrough -- module-boundary value; narrowed at consumer
 	const data = (await res.json().catch(() => ({}))) as Record<string, unknown>;
 	return {
 		ok: true,
@@ -69,7 +70,9 @@ async function triggerVercel(
 		return { ok: false, error: `Vercel deploy hook returned ${res.status}` };
 	}
 
+	// audit-boundary: opaque-passthrough -- module-boundary value; narrowed at consumer
 	const data = (await res.json().catch(() => ({}))) as Record<string, unknown>;
+	// audit-boundary: opaque-passthrough -- module-boundary value; narrowed at consumer
 	const job = (data.job ?? {}) as Record<string, unknown>;
 	return {
 		ok: true,

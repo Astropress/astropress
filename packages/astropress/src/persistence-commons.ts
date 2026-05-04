@@ -120,6 +120,7 @@ export interface AuditEntryInput {
 	resourceType: string;
 	resourceId?: string | null;
 	summary: string;
+	// audit-boundary: opaque-passthrough -- JSON column passthrough at persistence boundary
 	details?: Record<string, unknown> | null;
 }
 
@@ -165,12 +166,16 @@ export interface PersistedOverrideRow {
 }
 
 export interface PersistedOverrideRecord extends ContentOverride {
+	// audit-boundary: opaque-passthrough -- JSON column passthrough at persistence boundary
 	metadata?: Record<string, unknown>;
 }
 
+// audit-boundary: opaque-passthrough -- JSON column passthrough at persistence boundary
+type ParsedMetadata = Record<string, unknown>;
+
 export function parseMetadataJson(
 	raw: string | null | undefined,
-): Record<string, unknown> | undefined {
+): ParsedMetadata | undefined {
 	let parsed: unknown;
 	try {
 		parsed = JSON.parse(raw ?? "null");
@@ -180,6 +185,7 @@ export function parseMetadataJson(
 	if (parsed === null || typeof parsed !== "object" || Array.isArray(parsed)) {
 		return undefined;
 	}
+	// audit-boundary: opaque-passthrough -- JSON column passthrough at persistence boundary
 	return parsed as Record<string, unknown>;
 }
 

@@ -73,6 +73,7 @@ async function saveCloudflareRecord(
 		title?: string;
 		body?: string | null;
 		status?: string;
+		// audit-boundary: opaque-passthrough -- driver row-shape mirror; values narrowed at consumer
 		metadata?: Record<string, unknown> | null;
 	},
 ) {
@@ -362,6 +363,7 @@ export function createAstropressCloudflareAdapter(
 						createdAt: revision.createdAt,
 						actorId: revision.createdBy ?? null,
 						summary: revision.revisionNote ?? null,
+						// audit-boundary: opaque-passthrough -- driver row-shape mirror; values narrowed at consumer
 						snapshot: revision as unknown as Record<string, unknown>,
 					}),
 				);

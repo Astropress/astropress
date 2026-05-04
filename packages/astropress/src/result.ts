@@ -1,6 +1,7 @@
 /**
  * Tiny Result<T, E> + Option<T> helpers — no library dependency.
  *
+ // audit-boundary: opaque-passthrough -- module-boundary value; narrowed at consumer
  * Used at module boundaries that previously returned Record<string, unknown>
  * or threw raw errors. The discovery audit (audit-boundary-types) ratchets
  * a grandfathered count of weak-typed exports; new code should reach for

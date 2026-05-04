@@ -7,6 +7,7 @@ export interface SystemRouteRecord {
 	summary?: string;
 	bodyHtml?: string;
 	renderStrategy: "structured_sections" | "generated_text" | "generated_xml";
+	// audit-boundary: opaque-passthrough -- SQL row-shape mirror; columns narrowed at row-mapper boundary
 	settings: Record<string, unknown> | null;
 	updatedAt?: string;
 }
@@ -31,6 +32,7 @@ export interface StructuredPageRouteRecord {
 	ogImage?: string;
 	templateKey: string;
 	alternateLinks: Array<{ hreflang: string; href: string }>;
+	// audit-boundary: opaque-passthrough -- SQL row-shape mirror; columns narrowed at row-mapper boundary
 	sections: Record<string, unknown> | null;
 	updatedAt?: string;
 }
@@ -108,6 +110,7 @@ export interface InsertStructuredInput {
 	ogImage?: string;
 	templateKey: string;
 	alternateLinks: Array<{ hreflang: string; href: string }>;
+	// audit-boundary: opaque-passthrough -- SQL row-shape mirror; columns narrowed at row-mapper boundary
 	sections: Record<string, unknown> | null;
 	actor: Actor;
 }
@@ -122,6 +125,7 @@ export interface PersistStructuredInput {
 	ogImage?: string;
 	templateKey: string;
 	alternateLinks: Array<{ hreflang: string; href: string }>;
+	// audit-boundary: opaque-passthrough -- SQL row-shape mirror; columns narrowed at row-mapper boundary
 	sections: Record<string, unknown> | null;
 	actor: Actor;
 }

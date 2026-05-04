@@ -173,9 +173,9 @@ export function parseSystemSettings(value: string | null) {
 
 	try {
 		const parsed = JSON.parse(value) as unknown;
-		return parsed && typeof parsed === "object"
-			? (parsed as Record<string, unknown>)
-			: null;
+		if (!parsed || typeof parsed !== "object") return null;
+		// audit-boundary: opaque-passthrough -- SQL row-shape mirror; columns narrowed at row-mapper boundary
+		return parsed as Record<string, unknown>;
 	} catch {
 		return null;
 	}

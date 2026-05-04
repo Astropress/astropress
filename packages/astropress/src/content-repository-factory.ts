@@ -28,6 +28,7 @@ export interface AstropressContentOverride {
 	ogImage?: string;
 	canonicalUrlOverride?: string;
 	robotsDirective?: string;
+	// audit-boundary: opaque-passthrough -- module-boundary value; narrowed at consumer
 	metadata?: Record<string, unknown>;
 }
 

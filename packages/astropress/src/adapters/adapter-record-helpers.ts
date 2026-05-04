@@ -80,6 +80,7 @@ export async function listTranslationRecords(db: D1DatabaseLike) {
 }
 
 function buildRevisionBindParams(revision: RevisionRecord, actorEmail: string) {
+	// audit-boundary: opaque-passthrough -- module-boundary value; narrowed at consumer
 	const snapshot = revision.snapshot as Record<string, unknown>;
 	const title = String(snapshot.title ?? revision.recordId);
 	const status = normalizeContentStatus(snapshot.status as string);

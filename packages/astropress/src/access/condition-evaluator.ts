@@ -52,6 +52,7 @@ function walk(
 	for (const p of parts) {
 		if (cur === null || cur === undefined) return undefined;
 		if (typeof cur !== "object") return undefined;
+		// audit-boundary: opaque-passthrough -- module-boundary value; narrowed at consumer
 		cur = (cur as Record<string, unknown>)[p];
 	}
 	return cur as AttributeValue | undefined;

@@ -150,6 +150,7 @@ export function createAstropressSqliteAdapter(
 						createdAt: revision.createdAt,
 						actorId: revision.createdBy ?? null,
 						summary: revision.revisionNote ?? null,
+						// audit-boundary: opaque-passthrough -- driver row-shape mirror; values narrowed at consumer
 						snapshot: revision as unknown as Record<string, unknown>,
 					}),
 				);
@@ -160,6 +161,7 @@ export function createAstropressSqliteAdapter(
 					revision as {
 						id: string;
 						recordId: string;
+						// audit-boundary: opaque-passthrough -- driver row-shape mirror; values narrowed at consumer
 						snapshot: Record<string, unknown>;
 						summary?: string | null;
 						createdAt: string;

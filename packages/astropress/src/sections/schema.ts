@@ -136,6 +136,7 @@ export interface SectionParseError {
 
 export type SectionsParseResult = SectionsParseSuccess | SectionsParseFailure;
 
+// audit-boundary: opaque-passthrough -- runtime type-guard for plain objects; values are user JSON
 function isObject(value: unknown): value is Record<string, unknown> {
 	return typeof value === "object" && value !== null && !Array.isArray(value);
 }
@@ -199,6 +200,7 @@ function parseTestimonialLayout(value: unknown): TestimonialLayout {
 }
 
 function parseHero(
+	// audit-boundary: opaque-passthrough -- parsed JSON section config; narrowed via field guards below
 	raw: Record<string, unknown>,
 	path: string,
 	errors: SectionParseError[],
@@ -239,6 +241,7 @@ function parseHero(
 }
 
 function parseFeatureGrid(
+	// audit-boundary: opaque-passthrough -- parsed JSON section config; narrowed via field guards below
 	raw: Record<string, unknown>,
 	path: string,
 	errors: SectionParseError[],
@@ -289,6 +292,7 @@ function parseFeatureGrid(
 }
 
 function parseTestimonials(
+	// audit-boundary: opaque-passthrough -- parsed JSON section config; narrowed via field guards below
 	raw: Record<string, unknown>,
 	path: string,
 	errors: SectionParseError[],
@@ -317,6 +321,7 @@ function parseTestimonials(
 }
 
 function parseCtaBanner(
+	// audit-boundary: opaque-passthrough -- parsed JSON section config; narrowed via field guards below
 	raw: Record<string, unknown>,
 	path: string,
 	errors: SectionParseError[],
@@ -343,6 +348,7 @@ function parseCtaBanner(
 }
 
 function parseImageText(
+	// audit-boundary: opaque-passthrough -- parsed JSON section config; narrowed via field guards below
 	raw: Record<string, unknown>,
 	path: string,
 	errors: SectionParseError[],
@@ -370,6 +376,7 @@ function parseImageText(
 }
 
 function parseFaq(
+	// audit-boundary: opaque-passthrough -- parsed JSON section config; narrowed via field guards below
 	raw: Record<string, unknown>,
 	path: string,
 	errors: SectionParseError[],
@@ -408,6 +415,7 @@ function parseFaq(
 }
 
 function parseGallery(
+	// audit-boundary: opaque-passthrough -- parsed JSON section config; narrowed via field guards below
 	raw: Record<string, unknown>,
 	path: string,
 	errors: SectionParseError[],
@@ -432,6 +440,7 @@ function parseGallery(
 }
 
 function parseRichText(
+	// audit-boundary: opaque-passthrough -- parsed JSON section config; narrowed via field guards below
 	raw: Record<string, unknown>,
 	path: string,
 	errors: SectionParseError[],
