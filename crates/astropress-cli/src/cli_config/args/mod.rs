@@ -181,25 +181,25 @@ pub(crate) fn parse_command(args: &[String]) -> Result<Command, String> {
             ops::parse_sync_import_command(rest)
         }
         [command, subcommand, rest @ ..] if command == "services" && subcommand == "bootstrap" => {
-            ops::parse_services_bootstrap_command(rest)
+            ops::parse_services_bootstrap_command(rest).map_err(|e| e.to_string())
         }
         [command, subcommand, rest @ ..] if command == "services" && subcommand == "verify" => {
-            ops::parse_services_verify_command(rest)
+            ops::parse_services_verify_command(rest).map_err(|e| e.to_string())
         }
         [command, subcommand, rest @ ..] if command == "config" && subcommand == "migrate" => {
-            ops::parse_config_migrate_command(rest)
+            ops::parse_config_migrate_command(rest).map_err(|e| e.to_string())
         }
         [command, subcommand, rest @ ..] if command == "db" && subcommand == "migrate" => {
-            ops::parse_db_migrate_command(rest)
+            ops::parse_db_migrate_command(rest).map_err(|e| e.to_string())
         }
         [command, subcommand, rest @ ..] if command == "db" && subcommand == "rollback" => {
-            ops::parse_db_rollback_command(rest)
+            ops::parse_db_rollback_command(rest).map_err(|e| e.to_string())
         }
         [command, rest @ ..] if command == "deploy" => dev_deploy::parse_deploy_command(rest),
         [command, subcommand, rest @ ..] if command == "upgrade" && subcommand == "--apply" => {
-            ops::parse_upgrade_apply_command(rest)
+            ops::parse_upgrade_apply_command(rest).map_err(|e| e.to_string())
         }
-        [command, rest @ ..] if command == "upgrade" => ops::parse_upgrade_check_command(rest),
+        [command, rest @ ..] if command == "upgrade" => ops::parse_upgrade_check_command(rest).map_err(|e| e.to_string()),
         [command, ..] if command == "import" => {
             Err("Unsupported import source. Use `astropress import wordpress` or `astropress import wix`.".into())
         }
