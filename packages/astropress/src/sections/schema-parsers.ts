@@ -14,7 +14,7 @@ import {
 	parseTestimonialLayout,
 	parseTestimonialSource,
 	parseTone,
-} from "./schema";
+} from "./schema-helpers";
 import type {
 	CtaBannerSection,
 	FaqItem,
@@ -27,7 +27,7 @@ import type {
 	RichTextSection,
 	SectionParseError,
 	TestimonialsSection,
-} from "./schema";
+} from "./schema-helpers";
 
 export function parseHero(
 	// audit-boundary: opaque-passthrough -- parsed JSON section config; narrowed via field guards below
