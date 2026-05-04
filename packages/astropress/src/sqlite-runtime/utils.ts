@@ -8,8 +8,11 @@ import {
 type ContentStatus = "draft" | "review" | "published" | "archived";
 
 interface SqliteStatementLike {
+	// audit-boundary: opaque-passthrough -- mirrors driver bind-arg shape
 	run(...params: unknown[]): { changes?: number | bigint };
+	// audit-boundary: opaque-passthrough -- mirrors driver row shape; callers narrow at use
 	get(...params: unknown[]): unknown;
+	// audit-boundary: opaque-passthrough -- mirrors driver row shape; callers narrow at use
 	all(...params: unknown[]): unknown[];
 }
 

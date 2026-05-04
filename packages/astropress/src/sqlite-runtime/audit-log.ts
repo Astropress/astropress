@@ -78,6 +78,7 @@ export function listAuditEvents(
 	const limit = options.limit ?? 50;
 	const offset = options.offset ?? 0;
 
+	// audit-boundary: opaque-passthrough -- raw rows from driver; mapped below at row-shape boundary
 	let rows: unknown[];
 	if (options.resourceId) {
 		rows = db

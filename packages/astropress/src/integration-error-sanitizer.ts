@@ -51,8 +51,7 @@ export function sanitizeIntegrationError(
 ): IntegrationErrorCode {
 	if (hint && KNOWN_CODES.has(hint)) return hint;
 	if (err && typeof err === "object" && "code" in err) {
-		const code = (err as { code: unknown }).code;
-		if (isIntegrationErrorCode(code)) return code;
+		if (isIntegrationErrorCode(err.code)) return err.code;
 	}
 	if (err instanceof Error) {
 		// Map common network/timeout shapes without relaying message text.

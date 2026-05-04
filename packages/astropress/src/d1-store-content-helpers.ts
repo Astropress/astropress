@@ -1,4 +1,5 @@
 import type { D1DatabaseLike } from "./d1-database";
+import type { JsonValue } from "./json-types";
 import {
 	type ContentStatus,
 	type PersistedOverrideRow,
@@ -11,8 +12,8 @@ export interface PageRecord {
 	legacyUrl: string;
 	title: string;
 	templateKey: string;
-	listingItems: unknown[];
-	paginationLinks: unknown[];
+	listingItems: JsonValue[];
+	paginationLinks: JsonValue[];
 	sourceHtmlPath: string;
 	updatedAt: string;
 	body?: string;

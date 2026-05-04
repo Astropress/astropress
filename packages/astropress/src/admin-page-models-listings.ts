@@ -7,6 +7,7 @@ import {
 	withSettledMap,
 } from "./admin-page-model-helpers";
 import { getCmsConfig } from "./config";
+import type { JsonValue } from "./json-types";
 import { isAuthUserAdmin } from "./platform-contracts";
 import type { AuthUser } from "./platform-contracts";
 import {
@@ -50,7 +51,7 @@ export async function buildArchivesIndexPageModel(
 			kind: string;
 			slug: string;
 			legacyUrl: string;
-			listingItems?: unknown[];
+			listingItems?: JsonValue[];
 		}>,
 		async (archive) => {
 			const runtimeArchive = await getRuntimeArchiveRoute(

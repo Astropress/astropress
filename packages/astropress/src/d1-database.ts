@@ -5,6 +5,7 @@ export interface D1Result<T = Record<string, unknown>> {
 }
 
 export interface D1PreparedStatement {
+	// audit-boundary: opaque-passthrough -- mirrors Cloudflare D1 SDK bind-arg shape
 	bind(...values: unknown[]): D1PreparedStatement;
 	first<T = Record<string, unknown>>(columnName?: string): Promise<T | null>;
 	all<T = Record<string, unknown>>(): Promise<D1Result<T>>;

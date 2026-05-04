@@ -58,8 +58,11 @@ export interface UserRoleAssignment {
 export interface AccessStore {
 	exec(sql: string): void;
 	prepare(sql: string): {
+		// audit-boundary: opaque-passthrough -- mirrors driver bind-arg shape
 		all<T = unknown>(...params: unknown[]): T[];
+		// audit-boundary: opaque-passthrough -- mirrors driver bind-arg shape
 		get<T = unknown>(...params: unknown[]): T | undefined;
+		// audit-boundary: opaque-passthrough -- mirrors driver bind-arg shape
 		run(...params: unknown[]): { changes: number };
 	};
 }
@@ -106,6 +109,7 @@ export function createAccessRepository(store: AccessStore) {
 		): void {
 			const now = nowIso();
 			const sets: string[] = [];
+			// audit-boundary: opaque-passthrough -- variadic SQL bind args
 			const args: unknown[] = [];
 			if (input.name !== undefined) {
 				sets.push("name = ?");

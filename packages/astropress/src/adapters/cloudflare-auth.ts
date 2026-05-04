@@ -26,6 +26,7 @@ function getConfiguredSecrets(...values: Array<string | undefined>) {
 
 export function resolveCloudflareSessionSecret(): string {
 	const secret =
+		// audit-boundary: opaque-passthrough -- dev default; production throws below
 		process.env.CLOUDFLARE_SESSION_SECRET ??
 		"cloudflare-adapter-session-secret";
 	if (secret === "cloudflare-adapter-session-secret") {

@@ -1,13 +1,14 @@
 import type { safeLoadLocalAdminStore } from "./admin-store-dispatch";
 import type { D1AdminReadStore } from "./d1-admin-store";
+import type { JsonValue } from "./json-types";
 import type { ContentRecord, ContentStatus } from "./persistence-types";
 import { defaultSiteSettings } from "./site-settings";
 
 export type SeededContentRecord = ContentRecord & {
 	id?: string;
 	locale?: string;
-	listingItems: unknown[];
-	paginationLinks: unknown[];
+	listingItems: JsonValue[];
+	paginationLinks: JsonValue[];
 };
 
 export function normalizeContentStatus(value: unknown): ContentStatus {
