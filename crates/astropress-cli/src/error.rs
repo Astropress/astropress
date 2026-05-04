@@ -31,15 +31,6 @@ impl From<&str> for CliError {
     }
 }
 
-// Bridge to String so `?` works at boundaries whose return type is still
-// the legacy stringly-typed shape. Removed once every caller is migrated
-// to CliResult.
-impl From<CliError> for String {
-    fn from(e: CliError) -> Self {
-        e.to_string()
-    }
-}
-
 pub(crate) type CliResult<T> = Result<T, CliError>;
 
 #[cfg(test)]
@@ -67,17 +58,6 @@ mod tests {
     fn from_str_yields_other_variant() {
         let e: CliError = "boom".into();
         assert_eq!(e.to_string(), "boom");
-    }
-
-    #[test]
-    fn cli_error_into_string_round_trips_via_display() {
-        let e = CliError::InvalidValue {
-            kind: "x",
-            value: "y".to_string(),
-            hint: "z",
-        };
-        let s: String = e.into();
-        assert_eq!(s, "Unsupported x `y`. z");
     }
 
     #[test]

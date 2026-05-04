@@ -64,7 +64,7 @@ fn add_chat_tiledesk_parses() {
 fn add_unknown_flag_returns_error() {
     let result = parse_add_features(&args(&["--unknown-flag", "value"]));
     assert!(result.is_err());
-    let err = result.unwrap_err();
+    let err = result.unwrap_err().to_string();
     assert!(
         err.contains("Unknown flag"),
         "expected 'Unknown flag' in error, got: {err}"
@@ -138,10 +138,13 @@ fn add_to_nonexistent_dir_returns_error() {
     let f = AllFeatures::defaults();
     let result = add_integrations(Path::new("/nonexistent/dir/that/does/not/exist"), f);
     match result {
-        Err(err) => assert!(
-            err.contains("does not exist"),
-            "expected 'does not exist' in error, got: {err}"
-        ),
+        Err(err) => {
+            let err = err.to_string();
+            assert!(
+                err.contains("does not exist"),
+                "expected 'does not exist' in error, got: {err}"
+            );
+        }
         Ok(()) => panic!("expected an error but got Ok"),
     }
 }

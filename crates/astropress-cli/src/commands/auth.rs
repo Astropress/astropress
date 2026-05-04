@@ -1,13 +1,14 @@
 use std::path::Path;
 
 use crate::cli_config::args::AuthRevokeScope;
+use crate::error::CliResult;
 use crate::js_bridge::loaders::{resolve_admin_db_path, resolve_local_provider, run_auth_emergency_revoke_operation};
 
 pub(crate) fn run_emergency_revoke(
     project_dir: &Path,
     scope: AuthRevokeScope,
     user_email: Option<&str>,
-) -> Result<(), String> {
+) -> CliResult<()> {
     let provider = resolve_local_provider(project_dir, None)?;
     let db_path = resolve_admin_db_path(project_dir, provider)?;
     let abs_db = project_dir.join(&db_path);

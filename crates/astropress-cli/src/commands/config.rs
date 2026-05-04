@@ -5,8 +5,9 @@ use crate::cli_config::env::{
     format_env_map, migrate_env_map, migrate_package_manifest_scripts, read_env_path,
     read_package_manifest, write_package_manifest,
 };
+use crate::error::CliResult;
 
-pub(crate) fn migrate_project_config(project_dir: &Path, dry_run: bool) -> Result<usize, String> { // ~ skip
+pub(crate) fn migrate_project_config(project_dir: &Path, dry_run: bool) -> CliResult<usize> { // ~ skip
     let mut changed = 0;
     for file_name in [".env", ".env.example"] {
         let path = project_dir.join(file_name);

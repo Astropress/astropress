@@ -5,6 +5,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::cli_config::args::CrawlMode;
 use crate::commands::import_common::{crawl_and_save, now_unix_ms, resolve_absolute_admin_db_path, resolve_wix_credentials};
+use crate::error::CliResult;
 use crate::js_bridge::runner::{detect_package_manager, run_package_json_command};
 use crate::telemetry::{ImportSummary, PostImportChoice};
 
@@ -76,7 +77,7 @@ pub(crate) fn stage_wix_import(
     apply_local: bool,
     resume: bool,
     crawl_mode: CrawlMode,
-) -> Result<(), String> { // ~ skip
+) -> CliResult<()> { // ~ skip
     let import_dir = artifact_dir
         .map(PathBuf::from)
         .unwrap_or_else(|| {
@@ -91,7 +92,7 @@ pub(crate) fn stage_wix_import(
             return Err(format!(
                 "Wix export file was not found: {}",
                 path.display()
-            ));
+            ).into());
         }
         path.to_path_buf()
     } else if let Some(site_url) = url {

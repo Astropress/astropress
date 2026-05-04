@@ -9,7 +9,7 @@
     "jsonParseFallbackChain": 0
   },
   "rust": {
-    "resultStringErr": 11,
+    "resultStringErr": 0,
     "panicCalls": 1,
     "unwrapCalls": 64,
     "expectCalls": 14

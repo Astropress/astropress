@@ -10,6 +10,7 @@ use std::path::Path;
 
 use crate::feature_stubs::{feature_config_stubs, feature_env_stubs};
 use crate::service_docs::build_services_doc;
+use crate::error::CliResult;
 use crate::features::AllFeatures;
 use crate::providers::{AbTestingProvider, AnalyticsProvider, HeatmapProvider};
 use crate::utils::write_text_file;
@@ -96,12 +97,12 @@ fn provider_env_stubs(
 // ── main entry point ──────────────────────────────────────────────────────────
 
 /// Apply one or more integration additions to an existing project directory.
-pub(crate) fn add_integrations(project_dir: &Path, features: AllFeatures) -> Result<(), String> { // ~ skip
+pub(crate) fn add_integrations(project_dir: &Path, features: AllFeatures) -> CliResult<()> { // ~ skip
     if !project_dir.exists() {
         return Err(format!(
             "Project directory `{}` does not exist. Run `astropress new` first.",
             project_dir.display()
-        ));
+        ).into());
     }
 
     let feature_stubs = feature_env_stubs(&features);
