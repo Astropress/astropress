@@ -26,10 +26,6 @@ export default {
 	incremental: true,
 	incrementalFile: "../../.stryker-incremental.json",
 	timeoutMS: 120000,
-	// Static mutants (those evaluated at module-load) run the full test suite per
-	// mutant — Stryker estimated ~86% of total time on the 2564 static mutants in
-	// this codebase, pushing a single run past 6 hours. Skip them; behavioural
-	// coverage of the same lines comes from non-static mutants.
-	ignoreStatic: true,
+	ignoreStatic: false,
 	thresholds: { high: 95, low: 95, break: 95 },
 };

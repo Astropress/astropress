@@ -362,16 +362,11 @@ function scoreForFile(
 	if (!key) return null;
 	const mutants = report.files[key].mutants;
 	const equivalents = loadEquivalentMutants();
-	// Match stryker's `ignoreStatic: true` — static mutants run at module
-	// load and can't be killed by ordinary unit tests. The runner config
-	// excludes them from scoring; mirror that here so survivors-by-design
-	// don't drag the per-file score below baseline. Equivalent mutants
-	// (catalogued in tooling/stryker/equivalent-mutants.json) are excluded
-	// for the same reason: no test can kill them.
+	// Equivalent mutants (catalogued in tooling/stryker/equivalent-mutants.json)
+	// are excluded from scoring because no test can kill them.
 	const isExcluded = (m: StrykerReportMutant): boolean =>
 		m.status === "Ignored" ||
 		m.status === "NoCoverage" ||
-		m.static === true ||
 		isEquivalentMutant(key, m, equivalents);
 	const scored = mutants.filter((m) => !isExcluded(m));
 	const killed = scored.filter(

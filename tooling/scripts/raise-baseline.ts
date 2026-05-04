@@ -103,7 +103,6 @@ function scoreForFile(report: StrykerReport, relMutate: string): number | null {
 	const isExcluded = (m: StrykerReportMutant): boolean =>
 		m.status === "Ignored" ||
 		m.status === "NoCoverage" ||
-		m.static === true ||
 		isEquivalentMutant(key, m, equivalents);
 	const scored = mutants.filter((m) => !isExcluded(m));
 	if (scored.length === 0) return 100;
@@ -133,7 +132,7 @@ function runStryker(
   testRunner: "vitest",
   coverageAnalysis: ${JSON.stringify(coverageAnalysis)},
   vitest: { related: true },
-  ignoreStatic: true,
+  ignoreStatic: false,
   concurrency: 4,
   reporters: ["clear-text", "json"],
   jsonReporter: { fileName: ${JSON.stringify(reportPath)} },

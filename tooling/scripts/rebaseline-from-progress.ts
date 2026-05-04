@@ -62,12 +62,7 @@ function gitHashObject(path: string): string | null {
 
 function scoreFromMutants(mutants: IncrementalMutant[]): number | null {
 	const scoreable = mutants.filter(
-		(m) =>
-			m.status !== "Ignored" &&
-			m.status !== "NoCoverage" &&
-			// Mirror the prepush gate's ignoreStatic config — static mutants
-			// run the full suite per mutant and are excluded from scoring there.
-			m.static !== true,
+		(m) => m.status !== "Ignored" && m.status !== "NoCoverage",
 	);
 	if (scoreable.length === 0) return null;
 	const killed = scoreable.filter(
