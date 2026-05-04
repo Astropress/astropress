@@ -2,8 +2,9 @@ use std::env;
 use std::path::PathBuf;
 
 use super::{Command, CrawlMode};
+use crate::error::CliResult;
 
-pub(super) fn parse_import_wordpress_command(args: &[String]) -> Result<Command, String> {
+pub(super) fn parse_import_wordpress_command(args: &[String]) -> CliResult<Command> {
     let mut project_dir = env::current_dir().unwrap_or_else(|_| PathBuf::from("."));
     let mut source_path: Option<PathBuf> = None;
     let mut url: Option<String> = None;
@@ -76,7 +77,7 @@ pub(super) fn parse_import_wordpress_command(args: &[String]) -> Result<Command,
             other => {
                 return Err(format!(
                     "Unsupported astropress import wordpress option: `{other}`."
-                ))
+                ).into())
             }
         }
         index += 1; // ~ skip
@@ -85,11 +86,11 @@ pub(super) fn parse_import_wordpress_command(args: &[String]) -> Result<Command,
     if source_path.is_none() && url.is_none() {
         return Err(
             "Usage: `astropress import wordpress --source <export.xml>` or `astropress import wordpress --url <https://mysite.com>`."
-                .to_string(),
+                .into(),
         );
     }
     if source_path.is_some() && url.is_some() {
-        return Err("Cannot use both `--source` and `--url` at the same time.".to_string());
+        return Err("Cannot use both `--source` and `--url` at the same time.".into());
     }
 
     Ok(Command::ImportWordPress {
@@ -107,7 +108,7 @@ pub(super) fn parse_import_wordpress_command(args: &[String]) -> Result<Command,
     })
 }
 
-pub(super) fn parse_import_wix_command(args: &[String]) -> Result<Command, String> {
+pub(super) fn parse_import_wix_command(args: &[String]) -> CliResult<Command> {
     let mut project_dir = env::current_dir().unwrap_or_else(|_| PathBuf::from("."));
     let mut source_path: Option<PathBuf> = None;
     let mut url: Option<String> = None;
@@ -180,7 +181,7 @@ pub(super) fn parse_import_wix_command(args: &[String]) -> Result<Command, Strin
             other => {
                 return Err(format!(
                     "Unsupported astropress import wix option: `{other}`."
-                ))
+                ).into())
             }
         }
         index += 1; // ~ skip
@@ -189,11 +190,11 @@ pub(super) fn parse_import_wix_command(args: &[String]) -> Result<Command, Strin
     if source_path.is_none() && url.is_none() {
         return Err(
             "Usage: `astropress import wix --source <export.csv>` or `astropress import wix --url <https://username.wixsite.com/mysite>`."
-                .to_string(),
+                .into(),
         );
     }
     if source_path.is_some() && url.is_some() {
-        return Err("Cannot use both `--source` and `--url` at the same time.".to_string());
+        return Err("Cannot use both `--source` and `--url` at the same time.".into());
     }
 
     Ok(Command::ImportWix {

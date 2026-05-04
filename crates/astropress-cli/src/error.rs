@@ -31,9 +31,9 @@ impl From<&str> for CliError {
     }
 }
 
-// Bridge to String so `?` works at boundaries that still return
-// `Result<_, String>`. Removed once W10a finishes and every caller is
-// `Result<_, CliError>`.
+// Bridge to String so `?` works at boundaries whose return type is still
+// the legacy stringly-typed shape. Removed once every caller is migrated
+// to CliResult.
 impl From<CliError> for String {
     fn from(e: CliError) -> Self {
         e.to_string()

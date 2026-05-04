@@ -1,11 +1,12 @@
 use std::env;
 use std::path::PathBuf;
 
+use crate::error::CliResult;
 use crate::providers::{AppHost, DataServices, LocalProvider};
 
 use super::Command;
 
-pub(super) fn parse_dev_command(args: &[String]) -> Result<Command, String> {
+pub(super) fn parse_dev_command(args: &[String]) -> CliResult<Command> {
     let mut project_dir = env::current_dir().unwrap_or_else(|_| PathBuf::from("."));
     let mut provider = None;
     let mut app_host = None;
@@ -39,7 +40,7 @@ pub(super) fn parse_dev_command(args: &[String]) -> Result<Command, String> {
                 data_services = Some(selected);
             }
             value if value.starts_with("--") => {
-                return Err(format!("Unsupported astropress dev option: `{value}`."));
+                return Err(format!("Unsupported astropress dev option: `{value}`.").into());
             }
             value => {
                 if positional_project_dir.is_some() {
@@ -59,7 +60,7 @@ pub(super) fn parse_dev_command(args: &[String]) -> Result<Command, String> {
     })
 }
 
-pub(super) fn parse_deploy_command(args: &[String]) -> Result<Command, String> {
+pub(super) fn parse_deploy_command(args: &[String]) -> CliResult<Command> {
     let mut project_dir = env::current_dir().unwrap_or_else(|_| PathBuf::from("."));
     let mut target = None;
     let mut app_host = None;
@@ -90,7 +91,7 @@ pub(super) fn parse_deploy_command(args: &[String]) -> Result<Command, String> {
                 target = Some(selected.deploy_target().to_string());
                 app_host = Some(selected);
             }
-            other => return Err(format!("Unsupported astropress deploy option: `{other}`.")),
+            other => return Err(format!("Unsupported astropress deploy option: `{other}`.").into()),
         }
         index += 1; // ~ skip
     }

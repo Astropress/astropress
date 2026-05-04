@@ -2,6 +2,7 @@ use std::env;
 use std::path::PathBuf;
 
 use crate::cli_config::args::Command;
+use crate::error::CliResult;
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub(crate) enum AuthRevokeScope {
@@ -22,7 +23,7 @@ impl AuthRevokeScope {
 
 pub(in crate::cli_config::args) fn parse_auth_emergency_revoke_command(
     args: &[String],
-) -> Result<Command, String> {
+) -> CliResult<Command> {
     let mut project_dir = env::current_dir().unwrap_or_else(|_| PathBuf::from("."));
     let mut user_email: Option<String> = None;
     let mut all = false;
@@ -58,7 +59,7 @@ pub(in crate::cli_config::args) fn parse_auth_emergency_revoke_command(
             other => {
                 return Err(format!(
                     "Unsupported astropress auth emergency-revoke option: `{other}`."
-                ))
+                ).into())
             }
         }
         index += 1;

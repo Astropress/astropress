@@ -56,7 +56,7 @@ fn auth_emergency_revoke_bootstrap_warning_scope() {
 
 #[test]
 fn auth_emergency_revoke_no_scope_returns_error() {
-    let err = parse_command(&strings(&["auth", "emergency-revoke"])).unwrap_err();
+    let err = parse_command(&strings(&["auth", "emergency-revoke"])).unwrap_err().to_string();
     assert!(
         err.contains("--all") && err.contains("--sessions-only") && err.contains("--tokens-only"),
         "expected error listing all scope flags, got: {err}"

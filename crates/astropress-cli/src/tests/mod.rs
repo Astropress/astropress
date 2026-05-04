@@ -123,25 +123,25 @@ fn init_is_alias_for_new() {
 
 #[test]
 fn falls_back_to_help() {
-    assert_eq!(parse_command(&strings(&[])), Ok(Command::Help));
-    assert_eq!(parse_command(&strings(&["--help"])), Ok(Command::Help));
+    assert!(matches!(parse_command(&strings(&[])), Ok(Command::Help)));
+    assert!(matches!(parse_command(&strings(&["--help"])), Ok(Command::Help)));
 }
 
 #[test]
 fn rejects_unknown_subcommands() {
-    let import_error = parse_command(&strings(&["import", "ghost"])).unwrap_err();
+    let import_error = parse_command(&strings(&["import", "ghost"])).unwrap_err().to_string();
     assert!(import_error.contains("Unsupported import source"));
 
-    let sync_error = parse_command(&strings(&["sync", "push"])).unwrap_err();
+    let sync_error = parse_command(&strings(&["sync", "push"])).unwrap_err().to_string();
     assert!(sync_error.contains("Unsupported sync subcommand"));
 
-    let db_error = parse_command(&strings(&["db", "unknown"])).unwrap_err();
+    let db_error = parse_command(&strings(&["db", "unknown"])).unwrap_err().to_string();
     assert!(db_error.contains("Unsupported db subcommand"));
 }
 
 #[test]
 fn rejects_unknown_commands() {
-    let error = parse_command(&strings(&["explode"])).unwrap_err();
+    let error = parse_command(&strings(&["explode"])).unwrap_err().to_string();
     assert!(error.contains("Unsupported astropress command"));
 }
 

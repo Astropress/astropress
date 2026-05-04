@@ -112,7 +112,7 @@ fn list_tools_command_parses() {
 
 #[test]
 fn list_without_subcommand_returns_error() {
-    let err = parse_command(&strings(&["list"])).unwrap_err();
+    let err = parse_command(&strings(&["list"])).unwrap_err().to_string();
     assert!(
         err.contains("list tools"),
         "expected 'list tools' in error message, got: {err}"
@@ -121,7 +121,7 @@ fn list_without_subcommand_returns_error() {
 
 #[test]
 fn list_tools_with_unknown_flag_returns_error() {
-    let err = parse_command(&strings(&["list", "tools", "--unknown"])).unwrap_err();
+    let err = parse_command(&strings(&["list", "tools", "--unknown"])).unwrap_err().to_string();
     assert!(
         err.contains("--unknown"),
         "expected unknown flag name in error, got: {err}"
@@ -138,7 +138,7 @@ fn ls_tools_alias_parses() {
 
 #[test]
 fn ls_without_subcommand_returns_error() {
-    let err = parse_command(&strings(&["ls"])).unwrap_err();
+    let err = parse_command(&strings(&["ls"])).unwrap_err().to_string();
     assert!(
         err.contains("list tools"),
         "expected 'list tools' in error message, got: {err}"
@@ -163,7 +163,7 @@ fn ls_providers_alias_parses() {
 
 #[test]
 fn list_providers_with_unknown_flag_returns_error() {
-    let err = parse_command(&strings(&["list", "providers", "--unknown"])).unwrap_err();
+    let err = parse_command(&strings(&["list", "providers", "--unknown"])).unwrap_err().to_string();
     assert!(
         err.contains("--unknown"),
         "expected unknown flag name in error, got: {err}"
