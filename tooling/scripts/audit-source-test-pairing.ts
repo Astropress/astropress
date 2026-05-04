@@ -147,16 +147,78 @@ function rustAudit(): {
 } {
 	const SRC = "crates/astropress-cli/src";
 	const srcFiles = lines(`find ${SRC} -name "*.rs" -not -name "main.rs"`);
-	const integTests = new Set(
-		lines("find crates/astropress-cli/tests -name '*.rs' 2>/dev/null").map(
-			(p) => basename(p, ".rs"),
-		),
-	);
-	const unpaired: string[] = [];
-	let intestSrc = 0;
+	// "Integration" tests live at crates/astropress-cli/tests/ AND
+	// crates/astropress-cli/src/tests/ (the latter via `#[cfg(test)] mod tests;`).
+	const testFilePaths = [
+		...lines("find crates/astropress-cli/tests -name '*.rs' 2>/dev/null"),
+		...lines("find crates/astropress-cli/src/tests -name '*.rs' 2>/dev/null"),
+	];
+	// Build expanded test-name token set: include hyphen/underscore-separated
+	// head- and tail-trims so `tests/parse_more.rs` covers any src whose
+	// basename is "parse" (and vice versa).
+	const integTests = new Set<string>();
+	for (const p of testFilePaths) {
+		const base = basename(p, ".rs");
+		integTests.add(base);
+		const parts = base.split("_");
+		for (let i = 1; i < parts.length; i++)
+			integTests.add(parts.slice(i).join("_"));
+		for (let i = parts.length - 1; i >= 1; i--)
+			integTests.add(parts.slice(0, i).join("_"));
+	}
+	const fileContent = new Map<string, string>();
+	for (const p of srcFiles) {
+		try {
+			fileContent.set(p, readFileSync(p, "utf8"));
+		} catch {
+			fileContent.set(p, "");
+		}
+	}
+	// Test-helper files are themselves tests, not src needing pairing.
+	// Detected by: living under src/tests/, ending in *_tests*.rs / *_test.rs,
+	// or being referenced by another file via `#[cfg(test)] #[path = "X"] mod ...`.
+	const testHelperFiles = new Set<string>();
+	for (const p of srcFiles) {
+		if (p.includes("/tests/")) testHelperFiles.add(p);
+		const base = basename(p, ".rs");
+		if (/(_tests?|_tests_\w+)$/.test(base)) testHelperFiles.add(p);
+	}
+	// Collect #[cfg(test)] #[path = "X.rs"] references — the referenced file is
+	// a test helper for the referencing file (and thus paired).
+	const cfgTestPathPair = new Map<string, string>(); // referenced-file -> referencer
+	for (const [p, content] of fileContent) {
+		const re = /#\[cfg\(test\)\][^\n]*\n[^\n]*#\[path\s*=\s*"([^"]+)"\]/g;
+		let m: RegExpExecArray | null;
+		while ((m = re.exec(content)) !== null) {
+			const referenced = `${dirname(p)}/${m[1]}`.replace(/\/\.\//g, "/");
+			cfgTestPathPair.set(referenced, p);
+			testHelperFiles.add(referenced);
+		}
+	}
+
+	// Sibling-file pairing: src/foo.rs paired by a sibling src/foo_tests.rs
+	// (or foo_test.rs / foo_tests_more.rs etc).
+	const siblingPaired = new Set<string>();
 	for (const p of srcFiles) {
 		const base = basename(p, ".rs");
-		if (integTests.has(base)) continue;
+		const dir = dirname(p);
+		const sibPattern = new RegExp(`^${base}(?:_tests?(?:_\\w+)?|_tests)$`);
+		for (const q of srcFiles) {
+			if (q === p) continue;
+			if (dirname(q) !== dir) continue;
+			if (sibPattern.test(basename(q, ".rs"))) {
+				siblingPaired.add(p);
+				break;
+			}
+		}
+	}
+
+	// Use-statement coverage: parse `use <a::b::c>` from every test file and
+	// resolve to a src path. This catches integration tests that don't share a
+	// basename with the src they exercise (e.g. `tests/parse.rs` testing
+	// `cli_config/args.rs`).
+	const usePaired = new Set<string>();
+	for (const p of testFilePaths) {
 		const content = (() => {
 			try {
 				return readFileSync(p, "utf8");
@@ -164,7 +226,51 @@ function rustAudit(): {
 				return "";
 			}
 		})();
+		const useRe = /use\s+(?:crate::|super::)?([\w:]+)/g;
+		let m: RegExpExecArray | null;
+		while ((m = useRe.exec(content)) !== null) {
+			const segments = m[1].split("::").filter((s) => s && s !== "self");
+			// Check progressively shorter prefixes — cli_config::args::auth → try
+			// auth.rs, then args.rs, then cli_config.rs.
+			for (let i = segments.length; i > 0; i--) {
+				const sub = segments.slice(0, i);
+				const candidates = [
+					`${SRC}/${sub.join("/")}.rs`,
+					`${SRC}/${sub.join("/")}/mod.rs`,
+				];
+				for (const c of candidates) {
+					if (fileContent.has(c)) usePaired.add(c);
+				}
+			}
+		}
+	}
+
+	const unpaired: string[] = [];
+	let intestSrc = 0;
+	for (const p of srcFiles) {
+		// Test-helper files don't themselves need a test partner.
+		if (testHelperFiles.has(p)) continue;
+		if (usePaired.has(p)) {
+			intestSrc++;
+			continue;
+		}
+		const base = basename(p, ".rs");
+		// Direct + underscore-trim probe so `tests/import_wordpress_types.rs`
+		// covers `commands/import_wordpress_types.rs` AND any sibling
+		// `import_wordpress.rs` / `import.rs`.
+		const candidates = new Set<string>([base]);
+		const parts = base.split("_");
+		for (let i = 1; i < parts.length; i++)
+			candidates.add(parts.slice(i).join("_"));
+		for (let i = parts.length - 1; i >= 1; i--)
+			candidates.add(parts.slice(0, i).join("_"));
+		if ([...candidates].some((c) => integTests.has(c))) continue;
+		const content = fileContent.get(p) ?? "";
 		if (content.includes("#[cfg(test)]")) {
+			intestSrc++;
+			continue;
+		}
+		if (siblingPaired.has(p)) {
 			intestSrc++;
 			continue;
 		}
