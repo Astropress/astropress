@@ -1,4 +1,5 @@
 import { peekCmsConfig } from "./config";
+import type { JsonValue } from "./json-types";
 import type { ApiScope, ApiTokenStore } from "./platform-contracts";
 
 export interface ApiRequestContext {
@@ -6,14 +7,6 @@ export interface ApiRequestContext {
 	checkRateLimit: (key: string, max: number, windowMs: number) => boolean;
 	rateLimit?: number; // requests per minute per token, default 60
 }
-
-type JsonValue =
-	| string
-	| number
-	| boolean
-	| null
-	| JsonValue[]
-	| { [key: string]: JsonValue };
 
 const API_ERROR_SHAPES = {
 	unauthorized: (detail: string) =>
