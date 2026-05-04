@@ -10,4 +10,5 @@ pub(crate) fn verify_content_services(
     project_dir: &Path,
 ) -> Result<ContentServicesReport, String> { // ~ skip
     run_content_services_operation(project_dir, "verifyAstropressContentServices")
+        .map_err(|e| e.to_string())
 }

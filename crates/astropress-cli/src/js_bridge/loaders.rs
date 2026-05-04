@@ -308,7 +308,7 @@ pub(crate) fn load_project_scaffold(
     heatmap: Option<&str>,
     enable_api: bool,
     donations: &DonationChoices,
-) -> Result<ProjectScaffold, String> { // ~ skip
+) -> CliResult<ProjectScaffold> { // ~ skip
     let scaffold_module = package_module_import("project-scaffold.js", None)?;
     let scaffold_module_literal =
         serde_json::to_string(&scaffold_module).map_err(|error| error.to_string())?;
@@ -361,13 +361,13 @@ console.log(JSON.stringify(scaffold));
         .map_err(crate::io_error)?;
 
     if !output.status.success() {
-        return Err(format!(
+        return Err(CliError::Other(format!(
             "Failed to load Astropress scaffold defaults: {}",
             String::from_utf8_lossy(&output.stderr).trim()
-        ));
+        )));
     }
 
-    serde_json::from_slice::<ProjectScaffold>(&output.stdout).map_err(|error| error.to_string())
+    Ok(serde_json::from_slice::<ProjectScaffold>(&output.stdout)?)
 }
 
 #[derive(Debug, Deserialize)]
@@ -388,7 +388,7 @@ pub(crate) fn run_db_migrations_operation(
     db_path: &str,
     migrations_dir: &str,
     dry_run: bool,
-) -> Result<DbMigrateReport, String> { // ~ skip
+) -> CliResult<DbMigrateReport> { // ~ skip
     let module = package_module_import("db-migrate-ops.js", Some(project_dir))?;
     let module_literal = serde_json::to_string(&module).map_err(|error| error.to_string())?;
     let db_path_json = serde_json::to_string(db_path).map_err(|error| error.to_string())?;
@@ -425,7 +425,7 @@ pub(crate) fn run_db_rollback_operation(
     project_dir: &Path,
     db_path: &str,
     dry_run: bool,
-) -> Result<DbRollbackReport, String> { // ~ skip
+) -> CliResult<DbRollbackReport> { // ~ skip
     let module = package_module_import("db-migrate-ops.js", Some(project_dir))?;
     let module_literal = serde_json::to_string(&module).map_err(|error| error.to_string())?;
     let db_path_json = serde_json::to_string(db_path).map_err(|error| error.to_string())?;
@@ -447,7 +447,7 @@ console.log(JSON.stringify(result));
 pub(crate) fn run_content_services_operation(
     project_dir: &Path,
     export_name: &str,
-) -> Result<ContentServicesReport, String> { // ~ skip
+) -> CliResult<ContentServicesReport> { // ~ skip
     let module = package_module_import("content-services-ops.js", Some(project_dir))?;
     let module_literal = serde_json::to_string(&module).map_err(|error| error.to_string())?;
     let env_values = read_env_file(project_dir)?;
@@ -484,7 +484,7 @@ pub(crate) fn run_auth_emergency_revoke_operation(
     db_path: &str,
     scope: &str,
     user_email: Option<&str>,
-) -> Result<AuthRevokeReport, String> {
+) -> CliResult<AuthRevokeReport> {
     let module = package_module_import("auth-emergency-revoke-ops.js", Some(project_dir))?;
     let module_literal = serde_json::to_string(&module).map_err(|error| error.to_string())?;
     let db_path_json = serde_json::to_string(db_path).map_err(|error| error.to_string())?;
