@@ -310,7 +310,7 @@ fn main() -> ExitCode {
     }
 }
 
-fn fail(message: String) -> ExitCode { // ~ skip
+fn fail(message: impl std::fmt::Display) -> ExitCode { // ~ skip
     eprintln!("{message}");
     ExitCode::from(1)
 }

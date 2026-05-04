@@ -2,6 +2,7 @@ use std::path::Path;
 
 use serde::Deserialize;
 
+use crate::error::CliResult;
 use crate::js_bridge::loaders::package_module_import;
 use crate::js_bridge::runner::{detect_package_manager, run_package_json_command};
 
@@ -15,7 +16,7 @@ pub(crate) struct SnapshotResult {
 pub(crate) fn export_project_snapshot(
     project_dir: &Path,
     output_dir: Option<&Path>,
-) -> Result<(), String> { // ~ skip
+) -> CliResult<()> { // ~ skip
     let snapshot_dir = output_dir
         .map(std::path::PathBuf::from)
         .unwrap_or_else(|| {
@@ -54,12 +55,12 @@ console.log(JSON.stringify({{
 pub(crate) fn import_project_snapshot(
     project_dir: &Path,
     input_dir: &Path,
-) -> Result<(), String> { // ~ skip
+) -> CliResult<()> { // ~ skip
     if !input_dir.exists() {
         return Err(format!(
             "Snapshot directory was not found: {}",
             input_dir.display()
-        ));
+        ).into());
     }
     let package_manager = detect_package_manager(project_dir);
     let sync_module = package_module_import("sync/git.js", Some(project_dir))?;
