@@ -2,11 +2,12 @@
 //! Extracted from `telemetry.rs` to keep that file under the 300-line limit.
 
 use serde::Serialize;
+use crate::error::CliResult;
 use crate::features::AllFeatures;
 use super::ImportSummary;
 
 
-pub(super) fn send_project_created(f: &AllFeatures, version: &str, app_host: &str, data_services: &str) -> Result<(), String> { // ~ skip
+pub(super) fn send_project_created(f: &AllFeatures, version: &str, app_host: &str, data_services: &str) -> CliResult<()> { // ~ skip
     // Debug representations of enums produce clean variant names ("HyperSwitch",
     // "Postiz", etc.) — no paths, no content, no credentials.
     let payload = serde_json::json!({
@@ -67,7 +68,7 @@ struct TelemetryPayload<'a> {
     platform: &'a str,
 }
 
-pub(super) fn send_telemetry_report(summary: &ImportSummary, issues: &[String]) -> Result<(), String> { // ~ skip
+pub(super) fn send_telemetry_report(summary: &ImportSummary, issues: &[String]) -> CliResult<()> { // ~ skip
     // Payload: source, issues[], postCount, warningCount, platform.
     // No URLs, no content, no credentials.
     let payload = TelemetryPayload {

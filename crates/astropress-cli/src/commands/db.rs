@@ -1,6 +1,7 @@
 use std::path::Path;
 use std::process::Command as ProcessCommand;
 
+use crate::error::CliResult;
 use crate::js_bridge::loaders::{run_db_migrations_operation, run_db_rollback_operation, resolve_admin_db_path, resolve_local_provider};
 
 #[mutants::skip]
@@ -9,7 +10,7 @@ pub(crate) fn run_db_migrations(
     migrations_dir: Option<&str>,
     dry_run: bool,
     target: &str,
-) -> Result<(), String> {
+) -> CliResult<()> {
     let resolved_migrations_dir = migrations_dir
         .map(|d| project_dir.join(d).to_string_lossy().into_owned())
         .unwrap_or_else(|| project_dir.join("migrations").to_string_lossy().into_owned());
@@ -74,7 +75,7 @@ pub(crate) fn run_db_migrations(
 ///
 /// Each `.sql` file in `migrations_dir` is passed to `wrangler d1 execute <binding> --file=<path> --remote`.
 #[mutants::skip]
-fn run_db_migrations_d1(migrations_dir: &str, dry_run: bool) -> Result<(), String> {
+fn run_db_migrations_d1(migrations_dir: &str, dry_run: bool) -> CliResult<()> {
     let binding = std::env::var("CLOUDFLARE_D1_BINDING").unwrap_or_else(|_| "DB".to_string());
 
     let migrations_path = Path::new(migrations_dir);
@@ -115,7 +116,7 @@ fn run_db_migrations_d1(migrations_dir: &str, dry_run: bool) -> Result<(), Strin
                 .map_err(|e| format!("Failed to invoke wrangler: {e}. Is `wrangler` on PATH?"))?;
 
             if !status.success() {
-                return Err(format!("wrangler d1 execute failed for {file_str}"));
+                return Err(format!("wrangler d1 execute failed for {file_str}").into());
             }
         }
     }
@@ -134,7 +135,7 @@ pub(crate) fn rollback_db_migration(
     project_dir: &Path,
     dry_run: bool,
     target: &str,
-) -> Result<(), String> {
+) -> CliResult<()> {
     match target {
         "d1" => {
             println!("D1 rollback via wrangler is not automated — apply the .down.sql file manually:");
@@ -173,13 +174,13 @@ pub(crate) fn rollback_db_migration(
                     let name = report.migration_name.as_deref().unwrap_or("(unknown)");
                     println!("Cannot roll back: migration `{name}` has no rollback SQL.");
                     println!("Add a companion `.down.sql` file alongside the migration to enable rollback.");
-                    return Err(format!("No rollback SQL for migration: {name}"));
+                    return Err(format!("No rollback SQL for migration: {name}").into());
                 }
                 "no_migrations" => {
                     println!("No migrations have been applied — nothing to roll back.");
                 }
                 other => {
-                    return Err(format!("Unexpected rollback status: {other}"));
+                    return Err(format!("Unexpected rollback status: {other}").into());
                 }
             }
 

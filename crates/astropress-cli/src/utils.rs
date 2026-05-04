@@ -2,6 +2,7 @@ use std::fs;
 use std::io;
 use std::path::{Path, PathBuf};
 
+use crate::error::CliResult;
 use crate::providers;
 
 pub(crate) fn io_error(error: io::Error) -> String {
@@ -77,15 +78,16 @@ pub(crate) fn write_text_file(
     project_dir: &Path,
     relative_path: &str,
     contents: &str,
-) -> Result<(), String> { // ~ skip
+) -> CliResult<()> { // ~ skip
     let destination = project_dir.join(relative_path);
     if let Some(parent) = destination.parent() {
         fs::create_dir_all(parent).map_err(io_error)?;
     }
-    fs::write(destination, contents).map_err(io_error)
+    fs::write(destination, contents).map_err(io_error)?;
+    Ok(())
 }
 
-pub(crate) fn ensure_local_provider_defaults(project_dir: &Path) -> Result<(), String> { // ~ skip
+pub(crate) fn ensure_local_provider_defaults(project_dir: &Path) -> CliResult<()> { // ~ skip
     let data_dir = project_dir.join(".data");
     fs::create_dir_all(&data_dir).map_err(io_error)?;
     let gitkeep_path = data_dir.join(".gitkeep");
