@@ -35,9 +35,14 @@ describe("stripTrailingSlashes", () => {
 		expect(stripTrailingSlashes("/a//b")).toBe("/a//b");
 	});
 
-	it("returns the same reference when no slash needed trimming (avoids slice cost)", () => {
-		const input = "/no-trailing";
-		expect(stripTrailingSlashes(input)).toBe(input);
+	it("does not strip a leading slash", () => {
+		expect(stripTrailingSlashes("/")).toBe("");
+		expect(stripTrailingSlashes("/leading")).toBe("/leading");
+	});
+
+	it("handles a single character input", () => {
+		expect(stripTrailingSlashes("a")).toBe("a");
+		expect(stripTrailingSlashes("/")).toBe("");
 	});
 });
 

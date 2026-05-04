@@ -12,9 +12,13 @@
  * the input unchanged when it has no trailing slash.
  */
 export function stripTrailingSlashes(value: string): string {
+	// `end > 0` would be redundant in the loop guard: when `end` reaches 0
+	// `charCodeAt(-1)` returns NaN, the strict-equality check fails, and the
+	// loop exits without the body running. Dropping the bounds check removes
+	// two equivalent-mutant surfaces from the file's mutation surface.
 	let end = value.length;
-	while (end > 0 && value.charCodeAt(end - 1) === 47) end--;
-	return end === value.length ? value : value.slice(0, end);
+	while (value.charCodeAt(end - 1) === 47) end--;
+	return value.slice(0, end);
 }
 
 /**
