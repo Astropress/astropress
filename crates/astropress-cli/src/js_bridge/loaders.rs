@@ -5,6 +5,7 @@ use std::process::Command as ProcessCommand;
 use serde::{Deserialize, Serialize};
 use url::Url;
 
+use crate::error::{CliError, CliResult};
 use crate::providers::{AppHost, DataServices, LocalProvider};
 use crate::cli_config::env::{merge_env_overrides, read_env_file};
 use crate::js_bridge::runner::{detect_package_manager, run_package_json_command};
@@ -99,7 +100,7 @@ pub(crate) struct ContentServicesReport {
     pub(crate) manifest_file: Option<String>,
 }
 
-fn file_url_from_path(path: &Path) -> Result<String, String> {
+fn file_url_from_path(path: &Path) -> CliResult<String> {
     #[cfg(windows)]
     let normalized_path = {
         let raw = path.to_string_lossy();
@@ -116,10 +117,10 @@ fn file_url_from_path(path: &Path) -> Result<String, String> {
 
     Url::from_file_path(&normalized_path)
         .map(|url| url.into())
-        .map_err(|()| format!("Cannot convert path into a file URL: {}", normalized_path.display()))
+        .map_err(|()| CliError::Other(format!("Cannot convert path into a file URL: {}", normalized_path.display())))
 }
 
-pub(crate) fn package_module_import(module_path: &str, project_dir: Option<&Path>) -> Result<String, String> { // ~ skip
+pub(crate) fn package_module_import(module_path: &str, project_dir: Option<&Path>) -> CliResult<String> { // ~ skip
     let src_root = crate::find_astropress_src(project_dir)
         .ok_or_else(|| "Cannot locate astropress package. Run `bun install` in your project directory.".to_string())?;
     let full_path = src_root.join(module_path);
@@ -127,7 +128,7 @@ pub(crate) fn package_module_import(module_path: &str, project_dir: Option<&Path
     file_url_from_path(&canonical)
 }
 
-pub(crate) fn load_project_env_contract(project_dir: &Path) -> Result<ProjectEnvContract, String> { // ~ skip
+pub(crate) fn load_project_env_contract(project_dir: &Path) -> CliResult<ProjectEnvContract> { // ~ skip
     let env_module = package_module_import("project-env.js", Some(project_dir))?;
     let env_module_literal = serde_json::to_string(&env_module).map_err(|error| error.to_string())?;
     let env_values = read_env_file(project_dir)?;
@@ -148,13 +149,13 @@ console.log(JSON.stringify(resolveAstropressProjectEnvContract(envValues)));
         .map_err(crate::io_error)?;
 
     if !output.status.success() {
-        return Err(format!(
+        return Err(CliError::Other(format!(
             "Failed to load Astropress project env contract: {}",
             String::from_utf8_lossy(&output.stderr).trim()
-        ));
+        )));
     }
 
-    serde_json::from_slice::<ProjectEnvContract>(&output.stdout).map_err(|error| error.to_string())
+    Ok(serde_json::from_slice::<ProjectEnvContract>(&output.stdout)?)
 }
 
 #[allow(dead_code)] // called only from integration tests
@@ -163,7 +164,7 @@ pub(crate) fn load_project_runtime_plan(
     provider: Option<LocalProvider>,
     app_host: Option<AppHost>,
     data_services: Option<DataServices>,
-) -> Result<ProjectRuntimePlan, String> { // ~ skip
+) -> CliResult<ProjectRuntimePlan> { // ~ skip
     let runtime_module = package_module_import("project-runtime.js", Some(project_dir))?;
     let runtime_module_literal =
         serde_json::to_string(&runtime_module).map_err(|error| error.to_string())?;
@@ -201,13 +202,13 @@ console.log(JSON.stringify(createAstropressProjectRuntimePlan({{
         .map_err(crate::io_error)?;
 
     if !output.status.success() {
-        return Err(format!(
+        return Err(CliError::Other(format!(
             "Failed to load Astropress project runtime plan: {}",
             String::from_utf8_lossy(&output.stderr).trim()
-        ));
+        )));
     }
 
-    serde_json::from_slice::<ProjectRuntimePlan>(&output.stdout).map_err(|error| error.to_string())
+    Ok(serde_json::from_slice::<ProjectRuntimePlan>(&output.stdout)?)
 }
 
 pub(crate) fn load_project_launch_plan(
@@ -215,7 +216,7 @@ pub(crate) fn load_project_launch_plan(
     provider: Option<LocalProvider>,
     app_host: Option<AppHost>,
     data_services: Option<DataServices>,
-) -> Result<ProjectLaunchPlan, String> { // ~ skip
+) -> CliResult<ProjectLaunchPlan> { // ~ skip
     let launch_module = package_module_import("project-launch.js", Some(project_dir))?;
     let launch_module_literal =
         serde_json::to_string(&launch_module).map_err(|error| error.to_string())?;
@@ -253,30 +254,30 @@ console.log(JSON.stringify(createAstropressProjectLaunchPlan({{
         .map_err(crate::io_error)?;
 
     if !output.status.success() {
-        return Err(format!(
+        return Err(CliError::Other(format!(
             "Failed to load Astropress project launch plan: {}",
             String::from_utf8_lossy(&output.stderr).trim()
-        ));
+        )));
     }
 
-    serde_json::from_slice::<ProjectLaunchPlan>(&output.stdout).map_err(|error| error.to_string())
+    Ok(serde_json::from_slice::<ProjectLaunchPlan>(&output.stdout)?)
 }
 
 pub(crate) fn resolve_local_provider(
     project_dir: &Path,
     provider: Option<LocalProvider>,
-) -> Result<LocalProvider, String> { // ~ skip
+) -> CliResult<LocalProvider> { // ~ skip
     if let Some(provider) = provider {
         return Ok(provider);
     }
 
-    Ok(LocalProvider::parse(&load_project_launch_plan(project_dir, None, None, None)?.provider)?)
+    LocalProvider::parse(&load_project_launch_plan(project_dir, None, None, None)?.provider)
 }
 
 pub(crate) fn resolve_admin_db_path(
     project_dir: &Path,
     provider: LocalProvider,
-) -> Result<String, String> { // ~ skip
+) -> CliResult<String> { // ~ skip
     let launch_plan = load_project_launch_plan(project_dir, Some(provider), None, None)?;
     let contract = launch_plan.runtime.env;
     if contract.local_provider != provider.as_str() {
@@ -288,7 +289,7 @@ pub(crate) fn resolve_admin_db_path(
 pub(crate) fn resolve_deploy_target(
     project_dir: &Path,
     target: Option<&str>,
-) -> Result<String, String> { // ~ skip
+) -> CliResult<String> { // ~ skip
     if let Some(target) = target {
         return Ok(target.to_string());
     }

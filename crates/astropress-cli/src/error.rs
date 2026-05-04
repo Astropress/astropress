@@ -13,6 +13,9 @@ pub(crate) enum CliError {
     Io(#[from] io::Error),
 
     #[error("{0}")]
+    Json(#[from] serde_json::Error),
+
+    #[error("{0}")]
     Other(String),
 }
 
