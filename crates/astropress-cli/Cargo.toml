@@ -20,6 +20,7 @@ ratatui = "0.30"
 crossterm = "0.29"
 url = "2"
 mutants = "0.0.4"
+thiserror = "2"
 
 [lints.rust]
 unused_imports = "warn"

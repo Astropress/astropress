@@ -1,3 +1,5 @@
+use crate::error::{CliError, CliResult};
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum PackageManager {
     Bun,
@@ -11,13 +13,15 @@ pub(crate) enum LocalProvider {
 }
 
 impl LocalProvider {
-    pub(crate) fn parse(value: &str) -> Result<Self, String> {
+    pub(crate) fn parse(value: &str) -> CliResult<Self> {
         match value {
             "sqlite" => Ok(Self::Sqlite),
             "supabase" => Ok(Self::Supabase),
-            other => Err(format!(
-                "Unsupported local provider `{other}`. Use sqlite or supabase."
-            )),
+            other => Err(CliError::InvalidValue {
+                kind: "local provider",
+                value: other.to_string(),
+                hint: "Use sqlite or supabase.",
+            }),
         }
     }
 
@@ -53,7 +57,7 @@ pub(crate) enum AppHost {
 }
 
 impl AppHost {
-    pub(crate) fn parse(value: &str) -> Result<Self, String> {
+    pub(crate) fn parse(value: &str) -> CliResult<Self> {
         match value {
             "github-pages" => Ok(Self::GithubPages),
             "cloudflare-pages" => Ok(Self::CloudflarePages),
@@ -67,9 +71,11 @@ impl AppHost {
             "digitalocean" => Ok(Self::DigitalOcean),
             "railway" => Ok(Self::Railway),
             "custom" => Ok(Self::Custom),
-            other => Err(format!(
-                "Unsupported app host `{other}`. Use github-pages, cloudflare-pages, vercel, netlify, render-static, render-web, gitlab-pages, fly-io, coolify, digitalocean, railway, or custom."
-            )),
+            other => Err(CliError::InvalidValue {
+                kind: "app host",
+                value: other.to_string(),
+                hint: "Use github-pages, cloudflare-pages, vercel, netlify, render-static, render-web, gitlab-pages, fly-io, coolify, digitalocean, railway, or custom.",
+            }),
         }
     }
 
@@ -112,7 +118,7 @@ pub(crate) enum DataServices {
 }
 
 impl DataServices {
-    pub(crate) fn parse(value: &str) -> Result<Self, String> {
+    pub(crate) fn parse(value: &str) -> CliResult<Self> {
         match value {
             "none" => Ok(Self::None),
             "cloudflare" => Ok(Self::Cloudflare),
@@ -123,9 +129,11 @@ impl DataServices {
             "nhost" => Ok(Self::Nhost),
             "turso" => Ok(Self::Turso),
             "custom" => Ok(Self::Custom),
-            other => Err(format!(
-                "Unsupported data services `{other}`. Use none, cloudflare, supabase, appwrite, pocketbase, neon, nhost, turso, or custom."
-            )),
+            other => Err(CliError::InvalidValue {
+                kind: "data services",
+                value: other.to_string(),
+                hint: "Use none, cloudflare, supabase, appwrite, pocketbase, neon, nhost, turso, or custom.",
+            }),
         }
     }
 
@@ -162,7 +170,7 @@ pub(crate) enum AnalyticsProvider {
 }
 
 impl AnalyticsProvider {
-    pub(crate) fn parse(value: &str) -> Result<Self, String> {
+    pub(crate) fn parse(value: &str) -> CliResult<Self> {
         match value {
             "none" => Ok(Self::None),
             "umami" => Ok(Self::Umami),
@@ -170,9 +178,11 @@ impl AnalyticsProvider {
             "matomo" => Ok(Self::Matomo),
             "posthog" => Ok(Self::PostHog),
             "custom" => Ok(Self::Custom),
-            other => Err(format!(
-                "Unsupported analytics provider `{other}`. Use none, umami, plausible, matomo, posthog, or custom."
-            )),
+            other => Err(CliError::InvalidValue {
+                kind: "analytics provider",
+                value: other.to_string(),
+                hint: "Use none, umami, plausible, matomo, posthog, or custom.",
+            }),
         }
     }
 
@@ -198,16 +208,18 @@ pub(crate) enum AbTestingProvider {
 }
 
 impl AbTestingProvider {
-    pub(crate) fn parse(value: &str) -> Result<Self, String> {
+    pub(crate) fn parse(value: &str) -> CliResult<Self> {
         match value {
             "none" => Ok(Self::None),
             "growthbook" => Ok(Self::GrowthBook),
             "unleash" => Ok(Self::Unleash),
             "flagsmith" => Ok(Self::Flagsmith),
             "custom" => Ok(Self::Custom),
-            other => Err(format!(
-                "Unsupported A/B testing provider `{other}`. Use none, growthbook, unleash, flagsmith, or custom."
-            )),
+            other => Err(CliError::InvalidValue {
+                kind: "A/B testing provider",
+                value: other.to_string(),
+                hint: "Use none, growthbook, unleash, flagsmith, or custom.",
+            }),
         }
     }
 
@@ -232,14 +244,16 @@ pub(crate) enum HeatmapProvider {
 }
 
 impl HeatmapProvider {
-    pub(crate) fn parse(value: &str) -> Result<Self, String> {
+    pub(crate) fn parse(value: &str) -> CliResult<Self> {
         match value {
             "none" => Ok(Self::None),
             "posthog" => Ok(Self::PostHog),
             "custom" => Ok(Self::Custom),
-            other => Err(format!(
-                "Unsupported heatmap provider `{other}`. Use none, posthog, or custom."
-            )),
+            other => Err(CliError::InvalidValue {
+                kind: "heatmap provider",
+                value: other.to_string(),
+                hint: "Use none, posthog, or custom.",
+            }),
         }
     }
 

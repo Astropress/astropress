@@ -270,7 +270,7 @@ pub(crate) fn resolve_local_provider(
         return Ok(provider);
     }
 
-    LocalProvider::parse(&load_project_launch_plan(project_dir, None, None, None)?.provider)
+    Ok(LocalProvider::parse(&load_project_launch_plan(project_dir, None, None, None)?.provider)?)
 }
 
 pub(crate) fn resolve_admin_db_path(
