@@ -35,11 +35,17 @@ function tsAudit(): {
 	orphanTests: string[];
 } {
 	const SRC = "packages/astropress/src";
+	const WC = "packages/astropress/web-components";
 	const TESTS = "packages/astropress/tests";
 
-	const srcFiles = lines(
-		`find ${SRC} -name "*.ts" -not -name "*.d.ts" -not -name "index.ts" -not -name "*-types.ts"`,
-	);
+	const srcFiles = [
+		...lines(
+			`find ${SRC} -name "*.ts" -not -name "*.d.ts" -not -name "index.ts" -not -name "*-types.ts"`,
+		),
+		...lines(
+			`find ${WC} -maxdepth 1 -name "*.ts" -not -name "*.d.ts" -not -name "index.ts" -not -name "*-types.ts" 2>/dev/null`,
+		),
+	];
 	const testFiles = lines(`find ${TESTS} -name "*.test.ts"`);
 
 	// Build a lookup of every "name token" reachable from a test file path:
@@ -86,7 +92,9 @@ function tsAudit(): {
 	const unpairedSrc = srcFiles
 		.filter((p) => {
 			const base = basename(p, ".ts");
-			const rel = p.slice(SRC.length + 1).replace(/\.ts$/, "");
+			const rel = p
+				.replace(new RegExp(`^(?:${SRC}|${WC})/`), "")
+				.replace(/\.ts$/, "");
 			const candidates = new Set<string>([
 				base,
 				rel,
@@ -110,11 +118,30 @@ function tsAudit(): {
 	const srcKeys = new Set<string>();
 	for (const s of srcFiles) {
 		const base = basename(s, ".ts");
-		const rel = s.slice(SRC.length + 1).replace(/\.ts$/, "");
+		const rel = s
+			.replace(new RegExp(`^(?:${SRC}|${WC})/`), "")
+			.replace(/\.ts$/, "");
 		srcKeys.add(base);
 		srcKeys.add(rel);
 		srcKeys.add(rel.replace(/\//g, "-"));
 	}
+	// Build a word-set index of src keys: for each src basename "a-b-c",
+	// add a sorted-tokens key "a|b|c" so a test "c-a-b" can match a reordered
+	// src word-set. Also track src subdir prefixes so a test under
+	// tests/web-components/ pairs with anything under src/web-components/ if
+	// such a subdir exists.
+	const srcWordSets = new Map<string, string>();
+	const srcSubdirs = new Set<string>();
+	for (const s of srcFiles) {
+		const base = basename(s, ".ts");
+		const rel = s
+			.replace(new RegExp(`^(?:${SRC}|${WC})/`), "")
+			.replace(/\.ts$/, "");
+		const setKey = base.split("-").sort().join("|");
+		srcWordSets.set(setKey, base);
+		if (rel.includes("/")) srcSubdirs.add(rel.split("/")[0]);
+	}
+
 	const orphanTests = testFiles
 		.filter((p) => {
 			const base = basename(p, ".test.ts");
@@ -127,6 +154,25 @@ function tsAudit(): {
 			// Head-trim: "appwrite-adapter" → matches "appwrite" src.
 			for (let i = parts.length - 1; i >= 1; i--) {
 				if (srcKeys.has(parts.slice(0, i).join("-"))) return false;
+			}
+			// Word-set match: "access-runtime-actions" ↔ "runtime-actions-access".
+			const setKey = parts.slice().sort().join("|");
+			if (srcWordSets.has(setKey)) return false;
+			// Word-subset match: drop 1 word and try sorted match. Catches
+			// "admin-page-models-listings" ↔ "admin-page-models" when tests use
+			// a richer name than the src.
+			for (let i = 0; i < parts.length; i++) {
+				const subset = parts
+					.filter((_, j) => j !== i)
+					.sort()
+					.join("|");
+				if (srcWordSets.has(subset)) return false;
+			}
+			// Subdir match: tests/web-components/X.test.ts → src/web-components/.
+			const rel = p.slice(TESTS.length + 1);
+			if (rel.includes("/")) {
+				const subdir = rel.split("/")[0];
+				if (srcSubdirs.has(subdir)) return false;
 			}
 			return true;
 		})
@@ -188,8 +234,7 @@ function rustAudit(): {
 	const cfgTestPathPair = new Map<string, string>(); // referenced-file -> referencer
 	for (const [p, content] of fileContent) {
 		const re = /#\[cfg\(test\)\][^\n]*\n[^\n]*#\[path\s*=\s*"([^"]+)"\]/g;
-		let m: RegExpExecArray | null;
-		while ((m = re.exec(content)) !== null) {
+		for (const m of content.matchAll(re)) {
 			const referenced = `${dirname(p)}/${m[1]}`.replace(/\/\.\//g, "/");
 			cfgTestPathPair.set(referenced, p);
 			testHelperFiles.add(referenced);
@@ -227,8 +272,8 @@ function rustAudit(): {
 			}
 		})();
 		const useRe = /use\s+(?:crate::|super::)?([\w:]+)/g;
-		let m: RegExpExecArray | null;
-		while ((m = useRe.exec(content)) !== null) {
+		const matches = content.matchAll(useRe);
+		for (const m of matches) {
 			const segments = m[1].split("::").filter((s) => s && s !== "self");
 			// Check progressively shorter prefixes — cli_config::args::auth → try
 			// auth.rs, then args.rs, then cli_config.rs.
