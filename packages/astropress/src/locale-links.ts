@@ -1,4 +1,5 @@
 import { getCmsConfig } from "./config";
+import { stripTrailingSlashes } from "./path-helpers";
 import { isPublishedTranslationState } from "./translation-state";
 
 interface TranslationStatusRecord {
@@ -34,7 +35,7 @@ export function getAlternateLinksForEnglishRoute(legacyUrl: string) {
 }
 
 export function canonicalUrlForRoute(route: string) {
-	const siteUrl = getCmsConfig().siteUrl.replace(/\/$/, "");
+	const siteUrl = stripTrailingSlashes(getCmsConfig().siteUrl);
 	return `${siteUrl}${route === "/" ? "/" : `${route}/`}`;
 }
 

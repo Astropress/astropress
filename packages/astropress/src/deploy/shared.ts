@@ -1,5 +1,6 @@
 import { cp, mkdir, rm, writeFile } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
+import { stripTrailingSlashes } from "../path-helpers";
 
 export interface AstropressPreparedDeploymentOptions {
 	provider: string;
@@ -43,8 +44,7 @@ export async function prepareAstropressDeployment(
 
 	let url: string | undefined;
 	if (options.baseUrl) {
-		let trimmed = options.baseUrl;
-		while (trimmed.endsWith("/")) trimmed = trimmed.slice(0, -1);
+		const trimmed = stripTrailingSlashes(options.baseUrl);
 		url = `${trimmed}/${input.projectName}/`;
 	}
 

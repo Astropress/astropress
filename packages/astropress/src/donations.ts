@@ -1,4 +1,5 @@
 import type { DonationsConfig } from "./config";
+import { stripTrailingSlashes } from "./path-helpers";
 import type { AstropressDonationsProviders } from "./project-scaffold";
 
 export interface DonationSnippets {
@@ -58,7 +59,7 @@ export function resolveDonationSnippets(
 			? `<script src="https://widget.pledgecrypto.com/pledge-widget.js" defer></script>`
 			: "";
 
-	const donateUrl = `${siteUrl.replace(/\/$/, "")}/donate`;
+	const donateUrl = `${stripTrailingSlashes(siteUrl)}/donate`;
 	const jsonLd = any
 		? JSON.stringify({
 				"@context": "https://schema.org",

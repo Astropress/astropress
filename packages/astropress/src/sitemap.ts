@@ -6,6 +6,7 @@
  * In static mode the same endpoint runs at build time.
  */
 
+import { stripTrailingSlashes } from "./path-helpers";
 import type { AstropressPlatformAdapter } from "./platform-contracts";
 
 export interface SitemapEntry {
@@ -33,7 +34,7 @@ export async function generateAstropressSitemap(
 	adapter: Pick<AstropressPlatformAdapter, "content">,
 	baseUrl: string,
 ): Promise<string> {
-	const origin = baseUrl.replace(/\/$/, "");
+	const origin = stripTrailingSlashes(baseUrl);
 
 	// Fetch published posts and pages
 	const [posts, pages] = await Promise.all([

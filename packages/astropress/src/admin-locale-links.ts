@@ -1,4 +1,5 @@
 import { getCmsConfig } from "./config";
+import { normalizeRoutePath } from "./path-helpers";
 
 interface TranslationStatusRecord {
 	route: string;
@@ -14,11 +15,7 @@ export interface AdminLocalePair {
 	translationState?: string;
 }
 
-export function normalizeRoute(route: string) {
-	let r = route;
-	while (r.endsWith("/")) r = r.slice(0, -1);
-	return r === "" ? "/" : r;
-}
+export const normalizeRoute = normalizeRoutePath;
 
 export function getAdminLocalePair(route: string): AdminLocalePair | null {
 	const normalizedRoute = normalizeRoute(route);
