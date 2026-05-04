@@ -1,6 +1,6 @@
 {
   "updatedAt": "2026-05-04",
-  "note": "Grandfathered ceilings — counts may decrease but never increase. Run --rewrite-baseline to ratchet down.",
+  "note": "Grandfathered ceilings — counts may decrease but never increase. Run --rewrite-baseline to ratchet down. Pragma'd opaque-passthrough sites are tracked separately and do not count toward the ceiling.",
   "typescript": {
     "castsOnCaughtError": 1,
     "recordStringUnknown": 97,
@@ -10,8 +10,8 @@
   },
   "rust": {
     "resultStringErr": 0,
-    "panicCalls": 1,
-    "unwrapCalls": 64,
-    "expectCalls": 14
+    "panicCalls": 0,
+    "unwrapCalls": 0,
+    "expectCalls": 0
   }
 }

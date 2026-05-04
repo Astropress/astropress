@@ -116,15 +116,66 @@ const tsJsonParseFallback = splitByPragma(
 const rustResultString = splitByPragma(
 	rgLines("\\bResult<.*,\\s*(String|&str)\\b", RUST_GLOB),
 );
-// Filter unwrap/expect/panic to lines NOT inside tests dir (cheap heuristic).
+// Filter unwrap/expect/panic to production code only. Tests are allowed to
+// .unwrap()/.expect()/panic! freely. Detect:
+//   - paths under tests/ directories
+//   - filenames matching *_tests.rs / *_test.rs / tests.rs
+//   - lines inside #[cfg(test)] mod blocks of otherwise-production files
+function isInTestCfg(file: string, lineNum: number): boolean {
+	const lines = readFileLines(file);
+	if (!lines) return false;
+	let depth = 0;
+	let inTestCfg = false;
+	for (let i = 0; i < lineNum && i < lines.length; i++) {
+		const line = lines[i];
+		if (/^\s*#\[cfg\(test\)\]\s*$/.test(line)) {
+			// The next `mod` opens the test cfg block.
+			for (let j = i + 1; j <= lineNum && j < lines.length; j++) {
+				if (/^\s*(pub(\([^)]*\))?\s+)?mod\s+\w+\s*\{/.test(lines[j])) {
+					inTestCfg = true;
+					depth = 1;
+					i = j;
+					break;
+				}
+				if (lines[j].trim() && !lines[j].trim().startsWith("//")) break;
+			}
+			continue;
+		}
+		if (inTestCfg) {
+			for (const ch of line) {
+				if (ch === "{") depth++;
+				else if (ch === "}") {
+					depth--;
+					if (depth === 0) {
+						inTestCfg = false;
+						break;
+					}
+				}
+			}
+		}
+	}
+	return inTestCfg;
+}
+
+function isTestPath(line: string): boolean {
+	const m = line.match(/^([^:]+):(\d+):/);
+	if (!m) return false;
+	const file = m[1];
+	const lineNum = Number.parseInt(m[2], 10);
+	if (file.includes("/tests/")) return true;
+	const basename = file.split("/").pop() ?? file;
+	if (/(?:^|_)tests?(?:_|\.|$)/.test(basename)) return true;
+	return isInTestCfg(file, lineNum);
+}
+
 const rustPanic = splitByPragma(
-	rgLines("panic!\\(", RUST_GLOB).filter((l) => !l.includes("/tests/")),
+	rgLines("panic!\\(", RUST_GLOB).filter((l) => !isTestPath(l)),
 );
 const rustUnwrap = splitByPragma(
-	rgLines("\\.unwrap\\(\\)", RUST_GLOB).filter((l) => !l.includes("/tests/")),
+	rgLines("\\.unwrap\\(\\)", RUST_GLOB).filter((l) => !isTestPath(l)),
 );
 const rustExpect = splitByPragma(
-	rgLines("\\.expect\\(", RUST_GLOB).filter((l) => !l.includes("/tests/")),
+	rgLines("\\.expect\\(", RUST_GLOB).filter((l) => !isTestPath(l)),
 );
 
 function ctOf(split: PragmaSplit): {

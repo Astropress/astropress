@@ -1,7 +1,6 @@
 use std::fs;
 use std::io;
 use std::path::{Path, PathBuf};
-
 use crate::error::CliResult;
 use crate::providers;
 
@@ -10,11 +9,10 @@ pub(crate) fn io_error(error: io::Error) -> String {
 }
 
 pub(crate) fn repo_root() -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .parent()
-        .and_then(Path::parent)
-        .unwrap()
-        .to_path_buf()
+    let mut path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    path.pop();
+    path.pop();
+    path
 }
 
 /// Resolves the directory containing astropress's compiled JS modules.
