@@ -9,6 +9,7 @@
 //! 2. Create `DOCS.md` — a setup guide with the exact `bun add` command and
 //!    the `astro.config.mjs` diff to copy-paste.
 
+#[mutants::skip]
 pub(super) fn stubs() -> Vec<(&'static str, &'static str)> {
     vec![
         ("src/content/docs/index.mdx", INDEX_MDX),

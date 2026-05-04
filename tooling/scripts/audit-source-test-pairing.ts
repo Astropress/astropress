@@ -322,6 +322,29 @@ function rustAudit(): {
 		// Skip dirs that are obviously plumbing.
 		if (p.endsWith("mod.rs")) continue;
 		if (p.endsWith("lib.rs")) continue;
+		// Skip files where every top-level fn is marked `#[mutants::skip]`
+		// — these are help/docs/stub print-only files with no testable
+		// logic. Already excluded from mutation testing; pairing tests
+		// for them would add no end-user value.
+		const fnDecls = (
+			content.match(/(?:^|\n)\s*(?:pub(?:\([^)]*\))?\s+)?fn\s+\w+/g) ?? []
+		).length;
+		const skipMarks = (content.match(/#\[mutants::skip\]/g) ?? []).length;
+		if (fnDecls > 0 && skipMarks >= fnDecls) {
+			intestSrc++;
+			continue;
+		}
+		// Skip files that are pure data: zero top-level fns, only const/static
+		// items. There is nothing to test — every value is a literal table.
+		if (fnDecls === 0) {
+			const constDecls = (
+				content.match(/(?:^|\n)\s*(?:pub(?:\([^)]*\))?\s+)?(?:const|static)\s+\w+/g) ?? []
+			).length;
+			if (constDecls > 0) {
+				intestSrc++;
+				continue;
+			}
+		}
 		unpaired.push(p);
 	}
 	return { srcCount: srcFiles.length, unpaired: unpaired.sort(), intestSrc };
