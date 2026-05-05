@@ -2,6 +2,7 @@ import { beforeAll, describe, expect, it } from "vitest";
 import { registerCms } from "../src/config.js";
 import {
 	listAuditEvents,
+	recordAudit,
 	recordAuditEvent,
 } from "../src/sqlite-runtime/audit-log.js";
 import { makeDb } from "./helpers/make-db.js";
@@ -216,6 +217,25 @@ describe("audit log", () => {
 		// Without offset arg → offset 0 → 3 rows. Mutant ?? 1 → 2 rows.
 		const events = listAuditEvents(freshDb, { limit: 10 });
 		expect(events.length).toBe(3);
+	});
+
+	it("recordAudit wrapper forwards actor.email and resourceId to the underlying event", () => {
+		const freshDb = makeDb();
+		recordAudit(
+			freshDb,
+			{ email: "wrapper@example.com" },
+			"test.action",
+			"summary text",
+			"page",
+			"resource-x",
+		);
+		const events = listAuditEvents(freshDb, { resourceId: "resource-x" });
+		expect(events.length).toBe(1);
+		expect(events[0].userEmail).toBe("wrapper@example.com");
+		expect(events[0].action).toBe("test.action");
+		expect(events[0].summary).toBe("summary text");
+		expect(events[0].resourceType).toBe("page");
+		expect(events[0].resourceId).toBe("resource-x");
 	});
 
 	it("respects limit and offset", () => {

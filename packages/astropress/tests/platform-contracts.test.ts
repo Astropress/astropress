@@ -108,6 +108,11 @@ describe("platform contracts", () => {
 		}
 	});
 
+	it("defaults database flag to false when omitted", () => {
+		const result = normalizeProviderCapabilities({ name: "static-only" });
+		expect(result.database).toBe(false);
+	});
+
 	it("preserves unknown provider names as-is", () => {
 		const result = normalizeProviderCapabilities({
 			name: "my-custom-provider",
