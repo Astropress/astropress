@@ -1,3 +1,4 @@
+// stryker-disable-file: data-only — static admin-route catalogue; entries are not behaviour.
 // Admin route definition table extracted from admin-routes.ts to keep
 // that file under the 400-line arch-lint warning.
 

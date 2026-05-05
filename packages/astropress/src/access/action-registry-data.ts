@@ -1,3 +1,4 @@
+// stryker-disable-file: data-only — static catalogue of built-in access actions; data-only.
 /**
  * Static catalogue of built-in access actions.
  *

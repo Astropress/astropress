@@ -1,3 +1,4 @@
+// stryker-disable-file: data-only — type stub; no executable code to mutate.
 /**
  * TYPE STUB — mirrors the public exports of website/src/astropress/admin-persistence.ts
  *

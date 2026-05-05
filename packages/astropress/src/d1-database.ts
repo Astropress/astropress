@@ -1,3 +1,4 @@
+// stryker-disable-file: data-only — pure interface declarations mirroring D1 SDK shape.
 // audit-boundary: opaque-passthrough -- mirrors Cloudflare D1 SDK row-shape default
 export interface D1Result<T = Record<string, unknown>> {
 	success: boolean;

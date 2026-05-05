@@ -1,3 +1,4 @@
+// stryker-disable-file: data-only — pure interface declarations; no runtime code.
 // Admin-shell customization shape for CmsConfig. Extracted from config.ts
 // to keep that file under the 400-line arch-lint warning.
 

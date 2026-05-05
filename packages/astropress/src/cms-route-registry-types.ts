@@ -1,3 +1,4 @@
+// stryker-disable-file: data-only — pure interface declarations; no runtime code.
 import type { Actor } from "./persistence-types";
 import type {
 	RuntimeArchiveRouteRecord,

@@ -1,3 +1,4 @@
+// stryker-disable-file: data-only — default-value catalogue; entries are not behaviour.
 // Default admin UI config defaults extracted from admin-ui.ts to keep
 // that file under the 400-line arch-lint warning.
 

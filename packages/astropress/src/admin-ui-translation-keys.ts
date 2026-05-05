@@ -1,3 +1,4 @@
+// stryker-disable-file: data-only — static translation-key tuple tables; data-only.
 /**
  * Static label-key tables consumed by `applyTranslations` in admin-ui.ts.
  *
