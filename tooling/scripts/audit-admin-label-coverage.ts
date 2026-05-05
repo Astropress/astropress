@@ -96,6 +96,19 @@ function grepLiteralCallSites(): {
 	for (const m of adminUi.matchAll(/\btr\(\s*"([A-Za-z0-9_]+)"/g)) {
 		staticKeys.add(m[1]);
 	}
+	// Per-key translation tables in admin-ui-translation-keys.ts: each tuple
+	// `[outProperty, AdminLabelKey]` is a static use site of the second
+	// element. The label key sits in column 2 of a 2-element tuple literal,
+	// e.g. `["dashboard", "navDashboard"]`.
+	const trKeys = readFileSync(
+		"packages/astropress/src/admin-ui-translation-keys.ts",
+		"utf8",
+	);
+	for (const m of trKeys.matchAll(
+		/\[\s*"[A-Za-z0-9_]+"\s*,\s*"([A-Za-z0-9_]+)"\s*\]/g,
+	)) {
+		staticKeys.add(m[1]);
+	}
 
 	return { staticKeys, dynamicCalls: dynamic };
 }

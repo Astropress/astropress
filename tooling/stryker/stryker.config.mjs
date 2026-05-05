@@ -14,6 +14,25 @@ export default {
 		"!src/**/index.ts",
 		"!src/persistence-types.ts",
 		"!src/config-service-types.ts",
+		// Pure-data manifest/wordlist/catalog files. Each top-level entry is
+		// a static mutant, but the *values* (provider labels, marketing copy,
+		// passphrase words) carry no behavioural contract — exhaustive
+		// equality assertions would test "did we type the data correctly"
+		// rather than catch real bugs. Behavioural accessors that read these
+		// manifests live in their non-`-data` siblings and are mutation-tested
+		// at ≥95%. Excluding here lines up with the in-file `stryker-disable-file`
+		// intent markers that the runner doesn't honour as a real directive.
+		"!src/admin-stub-catalog.ts",
+		"!src/admin-ui-translation-keys.ts",
+		"!src/api-routes-data.ts",
+		"!src/app-host-targets-data.ts",
+		"!src/access/action-registry-data.ts",
+		"!src/data-service-targets-data.ts",
+		"!src/deployment-matrix-data.ts",
+		"!src/integration-manifest-data.ts",
+		"!src/project-scaffold-passphrase-wordlist.ts",
+		"!src/provider-targets-data.ts",
+		"!src/site-settings.ts",
 	],
 	testRunner: "vitest",
 	coverageAnalysis: "perTest",
