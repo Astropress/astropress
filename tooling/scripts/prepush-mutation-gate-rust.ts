@@ -118,12 +118,17 @@ function runCargoMutants(files: string[]): boolean {
 	// is gitignored. In-place mutation in the real source tree is safe
 	// because cargo-mutants reverts each mutant after testing it; the
 	// repo:clean check in pre-push catches any leftover artifacts.
+	// 180s per-test timeout: the full rust suite runs ~27s in isolation, but
+	// the baseline run can exceed 60s under parallel load (TS mutation-gate
+	// runs concurrently in the same pre-push). Without headroom, cargo-mutants
+	// reports "FAILED Unmutated baseline" and gives up before testing a single
+	// mutant. Observed 2026-05-05 / 06 on feat/main-ci-quality.
 	const args = [
 		"mutants",
 		"--package",
 		"astropress-cli",
 		"--timeout",
-		"60",
+		"180",
 		"--in-place",
 	];
 	for (const f of files) {
