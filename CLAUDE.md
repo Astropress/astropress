@@ -49,6 +49,31 @@ any `run:` block. Put the value in step `env:` first, then reference the quoted 
 The pre-push hook runs a full suite (~10 minutes). Do not re-run `git push` while one is already
 in progress. Wait for the background task notification before concluding anything.
 
+## Mutation testing — module-level constants belong in `*-data.ts` siblings
+
+When a source file defines pure-data module-level constants (string literal sets,
+SQL strings, label tables, default-message strings, error-shape dispatch tables,
+seed config arrays, etc.) and is otherwise mutation-tested, **split the constants
+to a `<name>-data.ts` sibling** and add `// stryker-disable-file: data-only — <reason>`
+in the first 10 lines of that file. The prepush mutation gate honors this marker
+to exempt the data file from the score denominator.
+
+The reason this convention exists rather than catalog-by-catalog equivalence
+entries: the project's stryker config sets `ignoreStatic: true` and
+`coverageAnalysis: "perTest"`, but `static: true` mutants on top-level consts
+nevertheless report as Survived because vitest-runner's worker model caches the
+imported module across per-test runs (the mutated source initialiser only fires
+once at module load and the cached module is reused for the rest of the test
+cycle). The same test that catches the mutation under `bun vitest run` doesn't
+catch it under stryker. Splitting + the data-only marker is the cleanest fix;
+see UPSTREAM_CONTRIBUTIONS.md #15 for the upstream ask. Existing precedents in
+`packages/astropress/src/`: `*-data.ts`, `*-error-shapes.ts`, `*-seed-data.ts`,
+`*-defaults.ts`.
+
+Audits that filter source files by filename prefix (e.g. `audit-error-handling.ts`
+matches `admin-action-*.ts`) **must also honor the `stryker-disable-file: data-only`
+marker** so a constants-only sibling doesn't trip rules meant for runtime files.
+
 ## Final PR verification loop
 
 Before calling a CI or security fix done:

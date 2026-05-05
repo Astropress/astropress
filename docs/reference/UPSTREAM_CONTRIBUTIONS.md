@@ -472,6 +472,47 @@ on disk during a multi-hour run; it materialises only at successful completion.
 
 ---
 
+### 15. `ignoreStatic` doesn't ignore static-only mutants under `perTest` + vitest-runner
+
+**Pain point:** With `ignoreStatic: true` AND `coverageAnalysis: "perTest"`, mutants
+on top-level `const` initialisers are reported as `Survived` (not `Ignored`) when
+they have any per-test coverage — even though the mutation itself only fires at
+module-load time. The vitest-runner's worker model caches the imported module
+across tests in the same run, so a mutated source const isn't re-evaluated when
+the per-test cycle re-enters the test body. Tests that assert the const value
+directly (`expect(FOO).toBe("bar")`) catch the mutation under `bun vitest run`,
+but stryker reports the same mutant as Survived.
+
+**Repro on Astropress (verified 2026-05-05):** hand-mutate
+`packages/astropress/src/admin-routes.ts` L25 `ASTROPRESS_ADMIN_BASE_PATH = "/ap-admin"`
+to `""`. `bun vitest run packages/astropress/tests/admin-routes.test.ts` fails
+on the line `expect(ASTROPRESS_ADMIN_BASE_PATH).toBe("/ap-admin")`. Run the same
+mutant under stryker with `ignoreStatic: true` and `coverageAnalysis: "perTest"`
+— it surfaces in the report with `status: "Survived"`, `static: true`, and
+`coveredBy: [...19 test ids...]`.
+
+**Astropress workaround:** project-wide convention of splitting module-level
+constants and pure-data tables to a `*-data.ts` sibling with a
+`// stryker-disable-file: data-only — <reason>` marker in the first 10 lines.
+Our prepush gate (`tooling/scripts/prepush-mutation-gate.ts`) honors that marker
+to exempt the file from the per-file score denominator. This works but bloats
+the file tree and forces every consumer to re-export the type alias.
+
+**Upstream ask:**
+- When `ignoreStatic: true`, exclude `static: true` mutants from the per-file
+  score denominator (and report them as `Ignored`) regardless of `coveredBy`
+  cardinality. The `static` flag is already computed at instrument time — it's
+  an AST property, not a runtime observation.
+- Alternatively: document that under runner+coverage combinations where module
+  caching prevents per-test re-evaluation, `ignoreStatic` requires
+  `coverageAnalysis: "off"` to take effect, and surface a clear warning at
+  config-validation time.
+- Long-term, the vitest-runner could opt-in to `vi.resetModules()` between
+  per-test mutant runs so static-mutant detection works as documented under
+  `perTest`. Trades a small dry-run overhead for a major correctness win.
+
+---
+
 ### 14. Incremental cache is local-only by design — no shared-state pattern
 
 **Pain point:** `.stryker-incremental.json` is intended to be gitignored, so
@@ -518,3 +559,4 @@ GitHub-release-asset shared store + lock branch.
 | Stryker | Mid-run flush of `incrementalFile` (resumability) | SIGKILL / OOM / CI timeout mid-run no longer forfeits hours of completed mutant work |
 | Stryker | Documented `repoRoot` in reporter injection context | Custom reporters write checkpoint artefacts outside the sandbox without env-var conventions |
 | Stryker | Remote-state config + lock for incremental file | Devs + CI share cache; no per-machine cold start |
+| Stryker | `ignoreStatic` honors `static: true` flag under `perTest` (or warns) | Static-only consts no longer surface as Survived under vitest-runner module caching |
