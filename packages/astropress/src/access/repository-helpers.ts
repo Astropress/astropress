@@ -9,6 +9,7 @@ import type {
 	UserPolicyRecord,
 	UserRoleAssignment,
 } from "./repository";
+import { STARTER_ROLE_SEEDS } from "./repository-helpers-seed-data";
 import type { AttributeValue, Condition, Effect } from "./types";
 
 export interface RoleRow {
@@ -110,87 +111,13 @@ export function nowIso(): string {
  */
 export function seedStarterRoles(repo: AccessRepository): void {
 	if (repo.listRoles().length > 0) return;
-
-	const editor = repo.createRole({
-		name: "Editor",
-		description:
-			"Edits site content (pages, posts, media). Cannot delete published items or manage users / settings. Admins can rename, edit, or delete this role.",
-	});
-	repo.addRolePolicy({ roleId: editor.id, effect: "allow", action: "pages:*" });
-	repo.addRolePolicy({
-		roleId: editor.id,
-		effect: "deny",
-		action: "pages:delete",
-		priority: 100,
-	});
-	repo.addRolePolicy({ roleId: editor.id, effect: "allow", action: "posts:*" });
-	repo.addRolePolicy({
-		roleId: editor.id,
-		effect: "deny",
-		action: "posts:delete",
-		priority: 100,
-	});
-	repo.addRolePolicy({
-		roleId: editor.id,
-		effect: "allow",
-		action: "media:upload",
-	});
-	repo.addRolePolicy({
-		roleId: editor.id,
-		effect: "allow",
-		action: "media:list",
-	});
-
-	const author = repo.createRole({
-		name: "Author",
-		description:
-			"Creates and edits their own posts only. Cannot edit other authors' work, manage taxonomies, or touch site structure. Admins can customize this role.",
-	});
-	repo.addRolePolicy({
-		roleId: author.id,
-		effect: "allow",
-		action: "posts:list",
-	});
-	repo.addRolePolicy({
-		roleId: author.id,
-		effect: "allow",
-		action: "posts:create",
-	});
-	repo.addRolePolicy({
-		roleId: author.id,
-		effect: "allow",
-		action: "posts:edit",
-		condition: {
-			op: "stringEquals",
-			left: "resource.ownerId",
-			right: "${user.id}",
-		},
-	});
-	repo.addRolePolicy({
-		roleId: author.id,
-		effect: "allow",
-		action: "media:upload",
-	});
-
-	const moderator = repo.createRole({
-		name: "Moderator",
-		description:
-			"Moderates comments and audience signals. No content authoring authority. Admins can customize this role.",
-	});
-	repo.addRolePolicy({
-		roleId: moderator.id,
-		effect: "allow",
-		action: "comments:*",
-	});
-
-	const translator = repo.createRole({
-		name: "Translator",
-		description:
-			"Edits localized strings only. Read-only on everything else. Admins can customize this role.",
-	});
-	repo.addRolePolicy({
-		roleId: translator.id,
-		effect: "allow",
-		action: "translations:manage",
-	});
+	for (const seed of STARTER_ROLE_SEEDS) {
+		const role = repo.createRole({
+			name: seed.name,
+			description: seed.description,
+		});
+		for (const policy of seed.policies) {
+			repo.addRolePolicy({ roleId: role.id, ...policy });
+		}
+	}
 }

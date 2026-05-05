@@ -1,3 +1,4 @@
+import { API_ERROR_SHAPES } from "./api-middleware-error-shapes";
 import { peekCmsConfig } from "./config";
 import type { JsonValue } from "./json-types";
 import type { ApiScope, ApiTokenStore } from "./platform-contracts";
@@ -6,40 +7,6 @@ export interface ApiRequestContext {
 	apiTokens: ApiTokenStore;
 	checkRateLimit: (key: string, max: number, windowMs: number) => boolean;
 	rateLimit?: number; // requests per minute per token, default 60
-}
-
-const API_ERROR_SHAPES = {
-	unauthorized: (detail: string) =>
-		jsonError(401, { error: detail, code: "unauthorized" }),
-	forbidden: (detail: string) =>
-		jsonError(403, { error: detail, code: "forbidden" }),
-	rateLimited: () =>
-		jsonError(429, { error: "Too many requests.", code: "rate_limited" }),
-	notFound: (detail = "Not found.") =>
-		jsonError(404, { error: detail, code: "not_found" }),
-	validationError: (detail: string) =>
-		jsonError(422, { error: detail, code: "validation_error" }),
-	fileTooLarge: (maxBytes: number, uploadedBytes: number) =>
-		jsonError(413, {
-			error: "FILE_TOO_LARGE",
-			code: "file_too_large",
-			maxBytes,
-			uploadedBytes,
-		}),
-	unsupportedMediaType: (mimeType: string, allowed: string[]) =>
-		jsonError(415, {
-			error: "UNSUPPORTED_MEDIA_TYPE",
-			code: "unsupported_media_type",
-			mimeType,
-			allowed: allowed as unknown as JsonValue,
-		}),
-};
-
-function jsonError(status: number, body: Record<string, JsonValue>) {
-	return new Response(JSON.stringify(body), {
-		status,
-		headers: { "Content-Type": "application/json" },
-	});
 }
 
 export function jsonOk(body: JsonValue, status = 200) {

@@ -64,4 +64,16 @@ describe("access action registry", () => {
 		const sorted = [...ids].sort();
 		expect(ids).toEqual(sorted);
 	});
+
+	test("_resetAccessActionRegistryForTests clears plugin actions and re-seeds built-ins", () => {
+		registerAccessAction({
+			id: "ephemeral:goAway",
+			description: "ephemeral",
+			pluginId: "ephemeral-plugin",
+		});
+		expect(getAccessAction("ephemeral:goAway")).toBeDefined();
+		_resetAccessActionRegistryForTests();
+		expect(getAccessAction("ephemeral:goAway")).toBeUndefined();
+		expect(getAccessAction("posts:edit")?.pluginId).toBe("core");
+	});
 });

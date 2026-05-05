@@ -10,6 +10,7 @@ import {
 } from "../src/access";
 import type { AccessStore } from "../src/access";
 import type { Subject } from "../src/access";
+import { decodeAttribute, rowToRole } from "../src/access/repository-helpers";
 import { loadSqliteDatabase } from "../src/sqlite-bootstrap-helpers";
 
 const SCHEMA = readFileSync(
@@ -180,6 +181,32 @@ describe("seedStarterRoles", () => {
 		seedStarterRoles(repo);
 		seedStarterRoles(repo);
 		expect(repo.listRoles().filter((r) => r.name === "Editor")).toHaveLength(1);
+	});
+});
+
+describe("repository-helpers row mappers", () => {
+	test("rowToRole maps is_system === 1 to isSystem true and any other number to false", () => {
+		const base = {
+			id: "r1",
+			name: "n",
+			description: "d",
+			created_at: "t",
+			updated_at: "t",
+		};
+		expect(rowToRole({ ...base, is_system: 1 }).isSystem).toBe(true);
+		expect(rowToRole({ ...base, is_system: 0 }).isSystem).toBe(false);
+		expect(rowToRole({ ...base, is_system: 2 }).isSystem).toBe(false);
+	});
+
+	test("decodeAttribute returns the raw string when the input is not valid JSON", () => {
+		expect(decodeAttribute("not-json")).toBe("not-json");
+		expect(decodeAttribute('{"unterminated":')).toBe('{"unterminated":');
+	});
+
+	test("decodeAttribute parses valid JSON values", () => {
+		expect(decodeAttribute('"hello"')).toBe("hello");
+		expect(decodeAttribute("42")).toBe(42);
+		expect(decodeAttribute("true")).toBe(true);
 	});
 });
 

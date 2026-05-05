@@ -3,8 +3,15 @@ import type { D1DatabaseLike } from "../d1-database";
 import type { AuthStore, AuthUser } from "../platform-contracts";
 import { isProductionRuntime } from "../runtime-env";
 import { createLogger } from "../runtime-logger";
+import {
+	CLOUDFLARE_DEFAULT_SESSION_SECRET,
+	CLOUDFLARE_SESSION_LOGGER_CONTEXT,
+	CLOUDFLARE_SESSION_TTL_MS,
+} from "./cloudflare-auth-data";
 
-const logger = createLogger("Cloudflare");
+export { CLOUDFLARE_SESSION_TTL_MS };
+
+const logger = createLogger(CLOUDFLARE_SESSION_LOGGER_CONTEXT);
 
 export type AstropressCloudflareSeedUser = AuthUser & { password: string };
 
@@ -27,9 +34,8 @@ function getConfiguredSecrets(...values: Array<string | undefined>) {
 export function resolveCloudflareSessionSecret(): string {
 	const secret =
 		// audit-boundary: opaque-passthrough -- dev default; production throws below
-		process.env.CLOUDFLARE_SESSION_SECRET ??
-		"cloudflare-adapter-session-secret";
-	if (secret === "cloudflare-adapter-session-secret") {
+		process.env.CLOUDFLARE_SESSION_SECRET ?? CLOUDFLARE_DEFAULT_SESSION_SECRET;
+	if (secret === CLOUDFLARE_DEFAULT_SESSION_SECRET) {
 		if (isProductionRuntime()) {
 			throw new Error(
 				"[astropress] CLOUDFLARE_SESSION_SECRET must be set before deployment. " +
@@ -50,8 +56,6 @@ export function resolveCloudflareSessionSecretCandidates(): string[] {
 		process.env.CLOUDFLARE_SESSION_SECRET_PREV,
 	);
 }
-
-export const CLOUDFLARE_SESSION_TTL_MS = 12 * 60 * 60 * 1000;
 
 export async function cleanupExpiredCloudflareSessions(db: D1DatabaseLike) {
 	await db

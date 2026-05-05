@@ -13,31 +13,18 @@
  * tooling/scripts/audit-integration-secrets.ts enforces this.
  */
 
-export type IntegrationErrorCode =
-	| "INTEGRATION_VERIFY_FAILED"
-	| "INTEGRATION_TIMEOUT"
-	| "INTEGRATION_AUTH_REJECTED"
-	| "INTEGRATION_NOT_FOUND"
-	| "INTEGRATION_RATE_LIMITED"
-	| "INTEGRATION_NETWORK_ERROR"
-	| "INTEGRATION_UNKNOWN_ERROR";
+import {
+	type IntegrationErrorCode,
+	KNOWN_INTEGRATION_ERROR_CODES,
+} from "./integration-error-sanitizer-data";
 
-const KNOWN_CODES: ReadonlySet<IntegrationErrorCode> = new Set([
-	"INTEGRATION_VERIFY_FAILED",
-	"INTEGRATION_TIMEOUT",
-	"INTEGRATION_AUTH_REJECTED",
-	"INTEGRATION_NOT_FOUND",
-	"INTEGRATION_RATE_LIMITED",
-	"INTEGRATION_NETWORK_ERROR",
-	"INTEGRATION_UNKNOWN_ERROR",
-]);
+export type { IntegrationErrorCode };
 
 export function isIntegrationErrorCode(
 	value: unknown,
 ): value is IntegrationErrorCode {
-	return (
-		typeof value === "string" && KNOWN_CODES.has(value as IntegrationErrorCode)
-	);
+	if (typeof value !== "string") return false;
+	return KNOWN_INTEGRATION_ERROR_CODES.has(value as IntegrationErrorCode);
 }
 
 /**
@@ -49,7 +36,7 @@ export function sanitizeIntegrationError(
 	err: unknown,
 	hint?: IntegrationErrorCode,
 ): IntegrationErrorCode {
-	if (hint && KNOWN_CODES.has(hint)) return hint;
+	if (hint && KNOWN_INTEGRATION_ERROR_CODES.has(hint)) return hint;
 	if (err && typeof err === "object" && "code" in err) {
 		if (isIntegrationErrorCode(err.code)) return err.code;
 	}

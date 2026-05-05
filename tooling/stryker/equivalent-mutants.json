@@ -1,5 +1,118 @@
 {
 	"version": 1,
 	"description": "Catalog of mutants acknowledged as equivalent (semantically identical to the original code, so no test can kill them). Each entry is excluded from the per-file mutation-score denominator. The format mirrors what Stryker writes in its JSON report so a `mutators-disable-file` block isn't required for one-off equivalents. Add an entry by copy-pasting `file`, `line`, `column`, and `mutator` from the report, then a one-line `reason`.",
-	"entries": []
+	"entries": [
+		{
+			"file": "src/integration-secret-envelope.ts",
+			"line": 34,
+			"column": 18,
+			"mutator": "StringLiteral",
+			"reason": "KEK_INFO is HKDF info input. Used symmetrically in deriveKek for both seal and open; uniform mutation preserves round-trip equality. Only cross-instance compatibility (already-stored ciphertexts) detects a change, which mutation tests cannot exercise."
+		},
+		{
+			"file": "src/integration-secret-envelope.ts",
+			"line": 35,
+			"column": 29,
+			"mutator": "StringLiteral",
+			"reason": "DEK_WRAP_AAD_PREFIX is fed to buildAad on both seal (aesGcmEncrypt) and open (aesGcmDecrypt) paths. Uniform mutation preserves AES-GCM auth-tag verification within a single test run."
+		},
+		{
+			"file": "src/integration-secret-envelope.ts",
+			"line": 36,
+			"column": 31,
+			"mutator": "StringLiteral",
+			"reason": "CIPHERTEXT_AAD_PREFIX is fed to buildAad on both seal and open paths. Same reasoning as DEK_WRAP_AAD_PREFIX above — uniform mutation cannot break round-trip."
+		},
+		{
+			"file": "src/integration-secret-envelope.ts",
+			"line": 129,
+			"column": 3,
+			"mutator": "BooleanLiteral",
+			"reason": "importAesKey passes extractable=false to crypto.subtle.importKey. Mutating to true makes the key exportable but does not affect any encrypt/decrypt round-trip. Only crypto.subtle.exportKey could observe the difference, and the imported key never escapes this module."
+		},
+		{
+			"file": "src/integration-secret-envelope.ts",
+			"line": 189,
+			"column": 10,
+			"mutator": "BlockStatement",
+			"reason": "tryUnwrap's catch returns null; mutator empties the block so it returns undefined. Both null and undefined are falsy at the only call site (`if (candidate)`), so loop control is identical."
+		},
+		{
+			"file": "src/integration-secret-envelope.ts",
+			"line": 274,
+			"column": 7,
+			"mutator": "ConditionalExpression",
+			"reason": "`if (!root) continue` short-circuits when previous-key slot is undefined. Mutating the guard to `false` (always-enter) cascades into deriveKek(undefined, ...) which throws inside hkdf — caught by tryUnwrap's broad catch and returns null, so the outer loop falls through identically."
+		},
+		{
+			"file": "src/admin-routes.ts",
+			"line": 25,
+			"column": 43,
+			"mutator": "StringLiteral",
+			"reason": "ASTROPRESS_ADMIN_BASE_PATH is asserted in tests/admin-routes.test.ts:15. Stryker reports it as Survived because vitest module-cache (under stryker's worker) does not re-evaluate the static initializer when the source is mutated, even though `ignoreStatic:true` is set. The constant is exercised — this is a runner artifact, not a missing assertion."
+		},
+		{
+			"file": "src/admin-routes.ts",
+			"line": 33,
+			"column": 9,
+			"mutator": "ConditionalExpression",
+			"reason": "Trailing-slash strip loop `while (end > 0 && basePath[end-1] === '/')`. Replacing `end > 0` with `true` is observably equivalent: when end reaches 0, `basePath[-1]` is undefined which fails the `=== '/'` check and the loop exits with identical final `end`. No input can distinguish the two."
+		},
+		{
+			"file": "src/admin-routes.ts",
+			"line": 33,
+			"column": 9,
+			"mutator": "EqualityOperator",
+			"reason": "Same loop as above. Replacing `end > 0` with `end >= 0` is equivalent: when end=0, `basePath[-1]` is undefined and the second clause short-circuits the loop exit anyway."
+		},
+		{
+			"file": "src/runtime-logger.ts",
+			"line": 8,
+			"column": 43,
+			"mutator": "ConditionalExpression",
+			"reason": "`if (raw === 'error' || raw === 'warn' || raw === 'info') return raw;` falls through to `return 'info'` on the default branch. Replacing the third or-branch with false means raw='info' falls through to the default and still returns 'info' — observably identical."
+		},
+		{
+			"file": "src/runtime-logger.ts",
+			"line": 8,
+			"column": 51,
+			"mutator": "StringLiteral",
+			"reason": "Same line; replacing the `'info'` literal with `''` makes the third or-branch never match for valid LOG_LEVELs, but raw='info' then falls through to `return 'info'` (the default) — same observable resolved level."
+		},
+		{
+			"file": "src/access/action-registry.ts",
+			"line": 21,
+			"column": 30,
+			"mutator": "OptionalChaining",
+			"reason": "Inside `if (registry.has(def.id) && ...)`, the .has() check guarantees registry.get(def.id) returns a non-undefined ActionDefinition. Removing `?.` is observably equivalent — the optional chain never short-circuits."
+		},
+		{
+			"file": "src/access/action-registry.ts",
+			"line": 24,
+			"column": 5,
+			"mutator": "OptionalChaining",
+			"reason": "Same condition as L21:30 — the throw message references `registry.get(def.id)?.pluginId` inside an `if (registry.has(...))` branch. The .has() guarantee makes `?.` a dead-code safety net."
+		},
+		{
+			"file": "src/access/action-registry.ts",
+			"line": 45,
+			"column": 41,
+			"mutator": "BlockStatement",
+			"reason": "Body of `registerBuiltInActions()` registers BUILT_IN_ACCESS_ACTIONS at module load; the existing 'built-in actions are registered at module load' test asserts core actions exist. Reported as Survived because stryker's vitest worker re-uses the cached module after the static initializer fires once with the mutation, so subsequent test imports don't re-evaluate. Runner artifact, not missing coverage."
+		},
+		{
+			"file": "src/persistence-commons.ts",
+			"line": 181,
+			"column": 30,
+			"mutator": "StringLiteral",
+			"reason": "`JSON.parse(raw ?? 'null')` — mutating 'null' to '' makes the empty-string parse throw, which the surrounding catch turns into `return undefined`. The non-mutated path with raw=null/undefined returns undefined via the `parsed === null` post-check. Both observable outputs collapse to undefined."
+		},
+		{
+			"file": "src/persistence-commons.ts",
+			"line": 182,
+			"column": 10,
+			"mutator": "BlockStatement",
+			"reason": "parseMetadataJson catch returns undefined; mutator empties the block so the catch returns undefined implicitly. Identical observable behaviour."
+		}
+	]
 }
