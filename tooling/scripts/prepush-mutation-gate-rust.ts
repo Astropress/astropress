@@ -196,11 +196,13 @@ function main(): number {
 	if (needsMutation.length > 0) {
 		console.log(`\nRunning cargo-mutants on ${needsMutation.length} file(s)...`);
 		runCargoMutants(needsMutation);
-		if (!existsSync(OUTCOMES_PATH)) {
-			console.error(`prepush-mutation-gate-rust: no outcomes at ${OUTCOMES_PATH}`);
-			return 1;
-		}
-		const outcomes = (JSON.parse(readFileSync(OUTCOMES_PATH, "utf8")) as OutcomesFile).outcomes;
+		// cargo-mutants writes outcomes.json only when at least one mutant was
+		// generated. Test files (#[cfg(test)] gated) and #[mutants::skip]'d
+		// modules legitimately produce zero mutants — in that case there is no
+		// outcomes file. Treat as null score (judge() handles that as pass).
+		const outcomes = existsSync(OUTCOMES_PATH)
+			? (JSON.parse(readFileSync(OUTCOMES_PATH, "utf8")) as OutcomesFile).outcomes
+			: [];
 		for (const file of needsMutation) {
 			const rel = file.startsWith(`${CRATE_ROOT}/`) ? file.slice(CRATE_ROOT.length + 1) : file;
 			const score = scoreFromOutcomes(outcomes, rel);
