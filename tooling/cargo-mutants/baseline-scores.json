@@ -1,9 +1,9 @@
 {
-  "updatedAt": "2026-05-02T19:03:09.931Z",
+  "updatedAt": "2026-05-06T01:09:16.439Z",
   "scores": {
     "astropress-cli/src/cli_config/args/dev_deploy.rs": {
-      "score": 95.83333333333333,
-      "hash": "c57d4757fb725a9918013052632bef993dae5b93"
+      "score": 100,
+      "hash": "aa0eb9cee5bccb394b9a0255bc6299bf0d469eb1"
     },
     "astropress-cli/src/cli_config/args/help.rs": {
       "score": 0,
@@ -11,55 +11,55 @@
     },
     "astropress-cli/src/cli_config/args/import.rs": {
       "score": 100,
-      "hash": "35b98bcbbdaf23519f3201e0a463611f8f3721b9"
+      "hash": "0a8ea6b66d102b9271c45c5ec285a9e900efa4c6"
     },
     "astropress-cli/src/cli_config/args/misc.rs": {
       "score": 100,
-      "hash": "2a52fecf7c70daff97e3b27669340f822ab7cdfa"
+      "hash": "799738ada0404b038ccb3d8843b7b7b852f75481"
     },
     "astropress-cli/src/cli_config/args/mod.rs": {
       "score": 100,
-      "hash": "23c838ec480d8ab1694838f1b0db913cb8080923"
+      "hash": "d13767b673e33b99cff29246234ca84b51c14419"
     },
     "astropress-cli/src/cli_config/args/new.rs": {
-      "score": 93.33333333333333,
-      "hash": "edfa246c0d645b88351a52e19866261e4d1fa408"
+      "score": 100,
+      "hash": "95ad627325ef349bb3134de677e86aacd8dd0cfa"
     },
     "astropress-cli/src/cli_config/env.rs": {
       "score": 100,
-      "hash": "74bff5bb7a9374fdb53c4206b8d7afd80fc3bf40"
+      "hash": "66eedcf363be2bfb3c39220a41441b7a23551926"
     },
     "astropress-cli/src/commands/add.rs": {
       "score": 100,
-      "hash": "6c50dbb54993238657e11284379be415f4a37018"
+      "hash": "66a2b26b8bddd5f197c1c4cbcc7ed269c86229b5"
     },
     "astropress-cli/src/commands/backup_restore.rs": {
       "score": 100,
-      "hash": "29365bbedd43e3bcbc3e3ad72e87b4f99fdfda96"
+      "hash": "364af5c58ca61355cf2cd199a9e4053dccbf2846"
     },
     "astropress-cli/src/commands/completions.rs": {
       "score": 100,
-      "hash": "2892049b96d66cba1c58bd758f96ffa8dc0e0028"
+      "hash": "f07be171862ed723348103913517aab5aa7b948b"
     },
     "astropress-cli/src/commands/config.rs": {
       "score": 100,
-      "hash": "ea7199d6b5c185626bb71716923004c0d54a2407"
+      "hash": "7f45240fc343610a0e836fe2a0ca60a3375dd06c"
     },
     "astropress-cli/src/commands/deploy.rs": {
       "score": 100,
-      "hash": "7147bf284f7f8fbb731109daa23ea7236d08950f"
+      "hash": "43f84d3fe1d921ece04f62d032709d6b1a0053ef"
     },
     "astropress-cli/src/commands/doctor.rs": {
       "score": 100,
-      "hash": "9616597d261f4aa1215983ca25000d2e4dcdb277"
+      "hash": "bc784366068b372b5da56e81f09a4eff99a25958"
     },
     "astropress-cli/src/commands/import_common.rs": {
       "score": 100,
-      "hash": "ea75e2c0f258acd35617d0c7060dd064fa54e48a"
+      "hash": "ee5a702404b1e3220726234e6ef43cccb0d2bd70"
     },
     "astropress-cli/src/commands/import_wordpress.rs": {
       "score": 100,
-      "hash": "37a4abed8ae06e328e2b20a51f42ebc8901c6b8f"
+      "hash": "a6b0ef2f3e331df27ac8740a487941c80fe7edf2"
     },
     "astropress-cli/src/commands/import_wordpress_types.rs": {
       "score": 100,
@@ -67,23 +67,23 @@
     },
     "astropress-cli/src/commands/migrate.rs": {
       "score": 100,
-      "hash": "05f7b135ee0aaab7d0225de11ba8fa8a8a0810ff"
+      "hash": "5fa1850d740e5e43aad360ca436c038a81bae68c"
     },
     "astropress-cli/src/commands/new.rs": {
       "score": 100,
-      "hash": "bbc0620c32dfc92238a535340b46858d8afe011b"
+      "hash": "1eb87c69feac9fc5324f036f8b740f193290859f"
     },
     "astropress-cli/src/commands/services.rs": {
       "score": 100,
-      "hash": "a4dadb6df727279505e0b5e299521f62a21dc541"
+      "hash": "6b15b4bbe7696ee8d40fd017f783f24c17fa6dd2"
     },
     "astropress-cli/src/commands/upgrade.rs": {
       "score": 100,
-      "hash": "09512bdc517021ef090eb7d53c58502be768d30f"
+      "hash": "cfc6de2a775bda3fb7df56f8981b423d21eeafac"
     },
     "astropress-cli/src/docs_stubs/mdbook.rs": {
       "score": 100,
-      "hash": "941277f78fc8a31309515e2054e87e2448cb2208"
+      "hash": "c2b3baf9c27bcbf0c5a4618da3e9bab7366f1b7b"
     },
     "astropress-cli/src/docs_stubs/mod.rs": {
       "score": 100,
@@ -91,11 +91,11 @@
     },
     "astropress-cli/src/docs_stubs/starlight.rs": {
       "score": 100,
-      "hash": "a123cb4efc2208990de6a0833d95810128c41632"
+      "hash": "9d3e0d0fda1dff32f7ee560300cd26b5c65cfcc9"
     },
     "astropress-cli/src/docs_stubs/vitepress.rs": {
       "score": 100,
-      "hash": "1a23754737dd4e501a4a49376232470de6d9b56d"
+      "hash": "443814c2c23ef635d835095a67c0aee00c6e54d2"
     },
     "astropress-cli/src/feature_stubs.rs": {
       "score": 100,
@@ -111,23 +111,23 @@
     },
     "astropress-cli/src/js_bridge/loaders.rs": {
       "score": 100,
-      "hash": "8065a6a9336575e906dbd7b62a30f8089f11a715"
+      "hash": "30a904ca322cd0d557ec2c9c5c12598915accdbf"
     },
     "astropress-cli/src/js_bridge/runner.rs": {
       "score": 100,
-      "hash": "a3ad03a5afc5f3292109d2a66ff95916cfbfb410"
+      "hash": "150688b73fd59815c8c3088ff7b43b2c58ebb977"
     },
     "astropress-cli/src/main.rs": {
       "score": 100,
-      "hash": "8424625823a833b16900d03195e2f926864a00f2"
+      "hash": "2c8976090c53e13d5fb4391ea6b5e5a74c940f93"
     },
     "astropress-cli/src/providers.rs": {
       "score": 100,
-      "hash": "c9f88953a2f1c38e6e9041e9d2e55da53bf1d9f5"
+      "hash": "64e20a71dd263dc1bf64077648f1547e17e4e24d"
     },
     "astropress-cli/src/scaffold.rs": {
       "score": 100,
-      "hash": "525f499fea87fa7c1139c0f96f2a4239922cafc7"
+      "hash": "8fb4cd4d02e2c52ada75a1088e566666a87a3246"
     },
     "astropress-cli/src/service_docs/markdown.rs": {
       "score": 100,
@@ -147,19 +147,19 @@
     },
     "astropress-cli/src/telemetry_sends.rs": {
       "score": 100,
-      "hash": "2475e7cfc652b3e267322227d9b18a0bd180eacd"
+      "hash": "76766d6826d51c7fb960008df40e2b9bc5dfcb6c"
     },
     "astropress-cli/src/tui/import_dashboard.rs": {
       "score": 100,
       "hash": "accfc4d9a7a67554a8ecd5a35061b86016294823"
     },
     "astropress-cli/src/tui/mod.rs": {
-      "score": 75,
-      "hash": "1c0042c3c5de81691beb7cbe191f33a55ba24adb"
+      "score": 100,
+      "hash": "2e386eaa4ae2bc052c5bfdcbd93378c13801cba1"
     },
     "astropress-cli/src/utils.rs": {
       "score": 100,
-      "hash": "a011958d515120621c571770307338ac74473cc0"
+      "hash": "d1d87bff3335fa0d05d0fa3d7202aada000ba11f"
     },
     "astropress-cli/src/cli_config/args.rs": {
       "score": 100,
@@ -167,15 +167,15 @@
     },
     "astropress-cli/src/cli_config/args/auth.rs": {
       "score": 100,
-      "hash": "f59db67e0cbd5eb4d0334695b1fdf48ec45f6582"
+      "hash": "01b7f686a3fab358a6ecc2641c0f7a371ce78c5f"
     },
     "astropress-cli/src/cli_config/args/ops.rs": {
       "score": 100,
-      "hash": "56552da97e86ab3ee040ee581dcaeced11a77ac1"
+      "hash": "93a4a85c517babf5440256cf4cc5d7e2fabbf944"
     },
     "astropress-cli/src/cli_config/args/ops_more.rs": {
       "score": 100,
-      "hash": "b3cb9e02bd66cb99f2ed0677d69ac62a784be493"
+      "hash": "7181b8d4d877a52b3a31d31f9d90df216c829180"
     },
     "astropress-cli/src/cli_config/mod.rs": {
       "score": 100,
@@ -183,19 +183,19 @@
     },
     "astropress-cli/src/commands/add_parse.rs": {
       "score": 100,
-      "hash": "29690d8f6b8247060ecc5e2e903ad324ffba2186"
+      "hash": "ad27d9e970b0dac9ae89ef6ef55518ea76801b9b"
     },
     "astropress-cli/src/commands/add_tests.rs": {
       "score": 100,
-      "hash": "06bca4db15f2aa6273e27a37e9a86016d52b6181"
+      "hash": "2bf39af38516f380806d0593623d5f73a656ab4e"
     },
     "astropress-cli/src/commands/add_tests_more.rs": {
       "score": 100,
-      "hash": "639b8fdd4719cc7e084574a4c95e7512dcf07339"
+      "hash": "f261c9a9b9499a5408e97e5964879ade388689da"
     },
     "astropress-cli/src/commands/auth.rs": {
       "score": 100,
-      "hash": "0ecfb370a8351ad12cb1d4cb0f4ce8119faddf4e"
+      "hash": "cecb2ebff83f0b0f6262dd855ba03a8d6fdf7113"
     },
     "astropress-cli/src/commands/completions_powershell.rs": {
       "score": 100,
@@ -207,15 +207,15 @@
     },
     "astropress-cli/src/commands/db.rs": {
       "score": 100,
-      "hash": "bab192668e18bf9c4c61a80b0c9229ebb0946738"
+      "hash": "f9907cd6300ebb17a53a2840bc4632b4496df8c7"
     },
     "astropress-cli/src/commands/dev.rs": {
       "score": 100,
-      "hash": "e3567e33be6fcb579108d29c6af3f5701bdda4a0"
+      "hash": "4c47ff42cf12fc40d7a3b543540abca2417bdaf6"
     },
     "astropress-cli/src/commands/import_wix.rs": {
       "score": 100,
-      "hash": "e8705d8ae202d37eb29e5a707023d643dab84f89"
+      "hash": "aaeab72e2c7115c6912272b97758e261613207ec"
     },
     "astropress-cli/src/commands/list.rs": {
       "score": 100,
@@ -223,7 +223,7 @@
     },
     "astropress-cli/src/commands/migrate_tests.rs": {
       "score": 100,
-      "hash": "a7a66293c39a5cb7167a8c5f2b463971274c54f3"
+      "hash": "5a54b5a4840e1c7d98cc355de6fcb1fb27f0e95e"
     },
     "astropress-cli/src/commands/mod.rs": {
       "score": 100,
@@ -320,6 +320,30 @@
     "astropress-cli/src/telemetry_tests.rs": {
       "score": 100,
       "hash": "3bac630b5065a5e360c754acf9dbd92141cd54cb"
+    },
+    "astropress-cli/src/error.rs": {
+      "score": 100,
+      "hash": "9d4f126b0fc9c3dff9421ca4e22416f1bf7d4cc3"
+    },
+    "astropress-cli/src/tests/auth.rs": {
+      "score": 100,
+      "hash": "43d78764a0329cfd2b562a278ff9f12e5f10abfc"
+    },
+    "astropress-cli/src/tests/deploy_tests.rs": {
+      "score": 100,
+      "hash": "3c38d4c63ae154206e72f64bb69b02b4fdfaa9c7"
+    },
+    "astropress-cli/src/tests/mod.rs": {
+      "score": 100,
+      "hash": "2598df8781ade4ba0abee20156e320bdd6b9f276"
+    },
+    "astropress-cli/src/tests/parse.rs": {
+      "score": 100,
+      "hash": "cd1f50af567f63e01edc133a061c19b7d42ff37b"
+    },
+    "astropress-cli/src/tests/parse_more2.rs": {
+      "score": 100,
+      "hash": "d6b77f2407807a7b28ea8892a7927c5e4e0e36c3"
     }
   }
 }

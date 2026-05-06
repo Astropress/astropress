@@ -165,8 +165,13 @@ function judge(
 	score: number | null,
 	prior: BaselineEntry | null,
 ): Verdict {
-	if (score === null)
-		return { file, hash, score: null, baseline: prior, status: "unscored" };
+	if (score === null) {
+		// cargo-mutants generated zero mutants for this file. Common causes:
+		// the file is a test module (cargo-mutants skips #[cfg(test)] code by
+		// default), every fn has #[mutants::skip], or it's pure macro/derive
+		// boilerplate. There is nothing to fail on — treat as pass.
+		return { file, hash, score: null, baseline: prior, status: "pass" };
+	}
 	if (prior === null)
 		return {
 			file,
