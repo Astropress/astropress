@@ -431,10 +431,15 @@ function runMutants(): { exitCode: number; reportFresh: boolean } {
 	// Use the shared-cache config (break: 0). Per-file quality is enforced
 	// by mutation-gate + audit:baseline-* jobs, not by the global threshold
 	// of this cache-refresh run.
+	// Stryker is hoisted to the root node_modules/.bin by bun's workspace
+	// install — it is not symlinked into packages/astropress/node_modules
+	// in CI (`bun install --frozen-lockfile` skips per-package shims).
+	// The package.json scripts use `../../node_modules/.bin/stryker`
+	// from packages/astropress; mirror that convention here.
 	const result = spawnSync(
 		"node",
 		[
-			"node_modules/.bin/stryker",
+			"../../node_modules/.bin/stryker",
 			"run",
 			"../../tooling/stryker/stryker-shared-cache.config.mjs",
 		],

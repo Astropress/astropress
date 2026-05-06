@@ -13,7 +13,7 @@
 		"prepare": "bunx lefthook install"
 	},
 	"dependencies": {
-		"astro": "6.1.9",
+		"astro": "6.2.2",
 		"@astropress-diy/astropress": "workspace:*"
 	},
 	"devDependencies": {
