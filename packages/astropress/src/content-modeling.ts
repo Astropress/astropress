@@ -123,6 +123,7 @@ export interface ContentTypeDefinition {
  */
 export function validateContentFields(
 	contentType: ContentTypeDefinition,
+	// audit-boundary: opaque-passthrough -- module-boundary value; narrowed at consumer
 	metadata: Record<string, unknown>,
 ): string | null {
 	for (const field of contentType.fields) {
@@ -144,6 +145,7 @@ export function validateContentFields(
 				}
 				if (field.fields) {
 					for (let i = 0; i < value.length; i++) {
+						// audit-boundary: opaque-passthrough -- module-boundary value; narrowed at consumer
 						const item = value[i] as Record<string, unknown>;
 						if (typeof item !== "object" || item === null) {
 							return `"${field.label}" item ${i + 1} must be an object.`;

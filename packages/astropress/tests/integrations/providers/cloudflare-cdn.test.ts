@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
 	CLOUDFLARE_CDN_FIELDS,
@@ -223,6 +223,20 @@ describe("verifyCloudflareCdn", () => {
 		await expect(
 			verifyCloudflareCdn(FIELDS, { signal }, { fetch }),
 		).rejects.toMatchObject({ code: "INTEGRATION_VERIFY_FAILED" });
+	});
+
+	it("falls back to global fetch when deps.fetch is omitted", async () => {
+		const stub = vi
+			.spyOn(globalThis, "fetch")
+			.mockResolvedValue(new Response(null, { status: 200 }));
+		try {
+			await expect(
+				verifyCloudflareCdn(FIELDS, { signal }),
+			).resolves.toBeUndefined();
+			expect(stub).toHaveBeenCalledTimes(2);
+		} finally {
+			stub.mockRestore();
+		}
 	});
 
 	it("CloudflareCdnVerifyError subclasses Error and carries the typed code", async () => {

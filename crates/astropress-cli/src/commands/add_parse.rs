@@ -8,12 +8,13 @@ use crate::features::{
     NotifyChoice, PaymentChoice, PodcastChoice, ScheduleChoice, SearchChoice, SocialChoice,
     SsoChoice, StatusChoice, TransactionalEmailChoice, VideoChoice,
 };
+use crate::error::CliResult;
 use crate::providers::{AbTestingProvider, AnalyticsProvider, HeatmapProvider};
 
 /// Parse `--feature value` pairs from add command args.
 /// Starts from a blank `AllFeatures` (everything None/default-false) so that
 /// only the flags actually passed produce output.
-pub(crate) fn parse_add_features(args: &[String]) -> Result<AllFeatures, String> {
+pub(crate) fn parse_add_features(args: &[String]) -> CliResult<AllFeatures> {
     let mut f = AllFeatures::defaults();
     // Reset community to None so we don't accidentally include Giscus env stubs
     // when the user hasn't asked for comments.
@@ -39,7 +40,7 @@ pub(crate) fn parse_add_features(args: &[String]) -> Result<AllFeatures, String>
                     "listmonk" => EmailChoice::Listmonk,
                     other => return Err(format!(
                         "Unknown email provider `{other}`. Use: listmonk."
-                    )),
+                    ).into()),
                 };
             }
             "--commerce" => {
@@ -48,7 +49,7 @@ pub(crate) fn parse_add_features(args: &[String]) -> Result<AllFeatures, String>
                     "vendure"  => CommerceChoice::Vendure,
                     other => return Err(format!(
                         "Unknown commerce platform `{other}`. Use: medusa, vendure."
-                    )),
+                    ).into()),
                 };
             }
             "--community" | "--comments" => {
@@ -57,7 +58,7 @@ pub(crate) fn parse_add_features(args: &[String]) -> Result<AllFeatures, String>
                     "remark42" => CommunityChoice::Remark42,
                     other => return Err(format!(
                         "Unknown comments provider `{other}`. Use: giscus, remark42."
-                    )),
+                    ).into()),
                 };
             }
             "--search" => {
@@ -66,7 +67,7 @@ pub(crate) fn parse_add_features(args: &[String]) -> Result<AllFeatures, String>
                     "meilisearch" => SearchChoice::Meilisearch,
                     other => return Err(format!(
                         "Unknown search provider `{other}`. Use: pagefind, meilisearch."
-                    )),
+                    ).into()),
                 };
             }
             "--courses" => {
@@ -74,7 +75,7 @@ pub(crate) fn parse_add_features(args: &[String]) -> Result<AllFeatures, String>
                     "frappe-lms" | "frapplms" => CourseChoice::FrappeLms,
                     other => return Err(format!(
                         "Unknown LMS `{other}`. Use: frappe-lms."
-                    )),
+                    ).into()),
                 };
             }
             "--forms" | "--testimonials" => {
@@ -83,7 +84,7 @@ pub(crate) fn parse_add_features(args: &[String]) -> Result<AllFeatures, String>
                     "typebot"    => FormsChoice::Typebot,
                     other => return Err(format!(
                         "Unknown forms provider `{other}`. Use: formbricks, typebot."
-                    )),
+                    ).into()),
                 };
             }
             "--video" => {
@@ -91,7 +92,7 @@ pub(crate) fn parse_add_features(args: &[String]) -> Result<AllFeatures, String>
                     "peertube" => VideoChoice::PeerTube,
                     other => return Err(format!(
                         "Unknown video provider `{other}`. Use: peertube."
-                    )),
+                    ).into()),
                 };
             }
             "--podcast" => {
@@ -99,7 +100,7 @@ pub(crate) fn parse_add_features(args: &[String]) -> Result<AllFeatures, String>
                     "castopod" => PodcastChoice::Castopod,
                     other => return Err(format!(
                         "Unknown podcast provider `{other}`. Use: castopod."
-                    )),
+                    ).into()),
                 };
             }
             "--events" => {
@@ -108,7 +109,7 @@ pub(crate) fn parse_add_features(args: &[String]) -> Result<AllFeatures, String>
                     "pretix"    => EventChoice::Pretix,
                     other => return Err(format!(
                         "Unknown events platform `{other}`. Use: hievents, pretix."
-                    )),
+                    ).into()),
                 };
             }
             "--transactional-email" | "--transactional_email" => {
@@ -117,7 +118,7 @@ pub(crate) fn parse_add_features(args: &[String]) -> Result<AllFeatures, String>
                     "smtp" => TransactionalEmailChoice::Smtp,
                     other => return Err(format!(
                         "Unknown transactional email provider `{other}`. Use: resend, smtp."
-                    )),
+                    ).into()),
                 };
             }
             "--status" => {
@@ -125,7 +126,7 @@ pub(crate) fn parse_add_features(args: &[String]) -> Result<AllFeatures, String>
                     "uptime-kuma" | "uptimekuma" => StatusChoice::UptimeKuma,
                     other => return Err(format!(
                         "Unknown status provider `{other}`. Use: uptime-kuma."
-                    )),
+                    ).into()),
                 };
             }
             "--knowledge-base" | "--knowledge_base" => {
@@ -133,7 +134,7 @@ pub(crate) fn parse_add_features(args: &[String]) -> Result<AllFeatures, String>
                     "bookstack" => KnowledgeBaseChoice::BookStack,
                     other => return Err(format!(
                         "Unknown knowledge base `{other}`. Use: bookstack."
-                    )),
+                    ).into()),
                 };
             }
             "--crm" => {
@@ -141,7 +142,7 @@ pub(crate) fn parse_add_features(args: &[String]) -> Result<AllFeatures, String>
                     "twenty" => CrmChoice::Twenty,
                     other => return Err(format!(
                         "Unknown CRM `{other}`. Use: twenty."
-                    )),
+                    ).into()),
                 };
             }
             "--sso" => {
@@ -150,7 +151,7 @@ pub(crate) fn parse_add_features(args: &[String]) -> Result<AllFeatures, String>
                     "zitadel"   => SsoChoice::Zitadel,
                     other => return Err(format!(
                         "Unknown SSO provider `{other}`. Use: authentik, zitadel."
-                    )),
+                    ).into()),
                 };
             }
             "--social" => {
@@ -159,7 +160,7 @@ pub(crate) fn parse_add_features(args: &[String]) -> Result<AllFeatures, String>
                     "mixpost" => SocialChoice::Mixpost,
                     other => return Err(format!(
                         "Unknown social cross-posting tool `{other}`. Use: postiz, mixpost."
-                    )),
+                    ).into()),
                 };
             }
             "--forum" => {
@@ -168,7 +169,7 @@ pub(crate) fn parse_add_features(args: &[String]) -> Result<AllFeatures, String>
                     "discourse" => ForumChoice::Discourse,
                     other => return Err(format!(
                         "Unknown forum software `{other}`. Use: flarum, discourse."
-                    )),
+                    ).into()),
                 };
             }
             "--chat" => {
@@ -176,7 +177,7 @@ pub(crate) fn parse_add_features(args: &[String]) -> Result<AllFeatures, String>
                     "tiledesk" => ChatChoice::Tiledesk,
                     other => return Err(format!(
                         "Unknown chat provider `{other}`. Use: tiledesk."
-                    )),
+                    ).into()),
                 };
             }
             "--payments" => {
@@ -184,7 +185,7 @@ pub(crate) fn parse_add_features(args: &[String]) -> Result<AllFeatures, String>
                     "hyperswitch" => PaymentChoice::HyperSwitch,
                     other => return Err(format!(
                         "Unknown payment router `{other}`. Use: hyperswitch."
-                    )),
+                    ).into()),
                 };
             }
             "--notify" | "--notifications" => {
@@ -193,7 +194,7 @@ pub(crate) fn parse_add_features(args: &[String]) -> Result<AllFeatures, String>
                     "gotify" => NotifyChoice::Gotify,
                     other => return Err(format!(
                         "Unknown notifications provider `{other}`. Use: ntfy, gotify."
-                    )),
+                    ).into()),
                 };
             }
             "--schedule" => {
@@ -202,7 +203,7 @@ pub(crate) fn parse_add_features(args: &[String]) -> Result<AllFeatures, String>
                     "calcom" | "cal.com" => ScheduleChoice::CalCom,
                     other => return Err(format!(
                         "Unknown scheduling provider `{other}`. Use: rallly, calcom."
-                    )),
+                    ).into()),
                 };
             }
             "--cms" => {
@@ -211,7 +212,7 @@ pub(crate) fn parse_add_features(args: &[String]) -> Result<AllFeatures, String>
                     "payload"   => CmsChoice::Payload,
                     other => return Err(format!(
                         "Unknown CMS `{other}`. Use: keystatic, payload."
-                    )),
+                    ).into()),
                 };
             }
             "--docs" => {
@@ -221,7 +222,7 @@ pub(crate) fn parse_add_features(args: &[String]) -> Result<AllFeatures, String>
                     "mdbook" | "md-book" => DocsChoice::MdBook,
                     other => return Err(format!(
                         "Unknown docs generator `{other}`. Use: starlight, vitepress, mdbook."
-                    )),
+                    ).into()),
                 };
             }
             "--heatmap" | "--session-replay" => {
@@ -251,7 +252,7 @@ pub(crate) fn parse_add_features(args: &[String]) -> Result<AllFeatures, String>
             other => {
                 return Err(format!(
                     "Unknown flag `{other}`. Run `astropress add --help` for available options."
-                ))
+                ).into())
             }
         }
         index += 2; // ~ skip

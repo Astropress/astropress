@@ -5,6 +5,22 @@ import {
 	resolveAstropressDeploymentSupportLevel,
 } from "../src/deployment-matrix.js";
 
+describe("listAstropressDeploymentMatrixEntries", () => {
+	// Pins the .slice() defensive copy so callers can mutate the returned
+	// array without poisoning the next call. Without .slice(), the
+	// MethodExpression mutant would let mutations bleed across calls.
+	it("returns a fresh array each call (defensive copy)", () => {
+		const a = listAstropressDeploymentMatrixEntries();
+		const b = listAstropressDeploymentMatrixEntries();
+		expect(a).not.toBe(b);
+		expect(a).toEqual(b);
+		// Mutating `a` must not affect `b` or future calls.
+		a.length = 0;
+		expect(b.length).toBeGreaterThan(0);
+		expect(listAstropressDeploymentMatrixEntries().length).toBeGreaterThan(0);
+	});
+});
+
 describe("deployment matrix — supported pairs", () => {
 	it("marks first-class pairs as supported", () => {
 		expect(

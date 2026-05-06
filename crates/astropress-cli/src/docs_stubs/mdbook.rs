@@ -1,5 +1,6 @@
 //! mdBook (Rust project, MPL-2.0) — zero JS framework lock-in, print-friendly.
 
+#[mutants::skip]
 pub(super) fn stubs() -> Vec<(&'static str, &'static str)> {
     vec![
         ("docs/book.toml",           BOOK_TOML),

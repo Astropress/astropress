@@ -6,6 +6,9 @@
 	"scripts": {
 		"bdd:lint": "bun run tooling/scripts/bdd-lint.ts",
 		"bdd:test": "bun run tooling/scripts/bdd-test.ts",
+		"audit:discovery": "bun run tooling/scripts/run-discovery-audit.ts",
+		"audit:followup": "bun run tooling/scripts/audit-followup-marker.ts",
+		"audit:coverage-floor": "bun run tooling/scripts/audit-coverage-floor.ts",
 		"audit:deps": "bun audit",
 		"audit:security": "bun run tooling/scripts/security-audit.ts",
 		"audit:codeql-patterns": "bun run tooling/scripts/audit-codeql-patterns.ts",
@@ -83,6 +86,11 @@
 		"audit:nuclei-suppressions": "bun run tooling/scripts/audit-nuclei-suppressions.ts",
 		"audit:required-checks": "bun run tooling/scripts/audit-required-checks.ts",
 		"audit:baseline-coverage": "bun run tooling/scripts/audit-baseline-coverage.ts",
+		"audit:baseline-floor": "bun run tooling/scripts/audit-baseline-floor.ts",
+		"audit:baseline-floor:rust": "bun run tooling/scripts/audit-baseline-floor-rust.ts",
+		"audit:baseline-coverage:rust": "bun run tooling/scripts/audit-baseline-coverage-rust.ts",
+		"mutation-gate": "bun run tooling/scripts/prepush-mutation-gate.ts",
+		"mutation-gate:rust": "bun run tooling/scripts/prepush-mutation-gate-rust.ts",
 		"audit:toolchain-pins": "bun run tooling/scripts/audit-toolchain-pins.ts",
 		"check:version": "bun run tooling/scripts/check-version-bump.ts",
 		"docs:api": "bun run tooling/scripts/generate-api-docs.ts",
@@ -92,6 +100,9 @@
 		"docs:check": "bun run --filter astropress-docs check",
 		"repo:clean": "bun run tooling/scripts/assert-clean-worktree.ts",
 		"check:pr-ghas": "bun run tooling/scripts/check-pr-ghas.ts",
+		"raise:baseline": "bun run tooling/scripts/raise-baseline.ts",
+		"raise:fast": "bun run tooling/scripts/raise-baseline.ts --fast",
+		"raise:batch": "bun run tooling/scripts/raise-baseline-batch.ts",
 		"stress:sqlite": "bun run tooling/scripts/stress-sqlite-writes.ts",
 		"test:mutants": "cd packages/astropress && node ../../node_modules/.bin/stryker run ../../tooling/stryker/stryker.config.mjs",
 		"test:mutants:shared": "bun run tooling/scripts/run-mutants-shared.ts",
@@ -129,7 +140,8 @@
 		"vite": "^7.3.2",
 		"astro": "^6.1.9",
 		"hono": "^4.12.14",
-		"postcss": "^8.5.10"
+		"postcss": "^8.5.10",
+		"ip-address": "^10.2.0"
 	},
 	"browserslist": [
 		"Chrome >= 108",

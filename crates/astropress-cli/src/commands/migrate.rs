@@ -196,7 +196,7 @@ pub(crate) struct MigrateOptions {
     pub dry_run: bool,
 }
 
-pub(crate) fn run_migrate(opts: &MigrateOptions) -> Result<(), String> {
+pub(crate) fn run_migrate(opts: &MigrateOptions) -> crate::error::CliResult<()> {
     let from_tool = find_tool(&opts.from)
         .ok_or_else(|| format!(
             "Unknown tool `{}`. Run `astropress migrate --help` for supported tools.",
@@ -212,7 +212,7 @@ pub(crate) fn run_migrate(opts: &MigrateOptions) -> Result<(), String> {
         return Err(format!(
             "Source and destination are both `{}` — nothing to migrate.",
             from_tool.slug
-        ));
+        ).into());
     }
 
     if from_tool.category != to_tool.category {
@@ -220,7 +220,7 @@ pub(crate) fn run_migrate(opts: &MigrateOptions) -> Result<(), String> {
             "`{}` ({}) and `{}` ({}) are in different categories; migration is not supported.",
             from_tool.slug, from_tool.category,
             to_tool.slug,   to_tool.category,
-        ));
+        ).into());
     }
 
     let guide = build_migration_guide(from_tool, to_tool);
@@ -234,7 +234,7 @@ pub(crate) fn run_migrate(opts: &MigrateOptions) -> Result<(), String> {
         return Err(format!(
             "Project directory `{}` does not exist.",
             opts.project_dir.display()
-        ));
+        ).into());
     }
 
     let filename = format!("MIGRATE-{}.md", to_tool.slug);

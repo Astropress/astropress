@@ -10,6 +10,12 @@ import {
 } from "../src/access";
 import type { AccessStore } from "../src/access";
 import type { Subject } from "../src/access";
+import {
+	decodeAttribute,
+	rowToRole,
+	rowToRolePolicy,
+	rowToUserPolicy,
+} from "../src/access/repository-helpers";
 import { loadSqliteDatabase } from "../src/sqlite-bootstrap-helpers";
 
 const SCHEMA = readFileSync(
@@ -180,6 +186,119 @@ describe("seedStarterRoles", () => {
 		seedStarterRoles(repo);
 		seedStarterRoles(repo);
 		expect(repo.listRoles().filter((r) => r.name === "Editor")).toHaveLength(1);
+	});
+});
+
+describe("repository write/delete operations", () => {
+	test("removeRolePolicy deletes a role policy by id", () => {
+		const repo = createAccessRepository(store);
+		const role = repo.createRole({ name: "TempRole" });
+		const policy = repo.addRolePolicy({
+			roleId: role.id,
+			effect: "allow",
+			action: "post:read",
+		});
+		expect(repo.listRolePolicies(role.id)).toHaveLength(1);
+		repo.removeRolePolicy(policy.id);
+		expect(repo.listRolePolicies(role.id)).toHaveLength(0);
+	});
+
+	test("revokeRole removes a user-role assignment", () => {
+		const repo = createAccessRepository(store);
+		const role = repo.createRole({ name: "TempRole2" });
+		repo.assignRole({ userId: editorUser.id, roleId: role.id });
+		expect(repo.listUserRoles(editorUser.id)).toHaveLength(1);
+		repo.revokeRole({ userId: editorUser.id, roleId: role.id });
+		expect(repo.listUserRoles(editorUser.id)).toHaveLength(0);
+	});
+
+	test("removeUserPolicy deletes a user policy by id", () => {
+		const repo = createAccessRepository(store);
+		const policy = repo.addUserPolicy({
+			userId: editorUser.id,
+			effect: "allow",
+			action: "post:edit",
+		});
+		expect(repo.listUserPolicies(editorUser.id)).toHaveLength(1);
+		repo.removeUserPolicy(policy.id);
+		expect(repo.listUserPolicies(editorUser.id)).toHaveLength(0);
+	});
+
+	test("deleteUserAttribute removes a single attribute", () => {
+		const repo = createAccessRepository(store);
+		repo.setUserAttribute({
+			userId: editorUser.id,
+			key: "team",
+			value: "alpha",
+		});
+		expect(repo.getUserAttributes(editorUser.id).team).toBe("alpha");
+		repo.deleteUserAttribute({ userId: editorUser.id, key: "team" });
+		expect(repo.getUserAttributes(editorUser.id).team).toBeUndefined();
+	});
+});
+
+describe("repository-helpers row mappers", () => {
+	test("rowToRole maps is_system === 1 to isSystem true and any other number to false", () => {
+		const base = {
+			id: "r1",
+			name: "n",
+			description: "d",
+			created_at: "t",
+			updated_at: "t",
+		};
+		expect(rowToRole({ ...base, is_system: 1 }).isSystem).toBe(true);
+		expect(rowToRole({ ...base, is_system: 0 }).isSystem).toBe(false);
+		expect(rowToRole({ ...base, is_system: 2 }).isSystem).toBe(false);
+	});
+
+	test("decodeAttribute returns the raw string when the input is not valid JSON", () => {
+		expect(decodeAttribute("not-json")).toBe("not-json");
+		expect(decodeAttribute('{"unterminated":')).toBe('{"unterminated":');
+	});
+
+	test("decodeAttribute parses valid JSON values", () => {
+		expect(decodeAttribute('"hello"')).toBe("hello");
+		expect(decodeAttribute("42")).toBe(42);
+		expect(decodeAttribute("true")).toBe(true);
+	});
+
+	test("rowToRolePolicy parses condition_json when present and returns null when absent", () => {
+		const base = {
+			id: "p1",
+			role_id: "r1",
+			effect: "allow" as const,
+			action: "post:edit",
+			priority: 0,
+		};
+		expect(
+			rowToRolePolicy({
+				...base,
+				condition_json: '{"op":"eq","left":"a","right":"b"}',
+			}).condition,
+		).toEqual({ op: "eq", left: "a", right: "b" });
+		expect(rowToRolePolicy({ ...base, condition_json: null }).condition).toBe(
+			null,
+		);
+	});
+
+	test("rowToUserPolicy parses condition_json when present and returns null when absent", () => {
+		const base = {
+			id: "u1",
+			user_id: 7,
+			effect: "deny" as const,
+			action: "post:delete",
+			priority: 1,
+			granted_by: "admin",
+		};
+		expect(
+			rowToUserPolicy({
+				...base,
+				condition_json: '{"op":"eq","left":"a","right":"b"}',
+			}).condition,
+		).toEqual({ op: "eq", left: "a", right: "b" });
+		expect(rowToUserPolicy({ ...base, condition_json: null }).condition).toBe(
+			null,
+		);
 	});
 });
 

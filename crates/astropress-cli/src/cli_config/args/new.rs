@@ -1,10 +1,11 @@
 use std::path::PathBuf;
 
+use crate::error::CliResult;
 use crate::providers::{AbTestingProvider, AnalyticsProvider, AppHost, DataServices, HeatmapProvider, LocalProvider};
 
 use super::Command;
 
-pub(super) fn parse_new_command(args: &[String]) -> Result<Command, String> {
+pub(super) fn parse_new_command(args: &[String]) -> CliResult<Command> {
     let mut project_dir = PathBuf::from("astropress-site");
     let mut use_local_package = true;
     let mut provider = LocalProvider::Sqlite;
@@ -68,7 +69,7 @@ pub(super) fn parse_new_command(args: &[String]) -> Result<Command, String> {
                 heatmap = Some(HeatmapProvider::parse(value)?);
             }
             value if value.starts_with("--") => {
-                return Err(format!("Unsupported astropress new option: `{value}`."));
+                return Err(format!("Unsupported astropress new option: `{value}`.").into());
             }
             value => {
                 project_dir = PathBuf::from(value);

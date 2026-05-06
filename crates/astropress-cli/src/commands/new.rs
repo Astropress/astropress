@@ -9,6 +9,7 @@ use super::new_wizard::prompt_all_features;
 use crate::feature_stubs::{feature_config_stubs, feature_env_stubs};
 use crate::stack_summary::{free_first_hosting_note, print_stack_summary, selected_services_note};
 use crate::service_docs::build_services_doc;
+use crate::error::CliResult;
 use crate::features::AllFeatures;
 use crate::js_bridge::loaders::load_project_scaffold;
 use crate::providers::{
@@ -60,7 +61,7 @@ fn as_provider_opt(value: &str) -> Option<&str> {
 /// Skipped because `feature_env_stubs` only returns content for features
 /// selected via the interactive wizard — untestable in a non-TTY context.
 #[mutants::skip]
-fn append_feature_stubs(project_dir: &Path, features: &AllFeatures) -> Result<(), String> {
+fn append_feature_stubs(project_dir: &Path, features: &AllFeatures) -> CliResult<()> {
     let stubs = feature_env_stubs(features);
     if !stubs.is_empty() {
         let example_path = project_dir.join(".env.example");
@@ -92,7 +93,7 @@ pub(crate) fn scaffold_new_project(
     app_host: Option<AppHost>,
     data_services: Option<DataServices>,
     options: ScaffoldOptions,
-) -> Result<AllFeatures, String> { // ~ skip
+) -> CliResult<AllFeatures> { // ~ skip
     let ScaffoldOptions { analytics_flag, ab_testing_flag, heatmap_flag, enable_api_flag, yes_defaults_flag } = options;
     if project_dir.exists() {
         let mut entries = fs::read_dir(project_dir).map_err(crate::io_error)?;
@@ -100,7 +101,7 @@ pub(crate) fn scaffold_new_project(
             return Err(format!(
                 "Refusing to scaffold into `{}` because the directory is not empty.",
                 project_dir.display()
-            ));
+            ).into());
         }
     } else {
         fs::create_dir_all(project_dir).map_err(crate::io_error)?;
@@ -168,7 +169,7 @@ pub(crate) fn scaffold_new_project(
     Ok(features)
 }
 
-pub(crate) fn run_post_scaffold_setup(project_dir: &Path, features: &AllFeatures, app_host: Option<crate::providers::AppHost>, data_services: Option<crate::providers::DataServices>) -> Result<(), String> { // ~ skip
+pub(crate) fn run_post_scaffold_setup(project_dir: &Path, features: &AllFeatures, app_host: Option<crate::providers::AppHost>, data_services: Option<crate::providers::DataServices>) -> CliResult<()> { // ~ skip
     println!("\nInstalling dependencies...");
     std::process::Command::new("bun")
         .arg("install").current_dir(project_dir).status()
@@ -217,7 +218,7 @@ pub(crate) fn run_post_scaffold_setup(project_dir: &Path, features: &AllFeatures
 }
 
 #[mutants::skip]
-fn astropress_package_version() -> Result<String, String> { // ~ skip
+fn astropress_package_version() -> CliResult<String> { // ~ skip
     Ok(env!("CARGO_PKG_VERSION").to_string())
 }
 

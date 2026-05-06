@@ -7,6 +7,55 @@ import type {
 } from "./cms-plugins";
 import { peekCmsConfig } from "./config-store";
 
+// Per-plugin diagnostic counters. Updated whenever a hook is run or an error
+// is swallowed by the silent-swallow contract. Operators never see these
+// (the contract to plugin authors is "we never fail your action because
+// of you"); tests use them to assert that a hook actually ran and an error
+// was actually swallowed without breaking that contract.
+export interface PluginDispatchStats {
+	hooksRun: number;
+	errorsSwallowed: number;
+}
+
+const STATS = new Map<string, PluginDispatchStats>();
+
+function recordHookRun(plugin: string): void {
+	const entry = STATS.get(plugin) ?? { hooksRun: 0, errorsSwallowed: 0 };
+	entry.hooksRun += 1;
+	STATS.set(plugin, entry);
+}
+
+function recordErrorSwallowed(plugin: string): void {
+	const entry = STATS.get(plugin) ?? { hooksRun: 0, errorsSwallowed: 0 };
+	entry.errorsSwallowed += 1;
+	STATS.set(plugin, entry);
+}
+
+/**
+ * Read per-plugin diagnostic counters. Returns a snapshot keyed by plugin
+ * name, with the number of hook invocations and the number of errors that
+ * were silently swallowed by the dispatch layer. Mutating the returned
+ * object does not affect internal state.
+ */
+export function getPluginDispatchStats(): Record<string, PluginDispatchStats> {
+	const out: Record<string, PluginDispatchStats> = {};
+	for (const [name, stats] of STATS.entries()) {
+		out[name] = {
+			hooksRun: stats.hooksRun,
+			errorsSwallowed: stats.errorsSwallowed,
+		};
+	}
+	return out;
+}
+
+/**
+ * Reset every per-plugin diagnostic counter. Tests call this between cases
+ * so assertions reflect only the events of the current test.
+ */
+export function resetPluginDispatchStats(): void {
+	STATS.clear();
+}
+
 /**
  * Dispatch an error to all registered plugin `onError` hooks.
  * Called internally whenever a plugin hook or Astropress operation throws unexpectedly.
@@ -23,8 +72,10 @@ async function dispatchPluginError(
 		if (typeof fn !== "function") continue;
 		try {
 			await fn(error, context);
+			recordHookRun(plugin.name);
 		} catch {
 			// swallow — onError must never throw
+			recordErrorSwallowed(plugin.name);
 		}
 	}
 }
@@ -47,8 +98,10 @@ export async function dispatchPluginContentEvent(
 		if (typeof fn !== "function") continue;
 		try {
 			await fn(event);
+			recordHookRun(plugin.name);
 		} catch (err) {
 			const error = err instanceof Error ? err : new Error(String(err));
+			recordErrorSwallowed(plugin.name);
 			console.error(
 				`[astropress] Plugin "${plugin.name}" threw in ${hook}:`,
 				err,
@@ -75,8 +128,10 @@ export async function dispatchPluginMediaEvent(
 		if (typeof fn !== "function") continue;
 		try {
 			await fn(event);
+			recordHookRun(plugin.name);
 		} catch (err) {
 			const error = err instanceof Error ? err : new Error(String(err));
+			recordErrorSwallowed(plugin.name);
 			console.error(
 				`[astropress] Plugin "${plugin.name}" threw in onMediaUpload:`,
 				err,

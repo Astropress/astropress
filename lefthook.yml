@@ -264,6 +264,127 @@ pre-commit:
       glob: "tooling/stryker/baseline-scores.json"
       run: bun run tooling/scripts/audit-baseline-floor.ts
 
+    # Same lock for the Rust cargo-mutants baseline.
+    audit-baseline-floor-rust:
+      glob: "tooling/cargo-mutants/baseline-scores.json"
+      run: bun run tooling/scripts/audit-baseline-floor-rust.ts
+
+    # Block dead admin label keys (defined in AdminLabelKey union but never
+    # read) and dynamic label call sites (silent UI regression risk).
+    audit-admin-labels:
+      glob:
+        - "packages/astropress/src/admin-labels.ts"
+        - "packages/astropress/src/admin-ui.ts"
+        - "packages/astropress/components/**/*.astro"
+        - "packages/astropress/pages/**/*.{astro,ts}"
+      run: bun run tooling/scripts/audit-admin-label-coverage.ts
+
+    # Block admin route registry drift (entrypoint on disk not registered, or
+    # registry entry without backing file).
+    audit-admin-route-drift:
+      glob:
+        - "packages/astropress/pages/ap-admin/**/*.{astro,ts}"
+        - "packages/astropress/src/admin-routes.ts"
+      run: bun run tooling/scripts/audit-admin-route-drift.ts
+
+    # Block any new admin route lacking a paired test mention with anon-auth
+    # keyword. Combined with admin-routes-auth-matrix.test.ts this catches
+    # routes that ship without a redirect-to-login regression check.
+    audit-route-http-matrix:
+      glob:
+        - "packages/astropress/pages/ap-admin/**/*.{astro,ts}"
+        - "packages/astropress/tests/**/*.ts"
+      run: bun run tooling/scripts/audit-route-http-matrix.ts
+
+    # Block any dynamic-segment admin route without an edge-input test.
+    audit-dynamic-segments:
+      glob:
+        - "packages/astropress/pages/ap-admin/**/*.{astro,ts}"
+        - "packages/astropress/tests/**/*.ts"
+      run: bun run tooling/scripts/audit-dynamic-segments.ts
+
+    # Auto-regenerate d1-schema.sql whenever sqlite-schema.sql changes, then
+    # re-stage. The follow-up audit-schema-migration audit will fail loudly
+    # if a hand-edit slipped past the regen.
+    d1-schema-regen:
+      glob: "packages/astropress/src/sqlite-schema.sql"
+      run: |
+        bun run tooling/scripts/generate-d1-schema.ts && \
+          git add packages/astropress/src/d1-schema.sql
+
+    # Gate D1 ↔ sqlite drift and the freshness of the generated d1-schema.sql.
+    audit-schema-migration:
+      glob:
+        - "packages/astropress/src/sqlite-schema.sql"
+        - "packages/astropress/src/d1-schema.sql"
+        - "packages/astropress/src/d1-*.ts"
+      run: bun run tooling/scripts/audit-schema-migration-robustness.ts
+
+    # Block any future narrowing of vitest coverage.include that would drop
+    # baseline-tracked src files out of v8 measurement (false confidence).
+    audit-v8-coverage-scope:
+      glob:
+        - "packages/astropress/vitest.config.ts"
+        - "tooling/stryker/baseline-scores.json"
+      run: bun run tooling/scripts/audit-v8-coverage-scope.ts
+
+    # Grandfather-ratchet on weak boundary types (Record<string, unknown>,
+    # Result<T, String>, .unwrap(), etc.). Counts can shrink, never grow.
+    audit-boundary-types:
+      glob:
+        - "packages/astropress/src/**/*.ts"
+        - "crates/astropress-cli/src/**/*.rs"
+        - "tooling/audit-output/boundary-types-baseline.json"
+      run: bun run tooling/scripts/audit-boundary-types.ts
+
+    # Per-file v8 coverage ratchet — lines/branches/functions for every
+    # tracked src file may move up but never down. Seeded baseline lives at
+    # tooling/audit-output/coverage-floor-baseline.json. After intentionally
+    # raising tests, re-run `test:coverage` then
+    # `audit-coverage-floor.ts --rewrite-baseline` to ratchet up.
+    audit-coverage-floor:
+      glob:
+        - "packages/astropress/coverage/coverage-summary.json"
+        - "tooling/audit-output/coverage-floor-baseline.json"
+      run: bun run tooling/scripts/audit-coverage-floor.ts
+
+    # Block any unresolved `audit-followup: <id>` markers from accumulating.
+    # The convention pairs every deferred adjacent issue with a marker so it
+    # stays visible in pre-push instead of decaying into invisible TODO sprawl.
+    audit-followup-marker:
+      run: bun run tooling/scripts/audit-followup-marker.ts
+
+    # Grandfather-ratchet on src files lacking a *.test.ts companion (and
+    # orphan tests with no src target). Counts can shrink, never grow.
+    audit-source-test-pairing:
+      glob:
+        - "packages/astropress/src/**/*.ts"
+        - "packages/astropress/tests/**/*.ts"
+        - "crates/astropress-cli/src/**/*.rs"
+        - "tooling/audit-output/source-test-pairing-baseline.json"
+      run: bun run tooling/scripts/audit-source-test-pairing.ts
+
+    # Auto-regenerate API_REFERENCE.md when an entry-point file changes,
+    # then re-stage it. Keeps slow-audits' docs:api:check from being the
+    # discovery point — it caused multiple wasted ~10-min pre-push cycles
+    # before this hook existed. The generator is fast (~1s).
+    docs-api-regen:
+      glob:
+        - "packages/astropress/index.ts"
+        - "packages/astropress/src/config.ts"
+        - "packages/astropress/src/platform-contracts.ts"
+        - "packages/astropress/src/api-middleware.ts"
+        - "packages/astropress/src/admin-ui.ts"
+        - "packages/astropress/src/d1-migrate-ops.ts"
+        - "packages/astropress/src/db-migrate-ops.ts"
+        - "packages/astropress/src/sqlite-bootstrap.ts"
+        - "packages/astropress/src/cache-purge.ts"
+        - "packages/astropress/src/transactional-email.ts"
+        - "packages/astropress/src/analytics.ts"
+        - "packages/astropress/src/public-site-integration.ts"
+      run: bun run docs:api && git add docs/reference/API_REFERENCE.md
+      stage_fixed: true
+
     # Non-blocking warning: surfaces Stryker disable / v8 ignore / biome-ignore
     # / @ts-ignore comments so the author considers a code-level fix instead.
     audit-suppression-warnings:
@@ -441,8 +562,21 @@ pre-push:
         bun run tooling/scripts/run-with-peer-abort.ts mutation-gate --
         bun run tooling/scripts/run-with-timing.ts mutation-gate -- bash -c '
           bun run tooling/scripts/prepush-mutation-gate.ts &&
-          bun run audit:baseline-coverage
+          bun run audit:baseline-coverage &&
+          bun run audit:baseline-coverage:rust
         '
+
+    # Rust mutation gate runs in parallel with the TS gate above. Same
+    # content-hash-aware delta model: only files changed since origin/main
+    # are re-mutated; unchanged files reuse their baseline score. The
+    # baseline floor (95% for new files; no regression on existing) is
+    # enforced separately by audit:baseline-floor:rust in slow-audits.
+    mutation-gate-rust:
+      tags: rust mutation
+      run: >-
+        bun run tooling/scripts/run-with-peer-abort.ts mutation-gate-rust --
+        bun run tooling/scripts/run-with-timing.ts mutation-gate-rust --
+        bun run tooling/scripts/prepush-mutation-gate-rust.ts
 
     slow-audits:
       # Whole-repo static audits moved out of pre-commit because they scan far
@@ -458,7 +592,9 @@ pre-push:
           bun run audit:deps:graph &&
           bun run audit:toolchain-pins &&
           bun run docs:api:check &&
-          bun run docs:check
+          bun run docs:check &&
+          bun run tooling/scripts/audit-astro-check.ts &&
+          bun run tooling/scripts/run-discovery-audit.ts
         '
 
     verify-commits-signed:

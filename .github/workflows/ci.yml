@@ -177,7 +177,32 @@ jobs:
           key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lockb') }}
           restore-keys: ${{ runner.os }}-bun-
       - run: bun install --frozen-lockfile
+      - run: bun run audit:baseline-coverage
+      - run: bun run audit:baseline-floor
+      - run: bun run audit:baseline-coverage:rust
+      - run: bun run audit:baseline-floor:rust
       - run: bun run tooling/scripts/prepush-mutation-gate.ts --check-only
+
+  # Rust per-file mutation gate. Mirrors the TS mutation-gate above.
+  # Only runs cargo-mutants on Rust files changed since origin/main —
+  # files whose git-blob hash matches the recorded baseline are reused.
+  mutation-gate-rust:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: crates
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.3.10"
+      - run: bun install --frozen-lockfile
+      - run: bun run --filter @astropress-diy/astropress build
+      - run: cargo install cargo-mutants --locked
+      - run: bun run tooling/scripts/prepush-mutation-gate-rust.ts --check-only
 
   platform-smoke:
     needs: [lint, lint-rust, build]
@@ -263,6 +288,8 @@ jobs:
       - run: bun install --frozen-lockfile
         if: steps.skip.outputs.cache-hit != 'true'
       - run: bun run test:coverage
+        if: steps.skip.outputs.cache-hit != 'true'
+      - run: bun run audit:coverage-floor
         if: steps.skip.outputs.cache-hit != 'true'
       - run: bun run repo:clean
         if: steps.skip.outputs.cache-hit != 'true'

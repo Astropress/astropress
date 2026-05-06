@@ -186,6 +186,7 @@ export async function processImageVariants(
 export async function insertMediaAssetRecord(
 	db: {
 		prepare: (sql: string) => {
+			// audit-boundary: opaque-passthrough -- mirrors driver bind-arg shape
 			bind: (...args: unknown[]) => { run: () => Promise<unknown> };
 		};
 	},

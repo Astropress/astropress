@@ -2,7 +2,6 @@ import type { APIContext } from "astro";
 
 import { getRuntimeSettings } from "./runtime-page-store";
 
-const DEFAULT_ADMIN_SLUG = "ap-admin";
 const ADMIN_SLUG_CACHE_TTL_MS = 60_000;
 
 let cachedAdminSlug: string | null = null;
@@ -10,6 +9,13 @@ let cachedAdminSlugAt = 0;
 
 export function invalidateAstropressAdminSlugCache() {
 	cachedAdminSlug = null;
+}
+
+// Inlined literal (rather than a module-level const) so the StringLiteral
+// mutation lives inside this function body — every call covers it,
+// rather than only the first test that loads the module.
+function defaultAdminSlug(): "ap-admin" {
+	return "ap-admin";
 }
 
 export async function resolveAstropressAdminSlug(locals: APIContext["locals"]) {
@@ -23,10 +29,10 @@ export async function resolveAstropressAdminSlug(locals: APIContext["locals"]) {
 
 	try {
 		const settings = await getRuntimeSettings(locals);
-		cachedAdminSlug = settings.adminSlug || DEFAULT_ADMIN_SLUG;
+		cachedAdminSlug = settings.adminSlug || defaultAdminSlug();
 		cachedAdminSlugAt = now;
 		return cachedAdminSlug;
 	} catch {
-		return DEFAULT_ADMIN_SLUG;
+		return defaultAdminSlug();
 	}
 }

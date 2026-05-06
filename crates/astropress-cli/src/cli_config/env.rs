@@ -4,6 +4,7 @@ use std::path::Path;
 
 use serde::{Deserialize, Serialize};
 
+use crate::error::CliResult;
 use crate::providers::{AppHost, DataServices, LocalProvider};
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -21,20 +22,20 @@ pub(crate) struct PackageManifest {
     pub(crate) dev_dependencies: BTreeMap<String, String>,
 }
 
-pub(crate) fn read_package_manifest(project_dir: &Path) -> Result<PackageManifest, String> { // ~ skip
+pub(crate) fn read_package_manifest(project_dir: &Path) -> CliResult<PackageManifest> { // ~ skip
     let package_json =
         fs::read_to_string(project_dir.join("package.json")).map_err(crate::io_error)?;
-    serde_json::from_str::<PackageManifest>(&package_json).map_err(|error| error.to_string())
+    Ok(serde_json::from_str::<PackageManifest>(&package_json)?)
 }
 
 pub(crate) fn write_package_manifest(
     project_dir: &Path,
     manifest: &PackageManifest,
-) -> Result<(), String> { // ~ skip
-    let package_json =
-        serde_json::to_string_pretty(manifest).map_err(|error| error.to_string())?;
+) -> CliResult<()> { // ~ skip
+    let package_json = serde_json::to_string_pretty(manifest)?;
     fs::write(project_dir.join("package.json"), format!("{package_json}\n"))
-        .map_err(crate::io_error)
+        .map_err(crate::io_error)?;
+    Ok(())
 }
 
 pub(crate) fn format_env_map(values: &BTreeMap<String, String>) -> String {
@@ -48,7 +49,7 @@ pub(crate) fn format_env_map(values: &BTreeMap<String, String>) -> String {
     output
 }
 
-pub(crate) fn read_env_path(env_path: &Path) -> Result<BTreeMap<String, String>, String> { // ~ skip
+pub(crate) fn read_env_path(env_path: &Path) -> CliResult<BTreeMap<String, String>> { // ~ skip
     if !env_path.exists() {
         return Ok(BTreeMap::new());
     }
@@ -69,7 +70,7 @@ pub(crate) fn read_env_path(env_path: &Path) -> Result<BTreeMap<String, String>,
     Ok(values)
 }
 
-pub(crate) fn read_env_file(project_dir: &Path) -> Result<BTreeMap<String, String>, String> {
+pub(crate) fn read_env_file(project_dir: &Path) -> CliResult<BTreeMap<String, String>> {
     read_env_path(&project_dir.join(".env"))
 }
 

@@ -130,6 +130,7 @@ function validateSystemRouteInput(input: {
 	title: string;
 	summary?: string;
 	bodyHtml?: string;
+	// audit-boundary: opaque-passthrough -- user CMS route-registry config; narrowed at consumer
 	settings?: Record<string, unknown> | null;
 }) {
 	const title = input.title.trim();
@@ -147,6 +148,7 @@ function validateSystemRouteInput(input: {
 function buildSystemRouteSnapshot(
 	normalizedPath: string,
 	validated: { title: string; summary: string | null; bodyHtml: string | null },
+	// audit-boundary: opaque-passthrough -- user CMS route-registry config; narrowed at consumer
 	settings: Record<string, unknown> | null | undefined,
 	renderStrategy: RuntimeSystemRouteRecord["renderStrategy"],
 ) {
@@ -163,6 +165,7 @@ function buildSystemRouteSnapshot(
 function buildSystemRouteResult(
 	normalizedPath: string,
 	validated: { title: string; summary: string | null; bodyHtml: string | null },
+	// audit-boundary: opaque-passthrough -- user CMS route-registry config; narrowed at consumer
 	settings: Record<string, unknown> | null | undefined,
 	renderStrategy: RuntimeSystemRouteRecord["renderStrategy"],
 ) {
@@ -209,6 +212,7 @@ async function persistSystemRouteChanges(
 		bodyHtml: string | null;
 		settingsJson: string | null;
 	},
+	// audit-boundary: opaque-passthrough -- user CMS route-registry config; narrowed at consumer
 	settings: Record<string, unknown> | null | undefined,
 	revisionNote: string | undefined,
 	actor: Actor,
@@ -270,6 +274,7 @@ export async function saveRuntimeSystemRoute(
 		title: string;
 		summary?: string;
 		bodyHtml?: string;
+		// audit-boundary: opaque-passthrough -- user CMS route-registry config; narrowed at consumer
 		settings?: Record<string, unknown> | null;
 		revisionNote?: string;
 	},

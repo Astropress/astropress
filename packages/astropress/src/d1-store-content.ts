@@ -289,6 +289,7 @@ export async function searchD1ContentStates(
 			"SELECT co.* FROM content_overrides co WHERE co.rowid IN (SELECT rowid FROM content_fts(?) ORDER BY rank)",
 		)
 		.bind(query)
+		// audit-boundary: opaque-passthrough -- driver row-shape mirror; values narrowed at consumer
 		.all<Record<string, unknown>>();
 	return (results.results ?? []) as unknown as ContentRecord[];
 }

@@ -52,6 +52,7 @@ function walk(
 	for (const p of parts) {
 		if (cur === null || cur === undefined) return undefined;
 		if (typeof cur !== "object") return undefined;
+		// audit-boundary: opaque-passthrough -- module-boundary value; narrowed at consumer
 		cur = (cur as Record<string, unknown>)[p];
 	}
 	return cur as AttributeValue | undefined;
@@ -68,23 +69,31 @@ export function substituteString(src: string, ctx: BindingContext): string {
 	});
 }
 
+// Single defensive guard used by every leaf operator. resolvePath returns
+// undefined for missing/null traversal; the leaf semantics are "missing
+// attribute on the left fails the condition." Centralising this keeps the
+// mutation surface to one site instead of one per operator.
+function present(left: AttributeValue | undefined): boolean {
+	return left !== undefined && left !== null;
+}
+
 /** Evaluate a condition tree. Missing-attribute on the left fails the leaf. */
 export function evaluateCondition(c: Condition, ctx: BindingContext): boolean {
 	switch (c.op) {
 		case "stringEquals": {
 			const left = resolvePath(c.left, ctx);
-			if (left === undefined || left === null) return false;
+			if (!present(left)) return false;
 			return String(left) === substituteString(c.right, ctx);
 		}
 		case "stringIn": {
 			const left = resolvePath(c.left, ctx);
-			if (left === undefined || left === null) return false;
+			if (!present(left)) return false;
 			const target = String(left);
 			return c.right.some((r) => substituteString(r, ctx) === target);
 		}
 		case "stringStartsWith": {
 			const left = resolvePath(c.left, ctx);
-			if (left === undefined || left === null) return false;
+			if (!present(left)) return false;
 			return String(left).startsWith(substituteString(c.right, ctx));
 		}
 		case "numberLessThan": {
@@ -102,10 +111,8 @@ export function evaluateCondition(c: Condition, ctx: BindingContext): boolean {
 			if (typeof left !== "boolean") return false;
 			return left === c.right;
 		}
-		case "attributeExists": {
-			const left = resolvePath(c.left, ctx);
-			return left !== undefined && left !== null;
-		}
+		case "attributeExists":
+			return present(resolvePath(c.left, ctx));
 		case "not":
 			return !evaluateCondition(c.condition, ctx);
 		case "anyOf":

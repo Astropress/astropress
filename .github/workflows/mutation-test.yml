@@ -36,6 +36,39 @@ env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 
 jobs:
+  baseline-audits:
+    name: Baseline audits (TypeScript + Rust)
+    # Quality gate. Runs the per-file baseline checks that the pre-push
+    # hook also runs locally — same authority on main as on PRs:
+    #   * audit:baseline-coverage  — every src file has a baseline entry
+    #   * audit:baseline-floor     — no entry drops vs HEAD~1
+    #   * mutation-gate --check-only — files changed since HEAD~1 still
+    #     match their recorded score within tolerance.
+    # Runs in parallel with the Stryker cache refresh (which is allowed
+    # to "fail" the historical 95% global threshold without blocking
+    # main).
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24.8"
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.3.10"
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: crates
+      - run: bun install --frozen-lockfile
+      - run: bun run audit:baseline-coverage
+      - run: bun run audit:baseline-floor
+      - run: bun run audit:baseline-coverage:rust
+      - run: bun run audit:baseline-floor:rust
+      - run: bun run tooling/scripts/prepush-mutation-gate.ts --check-only
+
   stryker:
     name: Stryker (TypeScript)
     runs-on: ubuntu-latest
@@ -83,18 +116,50 @@ jobs:
           path: reports/mutation/
 
   cargo-mutants:
-    name: cargo-mutants (Rust)
+    name: cargo-mutants (Rust, refresh)
+    # Refresh-only: runs the full crate, uploads outcomes.json as an
+    # artifact, and does NOT fail on missed mutants. Quality enforcement
+    # happens in baseline-audits (audit:baseline-floor:rust +
+    # audit:baseline-coverage:rust + prepush-mutation-gate-rust on
+    # changed files), mirroring the TS split.
     runs-on: ubuntu-latest
     timeout-minutes: 60
+    continue-on-error: true
     steps:
       - uses: actions/checkout@v6
 
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24.8"
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.3.10"
+
       - uses: dtolnay/rust-toolchain@stable
 
-      - run: cargo install cargo-mutants
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: crates
 
-      - name: Run cargo-mutants (full crate)
-        run: cargo mutants --package astropress-cli --timeout 60
+      # 27 Rust tests under tests::scaffold / tests::doctor depend on
+      # packages/astropress being built (find_astropress_src looks for
+      # packages/astropress/dist/src/). Without this build, cargo test
+      # exits red in the unmutated baseline and cargo-mutants refuses
+      # to test any mutants.
+      - run: bun install --frozen-lockfile
+      - run: bun run --filter @astropress-diy/astropress build
+
+      - run: cargo install cargo-mutants --locked
+
+      # --in-place: cargo-mutants's default tmp-copy excludes gitignored
+      # files, including packages/astropress/dist. 27 tests under
+      # tests::scaffold/doctor depend on that dist (find_astropress_src),
+      # so the unmutated baseline fails in a copy. Ephemeral CI runners
+      # tolerate in-place mutation safely; locally devs use --in-place
+      # too for the same reason.
+      - name: Run cargo-mutants (full crate, refresh-only)
+        run: cargo mutants --package astropress-cli --timeout 60 --in-place || true
         working-directory: crates
 
       - uses: actions/upload-artifact@v7

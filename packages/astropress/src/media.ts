@@ -1,3 +1,4 @@
+import { stripTrailingSlashes } from "./path-helpers";
 import {
 	getCloudflareBindings,
 	getStringRuntimeValue,
@@ -28,7 +29,7 @@ export function resolveMediaUrl(
 		return record.localPath;
 	}
 
-	return `${options.r2BaseUrl.replace(/\/$/, "")}/${record.r2Key}`;
+	return `${stripTrailingSlashes(options.r2BaseUrl)}/${record.r2Key}`;
 }
 
 export function getRuntimeMediaResolutionOptions(

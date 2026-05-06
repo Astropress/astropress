@@ -1,5 +1,6 @@
 import { mkdir } from "node:fs/promises";
 import path from "node:path";
+import { stripTrailingSlashes } from "../path-helpers";
 
 // ---------------------------------------------------------------------------
 // Typed error classes
@@ -175,7 +176,7 @@ async function attemptWordPressExport(
 		const context = await browser.newContext({ acceptDownloads: true });
 		const page = await context.newPage();
 
-		const loginUrl = `${siteUrl.replace(/\/$/, "")}/wp-login.php`;
+		const loginUrl = `${stripTrailingSlashes(siteUrl)}/wp-login.php`;
 
 		// 1. Navigate to wp-login.php
 		let loginResponse: { status(): number };
@@ -229,7 +230,7 @@ async function attemptWordPressExport(
 		}
 
 		// 5. Navigate to export page
-		const exportUrl = `${siteUrl.replace(/\/$/, "")}/wp-admin/export.php`;
+		const exportUrl = `${stripTrailingSlashes(siteUrl)}/wp-admin/export.php`;
 		await page.goto(exportUrl, {
 			timeout: timeoutMs,
 			waitUntil: "domcontentloaded",

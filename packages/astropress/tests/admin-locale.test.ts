@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest";
 
 import {
+	ADMIN_LOCALE_COOKIE,
 	isRtlLocale,
 	localeDirection,
 	pickAdminLocaleFromAcceptLanguage,
@@ -201,5 +202,37 @@ describe("admin-locale — extra branch coverage", () => {
 		const d = localeDirection("en");
 		expect(d).toBe("ltr");
 		expect(d).not.toBe("rtl");
+	});
+
+	test("ADMIN_LOCALE_COOKIE is the documented literal 'astropress_admin_locale' (kills cookie-name mutant)", () => {
+		expect(ADMIN_LOCALE_COOKIE).toBe("astropress_admin_locale");
+	});
+
+	test("Accept-Language entries with surrounding whitespace still parse (kills entry.trim() removal)", () => {
+		// Spaces around comma-separated entries are common in real headers.
+		// Without entry.trim(), the leading space would survive and tag would
+		// be " fr" — not matching any locale.
+		expect(pickAdminLocaleFromAcceptLanguage(" fr;q=0.9, en;q=0.5")).toBe("fr");
+	});
+
+	test("q-param with surrounding whitespace still parses (kills p.trim() removal)", () => {
+		// Without p.trim(), " q=0.9" wouldn't match startsWith("q=") and the
+		// entry would silently default to q=1, breaking the priority sort.
+		// fr is high-priority via the spaced q-param; en is the low-priority
+		// fallback. With original parsing fr wins.
+		expect(pickAdminLocaleFromAcceptLanguage("fr; q=0.9,en;q=0.5")).toBe("fr");
+	});
+
+	test("a parameter that is NOT a q-param does not capture the q value (kills startsWith('q=') -> startsWith('') mutant)", () => {
+		// Param "x=q=0.1" starts with "x=" not "q=". Original ignores it (q
+		// stays default 1). Mutant `startsWith("")` would match every param,
+		// reading "x=q=0.1" as q-param and parseFloat("q=0.1") = NaN, falling
+		// to default 1 — same. To distinguish, use a param the regex would
+		// "claim" with non-NaN value.
+		// Header: "fr;extra=0.1, en;q=0.99" — original: fr q=1, en q=0.99 → fr wins.
+		// Mutant: for fr, finds first param "extra=0.1", splits at "=", takes "0.1" → q=0.1. For en, finds "q=0.99" first → q=0.99. en wins.
+		expect(pickAdminLocaleFromAcceptLanguage("fr;extra=0.1, en;q=0.99")).toBe(
+			"fr",
+		);
 	});
 });

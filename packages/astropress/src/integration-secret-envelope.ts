@@ -315,6 +315,7 @@ export async function openIntegrationSecret<
 		!parsed ||
 		typeof parsed !== "object" ||
 		Array.isArray(parsed) ||
+		// audit-boundary: opaque-passthrough -- module-boundary value; narrowed at consumer
 		Object.values(parsed as Record<string, unknown>).some(
 			(v) => typeof v !== "string",
 		)

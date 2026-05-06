@@ -1,6 +1,8 @@
 use std::fs;
 use std::path::Path;
 
+use crate::error::CliResult;
+
 /// A known breaking-change entry in the embedded compatibility matrix.
 struct CompatEntry {
     /// Version range this entry covers (e.g. "< 0.1.0").
@@ -30,7 +32,7 @@ pub(crate) struct UpgradeCheckReport {
     pub(crate) notes: Vec<String>,
 }
 
-pub(crate) fn check_upgrade_compatibility(project_dir: &Path) -> Result<UpgradeCheckReport, String> {
+pub(crate) fn check_upgrade_compatibility(project_dir: &Path) -> CliResult<UpgradeCheckReport> {
     let framework_version = read_framework_version(project_dir);
     let schema_migration = read_latest_schema_migration(project_dir);
     let (app_host, data_services) = read_runtime_info(project_dir);
@@ -182,7 +184,7 @@ mod tests {
     }
 }
 
-pub(crate) fn apply_upgrade(project_dir: &Path) -> Result<(), String> { // ~ skip
+pub(crate) fn apply_upgrade(project_dir: &Path) -> CliResult<()> { // ~ skip
     println!("Running pre-flight compatibility check...");
     let report = check_upgrade_compatibility(project_dir)?;
     print_upgrade_check_report(&report, project_dir);

@@ -5,8 +5,9 @@ use std::env;
 use std::path::PathBuf;
 
 use super::Command;
+use crate::error::CliResult;
 
-pub(in crate::cli_config::args) fn parse_services_bootstrap_command(args: &[String]) -> Result<Command, String> {
+pub(in crate::cli_config::args) fn parse_services_bootstrap_command(args: &[String]) -> CliResult<Command> {
     let mut project_dir = env::current_dir().unwrap_or_else(|_| PathBuf::from("."));
     let mut index = 0;
 
@@ -22,7 +23,7 @@ pub(in crate::cli_config::args) fn parse_services_bootstrap_command(args: &[Stri
             other => {
                 return Err(format!(
                     "Unsupported astropress services bootstrap option: `{other}`."
-                ))
+                ).into())
             }
         }
         index += 1;
@@ -31,7 +32,7 @@ pub(in crate::cli_config::args) fn parse_services_bootstrap_command(args: &[Stri
     Ok(Command::ServicesBootstrap { project_dir })
 }
 
-pub(in crate::cli_config::args) fn parse_services_verify_command(args: &[String]) -> Result<Command, String> {
+pub(in crate::cli_config::args) fn parse_services_verify_command(args: &[String]) -> CliResult<Command> {
     let mut project_dir = env::current_dir().unwrap_or_else(|_| PathBuf::from("."));
     let mut index = 0;
 
@@ -47,7 +48,7 @@ pub(in crate::cli_config::args) fn parse_services_verify_command(args: &[String]
             other => {
                 return Err(format!(
                     "Unsupported astropress services verify option: `{other}`."
-                ))
+                ).into())
             }
         }
         index += 1;
@@ -56,7 +57,7 @@ pub(in crate::cli_config::args) fn parse_services_verify_command(args: &[String]
     Ok(Command::ServicesVerify { project_dir })
 }
 
-pub(in crate::cli_config::args) fn parse_db_migrate_command(args: &[String]) -> Result<Command, String> {
+pub(in crate::cli_config::args) fn parse_db_migrate_command(args: &[String]) -> CliResult<Command> {
     let mut project_dir = env::current_dir().unwrap_or_else(|_| PathBuf::from("."));
     let mut migrations_dir = None;
     let mut dry_run = false;
@@ -89,13 +90,13 @@ pub(in crate::cli_config::args) fn parse_db_migrate_command(args: &[String]) -> 
                     .ok_or_else(|| "Missing value after `--target`. Use `local` or `d1`.".to_string())?;
                 match value.as_str() {
                     "local" | "d1" => target = value.clone(),
-                    other => return Err(format!("Unknown --target `{other}`. Supported: local, d1.")),
+                    other => return Err(format!("Unknown --target `{other}`. Supported: local, d1.").into()),
                 }
             }
             other => {
                 return Err(format!(
                     "Unsupported astropress db migrate option: `{other}`."
-                ))
+                ).into())
             }
         }
         index += 1; // ~ skip
@@ -104,7 +105,7 @@ pub(in crate::cli_config::args) fn parse_db_migrate_command(args: &[String]) -> 
     Ok(Command::DbMigrate { project_dir, migrations_dir, dry_run, target })
 }
 
-pub(in crate::cli_config::args) fn parse_db_rollback_command(args: &[String]) -> Result<Command, String> {
+pub(in crate::cli_config::args) fn parse_db_rollback_command(args: &[String]) -> CliResult<Command> {
     let mut project_dir = env::current_dir().unwrap_or_else(|_| PathBuf::from("."));
     let mut dry_run = false;
     let mut target = "local".to_string();
@@ -129,13 +130,13 @@ pub(in crate::cli_config::args) fn parse_db_rollback_command(args: &[String]) ->
                     .ok_or_else(|| "Missing value after `--target`. Use `local` or `d1`.".to_string())?;
                 match value.as_str() {
                     "local" | "d1" => target = value.clone(),
-                    other => return Err(format!("Unknown --target `{other}`. Supported: local, d1.")),
+                    other => return Err(format!("Unknown --target `{other}`. Supported: local, d1.").into()),
                 }
             }
             other => {
                 return Err(format!(
                     "Unsupported astropress db rollback option: `{other}`."
-                ))
+                ).into())
             }
         }
         index += 1; // ~ skip
@@ -144,7 +145,7 @@ pub(in crate::cli_config::args) fn parse_db_rollback_command(args: &[String]) ->
     Ok(Command::DbRollback { project_dir, dry_run, target })
 }
 
-pub(in crate::cli_config::args) fn parse_upgrade_check_command(args: &[String]) -> Result<Command, String> {
+pub(in crate::cli_config::args) fn parse_upgrade_check_command(args: &[String]) -> CliResult<Command> {
     let mut project_dir = env::current_dir().unwrap_or_else(|_| PathBuf::from("."));
     let mut index = 0;
 
@@ -163,7 +164,7 @@ pub(in crate::cli_config::args) fn parse_upgrade_check_command(args: &[String]) 
             other => {
                 return Err(format!(
                     "Unsupported astropress upgrade option: `{other}`."
-                ))
+                ).into())
             }
         }
         index += 1;
@@ -172,7 +173,7 @@ pub(in crate::cli_config::args) fn parse_upgrade_check_command(args: &[String]) 
     Ok(Command::UpgradeCheck { project_dir })
 }
 
-pub(in crate::cli_config::args) fn parse_upgrade_apply_command(args: &[String]) -> Result<Command, String> {
+pub(in crate::cli_config::args) fn parse_upgrade_apply_command(args: &[String]) -> CliResult<Command> {
     let mut project_dir = env::current_dir().unwrap_or_else(|_| PathBuf::from("."));
     let mut index = 0;
 
@@ -191,7 +192,7 @@ pub(in crate::cli_config::args) fn parse_upgrade_apply_command(args: &[String]) 
             other => {
                 return Err(format!(
                     "Unsupported astropress upgrade --apply option: `{other}`."
-                ))
+                ).into())
             }
         }
         index += 1;
@@ -200,7 +201,7 @@ pub(in crate::cli_config::args) fn parse_upgrade_apply_command(args: &[String]) 
     Ok(Command::UpgradeApply { project_dir })
 }
 
-pub(in crate::cli_config::args) fn parse_config_migrate_command(args: &[String]) -> Result<Command, String> {
+pub(in crate::cli_config::args) fn parse_config_migrate_command(args: &[String]) -> CliResult<Command> {
     let mut project_dir = env::current_dir().unwrap_or_else(|_| PathBuf::from("."));
     let mut dry_run = false;
     let mut index = 0;
@@ -220,7 +221,7 @@ pub(in crate::cli_config::args) fn parse_config_migrate_command(args: &[String])
             other => {
                 return Err(format!(
                     "Unsupported astropress config migrate option: `{other}`."
-                ))
+                ).into())
             }
         }
         index += 1; // ~ skip

@@ -1,5 +1,6 @@
 import { cp, mkdir, rm, writeFile } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
+import { stripTrailingSlashes } from "../path-helpers";
 
 export interface AstropressPreparedDeploymentOptions {
 	provider: string;
@@ -39,18 +40,16 @@ export async function prepareAstropressDeployment(
 	await writeFile(
 		join(targetDir, ".astropress-deploy.json"),
 		`${JSON.stringify(metadata, null, 2)}\n`,
-		"utf8",
 	);
 
-	const baseUrl = options.baseUrl ?? "";
-	let end = baseUrl.length;
-	while (end > 0 && baseUrl[end - 1] === "/") end--;
-	const trimmedBaseUrl = baseUrl.slice(0, end);
+	let url: string | undefined;
+	if (options.baseUrl) {
+		const trimmed = stripTrailingSlashes(options.baseUrl);
+		url = `${trimmed}/${input.projectName}/`;
+	}
 
 	return {
 		deploymentId: `${options.provider}:${input.projectName}:${Date.now()}`,
-		url: options.baseUrl
-			? `${trimmedBaseUrl}/${input.projectName}/`
-			: undefined,
+		url,
 	};
 }

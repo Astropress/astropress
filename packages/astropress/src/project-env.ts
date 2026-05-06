@@ -1,5 +1,6 @@
 import type { AstropressAppHost } from "./app-host-targets";
 import type { AstropressDataServices } from "./data-service-targets";
+import { stripTrailingSlashes } from "./path-helpers";
 
 export type AstropressLocalProviderEnv = "sqlite" | "supabase";
 export type AstropressHostedProviderEnv =
@@ -178,13 +179,13 @@ export function resolveAstropressServiceOriginFromEnv(
 
 	if (dataServices === "supabase") {
 		const url = env.SUPABASE_URL?.trim();
-		return url ? `${url.replace(/\/$/, "")}/functions/v1/astropress` : null;
+		return url ? `${stripTrailingSlashes(url)}/functions/v1/astropress` : null;
 	}
 
 	if (dataServices === "appwrite") {
 		const endpoint = env.APPWRITE_ENDPOINT?.trim();
 		return endpoint
-			? `${endpoint.replace(/\/$/, "")}/functions/astropress`
+			? `${stripTrailingSlashes(endpoint)}/functions/astropress`
 			: null;
 	}
 

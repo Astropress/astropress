@@ -2,6 +2,7 @@ import { beforeAll, describe, expect, it } from "vitest";
 import { registerCms } from "../src/config.js";
 import {
 	listAuditEvents,
+	recordAudit,
 	recordAuditEvent,
 } from "../src/sqlite-runtime/audit-log.js";
 import { makeDb } from "./helpers/make-db.js";
@@ -111,6 +112,130 @@ describe("audit log", () => {
 			.prepare("SELECT resource_id FROM audit_events")
 			.get() as { resource_id: string };
 		expect(remaining.resource_id).toBe("new-post");
+	});
+
+	it("does NOT prune when auditRetentionDays is 0 (kills > 0 boundary mutant)", () => {
+		const freshDb = makeDb();
+		registerCms({
+			templateKeys: [],
+			siteUrl: "https://example.com",
+			seedPages: [],
+			archives: [],
+			translationStatus: [],
+			auditRetentionDays: 0,
+		});
+		freshDb
+			.prepare(
+				`INSERT INTO audit_events (user_email, action, resource_type, resource_id, summary, created_at)
+       VALUES ('old@x', 'content.published', 'post', 'old', 'old', datetime('now', '-365 days'))`,
+			)
+			.run();
+		recordAuditEvent(freshDb, {
+			userEmail: "new@x",
+			action: "content.published",
+			resourceType: "post",
+			resourceId: "new",
+			summary: "new",
+		});
+		// Both rows survive — pruning skipped because retention=0.
+		const count = (
+			freshDb.prepare("SELECT COUNT(*) as n FROM audit_events").get() as {
+				n: number;
+			}
+		).n;
+		expect(count).toBe(2);
+	});
+
+	it("falls back to 90-day retention when auditRetentionDays is undefined (pins ?? 90 default)", () => {
+		const freshDb = makeDb();
+		registerCms({
+			templateKeys: [],
+			siteUrl: "https://example.com",
+			seedPages: [],
+			archives: [],
+			translationStatus: [],
+			// auditRetentionDays intentionally omitted
+		});
+		// Row at 91 days should be pruned by the default 90-day window.
+		freshDb
+			.prepare(
+				`INSERT INTO audit_events (user_email, action, resource_type, resource_id, summary, created_at)
+       VALUES ('old@x', 'content.published', 'post', '91d', 'old', datetime('now', '-91 days'))`,
+			)
+			.run();
+		// Row at 89 days should survive.
+		freshDb
+			.prepare(
+				`INSERT INTO audit_events (user_email, action, resource_type, resource_id, summary, created_at)
+       VALUES ('keep@x', 'content.published', 'post', '89d', 'keep', datetime('now', '-89 days'))`,
+			)
+			.run();
+		recordAuditEvent(freshDb, {
+			userEmail: "trigger@x",
+			action: "content.published",
+			resourceType: "post",
+			resourceId: "trigger",
+			summary: "trigger prune",
+		});
+		const ids = (
+			freshDb
+				.prepare("SELECT resource_id as id FROM audit_events ORDER BY id")
+				.all() as { id: string }[]
+		).map((r) => r.id);
+		expect(ids).toContain("89d");
+		expect(ids).toContain("trigger");
+		expect(ids).not.toContain("91d");
+	});
+
+	it("listAuditEvents default limit is 50 (pins ?? 50 default)", () => {
+		const freshDb = makeDb();
+		// 51 rows so a default of 50 returns 50 (mutant ?? 0 would return 0).
+		for (let i = 0; i < 51; i++) {
+			recordAuditEvent(freshDb, {
+				userEmail: "x@y",
+				action: "act",
+				resourceType: "post",
+				resourceId: `r-${i}`,
+				summary: "s",
+			});
+		}
+		const events = listAuditEvents(freshDb);
+		expect(events.length).toBe(50);
+	});
+
+	it("listAuditEvents default offset is 0 (pins ?? 0 default)", () => {
+		const freshDb = makeDb();
+		for (let i = 0; i < 3; i++) {
+			recordAuditEvent(freshDb, {
+				userEmail: "x@y",
+				action: "act",
+				resourceType: "post",
+				resourceId: `r-${i}`,
+				summary: "s",
+			});
+		}
+		// Without offset arg → offset 0 → 3 rows. Mutant ?? 1 → 2 rows.
+		const events = listAuditEvents(freshDb, { limit: 10 });
+		expect(events.length).toBe(3);
+	});
+
+	it("recordAudit wrapper forwards actor.email and resourceId to the underlying event", () => {
+		const freshDb = makeDb();
+		recordAudit(
+			freshDb,
+			{ email: "wrapper@example.com" },
+			"test.action",
+			"summary text",
+			"page",
+			"resource-x",
+		);
+		const events = listAuditEvents(freshDb, { resourceId: "resource-x" });
+		expect(events.length).toBe(1);
+		expect(events[0].userEmail).toBe("wrapper@example.com");
+		expect(events[0].action).toBe("test.action");
+		expect(events[0].summary).toBe("summary text");
+		expect(events[0].resourceType).toBe("page");
+		expect(events[0].resourceId).toBe("resource-x");
 	});
 
 	it("respects limit and offset", () => {

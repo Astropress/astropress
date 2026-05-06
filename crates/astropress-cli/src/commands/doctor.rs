@@ -5,6 +5,7 @@ use crate::js_bridge::loaders::{
     load_project_env_contract, load_project_launch_plan, ProjectEnvContract, ProjectLaunchPlan,
 };
 use crate::cli_config::env::read_env_file;
+use crate::error::CliResult;
 use crate::providers::deployment_support_level;
 
 fn get_env_value<'a>(
@@ -25,7 +26,7 @@ pub(crate) struct DoctorReport {
     pub(crate) warnings: Vec<String>,
 }
 
-pub(crate) fn inspect_project_health(project_dir: &Path) -> Result<DoctorReport, String> { // ~ skip
+pub(crate) fn inspect_project_health(project_dir: &Path) -> CliResult<DoctorReport> { // ~ skip
     // Capture filesystem state BEFORE invoking the JS bridge. Loading the launch plan
     // instantiates the local adapter, which may seed an admin SQLite file on disk.
     let data_dir = project_dir.join(".data");

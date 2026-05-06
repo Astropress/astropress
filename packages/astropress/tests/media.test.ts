@@ -18,6 +18,18 @@ describe("resolveMediaUrl()", () => {
 		expect(url).toBe(sampleRecord.localPath);
 	});
 
+	it("development mode short-circuits even when r2BaseUrl is set (kills dev-branch mutants)", () => {
+		// Critical: dev mode must NOT build an R2 URL even if one is configured.
+		// Original returns localPath; if the dev short-circuit were removed we'd
+		// fall through to the deployment branch and synthesize an R2 URL.
+		const url = resolveMediaUrl(sampleRecord, {
+			mode: "development",
+			r2BaseUrl: "https://cdn.example.org",
+		});
+		expect(url).toBe(sampleRecord.localPath);
+		expect(url).not.toContain("cdn.example.org");
+	});
+
 	it("returns localPath in deployment mode when no r2BaseUrl is provided", () => {
 		const url = resolveMediaUrl(sampleRecord, { mode: "deployment" });
 		expect(url).toBe(sampleRecord.localPath);

@@ -46,6 +46,7 @@ interface ReadStore {
 }
 
 function resolveMetaString(
+	// audit-boundary: opaque-passthrough -- driver row-shape mirror; values narrowed at consumer
 	meta: Record<string, unknown> | null | undefined,
 	key: string,
 	fallback: string | null,
@@ -57,6 +58,7 @@ function resolveContentFields(
 	record: {
 		title?: string;
 		body?: string | null;
+		// audit-boundary: opaque-passthrough -- driver row-shape mirror; values narrowed at consumer
 		metadata?: Record<string, unknown> | null;
 	},
 	existing: ContentStateRow | null | undefined,
@@ -116,6 +118,7 @@ export async function savePageOrPost(
 		title?: string;
 		body?: string | null;
 		status?: string;
+		// audit-boundary: opaque-passthrough -- driver row-shape mirror; values narrowed at consumer
 		metadata?: Record<string, unknown> | null;
 	},
 ): Promise<ContentStoreRecord> {

@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { createKmacDigest } from "../src/crypto-primitives.js";
 import {
 	createSessionTokenDigest,
 	hashPassword,
@@ -16,6 +17,24 @@ describe("session token digest", () => {
 		expect(first).toBe(second);
 		expect(first).not.toBe(token);
 		expect(first).toMatch(/^[a-f0-9]{64}$/);
+	});
+
+	it("matches createKmacDigest invoked with the documented 'session-token' purpose tag", async () => {
+		// Pins the purpose-tag string literal: any other value (including "")
+		// produces a different KMAC digest under domain separation.
+		const digest = await createSessionTokenDigest("the-token", "the-secret");
+		const expected = createKmacDigest(
+			"the-token",
+			"the-secret",
+			"session-token",
+		);
+		expect(digest).toBe(expected);
+	});
+
+	it("differs from a digest computed under a different purpose tag", async () => {
+		const digest = await createSessionTokenDigest("t", "s");
+		expect(digest).not.toBe(createKmacDigest("t", "s", ""));
+		expect(digest).not.toBe(createKmacDigest("t", "s", "other-purpose"));
 	});
 });
 

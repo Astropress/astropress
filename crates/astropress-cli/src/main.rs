@@ -5,6 +5,7 @@ use std::process::ExitCode;
 mod cli_config;
 mod commands;
 mod docs_stubs;
+mod error;
 mod feature_stubs;
 mod features;
 mod js_bridge;
@@ -90,7 +91,7 @@ fn main() -> ExitCode {
             .and_then(|features| run_post_scaffold_setup(&project_dir, &features, app_host, data_services))
         {
             Ok(()) => ExitCode::SUCCESS,
-            Err(error) => fail(error),
+            Err(error) => fail(error.to_string()),
         },
         Ok(Command::Dev {
             project_dir,
@@ -199,7 +200,7 @@ fn main() -> ExitCode {
         Ok(Command::ServicesBootstrap { project_dir }) => {
             match bootstrap_content_services(&project_dir) {
                 Ok(()) => ExitCode::SUCCESS,
-                Err(error) => fail(error),
+                Err(error) => fail(error.to_string()),
             }
         }
         Ok(Command::ServicesVerify { project_dir }) => {
@@ -214,13 +215,13 @@ fn main() -> ExitCode {
         Ok(Command::DbMigrate { project_dir, migrations_dir, dry_run, target }) => {
             match run_db_migrations(&project_dir, migrations_dir.as_deref(), dry_run, &target) {
                 Ok(()) => ExitCode::SUCCESS,
-                Err(error) => fail(error),
+                Err(error) => fail(error.to_string()),
             }
         }
         Ok(Command::DbRollback { project_dir, dry_run, target }) => {
             match rollback_db_migration(&project_dir, dry_run, &target) {
                 Ok(()) => ExitCode::SUCCESS,
-                Err(error) => fail(error),
+                Err(error) => fail(error.to_string()),
             }
         }
         Ok(Command::ConfigMigrate { project_dir, dry_run }) => {
@@ -309,7 +310,7 @@ fn main() -> ExitCode {
     }
 }
 
-fn fail(message: String) -> ExitCode { // ~ skip
+fn fail(message: impl std::fmt::Display) -> ExitCode { // ~ skip
     eprintln!("{message}");
     ExitCode::from(1)
 }

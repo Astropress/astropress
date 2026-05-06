@@ -5,6 +5,14 @@
  * each adapter; this module holds only dialect-independent logic.
  */
 
+import {
+	AUDIT_TARGET_TYPES,
+	CONTENT_STATUSES,
+	type ContentStatus,
+	DEFAULT_CONTENT_STATUS,
+	SQL_LIST_ADMIN_USERS_WITH_INVITE as SQL_LIST_ADMIN_USERS_WITH_INVITE_DATA,
+	SQL_LIST_AUDIT_EVENTS as SQL_LIST_AUDIT_EVENTS_DATA,
+} from "./persistence-commons-data";
 import type {
 	AdminRole,
 	AuditEvent,
@@ -12,9 +20,7 @@ import type {
 	ManagedAdminUser,
 } from "./persistence-types";
 
-const CONTENT_STATUSES = ["draft", "review", "published", "archived"] as const;
-export type ContentStatus = (typeof CONTENT_STATUSES)[number];
-const DEFAULT_STATUS: ContentStatus = "published";
+export type { ContentStatus };
 
 function isContentStatus(value: unknown): value is ContentStatus {
 	return (CONTENT_STATUSES as readonly string[]).includes(value as string);
@@ -45,7 +51,7 @@ export function normalizeRedirectTarget(value: string) {
 }
 
 export function normalizeContentStatus(input?: string | null): ContentStatus {
-	return isContentStatus(input) ? input : DEFAULT_STATUS;
+	return isContentStatus(input) ? input : DEFAULT_CONTENT_STATUS;
 }
 
 // ---------------------------------------------------------------------------
@@ -120,6 +126,7 @@ export interface AuditEntryInput {
 	resourceType: string;
 	resourceId?: string | null;
 	summary: string;
+	// audit-boundary: opaque-passthrough -- JSON column passthrough at persistence boundary
 	details?: Record<string, unknown> | null;
 }
 
@@ -165,12 +172,16 @@ export interface PersistedOverrideRow {
 }
 
 export interface PersistedOverrideRecord extends ContentOverride {
+	// audit-boundary: opaque-passthrough -- JSON column passthrough at persistence boundary
 	metadata?: Record<string, unknown>;
 }
 
+// audit-boundary: opaque-passthrough -- JSON column passthrough at persistence boundary
+type ParsedMetadata = Record<string, unknown>;
+
 export function parseMetadataJson(
 	raw: string | null | undefined,
-): Record<string, unknown> | undefined {
+): ParsedMetadata | undefined {
 	let parsed: unknown;
 	try {
 		parsed = JSON.parse(raw ?? "null");
@@ -180,6 +191,7 @@ export function parseMetadataJson(
 	if (parsed === null || typeof parsed !== "object" || Array.isArray(parsed)) {
 		return undefined;
 	}
+	// audit-boundary: opaque-passthrough -- JSON column passthrough at persistence boundary
 	return parsed as Record<string, unknown>;
 }
 
@@ -249,10 +261,9 @@ function mapContentRecordKind(record: {
 // (CURRENT_TIMESTAMP, datetime(), CASE WHEN, EXISTS — all in the shared SQLite
 // dialect surface that D1 implements).
 
-export const SQL_LIST_AUDIT_EVENTS =
-	"SELECT id, user_email, action, resource_type, resource_id, summary, created_at FROM audit_events ORDER BY datetime(created_at) DESC, id DESC";
-
-export const SQL_LIST_ADMIN_USERS_WITH_INVITE = `SELECT id, email, CASE WHEN is_admin = 1 THEN 'admin' ELSE 'editor' END AS role, name, active, created_at, EXISTS (SELECT 1 FROM user_invites i WHERE i.user_id = admin_users.id AND i.accepted_at IS NULL AND datetime(i.expires_at) > CURRENT_TIMESTAMP) AS has_pending_invite FROM admin_users ORDER BY is_admin DESC, datetime(created_at) ASC, email ASC`;
+export const SQL_LIST_AUDIT_EVENTS = SQL_LIST_AUDIT_EVENTS_DATA;
+export const SQL_LIST_ADMIN_USERS_WITH_INVITE =
+	SQL_LIST_ADMIN_USERS_WITH_INVITE_DATA;
 
 export interface PersistedAuditEventRow {
 	id: number;
@@ -263,12 +274,6 @@ export interface PersistedAuditEventRow {
 	summary: string;
 	created_at: string;
 }
-
-const AUDIT_TARGET_TYPES = new Set<AuditEvent["targetType"]>([
-	"redirect",
-	"comment",
-	"content",
-]);
 
 function resolveAuditTargetType(value: string): AuditEvent["targetType"] {
 	return AUDIT_TARGET_TYPES.has(value as AuditEvent["targetType"])

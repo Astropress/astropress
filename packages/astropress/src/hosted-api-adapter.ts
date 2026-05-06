@@ -1,3 +1,4 @@
+import { stripTrailingSlashes } from "./path-helpers";
 import {
 	type AstropressPlatformAdapter,
 	type AuthStore,
@@ -25,7 +26,7 @@ export interface AstropressHostedApiAdapterOptions {
 }
 
 function joinApiUrl(baseUrl: string, path: string) {
-	return `${baseUrl.replace(/\/$/, "")}/${path.replace(/^\//, "")}`;
+	return `${stripTrailingSlashes(baseUrl)}/${path.replace(/^\//, "")}`;
 }
 
 async function readJson<T>(response: Response): Promise<T> {

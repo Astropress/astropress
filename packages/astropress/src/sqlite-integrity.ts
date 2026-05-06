@@ -21,6 +21,7 @@ export interface IntegrityCheckOptions {
 
 function readPragma(db: SqliteDatabaseLike, mode: "quick" | "full"): string[] {
 	const sql = mode === "full" ? "PRAGMA integrity_check" : "PRAGMA quick_check";
+	// audit-boundary: opaque-passthrough -- SQL row-shape mirror; columns narrowed at row-mapper boundary
 	const rows = db.prepare(sql).all() as Record<string, unknown>[];
 	return rows.map((row) => String(Object.values(row)[0]));
 }

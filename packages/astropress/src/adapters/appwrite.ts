@@ -4,6 +4,7 @@ import {
 } from "../hosted-api-adapter";
 import { createAstropressHostedPlatformAdapter } from "../hosted-platform-adapter";
 import type { AstropressInMemoryPlatformAdapterOptions } from "../in-memory-platform-adapter";
+import { stripTrailingSlashes } from "../path-helpers";
 import type { AstropressPlatformAdapter } from "../platform-contracts";
 import { FULL_STACK_CAPABILITIES } from "./adapter-record-helpers";
 
@@ -62,7 +63,7 @@ export function readAstropressAppwriteHostedConfig(
 		);
 	}
 
-	const base = endpoint.replace(/\/$/, "");
+	const base = stripTrailingSlashes(endpoint);
 	const databaseId = env.APPWRITE_DATABASE_ID?.trim();
 	const bucketId = env.APPWRITE_BUCKET_ID?.trim();
 	return {
@@ -98,7 +99,7 @@ export function createAstropressAppwriteHostedAdapter(
 			providerName: "appwrite",
 			apiBaseUrl: config.apiBaseUrl,
 			accessToken: config.apiKey,
-			previewBaseUrl: `${config.previewBaseUrl.replace(/\/$/, "")}/preview`,
+			previewBaseUrl: `${stripTrailingSlashes(config.previewBaseUrl)}/preview`,
 			fetchImpl: options.fetchImpl,
 			defaultCapabilities: {
 				...options.defaultCapabilities,
@@ -119,7 +120,7 @@ export function createAstropressAppwriteHostedAdapter(
 		preview: options.preview ?? {
 			async create() {
 				return {
-					url: `${config.previewBaseUrl.replace(/\/$/, "")}/preview`,
+					url: `${stripTrailingSlashes(config.previewBaseUrl)}/preview`,
 				};
 			},
 		},

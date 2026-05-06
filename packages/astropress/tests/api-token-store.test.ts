@@ -148,6 +148,68 @@ describe("ApiTokenStore SQLite implementation", () => {
 		expect(revoked?.revokedAt).not.toBeNull();
 	});
 
+	it("verify: expired token returns { valid: false } with 'expired' reason", async () => {
+		const db = makeDb();
+		const store = createApiTokenStore(db);
+		const past = new Date(Date.now() - 60_000).toISOString();
+		const { rawToken } = await store.create({
+			label: "expired",
+			scopes: ["content:read"],
+			expiresAt: past,
+		});
+		const result = await store.verify(rawToken);
+		expect(result.valid).toBe(false);
+		if (result.valid) throw new Error("expected invalid");
+		expect(result.reason).toMatch(/expired/i);
+	});
+
+	it("verify: future-expiry token still verifies (pins < boundary on expires_at)", async () => {
+		const db = makeDb();
+		const store = createApiTokenStore(db);
+		const future = new Date(Date.now() + 60_000).toISOString();
+		const { rawToken, record } = await store.create({
+			label: "future",
+			scopes: ["content:read"],
+			expiresAt: future,
+		});
+		const result = await store.verify(rawToken);
+		expect(result.valid).toBe(true);
+		if (!result.valid) throw new Error("expected valid");
+		expect(result.record.expiresAt).toBe(future);
+		expect(record.expiresAt).toBe(future);
+	});
+
+	it("create: persists expiresAt in the returned record (pins ?? null fallback)", async () => {
+		const db = makeDb();
+		const store = createApiTokenStore(db);
+		const { record } = await store.create({
+			label: "no-expiry",
+			scopes: ["content:read"],
+		});
+		expect(record.expiresAt).toBeNull();
+	});
+
+	it("verify: revoked token reason mentions 'revoked' (pins reason literal)", async () => {
+		const db = makeDb();
+		const store = createApiTokenStore(db);
+		const { record, rawToken } = await store.create({
+			label: "revoke-reason",
+			scopes: ["content:read"],
+		});
+		await store.revoke(record.id);
+		const result = await store.verify(rawToken);
+		if (result.valid) throw new Error("expected invalid");
+		expect(result.reason).toMatch(/revoked/i);
+	});
+
+	it("verify: unknown token reason mentions 'not found' (pins reason literal)", async () => {
+		const db = makeDb();
+		const store = createApiTokenStore(db);
+		const result = await store.verify("nonexistent-token");
+		if (result.valid) throw new Error("expected invalid");
+		expect(result.reason).toMatch(/not found/i);
+	});
+
 	it("list: revoked tokens still appear in list (for admin display)", async () => {
 		const db = makeDb();
 		const store = createApiTokenStore(db);

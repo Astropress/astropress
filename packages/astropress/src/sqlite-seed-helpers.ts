@@ -32,6 +32,7 @@ export function buildTableImportStatements(
 	if (columns.length === 0) return [] as string[];
 
 	const rows = db.prepare(`SELECT * FROM ${table}`).all() as Array<
+		// audit-boundary: opaque-passthrough -- SQL row-shape mirror; columns narrowed at row-mapper boundary
 		Record<string, unknown>
 	>;
 	const statements = [`DELETE FROM ${table};`];

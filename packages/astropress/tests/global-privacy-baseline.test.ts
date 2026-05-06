@@ -239,7 +239,7 @@ describe("global privacy: security measures for stored data", () => {
 			"CSRF token must be validated on all form submissions",
 		).toContain("_csrf");
 		expect(utils).toMatch(
-			/submittedToken\s*!==\s*expectedToken|!expectedToken/,
+			/submittedToken\s*!==\s*expectedToken|submittedToken\s*===\s*expectedToken|!expectedToken/,
 		);
 	});
 

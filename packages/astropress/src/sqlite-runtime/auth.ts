@@ -42,6 +42,39 @@ import {
 	verifyPasswordSync,
 } from "./utils";
 
+function mapAuditTargetType(
+	resourceType: string | null | undefined,
+): AuditEvent["targetType"] {
+	switch (resourceType) {
+		case "redirect":
+		case "comment":
+		case "content":
+		case "deployment":
+		case "testimonial":
+			return resourceType;
+		default:
+			return "auth";
+	}
+}
+
+function mapAdminUserRow(row: AdminUserRow) {
+	const status: "active" | "invited" | "suspended" =
+		row.active !== 1
+			? "suspended"
+			: row.has_pending_invite === 1
+				? "invited"
+				: "active";
+	return {
+		id: row.id,
+		email: row.email,
+		role: row.role,
+		name: row.name,
+		active: row.active === 1,
+		status,
+		createdAt: row.created_at,
+	};
+}
+
 export function createSqliteAuthStore(
 	getDb: () => AstropressSqliteDatabaseLike,
 	options: AuthStoreOptions,
@@ -56,18 +89,7 @@ export function createSqliteAuthStore(
 			actorEmail: row.user_email,
 			actorRole: "admin" as const,
 			summary: row.summary,
-			targetType: ((): AuditEvent["targetType"] => {
-				switch (row.resource_type) {
-					case "redirect":
-					case "comment":
-					case "content":
-					case "deployment":
-					case "testimonial":
-						return row.resource_type;
-					default:
-						return "auth";
-				}
-			})(),
+			targetType: mapAuditTargetType(row.resource_type),
 			targetId: row.resource_id ?? `${row.id}`,
 			createdAt: row.created_at,
 		}));
@@ -79,19 +101,7 @@ export function createSqliteAuthStore(
 
 	function listAdminUsers() {
 		const rows = getDb().prepare(SQL_LIST_USERS).all() as AdminUserRow[];
-		return rows.map((row) => ({
-			id: row.id,
-			email: row.email,
-			role: row.role,
-			name: row.name,
-			active: row.active === 1,
-			status: (row.active !== 1
-				? "suspended"
-				: row.has_pending_invite === 1
-					? "invited"
-					: "active") as "active" | "invited" | "suspended",
-			createdAt: row.created_at,
-		}));
+		return rows.map(mapAdminUserRow);
 	}
 
 	const sqliteUserRepository = createAstropressUserRepository({

@@ -11,7 +11,9 @@ use completions_scripts::{
     BASH_COMPLETION, FISH_COMPLETION, POWERSHELL_COMPLETION, ZSH_COMPLETION,
 };
 
-pub(crate) fn print_completions(shell: &str) -> Result<(), String> {
+use crate::error::CliResult;
+
+pub(crate) fn print_completions(shell: &str) -> CliResult<()> {
     match shell.to_ascii_lowercase().as_str() {
         "bash" => {
             print!("{}", BASH_COMPLETION);
@@ -32,7 +34,7 @@ pub(crate) fn print_completions(shell: &str) -> Result<(), String> {
         other => Err(format!(
             "Unknown shell `{other}`. Supported shells: bash, zsh, fish, powershell.\n\
              Usage: astropress completions <bash|zsh|fish|powershell>"
-        )),
+        ).into()),
     }
 }
 
@@ -64,6 +66,6 @@ mod tests {
     fn completions_rejects_unknown_shell() {
         let result = print_completions("unknown");
         assert!(result.is_err());
-        assert!(result.unwrap_err().contains("Supported shells"));
+        assert!(result.unwrap_err().to_string().contains("Supported shells"));
     }
 }

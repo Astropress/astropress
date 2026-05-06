@@ -1,3 +1,4 @@
+// stryker-disable-file: data-only — pure interface declarations; no runtime code.
 import type { Actor } from "./persistence-types";
 import type {
 	RuntimeArchiveRouteRecord,
@@ -39,6 +40,7 @@ export interface AstropressCmsRouteRegistryFactoryInput {
 		title: string;
 		summary: string | null;
 		bodyHtml: string | null;
+		// audit-boundary: opaque-passthrough -- user CMS route-registry config; narrowed at consumer
 		settings: Record<string, unknown> | null | undefined;
 		renderStrategy: RuntimeSystemRouteRecord["renderStrategy"];
 		revisionNote: string | null;
@@ -60,6 +62,7 @@ export interface AstropressCmsRouteRegistryFactoryInput {
 		ogImage: string | null;
 		templateKey: string;
 		alternateLinks: Array<{ hreflang: string; href: string }>;
+		// audit-boundary: opaque-passthrough -- user CMS route-registry config; narrowed at consumer
 		sections: Record<string, unknown> | null | undefined;
 		actor: RouteActor;
 	}): void;
@@ -75,6 +78,7 @@ export interface AstropressCmsRouteRegistryFactoryInput {
 		ogImage: string | null;
 		templateKey: string;
 		alternateLinks: Array<{ hreflang: string; href: string }>;
+		// audit-boundary: opaque-passthrough -- user CMS route-registry config; narrowed at consumer
 		sections: Record<string, unknown> | null | undefined;
 		actor: RouteActor;
 	}): void;
@@ -91,6 +95,7 @@ export interface AstropressCmsRouteRegistryFactoryInput {
 		ogImage: string | null;
 		templateKey: string;
 		alternateLinks: Array<{ hreflang: string; href: string }>;
+		// audit-boundary: opaque-passthrough -- user CMS route-registry config; narrowed at consumer
 		sections: Record<string, unknown> | null | undefined;
 		revisionNote: string | null;
 		actor: RouteActor;

@@ -4,6 +4,7 @@ import {
 } from "../hosted-api-adapter";
 import { createAstropressHostedPlatformAdapter } from "../hosted-platform-adapter";
 import type { AstropressInMemoryPlatformAdapterOptions } from "../in-memory-platform-adapter";
+import { stripTrailingSlashes } from "../path-helpers";
 import type { AstropressPlatformAdapter } from "../platform-contracts";
 import { FULL_STACK_CAPABILITIES } from "./adapter-record-helpers";
 
@@ -59,8 +60,8 @@ export function readAstropressPocketbaseHostedConfig(
 		url,
 		email,
 		password,
-		apiBaseUrl: `${url.replace(/\/$/, "")}/api/astropress`,
-		previewBaseUrl: url.replace(/\/$/, ""),
+		apiBaseUrl: `${stripTrailingSlashes(url)}/api/astropress`,
+		previewBaseUrl: stripTrailingSlashes(url),
 	};
 }
 

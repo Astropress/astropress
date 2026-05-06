@@ -3,16 +3,17 @@ use std::path::Path;
 
 use include_dir::{include_dir, Dir};
 
+use crate::error::CliResult;
 use crate::utils::io_error;
 
 pub(crate) static SCAFFOLD_TEMPLATE: Dir<'static> =
     include_dir!("$CARGO_MANIFEST_DIR/templates");
 
-pub(crate) fn write_embedded_template(dest: &Path) -> Result<(), String> { // ~ skip
+pub(crate) fn write_embedded_template(dest: &Path) -> CliResult<()> { // ~ skip
     write_embedded_dir(&SCAFFOLD_TEMPLATE, dest)
 }
 
-fn write_embedded_dir(dir: &Dir, dest: &Path) -> Result<(), String> {
+fn write_embedded_dir(dir: &Dir, dest: &Path) -> CliResult<()> {
     for entry in dir.entries() {
         match entry {
             include_dir::DirEntry::File(f) => {

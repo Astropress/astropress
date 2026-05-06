@@ -5,9 +5,10 @@
 use std::path::PathBuf;
 
 use super::Command;
+use crate::error::CliResult;
 use crate::telemetry::TelemetryAction;
 
-pub(super) fn parse_add_command(args: &[String]) -> Result<Command, String> {
+pub(super) fn parse_add_command(args: &[String]) -> CliResult<Command> {
     let mut project_dir = std::env::current_dir().unwrap_or_else(|_| PathBuf::from("."));
     let mut feature_args: Vec<String> = Vec::new();
     let mut index = 0;
@@ -28,7 +29,7 @@ pub(super) fn parse_add_command(args: &[String]) -> Result<Command, String> {
     Ok(Command::Add { project_dir, feature_args })
 }
 
-pub(super) fn parse_migrate_command(args: &[String]) -> Result<Command, String> {
+pub(super) fn parse_migrate_command(args: &[String]) -> CliResult<Command> {
     let mut project_dir = std::env::current_dir().unwrap_or_else(|_| PathBuf::from("."));
     let mut from: Option<String> = None;
     let mut to: Option<String> = None;
@@ -64,7 +65,7 @@ pub(super) fn parse_migrate_command(args: &[String]) -> Result<Command, String> 
             "--dry-run" | "--dry_run" => {
                 dry_run = true;
             }
-            other => return Err(format!("Unsupported astropress migrate option: `{other}`.")),
+            other => return Err(format!("Unsupported astropress migrate option: `{other}`.").into()),
         }
         index += 1; // ~ skip
     }
@@ -75,13 +76,13 @@ pub(super) fn parse_migrate_command(args: &[String]) -> Result<Command, String> 
     Ok(Command::Migrate { project_dir, from, to, dry_run })
 }
 
-pub(super) fn parse_telemetry_command(args: &[String]) -> Result<Command, String> {
+pub(super) fn parse_telemetry_command(args: &[String]) -> CliResult<Command> {
     match args.first().map(|s| s.as_str()) {
         Some("status") | None => Ok(Command::Telemetry { action: TelemetryAction::Status }),
         Some("enable")        => Ok(Command::Telemetry { action: TelemetryAction::Enable }),
         Some("disable")       => Ok(Command::Telemetry { action: TelemetryAction::Disable }),
         Some(other) => Err(format!(
             "Unknown telemetry subcommand `{other}`. Use: status, enable, disable."
-        )),
+        ).into()),
     }
 }

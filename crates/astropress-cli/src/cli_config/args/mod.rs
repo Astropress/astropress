@@ -16,6 +16,7 @@ pub(crate) use help::print_help;
 pub(crate) use auth::AuthRevokeScope;
 
 use misc::{parse_add_command, parse_migrate_command, parse_telemetry_command};
+use crate::error::CliResult;
 use crate::telemetry::TelemetryAction;
 
 /// How the page crawler should operate after a live-site import.
@@ -159,7 +160,7 @@ pub(crate) enum Command {
     Help,
 }
 
-pub(crate) fn parse_command(args: &[String]) -> Result<Command, String> {
+pub(crate) fn parse_command(args: &[String]) -> CliResult<Command> {
     match args {
         [] => Ok(Command::Help),
         [flag] if flag == "--help" || flag == "-h" || flag == "help" => Ok(Command::Help),
@@ -227,14 +228,14 @@ pub(crate) fn parse_command(args: &[String]) -> Result<Command, String> {
         [command, rest @ ..] if command == "migrate" => parse_migrate_command(rest),
         [command, subcommand, rest @ ..] if (command == "list" || command == "ls") && subcommand == "tools" => {
             if let Some(unknown) = rest.first() {
-                Err(format!("Unsupported astropress list tools option: `{unknown}`."))
+                Err(format!("Unsupported astropress list tools option: `{unknown}`.").into())
             } else {
                 Ok(Command::ListTools)
             }
         }
         [command, subcommand, rest @ ..] if (command == "list" || command == "ls") && subcommand == "providers" => {
             if let Some(unknown) = rest.first() {
-                Err(format!("Unsupported astropress list providers option: `{unknown}`."))
+                Err(format!("Unsupported astropress list providers option: `{unknown}`.").into())
             } else {
                 Ok(Command::ListProviders)
             }
@@ -249,6 +250,6 @@ pub(crate) fn parse_command(args: &[String]) -> Result<Command, String> {
             Err("Unsupported auth subcommand. Use `astropress auth emergency-revoke`.".into())
         }
         [command, rest @ ..] if command == "telemetry" => parse_telemetry_command(rest),
-        [command, ..] => Err(format!("Unsupported astropress command: `{command}`.")),
+        [command, ..] => Err(format!("Unsupported astropress command: `{command}`.").into()),
     }
 }

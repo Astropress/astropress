@@ -16,8 +16,11 @@ function shouldEmit(level: LogLevel): boolean {
 }
 
 export interface AstropressLogger {
+	// audit-boundary: opaque-passthrough -- log payload forwarded to sink; never read by logger
 	info(message: string, meta?: Record<string, unknown>): void;
+	// audit-boundary: opaque-passthrough -- log payload forwarded to sink; never read by logger
 	warn(message: string, meta?: Record<string, unknown>): void;
+	// audit-boundary: opaque-passthrough -- log payload forwarded to sink; never read by logger
 	error(message: string, meta?: Record<string, unknown>): void;
 }
 
@@ -25,6 +28,7 @@ function emit(
 	level: LogLevel,
 	context: string,
 	message: string,
+	// audit-boundary: opaque-passthrough -- log payload forwarded to sink; never read by logger
 	meta?: Record<string, unknown>,
 ) {
 	if (!shouldEmit(level)) return;

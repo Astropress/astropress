@@ -1,6 +1,7 @@
 use std::path::Path;
 use std::process::{Command as ProcessCommand, ExitCode};
 
+use crate::error::CliResult;
 use crate::providers::{AppHost, DataServices, LocalProvider};
 use crate::js_bridge::loaders::load_project_launch_plan;
 use crate::js_bridge::runner::{
@@ -13,7 +14,7 @@ pub(crate) fn run_dev_server(
     provider: Option<LocalProvider>,
     app_host: Option<AppHost>,
     data_services: Option<DataServices>,
-) -> Result<ExitCode, String> {
+) -> CliResult<ExitCode> {
     let package_manager = detect_package_manager(project_dir);
     let launch_plan = load_project_launch_plan(project_dir, provider, app_host, data_services)?;
     let runtime_plan = launch_plan.runtime;
@@ -21,7 +22,7 @@ pub(crate) fn run_dev_server(
         return Err(format!(
             "Astropress dev currently supports only local runtime mode, but this project resolved to `{}` with adapter `{}`.",
             runtime_plan.mode, runtime_plan.adapter.capabilities.name
-        ));
+        ).into());
     }
     let provider = LocalProvider::parse(&launch_plan.provider)?;
     let admin_db_path = launch_plan.admin_db_path;

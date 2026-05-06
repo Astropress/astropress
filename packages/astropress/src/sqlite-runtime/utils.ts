@@ -8,8 +8,11 @@ import {
 type ContentStatus = "draft" | "review" | "published" | "archived";
 
 interface SqliteStatementLike {
+	// audit-boundary: opaque-passthrough -- mirrors driver bind-arg shape
 	run(...params: unknown[]): { changes?: number | bigint };
+	// audit-boundary: opaque-passthrough -- mirrors driver row shape; callers narrow at use
 	get(...params: unknown[]): unknown;
+	// audit-boundary: opaque-passthrough -- mirrors driver row shape; callers narrow at use
 	all(...params: unknown[]): unknown[];
 }
 
@@ -170,9 +173,9 @@ export function parseSystemSettings(value: string | null) {
 
 	try {
 		const parsed = JSON.parse(value) as unknown;
-		return parsed && typeof parsed === "object"
-			? (parsed as Record<string, unknown>)
-			: null;
+		if (!parsed || typeof parsed !== "object") return null;
+		// audit-boundary: opaque-passthrough -- SQL row-shape mirror; columns narrowed at row-mapper boundary
+		return parsed as Record<string, unknown>;
 	} catch {
 		return null;
 	}

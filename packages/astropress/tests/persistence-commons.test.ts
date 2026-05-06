@@ -606,4 +606,10 @@ describe("mapPersistedAuditEvent", () => {
 			}).targetId,
 		).toBe("42");
 	});
+
+	it("hardcodes actorRole as 'admin' on every mapped audit event", () => {
+		expect(
+			mapPersistedAuditEvent({ row: baseRow, idPrefix: "x-" }).actorRole,
+		).toBe("admin");
+	});
 });

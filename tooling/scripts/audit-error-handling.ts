@@ -29,6 +29,14 @@ async function checkFile(
 ): Promise<void> {
 	const src = await readText(filePath);
 
+	// Files marked as data-only (constants/manifests with no runtime logic)
+	// are exempt from the typed-result rule — they have no functions to
+	// return a result from. The marker mirrors what the mutation gate honors.
+	const head = src.split("\n", 10).join("\n");
+	if (/stryker-disable-file:\s*data-only/.test(head)) {
+		return;
+	}
+
 	if (requireOkResult) {
 		const hasRuntimeExport =
 			/^export (async function|function|const|class)\b/m.test(src);

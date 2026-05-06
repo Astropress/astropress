@@ -5,6 +5,7 @@ import {
 	getAstropressService,
 	getAstropressServices,
 	registerAstropressService,
+	registerTestimonialsServiceIfConfigured,
 	unregisterAstropressService,
 } from "../src/services-config";
 
@@ -101,5 +102,52 @@ describe("clearAstropressServices", () => {
 		registerAstropressService(shopService);
 		clearAstropressServices();
 		expect(getAstropressServices()).toEqual([]);
+	});
+});
+
+describe("registerTestimonialsServiceIfConfigured", () => {
+	it("is a no-op when url is absent", () => {
+		registerTestimonialsServiceIfConfigured({ type: "typebot" });
+		expect(getAstropressService("testimonials")).toBeUndefined();
+	});
+
+	it("is a no-op when url is empty string", () => {
+		registerTestimonialsServiceIfConfigured({ type: "typebot", url: "" });
+		expect(getAstropressService("testimonials")).toBeUndefined();
+	});
+
+	it("registers a typebot service with the typebot label and description when url is set", () => {
+		registerTestimonialsServiceIfConfigured({
+			type: "typebot",
+			url: "http://localhost:8080",
+		});
+		const svc = getAstropressService("testimonials");
+		expect(svc?.label).toBe("Typebot");
+		expect(svc?.description).toBe(
+			"Conversational testimonial and referral capture flows.",
+		);
+		expect(svc?.proxyTarget).toBe("http://localhost:8080");
+		expect(svc?.adminPath).toBe("/ap-admin/services/testimonials");
+	});
+
+	it("registers a non-typebot type with the Formbricks label and description", () => {
+		registerTestimonialsServiceIfConfigured({
+			type: "formbricks",
+			url: "http://localhost:9000",
+		});
+		const svc = getAstropressService("testimonials");
+		expect(svc?.label).toBe("Formbricks");
+		expect(svc?.description).toBe(
+			"Survey and testimonial collection with referral support.",
+		);
+	});
+
+	it("uses the explicit label when provided, regardless of type", () => {
+		registerTestimonialsServiceIfConfigured({
+			type: "typebot",
+			url: "http://localhost:8080",
+			label: "My Custom Label",
+		});
+		expect(getAstropressService("testimonials")?.label).toBe("My Custom Label");
 	});
 });

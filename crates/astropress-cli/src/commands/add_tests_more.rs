@@ -32,7 +32,7 @@ fn add_payments_hyperswitch_scaffolds_checkout_component() {
 fn add_payments_unknown_returns_error() {
     let result = parse_add_features(&args(&["--payments", "stripe"]));
     assert!(result.is_err(), "unknown payment provider must return an error");
-    assert!(result.unwrap_err().contains("hyperswitch"), "error must list valid options");
+    assert!(result.unwrap_err().to_string().contains("hyperswitch"), "error must list valid options");
 }
 
 // ── docs-site generators (Starlight / VitePress / mdBook) ────────────────
@@ -59,7 +59,7 @@ fn add_docs_mdbook_parses() {
 fn add_docs_unknown_returns_error_listing_options() {
     let result = parse_add_features(&args(&["--docs", "bigtech"]));
     assert!(result.is_err(), "expected error for unknown docs generator");
-    let err = result.unwrap_err();
+    let err = result.unwrap_err().to_string();
     for expected in ["starlight", "vitepress", "mdbook"] {
         assert!(
             err.contains(expected),

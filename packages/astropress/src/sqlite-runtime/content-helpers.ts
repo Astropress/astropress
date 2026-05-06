@@ -235,6 +235,7 @@ export function upsertOverride(
 		scheduledAt?: string | null;
 		canonicalUrlOverride?: string | null;
 		robotsDirective?: string | null;
+		// audit-boundary: opaque-passthrough -- SQL row-shape mirror; columns narrowed at row-mapper boundary
 		metadata?: Record<string, unknown> | null;
 	},
 	actor: { email: string },

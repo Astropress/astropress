@@ -6,11 +6,24 @@ const mocks = vi.hoisted(() => ({
 	getRuntimeCsrfToken: vi.fn(),
 	getRuntimeSessionUser: vi.fn(),
 	getRuntimeEnv: vi.fn(),
+	getAccessContext: vi.fn(),
+	logAccessDeny: vi.fn(),
 }));
 
 vi.mock("../src/runtime-admin-auth", () => ({
 	getRuntimeCsrfToken: mocks.getRuntimeCsrfToken,
 	getRuntimeSessionUser: mocks.getRuntimeSessionUser,
+}));
+
+vi.mock("../src/access/index.js", async () => {
+	const actual = await vi.importActual<typeof import("../src/access/index.js")>(
+		"../src/access/index.js",
+	);
+	return { ...actual, getAccessContext: mocks.getAccessContext };
+});
+
+vi.mock("../src/access/audit-deny.js", () => ({
+	logAccessDeny: mocks.logAccessDeny,
 }));
 
 vi.mock("../src/runtime-env", async () => {
@@ -74,6 +87,8 @@ describe("admin action utils", () => {
 			name: "Admin User",
 		});
 		mocks.getRuntimeEnv.mockReturnValue(undefined);
+		mocks.getAccessContext.mockResolvedValue(null);
+		mocks.logAccessDeny.mockResolvedValue(undefined);
 	});
 
 	afterAll(() => {
@@ -145,6 +160,105 @@ describe("admin action utils", () => {
 		}
 	});
 
+	it("denies a requireAction when the access engine returns a deny decision and logs the deny", async () => {
+		mocks.getAccessContext.mockResolvedValue({
+			subject: { email: "editor@example.com" },
+			can: vi.fn(() => ({
+				decision: "deny",
+				reason: "policy says no",
+			})),
+		});
+		const { requireAdminFormAction } = await import(
+			"@astropress-diy/astropress"
+		);
+
+		const result = await requireAdminFormAction(
+			makeContext({ _csrf: "csrf-token" }),
+			{
+				failurePath: "/ap-admin/posts",
+				requireAction: "posts:delete",
+			},
+		);
+
+		expect(result.ok).toBe(false);
+		if (!result.ok) {
+			expect(result.response.headers.get("Location")).toContain(
+				"message=policy+says+no",
+			);
+		}
+		expect(mocks.logAccessDeny).toHaveBeenCalledTimes(1);
+	});
+
+	it("uses actionDeniedMessage override over the engine's reason when provided", async () => {
+		mocks.getAccessContext.mockResolvedValue({
+			subject: { email: "editor@example.com" },
+			can: vi.fn(() => ({ decision: "deny", reason: "engine reason" })),
+		});
+		const { requireAdminFormAction } = await import(
+			"@astropress-diy/astropress"
+		);
+
+		const result = await requireAdminFormAction(
+			makeContext({ _csrf: "csrf-token" }),
+			{
+				failurePath: "/ap-admin/posts",
+				requireAction: "posts:delete",
+				actionDeniedMessage: "Custom denied",
+			},
+		);
+
+		expect(result.ok).toBe(false);
+		if (!result.ok) {
+			expect(result.response.headers.get("Location")).toContain(
+				"message=Custom+denied",
+			);
+		}
+	});
+
+	it("allows the request when requireAction's decision is not 'deny'", async () => {
+		mocks.getAccessContext.mockResolvedValue({
+			subject: { email: "admin@example.com" },
+			can: vi.fn(() => ({ decision: "allow" })),
+		});
+		const { requireAdminFormAction } = await import(
+			"@astropress-diy/astropress"
+		);
+
+		const result = await requireAdminFormAction(
+			makeContext({ _csrf: "csrf-token" }),
+			{
+				failurePath: "/ap-admin/posts",
+				requireAction: "posts:delete",
+			},
+		);
+
+		expect(result.ok).toBe(true);
+		expect(mocks.logAccessDeny).not.toHaveBeenCalled();
+	});
+
+	it("denies a requireAction with the default message when no engine context is available", async () => {
+		mocks.getAccessContext.mockResolvedValue(null);
+		const { requireAdminFormAction } = await import(
+			"@astropress-diy/astropress"
+		);
+
+		const result = await requireAdminFormAction(
+			makeContext({ _csrf: "csrf-token" }),
+			{
+				failurePath: "/ap-admin/posts",
+				requireAction: "posts:delete",
+			},
+		);
+
+		expect(result.ok).toBe(false);
+		if (!result.ok) {
+			expect(result.response.headers.get("Location")).toContain(
+				"message=You+do+not+have+permission",
+			);
+		}
+		expect(mocks.logAccessDeny).not.toHaveBeenCalled();
+	});
+
 	it("rejects cross-origin admin form posts", async () => {
 		const { requireAdminFormAction } = await import(
 			"@astropress-diy/astropress"
@@ -160,6 +274,77 @@ describe("admin action utils", () => {
 			expect(result.response.headers.get("Location")).toBe(
 				"/ap-admin/posts/new?error=1&message=Invalid+request+origin",
 			);
+		}
+	});
+
+	it("actionRedirect sets HSTS header only when target is an absolute https URL", async () => {
+		const { actionRedirect } = await import("@astropress-diy/astropress");
+		const httpsResp = actionRedirect("https://example.com/ap-admin/posts");
+		const relativeResp = actionRedirect("/ap-admin/posts");
+		expect(httpsResp.headers.get("Strict-Transport-Security")).not.toBeNull();
+		expect(relativeResp.headers.get("Strict-Transport-Security")).toBeNull();
+	});
+
+	it("requireAdmin uses the default admin-required message when no override is provided", async () => {
+		mocks.getRuntimeSessionUser.mockResolvedValue({
+			email: "editor@example.com",
+			role: "editor",
+			name: "Editor User",
+		});
+		const { requireAdminFormAction } = await import(
+			"@astropress-diy/astropress"
+		);
+
+		const result = await requireAdminFormAction(
+			makeContext({ _csrf: "csrf-token" }),
+			{
+				failurePath: "/ap-admin/users",
+				requireAdmin: true,
+			},
+		);
+
+		expect(result.ok).toBe(false);
+		if (!result.ok) {
+			expect(result.response.headers.get("Location")).toContain(
+				"message=This+action+requires+an+admin+account.",
+			);
+		}
+	});
+
+	it("falls back to the legacy session cookie when the primary cookie is absent", async () => {
+		const { requireAdminFormAction } = await import(
+			"@astropress-diy/astropress"
+		);
+		const context = makeContext({ _csrf: "csrf-token" });
+		context.cookies.get = vi.fn((name: string) =>
+			name === "ff_admin_session" ? { value: "legacy-token" } : undefined,
+		);
+
+		const result = await requireAdminFormAction(context, {
+			failurePath: "/ap-admin/posts",
+		});
+
+		expect(result.ok).toBe(true);
+		expect(mocks.getRuntimeSessionUser).toHaveBeenCalledWith(
+			"legacy-token",
+			expect.anything(),
+		);
+	});
+
+	it("uses the loginPath override when provided for unauthenticated requests", async () => {
+		mocks.getRuntimeSessionUser.mockResolvedValue(null);
+		const { requireAdminFormAction } = await import(
+			"@astropress-diy/astropress"
+		);
+
+		const result = await requireAdminFormAction(
+			makeContext({ _csrf: "csrf-token" }),
+			{ failurePath: "/ap-admin/posts", loginPath: "/custom-login" },
+		);
+
+		expect(result.ok).toBe(false);
+		if (!result.ok) {
+			expect(result.response.headers.get("Location")).toBe("/custom-login");
 		}
 	});
 

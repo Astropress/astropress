@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
 	GITHUB_DEPLOY_FIELDS,
@@ -205,6 +205,20 @@ describe("verifyGithubDeploy", () => {
 			expect((err as GithubDeployVerifyError).code).toBe(
 				"INTEGRATION_AUTH_REJECTED",
 			);
+		}
+	});
+
+	it("falls back to global fetch when deps.fetch is omitted", async () => {
+		const stub = vi
+			.spyOn(globalThis, "fetch")
+			.mockResolvedValue(new Response(null, { status: 200 }));
+		try {
+			await expect(
+				verifyGithubDeploy(FIELDS, { signal }),
+			).resolves.toBeUndefined();
+			expect(stub).toHaveBeenCalledTimes(1);
+		} finally {
+			stub.mockRestore();
 		}
 	});
 });

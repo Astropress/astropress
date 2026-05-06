@@ -157,7 +157,7 @@ describe("ZTA P2: least privilege", () => {
 			utils,
 			"CSRF check must use constant-time comparison or strict equality",
 		).toMatch(
-			/submittedToken\s*!==\s*expectedToken|timingSafeEqual|!expectedToken/,
+			/submittedToken\s*!==\s*expectedToken|submittedToken\s*===\s*expectedToken|timingSafeEqual|!expectedToken/,
 		);
 	});
 

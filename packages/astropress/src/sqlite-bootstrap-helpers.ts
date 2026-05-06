@@ -1,8 +1,11 @@
 import type { defaultSiteSettings } from "./site-settings";
 
 export interface SqliteStatementLike {
+	// audit-boundary: opaque-passthrough -- mirrors driver bind-arg shape
 	run(...params: unknown[]): { changes?: number | bigint };
+	// audit-boundary: opaque-passthrough -- mirrors driver row shape; callers narrow via generic
 	get(...params: unknown[]): unknown;
+	// audit-boundary: opaque-passthrough -- mirrors driver row shape; callers narrow via generic
 	all(...params: unknown[]): unknown[];
 }
 
@@ -78,6 +81,7 @@ export interface MarketingRouteSeedRecord {
 	ogImage?: string;
 	templateKey: string;
 	alternateLinks?: Array<{ hreflang: string; href: string }>;
+	// audit-boundary: opaque-passthrough -- SQL row-shape mirror; columns narrowed at row-mapper boundary
 	sections: Record<string, unknown> | null;
 }
 

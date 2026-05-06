@@ -1,3 +1,4 @@
+// stryker-disable-file: data-only — pure interface declarations; no runtime code.
 import type { ContentStatus } from "./persistence-types";
 
 export interface SaveContentInput {
@@ -18,6 +19,7 @@ export interface SaveContentInput {
 	robotsDirective?: string;
 	revisionNote?: string;
 	lastKnownUpdatedAt?: string;
+	// audit-boundary: opaque-passthrough -- module-boundary value; narrowed at consumer
 	metadata?: Record<string, unknown>;
 }
 

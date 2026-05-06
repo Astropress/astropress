@@ -3,6 +3,7 @@ use std::process::ExitCode;
 
 use serde::Deserialize;
 
+use crate::error::CliResult;
 use crate::providers::AppHost;
 use crate::cli_config::env::{read_package_manifest, PackageManifest};
 use crate::js_bridge::loaders::{package_module_import, resolve_deploy_target};
@@ -17,7 +18,7 @@ pub(crate) struct DeployResult {
 pub(crate) fn deploy_script_for_target(
     manifest: &PackageManifest,
     explicit_target: Option<&str>,
-) -> Result<&'static str, String> {
+) -> CliResult<&'static str> {
     let target = explicit_target.unwrap_or("github-pages");
     match target {
         "github-pages" => {
@@ -135,7 +136,7 @@ pub(crate) fn deploy_script_for_target(
         }
         other => Err(format!(
             "Unsupported deploy target `{other}`. Use github-pages, cloudflare, vercel, netlify, render-static, render-web, gitlab-pages, fly-io, coolify, digitalocean, railway, or custom."
-        )),
+        ).into()),
     }
 }
 
@@ -144,7 +145,7 @@ pub(crate) fn deploy_project(
     project_dir: &Path,
     target: Option<&str>,
     app_host: Option<AppHost>,
-) -> Result<ExitCode, String> { // ~ skip
+) -> CliResult<ExitCode> { // ~ skip
     let manifest = read_package_manifest(project_dir)?;
     if manifest.scripts.contains_key("doctor:strict") {
         let doctor_exit = run_script(project_dir, "doctor:strict")?;

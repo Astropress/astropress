@@ -70,4 +70,17 @@ describe("createAstropressTranslationRepository", () => {
 
 		expect(repository.getEffectiveTranslationState("/about")).toBe("published");
 	});
+
+	it("uses 'not_started' as the default fallback when caller omits the fallback arg", () => {
+		// Pins the default-arg StringLiteral: omit fallback, ensure stored value
+		// missing → returns "not_started".
+		const repository = createAstropressTranslationRepository({
+			readTranslationState: vi.fn(() => null),
+			persistTranslationState: vi.fn(),
+			recordTranslationAudit: vi.fn(),
+		});
+		expect(repository.getEffectiveTranslationState("/about")).toBe(
+			"not_started",
+		);
+	});
 });

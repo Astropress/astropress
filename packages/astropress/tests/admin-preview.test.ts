@@ -46,6 +46,22 @@ describe("resolvePreviewPath", () => {
 		const result = resolvePreviewPath(url);
 		expect(result).toEqual({ slug: "2024/01/15/my-post-title" });
 	});
+
+	it("returns null when /ap-admin/preview/ appears mid-path (kills ^-removal mutant)", () => {
+		// Without the ^ anchor the regex would match anywhere in pathname,
+		// e.g. an attacker-crafted path like /foo/ap-admin/preview/bar.
+		const url = new URL(
+			"http://admin.example.com/decoy/ap-admin/preview/secret",
+		);
+		expect(resolvePreviewPath(url)).toBeNull();
+	});
+
+	it("returns null for the bare /ap-admin/preview/ path (no slug)", () => {
+		// Empty slug must be rejected — only matches when there is at
+		// least one character after the trailing slash (the (.+) quantifier).
+		const url = new URL("http://admin.example.com/ap-admin/preview/");
+		expect(resolvePreviewPath(url)).toBeNull();
+	});
 });
 
 describe("buildPreviewLoginRedirect", () => {

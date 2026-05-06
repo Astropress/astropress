@@ -47,28 +47,28 @@ fn migrate_umami_to_plausible_generates_guide() {
 fn migrate_same_tool_returns_error() {
     let result = run_migrate(&opts("rallly", "rallly", true));
     assert!(result.is_err());
-    assert!(result.unwrap_err().contains("nothing to migrate"));
+    assert!(result.unwrap_err().to_string().contains("nothing to migrate"));
 }
 
 #[test]
 fn migrate_incompatible_categories_returns_error() {
     let result = run_migrate(&opts("rallly", "flarum", true));
     assert!(result.is_err());
-    assert!(result.unwrap_err().contains("different categories"));
+    assert!(result.unwrap_err().to_string().contains("different categories"));
 }
 
 #[test]
 fn migrate_unknown_from_returns_error() {
     let result = run_migrate(&opts("unknown-tool", "calcom", true));
     assert!(result.is_err());
-    assert!(result.unwrap_err().contains("Unknown tool"));
+    assert!(result.unwrap_err().to_string().contains("Unknown tool"));
 }
 
 #[test]
 fn migrate_unknown_to_returns_error() {
     let result = run_migrate(&opts("rallly", "unknown-tool", true));
     assert!(result.is_err());
-    assert!(result.unwrap_err().contains("Unknown tool"));
+    assert!(result.unwrap_err().to_string().contains("Unknown tool"));
 }
 
 #[test]
@@ -77,7 +77,7 @@ fn migrate_builtin_cms_rejected() {
     // astropress add --cms keystatic/payload instead.
     let result = run_migrate(&opts("builtin", "keystatic", true));
     assert!(result.is_err());
-    assert!(result.unwrap_err().contains("Unknown tool"));
+    assert!(result.unwrap_err().to_string().contains("Unknown tool"));
 }
 
 #[test]
@@ -113,7 +113,7 @@ fn migrate_nonexistent_project_dir_returns_does_not_exist_error() {
         dry_run: false,
     });
     assert!(result.is_err());
-    let err = result.unwrap_err();
+    let err = result.unwrap_err().to_string();
     assert!(
         err.contains("does not exist"),
         "expected 'does not exist' error for absent project dir, got: {err}"

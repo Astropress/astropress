@@ -62,14 +62,17 @@ export function normalizeLegacyUrl(
 }
 
 export function serializeMetadata(
+	// audit-boundary: opaque-passthrough -- module-boundary value; narrowed at consumer
 	metadata: Record<string, unknown>,
 ): string | null {
 	return Object.keys(metadata).length > 0 ? JSON.stringify(metadata) : null;
 }
 
+// audit-boundary: opaque-passthrough -- module-boundary value; narrowed at consumer
 export function nullsToUndefined<T extends Record<string, unknown>>(
 	obj: T,
 ): { [K in keyof T]: Exclude<T[K], null> | undefined } {
+	// audit-boundary: opaque-passthrough -- module-boundary value; narrowed at consumer
 	const result = {} as Record<string, unknown>;
 	for (const [key, value] of Object.entries(obj)) {
 		result[key] = value ?? undefined;

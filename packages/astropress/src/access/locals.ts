@@ -8,12 +8,15 @@
  * ambient `App.Locals` augmentation.
  */
 
+import type { AuthUser } from "../platform-contracts";
 import type { AccessContext } from "./request-context";
 
 declare global {
 	namespace App {
 		interface Locals {
 			access?: AccessContext;
+			adminUser?: AuthUser & { name?: string };
+			csrfToken?: string;
 		}
 	}
 }

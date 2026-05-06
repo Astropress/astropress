@@ -12,6 +12,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { createAstropressCloudflarePagesDeployTarget } from "../src/deploy/cloudflare-pages";
 import { createAstropressCustomDeployTarget } from "../src/deploy/custom";
+import { createAstropressGitHubPagesDeployTarget } from "../src/deploy/github-pages";
 import { createAstropressGitLabPagesDeployTarget } from "../src/deploy/gitlab-pages";
 import { createAstropressNetlifyDeployTarget } from "../src/deploy/netlify";
 import { createAstropressRenderDeployTarget } from "../src/deploy/render";
@@ -120,6 +121,65 @@ describe("prepareAstropressDeployment", () => {
 
 		// Should still produce a valid deploymentId
 		expect(result.deploymentId).toContain("test-auto:auto-path:");
+
+		// Default path is `<buildDir>/../.astropress/deployments/<provider>/<projectName>`.
+		const expectedTarget = join(
+			buildDir,
+			"..",
+			".astropress",
+			"deployments",
+			"test-auto",
+			"auto-path",
+		);
+		expect(existsSync(join(expectedTarget, "index.html"))).toBe(true);
+		expect(existsSync(join(expectedTarget, ".astropress-deploy.json"))).toBe(
+			true,
+		);
+	});
+
+	it("metadata file is named exactly '.astropress-deploy.json'", async () => {
+		const buildDir = makeBuildDir("build-metaname");
+		const outputDir = join(testRoot, "out-metaname");
+		await prepareAstropressDeployment(
+			{ buildDir, projectName: "p" },
+			{ provider: "x", outputDir },
+		);
+		// readFile of the exact filename must succeed.
+		const meta = JSON.parse(
+			await readFile(join(outputDir, "p", ".astropress-deploy.json"), "utf8"),
+		);
+		expect(meta.preparedAt).toMatch(/^\d{4}-\d{2}-\d{2}T/);
+	});
+
+	it("trims trailing slashes from baseUrl before joining the project path", async () => {
+		const buildDir = makeBuildDir("build-trim");
+		const outputDir = join(testRoot, "out-trim");
+		const result = await prepareAstropressDeployment(
+			{ buildDir, projectName: "p" },
+			{ provider: "x", outputDir, baseUrl: "https://h.example///" },
+		);
+		expect(result.url).toBe("https://h.example/p/");
+	});
+
+	it("leaves a baseUrl without trailing slashes unchanged", async () => {
+		const buildDir = makeBuildDir("build-notrim");
+		const outputDir = join(testRoot, "out-notrim");
+		const result = await prepareAstropressDeployment(
+			{ buildDir, projectName: "p" },
+			{ provider: "x", outputDir, baseUrl: "https://h.example" },
+		);
+		expect(result.url).toBe("https://h.example/p/");
+	});
+
+	it("handles a baseUrl that is ONLY trailing slashes (full trim → empty origin)", async () => {
+		const buildDir = makeBuildDir("build-allslash");
+		const outputDir = join(testRoot, "out-allslash");
+		const result = await prepareAstropressDeployment(
+			{ buildDir, projectName: "p" },
+			{ provider: "x", outputDir, baseUrl: "//" },
+		);
+		// All slashes trimmed -> "" prefix; project segment still appended.
+		expect(result.url).toBe("/p/");
 	});
 
 	it("overwrites an existing deployment (idempotent)", async () => {
@@ -189,6 +249,38 @@ describe("createAstropressVercelDeployTarget", () => {
 		expect(result.deploymentId).toContain("vercel:");
 		expect(result.url).toContain("vercel.app");
 	});
+
+	it("default baseUrl is the literal vercel.app host", async () => {
+		const buildDir = makeBuildDir("build-vercel-default-url");
+		const outputDir = join(testRoot, "out-vercel-default-url");
+		const target = createAstropressVercelDeployTarget({ outputDir });
+		const result = await target.deploy({ buildDir, projectName: "p" });
+		expect(result.url).toBe("https://vercel.app/p/");
+	});
+
+	it("explicit baseUrl override is honored", async () => {
+		const buildDir = makeBuildDir("build-vercel-override");
+		const outputDir = join(testRoot, "out-vercel-override");
+		const target = createAstropressVercelDeployTarget({
+			outputDir,
+			baseUrl: "https://my-app.vercel.app",
+		});
+		const result = await target.deploy({ buildDir, projectName: "p" });
+		expect(result.url).toBe("https://my-app.vercel.app/p/");
+	});
+
+	it("works with no options at all (default-ctor branch)", async () => {
+		const buildDir = makeBuildDir("build-vercel-noopts");
+		const target = createAstropressVercelDeployTarget();
+		const result = await target.deploy({ buildDir, projectName: "p-no" });
+		expect(result.deploymentId).toContain("vercel:p-no:");
+		expect(result.url).toBe("https://vercel.app/p-no/");
+	});
+
+	it("provider field on the target is the literal string 'custom'", () => {
+		const target = createAstropressVercelDeployTarget();
+		expect(target.provider).toBe("custom");
+	});
 });
 
 describe("createAstropressRenderDeployTarget", () => {
@@ -210,6 +302,87 @@ describe("createAstropressRenderDeployTarget", () => {
 		const result = await target.deploy({ buildDir, projectName: "rs-site" });
 		expect(result.deploymentId).toContain("render-static:");
 	});
+
+	it("default baseUrl is the onrender.com host", async () => {
+		const buildDir = makeBuildDir("build-render-baseurl-default");
+		const outputDir = join(testRoot, "out-render-baseurl-default");
+		const target = createAstropressRenderDeployTarget({ outputDir });
+		const result = await target.deploy({ buildDir, projectName: "r-site" });
+		expect(result.url).toBe("https://onrender.com/r-site/");
+	});
+
+	it("explicit baseUrl override is honored", async () => {
+		const buildDir = makeBuildDir("build-render-baseurl-override");
+		const outputDir = join(testRoot, "out-render-baseurl-override");
+		const target = createAstropressRenderDeployTarget({
+			outputDir,
+			baseUrl: "https://custom.example",
+		});
+		const result = await target.deploy({ buildDir, projectName: "r-site" });
+		expect(result.url).toBe("https://custom.example/r-site/");
+	});
+
+	it("works when no options are passed at all (uses render-web default)", async () => {
+		const buildDir = makeBuildDir("build-render-no-opts");
+		const target = createAstropressRenderDeployTarget();
+		const result = await target.deploy({
+			buildDir,
+			projectName: "r-noopts-site",
+		});
+		expect(result.deploymentId).toContain("render-web:");
+		expect(result.url).toBe("https://onrender.com/r-noopts-site/");
+	});
+
+	it("provider field on the target is the literal string 'custom'", () => {
+		const target = createAstropressRenderDeployTarget();
+		expect(target.provider).toBe("custom");
+	});
+
+	it("kind=render-static uses the static deploymentId prefix exactly", async () => {
+		const buildDir = makeBuildDir("build-render-static-prefix");
+		const outputDir = join(testRoot, "out-render-static-prefix");
+		const target = createAstropressRenderDeployTarget({
+			outputDir,
+			kind: "render-static",
+		});
+		const result = await target.deploy({ buildDir, projectName: "p" });
+		expect(result.deploymentId.startsWith("render-static:")).toBe(true);
+		expect(result.deploymentId.startsWith("render-web:")).toBe(false);
+	});
+});
+
+describe("createAstropressGitHubPagesDeployTarget", () => {
+	it("provider field is the literal string 'github-pages'", () => {
+		const target = createAstropressGitHubPagesDeployTarget();
+		expect(target.provider).toBe("github-pages");
+	});
+
+	it("deploys with github-pages provider id and no url when baseUrl is omitted", async () => {
+		const buildDir = makeBuildDir("build-gh");
+		const outputDir = join(testRoot, "out-gh");
+		const target = createAstropressGitHubPagesDeployTarget({ outputDir });
+		const result = await target.deploy({ buildDir, projectName: "gh-site" });
+		expect(result.deploymentId).toContain("github-pages:gh-site:");
+		expect(result.url).toBeUndefined();
+	});
+
+	it("uses explicit baseUrl when provided", async () => {
+		const buildDir = makeBuildDir("build-gh-url");
+		const outputDir = join(testRoot, "out-gh-url");
+		const target = createAstropressGitHubPagesDeployTarget({
+			outputDir,
+			baseUrl: "https://owner.github.io/repo",
+		});
+		const result = await target.deploy({ buildDir, projectName: "gh-url" });
+		expect(result.url).toBe("https://owner.github.io/repo/gh-url/");
+	});
+
+	it("works with no options at all (default-ctor branch)", async () => {
+		const buildDir = makeBuildDir("build-gh-noopts");
+		const target = createAstropressGitHubPagesDeployTarget();
+		const result = await target.deploy({ buildDir, projectName: "gh-noopts" });
+		expect(result.deploymentId).toContain("github-pages:gh-noopts:");
+	});
 });
 
 describe("createAstropressGitLabPagesDeployTarget", () => {
@@ -220,6 +393,39 @@ describe("createAstropressGitLabPagesDeployTarget", () => {
 		const result = await target.deploy({ buildDir, projectName: "gl-site" });
 		expect(result.deploymentId).toContain("gitlab-pages:");
 		expect(result.url).toContain("gitlab.io");
+	});
+
+	it("default baseUrl is the literal gitlab.io host", async () => {
+		const buildDir = makeBuildDir("build-gitlab-default-url");
+		const outputDir = join(testRoot, "out-gitlab-default-url");
+		const target = createAstropressGitLabPagesDeployTarget({ outputDir });
+		const result = await target.deploy({ buildDir, projectName: "p" });
+		expect(result.url).toBe("https://gitlab.io/p/");
+	});
+
+	it("explicit baseUrl override is honored", async () => {
+		const buildDir = makeBuildDir("build-gitlab-override");
+		const outputDir = join(testRoot, "out-gitlab-override");
+		const target = createAstropressGitLabPagesDeployTarget({
+			outputDir,
+			baseUrl: "https://owner.gitlab.io/repo",
+		});
+		const result = await target.deploy({ buildDir, projectName: "p" });
+		expect(result.url).toBe("https://owner.gitlab.io/repo/p/");
+	});
+
+	it("works with no options at all (default-ctor branch)", async () => {
+		const buildDir = makeBuildDir("build-gitlab-noopts");
+		const target = createAstropressGitLabPagesDeployTarget();
+		const result = await target.deploy({ buildDir, projectName: "p-no" });
+		expect(result.deploymentId).toContain("gitlab-pages:p-no:");
+	});
+
+	it("provider field on the target is the literal string 'custom'", () => {
+		// Matches the pattern used by render/vercel/netlify; the actual
+		// provider id used in deploymentId is 'gitlab-pages'.
+		const target = createAstropressGitLabPagesDeployTarget();
+		expect(target.provider).toBe("custom");
 	});
 });
 
@@ -243,5 +449,29 @@ describe("createAstropressCustomDeployTarget", () => {
 		const target = createAstropressCustomDeployTarget({ outputDir });
 		const result = await target.deploy({ buildDir, projectName: "d-site" });
 		expect(result.deploymentId).toContain("custom:");
+	});
+
+	it("works with no options at all (default-ctor branch)", async () => {
+		const buildDir = makeBuildDir("build-custom-noopts");
+		const target = createAstropressCustomDeployTarget();
+		const result = await target.deploy({ buildDir, projectName: "p-no" });
+		expect(result.deploymentId).toContain("custom:p-no:");
+		expect(result.url).toBeUndefined();
+	});
+
+	it("provider field on the target is the literal string 'custom'", () => {
+		const target = createAstropressCustomDeployTarget();
+		expect(target.provider).toBe("custom");
+	});
+
+	it("custom provider name flows into deploymentId prefix exactly", async () => {
+		const buildDir = makeBuildDir("build-custom-prefix");
+		const outputDir = join(testRoot, "out-custom-prefix");
+		const target = createAstropressCustomDeployTarget({
+			outputDir,
+			provider: "edgeone",
+		});
+		const result = await target.deploy({ buildDir, projectName: "p" });
+		expect(result.deploymentId.startsWith("edgeone:")).toBe(true);
 	});
 });

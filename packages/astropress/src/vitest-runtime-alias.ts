@@ -4,6 +4,20 @@ export type AstropressVitestPlugin = {
 	resolveId: (id: string, importer?: string) => string | undefined;
 };
 
+export function isLocalRuntimeModuleId(id: string): boolean {
+	return /local-runtime-modules(?:\.[jt]s)?$/.test(id);
+}
+
+export function isAstropressSrcImporter(importer: string): boolean {
+	const norm = importer.replace(/\\/g, "/");
+	if (norm.includes("/astropress/packages/astropress/src/")) return true;
+	if (norm.includes("/node_modules/astropress/src/")) return true;
+	if (norm.includes("/node_modules/.bun/")) {
+		return norm.includes("/astropress/src/");
+	}
+	return false;
+}
+
 export function createAstropressVitestLocalRuntimePlugins(
 	localRuntimeModulesPath: string,
 ): AstropressVitestPlugin[] {
@@ -12,7 +26,7 @@ export function createAstropressVitestLocalRuntimePlugins(
 			name: "astropress-local-runtime-modules-replacer",
 			enforce: "pre",
 			resolveId(id) {
-				if (/local-runtime-modules(?:\.[jt]s)?$/.test(id)) {
+				if (isLocalRuntimeModuleId(id)) {
 					return localRuntimeModulesPath;
 				}
 			},
@@ -23,10 +37,8 @@ export function createAstropressVitestLocalRuntimePlugins(
 			resolveId(id, importer) {
 				if (
 					importer &&
-					/(?:astropress[\\/]packages[\\/]astropress|node_modules[\\/](?:\.bun[\\/].*?[\\/]node_modules[\\/])?astropress)[\\/]src/.test(
-						importer,
-					) &&
-					/local-runtime-modules(?:\.[jt]s)?$/.test(id)
+					isAstropressSrcImporter(importer) &&
+					isLocalRuntimeModuleId(id)
 				) {
 					return localRuntimeModulesPath;
 				}

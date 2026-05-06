@@ -1,9 +1,20 @@
 import type { DatabaseSync } from "node:sqlite";
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { logAccessDeny } from "../src/access/audit-deny";
 import { makeDb } from "./helpers/make-db.js";
 import { makeLocals } from "./helpers/make-locals.js";
+
+const recordAuditEventMock = vi.fn(async () => {});
+vi.mock("../src/local-runtime-modules", async (orig) => {
+	const real = (await orig()) as Record<string, unknown>;
+	return {
+		...real,
+		loadLocalAdminStore: async () => ({
+			recordAuditEvent: recordAuditEventMock,
+		}),
+	};
+});
 
 // BDD: logAccessDeny — every engine.can() deny should land in audit_events
 //
@@ -63,6 +74,51 @@ describe("logAccessDeny", () => {
 			.prepare("SELECT summary FROM audit_events ORDER BY id DESC LIMIT 1")
 			.get() as { summary: string } | undefined;
 		expect(row?.summary).toMatch(/access denied/i);
+	});
+
+	describe("local-store fallback (no D1 binding)", () => {
+		beforeEach(() => {
+			recordAuditEventMock.mockClear();
+		});
+
+		it("Calls store.recordAuditEvent with the documented action/resource shape", async () => {
+			await logAccessDeny(null, {
+				subjectEmail: "editor@test.local",
+				action: "users:invite",
+				decision: { decision: "deny", reason: "denied for users:invite" },
+			});
+			expect(recordAuditEventMock).toHaveBeenCalledTimes(1);
+			expect(recordAuditEventMock).toHaveBeenCalledWith({
+				userEmail: "editor@test.local",
+				action: "access:deny",
+				resourceType: "access",
+				resourceId: "users:invite",
+				summary: "denied for users:invite",
+			});
+		});
+
+		it("Falls back to default summary when reason is empty (local path)", async () => {
+			await logAccessDeny(null, {
+				subjectEmail: "editor@test.local",
+				action: "settings:edit",
+				decision: { decision: "deny", reason: "" },
+			});
+			const call = recordAuditEventMock.mock.calls[0]?.[0] as {
+				summary: string;
+			};
+			expect(call.summary).toBe("Access denied");
+		});
+
+		it("Swallows local-path failures (recordAuditEvent throws)", async () => {
+			recordAuditEventMock.mockRejectedValueOnce(new Error("boom"));
+			await expect(
+				logAccessDeny(null, {
+					subjectEmail: "editor@test.local",
+					action: "x",
+					decision: { decision: "deny", reason: "r" },
+				}),
+			).resolves.toBeUndefined();
+		});
 	});
 
 	it("Swallows logging failures — a broken audit table never blocks the deny path", async () => {

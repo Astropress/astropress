@@ -14,7 +14,22 @@
  */
 
 import { randomUUID } from "node:crypto";
+import {
+	type RolePolicyRow,
+	type RoleRow,
+	type UserPolicyRow,
+	type UserRoleRow,
+	decodeAttribute,
+	encodeAttribute,
+	nowIso,
+	rowToRole,
+	rowToRolePolicy,
+	rowToUserPolicy,
+	rowToUserRole,
+} from "./repository-helpers";
 import type { AttributeValue, Condition, Effect, Policy } from "./types";
+
+export { seedStarterRoles } from "./repository-helpers";
 
 export interface RoleRecord {
 	id: string;
@@ -58,15 +73,17 @@ export interface UserRoleAssignment {
 export interface AccessStore {
 	exec(sql: string): void;
 	prepare(sql: string): {
+		// audit-boundary: opaque-passthrough -- mirrors driver bind-arg shape
 		all<T = unknown>(...params: unknown[]): T[];
+		// audit-boundary: opaque-passthrough -- mirrors driver bind-arg shape
 		get<T = unknown>(...params: unknown[]): T | undefined;
+		// audit-boundary: opaque-passthrough -- mirrors driver bind-arg shape
 		run(...params: unknown[]): { changes: number };
 	};
 }
 
-export function createAccessRepository(store: AccessStore) {
+function rolesMethods(store: AccessStore) {
 	return {
-		// ─── Roles ─────────────────────────────────────────────────────────
 		listRoles(): RoleRecord[] {
 			return store
 				.prepare(
@@ -106,6 +123,7 @@ export function createAccessRepository(store: AccessStore) {
 		): void {
 			const now = nowIso();
 			const sets: string[] = [];
+			// audit-boundary: opaque-passthrough -- variadic SQL bind args
 			const args: unknown[] = [];
 			if (input.name !== undefined) {
 				sets.push("name = ?");
@@ -123,11 +141,13 @@ export function createAccessRepository(store: AccessStore) {
 				.run(...args);
 		},
 		deleteRole(id: string): void {
-			// CASCADE handles role_policies + user_roles.
 			store.prepare("DELETE FROM access_roles WHERE id = ?").run(id);
 		},
+	};
+}
 
-		// ─── Role policies ─────────────────────────────────────────────────
+function rolePoliciesMethods(store: AccessStore) {
+	return {
 		listRolePolicies(roleId: string): RolePolicyRecord[] {
 			return store
 				.prepare(
@@ -163,8 +183,11 @@ export function createAccessRepository(store: AccessStore) {
 		removeRolePolicy(id: string): void {
 			store.prepare("DELETE FROM access_role_policies WHERE id = ?").run(id);
 		},
+	};
+}
 
-		// ─── User-role assignments ─────────────────────────────────────────
+function userRolesMethods(store: AccessStore) {
+	return {
 		listUserRoles(userId: number): UserRoleAssignment[] {
 			return store
 				.prepare(
@@ -191,8 +214,11 @@ export function createAccessRepository(store: AccessStore) {
 				)
 				.run(input.userId, input.roleId);
 		},
+	};
+}
 
-		// ─── Direct user policies ──────────────────────────────────────────
+function userPoliciesMethods(store: AccessStore) {
+	return {
 		listUserPolicies(userId: number): UserPolicyRecord[] {
 			return store
 				.prepare(
@@ -246,8 +272,11 @@ export function createAccessRepository(store: AccessStore) {
 		removeUserPolicy(id: string): void {
 			store.prepare("DELETE FROM access_user_policies WHERE id = ?").run(id);
 		},
+	};
+}
 
-		// ─── User attributes ───────────────────────────────────────────────
+function attributesMethods(store: AccessStore) {
+	return {
 		getUserAttributes(
 			userId: number,
 		): Readonly<Record<string, AttributeValue>> {
@@ -280,8 +309,38 @@ export function createAccessRepository(store: AccessStore) {
 				)
 				.run(input.userId, input.key);
 		},
+	};
+}
 
-		// ─── Subject resolution ────────────────────────────────────────────
+function adminCountMethods(store: AccessStore) {
+	return {
+		countActiveAdmins(): number {
+			const row = store
+				.prepare(
+					"SELECT COUNT(*) AS n FROM admin_users WHERE active = 1 AND is_admin = 1",
+				)
+				.get<{ n: number }>();
+			return row?.n ?? 0;
+		},
+	};
+}
+
+export function createAccessRepository(store: AccessStore) {
+	const roles = rolesMethods(store);
+	const rolePolicies = rolePoliciesMethods(store);
+	const userRoles = userRolesMethods(store);
+	const userPolicies = userPoliciesMethods(store);
+	const attrs = attributesMethods(store);
+	const adminCount = adminCountMethods(store);
+
+	return {
+		...roles,
+		...rolePolicies,
+		...userRoles,
+		...userPolicies,
+		...attrs,
+		...adminCount,
+
 		/**
 		 * Compute the effective set of policies for a user — union of:
 		 *  - all policies attached to roles the user holds
@@ -290,12 +349,12 @@ export function createAccessRepository(store: AccessStore) {
 		 * the matched policy.
 		 */
 		resolvePoliciesForUser(userId: number): Policy[] {
-			const roleAssignments = this.listUserRoles(userId);
+			const roleAssignments = userRoles.listUserRoles(userId);
 			const policies: Policy[] = [];
 			for (const ra of roleAssignments) {
-				const role = this.getRole(ra.roleId);
+				const role = roles.getRole(ra.roleId);
 				const roleName = role?.name ?? ra.roleId;
-				for (const rp of this.listRolePolicies(ra.roleId)) {
+				for (const rp of rolePolicies.listRolePolicies(ra.roleId)) {
 					policies.push({
 						id: rp.id,
 						effect: rp.effect,
@@ -306,7 +365,7 @@ export function createAccessRepository(store: AccessStore) {
 					});
 				}
 			}
-			for (const up of this.listUserPolicies(userId)) {
+			for (const up of userPolicies.listUserPolicies(userId)) {
 				policies.push({
 					id: up.id,
 					effect: up.effect,
@@ -320,218 +379,9 @@ export function createAccessRepository(store: AccessStore) {
 		},
 
 		listUserRoleIds(userId: number): string[] {
-			return this.listUserRoles(userId).map((r) => r.roleId);
-		},
-
-		// ─── Last-admin safeguard ──────────────────────────────────────────
-		countActiveAdmins(): number {
-			const row = store
-				.prepare(
-					"SELECT COUNT(*) AS n FROM admin_users WHERE active = 1 AND is_admin = 1",
-				)
-				.get<{ n: number }>();
-			return row?.n ?? 0;
+			return userRoles.listUserRoles(userId).map((r) => r.roleId);
 		},
 	};
 }
 
 export type AccessRepository = ReturnType<typeof createAccessRepository>;
-
-// ─── Row mappers + attribute codec ───────────────────────────────────────
-
-interface RoleRow {
-	id: string;
-	name: string;
-	description: string;
-	is_system: number;
-	created_at: string;
-	updated_at: string;
-}
-interface RolePolicyRow {
-	id: string;
-	role_id: string;
-	effect: Effect;
-	action: string;
-	condition_json: string | null;
-	priority: number;
-}
-interface UserPolicyRow {
-	id: string;
-	user_id: number;
-	effect: Effect;
-	action: string;
-	condition_json: string | null;
-	priority: number;
-	granted_by: string | null;
-}
-interface UserRoleRow {
-	user_id: number;
-	role_id: string;
-	granted_at: string;
-	granted_by: string | null;
-}
-
-function rowToRole(r: RoleRow): RoleRecord {
-	return {
-		id: r.id,
-		name: r.name,
-		description: r.description,
-		isSystem: r.is_system === 1,
-		createdAt: r.created_at,
-		updatedAt: r.updated_at,
-	};
-}
-function rowToRolePolicy(r: RolePolicyRow): RolePolicyRecord {
-	return {
-		id: r.id,
-		roleId: r.role_id,
-		effect: r.effect,
-		action: r.action,
-		condition: r.condition_json
-			? (JSON.parse(r.condition_json) as Condition)
-			: null,
-		priority: r.priority,
-	};
-}
-function rowToUserPolicy(r: UserPolicyRow): UserPolicyRecord {
-	return {
-		id: r.id,
-		userId: r.user_id,
-		effect: r.effect,
-		action: r.action,
-		condition: r.condition_json
-			? (JSON.parse(r.condition_json) as Condition)
-			: null,
-		priority: r.priority,
-		grantedBy: r.granted_by,
-	};
-}
-function rowToUserRole(r: UserRoleRow): UserRoleAssignment {
-	return {
-		userId: r.user_id,
-		roleId: r.role_id,
-		grantedAt: r.granted_at,
-		grantedBy: r.granted_by,
-	};
-}
-
-// Attributes are stored as JSON-encoded strings so the DB column stays a
-// scalar TEXT regardless of value type. Decode is permissive — anything
-// that fails JSON.parse is returned as the raw string.
-function encodeAttribute(v: AttributeValue): string {
-	return JSON.stringify(v);
-}
-function decodeAttribute(raw: string): AttributeValue {
-	try {
-		return JSON.parse(raw) as AttributeValue;
-	} catch {
-		return raw;
-	}
-}
-
-function nowIso(): string {
-	return new Date().toISOString();
-}
-
-// ─── Starter role seeding ────────────────────────────────────────────────
-
-/**
- * Seed the four starter roles (Editor, Author, Moderator, Translator) if
- * the access_roles table is empty. Admins can rename, edit, or delete
- * them at will — they are not flagged is_system so the UI does not lock
- * them down. Idempotent: only runs when the table is empty.
- */
-export function seedStarterRoles(repo: AccessRepository): void {
-	if (repo.listRoles().length > 0) return;
-
-	const editor = repo.createRole({
-		name: "Editor",
-		description:
-			"Edits site content (pages, posts, media). Cannot delete published items or manage users / settings. Admins can rename, edit, or delete this role.",
-	});
-	repo.addRolePolicy({
-		roleId: editor.id,
-		effect: "allow",
-		action: "pages:*",
-	});
-	repo.addRolePolicy({
-		roleId: editor.id,
-		effect: "deny",
-		action: "pages:delete",
-		priority: 100,
-	});
-	repo.addRolePolicy({
-		roleId: editor.id,
-		effect: "allow",
-		action: "posts:*",
-	});
-	repo.addRolePolicy({
-		roleId: editor.id,
-		effect: "deny",
-		action: "posts:delete",
-		priority: 100,
-	});
-	repo.addRolePolicy({
-		roleId: editor.id,
-		effect: "allow",
-		action: "media:upload",
-	});
-	repo.addRolePolicy({
-		roleId: editor.id,
-		effect: "allow",
-		action: "media:list",
-	});
-
-	const author = repo.createRole({
-		name: "Author",
-		description:
-			"Creates and edits their own posts only. Cannot edit other authors' work, manage taxonomies, or touch site structure. Admins can customize this role.",
-	});
-	repo.addRolePolicy({
-		roleId: author.id,
-		effect: "allow",
-		action: "posts:list",
-	});
-	repo.addRolePolicy({
-		roleId: author.id,
-		effect: "allow",
-		action: "posts:create",
-	});
-	repo.addRolePolicy({
-		roleId: author.id,
-		effect: "allow",
-		action: "posts:edit",
-		condition: {
-			op: "stringEquals",
-			left: "resource.ownerId",
-			right: "${user.id}",
-		},
-	});
-	repo.addRolePolicy({
-		roleId: author.id,
-		effect: "allow",
-		action: "media:upload",
-	});
-
-	const moderator = repo.createRole({
-		name: "Moderator",
-		description:
-			"Moderates comments and audience signals. No content authoring authority. Admins can customize this role.",
-	});
-	repo.addRolePolicy({
-		roleId: moderator.id,
-		effect: "allow",
-		action: "comments:*",
-	});
-
-	const translator = repo.createRole({
-		name: "Translator",
-		description:
-			"Edits localized strings only. Read-only on everything else. Admins can customize this role.",
-	});
-	repo.addRolePolicy({
-		roleId: translator.id,
-		effect: "allow",
-		action: "translations:manage",
-	});
-}

@@ -1,3 +1,4 @@
+// stryker-disable-file: data-only — type stub; no executable code to mutate.
 /**
  * TYPE STUB — mirrors the public exports of website/src/astropress/admin-persistence.ts
  *
@@ -232,6 +233,7 @@ export declare function saveContentState(
 		canonicalUrlOverride?: string;
 		robotsDirective?: string;
 		revisionNote?: string;
+		// audit-boundary: opaque-passthrough -- module-boundary value; narrowed at consumer
 		metadata?: Record<string, unknown>;
 	},
 	actor: Actor,

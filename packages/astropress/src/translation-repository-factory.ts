@@ -44,10 +44,18 @@ export function createAstropressTranslationRepository(
 
 			return { ok: true as const };
 		},
-		getEffectiveTranslationState(route, fallback = "not_started") {
+		getEffectiveTranslationState(route, fallback) {
+			// normalizeTranslationState's own fallback is "not_started"; pass
+			// the caller-supplied fallback through only if provided, otherwise
+			// let normalize use its default to avoid an equivalent default-arg
+			// string literal.
+			const normalized =
+				fallback === undefined
+					? undefined
+					: normalizeTranslationState(fallback);
 			return normalizeTranslationState(
 				input.readTranslationState(route),
-				normalizeTranslationState(fallback),
+				normalized,
 			);
 		},
 	};

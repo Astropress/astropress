@@ -1,5 +1,6 @@
 //! VitePress (Vue, MIT) — minimal, keyboard-friendly, local search.
 
+#[mutants::skip]
 pub(super) fn stubs() -> Vec<(&'static str, &'static str)> {
     vec![
         ("docs/package.json",          PACKAGE_JSON),

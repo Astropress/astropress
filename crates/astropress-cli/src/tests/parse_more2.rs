@@ -86,44 +86,44 @@ fn parse_add_features_pledge_crypto_donation() {
 
 #[test]
 fn help_aliases_all_return_help() {
-    assert_eq!(parse_command(&strings(&["-h"])), Ok(Command::Help));
-    assert_eq!(parse_command(&strings(&["help"])), Ok(Command::Help));
+    assert!(matches!(parse_command(&strings(&["-h"])), Ok(Command::Help)));
+    assert!(matches!(parse_command(&strings(&["help"])), Ok(Command::Help)));
 }
 
 #[test]
 fn import_unknown_subcommand_error_mentions_import_sources() {
-    let err = parse_command(&strings(&["import", "unknown"])).unwrap_err();
+    let err = parse_command(&strings(&["import", "unknown"])).unwrap_err().to_string();
     assert!(err.contains("import wordpress"), "error should mention import wordpress: {err}");
 }
 
 #[test]
 fn sync_unknown_subcommand_error_mentions_sync_export() {
-    let err = parse_command(&strings(&["sync", "unknown"])).unwrap_err();
+    let err = parse_command(&strings(&["sync", "unknown"])).unwrap_err().to_string();
     assert!(err.contains("sync export"), "error should mention sync export: {err}");
 }
 
 #[test]
 fn db_unknown_subcommand_error_mentions_db_migrate() {
-    let err = parse_command(&strings(&["db", "unknown"])).unwrap_err();
+    let err = parse_command(&strings(&["db", "unknown"])).unwrap_err().to_string();
     assert!(err.contains("db migrate"), "error should mention db migrate: {err}");
 }
 
 #[test]
 fn list_unknown_subcommand_error_mentions_list_tools() {
-    let err = parse_command(&strings(&["list", "unknown"])).unwrap_err();
+    let err = parse_command(&strings(&["list", "unknown"])).unwrap_err().to_string();
     assert!(err.contains("list tools"), "error should mention list tools: {err}");
 }
 
 #[test]
 fn services_unknown_subcommand_error_mentions_services() {
-    let err = parse_command(&strings(&["services", "unknown"])).unwrap_err();
+    let err = parse_command(&strings(&["services", "unknown"])).unwrap_err().to_string();
     // Must match the services fallback arm, not the wildcard ("Unsupported astropress command: `services`")
     assert!(err.contains("services bootstrap"), "error should mention services bootstrap: {err}");
 }
 
 #[test]
 fn config_unknown_subcommand_error_mentions_config() {
-    let err = parse_command(&strings(&["config", "unknown"])).unwrap_err();
+    let err = parse_command(&strings(&["config", "unknown"])).unwrap_err().to_string();
     // Must match the config fallback arm, not the wildcard ("Unsupported astropress command: `config`")
     assert!(err.contains("config migrate"), "error should mention config migrate: {err}");
 }
@@ -132,7 +132,7 @@ fn config_unknown_subcommand_error_mentions_config() {
 fn non_list_command_with_providers_arg_is_not_list_providers() {
     // If the `(command == "list" || command == "ls") && subcommand == "providers"` guard
     // were changed to `||`, arbitrary commands with "providers" as 2nd arg would match.
-    let err = parse_command(&strings(&["db", "providers"])).unwrap_err();
+    let err = parse_command(&strings(&["db", "providers"])).unwrap_err().to_string();
     assert!(err.contains("db"), "should be a db error: {err}");
 }
 
@@ -223,7 +223,7 @@ fn dev_unknown_flag_returns_error() {
     // Original: guard true → Err("Unsupported..."). Mutation: guard false → Ok(New{..}).
     let result = parse_command(&strings(&["dev", "--bogus-unknown-flag"]));
     assert!(result.is_err(), "unknown dev flag must return an error, got: {result:?}");
-    assert!(result.unwrap_err().contains("Unsupported"));
+    assert!(result.unwrap_err().to_string().contains("Unsupported"));
 }
 
 #[test]
@@ -232,5 +232,5 @@ fn new_unknown_flag_returns_error() {
     // Same pattern: unknown flags must error, not silently become project_dir.
     let result = parse_command(&strings(&["new", "--bogus-unknown-flag"]));
     assert!(result.is_err(), "unknown new flag must return an error, got: {result:?}");
-    assert!(result.unwrap_err().contains("Unsupported"));
+    assert!(result.unwrap_err().to_string().contains("Unsupported"));
 }

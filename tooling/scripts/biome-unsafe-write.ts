@@ -1,7 +1,12 @@
-import { spawnSync } from "node:child_process";
+import { execFileSync, spawnSync } from "node:child_process";
 import { join } from "node:path";
 
-const root = process.cwd();
+// Resolve the repo root explicitly so the script works from any cwd —
+// `bunx biome` resolves relative paths against the caller's cwd, and a drift
+// into a subdirectory previously caused silent no-op runs.
+const root = execFileSync("git", ["rev-parse", "--show-toplevel"], {
+	encoding: "utf8",
+}).trim();
 const pkgDir = join(root, "packages/astropress");
 
 const DEFAULT_PATHS = [

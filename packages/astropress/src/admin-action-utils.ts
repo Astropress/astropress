@@ -1,6 +1,18 @@
 import type { APIRoute } from "astro";
 import { logAccessDeny } from "./access/audit-deny.js";
 import { getAccessContext } from "./access/index.js";
+import {
+	ADMIN_ACTION_LOGGER_CONTEXT,
+	DEFAULT_ACTION_DENIED_MESSAGE,
+	DEFAULT_ADMIN_REQUIRED_MESSAGE,
+	DEFAULT_INVALID_CSRF_MESSAGE,
+	DEFAULT_INVALID_ORIGIN_MESSAGE,
+	DEFAULT_LOGIN_PATH,
+	DEFAULT_UNEXPECTED_MESSAGE,
+	LEGACY_SESSION_COOKIE,
+	LOCAL_SESSION_COOKIE,
+	SECURE_SESSION_COOKIE,
+} from "./admin-action-utils-data";
 import { isAuthUserAdmin } from "./platform-contracts.js";
 import {
 	getRuntimeCsrfToken,
@@ -13,11 +25,7 @@ import {
 	isTrustedRequestOrigin,
 } from "./security-headers.js";
 
-const logger = createLogger("admin-action");
-
-const LEGACY_SESSION_COOKIE = "ff_admin_session";
-const LOCAL_SESSION_COOKIE = "astropress_admin_session";
-const SECURE_SESSION_COOKIE = "__Host-astropress_admin_session";
+const logger = createLogger(ADMIN_ACTION_LOGGER_CONTEXT);
 
 type AdminActionContext = Parameters<NonNullable<APIRoute>>[0];
 type AdminSessionUser = NonNullable<
@@ -69,6 +77,49 @@ export function actionErrorRedirect(path: string, message: string): Response {
 	return actionRedirect(url.pathname + url.search);
 }
 
+async function checkActionPermission(
+	context: AdminActionContext,
+	options: GuardOptions,
+	sessionUser: { email: string },
+): Promise<Response | null> {
+	if (!options.requireAction) return null;
+	const access = await getAccessContext({ locals: context.locals });
+	const decision = access?.can(options.requireAction);
+	if (decision && decision.decision !== "deny") return null;
+	if (decision) {
+		await logAccessDeny(context.locals, {
+			subjectEmail: access?.subject.email ?? sessionUser.email,
+			action: options.requireAction,
+			decision,
+		});
+	}
+	return actionErrorRedirect(
+		options.failurePath,
+		options.actionDeniedMessage ??
+			decision?.reason ??
+			DEFAULT_ACTION_DENIED_MESSAGE,
+	);
+}
+
+async function checkCsrf(
+	context: AdminActionContext,
+	options: GuardOptions,
+	sessionToken: string | undefined,
+	formData: FormData,
+): Promise<Response | null> {
+	const expectedToken =
+		(await getRuntimeCsrfToken(sessionToken, context.locals)) ??
+		(getRuntimeEnv("PLAYWRIGHT_E2E_MODE") === "admin-harness"
+			? (context.locals.csrfToken ?? null)
+			: null);
+	const submittedToken = String(formData.get("_csrf") ?? "");
+	if (expectedToken && submittedToken === expectedToken) return null;
+	return actionErrorRedirect(
+		options.failurePath,
+		options.invalidCsrfMessage ?? DEFAULT_INVALID_CSRF_MESSAGE,
+	);
+}
+
 export async function requireAdminFormAction(
 	context: AdminActionContext,
 	options: GuardOptions,
@@ -91,7 +142,7 @@ export async function requireAdminFormAction(
 	if (!sessionUser) {
 		return {
 			ok: false,
-			response: actionRedirect(options.loginPath ?? "/ap-admin/login"),
+			response: actionRedirect(options.loginPath ?? DEFAULT_LOGIN_PATH),
 		};
 	}
 
@@ -100,62 +151,31 @@ export async function requireAdminFormAction(
 			ok: false,
 			response: actionErrorRedirect(
 				options.failurePath,
-				options.adminRequiredMessage ??
-					"This action requires an admin account.",
+				options.adminRequiredMessage ?? DEFAULT_ADMIN_REQUIRED_MESSAGE,
 			),
 		};
 	}
 
-	if (options.requireAction) {
-		const access = await getAccessContext({ locals: context.locals });
-		const decision = access?.can(options.requireAction);
-		if (!decision || decision.decision === "deny") {
-			if (decision) {
-				await logAccessDeny(context.locals, {
-					subjectEmail: access?.subject.email ?? sessionUser.email,
-					action: options.requireAction,
-					decision,
-				});
-			}
-			return {
-				ok: false,
-				response: actionErrorRedirect(
-					options.failurePath,
-					options.actionDeniedMessage ??
-						decision?.reason ??
-						"You do not have permission to perform this action.",
-				),
-			};
-		}
-	}
+	const denyResponse = await checkActionPermission(
+		context,
+		options,
+		sessionUser,
+	);
+	if (denyResponse) return { ok: false, response: denyResponse };
 
 	if (!isTrustedRequestOrigin(context.request)) {
 		return {
 			ok: false,
 			response: actionErrorRedirect(
 				options.failurePath,
-				options.invalidOriginMessage ?? "Invalid request origin",
+				options.invalidOriginMessage ?? DEFAULT_INVALID_ORIGIN_MESSAGE,
 			),
 		};
 	}
 
 	const formData = await context.request.formData();
-	const expectedToken =
-		(await getRuntimeCsrfToken(sessionToken, context.locals)) ??
-		(getRuntimeEnv("PLAYWRIGHT_E2E_MODE") === "admin-harness"
-			? (context.locals.csrfToken ?? null)
-			: null);
-	const submittedToken = String(formData.get("_csrf") ?? "");
-
-	if (!expectedToken || submittedToken !== expectedToken) {
-		return {
-			ok: false,
-			response: actionErrorRedirect(
-				options.failurePath,
-				options.invalidCsrfMessage ?? "Invalid security token",
-			),
-		};
-	}
+	const csrfFailure = await checkCsrf(context, options, sessionToken, formData);
+	if (csrfFailure) return { ok: false, response: csrfFailure };
 
 	return { ok: true, sessionUser, formData };
 }
@@ -208,8 +228,7 @@ export async function withAdminFormAction(
 		});
 		return actionErrorRedirect(
 			options.failurePath,
-			options.unexpectedMessage ??
-				"The requested change could not be completed. Reload the page and retry the action.",
+			options.unexpectedMessage ?? DEFAULT_UNEXPECTED_MESSAGE,
 		);
 	}
 }

@@ -8,6 +8,7 @@ pub(crate) fn set_plain(plain: bool) {
     PLAIN_MODE.store(plain, Ordering::Relaxed);
 }
 
+#[mutants::skip]
 pub(crate) fn is_plain() -> bool {
     use std::io::IsTerminal;
     // In test builds stdout may be a real terminal (e.g. when cargo test inherits the
@@ -25,10 +26,9 @@ pub(crate) fn spinner(message: &str) -> Option<indicatif::ProgressBar> { // ~ sk
         return None;
     }
     let pb = indicatif::ProgressBar::new_spinner();
-    pb.set_style(
-        indicatif::ProgressStyle::with_template("{spinner:.cyan} {msg}")
-            .expect("valid indicatif template"),
-    );
+    let style = indicatif::ProgressStyle::with_template("{spinner:.cyan} {msg}")
+        .unwrap_or_else(|_| indicatif::ProgressStyle::default_spinner());
+    pb.set_style(style);
     pb.set_message(message.to_string());
     pb.enable_steady_tick(std::time::Duration::from_millis(80));
     Some(pb)

@@ -10,7 +10,7 @@ export function createAstropressGitLabPagesDeployTarget(
 	options: AstropressGitLabPagesDeployTargetOptions = {},
 ): DeployTarget {
 	return {
-		provider: "github-pages",
+		provider: "custom",
 		async deploy(input) {
 			return prepareAstropressDeployment(input, {
 				provider: "gitlab-pages",

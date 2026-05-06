@@ -234,6 +234,7 @@ export function mapContentState(
 
 export function validateContentTypeFields(
 	templateKey: string | undefined,
+	// audit-boundary: opaque-passthrough -- module-boundary value; narrowed at consumer
 	metadata: Record<string, unknown>,
 ): string | null {
 	const contentTypeDefinition = peekCmsConfig()?.contentTypes?.find(
