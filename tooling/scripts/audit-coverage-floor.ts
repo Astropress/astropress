@@ -101,14 +101,27 @@ function entryFromSummary(e: CoverageEntry): BaselineEntry {
 }
 
 function isSrcFile(rel: string): boolean {
-	return (
-		rel.startsWith("packages/astropress/src/") &&
-		rel.endsWith(".ts") &&
-		!rel.endsWith(".d.ts") &&
-		!rel.endsWith("/local-runtime-modules.ts") &&
-		!rel.includes("/client/") &&
-		!/cloudflare-.*-stub/.test(rel)
-	);
+	if (
+		!(
+			rel.startsWith("packages/astropress/src/") &&
+			rel.endsWith(".ts") &&
+			!rel.endsWith(".d.ts") &&
+			!rel.endsWith("/local-runtime-modules.ts") &&
+			!rel.includes("/client/") &&
+			!/cloudflare-.*-stub/.test(rel)
+		)
+	) {
+		return false;
+	}
+	// Honor the data-only marker (mirrors audit-error-handling.ts and the
+	// mutation gate). Pure-data sibling files (`*-data.ts`,
+	// `*-error-shapes.ts`, `*-seed-data.ts`, `*-defaults.ts`) carry no
+	// executable logic worth coverage-measuring; including them dilutes
+	// real-coverage signal for the parent file.
+	if (!existsSync(rel)) return true;
+	const head = readFileSync(rel, "utf8").split("\n", 10).join("\n");
+	if (/stryker-disable-file:\s*data-only/.test(head)) return false;
+	return true;
 }
 
 function gatherCurrent(summary: CoverageSummary): Map<string, BaselineEntry> {
@@ -204,7 +217,13 @@ function main(): number {
 		`\n  Coverage may move up freely, but never down. New files must hit >= ${FLOOR}% on lines, branches, AND functions.`,
 	);
 	console.error(
-		`  After intentionally raising tests on a file: re-run \`test:coverage\`, then \`audit-coverage-floor.ts --rewrite-baseline\` to ratchet up.\n`,
+		"  After intentionally raising tests on a file (lifting coverage above the prior baseline): re-run `test:coverage`,",
+	);
+	console.error(
+		"  then `audit-coverage-floor.ts --rewrite-baseline` to ratchet the baseline up to the new floor.",
+	);
+	console.error(
+		"  Do NOT use --rewrite-baseline to accept a regression — fix the missing tests instead.\n",
 	);
 	return 1;
 }

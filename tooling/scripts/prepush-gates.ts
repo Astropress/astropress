@@ -396,9 +396,13 @@ async function main(): Promise<void> {
 		// Step names match CI job names so local and CI share STEP_INPUTS keys.
 		{ name: "bdd:test", cmd: "bun", args: ["run", "bdd:test"] },
 		{
+			// Runs with coverage so the follow-up audit:coverage-floor step
+			// can read packages/astropress/coverage/coverage-summary.json. The
+			// v8 instrumentation overhead is ~30-60s but it catches per-file
+			// coverage regressions locally instead of in CI.
 			name: "test-unit",
 			cmd: "bun",
-			args: ["run", "--filter", "@astropress-diy/astropress", "test"],
+			args: ["run", "--filter", "@astropress-diy/astropress", "test:coverage"],
 		},
 		{ name: "test:cli:smoke", cmd: "bun", args: ["run", "test:cli:smoke"] },
 		{ name: "test-build-content", cmd: "bun", args: ["run", "test:example"] },
@@ -446,6 +450,26 @@ async function main(): Promise<void> {
 		console.log(
 			"\n── tier 2/3 parallel ── all steps cache-hit; nothing to run",
 		);
+	}
+
+	// audit:coverage-floor must follow test-unit so coverage-summary.json
+	// is fresh. Catches per-file v8 coverage regressions locally that would
+	// otherwise only surface in the CI lint job (post-push). Also runs
+	// audit:deps to catch transitive dep advisories that pre-commit misses
+	// when package.json is unchanged on a branch.
+	if (toRun.some((s) => s.name === "test-unit")) {
+		if (
+			!(await runSerial("── post-tests audits ──", [
+				{
+					name: "audit:coverage-floor",
+					cmd: "bun",
+					args: ["run", "audit:coverage-floor"],
+				},
+				{ name: "audit:deps", cmd: "bun", args: ["run", "audit:deps"] },
+			]))
+		) {
+			process.exit(1);
+		}
 	}
 
 	// repo:clean must run last — but can itself cache-hit on an all-hit run
