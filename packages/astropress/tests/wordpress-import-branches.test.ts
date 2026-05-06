@@ -243,8 +243,12 @@ describe("downloadMediaAssets failure branch", () => {
 	});
 });
 
+// Coverage instrumentation slows the WordPress import path enough to exceed
+// the default 20s test timeout on these end-to-end branches. Bump per-test.
 describe("applyLocal: true with includeComments/Media: false", () => {
-	it("applies import to local runtime but skips comments and media", async () => {
+	it("applies import to local runtime but skips comments and media", {
+		timeout: 60_000,
+	}, async () => {
 		const comment =
 			"<wp:comment><wp:comment_id>1</wp:comment_id><wp:comment_author><![CDATA[Alice]]></wp:comment_author><wp:comment_date>2024-01-01 10:00:00</wp:comment_date><wp:comment_approved>1</wp:comment_approved><wp:comment_content><![CDATA[Hi]]></wp:comment_content></wp:comment>";
 		await writeFile(
@@ -287,7 +291,9 @@ describe("applyLocal: true with includeComments/Media: false", () => {
 });
 
 describe("applyLocal: true with comments included", () => {
-	it("inserts approved comment into local runtime (covers comment loop in applyLocal)", async () => {
+	it("inserts approved comment into local runtime (covers comment loop in applyLocal)", {
+		timeout: 60_000,
+	}, async () => {
 		const comment = [
 			"<wp:comment>",
 			"<wp:comment_id>42</wp:comment_id>",

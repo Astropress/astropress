@@ -244,7 +244,7 @@ describe("auth", () => {
 		expect(() => fixture.store.auth.recordLogout(fixture.actor)).not.toThrow();
 	});
 
-	it("getCsrfToken returns null for expired session", async () => {
+	it("getCsrfToken returns null for expired session", { timeout: 60_000 }, async () => {
 		const expiredDb = makeDb();
 		expiredDb
 			.prepare(

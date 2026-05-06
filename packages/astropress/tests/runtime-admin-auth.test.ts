@@ -111,7 +111,7 @@ describe("authenticateRuntimeAdminUser", () => {
 		);
 	}
 
-	it("returns SessionUser for correct credentials", async () => {
+	it("returns SessionUser for correct credentials", { timeout: 60_000 }, async () => {
 		const { db, locals } = makeLocals();
 		await seedUser(db);
 		const result = await authenticateRuntimeAdminUser("admin@example.com", "correctpass", locals);
