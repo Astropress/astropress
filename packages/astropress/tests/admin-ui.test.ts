@@ -210,6 +210,45 @@ describe("admin ui", () => {
 		expect(getAdminLabel("saveButton", "pt-BR")).toBe("Salvar");
 	});
 
+	it("resolveAstropressAdminUiConfig(locale) applies translations through applyTranslations", () => {
+		restoreConfig(null);
+		const adminUi = resolveAstropressAdminUiConfig("es");
+		expect(adminUi.labels.signOut).toBe("Cerrar sesión");
+		expect(adminUi.labels.sidebarTitle).toBe("Espacio de trabajo");
+		expect(adminUi.navigation.dashboard).toBeTruthy();
+		expect(adminUi.branding.productName).toBe("Astropress Admin");
+	});
+
+	it("resolveAstropressAdminUiConfig(locale) preserves host overrides and translates remaining keys", () => {
+		registerCms({
+			siteUrl: "https://example.org",
+			templateKeys: [],
+			seedPages: [],
+			archives: [],
+			translationStatus: [],
+			admin: {
+				labels: { signOut: "Salir" },
+				navigation: { routePages: "Rutas" },
+			},
+		});
+		const adminUi = resolveAstropressAdminUiConfig("es");
+		expect(adminUi.labels.sidebarTitle).toBe("Espacio de trabajo");
+		expect(adminUi.navigation.dashboard).toBeTruthy();
+	});
+
+	it("falls back to null for stylesheetHref when override is empty string", () => {
+		registerCms({
+			siteUrl: "https://example.org",
+			templateKeys: [],
+			seedPages: [],
+			archives: [],
+			translationStatus: [],
+			admin: { branding: { stylesheetHref: "" } },
+		});
+		const adminUi = resolveAstropressAdminUiConfig();
+		expect(adminUi.branding.stylesheetHref).toBeNull();
+	});
+
 	it("falls back to productName for shellName/logoAlt and to /ap-admin for logoHref when overrides are empty strings", () => {
 		registerCms({
 			siteUrl: "https://example.org",

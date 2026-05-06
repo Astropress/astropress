@@ -149,7 +149,7 @@ export function parseSectionsFromJson(json: string): SectionsParseResult {
 			errors: [
 				{
 					path: "$",
-					message: `invalid JSON: ${err instanceof Error ? err.message : String(err)}`,
+					message: `invalid JSON: ${(err as Error).message}`,
 				},
 			],
 		};
