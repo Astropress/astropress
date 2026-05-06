@@ -60,43 +60,31 @@ afterEach(async () => {
 describe("normalizeContentStatus branches", () => {
 	it("maps 'pending' status to 'draft'", async () => {
 		const artifactDir = join(workspace, "artifacts-pending");
-		await writeFile(
-			exportFile,
-			makeWxr([makePost({ status: "pending" })]),
-			"utf8",
-		);
+		await writeFile(exportFile, makeWxr([makePost({ status: "pending" })]), "utf8");
 		await importer.importWordPress({ exportFile, artifactDir });
 		const records = JSON.parse(
 			await readFile(join(artifactDir, "content-records.json"), "utf8"),
-		) as Array<Record<string, unknown>>;
+		) as Record<string, unknown>[];
 		expect(records[0].status).toBe("draft");
 	});
 
 	it("maps 'future' status to 'draft'", async () => {
 		const artifactDir = join(workspace, "artifacts-future");
-		await writeFile(
-			exportFile,
-			makeWxr([makePost({ status: "future" })]),
-			"utf8",
-		);
+		await writeFile(exportFile, makeWxr([makePost({ status: "future" })]), "utf8");
 		await importer.importWordPress({ exportFile, artifactDir });
 		const records = JSON.parse(
 			await readFile(join(artifactDir, "content-records.json"), "utf8"),
-		) as Array<Record<string, unknown>>;
+		) as Record<string, unknown>[];
 		expect(records[0].status).toBe("draft");
 	});
 
 	it("maps 'private' status to 'archived' (default branch)", async () => {
 		const artifactDir = join(workspace, "artifacts-private");
-		await writeFile(
-			exportFile,
-			makeWxr([makePost({ status: "private" })]),
-			"utf8",
-		);
+		await writeFile(exportFile, makeWxr([makePost({ status: "private" })]), "utf8");
 		await importer.importWordPress({ exportFile, artifactDir });
 		const records = JSON.parse(
 			await readFile(join(artifactDir, "content-records.json"), "utf8"),
-		) as Array<Record<string, unknown>>;
+		) as Record<string, unknown>[];
 		expect(records[0].status).toBe("archived");
 	});
 });
@@ -115,7 +103,7 @@ describe("normalizePathname catch branch", () => {
 		await importer.importWordPress({ exportFile, artifactDir });
 		const records = JSON.parse(
 			await readFile(join(artifactDir, "content-records.json"), "utf8"),
-		) as Array<Record<string, unknown>>;
+		) as Record<string, unknown>[];
 		// catch branch produced the fallback slug as the pathname, not the malformed URL
 		expect(records[0].legacyUrl).toBe("/fallback-slug/");
 	});
@@ -124,25 +112,15 @@ describe("normalizePathname catch branch", () => {
 describe("detectUnsupportedPatterns branches", () => {
 	it("flags page builder markup when body contains vc_row", async () => {
 		const pageBuilderBody = '<div class="vc_row">Page builder content</div>';
-		await writeFile(
-			exportFile,
-			makeWxr([makePost({ body: pageBuilderBody })]),
-			"utf8",
-		);
+		await writeFile(exportFile, makeWxr([makePost({ body: pageBuilderBody })]), "utf8");
 		const report = await importer.importWordPress({ exportFile });
 		expect(report.reviewRequired).toBe(true);
-		expect(report.manualTasks.some((t) => t.includes("page-builder"))).toBe(
-			true,
-		);
+		expect(report.manualTasks.some((t) => t.includes("page-builder"))).toBe(true);
 	});
 
 	it("flags shortcodes when body contains [shortcode]", async () => {
 		const shortcodeBody = '<p>Intro</p>[gallery ids="1,2"]';
-		await writeFile(
-			exportFile,
-			makeWxr([makePost({ body: shortcodeBody })]),
-			"utf8",
-		);
+		await writeFile(exportFile, makeWxr([makePost({ body: shortcodeBody })]), "utf8");
 		const report = await importer.importWordPress({ exportFile });
 		expect(report.reviewRequired).toBe(true);
 		expect(report.manualTasks.some((t) => t.includes("shortcode"))).toBe(true);
@@ -171,20 +149,14 @@ describe("buildImportPlan branches", () => {
 		});
 		expect(
 			plan?.manualTasks.some((t) =>
-				t.includes(
-					"Media download was requested without an artifact directory",
-				),
+				t.includes("Media download was requested without an artifact directory"),
 			),
 		).toBe(true);
 		expect(plan?.downloadMedia).toBe(false); // guard prevents download without artifactDir
 	});
 
 	it("planWordPressImport without downloadMedia option uses false default (right ?? branch)", async () => {
-		await writeFile(
-			exportFile,
-			makeWxr([makePost({ id: "202", name: "plan-default" })]),
-			"utf8",
-		);
+		await writeFile(exportFile, makeWxr([makePost({ id: "202", name: "plan-default" })]), "utf8");
 		const inventory = await importer.inspectWordPress?.({ exportFile });
 		const plan = await importer.planWordPressImport?.({
 			inventory: inventory as NonNullable<typeof inventory>,
@@ -252,11 +224,7 @@ describe("downloadMediaAssets failure branch", () => {
 		// Stub fetch to return 404
 		vi.stubGlobal(
 			"fetch",
-			vi
-				.fn()
-				.mockResolvedValue(
-					new Response(null, { status: 404, statusText: "Not Found" }),
-				),
+			vi.fn().mockResolvedValue(new Response(null, { status: 404, statusText: "Not Found" })),
 		);
 
 		const artifactDir = join(workspace, "artifacts");
@@ -391,9 +359,7 @@ describe("applyLocal: true with comments included", () => {
 	it("applies import with archived status post to cover contentStatus=archived branch", async () => {
 		await writeFile(
 			exportFile,
-			makeWxr([
-				makePost({ id: "603", name: "archived-post", status: "private" }),
-			]),
+			makeWxr([makePost({ id: "603", name: "archived-post", status: "private" })]),
 			"utf8",
 		);
 
@@ -718,9 +684,7 @@ describe("WXR parsing — inferMimeType, normalizeSlug, filenameFromUrl, normali
 		].join("");
 		await writeFile(
 			exportFile,
-			makeWxr([
-				makePost({ id: "511", name: "hello-world", innerBlocks: postmeta }),
-			]),
+			makeWxr([makePost({ id: "511", name: "hello-world", innerBlocks: postmeta })]),
 			"utf8",
 		);
 		const report = await importer.importWordPress({ exportFile });
@@ -769,14 +733,9 @@ describe("malformed XML input handling", () => {
 	it("handles export file with truncated item — processes other items without throwing", async () => {
 		// A truncated item (missing closing tag) mixed with a valid item
 		const validItem = makePost({ id: "5001", name: "valid-post" });
-		const truncated =
-			"<item><title><![CDATA[Truncated]]></title><wp:post_id>5002</wp:post_id>";
+		const truncated = "<item><title><![CDATA[Truncated]]></title><wp:post_id>5002</wp:post_id>";
 		// The truncated item appears after the valid one; parser should still surface the valid post
-		await writeFile(
-			exportFile,
-			`<rss><channel>${validItem}${truncated}</channel></rss>`,
-			"utf8",
-		);
+		await writeFile(exportFile, `<rss><channel>${validItem}${truncated}</channel></rss>`, "utf8");
 		// Must not throw — partial result is acceptable
 		const report = await importer.importWordPress({ exportFile });
 		expect(report.importedRecords).toBeGreaterThanOrEqual(0);
@@ -837,9 +796,7 @@ describe("duplicate slug handling", () => {
 		});
 		await writeFile(exportFile, makeWxr([post]), "utf8");
 		const dbPath = join(workspace, "update-path.sqlite");
-		const { createDefaultAstropressSqliteSeedToolkit } = await import(
-			"../src/sqlite-bootstrap.js"
-		);
+		const { createDefaultAstropressSqliteSeedToolkit } = await import("../src/sqlite-bootstrap.js");
 		createDefaultAstropressSqliteSeedToolkit().seedDatabase({ dbPath });
 
 		// First apply — inserts
@@ -870,9 +827,7 @@ describe("duplicate slug handling", () => {
 describe("importWordPress — error/guard branches", () => {
 	it("throws when exportFile is not provided", async () => {
 		await expect(
-			importer.importWordPress(
-				{} as Parameters<typeof importer.importWordPress>[0],
-			),
+			importer.importWordPress({} as Parameters<typeof importer.importWordPress>[0]),
 		).rejects.toThrow("WordPress import requires an");
 	});
 
@@ -1016,11 +971,7 @@ describe("applyLocal — additional branches", () => {
 
 	it("uses process.cwd() when workspaceRoot is omitted", async () => {
 		// Write a minimal export; the DB will be created under process.cwd()
-		await writeFile(
-			exportFile,
-			makeWxr([makePost({ id: "903", name: "cwd-post" })]),
-			"utf8",
-		);
+		await writeFile(exportFile, makeWxr([makePost({ id: "903", name: "cwd-post" })]), "utf8");
 		// Provide an absolute adminDbPath so we control where the DB goes
 		const report = await importer.importWordPress({
 			exportFile,
@@ -1065,11 +1016,7 @@ describe("applyLocal — additional branches", () => {
 	});
 
 	it("applies import with includeUsers: false and reports zero applied users", async () => {
-		await writeFile(
-			exportFile,
-			makeWxr([makePost({ id: "950", name: "no-users-post" })]),
-			"utf8",
-		);
+		await writeFile(exportFile, makeWxr([makePost({ id: "950", name: "no-users-post" })]), "utf8");
 		const report = await importer.importWordPress({
 			exportFile,
 			applyLocal: true,
@@ -1125,7 +1072,7 @@ describe("decodeXml — numeric XML entity branches (lines 35-39)", () => {
 		await importer.importWordPress({ exportFile, artifactDir });
 		const records = JSON.parse(
 			await readFile(join(artifactDir, "content-records.json"), "utf8"),
-		) as Array<Record<string, unknown>>;
+		) as Record<string, unknown>[];
 		// &#39; → ', &#x27; → ', &#60; → <
 		expect(records[0].body).toBe("it's 'hello' <");
 	});
@@ -1134,15 +1081,13 @@ describe("decodeXml — numeric XML entity branches (lines 35-39)", () => {
 		const artifactDir = join(workspace, "artifacts-entity-nan");
 		await writeFile(
 			exportFile,
-			makeWxr([
-				makePost({ id: "2002", name: "entity-nan", body: "bad &#a; entity" }),
-			]),
+			makeWxr([makePost({ id: "2002", name: "entity-nan", body: "bad &#a; entity" })]),
 			"utf8",
 		);
 		await importer.importWordPress({ exportFile, artifactDir });
 		const records = JSON.parse(
 			await readFile(join(artifactDir, "content-records.json"), "utf8"),
-		) as Array<Record<string, unknown>>;
+		) as Record<string, unknown>[];
 		// &#a; → parseInt("a", 10) = NaN → !isFinite → entity left verbatim
 		expect(records[0].body).toBe("bad &#a; entity");
 	});
@@ -1163,7 +1108,7 @@ describe("decodeXml — numeric XML entity branches (lines 35-39)", () => {
 		await importer.importWordPress({ exportFile, artifactDir });
 		const records = JSON.parse(
 			await readFile(join(artifactDir, "content-records.json"), "utf8"),
-		) as Array<Record<string, unknown>>;
+		) as Record<string, unknown>[];
 		// &hellip; is not in XML_ENTITY_LOOKUP → preserved verbatim
 		expect(records[0].body).toBe("text&hellip;more");
 	});

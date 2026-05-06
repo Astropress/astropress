@@ -1,10 +1,7 @@
 // ─── Plugin Dispatch ──────────────────────────────────────────────────────────
 // Extracted from config.ts to keep that file under the 400-line limit.
 
-import type {
-	AstropressContentEvent,
-	AstropressMediaEvent,
-} from "./cms-plugins";
+import type { AstropressContentEvent, AstropressMediaEvent } from "./cms-plugins";
 import { peekCmsConfig } from "./config-store";
 
 // Per-plugin diagnostic counters. Updated whenever a hook is run or an error
@@ -61,10 +58,7 @@ export function resetPluginDispatchStats(): void {
  * Called internally whenever a plugin hook or Astropress operation throws unexpectedly.
  * Errors thrown inside `onError` are silently swallowed.
  */
-async function dispatchPluginError(
-	error: Error,
-	context: string,
-): Promise<void> {
+async function dispatchPluginError(error: Error, context: string): Promise<void> {
 	const config = peekCmsConfig();
 	if (!config?.plugins?.length) return;
 	for (const plugin of config.plugins) {
@@ -102,10 +96,7 @@ export async function dispatchPluginContentEvent(
 		} catch (err) {
 			const error = err instanceof Error ? err : new Error(String(err));
 			recordErrorSwallowed(plugin.name);
-			console.error(
-				`[astropress] Plugin "${plugin.name}" threw in ${hook}:`,
-				err,
-			);
+			console.error(`[astropress] Plugin "${plugin.name}" threw in ${hook}:`, err);
 			await dispatchPluginError(error, `plugin:${plugin.name}`);
 		}
 	}
@@ -118,9 +109,7 @@ export async function dispatchPluginContentEvent(
  * individual plugin hooks are caught, forwarded to `onError`, and logged;
  * they never fail the upload action.
  */
-export async function dispatchPluginMediaEvent(
-	event: AstropressMediaEvent,
-): Promise<void> {
+export async function dispatchPluginMediaEvent(event: AstropressMediaEvent): Promise<void> {
 	const config = peekCmsConfig();
 	if (!config?.plugins?.length) return;
 	for (const plugin of config.plugins) {
@@ -132,10 +121,7 @@ export async function dispatchPluginMediaEvent(
 		} catch (err) {
 			const error = err instanceof Error ? err : new Error(String(err));
 			recordErrorSwallowed(plugin.name);
-			console.error(
-				`[astropress] Plugin "${plugin.name}" threw in onMediaUpload:`,
-				err,
-			);
+			console.error(`[astropress] Plugin "${plugin.name}" threw in onMediaUpload:`, err);
 			await dispatchPluginError(error, `plugin:${plugin.name}`);
 		}
 	}
@@ -155,10 +141,7 @@ export async function dispatchPluginMediaEvent(
  * }
  * ```
  */
-export async function reportAstropressError(
-	error: unknown,
-	context: string,
-): Promise<void> {
+export async function reportAstropressError(error: unknown, context: string): Promise<void> {
 	const err = error instanceof Error ? error : new Error(String(error));
 	await dispatchPluginError(err, context);
 }

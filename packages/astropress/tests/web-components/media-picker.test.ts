@@ -50,9 +50,7 @@ describe("ap-media-picker", () => {
 			this.removeAttribute("open");
 		};
 
-		const trigger = host.querySelector<HTMLButtonElement>(
-			"[data-media-picker-trigger]",
-		);
+		const trigger = host.querySelector<HTMLButtonElement>("[data-media-picker-trigger]");
 		trigger?.click();
 		// allow the fetch promise to resolve
 		await new Promise((r) => setTimeout(r, 0));

@@ -17,7 +17,7 @@
  *       can inspect the result rather than assuming success.
  */
 
-import { readFileSync, readdirSync, statSync } from "node:fs";
+import { readdirSync, readFileSync, statSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { findRepoRoot } from "./_helpers/repo-root";
@@ -28,10 +28,7 @@ import { findRepoRoot } from "./_helpers/repo-root";
 // for branch tracking and the regex no longer matches).
 const repoRoot = findRepoRoot();
 const srcRoot = path.join(repoRoot, "packages/astropress/src");
-const actionsRoot = path.join(
-	repoRoot,
-	"packages/astropress/pages/ap-admin/actions",
-);
+const actionsRoot = path.join(repoRoot, "packages/astropress/pages/ap-admin/actions");
 
 function readSource(filePath: string): string {
 	return readFileSync(filePath, "utf8");
@@ -83,16 +80,12 @@ describe("H2: success-redirect params only appear after success checks", () => {
 
 		for (const file of actionFiles) {
 			const src = readSource(file);
-			const hasSuccessRedirect = SUCCESS_PARAMS.some((param) =>
-				src.includes(param),
-			);
+			const hasSuccessRedirect = SUCCESS_PARAMS.some((param) => src.includes(param));
 			if (!hasSuccessRedirect) continue;
 
 			// Must also have a failure path (fail(), return fail, or early return before the redirect)
 			const hasFail =
-				src.includes("fail(") ||
-				src.includes("return fail") ||
-				src.includes('fail("');
+				src.includes("fail(") || src.includes("return fail") || src.includes('fail("');
 			const hasGuard =
 				hasFail ||
 				src.includes("if (!") || // early-return guard pattern
@@ -120,20 +113,15 @@ describe("H3: schedule-publish validates content exists before scheduling", () =
 		const src = readSource(path.join(actionsRoot, "schedule-publish.ts"));
 
 		// Both calls must exist
-		expect(src, "must call getContentState to verify content exists").toMatch(
-			/getContentState\(/,
-		);
-		expect(src, "must redirect to ?scheduled=1 on success").toMatch(
-			/\?scheduled=1/,
-		);
+		expect(src, "must call getContentState to verify content exists").toMatch(/getContentState\(/);
+		expect(src, "must redirect to ?scheduled=1 on success").toMatch(/\?scheduled=1/);
 
 		// getContentState must appear before the redirect
 		const getContentStatePos = src.indexOf("getContentState(");
 		const scheduledRedirectPos = src.indexOf("?scheduled=1");
-		expect(
-			getContentStatePos,
-			"getContentState must precede ?scheduled=1 redirect",
-		).toBeLessThan(scheduledRedirectPos);
+		expect(getContentStatePos, "getContentState must precede ?scheduled=1 redirect").toBeLessThan(
+			scheduledRedirectPos,
+		);
 	});
 
 	it("schedule-publish.ts returns early when content is not found", () => {
@@ -155,15 +143,9 @@ describe("H4: delivered: true set only in provider success branches", () => {
 		expect(matches.length).toBe(2);
 
 		const resendDeliveredPos = src.indexOf("delivered: true");
-		const smtpDeliveredPos = src.indexOf(
-			"delivered: true",
-			resendDeliveredPos + 1,
-		);
+		const smtpDeliveredPos = src.indexOf("delivered: true", resendDeliveredPos + 1);
 		const responseOkPos = src.lastIndexOf("response.ok", resendDeliveredPos);
-		const smtpSendPos = src.lastIndexOf(
-			"transporter.sendMail",
-			smtpDeliveredPos,
-		);
+		const smtpSendPos = src.lastIndexOf("transporter.sendMail", smtpDeliveredPos);
 
 		expect(
 			responseOkPos,

@@ -31,9 +31,7 @@ describe("D1 scheduling — schedulePublish", () => {
 		await scheduling.schedulePublish("my-post", future);
 
 		const row = db
-			.prepare(
-				"SELECT slug, status, scheduled_at FROM content_overrides WHERE slug = ?",
-			)
+			.prepare("SELECT slug, status, scheduled_at FROM content_overrides WHERE slug = ?")
 			.get("my-post") as {
 			slug: string;
 			status: string;
@@ -112,9 +110,7 @@ describe("D1 scheduling — cancelScheduledPublish", () => {
 		await makeScheduling(db).cancelScheduledPublish("cancel-post");
 
 		const row = db
-			.prepare(
-				"SELECT status, scheduled_at FROM content_overrides WHERE slug = ?",
-			)
+			.prepare("SELECT status, scheduled_at FROM content_overrides WHERE slug = ?")
 			.get("cancel-post") as {
 			status: string;
 			scheduled_at: string | null;
@@ -145,9 +141,7 @@ describe("D1 scheduling — runScheduledPublishes", () => {
 		expect(count).toBe(1);
 
 		const due = db
-			.prepare(
-				"SELECT status, scheduled_at FROM content_overrides WHERE slug = ?",
-			)
+			.prepare("SELECT status, scheduled_at FROM content_overrides WHERE slug = ?")
 			.get("due-post") as {
 			status: string;
 			scheduled_at: string | null;
@@ -156,9 +150,7 @@ describe("D1 scheduling — runScheduledPublishes", () => {
 		expect(due.scheduled_at).toBeNull();
 
 		const notDue = db
-			.prepare(
-				"SELECT status, scheduled_at FROM content_overrides WHERE slug = ?",
-			)
+			.prepare("SELECT status, scheduled_at FROM content_overrides WHERE slug = ?")
 			.get("not-due-post") as {
 			status: string;
 			scheduled_at: string;

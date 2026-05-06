@@ -1,11 +1,7 @@
 import { DatabaseSync } from "node:sqlite";
 
 import { hashPassword } from "../../src/crypto-utils.js";
-import type {
-	D1DatabaseLike,
-	D1PreparedStatement,
-	D1Result,
-} from "../../src/d1-database";
+import type { D1DatabaseLike, D1PreparedStatement, D1Result } from "../../src/d1-database";
 import { readAstropressSqliteSchemaSql } from "../../src/sqlite-bootstrap.js";
 
 export class SqliteD1PreparedStatement implements D1PreparedStatement {
@@ -19,9 +15,7 @@ export class SqliteD1PreparedStatement implements D1PreparedStatement {
 		return new SqliteD1PreparedStatement(this.db, this.sql, values);
 	}
 
-	async first<T = Record<string, unknown>>(
-		columnName?: string,
-	): Promise<T | null> {
+	async first<T = Record<string, unknown>>(columnName?: string): Promise<T | null> {
 		const row = this.db.prepare(this.sql).get(...this.params) as
 			| Record<string, unknown>
 			| undefined;
@@ -66,10 +60,7 @@ export class SqliteBackedD1Database implements D1DatabaseLike {
 }
 
 export function createHostedStores() {
-	const contentRecords = new Map<
-		string,
-		{ id: string; slug: string; title: string }
-	>();
+	const contentRecords = new Map<string, { id: string; slug: string; title: string }>();
 
 	return {
 		content: {
@@ -157,13 +148,7 @@ export async function createSeededCloudflareDatabase() {
         email, password_hash, name, active, is_admin
       ) VALUES (?1, ?2, ?4, ?5, 1)
     `,
-	).run(
-		"admin@example.com",
-		await hashPassword("password"),
-		"admin",
-		"Cloudflare Admin",
-		1,
-	);
+	).run("admin@example.com", await hashPassword("password"), "admin", "Cloudflare Admin", 1);
 	db.prepare(
 		`
       INSERT INTO content_entries (

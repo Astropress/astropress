@@ -4,8 +4,7 @@
  * All tests are fully in-process: DatabaseSync + real schema SQL, no CLI invocations.
  */
 
-import { mkdirSync, writeFileSync } from "node:fs";
-import { mkdtempSync, rmSync } from "node:fs";
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { DatabaseSync } from "node:sqlite";
@@ -16,10 +15,7 @@ import {
 	rollbackAstropressLastMigration,
 	runAstropressMigrations,
 } from "../src/sqlite-bootstrap.js";
-import {
-	ensureLegacySchemaCompatibility,
-	getTableColumns,
-} from "../src/sqlite-schema-compat.js";
+import { ensureLegacySchemaCompatibility, getTableColumns } from "../src/sqlite-schema-compat.js";
 import { makeDb } from "./helpers/make-db.js";
 
 // Minimal v0.0.1 schema — mirrors what a real pre-upgrade backup would contain
@@ -126,9 +122,7 @@ describe("compat upgrade: old schema → current schema", () => {
 		ensureLegacySchemaCompatibility(db);
 
 		const row = db
-			.prepare(
-				"SELECT slug, title FROM content_overrides WHERE slug = 'surviving-post'",
-			)
+			.prepare("SELECT slug, title FROM content_overrides WHERE slug = 'surviving-post'")
 			.get() as { slug: string; title: string } | undefined;
 
 		expect(row?.slug).toBe("surviving-post");

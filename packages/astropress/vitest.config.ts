@@ -20,33 +20,23 @@ export default defineConfig({
 			// Explicit aliases for subpaths used by pages/ap-api/v1/* handlers
 			{
 				find: /^@astropress-diy\/astropress\/local-runtime-modules(?:\.js)?$/,
-				replacement: fileURLToPath(
-					new URL("./src/local-runtime-modules.ts", import.meta.url),
-				),
+				replacement: fileURLToPath(new URL("./src/local-runtime-modules.ts", import.meta.url)),
 			},
 			{
 				find: /^@astropress-diy\/astropress\/api-middleware(?:\.js)?$/,
-				replacement: fileURLToPath(
-					new URL("./src/api-middleware.ts", import.meta.url),
-				),
+				replacement: fileURLToPath(new URL("./src/api-middleware.ts", import.meta.url)),
 			},
 			{
 				find: /^@astropress-diy\/astropress\/platform-contracts(?:\.js)?$/,
-				replacement: fileURLToPath(
-					new URL("./src/platform-contracts.ts", import.meta.url),
-				),
+				replacement: fileURLToPath(new URL("./src/platform-contracts.ts", import.meta.url)),
 			},
 			{
 				find: /^@astropress-diy\/astropress\/import\/wordpress(?:\.js)?$/,
-				replacement: fileURLToPath(
-					new URL("./src/import/wordpress.ts", import.meta.url),
-				),
+				replacement: fileURLToPath(new URL("./src/import/wordpress.ts", import.meta.url)),
 			},
 			{
 				find: "cloudflare:workers",
-				replacement: fileURLToPath(
-					new URL("./src/cloudflare-workers-stub.ts", import.meta.url),
-				),
+				replacement: fileURLToPath(new URL("./src/cloudflare-workers-stub.ts", import.meta.url)),
 			},
 		],
 	},

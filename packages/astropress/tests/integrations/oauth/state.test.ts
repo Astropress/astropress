@@ -83,9 +83,7 @@ describe("serializeInnerEnvelope", () => {
 			c: { domain: "d", providerId: "p", returnTo: "r" },
 			e: 99,
 		});
-		expect(json).toBe(
-			'{"n":"nn","c":{"domain":"d","providerId":"p","returnTo":"r"},"e":99}',
-		);
+		expect(json).toBe('{"n":"nn","c":{"domain":"d","providerId":"p","returnTo":"r"},"e":99}');
 	});
 });
 

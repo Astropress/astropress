@@ -22,11 +22,7 @@ import { spawnSync } from "node:child_process";
 // share identical cache keys — a step warmed locally also warms CI, and
 // vice-versa when the cache is shared across a team.
 export const STEP_INPUTS: Record<string, string[]> = {
-	"bdd:test": [
-		"tooling/bdd",
-		"tooling/scripts/bdd-test.ts",
-		"packages/astropress/src",
-	],
+	"bdd:test": ["tooling/bdd", "tooling/scripts/bdd-test.ts", "packages/astropress/src"],
 	"test:cli:smoke": ["crates/astropress-cli", "crates/Cargo.toml"],
 	"test-unit": [
 		"packages/astropress/src",
@@ -109,9 +105,7 @@ if (import.meta.main) {
 	const step = process.argv[2];
 	if (!step) {
 		const known = Object.keys(STEP_INPUTS).sort().join("\n  - ");
-		console.error(
-			`usage: step-content-hash.ts <step-name>\n\nKnown steps:\n  - ${known}`,
-		);
+		console.error(`usage: step-content-hash.ts <step-name>\n\nKnown steps:\n  - ${known}`);
 		process.exit(2);
 	}
 	const hash = hashStep(step);

@@ -1,13 +1,8 @@
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { beforeEach, describe, expect, test, vi } from "vitest";
-
-import {
-	createAccessRepository,
-	requiresAccess,
-	seedStarterRoles,
-} from "../src/access";
 import type { LocalAccessStoreSurface } from "../src/access";
+import { createAccessRepository, requiresAccess, seedStarterRoles } from "../src/access";
 import { loadSqliteDatabase } from "../src/sqlite-bootstrap-helpers";
 
 const SCHEMA = readFileSync(
@@ -39,9 +34,7 @@ function buildLocalSurface(db: DbHandle): LocalAccessStoreSurface {
 	return {
 		resolveAccessSnapshotByEmail(email) {
 			const row = db
-				.prepare(
-					"SELECT id, is_admin FROM admin_users WHERE email = ? AND active = 1 LIMIT 1",
-				)
+				.prepare("SELECT id, is_admin FROM admin_users WHERE email = ? AND active = 1 LIMIT 1")
 				.get<{ id: number; is_admin: number }>(email);
 			if (!row) return null;
 			return {
@@ -55,9 +48,7 @@ function buildLocalSurface(db: DbHandle): LocalAccessStoreSurface {
 	};
 }
 
-function fakeAstro(
-	adminUser: { email: string; role: "admin" | "editor"; name: string } | null,
-) {
+function fakeAstro(adminUser: { email: string; role: "admin" | "editor"; name: string } | null) {
 	const calls: Array<{ path: string; status?: number }> = [];
 	const astro = {
 		locals: { adminUser } as unknown as App.Locals,
@@ -116,9 +107,7 @@ describe("requiresAccess", () => {
 		});
 		const result = await requiresAccess(astro, "users:invite");
 		expect(result).not.toBeNull();
-		expect(calls[0]?.path).toMatch(
-			/^\/ap-admin\?error=insufficient-permissions&reason=/,
-		);
+		expect(calls[0]?.path).toMatch(/^\/ap-admin\?error=insufficient-permissions&reason=/);
 	});
 
 	test("redirects to login when no admin user", async () => {

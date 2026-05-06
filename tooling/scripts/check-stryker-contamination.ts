@@ -12,10 +12,7 @@ import { execSync, spawnSync } from "node:child_process";
 
 // Stryker instrumentation markers. Nothing legitimate imports or defines
 // functions with these exact names — they're hashed per-run sandbox IDs.
-const CONTAMINATION_MARKERS = [
-	/stryMutAct_[0-9a-z]{5,}/,
-	/stryCov_[0-9a-z]{5,}/,
-];
+const CONTAMINATION_MARKERS = [/stryMutAct_[0-9a-z]{5,}/, /stryCov_[0-9a-z]{5,}/];
 
 // New // @ts-nocheck on any file — Stryker adds this to prevent TypeScript
 // from choking on the injected instrumentation. If a human legitimately
@@ -44,11 +41,9 @@ function splitPerFile(diff: string): Array<{ path: string; body: string }> {
 function checkFileModes(): string[] {
 	// Detect executable-bit flips on bin/ files. Stryker's sandbox in-place
 	// restoration drops the +x bit, silently breaking `npx astropress`.
-	const result = spawnSync(
-		"git",
-		["diff", "--cached", "--raw", "--abbrev=40"],
-		{ encoding: "utf8" },
-	);
+	const result = spawnSync("git", ["diff", "--cached", "--raw", "--abbrev=40"], {
+		encoding: "utf8",
+	});
 	if (result.status !== 0) return [];
 	const violations: string[] = [];
 	for (const line of (result.stdout ?? "").split("\n")) {
@@ -61,11 +56,7 @@ function checkFileModes(): string[] {
 		const path = match[3];
 		// Flip from exec (100755) to non-exec (100644) on any file under
 		// **/bin/ is never intentional outside a dedicated commit.
-		if (
-			srcMode === "100755" &&
-			dstMode === "100644" &&
-			/(^|\/)bin\//.test(path)
-		) {
+		if (srcMode === "100755" && dstMode === "100644" && /(^|\/)bin\//.test(path)) {
 			violations.push(
 				`  ${path}: executable bit dropped (100755 → 100644). This usually happens when a tool writes the file without preserving mode. Re-chmod and re-stage: \`chmod +x ${path} && git add ${path}\``,
 			);
@@ -79,9 +70,7 @@ function main(): void {
 	const violations: string[] = [];
 
 	// The guard script itself must mention the markers to detect them. Exempt.
-	const SELF_EXEMPT = new Set([
-		"tooling/scripts/check-stryker-contamination.ts",
-	]);
+	const SELF_EXEMPT = new Set(["tooling/scripts/check-stryker-contamination.ts"]);
 
 	for (const file of splitPerFile(diff)) {
 		if (SELF_EXEMPT.has(file.path)) continue;
@@ -108,9 +97,7 @@ function main(): void {
 	violations.push(...checkFileModes());
 
 	if (violations.length > 0) {
-		console.error(
-			`stryker-contamination check failed — ${violations.length} issue(s):\n`,
-		);
+		console.error(`stryker-contamination check failed — ${violations.length} issue(s):\n`);
 		for (const v of violations) console.error(v);
 		console.error(
 			"\nThis guard runs because a SIGKILLed Stryker mutation pass previously\n" +

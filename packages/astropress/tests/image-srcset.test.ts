@@ -1,9 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { generateSrcset } from "../src/local-image-storage.js";
-import {
-	ensureLegacySchemaCompatibility,
-	getTableColumns,
-} from "../src/sqlite-schema-compat.js";
+import { ensureLegacySchemaCompatibility, getTableColumns } from "../src/sqlite-schema-compat.js";
 import { makeDb } from "./helpers/make-db.js";
 
 // ─── generateSrcset ───────────────────────────────────────────────────────────
@@ -24,10 +21,7 @@ describe("generateSrcset() — basic output format", () => {
 	it("builds a srcset string from stored variant paths", async () => {
 		// Inject a mock storeVariant that returns deterministic paths
 		const stored: string[] = [];
-		const storeVariant = async (
-			filename: string,
-			_bytes: Uint8Array,
-		): Promise<string | null> => {
+		const storeVariant = async (filename: string, _bytes: Uint8Array): Promise<string | null> => {
 			const path = `/images/uploads/${filename}`;
 			stored.push(path);
 			return path;
@@ -48,11 +42,7 @@ describe("generateSrcset() — basic output format", () => {
 			return; // Skip if Buffer not available
 		}
 
-		const result = await generateSrcset(
-			pngBytes,
-			"/images/uploads/photo.jpg",
-			storeVariant,
-		);
+		const result = await generateSrcset(pngBytes, "/images/uploads/photo.jpg", storeVariant);
 
 		if (result === null) {
 			// Sharp not available in this environment — null is the correct graceful fallback
@@ -74,9 +64,9 @@ describe("generateSrcset() — basic output format", () => {
 
 describe("MediaAssetRecord.srcset field", () => {
 	it("is defined as an optional string on the MediaAssetRecord interface", async () => {
-		const { platform_contracts } = await import(
-			"../src/platform-contracts.js"
-		).catch(() => ({ platform_contracts: null }));
+		const { platform_contracts } = await import("../src/platform-contracts.js").catch(() => ({
+			platform_contracts: null,
+		}));
 		// Structural test: TypeScript compilation catches type errors.
 		// At runtime we verify the shape is valid by constructing a conforming object.
 		const record = {

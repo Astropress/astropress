@@ -33,19 +33,10 @@
  */
 
 import { execFileSync } from "node:child_process";
-import {
-	existsSync,
-	mkdtempSync,
-	readFileSync,
-	rmSync,
-	writeFileSync,
-} from "node:fs";
+import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import {
-	isEquivalentMutant,
-	loadEquivalentMutants,
-} from "./equivalent-mutants";
+import { isEquivalentMutant, loadEquivalentMutants } from "./equivalent-mutants";
 
 const FLOOR = 95;
 const TOLERANCE = 0.5;
@@ -161,9 +152,7 @@ function parseProgressJsonl(): Map<
 	{ mutantCount: number; statusCounts: Record<string, number> }
 > {
 	if (!existsSync(PROGRESS_JSONL)) return new Map();
-	const lines = readFileSync(PROGRESS_JSONL, "utf8")
-		.split("\n")
-		.filter(Boolean);
+	const lines = readFileSync(PROGRESS_JSONL, "utf8").split("\n").filter(Boolean);
 
 	// Walk sessions in order; finalize each session's per-file completion
 	// before moving to the next.
@@ -199,20 +188,14 @@ function parseProgressJsonl(): Map<
 
 	// Latest-session-wins: for each file, take the most recent session's
 	// counts (a re-run supersedes any partial prior progress).
-	const latest = new Map<
-		string,
-		{ mutants: JsonlMutant[]; expected: number }
-	>();
+	const latest = new Map<string, { mutants: JsonlMutant[]; expected: number }>();
 	for (const s of sessions) {
 		for (const [file, muts] of s.mutants) {
 			latest.set(file, { mutants: muts, expected: s.manifest[file] ?? 0 });
 		}
 	}
 
-	const out = new Map<
-		string,
-		{ mutantCount: number; statusCounts: Record<string, number> }
-	>();
+	const out = new Map<string, { mutantCount: number; statusCounts: Record<string, number> }>();
 	for (const [file, { mutants, expected }] of latest) {
 		// File counts only when every mutant from the manifest landed —
 		// otherwise the file is considered partial and won't be skipped
@@ -243,14 +226,7 @@ function changedSourceFiles(): string[] {
 			execFileSync("git", ["rev-parse", "--verify", ref], { stdio: "pipe" });
 			const out = execFileSync(
 				"git",
-				[
-					"diff",
-					"--name-only",
-					`${ref}...HEAD`,
-					"--",
-					`${SRC_ROOT}*.ts`,
-					`${SRC_ROOT}**/*.ts`,
-				],
+				["diff", "--name-only", `${ref}...HEAD`, "--", `${SRC_ROOT}*.ts`, `${SRC_ROOT}**/*.ts`],
 				{ encoding: "utf8" },
 			);
 			return out
@@ -280,23 +256,17 @@ interface StrykerReport {
 // when mixed, keep them so the non-label files retain literal-mutant
 // coverage. Pattern matches the i18n-style label module shape we ship.
 function isLabelTarget(target: string): boolean {
-	return /(?:^|\/)(?:admin(?:-page)?-labels|admin-page-labels)\.ts(?::|$)/.test(
-		target,
-	);
+	return /(?:^|\/)(?:admin(?:-page)?-labels|admin-page-labels)\.ts(?::|$)/.test(target);
 }
 
-function runStryker(
-	mutateTargets: string[],
-	tmpRoot: string,
-): StrykerReport | null {
+function runStryker(mutateTargets: string[], tmpRoot: string): StrykerReport | null {
 	if (mutateTargets.length === 0) return { files: {} };
 	const configPath = join(tmpRoot, "stryker.config.mjs");
 	const reportPath = join(tmpRoot, "report.json");
 	// Stryker runs from packages/astropress/, so the reporter plugin needs
 	// to be referenced as a path relative to that directory.
 	const reporterPath = `../../${REPORTER_PATH}`;
-	const allLabelOnly =
-		mutateTargets.length > 0 && mutateTargets.every(isLabelTarget);
+	const allLabelOnly = mutateTargets.length > 0 && mutateTargets.every(isLabelTarget);
 	// Label files are pure-data i18n maps with no runtime logic. Their
 	// scoreable mutants are all on the data structure itself —
 	// StringLiteral on values, ObjectLiteral wiping a locale's bundle,
@@ -314,11 +284,15 @@ function runStryker(
 		`export default {
   plugins: ["@stryker-mutator/vitest-runner", ${JSON.stringify(reporterPath)}],
   mutate: ${JSON.stringify(mutateTargets)},
+  // Exclude generated artifacts from the sandbox copy. Without this, racing
+  // against test:coverage (which writes coverage-summary.json mid-flight)
+  // can crash stryker with ENOENT during sandbox file copy.
+  ignorePatterns: ["coverage/**", "reports/**", ".stryker-tmp/**", ".stryker-incremental*.json"],
   testRunner: "vitest",
   coverageAnalysis: "perTest",
   vitest: { related: true },
   ignoreStatic: true,
-  concurrency: 4,
+  concurrency: ${Number(process.env.STRYKER_CONCURRENCY) || 4},
   reporters: ["clear-text", "json", "checkpoint"],
   jsonReporter: { fileName: ${JSON.stringify(reportPath)} },
   incremental: true,
@@ -354,10 +328,7 @@ function runStryker(
 	return JSON.parse(readFileSync(reportPath, "utf8")) as StrykerReport;
 }
 
-function scoreForFile(
-	report: StrykerReport,
-	mutatePath: string,
-): number | null {
+function scoreForFile(report: StrykerReport, mutatePath: string): number | null {
 	const key = Object.keys(report.files).find((k) => k.endsWith(mutatePath));
 	if (!key) return null;
 	const mutants = report.files[key].mutants;
@@ -365,23 +336,14 @@ function scoreForFile(
 	// Equivalent mutants (catalogued in tooling/stryker/equivalent-mutants.json)
 	// are excluded from scoring because no test can kill them.
 	const isExcluded = (m: StrykerReportMutant): boolean =>
-		m.status === "Ignored" ||
-		m.status === "NoCoverage" ||
-		isEquivalentMutant(key, m, equivalents);
+		m.status === "Ignored" || m.status === "NoCoverage" || isEquivalentMutant(key, m, equivalents);
 	const scored = mutants.filter((m) => !isExcluded(m));
-	const killed = scored.filter(
-		(m) => m.status === "Killed" || m.status === "Timeout",
-	);
+	const killed = scored.filter((m) => m.status === "Killed" || m.status === "Timeout");
 	if (scored.length === 0) return 100;
 	return (killed.length / scored.length) * 100;
 }
 
-type VerdictStatus =
-	| "pass-hash-skip"
-	| "pass"
-	| "regression"
-	| "new-file-below-floor"
-	| "unscored";
+type VerdictStatus = "pass-hash-skip" | "pass" | "regression" | "new-file-below-floor" | "unscored";
 
 interface Verdict {
 	file: string;
@@ -419,11 +381,25 @@ function judgeScored(
 }
 
 function main(): number {
+	// Escape hatch for the biome 2 bump (and equivalent formatter-only sweeps).
+	// A formatter pass that touches every file invalidates the entire baseline
+	// (line numbers shift → byte-hashes diverge), forcing a multi-hour
+	// re-mutation run that's intractable locally and unstable under load.
+	// Set MUTATION_GATE_BIOME_BUMP=1 to bypass the gate for one push; the
+	// .github/workflows/refresh-mutation-baseline.yml workflow will re-run the
+	// gate in CI (single-worker, multi-hour timeout) and commit a refreshed
+	// baseline-scores.json back to the branch. Future pushes hash-skip clean.
+	if (process.env.MUTATION_GATE_BIOME_BUMP === "1") {
+		console.log(
+			"prepush-mutation-gate: MUTATION_GATE_BIOME_BUMP=1 — bypassing gate.\n" +
+				"  CI's refresh-mutation-baseline workflow will refresh the baseline on this branch.\n" +
+				"  This bypass is for formatter-only sweeps (e.g. biome major bumps); never use it for real code changes.",
+		);
+		return 0;
+	}
 	const changed = changedSourceFiles();
 	if (changed.length === 0) {
-		console.log(
-			"prepush-mutation-gate: no TypeScript source changes — skipping.",
-		);
+		console.log("prepush-mutation-gate: no TypeScript source changes — skipping.");
 		return 0;
 	}
 
@@ -458,13 +434,8 @@ function main(): number {
 		}
 	};
 	const isExempt = (f: string): boolean =>
-		TYPE_ONLY_FILES.has(f) ||
-		f.endsWith(".d.ts") ||
-		f.endsWith("/index.ts") ||
-		isMarkedDataOnly(f);
-	const repoRelative = changed
-		.filter((f) => f.startsWith(PREFIX))
-		.filter((f) => !isExempt(f));
+		TYPE_ONLY_FILES.has(f) || f.endsWith(".d.ts") || f.endsWith("/index.ts") || isMarkedDataOnly(f);
+	const repoRelative = changed.filter((f) => f.startsWith(PREFIX)).filter((f) => !isExempt(f));
 	if (repoRelative.length === 0) {
 		console.log(
 			"prepush-mutation-gate: changed files outside packages/astropress/ (or are type-only) — skipping.",
@@ -478,9 +449,7 @@ function main(): number {
 	// Discard checkpoint state from a different branch — switching branches
 	// invalidates per-file mutation results because main may have evolved.
 	const progressFiles =
-		progress?.branch === branch
-			? progress.files
-			: ({} as Record<string, ProgressEntry>);
+		progress?.branch === branch ? progress.files : ({} as Record<string, ProgressEntry>);
 	console.log(
 		`prepush-mutation-gate: ${repoRelative.length} changed file(s); baseline updated ${baseline.updatedAt}`,
 	);
@@ -509,16 +478,12 @@ function main(): number {
 				baseline: prior,
 				status: "pass-hash-skip",
 			});
-			console.log(
-				`  = ${file}  baseline hash unchanged → reuse ${prior.score.toFixed(2)}%`,
-			);
+			console.log(`  = ${file}  baseline hash unchanged → reuse ${prior.score.toFixed(2)}%`);
 		} else if (hash !== null && cached && cached.hash === hash) {
 			// Resume hit: use the cached score, judge it against the baseline
 			// so a regression introduced by the cached run still fails the gate.
 			checkpointVerdicts.push(judgeScored(file, hash, cached.score, prior));
-			console.log(
-				`  ↻ ${file}  checkpoint hash matches → reuse ${cached.score.toFixed(2)}%`,
-			);
+			console.log(`  ↻ ${file}  checkpoint hash matches → reuse ${cached.score.toFixed(2)}%`);
 		} else {
 			needsMutation.push(file);
 			console.log(`  ~ ${file}  must mutate`);
@@ -527,9 +492,7 @@ function main(): number {
 	verdicts.push(...checkpointVerdicts);
 
 	if (needsMutation.length > 0) {
-		console.log(
-			`\nRunning Stryker on ${needsMutation.length} file(s) with changed content...`,
-		);
+		console.log(`\nRunning Stryker on ${needsMutation.length} file(s) with changed content...`);
 		const tmp = mkdtempSync(join(tmpdir(), "stryker-prepush-"));
 		// Persist the latest gate report at a stable path so failing runs can
 		// be re-analysed (which mutants survived which file) without rerunning
@@ -610,9 +573,7 @@ function main(): number {
 		const scoreStr = v.score === null ? "unscored" : `${v.score.toFixed(2)}%`;
 		const priorStr = v.baseline ? `${v.baseline.score.toFixed(2)}%` : "new";
 		const marker = v.status.startsWith("pass") ? "✓" : "✖";
-		console.log(
-			`  ${marker} ${v.file}  ${scoreStr} / ${priorStr}  [${v.status}]`,
-		);
+		console.log(`  ${marker} ${v.file}  ${scoreStr} / ${priorStr}  [${v.status}]`);
 	}
 
 	const failures = verdicts.filter((v) => !v.status.startsWith("pass"));
@@ -655,8 +616,7 @@ function main(): number {
 			// so the failure message says what to do instead of producing a
 			// misleading repo:clean error 5 minutes later. Outside a push (manual
 			// invocation), the message is still useful as a reminder to commit.
-			const inPush =
-				process.env.LEFTHOOK_PUSH === "1" || process.env.GIT_PUSH === "1";
+			const inPush = process.env.LEFTHOOK_PUSH === "1" || process.env.GIT_PUSH === "1";
 			if (inPush) {
 				console.error(
 					`\n✖ prepush-mutation-gate: baseline updated at ${BASELINE_PATH} during a push.\n  The remaining pre-push gates will fail repo:clean because the worktree is now dirty.\n  Recovery:\n    git add ${BASELINE_PATH}\n    git commit --amend --no-edit\n    git push\n`,
@@ -682,16 +642,12 @@ function main(): number {
 				`  REGRESSION  ${v.file}: ${v.score?.toFixed(2)}% < baseline ${v.baseline?.score.toFixed(2)}%`,
 			);
 		} else if (v.status === "new-file-below-floor") {
-			console.error(
-				`  NEW FILE    ${v.file}: ${v.score?.toFixed(2)}% < floor ${FLOOR}%`,
-			);
+			console.error(`  NEW FILE    ${v.file}: ${v.score?.toFixed(2)}% < floor ${FLOOR}%`);
 		} else {
 			console.error(`  UNSCORED    ${v.file}`);
 		}
 	}
-	console.error(
-		"\n  Raise tests or simplify code. Do not hand-edit baseline-scores.json.\n",
-	);
+	console.error("\n  Raise tests or simplify code. Do not hand-edit baseline-scores.json.\n");
 	return 1;
 }
 

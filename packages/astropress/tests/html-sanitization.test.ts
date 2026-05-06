@@ -6,9 +6,9 @@
  * sanitizeHtml() is part of the public rendering contract and must remain
  * available alongside optimizeImageLoading().
  */
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { sanitizeHtml } from "@astropress-diy/astropress";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 describe("html-sanitization.feature: sanitizeHtml() allowlist contract", () => {
 	it("strips <script> tags", async () => {
@@ -35,8 +35,7 @@ describe("html-sanitization.feature: sanitizeHtml() allowlist contract", () => {
 	});
 
 	it("preserves allowed structural tags: p, h2, ul, li, blockquote", async () => {
-		const input =
-			"<h2>Title</h2><p>Text</p><ul><li>Item</li></ul><blockquote>Quote</blockquote>";
+		const input = "<h2>Title</h2><p>Text</p><ul><li>Item</li></ul><blockquote>Quote</blockquote>";
 		const output = await sanitizeHtml(input);
 		expect(output).toContain("<h2>");
 		expect(output).toContain("<p>");
@@ -46,8 +45,7 @@ describe("html-sanitization.feature: sanitizeHtml() allowlist contract", () => {
 	});
 
 	it("preserves allowed inline tags with safe attributes: strong, em, a[href]", async () => {
-		const input =
-			'<strong>Bold</strong><em>Italic</em><a href="/about">Link</a>';
+		const input = '<strong>Bold</strong><em>Italic</em><a href="/about">Link</a>';
 		const output = await sanitizeHtml(input);
 		expect(output).toContain("<strong>");
 		expect(output).toContain("<em>");
@@ -55,8 +53,7 @@ describe("html-sanitization.feature: sanitizeHtml() allowlist contract", () => {
 	});
 
 	it("strips style= attributes from all elements", async () => {
-		const input =
-			'<p style="color:red">Text</p><h2 style="font-size:99px">Title</h2>';
+		const input = '<p style="color:red">Text</p><h2 style="font-size:99px">Title</h2>';
 		const output = await sanitizeHtml(input);
 		expect(output).not.toContain("style=");
 		expect(output).toContain("<p>");
@@ -72,8 +69,7 @@ describe("html-sanitization.feature: sanitizeHtml() allowlist contract", () => {
 	});
 
 	it("strips javascript: href values from links", async () => {
-		const input =
-			'<a href="javascript:alert(1)">Bad link</a><a href="/safe">Safe link</a>';
+		const input = '<a href="javascript:alert(1)">Bad link</a><a href="/safe">Safe link</a>';
 		const output = await sanitizeHtml(input);
 		expect(output).not.toContain("javascript:");
 		expect(output).toContain(">Bad link</a>");
@@ -81,8 +77,7 @@ describe("html-sanitization.feature: sanitizeHtml() allowlist contract", () => {
 	});
 
 	it("strips data: URL from img src (data URI injection)", async () => {
-		const input =
-			'<img src="data:text/html,<script>alert(1)</script>" alt="probe">';
+		const input = '<img src="data:text/html,<script>alert(1)</script>" alt="probe">';
 		const output = await sanitizeHtml(input);
 		expect(output).not.toContain("data:");
 		expect(output).not.toContain("alert(1)");
@@ -108,16 +103,14 @@ describe("html-sanitization.feature: sanitizeHtml() allowlist contract", () => {
 	});
 
 	it("strips srcset candidates with javascript: scheme while preserving safe candidates", async () => {
-		const input =
-			'<img srcset="javascript:alert(1) 1x, /safe.jpg 2x" alt="probe">';
+		const input = '<img srcset="javascript:alert(1) 1x, /safe.jpg 2x" alt="probe">';
 		const output = await sanitizeHtml(input);
 		expect(output).not.toContain("javascript:");
 		expect(output).toContain("/safe.jpg");
 	});
 
 	it("strips deeply nested script inside multiple allowed structural wrappers", async () => {
-		const input =
-			"<blockquote><ul><li><p><script>evil()</script></p></li></ul></blockquote>";
+		const input = "<blockquote><ul><li><p><script>evil()</script></p></li></ul></blockquote>";
 		const output = await sanitizeHtml(input);
 		expect(output).not.toContain("<script");
 		expect(output).not.toContain("evil()");
@@ -164,9 +157,7 @@ describe("html-sanitization.feature: sanitizeHtml() sanitize-html library fallba
 	});
 
 	it("strips event handler attributes via library fallback", async () => {
-		const output = await sanitizeHtml(
-			'<a href="/donate" onclick="steal()">Donate</a>',
-		);
+		const output = await sanitizeHtml('<a href="/donate" onclick="steal()">Donate</a>');
 		expect(output).not.toContain("onclick");
 		expect(output).toContain("Donate");
 	});

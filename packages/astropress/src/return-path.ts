@@ -1,7 +1,4 @@
-export function resolveSafeReturnPath(
-	referer: string | null | undefined,
-	fallbackPath: string,
-) {
+export function resolveSafeReturnPath(referer: string | null | undefined, fallbackPath: string) {
 	if (!referer) {
 		return fallbackPath;
 	}

@@ -1,0 +1,93 @@
+name: Refresh mutation baseline
+
+# One-shot workflow for branches that touch enough files to invalidate the
+# whole stryker baseline (e.g. a biome major bump that reformats everything).
+# Local pre-push can be bypassed with MUTATION_GATE_BIOME_BUMP=1 for those
+# pushes; this workflow then runs the gate in CI (multi-hour timeout, single
+# worker, more memory than the contributor's laptop) and commits the
+# refreshed `tooling/stryker/baseline-scores.json` back to the branch.
+#
+# After the commit lands, subsequent pushes hash-skip every file → mutation
+# gate passes locally and the PR is mergeable.
+#
+# Trigger by:
+#   - workflow_dispatch on the branch you want refreshed.
+#   - or labeling the PR with `refresh-mutation-baseline`.
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: "Branch ref to refresh baseline on"
+        required: true
+        type: string
+  pull_request:
+    types: [labeled]
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
+# Serialize: a second run on the same branch would race on the commit/push.
+concurrency:
+  group: refresh-mutation-baseline-${{ github.event.pull_request.head.ref || inputs.ref }}
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    if: |
+      github.event_name == 'workflow_dispatch'
+      || (github.event_name == 'pull_request' && github.event.label.name == 'refresh-mutation-baseline')
+    name: Refresh stryker baseline
+    runs-on: ubuntu-latest
+    # Up to 6h: a full sweep on ~200 files × ~80 mutants/file at single-worker
+    # concurrency takes hours. Setting headroom so a noisy environment doesn't
+    # truncate the run.
+    timeout-minutes: 360
+    permissions:
+      contents: write
+    env:
+      TARGET_REF: ${{ github.event.pull_request.head.ref || inputs.ref }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ env.TARGET_REF }}
+          # Need full history for the gate's `git diff origin/main...HEAD`.
+          fetch-depth: 0
+          # Use a token that can push back to the branch.
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24.8"
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.3.10"
+
+      - run: bun install --frozen-lockfile
+
+      - name: Build astropress (mutation tests load from dist/)
+        run: bun run --filter @astropress-diy/astropress build
+
+      - name: Refresh mutation baseline
+        # The gate writes the new baseline on a passing run. Pass `--check-only`
+        # off here so the rewrite happens. Single-worker concurrency to avoid
+        # OOM/SIGSEGV on the runner.
+        env:
+          STRYKER_CONCURRENCY: "1"
+        run: bun run tooling/scripts/prepush-mutation-gate.ts
+
+      - name: Commit refreshed baseline
+        run: |
+          if git diff --quiet tooling/stryker/baseline-scores.json; then
+            echo "Baseline unchanged — nothing to commit."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add tooling/stryker/baseline-scores.json
+          git commit -m "chore(stryker): refresh baseline after formatter sweep
+
+          Computed by .github/workflows/refresh-mutation-baseline.yml on
+          a single-worker stryker run. Commit lets subsequent pushes
+          hash-skip the gate and land normally."
+          git push origin HEAD:"$TARGET_REF"

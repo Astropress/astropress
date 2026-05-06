@@ -70,9 +70,9 @@ describe("logAccessDeny", () => {
 			decision: { decision: "deny", reason: "" },
 		});
 
-		const row = db
-			.prepare("SELECT summary FROM audit_events ORDER BY id DESC LIMIT 1")
-			.get() as { summary: string } | undefined;
+		const row = db.prepare("SELECT summary FROM audit_events ORDER BY id DESC LIMIT 1").get() as
+			| { summary: string }
+			| undefined;
 		expect(row?.summary).toMatch(/access denied/i);
 	});
 

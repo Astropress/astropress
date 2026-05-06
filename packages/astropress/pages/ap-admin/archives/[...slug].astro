@@ -1,12 +1,7 @@
 ---
 import AdminLayout from "@astropress-diy/astropress/components/AdminLayout.astro";
 import CsrfInput from "@astropress-diy/astropress/components/CsrfInput.astro";
-import {
-	buildArchiveEditorModel,
-	getPageT,
-	isAuthUserAdmin,
-	resolveAdminLocale,
-} from "astropress";
+import { buildArchiveEditorModel, getPageT, isAuthUserAdmin, resolveAdminLocale } from "astropress";
 
 export const prerender = false;
 
@@ -15,18 +10,12 @@ const slugValue = Array.isArray(Astro.params.slug)
 	? Astro.params.slug.join("/")
 	: (Astro.params.slug ?? "");
 const archivePath = `/${slugValue}`;
-const model = await buildArchiveEditorModel(
-	Astro.locals,
-	archivePath,
-	adminUser,
-);
+const model = await buildArchiveEditorModel(Astro.locals, archivePath, adminUser);
 const isForbidden = !adminUser || !isAuthUserAdmin(adminUser);
 const { archive } = model.data;
 const wasSaved = Astro.url.searchParams.get("saved") === "1";
 const errorMessage =
-	Astro.url.searchParams.get("error") === "1"
-		? Astro.url.searchParams.get("message")
-		: "";
+	Astro.url.searchParams.get("error") === "1" ? Astro.url.searchParams.get("message") : "";
 const t = getPageT(resolveAdminLocale(Astro));
 
 if (model.status === "forbidden") {

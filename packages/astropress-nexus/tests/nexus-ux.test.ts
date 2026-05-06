@@ -145,10 +145,7 @@ describe("Rubric 48: Nexus dashboard UX affordances", () => {
 			text.includes("degraded") ||
 			text.includes("status") ||
 			text.includes("ok");
-		expect(
-			hasHealthSignal,
-			"dashboard must convey site health in initial HTML",
-		).toBe(true);
+		expect(hasHealthSignal, "dashboard must convey site health in initial HTML").toBe(true);
 	});
 
 	it("dashboard links directly to each site's detail page (cross-site nav ≤ 2 clicks)", async () => {
@@ -168,10 +165,7 @@ describe("Rubric 48: Nexus dashboard UX affordances", () => {
 		const elapsed = performance.now() - start;
 		expect(status).toBe(200);
 		// A 2-site dashboard should render fast; generous upper bound guards against regression
-		expect(
-			elapsed,
-			`dashboard render took ${elapsed.toFixed(0)}ms`,
-		).toBeLessThan(2_000);
+		expect(elapsed, `dashboard render took ${elapsed.toFixed(0)}ms`).toBeLessThan(2_000);
 	});
 });
 
@@ -181,10 +175,9 @@ describe("Rubric 48: Nexus site-detail page affordances", () => {
 	it("site detail page renders the site name, breadcrumb, and deploy/refresh actions", async () => {
 		mockAllSitesHealthy();
 		const app = createNexusApp({ config: testConfig, authToken: ORG_TOKEN });
-		const { status, text } = await call(
-			app,
-			`/sites/site-a/detail?token=${ORG_TOKEN}`,
-		).catch(() => ({ status: 0, text: "", json: null }));
+		const { status, text } = await call(app, `/sites/site-a/detail?token=${ORG_TOKEN}`).catch(
+			() => ({ status: 0, text: "", json: null }),
+		);
 		// Endpoint may be /sites/:id or a detail route — accept either form
 		if (status === 0 || status === 404) {
 			// Fall back to /sites/site-a if the detail suffix isn't the actual path

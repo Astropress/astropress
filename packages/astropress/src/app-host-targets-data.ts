@@ -5,15 +5,9 @@
 // not the marketing copy. Behavior of the accessors that read this
 // data is mutation-tested in app-host-targets.ts at 95%+.
 
-import type {
-	AstropressAppHost,
-	AstropressAppHostTarget,
-} from "./app-host-targets";
+import type { AstropressAppHost, AstropressAppHostTarget } from "./app-host-targets";
 
-export const appHostTargets: Record<
-	AstropressAppHost,
-	AstropressAppHostTarget
-> = {
+export const appHostTargets: Record<AstropressAppHost, AstropressAppHostTarget> = {
 	"github-pages": {
 		id: "github-pages",
 		label: "GitHub Pages",
@@ -28,8 +22,7 @@ export const appHostTargets: Record<
 		runtime: "edge",
 		supportsStatic: true,
 		supportsServerRuntime: true,
-		notes:
-			"Pages plus Workers for static output and hosted server/runtime paths.",
+		notes: "Pages plus Workers for static output and hosted server/runtime paths.",
 	},
 	vercel: {
 		id: "vercel",
@@ -55,8 +48,7 @@ export const appHostTargets: Record<
 		runtime: "static",
 		supportsStatic: true,
 		supportsServerRuntime: false,
-		notes:
-			"Static site hosting on Render without a long-running Astro app process.",
+		notes: "Static site hosting on Render without a long-running Astro app process.",
 	},
 	"render-web": {
 		id: "render-web",
@@ -88,8 +80,7 @@ export const appHostTargets: Record<
 		runtime: "web-service",
 		supportsStatic: true,
 		supportsServerRuntime: true,
-		notes:
-			"Self-hosted PaaS (Coolify) deploying via git push or Docker Compose.",
+		notes: "Self-hosted PaaS (Coolify) deploying via git push or Docker Compose.",
 	},
 	digitalocean: {
 		id: "digitalocean",

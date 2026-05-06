@@ -9,9 +9,7 @@ export async function safeAdminValue<TLoad extends () => Promise<unknown>>(
 	}
 }
 
-export async function safeAdminData<
-	TLoaders extends Record<string, () => Promise<unknown>>,
->(
+export async function safeAdminData<TLoaders extends Record<string, () => Promise<unknown>>>(
 	loaders: TLoaders,
 	fallbacks: { [K in keyof TLoaders]: Awaited<ReturnType<TLoaders[K]>> },
 ): Promise<{ [K in keyof TLoaders]: Awaited<ReturnType<TLoaders[K]>> }> {

@@ -12,14 +12,7 @@ import type { AstropressPlatformAdapter } from "./platform-contracts";
 export interface SitemapEntry {
 	url: string;
 	lastmod?: string;
-	changefreq?:
-		| "always"
-		| "hourly"
-		| "daily"
-		| "weekly"
-		| "monthly"
-		| "yearly"
-		| "never";
+	changefreq?: "always" | "hourly" | "daily" | "weekly" | "monthly" | "yearly" | "never";
 	priority?: number;
 }
 
@@ -79,8 +72,7 @@ function buildSitemapXml(entries: SitemapEntry[]): string {
 		.map((entry) => {
 			const parts = ["  <url>", `    <loc>${escapeXml(entry.url)}</loc>`];
 			if (entry.lastmod) parts.push(`    <lastmod>${entry.lastmod}</lastmod>`);
-			if (entry.changefreq)
-				parts.push(`    <changefreq>${entry.changefreq}</changefreq>`);
+			if (entry.changefreq) parts.push(`    <changefreq>${entry.changefreq}</changefreq>`);
 			if (entry.priority !== undefined)
 				parts.push(`    <priority>${entry.priority.toFixed(1)}</priority>`);
 			parts.push("  </url>");

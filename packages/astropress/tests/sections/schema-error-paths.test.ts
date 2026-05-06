@@ -12,9 +12,7 @@ function expectErr(input: unknown, path: string, message: string) {
 	if (!r.ok) {
 		const found = r.errors.find((e) => e.path === path);
 		if (!found) {
-			throw new Error(
-				`expected error at path '${path}' but got: ${JSON.stringify(r.errors)}`,
-			);
+			throw new Error(`expected error at path '${path}' but got: ${JSON.stringify(r.errors)}`);
 		}
 		expect(found.message).toBe(message);
 	}
@@ -218,19 +216,11 @@ describe("schema error paths — exact path + message coverage", () => {
 	});
 
 	it("faq items not array", () => {
-		expectErr(
-			[{ id: "f", kind: "faq", items: "no" }],
-			"$[0].items",
-			"items must be an array",
-		);
+		expectErr([{ id: "f", kind: "faq", items: "no" }], "$[0].items", "items must be an array");
 	});
 
 	it("faq item not object", () => {
-		expectErr(
-			[{ id: "f", kind: "faq", items: ["nope"] }],
-			"$[0].items[0]",
-			"must be object",
-		);
+		expectErr([{ id: "f", kind: "faq", items: ["nope"] }], "$[0].items[0]", "must be object");
 	});
 
 	it("faq item.question missing", () => {
@@ -266,19 +256,11 @@ describe("schema error paths — exact path + message coverage", () => {
 	});
 
 	it("rich-text html non-string", () => {
-		expectErr(
-			[{ id: "r", kind: "rich-text", html: 5 }],
-			"$[0].html",
-			"html must be a string",
-		);
+		expectErr([{ id: "r", kind: "rich-text", html: 5 }], "$[0].html", "html must be a string");
 	});
 
 	it("section id missing → exact message", () => {
-		expectErr(
-			[{ kind: "hero", headline: "x", alignment: "start" }],
-			"$[0].id",
-			"id is required",
-		);
+		expectErr([{ kind: "hero", headline: "x", alignment: "start" }], "$[0].id", "id is required");
 	});
 
 	it("section non-object → exact message", () => {
@@ -297,8 +279,7 @@ describe("schema error paths — exact path + message coverage", () => {
 	it("top-level non-array message", () => {
 		const r = parseSections({ random: 1 });
 		expect(r.ok).toBe(false);
-		if (!r.ok)
-			expect(r.errors[0].message).toBe("sections payload must be an array");
+		if (!r.ok) expect(r.errors[0].message).toBe("sections payload must be an array");
 	});
 
 	it("intro included on success only when non-empty (string truthy guard)", () => {
@@ -371,10 +352,7 @@ describe("schema error paths — exact path + message coverage", () => {
 			},
 		]);
 		expect(r.ok).toBe(false);
-		if (!r.ok)
-			expect(r.errors.some((e) => e.path.startsWith("$[0].secondaryCta"))).toBe(
-				true,
-			);
+		if (!r.ok) expect(r.errors.some((e) => e.path.startsWith("$[0].secondaryCta"))).toBe(true);
 	});
 
 	it("hero secondaryCta with bad shape collects error", () => {
@@ -387,10 +365,7 @@ describe("schema error paths — exact path + message coverage", () => {
 			},
 		]);
 		expect(r.ok).toBe(false);
-		if (!r.ok)
-			expect(r.errors.some((e) => e.path === "$[0].secondaryCta.label")).toBe(
-				true,
-			);
+		if (!r.ok) expect(r.errors.some((e) => e.path === "$[0].secondaryCta.label")).toBe(true);
 	});
 
 	it("rich-text returns RichTextSection with kind preserved", () => {
@@ -458,9 +433,7 @@ describe("schema error paths — exact path + message coverage", () => {
 	});
 
 	it("hero preserved id stays as the input string verbatim", () => {
-		const r = parseSections([
-			{ id: "abc-123", kind: "hero", headline: "x", alignment: "start" },
-		]);
+		const r = parseSections([{ id: "abc-123", kind: "hero", headline: "x", alignment: "start" }]);
 		if (r.ok) expect(r.sections[0].id).toBe("abc-123");
 	});
 

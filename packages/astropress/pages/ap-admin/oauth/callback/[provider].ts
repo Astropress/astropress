@@ -57,8 +57,8 @@ export const GET: APIRoute = async (context) => {
 	}
 
 	const env =
-		(context.locals as { runtime?: { env?: Record<string, string> } } | null)
-			?.runtime?.env ?? (typeof process !== "undefined" ? process.env : {});
+		(context.locals as { runtime?: { env?: Record<string, string> } } | null)?.runtime?.env ??
+		(typeof process !== "undefined" ? process.env : {});
 	const clientId = env[provider.clientIdEnv];
 	const clientSecret = env[provider.clientSecretEnv];
 	if (!clientId || !clientSecret) {
@@ -67,10 +67,7 @@ export const GET: APIRoute = async (context) => {
 		});
 	}
 
-	const redirectUri = buildRedirectUri(
-		context.url.origin,
-		provider.redirectPath,
-	);
+	const redirectUri = buildRedirectUri(context.url.origin, provider.redirectPath);
 	const result = await exchangeCodeForToken({
 		tokenUrl: provider.tokenUrl,
 		clientId,

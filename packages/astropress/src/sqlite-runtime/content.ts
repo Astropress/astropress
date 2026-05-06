@@ -1,11 +1,6 @@
 import { createAstropressContentRepository } from "../content-repository-factory";
-import type { ContentRecord } from "../persistence-types";
 import { recordAudit } from "./audit-log";
 import {
-	type ContentEntryRow,
-	type RevisionInput,
-	type RevisionRow,
-	SQL_LIST_REVISIONS_FOR_SLUG,
 	ensureBaselineRevisionImpl,
 	insertRevision,
 	mapContentEntryRow,
@@ -14,17 +9,19 @@ import {
 	pageRecordToContentRecord,
 	queryContentAssignmentIds,
 	queryCustomContentEntries,
+	type RevisionRow,
 	replaceAssignments,
+	SQL_LIST_REVISIONS_FOR_SLUG,
 	tryInsertContentEntry,
 	upsertOverride,
 } from "./content-helpers";
 import { createSqliteSubmissionStore } from "./content-submissions";
 import {
 	type AstropressSqliteDatabaseLike,
-	type PageRecord,
 	getSeedPageRecords,
 	normalizeContentStatus,
 	normalizePath,
+	type PageRecord,
 	slugifyTerm,
 } from "./utils";
 
@@ -80,9 +77,7 @@ export function createSqliteContentStore(
 			return record ? pageRecordToContentRecord(record) : null;
 		},
 		listContentRecords() {
-			return getAllContentRecords().map((record) =>
-				pageRecordToContentRecord(record),
-			);
+			return getAllContentRecords().map((record) => pageRecordToContentRecord(record));
 		},
 		getPersistedOverride: getPersistedContentOverride,
 		getContentAssignments(slug) {
@@ -92,16 +87,12 @@ export function createSqliteContentStore(
 			ensureBaselineRevision(record as PageRecord);
 		},
 		listPersistedRevisions(slug) {
-			const rows = getDb()
-				.prepare(SQL_LIST_REVISIONS_FOR_SLUG)
-				.all(slug) as RevisionRow[];
+			const rows = getDb().prepare(SQL_LIST_REVISIONS_FOR_SLUG).all(slug) as RevisionRow[];
 			return rows.map(mapRevisionRow);
 		},
 		getPersistedRevision(slug, revisionId) {
 			return (
-				this.listPersistedRevisions(slug).find(
-					(revision) => revision.id === revisionId,
-				) ?? null
+				this.listPersistedRevisions(slug).find((revision) => revision.id === revisionId) ?? null
 			);
 		},
 		upsertContentOverride(slug, override, actor) {

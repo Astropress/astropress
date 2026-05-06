@@ -1,9 +1,9 @@
 import { afterEach, describe, expect, it } from "vitest";
 
 import {
-	InboundWebhookRegistryError,
 	_resetInboundWebhookRegistryForTests,
 	getInboundWebhookProvider,
+	InboundWebhookRegistryError,
 	listInboundWebhookProviders,
 	registerInboundWebhookProvider,
 } from "../../../src/integrations/webhooks/registry";

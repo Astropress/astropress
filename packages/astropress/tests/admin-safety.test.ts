@@ -1,4 +1,4 @@
-import { readFileSync, readdirSync, statSync } from "node:fs";
+import { readdirSync, readFileSync, statSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { findRepoRoot } from "./_helpers/repo-root";
@@ -37,18 +37,9 @@ describe("admin markup safety", () => {
 	});
 
 	it("labels admin dialogs accessibly and previews rich HTML inside a sandboxed iframe", () => {
-		const commentsPage = readFileSync(
-			path.join(adminPagesRoot, "comments.astro"),
-			"utf8",
-		);
-		const redirectsPage = readFileSync(
-			path.join(adminPagesRoot, "redirects.astro"),
-			"utf8",
-		);
-		const postEditorPage = readFileSync(
-			path.join(adminPagesRoot, "posts/[slug].astro"),
-			"utf8",
-		);
+		const commentsPage = readFileSync(path.join(adminPagesRoot, "comments.astro"), "utf8");
+		const redirectsPage = readFileSync(path.join(adminPagesRoot, "redirects.astro"), "utf8");
+		const postEditorPage = readFileSync(path.join(adminPagesRoot, "posts/[slug].astro"), "utf8");
 
 		expect(commentsPage).toContain(
 			'<dialog id="reject-dialog" class="confirm-modal" aria-labelledby="reject-dialog-title">',
@@ -62,9 +53,7 @@ describe("admin markup safety", () => {
 	});
 
 	it("does not suppress color-contrast in any axe audit script", () => {
-		const auditScripts = readdirSync(scriptsRoot).filter((f) =>
-			f.endsWith(".ts"),
-		);
+		const auditScripts = readdirSync(scriptsRoot).filter((f) => f.endsWith(".ts"));
 		for (const script of auditScripts) {
 			const src = readFileSync(path.join(scriptsRoot, script), "utf8");
 			expect(src, `${script} must not suppress color-contrast`).not.toContain(
@@ -81,26 +70,13 @@ describe("admin markup safety", () => {
 			path.resolve(import.meta.dirname, "../components/AdminLayout.astro"),
 			"utf8",
 		);
-		const loginPage = readFileSync(
-			path.join(adminPagesRoot, "login.astro"),
-			"utf8",
-		);
-		const invitePage = readFileSync(
-			path.join(adminPagesRoot, "accept-invite.astro"),
-			"utf8",
-		);
-		const resetPage = readFileSync(
-			path.join(adminPagesRoot, "reset-password.astro"),
-			"utf8",
-		);
+		const loginPage = readFileSync(path.join(adminPagesRoot, "login.astro"), "utf8");
+		const invitePage = readFileSync(path.join(adminPagesRoot, "accept-invite.astro"), "utf8");
+		const resetPage = readFileSync(path.join(adminPagesRoot, "reset-password.astro"), "utf8");
 
 		expect(adminLayout).toContain('class="skip-link"');
-		expect(adminLayout).toContain(
-			'aria-label={tLayout("layout.adminSections")}',
-		);
-		expect(loginPage).toContain(
-			'type="email" name="email" autocomplete="email" required',
-		);
+		expect(adminLayout).toContain('aria-label={tLayout("layout.adminSections")}');
+		expect(loginPage).toContain('type="email" name="email" autocomplete="email" required');
 		expect(loginPage).toContain(
 			'type="password" name="password" autocomplete="current-password" required',
 		);

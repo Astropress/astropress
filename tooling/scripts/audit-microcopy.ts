@@ -8,14 +8,7 @@ import { AuditReport, ROOT, readText, runAudit } from "../lib/audit-utils.js";
 //   1. Negative: banned low-signal phrases must not appear in user-facing code
 //   2. Positive: button labels must use verb phrases; non-verb labels flag a violation
 
-const auditableExtensions = new Set([
-	".md",
-	".mdx",
-	".astro",
-	".ts",
-	".tsx",
-	".rs",
-]);
+const auditableExtensions = new Set([".md", ".mdx", ".astro", ".ts", ".tsx", ".rs"]);
 const bannedPhrases = [
 	"Something went wrong. Please try again.",
 	"An error occurred",
@@ -45,9 +38,7 @@ async function main() {
 		.split("\n")
 		.map((file) => file.trim())
 		.filter((file) => file.length > 0)
-		.filter(
-			(file) => !file.startsWith("node_modules/") && isAuditableFile(file),
-		);
+		.filter((file) => !file.startsWith("node_modules/") && isAuditableFile(file));
 
 	for (const file of trackedFiles) {
 		if (allowedFiles.has(file)) {
@@ -62,10 +53,7 @@ async function main() {
 			}
 		}
 
-		if (
-			file.endsWith(".astro") &&
-			(file.includes("ap-admin") || file.includes("components/"))
-		) {
+		if (file.endsWith(".astro") && (file.includes("ap-admin") || file.includes("components/"))) {
 			for (const m of body.matchAll(NON_VERB_BUTTON_RE)) {
 				const label = m[1];
 				report.add(

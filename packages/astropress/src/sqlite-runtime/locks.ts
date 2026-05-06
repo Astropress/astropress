@@ -22,9 +22,7 @@ function lockExpiresAt(): string {
 	return d.toISOString();
 }
 
-export function createSqliteLocksOps(
-	getDb: () => AstropressSqliteDatabaseLike,
-) {
+export function createSqliteLocksOps(getDb: () => AstropressSqliteDatabaseLike) {
 	return {
 		acquireLock(
 			slug: string,
@@ -34,9 +32,7 @@ export function createSqliteLocksOps(
 			const db = getDb();
 			db.exec("BEGIN IMMEDIATE");
 			try {
-				db.prepare("DELETE FROM content_locks WHERE expires_at <= ?").run(
-					new Date().toISOString(),
-				);
+				db.prepare("DELETE FROM content_locks WHERE expires_at <= ?").run(new Date().toISOString());
 
 				const existing = db
 					.prepare(
@@ -83,9 +79,7 @@ export function createSqliteLocksOps(
 		refreshLock(slug: string, lockToken: string): boolean {
 			const expiresAt = lockExpiresAt();
 			const result = getDb()
-				.prepare(
-					"UPDATE content_locks SET expires_at = ? WHERE slug = ? AND lock_token = ?",
-				)
+				.prepare("UPDATE content_locks SET expires_at = ? WHERE slug = ? AND lock_token = ?")
 				.run(expiresAt, slug, lockToken);
 			return (result.changes as number) > 0;
 		},

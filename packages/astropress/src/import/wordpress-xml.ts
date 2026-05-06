@@ -90,18 +90,13 @@ export type ParsedBundle = {
 
 export function detectUnsupportedPatterns(source: string) {
 	const shortcodeMatches = countMatches(source, /\[[a-z][^\]]*\]/gi);
-	const builderMatches = countMatches(
-		source,
-		/(elementor|vc_row|wp-block-|et_pb_|fusion_)/gi,
-	);
+	const builderMatches = countMatches(source, /(elementor|vc_row|wp-block-|et_pb_|fusion_)/gi);
 	const unsupportedPatterns: string[] = [];
 	const warnings: string[] = [];
 
 	if (shortcodeMatches > 0) {
 		unsupportedPatterns.push("shortcodes");
-		warnings.push(
-			"WordPress shortcodes were detected; staged content will need manual review.",
-		);
+		warnings.push("WordPress shortcodes were detected; staged content will need manual review.");
 	}
 	if (builderMatches > 0) {
 		unsupportedPatterns.push("page-builder-markup");
@@ -114,20 +109,15 @@ export function detectUnsupportedPatterns(source: string) {
 }
 
 export function parseWordPressExport(source: string): ParsedBundle {
-	const authors: ParsedAuthor[] = getBlocks(source, "wp:author").map(
-		(block, index) => ({
-			id: getTagText(block, "wp:author_id") || `author-${index + 1}`,
-			login: normalizeSlug(
-				getTagText(block, "wp:author_login"),
-				`author-${index + 1}`,
-			),
-			email: getTagText(block, "wp:author_email") || undefined,
-			displayName:
-				getTagText(block, "wp:author_display_name") ||
-				getTagText(block, "wp:author_login") ||
-				`Author ${index + 1}`,
-		}),
-	);
+	const authors: ParsedAuthor[] = getBlocks(source, "wp:author").map((block, index) => ({
+		id: getTagText(block, "wp:author_id") || `author-${index + 1}`,
+		login: normalizeSlug(getTagText(block, "wp:author_login"), `author-${index + 1}`),
+		email: getTagText(block, "wp:author_email") || undefined,
+		displayName:
+			getTagText(block, "wp:author_display_name") ||
+			getTagText(block, "wp:author_login") ||
+			`Author ${index + 1}`,
+	}));
 
 	const termsByKey = new Map<string, ParsedTerm>();
 	const contentRecords: ParsedContentRecord[] = [];
@@ -155,15 +145,11 @@ export function parseWordPressExport(source: string): ParsedBundle {
 		const body = getTagText(item, "content:encoded");
 		const excerpt = getTagText(item, "excerpt:encoded");
 		const publishedAt =
-			getTagText(item, "wp:post_date_gmt") ||
-			getTagText(item, "wp:post_date") ||
-			undefined;
+			getTagText(item, "wp:post_date_gmt") || getTagText(item, "wp:post_date") || undefined;
 
 		const oldSlugs = getBlocks(item, "wp:postmeta")
 			.filter((meta) => getTagText(meta, "wp:meta_key") === "_wp_old_slug")
-			.map((meta) =>
-				normalizeSlug(getTagText(meta, "wp:meta_value"), "legacy"),
-			);
+			.map((meta) => normalizeSlug(getTagText(meta, "wp:meta_value"), "legacy"));
 
 		const categorySlugs: string[] = [];
 		const tagSlugs: string[] = [];
@@ -220,10 +206,7 @@ export function parseWordPressExport(source: string): ParsedBundle {
 
 			for (const oldSlug of oldSlugs) {
 				const targetPath = legacyUrl;
-				const sourcePath = legacyUrl.replace(
-					new RegExp(`${escapeRegExp(slug)}/?$`),
-					`${oldSlug}/`,
-				);
+				const sourcePath = legacyUrl.replace(new RegExp(`${escapeRegExp(slug)}/?$`), `${oldSlug}/`);
 				if (sourcePath !== targetPath) {
 					redirects.push({
 						id: `redirect-${legacyId}-${oldSlug}`,
@@ -235,25 +218,15 @@ export function parseWordPressExport(source: string): ParsedBundle {
 				}
 			}
 
-			for (const [commentIndex, commentBlock] of getBlocks(
-				item,
-				"wp:comment",
-			).entries()) {
+			for (const [commentIndex, commentBlock] of getBlocks(item, "wp:comment").entries()) {
 				comments.push({
 					id: `comment-${legacyId}-${commentIndex + 1}`,
-					legacyId:
-						getTagText(commentBlock, "wp:comment_id") ||
-						`${legacyId}-${commentIndex + 1}`,
+					legacyId: getTagText(commentBlock, "wp:comment_id") || `${legacyId}-${commentIndex + 1}`,
 					recordId: `${postType}-${legacyId}`,
-					authorName:
-						getTagText(commentBlock, "wp:comment_author") || "Anonymous",
-					authorEmail:
-						getTagText(commentBlock, "wp:comment_author_email") || undefined,
+					authorName: getTagText(commentBlock, "wp:comment_author") || "Anonymous",
+					authorEmail: getTagText(commentBlock, "wp:comment_author_email") || undefined,
 					body: getTagText(commentBlock, "wp:comment_content"),
-					status:
-						getTagText(commentBlock, "wp:comment_approved") === "1"
-							? "approved"
-							: "pending",
+					status: getTagText(commentBlock, "wp:comment_approved") === "1" ? "approved" : "pending",
 					createdAt:
 						getTagText(commentBlock, "wp:comment_date_gmt") ||
 						getTagText(commentBlock, "wp:comment_date") ||
@@ -264,8 +237,7 @@ export function parseWordPressExport(source: string): ParsedBundle {
 		}
 
 		if (postType === "attachment") {
-			const sourceUrl =
-				getTagText(item, "wp:attachment_url") || getTagText(item, "guid");
+			const sourceUrl = getTagText(item, "wp:attachment_url") || getTagText(item, "guid");
 			const filename = safeArtifactFilename(
 				filenameFromUrl(sourceUrl, `${slug || legacyId}.bin`),
 				`${slug || legacyId}.bin`,
@@ -312,8 +284,7 @@ export function parseWordPressExport(source: string): ParsedBundle {
 			redirects: redirects.length,
 			comments: comments.length,
 			users: authors.length,
-			categories: [...termsByKey.values()].filter((t) => t.kind === "category")
-				.length,
+			categories: [...termsByKey.values()].filter((t) => t.kind === "category").length,
 			tags: [...termsByKey.values()].filter((t) => t.kind === "tag").length,
 			skipped,
 		},

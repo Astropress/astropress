@@ -54,9 +54,7 @@ describe("toSqlLiteral", () => {
 	});
 
 	it("renders Uint8Array as a hex blob literal", () => {
-		expect(toSqlLiteral(new Uint8Array([0xde, 0xad, 0xbe, 0xef]))).toBe(
-			"X'deadbeef'",
-		);
+		expect(toSqlLiteral(new Uint8Array([0xde, 0xad, 0xbe, 0xef]))).toBe("X'deadbeef'");
 		expect(toSqlLiteral(new Uint8Array([]))).toBe("X''");
 	});
 
@@ -76,7 +74,7 @@ describe("toSqlLiteral", () => {
 describe("buildTableImportStatements", () => {
 	function makeDb(
 		columnsByTable: Record<string, string[]>,
-		rowsByTable: Record<string, Array<Record<string, unknown>>>,
+		rowsByTable: Record<string, Record<string, unknown>[]>,
 	) {
 		return {
 			prepare(query: string) {
@@ -154,8 +152,6 @@ describe("buildTableImportSql", () => {
 				return { all: () => [{ id: 7 }] };
 			},
 		} as never;
-		expect(buildTableImportSql(db, "x")).toBe(
-			"DELETE FROM x;\nINSERT INTO x (id) VALUES (7);",
-		);
+		expect(buildTableImportSql(db, "x")).toBe("DELETE FROM x;\nINSERT INTO x (id) VALUES (7);");
 	});
 });

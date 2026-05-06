@@ -1,8 +1,8 @@
 import {
+	getCmsConfig,
 	getRuntimeContentState,
 	saveRuntimeContentState,
 } from "@astropress-diy/astropress";
-import { getCmsConfig } from "@astropress-diy/astropress";
 import {
 	apiErrors,
 	jsonOk,
@@ -25,12 +25,10 @@ function buildApiCtx(
 }
 
 export const GET: APIRoute = async (context) => {
-	if (!getCmsConfig().api?.enabled)
-		return apiErrors.notFound("REST API is not enabled.");
+	if (!getCmsConfig().api?.enabled) return apiErrors.notFound("REST API is not enabled.");
 
 	const store = await loadLocalAdminStore();
-	if (!store.apiTokens)
-		return apiErrors.notFound("API token store unavailable.");
+	if (!store.apiTokens) return apiErrors.notFound("API token store unavailable.");
 
 	return withApiRequest(
 		context.request,
@@ -40,21 +38,16 @@ export const GET: APIRoute = async (context) => {
 			const id = context.params.id ?? "";
 			const record = await getRuntimeContentState(id, context.locals);
 			if (!record) return apiErrors.notFound(`Content '${id}' not found.`);
-			return jsonOkWithEtag(
-				record as Parameters<typeof jsonOkWithEtag>[0],
-				context.request,
-			);
+			return jsonOkWithEtag(record as Parameters<typeof jsonOkWithEtag>[0], context.request);
 		},
 	);
 };
 
 export const PUT: APIRoute = async (context) => {
-	if (!getCmsConfig().api?.enabled)
-		return apiErrors.notFound("REST API is not enabled.");
+	if (!getCmsConfig().api?.enabled) return apiErrors.notFound("REST API is not enabled.");
 
 	const store = await loadLocalAdminStore();
-	if (!store.apiTokens)
-		return apiErrors.notFound("API token store unavailable.");
+	if (!store.apiTokens) return apiErrors.notFound("API token store unavailable.");
 
 	return withApiRequest(
 		context.request,
@@ -84,9 +77,7 @@ export const PUT: APIRoute = async (context) => {
 					status: String(body.status ?? existing.status ?? "draft"),
 					body: String(body.body ?? existing.body ?? ""),
 					seoTitle: String(body.seoTitle ?? existing.seoTitle ?? ""),
-					metaDescription: String(
-						body.metaDescription ?? existing.metaDescription ?? "",
-					),
+					metaDescription: String(body.metaDescription ?? existing.metaDescription ?? ""),
 					excerpt: String(body.excerpt ?? existing.excerpt ?? ""),
 					ogTitle: String(body.ogTitle ?? ""),
 					ogDescription: String(body.ogDescription ?? ""),
@@ -102,8 +93,7 @@ export const PUT: APIRoute = async (context) => {
 			if (!result.ok) return apiErrors.validationError(result.error);
 
 			if (store.webhooks) {
-				const event =
-					result.state?.status === "published" ? "content.updated" : null;
+				const event = result.state?.status === "published" ? "content.updated" : null;
 				if (event) await store.webhooks.dispatch(event, { id });
 			}
 
@@ -113,12 +103,10 @@ export const PUT: APIRoute = async (context) => {
 };
 
 export const DELETE: APIRoute = async (context) => {
-	if (!getCmsConfig().api?.enabled)
-		return apiErrors.notFound("REST API is not enabled.");
+	if (!getCmsConfig().api?.enabled) return apiErrors.notFound("REST API is not enabled.");
 
 	const store = await loadLocalAdminStore();
-	if (!store.apiTokens)
-		return apiErrors.notFound("API token store unavailable.");
+	if (!store.apiTokens) return apiErrors.notFound("API token store unavailable.");
 
 	return withApiRequest(
 		context.request,

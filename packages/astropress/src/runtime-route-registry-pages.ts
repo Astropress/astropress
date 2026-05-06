@@ -2,16 +2,16 @@ import { normalizePath } from "./admin-normalizers";
 import { getCmsConfig } from "./config";
 import { getCloudflareBindings } from "./runtime-env";
 import {
-	type RuntimeStructuredPageRouteRecord,
 	loadSafeLocalCmsRegistry,
 	parseSettings,
+	type RuntimeStructuredPageRouteRecord,
 	withSafeRouteRegistryFallback,
 } from "./runtime-route-registry-dispatch";
 
 // ─── Mutations — extracted to runtime-route-registry-pages-mutations.ts ──────
 export {
-	saveRuntimeStructuredPageRoute,
 	createRuntimeStructuredPageRoute,
+	saveRuntimeStructuredPageRoute,
 } from "./runtime-route-registry-pages-mutations";
 
 function normalizeStructuredTemplateKey(value: unknown): string | null {
@@ -66,9 +66,7 @@ function mapStructuredPageRow(
 	} satisfies RuntimeStructuredPageRouteRecord;
 }
 
-export async function listRuntimeStructuredPageRoutes(
-	locals?: App.Locals | null,
-) {
+export async function listRuntimeStructuredPageRoutes(locals?: App.Locals | null) {
 	const db = getCloudflareBindings(locals).DB;
 	if (!db) {
 		const local = await loadSafeLocalCmsRegistry();
@@ -112,10 +110,7 @@ export async function listRuntimeStructuredPageRoutes(
 	);
 }
 
-export async function getRuntimeStructuredPageRoute(
-	pathname: string,
-	locals?: App.Locals | null,
-) {
+export async function getRuntimeStructuredPageRoute(pathname: string, locals?: App.Locals | null) {
 	const normalizedPath = normalizePath(pathname);
 	const db = getCloudflareBindings(locals).DB;
 	/* v8 ignore start */

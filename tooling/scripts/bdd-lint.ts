@@ -1,4 +1,4 @@
-import { readFileSync, readdirSync, statSync } from "node:fs";
+import { readdirSync, readFileSync, statSync } from "node:fs";
 import path from "node:path";
 
 const repoRoot = path.resolve(new URL("../..", import.meta.url).pathname);
@@ -33,9 +33,7 @@ function validateFeatureFile(featureFile: string) {
 	const content = readFileSync(featureFile, "utf8");
 	const lines = content.split(/\r?\n/);
 	const errors: string[] = [];
-	const relativePath = path
-		.relative(repoRoot, featureFile)
-		.replaceAll(path.sep, "/");
+	const relativePath = path.relative(repoRoot, featureFile).replaceAll(path.sep, "/");
 
 	let featureTitle = "";
 	let currentScenario: Scenario | null = null;
@@ -70,11 +68,7 @@ function validateFeatureFile(featureFile: string) {
 		}
 
 		// Feature-level description lines (narrative text before any Scenario/Background).
-		if (
-			!currentScenario &&
-			!inBackground &&
-			isFeatureLevelDescription(trimmed)
-		) {
+		if (!currentScenario && !inBackground && isFeatureLevelDescription(trimmed)) {
 			continue;
 		}
 
@@ -95,9 +89,7 @@ function validateFeatureFile(featureFile: string) {
 				hasThen: false,
 			};
 			if (!currentScenario.title) {
-				errors.push(
-					`${relativePath}:${index + 1} has an empty Scenario title.`,
-				);
+				errors.push(`${relativePath}:${index + 1} has an empty Scenario title.`);
 			}
 			scenarios.push(currentScenario);
 			continue;
@@ -116,9 +108,7 @@ function validateFeatureFile(featureFile: string) {
 		}
 
 		if (!currentScenario) {
-			errors.push(
-				`${relativePath}:${index + 1} contains steps outside a Scenario.`,
-			);
+			errors.push(`${relativePath}:${index + 1} contains steps outside a Scenario.`);
 			continue;
 		}
 
@@ -130,9 +120,7 @@ function validateFeatureFile(featureFile: string) {
 			currentScenario.hasThen = true;
 		} else if (trimmed.startsWith("And ") || trimmed.startsWith("But ")) {
 		} else {
-			errors.push(
-				`${relativePath}:${index + 1} contains an unsupported line: ${trimmed}`,
-			);
+			errors.push(`${relativePath}:${index + 1} contains an unsupported line: ${trimmed}`);
 		}
 	}
 

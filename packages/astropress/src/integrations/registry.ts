@@ -34,7 +34,7 @@ export type IntegrationDomain =
 	| "forms"
 	| "deploy-hooks";
 
-export const INTEGRATION_DOMAINS: ReadonlyArray<IntegrationDomain> = [
+export const INTEGRATION_DOMAINS: readonly IntegrationDomain[] = [
 	"newsletter",
 	"analytics",
 	"ab-testing",
@@ -49,10 +49,7 @@ export interface ProviderDefinition<TFields extends Record<string, string>> {
 	readonly id: string;
 	readonly label: string;
 	readonly fields: z.ZodType<TFields>;
-	readonly verify?: (
-		fields: TFields,
-		ctx: { signal: AbortSignal },
-	) => Promise<void>;
+	readonly verify?: (fields: TFields, ctx: { signal: AbortSignal }) => Promise<void>;
 	readonly runtimeShape?: z.ZodType<TFields>;
 	/**
 	 * Optional override for what error code a thrown {@link verify}
@@ -64,9 +61,8 @@ export interface ProviderDefinition<TFields extends Record<string, string>> {
 	readonly defaultErrorCode?: IntegrationErrorCode;
 }
 
-export interface RegisteredProvider<
-	TFields extends Record<string, string> = Record<string, string>,
-> extends ProviderDefinition<TFields> {
+export interface RegisteredProvider<TFields extends Record<string, string> = Record<string, string>>
+	extends ProviderDefinition<TFields> {
 	readonly domain: IntegrationDomain;
 }
 
@@ -91,10 +87,7 @@ export function registerProvider<TFields extends Record<string, string>>(
 	definition: ProviderDefinition<TFields>,
 ): RegisteredProvider<TFields> {
 	if (!INTEGRATION_DOMAINS.includes(domain)) {
-		throw new IntegrationRegistryError(
-			"UNKNOWN_DOMAIN",
-			`unknown integration domain: ${domain}`,
-		);
+		throw new IntegrationRegistryError("UNKNOWN_DOMAIN", `unknown integration domain: ${domain}`);
 	}
 	const k = key(domain, definition.id);
 	if (registry.has(k)) {
@@ -112,14 +105,10 @@ export function getProvider<TFields extends Record<string, string>>(
 	domain: IntegrationDomain,
 	providerId: string,
 ): RegisteredProvider<TFields> | undefined {
-	return registry.get(key(domain, providerId)) as
-		| RegisteredProvider<TFields>
-		| undefined;
+	return registry.get(key(domain, providerId)) as RegisteredProvider<TFields> | undefined;
 }
 
-export function listProviders(
-	domain: IntegrationDomain,
-): ReadonlyArray<RegisteredProvider> {
+export function listProviders(domain: IntegrationDomain): readonly RegisteredProvider[] {
 	const out: RegisteredProvider[] = [];
 	for (const [k, v] of registry) {
 		if (k.startsWith(`${domain}|`)) out.push(v);

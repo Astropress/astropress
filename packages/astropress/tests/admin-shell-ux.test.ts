@@ -8,10 +8,7 @@ import { describe, expect, it } from "vitest";
 // only invalidate the relevant suite under stryker incremental.
 
 const root = path.resolve(import.meta.dirname, "..");
-const adminLayout = readFileSync(
-	path.join(root, "components", "AdminLayout.astro"),
-	"utf8",
-);
+const adminLayout = readFileSync(path.join(root, "components", "AdminLayout.astro"), "utf8");
 const adminCss = readFileSync(path.join(root, "public", "admin.css"), "utf8");
 
 describe("admin shell ux invariants", () => {
@@ -20,9 +17,7 @@ describe("admin shell ux invariants", () => {
 			'<meta name="viewport" content="width=device-width, initial-scale=1" />',
 		);
 		expect(adminLayout).toContain('popovertarget="admin-keyboard-shortcuts"');
-		expect(adminLayout).toContain(
-			'<h2>{tLayout("layout.keyboardShortcuts")}</h2>',
-		);
+		expect(adminLayout).toContain('<h2>{tLayout("layout.keyboardShortcuts")}</h2>');
 		expect(adminLayout).toContain("<kbd>Ctrl</kbd>+<kbd>K</kbd>");
 	});
 
@@ -37,9 +32,7 @@ describe("admin shell ux invariants", () => {
 
 	it("utility panel sits inline in the topbar, not as a fixed overlay", () => {
 		// No position:fixed on the panel — it flows inside the topbar flex row
-		expect(adminCss).not.toMatch(
-			/\.topbar-utility-panel\s*\{[^}]*position:\s*fixed/,
-		);
+		expect(adminCss).not.toMatch(/\.topbar-utility-panel\s*\{[^}]*position:\s*fixed/);
 	});
 
 	it("has a scroll-to-top/bottom button in the utility panel", () => {
@@ -52,10 +45,7 @@ describe("admin shell ux invariants", () => {
 		expect(adminCss).toContain("ap-toast-out");
 		expect(adminCss).toContain("animation:");
 
-		const authorsPage = readFileSync(
-			path.join(root, "pages", "ap-admin", "authors.astro"),
-			"utf8",
-		);
+		const authorsPage = readFileSync(path.join(root, "pages", "ap-admin", "authors.astro"), "utf8");
 		const taxonomiesPage = readFileSync(
 			path.join(root, "pages", "ap-admin", "taxonomies.astro"),
 			"utf8",
@@ -69,10 +59,7 @@ describe("admin shell ux invariants", () => {
 	});
 
 	it("theme toggle uses SVG icons instead of Unicode", () => {
-		const themeToggle = readFileSync(
-			path.join(root, "web-components", "theme-toggle.ts"),
-			"utf8",
-		);
+		const themeToggle = readFileSync(path.join(root, "web-components", "theme-toggle.ts"), "utf8");
 		expect(themeToggle).toContain("<svg");
 		expect(themeToggle).not.toContain('"\\u2600"');
 		expect(themeToggle).not.toContain('"☀"');

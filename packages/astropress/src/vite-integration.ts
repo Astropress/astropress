@@ -19,9 +19,7 @@ export function createAstropressViteIntegration(
 		createAstropressLocalRuntimeModulePlugin(options.localRuntimeModulesPath),
 	];
 	if (options.astropressPackageRoot) {
-		plugins.push(
-			createAstropressPackageResolverPlugin(options.astropressPackageRoot),
-		);
+		plugins.push(createAstropressPackageResolverPlugin(options.astropressPackageRoot));
 	}
 	return {
 		plugins,

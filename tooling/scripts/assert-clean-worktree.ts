@@ -67,9 +67,7 @@ function main() {
 		const before = readFileSync(againstPath, "utf8");
 		const newOnly = diffLines(before, status);
 		if (newOnly.length > 0) {
-			console.error(
-				"\nFiles that appeared *during* this verification run (most likely cause):\n",
-			);
+			console.error("\nFiles that appeared *during* this verification run (most likely cause):\n");
 			for (const line of newOnly) console.error(`  ${line}`);
 			console.error(
 				"\nIf an editor / agent added these mid-gate, stage and commit them, then re-push.",

@@ -57,13 +57,7 @@ const allowedAttributes = new Map<string, Set<string>>([
 	["td", new Set(["colspan", "rowspan"])],
 ]);
 
-const dropContentTags = new Set([
-	"script",
-	"style",
-	"textarea",
-	"option",
-	"iframe",
-]);
+const dropContentTags = new Set(["script", "style", "textarea", "option", "iframe"]);
 const urlAttributes = new Set(["href", "src"]);
 const srcsetAttributes = new Set(["srcset"]);
 const allowedSchemes = new Set(["http", "https", "mailto", "tel"]);
@@ -95,15 +89,10 @@ function sanitizeSrcset(value: string) {
 	return candidates.length > 0 ? candidates.join(", ") : null;
 }
 
-function sanitizeAttribute(
-	tagName: string,
-	attributeName: string,
-	attributeValue: string,
-) {
+function sanitizeAttribute(tagName: string, attributeName: string, attributeValue: string) {
 	const allowedForTag = allowedAttributes.get(tagName);
 	const allowedGlobally = allowedAttributes.get("*");
-	const isAllowed =
-		allowedForTag?.has(attributeName) || allowedGlobally?.has(attributeName);
+	const isAllowed = allowedForTag?.has(attributeName) || allowedGlobally?.has(attributeName);
 
 	if (!isAllowed) {
 		return null;
@@ -130,10 +119,7 @@ export async function sanitizeHtml(html: string): Promise<string> {
 		return sanitizeHtmlLibrary(html, {
 			allowedTags: [...allowedTags],
 			allowedAttributes: Object.fromEntries(
-				[...allowedAttributes.entries()].map(([tagName, attributes]) => [
-					tagName,
-					[...attributes],
-				]),
+				[...allowedAttributes.entries()].map(([tagName, attributes]) => [tagName, [...attributes]]),
 			),
 			allowedSchemes: [...allowedSchemes],
 			allowProtocolRelative: false,
@@ -181,4 +167,5 @@ export async function sanitizeHtml(html: string): Promise<string> {
 
 	return rewriter.transform(new Response(html)).text();
 }
+
 import sanitizeHtmlLibrary from "sanitize-html";

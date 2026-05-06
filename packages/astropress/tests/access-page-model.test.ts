@@ -2,10 +2,7 @@ import type { DatabaseSync } from "node:sqlite";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createAccessRepository, seedStarterRoles } from "../src/access";
-import {
-	type AccessPageTab,
-	buildAccessPageModel,
-} from "../src/admin-page-models-access";
+import { type AccessPageTab, buildAccessPageModel } from "../src/admin-page-models-access";
 import { makeDb } from "./helpers/make-db.js";
 import { makeLocals } from "./helpers/make-locals.js";
 
@@ -62,12 +59,7 @@ describe("buildAccessPageModel", () => {
 		expect(result.data.activeTab).toBe<AccessPageTab>("users");
 		expect(result.data.users.length).toBeGreaterThanOrEqual(2);
 		const seededRoleNames = result.data.roles.map((r) => r.name).sort();
-		expect(seededRoleNames).toEqual([
-			"Author",
-			"Editor",
-			"Moderator",
-			"Translator",
-		]);
+		expect(seededRoleNames).toEqual(["Author", "Editor", "Moderator", "Translator"]);
 	});
 
 	it("respects the requested tab — 'roles' selects roles tab, 'my-permissions' selects perms tab", async () => {
@@ -128,9 +120,7 @@ describe("buildAccessPageModel", () => {
 		});
 		expect(result.data.activeTab).toBe("roles");
 		expect(result.data.rolePoliciesMap[editor.id]).toBeDefined();
-		expect(result.data.rolePoliciesMap[editor.id]?.length ?? 0).toBeGreaterThan(
-			0,
-		);
+		expect(result.data.rolePoliciesMap[editor.id]?.length ?? 0).toBeGreaterThan(0);
 	});
 
 	it("computes the active subject's effective policies for the My Permissions tab", async () => {

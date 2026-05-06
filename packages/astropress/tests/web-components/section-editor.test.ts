@@ -69,14 +69,10 @@ describe("ap-section-editor", () => {
 
 	it("updates the hidden input when an input value changes", () => {
 		mount({
-			sections: [
-				{ id: "x", kind: "hero", headline: "Old", alignment: "start" },
-			],
+			sections: [{ id: "x", kind: "hero", headline: "Old", alignment: "start" }],
 			templates: [],
 		});
-		const headlineInput = document.querySelector<HTMLInputElement>(
-			'[data-field="headline"]',
-		);
+		const headlineInput = document.querySelector<HTMLInputElement>('[data-field="headline"]');
 		expect(headlineInput).not.toBeNull();
 		if (!headlineInput) return;
 		headlineInput.value = "New headline";

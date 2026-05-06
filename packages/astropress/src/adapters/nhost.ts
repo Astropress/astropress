@@ -29,9 +29,7 @@ export type AstropressNhostAdapterOptions = Omit<
  * backend for Astropress. The hosted adapter connects to Astropress functions
  * deployed on Nhost Functions.
  */
-export function createAstropressNhostAdapter(
-	options: AstropressNhostAdapterOptions = {},
-) {
+export function createAstropressNhostAdapter(options: AstropressNhostAdapterOptions = {}) {
 	return createAstropressHostedPlatformAdapter({
 		...options,
 		providerName: "nhost",
@@ -42,8 +40,7 @@ export function createAstropressNhostAdapter(
 	});
 }
 
-export interface AstropressNhostHostedAdapterOptions
-	extends AstropressNhostAdapterOptions {
+export interface AstropressNhostHostedAdapterOptions extends AstropressNhostAdapterOptions {
 	config?: AstropressNhostHostedConfig;
 	env?: Record<string, string | undefined>;
 	fetchImpl?: AstropressHostedApiAdapterOptions["fetchImpl"];

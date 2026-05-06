@@ -1,18 +1,15 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
-	GITHUB_DEPLOY_FIELDS,
-	GithubDeployVerifyError,
 	buildGithubAuthHeader,
 	buildGithubUserUrl,
 	classifyGithubStatus,
+	GITHUB_DEPLOY_FIELDS,
+	GithubDeployVerifyError,
 	registerGithubDeploy,
 	verifyGithubDeploy,
 } from "../../../src/integrations/providers/github-deploy";
-import {
-	_resetRegistryForTests,
-	getProvider,
-} from "../../../src/integrations/registry";
+import { _resetRegistryForTests, getProvider } from "../../../src/integrations/registry";
 
 interface CapturedCall {
 	url: string;
@@ -61,9 +58,7 @@ describe("GITHUB_DEPLOY_FIELDS schema", () => {
 	});
 
 	it("rejects an empty accessToken", () => {
-		expect(GITHUB_DEPLOY_FIELDS.safeParse({ accessToken: "" }).success).toBe(
-			false,
-		);
+		expect(GITHUB_DEPLOY_FIELDS.safeParse({ accessToken: "" }).success).toBe(false);
 	});
 });
 
@@ -128,9 +123,7 @@ describe("verifyGithubDeploy", () => {
 
 	it("resolves on 200", async () => {
 		const { fetch, calls } = makeFetchMock(200);
-		await expect(
-			verifyGithubDeploy(FIELDS, { signal }, { fetch }),
-		).resolves.toBeUndefined();
+		await expect(verifyGithubDeploy(FIELDS, { signal }, { fetch })).resolves.toBeUndefined();
 		expect(calls).toHaveLength(1);
 	});
 
@@ -168,30 +161,30 @@ describe("verifyGithubDeploy", () => {
 
 	it("throws AUTH_REJECTED on 401", async () => {
 		const { fetch } = makeFetchMock(401);
-		await expect(
-			verifyGithubDeploy(FIELDS, { signal }, { fetch }),
-		).rejects.toMatchObject({ code: "INTEGRATION_AUTH_REJECTED" });
+		await expect(verifyGithubDeploy(FIELDS, { signal }, { fetch })).rejects.toMatchObject({
+			code: "INTEGRATION_AUTH_REJECTED",
+		});
 	});
 
 	it("throws AUTH_REJECTED on 403", async () => {
 		const { fetch } = makeFetchMock(403);
-		await expect(
-			verifyGithubDeploy(FIELDS, { signal }, { fetch }),
-		).rejects.toMatchObject({ code: "INTEGRATION_AUTH_REJECTED" });
+		await expect(verifyGithubDeploy(FIELDS, { signal }, { fetch })).rejects.toMatchObject({
+			code: "INTEGRATION_AUTH_REJECTED",
+		});
 	});
 
 	it("throws RATE_LIMITED on 429", async () => {
 		const { fetch } = makeFetchMock(429);
-		await expect(
-			verifyGithubDeploy(FIELDS, { signal }, { fetch }),
-		).rejects.toMatchObject({ code: "INTEGRATION_RATE_LIMITED" });
+		await expect(verifyGithubDeploy(FIELDS, { signal }, { fetch })).rejects.toMatchObject({
+			code: "INTEGRATION_RATE_LIMITED",
+		});
 	});
 
 	it("throws VERIFY_FAILED on 500", async () => {
 		const { fetch } = makeFetchMock(500);
-		await expect(
-			verifyGithubDeploy(FIELDS, { signal }, { fetch }),
-		).rejects.toMatchObject({ code: "INTEGRATION_VERIFY_FAILED" });
+		await expect(verifyGithubDeploy(FIELDS, { signal }, { fetch })).rejects.toMatchObject({
+			code: "INTEGRATION_VERIFY_FAILED",
+		});
 	});
 
 	it("GithubDeployVerifyError subclasses Error and carries the typed code", async () => {
@@ -202,9 +195,7 @@ describe("verifyGithubDeploy", () => {
 		} catch (err) {
 			expect(err).toBeInstanceOf(GithubDeployVerifyError);
 			expect(err).toBeInstanceOf(Error);
-			expect((err as GithubDeployVerifyError).code).toBe(
-				"INTEGRATION_AUTH_REJECTED",
-			);
+			expect((err as GithubDeployVerifyError).code).toBe("INTEGRATION_AUTH_REJECTED");
 		}
 	});
 
@@ -213,9 +204,7 @@ describe("verifyGithubDeploy", () => {
 			.spyOn(globalThis, "fetch")
 			.mockResolvedValue(new Response(null, { status: 200 }));
 		try {
-			await expect(
-				verifyGithubDeploy(FIELDS, { signal }),
-			).resolves.toBeUndefined();
+			await expect(verifyGithubDeploy(FIELDS, { signal })).resolves.toBeUndefined();
 			expect(stub).toHaveBeenCalledTimes(1);
 		} finally {
 			stub.mockRestore();

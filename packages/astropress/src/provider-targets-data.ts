@@ -4,16 +4,10 @@
 // the manifest shape, not specific provider copy. Behavior of the
 // accessors is mutation-tested in provider-targets.ts at 95%+.
 
-import {
-	type ProviderKind,
-	normalizeProviderCapabilities,
-} from "./platform-contracts";
+import { normalizeProviderCapabilities, type ProviderKind } from "./platform-contracts";
 import type { FirstPartyProviderTarget } from "./provider-targets";
 
-export const firstPartyProviderTargets: Record<
-	ProviderKind,
-	FirstPartyProviderTarget
-> = {
+export const firstPartyProviderTargets: Record<ProviderKind, FirstPartyProviderTarget> = {
 	"github-pages": {
 		id: "github-pages",
 		label: "GitHub Pages",

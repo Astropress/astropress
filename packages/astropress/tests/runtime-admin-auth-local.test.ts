@@ -1,15 +1,7 @@
 // @ts-nocheck
 //
 // Tests for runtime-admin-auth.ts when no D1 database is present (local store fallback paths).
-import {
-	afterAll,
-	afterEach,
-	beforeEach,
-	describe,
-	expect,
-	it,
-	vi,
-} from "vitest";
+import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // biome-ignore format: single-line typeof import required for esbuild/oxc compatibility
 let authenticateRuntimeAdminUser: typeof import("../src/runtime-admin-auth.js").authenticateRuntimeAdminUser;
@@ -93,25 +85,14 @@ describe("authenticateRuntimeAdminUser — local fallback", () => {
 			name: "Local Admin",
 		});
 
-		const result = await authenticateRuntimeAdminUser(
-			"admin@example.com",
-			"pass",
-			NO_DB_LOCALS,
-		);
-		expect(localAuthMock.authenticateAdminUser).toHaveBeenCalledWith(
-			"admin@example.com",
-			"pass",
-		);
+		const result = await authenticateRuntimeAdminUser("admin@example.com", "pass", NO_DB_LOCALS);
+		expect(localAuthMock.authenticateAdminUser).toHaveBeenCalledWith("admin@example.com", "pass");
 		expect(result).toMatchObject({ email: "admin@example.com", role: "admin" });
 	});
 
 	it("returns null when local auth returns null", async () => {
 		localAuthMock.authenticateAdminUser.mockResolvedValue(null);
-		const result = await authenticateRuntimeAdminUser(
-			"bad@example.com",
-			"wrong",
-			NO_DB_LOCALS,
-		);
+		const result = await authenticateRuntimeAdminUser("bad@example.com", "wrong", NO_DB_LOCALS);
 		expect(result).toBeNull();
 	});
 });
@@ -234,12 +215,7 @@ describe("_recordRuntimeAuditEvent — unmapped action", () => {
 			role: "admin" as const,
 			name: "Admin",
 		};
-		await _recordRuntimeAuditEvent(
-			"auth.other",
-			"some summary",
-			actor,
-			NO_DB_LOCALS,
-		);
+		await _recordRuntimeAuditEvent("auth.other", "some summary", actor, NO_DB_LOCALS);
 		expect(localStoreMock.recordSuccessfulLogin).not.toHaveBeenCalled();
 		expect(localStoreMock.recordLogout).not.toHaveBeenCalled();
 	});

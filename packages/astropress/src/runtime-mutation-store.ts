@@ -3,10 +3,7 @@
 
 import { safeLoadLocalAdminStore } from "./admin-store-dispatch";
 import { createD1AdminMutationStore } from "./d1-admin-store";
-import type {
-	TestimonialStatus,
-	TestimonialSubmissionInput,
-} from "./persistence-types";
+import type { TestimonialStatus, TestimonialSubmissionInput } from "./persistence-types";
 import { getCloudflareBindings } from "./runtime-env";
 
 function createStaticMutationStore() {
@@ -24,7 +21,7 @@ function createStaticMutationStore() {
 					...input,
 				},
 			}),
-			submitTestimonial: async (input: TestimonialSubmissionInput) => ({
+			submitTestimonial: async (_input: TestimonialSubmissionInput) => ({
 				ok: true as const,
 				id: `testimonial-${crypto.randomUUID()}`,
 			}),
@@ -83,11 +80,7 @@ async function getMutationStore(locals?: App.Locals | null) {
 			}) => localAdminStore.submitContact(input),
 			submitTestimonial: async (input: TestimonialSubmissionInput) =>
 				localAdminStore.submitTestimonial(input),
-			moderateTestimonial: async (
-				id: string,
-				status: TestimonialStatus,
-				actorEmail: string,
-			) =>
+			moderateTestimonial: async (id: string, status: TestimonialStatus, actorEmail: string) =>
 				localAdminStore.moderateTestimonial(id, status, {
 					email: actorEmail,
 					role: "admin",
@@ -120,11 +113,7 @@ export async function checkRuntimeRateLimit(
 	windowMs: number,
 	locals?: App.Locals | null,
 ) {
-	return (await getMutationStore(locals)).rateLimits.checkRateLimit(
-		key,
-		max,
-		windowMs,
-	);
+	return (await getMutationStore(locals)).rateLimits.checkRateLimit(key, max, windowMs);
 }
 
 export async function peekRuntimeRateLimit(
@@ -133,11 +122,7 @@ export async function peekRuntimeRateLimit(
 	windowMs: number,
 	locals?: App.Locals | null,
 ) {
-	return (await getMutationStore(locals)).rateLimits.peekRateLimit(
-		key,
-		max,
-		windowMs,
-	);
+	return (await getMutationStore(locals)).rateLimits.peekRateLimit(key, max, windowMs);
 }
 
 export async function recordRuntimeFailedAttempt(
@@ -146,11 +131,7 @@ export async function recordRuntimeFailedAttempt(
 	windowMs: number,
 	locals?: App.Locals | null,
 ) {
-	return (await getMutationStore(locals)).rateLimits.recordFailedAttempt(
-		key,
-		max,
-		windowMs,
-	);
+	return (await getMutationStore(locals)).rateLimits.recordFailedAttempt(key, max, windowMs);
 }
 
 export async function submitRuntimeContact(
@@ -186,9 +167,5 @@ export async function moderateRuntimeTestimonial(
 	actor: { email: string; role: string; name: string },
 	locals?: App.Locals | null,
 ) {
-	return (await getMutationStore(locals)).submissions.moderateTestimonial(
-		id,
-		status,
-		actor.email,
-	);
+	return (await getMutationStore(locals)).submissions.moderateTestimonial(id, status, actor.email);
 }

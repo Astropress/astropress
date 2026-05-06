@@ -21,14 +21,10 @@ const rows = model.data.rows;
 const filteredRows = rows.filter(
 	(entry) => selectedState === "all" || entry.effectiveState === selectedState,
 );
-const stateCounts = rows.reduce<Record<string, number>>(
-	(accumulator, entry) => {
-		accumulator[entry.effectiveState] =
-			(accumulator[entry.effectiveState] ?? 0) + 1;
-		return accumulator;
-	},
-	{},
-);
+const stateCounts = rows.reduce<Record<string, number>>((accumulator, entry) => {
+	accumulator[entry.effectiveState] = (accumulator[entry.effectiveState] ?? 0) + 1;
+	return accumulator;
+}, {});
 const t = getPageT(resolveAdminLocale(Astro));
 ---
 

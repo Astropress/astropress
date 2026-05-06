@@ -15,8 +15,7 @@ interface AlternateLink {
 }
 
 export function getAlternateLinksForEnglishRoute(legacyUrl: string) {
-	const translationStatus = getCmsConfig()
-		.translationStatus as TranslationStatusRecord[];
+	const translationStatus = getCmsConfig().translationStatus as TranslationStatusRecord[];
 	const translation = translationStatus.find(
 		(entry) =>
 			entry.locale === "es" &&
@@ -39,10 +38,7 @@ export function canonicalUrlForRoute(route: string) {
 	return `${siteUrl}${route === "/" ? "/" : `${route}/`}`;
 }
 
-export function sanitizeCanonicalUrl(
-	value: string | undefined,
-	fallbackRoute: string,
-) {
+export function sanitizeCanonicalUrl(value: string | undefined, fallbackRoute: string) {
 	if (!value) {
 		return canonicalUrlForRoute(fallbackRoute);
 	}
@@ -51,8 +47,7 @@ export function sanitizeCanonicalUrl(
 	parsed.search = "";
 	parsed.hash = "";
 
-	const normalizedPath =
-		parsed.pathname === "/" ? "/" : parsed.pathname.replace(/\/?$/, "/");
+	const normalizedPath = parsed.pathname === "/" ? "/" : parsed.pathname.replace(/\/?$/, "/");
 	parsed.pathname = normalizedPath;
 
 	return parsed.toString();
@@ -96,9 +91,7 @@ export function getLocaleSwitchTargets(input: {
 
 		const path = pathFromHref(link.href);
 		targets[link.hreflang] =
-			link.hreflang === "en" && path === "/" && input.lang === "es"
-				? "/en"
-				: path;
+			link.hreflang === "en" && path === "/" && input.lang === "es" ? "/en" : path;
 	}
 
 	return targets;

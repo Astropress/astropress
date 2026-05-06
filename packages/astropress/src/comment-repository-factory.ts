@@ -15,15 +15,8 @@ import type {
  * @param email     The raw email address (never stored after this call).
  * @param siteSalt  Site-specific secret (e.g. `getCmsConfig().sessionSecret`).
  */
-export async function hashCommentEmail(
-	email: string,
-	siteSalt: string,
-): Promise<string> {
-	return createKmacDigest(
-		email.trim().toLowerCase(),
-		siteSalt,
-		"comment-email",
-	);
+export async function hashCommentEmail(email: string, siteSalt: string): Promise<string> {
+	return createKmacDigest(email.trim().toLowerCase(), siteSalt, "comment-email");
 }
 
 export interface AstropressCommentRepositoryInput {
@@ -96,9 +89,7 @@ export function createAstropressCommentRepository(
 		getApprovedCommentsForRoute(route) {
 			return input
 				.getComments()
-				.filter(
-					(comment) => comment.route === route && comment.status === "approved",
-				);
+				.filter((comment) => comment.route === route && comment.status === "approved");
 		},
 	};
 }

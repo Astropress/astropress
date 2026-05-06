@@ -1,15 +1,9 @@
-import type {
-	Actor,
-	RedirectRepository,
-	RedirectRule,
-} from "./persistence-types";
+import type { Actor, RedirectRepository, RedirectRule } from "./persistence-types";
 
 export interface AstropressRedirectRepositoryInput {
 	getRedirectRules: RedirectRepository["getRedirectRules"];
 	normalizePath(path: string): string;
-	getExistingRedirect(
-		sourcePath: string,
-	): { deletedAt: string | null } | null | undefined;
+	getExistingRedirect(sourcePath: string): { deletedAt: string | null } | null | undefined;
 	upsertRedirect(input: {
 		sourcePath: string;
 		targetPath: string;

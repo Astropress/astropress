@@ -36,10 +36,7 @@ describe("admin RTL plumbing", () => {
 	});
 
 	it("AdminLayout.astro emits dir on the html element", () => {
-		const src = readFileSync(
-			join(REPO_ROOT, "components", "AdminLayout.astro"),
-			"utf8",
-		);
+		const src = readFileSync(join(REPO_ROOT, "components", "AdminLayout.astro"), "utf8");
 		expect(src).toMatch(/<html\s+lang=\{adminLocale\}\s+dir=\{adminDir\}/);
 	});
 

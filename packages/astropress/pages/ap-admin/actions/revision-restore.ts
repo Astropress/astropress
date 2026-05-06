@@ -1,5 +1,4 @@
-import { withAdminFormAction } from "@astropress-diy/astropress";
-import { restoreRuntimeRevision } from "@astropress-diy/astropress";
+import { restoreRuntimeRevision, withAdminFormAction } from "@astropress-diy/astropress";
 import type { APIRoute } from "astro";
 
 export const POST: APIRoute = async (context) =>
@@ -10,18 +9,10 @@ export const POST: APIRoute = async (context) =>
 			const slug = formData.get("slug") as string | null;
 			const revisionId = formData.get("revisionId") as string | null;
 			if (!slug || !revisionId) {
-				return fail(
-					"Slug and revision ID are required",
-					`/ap-admin/posts/${slug ?? ""}/revisions`,
-				);
+				return fail("Slug and revision ID are required", `/ap-admin/posts/${slug ?? ""}/revisions`);
 			}
 
-			const result = await restoreRuntimeRevision(
-				slug,
-				revisionId,
-				actor,
-				locals,
-			);
+			const result = await restoreRuntimeRevision(slug, revisionId, actor, locals);
 			if (!result.ok) {
 				return fail(result.error, `/ap-admin/posts/${slug}/revisions`);
 			}

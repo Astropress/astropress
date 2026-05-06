@@ -1,5 +1,5 @@
 import type { Actor, SettingsRepository } from "./persistence-types";
-import { type SiteSettings, defaultSiteSettings } from "./site-settings";
+import { defaultSiteSettings, type SiteSettings } from "./site-settings";
 
 export interface AstropressSettingsRepositoryInput {
 	getSettings: SettingsRepository["getSettings"];
@@ -18,10 +18,8 @@ export function createAstropressSettingsRepository(
 				siteTitle: partial.siteTitle ?? current.siteTitle,
 				siteTagline: partial.siteTagline ?? current.siteTagline,
 				donationUrl: partial.donationUrl ?? current.donationUrl,
-				newsletterEnabled:
-					partial.newsletterEnabled ?? current.newsletterEnabled,
-				commentsDefaultPolicy:
-					partial.commentsDefaultPolicy ?? current.commentsDefaultPolicy,
+				newsletterEnabled: partial.newsletterEnabled ?? current.newsletterEnabled,
+				commentsDefaultPolicy: partial.commentsDefaultPolicy ?? current.commentsDefaultPolicy,
 				adminSlug: partial.adminSlug ?? current.adminSlug,
 			};
 

@@ -16,12 +16,8 @@ describe("readAstropressAppwriteHostedConfig", () => {
 		expect(config.endpoint).toBe("https://cloud.appwrite.io/v1");
 		expect(config.projectId).toBe("proj-abc");
 		expect(config.apiKey).toBe("api-secret");
-		expect(config.apiBaseUrl).toBe(
-			"https://cloud.appwrite.io/v1/functions/astropress",
-		);
-		expect(config.previewBaseUrl).toBe(
-			"https://cloud.appwrite.io/v1/console/project-proj-abc",
-		);
+		expect(config.apiBaseUrl).toBe("https://cloud.appwrite.io/v1/functions/astropress");
+		expect(config.previewBaseUrl).toBe("https://cloud.appwrite.io/v1/console/project-proj-abc");
 	});
 
 	it("strips trailing slash from endpoint before building URLs", () => {
@@ -30,9 +26,7 @@ describe("readAstropressAppwriteHostedConfig", () => {
 			APPWRITE_PROJECT_ID: "my-project",
 			APPWRITE_API_KEY: "key",
 		});
-		expect(config.apiBaseUrl).toBe(
-			"https://self-hosted.example.com/functions/astropress",
-		);
+		expect(config.apiBaseUrl).toBe("https://self-hosted.example.com/functions/astropress");
 		expect(config.previewBaseUrl).toBe(
 			"https://self-hosted.example.com/console/project-my-project",
 		);

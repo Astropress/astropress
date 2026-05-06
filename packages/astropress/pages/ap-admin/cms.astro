@@ -24,8 +24,7 @@ if (!cmsConfig) {
 }
 
 const cmsLabel =
-	cmsConfig.label ??
-	cmsConfig.type.charAt(0).toUpperCase() + cmsConfig.type.slice(1);
+	cmsConfig.label ?? cmsConfig.type.charAt(0).toUpperCase() + cmsConfig.type.slice(1);
 ---
 
 <AdminLayout

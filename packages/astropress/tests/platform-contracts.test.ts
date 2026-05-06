@@ -1,12 +1,12 @@
 import {
 	type AstropressPlatformAdapter,
 	type AuthUser,
-	type ContentStoreRecord,
-	type MediaAssetRecord,
-	type RevisionRecord,
 	assertProviderContract,
+	type ContentStoreRecord,
 	isAuthUserAdmin,
+	type MediaAssetRecord,
 	normalizeProviderCapabilities,
+	type RevisionRecord,
 } from "@astropress-diy/astropress";
 import { describe, expect, it } from "vitest";
 
@@ -25,9 +25,7 @@ function createInMemoryAdapter(): AstropressPlatformAdapter {
 		}),
 		content: {
 			async list(kind) {
-				return [...records.values()].filter(
-					(record) => !kind || record.kind === kind,
-				);
+				return [...records.values()].filter((record) => !kind || record.kind === kind);
 			},
 			async get(id) {
 				return records.get(id) ?? null;
@@ -214,9 +212,7 @@ describe("platform contracts", () => {
 		});
 		// Pin the strict equality check: isAdmin === true must reject truthy non-true.
 		it("returns false when isAdmin is a truthy non-boolean (1)", () => {
-			expect(
-				isAuthUserAdmin({ ...base, isAdmin: 1 as unknown as boolean }),
-			).toBe(false);
+			expect(isAuthUserAdmin({ ...base, isAdmin: 1 as unknown as boolean })).toBe(false);
 		});
 	});
 

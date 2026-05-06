@@ -27,10 +27,7 @@ describe("breadcrumb navigation", () => {
 	for (const segments of PAGES_WITH_BREADCRUMBS) {
 		const rel = segments.join("/");
 		it(`${rel} renders a breadcrumb nav`, () => {
-			const src = readFileSync(
-				path.join(root, "pages", "ap-admin", ...segments),
-				"utf8",
-			);
+			const src = readFileSync(path.join(root, "pages", "ap-admin", ...segments), "utf8");
 			expect(src).toMatch(breadcrumbRe);
 		});
 	}

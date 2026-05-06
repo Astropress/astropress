@@ -1,11 +1,7 @@
 import type { DatabaseSync } from "node:sqlite";
 import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 
-import {
-	STANDARD_ACTOR,
-	STANDARD_CMS_CONFIG,
-	makeDb,
-} from "./helpers/make-db.js";
+import { makeDb, STANDARD_ACTOR, STANDARD_CMS_CONFIG } from "./helpers/make-db.js";
 import { makeLocals } from "./helpers/make-locals.js";
 
 // biome-ignore format: single-line typeof import required for esbuild/oxc compatibility
@@ -39,10 +35,7 @@ beforeEach(async () => {
 			updateRuntimeTranslationState,
 		},
 		{ registerCms },
-	] = await Promise.all([
-		import("../src/runtime-actions-misc.js"),
-		import("../src/config.js"),
-	]);
+	] = await Promise.all([import("../src/runtime-actions-misc.js"), import("../src/config.js")]);
 
 	db = makeDb();
 	locals = makeLocals(db);
@@ -51,9 +44,13 @@ beforeEach(async () => {
 	db.prepare(
 		"INSERT INTO redirect_rules (source_path, target_path, status_code, created_by) VALUES (?, ?, ?, ?)",
 	).run("/existing", "/dest", 301, "admin@test.local");
-	db.prepare(
-		"INSERT INTO comments (id, route, author, body, status) VALUES (?, ?, ?, ?, ?)",
-	).run("c-1", "/page", "Bob", "Hello", "pending");
+	db.prepare("INSERT INTO comments (id, route, author, body, status) VALUES (?, ?, ?, ?, ?)").run(
+		"c-1",
+		"/page",
+		"Bob",
+		"Hello",
+		"pending",
+	);
 });
 
 afterAll(() => {
@@ -62,12 +59,7 @@ afterAll(() => {
 
 describe("updateRuntimeTranslationState", () => {
 	it("persists a valid state", async () => {
-		const result = await updateRuntimeTranslationState(
-			"/about",
-			"translated",
-			actor,
-			locals,
-		);
+		const result = await updateRuntimeTranslationState("/about", "translated", actor, locals);
 		expect(result).toMatchObject({ ok: true });
 		const row = db
 			.prepare("SELECT state FROM translation_overrides WHERE route = ?")
@@ -76,12 +68,7 @@ describe("updateRuntimeTranslationState", () => {
 	});
 
 	it("rejects an invalid state", async () => {
-		const result = await updateRuntimeTranslationState(
-			"/about",
-			"bogus",
-			actor,
-			locals,
-		);
+		const result = await updateRuntimeTranslationState("/about", "bogus", actor, locals);
 		expect(result).toMatchObject({ ok: false });
 	});
 
@@ -165,9 +152,7 @@ describe("deleteRuntimeRedirectRule", () => {
 		const result = await deleteRuntimeRedirectRule("/existing", actor, locals);
 		expect(result).toMatchObject({ ok: true });
 		const row = db
-			.prepare(
-				"SELECT deleted_at FROM redirect_rules WHERE source_path = '/existing'",
-			)
+			.prepare("SELECT deleted_at FROM redirect_rules WHERE source_path = '/existing'")
 			.get() as { deleted_at: string | null };
 		expect(row.deleted_at).not.toBeNull();
 	});
@@ -180,34 +165,24 @@ describe("deleteRuntimeRedirectRule", () => {
 
 describe("moderateRuntimeComment", () => {
 	it("approves a pending comment", async () => {
-		const result = await moderateRuntimeComment(
-			"c-1",
-			"approved",
-			actor,
-			locals,
-		);
+		const result = await moderateRuntimeComment("c-1", "approved", actor, locals);
 		expect(result).toMatchObject({ ok: true });
-		const row = db
-			.prepare("SELECT status FROM comments WHERE id = 'c-1'")
-			.get() as { status: string };
+		const row = db.prepare("SELECT status FROM comments WHERE id = 'c-1'").get() as {
+			status: string;
+		};
 		expect(row.status).toBe("approved");
 	});
 
 	it("rejects a pending comment", async () => {
 		await moderateRuntimeComment("c-1", "rejected", actor, locals);
-		const row = db
-			.prepare("SELECT status FROM comments WHERE id = 'c-1'")
-			.get() as { status: string };
+		const row = db.prepare("SELECT status FROM comments WHERE id = 'c-1'").get() as {
+			status: string;
+		};
 		expect(row.status).toBe("rejected");
 	});
 
 	it("returns not-ok for unknown comment id", async () => {
-		const result = await moderateRuntimeComment(
-			"ghost",
-			"approved",
-			actor,
-			locals,
-		);
+		const result = await moderateRuntimeComment("ghost", "approved", actor, locals);
 		expect(result).toMatchObject({ ok: false });
 	});
 });
@@ -220,9 +195,9 @@ describe("no-db fallback (null locals)", () => {
 	});
 
 	it("saveRuntimeSettings throws without runtime alias", async () => {
-		await expect(
-			saveRuntimeSettings({ siteTitle: "Local" }, actor, null),
-		).rejects.toThrow("Local runtime modules are only available");
+		await expect(saveRuntimeSettings({ siteTitle: "Local" }, actor, null)).rejects.toThrow(
+			"Local runtime modules are only available",
+		);
 	});
 
 	it("createRuntimeRedirectRule throws without runtime alias", async () => {
@@ -238,28 +213,16 @@ describe("no-db fallback (null locals)", () => {
 
 describe("saveRuntimeSettings", () => {
 	it("creates settings when none exist", async () => {
-		const result = await saveRuntimeSettings(
-			{ siteTitle: "My Blog" },
-			actor,
-			locals,
-		);
+		const result = await saveRuntimeSettings({ siteTitle: "My Blog" }, actor, locals);
 		expect(result).toMatchObject({ ok: true });
-		expect(
-			(result as { settings: { siteTitle: string } }).settings.siteTitle,
-		).toBe("My Blog");
+		expect((result as { settings: { siteTitle: string } }).settings.siteTitle).toBe("My Blog");
 	});
 
 	it("partial update preserves other fields", async () => {
-		await saveRuntimeSettings(
-			{ siteTitle: "Original", siteTagline: "Tag" },
-			actor,
-			locals,
-		);
+		await saveRuntimeSettings({ siteTitle: "Original", siteTagline: "Tag" }, actor, locals);
 		await saveRuntimeSettings({ siteTitle: "Updated" }, actor, locals);
 		const row = db
-			.prepare(
-				"SELECT site_title, site_tagline FROM site_settings WHERE id = 1",
-			)
+			.prepare("SELECT site_title, site_tagline FROM site_settings WHERE id = 1")
 			.get() as { site_title: string; site_tagline: string };
 		expect(row.site_title).toBe("Updated");
 		expect(row.site_tagline).toBe("Tag");

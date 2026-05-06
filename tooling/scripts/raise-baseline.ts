@@ -17,19 +17,10 @@
  */
 
 import { execFileSync, spawnSync } from "node:child_process";
-import {
-	existsSync,
-	mkdtempSync,
-	readFileSync,
-	rmSync,
-	writeFileSync,
-} from "node:fs";
+import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import {
-	isEquivalentMutant,
-	loadEquivalentMutants,
-} from "./equivalent-mutants";
+import { isEquivalentMutant, loadEquivalentMutants } from "./equivalent-mutants";
 
 const PREFIX = "packages/astropress/";
 // Anchor every disk path to `git rev-parse --show-toplevel` so the script is
@@ -79,13 +70,7 @@ function saveBaseline(b: Baseline): void {
 	// happens to be configured to skip JSON in some future config.
 	const result = spawnSync(
 		"bunx",
-		[
-			"@biomejs/biome@1",
-			"format",
-			"--write",
-			"--no-errors-on-unmatched",
-			BASELINE_PATH,
-		],
+		["@biomejs/biome@1", "format", "--write", "--no-errors-on-unmatched", BASELINE_PATH],
 		{ stdio: "inherit", cwd: REPO_ROOT },
 	);
 	if (result.status !== 0) {
@@ -101,22 +86,14 @@ function scoreForFile(report: StrykerReport, relMutate: string): number | null {
 	const mutants = report.files[key].mutants;
 	const equivalents = loadEquivalentMutants();
 	const isExcluded = (m: StrykerReportMutant): boolean =>
-		m.status === "Ignored" ||
-		m.status === "NoCoverage" ||
-		isEquivalentMutant(key, m, equivalents);
+		m.status === "Ignored" || m.status === "NoCoverage" || isEquivalentMutant(key, m, equivalents);
 	const scored = mutants.filter((m) => !isExcluded(m));
 	if (scored.length === 0) return 100;
-	const killed = scored.filter(
-		(m) => m.status === "Killed" || m.status === "Timeout",
-	);
+	const killed = scored.filter((m) => m.status === "Killed" || m.status === "Timeout");
 	return (killed.length / scored.length) * 100;
 }
 
-function runStryker(
-	targets: string[],
-	tmp: string,
-	fast = false,
-): StrykerReport | null {
+function runStryker(targets: string[], tmp: string, fast = false): StrykerReport | null {
 	const configPath = join(tmp, "stryker.config.mjs");
 	const reportPath = join(tmp, "report.json");
 	// In fast mode coverage analysis is disabled and we trust vitest's
@@ -172,9 +149,7 @@ function main(): number {
 	const tmp = mkdtempSync(join(tmpdir(), "stryker-raise-"));
 	try {
 		const targets = argv.map((f) => f.slice(PREFIX.length));
-		console.log(
-			`raise-baseline: running Stryker on ${targets.length} file(s)...`,
-		);
+		console.log(`raise-baseline: running Stryker on ${targets.length} file(s)...`);
 		const report = runStryker(targets, tmp, fast);
 		if (!report) {
 			console.error("raise-baseline: Stryker produced no JSON report");

@@ -24,11 +24,7 @@ const NEXUS_APP = join(NEXUS_DIR, "src/app.ts");
 const NEXUS_BDD_DIR = fromRoot("tooling/bdd/nexus");
 const BDD_TEST_TS = fromRoot("tooling/scripts/bdd-test.ts");
 
-const REQUIRED_TEST_FILES = [
-	"app.test.ts",
-	"connectors.test.ts",
-	"jobs.test.ts",
-];
+const REQUIRED_TEST_FILES = ["app.test.ts", "connectors.test.ts", "jobs.test.ts"];
 
 function extractRuntimeExports(src: string): string[] {
 	const names: string[] = [];
@@ -39,9 +35,7 @@ function extractRuntimeExports(src: string): string[] {
 			if (name && !name.startsWith("type ")) names.push(name);
 		}
 	}
-	for (const m of src.matchAll(
-		/^export\s+(?:async\s+)?(?:function|const|class)\s+(\w+)/gm,
-	)) {
+	for (const m of src.matchAll(/^export\s+(?:async\s+)?(?:function|const|class)\s+(\w+)/gm)) {
 		names.push(m[1]);
 	}
 	return names;
@@ -76,17 +70,11 @@ async function main() {
 		const testEntries = await listFiles(NEXUS_TESTS_DIR);
 		const testFiles = testEntries.filter((f) => f.endsWith(".test.ts"));
 		const srcEntries = await listFiles(join(NEXUS_DIR, "src"));
-		const srcFiles = srcEntries.filter(
-			(f) => f.endsWith(".ts") && f !== "index.ts",
-		);
+		const srcFiles = srcEntries.filter((f) => f.endsWith(".ts") && f !== "index.ts");
 
 		const [testContents, srcContents] = await Promise.all([
-			Promise.all(
-				testFiles.map(async (f) => readText(join(NEXUS_TESTS_DIR, f))),
-			),
-			Promise.all(
-				srcFiles.map(async (f) => readText(join(NEXUS_DIR, "src", f))),
-			),
+			Promise.all(testFiles.map(async (f) => readText(join(NEXUS_TESTS_DIR, f)))),
+			Promise.all(srcFiles.map(async (f) => readText(join(NEXUS_DIR, "src", f)))),
 		]);
 		const combinedCorpus = [...testContents, ...srcContents].join("\n");
 
@@ -102,9 +90,7 @@ async function main() {
 	// 3. All BDD scenarios in tooling/bdd/nexus/ are wired in bdd-test.ts
 	const bddTestSrc = await readText(BDD_TEST_TS);
 	if (!bddTestSrc) {
-		report.add(
-			"tooling/scripts/bdd-test.ts: not found — cannot verify nexus BDD scenario wiring",
-		);
+		report.add("tooling/scripts/bdd-test.ts: not found — cannot verify nexus BDD scenario wiring");
 	} else {
 		const nexusFeatureFiles = (await listFiles(NEXUS_BDD_DIR)).filter((f) =>
 			f.endsWith(".feature"),

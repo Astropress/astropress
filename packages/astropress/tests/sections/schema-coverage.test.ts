@@ -4,17 +4,10 @@
  * StringLiteral, BooleanLiteral, ComparisonOperator, LogicalOperator.
  */
 import { describe, expect, it } from "vitest";
-import {
-	SECTION_KINDS,
-	parseSections,
-	parseSectionsFromJson,
-} from "../../src/sections/schema";
+import { parseSections, parseSectionsFromJson, SECTION_KINDS } from "../../src/sections/schema";
 
-function ok<T>(
-	r: { ok: true; sections: T } | { ok: false; errors: unknown[] },
-) {
-	if (!r.ok)
-		throw new Error(`expected ok, got errors: ${JSON.stringify(r.errors)}`);
+function ok<T>(r: { ok: true; sections: T } | { ok: false; errors: unknown[] }) {
+	if (!r.ok) throw new Error(`expected ok, got errors: ${JSON.stringify(r.errors)}`);
 	return r.sections;
 }
 
@@ -46,10 +39,7 @@ describe("schema — input shape", () => {
 	it("rejects an object missing both `sections` array and being empty", () => {
 		const r = parseSections({ random: 1 });
 		expect(r.ok).toBe(false);
-		if (!r.ok)
-			expect(r.errors[0].message).toContain(
-				"sections payload must be an array",
-			);
+		if (!r.ok) expect(r.errors[0].message).toContain("sections payload must be an array");
 	});
 
 	it("rejects sections envelope when sections is not an array", () => {
@@ -73,17 +63,13 @@ describe("schema — input shape", () => {
 	});
 
 	it("rejects a section with empty-string id", () => {
-		const r = parseSections([
-			{ id: "", kind: "hero", headline: "x", alignment: "start" },
-		]);
+		const r = parseSections([{ id: "", kind: "hero", headline: "x", alignment: "start" }]);
 		expect(r.ok).toBe(false);
 		if (!r.ok) expect(r.errors[0].path).toBe("$[0].id");
 	});
 
 	it("rejects a section with non-string id", () => {
-		const r = parseSections([
-			{ id: 5, kind: "hero", headline: "x", alignment: "start" },
-		]);
+		const r = parseSections([{ id: 5, kind: "hero", headline: "x", alignment: "start" }]);
 		expect(r.ok).toBe(false);
 	});
 });
@@ -115,70 +101,44 @@ describe("schema — hero parsing", () => {
 	});
 
 	it("alignment 'center' is preserved; anything else becomes 'start'", () => {
-		const a = ok(
-			parseSections([
-				{ id: "h", kind: "hero", headline: "Hi", alignment: "center" },
-			]),
-		);
+		const a = ok(parseSections([{ id: "h", kind: "hero", headline: "Hi", alignment: "center" }]));
 		if (a[0].kind === "hero") expect(a[0].alignment).toBe("center");
-		const b = ok(
-			parseSections([
-				{ id: "h", kind: "hero", headline: "Hi", alignment: "weird" },
-			]),
-		);
+		const b = ok(parseSections([{ id: "h", kind: "hero", headline: "Hi", alignment: "weird" }]));
 		if (b[0].kind === "hero") expect(b[0].alignment).toBe("start");
 		const c = ok(parseSections([{ id: "h", kind: "hero", headline: "Hi" }]));
 		if (c[0].kind === "hero") expect(c[0].alignment).toBe("start");
 	});
 
 	it("rejects subhead with non-string type", () => {
-		const r = parseSections([
-			{ id: "h", kind: "hero", headline: "x", subhead: 5 },
-		]);
+		const r = parseSections([{ id: "h", kind: "hero", headline: "x", subhead: 5 }]);
 		expect(r.ok).toBe(false);
 	});
 
 	it("rejects mediaId with non-string type", () => {
-		const r = parseSections([
-			{ id: "h", kind: "hero", headline: "x", mediaId: 5 },
-		]);
+		const r = parseSections([{ id: "h", kind: "hero", headline: "x", mediaId: 5 }]);
 		expect(r.ok).toBe(false);
 	});
 
 	it("rejects primaryCta missing label", () => {
-		const r = parseSections([
-			{ id: "h", kind: "hero", headline: "x", primaryCta: { href: "/p" } },
-		]);
+		const r = parseSections([{ id: "h", kind: "hero", headline: "x", primaryCta: { href: "/p" } }]);
 		expect(r.ok).toBe(false);
-		if (!r.ok)
-			expect(r.errors.some((e) => e.path === "$[0].primaryCta.label")).toBe(
-				true,
-			);
+		if (!r.ok) expect(r.errors.some((e) => e.path === "$[0].primaryCta.label")).toBe(true);
 	});
 
 	it("rejects primaryCta missing href", () => {
-		const r = parseSections([
-			{ id: "h", kind: "hero", headline: "x", primaryCta: { label: "L" } },
-		]);
+		const r = parseSections([{ id: "h", kind: "hero", headline: "x", primaryCta: { label: "L" } }]);
 		expect(r.ok).toBe(false);
-		if (!r.ok)
-			expect(r.errors.some((e) => e.path === "$[0].primaryCta.href")).toBe(
-				true,
-			);
+		if (!r.ok) expect(r.errors.some((e) => e.path === "$[0].primaryCta.href")).toBe(true);
 	});
 
 	it("rejects primaryCta as non-object", () => {
-		const r = parseSections([
-			{ id: "h", kind: "hero", headline: "x", primaryCta: "no" },
-		]);
+		const r = parseSections([{ id: "h", kind: "hero", headline: "x", primaryCta: "no" }]);
 		expect(r.ok).toBe(false);
 	});
 
 	it("does NOT include subhead/mediaId fields when omitted", () => {
 		const sections = ok(
-			parseSections([
-				{ id: "h", kind: "hero", headline: "Hi", alignment: "start" },
-			]),
+			parseSections([{ id: "h", kind: "hero", headline: "Hi", alignment: "start" }]),
 		);
 		const h = sections[0];
 		if (h.kind !== "hero") throw new Error();
@@ -191,17 +151,13 @@ describe("schema — hero parsing", () => {
 
 describe("schema — feature-grid", () => {
 	it("requires items to be an array", () => {
-		const r = parseSections([
-			{ id: "fg", kind: "feature-grid", heading: "X", items: "not-array" },
-		]);
+		const r = parseSections([{ id: "fg", kind: "feature-grid", heading: "X", items: "not-array" }]);
 		expect(r.ok).toBe(false);
 		if (!r.ok) expect(r.errors[0].path).toBe("$[0].items");
 	});
 
 	it("rejects non-object item", () => {
-		const r = parseSections([
-			{ id: "fg", kind: "feature-grid", heading: "X", items: ["x"] },
-		]);
+		const r = parseSections([{ id: "fg", kind: "feature-grid", heading: "X", items: ["x"] }]);
 		expect(r.ok).toBe(false);
 	});
 
@@ -260,9 +216,7 @@ describe("schema — feature-grid", () => {
 		);
 		if (a[0].kind === "feature-grid") expect(a[0].intro).toBe("yo");
 		const b = ok(
-			parseSections([
-				{ id: "fg", kind: "feature-grid", heading: "X", intro: "", items: [] },
-			]),
+			parseSections([{ id: "fg", kind: "feature-grid", heading: "X", intro: "", items: [] }]),
 		);
 		if (b[0].kind === "feature-grid") expect("intro" in b[0]).toBe(false);
 	});
@@ -280,8 +234,7 @@ describe("schema — feature-grid", () => {
 					},
 				]),
 			);
-			if (sections[0].kind === "feature-grid")
-				expect(sections[0].columns).toBe(c);
+			if (sections[0].kind === "feature-grid") expect(sections[0].columns).toBe(c);
 		}
 	});
 });
@@ -289,22 +242,16 @@ describe("schema — feature-grid", () => {
 describe("schema — testimonials", () => {
 	it("source defaults to 'featured' for unknown values", () => {
 		const sections = ok(
-			parseSections([
-				{ id: "t", kind: "testimonials", source: "weird", layout: "grid" },
-			]),
+			parseSections([{ id: "t", kind: "testimonials", source: "weird", layout: "grid" }]),
 		);
-		if (sections[0].kind === "testimonials")
-			expect(sections[0].source).toBe("featured");
+		if (sections[0].kind === "testimonials") expect(sections[0].source).toBe("featured");
 	});
 
 	it("source 'approved' is preserved", () => {
 		const sections = ok(
-			parseSections([
-				{ id: "t", kind: "testimonials", source: "approved", layout: "grid" },
-			]),
+			parseSections([{ id: "t", kind: "testimonials", source: "approved", layout: "grid" }]),
 		);
-		if (sections[0].kind === "testimonials")
-			expect(sections[0].source).toBe("approved");
+		if (sections[0].kind === "testimonials") expect(sections[0].source).toBe("approved");
 	});
 
 	it("layout 'carousel' preserved; otherwise 'grid'", () => {
@@ -320,9 +267,7 @@ describe("schema — testimonials", () => {
 		);
 		if (a[0].kind === "testimonials") expect(a[0].layout).toBe("carousel");
 		const b = ok(
-			parseSections([
-				{ id: "t", kind: "testimonials", source: "approved", layout: "weird" },
-			]),
+			parseSections([{ id: "t", kind: "testimonials", source: "approved", layout: "weird" }]),
 		);
 		if (b[0].kind === "testimonials") expect(b[0].layout).toBe("grid");
 	});
@@ -359,8 +304,7 @@ describe("schema — testimonials", () => {
 				},
 			]),
 		);
-		if (sections[0].kind === "testimonials")
-			expect(sections[0].ids).toEqual(["x", "y"]);
+		if (sections[0].kind === "testimonials") expect(sections[0].ids).toEqual(["x", "y"]);
 	});
 
 	it("preserves heading when non-empty", () => {
@@ -375,8 +319,7 @@ describe("schema — testimonials", () => {
 				},
 			]),
 		);
-		if (sections[0].kind === "testimonials")
-			expect(sections[0].heading).toBe("H");
+		if (sections[0].kind === "testimonials") expect(sections[0].heading).toBe("H");
 	});
 });
 
@@ -458,8 +401,7 @@ describe("schema — cta-banner", () => {
 				},
 			]),
 		);
-		if (sections[0].kind === "cta-banner")
-			expect(sections[0].secondaryCta?.label).toBe("Y");
+		if (sections[0].kind === "cta-banner") expect(sections[0].secondaryCta?.label).toBe("Y");
 	});
 });
 
@@ -488,9 +430,7 @@ describe("schema — image-text", () => {
 	});
 
 	it("rejects non-string mediaId", () => {
-		const r = parseSections([
-			{ id: "i", kind: "image-text", heading: "H", body: "B", mediaId: 5 },
-		]);
+		const r = parseSections([{ id: "i", kind: "image-text", heading: "H", body: "B", mediaId: 5 }]);
 		expect(r.ok).toBe(false);
 	});
 
@@ -526,8 +466,7 @@ describe("schema — image-text", () => {
 				},
 			]),
 		);
-		if (sections[0].kind === "image-text")
-			expect(sections[0].imageSide).toBe("start");
+		if (sections[0].kind === "image-text") expect(sections[0].imageSide).toBe("start");
 	});
 });
 
@@ -543,20 +482,14 @@ describe("schema — faq", () => {
 	});
 
 	it("rejects missing question / answer", () => {
-		const r1 = parseSections([
-			{ id: "f", kind: "faq", items: [{ answer: "a" }] },
-		]);
+		const r1 = parseSections([{ id: "f", kind: "faq", items: [{ answer: "a" }] }]);
 		expect(r1.ok).toBe(false);
-		const r2 = parseSections([
-			{ id: "f", kind: "faq", items: [{ question: "q" }] },
-		]);
+		const r2 = parseSections([{ id: "f", kind: "faq", items: [{ question: "q" }] }]);
 		expect(r2.ok).toBe(false);
 	});
 
 	it("preserves heading when non-empty", () => {
-		const sections = ok(
-			parseSections([{ id: "f", kind: "faq", items: [], heading: "Hello" }]),
-		);
+		const sections = ok(parseSections([{ id: "f", kind: "faq", items: [], heading: "Hello" }]));
 		if (sections[0].kind === "faq") expect(sections[0].heading).toBe("Hello");
 	});
 });
@@ -569,9 +502,7 @@ describe("schema — gallery", () => {
 
 	it("preserves heading when non-empty", () => {
 		const sections = ok(
-			parseSections([
-				{ id: "g", kind: "gallery", mediaIds: [], columns: 4, heading: "H" },
-			]),
+			parseSections([{ id: "g", kind: "gallery", mediaIds: [], columns: 4, heading: "H" }]),
 		);
 		if (sections[0].kind === "gallery") {
 			expect(sections[0].heading).toBe("H");
@@ -580,9 +511,7 @@ describe("schema — gallery", () => {
 	});
 
 	it("columns invalid normalises to 3", () => {
-		const sections = ok(
-			parseSections([{ id: "g", kind: "gallery", mediaIds: [], columns: 99 }]),
-		);
+		const sections = ok(parseSections([{ id: "g", kind: "gallery", mediaIds: [], columns: 99 }]));
 		if (sections[0].kind === "gallery") expect(sections[0].columns).toBe(3);
 	});
 });
@@ -594,20 +523,15 @@ describe("schema — rich-text", () => {
 	});
 
 	it("preserves html exactly", () => {
-		const sections = ok(
-			parseSections([{ id: "r", kind: "rich-text", html: "<p>hi</p>" }]),
-		);
-		if (sections[0].kind === "rich-text")
-			expect(sections[0].html).toBe("<p>hi</p>");
+		const sections = ok(parseSections([{ id: "r", kind: "rich-text", html: "<p>hi</p>" }]));
+		if (sections[0].kind === "rich-text") expect(sections[0].html).toBe("<p>hi</p>");
 	});
 });
 
 describe("schema — JSON wrapper", () => {
 	it("parses a valid JSON array", () => {
 		const r = parseSectionsFromJson(
-			JSON.stringify([
-				{ id: "h", kind: "hero", headline: "H", alignment: "start" },
-			]),
+			JSON.stringify([{ id: "h", kind: "hero", headline: "H", alignment: "start" }]),
 		);
 		expect(r.ok).toBe(true);
 	});

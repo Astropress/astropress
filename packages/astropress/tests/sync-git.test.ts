@@ -1,10 +1,4 @@
-import {
-	existsSync,
-	mkdirSync,
-	mkdtempSync,
-	rmSync,
-	writeFileSync,
-} from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
@@ -157,10 +151,7 @@ describe("createAstropressGitSyncAdapter — importSnapshot", () => {
 
 		await adapter.importSnapshot(snapshotDir);
 
-		const content = require("node:fs").readFileSync(
-			join(projectDir, "package.json"),
-			"utf8",
-		);
+		const content = require("node:fs").readFileSync(join(projectDir, "package.json"), "utf8");
 		expect(JSON.parse(content).new).toBe(true);
 	});
 
@@ -299,11 +290,7 @@ describe("createAstropressGitSyncAdapter — SQLite + reflink", () => {
 		const targetDir = makeDir("snapshot-integrity-export");
 		await adapter.exportSnapshot(targetDir);
 
-		expect(
-			warnings.some((w) =>
-				w.startsWith("SQLite integrity check unavailable for"),
-			),
-		).toBe(true);
+		expect(warnings.some((w) => w.startsWith("SQLite integrity check unavailable for"))).toBe(true);
 	});
 
 	it("warns after import when the restored .sqlite file fails its integrity check", async () => {
@@ -319,9 +306,7 @@ describe("createAstropressGitSyncAdapter — SQLite + reflink", () => {
 		});
 		await adapter.importSnapshot(snapshotDir);
 
-		expect(
-			warnings.some((w) => w.startsWith("Restored SQLite database at")),
-		).toBe(true);
+		expect(warnings.some((w) => w.startsWith("Restored SQLite database at"))).toBe(true);
 	});
 
 	it("logs importSnapshot copy method", async () => {

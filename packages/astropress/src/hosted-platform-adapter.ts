@@ -4,9 +4,9 @@ import {
 } from "./in-memory-platform-adapter";
 import {
 	type AstropressPlatformAdapter,
-	type ProviderCapabilities,
 	assertProviderContract,
 	normalizeProviderCapabilities,
+	type ProviderCapabilities,
 } from "./platform-contracts";
 
 export interface AstropressHostedPlatformAdapterOptions
@@ -28,8 +28,7 @@ export function createAstropressHostedPlatformAdapter(
 		objectStorage: true,
 		gitSync: true,
 		...options.defaultCapabilities,
-	} satisfies Pick<ProviderCapabilities, "name"> &
-		Partial<Omit<ProviderCapabilities, "name">>;
+	} satisfies Pick<ProviderCapabilities, "name"> & Partial<Omit<ProviderCapabilities, "name">>;
 
 	const baseAdapter =
 		options.backingAdapter ??

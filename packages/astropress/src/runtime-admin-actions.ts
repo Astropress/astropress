@@ -10,7 +10,7 @@
 //   runtime-actions-misc.ts      (updateRuntimeTranslationState, createRuntimeRedirectRule, deleteRuntimeRedirectRule,
 //                                  moderateRuntimeComment, saveRuntimeSettings)
 export * from "./runtime-actions-content";
-export * from "./runtime-actions-users";
 export * from "./runtime-actions-media";
-export * from "./runtime-actions-taxonomies";
 export * from "./runtime-actions-misc";
+export * from "./runtime-actions-taxonomies";
+export * from "./runtime-actions-users";

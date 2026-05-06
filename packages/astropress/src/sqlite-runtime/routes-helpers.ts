@@ -169,9 +169,7 @@ export function mapArchiveRow(row: ArchiveRouteRow): ArchiveRouteRecord {
 	};
 }
 
-export function mapStructuredPageRow(
-	row: StructuredPageRow,
-): StructuredPageRouteRecord | null {
+export function mapStructuredPageRow(row: StructuredPageRow): StructuredPageRouteRecord | null {
 	const settings = parseSystemSettings(row.settings_json) ?? {};
 	const templateKey = normalizeStructuredTemplateKey(settings.templateKey);
 	if (!templateKey) return null;

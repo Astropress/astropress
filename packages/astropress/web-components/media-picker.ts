@@ -52,9 +52,7 @@ export class ApMediaPicker extends HTMLElement {
 	connectedCallback() {
 		this.abort = new AbortController();
 		const { signal } = this.abort;
-		const trigger = this.querySelector<HTMLButtonElement>(
-			"[data-media-picker-trigger]",
-		);
+		const trigger = this.querySelector<HTMLButtonElement>("[data-media-picker-trigger]");
 		trigger?.addEventListener("click", () => this.open(), { signal });
 	}
 
@@ -76,15 +74,9 @@ export class ApMediaPicker extends HTMLElement {
 			this.dialog = document.createElement("dialog");
 			this.dialog.className = "ap-media-picker__dialog";
 			this.dialog.setAttribute("aria-label", "Media library");
-			const labelTitle = escapeText(
-				this.getAttribute("data-label-title") ?? "Choose media",
-			);
-			const labelSearch = escapeAttr(
-				this.getAttribute("data-label-search") ?? "Search…",
-			);
-			const labelClose = escapeAttr(
-				this.getAttribute("data-label-close") ?? "Close",
-			);
+			const labelTitle = escapeText(this.getAttribute("data-label-title") ?? "Choose media");
+			const labelSearch = escapeAttr(this.getAttribute("data-label-search") ?? "Search…");
+			const labelClose = escapeAttr(this.getAttribute("data-label-close") ?? "Close");
 			this.dialog.innerHTML = `
 <div class="ap-media-picker__inner">
   <header class="ap-media-picker__head">
@@ -104,9 +96,7 @@ export class ApMediaPicker extends HTMLElement {
 			const items = await fetchItems();
 			this.renderItems(items);
 		} catch (err) {
-			const grid = this.dialog.querySelector<HTMLElement>(
-				"[data-media-picker-grid]",
-			);
+			const grid = this.dialog.querySelector<HTMLElement>("[data-media-picker-grid]");
 			if (grid)
 				grid.innerHTML = `<p class="ap-media-picker__error">${err instanceof Error ? err.message : "Failed to load media"}</p>`;
 		}
@@ -128,33 +118,24 @@ export class ApMediaPicker extends HTMLElement {
 				this.commitSelection(id, url, title);
 			}
 		});
-		const search = this.dialog.querySelector<HTMLInputElement>(
-			"[data-media-picker-search]",
-		);
+		const search = this.dialog.querySelector<HTMLInputElement>("[data-media-picker-search]");
 		search?.addEventListener("input", () => this.applyFilter());
 	}
 
 	private applyFilter() {
 		if (!this.dialog) return;
-		const search = this.dialog.querySelector<HTMLInputElement>(
-			"[data-media-picker-search]",
-		);
+		const search = this.dialog.querySelector<HTMLInputElement>("[data-media-picker-search]");
 		const term = (search?.value ?? "").trim().toLowerCase();
-		const items = this.dialog.querySelectorAll<HTMLElement>(
-			".ap-media-picker__item",
-		);
+		const items = this.dialog.querySelectorAll<HTMLElement>(".ap-media-picker__item");
 		for (const el of items) {
-			const haystack =
-				`${el.dataset.mediaTitle ?? ""} ${el.dataset.mediaAlt ?? ""}`.toLowerCase();
+			const haystack = `${el.dataset.mediaTitle ?? ""} ${el.dataset.mediaAlt ?? ""}`.toLowerCase();
 			el.hidden = term.length > 0 && !haystack.includes(term);
 		}
 	}
 
 	private renderItems(items: MediaItem[]) {
 		if (!this.dialog) return;
-		const grid = this.dialog.querySelector<HTMLElement>(
-			"[data-media-picker-grid]",
-		);
+		const grid = this.dialog.querySelector<HTMLElement>("[data-media-picker-grid]");
 		if (!grid) return;
 		if (items.length === 0) {
 			const labelEmpty = escapeText(
@@ -233,9 +214,6 @@ function escapeText(value: string): string {
 	});
 }
 
-if (
-	typeof customElements !== "undefined" &&
-	!customElements.get("ap-media-picker")
-) {
+if (typeof customElements !== "undefined" && !customElements.get("ap-media-picker")) {
 	customElements.define("ap-media-picker", ApMediaPicker);
 }

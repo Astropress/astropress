@@ -11,23 +11,12 @@
 
 import { readdir } from "node:fs/promises";
 import { join, relative } from "node:path";
-import {
-	AuditReport,
-	ROOT,
-	fileExists,
-	fromRoot,
-	readText,
-	runAudit,
-} from "../lib/audit-utils.js";
+import { AuditReport, fileExists, fromRoot, ROOT, readText, runAudit } from "../lib/audit-utils.js";
 
 const API_ROUTES_FILE = fromRoot("packages/astropress/src/api-routes.ts");
-const API_MIDDLEWARE_FILE = fromRoot(
-	"packages/astropress/src/api-middleware.ts",
-);
+const API_MIDDLEWARE_FILE = fromRoot("packages/astropress/src/api-middleware.ts");
 const API_HANDLERS_DIR = fromRoot("packages/astropress/pages/ap-api");
-const OPENAPI_ENDPOINT = fromRoot(
-	"packages/astropress/pages/ap-api/v1/openapi.json.ts",
-);
+const OPENAPI_ENDPOINT = fromRoot("packages/astropress/pages/ap-api/v1/openapi.json.ts");
 
 const HANDLER_EXTENSIONS = new Set([".ts", ".js"]);
 
@@ -57,17 +46,14 @@ async function main() {
 
 	// 1. Check api-routes.ts exists and exports apiRouteDefinitions or injectApiRoutes
 	if (!(await fileExists(API_ROUTES_FILE))) {
-		report.add(
-			`[missing-api-routes] ${relative(ROOT, API_ROUTES_FILE)} does not exist`,
-		);
+		report.add(`[missing-api-routes] ${relative(ROOT, API_ROUTES_FILE)} does not exist`);
 	} else {
 		const src = await readText(API_ROUTES_FILE);
-		const hasApiRouteDefinitions =
-			/export\s+(const|let|var|function)\s+apiRouteDefinitions\b/.test(src);
+		const hasApiRouteDefinitions = /export\s+(const|let|var|function)\s+apiRouteDefinitions\b/.test(
+			src,
+		);
 		const hasInjectApiRoutes =
-			/export\s+(const|let|var|function|async\s+function)\s+injectApiRoutes\b/.test(
-				src,
-			);
+			/export\s+(const|let|var|function|async\s+function)\s+injectApiRoutes\b/.test(src);
 		if (!hasApiRouteDefinitions && !hasInjectApiRoutes) {
 			report.add(
 				`[missing-export] ${relative(ROOT, API_ROUTES_FILE)} must export apiRouteDefinitions or injectApiRoutes`,
@@ -77,9 +63,7 @@ async function main() {
 
 	// 2. Check api-middleware.ts exists and exports response helpers
 	if (!(await fileExists(API_MIDDLEWARE_FILE))) {
-		report.add(
-			`[missing-api-middleware] ${relative(ROOT, API_MIDDLEWARE_FILE)} does not exist`,
-		);
+		report.add(`[missing-api-middleware] ${relative(ROOT, API_MIDDLEWARE_FILE)} does not exist`);
 	} else {
 		const src = await readText(API_MIDDLEWARE_FILE);
 		const requiredExports = ["jsonOk", "jsonOkPaginated", "apiErrors"];
@@ -102,10 +86,7 @@ async function main() {
 	// - openapi.json: public discovery, no auth, returns raw JSON spec
 	// - og-image: public image generation, returns PNG, no JSON
 	// - testimonials/ingest: webhook receiver with HMAC signature auth, not bearer token
-	const EXCLUDED_FROM_RESPONSE_CHECK = new Set([
-		"openapi.json.ts",
-		"ingest.ts",
-	]);
+	const EXCLUDED_FROM_RESPONSE_CHECK = new Set(["openapi.json.ts", "ingest.ts"]);
 	const EXCLUDED_FROM_WRAPPER_CHECK = new Set(["openapi.json.ts", "ingest.ts"]);
 
 	for (const filePath of handlerFiles) {
@@ -131,21 +112,14 @@ async function main() {
 		}
 
 		// 5. Check for withApiRequest wrapper usage
-		if (
-			!EXCLUDED_FROM_WRAPPER_CHECK.has(fileName) &&
-			!src.includes("withApiRequest")
-		) {
-			report.add(
-				`[missing-withApiRequest] ${relPath}: does not use withApiRequest wrapper`,
-			);
+		if (!EXCLUDED_FROM_WRAPPER_CHECK.has(fileName) && !src.includes("withApiRequest")) {
+			report.add(`[missing-withApiRequest] ${relPath}: does not use withApiRequest wrapper`);
 		}
 	}
 
 	// 4. Check OpenAPI endpoint exists
 	if (!(await fileExists(OPENAPI_ENDPOINT))) {
-		report.add(
-			`[missing-openapi-endpoint] ${relative(ROOT, OPENAPI_ENDPOINT)} does not exist`,
-		);
+		report.add(`[missing-openapi-endpoint] ${relative(ROOT, OPENAPI_ENDPOINT)} does not exist`);
 	}
 
 	if (report.failed) {

@@ -86,9 +86,8 @@ export async function findPageRecord(slug: string, locals?: App.Locals | null) {
 	/* v8 ignore next 3 */
 	if (!db) {
 		return (
-			getPageRecords().find(
-				(entry) => entry.slug === slug || entry.legacyUrl === `/${slug}`,
-			) ?? null
+			getPageRecords().find((entry) => entry.slug === slug || entry.legacyUrl === `/${slug}`) ??
+			null
 		);
 	}
 
@@ -101,12 +100,7 @@ export async function findPageRecord(slug: string, locals?: App.Locals | null) {
 }
 
 export function normalizeContentStatus(input?: string | null): ContentStatus {
-	if (
-		input === "draft" ||
-		input === "review" ||
-		input === "archived" ||
-		input === "published"
-	) {
+	if (input === "draft" || input === "review" || input === "archived" || input === "published") {
 		return input;
 	}
 	return "published";
@@ -117,37 +111,25 @@ export async function replaceD1ContentAssignments(
 	slug: string,
 	input: { authorIds: number[]; categoryIds: number[]; tagIds: number[] },
 ) {
-	await db
-		.prepare("DELETE FROM content_authors WHERE slug = ?")
-		.bind(slug)
-		.run();
-	await db
-		.prepare("DELETE FROM content_categories WHERE slug = ?")
-		.bind(slug)
-		.run();
+	await db.prepare("DELETE FROM content_authors WHERE slug = ?").bind(slug).run();
+	await db.prepare("DELETE FROM content_categories WHERE slug = ?").bind(slug).run();
 	await db.prepare("DELETE FROM content_tags WHERE slug = ?").bind(slug).run();
 
 	for (const authorId of input.authorIds) {
 		await db
-			.prepare(
-				"INSERT OR IGNORE INTO content_authors (slug, author_id) VALUES (?, ?)",
-			)
+			.prepare("INSERT OR IGNORE INTO content_authors (slug, author_id) VALUES (?, ?)")
 			.bind(slug, authorId)
 			.run();
 	}
 	for (const categoryId of input.categoryIds) {
 		await db
-			.prepare(
-				"INSERT OR IGNORE INTO content_categories (slug, category_id) VALUES (?, ?)",
-			)
+			.prepare("INSERT OR IGNORE INTO content_categories (slug, category_id) VALUES (?, ?)")
 			.bind(slug, categoryId)
 			.run();
 	}
 	for (const tagId of input.tagIds) {
 		await db
-			.prepare(
-				"INSERT OR IGNORE INTO content_tags (slug, tag_id) VALUES (?, ?)",
-			)
+			.prepare("INSERT OR IGNORE INTO content_tags (slug, tag_id) VALUES (?, ?)")
 			.bind(slug, tagId)
 			.run();
 	}
@@ -163,10 +145,7 @@ function baselineFields(pageRecord: PageRecord) {
 	return { status, body, seoTitle, metaDesc, excerpt };
 }
 
-export async function ensureD1BaselineRevision(
-	db: D1DatabaseLike,
-	pageRecord: PageRecord,
-) {
+export async function ensureD1BaselineRevision(db: D1DatabaseLike, pageRecord: PageRecord) {
 	const f = baselineFields(pageRecord);
 	await db
 		.prepare(SQL_UPSERT_BASELINE_OVERRIDE)
@@ -222,10 +201,7 @@ export async function ensureD1BaselineRevision(
 		.run();
 }
 
-export function mapContentState(
-	pageRecord: PageRecord,
-	override: ContentOverride,
-) {
+export function mapContentState(pageRecord: PageRecord, override: ContentOverride) {
 	return {
 		...pageRecord,
 		...override,
@@ -237,9 +213,7 @@ export function validateContentTypeFields(
 	// audit-boundary: opaque-passthrough -- module-boundary value; narrowed at consumer
 	metadata: Record<string, unknown>,
 ): string | null {
-	const contentTypeDefinition = peekCmsConfig()?.contentTypes?.find(
-		(ct) => ct.key === templateKey,
-	);
+	const contentTypeDefinition = peekCmsConfig()?.contentTypes?.find((ct) => ct.key === templateKey);
 	if (contentTypeDefinition) {
 		return validateContentFields(contentTypeDefinition, metadata) ?? null;
 	}

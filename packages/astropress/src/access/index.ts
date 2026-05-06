@@ -5,6 +5,42 @@
  * subpaths. Plugins call `registerAccessAction()` from their setup.
  */
 
+export {
+	_resetAccessActionRegistryForTests,
+	getAccessAction,
+	listAccessActions,
+	registerAccessAction,
+} from "./action-registry";
+export type { BindingContext } from "./condition-evaluator";
+export {
+	evaluateCondition,
+	resolvePath,
+	substituteString,
+} from "./condition-evaluator";
+export type { JsonPolicyEngineOptions } from "./engine";
+export { createPolicyEngine } from "./engine";
+export { actionMatches, evaluate } from "./evaluator";
+export { createAccessMiddleware } from "./middleware";
+export type { RequiresAccessOptions } from "./page-guard";
+export { requiresAccess } from "./page-guard";
+export type {
+	AccessRepository,
+	AccessStore,
+	RolePolicyRecord,
+	RoleRecord,
+	UserPolicyRecord,
+	UserRoleAssignment,
+} from "./repository";
+export {
+	createAccessRepository,
+	seedStarterRoles,
+} from "./repository";
+export type {
+	AccessContext,
+	AccessSnapshot,
+	LocalAccessStoreSurface,
+} from "./request-context";
+export { getAccessContext } from "./request-context";
 export type {
 	ActionDefinition,
 	AttributeValue,
@@ -20,40 +56,4 @@ export type {
 	Resource,
 	Subject,
 } from "./types";
-export { actionMatches, evaluate } from "./evaluator";
-export {
-	evaluateCondition,
-	resolvePath,
-	substituteString,
-} from "./condition-evaluator";
-export type { BindingContext } from "./condition-evaluator";
-export {
-	getAccessAction,
-	listAccessActions,
-	registerAccessAction,
-	_resetAccessActionRegistryForTests,
-} from "./action-registry";
-export { createPolicyEngine } from "./engine";
-export type { JsonPolicyEngineOptions } from "./engine";
-export {
-	createAccessRepository,
-	seedStarterRoles,
-} from "./repository";
-export type {
-	AccessRepository,
-	AccessStore,
-	RolePolicyRecord,
-	RoleRecord,
-	UserPolicyRecord,
-	UserRoleAssignment,
-} from "./repository";
-export { getAccessContext } from "./request-context";
-export type {
-	AccessContext,
-	AccessSnapshot,
-	LocalAccessStoreSurface,
-} from "./request-context";
-export { createAccessMiddleware } from "./middleware";
-export { requiresAccess } from "./page-guard";
-export type { RequiresAccessOptions } from "./page-guard";
 import "./locals";

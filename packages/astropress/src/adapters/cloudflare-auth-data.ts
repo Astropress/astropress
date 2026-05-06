@@ -11,5 +11,4 @@ export const CLOUDFLARE_SESSION_TTL_MS = 12 * 60 * 60 * 1000;
 
 export const CLOUDFLARE_SESSION_LOGGER_CONTEXT = "Cloudflare";
 
-export const CLOUDFLARE_DEFAULT_SESSION_SECRET =
-	"cloudflare-adapter-session-secret";
+export const CLOUDFLARE_DEFAULT_SESSION_SECRET = "cloudflare-adapter-session-secret";

@@ -4,9 +4,7 @@ import { buildAdminDashboardModel } from "../src/admin-dashboard";
 import type { AuthUser } from "../src/platform-contracts";
 
 type ContentRecord = Parameters<
-	NonNullable<
-		Parameters<typeof buildAdminDashboardModel>[3]["isSeededPostRecord"]
-	>
+	NonNullable<Parameters<typeof buildAdminDashboardModel>[3]["isSeededPostRecord"]>
 >[0];
 
 const ADMIN_USER: AuthUser = {
@@ -56,12 +54,7 @@ function makeDeps(
 
 describe("buildAdminDashboardModel — base shape", () => {
 	it("returns every field in the model with sensible defaults when all sources are empty", async () => {
-		const model = await buildAdminDashboardModel(
-			LOCALS,
-			ADMIN_USER,
-			[],
-			makeDeps(),
-		);
+		const model = await buildAdminDashboardModel(LOCALS, ADMIN_USER, [], makeDeps());
 		expect(model).toMatchObject({
 			auditEvents: [],
 			comments: [],
@@ -157,9 +150,7 @@ describe("settledValue fallback", () => {
 		const model = await buildAdminDashboardModel(LOCALS, ADMIN_USER, [], deps);
 		expect(model.systemRoutes).toEqual([]);
 		expect(
-			model.supportSurfaceLinks.find(
-				(link) => link.labelKey === "dashboard.system",
-			)?.count,
+			model.supportSurfaceLinks.find((link) => link.labelKey === "dashboard.system")?.count,
 		).toBe(0);
 	});
 
@@ -208,12 +199,7 @@ describe("isAdmin gating", () => {
 		const deps = makeDeps({
 			getRuntimeArchiveRoute: vi.fn(async () => ({ title: "X" })),
 		});
-		const model = await buildAdminDashboardModel(
-			LOCALS,
-			NON_ADMIN_USER,
-			[],
-			deps,
-		);
+		const model = await buildAdminDashboardModel(LOCALS, NON_ADMIN_USER, [], deps);
 		expect(deps.getRuntimeArchiveRoute).not.toHaveBeenCalled();
 		expect(model.archiveRoutes).toEqual([]);
 	});
@@ -243,9 +229,9 @@ describe("isAdmin gating", () => {
 		});
 		await buildAdminDashboardModel(LOCALS, ADMIN_USER, [], deps);
 		expect(deps.getRuntimeArchiveRoute).toHaveBeenCalledTimes(3);
-		const calls = (
-			deps.getRuntimeArchiveRoute as ReturnType<typeof vi.fn>
-		).mock.calls.map((c) => c[0]);
+		const calls = (deps.getRuntimeArchiveRoute as ReturnType<typeof vi.fn>).mock.calls.map(
+			(c) => c[0],
+		);
 		expect(calls).toEqual(["/author", "/category", "/tag"]);
 	});
 });
@@ -368,15 +354,7 @@ describe("scheduledPosts", () => {
 	});
 
 	it("sorts ascending by scheduledAt and slices to 5", async () => {
-		const records = [
-			"2099",
-			"2098",
-			"2100",
-			"2097",
-			"2101",
-			"2096",
-			"2102",
-		].map((y, i) =>
+		const records = ["2099", "2098", "2100", "2097", "2101", "2096", "2102"].map((y, i) =>
 			content({
 				id: `s${i}`,
 				slug: `s${i}`,
@@ -459,15 +437,9 @@ describe("recentActivity", () => {
 			listRuntimeStructuredPageRoutes: vi.fn(async () => [route1]),
 		});
 		const model = await buildAdminDashboardModel(LOCALS, ADMIN_USER, [], deps);
-		expect(model.recentActivity.map((r) => r.title)).toEqual([
-			"R1",
-			"C1",
-			"C2",
-		]);
+		expect(model.recentActivity.map((r) => r.title)).toEqual(["R1", "C1", "C2"]);
 		expect(model.recentActivity[0].kind).toBe("Structured Page");
-		expect(model.recentActivity[0].editHref).toBe(
-			"/ap-admin/route-pages/route-1",
-		);
+		expect(model.recentActivity[0].editHref).toBe("/ap-admin/route-pages/route-1");
 		expect(model.recentActivity[1].editHref).toBe("/ap-admin/posts/c1");
 		expect(model.recentActivity[1].kind).toBe("Post");
 		expect(model.recentActivity[2].kind).toBe("Page");
@@ -497,12 +469,7 @@ describe("recentActivity", () => {
 			listRuntimeContentStates: vi.fn(async () => [post, page]),
 			listRuntimeStructuredPageRoutes: vi.fn(async () => [route1]),
 		});
-		const model = await buildAdminDashboardModel(
-			LOCALS,
-			NON_ADMIN_USER,
-			[],
-			deps,
-		);
+		const model = await buildAdminDashboardModel(LOCALS, NON_ADMIN_USER, [], deps);
 		expect(model.recentActivity).toHaveLength(1);
 		expect(model.recentActivity[0].title).toBe("P1");
 	});
@@ -669,12 +636,7 @@ describe("seoNeedsAttention", () => {
 
 describe("supportSurfaceLinks", () => {
 	it("emits four entries with the expected labelKeys and hrefs", async () => {
-		const model = await buildAdminDashboardModel(
-			LOCALS,
-			ADMIN_USER,
-			[],
-			makeDeps(),
-		);
+		const model = await buildAdminDashboardModel(LOCALS, ADMIN_USER, [], makeDeps());
 		expect(model.supportSurfaceLinks.map((l) => l.labelKey)).toEqual([
 			"dashboard.translations",
 			"dashboard.seo",
@@ -721,9 +683,7 @@ describe("supportSurfaceLinks", () => {
 			),
 		});
 		const model = await buildAdminDashboardModel(LOCALS, ADMIN_USER, [], deps);
-		const archives = model.supportSurfaceLinks.find(
-			(l) => l.labelKey === "dashboard.archives",
-		);
+		const archives = model.supportSurfaceLinks.find((l) => l.labelKey === "dashboard.archives");
 		// 2 truthy archive routes (/category, /tag).
 		expect(archives?.count).toBe(2);
 	});
@@ -738,9 +698,6 @@ describe("supportSurfaceLinks", () => {
 			listRuntimeSystemRoutes: vi.fn(async () => sys),
 		});
 		const model = await buildAdminDashboardModel(LOCALS, ADMIN_USER, [], deps);
-		expect(
-			model.supportSurfaceLinks.find((l) => l.labelKey === "dashboard.system")
-				?.count,
-		).toBe(3);
+		expect(model.supportSurfaceLinks.find((l) => l.labelKey === "dashboard.system")?.count).toBe(3);
 	});
 });

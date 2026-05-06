@@ -33,15 +33,14 @@ function gitDiffNames(): string[] {
 }
 
 function main(): void {
-	const paths =
-		process.argv.slice(2).length > 0 ? process.argv.slice(2) : DEFAULT_PATHS;
+	const paths = process.argv.slice(2).length > 0 ? process.argv.slice(2) : DEFAULT_PATHS;
 
 	console.log("── biome unsafe write ──");
 	console.log(`Paths: ${paths.join(", ")}`);
 
 	const biomeCode = run(
 		"bunx",
-		["@biomejs/biome@1", "check", "--write", "--unsafe", ...paths],
+		["@biomejs/biome@2", "check", "--write", "--unsafe", ...paths],
 		root,
 	);
 
@@ -52,17 +51,13 @@ function main(): void {
 		process.exit(biomeCode);
 	}
 
-	console.log(
-		"── smoke test (verifying unsafe fixes didn't break anything) ──",
-	);
+	console.log("── smoke test (verifying unsafe fixes didn't break anything) ──");
 
 	const vitestCode = run("bunx", ["vitest", "run"], pkgDir);
 
 	if (vitestCode !== 0) {
 		console.error("");
-		console.error(
-			"x Unsafe fixes broke tests. Review the diff before staging:",
-		);
+		console.error("x Unsafe fixes broke tests. Review the diff before staging:");
 		console.error("  git diff packages/");
 		console.error("");
 		process.exit(1);

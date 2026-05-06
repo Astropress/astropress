@@ -1,5 +1,4 @@
-import { deleteRuntimeMediaAsset } from "@astropress-diy/astropress";
-import { withAdminFormAction } from "@astropress-diy/astropress";
+import { deleteRuntimeMediaAsset, withAdminFormAction } from "@astropress-diy/astropress";
 import type { APIRoute } from "astro";
 
 export const POST: APIRoute = async (context) =>
@@ -7,11 +6,7 @@ export const POST: APIRoute = async (context) =>
 		context,
 		{ failurePath: "/ap-admin/media" },
 		async ({ actor, formData, locals, redirect, fail }) => {
-			const result = await deleteRuntimeMediaAsset(
-				String(formData.get("id") ?? ""),
-				actor,
-				locals,
-			);
+			const result = await deleteRuntimeMediaAsset(String(formData.get("id") ?? ""), actor, locals);
 			if (!result.ok) {
 				return fail(result.error);
 			}

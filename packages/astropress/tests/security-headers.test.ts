@@ -19,17 +19,13 @@ describe("security headers", () => {
 		});
 		const csp = headers.get("Content-Security-Policy") ?? "";
 
-		expect(csp).toContain(
-			"script-src 'self' https://challenges.cloudflare.com",
-		);
+		expect(csp).toContain("script-src 'self' https://challenges.cloudflare.com");
 		expect(csp).not.toContain("script-src 'self' 'unsafe-inline'");
 		expect(csp).toContain("style-src 'self' 'unsafe-inline'");
 		expect(csp).toContain("frame-ancestors 'none'");
 		expect(headers.get("X-Frame-Options")).toBe("DENY");
 		expect(headers.get("X-Content-Type-Options")).toBe("nosniff");
-		expect(headers.get("Referrer-Policy")).toBe(
-			"strict-origin-when-cross-origin",
-		);
+		expect(headers.get("Referrer-Policy")).toBe("strict-origin-when-cross-origin");
 	});
 
 	it("defaults allowInlineStyles to false — style-src excludes unsafe-inline without explicit opt-in", () => {
@@ -42,9 +38,7 @@ describe("security headers", () => {
 	it("sets Cross-Origin-Resource-Policy: same-site for admin, auth, and api areas", () => {
 		for (const area of ["admin", "auth", "api"] as const) {
 			const headers = createAstropressSecurityHeaders({ area });
-			expect(headers.get("Cross-Origin-Resource-Policy"), `area: ${area}`).toBe(
-				"same-site",
-			);
+			expect(headers.get("Cross-Origin-Resource-Policy"), `area: ${area}`).toBe("same-site");
 		}
 		// Public area does NOT get CORP
 		const publicHeaders = createAstropressSecurityHeaders({ area: "public" });
@@ -59,9 +53,7 @@ describe("security headers", () => {
 		});
 
 		expect(withoutHsts.has("Strict-Transport-Security")).toBe(false);
-		expect(withHsts.get("Strict-Transport-Security")).toContain(
-			"max-age=31536000",
-		);
+		expect(withHsts.get("Strict-Transport-Security")).toContain("max-age=31536000");
 	});
 
 	it("applies headers onto an existing collection and secures redirects", () => {
@@ -75,17 +67,12 @@ describe("security headers", () => {
 		const response = createAstropressSecureRedirect("/ap-admin/login", 302);
 		expect(response.status).toBe(302);
 		expect(response.headers.get("Location")).toBe("/ap-admin/login");
-		expect(response.headers.get("Content-Security-Policy")).toContain(
-			"default-src 'self'",
-		);
-		expect(response.headers.get("Cross-Origin-Resource-Policy")).toBe(
-			"same-site",
-		);
+		expect(response.headers.get("Content-Security-Policy")).toContain("default-src 'self'");
+		expect(response.headers.get("Cross-Origin-Resource-Policy")).toBe("same-site");
 	});
 
 	it("CSP includes all required default directives with proper separators", () => {
-		const csp =
-			createAstropressSecurityHeaders().get("Content-Security-Policy") ?? "";
+		const csp = createAstropressSecurityHeaders().get("Content-Security-Policy") ?? "";
 		expect(csp).toContain("base-uri 'self'");
 		expect(csp).toContain("img-src 'self' data: https:");
 		expect(csp).toContain("font-src 'self' data: https:");
@@ -196,10 +183,7 @@ describe("security headers", () => {
 
 	it("admin/auth/api areas use object-src none and restricted form-action", () => {
 		for (const area of ["admin", "auth", "api"] as const) {
-			const csp =
-				createAstropressSecurityHeaders({ area }).get(
-					"Content-Security-Policy",
-				) ?? "";
+			const csp = createAstropressSecurityHeaders({ area }).get("Content-Security-Policy") ?? "";
 			expect(csp).toContain("object-src 'none'");
 			expect(csp).toContain("form-action 'self'");
 			expect(csp).not.toContain("form-action 'self' https:");
@@ -235,9 +219,7 @@ describe("security headers", () => {
 		for (const area of ["admin", "auth", "api"] as const) {
 			const headers = new Headers();
 			applyCacheHeaders(headers, area, 600);
-			expect(headers.get("Cache-Control"), `area: ${area}`).toBe(
-				"private, no-store",
-			);
+			expect(headers.get("Cache-Control"), `area: ${area}`).toBe("private, no-store");
 		}
 	});
 
@@ -307,17 +289,11 @@ describe("security headers", () => {
 	});
 
 	it("classifies public, auth, admin, and action routes for middleware application", () => {
-		expect(resolveAstropressSecurityArea(new URL("https://example.com/"))).toBe(
-			"public",
+		expect(resolveAstropressSecurityArea(new URL("https://example.com/"))).toBe("public");
+		expect(resolveAstropressSecurityArea(new URL("https://example.com/ap-admin/login"))).toBe(
+			"auth",
 		);
-		expect(
-			resolveAstropressSecurityArea(
-				new URL("https://example.com/ap-admin/login"),
-			),
-		).toBe("auth");
-		expect(
-			resolveAstropressSecurityArea(new URL("https://example.com/ap-admin")),
-		).toBe("admin");
+		expect(resolveAstropressSecurityArea(new URL("https://example.com/ap-admin"))).toBe("admin");
 		expect(
 			resolveAstropressSecurityArea(
 				new URL("https://example.com/ap-admin/actions/comment-moderate"),

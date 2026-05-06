@@ -1,10 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { createKmacDigest } from "../src/crypto-primitives.js";
-import {
-	createSessionTokenDigest,
-	hashPassword,
-	verifyPassword,
-} from "../src/crypto-utils.js";
+import { createSessionTokenDigest, hashPassword, verifyPassword } from "../src/crypto-utils.js";
 
 describe("session token digest", () => {
 	it("produces a deterministic hex digest that does not equal the raw token", async () => {
@@ -23,11 +19,7 @@ describe("session token digest", () => {
 		// Pins the purpose-tag string literal: any other value (including "")
 		// produces a different KMAC digest under domain separation.
 		const digest = await createSessionTokenDigest("the-token", "the-secret");
-		const expected = createKmacDigest(
-			"the-token",
-			"the-secret",
-			"session-token",
-		);
+		const expected = createKmacDigest("the-token", "the-secret", "session-token");
 		expect(digest).toBe(expected);
 	});
 
@@ -63,8 +55,6 @@ describe("hashPassword / verifyPassword", () => {
 
 	it("returns false when base64 decode throws (catch branch)", async () => {
 		// A stored hash where base64 decoding the salt would throw (invalid base64 chars)
-		expect(await verifyPassword("password", "100000$!!!invalid!!!$aaaa")).toBe(
-			false,
-		);
+		expect(await verifyPassword("password", "100000$!!!invalid!!!$aaaa")).toBe(false);
 	});
 });

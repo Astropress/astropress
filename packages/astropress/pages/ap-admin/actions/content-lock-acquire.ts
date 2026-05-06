@@ -10,19 +10,15 @@ export const POST: APIRoute = async (context) =>
 		async ({ actor, formData, locals }) => {
 			const slug = String(formData.get("slug") ?? "");
 			if (!slug) {
-				return new Response(
-					JSON.stringify({ ok: false, error: "Missing slug" }),
-					{
-						status: 400,
-						headers: { "Content-Type": "application/json" },
-					},
-				);
+				return new Response(JSON.stringify({ ok: false, error: "Missing slug" }), {
+					status: 400,
+					headers: { "Content-Type": "application/json" },
+				});
 			}
 
 			const result = await withLocalStoreFallback(
 				locals,
-				async (db) =>
-					createD1LocksOps(db).acquireLock(slug, actor.email, actor.name),
+				async (db) => createD1LocksOps(db).acquireLock(slug, actor.email, actor.name),
 				async (store) => {
 					if (!store.acquireLock) {
 						return {

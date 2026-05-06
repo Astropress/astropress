@@ -37,8 +37,7 @@ interface Props {
 	datePublished?: string;
 }
 
-const { record, siteOrigin, publisherName, publisherLogo, datePublished } =
-	Astro.props;
+const { record, siteOrigin, publisherName, publisherLogo, datePublished } = Astro.props;
 
 const url =
 	siteOrigin && record.slug
@@ -65,15 +64,12 @@ if (url) jsonLd.mainEntityOfPage = { "@type": "WebPage", "@id": url };
 if (image) jsonLd.image = image;
 if (datePublishedValue) jsonLd.datePublished = datePublishedValue;
 if (dateModified) jsonLd.dateModified = dateModified;
-if (record.authorName)
-	jsonLd.author = { "@type": "Person", name: record.authorName };
+if (record.authorName) jsonLd.author = { "@type": "Person", name: record.authorName };
 if (publisherName) {
 	jsonLd.publisher = {
 		"@type": "Organization",
 		name: publisherName,
-		...(publisherLogo
-			? { logo: { "@type": "ImageObject", url: publisherLogo } }
-			: {}),
+		...(publisherLogo ? { logo: { "@type": "ImageObject", url: publisherLogo } } : {}),
 	};
 }
 

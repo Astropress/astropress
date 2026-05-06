@@ -16,9 +16,7 @@ type HPanelPlan = {
 	[key: string]: unknown;
 };
 
-export async function discoverHPanelSites(
-	input: HPanelDiscoveryInput,
-): Promise<DiscoveredSite[]> {
+export async function discoverHPanelSites(input: HPanelDiscoveryInput): Promise<DiscoveredSite[]> {
 	const { accessToken } = input;
 
 	const res = await fetch(`${HPANEL_API}/hosting/v1/shared-hosting`, {

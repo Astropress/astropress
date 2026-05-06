@@ -36,20 +36,10 @@ function emit(
 	if (isDev) {
 		const prefix = `[astropress:${context}]`;
 		if (meta && Object.keys(meta).length > 0) {
-			const fn_ =
-				level === "error"
-					? console.error
-					: level === "warn"
-						? console.warn
-						: console.log;
+			const fn_ = level === "error" ? console.error : level === "warn" ? console.warn : console.log;
 			fn_(prefix, message, meta);
 		} else {
-			const fn_ =
-				level === "error"
-					? console.error
-					: level === "warn"
-						? console.warn
-						: console.log;
+			const fn_ = level === "error" ? console.error : level === "warn" ? console.warn : console.log;
 			fn_(prefix, message);
 		}
 		return;

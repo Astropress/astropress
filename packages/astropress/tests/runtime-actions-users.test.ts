@@ -12,11 +12,7 @@ import {
 	suspendRuntimeAdminUser,
 	unsuspendRuntimeAdminUser,
 } from "../src/runtime-actions-users";
-import {
-	STANDARD_ACTOR,
-	STANDARD_CMS_CONFIG,
-	makeDb,
-} from "./helpers/make-db.js";
+import { makeDb, STANDARD_ACTOR, STANDARD_CMS_CONFIG } from "./helpers/make-db.js";
 import { makeLocals } from "./helpers/make-locals.js";
 
 const actor = STANDARD_ACTOR;
@@ -45,9 +41,7 @@ describe("inviteRuntimeAdminUser", () => {
 			locals,
 		);
 		expect(result).toMatchObject({ ok: true });
-		expect((result as { inviteUrl: string }).inviteUrl).toContain(
-			"/accept-invite?token=",
-		);
+		expect((result as { inviteUrl: string }).inviteUrl).toContain("/accept-invite?token=");
 	});
 
 	it("rejects duplicate email", async () => {
@@ -94,9 +88,7 @@ describe("getRuntimeInviteRequest / consumeRuntimeInviteToken", () => {
 			actor,
 			locals,
 		);
-		const rawToken = (invite as { inviteUrl: string }).inviteUrl.split(
-			"token=",
-		)[1];
+		const rawToken = (invite as { inviteUrl: string }).inviteUrl.split("token=")[1];
 		return decodeURIComponent(rawToken);
 	}
 
@@ -121,11 +113,7 @@ describe("getRuntimeInviteRequest / consumeRuntimeInviteToken", () => {
 
 	it("consumes an invite token and sets password", async () => {
 		const token = await createInvite();
-		const result = await consumeRuntimeInviteToken(
-			token,
-			"newpassword123",
-			locals,
-		);
+		const result = await consumeRuntimeInviteToken(token, "newpassword123", locals);
 		expect(result).toMatchObject({ ok: true });
 	}, 15000);
 
@@ -144,32 +132,18 @@ describe("createRuntimePasswordResetToken / getRuntimePasswordResetRequest / con
 	}
 
 	it("creates a reset URL for a known active user", async () => {
-		const result = await createRuntimePasswordResetToken(
-			"editor@test.local",
-			actor,
-			locals,
-		);
+		const result = await createRuntimePasswordResetToken("editor@test.local", actor, locals);
 		expect(result).toMatchObject({ ok: true });
-		expect((result as { resetUrl: string }).resetUrl).toContain(
-			"/reset-password?token=",
-		);
+		expect((result as { resetUrl: string }).resetUrl).toContain("/reset-password?token=");
 	});
 
 	it("returns not-ok (with actor) for unknown email", async () => {
-		const result = await createRuntimePasswordResetToken(
-			"nobody@test.local",
-			actor,
-			locals,
-		);
+		const result = await createRuntimePasswordResetToken("nobody@test.local", actor, locals);
 		expect(result).toMatchObject({ ok: false });
 	});
 
 	it("returns ok with null resetUrl (without actor) for unknown email", async () => {
-		const result = await createRuntimePasswordResetToken(
-			"nobody@test.local",
-			null,
-			locals,
-		);
+		const result = await createRuntimePasswordResetToken("nobody@test.local", null, locals);
 		expect(result).toMatchObject({ ok: true });
 		expect((result as { resetUrl: null }).resetUrl).toBeNull();
 	});
@@ -187,67 +161,41 @@ describe("createRuntimePasswordResetToken / getRuntimePasswordResetRequest / con
 
 	it("consumes a reset token and updates password", async () => {
 		const token = await createResetToken();
-		const result = await consumeRuntimePasswordResetToken(
-			token,
-			"newpassword123",
-			locals,
-		);
+		const result = await consumeRuntimePasswordResetToken(token, "newpassword123", locals);
 		expect(result).toMatchObject({ ok: true });
 	}, 15000);
 
 	it("rejects a short password", async () => {
 		const token = await createResetToken();
-		const result = await consumeRuntimePasswordResetToken(
-			token,
-			"short",
-			locals,
-		);
+		const result = await consumeRuntimePasswordResetToken(token, "short", locals);
 		expect(result).toMatchObject({ ok: false });
 	});
 
 	it("rejects an already-consumed token", async () => {
 		const token = await createResetToken();
 		await consumeRuntimePasswordResetToken(token, "newpassword123", locals);
-		const result = await consumeRuntimePasswordResetToken(
-			token,
-			"anotherpassword",
-			locals,
-		);
+		const result = await consumeRuntimePasswordResetToken(token, "anotherpassword", locals);
 		expect(result).toMatchObject({ ok: false });
 	}, 15000);
 });
 
 describe("suspendRuntimeAdminUser / unsuspendRuntimeAdminUser", () => {
 	it("suspends an active user", async () => {
-		const result = await suspendRuntimeAdminUser(
-			"editor@test.local",
-			actor,
-			locals,
-		);
+		const result = await suspendRuntimeAdminUser("editor@test.local", actor, locals);
 		expect(result).toMatchObject({ ok: true });
 		const row = db
-			.prepare(
-				"SELECT active FROM admin_users WHERE email = 'editor@test.local'",
-			)
+			.prepare("SELECT active FROM admin_users WHERE email = 'editor@test.local'")
 			.get() as { active: number };
 		expect(row.active).toBe(0);
 	});
 
 	it("cannot suspend own account", async () => {
-		const result = await suspendRuntimeAdminUser(
-			"admin@test.local",
-			actor,
-			locals,
-		);
+		const result = await suspendRuntimeAdminUser("admin@test.local", actor, locals);
 		expect(result).toMatchObject({ ok: false });
 	});
 
 	it("returns not-ok for unknown or already-suspended user", async () => {
-		const result = await suspendRuntimeAdminUser(
-			"nobody@test.local",
-			actor,
-			locals,
-		);
+		const result = await suspendRuntimeAdminUser("nobody@test.local", actor, locals);
 		expect(result).toMatchObject({ ok: false });
 	});
 
@@ -257,29 +205,17 @@ describe("suspendRuntimeAdminUser / unsuspendRuntimeAdminUser", () => {
 	});
 
 	it("restores a suspended user", async () => {
-		db.prepare(
-			"UPDATE admin_users SET active = 0 WHERE email = 'editor@test.local'",
-		).run();
-		const result = await unsuspendRuntimeAdminUser(
-			"editor@test.local",
-			actor,
-			locals,
-		);
+		db.prepare("UPDATE admin_users SET active = 0 WHERE email = 'editor@test.local'").run();
+		const result = await unsuspendRuntimeAdminUser("editor@test.local", actor, locals);
 		expect(result).toMatchObject({ ok: true });
 		const row = db
-			.prepare(
-				"SELECT active FROM admin_users WHERE email = 'editor@test.local'",
-			)
+			.prepare("SELECT active FROM admin_users WHERE email = 'editor@test.local'")
 			.get() as { active: number };
 		expect(row.active).toBe(1);
 	});
 
 	it("returns not-ok for already-active user on unsuspend", async () => {
-		const result = await unsuspendRuntimeAdminUser(
-			"editor@test.local",
-			actor,
-			locals,
-		);
+		const result = await unsuspendRuntimeAdminUser("editor@test.local", actor, locals);
 		expect(result).toMatchObject({ ok: false });
 	});
 

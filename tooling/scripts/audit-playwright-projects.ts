@@ -8,12 +8,7 @@
 //   // audit-playwright: local-only
 // on the line above their `{` in the config.
 
-import {
-	AuditReport,
-	fromRoot,
-	readText,
-	runAudit,
-} from "../lib/audit-utils.js";
+import { AuditReport, fromRoot, readText, runAudit } from "../lib/audit-utils.js";
 
 const PLAYWRIGHT_CONFIG = fromRoot("tooling/e2e/playwright.config.ts");
 const PACKAGE_JSON = fromRoot("package.json");

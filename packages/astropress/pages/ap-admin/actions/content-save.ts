@@ -1,6 +1,8 @@
-import { saveRuntimeContentState } from "@astropress-diy/astropress";
-import { withAdminFormAction } from "@astropress-diy/astropress";
-import { sanitizeHtml } from "@astropress-diy/astropress";
+import {
+	sanitizeHtml,
+	saveRuntimeContentState,
+	withAdminFormAction,
+} from "@astropress-diy/astropress";
 import type { APIRoute } from "astro";
 
 export const POST: APIRoute = async (context) =>
@@ -34,13 +36,10 @@ export const POST: APIRoute = async (context) =>
 					ogTitle: String(formData.get("ogTitle") ?? ""),
 					ogDescription: String(formData.get("ogDescription") ?? ""),
 					ogImage: String(formData.get("ogImage") ?? ""),
-					canonicalUrlOverride: String(
-						formData.get("canonicalUrlOverride") ?? "",
-					),
+					canonicalUrlOverride: String(formData.get("canonicalUrlOverride") ?? ""),
 					robotsDirective: String(formData.get("robotsDirective") ?? ""),
 					revisionNote: String(formData.get("revisionNote") ?? ""),
-					lastKnownUpdatedAt:
-						String(formData.get("lastKnownUpdatedAt") ?? "") || undefined,
+					lastKnownUpdatedAt: String(formData.get("lastKnownUpdatedAt") ?? "") || undefined,
 				},
 				actor,
 				locals,
@@ -48,13 +47,10 @@ export const POST: APIRoute = async (context) =>
 
 			if (!result.ok) {
 				if ("conflict" in result && result.conflict) {
-					return new Response(
-						JSON.stringify({ error: result.error, conflict: true }),
-						{
-							status: 409,
-							headers: { "Content-Type": "application/json" },
-						},
-					);
+					return new Response(JSON.stringify({ error: result.error, conflict: true }), {
+						status: 409,
+						headers: { "Content-Type": "application/json" },
+					});
 				}
 				return fail(result.error, `/ap-admin/posts/${slug}`);
 			}

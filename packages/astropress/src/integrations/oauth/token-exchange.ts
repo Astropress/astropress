@@ -62,9 +62,7 @@ function parseTokenResponse(raw: unknown): OAuthTokenSet | null {
 		return null;
 	}
 	const tokenType =
-		typeof r.token_type === "string" && r.token_type.length > 0
-			? r.token_type
-			: "bearer";
+		typeof r.token_type === "string" && r.token_type.length > 0 ? r.token_type : "bearer";
 	// Number.isFinite is strict — only true for actual finite numbers,
 	// so a redundant `typeof === "number"` would just create equivalent
 	// mutants without strengthening the guard.
@@ -74,9 +72,7 @@ function parseTokenResponse(raw: unknown): OAuthTokenSet | null {
 		...(typeof r.refresh_token === "string" && r.refresh_token.length > 0
 			? { refreshToken: r.refresh_token }
 			: {}),
-		...(Number.isFinite(r.expires_in)
-			? { expiresIn: r.expires_in as number }
-			: {}),
+		...(Number.isFinite(r.expires_in) ? { expiresIn: r.expires_in as number } : {}),
 		...(typeof r.scope === "string" ? { scope: r.scope } : {}),
 	};
 	return tokens;

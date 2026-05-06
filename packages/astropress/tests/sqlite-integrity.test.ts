@@ -1,10 +1,4 @@
-import {
-	existsSync,
-	mkdtempSync,
-	readFileSync,
-	rmSync,
-	writeFileSync,
-} from "node:fs";
+import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
@@ -108,9 +102,7 @@ describe("runIntegrityCheck", () => {
 			loadDb: () => Promise.reject("plain-string-failure"),
 		});
 		expect(result.status).toBe("unavailable");
-		expect(result.error).toBe(
-			"SQLite driver unavailable: plain-string-failure",
-		);
+		expect(result.error).toBe("SQLite driver unavailable: plain-string-failure");
 	});
 
 	it("returns unavailable when the constructor throws on open", async () => {
@@ -120,18 +112,12 @@ describe("runIntegrityCheck", () => {
 			NonNullable<Parameters<typeof runIntegrityCheck>[1]>["loadDb"]
 		> extends never
 			? never
-			: Awaited<
-					ReturnType<
-						NonNullable<Parameters<typeof runIntegrityCheck>[1]>["loadDb"]
-					>
-				>;
+			: Awaited<ReturnType<NonNullable<Parameters<typeof runIntegrityCheck>[1]>["loadDb"]>>;
 		const result = await runIntegrityCheck("/some/path.sqlite", {
 			loadDb: async () => fakeCtor,
 		});
 		expect(result.status).toBe("unavailable");
-		expect(result.error).toContain(
-			"Failed to open database at /some/path.sqlite",
-		);
+		expect(result.error).toContain("Failed to open database at /some/path.sqlite");
 		expect(result.error).toContain("open-fail");
 	});
 
@@ -185,9 +171,7 @@ describe("runIntegrityCheckOnOpenDatabase", () => {
 			close: () => undefined,
 		};
 		runIntegrityCheckOnOpenDatabase(
-			fakeDb as unknown as Parameters<
-				typeof runIntegrityCheckOnOpenDatabase
-			>[0],
+			fakeDb as unknown as Parameters<typeof runIntegrityCheckOnOpenDatabase>[0],
 			{ mode: "quick" },
 		);
 		expect(captured).toEqual(["PRAGMA quick_check"]);
@@ -208,9 +192,7 @@ describe("runIntegrityCheckOnOpenDatabase", () => {
 			close: () => undefined,
 		};
 		runIntegrityCheckOnOpenDatabase(
-			fakeDb as unknown as Parameters<
-				typeof runIntegrityCheckOnOpenDatabase
-			>[0],
+			fakeDb as unknown as Parameters<typeof runIntegrityCheckOnOpenDatabase>[0],
 			{ mode: "full" },
 		);
 		expect(captured).toEqual(["PRAGMA integrity_check"]);
@@ -225,9 +207,7 @@ describe("runIntegrityCheckOnOpenDatabase", () => {
 			close: () => undefined,
 		};
 		const result = runIntegrityCheckOnOpenDatabase(
-			fakeDb as unknown as Parameters<
-				typeof runIntegrityCheckOnOpenDatabase
-			>[0],
+			fakeDb as unknown as Parameters<typeof runIntegrityCheckOnOpenDatabase>[0],
 		);
 		expect(result.status).toBe("unavailable");
 		expect(result.messages).toEqual([]);
@@ -243,9 +223,7 @@ describe("runIntegrityCheckOnOpenDatabase", () => {
 			close: () => undefined,
 		};
 		const result = runIntegrityCheckOnOpenDatabase(
-			fakeDb as unknown as Parameters<
-				typeof runIntegrityCheckOnOpenDatabase
-			>[0],
+			fakeDb as unknown as Parameters<typeof runIntegrityCheckOnOpenDatabase>[0],
 		);
 		expect(result.status).toBe("unavailable");
 		expect(result.error).toBe("string-failure");
@@ -265,9 +243,7 @@ describe("runIntegrityCheckOnOpenDatabase", () => {
 			close: () => undefined,
 		};
 		const result = runIntegrityCheckOnOpenDatabase(
-			fakeDb as unknown as Parameters<
-				typeof runIntegrityCheckOnOpenDatabase
-			>[0],
+			fakeDb as unknown as Parameters<typeof runIntegrityCheckOnOpenDatabase>[0],
 		);
 		// "1" is not "ok" → corrupt. Messages should carry the stringified value.
 		expect(result.status).toBe("corrupt");
@@ -285,9 +261,7 @@ describe("runIntegrityCheckOnOpenDatabase", () => {
 			close: () => undefined,
 		};
 		const result = runIntegrityCheckOnOpenDatabase(
-			fakeDb as unknown as Parameters<
-				typeof runIntegrityCheckOnOpenDatabase
-			>[0],
+			fakeDb as unknown as Parameters<typeof runIntegrityCheckOnOpenDatabase>[0],
 		);
 		expect(result.status).toBe("corrupt");
 		expect(result.messages).toEqual(["ok", "ok"]);
@@ -306,9 +280,9 @@ describe("attemptRepair", () => {
 
 		const DbClass = await loadSqliteDatabase();
 		const db = new DbClass(dbPath);
-		const rows = db
-			.prepare("SELECT name FROM widgets ORDER BY id")
-			.all() as Array<{ name: string }>;
+		const rows = db.prepare("SELECT name FROM widgets ORDER BY id").all() as Array<{
+			name: string;
+		}>;
 		expect(rows.map((r) => r.name)).toEqual(["alpha", "beta"]);
 		db.close();
 	});
@@ -318,14 +292,9 @@ describe("attemptRepair", () => {
 		await seedHealthyDb(dbPath);
 		const result = await attemptRepair(dbPath);
 		expect(result.repaired).toBe(true);
-		const preservedMessage = result.messages.find((m) =>
-			m.startsWith("Original preserved at "),
-		);
+		const preservedMessage = result.messages.find((m) => m.startsWith("Original preserved at "));
 		expect(preservedMessage).toBeDefined();
-		const preservedPath = (preservedMessage ?? "").replace(
-			"Original preserved at ",
-			"",
-		);
+		const preservedPath = (preservedMessage ?? "").replace("Original preserved at ", "");
 		expect(existsSync(preservedPath)).toBe(true);
 	});
 
@@ -376,9 +345,7 @@ describe("attemptRepair", () => {
 					prepare: (_sql: string) => ({
 						run: () => ({}),
 						get: () => null,
-						all: () => [
-							{ name: "broken_table", sql: "CREATE TABLE broken_table()" },
-						],
+						all: () => [{ name: "broken_table", sql: "CREATE TABLE broken_table()" }],
 					}),
 					close: () => undefined,
 				};
@@ -394,17 +361,13 @@ describe("attemptRepair", () => {
 				}),
 				close: () => undefined,
 			};
-		} as unknown as Awaited<
-			ReturnType<NonNullable<Parameters<typeof attemptRepair>[1]>["loadDb"]>
-		>;
+		} as unknown as Awaited<ReturnType<NonNullable<Parameters<typeof attemptRepair>[1]>["loadDb"]>>;
 		const dbPath = join(testRoot, "schema-fail.sqlite");
 		const result = await attemptRepair(dbPath, {
 			loadDb: async () => fakeCtor,
 		});
 		expect(
-			result.messages.some((m) =>
-				m.startsWith("Skipped schema statement: schema-broken"),
-			),
+			result.messages.some((m) => m.startsWith("Skipped schema statement: schema-broken")),
 		).toBe(true);
 	});
 
@@ -453,17 +416,13 @@ describe("attemptRepair", () => {
 				},
 				close: () => undefined,
 			};
-		} as unknown as Awaited<
-			ReturnType<NonNullable<Parameters<typeof attemptRepair>[1]>["loadDb"]>
-		>;
+		} as unknown as Awaited<ReturnType<NonNullable<Parameters<typeof attemptRepair>[1]>["loadDb"]>>;
 		const result = await attemptRepair(join(testRoot, "row-fail.sqlite"), {
 			loadDb: async () => fakeCtor,
 		});
-		expect(
-			result.messages.some((m) =>
-				m.startsWith("Row copy failed in t: insert-fail"),
-			),
-		).toBe(true);
+		expect(result.messages.some((m) => m.startsWith("Row copy failed in t: insert-fail"))).toBe(
+			true,
+		);
 	});
 
 	it("logs 'Table T could not be read' when SELECT * throws", async () => {
@@ -502,17 +461,13 @@ describe("attemptRepair", () => {
 				}),
 				close: () => undefined,
 			};
-		} as unknown as Awaited<
-			ReturnType<NonNullable<Parameters<typeof attemptRepair>[1]>["loadDb"]>
-		>;
+		} as unknown as Awaited<ReturnType<NonNullable<Parameters<typeof attemptRepair>[1]>["loadDb"]>>;
 		const result = await attemptRepair(join(testRoot, "table-fail.sqlite"), {
 			loadDb: async () => fakeCtor,
 		});
-		expect(
-			result.messages.some((m) =>
-				m.startsWith("Table t could not be read: read-fail"),
-			),
-		).toBe(true);
+		expect(result.messages.some((m) => m.startsWith("Table t could not be read: read-fail"))).toBe(
+			true,
+		);
 	});
 
 	it("skips empty tables (rows.length===0) without inserting", async () => {
@@ -528,9 +483,7 @@ describe("attemptRepair", () => {
 							return {
 								run: () => ({}),
 								get: () => null,
-								all: () => [
-									{ name: "empty_t", sql: "CREATE TABLE empty_t(id INTEGER)" },
-								],
+								all: () => [{ name: "empty_t", sql: "CREATE TABLE empty_t(id INTEGER)" }],
 							};
 						}
 						return {
@@ -554,9 +507,7 @@ describe("attemptRepair", () => {
 				},
 				close: () => undefined,
 			};
-		} as unknown as Awaited<
-			ReturnType<NonNullable<Parameters<typeof attemptRepair>[1]>["loadDb"]>
-		>;
+		} as unknown as Awaited<ReturnType<NonNullable<Parameters<typeof attemptRepair>[1]>["loadDb"]>>;
 		const result = await attemptRepair(join(testRoot, "empty.sqlite"), {
 			loadDb: async () => fakeCtor,
 		});
@@ -564,11 +515,9 @@ describe("attemptRepair", () => {
 		expect(result.messages).toContain("Copied 0 row(s) to recovery database");
 		// No "could not be read" message — the empty table must be handled by the
 		// explicit length check, not fall through to the outer catch.
-		expect(
-			result.messages.some((m) =>
-				m.startsWith("Table empty_t could not be read"),
-			),
-		).toBe(false);
+		expect(result.messages.some((m) => m.startsWith("Table empty_t could not be read"))).toBe(
+			false,
+		);
 	});
 
 	it("returns failure with messages when recovery DB still fails integrity", async () => {
@@ -596,9 +545,7 @@ describe("attemptRepair", () => {
 				}),
 				close: () => undefined,
 			};
-		} as unknown as Awaited<
-			ReturnType<NonNullable<Parameters<typeof attemptRepair>[1]>["loadDb"]>
-		>;
+		} as unknown as Awaited<ReturnType<NonNullable<Parameters<typeof attemptRepair>[1]>["loadDb"]>>;
 		const dbPath = join(testRoot, "still-broken.sqlite");
 		const result = await attemptRepair(dbPath, {
 			loadDb: async () => fakeCtor,

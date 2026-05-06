@@ -1,13 +1,7 @@
 import type { AstropressPlatformAdapter } from "../platform-contracts";
 import { resolveAstropressProjectEnvContract } from "../project-env";
-import {
-	type AstropressHostedAdapterOptions,
-	createAstropressHostedAdapter,
-} from "./hosted";
-import {
-	type AstropressLocalAdapterOptions,
-	createAstropressLocalAdapter,
-} from "./local";
+import { type AstropressHostedAdapterOptions, createAstropressHostedAdapter } from "./hosted";
+import { type AstropressLocalAdapterOptions, createAstropressLocalAdapter } from "./local";
 
 export type AstropressProjectAdapterMode = "local" | "hosted";
 

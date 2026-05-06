@@ -19,10 +19,7 @@
  */
 
 import { verifyInboundWebhookSignature } from "./inbound.js";
-import {
-	type InboundWebhookProviderDefinition,
-	getInboundWebhookProvider,
-} from "./registry.js";
+import { getInboundWebhookProvider, type InboundWebhookProviderDefinition } from "./registry.js";
 
 export interface InboundWebhookReceiveArgs {
 	readonly providerId: string;
@@ -65,8 +62,6 @@ export async function receiveInboundWebhook(
 	if (!ok) {
 		return { ok: false, code: "RECEIVER_INVALID_SIGNATURE" };
 	}
-	const eventName = provider.eventHeader
-		? args.headers(provider.eventHeader)
-		: null;
+	const eventName = provider.eventHeader ? args.headers(provider.eventHeader) : null;
 	return { ok: true, provider, eventName };
 }

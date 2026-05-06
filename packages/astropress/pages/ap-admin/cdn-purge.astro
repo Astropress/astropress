@@ -21,9 +21,7 @@ const statuses = await withLocalStoreFallback<StatusRow[]>(
 	async (store) => (store.integrations?.listStatuses() ?? []) as StatusRow[],
 );
 const inDomain = statuses.filter((s) => s.domain === "cdn-purge");
-const connectedIds = inDomain
-	.filter((s) => s.status === "connected")
-	.map((s) => s.provider);
+const connectedIds = inDomain.filter((s) => s.status === "connected").map((s) => s.provider);
 const statusByProvider: Record<string, StatusRow["status"]> = {};
 for (const s of inDomain) statusByProvider[s.provider] = s.status;
 ---

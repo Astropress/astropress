@@ -10,11 +10,7 @@ import type {
 } from "./project-env";
 
 export type AstropressProviderOpsComfort = "minimal" | "moderate" | "advanced";
-export type AstropressExistingPlatform =
-	| "none"
-	| "cloudflare"
-	| "supabase"
-	| "appwrite";
+export type AstropressExistingPlatform = "none" | "cloudflare" | "supabase" | "appwrite";
 
 export interface AstropressProviderChoiceInput {
 	existingPlatform?: AstropressExistingPlatform;
@@ -34,9 +30,7 @@ export interface AstropressProviderChoiceRecommendation {
 	publicDeployTarget: AstropressDeployTargetEnv;
 }
 
-function appHostToDeployTarget(
-	appHost: AstropressAppHostEnv,
-): AstropressDeployTargetEnv {
+function appHostToDeployTarget(appHost: AstropressAppHostEnv): AstropressDeployTargetEnv {
 	return appHost === "cloudflare-pages" ? "cloudflare" : appHost;
 }
 
@@ -58,9 +52,7 @@ function finalizeRecommendation(
 		requiredEnvKeys: entry?.requiredEnvKeys ?? [],
 		deployTarget,
 		canonicalProvider:
-			dataServices === "cloudflare" ||
-			dataServices === "supabase" ||
-			dataServices === "appwrite"
+			dataServices === "cloudflare" || dataServices === "supabase" || dataServices === "appwrite"
 				? dataServices
 				: "cloudflare",
 		publicDeployTarget: deployTarget,

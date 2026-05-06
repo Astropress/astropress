@@ -34,7 +34,5 @@ export interface D1DatabaseLike {
 	 * ```
 	 */
 	// audit-boundary: opaque-passthrough -- mirrors Cloudflare D1 SDK row-shape default
-	batch<T = Record<string, unknown>>(
-		statements: D1PreparedStatement[],
-	): Promise<D1Result<T>[]>;
+	batch<T = Record<string, unknown>>(statements: D1PreparedStatement[]): Promise<D1Result<T>[]>;
 }

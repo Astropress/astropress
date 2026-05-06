@@ -4,8 +4,7 @@ type D1Like = import("./d1-database").D1DatabaseLike;
 
 export type ContentStatus = "draft" | "review" | "published" | "archived";
 
-export const SQL_DETECT_CONFLICT =
-	"SELECT updated_at FROM content_overrides WHERE slug = ?";
+export const SQL_DETECT_CONFLICT = "SELECT updated_at FROM content_overrides WHERE slug = ?";
 
 export const INSERT_REVISION_SQL = `INSERT INTO content_revisions (id, slug, title, status, scheduled_at, body, seo_title, meta_description, excerpt, og_title, og_description, og_image, author_ids, category_ids, tag_ids, canonical_url_override, robots_directive, revision_note, source, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'reviewed', ?)`;
 export const UPSERT_CONTENT_OVERRIDE_SQL =
@@ -23,11 +22,7 @@ export function trimOrNull(value: string | undefined | null): string | null {
 }
 
 export function cleanIdList(ids: number[] | undefined): number[] {
-	return [
-		...new Set(
-			(ids ?? []).filter((entry) => Number.isInteger(entry) && entry > 0),
-		),
-	];
+	return [...new Set((ids ?? []).filter((entry) => Number.isInteger(entry) && entry > 0))];
 }
 
 export function normalizeSeoFields(input: {
@@ -53,10 +48,7 @@ export function normalizeScheduledAt(value: string | undefined): string | null {
 	return trimmed ? new Date(value as string).toISOString() : null;
 }
 
-export function normalizeLegacyUrl(
-	legacyUrl: string | undefined,
-	slug: string,
-): string {
+export function normalizeLegacyUrl(legacyUrl: string | undefined, slug: string): string {
 	const raw = legacyUrl?.trim() || `/${slug}`;
 	return raw.startsWith("/") ? raw : `/${raw}`;
 }
@@ -80,15 +72,8 @@ export function nullsToUndefined<T extends Record<string, unknown>>(
 	return result as { [K in keyof T]: Exclude<T[K], null> | undefined };
 }
 
-export async function detectConflict(
-	db: D1Like,
-	slug: string,
-	lastKnownUpdatedAt: string,
-) {
-	const row = await db
-		.prepare(SQL_DETECT_CONFLICT)
-		.bind(slug)
-		.first<{ updated_at: string }>();
+export async function detectConflict(db: D1Like, slug: string, lastKnownUpdatedAt: string) {
+	const row = await db.prepare(SQL_DETECT_CONFLICT).bind(slug).first<{ updated_at: string }>();
 	if (row && row.updated_at !== lastKnownUpdatedAt) {
 		return {
 			ok: false as const,

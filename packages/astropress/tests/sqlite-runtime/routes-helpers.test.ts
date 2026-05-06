@@ -2,6 +2,8 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { registerCms } from "../../src/config";
 import {
+	mapArchiveRow,
+	mapStructuredPageRow,
 	SQL_FIND_ARCHIVE_FOR_UPDATE,
 	SQL_FIND_STRUCTURED_FOR_UPDATE,
 	SQL_FIND_SYSTEM_FOR_UPDATE,
@@ -17,8 +19,6 @@ import {
 	SQL_PERSIST_ARCHIVE,
 	SQL_PERSIST_STRUCTURED,
 	SQL_PERSIST_SYSTEM,
-	mapArchiveRow,
-	mapStructuredPageRow,
 } from "../../src/sqlite-runtime/routes-helpers";
 
 describe("mapArchiveRow", () => {
@@ -95,9 +95,7 @@ beforeEach(() => {
 	} as never);
 });
 afterEach(() => {
-	(globalThis as typeof globalThis & { [CMS_CONFIG_KEY]?: unknown })[
-		CMS_CONFIG_KEY
-	] = null;
+	(globalThis as typeof globalThis & { [CMS_CONFIG_KEY]?: unknown })[CMS_CONFIG_KEY] = null;
 });
 
 describe("mapStructuredPageRow", () => {
@@ -237,7 +235,7 @@ describe("mapStructuredPageRow", () => {
 describe("SQL constants", () => {
 	// These string literals are sent verbatim to D1/SQLite — pin every one to
 	// make StringLiteral mutations to "" or arbitrary text observable.
-	const cases: Array<[string, string, string[]]> = [
+	const cases: [string, string, string[]][] = [
 		[
 			"SQL_LIST_SYSTEM",
 			SQL_LIST_SYSTEM,
@@ -246,59 +244,30 @@ describe("SQL constants", () => {
 		[
 			"SQL_LIST_STRUCTURED",
 			SQL_LIST_STRUCTURED,
-			[
-				"SELECT",
-				"cms_route_variants",
-				"render_strategy = 'structured_sections'",
-				"ORDER BY",
-			],
+			["SELECT", "cms_route_variants", "render_strategy = 'structured_sections'", "ORDER BY"],
 		],
-		[
-			"SQL_GET_ARCHIVE",
-			SQL_GET_ARCHIVE,
-			["SELECT", "kind = 'archive'", "v.path = ?", "LIMIT 1"],
-		],
-		[
-			"SQL_LIST_ARCHIVES",
-			SQL_LIST_ARCHIVES,
-			["SELECT", "kind = 'archive'", "ORDER BY"],
-		],
+		["SQL_GET_ARCHIVE", SQL_GET_ARCHIVE, ["SELECT", "kind = 'archive'", "v.path = ?", "LIMIT 1"]],
+		["SQL_LIST_ARCHIVES", SQL_LIST_ARCHIVES, ["SELECT", "kind = 'archive'", "ORDER BY"]],
 		[
 			"SQL_FIND_SYSTEM_FOR_UPDATE",
 			SQL_FIND_SYSTEM_FOR_UPDATE,
 			["SELECT", "render_strategy", "kind = 'system'", "v.path = ?"],
 		],
 		["SQL_PERSIST_SYSTEM", SQL_PERSIST_SYSTEM, ["UPDATE", "WHERE id = ?"]],
-		[
-			"SQL_INSERT_REVISION",
-			SQL_INSERT_REVISION,
-			["INSERT INTO cms_route_revisions", "VALUES"],
-		],
-		[
-			"SQL_IS_PATH_TAKEN",
-			SQL_IS_PATH_TAKEN,
-			["SELECT", "v.path = ?", "LIMIT 1"],
-		],
+		["SQL_INSERT_REVISION", SQL_INSERT_REVISION, ["INSERT INTO cms_route_revisions", "VALUES"]],
+		["SQL_IS_PATH_TAKEN", SQL_IS_PATH_TAKEN, ["SELECT", "v.path = ?", "LIMIT 1"]],
 		[
 			"SQL_FIND_STRUCTURED_FOR_UPDATE",
 			SQL_FIND_STRUCTURED_FOR_UPDATE,
 			["SELECT", "render_strategy = 'structured_sections'", "v.path = ?"],
 		],
-		[
-			"SQL_INSERT_ROUTE_GROUP",
-			SQL_INSERT_ROUTE_GROUP,
-			["INSERT INTO cms_route_groups", "VALUES"],
-		],
+		["SQL_INSERT_ROUTE_GROUP", SQL_INSERT_ROUTE_GROUP, ["INSERT INTO cms_route_groups", "VALUES"]],
 		[
 			"SQL_INSERT_ROUTE_VARIANT",
 			SQL_INSERT_ROUTE_VARIANT,
 			["INSERT INTO cms_route_variants", "VALUES"],
 		],
-		[
-			"SQL_PERSIST_STRUCTURED",
-			SQL_PERSIST_STRUCTURED,
-			["UPDATE", "WHERE id = ?"],
-		],
+		["SQL_PERSIST_STRUCTURED", SQL_PERSIST_STRUCTURED, ["UPDATE", "WHERE id = ?"]],
 		[
 			"SQL_FIND_ARCHIVE_FOR_UPDATE",
 			SQL_FIND_ARCHIVE_FOR_UPDATE,

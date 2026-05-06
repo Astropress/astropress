@@ -16,10 +16,7 @@ Object.defineProperty(window, "matchMedia", {
 	})),
 });
 
-function makeToggle(
-	labelDark = "Switch to dark mode",
-	labelLight = "Switch to light mode",
-) {
+function makeToggle(labelDark = "Switch to dark mode", labelLight = "Switch to light mode") {
 	const el = document.createElement("ap-theme-toggle") as ApThemeToggle;
 	el.setAttribute("label-dark", labelDark);
 	el.setAttribute("label-light", labelLight);
@@ -148,8 +145,6 @@ describe("ApThemeToggle", () => {
 
 		// After disconnect, clicking the (now detached) button should not change theme
 		// We can only verify no errors are thrown; the handler is removed
-		expect(() =>
-			(el.querySelector("button") as HTMLButtonElement).click(),
-		).not.toThrow();
+		expect(() => (el.querySelector("button") as HTMLButtonElement).click()).not.toThrow();
 	});
 });

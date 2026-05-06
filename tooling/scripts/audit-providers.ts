@@ -1,9 +1,4 @@
-import {
-	AuditReport,
-	fromRoot,
-	readText,
-	runAudit,
-} from "../lib/audit-utils.js";
+import { AuditReport, fromRoot, readText, runAudit } from "../lib/audit-utils.js";
 
 // Verifies that every provider ID in the TypeScript type system has a corresponding
 // entry in tooling/verified-providers.json. This prevents hallucinated providers
@@ -16,10 +11,7 @@ type VerifiedProviders = {
 	dataServices: VerifiedProvider[];
 };
 
-async function extractTypeUnionValues(
-	filePath: string,
-	typeName: string,
-): Promise<string[]> {
+async function extractTypeUnionValues(filePath: string, typeName: string): Promise<string[]> {
 	const src = await readText(filePath);
 	const typeRegex = new RegExp(`export type ${typeName}\\s*=[^;]+;`, "s");
 	const match = src.match(typeRegex);

@@ -22,13 +22,7 @@ export interface AuditEvent {
 	actorEmail: string;
 	actorRole: AdminRole;
 	summary: string;
-	targetType:
-		| "auth"
-		| "content"
-		| "redirect"
-		| "comment"
-		| "testimonial"
-		| "deployment";
+	targetType: "auth" | "content" | "redirect" | "comment" | "testimonial" | "deployment";
 	targetId: string;
 	createdAt: string;
 }
@@ -43,11 +37,7 @@ export interface RecordAuditEventInput {
 	details?: Record<string, unknown> | null;
 }
 
-export type TestimonialStatus =
-	| "pending"
-	| "approved"
-	| "rejected"
-	| "featured";
+export type TestimonialStatus = "pending" | "approved" | "rejected" | "featured";
 export type TestimonialSource = "formbricks" | "typebot";
 
 export interface TestimonialSubmission {

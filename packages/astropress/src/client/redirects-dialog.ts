@@ -1,16 +1,10 @@
 window.addEventListener("DOMContentLoaded", () => {
-	const dialog = document.getElementById(
-		"confirm-dialog",
-	) as HTMLDialogElement | null;
+	const dialog = document.getElementById("confirm-dialog") as HTMLDialogElement | null;
 	const source = document.getElementById("dialog-source");
 	const target = document.getElementById("dialog-target");
-	const form = document.getElementById(
-		"confirm-form",
-	) as HTMLFormElement | null;
+	const form = document.getElementById("confirm-form") as HTMLFormElement | null;
 
-	for (const button of document.querySelectorAll<HTMLElement>(
-		"[data-confirm-delete]",
-	)) {
+	for (const button of document.querySelectorAll<HTMLElement>("[data-confirm-delete]")) {
 		button.addEventListener("click", () => {
 			if (!dialog || !source || !target || !form) {
 				return;
@@ -20,9 +14,7 @@ window.addEventListener("DOMContentLoaded", () => {
 			source.textContent = sourcePath;
 			target.textContent = button.getAttribute("data-target-path") || "";
 
-			const sourcePathField = form.querySelector<HTMLInputElement>(
-				'input[name="sourcePath"]',
-			);
+			const sourcePathField = form.querySelector<HTMLInputElement>('input[name="sourcePath"]');
 			if (sourcePathField) {
 				sourcePathField.value = sourcePath;
 			}

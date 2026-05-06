@@ -1,19 +1,17 @@
-import { getLoginSecurityConfig } from "@astropress-diy/astropress";
 import {
 	authenticateRuntimeAdminUser,
 	createAstropressSecureRedirect,
 	createRuntimeSession,
+	getLoginSecurityConfig,
 	getRuntimeSessionUser,
+	isTrustedRequestOrigin,
+	peekRuntimeRateLimit,
+	recordRuntimeFailedAttempt,
 	recordRuntimeLogout,
 	recordRuntimeSuccessfulLogin,
 	revokeRuntimeSession,
+	verifyTurnstileToken,
 } from "@astropress-diy/astropress";
-import { isTrustedRequestOrigin } from "@astropress-diy/astropress";
-import {
-	peekRuntimeRateLimit,
-	recordRuntimeFailedAttempt,
-} from "@astropress-diy/astropress";
-import { verifyTurnstileToken } from "@astropress-diy/astropress";
 import type { APIRoute, AstroCookies } from "astro";
 
 const LEGACY_SESSION_COOKIE = "ff_admin_session";
@@ -26,8 +24,7 @@ function getSessionCookieName(isSecure: boolean) {
 
 function getSessionToken(cookies: AstroCookies, isSecure: boolean) {
 	return (
-		cookies.get(getSessionCookieName(isSecure))?.value ??
-		cookies.get(LEGACY_SESSION_COOKIE)?.value
+		cookies.get(getSessionCookieName(isSecure))?.value ?? cookies.get(LEGACY_SESSION_COOKIE)?.value
 	);
 }
 
@@ -66,12 +63,7 @@ export const POST: APIRoute = async ({ request, cookies, url, locals }) => {
 
 		// Check rate limit without incrementing — only failed attempts count toward the limit.
 		if (
-			!(await peekRuntimeRateLimit(
-				`login:${email}`,
-				security.maxLoginAttempts,
-				60_000,
-				locals,
-			)) ||
+			!(await peekRuntimeRateLimit(`login:${email}`, security.maxLoginAttempts, 60_000, locals)) ||
 			!(await peekRuntimeRateLimit(
 				`login-ip:${ipAddress}`,
 				security.maxLoginAttempts * 2,
@@ -79,13 +71,9 @@ export const POST: APIRoute = async ({ request, cookies, url, locals }) => {
 				locals,
 			))
 		) {
-			return createAstropressSecureRedirect(
-				"/ap-admin/login?error=1&ratelimited=1",
-				302,
-				{
-					forceHsts: request.url.startsWith("https://"),
-				},
-			);
+			return createAstropressSecureRedirect("/ap-admin/login?error=1&ratelimited=1", 302, {
+				forceHsts: request.url.startsWith("https://"),
+			});
 		}
 
 		const challengeResult = await verifyTurnstileToken({
@@ -96,25 +84,16 @@ export const POST: APIRoute = async ({ request, cookies, url, locals }) => {
 		});
 
 		if (!challengeResult.ok) {
-			return createAstropressSecureRedirect(
-				"/ap-admin/login?error=1&challenge=1",
-				302,
-				{
-					forceHsts: request.url.startsWith("https://"),
-				},
-			);
+			return createAstropressSecureRedirect("/ap-admin/login?error=1&challenge=1", 302, {
+				forceHsts: request.url.startsWith("https://"),
+			});
 		}
 
 		const user = await authenticateRuntimeAdminUser(email, password, locals);
 
 		if (!user) {
 			// Only record a failed attempt — successful logins never consume rate-limit quota.
-			await recordRuntimeFailedAttempt(
-				`login:${email}`,
-				security.maxLoginAttempts,
-				60_000,
-				locals,
-			);
+			await recordRuntimeFailedAttempt(`login:${email}`, security.maxLoginAttempts, 60_000, locals);
 			await recordRuntimeFailedAttempt(
 				`login-ip:${ipAddress}`,
 				security.maxLoginAttempts * 2,
@@ -150,10 +129,9 @@ export const POST: APIRoute = async ({ request, cookies, url, locals }) => {
 			forceHsts: request.url.startsWith("https://"),
 		});
 	} catch {
-		cookies.delete(
-			getSessionCookieName(getLoginSecurityConfig(locals).secureCookies),
-			{ path: "/" },
-		);
+		cookies.delete(getSessionCookieName(getLoginSecurityConfig(locals).secureCookies), {
+			path: "/",
+		});
 		cookies.delete(LEGACY_SESSION_COOKIE, { path: "/" });
 		return createAstropressSecureRedirect("/ap-admin/login?error=1", 302, {
 			forceHsts: request.url.startsWith("https://"),

@@ -16,9 +16,8 @@ vi.mock("../src/runtime-admin-auth", () => ({
 }));
 
 vi.mock("../src/access/index.js", async () => {
-	const actual = await vi.importActual<typeof import("../src/access/index.js")>(
-		"../src/access/index.js",
-	);
+	const actual =
+		await vi.importActual<typeof import("../src/access/index.js")>("../src/access/index.js");
 	return { ...actual, getAccessContext: mocks.getAccessContext };
 });
 
@@ -27,10 +26,7 @@ vi.mock("../src/access/audit-deny.js", () => ({
 }));
 
 vi.mock("../src/runtime-env", async () => {
-	const actual =
-		await vi.importActual<typeof import("../src/runtime-env")>(
-			"../src/runtime-env",
-		);
+	const actual = await vi.importActual<typeof import("../src/runtime-env")>("../src/runtime-env");
 	return {
 		...actual,
 		getRuntimeEnv: mocks.getRuntimeEnv,
@@ -38,10 +34,7 @@ vi.mock("../src/runtime-env", async () => {
 });
 
 vi.mock("../src/runtime-env.js", async () => {
-	const actual =
-		await vi.importActual<typeof import("../src/runtime-env")>(
-			"../src/runtime-env",
-		);
+	const actual = await vi.importActual<typeof import("../src/runtime-env")>("../src/runtime-env");
 	return {
 		...actual,
 		getRuntimeEnv: mocks.getRuntimeEnv,
@@ -97,16 +90,11 @@ describe("admin action utils", () => {
 
 	it("redirects unauthenticated requests to login", async () => {
 		mocks.getRuntimeSessionUser.mockResolvedValue(null);
-		const { requireAdminFormAction } = await import(
-			"@astropress-diy/astropress"
-		);
+		const { requireAdminFormAction } = await import("@astropress-diy/astropress");
 
-		const result = await requireAdminFormAction(
-			makeContext({ _csrf: "csrf-token" }),
-			{
-				failurePath: "/ap-admin/posts",
-			},
-		);
+		const result = await requireAdminFormAction(makeContext({ _csrf: "csrf-token" }), {
+			failurePath: "/ap-admin/posts",
+		});
 
 		expect(result.ok).toBe(false);
 		if (!result.ok) {
@@ -120,37 +108,25 @@ describe("admin action utils", () => {
 			role: "editor",
 			name: "Editor User",
 		});
-		const { requireAdminFormAction } = await import(
-			"@astropress-diy/astropress"
-		);
+		const { requireAdminFormAction } = await import("@astropress-diy/astropress");
 
-		const result = await requireAdminFormAction(
-			makeContext({ _csrf: "csrf-token" }),
-			{
-				failurePath: "/ap-admin/users",
-				requireAdmin: true,
-			},
-		);
+		const result = await requireAdminFormAction(makeContext({ _csrf: "csrf-token" }), {
+			failurePath: "/ap-admin/users",
+			requireAdmin: true,
+		});
 
 		expect(result.ok).toBe(false);
 		if (!result.ok) {
-			expect(result.response.headers.get("Location")).toContain(
-				"/ap-admin/users?error=1",
-			);
+			expect(result.response.headers.get("Location")).toContain("/ap-admin/users?error=1");
 		}
 	});
 
 	it("rejects invalid csrf tokens with a safe redirect", async () => {
-		const { requireAdminFormAction } = await import(
-			"@astropress-diy/astropress"
-		);
+		const { requireAdminFormAction } = await import("@astropress-diy/astropress");
 
-		const result = await requireAdminFormAction(
-			makeContext({ _csrf: "wrong" }),
-			{
-				failurePath: "/ap-admin/posts/new",
-			},
-		);
+		const result = await requireAdminFormAction(makeContext({ _csrf: "wrong" }), {
+			failurePath: "/ap-admin/posts/new",
+		});
 
 		expect(result.ok).toBe(false);
 		if (!result.ok) {
@@ -168,23 +144,16 @@ describe("admin action utils", () => {
 				reason: "policy says no",
 			})),
 		});
-		const { requireAdminFormAction } = await import(
-			"@astropress-diy/astropress"
-		);
+		const { requireAdminFormAction } = await import("@astropress-diy/astropress");
 
-		const result = await requireAdminFormAction(
-			makeContext({ _csrf: "csrf-token" }),
-			{
-				failurePath: "/ap-admin/posts",
-				requireAction: "posts:delete",
-			},
-		);
+		const result = await requireAdminFormAction(makeContext({ _csrf: "csrf-token" }), {
+			failurePath: "/ap-admin/posts",
+			requireAction: "posts:delete",
+		});
 
 		expect(result.ok).toBe(false);
 		if (!result.ok) {
-			expect(result.response.headers.get("Location")).toContain(
-				"message=policy+says+no",
-			);
+			expect(result.response.headers.get("Location")).toContain("message=policy+says+no");
 		}
 		expect(mocks.logAccessDeny).toHaveBeenCalledTimes(1);
 	});
@@ -194,24 +163,17 @@ describe("admin action utils", () => {
 			subject: { email: "editor@example.com" },
 			can: vi.fn(() => ({ decision: "deny", reason: "engine reason" })),
 		});
-		const { requireAdminFormAction } = await import(
-			"@astropress-diy/astropress"
-		);
+		const { requireAdminFormAction } = await import("@astropress-diy/astropress");
 
-		const result = await requireAdminFormAction(
-			makeContext({ _csrf: "csrf-token" }),
-			{
-				failurePath: "/ap-admin/posts",
-				requireAction: "posts:delete",
-				actionDeniedMessage: "Custom denied",
-			},
-		);
+		const result = await requireAdminFormAction(makeContext({ _csrf: "csrf-token" }), {
+			failurePath: "/ap-admin/posts",
+			requireAction: "posts:delete",
+			actionDeniedMessage: "Custom denied",
+		});
 
 		expect(result.ok).toBe(false);
 		if (!result.ok) {
-			expect(result.response.headers.get("Location")).toContain(
-				"message=Custom+denied",
-			);
+			expect(result.response.headers.get("Location")).toContain("message=Custom+denied");
 		}
 	});
 
@@ -220,17 +182,12 @@ describe("admin action utils", () => {
 			subject: { email: "admin@example.com" },
 			can: vi.fn(() => ({ decision: "allow" })),
 		});
-		const { requireAdminFormAction } = await import(
-			"@astropress-diy/astropress"
-		);
+		const { requireAdminFormAction } = await import("@astropress-diy/astropress");
 
-		const result = await requireAdminFormAction(
-			makeContext({ _csrf: "csrf-token" }),
-			{
-				failurePath: "/ap-admin/posts",
-				requireAction: "posts:delete",
-			},
-		);
+		const result = await requireAdminFormAction(makeContext({ _csrf: "csrf-token" }), {
+			failurePath: "/ap-admin/posts",
+			requireAction: "posts:delete",
+		});
 
 		expect(result.ok).toBe(true);
 		expect(mocks.logAccessDeny).not.toHaveBeenCalled();
@@ -238,17 +195,12 @@ describe("admin action utils", () => {
 
 	it("denies a requireAction with the default message when no engine context is available", async () => {
 		mocks.getAccessContext.mockResolvedValue(null);
-		const { requireAdminFormAction } = await import(
-			"@astropress-diy/astropress"
-		);
+		const { requireAdminFormAction } = await import("@astropress-diy/astropress");
 
-		const result = await requireAdminFormAction(
-			makeContext({ _csrf: "csrf-token" }),
-			{
-				failurePath: "/ap-admin/posts",
-				requireAction: "posts:delete",
-			},
-		);
+		const result = await requireAdminFormAction(makeContext({ _csrf: "csrf-token" }), {
+			failurePath: "/ap-admin/posts",
+			requireAction: "posts:delete",
+		});
 
 		expect(result.ok).toBe(false);
 		if (!result.ok) {
@@ -260,9 +212,7 @@ describe("admin action utils", () => {
 	});
 
 	it("rejects cross-origin admin form posts", async () => {
-		const { requireAdminFormAction } = await import(
-			"@astropress-diy/astropress"
-		);
+		const { requireAdminFormAction } = await import("@astropress-diy/astropress");
 
 		const result = await requireAdminFormAction(
 			makeContext({ _csrf: "csrf-token" }, { origin: "https://evil.example" }),
@@ -291,17 +241,12 @@ describe("admin action utils", () => {
 			role: "editor",
 			name: "Editor User",
 		});
-		const { requireAdminFormAction } = await import(
-			"@astropress-diy/astropress"
-		);
+		const { requireAdminFormAction } = await import("@astropress-diy/astropress");
 
-		const result = await requireAdminFormAction(
-			makeContext({ _csrf: "csrf-token" }),
-			{
-				failurePath: "/ap-admin/users",
-				requireAdmin: true,
-			},
-		);
+		const result = await requireAdminFormAction(makeContext({ _csrf: "csrf-token" }), {
+			failurePath: "/ap-admin/users",
+			requireAdmin: true,
+		});
 
 		expect(result.ok).toBe(false);
 		if (!result.ok) {
@@ -312,9 +257,7 @@ describe("admin action utils", () => {
 	});
 
 	it("falls back to the legacy session cookie when the primary cookie is absent", async () => {
-		const { requireAdminFormAction } = await import(
-			"@astropress-diy/astropress"
-		);
+		const { requireAdminFormAction } = await import("@astropress-diy/astropress");
 		const context = makeContext({ _csrf: "csrf-token" });
 		context.cookies.get = vi.fn((name: string) =>
 			name === "ff_admin_session" ? { value: "legacy-token" } : undefined,
@@ -325,22 +268,17 @@ describe("admin action utils", () => {
 		});
 
 		expect(result.ok).toBe(true);
-		expect(mocks.getRuntimeSessionUser).toHaveBeenCalledWith(
-			"legacy-token",
-			expect.anything(),
-		);
+		expect(mocks.getRuntimeSessionUser).toHaveBeenCalledWith("legacy-token", expect.anything());
 	});
 
 	it("uses the loginPath override when provided for unauthenticated requests", async () => {
 		mocks.getRuntimeSessionUser.mockResolvedValue(null);
-		const { requireAdminFormAction } = await import(
-			"@astropress-diy/astropress"
-		);
+		const { requireAdminFormAction } = await import("@astropress-diy/astropress");
 
-		const result = await requireAdminFormAction(
-			makeContext({ _csrf: "csrf-token" }),
-			{ failurePath: "/ap-admin/posts", loginPath: "/custom-login" },
-		);
+		const result = await requireAdminFormAction(makeContext({ _csrf: "csrf-token" }), {
+			failurePath: "/ap-admin/posts",
+			loginPath: "/custom-login",
+		});
 
 		expect(result.ok).toBe(false);
 		if (!result.ok) {
@@ -365,14 +303,10 @@ describe("admin action utils", () => {
 	});
 
 	it("accepts the current non-legacy session cookie name", async () => {
-		const { requireAdminFormAction } = await import(
-			"@astropress-diy/astropress"
-		);
+		const { requireAdminFormAction } = await import("@astropress-diy/astropress");
 		const context = makeContext({ _csrf: "csrf-token" });
 		context.cookies.get = vi.fn((name: string) =>
-			name === "astropress_admin_session"
-				? { value: "session-token" }
-				: undefined,
+			name === "astropress_admin_session" ? { value: "session-token" } : undefined,
 		);
 
 		const result = await requireAdminFormAction(context, {
@@ -388,9 +322,7 @@ describe("admin action utils", () => {
 		mocks.getRuntimeEnv.mockImplementation((name: string) =>
 			name === "PLAYWRIGHT_E2E_MODE" ? "admin-harness" : undefined,
 		);
-		const { requireAdminFormAction } = await import(
-			"@astropress-diy/astropress"
-		);
+		const { requireAdminFormAction } = await import("@astropress-diy/astropress");
 		const context = makeContext({ _csrf: "harness-csrf-token" });
 		context.locals = {
 			adminUser: {
@@ -421,17 +353,13 @@ describe("admin action utils", () => {
 			},
 		);
 
-		expect(response.headers.get("Location")).toBe(
-			"/ap-admin/posts/hello-world?created=1",
-		);
+		expect(response.headers.get("Location")).toBe("/ap-admin/posts/hello-world?created=1");
 	});
 
 	it("builds error redirects with encoded messages", async () => {
 		const { actionErrorRedirect } = await import("@astropress-diy/astropress");
 		const response = actionErrorRedirect("/ap-admin/settings", "Bad input");
-		expect(response.headers.get("Location")).toBe(
-			"/ap-admin/settings?error=1&message=Bad+input",
-		);
+		expect(response.headers.get("Location")).toBe("/ap-admin/settings?error=1&message=Bad+input");
 	});
 
 	it("propagates guard non-ok response when auth check fails inside withAdminFormAction", async () => {
@@ -478,29 +406,22 @@ describe("admin action utils", () => {
 	it("uses secure cookie name when PROD env is set", async () => {
 		process.env.PROD = "true";
 		try {
-			const { requireAdminFormAction } = await import(
-				"@astropress-diy/astropress"
-			);
+			const { requireAdminFormAction } = await import("@astropress-diy/astropress");
 			const context = makeContext({ _csrf: "csrf-token" });
 			context.cookies.get = vi.fn((name: string) =>
-				name === "__Host-astropress_admin_session"
-					? { value: "session-token" }
-					: undefined,
+				name === "__Host-astropress_admin_session" ? { value: "session-token" } : undefined,
 			);
 			const result = await requireAdminFormAction(context, {
 				failurePath: "/ap-admin/posts",
 			});
 			expect(result.ok).toBe(true);
 		} finally {
-			// biome-ignore lint/performance/noDelete: = undefined keeps the key in Bun, causing getRuntimeEnvValue to fall through to import.meta.env.PROD
 			delete process.env.PROD;
 		}
 	});
 
 	it("falls back to legacy cookie when primary session cookie is absent", async () => {
-		const { requireAdminFormAction } = await import(
-			"@astropress-diy/astropress"
-		);
+		const { requireAdminFormAction } = await import("@astropress-diy/astropress");
 		const context = makeContext({ _csrf: "csrf-token" });
 		// Return undefined for the primary cookie names, a value only for the legacy name
 		context.cookies.get = vi.fn((name: string) =>
@@ -515,15 +436,10 @@ describe("admin action utils", () => {
 	it("rejects when csrf token resolves to null and not in harness mode", async () => {
 		mocks.getRuntimeCsrfToken.mockResolvedValue(null);
 		mocks.getRuntimeEnv.mockReturnValue(undefined); // not harness mode
-		const { requireAdminFormAction } = await import(
-			"@astropress-diy/astropress"
-		);
-		const result = await requireAdminFormAction(
-			makeContext({ _csrf: "anything" }),
-			{
-				failurePath: "/ap-admin/posts",
-			},
-		);
+		const { requireAdminFormAction } = await import("@astropress-diy/astropress");
+		const result = await requireAdminFormAction(makeContext({ _csrf: "anything" }), {
+			failurePath: "/ap-admin/posts",
+		});
 		expect(result.ok).toBe(false);
 	});
 
@@ -532,9 +448,7 @@ describe("admin action utils", () => {
 		mocks.getRuntimeEnv.mockImplementation((name: string) =>
 			name === "PLAYWRIGHT_E2E_MODE" ? "admin-harness" : undefined,
 		);
-		const { requireAdminFormAction } = await import(
-			"@astropress-diy/astropress"
-		);
+		const { requireAdminFormAction } = await import("@astropress-diy/astropress");
 		const context = makeContext({ _csrf: "any" });
 		// locals has adminUser but no csrfToken — triggers csrfToken ?? null path
 		context.locals = {
@@ -547,9 +461,7 @@ describe("admin action utils", () => {
 	});
 
 	it("treats a missing _csrf form field as an empty string", async () => {
-		const { requireAdminFormAction } = await import(
-			"@astropress-diy/astropress"
-		);
+		const { requireAdminFormAction } = await import("@astropress-diy/astropress");
 		// Submit form with no _csrf field; empty string won't match "csrf-token"
 		const result = await requireAdminFormAction(makeContext({}), {
 			failurePath: "/ap-admin/posts",
@@ -565,18 +477,13 @@ describe("admin action utils", () => {
 			role: "editor",
 			name: "Editor User",
 		});
-		const { requireAdminFormAction } = await import(
-			"@astropress-diy/astropress"
-		);
+		const { requireAdminFormAction } = await import("@astropress-diy/astropress");
 
-		const result = await requireAdminFormAction(
-			makeContext({ _csrf: "csrf-token" }),
-			{
-				failurePath: "/ap-admin",
-				// @ts-expect-error — deliberately testing the wrong key to prove it doesn't guard
-				requireRole: "admin",
-			},
-		);
+		const result = await requireAdminFormAction(makeContext({ _csrf: "csrf-token" }), {
+			failurePath: "/ap-admin",
+			// @ts-expect-error — deliberately testing the wrong key to prove it doesn't guard
+			requireRole: "admin",
+		});
 
 		// Without requireAdmin: true, an editor session passes the guard — this is the bug.
 		// The fix is in publish.ts (use requireAdmin: true), not here. This test documents the footgun.

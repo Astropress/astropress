@@ -9,8 +9,7 @@ import {
 const token = Astro.url.searchParams.get("token") ?? "";
 const hasError = Astro.url.searchParams.get("error") === "1";
 const errorMessage =
-	Astro.url.searchParams.get("message") ??
-	"That invitation link is invalid or has expired.";
+	Astro.url.searchParams.get("message") ?? "That invitation link is invalid or has expired.";
 const model = await buildAcceptInvitePageModel(Astro.locals, token);
 const { inviteRequest } = model.data;
 const adminLocale = resolveAdminLocale(Astro);

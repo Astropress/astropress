@@ -41,7 +41,7 @@ export async function purgeUserData(
 	locals: App.Locals,
 	options: { deleteAccount?: boolean } = {},
 ): Promise<UserPurgeResult> {
-	if (!email || !email.includes("@")) {
+	if (!email?.includes("@")) {
 		return {
 			ok: false,
 			email,

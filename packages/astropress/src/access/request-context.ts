@@ -20,17 +20,13 @@ import { withLocalStoreFallback } from "../admin-store-dispatch";
 import type { LocalAdminStoreModule } from "../local-runtime-modules";
 import type { AuthUser } from "../platform-contracts";
 import { isAuthUserAdmin } from "../platform-contracts";
-import { loadAccessSnapshotFromD1 } from "./d1-access-store";
 import type { AccessSnapshot } from "./d1-access-store";
+import { loadAccessSnapshotFromD1 } from "./d1-access-store";
+
 export type { AccessSnapshot } from "./d1-access-store";
+
 import { createPolicyEngine } from "./engine";
-import type {
-	Env,
-	EvaluationResult,
-	PolicyEngine,
-	Resource,
-	Subject,
-} from "./types";
+import type { Env, EvaluationResult, PolicyEngine, Resource, Subject } from "./types";
 
 export interface AccessContext {
 	subject: Subject;
@@ -110,12 +106,8 @@ async function loadAccessSnapshot(
 	);
 }
 
-function loadFromLocal(
-	store: LocalAdminStoreModule,
-	adminUser: AuthUser,
-): AccessSnapshot {
-	const surface = (store as unknown as { access?: LocalAccessStoreSurface })
-		.access;
+function loadFromLocal(store: LocalAdminStoreModule, adminUser: AuthUser): AccessSnapshot {
+	const surface = (store as unknown as { access?: LocalAccessStoreSurface }).access;
 	const fromStore = surface?.resolveAccessSnapshotByEmail(adminUser.email);
 	if (fromStore) {
 		const isAdmin = fromStore.isAdmin || isAuthUserAdmin(adminUser);

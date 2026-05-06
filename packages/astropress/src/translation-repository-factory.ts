@@ -1,22 +1,14 @@
 import type { Actor, TranslationRepository } from "./persistence-types";
 import {
-	type TranslationState,
 	normalizeTranslationState,
+	type TranslationState,
 	translationStates,
 } from "./translation-state";
 
 export interface AstropressTranslationRepositoryInput {
 	readTranslationState(route: string): string | null | undefined;
-	persistTranslationState(
-		route: string,
-		state: TranslationState,
-		actor: Actor,
-	): void;
-	recordTranslationAudit(input: {
-		actor: Actor;
-		route: string;
-		state: TranslationState;
-	}): void;
+	persistTranslationState(route: string, state: TranslationState, actor: Actor): void;
+	recordTranslationAudit(input: { actor: Actor; route: string; state: TranslationState }): void;
 }
 
 export function createAstropressTranslationRepository(
@@ -24,10 +16,7 @@ export function createAstropressTranslationRepository(
 ): TranslationRepository {
 	return {
 		updateTranslationState(route, state, actor) {
-			const normalizedState = normalizeTranslationState(
-				state,
-				"__invalid__" as TranslationState,
-			);
+			const normalizedState = normalizeTranslationState(state, "__invalid__" as TranslationState);
 			if (!(translationStates as readonly string[]).includes(normalizedState)) {
 				return {
 					ok: false as const,
@@ -49,14 +38,8 @@ export function createAstropressTranslationRepository(
 			// the caller-supplied fallback through only if provided, otherwise
 			// let normalize use its default to avoid an equivalent default-arg
 			// string literal.
-			const normalized =
-				fallback === undefined
-					? undefined
-					: normalizeTranslationState(fallback);
-			return normalizeTranslationState(
-				input.readTranslationState(route),
-				normalized,
-			);
+			const normalized = fallback === undefined ? undefined : normalizeTranslationState(fallback);
+			return normalizeTranslationState(input.readTranslationState(route), normalized);
 		},
 	};
 }

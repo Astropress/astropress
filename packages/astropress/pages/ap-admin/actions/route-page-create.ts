@@ -1,6 +1,8 @@
-import { withAdminFormAction } from "@astropress-diy/astropress";
-import { createRuntimeStructuredPageRoute } from "@astropress-diy/astropress";
-import { getCmsConfig } from "@astropress-diy/astropress";
+import {
+	createRuntimeStructuredPageRoute,
+	getCmsConfig,
+	withAdminFormAction,
+} from "@astropress-diy/astropress";
 import type { APIRoute } from "astro";
 
 function buildDefaultSections(title: string, summary: string, path: string) {
@@ -11,9 +13,7 @@ function buildDefaultSections(title: string, summary: string, path: string) {
 			body: summary,
 			image: "/images/home/field-learning.jpg",
 			imageAlt: title,
-			cta: [
-				{ label: "Learn more", href: path.startsWith("/es/") ? "/es" : "/en" },
-			],
+			cta: [{ label: "Learn more", href: path.startsWith("/es/") ? "/es" : "/en" }],
 		},
 		body: {
 			heading: title,

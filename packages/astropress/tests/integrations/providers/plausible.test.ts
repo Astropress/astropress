@@ -1,17 +1,14 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
-	PLAUSIBLE_FIELDS,
-	PlausibleVerifyError,
 	buildPlausibleAuthHeader,
 	buildPlausibleSiteUrl,
+	PLAUSIBLE_FIELDS,
+	PlausibleVerifyError,
 	registerPlausible,
 	verifyPlausible,
 } from "../../../src/integrations/providers/plausible";
-import {
-	_resetRegistryForTests,
-	getProvider,
-} from "../../../src/integrations/registry";
+import { _resetRegistryForTests, getProvider } from "../../../src/integrations/registry";
 
 interface CapturedCall {
 	url: string;
@@ -58,21 +55,15 @@ describe("PLAUSIBLE_FIELDS schema", () => {
 	});
 
 	it("rejects a non-URL host", () => {
-		expect(
-			PLAUSIBLE_FIELDS.safeParse({ ...FIELDS, host: "plausible.io" }).success,
-		).toBe(false);
+		expect(PLAUSIBLE_FIELDS.safeParse({ ...FIELDS, host: "plausible.io" }).success).toBe(false);
 	});
 
 	it("rejects an empty siteId", () => {
-		expect(PLAUSIBLE_FIELDS.safeParse({ ...FIELDS, siteId: "" }).success).toBe(
-			false,
-		);
+		expect(PLAUSIBLE_FIELDS.safeParse({ ...FIELDS, siteId: "" }).success).toBe(false);
 	});
 
 	it("rejects an empty apiKey", () => {
-		expect(PLAUSIBLE_FIELDS.safeParse({ ...FIELDS, apiKey: "" }).success).toBe(
-			false,
-		);
+		expect(PLAUSIBLE_FIELDS.safeParse({ ...FIELDS, apiKey: "" }).success).toBe(false);
 	});
 });
 
@@ -86,15 +77,15 @@ describe("buildPlausibleSiteUrl", () => {
 	it("URL-encodes a siteId that contains reserved characters", () => {
 		// `:` and `/` in a siteId would otherwise change the URL path
 		// shape; encodeURIComponent renders them safe.
-		expect(
-			buildPlausibleSiteUrl("https://plausible.io", "team/site:prod"),
-		).toBe("https://plausible.io/api/v1/sites/team%2Fsite%3Aprod");
+		expect(buildPlausibleSiteUrl("https://plausible.io", "team/site:prod")).toBe(
+			"https://plausible.io/api/v1/sites/team%2Fsite%3Aprod",
+		);
 	});
 
 	it("works against a self-hosted host with a trailing slash", () => {
-		expect(
-			buildPlausibleSiteUrl("https://stats.example.com/", "example.com"),
-		).toBe("https://stats.example.com/api/v1/sites/example.com");
+		expect(buildPlausibleSiteUrl("https://stats.example.com/", "example.com")).toBe(
+			"https://stats.example.com/api/v1/sites/example.com",
+		);
 	});
 });
 
@@ -120,9 +111,7 @@ describe("verifyPlausible", () => {
 
 	it("resolves on 200 OK", async () => {
 		const { fetch, calls } = makeFetchMock({ status: 200 });
-		await expect(
-			verifyPlausible(FIELDS, { signal }, { fetch }),
-		).resolves.toBeUndefined();
+		await expect(verifyPlausible(FIELDS, { signal }, { fetch })).resolves.toBeUndefined();
 		expect(calls).toHaveLength(1);
 	});
 
@@ -152,44 +141,44 @@ describe("verifyPlausible", () => {
 
 	it("throws AUTH_REJECTED on 401", async () => {
 		const { fetch } = makeFetchMock({ status: 401 });
-		await expect(
-			verifyPlausible(FIELDS, { signal }, { fetch }),
-		).rejects.toMatchObject({ code: "INTEGRATION_AUTH_REJECTED" });
+		await expect(verifyPlausible(FIELDS, { signal }, { fetch })).rejects.toMatchObject({
+			code: "INTEGRATION_AUTH_REJECTED",
+		});
 	});
 
 	it("throws AUTH_REJECTED on 403 (token-without-site-scope)", async () => {
 		const { fetch } = makeFetchMock({ status: 403 });
-		await expect(
-			verifyPlausible(FIELDS, { signal }, { fetch }),
-		).rejects.toMatchObject({ code: "INTEGRATION_AUTH_REJECTED" });
+		await expect(verifyPlausible(FIELDS, { signal }, { fetch })).rejects.toMatchObject({
+			code: "INTEGRATION_AUTH_REJECTED",
+		});
 	});
 
 	it("throws NOT_FOUND on 404 (distinct from AUTH_REJECTED)", async () => {
 		const { fetch } = makeFetchMock({ status: 404 });
-		await expect(
-			verifyPlausible(FIELDS, { signal }, { fetch }),
-		).rejects.toMatchObject({ code: "INTEGRATION_NOT_FOUND" });
+		await expect(verifyPlausible(FIELDS, { signal }, { fetch })).rejects.toMatchObject({
+			code: "INTEGRATION_NOT_FOUND",
+		});
 	});
 
 	it("throws RATE_LIMITED on 429 (distinct from VERIFY_FAILED)", async () => {
 		const { fetch } = makeFetchMock({ status: 429 });
-		await expect(
-			verifyPlausible(FIELDS, { signal }, { fetch }),
-		).rejects.toMatchObject({ code: "INTEGRATION_RATE_LIMITED" });
+		await expect(verifyPlausible(FIELDS, { signal }, { fetch })).rejects.toMatchObject({
+			code: "INTEGRATION_RATE_LIMITED",
+		});
 	});
 
 	it("throws VERIFY_FAILED on 500", async () => {
 		const { fetch } = makeFetchMock({ status: 500 });
-		await expect(
-			verifyPlausible(FIELDS, { signal }, { fetch }),
-		).rejects.toMatchObject({ code: "INTEGRATION_VERIFY_FAILED" });
+		await expect(verifyPlausible(FIELDS, { signal }, { fetch })).rejects.toMatchObject({
+			code: "INTEGRATION_VERIFY_FAILED",
+		});
 	});
 
 	it("throws VERIFY_FAILED on 400 (4xx that isn't 401/403/404/429)", async () => {
 		const { fetch } = makeFetchMock({ status: 400 });
-		await expect(
-			verifyPlausible(FIELDS, { signal }, { fetch }),
-		).rejects.toMatchObject({ code: "INTEGRATION_VERIFY_FAILED" });
+		await expect(verifyPlausible(FIELDS, { signal }, { fetch })).rejects.toMatchObject({
+			code: "INTEGRATION_VERIFY_FAILED",
+		});
 	});
 
 	it("PlausibleVerifyError subclasses Error and carries the typed code", async () => {
@@ -200,9 +189,7 @@ describe("verifyPlausible", () => {
 		} catch (err) {
 			expect(err).toBeInstanceOf(PlausibleVerifyError);
 			expect(err).toBeInstanceOf(Error);
-			expect((err as PlausibleVerifyError).code).toBe(
-				"INTEGRATION_AUTH_REJECTED",
-			);
+			expect((err as PlausibleVerifyError).code).toBe("INTEGRATION_AUTH_REJECTED");
 		}
 	});
 
@@ -211,9 +198,7 @@ describe("verifyPlausible", () => {
 			.spyOn(globalThis, "fetch")
 			.mockResolvedValue(new Response(null, { status: 200 }));
 		try {
-			await expect(
-				verifyPlausible(FIELDS, { signal }),
-			).resolves.toBeUndefined();
+			await expect(verifyPlausible(FIELDS, { signal })).resolves.toBeUndefined();
 			expect(stub).toHaveBeenCalledTimes(1);
 		} finally {
 			stub.mockRestore();

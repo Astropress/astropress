@@ -44,9 +44,7 @@ describe("comment repository factory", () => {
 			expect(submitted.comment.submittedAt).toBe("2025-01-02T00:00:00.000Z");
 		}
 
-		expect(repository.getApprovedCommentsForRoute("/blog/post")).toHaveLength(
-			1,
-		);
+		expect(repository.getApprovedCommentsForRoute("/blog/post")).toHaveLength(1);
 		expect(recordCommentAudit).toHaveBeenCalledWith(
 			expect.objectContaining({
 				action: "comment.moderate",

@@ -1,20 +1,15 @@
 import { expect, test } from "@playwright/test";
 
-import {
-	expectKeyboardFocusMoves,
-	expectNoAxeViolations,
-} from "./helpers/accessibility";
+import { expectKeyboardFocusMoves, expectNoAxeViolations } from "./helpers/accessibility";
 
 const routes = [
 	{
 		path: "/",
-		heading:
-			"A real admin for simple sites, without inheriting all of WordPress.",
+		heading: "A real admin for simple sites, without inheriting all of WordPress.",
 	},
 	{
 		path: "/docs",
-		heading:
-			"Start with the local path that Astropress validates most heavily.",
+		heading: "Start with the local path that Astropress validates most heavily.",
 	},
 	{
 		path: "/providers",
@@ -22,13 +17,11 @@ const routes = [
 	},
 	{
 		path: "/wordpress",
-		heading:
-			"WordPress migration is supported as a staged workflow, not a fake one-click promise.",
+		heading: "WordPress migration is supported as a staged workflow, not a fake one-click promise.",
 	},
 	{
 		path: "/operations",
-		heading:
-			"Use doctor, backup, and restore as first-class operational workflows.",
+		heading: "Use doctor, backup, and restore as first-class operational workflows.",
 	},
 	{
 		path: "/admin",
@@ -38,13 +31,9 @@ const routes = [
 
 test.describe("Feature: representative public accessibility coverage", () => {
 	for (const route of routes) {
-		test(`Scenario: ${route.path} is keyboard reachable and axe clean`, async ({
-			page,
-		}) => {
+		test(`Scenario: ${route.path} is keyboard reachable and axe clean`, async ({ page }) => {
 			await page.goto(route.path, { waitUntil: "networkidle" });
-			await expect(
-				page.getByRole("heading", { level: 1, name: route.heading }),
-			).toBeVisible();
+			await expect(page.getByRole("heading", { level: 1, name: route.heading })).toBeVisible();
 			await expectKeyboardFocusMoves(page);
 			await expectNoAxeViolations(page);
 		});

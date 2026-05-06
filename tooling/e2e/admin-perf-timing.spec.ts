@@ -18,9 +18,7 @@ import { expect, test } from "@playwright/test";
 // because timing measurements can hiccup under CPU contention.
 
 test.describe("Rubric 52: loading indicator appears ≤ 100ms", () => {
-	test("Scenario: redirect Save button flips aria-busy within 100ms of click", async ({
-		page,
-	}) => {
+	test("Scenario: redirect Save button flips aria-busy within 100ms of click", async ({ page }) => {
 		await page.goto("/ap-admin/redirects", { waitUntil: "domcontentloaded" });
 		await page.waitForFunction(() => !!customElements.get("ap-pending-form"));
 
@@ -59,15 +57,10 @@ test.describe("Rubric 52: loading indicator appears ≤ 100ms", () => {
 			});
 		});
 
-		expect(
-			latency,
-			`aria-busy appeared ${latency.toFixed(1)}ms after click`,
-		).toBeLessThan(100);
+		expect(latency, `aria-busy appeared ${latency.toFixed(1)}ms after click`).toBeLessThan(100);
 	});
 
-	test("Scenario: data-pending flips on the host element synchronously too", async ({
-		page,
-	}) => {
+	test("Scenario: data-pending flips on the host element synchronously too", async ({ page }) => {
 		await page.goto("/ap-admin/redirects", { waitUntil: "domcontentloaded" });
 		await page.waitForFunction(() => !!customElements.get("ap-pending-form"));
 
@@ -76,9 +69,7 @@ test.describe("Rubric 52: loading indicator appears ≤ 100ms", () => {
 
 		const pendingSeen = await page.evaluate(async () => {
 			const host = document.querySelector("ap-pending-form");
-			const button = host?.querySelector(
-				'button[type="submit"]',
-			) as HTMLButtonElement | null;
+			const button = host?.querySelector('button[type="submit"]') as HTMLButtonElement | null;
 			if (!host || !button) return false;
 			button.click();
 			// Read the attribute in the micro-task right after click returns.
@@ -90,12 +81,7 @@ test.describe("Rubric 52: loading indicator appears ≤ 100ms", () => {
 });
 
 test.describe("Rubric 52: CLS stays low on admin navigation", () => {
-	const ADMIN_ROUTES = [
-		"/ap-admin",
-		"/ap-admin/posts",
-		"/ap-admin/media",
-		"/ap-admin/redirects",
-	];
+	const ADMIN_ROUTES = ["/ap-admin", "/ap-admin/posts", "/ap-admin/media", "/ap-admin/redirects"];
 
 	// Relaxed initial threshold per issue #57 ("Use relaxed upper bounds first
 	// (≤200ms, CLS<0.25) and tighten once CI noise is characterized."). Treat
@@ -104,9 +90,7 @@ test.describe("Rubric 52: CLS stays low on admin navigation", () => {
 	const CLS_MAX = 0.25;
 
 	for (const route of ADMIN_ROUTES) {
-		test(`Scenario: CLS on ${route} stays below ${CLS_MAX}`, async ({
-			page,
-		}) => {
+		test(`Scenario: CLS on ${route} stays below ${CLS_MAX}`, async ({ page }) => {
 			await page.addInitScript(() => {
 				(globalThis as unknown as { __clsValue: number }).__clsValue = 0;
 				const po = new PerformanceObserver((list) => {
@@ -116,8 +100,7 @@ test.describe("Rubric 52: CLS stays low on admin navigation", () => {
 							hadRecentInput?: boolean;
 						};
 						if (!ls.hadRecentInput) {
-							(globalThis as unknown as { __clsValue: number }).__clsValue +=
-								ls.value;
+							(globalThis as unknown as { __clsValue: number }).__clsValue += ls.value;
 						}
 					}
 				});

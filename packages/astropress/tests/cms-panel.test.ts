@@ -7,9 +7,7 @@ import {
 } from "@astropress-diy/astropress";
 import { describe, expect, it } from "vitest";
 
-function createTestAdapter(
-	hostPanel?: AstropressHostPanelCapability,
-): AstropressPlatformAdapter {
+function createTestAdapter(hostPanel?: AstropressHostPanelCapability): AstropressPlatformAdapter {
 	return assertProviderContract({
 		capabilities: normalizeProviderCapabilities({
 			name: "test",
@@ -134,9 +132,7 @@ describe("AstropressHostPanelCapability", () => {
 		expect(adapter.capabilities.hostPanel).toBeDefined();
 		expect(adapter.capabilities.hostPanel?.label).toBe("Supabase Studio");
 		expect(adapter.capabilities.hostPanel?.mode).toBe("link");
-		expect(adapter.capabilities.hostPanel?.url).toBe(
-			"https://app.supabase.com/project/abc",
-		);
+		expect(adapter.capabilities.hostPanel?.url).toBe("https://app.supabase.com/project/abc");
 	});
 
 	it("adapter without hostPanel has undefined hostPanel", () => {
@@ -220,9 +216,7 @@ describe("deployHook capability", () => {
 		});
 
 		expect(caps.deployHook?.type).toBe("cloudflare-pages");
-		expect(caps.deployHook?.configuredViaEnv).toContain(
-			"CF_PAGES_DEPLOY_HOOK_URL",
-		);
+		expect(caps.deployHook?.configuredViaEnv).toContain("CF_PAGES_DEPLOY_HOOK_URL");
 	});
 
 	it("deployHook is optional — undefined when not declared", () => {

@@ -1,11 +1,5 @@
 import { join } from "node:path";
-import {
-	AuditReport,
-	fromRoot,
-	listFiles,
-	readText,
-	runAudit,
-} from "../lib/audit-utils.js";
+import { AuditReport, fromRoot, listFiles, readText, runAudit } from "../lib/audit-utils.js";
 
 const VITEST_CONFIG_PATH = fromRoot("packages/astropress/vitest.config.ts");
 const JOURNEY_MANIFEST_PATH = fromRoot("tooling/critical-journeys.json");
@@ -52,9 +46,7 @@ async function collectPlaywrightRoutes(): Promise<Set<string>> {
 	for (const entry of entries) {
 		if (!entry.endsWith(".spec.ts")) continue;
 		const source = await readText(join(E2E_DIR, entry));
-		for (const match of source.matchAll(
-			/page\.goto\s*\(\s*["'`](\/ap-admin[^"'`?]*)/g,
-		)) {
+		for (const match of source.matchAll(/page\.goto\s*\(\s*["'`](\/ap-admin[^"'`?]*)/g)) {
 			routes.add(match[1]);
 		}
 		for (const match of source.matchAll(/path:\s*["'](\/ap-admin[^"'?]*)/g)) {
@@ -93,18 +85,10 @@ async function collectMatchingTestBasenames(): Promise<Set<string>> {
 async function main() {
 	const report = new AuditReport("coverage-scope");
 	const vitestConfig = await readText(VITEST_CONFIG_PATH);
-	const coverageIncludes = new Set(
-		extractQuotedEntries(vitestConfig, "include"),
-	);
-	const journeyManifest = JSON.parse(
-		await readText(JOURNEY_MANIFEST_PATH),
-	) as JourneyManifest;
-	const exemptions = JSON.parse(
-		await readText(EXEMPTIONS_PATH),
-	) as ExemptionManifest;
-	const journeyCoveredFiles = new Set(
-		journeyManifest.journeys.flatMap((journey) => journey.files),
-	);
+	const coverageIncludes = new Set(extractQuotedEntries(vitestConfig, "include"));
+	const journeyManifest = JSON.parse(await readText(JOURNEY_MANIFEST_PATH)) as JourneyManifest;
+	const exemptions = JSON.parse(await readText(EXEMPTIONS_PATH)) as ExemptionManifest;
+	const journeyCoveredFiles = new Set(journeyManifest.journeys.flatMap((journey) => journey.files));
 	const playwrightRoutes = await collectPlaywrightRoutes();
 	const smokeRoutes = await collectSmokeRoutes();
 	const matchingTestBasenames = await collectMatchingTestBasenames();
@@ -125,16 +109,12 @@ async function main() {
 		extensions: [".astro"],
 	});
 	for (const entry of adminAstroFiles) {
-		candidateFiles.add(
-			`packages/astropress/pages/ap-admin/${entry.replace(/\\/g, "/")}`,
-		);
+		candidateFiles.add(`packages/astropress/pages/ap-admin/${entry.replace(/\\/g, "/")}`);
 	}
 
 	for (const [file, reason] of Object.entries(exemptions.exemptions)) {
 		if (!reason.trim()) {
-			report.add(
-				`${EXEMPTIONS_PATH}: exemption for ${file} is missing a reason.`,
-			);
+			report.add(`${EXEMPTIONS_PATH}: exemption for ${file} is missing a reason.`);
 		}
 		if (!candidateFiles.has(file)) {
 			report.add(
@@ -145,15 +125,13 @@ async function main() {
 
 	for (const file of [...candidateFiles].sort()) {
 		if (exemptions.exemptions[file]) continue;
-		if (coverageIncludes.has(file.replace("packages/astropress/", "")))
-			continue;
+		if (coverageIncludes.has(file.replace("packages/astropress/", ""))) continue;
 		if (journeyCoveredFiles.has(file)) continue;
 
 		if (file.endsWith(".astro")) {
 			const relPath = file.replace("packages/astropress/pages/ap-admin/", "");
 			const route = astroFileToRoute(relPath);
-			if (route && (playwrightRoutes.has(route) || smokeRoutes.has(route)))
-				continue;
+			if (route && (playwrightRoutes.has(route) || smokeRoutes.has(route))) continue;
 		}
 
 		const baseName =

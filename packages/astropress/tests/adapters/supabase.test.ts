@@ -11,9 +11,7 @@ describe("createAstropressSupabaseAdapter", () => {
 	});
 
 	it("throws when called with empty options object", () => {
-		expect(() => createAstropressSupabaseAdapter({})).toThrowError(
-			/requires backingAdapter/,
-		);
+		expect(() => createAstropressSupabaseAdapter({})).toThrowError(/requires backingAdapter/);
 	});
 
 	it("accepts a backingAdapter", () => {

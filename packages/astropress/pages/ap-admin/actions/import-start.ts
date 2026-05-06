@@ -1,8 +1,8 @@
 import { requireAdminFormAction } from "@astropress-diy/astropress";
 import type { APIRoute } from "astro";
 import { crawlSitePages } from "../../../src/import/page-crawler.js";
-import { applyWixImportToLocalRuntime } from "../../../src/import/wix-apply.js";
 import { parseWixExport } from "../../../src/import/wix.js";
+import { applyWixImportToLocalRuntime } from "../../../src/import/wix-apply.js";
 import { applyImportToLocalRuntime } from "../../../src/import/wordpress-apply.js";
 import { parseWordPressExport } from "../../../src/import/wordpress-xml.js";
 import { createLogger } from "../../../src/runtime-logger.js";
@@ -25,8 +25,7 @@ export const POST: APIRoute = async (context) => {
 
 	const { formData } = guard;
 	const source = String(formData.get("source") ?? "").trim();
-	const dryRun =
-		formData.get("dryRun") === "true" || formData.get("dryRun") === "1";
+	const dryRun = formData.get("dryRun") === "true" || formData.get("dryRun") === "1";
 	const applyLocal = !dryRun;
 	const workspaceRoot = process.cwd();
 
@@ -34,10 +33,7 @@ export const POST: APIRoute = async (context) => {
 		if (source === "wordpress") {
 			const file = formData.get("file");
 			if (!(file instanceof File) || file.size === 0) {
-				return jsonResponse(
-					{ ok: false, error: "A WordPress XML export file is required." },
-					400,
-				);
+				return jsonResponse({ ok: false, error: "A WordPress XML export file is required." }, 400);
 			}
 			const xmlText = await file.text();
 			const bundle = parseWordPressExport(xmlText);
@@ -76,9 +72,7 @@ export const POST: APIRoute = async (context) => {
 					comments: bundle.comments.length,
 					authors: bundle.authors.length,
 				},
-				applied: applyLocal
-					? { records: appliedRecords, media: appliedMedia }
-					: null,
+				applied: applyLocal ? { records: appliedRecords, media: appliedMedia } : null,
 				warnings: bundle.warnings,
 				manualTasks:
 					bundle.remediationCandidates.length > 0
@@ -92,10 +86,7 @@ export const POST: APIRoute = async (context) => {
 		if (source === "wix") {
 			const file = formData.get("file");
 			if (!(file instanceof File) || file.size === 0) {
-				return jsonResponse(
-					{ ok: false, error: "A Wix CSV export file is required." },
-					400,
-				);
+				return jsonResponse({ ok: false, error: "A Wix CSV export file is required." }, 400);
 			}
 			const csvText = await file.text();
 			const bundle = parseWixExport(csvText);
@@ -120,9 +111,7 @@ export const POST: APIRoute = async (context) => {
 					media: bundle.mediaAssets.length,
 					authors: bundle.authors.length,
 				},
-				applied: applyLocal
-					? { records: appliedRecords, media: appliedMedia }
-					: null,
+				applied: applyLocal ? { records: appliedRecords, media: appliedMedia } : null,
 				warnings: bundle.warnings,
 				manualTasks: [],
 			});
@@ -130,16 +119,10 @@ export const POST: APIRoute = async (context) => {
 
 		if (source === "crawl") {
 			const startUrl = String(formData.get("url") ?? "").trim();
-			const maxPages = Math.min(
-				Number(formData.get("maxPages") ?? "100"),
-				10000,
-			);
+			const maxPages = Math.min(Number(formData.get("maxPages") ?? "100"), 10000);
 
 			if (!startUrl) {
-				return jsonResponse(
-					{ ok: false, error: "A start URL is required for web crawl." },
-					400,
-				);
+				return jsonResponse({ ok: false, error: "A start URL is required for web crawl." }, 400);
 			}
 
 			const result = await crawlSitePages({ siteUrl: startUrl, maxPages });
@@ -156,20 +139,14 @@ export const POST: APIRoute = async (context) => {
 						? [
 								"Crawl complete. Run `astropress import crawl --url <site> --apply-local` to save content to the database.",
 							]
-						: [
-								"No pages were crawled. Check that the site is publicly accessible.",
-							],
+						: ["No pages were crawled. Check that the site is publicly accessible."],
 				failedUrls: result.failed.length,
 			});
 		}
 
-		return jsonResponse(
-			{ ok: false, error: `Unknown import source: ${source}` },
-			400,
-		);
+		return jsonResponse({ ok: false, error: `Unknown import source: ${source}` }, 400);
 	} catch (err) {
-		const message =
-			err instanceof Error ? err.message : "Import failed unexpectedly.";
+		const message = err instanceof Error ? err.message : "Import failed unexpectedly.";
 		logger.error("import-start failed", { source, message });
 		return jsonResponse({ ok: false, error: message }, 500);
 	}

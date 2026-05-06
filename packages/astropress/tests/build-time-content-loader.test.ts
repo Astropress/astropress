@@ -1,8 +1,8 @@
 import {
 	type AstropressPlatformAdapter,
+	assertProviderContract,
 	type ContentListOptions,
 	type ContentStoreRecord,
-	assertProviderContract,
 	normalizeProviderCapabilities,
 } from "@astropress-diy/astropress";
 import { describe, expect, it } from "vitest";
@@ -21,9 +21,7 @@ function makeTestRecord(
 	};
 }
 
-function createFilteringAdapter(
-	records: ContentStoreRecord[],
-): AstropressPlatformAdapter {
+function createFilteringAdapter(records: ContentStoreRecord[]): AstropressPlatformAdapter {
 	return assertProviderContract({
 		capabilities: normalizeProviderCapabilities({ name: "test-filtering" }),
 		content: {
@@ -39,9 +37,7 @@ function createFilteringAdapter(
 				}
 
 				if (options?.locale) {
-					results = results.filter(
-						(r) => !r.locale || r.locale === options.locale,
-					);
+					results = results.filter((r) => !r.locale || r.locale === options.locale);
 				}
 
 				if (options?.offset) {

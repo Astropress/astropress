@@ -54,12 +54,11 @@ export interface RuntimeBindings {
 
 type StringRuntimeKey = Exclude<keyof RuntimeBindings, "DB" | "MEDIA_BUCKET">;
 
-const LEGACY_RUNTIME_KEY_ALIASES: Partial<Record<StringRuntimeKey, string[]>> =
-	{
-		SESSION_SECRET: ["ASTROPRESS_SESSION_SECRET"],
-		ADMIN_PASSWORD: ["ASTROPRESS_ADMIN_PASSWORD"],
-		EDITOR_PASSWORD: ["ASTROPRESS_EDITOR_PASSWORD"],
-	};
+const LEGACY_RUNTIME_KEY_ALIASES: Partial<Record<StringRuntimeKey, string[]>> = {
+	SESSION_SECRET: ["ASTROPRESS_SESSION_SECRET"],
+	ADMIN_PASSWORD: ["ASTROPRESS_ADMIN_PASSWORD"],
+	EDITOR_PASSWORD: ["ASTROPRESS_EDITOR_PASSWORD"],
+};
 
 function importMetaEnv(): Record<string, string | undefined> {
 	return (
@@ -101,9 +100,7 @@ export function isProductionRuntime() {
 	return value === true || value === "true" || value === "1";
 }
 
-export function getCloudflareBindings(
-	locals?: App.Locals | null,
-): RuntimeBindings {
+export function getCloudflareBindings(locals?: App.Locals | null): RuntimeBindings {
 	if (locals?.runtime && typeof locals.runtime === "object") {
 		try {
 			const runtimeEnv = (locals.runtime as { env?: RuntimeBindings }).env;
@@ -125,10 +122,7 @@ export function getCloudflareBindings(
 	return (globalBindings ?? {}) as RuntimeBindings;
 }
 
-export function getStringRuntimeValue(
-	name: StringRuntimeKey,
-	locals?: App.Locals | null,
-) {
+export function getStringRuntimeValue(name: StringRuntimeKey, locals?: App.Locals | null) {
 	const bindings = getCloudflareBindings(locals);
 	const value = bindings[name] ?? getRuntimeEnv(name);
 	if (value != null) {
@@ -169,33 +163,19 @@ export function getTransactionalEmailConfig(locals?: App.Locals | null) {
 		smtpUsername: getStringRuntimeValue("SMTP_USERNAME", locals),
 		smtpPassword: getStringRuntimeValue("SMTP_PASSWORD", locals),
 		smtpFrom: getStringRuntimeValue("SMTP_FROM_EMAIL", locals),
-		contactDestination: getStringRuntimeValue(
-			"CONTACT_NOTIFICATION_TO_EMAIL",
-			locals,
-		),
+		contactDestination: getStringRuntimeValue("CONTACT_NOTIFICATION_TO_EMAIL", locals),
 	};
 }
 
 export function getAstropressRootSecret(locals?: App.Locals | null) {
-	return (
-		getAstropressRootSecretCandidates(locals)[0] ?? "astropress-dev-root-secret"
-	);
+	return getAstropressRootSecretCandidates(locals)[0] ?? "astropress-dev-root-secret";
 }
 
 export function getAstropressRootSecretCandidates(locals?: App.Locals | null) {
-	const currentRootSecret = getStringRuntimeValue(
-		"ASTROPRESS_ROOT_SECRET",
-		locals,
-	);
+	const currentRootSecret = getStringRuntimeValue("ASTROPRESS_ROOT_SECRET", locals);
 	const currentSessionSecret = getStringRuntimeValue("SESSION_SECRET", locals);
-	const previousRootSecret = getStringRuntimeValue(
-		"ASTROPRESS_ROOT_SECRET_PREV",
-		locals,
-	);
-	const previousSessionSecret = getStringRuntimeValue(
-		"SESSION_SECRET_PREV",
-		locals,
-	);
+	const previousRootSecret = getStringRuntimeValue("ASTROPRESS_ROOT_SECRET_PREV", locals);
+	const previousSessionSecret = getStringRuntimeValue("SESSION_SECRET_PREV", locals);
 
 	return getUniqueConfiguredValues(
 		currentRootSecret ?? currentSessionSecret,
@@ -204,9 +184,7 @@ export function getAstropressRootSecretCandidates(locals?: App.Locals | null) {
 }
 
 export function getAdminBootstrapConfig(locals?: App.Locals | null) {
-	const isPlaywright = Boolean(
-		getRuntimeEnv("PLAYWRIGHT_E2E_MODE") ?? getRuntimeEnv("PLAYWRIGHT"),
-	);
+	const isPlaywright = Boolean(getRuntimeEnv("PLAYWRIGHT_E2E_MODE") ?? getRuntimeEnv("PLAYWRIGHT"));
 	const adminPassword =
 		getStringRuntimeValue("ADMIN_PASSWORD", locals) ??
 		(isPlaywright ? "ap-e2e-admin-password" : undefined);
@@ -217,8 +195,7 @@ export function getAdminBootstrapConfig(locals?: App.Locals | null) {
 	return {
 		adminPassword,
 		editorPassword,
-		bootstrapDisabled:
-			getStringRuntimeValue("ADMIN_BOOTSTRAP_DISABLED", locals) === "1",
+		bootstrapDisabled: getStringRuntimeValue("ADMIN_BOOTSTRAP_DISABLED", locals) === "1",
 		adminDbPath: getStringRuntimeValue("ADMIN_DB_PATH", locals),
 		rootSecret: rootSecretCandidates[0] ?? "astropress-dev-root-secret",
 		rootSecretPrevious: rootSecretCandidates[1],
@@ -228,9 +205,7 @@ export function getAdminBootstrapConfig(locals?: App.Locals | null) {
 }
 
 export function getLoginSecurityConfig(locals?: App.Locals | null) {
-	const configuredMaxAttempts = Number(
-		getStringRuntimeValue("LOGIN_MAX_ATTEMPTS", locals),
-	);
+	const configuredMaxAttempts = Number(getStringRuntimeValue("LOGIN_MAX_ATTEMPTS", locals));
 	const runningPlaywright = Boolean(getRuntimeEnv("PLAYWRIGHT_E2E_MODE"));
 	const maxLoginAttempts =
 		Number.isFinite(configuredMaxAttempts) && configuredMaxAttempts > 0
@@ -242,10 +217,7 @@ export function getLoginSecurityConfig(locals?: App.Locals | null) {
 	return {
 		maxLoginAttempts,
 		secureCookies: isProductionRuntime(),
-		turnstileSiteKey: getStringRuntimeValue(
-			"PUBLIC_TURNSTILE_SITE_KEY",
-			locals,
-		),
+		turnstileSiteKey: getStringRuntimeValue("PUBLIC_TURNSTILE_SITE_KEY", locals),
 		turnstileSecretKey: getStringRuntimeValue("TURNSTILE_SECRET_KEY", locals),
 	};
 }

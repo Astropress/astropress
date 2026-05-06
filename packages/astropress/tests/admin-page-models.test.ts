@@ -140,10 +140,9 @@ describe("buildAdminDashboardPageModel", () => {
 	});
 
 	it("returns partial with warnings when a query fails", async () => {
-		vi.spyOn(
-			runtimePageStore,
-			"listRuntimeContentStates",
-		).mockRejectedValueOnce(new Error("DB error"));
+		vi.spyOn(runtimePageStore, "listRuntimeContentStates").mockRejectedValueOnce(
+			new Error("DB error"),
+		);
 		const result = await buildAdminDashboardPageModel(locals, adminRole);
 		expect(["ok", "partial"]).toContain(result.status);
 	});
@@ -167,9 +166,7 @@ describe("buildAuthorsPageModel", () => {
 	});
 
 	it("returns partial when authors query fails", async () => {
-		vi.spyOn(runtimePageStore, "getRuntimeAuthors").mockRejectedValueOnce(
-			new Error("fail"),
-		);
+		vi.spyOn(runtimePageStore, "getRuntimeAuthors").mockRejectedValueOnce(new Error("fail"));
 		const result = await buildAuthorsPageModel(locals, adminRole);
 		expect(result.status).toBe("partial");
 		expect(result.warnings.length).toBeGreaterThan(0);
@@ -194,9 +191,7 @@ describe("buildTaxonomiesPageModel", () => {
 	});
 
 	it("returns partial when categories fail", async () => {
-		vi.spyOn(runtimePageStore, "getRuntimeCategories").mockRejectedValueOnce(
-			new Error("fail"),
-		);
+		vi.spyOn(runtimePageStore, "getRuntimeCategories").mockRejectedValueOnce(new Error("fail"));
 		const result = await buildTaxonomiesPageModel(locals, adminRole);
 		expect(result.status).toBe("partial");
 	});
@@ -219,9 +214,7 @@ describe("buildUsersPageModel", () => {
 	});
 
 	it("returns partial when users query fails", async () => {
-		vi.spyOn(runtimePageStore, "getRuntimeAdminUsers").mockRejectedValueOnce(
-			new Error("fail"),
-		);
+		vi.spyOn(runtimePageStore, "getRuntimeAdminUsers").mockRejectedValueOnce(new Error("fail"));
 		const result = await buildUsersPageModel(locals, adminRole);
 		expect(result.status).toBe("partial");
 	});
@@ -239,9 +232,7 @@ describe("buildCommentsPageModel", () => {
 	});
 
 	it("returns partial when comments query fails", async () => {
-		vi.spyOn(runtimePageStore, "getRuntimeComments").mockRejectedValueOnce(
-			new Error("fail"),
-		);
+		vi.spyOn(runtimePageStore, "getRuntimeComments").mockRejectedValueOnce(new Error("fail"));
 		const result = await buildCommentsPageModel(locals);
 		expect(result.status).toBe("partial");
 	});
@@ -261,9 +252,7 @@ describe("buildTestimonialsPageModel", () => {
 	});
 
 	it("returns partial when testimonials query fails", async () => {
-		vi.spyOn(runtimePageStore, "getRuntimeTestimonials").mockRejectedValueOnce(
-			new Error("fail"),
-		);
+		vi.spyOn(runtimePageStore, "getRuntimeTestimonials").mockRejectedValueOnce(new Error("fail"));
 		const result = await buildTestimonialsPageModel(locals);
 		expect(result.status).toBe("partial");
 	});
@@ -281,9 +270,7 @@ describe("buildMediaPageModel", () => {
 	});
 
 	it("returns partial when media query fails", async () => {
-		vi.spyOn(runtimePageStore, "getRuntimeMediaAssets").mockRejectedValueOnce(
-			new Error("fail"),
-		);
+		vi.spyOn(runtimePageStore, "getRuntimeMediaAssets").mockRejectedValueOnce(new Error("fail"));
 		const result = await buildMediaPageModel(locals);
 		expect(result.status).toBe("partial");
 	});
@@ -325,9 +312,7 @@ describe("buildRedirectsPageModel", () => {
 	});
 
 	it("returns partial when redirects query fails", async () => {
-		vi.spyOn(runtimePageStore, "getRuntimeRedirectRules").mockRejectedValueOnce(
-			new Error("fail"),
-		);
+		vi.spyOn(runtimePageStore, "getRuntimeRedirectRules").mockRejectedValueOnce(new Error("fail"));
 		const result = await buildRedirectsPageModel(locals, adminRole);
 		expect(result.status).toBe("partial");
 	});
@@ -350,9 +335,7 @@ describe("buildSettingsPageModel", () => {
 	});
 
 	it("returns partial when settings query fails", async () => {
-		vi.spyOn(runtimePageStore, "getRuntimeSettings").mockRejectedValueOnce(
-			new Error("fail"),
-		);
+		vi.spyOn(runtimePageStore, "getRuntimeSettings").mockRejectedValueOnce(new Error("fail"));
 		const result = await buildSettingsPageModel(locals, adminRole);
 		expect(result.status).toBe("partial");
 	});
@@ -449,10 +432,9 @@ describe("buildArchivesIndexPageModel", () => {
 	});
 
 	it("returns partial when archive route lookup fails (withSettledMap fallback)", async () => {
-		vi.spyOn(
-			runtimeRouteRegistry,
-			"getRuntimeArchiveRoute",
-		).mockRejectedValueOnce(new Error("archive fail"));
+		vi.spyOn(runtimeRouteRegistry, "getRuntimeArchiveRoute").mockRejectedValueOnce(
+			new Error("archive fail"),
+		);
 		const result = await buildArchivesIndexPageModel(locals, adminRole);
 		expect(result.status).toBe("partial");
 		// withSettledMap fallback returns the raw archive config entry
@@ -489,10 +471,7 @@ describe("buildArchivesIndexPageModel", () => {
 		const result = await buildArchivesIndexPageModel(locals, adminRole);
 		expect(result.status).toBe("ok");
 		expect(result.data.archivesByKind.posts.length).toBe(2);
-		expect(
-			result.data.kindCounts.find((k: { kind: string }) => k.kind === "posts")
-				?.count,
-		).toBe(2);
+		expect(result.data.kindCounts.find((k: { kind: string }) => k.kind === "posts")?.count).toBe(2);
 	});
 });
 
@@ -515,26 +494,20 @@ describe("buildPagesIndexPageModel", () => {
 	});
 
 	it("returns partial when content states query fails", async () => {
-		vi.spyOn(
-			runtimePageStore,
-			"listRuntimeContentStates",
-		).mockRejectedValueOnce(new Error("fail"));
+		vi.spyOn(runtimePageStore, "listRuntimeContentStates").mockRejectedValueOnce(new Error("fail"));
 		const result = await buildPagesIndexPageModel(locals, adminRole);
 		expect(result.status).toBe("partial");
 	});
 
 	it("returns partial when archive route lookup fails (withSettledMap fallback)", async () => {
-		vi.spyOn(
-			runtimeRouteRegistry,
-			"getRuntimeArchiveRoute",
-		).mockRejectedValueOnce(new Error("archive fail"));
+		vi.spyOn(runtimeRouteRegistry, "getRuntimeArchiveRoute").mockRejectedValueOnce(
+			new Error("archive fail"),
+		);
 		const result = await buildPagesIndexPageModel(locals, adminRole);
 		expect(result.status).toBe("partial");
 		// withSettledMap fallback sets runtime: null for the failed archive
 		expect(
-			result.data.archiveRows.every(
-				(r: unknown) => (r as { runtime: unknown }).runtime === null,
-			),
+			result.data.archiveRows.every((r: unknown) => (r as { runtime: unknown }).runtime === null),
 		).toBe(true);
 	});
 });
@@ -552,9 +525,7 @@ describe("buildPostsIndexPageModel", () => {
 	});
 
 	it("returns partial when authors query fails", async () => {
-		vi.spyOn(runtimePageStore, "getRuntimeAuthors").mockRejectedValueOnce(
-			new Error("fail"),
-		);
+		vi.spyOn(runtimePageStore, "getRuntimeAuthors").mockRejectedValueOnce(new Error("fail"));
 		const result = await buildPostsIndexPageModel(locals);
 		expect(result.status).toBe("partial");
 	});
@@ -687,10 +658,9 @@ describe("buildTranslationsPageModel", () => {
 	});
 
 	it("returns partial status when a translation state lookup fails", async () => {
-		vi.spyOn(
-			runtimePageStore,
-			"getRuntimeTranslationState",
-		).mockRejectedValueOnce(new Error("db fail"));
+		vi.spyOn(runtimePageStore, "getRuntimeTranslationState").mockRejectedValueOnce(
+			new Error("db fail"),
+		);
 		const result = await buildTranslationsPageModel(locals, adminRole);
 		expect(result.status).toMatch(/ok|partial/);
 	});
@@ -713,28 +683,21 @@ describe("buildSeoPageModel", () => {
 	});
 
 	it("returns partial when content states query fails", async () => {
-		vi.spyOn(
-			runtimePageStore,
-			"listRuntimeContentStates",
-		).mockRejectedValueOnce(new Error("fail"));
+		vi.spyOn(runtimePageStore, "listRuntimeContentStates").mockRejectedValueOnce(new Error("fail"));
 		const result = await buildSeoPageModel(locals, adminRole);
 		expect(result.status).toBe("partial");
 	});
 
 	it("returns partial when archive route lookup fails (withSettledMap fallback)", async () => {
-		vi.spyOn(
-			runtimeRouteRegistry,
-			"getRuntimeArchiveRoute",
-		).mockRejectedValueOnce(new Error("archive fail"));
+		vi.spyOn(runtimeRouteRegistry, "getRuntimeArchiveRoute").mockRejectedValueOnce(
+			new Error("archive fail"),
+		);
 		const result = await buildSeoPageModel(locals, adminRole);
 		expect(result.status).toBe("partial");
 	});
 
 	it("shows em-dash placeholder when seo fields are absent on a page record", async () => {
-		vi.spyOn(
-			runtimePageStore,
-			"listRuntimeContentStates",
-		).mockResolvedValueOnce([
+		vi.spyOn(runtimePageStore, "listRuntimeContentStates").mockResolvedValueOnce([
 			{
 				slug: "about",
 				legacyUrl: "/about",
@@ -752,19 +715,14 @@ describe("buildSeoPageModel", () => {
 		]);
 		const result = await buildSeoPageModel(locals, adminRole);
 		expect(result.status).toMatch(/ok|partial/);
-		const row = result.data.rows.find(
-			(r: { path: string }) => r.path === "/about",
-		);
+		const row = result.data.rows.find((r: { path: string }) => r.path === "/about");
 		expect(row?.type).toBe("Page");
 		expect(row?.seoTitle).toBe("—");
 		expect(row?.metaDescription).toBe("—");
 	});
 
 	it("flags missingMetadata when seoTitle is present but metaDescription is absent", async () => {
-		vi.spyOn(
-			runtimePageStore,
-			"listRuntimeContentStates",
-		).mockResolvedValueOnce([
+		vi.spyOn(runtimePageStore, "listRuntimeContentStates").mockResolvedValueOnce([
 			{
 				slug: "services",
 				legacyUrl: "/services",
@@ -782,9 +740,7 @@ describe("buildSeoPageModel", () => {
 		]);
 		const result = await buildSeoPageModel(locals, adminRole);
 		expect(result.status).toMatch(/ok|partial/);
-		const row = result.data.rows.find(
-			(r: { path: string }) => r.path === "/services",
-		);
+		const row = result.data.rows.find((r: { path: string }) => r.path === "/services");
 		expect(row?.type).toBe("Post");
 		expect(row?.seoTitle).toBe("Services SEO Title");
 		expect(row?.missingMetadata).toBe(true);
@@ -935,9 +891,7 @@ describe("buildPostEditorPageModel", () => {
 	});
 
 	it("returns partial when authors query fails for known slug", async () => {
-		vi.spyOn(runtimePageStore, "getRuntimeAuthors").mockRejectedValueOnce(
-			new Error("fail"),
-		);
+		vi.spyOn(runtimePageStore, "getRuntimeAuthors").mockRejectedValueOnce(new Error("fail"));
 		const result = await buildPostEditorPageModel(locals, "hello-world");
 		expect(["ok", "partial"]).toContain(result.status);
 	});
@@ -1034,20 +988,12 @@ describe("buildPostRevisionsPageModel", () => {
 
 describe("buildRoutePageEditorModel", () => {
 	it("returns forbidden for editor role", async () => {
-		const result = await buildRoutePageEditorModel(
-			locals,
-			"/about",
-			editorRole,
-		);
+		const result = await buildRoutePageEditorModel(locals, "/about", editorRole);
 		expect(result.status).toBe("forbidden");
 	});
 
 	it("returns not_found for unknown route", async () => {
-		const result = await buildRoutePageEditorModel(
-			locals,
-			"/no-such-route",
-			adminRole,
-		);
+		const result = await buildRoutePageEditorModel(locals, "/no-such-route", adminRole);
 		expect(result.status).toBe("not_found");
 	});
 
@@ -1069,11 +1015,7 @@ describe("buildRoutePageEditorModel", () => {
 		).run(variantId, groupId, settingsJson);
 
 		// /services is not in translationStatus config so effectiveTranslationState should be undefined
-		const result = await buildRoutePageEditorModel(
-			locals,
-			"/services",
-			adminRole,
-		);
+		const result = await buildRoutePageEditorModel(locals, "/services", adminRole);
 		expect(result.status).toBe("ok");
 		expect(result.data.pageRecord).not.toBeNull();
 		expect(result.data.effectiveTranslationState).toBeUndefined();

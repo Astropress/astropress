@@ -41,10 +41,7 @@ export function splitCsvRows(text: string): string[][] {
 		if (ch === '"') {
 			inQuotes = !inQuotes;
 			current += ch;
-		} else if (
-			!inQuotes &&
-			(ch === "\n" || (ch === "\r" && text[i + 1] === "\n"))
-		) {
+		} else if (!inQuotes && (ch === "\n" || (ch === "\r" && text[i + 1] === "\n"))) {
 			if (ch === "\r") i++;
 			if (current.trim()) rows.push(parseCsvLine(current));
 			current = "";

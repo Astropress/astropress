@@ -15,9 +15,7 @@ export class WixInvalidCredentialsError extends Error {
 export class WixTwoFactorRequiredError extends Error {
 	override name = "WixTwoFactorRequiredError";
 	constructor() {
-		super(
-			"Two-factor authentication is required — export the file manually and use --source",
-		);
+		super("Two-factor authentication is required — export the file manually and use --source");
 	}
 }
 
@@ -106,14 +104,7 @@ function isBotBlocked(content: string): boolean {
 async function attemptWixExport(
 	opts: WixFetchOptions & { headless: boolean },
 ): Promise<WixFetchResult> {
-	const {
-		siteUrl: _siteUrl,
-		email,
-		password,
-		downloadDir,
-		headless,
-		timeoutMs = 30_000,
-	} = opts;
+	const { siteUrl: _siteUrl, email, password, downloadDir, headless, timeoutMs = 30_000 } = opts;
 
 	const pw = await requirePlaywright();
 	const browser = await pw.chromium.launch({ headless });
@@ -134,10 +125,7 @@ async function attemptWixExport(
 		if (isBotBlocked(loginContent)) {
 			throw new WixBotDetectionError();
 		}
-		if (
-			loginContent.includes("g-recaptcha") ||
-			loginContent.includes("h-captcha")
-		) {
+		if (loginContent.includes("g-recaptcha") || loginContent.includes("h-captcha")) {
 			throw new WixCaptchaDetectedError();
 		}
 
@@ -146,10 +134,7 @@ async function attemptWixExport(
 		await page.click('[type="submit"], button[data-testid="submit"]');
 
 		// 4. Fill password and submit second step
-		await page.fill(
-			'[type="password"], [name="password"], #password',
-			password,
-		);
+		await page.fill('[type="password"], [name="password"], #password', password);
 		await page.click('[type="submit"], button[data-testid="submit"]');
 
 		// 5. Check for 2FA / error — only if still on signin domain
@@ -158,8 +143,7 @@ async function attemptWixExport(
 		try {
 			const parsed = new URL(postLoginUrl);
 			isOnWixManage =
-				parsed.hostname === "manage.wix.com" ||
-				parsed.hostname.endsWith(".manage.wix.com");
+				parsed.hostname === "manage.wix.com" || parsed.hostname.endsWith(".manage.wix.com");
 		} catch {
 			// malformed URL — treat as not on manage.wix.com
 		}
@@ -168,17 +152,13 @@ async function attemptWixExport(
 				throw new WixTwoFactorRequiredError();
 			}
 			const has2FA = await page
-				.locator(
-					'[data-testid*="verification"], [data-testid*="phone"], input[name*="code"]',
-				)
+				.locator('[data-testid*="verification"], [data-testid*="phone"], input[name*="code"]')
 				.count();
 			if (has2FA > 0) {
 				throw new WixTwoFactorRequiredError();
 			}
 			const hasError = await page
-				.locator(
-					'[data-testid="error-message"], .error-message, [data-testid*="error"]',
-				)
+				.locator('[data-testid="error-message"], .error-message, [data-testid*="error"]')
 				.count();
 			if (hasError > 0) {
 				throw new WixInvalidCredentialsError();
@@ -189,9 +169,7 @@ async function attemptWixExport(
 		await mkdir(downloadDir, { recursive: true });
 
 		const hasBlogExport = await page
-			.locator(
-				'[data-testid*="blog"], a[href*="blog"], button:has-text("Export")',
-			)
+			.locator('[data-testid*="blog"], a[href*="blog"], button:has-text("Export")')
 			.count();
 		if (hasBlogExport === 0) {
 			throw new WixSiteNotFoundError();
@@ -218,9 +196,7 @@ async function attemptWixExport(
 // Public API — auto-retries with visible browser on bot detection / CAPTCHA
 // ---------------------------------------------------------------------------
 
-export async function fetchWixExport(
-	opts: WixFetchOptions,
-): Promise<WixFetchResult> {
+export async function fetchWixExport(opts: WixFetchOptions): Promise<WixFetchResult> {
 	if (opts.headless === false) {
 		return attemptWixExport({ ...opts, headless: false });
 	}
@@ -228,10 +204,7 @@ export async function fetchWixExport(
 	try {
 		return await attemptWixExport({ ...opts, headless: true });
 	} catch (err) {
-		if (
-			err instanceof WixCaptchaDetectedError ||
-			err instanceof WixBotDetectionError
-		) {
+		if (err instanceof WixCaptchaDetectedError || err instanceof WixBotDetectionError) {
 			process.stderr.write(
 				"\n[astropress] Bot detection or CAPTCHA triggered in headless mode.\n" +
 					"[astropress] Opening a visible browser — please solve any challenge that appears,\n" +

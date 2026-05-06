@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-
+import type { BindingContext, Policy, Subject } from "../src/access";
 import {
 	actionMatches,
 	createPolicyEngine,
@@ -8,7 +8,6 @@ import {
 	resolvePath,
 	substituteString,
 } from "../src/access";
-import type { BindingContext, Policy, Subject } from "../src/access";
 
 function subject(overrides: Partial<Subject> = {}): Subject {
 	return {
@@ -86,10 +85,7 @@ describe("evaluateCondition", () => {
 
 	test("stringEquals with substitution", () => {
 		expect(
-			evaluateCondition(
-				{ op: "stringEquals", left: "resource.ownerId", right: "${user.id}" },
-				ctx,
-			),
+			evaluateCondition({ op: "stringEquals", left: "resource.ownerId", right: "${user.id}" }, ctx),
 		).toBe(true);
 	});
 	test("stringIn", () => {
@@ -123,10 +119,7 @@ describe("evaluateCondition", () => {
 	});
 	test("missing left fails by default", () => {
 		expect(
-			evaluateCondition(
-				{ op: "stringEquals", left: "user.attributes.missing", right: "x" },
-				ctx,
-			),
+			evaluateCondition({ op: "stringEquals", left: "user.attributes.missing", right: "x" }, ctx),
 		).toBe(false);
 	});
 });
@@ -171,18 +164,12 @@ describe("evaluate", () => {
 		const ownResource = { type: "post", ownerId: "u1" };
 		const otherResource = { type: "post", ownerId: "u9" };
 
-		expect(
-			evaluate(subj, "posts:edit", [ownerOnly], ownResource).decision,
-		).toBe("allow");
-		expect(
-			evaluate(subj, "posts:edit", [ownerOnly], otherResource).decision,
-		).toBe("deny");
+		expect(evaluate(subj, "posts:edit", [ownerOnly], ownResource).decision).toBe("allow");
+		expect(evaluate(subj, "posts:edit", [ownerOnly], otherResource).decision).toBe("deny");
 	});
 
 	test("namespace wildcard policy matches sub-actions", () => {
-		const r = evaluate(subject(), "posts:delete", [
-			rolePolicy({ action: "posts:*" }),
-		]);
+		const r = evaluate(subject(), "posts:delete", [rolePolicy({ action: "posts:*" })]);
 		expect(r.decision).toBe("allow");
 	});
 

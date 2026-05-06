@@ -1,11 +1,7 @@
-import type {
-	AstropressSecurityArea,
-	AstropressSecurityHeadersOptions,
-} from "./security-headers";
+import type { AstropressSecurityArea, AstropressSecurityHeadersOptions } from "./security-headers";
 import { applyAstropressSecurityHeaders } from "./security-headers.js";
 
-export interface AstropressSecurityMiddlewareOptions
-	extends AstropressSecurityHeadersOptions {
+export interface AstropressSecurityMiddlewareOptions extends AstropressSecurityHeadersOptions {
 	adminBasePath?: string;
 	resolveArea?: (url: URL) => AstropressSecurityArea;
 }
@@ -44,8 +40,7 @@ export function createAstropressSecurityMiddleware(
 		const requestId = crypto.randomUUID();
 		const response = await next();
 		const area =
-			options.resolveArea?.(url) ??
-			resolveAstropressSecurityArea(url, options.adminBasePath);
+			options.resolveArea?.(url) ?? resolveAstropressSecurityArea(url, options.adminBasePath);
 
 		applyAstropressSecurityHeaders(response.headers, {
 			area,

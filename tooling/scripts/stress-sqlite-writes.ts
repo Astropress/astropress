@@ -18,12 +18,7 @@ import { existsSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
-import {
-	Worker,
-	isMainThread,
-	parentPort,
-	workerData,
-} from "node:worker_threads";
+import { isMainThread, parentPort, Worker, workerData } from "node:worker_threads";
 
 // ---------------------------------------------------------------------------
 // Worker thread: performs writes and reports results to the main thread
@@ -135,8 +130,7 @@ Options:
 	const keepDb = args.includes("--keep");
 
 	const customDb = args.find((a) => a.startsWith("--db="))?.split("=")[1];
-	const dbPath =
-		customDb ?? join(tmpdir(), `astropress-stress-${Date.now()}.sqlite`);
+	const dbPath = customDb ?? join(tmpdir(), `astropress-stress-${Date.now()}.sqlite`);
 
 	console.log("\nAstropress SQLite Write Stress Test");
 	console.log(`  Concurrency : ${concurrency} workers`);
@@ -197,8 +191,7 @@ Options:
 	const totalBusy = results.reduce((a, r) => a + r.busyErrors, 0);
 	const totalOther = results.reduce((a, r) => a + r.otherErrors, 0);
 	const maxWorkerMs = Math.max(...results.map((r) => r.elapsedMs));
-	const avgWorkerMs =
-		results.reduce((a, r) => a + r.elapsedMs, 0) / results.length;
+	const avgWorkerMs = results.reduce((a, r) => a + r.elapsedMs, 0) / results.length;
 
 	const throughput = totalSucceeded / (totalElapsedMs / 1000);
 
@@ -234,10 +227,7 @@ Options:
 	console.log(`  Slowest worker         : ${maxWorkerMs.toFixed(0)} ms`);
 	console.log(`  Avg worker time        : ${avgWorkerMs.toFixed(0)} ms`);
 
-	const passed =
-		totalBusy === 0 &&
-		totalOther === 0 &&
-		rowCount === concurrency * writesPerWorker;
+	const passed = totalBusy === 0 && totalOther === 0 && rowCount === concurrency * writesPerWorker;
 
 	console.log("");
 	if (passed) {

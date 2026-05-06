@@ -41,9 +41,7 @@ describe("resolvePath", () => {
 	});
 
 	it("returns undefined when resource is absent", () => {
-		expect(
-			resolvePath("resource.ownerId", { user: baseCtx.user }),
-		).toBeUndefined();
+		expect(resolvePath("resource.ownerId", { user: baseCtx.user })).toBeUndefined();
 	});
 
 	it("returns undefined when env is absent", () => {
@@ -55,9 +53,7 @@ describe("resolvePath", () => {
 	});
 
 	it("returns undefined when a mid-path segment is null/undefined", () => {
-		expect(
-			resolvePath("user.attributes.missing.deep", baseCtx),
-		).toBeUndefined();
+		expect(resolvePath("user.attributes.missing.deep", baseCtx)).toBeUndefined();
 	});
 
 	it("returns undefined when a mid-path segment is a primitive (not object)", () => {
@@ -76,9 +72,7 @@ describe("substituteString", () => {
 	});
 
 	it("replaces multiple substitutions in one string", () => {
-		expect(substituteString("${user.id}/${resource.ownerId}", baseCtx)).toBe(
-			"u1/u1",
-		);
+		expect(substituteString("${user.id}/${resource.ownerId}", baseCtx)).toBe("u1/u1");
 	});
 
 	it("leaves a string with no placeholders untouched", () => {
@@ -90,9 +84,7 @@ describe("substituteString", () => {
 	});
 
 	it("substitutes empty string when path resolves to null", () => {
-		expect(substituteString("[${user.attributes.missing}]", baseCtx)).toBe(
-			"[]",
-		);
+		expect(substituteString("[${user.attributes.missing}]", baseCtx)).toBe("[]");
 	});
 
 	it("coerces numbers and booleans to strings", () => {
@@ -131,10 +123,7 @@ describe("evaluateCondition", () => {
 
 		it("returns false when left is undefined (missing path)", () => {
 			expect(
-				evaluateCondition(
-					{ op: "stringEquals", left: "user.nope", right: "x" } as never,
-					baseCtx,
-				),
+				evaluateCondition({ op: "stringEquals", left: "user.nope", right: "x" } as never, baseCtx),
 			).toBe(false);
 		});
 
@@ -263,10 +252,7 @@ describe("evaluateCondition", () => {
 
 		it("returns false when left is not a number", () => {
 			expect(
-				evaluateCondition(
-					{ op: "numberLessThan", left: "user.role", right: 10 } as never,
-					baseCtx,
-				),
+				evaluateCondition({ op: "numberLessThan", left: "user.role", right: 10 } as never, baseCtx),
 			).toBe(false);
 		});
 	});
@@ -329,22 +315,16 @@ describe("evaluateCondition", () => {
 
 		it("returns false when left is not a boolean", () => {
 			expect(
-				evaluateCondition(
-					{ op: "bool", left: "user.role", right: true } as never,
-					baseCtx,
-				),
+				evaluateCondition({ op: "bool", left: "user.role", right: true } as never, baseCtx),
 			).toBe(false);
 		});
 	});
 
 	describe("attributeExists", () => {
 		it("returns true when attribute is present (truthy)", () => {
-			expect(
-				evaluateCondition(
-					{ op: "attributeExists", left: "user.id" } as never,
-					baseCtx,
-				),
-			).toBe(true);
+			expect(evaluateCondition({ op: "attributeExists", left: "user.id" } as never, baseCtx)).toBe(
+				true,
+			);
 		});
 
 		it("returns true when attribute is present and false (only undefined/null fail)", () => {
@@ -358,10 +338,7 @@ describe("evaluateCondition", () => {
 
 		it("returns false for missing path (undefined)", () => {
 			expect(
-				evaluateCondition(
-					{ op: "attributeExists", left: "user.nonexistent" } as never,
-					baseCtx,
-				),
+				evaluateCondition({ op: "attributeExists", left: "user.nonexistent" } as never, baseCtx),
 			).toBe(false);
 		});
 
@@ -439,9 +416,7 @@ describe("evaluateCondition", () => {
 		});
 
 		it("anyOf returns false for an empty conditions array", () => {
-			expect(
-				evaluateCondition({ op: "anyOf", conditions: [] } as never, baseCtx),
-			).toBe(false);
+			expect(evaluateCondition({ op: "anyOf", conditions: [] } as never, baseCtx)).toBe(false);
 		});
 
 		it("allOf returns true when every condition passes", () => {
@@ -475,9 +450,7 @@ describe("evaluateCondition", () => {
 		});
 
 		it("allOf returns true for an empty conditions array (vacuous truth)", () => {
-			expect(
-				evaluateCondition({ op: "allOf", conditions: [] } as never, baseCtx),
-			).toBe(true);
+			expect(evaluateCondition({ op: "allOf", conditions: [] } as never, baseCtx)).toBe(true);
 		});
 	});
 });

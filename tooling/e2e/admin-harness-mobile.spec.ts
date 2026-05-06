@@ -8,9 +8,7 @@ import { expectNoAxeViolations } from "./helpers/accessibility";
 test.describe("Feature: admin nav mobile sidebar (<ap-admin-nav>)", () => {
 	test.beforeEach(async ({ page }) => {
 		await page.goto("/ap-admin", { waitUntil: "domcontentloaded" });
-		await expect(
-			page.getByRole("heading", { level: 1, name: "Dashboard" }),
-		).toBeVisible();
+		await expect(page.getByRole("heading", { level: 1, name: "Dashboard" })).toBeVisible();
 		await page.waitForFunction(() => !!customElements.get("ap-admin-nav"));
 	});
 
@@ -58,9 +56,7 @@ test.describe("Feature: admin nav mobile sidebar (<ap-admin-nav>)", () => {
 		await expect(toggle).toHaveAttribute("aria-expanded", "false");
 	});
 
-	test("Scenario: Escape key closes the sidebar and returns focus to toggle", async ({
-		page,
-	}) => {
+	test("Scenario: Escape key closes the sidebar and returns focus to toggle", async ({ page }) => {
 		const toggle = page.locator("[data-nav-toggle]");
 		const sidebar = page.locator("[data-nav-sidebar]");
 		const hasVisibleToggle = await toggle.isVisible();
@@ -81,9 +77,7 @@ test.describe("Feature: admin nav mobile sidebar (<ap-admin-nav>)", () => {
 		await expect(toggle).toBeFocused();
 	});
 
-	test("Scenario: open sidebar state is axe-clean on mobile viewport", async ({
-		page,
-	}) => {
+	test("Scenario: open sidebar state is axe-clean on mobile viewport", async ({ page }) => {
 		const toggle = page.locator("[data-nav-toggle]");
 		const sidebar = page.locator("[data-nav-sidebar]");
 
@@ -98,9 +92,7 @@ test.describe("Feature: admin nav mobile sidebar (<ap-admin-nav>)", () => {
 		await expectNoAxeViolations(page);
 	});
 
-	test("Scenario: top bar controls stay touch-friendly on narrow viewports", async ({
-		page,
-	}) => {
+	test("Scenario: top bar controls stay touch-friendly on narrow viewports", async ({ page }) => {
 		const navToggle = page.locator("[data-nav-toggle]");
 		const panelToggle = page.locator("summary.topbar-panel-toggle");
 		const signOutButton = page.getByRole("button", { name: "Sign out" });
@@ -128,9 +120,7 @@ test.describe("Feature: admin nav mobile sidebar (<ap-admin-nav>)", () => {
 		expect(shortcutsBox?.height ?? 0).toBeGreaterThanOrEqual(44);
 	});
 
-	test("Scenario: Escape is no-op when sidebar is already closed", async ({
-		page,
-	}) => {
+	test("Scenario: Escape is no-op when sidebar is already closed", async ({ page }) => {
 		const sidebar = page.locator("[data-nav-sidebar]");
 		const toggle = page.locator("[data-nav-toggle]");
 

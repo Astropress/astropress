@@ -153,9 +153,7 @@ function main(): number {
 			updatedAt: new Date().toISOString(),
 			note: baseline.note,
 			floor: FLOOR,
-			scores: Object.fromEntries(
-				[...current.entries()].sort((a, b) => a[0].localeCompare(b[0])),
-			),
+			scores: Object.fromEntries([...current.entries()].sort((a, b) => a[0].localeCompare(b[0]))),
 		};
 		saveBaseline(next);
 		const aboveFloor = [...current.values()].filter(

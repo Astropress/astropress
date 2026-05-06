@@ -23,9 +23,7 @@ export type AstropressNeonAdapterOptions = Omit<
  * with a static host (Vercel, Netlify) for the app and a storage service
  * (Cloudflare R2, AWS S3) for media uploads.
  */
-export function createAstropressNeonAdapter(
-	options: AstropressNeonAdapterOptions = {},
-) {
+export function createAstropressNeonAdapter(options: AstropressNeonAdapterOptions = {}) {
 	return createAstropressHostedPlatformAdapter({
 		...options,
 		providerName: "neon",
@@ -41,8 +39,7 @@ export function createAstropressNeonAdapter(
 	});
 }
 
-export interface AstropressNeonHostedAdapterOptions
-	extends AstropressNeonAdapterOptions {
+export interface AstropressNeonHostedAdapterOptions extends AstropressNeonAdapterOptions {
 	config?: AstropressNeonHostedConfig;
 	env?: Record<string, string | undefined>;
 }
@@ -58,13 +55,8 @@ export function readAstropressNeonHostedConfig(
 		);
 	}
 
-	if (
-		!databaseUrl.startsWith("postgres://") &&
-		!databaseUrl.startsWith("postgresql://")
-	) {
-		throw new Error(
-			"Neon DATABASE_URL must be a postgres:// or postgresql:// connection string.",
-		);
+	if (!databaseUrl.startsWith("postgres://") && !databaseUrl.startsWith("postgresql://")) {
+		throw new Error("Neon DATABASE_URL must be a postgres:// or postgresql:// connection string.");
 	}
 
 	const projectId = env.NEON_PROJECT_ID?.trim();

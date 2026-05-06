@@ -22,12 +22,10 @@ function buildApiCtx(
 }
 
 export const GET: APIRoute = async (context) => {
-	if (!getCmsConfig().api?.enabled)
-		return apiErrors.notFound("REST API is not enabled.");
+	if (!getCmsConfig().api?.enabled) return apiErrors.notFound("REST API is not enabled.");
 
 	const store = await loadLocalAdminStore();
-	if (!store.apiTokens || !store.webhooks)
-		return apiErrors.notFound("Webhook store unavailable.");
+	if (!store.apiTokens || !store.webhooks) return apiErrors.notFound("Webhook store unavailable.");
 
 	return withApiRequest(
 		context.request,
@@ -36,17 +34,11 @@ export const GET: APIRoute = async (context) => {
 		async () => {
 			const url = new URL(context.request.url);
 			const limit = Math.min(
-				Number(
-					url.searchParams.get("limit") ??
-						url.searchParams.get("per_page") ??
-						"20",
-				),
+				Number(url.searchParams.get("limit") ?? url.searchParams.get("per_page") ?? "20"),
 				100,
 			);
 			const page = Math.max(Number(url.searchParams.get("page") ?? "1"), 1);
-			const offset = Number(
-				url.searchParams.get("offset") ?? String((page - 1) * limit),
-			);
+			const offset = Number(url.searchParams.get("offset") ?? String((page - 1) * limit));
 
 			const all = await store.webhooks?.list();
 			const pageRecords = all.slice(offset, offset + limit);
@@ -59,12 +51,10 @@ export const GET: APIRoute = async (context) => {
 };
 
 export const POST: APIRoute = async (context) => {
-	if (!getCmsConfig().api?.enabled)
-		return apiErrors.notFound("REST API is not enabled.");
+	if (!getCmsConfig().api?.enabled) return apiErrors.notFound("REST API is not enabled.");
 
 	const store = await loadLocalAdminStore();
-	if (!store.apiTokens || !store.webhooks)
-		return apiErrors.notFound("Webhook store unavailable.");
+	if (!store.apiTokens || !store.webhooks) return apiErrors.notFound("Webhook store unavailable.");
 
 	return withApiRequest(
 		context.request,
@@ -81,11 +71,8 @@ export const POST: APIRoute = async (context) => {
 			const url = String(body.url ?? "").trim();
 			if (!url) return apiErrors.validationError("url is required.");
 
-			const events = Array.isArray(body.events)
-				? (body.events as WebhookEvent[])
-				: [];
-			if (events.length === 0)
-				return apiErrors.validationError("At least one event is required.");
+			const events = Array.isArray(body.events) ? (body.events as WebhookEvent[]) : [];
+			if (events.length === 0) return apiErrors.validationError("At least one event is required.");
 
 			const { record, verification } = await store.webhooks.create({
 				url,

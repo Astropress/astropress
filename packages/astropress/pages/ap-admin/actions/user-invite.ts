@@ -1,6 +1,8 @@
-import { inviteRuntimeAdminUser } from "@astropress-diy/astropress";
-import { withAdminFormAction } from "@astropress-diy/astropress";
-import { sendUserInviteEmail } from "@astropress-diy/astropress";
+import {
+	inviteRuntimeAdminUser,
+	sendUserInviteEmail,
+	withAdminFormAction,
+} from "@astropress-diy/astropress";
 import type { APIRoute } from "astro";
 
 export const POST: APIRoute = async (context) =>
@@ -25,10 +27,7 @@ export const POST: APIRoute = async (context) =>
 			const redirectUrl = new URL("/ap-admin/users", request.url);
 
 			if (result.inviteUrl) {
-				const absoluteInviteUrl = new URL(
-					result.inviteUrl,
-					request.url,
-				).toString();
+				const absoluteInviteUrl = new URL(result.inviteUrl, request.url).toString();
 				const emailResult = await sendUserInviteEmail(
 					String(formData.get("email") ?? ""),
 					absoluteInviteUrl,
@@ -36,10 +35,7 @@ export const POST: APIRoute = async (context) =>
 				);
 				if (!emailResult.ok) {
 					redirectUrl.searchParams.set("error", "1");
-					redirectUrl.searchParams.set(
-						"message",
-						emailResult.error ?? "Invitation email failed.",
-					);
+					redirectUrl.searchParams.set("message", emailResult.error ?? "Invitation email failed.");
 					return redirect(redirectUrl.pathname + redirectUrl.search);
 				}
 				if (emailResult.delivered) {

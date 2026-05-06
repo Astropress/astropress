@@ -40,9 +40,7 @@ describe("resolveMediaUrl()", () => {
 			mode: "deployment",
 			r2BaseUrl: "https://cdn.example.org",
 		});
-		expect(url).toBe(
-			"https://cdn.example.org/images/home/community-garden-hero.jpg",
-		);
+		expect(url).toBe("https://cdn.example.org/images/home/community-garden-hero.jpg");
 	});
 
 	it("strips trailing slash from r2BaseUrl before joining", () => {
@@ -51,9 +49,7 @@ describe("resolveMediaUrl()", () => {
 			r2BaseUrl: "https://cdn.example.org/",
 		});
 		expect(url).not.toContain("//images");
-		expect(url).toBe(
-			"https://cdn.example.org/images/home/community-garden-hero.jpg",
-		);
+		expect(url).toBe("https://cdn.example.org/images/home/community-garden-hero.jpg");
 	});
 
 	it("keeps localPath when no r2 key exists", () => {

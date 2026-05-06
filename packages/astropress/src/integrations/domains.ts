@@ -25,25 +25,18 @@ type Register = <TFields extends Record<string, string>>(
 	def: ProviderDefinition<TFields>,
 ) => RegisteredProvider<TFields>;
 
-export const registerNewsletter: Register = (def) =>
-	registerProvider("newsletter", def);
+export const registerNewsletter: Register = (def) => registerProvider("newsletter", def);
 
-export const registerAnalytics: Register = (def) =>
-	registerProvider("analytics", def);
+export const registerAnalytics: Register = (def) => registerProvider("analytics", def);
 
-export const registerAbTesting: Register = (def) =>
-	registerProvider("ab-testing", def);
+export const registerAbTesting: Register = (def) => registerProvider("ab-testing", def);
 
-export const registerSearch: Register = (def) =>
-	registerProvider("search", def);
+export const registerSearch: Register = (def) => registerProvider("search", def);
 
-export const registerCdnPurge: Register = (def) =>
-	registerProvider("cdn-purge", def);
+export const registerCdnPurge: Register = (def) => registerProvider("cdn-purge", def);
 
-export const registerMonitoring: Register = (def) =>
-	registerProvider("monitoring", def);
+export const registerMonitoring: Register = (def) => registerProvider("monitoring", def);
 
 export const registerForms: Register = (def) => registerProvider("forms", def);
 
-export const registerDeployHooks: Register = (def) =>
-	registerProvider("deploy-hooks", def);
+export const registerDeployHooks: Register = (def) => registerProvider("deploy-hooks", def);

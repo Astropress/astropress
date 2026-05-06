@@ -55,9 +55,7 @@ function nonEmpty(v: string | undefined | null): v is string {
 	return typeof v === "string" && v.length > 0;
 }
 
-export function resolveNewsletter(
-	input: ResolveNewsletterInput,
-): ResolvedNewsletter {
+export function resolveNewsletter(input: ResolveNewsletterInput): ResolvedNewsletter {
 	const env = input.env ?? {};
 	if (env.NEWSLETTER_DELIVERY_MODE === "mock") {
 		return { kind: "mock" };
@@ -69,8 +67,7 @@ export function resolveNewsletter(
 		if (explicitListmonk) {
 			return {
 				kind: "misconfigured",
-				reason:
-					"LISTMONK_LIST_ID is required when NEWSLETTER_DELIVERY_MODE=listmonk",
+				reason: "LISTMONK_LIST_ID is required when NEWSLETTER_DELIVERY_MODE=listmonk",
 			};
 		}
 		return { kind: "mock" };

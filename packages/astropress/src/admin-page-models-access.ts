@@ -7,18 +7,13 @@
 
 import type { APIContext } from "astro";
 import { loadAccessTabDataFromD1 } from "./access/d1-access-page-store";
-import { getAccessContext } from "./access/index";
 import type { Policy, RolePolicyRecord, RoleRecord } from "./access/index";
-import {
-	type AdminPageResult,
-	forbidden,
-	ok,
-	withFallback,
-} from "./admin-page-model-helpers";
+import { getAccessContext } from "./access/index";
+import { type AdminPageResult, forbidden, ok, withFallback } from "./admin-page-model-helpers";
 import { withLocalStoreFallback } from "./admin-store-dispatch";
 import type { ManagedAdminUser } from "./persistence-types";
-import { isAuthUserAdmin } from "./platform-contracts";
 import type { AuthUser } from "./platform-contracts";
+import { isAuthUserAdmin } from "./platform-contracts";
 import { getRuntimeAdminUsers } from "./runtime-page-store";
 
 export type AccessPageTab = "users" | "roles" | "my-permissions";
@@ -38,9 +33,7 @@ const TABS: readonly AccessPageTab[] = ["users", "roles", "my-permissions"];
 
 function normaliseTab(input: string | null | undefined): AccessPageTab {
 	if (!input) return "users";
-	return TABS.includes(input as AccessPageTab)
-		? (input as AccessPageTab)
-		: "users";
+	return TABS.includes(input as AccessPageTab) ? (input as AccessPageTab) : "users";
 }
 
 const EMPTY_MODEL: AccessPageModel = {
@@ -87,8 +80,7 @@ export async function buildAccessPageModel(
 	const viewerAccess = await getAccessContext({ locals } as {
 		locals: App.Locals;
 	});
-	const viewerPolicies =
-		viewerAccess?.engine.policiesFor(viewerAccess.subject) ?? [];
+	const viewerPolicies = viewerAccess?.engine.policiesFor(viewerAccess.subject) ?? [];
 
 	return ok(
 		{

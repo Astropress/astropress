@@ -1,12 +1,9 @@
-import {
-	createAstropressCloudflareAdapter,
-	registerCms,
-} from "@astropress-diy/astropress";
+import { createAstropressCloudflareAdapter, registerCms } from "@astropress-diy/astropress";
 import { describe, expect, it } from "vitest";
 import { makeDb } from "./helpers/make-db.js";
 import {
-	SqliteBackedD1Database,
 	createSeededCloudflareDatabase,
+	SqliteBackedD1Database,
 } from "./helpers/provider-test-fixtures.js";
 
 describe("cloudflare provider integration", () => {
@@ -31,9 +28,9 @@ describe("cloudflare provider integration", () => {
 		const user = await cloudflare.auth.signIn("admin@example.com", "password");
 		expect(user?.isAdmin).toBe(true);
 		expect(user?.id).toHaveLength(36);
-		const storedSession = db
-			.prepare("SELECT id FROM admin_sessions LIMIT 1")
-			.get() as { id: string };
+		const storedSession = db.prepare("SELECT id FROM admin_sessions LIMIT 1").get() as {
+			id: string;
+		};
 		expect(storedSession.id).not.toBe(user?.id);
 		expect(await cloudflare.auth.getSession(user?.id)).toMatchObject({
 			email: "admin@example.com",
@@ -88,13 +85,11 @@ describe("cloudflare provider integration", () => {
 			},
 		});
 		expect(savedPost.slug).toBe("cloudflare-write-post");
-		expect(await cloudflare.content.get("cloudflare-write-post")).toMatchObject(
-			{
-				slug: "cloudflare-write-post",
-				kind: "post",
-				title: "Cloudflare write post",
-			},
-		);
+		expect(await cloudflare.content.get("cloudflare-write-post")).toMatchObject({
+			slug: "cloudflare-write-post",
+			kind: "post",
+			title: "Cloudflare write post",
+		});
 
 		const translation = await cloudflare.content.save({
 			id: "/es/cloudflare-write-post",
@@ -176,9 +171,7 @@ describe("cloudflare provider integration", () => {
 		await cloudflare.content.delete("/legacy-cloudflare-write-post");
 		await cloudflare.media.delete("cloudflare-upload");
 
-		expect(
-			await cloudflare.content.get("/legacy-cloudflare-write-post"),
-		).toBeNull();
+		expect(await cloudflare.content.get("/legacy-cloudflare-write-post")).toBeNull();
 		expect(await cloudflare.media.get("cloudflare-upload")).toBeNull();
 
 		db.close();
@@ -243,9 +236,7 @@ describe("cloudflare provider integration", () => {
 		});
 
 		// Unsupported record kind — adapter degrades gracefully (no-op) rather than throwing
-		await expect(
-			cloudflare.content.delete("comment-del-1"),
-		).resolves.toBeUndefined();
+		await expect(cloudflare.content.delete("comment-del-1")).resolves.toBeUndefined();
 
 		db.close();
 	});

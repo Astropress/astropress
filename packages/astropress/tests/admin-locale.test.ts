@@ -15,9 +15,7 @@ describe("pickAdminLocaleFromAcceptLanguage", () => {
 	});
 
 	test("matches the highest q-weighted supported locale", () => {
-		expect(
-			pickAdminLocaleFromAcceptLanguage("fr-CA;q=0.5,de-DE;q=0.9,en;q=0.1"),
-		).toBe("de");
+		expect(pickAdminLocaleFromAcceptLanguage("fr-CA;q=0.5,de-DE;q=0.9,en;q=0.1")).toBe("de");
 	});
 
 	test("strips region subtags so pt-BR matches pt", () => {
@@ -36,51 +34,34 @@ describe("pickAdminLocaleFromAcceptLanguage", () => {
 });
 
 describe("resolveAdminLocale", () => {
-	function makeAstro({
-		cookie,
-		acceptLanguage,
-	}: {
-		cookie?: string;
-		acceptLanguage?: string;
-	}) {
+	function makeAstro({ cookie, acceptLanguage }: { cookie?: string; acceptLanguage?: string }) {
 		return {
 			cookies: {
 				get: (name: string) =>
-					cookie && name === "astropress_admin_locale"
-						? { value: cookie }
-						: undefined,
+					cookie && name === "astropress_admin_locale" ? { value: cookie } : undefined,
 			},
 			request: {
 				headers: {
-					get: (name: string) =>
-						name === "accept-language" ? (acceptLanguage ?? null) : null,
+					get: (name: string) => (name === "accept-language" ? (acceptLanguage ?? null) : null),
 				},
 			},
 		};
 	}
 
 	test("cookie wins over Accept-Language", () => {
-		expect(
-			resolveAdminLocale(makeAstro({ cookie: "ja", acceptLanguage: "fr-FR" })),
-		).toBe("ja");
+		expect(resolveAdminLocale(makeAstro({ cookie: "ja", acceptLanguage: "fr-FR" }))).toBe("ja");
 	});
 
 	test("Accept-Language is used when no cookie is set", () => {
-		expect(resolveAdminLocale(makeAstro({ acceptLanguage: "es-MX" }))).toBe(
-			"es",
-		);
+		expect(resolveAdminLocale(makeAstro({ acceptLanguage: "es-MX" }))).toBe("es");
 	});
 
 	test("falls back to en when nothing matches", () => {
-		expect(resolveAdminLocale(makeAstro({ acceptLanguage: "ko-KR" }))).toBe(
-			"en",
-		);
+		expect(resolveAdminLocale(makeAstro({ acceptLanguage: "ko-KR" }))).toBe("en");
 	});
 
 	test("ignores invalid cookie values", () => {
-		expect(
-			resolveAdminLocale(makeAstro({ cookie: "xx", acceptLanguage: "hi-IN" })),
-		).toBe("hi");
+		expect(resolveAdminLocale(makeAstro({ cookie: "xx", acceptLanguage: "hi-IN" }))).toBe("hi");
 	});
 
 	test("supports the ar locale via cookie", () => {
@@ -88,9 +69,7 @@ describe("resolveAdminLocale", () => {
 	});
 
 	test("supports ar via Accept-Language", () => {
-		expect(resolveAdminLocale(makeAstro({ acceptLanguage: "ar-SA" }))).toBe(
-			"ar",
-		);
+		expect(resolveAdminLocale(makeAstro({ acceptLanguage: "ar-SA" }))).toBe("ar");
 	});
 });
 
@@ -99,17 +78,7 @@ describe("isRtlLocale", () => {
 		expect(isRtlLocale("ar")).toBe(true);
 	});
 	test("returns false for every LTR locale", () => {
-		for (const ltr of [
-			"en",
-			"es",
-			"fr",
-			"de",
-			"pt",
-			"ja",
-			"te",
-			"hi",
-			"ny",
-		] as const) {
+		for (const ltr of ["en", "es", "fr", "de", "pt", "ja", "te", "hi", "ny"] as const) {
 			expect(isRtlLocale(ltr)).toBe(false);
 		}
 	});
@@ -123,17 +92,7 @@ describe("localeDirection", () => {
 		expect(localeDirection("en")).toBe("ltr");
 	});
 	test("returns 'ltr' for every LTR locale in the catalog", () => {
-		for (const ltr of [
-			"en",
-			"es",
-			"fr",
-			"de",
-			"pt",
-			"ja",
-			"te",
-			"hi",
-			"ny",
-		] as const) {
+		for (const ltr of ["en", "es", "fr", "de", "pt", "ja", "te", "hi", "ny"] as const) {
 			expect(localeDirection(ltr)).toBe("ltr");
 		}
 	});
@@ -176,17 +135,7 @@ describe("admin-locale — extra branch coverage", () => {
 	});
 
 	test("isRtlLocale on every supported LTR returns false strictly", () => {
-		for (const l of [
-			"en",
-			"es",
-			"fr",
-			"de",
-			"pt",
-			"ja",
-			"te",
-			"hi",
-			"ny",
-		] as const) {
+		for (const l of ["en", "es", "fr", "de", "pt", "ja", "te", "hi", "ny"] as const) {
 			expect(isRtlLocale(l)).toBe(false);
 		}
 	});
@@ -231,8 +180,6 @@ describe("admin-locale — extra branch coverage", () => {
 		// "claim" with non-NaN value.
 		// Header: "fr;extra=0.1, en;q=0.99" — original: fr q=1, en q=0.99 → fr wins.
 		// Mutant: for fr, finds first param "extra=0.1", splits at "=", takes "0.1" → q=0.1. For en, finds "q=0.99" first → q=0.99. en wins.
-		expect(pickAdminLocaleFromAcceptLanguage("fr;extra=0.1, en;q=0.99")).toBe(
-			"fr",
-		);
+		expect(pickAdminLocaleFromAcceptLanguage("fr;extra=0.1, en;q=0.99")).toBe("fr");
 	});
 });

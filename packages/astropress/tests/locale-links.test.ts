@@ -52,9 +52,7 @@ describe("canonicalUrlForRoute()", () => {
 	});
 
 	it("appends a trailing slash to non-root routes", () => {
-		expect(canonicalUrlForRoute("/en/education")).toBe(
-			"https://example.com/en/education/",
-		);
+		expect(canonicalUrlForRoute("/en/education")).toBe("https://example.com/en/education/");
 	});
 });
 
@@ -106,10 +104,7 @@ describe("sanitizeCanonicalUrl()", () => {
 	});
 
 	it("normalizes trailing slash on override URL", () => {
-		const url = sanitizeCanonicalUrl(
-			"https://example.com/en/impact",
-			"/en/impact",
-		);
+		const url = sanitizeCanonicalUrl("https://example.com/en/impact", "/en/impact");
 		expect(url).toMatch(/\/en\/impact\/$/);
 	});
 

@@ -2,11 +2,11 @@ import type { DatabaseSync } from "node:sqlite";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { registerCms } from "../src/config.js";
 import { createAstropressSqliteAdminRuntime } from "../src/sqlite-admin-runtime.js";
-import { STANDARD_CMS_CONFIG, makeDb } from "./helpers/make-db.js";
+import { makeDb, STANDARD_CMS_CONFIG } from "./helpers/make-db.js";
 import {
-	type RuntimeFixture,
 	createRuntimeFixture,
 	makePasswordHash,
+	type RuntimeFixture,
 } from "./helpers/sqlite-admin-runtime-fixture.js";
 
 let fixture: RuntimeFixture;
@@ -39,10 +39,7 @@ describe("media", () => {
 	});
 
 	it("updateMediaAsset returns error for empty id (empty-id branch)", () => {
-		const result = fixture.store.media.updateMediaAsset(
-			{ id: "  " },
-			fixture.actor,
-		);
+		const result = fixture.store.media.updateMediaAsset({ id: "  " }, fixture.actor);
 		expect(result.ok).toBe(false);
 		expect(result.error).toMatch(/id is required/i);
 	});
@@ -61,24 +58,14 @@ describe("media", () => {
 			.prepare(
 				"INSERT INTO media_assets (id, local_path, mime_type, file_size, alt_text, title, uploaded_by) VALUES (?, ?, ?, ?, ?, ?, ?)",
 			)
-			.run(
-				"media-test-1",
-				"/uploads/img.png",
-				"image/png",
-				1024,
-				"old alt",
-				"Old Title",
-				"seed",
-			);
+			.run("media-test-1", "/uploads/img.png", "image/png", 1024, "old alt", "Old Title", "seed");
 
 		const result = fixture.store.media.updateMediaAsset(
 			{ id: "media-test-1", title: "New Title", altText: "new alt" },
 			fixture.actor,
 		);
 		expect(result.ok).toBe(true);
-		const asset = fixture.store.media
-			.listMediaAssets()
-			.find((a) => a.id === "media-test-1");
+		const asset = fixture.store.media.listMediaAssets().find((a) => a.id === "media-test-1");
 		expect(asset?.title).toBe("New Title");
 		expect(asset?.altText).toBe("new alt");
 	});
@@ -131,9 +118,7 @@ describe("media", () => {
 		);
 		expect(result.ok).toBe(true);
 		if (!result.ok) throw new Error("unreachable");
-		expect(
-			fixture.store.media.listMediaAssets().some((a) => a.id === result.id),
-		).toBe(true);
+		expect(fixture.store.media.listMediaAssets().some((a) => a.id === result.id)).toBe(true);
 	});
 
 	it("createMediaAsset: .jpg file succeeds (covers guessImageMimeType jpeg fallback branch)", () => {
@@ -146,14 +131,10 @@ describe("media", () => {
 	});
 
 	it("createMediaAsset: .svg file succeeds — no mimeType forces guessImageMimeType svg branch", () => {
-		const svgBytes = Buffer.from(
-			"<svg xmlns='http://www.w3.org/2000/svg'><rect/></svg>",
-		);
+		const svgBytes = Buffer.from("<svg xmlns='http://www.w3.org/2000/svg'><rect/></svg>");
 		expect(
-			fixture.store.media.createMediaAsset(
-				{ filename: "icon.svg", bytes: svgBytes },
-				fixture.actor,
-			).ok,
+			fixture.store.media.createMediaAsset({ filename: "icon.svg", bytes: svgBytes }, fixture.actor)
+				.ok,
 		).toBe(true);
 	});
 
@@ -172,10 +153,8 @@ describe("media", () => {
 			"hex",
 		);
 		expect(
-			fixture.store.media.createMediaAsset(
-				{ filename: "anim.gif", bytes: gifBytes },
-				fixture.actor,
-			).ok,
+			fixture.store.media.createMediaAsset({ filename: "anim.gif", bytes: gifBytes }, fixture.actor)
+				.ok,
 		).toBe(true);
 	});
 
@@ -248,10 +227,7 @@ describe("media", () => {
 	});
 
 	it("deleteMediaAsset: non-existent asset returns error", () => {
-		const result = fixture.store.media.deleteMediaAsset(
-			"does-not-exist",
-			fixture.actor,
-		);
+		const result = fixture.store.media.deleteMediaAsset("does-not-exist", fixture.actor);
 		expect(result.ok).toBe(false);
 		expect(result.error).toMatch(/could not be deleted/i);
 	});
@@ -263,14 +239,9 @@ describe("media", () => {
 		);
 		expect(created.ok).toBe(true);
 		if (!created.ok) throw new Error("unreachable");
-		const result = fixture.store.media.deleteMediaAsset(
-			created.id,
-			fixture.actor,
-		);
+		const result = fixture.store.media.deleteMediaAsset(created.id, fixture.actor);
 		expect(result.ok).toBe(true);
-		expect(
-			fixture.store.media.listMediaAssets().some((a) => a.id === created.id),
-		).toBe(false);
+		expect(fixture.store.media.listMediaAssets().some((a) => a.id === created.id)).toBe(false);
 	});
 
 	it("deleteMediaAsset: non-uploads local_path skips file deletion (deleteLocalMediaUpload !startsWith branch)", () => {
@@ -278,19 +249,8 @@ describe("media", () => {
 			.prepare(
 				"INSERT INTO media_assets (id, local_path, mime_type, file_size, alt_text, title, uploaded_by) VALUES (?, ?, ?, ?, ?, ?, ?)",
 			)
-			.run(
-				"media-other-path",
-				"/some/other/path.png",
-				"image/png",
-				512,
-				"",
-				"Other Path",
-				"seed",
-			);
-		expect(
-			fixture.store.media.deleteMediaAsset("media-other-path", fixture.actor)
-				.ok,
-		).toBe(true);
+			.run("media-other-path", "/some/other/path.png", "image/png", 512, "", "Other Path", "seed");
+		expect(fixture.store.media.deleteMediaAsset("media-other-path", fixture.actor).ok).toBe(true);
 	});
 
 	it("getLocalImageRoot uses ASTROPRESS_LOCAL_IMAGE_ROOT env var (branch 1)", () => {
@@ -302,12 +262,7 @@ describe("media", () => {
 				.prepare(
 					"INSERT INTO admin_users (email, password_hash, name, active, is_admin) VALUES (?1, ?2, ?4, 1, CASE WHEN ?3 = 'admin' THEN 1 ELSE 0 END)",
 				)
-				.run(
-					"env@test.local",
-					makePasswordHash("password"),
-					"admin",
-					"Env Test",
-				);
+				.run("env@test.local", makePasswordHash("password"), "admin", "Env Test");
 			const rt = createAstropressSqliteAdminRuntime({
 				getDatabase: () => testDb,
 			});
@@ -319,9 +274,7 @@ describe("media", () => {
 			).toBe(true);
 			testDb.close();
 		} finally {
-			if (prev === undefined)
-				// biome-ignore lint/performance/noDelete: = undefined keeps the key in Bun, causing getLocalUploadsDir to return "undefined/uploads" and create a stray directory
-				delete process.env.ASTROPRESS_LOCAL_IMAGE_ROOT;
+			if (prev === undefined) delete process.env.ASTROPRESS_LOCAL_IMAGE_ROOT;
 			else process.env.ASTROPRESS_LOCAL_IMAGE_ROOT = prev;
 		}
 	});
@@ -348,15 +301,11 @@ describe("CMS routes", () => {
 		});
 
 		it("getSystemRoute with already-normalized path (normalizeSystemRoutePath branch 2)", () => {
-			expect(fixture.registry.getSystemRoute("/sitemap.xml")?.path).toBe(
-				"/sitemap.xml",
-			);
+			expect(fixture.registry.getSystemRoute("/sitemap.xml")?.path).toBe("/sitemap.xml");
 		});
 
 		it("getSystemRoute with un-prefixed path (normalizeSystemRoutePath branch 3)", () => {
-			expect(fixture.registry.getSystemRoute("sitemap.xml")?.path).toBe(
-				"/sitemap.xml",
-			);
+			expect(fixture.registry.getSystemRoute("sitemap.xml")?.path).toBe("/sitemap.xml");
 		});
 
 		it("getSystemRoute returns null for unknown path", () => {
@@ -384,18 +333,12 @@ describe("CMS routes", () => {
 		});
 
 		it("saveSystemRoute returns error for empty path", () => {
-			expect(
-				fixture.registry.saveSystemRoute("", { title: "X" }, fixture.actor).ok,
-			).toBe(false);
+			expect(fixture.registry.saveSystemRoute("", { title: "X" }, fixture.actor).ok).toBe(false);
 		});
 
 		it("saveSystemRoute returns error for non-existent path", () => {
 			expect(
-				fixture.registry.saveSystemRoute(
-					"/does-not-exist.xml",
-					{ title: "X" },
-					fixture.actor,
-				).ok,
+				fixture.registry.saveSystemRoute("/does-not-exist.xml", { title: "X" }, fixture.actor).ok,
 			).toBe(false);
 		});
 	});
@@ -403,17 +346,13 @@ describe("CMS routes", () => {
 	describe("structured page routes", () => {
 		it("listStructuredPageRoutes filters out routes with non-string templateKey (normalizeStructuredTemplateKey branch 1)", () => {
 			expect(
-				fixture.registry
-					.listStructuredPageRoutes()
-					.every((r) => r.path !== "/numeric-key"),
+				fixture.registry.listStructuredPageRoutes().every((r) => r.path !== "/numeric-key"),
 			).toBe(true);
 		});
 
 		it("listStructuredPageRoutes filters out routes where getCmsConfig throws (normalizeStructuredTemplateKey catch branch)", () => {
 			expect(
-				fixture.registry
-					.listStructuredPageRoutes()
-					.every((r) => r.path !== "/string-key"),
+				fixture.registry.listStructuredPageRoutes().every((r) => r.path !== "/string-key"),
 			).toBe(true);
 		});
 
@@ -434,9 +373,7 @@ describe("CMS routes", () => {
 			);
 			expect(
 				fixture.db
-					.prepare(
-						"SELECT id FROM cms_route_groups WHERE canonical_path = '/new-page'",
-					)
+					.prepare("SELECT id FROM cms_route_groups WHERE canonical_path = '/new-page'")
 					.get(),
 			).not.toBeNull();
 		});
@@ -449,9 +386,7 @@ describe("CMS routes", () => {
 			);
 			expect(
 				fixture.db
-					.prepare(
-						"SELECT id FROM cms_route_groups WHERE canonical_path = '/no-sections-page'",
-					)
+					.prepare("SELECT id FROM cms_route_groups WHERE canonical_path = '/no-sections-page'")
 					.get(),
 			).not.toBeNull();
 		});
@@ -497,9 +432,7 @@ describe("CMS routes", () => {
 
 	describe("archive routes", () => {
 		it("listArchiveRoutes returns seeded archive routes", () => {
-			expect(
-				fixture.registry.listArchiveRoutes().some((r) => r.path === "/blog"),
-			).toBe(true);
+			expect(fixture.registry.listArchiveRoutes().some((r) => r.path === "/blog")).toBe(true);
 		});
 
 		it("getArchiveRoute returns the route", () => {
@@ -522,11 +455,7 @@ describe("CMS routes", () => {
 
 		it("saveArchiveRoute returns error for non-existent path", () => {
 			expect(
-				fixture.registry.saveArchiveRoute(
-					"/not-an-archive",
-					{ title: "X" },
-					fixture.actor,
-				).ok,
+				fixture.registry.saveArchiveRoute("/not-an-archive", { title: "X" }, fixture.actor).ok,
 			).toBe(false);
 		});
 	});
@@ -536,13 +465,9 @@ describe("CMS routes", () => {
 
 describe("CMS route factory error guards", () => {
 	it("saveSystemRoute: empty title returns error", () => {
-		expect(
-			fixture.registry.saveSystemRoute(
-				"/sitemap.xml",
-				{ title: "" },
-				fixture.actor,
-			).ok,
-		).toBe(false);
+		expect(fixture.registry.saveSystemRoute("/sitemap.xml", { title: "" }, fixture.actor).ok).toBe(
+			false,
+		);
 	});
 
 	it("saveSystemRoute: all optional fields provided (covers bodyHtml, settings branches)", () => {
@@ -639,10 +564,7 @@ describe("CMS route factory error guards", () => {
 	});
 
 	it("saveArchiveRoute: empty title returns error", () => {
-		expect(
-			fixture.registry.saveArchiveRoute("/blog", { title: "" }, fixture.actor)
-				.ok,
-		).toBe(false);
+		expect(fixture.registry.saveArchiveRoute("/blog", { title: "" }, fixture.actor).ok).toBe(false);
 	});
 
 	it("saveArchiveRoute: all optional fields provided", () => {
@@ -677,11 +599,8 @@ describe("additional route branches", () => {
 
 	it("saveArchiveRoute: saves with null values for omitted optional fields", () => {
 		expect(
-			fixture.registry.saveArchiveRoute(
-				"/blog",
-				{ title: "Minimal Archive Save" },
-				fixture.actor,
-			).ok,
+			fixture.registry.saveArchiveRoute("/blog", { title: "Minimal Archive Save" }, fixture.actor)
+				.ok,
 		).toBe(true);
 	});
 });
@@ -689,14 +608,12 @@ describe("additional route branches", () => {
 // ─── CMS config registered: normalizeStructuredTemplateKey success paths ──────
 
 describe("CMS config registered: structured template key branches", () => {
-	let cmsStore: RuntimeFixture["store"];
+	let _cmsStore: RuntimeFixture["store"];
 	let cmsRegistry: RuntimeFixture["registry"];
 	let cmsDb: DatabaseSync;
 
 	beforeAll(() => {
-		(globalThis as Record<symbol, unknown>)[
-			Symbol.for("astropress.cms-config")
-		] = {
+		(globalThis as Record<symbol, unknown>)[Symbol.for("astropress.cms-config")] = {
 			templateKeys: ["hero", "blog"],
 			seedPages: [],
 		};
@@ -712,13 +629,7 @@ describe("CMS config registered: structured template key branches", () => {
 			.prepare(
 				"INSERT INTO cms_route_groups (id, kind, render_strategy, canonical_locale, canonical_path) VALUES (?, ?, ?, ?, ?)",
 			)
-			.run(
-				"group-hero-page",
-				"page",
-				"structured_sections",
-				"en",
-				"/hero-page",
-			);
+			.run("group-hero-page", "page", "structured_sections", "en", "/hero-page");
 		cmsDb
 			.prepare(
 				"INSERT INTO cms_route_variants (id, group_id, locale, path, status, title, sections_json, settings_json, updated_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
@@ -738,13 +649,7 @@ describe("CMS config registered: structured template key branches", () => {
 			.prepare(
 				"INSERT INTO cms_route_groups (id, kind, render_strategy, canonical_locale, canonical_path) VALUES (?, ?, ?, ?, ?)",
 			)
-			.run(
-				"group-full-page",
-				"page",
-				"structured_sections",
-				"en",
-				"/full-page",
-			);
+			.run("group-full-page", "page", "structured_sections", "en", "/full-page");
 		cmsDb
 			.prepare(
 				"INSERT INTO cms_route_variants (id, group_id, locale, path, status, title, summary, seo_title, meta_description, og_image, settings_json, sections_json, updated_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
@@ -768,13 +673,7 @@ describe("CMS config registered: structured template key branches", () => {
 			.prepare(
 				"INSERT INTO cms_route_groups (id, kind, render_strategy, canonical_locale, canonical_path) VALUES (?, ?, ?, ?, ?)",
 			)
-			.run(
-				"group-rich-archive",
-				"archive",
-				"archive_listing",
-				"en",
-				"/rich-blog",
-			);
+			.run("group-rich-archive", "archive", "archive_listing", "en", "/rich-blog");
 		cmsDb
 			.prepare(
 				"INSERT INTO cms_route_variants (id, group_id, locale, path, status, title, summary, seo_title, meta_description, updated_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
@@ -795,13 +694,7 @@ describe("CMS config registered: structured template key branches", () => {
 			.prepare(
 				"INSERT INTO cms_route_groups (id, kind, render_strategy, canonical_locale, canonical_path) VALUES (?, ?, ?, ?, ?)",
 			)
-			.run(
-				"group-rich-sitemap",
-				"system",
-				"generated_xml",
-				"en",
-				"/rich-sitemap.xml",
-			);
+			.run("group-rich-sitemap", "system", "generated_xml", "en", "/rich-sitemap.xml");
 		cmsDb
 			.prepare(
 				"INSERT INTO cms_route_variants (id, group_id, locale, path, status, title, summary, body_html, settings_json, updated_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
@@ -822,37 +715,27 @@ describe("CMS config registered: structured template key branches", () => {
 		const cmsRuntime = createAstropressSqliteAdminRuntime({
 			getDatabase: () => cmsDb,
 		});
-		cmsStore = cmsRuntime.sqliteAdminStore;
+		_cmsStore = cmsRuntime.sqliteAdminStore;
 		cmsRegistry = cmsRuntime.sqliteCmsRegistryModule;
 	});
 
 	afterAll(() => {
-		delete (globalThis as Record<symbol, unknown>)[
-			Symbol.for("astropress.cms-config")
-		];
+		delete (globalThis as Record<symbol, unknown>)[Symbol.for("astropress.cms-config")];
 		cmsDb.close();
 	});
 
 	it("getCmsConfig success path: normalizeStructuredTemplateKey returns known key (branch includes=true)", () => {
-		expect(
-			cmsRegistry
-				.listStructuredPageRoutes()
-				.some((r) => r.path === "/hero-page"),
-		).toBe(true);
+		expect(cmsRegistry.listStructuredPageRoutes().some((r) => r.path === "/hero-page")).toBe(true);
 	});
 
 	it("normalizeStructuredTemplateKey returns null for unknown templateKey (branch includes=false)", () => {
-		expect(
-			fixture.registry
-				.listStructuredPageRoutes()
-				.every((r) => r.path !== "/string-key"),
-		).toBe(true);
+		expect(fixture.registry.listStructuredPageRoutes().every((r) => r.path !== "/string-key")).toBe(
+			true,
+		);
 	});
 
 	it("listStructuredPageRoutes returns routes with all optional fields populated", () => {
-		const full = cmsRegistry
-			.listStructuredPageRoutes()
-			.find((r) => r.path === "/full-page");
+		const full = cmsRegistry.listStructuredPageRoutes().find((r) => r.path === "/full-page");
 		expect(full?.summary).toBe("Page summary");
 		expect(full?.seoTitle).toBe("Full Page SEO");
 		expect(full?.metaDescription).toBe("Full page meta");
@@ -862,17 +745,13 @@ describe("CMS config registered: structured template key branches", () => {
 	});
 
 	it("listSystemRoutes returns summary and body_html when populated", () => {
-		const rich = cmsRegistry
-			.listSystemRoutes()
-			.find((r) => r.path === "/rich-sitemap.xml");
+		const rich = cmsRegistry.listSystemRoutes().find((r) => r.path === "/rich-sitemap.xml");
 		expect(rich?.summary).toBe("A summary");
 		expect(rich?.settings).toMatchObject({ crawl: true });
 	});
 
 	it("listArchiveRoutes returns all optional fields when populated", () => {
-		const rich = cmsRegistry
-			.listArchiveRoutes()
-			.find((r) => r.path === "/rich-blog");
+		const rich = cmsRegistry.listArchiveRoutes().find((r) => r.path === "/rich-blog");
 		expect(rich?.summary).toBe("Blog summary");
 		expect(rich?.seoTitle).toBe("Rich Blog SEO");
 		expect(rich?.metaDescription).toBe("Blog meta");

@@ -20,10 +20,7 @@ function defaultAdminSlug(): "ap-admin" {
 
 export async function resolveAstropressAdminSlug(locals: APIContext["locals"]) {
 	const now = Date.now();
-	if (
-		cachedAdminSlug !== null &&
-		now - cachedAdminSlugAt < ADMIN_SLUG_CACHE_TTL_MS
-	) {
+	if (cachedAdminSlug !== null && now - cachedAdminSlugAt < ADMIN_SLUG_CACHE_TTL_MS) {
 		return cachedAdminSlug;
 	}
 

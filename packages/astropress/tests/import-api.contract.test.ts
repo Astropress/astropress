@@ -1,13 +1,5 @@
 import type { DatabaseSync } from "node:sqlite";
-import {
-	afterAll,
-	beforeAll,
-	beforeEach,
-	describe,
-	expect,
-	it,
-	vi,
-} from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { registerCms } from "../src/config";
 import type { AstropressWordPressImportReport } from "../src/platform-contracts.js";
@@ -113,12 +105,8 @@ beforeAll(async () => {
 	});
 
 	const store = createApiTokenStore(db);
-	importWriteToken = (
-		await store.create({ label: "import", scopes: ["import:write"] })
-	).rawToken;
-	contentReadToken = (
-		await store.create({ label: "read", scopes: ["content:read"] })
-	).rawToken;
+	importWriteToken = (await store.create({ label: "import", scopes: ["import:write"] })).rawToken;
+	contentReadToken = (await store.create({ label: "read", scopes: ["content:read"] })).rawToken;
 });
 
 afterAll(() => {
@@ -158,9 +146,7 @@ function req(opts: { token?: string; body?: unknown } = {}): Request {
 
 describe("POST /ap-api/v1/import/wordpress — auth and scope", () => {
 	it("returns 401 without Authorization header", async () => {
-		const res = await POST(
-			ctx(req({ body: { exportFile: "/tmp/export.xml" } })),
-		);
+		const res = await POST(ctx(req({ body: { exportFile: "/tmp/export.xml" } })));
 		expect(res.status).toBe(401);
 	});
 
@@ -215,9 +201,7 @@ describe("POST /ap-api/v1/import/wordpress — request validation", () => {
 	});
 
 	it("returns 422 when exportFile is empty string", async () => {
-		const res = await POST(
-			ctx(req({ token: importWriteToken, body: { exportFile: "  " } })),
-		);
+		const res = await POST(ctx(req({ token: importWriteToken, body: { exportFile: "  " } })));
 		expect(res.status).toBe(422);
 	});
 });

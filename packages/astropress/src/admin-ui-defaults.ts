@@ -28,19 +28,14 @@ export const defaultAdminUiConfig: AstropressResolvedAdminUiConfig = {
 		loginEmailLabel: "Email address",
 		loginPasswordLabel: "Password",
 		forgotPassword: "Forgot your password?",
-		invalidCredentials:
-			"That email and password combination was not recognized.",
-		rateLimited:
-			"Too many sign-in attempts were recorded. Wait a minute and try again.",
-		challengeRequired:
-			"Complete the security challenge and try signing in again.",
-		passwordResetSuccess:
-			"Your password was reset successfully. Sign in with the new password.",
+		invalidCredentials: "That email and password combination was not recognized.",
+		rateLimited: "Too many sign-in attempts were recorded. Wait a minute and try again.",
+		challengeRequired: "Complete the security challenge and try signing in again.",
+		passwordResetSuccess: "Your password was reset successfully. Sign in with the new password.",
 		invitationAcceptedSuccess:
 			"Your invitation was accepted successfully. Sign in with the new password.",
 		acceptInvitationHeading: "Accept invitation",
-		acceptInvitationDescription:
-			"Set a password to activate this invited admin account.",
+		acceptInvitationDescription: "Set a password to activate this invited admin account.",
 		acceptInvitationSubmit: "Accept invitation",
 		resetPasswordRequestHeading: "Reset password",
 		resetPasswordRequestDescription:

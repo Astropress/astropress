@@ -45,9 +45,7 @@ export interface ConnectIntegrationErr {
 	readonly code: IntegrationErrorCode;
 }
 
-export type ConnectIntegrationResult =
-	| ConnectIntegrationOk
-	| ConnectIntegrationErr;
+export type ConnectIntegrationResult = ConnectIntegrationOk | ConnectIntegrationErr;
 
 const DEFAULT_VERIFY_TIMEOUT_MS = 10_000;
 
@@ -86,9 +84,7 @@ export async function runProviderVerify<TFields extends Record<string, string>>(
  * the typed code in `last_error` so the UI can show a localised hint
  * without exposing the upstream error message.
  */
-export async function connectIntegration<
-	TFields extends Record<string, string>,
->(
+export async function connectIntegration<TFields extends Record<string, string>>(
 	repo: IntegrationsRepository,
 	params: ConnectIntegrationParams<TFields>,
 ): Promise<ConnectIntegrationResult> {
@@ -130,9 +126,7 @@ export async function connectIntegration<
  * `integration-reverify` admin action and by the sidebar status
  * health check.
  */
-export async function reverifyIntegration<
-	TFields extends Record<string, string>,
->(
+export async function reverifyIntegration<TFields extends Record<string, string>>(
 	repo: IntegrationsRepository,
 	provider: RegisteredProvider<TFields>,
 	fields: TFields,

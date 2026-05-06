@@ -17,14 +17,7 @@ export async function prepareAstropressDeployment(
 	options: AstropressPreparedDeploymentOptions,
 ) {
 	const baseOutputDir = resolve(
-		options.outputDir ??
-			join(
-				input.buildDir,
-				"..",
-				".astropress",
-				"deployments",
-				options.provider,
-			),
+		options.outputDir ?? join(input.buildDir, "..", ".astropress", "deployments", options.provider),
 	);
 	const targetDir = join(baseOutputDir, input.projectName);
 	await rm(targetDir, { recursive: true, force: true });

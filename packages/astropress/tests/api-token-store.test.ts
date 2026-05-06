@@ -1,10 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import type {
-	ApiScope,
-	ApiTokenRecord,
-	ApiTokenStore,
-} from "../src/platform-contracts";
+import type { ApiScope, ApiTokenRecord, ApiTokenStore } from "../src/platform-contracts";
 import { createApiTokenStore } from "../src/sqlite-runtime/api-tokens.js";
 import { hashOpaqueToken } from "../src/sqlite-runtime/utils.js";
 import { makeDb } from "./helpers/make-db.js";
@@ -74,9 +70,9 @@ describe("ApiTokenStore SQLite implementation", () => {
 		expect(record.revokedAt).toBeNull();
 
 		// Hash stored, not raw token
-		const row = db
-			.prepare("SELECT token_hash FROM api_tokens WHERE id = ?")
-			.get(record.id) as { token_hash: string };
+		const row = db.prepare("SELECT token_hash FROM api_tokens WHERE id = ?").get(record.id) as {
+			token_hash: string;
+		};
 		expect(row.token_hash).toBe(hashOpaqueToken(rawToken));
 		expect(row.token_hash).not.toBe(rawToken);
 	});

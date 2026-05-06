@@ -1,5 +1,5 @@
-import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 
 import { expectStylesheetsLoaded } from "./helpers/accessibility";
 
@@ -11,14 +11,8 @@ async function submitAndExpectInlineFeedback(page: Page) {
 	await page.waitForFunction(() => !!customElements.get("ap-pending-form"));
 	await page.waitForFunction(() => {
 		const host = document.querySelector("ap-pending-form");
-		const form = document.querySelector(
-			"form[action='/ap-admin/actions/content-save']",
-		);
-		return (
-			host instanceof HTMLElement &&
-			form instanceof HTMLFormElement &&
-			host.contains(form)
-		);
+		const form = document.querySelector("form[action='/ap-admin/actions/content-save']");
+		return host instanceof HTMLElement && form instanceof HTMLFormElement && host.contains(form);
 	});
 
 	const form = page.locator("form[action='/ap-admin/actions/content-save']");
@@ -31,9 +25,7 @@ async function submitAndExpectInlineFeedback(page: Page) {
 			},
 			{ once: true },
 		);
-		form.dispatchEvent(
-			new Event("submit", { bubbles: true, cancelable: true }),
-		);
+		form.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
 	});
 
 	const saveButton = page.getByRole("button", {
@@ -41,19 +33,14 @@ async function submitAndExpectInlineFeedback(page: Page) {
 	});
 	await expect(saveButton).toBeDisabled();
 	await expect(saveButton).toHaveAttribute("aria-busy", "true");
-	await expect(page.locator("ap-pending-form")).toHaveAttribute(
-		"data-pending",
-		"true",
-	);
+	await expect(page.locator("ap-pending-form")).toHaveAttribute("data-pending", "true");
 }
 
 async function expectSubmitAffordance(page: Page) {
 	const form = page.locator("form[action='/ap-admin/actions/content-save']");
 	await expect(form).toBeVisible();
 	await expect(form).toHaveAttribute("method", "post");
-	await expect(
-		page.getByRole("button", { name: "Save reviewed changes" }),
-	).toBeVisible();
+	await expect(page.getByRole("button", { name: "Save reviewed changes" })).toBeVisible();
 }
 
 test.describe("Feature: cross-browser admin golden smoke", () => {
@@ -62,9 +49,7 @@ test.describe("Feature: cross-browser admin golden smoke", () => {
 		browserName,
 	}) => {
 		await page.goto("/ap-admin", { waitUntil: "networkidle" });
-		await expect(
-			page.getByRole("heading", { level: 1, name: "Dashboard" }),
-		).toBeVisible();
+		await expect(page.getByRole("heading", { level: 1, name: "Dashboard" })).toBeVisible();
 		await expectStylesheetsLoaded(page);
 
 		await page.keyboard.press("Tab");
@@ -73,9 +58,7 @@ test.describe("Feature: cross-browser admin golden smoke", () => {
 		await page.goto("/ap-admin/posts/hello-world", {
 			waitUntil: "networkidle",
 		});
-		await expect(
-			page.getByRole("heading", { level: 1, name: "Edit Post" }),
-		).toBeVisible();
+		await expect(page.getByRole("heading", { level: 1, name: "Edit Post" })).toBeVisible();
 		await expectStylesheetsLoaded(page);
 
 		await page

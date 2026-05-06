@@ -7,13 +7,7 @@
  */
 
 import { join, relative } from "node:path";
-import {
-	AuditReport,
-	fromRoot,
-	listFiles,
-	readText,
-	runAudit,
-} from "../lib/audit-utils.js";
+import { AuditReport, fromRoot, listFiles, readText, runAudit } from "../lib/audit-utils.js";
 
 const WORKFLOWS_DIR = fromRoot(".github");
 const DIRECT_EXPRESSION_PATTERN = /\$\{\{\s*(github|inputs|secrets)\.[^}]+}}/;

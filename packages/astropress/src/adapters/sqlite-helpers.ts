@@ -1,13 +1,7 @@
-import type {
-	ContentStoreRecord,
-	MediaAssetRecord,
-} from "../platform-contracts";
+import type { ContentStoreRecord, MediaAssetRecord } from "../platform-contracts";
 import type { createAstropressSqliteAdminRuntime } from "../sqlite-admin-runtime";
 import type { AstropressSqliteSeedToolkit } from "../sqlite-bootstrap";
-import {
-	toContentStoreRecord,
-	toRedirectRecord,
-} from "./adapter-record-helpers.js";
+import { toContentStoreRecord, toRedirectRecord } from "./adapter-record-helpers.js";
 
 export const SQL_UPSERT_MEDIA =
 	"INSERT INTO media_assets (id, source_url, local_path, mime_type, file_size, alt_text, title, uploaded_at, uploaded_by, deleted_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NULL) ON CONFLICT(id) DO UPDATE SET source_url = excluded.source_url, local_path = excluded.local_path, mime_type = excluded.mime_type, file_size = excluded.file_size, alt_text = excluded.alt_text, title = excluded.title, deleted_at = NULL";
@@ -15,16 +9,12 @@ export const SQL_INSERT_REVISION = `INSERT INTO content_revisions (id, slug, sou
 export const SQL_LIST_TRANSLATIONS =
 	"SELECT route, state, updated_at, updated_by FROM translation_overrides ORDER BY route ASC";
 
-export type SqliteAdminRuntime = ReturnType<
-	typeof createAstropressSqliteAdminRuntime
->;
+export type SqliteAdminRuntime = ReturnType<typeof createAstropressSqliteAdminRuntime>;
 export type SqliteActor = { email: string; role: "admin"; name: string };
 
 export function listSqliteContentRecords(
 	runtime: SqliteAdminRuntime,
-	ensureDatabase: () => ReturnType<
-		AstropressSqliteSeedToolkit["openSeedDatabase"]
-	>,
+	ensureDatabase: () => ReturnType<AstropressSqliteSeedToolkit["openSeedDatabase"]>,
 	kind: ContentStoreRecord["kind"] | undefined,
 ): ContentStoreRecord[] {
 	const records: ContentStoreRecord[] = [];
@@ -88,9 +78,7 @@ export function listSqliteContentRecords(
 		});
 	}
 	if (!kind || kind === "translation") {
-		const rows = ensureDatabase()
-			.prepare(SQL_LIST_TRANSLATIONS)
-			.all() as Array<{
+		const rows = ensureDatabase().prepare(SQL_LIST_TRANSLATIONS).all() as Array<{
 			route: string;
 			state: string;
 			updated_at: string;
@@ -143,11 +131,7 @@ export function resolveMetaString(
 export function resolveSqliteStatus(
 	status: string | undefined,
 ): "archived" | "draft" | "published" {
-	return status === "archived"
-		? "archived"
-		: status === "draft"
-			? "draft"
-			: "published";
+	return status === "archived" ? "archived" : status === "draft" ? "draft" : "published";
 }
 
 export function saveSqlitePageOrPost(
@@ -158,9 +142,7 @@ export function saveSqlitePageOrPost(
 ): ContentStoreRecord {
 	const existing = runtime.sqliteAdminStore.content.getContentState(slug);
 	const seoTitle = String(record.metadata?.seoTitle ?? record.title ?? slug);
-	const metaDescription = String(
-		record.metadata?.metaDescription ?? record.title ?? slug,
-	);
+	const metaDescription = String(record.metadata?.metaDescription ?? record.title ?? slug);
 	if (existing) {
 		const result = runtime.sqliteAdminStore.content.saveContentState(
 			slug,
@@ -174,10 +156,7 @@ export function saveSqlitePageOrPost(
 				ogTitle: resolveMetaString(record.metadata, "ogTitle"),
 				ogDescription: resolveMetaString(record.metadata, "ogDescription"),
 				ogImage: resolveMetaString(record.metadata, "ogImage"),
-				canonicalUrlOverride: resolveMetaString(
-					record.metadata,
-					"canonicalUrlOverride",
-				),
+				canonicalUrlOverride: resolveMetaString(record.metadata, "canonicalUrlOverride"),
 				robotsDirective: resolveMetaString(record.metadata, "robotsDirective"),
 			},
 			actor,
@@ -237,11 +216,7 @@ export function saveSqliteContentRecord(
 	}
 	if (record.kind === "translation") {
 		const state = String(record.metadata?.state ?? "not_started");
-		runtime.sqliteAdminStore.translations.updateTranslationState(
-			slug,
-			state,
-			actor,
-		);
+		runtime.sqliteAdminStore.translations.updateTranslationState(slug, state, actor);
 		return {
 			id: slug,
 			kind: "translation",
@@ -254,9 +229,7 @@ export function saveSqliteContentRecord(
 	if (record.kind === "page" || record.kind === "post") {
 		return saveSqlitePageOrPost(runtime, slug, record, actor);
 	}
-	throw new Error(
-		`SQLite content store does not support saving ${record.kind} records yet.`,
-	);
+	throw new Error(`SQLite content store does not support saving ${record.kind} records yet.`);
 }
 
 export function deleteSqliteContentRecord(
@@ -275,9 +248,7 @@ export function deleteSqliteContentRecord(
 				title: existing.title ?? existing.slug,
 				status: "archived",
 				body: existing.body ?? "",
-				seoTitle: String(
-					existing.metadata?.seoTitle ?? existing.title ?? existing.slug,
-				),
+				seoTitle: String(existing.metadata?.seoTitle ?? existing.title ?? existing.slug),
 				metaDescription: String(
 					existing.metadata?.metaDescription ?? existing.title ?? existing.slug,
 				),
@@ -286,9 +257,7 @@ export function deleteSqliteContentRecord(
 		);
 		return;
 	}
-	throw new Error(
-		`SQLite content store does not support deleting ${existing.kind} records yet.`,
-	);
+	throw new Error(`SQLite content store does not support deleting ${existing.kind} records yet.`);
 }
 
 export function snapshotField(
@@ -338,9 +307,7 @@ export function buildRevisionParams(
 }
 
 export function appendSqliteRevision(
-	ensureDatabase: () => ReturnType<
-		AstropressSqliteSeedToolkit["openSeedDatabase"]
-	>,
+	ensureDatabase: () => ReturnType<AstropressSqliteSeedToolkit["openSeedDatabase"]>,
 	revision: {
 		id: string;
 		recordId: string;
@@ -358,9 +325,7 @@ export function appendSqliteRevision(
 }
 
 export function getSqliteMedia(runtime: SqliteAdminRuntime, id: string) {
-	const asset = runtime.sqliteAdminStore.media
-		.listMediaAssets()
-		.find((entry) => entry.id === id);
+	const asset = runtime.sqliteAdminStore.media.listMediaAssets().find((entry) => entry.id === id);
 	if (!asset) return null;
 	return {
 		id: asset.id,
@@ -372,9 +337,7 @@ export function getSqliteMedia(runtime: SqliteAdminRuntime, id: string) {
 }
 
 export function putSqliteMedia(
-	ensureDatabase: () => ReturnType<
-		AstropressSqliteSeedToolkit["openSeedDatabase"]
-	>,
+	ensureDatabase: () => ReturnType<AstropressSqliteSeedToolkit["openSeedDatabase"]>,
 	asset: MediaAssetRecord,
 	actorEmail: string,
 ) {

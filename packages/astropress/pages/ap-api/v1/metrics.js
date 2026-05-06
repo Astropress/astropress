@@ -6,11 +6,7 @@
  */
 
 import { getCmsConfig } from "@astropress-diy/astropress";
-import {
-	apiErrors,
-	jsonOk,
-	withApiRequest,
-} from "@astropress-diy/astropress/api-middleware.js";
+import { apiErrors, jsonOk, withApiRequest } from "@astropress-diy/astropress/api-middleware.js";
 import { loadLocalAdminStore } from "@astropress-diy/astropress/local-runtime-modules.js";
 import { listRuntimeContentStates } from "../../src/runtime-page-store.js";
 

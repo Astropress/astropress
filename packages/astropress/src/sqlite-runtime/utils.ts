@@ -92,9 +92,7 @@ export function localeFromPath(pathname: string): string {
  * localeFromAcceptLanguage("es;q=0.9, en;q=0.8");          // "es" (if locales = ["en","es"])
  * ```
  */
-export function localeFromAcceptLanguage(
-	acceptLanguage: string | null | undefined,
-): string {
+export function localeFromAcceptLanguage(acceptLanguage: string | null | undefined): string {
 	let locales: readonly string[];
 	try {
 		locales = getCmsConfig().locales ?? ["en", "es"];
@@ -136,10 +134,7 @@ export function getSeedPageRecords(): PageRecord[] {
 	}
 }
 
-export function hashOpaqueToken(
-	token: string,
-	secret = "astropress-dev-root-secret",
-) {
+export function hashOpaqueToken(token: string, secret = "astropress-dev-root-secret") {
 	return createKmacDigest(token, secret, "sqlite-opaque-token");
 }
 
@@ -153,16 +148,14 @@ export function verifyPasswordSync(password: string, storedHash: string) {
 
 export { normalizePath } from "../admin-normalizers";
 export {
-	normalizeSlug as slugifyTerm,
 	normalizeContentStatus,
+	normalizeSlug as slugifyTerm,
 	parseIdList,
 } from "../persistence-commons";
 
 export function serializeIdList(values: number[] | undefined) {
 	return JSON.stringify(
-		(values ?? [])
-			.filter((entry) => Number.isInteger(entry) && entry > 0)
-			.sort((a, b) => a - b),
+		(values ?? []).filter((entry) => Number.isInteger(entry) && entry > 0).sort((a, b) => a - b),
 	);
 }
 

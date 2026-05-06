@@ -8,18 +8,13 @@
 import { describe, expect, it, vi } from "vitest";
 
 import { searchContentOverrides } from "../src/sqlite-runtime/search.js";
-import {
-	ensureFts5SearchIndex,
-	getTableSql,
-} from "../src/sqlite-schema-compat.js";
+import { ensureFts5SearchIndex, getTableSql } from "../src/sqlite-schema-compat.js";
 import { makeDb } from "./helpers/make-db.js";
 
 const CMS_CONFIG_KEY = Symbol.for("astropress.cms-config");
 
 function setCmsConfig(search?: { enabled?: boolean }) {
-	(globalThis as typeof globalThis & { [key: symbol]: unknown })[
-		CMS_CONFIG_KEY
-	] = {
+	(globalThis as typeof globalThis & { [key: symbol]: unknown })[CMS_CONFIG_KEY] = {
 		siteName: "Test Site",
 		siteUrl: "https://example.com",
 		templateKeys: [],
@@ -31,9 +26,7 @@ function setCmsConfig(search?: { enabled?: boolean }) {
 }
 
 function clearCmsConfig() {
-	(globalThis as typeof globalThis & { [key: symbol]: unknown })[
-		CMS_CONFIG_KEY
-	] = null;
+	(globalThis as typeof globalThis & { [key: symbol]: unknown })[CMS_CONFIG_KEY] = null;
 }
 
 describe("FTS5 search index creation", () => {
@@ -44,9 +37,9 @@ describe("FTS5 search index creation", () => {
 		ensureFts5SearchIndex(db);
 
 		// FTS5 virtual tables appear in sqlite_master as type 'table'
-		const row = db
-			.prepare("SELECT name FROM sqlite_master WHERE name = 'content_fts'")
-			.get() as { name: string } | undefined;
+		const row = db.prepare("SELECT name FROM sqlite_master WHERE name = 'content_fts'").get() as
+			| { name: string }
+			| undefined;
 		expect(row?.name).toBe("content_fts");
 		db.close();
 	});
@@ -106,15 +99,11 @@ describe("searchRuntimeContentStates gating", () => {
 		const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
 
 		// Import after setting config to ensure peekCmsConfig resolves correctly
-		const { searchRuntimeContentStates } = await import(
-			"../src/runtime-page-store.js"
-		);
+		const { searchRuntimeContentStates } = await import("../src/runtime-page-store.js");
 		const results = await searchRuntimeContentStates("hello");
 
 		expect(results).toEqual([]);
-		expect(warnSpy).toHaveBeenCalledWith(
-			expect.stringContaining("search.enabled"),
-		);
+		expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining("search.enabled"));
 		warnSpy.mockRestore();
 		clearCmsConfig();
 	});

@@ -10,12 +10,7 @@ import {
 	resolveValidSession,
 	validatePasswordInput,
 } from "./auth-repository-helpers";
-import type {
-	Actor,
-	AuthRepository,
-	PasswordResetRequest,
-	SessionUser,
-} from "./persistence-types";
+import type { AuthRepository, PasswordResetRequest, SessionUser } from "./persistence-types";
 
 export type {
 	AstropressAuthRepositoryInput,
@@ -27,10 +22,7 @@ export type {
 export function createAstropressAuthRepository(
 	input: AstropressAuthRepositoryInput,
 ): AuthRepository & {
-	authenticatePersistedAdminUser(
-		email: string,
-		password: string,
-	): Promise<SessionUser | null>;
+	authenticatePersistedAdminUser(email: string, password: string): Promise<SessionUser | null>;
 } {
 	return {
 		async authenticatePersistedAdminUser(email, password) {
@@ -47,13 +39,9 @@ export function createAstropressAuthRepository(
 			return mapSessionUser(user);
 		},
 		createSession(user, metadata) {
-			const userId = input.findActiveAdminUserIdByEmail(
-				user.email.toLowerCase(),
-			);
+			const userId = input.findActiveAdminUserIdByEmail(user.email.toLowerCase());
 			if (!userId) {
-				throw new Error(
-					`Cannot create a session for unknown admin user ${user.email}.`,
-				);
+				throw new Error(`Cannot create a session for unknown admin user ${user.email}.`);
 			}
 
 			const sessionToken = input.randomId();
@@ -127,10 +115,7 @@ export function createAstropressAuthRepository(
 				};
 			}
 
-			input.updateAdminUserPassword(
-				row.userId,
-				input.hashPassword(pw.trimmedPassword),
-			);
+			input.updateAdminUserPassword(row.userId, input.hashPassword(pw.trimmedPassword));
 			input.acceptInvitesForUser(row.userId);
 			input.recordAuthAudit({
 				actor: { email: row.email, role: row.role, name: row.name },
@@ -165,10 +150,7 @@ export function createAstropressAuthRepository(
 				};
 			}
 
-			input.updateAdminUserPassword(
-				row.userId,
-				input.hashPassword(pw.trimmedPassword),
-			);
+			input.updateAdminUserPassword(row.userId, input.hashPassword(pw.trimmedPassword));
 			input.markPasswordResetTokenConsumed(row.id);
 			input.revokeSessionsForUser(row.userId);
 			input.recordAuthAudit({

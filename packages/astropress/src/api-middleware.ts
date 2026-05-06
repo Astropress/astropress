@@ -21,16 +21,12 @@ function weakEtag(serialized: string): string {
 	let h = 5381;
 	for (let i = 0; i < serialized.length; i++) {
 		h = ((h << 5) + h) ^ serialized.charCodeAt(i);
-		h = h >>> 0; // keep unsigned 32-bit
+		h >>>= 0; // keep unsigned 32-bit
 	}
 	return `W/"${h.toString(16)}"`;
 }
 
-export function jsonOkWithEtag(
-	body: JsonValue,
-	request: Request,
-	status = 200,
-): Response {
+export function jsonOkWithEtag(body: JsonValue, request: Request, status = 200): Response {
 	const serialized = JSON.stringify(body);
 	const etag = weakEtag(serialized);
 	const ifNoneMatch = request.headers.get("If-None-Match");
@@ -72,10 +68,7 @@ function applyCorsHeaders(response: Response, request: Request): Response {
 	if (!allowedOrigin) return response;
 	const headers = new Headers(response.headers);
 	headers.set("Access-Control-Allow-Origin", allowedOrigin);
-	headers.set(
-		"Access-Control-Allow-Methods",
-		"GET, POST, PUT, DELETE, OPTIONS",
-	);
+	headers.set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
 	headers.set("Access-Control-Allow-Headers", "Authorization, Content-Type");
 	if (allowedOrigin !== "*") {
 		headers.set("Vary", "Origin");
@@ -113,7 +106,7 @@ export async function withApiRequest(
 	if (preflight) return preflight;
 
 	const authHeader = request.headers.get("Authorization");
-	if (!authHeader || !authHeader.startsWith("Bearer ")) {
+	if (!authHeader?.startsWith("Bearer ")) {
 		return applyCorsHeaders(
 			API_ERROR_SHAPES.unauthorized(
 				"Missing or invalid Authorization header. Use: Authorization: Bearer <token>",
@@ -125,10 +118,7 @@ export async function withApiRequest(
 	const [, rawToken] = authHeader.split("Bearer ");
 	const result = await ctx.apiTokens.verify(rawToken);
 	if (!result.valid) {
-		return applyCorsHeaders(
-			API_ERROR_SHAPES.unauthorized(result.reason),
-			request,
-		);
+		return applyCorsHeaders(API_ERROR_SHAPES.unauthorized(result.reason), request);
 	}
 
 	const { record } = result;

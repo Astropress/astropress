@@ -1,16 +1,12 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createKmacDigest } from "../src/crypto-primitives.js";
-import {
-	hashPassword,
-	isLegacyHash,
-	verifyPassword,
-} from "../src/crypto-utils.js";
+import { hashPassword, isLegacyHash, verifyPassword } from "../src/crypto-utils.js";
 import { createAstropressSqliteAdminRuntime } from "../src/sqlite-admin-runtime.js";
 import { makeDb } from "./helpers/make-db.js";
 import {
-	type RuntimeFixture,
 	createRuntimeFixture,
 	makePasswordHash,
+	type RuntimeFixture,
 } from "./helpers/sqlite-admin-runtime-fixture.js";
 
 let fixture: RuntimeFixture;
@@ -40,29 +36,18 @@ describe("factory option defaults", () => {
 
 describe("auth", () => {
 	it("returns null for empty email", async () => {
-		expect(
-			await fixture.runtime.authenticatePersistedAdminUser(
-				"",
-				"correct-password",
-			),
-		).toBeNull();
+		expect(await fixture.runtime.authenticatePersistedAdminUser("", "correct-password")).toBeNull();
 	});
 
 	it("returns null for malformed password hash (verifyPasswordSync malformed-hash branch)", async () => {
 		expect(
-			await fixture.runtime.authenticatePersistedAdminUser(
-				"malformed@test.local",
-				"any-password",
-			),
+			await fixture.runtime.authenticatePersistedAdminUser("malformed@test.local", "any-password"),
 		).toBeNull();
 	});
 
 	it("returns null for wrong password", async () => {
 		expect(
-			await fixture.runtime.authenticatePersistedAdminUser(
-				"admin@test.local",
-				"wrong-password",
-			),
+			await fixture.runtime.authenticatePersistedAdminUser("admin@test.local", "wrong-password"),
 		).toBeNull();
 	});
 
@@ -76,9 +61,7 @@ describe("auth", () => {
 	});
 
 	it("getSessionUser returns null for null/empty token", () => {
-		expect(
-			fixture.store.auth.getSessionUser(null as unknown as string),
-		).toBeNull();
+		expect(fixture.store.auth.getSessionUser(null as unknown as string)).toBeNull();
 		expect(fixture.store.auth.getSessionUser("")).toBeNull();
 	});
 
@@ -91,10 +74,9 @@ describe("auth", () => {
 			"admin@test.local",
 			"correct-password",
 		);
-		const sessionToken = fixture.store.auth.createSession(
-			user as NonNullable<typeof user>,
-			{ ipAddress: "127.0.0.1" },
-		);
+		const sessionToken = fixture.store.auth.createSession(user as NonNullable<typeof user>, {
+			ipAddress: "127.0.0.1",
+		});
 		expect(typeof sessionToken).toBe("string");
 
 		const sessionUser = fixture.store.auth.getSessionUser(sessionToken);
@@ -108,9 +90,7 @@ describe("auth", () => {
 	});
 
 	it("revokeSession with null token is a no-op", () => {
-		expect(() =>
-			fixture.store.auth.revokeSession(null as unknown as string),
-		).not.toThrow();
+		expect(() => fixture.store.auth.revokeSession(null as unknown as string)).not.toThrow();
 	});
 
 	it("getSessionUser returns null for expired session (sessionTtlMs branch)", async () => {
@@ -119,12 +99,7 @@ describe("auth", () => {
 			.prepare(
 				"INSERT INTO admin_users (email, password_hash, name, active, is_admin) VALUES (?1, ?2, ?4, 1, CASE WHEN ?3 = 'admin' THEN 1 ELSE 0 END)",
 			)
-			.run(
-				"expired@test.local",
-				makePasswordHash("password"),
-				"admin",
-				"Expired",
-			);
+			.run("expired@test.local", makePasswordHash("password"), "admin", "Expired");
 		let clockOffset = 0;
 		const expiredRuntime = createAstropressSqliteAdminRuntime({
 			getDatabase: () => expiredDb,
@@ -141,42 +116,31 @@ describe("auth", () => {
 		);
 		// Session created under real clock; now advance past the 1ms TTL
 		clockOffset = 100_000;
-		expect(
-			expiredRuntime.sqliteAdminStore.auth.getSessionUser(token),
-		).toBeNull();
+		expect(expiredRuntime.sqliteAdminStore.auth.getSessionUser(token)).toBeNull();
 		expiredDb.close();
 	});
 
 	it("createPasswordResetToken: unknown user without actor returns ok:true with null resetUrl", () => {
-		const result = fixture.store.auth.createPasswordResetToken(
-			"nobody@test.local",
-			null,
-		);
+		const result = fixture.store.auth.createPasswordResetToken("nobody@test.local", null);
 		expect(result).toMatchObject({ ok: true, resetUrl: null });
 	});
 
 	it("createPasswordResetToken: known user returns ok:true with resetUrl", () => {
-		const result = fixture.store.auth.createPasswordResetToken(
-			"admin@test.local",
-			fixture.actor,
-		);
+		const result = fixture.store.auth.createPasswordResetToken("admin@test.local", fixture.actor);
 		expect(result.ok).toBe(true);
 		if (!result.ok) throw new Error("unreachable");
 		expect(result.resetUrl).toContain("token=");
 	});
 
 	it("createPasswordResetToken: unknown user with actor returns ok:false", () => {
-		const result = fixture.store.auth.createPasswordResetToken(
-			"nobody@test.local",
-			fixture.actor,
-		);
+		const result = fixture.store.auth.createPasswordResetToken("nobody@test.local", fixture.actor);
 		expect(result).toMatchObject({ ok: false });
 	});
 
 	it("createPasswordResetToken: empty email returns ok:false", () => {
-		expect(
-			fixture.store.auth.createPasswordResetToken("", fixture.actor),
-		).toMatchObject({ ok: false });
+		expect(fixture.store.auth.createPasswordResetToken("", fixture.actor)).toMatchObject({
+			ok: false,
+		});
 	});
 
 	it("getPasswordResetRequest: empty token returns null", () => {
@@ -184,9 +148,7 @@ describe("auth", () => {
 	});
 
 	it("getPasswordResetRequest: invalid token returns null", () => {
-		expect(
-			fixture.store.auth.getPasswordResetRequest("invalid-token"),
-		).toBeNull();
+		expect(fixture.store.auth.getPasswordResetRequest("invalid-token")).toBeNull();
 	});
 
 	it("getInviteRequest: empty token returns null", () => {
@@ -198,40 +160,31 @@ describe("auth", () => {
 	});
 
 	it("consumeInviteToken: short password returns error", () => {
-		expect(
-			fixture.store.auth.consumeInviteToken("any-token", "short"),
-		).toMatchObject({ ok: false });
+		expect(fixture.store.auth.consumeInviteToken("any-token", "short")).toMatchObject({
+			ok: false,
+		});
 	});
 
 	it("consumeInviteToken: invalid token returns error", () => {
 		expect(
-			fixture.store.auth.consumeInviteToken(
-				"not-a-real-token",
-				"long-enough-password",
-			),
+			fixture.store.auth.consumeInviteToken("not-a-real-token", "long-enough-password"),
 		).toMatchObject({ ok: false });
 	});
 
 	it("consumePasswordResetToken: short password returns error", () => {
-		expect(
-			fixture.store.auth.consumePasswordResetToken("any-token", "short"),
-		).toMatchObject({ ok: false });
+		expect(fixture.store.auth.consumePasswordResetToken("any-token", "short")).toMatchObject({
+			ok: false,
+		});
 	});
 
 	it("consumePasswordResetToken: invalid token returns error", () => {
 		expect(
-			fixture.store.auth.consumePasswordResetToken(
-				"not-a-real-token",
-				"long-enough-password",
-			),
+			fixture.store.auth.consumePasswordResetToken("not-a-real-token", "long-enough-password"),
 		).toMatchObject({ ok: false });
 	});
 
 	it("full password reset flow: issue, get request, consume", () => {
-		const issued = fixture.store.auth.createPasswordResetToken(
-			"admin@test.local",
-			fixture.actor,
-		);
+		const issued = fixture.store.auth.createPasswordResetToken("admin@test.local", fixture.actor);
 		expect(issued.ok).toBe(true);
 		if (!issued.ok) throw new Error("unreachable");
 
@@ -262,9 +215,7 @@ describe("auth", () => {
 		);
 		const invitedUserId = (
 			fixture.db
-				.prepare(
-					"SELECT id FROM admin_users WHERE email = 'invite-flow@test.local'",
-				)
+				.prepare("SELECT id FROM admin_users WHERE email = 'invite-flow@test.local'")
 				.get() as { id: number }
 		).id;
 		fixture.db
@@ -286,9 +237,7 @@ describe("auth", () => {
 	});
 
 	it("recordSuccessfulLogin records an auth audit event", () => {
-		expect(() =>
-			fixture.store.auth.recordSuccessfulLogin(fixture.actor),
-		).not.toThrow();
+		expect(() => fixture.store.auth.recordSuccessfulLogin(fixture.actor)).not.toThrow();
 	});
 
 	it("recordLogout records an auth audit event", () => {
@@ -301,12 +250,7 @@ describe("auth", () => {
 			.prepare(
 				"INSERT INTO admin_users (email, password_hash, name, active, is_admin) VALUES (?1, ?2, ?4, 1, CASE WHEN ?3 = 'admin' THEN 1 ELSE 0 END)",
 			)
-			.run(
-				"expired2@test.local",
-				makePasswordHash("password"),
-				"admin",
-				"Expired2",
-			);
+			.run("expired2@test.local", makePasswordHash("password"), "admin", "Expired2");
 		let clockOffset = 0;
 		const expiredRuntime = createAstropressSqliteAdminRuntime({
 			getDatabase: () => expiredDb,
@@ -399,8 +343,6 @@ describe("password hashing", () => {
 	});
 
 	it("verifyPassword returns false for a malformed hash string", async () => {
-		expect(await verifyPassword("any-password", "not-a-valid-hash")).toBe(
-			false,
-		);
+		expect(await verifyPassword("any-password", "not-a-valid-hash")).toBe(false);
 	});
 });

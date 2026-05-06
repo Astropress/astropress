@@ -5,17 +5,12 @@ import {
 } from "@astropress-diy/astropress/integration";
 import { defineConfig } from "astro/config";
 
-const astropressRoot = fileURLToPath(
-	new URL("../../packages/astropress", import.meta.url),
-);
+const astropressRoot = fileURLToPath(new URL("../../packages/astropress", import.meta.url));
 const localRuntimeModulesPath = fileURLToPath(
 	new URL("./src/astropress/local-runtime-modules.ts", import.meta.url),
 );
 const cloudflareWorkersStubPath = fileURLToPath(
-	new URL(
-		"../../packages/astropress/src/cloudflare-workers-stub.ts",
-		import.meta.url,
-	),
+	new URL("../../packages/astropress/src/cloudflare-workers-stub.ts", import.meta.url),
 );
 const viteIntegration = createAstropressViteIntegration({
 	localRuntimeModulesPath,
@@ -83,8 +78,7 @@ export default defineConfig({
 					? {
 							"/ap-admin/services/community": {
 								target: `http://localhost:${process.env.SERVICE_COMMUNITY_PORT}`,
-								rewrite: (p) =>
-									p.replace(/^\/ap-admin\/services\/community/, ""),
+								rewrite: (p) => p.replace(/^\/ap-admin\/services\/community/, ""),
 								ws: true,
 							},
 						}

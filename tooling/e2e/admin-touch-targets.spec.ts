@@ -103,9 +103,7 @@ const MIN_TOUCH_DIMENSION = 44;
 
 test.describe("Rubric 46: touch targets ≥ 44×44 at viewport-375", () => {
 	for (const route of ADMIN_ROUTES) {
-		test(`Scenario: ${route} has no WCAG 2.5.5 violations`, async ({
-			page,
-		}) => {
+		test(`Scenario: ${route} has no WCAG 2.5.5 violations`, async ({ page }) => {
 			await page.goto(route, { waitUntil: "domcontentloaded" });
 
 			const offenders = await page.evaluate(
@@ -125,8 +123,7 @@ test.describe("Rubric 46: touch targets ≥ 44×44 at viewport-375", () => {
 							parentTag === "AP-NOTICE"
 						);
 					};
-					const isExempt = (el: Element): boolean =>
-						exemptSelectors.some((sel) => el.matches(sel));
+					const isExempt = (el: Element): boolean => exemptSelectors.some((sel) => el.matches(sel));
 					const results: Array<{
 						tag: string;
 						text: string;
@@ -141,8 +138,7 @@ test.describe("Rubric 46: touch targets ≥ 44×44 at viewport-375", () => {
 						const rect = el.getBoundingClientRect();
 						if (rect.width === 0 && rect.height === 0) continue;
 						const style = window.getComputedStyle(el);
-						if (style.display === "none" || style.visibility === "hidden")
-							continue;
+						if (style.display === "none" || style.visibility === "hidden") continue;
 						if (rect.width < min || rect.height < min) {
 							results.push({
 								tag: el.tagName.toLowerCase(),
@@ -164,13 +160,8 @@ test.describe("Rubric 46: touch targets ≥ 44×44 at viewport-375", () => {
 				},
 			);
 
-			const formatted = offenders
-				.map((o) => `  <${o.tag}> "${o.text}" (${o.w}×${o.h})`)
-				.join("\n");
-			expect(
-				offenders,
-				`WCAG 2.5.5 violations on ${route}:\n${formatted}`,
-			).toEqual([]);
+			const formatted = offenders.map((o) => `  <${o.tag}> "${o.text}" (${o.w}×${o.h})`).join("\n");
+			expect(offenders, `WCAG 2.5.5 violations on ${route}:\n${formatted}`).toEqual([]);
 		});
 	}
 });

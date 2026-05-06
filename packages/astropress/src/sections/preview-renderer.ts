@@ -89,10 +89,7 @@ function renderFeatureGrid(s: FeatureGridSection): string {
 </section>`;
 }
 
-function renderTestimonials(
-	s: TestimonialsSection,
-	ctx: PreviewContext,
-): string {
+function renderTestimonials(s: TestimonialsSection, ctx: PreviewContext): string {
 	const all = ctx.testimonials;
 	const isApproved = (t: PreviewContext["testimonials"][number]) =>
 		(t.status ?? "approved") === "approved";

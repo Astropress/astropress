@@ -12,9 +12,7 @@ interface NavItem {
 
 function filterNavItems(items: NavItem[], query: string): NavItem[] {
 	const q = query.trim().toLowerCase();
-	return q
-		? items.filter((item) => item.label.toLowerCase().includes(q))
-		: items;
+	return q ? items.filter((item) => item.label.toLowerCase().includes(q)) : items;
 }
 
 const sampleNavItems: NavItem[] = [

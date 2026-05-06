@@ -39,10 +39,7 @@ registerCms({
 			title: "Blog",
 			kind: "posts",
 			legacyUrl: "/blog",
-			listingItems: [
-				{ href: "/blog/hello-world" },
-				{ href: "/blog/draft-update" },
-			],
+			listingItems: [{ href: "/blog/hello-world" }, { href: "/blog/draft-update" }],
 		},
 	],
 	translationStatus: [

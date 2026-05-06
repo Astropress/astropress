@@ -4,7 +4,6 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { createSessionTokenDigest, hashPassword } from "../src/crypto-utils.js";
 import {
-	SESSION_TTL_MS,
 	authenticateRuntimeAdminUser,
 	createRuntimeSession,
 	getRuntimeCsrfToken,
@@ -12,6 +11,7 @@ import {
 	recordRuntimeLogout,
 	recordRuntimeSuccessfulLogin,
 	revokeRuntimeSession,
+	SESSION_TTL_MS,
 } from "../src/runtime-admin-auth.js";
 import { makeDb } from "./helpers/make-db.js";
 import { SqliteBackedD1Database } from "./helpers/provider-test-fixtures.js";
@@ -42,12 +42,7 @@ describe("runtime admin auth secret rotation", () => {
 		const { db, locals } = makeLocals();
 		db.prepare(
 			"INSERT INTO admin_users (email, password_hash, name, active, is_admin) VALUES (?1, ?3, ?4, 1, CASE WHEN ?2 = 'admin' THEN 1 ELSE 0 END)",
-		).run(
-			"admin@example.com",
-			"admin",
-			await hashPassword("correctpass"),
-			"Admin User",
-		);
+		).run("admin@example.com", "admin", await hashPassword("correctpass"), "Admin User");
 
 		const sessionToken = await createRuntimeSession(
 			{ email: "admin@example.com", role: "admin", name: "Admin User" },
@@ -55,12 +50,8 @@ describe("runtime admin auth secret rotation", () => {
 			locals,
 		);
 
-		const stored = db
-			.prepare("SELECT id FROM admin_sessions LIMIT 1")
-			.get() as { id: string };
-		expect(stored.id).toBe(
-			await createSessionTokenDigest(sessionToken, "current-session-secret"),
-		);
+		const stored = db.prepare("SELECT id FROM admin_sessions LIMIT 1").get() as { id: string };
+		expect(stored.id).toBe(await createSessionTokenDigest(sessionToken, "current-session-secret"));
 		expect(stored.id).not.toBe(
 			await createSessionTokenDigest(sessionToken, "previous-session-secret"),
 		);
@@ -75,13 +66,7 @@ describe("runtime admin auth secret rotation", () => {
 		const { db, locals } = makeLocals();
 		db.prepare(
 			"INSERT INTO admin_users (id, email, password_hash, name, active, is_admin) VALUES (?1, ?2, ?4, ?5, 1, CASE WHEN ?3 = 'admin' THEN 1 ELSE 0 END)",
-		).run(
-			1,
-			"admin@example.com",
-			"admin",
-			await hashPassword("correctpass"),
-			"Admin User",
-		);
+		).run(1, "admin@example.com", "admin", await hashPassword("correctpass"), "Admin User");
 
 		const legacySessionToken = "legacy-session-token";
 		const legacyDigest = await createSessionTokenDigest(
@@ -92,9 +77,7 @@ describe("runtime admin auth secret rotation", () => {
 			"INSERT INTO admin_sessions (id, user_id, csrf_token, ip_address, user_agent) VALUES (?, ?, ?, ?, ?)",
 		).run(legacyDigest, 1, "csrf-token", null, "vitest");
 
-		await expect(
-			getRuntimeSessionUser(legacySessionToken, locals),
-		).resolves.toMatchObject({
+		await expect(getRuntimeSessionUser(legacySessionToken, locals)).resolves.toMatchObject({
 			email: "admin@example.com",
 			role: "admin",
 		});
@@ -115,10 +98,7 @@ describe("authenticateRuntimeAdminUser", () => {
 		vi.unstubAllEnvs();
 	});
 
-	async function seedUser(
-		db: ReturnType<typeof makeDb>,
-		opts: { active?: number } = {},
-	) {
+	async function seedUser(db: ReturnType<typeof makeDb>, opts: { active?: number } = {}) {
 		db.prepare(
 			"INSERT INTO admin_users (id, email, password_hash, name, active, is_admin) VALUES (?1, ?2, ?4, ?5, ?6, CASE WHEN ?3 = 'admin' THEN 1 ELSE 0 END)",
 		).run(
@@ -134,11 +114,7 @@ describe("authenticateRuntimeAdminUser", () => {
 	it("returns SessionUser for correct credentials", async () => {
 		const { db, locals } = makeLocals();
 		await seedUser(db);
-		const result = await authenticateRuntimeAdminUser(
-			"admin@example.com",
-			"correctpass",
-			locals,
-		);
+		const result = await authenticateRuntimeAdminUser("admin@example.com", "correctpass", locals);
 		expect(result).toMatchObject({
 			email: "admin@example.com",
 			role: "admin",
@@ -163,22 +139,14 @@ describe("authenticateRuntimeAdminUser", () => {
 	it("returns null for wrong password", async () => {
 		const { db, locals } = makeLocals();
 		await seedUser(db);
-		const result = await authenticateRuntimeAdminUser(
-			"admin@example.com",
-			"wrongpass",
-			locals,
-		);
+		const result = await authenticateRuntimeAdminUser("admin@example.com", "wrongpass", locals);
 		expect(result).toBeNull();
 		db.close();
 	});
 
 	it("returns null for unknown user", async () => {
 		const { db, locals } = makeLocals();
-		const result = await authenticateRuntimeAdminUser(
-			"unknown@example.com",
-			"somepass",
-			locals,
-		);
+		const result = await authenticateRuntimeAdminUser("unknown@example.com", "somepass", locals);
 		expect(result).toBeNull();
 		db.close();
 	});
@@ -201,18 +169,8 @@ describe("authenticateRuntimeAdminUser", () => {
 		// verifyPassword("", hash) returns true and a non-null result escapes.
 		db.prepare(
 			"INSERT INTO admin_users (id, email, password_hash, name, active, is_admin) VALUES (?1, ?2, ?4, ?5, 1, CASE WHEN ?3 = 'admin' THEN 1 ELSE 0 END)",
-		).run(
-			2,
-			"emptypass@example.com",
-			"editor",
-			await hashPassword(""),
-			"Empty Pass User",
-		);
-		const result = await authenticateRuntimeAdminUser(
-			"emptypass@example.com",
-			"",
-			locals,
-		);
+		).run(2, "emptypass@example.com", "editor", await hashPassword(""), "Empty Pass User");
+		const result = await authenticateRuntimeAdminUser("emptypass@example.com", "", locals);
 		expect(result).toBeNull();
 		db.close();
 	});
@@ -220,11 +178,7 @@ describe("authenticateRuntimeAdminUser", () => {
 	it("returns null for inactive user (active=0)", async () => {
 		const { db, locals } = makeLocals();
 		await seedUser(db, { active: 0 });
-		const result = await authenticateRuntimeAdminUser(
-			"admin@example.com",
-			"correctpass",
-			locals,
-		);
+		const result = await authenticateRuntimeAdminUser("admin@example.com", "correctpass", locals);
 		expect(result).toBeNull();
 		db.close();
 	});
@@ -290,14 +244,10 @@ describe("createRuntimeSession session storage", () => {
 			locals,
 		);
 
-		const stored = db
-			.prepare("SELECT id FROM admin_sessions LIMIT 1")
-			.get() as { id: string };
+		const stored = db.prepare("SELECT id FROM admin_sessions LIMIT 1").get() as { id: string };
 		// Stored ID must be the HMAC digest, not the raw UUID
 		expect(stored.id).not.toBe(sessionToken);
-		expect(stored.id).toBe(
-			await createSessionTokenDigest(sessionToken, "my-test-secret"),
-		);
+		expect(stored.id).toBe(await createSessionTokenDigest(sessionToken, "my-test-secret"));
 		db.close();
 	});
 
@@ -313,9 +263,10 @@ describe("createRuntimeSession session storage", () => {
 			locals,
 		);
 
-		const row = db
-			.prepare("SELECT ip_address, user_agent FROM admin_sessions LIMIT 1")
-			.get() as { ip_address: string; user_agent: string };
+		const row = db.prepare("SELECT ip_address, user_agent FROM admin_sessions LIMIT 1").get() as {
+			ip_address: string;
+			user_agent: string;
+		};
 		expect(row.ip_address).toBe("10.0.0.1");
 		expect(row.user_agent).toBe("test-agent/1.0");
 		db.close();
@@ -396,9 +347,7 @@ describe("session last_active_at refresh on access", () => {
 		);
 
 		// Back-date the session 1 hour (safely within 12h cleanup window)
-		db.prepare(
-			"UPDATE admin_sessions SET last_active_at = datetime('now', '-1 hour')",
-		).run();
+		db.prepare("UPDATE admin_sessions SET last_active_at = datetime('now', '-1 hour')").run();
 		const before = (
 			db.prepare("SELECT last_active_at FROM admin_sessions LIMIT 1").get() as {
 				last_active_at: string;
@@ -407,9 +356,9 @@ describe("session last_active_at refresh on access", () => {
 
 		await getRuntimeSessionUser(sessionToken, locals);
 
-		const row = db
-			.prepare("SELECT last_active_at FROM admin_sessions LIMIT 1")
-			.get() as { last_active_at: string };
+		const row = db.prepare("SELECT last_active_at FROM admin_sessions LIMIT 1").get() as {
+			last_active_at: string;
+		};
 		// The UPDATE should have refreshed it past the backdated -1 hour value
 		expect(Date.parse(row.last_active_at)).toBeGreaterThan(Date.parse(before));
 		db.close();
@@ -428,9 +377,7 @@ describe("audit event recording", () => {
 		await recordRuntimeSuccessfulLogin(actor, locals);
 
 		const row = db
-			.prepare(
-				"SELECT action, user_email FROM audit_events WHERE action = 'auth.login' LIMIT 1",
-			)
+			.prepare("SELECT action, user_email FROM audit_events WHERE action = 'auth.login' LIMIT 1")
 			.get() as { action: string; user_email: string } | undefined;
 
 		expect(row).not.toBeUndefined();
@@ -450,9 +397,7 @@ describe("audit event recording", () => {
 		await recordRuntimeLogout(actor, locals);
 
 		const row = db
-			.prepare(
-				"SELECT action, user_email FROM audit_events WHERE action = 'auth.logout' LIMIT 1",
-			)
+			.prepare("SELECT action, user_email FROM audit_events WHERE action = 'auth.logout' LIMIT 1")
 			.get() as { action: string; user_email: string } | undefined;
 
 		expect(row).not.toBeUndefined();
@@ -472,9 +417,7 @@ describe("audit event recording", () => {
 		await recordRuntimeSuccessfulLogin(actor, locals);
 
 		const row = db
-			.prepare(
-				"SELECT summary FROM audit_events WHERE action = 'auth.login' LIMIT 1",
-			)
+			.prepare("SELECT summary FROM audit_events WHERE action = 'auth.login' LIMIT 1")
 			.get() as { summary: string } | undefined;
 
 		expect(row?.summary).toContain("Test Admin");
@@ -511,9 +454,7 @@ describe("revokeRuntimeSession — null token guard", () => {
 
 	it("returns without error when sessionToken is undefined", async () => {
 		const { db, locals } = makeLocals();
-		await expect(
-			revokeRuntimeSession(undefined, locals),
-		).resolves.toBeUndefined();
+		await expect(revokeRuntimeSession(undefined, locals)).resolves.toBeUndefined();
 		db.close();
 	});
 });
@@ -585,9 +526,7 @@ describe("audit event summary text", () => {
 		await recordRuntimeLogout(actor, locals);
 
 		const row = db
-			.prepare(
-				"SELECT summary FROM audit_events WHERE action = 'auth.logout' LIMIT 1",
-			)
+			.prepare("SELECT summary FROM audit_events WHERE action = 'auth.logout' LIMIT 1")
 			.get() as { summary: string } | undefined;
 
 		expect(row?.summary).toContain("Summary Actor");
@@ -641,9 +580,11 @@ describe("revokeRuntimeSession raw-token inclusion", () => {
 
 		// Insert session row directly with raw UUID so we know the exact stored id.
 		const rawToken = crypto.randomUUID();
-		db.prepare(
-			"INSERT INTO admin_sessions (id, user_id, csrf_token) VALUES (?, ?, ?)",
-		).run(rawToken, 1, crypto.randomUUID());
+		db.prepare("INSERT INTO admin_sessions (id, user_id, csrf_token) VALUES (?, ?, ?)").run(
+			rawToken,
+			1,
+			crypto.randomUUID(),
+		);
 
 		const beforeRevoke = await getRuntimeSessionUser(rawToken, locals);
 		expect(beforeRevoke).not.toBeNull();
@@ -736,9 +677,10 @@ describe("cleanupExpiredSessions bulk revoke", () => {
 
 		// Insert a valid current session to trigger getRuntimeSessionUser (which calls cleanupExpiredSessions).
 		const rawToken = crypto.randomUUID();
-		db.prepare(
-			"INSERT INTO admin_sessions (id, user_id, csrf_token) VALUES (?, 1, ?)",
-		).run(rawToken, crypto.randomUUID());
+		db.prepare("INSERT INTO admin_sessions (id, user_id, csrf_token) VALUES (?, 1, ?)").run(
+			rawToken,
+			crypto.randomUUID(),
+		);
 
 		await getRuntimeSessionUser(rawToken, locals);
 

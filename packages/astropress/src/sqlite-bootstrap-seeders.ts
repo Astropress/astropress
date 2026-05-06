@@ -106,11 +106,7 @@ function systemRouteSnapshot(route: SystemRouteSeed) {
 }
 
 /** Build bind params for an archive route variant insert. */
-function archiveVariantParams(
-	archive: ArchiveSeedRecord,
-	variantId: string,
-	groupId: string,
-) {
+function archiveVariantParams(archive: ArchiveSeedRecord, variantId: string, groupId: string) {
 	return [
 		variantId,
 		groupId,
@@ -133,11 +129,7 @@ function resolveMarketingLocale(pagePath: string): string {
 	} catch {
 		configLocales = ["en", "es"];
 	}
-	return (
-		configLocales.find((l) => pagePath.startsWith(`/${l}/`)) ??
-		configLocales[0] ??
-		"en"
-	);
+	return configLocales.find((l) => pagePath.startsWith(`/${l}/`)) ?? configLocales[0] ?? "en";
 }
 
 /** Build bind params for a marketing route variant insert. */
@@ -229,10 +221,7 @@ export function seedMediaAssets(
 	return count;
 }
 
-export function seedRedirects(
-	options: AstropressSqliteSeedToolkitOptions,
-	db: SqliteDatabaseLike,
-) {
+export function seedRedirects(options: AstropressSqliteSeedToolkitOptions, db: SqliteDatabaseLike) {
 	const insert = db.prepare(`
     INSERT INTO redirect_rules (source_path, target_path, status_code, created_by, deleted_at)
     VALUES (?, ?, ?, ?, NULL)
@@ -244,21 +233,15 @@ export function seedRedirects(
   `);
 	let count = 0;
 	for (const rule of options.redirectRules) {
-		const result = insert.run(
-			rule.sourcePath,
-			rule.targetPath,
-			rule.statusCode,
-			"seed-import",
-		) as { changes?: number };
+		const result = insert.run(rule.sourcePath, rule.targetPath, rule.statusCode, "seed-import") as {
+			changes?: number;
+		};
 		count += result.changes ?? 1;
 	}
 	return count;
 }
 
-export function seedComments(
-	options: AstropressSqliteSeedToolkitOptions,
-	db: SqliteDatabaseLike,
-) {
+export function seedComments(options: AstropressSqliteSeedToolkitOptions, db: SqliteDatabaseLike) {
 	const insert = db.prepare(`
     INSERT INTO comments (id, author, email, body, route, status, policy, submitted_at)
     VALUES (?, ?, ?, ?, ?, ?, ?, COALESCE(?, CURRENT_TIMESTAMP))
@@ -335,14 +318,13 @@ export function seedArchiveRoutes(
 
 	let count = 0;
 	for (const archive of options.archiveRoutes) {
-		const baseId =
-			archive.legacyUrl.replace(/^\//, "").replaceAll("/", ":") || "root";
+		const baseId = archive.legacyUrl.replace(/^\//, "").replaceAll("/", ":") || "root";
 		const groupId = `archive:${baseId}`;
 		const variantId = `variant:archive:${baseId}:en`;
 		insertGroup.run(groupId, archive.legacyUrl);
-		const result = insertVariant.run(
-			...archiveVariantParams(archive, variantId, groupId),
-		) as { changes?: number };
+		const result = insertVariant.run(...archiveVariantParams(archive, variantId, groupId)) as {
+			changes?: number;
+		};
 		count += result.changes ?? 1;
 	}
 	return count;

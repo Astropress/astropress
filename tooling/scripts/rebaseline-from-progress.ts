@@ -61,13 +61,9 @@ function gitHashObject(path: string): string | null {
 }
 
 function scoreFromMutants(mutants: IncrementalMutant[]): number | null {
-	const scoreable = mutants.filter(
-		(m) => m.status !== "Ignored" && m.status !== "NoCoverage",
-	);
+	const scoreable = mutants.filter((m) => m.status !== "Ignored" && m.status !== "NoCoverage");
 	if (scoreable.length === 0) return null;
-	const killed = scoreable.filter(
-		(m) => m.status === "Killed" || m.status === "Timeout",
-	);
+	const killed = scoreable.filter((m) => m.status === "Killed" || m.status === "Timeout");
 	return (killed.length / scoreable.length) * 100;
 }
 
@@ -139,9 +135,7 @@ function main(): number {
 	}
 
 	updates.sort((a, b) => a.file.localeCompare(b.file));
-	const changed = updates.filter(
-		(u) => u.from === null || Math.abs(u.delta ?? 0) > 0.001,
-	);
+	const changed = updates.filter((u) => u.from === null || Math.abs(u.delta ?? 0) > 0.001);
 	console.log(
 		`Updates (${updates.length} files seen, ${changed.length} changed, ${unscored} unscored):`,
 	);
@@ -157,15 +151,9 @@ function main(): number {
 
 	writeFileSync(
 		BASELINE_PATH,
-		`${JSON.stringify(
-			{ updatedAt: new Date().toISOString(), scores: nextScores },
-			null,
-			2,
-		)}\n`,
+		`${JSON.stringify({ updatedAt: new Date().toISOString(), scores: nextScores }, null, 2)}\n`,
 	);
-	console.log(
-		`\n✓ Rewrote ${BASELINE_PATH} with ${Object.keys(nextScores).length} entries.`,
-	);
+	console.log(`\n✓ Rewrote ${BASELINE_PATH} with ${Object.keys(nextScores).length} entries.`);
 	return 0;
 }
 

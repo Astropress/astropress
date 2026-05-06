@@ -2,13 +2,7 @@ export interface SubscriberRecord {
 	id: string | number;
 	email: string;
 	name?: string;
-	status:
-		| "enabled"
-		| "disabled"
-		| "blocklisted"
-		| "subscribed"
-		| "unsubscribed"
-		| string;
+	status: "enabled" | "disabled" | "blocklisted" | "subscribed" | "unsubscribed" | string;
 	createdAt?: string;
 }
 
@@ -30,10 +24,7 @@ export interface GetSubscriberResult {
 }
 
 export interface NewsletterAdapter {
-	subscribe(
-		email: string,
-		locals?: App.Locals | null,
-	): Promise<{ ok: boolean; error?: string }>;
+	subscribe(email: string, locals?: App.Locals | null): Promise<{ ok: boolean; error?: string }>;
 	/** List subscribers. Returns `{ supported: false }` when the adapter does not support list operations. */
 	listSubscribers?(
 		opts?: ListSubscribersOptions,
@@ -53,10 +44,7 @@ import { createLogger } from "./runtime-logger";
 
 const logger = createLogger("Newsletter");
 
-export function buildListmonkBasicAuthHeader(
-	apiUser: string,
-	apiKey: string,
-): string {
+export function buildListmonkBasicAuthHeader(apiUser: string, apiKey: string): string {
 	return `Basic ${btoa(`${apiUser}:${apiKey}`)}`;
 }
 
@@ -81,33 +69,26 @@ export async function subscribeViaListmonk(
 ): Promise<{ ok: boolean; error?: string }> {
 	const fetchImpl = deps.fetch ?? fetch;
 	try {
-		const response = await fetchImpl(
-			buildListmonkSubscribeUrl(resolved.baseUrl),
-			{
-				method: "POST",
-				headers: {
-					Authorization: buildListmonkBasicAuthHeader(
-						resolved.apiUser,
-						resolved.apiKey,
-					),
-					"Content-Type": "application/json",
-				},
-				body: JSON.stringify({
-					email,
-					name: email,
-					status: "enabled",
-					lists: [Number(resolved.listId)],
-					preconfirm_subscriptions: true,
-				}),
+		const response = await fetchImpl(buildListmonkSubscribeUrl(resolved.baseUrl), {
+			method: "POST",
+			headers: {
+				Authorization: buildListmonkBasicAuthHeader(resolved.apiUser, resolved.apiKey),
+				"Content-Type": "application/json",
 			},
-		);
+			body: JSON.stringify({
+				email,
+				name: email,
+				status: "enabled",
+				lists: [Number(resolved.listId)],
+				preconfirm_subscriptions: true,
+			}),
+		});
 		if (!response.ok) {
 			const body = await response.text();
 			logger.error("Listmonk API error", { status: response.status, body });
 			return {
 				ok: false,
-				error:
-					"Subscription could not be saved. Confirm the list settings and retry.",
+				error: "Subscription could not be saved. Confirm the list settings and retry.",
 			};
 		}
 		logger.info("Successfully subscribed to Listmonk", { email });
@@ -141,8 +122,7 @@ export const newsletterAdapter: NewsletterAdapter = {
 			logger.error("Newsletter is misconfigured", { reason: resolved.reason });
 			return {
 				ok: false,
-				error:
-					"The newsletter is not fully configured. Check the provider settings and try again.",
+				error: "The newsletter is not fully configured. Check the provider settings and try again.",
 			};
 		}
 		// kind === "mock" — safe for local dev, CI, and unknown future modes.
@@ -171,9 +151,7 @@ export function createListmonkOps(config: {
 	});
 
 	return {
-		async listSubscribers(
-			opts: ListSubscribersOptions = {},
-		): Promise<ListSubscribersResult> {
+		async listSubscribers(opts: ListSubscribersOptions = {}): Promise<ListSubscribersResult> {
 			const { page = 1, perPage = 25, query = "" } = opts;
 			const params = new URLSearchParams({
 				page: String(page),
@@ -235,15 +213,12 @@ export function createListmonkOps(config: {
 			};
 		},
 
-		async deleteSubscriber(
-			id: string | number,
-		): Promise<{ ok: boolean; error?: string }> {
+		async deleteSubscriber(id: string | number): Promise<{ ok: boolean; error?: string }> {
 			const res = await fetch(`${config.apiUrl}/api/subscribers/${id}`, {
 				method: "DELETE",
 				headers: headers(),
 			});
-			if (!res.ok)
-				return { ok: false, error: `Listmonk API error: ${res.status}` };
+			if (!res.ok) return { ok: false, error: `Listmonk API error: ${res.status}` };
 			return { ok: true };
 		},
 	};

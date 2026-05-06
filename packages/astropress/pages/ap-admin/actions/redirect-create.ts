@@ -1,5 +1,4 @@
-import { createRuntimeRedirectRule } from "@astropress-diy/astropress";
-import { withAdminFormAction } from "@astropress-diy/astropress";
+import { createRuntimeRedirectRule, withAdminFormAction } from "@astropress-diy/astropress";
 import type { APIRoute } from "astro";
 
 export const POST: APIRoute = async (context) =>

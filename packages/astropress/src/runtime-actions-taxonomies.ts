@@ -11,8 +11,7 @@ export async function createRuntimeAuthor(
 	return withLocalStoreFallback(
 		locals,
 		async (db) => {
-			const result =
-				await createD1AdminMutationStore(db).authors.createAuthor(input);
+			const result = await createD1AdminMutationStore(db).authors.createAuthor(input);
 			if (!result.ok) return result;
 			await recordD1Audit(
 				locals,
@@ -37,8 +36,7 @@ export async function updateRuntimeAuthor(
 	return withLocalStoreFallback(
 		locals,
 		async (db) => {
-			const result =
-				await createD1AdminMutationStore(db).authors.updateAuthor(input);
+			const result = await createD1AdminMutationStore(db).authors.updateAuthor(input);
 			if (!result.ok) return result;
 			await recordD1Audit(
 				locals,
@@ -55,11 +53,7 @@ export async function updateRuntimeAuthor(
 	);
 }
 
-export async function deleteRuntimeAuthor(
-	id: number,
-	actor: Actor,
-	locals?: App.Locals | null,
-) {
+export async function deleteRuntimeAuthor(id: number, actor: Actor, locals?: App.Locals | null) {
 	return withLocalStoreFallback(
 		locals,
 		async (db) => {
@@ -87,8 +81,7 @@ export async function createRuntimeCategory(
 	return withLocalStoreFallback(
 		locals,
 		async (db) => {
-			const result =
-				await createD1AdminMutationStore(db).taxonomies.createCategory(input);
+			const result = await createD1AdminMutationStore(db).taxonomies.createCategory(input);
 			if (!result.ok) return result;
 			await recordD1Audit(
 				locals,
@@ -113,8 +106,7 @@ export async function updateRuntimeCategory(
 	return withLocalStoreFallback(
 		locals,
 		async (db) => {
-			const result =
-				await createD1AdminMutationStore(db).taxonomies.updateCategory(input);
+			const result = await createD1AdminMutationStore(db).taxonomies.updateCategory(input);
 			if (!result.ok) return result;
 			await recordD1Audit(
 				locals,
@@ -131,11 +123,7 @@ export async function updateRuntimeCategory(
 	);
 }
 
-export async function deleteRuntimeCategory(
-	id: number,
-	actor: Actor,
-	locals?: App.Locals | null,
-) {
+export async function deleteRuntimeCategory(id: number, actor: Actor, locals?: App.Locals | null) {
 	return withLocalStoreFallback(
 		locals,
 		async (db) => {
@@ -163,8 +151,7 @@ export async function createRuntimeTag(
 	return withLocalStoreFallback(
 		locals,
 		async (db) => {
-			const result =
-				await createD1AdminMutationStore(db).taxonomies.createTag(input);
+			const result = await createD1AdminMutationStore(db).taxonomies.createTag(input);
 			if (!result.ok) return result;
 			await recordD1Audit(
 				locals,
@@ -189,8 +176,7 @@ export async function updateRuntimeTag(
 	return withLocalStoreFallback(
 		locals,
 		async (db) => {
-			const result =
-				await createD1AdminMutationStore(db).taxonomies.updateTag(input);
+			const result = await createD1AdminMutationStore(db).taxonomies.updateTag(input);
 			if (!result.ok) return result;
 			await recordD1Audit(
 				locals,
@@ -207,23 +193,12 @@ export async function updateRuntimeTag(
 	);
 }
 
-export async function deleteRuntimeTag(
-	id: number,
-	actor: Actor,
-	locals?: App.Locals | null,
-) {
+export async function deleteRuntimeTag(id: number, actor: Actor, locals?: App.Locals | null) {
 	return withLocalStoreFallback(
 		locals,
 		async (db) => {
 			await createD1AdminMutationStore(db).taxonomies.deleteTag(id);
-			await recordD1Audit(
-				locals,
-				actor,
-				"tag.delete",
-				"content",
-				String(id),
-				`Deleted tag ${id}.`,
-			);
+			await recordD1Audit(locals, actor, "tag.delete", "content", String(id), `Deleted tag ${id}.`);
 			return { ok: true as const };
 		},
 		/* v8 ignore next 1 */

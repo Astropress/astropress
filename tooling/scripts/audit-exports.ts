@@ -28,8 +28,7 @@ interface AdapterExport {
 function parseAdapterExports(indexSrc: string): AdapterExport[] {
 	const results: AdapterExport[] = [];
 
-	const exportRegex =
-		/^export\s+\{([^}]+)\}\s+from\s+"(\.\/src\/adapters\/[^"]+)"/gm;
+	const exportRegex = /^export\s+\{([^}]+)\}\s+from\s+"(\.\/src\/adapters\/[^"]+)"/gm;
 
 	for (const m of indexSrc.matchAll(exportRegex)) {
 		const exportBlock = m[0];
@@ -77,9 +76,7 @@ async function main() {
 
 	for (const { adapterPath, resolvedTs, functionNames } of adapterExports) {
 		if (!(await fileExists(resolvedTs))) {
-			report.add(
-				`${adapterPath} — referenced in index.ts but ${resolvedTs} does not exist`,
-			);
+			report.add(`${adapterPath} — referenced in index.ts but ${resolvedTs} does not exist`);
 			continue;
 		}
 
@@ -93,10 +90,7 @@ async function main() {
 		}
 	}
 
-	const totalFns = adapterExports.reduce(
-		(n, a) => n + a.functionNames.length,
-		0,
-	);
+	const totalFns = adapterExports.reduce((n, a) => n + a.functionNames.length, 0);
 	report.finish(
 		`exports audit passed — ${adapterExports.length} adapter files exist, ${totalFns} exported functions covered by tests.`,
 	);

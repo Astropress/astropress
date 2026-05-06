@@ -13,15 +13,12 @@
 // with a comment explaining why translation is impossible at that callsite.
 
 import type { Dirent } from "node:fs";
-import { readFile, readdir } from "node:fs/promises";
+import { readdir, readFile } from "node:fs/promises";
 import { join } from "node:path";
 
 import { AuditReport, fromRoot, runAudit } from "../lib/audit-utils.js";
 
-const ADMIN_DIRS = [
-	"packages/astropress/pages/ap-admin",
-	"packages/astropress/components",
-];
+const ADMIN_DIRS = ["packages/astropress/pages/ap-admin", "packages/astropress/components"];
 
 interface Finding {
 	file: string;
@@ -130,10 +127,7 @@ function checkFile(path: string, src: string): Finding[] {
 		}
 		// First argument is a hardcoded BCP-47 string literal like "en-US".
 		const firstArg = args.split(",")[0].trim();
-		if (
-			/^"[a-z]{2}(-[A-Z]{2})?"$/.test(firstArg) ||
-			/^'[a-z]{2}(-[A-Z]{2})?'$/.test(firstArg)
-		) {
+		if (/^"[a-z]{2}(-[A-Z]{2})?"$/.test(firstArg) || /^'[a-z]{2}(-[A-Z]{2})?'$/.test(firstArg)) {
 			findings.push({
 				file: rel,
 				line: findLineNumber(src, m.index),
@@ -151,12 +145,12 @@ async function main() {
 	const files: string[] = [];
 	for (const dir of ADMIN_DIRS) await walkAstroFiles(fromRoot(dir), files);
 
-	let total = 0;
+	let _total = 0;
 	for (const file of files) {
 		const src = await readFile(file, "utf8");
 		const findings = checkFile(file, src);
 		for (const f of findings) {
-			total++;
+			_total++;
 			report.add(`[${f.rule}] ${f.file}:${f.line} — ${f.snippet}`);
 		}
 	}

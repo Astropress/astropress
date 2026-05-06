@@ -54,9 +54,7 @@ function findMarkers(): Hit[] {
 			description: (idMatch[2] ?? "").trim(),
 		});
 	}
-	return hits.sort((a, b) =>
-		a.file === b.file ? a.line - b.line : a.file.localeCompare(b.file),
-	);
+	return hits.sort((a, b) => (a.file === b.file ? a.line - b.line : a.file.localeCompare(b.file)));
 }
 
 const gate = !process.argv.includes("--list-only");
@@ -69,9 +67,7 @@ if (hits.length === 0) {
 
 console.log(`audit-followup-marker: ${hits.length} open marker(s):\n`);
 for (const h of hits) {
-	console.log(
-		`  ${h.file}:${h.line}  [${h.id}]${h.description ? ` — ${h.description}` : ""}`,
-	);
+	console.log(`  ${h.file}:${h.line}  [${h.id}]${h.description ? ` — ${h.description}` : ""}`);
 }
 
 if (gate) {

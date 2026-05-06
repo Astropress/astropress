@@ -1,7 +1,4 @@
-import {
-	removeRuntimeRolePolicy,
-	withAdminFormAction,
-} from "@astropress-diy/astropress";
+import { removeRuntimeRolePolicy, withAdminFormAction } from "@astropress-diy/astropress";
 import type { APIRoute } from "astro";
 
 export const POST: APIRoute = async (context) =>

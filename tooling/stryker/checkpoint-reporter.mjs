@@ -28,8 +28,7 @@ import { dirname } from "node:path";
 // packages/astropress/, which is *not* where the wrapper looks — relying
 // on a relative path here would silently route the file into the wrong
 // directory. (See UPSTREAM_CONTRIBUTIONS.md item 14d.)
-const PROGRESS_PATH =
-	process.env.STRYKER_PROGRESS_PATH ?? ".stryker-progress.jsonl";
+const PROGRESS_PATH = process.env.STRYKER_PROGRESS_PATH ?? ".stryker-progress.jsonl";
 const PluginKind = { Reporter: "Reporter" };
 
 class CheckpointReporter {

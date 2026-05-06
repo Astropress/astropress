@@ -70,25 +70,23 @@ describe("loadCredentialsFile", () => {
 		fsMocks.readFile.mockRejectedValue(
 			Object.assign(new Error("no such file"), { code: "ENOENT" }),
 		);
-		await expect(
-			loadCredentialsFile("/path/.credentials.json"),
-		).rejects.toThrow("Credentials file not found: /path/.credentials.json");
+		await expect(loadCredentialsFile("/path/.credentials.json")).rejects.toThrow(
+			"Credentials file not found: /path/.credentials.json",
+		);
 	});
 
 	it("throws a clear error when the file contains invalid JSON", async () => {
 		fsMocks.readFile.mockResolvedValue("not valid json {{{");
-		await expect(
-			loadCredentialsFile("/path/.credentials.json"),
-		).rejects.toThrow("Credentials file is not valid JSON");
+		await expect(loadCredentialsFile("/path/.credentials.json")).rejects.toThrow(
+			"Credentials file is not valid JSON",
+		);
 	});
 
 	it("throws a clear error when the file is valid JSON but not an object", async () => {
-		fsMocks.readFile.mockResolvedValue(
-			JSON.stringify(["array", "not", "object"]),
+		fsMocks.readFile.mockResolvedValue(JSON.stringify(["array", "not", "object"]));
+		await expect(loadCredentialsFile("/path/.credentials.json")).rejects.toThrow(
+			"Credentials file must be a JSON object",
 		);
-		await expect(
-			loadCredentialsFile("/path/.credentials.json"),
-		).rejects.toThrow("Credentials file must be a JSON object");
 	});
 });
 
@@ -111,12 +109,10 @@ describe("saveCredentialsFile", () => {
 	});
 
 	it("throws a clear error when the path is not writable", async () => {
-		fsMocks.writeFile.mockRejectedValue(
-			Object.assign(new Error("EACCES"), { code: "EACCES" }),
+		fsMocks.writeFile.mockRejectedValue(Object.assign(new Error("EACCES"), { code: "EACCES" }));
+		await expect(saveCredentialsFile("/protected/.credentials.json", {})).rejects.toThrow(
+			"Cannot write credentials file: permission denied",
 		);
-		await expect(
-			saveCredentialsFile("/protected/.credentials.json", {}),
-		).rejects.toThrow("Cannot write credentials file: permission denied");
 	});
 });
 
@@ -141,9 +137,7 @@ describe("validateUrl", () => {
 	});
 
 	it("rejects URLs with unsupported protocols", () => {
-		expect(() => validateUrl("ftp://mysite.com")).toThrow(
-			"URL must use http or https",
-		);
+		expect(() => validateUrl("ftp://mysite.com")).toThrow("URL must use http or https");
 	});
 });
 
@@ -177,9 +171,7 @@ describe("resolveWordPressCredentials — credentials file path provided", () =>
 				url: "https://mysite.com",
 				credentialsFile: "/path/.credentials.json",
 			}),
-		).rejects.toThrow(
-			"Credentials file does not contain a 'wordpress' section",
-		);
+		).rejects.toThrow("Credentials file does not contain a 'wordpress' section");
 	});
 
 	it("throws if the wordpress section is missing username or password", async () => {
@@ -212,9 +204,7 @@ describe("resolveWixCredentials — credentials file path provided", () => {
 	});
 
 	it("throws if the wix section is missing email", async () => {
-		fsMocks.readFile.mockResolvedValue(
-			JSON.stringify({ wix: { password: "wixpass" } }),
-		);
+		fsMocks.readFile.mockResolvedValue(JSON.stringify({ wix: { password: "wixpass" } }));
 		await expect(
 			resolveWixCredentials({ credentialsFile: "/path/.credentials.json" }),
 		).rejects.toThrow("Wix credentials are missing 'email'");

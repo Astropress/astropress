@@ -46,9 +46,7 @@ const WIX_IMPORT_ACTOR = {
 	name: "Wix Import",
 };
 
-export async function fileSizeOrNull(
-	targetPath: string,
-): Promise<number | null> {
+export async function fileSizeOrNull(targetPath: string): Promise<number | null> {
 	try {
 		return (await stat(targetPath)).size;
 	} catch {
@@ -56,23 +54,14 @@ export async function fileSizeOrNull(
 	}
 }
 
-export function resolveAdminDbPath(
-	workspaceRoot: string,
-	adminDbPath?: string,
-): string {
+export function resolveAdminDbPath(workspaceRoot: string, adminDbPath?: string): string {
 	if (adminDbPath)
-		return path.isAbsolute(adminDbPath)
-			? adminDbPath
-			: path.join(workspaceRoot, adminDbPath);
-	return createDefaultAstropressSqliteSeedToolkit().getDefaultAdminDbPath(
-		workspaceRoot,
-	);
+		return path.isAbsolute(adminDbPath) ? adminDbPath : path.join(workspaceRoot, adminDbPath);
+	return createDefaultAstropressSqliteSeedToolkit().getDefaultAdminDbPath(workspaceRoot);
 }
 
 type WixAdminDb = ReturnType<
-	ReturnType<
-		typeof createDefaultAstropressSqliteSeedToolkit
-	>["openSeedDatabase"]
+	ReturnType<typeof createDefaultAstropressSqliteSeedToolkit>["openSeedDatabase"]
 >;
 type WixAdminRuntime = ReturnType<typeof createAstropressSqliteAdminRuntime>;
 
@@ -91,9 +80,7 @@ function importWixTerms(
     INSERT INTO tags (slug, name, description, deleted_at) VALUES (?, ?, ?, NULL)
     ON CONFLICT(slug) DO UPDATE SET name = excluded.name, deleted_at = NULL, updated_at = CURRENT_TIMESTAMP
   `);
-	const selectCategoryId = db.prepare(
-		"SELECT id FROM categories WHERE slug = ? LIMIT 1",
-	);
+	const selectCategoryId = db.prepare("SELECT id FROM categories WHERE slug = ? LIMIT 1");
 	const selectTagId = db.prepare("SELECT id FROM tags WHERE slug = ? LIMIT 1");
 	const categoryIdsBySlug = new Map<string, number>();
 	const tagIdsBySlug = new Map<string, number>();
@@ -142,9 +129,7 @@ function importWixContentRecords(
 			revisionNote: `Wix import ${record.id}`,
 		};
 
-		const existing = runtime.sqliteAdminStore.content.getContentState(
-			record.slug,
-		);
+		const existing = runtime.sqliteAdminStore.content.getContentState(record.slug);
 		if (existing) {
 			const saved = runtime.sqliteAdminStore.content.saveContentState(
 				record.slug,
@@ -201,9 +186,7 @@ async function importWixMedia(
 		const downloadedPath = artifactDir
 			? path.join(artifactDir, "downloads", path.basename(asset.filename))
 			: undefined;
-		const hasFile = downloadedPath
-			? (await fileSizeOrNull(downloadedPath)) !== null
-			: false;
+		const hasFile = downloadedPath ? (await fileSizeOrNull(downloadedPath)) !== null : false;
 		const localPath = hasFile ? (downloadedPath as string) : asset.sourceUrl;
 		upsertMedia.run(
 			asset.id,
@@ -230,10 +213,7 @@ export async function applyWixImportToLocalRuntime(input: {
 	adminDbPath: string;
 }> {
 	const seedToolkit = createDefaultAstropressSqliteSeedToolkit();
-	const resolvedDbPath = resolveAdminDbPath(
-		input.workspaceRoot,
-		input.adminDbPath,
-	);
+	const resolvedDbPath = resolveAdminDbPath(input.workspaceRoot, input.adminDbPath);
 	seedToolkit.seedDatabase({
 		dbPath: resolvedDbPath,
 		workspaceRoot: input.workspaceRoot,
@@ -249,22 +229,15 @@ export async function applyWixImportToLocalRuntime(input: {
       INSERT INTO authors (slug, name, bio, deleted_at) VALUES (?, ?, ?, NULL)
       ON CONFLICT(slug) DO UPDATE SET name = excluded.name, bio = excluded.bio, deleted_at = NULL, updated_at = CURRENT_TIMESTAMP
     `);
-		const selectAuthorId = db.prepare(
-			"SELECT id FROM authors WHERE slug = ? LIMIT 1",
-		);
+		const selectAuthorId = db.prepare("SELECT id FROM authors WHERE slug = ? LIMIT 1");
 		const authorIdsByLogin = new Map<string, number>();
 		for (const author of input.bundle.authors) {
 			upsertAuthor.run(author.login, author.displayName, null);
-			const row = selectAuthorId.get(author.login) as
-				| { id: number }
-				| undefined;
+			const row = selectAuthorId.get(author.login) as { id: number } | undefined;
 			if (row) authorIdsByLogin.set(author.login, row.id);
 		}
 
-		const { categoryIdsBySlug, tagIdsBySlug } = importWixTerms(
-			db,
-			input.bundle,
-		);
+		const { categoryIdsBySlug, tagIdsBySlug } = importWixTerms(db, input.bundle);
 		importWixContentRecords(
 			db,
 			runtime,

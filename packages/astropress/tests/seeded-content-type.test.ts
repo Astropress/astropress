@@ -20,9 +20,7 @@ describe("getSeededAdminContentType", () => {
 	});
 
 	it("returns 'page' when kind is 'page' and templateKey is unrelated", () => {
-		expect(
-			getSeededAdminContentType({ kind: "page", templateKey: "landing" }),
-		).toBe("page");
+		expect(getSeededAdminContentType({ kind: "page", templateKey: "landing" })).toBe("page");
 	});
 
 	it("returns 'page' for an empty record (no signals)", () => {
@@ -30,15 +28,11 @@ describe("getSeededAdminContentType", () => {
 	});
 
 	it("returns 'page' when kind is null and templateKey is null", () => {
-		expect(getSeededAdminContentType({ kind: null, templateKey: null })).toBe(
-			"page",
-		);
+		expect(getSeededAdminContentType({ kind: null, templateKey: null })).toBe("page");
 	});
 
 	it("returns 'page' when templateKey is some other value", () => {
-		expect(getSeededAdminContentType({ templateKey: "not-content" })).toBe(
-			"page",
-		);
+		expect(getSeededAdminContentType({ templateKey: "not-content" })).toBe("page");
 	});
 
 	it("does NOT match templateKey strictly equal — only 'post' or 'content' count", () => {

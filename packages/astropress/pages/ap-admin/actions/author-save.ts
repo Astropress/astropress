@@ -1,8 +1,8 @@
 import {
 	createRuntimeAuthor,
 	updateRuntimeAuthor,
+	withAdminFormAction,
 } from "@astropress-diy/astropress";
-import { withAdminFormAction } from "@astropress-diy/astropress";
 import type { APIRoute } from "astro";
 
 export const POST: APIRoute = async (context) =>
@@ -10,14 +10,10 @@ export const POST: APIRoute = async (context) =>
 		context,
 		{ failurePath: "/ap-admin/authors", requireAdmin: true },
 		async ({ actor, formData, locals, redirect, fail }) => {
-			const id = Number.parseInt(
-				(formData.get("id") as string | null) ?? "",
-				10,
-			);
+			const id = Number.parseInt((formData.get("id") as string | null) ?? "", 10);
 			const payload = {
 				name: ((formData.get("name") as string | null) ?? "").trim(),
-				slug:
-					((formData.get("slug") as string | null) ?? "").trim() || undefined,
+				slug: ((formData.get("slug") as string | null) ?? "").trim() || undefined,
 				bio: ((formData.get("bio") as string | null) ?? "").trim() || undefined,
 			};
 			const result = Number.isFinite(id)

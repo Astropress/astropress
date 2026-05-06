@@ -108,12 +108,7 @@ export interface ActionDefinition {
 }
 
 export interface PolicyEngine {
-	can(
-		subject: Subject,
-		action: string,
-		resource?: Resource,
-		env?: Env,
-	): EvaluationResult;
+	can(subject: Subject, action: string, resource?: Resource, env?: Env): EvaluationResult;
 	/** Return the full set of policies the engine would evaluate for a subject. */
 	policiesFor(subject: Subject): readonly Policy[];
 }

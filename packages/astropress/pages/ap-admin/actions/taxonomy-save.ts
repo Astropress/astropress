@@ -1,9 +1,9 @@
-import { withAdminFormAction } from "@astropress-diy/astropress";
 import {
 	createRuntimeCategory,
 	createRuntimeTag,
 	updateRuntimeCategory,
 	updateRuntimeTag,
+	withAdminFormAction,
 } from "@astropress-diy/astropress";
 import type { APIRoute } from "astro";
 export const POST: APIRoute = async (context) =>
@@ -11,19 +11,12 @@ export const POST: APIRoute = async (context) =>
 		context,
 		{ failurePath: "/ap-admin/taxonomies", requireAdmin: true },
 		async ({ actor, formData, locals, redirect, fail }) => {
-			const kind =
-				(formData.get("kind") as string | null) === "tag" ? "tag" : "category";
-			const id = Number.parseInt(
-				(formData.get("id") as string | null) ?? "",
-				10,
-			);
+			const kind = (formData.get("kind") as string | null) === "tag" ? "tag" : "category";
+			const id = Number.parseInt((formData.get("id") as string | null) ?? "", 10);
 			const payload = {
 				name: ((formData.get("name") as string | null) ?? "").trim(),
-				slug:
-					((formData.get("slug") as string | null) ?? "").trim() || undefined,
-				description:
-					((formData.get("description") as string | null) ?? "").trim() ||
-					undefined,
+				slug: ((formData.get("slug") as string | null) ?? "").trim() || undefined,
+				description: ((formData.get("description") as string | null) ?? "").trim() || undefined,
 			};
 
 			const result =

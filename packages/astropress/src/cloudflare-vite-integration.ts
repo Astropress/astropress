@@ -87,10 +87,7 @@ const resolveIdEntries: ResolveIdEntry[] = [
 	},
 ];
 
-function isLocalRuntimeModuleRequest(
-	id: string,
-	localRuntimeModulesPath: string,
-): boolean {
+function isLocalRuntimeModuleRequest(id: string, localRuntimeModulesPath: string): boolean {
 	if (
 		id === "./local-runtime-modules" ||
 		id === "./local-runtime-modules.ts" ||
@@ -159,9 +156,7 @@ function normalizeImportId(id: string): string {
 	return normalized;
 }
 
-function resolveStubPaths(
-	options: AstropressCloudflareViteIntegrationOptions,
-): ResolvedStubPaths {
+function resolveStubPaths(options: AstropressCloudflareViteIntegrationOptions): ResolvedStubPaths {
 	return {
 		localImageStorage:
 			options.cloudflareLocalImageStorageStubPath ??
@@ -170,17 +165,14 @@ function resolveStubPaths(
 			options.cloudflareLocalMediaStorageStubPath ??
 			"astropress/cloudflare-local-media-storage-stub",
 		sqliteAdapter:
-			options.cloudflareSqliteAdapterStubPath ??
-			"astropress/cloudflare-sqlite-adapter-stub",
+			options.cloudflareSqliteAdapterStubPath ?? "astropress/cloudflare-sqlite-adapter-stub",
 		sqliteAdminRuntime:
 			options.cloudflareSqliteAdminRuntimeStubPath ??
 			"astropress/cloudflare-sqlite-admin-runtime-stub",
 		sqliteBootstrap:
-			options.cloudflareSqliteBootstrapStubPath ??
-			"astropress/cloudflare-sqlite-bootstrap-stub",
+			options.cloudflareSqliteBootstrapStubPath ?? "astropress/cloudflare-sqlite-bootstrap-stub",
 		localRuntimeStubs:
-			options.cloudflareLocalRuntimeStubsPath ??
-			"astropress/cloudflare-local-runtime-stubs",
+			options.cloudflareLocalRuntimeStubsPath ?? "astropress/cloudflare-local-runtime-stubs",
 	};
 }
 
@@ -222,11 +214,7 @@ export function createAstropressCloudflareViteIntegration(
 			name: "astropress-cloudflare-local-runtime-stubs",
 			enforce: "pre",
 			resolveId(id) {
-				return resolvePluginId(
-					normalizeImportId(id),
-					localRuntimeModulesPath,
-					stubs,
-				);
+				return resolvePluginId(normalizeImportId(id), localRuntimeModulesPath, stubs);
 			},
 		},
 	};

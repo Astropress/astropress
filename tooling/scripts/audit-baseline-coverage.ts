@@ -26,7 +26,7 @@
  */
 
 import { execFileSync } from "node:child_process";
-import { existsSync, readFileSync, readdirSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join, relative } from "node:path";
 
 const SRC_ROOT = "packages/astropress/src";
@@ -110,8 +110,7 @@ function main(): number {
 	const baseline = loadBaseline();
 
 	const missing: string[] = [];
-	const stale: { file: string; baselineHash: string; currentHash: string }[] =
-		[];
+	const stale: { file: string; baselineHash: string; currentHash: string }[] = [];
 
 	for (const file of eligible) {
 		const entry = baseline.scores[file];
@@ -134,9 +133,7 @@ function main(): number {
 	if (missing.length === 0 && orphans.length === 0) {
 		console.log(
 			`audit-baseline-coverage passed — ${eligible.length} mutation-eligible src files, all in ${BASELINE_PATH}${
-				stale.length > 0
-					? ` (${stale.length} hash-drifted; gate will re-score on push)`
-					: ""
+				stale.length > 0 ? ` (${stale.length} hash-drifted; gate will re-score on push)` : ""
 			}.`,
 		);
 		return 0;
@@ -144,20 +141,13 @@ function main(): number {
 
 	console.error("\n✖ audit-baseline-coverage FAILED:\n");
 	if (missing.length > 0) {
-		console.error(
-			`  ${missing.length} src file(s) missing from ${BASELINE_PATH}:`,
-		);
+		console.error(`  ${missing.length} src file(s) missing from ${BASELINE_PATH}:`);
 		for (const f of missing.slice(0, 20)) console.error(`    ${f}`);
-		if (missing.length > 20)
-			console.error(`    ... and ${missing.length - 20} more`);
-		console.error(
-			"\n  Populate via: bun run tooling/scripts/backfill-baseline-scores.ts",
-		);
+		if (missing.length > 20) console.error(`    ... and ${missing.length - 20} more`);
+		console.error("\n  Populate via: bun run tooling/scripts/backfill-baseline-scores.ts");
 	}
 	if (orphans.length > 0) {
-		console.error(
-			`\n  ${orphans.length} baseline entries point to deleted files:`,
-		);
+		console.error(`\n  ${orphans.length} baseline entries point to deleted files:`);
 		for (const f of orphans) console.error(`    ${f}`);
 		console.error(
 			"\n  Remove orphans by re-running backfill-baseline-scores.ts (it prunes deleted files).",

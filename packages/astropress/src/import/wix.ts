@@ -1,8 +1,8 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { downloadMediaToFile } from "./download-media.js";
-import { applyWixImportToLocalRuntime } from "./wix-apply.js";
 import type { WixParsedBundle } from "./wix-apply.js";
+import { applyWixImportToLocalRuntime } from "./wix-apply.js";
 import {
 	cleanWixHtml,
 	guessExtension,
@@ -34,7 +34,9 @@ export function parseWixExport(csvText: string): WixParsedBundle {
 
 	const headerRow = rows[0] as string[];
 	const headerIndex = new Map<string, number>();
-	headerRow.forEach((col, i) => headerIndex.set(col.toLowerCase().trim(), i));
+	headerRow.forEach((col, i) => {
+		headerIndex.set(col.toLowerCase().trim(), i);
+	});
 
 	function col(row: string[], names: string[]): string {
 		for (const name of names) {
@@ -60,21 +62,12 @@ export function parseWixExport(csvText: string): WixParsedBundle {
 		const authorName = col(row, ["author", "writer"]) || "Unknown";
 		const authorLogin = slugify(authorName);
 		const rawSlug = col(row, ["slug", "url", "posturl", "link"]);
-		const slug = rawSlug
-			? lastPathSegment(rawSlug) || slugify(title)
-			: slugify(title);
+		const slug = rawSlug ? lastPathSegment(rawSlug) || slugify(title) : slugify(title);
 		const legacyUrl = rawSlug || `/${slug}`;
 		const publishedAt =
-			col(row, ["publisheddate", "publicationdate", "published", "date"]) ||
-			undefined;
-		const excerpt =
-			col(row, ["excerpt", "description", "summary"]) || undefined;
-		const coverImageRaw = col(row, [
-			"coverimage",
-			"featuredimage",
-			"image",
-			"thumbnail",
-		]);
+			col(row, ["publisheddate", "publicationdate", "published", "date"]) || undefined;
+		const excerpt = col(row, ["excerpt", "description", "summary"]) || undefined;
+		const coverImageRaw = col(row, ["coverimage", "featuredimage", "image", "thumbnail"]);
 
 		if (!title && !body) continue;
 
@@ -100,8 +93,7 @@ export function parseWixExport(csvText: string): WixParsedBundle {
 		for (const tag of splitTermList(col(row, ["tags", "tag"]))) {
 			const tagSlug = slugify(tag);
 			tagSlugs.push(tagSlug);
-			if (!tagSet.has(tagSlug))
-				tagSet.set(tagSlug, { kind: "tag", slug: tagSlug, name: tag });
+			if (!tagSet.has(tagSlug)) tagSet.set(tagSlug, { kind: "tag", slug: tagSlug, name: tag });
 		}
 
 		if (coverImageRaw) {
@@ -160,10 +152,7 @@ export function parseWixExport(csvText: string): WixParsedBundle {
 
 	return {
 		authors: Array.from(authorSet.values()),
-		terms: [
-			...Array.from(categorySet.values()),
-			...Array.from(tagSet.values()),
-		],
+		terms: [...Array.from(categorySet.values()), ...Array.from(tagSet.values())],
 		contentRecords,
 		mediaAssets: Array.from(mediaSet.values()),
 		warnings,
@@ -229,10 +218,7 @@ async function stageWixArtifacts(artifactDir: string, bundle: WixParsedBundle) {
 		taxonomyFile: path.join(artifactDir, "taxonomy-records.json"),
 		downloadStateFile: path.join(artifactDir, "download-state.json"),
 	};
-	await writeFile(
-		files.contentFile,
-		JSON.stringify(bundle.contentRecords, null, 2),
-	);
+	await writeFile(files.contentFile, JSON.stringify(bundle.contentRecords, null, 2));
 	await writeFile(files.mediaFile, JSON.stringify(bundle.mediaAssets, null, 2));
 	await writeFile(files.userFile, JSON.stringify(bundle.authors, null, 2));
 	await writeFile(files.taxonomyFile, JSON.stringify(bundle.terms, null, 2));
@@ -254,28 +240,17 @@ export function createAstropressWixImportSource() {
 			const bundle = parseWixExport(csvText);
 
 			let artifacts: Awaited<ReturnType<typeof stageWixArtifacts>> | undefined;
-			if (input.artifactDir)
-				artifacts = await stageWixArtifacts(input.artifactDir, bundle);
+			if (input.artifactDir) artifacts = await stageWixArtifacts(input.artifactDir, bundle);
 
 			let downloadedMedia = 0;
 			const failedMedia: DownloadState["failed"] = [];
-			if (
-				input.downloadMedia &&
-				input.artifactDir &&
-				bundle.mediaAssets.length > 0
-			) {
-				const dl = await downloadWixMedia(
-					bundle.mediaAssets,
-					input.artifactDir,
-					input.resumeFrom,
-				);
+			if (input.downloadMedia && input.artifactDir && bundle.mediaAssets.length > 0) {
+				const dl = await downloadWixMedia(bundle.mediaAssets, input.artifactDir, input.resumeFrom);
 				downloadedMedia = dl.downloadedMedia;
 				failedMedia.push(...dl.failedMedia);
 			}
 
-			let localApply:
-				| Awaited<ReturnType<typeof applyWixImportToLocalRuntime>>
-				| undefined;
+			let localApply: Awaited<ReturnType<typeof applyWixImportToLocalRuntime>> | undefined;
 			if (input.applyLocal && input.workspaceRoot) {
 				localApply = await applyWixImportToLocalRuntime({
 					bundle,

@@ -6,12 +6,7 @@
 
 import type { AuditEvent } from "./persistence-types";
 
-export const CONTENT_STATUSES = [
-	"draft",
-	"review",
-	"published",
-	"archived",
-] as const;
+export const CONTENT_STATUSES = ["draft", "review", "published", "archived"] as const;
 export type ContentStatus = (typeof CONTENT_STATUSES)[number];
 export const DEFAULT_CONTENT_STATUS: ContentStatus = "published";
 

@@ -6,12 +6,8 @@ import { readAstropressSqliteSchemaSql } from "../../src/sqlite-bootstrap.js";
 export type RuntimeFixture = {
 	db: DatabaseSync;
 	runtime: ReturnType<typeof createAstropressSqliteAdminRuntime>;
-	store: ReturnType<
-		typeof createAstropressSqliteAdminRuntime
-	>["sqliteAdminStore"];
-	registry: ReturnType<
-		typeof createAstropressSqliteAdminRuntime
-	>["sqliteCmsRegistryModule"];
+	store: ReturnType<typeof createAstropressSqliteAdminRuntime>["sqliteAdminStore"];
+	registry: ReturnType<typeof createAstropressSqliteAdminRuntime>["sqliteCmsRegistryModule"];
 	actor: { email: string; role: "admin"; name: string };
 };
 
@@ -31,50 +27,30 @@ export function createRuntimeFixture(): RuntimeFixture {
 	// Active admin user (correct password)
 	db.prepare(
 		"INSERT INTO admin_users (email, password_hash, name, active, is_admin) VALUES (?1, ?2, ?4, 1, CASE WHEN ?3 = 'admin' THEN 1 ELSE 0 END)",
-	).run(
-		"admin@test.local",
-		makePasswordHash("correct-password"),
-		"admin",
-		"Test Admin",
-	);
+	).run("admin@test.local", makePasswordHash("correct-password"), "admin", "Test Admin");
 
 	// Suspended user (active=0)
 	db.prepare(
 		"INSERT INTO admin_users (email, password_hash, name, active, is_admin) VALUES (?1, ?2, ?4, 0, CASE WHEN ?3 = 'admin' THEN 1 ELSE 0 END)",
-	).run(
-		"suspended@test.local",
-		makePasswordHash("x"),
-		"editor",
-		"Suspended User",
-	);
+	).run("suspended@test.local", makePasswordHash("x"), "editor", "Suspended User");
 
 	// User with pending invite (for listAdminUsers invited-status branch)
 	db.prepare(
 		"INSERT INTO admin_users (email, password_hash, name, active, is_admin) VALUES (?1, ?2, ?4, 1, CASE WHEN ?3 = 'admin' THEN 1 ELSE 0 END)",
 	).run("invited@test.local", makePasswordHash("x"), "editor", "Invited User");
 	const invitedUserId = (
-		db
-			.prepare("SELECT id FROM admin_users WHERE email = 'invited@test.local'")
-			.get() as { id: number }
+		db.prepare("SELECT id FROM admin_users WHERE email = 'invited@test.local'").get() as {
+			id: number;
+		}
 	).id;
 	db.prepare(
 		"INSERT INTO user_invites (id, user_id, token_hash, expires_at, invited_by) VALUES (?, ?, ?, datetime('now', '+7 days'), ?)",
-	).run(
-		"invite-1",
-		invitedUserId,
-		"fake-invite-token-hash",
-		"admin@test.local",
-	);
+	).run("invite-1", invitedUserId, "fake-invite-token-hash", "admin@test.local");
 
 	// User with malformed password hash (for verifyPasswordSync malformed-hash branch)
 	db.prepare(
 		"INSERT INTO admin_users (email, password_hash, name, active, is_admin) VALUES (?1, ?2, ?4, 1, CASE WHEN ?3 = 'admin' THEN 1 ELSE 0 END)",
-	).run(
-		"malformed@test.local",
-		"not-a-valid-hash",
-		"editor",
-		"Malformed Hash User",
-	);
+	).run("malformed@test.local", "not-a-valid-hash", "editor", "Malformed Hash User");
 
 	// System route group + variant (null settings_json)
 	db.prepare(
@@ -168,15 +144,7 @@ export function createRuntimeFixture(): RuntimeFixture {
 	).run("group-archive", "archive", "archive_listing", "en", "/blog");
 	db.prepare(
 		"INSERT INTO cms_route_variants (id, group_id, locale, path, status, title, updated_by) VALUES (?, ?, ?, ?, ?, ?, ?)",
-	).run(
-		"variant-archive",
-		"group-archive",
-		"en",
-		"/blog",
-		"published",
-		"Blog Archive",
-		"seed",
-	);
+	).run("variant-archive", "group-archive", "en", "/blog", "published", "Blog Archive", "seed");
 
 	const runtime = createAstropressSqliteAdminRuntime({ getDatabase: () => db });
 	const store = runtime.sqliteAdminStore;

@@ -13,7 +13,7 @@
  *   bun tooling/scripts/carbon-audit.ts [--dist path/to/dist] [--budget 10240]
  */
 
-import { readFile, readdir, stat } from "node:fs/promises";
+import { readdir, readFile, stat } from "node:fs/promises";
 import path from "node:path";
 
 const JS_BUDGET_BYTES = Number.parseInt(process.env.JS_BUDGET ?? "10240", 10); // 10 KB default
@@ -38,11 +38,8 @@ async function main() {
 	const budgetIdx = args.indexOf("--budget");
 	const domainsOnly = args.includes("--domains-only");
 	const distDir =
-		distIdx >= 0
-			? args[distIdx + 1]
-			: path.join(process.cwd(), "examples/github-pages/dist");
-	const budget =
-		budgetIdx >= 0 ? Number.parseInt(args[budgetIdx + 1], 10) : JS_BUDGET_BYTES;
+		distIdx >= 0 ? args[distIdx + 1] : path.join(process.cwd(), "examples/github-pages/dist");
+	const budget = budgetIdx >= 0 ? Number.parseInt(args[budgetIdx + 1], 10) : JS_BUDGET_BYTES;
 
 	const allFiles = await walk(distDir);
 	if (allFiles.length === 0) {
@@ -90,9 +87,7 @@ async function main() {
 	const totalJsKb = (totalJsBytes / 1024).toFixed(2);
 	const passed = totalJsBytes <= budget;
 
-	console.log(
-		`Total JS payload : ${totalJsKb} KB (budget: ${(budget / 1024).toFixed(0)} KB)`,
-	);
+	console.log(`Total JS payload : ${totalJsKb} KB (budget: ${(budget / 1024).toFixed(0)} KB)`);
 	console.log(`JS files         : ${jsFiles.length}`);
 	console.log(`HTML files       : ${htmlFiles.length}`);
 	console.log(`Total assets     : ${allFiles.length}`);

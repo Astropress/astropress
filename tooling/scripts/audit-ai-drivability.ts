@@ -10,13 +10,7 @@
  *   5. api-middleware.ts contains no generic/banned error messages
  */
 
-import {
-	AuditReport,
-	fileExists,
-	fromRoot,
-	readText,
-	runAudit,
-} from "../lib/audit-utils.js";
+import { AuditReport, fileExists, fromRoot, readText, runAudit } from "../lib/audit-utils.js";
 
 async function main() {
 	const report = new AuditReport("ai-drivability");
@@ -35,9 +29,7 @@ async function main() {
 		];
 		for (const section of requiredSections) {
 			if (!content.includes(section)) {
-				report.add(
-					`[agents-md-section] AGENTS.md is missing required section: "${section}"`,
-				);
+				report.add(`[agents-md-section] AGENTS.md is missing required section: "${section}"`);
 			}
 		}
 	}
@@ -51,19 +43,13 @@ async function main() {
 	// 3. MCP package exists
 	const mcpPkgPath = fromRoot("packages/astropress-mcp/package.json");
 	if (!(await fileExists(mcpPkgPath))) {
-		report.add(
-			"[mcp-package-missing] packages/astropress-mcp/package.json does not exist",
-		);
+		report.add("[mcp-package-missing] packages/astropress-mcp/package.json does not exist");
 	}
 
 	// 4. platform-contracts.ts has >= 20 JSDoc comment blocks
-	const contractsPath = fromRoot(
-		"packages/astropress/src/platform-contracts.ts",
-	);
+	const contractsPath = fromRoot("packages/astropress/src/platform-contracts.ts");
 	if (!(await fileExists(contractsPath))) {
-		report.add(
-			"[contracts-missing] packages/astropress/src/platform-contracts.ts does not exist",
-		);
+		report.add("[contracts-missing] packages/astropress/src/platform-contracts.ts does not exist");
 	} else {
 		const src = await readText(contractsPath);
 		const lines = src.split("\n");
@@ -80,9 +66,7 @@ async function main() {
 	// 5. No generic error messages in api-middleware.ts
 	const middlewarePath = fromRoot("packages/astropress/src/api-middleware.ts");
 	if (!(await fileExists(middlewarePath))) {
-		report.add(
-			"[middleware-missing] packages/astropress/src/api-middleware.ts does not exist",
-		);
+		report.add("[middleware-missing] packages/astropress/src/api-middleware.ts does not exist");
 	} else {
 		const src = await readText(middlewarePath);
 		const lines = src.split("\n");

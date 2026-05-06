@@ -36,12 +36,8 @@ function spawnServer(
 		detached: true,
 		env: { ...process.env, ...env },
 	});
-	child.stdout?.on("data", (chunk: Buffer) =>
-		process.stdout.write(`[${name}] ${chunk}`),
-	);
-	child.stderr?.on("data", (chunk: Buffer) =>
-		process.stderr.write(`[${name}] ${chunk}`),
-	);
+	child.stdout?.on("data", (chunk: Buffer) => process.stdout.write(`[${name}] ${chunk}`));
+	child.stderr?.on("data", (chunk: Buffer) => process.stderr.write(`[${name}] ${chunk}`));
 	return { process: child };
 }
 
@@ -111,11 +107,7 @@ async function runCommand(
 		child.once("error", reject);
 		child.once("exit", (code) => {
 			if ((code ?? 1) !== 0)
-				reject(
-					new Error(
-						`${command} ${args.join(" ")} exited with code ${code}\n${stderr}`,
-					),
-				);
+				reject(new Error(`${command} ${args.join(" ")} exited with code ${code}\n${stderr}`));
 			else resolve(stdout);
 		});
 	});
@@ -147,12 +139,8 @@ async function main(): Promise<void> {
 		console.log(`Tarball: ${tarballPath}`);
 
 		// 3. Copy the consumer smoke template to a temp directory.
-		tempProjectDir = await mkdtemp(
-			path.join(tmpdir(), "astropress-tarball-smoke-"),
-		);
-		tempDataDir = await mkdtemp(
-			path.join(tmpdir(), "astropress-tarball-data-"),
-		);
+		tempProjectDir = await mkdtemp(path.join(tmpdir(), "astropress-tarball-smoke-"));
+		tempDataDir = await mkdtemp(path.join(tmpdir(), "astropress-tarball-data-"));
 		console.log(`Temp project: ${tempProjectDir}`);
 
 		await cp(smokeTemplateDir, tempProjectDir, { recursive: true });
@@ -174,11 +162,7 @@ async function main(): Promise<void> {
 
 		// 5. Install dependencies (uses the tarball, not the workspace symlink).
 		console.log("Installing from tarball…");
-		await runCommand(
-			"npm",
-			["install", "--prefer-offline", "--legacy-peer-deps"],
-			tempProjectDir,
-		);
+		await runCommand("npm", ["install", "--prefer-offline", "--legacy-peer-deps"], tempProjectDir);
 
 		// 6. Boot the dev server.
 		const port = await findAvailablePort(4327, "tarball smoke");
@@ -253,8 +237,7 @@ async function main(): Promise<void> {
 		);
 	} finally {
 		if (server) await stopServer(server);
-		if (tempProjectDir)
-			await rm(tempProjectDir, { recursive: true, force: true });
+		if (tempProjectDir) await rm(tempProjectDir, { recursive: true, force: true });
 		if (tempDataDir) await rm(tempDataDir, { recursive: true, force: true });
 	}
 }

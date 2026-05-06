@@ -1,10 +1,6 @@
 ---
 import AdminLayout from "@astropress-diy/astropress/components/AdminLayout.astro";
-import {
-	buildRouteTablePageModel,
-	getPageT,
-	resolveAdminLocale,
-} from "astropress";
+import { buildRouteTablePageModel, getPageT, resolveAdminLocale } from "astropress";
 
 const adminUser = Astro.locals.adminUser;
 const model = await buildRouteTablePageModel(Astro.locals, adminUser);

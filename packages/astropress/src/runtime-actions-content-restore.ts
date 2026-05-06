@@ -3,9 +3,9 @@ import { withLocalStoreFallback } from "./admin-store-dispatch";
 import { recordD1Audit } from "./d1-audit";
 import type { Actor } from "./persistence-types";
 import {
+	insertContentRevision,
 	SQL_SELECT_REVISION,
 	UPSERT_CONTENT_OVERRIDE_NO_META_SQL,
-	insertContentRevision,
 } from "./runtime-actions-content-helpers";
 import {
 	ensureD1BaselineRevision,

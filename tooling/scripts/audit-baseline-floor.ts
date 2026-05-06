@@ -124,9 +124,7 @@ function main(): number {
 		);
 	}
 	for (const n of newBelowFloor) {
-		console.error(
-			`  NEW BELOW FLOOR  ${n.file}: ${n.score.toFixed(2)}% < ${FLOOR}%`,
-		);
+		console.error(`  NEW BELOW FLOOR  ${n.file}: ${n.score.toFixed(2)}% < ${FLOOR}%`);
 	}
 	console.error(
 		`\n  Baselines may move up freely, but never down. New files must score >= ${FLOOR}%.`,

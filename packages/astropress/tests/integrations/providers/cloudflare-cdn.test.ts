@@ -1,19 +1,16 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
-	CLOUDFLARE_CDN_FIELDS,
-	CloudflareCdnVerifyError,
 	buildCloudflareAuthHeader,
 	buildCloudflareTokenVerifyUrl,
 	buildCloudflareZoneUrl,
+	CLOUDFLARE_CDN_FIELDS,
+	CloudflareCdnVerifyError,
 	classifyCloudflareStatus,
 	registerCloudflareCdn,
 	verifyCloudflareCdn,
 } from "../../../src/integrations/providers/cloudflare-cdn";
-import {
-	_resetRegistryForTests,
-	getProvider,
-} from "../../../src/integrations/registry";
+import { _resetRegistryForTests, getProvider } from "../../../src/integrations/registry";
 
 interface CapturedCall {
 	url: string;
@@ -62,15 +59,11 @@ describe("CLOUDFLARE_CDN_FIELDS schema", () => {
 	});
 
 	it("rejects an empty apiToken", () => {
-		expect(
-			CLOUDFLARE_CDN_FIELDS.safeParse({ ...FIELDS, apiToken: "" }).success,
-		).toBe(false);
+		expect(CLOUDFLARE_CDN_FIELDS.safeParse({ ...FIELDS, apiToken: "" }).success).toBe(false);
 	});
 
 	it("rejects an empty zoneId", () => {
-		expect(
-			CLOUDFLARE_CDN_FIELDS.safeParse({ ...FIELDS, zoneId: "" }).success,
-		).toBe(false);
+		expect(CLOUDFLARE_CDN_FIELDS.safeParse({ ...FIELDS, zoneId: "" }).success).toBe(false);
 	});
 });
 
@@ -145,26 +138,20 @@ describe("verifyCloudflareCdn", () => {
 
 	it("resolves when both probes return 200", async () => {
 		const { fetch, calls } = makeFetchMock([200, 200]);
-		await expect(
-			verifyCloudflareCdn(FIELDS, { signal }, { fetch }),
-		).resolves.toBeUndefined();
+		await expect(verifyCloudflareCdn(FIELDS, { signal }, { fetch })).resolves.toBeUndefined();
 		expect(calls).toHaveLength(2);
 	});
 
 	it("hits the token-verify endpoint first", async () => {
 		const { fetch, calls } = makeFetchMock([200, 200]);
 		await verifyCloudflareCdn(FIELDS, { signal }, { fetch });
-		expect(calls[0].url).toBe(
-			"https://api.cloudflare.com/client/v4/user/tokens/verify",
-		);
+		expect(calls[0].url).toBe("https://api.cloudflare.com/client/v4/user/tokens/verify");
 	});
 
 	it("hits the zone endpoint second", async () => {
 		const { fetch, calls } = makeFetchMock([200, 200]);
 		await verifyCloudflareCdn(FIELDS, { signal }, { fetch });
-		expect(calls[1].url).toBe(
-			"https://api.cloudflare.com/client/v4/zones/zone-12345",
-		);
+		expect(calls[1].url).toBe("https://api.cloudflare.com/client/v4/zones/zone-12345");
 	});
 
 	it("uses GET on both probes", async () => {
@@ -190,39 +177,39 @@ describe("verifyCloudflareCdn", () => {
 
 	it("short-circuits with AUTH_REJECTED when token-verify returns 401 (no zone fetch)", async () => {
 		const { fetch, calls } = makeFetchMock([401]);
-		await expect(
-			verifyCloudflareCdn(FIELDS, { signal }, { fetch }),
-		).rejects.toMatchObject({ code: "INTEGRATION_AUTH_REJECTED" });
+		await expect(verifyCloudflareCdn(FIELDS, { signal }, { fetch })).rejects.toMatchObject({
+			code: "INTEGRATION_AUTH_REJECTED",
+		});
 		expect(calls).toHaveLength(1);
 	});
 
 	it("throws AUTH_REJECTED when zone probe returns 403 (token valid but no zone scope)", async () => {
 		const { fetch, calls } = makeFetchMock([200, 403]);
-		await expect(
-			verifyCloudflareCdn(FIELDS, { signal }, { fetch }),
-		).rejects.toMatchObject({ code: "INTEGRATION_AUTH_REJECTED" });
+		await expect(verifyCloudflareCdn(FIELDS, { signal }, { fetch })).rejects.toMatchObject({
+			code: "INTEGRATION_AUTH_REJECTED",
+		});
 		expect(calls).toHaveLength(2);
 	});
 
 	it("throws NOT_FOUND when zone probe returns 404 (zoneId does not exist)", async () => {
 		const { fetch } = makeFetchMock([200, 404]);
-		await expect(
-			verifyCloudflareCdn(FIELDS, { signal }, { fetch }),
-		).rejects.toMatchObject({ code: "INTEGRATION_NOT_FOUND" });
+		await expect(verifyCloudflareCdn(FIELDS, { signal }, { fetch })).rejects.toMatchObject({
+			code: "INTEGRATION_NOT_FOUND",
+		});
 	});
 
 	it("throws RATE_LIMITED when token probe returns 429", async () => {
 		const { fetch } = makeFetchMock([429]);
-		await expect(
-			verifyCloudflareCdn(FIELDS, { signal }, { fetch }),
-		).rejects.toMatchObject({ code: "INTEGRATION_RATE_LIMITED" });
+		await expect(verifyCloudflareCdn(FIELDS, { signal }, { fetch })).rejects.toMatchObject({
+			code: "INTEGRATION_RATE_LIMITED",
+		});
 	});
 
 	it("throws VERIFY_FAILED when token probe returns 500", async () => {
 		const { fetch } = makeFetchMock([500]);
-		await expect(
-			verifyCloudflareCdn(FIELDS, { signal }, { fetch }),
-		).rejects.toMatchObject({ code: "INTEGRATION_VERIFY_FAILED" });
+		await expect(verifyCloudflareCdn(FIELDS, { signal }, { fetch })).rejects.toMatchObject({
+			code: "INTEGRATION_VERIFY_FAILED",
+		});
 	});
 
 	it("falls back to global fetch when deps.fetch is omitted", async () => {
@@ -230,9 +217,7 @@ describe("verifyCloudflareCdn", () => {
 			.spyOn(globalThis, "fetch")
 			.mockResolvedValue(new Response(null, { status: 200 }));
 		try {
-			await expect(
-				verifyCloudflareCdn(FIELDS, { signal }),
-			).resolves.toBeUndefined();
+			await expect(verifyCloudflareCdn(FIELDS, { signal })).resolves.toBeUndefined();
 			expect(stub).toHaveBeenCalledTimes(2);
 		} finally {
 			stub.mockRestore();
@@ -247,9 +232,7 @@ describe("verifyCloudflareCdn", () => {
 		} catch (err) {
 			expect(err).toBeInstanceOf(CloudflareCdnVerifyError);
 			expect(err).toBeInstanceOf(Error);
-			expect((err as CloudflareCdnVerifyError).code).toBe(
-				"INTEGRATION_AUTH_REJECTED",
-			);
+			expect((err as CloudflareCdnVerifyError).code).toBe("INTEGRATION_AUTH_REJECTED");
 		}
 	});
 });

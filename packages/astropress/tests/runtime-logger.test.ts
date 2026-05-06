@@ -158,9 +158,7 @@ describe("createLogger (dev mode)", () => {
 
 describe("createLogger (production / JSON mode)", () => {
 	it("writes a JSON envelope to stderr with level/context/message/timestamp", async () => {
-		const writeSpy = vi
-			.spyOn(process.stderr, "write")
-			.mockImplementation(() => true);
+		const writeSpy = vi.spyOn(process.stderr, "write").mockImplementation(() => true);
 		const { createLogger } = await importLoggerWith({
 			NODE_ENV: "production",
 			LOG_LEVEL: "info",
@@ -180,9 +178,7 @@ describe("createLogger (production / JSON mode)", () => {
 	});
 
 	it("respects LOG_LEVEL filter in production mode", async () => {
-		const writeSpy = vi
-			.spyOn(process.stderr, "write")
-			.mockImplementation(() => true);
+		const writeSpy = vi.spyOn(process.stderr, "write").mockImplementation(() => true);
 		const { createLogger } = await importLoggerWith({
 			NODE_ENV: "production",
 			LOG_LEVEL: "error",

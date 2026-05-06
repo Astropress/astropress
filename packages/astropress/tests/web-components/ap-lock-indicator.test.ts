@@ -101,9 +101,7 @@ describe("ap-lock-indicator", () => {
 	});
 
 	it("does nothing on acquire-url returning non-OK", async () => {
-		const fetchMock = mockFetch(
-			async () => new Response("{}", { status: 500 }),
-		);
+		const fetchMock = mockFetch(async () => new Response("{}", { status: 500 }));
 		const el = document.createElement("ap-lock-indicator") as HTMLElement;
 		setAttrs(el);
 		document.body.appendChild(el);
@@ -133,9 +131,7 @@ describe("ap-lock-indicator", () => {
 		await vi.advanceTimersByTimeAsync(0);
 		el.remove();
 		await vi.advanceTimersByTimeAsync(0);
-		expect(
-			fetchMock.mock.calls.some((c) => c[0] === `${BASE}/lock/release`),
-		).toBe(true);
+		expect(fetchMock.mock.calls.some((c) => c[0] === `${BASE}/lock/release`)).toBe(true);
 	});
 
 	it("skips release when no token was acquired (e.g. conflict path)", async () => {
@@ -158,8 +154,6 @@ describe("ap-lock-indicator", () => {
 		el.remove();
 		// Brief tick to flush microtasks.
 		await Promise.resolve();
-		expect(
-			fetchMock.mock.calls.some((c) => c[0] === `${BASE}/lock/release`),
-		).toBe(false);
+		expect(fetchMock.mock.calls.some((c) => c[0] === `${BASE}/lock/release`)).toBe(false);
 	});
 });

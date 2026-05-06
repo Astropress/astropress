@@ -1,5 +1,5 @@
-import type { AstropressPlatformAdapter } from "./platform-contracts";
 import type {
+	AstropressPlatformAdapter,
 	ContentStoreRecord,
 	ReadableContentKind,
 } from "./platform-contracts";

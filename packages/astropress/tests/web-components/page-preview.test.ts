@@ -15,9 +15,7 @@ describe("ap-page-preview", () => {
 		const input = document.createElement("input");
 		input.id = "src";
 		input.value = JSON.stringify({
-			sections: [
-				{ id: "h1", kind: "hero", headline: "Hello", alignment: "center" },
-			],
+			sections: [{ id: "h1", kind: "hero", headline: "Hello", alignment: "center" }],
 		});
 		document.body.appendChild(input);
 

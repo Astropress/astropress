@@ -152,9 +152,7 @@ async function triggerGitHubActions(
 /**
  * Trigger a static production build using the configured deploy hook.
  */
-export async function triggerPublish(
-	config: DeployHookConfig,
-): Promise<PublishTriggerResult> {
+export async function triggerPublish(config: DeployHookConfig): Promise<PublishTriggerResult> {
 	switch (config.type) {
 		case "cloudflare-pages":
 			return triggerCloudflarePages(config.env);
@@ -196,14 +194,7 @@ export async function recordPublishAudit(
 	await withLocalStoreFallback(
 		locals,
 		async () => {
-			await recordD1Audit(
-				locals,
-				actor,
-				action,
-				"deployment",
-				resourceId,
-				summary,
-			);
+			await recordD1Audit(locals, actor, action, "deployment", resourceId, summary);
 		},
 		async (store) => {
 			await store.recordAuditEvent({
@@ -222,10 +213,7 @@ export async function recordPublishAudit(
  * Returns null if no deploy hook is configured.
  */
 export function resolveDeployHookFromEnv(
-	env: Record<string, string | undefined> = process.env as Record<
-		string,
-		string | undefined
-	>,
+	env: Record<string, string | undefined> = process.env as Record<string, string | undefined>,
 ): DeployHookConfig | null {
 	if (env.CF_PAGES_DEPLOY_HOOK_URL) {
 		return { type: "cloudflare-pages", env };

@@ -1,10 +1,6 @@
 import { createReadStream } from "node:fs";
 import { access, stat } from "node:fs/promises";
-import {
-	type IncomingMessage,
-	type ServerResponse,
-	createServer,
-} from "node:http";
+import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
 import { extname, join, normalize } from "node:path";
 
 import AxeBuilder from "@axe-core/playwright";
@@ -35,8 +31,7 @@ const auditedRoutes: RouteAudit[] = [
 		path: "/",
 		title: "Astropress",
 		landmarkSelector: "main",
-		heading:
-			"A real admin for simple sites, without inheriting all of WordPress.",
+		heading: "A real admin for simple sites, without inheriting all of WordPress.",
 	},
 	{
 		path: "/docs/",
@@ -60,16 +55,10 @@ function resolveRequestedPath(root: string, requestPath: string) {
 	const decoded = decodeURIComponent(requestPath.split("?")[0] || "/");
 	const safePath = normalize(decoded).replace(/^(\.\.(\/|\\|$))+/, "");
 	const filesystemPath = join(root, safePath);
-	return safePath.endsWith("/")
-		? join(filesystemPath, "index.html")
-		: filesystemPath;
+	return safePath.endsWith("/") ? join(filesystemPath, "index.html") : filesystemPath;
 }
 
-async function serveStaticFile(
-	root: string,
-	request: IncomingMessage,
-	response: ServerResponse,
-) {
+async function serveStaticFile(root: string, request: IncomingMessage, response: ServerResponse) {
 	const filePath = resolveRequestedPath(root, request.url || "/");
 	try {
 		const fileStat = await stat(filePath);
@@ -93,9 +82,7 @@ async function serveStaticFile(
 async function main() {
 	const distRoot = process.argv[2];
 	if (!distRoot) {
-		console.error(
-			"Usage: bun run tooling/scripts/accessibility-browser-audit.ts <dist-directory>",
-		);
+		console.error("Usage: bun run tooling/scripts/accessibility-browser-audit.ts <dist-directory>");
 		process.exit(1);
 	}
 
@@ -121,24 +108,18 @@ async function main() {
 		for (const route of auditedRoutes) {
 			const url = `http://127.0.0.1:4173${route.path}`;
 			const response = await page.goto(url, { waitUntil: "networkidle" });
-			if (!response || !response.ok()) {
-				throw new Error(
-					`Failed to load ${url}: ${response?.status() ?? "no response"}`,
-				);
+			if (!response?.ok()) {
+				throw new Error(`Failed to load ${url}: ${response?.status() ?? "no response"}`);
 			}
 			const title = await page.title();
 			if (!title.includes(route.title)) {
-				throw new Error(
-					`Unexpected title for ${route.path}: received "${title}"`,
-				);
+				throw new Error(`Unexpected title for ${route.path}: received "${title}"`);
 			}
 
 			if (route.landmarkSelector) {
 				const landmark = page.locator(route.landmarkSelector);
 				if ((await landmark.count()) === 0) {
-					throw new Error(
-						`Missing landmark "${route.landmarkSelector}" on ${route.path}`,
-					);
+					throw new Error(`Missing landmark "${route.landmarkSelector}" on ${route.path}`);
 				}
 			}
 
@@ -148,45 +129,31 @@ async function main() {
 					name: route.heading,
 				});
 				if ((await heading.count()) === 0) {
-					throw new Error(
-						`Missing expected h1 "${route.heading}" on ${route.path}`,
-					);
+					throw new Error(`Missing expected h1 "${route.heading}" on ${route.path}`);
 				}
 			}
 
 			await page.keyboard.press("Tab");
-			const activeTag = await page.evaluate(
-				() => document.activeElement?.tagName ?? "",
-			);
+			const activeTag = await page.evaluate(() => document.activeElement?.tagName ?? "");
 			if (!activeTag) {
 				throw new Error(`Keyboard focus did not move on ${route.path}`);
 			}
 
 			const accessibilityScan = await new AxeBuilder({ page })
-				.withTags([
-					"wcag2a",
-					"wcag2aa",
-					"wcag21a",
-					"wcag21aa",
-					"wcag22aa",
-					"best-practice",
-				])
+				.withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa", "best-practice"])
 				.analyze();
 
 			if (accessibilityScan.violations.length > 0) {
 				const details = accessibilityScan.violations
 					.map(
-						(violation) =>
-							`${violation.id}: ${violation.help} (${violation.nodes.length} nodes)`,
+						(violation) => `${violation.id}: ${violation.help} (${violation.nodes.length} nodes)`,
 					)
 					.join("\n");
 				throw new Error(`Axe violations found on ${route.path}\n${details}`);
 			}
 		}
 
-		console.log(
-			`Browser accessibility audit passed for ${auditedRoutes.length} routes.`,
-		);
+		console.log(`Browser accessibility audit passed for ${auditedRoutes.length} routes.`);
 		await context.close();
 	} finally {
 		await browser.close();

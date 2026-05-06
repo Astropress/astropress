@@ -2,8 +2,8 @@
 // Extracted from admin-page-models.ts to keep that file under the 400-line limit.
 
 import type { AdminDashboardModel } from "./admin-dashboard";
-import { isAuthUserAdmin } from "./platform-contracts";
 import type { AuthUser } from "./platform-contracts";
+import { isAuthUserAdmin } from "./platform-contracts";
 
 type Status = "ok" | "partial" | "forbidden" | "not_found";
 
@@ -13,11 +13,7 @@ export type AdminPageResult<T> = {
 	warnings: string[];
 };
 
-export function result<T>(
-	status: Status,
-	data: T,
-	warnings: string[] = [],
-): AdminPageResult<T> {
+export function result<T>(status: Status, data: T, warnings: string[] = []): AdminPageResult<T> {
 	return { status, data, warnings };
 }
 
@@ -29,10 +25,7 @@ export function forbidden<T>(data: T): AdminPageResult<T> {
 	return result("forbidden", data);
 }
 
-export function notFound<T>(
-	data: T,
-	warnings: string[] = [],
-): AdminPageResult<T> {
+export function notFound<T>(data: T, warnings: string[] = []): AdminPageResult<T> {
 	return result("not_found", data, warnings);
 }
 

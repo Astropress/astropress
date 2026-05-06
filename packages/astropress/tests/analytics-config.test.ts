@@ -18,9 +18,8 @@ import { localeFromAcceptLanguage } from "../src/sqlite-runtime/utils.js";
 const CMS_CONFIG_KEY = Symbol.for("astropress.cms-config");
 
 function restoreConfig(config: ReturnType<typeof peekCmsConfig>) {
-	(globalThis as typeof globalThis & { [CMS_CONFIG_KEY]?: unknown })[
-		CMS_CONFIG_KEY
-	] = config ?? null;
+	(globalThis as typeof globalThis & { [CMS_CONFIG_KEY]?: unknown })[CMS_CONFIG_KEY] =
+		config ?? null;
 }
 
 afterEach(() => {
@@ -54,13 +53,7 @@ describe("AnalyticsConfig types", () => {
 	});
 
 	it("all supported analytics types are valid", () => {
-		const types: AnalyticsConfig["type"][] = [
-			"umami",
-			"plausible",
-			"matomo",
-			"posthog",
-			"custom",
-		];
+		const types: AnalyticsConfig["type"][] = ["umami", "plausible", "matomo", "posthog", "custom"];
 		for (const type of types) {
 			const config: AnalyticsConfig = { type, mode: "link" };
 			expect(config.type).toBe(type);
@@ -106,11 +99,7 @@ describe("AbTestingConfig types", () => {
 	});
 
 	it("all supported ab testing types are valid", () => {
-		const types: AbTestingConfig["type"][] = [
-			"growthbook",
-			"unleash",
-			"custom",
-		];
+		const types: AbTestingConfig["type"][] = ["growthbook", "unleash", "custom"];
 		for (const type of types) {
 			const config: AbTestingConfig = { type, mode: "link" };
 			expect(config.type).toBe(type);
@@ -247,9 +236,7 @@ describe("requestOptedOutOfTracking", () => {
 	});
 
 	it("returns true when Sec-GPC: 1 is set", () => {
-		expect(requestOptedOutOfTracking(makeRequest({ "Sec-GPC": "1" }))).toBe(
-			true,
-		);
+		expect(requestOptedOutOfTracking(makeRequest({ "Sec-GPC": "1" }))).toBe(true);
 	});
 
 	it("returns false when DNT is 0", () => {
@@ -270,18 +257,12 @@ describe("resolveAnalyticsSnippetConsentAware", () => {
 	};
 
 	it("returns snippet when no opt-out header", () => {
-		const snippet = resolveAnalyticsSnippetConsentAware(
-			umamiConfig,
-			makeRequest(),
-		);
+		const snippet = resolveAnalyticsSnippetConsentAware(umamiConfig, makeRequest());
 		expect(snippet).toContain("analytics.example.com");
 	});
 
 	it("returns empty string when DNT: 1", () => {
-		const snippet = resolveAnalyticsSnippetConsentAware(
-			umamiConfig,
-			makeRequest({ DNT: "1" }),
-		);
+		const snippet = resolveAnalyticsSnippetConsentAware(umamiConfig, makeRequest({ DNT: "1" }));
 		expect(snippet).toBe("");
 	});
 
@@ -470,9 +451,7 @@ describe("resolveAnalyticsSnippet", () => {
 	});
 
 	it("custom: returns empty string when snippetSrc is absent", () => {
-		expect(
-			resolveAnalyticsSnippet({ type: "custom", mode: "snippet-only" }),
-		).toBe("");
+		expect(resolveAnalyticsSnippet({ type: "custom", mode: "snippet-only" })).toBe("");
 	});
 
 	it("unknown type falls through to default and returns empty string", () => {

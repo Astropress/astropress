@@ -88,10 +88,7 @@ describe("runMailchimpImport — CSV parsing", () => {
 	});
 
 	it("skips rows without an @ in the email", async () => {
-		const r = await runMailchimpImport(
-			"Email Address\nnot-an-email\nfoo@bar.com\n",
-			null,
-		);
+		const r = await runMailchimpImport("Email Address\nnot-an-email\nfoo@bar.com\n", null);
 		expect(r.ok).toBe(true);
 		expect(r.imported).toBe(1);
 	});
@@ -121,10 +118,7 @@ describe("runMailchimpImport — CSV parsing", () => {
 	});
 
 	it("falls back to email when First/Last cells are empty", async () => {
-		const r = await runMailchimpImport(
-			"Email Address,First Name,Last Name\na@b.com,,\n",
-			null,
-		);
+		const r = await runMailchimpImport("Email Address,First Name,Last Name\na@b.com,,\n", null);
 		expect(r.ok).toBe(true);
 		const body = JSON.parse(String(okFetch.mock.calls[0]?.[1]?.body ?? "{}"));
 		expect(String(body.records)).toContain("a@b.com,a@b.com");
@@ -155,9 +149,7 @@ describe("runMailchimpImport — Listmonk dispatch", () => {
 		await runMailchimpImport("Email Address\na@b.com\n", null);
 		expect(okFetch).toHaveBeenCalledTimes(1);
 		const [url, init] = okFetch.mock.calls[0] ?? [];
-		expect(String(url)).toBe(
-			"https://listmonk.example/api/api/subscribers/import",
-		);
+		expect(String(url)).toBe("https://listmonk.example/api/api/subscribers/import");
 		const initRec = init as {
 			method?: string;
 			headers?: Record<string, string>;
@@ -176,10 +168,7 @@ describe("runMailchimpImport — Listmonk dispatch", () => {
 	});
 
 	it("returns ok:true with imported count when Listmonk responds 200", async () => {
-		const r = await runMailchimpImport(
-			"Email Address\na@b.com\nc@d.com\n",
-			null,
-		);
+		const r = await runMailchimpImport("Email Address\na@b.com\nc@d.com\n", null);
 		expect(r).toEqual({ ok: true, imported: 2, skipped: 0 });
 	});
 

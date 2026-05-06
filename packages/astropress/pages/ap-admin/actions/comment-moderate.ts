@@ -1,5 +1,4 @@
-import { moderateRuntimeComment } from "@astropress-diy/astropress";
-import { withAdminFormAction } from "@astropress-diy/astropress";
+import { moderateRuntimeComment, withAdminFormAction } from "@astropress-diy/astropress";
 import type { APIRoute } from "astro";
 
 export const POST: APIRoute = async (context) =>
@@ -10,16 +9,9 @@ export const POST: APIRoute = async (context) =>
 			const commentId = String(formData.get("commentId") ?? "");
 			const statusValue = String(formData.get("status") ?? "");
 			const status =
-				statusValue === "approved" || statusValue === "rejected"
-					? statusValue
-					: "pending";
+				statusValue === "approved" || statusValue === "rejected" ? statusValue : "pending";
 
-			const result = await moderateRuntimeComment(
-				commentId,
-				status,
-				actor,
-				locals,
-			);
+			const result = await moderateRuntimeComment(commentId, status, actor, locals);
 			if (!result.ok) {
 				return fail(result.error);
 			}

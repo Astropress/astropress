@@ -30,9 +30,7 @@ function formatDuration(ms: number): string {
 const argv = process.argv.slice(2);
 const sep = argv.indexOf("--");
 if (sep === -1 || sep === 0 || sep === argv.length - 1) {
-	console.error(
-		"run-with-timing: usage: run-with-timing <label> -- <cmd> [args...]",
-	);
+	console.error("run-with-timing: usage: run-with-timing <label> -- <cmd> [args...]");
 	process.exit(2);
 }
 

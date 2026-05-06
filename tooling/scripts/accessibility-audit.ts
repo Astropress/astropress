@@ -1,4 +1,4 @@
-import { readFileSync, readdirSync, statSync } from "node:fs";
+import { readdirSync, readFileSync, statSync } from "node:fs";
 import path from "node:path";
 import axe from "axe-core";
 import { JSDOM } from "jsdom";
@@ -20,9 +20,7 @@ function listHtmlFiles(root: string, files: string[] = []) {
 
 const targetRoot = process.argv[2];
 if (!targetRoot) {
-	throw new Error(
-		"Usage: bun run tooling/scripts/accessibility-audit.ts <built-html-directory>",
-	);
+	throw new Error("Usage: bun run tooling/scripts/accessibility-audit.ts <built-html-directory>");
 }
 
 const htmlFiles = listHtmlFiles(path.resolve(targetRoot));
@@ -41,21 +39,15 @@ for (const htmlFile of htmlFiles) {
 	});
 
 	dom.window.eval(axe.source);
-	const result = await (
-		dom.window as typeof dom.window & { axe: typeof axe }
-	).axe.run(dom.window.document, {
-		runOnly: {
-			type: "tag",
-			values: [
-				"wcag2a",
-				"wcag2aa",
-				"wcag21a",
-				"wcag21aa",
-				"wcag22aa",
-				"best-practice",
-			],
+	const result = await (dom.window as typeof dom.window & { axe: typeof axe }).axe.run(
+		dom.window.document,
+		{
+			runOnly: {
+				type: "tag",
+				values: ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa", "best-practice"],
+			},
 		},
-	});
+	);
 
 	for (const violation of result.violations) {
 		for (const node of violation.nodes) {
@@ -74,6 +66,4 @@ if (violations.length > 0) {
 	process.exit(1);
 }
 
-console.log(
-	`Accessibility audit passed for ${htmlFiles.length} built HTML files.`,
-);
+console.log(`Accessibility audit passed for ${htmlFiles.length} built HTML files.`);

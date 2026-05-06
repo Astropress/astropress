@@ -15,14 +15,11 @@ export const POST: APIRoute = async (context) =>
 
 			// Validate ISO date string
 			const date = new Date(scheduledAt);
-			if (Number.isNaN(date.getTime()))
-				return fail("Invalid date/time format.");
-			if (date <= new Date())
-				return fail("Scheduled date must be in the future.");
+			if (Number.isNaN(date.getTime())) return fail("Invalid date/time format.");
+			if (date <= new Date()) return fail("Scheduled date must be in the future.");
 
 			const store = await loadLocalAdminStore();
-			if (!store.schedulePublish)
-				return fail("Content scheduling is not available.");
+			if (!store.schedulePublish) return fail("Content scheduling is not available.");
 
 			const existing = await store.getContentState(slug);
 			if (!existing) return fail("Content not found.");

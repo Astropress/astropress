@@ -21,10 +21,7 @@ const ORG_TOKEN = "org-secret-token";
 // ─── Fetch mock helpers ───────────────────────────────────────────────────────
 
 function makeFetchMock(
-	handler: (
-		url: string,
-		init?: RequestInit,
-	) => { ok: boolean; status: number; body: unknown },
+	handler: (url: string, init?: RequestInit) => { ok: boolean; status: number; body: unknown },
 ) {
 	return vi.fn(async (url: RequestInfo | URL, init?: RequestInit) => {
 		const urlStr = url.toString();

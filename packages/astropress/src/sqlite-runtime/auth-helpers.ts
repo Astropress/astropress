@@ -64,8 +64,7 @@ export type ResetJoinRow = PasswordResetTokenRow & {
 export const SQL_LIST_AUDIT = SQL_LIST_AUDIT_EVENTS;
 export const SQL_CLEANUP_SESSIONS = `UPDATE admin_sessions SET revoked_at = CURRENT_TIMESTAMP WHERE revoked_at IS NULL AND last_active_at < datetime('now', '-12 hours')`;
 export const SQL_LIST_USERS = SQL_LIST_ADMIN_USERS_WITH_INVITE;
-export const SQL_FIND_USER =
-	"SELECT id FROM admin_users WHERE email = ? LIMIT 1";
+export const SQL_FIND_USER = "SELECT id FROM admin_users WHERE email = ? LIMIT 1";
 export const SQL_INSERT_USER =
 	"INSERT INTO admin_users (email, password_hash, name, active, is_admin) VALUES (?, ?, ?, 1, ?)";
 export const SQL_INSERT_INVITE =
@@ -100,7 +99,6 @@ export const SQL_SET_USER_ACTIVE =
 	"UPDATE admin_users SET active = ? WHERE email = ? AND active = ?";
 export const SQL_TOUCH_SESSION =
 	"UPDATE admin_sessions SET last_active_at = CURRENT_TIMESTAMP WHERE id = ?";
-export const SQL_UPDATE_PASSWORD =
-	"UPDATE admin_users SET password_hash = ? WHERE id = ?";
+export const SQL_UPDATE_PASSWORD = "UPDATE admin_users SET password_hash = ? WHERE id = ?";
 export const SQL_CONSUME_RESET =
 	"UPDATE password_reset_tokens SET consumed_at = CURRENT_TIMESTAMP WHERE id = ?";

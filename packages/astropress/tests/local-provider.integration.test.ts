@@ -13,9 +13,7 @@ import { createAstropressSupabaseSqliteAdapter } from "../src/adapters/supabase-
 
 describe("local provider integration", () => {
 	it("creates first-party adapters with provider-specific capability defaults", async () => {
-		const workspace = await mkdtemp(
-			join(tmpdir(), "astropress-sqlite-adapter-"),
-		);
+		const workspace = await mkdtemp(join(tmpdir(), "astropress-sqlite-adapter-"));
 		const sqlite = createAstropressSqliteAdapter({
 			workspaceRoot: workspace,
 			dbPath: join(workspace, "admin.sqlite"),
@@ -58,18 +56,14 @@ describe("local provider integration", () => {
 			kind: "post",
 		});
 		expect(
-			(await sqlite.content.list("post")).some(
-				(record) => record.slug === "hello-world",
-			),
+			(await sqlite.content.list("post")).some((record) => record.slug === "hello-world"),
 		).toBe(true);
 
 		await rm(workspace, { recursive: true, force: true });
 	});
 
 	it("lets Supabase wrap a real backing adapter surface", async () => {
-		const workspace = await mkdtemp(
-			join(tmpdir(), "astropress-provider-wrap-"),
-		);
+		const workspace = await mkdtemp(join(tmpdir(), "astropress-provider-wrap-"));
 		const backingAdapter = createAstropressSqliteAdapter({
 			workspaceRoot: workspace,
 			dbPath: join(workspace, "admin.sqlite"),
@@ -102,18 +96,13 @@ describe("local provider integration", () => {
 	});
 
 	it("creates sqlite-backed local runtime for Supabase", async () => {
-		const workspace = await mkdtemp(
-			join(tmpdir(), "astropress-provider-sqlite-"),
-		);
+		const workspace = await mkdtemp(join(tmpdir(), "astropress-provider-sqlite-"));
 		const supabase = createAstropressSupabaseSqliteAdapter({
 			workspaceRoot: workspace,
 			dbPath: join(workspace, "supabase-admin.sqlite"),
 		});
 
-		const supabaseUser = await supabase.auth.signIn(
-			"admin@example.com",
-			"password",
-		);
+		const supabaseUser = await supabase.auth.signIn("admin@example.com", "password");
 		expect(supabaseUser?.isAdmin).toBe(true);
 
 		const saved = await supabase.content.save({
@@ -138,9 +127,7 @@ describe("local provider integration", () => {
 	});
 
 	it("selects the requested local provider runtime", async () => {
-		const workspace = await mkdtemp(
-			join(tmpdir(), "astropress-provider-local-select-"),
-		);
+		const workspace = await mkdtemp(join(tmpdir(), "astropress-provider-local-select-"));
 		const supabase = createAstropressLocalAdapter({
 			provider: "supabase",
 			workspaceRoot: workspace,

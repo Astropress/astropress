@@ -1,5 +1,4 @@
-import { withAdminFormAction } from "@astropress-diy/astropress";
-import { saveRuntimeSettings } from "@astropress-diy/astropress";
+import { saveRuntimeSettings, withAdminFormAction } from "@astropress-diy/astropress";
 import type { APIRoute } from "astro";
 export const POST: APIRoute = async (context) =>
 	withAdminFormAction(
@@ -10,19 +9,14 @@ export const POST: APIRoute = async (context) =>
 			const siteTagline = formData.get("siteTagline") as string | null;
 			const donationUrl = formData.get("donationUrl") as string | null;
 			const newsletterEnabled = formData.get("newsletterEnabled") === "1";
-			const commentsDefaultPolicy = formData.get("commentsDefaultPolicy") as
-				| string
-				| null;
+			const commentsDefaultPolicy = formData.get("commentsDefaultPolicy") as string | null;
 
 			if (!siteTitle || !siteTagline || !donationUrl) {
 				return fail("All fields are required");
 			}
 
 			const validPolicies = ["disabled", "legacy-readonly", "open-moderated"];
-			if (
-				!commentsDefaultPolicy ||
-				!validPolicies.includes(commentsDefaultPolicy)
-			) {
+			if (!commentsDefaultPolicy || !validPolicies.includes(commentsDefaultPolicy)) {
 				return fail("Invalid comments policy");
 			}
 

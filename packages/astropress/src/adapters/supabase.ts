@@ -21,9 +21,7 @@ export type AstropressSupabaseAdapterOptions = Omit<
 	backingAdapter?: AstropressPlatformAdapter;
 };
 
-export function createAstropressSupabaseAdapter(
-	options: AstropressSupabaseAdapterOptions = {},
-) {
+export function createAstropressSupabaseAdapter(options: AstropressSupabaseAdapterOptions = {}) {
 	// Reject the misconfiguration that previously routed silently to the
 	// in-memory fallback. Callers must supply a real backingAdapter, or at
 	// least one of the granular stores (auth/content/media/revisions); the
@@ -46,8 +44,7 @@ export function createAstropressSupabaseAdapter(
 	});
 }
 
-export interface AstropressSupabaseHostedAdapterOptions
-	extends AstropressSupabaseAdapterOptions {
+export interface AstropressSupabaseHostedAdapterOptions extends AstropressSupabaseAdapterOptions {
 	config?: AstropressSupabaseHostedConfig;
 	env?: Record<string, string | undefined>;
 	fetchImpl?: AstropressHostedApiAdapterOptions["fetchImpl"];
@@ -60,9 +57,7 @@ export function readAstropressSupabaseHostedConfig(
 	const serviceRoleKey = env.SUPABASE_SERVICE_ROLE_KEY?.trim();
 
 	if (!url || !serviceRoleKey) {
-		throw new Error(
-			"Supabase hosted config requires SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY.",
-		);
+		throw new Error("Supabase hosted config requires SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY.");
 	}
 
 	return {
@@ -75,8 +70,7 @@ export function readAstropressSupabaseHostedConfig(
 export function createAstropressSupabaseHostedAdapter(
 	options: AstropressSupabaseHostedAdapterOptions = {},
 ) {
-	const config =
-		options.config ?? readAstropressSupabaseHostedConfig(options.env);
+	const config = options.config ?? readAstropressSupabaseHostedConfig(options.env);
 	if (
 		!options.backingAdapter &&
 		!options.content &&

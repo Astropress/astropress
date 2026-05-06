@@ -1,4 +1,4 @@
-import { readFileSync, readdirSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
@@ -19,10 +19,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 //   5. CLI verbs follow noun-verb pattern (services bootstrap, db migrate — not migrate-db)
 
 const ROOT = findRepoRoot(__dirname);
-const ADMIN_LAYOUT = join(
-	ROOT,
-	"packages/astropress/components/AdminLayout.astro",
-);
+const ADMIN_LAYOUT = join(ROOT, "packages/astropress/components/AdminLayout.astro");
 const ADMIN_PAGES_DIR = join(ROOT, "packages/astropress/pages/ap-admin");
 const CLI_ARGS = join(ROOT, "crates/astropress-cli/src/cli_config/args/mod.rs");
 
@@ -41,8 +38,7 @@ interface ParsedNavItem {
  */
 function parseNavItems(source: string): ParsedNavItem[] {
 	const start = source.indexOf("const navItems:");
-	if (start < 0)
-		throw new Error("navItems declaration not found in AdminLayout.astro");
+	if (start < 0) throw new Error("navItems declaration not found in AdminLayout.astro");
 	// Skip past `NavItem[]` type annotation to the `= [` assignment
 	const assignIdx = source.indexOf("= [", start);
 	if (assignIdx < 0) throw new Error("navItems array literal not found");
@@ -69,8 +65,7 @@ function parseNavItems(source: string): ParsedNavItem[] {
 	//   { href: "...", label: ..., ... }   — literal object entries
 	//   leaf("/href", labelExpr, { ... })  — leaf() helper
 	//   groupSep(labelExpr)                — group separator
-	const combinedRe =
-		/\{\s*href:\s*"([^"]*)"[^}]*\}|\bleaf\(\s*"([^"]+)"\s*,|\bgroupSep\(/g;
+	const combinedRe = /\{\s*href:\s*"([^"]*)"[^}]*\}|\bleaf\(\s*"([^"]+)"\s*,|\bgroupSep\(/g;
 	const items: ParsedNavItem[] = [];
 	for (const match of block.matchAll(combinedRe)) {
 		const body = match[0];
@@ -112,9 +107,7 @@ describe("Rubric 50: admin nav structure coherence", () => {
 	});
 
 	it("every navigable href is unique (no duplicate nav entries)", () => {
-		const hrefs = items
-			.filter((i) => !i.isGroupLabel && i.href)
-			.map((i) => i.href);
+		const hrefs = items.filter((i) => !i.isGroupLabel && i.href).map((i) => i.href);
 		const seen = new Set<string>();
 		const duplicates: string[] = [];
 		for (const h of hrefs) {
@@ -143,9 +136,7 @@ describe("Rubric 50: admin nav structure coherence", () => {
 				}
 			} else {
 				if (item.indent) {
-					violations.push(
-						`indented item "${item.href}" has no parent group label`,
-					);
+					violations.push(`indented item "${item.href}" has no parent group label`);
 				}
 			}
 		}
@@ -158,10 +149,7 @@ describe("Rubric 50: admin nav structure coherence", () => {
 			for (const entry of readdirSync(dir, { withFileTypes: true })) {
 				if (entry.isDirectory()) {
 					walk(join(dir, entry.name), `${prefix}/${entry.name}`);
-				} else if (
-					entry.name.endsWith(".astro") ||
-					entry.name.endsWith(".ts")
-				) {
+				} else if (entry.name.endsWith(".astro") || entry.name.endsWith(".ts")) {
 					const base = entry.name.replace(/\.(astro|ts)$/, "");
 					const route = base === "index" ? prefix : `${prefix}/${base}`;
 					adminPages.add(route || "/");
@@ -186,10 +174,7 @@ describe("Rubric 50: admin nav structure coherence", () => {
 			}
 		}
 		// Route-pages and similar may be dynamic [param] routes — tolerate by hyphen normalization
-		expect(
-			missing,
-			`nav entries without a matching page: ${missing.join(", ")}`,
-		).toEqual([]);
+		expect(missing, `nav entries without a matching page: ${missing.join(", ")}`).toEqual([]);
 	});
 });
 
@@ -208,9 +193,7 @@ describe("Rubric 50: CLI noun-verb pattern", () => {
 
 	it("exposes a 'list' or 'ls' command for discovery", () => {
 		const hasList =
-			cliSrc.includes('"list"') ||
-			cliSrc.includes('"ls"') ||
-			cliSrc.includes("ListTools");
+			cliSrc.includes('"list"') || cliSrc.includes('"ls"') || cliSrc.includes("ListTools");
 		expect(hasList).toBe(true);
 	});
 });

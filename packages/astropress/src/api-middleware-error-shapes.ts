@@ -15,16 +15,11 @@ function jsonError(status: number, body: Record<string, JsonValue>) {
 }
 
 export const API_ERROR_SHAPES = {
-	unauthorized: (detail: string) =>
-		jsonError(401, { error: detail, code: "unauthorized" }),
-	forbidden: (detail: string) =>
-		jsonError(403, { error: detail, code: "forbidden" }),
-	rateLimited: () =>
-		jsonError(429, { error: "Too many requests.", code: "rate_limited" }),
-	notFound: (detail = "Not found.") =>
-		jsonError(404, { error: detail, code: "not_found" }),
-	validationError: (detail: string) =>
-		jsonError(422, { error: detail, code: "validation_error" }),
+	unauthorized: (detail: string) => jsonError(401, { error: detail, code: "unauthorized" }),
+	forbidden: (detail: string) => jsonError(403, { error: detail, code: "forbidden" }),
+	rateLimited: () => jsonError(429, { error: "Too many requests.", code: "rate_limited" }),
+	notFound: (detail = "Not found.") => jsonError(404, { error: detail, code: "not_found" }),
+	validationError: (detail: string) => jsonError(422, { error: detail, code: "validation_error" }),
 	fileTooLarge: (maxBytes: number, uploadedBytes: number) =>
 		jsonError(413, {
 			error: "FILE_TOO_LARGE",

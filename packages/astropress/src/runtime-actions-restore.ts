@@ -6,12 +6,7 @@ import type { Actor } from "./persistence-types";
  * Tables that support soft-delete undo via this restore action.
  * Must be an exact match — never accept arbitrary user input as a table name.
  */
-const RESTORABLE_TABLES = [
-	"authors",
-	"media_assets",
-	"categories",
-	"tags",
-] as const;
+const RESTORABLE_TABLES = ["authors", "media_assets", "categories", "tags"] as const;
 type RestorableTable = (typeof RESTORABLE_TABLES)[number];
 
 export function isRestorableTable(table: string): table is RestorableTable {

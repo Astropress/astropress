@@ -4,24 +4,13 @@ import { createD1RateLimitPart } from "./d1-rate-limit-part";
 import {
 	type AdminUserRow,
 	type AuditEventRow,
+	bindTestimonialFilter,
+	buildCommentBindParams,
+	buildModerateSql,
 	COMMENT_INSERT_SQL,
 	CONTACT_INSERT_SQL,
 	type CommentRow,
 	type MediaRow,
-	SQL_ADMIN_USERS,
-	SQL_AUDIT_EVENTS,
-	SQL_COMMENTS,
-	SQL_CONTACT_SUBMISSIONS,
-	SQL_MEDIA_ASSETS,
-	SQL_REDIRECT_RULES,
-	SQL_SITE_SETTINGS,
-	SQL_TRANSLATION_STATE,
-	type SettingsRow,
-	TESTIMONIAL_INSERT_SQL,
-	type TestimonialRow,
-	bindTestimonialFilter,
-	buildCommentBindParams,
-	buildModerateSql,
 	mapAdminUserRow,
 	mapAuditEventRow,
 	mapCommentRow,
@@ -30,6 +19,17 @@ import {
 	mapRedirectRow,
 	mapSettingsRow,
 	mapTestimonialRow,
+	type SettingsRow,
+	SQL_ADMIN_USERS,
+	SQL_AUDIT_EVENTS,
+	SQL_COMMENTS,
+	SQL_CONTACT_SUBMISSIONS,
+	SQL_MEDIA_ASSETS,
+	SQL_REDIRECT_RULES,
+	SQL_SITE_SETTINGS,
+	SQL_TRANSLATION_STATE,
+	TESTIMONIAL_INSERT_SQL,
+	type TestimonialRow,
 	testimonialInputBindParams,
 } from "./d1-store-operations-helpers";
 import type {
@@ -49,8 +49,7 @@ export function createD1OperationsReadPart(
 	return {
 		audit: {
 			async getAuditEvents() {
-				const rows = (await db.prepare(SQL_AUDIT_EVENTS).all<AuditEventRow>())
-					.results;
+				const rows = (await db.prepare(SQL_AUDIT_EVENTS).all<AuditEventRow>()).results;
 				return rows.map(mapAuditEventRow);
 			},
 			async recordAuditEvent(input) {
@@ -71,8 +70,7 @@ export function createD1OperationsReadPart(
 		},
 		users: {
 			async listAdminUsers() {
-				const rows = (await db.prepare(SQL_ADMIN_USERS).all<AdminUserRow>())
-					.results;
+				const rows = (await db.prepare(SQL_ADMIN_USERS).all<AdminUserRow>()).results;
 				return rows.map(mapAdminUserRow);
 			},
 		},
@@ -95,9 +93,7 @@ export function createD1OperationsReadPart(
 			},
 			async getApprovedCommentsForRoute(route: string) {
 				const comments = await this.getComments();
-				return comments.filter(
-					(c) => c.route === route && c.status === "approved",
-				);
+				return comments.filter((c) => c.route === route && c.status === "approved");
 			},
 		},
 		submissions: {
@@ -114,25 +110,14 @@ export function createD1OperationsReadPart(
 				return rows.map(mapContactRow);
 			},
 			async getTestimonials(status?: TestimonialStatus) {
-				const rows = (
-					await bindTestimonialFilter(db, status).all<TestimonialRow>()
-				).results;
+				const rows = (await bindTestimonialFilter(db, status).all<TestimonialRow>()).results;
 				return rows.map(mapTestimonialRow);
 			},
 		},
 		translations: {
-			async getEffectiveTranslationState(
-				route: string,
-				fallback = "not_started",
-			) {
-				const row = await db
-					.prepare(SQL_TRANSLATION_STATE)
-					.bind(route)
-					.first<{ state: string }>();
-				return normalizeTranslationState(
-					row?.state,
-					normalizeTranslationState(fallback),
-				);
+			async getEffectiveTranslationState(route: string, fallback = "not_started") {
+				const row = await db.prepare(SQL_TRANSLATION_STATE).bind(route).first<{ state: string }>();
+				return normalizeTranslationState(row?.state, normalizeTranslationState(fallback));
 			},
 		},
 		settings: {
@@ -145,8 +130,7 @@ export function createD1OperationsReadPart(
 		rateLimits: createD1RateLimitPart(db),
 		media: {
 			async listMediaAssets() {
-				const rows = (await db.prepare(SQL_MEDIA_ASSETS).all<MediaRow>())
-					.results;
+				const rows = (await db.prepare(SQL_MEDIA_ASSETS).all<MediaRow>()).results;
 				return rows.map(mapMediaRow);
 			},
 		},
@@ -174,16 +158,13 @@ export function createD1OperationsMutationPart(
 			async moderateTestimonial(
 				id: string,
 				status: TestimonialStatus,
-				actorEmail: string,
+				_actorEmail: string,
 			): Promise<{ ok: true } | { ok: false; error: string }> {
 				const result = await buildModerateSql(db, status, id);
-				if (!result.meta.changes)
-					return { ok: false as const, error: "Testimonial not found" };
+				if (!result.meta.changes) return { ok: false as const, error: "Testimonial not found" };
 				return { ok: true as const };
 			},
-			async submitContact(
-				input,
-			): Promise<{ ok: true; submission: ContactSubmission }> {
+			async submitContact(input): Promise<{ ok: true; submission: ContactSubmission }> {
 				const submission: ContactSubmission = {
 					id: `contact-${crypto.randomUUID()}`,
 					name: input.name,
@@ -205,9 +186,7 @@ export function createD1OperationsMutationPart(
 			},
 		},
 		comments: {
-			async submitPublicComment(
-				input,
-			): Promise<{ ok: true; comment: CommentRecord }> {
+			async submitPublicComment(input): Promise<{ ok: true; comment: CommentRecord }> {
 				const submittedAt = input.submittedAt || new Date().toISOString();
 				const comment: CommentRecord = {
 					id: `public-${crypto.randomUUID()}`,

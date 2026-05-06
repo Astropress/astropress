@@ -3,15 +3,15 @@ import {
 	createWriteStream,
 	existsSync,
 	mkdirSync,
-	readFileSync,
 	readdirSync,
+	readFileSync,
 	rmSync,
 	statSync,
 	writeFileSync,
 } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
-import { STEP_INPUTS, hashPaths } from "./step-content-hash";
+import { hashPaths, STEP_INPUTS } from "./step-content-hash";
 
 const root = process.cwd();
 
@@ -225,9 +225,7 @@ function checkGhasAlerts(): boolean {
 		return true;
 	}
 
-	console.error(
-		`\n── GHAS alert check FAILED — open code-scanning alerts on ${branch}:`,
-	);
+	console.error(`\n── GHAS alert check FAILED — open code-scanning alerts on ${branch}:`);
 	console.error(alerts);
 	console.error("Fix or suppress these before pushing.");
 	return false;
@@ -260,11 +258,9 @@ function isTestIrrelevantOnlyPush(): boolean {
 	}
 	let changed = "";
 	try {
-		const diff = spawnSync(
-			"git",
-			["diff", "--name-only", `${defaultRef}...HEAD`],
-			{ encoding: "utf8" },
-		);
+		const diff = spawnSync("git", ["diff", "--name-only", `${defaultRef}...HEAD`], {
+			encoding: "utf8",
+		});
 		if (diff.status !== 0) return false;
 		changed = (diff.stdout ?? "").trim();
 	} catch {
@@ -324,9 +320,7 @@ function maybeColdCacheWipe(): void {
 			console.log(`  skipped ${t.path}: ${(err as Error).message}`);
 		}
 	}
-	console.log(
-		"── cold-cache wipe complete; gates will pay the fetch/build cost ──",
-	);
+	console.log("── cold-cache wipe complete; gates will pay the fetch/build cost ──");
 }
 
 async function main(): Promise<void> {
@@ -341,12 +335,7 @@ async function main(): Promise<void> {
 	try {
 		spawnSync(
 			"bun",
-			[
-				"run",
-				"tooling/scripts/assert-clean-worktree.ts",
-				"--snapshot",
-				snapshotPath,
-			],
+			["run", "tooling/scripts/assert-clean-worktree.ts", "--snapshot", snapshotPath],
 			{ stdio: "ignore" },
 		);
 	} catch {
@@ -360,9 +349,7 @@ async function main(): Promise<void> {
 	const docsOnly = isDocsOnlyPush();
 	if (docsOnly) {
 		console.log("\n── docs-only push detected (no .ts/.rs/.astro changes)");
-		console.log(
-			"── skipping tiers 2 and 3; running tier 1 only as sanity check",
-		);
+		console.log("── skipping tiers 2 and 3; running tier 1 only as sanity check");
 	}
 
 	if (docsOnly) {
@@ -374,8 +361,7 @@ async function main(): Promise<void> {
 
 	const cache = loadCache();
 	const forceFull = process.env.PREPUSH_NO_CACHE === "1";
-	if (forceFull)
-		console.log("\n── PREPUSH_NO_CACHE=1: ignoring content-hash cache ──");
+	if (forceFull) console.log("\n── PREPUSH_NO_CACHE=1: ignoring content-hash cache ──");
 
 	// Build must come first — bdd:test imports compiled JS from dist/.
 	if (isBuildUpToDate()) {
@@ -447,9 +433,7 @@ async function main(): Promise<void> {
 		}
 		saveCache(cache);
 	} else {
-		console.log(
-			"\n── tier 2/3 parallel ── all steps cache-hit; nothing to run",
-		);
+		console.log("\n── tier 2/3 parallel ── all steps cache-hit; nothing to run");
 	}
 
 	// audit:coverage-floor must follow test-unit so coverage-summary.json
@@ -483,12 +467,7 @@ async function main(): Promise<void> {
 				{
 					name: "repo:clean",
 					cmd: "bun",
-					args: [
-						"run",
-						"tooling/scripts/assert-clean-worktree.ts",
-						"--against",
-						snapshotPath,
-					],
+					args: ["run", "tooling/scripts/assert-clean-worktree.ts", "--against", snapshotPath],
 				},
 			]))
 		) {

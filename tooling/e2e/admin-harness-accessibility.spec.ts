@@ -34,9 +34,7 @@ test.describe("Feature: package-owned admin accessibility coverage", () => {
 				}, theme);
 
 				await page.goto(route.path, { waitUntil: "networkidle" });
-				await expect(
-					page.getByRole("heading", { level: 1, name: route.heading }),
-				).toBeVisible();
+				await expect(page.getByRole("heading", { level: 1, name: route.heading })).toBeVisible();
 
 				// Belt-and-braces: pages without <ap-theme-toggle> in their template
 				// (or before the WC has connected) won't pick up the localStorage
@@ -57,9 +55,7 @@ test.describe("Feature: package-owned admin accessibility coverage", () => {
 		}
 	}
 
-	test("Scenario: redirects confirmation dialog is keyboard operable", async ({
-		page,
-	}) => {
+	test("Scenario: redirects confirmation dialog is keyboard operable", async ({ page }) => {
 		await page.goto("/ap-admin/redirects", { waitUntil: "networkidle" });
 		await page.locator("[data-confirm-delete]").first().click();
 		const dialog = page.locator("#confirm-dialog");
@@ -90,18 +86,12 @@ test.describe("Feature: package-owned admin accessibility coverage", () => {
 	}) => {
 		await page.goto("/ap-admin/posts", { waitUntil: "networkidle" });
 		await page.getByRole("link", { name: "Hello World" }).click();
-		await expect(
-			page.getByRole("heading", { level: 1, name: "Edit Post" }),
-		).toBeVisible();
-		await expect(
-			page.getByRole("textbox", { name: "Body HTML" }),
-		).toBeVisible();
+		await expect(page.getByRole("heading", { level: 1, name: "Edit Post" })).toBeVisible();
+		await expect(page.getByRole("textbox", { name: "Body HTML" })).toBeVisible();
 		await page.getByRole("button", { name: "Open media library" }).click();
 		const dialog = page.locator("#media-library-dialog");
 		await expect(dialog).toBeVisible();
-		await expect(
-			page.getByRole("heading", { level: 2, name: "Media Library" }),
-		).toBeVisible();
+		await expect(page.getByRole("heading", { level: 2, name: "Media Library" })).toBeVisible();
 		await page.getByRole("button", { name: "Close" }).click();
 		await expect(dialog).not.toBeVisible();
 	});

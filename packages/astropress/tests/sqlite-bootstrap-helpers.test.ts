@@ -3,10 +3,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import {
-	checkpointSqliteWal,
-	loadSqliteDatabase,
-} from "../src/sqlite-bootstrap-helpers";
+import { checkpointSqliteWal, loadSqliteDatabase } from "../src/sqlite-bootstrap-helpers";
 
 let testRoot: string;
 
@@ -43,9 +40,7 @@ describe("checkpointSqliteWal", () => {
 		db.close();
 
 		const warnings: string[] = [];
-		const result = await checkpointSqliteWal(dbPath, (msg) =>
-			warnings.push(msg),
-		);
+		const result = await checkpointSqliteWal(dbPath, (msg) => warnings.push(msg));
 
 		expect(result).toBe(true);
 		expect(warnings).toHaveLength(0);
@@ -56,9 +51,7 @@ describe("checkpointSqliteWal", () => {
 		writeFileSync(badPath, "this is not sqlite", "utf8");
 
 		const warnings: string[] = [];
-		const result = await checkpointSqliteWal(badPath, (msg) =>
-			warnings.push(msg),
-		);
+		const result = await checkpointSqliteWal(badPath, (msg) => warnings.push(msg));
 
 		expect(result).toBe(false);
 		expect(warnings.length).toBeGreaterThan(0);

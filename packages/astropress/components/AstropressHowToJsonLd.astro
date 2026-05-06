@@ -52,9 +52,7 @@ const jsonLd: Record<string, unknown> = {
 		position: index + 1,
 		name: step.name,
 		text: step.text,
-		...(step.imageUrl
-			? { image: { "@type": "ImageObject", url: step.imageUrl } }
-			: {}),
+		...(step.imageUrl ? { image: { "@type": "ImageObject", url: step.imageUrl } } : {}),
 	})),
 };
 

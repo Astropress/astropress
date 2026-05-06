@@ -29,14 +29,11 @@ export async function detectImageDimensions(
  */
 export async function generateThumbnail(
 	bytes: Uint8Array,
-	width: number,
+	_width: number,
 ): Promise<Uint8Array | null> {
 	try {
 		const sharp = (await import("sharp")).default;
-		const output = await sharp(Buffer.from(bytes))
-			.resize({ width: 400 })
-			.webp()
-			.toBuffer();
+		const output = await sharp(Buffer.from(bytes)).resize({ width: 400 }).webp().toBuffer();
 		return new Uint8Array(output);
 	} catch {
 		return null;
@@ -89,22 +86,18 @@ export async function generateAndStoreSrcset(
 	locals?: App.Locals | null,
 ): Promise<string | null> {
 	const { generateSrcset } = await import("./local-image-storage.js");
-	return generateSrcset(
-		input.bytes,
-		publicPath,
-		async (variantFilename, variantBytes) => {
-			const variantStored = await storeRuntimeMediaObject(
-				{
-					...input,
-					filename: variantFilename,
-					bytes: variantBytes,
-					mimeType: "image/webp",
-				},
-				locals,
-			);
-			return variantStored.ok ? variantStored.asset.publicPath : null;
-		},
-	);
+	return generateSrcset(input.bytes, publicPath, async (variantFilename, variantBytes) => {
+		const variantStored = await storeRuntimeMediaObject(
+			{
+				...input,
+				filename: variantFilename,
+				bytes: variantBytes,
+				mimeType: "image/webp",
+			},
+			locals,
+		);
+		return variantStored.ok ? variantStored.asset.publicPath : null;
+	});
 }
 
 export function buildMediaInsertParams(
@@ -213,22 +206,11 @@ export async function insertMediaAssetRecord(
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `,
 		)
-		.bind(
-			...buildMediaInsertParams(
-				stored,
-				actor,
-				imageDimensions,
-				thumbnailUrl,
-				srcset,
-			),
-		)
+		.bind(...buildMediaInsertParams(stored, actor, imageDimensions, thumbnailUrl, srcset))
 		.run();
 }
 
-export async function detectImageDimensionsForMime(
-	bytes: Uint8Array,
-	mimeType: string,
-) {
+export async function detectImageDimensionsForMime(bytes: Uint8Array, mimeType: string) {
 	if (mimeType.startsWith("image/")) {
 		return detectImageDimensions(bytes);
 	}

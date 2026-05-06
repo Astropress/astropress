@@ -3,15 +3,9 @@
 // labels or notes strings produces equivalent mutants. Behavior of the
 // accessors is mutation-tested in data-service-targets.ts at 95%+.
 
-import type {
-	AstropressDataServiceTarget,
-	AstropressDataServices,
-} from "./data-service-targets";
+import type { AstropressDataServices, AstropressDataServiceTarget } from "./data-service-targets";
 
-export const dataServiceTargets: Record<
-	AstropressDataServices,
-	AstropressDataServiceTarget
-> = {
+export const dataServiceTargets: Record<AstropressDataServices, AstropressDataServiceTarget> = {
 	none: {
 		id: "none",
 		label: "No Hosted Content Services",
@@ -47,8 +41,7 @@ export const dataServiceTargets: Record<
 		providesDatabase: true,
 		providesObjectStorage: true,
 		providesAuth: true,
-		notes:
-			"Backend services platform for data, auth, and storage behind a separate Astro host.",
+		notes: "Backend services platform for data, auth, and storage behind a separate Astro host.",
 	},
 	pocketbase: {
 		id: "pocketbase",
@@ -57,8 +50,7 @@ export const dataServiceTargets: Record<
 		providesDatabase: true,
 		providesObjectStorage: true,
 		providesAuth: true,
-		notes:
-			"Lightweight backend-in-one-box path. Treat as preview or self-hosted infrastructure.",
+		notes: "Lightweight backend-in-one-box path. Treat as preview or self-hosted infrastructure.",
 	},
 	neon: {
 		id: "neon",

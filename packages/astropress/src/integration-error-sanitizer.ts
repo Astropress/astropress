@@ -20,9 +20,7 @@ import {
 
 export type { IntegrationErrorCode };
 
-export function isIntegrationErrorCode(
-	value: unknown,
-): value is IntegrationErrorCode {
+export function isIntegrationErrorCode(value: unknown): value is IntegrationErrorCode {
 	if (typeof value !== "string") return false;
 	return KNOWN_INTEGRATION_ERROR_CODES.has(value as IntegrationErrorCode);
 }

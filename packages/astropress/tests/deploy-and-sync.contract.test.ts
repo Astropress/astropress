@@ -30,14 +30,11 @@ describe("deploy and sync contracts", () => {
 		});
 
 		expect(result.url).toBe("https://example.com/docs/demo-site/");
+		expect(await readFile(join(outputDir, "demo-site", "index.html"), "utf8")).toContain(
+			"Astropress",
+		);
 		expect(
-			await readFile(join(outputDir, "demo-site", "index.html"), "utf8"),
-		).toContain("Astropress");
-		expect(
-			await readFile(
-				join(outputDir, "demo-site", ".astropress-deploy.json"),
-				"utf8",
-			),
+			await readFile(join(outputDir, "demo-site", ".astropress-deploy.json"), "utf8"),
 		).toContain('"provider": "github-pages"');
 
 		await rm(workspace, { recursive: true, force: true });
@@ -65,10 +62,7 @@ describe("deploy and sync contracts", () => {
 
 			expect(result.deploymentId).toContain("demo-site");
 			expect(
-				await readFile(
-					join(outputDir, "demo-site", ".astropress-deploy.json"),
-					"utf8",
-				),
+				await readFile(join(outputDir, "demo-site", ".astropress-deploy.json"), "utf8"),
 			).toContain(provider);
 		}
 
@@ -81,24 +75,16 @@ describe("deploy and sync contracts", () => {
 		const snapshotDir = join(workspace, "snapshot");
 		await mkdir(join(projectDir, "src"), { recursive: true });
 		await writeFile(join(projectDir, "package.json"), '{"name":"demo"}');
-		await writeFile(
-			join(projectDir, "src", "index.ts"),
-			"export const demo = true;",
-		);
+		await writeFile(join(projectDir, "src", "index.ts"), "export const demo = true;");
 
 		const sync = createAstropressGitSyncAdapter({ projectDir });
 		const exported = await sync.exportSnapshot(snapshotDir);
-		await writeFile(
-			join(projectDir, "src", "index.ts"),
-			"export const demo = false;",
-		);
+		await writeFile(join(projectDir, "src", "index.ts"), "export const demo = false;");
 		const imported = await sync.importSnapshot(snapshotDir);
 
 		expect(exported.fileCount).toBeGreaterThan(0);
 		expect(imported.fileCount).toBe(exported.fileCount);
-		expect(
-			await readFile(join(projectDir, "src", "index.ts"), "utf8"),
-		).toContain("demo = true");
+		expect(await readFile(join(projectDir, "src", "index.ts"), "utf8")).toContain("demo = true");
 
 		await rm(workspace, { recursive: true, force: true });
 	});

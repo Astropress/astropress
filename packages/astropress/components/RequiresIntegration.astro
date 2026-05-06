@@ -1,4 +1,5 @@
 ---
+import type { AdminLocale } from "astropress";
 /**
  * Empty-state shown when an admin leaf has no backing integration configured.
  *
@@ -7,7 +8,6 @@
  * enable the feature without leaving the page.
  */
 import { getAdminLabel } from "astropress";
-import type { AdminLocale } from "astropress";
 
 interface Provider {
 	name: string;
@@ -54,10 +54,8 @@ const tHeading =
 const tHowTo = getAdminLabel("stubHowToEnable", locale);
 const tProviders = getAdminLabel("stubSupportedProviders", locale);
 const tLearnMore = getAdminLabel("stubLearnMore", locale);
-const tRoadmapBody =
-	variant === "coming-soon" ? getAdminLabel("stubComingSoonBody", locale) : "";
-const tRoadmapLink =
-	variant === "coming-soon" ? getAdminLabel("stubComingSoonLink", locale) : "";
+const tRoadmapBody = variant === "coming-soon" ? getAdminLabel("stubComingSoonBody", locale) : "";
+const tRoadmapLink = variant === "coming-soon" ? getAdminLabel("stubComingSoonLink", locale) : "";
 ---
 
 <section class="panel stub-panel" aria-labelledby="stub-heading">

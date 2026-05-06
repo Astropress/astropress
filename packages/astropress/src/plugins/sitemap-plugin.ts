@@ -29,9 +29,7 @@ export interface SitemapPluginOptions {
 	onPublish?: (slug: string) => Promise<void> | void;
 }
 
-export function createSitemapPlugin(
-	options: SitemapPluginOptions = {},
-): AstropressPlugin {
+export function createSitemapPlugin(options: SitemapPluginOptions = {}): AstropressPlugin {
 	return {
 		name: "astropress-sitemap",
 
@@ -55,10 +53,7 @@ export function createSitemapPlugin(
 					}),
 				}).catch((err: unknown) => {
 					// Sitemap purge failures are non-fatal — log and continue
-					console.warn(
-						`[astropress-sitemap] Purge webhook failed for slug "${slug}":`,
-						err,
-					);
+					console.warn(`[astropress-sitemap] Purge webhook failed for slug "${slug}":`, err);
 				});
 			}
 		},

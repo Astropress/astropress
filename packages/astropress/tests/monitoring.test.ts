@@ -9,9 +9,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 const CMS_CONFIG_KEY = Symbol.for("astropress.cms-config");
 
 function setCmsConfig(monitoring?: { prometheusEnabled?: boolean }) {
-	(globalThis as typeof globalThis & { [key: symbol]: unknown })[
-		CMS_CONFIG_KEY
-	] = {
+	(globalThis as typeof globalThis & { [key: symbol]: unknown })[CMS_CONFIG_KEY] = {
 		siteName: "Test Site",
 		siteUrl: "https://example.com",
 		templateKeys: [],
@@ -23,9 +21,7 @@ function setCmsConfig(monitoring?: { prometheusEnabled?: boolean }) {
 }
 
 function clearCmsConfig() {
-	(globalThis as typeof globalThis & { [key: symbol]: unknown })[
-		CMS_CONFIG_KEY
-	] = null;
+	(globalThis as typeof globalThis & { [key: symbol]: unknown })[CMS_CONFIG_KEY] = null;
 }
 
 // Mock the runtime store and content functions so the endpoint doesn't need real SQLite
@@ -60,11 +56,7 @@ vi.mock("../src/admin-store-dispatch.js", () => ({
 	safeLoadLocalAdminStore: vi.fn().mockResolvedValue({
 		listMediaAssets: vi
 			.fn()
-			.mockReturnValue([
-				{ id: "media-1" },
-				{ id: "media-2" },
-				{ id: "media-3" },
-			]),
+			.mockReturnValue([{ id: "media-1" }, { id: "media-2" }, { id: "media-3" }]),
 	}),
 }));
 
@@ -99,9 +91,7 @@ describe("GET /ap/metrics — enabled", () => {
 		setCmsConfig({ prometheusEnabled: true });
 		const response = await callMetricsEndpoint();
 		expect(response.status).toBe(200);
-		expect(response.headers.get("Content-Type")).toBe(
-			"text/plain; version=0.0.4",
-		);
+		expect(response.headers.get("Content-Type")).toBe("text/plain; version=0.0.4");
 	});
 
 	it("sets Cache-Control: no-store", async () => {

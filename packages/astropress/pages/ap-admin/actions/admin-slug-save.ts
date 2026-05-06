@@ -26,16 +26,10 @@ export const POST: APIRoute = async (context) =>
 				);
 			}
 			if (RESERVED_SLUGS.has(raw)) {
-				return fail(
-					`"${raw}" is a reserved path and cannot be used as the admin slug.`,
-				);
+				return fail(`"${raw}" is a reserved path and cannot be used as the admin slug.`);
 			}
 
-			const result = await saveRuntimeSettings(
-				{ adminSlug: raw },
-				actor,
-				locals,
-			);
+			const result = await saveRuntimeSettings({ adminSlug: raw }, actor, locals);
 			if (!result.ok) {
 				return fail("Failed to save admin slug.");
 			}

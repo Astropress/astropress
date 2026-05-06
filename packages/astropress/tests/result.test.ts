@@ -1,15 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import {
-	err,
-	isErr,
-	isOk,
-	mapResult,
-	none,
-	ok,
-	some,
-	unwrapOr,
-} from "../src/result";
+import { err, isErr, isOk, mapResult, none, ok, some, unwrapOr } from "../src/result";
 
 describe("result helpers", () => {
 	it("ok narrows correctly via isOk and exposes value", () => {

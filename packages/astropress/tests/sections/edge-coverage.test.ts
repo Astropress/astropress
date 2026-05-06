@@ -10,9 +10,7 @@ describe("templates exact field strings", () => {
 	it("about hero subhead exact text", () => {
 		const sections = buildTemplate("about");
 		if (sections[0].kind === "hero") {
-			expect(sections[0].subhead).toBe(
-				"A short, honest description of who we are.",
-			);
+			expect(sections[0].subhead).toBe("A short, honest description of who we are.");
 		}
 	});
 
@@ -20,9 +18,7 @@ describe("templates exact field strings", () => {
 		const sections = buildTemplate("contact");
 		if (sections[0].kind === "hero") {
 			expect(sections[0].headline).toBe("Contact");
-			expect(sections[0].subhead).toBe(
-				"Reach us through any of these channels.",
-			);
+			expect(sections[0].subhead).toBe("Reach us through any of these channels.");
 		}
 	});
 

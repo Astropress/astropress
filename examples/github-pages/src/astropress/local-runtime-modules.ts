@@ -13,9 +13,7 @@ export const hostRuntimeModules = defineAstropressHostRuntimeModules({
 		return (await import("./admin-auth")) as unknown as LocalAdminAuthModule;
 	},
 	async loadLocalCmsRegistry() {
-		return (await import(
-			"./admin-persistence"
-		)) as unknown as LocalCmsRegistryModule;
+		return (await import("./admin-persistence")) as unknown as LocalCmsRegistryModule;
 	},
 	async loadLocalMediaStorage() {
 		return import("@astropress-diy/astropress/local-media-storage");

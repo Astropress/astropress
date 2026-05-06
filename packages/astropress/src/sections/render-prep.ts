@@ -10,11 +10,7 @@
  * of DB lookups instead of N per-section ones.
  */
 
-import {
-	type MediaRecord,
-	getRuntimeMediaResolutionOptions,
-	resolveMediaUrl,
-} from "../media";
+import { getRuntimeMediaResolutionOptions, type MediaRecord, resolveMediaUrl } from "../media";
 import type { Section, TestimonialsSection } from "./schema";
 
 export interface MediaLike extends MediaRecord {

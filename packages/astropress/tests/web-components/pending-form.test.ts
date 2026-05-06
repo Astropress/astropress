@@ -123,15 +123,9 @@ describe("ap-pending-form: submit wiring", () => {
 		`);
 		const form = host.querySelector("form") as HTMLFormElement;
 		form.dispatchEvent(new Event("submit", { cancelable: true }));
-		const reset = host.querySelector(
-			'button[type="reset"]',
-		) as HTMLButtonElement;
-		const btn = host.querySelector(
-			'button[type="button"]',
-		) as HTMLButtonElement;
-		const submit = host.querySelector(
-			'button[type="submit"]',
-		) as HTMLButtonElement;
+		const reset = host.querySelector('button[type="reset"]') as HTMLButtonElement;
+		const btn = host.querySelector('button[type="button"]') as HTMLButtonElement;
+		const submit = host.querySelector('button[type="submit"]') as HTMLButtonElement;
 		expect(reset.disabled).toBe(false);
 		expect(btn.disabled).toBe(false);
 		expect(submit.disabled).toBe(true);

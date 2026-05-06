@@ -20,10 +20,7 @@ interface StoredMediaAsset {
 	altText: string;
 }
 
-export async function storeRuntimeMediaObject(
-	input: MediaUploadInput,
-	locals?: App.Locals | null,
-) {
+export async function storeRuntimeMediaObject(input: MediaUploadInput, locals?: App.Locals | null) {
 	const bindings = getCloudflareBindings(locals);
 
 	if (bindings.MEDIA_BUCKET) {

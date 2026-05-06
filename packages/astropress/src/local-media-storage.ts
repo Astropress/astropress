@@ -21,15 +21,7 @@ const allowedMimeTypes = new Set([
 // Safe file extensions that map unambiguously to allowed image types.
 // This allowlist is checked in addition to MIME type — extensions like .php
 // that fall through to a default MIME type guess are explicitly blocked here.
-const allowedExtensions = new Set([
-	".jpg",
-	".jpeg",
-	".png",
-	".webp",
-	".gif",
-	".avif",
-	".svg",
-]);
+const allowedExtensions = new Set([".jpg", ".jpeg", ".png", ".webp", ".gif", ".avif", ".svg"]);
 
 const maxUploadBytes = 10 * 1024 * 1024; // 10 MB
 
@@ -69,8 +61,7 @@ export function buildLocalMediaDescriptor(input: {
 	if (!allowedExtensions.has(extension)) {
 		return {
 			ok: false as const,
-			error:
-				"File type is not allowed. Upload JPEG, PNG, WebP, GIF, AVIF, or SVG images.",
+			error: "File type is not allowed. Upload JPEG, PNG, WebP, GIF, AVIF, or SVG images.",
 		};
 	}
 
@@ -78,8 +69,7 @@ export function buildLocalMediaDescriptor(input: {
 	if (!allowedMimeTypes.has(guessedMime)) {
 		return {
 			ok: false as const,
-			error:
-				"File type is not allowed. Upload JPEG, PNG, WebP, GIF, AVIF, or SVG images.",
+			error: "File type is not allowed. Upload JPEG, PNG, WebP, GIF, AVIF, or SVG images.",
 		};
 	}
 

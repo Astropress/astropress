@@ -70,10 +70,7 @@ export async function cleanupExpiredCloudflareSessions(db: D1DatabaseLike) {
 		.run();
 }
 
-export async function getLiveCloudflareSessionRow(
-	db: D1DatabaseLike,
-	sessionId: string,
-) {
+export async function getLiveCloudflareSessionRow(db: D1DatabaseLike, sessionId: string) {
 	await cleanupExpiredCloudflareSessions(db);
 
 	const sessionCandidates = [sessionId];
@@ -113,10 +110,7 @@ export async function getLiveCloudflareSessionRow(
 	if (!row) return null;
 
 	const lastActiveAt = Date.parse(row.last_active_at);
-	if (
-		!Number.isFinite(lastActiveAt) ||
-		Date.now() - lastActiveAt > CLOUDFLARE_SESSION_TTL_MS
-	) {
+	if (!Number.isFinite(lastActiveAt) || Date.now() - lastActiveAt > CLOUDFLARE_SESSION_TTL_MS) {
 		await db
 			.prepare(
 				"UPDATE admin_sessions SET revoked_at = CURRENT_TIMESTAMP WHERE id = ? AND revoked_at IS NULL",
@@ -127,9 +121,7 @@ export async function getLiveCloudflareSessionRow(
 	}
 
 	await db
-		.prepare(
-			"UPDATE admin_sessions SET last_active_at = CURRENT_TIMESTAMP WHERE id = ?",
-		)
+		.prepare("UPDATE admin_sessions SET last_active_at = CURRENT_TIMESTAMP WHERE id = ?")
 		.bind(row.id)
 		.run();
 	return row;
@@ -138,9 +130,7 @@ export async function getLiveCloudflareSessionRow(
 export function createFallbackCloudflareAuthStore(
 	seedUsers: AstropressCloudflareSeedUser[],
 ): AuthStore {
-	const users = new Map(
-		seedUsers.map((user) => [user.email.toLowerCase(), user]),
-	);
+	const users = new Map(seedUsers.map((user) => [user.email.toLowerCase(), user]));
 	const sessions = new Map<string, AuthUser>();
 
 	return {
@@ -192,8 +182,7 @@ export function createD1CloudflareAuthStore(db: D1DatabaseLike): AuthStore {
 					password_hash: string;
 				}>();
 
-			if (!row || !(await verifyPassword(password, row.password_hash)))
-				return null;
+			if (!row || !(await verifyPassword(password, row.password_hash))) return null;
 
 			const sessionId = crypto.randomUUID();
 			const storedSessionId = await createSessionTokenDigest(
@@ -212,13 +201,7 @@ export function createD1CloudflareAuthStore(db: D1DatabaseLike): AuthStore {
 					.prepare(
 						"INSERT INTO admin_sessions (id, user_id, csrf_token, ip_address, user_agent) VALUES (?, ?, ?, ?, ?)",
 					)
-					.bind(
-						storedSessionId,
-						row.id,
-						csrfToken,
-						null,
-						"astropress-cloudflare-adapter",
-					),
+					.bind(storedSessionId, row.id, csrfToken, null, "astropress-cloudflare-adapter"),
 			]);
 
 			return {
@@ -233,9 +216,7 @@ export function createD1CloudflareAuthStore(db: D1DatabaseLike): AuthStore {
 			const statements = [db.prepare(revokeStmt).bind(sessionId)];
 			for (const secret of resolveCloudflareSessionSecretCandidates()) {
 				statements.push(
-					db
-						.prepare(revokeStmt)
-						.bind(await createSessionTokenDigest(sessionId, secret)),
+					db.prepare(revokeStmt).bind(await createSessionTokenDigest(sessionId, secret)),
 				);
 			}
 			await db.batch(statements);

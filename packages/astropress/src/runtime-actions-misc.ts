@@ -2,10 +2,10 @@ import { normalizeRedirectPath } from "./admin-normalizers";
 import { withLocalStoreFallback } from "./admin-store-dispatch";
 import { recordD1Audit } from "./d1-audit";
 import type { Actor } from "./persistence-types";
-import { type SiteSettings, defaultSiteSettings } from "./site-settings";
+import { defaultSiteSettings, type SiteSettings } from "./site-settings";
 import {
-	type TranslationState,
 	normalizeTranslationState,
+	type TranslationState,
 	translationStates,
 } from "./translation-state";
 
@@ -18,10 +18,7 @@ export async function updateRuntimeTranslationState(
 	return withLocalStoreFallback(
 		locals,
 		async (db) => {
-			const normalizedState = normalizeTranslationState(
-				state,
-				"__invalid__" as TranslationState,
-			);
+			const normalizedState = normalizeTranslationState(state, "__invalid__" as TranslationState);
 			if (!(translationStates as readonly string[]).includes(normalizedState)) {
 				return {
 					ok: false as const,
@@ -85,9 +82,7 @@ export async function createRuntimeRedirectRule(
 			}
 
 			const existing = await db
-				.prepare(
-					"SELECT deleted_at FROM redirect_rules WHERE source_path = ? LIMIT 1",
-				)
+				.prepare("SELECT deleted_at FROM redirect_rules WHERE source_path = ? LIMIT 1")
 				.bind(sourcePath)
 				.first<{ deleted_at: string | null }>();
 
@@ -154,9 +149,7 @@ export async function deleteRuntimeRedirectRule(
 			}
 
 			const row = await db
-				.prepare(
-					"SELECT deleted_at FROM redirect_rules WHERE source_path = ? LIMIT 1",
-				)
+				.prepare("SELECT deleted_at FROM redirect_rules WHERE source_path = ? LIMIT 1")
 				.bind(normalizedSourcePath)
 				.first<{ deleted_at: string | null }>();
 
@@ -259,10 +252,8 @@ export async function saveRuntimeSettings(
 				siteTitle: partial.siteTitle ?? current.siteTitle,
 				siteTagline: partial.siteTagline ?? current.siteTagline,
 				donationUrl: partial.donationUrl ?? current.donationUrl,
-				newsletterEnabled:
-					partial.newsletterEnabled ?? current.newsletterEnabled,
-				commentsDefaultPolicy:
-					partial.commentsDefaultPolicy ?? current.commentsDefaultPolicy,
+				newsletterEnabled: partial.newsletterEnabled ?? current.newsletterEnabled,
+				commentsDefaultPolicy: partial.commentsDefaultPolicy ?? current.commentsDefaultPolicy,
 				adminSlug: partial.adminSlug ?? current.adminSlug,
 			};
 

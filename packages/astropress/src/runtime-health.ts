@@ -27,9 +27,7 @@ export function registerHealthCheck(fn: HealthCheckFn): void {
 	_healthCheck = fn;
 }
 
-export async function handleHealthRequest(
-	_request: Request,
-): Promise<Response> {
+export async function handleHealthRequest(_request: Request): Promise<Response> {
 	let status: "ok" | "degraded" = "ok";
 	if (_healthCheck) {
 		try {

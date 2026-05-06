@@ -1,13 +1,5 @@
 import type { DatabaseSync } from "node:sqlite";
-import {
-	afterAll,
-	beforeAll,
-	beforeEach,
-	describe,
-	expect,
-	it,
-	vi,
-} from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { registerCms } from "../src/config";
 import { createApiTokenStore } from "../src/sqlite-runtime/api-tokens.js";
@@ -50,22 +42,16 @@ vi.mock("@astropress-diy/astropress", async (importOriginal) => {
 // ─── Page handler imports (after mocks are registered) ────────────────────────
 
 import {
-	GET as contentGET,
-	POST as contentPOST,
-} from "../pages/ap-api/v1/content.js";
-import {
 	DELETE as contentIdDELETE,
 	GET as contentIdGET,
 	PUT as contentIdPUT,
 } from "../pages/ap-api/v1/content/[id].js";
+import { GET as contentGET, POST as contentPOST } from "../pages/ap-api/v1/content.js";
 import { GET as mediaGET } from "../pages/ap-api/v1/media.js";
 import { GET as openapiGET } from "../pages/ap-api/v1/openapi.json.js";
 import { GET as revisionsGET } from "../pages/ap-api/v1/revisions/[recordId].js";
 import { GET as settingsGET } from "../pages/ap-api/v1/settings.js";
-import {
-	GET as webhooksGET,
-	POST as webhooksPOST,
-} from "../pages/ap-api/v1/webhooks.js";
+import { GET as webhooksGET, POST as webhooksPOST } from "../pages/ap-api/v1/webhooks.js";
 
 // ─── Test state ───────────────────────────────────────────────────────────────
 
@@ -93,23 +79,18 @@ beforeAll(async () => {
 	});
 
 	const store = createApiTokenStore(db);
-	readToken = (await store.create({ label: "read", scopes: ["content:read"] }))
-		.rawToken;
+	readToken = (await store.create({ label: "read", scopes: ["content:read"] })).rawToken;
 	writeToken = (
 		await store.create({
 			label: "write",
 			scopes: ["content:read", "content:write"],
 		})
 	).rawToken;
-	mediaReadToken = (
-		await store.create({ label: "media-read", scopes: ["media:read"] })
-	).rawToken;
-	settingsReadToken = (
-		await store.create({ label: "settings-read", scopes: ["settings:read"] })
-	).rawToken;
-	webhooksManageToken = (
-		await store.create({ label: "webhooks", scopes: ["webhooks:manage"] })
-	).rawToken;
+	mediaReadToken = (await store.create({ label: "media-read", scopes: ["media:read"] })).rawToken;
+	settingsReadToken = (await store.create({ label: "settings-read", scopes: ["settings:read"] }))
+		.rawToken;
+	webhooksManageToken = (await store.create({ label: "webhooks", scopes: ["webhooks:manage"] }))
+		.rawToken;
 });
 
 afterAll(() => {
@@ -206,18 +187,11 @@ beforeEach(() => {
 
 type AnyAPIContext = Parameters<typeof contentGET>[0];
 
-function ctx(
-	request: Request,
-	params: Record<string, string> = {},
-): AnyAPIContext {
+function ctx(request: Request, params: Record<string, string> = {}): AnyAPIContext {
 	return { request, params, locals } as unknown as AnyAPIContext;
 }
 
-function req(
-	method: string,
-	path: string,
-	opts?: { token?: string; body?: unknown },
-): Request {
+function req(method: string, path: string, opts?: { token?: string; body?: unknown }): Request {
 	const headers: Record<string, string> = {};
 	if (opts?.token) headers.Authorization = `Bearer ${opts.token}`;
 	if (opts?.body !== undefined) headers["Content-Type"] = "application/json";
@@ -232,9 +206,7 @@ function req(
 
 describe("GET /ap-api/v1/content", () => {
 	it("returns 200 with paginated records for content:read scope", async () => {
-		const res = await contentGET(
-			ctx(req("GET", "/ap-api/v1/content", { token: readToken })),
-		);
+		const res = await contentGET(ctx(req("GET", "/ap-api/v1/content", { token: readToken })));
 		expect(res.status).toBe(200);
 		const body = (await res.json()) as Record<string, unknown>;
 		expect(Array.isArray(body.records)).toBe(true);
@@ -247,9 +219,7 @@ describe("GET /ap-api/v1/content", () => {
 	});
 
 	it("returns 403 when token lacks content:read scope", async () => {
-		const res = await contentGET(
-			ctx(req("GET", "/ap-api/v1/content", { token: mediaReadToken })),
-		);
+		const res = await contentGET(ctx(req("GET", "/ap-api/v1/content", { token: mediaReadToken })));
 		expect(res.status).toBe(403);
 	});
 
@@ -275,9 +245,7 @@ describe("GET /ap-api/v1/content", () => {
 
 	it("honours limit and offset query parameters", async () => {
 		const res = await contentGET(
-			ctx(
-				req("GET", "/ap-api/v1/content?limit=2&offset=1", { token: readToken }),
-			),
+			ctx(req("GET", "/ap-api/v1/content?limit=2&offset=1", { token: readToken })),
 		);
 		expect(res.status).toBe(200);
 		const body = (await res.json()) as { records: unknown[]; total: number };
@@ -445,9 +413,7 @@ describe("DELETE /ap-api/v1/content/:id", () => {
 
 describe("GET /ap-api/v1/media", () => {
 	it("returns 200 with media records for media:read scope", async () => {
-		const res = await mediaGET(
-			ctx(req("GET", "/ap-api/v1/media", { token: mediaReadToken })),
-		);
+		const res = await mediaGET(ctx(req("GET", "/ap-api/v1/media", { token: mediaReadToken })));
 		expect(res.status).toBe(200);
 		const body = (await res.json()) as { records: unknown[] };
 		expect(Array.isArray(body.records)).toBe(true);

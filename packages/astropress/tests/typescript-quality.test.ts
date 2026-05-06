@@ -5,8 +5,8 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { adminLabels } from "../src/admin-ui.js";
 import type { AdminLabelKey, AdminLocale } from "../src/admin-ui.js";
+import { adminLabels } from "../src/admin-ui.js";
 import type {
 	ActionResult,
 	AdminUserId,
@@ -120,22 +120,9 @@ describe("admin i18n label map", () => {
 	it("locale set covers every AdminLocale union member", () => {
 		// If you add a new locale to the AdminLocale union, this assertion
 		// will fail until you also add an entry to the adminLabels map.
-		const expected: AdminLocale[] = [
-			"en",
-			"es",
-			"fr",
-			"de",
-			"pt",
-			"ja",
-			"te",
-			"hi",
-			"ny",
-		];
+		const expected: AdminLocale[] = ["en", "es", "fr", "de", "pt", "ja", "te", "hi", "ny"];
 		for (const loc of expected) {
-			expect(
-				ALL_LOCALES,
-				`AdminLocale '${loc}' missing from adminLabels`,
-			).toContain(loc);
+			expect(ALL_LOCALES, `AdminLocale '${loc}' missing from adminLabels`).toContain(loc);
 		}
 	});
 

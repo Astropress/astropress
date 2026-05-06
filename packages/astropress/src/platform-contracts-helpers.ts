@@ -32,8 +32,6 @@ export interface ApiTokenStore {
 	list(): Promise<ApiTokenRecord[]>;
 	verify(
 		rawToken: string,
-	): Promise<
-		{ valid: true; record: ApiTokenRecord } | { valid: false; reason: string }
-	>;
+	): Promise<{ valid: true; record: ApiTokenRecord } | { valid: false; reason: string }>;
 	revoke(id: string): Promise<void>;
 }

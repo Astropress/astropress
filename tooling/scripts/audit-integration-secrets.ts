@@ -20,14 +20,7 @@
  */
 
 import { join, relative } from "node:path";
-import {
-	AuditReport,
-	ROOT,
-	fromRoot,
-	listFiles,
-	readText,
-	runAudit,
-} from "../lib/audit-utils.js";
+import { AuditReport, fromRoot, listFiles, ROOT, readText, runAudit } from "../lib/audit-utils.js";
 
 const SRC_DIR = fromRoot("packages/astropress/src");
 const TESTS_DIR = fromRoot("packages/astropress/tests");
@@ -81,11 +74,11 @@ async function main() {
 			listFiles(SRC_DIR, { recursive: true, extensions: [".ts"] }).then((rs) =>
 				rs.map((r) => `packages/astropress/src/${r}`),
 			),
-			listFiles(TESTS_DIR, { recursive: true, extensions: [".ts"] }).then(
-				(rs) => rs.map((r) => `packages/astropress/tests/${r}`),
+			listFiles(TESTS_DIR, { recursive: true, extensions: [".ts"] }).then((rs) =>
+				rs.map((r) => `packages/astropress/tests/${r}`),
 			),
-			listFiles(TOOLING_DIR, { recursive: true, extensions: [".ts"] }).then(
-				(rs) => rs.map((r) => `tooling/scripts/${r}`),
+			listFiles(TOOLING_DIR, { recursive: true, extensions: [".ts"] }).then((rs) =>
+				rs.map((r) => `tooling/scripts/${r}`),
 			),
 		])
 	).flat();
@@ -101,9 +94,7 @@ async function main() {
 			// Allow the token to appear inside an import path or as part of
 			// another identifier; only flag exact column references that look
 			// like SQL or JSON access.
-			const sqlPattern = new RegExp(
-				`(SELECT[^;]*\\b${token}\\b|\\b${token}\\s*[:,])`,
-			);
+			const sqlPattern = new RegExp(`(SELECT[^;]*\\b${token}\\b|\\b${token}\\s*[:,])`);
 			if (sqlPattern.test(src)) {
 				report.add(
 					`[secret-column-leak] ${rel}: references "${token}" outside the envelope/repository/rotation allowlist. Read secrets only via createIntegrationsRepository.findSecret().`,
@@ -158,9 +149,7 @@ async function main() {
 		const src = await readRel(ENVELOPE_FILE);
 		const ifaceMatch = src.match(/interface SealedSecret\s*\{([^}]+)\}/);
 		if (!ifaceMatch) {
-			report.add(
-				`[envelope-shape] ${ENVELOPE_FILE}: SealedSecret interface not found.`,
-			);
+			report.add(`[envelope-shape] ${ENVELOPE_FILE}: SealedSecret interface not found.`);
 		} else {
 			const body = ifaceMatch[1];
 			const declared = new Set<string>();
@@ -178,9 +167,7 @@ async function main() {
 			}
 			for (const k of expected) {
 				if (!declared.has(k)) {
-					report.add(
-						`[envelope-shape] SealedSecret is missing required field "${k}".`,
-					);
+					report.add(`[envelope-shape] SealedSecret is missing required field "${k}".`);
 				}
 			}
 		}

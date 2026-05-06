@@ -39,9 +39,7 @@ describe("integrationStatusBadgeText", () => {
 		expect(integrationStatusBadgeText("paused", LABELS)).toBe("Paused");
 	});
 	it("returns the notConnected label for 'not-connected'", () => {
-		expect(integrationStatusBadgeText("not-connected", LABELS)).toBe(
-			"Not connected",
-		);
+		expect(integrationStatusBadgeText("not-connected", LABELS)).toBe("Not connected");
 	});
 	it("returns each label verbatim — no normalisation, escaping, or trim", () => {
 		const padded: IntegrationStatusBadgeLabels = {

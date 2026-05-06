@@ -6,9 +6,7 @@ import { createAstropressProjectLaunchPlan } from "../src/project-launch.js";
 
 describe("project launch", () => {
 	it("builds a local launch plan with static hosting and no hosted data-services by default", async () => {
-		const workspace = await mkdtemp(
-			join(tmpdir(), "astropress-project-launch-local-"),
-		);
+		const workspace = await mkdtemp(join(tmpdir(), "astropress-project-launch-local-"));
 		const plan = createAstropressProjectLaunchPlan({
 			env: {
 				ASTROPRESS_RUNTIME_MODE: "local",
@@ -101,9 +99,7 @@ describe("project launch", () => {
 	it("dataServices=cloudflare flows Cloudflare to recommendation.existingPlatform (kills L30 branch mutants)", async () => {
 		// Local mode keeps adapter setup minimal; the recommendation engine
 		// reads runtime.env.dataServices independently of the runtime mode.
-		const workspace = await mkdtemp(
-			join(tmpdir(), "astropress-project-launch-cf-"),
-		);
+		const workspace = await mkdtemp(join(tmpdir(), "astropress-project-launch-cf-"));
 		const plan = createAstropressProjectLaunchPlan({
 			env: {
 				ASTROPRESS_RUNTIME_MODE: "local",
@@ -120,9 +116,7 @@ describe("project launch", () => {
 	});
 
 	it("dataServices=appwrite flows Appwrite to recommendation.existingPlatform (kills L32 branch mutants)", async () => {
-		const workspace = await mkdtemp(
-			join(tmpdir(), "astropress-project-launch-aw-"),
-		);
+		const workspace = await mkdtemp(join(tmpdir(), "astropress-project-launch-aw-"));
 		const plan = createAstropressProjectLaunchPlan({
 			env: {
 				ASTROPRESS_RUNTIME_MODE: "local",
@@ -166,9 +160,7 @@ describe("project launch", () => {
 	});
 
 	it("provider mirrors runtime.env.localProvider in local mode (kills L44 mode-branch mutant)", async () => {
-		const workspace = await mkdtemp(
-			join(tmpdir(), "astropress-project-launch-prov-"),
-		);
+		const workspace = await mkdtemp(join(tmpdir(), "astropress-project-launch-prov-"));
 		const plan = createAstropressProjectLaunchPlan({
 			env: {
 				ASTROPRESS_RUNTIME_MODE: "local",

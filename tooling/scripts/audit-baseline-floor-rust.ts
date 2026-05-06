@@ -62,8 +62,7 @@ function main(): number {
 	for (const [file, entry] of Object.entries(after.scores)) {
 		const prior = beforeScores[file];
 		if (!prior) {
-			if (entry.score < FLOOR - TOLERANCE)
-				newBelowFloor.push({ file, score: entry.score });
+			if (entry.score < FLOOR - TOLERANCE) newBelowFloor.push({ file, score: entry.score });
 			continue;
 		}
 		if (entry.score + TOLERANCE < prior.score)
@@ -77,13 +76,9 @@ function main(): number {
 	}
 	console.error("\n✖ audit-baseline-floor-rust FAILED:\n");
 	for (const d of drops)
-		console.error(
-			`  REGRESSION  ${d.file}: ${d.from.toFixed(2)}% → ${d.to.toFixed(2)}%`,
-		);
+		console.error(`  REGRESSION  ${d.file}: ${d.from.toFixed(2)}% → ${d.to.toFixed(2)}%`);
 	for (const n of newBelowFloor)
-		console.error(
-			`  NEW BELOW FLOOR  ${n.file}: ${n.score.toFixed(2)}% < ${FLOOR}%`,
-		);
+		console.error(`  NEW BELOW FLOOR  ${n.file}: ${n.score.toFixed(2)}% < ${FLOOR}%`);
 	console.error(
 		`\n  Baselines may move up freely, but never down. New files must score >= ${FLOOR}%.`,
 	);

@@ -39,11 +39,11 @@ vi.mock("playwright", () => ({
 
 import { chromium } from "playwright";
 import {
+	fetchWixExport,
 	WixCaptchaDetectedError,
 	WixInvalidCredentialsError,
 	WixSiteNotFoundError,
 	WixTwoFactorRequiredError,
-	fetchWixExport,
 } from "../../src/import/fetch-wix.js";
 
 const BASE_OPTS = {
@@ -84,20 +84,14 @@ describe("fetchWixExport — success path", () => {
 		// Wix login: email step, then password step
 		mocks.page.content
 			.mockResolvedValueOnce('<html><form><input type="email" /></form></html>') // login page
-			.mockResolvedValueOnce(
-				'<html><form><input type="password" /></form></html>',
-			); // password step
+			.mockResolvedValueOnce('<html><form><input type="password" /></form></html>'); // password step
 
 		// After login: dashboard URL
 		mocks.page.url.mockReturnValue("https://manage.wix.com/dashboard");
 
 		// No 2FA, no CAPTCHA
 		mocks.page.locator.mockImplementation((sel: string) => {
-			if (
-				sel.includes("captcha") ||
-				sel.includes("phone") ||
-				sel.includes("two-factor")
-			) {
+			if (sel.includes("captcha") || sel.includes("phone") || sel.includes("two-factor")) {
 				return makeLocator(0);
 			}
 			return makeLocator(1);
@@ -153,9 +147,7 @@ describe("fetchWixExport — failure modes", () => {
 			makeLocator(sel.includes("error") ? 1 : 0),
 		);
 
-		await expect(fetchWixExport(BASE_OPTS)).rejects.toBeInstanceOf(
-			WixInvalidCredentialsError,
-		);
+		await expect(fetchWixExport(BASE_OPTS)).rejects.toBeInstanceOf(WixInvalidCredentialsError);
 	});
 
 	it("WixInvalidCredentialsError has a clear message", async () => {
@@ -175,19 +167,13 @@ describe("fetchWixExport — failure modes", () => {
 
 	it("throws WixTwoFactorRequiredError when phone verification is shown", async () => {
 		mocks.page.goto.mockResolvedValue({ status: () => 200 });
-		mocks.page.content.mockResolvedValue(
-			'<html><form><input type="email" /></form></html>',
-		);
+		mocks.page.content.mockResolvedValue('<html><form><input type="email" /></form></html>');
 		mocks.page.url.mockReturnValue("https://users.wix.com/signin/verification");
 		mocks.page.locator.mockImplementation((sel: string) =>
-			makeLocator(
-				sel.includes("verification") || sel.includes("phone") ? 1 : 0,
-			),
+			makeLocator(sel.includes("verification") || sel.includes("phone") ? 1 : 0),
 		);
 
-		await expect(fetchWixExport(BASE_OPTS)).rejects.toBeInstanceOf(
-			WixTwoFactorRequiredError,
-		);
+		await expect(fetchWixExport(BASE_OPTS)).rejects.toBeInstanceOf(WixTwoFactorRequiredError);
 	});
 
 	it("WixTwoFactorRequiredError message tells the user to export manually", async () => {
@@ -212,25 +198,19 @@ describe("fetchWixExport — failure modes", () => {
 			makeLocator(sel.includes("recaptcha") || sel.includes("captcha") ? 1 : 0),
 		);
 
-		await expect(fetchWixExport(BASE_OPTS)).rejects.toBeInstanceOf(
-			WixCaptchaDetectedError,
-		);
+		await expect(fetchWixExport(BASE_OPTS)).rejects.toBeInstanceOf(WixCaptchaDetectedError);
 	});
 
 	it("throws WixSiteNotFoundError when blog export is not available for the site", async () => {
 		mocks.page.goto.mockResolvedValue({ status: () => 200 });
-		mocks.page.content.mockResolvedValue(
-			'<html><form><input type="email" /></form></html>',
-		);
+		mocks.page.content.mockResolvedValue('<html><form><input type="email" /></form></html>');
 		mocks.page.url.mockReturnValue("https://manage.wix.com/dashboard");
 		// After login: blog section not found
 		mocks.page.locator.mockImplementation((sel: string) =>
 			makeLocator(sel.includes("blog") || sel.includes("export") ? 0 : 1),
 		);
 
-		await expect(fetchWixExport(BASE_OPTS)).rejects.toBeInstanceOf(
-			WixSiteNotFoundError,
-		);
+		await expect(fetchWixExport(BASE_OPTS)).rejects.toBeInstanceOf(WixSiteNotFoundError);
 	});
 
 	it("always closes the browser even when an error is thrown", async () => {

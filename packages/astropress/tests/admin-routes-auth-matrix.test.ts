@@ -22,8 +22,7 @@ describe("admin route auth matrix (registry-driven)", () => {
 		for (const route of pageRoutes) {
 			if (PUBLIC_PAGE_PATTERNS.has(route.pattern)) continue;
 			const src = readFileSync(`${PAGES_DIR}/${route.entrypoint}`, "utf8");
-			const guarded =
-				src.includes("requiresAccess(") || src.includes("adminUser");
+			const guarded = src.includes("requiresAccess(") || src.includes("adminUser");
 			if (!guarded) offenders.push(`${route.pattern} (${route.entrypoint})`);
 		}
 		expect(offenders).toEqual([]);
@@ -60,9 +59,7 @@ describe("admin route auth matrix (registry-driven)", () => {
 		};
 		const response = await requiresAccess(fakeAstro, "settings:edit");
 		expect(response?.status).toBe(302);
-		expect(redirectTarget).toContain(
-			"/ap-admin?error=insufficient-permissions",
-		);
+		expect(redirectTarget).toContain("/ap-admin?error=insufficient-permissions");
 		expect(redirectTarget).toContain("reason=role%20mismatch");
 	});
 
@@ -74,8 +71,7 @@ describe("admin route auth matrix (registry-driven)", () => {
 					can: () => ({ decision: "allow" as const, reason: "ok" }),
 				},
 			} as unknown as App.Locals,
-			redirect: (path: string) =>
-				new Response(null, { status: 302, headers: { Location: path } }),
+			redirect: (path: string) => new Response(null, { status: 302, headers: { Location: path } }),
 		};
 		const response = await requiresAccess(fakeAstro, "settings:edit");
 		expect(response).toBeNull();
@@ -125,13 +121,7 @@ describe("admin route auth matrix (registry-driven)", () => {
 
 	describe("dynamic segment edge cases", () => {
 		it("/ap-admin/posts/[slug]/revisions accepts and round-trips a slug with hyphens, unicode, and percent-encoding", () => {
-			const samples = [
-				"hello-world",
-				"über-café",
-				"weird%20slug",
-				"a/b/c-with-slashes",
-				"",
-			];
+			const samples = ["hello-world", "über-café", "weird%20slug", "a/b/c-with-slashes", ""];
 			for (const slug of samples) {
 				const path = `/ap-admin/posts/${encodeURIComponent(slug)}/revisions`;
 				expect(path.startsWith("/ap-admin/posts/")).toBe(true);

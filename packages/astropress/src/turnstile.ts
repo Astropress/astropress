@@ -44,16 +44,13 @@ export async function verifyTurnstileToken(input: {
 	}
 
 	try {
-		const response = await fetch(
-			"https://challenges.cloudflare.com/turnstile/v0/siteverify",
-			{
-				method: "POST",
-				headers: {
-					"Content-Type": "application/x-www-form-urlencoded",
-				},
-				body: payload,
+		const response = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/x-www-form-urlencoded",
 			},
-		);
+			body: payload,
+		});
 
 		if (!response.ok) {
 			return { ok: false, error: "Security challenge could not be verified." };
@@ -63,8 +60,7 @@ export async function verifyTurnstileToken(input: {
 		if (!result.success) {
 			return {
 				ok: false,
-				error:
-					result["error-codes"]?.join(", ") || "Security challenge failed.",
+				error: result["error-codes"]?.join(", ") || "Security challenge failed.",
 			};
 		}
 

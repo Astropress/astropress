@@ -7,9 +7,7 @@ async function main() {
 	const [command, ...args] = process.argv.slice(2);
 
 	if (!command) {
-		throw new Error(
-			"usage: bun run tooling/scripts/run-with-temp-data.ts <command> [args...]",
-		);
+		throw new Error("usage: bun run tooling/scripts/run-with-temp-data.ts <command> [args...]");
 	}
 
 	const tempDataRoot = await mkdtemp(join(tmpdir(), "astropress-data-"));

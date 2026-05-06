@@ -34,13 +34,11 @@ export function createPackageScripts(appHost: AstropressAppHost) {
 
 	switch (appHost) {
 		case "cloudflare-pages":
-			scripts["deploy:cloudflare"] =
-				"wrangler pages deploy dist --commit-dirty=true";
+			scripts["deploy:cloudflare"] = "wrangler pages deploy dist --commit-dirty=true";
 			scripts["build:cloudflare-production"] = "astro build";
 			break;
 		case "vercel":
-			scripts["deploy:vercel"] =
-				"vercel build && vercel deploy --prebuilt --prod --yes";
+			scripts["deploy:vercel"] = "vercel build && vercel deploy --prebuilt --prod --yes";
 			break;
 		case "netlify":
 			scripts["deploy:netlify"] = "netlify deploy --dir dist --prod";
@@ -61,8 +59,7 @@ export function createPackageScripts(appHost: AstropressAppHost) {
 			scripts["deploy:railway"] = "railway up";
 			break;
 		case "digitalocean":
-			scripts["deploy:digitalocean"] =
-				"doctl apps create-deployment $DO_APP_ID";
+			scripts["deploy:digitalocean"] = "doctl apps create-deployment $DO_APP_ID";
 			break;
 		case "coolify":
 			// Coolify deploys via git push / webhooks — no CLI deploy step needed.
@@ -87,8 +84,10 @@ export function createCiFiles(
 	if (appHost === "gitlab-pages") {
 		files[".gitlab-ci.yml"] = gitLabPagesWorkflow();
 	} else {
-		files[".github/workflows/deploy-astropress.yml"] =
-			gitHubActionsDeployWorkflow(appHost, requiredEnvKeys);
+		files[".github/workflows/deploy-astropress.yml"] = gitHubActionsDeployWorkflow(
+			appHost,
+			requiredEnvKeys,
+		);
 		files[".github/workflows/quality.yml"] = createQualityWorkflow();
 		files[".github/workflows/security.yml"] = createSecurityWorkflow();
 	}
@@ -100,13 +99,9 @@ export function createCiFiles(
 		files["astro.config.public.mjs"] = createAstropressPublicConfig();
 	}
 	const hasAnyDonation =
-		donations &&
-		(donations.giveLively || donations.liberapay || donations.pledgeCrypto);
+		donations && (donations.giveLively || donations.liberapay || donations.pledgeCrypto);
 	if (hasAnyDonation) {
-		files["src/pages/donate.astro"] = createDonatePage(
-			donations,
-			"https://example.com",
-		);
+		files["src/pages/donate.astro"] = createDonatePage(donations, "https://example.com");
 	}
 	return files;
 }

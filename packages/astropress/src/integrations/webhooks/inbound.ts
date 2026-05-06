@@ -25,9 +25,7 @@ export interface VerifyInboundWebhookArgs {
 /**
  * WebCrypto hash-name for the given algorithm. Pure.
  */
-export function algorithmHashName(
-	algo: InboundWebhookAlgorithm,
-): "SHA-256" | "SHA-512" {
+export function algorithmHashName(algo: InboundWebhookAlgorithm): "SHA-256" | "SHA-512" {
 	if (algo === "hmac-sha256") return "SHA-256";
 	return "SHA-512";
 }
@@ -45,10 +43,7 @@ export function algorithmHeaderPrefix(algo: InboundWebhookAlgorithm): string {
  * Strip the algorithm prefix from a header value if present, else
  * return the input verbatim. Pure.
  */
-export function extractWebhookHexSignature(
-	header: string,
-	algo: InboundWebhookAlgorithm,
-): string {
+export function extractWebhookHexSignature(header: string, algo: InboundWebhookAlgorithm): string {
 	const prefix = algorithmHeaderPrefix(algo);
 	if (header.startsWith(prefix)) {
 		return header.slice(prefix.length);
@@ -88,11 +83,7 @@ export async function computeWebhookHmacBytes(
 	);
 	const bodyBuf = new ArrayBuffer(body.byteLength);
 	new Uint8Array(bodyBuf).set(body);
-	const sig = await crypto.subtle.sign(
-		{ name: "HMAC", hash: { name: hash } },
-		key,
-		bodyBuf,
-	);
+	const sig = await crypto.subtle.sign({ name: "HMAC", hash: { name: hash } }, key, bodyBuf);
 	return new Uint8Array(sig);
 }
 
@@ -103,11 +94,7 @@ export async function verifyInboundWebhookSignature(
 	const hex = extractWebhookHexSignature(args.header, args.algo);
 	const supplied = parseWebhookHexBytes(hex);
 	if (supplied === null) return false;
-	const expected = await computeWebhookHmacBytes(
-		args.algo,
-		args.secret,
-		args.body,
-	);
+	const expected = await computeWebhookHmacBytes(args.algo, args.secret, args.body);
 	return constantTimeEqual(supplied, expected);
 }
 

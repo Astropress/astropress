@@ -1,8 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import {
-	downloadMedia,
-	validateMediaSourceUrl,
-} from "../src/import/download-media.js";
+import { downloadMedia, validateMediaSourceUrl } from "../src/import/download-media.js";
 import * as sharpTranscode from "../src/import/sharp-transcode.js";
 
 // ---------------------------------------------------------------------------
@@ -13,9 +10,7 @@ import * as sharpTranscode from "../src/import/sharp-transcode.js";
 // no matter when the module was first imported.
 // ---------------------------------------------------------------------------
 
-let transcodeViaSharpSpy: ReturnType<
-	typeof vi.spyOn<typeof sharpTranscode, "transcodeViaSharp">
->;
+let transcodeViaSharpSpy: ReturnType<typeof vi.spyOn<typeof sharpTranscode, "transcodeViaSharp">>;
 
 beforeEach(() => {
 	transcodeViaSharpSpy = vi
@@ -29,15 +24,11 @@ afterEach(() => {
 
 describe("validateMediaSourceUrl", () => {
 	it("accepts http URLs", () => {
-		expect(() =>
-			validateMediaSourceUrl("http://example.com/image.jpg"),
-		).not.toThrow();
+		expect(() => validateMediaSourceUrl("http://example.com/image.jpg")).not.toThrow();
 	});
 
 	it("accepts https URLs", () => {
-		expect(() =>
-			validateMediaSourceUrl("https://example.com/image.png"),
-		).not.toThrow();
+		expect(() => validateMediaSourceUrl("https://example.com/image.png")).not.toThrow();
 	});
 
 	it("blocks data: URLs", () => {
@@ -89,9 +80,9 @@ describe("validateMediaSourceUrl", () => {
 	});
 
 	it("blocks 169.254.x link-local range", () => {
-		expect(() =>
-			validateMediaSourceUrl("http://169.254.169.254/latest/meta-data"),
-		).toThrow("Blocked request to private/loopback host");
+		expect(() => validateMediaSourceUrl("http://169.254.169.254/latest/meta-data")).toThrow(
+			"Blocked request to private/loopback host",
+		);
 	});
 
 	it("rejects invalid URLs", () => {
@@ -136,9 +127,7 @@ describe("downloadMedia", () => {
 					}),
 			),
 		);
-		await expect(downloadMedia("https://example.com/huge.jpg")).rejects.toThrow(
-			"exceeds",
-		);
+		await expect(downloadMedia("https://example.com/huge.jpg")).rejects.toThrow("exceeds");
 		vi.unstubAllGlobals();
 	});
 
@@ -147,9 +136,7 @@ describe("downloadMedia", () => {
 			"fetch",
 			vi.fn(async () => new Response(null, { status: 404 })),
 		);
-		await expect(
-			downloadMedia("https://example.com/missing.jpg"),
-		).rejects.toThrow("HTTP 404");
+		await expect(downloadMedia("https://example.com/missing.jpg")).rejects.toThrow("HTTP 404");
 		vi.unstubAllGlobals();
 	});
 
@@ -194,13 +181,10 @@ describe("downloadMedia", () => {
 			"fetch",
 			vi.fn(
 				async () =>
-					new Response(
-						'<svg xmlns="http://www.w3.org/2000/svg"><circle r="5"/></svg>',
-						{
-							status: 200,
-							headers: { "content-type": "image/svg+xml" },
-						},
-					),
+					new Response('<svg xmlns="http://www.w3.org/2000/svg"><circle r="5"/></svg>', {
+						status: 200,
+						headers: { "content-type": "image/svg+xml" },
+					}),
 			),
 		);
 		const bytes = await downloadMedia("https://example.com/icon.svg");
@@ -313,9 +297,9 @@ describe("downloadMedia", () => {
 					}),
 			),
 		);
-		await expect(
-			downloadMedia("https://example.com/corrupt.jpg"),
-		).rejects.toThrow("Input buffer contains unsupported image format");
+		await expect(downloadMedia("https://example.com/corrupt.jpg")).rejects.toThrow(
+			"Input buffer contains unsupported image format",
+		);
 		vi.unstubAllGlobals();
 	});
 

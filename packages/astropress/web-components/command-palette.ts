@@ -82,9 +82,7 @@ export class ApCommandPalette extends HTMLElement {
 	}
 
 	private onInputKeydown = (e: KeyboardEvent) => {
-		const lis = Array.from(
-			this.results.querySelectorAll<HTMLLIElement>("li[role='option']"),
-		);
+		const lis = Array.from(this.results.querySelectorAll<HTMLLIElement>("li[role='option']"));
 		if (!lis.length) return;
 
 		if (e.key === "ArrowDown") {
@@ -107,12 +105,9 @@ export class ApCommandPalette extends HTMLElement {
 	};
 
 	private updateSelection(lis: HTMLLIElement[]) {
-		lis.forEach((li, i) =>
-			li.setAttribute(
-				"aria-selected",
-				i === this.selectedIndex ? "true" : "false",
-			),
-		);
+		lis.forEach((li, i) => {
+			li.setAttribute("aria-selected", i === this.selectedIndex ? "true" : "false");
+		});
 		lis[this.selectedIndex]?.scrollIntoView({ block: "nearest" });
 	}
 }

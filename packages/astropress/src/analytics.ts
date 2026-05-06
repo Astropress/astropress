@@ -10,9 +10,7 @@ import type { AnalyticsConfig } from "./config";
  * For the "custom" type, the snippet is passed through as-is.
  * For all other types, the snippet is built from the config fields.
  */
-export function resolveAnalyticsSnippet(
-	config?: AnalyticsConfig | null,
-): string {
+export function resolveAnalyticsSnippet(config?: AnalyticsConfig | null): string {
 	if (!config) return "";
 
 	switch (config.type) {
@@ -26,9 +24,7 @@ export function resolveAnalyticsSnippet(
 		}
 		case "matomo": {
 			if (!config.url || !config.siteId) return "";
-			const trackerUrl = config.url.endsWith("/")
-				? config.url
-				: `${config.url}/`;
+			const trackerUrl = config.url.endsWith("/") ? config.url : `${config.url}/`;
 			return [
 				"<script>",
 				"var _paq = window._paq = window._paq || [];",
@@ -115,8 +111,5 @@ function escAttr(value: string): string {
 
 /** Escape a string for embedding as a JS string literal (single-quoted). */
 function escJs(value: string): string {
-	return value
-		.replace(/\\/g, "\\\\")
-		.replace(/'/g, "\\'")
-		.replace(/\n/g, "\\n");
+	return value.replace(/\\/g, "\\\\").replace(/'/g, "\\'").replace(/\n/g, "\\n");
 }

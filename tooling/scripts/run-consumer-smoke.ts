@@ -101,12 +101,8 @@ function spawnServer(
 		detached: true,
 		env: { ...process.env, ...env },
 	});
-	child.stdout?.on("data", (chunk: Buffer) =>
-		process.stdout.write(`[${name}] ${chunk}`),
-	);
-	child.stderr?.on("data", (chunk: Buffer) =>
-		process.stderr.write(`[${name}] ${chunk}`),
-	);
+	child.stdout?.on("data", (chunk: Buffer) => process.stdout.write(`[${name}] ${chunk}`));
+	child.stderr?.on("data", (chunk: Buffer) => process.stderr.write(`[${name}] ${chunk}`));
 	return { process: child };
 }
 
@@ -166,26 +162,19 @@ async function runCommand(
 		child.once("error", reject);
 		child.once("exit", (c) => resolve(c ?? 1));
 	});
-	if (code !== 0)
-		throw new Error(`${command} ${args.join(" ")} exited with code ${code}`);
+	if (code !== 0) throw new Error(`${command} ${args.join(" ")} exited with code ${code}`);
 }
 
 async function main(): Promise<void> {
 	const root = process.cwd();
 	const skipBuild = process.argv.includes("--skip-build");
-	const dataRoot = await mkdtemp(
-		path.join(tmpdir(), "astropress-consumer-smoke-"),
-	);
+	const dataRoot = await mkdtemp(path.join(tmpdir(), "astropress-consumer-smoke-"));
 	let server: ServerHandle | null = null;
 
 	try {
 		if (!skipBuild) {
 			console.log("Building @astropress-diy/astropress…");
-			await runCommand(
-				"bun",
-				["run", "--filter", "@astropress-diy/astropress", "build"],
-				root,
-			);
+			await runCommand("bun", ["run", "--filter", "@astropress-diy/astropress", "build"], root);
 		}
 
 		const port = await findAvailablePort(4326, "consumer smoke");

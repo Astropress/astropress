@@ -6,9 +6,7 @@ import { registerCms } from "../src/config";
 const CMS_CONFIG_KEY = Symbol.for("astropress.cms-config");
 
 afterEach(() => {
-	(globalThis as typeof globalThis & { [CMS_CONFIG_KEY]?: unknown })[
-		CMS_CONFIG_KEY
-	] = null;
+	(globalThis as typeof globalThis & { [CMS_CONFIG_KEY]?: unknown })[CMS_CONFIG_KEY] = null;
 });
 
 const TRANSLATION_STATUS = [
@@ -93,9 +91,7 @@ describe("getAdminLocalePair", () => {
 
 	it("propagates translationState verbatim from the matching entry", () => {
 		setup();
-		expect(getAdminLocalePair("/es/contacto")?.translationState).toBe(
-			"in_progress",
-		);
+		expect(getAdminLocalePair("/es/contacto")?.translationState).toBe("in_progress");
 	});
 });
 

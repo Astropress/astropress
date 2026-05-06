@@ -35,10 +35,7 @@ async function waitForServer(url: string, timeoutMs = 60_000) {
 	throw new Error(`Timed out waiting for ${url}`);
 }
 
-async function waitForDevServerUrl(
-	getOutput: () => string,
-	timeoutMs = 30_000,
-) {
+async function waitForDevServerUrl(getOutput: () => string, timeoutMs = 30_000) {
 	const startedAt = Date.now();
 	while (Date.now() - startedAt < timeoutMs) {
 		const match = getOutput().match(/http:\/\/127\.0\.0\.1:(\d+)\//);
@@ -54,18 +51,14 @@ async function waitForDevServerUrl(
 async function main() {
 	const root = process.cwd();
 	const harnessRoot = path.join(root, "examples/admin-harness");
-	const devServer = spawn(
-		"bun",
-		["run", "dev", "--", "--host", "127.0.0.1", "--port", "4325"],
-		{
-			cwd: harnessRoot,
-			stdio: ["ignore", "pipe", "pipe"],
-			env: {
-				...process.env,
-				PLAYWRIGHT_E2E_MODE: "admin-harness",
-			},
+	const devServer = spawn("bun", ["run", "dev", "--", "--host", "127.0.0.1", "--port", "4325"], {
+		cwd: harnessRoot,
+		stdio: ["ignore", "pipe", "pipe"],
+		env: {
+			...process.env,
+			PLAYWRIGHT_E2E_MODE: "admin-harness",
 		},
-	);
+	});
 
 	let serverOutput = "";
 	devServer.stdout.on("data", (chunk) => {
@@ -91,10 +84,8 @@ async function main() {
 				const response = await page.goto(targetUrl, {
 					waitUntil: "networkidle",
 				});
-				if (!response || !response.ok()) {
-					throw new Error(
-						`Failed to load ${targetUrl}: ${response?.status() ?? "no response"}`,
-					);
+				if (!response?.ok()) {
+					throw new Error(`Failed to load ${targetUrl}: ${response?.status() ?? "no response"}`);
 				}
 
 				const heading = page.getByRole("heading", {
@@ -102,44 +93,30 @@ async function main() {
 					name: route.heading,
 				});
 				if ((await heading.count()) === 0) {
-					throw new Error(
-						`Missing expected h1 "${route.heading}" on ${route.path}`,
-					);
+					throw new Error(`Missing expected h1 "${route.heading}" on ${route.path}`);
 				}
 
 				await page.keyboard.press("Tab");
-				const activeTag = await page.evaluate(
-					() => document.activeElement?.tagName ?? "",
-				);
+				const activeTag = await page.evaluate(() => document.activeElement?.tagName ?? "");
 				if (!activeTag) {
 					throw new Error(`Keyboard focus did not move on ${route.path}`);
 				}
 
 				const axe = await new AxeBuilder({ page })
-					.withTags([
-						"wcag2a",
-						"wcag2aa",
-						"wcag21a",
-						"wcag21aa",
-						"wcag22aa",
-						"best-practice",
-					])
+					.withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa", "best-practice"])
 					.analyze();
 
 				if (axe.violations.length > 0) {
 					const details = axe.violations
 						.map(
-							(violation) =>
-								`${violation.id}: ${violation.help} (${violation.nodes.length} nodes)`,
+							(violation) => `${violation.id}: ${violation.help} (${violation.nodes.length} nodes)`,
 						)
 						.join("\n");
 					throw new Error(`Axe violations found on ${route.path}\n${details}`);
 				}
 			}
 
-			console.log(
-				`Admin harness browser audit passed for ${auditedRoutes.length} routes.`,
-			);
+			console.log(`Admin harness browser audit passed for ${auditedRoutes.length} routes.`);
 			await context.close();
 		} finally {
 			await browser.close();

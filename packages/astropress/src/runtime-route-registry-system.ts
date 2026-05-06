@@ -3,10 +3,10 @@ import { recordD1Audit } from "./d1-audit";
 import type { D1DatabaseLike } from "./d1-database";
 import { getCloudflareBindings } from "./runtime-env";
 import {
-	type RuntimeSystemRouteRecord,
 	loadSafeLocalCmsRegistry,
 	localeFromPath,
 	parseSettings,
+	type RuntimeSystemRouteRecord,
 	withSafeRouteRegistryFallback,
 } from "./runtime-route-registry-dispatch";
 
@@ -84,10 +84,7 @@ export async function listRuntimeSystemRoutes(locals?: App.Locals | null) {
 	);
 }
 
-export async function getRuntimeSystemRoute(
-	pathname: string,
-	locals?: App.Locals | null,
-) {
+export async function getRuntimeSystemRoute(pathname: string, locals?: App.Locals | null) {
 	const normalizedPath = normalizePath(pathname);
 	const db = getCloudflareBindings(locals).DB;
 	if (!db) {
@@ -240,12 +237,7 @@ async function persistSystemRouteChanges(
 			routeId,
 			normalizedPath,
 			localeFromPath(normalizedPath),
-			buildSystemRouteSnapshot(
-				normalizedPath,
-				validated,
-				settings,
-				renderStrategy,
-			),
+			buildSystemRouteSnapshot(normalizedPath, validated, settings, renderStrategy),
 			revisionNote?.trim() || null,
 			actor.email,
 		)
@@ -260,12 +252,7 @@ async function persistSystemRouteChanges(
 		`Updated system route ${normalizedPath}.`,
 	);
 
-	return buildSystemRouteResult(
-		normalizedPath,
-		validated,
-		settings,
-		renderStrategy,
-	);
+	return buildSystemRouteResult(normalizedPath, validated, settings, renderStrategy);
 }
 
 export async function saveRuntimeSystemRoute(

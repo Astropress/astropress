@@ -4,12 +4,7 @@
 // (Nuclei) skipped its SARIF on zero findings, breaking upload-sarif.
 
 import { readdirSync } from "node:fs";
-import {
-	AuditReport,
-	fromRoot,
-	readText,
-	runAudit,
-} from "../lib/audit-utils.js";
+import { AuditReport, fromRoot, readText, runAudit } from "../lib/audit-utils.js";
 
 const WORKFLOWS_DIR = fromRoot(".github/workflows");
 
@@ -92,13 +87,9 @@ async function main() {
 	const report = new AuditReport("ci-sarif-upload");
 	let files: string[] = [];
 	try {
-		files = readdirSync(WORKFLOWS_DIR).filter(
-			(f) => f.endsWith(".yml") || f.endsWith(".yaml"),
-		);
+		files = readdirSync(WORKFLOWS_DIR).filter((f) => f.endsWith(".yml") || f.endsWith(".yaml"));
 	} catch {
-		report.finish(
-			"ci-sarif-upload audit skipped — no .github/workflows directory",
-		);
+		report.finish("ci-sarif-upload audit skipped — no .github/workflows directory");
 	}
 
 	let uploadSarifCount = 0;

@@ -1,12 +1,5 @@
 import { join, relative } from "node:path";
-import {
-	AuditReport,
-	ROOT,
-	fromRoot,
-	listFiles,
-	readText,
-	runAudit,
-} from "../lib/audit-utils.js";
+import { AuditReport, fromRoot, listFiles, ROOT, readText, runAudit } from "../lib/audit-utils.js";
 
 // Rubric 55 (Minimalism)
 //
@@ -46,16 +39,10 @@ const ALLOWLISTED_NAMES = new Set<string>([
 	"createLocalCmsRegistryModule",
 ]);
 
-async function collectSourceFiles(
-	dir: string,
-	suffix = ".ts",
-): Promise<string[]> {
+async function collectSourceFiles(dir: string, suffix = ".ts"): Promise<string[]> {
 	const entries = await listFiles(dir, { recursive: true });
 	return entries
-		.filter(
-			(f) =>
-				f.endsWith(suffix) && !f.endsWith(".test.ts") && !f.endsWith(".sql"),
-		)
+		.filter((f) => f.endsWith(suffix) && !f.endsWith(".test.ts") && !f.endsWith(".sql"))
 		.map((f) => join(dir, f));
 }
 
@@ -78,9 +65,7 @@ function extractExportedNames(src: string): string[] {
 		names.push(m[1]);
 	}
 
-	for (const m of src.matchAll(
-		/^export\s+\{([^}]+)\}(?:\s+from\s+["'][^"']+["'])?/gm,
-	)) {
+	for (const m of src.matchAll(/^export\s+\{([^}]+)\}(?:\s+from\s+["'][^"']+["'])?/gm)) {
 		const line = m[0];
 		if (line.includes(" from ")) continue;
 		if (/^export\s+type\s+\{/.test(line)) continue;
@@ -103,15 +88,11 @@ async function main() {
 	const indexSrc = await readText(INDEX_TS);
 	const testEntries = await listFiles(TESTS_DIR);
 	const testFiles = await Promise.all(
-		testEntries
-			.filter((f) => f.endsWith(".test.ts"))
-			.map((f) => readText(join(TESTS_DIR, f))),
+		testEntries.filter((f) => f.endsWith(".test.ts")).map((f) => readText(join(TESTS_DIR, f))),
 	);
 	const allOtherFiles = await collectAllFiles();
 
-	const consumerContents = await Promise.all(
-		allOtherFiles.map((f) => readText(f)),
-	);
+	const consumerContents = await Promise.all(allOtherFiles.map((f) => readText(f)));
 
 	const corpus = [indexSrc, ...testFiles, ...consumerContents].join("\n");
 

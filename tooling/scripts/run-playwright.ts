@@ -27,12 +27,8 @@ function spawnCommand(
 		},
 	});
 
-	child.stdout?.on("data", (chunk) =>
-		process.stdout.write(`[${name}] ${chunk}`),
-	);
-	child.stderr?.on("data", (chunk) =>
-		process.stderr.write(`[${name}] ${chunk}`),
-	);
+	child.stdout?.on("data", (chunk) => process.stdout.write(`[${name}] ${chunk}`));
+	child.stderr?.on("data", (chunk) => process.stderr.write(`[${name}] ${chunk}`));
 
 	return { name, process: child };
 }
@@ -68,12 +64,7 @@ async function warmRoutes(baseUrl: string, paths: string[]) {
 	}
 }
 
-async function runCommand(
-	command: string,
-	args: string[],
-	cwd: string,
-	env?: NodeJS.ProcessEnv,
-) {
+async function runCommand(command: string, args: string[], cwd: string, env?: NodeJS.ProcessEnv) {
 	const child = spawn(command, args, {
 		cwd,
 		stdio: "inherit",
@@ -89,9 +80,7 @@ async function runCommand(
 	});
 
 	if (exitCode !== 0) {
-		throw new Error(
-			`${command} ${args.join(" ")} exited with code ${exitCode}`,
-		);
+		throw new Error(`${command} ${args.join(" ")} exited with code ${exitCode}`);
 	}
 }
 
@@ -129,8 +118,7 @@ async function main() {
 	const root = process.cwd();
 	const requestedProjects = process.argv.slice(2);
 	const needsExample =
-		requestedProjects.length === 0 ||
-		requestedProjects.some((arg) => arg.includes("example-a11y"));
+		requestedProjects.length === 0 || requestedProjects.some((arg) => arg.includes("example-a11y"));
 	const adminHarnessProjectFragments = [
 		"admin-harness",
 		"admin-cross-browser",
@@ -153,30 +141,17 @@ async function main() {
 
 	try {
 		if (needsExample) {
-			const exampleDataRoot = await mkdtemp(
-				path.join(tmpdir(), "astropress-example-data-"),
-			);
+			const exampleDataRoot = await mkdtemp(path.join(tmpdir(), "astropress-example-data-"));
 			tempDataRoots.push(exampleDataRoot);
 			const examplePort = await findAvailablePort(4173, "example");
-			await runCommand(
-				"bun",
-				["run", "--filter", "astropress-example-gh-pages", "build"],
-				root,
-				{
-					ASTROPRESS_DATA_ROOT: exampleDataRoot,
-					ASTROPRESS_LOCAL_IMAGE_ROOT: exampleDataRoot,
-				},
-			);
+			await runCommand("bun", ["run", "--filter", "astropress-example-gh-pages", "build"], root, {
+				ASTROPRESS_DATA_ROOT: exampleDataRoot,
+				ASTROPRESS_LOCAL_IMAGE_ROOT: exampleDataRoot,
+			});
 			const exampleServer = spawnCommand(
 				"example-server",
 				"python3",
-				[
-					"-m",
-					"http.server",
-					String(examplePort),
-					"--directory",
-					"examples/github-pages/dist",
-				],
+				["-m", "http.server", String(examplePort), "--directory", "examples/github-pages/dist"],
 				root,
 			);
 			servers.push(exampleServer);
@@ -185,9 +160,7 @@ async function main() {
 		}
 
 		if (needsAdminHarness) {
-			const adminDataRoot = await mkdtemp(
-				path.join(tmpdir(), "astropress-admin-data-"),
-			);
+			const adminDataRoot = await mkdtemp(path.join(tmpdir(), "astropress-admin-data-"));
 			tempDataRoots.push(adminDataRoot);
 			const adminPort = await findAvailablePort(4325, "admin harness");
 			const harnessServer = spawnCommand(
@@ -246,13 +219,7 @@ async function main() {
 
 		await runCommand(
 			"npx",
-			[
-				"playwright",
-				"test",
-				"--config",
-				"tooling/e2e/playwright.config.ts",
-				...requestedProjects,
-			],
+			["playwright", "test", "--config", "tooling/e2e/playwright.config.ts", ...requestedProjects],
 			root,
 			{
 				PLAYWRIGHT_EXAMPLE_BASE_URL: process.env.PLAYWRIGHT_EXAMPLE_BASE_URL,
@@ -261,9 +228,7 @@ async function main() {
 		);
 	} finally {
 		await Promise.allSettled(servers.map((server) => stopServer(server)));
-		await Promise.allSettled(
-			tempDataRoots.map((dir) => rm(dir, { recursive: true, force: true })),
-		);
+		await Promise.allSettled(tempDataRoots.map((dir) => rm(dir, { recursive: true, force: true })));
 	}
 }
 

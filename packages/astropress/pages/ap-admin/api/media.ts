@@ -5,10 +5,7 @@
  * keyed by asset id. Admin-only — non-admins get 403, unauthenticated 401.
  */
 
-import {
-	buildMediaPageModel,
-	isAuthUserAdmin,
-} from "@astropress-diy/astropress";
+import { buildMediaPageModel, isAuthUserAdmin } from "@astropress-diy/astropress";
 import type { APIRoute } from "astro";
 
 export const prerender = false;

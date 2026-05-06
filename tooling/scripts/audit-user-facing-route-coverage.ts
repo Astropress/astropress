@@ -3,13 +3,7 @@
  */
 
 import { join, relative } from "node:path";
-import {
-	AuditReport,
-	fromRoot,
-	listFiles,
-	readText,
-	runAudit,
-} from "../lib/audit-utils.js";
+import { AuditReport, fromRoot, listFiles, readText, runAudit } from "../lib/audit-utils.js";
 
 const MAX_UNCOVERED_FRACTION = 0;
 
@@ -64,9 +58,7 @@ async function walkAstroFiles(dir: string): Promise<string[]> {
 async function collectPlaywrightRoutes(): Promise<Set<string>> {
 	const routes = new Set<string>();
 	const entries = await listFiles(E2E_DIR);
-	const specFiles = entries
-		.filter((f) => f.endsWith(".spec.ts"))
-		.map((f) => join(E2E_DIR, f));
+	const specFiles = entries.filter((f) => f.endsWith(".spec.ts")).map((f) => join(E2E_DIR, f));
 
 	for (const specFile of specFiles) {
 		const src = await readText(specFile);

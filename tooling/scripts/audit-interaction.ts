@@ -9,13 +9,7 @@
 //      (WCAG 2.2.1 — auto-dismissing content must give users ≥ 4 seconds to read it)
 
 import { join } from "node:path";
-import {
-	AuditReport,
-	fromRoot,
-	listFiles,
-	readText,
-	runAudit,
-} from "../lib/audit-utils.js";
+import { AuditReport, fromRoot, listFiles, readText, runAudit } from "../lib/audit-utils.js";
 
 const ADMIN_CSS = fromRoot("packages/astropress/public/admin.css");
 const WC_DIR = fromRoot("packages/astropress/web-components");
@@ -59,8 +53,7 @@ async function main() {
 	const noticeSrc = await readText(join(WC_DIR, "notice.ts"));
 	if (noticeSrc) {
 		const hasDismissAttr = noticeSrc.includes("dismiss-after");
-		const hasParseInt =
-			noticeSrc.includes("parseInt") || noticeSrc.includes("Number(");
+		const hasParseInt = noticeSrc.includes("parseInt") || noticeSrc.includes("Number(");
 		const hasPositiveGuard =
 			noticeSrc.includes("> 0") ||
 			noticeSrc.includes(">= 1") ||

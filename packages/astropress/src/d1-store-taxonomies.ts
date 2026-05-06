@@ -3,9 +3,7 @@ import type { D1AdminMutationStore, D1AdminReadStore } from "./d1-admin-store";
 import type { D1DatabaseLike } from "./d1-database";
 import type { AuthorRecord, TaxonomyTerm } from "./persistence-types";
 
-export function createD1AuthorsReadPart(
-	db: D1DatabaseLike,
-): D1AdminReadStore["authors"] {
+export function createD1AuthorsReadPart(db: D1DatabaseLike): D1AdminReadStore["authors"] {
 	return {
 		async listAuthors(): Promise<AuthorRecord[]> {
 			const rows = (
@@ -40,9 +38,7 @@ export function createD1AuthorsReadPart(
 	};
 }
 
-export function createD1TaxonomiesReadPart(
-	db: D1DatabaseLike,
-): D1AdminReadStore["taxonomies"] {
+export function createD1TaxonomiesReadPart(db: D1DatabaseLike): D1AdminReadStore["taxonomies"] {
 	return {
 		async listCategories(): Promise<TaxonomyTerm[]> {
 			const rows = (
@@ -109,9 +105,7 @@ export function createD1TaxonomiesReadPart(
 	};
 }
 
-export function createD1AuthorsMutationPart(
-	db: D1DatabaseLike,
-): D1AdminMutationStore["authors"] {
+export function createD1AuthorsMutationPart(db: D1DatabaseLike): D1AdminMutationStore["authors"] {
 	return {
 		async createAuthor(input) {
 			const name = input.name.trim();
@@ -206,9 +200,7 @@ async function upsertTaxonomyTerm(
 	try {
 		if (mode === "create") {
 			await db
-				.prepare(
-					`INSERT INTO ${table} (slug, name, description) VALUES (?, ?, ?)`,
-				)
+				.prepare(`INSERT INTO ${table} (slug, name, description) VALUES (?, ?, ?)`)
 				.bind(validated.slug, validated.name, desc)
 				.run();
 		} else {

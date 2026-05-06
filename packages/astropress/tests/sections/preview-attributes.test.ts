@@ -168,9 +168,7 @@ describe("preview-renderer — exact substring guards", () => {
 			[{ id: "t", kind: "testimonials", source: "approved", layout: "grid" }],
 			ctx,
 		);
-		expect(html).toContain(
-			'<p class="ap-testimonials__empty">No testimonials yet.</p>',
-		);
+		expect(html).toContain('<p class="ap-testimonials__empty">No testimonials yet.</p>');
 	});
 
 	it("testimonials item li class", () => {
@@ -297,10 +295,7 @@ describe("preview-renderer — exact substring guards", () => {
 	});
 
 	it("rich-text inner wrapper class is ap-rich-text__inner", () => {
-		const html = renderSectionsDocument(
-			[{ id: "r", kind: "rich-text", html: "<p>x</p>" }],
-			ctx,
-		);
+		const html = renderSectionsDocument([{ id: "r", kind: "rich-text", html: "<p>x</p>" }], ctx);
 		expect(html).toContain('<div class="ap-rich-text__inner">');
 	});
 
@@ -343,9 +338,7 @@ describe("preview-renderer — exact substring guards", () => {
 			[{ id: "t", kind: "testimonials", source: "approved", layout: "grid" }],
 			{
 				...ctx,
-				testimonials: [
-					{ id: "x", name: "X", quote: "q", role: "PM", status: "approved" },
-				],
+				testimonials: [{ id: "x", name: "X", quote: "q", role: "PM", status: "approved" }],
 			},
 		);
 		expect(html).toContain(">PM<");
@@ -367,10 +360,7 @@ describe("preview-renderer no mutation-marker leakage", () => {
 
 	it("hero with no media + no subhead + no CTAs has no marker", () => {
 		expectClean(
-			renderSectionsDocument(
-				[{ id: "h", kind: "hero", headline: "x", alignment: "start" }],
-				ctx,
-			),
+			renderSectionsDocument([{ id: "h", kind: "hero", headline: "x", alignment: "start" }], ctx),
 		);
 	});
 
@@ -581,10 +571,10 @@ describe("preview-renderer no mutation-marker leakage", () => {
 
 	it("gallery with no heading + items has no marker", () => {
 		expectClean(
-			renderSectionsDocument(
-				[{ id: "g", kind: "gallery", mediaIds: ["a", "b"], columns: 3 }],
-				{ ...ctx, mediaUrls: { a: "/a.png", b: "/b.png" } },
-			),
+			renderSectionsDocument([{ id: "g", kind: "gallery", mediaIds: ["a", "b"], columns: 3 }], {
+				...ctx,
+				mediaUrls: { a: "/a.png", b: "/b.png" },
+			}),
 		);
 	});
 

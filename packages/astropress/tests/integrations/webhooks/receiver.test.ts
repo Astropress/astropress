@@ -10,10 +10,7 @@ const SECRET = "super-secret";
 const BODY_TEXT = '{"action":"opened","number":42}';
 const BODY = new TextEncoder().encode(BODY_TEXT);
 
-async function signGithubBody(
-	body: Uint8Array,
-	secret: string,
-): Promise<string> {
+async function signGithubBody(body: Uint8Array, secret: string): Promise<string> {
 	const key = await crypto.subtle.importKey(
 		"raw",
 		new TextEncoder().encode(secret),
@@ -28,9 +25,7 @@ async function signGithubBody(
 	return `sha256=${hex}`;
 }
 
-function headerLookup(
-	map: Record<string, string>,
-): (name: string) => string | null {
+function headerLookup(map: Record<string, string>): (name: string) => string | null {
 	return (name) => {
 		const lower = name.toLowerCase();
 		for (const [k, v] of Object.entries(map)) {

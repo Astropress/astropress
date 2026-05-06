@@ -1,5 +1,4 @@
-import { withAdminFormAction } from "@astropress-diy/astropress";
-import { saveRuntimeArchiveRoute } from "@astropress-diy/astropress";
+import { saveRuntimeArchiveRoute, withAdminFormAction } from "@astropress-diy/astropress";
 import type { APIRoute } from "astro";
 
 export const POST: APIRoute = async (context) =>
@@ -16,9 +15,7 @@ export const POST: APIRoute = async (context) =>
 					summary: String(formData.get("summary") ?? ""),
 					seoTitle: String(formData.get("seoTitle") ?? ""),
 					metaDescription: String(formData.get("metaDescription") ?? ""),
-					canonicalUrlOverride: String(
-						formData.get("canonicalUrlOverride") ?? "",
-					),
+					canonicalUrlOverride: String(formData.get("canonicalUrlOverride") ?? ""),
 					robotsDirective: String(formData.get("robotsDirective") ?? ""),
 					revisionNote: String(formData.get("revisionNote") ?? ""),
 				},

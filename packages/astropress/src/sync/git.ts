@@ -1,11 +1,4 @@
-import {
-	constants,
-	copyFile,
-	mkdir,
-	readdir,
-	rm,
-	stat,
-} from "node:fs/promises";
+import { constants, copyFile, mkdir, readdir, rm, stat } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
 import type { GitSyncAdapter } from "../platform-contracts";
 import { checkpointSqliteWal } from "../sqlite-bootstrap-helpers";
@@ -36,10 +29,7 @@ async function pathExists(pathname: string) {
 	}
 }
 
-async function copyFileWithReflink(
-	src: string,
-	dest: string,
-): Promise<boolean> {
+async function copyFileWithReflink(src: string, dest: string): Promise<boolean> {
 	try {
 		await copyFile(src, dest, constants.COPYFILE_FICLONE);
 		return true;
@@ -73,9 +63,7 @@ async function copyTreeWithReflink(
 					);
 				}
 				if (check.status === "unavailable") {
-					warn(
-						`SQLite integrity check unavailable for ${src} before backup: ${check.error}`,
-					);
+					warn(`SQLite integrity check unavailable for ${src} before backup: ${check.error}`);
 				}
 			}
 			await checkpointSqliteWal(src, warn);
@@ -167,15 +155,9 @@ export function createAstropressGitSyncAdapter(
 			for (const entry of include) {
 				await rm(resolve(projectDir, entry), { recursive: true, force: true });
 			}
-			const { fileCount, anyReflink } = await processIncludes(
-				include,
-				inputDir,
-				projectDir,
-				warn,
-				{
-					postCheckIntegrity: true,
-				},
-			);
+			const { fileCount, anyReflink } = await processIncludes(include, inputDir, projectDir, warn, {
+				postCheckIntegrity: true,
+			});
 			log(
 				anyReflink
 					? `Snapshot imported using copy-on-write (reflink): ${fileCount} file(s)`

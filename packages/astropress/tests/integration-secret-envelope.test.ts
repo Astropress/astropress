@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
-	IntegrationSecretError,
-	type SealedSecret,
 	envelopeSerializedLength,
+	IntegrationSecretError,
 	openIntegrationSecret,
+	type SealedSecret,
 	sealIntegrationSecret,
 } from "../src/integration-secret-envelope";
 
@@ -55,9 +55,9 @@ describe("integration-secret-envelope", () => {
 			...sealed,
 			ciphertext: flipFirstByte(sealed.ciphertext),
 		};
-		await expect(
-			openIntegrationSecret(tampered, CTX, { current: ROOT }),
-		).rejects.toMatchObject({ code: "DECRYPT_FAILED" });
+		await expect(openIntegrationSecret(tampered, CTX, { current: ROOT })).rejects.toMatchObject({
+			code: "DECRYPT_FAILED",
+		});
 	});
 
 	it("tampered dek_wrap throws DECRYPT_FAILED", async () => {
@@ -66,9 +66,9 @@ describe("integration-secret-envelope", () => {
 			...sealed,
 			dek_wrap: flipFirstByte(sealed.dek_wrap),
 		};
-		await expect(
-			openIntegrationSecret(tampered, CTX, { current: ROOT }),
-		).rejects.toMatchObject({ code: "DECRYPT_FAILED" });
+		await expect(openIntegrationSecret(tampered, CTX, { current: ROOT })).rejects.toMatchObject({
+			code: "DECRYPT_FAILED",
+		});
 	});
 
 	it("tampered IVs throw DECRYPT_FAILED", async () => {
@@ -77,16 +77,16 @@ describe("integration-secret-envelope", () => {
 			...sealed,
 			wrap_iv: flipFirstByte(sealed.wrap_iv),
 		};
-		await expect(
-			openIntegrationSecret(wrapTampered, CTX, { current: ROOT }),
-		).rejects.toMatchObject({ code: "DECRYPT_FAILED" });
+		await expect(openIntegrationSecret(wrapTampered, CTX, { current: ROOT })).rejects.toMatchObject(
+			{ code: "DECRYPT_FAILED" },
+		);
 		const dataTampered: SealedSecret = {
 			...sealed,
 			data_iv: flipFirstByte(sealed.data_iv),
 		};
-		await expect(
-			openIntegrationSecret(dataTampered, CTX, { current: ROOT }),
-		).rejects.toMatchObject({ code: "DECRYPT_FAILED" });
+		await expect(openIntegrationSecret(dataTampered, CTX, { current: ROOT })).rejects.toMatchObject(
+			{ code: "DECRYPT_FAILED" },
+		);
 	});
 
 	it("opens against previous key when current rejects", async () => {
@@ -128,17 +128,17 @@ describe("integration-secret-envelope", () => {
 	it("rejects unknown envelope version", async () => {
 		const sealed = await sealIntegrationSecret(FIELDS, CTX, ROOT);
 		const future = { ...sealed, v: 999 } as unknown as SealedSecret;
-		await expect(
-			openIntegrationSecret(future, CTX, { current: ROOT }),
-		).rejects.toMatchObject({ code: "INVALID_ENVELOPE" });
+		await expect(openIntegrationSecret(future, CTX, { current: ROOT })).rejects.toMatchObject({
+			code: "INVALID_ENVELOPE",
+		});
 	});
 
 	it("rejects an invalid kid value", async () => {
 		const sealed = await sealIntegrationSecret(FIELDS, CTX, ROOT);
 		const broken = { ...sealed, kid: "antique" } as unknown as SealedSecret;
-		await expect(
-			openIntegrationSecret(broken, CTX, { current: ROOT }),
-		).rejects.toMatchObject({ code: "INVALID_ENVELOPE" });
+		await expect(openIntegrationSecret(broken, CTX, { current: ROOT })).rejects.toMatchObject({
+			code: "INVALID_ENVELOPE",
+		});
 	});
 
 	it("rejects empty rootSecret on seal", async () => {
@@ -174,15 +174,7 @@ describe("integration-secret-envelope", () => {
 	it("envelope JSON shape has exactly the documented keys", async () => {
 		const sealed = await sealIntegrationSecret(FIELDS, CTX, ROOT);
 		expect(Object.keys(sealed).sort()).toEqual(
-			[
-				"ciphertext",
-				"data_iv",
-				"dek_wrap",
-				"kid",
-				"v",
-				"wrap_iv",
-				"wrap_salt",
-			].sort(),
+			["ciphertext", "data_iv", "dek_wrap", "kid", "v", "wrap_iv", "wrap_salt"].sort(),
 		);
 	});
 
@@ -197,9 +189,9 @@ describe("integration-secret-envelope", () => {
 			CTX,
 			ROOT,
 		);
-		await expect(
-			openIntegrationSecret(sealed, CTX, { current: ROOT }),
-		).rejects.toMatchObject({ code: "INVALID_PLAINTEXT" });
+		await expect(openIntegrationSecret(sealed, CTX, { current: ROOT })).rejects.toMatchObject({
+			code: "INVALID_PLAINTEXT",
+		});
 	});
 
 	it("rejects payload sealed as null (typeof object but falsy)", async () => {
@@ -208,9 +200,9 @@ describe("integration-secret-envelope", () => {
 			CTX,
 			ROOT,
 		);
-		await expect(
-			openIntegrationSecret(sealed, CTX, { current: ROOT }),
-		).rejects.toMatchObject({ code: "INVALID_PLAINTEXT" });
+		await expect(openIntegrationSecret(sealed, CTX, { current: ROOT })).rejects.toMatchObject({
+			code: "INVALID_PLAINTEXT",
+		});
 	});
 
 	it("rejects payload sealed as an array", async () => {
@@ -219,9 +211,9 @@ describe("integration-secret-envelope", () => {
 			CTX,
 			ROOT,
 		);
-		await expect(
-			openIntegrationSecret(sealed, CTX, { current: ROOT }),
-		).rejects.toMatchObject({ code: "INVALID_PLAINTEXT" });
+		await expect(openIntegrationSecret(sealed, CTX, { current: ROOT })).rejects.toMatchObject({
+			code: "INVALID_PLAINTEXT",
+		});
 	});
 
 	it("rejects payload with a non-string value", async () => {
@@ -230,32 +222,26 @@ describe("integration-secret-envelope", () => {
 			CTX,
 			ROOT,
 		);
-		await expect(
-			openIntegrationSecret(sealed, CTX, { current: ROOT }),
-		).rejects.toMatchObject({ code: "INVALID_PLAINTEXT" });
+		await expect(openIntegrationSecret(sealed, CTX, { current: ROOT })).rejects.toMatchObject({
+			code: "INVALID_PLAINTEXT",
+		});
 	});
 
 	it("INVALID_ENVELOPE error messages name the offending field", async () => {
 		const sealed = await sealIntegrationSecret(FIELDS, CTX, ROOT);
 		const future = { ...sealed, v: 999 } as unknown as SealedSecret;
 		const broken = { ...sealed, kid: "antique" } as unknown as SealedSecret;
-		await expect(
-			openIntegrationSecret(future, CTX, { current: ROOT }),
-		).rejects.toMatchObject({
+		await expect(openIntegrationSecret(future, CTX, { current: ROOT })).rejects.toMatchObject({
 			message: expect.stringContaining("envelope version"),
 		});
-		await expect(
-			openIntegrationSecret(broken, CTX, { current: ROOT }),
-		).rejects.toMatchObject({
+		await expect(openIntegrationSecret(broken, CTX, { current: ROOT })).rejects.toMatchObject({
 			message: expect.stringContaining("envelope kid"),
 		});
 	});
 
 	it("DECRYPT_FAILED error message names domain/provider context", async () => {
 		const sealed = await sealIntegrationSecret(FIELDS, CTX, ROOT);
-		await expect(
-			openIntegrationSecret(sealed, CTX, { current: "bad-key" }),
-		).rejects.toMatchObject({
+		await expect(openIntegrationSecret(sealed, CTX, { current: "bad-key" })).rejects.toMatchObject({
 			message: expect.stringMatching(/newsletter\/listmonk/),
 		});
 	});
@@ -296,9 +282,9 @@ describe("integration-secret-envelope", () => {
 	it("rejects when sealed.kid='previous' and only current is supplied and doesn't match", async () => {
 		const sealed = await sealIntegrationSecret(FIELDS, CTX, PREV);
 		const labeled: SealedSecret = { ...sealed, kid: "previous" };
-		await expect(
-			openIntegrationSecret(labeled, CTX, { current: ROOT }),
-		).rejects.toMatchObject({ code: "DECRYPT_FAILED" });
+		await expect(openIntegrationSecret(labeled, CTX, { current: ROOT })).rejects.toMatchObject({
+			code: "DECRYPT_FAILED",
+		});
 	});
 
 	it("thrown errors carry name='IntegrationSecretError'", async () => {
@@ -317,18 +303,14 @@ describe("integration-secret-envelope", () => {
 			...sealed,
 			ciphertext: flipFirstByte(sealed.ciphertext),
 		};
-		await expect(
-			openIntegrationSecret(tampered, CTX, { current: ROOT }),
-		).rejects.toMatchObject({
+		await expect(openIntegrationSecret(tampered, CTX, { current: ROOT })).rejects.toMatchObject({
 			message: expect.stringContaining("authentication failed"),
 		});
 	});
 
 	it("DECRYPT_FAILED on no-key-match mentions 'unable to decrypt'", async () => {
 		const sealed = await sealIntegrationSecret(FIELDS, CTX, ROOT);
-		await expect(
-			openIntegrationSecret(sealed, CTX, { current: "wrong" }),
-		).rejects.toMatchObject({
+		await expect(openIntegrationSecret(sealed, CTX, { current: "wrong" })).rejects.toMatchObject({
 			message: expect.stringContaining("unable to decrypt"),
 		});
 	});
@@ -339,9 +321,7 @@ describe("integration-secret-envelope", () => {
 			CTX,
 			ROOT,
 		);
-		await expect(
-			openIntegrationSecret(sealed, CTX, { current: ROOT }),
-		).rejects.toMatchObject({
+		await expect(openIntegrationSecret(sealed, CTX, { current: ROOT })).rejects.toMatchObject({
 			message: expect.stringContaining("flat string-valued object"),
 		});
 	});
@@ -354,9 +334,9 @@ describe("integration-secret-envelope", () => {
 			CTX,
 			ROOT,
 		);
-		await expect(
-			openIntegrationSecret(sealed, CTX, { current: ROOT }),
-		).rejects.toMatchObject({ code: "INVALID_PLAINTEXT" });
+		await expect(openIntegrationSecret(sealed, CTX, { current: ROOT })).rejects.toMatchObject({
+			code: "INVALID_PLAINTEXT",
+		});
 	});
 
 	it("opens with only previous slot supplied (no current key)", async () => {
@@ -388,7 +368,7 @@ function flipFirstByte(b64url: string): string {
 	const binary = atob(padded + "=".repeat(padLen));
 	const bytes = new Uint8Array(binary.length);
 	for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-	bytes[0] = bytes[0] ^ 0x01;
+	bytes[0] ^= 0x01;
 	let out = "";
 	for (const byte of bytes) out += String.fromCharCode(byte);
 	return btoa(out).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");

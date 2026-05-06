@@ -16,13 +16,11 @@ describe("createAstropressTranslationRepository", () => {
 			recordTranslationAudit: vi.fn(),
 		});
 
-		expect(repository.updateTranslationState("/about", "wrong", actor)).toEqual(
-			{
-				ok: false,
-				error:
-					"Invalid translation state. Must be one of: not_started, partial, fallback_en, translated, reviewed, published",
-			},
-		);
+		expect(repository.updateTranslationState("/about", "wrong", actor)).toEqual({
+			ok: false,
+			error:
+				"Invalid translation state. Must be one of: not_started, partial, fallback_en, translated, reviewed, published",
+		});
 	});
 
 	it("persists a valid translation state and records audit data", () => {
@@ -34,14 +32,8 @@ describe("createAstropressTranslationRepository", () => {
 			recordTranslationAudit,
 		});
 
-		expect(
-			repository.updateTranslationState("/about", "published", actor),
-		).toEqual({ ok: true });
-		expect(persistTranslationState).toHaveBeenCalledWith(
-			"/about",
-			"published",
-			actor,
-		);
+		expect(repository.updateTranslationState("/about", "published", actor)).toEqual({ ok: true });
+		expect(persistTranslationState).toHaveBeenCalledWith("/about", "published", actor);
 		expect(recordTranslationAudit).toHaveBeenCalledWith({
 			actor,
 			route: "/about",
@@ -56,9 +48,7 @@ describe("createAstropressTranslationRepository", () => {
 			recordTranslationAudit: vi.fn(),
 		});
 
-		expect(repository.getEffectiveTranslationState("/about", "reviewed")).toBe(
-			"reviewed",
-		);
+		expect(repository.getEffectiveTranslationState("/about", "reviewed")).toBe("reviewed");
 	});
 
 	it("normalizes the stored translation state", () => {
@@ -79,8 +69,6 @@ describe("createAstropressTranslationRepository", () => {
 			persistTranslationState: vi.fn(),
 			recordTranslationAudit: vi.fn(),
 		});
-		expect(repository.getEffectiveTranslationState("/about")).toBe(
-			"not_started",
-		);
+		expect(repository.getEffectiveTranslationState("/about")).toBe("not_started");
 	});
 });

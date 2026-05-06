@@ -13,9 +13,7 @@ describe("createSitemapPlugin", () => {
 	let fetchSpy: ReturnType<typeof vi.spyOn>;
 
 	beforeEach(() => {
-		fetchSpy = vi
-			.spyOn(globalThis, "fetch")
-			.mockResolvedValue(new Response(null, { status: 200 }));
+		fetchSpy = vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response(null, { status: 200 }));
 	});
 	afterEach(() => {
 		fetchSpy.mockRestore();
@@ -39,9 +37,7 @@ describe("createSitemapPlugin", () => {
 		const [url, init] = fetchSpy.mock.calls[0] as [string, RequestInit];
 		expect(url).toBe("https://h.example/purge");
 		expect(init.method).toBe("POST");
-		expect((init.headers as Record<string, string>)["Content-Type"]).toBe(
-			"application/json",
-		);
+		expect((init.headers as Record<string, string>)["Content-Type"]).toBe("application/json");
 		const body = JSON.parse(init.body as string) as Record<string, unknown>;
 		expect(body.slug).toBe("my-post");
 		expect(body.event).toBe("content.publish");

@@ -18,13 +18,7 @@
 
 import { spawnSync } from "node:child_process";
 import { join } from "node:path";
-import {
-	AuditReport,
-	fileExists,
-	fromRoot,
-	readText,
-	runAudit,
-} from "../lib/audit-utils.js";
+import { AuditReport, fileExists, fromRoot, readText, runAudit } from "../lib/audit-utils.js";
 
 const EVALUATION_MD = fromRoot("docs/reference/EVALUATION.md");
 const PACKAGE_JSON = fromRoot("package.json");
@@ -125,8 +119,7 @@ async function main() {
 	await checkGradeRaises(evalSrc, report);
 
 	// ── Report ──
-	const automatedPct =
-		totalRubrics > 0 ? Math.round((automatedCount / totalRubrics) * 100) : 0;
+	const automatedPct = totalRubrics > 0 ? Math.round((automatedCount / totalRubrics) * 100) : 0;
 	const selfAssessedPct =
 		totalRubrics > 0 ? Math.round((selfAssessedCount / totalRubrics) * 100) : 0;
 
@@ -164,9 +157,7 @@ const GRADE_ORDER: Record<string, number> = {
 	"A+": 5,
 };
 
-function parseRubricMap(
-	src: string,
-): Map<string, { grade: string; evidence: string }> {
+function parseRubricMap(src: string): Map<string, { grade: string; evidence: string }> {
 	const rubrics = new Map<string, { grade: string; evidence: string }>();
 	const linePattern = /^\|\s*(\d+)\s*\|[^|]+\|\s*([A-F][+-]?)\s*\|([^|]*)\|/gm;
 	for (const m of src.matchAll(linePattern)) {
@@ -178,16 +169,11 @@ function parseRubricMap(
 	return rubrics;
 }
 
-async function checkGradeRaises(
-	currentSrc: string,
-	report: AuditReport,
-): Promise<void> {
+async function checkGradeRaises(currentSrc: string, report: AuditReport): Promise<void> {
 	// Fetch the main version of EVALUATION.md. If unavailable, skip silently.
-	const show = spawnSync(
-		"git",
-		["show", "origin/main:docs/reference/EVALUATION.md"],
-		{ encoding: "utf8" },
-	);
+	const show = spawnSync("git", ["show", "origin/main:docs/reference/EVALUATION.md"], {
+		encoding: "utf8",
+	});
 	if (show.status !== 0 || !show.stdout) return;
 	const mainSrc = show.stdout;
 	const before = parseRubricMap(mainSrc);
@@ -217,7 +203,7 @@ async function checkGradeRaises(
 	for (const r of raised) {
 		// Evidence must cite at least one .test.ts / .spec.ts that exists on disk
 		const testFiles: string[] = [];
-		const pattern = /[\w.\\/\-]+?\.(?:test|spec)\.ts/g;
+		const pattern = /[\w.\\/-]+?\.(?:test|spec)\.ts/g;
 		for (const m of r.evidence.matchAll(pattern)) testFiles.push(m[0]);
 		if (testFiles.length === 0) {
 			report.add(

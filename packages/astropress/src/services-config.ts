@@ -16,12 +16,7 @@
  * ```
  */
 
-export type ServiceProvider =
-	| "cms"
-	| "shop"
-	| "community"
-	| "email"
-	| "testimonials";
+export type ServiceProvider = "cms" | "shop" | "community" | "email" | "testimonials";
 
 export type AstropressServiceConfig = {
 	/** Identifier for this service category. One of the four supported providers. */
@@ -45,12 +40,8 @@ const registeredServices: AstropressServiceConfig[] = [];
  * Register (or replace) an optional service integration.
  * Call this in your Astro config / integration setup file.
  */
-export function registerAstropressService(
-	config: AstropressServiceConfig,
-): void {
-	const existing = registeredServices.findIndex(
-		(s) => s.provider === config.provider,
-	);
+export function registerAstropressService(config: AstropressServiceConfig): void {
+	const existing = registeredServices.findIndex((s) => s.provider === config.provider);
 	if (existing >= 0) {
 		registeredServices[existing] = config;
 	} else {
@@ -94,8 +85,7 @@ export function registerTestimonialsServiceIfConfigured(config: {
 	if (!config.url) return;
 	registerAstropressService({
 		provider: "testimonials",
-		label:
-			config.label ?? (config.type === "typebot" ? "Typebot" : "Formbricks"),
+		label: config.label ?? (config.type === "typebot" ? "Typebot" : "Formbricks"),
 		description:
 			config.type === "typebot"
 				? "Conversational testimonial and referral capture flows."

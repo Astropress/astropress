@@ -18,13 +18,10 @@ export const POST: APIRoute = async (context) =>
 		async ({ formData, locals }) => {
 			const email = String(formData.get("email") ?? "").trim();
 			if (!email) {
-				return new Response(
-					JSON.stringify({ ok: false, error: "email is required" }),
-					{
-						status: 400,
-						headers: { "Content-Type": "application/json" },
-					},
-				);
+				return new Response(JSON.stringify({ ok: false, error: "email is required" }), {
+					status: 400,
+					headers: { "Content-Type": "application/json" },
+				});
 			}
 
 			const deleteAccount = formData.get("deleteAccount") === "1";

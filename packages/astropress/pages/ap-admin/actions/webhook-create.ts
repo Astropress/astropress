@@ -21,9 +21,7 @@ export const POST: APIRoute = async (context) =>
 			if (!url.startsWith("https://") && !url.startsWith("http://"))
 				return fail("URL must start with http:// or https://");
 
-			const eventValues = formData
-				.getAll("events")
-				.map(String) as WebhookEvent[];
+			const eventValues = formData.getAll("events").map(String) as WebhookEvent[];
 			const events = eventValues.filter((e) => VALID_EVENTS.includes(e));
 			if (events.length === 0) return fail("At least one event is required.");
 

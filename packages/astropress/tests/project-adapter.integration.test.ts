@@ -17,9 +17,7 @@ describe("project adapter integration", () => {
 			}),
 		).toBe("hosted");
 
-		const workspace = await mkdtemp(
-			join(tmpdir(), "astropress-project-adapter-"),
-		);
+		const workspace = await mkdtemp(join(tmpdir(), "astropress-project-adapter-"));
 		const localAdapter = createAstropressProjectAdapter({
 			env: {
 				ASTROPRESS_RUNTIME_MODE: "local",
@@ -66,9 +64,7 @@ describe("project adapter integration", () => {
 
 	it("explicit options.mode overrides any env-derived mode (kills ?? to && mutant)", async () => {
 		// env says hosted, but options.mode="local" should win.
-		const workspace = await mkdtemp(
-			join(tmpdir(), "astropress-mode-override-"),
-		);
+		const workspace = await mkdtemp(join(tmpdir(), "astropress-mode-override-"));
 		const adapter = createAstropressProjectAdapter({
 			mode: "local",
 			env: {

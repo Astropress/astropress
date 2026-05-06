@@ -15,9 +15,7 @@ export const GET = async ({ request, locals }) => {
 	const posts = published.filter((r) => r.kind === "post" || r.kind == null);
 	const pages = published.filter((r) => r.kind === "page");
 
-	const entries = [
-		{ loc: `${origin}/`, changefreq: "weekly", priority: "1.0" },
-	];
+	const entries = [{ loc: `${origin}/`, changefreq: "weekly", priority: "1.0" }];
 
 	for (const post of posts) {
 		entries.push({

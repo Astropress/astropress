@@ -4,25 +4,19 @@ import { normalizeRoutePath, stripTrailingSlashes } from "../src/path-helpers";
 
 describe("stripTrailingSlashes", () => {
 	it("returns the input unchanged when there are no trailing slashes", () => {
-		expect(stripTrailingSlashes("https://example.com")).toBe(
-			"https://example.com",
-		);
+		expect(stripTrailingSlashes("https://example.com")).toBe("https://example.com");
 		expect(stripTrailingSlashes("/about")).toBe("/about");
 		expect(stripTrailingSlashes("")).toBe("");
 	});
 
 	it("strips a single trailing slash", () => {
-		expect(stripTrailingSlashes("https://example.com/")).toBe(
-			"https://example.com",
-		);
+		expect(stripTrailingSlashes("https://example.com/")).toBe("https://example.com");
 		expect(stripTrailingSlashes("/about/")).toBe("/about");
 	});
 
 	it("strips multiple trailing slashes", () => {
 		expect(stripTrailingSlashes("/about///")).toBe("/about");
-		expect(stripTrailingSlashes("https://example.com////")).toBe(
-			"https://example.com",
-		);
+		expect(stripTrailingSlashes("https://example.com////")).toBe("https://example.com");
 	});
 
 	it("collapses an all-slash string to empty", () => {

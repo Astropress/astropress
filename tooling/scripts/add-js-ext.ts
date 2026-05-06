@@ -10,7 +10,7 @@
  * Bare specifiers (e.g. `"astro"`) and imports with known extensions
  * (`.json`, `.css`, `.wasm`, etc.) are left alone.
  */
-import { readFile, readdir, writeFile } from "node:fs/promises";
+import { readdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 async function walk(dir: string): Promise<string[]> {
@@ -43,8 +43,7 @@ for (const file of files) {
 	const src = await readFile(file, "utf8");
 	let rewrites = 0;
 	const next = src.replace(importRe, (full, keyword, quote, spec) => {
-		if (/\.(m?js|cjs|json|node|css|wasm|svg|png|jpg|webp)$/.test(spec))
-			return full;
+		if (/\.(m?js|cjs|json|node|css|wasm|svg|png|jpg|webp)$/.test(spec)) return full;
 		rewrites++;
 		return `${keyword}${quote}${spec}.js${quote}`;
 	});
@@ -55,6 +54,4 @@ for (const file of files) {
 	}
 }
 
-console.log(
-	`Added .js extension to ${totalRewrites} imports across ${totalFiles} files.`,
-);
+console.log(`Added .js extension to ${totalRewrites} imports across ${totalFiles} files.`);

@@ -1,19 +1,16 @@
 import { createAstropressAuthorRepository } from "../author-repository-factory";
-import type { Actor, SessionUser } from "../persistence-types";
+import type { Actor } from "../persistence-types";
 import { createAstropressTaxonomyRepository } from "../taxonomy-repository-factory";
 import { recordAudit } from "./audit-log";
 import { type AstropressSqliteDatabaseLike, slugifyTerm } from "./utils";
 
-const SQL_INSERT_AUTHOR =
-	"INSERT INTO authors (slug, name, bio) VALUES (?, ?, ?)";
+const SQL_INSERT_AUTHOR = "INSERT INTO authors (slug, name, bio) VALUES (?, ?, ?)";
 const SQL_UPDATE_AUTHOR =
 	"UPDATE authors SET slug = ?, name = ?, bio = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND deleted_at IS NULL";
 const SQL_DELETE_AUTHOR =
 	"UPDATE authors SET deleted_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND deleted_at IS NULL";
 
-export function createSqliteCatalogStore(
-	getDb: () => AstropressSqliteDatabaseLike,
-) {
+export function createSqliteCatalogStore(getDb: () => AstropressSqliteDatabaseLike) {
 	function listAuthors() {
 		const rows = getDb()
 			.prepare(
@@ -46,11 +43,7 @@ export function createSqliteCatalogStore(
 	const sqliteAuthorRepository = createAstropressAuthorRepository({
 		listAuthors,
 		slugifyTerm,
-		createAuthor({
-			slug,
-			name,
-			bio,
-		}: { slug: string; name: string; bio?: string }) {
+		createAuthor({ slug, name, bio }: { slug: string; name: string; bio?: string }) {
 			try {
 				getDb().prepare(SQL_INSERT_AUTHOR).run(slug, name, bio);
 				return true;
@@ -63,11 +56,14 @@ export function createSqliteCatalogStore(
 			slug,
 			name,
 			bio,
-		}: { id: number; slug: string; name: string; bio?: string }) {
+		}: {
+			id: number;
+			slug: string;
+			name: string;
+			bio?: string;
+		}) {
 			try {
-				const result = getDb()
-					.prepare(SQL_UPDATE_AUTHOR)
-					.run(slug, name, bio, id);
+				const result = getDb().prepare(SQL_UPDATE_AUTHOR).run(slug, name, bio, id);
 				return result.changes > 0;
 			} catch {
 				return false;
@@ -81,15 +77,17 @@ export function createSqliteCatalogStore(
 			action,
 			summary,
 			targetId,
-		}: { actor: Actor; action: string; summary: string; targetId: string }) {
+		}: {
+			actor: Actor;
+			action: string;
+			summary: string;
+			targetId: string;
+		}) {
 			recordAudit(getDb(), actor, action, summary, "content", targetId);
 		},
 	});
 
-	function listTaxonomyTerms(
-		table: "categories" | "tags",
-		kind: "category" | "tag",
-	) {
+	function listTaxonomyTerms(table: "categories" | "tags", kind: "category" | "tag") {
 		const rows = getDb()
 			.prepare(
 				`
@@ -140,9 +138,7 @@ export function createSqliteCatalogStore(
 		}) {
 			try {
 				getDb()
-					.prepare(
-						`INSERT INTO ${table} (slug, name, description) VALUES (?, ?, ?)`,
-					)
+					.prepare(`INSERT INTO ${table} (slug, name, description) VALUES (?, ?, ?)`)
 					.run(slug, name, description);
 				return true;
 			} catch {
@@ -173,10 +169,7 @@ export function createSqliteCatalogStore(
 				return false;
 			}
 		},
-		deleteTaxonomyTerm({
-			table,
-			id,
-		}: { table: "categories" | "tags"; id: number }) {
+		deleteTaxonomyTerm({ table, id }: { table: "categories" | "tags"; id: number }) {
 			return (
 				getDb()
 					.prepare(
@@ -190,7 +183,12 @@ export function createSqliteCatalogStore(
 			action,
 			summary,
 			targetId,
-		}: { actor: Actor; action: string; summary: string; targetId: string }) {
+		}: {
+			actor: Actor;
+			action: string;
+			summary: string;
+			targetId: string;
+		}) {
 			recordAudit(getDb(), actor, action, summary, "content", targetId);
 		},
 	});

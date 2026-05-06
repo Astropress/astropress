@@ -21,10 +21,7 @@ import type {
 	SealedSecret,
 	SecretContext,
 } from "../integration-secret-envelope";
-import {
-	openIntegrationSecret,
-	sealIntegrationSecret,
-} from "../integration-secret-envelope";
+import { openIntegrationSecret, sealIntegrationSecret } from "../integration-secret-envelope";
 import type { AstropressSqliteDatabaseLike } from "./utils";
 
 export type IntegrationStatusValue = "connected" | "error" | "paused";
@@ -175,10 +172,7 @@ function rowToSealed(row: RawSecretRow): SealedSecret {
 }
 
 export interface IntegrationsRepository {
-	findStatus(
-		domain: string,
-		provider: string,
-	): IntegrationStatusRow | undefined;
+	findStatus(domain: string, provider: string): IntegrationStatusRow | undefined;
 	listStatuses(): IntegrationStatusRow[];
 	updateStatus(input: {
 		domain: string;
@@ -208,13 +202,8 @@ export function createIntegrationsRepository(
 ): IntegrationsRepository {
 	const { getDb, now } = options;
 
-	function findStatus(
-		domain: string,
-		provider: string,
-	): IntegrationStatusRow | undefined {
-		const row = getDb().prepare(SQL_FIND_STATUS).get(domain, provider) as
-			| RawStatusRow
-			| undefined;
+	function findStatus(domain: string, provider: string): IntegrationStatusRow | undefined {
+		const row = getDb().prepare(SQL_FIND_STATUS).get(domain, provider) as RawStatusRow | undefined;
 		return row ? rowToStatus(row) : undefined;
 	}
 
@@ -232,13 +221,7 @@ export function createIntegrationsRepository(
 	}): boolean {
 		const result = getDb()
 			.prepare(SQL_UPDATE_STATUS)
-			.run(
-				input.status,
-				input.lastCheckAt,
-				input.lastError ?? null,
-				input.domain,
-				input.provider,
-			);
+			.run(input.status, input.lastCheckAt, input.lastError ?? null, input.domain, input.provider);
 		return Number(result.changes ?? 0) > 0;
 	}
 
@@ -247,9 +230,7 @@ export function createIntegrationsRepository(
 		return Number(result.changes ?? 0) > 0;
 	}
 
-	async function connect<
-		TFields extends Record<string, string> = Record<string, string>,
-	>(
+	async function connect<TFields extends Record<string, string> = Record<string, string>>(
 		input: ConnectIntegrationInput<TFields>,
 		rootSecret: string,
 	): Promise<void> {
@@ -280,32 +261,20 @@ export function createIntegrationsRepository(
 		);
 	}
 
-	async function findSecret<
-		TFields extends Record<string, string> = Record<string, string>,
-	>(
+	async function findSecret<TFields extends Record<string, string> = Record<string, string>>(
 		domain: string,
 		provider: string,
 		rootSecrets: RootSecretCandidates,
 	): Promise<TFields | undefined> {
-		const row = getDb().prepare(SQL_FIND_SECRET).get(domain, provider) as
-			| RawSecretRow
-			| undefined;
+		const row = getDb().prepare(SQL_FIND_SECRET).get(domain, provider) as RawSecretRow | undefined;
 		if (!row) return undefined;
 		const sealed = rowToSealed(row);
 		const ctx: SecretContext = { domain, provider };
-		const opened = await openIntegrationSecret<TFields>(
-			sealed,
-			ctx,
-			rootSecrets,
-		);
+		const opened = await openIntegrationSecret<TFields>(sealed, ctx, rootSecrets);
 		// Reseal-on-read: when we just decrypted with the previous key, push
 		// the record forward under current in a guarded UPDATE.
 		if (opened.usedKid === "previous" && rootSecrets.previous) {
-			const resealed = await sealIntegrationSecret(
-				opened.fields,
-				ctx,
-				rootSecrets.current,
-			);
+			const resealed = await sealIntegrationSecret(opened.fields, ctx, rootSecrets.current);
 			getDb()
 				.prepare(SQL_RESEAL_GUARDED)
 				.run(
@@ -327,9 +296,7 @@ export function createIntegrationsRepository(
 	}
 
 	function listPreviousKidContexts(): SecretContext[] {
-		const rows = getDb()
-			.prepare(SQL_LIST_PREVIOUS_SECRETS)
-			.all() as RawSecretRow[];
+		const rows = getDb().prepare(SQL_LIST_PREVIOUS_SECRETS).all() as RawSecretRow[];
 		return rows.map((row) => ({
 			domain: row.domain,
 			provider: row.provider,

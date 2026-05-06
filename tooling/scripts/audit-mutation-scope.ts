@@ -11,12 +11,7 @@
 // one stryker config — either by explicit path or by a containing glob.
 
 import { readdirSync } from "node:fs";
-import {
-	AuditReport,
-	fromRoot,
-	readText,
-	runAudit,
-} from "../lib/audit-utils.js";
+import { AuditReport, fromRoot, readText, runAudit } from "../lib/audit-utils.js";
 
 const CRITICAL_PATTERNS: Array<{ prefix: string; label: string }> = [
 	{ prefix: "security-", label: "security" },

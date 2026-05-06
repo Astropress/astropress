@@ -1,10 +1,10 @@
 import { afterEach, describe, expect, it } from "vitest";
 
 import {
-	OAuthRegistryError,
 	_resetOAuthRegistryForTests,
 	getOAuthProvider,
 	listOAuthProviders,
+	OAuthRegistryError,
 	registerOAuthProvider,
 } from "../../../src/integrations/oauth/registry";
 
@@ -62,9 +62,7 @@ describe("registerOAuthProvider", () => {
 
 	it("allows the same providerId across different domains", () => {
 		registerOAuthProvider({ ...GITHUB });
-		expect(() =>
-			registerOAuthProvider({ ...GITHUB, domain: "newsletter" }),
-		).not.toThrow();
+		expect(() => registerOAuthProvider({ ...GITHUB, domain: "newsletter" })).not.toThrow();
 	});
 
 	it("listOAuthProviders is domain-scoped", () => {

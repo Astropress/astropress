@@ -23,7 +23,7 @@ const CHECK_MODE = process.argv.includes("--check");
 
 // ── Entry points to document ────────────────────────────────────────────────
 
-const ENTRY_POINTS: Array<[filePath: string, label: string]> = [
+const ENTRY_POINTS: [filePath: string, label: string][] = [
 	[join(PKG_DIR, "index.ts"), "astropress"],
 	[join(PKG_DIR, "src/config.ts"), "astropress (config)"],
 	[join(PKG_DIR, "src/platform-contracts.ts"), "astropress/platform-contracts"],
@@ -33,10 +33,7 @@ const ENTRY_POINTS: Array<[filePath: string, label: string]> = [
 	[join(PKG_DIR, "src/db-migrate-ops.ts"), "astropress/db-migrate-ops"],
 	[join(PKG_DIR, "src/sqlite-bootstrap.ts"), "astropress/sqlite-bootstrap"],
 	[join(PKG_DIR, "src/cache-purge.ts"), "astropress (cache-purge)"],
-	[
-		join(PKG_DIR, "src/transactional-email.ts"),
-		"astropress/transactional-email",
-	],
+	[join(PKG_DIR, "src/transactional-email.ts"), "astropress/transactional-email"],
 	[join(PKG_DIR, "src/analytics.ts"), "astropress/analytics"],
 	[join(PKG_DIR, "src/public-site-integration.ts"), "astropress/integration"],
 ];
@@ -82,10 +79,7 @@ function getSymbolKind(
 	if (flags & ts.SymbolFlags.TypeAlias) return "type";
 	if (flags & ts.SymbolFlags.Enum) return "enum";
 	// Could be an alias wrapping a function (export { foo } from '...')
-	const aliased =
-		symbol.flags & ts.SymbolFlags.Alias
-			? checker.getAliasedSymbol(symbol)
-			: symbol;
+	const aliased = symbol.flags & ts.SymbolFlags.Alias ? checker.getAliasedSymbol(symbol) : symbol;
 	if (aliased.flags & ts.SymbolFlags.Function) return "function";
 	if (aliased.flags & ts.SymbolFlags.Interface) return "interface";
 	if (aliased.flags & ts.SymbolFlags.TypeAlias) return "type";
@@ -102,10 +96,7 @@ function getFunctionSignature(symbol: ts.Symbol, name: string): string {
 		if (symbol.flags & ts.SymbolFlags.Alias) {
 			const aliased = checker.getAliasedSymbol(symbol);
 			const aliasType = checker.getTypeOfSymbol(aliased);
-			const aliasSigs = checker.getSignaturesOfType(
-				aliasType,
-				ts.SignatureKind.Call,
-			);
+			const aliasSigs = checker.getSignaturesOfType(aliasType, ts.SignatureKind.Call);
 			if (aliasSigs.length > 0) {
 				return formatSignatures(name, aliasSigs);
 			}
@@ -216,9 +207,7 @@ for (const source of orderedSources) {
 	const types = entries.filter(
 		(e) => e.kind === "interface" || e.kind === "type" || e.kind === "enum",
 	);
-	const consts = entries.filter(
-		(e) => e.kind === "const" || e.kind === "class",
-	);
+	const consts = entries.filter((e) => e.kind === "const" || e.kind === "class");
 
 	if (functions.length > 0) {
 		lines.push("### Functions");
@@ -235,15 +224,8 @@ for (const source of orderedSources) {
 		lines.push("### Types & Interfaces");
 		lines.push("");
 		for (const t of types) {
-			const prefix =
-				t.kind === "interface"
-					? "interface"
-					: t.kind === "enum"
-						? "enum"
-						: "type";
-			lines.push(
-				`- \`${prefix} ${t.name}\`${t.description ? ` — ${t.description}` : ""}`,
-			);
+			const prefix = t.kind === "interface" ? "interface" : t.kind === "enum" ? "enum" : "type";
+			lines.push(`- \`${prefix} ${t.name}\`${t.description ? ` — ${t.description}` : ""}`);
 		}
 		lines.push("");
 	}
@@ -253,13 +235,9 @@ for (const source of orderedSources) {
 		lines.push("");
 		for (const c of consts) {
 			if (c.signature) {
-				lines.push(
-					`- \`${c.signature}\`${c.description ? ` — ${c.description}` : ""}`,
-				);
+				lines.push(`- \`${c.signature}\`${c.description ? ` — ${c.description}` : ""}`);
 			} else {
-				lines.push(
-					`- \`${c.name}\`${c.description ? ` — ${c.description}` : ""}`,
-				);
+				lines.push(`- \`${c.name}\`${c.description ? ` — ${c.description}` : ""}`);
 			}
 		}
 		lines.push("");

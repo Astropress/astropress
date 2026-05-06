@@ -15,16 +15,14 @@ export default defineConfig({
 			name: "example-a11y",
 			testMatch: /example-accessibility\.spec\.ts/,
 			use: {
-				baseURL:
-					process.env.PLAYWRIGHT_EXAMPLE_BASE_URL ?? "http://127.0.0.1:4173",
+				baseURL: process.env.PLAYWRIGHT_EXAMPLE_BASE_URL ?? "http://127.0.0.1:4173",
 			},
 		},
 		{
 			name: "admin-harness-a11y",
 			testMatch: /admin-harness-accessibility\.spec\.ts/,
 			use: {
-				baseURL:
-					process.env.PLAYWRIGHT_ADMIN_BASE_URL ?? "http://127.0.0.1:4325",
+				baseURL: process.env.PLAYWRIGHT_ADMIN_BASE_URL ?? "http://127.0.0.1:4325",
 			},
 		},
 		{
@@ -35,8 +33,7 @@ export default defineConfig({
 				viewport: { width: 390, height: 844 },
 				isMobile: true,
 				hasTouch: true,
-				baseURL:
-					process.env.PLAYWRIGHT_ADMIN_BASE_URL ?? "http://127.0.0.1:4325",
+				baseURL: process.env.PLAYWRIGHT_ADMIN_BASE_URL ?? "http://127.0.0.1:4325",
 			},
 		},
 		{
@@ -47,8 +44,7 @@ export default defineConfig({
 				viewport: { width: 375, height: 667 },
 				isMobile: true,
 				hasTouch: true,
-				baseURL:
-					process.env.PLAYWRIGHT_ADMIN_BASE_URL ?? "http://127.0.0.1:4325",
+				baseURL: process.env.PLAYWRIGHT_ADMIN_BASE_URL ?? "http://127.0.0.1:4325",
 			},
 		},
 		{
@@ -59,16 +55,14 @@ export default defineConfig({
 				viewport: { width: 360, height: 640 },
 				isMobile: true,
 				hasTouch: true,
-				baseURL:
-					process.env.PLAYWRIGHT_ADMIN_BASE_URL ?? "http://127.0.0.1:4325",
+				baseURL: process.env.PLAYWRIGHT_ADMIN_BASE_URL ?? "http://127.0.0.1:4325",
 			},
 		},
 		{
 			name: "admin-harness-a11y-interactions",
 			testMatch: /admin-harness-interactions\.spec\.ts/,
 			use: {
-				baseURL:
-					process.env.PLAYWRIGHT_ADMIN_BASE_URL ?? "http://127.0.0.1:4325",
+				baseURL: process.env.PLAYWRIGHT_ADMIN_BASE_URL ?? "http://127.0.0.1:4325",
 			},
 		},
 		// audit-playwright: local-only — Firefox isn't installed in the CI
@@ -78,32 +72,28 @@ export default defineConfig({
 			testMatch: /admin-harness-accessibility\.spec\.ts/,
 			use: {
 				...devices["Desktop Firefox"],
-				baseURL:
-					process.env.PLAYWRIGHT_ADMIN_BASE_URL ?? "http://127.0.0.1:4325",
+				baseURL: process.env.PLAYWRIGHT_ADMIN_BASE_URL ?? "http://127.0.0.1:4325",
 			},
 		},
 		{
 			name: "admin-harness-crud",
 			testMatch: /admin-harness-crud\.spec\.ts/,
 			use: {
-				baseURL:
-					process.env.PLAYWRIGHT_ADMIN_BASE_URL ?? "http://127.0.0.1:4325",
+				baseURL: process.env.PLAYWRIGHT_ADMIN_BASE_URL ?? "http://127.0.0.1:4325",
 			},
 		},
 		{
 			name: "admin-harness-negative-paths",
 			testMatch: /admin-harness-negative-paths\.spec\.ts/,
 			use: {
-				baseURL:
-					process.env.PLAYWRIGHT_ADMIN_BASE_URL ?? "http://127.0.0.1:4325",
+				baseURL: process.env.PLAYWRIGHT_ADMIN_BASE_URL ?? "http://127.0.0.1:4325",
 			},
 		},
 		{
 			name: "admin-harness-smoke",
 			testMatch: /admin-harness-smoke\.spec\.ts/,
 			use: {
-				baseURL:
-					process.env.PLAYWRIGHT_ADMIN_BASE_URL ?? "http://127.0.0.1:4325",
+				baseURL: process.env.PLAYWRIGHT_ADMIN_BASE_URL ?? "http://127.0.0.1:4325",
 			},
 		},
 		{
@@ -112,8 +102,7 @@ export default defineConfig({
 			use: {
 				...devices["Desktop Chrome"],
 				browserName: "chromium",
-				baseURL:
-					process.env.PLAYWRIGHT_ADMIN_BASE_URL ?? "http://127.0.0.1:4325",
+				baseURL: process.env.PLAYWRIGHT_ADMIN_BASE_URL ?? "http://127.0.0.1:4325",
 			},
 		},
 		{
@@ -121,8 +110,7 @@ export default defineConfig({
 			testMatch: /admin-cross-browser-smoke\.spec\.ts/,
 			use: {
 				...devices["Desktop Firefox"],
-				baseURL:
-					process.env.PLAYWRIGHT_ADMIN_BASE_URL ?? "http://127.0.0.1:4325",
+				baseURL: process.env.PLAYWRIGHT_ADMIN_BASE_URL ?? "http://127.0.0.1:4325",
 			},
 		},
 		{
@@ -131,8 +119,7 @@ export default defineConfig({
 			use: {
 				...devices["Desktop Safari"],
 				browserName: "webkit",
-				baseURL:
-					process.env.PLAYWRIGHT_ADMIN_BASE_URL ?? "http://127.0.0.1:4325",
+				baseURL: process.env.PLAYWRIGHT_ADMIN_BASE_URL ?? "http://127.0.0.1:4325",
 			},
 		},
 		{
@@ -140,8 +127,7 @@ export default defineConfig({
 			testMatch: /admin-harness-mobile\.spec\.ts/,
 			use: {
 				viewport: { width: 375, height: 812 },
-				baseURL:
-					process.env.PLAYWRIGHT_ADMIN_BASE_URL ?? "http://127.0.0.1:4325",
+				baseURL: process.env.PLAYWRIGHT_ADMIN_BASE_URL ?? "http://127.0.0.1:4325",
 			},
 		},
 		{
@@ -151,48 +137,42 @@ export default defineConfig({
 				viewport: { width: 375, height: 812 },
 				isMobile: true,
 				hasTouch: true,
-				baseURL:
-					process.env.PLAYWRIGHT_ADMIN_BASE_URL ?? "http://127.0.0.1:4325",
+				baseURL: process.env.PLAYWRIGHT_ADMIN_BASE_URL ?? "http://127.0.0.1:4325",
 			},
 		},
 		{
 			name: "admin-pre-alpha-walkthrough",
 			testMatch: /admin-pre-alpha-walkthrough\.spec\.ts/,
 			use: {
-				baseURL:
-					process.env.PLAYWRIGHT_ADMIN_BASE_URL ?? "http://127.0.0.1:4325",
+				baseURL: process.env.PLAYWRIGHT_ADMIN_BASE_URL ?? "http://127.0.0.1:4325",
 			},
 		},
 		{
 			name: "admin-integration-honesty",
 			testMatch: /admin-integration-honesty\.spec\.ts/,
 			use: {
-				baseURL:
-					process.env.PLAYWRIGHT_ADMIN_BASE_URL ?? "http://127.0.0.1:4325",
+				baseURL: process.env.PLAYWRIGHT_ADMIN_BASE_URL ?? "http://127.0.0.1:4325",
 			},
 		},
 		{
 			name: "admin-heading-hierarchy",
 			testMatch: /admin-heading-hierarchy\.spec\.ts/,
 			use: {
-				baseURL:
-					process.env.PLAYWRIGHT_ADMIN_BASE_URL ?? "http://127.0.0.1:4325",
+				baseURL: process.env.PLAYWRIGHT_ADMIN_BASE_URL ?? "http://127.0.0.1:4325",
 			},
 		},
 		{
 			name: "admin-i18n-no-english-leak",
 			testMatch: /admin-i18n-no-english-leak\.spec\.ts/,
 			use: {
-				baseURL:
-					process.env.PLAYWRIGHT_ADMIN_BASE_URL ?? "http://127.0.0.1:4325",
+				baseURL: process.env.PLAYWRIGHT_ADMIN_BASE_URL ?? "http://127.0.0.1:4325",
 			},
 		},
 		{
 			name: "admin-interaction-timing",
 			testMatch: /admin-interaction-timing\.spec\.ts/,
 			use: {
-				baseURL:
-					process.env.PLAYWRIGHT_ADMIN_BASE_URL ?? "http://127.0.0.1:4325",
+				baseURL: process.env.PLAYWRIGHT_ADMIN_BASE_URL ?? "http://127.0.0.1:4325",
 			},
 		},
 		{
@@ -200,8 +180,7 @@ export default defineConfig({
 			testMatch: /admin-perf-timing\.spec\.ts/,
 			retries: 1,
 			use: {
-				baseURL:
-					process.env.PLAYWRIGHT_ADMIN_BASE_URL ?? "http://127.0.0.1:4325",
+				baseURL: process.env.PLAYWRIGHT_ADMIN_BASE_URL ?? "http://127.0.0.1:4325",
 			},
 		},
 		{
@@ -209,8 +188,7 @@ export default defineConfig({
 			testMatch: /admin-harness-mobile\.spec\.ts/,
 			use: {
 				viewport: { width: 768, height: 1024 },
-				baseURL:
-					process.env.PLAYWRIGHT_ADMIN_BASE_URL ?? "http://127.0.0.1:4325",
+				baseURL: process.env.PLAYWRIGHT_ADMIN_BASE_URL ?? "http://127.0.0.1:4325",
 			},
 		},
 		{
@@ -218,8 +196,7 @@ export default defineConfig({
 			testMatch: /admin-harness-mobile\.spec\.ts/,
 			use: {
 				viewport: { width: 1280, height: 800 },
-				baseURL:
-					process.env.PLAYWRIGHT_ADMIN_BASE_URL ?? "http://127.0.0.1:4325",
+				baseURL: process.env.PLAYWRIGHT_ADMIN_BASE_URL ?? "http://127.0.0.1:4325",
 			},
 		},
 	],

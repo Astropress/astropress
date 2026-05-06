@@ -30,21 +30,13 @@ export async function recordD1Audit(
 			`INSERT INTO audit_events (user_email, action, resource_type, resource_id, summary)
        VALUES (?, ?, ?, ?, ?)`,
 		)
-		.bind(
-			entry.userEmail,
-			entry.action,
-			entry.resourceType,
-			entry.resourceId,
-			entry.summary,
-		)
+		.bind(entry.userEmail, entry.action, entry.resourceType, entry.resourceId, entry.summary)
 		.run();
 
 	const retentionDays = peekCmsConfig()?.auditRetentionDays ?? 90;
 	if (retentionDays > 0) {
 		await db
-			.prepare(
-				`DELETE FROM audit_events WHERE created_at < datetime('now', '-' || ? || ' days')`,
-			)
+			.prepare(`DELETE FROM audit_events WHERE created_at < datetime('now', '-' || ? || ' days')`)
 			.bind(retentionDays)
 			.run();
 	}

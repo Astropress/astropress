@@ -23,17 +23,15 @@ const OUT = "tooling/audit-output/route-http-matrix.json";
 
 function lines(cmd: string): string[] {
 	try {
-		return execFileSync("bash", ["-c", cmd], { encoding: "utf8" })
-			.split("\n")
-			.filter(Boolean);
+		return execFileSync("bash", ["-c", cmd], { encoding: "utf8" }).split("\n").filter(Boolean);
 	} catch {
 		return [];
 	}
 }
 
-const adminFiles = lines(
-	`find ${ADMIN_DIR} -type f \\( -name "*.astro" -o -name "*.ts" \\)`,
-).map((p) => relative(ADMIN_DIR, p));
+const adminFiles = lines(`find ${ADMIN_DIR} -type f \\( -name "*.astro" -o -name "*.ts" \\)`).map(
+	(p) => relative(ADMIN_DIR, p),
+);
 
 const testCorpus = lines(`find ${TESTS} ${E2E} -name '*.ts' 2>/dev/null`);
 const smokeContent = (() => {
@@ -52,19 +50,14 @@ function classify(file: string): {
 } {
 	const route = `/ap-admin/${file.replace(/\.(astro|ts)$/, "")}`;
 	const routePrefix = route.replace(/\/\[[^\]]+\]/g, "");
-	const matches = lines(
-		`grep -lF "${routePrefix}" ${testCorpus.join(" ")} 2>/dev/null`,
-	);
+	const matches = lines(`grep -lF "${routePrefix}" ${testCorpus.join(" ")} 2>/dev/null`);
 	const mentionedInSmoke = smokeContent.includes(routePrefix);
 	// Heuristic for anon-auth coverage: a test mentions both this route AND
 	// "redirect" / "302" / "/login" / "anon".
 	let hasAnonAuth = false;
 	for (const m of matches) {
 		const txt = readFileSync(m, "utf8");
-		if (
-			txt.includes(routePrefix) &&
-			/redirect|302|\/ap-admin\/login|anon/i.test(txt)
-		) {
+		if (txt.includes(routePrefix) && /redirect|302|\/ap-admin\/login|anon/i.test(txt)) {
 			hasAnonAuth = true;
 			break;
 		}

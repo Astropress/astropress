@@ -49,10 +49,7 @@ export function buildListmonkHealthUrl(baseUrl: string): string {
 	return new URL(HEALTH_PATH, baseUrl).toString();
 }
 
-export function buildListmonkAuthHeader(
-	apiUser: string,
-	apiKey: string,
-): string {
+export function buildListmonkAuthHeader(apiUser: string, apiKey: string): string {
 	return `Basic ${btoa(`${apiUser}:${apiKey}`)}`;
 }
 

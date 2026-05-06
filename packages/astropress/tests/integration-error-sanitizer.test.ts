@@ -6,12 +6,9 @@ import {
 
 describe("sanitizeIntegrationError", () => {
 	it("returns the explicit hint when valid", () => {
-		expect(
-			sanitizeIntegrationError(
-				new Error("upstream"),
-				"INTEGRATION_AUTH_REJECTED",
-			),
-		).toBe("INTEGRATION_AUTH_REJECTED");
+		expect(sanitizeIntegrationError(new Error("upstream"), "INTEGRATION_AUTH_REJECTED")).toBe(
+			"INTEGRATION_AUTH_REJECTED",
+		);
 	});
 
 	it("recognises typed `code` on the thrown object", () => {
@@ -35,18 +32,14 @@ describe("sanitizeIntegrationError", () => {
 		expect(sanitizeIntegrationError("upstream-401-credentials-leaked")).toBe(
 			"INTEGRATION_UNKNOWN_ERROR",
 		);
-		expect(sanitizeIntegrationError(undefined)).toBe(
-			"INTEGRATION_UNKNOWN_ERROR",
-		);
+		expect(sanitizeIntegrationError(undefined)).toBe("INTEGRATION_UNKNOWN_ERROR");
 		expect(sanitizeIntegrationError(new Error("Bearer abcd1234"))).toBe(
 			"INTEGRATION_UNKNOWN_ERROR",
 		);
 	});
 
 	it("never echoes the original error message", () => {
-		const code = sanitizeIntegrationError(
-			new Error("API_KEY=sk-secret-do-not-leak"),
-		);
+		const code = sanitizeIntegrationError(new Error("API_KEY=sk-secret-do-not-leak"));
 		expect(code).not.toContain("sk-secret-do-not-leak");
 		expect(code).not.toContain("API_KEY");
 	});
@@ -72,15 +65,11 @@ describe("sanitizeIntegrationError", () => {
 	});
 
 	it("ignores objects whose `code` is not a known IntegrationErrorCode", () => {
-		expect(sanitizeIntegrationError({ code: "garbage-code" })).toBe(
-			"INTEGRATION_UNKNOWN_ERROR",
-		);
+		expect(sanitizeIntegrationError({ code: "garbage-code" })).toBe("INTEGRATION_UNKNOWN_ERROR");
 	});
 
 	it("falls through when err is an object without `code` property", () => {
-		expect(sanitizeIntegrationError({ unrelated: true })).toBe(
-			"INTEGRATION_UNKNOWN_ERROR",
-		);
+		expect(sanitizeIntegrationError({ unrelated: true })).toBe("INTEGRATION_UNKNOWN_ERROR");
 	});
 
 	it("maps TimeoutError → INTEGRATION_TIMEOUT", () => {

@@ -1,27 +1,20 @@
 import { mkdirSync } from "node:fs";
 import { join } from "node:path";
+import { DatabaseSync } from "node:sqlite";
 import { fileURLToPath } from "node:url";
 
-import { DatabaseSync } from "node:sqlite";
-
 import { createAstropressSqliteAdminRuntime } from "@astropress-diy/astropress/sqlite-admin-runtime";
+import type { RedirectRuleSeed, SeededComment } from "@astropress-diy/astropress/sqlite-bootstrap";
 import {
 	createAstropressSqliteSeedToolkit,
 	readAstropressSqliteSchemaSql,
-} from "@astropress-diy/astropress/sqlite-bootstrap";
-import type {
-	RedirectRuleSeed,
-	SeededComment,
 } from "@astropress-diy/astropress/sqlite-bootstrap";
 
 const workspaceRoot = fileURLToPath(new URL("../../", import.meta.url));
 const configuredDataDirectory = process.env.ASTROPRESS_DATA_ROOT?.trim();
 const dataDirectory =
-	configuredDataDirectory ||
-	fileURLToPath(new URL("../../.data/", import.meta.url));
-const dbPath =
-	process.env.ADMIN_DB_PATH?.trim() ||
-	join(dataDirectory, "admin-harness.sqlite");
+	configuredDataDirectory || fileURLToPath(new URL("../../.data/", import.meta.url));
+const dbPath = process.env.ADMIN_DB_PATH?.trim() || join(dataDirectory, "admin-harness.sqlite");
 
 mkdirSync(dataDirectory, { recursive: true });
 
@@ -126,5 +119,4 @@ const runtime = createAstropressSqliteAdminRuntime({
 
 export const sqliteAdminStore = runtime.sqliteAdminStore;
 export const sqliteCmsRegistryModule = runtime.sqliteCmsRegistryModule;
-export const authenticatePersistedAdminUser =
-	runtime.authenticatePersistedAdminUser;
+export const authenticatePersistedAdminUser = runtime.authenticatePersistedAdminUser;

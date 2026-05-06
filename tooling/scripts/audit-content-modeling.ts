@@ -8,24 +8,11 @@
 //   4. content-modeling.test.ts exists
 
 import { relative } from "node:path";
-import {
-	AuditReport,
-	ROOT,
-	fileExists,
-	fromRoot,
-	readText,
-	runAudit,
-} from "../lib/audit-utils.js";
+import { AuditReport, fileExists, fromRoot, ROOT, readText, runAudit } from "../lib/audit-utils.js";
 
-const CONTENT_MODELING_PATH = fromRoot(
-	"packages/astropress/src/content-modeling.ts",
-);
-const PLATFORM_CONTRACTS_PATH = fromRoot(
-	"packages/astropress/src/platform-contracts.ts",
-);
-const TEST_FILE_PATH = fromRoot(
-	"packages/astropress/tests/content-modeling.test.ts",
-);
+const CONTENT_MODELING_PATH = fromRoot("packages/astropress/src/content-modeling.ts");
+const PLATFORM_CONTRACTS_PATH = fromRoot("packages/astropress/src/platform-contracts.ts");
+const TEST_FILE_PATH = fromRoot("packages/astropress/tests/content-modeling.test.ts");
 
 const REQUIRED_FIELD_TYPES = [
 	"text",
@@ -54,9 +41,7 @@ async function main() {
 				src,
 			)
 		) {
-			report.add(
-				`[missing-export] ${contentModelingRel} does not export validateContentFields`,
-			);
+			report.add(`[missing-export] ${contentModelingRel} does not export validateContentFields`);
 		}
 	}
 
@@ -107,9 +92,7 @@ async function main() {
 		);
 	}
 
-	report.finish(
-		"content-modeling audit passed — content modeling subsystem verified.",
-	);
+	report.finish("content-modeling audit passed — content modeling subsystem verified.");
 }
 
 runAudit("content-modeling", main);

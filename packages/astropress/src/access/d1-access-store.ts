@@ -23,9 +23,7 @@ export async function loadAccessSnapshotFromD1(
 	email: string,
 ): Promise<AccessSnapshot | null> {
 	const userRow = await db
-		.prepare(
-			"SELECT id, is_admin FROM admin_users WHERE email = ? AND active = 1 LIMIT 1",
-		)
+		.prepare("SELECT id, is_admin FROM admin_users WHERE email = ? AND active = 1 LIMIT 1")
 		.bind(email)
 		.first<{ id: number; is_admin: number }>();
 	if (!userRow) return null;
@@ -33,37 +31,34 @@ export async function loadAccessSnapshotFromD1(
 	const userId = userRow.id;
 	const isAdmin = userRow.is_admin === 1;
 
-	const [roleRows, attrRows, rolePolicyRows, userPolicyRows] =
-		await Promise.all([
-			db
-				.prepare(
-					"SELECT r.id, r.name FROM access_user_roles ur JOIN access_roles r ON r.id = ur.role_id WHERE ur.user_id = ?",
-				)
-				.bind(userId)
-				.all<{ id: string; name: string }>(),
-			db
-				.prepare(
-					"SELECT key, value FROM access_user_attributes WHERE user_id = ?",
-				)
-				.bind(userId)
-				.all<{ key: string; value: string }>(),
-			db
-				.prepare(
-					`SELECT rp.id, rp.role_id, rp.effect, rp.action, rp.condition_json, rp.priority, r.name AS role_name
+	const [roleRows, attrRows, rolePolicyRows, userPolicyRows] = await Promise.all([
+		db
+			.prepare(
+				"SELECT r.id, r.name FROM access_user_roles ur JOIN access_roles r ON r.id = ur.role_id WHERE ur.user_id = ?",
+			)
+			.bind(userId)
+			.all<{ id: string; name: string }>(),
+		db
+			.prepare("SELECT key, value FROM access_user_attributes WHERE user_id = ?")
+			.bind(userId)
+			.all<{ key: string; value: string }>(),
+		db
+			.prepare(
+				`SELECT rp.id, rp.role_id, rp.effect, rp.action, rp.condition_json, rp.priority, r.name AS role_name
 					 FROM access_role_policies rp
 					 JOIN access_user_roles ur ON ur.role_id = rp.role_id
 					 JOIN access_roles r ON r.id = rp.role_id
 					 WHERE ur.user_id = ?`,
-				)
-				.bind(userId)
-				.all<RolePolicyRow>(),
-			db
-				.prepare(
-					"SELECT id, effect, action, condition_json, priority FROM access_user_policies WHERE user_id = ?",
-				)
-				.bind(userId)
-				.all<UserPolicyRow>(),
-		]);
+			)
+			.bind(userId)
+			.all<RolePolicyRow>(),
+		db
+			.prepare(
+				"SELECT id, effect, action, condition_json, priority FROM access_user_policies WHERE user_id = ?",
+			)
+			.bind(userId)
+			.all<UserPolicyRow>(),
+	]);
 
 	const roleIds = (roleRows.results ?? []).map((r) => r.id);
 	const attributes: Record<string, AttributeValue> = {};
@@ -77,9 +72,7 @@ export async function loadAccessSnapshotFromD1(
 			id: rp.id,
 			effect: rp.effect,
 			action: rp.action,
-			condition: rp.condition_json
-				? (JSON.parse(rp.condition_json) as Condition)
-				: undefined,
+			condition: rp.condition_json ? (JSON.parse(rp.condition_json) as Condition) : undefined,
 			priority: rp.priority,
 			source: { kind: "role", roleId: rp.role_id, roleName: rp.role_name },
 		});
@@ -89,9 +82,7 @@ export async function loadAccessSnapshotFromD1(
 			id: up.id,
 			effect: up.effect,
 			action: up.action,
-			condition: up.condition_json
-				? (JSON.parse(up.condition_json) as Condition)
-				: undefined,
+			condition: up.condition_json ? (JSON.parse(up.condition_json) as Condition) : undefined,
 			priority: up.priority,
 			source: { kind: "direct" },
 		});

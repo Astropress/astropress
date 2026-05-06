@@ -11,9 +11,7 @@ if (model.status === "forbidden") {
 	Astro.response.status = 403;
 }
 const errorMessage =
-	Astro.url.searchParams.get("error") === "1"
-		? Astro.url.searchParams.get("message")
-		: "";
+	Astro.url.searchParams.get("error") === "1" ? Astro.url.searchParams.get("message") : "";
 const wasSaved = Astro.url.searchParams.get("saved") === "1";
 
 const errorPage = routeMap.get("/500");

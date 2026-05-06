@@ -4,12 +4,7 @@ export interface AstropressAuthorRepositoryInput {
 	listAuthors: AuthorRepository["listAuthors"];
 	slugifyTerm(value: string): string;
 	createAuthor(input: { slug: string; name: string; bio: string }): boolean;
-	updateAuthor(input: {
-		id: number;
-		slug: string;
-		name: string;
-		bio: string;
-	}): boolean;
+	updateAuthor(input: { id: number; slug: string; name: string; bio: string }): boolean;
 	deleteAuthor(id: number): boolean;
 	recordAuthorAudit(input: {
 		actor: Actor;

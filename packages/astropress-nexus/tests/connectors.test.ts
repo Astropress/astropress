@@ -78,28 +78,20 @@ describe("POST /connectors/cloudways/discover", () => {
 
 	it("returns 422 when email is missing", async () => {
 		const app = createNexusApp({ config: testConfig, authToken: ORG_TOKEN });
-		const { status, body } = await callApp(
-			app,
-			"/connectors/cloudways/discover",
-			{
-				token: ORG_TOKEN,
-				body: { apiKey: "key123" },
-			},
-		);
+		const { status, body } = await callApp(app, "/connectors/cloudways/discover", {
+			token: ORG_TOKEN,
+			body: { apiKey: "key123" },
+		});
 		expect(status).toBe(422);
 		expect((body as Record<string, unknown>).error).toMatch(/email/);
 	});
 
 	it("returns 422 when apiKey is missing", async () => {
 		const app = createNexusApp({ config: testConfig, authToken: ORG_TOKEN });
-		const { status, body } = await callApp(
-			app,
-			"/connectors/cloudways/discover",
-			{
-				token: ORG_TOKEN,
-				body: { email: "user@example.com" },
-			},
-		);
+		const { status, body } = await callApp(app, "/connectors/cloudways/discover", {
+			token: ORG_TOKEN,
+			body: { email: "user@example.com" },
+		});
 		expect(status).toBe(422);
 		expect((body as Record<string, unknown>).error).toMatch(/apiKey/);
 	});
@@ -127,14 +119,10 @@ describe("POST /connectors/cloudways/discover", () => {
 		);
 
 		const app = createNexusApp({ config: testConfig, authToken: ORG_TOKEN });
-		const { status, body } = await callApp(
-			app,
-			"/connectors/cloudways/discover",
-			{
-				token: ORG_TOKEN,
-				body: { email: "user@example.com", apiKey: "key123" },
-			},
-		);
+		const { status, body } = await callApp(app, "/connectors/cloudways/discover", {
+			token: ORG_TOKEN,
+			body: { email: "user@example.com", apiKey: "key123" },
+		});
 		expect(status).toBe(200);
 		expect((body as { sites: unknown[] }).sites).toHaveLength(0);
 	});
@@ -174,17 +162,12 @@ describe("POST /connectors/cloudways/discover", () => {
 		);
 
 		const app = createNexusApp({ config: testConfig, authToken: ORG_TOKEN });
-		const { status, body } = await callApp(
-			app,
-			"/connectors/cloudways/discover",
-			{
-				token: ORG_TOKEN,
-				body: { email: "user@example.com", apiKey: "key123" },
-			},
-		);
+		const { status, body } = await callApp(app, "/connectors/cloudways/discover", {
+			token: ORG_TOKEN,
+			body: { email: "user@example.com", apiKey: "key123" },
+		});
 		expect(status).toBe(200);
-		const sites = (body as { sites: Array<{ siteUrl: string; name: string }> })
-			.sites;
+		const sites = (body as { sites: Array<{ siteUrl: string; name: string }> }).sites;
 		// wordpress and woocommerce are both WordPress-based
 		expect(sites).toHaveLength(2);
 		expect(sites[0].siteUrl).toBe("https://blog.example.com");
@@ -209,9 +192,7 @@ describe("POST /connectors/cloudways/discover", () => {
 	it("returns 502 when Cloudways returns 401", async () => {
 		vi.stubGlobal(
 			"fetch",
-			makeSequentialFetchMock([
-				{ ok: false, status: 401, body: { error: "Invalid credentials" } },
-			]),
+			makeSequentialFetchMock([{ ok: false, status: 401, body: { error: "Invalid credentials" } }]),
 		);
 		const app = createNexusApp({ config: testConfig, authToken: ORG_TOKEN });
 		const { status } = await callApp(app, "/connectors/cloudways/discover", {
@@ -268,10 +249,7 @@ describe("POST /connectors/cpanel/discover", () => {
 	});
 
 	it("returns empty sites array for 0 WordPress installations", async () => {
-		vi.stubGlobal(
-			"fetch",
-			makeSequentialFetchMock([{ ok: true, status: 200, body: [] }]),
-		);
+		vi.stubGlobal("fetch", makeSequentialFetchMock([{ ok: true, status: 200, body: [] }]));
 		const app = createNexusApp({ config: testConfig, authToken: ORG_TOKEN });
 		const { status, body } = await callApp(app, "/connectors/cpanel/discover", {
 			token: ORG_TOKEN,
@@ -391,8 +369,7 @@ describe("POST /connectors/hpanel/discover", () => {
 			body: { accessToken: "hpanel-oauth-token" },
 		});
 		expect(status).toBe(200);
-		const sites = (body as { sites: Array<{ siteUrl: string; name: string }> })
-			.sites;
+		const sites = (body as { sites: Array<{ siteUrl: string; name: string }> }).sites;
 		expect(sites).toHaveLength(2);
 		expect(sites[0].siteUrl).toBe("https://myblog.example.com");
 		expect(sites[1].siteUrl).toBe("https://myshop.example.com");
@@ -431,9 +408,7 @@ describe("POST /connectors/hpanel/discover", () => {
 	it("returns 502 when hPanel returns 401 (expired token)", async () => {
 		vi.stubGlobal(
 			"fetch",
-			makeSequentialFetchMock([
-				{ ok: false, status: 401, body: { message: "Unauthorized" } },
-			]),
+			makeSequentialFetchMock([{ ok: false, status: 401, body: { message: "Unauthorized" } }]),
 		);
 		const app = createNexusApp({ config: testConfig, authToken: ORG_TOKEN });
 		const { status } = await callApp(app, "/connectors/hpanel/discover", {

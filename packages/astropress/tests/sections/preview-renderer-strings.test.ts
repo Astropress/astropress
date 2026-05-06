@@ -288,9 +288,7 @@ describe("preview testimonials branches", () => {
 			],
 			{
 				...ctx,
-				testimonials: [
-					{ id: "x", name: "X", quote: "q", role: "Eng", status: "approved" },
-				],
+				testimonials: [{ id: "x", name: "X", quote: "q", role: "Eng", status: "approved" }],
 			},
 		);
 		expect(html).toContain("Eng");
@@ -390,10 +388,7 @@ describe("preview cta-banner exact attributes", () => {
 
 describe("preview faq + gallery exact attributes", () => {
 	it("faq heading class is ap-faq__heading", () => {
-		const html = renderSectionsDocument(
-			[{ id: "f", kind: "faq", items: [], heading: "Q" }],
-			ctx,
-		);
+		const html = renderSectionsDocument([{ id: "f", kind: "faq", items: [], heading: "Q" }], ctx);
 		expect(html).toContain('<h2 class="ap-faq__heading">Q</h2>');
 	});
 

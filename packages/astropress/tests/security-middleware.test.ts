@@ -6,113 +6,71 @@ import {
 
 describe("resolveAstropressSecurityArea", () => {
 	it("returns public for root path", () => {
-		expect(resolveAstropressSecurityArea(new URL("http://localhost/"))).toBe(
+		expect(resolveAstropressSecurityArea(new URL("http://localhost/"))).toBe("public");
+	});
+
+	it("returns public for non-admin paths", () => {
+		expect(resolveAstropressSecurityArea(new URL("http://localhost/about"))).toBe("public");
+		expect(resolveAstropressSecurityArea(new URL("http://localhost/blog/post-slug"))).toBe(
 			"public",
 		);
 	});
 
-	it("returns public for non-admin paths", () => {
-		expect(
-			resolveAstropressSecurityArea(new URL("http://localhost/about")),
-		).toBe("public");
-		expect(
-			resolveAstropressSecurityArea(new URL("http://localhost/blog/post-slug")),
-		).toBe("public");
-	});
-
 	it("returns auth for /ap-admin/login", () => {
-		expect(
-			resolveAstropressSecurityArea(new URL("http://localhost/ap-admin/login")),
-		).toBe("auth");
+		expect(resolveAstropressSecurityArea(new URL("http://localhost/ap-admin/login"))).toBe("auth");
 	});
 
 	it("returns auth for /ap-admin/reset-password", () => {
-		expect(
-			resolveAstropressSecurityArea(
-				new URL("http://localhost/ap-admin/reset-password"),
-			),
-		).toBe("auth");
+		expect(resolveAstropressSecurityArea(new URL("http://localhost/ap-admin/reset-password"))).toBe(
+			"auth",
+		);
 	});
 
 	it("returns auth for /ap-admin/accept-invite", () => {
-		expect(
-			resolveAstropressSecurityArea(
-				new URL("http://localhost/ap-admin/accept-invite"),
-			),
-		).toBe("auth");
+		expect(resolveAstropressSecurityArea(new URL("http://localhost/ap-admin/accept-invite"))).toBe(
+			"auth",
+		);
 	});
 
 	it("returns api for paths under /ap-admin/actions/", () => {
 		expect(
-			resolveAstropressSecurityArea(
-				new URL("http://localhost/ap-admin/actions/save-post"),
-			),
+			resolveAstropressSecurityArea(new URL("http://localhost/ap-admin/actions/save-post")),
 		).toBe("api");
 		expect(
-			resolveAstropressSecurityArea(
-				new URL("http://localhost/ap-admin/actions/redirect-create"),
-			),
+			resolveAstropressSecurityArea(new URL("http://localhost/ap-admin/actions/redirect-create")),
 		).toBe("api");
 	});
 
 	it("returns admin for other /ap-admin paths", () => {
-		expect(
-			resolveAstropressSecurityArea(
-				new URL("http://localhost/ap-admin/settings"),
-			),
-		).toBe("admin");
-		expect(
-			resolveAstropressSecurityArea(new URL("http://localhost/ap-admin/users")),
-		).toBe("admin");
-		expect(
-			resolveAstropressSecurityArea(new URL("http://localhost/ap-admin/posts")),
-		).toBe("admin");
+		expect(resolveAstropressSecurityArea(new URL("http://localhost/ap-admin/settings"))).toBe(
+			"admin",
+		);
+		expect(resolveAstropressSecurityArea(new URL("http://localhost/ap-admin/users"))).toBe("admin");
+		expect(resolveAstropressSecurityArea(new URL("http://localhost/ap-admin/posts"))).toBe("admin");
 	});
 
 	it("supports a custom adminBasePath", () => {
+		expect(resolveAstropressSecurityArea(new URL("http://localhost/admin/login"), "/admin")).toBe(
+			"auth",
+		);
 		expect(
-			resolveAstropressSecurityArea(
-				new URL("http://localhost/admin/login"),
-				"/admin",
-			),
-		).toBe("auth");
-		expect(
-			resolveAstropressSecurityArea(
-				new URL("http://localhost/admin/settings"),
-				"/admin",
-			),
+			resolveAstropressSecurityArea(new URL("http://localhost/admin/settings"), "/admin"),
 		).toBe("admin");
 		expect(
-			resolveAstropressSecurityArea(
-				new URL("http://localhost/ap-admin/login"),
-				"/admin",
-			),
+			resolveAstropressSecurityArea(new URL("http://localhost/ap-admin/login"), "/admin"),
 		).toBe("public");
 	});
 
 	it("returns api for /ap-api/ paths regardless of adminBasePath", () => {
 		// The /ap-api/ prefix check runs BEFORE the adminBasePath check
-		expect(
-			resolveAstropressSecurityArea(
-				new URL("http://localhost/ap-api/v1/content"),
-			),
-		).toBe("api");
-		expect(
-			resolveAstropressSecurityArea(
-				new URL("http://localhost/ap-api/v1/media"),
-			),
-		).toBe("api");
-		expect(
-			resolveAstropressSecurityArea(
-				new URL("http://localhost/ap-api/v1/health"),
-			),
-		).toBe("api");
+		expect(resolveAstropressSecurityArea(new URL("http://localhost/ap-api/v1/content"))).toBe(
+			"api",
+		);
+		expect(resolveAstropressSecurityArea(new URL("http://localhost/ap-api/v1/media"))).toBe("api");
+		expect(resolveAstropressSecurityArea(new URL("http://localhost/ap-api/v1/health"))).toBe("api");
 		// Custom adminBasePath does not affect /ap-api/ classification
 		expect(
-			resolveAstropressSecurityArea(
-				new URL("http://localhost/ap-api/v1/content"),
-				"/admin",
-			),
+			resolveAstropressSecurityArea(new URL("http://localhost/ap-api/v1/content"), "/admin"),
 		).toBe("api");
 	});
 });
@@ -124,10 +82,7 @@ describe("createAstropressSecurityMiddleware", () => {
 
 	it("applies security headers to the response", async () => {
 		const middleware = createAstropressSecurityMiddleware();
-		const response = await middleware(
-			{ url: new URL("http://localhost/") },
-			makeNext(),
-		);
+		const response = await middleware({ url: new URL("http://localhost/") }, makeNext());
 		expect(response.headers.get("content-security-policy")).toBeTruthy();
 		expect(response.headers.get("x-content-type-options")).toBe("nosniff");
 	});
@@ -136,9 +91,7 @@ describe("createAstropressSecurityMiddleware", () => {
 		const resolveArea = vi.fn(() => "api" as const);
 		const middleware = createAstropressSecurityMiddleware({ resolveArea });
 		await middleware({ url: new URL("http://localhost/custom") }, makeNext());
-		expect(resolveArea).toHaveBeenCalledWith(
-			new URL("http://localhost/custom"),
-		);
+		expect(resolveArea).toHaveBeenCalledWith(new URL("http://localhost/custom"));
 	});
 
 	it("falls back to resolveAstropressSecurityArea when resolveArea is not provided", async () => {
@@ -157,24 +110,15 @@ describe("createAstropressSecurityMiddleware", () => {
 
 	it("public area CSP permits https: in form-action", async () => {
 		const middleware = createAstropressSecurityMiddleware();
-		const response = await middleware(
-			{ url: new URL("http://localhost/") },
-			makeNext(),
-		);
+		const response = await middleware({ url: new URL("http://localhost/") }, makeNext());
 		const csp = response.headers.get("content-security-policy") ?? "";
 		expect(csp).toContain("form-action 'self' https:");
 	});
 
 	it("attaches a unique X-Request-Id header to every response", async () => {
 		const middleware = createAstropressSecurityMiddleware();
-		const r1 = await middleware(
-			{ url: new URL("http://localhost/") },
-			makeNext(),
-		);
-		const r2 = await middleware(
-			{ url: new URL("http://localhost/") },
-			makeNext(),
-		);
+		const r1 = await middleware({ url: new URL("http://localhost/") }, makeNext());
+		const r2 = await middleware({ url: new URL("http://localhost/") }, makeNext());
 		const id1 = r1.headers.get("x-request-id");
 		const id2 = r2.headers.get("x-request-id");
 		expect(id1).toBeTruthy();
@@ -196,23 +140,15 @@ describe("createAstropressSecurityMiddleware", () => {
 
 	it("applies forceHsts option when set", async () => {
 		const middleware = createAstropressSecurityMiddleware({ forceHsts: true });
-		const response = await middleware(
-			{ url: new URL("http://localhost/") },
-			makeNext(),
-		);
-		expect(response.headers.get("strict-transport-security")).toContain(
-			"max-age=31536000",
-		);
+		const response = await middleware({ url: new URL("http://localhost/") }, makeNext());
+		expect(response.headers.get("strict-transport-security")).toContain("max-age=31536000");
 	});
 
 	it("applies frameAncestors option to X-Frame-Options", async () => {
 		const middleware = createAstropressSecurityMiddleware({
 			frameAncestors: "'self'",
 		});
-		const response = await middleware(
-			{ url: new URL("http://localhost/") },
-			makeNext(),
-		);
+		const response = await middleware({ url: new URL("http://localhost/") }, makeNext());
 		expect(response.headers.get("x-frame-options")).toBe("SAMEORIGIN");
 	});
 
@@ -223,9 +159,7 @@ describe("createAstropressSecurityMiddleware", () => {
 			makeNext(),
 		);
 		// API area: Cross-Origin-Resource-Policy must be set
-		expect(response.headers.get("cross-origin-resource-policy")).toBe(
-			"same-site",
-		);
+		expect(response.headers.get("cross-origin-resource-policy")).toBe("same-site");
 		// API area: Cache-Control must be no-store
 		expect(response.headers.get("cache-control")).toBe("private, no-store");
 	});
@@ -257,11 +191,7 @@ describe("createAstropressSecurityMiddleware", () => {
 			{ url: new URL("http://localhost/ap-admin/reset-password") },
 			makeNext(),
 		);
-		expect(loginResponse.headers.get("content-security-policy")).toContain(
-			"'unsafe-inline'",
-		);
-		expect(resetResponse.headers.get("content-security-policy")).toContain(
-			"'unsafe-inline'",
-		);
+		expect(loginResponse.headers.get("content-security-policy")).toContain("'unsafe-inline'");
+		expect(resetResponse.headers.get("content-security-policy")).toContain("'unsafe-inline'");
 	});
 });

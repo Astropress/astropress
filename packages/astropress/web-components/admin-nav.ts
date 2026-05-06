@@ -63,10 +63,7 @@ export class ApAdminNav extends HTMLElement {
 	private _close(toggle: HTMLButtonElement, sidebar: HTMLElement) {
 		sidebar.removeAttribute("data-open");
 		toggle.setAttribute("aria-expanded", "false");
-		toggle.setAttribute(
-			"aria-label",
-			toggle.getAttribute("data-label-open") ?? "Open navigation",
-		);
+		toggle.setAttribute("aria-label", toggle.getAttribute("data-label-open") ?? "Open navigation");
 	}
 }
 

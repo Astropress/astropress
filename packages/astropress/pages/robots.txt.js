@@ -7,12 +7,7 @@
 export const GET = async ({ request }) => {
 	const origin = new URL(request.url).origin;
 
-	const content = [
-		"User-agent: *",
-		"Allow: /",
-		"",
-		`Sitemap: ${origin}/sitemap.xml`,
-	].join("\n");
+	const content = ["User-agent: *", "Allow: /", "", `Sitemap: ${origin}/sitemap.xml`].join("\n");
 
 	return new Response(content, {
 		headers: {

@@ -20,9 +20,7 @@ const OUT = "tooling/audit-output/source-test-pairing.json";
 
 function lines(cmd: string): string[] {
 	try {
-		return execFileSync("bash", ["-c", cmd], { encoding: "utf8" })
-			.split("\n")
-			.filter(Boolean);
+		return execFileSync("bash", ["-c", cmd], { encoding: "utf8" }).split("\n").filter(Boolean);
 	} catch {
 		return [];
 	}
@@ -92,9 +90,7 @@ function tsAudit(): {
 	const unpairedSrc = srcFiles
 		.filter((p) => {
 			const base = basename(p, ".ts");
-			const rel = p
-				.replace(new RegExp(`^(?:${SRC}|${WC})/`), "")
-				.replace(/\.ts$/, "");
+			const rel = p.replace(new RegExp(`^(?:${SRC}|${WC})/`), "").replace(/\.ts$/, "");
 			const candidates = new Set<string>([
 				base,
 				rel,
@@ -102,10 +98,8 @@ function tsAudit(): {
 				base.replace(/-helpers$|-utils$|-factory$|-impl$|-commons$/, ""),
 			]);
 			const parts = base.split("-");
-			for (let i = 1; i < parts.length; i++)
-				candidates.add(parts.slice(i).join("-"));
-			for (let i = parts.length - 1; i >= 1; i--)
-				candidates.add(parts.slice(0, i).join("-"));
+			for (let i = 1; i < parts.length; i++) candidates.add(parts.slice(i).join("-"));
+			for (let i = parts.length - 1; i >= 1; i--) candidates.add(parts.slice(0, i).join("-"));
 			if ([...candidates].some((c) => testTokens.has(c))) return false;
 			const subdir = rel.includes("/") ? rel.split("/")[0] : null;
 			if (subdir && testSubdirPrefixes.has(subdir)) return false;
@@ -118,9 +112,7 @@ function tsAudit(): {
 	const srcKeys = new Set<string>();
 	for (const s of srcFiles) {
 		const base = basename(s, ".ts");
-		const rel = s
-			.replace(new RegExp(`^(?:${SRC}|${WC})/`), "")
-			.replace(/\.ts$/, "");
+		const rel = s.replace(new RegExp(`^(?:${SRC}|${WC})/`), "").replace(/\.ts$/, "");
 		srcKeys.add(base);
 		srcKeys.add(rel);
 		srcKeys.add(rel.replace(/\//g, "-"));
@@ -134,9 +126,7 @@ function tsAudit(): {
 	const srcSubdirs = new Set<string>();
 	for (const s of srcFiles) {
 		const base = basename(s, ".ts");
-		const rel = s
-			.replace(new RegExp(`^(?:${SRC}|${WC})/`), "")
-			.replace(/\.ts$/, "");
+		const rel = s.replace(new RegExp(`^(?:${SRC}|${WC})/`), "").replace(/\.ts$/, "");
 		const setKey = base.split("-").sort().join("|");
 		srcWordSets.set(setKey, base);
 		if (rel.includes("/")) srcSubdirs.add(rel.split("/")[0]);
@@ -207,10 +197,8 @@ function rustAudit(): {
 		const base = basename(p, ".rs");
 		integTests.add(base);
 		const parts = base.split("_");
-		for (let i = 1; i < parts.length; i++)
-			integTests.add(parts.slice(i).join("_"));
-		for (let i = parts.length - 1; i >= 1; i--)
-			integTests.add(parts.slice(0, i).join("_"));
+		for (let i = 1; i < parts.length; i++) integTests.add(parts.slice(i).join("_"));
+		for (let i = parts.length - 1; i >= 1; i--) integTests.add(parts.slice(0, i).join("_"));
 	}
 	const fileContent = new Map<string, string>();
 	for (const p of srcFiles) {
@@ -279,10 +267,7 @@ function rustAudit(): {
 			// auth.rs, then args.rs, then cli_config.rs.
 			for (let i = segments.length; i > 0; i--) {
 				const sub = segments.slice(0, i);
-				const candidates = [
-					`${SRC}/${sub.join("/")}.rs`,
-					`${SRC}/${sub.join("/")}/mod.rs`,
-				];
+				const candidates = [`${SRC}/${sub.join("/")}.rs`, `${SRC}/${sub.join("/")}/mod.rs`];
 				for (const c of candidates) {
 					if (fileContent.has(c)) usePaired.add(c);
 				}
@@ -305,10 +290,8 @@ function rustAudit(): {
 		// `import_wordpress.rs` / `import.rs`.
 		const candidates = new Set<string>([base]);
 		const parts = base.split("_");
-		for (let i = 1; i < parts.length; i++)
-			candidates.add(parts.slice(i).join("_"));
-		for (let i = parts.length - 1; i >= 1; i--)
-			candidates.add(parts.slice(0, i).join("_"));
+		for (let i = 1; i < parts.length; i++) candidates.add(parts.slice(i).join("_"));
+		for (let i = parts.length - 1; i >= 1; i--) candidates.add(parts.slice(0, i).join("_"));
 		if ([...candidates].some((c) => integTests.has(c))) continue;
 		const content = fileContent.get(p) ?? "";
 		if (content.includes("#[cfg(test)]")) {
@@ -326,9 +309,7 @@ function rustAudit(): {
 		// — these are help/docs/stub print-only files with no testable
 		// logic. Already excluded from mutation testing; pairing tests
 		// for them would add no end-user value.
-		const fnDecls = (
-			content.match(/(?:^|\n)\s*(?:pub(?:\([^)]*\))?\s+)?fn\s+\w+/g) ?? []
-		).length;
+		const fnDecls = (content.match(/(?:^|\n)\s*(?:pub(?:\([^)]*\))?\s+)?fn\s+\w+/g) ?? []).length;
 		const skipMarks = (content.match(/#\[mutants::skip\]/g) ?? []).length;
 		if (fnDecls > 0 && skipMarks >= fnDecls) {
 			intestSrc++;

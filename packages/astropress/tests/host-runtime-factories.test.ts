@@ -197,15 +197,13 @@ describe("host runtime factories", () => {
 	});
 
 	it("creates a password auth module from an authenticate function", async () => {
-		const authModule = createAstropressPasswordAuthModule(
-			async (email, password) => {
-				if (email === "admin@example.com" && password === "secret") {
-					return { email, role: "admin", name: "Admin" };
-				}
+		const authModule = createAstropressPasswordAuthModule(async (email, password) => {
+			if (email === "admin@example.com" && password === "secret") {
+				return { email, role: "admin", name: "Admin" };
+			}
 
-				return null;
-			},
-		);
+			return null;
+		});
 
 		await expect(
 			authModule.authenticateAdminUser("admin@example.com", "secret"),
@@ -505,16 +503,11 @@ describe("host runtime factories", () => {
 			}),
 		});
 
-		expect(
-			bundle.localAdminStoreModule.getSessionUser("session"),
-		).toMatchObject({
+		expect(bundle.localAdminStoreModule.getSessionUser("session")).toMatchObject({
 			email: "admin@example.com",
 		});
 		await expect(
-			bundle.localAdminAuthModule.authenticateAdminUser(
-				"admin@example.com",
-				"secret",
-			),
+			bundle.localAdminAuthModule.authenticateAdminUser("admin@example.com", "secret"),
 		).resolves.toMatchObject({
 			email: "admin@example.com",
 		});

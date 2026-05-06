@@ -80,9 +80,7 @@ export class ApHtmlEditor extends HTMLElement {
 		// Multi-tab safety: warn if this post is already open in another tab
 		const slug =
 			this.getAttribute("data-slug") ??
-			this.querySelector<HTMLFormElement>("form[action]")
-				?.action?.split("/")
-				.at(-1) ??
+			this.querySelector<HTMLFormElement>("form[action]")?.action?.split("/").at(-1) ??
 			"";
 
 		if (slug && typeof BroadcastChannel !== "undefined") {
@@ -102,29 +100,17 @@ export class ApHtmlEditor extends HTMLElement {
 			});
 		}
 
-		const editor =
-			this.querySelector<HTMLTextAreaElement>("[data-body-editor]");
-		const preview = this.querySelector<HTMLIFrameElement>(
-			".preview-frame iframe",
-		);
-		const toolbar = this.querySelector<HTMLElement>(
-			'[role="toolbar"][aria-label="Format body"]',
-		);
-		const mediaButton =
-			this.querySelector<HTMLButtonElement>(".insert-media-btn");
-		const mediaDialog = this.querySelector<HTMLDialogElement>(
-			"#media-library-dialog",
-		);
+		const editor = this.querySelector<HTMLTextAreaElement>("[data-body-editor]");
+		const preview = this.querySelector<HTMLIFrameElement>(".preview-frame iframe");
+		const toolbar = this.querySelector<HTMLElement>('[role="toolbar"][aria-label="Format body"]');
+		const mediaButton = this.querySelector<HTMLButtonElement>(".insert-media-btn");
+		const mediaDialog = this.querySelector<HTMLDialogElement>("#media-library-dialog");
 		const mediaClose = this.querySelector<HTMLElement>("#media-dialog-close");
-		const urlDialog =
-			this.querySelector<HTMLDialogElement>("#url-input-dialog");
+		const urlDialog = this.querySelector<HTMLDialogElement>("#url-input-dialog");
 		const urlField = this.querySelector<HTMLInputElement>("#url-input-field");
 		const urlForm = this.querySelector<HTMLFormElement>("#url-input-form");
 
-		const trapDialogFocus = (
-			dialog: HTMLDialogElement,
-			event: KeyboardEvent,
-		) => {
+		const trapDialogFocus = (dialog: HTMLDialogElement, event: KeyboardEvent) => {
 			if (event.key !== "Tab") {
 				return;
 			}
@@ -163,11 +149,7 @@ export class ApHtmlEditor extends HTMLElement {
 				return;
 			}
 
-			dialog.addEventListener(
-				"keydown",
-				(event) => trapDialogFocus(dialog, event),
-				{ signal },
-			);
+			dialog.addEventListener("keydown", (event) => trapDialogFocus(dialog, event), { signal });
 			dialog.addEventListener("close", () => restoreFocus?.focus(), { signal });
 			dialog.addEventListener("cancel", () => restoreFocus?.focus(), {
 				signal,
@@ -176,11 +158,7 @@ export class ApHtmlEditor extends HTMLElement {
 				"transitionend",
 				() => {
 					if (dialog.open) {
-						(
-							initialFocus ??
-							this.getFocusableElements(dialog)[0] ??
-							dialog
-						).focus();
+						(initialFocus ?? this.getFocusableElements(dialog)[0] ?? dialog).focus();
 					}
 				},
 				{ signal },
@@ -193,11 +171,7 @@ export class ApHtmlEditor extends HTMLElement {
 			}
 		};
 
-		const wrapSelection = (
-			prefix: string,
-			suffix: string,
-			placeholder: string,
-		) => {
+		const wrapSelection = (prefix: string, suffix: string, placeholder: string) => {
 			if (!editor) {
 				return;
 			}
@@ -205,15 +179,8 @@ export class ApHtmlEditor extends HTMLElement {
 			const end = editor.selectionEnd;
 			const selected = editor.value.slice(start, end) || placeholder;
 			editor.value =
-				editor.value.slice(0, start) +
-				prefix +
-				selected +
-				suffix +
-				editor.value.slice(end);
-			editor.setSelectionRange(
-				start + prefix.length,
-				start + prefix.length + selected.length,
-			);
+				editor.value.slice(0, start) + prefix + selected + suffix + editor.value.slice(end);
+			editor.setSelectionRange(start + prefix.length, start + prefix.length + selected.length);
 			editor.focus();
 			syncPreview();
 		};
@@ -263,11 +230,7 @@ export class ApHtmlEditor extends HTMLElement {
 				// We read the field value before the browser closes the dialog
 				const url = urlField?.value?.trim() ?? "";
 				if (url) {
-					wrapSelection(
-						`<a href="${url.replaceAll('"', "&quot;")}">`,
-						"</a>",
-						"Link text",
-					);
+					wrapSelection(`<a href="${url.replaceAll('"', "&quot;")}">`, "</a>", "Link text");
 				}
 			},
 			{ signal },

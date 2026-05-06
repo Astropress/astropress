@@ -78,9 +78,7 @@ export function createD1LocksOps(db: D1DatabaseLike) {
 		async refreshLock(slug: string, lockToken: string): Promise<boolean> {
 			const expiresAt = lockExpiresAt();
 			const result = await db
-				.prepare(
-					"UPDATE content_locks SET expires_at = ? WHERE slug = ? AND lock_token = ?",
-				)
+				.prepare("UPDATE content_locks SET expires_at = ? WHERE slug = ? AND lock_token = ?")
 				.bind(expiresAt, slug, lockToken)
 				.run();
 			return (result.meta?.changes ?? 0) > 0;

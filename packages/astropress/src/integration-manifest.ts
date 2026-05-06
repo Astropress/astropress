@@ -17,14 +17,10 @@ export {
 	type IntegrationStatus,
 } from "./integration-manifest-data";
 
-export function integrationsByStatus(
-	status: IntegrationStatus,
-): readonly IntegrationEntry[] {
+export function integrationsByStatus(status: IntegrationStatus): readonly IntegrationEntry[] {
 	return INTEGRATIONS.filter((entry) => entry.status === status);
 }
 
-export function findIntegrationByHref(
-	href: string,
-): IntegrationEntry | undefined {
+export function findIntegrationByHref(href: string): IntegrationEntry | undefined {
 	return INTEGRATIONS.find((entry) => entry.href === href);
 }

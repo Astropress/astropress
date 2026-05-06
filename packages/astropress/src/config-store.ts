@@ -28,9 +28,7 @@ export function peekCmsConfig(): CmsConfig | null {
 export function getCmsConfigOrThrow(): CmsConfig {
 	const config = getConfigStore()[CMS_CONFIG_KEY] ?? null;
 	if (!config) {
-		throw new Error(
-			"Astropress not initialized — call registerCms() before using astropress.",
-		);
+		throw new Error("Astropress not initialized — call registerCms() before using astropress.");
 	}
 	return config;
 }

@@ -60,7 +60,7 @@ export function getInboundWebhookProvider(
 	return registry.get(providerId);
 }
 
-export function listInboundWebhookProviders(): ReadonlyArray<InboundWebhookProviderDefinition> {
+export function listInboundWebhookProviders(): readonly InboundWebhookProviderDefinition[] {
 	return Array.from(registry.values());
 }
 

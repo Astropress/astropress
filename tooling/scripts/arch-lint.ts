@@ -1,4 +1,4 @@
-import { readFile, readdir, stat } from "node:fs/promises";
+import { readdir, readFile, stat } from "node:fs/promises";
 import { join, relative } from "node:path";
 
 type Violation = {
@@ -35,9 +35,7 @@ async function main() {
 	const root = process.cwd();
 	const pkgDir = join(root, "packages/astropress");
 	const srcDir = join(pkgDir, "src");
-	const allFiles = (await walk(srcDir)).filter(
-		(f) => f.endsWith(".ts") && !f.endsWith(".d.ts"),
-	);
+	const allFiles = (await walk(srcDir)).filter((f) => f.endsWith(".ts") && !f.endsWith(".d.ts"));
 
 	const violations: Violation[] = [];
 	const warnings: Warning[] = [];
@@ -141,10 +139,7 @@ async function main() {
 
 		// --- Rule: Dependency direction ---
 		// d1-store-*.ts files must not import from runtime-*.ts (adapters don't depend on runtime layer)
-		if (
-			filename.startsWith("d1-store-") &&
-			/from\s+["']\.\/runtime-/.test(content)
-		) {
+		if (filename.startsWith("d1-store-") && /from\s+["']\.\/runtime-/.test(content)) {
 			violations.push({
 				file: display,
 				rule: "dependency-direction",
@@ -163,10 +158,7 @@ async function main() {
 			"cloudflare-local-runtime-stubs.ts", // cloudflare stub — legitimate re-export
 			"host-runtime-modules.ts", // host bundle factory — legitimate consumer
 		]);
-		if (
-			!dispatchExempt.has(filename) &&
-			content.includes("loadLocalAdminStore()")
-		) {
+		if (!dispatchExempt.has(filename) && content.includes("loadLocalAdminStore()")) {
 			violations.push({
 				file: display,
 				rule: "dispatch-containment",
@@ -188,14 +180,11 @@ async function main() {
 			"import/",
 		];
 		const isUtilDefExempt =
-			utilDefExempt.has(filename) ||
-			utilDefExemptPatterns.some((p) => display.includes(p));
+			utilDefExempt.has(filename) || utilDefExemptPatterns.some((p) => display.includes(p));
 
 		if (
 			!isUtilDefExempt &&
-			/^(?:export\s+)?function\s+(?:normalizeEmail|normalizePath)\s*\(/m.test(
-				content,
-			)
+			/^(?:export\s+)?function\s+(?:normalizeEmail|normalizePath)\s*\(/m.test(content)
 		) {
 			violations.push({
 				file: display,
@@ -222,13 +211,7 @@ async function main() {
 		const measureComplexity = (name: string, body: string) => {
 			let complexity = 1;
 			// Count branching keywords/operators
-			const patterns = [
-				/\bif\s*\(/g,
-				/\belse\s+if\s*\(/g,
-				/\bcase\s+/g,
-				/\bcatch\s*\(/g,
-				/\?\?/g,
-			];
+			const patterns = [/\bif\s*\(/g, /\belse\s+if\s*\(/g, /\bcase\s+/g, /\bcatch\s*\(/g, /\?\?/g];
 			for (const p of patterns) {
 				const matches = body.match(p);
 				if (matches) complexity += matches.length;
@@ -274,8 +257,7 @@ async function main() {
 
 		for (let i = 0; i < funcStarts.length; i++) {
 			const start = funcStarts[i].line;
-			const end =
-				i + 1 < funcStarts.length ? funcStarts[i + 1].line : lines.length;
+			const end = i + 1 < funcStarts.length ? funcStarts[i + 1].line : lines.length;
 			const body = lines.slice(start, end).join("\n");
 			measureComplexity(funcStarts[i].name, body);
 		}
@@ -298,9 +280,7 @@ async function main() {
 			console.error(`  [${v.rule}] ${v.file}`);
 			console.error(`    ${v.message}\n`);
 		}
-		console.error(
-			`${violations.length} violation(s) found. Fix before committing.\n`,
-		);
+		console.error(`${violations.length} violation(s) found. Fix before committing.\n`);
 		process.exit(1);
 	}
 

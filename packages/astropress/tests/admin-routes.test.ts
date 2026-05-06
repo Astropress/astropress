@@ -132,25 +132,16 @@ describe("admin routes", () => {
 	});
 
 	it("builds an injection plan from the same canonical route inventory", () => {
-		expect(
-			createAstropressAdminRouteInjectionPlan(
-				"/fake/astropress/pages/ap-admin",
-			),
-		).toEqual(
+		expect(createAstropressAdminRouteInjectionPlan("/fake/astropress/pages/ap-admin")).toEqual(
 			resolveAstropressAdminRouteEntrypoints("/fake/astropress/pages/ap-admin"),
 		);
 	});
 
 	it("injects the full canonical route plan into a host callback", () => {
-		const injectedRoutes: ReturnType<
-			typeof createAstropressAdminRouteInjectionPlan
-		> = [];
-		const plan = injectAstropressAdminRoutes(
-			"/fake/astropress/pages/ap-admin",
-			(route) => {
-				injectedRoutes.push(route);
-			},
-		);
+		const injectedRoutes: ReturnType<typeof createAstropressAdminRouteInjectionPlan> = [];
+		const plan = injectAstropressAdminRoutes("/fake/astropress/pages/ap-admin", (route) => {
+			injectedRoutes.push(route);
+		});
 
 		expect(injectedRoutes).toEqual(plan);
 		expect(injectedRoutes).toHaveLength(93);

@@ -3,9 +3,9 @@ import AdminLayout from "@astropress-diy/astropress/components/AdminLayout.astro
 import {
 	buildPagesIndexPageModel,
 	getPageT,
+	isSeededPostRecord,
 	resolveAdminLocale,
 } from "astropress";
-import { isSeededPostRecord } from "astropress";
 
 const adminUser = Astro.locals.adminUser;
 const model = await buildPagesIndexPageModel(Astro.locals, adminUser);
@@ -84,12 +84,11 @@ const archivePages = archiveRows.map(({ archive, runtime }) => ({
 	ownerLabel: t("pages.editArchive"),
 }));
 
-const rows = [...legacyPages, ...structuredPages, ...archivePages].sort(
-	(left, right) => left.path.localeCompare(right.path),
+const rows = [...legacyPages, ...structuredPages, ...archivePages].sort((left, right) =>
+	left.path.localeCompare(right.path),
 );
 const filteredRows = rows.filter((row) => {
-	const matchesKind =
-		selectedKind === "all" || row.kind.toLowerCase() === selectedKind;
+	const matchesKind = selectedKind === "all" || row.kind.toLowerCase() === selectedKind;
 	const haystack = `${row.title} ${row.path} ${row.kind}`.toLowerCase();
 	const matchesSearch = !searchQuery || haystack.includes(searchQuery);
 	return matchesKind && matchesSearch;

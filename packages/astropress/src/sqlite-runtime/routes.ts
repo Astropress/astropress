@@ -7,6 +7,8 @@ import {
 	type AppendStructuredRevisionInput,
 	type ArchiveRouteRow,
 	type InsertStructuredInput,
+	mapArchiveRow,
+	mapStructuredPageRow,
 	type PersistArchiveInput,
 	type PersistStructuredInput,
 	SQL_FIND_ARCHIVE_FOR_UPDATE,
@@ -27,8 +29,6 @@ import {
 	type StructuredPageRow,
 	type SystemRouteRecord,
 	type SystemRouteRow,
-	mapArchiveRow,
-	mapStructuredPageRow,
 } from "./routes-helpers";
 import {
 	type AstropressSqliteDatabaseLike,
@@ -37,9 +37,7 @@ import {
 	parseSystemSettings,
 } from "./utils";
 
-function querySystemRoutes(
-	getDb: () => AstropressSqliteDatabaseLike,
-): SystemRouteRecord[] {
+function querySystemRoutes(getDb: () => AstropressSqliteDatabaseLike): SystemRouteRecord[] {
 	const rows = getDb().prepare(SQL_LIST_SYSTEM).all() as SystemRouteRow[];
 	return rows.map((row) => ({
 		path: row.path,
@@ -53,9 +51,7 @@ function querySystemRoutes(
 }
 
 function queryStructuredPageRoutes(getDb: () => AstropressSqliteDatabaseLike) {
-	const rows = getDb()
-		.prepare(SQL_LIST_STRUCTURED)
-		.all() as StructuredPageRow[];
+	const rows = getDb().prepare(SQL_LIST_STRUCTURED).all() as StructuredPageRow[];
 	return rows.map(mapStructuredPageRow).filter(Boolean) as ReturnType<
 		typeof mapStructuredPageRow
 	>[];
@@ -71,31 +67,21 @@ export function createSqliteRoutesStore(
 
 	function getSystemRoute(pathname: string) {
 		const normalizedPath = normalizeSystemRoutePath(pathname);
-		return (
-			listSystemRoutes().find((route) => route.path === normalizedPath) ?? null
-		);
+		return listSystemRoutes().find((route) => route.path === normalizedPath) ?? null;
 	}
 
 	function listStructuredPageRoutes() {
-		return queryStructuredPageRoutes(getDb).filter(
-			(r): r is NonNullable<typeof r> => r !== null,
-		);
+		return queryStructuredPageRoutes(getDb).filter((r): r is NonNullable<typeof r> => r !== null);
 	}
 
 	function getStructuredPageRoute(pathname: string) {
 		const normalizedPath = normalizeSystemRoutePath(pathname);
-		return (
-			listStructuredPageRoutes().find(
-				(route) => route.path === normalizedPath,
-			) ?? null
-		);
+		return listStructuredPageRoutes().find((route) => route.path === normalizedPath) ?? null;
 	}
 
 	function getArchiveRoute(pathname: string) {
 		const normalizedPath = normalizeSystemRoutePath(pathname);
-		const row = getDb().prepare(SQL_GET_ARCHIVE).get(normalizedPath) as
-			| ArchiveRouteRow
-			| undefined;
+		const row = getDb().prepare(SQL_GET_ARCHIVE).get(normalizedPath) as ArchiveRouteRow | undefined;
 		if (!row) return null;
 		return mapArchiveRow(row);
 	}
@@ -137,16 +123,7 @@ export function createSqliteRoutesStore(
 		}) {
 			getDb()
 				.prepare(SQL_PERSIST_SYSTEM)
-				.run(
-					title,
-					summary,
-					bodyHtml,
-					settingsJson,
-					title,
-					summary ?? title,
-					actor.email,
-					routeId,
-				);
+				.run(title, summary, bodyHtml, settingsJson, title, summary ?? title, actor.email, routeId);
 		},
 		appendSystemRouteRevision({
 			routeId,
@@ -375,7 +352,12 @@ export function createSqliteRoutesStore(
 			action,
 			summary,
 			targetId,
-		}: { actor: Actor; action: string; summary: string; targetId: string }) {
+		}: {
+			actor: Actor;
+			action: string;
+			summary: string;
+			targetId: string;
+		}) {
 			recordAudit(getDb(), actor, action, summary, "content", targetId);
 		},
 	});

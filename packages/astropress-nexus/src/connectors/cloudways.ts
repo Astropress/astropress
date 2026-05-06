@@ -1,11 +1,7 @@
 const CLOUDWAYS_API = "https://api.cloudways.com/api/v1";
 
 /** WordPress-based app types on the Cloudways platform. */
-const WORDPRESS_APP_TYPES = new Set([
-	"wordpress",
-	"woocommerce",
-	"wordpress_lite",
-]);
+const WORDPRESS_APP_TYPES = new Set(["wordpress", "woocommerce", "wordpress_lite"]);
 
 export type CloudwaysDiscoveryInput = {
 	email: string;
@@ -58,7 +54,7 @@ export async function discoverCloudwaySites(
 	const body = (await res.json()) as Record<string, unknown>;
 	const apps = Array.isArray(body.apps) ? body.apps : [];
 
-	return (apps as Array<Record<string, unknown>>)
+	return (apps as Record<string, unknown>[])
 		.filter((app) => {
 			const appType = (app.application as Record<string, unknown>)?.type;
 			return typeof appType === "string" && WORDPRESS_APP_TYPES.has(appType);

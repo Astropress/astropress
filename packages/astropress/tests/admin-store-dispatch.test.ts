@@ -26,12 +26,8 @@ vi.mock("../src/local-runtime-modules.js", () => ({
 
 beforeEach(async () => {
 	vi.resetModules();
-	({
-		withLocalStoreFallback,
-		withSafeLocalStoreFallback,
-		getAdminDb,
-		safeLoadLocalAdminStore,
-	} = await import("../src/admin-store-dispatch.js"));
+	({ withLocalStoreFallback, withSafeLocalStoreFallback, getAdminDb, safeLoadLocalAdminStore } =
+		await import("../src/admin-store-dispatch.js"));
 	mockLoadLocalAdminStore.mockReset();
 });
 

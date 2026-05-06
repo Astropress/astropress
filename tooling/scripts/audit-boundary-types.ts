@@ -24,12 +24,7 @@
  */
 
 import { execFileSync } from "node:child_process";
-import {
-	existsSync,
-	mkdirSync,
-	readFileSync,
-	writeFileSync,
-} from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname } from "node:path";
 
 const OUT = "tooling/audit-output/boundary-types.json";
@@ -98,25 +93,14 @@ function splitByPragma(matches: string[]): PragmaSplit {
 }
 
 const tsCastsOnError = splitByPragma(
-	rgLines(
-		"\\(\\s*err\\s+as\\s+\\{|\\(\\s*error\\s+as\\s+\\{|\\(\\s*e\\s+as\\s+\\{",
-		TS_GLOB,
-	),
+	rgLines("\\(\\s*err\\s+as\\s+\\{|\\(\\s*error\\s+as\\s+\\{|\\(\\s*e\\s+as\\s+\\{", TS_GLOB),
 );
-const tsRecordUnknown = splitByPragma(
-	rgLines("Record<string,\\s*unknown>", TS_GLOB),
-);
+const tsRecordUnknown = splitByPragma(rgLines("Record<string,\\s*unknown>", TS_GLOB));
 const tsUnknownArr = splitByPragma(rgLines(":\\s*unknown\\[\\]", TS_GLOB));
-const tsEnvFallback = splitByPragma(
-	rgLines("process\\.env\\.[A-Z_]+\\s*\\?\\?", TS_GLOB),
-);
-const tsJsonParseFallback = splitByPragma(
-	rgLines("JSON\\.parse\\([^)]+\\)\\s*\\?\\?", TS_GLOB),
-);
+const tsEnvFallback = splitByPragma(rgLines("process\\.env\\.[A-Z_]+\\s*\\?\\?", TS_GLOB));
+const tsJsonParseFallback = splitByPragma(rgLines("JSON\\.parse\\([^)]+\\)\\s*\\?\\?", TS_GLOB));
 
-const rustResultString = splitByPragma(
-	rgLines("\\bResult<.*,\\s*(String|&str)\\b", RUST_GLOB),
-);
+const rustResultString = splitByPragma(rgLines("\\bResult<.*,\\s*(String|&str)\\b", RUST_GLOB));
 // Filter unwrap/expect/panic to production code only. Tests are allowed to
 // .unwrap()/.expect()/panic! freely. Detect:
 //   - paths under tests/ directories
@@ -169,15 +153,11 @@ function isTestPath(line: string): boolean {
 	return isInTestCfg(file, lineNum);
 }
 
-const rustPanic = splitByPragma(
-	rgLines("panic!\\(", RUST_GLOB).filter((l) => !isTestPath(l)),
-);
+const rustPanic = splitByPragma(rgLines("panic!\\(", RUST_GLOB).filter((l) => !isTestPath(l)));
 const rustUnwrap = splitByPragma(
 	rgLines("\\.unwrap\\(\\)", RUST_GLOB).filter((l) => !isTestPath(l)),
 );
-const rustExpect = splitByPragma(
-	rgLines("\\.expect\\(", RUST_GLOB).filter((l) => !isTestPath(l)),
-);
+const rustExpect = splitByPragma(rgLines("\\.expect\\(", RUST_GLOB).filter((l) => !isTestPath(l)));
 
 function ctOf(split: PragmaSplit): {
 	count: number;
@@ -254,9 +234,7 @@ for (const [k, v] of Object.entries(current.rust)) {
 }
 
 if (violations.length > 0) {
-	console.error(
-		`boundary-types FAIL: ${violations.length} category/ies have weak-typed sites.`,
-	);
+	console.error(`boundary-types FAIL: ${violations.length} category/ies have weak-typed sites.`);
 	for (const v of violations) console.error(`  ${v}`);
 	console.error(
 		"\nFix the new occurrence(s). Use packages/astropress/src/result.ts (Result/Option) at TS module boundaries, concrete error enums in Rust. Genuine pass-through can use `// audit-boundary: opaque-passthrough -- <reason>` (same line or above).",

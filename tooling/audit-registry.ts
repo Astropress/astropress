@@ -53,7 +53,7 @@ export interface AuditEntry {
 	readonly description: string;
 }
 
-export const AUDITS: ReadonlyArray<AuditEntry> = [
+export const AUDITS: readonly AuditEntry[] = [
 	{
 		name: "integration-honesty",
 		script: "tooling/scripts/audit-integration-honesty.ts",

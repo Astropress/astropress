@@ -1,19 +1,19 @@
 export type {
-	AstropressWordPressImportEntityCount,
-	AstropressWordPressImportInventory,
-	AstropressWordPressImportPlan,
-	AstropressWordPressImportArtifacts,
-	AstropressWordPressImportLocalApplyReport,
-	AstropressWordPressImportReport,
-	ImportSource,
-} from "./wordpress-import-contracts.js";
-
-export type {
 	ApiScope,
 	ApiTokenId,
 	ApiTokenRecord,
 	ApiTokenStore,
 } from "./platform-contracts-helpers";
+export type {
+	AstropressWordPressImportArtifacts,
+	AstropressWordPressImportEntityCount,
+	AstropressWordPressImportInventory,
+	AstropressWordPressImportLocalApplyReport,
+	AstropressWordPressImportPlan,
+	AstropressWordPressImportReport,
+	ImportSource,
+} from "./wordpress-import-contracts.js";
+
 import type { ApiTokenStore } from "./platform-contracts-helpers";
 import type { ImportSource } from "./wordpress-import-contracts.js";
 
@@ -32,15 +32,9 @@ export type AuditEventId = string & { readonly __brand: "AuditEventId" };
 
 // ─── Discriminated union for action results ───────────────────────────────────
 /** Standard discriminated union for all repository / action operation results. */
-export type ActionResult<T> =
-	| { ok: true; data: T }
-	| { ok: false; error: string; code?: string };
+export type ActionResult<T> = { ok: true; data: T } | { ok: false; error: string; code?: string };
 
-export type ProviderKind =
-	| "github-pages"
-	| "cloudflare"
-	| "supabase"
-	| "custom";
+export type ProviderKind = "github-pages" | "cloudflare" | "supabase" | "custom";
 
 /** Configuration for the editorial CMS panel embedded in the admin. */
 export interface AstropressCmsConfig {
@@ -78,12 +72,7 @@ export interface ProviderCapabilities {
 	gitSync: boolean;
 	hostPanel?: AstropressHostPanelCapability;
 	deployHook?: {
-		type:
-			| "cloudflare-pages"
-			| "vercel"
-			| "netlify"
-			| "render"
-			| "github-actions";
+		type: "cloudflare-pages" | "vercel" | "netlify" | "render" | "github-actions";
 		configuredViaEnv: string[];
 	};
 }
@@ -124,19 +113,10 @@ export interface WebhookStore {
 // ─── Content kinds ───────────────────────────────────────────────────────────
 
 /** Kinds that can be written via ContentStore.save. */
-export type SaveableContentKind =
-	| "page"
-	| "post"
-	| "redirect"
-	| "settings"
-	| "translation";
+export type SaveableContentKind = "page" | "post" | "redirect" | "settings" | "translation";
 
 /** All kinds that can be read via ContentStore.list/get (superset of SaveableContentKind). */
-export type ReadableContentKind =
-	| SaveableContentKind
-	| "comment"
-	| "user"
-	| "media";
+export type ReadableContentKind = SaveableContentKind | "comment" | "user" | "media";
 
 /** A single FAQ item for AEO-optimised FAQPage JSON-LD. */
 export interface FaqItem {
@@ -182,10 +162,7 @@ export interface ContentListOptions {
 }
 
 export interface ContentStore {
-	list(
-		kind?: ReadableContentKind,
-		options?: ContentListOptions,
-	): Promise<ContentStoreRecord[]>;
+	list(kind?: ReadableContentKind, options?: ContentListOptions): Promise<ContentStoreRecord[]>;
 	get(id: string): Promise<ContentStoreRecord | null>;
 	save(
 		record: Omit<ContentStoreRecord, "kind"> & { kind: SaveableContentKind },
@@ -266,12 +243,8 @@ export interface AuthStore {
 }
 
 export interface GitSyncAdapter {
-	exportSnapshot(
-		targetDir: string,
-	): Promise<{ targetDir: string; fileCount: number }>;
-	importSnapshot(
-		sourceDir: string,
-	): Promise<{ sourceDir: string; fileCount: number }>;
+	exportSnapshot(targetDir: string): Promise<{ targetDir: string; fileCount: number }>;
+	importSnapshot(sourceDir: string): Promise<{ sourceDir: string; fileCount: number }>;
 }
 
 export interface DeployTarget {
@@ -322,8 +295,7 @@ export interface AstropressPlatformAdapter {
  * ```
  */
 export function normalizeProviderCapabilities(
-	partial: Pick<ProviderCapabilities, "name"> &
-		Partial<Omit<ProviderCapabilities, "name">>,
+	partial: Pick<ProviderCapabilities, "name"> & Partial<Omit<ProviderCapabilities, "name">>,
 ): ProviderCapabilities {
 	return {
 		name: partial.name,
@@ -357,12 +329,7 @@ export function assertProviderContract(adapter: AstropressPlatformAdapter) {
 		throw new Error("Provider adapter must declare a name.");
 	}
 
-	if (
-		!adapter.content ||
-		!adapter.media ||
-		!adapter.revisions ||
-		!adapter.auth
-	) {
+	if (!adapter.content || !adapter.media || !adapter.revisions || !adapter.auth) {
 		throw new Error("Provider adapter is missing one or more required stores.");
 	}
 

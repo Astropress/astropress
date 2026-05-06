@@ -5,7 +5,6 @@
  */
 import { describe, expect, it } from "vitest";
 import { renderSectionsDocument } from "../../src/sections/preview-renderer";
-import type { Section } from "../../src/sections/schema";
 
 const baseCtx = { mediaUrls: {} as Record<string, string>, testimonials: [] };
 
@@ -15,9 +14,7 @@ describe("preview document chrome", () => {
 		expect(html).toContain("<!doctype html>");
 		expect(html).toContain('<html lang="en"');
 		expect(html).toContain('class="ap-sections"');
-		expect(html).toContain(
-			'<meta name="viewport" content="width=device-width, initial-scale=1"',
-		);
+		expect(html).toContain('<meta name="viewport" content="width=device-width, initial-scale=1"');
 		expect(html).toContain("<title>Preview</title>");
 	});
 
@@ -576,10 +573,7 @@ describe("preview faq", () => {
 	});
 
 	it("heading block absent when not provided", () => {
-		const html = renderSectionsDocument(
-			[{ id: "f", kind: "faq", items: [] }],
-			baseCtx,
-		);
+		const html = renderSectionsDocument([{ id: "f", kind: "faq", items: [] }], baseCtx);
 		expect(html).not.toContain("ap-faq__heading");
 	});
 });

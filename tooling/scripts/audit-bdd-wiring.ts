@@ -1,10 +1,10 @@
 import { join, relative } from "node:path";
 import {
 	AuditReport,
-	ROOT,
 	fileExists,
 	fromRoot,
 	listFiles,
+	ROOT,
 	readText,
 	runAudit,
 } from "../lib/audit-utils.js";
@@ -51,10 +51,7 @@ async function main() {
 
 			// Also try the escaped-quotes form: `"c"` in a .feature file appears as `\"c\"` in bdd-test.ts
 			const escapedScenarioText = scenarioText.replaceAll('"', '\\"');
-			if (
-				!bddTestSrc.includes(scenarioText) &&
-				!bddTestSrc.includes(escapedScenarioText)
-			) {
+			if (!bddTestSrc.includes(scenarioText) && !bddTestSrc.includes(escapedScenarioText)) {
 				report.add(
 					`[unwired scenario] "${scenarioText}" — in ${relPath} but not found in bdd-test.ts`,
 				);
@@ -80,12 +77,8 @@ async function main() {
 		const testRelPath = m[1];
 		const matchPos = m.index ?? 0;
 
-		const context = bddTestSrc.slice(
-			Math.max(0, matchPos - 500),
-			matchPos + 200,
-		);
-		const isNexusTest =
-			context.includes("nexusPackageRoot") || context.includes("nexus");
+		const context = bddTestSrc.slice(Math.max(0, matchPos - 500), matchPos + 200);
+		const isNexusTest = context.includes("nexusPackageRoot") || context.includes("nexus");
 
 		const resolvedPath = isNexusTest
 			? join(NEXUS_PKG, "tests", testRelPath)

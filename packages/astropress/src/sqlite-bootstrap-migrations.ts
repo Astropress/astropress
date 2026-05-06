@@ -1,9 +1,6 @@
-import { existsSync, readFileSync, readdirSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
-import type {
-	AstropressRollbackResult,
-	SqliteDatabaseLike,
-} from "./sqlite-bootstrap-helpers";
+import type { AstropressRollbackResult, SqliteDatabaseLike } from "./sqlite-bootstrap-helpers";
 
 /**
  * Run incremental SQL migrations from a directory against a live SQLite database.
@@ -57,16 +54,12 @@ export function runAstropressMigrations(
 		const sql = readFileSync(path.join(migrationsDir, file), "utf8");
 		db.exec(sql);
 
-		const downFilePath = path.join(
-			migrationsDir,
-			file.replace(/\.sql$/, ".down.sql"),
+		const downFilePath = path.join(migrationsDir, file.replace(/\.sql$/, ".down.sql"));
+		const rollbackSql = existsSync(downFilePath) ? readFileSync(downFilePath, "utf8") : null;
+		db.prepare("INSERT INTO schema_migrations (name, rollback_sql) VALUES (?, ?)").run(
+			file,
+			rollbackSql,
 		);
-		const rollbackSql = existsSync(downFilePath)
-			? readFileSync(downFilePath, "utf8")
-			: null;
-		db.prepare(
-			"INSERT INTO schema_migrations (name, rollback_sql) VALUES (?, ?)",
-		).run(file, rollbackSql);
 		applied.push(file);
 	}
 
@@ -88,9 +81,9 @@ export function checkSchemaVersionAhead(
 	frameworkBaseline = ASTROPRESS_FRAMEWORK_MIGRATION_BASELINE,
 ): { isAhead: boolean; dbCount: number; frameworkCount: number } | null {
 	try {
-		const row = db
-			.prepare("SELECT COUNT(*) as count FROM schema_migrations")
-			.get() as { count: number } | undefined;
+		const row = db.prepare("SELECT COUNT(*) as count FROM schema_migrations").get() as
+			| { count: number }
+			| undefined;
 		if (!row) return null;
 		return {
 			isAhead: row.count > frameworkBaseline,
@@ -107,13 +100,9 @@ export function checkSchemaVersionAhead(
  * removing its record from `schema_migrations`. Returns the name of the rolled-back
  * migration, or `null` if there are no applied migrations or the last one has no rollback SQL.
  */
-export function rollbackAstropressLastMigration(
-	db: SqliteDatabaseLike,
-): string | null {
+export function rollbackAstropressLastMigration(db: SqliteDatabaseLike): string | null {
 	const last = db
-		.prepare(
-			"SELECT name, rollback_sql FROM schema_migrations ORDER BY id DESC LIMIT 1",
-		)
+		.prepare("SELECT name, rollback_sql FROM schema_migrations ORDER BY id DESC LIMIT 1")
 		.get() as { name: string; rollback_sql: string | null } | undefined;
 
 	if (!last) return null;
@@ -130,9 +119,7 @@ export function rollbackAstropressLastMigrationWithOptions(
 ): AstropressRollbackResult {
 	const dryRun = options.dryRun ?? false;
 	const row = db
-		.prepare(
-			"SELECT name, rollback_sql FROM schema_migrations ORDER BY id DESC LIMIT 1",
-		)
+		.prepare("SELECT name, rollback_sql FROM schema_migrations ORDER BY id DESC LIMIT 1")
 		.get() as { name: string; rollback_sql: string | null } | undefined;
 
 	if (!row) {

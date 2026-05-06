@@ -25,9 +25,9 @@ describe("readAstropressTursoHostedConfig", () => {
 	});
 
 	it("throws when TURSO_DATABASE_URL is missing", () => {
-		expect(() =>
-			readAstropressTursoHostedConfig({ TURSO_AUTH_TOKEN: "token-abc" }),
-		).toThrow(/TURSO_DATABASE_URL/);
+		expect(() => readAstropressTursoHostedConfig({ TURSO_AUTH_TOKEN: "token-abc" })).toThrow(
+			/TURSO_DATABASE_URL/,
+		);
 	});
 
 	it("throws when TURSO_DATABASE_URL is not a libsql:// or https:// URL", () => {
@@ -102,8 +102,6 @@ describe("createAstropressTursoHostedAdapter", () => {
 	});
 
 	it("throws when TURSO_DATABASE_URL is missing and no explicit config", () => {
-		expect(() => createAstropressTursoHostedAdapter({ env: {} })).toThrow(
-			/TURSO_DATABASE_URL/,
-		);
+		expect(() => createAstropressTursoHostedAdapter({ env: {} })).toThrow(/TURSO_DATABASE_URL/);
 	});
 });

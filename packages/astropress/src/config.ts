@@ -1,13 +1,14 @@
 export type {
-	FieldDefinition,
-	ContentTypeDefinition,
-} from "./content-modeling.js";
-export { validateContentFields } from "./content-modeling.js";
-export type {
 	AstropressContentEvent,
 	AstropressMediaEvent,
 	AstropressPlugin,
 } from "./cms-plugins.js";
+export type {
+	ContentTypeDefinition,
+	FieldDefinition,
+} from "./content-modeling.js";
+export { validateContentFields } from "./content-modeling.js";
+
 import type { AstropressPlugin } from "./cms-plugins.js";
 import type { CmsAdminConfig } from "./config-admin.js";
 import type {
@@ -73,7 +74,7 @@ export interface CmsConfig {
 	 * Typed loosely so the framework does not need to know the host's full page schema.
 	 */
 	// audit-boundary: opaque-passthrough -- user-supplied CMS config; narrowed at consumer
-	seedPages: ReadonlyArray<Record<string, unknown>>;
+	seedPages: readonly Record<string, unknown>[];
 
 	/**
 	 * Archive sources loaded from the host site's archives.json.
@@ -85,7 +86,7 @@ export interface CmsConfig {
 		kind: string;
 		legacyUrl: string;
 		// audit-boundary: opaque-passthrough -- user-supplied CMS config; narrowed at consumer
-		listingItems?: ReadonlyArray<Record<string, unknown>>;
+		listingItems?: readonly Record<string, unknown>[];
 	}>;
 
 	/**

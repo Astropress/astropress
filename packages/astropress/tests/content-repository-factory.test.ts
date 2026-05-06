@@ -1,10 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { createAstropressContentRepository } from "../src/content-repository-factory";
-import type {
-	Actor,
-	ContentRecord,
-	ContentRevision,
-} from "../src/persistence-types";
+import type { Actor, ContentRecord, ContentRevision } from "../src/persistence-types";
 
 const actor: Actor = {
 	email: "admin@example.com",
@@ -51,11 +47,9 @@ describe("createAstropressContentRepository", () => {
 		const repository = createAstropressContentRepository({
 			normalizePath: (value) => value,
 			slugifyTerm: (value) => value,
-			normalizeContentStatus: (value) =>
-				value === "draft" ? "draft" : "published",
+			normalizeContentStatus: (value) => (value === "draft" ? "draft" : "published"),
 			findContentRecord: (slug) =>
-				records.find((record) => record.slug === slug && slug !== "missing") ??
-				null,
+				records.find((record) => record.slug === slug && slug !== "missing") ?? null,
 			listContentRecords: () => records,
 			getPersistedOverride: vi.fn(),
 			getContentAssignments: () => ({
@@ -73,17 +67,14 @@ describe("createAstropressContentRepository", () => {
 			recordContentAudit: vi.fn(),
 		});
 
-		expect(repository.listContentStates().map((record) => record.slug)).toEqual(
-			["newer", "older"],
-		);
+		expect(repository.listContentStates().map((record) => record.slug)).toEqual(["newer", "older"]);
 	});
 
 	it("lists and maps content state with overrides and assignments", () => {
 		const repository = createAstropressContentRepository({
 			normalizePath: (value) => value,
 			slugifyTerm: (value) => value,
-			normalizeContentStatus: (value) =>
-				value === "draft" ? "draft" : "published",
+			normalizeContentStatus: (value) => (value === "draft" ? "draft" : "published"),
 			findContentRecord: (slug) => (slug === "about" ? baseRecord() : null),
 			listContentRecords: () => [baseRecord()],
 			getPersistedOverride: () => ({
@@ -125,8 +116,7 @@ describe("createAstropressContentRepository", () => {
 		const repository = createAstropressContentRepository({
 			normalizePath: (value) => value,
 			slugifyTerm: (value) => value,
-			normalizeContentStatus: (value) =>
-				value === "draft" ? "draft" : "published",
+			normalizeContentStatus: (value) => (value === "draft" ? "draft" : "published"),
 			findContentRecord: () => baseRecord(),
 			listContentRecords: () => [baseRecord()],
 			getPersistedOverride: vi.fn(),
@@ -222,8 +212,7 @@ describe("createAstropressContentRepository", () => {
 		const repository = createAstropressContentRepository({
 			normalizePath: (value) => value,
 			slugifyTerm: (value) => value,
-			normalizeContentStatus: (value) =>
-				value === "review" ? "review" : "published",
+			normalizeContentStatus: (value) => (value === "review" ? "review" : "published"),
 			findContentRecord: () => baseRecord({ body: "<p>Existing body</p>" }),
 			listContentRecords: () => [baseRecord()],
 			getPersistedOverride: vi.fn(),
@@ -318,10 +307,8 @@ describe("createAstropressContentRepository", () => {
 		const repository = createAstropressContentRepository({
 			normalizePath: (value) => value,
 			slugifyTerm: (value) => value,
-			normalizeContentStatus: (value) =>
-				value === "draft" ? "draft" : "published",
-			findContentRecord: () =>
-				baseRecord({ updatedAt: "2026-01-02T03:04:05.000Z" }),
+			normalizeContentStatus: (value) => (value === "draft" ? "draft" : "published"),
+			findContentRecord: () => baseRecord({ updatedAt: "2026-01-02T03:04:05.000Z" }),
 			listContentRecords: () => [baseRecord()],
 			getPersistedOverride: vi.fn(),
 			getContentAssignments: () => ({
@@ -595,9 +582,7 @@ describe("createAstropressContentRepository", () => {
 		);
 
 		expect(result.ok).toBe(true);
-		expect(insertContentEntry).toHaveBeenCalledWith(
-			expect.objectContaining({ summary: "" }),
-		);
+		expect(insertContentEntry).toHaveBeenCalledWith(expect.objectContaining({ summary: "" }));
 		expect(upsertContentOverride).toHaveBeenCalledWith(
 			"empty-summary",
 			expect.objectContaining({ excerpt: undefined }),
@@ -609,8 +594,7 @@ describe("createAstropressContentRepository", () => {
 		const repository = createAstropressContentRepository({
 			normalizePath: (value) => value,
 			slugifyTerm: (value) => value,
-			normalizeContentStatus: (value) =>
-				value === "draft" ? "draft" : "published",
+			normalizeContentStatus: (value) => (value === "draft" ? "draft" : "published"),
 			findContentRecord: () => baseRecord(),
 			listContentRecords: () => [baseRecord()],
 			getPersistedOverride: vi.fn(),
@@ -953,9 +937,7 @@ describe("createAstropressContentRepository", () => {
 			recordContentAudit: vi.fn(),
 		});
 
-		expect(
-			repository.restoreRevision("about", "missing-revision", actor),
-		).toEqual({
+		expect(repository.restoreRevision("about", "missing-revision", actor)).toEqual({
 			ok: false,
 			error: "Revision not found.",
 		});

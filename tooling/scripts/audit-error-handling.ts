@@ -1,11 +1,5 @@
 import { join } from "node:path";
-import {
-	AuditReport,
-	fromRoot,
-	listFiles,
-	readText,
-	runAudit,
-} from "../lib/audit-utils.js";
+import { AuditReport, fromRoot, listFiles, readText, runAudit } from "../lib/audit-utils.js";
 
 // Rubric 16 (Error Handling)
 //
@@ -38,8 +32,7 @@ async function checkFile(
 	}
 
 	if (requireOkResult) {
-		const hasRuntimeExport =
-			/^export (async function|function|const|class)\b/m.test(src);
+		const hasRuntimeExport = /^export (async function|function|const|class)\b/m.test(src);
 		if (hasRuntimeExport) {
 			const hasOkResult =
 				src.includes("ok: ") ||
@@ -71,9 +64,7 @@ async function main() {
 
 	// 1. admin-action-*.ts files
 	const srcFiles = await listFiles(SRC_DIR);
-	const actionFiles = srcFiles.filter(
-		(f) => f.startsWith("admin-action-") && f.endsWith(".ts"),
-	);
+	const actionFiles = srcFiles.filter((f) => f.startsWith("admin-action-") && f.endsWith(".ts"));
 
 	for (const filename of actionFiles) {
 		await checkFile(report, join(SRC_DIR, filename), `src/${filename}`);
@@ -87,9 +78,7 @@ async function main() {
 		// Distinguish empty dir from missing: use listFiles with recursive to probe
 		const probeAll = await listFiles(deployDir, { recursive: true });
 		if (probeAll.length === 0) {
-			report.add(
-				"src/deploy/: directory not found — deploy target implementations are missing",
-			);
+			report.add("src/deploy/: directory not found — deploy target implementations are missing");
 			deployFiles = [];
 		} else {
 			deployFiles = deployEntries.filter((f) => f.endsWith(".ts"));
@@ -99,21 +88,14 @@ async function main() {
 	}
 
 	for (const filename of deployFiles) {
-		await checkFile(
-			report,
-			join(deployDir, filename),
-			`src/deploy/${filename}`,
-			false,
-		);
+		await checkFile(report, join(deployDir, filename), `src/deploy/${filename}`, false);
 	}
 
 	// 3. cache-purge.ts: failures must be console.warn, not throw
 	const cachePurgePath = join(SRC_DIR, "cache-purge.ts");
 	const cachePurgeSrc = await readText(cachePurgePath);
 	if (!cachePurgeSrc) {
-		report.add(
-			"src/cache-purge.ts: file not found — CDN cache purge strategy is missing",
-		);
+		report.add("src/cache-purge.ts: file not found — CDN cache purge strategy is missing");
 	} else {
 		if (
 			/\.catch\s*\([^)]*\)\s*\{\s*throw/m.test(cachePurgeSrc) ||

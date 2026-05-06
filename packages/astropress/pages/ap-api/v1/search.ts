@@ -18,13 +18,8 @@
  * when you want a dedicated search response with a `total` count and `query` echo.
  */
 
-import { searchRuntimeContentStates } from "@astropress-diy/astropress";
-import { getCmsConfig } from "@astropress-diy/astropress";
-import {
-	apiErrors,
-	jsonOk,
-	withApiRequest,
-} from "@astropress-diy/astropress/api-middleware.js";
+import { getCmsConfig, searchRuntimeContentStates } from "@astropress-diy/astropress";
+import { apiErrors, jsonOk, withApiRequest } from "@astropress-diy/astropress/api-middleware.js";
 import { loadLocalAdminStore } from "@astropress-diy/astropress/local-runtime-modules.js";
 import type { APIRoute } from "astro";
 
@@ -51,10 +46,7 @@ export const GET: APIRoute = async (context) => {
 			const url = new URL(context.request.url);
 			const q = url.searchParams.get("q")?.trim() ?? "";
 			const kind = url.searchParams.get("kind") ?? undefined;
-			const limit = Math.min(
-				Number(url.searchParams.get("limit") ?? "20"),
-				100,
-			);
+			const limit = Math.min(Number(url.searchParams.get("limit") ?? "20"), 100);
 
 			if (!q) {
 				return apiErrors.badRequest("Missing required query parameter: q");

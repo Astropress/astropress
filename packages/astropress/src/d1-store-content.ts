@@ -3,10 +3,10 @@ import { getCmsConfig } from "./config";
 import type { D1AdminReadStore } from "./d1-admin-store";
 import type { D1DatabaseLike } from "./d1-database";
 import {
-	type PageRecord,
 	getD1ContentAssignmentIds,
 	mapPersistedOverride,
 	mergeContentOverride,
+	type PageRecord,
 } from "./d1-store-content-helpers";
 import type { ContentRecord, ContentRevision } from "./persistence-types";
 
@@ -72,11 +72,7 @@ async function getAllContentRecords(db: D1DatabaseLike) {
 
 async function findPageRecord(db: D1DatabaseLike, slug: string) {
 	const records = await getAllContentRecords(db);
-	return (
-		records.find(
-			(entry) => entry.slug === slug || entry.legacyUrl === `/${slug}`,
-		) ?? null
-	);
+	return records.find((entry) => entry.slug === slug || entry.legacyUrl === `/${slug}`) ?? null;
 }
 
 async function getPersistedContentOverride(db: D1DatabaseLike, slug: string) {
@@ -120,9 +116,7 @@ export function createD1SchedulingPart(db: D1DatabaseLike) {
 	return {
 		async schedulePublish(id: string, scheduledAt: string): Promise<void> {
 			await db
-				.prepare(
-					"UPDATE content_overrides SET scheduled_at = ?, status = 'draft' WHERE slug = ?",
-				)
+				.prepare("UPDATE content_overrides SET scheduled_at = ?, status = 'draft' WHERE slug = ?")
 				.bind(scheduledAt, id)
 				.run();
 			await db
@@ -165,9 +159,7 @@ export function createD1SchedulingPart(db: D1DatabaseLike) {
 
 		async cancelScheduledPublish(id: string): Promise<void> {
 			await db
-				.prepare(
-					"UPDATE content_overrides SET scheduled_at = NULL WHERE slug = ?",
-				)
+				.prepare("UPDATE content_overrides SET scheduled_at = NULL WHERE slug = ?")
 				.bind(id)
 				.run();
 		},
@@ -186,18 +178,15 @@ export function createD1SchedulingPart(db: D1DatabaseLike) {
 	};
 }
 
-export function createD1ContentReadPart(
-	db: D1DatabaseLike,
-): D1AdminReadStore["content"] {
+export function createD1ContentReadPart(db: D1DatabaseLike): D1AdminReadStore["content"] {
 	return {
 		async listContentStates() {
 			const records = await getAllContentRecords(db);
 			const states = await Promise.all(
 				records.map(async (record) => this.getContentState(record.slug)),
 			);
-			return states.filter(
-				(record): record is NonNullable<(typeof states)[number]> =>
-					Boolean(record),
+			return states.filter((record): record is NonNullable<(typeof states)[number]> =>
+				Boolean(record),
 			);
 		},
 		async getContentState(slug: string): Promise<ContentRecord | null> {

@@ -7,9 +7,9 @@
  * specific finding.
  */
 
-import { readFileSync, readdirSync, statSync } from "node:fs";
+import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join, relative } from "node:path";
-import { AuditReport, ROOT, fromRoot, runAudit } from "../lib/audit-utils.js";
+import { AuditReport, fromRoot, ROOT, runAudit } from "../lib/audit-utils.js";
 
 type Violation = { file: string; line: number; message: string };
 
@@ -43,11 +43,7 @@ function isSuppressedNear(lines: string[], i: number): boolean {
 	return false;
 }
 
-function isSuppressedInWindow(
-	lines: string[],
-	start: number,
-	end: number,
-): boolean {
+function isSuppressedInWindow(lines: string[], start: number, end: number): boolean {
 	for (let j = Math.max(0, start); j <= Math.min(lines.length - 1, end); j++) {
 		if (isSuppressed(lines[j])) return true;
 	}
@@ -64,9 +60,7 @@ function checkFile(file: string, src: string): Violation[] {
 		for (let i = 0; i < lines.length; i++) {
 			const line = lines[i];
 			if (/path\.join\(/.test(line) && /\.filename/.test(line)) {
-				const window = lines
-					.slice(Math.max(0, i - 3), Math.min(lines.length, i + 3))
-					.join("\n");
+				const window = lines.slice(Math.max(0, i - 3), Math.min(lines.length, i + 3)).join("\n");
 				if (!/path\.basename/.test(window) && !isSuppressedNear(lines, i)) {
 					violations.push({
 						file: rel,
@@ -117,10 +111,7 @@ function checkFile(file: string, src: string): Violation[] {
 	if (/\/tests\//.test(rel) && file.endsWith(".ts")) {
 		for (let i = 0; i < lines.length; i++) {
 			const line = lines[i];
-			if (
-				/[`'"][/\\]tmp[/\\]astropress/.test(line) &&
-				!isSuppressedNear(lines, i)
-			) {
+			if (/[`'"][/\\]tmp[/\\]astropress/.test(line) && !isSuppressedNear(lines, i)) {
 				violations.push({
 					file: rel,
 					line: i + 1,
@@ -128,13 +119,8 @@ function checkFile(file: string, src: string): Violation[] {
 						"predictable /tmp path — use mkdtempSync(join(tmpdir(), 'prefix-')) for collision-safe temp dirs [js/insecure-temporary-file]",
 				});
 			}
-			if (
-				/join\(tmpdir\(\)\s*,\s*["'][^"']*["']\)/.test(line) &&
-				!isSuppressedNear(lines, i)
-			) {
-				const ctx = lines
-					.slice(Math.max(0, i - 2), Math.min(lines.length, i + 2))
-					.join("\n");
+			if (/join\(tmpdir\(\)\s*,\s*["'][^"']*["']\)/.test(line) && !isSuppressedNear(lines, i)) {
+				const ctx = lines.slice(Math.max(0, i - 2), Math.min(lines.length, i + 2)).join("\n");
 				if (!/mkdtemp/.test(ctx)) {
 					violations.push({
 						file: rel,
@@ -151,9 +137,7 @@ function checkFile(file: string, src: string): Violation[] {
 	if (/packages\/[^/]+\/src\/import\//.test(rel)) {
 		for (let i = 0; i < lines.length; i++) {
 			if (!/\bwriteFile\b/.test(lines[i])) continue;
-			const callWindow = lines
-				.slice(i, Math.min(lines.length, i + 4))
-				.join("\n");
+			const callWindow = lines.slice(i, Math.min(lines.length, i + 4)).join("\n");
 			const fetchWindow = lines.slice(Math.max(0, i - 10), i + 4).join("\n");
 			if (
 				/\.filename/.test(callWindow) &&
@@ -195,9 +179,7 @@ function checkFile(file: string, src: string): Violation[] {
 				});
 			}
 			if (
-				(/(\.replace|\.match|\.test|\.search|\.split|new RegExp)\(/.test(
-					line,
-				) ||
+				(/(\.replace|\.match|\.test|\.search|\.split|new RegExp)\(/.test(line) ||
 					/=\s*\/[^/]/.test(line)) &&
 				/\[\^[^\]]*\][*+]\?/.test(line) // audit-ok: testing source text for negated-class lazy-quantifier pattern
 			) {
@@ -227,13 +209,8 @@ function checkFile(file: string, src: string): Violation[] {
 		for (let i = 0; i < lines.length; i++) {
 			const line = lines[i];
 			if (!/\bwriteFileSync\(/.test(line)) continue;
-			if (
-				!/writeFileSync\(\s*["'`][^"'`]+["'`]/.test(line) &&
-				!isSuppressedNear(lines, i)
-			) {
-				const callWindow = lines
-					.slice(i, Math.min(lines.length, i + 4))
-					.join("\n");
+			if (!/writeFileSync\(\s*["'`][^"'`]+["'`]/.test(line) && !isSuppressedNear(lines, i)) {
+				const callWindow = lines.slice(i, Math.min(lines.length, i + 4)).join("\n");
 				if (!/0o600|0o400/.test(callWindow)) {
 					violations.push({
 						file: rel,
@@ -268,10 +245,7 @@ function checkFile(file: string, src: string): Violation[] {
 	// ── 9. process.env.X = undefined in test files (Bun env-string bug) ────────
 	if (/\/tests\//.test(rel) && file.endsWith(".ts")) {
 		for (let i = 0; i < lines.length; i++) {
-			if (
-				/process\.env\.\w+\s*=\s*undefined\b/.test(lines[i]) &&
-				!isSuppressedNear(lines, i)
-			) {
+			if (/process\.env\.\w+\s*=\s*undefined\b/.test(lines[i]) && !isSuppressedNear(lines, i)) {
 				violations.push({
 					file: rel,
 					line: i + 1,
@@ -331,9 +305,7 @@ async function main() {
 		);
 	}
 
-	report.finish(
-		`CodeQL pattern audit passed (${allFiles.length} files scanned).`,
-	);
+	report.finish(`CodeQL pattern audit passed (${allFiles.length} files scanned).`);
 }
 
 runAudit("CodeQL pattern", main);

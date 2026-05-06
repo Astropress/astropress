@@ -27,15 +27,14 @@ export const POST: APIRoute = async (context) => {
 	}
 
 	const env =
-		(context.locals as { runtime?: { env?: Record<string, string> } } | null)
-			?.runtime?.env ?? (typeof process !== "undefined" ? process.env : {});
+		(context.locals as { runtime?: { env?: Record<string, string> } } | null)?.runtime?.env ??
+		(typeof process !== "undefined" ? process.env : {});
 	const secretEnvKey = `WEBHOOK_SECRET_${providerSlug.toUpperCase().replace(/[^A-Z0-9]/g, "_")}`;
 	const secret = env[secretEnvKey];
 	if (!secret) {
-		return new Response(
-			`Inbound webhook secret not configured (env ${secretEnvKey}).`,
-			{ status: 503 },
-		);
+		return new Response(`Inbound webhook secret not configured (env ${secretEnvKey}).`, {
+			status: 503,
+		});
 	}
 
 	const buffer = await context.request.arrayBuffer();

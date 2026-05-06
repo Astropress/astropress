@@ -17,10 +17,7 @@ export function isLegacyHash(storedHash: string): boolean {
 	return !isArgon2idHash(storedHash);
 }
 
-export async function verifyPassword(
-	password: string,
-	storedHash: string,
-): Promise<boolean> {
+export async function verifyPassword(password: string, storedHash: string): Promise<boolean> {
 	return verifyArgon2idPassword(password, storedHash);
 }
 

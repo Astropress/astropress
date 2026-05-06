@@ -8,9 +8,7 @@ export interface AstropressRateLimitWindowRecord {
 
 export interface AstropressRateLimitRepositoryInput {
 	now(): number;
-	readRateLimitWindow(
-		key: string,
-	): AstropressRateLimitWindowRecord | null | undefined;
+	readRateLimitWindow(key: string): AstropressRateLimitWindowRecord | null | undefined;
 	resetRateLimitWindow(key: string, now: number, windowMs: number): void;
 	incrementRateLimitWindow(key: string): void;
 }

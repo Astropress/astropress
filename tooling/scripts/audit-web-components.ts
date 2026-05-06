@@ -1,11 +1,5 @@
 import { join } from "node:path";
-import {
-	AuditReport,
-	fromRoot,
-	listFiles,
-	readText,
-	runAudit,
-} from "../lib/audit-utils.js";
+import { AuditReport, fromRoot, listFiles, readText, runAudit } from "../lib/audit-utils.js";
 
 // Rubrics 8 (Browser/Web API Usage), 9 (Web Components), 10 (Spec Coherence — WC First-Class)
 //
@@ -23,9 +17,7 @@ const INDEX_TS = join(WC_DIR, "index.ts");
 async function main() {
 	const report = new AuditReport("web-components");
 	const allFiles = await listFiles(WC_DIR);
-	const componentFiles = allFiles.filter(
-		(f) => f.endsWith(".ts") && f !== "index.ts",
-	);
+	const componentFiles = allFiles.filter((f) => f.endsWith(".ts") && f !== "index.ts");
 
 	const indexSrc = await readText(INDEX_TS);
 
@@ -45,20 +37,12 @@ async function main() {
 		}
 
 		// 2. connectedCallback
-		if (
-			!src.includes("connectedCallback()") &&
-			!src.includes("connectedCallback (){")
-		) {
-			report.add(
-				`${label}: missing connectedCallback — required lifecycle hook`,
-			);
+		if (!src.includes("connectedCallback()") && !src.includes("connectedCallback (){")) {
+			report.add(`${label}: missing connectedCallback — required lifecycle hook`);
 		}
 
 		// 3. disconnectedCallback
-		if (
-			!src.includes("disconnectedCallback()") &&
-			!src.includes("disconnectedCallback (){")
-		) {
+		if (!src.includes("disconnectedCallback()") && !src.includes("disconnectedCallback (){")) {
 			report.add(
 				`${label}: missing disconnectedCallback — required to prevent memory/listener leaks`,
 			);
@@ -69,12 +53,7 @@ async function main() {
 		const hasClearTimeout = src.includes("clearTimeout");
 		const hasClearInterval = src.includes("clearInterval");
 		const hasRemoveEventListener = src.includes("removeEventListener");
-		if (
-			!hasAbortController &&
-			!hasClearTimeout &&
-			!hasClearInterval &&
-			!hasRemoveEventListener
-		) {
+		if (!hasAbortController && !hasClearTimeout && !hasClearInterval && !hasRemoveEventListener) {
 			report.add(
 				`${label}: no cleanup mechanism found — use AbortController, clearTimeout, clearInterval, or removeEventListener in disconnectedCallback`,
 			);
@@ -87,10 +66,7 @@ async function main() {
 
 		// 6. Exported from index.ts
 		const moduleName = filename.replace(/\.ts$/, "");
-		if (
-			!indexSrc.includes(`"./${moduleName}"`) &&
-			!indexSrc.includes(`'./${moduleName}'`)
-		) {
+		if (!indexSrc.includes(`"./${moduleName}"`) && !indexSrc.includes(`'./${moduleName}'`)) {
 			report.add(
 				`${label}: not exported from web-components/index.ts — every component file must be re-exported`,
 			);

@@ -21,8 +21,7 @@ interface TemplateSpec {
 }
 
 const SAMPLE_HEADLINE = "Tell your story";
-const SAMPLE_SUBHEAD =
-	"Replace this copy with the message that matters most to your visitors.";
+const SAMPLE_SUBHEAD = "Replace this copy with the message that matters most to your visitors.";
 
 const templates: Record<TemplateKey, TemplateSpec> = {
 	blank: {
@@ -166,10 +165,7 @@ function defaultIdGen(): () => string {
 	};
 }
 
-export function buildTemplate(
-	key: TemplateKey,
-	idGen: () => string = defaultIdGen(),
-): Section[] {
+export function buildTemplate(key: TemplateKey, idGen: () => string = defaultIdGen()): Section[] {
 	const spec = templates[key];
 	if (!spec) return [];
 	return spec.build(idGen);

@@ -15,8 +15,7 @@ const packageRoot = (() => {
 	return basename(parent) === "dist" ? dirname(parent) : parent;
 })();
 
-const packageResource = (relativePath: string) =>
-	join(packageRoot, relativePath);
+const packageResource = (relativePath: string) => join(packageRoot, relativePath);
 
 const adminCssSrc = packageResource("public/admin.css");
 const sectionsCssSrc = packageResource("public/sections.css");
@@ -92,10 +91,7 @@ export function createAstropressAdminAppIntegration(): AstroIntegration {
 
 				addMiddleware({
 					order: "pre",
-					entrypoint: new URL(
-						"./security-middleware-entrypoint.js",
-						import.meta.url,
-					),
+					entrypoint: new URL("./security-middleware-entrypoint.js", import.meta.url),
 				});
 			},
 		},

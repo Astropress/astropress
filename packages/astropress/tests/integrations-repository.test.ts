@@ -2,8 +2,8 @@ import type { DatabaseSync } from "node:sqlite";
 import { beforeEach, describe, expect, it } from "vitest";
 
 import {
-	type IntegrationsRepository,
 	createIntegrationsRepository,
+	type IntegrationsRepository,
 } from "../src/sqlite-runtime/integrations";
 import { makeDb } from "./helpers/make-db.js";
 
@@ -109,11 +109,7 @@ describe("createIntegrationsRepository — status surface", () => {
 			ROOT,
 		);
 		const ordered = repo.listStatuses().map((r) => `${r.domain}/${r.provider}`);
-		expect(ordered).toEqual([
-			"analytics/matomo",
-			"analytics/plausible",
-			"newsletter/listmonk",
-		]);
+		expect(ordered).toEqual(["analytics/matomo", "analytics/plausible", "newsletter/listmonk"]);
 	});
 
 	it("updateStatus() flips state and records error code", async () => {
@@ -153,9 +149,9 @@ describe("createIntegrationsRepository — status surface", () => {
 		);
 		expect(repo.disconnect("newsletter", "listmonk")).toBe(true);
 		expect(repo.findStatus("newsletter", "listmonk")).toBeUndefined();
-		const remaining = db
-			.prepare("SELECT count(*) AS n FROM integration_secrets")
-			.get() as { n: number };
+		const remaining = db.prepare("SELECT count(*) AS n FROM integration_secrets").get() as {
+			n: number;
+		};
 		expect(remaining.n).toBe(0);
 	});
 
@@ -226,15 +222,11 @@ describe("createIntegrationsRepository — secret surface", () => {
 			},
 			ROOT,
 		);
-		await expect(
-			repo.findSecret("newsletter", "listmonk", { current: "wrong" }),
-		).rejects.toThrow();
+		await expect(repo.findSecret("newsletter", "listmonk", { current: "wrong" })).rejects.toThrow();
 	});
 
 	it("findSecret() returns undefined for unknown integration", async () => {
-		expect(
-			await repo.findSecret("newsletter", "missing", { current: ROOT }),
-		).toBeUndefined();
+		expect(await repo.findSecret("newsletter", "missing", { current: ROOT })).toBeUndefined();
 	});
 
 	it("two-key rotation: previous-key seal opens and reseals under current", async () => {
@@ -251,25 +243,27 @@ describe("createIntegrationsRepository — secret surface", () => {
 		);
 		// Mark the existing row as previous-rooted (this is what the rotation
 		// script targets: rows whose KEK derives from the old rootSecret).
-		db.prepare(
-			"UPDATE integration_secrets SET kid='previous' WHERE domain=? AND provider=?",
-		).run("newsletter", "listmonk");
-
-		const before = db
-			.prepare("SELECT kid, ciphertext FROM integration_secrets")
-			.get() as { kid: string; ciphertext: string };
-		expect(before.kid).toBe("previous");
-
-		const fields = await repo.findSecret<{ apiKey: string }>(
+		db.prepare("UPDATE integration_secrets SET kid='previous' WHERE domain=? AND provider=?").run(
 			"newsletter",
 			"listmonk",
-			{ current: ROOT, previous: PREV },
 		);
+
+		const before = db.prepare("SELECT kid, ciphertext FROM integration_secrets").get() as {
+			kid: string;
+			ciphertext: string;
+		};
+		expect(before.kid).toBe("previous");
+
+		const fields = await repo.findSecret<{ apiKey: string }>("newsletter", "listmonk", {
+			current: ROOT,
+			previous: PREV,
+		});
 		expect(fields?.apiKey).toBe("rotation-canary");
 
-		const after = db
-			.prepare("SELECT kid, ciphertext FROM integration_secrets")
-			.get() as { kid: string; ciphertext: string };
+		const after = db.prepare("SELECT kid, ciphertext FROM integration_secrets").get() as {
+			kid: string;
+			ciphertext: string;
+		};
 		expect(after.kid).toBe("current");
 		expect(after.ciphertext).not.toBe(before.ciphertext);
 	});
@@ -285,9 +279,10 @@ describe("createIntegrationsRepository — secret surface", () => {
 			},
 			PREV,
 		);
-		db.prepare(
-			"UPDATE integration_secrets SET kid='previous' WHERE domain=? AND provider=?",
-		).run("newsletter", "listmonk");
+		db.prepare("UPDATE integration_secrets SET kid='previous' WHERE domain=? AND provider=?").run(
+			"newsletter",
+			"listmonk",
+		);
 
 		// Snapshot the row, then simulate a concurrent admin write that
 		// already rotated the record forward by manually rewriting under
@@ -302,20 +297,20 @@ describe("createIntegrationsRepository — secret surface", () => {
 			},
 			ROOT,
 		);
-		const racedAhead = db
-			.prepare("SELECT kid, ciphertext FROM integration_secrets")
-			.get() as { kid: string; ciphertext: string };
+		const racedAhead = db.prepare("SELECT kid, ciphertext FROM integration_secrets").get() as {
+			kid: string;
+			ciphertext: string;
+		};
 		expect(racedAhead.kid).toBe("current");
 
 		// Now a stale read decides to reseal — but our guard refuses to
 		// overwrite the racing record because ciphertext + kid differ.
 		// The simplest assertion: the row stays under current key and the
 		// repository still returns the right plaintext.
-		const fields = await repo.findSecret<{ apiKey: string }>(
-			"newsletter",
-			"listmonk",
-			{ current: ROOT, previous: PREV },
-		);
+		const fields = await repo.findSecret<{ apiKey: string }>("newsletter", "listmonk", {
+			current: ROOT,
+			previous: PREV,
+		});
 		expect(fields?.apiKey).toBe("race-canary");
 		const final = db.prepare("SELECT kid FROM integration_secrets").get() as {
 			kid: string;
@@ -334,13 +329,15 @@ describe("createIntegrationsRepository — secret surface", () => {
 			},
 			ROOT,
 		);
-		const before = db
-			.prepare("SELECT ciphertext, rotated_at FROM integration_secrets")
-			.get() as { ciphertext: string; rotated_at: string };
+		const before = db.prepare("SELECT ciphertext, rotated_at FROM integration_secrets").get() as {
+			ciphertext: string;
+			rotated_at: string;
+		};
 		await repo.findSecret("newsletter", "listmonk", { current: ROOT });
-		const after = db
-			.prepare("SELECT ciphertext, rotated_at FROM integration_secrets")
-			.get() as { ciphertext: string; rotated_at: string };
+		const after = db.prepare("SELECT ciphertext, rotated_at FROM integration_secrets").get() as {
+			ciphertext: string;
+			rotated_at: string;
+		};
 		expect(after.ciphertext).toBe(before.ciphertext);
 		expect(after.rotated_at).toBe(before.rotated_at);
 	});
@@ -358,16 +355,18 @@ describe("createIntegrationsRepository — secret surface", () => {
 			},
 			ROOT,
 		);
-		const before = db
-			.prepare("SELECT ciphertext, rotated_at FROM integration_secrets")
-			.get() as { ciphertext: string; rotated_at: string };
+		const before = db.prepare("SELECT ciphertext, rotated_at FROM integration_secrets").get() as {
+			ciphertext: string;
+			rotated_at: string;
+		};
 		await repo.findSecret("newsletter", "listmonk", {
 			current: ROOT,
 			previous: PREV,
 		});
-		const after = db
-			.prepare("SELECT ciphertext, rotated_at FROM integration_secrets")
-			.get() as { ciphertext: string; rotated_at: string };
+		const after = db.prepare("SELECT ciphertext, rotated_at FROM integration_secrets").get() as {
+			ciphertext: string;
+			rotated_at: string;
+		};
 		expect(after.ciphertext).toBe(before.ciphertext);
 		expect(after.rotated_at).toBe(before.rotated_at);
 	});
@@ -389,17 +388,18 @@ describe("createIntegrationsRepository — secret surface", () => {
 		// Mislabel without changing the key — open will fall back through
 		// kids and pick the current slot.
 		db.prepare("UPDATE integration_secrets SET kid='previous'").run();
-		const before = db
-			.prepare("SELECT ciphertext FROM integration_secrets")
-			.get() as { ciphertext: string };
+		const before = db.prepare("SELECT ciphertext FROM integration_secrets").get() as {
+			ciphertext: string;
+		};
 		// Only current is supplied; previous is absent.
 		const fields = await repo.findSecret("newsletter", "listmonk", {
 			current: ROOT,
 		});
 		expect(fields).toEqual({ apiKey: "no-reseal-without-prev" });
-		const after = db
-			.prepare("SELECT ciphertext, kid FROM integration_secrets")
-			.get() as { ciphertext: string; kid: string };
+		const after = db.prepare("SELECT ciphertext, kid FROM integration_secrets").get() as {
+			ciphertext: string;
+			kid: string;
+		};
 		// No reseal: ciphertext unchanged, kid unchanged.
 		expect(after.ciphertext).toBe(before.ciphertext);
 		expect(after.kid).toBe("previous");
@@ -416,9 +416,10 @@ describe("createIntegrationsRepository — secret surface", () => {
 			},
 			PREV,
 		);
-		db.prepare(
-			"UPDATE integration_secrets SET kid='previous' WHERE domain=? AND provider=?",
-		).run("newsletter", "listmonk");
+		db.prepare("UPDATE integration_secrets SET kid='previous' WHERE domain=? AND provider=?").run(
+			"newsletter",
+			"listmonk",
+		);
 
 		const pending = repo.listPreviousKidContexts();
 		expect(pending).toEqual([{ domain: "newsletter", provider: "listmonk" }]);
@@ -444,9 +445,7 @@ describe("createIntegrationsRepository — privacy invariants", () => {
 			ROOT,
 		);
 		const row = db
-			.prepare(
-				"SELECT ciphertext, dek_wrap FROM integration_secrets WHERE domain=? AND provider=?",
-			)
+			.prepare("SELECT ciphertext, dek_wrap FROM integration_secrets WHERE domain=? AND provider=?")
 			.get("newsletter", "listmonk") as {
 			ciphertext: string;
 			dek_wrap: string;

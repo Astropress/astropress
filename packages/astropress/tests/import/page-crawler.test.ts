@@ -172,9 +172,7 @@ describe("crawlSitePages — failure modes", () => {
 </urlset>`;
 
 		vi.mocked(fetch)
-			.mockResolvedValueOnce(
-				makeResponse(sitemapWithDupe, 200, "application/xml"),
-			)
+			.mockResolvedValueOnce(makeResponse(sitemapWithDupe, 200, "application/xml"))
 			.mockResolvedValueOnce(makeResponse(ABOUT_HTML));
 
 		const result = await crawlSitePages({ siteUrl: "https://mysite.com" });

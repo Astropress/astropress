@@ -1,10 +1,4 @@
-import {
-	existsSync,
-	mkdirSync,
-	mkdtempSync,
-	rmSync,
-	writeFileSync,
-} from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -59,9 +53,7 @@ describe("prepareAstropressDeployment", () => {
 		expect(existsSync(join(targetDir, "index.html"))).toBe(true);
 		expect(existsSync(join(targetDir, ".astropress-deploy.json"))).toBe(true);
 
-		const meta = JSON.parse(
-			await readFile(join(targetDir, ".astropress-deploy.json"), "utf8"),
-		);
+		const meta = JSON.parse(await readFile(join(targetDir, ".astropress-deploy.json"), "utf8"));
 		expect(meta.provider).toBe("test-provider");
 		expect(meta.projectName).toBe("my-site");
 		expect(meta.environment).toBe("production");
@@ -77,10 +69,7 @@ describe("prepareAstropressDeployment", () => {
 		);
 
 		const meta = JSON.parse(
-			await readFile(
-				join(outputDir, "site", ".astropress-deploy.json"),
-				"utf8",
-			),
+			await readFile(join(outputDir, "site", ".astropress-deploy.json"), "utf8"),
 		);
 		expect(meta.environment).toBe("staging");
 	});
@@ -132,18 +121,13 @@ describe("prepareAstropressDeployment", () => {
 			"auto-path",
 		);
 		expect(existsSync(join(expectedTarget, "index.html"))).toBe(true);
-		expect(existsSync(join(expectedTarget, ".astropress-deploy.json"))).toBe(
-			true,
-		);
+		expect(existsSync(join(expectedTarget, ".astropress-deploy.json"))).toBe(true);
 	});
 
 	it("metadata file is named exactly '.astropress-deploy.json'", async () => {
 		const buildDir = makeBuildDir("build-metaname");
 		const outputDir = join(testRoot, "out-metaname");
-		await prepareAstropressDeployment(
-			{ buildDir, projectName: "p" },
-			{ provider: "x", outputDir },
-		);
+		await prepareAstropressDeployment({ buildDir, projectName: "p" }, { provider: "x", outputDir });
 		// readFile of the exact filename must succeed.
 		const meta = JSON.parse(
 			await readFile(join(outputDir, "p", ".astropress-deploy.json"), "utf8"),
@@ -193,10 +177,7 @@ describe("prepareAstropressDeployment", () => {
 
 		// Run a second time — should not throw
 		await expect(
-			prepareAstropressDeployment(
-				{ buildDir, projectName: "site" },
-				{ provider: "x", outputDir },
-			),
+			prepareAstropressDeployment({ buildDir, projectName: "site" }, { provider: "x", outputDir }),
 		).resolves.toBeDefined();
 	});
 });

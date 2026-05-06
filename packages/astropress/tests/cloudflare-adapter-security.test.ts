@@ -17,9 +17,7 @@ describe("cloudflare adapter security defaults", () => {
 			],
 		});
 
-		await expect(
-			adapter.auth.signIn("admin@example.com", "password"),
-		).resolves.toBeNull();
+		await expect(adapter.auth.signIn("admin@example.com", "password")).resolves.toBeNull();
 	});
 
 	it("supports explicit insecure fallback auth only for test-style callers", async () => {
@@ -35,9 +33,7 @@ describe("cloudflare adapter security defaults", () => {
 			],
 		});
 
-		await expect(
-			adapter.auth.signIn("admin@example.com", "password"),
-		).resolves.toMatchObject({
+		await expect(adapter.auth.signIn("admin@example.com", "password")).resolves.toMatchObject({
 			email: "admin@example.com",
 			isAdmin: true,
 		});
@@ -47,13 +43,11 @@ describe("cloudflare adapter security defaults", () => {
 describe("cloudflare session secret", () => {
 	beforeEach(() => {
 		vi.spyOn(console, "warn").mockImplementation(() => {});
-		// biome-ignore lint/performance/noDelete: = undefined sets the string "undefined", not actual unset
 		delete process.env.CLOUDFLARE_SESSION_SECRET;
 	});
 
 	afterEach(() => {
 		vi.restoreAllMocks();
-		// biome-ignore lint/performance/noDelete: = undefined sets the string "undefined", not actual unset
 		delete process.env.CLOUDFLARE_SESSION_SECRET;
 	});
 
@@ -67,9 +61,7 @@ describe("cloudflare session secret", () => {
 		await adapter.auth.signIn("admin@example.com", "correctpass");
 		expect(console.warn).toHaveBeenCalledWith(
 			expect.any(String),
-			expect.stringContaining(
-				"CLOUDFLARE_SESSION_SECRET is using the insecure default",
-			),
+			expect.stringContaining("CLOUDFLARE_SESSION_SECRET is using the insecure default"),
 		);
 		db.close();
 	});
@@ -98,10 +90,7 @@ describe("cloudflare session secret", () => {
 		const d1 = new SqliteBackedD1Database(db);
 		const adapter = createAstropressCloudflareAdapter({ db: d1 });
 
-		const session = await adapter.auth.signIn(
-			"admin@example.com",
-			"correctpass",
-		);
+		const session = await adapter.auth.signIn("admin@example.com", "correctpass");
 		expect(session).not.toBeNull();
 		expect(session?.email).toBe("admin@example.com");
 
@@ -125,10 +114,7 @@ describe("cloudflare session secret", () => {
 		const d1 = new SqliteBackedD1Database(db);
 		const adapter = createAstropressCloudflareAdapter({ db: d1 });
 
-		const session = await adapter.auth.signIn(
-			"admin@example.com",
-			"correctpass",
-		);
+		const session = await adapter.auth.signIn("admin@example.com", "correctpass");
 		expect(session).not.toBeNull();
 
 		process.env.CLOUDFLARE_SESSION_SECRET = "new-cloudflare-secret";
@@ -157,18 +143,11 @@ describe("cloudflare session secret", () => {
 		const d1 = new SqliteBackedD1Database(db);
 		const adapter = createAstropressCloudflareAdapter({ db: d1 });
 
-		const session = await adapter.auth.signIn(
-			"admin@example.com",
-			"correctpass",
-		);
+		const session = await adapter.auth.signIn("admin@example.com", "correctpass");
 		expect(session).not.toBeNull();
 
-		const stored = db
-			.prepare("SELECT id FROM admin_sessions LIMIT 1")
-			.get() as { id: string };
-		expect(stored.id).toBe(
-			await createSessionTokenDigest(session?.id, "new-cloudflare-secret"),
-		);
+		const stored = db.prepare("SELECT id FROM admin_sessions LIMIT 1").get() as { id: string };
+		expect(stored.id).toBe(await createSessionTokenDigest(session?.id, "new-cloudflare-secret"));
 		expect(stored.id).not.toBe(
 			await createSessionTokenDigest(session?.id, "old-cloudflare-secret"),
 		);
