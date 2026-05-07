@@ -1,3 +1,4 @@
+// stryker-disable-file: data-only — pure SQL string constants, type aliases, and row-shape interfaces. No conditional logic; the consuming runtime in auth.ts is mutation-tested separately.
 import {
 	type PersistedAdminUserRow,
 	type PersistedAuditEventRow,
