@@ -381,31 +381,6 @@ function judgeScored(
 }
 
 function main(): number {
-	// Escape hatch for the biome 2 bump (and equivalent formatter-only sweeps).
-	// A formatter pass that touches every file invalidates the entire baseline
-	// (line numbers shift → byte-hashes diverge), forcing a multi-hour
-	// re-mutation run that's intractable locally and unstable under load.
-	// Set MUTATION_GATE_BIOME_BUMP=1 to bypass the gate for one push; the
-	// .github/workflows/refresh-mutation-baseline.yml workflow will re-run the
-	// gate in CI (single-worker, multi-hour timeout) and commit a refreshed
-	// baseline-scores.json back to the branch. Future pushes hash-skip clean.
-	// Two-mode formatter escape hatch:
-	//   - MUTATION_GATE_BIOME_BUMP=1 alone (local push): bypass the gate
-	//     entirely. CI's refresh-mutation-baseline workflow refreshes the
-	//     baseline so the next push hash-skips clean.
-	//   - MUTATION_GATE_BIOME_BUMP=1 + --rewrite-on-regression (CI workflow):
-	//     run the gate normally but accept regressions as the new baseline.
-	if (
-		process.env.MUTATION_GATE_BIOME_BUMP === "1" &&
-		!process.argv.includes("--rewrite-on-regression")
-	) {
-		console.log(
-			"prepush-mutation-gate: MUTATION_GATE_BIOME_BUMP=1 — bypassing gate.\n" +
-				"  CI's refresh-mutation-baseline workflow will refresh the baseline on this branch.\n" +
-				"  This bypass is for formatter-only sweeps (e.g. biome major bumps); never use it for real code changes.",
-		);
-		return 0;
-	}
 	const changed = changedSourceFiles();
 	if (changed.length === 0) {
 		console.log("prepush-mutation-gate: no TypeScript source changes — skipping.");
@@ -644,38 +619,6 @@ function main(): number {
 		return 0;
 	}
 
-	// Opt-in formatter-sweep override: when a PR's diff is purely
-	// formatter-induced (e.g. a biome major bump that touches every file),
-	// the gate's regression check fires on measurement noise — line shifts
-	// invalidate hashes and stryker's `vitest related` discovery can drop
-	// scores even though tests still pass. With --rewrite-on-regression,
-	// we accept the new scores as the baseline so the next push hash-skips
-	// clean. NEVER set this in normal commits; it bypasses the safety
-	// guarantee the gate exists for. Restricted to the formatter escape
-	// hatch (MUTATION_GATE_BIOME_BUMP=1 implied) to make misuse loud.
-	const rewriteOnRegression =
-		process.argv.includes("--rewrite-on-regression") &&
-		process.env.MUTATION_GATE_BIOME_BUMP === "1";
-	if (rewriteOnRegression) {
-		console.warn(
-			"\n⚠ prepush-mutation-gate: --rewrite-on-regression + MUTATION_GATE_BIOME_BUMP=1 — accepting failures as new baseline.\n",
-		);
-		for (const v of failures) {
-			console.warn(
-				`  ratchet-down  ${v.file}: ${v.score?.toFixed(2) ?? "null"}% (was ${v.baseline?.score.toFixed(2) ?? "new"}%) [${v.status}]`,
-			);
-		}
-		const next: Record<string, BaselineEntry> = { ...baseline.scores };
-		for (const v of [...verdicts]) {
-			if (v.score === null || v.hash === null) continue;
-			next[v.file] = { score: v.score, hash: v.hash };
-		}
-		saveBaseline({ updatedAt: new Date().toISOString(), scores: next });
-		console.warn(
-			`\n✓ prepush-mutation-gate: rewrote baseline at ${BASELINE_PATH} (formatter-sweep override).\n`,
-		);
-		return 0;
-	}
 	console.error("\n✖ prepush-mutation-gate FAILED:\n");
 	for (const v of failures) {
 		if (v.status === "regression") {
