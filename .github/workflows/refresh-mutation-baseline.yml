@@ -46,9 +46,12 @@ jobs:
       || (github.event_name == 'pull_request' && github.event.label.name == 'refresh-mutation-baseline')
     name: Refresh stryker baseline
     runs-on: ubuntu-latest
-    # Up to 6h: a full sweep on ~200 files × ~80 mutants/file at single-worker
-    # concurrency takes hours. Setting headroom so a noisy environment doesn't
-    # truncate the run.
+    # Up to GitHub Actions' max (6h on most plans). A 6h cap was hit at
+    # single-worker concurrency on a 227-file sweep, so this version uses
+    # default parallelism (4) and explicitly accepts that the workflow may
+    # be split across multiple runs (the gate's checkpoint reporter
+    # persists progress per mutant, so a re-run picks up where the
+    # previous one stopped).
     timeout-minutes: 360
     permissions:
       contents: write
@@ -77,11 +80,12 @@ jobs:
         run: bun run --filter @astropress-diy/astropress build
 
       - name: Refresh mutation baseline
-        # The gate writes the new baseline on a passing run. Pass `--check-only`
-        # off here so the rewrite happens. Single-worker concurrency to avoid
-        # OOM/SIGSEGV on the runner.
+        # The gate writes the new baseline on a passing run. STRYKER_CONCURRENCY
+        # defaults to 4; raising it more on a 4-CPU runner produces diminishing
+        # returns and risks OOM. The gate's checkpoint reporter persists
+        # per-mutant progress so a SIGKILLed worker doesn't lose the work.
         env:
-          STRYKER_CONCURRENCY: "1"
+          STRYKER_CONCURRENCY: "4"
         run: bun run tooling/scripts/prepush-mutation-gate.ts
 
       - name: Commit refreshed baseline

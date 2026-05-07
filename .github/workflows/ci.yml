@@ -93,7 +93,7 @@ jobs:
       - run: bun run audit:microcopy
       - run: bun run check:version
       - run: bun run audit:arch
-      - run: bunx @biomejs/biome@1 check --reporter=github packages/astropress/src packages/astropress/tests packages/astropress/web-components
+      - run: bunx @biomejs/biome@2 check --reporter=github packages/astropress/src packages/astropress/tests packages/astropress/web-components
       - run: bun run audit:deps:graph
       - run: bun run audit:tooling-types
       - run: bun run audit:aeo
