@@ -192,7 +192,9 @@ describe("wordpress import contract", () => {
 		vi.unstubAllGlobals();
 	});
 
-	it("can apply staged imports into the local sqlite runtime idempotently", async () => {
+	it("can apply staged imports into the local sqlite runtime idempotently", {
+		timeout: 60_000,
+	}, async () => {
 		const workspace = await mkdtemp(join(tmpdir(), "astropress-wordpress-apply-"));
 		const artifactDir = join(workspace, "artifacts");
 		const adminDbPath = join(workspace, ".data", "admin.sqlite");

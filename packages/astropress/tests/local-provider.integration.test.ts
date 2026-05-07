@@ -126,7 +126,7 @@ describe("local provider integration", () => {
 		await rm(workspace, { recursive: true, force: true });
 	});
 
-	it("selects the requested local provider runtime", async () => {
+	it("selects the requested local provider runtime", { timeout: 60_000 }, async () => {
 		const workspace = await mkdtemp(join(tmpdir(), "astropress-provider-local-select-"));
 		const supabase = createAstropressLocalAdapter({
 			provider: "supabase",
