@@ -33,6 +33,7 @@ export default {
 		"!src/project-scaffold-passphrase-wordlist.ts",
 		"!src/provider-targets-data.ts",
 		"!src/site-settings.ts",
+		"!src/sqlite-admin-runtime-wiring.ts",
 	],
 	testRunner: "vitest",
 	coverageAnalysis: "perTest",

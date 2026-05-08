@@ -21,6 +21,14 @@ afterAll(() => {
 	fixture.db.close();
 });
 
+// ─── Adapter identity ─────────────────────────────────────────────────────────
+
+describe("admin store adapter identity", () => {
+	it("declares backend as 'sqlite'", () => {
+		expect(fixture.store.backend).toBe("sqlite");
+	});
+});
+
 // ─── Redirects ────────────────────────────────────────────────────────────────
 
 describe("redirects", () => {

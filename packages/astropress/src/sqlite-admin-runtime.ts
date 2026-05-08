@@ -2,9 +2,9 @@ import { createAstropressAdminStoreAdapter } from "./admin-store-adapter-factory
 import { peekCmsConfig } from "./config";
 import type { AdminStoreAdapter } from "./persistence-types";
 import { getAstropressRootSecret } from "./runtime-env";
+import { buildSqliteAdminStoreModules } from "./sqlite-admin-runtime-wiring";
 import { createApiTokenStore } from "./sqlite-runtime/api-tokens";
 import { createSqliteAssetsStore } from "./sqlite-runtime/assets";
-import { recordAuditEvent } from "./sqlite-runtime/audit-log";
 import { createSqliteAuthStore } from "./sqlite-runtime/auth";
 import { createSqliteCatalogStore } from "./sqlite-runtime/catalog";
 import { createSqliteContentStore } from "./sqlite-runtime/content";
@@ -62,96 +62,29 @@ export function createAstropressSqliteAdminRuntime(options: AstropressSqliteAdmi
 		now: () => new Date(now()).toISOString(),
 	});
 
-	const sqliteAdminStore: AdminStoreAdapter = createAstropressAdminStoreAdapter("sqlite", {
-		auth: {
-			createSession: sqliteAuthRepository.createSession,
-			getSessionUser: sqliteAuthRepository.getSessionUser,
-			getCsrfToken: sqliteAuthRepository.getCsrfToken,
-			revokeSession: sqliteAuthRepository.revokeSession,
-			createPasswordResetToken: sqliteAuthRepository.createPasswordResetToken,
-			getInviteRequest: sqliteAuthRepository.getInviteRequest,
-			getPasswordResetRequest: sqliteAuthRepository.getPasswordResetRequest,
-			consumeInviteToken: sqliteAuthRepository.consumeInviteToken,
-			consumePasswordResetToken: sqliteAuthRepository.consumePasswordResetToken,
-			recordSuccessfulLogin: sqliteAuthRepository.recordSuccessfulLogin,
-			recordLogout: sqliteAuthRepository.recordLogout,
-		},
-		audit: {
-			getAuditEvents: getPersistedAuditEvents,
-			recordAuditEvent: (input) => recordAuditEvent(getDb(), input),
-		},
-		users: {
-			listAdminUsers: sqliteUserRepository.listAdminUsers,
-			inviteAdminUser: sqliteUserRepository.inviteAdminUser,
-			suspendAdminUser: sqliteUserRepository.suspendAdminUser,
-			unsuspendAdminUser: sqliteUserRepository.unsuspendAdminUser,
-		},
-		authors: {
-			listAuthors: sqliteAuthorRepository.listAuthors,
-			createAuthor: sqliteAuthorRepository.createAuthor,
-			updateAuthor: sqliteAuthorRepository.updateAuthor,
-			deleteAuthor: sqliteAuthorRepository.deleteAuthor,
-		},
-		taxonomies: {
-			listCategories: sqliteTaxonomyRepository.listCategories,
-			createCategory: sqliteTaxonomyRepository.createCategory,
-			updateCategory: sqliteTaxonomyRepository.updateCategory,
-			deleteCategory: sqliteTaxonomyRepository.deleteCategory,
-			listTags: sqliteTaxonomyRepository.listTags,
-			createTag: sqliteTaxonomyRepository.createTag,
-			updateTag: sqliteTaxonomyRepository.updateTag,
-			deleteTag: sqliteTaxonomyRepository.deleteTag,
-		},
-		redirects: {
-			getRedirectRules: sqliteRedirectRepository.getRedirectRules,
-			createRedirectRule: sqliteRedirectRepository.createRedirectRule,
-			deleteRedirectRule: sqliteRedirectRepository.deleteRedirectRule,
-		},
-		comments: {
-			getComments: sqliteCommentRepository.getComments,
-			moderateComment: sqliteCommentRepository.moderateComment,
-			submitPublicComment: sqliteCommentRepository.submitPublicComment,
-			getApprovedCommentsForRoute: sqliteCommentRepository.getApprovedCommentsForRoute,
-		},
-		content: {
-			listContentStates: sqliteContentRepository.listContentStates,
-			getContentState: sqliteContentRepository.getContentState,
-			getContentRevisions: sqliteContentRepository.getContentRevisions,
-			createContentRecord: sqliteContentRepository.createContentRecord,
-			saveContentState: sqliteContentRepository.saveContentState,
-			restoreRevision: sqliteContentRepository.restoreRevision,
-			schedulePublish: sqliteSchedulingRepository.schedulePublish,
-			listScheduled: sqliteSchedulingRepository.listScheduled,
-			cancelScheduledPublish: sqliteSchedulingRepository.cancelScheduledPublish,
-			runScheduledPublishes: sqliteSchedulingRepository.runScheduledPublishes,
-		},
-		submissions: {
-			submitContact: sqliteSubmissionRepository.submitContact,
-			getContactSubmissions: sqliteSubmissionRepository.getContactSubmissions,
-		},
-		translations: {
-			updateTranslationState: sqliteTranslationRepository.updateTranslationState,
-			getEffectiveTranslationState: sqliteTranslationRepository.getEffectiveTranslationState,
-		},
-		settings: {
-			getSettings: sqliteSettingsRepository.getSettings,
-			saveSettings: sqliteSettingsRepository.saveSettings,
-		},
-		rateLimits: {
-			checkRateLimit: sqliteRateLimitRepository.checkRateLimit,
-			peekRateLimit: sqliteRateLimitRepository.peekRateLimit,
-			recordFailedAttempt: sqliteRateLimitRepository.recordFailedAttempt,
-		},
-		media: {
-			listMediaAssets: sqliteMediaRepository.listMediaAssets,
-			createMediaAsset: sqliteMediaRepository.createMediaAsset,
-			updateMediaAsset: sqliteMediaRepository.updateMediaAsset,
-			deleteMediaAsset: sqliteMediaRepository.deleteMediaAsset,
-		},
-		apiTokens: sqliteApiTokenStore,
-		webhooks: sqliteWebhookStore,
-		integrations: sqliteIntegrationsRepository,
-	});
+	const sqliteAdminStore: AdminStoreAdapter = createAstropressAdminStoreAdapter(
+		"sqlite",
+		buildSqliteAdminStoreModules({
+			getDb,
+			sqliteAuthRepository,
+			getPersistedAuditEvents,
+			sqliteUserRepository,
+			sqliteAuthorRepository,
+			sqliteTaxonomyRepository,
+			sqliteRedirectRepository,
+			sqliteCommentRepository,
+			sqliteContentRepository,
+			sqliteSchedulingRepository,
+			sqliteSubmissionRepository,
+			sqliteTranslationRepository,
+			sqliteSettingsRepository,
+			sqliteRateLimitRepository,
+			sqliteMediaRepository,
+			sqliteApiTokenStore,
+			sqliteWebhookStore,
+			sqliteIntegrationsRepository,
+		}),
+	);
 
 	if (peekCmsConfig()?.search?.enabled) {
 		ensureFts5SearchIndex(getDb());
