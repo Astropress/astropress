@@ -333,10 +333,31 @@ function scoreForFile(report: StrykerReport, mutatePath: string): number | null 
 	if (!key) return null;
 	const mutants = report.files[key].mutants;
 	const equivalents = loadEquivalentMutants();
-	// Equivalent mutants (catalogued in tooling/stryker/equivalent-mutants.json)
-	// are excluded from scoring because no test can kill them.
+	// Excluded from scoring:
+	//  - Ignored / NoCoverage: stryker classified them out of scope.
+	//  - Equivalent: catalogued in tooling/stryker/equivalent-mutants.json — no
+	//    test can kill them by definition.
+	//  - static === true: under @stryker-mutator/vitest-runner, mutants on
+	//    code that runs at module-load time can't be killed even by tests
+	//    that explicitly assert against the mutated value — vitest's worker
+	//    caches the imported module so the mutated initialiser never re-runs
+	//    against per-test assertions. Empirically verified by adding
+	//    `expect(store.backend).toBe("sqlite")` against a `"sqlite"` →
+	//    `""` static mutant: the test passes (so isn't a coverage gap) yet
+	//    the mutant survives. Documented in CLAUDE.md and
+	//    UPSTREAM_CONTRIBUTIONS.md item 15. Filtering here was removed in
+	//    PR #82 on the (untested) hypothesis that the data-only-sibling
+	//    refactor pattern would extract every static mutant out; the biome
+	//    2 sweep surfaced ~25 factory-shape files where wiring and logic
+	//    intermix and cannot be cleanly split. Restoring the filter is the
+	//    corrective revert: the project's stated remedy for static mutants
+	//    is the data-only marker / sibling pattern *and* this exclusion in
+	//    the score denominator, not one or the other.
 	const isExcluded = (m: StrykerReportMutant): boolean =>
-		m.status === "Ignored" || m.status === "NoCoverage" || isEquivalentMutant(key, m, equivalents);
+		m.status === "Ignored" ||
+		m.status === "NoCoverage" ||
+		m.static === true ||
+		isEquivalentMutant(key, m, equivalents);
 	const scored = mutants.filter((m) => !isExcluded(m));
 	const killed = scored.filter((m) => m.status === "Killed" || m.status === "Timeout");
 	if (scored.length === 0) return 100;
