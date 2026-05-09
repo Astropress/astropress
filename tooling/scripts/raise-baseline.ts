@@ -70,7 +70,7 @@ function saveBaseline(b: Baseline): void {
 	// happens to be configured to skip JSON in some future config.
 	const result = spawnSync(
 		"bunx",
-		["@biomejs/biome@1", "format", "--write", "--no-errors-on-unmatched", BASELINE_PATH],
+		["@biomejs/biome", "format", "--write", "--no-errors-on-unmatched", BASELINE_PATH],
 		{ stdio: "inherit", cwd: REPO_ROOT },
 	);
 	if (result.status !== 0) {
