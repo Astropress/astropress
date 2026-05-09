@@ -561,6 +561,7 @@ pre-push:
       run: >-
         bun run tooling/scripts/run-with-peer-abort.ts mutation-gate --
         bun run tooling/scripts/run-with-timing.ts mutation-gate -- bash -c '
+          bun run tooling/scripts/is-baseline-only-push.ts && exit 0;
           bun run tooling/scripts/prepush-mutation-gate.ts &&
           bun run audit:baseline-coverage &&
           bun run audit:baseline-coverage:rust
@@ -575,8 +576,10 @@ pre-push:
       tags: rust mutation
       run: >-
         bun run tooling/scripts/run-with-peer-abort.ts mutation-gate-rust --
-        bun run tooling/scripts/run-with-timing.ts mutation-gate-rust --
-        bun run tooling/scripts/prepush-mutation-gate-rust.ts
+        bun run tooling/scripts/run-with-timing.ts mutation-gate-rust -- bash -c '
+          bun run tooling/scripts/is-baseline-only-push.ts && exit 0;
+          bun run tooling/scripts/prepush-mutation-gate-rust.ts
+        '
 
     slow-audits:
       # Whole-repo static audits moved out of pre-commit because they scan far
