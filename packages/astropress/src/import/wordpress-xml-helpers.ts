@@ -1,10 +1,11 @@
-export const XML_ENTITY_LOOKUP: Record<string, string> = {
-	amp: "&",
-	apos: "'",
-	gt: ">",
-	lt: "<",
-	quot: '"',
-};
+import {
+	WP_DEFAULT_MIME,
+	WP_MIME_BY_EXTENSION,
+	WP_STATUS_INPUT,
+	XML_ENTITY_LOOKUP,
+} from "./wordpress-xml-tags-data";
+
+export { XML_ENTITY_LOOKUP };
 
 export function countMatches(source: string, pattern: RegExp) {
 	const matches = source.match(pattern);
@@ -88,11 +89,11 @@ export function normalizePathname(value: string, fallbackSlug: string) {
 
 export function normalizeContentStatus(value: string): "draft" | "published" | "archived" {
 	switch (value.trim().toLowerCase()) {
-		case "publish":
+		case WP_STATUS_INPUT.PUBLISH:
 			return "published";
-		case "draft":
-		case "pending":
-		case "future":
+		case WP_STATUS_INPUT.DRAFT:
+		case WP_STATUS_INPUT.PENDING:
+		case WP_STATUS_INPUT.FUTURE:
 			return "draft";
 		default:
 			return "archived";
@@ -101,16 +102,7 @@ export function normalizeContentStatus(value: string): "draft" | "published" | "
 
 export function inferMimeType(filename: string) {
 	const extension = filename.toLowerCase().split(".").pop() ?? "";
-	const map: Record<string, string> = {
-		jpg: "image/jpeg",
-		jpeg: "image/jpeg",
-		png: "image/png",
-		gif: "image/gif",
-		webp: "image/webp",
-		svg: "image/svg+xml",
-		pdf: "application/pdf",
-	};
-	return map[extension] ?? "application/octet-stream";
+	return WP_MIME_BY_EXTENSION[extension] ?? WP_DEFAULT_MIME;
 }
 
 export function filenameFromUrl(sourceUrl: string, fallback: string) {

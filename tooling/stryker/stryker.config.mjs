@@ -39,6 +39,7 @@ export default {
 		"!src/sqlite-admin-runtime-options.ts",
 		"!src/sqlite-admin-runtime-wiring.ts",
 		"!src/sqlite-bootstrap-seed-sql.ts",
+		"!src/import/wordpress-xml-tags-data.ts",
 		// Pure barrel files (only `export … from` lines) and pure type-declaration
 		// files. Stryker produces zero mutants for these → absent from the report
 		// → gate would mark UNSCORED. Honors the in-file `stryker-disable-file:

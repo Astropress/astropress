@@ -13,6 +13,15 @@ import {
 	parseCategoryBlocks,
 	safeArtifactFilename,
 } from "./wordpress-xml-helpers";
+import {
+	WP_ATTR,
+	WP_CATEGORY_DOMAIN,
+	WP_COMMENT_APPROVED_VALUE,
+	WP_META_KEY_OLD_SLUG,
+	WP_POST_TYPE,
+	WP_REDIRECT_REASON_OLD_SLUG,
+	WP_TAG,
+} from "./wordpress-xml-tags-data";
 
 export type ParsedAuthor = {
 	id: string;
@@ -109,13 +118,13 @@ export function detectUnsupportedPatterns(source: string) {
 }
 
 export function parseWordPressExport(source: string): ParsedBundle {
-	const authors: ParsedAuthor[] = getBlocks(source, "wp:author").map((block, index) => ({
-		id: getTagText(block, "wp:author_id") || `author-${index + 1}`,
-		login: normalizeSlug(getTagText(block, "wp:author_login"), `author-${index + 1}`),
-		email: getTagText(block, "wp:author_email") || undefined,
+	const authors: ParsedAuthor[] = getBlocks(source, WP_TAG.AUTHOR).map((block, index) => ({
+		id: getTagText(block, WP_TAG.AUTHOR_ID) || `author-${index + 1}`,
+		login: normalizeSlug(getTagText(block, WP_TAG.AUTHOR_LOGIN), `author-${index + 1}`),
+		email: getTagText(block, WP_TAG.AUTHOR_EMAIL) || undefined,
 		displayName:
-			getTagText(block, "wp:author_display_name") ||
-			getTagText(block, "wp:author_login") ||
+			getTagText(block, WP_TAG.AUTHOR_DISPLAY_NAME) ||
+			getTagText(block, WP_TAG.AUTHOR_LOGIN) ||
 			`Author ${index + 1}`,
 	}));
 
@@ -126,47 +135,47 @@ export function parseWordPressExport(source: string): ParsedBundle {
 	const redirects: ParsedRedirect[] = [];
 	let skipped = 0;
 
-	for (const [index, item] of getBlocks(source, "item").entries()) {
-		const legacyId = getTagText(item, "wp:post_id") || `item-${index + 1}`;
-		const postType = getTagText(item, "wp:post_type").toLowerCase();
-		const postStatus = normalizeContentStatus(getTagText(item, "wp:status"));
-		const title = getTagText(item, "title") || `Untitled ${legacyId}`;
+	for (const [index, item] of getBlocks(source, WP_TAG.ITEM).entries()) {
+		const legacyId = getTagText(item, WP_TAG.POST_ID) || `item-${index + 1}`;
+		const postType = getTagText(item, WP_TAG.POST_TYPE).toLowerCase();
+		const postStatus = normalizeContentStatus(getTagText(item, WP_TAG.STATUS));
+		const title = getTagText(item, WP_TAG.TITLE) || `Untitled ${legacyId}`;
 		const legacyUrl = normalizePathname(
-			getTagText(item, "link") || getTagText(item, "guid"),
-			normalizeSlug(getTagText(item, "wp:post_name"), legacyId),
+			getTagText(item, WP_TAG.LINK) || getTagText(item, WP_TAG.GUID),
+			normalizeSlug(getTagText(item, WP_TAG.POST_NAME), legacyId),
 		);
 		const slug = normalizeSlug(
-			getTagText(item, "wp:post_name"),
+			getTagText(item, WP_TAG.POST_NAME),
 			legacyUrl
 				.replace(/^\/|\/$/g, "")
 				.split("/")
 				.at(-1) || legacyId,
 		);
-		const body = getTagText(item, "content:encoded");
-		const excerpt = getTagText(item, "excerpt:encoded");
+		const body = getTagText(item, WP_TAG.CONTENT_ENCODED);
+		const excerpt = getTagText(item, WP_TAG.EXCERPT_ENCODED);
 		const publishedAt =
-			getTagText(item, "wp:post_date_gmt") || getTagText(item, "wp:post_date") || undefined;
+			getTagText(item, WP_TAG.POST_DATE_GMT) || getTagText(item, WP_TAG.POST_DATE) || undefined;
 
-		const oldSlugs = getBlocks(item, "wp:postmeta")
-			.filter((meta) => getTagText(meta, "wp:meta_key") === "_wp_old_slug")
-			.map((meta) => normalizeSlug(getTagText(meta, "wp:meta_value"), "legacy"));
+		const oldSlugs = getBlocks(item, WP_TAG.POSTMETA)
+			.filter((meta) => getTagText(meta, WP_TAG.META_KEY) === WP_META_KEY_OLD_SLUG)
+			.map((meta) => normalizeSlug(getTagText(meta, WP_TAG.META_VALUE), "legacy"));
 
 		const categorySlugs: string[] = [];
 		const tagSlugs: string[] = [];
 		for (const category of parseCategoryBlocks(item)) {
-			const domain = getAttributeValue(category.attributes, "domain");
+			const domain = getAttributeValue(category.attributes, WP_ATTR.DOMAIN);
 			const slugValue = normalizeSlug(
-				getAttributeValue(category.attributes, "nicename"),
+				getAttributeValue(category.attributes, WP_ATTR.NICENAME),
 				normalizeSlug(category.value, "term"),
 			);
-			if (domain === "category") {
+			if (domain === WP_CATEGORY_DOMAIN.CATEGORY) {
 				categorySlugs.push(slugValue);
 				termsByKey.set(`category:${slugValue}`, {
 					kind: "category",
 					slug: slugValue,
 					name: category.value || slugValue,
 				});
-			} else if (domain === "post_tag") {
+			} else if (domain === WP_CATEGORY_DOMAIN.POST_TAG) {
 				tagSlugs.push(slugValue);
 				termsByKey.set(`tag:${slugValue}`, {
 					kind: "tag",
@@ -176,8 +185,8 @@ export function parseWordPressExport(source: string): ParsedBundle {
 			}
 		}
 
-		if (postType === "post" || postType === "page") {
-			const creatorLogin = getTagText(item, "dc:creator");
+		if (postType === WP_POST_TYPE.POST || postType === WP_POST_TYPE.PAGE) {
+			const creatorLogin = getTagText(item, WP_TAG.DC_CREATOR);
 			const matchedAuthor = creatorLogin
 				? authors.find((a) => a.login === creatorLogin)
 				: undefined;
@@ -212,32 +221,36 @@ export function parseWordPressExport(source: string): ParsedBundle {
 						id: `redirect-${legacyId}-${oldSlug}`,
 						sourcePath,
 						targetPath,
-						reason: "wp_old_slug",
+						reason: WP_REDIRECT_REASON_OLD_SLUG,
 						recordId: `${postType}-${legacyId}`,
 					});
 				}
 			}
 
-			for (const [commentIndex, commentBlock] of getBlocks(item, "wp:comment").entries()) {
+			for (const [commentIndex, commentBlock] of getBlocks(item, WP_TAG.COMMENT).entries()) {
 				comments.push({
 					id: `comment-${legacyId}-${commentIndex + 1}`,
-					legacyId: getTagText(commentBlock, "wp:comment_id") || `${legacyId}-${commentIndex + 1}`,
+					legacyId:
+						getTagText(commentBlock, WP_TAG.COMMENT_ID) || `${legacyId}-${commentIndex + 1}`,
 					recordId: `${postType}-${legacyId}`,
-					authorName: getTagText(commentBlock, "wp:comment_author") || "Anonymous",
-					authorEmail: getTagText(commentBlock, "wp:comment_author_email") || undefined,
-					body: getTagText(commentBlock, "wp:comment_content"),
-					status: getTagText(commentBlock, "wp:comment_approved") === "1" ? "approved" : "pending",
+					authorName: getTagText(commentBlock, WP_TAG.COMMENT_AUTHOR) || "Anonymous",
+					authorEmail: getTagText(commentBlock, WP_TAG.COMMENT_AUTHOR_EMAIL) || undefined,
+					body: getTagText(commentBlock, WP_TAG.COMMENT_CONTENT),
+					status:
+						getTagText(commentBlock, WP_TAG.COMMENT_APPROVED) === WP_COMMENT_APPROVED_VALUE
+							? "approved"
+							: "pending",
 					createdAt:
-						getTagText(commentBlock, "wp:comment_date_gmt") ||
-						getTagText(commentBlock, "wp:comment_date") ||
+						getTagText(commentBlock, WP_TAG.COMMENT_DATE_GMT) ||
+						getTagText(commentBlock, WP_TAG.COMMENT_DATE) ||
 						undefined,
 				});
 			}
 			continue;
 		}
 
-		if (postType === "attachment") {
-			const sourceUrl = getTagText(item, "wp:attachment_url") || getTagText(item, "guid");
+		if (postType === WP_POST_TYPE.ATTACHMENT) {
+			const sourceUrl = getTagText(item, WP_TAG.ATTACHMENT_URL) || getTagText(item, WP_TAG.GUID);
 			const filename = safeArtifactFilename(
 				filenameFromUrl(sourceUrl, `${slug || legacyId}.bin`),
 				`${slug || legacyId}.bin`,
@@ -251,7 +264,7 @@ export function parseWordPressExport(source: string): ParsedBundle {
 				legacyUrl,
 				filename,
 				mimeType: inferMimeType(filename),
-				parentLegacyId: getTagText(item, "wp:post_parent") || undefined,
+				parentLegacyId: getTagText(item, WP_TAG.POST_PARENT) || undefined,
 			});
 			continue;
 		}
