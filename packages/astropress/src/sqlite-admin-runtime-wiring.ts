@@ -152,6 +152,9 @@ export function buildSqliteAdminStoreModules(deps: SqliteAdminStoreWiringDeps): 
 		submissions: {
 			submitContact: sqliteSubmissionRepository.submitContact,
 			getContactSubmissions: sqliteSubmissionRepository.getContactSubmissions,
+			submitTestimonial: sqliteSubmissionRepository.submitTestimonial,
+			getTestimonials: sqliteSubmissionRepository.getTestimonials,
+			moderateTestimonial: sqliteSubmissionRepository.moderateTestimonial,
 		},
 		translations: {
 			updateTranslationState: sqliteTranslationRepository.updateTranslationState,
