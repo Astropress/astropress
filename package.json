@@ -144,7 +144,8 @@
 		"astro": "^6.2.2",
 		"hono": "^4.12.18",
 		"postcss": "^8.5.10",
-		"ip-address": "^10.2.0"
+		"ip-address": "^10.2.0",
+		"fast-uri": "^3.1.2"
 	},
 	"browserslist": [
 		"Chrome >= 108",
