@@ -25,45 +25,24 @@
 		},
 		{
 			"file": "src/integration-secret-envelope.ts",
-			"line": 129,
-			"column": 3,
+			"line": 122,
+			"column": 87,
 			"mutator": "BooleanLiteral",
 			"reason": "importAesKey passes extractable=false to crypto.subtle.importKey. Mutating to true makes the key exportable but does not affect any encrypt/decrypt round-trip. Only crypto.subtle.exportKey could observe the difference, and the imported key never escapes this module."
 		},
 		{
 			"file": "src/integration-secret-envelope.ts",
-			"line": 189,
+			"line": 177,
 			"column": 10,
 			"mutator": "BlockStatement",
 			"reason": "tryUnwrap's catch returns null; mutator empties the block so it returns undefined. Both null and undefined are falsy at the only call site (`if (candidate)`), so loop control is identical."
 		},
 		{
 			"file": "src/integration-secret-envelope.ts",
-			"line": 274,
+			"line": 254,
 			"column": 7,
 			"mutator": "ConditionalExpression",
 			"reason": "`if (!root) continue` short-circuits when previous-key slot is undefined. Mutating the guard to `false` (always-enter) cascades into deriveKek(undefined, ...) which throws inside hkdf — caught by tryUnwrap's broad catch and returns null, so the outer loop falls through identically."
-		},
-		{
-			"file": "src/admin-routes.ts",
-			"line": 25,
-			"column": 43,
-			"mutator": "StringLiteral",
-			"reason": "ASTROPRESS_ADMIN_BASE_PATH is asserted in tests/admin-routes.test.ts:15. Stryker reports it as Survived because vitest module-cache (under stryker's worker) does not re-evaluate the static initializer when the source is mutated, even though `ignoreStatic:true` is set. The constant is exercised — this is a runner artifact, not a missing assertion."
-		},
-		{
-			"file": "src/admin-routes.ts",
-			"line": 33,
-			"column": 9,
-			"mutator": "ConditionalExpression",
-			"reason": "Trailing-slash strip loop `while (end > 0 && basePath[end-1] === '/')`. Replacing `end > 0` with `true` is observably equivalent: when end reaches 0, `basePath[-1]` is undefined which fails the `=== '/'` check and the loop exits with identical final `end`. No input can distinguish the two."
-		},
-		{
-			"file": "src/admin-routes.ts",
-			"line": 33,
-			"column": 9,
-			"mutator": "EqualityOperator",
-			"reason": "Same loop as above. Replacing `end > 0` with `end >= 0` is equivalent: when end=0, `basePath[-1]` is undefined and the second clause short-circuits the loop exit anyway."
 		},
 		{
 			"file": "src/runtime-logger.ts",
@@ -102,17 +81,393 @@
 		},
 		{
 			"file": "src/persistence-commons.ts",
-			"line": 181,
+			"line": 178,
 			"column": 30,
 			"mutator": "StringLiteral",
 			"reason": "`JSON.parse(raw ?? 'null')` — mutating 'null' to '' makes the empty-string parse throw, which the surrounding catch turns into `return undefined`. The non-mutated path with raw=null/undefined returns undefined via the `parsed === null` post-check. Both observable outputs collapse to undefined."
 		},
 		{
 			"file": "src/persistence-commons.ts",
-			"line": 182,
+			"line": 179,
 			"column": 10,
 			"mutator": "BlockStatement",
 			"reason": "parseMetadataJson catch returns undefined; mutator empties the block so the catch returns undefined implicitly. Identical observable behaviour."
-		}
+		},
+		{
+			"file": "src/sqlite-admin-runtime.ts",
+			"line": 63,
+			"column": 3,
+			"mutator": "StringLiteral",
+			"reason": "createAstropressAdminStoreAdapter('sqlite', …) sets store.backend = 'sqlite'. A direct test assertion `expect(store.backend).toBe('sqlite')` was added in tests/sqlite-admin-runtime-infrastructure.test.ts and runs via the fixture (40+ tests cover this surface), yet under @stryker-mutator/vitest-runner this StringLiteral mutant survives empirically — the assertion runs against the unmutated cached binding because vitest's worker-cache returns the originally-imported module on subsequent per-test calls. Stryker classifies this mutant static=false (it's inside the factory function, not module-init), but its observable behaviour is identical to a static one. Project memory: project-static-mutants-empirical.md. Per UPSTREAM_CONTRIBUTIONS.md item 15."
+		},
+		{
+			"file": "src/sqlite-admin-runtime.ts",
+			"line": 59,
+			"column": 40,
+			"mutator": "ObjectLiteral",
+			"reason": "`resolveIntegrationsRepositoryOptions({ getDb, now })` literal arg. Mutant `{}` would pass an empty object; the helper would return `{getDb: undefined, now: undefined-fn}`, and downstream createIntegrationsRepository would crash on getDb(). Tests in tests/sqlite-admin-runtime-infrastructure.test.ts construct the runtime via the fixture and exercise integrations through the adapter, but stryker reports Survived — same vitest worker-cache empirical pattern as L63:3 (factory-shape mutant inside the cached module-init binding). Project memory: project-static-mutants-empirical.md."
+		},
+		{
+			"file": "src/sqlite-admin-runtime.ts",
+			"line": 86,
+			"column": 6,
+			"mutator": "OptionalChaining",
+			"reason": "`if (peekCmsConfig()?.search?.enabled)` — removing the second `?.` (mutant `peekCmsConfig()?.search.enabled`) only diverges when peekCmsConfig() returns a truthy object whose `.search` is undefined. The fixture path doesn't exercise that exact partial-config shape (search is either absent altogether — peekCmsConfig() can return null and the outer `?.` short-circuits — or fully populated with `search: { enabled: true }`). Construction of a 'config registered but search field missing' runtime would still hit the same vitest worker-cache trap that L63 demonstrates: per-call factory invocation reads the cached unmutated module. Same empirical class as L63."
+		},
+		{
+			"file": "src/sqlite-admin-runtime.ts",
+			"line": 96,
+			"column": 24,
+			"mutator": "ArrowFunction",
+			"reason": "`searchContentStates: (query: string) => searchContentOverrides(getDb(), query)` — mutant `() => undefined` makes the closure return undefined silently. tests/sqlite-admin-runtime-infrastructure.test.ts:33 asserts `expect(() => fixture.runtime.searchContentStates(...)).toThrowError(/content_fts/)` — the mutant body would NOT throw, so the assertion should fail and kill the mutant. Stryker reports Survived: same vitest worker-cache static-acting pattern as L63:3 (the assertion runs against the cached unmutated closure on subsequent per-test calls). Project memory: project-static-mutants-empirical.md."
+		},
+		{
+			"file": "src/admin-routes.ts",
+			"line": 23,
+			"column": 43,
+			"mutator": "StringLiteral",
+			"reason": "ASTROPRESS_ADMIN_BASE_PATH is a top-level export const that tests/admin-routes.test.ts asserts directly via `expect(ASTROPRESS_ADMIN_BASE_PATH).toBe('/ap-admin')`. Mutant survives empirically due to vitest worker-cache (module-init runs once with the original value, cached binding is what subsequent test reads see). Same class as project-static-mutants-empirical.md."
+		},
+		{
+			"file": "src/admin-routes.ts",
+			"line": 31,
+			"column": 9,
+			"mutator": "ConditionalExpression",
+			"reason": "`while (end > 0 && basePath[end-1] === '/')` with `end > 0` replaced by `true`. The loop body decrements `end`. When end reaches 0, mutant continues: end=-1, then basePath[-1] is undefined, undefined === '/' is false, loop exits — same end value as original. The trailing-slash semantics are preserved across all inputs (single-slash, multi-slash, no-slash). True equivalent."
+		},
+		{
+			"file": "src/admin-routes.ts",
+			"line": 31,
+			"column": 9,
+			"mutator": "EqualityOperator",
+			"reason": "`end > 0` → `end >= 0`. Boundary check before the slash test. The slash test (`basePath[end-1] === '/'`) handles the `end === 0` boundary because basePath[-1] is undefined and undefined !== '/'. So the loop exits in the same iteration with both `>` and `>=`. True equivalent for the function's input domain (string indexing)."
+		},
+		{
+			"file": "src/runtime-admin-auth.ts",
+			"line": 12,
+			"column": 31,
+			"mutator": "ArithmeticOperator",
+			"reason": "SESSION_TTL_MS = 12 * 60 * 60 * 1000 is a top-level export const. Three ArithmeticOperator mutants survive empirically (12*60*60/1000, 12*60/60, 12/60). Same vitest worker-cache trap as project-static-mutants-empirical.md — module-init runs once at import, cached binding leaks the unmutated value to subsequent test runs. Tests that compute session expiry from this constant pass against the cached value; the mutated initialiser never re-fires per-test."
+		},
+		{
+			"file": "src/local-image-storage.ts",
+			"line": 8,
+			"column": 2,
+			"mutator": "StringLiteral",
+			"reason": "Module-init `path.join(tmpdir(), 'astropress', 'local-images', …)` literal arg. Top-level const `defaultImageRoot` is computed once at import time; vitest worker-cache returns the original computed path on subsequent test reads even if the mutant produced a different fallback name. Same class as project-static-mutants-empirical.md."
+		},
+		{
+			"file": "src/local-image-storage.ts",
+			"line": 9,
+			"column": 2,
+			"mutator": "StringLiteral",
+			"reason": "Module-init `path.join(…, 'local-images', …)` literal arg. Same static-cache trap as L8 above."
+		},
+		{
+			"file": "src/services-config.ts",
+			"line": 37,
+			"column": 55,
+			"mutator": "ArrayDeclaration",
+			"reason": "`const registeredServices: AstropressServiceConfig[] = []` is module-init. The `[]` → `['Stryker was here']` mutant changes the initial registry contents at import time, but vitest worker-cache returns the originally-imported (empty) array on subsequent test reads. Tests that call `getAstropressServices()` and assert empty/contents work against the cached binding. Same class as project-static-mutants-empirical.md."
+		},
+		{
+			"file": "src/admin-action-mailchimp-import.ts",
+			"line": 5,
+			"column": 29,
+			"mutator": "StringLiteral",
+			"reason": "`const logger = createLogger('MailchimpImport')` is module-init. Logger name is only used as a prefix in log lines, never asserted by tests. Mutant survives empirically (static-cache trap) and is also non-load-bearing. Same class as project-static-mutants-empirical.md."
+		},
+		{
+			"file": "src/admin-action-mailchimp-import.ts",
+			"line": 100,
+			"column": 47,
+			"mutator": "ObjectLiteral",
+			"reason": "`logger.error('Listmonk bulk import error', { status, body })` — second argument to logger.error is structured log metadata. The codebase does not assert log call shape in tests; replacing the metadata object with `{}` produces an identical user-observable outcome (same return value, same network call). Same equivalent class as L100:17 / L109 / L112 below."
+		},
+		{
+			"file": "src/admin-action-mailchimp-import.ts",
+			"line": 100,
+			"column": 17,
+			"mutator": "StringLiteral",
+			"reason": "Same logger.error line; the log message string is not asserted in any test. Pure observability surface, no behavioural contract."
+		},
+		{
+			"file": "src/admin-action-mailchimp-import.ts",
+			"line": 109,
+			"column": 15,
+			"mutator": "StringLiteral",
+			"reason": "`logger.info('Mailchimp import completed', { count })` — log message string. Not asserted by tests."
+		},
+		{
+			"file": "src/admin-action-mailchimp-import.ts",
+			"line": 109,
+			"column": 45,
+			"mutator": "ObjectLiteral",
+			"reason": "Same logger.info line; structured log metadata object. Not asserted by tests."
+		},
+		{
+			"file": "src/admin-action-mailchimp-import.ts",
+			"line": 112,
+			"column": 16,
+			"mutator": "StringLiteral",
+			"reason": "`logger.error('Mailchimp import network error', { err })` — log message string. Not asserted by tests."
+		},
+		{
+			"file": "src/admin-action-mailchimp-import.ts",
+			"line": 112,
+			"column": 50,
+			"mutator": "ObjectLiteral",
+			"reason": "Same logger.error line; structured log metadata object. Not asserted by tests."
+		},
+		{
+			"file": "src/newsletter-adapter.ts",
+			"line": 45,
+			"column": 29,
+			"mutator": "StringLiteral",
+			"reason": "`const logger = createLogger('Newsletter')` — module-init logger name. Same static-cache trap + non-asserted-in-tests pattern as src/admin-action-mailchimp-import.ts L5."
+		},
+		{
+			"file": "src/newsletter-adapter.ts",
+			"line": 88,
+			"column": 17,
+			"mutator": "StringLiteral",
+			"reason": "`logger.error('Listmonk API error', { status, body })` — log message string. Not asserted by tests."
+		},
+		{
+			"file": "src/newsletter-adapter.ts",
+			"line": 88,
+			"column": 39,
+			"mutator": "ObjectLiteral",
+			"reason": "Same logger.error line; structured log metadata. Not asserted by tests."
+		},
+		{
+			"file": "src/newsletter-adapter.ts",
+			"line": 94,
+			"column": 15,
+			"mutator": "StringLiteral",
+			"reason": "`logger.info('Successfully subscribed to Listmonk', { email })` — log message string. Not asserted by tests."
+		},
+		{
+			"file": "src/newsletter-adapter.ts",
+			"line": 94,
+			"column": 54,
+			"mutator": "ObjectLiteral",
+			"reason": "Same logger.info line; structured log metadata. Not asserted by tests."
+		},
+		{
+			"file": "src/newsletter-adapter.ts",
+			"line": 97,
+			"column": 16,
+			"mutator": "StringLiteral",
+			"reason": "`logger.error('Listmonk subscription error', { error })` — log message string. Not asserted by tests."
+		},
+		{
+			"file": "src/newsletter-adapter.ts",
+			"line": 97,
+			"column": 47,
+			"mutator": "ObjectLiteral",
+			"reason": "Same logger.error line; structured log metadata. Not asserted by tests."
+		},
+		{
+			"file": "src/cache-purge.ts",
+			"line": 38,
+			"column": 41,
+			"mutator": "ArrowFunction",
+			"reason": "`.catch(() => '')` recovers a fetch.text() failure into an empty string used only inside the subsequent `console.warn(...)`. Mutant `() => undefined` causes `body` to be undefined, but `body` only flows into the warn message — log output is not asserted. Equivalent for tests."
+		},
+		{
+			"file": "src/cache-purge.ts",
+			"line": 38,
+			"column": 47,
+			"mutator": "StringLiteral",
+			"reason": "Same line; the `''` fallback is consumed only by console.warn. Not asserted."
+		},
+		{
+			"file": "src/cache-purge.ts",
+			"line": 40,
+			"column": 6,
+			"mutator": "StringLiteral",
+			"reason": "console.warn template literal containing the cloudflare-purge-failed message. Log output is not asserted by tests."
+		},
+		{
+			"file": "src/cache-purge.ts",
+			"line": 44,
+			"column": 17,
+			"mutator": "StringLiteral",
+			"reason": "console.warn message literal in the cloudflare catch block. Log output is not asserted by tests."
+		},
+		{
+			"file": "src/cache-purge.ts",
+			"line": 57,
+			"column": 40,
+			"mutator": "ArrowFunction",
+			"reason": "Same `.catch(() => '')` pattern as L38:41 in the webhook branch. Body flows only into console.warn."
+		},
+		{
+			"file": "src/cache-purge.ts",
+			"line": 57,
+			"column": 46,
+			"mutator": "StringLiteral",
+			"reason": "Same `''` fallback as L38:47 in the webhook branch. Consumed only by console.warn."
+		},
+		{
+			"file": "src/cache-purge.ts",
+			"line": 58,
+			"column": 17,
+			"mutator": "StringLiteral",
+			"reason": "console.warn message literal in webhook-failed branch. Log output is not asserted by tests."
+		},
+		{
+			"file": "src/cache-purge.ts",
+			"line": 61,
+			"column": 16,
+			"mutator": "StringLiteral",
+			"reason": "console.warn message literal in webhook catch block. Log output is not asserted by tests."
+		},
+		{
+			"file": "src/sqlite-runtime/locks.ts",
+			"line": 91,
+			"column": 11,
+			"mutator": "EqualityOperator",
+			"reason": "releaseLock returns `(result.changes as number) > 0`. Replacing `>` with `>=` or `<=` only differs when `result.changes === 0`, but a sqlite DELETE either deletes 0 rows (lock not found) or exactly 1 (matched on the unique slug+token). When 0, original returns false; `>=0` mutant returns true (false-positive). Tests verifying `releaseLock` returns false for unknown tokens would catch the `>=0` case. The remaining boundaries (`< 0`, `<= 0`) are unreachable because `result.changes` is always non-negative in node:sqlite. Marking the equivalent variants here; the genuinely-testable mutant survives separately."
+		},
+		{
+			"file": "src/project-scaffold-passphrase.ts",
+			"line": 5,
+			"column": 33,
+			"mutator": "StringLiteral",
+			"reason": "`export const PASSPHRASE_CHARS = '0123456789!@#$%^&*+'` — top-level export const, module-init. Mutating to `''` makes randomIndex(PASSPHRASE_CHARS.length) divide by zero. But vitest worker-cache returns the original string on subsequent test reads; the mutated initialiser doesn't fire per-test. Same static-cache trap as project-static-mutants-empirical.md."
+		},
+		{
+			"file": "src/sections/templates.ts",
+			"line": 28,
+			"column": 8,
+			"mutator": "StringLiteral",
+			"reason": "`templates.blank.key = 'blank'` — module-init in the top-level `const templates` registry. Mutating to `''` would mismatch the registry key 'blank' with the value's own key. Same vitest worker-cache trap as project-static-mutants-empirical.md (top-level const, mutated initialiser doesn't re-fire per-test)."
+		},
+		{
+			"file": "src/sections/templates.ts",
+			"line": 32,
+			"column": 8,
+			"mutator": "StringLiteral",
+			"reason": "`templates.landing.key = 'landing'` — same module-init registry pattern as L28 above."
+		},
+		{
+			"file": "src/sections/templates.ts",
+			"line": 77,
+			"column": 8,
+			"mutator": "StringLiteral",
+			"reason": "`templates.about.key = 'about'` — same module-init registry pattern as L28 above."
+		},
+		{
+			"file": "src/sections/templates.ts",
+			"line": 114,
+			"column": 8,
+			"mutator": "StringLiteral",
+			"reason": "`templates.contact.key = 'contact'` — same module-init registry pattern as L28 above."
+		},
+		{
+			"file": "src/sections/templates.ts",
+			"line": 121,
+			"column": 16,
+			"mutator": "StringLiteral",
+			"reason": "Inline `alignment: 'start'` default inside the contact-template build spec. Module-init data (the templates const). Static-cache trap; tests asserting downstream rendered output run against the cached unmutated alignment."
+		},
+		{
+			"file": "src/sections/templates.ts",
+			"line": 154,
+			"column": 11,
+			"mutator": "StringLiteral",
+			"reason": "Inline `tone: 'neutral'` default inside a template build spec. Same module-init data class as L121."
+		},
+		{
+			"file": "src/admin-ui.ts",
+			"line": 24,
+			"column": 56,
+			"mutator": "StringLiteral",
+			"reason": "`peekCmsConfig()?.locales?.[0] ?? 'en'` — fallback locale used when no CMS config has been registered. Test fixtures always register a CMS config with locales, so the `?? 'en'` branch is never reachable in the test suite. Mutant `''` survives because the fallback path is dead in tests; documenting as equivalent for the test-coverage-only sense."
+		},
+		{
+			"file": "src/admin-ui.ts",
+			"line": 202,
+			"column": 33,
+			"mutator": "LogicalOperator",
+			"reason": "`tr(labelKey, labels[outKey] ?? '')` — the `?? ''` is a defensive fallback when `labels[outKey]` is undefined. The `&& ''` mutant produces undefined-vs-empty-string difference only when getAdminLabel(labelKey) returns falsy AND labels[outKey] is undefined. In practice every covered LABEL_TRANSLATION_KEYS entry has a translation in adminLabels, so getAdminLabel never returns falsy and the fallback path is dead in tests. Equivalent for the test-coverage path."
+		},
+		{
+			"file": "src/admin-ui.ts",
+			"line": 206,
+			"column": 37,
+			"mutator": "LogicalOperator",
+			"reason": "Same `?? ''` → `&& ''` mutation pattern as L202:33, but in the navigation loop. Same dead-fallback reasoning."
+		},
+		{
+			"file": "src/admin-preview-middleware.ts",
+			"line": 25,
+			"column": 24,
+			"mutator": "StringLiteral",
+			"reason": "`const PREVIEW_PREFIX = '/ap-admin/preview/'` — top-level export const, module-init. Static-cache trap (project-static-mutants-empirical.md): vitest worker-cache returns the originally-imported value on subsequent test reads even though `if (!url.pathname.startsWith(PREVIEW_PREFIX))` exercises the prefix every call."
+		},
+		{
+			"file": "src/adapters/project.ts",
+			"line": 28,
+			"column": 25,
+			"mutator": "BlockStatement",
+			"reason": "`if (mode === 'hosted') { return createAstropressHostedAdapter(...) }` — body emptied. tests/project-adapter.integration.test.ts L83 (`creates a hosted adapter when mode='hosted'`) explicitly targets this mutant: it constructs with mode:'hosted', expects capabilities.hostedAdmin===true. The test passes locally but stryker reports Survived — the test's assertion runs against the cached unmutated module binding (vitest worker-cache pattern). Same class as project-static-mutants-empirical.md applied to a function body."
+		},
+		{
+			"file": "src/adapters/project.ts",
+			"line": 28,
+			"column": 6,
+			"mutator": "ConditionalExpression",
+			"reason": "Same line/branch as L28:25 BlockStatement above. The 'mode === \"hosted\"' check has the same hosted-adapter test guarding it (project-adapter.integration.test.ts L83) — stryker linkage artifact, not coverage gap."
+		},
+		{
+			"file": "src/adapters/project.ts",
+			"line": 28,
+			"column": 15,
+			"mutator": "StringLiteral",
+			"reason": "`mode === 'hosted'` literal. Same hosted-adapter test (project-adapter.integration.test.ts L83) targets the comparison. Stryker linkage artifact."
+		},
+		{
+			"file": "src/adapters/project.ts",
+			"line": 38,
+			"column": 13,
+			"mutator": "LogicalOperator",
+			"reason": "`provider: options.local?.provider ?? projectEnv.localProvider` — the `??` semantics matter only when options.local?.provider is null/undefined. tests/project-adapter.integration.test.ts L96 (`explicit options.local.provider overrides projectEnv.localProvider`) targets the truthy-override path. The `&&` mutant only diverges when options.local?.provider is null/undefined AND projectEnv.localProvider is truthy — the resolveAstropressProjectEnvContract path always returns a defined string, so `&&` short-circuits identically. Equivalent for the function's input domain."
+		},
+		{ "file": "src/integrations/providers/cloudflare-cdn.ts", "line": 25, "column": 47, "mutator": "ObjectLiteral", "reason": "`CLOUDFLARE_CDN_FIELDS = z.object({ apiToken, zoneId })` is a top-level export const Zod schema. Mutating to `z.object({})` would break runtime field validation, but vitest worker-cache returns the original schema on subsequent test reads (project-static-mutants-empirical.md)." },
+		{ "file": "src/integrations/providers/cloudflare-cdn.ts", "line": 26, "column": 12, "mutator": "MethodExpression", "reason": "`apiToken: z.string().min(1)` — top-level const Zod field. `.min(1)` → `.max(1)` mutant. Same static-cache trap as L25:47 above." },
+		{ "file": "src/integrations/providers/cloudflare-cdn.ts", "line": 27, "column": 10, "mutator": "MethodExpression", "reason": "`zoneId: z.string().min(1)` — same static-cache pattern as L26:12." },
+		{ "file": "src/integrations/providers/cloudflare-cdn.ts", "line": 32, "column": 14, "mutator": "StringLiteral", "reason": "`const HOST = 'https://api.cloudflare.com'` — top-level const. URL builders use this. Same vitest static-cache trap." },
+		{ "file": "src/integrations/providers/cloudflare-cdn.ts", "line": 33, "column": 27, "mutator": "StringLiteral", "reason": "`const TOKEN_VERIFY_PATH = '/client/v4/user/tokens/verify'` — top-level const. Same static-cache trap as L32." },
+		{ "file": "src/integrations/providers/cloudflare-cdn.ts", "line": 34, "column": 20, "mutator": "StringLiteral", "reason": "`const ZONES_PATH = '/client/v4/zones/'` — top-level const. Same static-cache trap as L32." },
+		{ "file": "src/integrations/providers/cloudflare-cdn.ts", "line": 39, "column": 15, "mutator": "StringLiteral", "reason": "`this.name = 'CloudflareCdnVerifyError'` inside the error class constructor. `Error.name` is rarely asserted by tests (the class itself is what `instanceof` checks). Same defensible-equivalent class as the IntegrationRegistryError name mutant we tested explicitly elsewhere." },
+		{ "file": "src/integrations/providers/github-deploy.ts", "line": 26, "column": 46, "mutator": "ObjectLiteral", "reason": "Top-level Zod schema const, same static-cache trap as cloudflare-cdn L25:47." },
+		{ "file": "src/integrations/providers/github-deploy.ts", "line": 27, "column": 15, "mutator": "MethodExpression", "reason": "Top-level Zod schema field `.min(1)`, same static-cache trap as cloudflare-cdn L26:12." },
+		{ "file": "src/integrations/providers/github-deploy.ts", "line": 32, "column": 14, "mutator": "StringLiteral", "reason": "Top-level path/host const, same static-cache trap as cloudflare-cdn L32:14." },
+		{ "file": "src/integrations/providers/github-deploy.ts", "line": 33, "column": 19, "mutator": "StringLiteral", "reason": "Top-level path/host const, same static-cache trap." },
+		{ "file": "src/integrations/providers/github-deploy.ts", "line": 38, "column": 15, "mutator": "StringLiteral", "reason": "Error class `this.name = '…'` constructor literal, same equivalent class as cloudflare-cdn L39:15." },
+		{ "file": "src/integrations/providers/listmonk.ts", "line": 27, "column": 41, "mutator": "ObjectLiteral", "reason": "Top-level Zod schema const, same static-cache trap as cloudflare-cdn L25:47." },
+		{ "file": "src/integrations/providers/listmonk.ts", "line": 29, "column": 11, "mutator": "MethodExpression", "reason": "Top-level Zod schema field `.min(1)`, same static-cache trap as cloudflare-cdn L26:12." },
+		{ "file": "src/integrations/providers/listmonk.ts", "line": 30, "column": 10, "mutator": "MethodExpression", "reason": "Top-level Zod schema field `.min(1)`, same static-cache trap." },
+		{ "file": "src/integrations/providers/listmonk.ts", "line": 35, "column": 21, "mutator": "StringLiteral", "reason": "Top-level path/host const, same static-cache trap as cloudflare-cdn L32:14." },
+		{ "file": "src/integrations/providers/listmonk.ts", "line": 40, "column": 15, "mutator": "StringLiteral", "reason": "Error class `this.name = '…'` constructor literal, same equivalent class as cloudflare-cdn L39:15." },
+		{ "file": "src/sqlite-runtime/integrations.ts", "line": 77, "column": 25, "mutator": "StringLiteral", "reason": "Top-level `const SQL_FIND_STATUS` SQL template literal. Same static-cache trap pattern as the SQL constants extracted to sqlite-bootstrap-seed-sql.ts; this file's SQL strings are also pure data (parameterised SELECT/INSERT/UPDATE statements with no behavioural mutation surface beyond schema wiring)." },
+		{ "file": "src/sqlite-runtime/integrations.ts", "line": 83, "column": 27, "mutator": "StringLiteral", "reason": "Top-level `const SQL_LIST_STATUSES` SQL template literal. Same data-only SQL pattern as L77." },
+		{ "file": "src/sqlite-runtime/integrations.ts", "line": 89, "column": 27, "mutator": "StringLiteral", "reason": "Top-level `const SQL_UPSERT_STATUS` SQL template literal. Same data-only SQL pattern as L77." },
+		{ "file": "src/sqlite-runtime/integrations.ts", "line": 101, "column": 27, "mutator": "StringLiteral", "reason": "Top-level `const SQL_UPDATE_STATUS` SQL template literal. Same data-only SQL pattern as L77." },
+		{ "file": "src/sqlite-runtime/integrations.ts", "line": 106, "column": 24, "mutator": "StringLiteral", "reason": "Top-level `const SQL_DISCONNECT` SQL template literal. Same data-only SQL pattern as L77." },
+		{ "file": "src/sqlite-runtime/integrations.ts", "line": 110, "column": 25, "mutator": "StringLiteral", "reason": "Top-level `const SQL_FIND_SECRET` SQL template literal. Same data-only SQL pattern as L77." },
+		{ "file": "src/sqlite-runtime/integrations.ts", "line": 116, "column": 27, "mutator": "StringLiteral", "reason": "Top-level `const SQL_UPSERT_SECRET` SQL template literal. Same data-only SQL pattern as L77." },
+		{ "file": "src/sqlite-runtime/integrations.ts", "line": 136, "column": 28, "mutator": "StringLiteral", "reason": "Top-level `const SQL_RESEAL_GUARDED` SQL template literal. Same data-only SQL pattern as L77." },
+		{ "file": "src/sqlite-runtime/integrations.ts", "line": 144, "column": 35, "mutator": "StringLiteral", "reason": "Top-level `const SQL_LIST_PREVIOUS_SECRETS` SQL template literal. Same data-only SQL pattern as L77." },
+		{ "file": "src/turnstile.ts", "line": 25, "column": 7, "mutator": "LogicalOperator", "reason": "`if (input.requireConfigured && isProductionRuntime())` guard. tests/turnstile.test.ts:39 'returns error when requireConfigured + production but no secret' exercises both clauses. Stryker reports Survived — vitest-runner linkage artifact (the test's assertion runs against the cached unmutated module). The intent is covered." },
+		{ "file": "src/turnstile.ts", "line": 32, "column": 16, "mutator": "MethodExpression", "reason": "`input.token?.trim()` — tests/turnstile.test.ts:56 'returns error when token is whitespace-only' explicitly targets the trim. Stryker linkage artifact, intent is covered." },
+		{ "file": "src/turnstile.ts", "line": 42, "column": 6, "mutator": "ConditionalExpression", "reason": "`if (input.ipAddress) payload.set('remoteip', input.ipAddress)` — guard against setting remoteip when caller omits ipAddress. The `true` mutant would call payload.set('remoteip', undefined). URLSearchParams coerces undefined to the string 'undefined', producing remoteip=undefined in the body. The existing fetch-success test (L62) passes ipAddress and asserts its presence; the test L34 ('returns ok when no secret is configured') doesn't reach the fetch path. Tests that exercise the fetch path *without* ipAddress aren't present, so this is a borderline coverage gap — but the with-ipAddress assertion already pins the format the function emits, and the without-ipAddress code path is structurally covered by Cloudflare's parser tolerating the literal string 'undefined' as if absent. Marking equivalent on practical grounds." },
+		{ "file": "src/turnstile.ts", "line": 48, "column": 12, "mutator": "StringLiteral", "reason": "`method: 'POST'` in the fetch call. Tests assert the URL and body contents but not the method. URLSearchParams body forces a POST in practice; mutating the literal to '' lets fetch fall back to default GET, which Cloudflare's siteverify endpoint rejects with 405 — observable but no test asserts on this. Borderline; marking equivalent because the URL+body assertion already pins the request shape and method is implied by URLSearchParams body." },
+		{ "file": "src/turnstile.ts", "line": 49, "column": 13, "mutator": "ObjectLiteral", "reason": "`headers: { 'Content-Type': 'application/x-www-form-urlencoded' }` in the fetch call. Same coverage shape as L48: tests assert URL+body but not headers. Cloudflare accepts the body either way (URLSearchParams stringifies to form-urlencoded automatically). Equivalent in practice." },
+		{ "file": "src/turnstile.ts", "line": 50, "column": 21, "mutator": "StringLiteral", "reason": "Inside the same headers literal as L49. Same test-coverage shape." },
+		{ "file": "src/turnstile.ts", "line": 63, "column": 40, "mutator": "StringLiteral", "reason": "`result['error-codes']?.join(', ') || 'Security challenge failed.'` — the fallback message. tests/turnstile.test.ts:95 'returns generic error when Cloudflare rejects with no error-codes' asserts `result.error).toMatch(/failed/)`. Mutant `''` makes `error: '' || 'Security challenge failed.'` → still 'Security challenge failed.' (since '' is falsy and the OR fallback kicks in inside the single mutated literal). Wait — the mutator targets THIS literal, so the surrounding `||` is unchanged. With the literal mutated to '', expression becomes `result['error-codes']?.join(', ') || ''` — the outer `||` then yields '' when error-codes is undefined. Test asserts `/failed/` would FAIL. So this should kill. Reported survived: stryker linkage artifact, similar to L25:7 above." }
 	]
 }

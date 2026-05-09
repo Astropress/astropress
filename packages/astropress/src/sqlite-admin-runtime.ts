@@ -1,7 +1,10 @@
 import { createAstropressAdminStoreAdapter } from "./admin-store-adapter-factory";
 import { peekCmsConfig } from "./config";
 import type { AdminStoreAdapter } from "./persistence-types";
-import { getAstropressRootSecret } from "./runtime-env";
+import {
+	resolveAstropressSqliteAdminRuntimeOptions,
+	resolveIntegrationsRepositoryOptions,
+} from "./sqlite-admin-runtime-options";
 import { buildSqliteAdminStoreModules } from "./sqlite-admin-runtime-wiring";
 import { createApiTokenStore } from "./sqlite-runtime/api-tokens";
 import { createSqliteAssetsStore } from "./sqlite-runtime/assets";
@@ -28,14 +31,9 @@ export interface AstropressSqliteAdminRuntimeOptions {
 	rootSecret?: string;
 }
 
-const DEFAULT_SESSION_TTL_MS = 12 * 60 * 60 * 1000;
-
 export function createAstropressSqliteAdminRuntime(options: AstropressSqliteAdminRuntimeOptions) {
-	const getDb = options.getDatabase;
-	const sessionTtlMs = options.sessionTtlMs ?? DEFAULT_SESSION_TTL_MS;
-	const now = options.now ?? (() => Date.now());
-	const randomId = options.randomId ?? (() => crypto.randomUUID());
-	const rootSecret = options.rootSecret ?? getAstropressRootSecret();
+	const { getDb, sessionTtlMs, now, randomId, rootSecret } =
+		resolveAstropressSqliteAdminRuntimeOptions(options);
 
 	const { sqliteUserRepository, sqliteAuthRepository, getPersistedAuditEvents } =
 		createSqliteAuthStore(getDb, { sessionTtlMs, now, randomId, rootSecret });
@@ -57,10 +55,9 @@ export function createAstropressSqliteAdminRuntime(options: AstropressSqliteAdmi
 	const sqliteWebhookStore = createWebhookStore(getDb());
 	const sqliteLocksOps = createSqliteLocksOps(getDb);
 	const sqlitePurgeOps = createSqlitePurgeOps(getDb);
-	const sqliteIntegrationsRepository = createIntegrationsRepository({
-		getDb,
-		now: () => new Date(now()).toISOString(),
-	});
+	const sqliteIntegrationsRepository = createIntegrationsRepository(
+		resolveIntegrationsRepositoryOptions({ getDb, now }),
+	);
 
 	const sqliteAdminStore: AdminStoreAdapter = createAstropressAdminStoreAdapter(
 		"sqlite",

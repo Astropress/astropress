@@ -423,11 +423,14 @@ function main(): number {
 		`${PREFIX}src/admin-stub-catalog.ts`,
 	]);
 	/**
-	 * In-source escape hatch for files that are 90% const data (manifests,
-	 * dictionaries, fixture catalogs) and would otherwise drag the new-file
-	 * 95% mutation floor without representing real logic. The marker MUST
-	 * appear in the first 10 lines of the file. Each call site should
-	 * justify the marker in a comment so reviewers can push back when a
+	 * In-source escape hatch for files with no scoreable behaviour: const-data
+	 * catalogues, pure interface declarations, type stubs, or pure re-export
+	 * barrels. Stryker either produces 0 mutants (so the file is absent from
+	 * the report and would otherwise be UNSCORED) or only static-init mutants
+	 * that vitest's worker-cache makes unkillable.
+	 *
+	 * The marker MUST appear in the first 10 lines of the file. Each call site
+	 * should justify the marker in a comment so reviewers can push back when a
 	 * "data-only" claim is hiding actual conditional logic.
 	 */
 	const isMarkedDataOnly = (f: string): boolean => {

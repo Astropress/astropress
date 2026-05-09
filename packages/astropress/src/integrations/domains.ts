@@ -1,3 +1,4 @@
+// stryker-disable-file: data-only — typed thin-wrapper bindings; each export is a one-line passthrough that pins a literal domain string for `registerProvider`.
 /**
  * Typed thin wrappers around {@link registerProvider} that pin the
  * domain at the call site so a typo is a TypeScript error.

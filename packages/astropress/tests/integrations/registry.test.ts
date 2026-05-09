@@ -118,6 +118,7 @@ describe("integration registry", () => {
 		} catch (err) {
 			expect(err).toBeInstanceOf(IntegrationRegistryError);
 			expect((err as IntegrationRegistryError).code).toBe("DUPLICATE_PROVIDER");
+			expect((err as Error).name).toBe("IntegrationRegistryError");
 		}
 	});
 

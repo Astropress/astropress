@@ -1,3 +1,4 @@
+// stryker-disable-file: data-only — pure barrel; only `export … from` lines, no runtime code to mutate.
 export { createAstropressAdminAppIntegration } from "./admin-app-integration";
 export type {
 	AstropressAdminRouteDefinition,

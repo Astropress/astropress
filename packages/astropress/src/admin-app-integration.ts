@@ -4,6 +4,14 @@ import { basename, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { AstroIntegration } from "astro";
 
+import {
+	ADMIN_APP_ASSET_PATHS,
+	ADMIN_APP_DEV_SERVE_ROUTES,
+	ADMIN_APP_INJECTED_ROUTES,
+	ADMIN_APP_INTEGRATION_NAME,
+	ADMIN_APP_PAGES_DIRECTORY,
+	ADMIN_APP_SECURITY_MIDDLEWARE_ENTRYPOINT,
+} from "./admin-app-integration-data";
 import { injectAstropressAdminRoutes } from "./admin-routes";
 import { peekCmsConfig } from "./config";
 
@@ -17,62 +25,41 @@ const packageRoot = (() => {
 
 const packageResource = (relativePath: string) => join(packageRoot, relativePath);
 
-const adminCssSrc = packageResource("public/admin.css");
-const sectionsCssSrc = packageResource("public/sections.css");
+const assetSources: Record<keyof typeof ADMIN_APP_ASSET_PATHS, string> = {
+	adminCss: packageResource(ADMIN_APP_ASSET_PATHS.adminCss),
+	sectionsCss: packageResource(ADMIN_APP_ASSET_PATHS.sectionsCss),
+};
 
 export function createAstropressAdminAppIntegration(): AstroIntegration {
 	return {
-		name: "astropress-admin-app",
+		name: ADMIN_APP_INTEGRATION_NAME,
 		hooks: {
 			// Serve admin.css and sections.css from the package public directory
 			// during development. sections.css is loaded by the section-editor
 			// live-preview iframe (see web-components/page-preview.ts).
 			"astro:server:setup": ({ server }) => {
-				server.middlewares.use("/admin.css", (_req, res) => {
-					res.setHeader("Content-Type", "text/css; charset=utf-8");
-					res.setHeader("Cache-Control", "no-cache");
-					createReadStream(adminCssSrc).pipe(res);
-				});
-				server.middlewares.use("/sections.css", (_req, res) => {
-					res.setHeader("Content-Type", "text/css; charset=utf-8");
-					res.setHeader("Cache-Control", "no-cache");
-					createReadStream(sectionsCssSrc).pipe(res);
-				});
+				for (const { url, asset } of ADMIN_APP_DEV_SERVE_ROUTES) {
+					server.middlewares.use(url, (_req, res) => {
+						res.setHeader("Content-Type", "text/css; charset=utf-8");
+						res.setHeader("Cache-Control", "no-cache");
+						createReadStream(assetSources[asset]).pipe(res);
+					});
+				}
 			},
 			// Copy stylesheets into the build output for production deployments.
 			"astro:build:done": async ({ dir }) => {
 				const outDir = fileURLToPath(dir);
 				await mkdir(outDir, { recursive: true });
-				await copyFile(adminCssSrc, join(outDir, "admin.css"));
-				await copyFile(sectionsCssSrc, join(outDir, "sections.css"));
+				for (const asset of Object.values(assetSources)) {
+					await copyFile(asset, join(outDir, basename(asset)));
+				}
 			},
 			"astro:config:setup": ({ injectRoute, addMiddleware }) => {
-				const pagesDirectory = packageResource("pages/ap-admin");
+				const pagesDirectory = packageResource(ADMIN_APP_PAGES_DIRECTORY);
 				injectAstropressAdminRoutes(pagesDirectory, injectRoute);
-				injectRoute({
-					pattern: "/ap/health",
-					entrypoint: packageResource("pages/ap/health.js"),
-				});
-				injectRoute({
-					pattern: "/sitemap.xml",
-					entrypoint: packageResource("pages/sitemap.xml.js"),
-				});
-				injectRoute({
-					pattern: "/robots.txt",
-					entrypoint: packageResource("pages/robots.txt.js"),
-				});
-				injectRoute({
-					pattern: "/llms.txt",
-					entrypoint: packageResource("pages/llms.txt.js"),
-				});
-				injectRoute({
-					pattern: "/ap-api/v1/metrics",
-					entrypoint: packageResource("pages/ap-api/v1/metrics.js"),
-				});
-				injectRoute({
-					pattern: "/ap-api/v1/og-image/[slug].png",
-					entrypoint: packageResource("pages/ap-api/v1/og-image/[slug].png.js"),
-				});
+				for (const { pattern, entrypoint } of ADMIN_APP_INJECTED_ROUTES) {
+					injectRoute({ pattern, entrypoint: packageResource(entrypoint) });
+				}
 
 				// Inject plugin-declared admin routes
 				const config = peekCmsConfig();
@@ -91,7 +78,7 @@ export function createAstropressAdminAppIntegration(): AstroIntegration {
 
 				addMiddleware({
 					order: "pre",
-					entrypoint: new URL("./security-middleware-entrypoint.js", import.meta.url),
+					entrypoint: new URL(ADMIN_APP_SECURITY_MIDDLEWARE_ENTRYPOINT, import.meta.url),
 				});
 			},
 		},

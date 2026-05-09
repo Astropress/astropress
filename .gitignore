@@ -28,6 +28,8 @@ mutants.out.old/
 stryker.local.mjs
 .stryker-progress.jsonl
 .stryker-mutation-gate-progress.json
+.stryker-prepush-last-report.json
+**/stryker.log
 
 # Claude Code session data
 .claude/

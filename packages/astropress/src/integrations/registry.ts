@@ -23,27 +23,9 @@
 import type { z } from "zod";
 
 import type { IntegrationErrorCode } from "../integration-error-sanitizer.js";
+import { INTEGRATION_DOMAINS, type IntegrationDomain } from "./registry-data.js";
 
-export type IntegrationDomain =
-	| "newsletter"
-	| "analytics"
-	| "ab-testing"
-	| "search"
-	| "cdn-purge"
-	| "monitoring"
-	| "forms"
-	| "deploy-hooks";
-
-export const INTEGRATION_DOMAINS: readonly IntegrationDomain[] = [
-	"newsletter",
-	"analytics",
-	"ab-testing",
-	"search",
-	"cdn-purge",
-	"monitoring",
-	"forms",
-	"deploy-hooks",
-];
+export { INTEGRATION_DOMAINS, type IntegrationDomain };
 
 export interface ProviderDefinition<TFields extends Record<string, string>> {
 	readonly id: string;

@@ -27,6 +27,64 @@ describe("admin store adapter identity", () => {
 	it("declares backend as 'sqlite'", () => {
 		expect(fixture.store.backend).toBe("sqlite");
 	});
+
+	it("exposes searchContentStates that delegates to the sqlite backing store", () => {
+		// The fixture DB has no FTS index (search disabled), so searchContentOverrides
+		// throws "no such table: content_fts". The mutation that turns the closure
+		// body into `undefined` would *not* throw — so the throwing call IS the kill
+		// signal: a real delegation reaches into the sqlite layer; an `() => undefined`
+		// stub returns silently.
+		expect(typeof fixture.runtime.searchContentStates).toBe("function");
+		expect(() => fixture.runtime.searchContentStates("nonexistent-query-xyz")).toThrowError(
+			/content_fts/,
+		);
+	});
+});
+
+describe("FTS5 search index bootstrap", () => {
+	const CMS_CONFIG_KEY = Symbol.for("astropress.cms-config");
+	type ConfigSlot = { [k: symbol]: unknown };
+	const slot = globalThis as unknown as ConfigSlot;
+
+	it("does not create the FTS5 index when CMS search is disabled (no registerCms)", () => {
+		const prior = slot[CMS_CONFIG_KEY];
+		slot[CMS_CONFIG_KEY] = null;
+		const db = makeDb();
+		try {
+			createAstropressSqliteAdminRuntime({ getDatabase: () => db });
+			const ftsTable = db
+				.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='content_fts'")
+				.get();
+			expect(ftsTable).toBeUndefined();
+		} finally {
+			slot[CMS_CONFIG_KEY] = prior;
+			db.close();
+		}
+	});
+
+	it("creates the FTS5 index when CMS search is enabled", async () => {
+		const { registerCms } = await import("../src/config.js");
+		const prior = slot[CMS_CONFIG_KEY];
+		const db = makeDb();
+		try {
+			registerCms({
+				templateKeys: ["content"],
+				siteUrl: "https://example.com",
+				seedPages: [],
+				archives: [],
+				translationStatus: [],
+				search: { enabled: true },
+			});
+			createAstropressSqliteAdminRuntime({ getDatabase: () => db });
+			const ftsTable = db
+				.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='content_fts'")
+				.get();
+			expect(ftsTable).toEqual({ name: "content_fts" });
+		} finally {
+			slot[CMS_CONFIG_KEY] = prior;
+			db.close();
+		}
+	});
 });
 
 // ─── Redirects ────────────────────────────────────────────────────────────────

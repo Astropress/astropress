@@ -1,3 +1,4 @@
+// stryker-disable-file: data-only — pure type declarations (ApiScope, ApiTokenId, ApiTokenRecord, ApiTokenStore); no runtime code to mutate.
 // ─── API Token Store ──────────────────────────────────────────────────────────
 // Extracted to keep platform-contracts.ts under the 400-line limit.
 
