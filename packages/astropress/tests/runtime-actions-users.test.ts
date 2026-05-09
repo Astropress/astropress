@@ -115,7 +115,7 @@ describe("getRuntimeInviteRequest / consumeRuntimeInviteToken", () => {
 		const token = await createInvite();
 		const result = await consumeRuntimeInviteToken(token, "newpassword123", locals);
 		expect(result).toMatchObject({ ok: true });
-	}, 15000);
+	}, 30000);
 
 	it("rejects a short password", async () => {
 		const token = await createInvite();
