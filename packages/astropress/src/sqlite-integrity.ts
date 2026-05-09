@@ -1,7 +1,7 @@
 import {
+	loadSqliteDatabase,
 	type SqliteDatabaseConstructor,
 	type SqliteDatabaseLike,
-	loadSqliteDatabase,
 } from "./sqlite-bootstrap-helpers";
 
 export type IntegrityStatus = "ok" | "corrupt" | "unavailable";
@@ -51,9 +51,7 @@ export function runIntegrityCheckOnOpenDatabase(
 
 async function loadDriver(
 	override?: () => Promise<SqliteDatabaseConstructor>,
-): Promise<
-	{ ok: true; ctor: SqliteDatabaseConstructor } | { ok: false; error: string }
-> {
+): Promise<{ ok: true; ctor: SqliteDatabaseConstructor } | { ok: false; error: string }> {
 	try {
 		const ctor = await (override ?? loadSqliteDatabase)();
 		return { ok: true, ctor };
@@ -131,9 +129,7 @@ export async function attemptRepair(
 		recovery = new DbClass(recoveryPath);
 
 		const tables = corrupt
-			.prepare(
-				"SELECT name, sql FROM sqlite_master WHERE type = 'table' AND sql IS NOT NULL",
-			)
+			.prepare("SELECT name, sql FROM sqlite_master WHERE type = 'table' AND sql IS NOT NULL")
 			.all() as { name: string; sql: string }[];
 
 		for (const { sql } of tables) {
@@ -149,10 +145,8 @@ export async function attemptRepair(
 		let rowsCopied = 0;
 		for (const { name } of tables) {
 			try {
-				const rows = corrupt.prepare(`SELECT * FROM "${name}"`).all() as Record<
-					string,
-					unknown
-				>[];
+				// audit-boundary: opaque-passthrough -- SQL row-shape mirror; columns narrowed at row-mapper boundary
+				const rows = corrupt.prepare(`SELECT * FROM "${name}"`).all() as Record<string, unknown>[];
 				const columns = rows.length > 0 ? Object.keys(rows[0]) : [];
 				if (columns.length === 0) continue;
 				const placeholders = columns.map(() => "?").join(", ");

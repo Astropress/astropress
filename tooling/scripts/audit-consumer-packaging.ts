@@ -20,10 +20,10 @@
 import { join, relative } from "node:path";
 import {
 	AuditReport,
-	ROOT,
 	fileExists,
 	fromRoot,
 	listFiles,
+	ROOT,
 	readText,
 	runAudit,
 } from "../lib/audit-utils.js";
@@ -54,9 +54,7 @@ async function main() {
 		// Rule 1: no bare `from "astropress/` — must be `@astropress-diy/astropress/`
 		const bareImportPattern = /from\s+["']astropress\/[^"']/g;
 		for (const m of src.matchAll(bareImportPattern)) {
-			const snippet = src
-				.slice(m.index ?? 0, (m.index ?? 0) + 60)
-				.split("\n")[0];
+			const snippet = src.slice(m.index ?? 0, (m.index ?? 0) + 60).split("\n")[0];
 			report.add(
 				`[bare-import] ${relPath}: bare "astropress/" import — use "@astropress-diy/astropress/" instead\n    → ${snippet}`,
 			);

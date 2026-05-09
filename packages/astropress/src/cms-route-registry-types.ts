@@ -14,17 +14,12 @@ export interface AstropressCmsRouteRegistryFactoryInput {
 	listSystemRoutes(): RuntimeSystemRouteRecord[];
 	getSystemRoute(pathname: string): RuntimeSystemRouteRecord | null;
 	listStructuredPageRoutes(): RuntimeStructuredPageRouteRecord[];
-	getStructuredPageRoute(
-		pathname: string,
-	): RuntimeStructuredPageRouteRecord | null;
+	getStructuredPageRoute(pathname: string): RuntimeStructuredPageRouteRecord | null;
 	getArchiveRoute(pathname: string): RuntimeArchiveRouteRecord | null;
 	listArchiveRoutes(): RuntimeArchiveRouteRecord[];
 	findSystemRouteForUpdate(
 		pathname: string,
-	):
-		| { id: string; renderStrategy: RuntimeSystemRouteRecord["renderStrategy"] }
-		| null
-		| undefined;
+	): { id: string; renderStrategy: RuntimeSystemRouteRecord["renderStrategy"] } | null | undefined;
 	persistSystemRoute(input: {
 		routeId: string;
 		title: string;
@@ -47,9 +42,7 @@ export interface AstropressCmsRouteRegistryFactoryInput {
 		actor: RouteActor;
 	}): void;
 	isRoutePathTaken(pathname: string): boolean;
-	findStructuredRouteForUpdate(
-		pathname: string,
-	): { id: string } | null | undefined;
+	findStructuredRouteForUpdate(pathname: string): { id: string } | null | undefined;
 	insertStructuredRoute(input: {
 		pathname: string;
 		locale: string;
@@ -100,9 +93,7 @@ export interface AstropressCmsRouteRegistryFactoryInput {
 		revisionNote: string | null;
 		actor: RouteActor;
 	}): void;
-	findArchiveRouteForUpdate(
-		pathname: string,
-	): { id: string } | null | undefined;
+	findArchiveRouteForUpdate(pathname: string): { id: string } | null | undefined;
 	persistArchiveRoute(input: {
 		routeId: string;
 		pathname: string;
@@ -128,11 +119,7 @@ export interface AstropressCmsRouteRegistryFactoryInput {
 	}): void;
 	recordRouteAudit(input: {
 		actor: RouteActor;
-		action:
-			| "system.update"
-			| "route_page.create"
-			| "route_page.update"
-			| "archive.update";
+		action: "system.update" | "route_page.create" | "route_page.update" | "archive.update";
 		summary: string;
 		targetId: string;
 	}): void;

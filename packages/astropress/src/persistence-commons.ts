@@ -13,12 +13,7 @@ import {
 	SQL_LIST_ADMIN_USERS_WITH_INVITE as SQL_LIST_ADMIN_USERS_WITH_INVITE_DATA,
 	SQL_LIST_AUDIT_EVENTS as SQL_LIST_AUDIT_EVENTS_DATA,
 } from "./persistence-commons-data";
-import type {
-	AdminRole,
-	AuditEvent,
-	ContentOverride,
-	ManagedAdminUser,
-} from "./persistence-types";
+import type { AdminRole, AuditEvent, ContentOverride, ManagedAdminUser } from "./persistence-types";
 
 export type { ContentStatus };
 
@@ -73,9 +68,7 @@ export function parseIdList(value: string | null | undefined): number[] {
 
 export function serializeIdList(values: number[]): string {
 	return JSON.stringify(
-		values
-			.filter((entry) => Number.isInteger(entry) && entry > 0)
-			.sort((a, b) => a - b),
+		values.filter((entry) => Number.isInteger(entry) && entry > 0).sort((a, b) => a - b),
 	);
 }
 
@@ -179,9 +172,7 @@ export interface PersistedOverrideRecord extends ContentOverride {
 // audit-boundary: opaque-passthrough -- JSON column passthrough at persistence boundary
 type ParsedMetadata = Record<string, unknown>;
 
-export function parseMetadataJson(
-	raw: string | null | undefined,
-): ParsedMetadata | undefined {
+export function parseMetadataJson(raw: string | null | undefined): ParsedMetadata | undefined {
 	let parsed: unknown;
 	try {
 		parsed = JSON.parse(raw ?? "null");
@@ -248,9 +239,7 @@ export interface ContentStoreRecordInput {
 	summary?: string;
 }
 
-function mapContentRecordKind(record: {
-	kind?: string | null;
-}): "post" | "page" {
+function mapContentRecordKind(record: { kind?: string | null }): "post" | "page" {
 	return record.kind === "post" ? "post" : "page";
 }
 
@@ -262,8 +251,7 @@ function mapContentRecordKind(record: {
 // dialect surface that D1 implements).
 
 export const SQL_LIST_AUDIT_EVENTS = SQL_LIST_AUDIT_EVENTS_DATA;
-export const SQL_LIST_ADMIN_USERS_WITH_INVITE =
-	SQL_LIST_ADMIN_USERS_WITH_INVITE_DATA;
+export const SQL_LIST_ADMIN_USERS_WITH_INVITE = SQL_LIST_ADMIN_USERS_WITH_INVITE_DATA;
 
 export interface PersistedAuditEventRow {
 	id: number;
@@ -322,9 +310,7 @@ export function deriveAdminUserStatus(
 	return "active";
 }
 
-export function mapPersistedAdminUserRow(
-	row: PersistedAdminUserRow,
-): ManagedAdminUser {
+export function mapPersistedAdminUserRow(row: PersistedAdminUserRow): ManagedAdminUser {
 	return {
 		id: row.id,
 		email: row.email,

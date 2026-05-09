@@ -1,4 +1,4 @@
-import { readFileSync, readdirSync, statSync } from "node:fs";
+import { readdirSync, readFileSync, statSync } from "node:fs";
 import path from "node:path";
 import { JSDOM } from "jsdom";
 
@@ -30,9 +30,7 @@ function resolveInternalTarget(root: string, href: string, sourceFile: string) {
 
 	const relativeTarget = pathPart.startsWith("/")
 		? pathPart.slice(1)
-		: path.normalize(
-				path.join(path.relative(root, path.dirname(sourceFile)), pathPart),
-			);
+		: path.normalize(path.join(path.relative(root, path.dirname(sourceFile)), pathPart));
 	const normalized = relativeTarget.replace(/\\/g, "/").replace(/^\.\/+/, "");
 	const directFile = path.join(root, normalized);
 	const indexFile = path.join(root, normalized, "index.html");
@@ -46,9 +44,7 @@ function resolveInternalTarget(root: string, href: string, sourceFile: string) {
 
 const targetRoot = process.argv[2];
 if (!targetRoot) {
-	throw new Error(
-		"Usage: bun run tooling/scripts/static-site-audit.ts <built-static-directory>",
-	);
+	throw new Error("Usage: bun run tooling/scripts/static-site-audit.ts <built-static-directory>");
 }
 
 const resolvedRoot = path.resolve(targetRoot);
@@ -87,30 +83,19 @@ for (const htmlFile of htmlFiles) {
 
 		if (href.startsWith("#")) {
 			const fragmentTarget = href.slice(1);
-			if (
-				fragmentTarget &&
-				!dom.window.document.getElementById(fragmentTarget)
-			) {
-				failures.push(
-					`${relativeSource}: missing fragment target #${fragmentTarget}`,
-				);
+			if (fragmentTarget && !dom.window.document.getElementById(fragmentTarget)) {
+				failures.push(`${relativeSource}: missing fragment target #${fragmentTarget}`);
 			}
 			continue;
 		}
 
-		const { filePath, fragment } = resolveInternalTarget(
-			resolvedRoot,
-			href,
-			htmlFile,
-		);
+		const { filePath, fragment } = resolveInternalTarget(resolvedRoot, href, htmlFile);
 		try {
 			const targetHtml = readFileSync(filePath, "utf8");
 			if (fragment) {
 				const targetDom = new JSDOM(targetHtml);
 				if (!targetDom.window.document.getElementById(fragment)) {
-					failures.push(
-						`${relativeSource}: ${href} points to missing fragment #${fragment}`,
-					);
+					failures.push(`${relativeSource}: ${href} points to missing fragment #${fragment}`);
 				}
 			}
 		} catch {
@@ -120,9 +105,7 @@ for (const htmlFile of htmlFiles) {
 }
 
 if (totalBytes > 80 * 1024) {
-	failures.push(
-		`Static site budget exceeded: ${totalBytes} bytes > 81920 bytes.`,
-	);
+	failures.push(`Static site budget exceeded: ${totalBytes} bytes > 81920 bytes.`);
 }
 
 if (cssBytes > 16 * 1024) {

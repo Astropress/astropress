@@ -19,8 +19,7 @@ const pagesDirectory = path.resolve(import.meta.dirname, "../pages/ap-admin");
 
 describe("tooling integration", () => {
 	it("ships page files for the canonical admin route inventory and injects them through the Astro integration", () => {
-		const routeEntrypoints =
-			createAstropressAdminRouteInjectionPlan(pagesDirectory);
+		const routeEntrypoints = createAstropressAdminRouteInjectionPlan(pagesDirectory);
 		const injectedRoutes: Array<{ pattern: string; entrypoint: string }> = [];
 		const integration = createAstropressAdminAppIntegration();
 
@@ -46,14 +45,10 @@ describe("tooling integration", () => {
 		expect(listAstropressAdminRoutes()).toHaveLength(routeEntrypoints.length);
 		// The integration injects admin routes plus additional system routes (health, sitemap, robots, llms, metrics, og-image).
 		// Filter to only the admin routes before comparing against the plan.
-		const adminInjectedRoutes = injectedRoutes.filter((r) =>
-			r.pattern.startsWith("/ap-admin"),
-		);
+		const adminInjectedRoutes = injectedRoutes.filter((r) => r.pattern.startsWith("/ap-admin"));
 		expect(adminInjectedRoutes).toEqual(routeEntrypoints);
 		expect(
-			injectAstropressAdminRoutes(pagesDirectory, (route) =>
-				callbackInjectedRoutes.push(route),
-			),
+			injectAstropressAdminRoutes(pagesDirectory, (route) => callbackInjectedRoutes.push(route)),
 		).toEqual(routeEntrypoints);
 		expect(callbackInjectedRoutes).toEqual(routeEntrypoints);
 	});
@@ -70,18 +65,14 @@ describe("tooling integration", () => {
 	});
 
 	it("exposes Vite, Vitest, and host runtime helpers from one coherent boundary", async () => {
-		const localRuntimeModulesPath =
-			"/tmp/site/src/astropress/local-runtime-modules.ts";
+		const localRuntimeModulesPath = "/tmp/site/src/astropress/local-runtime-modules.ts";
 		const vite = createAstropressViteIntegration({
 			localRuntimeModulesPath,
-			cloudflareWorkersStubPath:
-				"/tmp/site/src/astropress/cloudflare-workers-stub.ts",
+			cloudflareWorkersStubPath: "/tmp/site/src/astropress/cloudflare-workers-stub.ts",
 		});
 		const [replacePlugin, rewritePlugin] =
 			createAstropressVitestLocalRuntimePlugins(localRuntimeModulesPath);
-		const runtimePlugin = createAstropressLocalRuntimeModulePlugin(
-			localRuntimeModulesPath,
-		);
+		const runtimePlugin = createAstropressLocalRuntimeModulePlugin(localRuntimeModulesPath);
 		const hostRuntimeModules = defineAstropressHostRuntimeModules({
 			async loadLocalAdminStore() {
 				return {} as never;
@@ -102,13 +93,9 @@ describe("tooling integration", () => {
 
 		expect(vite.plugins[0]?.name).toBe("astropress-local-runtime-modules");
 		expect(vite.aliases).toHaveLength(3);
-		expect(replacePlugin.name).toBe(
-			"astropress-local-runtime-modules-replacer",
-		);
+		expect(replacePlugin.name).toBe("astropress-local-runtime-modules-replacer");
 		expect(rewritePlugin.name).toBe("astropress-external-source-rewriter");
-		expect(runtimePlugin.resolveId("./local-runtime-modules")).toBe(
-			localRuntimeModulesPath,
-		);
+		expect(runtimePlugin.resolveId("./local-runtime-modules")).toBe(localRuntimeModulesPath);
 		await expect(hostRuntimeModules.loadLocalAdminAuth()).resolves.toEqual({});
 	});
 
@@ -123,10 +110,7 @@ describe("tooling integration", () => {
 		//
 		// The fix is ssr.noExternal:["@astropress-diy/astropress"] in the harness
 		// Vite config. This test prevents accidental removal.
-		const configPath = path.join(
-			findRepoRoot(),
-			"examples/admin-harness/astro.config.mjs",
-		);
+		const configPath = path.join(findRepoRoot(), "examples/admin-harness/astro.config.mjs");
 		const source = readFileSync(configPath, "utf8");
 		expect(
 			source,

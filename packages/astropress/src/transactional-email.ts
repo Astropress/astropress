@@ -19,10 +19,7 @@ interface EmailMessage {
 
 import nodemailer from "nodemailer";
 import { peekCmsConfig } from "./config";
-import {
-	getTransactionalEmailConfig,
-	isProductionRuntime,
-} from "./runtime-env";
+import { getTransactionalEmailConfig, isProductionRuntime } from "./runtime-env";
 
 function escapeHtml(str: string): string {
 	return str
@@ -41,8 +38,7 @@ async function sendResendEmail(
 	message: EmailMessage,
 	locals?: App.Locals | null,
 ): Promise<EmailResult> {
-	const { resendApiKey: apiKey, resendFrom: from } =
-		getTransactionalEmailConfig(locals);
+	const { resendApiKey: apiKey, resendFrom: from } = getTransactionalEmailConfig(locals);
 
 	if (!apiKey || !from) {
 		if (isProductionRuntime()) {
@@ -218,8 +214,7 @@ export async function sendContactNotification(
 	},
 	locals?: App.Locals | null,
 ): Promise<EmailResult> {
-	const { contactDestination: destination } =
-		getTransactionalEmailConfig(locals);
+	const { contactDestination: destination } = getTransactionalEmailConfig(locals);
 	const safeName = escapeHtml(input.name);
 	const safeEmail = escapeHtml(input.email);
 	const safeMessage = escapeHtml(input.message);

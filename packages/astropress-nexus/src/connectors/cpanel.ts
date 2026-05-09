@@ -51,9 +51,7 @@ export async function discoverCPanelWordPressSites(
 			name: install.softurl,
 			metadata: {
 				// adminUsername included for reference; password intentionally omitted
-				...(install.admin_username
-					? { adminUsername: install.admin_username }
-					: {}),
+				...(install.admin_username ? { adminUsername: install.admin_username } : {}),
 			},
 		}));
 }

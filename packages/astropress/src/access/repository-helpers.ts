@@ -60,9 +60,7 @@ export function rowToRolePolicy(r: RolePolicyRow): RolePolicyRecord {
 		roleId: r.role_id,
 		effect: r.effect,
 		action: r.action,
-		condition: r.condition_json
-			? (JSON.parse(r.condition_json) as Condition)
-			: null,
+		condition: r.condition_json ? (JSON.parse(r.condition_json) as Condition) : null,
 		priority: r.priority,
 	};
 }
@@ -72,9 +70,7 @@ export function rowToUserPolicy(r: UserPolicyRow): UserPolicyRecord {
 		userId: r.user_id,
 		effect: r.effect,
 		action: r.action,
-		condition: r.condition_json
-			? (JSON.parse(r.condition_json) as Condition)
-			: null,
+		condition: r.condition_json ? (JSON.parse(r.condition_json) as Condition) : null,
 		priority: r.priority,
 		grantedBy: r.granted_by,
 	};

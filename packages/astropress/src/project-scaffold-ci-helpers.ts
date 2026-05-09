@@ -21,8 +21,7 @@ export function gitHubActionsDeployWorkflow(
 			? `# Required repository secrets or variables: ${requiredEnvKeys.join(", ")}`
 			: "# No additional content-services secrets are required for this target.";
 
-	let deployStep =
-		'      - run: echo "Build completed. Configure your host publish step here."';
+	let deployStep = '      - run: echo "Build completed. Configure your host publish step here."';
 	if (appHost === "github-pages") {
 		return `name: Deploy Astropress\n\non:\n  push:\n    branches:\n      - main\n  workflow_dispatch:\n\njobs:\n  deploy:\n    runs-on: ubuntu-latest\n    permissions:\n      contents: read\n      pages: write\n      id-token: write\n    steps:\n${install.join("\n")}\n      - uses: actions/configure-pages@v5\n      - uses: actions/upload-pages-artifact@v3\n        with:\n          path: dist\n      - uses: actions/deploy-pages@v4\n`;
 	}
@@ -182,7 +181,7 @@ export function createSecurityWorkflow(): string {
 
 export function createDonatePage(
 	donations: AstropressDonationsProviders,
-	siteUrl: string,
+	_siteUrl: string,
 ): string {
 	const providers: string[] = [];
 	if (donations.giveLively) providers.push("giveLively");

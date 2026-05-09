@@ -1,8 +1,4 @@
-import type {
-	Actor,
-	ManagedAdminUser,
-	UserRepository,
-} from "./persistence-types";
+import type { Actor, UserRepository } from "./persistence-types";
 
 export interface AstropressUserRepositoryInput {
 	listAdminUsers: UserRepository["listAdminUsers"];
@@ -46,12 +42,7 @@ export function createAstropressUserRepository(
 		inviteAdminUser(rawInput, actor) {
 			const name = rawInput.name.trim();
 			const email = rawInput.email.trim().toLowerCase();
-			const role =
-				rawInput.role === "admin"
-					? "admin"
-					: rawInput.role === "editor"
-						? "editor"
-						: "";
+			const role = rawInput.role === "admin" ? "admin" : rawInput.role === "editor" ? "editor" : "";
 
 			if (!name || !email || !role) {
 				return {
@@ -95,9 +86,7 @@ export function createAstropressUserRepository(
 
 			const rawToken = crypto.randomUUID();
 			const inviteId = `invite-${crypto.randomUUID()}`;
-			const expiresAt = new Date(
-				Date.now() + 7 * 24 * 60 * 60 * 1000,
-			).toISOString();
+			const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
 
 			const insertedInvite = input.insertUserInvite({
 				inviteId,

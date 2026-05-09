@@ -20,12 +20,8 @@ test.describe("Admin: visual section editor smoke", () => {
 		// element + a hidden sectionsJson input proves the editor took over
 		// from the legacy textarea.
 		await expect(page.locator("ap-section-editor")).toBeVisible();
-		await expect(
-			page.locator("ap-section-editor input[name=sectionsJson]"),
-		).toHaveCount(1);
-		await expect(
-			page.locator("ap-section-editor [data-section-editor-add]"),
-		).toBeVisible();
+		await expect(page.locator("ap-section-editor input[name=sectionsJson]")).toHaveCount(1);
+		await expect(page.locator("ap-section-editor [data-section-editor-add]")).toBeVisible();
 	});
 
 	test("Scenario: live preview iframe is mounted", async ({ page }) => {

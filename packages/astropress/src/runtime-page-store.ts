@@ -1,14 +1,14 @@
 import { safeLoadLocalAdminStore } from "./admin-store-dispatch";
 import { getCmsConfig, peekCmsConfig } from "./config";
-import { createD1AdminReadStore } from "./d1-admin-store";
 import type { D1AdminReadStore } from "./d1-admin-store";
+import { createD1AdminReadStore } from "./d1-admin-store";
 import { searchD1ContentStates } from "./d1-store-content";
 import type { ContentRecord } from "./persistence-types";
 import { getCloudflareBindings } from "./runtime-env";
 import {
-	type SeededContentRecord,
 	createFallbackReadStore,
 	normalizeContentStatus,
+	type SeededContentRecord,
 } from "./runtime-page-store-helpers";
 
 function getSeededContentRecords(): SeededContentRecord[] {
@@ -19,15 +19,10 @@ function getSeededContentRecords(): SeededContentRecord[] {
 				kind: typeof page.kind === "string" ? page.kind : undefined,
 				status: normalizeContentStatus(page.status),
 				listingItems: Array.isArray(page.listingItems) ? page.listingItems : [],
-				paginationLinks: Array.isArray(page.paginationLinks)
-					? page.paginationLinks
-					: [],
-				scheduledAt:
-					typeof page.scheduledAt === "string" ? page.scheduledAt : undefined,
+				paginationLinks: Array.isArray(page.paginationLinks) ? page.paginationLinks : [],
+				scheduledAt: typeof page.scheduledAt === "string" ? page.scheduledAt : undefined,
 				authorIds: Array.isArray(page.authorIds) ? page.authorIds : undefined,
-				categoryIds: Array.isArray(page.categoryIds)
-					? page.categoryIds
-					: undefined,
+				categoryIds: Array.isArray(page.categoryIds) ? page.categoryIds : undefined,
 				tagIds: Array.isArray(page.tagIds) ? page.tagIds : undefined,
 			}) satisfies SeededContentRecord,
 	);
@@ -49,10 +44,7 @@ function withFallback<A extends unknown[], R>(
 async function getReadStore(locals?: App.Locals | null) {
 	const db = getCloudflareBindings(locals).DB;
 	const localAdminStore = await safeLoadLocalAdminStore();
-	const fallbackStore = createFallbackReadStore(
-		localAdminStore,
-		getSeededContentRecords,
-	);
+	const fallbackStore = createFallbackReadStore(localAdminStore, getSeededContentRecords);
 
 	if (!db) {
 		return fallbackStore;
@@ -64,10 +56,7 @@ async function getReadStore(locals?: App.Locals | null) {
 	return {
 		audit: {
 			getAuditEvents: wf(d1.audit.getAuditEvents, fb.audit.getAuditEvents),
-			recordAuditEvent: wf(
-				d1.audit.recordAuditEvent,
-				fb.audit.recordAuditEvent,
-			),
+			recordAuditEvent: wf(d1.audit.recordAuditEvent, fb.audit.recordAuditEvent),
 		},
 		users: {
 			listAdminUsers: wf(d1.users.listAdminUsers, fb.users.listAdminUsers),
@@ -76,17 +65,11 @@ async function getReadStore(locals?: App.Locals | null) {
 			listAuthors: wf(d1.authors.listAuthors, fb.authors.listAuthors),
 		},
 		taxonomies: {
-			listCategories: wf(
-				d1.taxonomies.listCategories,
-				fb.taxonomies.listCategories,
-			),
+			listCategories: wf(d1.taxonomies.listCategories, fb.taxonomies.listCategories),
 			listTags: wf(d1.taxonomies.listTags, fb.taxonomies.listTags),
 		},
 		redirects: {
-			getRedirectRules: wf(
-				d1.redirects.getRedirectRules,
-				fb.redirects.getRedirectRules,
-			),
+			getRedirectRules: wf(d1.redirects.getRedirectRules, fb.redirects.getRedirectRules),
 		},
 		comments: {
 			getComments: wf(d1.comments.getComments, fb.comments.getComments),
@@ -96,28 +79,16 @@ async function getReadStore(locals?: App.Locals | null) {
 			),
 		},
 		content: {
-			listContentStates: wf(
-				d1.content.listContentStates,
-				fb.content.listContentStates,
-			),
-			getContentState: wf(
-				d1.content.getContentState,
-				fb.content.getContentState,
-			),
-			getContentRevisions: wf(
-				d1.content.getContentRevisions,
-				fb.content.getContentRevisions,
-			),
+			listContentStates: wf(d1.content.listContentStates, fb.content.listContentStates),
+			getContentState: wf(d1.content.getContentState, fb.content.getContentState),
+			getContentRevisions: wf(d1.content.getContentRevisions, fb.content.getContentRevisions),
 		},
 		submissions: {
 			getContactSubmissions: wf(
 				d1.submissions.getContactSubmissions,
 				fb.submissions.getContactSubmissions,
 			),
-			getTestimonials: wf(
-				d1.submissions.getTestimonials,
-				fb.submissions.getTestimonials,
-			),
+			getTestimonials: wf(d1.submissions.getTestimonials, fb.submissions.getTestimonials),
 		},
 		translations: {
 			getEffectiveTranslationState: wf(
@@ -129,18 +100,9 @@ async function getReadStore(locals?: App.Locals | null) {
 			getSettings: wf(d1.settings.getSettings, fb.settings.getSettings),
 		},
 		rateLimits: {
-			checkRateLimit: wf(
-				d1.rateLimits.checkRateLimit,
-				fb.rateLimits.checkRateLimit,
-			),
-			peekRateLimit: wf(
-				d1.rateLimits.peekRateLimit,
-				fb.rateLimits.peekRateLimit,
-			),
-			recordFailedAttempt: wf(
-				d1.rateLimits.recordFailedAttempt,
-				fb.rateLimits.recordFailedAttempt,
-			),
+			checkRateLimit: wf(d1.rateLimits.checkRateLimit, fb.rateLimits.checkRateLimit),
+			peekRateLimit: wf(d1.rateLimits.peekRateLimit, fb.rateLimits.peekRateLimit),
+			recordFailedAttempt: wf(d1.rateLimits.recordFailedAttempt, fb.rateLimits.recordFailedAttempt),
 		},
 		media: {
 			listMediaAssets: wf(d1.media.listMediaAssets, fb.media.listMediaAssets),
@@ -176,10 +138,7 @@ export async function getRuntimeComments(locals?: App.Locals | null) {
 	return (await getReadStore(locals)).comments.getComments();
 }
 
-export async function getRuntimeContentState(
-	slug: string,
-	locals?: App.Locals | null,
-) {
+export async function getRuntimeContentState(slug: string, locals?: App.Locals | null) {
 	return (await getReadStore(locals)).content.getContentState(slug);
 }
 
@@ -205,25 +164,17 @@ export async function searchRuntimeContentStates(
 	if (db) {
 		return searchD1ContentStates(db, query);
 	}
-	console.warn(
-		"[astropress] searchRuntimeContentStates: no FTS-capable store available",
-	);
+	console.warn("[astropress] searchRuntimeContentStates: no FTS-capable store available");
 	return [];
 }
 
-export async function getRuntimeContentStateByPath(
-	pathname: string,
-	locals?: App.Locals | null,
-) {
+export async function getRuntimeContentStateByPath(pathname: string, locals?: App.Locals | null) {
 	const normalizedPath = pathname.startsWith("/") ? pathname : `/${pathname}`;
 	const records = await listRuntimeContentStates(locals);
 	return records.find((record) => record.legacyUrl === normalizedPath) ?? null;
 }
 
-export async function getRuntimeContentRevisions(
-	slug: string,
-	locals?: App.Locals | null,
-) {
+export async function getRuntimeContentRevisions(slug: string, locals?: App.Locals | null) {
 	return (await getReadStore(locals)).content.getContentRevisions(slug);
 }
 
@@ -232,10 +183,7 @@ export async function getRuntimeTranslationState(
 	fallback = "not_started",
 	locals?: App.Locals | null,
 ) {
-	return (await getReadStore(locals)).translations.getEffectiveTranslationState(
-		route,
-		fallback,
-	);
+	return (await getReadStore(locals)).translations.getEffectiveTranslationState(route, fallback);
 }
 
 export async function getRuntimeSettings(locals?: App.Locals | null) {

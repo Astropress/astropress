@@ -40,19 +40,13 @@ const baselineFiles = Object.keys(baseline.scores)
 const includedGlob = included.some((p) => p === "src/**/*.ts");
 const includedSet = new Set(included);
 const baselineSet = new Set(baselineFiles);
-const baselineNotIncluded = includedGlob
-	? []
-	: baselineFiles.filter((p) => !includedSet.has(p));
-const includedNotBaseline = includedGlob
-	? []
-	: included.filter((p) => !baselineSet.has(p));
+const baselineNotIncluded = includedGlob ? [] : baselineFiles.filter((p) => !includedSet.has(p));
+const includedNotBaseline = includedGlob ? [] : included.filter((p) => !baselineSet.has(p));
 
 const falseConfidence = includedGlob
 	? []
 	: Object.entries(baseline.scores)
-			.filter(
-				([p, v]) => p.startsWith("packages/astropress/src/") && v.score >= 95,
-			)
+			.filter(([p, v]) => p.startsWith("packages/astropress/src/") && v.score >= 95)
 			.map(([p]) => p.slice("packages/astropress/".length))
 			.filter((p) => !includedSet.has(p))
 			.sort();
@@ -83,12 +77,8 @@ if (falseConfidence.length > 0 || baselineNotIncluded.length > 0) {
 	console.error(
 		`v8-coverage-scope FAIL: ${baselineNotIncluded.length} baseline file(s) outside coverage.include, ${falseConfidence.length} of those mutation>=95 (false confidence).`,
 	);
-	for (const p of falseConfidence.slice(0, 20))
-		console.error(`  false-confidence: ${p}`);
-	if (falseConfidence.length > 20)
-		console.error(`  ... and ${falseConfidence.length - 20} more`);
-	console.error(
-		'\nFix: set vitest.config.ts coverage.include to ["src/**/*.ts"].',
-	);
+	for (const p of falseConfidence.slice(0, 20)) console.error(`  false-confidence: ${p}`);
+	if (falseConfidence.length > 20) console.error(`  ... and ${falseConfidence.length - 20} more`);
+	console.error('\nFix: set vitest.config.ts coverage.include to ["src/**/*.ts"].');
 	process.exit(1);
 }

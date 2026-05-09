@@ -15,8 +15,7 @@ describe("settings_tabs", () => {
 	});
 
 	it("Settings Newsletter tab shows subscriber list and Mailchimp import form — tab param resolves correctly", () => {
-		const activeTab =
-			new URLSearchParams("tab=newsletter").get("tab") ?? "general";
+		const activeTab = new URLSearchParams("tab=newsletter").get("tab") ?? "general";
 		expect(activeTab).toBe("newsletter");
 	});
 
@@ -63,10 +62,7 @@ describe("settings_tabs", () => {
 		const fetchSpy = vi
 			.spyOn(global, "fetch")
 			.mockResolvedValueOnce(
-				new Response(
-					JSON.stringify({ data: { id: 1, status: "subscribing" } }),
-					{ status: 200 },
-				),
+				new Response(JSON.stringify({ data: { id: 1, status: "subscribing" } }), { status: 200 }),
 			);
 
 		const fakeLocals = {

@@ -10,20 +10,14 @@ import { defineConfig } from "astro/config";
 // Resolve the installed package root. Works for both workspace:* (symlink) and a
 // real npm install (tarball). Does NOT hardcode paths into the monorepo source tree.
 const require = createRequire(import.meta.url);
-const packageRoot = join(
-	require.resolve("@astropress-diy/astropress/package.json"),
-	"..",
-);
+const packageRoot = join(require.resolve("@astropress-diy/astropress/package.json"), "..");
 
 const localRuntimeModulesPath = fileURLToPath(
 	new URL("./src/astropress/local-runtime-modules.ts", import.meta.url),
 );
 
 // cloudflare-workers-stub lives inside the published package under src/ (included in files[]).
-const cloudflareWorkersStubPath = join(
-	packageRoot,
-	"src/cloudflare-workers-stub.ts",
-);
+const cloudflareWorkersStubPath = join(packageRoot, "src/cloudflare-workers-stub.ts");
 
 // createAstropressViteIntegration with astropressPackageRoot enables
 // createAstropressPackageResolverPlugin, which handles any bare astropress/ imports

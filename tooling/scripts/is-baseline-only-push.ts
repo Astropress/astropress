@@ -36,10 +36,7 @@ const SAFE_EXACT = new Set([
 function isSafePath(path: string): boolean {
 	if (SAFE_EXACT.has(path)) return true;
 	// Paired test files under packages/*/tests/**/*.test.ts.
-	if (
-		/^packages\/[^/]+\/tests\/.+\.test\.ts$/.test(path) &&
-		!path.includes("..")
-	) {
+	if (/^packages\/[^/]+\/tests\/.+\.test\.ts$/.test(path) && !path.includes("..")) {
 		return true;
 	}
 	return false;
@@ -51,15 +48,11 @@ function changedPathsSinceUpstream(): string[] | null {
 	// pre-push hook.
 	const headBefore = process.env.LEFTHOOK_HEAD_BEFORE;
 	let base =
-		headBefore && headBefore !== "0000000000000000000000000000000000000000"
-			? headBefore
-			: "";
+		headBefore && headBefore !== "0000000000000000000000000000000000000000" ? headBefore : "";
 	if (!base) {
-		const upstream = spawnSync(
-			"git",
-			["rev-parse", "--abbrev-ref", "@{upstream}"],
-			{ encoding: "utf8" },
-		);
+		const upstream = spawnSync("git", ["rev-parse", "--abbrev-ref", "@{upstream}"], {
+			encoding: "utf8",
+		});
 		if (upstream.status !== 0) return null;
 		base = upstream.stdout.trim();
 	}

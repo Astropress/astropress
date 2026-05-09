@@ -56,9 +56,7 @@ export function buildGithubAuthHeader(accessToken: string): string {
  * a typed integration error code. Pinned independently so a typo in
  * the status table is caught by a unit test.
  */
-export function classifyGithubStatus(
-	res: Response,
-): IntegrationErrorCode | null {
+export function classifyGithubStatus(res: Response): IntegrationErrorCode | null {
 	if (res.status === 401 || res.status === 403) {
 		return "INTEGRATION_AUTH_REJECTED";
 	}

@@ -182,8 +182,7 @@ export function buildAbTestingEnvExample(
 		case "flagsmith":
 			return {
 				FLAGSMITH_API_URL: "https://flags.yourdomain.com/api/v1/",
-				FLAGSMITH_ENVIRONMENT_KEY:
-					"replace-with-your-flagsmith-environment-key",
+				FLAGSMITH_ENVIRONMENT_KEY: "replace-with-your-flagsmith-environment-key",
 			};
 		case "custom":
 			return {
@@ -201,8 +200,7 @@ export function buildHeatmapEnvExample(
 	switch (heatmap) {
 		case "openreplay":
 			return {
-				PUBLIC_OPENREPLAY_PROJECT_KEY:
-					"replace-with-your-openreplay-project-key",
+				PUBLIC_OPENREPLAY_PROJECT_KEY: "replace-with-your-openreplay-project-key",
 			};
 		case "posthog":
 			// PostHog handles both analytics and heatmaps with the same keys.
@@ -230,8 +228,7 @@ export function buildDonationsEnvExample(
 	const result: Record<string, string> = {};
 	if (donations.giveLively) {
 		result.GIVELIVELY_ORG_SLUG = "replace-with-your-org-slug";
-		result.GIVELIVELY_CAMPAIGN_SLUG =
-			"replace-with-your-campaign-slug-or-remove";
+		result.GIVELIVELY_CAMPAIGN_SLUG = "replace-with-your-campaign-slug-or-remove";
 	}
 	if (donations.liberapay) {
 		result.LIBERAPAY_USERNAME = "replace-with-your-liberapay-username";

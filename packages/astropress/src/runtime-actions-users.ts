@@ -8,9 +8,9 @@ import { getAstropressRootSecret } from "./runtime-env";
 
 // ─── Password reset — extracted to runtime-actions-password-reset.ts ──────────
 export {
+	consumeRuntimePasswordResetToken,
 	createRuntimePasswordResetToken,
 	getRuntimePasswordResetRequest,
-	consumeRuntimePasswordResetToken,
 } from "./runtime-actions-password-reset";
 
 function normalizeRole(role: string): "admin" | "editor" | "" {
@@ -58,12 +58,7 @@ async function getD1InviteToken(rawToken: string, locals?: App.Locals | null) {
 			active: number;
 		}>();
 
-	if (
-		!row ||
-		row.accepted_at ||
-		row.active !== 1 ||
-		Date.parse(row.expires_at) < Date.now()
-	) {
+	if (!row || row.accepted_at || row.active !== 1 || Date.parse(row.expires_at) < Date.now()) {
 		return null;
 	}
 
@@ -111,12 +106,7 @@ export async function inviteRuntimeAdminUser(
             VALUES (?, ?, ?, 1, ?)
           `,
 				)
-				.bind(
-					email,
-					await hashPassword(crypto.randomUUID()),
-					name,
-					role === "admin" ? 1 : 0,
-				)
+				.bind(email, await hashPassword(crypto.randomUUID()), name, role === "admin" ? 1 : 0)
 				.run();
 
 			const user = await db
@@ -133,9 +123,7 @@ export async function inviteRuntimeAdminUser(
 
 			const rawToken = crypto.randomUUID();
 			const inviteId = `invite-${crypto.randomUUID()}`;
-			const expiresAt = new Date(
-				Date.now() + 7 * 24 * 60 * 60 * 1000,
-			).toISOString();
+			const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
 
 			await db
 				.prepare(
@@ -144,13 +132,7 @@ export async function inviteRuntimeAdminUser(
             VALUES (?, ?, ?, ?, ?)
           `,
 				)
-				.bind(
-					inviteId,
-					user.id,
-					await hashOpaqueToken(rawToken),
-					expiresAt,
-					actor.email,
-				)
+				.bind(inviteId, user.id, await hashOpaqueToken(rawToken), expiresAt, actor.email)
 				.run();
 
 			await recordD1Audit(
@@ -171,10 +153,7 @@ export async function inviteRuntimeAdminUser(
 	);
 }
 
-export async function getRuntimeInviteRequest(
-	rawToken: string,
-	locals?: App.Locals | null,
-) {
+export async function getRuntimeInviteRequest(rawToken: string, locals?: App.Locals | null) {
 	return withLocalStoreFallback(
 		locals,
 		async () => {
@@ -279,9 +258,7 @@ export async function suspendRuntimeAdminUser(
 			}
 
 			const target = await db
-				.prepare(
-					"SELECT id FROM admin_users WHERE email = ? AND active = 1 LIMIT 1",
-				)
+				.prepare("SELECT id FROM admin_users WHERE email = ? AND active = 1 LIMIT 1")
 				.bind(normalizedEmail)
 				.first<{ id: number }>();
 			if (!target) {
@@ -291,10 +268,7 @@ export async function suspendRuntimeAdminUser(
 				};
 			}
 
-			await db
-				.prepare("UPDATE admin_users SET active = 0 WHERE id = ?")
-				.bind(target.id)
-				.run();
+			await db.prepare("UPDATE admin_users SET active = 0 WHERE id = ?").bind(target.id).run();
 			await db
 				.prepare(
 					`
@@ -336,9 +310,7 @@ export async function unsuspendRuntimeAdminUser(
 			}
 
 			const target = await db
-				.prepare(
-					"SELECT id FROM admin_users WHERE email = ? AND active = 0 LIMIT 1",
-				)
+				.prepare("SELECT id FROM admin_users WHERE email = ? AND active = 0 LIMIT 1")
 				.bind(normalizedEmail)
 				.first<{ id: number }>();
 			if (!target) {
@@ -348,10 +320,7 @@ export async function unsuspendRuntimeAdminUser(
 				};
 			}
 
-			await db
-				.prepare("UPDATE admin_users SET active = 1 WHERE id = ?")
-				.bind(target.id)
-				.run();
+			await db.prepare("UPDATE admin_users SET active = 1 WHERE id = ?").bind(target.id).run();
 			await recordD1Audit(
 				locals,
 				actor,

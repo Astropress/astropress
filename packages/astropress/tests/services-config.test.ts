@@ -123,9 +123,7 @@ describe("registerTestimonialsServiceIfConfigured", () => {
 		});
 		const svc = getAstropressService("testimonials");
 		expect(svc?.label).toBe("Typebot");
-		expect(svc?.description).toBe(
-			"Conversational testimonial and referral capture flows.",
-		);
+		expect(svc?.description).toBe("Conversational testimonial and referral capture flows.");
 		expect(svc?.proxyTarget).toBe("http://localhost:8080");
 		expect(svc?.adminPath).toBe("/ap-admin/services/testimonials");
 	});
@@ -137,9 +135,7 @@ describe("registerTestimonialsServiceIfConfigured", () => {
 		});
 		const svc = getAstropressService("testimonials");
 		expect(svc?.label).toBe("Formbricks");
-		expect(svc?.description).toBe(
-			"Survey and testimonial collection with referral support.",
-		);
+		expect(svc?.description).toBe("Survey and testimonial collection with referral support.");
 	});
 
 	it("uses the explicit label when provided, regardless of type", () => {

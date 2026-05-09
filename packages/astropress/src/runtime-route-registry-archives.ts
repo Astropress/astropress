@@ -3,8 +3,8 @@ import { recordD1Audit } from "./d1-audit";
 import type { D1DatabaseLike } from "./d1-database";
 import { getCloudflareBindings } from "./runtime-env";
 import {
-	type RuntimeArchiveRouteRecord,
 	loadSafeLocalCmsRegistry,
+	type RuntimeArchiveRouteRecord,
 	withSafeRouteRegistryFallback,
 } from "./runtime-route-registry-dispatch";
 
@@ -14,10 +14,7 @@ interface Actor {
 	name: string;
 }
 
-export async function getRuntimeArchiveRoute(
-	pathname: string,
-	locals?: App.Locals | null,
-) {
+export async function getRuntimeArchiveRoute(pathname: string, locals?: App.Locals | null) {
 	const normalizedPath = normalizePath(pathname);
 	const db = getCloudflareBindings(locals).DB;
 	if (!db) {

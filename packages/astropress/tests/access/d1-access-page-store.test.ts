@@ -254,9 +254,7 @@ describe("loadAccessTabDataFromD1", () => {
 			}),
 			admin_users: () => null,
 		});
-		expect(
-			(await loadAccessTabDataFromD1(db)).rolePoliciesMap.r1?.[0]?.condition,
-		).toBeNull();
+		expect((await loadAccessTabDataFromD1(db)).rolePoliciesMap.r1?.[0]?.condition).toBeNull();
 	});
 
 	it("issues SELECT queries against the documented tables", async () => {
@@ -269,21 +267,13 @@ describe("loadAccessTabDataFromD1", () => {
 		});
 		await loadAccessTabDataFromD1(db);
 		expect(queries.some((q) => q.includes("FROM access_roles"))).toBe(true);
-		expect(queries.some((q) => q.includes("FROM access_user_roles"))).toBe(
-			true,
-		);
-		expect(queries.some((q) => q.includes("FROM access_user_policies"))).toBe(
-			true,
-		);
-		expect(queries.some((q) => q.includes("FROM access_role_policies"))).toBe(
-			true,
-		);
+		expect(queries.some((q) => q.includes("FROM access_user_roles"))).toBe(true);
+		expect(queries.some((q) => q.includes("FROM access_user_policies"))).toBe(true);
+		expect(queries.some((q) => q.includes("FROM access_role_policies"))).toBe(true);
 		expect(
 			queries.some(
 				(q) =>
-					q.includes("FROM admin_users") &&
-					q.includes("active = 1") &&
-					q.includes("is_admin = 1"),
+					q.includes("FROM admin_users") && q.includes("active = 1") && q.includes("is_admin = 1"),
 			),
 		).toBe(true);
 	});

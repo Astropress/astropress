@@ -16,12 +16,7 @@ export const GET = async ({ request, locals }) => {
 	const posts = published.filter((r) => r.kind === "post" || r.kind == null);
 	const pages = published.filter((r) => r.kind === "page");
 
-	const lines = [
-		`# ${origin}`,
-		"",
-		"> Content site powered by Astropress.",
-		"",
-	];
+	const lines = [`# ${origin}`, "", "> Content site powered by Astropress.", ""];
 
 	if (posts.length > 0) {
 		lines.push("## Posts", "");

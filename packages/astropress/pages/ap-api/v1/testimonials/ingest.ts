@@ -21,11 +21,7 @@ function getClientIp(request: Request): string {
 	);
 }
 
-async function verifyHmac(
-	rawBody: string,
-	signature: string,
-	secret: string,
-): Promise<boolean> {
+async function verifyHmac(rawBody: string, signature: string, secret: string): Promise<boolean> {
 	const enc = new TextEncoder();
 	const key = await crypto.subtle.importKey(
 		"raw",
@@ -49,9 +45,7 @@ async function verifyHmac(
 
 type AnyObject = Record<string, unknown>;
 
-function mapFormbricksPayload(
-	data: AnyObject,
-): Partial<TestimonialSubmissionInput> {
+function mapFormbricksPayload(data: AnyObject): Partial<TestimonialSubmissionInput> {
 	const result: Partial<TestimonialSubmissionInput> = {};
 	const responseData = (data as AnyObject)?.data as AnyObject | undefined;
 	const answers: unknown[] = Array.isArray(responseData?.answers)
@@ -65,8 +59,7 @@ function mapFormbricksPayload(
 		if (headline.includes("name")) result.name = value;
 		else if (headline.includes("email")) result.email = value;
 		else if (headline.includes("company")) result.company = value;
-		else if (headline.includes("role") || headline.includes("title"))
-			result.role = value;
+		else if (headline.includes("role") || headline.includes("title")) result.role = value;
 		else if (
 			headline.includes("before") ||
 			headline.includes("fear") ||
@@ -91,13 +84,9 @@ function mapFormbricksPayload(
 	return result;
 }
 
-function mapTypebotPayload(
-	data: AnyObject,
-): Partial<TestimonialSubmissionInput> {
+function mapTypebotPayload(data: AnyObject): Partial<TestimonialSubmissionInput> {
 	const result: Partial<TestimonialSubmissionInput> = {};
-	const results = Array.isArray(data?.results)
-		? (data.results as AnyObject[])
-		: [];
+	const results = Array.isArray(data?.results) ? (data.results as AnyObject[]) : [];
 	const firstResult = results[0];
 	const variables: unknown[] = Array.isArray(firstResult?.variables)
 		? (firstResult.variables as unknown[])
@@ -105,31 +94,19 @@ function mapTypebotPayload(
 	for (const v of variables) {
 		const variable = v as AnyObject;
 		const name = String(variable.name ?? "").toLowerCase();
-		const value =
-			typeof variable.value === "string" ? variable.value : undefined;
+		const value = typeof variable.value === "string" ? variable.value : undefined;
 		if (!value) continue;
 		if (name === "name" || name === "respondent_name") result.name = value;
-		else if (name === "email" || name === "respondent_email")
-			result.email = value;
+		else if (name === "email" || name === "respondent_email") result.email = value;
 		else if (name === "company") result.company = value;
 		else if (name === "role" || name === "job_title") result.role = value;
-		else if (
-			name === "before_state" ||
-			name === "before" ||
-			name === "challenge"
-		)
+		else if (name === "before_state" || name === "before" || name === "challenge")
 			result.beforeState = value;
-		else if (name === "transformation" || name === "what_happened")
-			result.transformation = value;
-		else if (
-			name === "specific_result" ||
-			name === "result" ||
-			name === "outcome"
-		)
+		else if (name === "transformation" || name === "what_happened") result.transformation = value;
+		else if (name === "specific_result" || name === "result" || name === "outcome")
 			result.specificResult = value;
 		else if (name === "consent")
-			result.consentToPublish =
-				value.toLowerCase() !== "no" && value.toLowerCase() !== "false";
+			result.consentToPublish = value.toLowerCase() !== "no" && value.toLowerCase() !== "false";
 	}
 	result.consentToPublish = result.consentToPublish ?? true;
 	return result;
@@ -144,10 +121,10 @@ export const POST: APIRoute = async ({ request, locals }) => {
 		locals,
 	);
 	if (!allowed) {
-		return new Response(
-			JSON.stringify({ ok: false, error: "Rate limit exceeded." }),
-			{ status: 429, headers: JSON_HEADERS },
-		);
+		return new Response(JSON.stringify({ ok: false, error: "Rate limit exceeded." }), {
+			status: 429,
+			headers: JSON_HEADERS,
+		});
 	}
 
 	const rawBody = await request.text().catch(() => null);
@@ -165,17 +142,17 @@ export const POST: APIRoute = async ({ request, locals }) => {
 			request.headers.get("X-Typebot-Signature") ??
 			"";
 		if (!signature) {
-			return new Response(
-				JSON.stringify({ ok: false, error: "Missing signature." }),
-				{ status: 401, headers: JSON_HEADERS },
-			);
+			return new Response(JSON.stringify({ ok: false, error: "Missing signature." }), {
+				status: 401,
+				headers: JSON_HEADERS,
+			});
 		}
 		const valid = await verifyHmac(rawBody, signature, webhookSecret);
 		if (!valid) {
-			return new Response(
-				JSON.stringify({ ok: false, error: "Invalid signature." }),
-				{ status: 401, headers: JSON_HEADERS },
-			);
+			return new Response(JSON.stringify({ ok: false, error: "Invalid signature." }), {
+				status: 401,
+				headers: JSON_HEADERS,
+			});
 		}
 	} else {
 		console.warn(
@@ -196,20 +173,17 @@ export const POST: APIRoute = async ({ request, locals }) => {
 	let source: TestimonialSource;
 	let mapped: Partial<TestimonialSubmissionInput>;
 
-	if (
-		body.type === "responseFinished" &&
-		typeof (body as AnyObject)?.data === "object"
-	) {
+	if (body.type === "responseFinished" && typeof (body as AnyObject)?.data === "object") {
 		source = "formbricks";
 		mapped = mapFormbricksPayload(body);
 	} else if (Array.isArray(body.results)) {
 		source = "typebot";
 		mapped = mapTypebotPayload(body);
 	} else {
-		return new Response(
-			JSON.stringify({ ok: false, error: "Unrecognised webhook shape." }),
-			{ status: 400, headers: JSON_HEADERS },
-		);
+		return new Response(JSON.stringify({ ok: false, error: "Unrecognised webhook shape." }), {
+			status: 400,
+			headers: JSON_HEADERS,
+		});
 	}
 
 	if (!mapped.name || !mapped.email) {

@@ -11,19 +11,13 @@ function randomIndex(max: number): number {
 }
 
 export function randomSecret(bytes = 24) {
-	return Buffer.from(crypto.getRandomValues(new Uint8Array(bytes))).toString(
-		"base64url",
-	);
+	return Buffer.from(crypto.getRandomValues(new Uint8Array(bytes))).toString("base64url");
 }
 
 export function generatePassphrase(): string {
 	return Array.from({ length: 4 }, () => {
-		const word = EFF_SHORT_WORDLIST[
-			randomIndex(EFF_SHORT_WORDLIST.length)
-		] as string;
-		const char = PASSPHRASE_CHARS[
-			randomIndex(PASSPHRASE_CHARS.length)
-		] as string;
+		const word = EFF_SHORT_WORDLIST[randomIndex(EFF_SHORT_WORDLIST.length)] as string;
+		const char = PASSPHRASE_CHARS[randomIndex(PASSPHRASE_CHARS.length)] as string;
 		return word + char;
 	}).join("-");
 }

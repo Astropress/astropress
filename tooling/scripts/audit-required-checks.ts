@@ -29,7 +29,7 @@
  */
 
 import { execFileSync } from "node:child_process";
-import { existsSync, readFileSync, readdirSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
 const CHECKS_FILE = ".github/required-status-checks.json";
@@ -59,13 +59,9 @@ function loadWorkflowText(): string {
 		console.error(`audit-required-checks: missing ${WORKFLOWS_DIR}`);
 		process.exit(1);
 	}
-	const ymls = readdirSync(WORKFLOWS_DIR).filter(
-		(f) => f.endsWith(".yml") || f.endsWith(".yaml"),
-	);
+	const ymls = readdirSync(WORKFLOWS_DIR).filter((f) => f.endsWith(".yml") || f.endsWith(".yaml"));
 	return ymls
-		.map(
-			(f) => `# === ${f} ===\n${readFileSync(join(WORKFLOWS_DIR, f), "utf8")}`,
-		)
+		.map((f) => `# === ${f} ===\n${readFileSync(join(WORKFLOWS_DIR, f), "utf8")}`)
 		.join("\n");
 }
 
@@ -104,11 +100,10 @@ function escapeRegExp(s: string): string {
 
 function tryFetchLiveRulesetContexts(rulesetId: number): string[] | null {
 	try {
-		const out = execFileSync(
-			"gh",
-			["api", `repos/Astropress/astropress/rulesets/${rulesetId}`],
-			{ encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] },
-		);
+		const out = execFileSync("gh", ["api", `repos/Astropress/astropress/rulesets/${rulesetId}`], {
+			encoding: "utf8",
+			stdio: ["ignore", "pipe", "ignore"],
+		});
 		const ruleset = JSON.parse(out) as {
 			rules: Array<{
 				type: string;
@@ -147,9 +142,7 @@ function main(): number {
 		const onlyInLive = liveSorted.filter((c) => !committed.includes(c));
 		const onlyInCommitted = committed.filter((c) => !liveSorted.includes(c));
 		if (onlyInLive.length > 0) {
-			errors.push(
-				`  Live ruleset has contexts not in ${CHECKS_FILE}: ${onlyInLive.join(", ")}`,
-			);
+			errors.push(`  Live ruleset has contexts not in ${CHECKS_FILE}: ${onlyInLive.join(", ")}`);
 		}
 		if (onlyInCommitted.length > 0) {
 			errors.push(

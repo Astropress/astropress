@@ -79,13 +79,7 @@ const OPENAPI_SPEC = {
 					error: { type: "string" },
 					code: {
 						type: "string",
-						enum: [
-							"unauthorized",
-							"forbidden",
-							"not_found",
-							"validation_error",
-							"rate_limited",
-						],
+						enum: ["unauthorized", "forbidden", "not_found", "validation_error", "rate_limited"],
 					},
 				},
 			},
@@ -142,8 +136,7 @@ const OPENAPI_SPEC = {
 					},
 					401: { description: "Unauthorized" },
 					403: {
-						description:
-							"Forbidden — insufficient scope (requires content:read)",
+						description: "Forbidden — insufficient scope (requires content:read)",
 					},
 				},
 				security: [{ BearerAuth: ["content:read"] }],
@@ -399,8 +392,7 @@ const OPENAPI_SPEC = {
 				},
 				responses: {
 					201: {
-						description:
-							"Created webhook with ML-DSA-65 verification key (shown once)",
+						description: "Created webhook with ML-DSA-65 verification key (shown once)",
 					},
 				},
 				security: [{ BearerAuth: ["webhooks:manage"] }],

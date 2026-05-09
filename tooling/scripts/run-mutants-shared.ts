@@ -73,19 +73,14 @@ interface RepoIdent {
 	name: string;
 }
 
-function gh(
-	args: string[],
-	opts: { stdin?: string; stderr?: "pipe" | "inherit" } = {},
-): string {
+function gh(args: string[], opts: { stdin?: string; stderr?: "pipe" | "inherit" } = {}): string {
 	const result = spawnSync("gh", args, {
 		input: opts.stdin,
 		encoding: "utf8",
 		stdio: ["pipe", "pipe", opts.stderr ?? "pipe"],
 	});
 	if (result.status !== 0) {
-		throw new Error(
-			`gh ${args.join(" ")}\n${result.stderr || result.stdout}`.trim(),
-		);
+		throw new Error(`gh ${args.join(" ")}\n${result.stderr || result.stdout}`.trim());
 	}
 	return result.stdout;
 }
@@ -119,18 +114,12 @@ function getBranchHead(repo: RepoIdent): BranchHead | null {
 	if (refResult.status !== 0) return null;
 	const ref = JSON.parse(refResult.stdout) as { object: { sha: string } };
 	const commit = JSON.parse(
-		gh([
-			"api",
-			`repos/${repo.owner}/${repo.name}/git/commits/${ref.object.sha}`,
-		]),
+		gh(["api", `repos/${repo.owner}/${repo.name}/git/commits/${ref.object.sha}`]),
 	) as { tree: { sha: string } };
 	return { sha: ref.object.sha, treeSha: commit.tree.sha };
 }
 
-function readBranchFileBuffer(
-	repo: RepoIdent,
-	filename: string,
-): Buffer | null {
+function readBranchFileBuffer(repo: RepoIdent, filename: string): Buffer | null {
 	// Stream gh's response directly to a file via fd redirection — the default
 	// stdout buffer overflows on 15+ MB blobs. `Accept: application/vnd.github.raw`
 	// returns file bytes without the Contents API's 1 MB inline limit.
@@ -216,14 +205,7 @@ function createTree(repo: RepoIdent, uploads: BlobUpload[]): string {
 	}));
 	const body = JSON.stringify({ tree });
 	const out = gh(
-		[
-			"api",
-			"-X",
-			"POST",
-			`repos/${repo.owner}/${repo.name}/git/trees`,
-			"--input",
-			"-",
-		],
+		["api", "-X", "POST", `repos/${repo.owner}/${repo.name}/git/trees`, "--input", "-"],
 		{ stdin: body },
 	);
 	return (JSON.parse(out) as { sha: string }).sha;
@@ -241,14 +223,7 @@ function createCommit(
 		parents: parentSha ? [parentSha] : [],
 	});
 	const out = gh(
-		[
-			"api",
-			"-X",
-			"POST",
-			`repos/${repo.owner}/${repo.name}/git/commits`,
-			"--input",
-			"-",
-		],
+		["api", "-X", "POST", `repos/${repo.owner}/${repo.name}/git/commits`, "--input", "-"],
 		{ stdin: body },
 	);
 	return (JSON.parse(out) as { sha: string }).sha;
@@ -264,17 +239,9 @@ function createOrUpdateRef(
 			ref: `refs/heads/${BRANCH}`,
 			sha: commitSha,
 		});
-		gh(
-			[
-				"api",
-				"-X",
-				"POST",
-				`repos/${repo.owner}/${repo.name}/git/refs`,
-				"--input",
-				"-",
-			],
-			{ stdin: body },
-		);
+		gh(["api", "-X", "POST", `repos/${repo.owner}/${repo.name}/git/refs`, "--input", "-"], {
+			stdin: body,
+		});
 		return;
 	}
 	// Compare-and-swap: GitHub rejects with 422 if remote sha != current.
@@ -292,11 +259,7 @@ function createOrUpdateRef(
 	);
 }
 
-function commitFiles(
-	repo: RepoIdent,
-	uploads: BlobUpload[],
-	message: string,
-): void {
+function commitFiles(repo: RepoIdent, uploads: BlobUpload[], message: string): void {
 	const head = getBranchHead(repo);
 	const treeSha = createTree(repo, uploads);
 	const commitSha = createCommit(repo, treeSha, head?.sha ?? null, message);
@@ -340,17 +303,13 @@ function readmeContent(): Buffer {
 function acquireLock(repo: RepoIdent, force: boolean): LockData {
 	const existing = readRemoteLock(repo);
 	if (existing && !lockIsStale(existing) && !force) {
-		const ageMin = Math.round(
-			(Date.now() - new Date(existing.startedAt).getTime()) / 60000,
-		);
+		const ageMin = Math.round((Date.now() - new Date(existing.startedAt).getTime()) / 60000);
 		throw new Error(
 			`Lock held by ${existing.host}:${existing.pid} for ${ageMin} min (TTL ${existing.ttlHours}h, started ${existing.startedAt}).\nIf you're certain it's stale, re-run with --force.`,
 		);
 	}
 	if (existing) {
-		console.log(
-			`overwriting ${force ? "" : "stale "}lock from ${existing.host}:${existing.pid}…`,
-		);
+		console.log(`overwriting ${force ? "" : "stale "}lock from ${existing.host}:${existing.pid}…`);
 	}
 	const me: LockData = {
 		host: hostname(),
@@ -377,9 +336,7 @@ function acquireLock(repo: RepoIdent, force: boolean): LockData {
 function releaseLock(repo: RepoIdent): void {
 	try {
 		const incremental = readBranchFileBuffer(repo, INCREMENTAL_FILE);
-		const uploads: BlobUpload[] = [
-			{ path: README_FILE, content: readmeContent() },
-		];
+		const uploads: BlobUpload[] = [{ path: README_FILE, content: readmeContent() }];
 		if (incremental !== null) {
 			uploads.push({ path: INCREMENTAL_FILE, content: incremental });
 		}
@@ -393,9 +350,7 @@ function releaseLock(repo: RepoIdent): void {
 function pullState(repo: RepoIdent): void {
 	const content = readBranchFileBuffer(repo, INCREMENTAL_FILE);
 	if (content === null) {
-		console.log(
-			`no remote ${INCREMENTAL_FILE} yet — run will start from scratch.`,
-		);
+		console.log(`no remote ${INCREMENTAL_FILE} yet — run will start from scratch.`);
 		return;
 	}
 	writeFileSync(LOCAL_INCREMENTAL, content);
@@ -448,23 +403,15 @@ function runMutants(): { exitCode: number; reportFresh: boolean } {
 			cwd: path.join(process.cwd(), "packages/astropress"),
 		},
 	);
-	const reportFresh =
-		existsSync(LOCAL_REPORT) && statSync(LOCAL_REPORT).mtimeMs > before;
+	const reportFresh = existsSync(LOCAL_REPORT) && statSync(LOCAL_REPORT).mtimeMs > before;
 	return { exitCode: result.status ?? 1, reportFresh };
 }
 
 function ensureBranch(repo: RepoIdent): void {
 	if (getBranchHead(repo) !== null) return;
 	console.log(`creating ${BRANCH} branch…`);
-	const treeSha = createTree(repo, [
-		{ path: README_FILE, content: readmeContent() },
-	]);
-	const commitSha = createCommit(
-		repo,
-		treeSha,
-		null,
-		"init: stryker-state branch",
-	);
+	const treeSha = createTree(repo, [{ path: README_FILE, content: readmeContent() }]);
+	const commitSha = createCommit(repo, treeSha, null, "init: stryker-state branch");
 	createOrUpdateRef(repo, commitSha, null);
 }
 
@@ -544,9 +491,7 @@ function cmdStatus(repo: RepoIdent): number {
 
 function cmdForceUnlock(repo: RepoIdent): number {
 	const incremental = readBranchFileBuffer(repo, INCREMENTAL_FILE);
-	const uploads: BlobUpload[] = [
-		{ path: README_FILE, content: readmeContent() },
-	];
+	const uploads: BlobUpload[] = [{ path: README_FILE, content: readmeContent() }];
 	if (incremental !== null) {
 		uploads.push({ path: INCREMENTAL_FILE, content: incremental });
 	}
@@ -559,9 +504,7 @@ function checkGh(): void {
 	try {
 		execFileSync("gh", ["auth", "status"], { stdio: "ignore" });
 	} catch {
-		console.error(
-			"gh CLI is not authenticated. Run `gh auth login` first, then retry.",
-		);
+		console.error("gh CLI is not authenticated. Run `gh auth login` first, then retry.");
 		process.exit(1);
 	}
 }

@@ -48,9 +48,7 @@ try {
 	const f = readFileSync(FANOUT, "utf8");
 	const allowMap = f.match(/ALLOWLIST[\s\S]*?new Map\(\[([\s\S]*?)\]\);/);
 	if (allowMap) {
-		fanoutAllowlist = [...allowMap[1].matchAll(/"([^"]+\.test\.ts)"/g)].map(
-			(m) => m[1],
-		);
+		fanoutAllowlist = [...allowMap[1].matchAll(/"([^"]+\.test\.ts)"/g)].map((m) => m[1]);
 	}
 } catch {}
 

@@ -1,4 +1,4 @@
-import { existsSync, readFileSync, readdirSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import type { D1DatabaseLike } from "./d1-database.js";
 
@@ -15,11 +15,7 @@ export interface D1MigrateReport {
 	dryRun: boolean;
 }
 
-export type D1RollbackStatus =
-	| "rolled_back"
-	| "no_rollback_sql"
-	| "no_migrations"
-	| "dry_run";
+export type D1RollbackStatus = "rolled_back" | "no_rollback_sql" | "no_migrations" | "dry_run";
 
 export interface D1RollbackReport {
 	migrationName: string | null;
@@ -42,9 +38,7 @@ function splitSqlStatements(sql: string): string[] {
  * Ensures the `schema_migrations` table exists in D1 and returns the set of
  * already-applied migration names.
  */
-async function bootstrapD1MigrationsTable(
-	db: D1DatabaseLike,
-): Promise<Set<string>> {
+async function bootstrapD1MigrationsTable(db: D1DatabaseLike): Promise<Set<string>> {
 	await db.batch([
 		db.prepare(`CREATE TABLE IF NOT EXISTS schema_migrations (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -54,9 +48,7 @@ async function bootstrapD1MigrationsTable(
     )`),
 	]);
 
-	const result = await db
-		.prepare("SELECT name FROM schema_migrations")
-		.all<{ name: string }>();
+	const result = await db.prepare("SELECT name FROM schema_migrations").all<{ name: string }>();
 	return new Set(result.results.map((r) => r.name));
 }
 
@@ -73,9 +65,7 @@ async function bootstrapD1MigrationsTable(
  * In `dryRun` mode no writes are performed — the function returns what would have
  * been applied.
  */
-export async function runD1Migrations(
-	input: D1MigrateInput,
-): Promise<D1MigrateReport> {
+export async function runD1Migrations(input: D1MigrateInput): Promise<D1MigrateReport> {
 	const { db, migrationsDir, dryRun = false } = input;
 	const applied: string[] = [];
 	const skipped: string[] = [];
@@ -103,21 +93,14 @@ export async function runD1Migrations(
 		const sql = readFileSync(path.join(migrationsDir, file), "utf8");
 		const statements = splitSqlStatements(sql);
 
-		const downFilePath = path.join(
-			migrationsDir,
-			file.replace(/\.sql$/, ".down.sql"),
-		);
-		const rollbackSql = existsSync(downFilePath)
-			? readFileSync(downFilePath, "utf8")
-			: null;
+		const downFilePath = path.join(migrationsDir, file.replace(/\.sql$/, ".down.sql"));
+		const rollbackSql = existsSync(downFilePath) ? readFileSync(downFilePath, "utf8") : null;
 
 		if (!dryRun) {
 			const batch = [
 				...statements.map((stmt) => db.prepare(stmt)),
 				db
-					.prepare(
-						"INSERT INTO schema_migrations (name, rollback_sql) VALUES (?, ?)",
-					)
+					.prepare("INSERT INTO schema_migrations (name, rollback_sql) VALUES (?, ?)")
 					.bind(file, rollbackSql),
 			];
 			await db.batch(batch);
@@ -144,20 +127,16 @@ export async function rollbackD1LastMigration(
 
 	try {
 		last = await db
-			.prepare(
-				"SELECT name, rollback_sql FROM schema_migrations ORDER BY id DESC LIMIT 1",
-			)
+			.prepare("SELECT name, rollback_sql FROM schema_migrations ORDER BY id DESC LIMIT 1")
 			.first<{ name: string; rollback_sql: string | null }>();
 	} catch {
 		return { migrationName: null, status: "no_migrations", dryRun };
 	}
 
 	if (!last) return { migrationName: null, status: "no_migrations", dryRun };
-	if (!last.rollback_sql)
-		return { migrationName: last.name, status: "no_rollback_sql", dryRun };
+	if (!last.rollback_sql) return { migrationName: last.name, status: "no_rollback_sql", dryRun };
 
-	if (dryRun)
-		return { migrationName: last.name, status: "dry_run", dryRun: true };
+	if (dryRun) return { migrationName: last.name, status: "dry_run", dryRun: true };
 
 	const rollbackStatements = splitSqlStatements(last.rollback_sql);
 	await db.batch([

@@ -5,11 +5,7 @@ import type {
 import type { ContentRecord } from "./persistence-types";
 
 export function normalizeAssignments(values?: number[]): number[] {
-	return [
-		...new Set(
-			(values ?? []).filter((entry) => Number.isInteger(entry) && entry > 0),
-		),
-	];
+	return [...new Set((values ?? []).filter((entry) => Number.isInteger(entry) && entry > 0))];
 }
 
 export function mapContentState(

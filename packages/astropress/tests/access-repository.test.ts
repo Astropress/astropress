@@ -1,15 +1,13 @@
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
-
+import type { AccessStore, Subject } from "../src/access";
 import {
 	createAccessRepository,
 	createPolicyEngine,
 	evaluate,
 	seedStarterRoles,
 } from "../src/access";
-import type { AccessStore } from "../src/access";
-import type { Subject } from "../src/access";
 import {
 	decodeAttribute,
 	rowToRole,
@@ -38,9 +36,9 @@ beforeEach(async () => {
 	db.prepare(
 		"INSERT INTO admin_users (email, password_hash, name, is_admin) VALUES (?, 'h', 'Editor', 0)",
 	).run("editor@example.com");
-	admin = db
-		.prepare("SELECT id FROM admin_users WHERE email = ?")
-		.get("admin@example.com") as { id: number };
+	admin = db.prepare("SELECT id FROM admin_users WHERE email = ?").get("admin@example.com") as {
+		id: number;
+	};
 	editorUser = db
 		.prepare("SELECT id FROM admin_users WHERE email = ?")
 		.get("editor@example.com") as { id: number };
@@ -276,9 +274,7 @@ describe("repository-helpers row mappers", () => {
 				condition_json: '{"op":"eq","left":"a","right":"b"}',
 			}).condition,
 		).toEqual({ op: "eq", left: "a", right: "b" });
-		expect(rowToRolePolicy({ ...base, condition_json: null }).condition).toBe(
-			null,
-		);
+		expect(rowToRolePolicy({ ...base, condition_json: null }).condition).toBe(null);
 	});
 
 	test("rowToUserPolicy parses condition_json when present and returns null when absent", () => {
@@ -296,9 +292,7 @@ describe("repository-helpers row mappers", () => {
 				condition_json: '{"op":"eq","left":"a","right":"b"}',
 			}).condition,
 		).toEqual({ op: "eq", left: "a", right: "b" });
-		expect(rowToUserPolicy({ ...base, condition_json: null }).condition).toBe(
-			null,
-		);
+		expect(rowToUserPolicy({ ...base, condition_json: null }).condition).toBe(null);
 	});
 });
 
@@ -311,8 +305,7 @@ describe("end-to-end: repository → policy engine", () => {
 		repo.assignRole({ userId: editorUser.id, roleId: author.id });
 
 		const engine = createPolicyEngine({
-			resolvePoliciesForSubject: () =>
-				repo.resolvePoliciesForUser(editorUser.id),
+			resolvePoliciesForSubject: () => repo.resolvePoliciesForUser(editorUser.id),
 		});
 		const subj = subject({ id: String(editorUser.id) });
 		expect(
@@ -348,11 +341,7 @@ describe("end-to-end: repository → policy engine", () => {
 			id: String(admin.id),
 			isAdmin: true,
 		});
-		const r = evaluate(
-			adminSubject,
-			"anything:goes",
-			repo.resolvePoliciesForUser(admin.id),
-		);
+		const r = evaluate(adminSubject, "anything:goes", repo.resolvePoliciesForUser(admin.id));
 		expect(r.decision).toBe("allow");
 	});
 
@@ -372,8 +361,6 @@ describe("end-to-end: repository → policy engine", () => {
 		const policies = repo.resolvePoliciesForUser(editorUser.id);
 		const subj = subject({ id: String(editorUser.id) });
 		expect(evaluate(subj, "audit:view", policies).decision).toBe("allow");
-		expect(
-			evaluate(subj, "audit:view", policies).matchedPolicy?.source.kind,
-		).toBe("direct");
+		expect(evaluate(subj, "audit:view", policies).matchedPolicy?.source.kind).toBe("direct");
 	});
 });

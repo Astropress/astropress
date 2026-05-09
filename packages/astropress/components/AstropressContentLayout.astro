@@ -61,12 +61,10 @@ const speakableSelectors = Array.isArray(meta.speakableCssSelectors)
 	? (meta.speakableCssSelectors as string[])
 	: null;
 
-const howToName =
-	typeof meta.howToName === "string" ? meta.howToName : (content.title ?? "");
+const howToName = typeof meta.howToName === "string" ? meta.howToName : (content.title ?? "");
 const howToDescription =
 	typeof meta.howToDescription === "string" ? meta.howToDescription : undefined;
-const howToTotalTime =
-	typeof meta.howToTotalTime === "string" ? meta.howToTotalTime : undefined;
+const howToTotalTime = typeof meta.howToTotalTime === "string" ? meta.howToTotalTime : undefined;
 ---
 
 {isBlogPost && (

@@ -11,10 +11,7 @@
  * Light DOM. Builds its own iframe + tabs lazily.
  */
 
-import {
-	type PreviewContext,
-	renderSectionsDocument,
-} from "../src/sections/preview-renderer";
+import { type PreviewContext, renderSectionsDocument } from "../src/sections/preview-renderer";
 import { parseSections } from "../src/sections/schema";
 
 const DEBOUNCE_MS = 400;
@@ -124,14 +121,11 @@ export class ApPagePreview extends HTMLElement {
 	}
 
 	private onTabClick(e: Event) {
-		const target = (e.target as HTMLElement).closest<HTMLElement>(
-			"[data-pp-tab]",
-		);
+		const target = (e.target as HTMLElement).closest<HTMLElement>("[data-pp-tab]");
 		if (!target) return;
 		const which = target.dataset.ppTab;
 		if (!which) return;
-		const tabs =
-			this.tabsRoot?.querySelectorAll<HTMLElement>("[data-pp-tab]") ?? [];
+		const tabs = this.tabsRoot?.querySelectorAll<HTMLElement>("[data-pp-tab]") ?? [];
 		for (const tab of tabs) {
 			tab.setAttribute("aria-selected", tab === target ? "true" : "false");
 		}
@@ -139,13 +133,11 @@ export class ApPagePreview extends HTMLElement {
 			.getElementById(this.getAttribute("for") ?? "")
 			?.closest("ap-section-editor");
 		if (which === "preview") {
-			if (editor instanceof HTMLElement)
-				editor.setAttribute("data-pp-hidden", "true");
+			if (editor instanceof HTMLElement) editor.setAttribute("data-pp-hidden", "true");
 			this.setAttribute("data-pp-active", "preview");
 			this.refresh();
 		} else {
-			if (editor instanceof HTMLElement)
-				editor.removeAttribute("data-pp-hidden");
+			if (editor instanceof HTMLElement) editor.removeAttribute("data-pp-hidden");
 			this.setAttribute("data-pp-active", "edit");
 		}
 	}
@@ -173,9 +165,7 @@ export class ApPagePreview extends HTMLElement {
 			return;
 		}
 		if (!parsed.ok) {
-			const errors = parsed.errors
-				.map((e) => `${e.path}: ${e.message}`)
-				.join("\n");
+			const errors = parsed.errors.map((e) => `${e.path}: ${e.message}`).join("\n");
 			this.iframe.srcdoc = `<!doctype html><html><body><pre style="color:#b91c1c">${errors}</pre></body></html>`;
 			return;
 		}
@@ -185,9 +175,6 @@ export class ApPagePreview extends HTMLElement {
 	}
 }
 
-if (
-	typeof customElements !== "undefined" &&
-	!customElements.get("ap-page-preview")
-) {
+if (typeof customElements !== "undefined" && !customElements.get("ap-page-preview")) {
 	customElements.define("ap-page-preview", ApPagePreview);
 }

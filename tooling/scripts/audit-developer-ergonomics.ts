@@ -1,10 +1,4 @@
-import {
-	AuditReport,
-	fileExists,
-	fromRoot,
-	readText,
-	runAudit,
-} from "../lib/audit-utils.js";
+import { AuditReport, fileExists, fromRoot, readText, runAudit } from "../lib/audit-utils.js";
 
 // Rubric 7 (Developer Ergonomics)
 //
@@ -20,14 +14,12 @@ const CHECKS: Array<{ label: string; path: string; description: string }> = [
 	{
 		label: "Quick-start guide (docs/guides/QUICK_START.md)",
 		path: fromRoot("docs/guides/QUICK_START.md"),
-		description:
-			"quick-start documentation is missing — developers need a first-run guide",
+		description: "quick-start documentation is missing — developers need a first-run guide",
 	},
 	{
 		label: "Scaffold test (packages/astropress/tests/project-scaffold.test.ts)",
 		path: fromRoot("packages/astropress/tests/project-scaffold.test.ts"),
-		description:
-			"project scaffold test missing — astropress new must generate a working project",
+		description: "project scaffold test missing — astropress new must generate a working project",
 	},
 	{
 		label: "CLI doctor command (crates/astropress-cli/src/commands/doctor.rs)",
@@ -36,11 +28,9 @@ const CHECKS: Array<{ label: string; path: string; description: string }> = [
 			"doctor command implementation missing — astropress doctor is part of the ergonomics contract",
 	},
 	{
-		label:
-			"Admin shell UX test (packages/astropress/tests/admin-shell-ux.test.ts)",
+		label: "Admin shell UX test (packages/astropress/tests/admin-shell-ux.test.ts)",
 		path: fromRoot("packages/astropress/tests/admin-shell-ux.test.ts"),
-		description:
-			"admin shell UX test missing — core admin interaction patterns must be tested",
+		description: "admin shell UX test missing — core admin interaction patterns must be tested",
 	},
 ];
 

@@ -1,10 +1,10 @@
 import { join, relative } from "node:path";
 import {
 	AuditReport,
-	ROOT,
 	fileExists,
 	fromRoot,
 	listFiles,
+	ROOT,
 	readText,
 	runAudit,
 } from "../lib/audit-utils.js";
@@ -71,10 +71,7 @@ async function main() {
 	const optionalResolved = await Promise.all(
 		OPTIONAL_TEST_DIRS.map(async (d) => ((await fileExists(d)) ? d : null)),
 	);
-	const allDirs = [
-		...TEST_DIRS,
-		...optionalResolved.filter((d): d is string => d !== null),
-	];
+	const allDirs = [...TEST_DIRS, ...optionalResolved.filter((d): d is string => d !== null)];
 
 	let totalFiles = 0;
 
@@ -95,9 +92,7 @@ async function main() {
 				} else {
 					for (let i = 0; i < lines.length; i++) {
 						if (pattern.test(lines[i])) {
-							report.add(
-								`${relPath}:${i + 1}: ${name} — \`${lines[i].trim()}\``,
-							);
+							report.add(`${relPath}:${i + 1}: ${name} — \`${lines[i].trim()}\``);
 							if (pattern.global) pattern.lastIndex = 0;
 							break;
 						}

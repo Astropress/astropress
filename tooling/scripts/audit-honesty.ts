@@ -1,12 +1,6 @@
 import { execFileSync } from "node:child_process";
 import { join } from "node:path";
-import {
-	AuditReport,
-	ROOT,
-	fromRoot,
-	readText,
-	runAudit,
-} from "../lib/audit-utils.js";
+import { AuditReport, fromRoot, ROOT, readText, runAudit } from "../lib/audit-utils.js";
 
 type TruthSource = {
 	crypto: {
@@ -75,9 +69,7 @@ async function main() {
 		.split("\n")
 		.map((file) => file.trim())
 		.filter((file) => file.length > 0)
-		.filter(
-			(file) => !file.startsWith("node_modules/") && isAuditableFile(file),
-		);
+		.filter((file) => !file.startsWith("node_modules/") && isAuditableFile(file));
 
 	for (const file of trackedFiles) {
 		if (bannedPhraseAllowlist.has(file)) {
@@ -108,9 +100,7 @@ async function main() {
 
 	const readme = await readText(fromRoot("README.md"));
 	if (!readme.includes(truth.docs.readmeSecurityNote)) {
-		report.add(
-			"README.md: security note drifted from tooling/readiness-truth.json",
-		);
+		report.add("README.md: security note drifted from tooling/readiness-truth.json");
 	}
 
 	const evaluation = await readText(fromRoot("docs/reference/EVALUATION.md"));

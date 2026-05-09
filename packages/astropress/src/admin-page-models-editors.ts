@@ -11,12 +11,9 @@ import {
 	ok,
 	withFallback,
 } from "./admin-page-model-helpers";
-import { isAuthUserAdmin } from "./platform-contracts";
 import type { AuthUser } from "./platform-contracts";
-import {
-	getRuntimeInviteRequest,
-	getRuntimePasswordResetRequest,
-} from "./runtime-admin-actions";
+import { isAuthUserAdmin } from "./platform-contracts";
+import { getRuntimeInviteRequest, getRuntimePasswordResetRequest } from "./runtime-admin-actions";
 import {
 	getRuntimeAuditEvents,
 	getRuntimeAuthors,
@@ -27,17 +24,11 @@ import {
 	getRuntimeTags,
 	getRuntimeTranslationState,
 } from "./runtime-page-store";
-import {
-	getRuntimeArchiveRoute,
-	getRuntimeStructuredPageRoute,
-} from "./runtime-route-registry";
+import { getRuntimeArchiveRoute, getRuntimeStructuredPageRoute } from "./runtime-route-registry";
 
 type AdminLocals = APIContext["locals"];
 
-export async function buildPostEditorPageModel(
-	locals: AdminLocals,
-	slug: string,
-) {
+export async function buildPostEditorPageModel(locals: AdminLocals, slug: string) {
 	const warnings: string[] = [];
 	const pageRecord = await withFallback(
 		warnings,
@@ -87,8 +78,7 @@ export async function buildPostEditorPageModel(
 	);
 	const localePair = getAdminLocalePair(pageRecord.legacyUrl);
 	const localizedRoutePath = localePair?.localizedRoute;
-	const fallbackTranslationState =
-		localePair?.translationState ?? "not_started";
+	const fallbackTranslationState = localePair?.translationState ?? "not_started";
 	const englishOwnerRecord =
 		localePair?.englishRoute && localePair.englishRoute !== pageRecord.legacyUrl
 			? await withFallback(
@@ -110,12 +100,7 @@ export async function buildPostEditorPageModel(
 		? await withFallback(
 				warnings,
 				"Translation state is temporarily unavailable.",
-				() =>
-					getRuntimeTranslationState(
-						localizedRoutePath,
-						fallbackTranslationState,
-						locals,
-					),
+				() => getRuntimeTranslationState(localizedRoutePath, fallbackTranslationState, locals),
 				fallbackTranslationState,
 			)
 		: undefined;
@@ -135,10 +120,7 @@ export async function buildPostEditorPageModel(
 	);
 }
 
-export async function buildPostRevisionsPageModel(
-	locals: AdminLocals,
-	slug: string,
-) {
+export async function buildPostRevisionsPageModel(locals: AdminLocals, slug: string) {
 	const warnings: string[] = [];
 	const pageRecord = await withFallback(
 		warnings,
@@ -194,10 +176,7 @@ export async function buildPostRevisionsPageModel(
 		[],
 	);
 
-	return ok(
-		{ pageRecord, revisions, auditEvents, authors, categories, tags },
-		warnings,
-	);
+	return ok({ pageRecord, revisions, auditEvents, authors, categories, tags }, warnings);
 }
 
 export async function buildRoutePageEditorModel(
@@ -207,9 +186,7 @@ export async function buildRoutePageEditorModel(
 ): Promise<
 	AdminPageResult<{
 		pageRecord: Awaited<ReturnType<typeof getRuntimeStructuredPageRoute>>;
-		englishOwner: Awaited<
-			ReturnType<typeof getRuntimeContentStateByPath>
-		> | null;
+		englishOwner: Awaited<ReturnType<typeof getRuntimeContentStateByPath>> | null;
 		effectiveTranslationState: string | undefined;
 	}>
 > {
@@ -235,8 +212,7 @@ export async function buildRoutePageEditorModel(
 
 	const localePair = getAdminLocalePair(routePath);
 	const localizedRoutePath = localePair?.localizedRoute;
-	const fallbackTranslationState =
-		localePair?.translationState ?? "not_started";
+	const fallbackTranslationState = localePair?.translationState ?? "not_started";
 	const englishOwner = localePair
 		? await withFallback(
 				warnings,
@@ -249,12 +225,7 @@ export async function buildRoutePageEditorModel(
 		? await withFallback(
 				warnings,
 				"Translation state is temporarily unavailable.",
-				() =>
-					getRuntimeTranslationState(
-						localizedRoutePath,
-						fallbackTranslationState,
-						locals,
-					),
+				() => getRuntimeTranslationState(localizedRoutePath, fallbackTranslationState, locals),
 				fallbackTranslationState,
 			)
 		: undefined;
@@ -286,10 +257,7 @@ export async function buildArchiveEditorModel(
 	return ok({ archive }, warnings);
 }
 
-export async function buildResetPasswordPageModel(
-	locals: AdminLocals,
-	token: string,
-) {
+export async function buildResetPasswordPageModel(locals: AdminLocals, token: string) {
 	const warnings: string[] = [];
 	const request = token
 		? await withFallback(
@@ -302,10 +270,7 @@ export async function buildResetPasswordPageModel(
 	return ok({ request }, warnings);
 }
 
-export async function buildAcceptInvitePageModel(
-	locals: AdminLocals,
-	token: string,
-) {
+export async function buildAcceptInvitePageModel(locals: AdminLocals, token: string) {
 	const warnings: string[] = [];
 	const inviteRequest = token
 		? await withFallback(

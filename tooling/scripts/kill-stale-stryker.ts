@@ -70,11 +70,7 @@ function killPid(pid: number, signal: string): boolean {
 	}
 }
 
-function cleanSandboxes(
-	root: string,
-	minutes: number,
-	dryRun: boolean,
-): number {
+function cleanSandboxes(root: string, minutes: number, dryRun: boolean): number {
 	const tmpDir = join(root, ".stryker-tmp");
 	let removed = 0;
 	try {
@@ -103,19 +99,13 @@ function main(): void {
 	const { minutes, dryRun } = parseArgs();
 	const cutoffSec = minutes * 60;
 
-	const candidates = listStrykerProcesses().filter(
-		(p) => p.etimeSec >= cutoffSec,
-	);
+	const candidates = listStrykerProcesses().filter((p) => p.etimeSec >= cutoffSec);
 	if (candidates.length === 0) {
 		console.log(`no Stryker processes older than ${minutes}m`);
 	} else {
-		console.log(
-			`found ${candidates.length} Stryker process(es) older than ${minutes}m:`,
-		);
+		console.log(`found ${candidates.length} Stryker process(es) older than ${minutes}m:`);
 		for (const p of candidates) {
-			console.log(
-				`  pid=${p.pid}  age=${Math.round(p.etimeSec / 60)}m  ${p.cmd.slice(0, 80)}`,
-			);
+			console.log(`  pid=${p.pid}  age=${Math.round(p.etimeSec / 60)}m  ${p.cmd.slice(0, 80)}`);
 		}
 		if (!dryRun) {
 			for (const p of candidates) killPid(p.pid, "SIGTERM");
@@ -124,8 +114,7 @@ function main(): void {
 			while (Date.now() < deadline) {
 				// busy-wait; 2s is the whole budget
 				const remaining = listStrykerProcesses().filter(
-					(p) =>
-						candidates.some((c) => c.pid === p.pid) && p.etimeSec >= cutoffSec,
+					(p) => candidates.some((c) => c.pid === p.pid) && p.etimeSec >= cutoffSec,
 				);
 				if (remaining.length === 0) break;
 			}

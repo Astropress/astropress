@@ -2,19 +2,6 @@
 // under the 400-line arch-lint warning. The dispatcher (parseSection)
 // and public API (parseSections) live in schema.ts.
 
-import {
-	isNonEmptyString,
-	isObject,
-	isOptionalString,
-	isStringArray,
-	parseAlignment,
-	parseColumns,
-	parseCtaButton,
-	parseImageSide,
-	parseTestimonialLayout,
-	parseTestimonialSource,
-	parseTone,
-} from "./schema-helpers";
 import type {
 	CtaBannerSection,
 	FaqItem,
@@ -27,6 +14,19 @@ import type {
 	RichTextSection,
 	SectionParseError,
 	TestimonialsSection,
+} from "./schema-helpers";
+import {
+	isNonEmptyString,
+	isObject,
+	isOptionalString,
+	isStringArray,
+	parseAlignment,
+	parseColumns,
+	parseCtaButton,
+	parseImageSide,
+	parseTestimonialLayout,
+	parseTestimonialSource,
+	parseTone,
 } from "./schema-helpers";
 
 export function parseHero(
@@ -60,11 +60,7 @@ export function parseHero(
 		if (cta) out.primaryCta = cta;
 	}
 	if (raw.secondaryCta !== undefined) {
-		const cta = parseCtaButton(
-			raw.secondaryCta,
-			`${path}.secondaryCta`,
-			errors,
-		);
+		const cta = parseCtaButton(raw.secondaryCta, `${path}.secondaryCta`, errors);
 		if (cta) out.secondaryCta = cta;
 	}
 	return out;
@@ -105,8 +101,7 @@ export function parseFeatureGrid(
 			return;
 		}
 		const fi: FeatureItem = { title: item.title, body: item.body };
-		if (typeof item.icon === "string" && item.icon.length > 0)
-			fi.icon = item.icon;
+		if (typeof item.icon === "string" && item.icon.length > 0) fi.icon = item.icon;
 		items.push(fi);
 	});
 	const out: FeatureGridSection = {
@@ -116,8 +111,7 @@ export function parseFeatureGrid(
 		columns: parseColumns(raw.columns),
 		items,
 	};
-	if (typeof raw.intro === "string" && raw.intro.length > 0)
-		out.intro = raw.intro;
+	if (typeof raw.intro === "string" && raw.intro.length > 0) out.intro = raw.intro;
 	return out;
 }
 

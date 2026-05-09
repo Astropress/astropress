@@ -16,8 +16,7 @@ export interface AstropressProjectRuntimePlan {
 	adapter: AstropressPlatformAdapter;
 }
 
-export interface AstropressProjectRuntimeOptions
-	extends AstropressProjectAdapterOptions {}
+export interface AstropressProjectRuntimeOptions extends AstropressProjectAdapterOptions {}
 
 export function createAstropressProjectRuntimePlan(
 	options: AstropressProjectRuntimeOptions = {},

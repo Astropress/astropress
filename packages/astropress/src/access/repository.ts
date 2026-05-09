@@ -15,17 +15,17 @@
 
 import { randomUUID } from "node:crypto";
 import {
-	type RolePolicyRow,
-	type RoleRow,
-	type UserPolicyRow,
-	type UserRoleRow,
 	decodeAttribute,
 	encodeAttribute,
 	nowIso,
+	type RolePolicyRow,
+	type RoleRow,
 	rowToRole,
 	rowToRolePolicy,
 	rowToUserPolicy,
 	rowToUserRole,
+	type UserPolicyRow,
+	type UserRoleRow,
 } from "./repository-helpers";
 import type { AttributeValue, Condition, Effect, Policy } from "./types";
 
@@ -117,10 +117,7 @@ function rolesMethods(store: AccessStore) {
 				updatedAt: now,
 			};
 		},
-		updateRole(
-			id: string,
-			input: { name?: string; description?: string },
-		): void {
+		updateRole(id: string, input: { name?: string; description?: string }): void {
 			const now = nowIso();
 			const sets: string[] = [];
 			// audit-boundary: opaque-passthrough -- variadic SQL bind args
@@ -136,9 +133,7 @@ function rolesMethods(store: AccessStore) {
 			if (sets.length === 0) return;
 			sets.push("updated_at = ?");
 			args.push(now, id);
-			store
-				.prepare(`UPDATE access_roles SET ${sets.join(", ")} WHERE id = ?`)
-				.run(...args);
+			store.prepare(`UPDATE access_roles SET ${sets.join(", ")} WHERE id = ?`).run(...args);
 		},
 		deleteRole(id: string): void {
 			store.prepare("DELETE FROM access_roles WHERE id = ?").run(id);
@@ -196,11 +191,7 @@ function userRolesMethods(store: AccessStore) {
 				.all<UserRoleRow>(userId)
 				.map(rowToUserRole);
 		},
-		assignRole(input: {
-			userId: number;
-			roleId: string;
-			grantedBy?: string;
-		}): void {
+		assignRole(input: { userId: number; roleId: string; grantedBy?: string }): void {
 			store
 				.prepare(
 					"INSERT OR IGNORE INTO access_user_roles (user_id, role_id, granted_by) VALUES (?, ?, ?)",
@@ -209,9 +200,7 @@ function userRolesMethods(store: AccessStore) {
 		},
 		revokeRole(input: { userId: number; roleId: string }): void {
 			store
-				.prepare(
-					"DELETE FROM access_user_roles WHERE user_id = ? AND role_id = ?",
-				)
+				.prepare("DELETE FROM access_user_roles WHERE user_id = ? AND role_id = ?")
 				.run(input.userId, input.roleId);
 		},
 	};
@@ -229,9 +218,7 @@ function userPoliciesMethods(store: AccessStore) {
 		},
 		countUserDirectGrants(userId: number): number {
 			const row = store
-				.prepare(
-					"SELECT COUNT(*) AS n FROM access_user_policies WHERE user_id = ?",
-				)
+				.prepare("SELECT COUNT(*) AS n FROM access_user_policies WHERE user_id = ?")
 				.get<{ n: number }>(userId);
 			return row?.n ?? 0;
 		},
@@ -277,13 +264,9 @@ function userPoliciesMethods(store: AccessStore) {
 
 function attributesMethods(store: AccessStore) {
 	return {
-		getUserAttributes(
-			userId: number,
-		): Readonly<Record<string, AttributeValue>> {
+		getUserAttributes(userId: number): Readonly<Record<string, AttributeValue>> {
 			const rows = store
-				.prepare(
-					"SELECT key, value FROM access_user_attributes WHERE user_id = ?",
-				)
+				.prepare("SELECT key, value FROM access_user_attributes WHERE user_id = ?")
 				.all<{ key: string; value: string }>(userId);
 			const out: Record<string, AttributeValue> = {};
 			for (const r of rows) {
@@ -291,11 +274,7 @@ function attributesMethods(store: AccessStore) {
 			}
 			return out;
 		},
-		setUserAttribute(input: {
-			userId: number;
-			key: string;
-			value: AttributeValue;
-		}): void {
+		setUserAttribute(input: { userId: number; key: string; value: AttributeValue }): void {
 			store
 				.prepare(
 					"INSERT INTO access_user_attributes (user_id, key, value) VALUES (?, ?, ?) ON CONFLICT(user_id, key) DO UPDATE SET value = excluded.value",
@@ -304,9 +283,7 @@ function attributesMethods(store: AccessStore) {
 		},
 		deleteUserAttribute(input: { userId: number; key: string }): void {
 			store
-				.prepare(
-					"DELETE FROM access_user_attributes WHERE user_id = ? AND key = ?",
-				)
+				.prepare("DELETE FROM access_user_attributes WHERE user_id = ? AND key = ?")
 				.run(input.userId, input.key);
 		},
 	};
@@ -316,9 +293,7 @@ function adminCountMethods(store: AccessStore) {
 	return {
 		countActiveAdmins(): number {
 			const row = store
-				.prepare(
-					"SELECT COUNT(*) AS n FROM admin_users WHERE active = 1 AND is_admin = 1",
-				)
+				.prepare("SELECT COUNT(*) AS n FROM admin_users WHERE active = 1 AND is_admin = 1")
 				.get<{ n: number }>();
 			return row?.n ?? 0;
 		},

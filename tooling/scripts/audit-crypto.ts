@@ -1,12 +1,5 @@
 import { join } from "node:path";
-import {
-	AuditReport,
-	ROOT,
-	fromRoot,
-	listFiles,
-	readText,
-	runAudit,
-} from "../lib/audit-utils.js";
+import { AuditReport, fromRoot, listFiles, ROOT, readText, runAudit } from "../lib/audit-utils.js";
 
 // Verifies that the three cryptographic algorithms claimed in docs
 // (Argon2id, KMAC256, ML-DSA-65) are implemented via the correct library
@@ -58,11 +51,7 @@ function hasCallSite(src: string, token: string): boolean {
 	return callSiteRe.test(src);
 }
 
-function hasImport(
-	src: string,
-	importSource: string,
-	importName: string,
-): boolean {
+function hasImport(src: string, importSource: string, importName: string): boolean {
 	const escapedSource = importSource.replace(/[/.-]/g, (c) =>
 		c === "/" ? "\\/" : c === "." ? "\\." : "\\-",
 	);

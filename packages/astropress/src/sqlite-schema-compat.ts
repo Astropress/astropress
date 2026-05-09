@@ -1,18 +1,16 @@
 import type { SqliteDatabaseLike } from "./sqlite-bootstrap.js";
 
 export function getTableColumns(db: SqliteDatabaseLike, table: string) {
-	return (
-		db.prepare(`PRAGMA table_info(${table})`).all() as Array<{ name: string }>
-	).map((column) => column.name);
+	return (db.prepare(`PRAGMA table_info(${table})`).all() as Array<{ name: string }>).map(
+		(column) => column.name,
+	);
 }
 
 export function getTableSql(db: SqliteDatabaseLike, table: string) {
 	return (
-		db
-			.prepare(
-				"SELECT sql FROM sqlite_master WHERE type = 'table' AND name = ?",
-			)
-			.get(table) as { sql: string | null } | undefined
+		db.prepare("SELECT sql FROM sqlite_master WHERE type = 'table' AND name = ?").get(table) as
+			| { sql: string | null }
+			| undefined
 	)?.sql;
 }
 
@@ -27,21 +25,13 @@ export function rebuildContentTablesForCompatibility(
 		hasRevisionNote: boolean;
 	},
 ) {
-	const authorIdsSelect = options.hasRevisionAuthorIds
-		? "COALESCE(author_ids, '[]')"
-		: "'[]'";
+	const authorIdsSelect = options.hasRevisionAuthorIds ? "COALESCE(author_ids, '[]')" : "'[]'";
 	const categoryIdsSelect = options.hasRevisionCategoryIds
 		? "COALESCE(category_ids, '[]')"
 		: "'[]'";
-	const tagIdsSelect = options.hasRevisionTagIds
-		? "COALESCE(tag_ids, '[]')"
-		: "'[]'";
-	const overrideScheduledAtSelect = options.hasOverrideScheduledAt
-		? "scheduled_at"
-		: "NULL";
-	const revisionScheduledAtSelect = options.hasRevisionScheduledAt
-		? "scheduled_at"
-		: "NULL";
+	const tagIdsSelect = options.hasRevisionTagIds ? "COALESCE(tag_ids, '[]')" : "'[]'";
+	const overrideScheduledAtSelect = options.hasOverrideScheduledAt ? "scheduled_at" : "NULL";
+	const revisionScheduledAtSelect = options.hasRevisionScheduledAt ? "scheduled_at" : "NULL";
 	const revisionNoteSelect = options.hasRevisionNote ? "revision_note" : "NULL";
 
 	db.exec(`
@@ -164,9 +154,7 @@ export function rebuildContentTablesForCompatibility(
 
 export function ensureFts5SearchIndex(db: SqliteDatabaseLike) {
 	const existing = db
-		.prepare(
-			"SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'content_fts'",
-		)
+		.prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'content_fts'")
 		.get() as { name: string } | undefined;
 	if (existing) {
 		return;
@@ -234,9 +222,7 @@ export function ensureLegacySchemaCompatibility(db: SqliteDatabaseLike) {
 	// drop the role column entirely (terminal access-PR migration).
 	const adminUserColumns = new Set(getTableColumns(db, "admin_users"));
 	if (adminUserColumns.size > 0 && !adminUserColumns.has("is_admin")) {
-		db.exec(
-			"ALTER TABLE admin_users ADD COLUMN is_admin INTEGER NOT NULL DEFAULT 0",
-		);
+		db.exec("ALTER TABLE admin_users ADD COLUMN is_admin INTEGER NOT NULL DEFAULT 0");
 		// Backfill: anyone whose legacy role was 'admin' becomes is_admin=1.
 		if (adminUserColumns.has("role")) {
 			db.exec("UPDATE admin_users SET is_admin = 1 WHERE role = 'admin'");
@@ -300,11 +286,7 @@ export function ensureLegacySchemaCompatibility(db: SqliteDatabaseLike) {
 		!revisionSql.includes("'review'") ||
 		!revisionSql.includes("'archived'");
 
-	if (
-		!needsRevisionColumns &&
-		!needsOverrideColumns &&
-		!needsExpandedStatuses
-	) {
+	if (!needsRevisionColumns && !needsOverrideColumns && !needsExpandedStatuses) {
 		return;
 	}
 

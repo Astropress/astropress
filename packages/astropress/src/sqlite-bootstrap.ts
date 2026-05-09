@@ -1,5 +1,4 @@
-import { existsSync, mkdirSync, rmSync } from "node:fs";
-import { readFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -13,19 +12,19 @@ import {
 	type AstropressSqliteSeedToolkit,
 	type AstropressSqliteSeedToolkitOptions,
 	type BootstrapUserSeed,
+	defaultSeedImportTables,
+	loadSqliteDatabase,
 	type MarketingRouteSeedRecord,
 	type MediaSeedRecord,
 	type RedirectRuleSeed,
 	type SeedDatabaseOptions,
+	type SeededComment,
 	type SeedImportStatement,
 	type SeedSummary,
-	type SeededComment,
 	type SiteSettingsSeed,
 	type SqliteDatabaseLike,
 	type SqliteStatementLike,
 	type SystemRouteSeed,
-	defaultSeedImportTables,
-	loadSqliteDatabase,
 } from "./sqlite-bootstrap-helpers";
 import {
 	seedArchiveRoutes,
@@ -39,10 +38,7 @@ import {
 } from "./sqlite-bootstrap-seeders.js";
 import { runIntegrityCheckOnOpenDatabase } from "./sqlite-integrity.js";
 import { ensureLegacySchemaCompatibility } from "./sqlite-schema-compat.js";
-import {
-	buildTableImportSql,
-	buildTableImportStatements,
-} from "./sqlite-seed-helpers.js";
+import { buildTableImportSql, buildTableImportStatements } from "./sqlite-seed-helpers.js";
 
 const integrityLogger = createLogger("sqlite-integrity");
 
@@ -57,8 +53,8 @@ export type {
 	MarketingRouteSeedRecord,
 	MediaSeedRecord,
 	RedirectRuleSeed,
-	SeededComment,
 	SeedDatabaseOptions,
+	SeededComment,
 	SeedImportStatement,
 	SeedSummary,
 	SiteSettingsSeed,
@@ -76,9 +72,7 @@ function defaultAdminDbPath(workspaceRoot = process.cwd()) {
 }
 
 export function resolveAstropressSqliteSchemaPath() {
-	const primaryPath = fileURLToPath(
-		new URL("./sqlite-schema.sql", import.meta.url),
-	);
+	const primaryPath = fileURLToPath(new URL("./sqlite-schema.sql", import.meta.url));
 	if (existsSync(primaryPath)) return primaryPath;
 	return fileURLToPath(new URL("../sqlite-schema.sql", import.meta.url));
 }
@@ -97,27 +91,20 @@ export {
 
 export function createAstropressSqliteSeedToolkit<
 	TableName extends string = (typeof defaultSeedImportTables)[number],
->(
-	options: AstropressSqliteSeedToolkitOptions<TableName>,
-): AstropressSqliteSeedToolkit<TableName> {
+>(options: AstropressSqliteSeedToolkitOptions<TableName>): AstropressSqliteSeedToolkit<TableName> {
 	const seedImportTables = [
 		...(options.seedImportTables ?? defaultSeedImportTables),
 	] as TableName[];
 
 	function getDefaultAdminDbPath(workspaceRoot = process.cwd()) {
-		return (
-			options.getDefaultAdminDbPath?.(workspaceRoot) ??
-			defaultAdminDbPath(workspaceRoot)
-		);
+		return options.getDefaultAdminDbPath?.(workspaceRoot) ?? defaultAdminDbPath(workspaceRoot);
 	}
 
 	function applyCommittedSchema(db: SqliteDatabaseLike) {
 		db.exec(options.readSchemaSql());
 		ensureLegacySchemaCompatibility(db);
 		try {
-			db.prepare(
-				`INSERT OR IGNORE INTO schema_migrations (name) VALUES ('baseline-schema')`,
-			).run();
+			db.prepare(`INSERT OR IGNORE INTO schema_migrations (name) VALUES ('baseline-schema')`).run();
 		} catch {
 			// Non-standard setup without schema_migrations table.
 		}
@@ -153,8 +140,7 @@ export function createAstropressSqliteSeedToolkit<
 		const dbPath = seedOptions.dbPath ?? getDefaultAdminDbPath(workspaceRoot);
 		const ownsConnection = !seedOptions.db;
 
-		if (seedOptions.reset && dbPath !== ":memory:")
-			rmSync(dbPath, { force: true });
+		if (seedOptions.reset && dbPath !== ":memory:") rmSync(dbPath, { force: true });
 		if (ownsConnection && dbPath !== ":memory:")
 			mkdirSync(path.dirname(dbPath), { recursive: true });
 
@@ -189,9 +175,7 @@ export function createAstropressSqliteSeedToolkit<
 			seedDatabase({ dbPath: tempPath, reset: true, workspaceRoot });
 			const db = openSeedDatabase(tempPath);
 			try {
-				const tableSql = buildSeedImportStatements(workspaceRoot, db).map(
-					(s) => s.sql,
-				);
+				const tableSql = buildSeedImportStatements(workspaceRoot, db).map((s) => s.sql);
 				return ["BEGIN TRANSACTION;", ...tableSql, "COMMIT;"].join("\n\n");
 			} finally {
 				db.close();
@@ -201,10 +185,7 @@ export function createAstropressSqliteSeedToolkit<
 		}
 	}
 
-	function buildSeedImportStatements(
-		workspaceRoot = process.cwd(),
-		seededDb?: SqliteDatabaseLike,
-	) {
+	function buildSeedImportStatements(workspaceRoot = process.cwd(), seededDb?: SqliteDatabaseLike) {
 		const tempPath = path.join(
 			tmpdir(),
 			`astropress-seed-${Date.now()}-${Math.random().toString(36).slice(2)}.sqlite`,

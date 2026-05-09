@@ -3,17 +3,13 @@ import { expect, test } from "@playwright/test";
 import { expectNoAxeViolations } from "./helpers/accessibility";
 
 test.describe("Feature: authenticated admin interaction flows", () => {
-	test("Scenario: keyboard shortcut help opens from the top bar", async ({
-		page,
-	}) => {
+	test("Scenario: keyboard shortcut help opens from the top bar", async ({ page }) => {
 		await page.goto("/ap-admin", { waitUntil: "networkidle" });
 
 		// Open the utility panel first (keyboard shortcuts button is inside the details panel)
 		await page.locator("summary.topbar-panel-toggle").click();
 		await page.getByRole("button", { name: "Keyboard shortcuts" }).click();
-		await expect(
-			page.getByRole("dialog", { name: "Keyboard shortcuts" }),
-		).toBeVisible();
+		await expect(page.getByRole("dialog", { name: "Keyboard shortcuts" })).toBeVisible();
 		await expect(page.getByText("Open command palette")).toBeVisible();
 	});
 
@@ -27,9 +23,7 @@ test.describe("Feature: authenticated admin interaction flows", () => {
 			scrollHeight: document.documentElement.scrollHeight,
 			clientHeight: document.documentElement.clientHeight,
 		}));
-		expect(scrollMeta.scrollHeight).toBeGreaterThan(
-			scrollMeta.clientHeight + 240,
-		);
+		expect(scrollMeta.scrollHeight).toBeGreaterThan(scrollMeta.clientHeight + 240);
 
 		const fab = page.locator("#scroll-to-top-fab");
 		// Hidden at the top of the page (topbar fully visible).
@@ -75,15 +69,12 @@ test.describe("Feature: authenticated admin interaction flows", () => {
 			await page.addInitScript((t) => {
 				try {
 					localStorage.setItem("theme", t);
-				} catch (e) {
+				} catch (_e) {
 					/* ignore */
 				}
 			}, theme);
 			await page.goto("/ap-admin", { waitUntil: "networkidle" });
-			await page.evaluate(
-				(t) => document.documentElement.setAttribute("data-theme", t),
-				theme,
-			);
+			await page.evaluate((t) => document.documentElement.setAttribute("data-theme", t), theme);
 			await page.locator("summary.topbar-panel-toggle").click();
 			// Move the mouse out of the topbar so :hover doesn't skew the colour read.
 			await page.mouse.move(0, 600);
@@ -125,9 +116,7 @@ test.describe("Feature: authenticated admin interaction flows", () => {
 
 		await expect(page.locator("html")).toHaveAttribute("lang", "es");
 		// "Cerrar sesión" is the Spanish translation of Sign out — proves SSR labels switched.
-		await expect(
-			page.getByRole("button", { name: "Cerrar sesión" }),
-		).toBeVisible();
+		await expect(page.getByRole("button", { name: "Cerrar sesión" })).toBeVisible();
 
 		// Section headings (h1) should also reflect the localised nav label —
 		// the Pages page renders the navigation label as its heading.
@@ -142,9 +131,7 @@ test.describe("Feature: authenticated admin interaction flows", () => {
 		const page = await ctx.newPage();
 		await page.goto("/ap-admin/login");
 		await expect(page.locator("html")).toHaveAttribute("lang", "fr");
-		await expect(
-			page.getByRole("button", { name: "Se connecter" }),
-		).toBeVisible();
+		await expect(page.getByRole("button", { name: "Se connecter" })).toBeVisible();
 		await ctx.close();
 	});
 
@@ -160,9 +147,7 @@ test.describe("Feature: authenticated admin interaction flows", () => {
 		await page.waitForURL(/\/ap-admin\/redirects/, {
 			waitUntil: "networkidle",
 		});
-		await expect(
-			page.locator("td", { hasText: "/old-test-path/" }),
-		).toBeVisible();
+		await expect(page.locator("td", { hasText: "/old-test-path/" })).toBeVisible();
 		await expectNoAxeViolations(page, { ignoreRules: ["target-size"] });
 	});
 
@@ -171,9 +156,7 @@ test.describe("Feature: authenticated admin interaction flows", () => {
 	}) => {
 		await page.goto("/ap-admin/comments", { waitUntil: "networkidle" });
 
-		const firstApproveButton = page
-			.getByRole("button", { name: "Approve" })
-			.first();
+		const firstApproveButton = page.getByRole("button", { name: "Approve" }).first();
 		await expect(firstApproveButton).toBeVisible();
 		await firstApproveButton.click();
 
@@ -202,9 +185,7 @@ test.describe("Feature: authenticated admin interaction flows", () => {
 	}) => {
 		await page.goto("/ap-admin/posts", { waitUntil: "networkidle" });
 		await page.getByRole("link", { name: "Hello World" }).click();
-		await expect(
-			page.getByRole("heading", { level: 1, name: "Edit Post" }),
-		).toBeVisible();
+		await expect(page.getByRole("heading", { level: 1, name: "Edit Post" })).toBeVisible();
 
 		// Focus the html-editor area and verify Tab moves through controls
 		const editor = page.locator("ap-html-editor");
@@ -223,9 +204,7 @@ test.describe("Feature: authenticated admin interaction flows", () => {
 	}) => {
 		await page.goto("/ap-admin/posts", { waitUntil: "networkidle" });
 		await page.getByRole("link", { name: "Hello World" }).click();
-		await expect(
-			page.getByRole("heading", { level: 1, name: "Edit Post" }),
-		).toBeVisible();
+		await expect(page.getByRole("heading", { level: 1, name: "Edit Post" })).toBeVisible();
 
 		await page.getByRole("button", { name: "Open media library" }).click();
 		const dialog = page.locator("#media-library-dialog");
@@ -250,9 +229,7 @@ test.describe("Feature: authenticated admin interaction flows", () => {
 	}) => {
 		await page.goto("/ap-admin/posts", { waitUntil: "networkidle" });
 		await page.getByRole("link", { name: "Hello World" }).click();
-		await expect(
-			page.getByRole("heading", { level: 1, name: "Edit Post" }),
-		).toBeVisible();
+		await expect(page.getByRole("heading", { level: 1, name: "Edit Post" })).toBeVisible();
 
 		const openButton = page.getByRole("button", { name: "Open media library" });
 		await openButton.click();
@@ -289,21 +266,15 @@ test.describe("Feature: authenticated admin interaction flows", () => {
 	}) => {
 		await page.goto("/ap-admin/posts", { waitUntil: "networkidle" });
 		await page.getByRole("link", { name: "Hello World" }).click();
-		await expect(
-			page.getByRole("heading", { level: 1, name: "Edit Post" }),
-		).toBeVisible();
+		await expect(page.getByRole("heading", { level: 1, name: "Edit Post" })).toBeVisible();
 
 		// Clear the title field and attempt to save
-		const titleInput = page
-			.locator("input[name='title'], input[name='seoTitle']")
-			.first();
+		const titleInput = page.locator("input[name='title'], input[name='seoTitle']").first();
 		await titleInput.fill("");
 		await page.getByRole("button", { name: /save/i }).first().click();
 
 		// Should not navigate away — either browser validation stops it or the page shows an error
-		await expect(
-			page.getByRole("heading", { level: 1, name: "Edit Post" }),
-		).toBeVisible();
+		await expect(page.getByRole("heading", { level: 1, name: "Edit Post" })).toBeVisible();
 	});
 
 	test("Scenario: redirect creation with duplicate path — error shown, not saved twice", async ({

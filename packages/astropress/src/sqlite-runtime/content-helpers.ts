@@ -88,9 +88,7 @@ export function mapContentEntryRow(row: ContentEntryRow): PageRecord {
 	};
 }
 
-export function pageRecordToContentRecord(
-	pageRecord: PageRecord,
-): ContentRecord {
+export function pageRecordToContentRecord(pageRecord: PageRecord): ContentRecord {
 	return {
 		...pageRecord,
 		status: pageRecord.status ?? "published",
@@ -135,12 +133,13 @@ export function mapRevisionRow(row: RevisionRow) {
 /* ── SQL constants, RevisionInput, and baseline helpers ── */
 
 export {
-	SQL_LIST_REVISIONS_FOR_SLUG,
-	type RevisionInput,
 	buildBaselineOverrideParams,
 	buildBaselineRevisionParams,
 	ensureBaselineRevisionImpl,
+	type RevisionInput,
+	SQL_LIST_REVISIONS_FOR_SLUG,
 } from "./content-sql";
+
 import {
 	type RevisionInput,
 	SQL_INSERT_ENTRY,
@@ -148,9 +147,7 @@ import {
 	SQL_UPSERT_OVERRIDE,
 } from "./content-sql";
 
-export function queryCustomContentEntries(
-	getDb: () => AstropressSqliteDatabaseLike,
-) {
+export function queryCustomContentEntries(getDb: () => AstropressSqliteDatabaseLike) {
 	return getDb()
 		.prepare(
 			`
@@ -163,30 +160,21 @@ export function queryCustomContentEntries(
 		.all() as ContentEntryRow[];
 }
 
-export function queryContentAssignmentIds(
-	getDb: () => AstropressSqliteDatabaseLike,
-	slug: string,
-) {
+export function queryContentAssignmentIds(getDb: () => AstropressSqliteDatabaseLike, slug: string) {
 	const db = getDb();
 	const authorIds = (
 		db
-			.prepare(
-				"SELECT author_id FROM content_authors WHERE slug = ? ORDER BY author_id ASC",
-			)
+			.prepare("SELECT author_id FROM content_authors WHERE slug = ? ORDER BY author_id ASC")
 			.all(slug) as Array<{ author_id: number }>
 	).map((row) => row.author_id);
 	const categoryIds = (
 		db
-			.prepare(
-				"SELECT category_id FROM content_categories WHERE slug = ? ORDER BY category_id ASC",
-			)
+			.prepare("SELECT category_id FROM content_categories WHERE slug = ? ORDER BY category_id ASC")
 			.all(slug) as Array<{ category_id: number }>
 	).map((row) => row.category_id);
 	const tagIds = (
 		db
-			.prepare(
-				"SELECT tag_id FROM content_tags WHERE slug = ? ORDER BY tag_id ASC",
-			)
+			.prepare("SELECT tag_id FROM content_tags WHERE slug = ? ORDER BY tag_id ASC")
 			.all(slug) as Array<{ tag_id: number }>
 	).map((row) => row.tag_id);
 	return { authorIds, categoryIds, tagIds };
@@ -203,19 +191,19 @@ export function replaceAssignments(
 	db.prepare("DELETE FROM content_tags WHERE slug = ?").run(slug);
 
 	for (const authorId of input.authorIds ?? []) {
-		db.prepare(
-			"INSERT OR IGNORE INTO content_authors (slug, author_id) VALUES (?, ?)",
-		).run(slug, authorId);
+		db.prepare("INSERT OR IGNORE INTO content_authors (slug, author_id) VALUES (?, ?)").run(
+			slug,
+			authorId,
+		);
 	}
 	for (const categoryId of input.categoryIds ?? []) {
-		db.prepare(
-			"INSERT OR IGNORE INTO content_categories (slug, category_id) VALUES (?, ?)",
-		).run(slug, categoryId);
+		db.prepare("INSERT OR IGNORE INTO content_categories (slug, category_id) VALUES (?, ?)").run(
+			slug,
+			categoryId,
+		);
 	}
 	for (const tagId of input.tagIds ?? []) {
-		db.prepare(
-			"INSERT OR IGNORE INTO content_tags (slug, tag_id) VALUES (?, ?)",
-		).run(slug, tagId);
+		db.prepare("INSERT OR IGNORE INTO content_tags (slug, tag_id) VALUES (?, ?)").run(slug, tagId);
 	}
 }
 

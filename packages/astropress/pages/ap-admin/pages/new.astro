@@ -11,9 +11,7 @@ if (!adminUser || !isAuthUserAdmin(adminUser)) {
 }
 
 const errorMessage =
-	Astro.url.searchParams.get("error") === "1"
-		? Astro.url.searchParams.get("message")
-		: "";
+	Astro.url.searchParams.get("error") === "1" ? Astro.url.searchParams.get("message") : "";
 ---
 
 {adminUser && isAuthUserAdmin(adminUser) ? (

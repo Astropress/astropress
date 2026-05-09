@@ -1,11 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { verifyMlDsaMessage } from "../src/crypto-primitives.js";
-import type {
-	WebhookEvent,
-	WebhookRecord,
-	WebhookStore,
-} from "../src/platform-contracts";
+import type { WebhookEvent, WebhookRecord, WebhookStore } from "../src/platform-contracts";
 import { createWebhookStore } from "../src/sqlite-runtime/webhooks.js";
 import { makeDb } from "./helpers/make-db.js";
 
@@ -62,9 +58,9 @@ describe("WebhookStore SQLite implementation", () => {
 		expect(record.active).toBe(true);
 
 		// The private signing key is stored server-side; the public key is returned once.
-		const row = db
-			.prepare("SELECT secret_hash FROM webhooks WHERE id = ?")
-			.get(record.id) as { secret_hash: string };
+		const row = db.prepare("SELECT secret_hash FROM webhooks WHERE id = ?").get(record.id) as {
+			secret_hash: string;
+		};
 		expect(row.secret_hash).not.toBe(verification.publicKey);
 	});
 
@@ -97,9 +93,9 @@ describe("WebhookStore SQLite implementation", () => {
 
 		await store.delete(record.id);
 
-		const row = db
-			.prepare("SELECT deleted_at FROM webhooks WHERE id = ?")
-			.get(record.id) as { deleted_at: string | null };
+		const row = db.prepare("SELECT deleted_at FROM webhooks WHERE id = ?").get(record.id) as {
+			deleted_at: string | null;
+		};
 		expect(row.deleted_at).not.toBeNull();
 	});
 
@@ -125,15 +121,11 @@ describe("WebhookStore SQLite implementation", () => {
 
 		const sig = capturedRequest?.headers.get("x-astropress-signature");
 		expect(sig).toBeTruthy();
-		expect(capturedRequest?.headers.get("x-astropress-signature-alg")).toBe(
-			"ML-DSA-65",
-		);
+		expect(capturedRequest?.headers.get("x-astropress-signature-alg")).toBe("ML-DSA-65");
 		expect(capturedRequest?.headers.get("x-astropress-key-id")).toBe(record.id);
 
 		const body = await capturedRequest?.clone().text();
-		expect(
-			verifyMlDsaMessage(body, sig as string, verification.publicKey),
-		).toBe(true);
+		expect(verifyMlDsaMessage(body, sig as string, verification.publicKey)).toBe(true);
 	});
 
 	it("dispatch: partial failure does not throw", async () => {
@@ -155,9 +147,7 @@ describe("WebhookStore SQLite implementation", () => {
 			events: ["content.updated"],
 		});
 
-		await expect(
-			store.dispatch("content.updated", { test: true }),
-		).resolves.not.toThrow();
+		await expect(store.dispatch("content.updated", { test: true })).resolves.not.toThrow();
 		expect(callCount).toBe(2);
 	});
 

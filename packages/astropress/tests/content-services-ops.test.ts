@@ -18,31 +18,22 @@ describe("content services operations", () => {
 				ASTROPRESS_CONTENT_SERVICES: "supabase",
 				SUPABASE_URL: "https://demo.supabase.co",
 				SUPABASE_SERVICE_ROLE_KEY: "service",
-				ASTROPRESS_SERVICE_ORIGIN:
-					"https://demo.supabase.co/functions/v1/astropress",
+				ASTROPRESS_SERVICE_ORIGIN: "https://demo.supabase.co/functions/v1/astropress",
 			},
 		});
 
 		expect(report.supportLevel).toBe("configured");
 		expect(report.manifestFile).toBeTruthy();
-		expect(
-			await readFile(
-				join(workspace, ".astropress/services/supabase.json"),
-				"utf8",
-			),
-		).toContain('"status": "configured"');
+		expect(await readFile(join(workspace, ".astropress/services/supabase.json"), "utf8")).toContain(
+			'"status": "configured"',
+		);
 
 		await rm(workspace, { recursive: true, force: true });
 	});
 
 	it("reports missing config when verify runs without required keys", async () => {
-		const workspace = await mkdtemp(
-			join(tmpdir(), "astropress-services-missing-"),
-		);
-		await writeFile(
-			join(workspace, ".env"),
-			"ASTROPRESS_CONTENT_SERVICES=appwrite\n",
-		);
+		const workspace = await mkdtemp(join(tmpdir(), "astropress-services-missing-"));
+		await writeFile(join(workspace, ".env"), "ASTROPRESS_CONTENT_SERVICES=appwrite\n");
 
 		const report = await verifyAstropressContentServices({
 			workspaceRoot: workspace,
@@ -58,17 +49,14 @@ describe("content services operations", () => {
 	});
 
 	it("accepts scaffolded Neon env keys during verification", async () => {
-		const workspace = await mkdtemp(
-			join(tmpdir(), "astropress-services-neon-"),
-		);
+		const workspace = await mkdtemp(join(tmpdir(), "astropress-services-neon-"));
 
 		const report = await verifyAstropressContentServices({
 			workspaceRoot: workspace,
 			env: {
 				ASTROPRESS_CONTENT_SERVICES: "neon",
 				ASTROPRESS_SERVICE_ORIGIN: "https://service.example.com/astropress",
-				NEON_DATABASE_URL:
-					"postgres://user:pass@ep-example.us-east-1.aws.neon.tech/neondb",
+				NEON_DATABASE_URL: "postgres://user:pass@ep-example.us-east-1.aws.neon.tech/neondb",
 			},
 		});
 
@@ -79,9 +67,7 @@ describe("content services operations", () => {
 	});
 
 	it("reports NHOST and Turso missing keys with the canonical env contract", async () => {
-		const workspace = await mkdtemp(
-			join(tmpdir(), "astropress-services-more-"),
-		);
+		const workspace = await mkdtemp(join(tmpdir(), "astropress-services-more-"));
 
 		const nhostReport = await verifyAstropressContentServices({
 			workspaceRoot: workspace,

@@ -33,38 +33,29 @@ describe("schema privacy invariants", () => {
 	it("comments table does not store IP addresses", () => {
 		// Extract just the comments table definition
 		const commentsTable =
-			schema.match(/CREATE TABLE IF NOT EXISTS comments \([\s\S]*?\);/)?.[0] ??
-			"";
-		expect(
-			commentsTable,
-			"comments table must not have an ip_address column",
-		).not.toMatch(/ip_address/i);
-		expect(
-			commentsTable,
-			"comments table must not have an ip_addr column",
-		).not.toMatch(/\bip_addr\b/i);
-		expect(
-			commentsTable,
-			"comments table must not have a submitter_ip column",
-		).not.toMatch(/submitter_ip/i);
+			schema.match(/CREATE TABLE IF NOT EXISTS comments \([\s\S]*?\);/)?.[0] ?? "";
+		expect(commentsTable, "comments table must not have an ip_address column").not.toMatch(
+			/ip_address/i,
+		);
+		expect(commentsTable, "comments table must not have an ip_addr column").not.toMatch(
+			/\bip_addr\b/i,
+		);
+		expect(commentsTable, "comments table must not have a submitter_ip column").not.toMatch(
+			/submitter_ip/i,
+		);
 	});
 
 	it("contact_submissions table does not store IP addresses", () => {
 		const contactTable =
-			schema.match(
-				/CREATE TABLE IF NOT EXISTS contact_submissions \([\s\S]*?\);/,
-			)?.[0] ?? "";
-		expect(
-			contactTable,
-			"contact_submissions must not store IP addresses",
-		).not.toMatch(/ip_address|ip_addr|submitter_ip/i);
+			schema.match(/CREATE TABLE IF NOT EXISTS contact_submissions \([\s\S]*?\);/)?.[0] ?? "";
+		expect(contactTable, "contact_submissions must not store IP addresses").not.toMatch(
+			/ip_address|ip_addr|submitter_ip/i,
+		);
 	});
 
 	it("admin_sessions IP and user-agent columns are nullable (opt-in, not required)", () => {
 		const sessionsTable =
-			schema.match(
-				/CREATE TABLE IF NOT EXISTS admin_sessions \([\s\S]*?\);/,
-			)?.[0] ?? "";
+			schema.match(/CREATE TABLE IF NOT EXISTS admin_sessions \([\s\S]*?\);/)?.[0] ?? "";
 		// ip_address and user_agent may exist only if they are nullable (no NOT NULL constraint)
 		if (sessionsTable.includes("ip_address")) {
 			expect(
@@ -82,22 +73,17 @@ describe("schema privacy invariants", () => {
 
 	it("api_tokens are hashed at rest", () => {
 		const apiTokensTable =
-			schema.match(
-				/CREATE TABLE IF NOT EXISTS api_tokens \([\s\S]*?\);/,
-			)?.[0] ?? "";
+			schema.match(/CREATE TABLE IF NOT EXISTS api_tokens \([\s\S]*?\);/)?.[0] ?? "";
 		// Raw token must not be stored — only the hash
-		expect(
-			apiTokensTable,
-			"api_tokens must store token_hash, not raw token",
-		).toContain("token_hash");
-		expect(
-			apiTokensTable,
-			"api_tokens must not have a raw_token column",
-		).not.toMatch(/\braw_token\b/i);
-		expect(
-			apiTokensTable,
-			"api_tokens must not have a token_value column",
-		).not.toMatch(/\btoken_value\b/i);
+		expect(apiTokensTable, "api_tokens must store token_hash, not raw token").toContain(
+			"token_hash",
+		);
+		expect(apiTokensTable, "api_tokens must not have a raw_token column").not.toMatch(
+			/\braw_token\b/i,
+		);
+		expect(apiTokensTable, "api_tokens must not have a token_value column").not.toMatch(
+			/\btoken_value\b/i,
+		);
 		expect(
 			apiTokensTable,
 			"api_tokens must not have a plain token column without hash suffix",
@@ -106,8 +92,7 @@ describe("schema privacy invariants", () => {
 
 	it("webhook secrets are hashed at rest", () => {
 		const webhooksTable =
-			schema.match(/CREATE TABLE IF NOT EXISTS webhooks \([\s\S]*?\);/)?.[0] ??
-			"";
+			schema.match(/CREATE TABLE IF NOT EXISTS webhooks \([\s\S]*?\);/)?.[0] ?? "";
 		// As documented in the schema comment, secret is stored under secret_hash for backwards compat
 		expect(
 			webhooksTable,
@@ -158,10 +143,9 @@ describe("analytics privacy invariants", () => {
 			"heap.io",
 		];
 		for (const domain of thirdPartyAnalytics) {
-			expect(
-				analytics,
-				`analytics.ts must not unconditionally reference ${domain}`,
-			).not.toContain(domain);
+			expect(analytics, `analytics.ts must not unconditionally reference ${domain}`).not.toContain(
+				domain,
+			);
 		}
 	});
 
@@ -192,10 +176,7 @@ describe("third-party script invariants", () => {
 	});
 
 	it("security headers do not allowlist known tracking domains in CSP", () => {
-		const securityHeaders = readFileSync(
-			path.resolve(srcRoot, "security-headers.ts"),
-			"utf8",
-		);
+		const securityHeaders = readFileSync(path.resolve(srcRoot, "security-headers.ts"), "utf8");
 		const trackingDomains = [
 			"google-analytics.com",
 			"googletagmanager.com",
@@ -219,37 +200,29 @@ describe("third-party script invariants", () => {
 describe("data minimization invariants", () => {
 	it("comment submission does not collect phone numbers or physical addresses", () => {
 		const commentTable =
-			schema.match(/CREATE TABLE IF NOT EXISTS comments \([\s\S]*?\);/)?.[0] ??
-			"";
-		expect(
-			commentTable,
-			"comments table must not collect phone numbers",
-		).not.toMatch(/\bphone\b|\btel\b|\bmobile\b/i);
-		expect(
-			commentTable,
-			"comments table must not collect physical addresses",
-		).not.toMatch(/\baddress\b|\bpostcode\b|\bzip\b/i);
+			schema.match(/CREATE TABLE IF NOT EXISTS comments \([\s\S]*?\);/)?.[0] ?? "";
+		expect(commentTable, "comments table must not collect phone numbers").not.toMatch(
+			/\bphone\b|\btel\b|\bmobile\b/i,
+		);
+		expect(commentTable, "comments table must not collect physical addresses").not.toMatch(
+			/\baddress\b|\bpostcode\b|\bzip\b/i,
+		);
 	});
 
 	it("contact_submissions does not collect phone numbers or physical addresses", () => {
 		const contactTable =
-			schema.match(
-				/CREATE TABLE IF NOT EXISTS contact_submissions \([\s\S]*?\);/,
-			)?.[0] ?? "";
-		expect(
-			contactTable,
-			"contact_submissions must not collect phone numbers",
-		).not.toMatch(/\bphone\b|\btel\b|\bmobile\b/i);
-		expect(
-			contactTable,
-			"contact_submissions must not collect physical addresses",
-		).not.toMatch(/\baddress\b|\bpostcode\b|\bzip\b/i);
+			schema.match(/CREATE TABLE IF NOT EXISTS contact_submissions \([\s\S]*?\);/)?.[0] ?? "";
+		expect(contactTable, "contact_submissions must not collect phone numbers").not.toMatch(
+			/\bphone\b|\btel\b|\bmobile\b/i,
+		);
+		expect(contactTable, "contact_submissions must not collect physical addresses").not.toMatch(
+			/\baddress\b|\bpostcode\b|\bzip\b/i,
+		);
 	});
 
 	it("bootstrap seeder does not log email addresses to stdout or console", () => {
 		// Logging PII to stdout risks leaking it into log aggregators
-		const emailLogPattern =
-			/console\.(log|info|warn|error)\s*\([^)]*email[^)]*\)/i;
+		const emailLogPattern = /console\.(log|info|warn|error)\s*\([^)]*email[^)]*\)/i;
 		expect(
 			bootstrap,
 			"sqlite-bootstrap.ts must not log email addresses via console — use structured logger with PII redaction",
@@ -264,9 +237,7 @@ describe("data minimization invariants", () => {
 describe("session security invariants", () => {
 	it("admin_sessions table has a revoked_at column for server-side revocation", () => {
 		const sessionsTable =
-			schema.match(
-				/CREATE TABLE IF NOT EXISTS admin_sessions \([\s\S]*?\);/,
-			)?.[0] ?? "";
+			schema.match(/CREATE TABLE IF NOT EXISTS admin_sessions \([\s\S]*?\);/)?.[0] ?? "";
 		expect(
 			sessionsTable,
 			"admin_sessions must support server-side revocation via revoked_at",
@@ -275,20 +246,14 @@ describe("session security invariants", () => {
 
 	it("admin_sessions table has a last_active_at column for TTL enforcement", () => {
 		const sessionsTable =
-			schema.match(
-				/CREATE TABLE IF NOT EXISTS admin_sessions \([\s\S]*?\);/,
-			)?.[0] ?? "";
-		expect(
-			sessionsTable,
-			"admin_sessions must track last_active_at for TTL enforcement",
-		).toContain("last_active_at");
+			schema.match(/CREATE TABLE IF NOT EXISTS admin_sessions \([\s\S]*?\);/)?.[0] ?? "";
+		expect(sessionsTable, "admin_sessions must track last_active_at for TTL enforcement").toContain(
+			"last_active_at",
+		);
 	});
 
 	it("session store enforces TTL on getSessionUser", () => {
-		const authStore = readFileSync(
-			path.resolve(srcRoot, "sqlite-runtime/auth.ts"),
-			"utf8",
-		);
+		const authStore = readFileSync(path.resolve(srcRoot, "sqlite-runtime/auth.ts"), "utf8");
 		expect(
 			authStore,
 			"getSessionUser must check TTL — sessions must expire, not be held indefinitely",
@@ -303,9 +268,7 @@ describe("session security invariants", () => {
 describe("right-to-erasure schema readiness", () => {
 	it("admin_sessions deletes cascade when admin_user is deleted", () => {
 		const sessionsTable =
-			schema.match(
-				/CREATE TABLE IF NOT EXISTS admin_sessions \([\s\S]*?\);/,
-			)?.[0] ?? "";
+			schema.match(/CREATE TABLE IF NOT EXISTS admin_sessions \([\s\S]*?\);/)?.[0] ?? "";
 		expect(
 			sessionsTable,
 			"admin_sessions must CASCADE on user deletion — deleting a user must also delete their sessions",
@@ -314,13 +277,10 @@ describe("right-to-erasure schema readiness", () => {
 
 	it("content_revisions deletes cascade when content_overrides is deleted", () => {
 		const revisionsTable =
-			schema.match(
-				/CREATE TABLE IF NOT EXISTS content_revisions \([\s\S]*?\);/,
-			)?.[0] ?? "";
-		expect(
-			revisionsTable,
-			"content_revisions must CASCADE on content deletion",
-		).toMatch(/ON DELETE CASCADE/i);
+			schema.match(/CREATE TABLE IF NOT EXISTS content_revisions \([\s\S]*?\);/)?.[0] ?? "";
+		expect(revisionsTable, "content_revisions must CASCADE on content deletion").toMatch(
+			/ON DELETE CASCADE/i,
+		);
 	});
 });
 

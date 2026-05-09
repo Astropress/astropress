@@ -34,14 +34,8 @@ import { findRepoRoot } from "./_helpers/repo-root";
 // sandbox copy.
 const srcRoot = path.join(findRepoRoot(), "packages/astropress/src");
 const schema = readFileSync(path.join(srcRoot, "sqlite-schema.sql"), "utf8");
-const contracts = readFileSync(
-	path.join(srcRoot, "platform-contracts.ts"),
-	"utf8",
-);
-const authStore = readFileSync(
-	path.join(srcRoot, "sqlite-runtime/auth.ts"),
-	"utf8",
-);
+const contracts = readFileSync(path.join(srcRoot, "platform-contracts.ts"), "utf8");
+const authStore = readFileSync(path.join(srcRoot, "sqlite-runtime/auth.ts"), "utf8");
 
 // ---------------------------------------------------------------------------
 // 1. DID-COMPATIBLE: properties that already satisfy DID requirements
@@ -50,9 +44,7 @@ const authStore = readFileSync(
 describe("DID-compatible: session layer is auth-method-agnostic", () => {
 	it("admin_sessions has no auth_method or password-specific column — sessions are opaque tokens, not tied to password auth", () => {
 		const sessionsTable =
-			schema.match(
-				/CREATE TABLE IF NOT EXISTS admin_sessions \([\s\S]*?\);/,
-			)?.[0] ?? "";
+			schema.match(/CREATE TABLE IF NOT EXISTS admin_sessions \([\s\S]*?\);/)?.[0] ?? "";
 		// If sessions stored an auth_method they would be fine — but they must not embed password-specific artifacts
 		expect(sessionsTable).not.toMatch(/\bpassword\b/i);
 		expect(sessionsTable).not.toMatch(/\bpassword_ref\b/i);
@@ -62,29 +54,23 @@ describe("DID-compatible: session layer is auth-method-agnostic", () => {
 
 	it("admin_sessions.id is a TEXT column — compatible with DID-derived session identifiers (not an integer auto-increment)", () => {
 		const sessionsTable =
-			schema.match(
-				/CREATE TABLE IF NOT EXISTS admin_sessions \([\s\S]*?\);/,
-			)?.[0] ?? "";
+			schema.match(/CREATE TABLE IF NOT EXISTS admin_sessions \([\s\S]*?\);/)?.[0] ?? "";
 		expect(sessionsTable).toMatch(/id TEXT PRIMARY KEY/i);
 		expect(sessionsTable).not.toMatch(/id INTEGER PRIMARY KEY AUTOINCREMENT/i);
 	});
 
 	it("AuthUser.id is typed as string — DIDs are strings (did:key:z6Mk...), not integers", () => {
 		// AuthUser must use id: string (not id: number) to be DID-compatible
-		const authUserMatch =
-			contracts.match(/export interface AuthUser \{[\s\S]*?\}/)?.[0] ?? "";
-		expect(
-			authUserMatch,
-			"AuthUser.id must be typed as string to allow DID identifiers",
-		).toMatch(/id:\s*string/);
+		const authUserMatch = contracts.match(/export interface AuthUser \{[\s\S]*?\}/)?.[0] ?? "";
+		expect(authUserMatch, "AuthUser.id must be typed as string to allow DID identifiers").toMatch(
+			/id:\s*string/,
+		);
 		expect(authUserMatch).not.toMatch(/id:\s*number/);
 	});
 
 	it("session revocation uses revoked_at — DID-based sessions need the same server-side revocation capability", () => {
 		const sessionsTable =
-			schema.match(
-				/CREATE TABLE IF NOT EXISTS admin_sessions \([\s\S]*?\);/,
-			)?.[0] ?? "";
+			schema.match(/CREATE TABLE IF NOT EXISTS admin_sessions \([\s\S]*?\);/)?.[0] ?? "";
 		expect(sessionsTable).toContain("revoked_at");
 	});
 
@@ -104,9 +90,7 @@ describe("DID-compatible: session layer is auth-method-agnostic", () => {
 
 	it("audit_events stores user_email as a TEXT field — a DID identifier (did:key:...) could be stored in the same column", () => {
 		const auditTable =
-			schema.match(
-				/CREATE TABLE IF NOT EXISTS audit_events \([\s\S]*?\);/,
-			)?.[0] ?? "";
+			schema.match(/CREATE TABLE IF NOT EXISTS audit_events \([\s\S]*?\);/)?.[0] ?? "";
 		// user_email column must be TEXT (not an FK to admin_users.id) so it can hold a DID URI
 		expect(auditTable).toMatch(/user_email\s+TEXT/i);
 		// Must not be a FK that would require an integer user_id
@@ -114,10 +98,7 @@ describe("DID-compatible: session layer is auth-method-agnostic", () => {
 	});
 
 	it("CSRF protection in admin-action-utils is auth-method-agnostic — CSRF token is set at session creation, not tied to password auth", () => {
-		const utils = readFileSync(
-			path.join(srcRoot, "admin-action-utils.ts"),
-			"utf8",
-		);
+		const utils = readFileSync(path.join(srcRoot, "admin-action-utils.ts"), "utf8");
 		// CSRF check reads from the session and form data — does not re-verify password
 		expect(utils).toContain("_csrf");
 		expect(utils).not.toMatch(/password.*csrf|csrf.*password/i);
@@ -131,9 +112,7 @@ describe("DID-compatible: session layer is auth-method-agnostic", () => {
 describe("DID-incompatible: structural blockers that require schema/interface changes before DID auth is possible", () => {
 	it("[BLOCKER] admin_users.password_hash is NOT NULL — prevents creating a DID-only user with no password", () => {
 		const adminUsersTable =
-			schema.match(
-				/CREATE TABLE IF NOT EXISTS admin_users \([\s\S]*?\);/,
-			)?.[0] ?? "";
+			schema.match(/CREATE TABLE IF NOT EXISTS admin_users \([\s\S]*?\);/)?.[0] ?? "";
 		// This test documents the blocker: if password_hash NOT NULL exists, DID users cannot be
 		// created without a dummy password hash. The fix: make password_hash nullable and add a
 		// did TEXT column for DID-authenticated users.
@@ -170,9 +149,7 @@ describe("DID-incompatible: structural blockers that require schema/interface ch
 
 	it("[BLOCKER] admin_users has no external_id or did column — cannot associate a DID with an existing admin user", () => {
 		const adminUsersTable =
-			schema.match(
-				/CREATE TABLE IF NOT EXISTS admin_users \([\s\S]*?\);/,
-			)?.[0] ?? "";
+			schema.match(/CREATE TABLE IF NOT EXISTS admin_users \([\s\S]*?\);/)?.[0] ?? "";
 		// For a migration path where existing password users link a DID, the table needs
 		// either an 'external_id TEXT UNIQUE' or 'did TEXT UNIQUE' column.
 		expect(
@@ -191,13 +168,9 @@ describe("DID-neutral: features that are unaffected by the auth method", () => {
 	it("content, media, settings, and webhooks tables have no auth-method dependency — content layer is fully auth-agnostic", () => {
 		// None of the content tables should reference password_hash or an auth method
 		const contentTable =
-			schema.match(
-				/CREATE TABLE IF NOT EXISTS content_overrides \([\s\S]*?\);/,
-			)?.[0] ?? "";
+			schema.match(/CREATE TABLE IF NOT EXISTS content_overrides \([\s\S]*?\);/)?.[0] ?? "";
 		const mediaTable =
-			schema.match(
-				/CREATE TABLE IF NOT EXISTS media_assets \([\s\S]*?\);/,
-			)?.[0] ?? "";
+			schema.match(/CREATE TABLE IF NOT EXISTS media_assets \([\s\S]*?\);/)?.[0] ?? "";
 		for (const [name, table] of [
 			["content_overrides", contentTable],
 			["media_assets", mediaTable],
@@ -213,18 +186,14 @@ describe("DID-neutral: features that are unaffected by the auth method", () => {
 		// (identified by user_id) and verified by token hash. A DID-authenticated user
 		// who exists in admin_users could already use API tokens without any changes.
 		const apiTokensTable =
-			schema.match(
-				/CREATE TABLE IF NOT EXISTS api_tokens \([\s\S]*?\);/,
-			)?.[0] ?? "";
+			schema.match(/CREATE TABLE IF NOT EXISTS api_tokens \([\s\S]*?\);/)?.[0] ?? "";
 		expect(apiTokensTable).toContain("token_hash");
 		expect(apiTokensTable).not.toMatch(/\bpassword\b|\bauth_method\b/i);
 	});
 
 	it("rate limiting is applied per-token and per-IP, not per-auth-method — DID auth would get the same rate limiting", () => {
 		const rateLimitTable =
-			schema.match(
-				/CREATE TABLE IF NOT EXISTS rate_limit_entries \([\s\S]*?\);/,
-			)?.[0] ?? "";
+			schema.match(/CREATE TABLE IF NOT EXISTS rate_limit_entries \([\s\S]*?\);/)?.[0] ?? "";
 		if (rateLimitTable) {
 			expect(rateLimitTable).not.toMatch(/\bpassword\b|\bauth_method\b/i);
 		}
@@ -232,8 +201,7 @@ describe("DID-neutral: features that are unaffected by the auth method", () => {
 
 	it("webhook delivery and audit logging do not reference auth method — event bus is auth-agnostic", () => {
 		const webhooksTable =
-			schema.match(/CREATE TABLE IF NOT EXISTS webhooks \([\s\S]*?\);/)?.[0] ??
-			"";
+			schema.match(/CREATE TABLE IF NOT EXISTS webhooks \([\s\S]*?\);/)?.[0] ?? "";
 		expect(webhooksTable).not.toMatch(/\bpassword\b|\bauth_method\b/i);
 	});
 });
@@ -247,9 +215,7 @@ describe("DID readiness: the AuthStore interface contract is the correct extensi
 		const authStoreInterface =
 			contracts.match(/export interface AuthStore \{[\s\S]*?\}/)?.[0] ?? "";
 		// Count the method signatures
-		const methods = [...authStoreInterface.matchAll(/^\s+\w+\s*\(/gm)].map(
-			(m) => m[0].trim(),
-		);
+		const methods = [...authStoreInterface.matchAll(/^\s+\w+\s*\(/gm)].map((m) => m[0].trim());
 		expect(
 			methods.length,
 			"AuthStore has exactly 3 methods — a DID adapter implements the same 3 methods with a different signIn strategy",
@@ -265,8 +231,7 @@ describe("DID readiness: the AuthStore interface contract is the correct extensi
 	});
 
 	it("AuthUser has email + isAdmin (canonical authorization signal) — a DID auth adapter must populate isAdmin from the DID document or claim", () => {
-		const authUserInterface =
-			contracts.match(/export interface AuthUser \{[\s\S]*?\}/)?.[0] ?? "";
+		const authUserInterface = contracts.match(/export interface AuthUser \{[\s\S]*?\}/)?.[0] ?? "";
 		expect(authUserInterface).toMatch(/email:\s*string/);
 		expect(authUserInterface).toMatch(/isAdmin:\s*boolean/);
 		// id is string — a DID adapter would set this to the DID URI (did:key:...)

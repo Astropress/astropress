@@ -24,13 +24,7 @@
  * sends the latest payload.
  */
 
-import type {
-	CtaButton,
-	FaqItem,
-	FeatureItem,
-	Section,
-	SectionKind,
-} from "../src/sections/schema";
+import type { CtaButton, FaqItem, FeatureItem, Section, SectionKind } from "../src/sections/schema";
 import { SECTION_KINDS } from "../src/sections/schema";
 import type { TemplateCatalogEntry } from "../src/sections/templates";
 
@@ -116,9 +110,7 @@ function parseInitialState(host: HTMLElement): EditorState {
 	);
 	if (!script) return { sections: [], templates: [] };
 	try {
-		const parsed = JSON.parse(
-			script.textContent ?? "{}",
-		) as Partial<EditorState>;
+		const parsed = JSON.parse(script.textContent ?? "{}") as Partial<EditorState>;
 		return {
 			sections: Array.isArray(parsed.sections) ? parsed.sections : [],
 			templates: Array.isArray(parsed.templates) ? parsed.templates : [],
@@ -173,14 +165,8 @@ function resolveLabels(host: HTMLElement): EditorLabels {
 		moveDown: get("labelMoveDown", "Move down"),
 		duplicate: get("labelDuplicate", "Duplicate"),
 		delete: get("labelDelete", "Delete"),
-		deleteConfirm: get(
-			"labelDeleteConfirm",
-			"Delete this section? This cannot be undone.",
-		),
-		emptyState: get(
-			"labelEmptyState",
-			"No sections yet. Add one to get started.",
-		),
+		deleteConfirm: get("labelDeleteConfirm", "Delete this section? This cannot be undone."),
+		emptyState: get("labelEmptyState", "No sections yet. Add one to get started."),
 		dragHandle: get("labelDragHandle", "Drag to reorder"),
 		kind,
 		field,
@@ -211,15 +197,9 @@ export class ApSectionEditor extends HTMLElement {
 		this.state = parseInitialState(this);
 		this.labels = resolveLabels(this);
 		this.list = this.querySelector<HTMLElement>("[data-section-editor-list]");
-		this.hiddenInput = this.querySelector<HTMLInputElement>(
-			"[data-section-editor-input]",
-		);
-		this.addBtn = this.querySelector<HTMLButtonElement>(
-			"[data-section-editor-add]",
-		);
-		this.addDialog = this.querySelector<HTMLDialogElement>(
-			"[data-section-editor-add-dialog]",
-		);
+		this.hiddenInput = this.querySelector<HTMLInputElement>("[data-section-editor-input]");
+		this.addBtn = this.querySelector<HTMLButtonElement>("[data-section-editor-add]");
+		this.addDialog = this.querySelector<HTMLDialogElement>("[data-section-editor-add-dialog]");
 		if (!this.list || !this.hiddenInput) return;
 
 		this.renderAll();
@@ -267,9 +247,7 @@ export class ApSectionEditor extends HTMLElement {
 			this.list.innerHTML = `<p class="ap-section-editor__empty">${escapeHtml(this.labels.emptyState)}</p>`;
 			return;
 		}
-		this.list.innerHTML = this.state.sections
-			.map((section) => this.renderCard(section))
-			.join("");
+		this.list.innerHTML = this.state.sections.map((section) => this.renderCard(section)).join("");
 	}
 
 	private renderCard(section: AnySection): string {
@@ -315,9 +293,7 @@ export class ApSectionEditor extends HTMLElement {
 		return this.labels.field[key] ?? fallback;
 	}
 
-	private renderHeroForm(
-		s: import("../src/sections/schema").HeroSection,
-	): string {
+	private renderHeroForm(s: import("../src/sections/schema").HeroSection): string {
 		return `
 <label class="admin-field"><span>${escapeHtml(this.fieldLabel("headline", "Headline"))}</span>
   <input class="admin-input" data-field="headline" type="text" value="${escapeHtml(s.headline)}" /></label>
@@ -365,15 +341,12 @@ ${this.renderCtaInputs("secondaryCta", s.secondaryCta)}
 </fieldset>`;
 	}
 
-	private renderFeatureGridForm(
-		s: import("../src/sections/schema").FeatureGridSection,
-	): string {
+	private renderFeatureGridForm(s: import("../src/sections/schema").FeatureGridSection): string {
 		const renderItem = (
 			item: { title?: string; body?: string; icon?: string },
 			idx: number,
 		): string => {
-			const fLabel = (k: string, fb: string) =>
-				escapeHtml(this.fieldLabel(k, fb));
+			const fLabel = (k: string, fb: string) => escapeHtml(this.fieldLabel(k, fb));
 			const title = escapeHtml(item.title ?? "");
 			const body = escapeHtml(item.body ?? "");
 			const icon = escapeHtml(item.icon ?? "");
@@ -395,9 +368,7 @@ ${items}
 `;
 	}
 
-	private renderTestimonialsForm(
-		s: import("../src/sections/schema").TestimonialsSection,
-	): string {
+	private renderTestimonialsForm(s: import("../src/sections/schema").TestimonialsSection): string {
 		return `
 <label class="admin-field"><span>${escapeHtml(this.fieldLabel("heading", "Heading"))}</span>
   <input class="admin-input" data-field="heading" type="text" value="${escapeHtml(s.heading ?? "")}" /></label>
@@ -416,9 +387,7 @@ ${items}
   </select></label>`;
 	}
 
-	private renderCtaForm(
-		s: import("../src/sections/schema").CtaBannerSection,
-	): string {
+	private renderCtaForm(s: import("../src/sections/schema").CtaBannerSection): string {
 		return `
 <label class="admin-field"><span>${escapeHtml(this.fieldLabel("headline", "Headline"))}</span>
   <input class="admin-input" data-field="headline" type="text" value="${escapeHtml(s.headline)}" /></label>
@@ -434,9 +403,7 @@ ${this.renderCtaInputs("secondaryCta", s.secondaryCta)}
 `;
 	}
 
-	private renderImageTextForm(
-		s: import("../src/sections/schema").ImageTextSection,
-	): string {
+	private renderImageTextForm(s: import("../src/sections/schema").ImageTextSection): string {
 		return `
 <label class="admin-field"><span>${escapeHtml(this.fieldLabel("heading", "Heading"))}</span>
   <input class="admin-input" data-field="heading" type="text" value="${escapeHtml(s.heading)}" /></label>
@@ -450,9 +417,7 @@ ${this.renderMediaIdField(`media-${s.id}`, s.mediaId, "mediaId")}
   </select></label>`;
 	}
 
-	private renderFaqForm(
-		s: import("../src/sections/schema").FaqSection,
-	): string {
+	private renderFaqForm(s: import("../src/sections/schema").FaqSection): string {
 		const items = s.items
 			.map(
 				(item, idx) => `
@@ -473,9 +438,7 @@ ${items}
 <button type="button" class="admin-button-secondary" data-action="add-item">${escapeHtml(this.fieldLabel("addItem", "Add question"))}</button>`;
 	}
 
-	private renderGalleryForm(
-		s: import("../src/sections/schema").GallerySection,
-	): string {
+	private renderGalleryForm(s: import("../src/sections/schema").GallerySection): string {
 		return `
 <label class="admin-field"><span>${escapeHtml(this.fieldLabel("heading", "Heading"))}</span>
   <input class="admin-input" data-field="heading" type="text" value="${escapeHtml(s.heading ?? "")}" /></label>
@@ -486,9 +449,7 @@ ${this.renderMediaIdField(`media-${s.id}`, s.mediaIds.join(", "), "mediaIds", tr
   </select></label>`;
 	}
 
-	private renderRichTextForm(
-		s: import("../src/sections/schema").RichTextSection,
-	): string {
+	private renderRichTextForm(s: import("../src/sections/schema").RichTextSection): string {
 		return `
 <label class="admin-field"><span>${escapeHtml(this.fieldLabel("html", "HTML"))}</span>
   <textarea class="admin-textarea" data-field="html" rows="10">${escapeHtml(s.html)}</textarea></label>`;
@@ -533,16 +494,12 @@ ${this.renderMediaIdField(`media-${s.id}`, s.mediaIds.join(", "), "mediaIds", tr
 		const id = card?.dataset.sectionId;
 		if (!id) return;
 		const field = fieldEl.getAttribute("data-field") ?? "";
-		const value = (
-			input as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
-		).value;
+		const value = (input as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement).value;
 		this.updateField(id, field, value);
 	}
 
 	private onDragStart(e: DragEvent) {
-		const card = (e.target as HTMLElement | null)?.closest<HTMLElement>(
-			".ap-section-card",
-		);
+		const card = (e.target as HTMLElement | null)?.closest<HTMLElement>(".ap-section-card");
 		if (!card) return;
 		this.dragSourceId = card.dataset.sectionId ?? null;
 		card.classList.add("ap-section-card--dragging");
@@ -558,17 +515,13 @@ ${this.renderMediaIdField(`media-${s.id}`, s.mediaIds.join(", "), "mediaIds", tr
 	private onDrop(e: DragEvent) {
 		if (!this.dragSourceId) return;
 		e.preventDefault();
-		const card = (e.target as HTMLElement | null)?.closest<HTMLElement>(
-			".ap-section-card",
-		);
+		const card = (e.target as HTMLElement | null)?.closest<HTMLElement>(".ap-section-card");
 		const targetId = card?.dataset.sectionId;
 		if (!targetId || targetId === this.dragSourceId) {
 			this.clearDragState();
 			return;
 		}
-		const fromIdx = this.state.sections.findIndex(
-			(s) => s.id === this.dragSourceId,
-		);
+		const fromIdx = this.state.sections.findIndex((s) => s.id === this.dragSourceId);
 		const toIdx = this.state.sections.findIndex((s) => s.id === targetId);
 		if (fromIdx < 0 || toIdx < 0) {
 			this.clearDragState();
@@ -583,9 +536,7 @@ ${this.renderMediaIdField(`media-${s.id}`, s.mediaIds.join(", "), "mediaIds", tr
 
 	private clearDragState() {
 		this.dragSourceId = null;
-		const dragging =
-			this.list?.querySelectorAll<HTMLElement>(".ap-section-card--dragging") ??
-			[];
+		const dragging = this.list?.querySelectorAll<HTMLElement>(".ap-section-card--dragging") ?? [];
 		for (const el of dragging) {
 			el.classList.remove("ap-section-card--dragging");
 		}
@@ -658,12 +609,8 @@ ${this.renderMediaIdField(`media-${s.id}`, s.mediaIds.join(", "), "mediaIds", tr
 
 	private populateAddDialog() {
 		if (!this.addDialog) return;
-		const tplList = this.addDialog.querySelector<HTMLElement>(
-			"[data-section-editor-templates]",
-		);
-		const kindList = this.addDialog.querySelector<HTMLElement>(
-			"[data-section-editor-kinds]",
-		);
+		const tplList = this.addDialog.querySelector<HTMLElement>("[data-section-editor-templates]");
+		const kindList = this.addDialog.querySelector<HTMLElement>("[data-section-editor-kinds]");
 		if (tplList) {
 			tplList.innerHTML = this.state.templates
 				.map((t) => {
@@ -751,10 +698,7 @@ function applyField(target: AnySection, field: string, value: string): void {
 			.filter((v) => v.length > 0);
 		return;
 	}
-	if (
-		(target.kind === "feature-grid" || target.kind === "gallery") &&
-		field === "columns"
-	) {
+	if ((target.kind === "feature-grid" || target.kind === "gallery") && field === "columns") {
 		const n = Number.parseInt(value, 10);
 		(target as { columns: number }).columns = n === 2 || n === 4 ? n : 3;
 		return;
@@ -794,9 +738,6 @@ function applyField(target: AnySection, field: string, value: string): void {
 	(target as unknown as Record<string, unknown>)[field] = value;
 }
 
-if (
-	typeof customElements !== "undefined" &&
-	!customElements.get("ap-section-editor")
-) {
+if (typeof customElements !== "undefined" && !customElements.get("ap-section-editor")) {
 	customElements.define("ap-section-editor", ApSectionEditor);
 }

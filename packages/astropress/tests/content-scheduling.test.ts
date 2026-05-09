@@ -74,9 +74,7 @@ describe("Content scheduling store operations", () => {
 		sqliteSchedulingRepository.schedulePublish("future-post", futureDate);
 
 		const row = db
-			.prepare(
-				"SELECT scheduled_at, status FROM content_overrides WHERE slug = ?",
-			)
+			.prepare("SELECT scheduled_at, status FROM content_overrides WHERE slug = ?")
 			.get("future-post") as { scheduled_at: string; status: string };
 		expect(row.scheduled_at).toBe(futureDate);
 		expect(row.status).toBe("draft");
@@ -93,9 +91,7 @@ describe("Content scheduling store operations", () => {
 
 		sqliteSchedulingRepository.schedulePublish("post-a", future);
 		// Set post-b to a past timestamp directly so it doesn't appear in listScheduled
-		db.prepare(
-			"UPDATE content_overrides SET scheduled_at = ? WHERE slug = ?",
-		).run(past, "post-b");
+		db.prepare("UPDATE content_overrides SET scheduled_at = ? WHERE slug = ?").run(past, "post-b");
 
 		const scheduled = sqliteSchedulingRepository.listScheduled();
 		const slugs = scheduled.map((s) => s.slug);
@@ -113,9 +109,7 @@ describe("Content scheduling store operations", () => {
 		sqliteSchedulingRepository.cancelScheduledPublish("cancel-me");
 
 		const row = db
-			.prepare(
-				"SELECT scheduled_at, status FROM content_overrides WHERE slug = ?",
-			)
+			.prepare("SELECT scheduled_at, status FROM content_overrides WHERE slug = ?")
 			.get("cancel-me") as { scheduled_at: string | null; status: string };
 		expect(row.scheduled_at).toBeNull();
 		expect(row.status).toBe("draft");
@@ -128,17 +122,16 @@ describe("Content scheduling store operations", () => {
 
 		// Directly set a past scheduled_at
 		const past = new Date(Date.now() - 1000).toISOString();
-		db.prepare(
-			"UPDATE content_overrides SET scheduled_at = ? WHERE slug = ?",
-		).run(past, "past-post");
+		db.prepare("UPDATE content_overrides SET scheduled_at = ? WHERE slug = ?").run(
+			past,
+			"past-post",
+		);
 
 		const published = sqliteSchedulingRepository.runScheduledPublishes();
 		expect(published).toBeGreaterThanOrEqual(1);
 
 		const row = db
-			.prepare(
-				"SELECT scheduled_at, status FROM content_overrides WHERE slug = ?",
-			)
+			.prepare("SELECT scheduled_at, status FROM content_overrides WHERE slug = ?")
 			.get("past-post") as { scheduled_at: string | null; status: string };
 		expect(row.status).toBe("published");
 		expect(row.scheduled_at).toBeNull();

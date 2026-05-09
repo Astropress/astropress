@@ -25,9 +25,7 @@ export class ApStaleTabWarning extends HTMLElement {
 		if (!slug) return;
 
 		const openedAt = Number(this.getAttribute("opened-at") ?? Date.now());
-		const sessionTtlMs = Number(
-			this.getAttribute("session-ttl-ms") ?? 3_600_000,
-		);
+		const sessionTtlMs = Number(this.getAttribute("session-ttl-ms") ?? 3_600_000);
 
 		this._channel = new BroadcastChannel("astropress-editor");
 
@@ -65,10 +63,7 @@ export class ApStaleTabWarning extends HTMLElement {
 		if (remaining <= 0) {
 			this._showStaleSessionWarning();
 		} else {
-			this._ttlTimer = setTimeout(
-				() => this._showStaleSessionWarning(),
-				remaining,
-			);
+			this._ttlTimer = setTimeout(() => this._showStaleSessionWarning(), remaining);
 		}
 
 		// Inform other open tabs that this tab just opened

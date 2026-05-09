@@ -60,9 +60,7 @@ export function loadEquivalentMutants(): EquivalentMutantCatalog {
 		cached = { version: 1, entries: [] };
 		return cached;
 	}
-	const parsed = JSON.parse(
-		readFileSync(path, "utf8"),
-	) as EquivalentMutantCatalog;
+	const parsed = JSON.parse(readFileSync(path, "utf8")) as EquivalentMutantCatalog;
 	if (!parsed || typeof parsed !== "object" || !Array.isArray(parsed.entries)) {
 		throw new Error(
 			`equivalent-mutants.json is malformed at ${path} — expected { version, entries: [] }`,

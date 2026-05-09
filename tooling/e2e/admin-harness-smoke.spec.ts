@@ -32,15 +32,11 @@ const staticRoutes: Array<{ path: string; heading: string }> = [
 
 test.describe("Feature: admin panel smoke coverage — all static routes load with CSS", () => {
 	for (const { path, heading } of staticRoutes) {
-		test(`Scenario: ${path} loads with heading and stylesheets`, async ({
-			page,
-		}) => {
+		test(`Scenario: ${path} loads with heading and stylesheets`, async ({ page }) => {
 			await page.goto(path, { waitUntil: "networkidle" });
 
 			// Heading visible — ensures SSR rendered successfully (not 500).
-			await expect(
-				page.getByRole("heading", { level: 1, name: heading }),
-			).toBeVisible();
+			await expect(page.getByRole("heading", { level: 1, name: heading })).toBeVisible();
 
 			// CSS loaded — guards against CSP blocking inline styles or missing stylesheet link.
 			await expectStylesheetsLoaded(page);

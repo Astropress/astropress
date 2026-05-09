@@ -8,13 +8,13 @@ import {
 	runProviderVerify,
 } from "../../src/integrations/connect-flow";
 import {
-	type RegisteredProvider,
 	_resetRegistryForTests,
+	type RegisteredProvider,
 	registerProvider,
 } from "../../src/integrations/registry";
 import {
-	type IntegrationsRepository,
 	createIntegrationsRepository,
+	type IntegrationsRepository,
 } from "../../src/sqlite-runtime/integrations";
 import { makeDb } from "../helpers/make-db.js";
 
@@ -27,10 +27,7 @@ let repo: IntegrationsRepository;
 const fields = z.object({ apiKey: z.string().min(1) });
 
 function makeProvider(opts: {
-	verify?: (
-		fields: { apiKey: string },
-		ctx: { signal: AbortSignal },
-	) => Promise<void>;
+	verify?: (fields: { apiKey: string }, ctx: { signal: AbortSignal }) => Promise<void>;
 	defaultErrorCode?: "INTEGRATION_AUTH_REJECTED" | "INTEGRATION_VERIFY_FAILED";
 }): RegisteredProvider<{ apiKey: string }> {
 	_resetRegistryForTests();
@@ -137,11 +134,9 @@ describe("connectIntegration", () => {
 		});
 		expect(result).toEqual({ ok: true, status: "connected" });
 		expect(repo.findStatus("newsletter", "test")?.status).toBe("connected");
-		const decoded = await repo.findSecret<{ apiKey: string }>(
-			"newsletter",
-			"test",
-			{ current: ROOT },
-		);
+		const decoded = await repo.findSecret<{ apiKey: string }>("newsletter", "test", {
+			current: ROOT,
+		});
 		expect(decoded?.apiKey).toBe("live-key");
 	});
 
@@ -212,9 +207,7 @@ describe("connectIntegration", () => {
 			now: NOW,
 			rootSecret: ROOT,
 		});
-		expect(repo.findStatus("newsletter", "test")?.configJson).toBe(
-			'{"baseUrl":"https://x.test"}',
-		);
+		expect(repo.findStatus("newsletter", "test")?.configJson).toBe('{"baseUrl":"https://x.test"}');
 	});
 
 	it("defaults configJson to '{}' when omitted", async () => {

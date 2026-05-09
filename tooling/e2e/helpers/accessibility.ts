@@ -1,5 +1,5 @@
 import AxeBuilder from "@axe-core/playwright";
-import { type Page, expect } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
 
 /**
  * Asserts that the page has at least one loaded stylesheet with CSS rules.
@@ -60,10 +60,7 @@ export async function expectNoDoubleTitleSuffix(page: Page): Promise<void> {
  * for entire sites), but contrast, section headings (2.4.10), change on
  * request (3.2.5), and visual presentation (1.4.8) all meet AAA.
  */
-export async function expectNoAxeViolations(
-	page: Page,
-	options?: { ignoreRules?: string[] },
-) {
+export async function expectNoAxeViolations(page: Page, options?: { ignoreRules?: string[] }) {
 	const ignoreRules = new Set(options?.ignoreRules ?? []);
 	// IMPORTANT: do NOT add `.withRules(...)`. AxeBuilder treats withRules as a
 	// hard restriction — it overrides withTags and disables every rule not
@@ -74,14 +71,7 @@ export async function expectNoAxeViolations(
 	// We turn AAA contrast on via `options.rules` so it runs in addition to the
 	// tag-driven AA + best-practice rules, never instead of them.
 	const results = await new AxeBuilder({ page })
-		.withTags([
-			"wcag2a",
-			"wcag2aa",
-			"wcag21a",
-			"wcag21aa",
-			"wcag22aa",
-			"best-practice",
-		])
+		.withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa", "best-practice"])
 		.options({ rules: { "color-contrast-enhanced": { enabled: true } } })
 		.analyze();
 
@@ -103,8 +93,6 @@ export async function expectNoAxeViolations(
 
 export async function expectKeyboardFocusMoves(page: Page) {
 	await page.keyboard.press("Tab");
-	const activeTag = await page.evaluate(
-		() => document.activeElement?.tagName ?? "",
-	);
+	const activeTag = await page.evaluate(() => document.activeElement?.tagName ?? "");
 	expect(activeTag).not.toBe("");
 }

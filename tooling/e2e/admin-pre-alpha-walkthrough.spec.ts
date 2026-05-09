@@ -21,10 +21,7 @@ test.describe("pre-alpha walkthrough regression guards", () => {
 		const res = await request.get("/sections.css");
 		expect(res.status()).toBe(200);
 		const ct = res.headers()["content-type"] ?? "";
-		expect(
-			ct,
-			`expected text/css mime, got "${ct}"`,
-		).toMatch(/text\/css/);
+		expect(ct, `expected text/css mime, got "${ct}"`).toMatch(/text\/css/);
 		const body = await res.text();
 		expect(body.length).toBeGreaterThan(0);
 	});
@@ -35,9 +32,7 @@ test.describe("pre-alpha walkthrough regression guards", () => {
 		expect(res.headers()["content-type"] ?? "").toMatch(/text\/css/);
 	});
 
-	test("Scenario: /pages exposes the section editor for structured pages", async ({
-		page,
-	}) => {
+	test("Scenario: /pages exposes the section editor for structured pages", async ({ page }) => {
 		await page.goto(`${ADMIN}/pages`, { waitUntil: "domcontentloaded" });
 		// Harness seeds /welcome as a structured page so the editor link is
 		// reachable from the public pages list.
@@ -52,16 +47,12 @@ test.describe("pre-alpha walkthrough regression guards", () => {
 		await expect(firstPanel.locator("ap-section-editor")).toHaveCount(1);
 	});
 
-	test("Scenario: section editor heading is 'Sections' (not 'Sections JSON')", async ({
-		page,
-	}) => {
+	test("Scenario: section editor heading is 'Sections' (not 'Sections JSON')", async ({ page }) => {
 		await page.goto(`${ADMIN}/route-pages/welcome`, {
 			waitUntil: "domcontentloaded",
 		});
 		const headings = await page.locator("main h2").allTextContents();
-		expect(headings, `headings: ${JSON.stringify(headings)}`).not.toContain(
-			"Sections JSON",
-		);
+		expect(headings, `headings: ${JSON.stringify(headings)}`).not.toContain("Sections JSON");
 		expect(headings).toContain("Sections");
 	});
 
@@ -77,9 +68,7 @@ test.describe("pre-alpha walkthrough regression guards", () => {
 		expect(await meta.getAttribute("required")).toBeNull();
 		// Visible "(optional)" hint copy is present under the SEO heading so the
 		// operator knows they can skip these.
-		await expect(
-			page.locator("text=/optional/i").first(),
-		).toBeVisible();
+		await expect(page.locator("text=/optional/i").first()).toBeVisible();
 	});
 
 	test("Scenario: admin URL warning leaves whitespace around inline code tokens", async ({
@@ -91,13 +80,16 @@ test.describe("pre-alpha walkthrough regression guards", () => {
 		// Render-time computed style: the inline-margin rule we added must
 		// produce a non-zero margin around the <code> token so the prose
 		// reads as separate words.
-		const margin = await note.locator("code").first().evaluate((el) => {
-			const s = window.getComputedStyle(el);
-			return {
-				inlineStart: parseFloat(s.marginInlineStart || "0"),
-				paddingInline: parseFloat(s.paddingInlineStart || "0"),
-			};
-		});
+		const margin = await note
+			.locator("code")
+			.first()
+			.evaluate((el) => {
+				const s = window.getComputedStyle(el);
+				return {
+					inlineStart: parseFloat(s.marginInlineStart || "0"),
+					paddingInline: parseFloat(s.paddingInlineStart || "0"),
+				};
+			});
 		expect(
 			margin.paddingInline + margin.inlineStart,
 			`expected non-zero inline padding/margin around <code>, got ${JSON.stringify(margin)}`,
@@ -130,15 +122,13 @@ test.describe("pre-alpha walkthrough regression guards", () => {
 		await page.goto(`${ADMIN}/route-pages/welcome`, {
 			waitUntil: "domcontentloaded",
 		});
-		await page.locator('[data-section-editor-add]').first().click();
-		const dialog = page.locator('[data-section-editor-add-dialog]');
+		await page.locator("[data-section-editor-add]").first().click();
+		const dialog = page.locator("[data-section-editor-add-dialog]");
 		await expect(dialog).toBeVisible();
-		const tplCount = await dialog.locator('[data-template]').count();
-		expect(tplCount, `expected 4 templates (blank, landing, about, contact)`).toBe(
-			4,
-		);
+		const tplCount = await dialog.locator("[data-template]").count();
+		expect(tplCount, `expected 4 templates (blank, landing, about, contact)`).toBe(4);
 		const tplKeys = await dialog
-			.locator('[data-template]')
+			.locator("[data-template]")
 			.evaluateAll((els) => els.map((e) => e.getAttribute("data-template")));
 		expect(tplKeys.sort()).toEqual(["about", "blank", "contact", "landing"]);
 	});
@@ -149,10 +139,10 @@ test.describe("pre-alpha walkthrough regression guards", () => {
 		await page.goto(`${ADMIN}/route-pages/welcome`, {
 			waitUntil: "domcontentloaded",
 		});
-		await page.locator('[data-section-editor-add]').first().click();
-		const dialog = page.locator('[data-section-editor-add-dialog]');
+		await page.locator("[data-section-editor-add]").first().click();
+		const dialog = page.locator("[data-section-editor-add-dialog]");
 		const kindKeys = await dialog
-			.locator('[data-kind]')
+			.locator("[data-kind]")
 			.evaluateAll((els) => els.map((e) => e.getAttribute("data-kind")));
 		expect(kindKeys.sort()).toEqual([
 			"cta-banner",
@@ -166,7 +156,7 @@ test.describe("pre-alpha walkthrough regression guards", () => {
 		]);
 		// CTA banner must render a human-readable label, not the raw kind key.
 		const ctaButton = dialog.locator('[data-kind="cta-banner"]');
-		const ctaLabel = (await ctaButton.textContent() ?? "").trim();
+		const ctaLabel = ((await ctaButton.textContent()) ?? "").trim();
 		expect(ctaLabel).not.toBe("cta-banner");
 		expect(ctaLabel.length).toBeGreaterThan(0);
 	});
@@ -178,10 +168,7 @@ test.describe("pre-alpha walkthrough regression guards", () => {
 		await page.goto(`${ADMIN}/route-pages/welcome`, {
 			waitUntil: "domcontentloaded",
 		});
-		const stylesheet = await page
-			.locator("ap-page-preview")
-			.first()
-			.getAttribute("stylesheet");
+		const stylesheet = await page.locator("ap-page-preview").first().getAttribute("stylesheet");
 		expect(stylesheet).toBe("/sections.css");
 		const r = await request.get(stylesheet ?? "/sections.css");
 		expect(r.status()).toBe(200);
@@ -191,24 +178,18 @@ test.describe("pre-alpha walkthrough regression guards", () => {
 test.describe("pre-alpha walkthrough — mobile chrome at 375px", () => {
 	test.use({ viewport: { width: 375, height: 812 }, isMobile: true, hasTouch: true });
 
-	test("Scenario: mobile topbar wraps; brand and identity do not overlap", async ({
-		page,
-	}) => {
+	test("Scenario: mobile topbar wraps; brand and identity do not overlap", async ({ page }) => {
 		await page.goto(ADMIN, { waitUntil: "domcontentloaded" });
 		const brand = page.locator(".topbar-brand").first();
 		const meta = page.locator(".topbar-meta").first();
 		await expect(brand).toBeVisible();
 		await expect(meta).toBeVisible();
-		const [b, m] = await Promise.all([
-			brand.boundingBox(),
-			meta.boundingBox(),
-		]);
+		const [b, m] = await Promise.all([brand.boundingBox(), meta.boundingBox()]);
 		if (!b || !m) throw new Error("topbar boxes missing");
 		// Either brand wraps to its own row (m.y >= b.y + b.height) OR the two
 		// boxes do not horizontally overlap. Either is acceptable; overlap is
 		// the failure mode we're guarding against.
-		const horizontalOverlap =
-			b.x < m.x + m.width && m.x < b.x + b.width;
+		const horizontalOverlap = b.x < m.x + m.width && m.x < b.x + b.width;
 		const verticallyStacked = m.y >= b.y + b.height - 1;
 		expect(
 			!horizontalOverlap || verticallyStacked,
@@ -216,9 +197,7 @@ test.describe("pre-alpha walkthrough — mobile chrome at 375px", () => {
 		).toBe(true);
 	});
 
-	test("Scenario: hamburger toggle is visible at 375px and meets WCAG 2.5.5", async ({
-		page,
-	}) => {
+	test("Scenario: hamburger toggle is visible at 375px and meets WCAG 2.5.5", async ({ page }) => {
 		await page.goto(ADMIN, { waitUntil: "domcontentloaded" });
 		const toggle = page.locator("[data-nav-toggle]").first();
 		await expect(toggle).toBeVisible();

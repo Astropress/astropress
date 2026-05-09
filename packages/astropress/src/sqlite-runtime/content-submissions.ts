@@ -1,9 +1,7 @@
 import { createAstropressSubmissionRepository } from "../submission-repository-factory";
 import type { AstropressSqliteDatabaseLike } from "./utils";
 
-export function createSqliteSubmissionStore(
-	getDb: () => AstropressSqliteDatabaseLike,
-) {
+export function createSqliteSubmissionStore(getDb: () => AstropressSqliteDatabaseLike) {
 	function getContactSubmissions() {
 		const rows = getDb()
 			.prepare(
@@ -46,9 +44,7 @@ export function createSqliteSubmissionStore(
 	const sqliteSchedulingRepository = {
 		schedulePublish(id: string, scheduledAt: string): void {
 			getDb()
-				.prepare(
-					"UPDATE content_overrides SET scheduled_at = ?, status = 'draft' WHERE slug = ?",
-				)
+				.prepare("UPDATE content_overrides SET scheduled_at = ?, status = 'draft' WHERE slug = ?")
 				.run(scheduledAt, id);
 			getDb()
 				.prepare(
@@ -88,11 +84,7 @@ export function createSqliteSubmissionStore(
 		},
 
 		cancelScheduledPublish(id: string): void {
-			getDb()
-				.prepare(
-					"UPDATE content_overrides SET scheduled_at = NULL WHERE slug = ?",
-				)
-				.run(id);
+			getDb().prepare("UPDATE content_overrides SET scheduled_at = NULL WHERE slug = ?").run(id);
 		},
 
 		runScheduledPublishes(): number {

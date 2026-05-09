@@ -118,17 +118,10 @@ function toBufferSource(bytes: Uint8Array): ArrayBuffer {
 	return copy;
 }
 
-async function importAesKey(
-	keyBytes: Uint8Array,
-	usage: KeyUsage,
-): Promise<CryptoKey> {
-	return crypto.subtle.importKey(
-		"raw",
-		toBufferSource(keyBytes),
-		{ name: "AES-GCM" },
-		false,
-		[usage],
-	);
+async function importAesKey(keyBytes: Uint8Array, usage: KeyUsage): Promise<CryptoKey> {
+	return crypto.subtle.importKey("raw", toBufferSource(keyBytes), { name: "AES-GCM" }, false, [
+		usage,
+	]);
 }
 
 async function aesGcmEncrypt(
@@ -179,12 +172,7 @@ async function tryUnwrap(
 		const wrapIv = b64ToBytes(sealed.wrap_iv);
 		const dekWrap = b64ToBytes(sealed.dek_wrap);
 		const kek = deriveKek(rootSecret, wrapSalt);
-		const dek = await aesGcmDecrypt(
-			kek,
-			wrapIv,
-			dekWrap,
-			buildAad(DEK_WRAP_AAD_PREFIX, ctx),
-		);
+		const dek = await aesGcmDecrypt(kek, wrapIv, dekWrap, buildAad(DEK_WRAP_AAD_PREFIX, ctx));
 		return dek;
 	} catch {
 		return null;
@@ -214,12 +202,7 @@ export async function sealIntegrationSecret(
 	const dek = getRandomBytes(KEY_BYTES);
 	const kek = deriveKek(rootSecret, wrapSalt);
 
-	const dekWrap = await aesGcmEncrypt(
-		kek,
-		wrapIv,
-		dek,
-		buildAad(DEK_WRAP_AAD_PREFIX, ctx),
-	);
+	const dekWrap = await aesGcmEncrypt(kek, wrapIv, dek, buildAad(DEK_WRAP_AAD_PREFIX, ctx));
 	const ciphertext = await aesGcmEncrypt(
 		dek,
 		dataIv,
@@ -258,15 +241,12 @@ export async function openIntegrationSecret<
 		);
 	}
 	if (sealed.kid !== "current" && sealed.kid !== "previous") {
-		throw new IntegrationSecretError(
-			"INVALID_ENVELOPE",
-			`invalid envelope kid: ${sealed.kid}`,
-		);
+		throw new IntegrationSecretError("INVALID_ENVELOPE", `invalid envelope kid: ${sealed.kid}`);
 	}
 
 	let usedKid: SealedSecretKid | null = null;
 	let dek: Uint8Array | null = null;
-	const slots: Array<[SealedSecretKid, string | undefined]> = [
+	const slots: [SealedSecretKid, string | undefined][] = [
 		["current", rootSecrets.current],
 		["previous", rootSecrets.previous],
 	];
@@ -316,9 +296,7 @@ export async function openIntegrationSecret<
 		typeof parsed !== "object" ||
 		Array.isArray(parsed) ||
 		// audit-boundary: opaque-passthrough -- module-boundary value; narrowed at consumer
-		Object.values(parsed as Record<string, unknown>).some(
-			(v) => typeof v !== "string",
-		)
+		Object.values(parsed as Record<string, unknown>).some((v) => typeof v !== "string")
 	) {
 		throw new IntegrationSecretError(
 			"INVALID_PLAINTEXT",

@@ -96,9 +96,7 @@ describe("POST /ap/newsletter/subscribe", () => {
 			headers: { "Content-Type": "application/json" },
 			body: "{ invalid json",
 		});
-		const res = await POST({ request: req, locals: MOCK_LOCALS } as Parameters<
-			typeof POST
-		>[0]);
+		const res = await POST({ request: req, locals: MOCK_LOCALS } as Parameters<typeof POST>[0]);
 		expect(res.status).toBe(400);
 		const body = (await res.json()) as Record<string, unknown>;
 		expect(body).toMatchObject({ ok: false });
@@ -167,17 +165,12 @@ describe("POST /ap/newsletter/subscribe", () => {
 	});
 
 	it("includes utm_source in the audit summary when present in query string", async () => {
-		const reqWithUtm = new Request(
-			"http://localhost/ap/newsletter/subscribe?utm_source=homepage",
-			{
-				method: "POST",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({ email: "user@example.com" }),
-			},
-		);
-		await POST({ request: reqWithUtm, locals: MOCK_LOCALS } as Parameters<
-			typeof POST
-		>[0]);
+		const reqWithUtm = new Request("http://localhost/ap/newsletter/subscribe?utm_source=homepage", {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({ email: "user@example.com" }),
+		});
+		await POST({ request: reqWithUtm, locals: MOCK_LOCALS } as Parameters<typeof POST>[0]);
 		expect(mockRecordAudit).toHaveBeenCalledWith(
 			MOCK_LOCALS,
 			expect.anything(),

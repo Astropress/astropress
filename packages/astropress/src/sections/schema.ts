@@ -10,12 +10,8 @@
  * live in `./schema-parsers`. This file is the public API + dispatcher.
  */
 
+import type { Section, SectionParseError, SectionsParseResult } from "./schema-helpers";
 import { isNonEmptyString, isObject } from "./schema-helpers";
-import type {
-	Section,
-	SectionParseError,
-	SectionsParseResult,
-} from "./schema-helpers";
 import {
 	parseCtaBanner,
 	parseFaq,
@@ -28,9 +24,9 @@ import {
 } from "./schema-parsers";
 
 export type {
+	CtaBannerSection,
 	CtaButton,
 	CtaTone,
-	CtaBannerSection,
 	FaqItem,
 	FaqSection,
 	FeatureGridSection,
@@ -55,7 +51,6 @@ export type {
 } from "./schema-helpers";
 
 export {
-	SECTION_KINDS,
 	isNonEmptyString,
 	isObject,
 	isOptionalString,
@@ -67,13 +62,10 @@ export {
 	parseTestimonialLayout,
 	parseTestimonialSource,
 	parseTone,
+	SECTION_KINDS,
 } from "./schema-helpers";
 
-function parseSection(
-	raw: unknown,
-	path: string,
-	errors: SectionParseError[],
-): Section | null {
+function parseSection(raw: unknown, path: string, errors: SectionParseError[]): Section | null {
 	if (!isObject(raw)) {
 		errors.push({ path, message: "section must be an object" });
 		return null;

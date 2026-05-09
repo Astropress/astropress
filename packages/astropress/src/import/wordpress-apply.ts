@@ -12,8 +12,7 @@ const SQL_UPSERT_CATEGORY =
 	"INSERT INTO categories (slug, name, description, deleted_at) VALUES (?, ?, ?, NULL) ON CONFLICT(slug) DO UPDATE SET name = excluded.name, description = excluded.description, deleted_at = NULL, updated_at = CURRENT_TIMESTAMP";
 const SQL_UPSERT_TAG =
 	"INSERT INTO tags (slug, name, description, deleted_at) VALUES (?, ?, ?, NULL) ON CONFLICT(slug) DO UPDATE SET name = excluded.name, description = excluded.description, deleted_at = NULL, updated_at = CURRENT_TIMESTAMP";
-const SQL_SELECT_CATEGORY_ID =
-	"SELECT id FROM categories WHERE slug = ? LIMIT 1";
+const SQL_SELECT_CATEGORY_ID = "SELECT id FROM categories WHERE slug = ? LIMIT 1";
 const SQL_SELECT_TAG_ID = "SELECT id FROM tags WHERE slug = ? LIMIT 1";
 const SQL_UPDATE_ENTRY_LEGACY =
 	"UPDATE content_entries SET legacy_url = ?, summary = ?, kind = ? WHERE slug = ?";
@@ -33,18 +32,11 @@ const WORDPRESS_IMPORT_ACTOR = {
 	name: "WordPress Import",
 };
 
-export function resolveLocalAdminDbPath(
-	workspaceRoot: string,
-	adminDbPath?: string,
-) {
+export function resolveLocalAdminDbPath(workspaceRoot: string, adminDbPath?: string) {
 	if (adminDbPath) {
-		return path.isAbsolute(adminDbPath)
-			? adminDbPath
-			: path.join(workspaceRoot, adminDbPath);
+		return path.isAbsolute(adminDbPath) ? adminDbPath : path.join(workspaceRoot, adminDbPath);
 	}
-	return createDefaultAstropressSqliteSeedToolkit().getDefaultAdminDbPath(
-		workspaceRoot,
-	);
+	return createDefaultAstropressSqliteSeedToolkit().getDefaultAdminDbPath(workspaceRoot);
 }
 
 export async function fileSizeOrNull(targetPath: string) {
@@ -57,9 +49,7 @@ export async function fileSizeOrNull(targetPath: string) {
 }
 
 type AdminDb = ReturnType<
-	ReturnType<
-		typeof createDefaultAstropressSqliteSeedToolkit
-	>["openSeedDatabase"]
+	ReturnType<typeof createDefaultAstropressSqliteSeedToolkit>["openSeedDatabase"]
 >;
 type AdminRuntime = ReturnType<typeof createAstropressSqliteAdminRuntime>;
 
@@ -100,15 +90,9 @@ function importContentRecords(
 ): Map<string, string> {
 	const contentRouteByImportId = new Map<string, string>();
 	for (const record of bundle.contentRecords) {
-		const existing = runtime.sqliteAdminStore.content.getContentState(
-			record.slug,
-		);
+		const existing = runtime.sqliteAdminStore.content.getContentState(record.slug);
 		const contentStatus =
-			record.status === "archived"
-				? "archived"
-				: record.status === "draft"
-					? "draft"
-					: "published";
+			record.status === "archived" ? "archived" : record.status === "draft" ? "draft" : "published";
 		const authorIds = record.authorLogins
 			.map((l) => authorIdsByLogin.get(l))
 			.filter((v): v is number => typeof v === "number");
@@ -189,9 +173,7 @@ async function importMediaAssets(
 		const hasDownloadedFile = downloadedPath
 			? (await fileSizeOrNull(downloadedPath)) !== null
 			: false;
-		const localPath = hasDownloadedFile
-			? (downloadedPath as string)
-			: asset.legacyUrl;
+		const localPath = hasDownloadedFile ? (downloadedPath as string) : asset.legacyUrl;
 		upsertMedia.run(
 			asset.id,
 			asset.sourceUrl,
@@ -213,10 +195,7 @@ export async function applyImportToLocalRuntime(input: {
 	plan: AstropressWordPressImportPlan;
 }): Promise<AstropressWordPressImportLocalApplyReport> {
 	const seedToolkit = createDefaultAstropressSqliteSeedToolkit();
-	const resolvedDbPath = resolveLocalAdminDbPath(
-		input.workspaceRoot,
-		input.adminDbPath,
-	);
+	const resolvedDbPath = resolveLocalAdminDbPath(input.workspaceRoot, input.adminDbPath);
 	seedToolkit.seedDatabase({
 		dbPath: resolvedDbPath,
 		workspaceRoot: input.workspaceRoot,
@@ -234,9 +213,7 @@ export async function applyImportToLocalRuntime(input: {
 		if (input.plan.includeUsers) {
 			for (const author of input.bundle.authors) {
 				upsertAuthor.run(author.login, author.displayName, null);
-				const row = selectAuthorId.get(author.login) as
-					| { id: number }
-					| undefined;
+				const row = selectAuthorId.get(author.login) as { id: number } | undefined;
 				if (row) authorIdsByLogin.set(author.login, row.id);
 			}
 		}
@@ -287,12 +264,8 @@ export async function applyImportToLocalRuntime(input: {
 			workspaceRoot: input.workspaceRoot,
 			adminDbPath: resolvedDbPath,
 			appliedRecords: input.bundle.contentRecords.length,
-			appliedMedia: input.plan.includeMedia
-				? input.bundle.mediaAssets.length
-				: 0,
-			appliedComments: input.plan.includeComments
-				? input.bundle.comments.length
-				: 0,
+			appliedMedia: input.plan.includeMedia ? input.bundle.mediaAssets.length : 0,
+			appliedComments: input.plan.includeComments ? input.bundle.comments.length : 0,
 			appliedUsers: input.plan.includeUsers ? input.bundle.authors.length : 0,
 			appliedRedirects: input.bundle.redirects.length,
 		};

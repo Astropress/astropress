@@ -1,17 +1,6 @@
-import {
-	createContentRecordImpl,
-	restoreRevisionImpl,
-} from "./content-repository-factory-helpers";
-import {
-	mapContentState,
-	normalizeAssignments,
-} from "./content-repository-helpers";
-import type {
-	Actor,
-	ContentRecord,
-	ContentRepository,
-	ContentRevision,
-} from "./persistence-types";
+import { createContentRecordImpl, restoreRevisionImpl } from "./content-repository-factory-helpers";
+import { mapContentState, normalizeAssignments } from "./content-repository-helpers";
+import type { Actor, ContentRecord, ContentRepository, ContentRevision } from "./persistence-types";
 
 export interface AstropressContentAssignments {
 	authorIds: number[];
@@ -42,31 +31,18 @@ export interface AstropressContentRepositoryInput {
 	normalizeContentStatus(value?: string | null): ContentRecord["status"];
 	findContentRecord(slug: string): ContentRecord | null | undefined;
 	listContentRecords(): ContentRecord[];
-	getPersistedOverride(
-		slug: string,
-	): AstropressContentOverride | null | undefined;
+	getPersistedOverride(slug: string): AstropressContentOverride | null | undefined;
 	getContentAssignments(slug: string): AstropressContentAssignments;
 	ensureBaselineRevision(record: ContentRecord): void;
 	listPersistedRevisions(slug: string): ContentRevision[];
-	getPersistedRevision(
-		slug: string,
-		revisionId: string,
-	): ContentRevision | null | undefined;
-	upsertContentOverride(
-		slug: string,
-		override: AstropressContentOverride,
-		actor: Actor,
-	): void;
-	replaceContentAssignments(
-		slug: string,
-		assignments: AstropressContentAssignments,
-	): void;
+	getPersistedRevision(slug: string, revisionId: string): ContentRevision | null | undefined;
+	upsertContentOverride(slug: string, override: AstropressContentOverride, actor: Actor): void;
+	replaceContentAssignments(slug: string, assignments: AstropressContentAssignments): void;
 	insertReviewedRevision(
 		slug: string,
-		revision: Omit<
-			ContentRevision,
-			"id" | "slug" | "source" | "createdAt" | "createdBy"
-		> & { revisionNote?: string },
+		revision: Omit<ContentRevision, "id" | "slug" | "source" | "createdAt" | "createdBy"> & {
+			revisionNote?: string;
+		},
 		actor: Actor,
 	): void;
 	insertContentEntry(input: {
@@ -93,10 +69,7 @@ type SaveContentInput = Parameters<ContentRepository["saveContentState"]>[1] & {
 	lastKnownUpdatedAt?: string;
 };
 
-function detectLocalConflict(
-	record: ContentRecord,
-	lastKnownUpdatedAt: string | undefined,
-) {
+function detectLocalConflict(record: ContentRecord, lastKnownUpdatedAt: string | undefined) {
 	if (!lastKnownUpdatedAt) {
 		return null;
 	}
@@ -136,9 +109,7 @@ export function createAstropressContentRepository(
 				.map((record) => getContentState(record.slug))
 				.filter((record): record is ContentRecord => Boolean(record))
 				.sort(
-					(left, right) =>
-						Date.parse(right.updatedAt ?? "") -
-						Date.parse(left.updatedAt ?? ""),
+					(left, right) => Date.parse(right.updatedAt ?? "") - Date.parse(left.updatedAt ?? ""),
 				);
 		},
 		getContentState,
@@ -205,8 +176,7 @@ export function createAstropressContentRepository(
 					ogTitle: rawInput.ogTitle?.trim() || undefined,
 					ogDescription: rawInput.ogDescription?.trim() || undefined,
 					ogImage: rawInput.ogImage?.trim() || undefined,
-					canonicalUrlOverride:
-						rawInput.canonicalUrlOverride?.trim() || undefined,
+					canonicalUrlOverride: rawInput.canonicalUrlOverride?.trim() || undefined,
 					robotsDirective: rawInput.robotsDirective?.trim() || undefined,
 					metadata: rawInput.metadata,
 				},
@@ -230,8 +200,7 @@ export function createAstropressContentRepository(
 					authorIds: assignments.authorIds,
 					categoryIds: assignments.categoryIds,
 					tagIds: assignments.tagIds,
-					canonicalUrlOverride:
-						rawInput.canonicalUrlOverride?.trim() || undefined,
+					canonicalUrlOverride: rawInput.canonicalUrlOverride?.trim() || undefined,
 					robotsDirective: rawInput.robotsDirective?.trim() || undefined,
 					revisionNote,
 				},

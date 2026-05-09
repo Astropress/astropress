@@ -20,46 +20,28 @@ export const deploymentMatrixEntries: AstropressDeploymentMatrixEntry[] = [
 		dataServices: "cloudflare",
 		supportLevel: "supported",
 		notes: "Cloudflare-native path using Pages, Workers, D1, and R2.",
-		requiredEnvKeys: [
-			"ASTROPRESS_SERVICE_ORIGIN",
-			"CLOUDFLARE_ACCOUNT_ID",
-			"CLOUDFLARE_API_TOKEN",
-		],
+		requiredEnvKeys: ["ASTROPRESS_SERVICE_ORIGIN", "CLOUDFLARE_ACCOUNT_ID", "CLOUDFLARE_API_TOKEN"],
 	},
 	{
 		appHost: "vercel",
 		dataServices: "supabase",
 		supportLevel: "supported",
-		notes:
-			"Astro app on Vercel with Supabase handling database, storage, and auth services.",
-		requiredEnvKeys: [
-			"ASTROPRESS_SERVICE_ORIGIN",
-			"SUPABASE_URL",
-			"SUPABASE_SERVICE_ROLE_KEY",
-		],
+		notes: "Astro app on Vercel with Supabase handling database, storage, and auth services.",
+		requiredEnvKeys: ["ASTROPRESS_SERVICE_ORIGIN", "SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY"],
 	},
 	{
 		appHost: "netlify",
 		dataServices: "supabase",
 		supportLevel: "supported",
-		notes:
-			"Astro app on Netlify with Supabase for data, media, and auth services.",
-		requiredEnvKeys: [
-			"ASTROPRESS_SERVICE_ORIGIN",
-			"SUPABASE_URL",
-			"SUPABASE_SERVICE_ROLE_KEY",
-		],
+		notes: "Astro app on Netlify with Supabase for data, media, and auth services.",
+		requiredEnvKeys: ["ASTROPRESS_SERVICE_ORIGIN", "SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY"],
 	},
 	{
 		appHost: "render-web",
 		dataServices: "supabase",
 		supportLevel: "supported",
 		notes: "Node-hosted Astro app on Render backed by Supabase services.",
-		requiredEnvKeys: [
-			"ASTROPRESS_SERVICE_ORIGIN",
-			"SUPABASE_URL",
-			"SUPABASE_SERVICE_ROLE_KEY",
-		],
+		requiredEnvKeys: ["ASTROPRESS_SERVICE_ORIGIN", "SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY"],
 	},
 	{
 		appHost: "render-web",
@@ -77,25 +59,15 @@ export const deploymentMatrixEntries: AstropressDeploymentMatrixEntry[] = [
 		appHost: "github-pages",
 		dataServices: "supabase",
 		supportLevel: "preview",
-		notes:
-			"Static public site with Supabase-hosted admin/services handled separately.",
-		requiredEnvKeys: [
-			"ASTROPRESS_SERVICE_ORIGIN",
-			"SUPABASE_URL",
-			"SUPABASE_SERVICE_ROLE_KEY",
-		],
+		notes: "Static public site with Supabase-hosted admin/services handled separately.",
+		requiredEnvKeys: ["ASTROPRESS_SERVICE_ORIGIN", "SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY"],
 	},
 	{
 		appHost: "gitlab-pages",
 		dataServices: "supabase",
 		supportLevel: "preview",
-		notes:
-			"Static public site on GitLab Pages with separate Supabase-hosted services.",
-		requiredEnvKeys: [
-			"ASTROPRESS_SERVICE_ORIGIN",
-			"SUPABASE_URL",
-			"SUPABASE_SERVICE_ROLE_KEY",
-		],
+		notes: "Static public site on GitLab Pages with separate Supabase-hosted services.",
+		requiredEnvKeys: ["ASTROPRESS_SERVICE_ORIGIN", "SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY"],
 	},
 	{
 		appHost: "vercel",
@@ -125,13 +97,8 @@ export const deploymentMatrixEntries: AstropressDeploymentMatrixEntry[] = [
 		appHost: "cloudflare-pages",
 		dataServices: "supabase",
 		supportLevel: "preview",
-		notes:
-			"Cloudflare-hosted Astro app with Supabase-hosted data and auth services.",
-		requiredEnvKeys: [
-			"ASTROPRESS_SERVICE_ORIGIN",
-			"SUPABASE_URL",
-			"SUPABASE_SERVICE_ROLE_KEY",
-		],
+		notes: "Cloudflare-hosted Astro app with Supabase-hosted data and auth services.",
+		requiredEnvKeys: ["ASTROPRESS_SERVICE_ORIGIN", "SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY"],
 	},
 	// ── Fly.io ──────────────────────────────────────────────────────────────────
 	{
@@ -146,11 +113,7 @@ export const deploymentMatrixEntries: AstropressDeploymentMatrixEntry[] = [
 		dataServices: "supabase",
 		supportLevel: "preview",
 		notes: "Fly.io Node app with Supabase for data, media, and auth.",
-		requiredEnvKeys: [
-			"ASTROPRESS_SERVICE_ORIGIN",
-			"SUPABASE_URL",
-			"SUPABASE_SERVICE_ROLE_KEY",
-		],
+		requiredEnvKeys: ["ASTROPRESS_SERVICE_ORIGIN", "SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY"],
 	},
 	{
 		appHost: "fly-io",
@@ -184,18 +147,13 @@ export const deploymentMatrixEntries: AstropressDeploymentMatrixEntry[] = [
 		dataServices: "supabase",
 		supportLevel: "preview",
 		notes: "Coolify-hosted Node app with Supabase for data and auth.",
-		requiredEnvKeys: [
-			"ASTROPRESS_SERVICE_ORIGIN",
-			"SUPABASE_URL",
-			"SUPABASE_SERVICE_ROLE_KEY",
-		],
+		requiredEnvKeys: ["ASTROPRESS_SERVICE_ORIGIN", "SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY"],
 	},
 	{
 		appHost: "coolify",
 		dataServices: "turso",
 		supportLevel: "preview",
-		notes:
-			"Coolify-hosted Node app with Turso (LibSQL) for distributed SQLite data.",
+		notes: "Coolify-hosted Node app with Turso (LibSQL) for distributed SQLite data.",
 		requiredEnvKeys: ["TURSO_DATABASE_URL", "TURSO_AUTH_TOKEN"],
 	},
 	// ── DigitalOcean ────────────────────────────────────────────────────────────
@@ -204,11 +162,7 @@ export const deploymentMatrixEntries: AstropressDeploymentMatrixEntry[] = [
 		dataServices: "supabase",
 		supportLevel: "preview",
 		notes: "DigitalOcean App Platform with Supabase for data, media, and auth.",
-		requiredEnvKeys: [
-			"ASTROPRESS_SERVICE_ORIGIN",
-			"SUPABASE_URL",
-			"SUPABASE_SERVICE_ROLE_KEY",
-		],
+		requiredEnvKeys: ["ASTROPRESS_SERVICE_ORIGIN", "SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY"],
 	},
 	{
 		appHost: "digitalocean",
@@ -226,8 +180,7 @@ export const deploymentMatrixEntries: AstropressDeploymentMatrixEntry[] = [
 		appHost: "digitalocean",
 		dataServices: "turso",
 		supportLevel: "preview",
-		notes:
-			"DigitalOcean App Platform with Turso (LibSQL) for distributed SQLite data.",
+		notes: "DigitalOcean App Platform with Turso (LibSQL) for distributed SQLite data.",
 		requiredEnvKeys: ["TURSO_DATABASE_URL", "TURSO_AUTH_TOKEN"],
 	},
 	// ── Turso with other hosts ───────────────────────────────────────────────────
@@ -242,24 +195,21 @@ export const deploymentMatrixEntries: AstropressDeploymentMatrixEntry[] = [
 		appHost: "netlify",
 		dataServices: "turso",
 		supportLevel: "preview",
-		notes:
-			"Netlify serverless with Turso (LibSQL) for distributed SQLite data.",
+		notes: "Netlify serverless with Turso (LibSQL) for distributed SQLite data.",
 		requiredEnvKeys: ["TURSO_DATABASE_URL", "TURSO_AUTH_TOKEN"],
 	},
 	{
 		appHost: "render-web",
 		dataServices: "turso",
 		supportLevel: "preview",
-		notes:
-			"Render web service with Turso (LibSQL) for distributed SQLite data.",
+		notes: "Render web service with Turso (LibSQL) for distributed SQLite data.",
 		requiredEnvKeys: ["TURSO_DATABASE_URL", "TURSO_AUTH_TOKEN"],
 	},
 	{
 		appHost: "cloudflare-pages",
 		dataServices: "turso",
 		supportLevel: "preview",
-		notes:
-			"Cloudflare Pages + Workers with Turso (LibSQL) for SQLite-compatible edge data.",
+		notes: "Cloudflare Pages + Workers with Turso (LibSQL) for SQLite-compatible edge data.",
 		requiredEnvKeys: ["TURSO_DATABASE_URL", "TURSO_AUTH_TOKEN"],
 	},
 	// ── Railway ─────────────────────────────────────────────────────────────────
@@ -268,28 +218,21 @@ export const deploymentMatrixEntries: AstropressDeploymentMatrixEntry[] = [
 		appHost: "railway",
 		dataServices: "none",
 		supportLevel: "preview",
-		notes:
-			"Railway container service with no hosted content services. Paid — usage-based billing.",
+		notes: "Railway container service with no hosted content services. Paid — usage-based billing.",
 		requiredEnvKeys: [],
 	},
 	{
 		appHost: "railway",
 		dataServices: "supabase",
 		supportLevel: "preview",
-		notes:
-			"Railway Node app with Supabase for data, media, and auth. Paid — usage-based billing.",
-		requiredEnvKeys: [
-			"ASTROPRESS_SERVICE_ORIGIN",
-			"SUPABASE_URL",
-			"SUPABASE_SERVICE_ROLE_KEY",
-		],
+		notes: "Railway Node app with Supabase for data, media, and auth. Paid — usage-based billing.",
+		requiredEnvKeys: ["ASTROPRESS_SERVICE_ORIGIN", "SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY"],
 	},
 	{
 		appHost: "railway",
 		dataServices: "appwrite",
 		supportLevel: "preview",
-		notes:
-			"Railway container with Appwrite as the service layer. Paid — usage-based billing.",
+		notes: "Railway container with Appwrite as the service layer. Paid — usage-based billing.",
 		requiredEnvKeys: [
 			"ASTROPRESS_SERVICE_ORIGIN",
 			"APPWRITE_ENDPOINT",

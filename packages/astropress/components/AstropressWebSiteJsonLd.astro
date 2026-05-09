@@ -30,14 +30,7 @@ interface Props {
 	searchUrl?: string;
 }
 
-const {
-	name,
-	url,
-	description,
-	organizationName,
-	organizationLogo,
-	searchUrl,
-} = Astro.props;
+const { name, url, description, organizationName, organizationLogo, searchUrl } = Astro.props;
 
 const siteSchema: Record<string, unknown> = {
 	"@context": "https://schema.org",

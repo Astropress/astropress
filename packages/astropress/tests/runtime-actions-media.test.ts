@@ -2,11 +2,7 @@ import type { DatabaseSync } from "node:sqlite";
 import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { registerCms } from "../src/config";
-import {
-	STANDARD_ACTOR,
-	STANDARD_CMS_CONFIG,
-	makeDb,
-} from "./helpers/make-db.js";
+import { makeDb, STANDARD_ACTOR, STANDARD_CMS_CONFIG } from "./helpers/make-db.js";
 import { makeLocals } from "./helpers/make-locals.js";
 
 // biome-ignore format: single-line typeof import required for esbuild/oxc compatibility
@@ -16,19 +12,14 @@ let deleteRuntimeMediaAsset: typeof import("../src/runtime-actions-media.js").de
 // biome-ignore format: single-line typeof import required for esbuild/oxc compatibility
 let updateRuntimeMediaAsset: typeof import("../src/runtime-actions-media.js").updateRuntimeMediaAsset;
 
-const {
-	mockStoreMedia,
-	mockDeleteMedia,
-	mockImageSize,
-	mockSharp,
-	mockGenerateSrcset,
-} = vi.hoisted(() => ({
-	mockStoreMedia: vi.fn(),
-	mockDeleteMedia: vi.fn(),
-	mockImageSize: vi.fn(),
-	mockSharp: vi.fn(),
-	mockGenerateSrcset: vi.fn(),
-}));
+const { mockStoreMedia, mockDeleteMedia, mockImageSize, mockSharp, mockGenerateSrcset } =
+	vi.hoisted(() => ({
+		mockStoreMedia: vi.fn(),
+		mockDeleteMedia: vi.fn(),
+		mockImageSize: vi.fn(),
+		mockSharp: vi.fn(),
+		mockGenerateSrcset: vi.fn(),
+	}));
 
 vi.mock("../src/runtime-media-storage", () => ({
 	storeRuntimeMediaObject: mockStoreMedia,
@@ -59,24 +50,16 @@ let locals: App.Locals;
 
 beforeEach(async () => {
 	vi.resetModules();
-	({
-		createRuntimeMediaAsset,
-		deleteRuntimeMediaAsset,
-		updateRuntimeMediaAsset,
-	} = await import("../src/runtime-actions-media.js"));
+	({ createRuntimeMediaAsset, deleteRuntimeMediaAsset, updateRuntimeMediaAsset } = await import(
+		"../src/runtime-actions-media.js"
+	));
 	db = makeDb();
 	locals = makeLocals(db);
 	registerCms(STANDARD_CMS_CONFIG);
 
 	db.prepare(
 		"INSERT INTO media_assets (id, local_path, alt_text, title, uploaded_by) VALUES (?, ?, ?, ?, ?)",
-	).run(
-		"asset-1",
-		"/images/test.png",
-		"Alt text",
-		"test.png",
-		"admin@test.local",
-	);
+	).run("asset-1", "/images/test.png", "Alt text", "test.png", "admin@test.local");
 
 	mockStoreMedia.mockReset();
 	mockDeleteMedia.mockReset();
@@ -174,9 +157,9 @@ describe("createRuntimeMediaAsset", () => {
 		);
 
 		expect(result).toMatchObject({ ok: true, id: "asset-new" });
-		const row = db
-			.prepare("SELECT id FROM media_assets WHERE id = 'asset-new'")
-			.get() as { id: string } | undefined;
+		const row = db.prepare("SELECT id FROM media_assets WHERE id = 'asset-new'").get() as
+			| { id: string }
+			| undefined;
 		expect(row?.id).toBe("asset-new");
 	});
 
@@ -255,18 +238,18 @@ describe("createRuntimeMediaAsset — dimension detection", () => {
 			locals,
 		);
 
-		const row = db
-			.prepare("SELECT width, height FROM media_assets WHERE id = 'asset-pdf'")
-			.get() as { width: number | null; height: number | null } | undefined;
+		const row = db.prepare("SELECT width, height FROM media_assets WHERE id = 'asset-pdf'").get() as
+			| { width: number | null; height: number | null }
+			| undefined;
 		expect(row).toBeDefined();
 		expect(row?.width).toBeNull();
 		expect(row?.height).toBeNull();
 	});
 
 	it("schema includes thumbnail_url column in media_assets", () => {
-		const row = db
-			.prepare("SELECT thumbnail_url FROM media_assets WHERE id = 'asset-1'")
-			.get() as { thumbnail_url: string | null } | undefined;
+		const row = db.prepare("SELECT thumbnail_url FROM media_assets WHERE id = 'asset-1'").get() as
+			| { thumbnail_url: string | null }
+			| undefined;
 		// Column exists (query doesn't throw)
 		expect(row).toBeDefined();
 		expect(row?.thumbnail_url ?? null).toBeNull();
@@ -289,11 +272,7 @@ describe("updateRuntimeMediaAsset", () => {
 	});
 
 	it("returns not-ok for unknown asset id", async () => {
-		const result = await updateRuntimeMediaAsset(
-			{ id: "ghost" },
-			actor,
-			locals,
-		);
+		const result = await updateRuntimeMediaAsset({ id: "ghost" }, actor, locals);
 		expect(result).toMatchObject({ ok: false });
 	});
 
@@ -303,11 +282,7 @@ describe("updateRuntimeMediaAsset", () => {
 	});
 
 	it("omitting title and altText binds empty strings", async () => {
-		const result = await updateRuntimeMediaAsset(
-			{ id: "asset-1" },
-			actor,
-			locals,
-		);
+		const result = await updateRuntimeMediaAsset({ id: "asset-1" }, actor, locals);
 		expect(result).toMatchObject({ ok: true });
 		const row = db
 			.prepare("SELECT title, alt_text FROM media_assets WHERE id = 'asset-1'")
@@ -322,9 +297,9 @@ describe("deleteRuntimeMediaAsset", () => {
 		mockDeleteMedia.mockResolvedValue(undefined);
 		const result = await deleteRuntimeMediaAsset("asset-1", actor, locals);
 		expect(result).toMatchObject({ ok: true });
-		const row = db
-			.prepare("SELECT deleted_at FROM media_assets WHERE id = 'asset-1'")
-			.get() as { deleted_at: string | null };
+		const row = db.prepare("SELECT deleted_at FROM media_assets WHERE id = 'asset-1'").get() as {
+			deleted_at: string | null;
+		};
 		expect(row.deleted_at).not.toBeNull();
 		expect(mockDeleteMedia).toHaveBeenCalledOnce();
 	});
@@ -500,10 +475,7 @@ describe("createRuntimeMediaAsset — thumbnail and srcset", () => {
 				_basePath: string | null,
 				storeVariant: (f: string, b: Uint8Array) => Promise<string | null>,
 			) => {
-				const path = await storeVariant(
-					"photo-400w.webp",
-					new Uint8Array([0x52, 0x49, 0x46]),
-				);
+				const path = await storeVariant("photo-400w.webp", new Uint8Array([0x52, 0x49, 0x46]));
 				return path ? `${path} 400w` : null;
 			},
 		);

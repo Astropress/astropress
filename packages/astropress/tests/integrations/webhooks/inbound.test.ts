@@ -44,22 +44,16 @@ describe("algorithmHeaderPrefix", () => {
 
 describe("extractWebhookHexSignature", () => {
 	it("strips the sha256= prefix when present", () => {
-		expect(extractWebhookHexSignature("sha256=abcdef", "hmac-sha256")).toBe(
-			"abcdef",
-		);
+		expect(extractWebhookHexSignature("sha256=abcdef", "hmac-sha256")).toBe("abcdef");
 	});
 	it("strips the sha512= prefix when present", () => {
-		expect(extractWebhookHexSignature("sha512=abcdef", "hmac-sha512")).toBe(
-			"abcdef",
-		);
+		expect(extractWebhookHexSignature("sha512=abcdef", "hmac-sha512")).toBe("abcdef");
 	});
 	it("returns the input unchanged when the prefix is absent", () => {
 		expect(extractWebhookHexSignature("abcdef", "hmac-sha256")).toBe("abcdef");
 	});
 	it("does not strip a sha512= prefix when algo is hmac-sha256", () => {
-		expect(extractWebhookHexSignature("sha512=abcdef", "hmac-sha256")).toBe(
-			"sha512=abcdef",
-		);
+		expect(extractWebhookHexSignature("sha512=abcdef", "hmac-sha256")).toBe("sha512=abcdef");
 	});
 	it("returns empty when the entire input is the prefix", () => {
 		expect(extractWebhookHexSignature("sha256=", "hmac-sha256")).toBe("");

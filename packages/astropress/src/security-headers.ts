@@ -16,18 +16,12 @@ function parseOrigin(value: string): URL | null {
 	}
 }
 
-function buildContentSecurityPolicy(
-	options: Required<AstropressSecurityHeadersOptions>,
-) {
+function buildContentSecurityPolicy(options: Required<AstropressSecurityHeadersOptions>) {
 	const styleSource = options.allowInlineStyles
 		? "style-src 'self' 'unsafe-inline'"
 		: "style-src 'self'";
-	const objectSource =
-		options.area === "public" ? "object-src 'self'" : "object-src 'none'";
-	const formAction =
-		options.area === "public"
-			? "form-action 'self' https:"
-			: "form-action 'self'";
+	const objectSource = options.area === "public" ? "object-src 'self'" : "object-src 'none'";
+	const formAction = options.area === "public" ? "form-action 'self' https:" : "form-action 'self'";
 
 	const directives = [
 		"default-src 'self'",
@@ -48,10 +42,7 @@ function buildContentSecurityPolicy(
 	];
 
 	if (options.reportUri) {
-		directives.push(
-			`report-uri ${options.reportUri}`,
-			"report-to csp-endpoint",
-		);
+		directives.push(`report-uri ${options.reportUri}`, "report-to csp-endpoint");
 	}
 
 	return directives.join("; ");
@@ -72,29 +63,16 @@ export function createAstropressSecurityHeaders(
 	headers.set("Content-Security-Policy", buildContentSecurityPolicy(resolved));
 	headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
 	headers.set("X-Content-Type-Options", "nosniff");
-	headers.set(
-		"X-Frame-Options",
-		resolved.frameAncestors === "'none'" ? "DENY" : "SAMEORIGIN",
-	);
-	headers.set(
-		"Permissions-Policy",
-		"camera=(), geolocation=(), microphone=(), payment=(), usb=()",
-	);
+	headers.set("X-Frame-Options", resolved.frameAncestors === "'none'" ? "DENY" : "SAMEORIGIN");
+	headers.set("Permissions-Policy", "camera=(), geolocation=(), microphone=(), payment=(), usb=()");
 	headers.set("Cross-Origin-Opener-Policy", "same-origin");
 
-	if (
-		resolved.area === "admin" ||
-		resolved.area === "api" ||
-		resolved.area === "auth"
-	) {
+	if (resolved.area === "admin" || resolved.area === "api" || resolved.area === "auth") {
 		headers.set("Cross-Origin-Resource-Policy", "same-site");
 	}
 
 	if (resolved.forceHsts) {
-		headers.set(
-			"Strict-Transport-Security",
-			"max-age=31536000; includeSubDomains",
-		);
+		headers.set("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
 	}
 
 	if (resolved.reportUri) {

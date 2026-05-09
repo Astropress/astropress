@@ -124,16 +124,11 @@ export interface LocalAdminStoreModule extends AdminStoreAdapter {
 		options?: { deleteAccount?: boolean },
 	) => import("./admin-action-user-purge").UserPurgeResult;
 	// Full-text search (SQLite FTS5)
-	searchContentStates?: (
-		query: string,
-	) => import("./persistence-types").ContentRecord[];
+	searchContentStates?: (query: string) => import("./persistence-types").ContentRecord[];
 }
 
 export interface LocalAdminAuthModule {
-	authenticateAdminUser(
-		email: string,
-		password: string,
-	): Promise<SessionUser | null>;
+	authenticateAdminUser(email: string, password: string): Promise<SessionUser | null>;
 }
 
 export interface LocalCmsRegistryModule {
@@ -143,13 +138,9 @@ export interface LocalCmsRegistryModule {
 		pathname: string,
 		input: Partial<RuntimeSystemRouteRecord>,
 		actor: unknown,
-	):
-		| { ok: true; route: RuntimeSystemRouteRecord }
-		| { ok: false; error: string };
+	): { ok: true; route: RuntimeSystemRouteRecord } | { ok: false; error: string };
 	listStructuredPageRoutes(): RuntimeStructuredPageRouteRecord[];
-	getStructuredPageRoute(
-		pathname: string,
-	): RuntimeStructuredPageRouteRecord | null;
+	getStructuredPageRoute(pathname: string): RuntimeStructuredPageRouteRecord | null;
 	saveStructuredPageRoute(
 		pathname: string,
 		input: {
@@ -167,9 +158,7 @@ export interface LocalCmsRegistryModule {
 			revisionNote?: string;
 		},
 		actor: unknown,
-	):
-		| { ok: true; route: RuntimeStructuredPageRouteRecord }
-		| { ok: false; error: string };
+	): { ok: true; route: RuntimeStructuredPageRouteRecord } | { ok: false; error: string };
 	createStructuredPageRoute(
 		pathname: string,
 		input: {
@@ -187,9 +176,7 @@ export interface LocalCmsRegistryModule {
 			revisionNote?: string;
 		},
 		actor: unknown,
-	):
-		| { ok: true; route: RuntimeStructuredPageRouteRecord }
-		| { ok: false; error: string };
+	): { ok: true; route: RuntimeStructuredPageRouteRecord } | { ok: false; error: string };
 	getArchiveRoute(pathname: string): RuntimeArchiveRouteRecord | null;
 	listArchiveRoutes(): RuntimeArchiveRouteRecord[];
 	saveArchiveRoute(
@@ -204,9 +191,7 @@ export interface LocalCmsRegistryModule {
 			revisionNote?: string;
 		},
 		actor: unknown,
-	):
-		| { ok: true; route: RuntimeArchiveRouteRecord }
-		| { ok: false; error: string };
+	): { ok: true; route: RuntimeArchiveRouteRecord } | { ok: false; error: string };
 }
 
 export interface LocalMediaStorageModule {
@@ -230,9 +215,7 @@ export interface LocalMediaStorageModule {
 export interface LocalImageStorageModule {
 	readLocalImageAsset(
 		publicPath: string,
-	):
-		| { ok: false; error: string }
-		| { ok: true; asset: { bytes: ArrayBuffer; mimeType: string } };
+	): { ok: false; error: string } | { ok: true; asset: { bytes: ArrayBuffer; mimeType: string } };
 	resolveLocalImageDiskPath(publicPath: string): string;
 }
 

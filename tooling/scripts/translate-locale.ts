@@ -19,9 +19,7 @@ import { readFile, writeFile } from "node:fs/promises";
 async function main() {
 	const [, , filePath, locale] = process.argv;
 	if (!filePath || !locale) {
-		console.error(
-			"Usage: bun run tooling/scripts/translate-locale.ts <file> <locale>",
-		);
+		console.error("Usage: bun run tooling/scripts/translate-locale.ts <file> <locale>");
 		process.exit(1);
 	}
 	// `locale` is user-supplied — restrict to an allowlist of supported
@@ -41,7 +39,7 @@ async function main() {
 		ny: true,
 		ar: true,
 	};
-	if (!Object.prototype.hasOwnProperty.call(SUPPORTED, locale)) {
+	if (!Object.hasOwn(SUPPORTED, locale)) {
 		console.error(
 			`Invalid locale "${locale}" — must be one of: ${Object.keys(SUPPORTED).join(", ")}.`,
 		);
@@ -75,10 +73,7 @@ async function main() {
 		const indent = enMatch[1] ?? "\t\t";
 		const enValue = enMatch[2];
 		const insertion = `\n${indent}${safeLocale}: ${enValue}, // TODO(i18n-${safeLocale}): native-speaker review (issue #76)`;
-		const newBody = body.replace(
-			/^(\s*en:\s*"(?:[^"\\]|\\.)*"\s*,?)/m,
-			`$1${insertion}`,
-		);
+		const newBody = body.replace(/^(\s*en:\s*"(?:[^"\\]|\\.)*"\s*,?)/m, `$1${insertion}`);
 		added += 1;
 		return `${head}${newBody}${tail}`;
 	});

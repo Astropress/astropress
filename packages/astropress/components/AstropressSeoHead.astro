@@ -65,9 +65,7 @@ if (record.canonicalUrlOverride) {
 	canonicalHref = record.canonicalUrlOverride;
 } else if (siteOrigin && record.slug) {
 	const basePath =
-		record.kind === "post" || record.kind == null
-			? `/blog/${record.slug}/`
-			: `/${record.slug}/`;
+		record.kind === "post" || record.kind == null ? `/blog/${record.slug}/` : `/${record.slug}/`;
 	canonicalHref = `${siteOrigin}${basePath}`;
 }
 

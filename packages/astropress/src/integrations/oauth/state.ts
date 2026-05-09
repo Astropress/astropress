@@ -134,17 +134,12 @@ async function hmacSha256Hex(secret: string, message: string): Promise<string> {
 	return bytesToHex(sig);
 }
 
-export async function issueOAuthState(
-	args: IssueOAuthStateArgs,
-): Promise<IssuedOAuthState> {
+export async function issueOAuthState(args: IssueOAuthStateArgs): Promise<IssuedOAuthState> {
 	const nonce = bytesToHex(crypto.getRandomValues(new Uint8Array(NONCE_BYTES)));
 	const ttl = args.ttlMs ?? DEFAULT_OAUTH_STATE_TTL_MS;
 	const expiresAt = args.nowMs + ttl;
 	const inner: InnerEnvelope = { n: nonce, c: args.context, e: expiresAt };
-	const sig = await hmacSha256Hex(
-		args.rootSecret,
-		serializeInnerEnvelope(inner),
-	);
+	const sig = await hmacSha256Hex(args.rootSecret, serializeInnerEnvelope(inner));
 	const envelope = JSON.stringify({ ...inner, s: sig });
 	const token = bytesToHex(textEncoder.encode(envelope));
 	return { token, nonce, expiresAt };
@@ -190,9 +185,7 @@ export function parseStateEnvelope(token: string): ParsedEnvelope | null {
 			e: typeof parsed.e === "number" ? parsed.e : 0,
 		};
 		const signatureHex =
-			typeof parsed.s === "string" && /^[0-9a-fA-F]+$/.test(parsed.s)
-				? parsed.s
-				: "";
+			typeof parsed.s === "string" && /^[0-9a-fA-F]+$/.test(parsed.s) ? parsed.s : "";
 		return { inner, signatureHex };
 	} catch {
 		return null;
@@ -206,10 +199,7 @@ export async function verifyOAuthState(
 	if (parsed === null) return { ok: false, code: "INVALID_FORMAT" };
 	const lhs = parseHexBytes(parsed.signatureHex);
 	if (lhs === null) return { ok: false, code: "INVALID_SIGNATURE" };
-	const expectedSig = await hmacSha256Hex(
-		args.rootSecret,
-		serializeInnerEnvelope(parsed.inner),
-	);
+	const expectedSig = await hmacSha256Hex(args.rootSecret, serializeInnerEnvelope(parsed.inner));
 	const rhs = parseHexBytes(expectedSig);
 	if (rhs === null) return { ok: false, code: "INVALID_SIGNATURE" };
 	if (!constantTimeEqual(lhs, rhs)) {
@@ -223,16 +213,10 @@ export async function verifyOAuthState(
 		if (exp.domain !== undefined && exp.domain !== parsed.inner.c.domain) {
 			return { ok: false, code: "CONTEXT_MISMATCH" };
 		}
-		if (
-			exp.providerId !== undefined &&
-			exp.providerId !== parsed.inner.c.providerId
-		) {
+		if (exp.providerId !== undefined && exp.providerId !== parsed.inner.c.providerId) {
 			return { ok: false, code: "CONTEXT_MISMATCH" };
 		}
-		if (
-			exp.returnTo !== undefined &&
-			exp.returnTo !== parsed.inner.c.returnTo
-		) {
+		if (exp.returnTo !== undefined && exp.returnTo !== parsed.inner.c.returnTo) {
 			return { ok: false, code: "CONTEXT_MISMATCH" };
 		}
 	}

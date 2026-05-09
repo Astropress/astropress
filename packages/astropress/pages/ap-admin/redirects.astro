@@ -2,11 +2,7 @@
 import AdminLayout from "@astropress-diy/astropress/components/AdminLayout.astro";
 import AuditTrail from "@astropress-diy/astropress/components/AuditTrail.astro";
 import CsrfInput from "@astropress-diy/astropress/components/CsrfInput.astro";
-import {
-	buildRedirectsPageModel,
-	getPageT,
-	resolveAdminLocale,
-} from "astropress";
+import { buildRedirectsPageModel, getPageT, resolveAdminLocale } from "astropress";
 
 const adminUser = Astro.locals.adminUser;
 const model = await buildRedirectsPageModel(Astro.locals, adminUser);
@@ -14,9 +10,7 @@ const { redirectRules, auditEvents } = model.data;
 const wasSaved = Astro.url.searchParams.get("saved") === "1";
 const wasDeleted = Astro.url.searchParams.get("deleted") === "1";
 const errorMessage =
-	Astro.url.searchParams.get("error") === "1"
-		? Astro.url.searchParams.get("message")
-		: "";
+	Astro.url.searchParams.get("error") === "1" ? Astro.url.searchParams.get("message") : "";
 const t = getPageT(resolveAdminLocale(Astro));
 
 if (model.status === "forbidden") {

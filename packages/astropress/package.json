@@ -493,7 +493,10 @@
 		"github-pages",
 		"web-components"
 	],
-	"sideEffects": ["./web-components/*.ts", "./web-components/index.ts"],
+	"sideEffects": [
+		"./web-components/*.ts",
+		"./web-components/index.ts"
+	],
 	"license": "MIT",
 	"repository": {
 		"type": "git",

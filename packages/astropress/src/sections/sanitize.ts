@@ -12,9 +12,7 @@
 import { sanitizeHtml } from "../html-sanitization";
 import type { Section } from "./schema";
 
-export async function sanitizeSections(
-	sections: Section[],
-): Promise<Section[]> {
+export async function sanitizeSections(sections: Section[]): Promise<Section[]> {
 	const out: Section[] = [];
 	for (const section of sections) {
 		if (section.kind === "rich-text") {

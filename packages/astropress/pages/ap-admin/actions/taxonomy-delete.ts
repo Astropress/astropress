@@ -1,7 +1,7 @@
-import { withAdminFormAction } from "@astropress-diy/astropress";
 import {
 	deleteRuntimeCategory,
 	deleteRuntimeTag,
+	withAdminFormAction,
 } from "@astropress-diy/astropress";
 import type { APIRoute } from "astro";
 
@@ -10,12 +10,8 @@ export const POST: APIRoute = async (context) =>
 		context,
 		{ failurePath: "/ap-admin/taxonomies", requireAdmin: true },
 		async ({ actor, formData, locals, redirect, fail }) => {
-			const id = Number.parseInt(
-				(formData.get("id") as string | null) ?? "",
-				10,
-			);
-			const kind =
-				(formData.get("kind") as string | null) === "tag" ? "tag" : "category";
+			const id = Number.parseInt((formData.get("id") as string | null) ?? "", 10);
+			const kind = (formData.get("kind") as string | null) === "tag" ? "tag" : "category";
 			if (!Number.isFinite(id)) {
 				return fail("Taxonomy id is required");
 			}

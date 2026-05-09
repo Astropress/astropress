@@ -7,7 +7,7 @@
  */
 
 import { execFileSync } from "node:child_process";
-import { existsSync, readFileSync, readdirSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join, relative } from "node:path";
 
 const CRATE_ROOT = "crates";
@@ -89,15 +89,11 @@ function main(): number {
 		const hash = gitHashObject(join(CRATE_ROOT, file));
 		if (hash && entry.hash !== hash) stale.push({ file });
 	}
-	const orphans = Object.keys(baseline.scores).filter(
-		(f) => !existsSync(join(CRATE_ROOT, f)),
-	);
+	const orphans = Object.keys(baseline.scores).filter((f) => !existsSync(join(CRATE_ROOT, f)));
 	if (missing.length === 0 && orphans.length === 0) {
 		console.log(
 			`audit-baseline-coverage-rust passed — ${eligible.length} Rust src files, all in ${BASELINE_PATH}${
-				stale.length > 0
-					? ` (${stale.length} hash-drifted; gate will re-score on push)`
-					: ""
+				stale.length > 0 ? ` (${stale.length} hash-drifted; gate will re-score on push)` : ""
 			}.`,
 		);
 		return 0;
@@ -111,9 +107,7 @@ function main(): number {
 		);
 	}
 	if (orphans.length > 0) {
-		console.error(
-			`\n  ${orphans.length} baseline entries point to deleted files:`,
-		);
+		console.error(`\n  ${orphans.length} baseline entries point to deleted files:`);
 		for (const f of orphans) console.error(`    ${f}`);
 	}
 	return 1;

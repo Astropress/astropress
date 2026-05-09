@@ -2,9 +2,7 @@ import type { D1AdminReadStore } from "./d1-admin-store";
 import type { D1DatabaseLike } from "./d1-database";
 import type { MediaAsset } from "./persistence-types";
 
-export function createD1MediaReadPart(
-	db: D1DatabaseLike,
-): D1AdminReadStore["media"] {
+export function createD1MediaReadPart(db: D1DatabaseLike): D1AdminReadStore["media"] {
 	return {
 		async listMediaAssets(): Promise<MediaAsset[]> {
 			const rows = (

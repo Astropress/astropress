@@ -10,11 +10,7 @@
 	"forwardPorts": [4321, 4322],
 	"customizations": {
 		"vscode": {
-			"extensions": [
-				"biomejs.biome",
-				"astro-build.astro-vscode",
-				"rust-lang.rust-analyzer"
-			]
+			"extensions": ["biomejs.biome", "astro-build.astro-vscode", "rust-lang.rust-analyzer"]
 		}
 	}
 }

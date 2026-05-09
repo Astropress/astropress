@@ -1,6 +1,8 @@
-import { createRuntimePasswordResetToken } from "@astropress-diy/astropress";
-import { withAdminFormAction } from "@astropress-diy/astropress";
-import { sendPasswordResetEmail } from "@astropress-diy/astropress";
+import {
+	createRuntimePasswordResetToken,
+	sendPasswordResetEmail,
+	withAdminFormAction,
+} from "@astropress-diy/astropress";
 import type { APIRoute } from "astro";
 
 export const POST: APIRoute = async (context) =>
@@ -9,11 +11,7 @@ export const POST: APIRoute = async (context) =>
 		{ failurePath: "/ap-admin/users", requireAdmin: true },
 		async ({ actor, formData, locals, request, redirect, fail }) => {
 			const email = String(formData.get("email") ?? "");
-			const result = await createRuntimePasswordResetToken(
-				email,
-				actor,
-				locals,
-			);
+			const result = await createRuntimePasswordResetToken(email, actor, locals);
 
 			if (!result.ok) {
 				return fail(result.error);
@@ -24,11 +22,7 @@ export const POST: APIRoute = async (context) =>
 				? new URL(result.resetUrl, request.url).toString()
 				: null;
 			if (result.resetUrl && absoluteResetUrl) {
-				const emailResult = await sendPasswordResetEmail(
-					email,
-					absoluteResetUrl,
-					locals,
-				);
+				const emailResult = await sendPasswordResetEmail(email, absoluteResetUrl, locals);
 				if (!emailResult.ok) {
 					return fail(emailResult.error ?? "Password reset email failed.");
 				}

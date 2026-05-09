@@ -2,9 +2,12 @@
 import AdminLayout from "@astropress-diy/astropress/components/AdminLayout.astro";
 import AuditTrail from "@astropress-diy/astropress/components/AuditTrail.astro";
 import CsrfInput from "@astropress-diy/astropress/components/CsrfInput.astro";
-import { buildPostEditorPageModel } from "astropress";
-import { getAdminLocalePair, isAuthUserAdmin } from "astropress";
-import { getSeededAdminContentType } from "astropress";
+import {
+	buildPostEditorPageModel,
+	getAdminLocalePair,
+	getSeededAdminContentType,
+	isAuthUserAdmin,
+} from "astropress";
 import { peekCmsConfig } from "../../../src/config.js";
 
 export const prerender = false;
@@ -24,9 +27,7 @@ const {
 } = model.data;
 const wasSaved = Astro.url.searchParams.get("saved") === "1";
 const errorMessage =
-	Astro.url.searchParams.get("error") === "1"
-		? Astro.url.searchParams.get("message")
-		: "";
+	Astro.url.searchParams.get("error") === "1" ? Astro.url.searchParams.get("message") : "";
 const contentType = pageRecord ? getSeededAdminContentType(pageRecord) : "post";
 const contentLabel = contentType === "page" ? "Page" : "Post";
 const listPath = contentType === "page" ? "/ap-admin/pages" : "/ap-admin/posts";
@@ -44,8 +45,7 @@ const publicStatus = pageRecord?.status ?? "published";
 // Used to auto-generate custom field inputs in the editor.
 const registeredContentTypes = peekCmsConfig()?.contentTypes ?? [];
 const registeredContentType = pageRecord
-	? (registeredContentTypes.find((ct) => ct.key === pageRecord.templateKey) ??
-		null)
+	? (registeredContentTypes.find((ct) => ct.key === pageRecord.templateKey) ?? null)
 	: null;
 const customFields = registeredContentType?.fields ?? [];
 const currentMetadata = (pageRecord?.metadata ?? {}) as Record<string, unknown>;

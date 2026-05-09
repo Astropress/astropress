@@ -15,16 +15,10 @@ const webhooks = store.webhooks ? await store.webhooks.list() : [];
 
 const wasCreated = Astro.url.searchParams.get("created") === "1";
 const wasDeleted = Astro.url.searchParams.get("deleted") === "1";
-const createdAlgorithm = wasCreated
-	? Astro.url.searchParams.get("algorithm")
-	: null;
-const createdPublicKey = wasCreated
-	? Astro.url.searchParams.get("publicKey")
-	: null;
+const createdAlgorithm = wasCreated ? Astro.url.searchParams.get("algorithm") : null;
+const createdPublicKey = wasCreated ? Astro.url.searchParams.get("publicKey") : null;
 const errorMessage =
-	Astro.url.searchParams.get("error") === "1"
-		? Astro.url.searchParams.get("message")
-		: null;
+	Astro.url.searchParams.get("error") === "1" ? Astro.url.searchParams.get("message") : null;
 
 const ALL_EVENTS = [
 	"content.published",

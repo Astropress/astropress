@@ -311,9 +311,7 @@ export function validateMediaSourceUrl(rawUrl: string): URL {
 		throw new Error(`Blocked non-HTTP URL scheme: ${parsed.protocol}`);
 	}
 	if (PRIVATE_HOST_RE.test(parsed.hostname)) {
-		throw new Error(
-			`Blocked request to private/loopback host: ${parsed.hostname}`,
-		);
+		throw new Error(`Blocked request to private/loopback host: ${parsed.hostname}`);
 	}
 	return parsed;
 }
@@ -329,10 +327,7 @@ function sanitizeSvgBytes(bytes: Uint8Array): Uint8Array {
 	return new TextEncoder().encode(sanitized);
 }
 
-async function transcodeImageBytes(
-	bytes: Uint8Array,
-	mimeType: string,
-): Promise<Uint8Array> {
+async function transcodeImageBytes(bytes: Uint8Array, mimeType: string): Promise<Uint8Array> {
 	if (mimeType === "image/svg+xml") {
 		return sanitizeSvgBytes(bytes);
 	}
@@ -351,32 +346,21 @@ export async function downloadMedia(rawUrl: string): Promise<Uint8Array> {
 		.split(";")[0]
 		.trim()
 		.toLowerCase();
-	if (
-		!ALLOWED_CONTENT_TYPES.some(
-			(t) => contentType === t || contentType.startsWith("image/"),
-		)
-	) {
+	if (!ALLOWED_CONTENT_TYPES.some((t) => contentType === t || contentType.startsWith("image/"))) {
 		throw new Error(`Blocked: unexpected media content-type "${contentType}"`);
 	}
 	const contentLength = Number(response.headers.get("content-length") ?? 0);
 	if (contentLength > MAX_MEDIA_BYTES) {
-		throw new Error(
-			`Blocked: content-length ${contentLength} exceeds ${MAX_MEDIA_BYTES} bytes`,
-		);
+		throw new Error(`Blocked: content-length ${contentLength} exceeds ${MAX_MEDIA_BYTES} bytes`);
 	}
 	const bytes = new Uint8Array(await response.arrayBuffer());
 	if (bytes.length > MAX_MEDIA_BYTES) {
-		throw new Error(
-			`Blocked: download size ${bytes.length} exceeds ${MAX_MEDIA_BYTES} bytes`,
-		);
+		throw new Error(`Blocked: download size ${bytes.length} exceeds ${MAX_MEDIA_BYTES} bytes`);
 	}
 	return transcodeImageBytes(bytes, contentType);
 }
 
-export async function downloadMediaToFile(
-	rawUrl: string,
-	targetPath: string,
-): Promise<void> {
+export async function downloadMediaToFile(rawUrl: string, targetPath: string): Promise<void> {
 	const bytes = await downloadMedia(rawUrl);
 	await writeFile(targetPath, bytes); // lgtm[js/http-to-file-access]
 }

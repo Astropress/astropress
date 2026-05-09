@@ -13,7 +13,7 @@
  *   5. Volatility boundary — import commands must not import from new/dev commands
  */
 
-import { readFile, readdir } from "node:fs/promises";
+import { readdir, readFile } from "node:fs/promises";
 import { join, relative } from "node:path";
 
 type Violation = { file: string; rule: string; message: string };
@@ -91,8 +91,7 @@ async function main() {
 
 		if (isCommandFile) {
 			// Detect `use crate::commands::something_other_than_import_common`
-			const commandImportPattern =
-				/use\s+crate::commands::(?!import_common\b)(\w+)/g;
+			const commandImportPattern = /use\s+crate::commands::(?!import_common\b)(\w+)/g;
 			let match: RegExpExecArray | null;
 			// biome-ignore lint/suspicious/noAssignInExpressions: standard regex exec loop
 			while ((match = commandImportPattern.exec(content)) !== null) {
@@ -169,13 +168,10 @@ async function main() {
 		// Changes to the import pipeline should never ripple into the scaffolding
 		// command, and vice versa.
 		// -------------------------------------------------------------------------
-		const isImportCommand =
-			filename === "import_wordpress.rs" || filename === "import_wix.rs";
+		const isImportCommand = filename === "import_wordpress.rs" || filename === "import_wix.rs";
 
 		if (isImportCommand) {
-			if (
-				/use\s+(?:super|crate)::(?:commands::)?(?:new\b|dev\b)/.test(content)
-			) {
+			if (/use\s+(?:super|crate)::(?:commands::)?(?:new\b|dev\b)/.test(content)) {
 				violations.push({
 					file: display,
 					rule: "volatility-boundary",
@@ -187,9 +183,7 @@ async function main() {
 		const isNewOrDevCommand = filename === "new.rs" || filename === "dev.rs";
 		if (isNewOrDevCommand && pathSegments.includes("/commands/")) {
 			if (
-				/use\s+(?:super|crate)::(?:commands::)?(?:import_wordpress\b|import_wix\b)/.test(
-					content,
-				)
+				/use\s+(?:super|crate)::(?:commands::)?(?:import_wordpress\b|import_wix\b)/.test(content)
 			) {
 				violations.push({
 					file: display,
@@ -220,9 +214,7 @@ async function main() {
 			console.error(`  [${v.rule}] ${v.file}`);
 			console.error(`    ${v.message}\n`);
 		}
-		console.error(
-			`${violations.length} violation(s) found. Fix before committing.\n`,
-		);
+		console.error(`${violations.length} violation(s) found. Fix before committing.\n`);
 		process.exit(1);
 	}
 

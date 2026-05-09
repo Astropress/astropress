@@ -1,12 +1,11 @@
 import { describe, expect, it } from "vitest";
-
+import type { AstropressPlugin } from "../src/config.js";
 import {
 	dispatchPluginContentEvent,
 	dispatchPluginMediaEvent,
 	peekCmsConfig,
 	registerCms,
 } from "../src/config.js";
-import type { AstropressPlugin } from "../src/config.js";
 
 function makeMinimalConfig(plugins?: AstropressPlugin[]) {
 	return {
@@ -182,25 +181,19 @@ describe("AstropressPlugin API", () => {
 
 describe("createSitemapPlugin", () => {
 	it("source file exists and exports createSitemapPlugin", async () => {
-		const { createSitemapPlugin: fn } = await import(
-			"../src/plugins/sitemap-plugin.js"
-		);
+		const { createSitemapPlugin: fn } = await import("../src/plugins/sitemap-plugin.js");
 		expect(typeof fn).toBe("function");
 	});
 
 	it("returned plugin has name 'astropress-sitemap' and onContentPublish hook", async () => {
-		const { createSitemapPlugin: fn } = await import(
-			"../src/plugins/sitemap-plugin.js"
-		);
+		const { createSitemapPlugin: fn } = await import("../src/plugins/sitemap-plugin.js");
 		const plugin = fn();
 		expect(plugin.name).toBe("astropress-sitemap");
 		expect(typeof plugin.onContentPublish).toBe("function");
 	});
 
 	it("onContentPublish calls onPublish callback with slug", async () => {
-		const { createSitemapPlugin: fn } = await import(
-			"../src/plugins/sitemap-plugin.js"
-		);
+		const { createSitemapPlugin: fn } = await import("../src/plugins/sitemap-plugin.js");
 		const slugs: string[] = [];
 		const plugin = fn({
 			onPublish: (slug: string) => {

@@ -95,9 +95,7 @@ const sizes = explicitSizes ?? (srcset ? defaultSizes : undefined);
 
 // Reserve layout space before the image loads to prevent CLS.
 const aspectRatioStyle = `aspect-ratio: ${width} / ${height};`;
-const combinedStyle = extraStyle
-	? `${aspectRatioStyle} ${extraStyle}`
-	: aspectRatioStyle;
+const combinedStyle = extraStyle ? `${aspectRatioStyle} ${extraStyle}` : aspectRatioStyle;
 ---
 
 <img

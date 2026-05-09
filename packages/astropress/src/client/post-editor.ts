@@ -39,8 +39,7 @@ function createUrlDialog(): {
 	dialog.addEventListener("close", () => {
 		const val =
 			dialog.returnValue === "ok"
-				? (dialog.querySelector<HTMLInputElement>("#url-dialog-input")?.value ??
-					"")
+				? (dialog.querySelector<HTMLInputElement>("#url-dialog-input")?.value ?? "")
 				: null;
 		resolveFn(val || null);
 	});
@@ -60,8 +59,7 @@ function promptUrl(urlDialog: {
 	dialog: HTMLDialogElement;
 	resolve: (value: string | null) => void;
 }): Promise<string | null> {
-	const input =
-		urlDialog.dialog.querySelector<HTMLInputElement>("#url-dialog-input");
+	const input = urlDialog.dialog.querySelector<HTMLInputElement>("#url-dialog-input");
 	if (input) input.value = "";
 	return new Promise((resolve) => {
 		urlDialog.resolve = resolve;
@@ -72,19 +70,11 @@ function promptUrl(urlDialog: {
 }
 
 window.addEventListener("DOMContentLoaded", () => {
-	const editor =
-		document.querySelector<HTMLTextAreaElement>("[data-body-editor]");
-	const preview = document.querySelector<HTMLIFrameElement>(
-		".preview-frame iframe",
-	);
-	const toolbar = document.querySelector<HTMLElement>(
-		'[role="toolbar"][aria-label="Format body"]',
-	);
-	const mediaButton =
-		document.querySelector<HTMLButtonElement>(".insert-media-btn");
-	const mediaDialog = document.getElementById(
-		"media-library-dialog",
-	) as HTMLDialogElement | null;
+	const editor = document.querySelector<HTMLTextAreaElement>("[data-body-editor]");
+	const preview = document.querySelector<HTMLIFrameElement>(".preview-frame iframe");
+	const toolbar = document.querySelector<HTMLElement>('[role="toolbar"][aria-label="Format body"]');
+	const mediaButton = document.querySelector<HTMLButtonElement>(".insert-media-btn");
+	const mediaDialog = document.getElementById("media-library-dialog") as HTMLDialogElement | null;
 	const mediaClose = document.getElementById("media-dialog-close");
 	const urlDialog = createUrlDialog();
 
@@ -95,11 +85,7 @@ window.addEventListener("DOMContentLoaded", () => {
 		preview.srcdoc = buildPreviewDocument(editor.value);
 	};
 
-	const wrapSelection = (
-		prefix: string,
-		suffix: string,
-		placeholder: string,
-	) => {
+	const wrapSelection = (prefix: string, suffix: string, placeholder: string) => {
 		if (!editor) {
 			return;
 		}
@@ -108,15 +94,8 @@ window.addEventListener("DOMContentLoaded", () => {
 		const end = editor.selectionEnd;
 		const selected = editor.value.slice(start, end) || placeholder;
 		editor.value =
-			editor.value.slice(0, start) +
-			prefix +
-			selected +
-			suffix +
-			editor.value.slice(end);
-		editor.setSelectionRange(
-			start + prefix.length,
-			start + prefix.length + selected.length,
-		);
+			editor.value.slice(0, start) + prefix + selected + suffix + editor.value.slice(end);
+		editor.setSelectionRange(start + prefix.length, start + prefix.length + selected.length);
 		editor.focus();
 		syncPreview();
 	};

@@ -3,9 +3,9 @@ import AdminLayout from "@astropress-diy/astropress/components/AdminLayout.astro
 import {
 	buildPostsIndexPageModel,
 	getPageT,
+	isSeededPostRecord,
 	resolveAdminLocale,
 } from "astropress";
-import { isSeededPostRecord } from "astropress";
 
 const adminLocale = resolveAdminLocale(Astro);
 const t = getPageT(adminLocale);
@@ -60,23 +60,15 @@ const tagFilter = Number(query.get("tag") ?? "");
 const searchFilter = query.get("q")?.trim().toLowerCase() || "";
 const now = Date.now();
 
-const authorNamesById = new Map(
-	authors.map((author) => [author.id, author.name]),
-);
-const categoryNamesById = new Map(
-	categories.map((term) => [term.id, term.name]),
-);
+const authorNamesById = new Map(authors.map((author) => [author.id, author.name]));
+const categoryNamesById = new Map(categories.map((term) => [term.id, term.name]));
 const tagNamesById = new Map(tags.map((term) => [term.id, term.name]));
-const selectedArchive =
-	archives.find((entry) => entry.slug === archiveFilter) ?? null;
+const selectedArchive = archives.find((entry) => entry.slug === archiveFilter) ?? null;
 const selectedArchiveRoutes = new Set(
 	(selectedArchive?.listingItems ?? []).map((item) => item.href),
 );
 
-function joinAssignmentLabels(
-	ids: number[] | undefined,
-	labelsById: Map<number, string>,
-) {
+function joinAssignmentLabels(ids: number[] | undefined, labelsById: Map<number, string>) {
 	if (!ids || ids.length === 0) {
 		return "—";
 	}
@@ -131,9 +123,7 @@ const filteredRows = rows.filter((page) => {
 	const tagIds = page.tagIds ?? [];
 	const workflowLabel = getWorkflowLabel(page);
 	const matchesArchive =
-		!archiveFilter ||
-		selectedArchiveRoutes.size === 0 ||
-		selectedArchiveRoutes.has(page.legacyUrl);
+		!archiveFilter || selectedArchiveRoutes.size === 0 || selectedArchiveRoutes.has(page.legacyUrl);
 	const matchesSearch =
 		searchFilter.length === 0 ||
 		[
@@ -154,25 +144,18 @@ const filteredRows = rows.filter((page) => {
 		(!statusFilter || effectiveStatus === statusFilter) &&
 		(!workflowFilter || workflowLabel === workflowFilter) &&
 		matchesArchive &&
-		(!Number.isInteger(authorFilter) ||
-			authorFilter <= 0 ||
-			authorIds.includes(authorFilter)) &&
+		(!Number.isInteger(authorFilter) || authorFilter <= 0 || authorIds.includes(authorFilter)) &&
 		(!Number.isInteger(categoryFilter) ||
 			categoryFilter <= 0 ||
 			categoryIds.includes(categoryFilter)) &&
-		(!Number.isInteger(tagFilter) ||
-			tagFilter <= 0 ||
-			tagIds.includes(tagFilter)) &&
+		(!Number.isInteger(tagFilter) || tagFilter <= 0 || tagIds.includes(tagFilter)) &&
 		matchesSearch
 	);
 });
 
 const totalPages = Math.max(Math.ceil(filteredRows.length / PAGE_SIZE), 1);
 const safePage = Math.min(currentPage, totalPages);
-const pagedRows = filteredRows.slice(
-	(safePage - 1) * PAGE_SIZE,
-	safePage * PAGE_SIZE,
-);
+const pagedRows = filteredRows.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
 
 function paginationHref(targetPage: number) {
 	const p = new URLSearchParams(query);

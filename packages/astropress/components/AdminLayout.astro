@@ -6,10 +6,7 @@ import { getPageT } from "../src/admin-page-labels";
 import { getRecentAdminItems } from "../src/admin-recent";
 import { getAdminLabel, resolveAstropressAdminUiConfig } from "../src/admin-ui";
 import { peekCmsConfig } from "../src/config";
-import {
-	INTEGRATIONS,
-	type IntegrationEntry,
-} from "../src/integration-manifest";
+import { INTEGRATIONS, type IntegrationEntry } from "../src/integration-manifest";
 import { getAdminBootstrapConfig } from "../src/runtime-env";
 import { applyAstropressSecurityHeaders } from "../src/security-headers";
 
@@ -81,8 +78,7 @@ applyAstropressSecurityHeaders(Astro.response.headers, {
 });
 const access = await getAccessContext(Astro);
 const isAdminRole = access?.subject.isAdmin ?? role === "admin";
-const displayRole: "admin" | "editor" =
-	role ?? (isAdminRole ? "admin" : "editor");
+const displayRole: "admin" | "editor" = role ?? (isAdminRole ? "admin" : "editor");
 const recentItems = await getRecentAdminItems(Astro.locals, {
 	id: access?.subject.id ?? "",
 	email: access?.subject.email ?? "",
@@ -124,18 +120,14 @@ const integrationLeaf = (entry: IntegrationEntry): NavItem =>
 		requiredAction: entry.requiredAction,
 	});
 
-function integrationLeavesForGroup(
-	group: "real-or-env-gated" | "coming-soon",
-): NavItem[] {
+function integrationLeavesForGroup(group: "real-or-env-gated" | "coming-soon"): NavItem[] {
 	if (group === "real-or-env-gated") {
 		const items = INTEGRATIONS.filter(
 			(entry) => entry.status === "real" || entry.status === "env-gated",
 		).map(integrationLeaf);
 		return [groupSep(adminUi.navigation.groupIntegrations), ...items];
 	}
-	const items = INTEGRATIONS.filter(
-		(entry) => entry.status === "coming-soon",
-	).map(integrationLeaf);
+	const items = INTEGRATIONS.filter((entry) => entry.status === "coming-soon").map(integrationLeaf);
 	if (items.length === 0) return [];
 	return [
 		// Pulled from admin-labels (10-locale coverage) rather than admin-ui's
@@ -318,12 +310,9 @@ void hasCms;
 const matchedNavItem = navItems.find(
 	(item) => item.href && item.href === currentPath && !item.isGroupLabel,
 );
-const isOnMatchedNavRoute =
-	!!matchedNavItem?.href && Astro.url.pathname === matchedNavItem.href;
-const localisedHeading =
-	isOnMatchedNavRoute && matchedNavItem ? matchedNavItem.label : heading;
-const localisedTitle =
-	isOnMatchedNavRoute && matchedNavItem ? matchedNavItem.label : title;
+const isOnMatchedNavRoute = !!matchedNavItem?.href && Astro.url.pathname === matchedNavItem.href;
+const localisedHeading = isOnMatchedNavRoute && matchedNavItem ? matchedNavItem.label : heading;
+const localisedTitle = isOnMatchedNavRoute && matchedNavItem ? matchedNavItem.label : title;
 const documentTitleResolved = isOnMatchedNavRoute
 	? buildAstropressAdminDocumentTitle(localisedTitle)
 	: documentTitle;

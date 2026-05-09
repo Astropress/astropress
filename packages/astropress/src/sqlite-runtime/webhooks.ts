@@ -1,14 +1,6 @@
 import { randomBytes } from "node:crypto";
-import {
-	createMlDsaKeyPair,
-	secretKeyToBase64,
-	signMlDsaMessage,
-} from "../crypto-primitives";
-import type {
-	WebhookEvent,
-	WebhookRecord,
-	WebhookStore,
-} from "../platform-contracts";
+import { createMlDsaKeyPair, secretKeyToBase64, signMlDsaMessage } from "../crypto-primitives";
+import type { WebhookEvent, WebhookRecord, WebhookStore } from "../platform-contracts";
 import { createLogger } from "../runtime-logger";
 import type { AstropressSqliteDatabaseLike } from "./utils";
 
@@ -59,13 +51,7 @@ export function createWebhookStore(
 
 			db.prepare(
 				"INSERT INTO webhooks (id, url, events, secret_hash, active, created_at) VALUES (?, ?, ?, ?, 1, ?)",
-			).run(
-				id,
-				url,
-				JSON.stringify(events),
-				secretKeyToBase64(keyPair.secretKey),
-				now,
-			);
+			).run(id, url, JSON.stringify(events), secretKeyToBase64(keyPair.secretKey), now);
 
 			const record: WebhookRecord = {
 				id,
@@ -81,9 +67,7 @@ export function createWebhookStore(
 
 		async delete(id) {
 			const now = new Date().toISOString();
-			db.prepare(
-				"UPDATE webhooks SET deleted_at = ?, active = 0 WHERE id = ?",
-			).run(now, id);
+			db.prepare("UPDATE webhooks SET deleted_at = ?, active = 0 WHERE id = ?").run(now, id);
 		},
 
 		async dispatch(event, payload) {
@@ -131,10 +115,7 @@ export function createWebhookStore(
 						return;
 					}
 
-					db.prepare("UPDATE webhooks SET last_fired_at = ? WHERE id = ?").run(
-						now,
-						row.id,
-					);
+					db.prepare("UPDATE webhooks SET last_fired_at = ? WHERE id = ?").run(now, row.id);
 				}),
 			);
 		},

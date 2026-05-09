@@ -56,9 +56,7 @@ describe("purgeCdnCacheForResolved — kind: 'cloudflare'", () => {
 		const { fetch, calls } = makeFetchMock();
 		await purgeCdnCacheForResolved("slug", RESOLVED, { fetch });
 		expect(calls).toHaveLength(1);
-		expect(calls[0].url).toBe(
-			"https://api.cloudflare.com/client/v4/zones/zone-12345/purge_cache",
-		);
+		expect(calls[0].url).toBe("https://api.cloudflare.com/client/v4/zones/zone-12345/purge_cache");
 		expect(calls[0].method).toBe("POST");
 	});
 
@@ -96,9 +94,7 @@ describe("purgeCdnCacheForResolved — kind: 'cloudflare'", () => {
 	it("does not throw on a non-200 response (failures are non-fatal)", async () => {
 		const { fetch } = makeFetchMock(500);
 		const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
-		await expect(
-			purgeCdnCacheForResolved("slug", RESOLVED, { fetch }),
-		).resolves.toBeUndefined();
+		await expect(purgeCdnCacheForResolved("slug", RESOLVED, { fetch })).resolves.toBeUndefined();
 		expect(warnSpy).toHaveBeenCalled();
 		warnSpy.mockRestore();
 	});
@@ -154,9 +150,7 @@ describe("purgeCdnCacheForResolved — kind: 'webhook'", () => {
 	it("does not throw on a non-200 response", async () => {
 		const { fetch } = makeFetchMock(500);
 		const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
-		await expect(
-			purgeCdnCacheForResolved("slug", RESOLVED, { fetch }),
-		).resolves.toBeUndefined();
+		await expect(purgeCdnCacheForResolved("slug", RESOLVED, { fetch })).resolves.toBeUndefined();
 		expect(warnSpy).toHaveBeenCalled();
 		warnSpy.mockRestore();
 	});

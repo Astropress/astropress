@@ -12,11 +12,7 @@ describe("createAstropressRateLimitRepository", () => {
 		});
 
 		expect(repository.checkRateLimit("login:test", 3, 60_000)).toBe(true);
-		expect(resetRateLimitWindow).toHaveBeenCalledWith(
-			"login:test",
-			1_000,
-			60_000,
-		);
+		expect(resetRateLimitWindow).toHaveBeenCalledWith("login:test", 1_000, 60_000);
 	});
 
 	it("increments while the window is still under the limit", () => {

@@ -71,18 +71,14 @@ describe("ap-admin-nav", () => {
 		const { toggle, sidebar } = buildNav();
 		toggle.click();
 		expect(sidebar.hasAttribute("data-open")).toBe(true);
-		document.dispatchEvent(
-			new KeyboardEvent("keydown", { key: "Escape", bubbles: true }),
-		);
+		document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
 		expect(sidebar.hasAttribute("data-open")).toBe(false);
 		expect(toggle.getAttribute("aria-expanded")).toBe("false");
 	});
 
 	it("Escape key does nothing when sidebar is already closed", () => {
 		const { sidebar } = buildNav();
-		document.dispatchEvent(
-			new KeyboardEvent("keydown", { key: "Escape", bubbles: true }),
-		);
+		document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
 		expect(sidebar.hasAttribute("data-open")).toBe(false);
 	});
 
@@ -91,9 +87,7 @@ describe("ap-admin-nav", () => {
 		toggle.click();
 		root.remove();
 		expect(() => {
-			document.dispatchEvent(
-				new KeyboardEvent("keydown", { key: "Escape", bubbles: true }),
-			);
+			document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
 		}).not.toThrow();
 	});
 });

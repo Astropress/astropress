@@ -22,17 +22,13 @@ const OUT = "tooling/audit-output/dynamic-segments.json";
 
 function lines(cmd: string): string[] {
 	try {
-		return execFileSync("bash", ["-c", cmd], { encoding: "utf8" })
-			.split("\n")
-			.filter(Boolean);
+		return execFileSync("bash", ["-c", cmd], { encoding: "utf8" }).split("\n").filter(Boolean);
 	} catch {
 		return [];
 	}
 }
 
-const dynPaths = lines(
-	`find ${ADMIN_DIR} -type f \\( -name '\\[*' -o -path '*/\\[*\\]/*' \\)`,
-);
+const dynPaths = lines(`find ${ADMIN_DIR} -type f \\( -name '\\[*' -o -path '*/\\[*\\]/*' \\)`);
 
 function paramName(p: string): string | null {
 	const m = p.match(/\[([^\]]+)\]/);
@@ -49,9 +45,7 @@ function hasMention(route: string): { covered: boolean; mentions: number } {
 	// Strip the dynamic part for the mention search; we just want "did any
 	// test file mention the route prefix".
 	const prefix = route.replace(/\/\[[^\]]+\]/g, "");
-	const matches = lines(
-		`grep -lF "${prefix}" ${testCorpus.join(" ")} 2>/dev/null`,
-	);
+	const matches = lines(`grep -lF "${prefix}" ${testCorpus.join(" ")} 2>/dev/null`);
 	return { covered: matches.length > 0, mentions: matches.length };
 }
 
@@ -73,9 +67,7 @@ const report = {
 
 if (!existsSync(dirname(OUT))) mkdirSync(dirname(OUT), { recursive: true });
 writeFileSync(OUT, `${JSON.stringify(report, null, 2)}\n`);
-console.log(
-	`dynamic-segments: total=${findings.length} uncovered=${uncovered.length}`,
-);
+console.log(`dynamic-segments: total=${findings.length} uncovered=${uncovered.length}`);
 
 // Gate: any dynamic-segment route without a test mention is a 404 risk.
 // Mention the route prefix in admin-routes-auth-matrix.test.ts (or any
@@ -84,7 +76,6 @@ if (uncovered.length > 0) {
 	console.error(
 		`dynamic-segments FAIL: ${uncovered.length} dynamic route(s) lack edge-input coverage.`,
 	);
-	for (const f of uncovered)
-		console.error(`  ${f.route} (${f.param}) — file: ${f.file}`);
+	for (const f of uncovered) console.error(`  ${f.route} (${f.param}) — file: ${f.file}`);
 	process.exit(1);
 }

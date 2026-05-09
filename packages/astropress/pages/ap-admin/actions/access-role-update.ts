@@ -1,7 +1,4 @@
-import {
-	updateRuntimeRole,
-	withAdminFormAction,
-} from "@astropress-diy/astropress";
+import { updateRuntimeRole, withAdminFormAction } from "@astropress-diy/astropress";
 import type { APIRoute } from "astro";
 
 export const POST: APIRoute = async (context) =>
@@ -14,9 +11,7 @@ export const POST: APIRoute = async (context) =>
 		async ({ formData, locals, redirect, fail }) => {
 			const id = String(formData.get("roleId") ?? "");
 			if (!id) return fail("Missing roleId.");
-			const name = formData.has("name")
-				? String(formData.get("name") ?? "")
-				: undefined;
+			const name = formData.has("name") ? String(formData.get("name") ?? "") : undefined;
 			const description = formData.has("description")
 				? String(formData.get("description") ?? "")
 				: undefined;

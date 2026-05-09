@@ -19,10 +19,7 @@ export function getJob(id: string): JobEntry | undefined {
 	return store.get(id);
 }
 
-export function listJobs(
-	limit = 50,
-	offset = 0,
-): { jobs: JobEntry[]; total: number } {
+export function listJobs(limit = 50, offset = 0): { jobs: JobEntry[]; total: number } {
 	const all = [...store.values()].sort(
 		(a, b) => new Date(b.queuedAt).getTime() - new Date(a.queuedAt).getTime(),
 	);

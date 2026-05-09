@@ -104,14 +104,8 @@ export function verifyArgon2idPassword(password: string, storedHash: string) {
 			return false;
 		}
 
-		const [
-			prefix,
-			iterationsText,
-			memoryText,
-			parallelismText,
-			saltBase64,
-			hashBase64,
-		] = storedHash.split("$");
+		const [prefix, iterationsText, memoryText, parallelismText, saltBase64, hashBase64] =
+			storedHash.split("$");
 		if (
 			prefix !== ARGON2_PREFIX ||
 			!iterationsText ||
@@ -167,9 +161,7 @@ export function createMlDsaKeyPair(keyId: string, seed = randomBytes(32)) {
 }
 
 export function signMlDsaMessage(message: string, secretKeyBase64: string) {
-	return bytesToBase64(
-		ml_dsa65.sign(encodeUtf8(message), base64ToBytes(secretKeyBase64)),
-	);
+	return bytesToBase64(ml_dsa65.sign(encodeUtf8(message), base64ToBytes(secretKeyBase64)));
 }
 
 export function verifyMlDsaMessage(

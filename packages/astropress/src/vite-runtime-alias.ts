@@ -48,9 +48,7 @@ export function isAstropressLocalRuntimeModuleRequest(
 	}
 
 	const normalized = normalizeRuntimeRequest(id);
-	const normalizedLocalRuntimeModulesPath = normalizeRuntimeRequest(
-		localRuntimeModulesPath,
-	);
+	const normalizedLocalRuntimeModulesPath = normalizeRuntimeRequest(localRuntimeModulesPath);
 	return (
 		normalized === normalizedLocalRuntimeModulesPath ||
 		normalized.endsWith("/local-runtime-modules") ||

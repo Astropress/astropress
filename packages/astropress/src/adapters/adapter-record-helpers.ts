@@ -19,9 +19,7 @@ export const FULL_STACK_CAPABILITIES = {
 	gitSync: true,
 } as const;
 
-export function mapContentRecordKind(record: {
-	kind?: string | null;
-}): ContentStoreRecord["kind"] {
+export function mapContentRecordKind(record: { kind?: string | null }): ContentStoreRecord["kind"] {
 	return record.kind === "post" ? "post" : "page";
 }
 
@@ -84,12 +82,8 @@ function buildRevisionBindParams(revision: RevisionRecord, actorEmail: string) {
 	const snapshot = revision.snapshot as Record<string, unknown>;
 	const title = String(snapshot.title ?? revision.recordId);
 	const status = normalizeContentStatus(snapshot.status as string);
-	const seoTitle = String(
-		snapshot.seoTitle ?? snapshot.title ?? revision.recordId,
-	);
-	const metaDescription = String(
-		snapshot.metaDescription ?? snapshot.title ?? revision.recordId,
-	);
+	const seoTitle = String(snapshot.seoTitle ?? snapshot.title ?? revision.recordId);
+	const metaDescription = String(snapshot.metaDescription ?? snapshot.title ?? revision.recordId);
 	return [
 		revision.id,
 		revision.recordId,

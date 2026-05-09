@@ -66,10 +66,7 @@ export function resolveCdnPurge(input: ResolveCdnPurgeInput): ResolvedCdnPurge {
 		};
 	}
 	const env = input.env ?? {};
-	if (
-		nonEmptyString(env.CLOUDFLARE_API_TOKEN) &&
-		nonEmptyString(env.CLOUDFLARE_ZONE_ID)
-	) {
+	if (nonEmptyString(env.CLOUDFLARE_API_TOKEN) && nonEmptyString(env.CLOUDFLARE_ZONE_ID)) {
 		return {
 			kind: "cloudflare",
 			apiToken: env.CLOUDFLARE_API_TOKEN,

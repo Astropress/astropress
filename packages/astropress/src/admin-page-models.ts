@@ -1,6 +1,6 @@
 import type { APIContext } from "astro";
-import { buildAdminDashboardModel } from "./admin-dashboard";
 import type { AdminDashboardModel } from "./admin-dashboard";
+import { buildAdminDashboardModel } from "./admin-dashboard";
 import {
 	type AdminPageResult,
 	adminOnlyPage,
@@ -33,26 +33,24 @@ import {
 import { isSeededPostRecord } from "./seeded-content-type";
 import { defaultSiteSettings } from "./site-settings";
 
+export type { AdminPageResult } from "./admin-page-model-helpers";
 // ─── Editor models — extracted to admin-page-models-editors.ts ───────────────
 export {
+	buildAcceptInvitePageModel,
+	buildArchiveEditorModel,
 	buildPostEditorPageModel,
 	buildPostRevisionsPageModel,
-	buildRoutePageEditorModel,
-	buildArchiveEditorModel,
 	buildResetPasswordPageModel,
-	buildAcceptInvitePageModel,
+	buildRoutePageEditorModel,
 } from "./admin-page-models-editors";
-
 // ─── Listing/index models — extracted to admin-page-models-listings.ts ────────
 export {
 	buildArchivesIndexPageModel,
 	buildPagesIndexPageModel,
 	buildPostsIndexPageModel,
-	buildTranslationsPageModel,
 	buildSeoPageModel,
+	buildTranslationsPageModel,
 } from "./admin-page-models-listings";
-
-export type { AdminPageResult } from "./admin-page-model-helpers";
 
 type AdminLocals = APIContext["locals"];
 
@@ -151,10 +149,7 @@ export async function buildTaxonomiesPageModel(
 	);
 }
 
-export async function buildUsersPageModel(
-	locals: AdminLocals,
-	user: AuthUser | null | undefined,
-) {
+export async function buildUsersPageModel(locals: AdminLocals, user: AuthUser | null | undefined) {
 	return adminOnlyPage(
 		user,
 		{
@@ -284,24 +279,17 @@ export async function buildSettingsPageModel(
 	locals: AdminLocals,
 	user: AuthUser | null | undefined,
 ) {
-	return adminOnlyPage(
-		user,
-		{ settings: defaultSiteSettings },
-		async (warnings) => ({
-			settings: await withFallback(
-				warnings,
-				"Settings could not be loaded. Showing defaults.",
-				() => getRuntimeSettings(locals),
-				defaultSiteSettings,
-			),
-		}),
-	);
+	return adminOnlyPage(user, { settings: defaultSiteSettings }, async (warnings) => ({
+		settings: await withFallback(
+			warnings,
+			"Settings could not be loaded. Showing defaults.",
+			() => getRuntimeSettings(locals),
+			defaultSiteSettings,
+		),
+	}));
 }
 
-export async function buildSystemPageModel(
-	locals: AdminLocals,
-	user: AuthUser | null | undefined,
-) {
+export async function buildSystemPageModel(locals: AdminLocals, user: AuthUser | null | undefined) {
 	return adminOnlyPage(
 		user,
 		{ systemRoutes: [], routeMap: new Map<string, unknown>() },
@@ -327,9 +315,7 @@ export async function buildRouteTablePageModel(
 	return adminOnlyPage(
 		user,
 		{
-			routePages: [] as Awaited<
-				ReturnType<typeof listRuntimeStructuredPageRoutes>
-			>,
+			routePages: [] as Awaited<ReturnType<typeof listRuntimeStructuredPageRoutes>>,
 			settings: defaultSiteSettings,
 		},
 		async (warnings) => ({

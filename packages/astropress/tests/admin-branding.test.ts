@@ -9,9 +9,7 @@ import {
 const CMS_CONFIG_KEY = Symbol.for("astropress.cms-config");
 
 afterEach(() => {
-	(globalThis as typeof globalThis & { [CMS_CONFIG_KEY]?: unknown })[
-		CMS_CONFIG_KEY
-	] = null;
+	(globalThis as typeof globalThis & { [CMS_CONFIG_KEY]?: unknown })[CMS_CONFIG_KEY] = null;
 });
 
 describe("admin-branding constants", () => {
@@ -26,9 +24,7 @@ describe("admin-branding constants", () => {
 
 describe("buildAstropressAdminDocumentTitle", () => {
 	it("appends the product name with ' | ' separator when title is non-empty", () => {
-		expect(buildAstropressAdminDocumentTitle("Dashboard")).toBe(
-			"Dashboard | Astropress Admin",
-		);
+		expect(buildAstropressAdminDocumentTitle("Dashboard")).toBe("Dashboard | Astropress Admin");
 	});
 
 	it("returns just the product name when title is empty string", () => {
@@ -37,14 +33,10 @@ describe("buildAstropressAdminDocumentTitle", () => {
 
 	it("returns just the product name when title is whitespace only", () => {
 		expect(buildAstropressAdminDocumentTitle("   ")).toBe("Astropress Admin");
-		expect(buildAstropressAdminDocumentTitle("\t\n  ")).toBe(
-			"Astropress Admin",
-		);
+		expect(buildAstropressAdminDocumentTitle("\t\n  ")).toBe("Astropress Admin");
 	});
 
 	it("trims surrounding whitespace from non-empty titles before joining", () => {
-		expect(buildAstropressAdminDocumentTitle("  Pages  ")).toBe(
-			"Pages | Astropress Admin",
-		);
+		expect(buildAstropressAdminDocumentTitle("  Pages  ")).toBe("Pages | Astropress Admin");
 	});
 });

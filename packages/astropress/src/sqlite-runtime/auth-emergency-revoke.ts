@@ -28,9 +28,7 @@ export function revokeSessionsInDb(
 	return result.changes;
 }
 
-export function revokeApiTokensInDb(
-	db: InstanceType<typeof DatabaseSync>,
-): number {
+export function revokeApiTokensInDb(db: InstanceType<typeof DatabaseSync>): number {
 	const result = db
 		.prepare(
 			`UPDATE api_tokens SET revoked_at = CURRENT_TIMESTAMP

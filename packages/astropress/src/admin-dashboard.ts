@@ -5,8 +5,8 @@ import type {
 	ContentRecord as PersistedContentRecord,
 	RedirectRule,
 } from "./persistence-types";
-import { isAuthUserAdmin } from "./platform-contracts";
 import type { AuthUser } from "./platform-contracts";
+import { isAuthUserAdmin } from "./platform-contracts";
 import type { SeededContentRecordLike } from "./seeded-content-type";
 
 type TranslationEntry = {
@@ -34,33 +34,18 @@ type SystemRoute = {
 type ArchiveRoute = { title?: string } | null;
 
 type DashboardDeps = {
-	getRuntimeAuditEvents: (
-		locals: APIContext["locals"],
-	) => Promise<AuditEvent[]>;
-	getRuntimeComments: (
-		locals: APIContext["locals"],
-	) => Promise<CommentRecord[]>;
-	getRuntimeRedirectRules: (
-		locals: APIContext["locals"],
-	) => Promise<RedirectRule[]>;
+	getRuntimeAuditEvents: (locals: APIContext["locals"]) => Promise<AuditEvent[]>;
+	getRuntimeComments: (locals: APIContext["locals"]) => Promise<CommentRecord[]>;
+	getRuntimeRedirectRules: (locals: APIContext["locals"]) => Promise<RedirectRule[]>;
 	getRuntimeTranslationState: (
 		route: string,
 		fallback: string,
 		locals: APIContext["locals"],
 	) => Promise<string>;
-	listRuntimeContentStates: (
-		locals: APIContext["locals"],
-	) => Promise<ContentRecord[]>;
-	listRuntimeStructuredPageRoutes: (
-		locals: APIContext["locals"],
-	) => Promise<StructuredRoute[]>;
-	listRuntimeSystemRoutes: (
-		locals: APIContext["locals"],
-	) => Promise<SystemRoute[]>;
-	getRuntimeArchiveRoute: (
-		path: string,
-		locals: APIContext["locals"],
-	) => Promise<ArchiveRoute>;
+	listRuntimeContentStates: (locals: APIContext["locals"]) => Promise<ContentRecord[]>;
+	listRuntimeStructuredPageRoutes: (locals: APIContext["locals"]) => Promise<StructuredRoute[]>;
+	listRuntimeSystemRoutes: (locals: APIContext["locals"]) => Promise<SystemRoute[]>;
+	getRuntimeArchiveRoute: (path: string, locals: APIContext["locals"]) => Promise<ArchiveRoute>;
 	isSeededPostRecord: (record: ContentRecord) => boolean;
 };
 
@@ -109,33 +94,22 @@ export async function buildAdminDashboardModel(
 	deps: DashboardDeps,
 ): Promise<AdminDashboardModel> {
 	const isAdmin = !!user && isAuthUserAdmin(user);
-	const [
-		auditEvents,
-		comments,
-		redirectRules,
-		routePages,
-		contentStates,
-		systemRoutes,
-	] = await Promise.all([
-		settledValue(deps.getRuntimeAuditEvents(locals), []),
-		settledValue(deps.getRuntimeComments(locals), []),
-		settledValue(deps.getRuntimeRedirectRules(locals), []),
-		settledValue(deps.listRuntimeStructuredPageRoutes(locals), []),
-		settledValue(deps.listRuntimeContentStates(locals), []),
-		settledValue(deps.listRuntimeSystemRoutes(locals), []),
-	]);
+	const [auditEvents, comments, redirectRules, routePages, contentStates, systemRoutes] =
+		await Promise.all([
+			settledValue(deps.getRuntimeAuditEvents(locals), []),
+			settledValue(deps.getRuntimeComments(locals), []),
+			settledValue(deps.getRuntimeRedirectRules(locals), []),
+			settledValue(deps.listRuntimeStructuredPageRoutes(locals), []),
+			settledValue(deps.listRuntimeContentStates(locals), []),
+			settledValue(deps.listRuntimeSystemRoutes(locals), []),
+		]);
 
 	const now = Date.now();
-	const posts = contentStates.filter((record) =>
-		deps.isSeededPostRecord(record),
-	);
-	const pages = contentStates.filter(
-		(record) => !deps.isSeededPostRecord(record),
-	);
+	const posts = contentStates.filter((record) => deps.isSeededPostRecord(record));
+	const pages = contentStates.filter((record) => !deps.isSeededPostRecord(record));
 	const reviewPosts = posts.filter(
 		(record) =>
-			(record.status ?? "published") === "review" ||
-			(record.status ?? "published") === "draft",
+			(record.status ?? "published") === "review" || (record.status ?? "published") === "draft",
 	);
 	const scheduledPosts = posts
 		.filter(
@@ -144,15 +118,10 @@ export async function buildAdminDashboardModel(
 				Number.isFinite(Date.parse(record.scheduledAt)) &&
 				Date.parse(record.scheduledAt) > now,
 		)
-		.sort(
-			(left, right) =>
-				Date.parse(left.scheduledAt ?? "") -
-				Date.parse(right.scheduledAt ?? ""),
-		)
+		.sort((left, right) => Date.parse(left.scheduledAt ?? "") - Date.parse(right.scheduledAt ?? ""))
 		.slice(0, 5);
 	const recentAuditEvents = auditEvents.slice(0, 6);
-	const latestDeployment =
-		auditEvents.find((event) => event.targetType === "deployment") ?? null;
+	const latestDeployment = auditEvents.find((event) => event.targetType === "deployment") ?? null;
 	const recentActivity = (
 		isAdmin
 			? [
@@ -177,10 +146,7 @@ export async function buildAdminDashboardModel(
 				}))
 	)
 		.filter((record) => Boolean(record.updatedAt))
-		.sort(
-			(left, right) =>
-				Date.parse(right.updatedAt ?? "") - Date.parse(left.updatedAt ?? ""),
-		)
+		.sort((left, right) => Date.parse(right.updatedAt ?? "") - Date.parse(left.updatedAt ?? ""))
 		.slice(0, 6);
 
 	const translationEntries = isAdmin
@@ -203,9 +169,7 @@ export async function buildAdminDashboardModel(
 		(entry) => entry.state !== "published",
 	).length;
 	const seoNeedsAttention = [
-		...contentStates.filter(
-			(record) => !record.seoTitle || !record.metaDescription,
-		),
+		...contentStates.filter((record) => !record.seoTitle || !record.metaDescription),
 		...routePages.filter((route) => !route.seoTitle || !route.metaDescription),
 	].length;
 

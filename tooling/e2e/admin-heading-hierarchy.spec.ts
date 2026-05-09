@@ -25,9 +25,7 @@ const ADMIN_ROUTES = [
 
 test.describe("Rubric 47: heading hierarchy + button labelling", () => {
 	for (const route of ADMIN_ROUTES) {
-		test(`Scenario: ${route} has exactly one h1 and no level skips`, async ({
-			page,
-		}) => {
+		test(`Scenario: ${route} has exactly one h1 and no level skips`, async ({ page }) => {
 			await page.goto(route, { waitUntil: "domcontentloaded" });
 
 			const headingLevels = await page.evaluate(() => {
@@ -45,10 +43,7 @@ test.describe("Rubric 47: heading hierarchy + button labelling", () => {
 			});
 
 			const h1Count = headingLevels.filter((l) => l === 1).length;
-			expect(
-				h1Count,
-				`${route} must have exactly one <h1>, found ${h1Count}`,
-			).toBe(1);
+			expect(h1Count, `${route} must have exactly one <h1>, found ${h1Count}`).toBe(1);
 
 			let previous = 0;
 			for (const level of headingLevels) {
@@ -61,23 +56,18 @@ test.describe("Rubric 47: heading hierarchy + button labelling", () => {
 			}
 		});
 
-		test(`Scenario: ${route} icon-only buttons have aria-label`, async ({
-			page,
-		}) => {
+		test(`Scenario: ${route} icon-only buttons have aria-label`, async ({ page }) => {
 			await page.goto(route, { waitUntil: "domcontentloaded" });
 
 			const offenders = await page.evaluate(() => {
 				const results: Array<{ outerHtml: string; text: string }> = [];
-				const buttons = Array.from(
-					document.querySelectorAll<HTMLElement>("button, [role=button]"),
-				);
+				const buttons = Array.from(document.querySelectorAll<HTMLElement>("button, [role=button]"));
 				for (const btn of buttons) {
 					const rect = btn.getBoundingClientRect();
 					if (rect.width === 0 && rect.height === 0) continue;
 					const text = (btn.textContent ?? "").trim();
 					const ariaLabel = btn.getAttribute("aria-label")?.trim() ?? "";
-					const ariaLabelledBy =
-						btn.getAttribute("aria-labelledby")?.trim() ?? "";
+					const ariaLabelledBy = btn.getAttribute("aria-labelledby")?.trim() ?? "";
 					const title = btn.getAttribute("title")?.trim() ?? "";
 					// Icon-only: text content is empty or purely a single symbol/codepoint
 					const isIconOnly = text.length === 0 || text.length === 1;
@@ -104,9 +94,7 @@ test.describe("Rubric 47: heading hierarchy + button labelling", () => {
 			).toEqual([]);
 		});
 
-		test(`Scenario: ${route} passes axe heading-order (not ignored)`, async ({
-			page,
-		}) => {
+		test(`Scenario: ${route} passes axe heading-order (not ignored)`, async ({ page }) => {
 			await page.goto(route, { waitUntil: "domcontentloaded" });
 			// Note: heading-order is NOT in the ignore list — Rubric 47 A+ requires it to be enforced.
 			await expectNoAxeViolations(page);

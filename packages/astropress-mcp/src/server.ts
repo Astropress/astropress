@@ -19,9 +19,7 @@ import {
 	type Tool,
 } from "@modelcontextprotocol/sdk/types.js";
 
-const apiUrl = (
-	process.env.ASTROPRESS_API_URL ?? "http://localhost:4321"
-).replace(/\/$/, "");
+const apiUrl = (process.env.ASTROPRESS_API_URL ?? "http://localhost:4321").replace(/\/$/, "");
 const apiToken = process.env.ASTROPRESS_API_TOKEN ?? "";
 
 function apiHeaders(): Record<string, string> {
@@ -32,10 +30,7 @@ function apiHeaders(): Record<string, string> {
 	return headers;
 }
 
-async function apiFetch(
-	path: string,
-	options: RequestInit = {},
-): Promise<unknown> {
+async function apiFetch(path: string, options: RequestInit = {}): Promise<unknown> {
 	const url = path.startsWith("http") ? path : `${apiUrl}${path}`;
 	const response = await fetch(url, {
 		...options,
@@ -180,9 +175,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 				break;
 			}
 			case "get_content": {
-				result = await apiFetch(
-					`/ap-api/v1/content/${encodeURIComponent(String(input.id))}`,
-				);
+				result = await apiFetch(`/ap-api/v1/content/${encodeURIComponent(String(input.id))}`);
 				break;
 			}
 			case "create_content": {
@@ -199,13 +192,10 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 				break;
 			}
 			case "update_content": {
-				result = await apiFetch(
-					`/ap-api/v1/content/${encodeURIComponent(String(input.id))}`,
-					{
-						method: "PUT",
-						body: JSON.stringify(input),
-					},
-				);
+				result = await apiFetch(`/ap-api/v1/content/${encodeURIComponent(String(input.id))}`, {
+					method: "PUT",
+					body: JSON.stringify(input),
+				});
 				break;
 			}
 			case "list_media": {

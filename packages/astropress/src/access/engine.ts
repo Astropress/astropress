@@ -13,14 +13,7 @@
  */
 
 import { evaluate } from "./evaluator";
-import type {
-	Env,
-	EvaluationResult,
-	Policy,
-	PolicyEngine,
-	Resource,
-	Subject,
-} from "./types";
+import type { Env, EvaluationResult, Policy, PolicyEngine, Resource, Subject } from "./types";
 
 export interface JsonPolicyEngineOptions {
 	/**
@@ -32,16 +25,9 @@ export interface JsonPolicyEngineOptions {
 	resolvePoliciesForSubject: (subject: Subject) => readonly Policy[];
 }
 
-export function createPolicyEngine(
-	options: JsonPolicyEngineOptions,
-): PolicyEngine {
+export function createPolicyEngine(options: JsonPolicyEngineOptions): PolicyEngine {
 	return {
-		can(
-			subject: Subject,
-			action: string,
-			resource?: Resource,
-			env?: Env,
-		): EvaluationResult {
+		can(subject: Subject, action: string, resource?: Resource, env?: Env): EvaluationResult {
 			const policies = options.resolvePoliciesForSubject(subject);
 			return evaluate(subject, action, policies, resource, env);
 		},

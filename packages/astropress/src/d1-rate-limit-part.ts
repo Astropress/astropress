@@ -2,16 +2,12 @@ import type { D1AdminReadStore } from "./d1-admin-store";
 import type { D1DatabaseLike } from "./d1-database";
 
 /** Rate-limit logic shared between read (check/peek) and mutation (recordFailedAttempt) stores. */
-export function createD1RateLimitPart(
-	db: D1DatabaseLike,
-): D1AdminReadStore["rateLimits"] {
+export function createD1RateLimitPart(db: D1DatabaseLike): D1AdminReadStore["rateLimits"] {
 	return {
 		async checkRateLimit(key: string, max: number, windowMs: number) {
 			const now = Date.now();
 			const row = await db
-				.prepare(
-					"SELECT count, window_start_ms, window_ms FROM rate_limits WHERE key = ? LIMIT 1",
-				)
+				.prepare("SELECT count, window_start_ms, window_ms FROM rate_limits WHERE key = ? LIMIT 1")
 				.bind(key)
 				.first<{ count: number; window_start_ms: number; window_ms: number }>();
 
@@ -33,10 +29,7 @@ export function createD1RateLimitPart(
 			}
 
 			if (row.count < max) {
-				await db
-					.prepare("UPDATE rate_limits SET count = count + 1 WHERE key = ?")
-					.bind(key)
-					.run();
+				await db.prepare("UPDATE rate_limits SET count = count + 1 WHERE key = ?").bind(key).run();
 				return true;
 			}
 
@@ -45,20 +38,16 @@ export function createD1RateLimitPart(
 		async peekRateLimit(key: string, max: number, windowMs: number) {
 			const now = Date.now();
 			const row = await db
-				.prepare(
-					"SELECT count, window_start_ms FROM rate_limits WHERE key = ? LIMIT 1",
-				)
+				.prepare("SELECT count, window_start_ms FROM rate_limits WHERE key = ? LIMIT 1")
 				.bind(key)
 				.first<{ count: number; window_start_ms: number }>();
 			if (!row || now - row.window_start_ms > windowMs) return true;
 			return row.count < max;
 		},
-		async recordFailedAttempt(key: string, max: number, windowMs: number) {
+		async recordFailedAttempt(key: string, _max: number, windowMs: number) {
 			const now = Date.now();
 			const row = await db
-				.prepare(
-					"SELECT count, window_start_ms FROM rate_limits WHERE key = ? LIMIT 1",
-				)
+				.prepare("SELECT count, window_start_ms FROM rate_limits WHERE key = ? LIMIT 1")
 				.bind(key)
 				.first<{ count: number; window_start_ms: number }>();
 			if (!row || now - row.window_start_ms > windowMs) {
@@ -77,10 +66,7 @@ export function createD1RateLimitPart(
 					.run();
 				return;
 			}
-			await db
-				.prepare("UPDATE rate_limits SET count = count + 1 WHERE key = ?")
-				.bind(key)
-				.run();
+			await db.prepare("UPDATE rate_limits SET count = count + 1 WHERE key = ?").bind(key).run();
 		},
 	};
 }

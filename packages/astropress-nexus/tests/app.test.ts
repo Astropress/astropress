@@ -30,9 +30,7 @@ const ORG_TOKEN = "org-secret-token";
 
 // ─── Fetch mock helpers ───────────────────────────────────────────────────────
 
-function makeFetchMock(
-	handler: (url: string) => { ok: boolean; status: number; body: unknown },
-) {
+function makeFetchMock(handler: (url: string) => { ok: boolean; status: number; body: unknown }) {
 	return vi.fn(async (url: RequestInfo | URL) => {
 		const urlStr = url.toString();
 		const result = handler(urlStr);
@@ -123,10 +121,7 @@ describe("gateway auth", () => {
 					: { ok: true, status: 200, body: {} },
 			),
 		);
-		const { status, text } = await callApp(
-			app,
-			`/dashboard?token=${ORG_TOKEN}`,
-		);
+		const { status, text } = await callApp(app, `/dashboard?token=${ORG_TOKEN}`);
 		expect(status).toBe(200);
 		expect(text).toContain("Astropress Nexus");
 	});
@@ -148,7 +143,7 @@ describe("GET /", () => {
 		const b = body as Record<string, unknown>;
 		expect(b.siteCount).toBe(2);
 		expect(Array.isArray(b.sites)).toBe(true);
-		const sites = b.sites as Array<Record<string, unknown>>;
+		const sites = b.sites as Record<string, unknown>[];
 		expect(sites).toHaveLength(2);
 		expect(sites[0]).toHaveProperty("id");
 		expect(sites[0]).toHaveProperty("status");
@@ -184,7 +179,7 @@ describe("GET /sites", () => {
 		const { status, body } = await callApp(app, "/sites");
 		expect(status).toBe(200);
 		expect(Array.isArray(body)).toBe(true);
-		const sites = body as Array<Record<string, unknown>>;
+		const sites = body as Record<string, unknown>[];
 		expect(sites).toHaveLength(2);
 	});
 });
@@ -272,9 +267,7 @@ describe("GET /sites/:id/content", () => {
 
 	it("proxies content request to the member site", async () => {
 		const contentList = {
-			items: [
-				{ id: "post-1", slug: "post-1", kind: "post", status: "published" },
-			],
+			items: [{ id: "post-1", slug: "post-1", kind: "post", status: "published" }],
 		};
 		vi.spyOn(globalThis, "fetch").mockImplementation(
 			makeFetchMock(() => ({ ok: true, status: 200, body: contentList })),
@@ -351,7 +344,7 @@ describe("GET /content (fan-out)", () => {
 		const { status, body } = await callApp(app, "/content");
 		expect(status).toBe(200);
 		const b = body as Record<string, unknown>;
-		const items = b.items as Array<Record<string, unknown>>;
+		const items = b.items as Record<string, unknown>[];
 		expect(items.length).toBeGreaterThanOrEqual(2);
 		const sitaAItem = items.find((i) => i.siteId === "site-a");
 		const siteBItem = items.find((i) => i.siteId === "site-b");
@@ -368,16 +361,14 @@ describe("GET /content (fan-out)", () => {
 				return {
 					ok: true,
 					status: 200,
-					json: async () => [
-						{ id: "a1", slug: "post-a", kind: "post", status: "published" },
-					],
+					json: async () => [{ id: "a1", slug: "post-a", kind: "post", status: "published" }],
 				} as Response;
 			}),
 		);
 		const { status, body } = await callApp(app, "/content");
 		expect(status).toBe(200);
 		const b = body as Record<string, unknown>;
-		const degraded = b.degraded as Array<Record<string, unknown>>;
+		const degraded = b.degraded as Record<string, unknown>[];
 		expect(degraded.length).toBeGreaterThanOrEqual(1);
 		expect(degraded[0].siteId).toBe("site-b");
 	});

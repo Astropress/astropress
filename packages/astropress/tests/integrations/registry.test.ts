@@ -12,9 +12,9 @@ import {
 	registerSearch,
 } from "../../src/integrations/domains";
 import {
-	IntegrationRegistryError,
 	_resetRegistryForTests,
 	getProvider,
+	IntegrationRegistryError,
 	listProviders,
 	registerProvider,
 } from "../../src/integrations/registry";
@@ -45,17 +45,13 @@ describe("integration registry", () => {
 	it("isolates providers per domain (same id, different domain)", () => {
 		registerProvider("newsletter", baseDef);
 		registerProvider("analytics", baseDef);
-		expect(getProvider("newsletter", "test-provider")?.domain).toBe(
-			"newsletter",
-		);
+		expect(getProvider("newsletter", "test-provider")?.domain).toBe("newsletter");
 		expect(getProvider("analytics", "test-provider")?.domain).toBe("analytics");
 	});
 
 	it("rejects duplicate registration in the same domain", () => {
 		registerProvider("newsletter", baseDef);
-		expect(() => registerProvider("newsletter", baseDef)).toThrowError(
-			IntegrationRegistryError,
-		);
+		expect(() => registerProvider("newsletter", baseDef)).toThrowError(IntegrationRegistryError);
 	});
 
 	it("rejects an unknown domain", () => {
@@ -122,6 +118,7 @@ describe("integration registry", () => {
 		} catch (err) {
 			expect(err).toBeInstanceOf(IntegrationRegistryError);
 			expect((err as IntegrationRegistryError).code).toBe("DUPLICATE_PROVIDER");
+			expect((err as Error).name).toBe("IntegrationRegistryError");
 		}
 	});
 

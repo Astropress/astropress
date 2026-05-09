@@ -1,10 +1,6 @@
 import { describe, expect, it } from "vitest";
 
 import {
-	type PersistedAdminUserRow,
-	type PersistedAuditEventRow,
-	SQL_LIST_ADMIN_USERS_WITH_INVITE,
-	SQL_LIST_AUDIT_EVENTS,
 	auditSchemaFields,
 	buildAuditEntry,
 	deriveAdminUserStatus,
@@ -14,8 +10,12 @@ import {
 	normalizeContentStatus,
 	normalizeRedirectTarget,
 	normalizeSlug,
+	type PersistedAdminUserRow,
+	type PersistedAuditEventRow,
 	parseIdList,
 	parseMetadataJson,
+	SQL_LIST_ADMIN_USERS_WITH_INVITE,
+	SQL_LIST_AUDIT_EVENTS,
 	serializeIdList,
 	toContentStoreRecord,
 	toRedirectRecord,
@@ -119,9 +119,7 @@ describe("validateContentRecord", () => {
 		});
 	});
 	it("accepts records with a valid status", () => {
-		expect(
-			validateContentRecord({ slug: "a", title: "A", status: "draft" }).ok,
-		).toBe(true);
+		expect(validateContentRecord({ slug: "a", title: "A", status: "draft" }).ok).toBe(true);
 	});
 	it("rejects non-string slug with the slug error message", () => {
 		const r = validateContentRecord({ slug: 123 as unknown, title: "A" });
@@ -159,20 +157,14 @@ describe("validateContentRecord", () => {
 		expect(r.error).toBe("Invalid content status: bogus");
 	});
 	it("permits null status (treated as absent)", () => {
-		expect(
-			validateContentRecord({ slug: "a", title: "A", status: null }).ok,
-		).toBe(true);
+		expect(validateContentRecord({ slug: "a", title: "A", status: null }).ok).toBe(true);
 	});
 	it("permits undefined status (treated as absent)", () => {
-		expect(
-			validateContentRecord({ slug: "a", title: "A", status: undefined }).ok,
-		).toBe(true);
+		expect(validateContentRecord({ slug: "a", title: "A", status: undefined }).ok).toBe(true);
 	});
 	it("permits non-string status (the type guard skips validation)", () => {
 		// status check requires `typeof === "string"`. Numbers fall through OK.
-		expect(
-			validateContentRecord({ slug: "a", title: "A", status: 1 as unknown }).ok,
-		).toBe(true);
+		expect(validateContentRecord({ slug: "a", title: "A", status: 1 as unknown }).ok).toBe(true);
 	});
 });
 
@@ -338,14 +330,10 @@ describe("mapPersistedOverrideRow", () => {
 		expect(r?.scheduledAt).toBe("2026-01-01");
 	});
 	it("preserves a non-null body", () => {
-		expect(mapPersistedOverrideRow({ ...baseRow, body: "hello" })?.body).toBe(
-			"hello",
-		);
+		expect(mapPersistedOverrideRow({ ...baseRow, body: "hello" })?.body).toBe("hello");
 	});
 	it("preserves a non-null excerpt", () => {
-		expect(
-			mapPersistedOverrideRow({ ...baseRow, excerpt: "ex" })?.excerpt,
-		).toBe("ex");
+		expect(mapPersistedOverrideRow({ ...baseRow, excerpt: "ex" })?.excerpt).toBe("ex");
 	});
 	it("preserves non-null og_* fields", () => {
 		const r = mapPersistedOverrideRow({
@@ -407,33 +395,21 @@ describe("toContentStoreRecord", () => {
 		expect(r.title).toBe("A");
 	});
 	it("treats kind other than 'post' as 'page' (including null/undefined)", () => {
-		expect(
-			toContentStoreRecord({ ...base, kind: null, status: "draft" }).kind,
-		).toBe("page");
-		expect(
-			toContentStoreRecord({ ...base, kind: "anything", status: "draft" }).kind,
-		).toBe("page");
+		expect(toContentStoreRecord({ ...base, kind: null, status: "draft" }).kind).toBe("page");
+		expect(toContentStoreRecord({ ...base, kind: "anything", status: "draft" }).kind).toBe("page");
 	});
 	it("collapses 'review' to 'draft' on the way out", () => {
-		expect(toContentStoreRecord({ ...base, status: "review" }).status).toBe(
-			"draft",
-		);
+		expect(toContentStoreRecord({ ...base, status: "review" }).status).toBe("draft");
 	});
 	it("preserves 'draft' / 'archived' verbatim", () => {
-		expect(toContentStoreRecord({ ...base, status: "draft" }).status).toBe(
-			"draft",
-		);
-		expect(toContentStoreRecord({ ...base, status: "archived" }).status).toBe(
-			"archived",
-		);
+		expect(toContentStoreRecord({ ...base, status: "draft" }).status).toBe("draft");
+		expect(toContentStoreRecord({ ...base, status: "archived" }).status).toBe("archived");
 	});
 	it("nulls a missing body", () => {
 		expect(toContentStoreRecord({ ...base, status: "draft" }).body).toBeNull();
 	});
 	it("preserves a provided body", () => {
-		expect(
-			toContentStoreRecord({ ...base, status: "draft", body: "hi" }).body,
-		).toBe("hi");
+		expect(toContentStoreRecord({ ...base, status: "draft", body: "hi" }).body).toBe("hi");
 	});
 	it("populates the metadata object with all six fields, defaulting summary to ''", () => {
 		const r = toContentStoreRecord({ ...base, status: "draft" });
@@ -489,9 +465,7 @@ describe("toRedirectRecord", () => {
 describe("SQL_LIST_AUDIT_EVENTS / SQL_LIST_ADMIN_USERS_WITH_INVITE", () => {
 	it("audit-events query orders by created_at desc, id desc", () => {
 		expect(SQL_LIST_AUDIT_EVENTS).toContain("FROM audit_events");
-		expect(SQL_LIST_AUDIT_EVENTS).toMatch(
-			/ORDER BY datetime\(created_at\) DESC, id DESC/,
-		);
+		expect(SQL_LIST_AUDIT_EVENTS).toMatch(/ORDER BY datetime\(created_at\) DESC, id DESC/);
 	});
 
 	it("admin-users query joins user_invites for has_pending_invite and orders admins first", () => {
@@ -545,16 +519,13 @@ describe("mapPersistedAdminUserRow", () => {
 	});
 
 	it("propagates 'invited' status when has_pending_invite is 1", () => {
-		expect(
-			mapPersistedAdminUserRow({ ...row, has_pending_invite: 1 }).status,
-		).toBe("invited");
+		expect(mapPersistedAdminUserRow({ ...row, has_pending_invite: 1 }).status).toBe("invited");
 	});
 
 	it("returns 'suspended' when active is 0 regardless of invite", () => {
-		expect(
-			mapPersistedAdminUserRow({ ...row, active: 0, has_pending_invite: 1 })
-				.status,
-		).toBe("suspended");
+		expect(mapPersistedAdminUserRow({ ...row, active: 0, has_pending_invite: 1 }).status).toBe(
+			"suspended",
+		);
 	});
 });
 
@@ -570,12 +541,10 @@ describe("mapPersistedAuditEvent", () => {
 	};
 
 	it("namespaces id with the supplied prefix to avoid cross-store collisions", () => {
-		expect(
-			mapPersistedAuditEvent({ row: baseRow, idPrefix: "d1-audit-" }).id,
-		).toBe("d1-audit-42");
-		expect(
-			mapPersistedAuditEvent({ row: baseRow, idPrefix: "sqlite-audit-" }).id,
-		).toBe("sqlite-audit-42");
+		expect(mapPersistedAuditEvent({ row: baseRow, idPrefix: "d1-audit-" }).id).toBe("d1-audit-42");
+		expect(mapPersistedAuditEvent({ row: baseRow, idPrefix: "sqlite-audit-" }).id).toBe(
+			"sqlite-audit-42",
+		);
 	});
 
 	it("maps known target types verbatim", () => {
@@ -608,8 +577,6 @@ describe("mapPersistedAuditEvent", () => {
 	});
 
 	it("hardcodes actorRole as 'admin' on every mapped audit event", () => {
-		expect(
-			mapPersistedAuditEvent({ row: baseRow, idPrefix: "x-" }).actorRole,
-		).toBe("admin");
+		expect(mapPersistedAuditEvent({ row: baseRow, idPrefix: "x-" }).actorRole).toBe("admin");
 	});
 });

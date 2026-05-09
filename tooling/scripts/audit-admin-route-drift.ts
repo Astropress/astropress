@@ -19,18 +19,7 @@ const OUT = "tooling/audit-output/route-drift.json";
 function listFiles(): string[] {
 	const out = execFileSync(
 		"find",
-		[
-			ADMIN_DIR,
-			"-type",
-			"f",
-			"(",
-			"-name",
-			"*.astro",
-			"-o",
-			"-name",
-			"*.ts",
-			")",
-		],
+		[ADMIN_DIR, "-type", "f", "(", "-name", "*.astro", "-o", "-name", "*.ts", ")"],
 		{ encoding: "utf8" },
 	);
 	return out
@@ -98,9 +87,7 @@ function main(): void {
 				2,
 			)}\n`,
 		);
-		console.log(
-			`route-drift baseline rewritten: ${unregisteredEntrypoints.length} grandfathered.`,
-		);
+		console.log(`route-drift baseline rewritten: ${unregisteredEntrypoints.length} grandfathered.`);
 		return;
 	}
 	let baseline: {
@@ -115,16 +102,11 @@ function main(): void {
 	}
 	const baselineUnreg = new Set(baseline.unregisteredEntrypoints);
 	const baselineUnbacked = new Set(baseline.unbackedRegistryEntries);
-	const newUnregistered = unregisteredEntrypoints.filter(
-		(p) => !baselineUnreg.has(p),
-	);
-	const newUnbacked = unbackedRegistryEntries.filter(
-		(p) => !baselineUnbacked.has(p),
-	);
+	const newUnregistered = unregisteredEntrypoints.filter((p) => !baselineUnreg.has(p));
+	const newUnbacked = unbackedRegistryEntries.filter((p) => !baselineUnbacked.has(p));
 	if (newUnregistered.length > 0 || newUnbacked.length > 0) {
 		console.error("route-drift FAIL:");
-		for (const p of newUnregistered)
-			console.error(`  unregistered (new): ${p}`);
+		for (const p of newUnregistered) console.error(`  unregistered (new): ${p}`);
 		for (const p of newUnbacked) console.error(`  unbacked (new): ${p}`);
 		console.error(
 			"\nEither register the file in packages/astropress/src/admin-routes-definitions.ts, delete it, OR (intentional) run:\n  bun run tooling/scripts/audit-admin-route-drift.ts --rewrite-baseline",

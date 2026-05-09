@@ -9,10 +9,7 @@ import {
 } from "../lib/audit-utils.js";
 
 const MANIFEST_PATH = fromRoot("tooling/critical-journeys.json");
-const TEST_DIRS = [
-	fromRoot("tooling/e2e"),
-	fromRoot("packages/astropress/tests"),
-];
+const TEST_DIRS = [fromRoot("tooling/e2e"), fromRoot("packages/astropress/tests")];
 
 type JourneyManifest = {
 	journeys: Array<{

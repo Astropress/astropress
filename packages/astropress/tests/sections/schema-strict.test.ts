@@ -207,9 +207,7 @@ describe("schema strict shape — image-text + faq + gallery + rich-text", () =>
 	});
 
 	it("gallery returns object with kind=gallery + mediaIds + columns", () => {
-		const r = parseSections([
-			{ id: "g", kind: "gallery", mediaIds: ["a"], columns: 4 },
-		]);
+		const r = parseSections([{ id: "g", kind: "gallery", mediaIds: ["a"], columns: 4 }]);
 		if (r.ok) {
 			const s = r.sections[0];
 			expect(s.kind).toBe("gallery");
@@ -222,9 +220,7 @@ describe("schema strict shape — image-text + faq + gallery + rich-text", () =>
 	});
 
 	it("gallery empty heading drops heading", () => {
-		const r = parseSections([
-			{ id: "g", kind: "gallery", mediaIds: [], columns: 3, heading: "" },
-		]);
+		const r = parseSections([{ id: "g", kind: "gallery", mediaIds: [], columns: 3, heading: "" }]);
 		if (r.ok && r.sections[0].kind === "gallery") {
 			expect(r.sections[0].heading).toBeUndefined();
 		}

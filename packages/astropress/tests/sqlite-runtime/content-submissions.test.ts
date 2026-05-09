@@ -6,9 +6,7 @@ import { makeDb } from "../helpers/make-db.js";
 describe("createSqliteSubmissionStore", () => {
 	it("submitContact persists a row that getContactSubmissions reads back", () => {
 		const db = makeDb();
-		const { sqliteSubmissionRepository } = createSqliteSubmissionStore(
-			() => db,
-		);
+		const { sqliteSubmissionRepository } = createSqliteSubmissionStore(() => db);
 
 		const submitted = sqliteSubmissionRepository.submitContact({
 			name: "Alice",
@@ -27,9 +25,7 @@ describe("createSqliteSubmissionStore", () => {
 
 	it("getContactSubmissions returns rows ordered by submitted_at DESC then id DESC", () => {
 		const db = makeDb();
-		const { sqliteSubmissionRepository } = createSqliteSubmissionStore(
-			() => db,
-		);
+		const { sqliteSubmissionRepository } = createSqliteSubmissionStore(() => db);
 
 		sqliteSubmissionRepository.submitContact({
 			name: "First",
@@ -50,9 +46,7 @@ describe("createSqliteSubmissionStore", () => {
 
 	it("schedulePublish + listScheduled returns the future scheduled row", () => {
 		const db = makeDb();
-		const { sqliteSchedulingRepository } = createSqliteSubmissionStore(
-			() => db,
-		);
+		const { sqliteSchedulingRepository } = createSqliteSubmissionStore(() => db);
 		// Seed an existing entry so the schedulePublish UPDATE can find a row
 		// to set scheduled_at on.
 		db.prepare(
@@ -70,9 +64,7 @@ describe("createSqliteSubmissionStore", () => {
 
 	it("cancelScheduledPublish clears scheduled_at and listScheduled drops the row", () => {
 		const db = makeDb();
-		const { sqliteSchedulingRepository } = createSqliteSubmissionStore(
-			() => db,
-		);
+		const { sqliteSchedulingRepository } = createSqliteSubmissionStore(() => db);
 		db.prepare(
 			"INSERT INTO content_entries (slug, legacy_url, title, kind, body) VALUES (?, ?, ?, 'page', '')",
 		).run("a", "/a", "A");
@@ -87,9 +79,7 @@ describe("createSqliteSubmissionStore", () => {
 
 	it("runScheduledPublishes promotes due entries to published and returns the row count", () => {
 		const db = makeDb();
-		const { sqliteSchedulingRepository } = createSqliteSubmissionStore(
-			() => db,
-		);
+		const { sqliteSchedulingRepository } = createSqliteSubmissionStore(() => db);
 		db.prepare(
 			"INSERT INTO content_entries (slug, legacy_url, title, kind, body) VALUES (?, ?, ?, 'page', '')",
 		).run("due", "/due", "Due");
@@ -101,9 +91,7 @@ describe("createSqliteSubmissionStore", () => {
 		expect(changed).toBe(1);
 		// scheduled_at cleared after promotion.
 		const row = db
-			.prepare(
-				"SELECT status, scheduled_at FROM content_overrides WHERE slug = ?",
-			)
+			.prepare("SELECT status, scheduled_at FROM content_overrides WHERE slug = ?")
 			.get("due") as { status: string; scheduled_at: string | null };
 		expect(row.status).toBe("published");
 		expect(row.scheduled_at).toBeNull();
@@ -111,9 +99,7 @@ describe("createSqliteSubmissionStore", () => {
 
 	it("listScheduled excludes entries whose scheduled_at is in the past", () => {
 		const db = makeDb();
-		const { sqliteSchedulingRepository } = createSqliteSubmissionStore(
-			() => db,
-		);
+		const { sqliteSchedulingRepository } = createSqliteSubmissionStore(() => db);
 		db.prepare(
 			"INSERT INTO content_entries (slug, legacy_url, title, kind, body) VALUES (?, ?, ?, 'page', '')",
 		).run("past", "/past", "P");

@@ -3,8 +3,8 @@ import {
 	createAstropressSecureRedirect,
 	createRuntimePasswordResetToken,
 	isTrustedStrictRequestOrigin,
+	sendPasswordResetEmail,
 } from "@astropress-diy/astropress";
-import { sendPasswordResetEmail } from "@astropress-diy/astropress";
 import type { APIRoute } from "astro";
 
 export const POST: APIRoute = async ({ request, locals }) => {
@@ -33,11 +33,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
 			);
 		}
 
-		const result = await consumeRuntimePasswordResetToken(
-			token,
-			password,
-			locals,
-		);
+		const result = await consumeRuntimePasswordResetToken(token, password, locals);
 		if (!result.ok) {
 			return createAstropressSecureRedirect(
 				`/ap-admin/reset-password?error=1&message=${encodeURIComponent(result.error)}&token=${encodeURIComponent(token)}`,
@@ -57,11 +53,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
 
 	if (result.ok && result.resetUrl) {
 		const absoluteResetUrl = new URL(result.resetUrl, request.url).toString();
-		const emailResult = await sendPasswordResetEmail(
-			email,
-			absoluteResetUrl,
-			locals,
-		);
+		const emailResult = await sendPasswordResetEmail(email, absoluteResetUrl, locals);
 		if (!emailResult.ok) {
 			// Email failed in production — tell the user clearly rather than falsely claiming success
 			redirectUrl.searchParams.set("error", "1");
@@ -82,11 +74,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
 		redirectUrl.searchParams.set("mail_sent", "1");
 	}
 
-	return createAstropressSecureRedirect(
-		redirectUrl.pathname + redirectUrl.search,
-		302,
-		{
-			forceHsts: request.url.startsWith("https://"),
-		},
-	);
+	return createAstropressSecureRedirect(redirectUrl.pathname + redirectUrl.search, 302, {
+		forceHsts: request.url.startsWith("https://"),
+	});
 };

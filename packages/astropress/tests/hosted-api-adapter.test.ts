@@ -21,9 +21,7 @@ describe("hosted api adapter", () => {
 					method: init?.method ?? "GET",
 					body: typeof init?.body === "string" ? init.body : null,
 					auth:
-						init?.headers &&
-						typeof init.headers === "object" &&
-						"authorization" in init.headers
+						init?.headers && typeof init.headers === "object" && "authorization" in init.headers
 							? String((init.headers as Record<string, string>).authorization)
 							: null,
 				});
@@ -59,9 +57,7 @@ describe("hosted api adapter", () => {
 				}
 				if (url.includes("/revisions?recordId=1")) {
 					return new Response(
-						JSON.stringify([
-							{ id: "r1", recordId: "1", createdAt: "now", snapshot: {} },
-						]),
+						JSON.stringify([{ id: "r1", recordId: "1", createdAt: "now", snapshot: {} }]),
 						{
 							status: 200,
 						},
@@ -142,16 +138,10 @@ describe("hosted api adapter", () => {
 			).filename,
 		).toBe("logo.png");
 		expect((await adapter.revisions.list("1")).length).toBe(1);
-		expect(
-			(await adapter.auth.signIn("admin@example.com", "password"))?.role,
-		).toBe("admin");
-		expect((await adapter.auth.getSession("session-1"))?.email).toBe(
-			"admin@example.com",
-		);
+		expect((await adapter.auth.signIn("admin@example.com", "password"))?.role).toBe("admin");
+		expect((await adapter.auth.getSession("session-1"))?.email).toBe("admin@example.com");
 		await adapter.auth.signOut("session-1");
-		expect((await adapter.preview?.create({ recordId: "1" }))?.url).toContain(
-			"/preview/1",
-		);
+		expect((await adapter.preview?.create({ recordId: "1" }))?.url).toContain("/preview/1");
 		expect((await adapter.media.get("logo"))?.filename).toBe("logo.png");
 		await adapter.media.delete("logo");
 		const revision = {
@@ -160,22 +150,17 @@ describe("hosted api adapter", () => {
 			createdAt: "now",
 			snapshot: {},
 		};
-		await adapter.revisions.append(
-			revision as Parameters<typeof adapter.revisions.append>[0],
-		);
+		await adapter.revisions.append(revision as Parameters<typeof adapter.revisions.append>[0]);
 		await adapter.content.delete("1");
 
-		expect(
-			requests.every((request) => request.auth === "Bearer secret-token"),
-		).toBe(true);
+		expect(requests.every((request) => request.auth === "Bearer secret-token")).toBe(true);
 	});
 
 	it("throws when the API returns a non-OK HTTP response", async () => {
 		const adapter = createAstropressHostedApiAdapter({
 			providerName: "supabase",
 			apiBaseUrl: "https://api.example.test/astropress",
-			fetchImpl: async () =>
-				new Response(JSON.stringify({ error: "Not found" }), { status: 404 }),
+			fetchImpl: async () => new Response(JSON.stringify({ error: "Not found" }), { status: 404 }),
 		});
 		await expect(adapter.content.list()).rejects.toThrow(
 			"Astropress hosted API request failed with 404",

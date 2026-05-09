@@ -20,17 +20,10 @@ export interface AstropressProjectLaunchPlan {
 	recommendation: AstropressProviderChoiceRecommendation;
 }
 
-export interface AstropressProjectLaunchOptions
-	extends AstropressProjectRuntimeOptions {}
+export interface AstropressProjectLaunchOptions extends AstropressProjectRuntimeOptions {}
 
-function resolveExistingPlatform(
-	dataServices: string,
-): AstropressExistingPlatform {
-	if (
-		dataServices === "cloudflare" ||
-		dataServices === "supabase" ||
-		dataServices === "appwrite"
-	) {
+function resolveExistingPlatform(dataServices: string): AstropressExistingPlatform {
+	if (dataServices === "cloudflare" || dataServices === "supabase" || dataServices === "appwrite") {
 		return dataServices;
 	}
 	return "none";
@@ -41,9 +34,7 @@ export function createAstropressProjectLaunchPlan(
 ): AstropressProjectLaunchPlan {
 	const runtime = createAstropressProjectRuntimePlan(options);
 	const provider =
-		runtime.mode === "hosted"
-			? runtime.env.hostedProvider
-			: runtime.env.localProvider;
+		runtime.mode === "hosted" ? runtime.env.hostedProvider : runtime.env.localProvider;
 	return {
 		runtime,
 		provider,
@@ -55,8 +46,7 @@ export function createAstropressProjectLaunchPlan(
 		recommendation: recommendAstropressProvider({
 			existingPlatform: resolveExistingPlatform(runtime.env.dataServices),
 			wantsStaticMirror:
-				runtime.env.appHost === "github-pages" ||
-				runtime.env.appHost === "gitlab-pages",
+				runtime.env.appHost === "github-pages" || runtime.env.appHost === "gitlab-pages",
 			wantsHostedAdmin: runtime.env.dataServices !== "none",
 		}),
 	};

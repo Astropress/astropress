@@ -1,13 +1,8 @@
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { beforeEach, describe, expect, test } from "vitest";
-
-import {
-	createAccessRepository,
-	getAccessContext,
-	seedStarterRoles,
-} from "../src/access";
 import type { LocalAccessStoreSurface } from "../src/access";
+import { createAccessRepository, getAccessContext, seedStarterRoles } from "../src/access";
 import { loadSqliteDatabase } from "../src/sqlite-bootstrap-helpers";
 
 const SCHEMA = readFileSync(
@@ -36,9 +31,7 @@ function buildLocalSurface(db: DbHandle): LocalAccessStoreSurface {
 	return {
 		resolveAccessSnapshotByEmail(email) {
 			const row = db
-				.prepare(
-					"SELECT id, is_admin FROM admin_users WHERE email = ? AND active = 1 LIMIT 1",
-				)
+				.prepare("SELECT id, is_admin FROM admin_users WHERE email = ? AND active = 1 LIMIT 1")
 				.get<{ id: number; is_admin: number }>(email);
 			if (!row) return null;
 			return {
@@ -66,6 +59,7 @@ function makeLocalsFromStore(
 // Stub the local-runtime-modules loader so getAccessContext's local fallback
 // receives our in-memory store instead of throwing.
 import { vi } from "vitest";
+
 vi.mock("../src/local-runtime-modules", async (orig) => {
 	const original = await orig<typeof import("../src/local-runtime-modules")>();
 	return {

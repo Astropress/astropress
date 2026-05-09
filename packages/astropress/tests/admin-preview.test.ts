@@ -1,22 +1,15 @@
 import { describe, expect, it } from "vitest";
-import {
-	buildPreviewLoginRedirect,
-	resolvePreviewPath,
-} from "../src/admin-preview-middleware";
+import { buildPreviewLoginRedirect, resolvePreviewPath } from "../src/admin-preview-middleware";
 
 describe("resolvePreviewPath", () => {
 	it("returns the slug for a valid preview path", () => {
-		const url = new URL(
-			"http://admin.example.com/ap-admin/preview/blog/my-draft-post",
-		);
+		const url = new URL("http://admin.example.com/ap-admin/preview/blog/my-draft-post");
 		const result = resolvePreviewPath(url);
 		expect(result).toEqual({ slug: "blog/my-draft-post" });
 	});
 
 	it("returns the slug for a simple single-segment preview path", () => {
-		const url = new URL(
-			"http://admin.example.com/ap-admin/preview/coming-soon",
-		);
+		const url = new URL("http://admin.example.com/ap-admin/preview/coming-soon");
 		const result = resolvePreviewPath(url);
 		expect(result).toEqual({ slug: "coming-soon" });
 	});
@@ -40,9 +33,7 @@ describe("resolvePreviewPath", () => {
 	});
 
 	it("handles deeply nested slugs", () => {
-		const url = new URL(
-			"http://admin.example.com/ap-admin/preview/2024/01/15/my-post-title",
-		);
+		const url = new URL("http://admin.example.com/ap-admin/preview/2024/01/15/my-post-title");
 		const result = resolvePreviewPath(url);
 		expect(result).toEqual({ slug: "2024/01/15/my-post-title" });
 	});
@@ -50,9 +41,7 @@ describe("resolvePreviewPath", () => {
 	it("returns null when /ap-admin/preview/ appears mid-path (kills ^-removal mutant)", () => {
 		// Without the ^ anchor the regex would match anywhere in pathname,
 		// e.g. an attacker-crafted path like /foo/ap-admin/preview/bar.
-		const url = new URL(
-			"http://admin.example.com/decoy/ap-admin/preview/secret",
-		);
+		const url = new URL("http://admin.example.com/decoy/ap-admin/preview/secret");
 		expect(resolvePreviewPath(url)).toBeNull();
 	});
 
@@ -66,19 +55,13 @@ describe("resolvePreviewPath", () => {
 
 describe("buildPreviewLoginRedirect", () => {
 	it("builds a login redirect with the return path encoded", () => {
-		const url = new URL(
-			"http://admin.example.com/ap-admin/preview/coming-soon",
-		);
+		const url = new URL("http://admin.example.com/ap-admin/preview/coming-soon");
 		const redirect = buildPreviewLoginRedirect(url);
-		expect(redirect).toBe(
-			"/ap-admin/login?return=%2Fap-admin%2Fpreview%2Fcoming-soon",
-		);
+		expect(redirect).toBe("/ap-admin/login?return=%2Fap-admin%2Fpreview%2Fcoming-soon");
 	});
 
 	it("preserves query parameters in the return path", () => {
-		const url = new URL(
-			"http://admin.example.com/ap-admin/preview/post?draft=1",
-		);
+		const url = new URL("http://admin.example.com/ap-admin/preview/post?draft=1");
 		const redirect = buildPreviewLoginRedirect(url);
 		expect(redirect).toContain("/ap-admin/login?return=");
 		expect(redirect).toContain("draft");
@@ -98,9 +81,7 @@ describe("preview route isolation from production build", () => {
 
 		const previewRoutes = routes.filter((r) => r.pattern.includes("preview"));
 		expect(previewRoutes.length).toBeGreaterThan(0);
-		expect(previewRoutes.every((r) => r.pattern.startsWith("/ap-admin/"))).toBe(
-			true,
-		);
+		expect(previewRoutes.every((r) => r.pattern.startsWith("/ap-admin/"))).toBe(true);
 	});
 
 	it("createAstropressPublicSiteIntegration injects zero preview routes", async () => {

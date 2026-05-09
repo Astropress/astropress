@@ -25,10 +25,7 @@ import {
 	connectIntegration,
 	reverifyIntegration,
 } from "./integrations/connect-flow.js";
-import {
-	type IntegrationDomain,
-	getProvider,
-} from "./integrations/registry.js";
+import { getProvider, type IntegrationDomain } from "./integrations/registry.js";
 import { getAstropressRootSecret } from "./runtime-env.js";
 
 export type RuntimeIntegrationActionResult =
@@ -53,9 +50,7 @@ export interface ConnectIntegrationActionInput<
 	readonly configJson?: string;
 }
 
-export async function connectIntegrationAction<
-	TFields extends Record<string, string>,
->(
+export async function connectIntegrationAction<TFields extends Record<string, string>>(
 	locals: App.Locals | null | undefined,
 	input: ConnectIntegrationActionInput<TFields>,
 ): Promise<RuntimeIntegrationActionResult> {
@@ -95,9 +90,7 @@ export async function connectIntegrationAction<
 	);
 }
 
-export async function reverifyIntegrationAction<
-	TFields extends Record<string, string>,
->(
+export async function reverifyIntegrationAction<TFields extends Record<string, string>>(
 	locals: App.Locals | null | undefined,
 	domain: IntegrationDomain,
 	providerId: string,
@@ -127,12 +120,7 @@ export async function reverifyIntegrationAction<
 					code: "INTEGRATIONS_NOT_AVAILABLE",
 				};
 			}
-			return reverifyIntegration(
-				repo,
-				provider,
-				fields,
-				new Date().toISOString(),
-			);
+			return reverifyIntegration(repo, provider, fields, new Date().toISOString());
 		},
 	);
 }
@@ -142,9 +130,7 @@ export async function disconnectIntegrationAction(
 	domain: IntegrationDomain,
 	providerId: string,
 ): Promise<{ ok: true } | { ok: false; code: "INTEGRATIONS_NOT_AVAILABLE" }> {
-	return withLocalStoreFallback<
-		{ ok: true } | { ok: false; code: "INTEGRATIONS_NOT_AVAILABLE" }
-	>(
+	return withLocalStoreFallback<{ ok: true } | { ok: false; code: "INTEGRATIONS_NOT_AVAILABLE" }>(
 		locals,
 		async () => ({ ok: false, code: "INTEGRATIONS_NOT_AVAILABLE" }),
 		async (store) => {

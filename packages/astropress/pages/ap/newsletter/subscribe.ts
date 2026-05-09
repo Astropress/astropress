@@ -30,10 +30,10 @@ export const POST: APIRoute = async ({ request, locals }) => {
 			const body = (await request.json()) as Record<string, unknown>;
 			email = typeof body.email === "string" ? body.email.trim() : undefined;
 		} catch {
-			return new Response(
-				JSON.stringify({ ok: false, error: "Invalid JSON body." }),
-				{ status: 400, headers: JSON_HEADERS },
-			);
+			return new Response(JSON.stringify({ ok: false, error: "Invalid JSON body." }), {
+				status: 400,
+				headers: JSON_HEADERS,
+			});
 		}
 	} else {
 		const formData = await request.formData().catch(() => null);
@@ -63,8 +63,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
 	}
 
 	// Record a conversion audit event for first-party analytics (GDPR Art. 6(1)(f))
-	const utmSource =
-		new URL(request.url).searchParams.get("utm_source") ?? undefined;
+	const utmSource = new URL(request.url).searchParams.get("utm_source") ?? undefined;
 	await recordD1Audit(
 		locals,
 		{ email: "public", role: "editor" as const, name: "Public visitor" },

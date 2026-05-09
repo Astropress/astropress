@@ -13,14 +13,14 @@
  */
 
 export { ApAdminNav } from "./admin-nav";
-export { ApNotice } from "./notice";
-export { ApThemeToggle } from "./theme-toggle";
+export { ApLockIndicator } from "./ap-lock-indicator";
+export { ApStaleTabWarning } from "./ap-stale-tab-warning";
+export { ApCommandPalette } from "./command-palette";
 export { ApConfirmDialog } from "./confirm-dialog";
 export { ApHtmlEditor } from "./html-editor";
-export { ApStaleTabWarning } from "./ap-stale-tab-warning";
-export { ApLockIndicator } from "./ap-lock-indicator";
-export { ApCommandPalette } from "./command-palette";
+export { ApMediaPicker } from "./media-picker";
+export { ApNotice } from "./notice";
+export { ApPagePreview } from "./page-preview";
 export { ApPendingForm } from "./pending-form";
 export { ApSectionEditor } from "./section-editor";
-export { ApMediaPicker } from "./media-picker";
-export { ApPagePreview } from "./page-preview";
+export { ApThemeToggle } from "./theme-toggle";

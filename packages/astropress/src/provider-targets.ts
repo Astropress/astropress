@@ -14,8 +14,6 @@ export function listFirstPartyProviderTargets(): FirstPartyProviderTarget[] {
 	return Object.values(firstPartyProviderTargets);
 }
 
-export function getFirstPartyProviderTarget(
-	provider: ProviderKind,
-): FirstPartyProviderTarget {
+export function getFirstPartyProviderTarget(provider: ProviderKind): FirstPartyProviderTarget {
 	return firstPartyProviderTargets[provider];
 }

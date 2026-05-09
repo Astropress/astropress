@@ -22,7 +22,5 @@ export function findRepoRoot(
 		if (parent === dir) break;
 		dir = parent;
 	}
-	throw new Error(
-		`findRepoRoot: no ancestor of ${start} contains all of ${markers.join(", ")}`,
-	);
+	throw new Error(`findRepoRoot: no ancestor of ${start} contains all of ${markers.join(", ")}`);
 }

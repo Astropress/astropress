@@ -1,8 +1,5 @@
-import {
-	connectIntegrationAction,
-	withAdminFormAction,
-} from "@astropress-diy/astropress";
 import type { IntegrationDomain } from "@astropress-diy/astropress";
+import { connectIntegrationAction, withAdminFormAction } from "@astropress-diy/astropress";
 import type { APIRoute } from "astro";
 
 const ALLOWED_DOMAINS: ReadonlySet<IntegrationDomain> = new Set([

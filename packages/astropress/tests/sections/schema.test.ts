@@ -1,9 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-	SECTION_KINDS,
-	parseSections,
-	parseSectionsFromJson,
-} from "../../src/sections/schema";
+import { parseSections, parseSectionsFromJson, SECTION_KINDS } from "../../src/sections/schema";
 
 describe("parseSections", () => {
 	it("returns empty array for null/undefined input", () => {
@@ -16,18 +12,14 @@ describe("parseSections", () => {
 	});
 
 	it("accepts a top-level array", () => {
-		const r = parseSections([
-			{ id: "h", kind: "hero", headline: "Hello", alignment: "center" },
-		]);
+		const r = parseSections([{ id: "h", kind: "hero", headline: "Hello", alignment: "center" }]);
 		expect(r.ok).toBe(true);
 		if (r.ok) expect(r.sections).toHaveLength(1);
 	});
 
 	it("accepts the {sections: [...]} envelope shape", () => {
 		const r = parseSections({
-			sections: [
-				{ id: "h", kind: "hero", headline: "Hello", alignment: "center" },
-			],
+			sections: [{ id: "h", kind: "hero", headline: "Hello", alignment: "center" }],
 		});
 		expect(r.ok).toBe(true);
 		if (r.ok) expect(r.sections).toHaveLength(1);
@@ -85,9 +77,7 @@ describe("parseSections", () => {
 	});
 
 	it("requires testimonials.ids when source=ids", () => {
-		const r = parseSections([
-			{ id: "t", kind: "testimonials", source: "ids", layout: "grid" },
-		]);
+		const r = parseSections([{ id: "t", kind: "testimonials", source: "ids", layout: "grid" }]);
 		expect(r.ok).toBe(false);
 	});
 

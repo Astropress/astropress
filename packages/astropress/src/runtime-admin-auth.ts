@@ -42,9 +42,7 @@ async function getLiveD1SessionRow(
 
 	const sessionCandidates = [sessionToken];
 	for (const sessionSecret of getAstropressRootSecretCandidates(locals)) {
-		sessionCandidates.unshift(
-			await createSessionTokenDigest(sessionToken, sessionSecret),
-		);
+		sessionCandidates.unshift(await createSessionTokenDigest(sessionToken, sessionSecret));
 	}
 
 	let row: {
@@ -91,10 +89,7 @@ async function getLiveD1SessionRow(
 	}
 
 	const lastActiveAt = Date.parse(row.last_active_at);
-	if (
-		!Number.isFinite(lastActiveAt) ||
-		Date.now() - lastActiveAt > SESSION_TTL_MS
-	) {
+	if (!Number.isFinite(lastActiveAt) || Date.now() - lastActiveAt > SESSION_TTL_MS) {
 		await db
 			.prepare(
 				`
@@ -110,9 +105,7 @@ async function getLiveD1SessionRow(
 	}
 
 	await db
-		.prepare(
-			"UPDATE admin_sessions SET last_active_at = CURRENT_TIMESTAMP WHERE id = ?",
-		)
+		.prepare("UPDATE admin_sessions SET last_active_at = CURRENT_TIMESTAMP WHERE id = ?")
 		.bind(row.id)
 		.run();
 	return row;
@@ -174,16 +167,12 @@ export async function createRuntimeSession(
 		locals,
 		async (db) => {
 			const userRow = await db
-				.prepare(
-					"SELECT id FROM admin_users WHERE email = ? AND active = 1 LIMIT 1",
-				)
+				.prepare("SELECT id FROM admin_users WHERE email = ? AND active = 1 LIMIT 1")
 				.bind(user.email.toLowerCase())
 				.first<{ id: number }>();
 
 			if (!userRow) {
-				throw new Error(
-					`Cannot create a session for unknown admin user ${user.email}.`,
-				);
+				throw new Error(`Cannot create a session for unknown admin user ${user.email}.`);
 			}
 
 			const sessionToken = crypto.randomUUID();
@@ -259,9 +248,7 @@ export async function revokeRuntimeSession(
 
 			const sessionCandidates = [sessionToken];
 			for (const sessionSecret of getAstropressRootSecretCandidates(locals)) {
-				sessionCandidates.unshift(
-					await createSessionTokenDigest(sessionToken, sessionSecret),
-				);
+				sessionCandidates.unshift(await createSessionTokenDigest(sessionToken, sessionSecret));
 			}
 
 			for (const sessionId of sessionCandidates) {
@@ -313,28 +300,12 @@ async function recordRuntimeAudit(
 	);
 }
 
-export async function recordRuntimeSuccessfulLogin(
-	actor: SessionUser,
-	locals?: App.Locals | null,
-) {
-	return recordRuntimeAudit(
-		"auth.login",
-		`${actor.name} signed in successfully.`,
-		actor,
-		locals,
-	);
+export async function recordRuntimeSuccessfulLogin(actor: SessionUser, locals?: App.Locals | null) {
+	return recordRuntimeAudit("auth.login", `${actor.name} signed in successfully.`, actor, locals);
 }
 
-export async function recordRuntimeLogout(
-	actor: SessionUser,
-	locals?: App.Locals | null,
-) {
-	return recordRuntimeAudit(
-		"auth.logout",
-		`${actor.name} signed out.`,
-		actor,
-		locals,
-	);
+export async function recordRuntimeLogout(actor: SessionUser, locals?: App.Locals | null) {
+	return recordRuntimeAudit("auth.logout", `${actor.name} signed out.`, actor, locals);
 }
 
 export const _recordRuntimeAuditEvent = recordRuntimeAudit;

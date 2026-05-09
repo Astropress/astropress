@@ -9,9 +9,7 @@ describe("readAstropressPocketbaseHostedConfig", () => {
 			POCKETBASE_EMAIL: "admin@example.com",
 			POCKETBASE_PASSWORD: "secret",
 		});
-		expect(config.apiBaseUrl).toBe(
-			"https://pocketbase.example.com/api/astropress",
-		);
+		expect(config.apiBaseUrl).toBe("https://pocketbase.example.com/api/astropress");
 		expect(config.previewBaseUrl).toBe("https://pocketbase.example.com");
 	});
 
@@ -21,9 +19,7 @@ describe("readAstropressPocketbaseHostedConfig", () => {
 			POCKETBASE_EMAIL: "admin@example.com",
 			POCKETBASE_PASSWORD: "secret",
 		});
-		expect(config.apiBaseUrl).toBe(
-			"https://pocketbase.example.com/api/astropress",
-		);
+		expect(config.apiBaseUrl).toBe("https://pocketbase.example.com/api/astropress");
 		expect(config.previewBaseUrl).toBe("https://pocketbase.example.com");
 	});
 
@@ -33,9 +29,7 @@ describe("readAstropressPocketbaseHostedConfig", () => {
 			POCKETBASE_EMAIL: "admin@example.com",
 			POCKETBASE_PASSWORD: "secret",
 		});
-		expect(config.apiBaseUrl).toBe(
-			"https://pocketbase.example.com/api/astropress",
-		);
+		expect(config.apiBaseUrl).toBe("https://pocketbase.example.com/api/astropress");
 		expect(config.previewBaseUrl).toBe("https://pocketbase.example.com");
 	});
 
@@ -89,9 +83,7 @@ describe("readAstropressPocketbaseHostedConfig", () => {
 	});
 
 	it("throws when POCKETBASE_URL is missing", () => {
-		expect(() => readAstropressPocketbaseHostedConfig({})).toThrowError(
-			/POCKETBASE_URL/,
-		);
+		expect(() => readAstropressPocketbaseHostedConfig({})).toThrowError(/POCKETBASE_URL/);
 	});
 
 	it("throws when POCKETBASE_EMAIL is missing", () => {

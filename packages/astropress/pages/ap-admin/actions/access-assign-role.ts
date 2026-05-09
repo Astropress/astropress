@@ -1,7 +1,4 @@
-import {
-	assignRuntimeUserRole,
-	withAdminFormAction,
-} from "@astropress-diy/astropress";
+import { assignRuntimeUserRole, withAdminFormAction } from "@astropress-diy/astropress";
 import type { APIRoute } from "astro";
 
 export const POST: APIRoute = async (context) =>

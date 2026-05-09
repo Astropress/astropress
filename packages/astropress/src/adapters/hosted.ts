@@ -4,10 +4,7 @@ import {
 	type AstropressAppwriteHostedAdapterOptions,
 	createAstropressAppwriteHostedAdapter,
 } from "./appwrite";
-import {
-	type AstropressNeonHostedAdapterOptions,
-	createAstropressNeonHostedAdapter,
-} from "./neon";
+import { type AstropressNeonHostedAdapterOptions, createAstropressNeonHostedAdapter } from "./neon";
 import {
 	type AstropressNhostHostedAdapterOptions,
 	createAstropressNhostHostedAdapter,
@@ -71,25 +68,18 @@ export function createAstropressHostedAdapter(
 	options: AstropressHostedAdapterOptions = {},
 ): AstropressPlatformAdapter {
 	const provider = resolveAstropressHostedProvider(
-		options.provider ??
-			resolveAstropressHostedProviderFromEnv(options.env ?? process.env),
+		options.provider ?? resolveAstropressHostedProviderFromEnv(options.env ?? process.env),
 	);
 
 	if (provider === "appwrite") {
 		return createAstropressAppwriteHostedAdapter(
-			options as Extract<
-				AstropressHostedAdapterOptions,
-				{ provider: "appwrite" }
-			>,
+			options as Extract<AstropressHostedAdapterOptions, { provider: "appwrite" }>,
 		);
 	}
 
 	if (provider === "pocketbase") {
 		return createAstropressPocketbaseHostedAdapter(
-			options as Extract<
-				AstropressHostedAdapterOptions,
-				{ provider: "pocketbase" }
-			>,
+			options as Extract<AstropressHostedAdapterOptions, { provider: "pocketbase" }>,
 		);
 	}
 
@@ -112,9 +102,6 @@ export function createAstropressHostedAdapter(
 	}
 
 	return createAstropressSupabaseHostedAdapter(
-		options as Extract<
-			AstropressHostedAdapterOptions,
-			{ provider?: "supabase" }
-		>,
+		options as Extract<AstropressHostedAdapterOptions, { provider?: "supabase" }>,
 	);
 }

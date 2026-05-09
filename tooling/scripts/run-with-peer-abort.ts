@@ -40,9 +40,7 @@ import { join } from "node:path";
 const argv = process.argv.slice(2);
 const sep = argv.indexOf("--");
 if (sep === -1 || sep === 0 || sep === argv.length - 1) {
-	console.error(
-		"run-with-peer-abort: usage: run-with-peer-abort <label> -- <cmd> [args...]",
-	);
+	console.error("run-with-peer-abort: usage: run-with-peer-abort <label> -- <cmd> [args...]");
 	process.exit(2);
 }
 
@@ -73,9 +71,7 @@ function describePeerFailure(): string {
 			// prepush-gates.ts writes per-step logs under <cwd>/.prepush-logs/.
 			// Surface the path so the operator can read the genuine failure
 			// instead of guessing what SIGTERM truncated.
-			const slug = parsed.failedLabel
-				.replace(/[^a-z0-9]+/gi, "-")
-				.toLowerCase();
+			const slug = parsed.failedLabel.replace(/[^a-z0-9]+/gi, "-").toLowerCase();
 			const log = join(process.cwd(), ".prepush-logs", `${slug}.log`);
 			const errSuffix = parsed.error ? ` (spawn error: ${parsed.error})` : "";
 			return `peer "${parsed.failedLabel}" failed${errSuffix}\n   full log: ${log}`;

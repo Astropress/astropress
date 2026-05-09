@@ -62,9 +62,7 @@ describe("hosted provider contracts", () => {
 			slug: "custom-remote-post",
 			title: "Custom remote post",
 		});
-		expect(
-			await appwrite.auth.signIn("admin@example.com", "password"),
-		).toMatchObject({
+		expect(await appwrite.auth.signIn("admin@example.com", "password")).toMatchObject({
 			email: "admin@example.com",
 			role: "admin",
 		});
@@ -85,12 +83,10 @@ describe("hosted provider contracts", () => {
 			fetchImpl: async () => new Response(JSON.stringify([]), { status: 200 }),
 		});
 
-		expect(supabaseConfig.apiBaseUrl).toContain(
-			"demo.supabase.co/functions/v1/astropress",
+		expect(supabaseConfig.apiBaseUrl).toContain("demo.supabase.co/functions/v1/astropress");
+		expect((await supabase.preview?.create({ recordId: "hello" }))?.url).toContain(
+			"demo.supabase.co/preview/preview/hello",
 		);
-		expect(
-			(await supabase.preview?.create({ recordId: "hello" }))?.url,
-		).toContain("demo.supabase.co/preview/preview/hello");
 		expect(supabase.capabilities.hostedAdmin).toBe(true);
 	});
 
@@ -115,20 +111,14 @@ describe("hosted provider contracts", () => {
 			fetchImpl: async () => new Response(JSON.stringify([]), { status: 200 }),
 		});
 
-		expect(appwriteConfig.apiBaseUrl).toContain(
-			"cloud.appwrite.io/v1/functions/astropress",
-		);
-		expect(
-			(await appwrite.preview?.create({ recordId: "hello" }))?.url,
-		).toContain(
+		expect(appwriteConfig.apiBaseUrl).toContain("cloud.appwrite.io/v1/functions/astropress");
+		expect((await appwrite.preview?.create({ recordId: "hello" }))?.url).toContain(
 			"cloud.appwrite.io/v1/console/project-project-123/preview/preview/hello",
 		);
-		expect(pocketbaseConfig.apiBaseUrl).toContain(
-			"pocketbase.example.com/api/astropress",
+		expect(pocketbaseConfig.apiBaseUrl).toContain("pocketbase.example.com/api/astropress");
+		expect((await pocketbase.preview?.create({ recordId: "hello" }))?.url).toContain(
+			"pocketbase.example.com/preview",
 		);
-		expect(
-			(await pocketbase.preview?.create({ recordId: "hello" }))?.url,
-		).toContain("pocketbase.example.com/preview");
 	});
 
 	it("reads hosted provider config from env maps", () => {
@@ -153,8 +143,7 @@ describe("hosted provider contracts", () => {
 			projectId: "project-123",
 			apiKey: "secret",
 			apiBaseUrl: "https://cloud.appwrite.io/v1/functions/astropress",
-			previewBaseUrl:
-				"https://cloud.appwrite.io/v1/console/project-project-123",
+			previewBaseUrl: "https://cloud.appwrite.io/v1/console/project-project-123",
 		});
 		expect(
 			readAstropressPocketbaseHostedConfig({
@@ -179,22 +168,18 @@ describe("hosted provider contracts", () => {
 			subdomain: "abcdefgh",
 			region: "eu-central-1",
 			adminSecret: "secret",
-			apiBaseUrl:
-				"https://abcdefgh.eu-central-1.nhost.run/v1/functions/astropress",
+			apiBaseUrl: "https://abcdefgh.eu-central-1.nhost.run/v1/functions/astropress",
 			previewBaseUrl: "https://abcdefgh.eu-central-1.nhost.run/console",
 		});
 		expect(
 			readAstropressNeonHostedConfig({
-				NEON_DATABASE_URL:
-					"postgres://user:pass@ep-example.us-east-1.aws.neon.tech/neondb",
+				NEON_DATABASE_URL: "postgres://user:pass@ep-example.us-east-1.aws.neon.tech/neondb",
 				NEON_PROJECT_ID: "proj-quiet-moon-123456",
 			}),
 		).toEqual({
-			databaseUrl:
-				"postgres://user:pass@ep-example.us-east-1.aws.neon.tech/neondb",
+			databaseUrl: "postgres://user:pass@ep-example.us-east-1.aws.neon.tech/neondb",
 			projectId: "proj-quiet-moon-123456",
-			apiBaseUrl:
-				"https://console.neon.tech/app/projects/proj-quiet-moon-123456",
+			apiBaseUrl: "https://console.neon.tech/app/projects/proj-quiet-moon-123456",
 		});
 		expect(
 			readAstropressTursoHostedConfig({
@@ -209,24 +194,12 @@ describe("hosted provider contracts", () => {
 	});
 
 	it("guards hosted provider config and builds hosted adapters with preview URLs", async () => {
-		expect(() => readAstropressSupabaseHostedConfig({})).toThrow(
-			/SUPABASE_URL/,
-		);
-		expect(() => readAstropressAppwriteHostedConfig({})).toThrow(
-			/APPWRITE_ENDPOINT/,
-		);
-		expect(() => readAstropressPocketbaseHostedConfig({})).toThrow(
-			/POCKETBASE_URL/,
-		);
-		expect(() => readAstropressNhostHostedConfig({})).toThrow(
-			/NHOST_SUBDOMAIN/,
-		);
-		expect(() => readAstropressNeonHostedConfig({})).toThrow(
-			/NEON_DATABASE_URL|DATABASE_URL/,
-		);
-		expect(() => readAstropressTursoHostedConfig({})).toThrow(
-			/TURSO_DATABASE_URL/,
-		);
+		expect(() => readAstropressSupabaseHostedConfig({})).toThrow(/SUPABASE_URL/);
+		expect(() => readAstropressAppwriteHostedConfig({})).toThrow(/APPWRITE_ENDPOINT/);
+		expect(() => readAstropressPocketbaseHostedConfig({})).toThrow(/POCKETBASE_URL/);
+		expect(() => readAstropressNhostHostedConfig({})).toThrow(/NHOST_SUBDOMAIN/);
+		expect(() => readAstropressNeonHostedConfig({})).toThrow(/NEON_DATABASE_URL|DATABASE_URL/);
+		expect(() => readAstropressTursoHostedConfig({})).toThrow(/TURSO_DATABASE_URL/);
 
 		const hostedStores = createHostedStores();
 		const supabase = createAstropressSupabaseHostedAdapter({
@@ -262,8 +235,7 @@ describe("hosted provider contracts", () => {
 		});
 		const neon = createAstropressNeonHostedAdapter({
 			env: {
-				NEON_DATABASE_URL:
-					"postgres://user:pass@ep-example.us-east-1.aws.neon.tech/neondb",
+				NEON_DATABASE_URL: "postgres://user:pass@ep-example.us-east-1.aws.neon.tech/neondb",
 			},
 			...hostedStores,
 		});
@@ -283,30 +255,20 @@ describe("hosted provider contracts", () => {
 			title: "Hosted config post",
 		});
 
-		expect(
-			await supabase.preview?.create({ recordId: "hosted-config-post" }),
-		).toEqual({
+		expect(await supabase.preview?.create({ recordId: "hosted-config-post" })).toEqual({
 			url: "https://example.supabase.co/preview",
 		});
-		expect(
-			await appwrite.preview?.create({ recordId: "hosted-config-post" }),
-		).toEqual({
+		expect(await appwrite.preview?.create({ recordId: "hosted-config-post" })).toEqual({
 			url: "https://cloud.appwrite.io/v1/console/project-project-123/preview",
 		});
-		expect(
-			await pocketbase.preview?.create({ recordId: "hosted-config-post" }),
-		).toEqual({
+		expect(await pocketbase.preview?.create({ recordId: "hosted-config-post" })).toEqual({
 			url: "https://pocketbase.example.com/preview",
 		});
-		expect(
-			await nhost.preview?.create({ recordId: "hosted-config-post" }),
-		).toEqual({
+		expect(await nhost.preview?.create({ recordId: "hosted-config-post" })).toEqual({
 			url: "https://abcdefgh.eu-central-1.nhost.run/console/preview",
 		});
 		expect(neon.capabilities.hostedAdmin).toBe(false);
-		expect(
-			await turso.preview?.create({ recordId: "hosted-config-post" }),
-		).toBeUndefined();
+		expect(await turso.preview?.create({ recordId: "hosted-config-post" })).toBeUndefined();
 	});
 
 	it("selects hosted providers from explicit options or env", async () => {
@@ -366,8 +328,7 @@ describe("hosted provider contracts", () => {
 		const neon = createAstropressHostedAdapter({
 			provider: "neon",
 			env: {
-				NEON_DATABASE_URL:
-					"postgres://user:pass@ep-example.us-east-1.aws.neon.tech/neondb",
+				NEON_DATABASE_URL: "postgres://user:pass@ep-example.us-east-1.aws.neon.tech/neondb",
 			},
 			content: hostedStores.content,
 			media: hostedStores.media,

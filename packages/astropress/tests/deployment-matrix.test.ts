@@ -188,18 +188,14 @@ describe("deployment matrix — Railway preview pairs (paid platform)", () => {
 		).toBe("preview");
 	});
 	it("railway is never 'supported' — no official end-to-end test path", () => {
-		const entries = listAstropressDeploymentMatrixEntries().filter(
-			(e) => e.appHost === "railway",
-		);
+		const entries = listAstropressDeploymentMatrixEntries().filter((e) => e.appHost === "railway");
 		expect(entries.length).toBeGreaterThan(0);
 		for (const e of entries) {
 			expect(e.supportLevel).not.toBe("supported");
 		}
 	});
 	it("railway notes warn of paid billing", () => {
-		const entries = listAstropressDeploymentMatrixEntries().filter(
-			(e) => e.appHost === "railway",
-		);
+		const entries = listAstropressDeploymentMatrixEntries().filter((e) => e.appHost === "railway");
 		for (const e of entries) {
 			expect(e.notes.toLowerCase()).toContain("paid");
 		}

@@ -1,8 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-	collectMediaIds,
-	selectTestimonialsForSection,
-} from "../../src/sections/render-prep";
+import { collectMediaIds, selectTestimonialsForSection } from "../../src/sections/render-prep";
 import type { Section, TestimonialsSection } from "../../src/sections/schema";
 
 describe("collectMediaIds", () => {

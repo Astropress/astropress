@@ -1,14 +1,4 @@
-export type AdminLocale =
-	| "en"
-	| "es"
-	| "fr"
-	| "de"
-	| "pt"
-	| "ja"
-	| "te"
-	| "hi"
-	| "ny"
-	| "ar";
+export type AdminLocale = "en" | "es" | "fr" | "de" | "pt" | "ja" | "te" | "hi" | "ny" | "ar";
 
 export type AdminLabelKey =
 	| "loginHeading"
@@ -137,19 +127,14 @@ export const adminLabels: Record<AdminLocale, Record<AdminLabelKey, string>> = {
 		loginEmailLabel: "Email address",
 		loginPasswordLabel: "Password",
 		forgotPassword: "Forgot your password?",
-		invalidCredentials:
-			"That email and password combination was not recognized.",
-		rateLimited:
-			"Too many sign-in attempts were recorded. Wait a minute and try again.",
-		challengeRequired:
-			"Complete the security challenge and try signing in again.",
-		passwordResetSuccess:
-			"Your password was reset successfully. Sign in with the new password.",
+		invalidCredentials: "That email and password combination was not recognized.",
+		rateLimited: "Too many sign-in attempts were recorded. Wait a minute and try again.",
+		challengeRequired: "Complete the security challenge and try signing in again.",
+		passwordResetSuccess: "Your password was reset successfully. Sign in with the new password.",
 		invitationAcceptedSuccess:
 			"Your invitation was accepted successfully. Sign in with the new password.",
 		acceptInvitationHeading: "Accept invitation",
-		acceptInvitationDescription:
-			"Set a password to activate this invited admin account.",
+		acceptInvitationDescription: "Set a password to activate this invited admin account.",
 		acceptInvitationSubmit: "Accept invitation",
 		resetPasswordRequestHeading: "Reset password",
 		resetPasswordRequestDescription:
@@ -222,11 +207,9 @@ export const adminLabels: Record<AdminLocale, Record<AdminLabelKey, string>> = {
 		stubSupportedProviders: "Supported providers",
 		stubLearnMore: "Learn more",
 		stubComingSoonHeading: "Coming soon",
-		stubComingSoonBody:
-			"This integration is on the roadmap but not yet implemented.",
+		stubComingSoonBody: "This integration is on the roadmap but not yet implemented.",
 		stubComingSoonLink: "Track progress on GitHub",
-		confirmDelete:
-			"Are you sure you want to delete this? This action cannot be undone.",
+		confirmDelete: "Are you sure you want to delete this? This action cannot be undone.",
 		changeLanguage: "Change language",
 		approveComment: "Approve",
 		cancelButton: "Cancel",
@@ -252,8 +235,7 @@ export const adminLabels: Record<AdminLocale, Record<AdminLabelKey, string>> = {
 		forgotPassword: "¿Olvidaste tu contraseña?",
 		invalidCredentials: "El correo y la contraseña no se reconocen.",
 		rateLimited: "Demasiados intentos. Espera un minuto e inténtalo de nuevo.",
-		challengeRequired:
-			"Completa el desafío de seguridad y vuelve a iniciar sesión.",
+		challengeRequired: "Completa el desafío de seguridad y vuelve a iniciar sesión.",
 		passwordResetSuccess:
 			"Tu contraseña se restableció correctamente. Inicia sesión con la nueva contraseña.",
 		invitationAcceptedSuccess:
@@ -334,11 +316,9 @@ export const adminLabels: Record<AdminLocale, Record<AdminLabelKey, string>> = {
 		stubSupportedProviders: "Proveedores compatibles",
 		stubLearnMore: "Más información",
 		stubComingSoonHeading: "Próximamente",
-		stubComingSoonBody:
-			"Esta integración está en la hoja de ruta pero aún no está implementada.",
+		stubComingSoonBody: "Esta integración está en la hoja de ruta pero aún no está implementada.",
 		stubComingSoonLink: "Sigue el progreso en GitHub",
-		confirmDelete:
-			"¿Seguro que quieres eliminar esto? Esta acción no se puede deshacer.",
+		confirmDelete: "¿Seguro que quieres eliminar esto? Esta acción no se puede deshacer.",
 		changeLanguage: "Cambiar idioma",
 		approveComment: "Aprobar",
 		cancelButton: "Cancelar",
@@ -364,12 +344,9 @@ export const adminLabels: Record<AdminLocale, Record<AdminLabelKey, string>> = {
 		forgotPassword: "Mot de passe oublié ?",
 		invalidCredentials: "Adresse e-mail ou mot de passe non reconnu.",
 		rateLimited: "Trop de tentatives. Attendez une minute et réessayez.",
-		challengeRequired:
-			"Complétez la vérification de sécurité puis reconnectez-vous.",
-		passwordResetSuccess:
-			"Mot de passe réinitialisé. Connectez-vous avec le nouveau mot de passe.",
-		invitationAcceptedSuccess:
-			"Invitation acceptée. Connectez-vous avec le nouveau mot de passe.",
+		challengeRequired: "Complétez la vérification de sécurité puis reconnectez-vous.",
+		passwordResetSuccess: "Mot de passe réinitialisé. Connectez-vous avec le nouveau mot de passe.",
+		invitationAcceptedSuccess: "Invitation acceptée. Connectez-vous avec le nouveau mot de passe.",
 		acceptInvitationHeading: "Accepter l'invitation",
 		acceptInvitationDescription:
 			"Définissez un mot de passe pour activer ce compte administrateur invité.",
@@ -449,8 +426,7 @@ export const adminLabels: Record<AdminLocale, Record<AdminLabelKey, string>> = {
 		stubComingSoonBody:
 			"Cette intégration est sur la feuille de route mais n'est pas encore implémentée.",
 		stubComingSoonLink: "Suivre l'avancement sur GitHub",
-		confirmDelete:
-			"Voulez-vous vraiment supprimer ceci ? Cette action est irréversible.",
+		confirmDelete: "Voulez-vous vraiment supprimer ceci ? Cette action est irréversible.",
 		changeLanguage: "Changer de langue",
 		approveComment: "Approuver",
 		cancelButton: "Annuler",
@@ -475,10 +451,8 @@ export const adminLabels: Record<AdminLocale, Record<AdminLabelKey, string>> = {
 		loginPasswordLabel: "Passwort",
 		forgotPassword: "Passwort vergessen?",
 		invalidCredentials: "E-Mail und Passwort wurden nicht erkannt.",
-		rateLimited:
-			"Zu viele Anmeldeversuche. Warten Sie eine Minute und versuchen Sie es erneut.",
-		challengeRequired:
-			"Schließen Sie die Sicherheitsprüfung ab und melden Sie sich erneut an.",
+		rateLimited: "Zu viele Anmeldeversuche. Warten Sie eine Minute und versuchen Sie es erneut.",
+		challengeRequired: "Schließen Sie die Sicherheitsprüfung ab und melden Sie sich erneut an.",
 		passwordResetSuccess:
 			"Ihr Passwort wurde erfolgreich zurückgesetzt. Melden Sie sich mit dem neuen Passwort an.",
 		invitationAcceptedSuccess:
@@ -491,8 +465,7 @@ export const adminLabels: Record<AdminLocale, Record<AdminLabelKey, string>> = {
 		resetPasswordRequestDescription:
 			"Geben Sie Ihre Admin-E-Mail-Adresse ein. Astropress sendet einen Reset-Link, falls das Konto existiert.",
 		resetPasswordTokenHeading: "Neues Passwort wählen",
-		resetPasswordTokenDescription:
-			"Legen Sie ein neues Passwort für dieses Admin-Konto fest.",
+		resetPasswordTokenDescription: "Legen Sie ein neues Passwort für dieses Admin-Konto fest.",
 		resetPasswordRequestSubmit: "Link senden",
 		resetPasswordTokenSubmit: "Passwort speichern",
 		backToLogin: "Zurück zur Anmeldung",
@@ -589,8 +562,7 @@ export const adminLabels: Record<AdminLocale, Record<AdminLabelKey, string>> = {
 		forgotPassword: "Esqueceu sua senha?",
 		invalidCredentials: "E-mail e senha não reconhecidos.",
 		rateLimited: "Muitas tentativas. Aguarde um minuto e tente novamente.",
-		challengeRequired:
-			"Conclua o desafio de segurança e tente entrar novamente.",
+		challengeRequired: "Conclua o desafio de segurança e tente entrar novamente.",
 		passwordResetSuccess: "Sua senha foi redefinida. Entre com a nova senha.",
 		invitationAcceptedSuccess: "Convite aceito. Entre com a nova senha.",
 		acceptInvitationHeading: "Aceitar convite",
@@ -601,8 +573,7 @@ export const adminLabels: Record<AdminLocale, Record<AdminLabelKey, string>> = {
 		resetPasswordRequestDescription:
 			"Digite seu e-mail de administração; Astropress enviará um link de redefinição se a conta existir.",
 		resetPasswordTokenHeading: "Escolher nova senha",
-		resetPasswordTokenDescription:
-			"Defina uma nova senha para esta conta de administração.",
+		resetPasswordTokenDescription: "Defina uma nova senha para esta conta de administração.",
 		resetPasswordRequestSubmit: "Enviar link",
 		resetPasswordTokenSubmit: "Salvar nova senha",
 		backToLogin: "Voltar ao login",
@@ -669,11 +640,9 @@ export const adminLabels: Record<AdminLocale, Record<AdminLabelKey, string>> = {
 		stubSupportedProviders: "Provedores suportados",
 		stubLearnMore: "Saiba mais",
 		stubComingSoonHeading: "Em breve",
-		stubComingSoonBody:
-			"Esta integração está no roadmap, mas ainda não foi implementada.",
+		stubComingSoonBody: "Esta integração está no roadmap, mas ainda não foi implementada.",
 		stubComingSoonLink: "Acompanhe o progresso no GitHub",
-		confirmDelete:
-			"Tem certeza que quer excluir isso? Esta ação não pode ser desfeita.",
+		confirmDelete: "Tem certeza que quer excluir isso? Esta ação não pode ser desfeita.",
 		changeLanguage: "Alterar idioma",
 		approveComment: "Aprovar",
 		cancelButton: "Cancelar",
@@ -697,26 +666,20 @@ export const adminLabels: Record<AdminLocale, Record<AdminLabelKey, string>> = {
 		loginEmailLabel: "メールアドレス",
 		loginPasswordLabel: "パスワード",
 		forgotPassword: "パスワードをお忘れですか？",
-		invalidCredentials:
-			"メールアドレスとパスワードの組み合わせが正しくありません。",
-		rateLimited:
-			"サインインの試行回数が多すぎます。1分待って再度お試しください。",
-		challengeRequired:
-			"セキュリティチェックを完了してから再度サインインしてください。",
+		invalidCredentials: "メールアドレスとパスワードの組み合わせが正しくありません。",
+		rateLimited: "サインインの試行回数が多すぎます。1分待って再度お試しください。",
+		challengeRequired: "セキュリティチェックを完了してから再度サインインしてください。",
 		passwordResetSuccess:
 			"パスワードがリセットされました。新しいパスワードでサインインしてください。",
-		invitationAcceptedSuccess:
-			"招待が承認されました。新しいパスワードでサインインしてください。",
+		invitationAcceptedSuccess: "招待が承認されました。新しいパスワードでサインインしてください。",
 		acceptInvitationHeading: "招待を承認",
-		acceptInvitationDescription:
-			"パスワードを設定して、招待された管理アカウントを有効化します。",
+		acceptInvitationDescription: "パスワードを設定して、招待された管理アカウントを有効化します。",
 		acceptInvitationSubmit: "招待を承認",
 		resetPasswordRequestHeading: "パスワードのリセット",
 		resetPasswordRequestDescription:
 			"管理者のメールアドレスを入力してください。アカウントが存在する場合、Astropress がリセットリンクを送信します。",
 		resetPasswordTokenHeading: "新しいパスワードを選択",
-		resetPasswordTokenDescription:
-			"この管理アカウントの新しいパスワードを設定します。",
+		resetPasswordTokenDescription: "この管理アカウントの新しいパスワードを設定します。",
 		resetPasswordRequestSubmit: "リンクを送信",
 		resetPasswordTokenSubmit: "新しいパスワードを保存",
 		backToLogin: "ログインに戻る",
@@ -783,8 +746,7 @@ export const adminLabels: Record<AdminLocale, Record<AdminLabelKey, string>> = {
 		stubSupportedProviders: "対応プロバイダー",
 		stubLearnMore: "詳しく見る",
 		stubComingSoonHeading: "近日公開",
-		stubComingSoonBody:
-			"この連携はロードマップに含まれていますが、まだ実装されていません。",
+		stubComingSoonBody: "この連携はロードマップに含まれていますが、まだ実装されていません。",
 		stubComingSoonLink: "GitHub で進捗を確認",
 		changeLanguage: "言語を変更",
 		approveComment: "承認",
@@ -804,8 +766,7 @@ export const adminLabels: Record<AdminLocale, Record<AdminLabelKey, string>> = {
 	},
 	te: {
 		loginHeading: "అడ్మిన్‌లోకి సైన్ ఇన్ చేయండి",
-		loginDescription:
-			"కంటెంట్, మీడియా, రీడైరెక్ట్‌లు, ప్రచురణ సెట్టింగ్‌లను నిర్వహించడానికి ఆమోదిత అడ్మిన్ ఖాతాను ఉపయోగించండి.",
+		loginDescription: "కంటెంట్, మీడియా, రీడైరెక్ట్‌లు, ప్రచురణ సెట్టింగ్‌లను నిర్వహించడానికి ఆమోదిత అడ్మిన్ ఖాతాను ఉపయోగించండి.",
 		loginSubmit: "సైన్ ఇన్",
 		loginEmailLabel: "ఇమెయిల్ చిరునామా",
 		loginPasswordLabel: "పాస్‌వర్డ్",
@@ -814,8 +775,7 @@ export const adminLabels: Record<AdminLocale, Record<AdminLabelKey, string>> = {
 		rateLimited: "చాలా సైన్-ఇన్ ప్రయత్నాలు. ఒక నిమిషం వేచి మళ్ళీ ప్రయత్నించండి.",
 		challengeRequired: "భద్రతా సవాల్‌ని పూర్తి చేసి మళ్ళీ సైన్ ఇన్ ప్రయత్నించండి.",
 		passwordResetSuccess: "మీ పాస్‌వర్డ్ విజయవంతంగా రీసెట్ చేయబడింది. కొత్త పాస్‌వర్డ్‌తో సైన్ ఇన్ చేయండి.",
-		invitationAcceptedSuccess:
-			"మీ ఆహ్వానం విజయవంతంగా ఆమోదించబడింది. కొత్త పాస్‌వర్డ్‌తో సైన్ ఇన్ చేయండి.",
+		invitationAcceptedSuccess: "మీ ఆహ్వానం విజయవంతంగా ఆమోదించబడింది. కొత్త పాస్‌వర్డ్‌తో సైన్ ఇన్ చేయండి.",
 		acceptInvitationHeading: "ఆహ్వానాన్ని ఆమోదించండి",
 		acceptInvitationDescription: "ఈ ఆహ్వానిత అడ్మిన్ ఖాతాను సక్రియం చేయడానికి పాస్‌వర్డ్ సెట్ చేయండి.",
 		acceptInvitationSubmit: "ఆహ్వానాన్ని ఆమోదించండి",
@@ -919,13 +879,10 @@ export const adminLabels: Record<AdminLocale, Record<AdminLabelKey, string>> = {
 		invalidCredentials: "वह ईमेल और पासवर्ड संयोजन पहचाना नहीं गया.",
 		rateLimited: "बहुत अधिक प्रयास. एक मिनट प्रतीक्षा करें और फिर से प्रयास करें.",
 		challengeRequired: "सुरक्षा चुनौती पूरी करें और दोबारा साइन इन करें.",
-		passwordResetSuccess:
-			"आपका पासवर्ड सफलतापूर्वक रीसेट हो गया. नए पासवर्ड से साइन इन करें.",
-		invitationAcceptedSuccess:
-			"आपका निमंत्रण स्वीकार किया गया. नए पासवर्ड से साइन इन करें.",
+		passwordResetSuccess: "आपका पासवर्ड सफलतापूर्वक रीसेट हो गया. नए पासवर्ड से साइन इन करें.",
+		invitationAcceptedSuccess: "आपका निमंत्रण स्वीकार किया गया. नए पासवर्ड से साइन इन करें.",
 		acceptInvitationHeading: "निमंत्रण स्वीकार करें",
-		acceptInvitationDescription:
-			"इस आमंत्रित एडमिन खाते को सक्रिय करने के लिए पासवर्ड सेट करें.",
+		acceptInvitationDescription: "इस आमंत्रित एडमिन खाते को सक्रिय करने के लिए पासवर्ड सेट करें.",
 		acceptInvitationSubmit: "निमंत्रण स्वीकार करें",
 		resetPasswordRequestHeading: "पासवर्ड रीसेट",
 		resetPasswordRequestDescription:
@@ -1000,8 +957,7 @@ export const adminLabels: Record<AdminLocale, Record<AdminLabelKey, string>> = {
 		stubComingSoonHeading: "जल्द आ रहा है",
 		stubComingSoonBody: "यह इंटीग्रेशन रोडमैप में है लेकिन अभी तक लागू नहीं किया गया है।",
 		stubComingSoonLink: "GitHub पर प्रगति देखें",
-		confirmDelete:
-			"क्या आप वाकई इसे मिटाना चाहते हैं? यह क्रिया पूर्ववत नहीं की जा सकती.",
+		confirmDelete: "क्या आप वाकई इसे मिटाना चाहते हैं? यह क्रिया पूर्ववत नहीं की जा सकती.",
 		changeLanguage: "भाषा बदलें",
 		approveComment: "स्वीकृत करें",
 		cancelButton: "रद्द करें",
@@ -1028,20 +984,16 @@ export const adminLabels: Record<AdminLocale, Record<AdminLabelKey, string>> = {
 		invalidCredentials: "Imelo ndi mawu achinsinsi sizinazindikiridwe.",
 		rateLimited: "Kuyesayesa kochuluka. Dikirani mphindi imodzi ndikuyesa.",
 		challengeRequired: "Malizani chitetezo ndi kulowanso.",
-		passwordResetSuccess:
-			"Mawu achinsinsi anu asinthidwa. Lowani ndi mawu atsopano.",
-		invitationAcceptedSuccess:
-			"Pempho lanu lalandiridwa. Lowani ndi mawu atsopano.",
+		passwordResetSuccess: "Mawu achinsinsi anu asinthidwa. Lowani ndi mawu atsopano.",
+		invitationAcceptedSuccess: "Pempho lanu lalandiridwa. Lowani ndi mawu atsopano.",
 		acceptInvitationHeading: "Landirani pempho",
-		acceptInvitationDescription:
-			"Ikani mawu achinsinsi kuti muyatsanitse akaunti yoyitanidwa.",
+		acceptInvitationDescription: "Ikani mawu achinsinsi kuti muyatsanitse akaunti yoyitanidwa.",
 		acceptInvitationSubmit: "Landirani pempho",
 		resetPasswordRequestHeading: "Sinthani mawu achinsinsi",
 		resetPasswordRequestDescription:
 			"Lembani imelo yanu; Astropress idzatumiza ulalo wokongolanso ngati akaunti ilipo.",
 		resetPasswordTokenHeading: "Sankhani mawu atsopano",
-		resetPasswordTokenDescription:
-			"Ikani mawu atsopano achinsinsi pa akaunti iyi.",
+		resetPasswordTokenDescription: "Ikani mawu atsopano achinsinsi pa akaunti iyi.",
 		resetPasswordRequestSubmit: "Tumizani ulalo",
 		resetPasswordTokenSubmit: "Sungani mawu atsopano",
 		backToLogin: "Bwerera ku login",
@@ -1108,11 +1060,9 @@ export const adminLabels: Record<AdminLocale, Record<AdminLabelKey, string>> = {
 		stubSupportedProviders: "Operekera Othandizidwa",
 		stubLearnMore: "Phunzirani Zambiri",
 		stubComingSoonHeading: "Posachedwapa",
-		stubComingSoonBody:
-			"Kuphatikiza uku kuli pa mapu a tsogolo koma sikunakhazikitsidwebe.",
+		stubComingSoonBody: "Kuphatikiza uku kuli pa mapu a tsogolo koma sikunakhazikitsidwebe.",
 		stubComingSoonLink: "Tsatirani kupita patsogolo pa GitHub",
-		confirmDelete:
-			"Mukutsimikiza kuchotsa izi? Chochita ichi sichingathe kubwezedwa.",
+		confirmDelete: "Mukutsimikiza kuchotsa izi? Chochita ichi sichingathe kubwezedwa.",
 		changeLanguage: "Sinthani chinenero",
 		approveComment: "Vomerezani",
 		cancelButton: "Letsani",
@@ -1137,13 +1087,10 @@ export const adminLabels: Record<AdminLocale, Record<AdminLabelKey, string>> = {
 		loginPasswordLabel: "كلمة المرور",
 		forgotPassword: "هل نسيت كلمة المرور؟",
 		invalidCredentials: "لم يتم التعرف على البريد الإلكتروني وكلمة المرور.",
-		rateLimited:
-			"تم تسجيل عدد كبير من محاولات الدخول. انتظر دقيقة وحاول مرة أخرى.",
+		rateLimited: "تم تسجيل عدد كبير من محاولات الدخول. انتظر دقيقة وحاول مرة أخرى.",
 		challengeRequired: "أكمل تحدي الأمان وحاول تسجيل الدخول مرة أخرى.",
-		passwordResetSuccess:
-			"تم إعادة تعيين كلمة المرور بنجاح. سجّل الدخول بكلمة المرور الجديدة.",
-		invitationAcceptedSuccess:
-			"تم قبول الدعوة بنجاح. سجّل الدخول بكلمة المرور الجديدة.",
+		passwordResetSuccess: "تم إعادة تعيين كلمة المرور بنجاح. سجّل الدخول بكلمة المرور الجديدة.",
+		invitationAcceptedSuccess: "تم قبول الدعوة بنجاح. سجّل الدخول بكلمة المرور الجديدة.",
 		acceptInvitationHeading: "قبول الدعوة",
 		acceptInvitationDescription: "حدد كلمة مرور لتفعيل حساب المسؤول المدعو.",
 		acceptInvitationSubmit: "قبول الدعوة",

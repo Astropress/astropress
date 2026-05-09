@@ -51,11 +51,11 @@ describe("playwright-registry shape", () => {
 
 describe("audit-registry-sync.ts script", () => {
 	it("exits 0 against the current call sites", () => {
-		const result = execFileSync(
-			"bun",
-			["run", "tooling/scripts/audit-registry-sync.ts"],
-			{ cwd: ROOT, encoding: "utf8", stdio: "pipe" },
-		);
+		const result = execFileSync("bun", ["run", "tooling/scripts/audit-registry-sync.ts"], {
+			cwd: ROOT,
+			encoding: "utf8",
+			stdio: "pipe",
+		});
 		expect(result).toContain("registry-sync audit passed");
 	});
 
@@ -94,21 +94,16 @@ export const AUDITS: ReadonlyArray<AuditEntry> = [
 	});
 
 	it("playwright registry projects are declared in playwright.config.ts", () => {
-		const config = readFileSync(
-			join(ROOT, "tooling/e2e/playwright.config.ts"),
-			"utf8",
-		);
+		const config = readFileSync(join(ROOT, "tooling/e2e/playwright.config.ts"), "utf8");
 		for (const project of PLAYWRIGHT_PROJECTS) {
 			expect(config).toContain(`name: "${project.name}"`);
 		}
 	});
 
 	it("audit registry-sync entry is wired in package.json scripts", () => {
-		const pkg = JSON.parse(
-			readFileSync(join(ROOT, "package.json"), "utf8"),
-		) as { scripts: Record<string, string> };
-		expect(pkg.scripts["audit:registry-sync"]).toContain(
-			"tooling/scripts/audit-registry-sync.ts",
-		);
+		const pkg = JSON.parse(readFileSync(join(ROOT, "package.json"), "utf8")) as {
+			scripts: Record<string, string>;
+		};
+		expect(pkg.scripts["audit:registry-sync"]).toContain("tooling/scripts/audit-registry-sync.ts");
 	});
 });

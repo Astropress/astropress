@@ -85,25 +85,16 @@ function changedRustFiles(): string[] {
 	return [];
 }
 
-function scoreFromOutcomes(
-	outcomes: Outcome[],
-	relFile: string,
-): number | null {
+function scoreFromOutcomes(outcomes: Outcome[], relFile: string): number | null {
 	const matching = outcomes.filter(
-		(o) =>
-			typeof o.scenario === "object" && o.scenario.Mutant?.file === relFile,
+		(o) => typeof o.scenario === "object" && o.scenario.Mutant?.file === relFile,
 	);
 	if (matching.length === 0) return null;
 	const viable = matching.filter(
-		(o) =>
-			o.summary === "CaughtMutant" ||
-			o.summary === "Timeout" ||
-			o.summary === "MissedMutant",
+		(o) => o.summary === "CaughtMutant" || o.summary === "Timeout" || o.summary === "MissedMutant",
 	);
 	if (viable.length === 0) return 100;
-	const killed = matching.filter(
-		(o) => o.summary === "CaughtMutant" || o.summary === "Timeout",
-	);
+	const killed = matching.filter((o) => o.summary === "CaughtMutant" || o.summary === "Timeout");
 	return (killed.length / viable.length) * 100;
 }
 
@@ -123,19 +114,10 @@ function runCargoMutants(files: string[]): boolean {
 	// runs concurrently in the same pre-push). Without headroom, cargo-mutants
 	// reports "FAILED Unmutated baseline" and gives up before testing a single
 	// mutant. Observed 2026-05-05 / 06 on feat/main-ci-quality.
-	const args = [
-		"mutants",
-		"--package",
-		"astropress-cli",
-		"--timeout",
-		"180",
-		"--in-place",
-	];
+	const args = ["mutants", "--package", "astropress-cli", "--timeout", "180", "--in-place"];
 	for (const f of files) {
 		// f is "crates/astropress-cli/src/foo.rs" → strip "crates/"
-		const rel = f.startsWith(`${CRATE_ROOT}/`)
-			? f.slice(CRATE_ROOT.length + 1)
-			: f;
+		const rel = f.startsWith(`${CRATE_ROOT}/`) ? f.slice(CRATE_ROOT.length + 1) : f;
 		args.push("--file", rel);
 	}
 	const result = spawnSync("cargo", args, {
@@ -145,12 +127,7 @@ function runCargoMutants(files: string[]): boolean {
 	return result.status === 0 || result.status === 2; // 2 = found viable mutants run completed
 }
 
-type VerdictStatus =
-	| "pass-hash-skip"
-	| "pass"
-	| "regression"
-	| "new-file-below-floor"
-	| "unscored";
+type VerdictStatus = "pass-hash-skip" | "pass" | "regression" | "new-file-below-floor" | "unscored";
 interface Verdict {
 	file: string;
 	hash: string | null;
@@ -192,18 +169,14 @@ function judge(
 function main(): number {
 	const changed = changedRustFiles();
 	if (changed.length === 0) {
-		console.log(
-			"prepush-mutation-gate-rust: no Rust source changes — skipping.",
-		);
+		console.log("prepush-mutation-gate-rust: no Rust source changes — skipping.");
 		return 0;
 	}
 	const baseline = loadBaseline();
 	const verdicts: Verdict[] = [];
 	const needsMutation: string[] = [];
 	for (const file of changed) {
-		const rel = file.startsWith(`${CRATE_ROOT}/`)
-			? file.slice(CRATE_ROOT.length + 1)
-			: file;
+		const rel = file.startsWith(`${CRATE_ROOT}/`) ? file.slice(CRATE_ROOT.length + 1) : file;
 		const hash = gitHashObject(file);
 		const prior = baseline.scores[rel] ?? null;
 		if (hash !== null && prior && prior.hash === hash) {
@@ -214,32 +187,24 @@ function main(): number {
 				baseline: prior,
 				status: "pass-hash-skip",
 			});
-			console.log(
-				`  = ${rel}  baseline hash unchanged → reuse ${prior.score.toFixed(2)}%`,
-			);
+			console.log(`  = ${rel}  baseline hash unchanged → reuse ${prior.score.toFixed(2)}%`);
 		} else {
 			needsMutation.push(file);
 			console.log(`  ~ ${rel}  must mutate`);
 		}
 	}
 	if (needsMutation.length > 0) {
-		console.log(
-			`\nRunning cargo-mutants on ${needsMutation.length} file(s)...`,
-		);
+		console.log(`\nRunning cargo-mutants on ${needsMutation.length} file(s)...`);
 		runCargoMutants(needsMutation);
-		if (!existsSync(OUTCOMES_PATH)) {
-			console.error(
-				`prepush-mutation-gate-rust: no outcomes at ${OUTCOMES_PATH}`,
-			);
-			return 1;
-		}
-		const outcomes = (
-			JSON.parse(readFileSync(OUTCOMES_PATH, "utf8")) as OutcomesFile
-		).outcomes;
+		// cargo-mutants writes outcomes.json only when at least one mutant was
+		// generated. Test files (#[cfg(test)] gated) and #[mutants::skip]'d
+		// modules legitimately produce zero mutants — in that case there is no
+		// outcomes file. Treat as null score (judge() handles that as pass).
+		const outcomes = existsSync(OUTCOMES_PATH)
+			? (JSON.parse(readFileSync(OUTCOMES_PATH, "utf8")) as OutcomesFile).outcomes
+			: [];
 		for (const file of needsMutation) {
-			const rel = file.startsWith(`${CRATE_ROOT}/`)
-				? file.slice(CRATE_ROOT.length + 1)
-				: file;
+			const rel = file.startsWith(`${CRATE_ROOT}/`) ? file.slice(CRATE_ROOT.length + 1) : file;
 			const score = scoreFromOutcomes(outcomes, rel);
 			const hash = gitHashObject(file);
 			const prior = baseline.scores[rel] ?? null;
@@ -257,9 +222,7 @@ function main(): number {
 	const checkOnly = process.argv.includes("--check-only");
 	if (failures.length === 0) {
 		if (checkOnly) {
-			console.log(
-				"\n✓ prepush-mutation-gate-rust: all changed files pass (check-only).\n",
-			);
+			console.log("\n✓ prepush-mutation-gate-rust: all changed files pass (check-only).\n");
 			return 0;
 		}
 		const next: Record<string, BaselineEntry> = { ...baseline.scores };
@@ -274,9 +237,7 @@ function main(): number {
 		}
 		if (dirty) {
 			saveBaseline({ updatedAt: new Date().toISOString(), scores: next });
-			console.log(
-				`\n✓ prepush-mutation-gate-rust: pass. Baseline updated at ${BASELINE_PATH}.\n`,
-			);
+			console.log(`\n✓ prepush-mutation-gate-rust: pass. Baseline updated at ${BASELINE_PATH}.\n`);
 		} else {
 			console.log("\n✓ prepush-mutation-gate-rust: pass (hash-skip only).\n");
 		}
@@ -289,9 +250,7 @@ function main(): number {
 				`  REGRESSION  ${v.file}: ${v.score?.toFixed(2)}% < baseline ${v.baseline?.score.toFixed(2)}%`,
 			);
 		else if (v.status === "new-file-below-floor")
-			console.error(
-				`  NEW FILE    ${v.file}: ${v.score?.toFixed(2)}% < floor ${FLOOR}%`,
-			);
+			console.error(`  NEW FILE    ${v.file}: ${v.score?.toFixed(2)}% < floor ${FLOOR}%`);
 		else console.error(`  UNSCORED    ${v.file}`);
 	}
 	return 1;

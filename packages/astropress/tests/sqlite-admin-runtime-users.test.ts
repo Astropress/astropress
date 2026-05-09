@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
-	type RuntimeFixture,
 	createRuntimeFixture,
+	type RuntimeFixture,
 } from "./helpers/sqlite-admin-runtime-fixture.js";
 
 let fixture: RuntimeFixture;
@@ -19,21 +19,13 @@ afterAll(() => {
 describe("users", () => {
 	it("listAdminUsers returns active, suspended, and invited statuses", () => {
 		const users = fixture.store.users.listAdminUsers();
-		expect(
-			users.some(
-				(u) => u.email === "admin@test.local" && u.status === "active",
-			),
-		).toBe(true);
-		expect(
-			users.some(
-				(u) => u.email === "suspended@test.local" && u.status === "suspended",
-			),
-		).toBe(true);
-		expect(
-			users.some(
-				(u) => u.email === "invited@test.local" && u.status === "invited",
-			),
-		).toBe(true);
+		expect(users.some((u) => u.email === "admin@test.local" && u.status === "active")).toBe(true);
+		expect(users.some((u) => u.email === "suspended@test.local" && u.status === "suspended")).toBe(
+			true,
+		);
+		expect(users.some((u) => u.email === "invited@test.local" && u.status === "invited")).toBe(
+			true,
+		);
 	});
 
 	it("inviteAdminUser creates a new user", () => {
@@ -61,21 +53,14 @@ describe("users", () => {
 			{ email: "toggle@test.local", role: "editor", name: "Toggle" },
 			fixture.actor,
 		);
-		expect(
-			fixture.store.users.suspendAdminUser("toggle@test.local", fixture.actor)
-				.ok,
-		).toBe(true);
-		expect(
-			fixture.store.users.unsuspendAdminUser("toggle@test.local", fixture.actor)
-				.ok,
-		).toBe(true);
+		expect(fixture.store.users.suspendAdminUser("toggle@test.local", fixture.actor).ok).toBe(true);
+		expect(fixture.store.users.unsuspendAdminUser("toggle@test.local", fixture.actor).ok).toBe(
+			true,
+		);
 	});
 
 	it("suspendAdminUser returns error for unknown user", () => {
-		expect(
-			fixture.store.users.suspendAdminUser("nobody@test.local", fixture.actor)
-				.ok,
-		).toBe(false);
+		expect(fixture.store.users.suspendAdminUser("nobody@test.local", fixture.actor).ok).toBe(false);
 	});
 });
 
@@ -136,29 +121,21 @@ describe("users additional error branches", () => {
 	});
 
 	it("suspendAdminUser: empty email returns error", () => {
-		expect(fixture.store.users.suspendAdminUser("", fixture.actor).ok).toBe(
-			false,
-		);
+		expect(fixture.store.users.suspendAdminUser("", fixture.actor).ok).toBe(false);
 	});
 
 	it("suspendAdminUser: suspending yourself returns error", () => {
-		expect(
-			fixture.store.users.suspendAdminUser("admin@test.local", fixture.actor)
-				.ok,
-		).toBe(false);
+		expect(fixture.store.users.suspendAdminUser("admin@test.local", fixture.actor).ok).toBe(false);
 	});
 
 	it("unsuspendAdminUser: empty email returns error", () => {
-		expect(fixture.store.users.unsuspendAdminUser("", fixture.actor).ok).toBe(
-			false,
-		);
+		expect(fixture.store.users.unsuspendAdminUser("", fixture.actor).ok).toBe(false);
 	});
 
 	it("unsuspendAdminUser: non-existent user returns error", () => {
-		expect(
-			fixture.store.users.unsuspendAdminUser("nobody@test.local", fixture.actor)
-				.ok,
-		).toBe(false);
+		expect(fixture.store.users.unsuspendAdminUser("nobody@test.local", fixture.actor).ok).toBe(
+			false,
+		);
 	});
 });
 

@@ -3,14 +3,7 @@
  */
 
 import { join, relative } from "node:path";
-import {
-	AuditReport,
-	ROOT,
-	fromRoot,
-	listFiles,
-	readText,
-	runAudit,
-} from "../lib/audit-utils.js";
+import { AuditReport, fromRoot, listFiles, ROOT, readText, runAudit } from "../lib/audit-utils.js";
 
 const SCAN_DIRS = [
 	fromRoot("packages/astropress/pages"),

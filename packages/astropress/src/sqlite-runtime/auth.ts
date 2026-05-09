@@ -42,9 +42,7 @@ import {
 	verifyPasswordSync,
 } from "./utils";
 
-function mapAuditTargetType(
-	resourceType: string | null | undefined,
-): AuditEvent["targetType"] {
+function mapAuditTargetType(resourceType: string | null | undefined): AuditEvent["targetType"] {
 	switch (resourceType) {
 		case "redirect":
 		case "comment":
@@ -59,11 +57,7 @@ function mapAuditTargetType(
 
 function mapAdminUserRow(row: AdminUserRow) {
 	const status: "active" | "invited" | "suspended" =
-		row.active !== 1
-			? "suspended"
-			: row.has_pending_invite === 1
-				? "invited"
-				: "active";
+		row.active !== 1 ? "suspended" : row.has_pending_invite === 1 ? "invited" : "active";
 	return {
 		id: row.id,
 		email: row.email,
@@ -109,18 +103,19 @@ export function createSqliteAuthStore(
 		hashPassword: hashPasswordSync,
 		hashOpaqueToken: (value) => hashOpaqueToken(value, rootSecret),
 		findAdminUserByEmail(email: string) {
-			return (
-				(getDb().prepare(SQL_FIND_USER).get(email) as
-					| { id: number }
-					| undefined) ?? null
-			);
+			return (getDb().prepare(SQL_FIND_USER).get(email) as { id: number } | undefined) ?? null;
 		},
 		createInvitedAdminUser({
 			email,
 			passwordHash,
 			role,
 			name,
-		}: { email: string; passwordHash: string; role: AdminRole; name: string }) {
+		}: {
+			email: string;
+			passwordHash: string;
+			role: AdminRole;
+			name: string;
+		}) {
 			try {
 				getDb()
 					.prepare(SQL_INSERT_USER)
@@ -131,13 +126,7 @@ export function createSqliteAuthStore(
 			}
 		},
 		getAdminUserIdByEmail(email: string) {
-			return (
-				(
-					getDb().prepare(SQL_FIND_USER).get(email) as
-						| { id: number }
-						| undefined
-				)?.id ?? null
-			);
+			return (getDb().prepare(SQL_FIND_USER).get(email) as { id: number } | undefined)?.id ?? null;
 		},
 		insertUserInvite({
 			inviteId,
@@ -153,9 +142,7 @@ export function createSqliteAuthStore(
 			invitedBy: string;
 		}) {
 			try {
-				getDb()
-					.prepare(SQL_INSERT_INVITE)
-					.run(inviteId, userId, tokenHash, expiresAt, invitedBy);
+				getDb().prepare(SQL_INSERT_INVITE).run(inviteId, userId, tokenHash, expiresAt, invitedBy);
 				return true;
 			} catch {
 				return false;
@@ -177,7 +164,12 @@ export function createSqliteAuthStore(
 			action,
 			summary,
 			targetId,
-		}: { actor: Actor; action: string; summary: string; targetId: string }) {
+		}: {
+			actor: Actor;
+			action: string;
+			summary: string;
+			targetId: string;
+		}) {
 			recordAudit(getDb(), actor, action, summary, "auth", targetId);
 		},
 	});
@@ -191,9 +183,7 @@ export function createSqliteAuthStore(
 		verifyPassword: verifyPasswordSync,
 		cleanupExpiredSessions,
 		findActiveAdminUserByEmail(email: string) {
-			const row = getDb().prepare(SQL_FIND_ACTIVE_USER).get(email) as
-				| ActiveAdminRow
-				| undefined;
+			const row = getDb().prepare(SQL_FIND_ACTIVE_USER).get(email) as ActiveAdminRow | undefined;
 			if (!row) return null;
 			return {
 				id: row.id,
@@ -205,11 +195,7 @@ export function createSqliteAuthStore(
 		},
 		findActiveAdminUserIdByEmail(email: string) {
 			return (
-				(
-					getDb().prepare(SQL_FIND_ACTIVE_ID).get(email) as
-						| { id: number }
-						| undefined
-				)?.id ?? null
+				(getDb().prepare(SQL_FIND_ACTIVE_ID).get(email) as { id: number } | undefined)?.id ?? null
 			);
 		},
 		insertSession({
@@ -227,13 +213,7 @@ export function createSqliteAuthStore(
 		}) {
 			getDb()
 				.prepare(SQL_INSERT_SESSION)
-				.run(
-					sessionToken,
-					userId,
-					csrfToken,
-					ipAddress ?? null,
-					userAgent ?? null,
-				);
+				.run(sessionToken, userId, csrfToken, ipAddress ?? null, userAgent ?? null);
 		},
 		findLiveSessionById(sessionToken: string) {
 			const row = getDb().prepare(SQL_FIND_LIVE_SESSION).get(sessionToken) as
@@ -256,9 +236,7 @@ export function createSqliteAuthStore(
 			getDb().prepare(SQL_REVOKE_SESSION).run(sessionToken);
 		},
 		findInviteTokenByHash(tokenHash: string) {
-			const row = getDb().prepare(SQL_FIND_INVITE).get(tokenHash) as
-				| InviteJoinRow
-				| undefined;
+			const row = getDb().prepare(SQL_FIND_INVITE).get(tokenHash) as InviteJoinRow | undefined;
 			if (!row) return null;
 			return {
 				id: row.id,
@@ -305,9 +283,7 @@ export function createSqliteAuthStore(
 				.run(tokenId, userId, tokenHash, expiresAt, requestedBy);
 		},
 		findPasswordResetTokenByHash(tokenHash: string) {
-			const row = getDb().prepare(SQL_FIND_RESET_TOKEN).get(tokenHash) as
-				| ResetJoinRow
-				| undefined;
+			const row = getDb().prepare(SQL_FIND_RESET_TOKEN).get(tokenHash) as ResetJoinRow | undefined;
 			if (!row) return null;
 			return {
 				id: row.id,
@@ -331,7 +307,12 @@ export function createSqliteAuthStore(
 			action,
 			summary,
 			targetId,
-		}: { actor: Actor; action: string; summary: string; targetId: string }) {
+		}: {
+			actor: Actor;
+			action: string;
+			summary: string;
+			targetId: string;
+		}) {
 			recordAudit(getDb(), actor, action, summary, "auth", targetId);
 		},
 	});

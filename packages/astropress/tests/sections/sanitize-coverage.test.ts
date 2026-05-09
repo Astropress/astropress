@@ -27,17 +27,13 @@ describe("sanitizeSections — coverage", () => {
 	});
 
 	it("keeps non-html-bearing kinds object-equal in shape", async () => {
-		const input: Section[] = [
-			{ id: "g", kind: "gallery", mediaIds: ["a"], columns: 3 },
-		];
+		const input: Section[] = [{ id: "g", kind: "gallery", mediaIds: ["a"], columns: 3 }];
 		const out = await sanitizeSections(input);
 		expect(out[0]).toEqual(input[0]);
 	});
 
 	it("rich-text retains kind discriminator after sanitization", async () => {
-		const out = await sanitizeSections([
-			{ id: "r", kind: "rich-text", html: "<p>x</p>" },
-		]);
+		const out = await sanitizeSections([{ id: "r", kind: "rich-text", html: "<p>x</p>" }]);
 		expect(out[0].kind).toBe("rich-text");
 	});
 

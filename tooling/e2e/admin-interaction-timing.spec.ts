@@ -33,24 +33,16 @@ test.describe("Rubric 52: interaction timing", () => {
 		await expect(page.locator("#__timing_probe__")).toBeVisible();
 
 		// Wait for self-removal — Playwright will poll
-		await page.waitForFunction(
-			() => !document.getElementById("__timing_probe__"),
-			undefined,
-			{ timeout: 8_000 },
-		);
+		await page.waitForFunction(() => !document.getElementById("__timing_probe__"), undefined, {
+			timeout: 8_000,
+		});
 
 		const elapsed = Date.now() - start;
-		expect(elapsed, `notice removed too early (${elapsed}ms)`).toBeGreaterThan(
-			4_900,
-		);
-		expect(elapsed, `notice removed too late (${elapsed}ms)`).toBeLessThan(
-			6_500,
-		);
+		expect(elapsed, `notice removed too early (${elapsed}ms)`).toBeGreaterThan(4_900);
+		expect(elapsed, `notice removed too late (${elapsed}ms)`).toBeLessThan(6_500);
 	});
 
-	test("Scenario: ap-notice without dismiss-after stays persistent after 1s", async ({
-		page,
-	}) => {
+	test("Scenario: ap-notice without dismiss-after stays persistent after 1s", async ({ page }) => {
 		await page.evaluate(() => {
 			const notice = document.createElement("ap-notice");
 			notice.setAttribute("type", "info");
@@ -80,9 +72,7 @@ test.describe("Rubric 52: interaction timing", () => {
 		await expect(page.locator("#__zero_probe__")).toBeVisible();
 	});
 
-	test("Scenario: ap-notice with non-numeric dismiss-after stays persistent", async ({
-		page,
-	}) => {
+	test("Scenario: ap-notice with non-numeric dismiss-after stays persistent", async ({ page }) => {
 		await page.evaluate(() => {
 			const notice = document.createElement("ap-notice");
 			notice.setAttribute("type", "info");

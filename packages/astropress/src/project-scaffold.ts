@@ -4,11 +4,7 @@ import {
 	getAstropressDeploymentMatrixEntry,
 	resolveAstropressDeploymentSupportLevel,
 } from "./deployment-matrix";
-import {
-	createCiFiles,
-	createDeployDoc,
-	createPackageScripts,
-} from "./project-scaffold-ci";
+import { createCiFiles, createDeployDoc, createPackageScripts } from "./project-scaffold-ci";
 import {
 	appHostToDeployTarget,
 	baseEnvExample,
@@ -24,12 +20,7 @@ import {
 
 export type AstropressScaffoldProvider = "sqlite" | "supabase";
 
-export type AstropressAnalyticsProvider =
-	| "umami"
-	| "plausible"
-	| "matomo"
-	| "posthog"
-	| "custom";
+export type AstropressAnalyticsProvider = "umami" | "plausible" | "matomo" | "posthog" | "custom";
 export type AstropressAbTestingProvider = "growthbook" | "unleash" | "custom";
 export type AstropressHeatmapProvider = "openreplay" | "posthog" | "custom";
 
@@ -66,9 +57,7 @@ export interface AstropressProjectScaffold {
 	requiredEnvKeys: string[];
 }
 
-function resolveProfile(
-	input: AstropressProjectScaffoldInput | AstropressScaffoldProvider,
-): {
+function resolveProfile(input: AstropressProjectScaffoldInput | AstropressScaffoldProvider): {
 	appHost: AstropressAppHost;
 	dataServices: AstropressDataServices;
 	provider: AstropressScaffoldProvider;
@@ -88,8 +77,7 @@ function resolveProfile(
 	}
 
 	const dataServices =
-		input.dataServices ??
-		(input.legacyProvider === "supabase" ? "supabase" : "none");
+		input.dataServices ?? (input.legacyProvider === "supabase" ? "supabase" : "none");
 	return {
 		appHost:
 			input.appHost ??
@@ -144,15 +132,10 @@ export function createAstropressProjectScaffold(
 	const analyticsOpt = typeof input === "string" ? undefined : input.analytics;
 	const abTestingOpt = typeof input === "string" ? undefined : input.abTesting;
 	const heatmapOpt = typeof input === "string" ? undefined : input.heatmap;
-	const enableApi =
-		typeof input === "string" ? false : (input.enableApi ?? false);
+	const enableApi = typeof input === "string" ? false : (input.enableApi ?? false);
 	const donationsOpt = typeof input === "string" ? undefined : input.donations;
 
-	const localEnv = baseLocalEnv(
-		profile.provider,
-		profile.appHost,
-		profile.dataServices,
-	);
+	const localEnv = baseLocalEnv(profile.provider, profile.appHost, profile.dataServices);
 	if (enableApi) localEnv.ASTROPRESS_API_ENABLED = "true";
 
 	return {
@@ -165,11 +148,7 @@ export function createAstropressProjectScaffold(
 		supportLevel,
 		localEnv,
 		envExample: {
-			...baseEnvExample(
-				profile.provider,
-				profile.appHost,
-				profile.dataServices,
-			),
+			...baseEnvExample(profile.provider, profile.appHost, profile.dataServices),
 			...buildDataServiceExample(profile.dataServices),
 			...buildAnalyticsEnvExample(analyticsOpt),
 			...buildAbTestingEnvExample(abTestingOpt),

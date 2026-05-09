@@ -28,9 +28,7 @@ describe("readAstropressNhostHostedConfig", () => {
 
 	it("builds the correct preview (console) URL", () => {
 		const config = readAstropressNhostHostedConfig(validEnv);
-		expect(config.previewBaseUrl).toBe(
-			"https://abcdefgh.eu-central-1.nhost.run/console",
-		);
+		expect(config.previewBaseUrl).toBe("https://abcdefgh.eu-central-1.nhost.run/console");
 	});
 
 	it("throws when NHOST_SUBDOMAIN is missing", () => {
@@ -43,9 +41,9 @@ describe("readAstropressNhostHostedConfig", () => {
 	});
 
 	it("throws when NHOST_REGION is missing", () => {
-		expect(() =>
-			readAstropressNhostHostedConfig({ ...validEnv, NHOST_REGION: undefined }),
-		).toThrow(/NHOST_REGION/);
+		expect(() => readAstropressNhostHostedConfig({ ...validEnv, NHOST_REGION: undefined })).toThrow(
+			/NHOST_REGION/,
+		);
 	});
 
 	it("throws when NHOST_ADMIN_SECRET is missing", () => {
@@ -141,8 +139,6 @@ describe("createAstropressNhostHostedAdapter", () => {
 	});
 
 	it("throws when required env vars are missing and no explicit config", () => {
-		expect(() => createAstropressNhostHostedAdapter({ env: {} })).toThrow(
-			/NHOST_SUBDOMAIN/,
-		);
+		expect(() => createAstropressNhostHostedAdapter({ env: {} })).toThrow(/NHOST_SUBDOMAIN/);
 	});
 });

@@ -8,12 +8,8 @@ import {
 
 describe("provider targets", () => {
 	it("includes the required first-party providers for v1", () => {
-		const providers = listFirstPartyProviderTargets().map(
-			(provider) => provider.id,
-		);
-		expect(providers).toEqual(
-			expect.arrayContaining(["github-pages", "cloudflare", "supabase"]),
-		);
+		const providers = listFirstPartyProviderTargets().map((provider) => provider.id);
+		expect(providers).toEqual(expect.arrayContaining(["github-pages", "cloudflare", "supabase"]));
 	});
 
 	it("describes github pages as a static publish target without a database", () => {
@@ -49,12 +45,7 @@ describe("provider targets", () => {
 		}
 	});
 
-	const ALL: ProviderKind[] = [
-		"github-pages",
-		"cloudflare",
-		"supabase",
-		"custom",
-	];
+	const ALL: ProviderKind[] = ["github-pages", "cloudflare", "supabase", "custom"];
 
 	it.each(ALL)("getFirstPartyProviderTarget — id matches for %s", (key) => {
 		const t = getFirstPartyProviderTarget(key);

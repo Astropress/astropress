@@ -31,9 +31,7 @@ describe("createAstropressViteIntegration", () => {
 		expect(r.plugins).toHaveLength(1);
 		expect((r.plugins[0] as { name: string }).name).toBe("local-runtime");
 		expect((r.plugins[0] as { __path: string }).__path).toBe("/runtime.ts");
-		expect(createAstropressLocalRuntimeModulePlugin).toHaveBeenCalledWith(
-			"/runtime.ts",
-		);
+		expect(createAstropressLocalRuntimeModulePlugin).toHaveBeenCalledWith("/runtime.ts");
 		expect(createAstropressPackageResolverPlugin).not.toHaveBeenCalled();
 	});
 
@@ -69,9 +67,7 @@ describe("createAstropressViteIntegration", () => {
 
 	it("does not invoke package-resolver when astropressPackageRoot is empty string (falsy)", () => {
 		// Pins ConditionalExpression on `if (options.astropressPackageRoot)`.
-		(
-			createAstropressPackageResolverPlugin as { mockClear?: () => void }
-		).mockClear?.();
+		(createAstropressPackageResolverPlugin as { mockClear?: () => void }).mockClear?.();
 		const r = createAstropressViteIntegration({
 			localRuntimeModulesPath: "/r.ts",
 			astropressPackageRoot: "",

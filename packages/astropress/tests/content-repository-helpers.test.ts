@@ -1,9 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import {
-	mapContentState,
-	normalizeAssignments,
-} from "../src/content-repository-helpers.js";
+import { mapContentState, normalizeAssignments } from "../src/content-repository-helpers.js";
 
 const baseRecord = {
 	id: "p1",
@@ -61,11 +58,7 @@ describe("mapContentState", () => {
 	});
 
 	it("uses record fields when override is undefined", () => {
-		const out = mapContentState(
-			baseRecord as never,
-			undefined,
-			baseAssignments,
-		);
+		const out = mapContentState(baseRecord as never, undefined, baseAssignments);
 		expect(out.title).toBe("Original title");
 	});
 
@@ -112,20 +105,12 @@ describe("mapContentState", () => {
 	it("preserves an empty-string override.body (?? semantics, not || or &&)", () => {
 		// Editor explicitly cleared the body. Original `??` returns "" (use override).
 		// Mutant `&&` would return record.body since "" is falsy.
-		const out = mapContentState(
-			baseRecord as never,
-			{ body: "" } as never,
-			baseAssignments,
-		);
+		const out = mapContentState(baseRecord as never, { body: "" } as never, baseAssignments);
 		expect(out.body).toBe("");
 	});
 
 	it("preserves an empty-string override.seoTitle (?? semantics)", () => {
-		const out = mapContentState(
-			baseRecord as never,
-			{ seoTitle: "" } as never,
-			baseAssignments,
-		);
+		const out = mapContentState(baseRecord as never, { seoTitle: "" } as never, baseAssignments);
 		expect(out.seoTitle).toBe("");
 	});
 
@@ -139,11 +124,7 @@ describe("mapContentState", () => {
 	});
 
 	it("preserves an empty-string override.excerpt (?? semantics)", () => {
-		const out = mapContentState(
-			baseRecord as never,
-			{ excerpt: "" } as never,
-			baseAssignments,
-		);
+		const out = mapContentState(baseRecord as never, { excerpt: "" } as never, baseAssignments);
 		expect(out.excerpt).toBe("");
 	});
 });

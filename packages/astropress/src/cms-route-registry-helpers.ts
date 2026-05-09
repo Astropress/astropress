@@ -1,10 +1,8 @@
 import type { Actor } from "./persistence-types";
-import type {
-	RuntimeArchiveRouteRecord,
-	RuntimeStructuredPageRouteRecord,
-	RuntimeSystemRouteRecord,
-} from "./runtime-route-registry";
+import type { RuntimeSystemRouteRecord } from "./runtime-route-registry";
+
 export type { AstropressCmsRouteRegistryFactoryInput } from "./cms-route-registry-types";
+
 import type { AstropressCmsRouteRegistryFactoryInput } from "./cms-route-registry-types";
 
 interface RouteActor extends Actor {}
@@ -293,7 +291,6 @@ export function doSaveArchiveRoute(
 		targetId: normalizedPath,
 	});
 	const savedArchive = ctx.getArchiveRoute(normalizedPath);
-	if (!savedArchive)
-		throw new Error(`Archive route ${normalizedPath} not found after save`);
+	if (!savedArchive) throw new Error(`Archive route ${normalizedPath} not found after save`);
 	return { ok: true as const, route: savedArchive };
 }

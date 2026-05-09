@@ -8,10 +8,7 @@ import {
 	insertMediaAssetRecord,
 	processImageVariants,
 } from "./runtime-actions-media-helpers";
-import {
-	deleteRuntimeMediaObject,
-	storeRuntimeMediaObject,
-} from "./runtime-media-storage";
+import { deleteRuntimeMediaObject, storeRuntimeMediaObject } from "./runtime-media-storage";
 
 type MediaAssetInput = {
 	filename: string;
@@ -21,9 +18,7 @@ type MediaAssetInput = {
 	altText?: string;
 };
 
-function checkUploadSize(
-	bytes: Uint8Array,
-): { ok: true } | { ok: false; error: string } {
+function checkUploadSize(bytes: Uint8Array): { ok: true } | { ok: false; error: string } {
 	const maxUploadBytes = peekCmsConfig()?.maxUploadBytes ?? 10 * 1024 * 1024;
 	if (bytes.length > maxUploadBytes) {
 		const limitMib = (maxUploadBytes / (1024 * 1024)).toFixed(1);
@@ -53,9 +48,7 @@ export async function updateRuntimeMediaAsset(
 			}
 
 			const existing = await db
-				.prepare(
-					"SELECT id FROM media_assets WHERE id = ? AND deleted_at IS NULL LIMIT 1",
-				)
+				.prepare("SELECT id FROM media_assets WHERE id = ? AND deleted_at IS NULL LIMIT 1")
 				.bind(id)
 				.first<{ id: string }>();
 
@@ -98,10 +91,7 @@ export async function createRuntimeMediaAsset(
 		return { ok: false as const, error: sizeCheck.error };
 	}
 
-	const imageDimensions = await detectImageDimensionsForMime(
-		input.bytes,
-		input.mimeType,
-	);
+	const imageDimensions = await detectImageDimensionsForMime(input.bytes, input.mimeType);
 
 	return withLocalStoreFallback(
 		locals,
@@ -117,14 +107,7 @@ export async function createRuntimeMediaAsset(
 				imageDimensions,
 				locals,
 			);
-			await insertMediaAssetRecord(
-				db,
-				stored.asset,
-				actor,
-				imageDimensions,
-				thumbnailUrl,
-				srcset,
-			);
+			await insertMediaAssetRecord(db, stored.asset, actor, imageDimensions, thumbnailUrl, srcset);
 
 			await recordD1Audit(
 				locals,
@@ -141,12 +124,7 @@ export async function createRuntimeMediaAsset(
 				size: stored.asset.fileSize,
 				actor: actor.email,
 			});
-			return buildMediaCreateResult(
-				stored.asset.id,
-				imageDimensions,
-				thumbnailUrl,
-				srcset,
-			);
+			return buildMediaCreateResult(stored.asset.id, imageDimensions, thumbnailUrl, srcset);
 		},
 		/* v8 ignore next 1 */
 		(localStore) => localStore.createMediaAsset(input, actor),
@@ -167,9 +145,7 @@ export async function deleteRuntimeMediaAsset(
 			}
 
 			const existing = await db
-				.prepare(
-					"SELECT id FROM media_assets WHERE id = ? AND deleted_at IS NULL LIMIT 1",
-				)
+				.prepare("SELECT id FROM media_assets WHERE id = ? AND deleted_at IS NULL LIMIT 1")
 				.bind(assetId)
 				.first<{ id: string }>();
 
@@ -181,15 +157,11 @@ export async function deleteRuntimeMediaAsset(
 			}
 
 			await db
-				.prepare(
-					"UPDATE media_assets SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?",
-				)
+				.prepare("UPDATE media_assets SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?")
 				.bind(assetId)
 				.run();
 			const row = await db
-				.prepare(
-					"SELECT local_path, r2_key FROM media_assets WHERE id = ? LIMIT 1",
-				)
+				.prepare("SELECT local_path, r2_key FROM media_assets WHERE id = ? LIMIT 1")
 				.bind(assetId)
 				.first<{ local_path: string | null; r2_key: string | null }>();
 			await deleteRuntimeMediaObject(

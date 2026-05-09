@@ -3,12 +3,7 @@
 		"collect": {
 			"staticDistDir": "examples/github-pages/dist",
 			"settings": {
-				"onlyCategories": [
-					"performance",
-					"accessibility",
-					"best-practices",
-					"seo"
-				],
+				"onlyCategories": ["performance", "accessibility", "best-practices", "seo"],
 				"formFactor": "desktop",
 				"throttlingMethod": "simulate"
 			}

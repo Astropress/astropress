@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-05-06T01:09:16.439Z",
+  "updatedAt": "2026-05-06T20:02:54.620Z",
   "scores": {
     "astropress-cli/src/cli_config/args/dev_deploy.rs": {
       "score": 100,
@@ -127,7 +127,7 @@
     },
     "astropress-cli/src/scaffold.rs": {
       "score": 100,
-      "hash": "8fb4cd4d02e2c52ada75a1088e566666a87a3246"
+      "hash": "2c3a75ae90a55606c142251d438fa5f7a1317f32"
     },
     "astropress-cli/src/service_docs/markdown.rs": {
       "score": 100,

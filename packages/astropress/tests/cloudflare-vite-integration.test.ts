@@ -48,12 +48,8 @@ describe("cloudflare vite integration helper", () => {
 			find: /^.*\/sqlite-bootstrap(?:\.[cm]?[jt]s)?$/,
 			replacement: "astropress/cloudflare-sqlite-bootstrap-stub",
 		});
-		expect(integration.aliases[12]?.replacement).toBe(
-			"astropress/cloudflare-local-runtime-stubs",
-		);
-		expect(integration.plugin.name).toBe(
-			"astropress-cloudflare-local-runtime-stubs",
-		);
+		expect(integration.aliases[12]?.replacement).toBe("astropress/cloudflare-local-runtime-stubs");
+		expect(integration.plugin.name).toBe("astropress-cloudflare-local-runtime-stubs");
 		expect(integration.plugin.resolveId("./local-runtime-modules")).toBe(
 			"astropress/cloudflare-local-runtime-stubs",
 		);
@@ -61,33 +57,27 @@ describe("cloudflare vite integration helper", () => {
 			"astropress/cloudflare-local-image-storage-stub",
 		);
 		expect(
-			integration.plugin.resolveId(
-				"/workspace/packages/astropress/src/local-image-storage.ts",
-			),
+			integration.plugin.resolveId("/workspace/packages/astropress/src/local-image-storage.ts"),
 		).toBe("astropress/cloudflare-local-image-storage-stub");
 		expect(integration.plugin.resolveId("astropress/local-media-storage")).toBe(
 			"astropress/cloudflare-local-media-storage-stub",
 		);
 		expect(
-			integration.plugin.resolveId(
-				"/workspace/packages/astropress/src/local-media-storage.ts",
-			),
+			integration.plugin.resolveId("/workspace/packages/astropress/src/local-media-storage.ts"),
 		).toBe("astropress/cloudflare-local-media-storage-stub");
 		expect(integration.plugin.resolveId("astropress/adapters/sqlite")).toBe(
 			"astropress/cloudflare-sqlite-adapter-stub",
 		);
-		expect(
-			integration.plugin.resolveId("astropress/sqlite-admin-runtime"),
-		).toBe("astropress/cloudflare-sqlite-admin-runtime-stub");
+		expect(integration.plugin.resolveId("astropress/sqlite-admin-runtime")).toBe(
+			"astropress/cloudflare-sqlite-admin-runtime-stub",
+		);
 		expect(integration.plugin.resolveId("astropress/sqlite-bootstrap")).toBe(
 			"astropress/cloudflare-sqlite-bootstrap-stub",
 		);
 
 		// line 115: non-matching ID returns null
 		expect(
-			integration.plugin.resolveId(
-				"/workspace/packages/astropress/src/some-other-module.ts",
-			),
+			integration.plugin.resolveId("/workspace/packages/astropress/src/some-other-module.ts"),
 		).toBeNull();
 
 		// lines 23-24: file:// URL normalization (decodeURIComponent + file:// strip)

@@ -41,15 +41,11 @@ const actor: Actor = { email: "alice@example.com" };
 
 beforeEach(() => {
 	// getCloudflareBindings reads a global — set it explicitly per test.
-	(
-		globalThis as unknown as Record<string, unknown>
-	).__astropressCloudflareBindings = {};
+	(globalThis as unknown as Record<string, unknown>).__astropressCloudflareBindings = {};
 });
 
 afterEach(() => {
-	(
-		globalThis as unknown as Record<string, unknown>
-	).__astropressCloudflareBindings = undefined;
+	(globalThis as unknown as Record<string, unknown>).__astropressCloudflareBindings = undefined;
 	vi.resetModules();
 });
 
@@ -63,9 +59,7 @@ describe("recordD1Audit", () => {
 
 	it("inserts with the expected SQL and bindings in actor/action/type/id/summary order", async () => {
 		const calls: CapturedCall[] = [];
-		(
-			globalThis as unknown as Record<string, unknown>
-		).__astropressCloudflareBindings = {
+		(globalThis as unknown as Record<string, unknown>).__astropressCloudflareBindings = {
 			DB: makeDb(calls),
 		};
 
@@ -74,9 +68,7 @@ describe("recordD1Audit", () => {
 		expect(calls.length).toBeGreaterThanOrEqual(1);
 		const insert = calls[0];
 		expect(insert.sql).toContain("INSERT INTO audit_events");
-		expect(insert.sql).toContain(
-			"(user_email, action, resource_type, resource_id, summary)",
-		);
+		expect(insert.sql).toContain("(user_email, action, resource_type, resource_id, summary)");
 		expect(insert.bindings).toEqual([
 			"alice@example.com",
 			"publish",
@@ -88,9 +80,7 @@ describe("recordD1Audit", () => {
 
 	it("issues a retention DELETE with the configured days when retention > 0", async () => {
 		const calls: CapturedCall[] = [];
-		(
-			globalThis as unknown as Record<string, unknown>
-		).__astropressCloudflareBindings = {
+		(globalThis as unknown as Record<string, unknown>).__astropressCloudflareBindings = {
 			DB: makeDb(calls),
 		};
 
@@ -110,9 +100,7 @@ describe("recordD1Audit", () => {
 			peekCmsConfig: () => ({ auditRetentionDays: 0 }),
 		}));
 		const calls: CapturedCall[] = [];
-		(
-			globalThis as unknown as Record<string, unknown>
-		).__astropressCloudflareBindings = {
+		(globalThis as unknown as Record<string, unknown>).__astropressCloudflareBindings = {
 			DB: makeDb(calls),
 		};
 		const mod = await import("../src/d1-audit");
@@ -129,9 +117,7 @@ describe("recordD1Audit", () => {
 			peekCmsConfig: () => ({ auditRetentionDays: 7 }),
 		}));
 		const calls: CapturedCall[] = [];
-		(
-			globalThis as unknown as Record<string, unknown>
-		).__astropressCloudflareBindings = {
+		(globalThis as unknown as Record<string, unknown>).__astropressCloudflareBindings = {
 			DB: makeDb(calls),
 		};
 		const mod = await import("../src/d1-audit");
@@ -148,9 +134,7 @@ describe("recordD1Audit", () => {
 			peekCmsConfig: () => undefined,
 		}));
 		const calls: CapturedCall[] = [];
-		(
-			globalThis as unknown as Record<string, unknown>
-		).__astropressCloudflareBindings = {
+		(globalThis as unknown as Record<string, unknown>).__astropressCloudflareBindings = {
 			DB: makeDb(calls),
 		};
 		const mod = await import("../src/d1-audit");

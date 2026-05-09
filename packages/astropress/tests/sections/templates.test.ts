@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { parseSections } from "../../src/sections/schema";
 import {
-	TEMPLATE_CATALOG,
-	TEMPLATE_KEYS,
 	buildTemplate,
 	isTemplateKey,
+	TEMPLATE_CATALOG,
+	TEMPLATE_KEYS,
 } from "../../src/sections/templates";
 
 describe("page templates", () => {

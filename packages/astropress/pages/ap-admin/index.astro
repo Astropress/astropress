@@ -42,8 +42,7 @@ const statusLabel = (status: string | null | undefined): string => {
 const kindLabel = (kind: string | null | undefined): string => {
 	if (kind === "post") return t("common.kindPost");
 	if (kind === "page") return t("common.kindPage");
-	if (kind === "routePage" || kind === "route-page")
-		return t("common.kindRoutePage");
+	if (kind === "routePage" || kind === "route-page") return t("common.kindRoutePage");
 	return kind ?? "";
 };
 const deploymentSucceeded = latestDeployment?.action === "deployment.trigger";

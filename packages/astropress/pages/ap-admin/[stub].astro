@@ -29,11 +29,8 @@ export const prerender = false;
 // also injects this file under each of the 25 enumerated static patterns
 // (so the route catalog stays explicit). Either way, the slug is the last
 // path segment.
-const slugFromParam =
-	typeof Astro.params.stub === "string" ? Astro.params.stub : undefined;
-const slugFromPath = Astro.url.pathname
-	.replace(/^\/ap-admin\//, "")
-	.replace(/\/+$/, "");
+const slugFromParam = typeof Astro.params.stub === "string" ? Astro.params.stub : undefined;
+const slugFromPath = Astro.url.pathname.replace(/^\/ap-admin\//, "").replace(/\/+$/, "");
 const slug = slugFromParam ?? slugFromPath;
 const entry = slug ? getAdminStubPage(slug) : undefined;
 if (!entry) {

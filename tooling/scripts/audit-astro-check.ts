@@ -33,11 +33,10 @@ interface Baseline {
 function runCheck(): { erroredFiles: string[]; totalErrors: number } {
 	let stdout = "";
 	try {
-		stdout = execFileSync(
-			"bunx",
-			["astro", "check", "--root", "packages/astropress"],
-			{ encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] },
-		);
+		stdout = execFileSync("bunx", ["astro", "check", "--root", "packages/astropress"], {
+			encoding: "utf8",
+			stdio: ["ignore", "pipe", "pipe"],
+		});
 	} catch (e) {
 		const err = e as { stdout?: string };
 		stdout = err.stdout ?? "";
@@ -86,9 +85,7 @@ const baseline: Baseline = existsSync(BASELINE)
 
 const baselineSet = new Set(baseline.erroredFiles);
 const newErroredFiles = result.erroredFiles.filter((p) => !baselineSet.has(p));
-const fixedFiles = baseline.erroredFiles.filter(
-	(p) => !result.erroredFiles.includes(p),
-);
+const fixedFiles = baseline.erroredFiles.filter((p) => !result.erroredFiles.includes(p));
 
 const report = {
 	generatedAt: new Date().toISOString(),
@@ -103,9 +100,7 @@ if (!existsSync(dirname(OUT))) mkdirSync(dirname(OUT), { recursive: true });
 writeFileSync(OUT, `${JSON.stringify(report, null, 2)}\n`);
 
 if (newErroredFiles.length > 0) {
-	console.error(
-		`astro-check FAIL: ${newErroredFiles.length} NEW file(s) with type errors:`,
-	);
+	console.error(`astro-check FAIL: ${newErroredFiles.length} NEW file(s) with type errors:`);
 	for (const p of newErroredFiles) console.error(`  - ${p}`);
 	console.error(
 		"\nFix the new errors, OR if you intentionally added a known-broken file, run:\n  bun run tooling/scripts/audit-astro-check.ts --rewrite-baseline",

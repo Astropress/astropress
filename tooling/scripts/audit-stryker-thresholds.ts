@@ -16,7 +16,7 @@
  * this file.
  */
 
-import { readFileSync, readdirSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
 const FLOOR = 95;
@@ -24,9 +24,7 @@ const STRYKER_DIR = "tooling/stryker";
 
 function extractBreak(source: string): number | null {
 	// Find `thresholds: { ..., break: <number>, ... }` — tolerant of formatting.
-	const match = source.match(
-		/thresholds\s*:\s*\{[^}]*\bbreak\s*:\s*(\d+(?:\.\d+)?)/,
-	);
+	const match = source.match(/thresholds\s*:\s*\{[^}]*\bbreak\s*:\s*(\d+(?:\.\d+)?)/);
 	return match ? Number(match[1]) : null;
 }
 
@@ -69,16 +67,10 @@ function main(): number {
 	if (violations.length > 0) {
 		console.error("stryker-thresholds audit FAILED:");
 		for (const v of violations) {
-			console.error(
-				`  ${v.file}: thresholds.break = ${v.value} (project floor is ${FLOOR})`,
-			);
+			console.error(`  ${v.file}: thresholds.break = ${v.value} (project floor is ${FLOOR})`);
 		}
-		console.error(
-			"\nDo not lower the floor. Raise mutation coverage by adding tests or",
-		);
-		console.error(
-			"refactoring code (e.g. dependency injection so error paths are reachable).",
-		);
+		console.error("\nDo not lower the floor. Raise mutation coverage by adding tests or");
+		console.error("refactoring code (e.g. dependency injection so error paths are reachable).");
 		return 1;
 	}
 

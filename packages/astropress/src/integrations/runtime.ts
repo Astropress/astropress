@@ -12,11 +12,7 @@
 import type { RootSecretCandidates } from "../integration-secret-envelope.js";
 import type { IntegrationsRepository } from "../sqlite-runtime/integrations.js";
 
-import {
-	type IntegrationDomain,
-	getProvider,
-	listProviders,
-} from "./registry.js";
+import { getProvider, type IntegrationDomain, listProviders } from "./registry.js";
 
 export interface ConnectedProvider<
 	TFields extends Record<string, string> = Record<string, string>,
@@ -45,9 +41,7 @@ export interface GetConnectedProviderArgs {
  */
 export async function getConnectedProvider<
 	TFields extends Record<string, string> = Record<string, string>,
->(
-	args: GetConnectedProviderArgs,
-): Promise<ConnectedProvider<TFields> | undefined> {
+>(args: GetConnectedProviderArgs): Promise<ConnectedProvider<TFields> | undefined> {
 	const statuses = args.repo.listStatuses();
 	const inDomain = statuses.filter((s) => s.domain === args.domain);
 	const active = inDomain.find((s) => s.status === "connected");

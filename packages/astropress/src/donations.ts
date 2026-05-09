@@ -31,23 +31,14 @@ export function resolveDonationSnippets(
 	siteUrl: string,
 	optedOut: boolean,
 ): DonationSnippets {
-	const any = !!(
-		donations?.giveLively ||
-		donations?.liberapay ||
-		donations?.pledgeCrypto
-	);
+	const any = !!(donations?.giveLively || donations?.liberapay || donations?.pledgeCrypto);
 
 	const giveLively =
 		!optedOut && donations?.giveLively
-			? buildGiveLivelySnippet(
-					donations.giveLively.orgSlug,
-					donations.giveLively.campaignSlug,
-				)
+			? buildGiveLivelySnippet(donations.giveLively.orgSlug, donations.giveLively.campaignSlug)
 			: "";
 
-	const liberapay = donations?.liberapay
-		? buildLiberapaySnippet(donations.liberapay.username)
-		: "";
+	const liberapay = donations?.liberapay ? buildLiberapaySnippet(donations.liberapay.username) : "";
 
 	const pledgeCrypto =
 		!optedOut && donations?.pledgeCrypto
@@ -79,19 +70,11 @@ export function resolveDonationSnippets(
 }
 
 function escAttr(value: string): string {
-	return value
-		.replace(/&/g, "&amp;")
-		.replace(/"/g, "&quot;")
-		.replace(/</g, "&lt;");
+	return value.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
 }
 
-function buildGiveLivelySnippet(
-	orgSlug: string,
-	campaignSlug?: string,
-): string {
-	const identifier = escAttr(
-		campaignSlug ? `${orgSlug}/${campaignSlug}` : `${orgSlug}/${orgSlug}`,
-	);
+function buildGiveLivelySnippet(orgSlug: string, campaignSlug?: string): string {
+	const identifier = escAttr(campaignSlug ? `${orgSlug}/${campaignSlug}` : `${orgSlug}/${orgSlug}`);
 	return [
 		`<script src="https://assets.givelively.org/widget/simple_fundraiser.js" defer></script>`,
 		`<div id="give-lively-widget" class="gl-simple-fundraiser-widget"`,
@@ -125,8 +108,7 @@ export function buildDonationsEnvExample(
 	const result: Record<string, string> = {};
 	if (donations.giveLively) {
 		result.GIVELIVELY_ORG_SLUG = "replace-with-your-org-slug";
-		result.GIVELIVELY_CAMPAIGN_SLUG =
-			"replace-with-your-campaign-slug-or-remove";
+		result.GIVELIVELY_CAMPAIGN_SLUG = "replace-with-your-campaign-slug-or-remove";
 	}
 	if (donations.liberapay) {
 		result.LIBERAPAY_USERNAME = "replace-with-your-liberapay-username";

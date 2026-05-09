@@ -2,10 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { z } from "zod";
 
 import * as adminStoreDispatch from "../src/admin-store-dispatch";
-import {
-	_resetRegistryForTests,
-	registerProvider,
-} from "../src/integrations/registry";
+import { _resetRegistryForTests, registerProvider } from "../src/integrations/registry";
 import {
 	connectIntegrationAction,
 	disconnectIntegrationAction,
@@ -38,8 +35,7 @@ function withRepo(repo: FakeRepo | null) {
 	// Stub the dispatch helper to always run the local-store branch
 	// (no D1 binding) and hand back a minimal store with the repo.
 	vi.spyOn(adminStoreDispatch, "withLocalStoreFallback").mockImplementation(
-		async (_locals, _onD1, onLocal) =>
-			onLocal({ integrations: repo ?? undefined } as never),
+		async (_locals, _onD1, onLocal) => onLocal({ integrations: repo ?? undefined } as never),
 	);
 }
 
@@ -141,12 +137,7 @@ describe("reverifyIntegrationAction", () => {
 
 	it("returns INTEGRATIONS_NOT_AVAILABLE when the repo is missing", async () => {
 		withRepo(null);
-		const r = await reverifyIntegrationAction(
-			null,
-			"newsletter",
-			"fake-listmonk",
-			{ apiKey: "k" },
-		);
+		const r = await reverifyIntegrationAction(null, "newsletter", "fake-listmonk", { apiKey: "k" });
 		expect(r).toEqual({
 			ok: false,
 			status: "error",
@@ -156,12 +147,7 @@ describe("reverifyIntegrationAction", () => {
 
 	it("returns INTEGRATIONS_NOT_AVAILABLE on the D1 path (no local store)", async () => {
 		withD1Fallback();
-		const r = await reverifyIntegrationAction(
-			null,
-			"newsletter",
-			"fake-listmonk",
-			{ apiKey: "k" },
-		);
+		const r = await reverifyIntegrationAction(null, "newsletter", "fake-listmonk", { apiKey: "k" });
 		expect(r).toEqual({
 			ok: false,
 			status: "error",
@@ -172,12 +158,7 @@ describe("reverifyIntegrationAction", () => {
 	it("calls repo.updateStatus with status='connected' when verify passes (no provider.verify => trivially ok)", async () => {
 		const repo = makeRepo();
 		withRepo(repo);
-		const r = await reverifyIntegrationAction(
-			null,
-			"newsletter",
-			"fake-listmonk",
-			{ apiKey: "k" },
-		);
+		const r = await reverifyIntegrationAction(null, "newsletter", "fake-listmonk", { apiKey: "k" });
 		expect(r.ok).toBe(true);
 		expect(repo.updateStatus).toHaveBeenCalledOnce();
 		const [updateArgs] = repo.updateStatus.mock.calls[0];
@@ -188,11 +169,7 @@ describe("reverifyIntegrationAction", () => {
 describe("disconnectIntegrationAction", () => {
 	it("returns INTEGRATIONS_NOT_AVAILABLE when the repo is missing", async () => {
 		withRepo(null);
-		const r = await disconnectIntegrationAction(
-			null,
-			"newsletter",
-			"fake-listmonk",
-		);
+		const r = await disconnectIntegrationAction(null, "newsletter", "fake-listmonk");
 		expect(r).toEqual({
 			ok: false,
 			code: "INTEGRATIONS_NOT_AVAILABLE",
@@ -201,22 +178,14 @@ describe("disconnectIntegrationAction", () => {
 
 	it("returns INTEGRATIONS_NOT_AVAILABLE on the D1 path (no local store)", async () => {
 		withD1Fallback();
-		const r = await disconnectIntegrationAction(
-			null,
-			"newsletter",
-			"fake-listmonk",
-		);
+		const r = await disconnectIntegrationAction(null, "newsletter", "fake-listmonk");
 		expect(r).toEqual({ ok: false, code: "INTEGRATIONS_NOT_AVAILABLE" });
 	});
 
 	it("calls repo.disconnect with the (domain, providerId) pair", async () => {
 		const repo = makeRepo();
 		withRepo(repo);
-		const r = await disconnectIntegrationAction(
-			null,
-			"newsletter",
-			"fake-listmonk",
-		);
+		const r = await disconnectIntegrationAction(null, "newsletter", "fake-listmonk");
 		expect(r).toEqual({ ok: true });
 		expect(repo.disconnect).toHaveBeenCalledWith("newsletter", "fake-listmonk");
 	});

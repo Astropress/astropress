@@ -29,7 +29,7 @@ export interface OAuthProviderDefinition {
 	readonly label: string;
 	readonly authorizationUrl: string;
 	readonly tokenUrl: string;
-	readonly scopes: ReadonlyArray<string>;
+	readonly scopes: readonly string[];
 	readonly clientIdEnv: string;
 	readonly clientSecretEnv: string;
 	/** Path the IdP should redirect to. Combined with the request origin at start time. */
@@ -52,9 +52,7 @@ function key(domain: IntegrationDomain, providerId: string): string {
 	return `${domain}|${providerId}`;
 }
 
-export function registerOAuthProvider(
-	def: OAuthProviderDefinition,
-): OAuthProviderDefinition {
+export function registerOAuthProvider(def: OAuthProviderDefinition): OAuthProviderDefinition {
 	const k = key(def.domain, def.id);
 	if (registry.has(k)) {
 		throw new OAuthRegistryError(
@@ -73,9 +71,7 @@ export function getOAuthProvider(
 	return registry.get(key(domain, providerId));
 }
 
-export function listOAuthProviders(
-	domain: IntegrationDomain,
-): ReadonlyArray<OAuthProviderDefinition> {
+export function listOAuthProviders(domain: IntegrationDomain): readonly OAuthProviderDefinition[] {
 	const out: OAuthProviderDefinition[] = [];
 	for (const [k, v] of registry) {
 		if (k.startsWith(`${domain}|`)) out.push(v);

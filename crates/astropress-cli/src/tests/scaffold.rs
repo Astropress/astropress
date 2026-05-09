@@ -52,6 +52,13 @@ fn scaffolds_new_project_from_example() {
     assert!(project_dir.join(".github/workflows/deploy-astropress.yml").exists());
     assert!(package_json.contains("\"doctor:strict\": \"astropress doctor --strict\""));
     assert!(package_json.contains("\"deploy:vercel\":"));
+
+    // Templates carrying a `.tpl` suffix are emitted with the suffix stripped
+    // so biome 2 doesn't trip on a nested-root config in the parent monorepo.
+    // Catches mutants on the suffix detection (`ends_with(".tpl")`) and the
+    // slice arithmetic (`s.len() - 4`) in scaffold.rs::write_embedded_dir.
+    assert!(project_dir.join("biome.json").exists(), "biome.json should be emitted with the .tpl suffix stripped");
+    assert!(!project_dir.join("biome.json.tpl").exists(), "biome.json.tpl should not appear in scaffold output");
 }
 
 #[test]

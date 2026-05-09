@@ -1,12 +1,6 @@
 import type { D1DatabaseLike } from "./d1-database";
-import {
-	createD1ContentReadPart,
-	createD1SchedulingPart,
-} from "./d1-store-content";
-import {
-	createD1OperationsMutationPart,
-	createD1OperationsReadPart,
-} from "./d1-store-operations";
+import { createD1ContentReadPart, createD1SchedulingPart } from "./d1-store-content";
+import { createD1OperationsMutationPart, createD1OperationsReadPart } from "./d1-store-operations";
 import {
 	createD1AuthorsMutationPart,
 	createD1AuthorsReadPart,
@@ -35,8 +29,8 @@ import type { SiteSettings } from "./site-settings";
 
 // Re-export types so existing consumers don't need to change imports
 export type {
-	AuthorRecord,
 	AuditEvent,
+	AuthorRecord,
 	CommentRecord,
 	CommentStatus,
 	ContactSubmission,
@@ -46,11 +40,11 @@ export type {
 	ManagedAdminUser,
 	MediaAsset,
 	RedirectRule,
-	TaxonomyTerm,
 	SiteSettings,
+	TaxonomyTerm,
+	TestimonialStatus,
 	TestimonialSubmission,
 	TestimonialSubmissionInput,
-	TestimonialStatus,
 };
 
 export interface D1AdminReadStore {
@@ -88,31 +82,18 @@ export interface D1AdminReadStore {
 	};
 	submissions: {
 		getContactSubmissions(): Promise<ContactSubmission[]>;
-		getTestimonials(
-			status?: TestimonialStatus,
-		): Promise<TestimonialSubmission[]>;
+		getTestimonials(status?: TestimonialStatus): Promise<TestimonialSubmission[]>;
 	};
 	translations: {
-		getEffectiveTranslationState(
-			route: string,
-			fallback?: string,
-		): Promise<string>;
+		getEffectiveTranslationState(route: string, fallback?: string): Promise<string>;
 	};
 	settings: {
 		getSettings(): Promise<SiteSettings>;
 	};
 	rateLimits: {
-		checkRateLimit(
-			key: string,
-			max: number,
-			windowMs: number,
-		): Promise<boolean>;
+		checkRateLimit(key: string, max: number, windowMs: number): Promise<boolean>;
 		peekRateLimit(key: string, max: number, windowMs: number): Promise<boolean>;
-		recordFailedAttempt(
-			key: string,
-			max: number,
-			windowMs: number,
-		): Promise<void>;
+		recordFailedAttempt(key: string, max: number, windowMs: number): Promise<void>;
 	};
 	media: {
 		listMediaAssets(): Promise<MediaAsset[]>;
@@ -121,18 +102,18 @@ export interface D1AdminReadStore {
 
 export interface D1AdminMutationStore {
 	authors: {
-		createAuthor(input: { name: string; slug?: string; bio?: string }): Promise<
-			{ ok: true } | { ok: false; error: string }
-		>;
+		createAuthor(input: {
+			name: string;
+			slug?: string;
+			bio?: string;
+		}): Promise<{ ok: true } | { ok: false; error: string }>;
 		updateAuthor(input: {
 			id: number;
 			name: string;
 			slug?: string;
 			bio?: string;
 		}): Promise<{ ok: true } | { ok: false; error: string }>;
-		deleteAuthor(
-			id: number,
-		): Promise<{ ok: true } | { ok: false; error: string }>;
+		deleteAuthor(id: number): Promise<{ ok: true } | { ok: false; error: string }>;
 	};
 	taxonomies: {
 		createCategory(input: {
@@ -146,9 +127,7 @@ export interface D1AdminMutationStore {
 			slug?: string;
 			description?: string;
 		}): Promise<{ ok: true } | { ok: false; error: string }>;
-		deleteCategory(
-			id: number,
-		): Promise<{ ok: true } | { ok: false; error: string }>;
+		deleteCategory(id: number): Promise<{ ok: true } | { ok: false; error: string }>;
 		createTag(input: {
 			name: string;
 			slug?: string;
@@ -172,9 +151,7 @@ export interface D1AdminMutationStore {
 			ok: true;
 			submission: ContactSubmission;
 		}>;
-		submitTestimonial(
-			input: TestimonialSubmissionInput,
-		): Promise<{ ok: true; id: string }>;
+		submitTestimonial(input: TestimonialSubmissionInput): Promise<{ ok: true; id: string }>;
 		moderateTestimonial(
 			id: string,
 			status: TestimonialStatus,
@@ -194,17 +171,9 @@ export interface D1AdminMutationStore {
 		}>;
 	};
 	rateLimits: {
-		checkRateLimit(
-			key: string,
-			max: number,
-			windowMs: number,
-		): Promise<boolean>;
+		checkRateLimit(key: string, max: number, windowMs: number): Promise<boolean>;
 		peekRateLimit(key: string, max: number, windowMs: number): Promise<boolean>;
-		recordFailedAttempt(
-			key: string,
-			max: number,
-			windowMs: number,
-		): Promise<void>;
+		recordFailedAttempt(key: string, max: number, windowMs: number): Promise<void>;
 	};
 }
 
@@ -217,9 +186,7 @@ export function createD1AdminReadStore(db: D1DatabaseLike): D1AdminReadStore {
 	};
 }
 
-export function createD1AdminMutationStore(
-	db: D1DatabaseLike,
-): D1AdminMutationStore {
+export function createD1AdminMutationStore(db: D1DatabaseLike): D1AdminMutationStore {
 	return {
 		authors: createD1AuthorsMutationPart(db),
 		taxonomies: createD1TaxonomiesMutationPart(db),

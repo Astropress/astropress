@@ -10,9 +10,7 @@
 
 import type { AdminLabelKey } from "./admin-labels";
 
-export const LABEL_TRANSLATION_KEYS: ReadonlyArray<
-	readonly [string, AdminLabelKey]
-> = [
+export const LABEL_TRANSLATION_KEYS: ReadonlyArray<readonly [string, AdminLabelKey]> = [
 	["sidebarTitle", "sidebarTitle"],
 	["signedInAsPrefix", "signedInAsPrefix"],
 	["signOut", "signOut"],
@@ -42,9 +40,7 @@ export const LABEL_TRANSLATION_KEYS: ReadonlyArray<
 	["changeLanguage", "changeLanguage"],
 ];
 
-export const NAVIGATION_TRANSLATION_KEYS: ReadonlyArray<
-	readonly [string, AdminLabelKey]
-> = [
+export const NAVIGATION_TRANSLATION_KEYS: ReadonlyArray<readonly [string, AdminLabelKey]> = [
 	["dashboard", "navDashboard"],
 	["contentGroup", "navContentGroup"],
 	["pages", "navPages"],

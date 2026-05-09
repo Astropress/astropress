@@ -2,8 +2,8 @@ import type { D1DatabaseLike } from "./d1-database";
 import type { JsonValue } from "./json-types";
 import {
 	type ContentStatus,
-	type PersistedOverrideRow,
 	mapPersistedOverrideRow,
+	type PersistedOverrideRow,
 } from "./persistence-commons";
 import type { ContentOverride, ContentRecord } from "./persistence-types";
 
@@ -29,9 +29,7 @@ export interface PageRecord {
 	status?: ContentStatus;
 }
 
-export function mapPersistedOverride(
-	row: PersistedOverrideRow | null,
-): ContentOverride | null {
+export function mapPersistedOverride(row: PersistedOverrideRow | null): ContentOverride | null {
 	const mapped = mapPersistedOverrideRow(row);
 	if (!mapped) return null;
 	// D1 schema lacks the metadata column; strip it to keep the return type identical.
@@ -39,27 +37,18 @@ export function mapPersistedOverride(
 	return rest;
 }
 
-export async function getD1ContentAssignmentIds(
-	db: D1DatabaseLike,
-	slug: string,
-) {
+export async function getD1ContentAssignmentIds(db: D1DatabaseLike, slug: string) {
 	const [authorRows, categoryRows, tagRows] = await Promise.all([
 		db
-			.prepare(
-				"SELECT author_id FROM content_authors WHERE slug = ? ORDER BY author_id ASC",
-			)
+			.prepare("SELECT author_id FROM content_authors WHERE slug = ? ORDER BY author_id ASC")
 			.bind(slug)
 			.all<{ author_id: number }>(),
 		db
-			.prepare(
-				"SELECT category_id FROM content_categories WHERE slug = ? ORDER BY category_id ASC",
-			)
+			.prepare("SELECT category_id FROM content_categories WHERE slug = ? ORDER BY category_id ASC")
 			.bind(slug)
 			.all<{ category_id: number }>(),
 		db
-			.prepare(
-				"SELECT tag_id FROM content_tags WHERE slug = ? ORDER BY tag_id ASC",
-			)
+			.prepare("SELECT tag_id FROM content_tags WHERE slug = ? ORDER BY tag_id ASC")
 			.bind(slug)
 			.all<{ tag_id: number }>(),
 	]);
@@ -87,10 +76,7 @@ export function mergeContentOverride(
 		tagIds: assignments.tagIds,
 		seoTitle: override?.seoTitle ?? pageRecord.seoTitle ?? pageRecord.title,
 		metaDescription:
-			override?.metaDescription ??
-			pageRecord.metaDescription ??
-			pageRecord.summary ??
-			"",
+			override?.metaDescription ?? pageRecord.metaDescription ?? pageRecord.summary ?? "",
 		excerpt: override?.excerpt ?? pageRecord.summary,
 		ogTitle: override?.ogTitle,
 		ogDescription: override?.ogDescription,

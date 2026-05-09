@@ -33,6 +33,22 @@ export default {
 		"!src/project-scaffold-passphrase-wordlist.ts",
 		"!src/provider-targets-data.ts",
 		"!src/site-settings.ts",
+		"!src/admin-app-integration-data.ts",
+		"!src/admin-page-models-access-data.ts",
+		"!src/integrations/registry-data.ts",
+		"!src/sqlite-admin-runtime-options.ts",
+		"!src/sqlite-admin-runtime-wiring.ts",
+		"!src/sqlite-bootstrap-seed-sql.ts",
+		"!src/import/wordpress-xml-tags-data.ts",
+		// Pure barrel files (only `export … from` lines) and pure type-declaration
+		// files. Stryker produces zero mutants for these → absent from the report
+		// → gate would mark UNSCORED. Honors the in-file `stryker-disable-file:
+		// data-only` markers on each.
+		"!src/integration.ts",
+		"!src/integrations/domains.ts",
+		"!src/platform-contracts-helpers.ts",
+		"!src/runtime-admin-actions.ts",
+		"!src/runtime-route-registry.ts",
 	],
 	testRunner: "vitest",
 	coverageAnalysis: "perTest",

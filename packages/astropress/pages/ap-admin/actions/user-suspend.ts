@@ -1,5 +1,4 @@
-import { suspendRuntimeAdminUser } from "@astropress-diy/astropress";
-import { withAdminFormAction } from "@astropress-diy/astropress";
+import { suspendRuntimeAdminUser, withAdminFormAction } from "@astropress-diy/astropress";
 import type { APIRoute } from "astro";
 
 export const POST: APIRoute = async (context) =>

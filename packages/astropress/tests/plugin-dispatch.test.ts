@@ -29,16 +29,12 @@ afterEach(() => {
 describe("dispatchPluginContentEvent", () => {
 	it("is a no-op when no config is registered", async () => {
 		setPlugins(null);
-		await expect(
-			dispatchPluginContentEvent("onContentSave", {} as never),
-		).resolves.toBeUndefined();
+		await expect(dispatchPluginContentEvent("onContentSave", {} as never)).resolves.toBeUndefined();
 	});
 
 	it("is a no-op when plugin list is empty", async () => {
 		setPlugins([]);
-		await expect(
-			dispatchPluginContentEvent("onContentSave", {} as never),
-		).resolves.toBeUndefined();
+		await expect(dispatchPluginContentEvent("onContentSave", {} as never)).resolves.toBeUndefined();
 	});
 
 	it("invokes onContentSave on each plugin that defines it", async () => {
@@ -68,9 +64,7 @@ describe("dispatchPluginContentEvent", () => {
 			{ name: "y", onContentSave: "not-a-fn" },
 			{ name: "z" },
 		]);
-		await expect(
-			dispatchPluginContentEvent("onContentSave", {} as never),
-		).resolves.toBeUndefined();
+		await expect(dispatchPluginContentEvent("onContentSave", {} as never)).resolves.toBeUndefined();
 		// Pins the `if (typeof fn !== "function") continue` mutation -> `if (false) continue`.
 		// Without the type-guard the loop body would attempt `await fn(event)` on
 		// a non-function, throw TypeError, and log via console.error.
@@ -80,11 +74,8 @@ describe("dispatchPluginContentEvent", () => {
 	it("returns early when config has no plugins property at all", async () => {
 		// Pins the `config?.plugins?.length` -> `config?.plugins.length` mutation:
 		// the mutant would TypeError on .length of undefined here.
-		(globalThis as typeof globalThis & { [CONFIG_KEY]?: unknown })[CONFIG_KEY] =
-			{};
-		await expect(
-			dispatchPluginContentEvent("onContentSave", {} as never),
-		).resolves.toBeUndefined();
+		(globalThis as typeof globalThis & { [CONFIG_KEY]?: unknown })[CONFIG_KEY] = {};
+		await expect(dispatchPluginContentEvent("onContentSave", {} as never)).resolves.toBeUndefined();
 	});
 
 	it("logs the failing plugin's name in the console.error message", async () => {
@@ -153,9 +144,7 @@ describe("dispatchPluginContentEvent", () => {
 				},
 			},
 		]);
-		await expect(
-			dispatchPluginContentEvent("onContentSave", {} as never),
-		).resolves.toBeUndefined();
+		await expect(dispatchPluginContentEvent("onContentSave", {} as never)).resolves.toBeUndefined();
 	});
 
 	it("continues iterating remaining plugins after one throws", async () => {
@@ -178,9 +167,7 @@ describe("dispatchPluginContentEvent", () => {
 describe("dispatchPluginMediaEvent", () => {
 	it("is a no-op when no plugins exist", async () => {
 		setPlugins([]);
-		await expect(
-			dispatchPluginMediaEvent({} as never),
-		).resolves.toBeUndefined();
+		await expect(dispatchPluginMediaEvent({} as never)).resolves.toBeUndefined();
 	});
 
 	it("invokes onMediaUpload on each plugin that defines it", async () => {
@@ -226,11 +213,8 @@ describe("dispatchPluginMediaEvent", () => {
 	});
 
 	it("returns early when config has no plugins property at all (media)", async () => {
-		(globalThis as typeof globalThis & { [CONFIG_KEY]?: unknown })[CONFIG_KEY] =
-			{};
-		await expect(
-			dispatchPluginMediaEvent({} as never),
-		).resolves.toBeUndefined();
+		(globalThis as typeof globalThis & { [CONFIG_KEY]?: unknown })[CONFIG_KEY] = {};
+		await expect(dispatchPluginMediaEvent({} as never)).resolves.toBeUndefined();
 	});
 
 	it("skips plugins whose onMediaUpload is not a function (no errorSpy)", async () => {
@@ -259,20 +243,15 @@ describe("dispatchPluginMediaEvent", () => {
 describe("reportAstropressError", () => {
 	it("is a no-op when no plugins are configured", async () => {
 		setPlugins(null);
-		await expect(
-			reportAstropressError(new Error("x"), "ctx"),
-		).resolves.toBeUndefined();
+		await expect(reportAstropressError(new Error("x"), "ctx")).resolves.toBeUndefined();
 	});
 
 	it("returns cleanly when config has no plugins property at all", async () => {
 		// Pins the OptionalChaining mutation in dispatchPluginError:
 		// `config?.plugins?.length` -> `config?.plugins.length` would throw
 		// TypeError on `.length` of undefined here.
-		(globalThis as typeof globalThis & { [CONFIG_KEY]?: unknown })[CONFIG_KEY] =
-			{};
-		await expect(
-			reportAstropressError(new Error("x"), "ctx"),
-		).resolves.toBeUndefined();
+		(globalThis as typeof globalThis & { [CONFIG_KEY]?: unknown })[CONFIG_KEY] = {};
+		await expect(reportAstropressError(new Error("x"), "ctx")).resolves.toBeUndefined();
 	});
 
 	it("calls onError on plugins with a function hook AND skips boolean/string non-function hooks (no side effects)", async () => {
@@ -330,9 +309,7 @@ describe("reportAstropressError", () => {
 				},
 			},
 		]);
-		await expect(
-			reportAstropressError(new Error("x"), "ctx"),
-		).resolves.toBeUndefined();
+		await expect(reportAstropressError(new Error("x"), "ctx")).resolves.toBeUndefined();
 	});
 });
 

@@ -6,22 +6,16 @@ function preferredTheme(): "dark" | "light" {
 		}
 	} catch {}
 
-	return window.matchMedia("(prefers-color-scheme: dark)").matches
-		? "dark"
-		: "light";
+	return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
 }
 
 function applyTheme(theme: "dark" | "light") {
 	document.documentElement.setAttribute("data-theme", theme);
 
-	const toggles = document.querySelectorAll<HTMLButtonElement>(
-		".theme-toggle-admin",
-	);
+	const toggles = document.querySelectorAll<HTMLButtonElement>(".theme-toggle-admin");
 	for (const toggle of toggles) {
-		const darkLabel =
-			toggle.getAttribute("data-theme-label-dark") || "Switch to dark mode";
-		const lightLabel =
-			toggle.getAttribute("data-theme-label-light") || "Switch to light mode";
+		const darkLabel = toggle.getAttribute("data-theme-label-dark") || "Switch to dark mode";
+		const lightLabel = toggle.getAttribute("data-theme-label-light") || "Switch to light mode";
 		const icon = toggle.querySelector<HTMLElement>(".theme-toggle-icon");
 		const isDark = theme === "dark";
 
@@ -41,9 +35,7 @@ applyTheme(initialTheme);
 window.addEventListener("DOMContentLoaded", () => {
 	applyTheme(preferredTheme());
 
-	for (const toggle of document.querySelectorAll<HTMLButtonElement>(
-		".theme-toggle-admin",
-	)) {
+	for (const toggle of document.querySelectorAll<HTMLButtonElement>(".theme-toggle-admin")) {
 		if (toggle.dataset.themeBound === "true") {
 			continue;
 		}
@@ -51,9 +43,7 @@ window.addEventListener("DOMContentLoaded", () => {
 		toggle.dataset.themeBound = "true";
 		toggle.addEventListener("click", () => {
 			const nextTheme =
-				document.documentElement.getAttribute("data-theme") === "dark"
-					? "light"
-					: "dark";
+				document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
 			applyTheme(nextTheme);
 			try {
 				window.localStorage.setItem("theme", nextTheme);

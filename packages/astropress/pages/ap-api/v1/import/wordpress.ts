@@ -1,9 +1,5 @@
 import { getCmsConfig } from "@astropress-diy/astropress";
-import {
-	apiErrors,
-	jsonOk,
-	withApiRequest,
-} from "@astropress-diy/astropress/api-middleware.js";
+import { apiErrors, jsonOk, withApiRequest } from "@astropress-diy/astropress/api-middleware.js";
 import { createAstropressWordPressImportSource } from "@astropress-diy/astropress/import/wordpress.js";
 import { loadLocalAdminStore } from "@astropress-diy/astropress/local-runtime-modules.js";
 import type { APIRoute } from "astro";
@@ -34,8 +30,7 @@ export const POST: APIRoute = async (context) => {
 				return apiErrors.validationError("Request body must be valid JSON.");
 			}
 
-			const exportFile =
-				typeof body.exportFile === "string" ? body.exportFile.trim() : "";
+			const exportFile = typeof body.exportFile === "string" ? body.exportFile.trim() : "";
 			if (!exportFile) {
 				return apiErrors.validationError("exportFile is required.");
 			}

@@ -2,17 +2,14 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
-const SQLITE = fileURLToPath(
-	new URL("../src/sqlite-schema.sql", import.meta.url),
-);
+const SQLITE = fileURLToPath(new URL("../src/sqlite-schema.sql", import.meta.url));
 const D1 = fileURLToPath(new URL("../src/d1-schema.sql", import.meta.url));
 
 type TableSpec = { name: string; columns: string[] };
 
 function parse(sql: string): TableSpec[] {
 	const stripped = sql.replace(/--[^\n]*\n/g, "\n");
-	const tableRe =
-		/CREATE\s+TABLE(?:\s+IF\s+NOT\s+EXISTS)?\s+(\w+)\s*\(([\s\S]*?)\n\)\s*;/gi;
+	const tableRe = /CREATE\s+TABLE(?:\s+IF\s+NOT\s+EXISTS)?\s+(\w+)\s*\(([\s\S]*?)\n\)\s*;/gi;
 	const out: TableSpec[] = [];
 	let m: RegExpExecArray | null;
 	while (true) {
@@ -25,8 +22,7 @@ function parse(sql: string): TableSpec[] {
 			.map((line) => line.trim())
 			.filter(
 				(line) =>
-					line.length > 0 &&
-					!/^(PRIMARY KEY|FOREIGN KEY|UNIQUE|CHECK|CONSTRAINT)\b/i.test(line),
+					line.length > 0 && !/^(PRIMARY KEY|FOREIGN KEY|UNIQUE|CHECK|CONSTRAINT)\b/i.test(line),
 			)
 			.map((line) => line.split(/\s+/)[0]);
 		out.push({ name, columns });

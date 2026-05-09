@@ -15,11 +15,9 @@ const OUT = "tooling/audit-output/astro-build-gap.json";
 
 function count(glob: string): number {
 	try {
-		const out = execFileSync(
-			"bash",
-			["-c", `find ${glob} -name "*.astro" 2>/dev/null | wc -l`],
-			{ encoding: "utf8" },
-		);
+		const out = execFileSync("bash", ["-c", `find ${glob} -name "*.astro" 2>/dev/null | wc -l`], {
+			encoding: "utf8",
+		});
 		return Number.parseInt(out.trim(), 10);
 	} catch {
 		return 0;
@@ -62,8 +60,7 @@ const report = {
 	uncheckedAstro: total - checked,
 	packageJsonsRunningAstroCheck: checkedScripts,
 	finding:
-		frameworkPages > 0 &&
-		!checkedScripts.some((p) => p.includes("astropress/package.json"))
+		frameworkPages > 0 && !checkedScripts.some((p) => p.includes("astropress/package.json"))
 			? "FRAMEWORK_PAGES_HAVE_NO_ASTRO_CHECK"
 			: "ok",
 };

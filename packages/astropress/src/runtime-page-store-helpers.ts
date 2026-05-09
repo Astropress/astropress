@@ -12,12 +12,7 @@ export type SeededContentRecord = ContentRecord & {
 };
 
 export function normalizeContentStatus(value: unknown): ContentStatus {
-	if (
-		value === "draft" ||
-		value === "review" ||
-		value === "published" ||
-		value === "archived"
-	) {
+	if (value === "draft" || value === "review" || value === "published" || value === "archived") {
 		return value;
 	}
 
@@ -62,10 +57,7 @@ export function createStaticReadStore(
 			getTestimonials: async () => [],
 		},
 		translations: {
-			getEffectiveTranslationState: async (
-				_route: string,
-				fallback = "not_started",
-			) => fallback,
+			getEffectiveTranslationState: async (_route: string, fallback = "not_started") => fallback,
 		},
 		settings: {
 			getSettings: async () => defaultSiteSettings,
@@ -92,8 +84,7 @@ export function createFallbackReadStore(
 	return {
 		audit: {
 			getAuditEvents: async () => localAdminStore.getAuditEvents(),
-			recordAuditEvent: async (input) =>
-				localAdminStore.recordAuditEvent(input),
+			recordAuditEvent: async (input) => localAdminStore.recordAuditEvent(input),
 		},
 		users: {
 			listAdminUsers: async () =>
@@ -101,9 +92,7 @@ export function createFallbackReadStore(
 					...user,
 					role: user.role,
 					status:
-						user.status === "active" ||
-						user.status === "invited" ||
-						user.status === "suspended"
+						user.status === "active" || user.status === "invited" || user.status === "suspended"
 							? user.status
 							: "active",
 				})),
@@ -123,29 +112,20 @@ export function createFallbackReadStore(
 			getApprovedCommentsForRoute: async (route: string) =>
 				localAdminStore
 					.getComments()
-					.filter(
-						(comment) =>
-							comment.route === route && comment.status === "approved",
-					),
+					.filter((comment) => comment.route === route && comment.status === "approved"),
 		},
 		content: {
 			listContentStates: async () => localAdminStore.listContentStates(),
-			getContentState: async (slug: string) =>
-				localAdminStore.getContentState(slug),
-			getContentRevisions: async (slug: string) =>
-				localAdminStore.getContentRevisions(slug),
+			getContentState: async (slug: string) => localAdminStore.getContentState(slug),
+			getContentRevisions: async (slug: string) => localAdminStore.getContentRevisions(slug),
 		},
 		submissions: {
-			getContactSubmissions: async () =>
-				localAdminStore.getContactSubmissions(),
-			getTestimonials: async (status?) =>
-				localAdminStore.getTestimonials(status),
+			getContactSubmissions: async () => localAdminStore.getContactSubmissions(),
+			getTestimonials: async (status?) => localAdminStore.getTestimonials(status),
 		},
 		translations: {
-			getEffectiveTranslationState: async (
-				route: string,
-				fallback = "not_started",
-			) => localAdminStore.getEffectiveTranslationState(route, fallback),
+			getEffectiveTranslationState: async (route: string, fallback = "not_started") =>
+				localAdminStore.getEffectiveTranslationState(route, fallback),
 		},
 		settings: {
 			getSettings: async () => localAdminStore.getSettings(),

@@ -2,15 +2,8 @@ import { mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { beforeEach, describe, expect, it } from "vitest";
-import type {
-	D1DatabaseLike,
-	D1PreparedStatement,
-	D1Result,
-} from "../src/d1-database.js";
-import {
-	rollbackD1LastMigration,
-	runD1Migrations,
-} from "../src/d1-migrate-ops.js";
+import type { D1DatabaseLike, D1PreparedStatement, D1Result } from "../src/d1-database.js";
+import { rollbackD1LastMigration, runD1Migrations } from "../src/d1-migrate-ops.js";
 
 // ── Minimal D1 mock backed by an in-memory SQLite ──────────────────────────
 
@@ -83,8 +76,7 @@ describe("runD1Migrations", () => {
 
 	it("applies a pending migration and records it in schema_migrations", async () => {
 		const dir = makeMigrationsDir({
-			"0001_create_posts.sql":
-				"CREATE TABLE posts (id INTEGER PRIMARY KEY, title TEXT NOT NULL)",
+			"0001_create_posts.sql": "CREATE TABLE posts (id INTEGER PRIMARY KEY, title TEXT NOT NULL)",
 		});
 
 		const report = await runD1Migrations({ db: d1, migrationsDir: dir });
@@ -114,18 +106,13 @@ describe("runD1Migrations", () => {
 
 	it("applies migrations in lexicographic order", async () => {
 		const dir = makeMigrationsDir({
-			"0002_add_status.sql":
-				"ALTER TABLE posts ADD COLUMN status TEXT DEFAULT 'draft'",
-			"0001_create_posts.sql":
-				"CREATE TABLE posts (id INTEGER PRIMARY KEY, title TEXT)",
+			"0002_add_status.sql": "ALTER TABLE posts ADD COLUMN status TEXT DEFAULT 'draft'",
+			"0001_create_posts.sql": "CREATE TABLE posts (id INTEGER PRIMARY KEY, title TEXT)",
 		});
 
 		const report = await runD1Migrations({ db: d1, migrationsDir: dir });
 
-		expect(report.applied).toEqual([
-			"0001_create_posts.sql",
-			"0002_add_status.sql",
-		]);
+		expect(report.applied).toEqual(["0001_create_posts.sql", "0002_add_status.sql"]);
 	});
 
 	it("dry-run mode reports what would be applied without writing", async () => {
@@ -181,8 +168,7 @@ describe("rollbackD1LastMigration", () => {
 
 	it("rolls back the last migration using its rollback_sql", async () => {
 		const dir = makeMigrationsDir({
-			"0001_create_posts.sql":
-				"CREATE TABLE posts (id INTEGER PRIMARY KEY, title TEXT)",
+			"0001_create_posts.sql": "CREATE TABLE posts (id INTEGER PRIMARY KEY, title TEXT)",
 			"0001_create_posts.down.sql": "DROP TABLE posts",
 		});
 
@@ -242,8 +228,7 @@ describe("rollbackD1LastMigration", () => {
 
 	it("re-enables re-apply after successful rollback", async () => {
 		const dir = makeMigrationsDir({
-			"0001_create_posts.sql":
-				"CREATE TABLE posts (id INTEGER PRIMARY KEY, title TEXT)",
+			"0001_create_posts.sql": "CREATE TABLE posts (id INTEGER PRIMARY KEY, title TEXT)",
 			"0001_create_posts.down.sql": "DROP TABLE posts",
 		});
 

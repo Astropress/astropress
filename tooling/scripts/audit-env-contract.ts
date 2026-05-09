@@ -1,20 +1,12 @@
 import { join } from "node:path";
-import {
-	AuditReport,
-	fromRoot,
-	listFiles,
-	readText,
-	runAudit,
-} from "../lib/audit-utils.js";
+import { AuditReport, fromRoot, listFiles, readText, runAudit } from "../lib/audit-utils.js";
 
 // Verifies that every env var key listed in the deployment matrix
 // (packages/astropress/src/deployment-matrix.ts) is actually read somewhere
 // in packages/astropress/src/. Prevents "SUPABASE_ANON_KEY"-style drift where
 // a key is documented as required but never consumed by the runtime code.
 
-const DEPLOYMENT_MATRIX = fromRoot(
-	"packages/astropress/src/deployment-matrix.ts",
-);
+const DEPLOYMENT_MATRIX = fromRoot("packages/astropress/src/deployment-matrix.ts");
 const SRC_DIR = fromRoot("packages/astropress/src");
 
 function extractRequiredEnvKeys(matrixSrc: string): string[] {
@@ -54,9 +46,7 @@ async function main() {
 	const requiredKeys = extractRequiredEnvKeys(matrixSrc);
 
 	const allSourceFiles = await collectSourceFiles(SRC_DIR);
-	const sourceFiles = allSourceFiles.filter(
-		(f) => !f.endsWith("deployment-matrix.ts"),
-	);
+	const sourceFiles = allSourceFiles.filter((f) => !f.endsWith("deployment-matrix.ts"));
 
 	for (const key of requiredKeys) {
 		let found = false;

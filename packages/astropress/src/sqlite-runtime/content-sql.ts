@@ -48,10 +48,7 @@ export function buildBaselineOverrideParams(pageRecord: PageRecord) {
 	];
 }
 
-export function buildBaselineRevisionParams(
-	randomId: () => string,
-	pageRecord: PageRecord,
-) {
+export function buildBaselineRevisionParams(randomId: () => string, pageRecord: PageRecord) {
 	return [
 		`revision-${randomId()}`,
 		pageRecord.slug,
@@ -79,13 +76,9 @@ export function ensureBaselineRevisionImpl(
 	pageRecord: PageRecord,
 ) {
 	const db = getDb();
-	db.prepare(SQL_INSERT_BASELINE_OVERRIDE).run(
-		...buildBaselineOverrideParams(pageRecord),
-	);
+	db.prepare(SQL_INSERT_BASELINE_OVERRIDE).run(...buildBaselineOverrideParams(pageRecord));
 	const existing = db
-		.prepare(
-			"SELECT id FROM content_revisions WHERE slug = ? AND source = 'imported' LIMIT 1",
-		)
+		.prepare("SELECT id FROM content_revisions WHERE slug = ? AND source = 'imported' LIMIT 1")
 		.get(pageRecord.slug) as { id: string } | undefined;
 	if (existing) return;
 	db.prepare(SQL_INSERT_BASELINE_REVISION).run(

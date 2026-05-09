@@ -100,13 +100,8 @@ function grepLiteralCallSites(): {
 	// `[outProperty, AdminLabelKey]` is a static use site of the second
 	// element. The label key sits in column 2 of a 2-element tuple literal,
 	// e.g. `["dashboard", "navDashboard"]`.
-	const trKeys = readFileSync(
-		"packages/astropress/src/admin-ui-translation-keys.ts",
-		"utf8",
-	);
-	for (const m of trKeys.matchAll(
-		/\[\s*"[A-Za-z0-9_]+"\s*,\s*"([A-Za-z0-9_]+)"\s*\]/g,
-	)) {
+	const trKeys = readFileSync("packages/astropress/src/admin-ui-translation-keys.ts", "utf8");
+	for (const m of trKeys.matchAll(/\[\s*"[A-Za-z0-9_]+"\s*,\s*"([A-Za-z0-9_]+)"\s*\]/g)) {
 		staticKeys.add(m[1]);
 	}
 

@@ -1,17 +1,14 @@
-import { withAdminFormAction } from "@astropress-diy/astropress";
-import { updateRuntimeTranslationState } from "@astropress-diy/astropress";
 import {
 	appendQueryParam,
 	resolveSafeReturnPath,
+	updateRuntimeTranslationState,
+	withAdminFormAction,
 } from "@astropress-diy/astropress";
 import type { APIRoute } from "astro";
 
 export const POST: APIRoute = async (context) => {
 	const fallbackPath = "/ap-admin/translations";
-	const refererPath = resolveSafeReturnPath(
-		context.request.headers.get("referer"),
-		fallbackPath,
-	);
+	const refererPath = resolveSafeReturnPath(context.request.headers.get("referer"), fallbackPath);
 
 	return withAdminFormAction(
 		context,
@@ -32,12 +29,7 @@ export const POST: APIRoute = async (context) => {
 				return fail("Route and state are required", returnPath);
 			}
 
-			const result = await updateRuntimeTranslationState(
-				route,
-				state,
-				actor,
-				locals,
-			);
+			const result = await updateRuntimeTranslationState(route, state, actor, locals);
 			if (!result.ok) {
 				return fail(result.error, returnPath);
 			}

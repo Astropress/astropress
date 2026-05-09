@@ -6,14 +6,8 @@ export interface SeededContentRecordLike {
 
 export type SeededAdminContentType = "page" | "post";
 
-export function getSeededAdminContentType(
-	record: SeededContentRecordLike,
-): SeededAdminContentType {
-	if (
-		record.kind === "post" ||
-		record.templateKey === "post" ||
-		record.templateKey === "content"
-	) {
+export function getSeededAdminContentType(record: SeededContentRecordLike): SeededAdminContentType {
+	if (record.kind === "post" || record.templateKey === "post" || record.templateKey === "content") {
 		return "post";
 	}
 

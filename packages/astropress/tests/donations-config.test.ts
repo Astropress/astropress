@@ -1,18 +1,11 @@
 import { describe, expect, it } from "vitest";
-import {
-	buildDonationsEnvExample,
-	resolveDonationSnippets,
-} from "../src/donations";
+import { buildDonationsEnvExample, resolveDonationSnippets } from "../src/donations";
 
 // ── no donations configured ────────────────────────────────────────────────
 
 describe("no donations configured returns empty snippets", () => {
 	it("returns all empty strings when donations is undefined", () => {
-		const result = resolveDonationSnippets(
-			undefined,
-			"https://example.com",
-			false,
-		);
+		const result = resolveDonationSnippets(undefined, "https://example.com", false);
 		expect(result.giveLively).toBe("");
 		expect(result.liberapay).toBe("");
 		expect(result.pledgeCrypto).toBe("");
@@ -166,11 +159,7 @@ describe("JSON-LD DonateAction included when any provider enabled", () => {
 
 describe("JSON-LD omitted when no providers configured", () => {
 	it("returns empty string for jsonLd when donations is undefined", () => {
-		const result = resolveDonationSnippets(
-			undefined,
-			"https://example.com",
-			false,
-		);
+		const result = resolveDonationSnippets(undefined, "https://example.com", false);
 		expect(result.jsonLd).toBe("");
 	});
 });

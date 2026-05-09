@@ -1,11 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { createAstropressHostedPlatformAdapter } from "../src/hosted-platform-adapter.js";
-import type {
-	AuthStore,
-	ContentStore,
-	MediaStore,
-	RevisionStore,
-} from "../src/platform-contracts";
+import type { AuthStore, ContentStore, MediaStore, RevisionStore } from "../src/platform-contracts";
 
 describe("hosted platform adapter", () => {
 	it("assembles a hosted provider from explicit store modules", async () => {
@@ -96,9 +91,7 @@ describe("hosted platform adapter", () => {
 			slug: "remote-post",
 			title: "Remote post",
 		});
-		expect(
-			await adapter.auth.signIn("admin@example.com", "password"),
-		).toMatchObject({
+		expect(await adapter.auth.signIn("admin@example.com", "password")).toMatchObject({
 			email: "admin@example.com",
 			role: "admin",
 		});

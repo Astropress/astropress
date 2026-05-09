@@ -33,15 +33,11 @@ describe("resolveAnalyticsStats", () => {
 	});
 
 	it("returns kind: 'none' when siteId is empty", () => {
-		expect(resolveAnalyticsStats({ registry: { ...REG, siteId: "" } })).toEqual(
-			{ kind: "none" },
-		);
+		expect(resolveAnalyticsStats({ registry: { ...REG, siteId: "" } })).toEqual({ kind: "none" });
 	});
 
 	it("returns kind: 'none' when apiKey is empty", () => {
-		expect(resolveAnalyticsStats({ registry: { ...REG, apiKey: "" } })).toEqual(
-			{ kind: "none" },
-		);
+		expect(resolveAnalyticsStats({ registry: { ...REG, apiKey: "" } })).toEqual({ kind: "none" });
 	});
 
 	it("propagates the registry's host verbatim (does not normalize trailing slash)", () => {

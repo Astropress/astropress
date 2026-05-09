@@ -1,9 +1,5 @@
 import { stripTrailingSlashes } from "./path-helpers";
-import {
-	getCloudflareBindings,
-	getStringRuntimeValue,
-	isProductionRuntime,
-} from "./runtime-env";
+import { getCloudflareBindings, getStringRuntimeValue, isProductionRuntime } from "./runtime-env";
 
 export interface MediaRecord {
 	id: string;
@@ -17,10 +13,7 @@ interface MediaResolutionOptions {
 	r2BaseUrl?: string;
 }
 
-export function resolveMediaUrl(
-	record: MediaRecord,
-	options: MediaResolutionOptions,
-) {
+export function resolveMediaUrl(record: MediaRecord, options: MediaResolutionOptions) {
 	if (options.mode === "development") {
 		return record.localPath;
 	}
@@ -37,17 +30,13 @@ export function getRuntimeMediaResolutionOptions(
 ): MediaResolutionOptions {
 	const bindings = getCloudflareBindings(locals);
 	const r2BaseUrl = getStringRuntimeValue("PUBLIC_R2_BASE_URL", locals);
-	const useDeploymentMode =
-		Boolean(r2BaseUrl || bindings.MEDIA_BUCKET) || isProductionRuntime();
+	const useDeploymentMode = Boolean(r2BaseUrl || bindings.MEDIA_BUCKET) || isProductionRuntime();
 	return {
 		mode: useDeploymentMode ? "deployment" : "development",
 		r2BaseUrl,
 	};
 }
 
-export function resolveRuntimeMediaUrl(
-	record: MediaRecord,
-	locals?: App.Locals | null,
-) {
+export function resolveRuntimeMediaUrl(record: MediaRecord, locals?: App.Locals | null) {
 	return resolveMediaUrl(record, getRuntimeMediaResolutionOptions(locals));
 }

@@ -37,30 +37,20 @@ export declare function createSession(
 	metadata?: { ipAddress?: string | null; userAgent?: string | null },
 ): string;
 
-export declare function getSessionUser(
-	sessionToken: string | null | undefined,
-): SessionUser | null;
+export declare function getSessionUser(sessionToken: string | null | undefined): SessionUser | null;
 
-export declare function getCsrfToken(
-	sessionToken: string | null | undefined,
-): string | null;
+export declare function getCsrfToken(sessionToken: string | null | undefined): string | null;
 
-export declare function revokeSession(
-	sessionToken: string | null | undefined,
-): void;
+export declare function revokeSession(sessionToken: string | null | undefined): void;
 
 export declare function createPasswordResetToken(
 	email: string,
 	actor?: Actor | null,
 ): { ok: true; resetUrl: string | null } | { ok: false; error: string };
 
-export declare function getInviteRequest(
-	rawToken: string,
-): InviteRequest | null;
+export declare function getInviteRequest(rawToken: string): InviteRequest | null;
 
-export declare function getPasswordResetRequest(
-	rawToken: string,
-): PasswordResetRequest | null;
+export declare function getPasswordResetRequest(rawToken: string): PasswordResetRequest | null;
 
 export declare function consumeInviteToken(
 	rawToken: string,
@@ -82,7 +72,7 @@ export declare function getPersistedAuditEvents(): AuditEvent[];
 
 // ── Users ────────────────────────────────────────────────────────────────────
 
-export declare function listAdminUsers(): Array<ManagedAdminUser>;
+export declare function listAdminUsers(): ManagedAdminUser[];
 
 export declare function inviteAdminUser(
 	input: { name: string; email: string; role: string },
@@ -180,9 +170,7 @@ export declare function submitPublicComment(input: {
 	submittedAt: string;
 }): { ok: true; comment: CommentRecord } | { ok: false; error: string };
 
-export declare function getApprovedCommentsForRoute(
-	route: string,
-): CommentRecord[];
+export declare function getApprovedCommentsForRoute(route: string): CommentRecord[];
 
 // ── Content ──────────────────────────────────────────────────────────────────
 
@@ -190,9 +178,7 @@ export declare function listContentStates(): ContentRecord[];
 
 export declare function getContentState(slug: string): ContentRecord | null;
 
-export declare function getContentRevisions(
-	slug: string,
-): ContentRevision[] | null;
+export declare function getContentRevisions(slug: string): ContentRevision[] | null;
 
 export declare function createContentRecord(
 	input: {
@@ -261,9 +247,7 @@ export declare function submitTestimonial(input: TestimonialSubmissionInput): {
 	id: string;
 };
 
-export declare function getTestimonials(
-	status?: TestimonialStatus,
-): TestimonialSubmission[];
+export declare function getTestimonials(status?: TestimonialStatus): TestimonialSubmission[];
 
 export declare function moderateTestimonial(
 	id: string,
@@ -279,10 +263,7 @@ export declare function updateTranslationState(
 	actor: Actor,
 ): { ok: true } | { ok: false; error: string };
 
-export declare function getEffectiveTranslationState(
-	route: string,
-	fallback?: string,
-): string;
+export declare function getEffectiveTranslationState(route: string, fallback?: string): string;
 
 // ── Settings ─────────────────────────────────────────────────────────────────
 
@@ -295,23 +276,11 @@ export declare function saveSettings(
 
 // ── Rate limits ──────────────────────────────────────────────────────────────
 
-export declare function checkRateLimit(
-	key: string,
-	max: number,
-	windowMs: number,
-): boolean;
+export declare function checkRateLimit(key: string, max: number, windowMs: number): boolean;
 
-export declare function peekRateLimit(
-	key: string,
-	max: number,
-	windowMs: number,
-): boolean;
+export declare function peekRateLimit(key: string, max: number, windowMs: number): boolean;
 
-export declare function recordFailedAttempt(
-	key: string,
-	max: number,
-	windowMs: number,
-): void;
+export declare function recordFailedAttempt(key: string, max: number, windowMs: number): void;
 
 // ── Media ─────────────────────────────────────────────────────────────────────
 

@@ -8,9 +8,7 @@ export type AstropressAdminRouteDefinition = {
 	kind: AstropressAdminRouteKind;
 };
 
-export type AstropressAdminRouteInjector = (
-	route: AstropressAdminRouteDefinition,
-) => void;
+export type AstropressAdminRouteInjector = (route: AstropressAdminRouteDefinition) => void;
 
 /**
  * The base URL path for all Astropress admin routes.
@@ -53,9 +51,7 @@ export function resolveAstropressAdminRouteEntrypoints(basePath: string) {
  * }
  * ```
  */
-export function createAstropressAdminRouteInjectionPlan(
-	pagesDirectory: string,
-) {
+export function createAstropressAdminRouteInjectionPlan(pagesDirectory: string) {
 	return resolveAstropressAdminRouteEntrypoints(pagesDirectory);
 }
 

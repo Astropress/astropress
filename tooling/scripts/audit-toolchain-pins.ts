@@ -26,7 +26,7 @@
  * Lists the offending file:line and proposes the corrected invocation.
  */
 
-import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 
 interface ToolPin {
@@ -56,8 +56,7 @@ const TOOLS: ToolPin[] = [
 			{
 				// Some authors write `bun x` instead of `bunx`.
 				pattern: /bun\s+x\s+biome\b/,
-				reason:
-					"Bare `bun x biome` resolves to registry-latest and bypasses the version pin.",
+				reason: "Bare `bun x biome` resolves to registry-latest and bypasses the version pin.",
 			},
 		],
 	},
@@ -111,11 +110,7 @@ function scanFiles(): string[] {
 // banned patterns as documentation, not as live invocations.
 function isCommentLine(line: string): boolean {
 	const trimmed = line.trimStart();
-	return (
-		trimmed.startsWith("//") ||
-		trimmed.startsWith("*") ||
-		trimmed.startsWith("#")
-	);
+	return trimmed.startsWith("//") || trimmed.startsWith("*") || trimmed.startsWith("#");
 }
 
 function main(): number {

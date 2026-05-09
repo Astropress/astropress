@@ -3,10 +3,7 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 
 const componentsRoot = path.resolve(import.meta.dirname, "../components");
-const contractsPath = path.resolve(
-	import.meta.dirname,
-	"../src/platform-contracts.ts",
-);
+const contractsPath = path.resolve(import.meta.dirname, "../src/platform-contracts.ts");
 
 describe("AEO metadata types in platform-contracts", () => {
 	it("exports FaqItem interface with question and answer fields", () => {
@@ -34,9 +31,7 @@ describe("AEO metadata types in platform-contracts", () => {
 
 	it("ContentStoreRecord.metadata includes AeoMetadata", () => {
 		const source = readFileSync(contractsPath, "utf8");
-		expect(source).toContain(
-			"metadata?: Record<string, unknown> & AeoMetadata",
-		);
+		expect(source).toContain("metadata?: Record<string, unknown> & AeoMetadata");
 	});
 });
 
@@ -79,10 +74,7 @@ describe("AstropressContentLayout component — AEO auto-wiring", () => {
 });
 
 describe("AstropressBlogPostingJsonLd — schema-dts integration", () => {
-	const blogPostingPath = path.join(
-		componentsRoot,
-		"AstropressBlogPostingJsonLd.astro",
-	);
+	const blogPostingPath = path.join(componentsRoot, "AstropressBlogPostingJsonLd.astro");
 
 	it("AstropressBlogPostingJsonLd.astro exists", () => {
 		expect(existsSync(blogPostingPath)).toBe(true);
@@ -100,19 +92,13 @@ describe("AstropressBlogPostingJsonLd — schema-dts integration", () => {
 	});
 
 	it("AstropressContentLayout imports AstropressBlogPostingJsonLd", () => {
-		const layoutPath = path.join(
-			componentsRoot,
-			"AstropressContentLayout.astro",
-		);
+		const layoutPath = path.join(componentsRoot, "AstropressContentLayout.astro");
 		const source = readFileSync(layoutPath, "utf8");
 		expect(source).toContain("AstropressBlogPostingJsonLd");
 	});
 
 	it("AstropressContentLayout auto-wires BlogPosting for kind === post", () => {
-		const layoutPath = path.join(
-			componentsRoot,
-			"AstropressContentLayout.astro",
-		);
+		const layoutPath = path.join(componentsRoot, "AstropressContentLayout.astro");
 		const source = readFileSync(layoutPath, "utf8");
 		expect(source).toContain("isBlogPost");
 		expect(source).toContain("<AstropressBlogPostingJsonLd");
@@ -152,9 +138,7 @@ describe("AEO JSON-LD component structural checks", () => {
 			expect(existsSync(filePath), `${name}.astro should exist`).toBe(true);
 			const source = readFileSync(filePath, "utf8");
 			for (const check of checks) {
-				expect(source, `${name}.astro should reference "${check}"`).toContain(
-					check,
-				);
+				expect(source, `${name}.astro should reference "${check}"`).toContain(check);
 			}
 		});
 	}

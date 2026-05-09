@@ -35,11 +35,7 @@ export function createAstropressVitestLocalRuntimePlugins(
 			name: "astropress-external-source-rewriter",
 			enforce: "pre",
 			resolveId(id, importer) {
-				if (
-					importer &&
-					isAstropressSrcImporter(importer) &&
-					isLocalRuntimeModuleId(id)
-				) {
+				if (importer && isAstropressSrcImporter(importer) && isLocalRuntimeModuleId(id)) {
 					return localRuntimeModulesPath;
 				}
 			},

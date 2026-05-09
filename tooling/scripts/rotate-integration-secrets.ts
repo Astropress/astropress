@@ -72,9 +72,7 @@ async function main() {
 	const current = process.env.ASTROPRESS_ROOT_SECRET ?? "";
 	const previous = process.env.ASTROPRESS_ROOT_SECRET_PREV ?? "";
 	if (!current || !previous) {
-		console.error(
-			"Both ASTROPRESS_ROOT_SECRET and ASTROPRESS_ROOT_SECRET_PREV must be set.",
-		);
+		console.error("Both ASTROPRESS_ROOT_SECRET and ASTROPRESS_ROOT_SECRET_PREV must be set.");
 		process.exit(2);
 	}
 

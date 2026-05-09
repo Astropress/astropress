@@ -1,17 +1,8 @@
-import {
-	afterAll,
-	afterEach,
-	beforeEach,
-	describe,
-	expect,
-	it,
-	vi,
-} from "vitest";
+import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { isProductionRuntime } from "../src/runtime-env.js";
 
 vi.mock("../src/runtime-env.js", async (importOriginal) => {
-	const original =
-		await importOriginal<typeof import("../src/runtime-env.js")>();
+	const original = await importOriginal<typeof import("../src/runtime-env.js")>();
 	return {
 		...original,
 		isProductionRuntime: vi.fn().mockReturnValue(false),
@@ -19,8 +10,7 @@ vi.mock("../src/runtime-env.js", async (importOriginal) => {
 });
 
 vi.mock("../src/runtime-env", async (importOriginal) => {
-	const original =
-		await importOriginal<typeof import("../src/runtime-env.js")>();
+	const original = await importOriginal<typeof import("../src/runtime-env.js")>();
 	return {
 		...original,
 		isProductionRuntime: vi.fn().mockReturnValue(false),
@@ -38,9 +28,7 @@ let sendUserInviteEmail: typeof import("../src/transactional-email.js").sendUser
 const CMS_CONFIG_KEY = Symbol.for("astropress.cms-config");
 
 function setCmsConfig(siteName: string) {
-	(globalThis as typeof globalThis & { [key: symbol]: unknown })[
-		CMS_CONFIG_KEY
-	] = {
+	(globalThis as typeof globalThis & { [key: symbol]: unknown })[CMS_CONFIG_KEY] = {
 		siteName,
 		seedPages: [],
 		contentTypes: [],
@@ -48,9 +36,7 @@ function setCmsConfig(siteName: string) {
 }
 
 function clearCmsConfig() {
-	(globalThis as typeof globalThis & { [key: symbol]: unknown })[
-		CMS_CONFIG_KEY
-	] = null;
+	(globalThis as typeof globalThis & { [key: symbol]: unknown })[CMS_CONFIG_KEY] = null;
 }
 
 beforeEach(() => {
@@ -59,8 +45,9 @@ beforeEach(() => {
 });
 
 beforeEach(async () => {
-	({ sendContactNotification, sendPasswordResetEmail, sendUserInviteEmail } =
-		await import("../src/transactional-email.js"));
+	({ sendContactNotification, sendPasswordResetEmail, sendUserInviteEmail } = await import(
+		"../src/transactional-email.js"
+	));
 });
 
 afterAll(() => {
@@ -90,19 +77,13 @@ describe("sendPasswordResetEmail", () => {
 	});
 
 	it("uses 'Astropress' as siteName fallback when no CMS config is registered", async () => {
-		const result = await sendPasswordResetEmail(
-			"user@example.com",
-			"https://example.com/reset",
-		);
+		const result = await sendPasswordResetEmail("user@example.com", "https://example.com/reset");
 		expect(result.preview?.subject).toContain("Astropress");
 	});
 
 	it("escapes HTML special chars in siteName to prevent XSS", async () => {
 		setCmsConfig("<script>alert(1)</script>");
-		const result = await sendPasswordResetEmail(
-			"user@example.com",
-			"https://example.com/reset",
-		);
+		const result = await sendPasswordResetEmail("user@example.com", "https://example.com/reset");
 		expect(result.preview?.html).not.toContain("<script>");
 		expect(result.preview?.html).toContain("&lt;script&gt;");
 	});
@@ -117,17 +98,12 @@ describe("sendUserInviteEmail", () => {
 		);
 		expect(result.ok).toBe(true);
 		expect(result.preview?.subject).toContain("Acme Corp");
-		expect(result.preview?.html).toContain(
-			"https://example.com/ap-admin/accept-invite?token=xyz",
-		);
+		expect(result.preview?.html).toContain("https://example.com/ap-admin/accept-invite?token=xyz");
 	});
 
 	it("escapes HTML special chars in siteName", async () => {
 		setCmsConfig('Acme & "Co"');
-		const result = await sendUserInviteEmail(
-			"invited@example.com",
-			"https://example.com/invite",
-		);
+		const result = await sendUserInviteEmail("invited@example.com", "https://example.com/invite");
 		expect(result.preview?.html).not.toContain('"Co"');
 		expect(result.preview?.html).toContain("&amp;");
 	});
@@ -188,10 +164,7 @@ describe("sendContactNotification", () => {
 describe("mock mode behavior", () => {
 	it("returns a preview object (not sending) when EMAIL_DELIVERY_MODE is not 'resend'", async () => {
 		vi.stubEnv("EMAIL_DELIVERY_MODE", "mock");
-		const result = await sendPasswordResetEmail(
-			"user@example.com",
-			"https://example.com/reset",
-		);
+		const result = await sendPasswordResetEmail("user@example.com", "https://example.com/reset");
 		expect(result.ok).toBe(true);
 		expect(result.delivered).toBe(false);
 		expect(result.preview).toBeDefined();
@@ -200,10 +173,7 @@ describe("mock mode behavior", () => {
 
 	it("returns a preview object when SMTP mode is selected without SMTP config", async () => {
 		vi.stubEnv("EMAIL_DELIVERY_MODE", "smtp");
-		const result = await sendPasswordResetEmail(
-			"user@example.com",
-			"https://example.com/reset",
-		);
+		const result = await sendPasswordResetEmail("user@example.com", "https://example.com/reset");
 		expect(result.ok).toBe(true);
 		expect(result.delivered).toBe(false);
 		expect(result.preview).toBeDefined();

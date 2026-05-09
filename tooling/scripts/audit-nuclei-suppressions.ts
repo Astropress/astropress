@@ -9,12 +9,7 @@
 // is on the human reviewer.
 
 import { readdirSync } from "node:fs";
-import {
-	AuditReport,
-	fromRoot,
-	readText,
-	runAudit,
-} from "../lib/audit-utils.js";
+import { AuditReport, fromRoot, readText, runAudit } from "../lib/audit-utils.js";
 
 const WORKFLOWS_DIR = fromRoot(".github/workflows");
 
@@ -32,9 +27,7 @@ async function main() {
 	const report = new AuditReport("nuclei-suppressions");
 	let files: string[] = [];
 	try {
-		files = readdirSync(WORKFLOWS_DIR).filter(
-			(f) => f.endsWith(".yml") || f.endsWith(".yaml"),
-		);
+		files = readdirSync(WORKFLOWS_DIR).filter((f) => f.endsWith(".yml") || f.endsWith(".yaml"));
 	} catch {
 		report.finish("nuclei-suppressions audit skipped — no workflows dir");
 	}
@@ -61,11 +54,7 @@ async function main() {
 					// Actually — allow a few lines of args between. Just check comment content.
 					continue;
 				}
-				if (
-					/suppress|false positive|exclude|skip|noisy|upstream bug|template bug/i.test(
-						prev,
-					)
-				) {
+				if (/suppress|false positive|exclude|skip|noisy|upstream bug|template bug/i.test(prev)) {
 					hasRationale = true;
 					break;
 				}

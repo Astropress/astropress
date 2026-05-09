@@ -2,7 +2,7 @@ import type { DatabaseSync } from "node:sqlite";
 import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { registerCms } from "../src/config";
-import { STANDARD_ACTOR, makeDb } from "./helpers/make-db.js";
+import { makeDb, STANDARD_ACTOR } from "./helpers/make-db.js";
 import { makeLocals } from "./helpers/make-locals.js";
 
 // biome-ignore format: single-line typeof import required for esbuild/oxc compatibility
@@ -46,9 +46,7 @@ const { mockLoadLocalCmsRegistry, mockLocalRegistry } = vi.hoisted(() => {
 		mockLoadLocalCmsRegistry: vi
 			.fn()
 			.mockRejectedValue(
-				new Error(
-					"Local runtime modules are only available inside an Astro host",
-				),
+				new Error("Local runtime modules are only available inside an Astro host"),
 			),
 		mockLocalRegistry: registry,
 	};
@@ -127,11 +125,7 @@ function makeFailingLocals(): App.Locals {
 // Helpers for seeding routes
 // ---------------------------------------------------------------------------
 
-function seedSystemRoute(
-	db: DatabaseSync,
-	path: string,
-	renderStrategy = "structured_sections",
-) {
+function seedSystemRoute(db: DatabaseSync, path: string, renderStrategy = "structured_sections") {
 	const groupId = `group:${path}`;
 	const variantId = `variant:${path}`;
 	db.prepare(
@@ -159,11 +153,7 @@ function seedArchiveRoute(db: DatabaseSync, path: string) {
 	return variantId;
 }
 
-function seedStructuredPageRoute(
-	db: DatabaseSync,
-	path: string,
-	templateKey = "content",
-) {
+function seedStructuredPageRoute(db: DatabaseSync, path: string, templateKey = "content") {
 	const groupId = `group:${path}`;
 	const variantId = `variant:${path}`;
 	const settingsJson = JSON.stringify({ templateKey, alternateLinks: [] });
@@ -174,14 +164,7 @@ function seedStructuredPageRoute(
 	db.prepare(
 		`INSERT INTO cms_route_variants (id, group_id, locale, path, status, title, settings_json, updated_by)
      VALUES (?, ?, 'en', ?, 'published', ?, ?, ?)`,
-	).run(
-		variantId,
-		groupId,
-		path,
-		`Page at ${path}`,
-		settingsJson,
-		"admin@test.local",
-	);
+	).run(variantId, groupId, path, `Page at ${path}`, settingsJson, "admin@test.local");
 	return variantId;
 }
 
@@ -257,24 +240,14 @@ describe("getRuntimeSystemRoute", () => {
 
 describe("saveRuntimeSystemRoute", () => {
 	it("returns not-ok for non-existent path", async () => {
-		const result = await saveRuntimeSystemRoute(
-			"/no-such-path",
-			{ title: "X" },
-			actor,
-			locals,
-		);
+		const result = await saveRuntimeSystemRoute("/no-such-path", { title: "X" }, actor, locals);
 		expect(result).toMatchObject({ ok: false });
 		expect((result as { error: string }).error).toContain("could not be found");
 	});
 
 	it("returns not-ok for empty title", async () => {
 		seedSystemRoute(db, "/contact");
-		const result = await saveRuntimeSystemRoute(
-			"/contact",
-			{ title: "   " },
-			actor,
-			locals,
-		);
+		const result = await saveRuntimeSystemRoute("/contact", { title: "   " }, actor, locals);
 		expect(result).toMatchObject({ ok: false });
 		expect((result as { error: string }).error).toContain("title is required");
 	});
@@ -304,9 +277,7 @@ describe("saveRuntimeSystemRoute", () => {
 		);
 		expect(result).toMatchObject({ ok: true });
 		const row = db
-			.prepare(
-				"SELECT settings_json FROM cms_route_variants WHERE path = '/feed.xml'",
-			)
+			.prepare("SELECT settings_json FROM cms_route_variants WHERE path = '/feed.xml'")
 			.get() as { settings_json: string };
 		expect(JSON.parse(row.settings_json)).toMatchObject({ limit: 20 });
 	});
@@ -331,23 +302,13 @@ describe("saveRuntimeSystemRoute", () => {
 	});
 
 	it("returns not-ok when locals are null and no local registry is available", async () => {
-		const result = await saveRuntimeSystemRoute(
-			"/contact",
-			{ title: "T" },
-			actor,
-			null,
-		);
+		const result = await saveRuntimeSystemRoute("/contact", { title: "T" }, actor, null);
 		expect(result).toMatchObject({ ok: false });
 	});
 
 	it("delegates to local registry when locals=null and local registry is available", async () => {
 		mockLoadLocalCmsRegistry.mockResolvedValueOnce(mockLocalRegistry);
-		const result = await saveRuntimeSystemRoute(
-			"/contact",
-			{ title: "T" },
-			actor,
-			null,
-		);
+		const result = await saveRuntimeSystemRoute("/contact", { title: "T" }, actor, null);
 		expect(result).toMatchObject({ ok: true });
 	});
 });
@@ -429,10 +390,7 @@ describe("getRuntimeStructuredPageRoute", () => {
 			path: "/about",
 			title: "Local About",
 		} as unknown);
-		const route = await getRuntimeStructuredPageRoute(
-			"/about",
-			makeFailingLocals(),
-		);
+		const route = await getRuntimeStructuredPageRoute("/about", makeFailingLocals());
 		expect(route).toMatchObject({ title: "Local About" });
 	});
 });
@@ -478,9 +436,9 @@ describe("saveRuntimeStructuredPageRoute", () => {
 			locals,
 		);
 		expect(result).toMatchObject({ ok: true });
-		const row = db
-			.prepare("SELECT title FROM cms_route_variants WHERE path = '/about'")
-			.get() as { title: string };
+		const row = db.prepare("SELECT title FROM cms_route_variants WHERE path = '/about'").get() as {
+			title: string;
+		};
 		expect(row.title).toBe("About Us");
 	});
 
@@ -560,9 +518,9 @@ describe("createRuntimeStructuredPageRoute", () => {
 			locals,
 		);
 		expect(result).toMatchObject({ ok: true });
-		const row = db
-			.prepare("SELECT path FROM cms_route_variants WHERE path = '/new-page'")
-			.get() as { path: string } | undefined;
+		const row = db.prepare("SELECT path FROM cms_route_variants WHERE path = '/new-page'").get() as
+			| { path: string }
+			| undefined;
 		expect(row?.path).toBe("/new-page");
 	});
 
@@ -574,9 +532,9 @@ describe("createRuntimeStructuredPageRoute", () => {
 			locals,
 		);
 		expect(result).toMatchObject({ ok: true });
-		const row = db
-			.prepare("SELECT path FROM cms_route_variants WHERE path = '/services'")
-			.get() as { path: string } | undefined;
+		const row = db.prepare("SELECT path FROM cms_route_variants WHERE path = '/services'").get() as
+			| { path: string }
+			| undefined;
 		expect(row?.path).toBe("/services");
 	});
 
@@ -620,10 +578,7 @@ describe("createRuntimeStructuredPageRoute", () => {
 			locals,
 		);
 		expect(result).toMatchObject({ ok: true });
-		const route = await getRuntimeStructuredPageRoute(
-			"/minimal-create",
-			locals,
-		);
+		const route = await getRuntimeStructuredPageRoute("/minimal-create", locals);
 		expect(route?.summary).toBeUndefined();
 		expect(route?.seoTitle).toBe("Minimal Create");
 	});
@@ -672,9 +627,7 @@ describe("createRuntimeStructuredPageRoute", () => {
 		const route = await getRuntimeStructuredPageRoute("/complete-page", locals);
 		expect(route?.summary).toBe("Page summary");
 		expect(route?.seoTitle).toBe("SEO Title Override");
-		expect(route?.canonicalUrlOverride).toBe(
-			"https://example.com/complete-page",
-		);
+		expect(route?.canonicalUrlOverride).toBe("https://example.com/complete-page");
 		expect(route?.robotsDirective).toBe("noindex,nofollow");
 		expect(route?.ogImage).toBe("/images/og-complete.jpg");
 	});
@@ -725,23 +678,13 @@ describe("getRuntimeArchiveRoute", () => {
 
 describe("saveRuntimeArchiveRoute", () => {
 	it("returns not-ok for non-existent archive", async () => {
-		const result = await saveRuntimeArchiveRoute(
-			"/no-archive",
-			{ title: "T" },
-			actor,
-			locals,
-		);
+		const result = await saveRuntimeArchiveRoute("/no-archive", { title: "T" }, actor, locals);
 		expect(result).toMatchObject({ ok: false });
 	});
 
 	it("returns not-ok for empty title", async () => {
 		seedArchiveRoute(db, "/blog");
-		const result = await saveRuntimeArchiveRoute(
-			"/blog",
-			{ title: "   " },
-			actor,
-			locals,
-		);
+		const result = await saveRuntimeArchiveRoute("/blog", { title: "   " }, actor, locals);
 		expect(result).toMatchObject({ ok: false });
 	});
 
@@ -760,9 +703,9 @@ describe("saveRuntimeArchiveRoute", () => {
 			locals,
 		);
 		expect(result).toMatchObject({ ok: true });
-		const row = db
-			.prepare("SELECT title FROM cms_route_variants WHERE path = '/blog'")
-			.get() as { title: string };
+		const row = db.prepare("SELECT title FROM cms_route_variants WHERE path = '/blog'").get() as {
+			title: string;
+		};
 		expect(row.title).toBe("The Blog");
 	});
 
@@ -804,23 +747,13 @@ describe("saveRuntimeArchiveRoute", () => {
 	});
 
 	it("returns not-ok when locals are null and no local registry is available", async () => {
-		const result = await saveRuntimeArchiveRoute(
-			"/blog",
-			{ title: "T" },
-			actor,
-			null,
-		);
+		const result = await saveRuntimeArchiveRoute("/blog", { title: "T" }, actor, null);
 		expect(result).toMatchObject({ ok: false });
 	});
 
 	it("delegates to local registry when locals=null and local registry is available", async () => {
 		mockLoadLocalCmsRegistry.mockResolvedValueOnce(mockLocalRegistry);
-		const result = await saveRuntimeArchiveRoute(
-			"/blog",
-			{ title: "T" },
-			actor,
-			null,
-		);
+		const result = await saveRuntimeArchiveRoute("/blog", { title: "T" }, actor, null);
 		expect(result).toMatchObject({ ok: true });
 	});
 });
@@ -912,10 +845,7 @@ describe("mapStructuredPageRow — edge cases in page settings_json", () => {
 		db.prepare(
 			"INSERT INTO cms_route_variants (id, group_id, locale, path, status, title, settings_json, updated_by) VALUES (?, ?, 'en', '/non-array-links', 'published', 'Non-Array Links', ?, 'seed')",
 		).run("v-non-array-links", groupId, settingsJson);
-		const route = await getRuntimeStructuredPageRoute(
-			"/non-array-links",
-			locals,
-		);
+		const route = await getRuntimeStructuredPageRoute("/non-array-links", locals);
 		expect(route).not.toBeNull();
 		expect(route?.alternateLinks).toEqual([]);
 	});
@@ -930,9 +860,7 @@ describe("mapStructuredPageRow — edge cases in page settings_json", () => {
 			"INSERT INTO cms_route_variants (id, group_id, locale, path, status, title, settings_json, updated_by) VALUES (?, ?, 'en', '/unknown-template', 'published', 'Unknown Template', ?, 'seed')",
 		).run("v-unknown-template", groupId, settingsJson);
 		// Single-record fetch returns null (templateKey not configured)
-		expect(
-			await getRuntimeStructuredPageRoute("/unknown-template", locals),
-		).toBeNull();
+		expect(await getRuntimeStructuredPageRoute("/unknown-template", locals)).toBeNull();
 		// List also omits this route
 		const routes = await listRuntimeStructuredPageRoutes(locals);
 		expect(routes.some((r) => r.path === "/unknown-template")).toBe(false);

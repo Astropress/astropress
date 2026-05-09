@@ -17,13 +17,7 @@ export type AstropressAppHost =
 export interface AstropressAppHostTarget {
 	id: AstropressAppHost;
 	label: string;
-	runtime:
-		| "static"
-		| "edge"
-		| "serverless"
-		| "web-service"
-		| "app-platform"
-		| "custom";
+	runtime: "static" | "edge" | "serverless" | "web-service" | "app-platform" | "custom";
 	supportsStatic: boolean;
 	supportsServerRuntime: boolean;
 	notes: string;
@@ -33,8 +27,6 @@ export function listAstropressAppHosts(): AstropressAppHostTarget[] {
 	return Object.values(appHostTargets);
 }
 
-export function getAstropressAppHostTarget(
-	appHost: AstropressAppHost,
-): AstropressAppHostTarget {
+export function getAstropressAppHostTarget(appHost: AstropressAppHost): AstropressAppHostTarget {
 	return appHostTargets[appHost];
 }

@@ -3,15 +3,15 @@ import type { D1DatabaseLike } from "../d1-database";
 import {
 	type AstropressPlatformAdapter,
 	type AuthStore,
+	assertProviderContract,
 	type ContentStoreRecord,
 	type DeployTarget,
 	type GitSyncAdapter,
 	type ImportSource,
 	type MediaAssetRecord,
+	normalizeProviderCapabilities,
 	type PreviewSession,
 	type RevisionRecord,
-	assertProviderContract,
-	normalizeProviderCapabilities,
 } from "../platform-contracts";
 import {
 	cloudflareActorEmail,
@@ -116,30 +116,20 @@ async function saveCloudflareRecord(
 		const state = String(record.metadata?.state ?? "not_started");
 		const updatedAt = nowIso();
 		const updatedBy = cloudflareActorEmail();
-		await db
-			.prepare(SQL_UPSERT_TRANSLATION)
-			.bind(slug, state, updatedAt, updatedBy)
-			.run();
+		await db.prepare(SQL_UPSERT_TRANSLATION).bind(slug, state, updatedAt, updatedBy).run();
 		return toTranslationRecord(slug, state, updatedAt, updatedBy);
 	}
 	if (record.kind === "page" || record.kind === "post") {
 		return savePageOrPost(db, readStore, record);
 	}
-	throw new Error(
-		`Cloudflare content store does not support saving ${record.kind} records yet.`,
-	);
+	throw new Error(`Cloudflare content store does not support saving ${record.kind} records yet.`);
 }
 
-function resolveAuth(
-	options: AstropressCloudflareAdapterOptions,
-	db?: D1DatabaseLike,
-) {
+function resolveAuth(options: AstropressCloudflareAdapterOptions, db?: D1DatabaseLike) {
 	if (options.auth) return options.auth;
 	if (options.allowInsecureFallbackAuth && options.users)
 		return createFallbackCloudflareAuthStore(options.users);
-	return db
-		? createD1CloudflareAuthStore(db)
-		: createDisabledCloudflareAuthStore();
+	return db ? createD1CloudflareAuthStore(db) : createDisabledCloudflareAuthStore();
 }
 
 async function listCloudflareContentRecords(
@@ -156,9 +146,7 @@ async function listCloudflareContentRecords(
 	}
 	if (!kind || kind === "redirect") {
 		records.push(
-			...(await readStore.redirects.getRedirectRules()).map((rule) =>
-				toRedirectRecord(rule),
-			),
+			...(await readStore.redirects.getRedirectRules()).map((rule) => toRedirectRecord(rule)),
 		);
 	}
 	if (!kind || kind === "comment") {
@@ -288,10 +276,7 @@ export function createAstropressCloudflareAdapter(
 				if (!normalizedId) return null;
 				const all = await this.list();
 				return (
-					all.find(
-						(record) =>
-							record.id === normalizedId || record.slug === normalizedId,
-					) ?? null
+					all.find((record) => record.id === normalizedId || record.slug === normalizedId) ?? null
 				);
 			},
 			async save(record) {
@@ -301,10 +286,7 @@ export function createAstropressCloudflareAdapter(
 				const existing = await this.get(id);
 				if (!existing) return;
 				if (existing.kind === "redirect") {
-					await db
-						.prepare(SQL_CF_SOFT_DELETE_REDIRECT)
-						.bind(existing.slug)
-						.run();
+					await db.prepare(SQL_CF_SOFT_DELETE_REDIRECT).bind(existing.slug).run();
 					return;
 				}
 				if (existing.kind === "page" || existing.kind === "post") {
@@ -336,9 +318,7 @@ export function createAstropressCloudflareAdapter(
 				return asset;
 			},
 			async get(id) {
-				const asset = (await readStore.media.listMediaAssets()).find(
-					(entry) => entry.id === id,
-				);
+				const asset = (await readStore.media.listMediaAssets()).find((entry) => entry.id === id);
 				if (!asset) return null;
 				return {
 					id: asset.id,
@@ -354,9 +334,7 @@ export function createAstropressCloudflareAdapter(
 		},
 		revisions: {
 			async list(recordId) {
-				return (
-					(await readStore.content.getContentRevisions(recordId)) ?? []
-				).map(
+				return ((await readStore.content.getContentRevisions(recordId)) ?? []).map(
 					(revision): RevisionRecord => ({
 						id: revision.id,
 						recordId: revision.slug,

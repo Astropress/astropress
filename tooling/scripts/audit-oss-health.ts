@@ -25,9 +25,7 @@ async function main() {
 	if (license === null) {
 		report.add("[missing] LICENSE — file not found at repo root");
 	} else if (!/MIT|Apache|ISC/i.test(license)) {
-		report.add(
-			'[invalid-license] LICENSE — does not contain "MIT", "Apache", or "ISC"',
-		);
+		report.add('[invalid-license] LICENSE — does not contain "MIT", "Apache", or "ISC"');
 	}
 
 	// 2. CONTRIBUTING.md
@@ -37,9 +35,7 @@ async function main() {
 	} else {
 		const lower = contributing.toLowerCase();
 		if (!(/setup/.test(lower) || /install/.test(lower))) {
-			report.add(
-				'[missing-section] CONTRIBUTING.md — does not mention "setup" or "install"',
-			);
+			report.add('[missing-section] CONTRIBUTING.md — does not mention "setup" or "install"');
 		}
 		if (!/test/.test(lower)) {
 			report.add('[missing-section] CONTRIBUTING.md — does not mention "test"');
@@ -74,9 +70,7 @@ async function main() {
 		const entries = await listFiles(issueTemplateDir);
 		const mdFiles = entries.filter((e) => e.endsWith(".md"));
 		if (mdFiles.length === 0) {
-			report.add(
-				"[empty] .github/ISSUE_TEMPLATE/ — directory exists but contains no .md files",
-			);
+			report.add("[empty] .github/ISSUE_TEMPLATE/ — directory exists but contains no .md files");
 		}
 	}
 
@@ -87,21 +81,15 @@ async function main() {
 	} else {
 		const lineCount = readme.split("\n").length;
 		if (lineCount < 100) {
-			report.add(
-				`[too-short] README.md — ${lineCount} lines (minimum 100 required)`,
-			);
+			report.add(`[too-short] README.md — ${lineCount} lines (minimum 100 required)`);
 		}
 	}
 
 	if (report.failed) {
-		console.error(
-			"\nFix: add or update the missing/invalid files at the repo root.",
-		);
+		console.error("\nFix: add or update the missing/invalid files at the repo root.");
 	}
 
-	report.finish(
-		"oss-health audit passed — all open-source health files present and valid.",
-	);
+	report.finish("oss-health audit passed — all open-source health files present and valid.");
 }
 
 runAudit("oss-health", main);

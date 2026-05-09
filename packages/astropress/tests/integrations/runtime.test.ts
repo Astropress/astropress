@@ -2,18 +2,15 @@ import type { DatabaseSync } from "node:sqlite";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { z } from "zod";
 
-import {
-	_resetRegistryForTests,
-	registerProvider,
-} from "../../src/integrations/registry";
+import { _resetRegistryForTests, registerProvider } from "../../src/integrations/registry";
 import {
 	createRequestProviderCache,
 	getConnectedProvider,
 	listRegisteredProvidersForDomain,
 } from "../../src/integrations/runtime";
 import {
-	type IntegrationsRepository,
 	createIntegrationsRepository,
+	type IntegrationsRepository,
 } from "../../src/sqlite-runtime/integrations";
 import { makeDb } from "../helpers/make-db.js";
 
@@ -242,9 +239,10 @@ describe("getConnectedProvider", () => {
 		// Wipe the secret row directly while leaving the status row in
 		// place; getConnectedProvider must not return a half-connected
 		// view to the runtime.
-		db.prepare(
-			"DELETE FROM integration_secrets WHERE domain=? AND provider=?",
-		).run("newsletter", "listmonk");
+		db.prepare("DELETE FROM integration_secrets WHERE domain=? AND provider=?").run(
+			"newsletter",
+			"listmonk",
+		);
 		const result = await getConnectedProvider({
 			domain: "newsletter",
 			repo,
@@ -312,9 +310,10 @@ describe("getConnectedProvider", () => {
 			},
 			PREV,
 		);
-		db.prepare(
-			"UPDATE integration_secrets SET kid='previous' WHERE domain=? AND provider=?",
-		).run("newsletter", "listmonk");
+		db.prepare("UPDATE integration_secrets SET kid='previous' WHERE domain=? AND provider=?").run(
+			"newsletter",
+			"listmonk",
+		);
 		const result = await getConnectedProvider({
 			domain: "newsletter",
 			repo,

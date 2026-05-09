@@ -15,13 +15,9 @@ const tokens = store.apiTokens ? await store.apiTokens.list() : [];
 
 const wasCreated = Astro.url.searchParams.get("created") === "1";
 const wasRevoked = Astro.url.searchParams.get("revoked") === "1";
-const createdRawToken = wasCreated
-	? Astro.url.searchParams.get("rawToken")
-	: null;
+const createdRawToken = wasCreated ? Astro.url.searchParams.get("rawToken") : null;
 const errorMessage =
-	Astro.url.searchParams.get("error") === "1"
-		? Astro.url.searchParams.get("message")
-		: null;
+	Astro.url.searchParams.get("error") === "1" ? Astro.url.searchParams.get("message") : null;
 
 const ALL_SCOPES = [
 	"content:read",

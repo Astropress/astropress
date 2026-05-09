@@ -12,19 +12,11 @@
 
 import { execFileSync } from "node:child_process";
 import { relative } from "node:path";
-import {
-	AuditReport,
-	ROOT,
-	fileExists,
-	fromRoot,
-	runAudit,
-} from "../lib/audit-utils.js";
+import { AuditReport, fileExists, fromRoot, ROOT, runAudit } from "../lib/audit-utils.js";
 
 const SCAFFOLD_MODULE = fromRoot("packages/astropress/src/project-scaffold.ts");
 const CI_MODULE = fromRoot("packages/astropress/src/project-scaffold-ci.ts");
-const TEST_FILE = fromRoot(
-	"packages/astropress/tests/project-scaffold.test.ts",
-);
+const TEST_FILE = fromRoot("packages/astropress/tests/project-scaffold.test.ts");
 
 function grepQuiet(filePath: string, pattern: string): boolean {
 	try {
@@ -40,9 +32,7 @@ async function main() {
 
 	// 1. Scaffold module exists and exports createAstropressProjectScaffold
 	if (!(await fileExists(SCAFFOLD_MODULE))) {
-		report.add(
-			`[missing-scaffold] ${relative(ROOT, SCAFFOLD_MODULE)} does not exist`,
-		);
+		report.add(`[missing-scaffold] ${relative(ROOT, SCAFFOLD_MODULE)} does not exist`);
 	} else if (!grepQuiet(SCAFFOLD_MODULE, "createAstropressProjectScaffold")) {
 		report.add(
 			`[missing-export] ${relative(ROOT, SCAFFOLD_MODULE)} does not export createAstropressProjectScaffold`,
@@ -52,9 +42,7 @@ async function main() {
 	// 2. CI scaffold module exists
 	const ciExists = await fileExists(CI_MODULE);
 	if (!ciExists) {
-		report.add(
-			`[missing-ci-module] ${relative(ROOT, CI_MODULE)} does not exist`,
-		);
+		report.add(`[missing-ci-module] ${relative(ROOT, CI_MODULE)} does not exist`);
 	}
 
 	// 3. CI scaffold includes security scanning
@@ -66,9 +54,7 @@ async function main() {
 
 	// 4. CI scaffold includes linting / quality
 	if (ciExists && !grepQuiet(CI_MODULE, "lint|biome|check")) {
-		report.add(
-			`[missing-lint] ${relative(ROOT, CI_MODULE)} does not reference linting`,
-		);
+		report.add(`[missing-lint] ${relative(ROOT, CI_MODULE)} does not reference linting`);
 	}
 
 	// 5. CI scaffold includes doctor health check

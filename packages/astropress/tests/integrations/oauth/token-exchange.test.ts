@@ -55,8 +55,7 @@ describe("exchangeCodeForToken — happy path", () => {
 	});
 
 	it("omits expiresIn when expires_in is not a finite number", async () => {
-		const fetchImpl = async () =>
-			jsonResponse({ access_token: "x", expires_in: "30" });
+		const fetchImpl = async () => jsonResponse({ access_token: "x", expires_in: "30" });
 		const r = await exchangeCodeForToken({ ...ARGS_BASE, fetch: fetchImpl });
 		expect(r.ok).toBe(true);
 		if (r.ok) expect(r.tokens.expiresIn).toBeUndefined();
@@ -72,10 +71,7 @@ describe("exchangeCodeForToken — payload encoding", () => {
 			contentType: "",
 			accept: "",
 		};
-		const fetchImpl = async (
-			url: string | URL | Request,
-			init?: RequestInit,
-		) => {
+		const fetchImpl = async (url: string | URL | Request, init?: RequestInit) => {
 			const headers = (init?.headers ?? {}) as Record<string, string>;
 			captured = {
 				url: String(url),
@@ -110,48 +106,42 @@ describe("exchangeCodeForToken — token field coercion", () => {
 	});
 
 	it("preserves a non-bearer token_type verbatim", async () => {
-		const fetchImpl = async () =>
-			jsonResponse({ access_token: "x", token_type: "mac" });
+		const fetchImpl = async () => jsonResponse({ access_token: "x", token_type: "mac" });
 		const r = await exchangeCodeForToken({ ...ARGS_BASE, fetch: fetchImpl });
 		expect(r.ok).toBe(true);
 		if (r.ok) expect(r.tokens.tokenType).toBe("mac");
 	});
 
 	it("defaults tokenType to 'bearer' when token_type is an empty string", async () => {
-		const fetchImpl = async () =>
-			jsonResponse({ access_token: "x", token_type: "" });
+		const fetchImpl = async () => jsonResponse({ access_token: "x", token_type: "" });
 		const r = await exchangeCodeForToken({ ...ARGS_BASE, fetch: fetchImpl });
 		expect(r.ok).toBe(true);
 		if (r.ok) expect(r.tokens.tokenType).toBe("bearer");
 	});
 
 	it("defaults tokenType to 'bearer' when token_type is a non-string", async () => {
-		const fetchImpl = async () =>
-			jsonResponse({ access_token: "x", token_type: 7 });
+		const fetchImpl = async () => jsonResponse({ access_token: "x", token_type: 7 });
 		const r = await exchangeCodeForToken({ ...ARGS_BASE, fetch: fetchImpl });
 		expect(r.ok).toBe(true);
 		if (r.ok) expect(r.tokens.tokenType).toBe("bearer");
 	});
 
 	it("omits refreshToken when refresh_token is an empty string", async () => {
-		const fetchImpl = async () =>
-			jsonResponse({ access_token: "x", refresh_token: "" });
+		const fetchImpl = async () => jsonResponse({ access_token: "x", refresh_token: "" });
 		const r = await exchangeCodeForToken({ ...ARGS_BASE, fetch: fetchImpl });
 		expect(r.ok).toBe(true);
 		if (r.ok) expect(r.tokens.refreshToken).toBeUndefined();
 	});
 
 	it("omits refreshToken when refresh_token is a non-string", async () => {
-		const fetchImpl = async () =>
-			jsonResponse({ access_token: "x", refresh_token: 12 });
+		const fetchImpl = async () => jsonResponse({ access_token: "x", refresh_token: 12 });
 		const r = await exchangeCodeForToken({ ...ARGS_BASE, fetch: fetchImpl });
 		expect(r.ok).toBe(true);
 		if (r.ok) expect(r.tokens.refreshToken).toBeUndefined();
 	});
 
 	it("omits expiresIn when expires_in is NaN", async () => {
-		const fetchImpl = async () =>
-			jsonResponse({ access_token: "x", expires_in: Number.NaN });
+		const fetchImpl = async () => jsonResponse({ access_token: "x", expires_in: Number.NaN });
 		const r = await exchangeCodeForToken({ ...ARGS_BASE, fetch: fetchImpl });
 		expect(r.ok).toBe(true);
 		if (r.ok) expect(r.tokens.expiresIn).toBeUndefined();
@@ -173,8 +163,7 @@ describe("exchangeCodeForToken — token field coercion", () => {
 	});
 
 	it("preserves an empty scope string", async () => {
-		const fetchImpl = async () =>
-			jsonResponse({ access_token: "x", scope: "" });
+		const fetchImpl = async () => jsonResponse({ access_token: "x", scope: "" });
 		const r = await exchangeCodeForToken({ ...ARGS_BASE, fetch: fetchImpl });
 		expect(r.ok).toBe(true);
 		if (r.ok) expect(r.tokens.scope).toBe("");

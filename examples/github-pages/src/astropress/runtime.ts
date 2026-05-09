@@ -24,5 +24,4 @@ const runtime = createAstropressSqliteAdminRuntime({
 
 export const sqliteAdminStore = runtime.sqliteAdminStore;
 export const sqliteCmsRegistryModule = runtime.sqliteCmsRegistryModule;
-export const authenticatePersistedAdminUser =
-	runtime.authenticatePersistedAdminUser;
+export const authenticatePersistedAdminUser = runtime.authenticatePersistedAdminUser;

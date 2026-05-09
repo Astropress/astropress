@@ -13,14 +13,7 @@
  */
 
 import { evaluateCondition } from "./condition-evaluator";
-import type {
-	Decision,
-	Env,
-	EvaluationResult,
-	Policy,
-	Resource,
-	Subject,
-} from "./types";
+import type { Decision, Env, EvaluationResult, Policy, Resource, Subject } from "./types";
 
 export function actionMatches(pattern: string, requested: string): boolean {
 	if (pattern === "*") return true;

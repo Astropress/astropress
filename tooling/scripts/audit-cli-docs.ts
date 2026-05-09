@@ -1,9 +1,4 @@
-import {
-	AuditReport,
-	fromRoot,
-	readText,
-	runAudit,
-} from "../lib/audit-utils.js";
+import { AuditReport, fromRoot, readText, runAudit } from "../lib/audit-utils.js";
 
 // Verifies that every command documented in crates/astropress-cli/README.md
 // has a corresponding Command::* match arm in main.rs. Prevents documented
@@ -60,10 +55,7 @@ function extractCommandVariants(mainRs: string): Set<string> {
 
 async function main() {
 	const report = new AuditReport("cli-docs");
-	const [readme, mainRs] = await Promise.all([
-		readText(CLI_README),
-		readText(MAIN_RS),
-	]);
+	const [readme, mainRs] = await Promise.all([readText(CLI_README), readText(MAIN_RS)]);
 
 	const documented = extractDocumentedCommands(readme);
 	const variants = extractCommandVariants(mainRs);
@@ -84,9 +76,7 @@ async function main() {
 
 		const variant = toVariantName(canonical);
 		if (!variants.has(variant)) {
-			report.add(
-				`"${cmd}" (documented) — expected Command::${variant} in main.rs, not found`,
-			);
+			report.add(`"${cmd}" (documented) — expected Command::${variant} in main.rs, not found`);
 		}
 	}
 

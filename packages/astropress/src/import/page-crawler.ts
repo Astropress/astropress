@@ -36,7 +36,7 @@ export type CrawlResult = {
 // Helpers
 // ---------------------------------------------------------------------------
 
-function resolveUrl(base: string, href: string): string | null {
+function _resolveUrl(base: string, href: string): string | null {
 	try {
 		return new URL(href, base).toString();
 	} catch {
@@ -216,9 +216,7 @@ export async function crawlSitePages(opts: CrawlOptions): Promise<CrawlResult> {
  *
  * Requires Playwright to be installed: `bunx playwright install chromium`
  */
-export async function crawlSitePagesWithBrowser(
-	opts: BrowserCrawlOptions,
-): Promise<CrawlResult> {
+export async function crawlSitePagesWithBrowser(opts: BrowserCrawlOptions): Promise<CrawlResult> {
 	const { siteUrl, maxPages = 500, timeoutMs = 30_000 } = opts;
 
 	// Lazy-load Playwright so it isn't required for fetch-mode crawls.
@@ -232,8 +230,7 @@ export async function crawlSitePagesWithBrowser(
 			failed: [
 				{
 					url: siteUrl,
-					reason:
-						"Playwright is not installed — run: bunx playwright install chromium",
+					reason: "Playwright is not installed — run: bunx playwright install chromium",
 				},
 			],
 			warnings: ["Playwright not available; falling back is recommended"],
@@ -265,9 +262,7 @@ export async function crawlSitePagesWithBrowser(
 			}
 			await sitemapPage.close();
 		} catch {
-			warnings.push(
-				"Could not fetch sitemap.xml with browser — crawling from homepage",
-			);
+			warnings.push("Could not fetch sitemap.xml with browser — crawling from homepage");
 		}
 		if (urlsToVisit.length === 0) urlsToVisit = [`${origin}/`];
 		urlsToVisit = [...new Set(urlsToVisit)];

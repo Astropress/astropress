@@ -45,9 +45,7 @@ async function main() {
 	}
 
 	// 3. Lock web component exists
-	const lockIndicatorPath = fromRoot(
-		"packages/astropress/web-components/ap-lock-indicator.ts",
-	);
+	const lockIndicatorPath = fromRoot("packages/astropress/web-components/ap-lock-indicator.ts");
 	if (!(await fileExists(lockIndicatorPath))) {
 		report.add(
 			"[missing-lock-indicator] packages/astropress/web-components/ap-lock-indicator.ts does not exist — " +
@@ -57,11 +55,7 @@ async function main() {
 
 	// 4. Lock action endpoints exist
 	const actionsDir = fromRoot("packages/astropress/pages/ap-admin/actions");
-	const requiredActions = [
-		"content-lock-acquire",
-		"content-lock-refresh",
-		"content-lock-release",
-	];
+	const requiredActions = ["content-lock-acquire", "content-lock-refresh", "content-lock-release"];
 	const actionEntries = await listFiles(actionsDir, { recursive: true });
 	if (actionEntries.length === 0 && !(await fileExists(actionsDir))) {
 		for (const action of requiredActions) {
@@ -81,15 +75,11 @@ async function main() {
 	}
 
 	// 5. Optimistic conflict detection
-	const runtimeActionsPath = fromRoot(
-		"packages/astropress/src/runtime-actions-content.ts",
-	);
+	const runtimeActionsPath = fromRoot("packages/astropress/src/runtime-actions-content.ts");
 	if (await fileExists(runtimeActionsPath)) {
 		const src = await readText(runtimeActionsPath);
 		const hasConflictDetection =
-			/lastKnownUpdatedAt/i.test(src) ||
-			/409/.test(src) ||
-			/conflict/i.test(src);
+			/lastKnownUpdatedAt/i.test(src) || /409/.test(src) || /conflict/i.test(src);
 		if (!hasConflictDetection) {
 			report.add(
 				"[missing-conflict-detection] packages/astropress/src/runtime-actions-content.ts " +
@@ -117,9 +107,7 @@ async function main() {
 	}
 
 	// 7. Content-locking test file exists
-	const testPath = fromRoot(
-		"packages/astropress/tests/content-locking.test.ts",
-	);
+	const testPath = fromRoot("packages/astropress/tests/content-locking.test.ts");
 	if (!(await fileExists(testPath))) {
 		report.add(
 			"[missing-test] packages/astropress/tests/content-locking.test.ts does not exist — " +

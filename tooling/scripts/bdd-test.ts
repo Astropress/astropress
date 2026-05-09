@@ -1,5 +1,5 @@
 import { spawn } from "node:child_process";
-import { readFileSync, readdirSync, statSync } from "node:fs";
+import { readdirSync, readFileSync, statSync } from "node:fs";
 import path from "node:path";
 
 type ScenarioDefinition = {
@@ -45,9 +45,7 @@ function readFeatureScenarios() {
 	const scenarios: ScenarioDefinition[] = [];
 
 	for (const featureFile of walkFeatureFiles(featuresRoot)) {
-		const relativePath = path
-			.relative(repoRoot, featureFile)
-			.replaceAll(path.sep, "/");
+		const relativePath = path.relative(repoRoot, featureFile).replaceAll(path.sep, "/");
 		const lines = readFileSync(featureFile, "utf8").split(/\r?\n/);
 		for (const line of lines) {
 			const trimmed = line.trim();
@@ -78,11 +76,7 @@ async function runStep(step: VerificationGroup["steps"][number]) {
 				resolve();
 				return;
 			}
-			reject(
-				new Error(
-					`${step.command} ${step.args.join(" ")} exited with code ${code ?? 1}`,
-				),
-			);
+			reject(new Error(`${step.command} ${step.args.join(" ")} exited with code ${code ?? 1}`));
 		});
 	});
 }
@@ -179,11 +173,7 @@ const verificationGroups: VerificationGroup[] = [
 		steps: [
 			{
 				command: "bun",
-				args: [
-					"run",
-					"tooling/scripts/run-playwright.ts",
-					"--project=admin-pre-alpha-walkthrough",
-				],
+				args: ["run", "tooling/scripts/run-playwright.ts", "--project=admin-pre-alpha-walkthrough"],
 			},
 		],
 	},
@@ -198,11 +188,7 @@ const verificationGroups: VerificationGroup[] = [
 		steps: [
 			{
 				command: "bun",
-				args: [
-					"run",
-					"tooling/scripts/run-playwright.ts",
-					"--project=admin-integration-honesty",
-				],
+				args: ["run", "tooling/scripts/run-playwright.ts", "--project=admin-integration-honesty"],
 			},
 		],
 	},
@@ -364,21 +350,14 @@ const verificationGroups: VerificationGroup[] = [
 		steps: [
 			{
 				command: "bunx",
-				args: [
-					"vitest",
-					"run",
-					"tests/admin-routes.test.ts",
-					"tests/tooling-integration.test.ts",
-				],
+				args: ["vitest", "run", "tests/admin-routes.test.ts", "tests/tooling-integration.test.ts"],
 				cwd: astropressPackageRoot,
 			},
 		],
 	},
 	{
 		label: "npm consumer admin route reachability",
-		scenarios: [
-			"All admin panel routes are reachable without source-level import aliases",
-		],
+		scenarios: ["All admin panel routes are reachable without source-level import aliases"],
 		steps: [
 			{
 				command: "bun",
@@ -587,12 +566,7 @@ const verificationGroups: VerificationGroup[] = [
 			},
 			{
 				command: "cargo",
-				args: [
-					"test",
-					"--",
-					"listmonk_generates_env_stubs",
-					"listmonk_services_doc_covers_setup",
-				],
+				args: ["test", "--", "listmonk_generates_env_stubs", "listmonk_services_doc_covers_setup"],
 			},
 		],
 	},
@@ -607,12 +581,7 @@ const verificationGroups: VerificationGroup[] = [
 		steps: [
 			{
 				command: "bunx",
-				args: [
-					"vitest",
-					"run",
-					"tests/services-config.test.ts",
-					"tests/admin-routes.test.ts",
-				],
+				args: ["vitest", "run", "tests/services-config.test.ts", "tests/admin-routes.test.ts"],
 				cwd: astropressPackageRoot,
 			},
 		],
@@ -782,9 +751,7 @@ const verificationGroups: VerificationGroup[] = [
 	},
 	{
 		label: "public comment submission scenarios",
-		scenarios: [
-			"A reader submits a comment on a post and it enters the moderation queue",
-		],
+		scenarios: ["A reader submits a comment on a post and it enters the moderation queue"],
 		steps: [
 			{
 				command: "bunx",
@@ -1612,12 +1579,7 @@ const verificationGroups: VerificationGroup[] = [
 		steps: [
 			{
 				command: "bunx",
-				args: [
-					"vitest",
-					"run",
-					"tests/admin-safety.test.ts",
-					"tests/admin-shell-ux.test.ts",
-				],
+				args: ["vitest", "run", "tests/admin-safety.test.ts", "tests/admin-shell-ux.test.ts"],
 				cwd: astropressPackageRoot,
 			},
 		],
@@ -1786,12 +1748,8 @@ const verificationGroups: VerificationGroup[] = [
 ];
 
 const scenarios = readFeatureScenarios();
-const featureScenarioTitles = new Set(
-	scenarios.map((scenario) => scenario.title),
-);
-const coveredScenarioTitles = new Set(
-	verificationGroups.flatMap((group) => group.scenarios),
-);
+const featureScenarioTitles = new Set(scenarios.map((scenario) => scenario.title));
+const coveredScenarioTitles = new Set(verificationGroups.flatMap((group) => group.scenarios));
 const unassignedScenarios = scenarios.filter(
 	(scenario) => !coveredScenarioTitles.has(scenario.title),
 );
@@ -1802,12 +1760,9 @@ const unknownScenarioTitles = [...coveredScenarioTitles].filter(
 if (unassignedScenarios.length > 0 || unknownScenarioTitles.length > 0) {
 	const issues = [
 		...unassignedScenarios.map(
-			(scenario) =>
-				`Unassigned scenario: ${scenario.featurePath} -> ${scenario.title}`,
+			(scenario) => `Unassigned scenario: ${scenario.featurePath} -> ${scenario.title}`,
 		),
-		...unknownScenarioTitles.map(
-			(title) => `Verification references unknown scenario: ${title}`,
-		),
+		...unknownScenarioTitles.map((title) => `Verification references unknown scenario: ${title}`),
 	];
 	console.error("BDD execution map is incomplete:");
 	for (const issue of issues) {
@@ -1860,12 +1815,8 @@ for (const group of verificationGroups) {
 	}
 
 	for (const scenarioTitle of group.scenarios) {
-		const scenario = scenarios.find(
-			(candidate) => candidate.title === scenarioTitle,
-		);
-		console.log(
-			`  PASS ${scenario?.featurePath ?? "features"} :: ${scenarioTitle}`,
-		);
+		const scenario = scenarios.find((candidate) => candidate.title === scenarioTitle);
+		console.log(`  PASS ${scenario?.featurePath ?? "features"} :: ${scenarioTitle}`);
 	}
 }
 

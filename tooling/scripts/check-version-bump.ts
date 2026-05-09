@@ -38,9 +38,7 @@ const currentVersion = getVersion(currentPkg);
 const basePkg = getFileAtRef(`origin/${BASE_BRANCH}`, PKG_PATH);
 if (!basePkg) {
 	// Can't compare — likely a new branch without remote tracking; skip check
-	console.log(
-		`✓ check:version — cannot compare to origin/${BASE_BRANCH}, skipping`,
-	);
+	console.log(`✓ check:version — cannot compare to origin/${BASE_BRANCH}, skipping`);
 	process.exit(0);
 }
 
@@ -67,9 +65,7 @@ if (!changelog.includes(currentVersion)) {
 	process.exit(1);
 }
 
-console.log(
-	`✓ check:version — version ${currentVersion} documented in CHANGELOG.md`,
-);
+console.log(`✓ check:version — version ${currentVersion} documented in CHANGELOG.md`);
 
 // Verify Cargo.toml is in sync with the npm package version
 const CARGO_PATH = resolve(ROOT, "crates/astropress-cli/Cargo.toml");

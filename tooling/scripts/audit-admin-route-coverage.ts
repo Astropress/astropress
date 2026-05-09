@@ -15,14 +15,7 @@
  */
 
 import { join, relative } from "node:path";
-import {
-	AuditReport,
-	ROOT,
-	fromRoot,
-	listFiles,
-	readText,
-	runAudit,
-} from "../lib/audit-utils.js";
+import { AuditReport, fromRoot, listFiles, ROOT, readText, runAudit } from "../lib/audit-utils.js";
 
 const ADMIN_PAGES_DIR = fromRoot("packages/astropress/pages/ap-admin");
 const E2E_DIR = fromRoot("tooling/e2e");
@@ -90,9 +83,7 @@ async function main() {
 
 	// 2. Collect routes referenced in Playwright spec files
 	const e2eEntries = await listFiles(E2E_DIR);
-	const specFiles = e2eEntries
-		.filter((f) => f.endsWith(".spec.ts"))
-		.map((f) => join(E2E_DIR, f));
+	const specFiles = e2eEntries.filter((f) => f.endsWith(".spec.ts")).map((f) => join(E2E_DIR, f));
 
 	const playwrightRoutes = new Set<string>();
 	for (const specFile of specFiles) {
@@ -137,9 +128,7 @@ async function main() {
 	console.log(
 		`  Playwright coverage: ${playwrightRoutes.size} route reference(s) across ${specFiles.length} spec file(s)`,
 	);
-	console.log(
-		`  Smoke coverage: ${smokeRoutes.size} route(s) in ${relSmokeScript}`,
-	);
+	console.log(`  Smoke coverage: ${smokeRoutes.size} route(s) in ${relSmokeScript}`);
 
 	if (uncovered.length > 0) {
 		console.warn("\n  Uncovered routes:");

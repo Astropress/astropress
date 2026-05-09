@@ -5,18 +5,8 @@ import { discoverHPanelSites } from "./connectors/hpanel.js";
 import { createJob, getJob, listJobs, updateJob } from "./jobs.js";
 import { getAggregateMetrics } from "./metrics-cache.js";
 import { SiteRegistry } from "./registry.js";
-import {
-	checkSiteHealth,
-	postSiteRequest,
-	proxySiteRequest,
-} from "./site-client.js";
-import type {
-	ContentItem,
-	FanOutResult,
-	NexusConfig,
-	SiteEntry,
-	SiteHealth,
-} from "./types.js";
+import { checkSiteHealth, postSiteRequest, proxySiteRequest } from "./site-client.js";
+import type { ContentItem, FanOutResult, NexusConfig, SiteEntry, SiteHealth } from "./types.js";
 
 export type NexusAppOptions = {
 	config: NexusConfig;
@@ -44,9 +34,7 @@ function getRequestedToken(request: Request) {
 }
 
 async function getSiteStatuses(sites: SiteEntry[]) {
-	const healthChecks = await Promise.allSettled(
-		sites.map((site) => checkSiteHealth(site)),
-	);
+	const healthChecks = await Promise.allSettled(sites.map((site) => checkSiteHealth(site)));
 	return healthChecks.map((result, index): SiteHealth => {
 		if (result.status === "fulfilled") {
 			return result.value;
@@ -64,20 +52,16 @@ async function getSiteStatuses(sites: SiteEntry[]) {
 }
 
 function normalizeRedirectTarget(value: string | undefined, fallback: string) {
-	if (!value || !value.startsWith("/")) {
+	if (!value?.startsWith("/")) {
 		return fallback;
 	}
 	return value;
 }
 
-function collectSelectedSiteIds(
-	formData: Record<string, string | File | (string | File)[]>,
-) {
+function collectSelectedSiteIds(formData: Record<string, string | File | (string | File)[]>) {
 	const raw = formData.siteIds ?? formData.siteId;
 	const values = Array.isArray(raw) ? raw : raw ? [raw] : [];
-	return values
-		.map((entry) => String(entry).trim())
-		.filter((entry) => entry.length > 0);
+	return values.map((entry) => String(entry).trim()).filter((entry) => entry.length > 0);
 }
 
 function renderDashboardHtml(input: {
@@ -90,25 +74,14 @@ function renderDashboardHtml(input: {
 	statuses: SiteHealth[];
 	metrics: Awaited<ReturnType<typeof getAggregateMetrics>>;
 }) {
-	const {
-		title,
-		authToken,
-		query,
-		refreshed,
-		redeployed,
-		sites,
-		statuses,
-		metrics,
-	} = input;
+	const { title, authToken, query, refreshed, redeployed, sites, statuses, metrics } = input;
 	const filtered = sites.filter((site) => {
 		const haystack =
 			`${site.name} ${site.id} ${site.baseUrl} ${site.description ?? ""}`.toLowerCase();
 		return haystack.includes(query.toLowerCase());
 	});
 	const statusMap = new Map(statuses.map((status) => [status.id, status]));
-	const tokenSuffix = authToken
-		? `?token=${encodeURIComponent(authToken)}`
-		: "";
+	const tokenSuffix = authToken ? `?token=${encodeURIComponent(authToken)}` : "";
 
 	const cards = filtered
 		.map((site) => {
@@ -246,9 +219,7 @@ function renderSiteDetailHtml(input: {
 	jobs: ReturnType<typeof listJobs>;
 }) {
 	const { title, authToken, site, health, jobs } = input;
-	const tokenSuffix = authToken
-		? `?token=${encodeURIComponent(authToken)}`
-		: "";
+	const tokenSuffix = authToken ? `?token=${encodeURIComponent(authToken)}` : "";
 	const adminLink = site.adminUrl ?? `${site.baseUrl}/ap-admin`;
 
 	return `<!doctype html>
@@ -420,10 +391,7 @@ export function createNexusApp(options: NexusAppOptions): Hono {
 		if (!site) {
 			return c.json({ error: `Site '${id}' not found` }, 404);
 		}
-		const result = await proxySiteRequest(
-			site,
-			`content/${encodeURIComponent(slug)}`,
-		);
+		const result = await proxySiteRequest(site, `content/${encodeURIComponent(slug)}`);
 		return c.json(result.body, result.status as 200 | 404 | 502);
 	});
 
@@ -457,19 +425,12 @@ export function createNexusApp(options: NexusAppOptions): Hono {
 
 		const results = await Promise.allSettled(
 			sites.map(async (site): Promise<FanOutResult<ContentItem[]>> => {
-				const result = await proxySiteRequest(
-					site,
-					"content",
-					url.searchParams,
-				);
+				const result = await proxySiteRequest(site, "content", url.searchParams);
 				if (!result.ok) {
 					return {
 						siteId: site.id,
 						status: "degraded",
-						error: String(
-							(result.body as Record<string, unknown>).error ??
-								"request failed",
-						),
+						error: String((result.body as Record<string, unknown>).error ?? "request failed"),
 					};
 				}
 				const items = (
@@ -518,8 +479,7 @@ export function createNexusApp(options: NexusAppOptions): Hono {
 		}
 
 		const siteId = typeof body.siteId === "string" ? body.siteId.trim() : "";
-		const exportFile =
-			typeof body.exportFile === "string" ? body.exportFile.trim() : "";
+		const exportFile = typeof body.exportFile === "string" ? body.exportFile.trim() : "";
 
 		if (!siteId) return c.json({ error: "siteId is required." }, 422);
 		if (!exportFile) return c.json({ error: "exportFile is required." }, 422);
@@ -548,9 +508,7 @@ export function createNexusApp(options: NexusAppOptions): Hono {
 				updateJob(job.id, {
 					status: "failed",
 					completedAt: new Date().toISOString(),
-					error: String(
-						(result.body as Record<string, unknown>).error ?? "import failed",
-					),
+					error: String((result.body as Record<string, unknown>).error ?? "import failed"),
 				});
 			}
 		})();
@@ -577,9 +535,7 @@ export function createNexusApp(options: NexusAppOptions): Hono {
 		const formData = await c.req.parseBody();
 		const requestedIds = collectSelectedSiteIds(formData);
 		const selectedSites = (
-			requestedIds.length > 0
-				? requestedIds
-				: registry.getAll().map((site) => site.id)
+			requestedIds.length > 0 ? requestedIds : registry.getAll().map((site) => site.id)
 		)
 			.map((id) => registry.get(id))
 			.filter((site): site is SiteEntry => Boolean(site));
@@ -603,9 +559,7 @@ export function createNexusApp(options: NexusAppOptions): Hono {
 		const formData = await c.req.parseBody();
 		const requestedIds = collectSelectedSiteIds(formData);
 		const selectedSites = (
-			requestedIds.length > 0
-				? requestedIds
-				: registry.getAll().map((site) => site.id)
+			requestedIds.length > 0 ? requestedIds : registry.getAll().map((site) => site.id)
 		)
 			.map((id) => registry.get(id))
 			.filter((site): site is SiteEntry => Boolean(site));
@@ -658,8 +612,7 @@ export function createNexusApp(options: NexusAppOptions): Hono {
 		} catch (err) {
 			return c.json(
 				{
-					error:
-						err instanceof Error ? err.message : "Cloudways discovery failed.",
+					error: err instanceof Error ? err.message : "Cloudways discovery failed.",
 				},
 				502,
 			);
@@ -676,8 +629,7 @@ export function createNexusApp(options: NexusAppOptions): Hono {
 		}
 
 		const host = typeof body.host === "string" ? body.host.trim() : "";
-		const username =
-			typeof body.username === "string" ? body.username.trim() : "";
+		const username = typeof body.username === "string" ? body.username.trim() : "";
 		const password = typeof body.password === "string" ? body.password : "";
 
 		if (!host) return c.json({ error: "host is required." }, 422);
@@ -694,8 +646,7 @@ export function createNexusApp(options: NexusAppOptions): Hono {
 		} catch (err) {
 			return c.json(
 				{
-					error:
-						err instanceof Error ? err.message : "cPanel discovery failed.",
+					error: err instanceof Error ? err.message : "cPanel discovery failed.",
 				},
 				502,
 			);
@@ -711,8 +662,7 @@ export function createNexusApp(options: NexusAppOptions): Hono {
 			return c.json({ error: "Request body must be valid JSON." }, 422);
 		}
 
-		const accessToken =
-			typeof body.accessToken === "string" ? body.accessToken.trim() : "";
+		const accessToken = typeof body.accessToken === "string" ? body.accessToken.trim() : "";
 		if (!accessToken) return c.json({ error: "accessToken is required." }, 422);
 
 		try {
@@ -721,8 +671,7 @@ export function createNexusApp(options: NexusAppOptions): Hono {
 		} catch (err) {
 			return c.json(
 				{
-					error:
-						err instanceof Error ? err.message : "hPanel discovery failed.",
+					error: err instanceof Error ? err.message : "hPanel discovery failed.",
 				},
 				502,
 			);

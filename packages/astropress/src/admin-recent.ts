@@ -1,6 +1,6 @@
 import type { APIContext } from "astro";
-import { isAuthUserAdmin } from "./platform-contracts";
 import type { AuthUser } from "./platform-contracts";
+import { isAuthUserAdmin } from "./platform-contracts";
 import { listRuntimeContentStates } from "./runtime-page-store";
 import { listRuntimeStructuredPageRoutes } from "./runtime-route-registry-pages";
 import { isSeededPostRecord } from "./seeded-content-type";
@@ -25,9 +25,7 @@ export async function getRecentAdminItems(
 	try {
 		const [contentStates, routePages] = await Promise.all([
 			listRuntimeContentStates(locals).catch(() => []),
-			isAdmin
-				? listRuntimeStructuredPageRoutes(locals).catch(() => [])
-				: Promise.resolve([]),
+			isAdmin ? listRuntimeStructuredPageRoutes(locals).catch(() => []) : Promise.resolve([]),
 		]);
 
 		const items: RecentAdminItem[] = isAdmin
@@ -54,9 +52,7 @@ export async function getRecentAdminItems(
 
 		return items
 			.filter((item) => Boolean(item.updatedAt))
-			.sort(
-				(a, b) => Date.parse(b.updatedAt ?? "") - Date.parse(a.updatedAt ?? ""),
-			)
+			.sort((a, b) => Date.parse(b.updatedAt ?? "") - Date.parse(a.updatedAt ?? ""))
 			.slice(0, 5);
 	} catch {
 		return [];

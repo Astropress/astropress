@@ -53,9 +53,7 @@ describe("renderSectionsDocument", () => {
 	});
 
 	it("renders rich-text html as-is (sanitization runs at save time)", () => {
-		const sections: Section[] = [
-			{ id: "r", kind: "rich-text", html: "<p>preserved</p>" },
-		];
+		const sections: Section[] = [{ id: "r", kind: "rich-text", html: "<p>preserved</p>" }];
 		const html = renderSectionsDocument(sections, ctx);
 		expect(html).toContain("<p>preserved</p>");
 	});

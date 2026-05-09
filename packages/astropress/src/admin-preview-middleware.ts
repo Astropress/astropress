@@ -34,8 +34,6 @@ export function resolvePreviewPath(url: URL): { slug: string } | null {
  * Build a redirect URL for the admin login page, preserving the return path.
  */
 export function buildPreviewLoginRedirect(requestUrl: URL): string {
-	const returnPath = encodeURIComponent(
-		requestUrl.pathname + requestUrl.search,
-	);
+	const returnPath = encodeURIComponent(requestUrl.pathname + requestUrl.search);
 	return `/ap-admin/login?return=${returnPath}`;
 }

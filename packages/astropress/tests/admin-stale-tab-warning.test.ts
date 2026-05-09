@@ -7,10 +7,7 @@ import { describe, expect, it } from "vitest";
 // subpath export entry. Mutations to other files do not invalidate this
 // suite's stryker cache.
 
-const wcPath = path.resolve(
-	import.meta.dirname,
-	"../web-components/ap-stale-tab-warning.ts",
-);
+const wcPath = path.resolve(import.meta.dirname, "../web-components/ap-stale-tab-warning.ts");
 const pkgPath = path.resolve(import.meta.dirname, "../package.json");
 
 describe("ap-stale-tab-warning web component", () => {

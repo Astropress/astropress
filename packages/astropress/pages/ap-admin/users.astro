@@ -14,20 +14,14 @@ const wasCreated = Astro.url.searchParams.get("saved") === "1";
 const userCreatedNoEmail = Astro.url.searchParams.get("user_created") === "1";
 const wasSuspended = Astro.url.searchParams.get("suspended") === "1";
 const wasRestored = Astro.url.searchParams.get("restored") === "1";
-const inviteLink = resolveSafeAdminHref(
-	Astro.url,
-	Astro.url.searchParams.get("invite_link"),
-	["/ap-admin/accept-invite"],
-);
-const resetLink = resolveSafeAdminHref(
-	Astro.url,
-	Astro.url.searchParams.get("reset_link"),
-	["/ap-admin/reset-password"],
-);
+const inviteLink = resolveSafeAdminHref(Astro.url, Astro.url.searchParams.get("invite_link"), [
+	"/ap-admin/accept-invite",
+]);
+const resetLink = resolveSafeAdminHref(Astro.url, Astro.url.searchParams.get("reset_link"), [
+	"/ap-admin/reset-password",
+]);
 const errorMessage =
-	Astro.url.searchParams.get("error") === "1"
-		? Astro.url.searchParams.get("message")
-		: "";
+	Astro.url.searchParams.get("error") === "1" ? Astro.url.searchParams.get("message") : "";
 
 if (model.status === "forbidden") {
 	Astro.response.status = 403;

@@ -13,11 +13,7 @@ import {
 	updateRuntimeCategory,
 	updateRuntimeTag,
 } from "../src/runtime-actions-taxonomies";
-import {
-	STANDARD_ACTOR,
-	STANDARD_CMS_CONFIG,
-	makeDb,
-} from "./helpers/make-db.js";
+import { makeDb, STANDARD_ACTOR, STANDARD_CMS_CONFIG } from "./helpers/make-db.js";
 import { makeLocals } from "./helpers/make-locals.js";
 
 const actor = STANDARD_ACTOR;
@@ -39,32 +35,21 @@ beforeEach(() => {
 		"Existing Cat",
 		"existing-cat",
 	);
-	db.prepare("INSERT INTO tags (name, slug) VALUES (?, ?)").run(
-		"Existing Tag",
-		"existing-tag",
-	);
+	db.prepare("INSERT INTO tags (name, slug) VALUES (?, ?)").run("Existing Tag", "existing-tag");
 });
 
 describe("createRuntimeAuthor", () => {
 	it("creates an author", async () => {
-		const result = await createRuntimeAuthor(
-			{ name: "New Author" },
-			actor,
-			locals,
-		);
+		const result = await createRuntimeAuthor({ name: "New Author" }, actor, locals);
 		expect(result).toMatchObject({ ok: true });
-		const row = db
-			.prepare("SELECT name FROM authors WHERE slug = 'new-author'")
-			.get() as { name: string } | undefined;
+		const row = db.prepare("SELECT name FROM authors WHERE slug = 'new-author'").get() as
+			| { name: string }
+			| undefined;
 		expect(row?.name).toBe("New Author");
 	});
 
 	it("rejects duplicate slug", async () => {
-		const result = await createRuntimeAuthor(
-			{ name: "Existing Author" },
-			actor,
-			locals,
-		);
+		const result = await createRuntimeAuthor({ name: "Existing Author" }, actor, locals);
 		expect(result).toMatchObject({ ok: false });
 	});
 
@@ -85,18 +70,15 @@ describe("updateRuntimeAuthor", () => {
 			locals,
 		);
 		expect(result).toMatchObject({ ok: true });
-		const row = db
-			.prepare("SELECT name, bio FROM authors WHERE id = ?")
-			.get(Number(id)) as { name: string; bio: string };
+		const row = db.prepare("SELECT name, bio FROM authors WHERE id = ?").get(Number(id)) as {
+			name: string;
+			bio: string;
+		};
 		expect(row.name).toBe("New Name");
 	});
 
 	it("rejects empty name", async () => {
-		const result = await updateRuntimeAuthor(
-			{ id: 1, name: "  " },
-			actor,
-			locals,
-		);
+		const result = await updateRuntimeAuthor({ id: 1, name: "  " }, actor, locals);
 		expect(result).toMatchObject({ ok: false });
 	});
 });
@@ -108,29 +90,21 @@ describe("deleteRuntimeAuthor", () => {
 			.run("To Delete", "to-delete");
 		const result = await deleteRuntimeAuthor(Number(id), actor, locals);
 		expect(result).toMatchObject({ ok: true });
-		const row = db
-			.prepare("SELECT deleted_at FROM authors WHERE id = ?")
-			.get(Number(id)) as { deleted_at: string | null };
+		const row = db.prepare("SELECT deleted_at FROM authors WHERE id = ?").get(Number(id)) as {
+			deleted_at: string | null;
+		};
 		expect(row.deleted_at).not.toBeNull();
 	});
 });
 
 describe("createRuntimeCategory", () => {
 	it("creates a category", async () => {
-		const result = await createRuntimeCategory(
-			{ name: "New Cat" },
-			actor,
-			locals,
-		);
+		const result = await createRuntimeCategory({ name: "New Cat" }, actor, locals);
 		expect(result).toMatchObject({ ok: true });
 	});
 
 	it("rejects duplicate slug", async () => {
-		const result = await createRuntimeCategory(
-			{ name: "Existing Cat" },
-			actor,
-			locals,
-		);
+		const result = await createRuntimeCategory({ name: "Existing Cat" }, actor, locals);
 		expect(result).toMatchObject({ ok: false });
 	});
 });
@@ -149,11 +123,7 @@ describe("updateRuntimeCategory", () => {
 	});
 
 	it("returns not-ok for invalid id (0)", async () => {
-		const result = await updateRuntimeCategory(
-			{ id: 0, name: "Invalid" },
-			actor,
-			locals,
-		);
+		const result = await updateRuntimeCategory({ id: 0, name: "Invalid" }, actor, locals);
 		expect(result).toMatchObject({ ok: false });
 	});
 });
@@ -164,9 +134,9 @@ describe("deleteRuntimeCategory", () => {
 			.prepare("INSERT INTO categories (name, slug) VALUES (?, ?)")
 			.run("Delete Cat", "delete-cat");
 		await deleteRuntimeCategory(Number(id), actor, locals);
-		const row = db
-			.prepare("SELECT deleted_at FROM categories WHERE id = ?")
-			.get(Number(id)) as { deleted_at: string | null };
+		const row = db.prepare("SELECT deleted_at FROM categories WHERE id = ?").get(Number(id)) as {
+			deleted_at: string | null;
+		};
 		expect(row.deleted_at).not.toBeNull();
 	});
 });
@@ -178,11 +148,7 @@ describe("createRuntimeTag", () => {
 	});
 
 	it("rejects duplicate slug", async () => {
-		const result = await createRuntimeTag(
-			{ name: "Existing Tag" },
-			actor,
-			locals,
-		);
+		const result = await createRuntimeTag({ name: "Existing Tag" }, actor, locals);
 		expect(result).toMatchObject({ ok: false });
 	});
 });
@@ -192,20 +158,12 @@ describe("updateRuntimeTag", () => {
 		const { lastInsertRowid: id } = db
 			.prepare("INSERT INTO tags (name, slug) VALUES (?, ?)")
 			.run("Old Tag", "old-tag");
-		const result = await updateRuntimeTag(
-			{ id: Number(id), name: "Updated Tag" },
-			actor,
-			locals,
-		);
+		const result = await updateRuntimeTag({ id: Number(id), name: "Updated Tag" }, actor, locals);
 		expect(result).toMatchObject({ ok: true });
 	});
 
 	it("returns not-ok for invalid id (0)", async () => {
-		const result = await updateRuntimeTag(
-			{ id: 0, name: "Invalid" },
-			actor,
-			locals,
-		);
+		const result = await updateRuntimeTag({ id: 0, name: "Invalid" }, actor, locals);
 		expect(result).toMatchObject({ ok: false });
 	});
 });
@@ -216,9 +174,9 @@ describe("deleteRuntimeTag", () => {
 			.prepare("INSERT INTO tags (name, slug) VALUES (?, ?)")
 			.run("Delete Tag", "delete-tag");
 		await deleteRuntimeTag(Number(id), actor, locals);
-		const row = db
-			.prepare("SELECT deleted_at FROM tags WHERE id = ?")
-			.get(Number(id)) as { deleted_at: string | null };
+		const row = db.prepare("SELECT deleted_at FROM tags WHERE id = ?").get(Number(id)) as {
+			deleted_at: string | null;
+		};
 		expect(row.deleted_at).not.toBeNull();
 	});
 });

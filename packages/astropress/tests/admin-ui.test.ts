@@ -1,19 +1,14 @@
 import { afterEach, describe, expect, it } from "vitest";
 
 import { buildAstropressAdminDocumentTitle } from "../src/admin-branding";
-import {
-	adminLabels,
-	getAdminLabel,
-	resolveAstropressAdminUiConfig,
-} from "../src/admin-ui";
+import { adminLabels, getAdminLabel, resolveAstropressAdminUiConfig } from "../src/admin-ui";
 import { getCmsConfig, type peekCmsConfig, registerCms } from "../src/config";
 
 const CMS_CONFIG_KEY = Symbol.for("astropress.cms-config");
 
 function restoreConfig(config: ReturnType<typeof peekCmsConfig>) {
-	(globalThis as typeof globalThis & { [CMS_CONFIG_KEY]?: unknown })[
-		CMS_CONFIG_KEY
-	] = config ?? null;
+	(globalThis as typeof globalThis & { [CMS_CONFIG_KEY]?: unknown })[CMS_CONFIG_KEY] =
+		config ?? null;
 }
 
 afterEach(() => {
@@ -38,9 +33,7 @@ describe("admin ui", () => {
 		expect(adminUi.branding.stylesheetHref).toBeNull();
 		expect(adminUi.labels.sidebarTitle).toBe("Workspace");
 		expect(adminUi.navigation.routePages).toBe("Route Table");
-		expect(buildAstropressAdminDocumentTitle("Dashboard")).toBe(
-			"Dashboard | Astropress Admin",
-		);
+		expect(buildAstropressAdminDocumentTitle("Dashboard")).toBe("Dashboard | Astropress Admin");
 	});
 
 	it("merges host branding, labels, navigation, and assets from registerCms()", () => {
@@ -86,9 +79,7 @@ describe("admin ui", () => {
 		expect(adminUi.labels.loginSubmit).toBe("Continue");
 		expect(adminUi.navigation.routePages).toBe("Page Routes");
 		expect(adminUi.navigation.media).toBe("Asset Library");
-		expect(buildAstropressAdminDocumentTitle("Dashboard")).toBe(
-			"Dashboard | Client Console Admin",
-		);
+		expect(buildAstropressAdminDocumentTitle("Dashboard")).toBe("Dashboard | Client Console Admin");
 	});
 
 	it("exposes locale-aware admin labels in Spanish when locale is es", () => {
@@ -96,9 +87,7 @@ describe("admin ui", () => {
 		expect(getAdminLabel("saveButton", "es")).toBe("Guardar");
 		expect(getAdminLabel("publishButton", "es")).toBe("Publicar");
 		expect(getAdminLabel("signOut", "es")).toBe("Cerrar sesión");
-		expect(getAdminLabel("loginHeading", "es")).toBe(
-			"Acceder al panel de administración",
-		);
+		expect(getAdminLabel("loginHeading", "es")).toBe("Acceder al panel de administración");
 		expect(getAdminLabel("sidebarTitle", "es")).toBe("Espacio de trabajo");
 	});
 
@@ -123,9 +112,7 @@ describe("admin ui", () => {
 		expect(getAdminLabel("deleteButton", "ar")).toBe("حذف");
 		expect(getAdminLabel("cancelButton", "ar")).toBe("إلغاء");
 		expect(getAdminLabel("signOut", "ar")).toBe("تسجيل الخروج");
-		expect(getAdminLabel("loginHeading", "ar")).toBe(
-			"تسجيل الدخول إلى لوحة الإدارة",
-		);
+		expect(getAdminLabel("loginHeading", "ar")).toBe("تسجيل الدخول إلى لوحة الإدارة");
 		expect(getAdminLabel("loginSubmit", "ar")).toBe("تسجيل الدخول");
 		expect(getAdminLabel("sidebarTitle", "ar")).toBe("مساحة العمل");
 		expect(getAdminLabel("navDashboard", "ar")).toBe("لوحة التحكم");
@@ -146,9 +133,7 @@ describe("admin ui", () => {
 		restoreConfig(null);
 		expect(getAdminLabel("navGroupComingSoon", "en")).toBe("Coming soon");
 		expect(getAdminLabel("navGroupComingSoon", "es")).toBe("Próximamente");
-		expect(getAdminLabel("navGroupComingSoon", "fr")).toBe(
-			"Bientôt disponible",
-		);
+		expect(getAdminLabel("navGroupComingSoon", "fr")).toBe("Bientôt disponible");
 		expect(getAdminLabel("navGroupComingSoon", "ar")).toBe("قريبًا");
 		expect(getAdminLabel("navGroupComingSoon", "ja")).toBe("近日公開");
 	});
@@ -161,16 +146,12 @@ describe("admin ui", () => {
 		expect(getAdminLabel("stubComingSoonHeading", "es")).toBe("Próximamente");
 		expect(getAdminLabel("stubComingSoonHeading", "ja")).toBe("近日公開");
 		expect(getAdminLabel("stubComingSoonHeading", "ar")).toBe("قريبًا");
-		expect(getAdminLabel("stubComingSoonBody", "fr")).not.toBe(
-			adminLabels.en.stubComingSoonBody,
-		);
+		expect(getAdminLabel("stubComingSoonBody", "fr")).not.toBe(adminLabels.en.stubComingSoonBody);
 	});
 
 	it("Arabic translations are non-empty strings for every key", () => {
 		const arDict = adminLabels.ar;
-		const keys = Object.keys(adminLabels.en) as Array<
-			keyof typeof adminLabels.en
-		>;
+		const keys = Object.keys(adminLabels.en) as Array<keyof typeof adminLabels.en>;
 		for (const k of keys) {
 			expect(typeof arDict[k]).toBe("string");
 			expect(arDict[k].length).toBeGreaterThan(0);
@@ -180,9 +161,7 @@ describe("admin ui", () => {
 	it("falls back to English when locale is unknown", () => {
 		restoreConfig(null);
 		expect(getAdminLabel("saveButton", "zz")).toBe(adminLabels.en.saveButton);
-		expect(getAdminLabel("publishButton", "xx")).toBe(
-			adminLabels.en.publishButton,
-		);
+		expect(getAdminLabel("publishButton", "xx")).toBe(adminLabels.en.publishButton);
 	});
 
 	it("falls back to English when locale is undefined (no cms config)", () => {

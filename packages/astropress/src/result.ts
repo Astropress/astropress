@@ -45,9 +45,6 @@ export function unwrapOr<T, E>(r: Result<T, E>, fallback: T): T {
 	return r.ok ? r.value : fallback;
 }
 
-export function mapResult<T, U, E>(
-	r: Result<T, E>,
-	f: (v: T) => U,
-): Result<U, E> {
+export function mapResult<T, U, E>(r: Result<T, E>, f: (v: T) => U): Result<U, E> {
 	return r.ok ? ok(f(r.value)) : r;
 }

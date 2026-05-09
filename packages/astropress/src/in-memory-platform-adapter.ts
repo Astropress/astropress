@@ -2,6 +2,7 @@ import {
 	type AstropressPlatformAdapter,
 	type AuthStore,
 	type AuthUser,
+	assertProviderContract,
 	type ContentStore,
 	type ContentStoreRecord,
 	type DeployTarget,
@@ -9,12 +10,11 @@ import {
 	type ImportSource,
 	type MediaAssetRecord,
 	type MediaStore,
+	normalizeProviderCapabilities,
 	type PreviewSession,
 	type ProviderCapabilities,
 	type RevisionRecord,
 	type RevisionStore,
-	assertProviderContract,
-	normalizeProviderCapabilities,
 } from "./platform-contracts";
 
 type AstropressSeedUser = AuthUser & {
@@ -22,8 +22,7 @@ type AstropressSeedUser = AuthUser & {
 };
 
 export interface AstropressInMemoryPlatformAdapterOptions {
-	capabilities: Pick<ProviderCapabilities, "name"> &
-		Partial<Omit<ProviderCapabilities, "name">>;
+	capabilities: Pick<ProviderCapabilities, "name"> & Partial<Omit<ProviderCapabilities, "name">>;
 	users?: AstropressSeedUser[];
 	content?: ContentStore;
 	media?: MediaStore;
@@ -39,9 +38,7 @@ function createInMemoryContentStore(): ContentStore {
 	const records = new Map<string, ContentStoreRecord>();
 	return {
 		async list(kind) {
-			return [...records.values()].filter(
-				(record) => !kind || record.kind === kind,
-			);
+			return [...records.values()].filter((record) => !kind || record.kind === kind);
 		},
 		async get(id) {
 			return records.get(id) ?? null;
@@ -88,9 +85,7 @@ function createInMemoryRevisionStore(): RevisionStore {
 }
 
 function createInMemoryAuthStore(seedUsers: AstropressSeedUser[]): AuthStore {
-	const users = new Map(
-		seedUsers.map((user) => [user.email.toLowerCase(), user]),
-	);
+	const users = new Map(seedUsers.map((user) => [user.email.toLowerCase(), user]));
 	const sessions = new Map<string, AuthUser>();
 
 	return {

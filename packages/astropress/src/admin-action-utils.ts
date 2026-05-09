@@ -14,23 +14,15 @@ import {
 	SECURE_SESSION_COOKIE,
 } from "./admin-action-utils-data";
 import { isAuthUserAdmin } from "./platform-contracts.js";
-import {
-	getRuntimeCsrfToken,
-	getRuntimeSessionUser,
-} from "./runtime-admin-auth";
+import { getRuntimeCsrfToken, getRuntimeSessionUser } from "./runtime-admin-auth";
 import { getLoginSecurityConfig, getRuntimeEnv } from "./runtime-env.js";
 import { createLogger } from "./runtime-logger.js";
-import {
-	createAstropressSecureRedirect,
-	isTrustedRequestOrigin,
-} from "./security-headers.js";
+import { createAstropressSecureRedirect, isTrustedRequestOrigin } from "./security-headers.js";
 
 const logger = createLogger(ADMIN_ACTION_LOGGER_CONTEXT);
 
 type AdminActionContext = Parameters<NonNullable<APIRoute>>[0];
-type AdminSessionUser = NonNullable<
-	Awaited<ReturnType<typeof getRuntimeSessionUser>>
->;
+type AdminSessionUser = NonNullable<Awaited<ReturnType<typeof getRuntimeSessionUser>>>;
 
 type GuardOptions = {
 	failurePath: string;
@@ -95,9 +87,7 @@ async function checkActionPermission(
 	}
 	return actionErrorRedirect(
 		options.failurePath,
-		options.actionDeniedMessage ??
-			decision?.reason ??
-			DEFAULT_ACTION_DENIED_MESSAGE,
+		options.actionDeniedMessage ?? decision?.reason ?? DEFAULT_ACTION_DENIED_MESSAGE,
 	);
 }
 
@@ -125,19 +115,14 @@ export async function requireAdminFormAction(
 	options: GuardOptions,
 ): Promise<GuardResult> {
 	const secureCookies = getLoginSecurityConfig(context.locals).secureCookies;
-	const sessionCookieName = secureCookies
-		? SECURE_SESSION_COOKIE
-		: LOCAL_SESSION_COOKIE;
+	const sessionCookieName = secureCookies ? SECURE_SESSION_COOKIE : LOCAL_SESSION_COOKIE;
 	const sessionToken =
 		context.cookies.get(sessionCookieName)?.value ??
 		context.cookies.get(LEGACY_SESSION_COOKIE)?.value;
 	const harnessSessionUser =
-		getRuntimeEnv("PLAYWRIGHT_E2E_MODE") === "admin-harness"
-			? context.locals.adminUser
-			: null;
+		getRuntimeEnv("PLAYWRIGHT_E2E_MODE") === "admin-harness" ? context.locals.adminUser : null;
 	const sessionUser =
-		(await getRuntimeSessionUser(sessionToken, context.locals)) ??
-		harnessSessionUser;
+		(await getRuntimeSessionUser(sessionToken, context.locals)) ?? harnessSessionUser;
 
 	if (!sessionUser) {
 		return {
@@ -156,11 +141,7 @@ export async function requireAdminFormAction(
 		};
 	}
 
-	const denyResponse = await checkActionPermission(
-		context,
-		options,
-		sessionUser,
-	);
+	const denyResponse = await checkActionPermission(context, options, sessionUser);
 	if (denyResponse) return { ok: false, response: denyResponse };
 
 	if (!isTrustedRequestOrigin(context.request)) {
@@ -214,10 +195,7 @@ export async function withAdminFormAction(
 					actor: sessionUser.email,
 					message,
 				});
-				return actionErrorRedirect(
-					overridePath ?? options.failurePath,
-					message,
-				);
+				return actionErrorRedirect(overridePath ?? options.failurePath, message);
 			},
 			redirect: actionRedirect,
 		});

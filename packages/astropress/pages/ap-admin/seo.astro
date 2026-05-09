@@ -26,17 +26,14 @@ const sortedRows = [...rows].sort((left, right) => {
 	}
 
 	if (sortKey === "type") {
-		return (
-			left.type.localeCompare(right.type) || left.path.localeCompare(right.path)
-		);
+		return left.type.localeCompare(right.type) || left.path.localeCompare(right.path);
 	}
 
 	return left.path.localeCompare(right.path);
 });
 const visibleRows = sortedRows.filter(
 	(row) =>
-		(selectedType === "all" || row.type === selectedType) &&
-		(!missingOnly || row.missingMetadata),
+		(selectedType === "all" || row.type === selectedType) && (!missingOnly || row.missingMetadata),
 );
 const countsByType = rows.reduce<Record<string, number>>((accumulator, row) => {
 	accumulator[row.type] = (accumulator[row.type] ?? 0) + 1;

@@ -52,10 +52,7 @@ export function readLocalImageAsset(publicPath: string) {
 	}
 
 	const bytes = readFileSync(diskPath);
-	const arrayBuffer = bytes.buffer.slice(
-		bytes.byteOffset,
-		bytes.byteOffset + bytes.byteLength,
-	);
+	const arrayBuffer = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength);
 
 	return {
 		ok: true as const,
@@ -81,10 +78,7 @@ export function readLocalImageAsset(publicPath: string) {
 export async function generateSrcset(
 	bytes: Uint8Array,
 	originalPublicPath: string,
-	storeVariant: (
-		filename: string,
-		variantBytes: Uint8Array,
-	) => Promise<string | null>,
+	storeVariant: (filename: string, variantBytes: Uint8Array) => Promise<string | null>,
 ): Promise<string | null> {
 	try {
 		const sharp = (await import("sharp")).default;
@@ -92,11 +86,8 @@ export async function generateSrcset(
 		const parts: string[] = [];
 
 		const dot = originalPublicPath.lastIndexOf(".");
-		const noExt =
-			dot > 0 ? originalPublicPath.slice(0, dot) : originalPublicPath;
-		const basename = noExt
-			.replace(/^\/images\/uploads\//, "")
-			.replace(/^\/images\//, "");
+		const noExt = dot > 0 ? originalPublicPath.slice(0, dot) : originalPublicPath;
+		const basename = noExt.replace(/^\/images\/uploads\//, "").replace(/^\/images\//, "");
 
 		for (const w of widths) {
 			const variantBuffer = await sharp(Buffer.from(bytes))
@@ -104,10 +95,7 @@ export async function generateSrcset(
 				.webp()
 				.toBuffer();
 			const variantFilename = `${basename}-${w}w.webp`;
-			const variantPath = await storeVariant(
-				variantFilename,
-				new Uint8Array(variantBuffer),
-			);
+			const variantPath = await storeVariant(variantFilename, new Uint8Array(variantBuffer));
 			if (variantPath) {
 				parts.push(`${variantPath} ${w}w`);
 			}

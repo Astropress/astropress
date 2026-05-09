@@ -9,9 +9,9 @@ function seedUser(db: DatabaseSync, email: string, name = "Test User") {
 		`INSERT INTO admin_users (email, password_hash, name, is_admin)
      VALUES (?, 'hash', ?, 0)`,
 	).run(email, name);
-	const row = db
-		.prepare("SELECT id FROM admin_users WHERE email = ? LIMIT 1")
-		.get(email) as { id: number };
+	const row = db.prepare("SELECT id FROM admin_users WHERE email = ? LIMIT 1").get(email) as {
+		id: number;
+	};
 
 	// Insert a session for the user
 	db.prepare(
@@ -57,9 +57,9 @@ describe("createSqlitePurgeOps — user data purge (GDPR)", () => {
 	it("anonymises audit events", () => {
 		seedUser(db, "alice@test.com");
 		purge.purgeUserData("alice@test.com");
-		const row = db
-			.prepare("SELECT user_email FROM audit_events LIMIT 1")
-			.get() as { user_email: string };
+		const row = db.prepare("SELECT user_email FROM audit_events LIMIT 1").get() as {
+			user_email: string;
+		};
 		expect(row.user_email).toBe("[deleted]");
 	});
 
@@ -68,9 +68,7 @@ describe("createSqlitePurgeOps — user data purge (GDPR)", () => {
 		const result = purge.purgeUserData("alice@test.com");
 		expect(result.deletedComments).toBe(1);
 		const remaining = db
-			.prepare(
-				"SELECT COUNT(*) as cnt FROM comments WHERE email = 'alice@test.com'",
-			)
+			.prepare("SELECT COUNT(*) as cnt FROM comments WHERE email = 'alice@test.com'")
 			.get() as { cnt: number };
 		expect(remaining.cnt).toBe(0);
 	});
@@ -98,9 +96,7 @@ describe("createSqlitePurgeOps — user data purge (GDPR)", () => {
 		});
 		expect(result.adminUserAction).toBe("deleted");
 		const row = db
-			.prepare(
-				"SELECT COUNT(*) as cnt FROM admin_users WHERE email = 'alice@test.com'",
-			)
+			.prepare("SELECT COUNT(*) as cnt FROM admin_users WHERE email = 'alice@test.com'")
 			.get() as { cnt: number };
 		expect(row.cnt).toBe(0);
 	});

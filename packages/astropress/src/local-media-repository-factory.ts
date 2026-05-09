@@ -1,20 +1,12 @@
-import {
-	createLocalMediaUpload,
-	deleteLocalMediaUpload,
-} from "./local-media-storage";
 import type { LocalMediaDescriptor } from "./local-media-storage";
+import { createLocalMediaUpload, deleteLocalMediaUpload } from "./local-media-storage";
 import type { MediaRepository, SessionUser } from "./persistence-types";
 
 export type AstropressLocalMediaRepositoryOptions = {
 	listMediaAssets: MediaRepository["listMediaAssets"];
 	updateMediaAsset: MediaRepository["updateMediaAsset"];
-	insertStoredMediaAsset(input: {
-		asset: LocalMediaDescriptor;
-		actor: SessionUser;
-	}): void;
-	getStoredMediaDeletionCandidate(
-		id: string,
-	): { localPath: string } | null | undefined;
+	insertStoredMediaAsset(input: { asset: LocalMediaDescriptor; actor: SessionUser }): void;
+	getStoredMediaDeletionCandidate(id: string): { localPath: string } | null | undefined;
 	markStoredMediaDeleted(id: string): boolean;
 	recordMediaAudit(input: {
 		actor: SessionUser;

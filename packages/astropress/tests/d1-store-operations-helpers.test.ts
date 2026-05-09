@@ -3,10 +3,24 @@ import { describe, expect, it, vi } from "vitest";
 import {
 	type AdminUserRow,
 	type AuditEventRow,
+	bindTestimonialFilter,
+	buildApprovedAtExpr,
+	buildCommentBindParams,
+	buildModerateSql,
 	COMMENT_INSERT_SQL,
 	CONTACT_INSERT_SQL,
 	type CommentRow,
+	deriveUserStatus,
 	type MediaRow,
+	mapAdminUserRow,
+	mapAuditEventRow,
+	mapCommentRow,
+	mapContactRow,
+	mapMediaRow,
+	mapRedirectRow,
+	mapSettingsRow,
+	mapTestimonialRow,
+	type SettingsRow,
 	SQL_ADMIN_USERS,
 	SQL_AUDIT_EVENTS,
 	SQL_COMMENTS,
@@ -16,22 +30,8 @@ import {
 	SQL_SITE_SETTINGS,
 	SQL_TESTIMONIALS,
 	SQL_TRANSLATION_STATE,
-	type SettingsRow,
 	TESTIMONIAL_INSERT_SQL,
 	type TestimonialRow,
-	bindTestimonialFilter,
-	buildApprovedAtExpr,
-	buildCommentBindParams,
-	buildModerateSql,
-	deriveUserStatus,
-	mapAdminUserRow,
-	mapAuditEventRow,
-	mapCommentRow,
-	mapContactRow,
-	mapMediaRow,
-	mapRedirectRow,
-	mapSettingsRow,
-	mapTestimonialRow,
 	testimonialInputBindParams,
 } from "../src/d1-store-operations-helpers";
 import {
@@ -91,9 +91,7 @@ describe("D1 SQL constants", () => {
 	});
 
 	it("TESTIMONIAL_INSERT_SQL hardcodes status='pending' (clients cannot self-approve)", () => {
-		expect(TESTIMONIAL_INSERT_SQL).toContain(
-			"INSERT INTO testimonial_submissions",
-		);
+		expect(TESTIMONIAL_INSERT_SQL).toContain("INSERT INTO testimonial_submissions");
 		expect(TESTIMONIAL_INSERT_SQL).toContain("'pending'");
 	});
 
@@ -126,9 +124,7 @@ describe("mapAuditEventRow", () => {
 	});
 
 	it("falls back to 'auth' for unknown resource_type values", () => {
-		expect(
-			mapAuditEventRow({ ...row, resource_type: "session" }).targetType,
-		).toBe("auth");
+		expect(mapAuditEventRow({ ...row, resource_type: "session" }).targetType).toBe("auth");
 	});
 
 	it("uses stringified id when resource_id is null", () => {
@@ -222,9 +218,7 @@ describe("mapTestimonialRow", () => {
 	});
 
 	it("converts consent_to_publish = 0 to boolean false", () => {
-		expect(
-			mapTestimonialRow({ ...row, consent_to_publish: 0 }).consentToPublish,
-		).toBe(false);
+		expect(mapTestimonialRow({ ...row, consent_to_publish: 0 }).consentToPublish).toBe(false);
 	});
 
 	it("renames snake_case fields to camelCase", () => {
@@ -270,9 +264,7 @@ describe("mapSettingsRow", () => {
 	});
 
 	it("converts newsletter_enabled = 0 to boolean false", () => {
-		expect(
-			mapSettingsRow({ ...row, newsletter_enabled: 0 }).newsletterEnabled,
-		).toBe(false);
+		expect(mapSettingsRow({ ...row, newsletter_enabled: 0 }).newsletterEnabled).toBe(false);
 	});
 
 	it("preserves operator-chosen admin_slug verbatim", () => {
@@ -280,10 +272,9 @@ describe("mapSettingsRow", () => {
 	});
 
 	it("falls back to 'ap-admin' when admin_slug is null (the only nullish case ?? guards)", () => {
-		expect(
-			mapSettingsRow({ ...row, admin_slug: null as unknown as string })
-				.adminSlug,
-		).toBe("ap-admin");
+		expect(mapSettingsRow({ ...row, admin_slug: null as unknown as string }).adminSlug).toBe(
+			"ap-admin",
+		);
 	});
 });
 
@@ -457,9 +448,7 @@ describe("bindTestimonialFilter", () => {
 	it("binds (null, null) when status is undefined so the NULL-safe filter matches all rows", () => {
 		const bind = vi.fn().mockReturnValue({});
 		const prepare = vi.fn().mockReturnValue({ bind });
-		const db = { prepare } as unknown as Parameters<
-			typeof bindTestimonialFilter
-		>[0];
+		const db = { prepare } as unknown as Parameters<typeof bindTestimonialFilter>[0];
 		bindTestimonialFilter(db, undefined);
 		expect(prepare).toHaveBeenCalledWith(SQL_TESTIMONIALS);
 		expect(bind).toHaveBeenCalledWith(null, null);
@@ -468,9 +457,7 @@ describe("bindTestimonialFilter", () => {
 	it("binds (null, null) when status is null", () => {
 		const bind = vi.fn().mockReturnValue({});
 		const prepare = vi.fn().mockReturnValue({ bind });
-		const db = { prepare } as unknown as Parameters<
-			typeof bindTestimonialFilter
-		>[0];
+		const db = { prepare } as unknown as Parameters<typeof bindTestimonialFilter>[0];
 		bindTestimonialFilter(db, null);
 		expect(bind).toHaveBeenCalledWith(null, null);
 	});
@@ -478,9 +465,7 @@ describe("bindTestimonialFilter", () => {
 	it("binds the same status twice (NULL-safe pattern: ? IS NULL OR status = ?)", () => {
 		const bind = vi.fn().mockReturnValue({});
 		const prepare = vi.fn().mockReturnValue({ bind });
-		const db = { prepare } as unknown as Parameters<
-			typeof bindTestimonialFilter
-		>[0];
+		const db = { prepare } as unknown as Parameters<typeof bindTestimonialFilter>[0];
 		bindTestimonialFilter(db, "approved");
 		expect(bind).toHaveBeenCalledWith("approved", "approved");
 	});
@@ -527,8 +512,6 @@ describe("buildModerateSql", () => {
 		const prepare = vi.fn().mockReturnValue({ bind });
 		const db = { prepare } as unknown as Parameters<typeof buildModerateSql>[0];
 		buildModerateSql(db, "rejected", "t-1");
-		expect(prepare).toHaveBeenCalledWith(
-			expect.stringContaining("approved_at = approved_at"),
-		);
+		expect(prepare).toHaveBeenCalledWith(expect.stringContaining("approved_at = approved_at"));
 	});
 });

@@ -9,8 +9,7 @@ describe("createAstropressAuthRepository", () => {
 			randomId: () => "token-1",
 			hashOpaqueToken: (value) => `hash:${value}`,
 			hashPassword: (value) => `password:${value}`,
-			verifyPassword: (password, storedHash) =>
-				storedHash === `password:${password}`,
+			verifyPassword: (password, storedHash) => storedHash === `password:${password}`,
 			cleanupExpiredSessions: vi.fn(),
 			findActiveAdminUserByEmail: () => ({
 				id: 1,
@@ -54,10 +53,7 @@ describe("createAstropressAuthRepository", () => {
 		const repository = createAstropressAuthRepository({
 			sessionTtlMs: 60_000,
 			now: () => 100_000,
-			randomId: vi
-				.fn()
-				.mockReturnValueOnce("session-1")
-				.mockReturnValueOnce("csrf-1"),
+			randomId: vi.fn().mockReturnValueOnce("session-1").mockReturnValueOnce("csrf-1"),
 			hashOpaqueToken: (value) => value,
 			hashPassword: (value) => value,
 			verifyPassword: vi.fn(),
@@ -188,12 +184,7 @@ describe("createAstropressAuthRepository", () => {
 			recordAuthAudit,
 		});
 
-		expect(
-			repository.consumeInviteToken(
-				"invite-token",
-				"correct horse battery staple",
-			),
-		).toEqual({
+		expect(repository.consumeInviteToken("invite-token", "correct horse battery staple")).toEqual({
 			ok: true,
 			user: {
 				email: "editor@example.com",
@@ -268,10 +259,7 @@ describe("createAstropressAuthRepository", () => {
 			requestedBy: null,
 		});
 		expect(
-			repository.consumePasswordResetToken(
-				"raw-reset-token",
-				"correct horse battery staple",
-			),
+			repository.consumePasswordResetToken("raw-reset-token", "correct horse battery staple"),
 		).toEqual({
 			ok: true,
 			user: {

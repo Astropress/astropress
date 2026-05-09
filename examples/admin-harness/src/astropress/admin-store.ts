@@ -2,6 +2,4 @@ import { createAstropressAdminStoreModule } from "@astropress-diy/astropress/int
 
 import { sqliteAdminStore } from "./runtime.ts";
 
-export const hostRuntimeAdminStore = createAstropressAdminStoreModule(
-	() => sqliteAdminStore,
-);
+export const hostRuntimeAdminStore = createAstropressAdminStoreModule(() => sqliteAdminStore);

@@ -14,11 +14,12 @@
 
 import { randomUUID } from "node:crypto";
 import type {
+	Condition,
+	Effect,
 	RolePolicyRecord,
 	RoleRecord,
 	UserPolicyRecord,
 } from "./access/index";
-import type { Condition, Effect } from "./access/index";
 import { getAdminDb, withLocalStoreFallback } from "./admin-store-dispatch";
 import type { D1DatabaseLike } from "./d1-database";
 import type { ActionResult } from "./platform-contracts";
@@ -42,9 +43,7 @@ export async function assignRuntimeUserRole(
 	locals: App.Locals | null | undefined,
 	input: AssignRoleInput,
 ): Promise<ActionResult<{ userId: number; roleId: string }>> {
-	return withLocalStoreFallback<
-		ActionResult<{ userId: number; roleId: string }>
-	>(
+	return withLocalStoreFallback<ActionResult<{ userId: number; roleId: string }>>(
 		locals,
 		async (db) => {
 			await db
@@ -70,15 +69,11 @@ export async function revokeRuntimeUserRole(
 	locals: App.Locals | null | undefined,
 	input: { userId: number; roleId: string },
 ): Promise<ActionResult<{ userId: number; roleId: string }>> {
-	return withLocalStoreFallback<
-		ActionResult<{ userId: number; roleId: string }>
-	>(
+	return withLocalStoreFallback<ActionResult<{ userId: number; roleId: string }>>(
 		locals,
 		async (db) => {
 			await db
-				.prepare(
-					"DELETE FROM access_user_roles WHERE user_id = ? AND role_id = ?",
-				)
+				.prepare("DELETE FROM access_user_roles WHERE user_id = ? AND role_id = ?")
 				.bind(input.userId, input.roleId)
 				.run();
 			return {
@@ -99,9 +94,7 @@ export async function addRuntimeUserDirectGrant(
 	input: DirectGrantInput,
 ): Promise<ActionResult<UserPolicyRecord>> {
 	const id = randomUUID();
-	const conditionJson = input.condition
-		? JSON.stringify(input.condition)
-		: null;
+	const conditionJson = input.condition ? JSON.stringify(input.condition) : null;
 	const priority = input.priority ?? 0;
 	return withLocalStoreFallback<ActionResult<UserPolicyRecord>>(
 		locals,
@@ -147,10 +140,7 @@ export async function removeRuntimeUserDirectGrant(
 	return withLocalStoreFallback<ActionResult<{ id: string }>>(
 		locals,
 		async (db) => {
-			await db
-				.prepare("DELETE FROM access_user_policies WHERE id = ?")
-				.bind(input.grantId)
-				.run();
+			await db.prepare("DELETE FROM access_user_policies WHERE id = ?").bind(input.grantId).run();
 			return { ok: true as const, data: { id: input.grantId } };
 		},
 		async () => ({
@@ -175,8 +165,7 @@ export async function assertNotLastActiveAdmin(
 	if (!db) {
 		return {
 			ok: false as const,
-			error:
-				"Cannot evaluate the last-admin safeguard without a database binding.",
+			error: "Cannot evaluate the last-admin safeguard without a database binding.",
 		};
 	}
 	return checkLastAdminAgainstD1(db, targetEmail);
@@ -194,16 +183,13 @@ async function checkLastAdminAgainstD1(
 	if (targetRow.is_admin !== 1) return { ok: true as const, data: undefined };
 
 	const countRow = await db
-		.prepare(
-			"SELECT COUNT(*) AS n FROM admin_users WHERE active = 1 AND is_admin = 1",
-		)
+		.prepare("SELECT COUNT(*) AS n FROM admin_users WHERE active = 1 AND is_admin = 1")
 		.first<{ n: number }>();
 	const count = countRow?.n ?? 0;
 	if (count <= 1) {
 		return {
 			ok: false as const,
-			error:
-				"Cannot remove the last active admin — at least one break-glass admin must remain.",
+			error: "Cannot remove the last active admin — at least one break-glass admin must remain.",
 		};
 	}
 	return { ok: true as const, data: undefined };
@@ -273,9 +259,7 @@ export async function updateRuntimeRole(
 			}
 			if (description !== undefined) {
 				await db
-					.prepare(
-						"UPDATE access_roles SET description = ?, updated_at = ? WHERE id = ?",
-					)
+					.prepare("UPDATE access_roles SET description = ?, updated_at = ? WHERE id = ?")
 					.bind(description, now, input.id)
 					.run();
 			}
@@ -329,9 +313,7 @@ export async function addRuntimeRolePolicy(
 	},
 ): Promise<ActionResult<RolePolicyRecord>> {
 	const id = randomUUID();
-	const conditionJson = input.condition
-		? JSON.stringify(input.condition)
-		: null;
+	const conditionJson = input.condition ? JSON.stringify(input.condition) : null;
 	const priority = input.priority ?? 0;
 	return withLocalStoreFallback<ActionResult<RolePolicyRecord>>(
 		locals,
@@ -340,14 +322,7 @@ export async function addRuntimeRolePolicy(
 				.prepare(
 					"INSERT INTO access_role_policies (id, role_id, effect, action, condition_json, priority) VALUES (?, ?, ?, ?, ?, ?)",
 				)
-				.bind(
-					id,
-					input.roleId,
-					input.effect,
-					input.action,
-					conditionJson,
-					priority,
-				)
+				.bind(id, input.roleId, input.effect, input.action, conditionJson, priority)
 				.run();
 			return {
 				ok: true as const,
@@ -375,10 +350,7 @@ export async function removeRuntimeRolePolicy(
 	return withLocalStoreFallback<ActionResult<{ id: string }>>(
 		locals,
 		async (db) => {
-			await db
-				.prepare("DELETE FROM access_role_policies WHERE id = ?")
-				.bind(input.policyId)
-				.run();
+			await db.prepare("DELETE FROM access_role_policies WHERE id = ?").bind(input.policyId).run();
 			return { ok: true as const, data: { id: input.policyId } };
 		},
 		async () => ({

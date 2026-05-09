@@ -11,13 +11,7 @@
  * for the classic "owner can edit" pattern without bespoke conditions.
  */
 
-import type {
-	AttributeValue,
-	Condition,
-	Env,
-	Resource,
-	Subject,
-} from "./types";
+import type { AttributeValue, Condition, Env, Resource, Subject } from "./types";
 
 export interface BindingContext {
 	user: Subject;
@@ -30,24 +24,16 @@ export interface BindingContext {
  * Returns `undefined` when any segment is missing — the caller decides whether
  * that should fail the condition (default: yes).
  */
-export function resolvePath(
-	path: string,
-	ctx: BindingContext,
-): AttributeValue | undefined {
+export function resolvePath(path: string, ctx: BindingContext): AttributeValue | undefined {
 	const parts = path.split(".");
 	const root = parts[0];
 	if (root === "user") return walk(parts.slice(1), ctx.user);
-	if (root === "resource")
-		return ctx.resource ? walk(parts.slice(1), ctx.resource) : undefined;
-	if (root === "env")
-		return ctx.env ? walk(parts.slice(1), ctx.env) : undefined;
+	if (root === "resource") return ctx.resource ? walk(parts.slice(1), ctx.resource) : undefined;
+	if (root === "env") return ctx.env ? walk(parts.slice(1), ctx.env) : undefined;
 	return undefined;
 }
 
-function walk(
-	parts: readonly string[],
-	root: object | undefined,
-): AttributeValue | undefined {
+function walk(parts: readonly string[], root: object | undefined): AttributeValue | undefined {
 	let cur: unknown = root;
 	for (const p of parts) {
 		if (cur === null || cur === undefined) return undefined;

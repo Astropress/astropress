@@ -5,26 +5,14 @@
  * All tests are fully in-process: no CLI invocations, no real filesystem state outside tmpdir.
  */
 
-import {
-	existsSync,
-	mkdirSync,
-	mkdtempSync,
-	rmSync,
-	writeFileSync,
-} from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import {
-	readAstropressSqliteSchemaSql,
-	runAstropressMigrations,
-} from "../src/sqlite-bootstrap.js";
-import {
-	ensureLegacySchemaCompatibility,
-	getTableColumns,
-} from "../src/sqlite-schema-compat.js";
+import { readAstropressSqliteSchemaSql, runAstropressMigrations } from "../src/sqlite-bootstrap.js";
+import { ensureLegacySchemaCompatibility, getTableColumns } from "../src/sqlite-schema-compat.js";
 import { createAstropressGitSyncAdapter } from "../src/sync/git.js";
 import { makeDb } from "./helpers/make-db.js";
 
@@ -158,9 +146,7 @@ describe("schema compatibility after restore from old version", () => {
 		ensureLegacySchemaCompatibility(db);
 
 		const row = db
-			.prepare(
-				"SELECT slug, title, status FROM content_overrides WHERE slug = 'hello-world'",
-			)
+			.prepare("SELECT slug, title, status FROM content_overrides WHERE slug = 'hello-world'")
 			.get() as { slug: string; title: string; status: string } | undefined;
 
 		expect(row).toBeDefined();
@@ -276,9 +262,7 @@ describe("backup and restore cycle using git sync adapter", () => {
 		// Verify content is intact
 		const restored = new DatabaseSync(dbPath);
 		const row = restored
-			.prepare(
-				"SELECT slug, title FROM content_overrides WHERE slug = 'dr-test-post'",
-			)
+			.prepare("SELECT slug, title FROM content_overrides WHERE slug = 'dr-test-post'")
 			.get() as { slug: string; title: string } | undefined;
 
 		expect(row).toBeDefined();

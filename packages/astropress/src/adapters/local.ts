@@ -1,9 +1,6 @@
 import type { AstropressPlatformAdapter } from "../platform-contracts";
 import { resolveAstropressLocalProviderFromEnv } from "../project-env";
-import {
-	type AstropressSqliteAdapterOptions,
-	createAstropressSqliteAdapter,
-} from "./sqlite";
+import { type AstropressSqliteAdapterOptions, createAstropressSqliteAdapter } from "./sqlite";
 import {
 	type AstropressSupabaseSqliteAdapterOptions,
 	createAstropressSupabaseSqliteAdapter,
@@ -20,8 +17,7 @@ export function createAstropressLocalAdapter(
 	options: AstropressLocalAdapterOptions = {},
 ): AstropressPlatformAdapter {
 	const provider =
-		options.provider ??
-		resolveAstropressLocalProviderFromEnv(options.env ?? process.env);
+		options.provider ?? resolveAstropressLocalProviderFromEnv(options.env ?? process.env);
 
 	if (provider === "supabase") {
 		return createAstropressSupabaseSqliteAdapter(

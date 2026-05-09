@@ -9,11 +9,7 @@
  * has no row at all.
  */
 
-export type IntegrationStatusBadgeKind =
-	| "connected"
-	| "error"
-	| "paused"
-	| "not-connected";
+export type IntegrationStatusBadgeKind = "connected" | "error" | "paused" | "not-connected";
 
 export type IntegrationStatusBadgeTone = "ok" | "err" | "warn" | "muted";
 

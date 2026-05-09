@@ -56,9 +56,7 @@ describe("project scaffold — additional provider/host combinations", () => {
 			appHost: "render-static",
 			dataServices: "none",
 		});
-		expect(scaffold.packageScripts["deploy:render-static"]).toContain(
-			"astro build",
-		);
+		expect(scaffold.packageScripts["deploy:render-static"]).toContain("astro build");
 	});
 
 	it("gitlab-pages appHost produces .gitlab-ci.yml CI file (not GitHub Actions)", () => {
@@ -66,13 +64,9 @@ describe("project scaffold — additional provider/host combinations", () => {
 			appHost: "gitlab-pages",
 			dataServices: "none",
 		});
-		expect(scaffold.packageScripts["deploy:gitlab-pages"]).toContain(
-			"astro build",
-		);
+		expect(scaffold.packageScripts["deploy:gitlab-pages"]).toContain("astro build");
 		expect(scaffold.ciFiles[".gitlab-ci.yml"]).toContain("pages");
-		expect(
-			scaffold.ciFiles[".github/workflows/deploy-astropress.yml"],
-		).toBeUndefined();
+		expect(scaffold.ciFiles[".github/workflows/deploy-astropress.yml"]).toBeUndefined();
 	});
 
 	it("netlify appHost produces netlify deploy script and CI workflow", () => {
@@ -80,12 +74,10 @@ describe("project scaffold — additional provider/host combinations", () => {
 			appHost: "netlify",
 			dataServices: "none",
 		});
-		expect(scaffold.packageScripts["deploy:netlify"]).toContain(
-			"netlify deploy",
+		expect(scaffold.packageScripts["deploy:netlify"]).toContain("netlify deploy");
+		expect(scaffold.ciFiles[".github/workflows/deploy-astropress.yml"]).toContain(
+			"NETLIFY_AUTH_TOKEN",
 		);
-		expect(
-			scaffold.ciFiles[".github/workflows/deploy-astropress.yml"],
-		).toContain("NETLIFY_AUTH_TOKEN");
 	});
 
 	it("server-output hosts emit a second public-site astro config and build:public script", () => {
@@ -97,12 +89,8 @@ describe("project scaffold — additional provider/host combinations", () => {
 		expect(scaffold.ciFiles["astro.config.public.mjs"]).toContain(
 			"createAstropressPublicSiteIntegration",
 		);
-		expect(scaffold.ciFiles["astro.config.public.mjs"]).toContain(
-			'output: "static"',
-		);
-		expect(scaffold.ciFiles["astro.config.public.mjs"]).not.toContain(
-			"AdminApp",
-		);
+		expect(scaffold.ciFiles["astro.config.public.mjs"]).toContain('output: "static"');
+		expect(scaffold.ciFiles["astro.config.public.mjs"]).not.toContain("AdminApp");
 		expect(scaffold.packageScripts["build:public"]).toBe(
 			"astro build --config astro.config.public.mjs",
 		);
@@ -123,12 +111,10 @@ describe("project scaffold — additional provider/host combinations", () => {
 			appHost: "render-web",
 			dataServices: "appwrite",
 		});
-		expect(scaffold.packageScripts["deploy:render-web"]).toContain(
-			"astro build",
+		expect(scaffold.packageScripts["deploy:render-web"]).toContain("astro build");
+		expect(scaffold.ciFiles[".github/workflows/deploy-astropress.yml"]).toContain(
+			"RENDER_DEPLOY_HOOK_URL",
 		);
-		expect(
-			scaffold.ciFiles[".github/workflows/deploy-astropress.yml"],
-		).toContain("RENDER_DEPLOY_HOOK_URL");
 	});
 
 	it("fly-io appHost produces fly-io deploy script and flyctl CI step", () => {
@@ -137,12 +123,8 @@ describe("project scaffold — additional provider/host combinations", () => {
 			dataServices: "supabase",
 		});
 		expect(scaffold.packageScripts["deploy:fly-io"]).toContain("flyctl deploy");
-		expect(
-			scaffold.ciFiles[".github/workflows/deploy-astropress.yml"],
-		).toContain("FLY_API_TOKEN");
-		expect(
-			scaffold.ciFiles[".github/workflows/deploy-astropress.yml"],
-		).toContain("flyctl");
+		expect(scaffold.ciFiles[".github/workflows/deploy-astropress.yml"]).toContain("FLY_API_TOKEN");
+		expect(scaffold.ciFiles[".github/workflows/deploy-astropress.yml"]).toContain("flyctl");
 	});
 
 	it("coolify appHost produces coolify deploy script and webhook CI step", () => {
@@ -151,9 +133,9 @@ describe("project scaffold — additional provider/host combinations", () => {
 			dataServices: "supabase",
 		});
 		expect(scaffold.packageScripts["deploy:coolify"]).toContain("astro build");
-		expect(
-			scaffold.ciFiles[".github/workflows/deploy-astropress.yml"],
-		).toContain("COOLIFY_WEBHOOK_URL");
+		expect(scaffold.ciFiles[".github/workflows/deploy-astropress.yml"]).toContain(
+			"COOLIFY_WEBHOOK_URL",
+		);
 	});
 
 	it("digitalocean appHost produces digitalocean deploy script and doctl CI step", () => {
@@ -162,9 +144,9 @@ describe("project scaffold — additional provider/host combinations", () => {
 			dataServices: "supabase",
 		});
 		expect(scaffold.packageScripts["deploy:digitalocean"]).toContain("doctl");
-		expect(
-			scaffold.ciFiles[".github/workflows/deploy-astropress.yml"],
-		).toContain("DIGITALOCEAN_ACCESS_TOKEN");
+		expect(scaffold.ciFiles[".github/workflows/deploy-astropress.yml"]).toContain(
+			"DIGITALOCEAN_ACCESS_TOKEN",
+		);
 	});
 
 	it("railway appHost produces railway deploy script with RAILWAY_TOKEN CI step", () => {
@@ -173,12 +155,8 @@ describe("project scaffold — additional provider/host combinations", () => {
 			dataServices: "supabase",
 		});
 		expect(scaffold.packageScripts["deploy:railway"]).toContain("railway up");
-		expect(
-			scaffold.ciFiles[".github/workflows/deploy-astropress.yml"],
-		).toContain("RAILWAY_TOKEN");
-		expect(
-			scaffold.ciFiles[".github/workflows/deploy-astropress.yml"],
-		).toContain("@railway/cli");
+		expect(scaffold.ciFiles[".github/workflows/deploy-astropress.yml"]).toContain("RAILWAY_TOKEN");
+		expect(scaffold.ciFiles[".github/workflows/deploy-astropress.yml"]).toContain("@railway/cli");
 	});
 
 	it("turso dataServices produces TURSO env example keys", () => {
@@ -261,26 +239,16 @@ describe("project scaffold", () => {
 		expect(scaffold.localEnv.ASTROPRESS_APP_HOST).toBe("github-pages");
 		expect(scaffold.localEnv.ASTROPRESS_CONTENT_SERVICES).toBe("none");
 		expect(scaffold.localEnv.ASTROPRESS_DATA_SERVICES).toBeUndefined();
-		expect(scaffold.localEnv.ADMIN_PASSWORD).toMatch(
-			/^[^-]+-[^-]+-[^-]+-[^-]+$/,
-		);
-		expect(scaffold.localEnv.EDITOR_PASSWORD).toMatch(
-			/^[^-]+-[^-]+-[^-]+-[^-]+$/,
-		);
+		expect(scaffold.localEnv.ADMIN_PASSWORD).toMatch(/^[^-]+-[^-]+-[^-]+-[^-]+$/);
+		expect(scaffold.localEnv.EDITOR_PASSWORD).toMatch(/^[^-]+-[^-]+-[^-]+-[^-]+$/);
 		expect(scaffold.localEnv.SESSION_SECRET).toHaveLength(43);
-		expect(scaffold.packageScripts["doctor:strict"]).toBe(
-			"astropress doctor --strict",
-		);
-		expect(
-			scaffold.ciFiles[".github/workflows/deploy-astropress.yml"],
-		).toContain("deploy-pages");
+		expect(scaffold.packageScripts["doctor:strict"]).toBe("astropress doctor --strict");
+		expect(scaffold.ciFiles[".github/workflows/deploy-astropress.yml"]).toContain("deploy-pages");
 		expect(scaffold.deployDoc).toContain("Content Services");
 		expect(scaffold.envExample.ADMIN_PASSWORD).toBe(
 			"replace-with-a-generated-local-admin-password",
 		);
-		expect(scaffold.envExample.SESSION_SECRET).toBe(
-			"replace-with-a-long-random-session-secret",
-		);
+		expect(scaffold.envExample.SESSION_SECRET).toBe("replace-with-a-long-random-session-secret");
 	});
 
 	it("does not include analytics keys when analytics is not set", () => {
@@ -377,13 +345,9 @@ describe("project scaffold", () => {
 		expect(supabase.appHost).toBe("vercel");
 		expect(supabase.dataServices).toBe("supabase");
 		expect(supabase.contentServices).toBe("supabase");
-		expect(supabase.envExample.SUPABASE_URL).toBe(
-			"https://your-project.supabase.co",
-		);
+		expect(supabase.envExample.SUPABASE_URL).toBe("https://your-project.supabase.co");
 		expect(supabase.envExample.ASTROPRESS_CONTENT_SERVICES).toBe("supabase");
-		expect(supabase.envExample.ASTROPRESS_SERVICE_ORIGIN).toContain(
-			"functions/v1/astropress",
-		);
+		expect(supabase.envExample.ASTROPRESS_SERVICE_ORIGIN).toContain("functions/v1/astropress");
 		expect(supabase.envExample.ASTROPRESS_DATA_SERVICES).toBeUndefined();
 		expect(supabase.localEnv.ASTROPRESS_DEPLOY_TARGET).toBeUndefined();
 		expect(supabase.packageScripts["deploy:vercel"]).toContain("vercel deploy");

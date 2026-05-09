@@ -1,9 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import {
-	newsletterAdapter,
-	placeholderAdapter,
-} from "../src/newsletter-adapter";
+import { newsletterAdapter, placeholderAdapter } from "../src/newsletter-adapter";
 import { getNewsletterConfig } from "../src/runtime-env";
 
 // ---------------------------------------------------------------------------
@@ -31,9 +28,7 @@ describe("NEWSLETTER_DELIVERY_MODE defaults to listmonk in production", () => {
 		// Simulate production by having no env override — the function checks
 		// isProductionRuntime() which reads import.meta.env.PROD. In tests that
 		// is false, so we verify the explicit listmonk path instead via locals.
-		const cfg = getNewsletterConfig(
-			makeLocals({ NEWSLETTER_DELIVERY_MODE: "listmonk" }),
-		);
+		const cfg = getNewsletterConfig(makeLocals({ NEWSLETTER_DELIVERY_MODE: "listmonk" }));
 		expect(cfg.mode).toBe("listmonk");
 	});
 });
@@ -105,13 +100,8 @@ describe("Subscriber endpoint forwards to Listmonk API via newsletterAdapter", (
 	});
 
 	it("calls the Listmonk subscribers API and returns ok on 200", async () => {
-		vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(
-			new Response("{}", { status: 200 }),
-		);
-		const result = await newsletterAdapter.subscribe(
-			"user@example.com",
-			makeLocals(listmonkEnv),
-		);
+		vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(new Response("{}", { status: 200 }));
+		const result = await newsletterAdapter.subscribe("user@example.com", makeLocals(listmonkEnv));
 		expect(result).toMatchObject({ ok: true });
 		expect(fetch).toHaveBeenCalledOnce();
 		const [url] = (fetch as ReturnType<typeof vi.fn>).mock.calls[0] as [string];
@@ -121,14 +111,10 @@ describe("Subscriber endpoint forwards to Listmonk API via newsletterAdapter", (
 	it("uses Basic auth header derived from username:password", async () => {
 		let capturedAuth = "";
 		vi.spyOn(globalThis, "fetch").mockImplementationOnce(async (_url, init) => {
-			capturedAuth =
-				(init?.headers as Record<string, string>).Authorization ?? "";
+			capturedAuth = (init?.headers as Record<string, string>).Authorization ?? "";
 			return new Response("{}", { status: 200 });
 		});
-		await newsletterAdapter.subscribe(
-			"user@example.com",
-			makeLocals(listmonkEnv),
-		);
+		await newsletterAdapter.subscribe("user@example.com", makeLocals(listmonkEnv));
 		expect(capturedAuth).toMatch(/^Basic /);
 		const decoded = atob(capturedAuth.replace("Basic ", ""));
 		expect(decoded).toBe("admin:secret");
@@ -140,10 +126,7 @@ describe("Subscriber endpoint forwards to Listmonk API via newsletterAdapter", (
 			body = JSON.parse(init?.body as string) as Record<string, unknown>;
 			return new Response("{}", { status: 200 });
 		});
-		await newsletterAdapter.subscribe(
-			"test@example.com",
-			makeLocals(listmonkEnv),
-		);
+		await newsletterAdapter.subscribe("test@example.com", makeLocals(listmonkEnv));
 		expect(body.email).toBe("test@example.com");
 		expect(body.status).toBe("enabled");
 		expect(Array.isArray(body.lists)).toBe(true);
@@ -151,25 +134,15 @@ describe("Subscriber endpoint forwards to Listmonk API via newsletterAdapter", (
 	});
 
 	it("returns error on non-200 Listmonk response", async () => {
-		vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(
-			new Response("Conflict", { status: 409 }),
-		);
-		const result = await newsletterAdapter.subscribe(
-			"user@example.com",
-			makeLocals(listmonkEnv),
-		);
+		vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(new Response("Conflict", { status: 409 }));
+		const result = await newsletterAdapter.subscribe("user@example.com", makeLocals(listmonkEnv));
 		expect(result).toMatchObject({ ok: false });
 		expect(result.error).toBeTruthy();
 	});
 
 	it("returns network error when fetch throws for Listmonk", async () => {
-		vi.spyOn(globalThis, "fetch").mockRejectedValueOnce(
-			new Error("ECONNREFUSED"),
-		);
-		const result = await newsletterAdapter.subscribe(
-			"user@example.com",
-			makeLocals(listmonkEnv),
-		);
+		vi.spyOn(globalThis, "fetch").mockRejectedValueOnce(new Error("ECONNREFUSED"));
+		const result = await newsletterAdapter.subscribe("user@example.com", makeLocals(listmonkEnv));
 		expect(result).toMatchObject({ ok: false });
 		expect(result.error).toContain("could not be reached");
 	});

@@ -68,8 +68,7 @@ export function readAstropressPocketbaseHostedConfig(
 export function createAstropressPocketbaseHostedAdapter(
 	options: AstropressPocketbaseHostedAdapterOptions = {},
 ) {
-	const config =
-		options.config ?? readAstropressPocketbaseHostedConfig(options.env);
+	const config = options.config ?? readAstropressPocketbaseHostedConfig(options.env);
 	if (
 		!options.backingAdapter &&
 		!options.content &&

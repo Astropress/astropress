@@ -1,8 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-	collectMediaIds,
-	selectTestimonialsForSection,
-} from "../../src/sections/render-prep";
+import { collectMediaIds, selectTestimonialsForSection } from "../../src/sections/render-prep";
 import type { Section, TestimonialsSection } from "../../src/sections/schema";
 
 describe("collectMediaIds — coverage", () => {
@@ -11,9 +8,7 @@ describe("collectMediaIds — coverage", () => {
 	});
 
 	it("hero without mediaId yields no id", () => {
-		const r = collectMediaIds([
-			{ id: "h", kind: "hero", headline: "h", alignment: "start" },
-		]);
+		const r = collectMediaIds([{ id: "h", kind: "hero", headline: "h", alignment: "start" }]);
 		expect(r).toEqual([]);
 	});
 

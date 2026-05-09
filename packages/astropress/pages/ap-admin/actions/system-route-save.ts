@@ -1,5 +1,4 @@
-import { withAdminFormAction } from "@astropress-diy/astropress";
-import { saveRuntimeSystemRoute } from "@astropress-diy/astropress";
+import { saveRuntimeSystemRoute, withAdminFormAction } from "@astropress-diy/astropress";
 import type { APIRoute } from "astro";
 
 function splitLines(value: FormDataEntryValue | null) {
@@ -27,12 +26,9 @@ export const POST: APIRoute = async (context) =>
 			let settings: Record<string, unknown> | null = null;
 			if (path === "/500") {
 				settings = {
-					buttonLabel:
-						String(formData.get("buttonLabel") ?? "").trim() ||
-						"Go to homepage",
+					buttonLabel: String(formData.get("buttonLabel") ?? "").trim() || "Go to homepage",
 					buttonHref: String(formData.get("buttonHref") ?? "").trim() || "/",
-					contactHref:
-						String(formData.get("contactHref") ?? "").trim() || "/en/contact",
+					contactHref: String(formData.get("contactHref") ?? "").trim() || "/en/contact",
 				};
 			} else if (path === "/sitemap.xml") {
 				settings = {

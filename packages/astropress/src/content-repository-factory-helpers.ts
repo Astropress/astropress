@@ -2,11 +2,7 @@
 // under the 400-line arch-lint warning.
 
 import type { AstropressContentRepositoryInput } from "./content-repository-factory";
-import type {
-	Actor,
-	ContentRecord,
-	ContentRepository,
-} from "./persistence-types";
+import type { Actor, ContentRecord, ContentRepository } from "./persistence-types";
 
 type CreateInput = Parameters<ContentRepository["createContentRecord"]>[0];
 type RestoreResult = ReturnType<ContentRepository["restoreRevision"]>;
@@ -98,9 +94,7 @@ export function createContentRecordImpl(
 ): CreateResult {
 	const title = rawInput.title.trim();
 	const slug = input.slugifyTerm(rawInput.slug);
-	const legacyUrl = input.normalizePath(
-		rawInput.legacyUrl?.trim() || `/${slug}`,
-	);
+	const legacyUrl = input.normalizePath(rawInput.legacyUrl?.trim() || `/${slug}`);
 	const seoTitle = rawInput.seoTitle.trim() || title;
 	const metaDescription = rawInput.metaDescription.trim();
 	const status = input.normalizeContentStatus(rawInput.status);
@@ -114,10 +108,7 @@ export function createContentRecordImpl(
 		};
 	}
 
-	if (
-		input.findContentRecord(slug) ||
-		input.findContentRecord(legacyUrl.replace(/^\//, ""))
-	) {
+	if (input.findContentRecord(slug) || input.findContentRecord(legacyUrl.replace(/^\//, ""))) {
 		return { ok: false as const, error: "That slug is already in use." };
 	}
 

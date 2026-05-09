@@ -1,13 +1,10 @@
 import { afterEach, describe, expect, it } from "vitest";
 
 import {
-	type OAuthProviderDefinition,
 	_resetOAuthRegistryForTests,
+	type OAuthProviderDefinition,
 } from "../../../src/integrations/oauth/registry";
-import {
-	buildAuthorizeRedirect,
-	buildRedirectUri,
-} from "../../../src/integrations/oauth/start";
+import { buildAuthorizeRedirect, buildRedirectUri } from "../../../src/integrations/oauth/start";
 import { verifyOAuthState } from "../../../src/integrations/oauth/state";
 
 const GITHUB: OAuthProviderDefinition = {
@@ -27,27 +24,21 @@ const ROOT = "test-root-secret";
 
 describe("buildRedirectUri", () => {
 	it("joins origin and path with one slash", () => {
-		expect(buildRedirectUri("https://x.example", "/cb")).toBe(
-			"https://x.example/cb",
-		);
+		expect(buildRedirectUri("https://x.example", "/cb")).toBe("https://x.example/cb");
 	});
 
 	it("trims trailing slashes from the origin", () => {
-		expect(buildRedirectUri("https://x.example///", "/cb")).toBe(
-			"https://x.example/cb",
-		);
+		expect(buildRedirectUri("https://x.example///", "/cb")).toBe("https://x.example/cb");
 	});
 
 	it("prepends a slash when the path is missing one", () => {
-		expect(buildRedirectUri("https://x.example", "cb")).toBe(
-			"https://x.example/cb",
-		);
+		expect(buildRedirectUri("https://x.example", "cb")).toBe("https://x.example/cb");
 	});
 
 	it("preserves the exact path beyond the leading slash", () => {
-		expect(
-			buildRedirectUri("https://x.example", "/ap-admin/oauth/callback/github"),
-		).toBe("https://x.example/ap-admin/oauth/callback/github");
+		expect(buildRedirectUri("https://x.example", "/ap-admin/oauth/callback/github")).toBe(
+			"https://x.example/ap-admin/oauth/callback/github",
+		);
 	});
 
 	it("returns just the prefixed path when origin is empty", () => {

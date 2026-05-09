@@ -25,9 +25,7 @@ export type AstropressAppwriteAdapterOptions = Omit<
 	backingAdapter?: AstropressPlatformAdapter;
 };
 
-export function createAstropressAppwriteAdapter(
-	options: AstropressAppwriteAdapterOptions = {},
-) {
+export function createAstropressAppwriteAdapter(options: AstropressAppwriteAdapterOptions = {}) {
 	return createAstropressHostedPlatformAdapter({
 		...options,
 		providerName: "appwrite",
@@ -43,8 +41,7 @@ export function createAstropressAppwriteAdapter(
 	});
 }
 
-export interface AstropressAppwriteHostedAdapterOptions
-	extends AstropressAppwriteAdapterOptions {
+export interface AstropressAppwriteHostedAdapterOptions extends AstropressAppwriteAdapterOptions {
 	config?: AstropressAppwriteHostedConfig;
 	env?: Record<string, string | undefined>;
 	fetchImpl?: AstropressHostedApiAdapterOptions["fetchImpl"];
@@ -80,8 +77,7 @@ export function readAstropressAppwriteHostedConfig(
 export function createAstropressAppwriteHostedAdapter(
 	options: AstropressAppwriteHostedAdapterOptions = {},
 ) {
-	const config =
-		options.config ?? readAstropressAppwriteHostedConfig(options.env);
+	const config = options.config ?? readAstropressAppwriteHostedConfig(options.env);
 	const hostPanel = options.defaultCapabilities?.hostPanel ?? {
 		mode: "link" as const,
 		url: `https://cloud.appwrite.io/console/project-${config.projectId}`,

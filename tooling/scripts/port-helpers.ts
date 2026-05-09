@@ -15,11 +15,7 @@ export async function findAvailablePort(
 	label: string,
 	maxAttempts = 100,
 ): Promise<number> {
-	for (
-		let port = preferredPort;
-		port < preferredPort + maxAttempts;
-		port += 1
-	) {
+	for (let port = preferredPort; port < preferredPort + maxAttempts; port += 1) {
 		if (await canBindPort(port)) return port;
 	}
 

@@ -110,10 +110,7 @@ describe("triggerPublish — cloudflare-pages", () => {
 
 		await triggerPublish(config);
 
-		expect(fetchSpy).toHaveBeenCalledWith(
-			hookUrl,
-			expect.objectContaining({ method: "POST" }),
-		);
+		expect(fetchSpy).toHaveBeenCalledWith(hookUrl, expect.objectContaining({ method: "POST" }));
 	});
 });
 

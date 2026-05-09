@@ -12,7 +12,7 @@
  * route, a scope escalation path, or a session that outlives its revocation.
  */
 
-import { readFileSync, readdirSync, statSync } from "node:fs";
+import { readdirSync, readFileSync, statSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { findRepoRoot } from "./_helpers/repo-root";
@@ -25,11 +25,7 @@ const actionsRoot = path.join(pagesRoot, "actions");
 const srcRoot = path.join(repoRoot, "packages/astropress/src");
 
 // Auth-exempt pages — login flow, not protected by session
-const AUTH_EXEMPT_PAGES = new Set([
-	"login.astro",
-	"accept-invite.astro",
-	"reset-password.astro",
-]);
+const AUTH_EXEMPT_PAGES = new Set(["login.astro", "accept-invite.astro", "reset-password.astro"]);
 // Auth-exempt actions — session creation and token consumption happen before session exists
 const AUTH_EXEMPT_ACTIONS = new Set(["accept-invite.ts", "reset-password.ts"]);
 
@@ -69,36 +65,24 @@ describe("ZTA P1: every request must prove identity", () => {
 	});
 
 	it("withAdminFormAction always calls getRuntimeSessionUser — session is verified per-request", () => {
-		const utils = readFileSync(
-			path.join(srcRoot, "admin-action-utils.ts"),
-			"utf8",
-		);
+		const utils = readFileSync(path.join(srcRoot, "admin-action-utils.ts"), "utf8");
 		expect(utils).toContain("getRuntimeSessionUser");
 		// Must be called before the action runs (inside requireAdminFormAction, before formData)
 		const requireFnBody =
-			utils.match(/async function requireAdminFormAction[\s\S]*?^}/m)?.[0] ??
-			utils;
+			utils.match(/async function requireAdminFormAction[\s\S]*?^}/m)?.[0] ?? utils;
 		expect(requireFnBody).toContain("getRuntimeSessionUser");
 	});
 
 	it("session verification checks revoked_at IS NULL — revoked sessions are denied immediately", () => {
-		const authSrc = readFileSync(
-			path.join(srcRoot, "runtime-admin-auth.ts"),
-			"utf8",
-		);
+		const authSrc = readFileSync(path.join(srcRoot, "runtime-admin-auth.ts"), "utf8");
 		expect(authSrc, "session query must check revoked_at IS NULL").toMatch(
 			/revoked_at\s+IS\s+NULL/i,
 		);
 	});
 
 	it("session verification checks active = 1 on the user — suspended users lose access immediately", () => {
-		const authSrc = readFileSync(
-			path.join(srcRoot, "runtime-admin-auth.ts"),
-			"utf8",
-		);
-		expect(authSrc, "session query must check user active = 1").toMatch(
-			/u\.active\s*=\s*1/i,
-		);
+		const authSrc = readFileSync(path.join(srcRoot, "runtime-admin-auth.ts"), "utf8");
+		expect(authSrc, "session query must check user active = 1").toMatch(/u\.active\s*=\s*1/i);
 	});
 
 	it("admin pages read Astro.locals.adminUser — auth is resolved in middleware, not ad-hoc", () => {
@@ -147,35 +131,21 @@ describe("ZTA P1: every request must prove identity", () => {
 
 describe("ZTA P2: least privilege", () => {
 	it("CSRF token is validated on all state-changing action handlers", () => {
-		const utils = readFileSync(
-			path.join(srcRoot, "admin-action-utils.ts"),
-			"utf8",
-		);
+		const utils = readFileSync(path.join(srcRoot, "admin-action-utils.ts"), "utf8");
 		// The CSRF check must compare submitted token against the server-side token
 		expect(utils).toContain("_csrf");
-		expect(
-			utils,
-			"CSRF check must use constant-time comparison or strict equality",
-		).toMatch(
+		expect(utils, "CSRF check must use constant-time comparison or strict equality").toMatch(
 			/submittedToken\s*!==\s*expectedToken|submittedToken\s*===\s*expectedToken|timingSafeEqual|!expectedToken/,
 		);
 	});
 
 	it("request origin is validated on all form submissions — prevents cross-origin POST forgery", () => {
-		const utils = readFileSync(
-			path.join(srcRoot, "admin-action-utils.ts"),
-			"utf8",
-		);
-		expect(utils, "admin actions must validate request origin").toContain(
-			"isTrustedRequestOrigin",
-		);
+		const utils = readFileSync(path.join(srcRoot, "admin-action-utils.ts"), "utf8");
+		expect(utils, "admin actions must validate request origin").toContain("isTrustedRequestOrigin");
 	});
 
 	it("requireAdmin flag is available and checked for admin-only actions", () => {
-		const utils = readFileSync(
-			path.join(srcRoot, "admin-action-utils.ts"),
-			"utf8",
-		);
+		const utils = readFileSync(path.join(srcRoot, "admin-action-utils.ts"), "utf8");
 		expect(utils).toContain("requireAdmin");
 		// Break-glass admin gate routes through isAuthUserAdmin (not the
 		// legacy `sessionUser.role !== "admin"` literal) so the access PR
@@ -184,15 +154,11 @@ describe("ZTA P2: least privilege", () => {
 	});
 
 	it("API token scope is validated per-request, not cached", () => {
-		const apiMiddleware = readFileSync(
-			path.join(srcRoot, "api-middleware.ts"),
-			"utf8",
-		);
+		const apiMiddleware = readFileSync(path.join(srcRoot, "api-middleware.ts"), "utf8");
 		// Token validation must check scopes on every call
-		expect(
-			apiMiddleware,
-			"API middleware must verify token scopes on every request",
-		).toMatch(/scope|scopes/i);
+		expect(apiMiddleware, "API middleware must verify token scopes on every request").toMatch(
+			/scope|scopes/i,
+		);
 		// Must not cache scope results across requests (no module-level scope cache)
 		expect(
 			apiMiddleware,
@@ -201,18 +167,15 @@ describe("ZTA P2: least privilege", () => {
 	});
 
 	it("admin users cannot escalate their own role via settings", () => {
-		const userActions = listFiles(actionsRoot, ".ts").filter((f) =>
-			f.includes("user"),
-		);
+		const userActions = listFiles(actionsRoot, ".ts").filter((f) => f.includes("user"));
 		for (const file of userActions) {
 			const src = readFileSync(file, "utf8");
 			const rel = path.relative(path.resolve(import.meta.dirname, ".."), file);
 			// User actions that modify role must require admin
 			if (src.includes("role") && src.includes("formData.get")) {
-				expect(
-					src,
-					`${rel}: actions that set user roles must require admin role`,
-				).toMatch(/requireAdmin|role.*admin|admin.*role/);
+				expect(src, `${rel}: actions that set user roles must require admin role`).toMatch(
+					/requireAdmin|role.*admin|admin.*role/,
+				);
 			}
 		}
 	});
@@ -224,10 +187,7 @@ describe("ZTA P2: least privilege", () => {
 
 describe("ZTA P3: assume breach — audit trail and trace propagation", () => {
 	it("security middleware attaches X-Request-Id to every response", () => {
-		const middleware = readFileSync(
-			path.join(srcRoot, "security-middleware.ts"),
-			"utf8",
-		);
+		const middleware = readFileSync(path.join(srcRoot, "security-middleware.ts"), "utf8");
 		expect(
 			middleware,
 			"every response must carry a unique X-Request-Id for breach investigation",
@@ -239,10 +199,7 @@ describe("ZTA P3: assume breach — audit trail and trace propagation", () => {
 	});
 
 	it("content write actions record audit events — all mutations are traceable", () => {
-		const contentActions = readFileSync(
-			path.join(srcRoot, "runtime-actions-content.ts"),
-			"utf8",
-		);
+		const contentActions = readFileSync(path.join(srcRoot, "runtime-actions-content.ts"), "utf8");
 		expect(contentActions, "content create must record audit event").toMatch(
 			/recordD1Audit|recordAudit/,
 		);
@@ -253,13 +210,8 @@ describe("ZTA P3: assume breach — audit trail and trace propagation", () => {
 	});
 
 	it("user management actions record audit events", () => {
-		const userActions = readFileSync(
-			path.join(srcRoot, "runtime-actions-users.ts"),
-			"utf8",
-		);
-		expect(userActions, "user management must record audit events").toMatch(
-			/recordD1Audit/,
-		);
+		const userActions = readFileSync(path.join(srcRoot, "runtime-actions-users.ts"), "utf8");
+		expect(userActions, "user management must record audit events").toMatch(/recordD1Audit/);
 		expect(userActions).toContain("user.invite");
 		expect(userActions).toContain("user.suspend");
 	});
@@ -269,10 +221,7 @@ describe("ZTA P3: assume breach — audit trail and trace propagation", () => {
 		// records by id, user, or resource (which would allow covering tracks).
 		// Time-based bulk retention pruning (DELETE ... WHERE created_at < ...) is the only
 		// allowed exception — it removes old records uniformly, not specific incriminating ones.
-		const auditLog = readFileSync(
-			path.join(srcRoot, "sqlite-runtime/audit-log.ts"),
-			"utf8",
-		);
+		const auditLog = readFileSync(path.join(srcRoot, "sqlite-runtime/audit-log.ts"), "utf8");
 		// Must not delete by id, user_email, action, resource_type, or resource_id (targeted delete).
 		expect(
 			auditLog,
@@ -283,14 +232,10 @@ describe("ZTA P3: assume breach — audit trail and trace propagation", () => {
 	});
 
 	it("session revocation is synchronous — revokeSession writes to DB, not just clears a cookie", () => {
-		const authSrc = readFileSync(
-			path.join(srcRoot, "runtime-admin-auth.ts"),
-			"utf8",
+		const authSrc = readFileSync(path.join(srcRoot, "runtime-admin-auth.ts"), "utf8");
+		expect(authSrc, "session revocation must write revoked_at to the database").toMatch(
+			/revoked_at\s*=\s*CURRENT_TIMESTAMP/i,
 		);
-		expect(
-			authSrc,
-			"session revocation must write revoked_at to the database",
-		).toMatch(/revoked_at\s*=\s*CURRENT_TIMESTAMP/i);
 	});
 });
 
@@ -300,22 +245,15 @@ describe("ZTA P3: assume breach — audit trail and trace propagation", () => {
 
 describe("ZTA P4: no implicit trust — explicit authorization on every request", () => {
 	it("session TTL is enforced per-request, not only at login", () => {
-		const authSrc = readFileSync(
-			path.join(srcRoot, "runtime-admin-auth.ts"),
-			"utf8",
-		);
+		const authSrc = readFileSync(path.join(srcRoot, "runtime-admin-auth.ts"), "utf8");
 		// TTL check must be in the session verification path (getLiveD1SessionRow / getSessionUser), not only login
-		expect(
-			authSrc,
-			"TTL enforcement must be in getSessionUser, not just createSession",
-		).toMatch(/SESSION_TTL_MS|12.*hours/i);
+		expect(authSrc, "TTL enforcement must be in getSessionUser, not just createSession").toMatch(
+			/SESSION_TTL_MS|12.*hours/i,
+		);
 	});
 
 	it("API endpoint handlers call withApiRequest — no endpoint skips token verification", () => {
-		const apiPages = listFiles(
-			path.resolve(import.meta.dirname, "../pages/ap-api"),
-			".ts",
-		).filter(
+		const apiPages = listFiles(path.resolve(import.meta.dirname, "../pages/ap-api"), ".ts").filter(
 			(f) =>
 				!f.endsWith("openapi.json.ts") && // OpenAPI spec is intentionally public
 				!f.includes("og-image") && // OG image endpoint is read-only public (accessed by social media scrapers)
@@ -350,10 +288,9 @@ describe("ZTA P4: no implicit trust — explicit authorization on every request"
 			path.join(srcRoot, "security-middleware-entrypoint.ts"),
 			"utf8",
 		);
-		expect(
-			entrypoint,
-			"security middleware must be the single wiring point for headers",
-		).toContain("createAstropressSecurityMiddleware");
+		expect(entrypoint, "security middleware must be the single wiring point for headers").toContain(
+			"createAstropressSecurityMiddleware",
+		);
 		// No admin page should call applyAstropressSecurityHeaders directly (that would allow per-page bypass)
 		const pageFiles = listFiles(pagesRoot, ".astro");
 		for (const file of pageFiles) {

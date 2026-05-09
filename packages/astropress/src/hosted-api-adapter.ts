@@ -3,15 +3,15 @@ import {
 	type AstropressPlatformAdapter,
 	type AuthStore,
 	type AuthUser,
+	assertProviderContract,
 	type ContentStore,
 	type ContentStoreRecord,
 	type MediaAssetRecord,
 	type MediaStore,
+	normalizeProviderCapabilities,
 	type ProviderCapabilities,
 	type RevisionRecord,
 	type RevisionStore,
-	assertProviderContract,
-	normalizeProviderCapabilities,
 } from "./platform-contracts";
 
 type AstropressFetch = typeof fetch;
@@ -31,9 +31,7 @@ function joinApiUrl(baseUrl: string, path: string) {
 
 async function readJson<T>(response: Response): Promise<T> {
 	if (!response.ok) {
-		throw new Error(
-			`Astropress hosted API request failed with ${response.status}.`,
-		);
+		throw new Error(`Astropress hosted API request failed with ${response.status}.`);
 	}
 	return (await response.json()) as T;
 }
@@ -61,10 +59,7 @@ export function createAstropressHostedApiAdapter(
 		...options.defaultCapabilities,
 	});
 
-	const requestJson = async <T>(
-		path: string,
-		init: RequestInit = {},
-	): Promise<T> => {
+	const requestJson = async <T>(path: string, init: RequestInit = {}): Promise<T> => {
 		const response = await fetchImpl(joinApiUrl(options.apiBaseUrl, path), {
 			...init,
 			headers: createHeaders(
@@ -81,9 +76,7 @@ export function createAstropressHostedApiAdapter(
 			return requestJson<ContentStoreRecord[]>(`content${query}`);
 		},
 		async get(id) {
-			return requestJson<ContentStoreRecord | null>(
-				`content/${encodeURIComponent(id)}`,
-			);
+			return requestJson<ContentStoreRecord | null>(`content/${encodeURIComponent(id)}`);
 		},
 		async save(record) {
 			return requestJson<ContentStoreRecord>("content", {
@@ -106,9 +99,7 @@ export function createAstropressHostedApiAdapter(
 			});
 		},
 		async get(id) {
-			return requestJson<MediaAssetRecord | null>(
-				`media/${encodeURIComponent(id)}`,
-			);
+			return requestJson<MediaAssetRecord | null>(`media/${encodeURIComponent(id)}`);
 		},
 		async delete(id) {
 			await requestJson<{ ok: true }>(`media/${encodeURIComponent(id)}`, {
@@ -119,9 +110,7 @@ export function createAstropressHostedApiAdapter(
 
 	const revisions: RevisionStore = {
 		async list(recordId) {
-			return requestJson<RevisionRecord[]>(
-				`revisions?recordId=${encodeURIComponent(recordId)}`,
-			);
+			return requestJson<RevisionRecord[]>(`revisions?recordId=${encodeURIComponent(recordId)}`);
 		},
 		async append(revision) {
 			return requestJson<RevisionRecord>("revisions", {
@@ -145,9 +134,7 @@ export function createAstropressHostedApiAdapter(
 			});
 		},
 		async getSession(sessionId) {
-			return requestJson<AuthUser | null>(
-				`auth/session/${encodeURIComponent(sessionId)}`,
-			);
+			return requestJson<AuthUser | null>(`auth/session/${encodeURIComponent(sessionId)}`);
 		},
 	};
 

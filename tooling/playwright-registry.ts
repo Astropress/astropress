@@ -28,7 +28,7 @@ export interface PlaywrightProjectEntry {
 	readonly description: string;
 }
 
-export const PLAYWRIGHT_PROJECTS: ReadonlyArray<PlaywrightProjectEntry> = [
+export const PLAYWRIGHT_PROJECTS: readonly PlaywrightProjectEntry[] = [
 	{
 		name: "admin-integration-honesty",
 		inAcceptanceMatrix: true,
@@ -38,13 +38,10 @@ export const PLAYWRIGHT_PROJECTS: ReadonlyArray<PlaywrightProjectEntry> = [
 	{
 		name: "admin-pre-alpha-walkthrough",
 		inAcceptanceMatrix: true,
-		description:
-			"End-to-end walkthrough of the admin shell exercising the most-trafficked routes.",
+		description: "End-to-end walkthrough of the admin shell exercising the most-trafficked routes.",
 	},
 ];
 
-export function findProjectByName(
-	name: string,
-): PlaywrightProjectEntry | undefined {
+export function findProjectByName(name: string): PlaywrightProjectEntry | undefined {
 	return PLAYWRIGHT_PROJECTS.find((p) => p.name === name);
 }

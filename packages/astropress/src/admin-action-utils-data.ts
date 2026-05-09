@@ -12,10 +12,8 @@ export const SECURE_SESSION_COOKIE = "__Host-astropress_admin_session";
 
 export const ADMIN_ACTION_LOGGER_CONTEXT = "admin-action";
 
-export const DEFAULT_ADMIN_REQUIRED_MESSAGE =
-	"This action requires an admin account.";
-export const DEFAULT_ACTION_DENIED_MESSAGE =
-	"You do not have permission to perform this action.";
+export const DEFAULT_ADMIN_REQUIRED_MESSAGE = "This action requires an admin account.";
+export const DEFAULT_ACTION_DENIED_MESSAGE = "You do not have permission to perform this action.";
 export const DEFAULT_INVALID_CSRF_MESSAGE = "Invalid security token";
 export const DEFAULT_INVALID_ORIGIN_MESSAGE = "Invalid request origin";
 export const DEFAULT_LOGIN_PATH = "/ap-admin/login";

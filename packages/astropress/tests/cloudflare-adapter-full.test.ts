@@ -1,12 +1,9 @@
-import {
-	createAstropressCloudflareAdapter,
-	registerCms,
-} from "@astropress-diy/astropress";
+import { createAstropressCloudflareAdapter, registerCms } from "@astropress-diy/astropress";
 import { beforeEach, describe, expect, it } from "vitest";
-import { STANDARD_CMS_CONFIG, makeDb } from "./helpers/make-db.js";
+import { makeDb, STANDARD_CMS_CONFIG } from "./helpers/make-db.js";
 import {
-	SqliteBackedD1Database,
 	createSeededCloudflareDatabase,
+	SqliteBackedD1Database,
 } from "./helpers/provider-test-fixtures.js";
 
 beforeEach(() => {
@@ -58,9 +55,7 @@ describe("cloudflare adapter — no-db path (static mode)", () => {
 
 	it("uses disabled auth store by default (no db, no fallback)", async () => {
 		const adapter = createAstropressCloudflareAdapter({});
-		expect(
-			await adapter.auth.signIn("admin@example.com", "password"),
-		).toBeNull();
+		expect(await adapter.auth.signIn("admin@example.com", "password")).toBeNull();
 		expect(await adapter.auth.getSession("session-id")).toBeNull();
 		await expect(adapter.auth.signOut("session-id")).resolves.toBeUndefined();
 	});
@@ -79,15 +74,10 @@ describe("cloudflare adapter — no-db path (static mode)", () => {
 		});
 
 		// wrong password returns null
-		expect(
-			await adapter.auth.signIn("admin@example.com", "wrongpass"),
-		).toBeNull();
+		expect(await adapter.auth.signIn("admin@example.com", "wrongpass")).toBeNull();
 
 		// correct password returns session
-		const session = await adapter.auth.signIn(
-			"admin@example.com",
-			"correctpass",
-		);
+		const session = await adapter.auth.signIn("admin@example.com", "correctpass");
 		expect(session).not.toBeNull();
 		expect(session?.email).toBe("admin@example.com");
 		expect(await adapter.auth.getSession(session?.id)).toMatchObject({
@@ -301,9 +291,7 @@ describe("cloudflare adapter — content.delete() branches", () => {
 		const adapter = createAstropressCloudflareAdapter({
 			db: new SqliteBackedD1Database(db),
 		});
-		await expect(
-			adapter.content.delete("does-not-exist"),
-		).resolves.toBeUndefined();
+		await expect(adapter.content.delete("does-not-exist")).resolves.toBeUndefined();
 	});
 
 	it("soft-deletes a redirect record", async () => {
@@ -322,9 +310,7 @@ describe("cloudflare adapter — content.delete() branches", () => {
 		await adapter.content.delete("/old");
 
 		const row = db
-			.prepare(
-				"SELECT deleted_at FROM redirect_rules WHERE source_path = '/old'",
-			)
+			.prepare("SELECT deleted_at FROM redirect_rules WHERE source_path = '/old'")
 			.get() as Record<string, unknown>;
 		expect(row?.deleted_at).not.toBeNull();
 	});
@@ -357,9 +343,7 @@ describe("cloudflare adapter — content.delete() branches", () => {
 		await adapter.content.delete("cloudflare-media-1");
 
 		const row = db
-			.prepare(
-				"SELECT deleted_at FROM media_assets WHERE id = 'cloudflare-media-1'",
-			)
+			.prepare("SELECT deleted_at FROM media_assets WHERE id = 'cloudflare-media-1'")
 			.get() as Record<string, unknown>;
 		expect(row?.deleted_at).not.toBeNull();
 
@@ -544,21 +528,13 @@ describe("cloudflare adapter — content.list() branch coverage", () => {
 		// Insert an inactive user (active=0) to cover the ternary false branch
 		db.prepare(
 			"INSERT INTO admin_users (email, password_hash, name, active, is_admin) VALUES (?1, ?2, ?4, ?5, CASE WHEN ?3 = 'admin' THEN 1 ELSE 0 END)",
-		).run(
-			"inactive@example.com",
-			"placeholder-hash",
-			"editor",
-			"Inactive User",
-			0,
-		);
+		).run("inactive@example.com", "placeholder-hash", "editor", "Inactive User", 0);
 
 		const adapter = createAstropressCloudflareAdapter({
 			db: new SqliteBackedD1Database(db),
 		});
 		const users = await adapter.content.list("user");
-		const inactive = users.find(
-			(u) => u.metadata?.email === "inactive@example.com",
-		);
+		const inactive = users.find((u) => u.metadata?.email === "inactive@example.com");
 		expect(inactive?.status).toBe("archived");
 
 		db.close();
@@ -622,9 +598,7 @@ describe("cloudflare adapter — auth edge cases", () => {
 		const adapter = createAstropressCloudflareAdapter({
 			db: new SqliteBackedD1Database(db),
 		});
-		expect(
-			await adapter.auth.signIn("nobody@example.com", "password"),
-		).toBeNull();
+		expect(await adapter.auth.signIn("nobody@example.com", "password")).toBeNull();
 		db.close();
 	});
 
@@ -633,9 +607,7 @@ describe("cloudflare adapter — auth edge cases", () => {
 		const adapter = createAstropressCloudflareAdapter({
 			db: new SqliteBackedD1Database(db),
 		});
-		expect(
-			await adapter.auth.signIn("admin@example.com", "wrong-password"),
-		).toBeNull();
+		expect(await adapter.auth.signIn("admin@example.com", "wrong-password")).toBeNull();
 		db.close();
 	});
 });
@@ -810,14 +782,7 @@ describe("cloudflare adapter — null-field branches in ?? operators", () => {
 		db.prepare(
 			`INSERT INTO content_revisions (id, slug, source, title, status, body, seo_title, meta_description, created_at, created_by)
        VALUES (?, ?, 'reviewed', ?, 'published', ?, ?, ?, datetime('now'), NULL)`,
-		).run(
-			"rev-1",
-			"rev-test",
-			"Rev Test",
-			"<p>body</p>",
-			"Rev Test",
-			"Rev Test",
-		);
+		).run("rev-1", "rev-test", "Rev Test", "<p>body</p>", "Rev Test", "Rev Test");
 		const adapter = createAstropressCloudflareAdapter({
 			db: new SqliteBackedD1Database(db),
 		});
@@ -995,9 +960,7 @@ describe("cloudflare adapter — null-field branches in ?? operators", () => {
 		});
 		// media.put returns its input, not the DB row — query directly to verify file_size was stored
 		const row = db
-			.prepare(
-				"SELECT file_size FROM media_assets WHERE id = 'real-bytes-asset'",
-			)
+			.prepare("SELECT file_size FROM media_assets WHERE id = 'real-bytes-asset'")
 			.get() as { file_size: number };
 		expect(row.file_size).toBe(4); // Uint8Array([0x89, 0x50, 0x4e, 0x47]).byteLength === 4
 		db.close();

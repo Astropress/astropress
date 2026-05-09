@@ -7,12 +7,10 @@ import { defineAstropressHostRuntimeModules } from "@astropress-diy/astropress/i
 
 export const hostRuntimeModules = defineAstropressHostRuntimeModules({
 	async loadLocalAdminStore() {
-		return (await import("./admin-store.ts"))
-			.hostRuntimeAdminStore as LocalAdminStoreModule;
+		return (await import("./admin-store.ts")).hostRuntimeAdminStore as LocalAdminStoreModule;
 	},
 	async loadLocalAdminAuth() {
-		return (await import("./admin-auth.ts"))
-			.hostRuntimeAdminAuth as LocalAdminAuthModule;
+		return (await import("./admin-auth.ts")).hostRuntimeAdminAuth as LocalAdminAuthModule;
 	},
 	async loadLocalCmsRegistry() {
 		return (await import("./admin-persistence.ts"))

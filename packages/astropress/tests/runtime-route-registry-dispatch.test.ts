@@ -16,9 +16,7 @@ import {
 const CMS_CONFIG_KEY = Symbol.for("astropress.cms-config");
 
 afterEach(() => {
-	(globalThis as typeof globalThis & { [CMS_CONFIG_KEY]?: unknown })[
-		CMS_CONFIG_KEY
-	] = null;
+	(globalThis as typeof globalThis & { [CMS_CONFIG_KEY]?: unknown })[CMS_CONFIG_KEY] = null;
 	vi.restoreAllMocks();
 });
 
@@ -31,9 +29,7 @@ describe("loadSafeLocalCmsRegistry", () => {
 	});
 
 	it("returns null when load throws", async () => {
-		(loadLocalCmsRegistry as ReturnType<typeof vi.fn>).mockRejectedValueOnce(
-			new Error("nope"),
-		);
+		(loadLocalCmsRegistry as ReturnType<typeof vi.fn>).mockRejectedValueOnce(new Error("nope"));
 		expect(await loadSafeLocalCmsRegistry()).toBeNull();
 	});
 });
@@ -41,11 +37,7 @@ describe("loadSafeLocalCmsRegistry", () => {
 describe("withSafeRouteRegistryFallback", () => {
 	it("returns the operation result on success (no fallback invoked)", async () => {
 		const fallback = vi.fn();
-		const result = await withSafeRouteRegistryFallback(
-			fallback,
-			"default",
-			async () => "ok",
-		);
+		const result = await withSafeRouteRegistryFallback(fallback, "default", async () => "ok");
 		expect(result).toBe("ok");
 		expect(fallback).not.toHaveBeenCalled();
 	});
@@ -54,16 +46,10 @@ describe("withSafeRouteRegistryFallback", () => {
 		(loadLocalCmsRegistry as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
 			marker: "local",
 		});
-		const fallback = vi.fn(
-			async (local: { marker: string }) => `fb-${local.marker}`,
-		);
-		const result = await withSafeRouteRegistryFallback(
-			fallback,
-			"default",
-			async () => {
-				throw new Error("boom");
-			},
-		);
+		const fallback = vi.fn(async (local: { marker: string }) => `fb-${local.marker}`);
+		const result = await withSafeRouteRegistryFallback(fallback, "default", async () => {
+			throw new Error("boom");
+		});
 		expect(result).toBe("fb-local");
 		expect(fallback).toHaveBeenCalledWith({ marker: "local" });
 	});
@@ -73,28 +59,18 @@ describe("withSafeRouteRegistryFallback", () => {
 			new Error("registry-also-broken"),
 		);
 		const fallback = vi.fn();
-		const result = await withSafeRouteRegistryFallback(
-			fallback,
-			"default-value",
-			async () => {
-				throw new Error("boom");
-			},
-		);
+		const result = await withSafeRouteRegistryFallback(fallback, "default-value", async () => {
+			throw new Error("boom");
+		});
 		expect(result).toBe("default-value");
 		expect(fallback).not.toHaveBeenCalled();
 	});
 
 	it("returns defaultValue when operation throws AND registry load returns null/undefined", async () => {
-		(loadLocalCmsRegistry as ReturnType<typeof vi.fn>).mockResolvedValueOnce(
-			null,
-		);
-		const result = await withSafeRouteRegistryFallback(
-			vi.fn(),
-			"def",
-			async () => {
-				throw new Error("boom");
-			},
-		);
+		(loadLocalCmsRegistry as ReturnType<typeof vi.fn>).mockResolvedValueOnce(null);
+		const result = await withSafeRouteRegistryFallback(vi.fn(), "def", async () => {
+			throw new Error("boom");
+		});
 		expect(result).toBe("def");
 	});
 });

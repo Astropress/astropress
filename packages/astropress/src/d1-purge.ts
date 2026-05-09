@@ -22,9 +22,7 @@ export function createD1PurgeOps(db: D1DatabaseLike) {
 			}
 
 			const auditResult = await db
-				.prepare(
-					"UPDATE audit_events SET user_email = '[deleted]' WHERE user_email = ?",
-				)
+				.prepare("UPDATE audit_events SET user_email = '[deleted]' WHERE user_email = ?")
 				.bind(email)
 				.run();
 			const anonymisedAuditEvents = auditResult.meta?.changes ?? 0;
@@ -45,16 +43,10 @@ export function createD1PurgeOps(db: D1DatabaseLike) {
 			if (!userRow) {
 				adminUserAction = "not_found";
 			} else if (options.deleteAccount) {
-				await db
-					.prepare("DELETE FROM admin_users WHERE email = ?")
-					.bind(email)
-					.run();
+				await db.prepare("DELETE FROM admin_users WHERE email = ?").bind(email).run();
 				adminUserAction = "deleted";
 			} else {
-				await db
-					.prepare("UPDATE admin_users SET active = 0 WHERE email = ?")
-					.bind(email)
-					.run();
+				await db.prepare("UPDATE admin_users SET active = 0 WHERE email = ?").bind(email).run();
 				adminUserAction = "suspended";
 			}
 

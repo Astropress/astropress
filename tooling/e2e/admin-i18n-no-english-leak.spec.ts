@@ -40,9 +40,7 @@ interface ChromeSnapshot {
 	supportCardLabels: string[];
 }
 
-async function snapshotChrome(
-	page: import("@playwright/test").Page,
-): Promise<ChromeSnapshot> {
+async function snapshotChrome(page: import("@playwright/test").Page): Promise<ChromeSnapshot> {
 	return await page.evaluate(() => {
 		const h1 = document.querySelector("h1");
 		const navLinks = Array.from(
@@ -52,9 +50,7 @@ async function snapshotChrome(
 			.filter((s) => s.length > 0);
 		// Section <h2> headings inside <main> are page-owned chrome — these are the
 		// labels that prompted bugs like "Admin URL" leaking through untranslated.
-		const mainHeadings = Array.from(
-			document.querySelectorAll<HTMLElement>("main h2"),
-		)
+		const mainHeadings = Array.from(document.querySelectorAll<HTMLElement>("main h2"))
 			.map((h) => (h.textContent ?? "").trim())
 			.filter((s) => s.length > 0);
 		// Dashboard support-card <strong> labels and stat-card <span class="stat-label">
@@ -93,78 +89,72 @@ test.describe("Admin i18n: chrome must change between English and target locale"
 				context,
 				page,
 			}) => {
-			await context.clearCookies();
-			await page.goto(route, { waitUntil: "domcontentloaded" });
-			const en = await snapshotChrome(page);
+				await context.clearCookies();
+				await page.goto(route, { waitUntil: "domcontentloaded" });
+				const en = await snapshotChrome(page);
 
-			await context.addCookies([
-				{
-					name: "astropress_admin_locale",
-					value: locale,
-					url: page.url(),
-				},
-			]);
-			await page.goto(route, { waitUntil: "domcontentloaded" });
-			const te = await snapshotChrome(page);
+				await context.addCookies([
+					{
+						name: "astropress_admin_locale",
+						value: locale,
+						url: page.url(),
+					},
+				]);
+				await page.goto(route, { waitUntil: "domcontentloaded" });
+				const te = await snapshotChrome(page);
 
-			expect(
-				en.h1.length,
-				`${route}: missing <h1> in English render`,
-			).toBeGreaterThan(0);
-			expect(
-				te.h1.length,
-				`${route}: missing <h1> in Telugu render`,
-			).toBeGreaterThan(0);
+				expect(en.h1.length, `${route}: missing <h1> in English render`).toBeGreaterThan(0);
+				expect(te.h1.length, `${route}: missing <h1> in Telugu render`).toBeGreaterThan(0);
 
-			expect(
-				te.h1,
-				`${route}: <h1> "${te.h1}" did not change between EN and TE — likely hardcoded English string instead of t(...)`,
-			).not.toBe(en.h1);
-
-			expect(
-				te.title,
-				`${route}: <title> did not change between EN and TE — document title is not localised`,
-			).not.toBe(en.title);
-
-			// Navigation labels are shared chrome rendered by AdminLayout; if any of them
-			// match between locales it means a nav label is hardcoded. Compare as a set.
-			const enNav = en.navLabels.join(" | ");
-			const teNav = te.navLabels.join(" | ");
-			expect(
-				teNav,
-				`${route}: navigation labels did not change between EN and TE\nEN: ${enNav}\nTE: ${teNav}`,
-			).not.toBe(enNav);
-
-			// Per-page <h2> section headings — each English heading must differ from
-			// its Telugu counterpart, which catches panel-level leaks (e.g. "Admin URL")
-			// that the h1/title/nav check misses. Technical identifiers that are valid
-			// across all locales (filenames, protocol names, code tokens) are exempt.
-			const TECH_IDENTIFIER = /^[a-z0-9._/-]+$/;
-			expect(
-				te.mainHeadings.length,
-				`${route}: <main> <h2> count differs between EN (${en.mainHeadings.length}) and TE (${te.mainHeadings.length})`,
-			).toBe(en.mainHeadings.length);
-			for (let i = 0; i < en.mainHeadings.length; i++) {
-				const enH = en.mainHeadings[i];
-				const teH = te.mainHeadings[i];
-				if (TECH_IDENTIFIER.test(enH)) continue;
 				expect(
-					teH,
-					`${route}: <main> <h2>[${i}] "${teH}" did not change between EN and TE — likely hardcoded English string instead of t(...)`,
-				).not.toBe(enH);
-			}
+					te.h1,
+					`${route}: <h1> "${te.h1}" did not change between EN and TE — likely hardcoded English string instead of t(...)`,
+				).not.toBe(en.h1);
 
-			// Stat-card / support-card chrome labels — the "SEO" leak class.
-			expect(te.supportCardLabels.length).toBe(en.supportCardLabels.length);
-			for (let i = 0; i < en.supportCardLabels.length; i++) {
-				const enL = en.supportCardLabels[i];
-				const teL = te.supportCardLabels[i];
-				if (TECH_IDENTIFIER.test(enL)) continue;
 				expect(
-					teL,
-					`${route}: stat/support card label[${i}] "${teL}" did not change between EN and ${locale}`,
-				).not.toBe(enL);
-			}
+					te.title,
+					`${route}: <title> did not change between EN and TE — document title is not localised`,
+				).not.toBe(en.title);
+
+				// Navigation labels are shared chrome rendered by AdminLayout; if any of them
+				// match between locales it means a nav label is hardcoded. Compare as a set.
+				const enNav = en.navLabels.join(" | ");
+				const teNav = te.navLabels.join(" | ");
+				expect(
+					teNav,
+					`${route}: navigation labels did not change between EN and TE\nEN: ${enNav}\nTE: ${teNav}`,
+				).not.toBe(enNav);
+
+				// Per-page <h2> section headings — each English heading must differ from
+				// its Telugu counterpart, which catches panel-level leaks (e.g. "Admin URL")
+				// that the h1/title/nav check misses. Technical identifiers that are valid
+				// across all locales (filenames, protocol names, code tokens) are exempt.
+				const TECH_IDENTIFIER = /^[a-z0-9._/-]+$/;
+				expect(
+					te.mainHeadings.length,
+					`${route}: <main> <h2> count differs between EN (${en.mainHeadings.length}) and TE (${te.mainHeadings.length})`,
+				).toBe(en.mainHeadings.length);
+				for (let i = 0; i < en.mainHeadings.length; i++) {
+					const enH = en.mainHeadings[i];
+					const teH = te.mainHeadings[i];
+					if (TECH_IDENTIFIER.test(enH)) continue;
+					expect(
+						teH,
+						`${route}: <main> <h2>[${i}] "${teH}" did not change between EN and TE — likely hardcoded English string instead of t(...)`,
+					).not.toBe(enH);
+				}
+
+				// Stat-card / support-card chrome labels — the "SEO" leak class.
+				expect(te.supportCardLabels.length).toBe(en.supportCardLabels.length);
+				for (let i = 0; i < en.supportCardLabels.length; i++) {
+					const enL = en.supportCardLabels[i];
+					const teL = te.supportCardLabels[i];
+					if (TECH_IDENTIFIER.test(enL)) continue;
+					expect(
+						teL,
+						`${route}: stat/support card label[${i}] "${teL}" did not change between EN and ${locale}`,
+					).not.toBe(enL);
+				}
 			});
 		}
 	}

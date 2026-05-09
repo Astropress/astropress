@@ -13,8 +13,7 @@ describe("createAstropressCmsRouteRegistry", () => {
 		const appendSystemRouteRevision = vi.fn();
 		const recordRouteAudit = vi.fn();
 		const registry = createAstropressCmsRouteRegistry({
-			normalizePath: (pathname) =>
-				pathname.startsWith("/") ? pathname : `/${pathname}`,
+			normalizePath: (pathname) => (pathname.startsWith("/") ? pathname : `/${pathname}`),
 			localeFromPath: () => "en",
 			listSystemRoutes: () => [],
 			getSystemRoute: () => null,
@@ -39,11 +38,7 @@ describe("createAstropressCmsRouteRegistry", () => {
 			recordRouteAudit,
 		});
 
-		const result = registry.saveSystemRoute(
-			"/about",
-			{ title: "About", summary: "Body" },
-			actor,
-		);
+		const result = registry.saveSystemRoute("/about", { title: "About", summary: "Body" }, actor);
 		expect(result.ok).toBe(true);
 		expect(persistSystemRoute).toHaveBeenCalled();
 		expect(appendSystemRouteRevision).toHaveBeenCalled();
@@ -54,8 +49,7 @@ describe("createAstropressCmsRouteRegistry", () => {
 		const insertStructuredRoute = vi.fn();
 		const appendStructuredRouteRevision = vi.fn();
 		const registry = createAstropressCmsRouteRegistry({
-			normalizePath: (pathname) =>
-				pathname.startsWith("/") ? pathname : `/${pathname}`,
+			normalizePath: (pathname) => (pathname.startsWith("/") ? pathname : `/${pathname}`),
 			localeFromPath: () => "en",
 			listSystemRoutes: () => [],
 			getSystemRoute: () => null,
@@ -97,8 +91,7 @@ describe("createAstropressCmsRouteRegistry", () => {
 		const persistArchiveRoute = vi.fn();
 		const appendArchiveRouteRevision = vi.fn();
 		const registry = createAstropressCmsRouteRegistry({
-			normalizePath: (pathname) =>
-				pathname.startsWith("/") ? pathname : `/${pathname}`,
+			normalizePath: (pathname) => (pathname.startsWith("/") ? pathname : `/${pathname}`),
 			localeFromPath: () => "en",
 			listSystemRoutes: () => [],
 			getSystemRoute: () => null,
@@ -127,9 +120,7 @@ describe("createAstropressCmsRouteRegistry", () => {
 	});
 
 	function makeReadOnlyRegistry(overrides: Record<string, unknown> = {}) {
-		const normalizePath = vi.fn(
-			(p: string) => (p.startsWith("/") ? p : `/${p}`) as string,
-		);
+		const normalizePath = vi.fn((p: string) => (p.startsWith("/") ? p : `/${p}`) as string);
 		const base = {
 			normalizePath,
 			localeFromPath: () => "en",
@@ -160,8 +151,7 @@ describe("createAstropressCmsRouteRegistry", () => {
 		const { input, registry } = makeReadOnlyRegistry();
 		expect(registry.listSystemRoutes()).toEqual([{ path: "/about" }]);
 		expect(
-			(input as { listSystemRoutes: ReturnType<typeof vi.fn> })
-				.listSystemRoutes,
+			(input as { listSystemRoutes: ReturnType<typeof vi.fn> }).listSystemRoutes,
 		).toHaveBeenCalled();
 	});
 
@@ -179,12 +169,9 @@ describe("createAstropressCmsRouteRegistry", () => {
 
 	it("listStructuredPageRoutes forwards verbatim", () => {
 		const { input, registry } = makeReadOnlyRegistry();
-		expect(registry.listStructuredPageRoutes()).toEqual([
-			{ path: "/programs" },
-		]);
+		expect(registry.listStructuredPageRoutes()).toEqual([{ path: "/programs" }]);
 		expect(
-			(input as { listStructuredPageRoutes: ReturnType<typeof vi.fn> })
-				.listStructuredPageRoutes,
+			(input as { listStructuredPageRoutes: ReturnType<typeof vi.fn> }).listStructuredPageRoutes,
 		).toHaveBeenCalled();
 	});
 
@@ -219,8 +206,7 @@ describe("createAstropressCmsRouteRegistry", () => {
 		const { input, registry } = makeReadOnlyRegistry();
 		expect(registry.listArchiveRoutes()).toEqual([{ path: "/blog" }]);
 		expect(
-			(input as { listArchiveRoutes: ReturnType<typeof vi.fn> })
-				.listArchiveRoutes,
+			(input as { listArchiveRoutes: ReturnType<typeof vi.fn> }).listArchiveRoutes,
 		).toHaveBeenCalled();
 	});
 

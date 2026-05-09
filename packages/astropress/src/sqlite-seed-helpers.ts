@@ -16,25 +16,18 @@ export function guessMimeType(pathname: string) {
 
 export function toSqlLiteral(value: unknown): string {
 	if (value === null || value === undefined) return "NULL";
-	if (typeof value === "number" || typeof value === "bigint")
-		return String(value);
+	if (typeof value === "number" || typeof value === "bigint") return String(value);
 	if (typeof value === "boolean") return value ? "1" : "0";
-	if (value instanceof Uint8Array)
-		return `X'${Buffer.from(value).toString("hex")}'`;
+	if (value instanceof Uint8Array) return `X'${Buffer.from(value).toString("hex")}'`;
 	return `'${String(value).replaceAll("'", "''")}'`;
 }
 
-export function buildTableImportStatements(
-	db: SqliteDatabaseLike,
-	table: string,
-) {
+export function buildTableImportStatements(db: SqliteDatabaseLike, table: string) {
 	const columns = getTableColumns(db, table);
 	if (columns.length === 0) return [] as string[];
 
-	const rows = db.prepare(`SELECT * FROM ${table}`).all() as Array<
-		// audit-boundary: opaque-passthrough -- SQL row-shape mirror; columns narrowed at row-mapper boundary
-		Record<string, unknown>
-	>;
+	// audit-boundary: opaque-passthrough -- SQL row-shape mirror; columns narrowed at row-mapper boundary
+	const rows = db.prepare(`SELECT * FROM ${table}`).all() as Record<string, unknown>[];
 	const statements = [`DELETE FROM ${table};`];
 	for (const row of rows) {
 		const serializedValues = columns.map((column) => toSqlLiteral(row[column]));

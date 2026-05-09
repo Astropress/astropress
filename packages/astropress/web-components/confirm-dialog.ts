@@ -76,9 +76,7 @@ export class ApConfirmDialog extends HTMLElement {
 		const { signal } = this._abortController;
 
 		// Close triggers inside this element
-		for (const btn of this.querySelectorAll<HTMLElement>(
-			"[data-dialog-close]",
-		)) {
+		for (const btn of this.querySelectorAll<HTMLElement>("[data-dialog-close]")) {
 			btn.addEventListener("click", () => this._dialog?.close(), { signal });
 		}
 
@@ -143,9 +141,7 @@ export class ApConfirmDialog extends HTMLElement {
 		const fieldName = trigger.getAttribute("data-field-name");
 		const fieldValue = trigger.getAttribute("data-field-value") ?? "";
 		if (fieldName) {
-			const input = this._dialog.querySelector<HTMLInputElement>(
-				`input[name="${fieldName}"]`,
-			);
+			const input = this._dialog.querySelector<HTMLInputElement>(`input[name="${fieldName}"]`);
 			if (input) {
 				input.value = fieldValue;
 			}

@@ -5,9 +5,9 @@ import { normalizePath } from "./admin-normalizers";
 import { recordD1Audit } from "./d1-audit";
 import { getCloudflareBindings } from "./runtime-env";
 import {
-	type RuntimeStructuredPageRouteRecord,
 	loadSafeLocalCmsRegistry,
 	localeFromPath,
+	type RuntimeStructuredPageRouteRecord,
 } from "./runtime-route-registry-dispatch";
 
 interface Actor {
@@ -18,8 +18,7 @@ interface Actor {
 
 type D1Like = ReturnType<typeof getCloudflareBindings>["DB"];
 
-const SQL_CHECK_VARIANT_PATH =
-	"SELECT v.id FROM cms_route_variants v WHERE v.path = ? LIMIT 1";
+const SQL_CHECK_VARIANT_PATH = "SELECT v.id FROM cms_route_variants v WHERE v.path = ? LIMIT 1";
 const SQL_FIND_STRUCTURED_ROUTE = `
   SELECT v.id
   FROM cms_route_variants v
@@ -291,10 +290,7 @@ export async function createRuntimeStructuredPageRoute(
 	const variantId = `route-variant:${crypto.randomUUID()}`;
 	const locale = localeFromPath(normalizedPath);
 
-	await db
-		.prepare(SQL_INSERT_ROUTE_GROUP)
-		.bind(groupId, locale, normalizedPath)
-		.run();
+	await db.prepare(SQL_INSERT_ROUTE_GROUP).bind(groupId, locale, normalizedPath).run();
 
 	await db
 		.prepare(SQL_INSERT_NEW_ROUTE_VARIANT)

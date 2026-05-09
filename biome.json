@@ -1,0 +1,77 @@
+{
+	"$schema": "https://biomejs.dev/schemas/2.4.14/schema.json",
+	"assist": { "actions": { "source": { "organizeImports": "on" } } },
+	"linter": {
+		"enabled": true,
+		"rules": {
+			"recommended": true,
+			"suspicious": {
+				"noExplicitAny": "error",
+				"noTemplateCurlyInString": "off"
+			},
+			"correctness": {
+				"noUnusedImports": "error"
+			},
+			"style": {
+				"useConsistentArrayType": "error",
+				"useShorthandAssign": "error"
+			}
+		}
+	},
+	"formatter": {
+		"enabled": true,
+		"indentStyle": "tab",
+		"lineWidth": 100
+	},
+	"javascript": {
+		"formatter": {
+			"quoteStyle": "double",
+			"trailingCommas": "all",
+			"semicolons": "always"
+		}
+	},
+	"overrides": [
+		{
+			"includes": ["**/*.astro"],
+			"assist": {
+				"actions": {
+					"source": {
+						"organizeImports": "off"
+					}
+				}
+			},
+			"linter": {
+				"rules": {
+					"correctness": {
+						"noUnusedVariables": "off",
+						"noUnusedImports": "off"
+					}
+				}
+			}
+		}
+	],
+	"files": {
+		"includes": [
+			"**",
+			"!**/dist",
+			"!**/node_modules",
+			"!**/.astro",
+			"!**/.stryker-tmp",
+			"!**/coverage",
+			"!**/reports",
+			"!**/stryker-setup-*.js",
+			"!**/public/*.css",
+			"!**/pages/**/*.png.js",
+			"!**/crates/astropress-cli/templates",
+			"!**/crates/target",
+			"!**/crates/mutants.out*",
+			"!**/.stryker-incremental*.json",
+			"!**/.stryker-prepush-*.json",
+			"!**/tooling/audit-output",
+			"!**/tooling/cargo-mutants",
+			"!**/tooling/stryker/baseline-scores.json",
+			"!**/packages/astropress/src/**/*.js",
+			"!**/packages/astropress/index.js"
+		]
+	}
+}

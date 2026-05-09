@@ -2,7 +2,7 @@
 /**
  * audit-suppression-warnings — non-blocking warning lint for suppression
  * comments (Stryker disable, v8 ignore, biome-ignore, eslint-disable,
- * @ts-ignore / @ts-expect-error).
+ * @ts-expect-error / @ts-expect-error).
  *
  * Suppressions silence quality signals. Each one represents either:
  *  (a) an equivalent mutant / unreachable branch that ought to be deleted
@@ -65,12 +65,8 @@ if (findings.length === 0) {
 	process.exit(0);
 }
 
-console.warn(
-	`\n⚠ suppression-warnings: ${findings.length} suppression comment(s) in staged files`,
-);
-console.warn(
-	"  Suppressions silence quality signals. Prefer fixing the underlying issue:",
-);
+console.warn(`\n⚠ suppression-warnings: ${findings.length} suppression comment(s) in staged files`);
+console.warn("  Suppressions silence quality signals. Prefer fixing the underlying issue:");
 console.warn(
 	"  • Equivalent Stryker mutant?  Often the source has a redundant guard worth deleting.",
 );
@@ -83,8 +79,6 @@ console.warn(
 for (const f of findings) {
 	console.warn(`  ${f.file}:${f.line}  [${f.pattern}]  ${f.text}`);
 }
-console.warn(
-	"\n  This is a warning, not a failure — the commit will proceed.\n",
-);
+console.warn("\n  This is a warning, not a failure — the commit will proceed.\n");
 
 process.exit(0);

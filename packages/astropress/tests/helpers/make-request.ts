@@ -12,12 +12,9 @@ export function makeFormRequest(
 	for (const [key, value] of Object.entries(fields)) {
 		fd.set(key, value);
 	}
-	return new Request(
-		options.url ?? "https://example.com/ap-admin/actions/content-save",
-		{
-			method: "POST",
-			body: fd,
-			headers: options.headers,
-		},
-	);
+	return new Request(options.url ?? "https://example.com/ap-admin/actions/content-save", {
+		method: "POST",
+		body: fd,
+		headers: options.headers,
+	});
 }

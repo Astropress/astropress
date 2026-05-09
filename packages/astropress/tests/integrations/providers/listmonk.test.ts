@@ -1,17 +1,14 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
-	LISTMONK_FIELDS,
-	ListmonkVerifyError,
 	buildListmonkAuthHeader,
 	buildListmonkHealthUrl,
+	LISTMONK_FIELDS,
+	ListmonkVerifyError,
 	registerListmonk,
 	verifyListmonk,
 } from "../../../src/integrations/providers/listmonk";
-import {
-	_resetRegistryForTests,
-	getProvider,
-} from "../../../src/integrations/registry";
+import { _resetRegistryForTests, getProvider } from "../../../src/integrations/registry";
 
 interface CapturedCall {
 	url: string;
@@ -58,21 +55,15 @@ describe("LISTMONK_FIELDS schema", () => {
 	});
 
 	it("rejects a malformed baseUrl", () => {
-		expect(
-			LISTMONK_FIELDS.safeParse({ ...FIELDS, baseUrl: "not-a-url" }).success,
-		).toBe(false);
+		expect(LISTMONK_FIELDS.safeParse({ ...FIELDS, baseUrl: "not-a-url" }).success).toBe(false);
 	});
 
 	it("rejects an empty apiUser", () => {
-		expect(LISTMONK_FIELDS.safeParse({ ...FIELDS, apiUser: "" }).success).toBe(
-			false,
-		);
+		expect(LISTMONK_FIELDS.safeParse({ ...FIELDS, apiUser: "" }).success).toBe(false);
 	});
 
 	it("rejects an empty apiKey", () => {
-		expect(LISTMONK_FIELDS.safeParse({ ...FIELDS, apiKey: "" }).success).toBe(
-			false,
-		);
+		expect(LISTMONK_FIELDS.safeParse({ ...FIELDS, apiKey: "" }).success).toBe(false);
 	});
 });
 
@@ -99,9 +90,7 @@ describe("buildListmonkHealthUrl", () => {
 describe("buildListmonkAuthHeader", () => {
 	it("encodes user:key as base64 with the Basic prefix", () => {
 		// btoa("admin:secret-token") → "YWRtaW46c2VjcmV0LXRva2Vu"
-		expect(buildListmonkAuthHeader("admin", "secret-token")).toBe(
-			"Basic YWRtaW46c2VjcmV0LXRva2Vu",
-		);
+		expect(buildListmonkAuthHeader("admin", "secret-token")).toBe("Basic YWRtaW46c2VjcmV0LXRva2Vu");
 	});
 
 	it("uses a colon as the user/key separator (not, e.g., empty)", () => {
@@ -126,9 +115,7 @@ describe("verifyListmonk", () => {
 
 	it("resolves on 200 OK", async () => {
 		const { fetch, calls } = makeFetchMock({ status: 200 });
-		await expect(
-			verifyListmonk(FIELDS, { signal }, { fetch }),
-		).resolves.toBeUndefined();
+		await expect(verifyListmonk(FIELDS, { signal }, { fetch })).resolves.toBeUndefined();
 		expect(calls).toHaveLength(1);
 	});
 
@@ -158,44 +145,44 @@ describe("verifyListmonk", () => {
 
 	it("throws AUTH_REJECTED on 401", async () => {
 		const { fetch } = makeFetchMock({ status: 401 });
-		await expect(
-			verifyListmonk(FIELDS, { signal }, { fetch }),
-		).rejects.toMatchObject({ code: "INTEGRATION_AUTH_REJECTED" });
+		await expect(verifyListmonk(FIELDS, { signal }, { fetch })).rejects.toMatchObject({
+			code: "INTEGRATION_AUTH_REJECTED",
+		});
 	});
 
 	it("throws AUTH_REJECTED on 403", async () => {
 		const { fetch } = makeFetchMock({ status: 403 });
-		await expect(
-			verifyListmonk(FIELDS, { signal }, { fetch }),
-		).rejects.toMatchObject({ code: "INTEGRATION_AUTH_REJECTED" });
+		await expect(verifyListmonk(FIELDS, { signal }, { fetch })).rejects.toMatchObject({
+			code: "INTEGRATION_AUTH_REJECTED",
+		});
 	});
 
 	it("throws NOT_FOUND on 404 (distinct from AUTH_REJECTED)", async () => {
 		const { fetch } = makeFetchMock({ status: 404 });
-		await expect(
-			verifyListmonk(FIELDS, { signal }, { fetch }),
-		).rejects.toMatchObject({ code: "INTEGRATION_NOT_FOUND" });
+		await expect(verifyListmonk(FIELDS, { signal }, { fetch })).rejects.toMatchObject({
+			code: "INTEGRATION_NOT_FOUND",
+		});
 	});
 
 	it("throws RATE_LIMITED on 429 (distinct from VERIFY_FAILED)", async () => {
 		const { fetch } = makeFetchMock({ status: 429 });
-		await expect(
-			verifyListmonk(FIELDS, { signal }, { fetch }),
-		).rejects.toMatchObject({ code: "INTEGRATION_RATE_LIMITED" });
+		await expect(verifyListmonk(FIELDS, { signal }, { fetch })).rejects.toMatchObject({
+			code: "INTEGRATION_RATE_LIMITED",
+		});
 	});
 
 	it("throws VERIFY_FAILED on 500 (generic non-ok fall-through)", async () => {
 		const { fetch } = makeFetchMock({ status: 500 });
-		await expect(
-			verifyListmonk(FIELDS, { signal }, { fetch }),
-		).rejects.toMatchObject({ code: "INTEGRATION_VERIFY_FAILED" });
+		await expect(verifyListmonk(FIELDS, { signal }, { fetch })).rejects.toMatchObject({
+			code: "INTEGRATION_VERIFY_FAILED",
+		});
 	});
 
 	it("throws VERIFY_FAILED on 400 (4xx that isn't 401/403/404/429)", async () => {
 		const { fetch } = makeFetchMock({ status: 400 });
-		await expect(
-			verifyListmonk(FIELDS, { signal }, { fetch }),
-		).rejects.toMatchObject({ code: "INTEGRATION_VERIFY_FAILED" });
+		await expect(verifyListmonk(FIELDS, { signal }, { fetch })).rejects.toMatchObject({
+			code: "INTEGRATION_VERIFY_FAILED",
+		});
 	});
 
 	it("ListmonkVerifyError subclasses Error and carries the typed code", async () => {
@@ -206,9 +193,7 @@ describe("verifyListmonk", () => {
 		} catch (err) {
 			expect(err).toBeInstanceOf(ListmonkVerifyError);
 			expect(err).toBeInstanceOf(Error);
-			expect((err as ListmonkVerifyError).code).toBe(
-				"INTEGRATION_AUTH_REJECTED",
-			);
+			expect((err as ListmonkVerifyError).code).toBe("INTEGRATION_AUTH_REJECTED");
 		}
 	});
 

@@ -8,8 +8,7 @@ import {
 describe("readAstropressNeonHostedConfig", () => {
 	it("reads DATABASE_URL from env", () => {
 		const config = readAstropressNeonHostedConfig({
-			DATABASE_URL:
-				"postgresql://user:pass@ep-example.us-east-1.aws.neon.tech/neondb",
+			DATABASE_URL: "postgresql://user:pass@ep-example.us-east-1.aws.neon.tech/neondb",
 		});
 		expect(config.databaseUrl).toBe(
 			"postgresql://user:pass@ep-example.us-east-1.aws.neon.tech/neondb",
@@ -20,14 +19,11 @@ describe("readAstropressNeonHostedConfig", () => {
 
 	it("includes project console URL when NEON_PROJECT_ID is set", () => {
 		const config = readAstropressNeonHostedConfig({
-			DATABASE_URL:
-				"postgres://user:pass@ep-example.us-east-1.aws.neon.tech/neondb",
+			DATABASE_URL: "postgres://user:pass@ep-example.us-east-1.aws.neon.tech/neondb",
 			NEON_PROJECT_ID: "proj-quiet-moon-123456",
 		});
 		expect(config.projectId).toBe("proj-quiet-moon-123456");
-		expect(config.apiBaseUrl).toBe(
-			"https://console.neon.tech/app/projects/proj-quiet-moon-123456",
-		);
+		expect(config.apiBaseUrl).toBe("https://console.neon.tech/app/projects/proj-quiet-moon-123456");
 	});
 
 	it("throws when DATABASE_URL is missing", () => {
@@ -84,8 +80,7 @@ describe("createAstropressNeonAdapter", () => {
 
 describe("createAstropressNeonHostedAdapter", () => {
 	const validEnv = {
-		DATABASE_URL:
-			"postgres://user:pass@ep-example.us-east-1.aws.neon.tech/neondb",
+		DATABASE_URL: "postgres://user:pass@ep-example.us-east-1.aws.neon.tech/neondb",
 		NEON_PROJECT_ID: "proj-silent-leaf-987654",
 	};
 
@@ -125,9 +120,7 @@ describe("createAstropressNeonHostedAdapter", () => {
 	});
 
 	it("throws when DATABASE_URL is missing and no explicit config", () => {
-		expect(() => createAstropressNeonHostedAdapter({ env: {} })).toThrow(
-			/DATABASE_URL/,
-		);
+		expect(() => createAstropressNeonHostedAdapter({ env: {} })).toThrow(/DATABASE_URL/);
 	});
 
 	it("prefers NEON_DATABASE_URL over DATABASE_URL (pins ?? operand order)", () => {

@@ -39,13 +39,7 @@ export function runAuthEmergencyRevokeForCli(
 			tokensRevoked = revokeApiTokensInDb(db);
 		}
 
-		recordEmergencyRevokeAuditEvent(
-			db,
-			scope,
-			userEmail ?? null,
-			sessionsRevoked,
-			tokensRevoked,
-		);
+		recordEmergencyRevokeAuditEvent(db, scope, userEmail ?? null, sessionsRevoked, tokensRevoked);
 
 		return {
 			dbPath,

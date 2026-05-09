@@ -41,10 +41,7 @@ export async function purgeCdnCacheForResolved(
 				);
 			}
 		} catch (err) {
-			console.warn(
-				`[cache-purge] Cloudflare purge error for slug "${slug}":`,
-				err,
-			);
+			console.warn(`[cache-purge] Cloudflare purge error for slug "${slug}":`, err);
 		}
 		return;
 	}
@@ -58,9 +55,7 @@ export async function purgeCdnCacheForResolved(
 		});
 		if (!res.ok) {
 			const body = await res.text().catch(() => "");
-			console.warn(
-				`[cache-purge] Webhook purge failed for slug "${slug}": ${res.status} ${body}`,
-			);
+			console.warn(`[cache-purge] Webhook purge failed for slug "${slug}": ${res.status} ${body}`);
 		}
 	} catch (err) {
 		console.warn(`[cache-purge] Webhook purge error for slug "${slug}":`, err);

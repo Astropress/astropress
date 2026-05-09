@@ -39,9 +39,9 @@ beforeEach(() => {
 	).run("editor@test.local", "hash", "Editor", 1, 0);
 	const repo = createAccessRepository(db as never);
 	seedStarterRoles(repo);
-	editorRow = db
-		.prepare("SELECT id FROM admin_users WHERE email = ?")
-		.get("editor@test.local") as { id: number };
+	editorRow = db.prepare("SELECT id FROM admin_users WHERE email = ?").get("editor@test.local") as {
+		id: number;
+	};
 	const editorRole = repo.listRoles().find((r) => r.name === "Editor");
 	if (!editorRole) throw new Error("seedStarterRoles did not create Editor");
 	editorRoleId = editorRole.id;
@@ -68,9 +68,7 @@ describe("assignRuntimeUserRole / revokeRuntimeUserRole", () => {
 			roleId: editorRoleId,
 		});
 		const repo = createAccessRepository(db as never);
-		expect(
-			repo.listUserRoleIds(editorRow.id).filter((r) => r === editorRoleId),
-		).toHaveLength(1);
+		expect(repo.listUserRoleIds(editorRow.id).filter((r) => r === editorRoleId)).toHaveLength(1);
 	});
 
 	it("Revoking a role detaches it — list no longer contains the role id", async () => {
@@ -175,9 +173,7 @@ describe("createRuntimeRole / updateRuntimeRole / deleteRuntimeRole", () => {
 
 	it("Refuses to delete system roles — they are managed by seedStarterRoles", async () => {
 		const repo = createAccessRepository(db as never);
-		db.prepare("UPDATE access_roles SET is_system = 1 WHERE name = ?").run(
-			"Editor",
-		);
+		db.prepare("UPDATE access_roles SET is_system = 1 WHERE name = ?").run("Editor");
 		const editor = repo.listRoles().find((r) => r.name === "Editor");
 		if (!editor) throw new Error("Editor role missing");
 		const result = await deleteRuntimeRole(locals, { id: editor.id });
@@ -222,8 +218,6 @@ describe("addRuntimeRolePolicy / removeRuntimeRolePolicy", () => {
 		});
 		expect(result.ok).toBe(true);
 		const repo = createAccessRepository(db as never);
-		expect(
-			repo.listRolePolicies(editorRoleId).some((p) => p.id === added.data.id),
-		).toBe(false);
+		expect(repo.listRolePolicies(editorRoleId).some((p) => p.id === added.data.id)).toBe(false);
 	});
 });

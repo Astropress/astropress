@@ -34,9 +34,7 @@ export interface AstropressProjectEnvContract {
 	adminDbPath: string;
 }
 
-function mapLegacyDeployTargetToAppHost(
-	target?: string | null,
-): AstropressAppHostEnv | null {
+function mapLegacyDeployTargetToAppHost(target?: string | null): AstropressAppHostEnv | null {
 	switch (target?.trim()) {
 		case "github-pages":
 			return "github-pages";
@@ -59,9 +57,7 @@ function mapLegacyDeployTargetToAppHost(
 	}
 }
 
-function mapAppHostToDeployTarget(
-	appHost: AstropressAppHostEnv,
-): AstropressDeployTargetEnv {
+function mapAppHostToDeployTarget(appHost: AstropressAppHostEnv): AstropressDeployTargetEnv {
 	return appHost === "cloudflare-pages" ? "cloudflare" : appHost;
 }
 
@@ -101,8 +97,7 @@ function resolveDataServicesFromLegacyEnv(
 export function resolveAstropressAppHostFromEnv(
 	env: Record<string, string | undefined> = process.env,
 ): AstropressAppHostEnv {
-	const explicitHost =
-		env.ASTROPRESS_APP_HOST?.trim() ?? env.ASTROPRESS_WEB_HOST?.trim();
+	const explicitHost = env.ASTROPRESS_APP_HOST?.trim() ?? env.ASTROPRESS_WEB_HOST?.trim();
 	if (
 		explicitHost === "github-pages" ||
 		explicitHost === "cloudflare-pages" ||
@@ -116,9 +111,7 @@ export function resolveAstropressAppHostFromEnv(
 		return explicitHost;
 	}
 
-	const legacyDeployTarget = mapLegacyDeployTargetToAppHost(
-		env.ASTROPRESS_DEPLOY_TARGET,
-	);
+	const legacyDeployTarget = mapLegacyDeployTargetToAppHost(env.ASTROPRESS_DEPLOY_TARGET);
 	if (legacyDeployTarget) {
 		return legacyDeployTarget;
 	}
@@ -184,9 +177,7 @@ export function resolveAstropressServiceOriginFromEnv(
 
 	if (dataServices === "appwrite") {
 		const endpoint = env.APPWRITE_ENDPOINT?.trim();
-		return endpoint
-			? `${stripTrailingSlashes(endpoint)}/functions/astropress`
-			: null;
+		return endpoint ? `${stripTrailingSlashes(endpoint)}/functions/astropress` : null;
 	}
 
 	if (dataServices === "nhost") {
@@ -297,9 +288,7 @@ export function resolveAstropressProjectEnvContract(
 	const localProvider = resolveAstropressLocalProviderFromEnv(env);
 	const adminDbPath =
 		env.ADMIN_DB_PATH?.trim() ||
-		(localProvider === "supabase"
-			? ".data/supabase-admin.sqlite"
-			: ".data/admin.sqlite");
+		(localProvider === "supabase" ? ".data/supabase-admin.sqlite" : ".data/admin.sqlite");
 
 	return {
 		localProvider,

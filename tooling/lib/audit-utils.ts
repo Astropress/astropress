@@ -1,4 +1,4 @@
-import { access, readFile, readdir } from "node:fs/promises";
+import { access, readdir, readFile } from "node:fs/promises";
 import { join } from "node:path";
 
 export const ROOT = process.cwd();
@@ -20,15 +20,10 @@ export async function readText(path: string, fallback = ""): Promise<string> {
 	}
 }
 
-export async function fileContains(
-	path: string,
-	pattern: string | RegExp,
-): Promise<boolean> {
+export async function fileContains(path: string, pattern: string | RegExp): Promise<boolean> {
 	const src = await readText(path);
 	if (!src) return false;
-	return typeof pattern === "string"
-		? src.includes(pattern)
-		: pattern.test(src);
+	return typeof pattern === "string" ? src.includes(pattern) : pattern.test(src);
 }
 
 export interface ListFilesOptions {
@@ -37,10 +32,7 @@ export interface ListFilesOptions {
 	exclude?: readonly string[];
 }
 
-export async function listFiles(
-	dir: string,
-	opts: ListFilesOptions = {},
-): Promise<string[]> {
+export async function listFiles(dir: string, opts: ListFilesOptions = {}): Promise<string[]> {
 	let entries: string[];
 	try {
 		entries = await readdir(dir, { recursive: opts.recursive ?? false });
@@ -49,8 +41,7 @@ export async function listFiles(
 	}
 	const { extensions, exclude } = opts;
 	return entries.filter((entry) => {
-		if (extensions && !extensions.some((ext) => entry.endsWith(ext)))
-			return false;
+		if (extensions && !extensions.some((ext) => entry.endsWith(ext))) return false;
 		if (exclude?.includes(entry)) return false;
 		return true;
 	});
@@ -79,9 +70,7 @@ export class AuditReport {
 	 */
 	finish(successMessage: string): never {
 		if (this.violations.length > 0) {
-			console.error(
-				`${this.name} audit failed — ${this.violations.length} issue(s):\n`,
-			);
+			console.error(`${this.name} audit failed — ${this.violations.length} issue(s):\n`);
 			for (const v of this.violations) console.error(`  - ${v}`);
 			process.exit(1);
 		}

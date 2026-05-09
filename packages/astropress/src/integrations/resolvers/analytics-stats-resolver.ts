@@ -40,9 +40,7 @@ function nonEmpty(v: string | undefined | null): v is string {
 	return typeof v === "string" && v.length > 0;
 }
 
-export function resolveAnalyticsStats(
-	input: ResolveAnalyticsStatsInput,
-): ResolvedAnalyticsStats {
+export function resolveAnalyticsStats(input: ResolveAnalyticsStatsInput): ResolvedAnalyticsStats {
 	const registry = input.registry;
 	if (!registry) return { kind: "none" };
 	if (!nonEmpty(registry.host)) return { kind: "none" };

@@ -1,10 +1,6 @@
 import { beforeAll, describe, expect, it } from "vitest";
 import { registerCms } from "../src/config.js";
-import {
-	listAuditEvents,
-	recordAudit,
-	recordAuditEvent,
-} from "../src/sqlite-runtime/audit-log.js";
+import { listAuditEvents, recordAudit, recordAuditEvent } from "../src/sqlite-runtime/audit-log.js";
 import { makeDb } from "./helpers/make-db.js";
 
 let db: ReturnType<typeof makeDb>;
@@ -108,9 +104,9 @@ describe("audit log", () => {
 		).n;
 		// Old event should be pruned; new event should remain
 		expect(after).toBe(1);
-		const remaining = freshDb
-			.prepare("SELECT resource_id FROM audit_events")
-			.get() as { resource_id: string };
+		const remaining = freshDb.prepare("SELECT resource_id FROM audit_events").get() as {
+			resource_id: string;
+		};
 		expect(remaining.resource_id).toBe("new-post");
 	});
 
@@ -178,9 +174,9 @@ describe("audit log", () => {
 			summary: "trigger prune",
 		});
 		const ids = (
-			freshDb
-				.prepare("SELECT resource_id as id FROM audit_events ORDER BY id")
-				.all() as { id: string }[]
+			freshDb.prepare("SELECT resource_id as id FROM audit_events ORDER BY id").all() as {
+				id: string;
+			}[]
 		).map((r) => r.id);
 		expect(ids).toContain("89d");
 		expect(ids).toContain("trigger");

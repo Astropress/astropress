@@ -1,9 +1,6 @@
 import { withAdminFormAction } from "@astropress-diy/astropress";
 import type { APIRoute } from "astro";
-import {
-	isRestorableTable,
-	restoreRuntimeRecord,
-} from "../../../src/runtime-actions-restore";
+import { isRestorableTable, restoreRuntimeRecord } from "../../../src/runtime-actions-restore";
 
 export const POST: APIRoute = async (context) =>
 	withAdminFormAction(

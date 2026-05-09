@@ -29,7 +29,7 @@
  */
 
 import { execFileSync } from "node:child_process";
-import { existsSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join, relative } from "node:path";
 
 const REPORT_PATH = "reports/mutation/report.json";
@@ -116,13 +116,9 @@ function gitHashObject(path: string): string | null {
 }
 
 function scoreFromMutants(mutants: MutantStatus[]): number {
-	const scored = mutants.filter(
-		(m) => m.status !== "Ignored" && m.status !== "NoCoverage",
-	);
+	const scored = mutants.filter((m) => m.status !== "Ignored" && m.status !== "NoCoverage");
 	if (scored.length === 0) return 100;
-	const killed = mutants.filter(
-		(m) => m.status === "Killed" || m.status === "Timeout",
-	);
+	const killed = mutants.filter((m) => m.status === "Killed" || m.status === "Timeout");
 	return (killed.length / scored.length) * 100;
 }
 

@@ -45,14 +45,7 @@ import {
 	INTEGRATIONS,
 	type IntegrationEntry,
 } from "../../packages/astropress/src/integration-manifest.js";
-import {
-	AuditReport,
-	ROOT,
-	fromRoot,
-	listFiles,
-	readText,
-	runAudit,
-} from "../lib/audit-utils.js";
+import { AuditReport, fromRoot, listFiles, ROOT, readText, runAudit } from "../lib/audit-utils.js";
 
 const ADMIN_PAGES_DIR = fromRoot("packages/astropress/pages/ap-admin");
 const DYNAMIC_STUB_FILE = "[stub].astro";
@@ -68,8 +61,7 @@ type AllowlistEntry = {
 	reason: string;
 	expectedVariant?: "coming-soon" | "env-gated";
 };
-const NON_MANIFEST_STUB_ALLOWLIST: ReadonlyMap<string, AllowlistEntry> =
-	new Map();
+const NON_MANIFEST_STUB_ALLOWLIST: ReadonlyMap<string, AllowlistEntry> = new Map();
 
 const REQUIRES_INTEGRATION_IMPORT = "RequiresIntegration";
 
@@ -102,9 +94,7 @@ async function main() {
 	}
 
 	// Rule 5: validate ADMIN_STUB_PAGES internal coherence.
-	for (const [slug, entry] of Object.entries(ADMIN_STUB_PAGES) as Array<
-		[string, AdminStubPageEntry]
-	>) {
+	for (const [slug, entry] of Object.entries(ADMIN_STUB_PAGES) as [string, AdminStubPageEntry][]) {
 		validateStubPageEntry(slug, entry, report);
 		// A static page at the same slug masks the dynamic route. If a slug
 		// is meant to be served by [stub].astro, no foo.astro may exist.
@@ -120,9 +110,9 @@ async function main() {
 	// be in the manifest or the allowlist. The dynamic [stub].astro route
 	// is the only place where un-listed stub rendering is permitted.
 	const manifestStaticPages = new Set(
-		INTEGRATIONS.filter(
-			(entry) => !(hrefToSlug(entry.href) in ADMIN_STUB_PAGES),
-		).map((entry) => hrefToPagePath(entry.href)),
+		INTEGRATIONS.filter((entry) => !(hrefToSlug(entry.href) in ADMIN_STUB_PAGES)).map((entry) =>
+			hrefToPagePath(entry.href),
+		),
 	);
 	const entries = await listFiles(ADMIN_PAGES_DIR, {
 		recursive: false,
@@ -173,14 +163,9 @@ async function main() {
 	);
 }
 
-async function checkManifestEntry(
-	entry: IntegrationEntry,
-	report: AuditReport,
-): Promise<void> {
+async function checkManifestEntry(entry: IntegrationEntry, report: AuditReport): Promise<void> {
 	const slug = hrefToSlug(entry.href);
-	const dynamicEntry = (ADMIN_STUB_PAGES as Record<string, AdminStubPageEntry>)[
-		slug
-	];
+	const dynamicEntry = (ADMIN_STUB_PAGES as Record<string, AdminStubPageEntry>)[slug];
 
 	if (entry.status === "real") {
 		if (dynamicEntry) {
@@ -226,10 +211,7 @@ async function checkManifestEntry(
 			);
 			return;
 		}
-		if (
-			!src.includes(REQUIRES_INTEGRATION_IMPORT) ||
-			!src.includes('variant="coming-soon"')
-		) {
+		if (!src.includes(REQUIRES_INTEGRATION_IMPORT) || !src.includes('variant="coming-soon"')) {
 			report.add(
 				`[coming-soon-wrong-variant] ${entry.href}: ${relative(ROOT, filePath)} does not render RequiresIntegration variant="coming-soon".`,
 			);
@@ -248,11 +230,7 @@ async function checkManifestEntry(
 	}
 }
 
-function validateStubPageEntry(
-	slug: string,
-	entry: AdminStubPageEntry,
-	report: AuditReport,
-): void {
+function validateStubPageEntry(slug: string, entry: AdminStubPageEntry, report: AuditReport): void {
 	if (!(entry.stubKey in adminStubs)) {
 		report.add(
 			`[stub-key-missing] ADMIN_STUB_PAGES["${slug}"].stubKey="${entry.stubKey}" does not match any adminStubs entry.`,

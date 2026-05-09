@@ -7,15 +7,11 @@ import {
 import { describe, expect, it } from "vitest";
 
 describe("vite runtime alias helpers", () => {
-	const localRuntimeModulesPath =
-		"/tmp/site/src/astropress/local-runtime-modules.ts";
+	const localRuntimeModulesPath = "/tmp/site/src/astropress/local-runtime-modules.ts";
 
 	it("matches relative and resolved local runtime module requests", () => {
 		expect(
-			isAstropressLocalRuntimeModuleRequest(
-				"./local-runtime-modules",
-				localRuntimeModulesPath,
-			),
+			isAstropressLocalRuntimeModuleRequest("./local-runtime-modules", localRuntimeModulesPath),
 		).toBe(true);
 		expect(
 			isAstropressLocalRuntimeModuleRequest(
@@ -29,24 +25,17 @@ describe("vite runtime alias helpers", () => {
 				localRuntimeModulesPath,
 			),
 		).toBe(true);
-		expect(
-			isAstropressLocalRuntimeModuleRequest(
-				"./something-else",
-				localRuntimeModulesPath,
-			),
-		).toBe(false);
+		expect(isAstropressLocalRuntimeModuleRequest("./something-else", localRuntimeModulesPath)).toBe(
+			false,
+		);
 	});
 
 	it("creates a pre-resolution plugin that rewrites runtime module imports", () => {
-		const plugin = createAstropressLocalRuntimeModulePlugin(
-			localRuntimeModulesPath,
-		);
+		const plugin = createAstropressLocalRuntimeModulePlugin(localRuntimeModulesPath);
 
 		expect(plugin.name).toBe("astropress-local-runtime-modules");
 		expect(plugin.enforce).toBe("pre");
-		expect(plugin.resolveId("./local-runtime-modules")).toBe(
-			localRuntimeModulesPath,
-		);
+		expect(plugin.resolveId("./local-runtime-modules")).toBe(localRuntimeModulesPath);
 		expect(plugin.resolveId("./not-it")).toBeNull();
 	});
 

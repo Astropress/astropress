@@ -12,9 +12,7 @@ import {
 describe("project env", () => {
 	it("resolves app host defaults and legacy mappings", () => {
 		expect(resolveAstropressAppHostFromEnv({})).toBe("github-pages");
-		expect(
-			resolveAstropressAppHostFromEnv({ ASTROPRESS_APP_HOST: "vercel" }),
-		).toBe("vercel");
+		expect(resolveAstropressAppHostFromEnv({ ASTROPRESS_APP_HOST: "vercel" })).toBe("vercel");
 		expect(
 			resolveAstropressAppHostFromEnv({
 				ASTROPRESS_DEPLOY_TARGET: "cloudflare",
@@ -71,9 +69,7 @@ describe("project env", () => {
 				ASTROPRESS_APP_HOST: "cloudflare-pages",
 			}),
 		).toBe("cloudflare");
-		expect(
-			resolveAstropressDeployTarget({ ASTROPRESS_APP_HOST: "vercel" }),
-		).toBe("vercel");
+		expect(resolveAstropressDeployTarget({ ASTROPRESS_APP_HOST: "vercel" })).toBe("vercel");
 	});
 
 	it("returns a single resolved project env contract", () => {
@@ -82,8 +78,7 @@ describe("project env", () => {
 				ASTROPRESS_APP_HOST: "netlify",
 				ASTROPRESS_CONTENT_SERVICES: "supabase",
 				ASTROPRESS_HOSTED_PROVIDER: "supabase",
-				ASTROPRESS_SERVICE_ORIGIN:
-					"https://example.supabase.co/functions/v1/astropress",
+				ASTROPRESS_SERVICE_ORIGIN: "https://example.supabase.co/functions/v1/astropress",
 				ADMIN_DB_PATH: ".data/custom-admin.sqlite",
 			}),
 		).toEqual({
@@ -109,9 +104,7 @@ describe("project env", () => {
 	});
 
 	it("derives the default admin db path from the resolved local provider", () => {
-		expect(resolveAstropressProjectEnvContract({}).adminDbPath).toBe(
-			".data/admin.sqlite",
-		);
+		expect(resolveAstropressProjectEnvContract({}).adminDbPath).toBe(".data/admin.sqlite");
 		expect(
 			resolveAstropressProjectEnvContract({
 				ASTROPRESS_DATA_SERVICES: "supabase",
@@ -122,24 +115,14 @@ describe("project env", () => {
 
 describe("resolveAstropressAppHostFromEnv — additional branches", () => {
 	it("returns each explicit ASTROPRESS_APP_HOST value verbatim", () => {
-		const hosts = [
-			"render-web",
-			"gitlab-pages",
-			"render-static",
-			"netlify",
-			"custom",
-		] as const;
+		const hosts = ["render-web", "gitlab-pages", "render-static", "netlify", "custom"] as const;
 		for (const host of hosts) {
-			expect(
-				resolveAstropressAppHostFromEnv({ ASTROPRESS_APP_HOST: host }),
-			).toBe(host);
+			expect(resolveAstropressAppHostFromEnv({ ASTROPRESS_APP_HOST: host })).toBe(host);
 		}
 	});
 
 	it("falls back to ASTROPRESS_WEB_HOST when ASTROPRESS_APP_HOST is absent", () => {
-		expect(
-			resolveAstropressAppHostFromEnv({ ASTROPRESS_WEB_HOST: "netlify" }),
-		).toBe("netlify");
+		expect(resolveAstropressAppHostFromEnv({ ASTROPRESS_WEB_HOST: "netlify" })).toBe("netlify");
 	});
 
 	it("maps legacy ASTROPRESS_LOCAL_PROVIDER=supabase → vercel via data-services chain", () => {
@@ -159,15 +142,15 @@ describe("resolveAstropressAppHostFromEnv — additional branches", () => {
 	});
 
 	it("maps ASTROPRESS_HOSTED_PROVIDER=nhost|neon|turso → render-web via data-services chain", () => {
-		expect(
-			resolveAstropressAppHostFromEnv({ ASTROPRESS_HOSTED_PROVIDER: "nhost" }),
-		).toBe("render-web");
-		expect(
-			resolveAstropressAppHostFromEnv({ ASTROPRESS_HOSTED_PROVIDER: "neon" }),
-		).toBe("render-web");
-		expect(
-			resolveAstropressAppHostFromEnv({ ASTROPRESS_HOSTED_PROVIDER: "turso" }),
-		).toBe("render-web");
+		expect(resolveAstropressAppHostFromEnv({ ASTROPRESS_HOSTED_PROVIDER: "nhost" })).toBe(
+			"render-web",
+		);
+		expect(resolveAstropressAppHostFromEnv({ ASTROPRESS_HOSTED_PROVIDER: "neon" })).toBe(
+			"render-web",
+		);
+		expect(resolveAstropressAppHostFromEnv({ ASTROPRESS_HOSTED_PROVIDER: "turso" })).toBe(
+			"render-web",
+		);
 	});
 
 	it("maps ASTROPRESS_DEPLOY_TARGET=github-pages → github-pages via legacy deploy target mapper", () => {
@@ -179,15 +162,13 @@ describe("resolveAstropressAppHostFromEnv — additional branches", () => {
 	});
 
 	it("maps ASTROPRESS_DEPLOY_TARGET=vercel → vercel via legacy deploy target mapper", () => {
-		expect(
-			resolveAstropressAppHostFromEnv({ ASTROPRESS_DEPLOY_TARGET: "vercel" }),
-		).toBe("vercel");
+		expect(resolveAstropressAppHostFromEnv({ ASTROPRESS_DEPLOY_TARGET: "vercel" })).toBe("vercel");
 	});
 
 	it("maps ASTROPRESS_DEPLOY_TARGET=netlify → netlify via legacy deploy target mapper", () => {
-		expect(
-			resolveAstropressAppHostFromEnv({ ASTROPRESS_DEPLOY_TARGET: "netlify" }),
-		).toBe("netlify");
+		expect(resolveAstropressAppHostFromEnv({ ASTROPRESS_DEPLOY_TARGET: "netlify" })).toBe(
+			"netlify",
+		);
 	});
 
 	it("maps ASTROPRESS_DEPLOY_TARGET=render-static → render-static via legacy deploy target mapper", () => {
@@ -345,9 +326,7 @@ describe("resolveAstropressServiceOriginFromEnv — fallthrough branch", () => {
 
 describe("mapLegacyDeployTargetToAppHost — custom arm (line 22)", () => {
 	it("maps ASTROPRESS_DEPLOY_TARGET=custom → custom appHost", () => {
-		expect(
-			resolveAstropressAppHostFromEnv({ ASTROPRESS_DEPLOY_TARGET: "custom" }),
-		).toBe("custom");
+		expect(resolveAstropressAppHostFromEnv({ ASTROPRESS_DEPLOY_TARGET: "custom" })).toBe("custom");
 	});
 });
 
@@ -365,17 +344,9 @@ describe("resolveDataServicesFromLegacyEnv — cloudflare via DEPLOY_TARGET (lin
 
 describe("resolveAstropressDeployTarget — explicit target values", () => {
 	it("returns each explicit ASTROPRESS_DEPLOY_TARGET value verbatim", () => {
-		const targets = [
-			"render-static",
-			"render-web",
-			"gitlab-pages",
-			"netlify",
-			"custom",
-		] as const;
+		const targets = ["render-static", "render-web", "gitlab-pages", "netlify", "custom"] as const;
 		for (const target of targets) {
-			expect(
-				resolveAstropressDeployTarget({ ASTROPRESS_DEPLOY_TARGET: target }),
-			).toBe(target);
+			expect(resolveAstropressDeployTarget({ ASTROPRESS_DEPLOY_TARGET: target })).toBe(target);
 		}
 	});
 });

@@ -1,10 +1,7 @@
 ---
 import AdminLayout from "@astropress-diy/astropress/components/AdminLayout.astro";
 import CsrfInput from "@astropress-diy/astropress/components/CsrfInput.astro";
-import {
-	TEMPLATE_CATALOG,
-	parseSections,
-} from "@astropress-diy/astropress/sections";
+import { parseSections, TEMPLATE_CATALOG } from "@astropress-diy/astropress/sections";
 import {
 	buildRoutePageEditorModel,
 	getAdminLocalePair,
@@ -22,18 +19,12 @@ const slugSegments = Array.isArray(Astro.params.slug)
 		? [Astro.params.slug]
 		: [];
 const routePath = `/${slugSegments.join("/")}`;
-const model = await buildRoutePageEditorModel(
-	Astro.locals,
-	routePath,
-	adminUser,
-);
+const model = await buildRoutePageEditorModel(Astro.locals, routePath, adminUser);
 const isForbidden = !adminUser || !isAuthUserAdmin(adminUser);
 const { pageRecord, englishOwner, effectiveTranslationState } = model.data;
 const wasSaved = Astro.url.searchParams.get("saved") === "1";
 const errorMessage =
-	Astro.url.searchParams.get("error") === "1"
-		? Astro.url.searchParams.get("message")
-		: "";
+	Astro.url.searchParams.get("error") === "1" ? Astro.url.searchParams.get("message") : "";
 const localePair = getAdminLocalePair(routePath);
 const localizedRoutePath = localePair?.localizedRoute;
 const t = getPageT(resolveAdminLocale(Astro));

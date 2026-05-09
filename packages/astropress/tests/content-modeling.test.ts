@@ -4,12 +4,8 @@ import path from "node:path";
 //
 import type { DatabaseSync } from "node:sqlite";
 import { describe, expect, it, vi } from "vitest";
-
+import type { ContentTypeDefinition, FieldDefinition } from "../src/content-modeling.js";
 import { validateContentFields } from "../src/content-modeling.js";
-import type {
-	ContentTypeDefinition,
-	FieldDefinition,
-} from "../src/content-modeling.js";
 import { createSqliteContentStore } from "../src/sqlite-runtime/content.js";
 import { makeDb } from "./helpers/make-db.js";
 
@@ -59,15 +55,11 @@ describe("validateContentFields — content-ref type", () => {
 	const contentType: ContentTypeDefinition = {
 		key: "article",
 		label: "Article",
-		fields: [
-			{ name: "relatedPost", label: "Related Post", type: "content-ref" },
-		],
+		fields: [{ name: "relatedPost", label: "Related Post", type: "content-ref" }],
 	};
 
 	it("passes when value is a string slug", () => {
-		expect(
-			validateContentFields(contentType, { relatedPost: "my-post" }),
-		).toBeNull();
+		expect(validateContentFields(contentType, { relatedPost: "my-post" })).toBeNull();
 	});
 
 	it("fails when value is a number (not a slug string)", () => {
@@ -160,10 +152,7 @@ describe("SQLite upsertContentOverride — metadata persistence", () => {
 		return sqliteContentRepository;
 	}
 
-	function getStoredMetadata(
-		db: DatabaseSync,
-		slug: string,
-	): Record<string, unknown> | null {
+	function getStoredMetadata(db: DatabaseSync, slug: string): Record<string, unknown> | null {
 		const row = db
 			.prepare("SELECT metadata FROM content_overrides WHERE slug = ? LIMIT 1")
 			.get(slug) as { metadata: string | null } | undefined;
@@ -282,9 +271,7 @@ describe("validateContentFields — validate() callback", () => {
 		const contentType: ContentTypeDefinition = {
 			key: "test",
 			label: "Test",
-			fields: [
-				{ name: "score", label: "Score", type: "number", validate: () => true },
-			],
+			fields: [{ name: "score", label: "Score", type: "number", validate: () => true }],
 		};
 		expect(validateContentFields(contentType, { score: 42 })).toBeNull();
 	});
@@ -293,9 +280,7 @@ describe("validateContentFields — validate() callback", () => {
 		const contentType: ContentTypeDefinition = {
 			key: "test",
 			label: "Test",
-			fields: [
-				{ name: "score", label: "Score", type: "number", validate: () => "" },
-			],
+			fields: [{ name: "score", label: "Score", type: "number", validate: () => "" }],
 		};
 		expect(validateContentFields(contentType, { score: 42 })).toBeNull();
 	});
@@ -313,9 +298,7 @@ describe("validateContentFields — validate() callback", () => {
 				},
 			],
 		};
-		expect(validateContentFields(contentType, { score: -1 })).toBe(
-			"Must be positive.",
-		);
+		expect(validateContentFields(contentType, { score: -1 })).toBe("Must be positive.");
 	});
 
 	it("skips validate when value is empty and field is not required", () => {
@@ -371,9 +354,7 @@ describe("validateContentFields — repeater null item check", () => {
 			label: "Test",
 			fields: [{ name: "tags", label: "Tags", type: "repeater" }],
 		};
-		expect(
-			validateContentFields(noFieldsType, { tags: [{ anything: true }] }),
-		).toBeNull();
+		expect(validateContentFields(noFieldsType, { tags: [{ anything: true }] })).toBeNull();
 	});
 });
 
@@ -389,21 +370,15 @@ describe("validateContentFields — required field isEmpty cases", () => {
 	}
 
 	it("treats undefined as empty", () => {
-		expect(validateContentFields(requiredField("x"), {})).toContain(
-			"is required",
-		);
+		expect(validateContentFields(requiredField("x"), {})).toContain("is required");
 	});
 
 	it("treats null as empty", () => {
-		expect(validateContentFields(requiredField("x"), { x: null })).toContain(
-			"is required",
-		);
+		expect(validateContentFields(requiredField("x"), { x: null })).toContain("is required");
 	});
 
 	it("treats empty string as empty", () => {
-		expect(validateContentFields(requiredField("x"), { x: "" })).toContain(
-			"is required",
-		);
+		expect(validateContentFields(requiredField("x"), { x: "" })).toContain("is required");
 	});
 
 	it("accepts zero as non-empty (0 is a valid value)", () => {
@@ -418,10 +393,7 @@ describe("validateContentFields — required field isEmpty cases", () => {
 // ─── content-modeling.ts source structure ────────────────────────────────────
 
 describe("content-modeling.ts — source structure", () => {
-	const srcPath = path.resolve(
-		import.meta.dirname,
-		"../src/content-modeling.ts",
-	);
+	const srcPath = path.resolve(import.meta.dirname, "../src/content-modeling.ts");
 
 	it("exports FieldDefinition with content-ref type", () => {
 		const source = readFileSync(srcPath, "utf8");

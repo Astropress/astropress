@@ -22,9 +22,7 @@ import { makeDb } from "./helpers/make-db.js";
 // ─── Route inventory ──────────────────────────────────────────────────────────
 
 function hasRoute(pattern: string, method: string) {
-	return apiRouteDefinitions.some(
-		(r) => r.pattern === pattern && r.methods.includes(method),
-	);
+	return apiRouteDefinitions.some((r) => r.pattern === pattern && r.methods.includes(method));
 }
 
 describe("REST API route inventory", () => {
@@ -84,10 +82,7 @@ function makeCtx(options?: { rateLimit?: number }) {
 	const db = makeDb();
 	const apiTokens = createApiTokenStore(db);
 
-	const rateLimitMap = new Map<
-		string,
-		{ count: number; windowStart: number }
-	>();
+	const rateLimitMap = new Map<string, { count: number; windowStart: number }>();
 
 	return {
 		apiTokens,
@@ -112,12 +107,7 @@ describe("API middleware (Bearer token auth)", () => {
 	it("withApiRequest rejects missing Authorization header with 401", async () => {
 		const ctx = makeCtx();
 		const req = new Request("http://localhost/ap-api/v1/content");
-		const res = await withApiRequest(
-			req,
-			ctx,
-			["content:read"],
-			async () => new Response("ok"),
-		);
+		const res = await withApiRequest(req, ctx, ["content:read"], async () => new Response("ok"));
 		expect(res.status).toBe(401);
 		const body = (await res.json()) as Record<string, unknown>;
 		expect(body.code).toBe("unauthorized");
@@ -128,12 +118,7 @@ describe("API middleware (Bearer token auth)", () => {
 		const req = new Request("http://localhost/ap-api/v1/content", {
 			headers: { Authorization: "Bearer completely-unknown-token" },
 		});
-		const res = await withApiRequest(
-			req,
-			ctx,
-			["content:read"],
-			async () => new Response("ok"),
-		);
+		const res = await withApiRequest(req, ctx, ["content:read"], async () => new Response("ok"));
 		expect(res.status).toBe(401);
 	});
 
@@ -146,12 +131,7 @@ describe("API middleware (Bearer token auth)", () => {
 		const req = new Request("http://localhost/ap-api/v1/content", {
 			headers: { Authorization: `Bearer ${rawToken}` },
 		});
-		const res = await withApiRequest(
-			req,
-			ctx,
-			["content:write"],
-			async () => new Response("ok"),
-		);
+		const res = await withApiRequest(req, ctx, ["content:write"], async () => new Response("ok"));
 		expect(res.status).toBe(403);
 		const body = (await res.json()) as Record<string, unknown>;
 		expect(body.code).toBe("forbidden");
@@ -231,19 +211,14 @@ describe("jsonOk helper", () => {
 
 describe("jsonOkPaginated helper", () => {
 	it("returns 200 with X-Total-Count header", () => {
-		const res = jsonOkPaginated(
-			{ records: [], total: 42, limit: 20, offset: 0, page: 1 },
-			42,
-		);
+		const res = jsonOkPaginated({ records: [], total: 42, limit: 20, offset: 0, page: 1 }, 42);
 		expect(res.status).toBe(200);
 		expect(res.headers.get("X-Total-Count")).toBe("42");
 	});
 
 	it("exposes X-Total-Count via Access-Control-Expose-Headers", () => {
 		const res = jsonOkPaginated({ records: [] }, 0);
-		expect(res.headers.get("Access-Control-Expose-Headers")).toContain(
-			"X-Total-Count",
-		);
+		expect(res.headers.get("Access-Control-Expose-Headers")).toContain("X-Total-Count");
 	});
 
 	it("returns JSON content-type", () => {
@@ -305,20 +280,14 @@ describe("runAstropressMigrations", () => {
 		// Running again skips already-applied migrations
 		const result2 = runAstropressMigrations(db, tmpDir);
 		expect(result2.applied).toEqual([]);
-		expect(result2.skipped).toEqual([
-			"0001_create_foo.sql",
-			"0002_add_bar.sql",
-		]);
+		expect(result2.skipped).toEqual(["0001_create_foo.sql", "0002_add_bar.sql"]);
 
 		rmSync(tmpDir, { recursive: true });
 	});
 
 	it("returns empty result when migrations directory does not exist", () => {
 		const db = makeDb();
-		const result = runAstropressMigrations(
-			db,
-			`/tmp/does-not-exist-${Date.now()}`,
-		);
+		const result = runAstropressMigrations(db, `/tmp/does-not-exist-${Date.now()}`);
 		expect(result.applied).toEqual([]);
 		expect(result.skipped).toEqual([]);
 	});
@@ -326,9 +295,7 @@ describe("runAstropressMigrations", () => {
 	it("records applied migrations in schema_migrations table", () => {
 		const db = makeDb();
 
-		const tmpDir = mkdtempSync(
-			join(tmpdir(), "astropress-migration-record-test-"),
-		);
+		const tmpDir = mkdtempSync(join(tmpdir(), "astropress-migration-record-test-"));
 		writeFileSync(
 			`${tmpDir}/0001_test.sql`,
 			"CREATE TABLE IF NOT EXISTS test_tbl (id INTEGER PRIMARY KEY);",
@@ -337,9 +304,7 @@ describe("runAstropressMigrations", () => {
 		runAstropressMigrations(db, tmpDir);
 
 		const rows = db
-			.prepare(
-				"SELECT name FROM schema_migrations WHERE name = '0001_test.sql'",
-			)
+			.prepare("SELECT name FROM schema_migrations WHERE name = '0001_test.sql'")
 			.all();
 		expect(rows).toHaveLength(1);
 
@@ -372,10 +337,7 @@ describe("apiErrors.fileTooLarge (413)", () => {
 
 describe("apiErrors.unsupportedMediaType (415)", () => {
 	it("returns 415 status", () => {
-		const res = apiErrors.unsupportedMediaType("application/x-evil", [
-			"image/jpeg",
-			"image/png",
-		]);
+		const res = apiErrors.unsupportedMediaType("application/x-evil", ["image/jpeg", "image/png"]);
 		expect(res.status).toBe(415);
 	});
 
@@ -403,12 +365,7 @@ describe("API middleware — edge cases", () => {
 		const req = new Request("http://localhost/ap-api/v1/content", {
 			headers: { Authorization: "Bearer " },
 		});
-		const res = await withApiRequest(
-			req,
-			ctx,
-			["content:read"],
-			async () => new Response("ok"),
-		);
+		const res = await withApiRequest(req, ctx, ["content:read"], async () => new Response("ok"));
 		expect(res.status).toBe(401);
 		const body = (await res.json()) as Record<string, unknown>;
 		expect(body.code).toBe("unauthorized");
@@ -420,12 +377,7 @@ describe("API middleware — edge cases", () => {
 		const req = new Request("http://localhost/ap-api/v1/content", {
 			headers: { Authorization: "Bearer   " },
 		});
-		const res = await withApiRequest(
-			req,
-			ctx,
-			["content:read"],
-			async () => new Response("ok"),
-		);
+		const res = await withApiRequest(req, ctx, ["content:read"], async () => new Response("ok"));
 		// whitespace-only token should be rejected as empty
 		expect(res.status).toBe(401);
 	});
@@ -436,12 +388,7 @@ describe("API middleware — edge cases", () => {
 		const req = new Request("http://localhost/ap-api/v1/content", {
 			headers: { Authorization: "Basic dXNlcjpwYXNz" },
 		});
-		const res = await withApiRequest(
-			req,
-			ctx,
-			["content:read"],
-			async () => new Response("ok"),
-		);
+		const res = await withApiRequest(req, ctx, ["content:read"], async () => new Response("ok"));
 		expect(res.status).toBe(401);
 	});
 
@@ -456,12 +403,7 @@ describe("API middleware — edge cases", () => {
 		const req = new Request("http://localhost/ap-api/v1/content", {
 			headers: { Authorization: `Scheme Bearer ${rawToken}` },
 		});
-		const res = await withApiRequest(
-			req,
-			ctx,
-			["content:read"],
-			async () => new Response("ok"),
-		);
+		const res = await withApiRequest(req, ctx, ["content:read"], async () => new Response("ok"));
 		expect(res.status).toBe(401);
 	});
 
@@ -609,16 +551,9 @@ describe("CORS preflight and response headers", () => {
 				"Access-Control-Request-Method": "GET",
 			},
 		});
-		const res = await withApiRequest(
-			req,
-			ctx,
-			["content:read"],
-			async () => new Response("ok"),
-		);
+		const res = await withApiRequest(req, ctx, ["content:read"], async () => new Response("ok"));
 		expect(res.status).toBe(204);
-		expect(res.headers.get("Access-Control-Allow-Origin")).toBe(
-			"https://app.example.com",
-		);
+		expect(res.headers.get("Access-Control-Allow-Origin")).toBe("https://app.example.com");
 	});
 
 	it("withApiRequest adds CORS headers to responses when origin matches", async () => {
@@ -643,19 +578,10 @@ describe("CORS preflight and response headers", () => {
 				Origin: "https://app.example.com",
 			},
 		});
-		const res = await withApiRequest(
-			req,
-			ctx,
-			["content:read"],
-			async () => new Response("ok"),
-		);
-		expect(res.headers.get("Access-Control-Allow-Origin")).toBe(
-			"https://app.example.com",
-		);
+		const res = await withApiRequest(req, ctx, ["content:read"], async () => new Response("ok"));
+		expect(res.headers.get("Access-Control-Allow-Origin")).toBe("https://app.example.com");
 		expect(res.headers.get("Access-Control-Allow-Methods")).toContain("GET");
-		expect(res.headers.get("Access-Control-Allow-Headers")).toBe(
-			"Authorization, Content-Type",
-		);
+		expect(res.headers.get("Access-Control-Allow-Headers")).toBe("Authorization, Content-Type");
 		expect(res.headers.get("Vary")).toBe("Origin");
 	});
 
@@ -681,12 +607,7 @@ describe("CORS preflight and response headers", () => {
 				Origin: "https://evil.example.com",
 			},
 		});
-		const res = await withApiRequest(
-			req,
-			ctx,
-			["content:read"],
-			async () => new Response("ok"),
-		);
+		const res = await withApiRequest(req, ctx, ["content:read"], async () => new Response("ok"));
 		expect(res.headers.get("Access-Control-Allow-Origin")).toBeNull();
 	});
 
@@ -712,12 +633,7 @@ describe("CORS preflight and response headers", () => {
 				Origin: "https://any.example.com",
 			},
 		});
-		const res = await withApiRequest(
-			req,
-			ctx,
-			["content:read"],
-			async () => new Response("ok"),
-		);
+		const res = await withApiRequest(req, ctx, ["content:read"], async () => new Response("ok"));
 		expect(res.headers.get("Access-Control-Allow-Origin")).toBe("*");
 		// Vary header should NOT be set for wildcard
 		expect(res.headers.get("Vary")).toBeNull();
@@ -750,15 +666,8 @@ describe("CORS preflight and response headers", () => {
 				Origin: "https://app2.example.com",
 			},
 		});
-		const res = await withApiRequest(
-			req,
-			ctx,
-			["content:read"],
-			async () => new Response("ok"),
-		);
-		expect(res.headers.get("Access-Control-Allow-Origin")).toBe(
-			"https://app2.example.com",
-		);
+		const res = await withApiRequest(req, ctx, ["content:read"], async () => new Response("ok"));
+		expect(res.headers.get("Access-Control-Allow-Origin")).toBe("https://app2.example.com");
 	});
 
 	it("withApiRequest handles array of allowed origins — not matched", async () => {
@@ -788,12 +697,7 @@ describe("CORS preflight and response headers", () => {
 				Origin: "https://evil.example.com",
 			},
 		});
-		const res = await withApiRequest(
-			req,
-			ctx,
-			["content:read"],
-			async () => new Response("ok"),
-		);
+		const res = await withApiRequest(req, ctx, ["content:read"], async () => new Response("ok"));
 		expect(res.headers.get("Access-Control-Allow-Origin")).toBeNull();
 	});
 
@@ -817,12 +721,7 @@ describe("CORS preflight and response headers", () => {
 		const req = new Request("http://localhost/ap-api/v1/content", {
 			headers: { Authorization: `Bearer ${rawToken}` },
 		});
-		const res = await withApiRequest(
-			req,
-			ctx,
-			["content:read"],
-			async () => new Response("ok"),
-		);
+		const res = await withApiRequest(req, ctx, ["content:read"], async () => new Response("ok"));
 		expect(res.headers.get("Access-Control-Allow-Origin")).toBeNull();
 	});
 
@@ -845,15 +744,11 @@ describe("CORS preflight and response headers", () => {
 		const res = handleCorsPreflightRequest(req);
 		expect(res).not.toBeNull();
 		expect(res?.status).toBe(204);
-		expect(res?.headers.get("Access-Control-Allow-Origin")).toBe(
-			"https://trusted.example.com",
-		);
+		expect(res?.headers.get("Access-Control-Allow-Origin")).toBe("https://trusted.example.com");
 		expect(res?.headers.get("Access-Control-Allow-Methods")).toBe(
 			"GET, POST, PUT, DELETE, OPTIONS",
 		);
-		expect(res?.headers.get("Access-Control-Allow-Headers")).toBe(
-			"Authorization, Content-Type",
-		);
+		expect(res?.headers.get("Access-Control-Allow-Headers")).toBe("Authorization, Content-Type");
 		expect(res?.headers.get("Access-Control-Max-Age")).toBe("86400");
 		expect(res?.headers.get("Vary")).toBe("Origin");
 	});
@@ -920,12 +815,7 @@ describe("CORS preflight and response headers", () => {
 		const req = new Request("http://localhost/ap-api/v1/content", {
 			headers: { Authorization: `Bearer ${rawToken}` }, // No Origin header
 		});
-		const res = await withApiRequest(
-			req,
-			ctx,
-			["content:read"],
-			async () => new Response("ok"),
-		);
+		const res = await withApiRequest(req, ctx, ["content:read"], async () => new Response("ok"));
 		expect(res.headers.get("Access-Control-Allow-Origin")).toBeNull();
 	});
 
@@ -953,12 +843,7 @@ describe("CORS preflight and response headers", () => {
 				Origin: "https://example.com",
 			},
 		});
-		const res = await withApiRequest(
-			req,
-			ctx,
-			["content:read"],
-			async () => new Response("ok"),
-		);
+		const res = await withApiRequest(req, ctx, ["content:read"], async () => new Response("ok"));
 		expect(res.headers.get("Access-Control-Allow-Origin")).toBeNull();
 	});
 });
@@ -1077,12 +962,7 @@ describe("API middleware — auth error messages", () => {
 		// Kills StringLiteral mutation: error message → "" (empty)
 		const ctx = makeCtx();
 		const req = new Request("http://localhost/ap-api/v1/content");
-		const res = await withApiRequest(
-			req,
-			ctx,
-			["content:read"],
-			async () => new Response("ok"),
-		);
+		const res = await withApiRequest(req, ctx, ["content:read"], async () => new Response("ok"));
 		const body = (await res.json()) as Record<string, unknown>;
 		expect(body.error as string).toContain("Authorization");
 	});
@@ -1092,12 +972,7 @@ describe("API middleware — auth error messages", () => {
 		// A second check that the missing-auth code path sets a non-empty error.
 		const ctx = makeCtx();
 		const req = new Request("http://localhost/ap-api/v1/content");
-		const res = await withApiRequest(
-			req,
-			ctx,
-			["content:read"],
-			async () => new Response("ok"),
-		);
+		const res = await withApiRequest(req, ctx, ["content:read"], async () => new Response("ok"));
 		const body = (await res.json()) as Record<string, unknown>;
 		expect(body.error as string).not.toBe("");
 	});
@@ -1117,18 +992,14 @@ describe("Security area mapping for /ap-api/*", () => {
 	});
 
 	it("api area applies no-store Cache-Control", async () => {
-		const { applyAstropressSecurityHeaders } = await import(
-			"../src/security-headers.js"
-		);
+		const { applyAstropressSecurityHeaders } = await import("../src/security-headers.js");
 		const headers = new Headers();
 		applyAstropressSecurityHeaders(headers, { area: "api" });
 		expect(headers.get("Cache-Control")).toContain("no-store");
 	});
 
 	it("api area sets default-src 'self' CSP", async () => {
-		const { applyAstropressSecurityHeaders } = await import(
-			"../src/security-headers.js"
-		);
+		const { applyAstropressSecurityHeaders } = await import("../src/security-headers.js");
 		const headers = new Headers();
 		applyAstropressSecurityHeaders(headers, { area: "api" });
 		const csp = headers.get("Content-Security-Policy") ?? "";
@@ -1170,9 +1041,7 @@ describe("CORS header behaviour (mutation kills)", () => {
 				Origin: "https://app.example.com",
 			},
 		});
-		const res = await withApiRequest(req, ctx, ["content:read"], async () =>
-			jsonOk({ ok: true }),
-		);
+		const res = await withApiRequest(req, ctx, ["content:read"], async () => jsonOk({ ok: true }));
 		expect(res.headers.get("Access-Control-Allow-Origin")).toBeNull();
 	});
 
@@ -1200,9 +1069,7 @@ describe("CORS header behaviour (mutation kills)", () => {
 				Origin: "https://app.example",
 			},
 		});
-		const res = await withApiRequest(req, ctx, ["content:read"], async () =>
-			jsonOk({ ok: true }),
-		);
+		const res = await withApiRequest(req, ctx, ["content:read"], async () => jsonOk({ ok: true }));
 		expect(res.headers.get("Access-Control-Allow-Origin")).toBeNull();
 	});
 

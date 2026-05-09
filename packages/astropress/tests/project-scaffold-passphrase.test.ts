@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
 
 import {
-	EFF_SHORT_WORDLIST,
-	PASSPHRASE_CHARS,
 	createLocalBootstrapSecrets,
+	EFF_SHORT_WORDLIST,
 	generatePassphrase,
+	PASSPHRASE_CHARS,
 	randomSecret,
 } from "../src/project-scaffold-passphrase.js";
 

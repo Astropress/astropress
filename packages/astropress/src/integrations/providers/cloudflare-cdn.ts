@@ -62,9 +62,7 @@ export function buildCloudflareAuthHeader(apiToken: string): string {
  * and `res.ok`. Exported so tests pin the mapping independently of
  * the fetch wiring above.
  */
-export function classifyCloudflareStatus(
-	res: Response,
-): IntegrationErrorCode | null {
+export function classifyCloudflareStatus(res: Response): IntegrationErrorCode | null {
 	if (res.status === 401 || res.status === 403) {
 		return "INTEGRATION_AUTH_REJECTED";
 	}

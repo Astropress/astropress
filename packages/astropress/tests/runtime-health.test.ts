@@ -1,8 +1,5 @@
 import { afterEach, describe, expect, it } from "vitest";
-import {
-	handleHealthRequest,
-	registerHealthCheck,
-} from "../src/runtime-health.js";
+import { handleHealthRequest, registerHealthCheck } from "../src/runtime-health.js";
 
 afterEach(() => {
 	// Reset the module-level health check between tests
@@ -37,9 +34,7 @@ describe("runtime health endpoint", () => {
 		registerHealthCheck(async () => {
 			/* no-op: DB is reachable */
 		});
-		const response = await handleHealthRequest(
-			new Request("https://example.com/ap/health"),
-		);
+		const response = await handleHealthRequest(new Request("https://example.com/ap/health"));
 		const body = (await response.json()) as Record<string, unknown>;
 		expect(response.status).toBe(200);
 		expect(body.status).toBe("ok");
@@ -51,9 +46,7 @@ describe("runtime health endpoint", () => {
 		const prev = g.__ASTROPRESS_VERSION__;
 		g.__ASTROPRESS_VERSION__ = undefined;
 		try {
-			const response = await handleHealthRequest(
-				new Request("https://example.com/ap/health"),
-			);
+			const response = await handleHealthRequest(new Request("https://example.com/ap/health"));
 			const body = (await response.json()) as Record<string, unknown>;
 			expect(body.version).toBe("unknown");
 		} finally {
@@ -66,9 +59,7 @@ describe("runtime health endpoint", () => {
 		const prev = g.__ASTROPRESS_VERSION__;
 		g.__ASTROPRESS_VERSION__ = "1.2.3-test";
 		try {
-			const response = await handleHealthRequest(
-				new Request("https://example.com/ap/health"),
-			);
+			const response = await handleHealthRequest(new Request("https://example.com/ap/health"));
 			const body = (await response.json()) as Record<string, unknown>;
 			expect(body.version).toBe("1.2.3-test");
 		} finally {
@@ -84,9 +75,7 @@ describe("runtime health endpoint", () => {
 		const prev = g.__ASTROPRESS_VERSION__;
 		g.__ASTROPRESS_VERSION__ = 12345 as unknown as string;
 		try {
-			const response = await handleHealthRequest(
-				new Request("https://example.com/ap/health"),
-			);
+			const response = await handleHealthRequest(new Request("https://example.com/ap/health"));
 			const body = (await response.json()) as Record<string, unknown>;
 			expect(body.version).toBe("unknown");
 		} finally {
@@ -96,9 +85,7 @@ describe("runtime health endpoint", () => {
 	});
 
 	it("uptime is plausibly small at process start (kills now+start arithmetic mutant)", async () => {
-		const response = await handleHealthRequest(
-			new Request("https://example.com/ap/health"),
-		);
+		const response = await handleHealthRequest(new Request("https://example.com/ap/health"));
 		const body = (await response.json()) as Record<string, unknown>;
 		const uptime = body.uptime as number;
 		// Original: floor((now - start) / 1000) — single-digit seconds during test.
@@ -110,9 +97,7 @@ describe("runtime health endpoint", () => {
 		registerHealthCheck(async () => {
 			throw new Error("DB unreachable");
 		});
-		const response = await handleHealthRequest(
-			new Request("https://example.com/ap/health"),
-		);
+		const response = await handleHealthRequest(new Request("https://example.com/ap/health"));
 		const body = (await response.json()) as Record<string, unknown>;
 		expect(response.status).toBe(503);
 		expect(body.status).toBe("degraded");

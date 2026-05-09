@@ -1,3 +1,4 @@
+// stryker-disable-file: data-only — pure type declarations (ApiScope, ApiTokenId, ApiTokenRecord, ApiTokenStore); no runtime code to mutate.
 // ─── API Token Store ──────────────────────────────────────────────────────────
 // Extracted to keep platform-contracts.ts under the 400-line limit.
 
@@ -32,8 +33,6 @@ export interface ApiTokenStore {
 	list(): Promise<ApiTokenRecord[]>;
 	verify(
 		rawToken: string,
-	): Promise<
-		{ valid: true; record: ApiTokenRecord } | { valid: false; reason: string }
-	>;
+	): Promise<{ valid: true; record: ApiTokenRecord } | { valid: false; reason: string }>;
 	revoke(id: string): Promise<void>;
 }

@@ -25,10 +25,9 @@ describe("provider choice", () => {
 	});
 
 	it("keeps the chosen data-services platform when Supabase is already selected", () => {
-		expect(
-			recommendAstropressProvider({ existingPlatform: "supabase" })
-				.dataServices,
-		).toBe("supabase");
+		expect(recommendAstropressProvider({ existingPlatform: "supabase" }).dataServices).toBe(
+			"supabase",
+		);
 	});
 
 	it("feeds the default scaffold recommendation", () => {

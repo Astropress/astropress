@@ -20,8 +20,7 @@ module.exports = {
 		{
 			name: "pages-no-direct-sqlite",
 			severity: "error",
-			comment:
-				"Admin pages must use the store dispatch seam, not import sqlite-runtime directly",
+			comment: "Admin pages must use the store dispatch seam, not import sqlite-runtime directly",
 			from: { path: "^packages/astropress/pages/" },
 			to: { path: "^packages/astropress/src/sqlite-runtime/" },
 		},

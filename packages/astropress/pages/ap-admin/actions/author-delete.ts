@@ -1,5 +1,4 @@
-import { deleteRuntimeAuthor } from "@astropress-diy/astropress";
-import { withAdminFormAction } from "@astropress-diy/astropress";
+import { deleteRuntimeAuthor, withAdminFormAction } from "@astropress-diy/astropress";
 import type { APIRoute } from "astro";
 
 export const POST: APIRoute = async (context) =>
@@ -7,10 +6,7 @@ export const POST: APIRoute = async (context) =>
 		context,
 		{ failurePath: "/ap-admin/authors", requireAdmin: true },
 		async ({ actor, formData, locals, redirect, fail }) => {
-			const id = Number.parseInt(
-				(formData.get("id") as string | null) ?? "",
-				10,
-			);
+			const id = Number.parseInt((formData.get("id") as string | null) ?? "", 10);
 			if (!Number.isFinite(id)) {
 				return fail("Author id is required");
 			}
@@ -20,8 +16,6 @@ export const POST: APIRoute = async (context) =>
 				return fail(result.error);
 			}
 
-			return redirect(
-				`/ap-admin/authors?deleted=1&restore_table=authors&restore_id=${id}`,
-			);
+			return redirect(`/ap-admin/authors?deleted=1&restore_table=authors&restore_id=${id}`);
 		},
 	);

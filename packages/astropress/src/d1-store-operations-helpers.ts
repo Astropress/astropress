@@ -1,19 +1,18 @@
 import type { D1DatabaseLike } from "./d1-database";
 import {
+	deriveAdminUserStatus,
+	mapPersistedAdminUserRow,
+	mapPersistedAuditEvent,
 	type PersistedAdminUserRow,
 	type PersistedAuditEventRow,
 	SQL_LIST_ADMIN_USERS_WITH_INVITE,
 	SQL_LIST_AUDIT_EVENTS,
-	deriveAdminUserStatus,
-	mapPersistedAdminUserRow,
-	mapPersistedAuditEvent,
 } from "./persistence-commons";
 import type {
 	AuditEvent,
 	CommentRecord,
 	CommentStatus,
 	ContactSubmission,
-	ManagedAdminUser,
 	MediaAsset,
 	RedirectRule,
 	TestimonialSource,
@@ -224,10 +223,7 @@ export function mapRedirectRow(row: {
 
 /* ── Bind-param helpers ── */
 
-export function testimonialInputBindParams(
-	id: string,
-	input: TestimonialSubmissionInput,
-) {
+export function testimonialInputBindParams(id: string, input: TestimonialSubmissionInput) {
 	return [
 		id,
 		input.name,
@@ -243,10 +239,7 @@ export function testimonialInputBindParams(
 	] as const;
 }
 
-export function buildCommentBindParams(
-	comment: CommentRecord,
-	submittedAt: string,
-) {
+export function buildCommentBindParams(comment: CommentRecord, submittedAt: string) {
 	return [
 		comment.id,
 		comment.author,
@@ -274,11 +267,7 @@ export function buildApprovedAtExpr(status: TestimonialStatus): string {
 		: "approved_at";
 }
 
-export function buildModerateSql(
-	db: D1DatabaseLike,
-	status: TestimonialStatus,
-	id: string,
-) {
+export function buildModerateSql(db: D1DatabaseLike, status: TestimonialStatus, id: string) {
 	const approvedAtExpr = buildApprovedAtExpr(status);
 	const sql = `UPDATE testimonial_submissions SET status = ?, approved_at = ${approvedAtExpr} WHERE id = ?`;
 	return db.prepare(sql).bind(status, id).run();

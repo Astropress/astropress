@@ -72,12 +72,9 @@ describe("slugify", () => {
 });
 
 describe("parseIdList", () => {
-	it.each([null, undefined, ""])(
-		"returns empty array for falsy input: %s",
-		(value) => {
-			expect(parseIdList(value)).toEqual([]);
-		},
-	);
+	it.each([null, undefined, ""])("returns empty array for falsy input: %s", (value) => {
+		expect(parseIdList(value)).toEqual([]);
+	});
 
 	it("returns empty array for invalid JSON string", () => {
 		expect(parseIdList("not-json")).toEqual([]);

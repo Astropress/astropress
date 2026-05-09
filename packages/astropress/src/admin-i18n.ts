@@ -100,16 +100,13 @@ export const defaultAdminStrings: Record<AstropressAdminStringKey, string> = {
 	"error.required": "This field is required.",
 	"error.invalidEmail": "Enter a valid email address.",
 	"error.passwordTooShort": "Password must be at least 12 characters.",
-	"error.invalidSlug":
-		"Slug must contain only lowercase letters, numbers, and hyphens.",
+	"error.invalidSlug": "Slug must contain only lowercase letters, numbers, and hyphens.",
 	"error.generic":
 		"The requested change could not be completed. Reload the page and retry the action.",
 };
 
 /** A partial override map — only the keys you want to translate. */
-export type AstropressAdminStringOverrides = Partial<
-	Record<AstropressAdminStringKey, string>
->;
+export type AstropressAdminStringOverrides = Partial<Record<AstropressAdminStringKey, string>>;
 
 /**
  * Resolves a complete string map by merging operator overrides over the English defaults.

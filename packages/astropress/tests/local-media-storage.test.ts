@@ -231,14 +231,10 @@ describe("deleteLocalMediaUpload", () => {
 	it("is a no-op for paths outside the uploads dir", () => {
 		// Should not throw
 		expect(() => deleteLocalMediaUpload("/etc/passwd")).not.toThrow();
-		expect(() =>
-			deleteLocalMediaUpload("relative/path/file.png"),
-		).not.toThrow();
+		expect(() => deleteLocalMediaUpload("relative/path/file.png")).not.toThrow();
 	});
 
 	it("is a no-op for non-existent files (no throw)", () => {
-		expect(() =>
-			deleteLocalMediaUpload("/images/uploads/does-not-exist-12345.png"),
-		).not.toThrow();
+		expect(() => deleteLocalMediaUpload("/images/uploads/does-not-exist-12345.png")).not.toThrow();
 	});
 });

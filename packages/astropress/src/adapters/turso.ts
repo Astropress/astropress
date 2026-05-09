@@ -22,9 +22,7 @@ export type AstropressTursoAdapterOptions = Omit<
  * a hosted admin panel, or preview environments. Pair Turso with a server-side host
  * (Vercel, Netlify, Fly.io) for the app and a storage service for media uploads.
  */
-export function createAstropressTursoAdapter(
-	options: AstropressTursoAdapterOptions = {},
-) {
+export function createAstropressTursoAdapter(options: AstropressTursoAdapterOptions = {}) {
 	return createAstropressHostedPlatformAdapter({
 		...options,
 		providerName: "turso",
@@ -40,8 +38,7 @@ export function createAstropressTursoAdapter(
 	});
 }
 
-export interface AstropressTursoHostedAdapterOptions
-	extends AstropressTursoAdapterOptions {
+export interface AstropressTursoHostedAdapterOptions extends AstropressTursoAdapterOptions {
 	config?: AstropressTursoHostedConfig;
 	env?: Record<string, string | undefined>;
 }
@@ -52,18 +49,11 @@ export function readAstropressTursoHostedConfig(
 	const databaseUrl = env.TURSO_DATABASE_URL?.trim();
 
 	if (!databaseUrl) {
-		throw new Error(
-			"Turso hosted config requires TURSO_DATABASE_URL (your Turso database URL).",
-		);
+		throw new Error("Turso hosted config requires TURSO_DATABASE_URL (your Turso database URL).");
 	}
 
-	if (
-		!databaseUrl.startsWith("libsql://") &&
-		!databaseUrl.startsWith("https://")
-	) {
-		throw new Error(
-			"Turso TURSO_DATABASE_URL must be a libsql:// or https:// connection string.",
-		);
+	if (!databaseUrl.startsWith("libsql://") && !databaseUrl.startsWith("https://")) {
+		throw new Error("Turso TURSO_DATABASE_URL must be a libsql:// or https:// connection string.");
 	}
 
 	const authToken = env.TURSO_AUTH_TOKEN?.trim();

@@ -2,10 +2,7 @@ import { existsSync } from "node:fs";
 import path from "node:path";
 import { createAstropressPublicSiteIntegration } from "@astropress-diy/astropress";
 import { describe, expect, it, vi } from "vitest";
-import {
-	injectAstropressAdminRoutes,
-	listAstropressAdminRoutes,
-} from "../src/admin-routes";
+import { injectAstropressAdminRoutes, listAstropressAdminRoutes } from "../src/admin-routes";
 import { createAstropressSitemapIntegration } from "../src/public-site-integration";
 
 describe("createAstropressPublicSiteIntegration", () => {
@@ -30,8 +27,7 @@ describe("createAstropressPublicSiteIntegration", () => {
 		const injectedPatterns: string[] = [];
 
 		const hook = integration.hooks["astro:config:setup"];
-		if (typeof hook !== "function")
-			throw new Error("Expected hook to be a function");
+		if (typeof hook !== "function") throw new Error("Expected hook to be a function");
 
 		// Call the hook with a spy injectRoute — public site should never inject admin routes
 		hook({
@@ -51,8 +47,7 @@ describe("createAstropressPublicSiteIntegration", () => {
 		const injectedPatterns: string[] = [];
 
 		const hook = integration.hooks["astro:config:setup"];
-		if (typeof hook !== "function")
-			throw new Error("Expected hook to be a function");
+		if (typeof hook !== "function") throw new Error("Expected hook to be a function");
 
 		hook({
 			_config: {},
@@ -72,8 +67,7 @@ describe("createAstropressPublicSiteIntegration", () => {
 		const addMiddleware = vi.fn();
 
 		const hook = integration.hooks["astro:config:setup"];
-		if (typeof hook !== "function")
-			throw new Error("Expected hook to be a function");
+		if (typeof hook !== "function") throw new Error("Expected hook to be a function");
 
 		hook({ _config: {}, injectRoute: vi.fn(), addMiddleware } as never);
 
@@ -85,8 +79,7 @@ describe("createAstropressPublicSiteIntegration", () => {
 		const publicInjected: string[] = [];
 
 		const hook = publicIntegration.hooks["astro:config:setup"];
-		if (typeof hook !== "function")
-			throw new Error("Expected hook to be a function");
+		if (typeof hook !== "function") throw new Error("Expected hook to be a function");
 
 		hook({
 			_config: {},
@@ -101,22 +94,16 @@ describe("createAstropressPublicSiteIntegration", () => {
 		// Public site integration injects public utility routes (sitemap, robots, llms.txt) but never admin routes
 		expect(publicInjected.some((p) => p.includes("ap-admin"))).toBe(false);
 		expect(adminRoutes.length).toBeGreaterThan(0);
-		expect(adminRoutes.every((r) => r.pattern.startsWith("/ap-admin"))).toBe(
-			true,
-		);
+		expect(adminRoutes.every((r) => r.pattern.startsWith("/ap-admin"))).toBe(true);
 	});
 
 	it("injectAstropressAdminRoutes injects all admin routes with correct patterns", () => {
 		const injected: Array<{ pattern: string; entrypoint: string }> = [];
-		injectAstropressAdminRoutes("/pages/ap-admin", (route) =>
-			injected.push(route),
-		);
+		injectAstropressAdminRoutes("/pages/ap-admin", (route) => injected.push(route));
 
 		expect(injected.length).toBeGreaterThan(0);
 		expect(injected.every((r) => r.pattern.startsWith("/ap-admin"))).toBe(true);
-		expect(
-			injected.every((r) => r.entrypoint.startsWith("/pages/ap-admin/")),
-		).toBe(true);
+		expect(injected.every((r) => r.entrypoint.startsWith("/pages/ap-admin/"))).toBe(true);
 	});
 });
 
@@ -154,9 +141,8 @@ describe("OG image endpoint (ap-api/v1/og-image/[slug].png.ts)", () => {
 	});
 
 	it("endpoint exports a GET handler and prerender=false", async () => {
-		const source = (
-			await import("../pages/ap-api/v1/og-image/[slug].png.ts?raw")
-		).default as string;
+		const source = (await import("../pages/ap-api/v1/og-image/[slug].png.ts?raw"))
+			.default as string;
 		expect(source).toContain("export const GET");
 		expect(source).toContain("prerender = false");
 	});
@@ -179,10 +165,7 @@ describe("OG image endpoint (ap-api/v1/og-image/[slug].png.ts)", () => {
 
 describe("AstropressSeoHead OG image fallback", () => {
 	it("AstropressSeoHead.astro falls back to generated OG image when ogImage is not set", () => {
-		const seoHeadPath = path.resolve(
-			import.meta.dirname,
-			"../components/AstropressSeoHead.astro",
-		);
+		const seoHeadPath = path.resolve(import.meta.dirname, "../components/AstropressSeoHead.astro");
 		const source = existsSync(seoHeadPath)
 			? require("node:fs").readFileSync(seoHeadPath, "utf8")
 			: "";

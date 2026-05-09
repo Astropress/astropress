@@ -34,23 +34,15 @@ const REAL_OR_ENV_GATED_HREFS = [
 ];
 
 test.describe("admin integration honesty", () => {
-	test("Scenario: Coming soon group is rendered and visually demoted", async ({
-		page,
-	}) => {
+	test("Scenario: Coming soon group is rendered and visually demoted", async ({ page }) => {
 		await page.goto(ADMIN, { waitUntil: "domcontentloaded" });
-		const muted = page.locator(
-			'.sidebar-group[data-coming-soon="true"]',
-		);
+		const muted = page.locator('.sidebar-group[data-coming-soon="true"]');
 		await expect(muted).toHaveCount(1);
 	});
 
-	test("Scenario: every coming-soon leaf is inside the muted group", async ({
-		page,
-	}) => {
+	test("Scenario: every coming-soon leaf is inside the muted group", async ({ page }) => {
 		await page.goto(ADMIN, { waitUntil: "domcontentloaded" });
-		const muted = page.locator(
-			'.sidebar-group[data-coming-soon="true"]',
-		);
+		const muted = page.locator('.sidebar-group[data-coming-soon="true"]');
 		// open the group so its children are queryable in DOM regardless of
 		// <details> open state
 		await muted.evaluate((el) => {
@@ -58,20 +50,13 @@ test.describe("admin integration honesty", () => {
 		});
 		for (const href of COMING_SOON_HREFS) {
 			const link = muted.locator(`a[href="${href}"]`);
-			await expect(
-				link,
-				`expected ${href} under data-coming-soon group`,
-			).toHaveCount(1);
+			await expect(link, `expected ${href} under data-coming-soon group`).toHaveCount(1);
 		}
 	});
 
-	test("Scenario: real + env-gated leaves stay in the Integrations group", async ({
-		page,
-	}) => {
+	test("Scenario: real + env-gated leaves stay in the Integrations group", async ({ page }) => {
 		await page.goto(ADMIN, { waitUntil: "domcontentloaded" });
-		const muted = page.locator(
-			'.sidebar-group[data-coming-soon="true"]',
-		);
+		const muted = page.locator('.sidebar-group[data-coming-soon="true"]');
 		for (const href of REAL_OR_ENV_GATED_HREFS) {
 			// Must NOT appear under the muted group.
 			const inMuted = muted.locator(`a[href="${href}"]`);
@@ -79,9 +64,7 @@ test.describe("admin integration honesty", () => {
 		}
 	});
 
-	test("Scenario: coming-soon stub page renders roadmap copy, not env hints", async ({
-		page,
-	}) => {
+	test("Scenario: coming-soon stub page renders roadmap copy, not env hints", async ({ page }) => {
 		await page.goto(`${ADMIN}/heatmaps`, { waitUntil: "domcontentloaded" });
 		// "Coming soon" eyebrow appears (English locale default).
 		const eyebrow = page.locator(".stub-eyebrow");
@@ -90,9 +73,7 @@ test.describe("admin integration honesty", () => {
 		// must NOT be rendered for coming-soon variant.
 		await expect(page.locator(".stub-grid pre")).toHaveCount(0);
 		// Roadmap link is present.
-		const roadmap = page.locator(
-			'a[href="https://github.com/Astropress/astropress/issues/76"]',
-		);
+		const roadmap = page.locator('a[href="https://github.com/Astropress/astropress/issues/76"]');
 		await expect(roadmap.first()).toBeVisible();
 	});
 });

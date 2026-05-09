@@ -13,10 +13,7 @@ type MiddlewareInput = {
 };
 
 export function createAccessMiddleware() {
-	return async (
-		ctx: MiddlewareInput,
-		next: () => Promise<Response>,
-	): Promise<Response> => {
+	return async (ctx: MiddlewareInput, next: () => Promise<Response>): Promise<Response> => {
 		await getAccessContext(ctx);
 		return next();
 	};

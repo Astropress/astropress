@@ -69,21 +69,13 @@ function resolveContentFields(
 	const summary = String(record.metadata?.summary ?? existing?.summary ?? "");
 	const seoTitle = String(record.metadata?.seoTitle ?? title);
 	const metaDescription = String(record.metadata?.metaDescription ?? title);
-	const ogTitle = resolveMetaString(
-		record.metadata,
-		"ogTitle",
-		existing?.ogTitle ?? null,
-	);
+	const ogTitle = resolveMetaString(record.metadata, "ogTitle", existing?.ogTitle ?? null);
 	const ogDescription = resolveMetaString(
 		record.metadata,
 		"ogDescription",
 		existing?.ogDescription ?? null,
 	);
-	const ogImage = resolveMetaString(
-		record.metadata,
-		"ogImage",
-		existing?.ogImage ?? null,
-	);
+	const ogImage = resolveMetaString(record.metadata, "ogImage", existing?.ogImage ?? null);
 	const canonicalUrlOverride = resolveMetaString(
 		record.metadata,
 		"canonicalUrlOverride",
@@ -128,10 +120,8 @@ export async function savePageOrPost(
 	const status = normalizeContentStatus(record.status);
 
 	if (!existing) {
-		const legacyUrl =
-			resolveMetaString(record.metadata, "legacyUrl", `/${slug}`) ?? `/${slug}`;
-		const templateKey =
-			resolveMetaString(record.metadata, "templateKey", "content") ?? "content";
+		const legacyUrl = resolveMetaString(record.metadata, "legacyUrl", `/${slug}`) ?? `/${slug}`;
+		const templateKey = resolveMetaString(record.metadata, "templateKey", "content") ?? "content";
 		await db
 			.prepare(SQL_INSERT_CONTENT)
 			.bind(
@@ -198,9 +188,6 @@ export async function savePageOrPost(
 	);
 
 	const saved = await readStore.content.getContentState(slug);
-	if (!saved)
-		throw new Error(
-			`Cloudflare adapter failed to persist content record ${slug}.`,
-		);
+	if (!saved) throw new Error(`Cloudflare adapter failed to persist content record ${slug}.`);
 	return toContentStoreRecord(saved);
 }

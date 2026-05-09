@@ -6,9 +6,6 @@ import { recordD1Audit } from "./d1-audit";
 import type { Actor } from "./persistence-types";
 import {
 	type ContentStatus,
-	SQL_INSERT_CONTENT_ENTRY,
-	SQL_INSERT_CREATE_OVERRIDE,
-	UPSERT_CONTENT_OVERRIDE_SQL,
 	cleanIdList,
 	detectConflict,
 	insertContentRevision,
@@ -16,8 +13,11 @@ import {
 	normalizeScheduledAt,
 	normalizeSeoFields,
 	nullsToUndefined,
+	SQL_INSERT_CONTENT_ENTRY,
+	SQL_INSERT_CREATE_OVERRIDE,
 	serializeMetadata,
 	trimOrNull,
+	UPSERT_CONTENT_OVERRIDE_SQL,
 } from "./runtime-actions-content-helpers";
 import {
 	ensureD1BaselineRevision,
@@ -67,20 +67,13 @@ export async function saveRuntimeContentState(
 			await ensureD1BaselineRevision(db, pageRecord);
 
 			if (input.lastKnownUpdatedAt) {
-				const conflict = await detectConflict(
-					db,
-					pageRecord.slug,
-					input.lastKnownUpdatedAt,
-				);
+				const conflict = await detectConflict(db, pageRecord.slug, input.lastKnownUpdatedAt);
 				if (conflict) return conflict;
 			}
 
 			// Content type field validation
 			const metadata = input.metadata ?? {};
-			const fieldError = validateContentTypeFields(
-				pageRecord.templateKey,
-				metadata,
-			);
+			const fieldError = validateContentTypeFields(pageRecord.templateKey, metadata);
 			if (fieldError) {
 				return { ok: false as const, error: fieldError };
 			}

@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
-	type RuntimeFixture,
 	createRuntimeFixture,
+	type RuntimeFixture,
 } from "./helpers/sqlite-admin-runtime-fixture.js";
 
 function unwrap<T>(v: T | undefined | null): NonNullable<T> {
@@ -32,36 +32,24 @@ describe("authors", () => {
 			fixture.actor,
 		);
 		expect(result.ok).toBe(true);
-		expect(
-			fixture.store.authors
-				.listAuthors()
-				.some((a) => a.name === "Alice Author"),
-		).toBe(true);
+		expect(fixture.store.authors.listAuthors().some((a) => a.name === "Alice Author")).toBe(true);
 	});
 
 	it("createAuthor returns error for duplicate name", () => {
 		fixture.store.authors.createAuthor({ name: "Bob Author" }, fixture.actor);
-		expect(
-			fixture.store.authors.createAuthor({ name: "Bob Author" }, fixture.actor)
-				.ok,
-		).toBe(false);
+		expect(fixture.store.authors.createAuthor({ name: "Bob Author" }, fixture.actor).ok).toBe(
+			false,
+		);
 	});
 
 	it("createAuthor returns error for empty name (slugifyTerm empty string branch)", () => {
-		expect(
-			fixture.store.authors.createAuthor({ name: "" }, fixture.actor).ok,
-		).toBe(false);
+		expect(fixture.store.authors.createAuthor({ name: "" }, fixture.actor).ok).toBe(false);
 	});
 
 	it("updateAuthor succeeds", () => {
-		fixture.store.authors.createAuthor(
-			{ name: "Charlie Author" },
-			fixture.actor,
-		);
+		fixture.store.authors.createAuthor({ name: "Charlie Author" }, fixture.actor);
 		const charlie = unwrap(
-			fixture.store.authors
-				.listAuthors()
-				.find((a) => a.name === "Charlie Author"),
+			fixture.store.authors.listAuthors().find((a) => a.name === "Charlie Author"),
 		);
 		expect(
 			fixture.store.authors.updateAuthor(
@@ -72,42 +60,28 @@ describe("authors", () => {
 	});
 
 	it("updateAuthor returns error for missing id", () => {
-		expect(
-			fixture.store.authors.updateAuthor(
-				{ id: 0, name: "Nobody" },
-				fixture.actor,
-			).ok,
-		).toBe(false);
+		expect(fixture.store.authors.updateAuthor({ id: 0, name: "Nobody" }, fixture.actor).ok).toBe(
+			false,
+		);
 	});
 
 	it("updateAuthor returns error for non-existent id", () => {
 		expect(
-			fixture.store.authors.updateAuthor(
-				{ id: 999_999, name: "Ghost" },
-				fixture.actor,
-			).ok,
+			fixture.store.authors.updateAuthor({ id: 999_999, name: "Ghost" }, fixture.actor).ok,
 		).toBe(false);
 	});
 
 	it("deleteAuthor marks as deleted", () => {
 		fixture.store.authors.createAuthor({ name: "Dave Delete" }, fixture.actor);
-		const dave = unwrap(
-			fixture.store.authors.listAuthors().find((a) => a.name === "Dave Delete"),
-		);
-		expect(fixture.store.authors.deleteAuthor(dave.id, fixture.actor).ok).toBe(
-			true,
-		);
-		expect(
-			fixture.store.authors.listAuthors().some((a) => a.name === "Dave Delete"),
-		).toBe(false);
+		const dave = unwrap(fixture.store.authors.listAuthors().find((a) => a.name === "Dave Delete"));
+		expect(fixture.store.authors.deleteAuthor(dave.id, fixture.actor).ok).toBe(true);
+		expect(fixture.store.authors.listAuthors().some((a) => a.name === "Dave Delete")).toBe(false);
 	});
 });
 
 describe("authors additional branches", () => {
 	it("deleteAuthor: not found returns error", () => {
-		expect(fixture.store.authors.deleteAuthor(999_996, fixture.actor).ok).toBe(
-			false,
-		);
+		expect(fixture.store.authors.deleteAuthor(999_996, fixture.actor).ok).toBe(false);
 	});
 
 	it("createAuthor: uses provided slug when explicitly set", () => {
@@ -120,14 +94,9 @@ describe("authors additional branches", () => {
 	});
 
 	it("updateAuthor: with explicit slug and bio (covers optional field branches)", () => {
-		fixture.store.authors.createAuthor(
-			{ name: "Author To Update" },
-			fixture.actor,
-		);
+		fixture.store.authors.createAuthor({ name: "Author To Update" }, fixture.actor);
 		const a = unwrap(
-			fixture.store.authors
-				.listAuthors()
-				.find((x) => x.name === "Author To Update"),
+			fixture.store.authors.listAuthors().find((x) => x.name === "Author To Update"),
 		);
 		expect(
 			fixture.store.authors.updateAuthor(
@@ -147,94 +116,54 @@ describe("authors additional branches", () => {
 
 describe("taxonomies", () => {
 	it("categories: create, update, delete lifecycle", () => {
+		expect(fixture.store.taxonomies.createCategory({ name: "Tech" }, fixture.actor).ok).toBe(true);
+		const tech = unwrap(fixture.store.taxonomies.listCategories().find((c) => c.name === "Tech"));
 		expect(
-			fixture.store.taxonomies.createCategory({ name: "Tech" }, fixture.actor)
+			fixture.store.taxonomies.updateCategory({ id: tech.id, name: "Technology" }, fixture.actor)
 				.ok,
 		).toBe(true);
-		const tech = unwrap(
-			fixture.store.taxonomies.listCategories().find((c) => c.name === "Tech"),
+		expect(fixture.store.taxonomies.deleteCategory(tech.id, fixture.actor).ok).toBe(true);
+		expect(fixture.store.taxonomies.listCategories().some((c) => c.name === "Technology")).toBe(
+			false,
 		);
-		expect(
-			fixture.store.taxonomies.updateCategory(
-				{ id: tech.id, name: "Technology" },
-				fixture.actor,
-			).ok,
-		).toBe(true);
-		expect(
-			fixture.store.taxonomies.deleteCategory(tech.id, fixture.actor).ok,
-		).toBe(true);
-		expect(
-			fixture.store.taxonomies
-				.listCategories()
-				.some((c) => c.name === "Technology"),
-		).toBe(false);
 	});
 
 	it("createCategory returns error for duplicate name", () => {
-		fixture.store.taxonomies.createCategory(
-			{ name: "Dup Category" },
-			fixture.actor,
-		);
+		fixture.store.taxonomies.createCategory({ name: "Dup Category" }, fixture.actor);
 		expect(
-			fixture.store.taxonomies.createCategory(
-				{ name: "Dup Category" },
-				fixture.actor,
-			).ok,
+			fixture.store.taxonomies.createCategory({ name: "Dup Category" }, fixture.actor).ok,
 		).toBe(false);
 	});
 
 	it("updateCategory returns error for non-existent id", () => {
 		expect(
-			fixture.store.taxonomies.updateCategory(
-				{ id: 999_999, name: "Ghost" },
-				fixture.actor,
-			).ok,
+			fixture.store.taxonomies.updateCategory({ id: 999_999, name: "Ghost" }, fixture.actor).ok,
 		).toBe(false);
 	});
 
 	it("tags: create, update, delete lifecycle", () => {
-		expect(
-			fixture.store.taxonomies.createTag({ name: "JavaScript" }, fixture.actor)
-				.ok,
-		).toBe(true);
-		const js = unwrap(
-			fixture.store.taxonomies.listTags().find((t) => t.name === "JavaScript"),
-		);
-		expect(
-			fixture.store.taxonomies.updateTag(
-				{ id: js.id, name: "JS" },
-				fixture.actor,
-			).ok,
-		).toBe(true);
-		expect(fixture.store.taxonomies.deleteTag(js.id, fixture.actor).ok).toBe(
+		expect(fixture.store.taxonomies.createTag({ name: "JavaScript" }, fixture.actor).ok).toBe(true);
+		const js = unwrap(fixture.store.taxonomies.listTags().find((t) => t.name === "JavaScript"));
+		expect(fixture.store.taxonomies.updateTag({ id: js.id, name: "JS" }, fixture.actor).ok).toBe(
 			true,
 		);
-		expect(
-			fixture.store.taxonomies.listTags().some((t) => t.name === "JS"),
-		).toBe(false);
+		expect(fixture.store.taxonomies.deleteTag(js.id, fixture.actor).ok).toBe(true);
+		expect(fixture.store.taxonomies.listTags().some((t) => t.name === "JS")).toBe(false);
 	});
 
 	it("createTag returns error for duplicate name", () => {
 		fixture.store.taxonomies.createTag({ name: "Dup Tag" }, fixture.actor);
-		expect(
-			fixture.store.taxonomies.createTag({ name: "Dup Tag" }, fixture.actor).ok,
-		).toBe(false);
+		expect(fixture.store.taxonomies.createTag({ name: "Dup Tag" }, fixture.actor).ok).toBe(false);
 	});
 });
 
 describe("taxonomies additional branches", () => {
 	it("createCategory: empty name (whitespace) returns error (covers !name branch)", () => {
-		expect(
-			fixture.store.taxonomies.createCategory({ name: "   " }, fixture.actor)
-				.ok,
-		).toBe(false);
+		expect(fixture.store.taxonomies.createCategory({ name: "   " }, fixture.actor).ok).toBe(false);
 	});
 
 	it("createCategory: slugifyTerm produces empty slug (covers !slug branch)", () => {
-		expect(
-			fixture.store.taxonomies.createCategory({ name: "---" }, fixture.actor)
-				.ok,
-		).toBe(false);
+		expect(fixture.store.taxonomies.createCategory({ name: "---" }, fixture.actor).ok).toBe(false);
 	});
 
 	it("createCategory: uses provided slug when explicitly set", () => {
@@ -256,32 +185,19 @@ describe("taxonomies additional branches", () => {
 	});
 
 	it("updateCategory: empty name returns error (covers !name branch)", () => {
-		fixture.store.taxonomies.createCategory(
-			{ name: "Up For Update" },
-			fixture.actor,
-		);
+		fixture.store.taxonomies.createCategory({ name: "Up For Update" }, fixture.actor);
 		const c = unwrap(
-			fixture.store.taxonomies
-				.listCategories()
-				.find((x) => x.name === "Up For Update"),
+			fixture.store.taxonomies.listCategories().find((x) => x.name === "Up For Update"),
 		);
-		expect(
-			fixture.store.taxonomies.updateCategory(
-				{ id: c.id, name: "" },
-				fixture.actor,
-			).ok,
-		).toBe(false);
+		expect(fixture.store.taxonomies.updateCategory({ id: c.id, name: "" }, fixture.actor).ok).toBe(
+			false,
+		);
 	});
 
 	it("updateCategory: with explicit slug and description (covers optional field branches)", () => {
-		fixture.store.taxonomies.createCategory(
-			{ name: "Cat To Update Fully" },
-			fixture.actor,
-		);
+		fixture.store.taxonomies.createCategory({ name: "Cat To Update Fully" }, fixture.actor);
 		const c = unwrap(
-			fixture.store.taxonomies
-				.listCategories()
-				.find((x) => x.name === "Cat To Update Fully"),
+			fixture.store.taxonomies.listCategories().find((x) => x.name === "Cat To Update Fully"),
 		);
 		expect(
 			fixture.store.taxonomies.updateCategory(
@@ -297,21 +213,15 @@ describe("taxonomies additional branches", () => {
 	});
 
 	it("deleteCategory: not found returns error", () => {
-		expect(
-			fixture.store.taxonomies.deleteCategory(999_998, fixture.actor).ok,
-		).toBe(false);
+		expect(fixture.store.taxonomies.deleteCategory(999_998, fixture.actor).ok).toBe(false);
 	});
 
 	it("createTag: empty name returns error (covers !name branch)", () => {
-		expect(
-			fixture.store.taxonomies.createTag({ name: "   " }, fixture.actor).ok,
-		).toBe(false);
+		expect(fixture.store.taxonomies.createTag({ name: "   " }, fixture.actor).ok).toBe(false);
 	});
 
 	it("createTag: empty slug returns error (covers !slug branch)", () => {
-		expect(
-			fixture.store.taxonomies.createTag({ name: "---" }, fixture.actor).ok,
-		).toBe(false);
+		expect(fixture.store.taxonomies.createTag({ name: "---" }, fixture.actor).ok).toBe(false);
 	});
 
 	it("createTag: uses provided slug when explicitly set", () => {
@@ -333,30 +243,19 @@ describe("taxonomies additional branches", () => {
 	});
 
 	it("updateTag: empty name returns error", () => {
-		fixture.store.taxonomies.createTag(
-			{ name: "Up For Tag Update" },
-			fixture.actor,
-		);
+		fixture.store.taxonomies.createTag({ name: "Up For Tag Update" }, fixture.actor);
 		const t = unwrap(
-			fixture.store.taxonomies
-				.listTags()
-				.find((x) => x.name === "Up For Tag Update"),
+			fixture.store.taxonomies.listTags().find((x) => x.name === "Up For Tag Update"),
 		);
-		expect(
-			fixture.store.taxonomies.updateTag({ id: t.id, name: "" }, fixture.actor)
-				.ok,
-		).toBe(false);
+		expect(fixture.store.taxonomies.updateTag({ id: t.id, name: "" }, fixture.actor).ok).toBe(
+			false,
+		);
 	});
 
 	it("updateTag: with explicit slug and description (covers optional field branches)", () => {
-		fixture.store.taxonomies.createTag(
-			{ name: "Tag To Update Fully" },
-			fixture.actor,
-		);
+		fixture.store.taxonomies.createTag({ name: "Tag To Update Fully" }, fixture.actor);
 		const t = unwrap(
-			fixture.store.taxonomies
-				.listTags()
-				.find((x) => x.name === "Tag To Update Fully"),
+			fixture.store.taxonomies.listTags().find((x) => x.name === "Tag To Update Fully"),
 		);
 		expect(
 			fixture.store.taxonomies.updateTag(
@@ -372,9 +271,7 @@ describe("taxonomies additional branches", () => {
 	});
 
 	it("deleteTag: not found returns error", () => {
-		expect(fixture.store.taxonomies.deleteTag(999_997, fixture.actor).ok).toBe(
-			false,
-		);
+		expect(fixture.store.taxonomies.deleteTag(999_997, fixture.actor).ok).toBe(false);
 	});
 });
 
@@ -402,9 +299,7 @@ describe("content", () => {
 			fixture.actor,
 		);
 		expect(result.ok).toBe(true);
-		expect(
-			fixture.store.content.getContentState("my-first-post"),
-		).not.toBeNull();
+		expect(fixture.store.content.getContentState("my-first-post")).not.toBeNull();
 	});
 
 	it("createContentRecord returns error for duplicate slug", () => {
@@ -449,9 +344,7 @@ describe("content", () => {
 			fixture.actor,
 		);
 		expect(result.ok).toBe(true);
-		expect(
-			fixture.store.content.getContentState("status-norm-post")?.status,
-		).toBe("published");
+		expect(fixture.store.content.getContentState("status-norm-post")?.status).toBe("published");
 	});
 
 	it("saveContentState updates an existing post (update path)", () => {
@@ -491,24 +384,16 @@ describe("content", () => {
 	});
 
 	it("saveContentState with author/category/tag assignments", () => {
-		fixture.store.authors.createAuthor(
-			{ name: "Assigned Author" },
-			fixture.actor,
-		);
+		fixture.store.authors.createAuthor({ name: "Assigned Author" }, fixture.actor);
 		const authorId = fixture.store.authors
 			.listAuthors()
 			.find((a) => a.name === "Assigned Author")?.id;
-		fixture.store.taxonomies.createCategory(
-			{ name: "Assigned Category" },
-			fixture.actor,
-		);
+		fixture.store.taxonomies.createCategory({ name: "Assigned Category" }, fixture.actor);
 		const catId = fixture.store.taxonomies
 			.listCategories()
 			.find((c) => c.name === "Assigned Category")?.id;
 		fixture.store.taxonomies.createTag({ name: "Assigned Tag" }, fixture.actor);
-		const tagId = fixture.store.taxonomies
-			.listTags()
-			.find((t) => t.name === "Assigned Tag")?.id;
+		const tagId = fixture.store.taxonomies.listTags().find((t) => t.name === "Assigned Tag")?.id;
 
 		expect(
 			fixture.store.content.saveContentState(
@@ -528,50 +413,34 @@ describe("content", () => {
 	});
 
 	it("getContentRevisions returns revisions with parseIdList null→[] for null author_ids", () => {
-		const revisions =
-			fixture.store.content.getContentRevisions("my-first-post");
+		const revisions = fixture.store.content.getContentRevisions("my-first-post");
 		expect(Array.isArray(revisions)).toBe(true);
 		expect(revisions?.length).toBeGreaterThan(0);
 		expect(revisions?.[0].authorIds).toEqual(expect.any(Array));
 	});
 
 	it("getContentRevisions returns null for unknown slug", () => {
-		expect(
-			fixture.store.content.getContentRevisions("unknown-slug"),
-		).toBeNull();
+		expect(fixture.store.content.getContentRevisions("unknown-slug")).toBeNull();
 	});
 
 	it("restoreRevision restores a previous revision", () => {
-		const revisions = unwrap(
-			fixture.store.content.getContentRevisions("my-first-post"),
-		);
+		const revisions = unwrap(fixture.store.content.getContentRevisions("my-first-post"));
 		const revisionId = revisions[revisions.length - 1].id;
 		expect(
-			fixture.store.content.restoreRevision(
-				"my-first-post",
-				revisionId,
-				fixture.actor,
-			).ok,
+			fixture.store.content.restoreRevision("my-first-post", revisionId, fixture.actor).ok,
 		).toBe(true);
 	});
 
 	it("restoreRevision returns error for non-existent slug", () => {
 		expect(
-			fixture.store.content.restoreRevision(
-				"does-not-exist",
-				"revision-1",
-				fixture.actor,
-			).ok,
+			fixture.store.content.restoreRevision("does-not-exist", "revision-1", fixture.actor).ok,
 		).toBe(false);
 	});
 
 	it("restoreRevision returns error for non-existent revision", () => {
 		expect(
-			fixture.store.content.restoreRevision(
-				"my-first-post",
-				"non-existent-revision",
-				fixture.actor,
-			).ok,
+			fixture.store.content.restoreRevision("my-first-post", "non-existent-revision", fixture.actor)
+				.ok,
 		).toBe(false);
 	});
 
@@ -582,11 +451,8 @@ describe("content", () => {
        VALUES (?, 'my-first-post', 'Injected', 'draft', 'X', 'X', '{"not":"array"}', 'reviewed', 'seed')`,
 			)
 			.run("revision-bad-ids");
-		const revisions =
-			fixture.store.content.getContentRevisions("my-first-post");
-		expect(
-			revisions?.find((r) => r.id === "revision-bad-ids")?.authorIds,
-		).toEqual([]);
+		const revisions = fixture.store.content.getContentRevisions("my-first-post");
+		expect(revisions?.find((r) => r.id === "revision-bad-ids")?.authorIds).toEqual([]);
 	});
 });
 
@@ -671,9 +537,7 @@ describe("content restoreRevision optional assignment branches", () => {
 			fixture.actor,
 		);
 		fixture.store.taxonomies.createCategory({ name: "Rev Cat" }, fixture.actor);
-		const catId = fixture.store.taxonomies
-			.listCategories()
-			.find((c) => c.name === "Rev Cat")?.id;
+		const catId = fixture.store.taxonomies.listCategories().find((c) => c.name === "Rev Cat")?.id;
 		fixture.store.content.saveContentState(
 			"revision-post-for-restore",
 			{
@@ -718,9 +582,7 @@ describe("content entry optional fields in DB", () => {
 				"Custom meta",
 			);
 		expect(
-			fixture.store.content
-				.listContentStates()
-				.find((s) => s.slug === "custom-entry-with-body"),
+			fixture.store.content.listContentStates().find((s) => s.slug === "custom-entry-with-body"),
 		).toBeDefined();
 	});
 });
@@ -736,11 +598,9 @@ describe("submissions", () => {
 			submittedAt: new Date().toISOString(),
 		});
 		expect(result.ok).toBe(true);
-		expect(
-			fixture.store.submissions
-				.getContactSubmissions()
-				.some((s) => s.name === "Alice"),
-		).toBe(true);
+		expect(fixture.store.submissions.getContactSubmissions().some((s) => s.name === "Alice")).toBe(
+			true,
+		);
 	});
 });
 
@@ -748,11 +608,9 @@ describe("submissions", () => {
 
 describe("translations", () => {
 	it("getEffectiveTranslationState returns default when no override exists", () => {
-		expect(
-			fixture.store.translations.getEffectiveTranslationState(
-				"/blog/no-override",
-			),
-		).toBe("not_started");
+		expect(fixture.store.translations.getEffectiveTranslationState("/blog/no-override")).toBe(
+			"not_started",
+		);
 	});
 
 	it("updateTranslationState persists state and getEffectiveTranslationState reads it back", () => {
@@ -763,11 +621,9 @@ describe("translations", () => {
 				fixture.actor,
 			).ok,
 		).toBe(true);
-		expect(
-			fixture.store.translations.getEffectiveTranslationState(
-				"/blog/translatable",
-			),
-		).toBe("partial");
+		expect(fixture.store.translations.getEffectiveTranslationState("/blog/translatable")).toBe(
+			"partial",
+		);
 	});
 
 	it("updateTranslationState returns error for invalid state", () => {

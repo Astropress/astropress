@@ -1,15 +1,9 @@
-import {
-	type AdminLabelKey,
-	type AdminLocale,
-	adminLabels,
-} from "./admin-labels";
+import { type AdminLabelKey, type AdminLocale, adminLabels } from "./admin-labels";
 import { defaultAdminUiConfig } from "./admin-ui-defaults";
-import {
-	LABEL_TRANSLATION_KEYS,
-	NAVIGATION_TRANSLATION_KEYS,
-} from "./admin-ui-translation-keys";
+import { LABEL_TRANSLATION_KEYS, NAVIGATION_TRANSLATION_KEYS } from "./admin-ui-translation-keys";
 import { peekCmsConfig } from "./config";
-export type { AdminLocale, AdminLabelKey } from "./admin-labels";
+
+export type { AdminLabelKey, AdminLocale } from "./admin-labels";
 export { adminLabels } from "./admin-labels";
 
 // ---------------------------------------------------------------------------
@@ -182,8 +176,7 @@ export function resolveAstropressAdminUiConfig(
 	return {
 		branding: {
 			...translated.branding,
-			shellName:
-				translated.branding.shellName || translated.branding.productName,
+			shellName: translated.branding.shellName || translated.branding.productName,
 			logoAlt: translated.branding.logoAlt || translated.branding.productName,
 			logoHref: translated.branding.logoHref || "/ap-admin",
 			stylesheetHref: translated.branding.stylesheetHref || null,

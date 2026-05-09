@@ -11,8 +11,7 @@ const packageRoot = (() => {
 	return basename(parent) === "dist" ? dirname(parent) : parent;
 })();
 
-const packageResource = (relativePath: string) =>
-	join(packageRoot, relativePath);
+const packageResource = (relativePath: string) => join(packageRoot, relativePath);
 
 export interface AstropressPublicSiteOptions {
 	/**
@@ -41,7 +40,7 @@ export interface AstropressPublicSiteOptions {
  * ```
  */
 export function createAstropressPublicSiteIntegration(
-	options: AstropressPublicSiteOptions = {},
+	_options: AstropressPublicSiteOptions = {},
 ): AstroIntegration {
 	return {
 		name: "astropress-public-site",

@@ -6,10 +6,7 @@ import { describe, expect, it } from "vitest";
 // Single-target test: only reads pages/ap-admin/posts/[slug].astro. Mutations
 // to other files do not invalidate this suite's stryker cache.
 
-const editorPath = path.resolve(
-	import.meta.dirname,
-	"../pages/ap-admin/posts/[slug].astro",
-);
+const editorPath = path.resolve(import.meta.dirname, "../pages/ap-admin/posts/[slug].astro");
 
 describe("post editor custom field auto-generation", () => {
 	it("post editor uses peekCmsConfig to find registered content types", () => {

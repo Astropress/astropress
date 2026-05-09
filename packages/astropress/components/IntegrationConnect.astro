@@ -18,24 +18,17 @@
  * render as `type="password"` so they're at least obscured in the
  * browser tab.
  */
-import type {
-	IntegrationDomain,
-	RegisteredProvider,
-} from "../src/integrations/registry";
+import type { IntegrationDomain, RegisteredProvider } from "../src/integrations/registry";
 import { listProviders } from "../src/integrations/registry";
 import CsrfInput from "./CsrfInput.astro";
 
 interface Props {
 	domain: IntegrationDomain;
-	connectedProviderIds?: ReadonlyArray<string>;
+	connectedProviderIds?: readonly string[];
 	statusByProvider?: Readonly<Record<string, "connected" | "error" | "paused">>;
 }
 
-const {
-	domain,
-	connectedProviderIds = [],
-	statusByProvider = {},
-} = Astro.props;
+const { domain, connectedProviderIds = [], statusByProvider = {} } = Astro.props;
 
 const providers = listProviders(domain);
 const connectedSet = new Set(connectedProviderIds);
@@ -57,12 +50,7 @@ function fieldKeysOf(provider: RegisteredProvider): string[] {
 
 function isSensitive(key: string): boolean {
 	const k = key.toLowerCase();
-	return (
-		k.includes("key") ||
-		k.includes("secret") ||
-		k.includes("token") ||
-		k.includes("password")
-	);
+	return k.includes("key") || k.includes("secret") || k.includes("token") || k.includes("password");
 }
 ---
 

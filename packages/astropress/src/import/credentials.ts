@@ -43,9 +43,7 @@ export function validateUrl(url: string): void {
 // File I/O
 // ---------------------------------------------------------------------------
 
-export async function loadCredentialsFile(
-	filePath: string,
-): Promise<CredentialsFile> {
+export async function loadCredentialsFile(filePath: string): Promise<CredentialsFile> {
 	let text: string;
 	try {
 		text = await readFile(filePath, "utf8");
@@ -110,9 +108,7 @@ export async function resolveWordPressCredentials(opts: {
 	if (opts.credentialsFile) {
 		const config = await loadCredentialsFile(opts.credentialsFile);
 		if (!config.wordpress) {
-			throw new Error(
-				"Credentials file does not contain a 'wordpress' section",
-			);
+			throw new Error("Credentials file does not contain a 'wordpress' section");
 		}
 		// audit-boundary: opaque-passthrough -- third-party API response shape; narrowed at consumer
 		const wp = config.wordpress as Record<string, unknown>;
@@ -128,9 +124,7 @@ export async function resolveWordPressCredentials(opts: {
 		return { url: opts.url, username: opts.username, password: opts.password };
 	}
 
-	throw new Error(
-		"No credentials provided. Use --credentials-file or let the CLI prompt you.",
-	);
+	throw new Error("No credentials provided. Use --credentials-file or let the CLI prompt you.");
 }
 
 export async function resolveWixCredentials(opts: {
@@ -155,7 +149,5 @@ export async function resolveWixCredentials(opts: {
 		return { email: opts.email, password: opts.password };
 	}
 
-	throw new Error(
-		"No credentials provided. Use --credentials-file or let the CLI prompt you.",
-	);
+	throw new Error("No credentials provided. Use --credentials-file or let the CLI prompt you.");
 }

@@ -21,9 +21,7 @@ function stubDialog(dialog: HTMLDialogElement) {
 }
 
 function makeConfirmDialog() {
-	const container = document.createElement(
-		"ap-confirm-dialog",
-	) as ApConfirmDialog;
+	const container = document.createElement("ap-confirm-dialog") as ApConfirmDialog;
 	container.innerHTML = `
     <dialog id="confirm-dialog" aria-labelledby="confirm-title">
       <h2 id="confirm-title">Confirm?</h2>
@@ -90,12 +88,8 @@ describe("ApConfirmDialog", () => {
 		document.body.appendChild(trigger);
 
 		trigger.click();
-		expect(dialog.querySelector("#dialog-source")?.textContent).toBe(
-			"/old-path",
-		);
-		expect(dialog.querySelector("#dialog-target")?.textContent).toBe(
-			"/new-path",
-		);
+		expect(dialog.querySelector("#dialog-source")?.textContent).toBe("/old-path");
+		expect(dialog.querySelector("#dialog-target")?.textContent).toBe("/new-path");
 	});
 
 	it("sets form input values from data-field-name + data-field-value attributes", () => {
@@ -108,9 +102,9 @@ describe("ApConfirmDialog", () => {
 		document.body.appendChild(trigger);
 
 		trigger.click();
-		expect(
-			dialog.querySelector<HTMLInputElement>('input[name="sourcePath"]')?.value,
-		).toBe("/old-path");
+		expect(dialog.querySelector<HTMLInputElement>('input[name="sourcePath"]')?.value).toBe(
+			"/old-path",
+		);
 	});
 
 	it("closes the dialog when the close button is clicked", () => {

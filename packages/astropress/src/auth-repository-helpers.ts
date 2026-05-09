@@ -48,22 +48,15 @@ export interface AstropressAuthRepositoryInput {
 		ipAddress?: string | null;
 		userAgent?: string | null;
 	}): void;
-	findLiveSessionById(
-		sessionToken: string,
-	): AstropressAuthSessionRow | null | undefined;
+	findLiveSessionById(sessionToken: string): AstropressAuthSessionRow | null | undefined;
 	touchSession(sessionToken: string): void;
 	revokeSessionById(sessionToken: string): void;
-	findInviteTokenByHash(
-		tokenHash: string,
-	): AstropressInviteTokenRecord | null | undefined;
+	findInviteTokenByHash(tokenHash: string): AstropressInviteTokenRecord | null | undefined;
 	updateAdminUserPassword(userId: number, passwordHash: string): void;
 	acceptInvitesForUser(userId: number): void;
 	findPasswordResetUserByEmail(
 		email: string,
-	):
-		| { id: number; email: string; role: SessionUser["role"]; name: string }
-		| null
-		| undefined;
+	): { id: number; email: string; role: SessionUser["role"]; name: string } | null | undefined;
 	consumePasswordResetTokensForUser(userId: number): void;
 	insertPasswordResetToken(input: {
 		tokenId: string;
@@ -124,10 +117,7 @@ export function resolveValidSession(
 	}
 
 	const lastActiveAt = Date.parse(row.lastActiveAt);
-	if (
-		!Number.isFinite(lastActiveAt) ||
-		deps.now() - lastActiveAt > deps.sessionTtlMs
-	) {
+	if (!Number.isFinite(lastActiveAt) || deps.now() - lastActiveAt > deps.sessionTtlMs) {
 		deps.revokeSessionById(sessionToken);
 		return null;
 	}
@@ -146,10 +136,7 @@ export function resolveUsableInviteToken(
 	}
 
 	const row = deps.findInviteTokenByHash(deps.hashOpaqueToken(trimmedToken));
-	if (
-		!row ||
-		!isUsableToken(row.expiresAt, row.acceptedAt, row.active, deps.now())
-	) {
+	if (!row || !isUsableToken(row.expiresAt, row.acceptedAt, row.active, deps.now())) {
 		return null;
 	}
 
@@ -165,13 +152,8 @@ export function resolveUsablePasswordResetToken(
 		return null;
 	}
 
-	const row = deps.findPasswordResetTokenByHash(
-		deps.hashOpaqueToken(trimmedToken),
-	);
-	if (
-		!row ||
-		!isUsableToken(row.expiresAt, row.consumedAt, row.active, deps.now())
-	) {
+	const row = deps.findPasswordResetTokenByHash(deps.hashOpaqueToken(trimmedToken));
+	if (!row || !isUsableToken(row.expiresAt, row.consumedAt, row.active, deps.now())) {
 		return null;
 	}
 

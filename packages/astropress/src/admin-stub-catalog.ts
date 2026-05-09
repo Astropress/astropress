@@ -155,8 +155,7 @@ export const adminStubs = {
 		capability: "Social Syndication",
 		description:
 			"Auto-post on publish to social networks. Configure a provider to enable cross-posting.",
-		configHint:
-			'registerCms({\n  socialSyndication: { providers: ["bluesky", "mastodon"] },\n});',
+		configHint: 'registerCms({\n  socialSyndication: { providers: ["bluesky", "mastodon"] },\n});',
 		providers: [
 			{ name: "Bluesky", href: "https://bsky.app", tag: "OSS" },
 			{ name: "Mastodon", href: "https://joinmastodon.org", tag: "OSS" },
@@ -180,8 +179,7 @@ export const adminStubs = {
 		capability: "Sitemaps",
 		description:
 			"Generate and submit XML sitemaps to search engines. View sitemap coverage and last submission status.",
-		configHint:
-			'registerCms({\n  sitemaps: { enabled: true, submit: ["google", "bing"] },\n});',
+		configHint: 'registerCms({\n  sitemaps: { enabled: true, submit: ["google", "bing"] },\n});',
 		providers: [
 			{ name: "Built-in XML sitemap", tag: "Recommended" },
 			{
@@ -338,8 +336,7 @@ export const adminStubs = {
 		capability: "Monitoring",
 		description:
 			"Metrics, uptime, and alerting. Enable Prometheus to scrape /ap/metrics, or wire a SaaS uptime monitor.",
-		configHint:
-			"registerCms({\n  monitoring: { prometheusEnabled: true },\n});",
+		configHint: "registerCms({\n  monitoring: { prometheusEnabled: true },\n});",
 		providers: [
 			{ name: "Prometheus (built-in)", tag: "Recommended" },
 			{ name: "Grafana Cloud", href: "https://grafana.com", tag: "SaaS" },
@@ -406,8 +403,7 @@ export const adminStubs = {
 		capability: "Backups",
 		description:
 			"Schedule snapshots of the data store and exports of the media bucket. View recent backup runs and restore points.",
-		configHint:
-			'registerCms({\n  backups: { schedule: "daily", target: "r2://backups" },\n});',
+		configHint: 'registerCms({\n  backups: { schedule: "daily", target: "r2://backups" },\n});',
 		providers: [
 			{
 				name: "Cloudflare D1 + R2",

@@ -67,13 +67,9 @@ describe("createD1RateLimitPart.checkRateLimit", () => {
 					q.includes("LIMIT 1"),
 			),
 		).toBe(true);
-		expect(m.queries.some((q) => q.includes("INSERT INTO rate_limits"))).toBe(
-			true,
-		);
+		expect(m.queries.some((q) => q.includes("INSERT INTO rate_limits"))).toBe(true);
 		// Bound args of the INSERT include (key, now, windowMs).
-		const insertBind = m.binds.find(
-			(b) => typeof b[0] === "string" && b.length === 3,
-		);
+		const insertBind = m.binds.find((b) => typeof b[0] === "string" && b.length === 3);
 		expect(insertBind?.[0]).toBe("k");
 		expect(insertBind?.[2]).toBe(60_000);
 	});
@@ -83,9 +79,7 @@ describe("createD1RateLimitPart.checkRateLimit", () => {
 		const part = createD1RateLimitPart(m.db);
 		const ok = await part.checkRateLimit("k", 5, 1);
 		expect(ok).toBe(true);
-		expect(m.queries.some((q) => q.includes("INSERT INTO rate_limits"))).toBe(
-			true,
-		);
+		expect(m.queries.some((q) => q.includes("INSERT INTO rate_limits"))).toBe(true);
 	});
 
 	it("increments count when under limit and returns true", async () => {
@@ -98,11 +92,9 @@ describe("createD1RateLimitPart.checkRateLimit", () => {
 		const part = createD1RateLimitPart(m.db);
 		const ok = await part.checkRateLimit("k", 5, 60_000);
 		expect(ok).toBe(true);
-		expect(
-			m.queries.some((q) =>
-				q.includes("UPDATE rate_limits SET count = count + 1"),
-			),
-		).toBe(true);
+		expect(m.queries.some((q) => q.includes("UPDATE rate_limits SET count = count + 1"))).toBe(
+			true,
+		);
 	});
 
 	it("returns false when count is at the limit", async () => {
@@ -130,14 +122,10 @@ describe("createD1RateLimitPart.checkRateLimit", () => {
 		});
 		const part = createD1RateLimitPart(m.db);
 		await part.checkRateLimit("k", 5, 60_000);
-		expect(
-			m.queries.some((q) =>
-				q.includes("UPDATE rate_limits SET count = count + 1"),
-			),
-		).toBe(true);
-		expect(m.queries.some((q) => q.includes("INSERT INTO rate_limits"))).toBe(
-			false,
+		expect(m.queries.some((q) => q.includes("UPDATE rate_limits SET count = count + 1"))).toBe(
+			true,
 		);
+		expect(m.queries.some((q) => q.includes("INSERT INTO rate_limits"))).toBe(false);
 	});
 });
 
@@ -174,10 +162,7 @@ describe("createD1RateLimitPart.peekRateLimit", () => {
 		await createD1RateLimitPart(m.db).peekRateLimit("k", 5, 1);
 		expect(
 			m.queries.some(
-				(q) =>
-					q.includes("SELECT") &&
-					q.includes("rate_limits") &&
-					q.includes("LIMIT 1"),
+				(q) => q.includes("SELECT") && q.includes("rate_limits") && q.includes("LIMIT 1"),
 			),
 		).toBe(true);
 	});
@@ -197,18 +182,14 @@ describe("createD1RateLimitPart.recordFailedAttempt", () => {
 		const m = makeDb(null);
 		const part = createD1RateLimitPart(m.db);
 		await part.recordFailedAttempt("k", 5, 60_000);
-		expect(m.queries.some((q) => q.includes("INSERT INTO rate_limits"))).toBe(
-			true,
-		);
+		expect(m.queries.some((q) => q.includes("INSERT INTO rate_limits"))).toBe(true);
 	});
 
 	it("inserts fresh row when window has expired", async () => {
 		const m = makeDb({ count: 99, window_start_ms: 0 });
 		const part = createD1RateLimitPart(m.db);
 		await part.recordFailedAttempt("k", 5, 1);
-		expect(m.queries.some((q) => q.includes("INSERT INTO rate_limits"))).toBe(
-			true,
-		);
+		expect(m.queries.some((q) => q.includes("INSERT INTO rate_limits"))).toBe(true);
 	});
 
 	it("increments count when row exists within window", async () => {
@@ -216,11 +197,9 @@ describe("createD1RateLimitPart.recordFailedAttempt", () => {
 		const m = makeDb({ count: 2, window_start_ms: now - 100 });
 		const part = createD1RateLimitPart(m.db);
 		await part.recordFailedAttempt("k", 5, 60_000);
-		expect(
-			m.queries.some((q) =>
-				q.includes("UPDATE rate_limits SET count = count + 1"),
-			),
-		).toBe(true);
+		expect(m.queries.some((q) => q.includes("UPDATE rate_limits SET count = count + 1"))).toBe(
+			true,
+		);
 	});
 
 	it("uses the rate-limits SELECT query (no StringLiteral mutation)", async () => {
@@ -228,10 +207,7 @@ describe("createD1RateLimitPart.recordFailedAttempt", () => {
 		await createD1RateLimitPart(m.db).recordFailedAttempt("k", 5, 1);
 		expect(
 			m.queries.some(
-				(q) =>
-					q.includes("SELECT") &&
-					q.includes("rate_limits") &&
-					q.includes("LIMIT 1"),
+				(q) => q.includes("SELECT") && q.includes("rate_limits") && q.includes("LIMIT 1"),
 			),
 		).toBe(true);
 	});
@@ -243,13 +219,9 @@ describe("createD1RateLimitPart.recordFailedAttempt", () => {
 		await part.recordFailedAttempt("k", 5, 60_000);
 		// At elapsed===windowMs: original UPDATEs (still-in-window).
 		// Mutant `>= windowMs` would INSERT (window expired).
-		expect(
-			m.queries.some((q) =>
-				q.includes("UPDATE rate_limits SET count = count + 1"),
-			),
-		).toBe(true);
-		expect(m.queries.some((q) => q.includes("INSERT INTO rate_limits"))).toBe(
-			false,
+		expect(m.queries.some((q) => q.includes("UPDATE rate_limits SET count = count + 1"))).toBe(
+			true,
 		);
+		expect(m.queries.some((q) => q.includes("INSERT INTO rate_limits"))).toBe(false);
 	});
 });

@@ -64,9 +64,7 @@ function ensureGh(): void {
 
 	// Verify install succeeded
 	try {
-		const version = execFileSync("gh", ["--version"], { encoding: "utf8" })
-			.trim()
-			.split("\n")[0];
+		const version = execFileSync("gh", ["--version"], { encoding: "utf8" }).trim().split("\n")[0];
 		console.log(`\nInstalled: ${version}\n`);
 	} catch {
 		console.error(
@@ -137,11 +135,10 @@ interface Alert {
 
 function detectPrNumber(): number | null {
 	try {
-		const out = execFileSync(
-			"gh",
-			["pr", "view", "--json", "number", "--jq", ".number"],
-			{ encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] },
-		).trim();
+		const out = execFileSync("gh", ["pr", "view", "--json", "number", "--jq", ".number"], {
+			encoding: "utf8",
+			stdio: ["ignore", "pipe", "ignore"],
+		}).trim();
 		const n = Number.parseInt(out, 10);
 		return Number.isFinite(n) && n > 0 ? n : null;
 	} catch {
@@ -183,8 +180,7 @@ async function main() {
 					? null
 					: detectPrNumber();
 
-	const usePrRef =
-		prNumber !== null && Number.isFinite(prNumber) && prNumber > 0;
+	const usePrRef = prNumber !== null && Number.isFinite(prNumber) && prNumber > 0;
 	const ref = usePrRef ? `refs/pull/${prNumber}/merge` : `refs/heads/${branch}`;
 	const label = usePrRef ? `PR #${prNumber}` : branch;
 	console.log(`Checking GHAS alerts for ${repo} @ ${ref}\n`);
@@ -217,9 +213,7 @@ async function main() {
 	}
 
 	// Partition into dismissed and active
-	const active = alerts.filter(
-		(a) => a.state === "open" && !a.dismissed_reason,
-	);
+	const active = alerts.filter((a) => a.state === "open" && !a.dismissed_reason);
 	const dismissed = alerts.filter((a) => a.dismissed_reason);
 
 	if (dismissed.length > 0) {
@@ -233,9 +227,7 @@ async function main() {
 	}
 
 	if (active.length === 0) {
-		console.log(
-			`✓ 0 active GHAS alerts on ${label} (${dismissed.length} dismissed)`,
-		);
+		console.log(`✓ 0 active GHAS alerts on ${label} (${dismissed.length} dismissed)`);
 		process.exit(0);
 	}
 

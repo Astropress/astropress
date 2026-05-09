@@ -58,10 +58,7 @@ export async function buildAuthorizeRedirect(
 	});
 	const url = new URL(args.provider.authorizationUrl);
 	url.searchParams.set("client_id", args.clientId);
-	url.searchParams.set(
-		"redirect_uri",
-		buildRedirectUri(args.origin, args.provider.redirectPath),
-	);
+	url.searchParams.set("redirect_uri", buildRedirectUri(args.origin, args.provider.redirectPath));
 	url.searchParams.set("response_type", "code");
 	url.searchParams.set("scope", args.provider.scopes.join(" "));
 	url.searchParams.set("state", state.token);

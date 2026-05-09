@@ -3,10 +3,10 @@
  */
 import { describe, expect, it } from "vitest";
 import {
-	TEMPLATE_CATALOG,
-	TEMPLATE_KEYS,
 	buildTemplate,
 	isTemplateKey,
+	TEMPLATE_CATALOG,
+	TEMPLATE_KEYS,
 } from "../../src/sections/templates";
 
 describe("templates content", () => {
@@ -163,35 +163,20 @@ describe("templates catalog", () => {
 
 	it("landing entry has 4 section kinds in order", () => {
 		const e = TEMPLATE_CATALOG.find((c) => c.key === "landing");
-		expect(e?.sectionKinds).toEqual([
-			"hero",
-			"feature-grid",
-			"testimonials",
-			"cta-banner",
-		]);
+		expect(e?.sectionKinds).toEqual(["hero", "feature-grid", "testimonials", "cta-banner"]);
 		expect(e?.defaultTitle).toBe("Landing page");
 	});
 
 	it("about entry catalog details", () => {
 		const e = TEMPLATE_CATALOG.find((c) => c.key === "about");
 		expect(e?.defaultTitle).toBe("About page");
-		expect(e?.sectionKinds).toEqual([
-			"hero",
-			"image-text",
-			"feature-grid",
-			"cta-banner",
-		]);
+		expect(e?.sectionKinds).toEqual(["hero", "image-text", "feature-grid", "cta-banner"]);
 	});
 
 	it("contact entry catalog details", () => {
 		const e = TEMPLATE_CATALOG.find((c) => c.key === "contact");
 		expect(e?.defaultTitle).toBe("Contact page");
-		expect(e?.sectionKinds).toEqual([
-			"hero",
-			"image-text",
-			"faq",
-			"cta-banner",
-		]);
+		expect(e?.sectionKinds).toEqual(["hero", "image-text", "faq", "cta-banner"]);
 	});
 
 	it("TEMPLATE_KEYS is in canonical order", () => {

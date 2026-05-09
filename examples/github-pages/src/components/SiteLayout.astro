@@ -12,13 +12,7 @@ interface Props {
 	currentPath: string;
 }
 
-const {
-	title,
-	description,
-	heading,
-	eyebrow = "Astropress",
-	currentPath,
-} = Astro.props;
+const { title, description, heading, eyebrow = "Astropress", currentPath } = Astro.props;
 
 const navLinks: NavLink[] = [
 	{ href: "/", label: "Overview" },

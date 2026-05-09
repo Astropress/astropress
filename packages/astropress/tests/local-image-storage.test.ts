@@ -1,10 +1,4 @@
-import {
-	existsSync,
-	mkdirSync,
-	mkdtempSync,
-	rmSync,
-	writeFileSync,
-} from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -216,11 +210,7 @@ describe("generateSrcset", () => {
 				return `/images/${filename}`;
 			},
 		);
-		expect(stored).toEqual([
-			"photo-400w.webp",
-			"photo-800w.webp",
-			"photo-1200w.webp",
-		]);
+		expect(stored).toEqual(["photo-400w.webp", "photo-800w.webp", "photo-1200w.webp"]);
 		expect(out).toBe(
 			"/images/photo-400w.webp 400w, /images/photo-800w.webp 800w, /images/photo-1200w.webp 1200w",
 		);
@@ -255,14 +245,10 @@ describe("generateSrcset", () => {
 			return { default: factory };
 		});
 		const stored: string[] = [];
-		await generateSrcset(
-			new Uint8Array([1]),
-			"/images/uploads/folder/p.png",
-			async (n, _b) => {
-				stored.push(n);
-				return `/images/${n}`;
-			},
-		);
+		await generateSrcset(new Uint8Array([1]), "/images/uploads/folder/p.png", async (n, _b) => {
+			stored.push(n);
+			return `/images/${n}`;
+		});
 		expect(stored[0]).toBe("folder/p-400w.webp");
 		vi.doUnmock("sharp");
 	});
@@ -277,21 +263,17 @@ describe("generateSrcset", () => {
 			return { default: factory };
 		});
 		const stored: string[] = [];
-		await generateSrcset(
-			new Uint8Array([1]),
-			"/images/seeded/x.png",
-			async (n, _b) => {
-				stored.push(n);
-				return `/images/${n}`;
-			},
-		);
+		await generateSrcset(new Uint8Array([1]), "/images/seeded/x.png", async (n, _b) => {
+			stored.push(n);
+			return `/images/${n}`;
+		});
 		expect(stored[0]).toBe("seeded/x-400w.webp");
 		vi.doUnmock("sharp");
 	});
 
 	it("calls sharp.resize with width AND withoutEnlargement:true (not {})", async () => {
 		// Pins the ObjectLiteral and BooleanLiteral mutations on the resize args.
-		const resizeCalls: Array<Record<string, unknown>> = [];
+		const resizeCalls: Record<string, unknown>[] = [];
 		vi.doMock("sharp", () => {
 			const factory = (_buf: Buffer) => ({
 				resize: (opts: Record<string, unknown>) => {
@@ -350,14 +332,10 @@ describe("generateSrcset", () => {
 			return { default: factory };
 		});
 		const stored: string[] = [];
-		await generateSrcset(
-			new Uint8Array([1]),
-			"/cdn/images/uploads/p.png",
-			async (n, _b) => {
-				stored.push(n);
-				return `/images/${n}`;
-			},
-		);
+		await generateSrcset(new Uint8Array([1]), "/cdn/images/uploads/p.png", async (n, _b) => {
+			stored.push(n);
+			return `/images/${n}`;
+		});
 		// The leading "/cdn/" should remain because /images/uploads/ is mid-path.
 		expect(stored[0]).toBe("/cdn/images/uploads/p-400w.webp");
 		vi.doUnmock("sharp");
@@ -374,14 +352,10 @@ describe("generateSrcset", () => {
 			return { default: factory };
 		});
 		const stored: string[] = [];
-		await generateSrcset(
-			new Uint8Array([1]),
-			"/cdn/images/p.png",
-			async (n, _b) => {
-				stored.push(n);
-				return `/images/${n}`;
-			},
-		);
+		await generateSrcset(new Uint8Array([1]), "/cdn/images/p.png", async (n, _b) => {
+			stored.push(n);
+			return `/images/${n}`;
+		});
 		expect(stored[0]).toBe("/cdn/images/p-400w.webp");
 		vi.doUnmock("sharp");
 	});
@@ -396,14 +370,10 @@ describe("generateSrcset", () => {
 			return { default: factory };
 		});
 		const stored: string[] = [];
-		await generateSrcset(
-			new Uint8Array([1]),
-			"/images/uploads/photo",
-			async (n, _b) => {
-				stored.push(n);
-				return `/images/${n}`;
-			},
-		);
+		await generateSrcset(new Uint8Array([1]), "/images/uploads/photo", async (n, _b) => {
+			stored.push(n);
+			return `/images/${n}`;
+		});
 		expect(stored[0]).toBe("photo-400w.webp");
 		vi.doUnmock("sharp");
 	});

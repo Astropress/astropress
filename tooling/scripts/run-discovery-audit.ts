@@ -7,6 +7,8 @@
  * Re-runnable; reads only from filesystem and prior baseline JSONs.
  */
 
+// biome-ignore-all lint/suspicious/noExplicitAny: each audit produces a different JSON shape; this script reads them dynamically with optional-chain access for a markdown summary — typing each shape adds no safety here.
+
 import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 

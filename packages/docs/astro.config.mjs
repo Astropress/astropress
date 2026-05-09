@@ -61,9 +61,7 @@ export default defineConfig({
 				{
 					label: "Contributing",
 					collapsed: true,
-					items: [
-						{ label: "Publishing to npm", slug: "contributing/publishing" },
-					],
+					items: [{ label: "Publishing to npm", slug: "contributing/publishing" }],
 				},
 			],
 		}),

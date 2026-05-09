@@ -6,9 +6,9 @@ import { createAstropressSqliteAdminRuntime } from "../src/sqlite-admin-runtime.
 import { createDefaultAstropressSqliteSeedToolkit } from "../src/sqlite-bootstrap.js";
 import { makeDb } from "./helpers/make-db.js";
 import {
-	type RuntimeFixture,
 	createRuntimeFixture,
 	makePasswordHash,
+	type RuntimeFixture,
 } from "./helpers/sqlite-admin-runtime-fixture.js";
 
 let fixture: RuntimeFixture;
@@ -19,6 +19,72 @@ beforeAll(() => {
 
 afterAll(() => {
 	fixture.db.close();
+});
+
+// ─── Adapter identity ─────────────────────────────────────────────────────────
+
+describe("admin store adapter identity", () => {
+	it("declares backend as 'sqlite'", () => {
+		expect(fixture.store.backend).toBe("sqlite");
+	});
+
+	it("exposes searchContentStates that delegates to the sqlite backing store", () => {
+		// The fixture DB has no FTS index (search disabled), so searchContentOverrides
+		// throws "no such table: content_fts". The mutation that turns the closure
+		// body into `undefined` would *not* throw — so the throwing call IS the kill
+		// signal: a real delegation reaches into the sqlite layer; an `() => undefined`
+		// stub returns silently.
+		expect(typeof fixture.runtime.searchContentStates).toBe("function");
+		expect(() => fixture.runtime.searchContentStates("nonexistent-query-xyz")).toThrowError(
+			/content_fts/,
+		);
+	});
+});
+
+describe("FTS5 search index bootstrap", () => {
+	const CMS_CONFIG_KEY = Symbol.for("astropress.cms-config");
+	type ConfigSlot = { [k: symbol]: unknown };
+	const slot = globalThis as unknown as ConfigSlot;
+
+	it("does not create the FTS5 index when CMS search is disabled (no registerCms)", () => {
+		const prior = slot[CMS_CONFIG_KEY];
+		slot[CMS_CONFIG_KEY] = null;
+		const db = makeDb();
+		try {
+			createAstropressSqliteAdminRuntime({ getDatabase: () => db });
+			const ftsTable = db
+				.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='content_fts'")
+				.get();
+			expect(ftsTable).toBeUndefined();
+		} finally {
+			slot[CMS_CONFIG_KEY] = prior;
+			db.close();
+		}
+	});
+
+	it("creates the FTS5 index when CMS search is enabled", async () => {
+		const { registerCms } = await import("../src/config.js");
+		const prior = slot[CMS_CONFIG_KEY];
+		const db = makeDb();
+		try {
+			registerCms({
+				templateKeys: ["content"],
+				siteUrl: "https://example.com",
+				seedPages: [],
+				archives: [],
+				translationStatus: [],
+				search: { enabled: true },
+			});
+			createAstropressSqliteAdminRuntime({ getDatabase: () => db });
+			const ftsTable = db
+				.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='content_fts'")
+				.get();
+			expect(ftsTable).toEqual({ name: "content_fts" });
+		} finally {
+			slot[CMS_CONFIG_KEY] = prior;
+			db.close();
+		}
+	});
 });
 
 // ─── Redirects ────────────────────────────────────────────────────────────────
@@ -35,9 +101,7 @@ describe("redirects", () => {
 		);
 		expect(result.ok).toBe(true);
 		expect(
-			fixture.store.redirects
-				.getRedirectRules()
-				.some((r) => r.sourcePath === "/old-page"),
+			fixture.store.redirects.getRedirectRules().some((r) => r.sourcePath === "/old-page"),
 		).toBe(true);
 	});
 
@@ -68,24 +132,16 @@ describe("redirects", () => {
 			{ sourcePath: "/to-delete", targetPath: "/dest", statusCode: 301 },
 			fixture.actor,
 		);
+		expect(fixture.store.redirects.deleteRedirectRule("/to-delete", fixture.actor).ok).toBe(true);
 		expect(
-			fixture.store.redirects.deleteRedirectRule("/to-delete", fixture.actor)
-				.ok,
-		).toBe(true);
-		expect(
-			fixture.store.redirects
-				.getRedirectRules()
-				.some((r) => r.sourcePath === "/to-delete"),
+			fixture.store.redirects.getRedirectRules().some((r) => r.sourcePath === "/to-delete"),
 		).toBe(false);
 	});
 
 	it("deleteRedirectRule returns error for non-existent path", () => {
-		expect(
-			fixture.store.redirects.deleteRedirectRule(
-				"/does-not-exist",
-				fixture.actor,
-			).ok,
-		).toBe(false);
+		expect(fixture.store.redirects.deleteRedirectRule("/does-not-exist", fixture.actor).ok).toBe(
+			false,
+		);
 	});
 });
 
@@ -136,11 +192,7 @@ describe("comments", () => {
 		expect(result.ok).toBe(true);
 		if (!result.ok) throw new Error("unreachable");
 		expect(typeof result.comment.id).toBe("string");
-		expect(
-			fixture.store.comments
-				.getComments()
-				.some((c) => c.id === result.comment.id),
-		).toBe(true);
+		expect(fixture.store.comments.getComments().some((c) => c.id === result.comment.id)).toBe(true);
 	});
 
 	it("submitPublicComment without submittedAt field (uses auto-generated id)", async () => {
@@ -164,30 +216,20 @@ describe("comments", () => {
 		});
 		if (!submitted.ok) throw new Error("submitPublicComment failed");
 		expect(
-			fixture.store.comments.moderateComment(
-				submitted.comment.id,
-				"approved",
-				fixture.actor,
-			).ok,
+			fixture.store.comments.moderateComment(submitted.comment.id, "approved", fixture.actor).ok,
 		).toBe(true);
 	});
 
 	it("moderateComment returns error for non-existent comment", () => {
 		expect(
-			fixture.store.comments.moderateComment(
-				"comment-999",
-				"approved",
-				fixture.actor,
-			).ok,
+			fixture.store.comments.moderateComment("comment-999", "approved", fixture.actor).ok,
 		).toBe(false);
 	});
 
 	it("getApprovedCommentsForRoute returns approved comments", () => {
-		expect(
-			Array.isArray(
-				fixture.store.comments.getApprovedCommentsForRoute("/blog/post-1"),
-			),
-		).toBe(true);
+		expect(Array.isArray(fixture.store.comments.getApprovedCommentsForRoute("/blog/post-1"))).toBe(
+			true,
+		);
 	});
 });
 
@@ -205,11 +247,7 @@ describe("comments optional fields", () => {
 
 	it("getApprovedCommentsForRoute returns empty when no approved comments (covers filter branch)", () => {
 		expect(
-			Array.isArray(
-				fixture.store.comments.getApprovedCommentsForRoute(
-					"/test-route-no-comments",
-				),
-			),
+			Array.isArray(fixture.store.comments.getApprovedCommentsForRoute("/test-route-no-comments")),
 		).toBe(true);
 	});
 });
@@ -291,57 +329,37 @@ describe("settings additional branches", () => {
 
 describe("rateLimits", () => {
 	it("checkRateLimit: no existing key → resets window and returns true", () => {
-		expect(
-			fixture.store.rateLimits.checkRateLimit("rl:new-key", 5, 60_000),
-		).toBe(true);
+		expect(fixture.store.rateLimits.checkRateLimit("rl:new-key", 5, 60_000)).toBe(true);
 	});
 
 	it("checkRateLimit: within limit → increments and returns true", () => {
 		fixture.store.rateLimits.checkRateLimit("rl:test-key", 5, 60_000);
-		expect(
-			fixture.store.rateLimits.checkRateLimit("rl:test-key", 5, 60_000),
-		).toBe(true);
+		expect(fixture.store.rateLimits.checkRateLimit("rl:test-key", 5, 60_000)).toBe(true);
 	});
 
 	it("checkRateLimit: at limit → returns false", () => {
-		for (let i = 0; i < 3; i++)
-			fixture.store.rateLimits.checkRateLimit("rl:limit-key", 3, 60_000);
-		expect(
-			fixture.store.rateLimits.checkRateLimit("rl:limit-key", 3, 60_000),
-		).toBe(false);
+		for (let i = 0; i < 3; i++) fixture.store.rateLimits.checkRateLimit("rl:limit-key", 3, 60_000);
+		expect(fixture.store.rateLimits.checkRateLimit("rl:limit-key", 3, 60_000)).toBe(false);
 	});
 
 	it("peekRateLimit: no existing key → returns true", () => {
-		expect(
-			fixture.store.rateLimits.peekRateLimit("rl:peek-new", 5, 60_000),
-		).toBe(true);
+		expect(fixture.store.rateLimits.peekRateLimit("rl:peek-new", 5, 60_000)).toBe(true);
 	});
 
 	it("peekRateLimit: at limit → returns false", () => {
-		for (let i = 0; i < 3; i++)
-			fixture.store.rateLimits.checkRateLimit("rl:peek-limit", 3, 60_000);
-		expect(
-			fixture.store.rateLimits.peekRateLimit("rl:peek-limit", 3, 60_000),
-		).toBe(false);
+		for (let i = 0; i < 3; i++) fixture.store.rateLimits.checkRateLimit("rl:peek-limit", 3, 60_000);
+		expect(fixture.store.rateLimits.peekRateLimit("rl:peek-limit", 3, 60_000)).toBe(false);
 	});
 
 	it("recordFailedAttempt: no existing key → resets window", () => {
 		fixture.store.rateLimits.recordFailedAttempt("rl:fail-new", 5, 60_000);
-		expect(
-			fixture.store.rateLimits.peekRateLimit("rl:fail-new", 5, 60_000),
-		).toBe(true);
+		expect(fixture.store.rateLimits.peekRateLimit("rl:fail-new", 5, 60_000)).toBe(true);
 	});
 
 	it("recordFailedAttempt: existing key within window → increments count", () => {
 		fixture.store.rateLimits.checkRateLimit("rl:fail-existing", 10, 60_000);
-		fixture.store.rateLimits.recordFailedAttempt(
-			"rl:fail-existing",
-			10,
-			60_000,
-		);
-		expect(
-			fixture.store.rateLimits.peekRateLimit("rl:fail-existing", 10, 60_000),
-		).toBe(true);
+		fixture.store.rateLimits.recordFailedAttempt("rl:fail-existing", 10, 60_000);
+		expect(fixture.store.rateLimits.peekRateLimit("rl:fail-existing", 10, 60_000)).toBe(true);
 	});
 });
 
@@ -393,9 +411,7 @@ describe("SQLite PRAGMA settings (file-based database)", () => {
 describe("SQLite schema table presence", () => {
 	it("api_tokens table exists in the schema", () => {
 		const result = fixture.db
-			.prepare(
-				"SELECT name FROM sqlite_master WHERE type='table' AND name='api_tokens'",
-			)
+			.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='api_tokens'")
 			.get() as { name: string } | undefined;
 		expect(result?.name).toBe("api_tokens");
 	});
@@ -417,9 +433,7 @@ describe("SQLite schema table presence", () => {
 
 	it("webhooks table exists in the schema", () => {
 		const result = fixture.db
-			.prepare(
-				"SELECT name FROM sqlite_master WHERE type='table' AND name='webhooks'",
-			)
+			.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='webhooks'")
 			.get() as { name: string } | undefined;
 		expect(result?.name).toBe("webhooks");
 	});
@@ -440,9 +454,7 @@ describe("SQLite schema table presence", () => {
 
 	it("content_overrides already has scheduled_at column", () => {
 		const names = (
-			fixture.db
-				.prepare("PRAGMA table_info(content_overrides)")
-				.all() as Array<{ name: string }>
+			fixture.db.prepare("PRAGMA table_info(content_overrides)").all() as Array<{ name: string }>
 		).map((c) => c.name);
 		expect(names).toContain("scheduled_at");
 	});

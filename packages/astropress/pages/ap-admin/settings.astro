@@ -3,12 +3,7 @@ import AdminLayout from "@astropress-diy/astropress/components/AdminLayout.astro
 import CsrfInput from "@astropress-diy/astropress/components/CsrfInput.astro";
 import { createListmonkOps } from "@astropress-diy/astropress/newsletter-adapter";
 import { getNewsletterConfig } from "@astropress-diy/astropress/runtime-env";
-import {
-	buildSettingsPageModel,
-	getPageT,
-	isAuthUserAdmin,
-	resolveAdminLocale,
-} from "astropress";
+import { buildSettingsPageModel, getPageT, isAuthUserAdmin, resolveAdminLocale } from "astropress";
 
 const t = getPageT(resolveAdminLocale(Astro));
 function format(template: string, params: Record<string, string | number>) {
@@ -20,9 +15,7 @@ const model = await buildSettingsPageModel(Astro.locals, adminUser);
 const { settings } = model.data;
 const wasSaved = Astro.url.searchParams.get("saved") === "1";
 const errorMessage =
-	Astro.url.searchParams.get("error") === "1"
-		? Astro.url.searchParams.get("message")
-		: "";
+	Astro.url.searchParams.get("error") === "1" ? Astro.url.searchParams.get("message") : "";
 
 const activeTab = Astro.url.searchParams.get("tab") ?? "general";
 

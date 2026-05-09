@@ -1,9 +1,9 @@
 import {
 	createRuntimeContentRecord,
+	getCmsConfig,
 	listRuntimeContentStates,
 	searchRuntimeContentStates,
 } from "@astropress-diy/astropress";
-import { getCmsConfig } from "@astropress-diy/astropress";
 import {
 	apiErrors,
 	jsonOk,
@@ -45,18 +45,12 @@ export const GET: APIRoute = async (context) => {
 			const status = url.searchParams.get("status") ?? undefined;
 			const q = url.searchParams.get("q") ?? undefined;
 			const limit = Math.min(
-				Number(
-					url.searchParams.get("limit") ??
-						url.searchParams.get("per_page") ??
-						"20",
-				),
+				Number(url.searchParams.get("limit") ?? url.searchParams.get("per_page") ?? "20"),
 				100,
 			);
 			const page = Math.max(Number(url.searchParams.get("page") ?? "1"), 1);
 			const cursor = url.searchParams.get("cursor") ?? undefined;
-			const offset = Number(
-				url.searchParams.get("offset") ?? String((page - 1) * limit),
-			);
+			const offset = Number(url.searchParams.get("offset") ?? String((page - 1) * limit));
 
 			const all = q
 				? await searchRuntimeContentStates(q, context.locals)
@@ -71,30 +65,21 @@ export const GET: APIRoute = async (context) => {
 			let effectiveOffset = offset;
 			if (cursor) {
 				try {
-					const decoded = Number(
-						Buffer.from(cursor, "base64url").toString("utf8"),
-					);
+					const decoded = Number(Buffer.from(cursor, "base64url").toString("utf8"));
 					if (!Number.isNaN(decoded)) effectiveOffset = decoded;
 				} catch {
 					/* ignore invalid cursor — fall back to offset */
 				}
 			}
 
-			const pageRecords = filtered.slice(
-				effectiveOffset,
-				effectiveOffset + limit,
-			);
+			const pageRecords = filtered.slice(effectiveOffset, effectiveOffset + limit);
 			const nextOffset = effectiveOffset + limit;
 			const prevOffset = Math.max(effectiveOffset - limit, 0);
 			const hasNext = nextOffset < filtered.length;
 			const hasPrev = effectiveOffset > 0;
 
-			const nextCursor = hasNext
-				? Buffer.from(String(nextOffset)).toString("base64url")
-				: null;
-			const prevCursor = hasPrev
-				? Buffer.from(String(prevOffset)).toString("base64url")
-				: null;
+			const nextCursor = hasNext ? Buffer.from(String(nextOffset)).toString("base64url") : null;
+			const prevCursor = hasPrev ? Buffer.from(String(prevOffset)).toString("base64url") : null;
 
 			const baseUrl = `${url.origin}${url.pathname}`;
 			const selfParams = new URLSearchParams(url.searchParams);

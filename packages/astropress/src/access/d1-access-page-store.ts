@@ -16,54 +16,43 @@ export interface AccessTabData {
 	activeAdminCount: number;
 }
 
-export async function loadAccessTabDataFromD1(
-	db: D1DatabaseLike,
-): Promise<AccessTabData> {
-	const [
-		roleRows,
-		assignmentRows,
-		grantCountRows,
-		rolePolicyRows,
-		adminCountRow,
-	] = await Promise.all([
-		db
-			.prepare(
-				"SELECT id, name, description, is_system, created_at, updated_at FROM access_roles ORDER BY name",
-			)
-			.all<{
-				id: string;
-				name: string;
-				description: string;
-				is_system: number;
-				created_at: string;
-				updated_at: string;
-			}>(),
-		db
-			.prepare("SELECT user_id, role_id FROM access_user_roles")
-			.all<{ user_id: number; role_id: string }>(),
-		db
-			.prepare(
-				"SELECT user_id, COUNT(*) AS n FROM access_user_policies GROUP BY user_id",
-			)
-			.all<{ user_id: number; n: number }>(),
-		db
-			.prepare(
-				"SELECT id, role_id, effect, action, condition_json, priority FROM access_role_policies ORDER BY role_id, priority DESC, id",
-			)
-			.all<{
-				id: string;
-				role_id: string;
-				effect: Effect;
-				action: string;
-				condition_json: string | null;
-				priority: number;
-			}>(),
-		db
-			.prepare(
-				"SELECT COUNT(*) AS n FROM admin_users WHERE active = 1 AND is_admin = 1",
-			)
-			.first<{ n: number }>(),
-	]);
+export async function loadAccessTabDataFromD1(db: D1DatabaseLike): Promise<AccessTabData> {
+	const [roleRows, assignmentRows, grantCountRows, rolePolicyRows, adminCountRow] =
+		await Promise.all([
+			db
+				.prepare(
+					"SELECT id, name, description, is_system, created_at, updated_at FROM access_roles ORDER BY name",
+				)
+				.all<{
+					id: string;
+					name: string;
+					description: string;
+					is_system: number;
+					created_at: string;
+					updated_at: string;
+				}>(),
+			db
+				.prepare("SELECT user_id, role_id FROM access_user_roles")
+				.all<{ user_id: number; role_id: string }>(),
+			db
+				.prepare("SELECT user_id, COUNT(*) AS n FROM access_user_policies GROUP BY user_id")
+				.all<{ user_id: number; n: number }>(),
+			db
+				.prepare(
+					"SELECT id, role_id, effect, action, condition_json, priority FROM access_role_policies ORDER BY role_id, priority DESC, id",
+				)
+				.all<{
+					id: string;
+					role_id: string;
+					effect: Effect;
+					action: string;
+					condition_json: string | null;
+					priority: number;
+				}>(),
+			db
+				.prepare("SELECT COUNT(*) AS n FROM admin_users WHERE active = 1 AND is_admin = 1")
+				.first<{ n: number }>(),
+		]);
 
 	const roles: RoleRecord[] = (roleRows.results ?? []).map((r) => ({
 		id: r.id,

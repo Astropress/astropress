@@ -6,14 +6,7 @@
  */
 
 import { join, relative } from "node:path";
-import {
-	AuditReport,
-	ROOT,
-	fromRoot,
-	listFiles,
-	readText,
-	runAudit,
-} from "../lib/audit-utils.js";
+import { AuditReport, fromRoot, listFiles, ROOT, readText, runAudit } from "../lib/audit-utils.js";
 
 const SCAN_DIRS = [
 	fromRoot("packages/astropress/src"),
@@ -24,30 +17,15 @@ const SCAN_DIRS = [
 
 const EXTENSIONS = [".ts", ".astro", ".mjs", ".js"] as const;
 
-const ENV_AWARE_FLAGS: Array<[string, RegExp, RegExp]> = [
-	[
-		"allowInlineStyles",
-		/allowInlineStyles\s*:\s*true\b/,
-		/allowInlineStyles\s*:\s*false\b/,
-	],
-	[
-		"allowInlineScripts",
-		/allowInlineScripts\s*:\s*true\b/,
-		/allowInlineScripts\s*:\s*false\b/,
-	],
+const ENV_AWARE_FLAGS: [string, RegExp, RegExp][] = [
+	["allowInlineStyles", /allowInlineStyles\s*:\s*true\b/, /allowInlineStyles\s*:\s*false\b/],
+	["allowInlineScripts", /allowInlineScripts\s*:\s*true\b/, /allowInlineScripts\s*:\s*false\b/],
 ];
 
-const TYPE_DEFINITION_FILES = new Set([
-	"security-headers.ts",
-	"security-middleware.ts",
-]);
+const TYPE_DEFINITION_FILES = new Set(["security-headers.ts", "security-middleware.ts"]);
 
 function isTestFile(path: string): boolean {
-	return (
-		path.includes(".test.") ||
-		path.includes(".spec.") ||
-		path.includes("/tests/")
-	);
+	return path.includes(".test.") || path.includes(".spec.") || path.includes("/tests/");
 }
 
 async function walkFiles(dir: string): Promise<string[]> {

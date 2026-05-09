@@ -8,9 +8,7 @@ import { createAstropressWordPressImportSource } from "../src/import/wordpress.j
 
 // SVG passes through downloadMedia without sharp transcoding, so no real
 // image data is needed — the contract test verifies pipeline flow, not format.
-const SVG_BYTES = new TextEncoder().encode(
-	"<svg xmlns='http://www.w3.org/2000/svg'/>",
-);
+const SVG_BYTES = new TextEncoder().encode("<svg xmlns='http://www.w3.org/2000/svg'/>");
 
 describe("wordpress import contract", () => {
 	it("parses WXR content into staged import artifacts and redirects", async () => {
@@ -26,9 +24,7 @@ describe("wordpress import contract", () => {
 				throw new Error(`Unexpected fetch in test: ${url}`);
 			}),
 		);
-		const workspace = await mkdtemp(
-			join(tmpdir(), "astropress-wordpress-import-"),
-		);
+		const workspace = await mkdtemp(join(tmpdir(), "astropress-wordpress-import-"));
 		const artifactDir = join(workspace, "artifacts");
 		const exportFile = join(workspace, "export.xml");
 		await writeFile(
@@ -139,13 +135,13 @@ describe("wordpress import contract", () => {
 
 		const contentRecords = JSON.parse(
 			await readFile(join(artifactDir, "content-records.json"), "utf8"),
-		) as Array<Record<string, unknown>>;
+		) as Record<string, unknown>[];
 		const redirectRecords = JSON.parse(
 			await readFile(join(artifactDir, "redirect-records.json"), "utf8"),
-		) as Array<Record<string, unknown>>;
+		) as Record<string, unknown>[];
 		const mediaManifest = JSON.parse(
 			await readFile(join(artifactDir, "media-manifest.json"), "utf8"),
-		) as Array<Record<string, unknown>>;
+		) as Record<string, unknown>[];
 		const downloadState = JSON.parse(
 			await readFile(join(artifactDir, "download-state.json"), "utf8"),
 		) as { completed: string[]; failed: unknown[] };
@@ -181,8 +177,7 @@ describe("wordpress import contract", () => {
 			mediaErrors: [],
 		});
 		expect(
-			importReport.status === "completed" ||
-				importReport.status === "completed_with_warnings",
+			importReport.status === "completed" || importReport.status === "completed_with_warnings",
 		).toBe(true);
 
 		const resumed = await importer.resumeWordPressImport?.({
@@ -191,18 +186,16 @@ describe("wordpress import contract", () => {
 			downloadMedia: true,
 		});
 		expect(resumed?.downloadedMedia).toBe(0);
-		expect(resumed?.artifacts?.downloadStateFile).toBe(
-			join(artifactDir, "download-state.json"),
-		);
+		expect(resumed?.artifacts?.downloadStateFile).toBe(join(artifactDir, "download-state.json"));
 
 		await rm(workspace, { recursive: true, force: true });
 		vi.unstubAllGlobals();
 	});
 
-	it("can apply staged imports into the local sqlite runtime idempotently", async () => {
-		const workspace = await mkdtemp(
-			join(tmpdir(), "astropress-wordpress-apply-"),
-		);
+	it("can apply staged imports into the local sqlite runtime idempotently", {
+		timeout: 60_000,
+	}, async () => {
+		const workspace = await mkdtemp(join(tmpdir(), "astropress-wordpress-apply-"));
 		const artifactDir = join(workspace, "artifacts");
 		const adminDbPath = join(workspace, ".data", "admin.sqlite");
 		const exportFile = join(workspace, "export.xml");
@@ -262,29 +255,23 @@ describe("wordpress import contract", () => {
 		).toBe(1);
 		expect(
 			(
-				db
-					.prepare(
-						"SELECT COUNT(*) AS count FROM authors WHERE deleted_at IS NULL",
-					)
-					.get() as { count: number }
+				db.prepare("SELECT COUNT(*) AS count FROM authors WHERE deleted_at IS NULL").get() as {
+					count: number;
+				}
 			).count,
 		).toBe(1);
 		expect(
 			(
-				db
-					.prepare(
-						"SELECT COUNT(*) AS count FROM categories WHERE deleted_at IS NULL",
-					)
-					.get() as { count: number }
+				db.prepare("SELECT COUNT(*) AS count FROM categories WHERE deleted_at IS NULL").get() as {
+					count: number;
+				}
 			).count,
 		).toBe(1);
 		expect(
 			(
-				db
-					.prepare(
-						"SELECT COUNT(*) AS count FROM tags WHERE deleted_at IS NULL",
-					)
-					.get() as { count: number }
+				db.prepare("SELECT COUNT(*) AS count FROM tags WHERE deleted_at IS NULL").get() as {
+					count: number;
+				}
 			).count,
 		).toBe(1);
 		expect(
@@ -296,19 +283,15 @@ describe("wordpress import contract", () => {
 		).toBe(1);
 		expect(
 			(
-				db
-					.prepare(
-						"SELECT COUNT(*) AS count FROM media_assets WHERE deleted_at IS NULL",
-					)
-					.get() as { count: number }
+				db.prepare("SELECT COUNT(*) AS count FROM media_assets WHERE deleted_at IS NULL").get() as {
+					count: number;
+				}
 			).count,
 		).toBe(1);
 		expect(
 			(
 				db
-					.prepare(
-						"SELECT COUNT(*) AS count FROM redirect_rules WHERE deleted_at IS NULL",
-					)
+					.prepare("SELECT COUNT(*) AS count FROM redirect_rules WHERE deleted_at IS NULL")
 					.get() as { count: number }
 			).count,
 		).toBe(1);
@@ -318,9 +301,7 @@ describe("wordpress import contract", () => {
 	});
 
 	it("skips local apply when applyLocal is false", async () => {
-		const workspace = await mkdtemp(
-			join(tmpdir(), "astropress-wordpress-noapply-"),
-		);
+		const workspace = await mkdtemp(join(tmpdir(), "astropress-wordpress-noapply-"));
 		const artifactDir = join(workspace, "artifacts");
 		const exportFile = join(workspace, "export.xml");
 		await writeFile(

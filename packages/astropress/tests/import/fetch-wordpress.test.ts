@@ -51,12 +51,12 @@ vi.mock("playwright", () => ({
 import { chromium } from "playwright";
 import {
 	CaptchaDetectedError,
+	fetchWordPressExport,
 	InsufficientPermissionsError,
 	InvalidCredentialsError,
 	NotWordPressSiteError,
 	SiteNotReachableError,
 	TwoFactorRequiredError,
-	fetchWordPressExport,
 } from "../../src/import/fetch-wordpress.js";
 
 const BASE_OPTS = {
@@ -104,11 +104,7 @@ describe("fetchWordPressExport — success path", () => {
 
 		// export page: no 2FA, no CAPTCHA, has export link
 		mocks.page.locator.mockImplementation((sel: string) => {
-			if (
-				sel.includes("two-factor") ||
-				sel.includes("mfa") ||
-				sel.includes("captcha")
-			) {
+			if (sel.includes("two-factor") || sel.includes("mfa") || sel.includes("captcha")) {
 				return makeLocator({ count: 0 });
 			}
 			return makeLocator({ count: 1 });
@@ -153,15 +149,11 @@ describe("fetchWordPressExport — failure modes", () => {
 		mocks.page.goto.mockRejectedValue(
 			Object.assign(new Error("net::ERR_NAME_NOT_RESOLVED"), { name: "Error" }),
 		);
-		await expect(fetchWordPressExport(BASE_OPTS)).rejects.toBeInstanceOf(
-			SiteNotReachableError,
-		);
+		await expect(fetchWordPressExport(BASE_OPTS)).rejects.toBeInstanceOf(SiteNotReachableError);
 	});
 
 	it("SiteNotReachableError message names the hostname", async () => {
-		mocks.page.goto.mockRejectedValue(
-			new Error("net::ERR_NAME_NOT_RESOLVED mysite.com"),
-		);
+		mocks.page.goto.mockRejectedValue(new Error("net::ERR_NAME_NOT_RESOLVED mysite.com"));
 		await expect(fetchWordPressExport(BASE_OPTS)).rejects.toThrow(
 			"Cannot reach mysite.com: DNS lookup failed",
 		);
@@ -169,9 +161,7 @@ describe("fetchWordPressExport — failure modes", () => {
 
 	it("throws NotWordPressSiteError when wp-login.php is not found", async () => {
 		mocks.page.goto.mockResolvedValue({ status: () => 404 });
-		await expect(fetchWordPressExport(BASE_OPTS)).rejects.toBeInstanceOf(
-			NotWordPressSiteError,
-		);
+		await expect(fetchWordPressExport(BASE_OPTS)).rejects.toBeInstanceOf(NotWordPressSiteError);
 	});
 
 	it("throws NotWordPressSiteError with clear message", async () => {
@@ -188,9 +178,7 @@ describe("fetchWordPressExport — failure modes", () => {
 		);
 		mocks.page.url.mockReturnValue("https://mysite.com/wp-login.php");
 
-		await expect(fetchWordPressExport(BASE_OPTS)).rejects.toBeInstanceOf(
-			InvalidCredentialsError,
-		);
+		await expect(fetchWordPressExport(BASE_OPTS)).rejects.toBeInstanceOf(InvalidCredentialsError);
 	});
 
 	it("InvalidCredentialsError has a clear human-readable message", async () => {
@@ -207,9 +195,7 @@ describe("fetchWordPressExport — failure modes", () => {
 
 	it("throws TwoFactorRequiredError when 2FA form is detected", async () => {
 		mocks.page.goto.mockResolvedValue({ status: () => 200 });
-		mocks.page.content.mockResolvedValue(
-			'<html><form id="loginform"></form></html>',
-		);
+		mocks.page.content.mockResolvedValue('<html><form id="loginform"></form></html>');
 		mocks.page.url.mockReturnValue("https://mysite.com/wp-admin/");
 		mocks.page.locator.mockImplementation((sel: string) => {
 			if (sel.includes("two-factor") || sel.includes("authcode")) {
@@ -218,16 +204,12 @@ describe("fetchWordPressExport — failure modes", () => {
 			return makeLocator({ count: 0 });
 		});
 
-		await expect(fetchWordPressExport(BASE_OPTS)).rejects.toBeInstanceOf(
-			TwoFactorRequiredError,
-		);
+		await expect(fetchWordPressExport(BASE_OPTS)).rejects.toBeInstanceOf(TwoFactorRequiredError);
 	});
 
 	it("TwoFactorRequiredError message tells user to use --source instead", async () => {
 		mocks.page.goto.mockResolvedValue({ status: () => 200 });
-		mocks.page.content.mockResolvedValue(
-			'<html><form id="loginform"></form></html>',
-		);
+		mocks.page.content.mockResolvedValue('<html><form id="loginform"></form></html>');
 		mocks.page.url.mockReturnValue("https://mysite.com/wp-admin/");
 		mocks.page.locator.mockImplementation((sel: string) =>
 			makeLocator({ count: sel.includes("authcode") ? 1 : 0 }),
@@ -245,18 +227,14 @@ describe("fetchWordPressExport — failure modes", () => {
 		);
 		mocks.page.url.mockReturnValue("https://mysite.com/wp-login.php");
 
-		await expect(fetchWordPressExport(BASE_OPTS)).rejects.toBeInstanceOf(
-			CaptchaDetectedError,
-		);
+		await expect(fetchWordPressExport(BASE_OPTS)).rejects.toBeInstanceOf(CaptchaDetectedError);
 	});
 
 	it("throws InsufficientPermissionsError when export.php redirects back to login", async () => {
 		mocks.page.goto
 			.mockResolvedValueOnce({ status: () => 200 }) // wp-login.php
 			.mockResolvedValueOnce({ status: () => 200 }); // export.php redirects
-		mocks.page.content.mockResolvedValue(
-			'<html><form id="loginform"></form></html>',
-		);
+		mocks.page.content.mockResolvedValue('<html><form id="loginform"></form></html>');
 		mocks.page.url
 			.mockReturnValueOnce("https://mysite.com/wp-admin/") // after login
 			.mockReturnValueOnce("https://mysite.com/wp-login.php"); // after navigating to export

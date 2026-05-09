@@ -41,10 +41,7 @@ const sqliteTables = tablesIn(sqliteSchema);
 // truth for the D1 dialect; generated from sqlite-schema.sql).
 const d1Sources = execFileSync(
 	"bash",
-	[
-		"-c",
-		"cat packages/astropress/src/d1-*.ts packages/astropress/src/d1-schema.sql 2>/dev/null",
-	],
+	["-c", "cat packages/astropress/src/d1-*.ts packages/astropress/src/d1-schema.sql 2>/dev/null"],
 	{ encoding: "utf8" },
 );
 const d1Tables = [...new Set(tablesIn(d1Sources))];
@@ -101,13 +98,9 @@ console.log(
 // generated baseline must reflect the latest sqlite-schema.sql.
 if (onlyInSqlite.length > 0 || onlyInD1.length > 0 || d1Stale) {
 	console.error("schema-migration FAIL:");
-	if (onlyInSqlite.length > 0)
-		console.error(`  sqlite-only tables: ${onlyInSqlite.join(", ")}`);
-	if (onlyInD1.length > 0)
-		console.error(`  d1-only tables: ${onlyInD1.join(", ")}`);
+	if (onlyInSqlite.length > 0) console.error(`  sqlite-only tables: ${onlyInSqlite.join(", ")}`);
+	if (onlyInD1.length > 0) console.error(`  d1-only tables: ${onlyInD1.join(", ")}`);
 	if (d1Stale)
-		console.error(
-			"  d1-schema.sql is stale — run: bun run tooling/scripts/generate-d1-schema.ts",
-		);
+		console.error("  d1-schema.sql is stale — run: bun run tooling/scripts/generate-d1-schema.ts");
 	process.exit(1);
 }

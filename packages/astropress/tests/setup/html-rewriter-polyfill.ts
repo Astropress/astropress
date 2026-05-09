@@ -74,16 +74,10 @@ const voidTagSet = new Set([
 ]);
 
 function escapeText(s: string): string {
-	return s
-		.replaceAll("&", "&amp;")
-		.replaceAll("<", "&lt;")
-		.replaceAll(">", "&gt;");
+	return s.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
 }
 
-function walkNode(
-	node: Record<string, unknown>,
-	handlers: ElementHandlerCallback[],
-): string {
+function walkNode(node: Record<string, unknown>, handlers: ElementHandlerCallback[]): string {
 	const type = node.type as string | undefined;
 
 	if (type === "text") {
@@ -98,9 +92,7 @@ function walkNode(
 		return "";
 	}
 
-	const children = Array.isArray(node.children)
-		? (node.children as Array<Record<string, unknown>>)
-		: [];
+	const children = Array.isArray(node.children) ? (node.children as Record<string, unknown>[]) : [];
 
 	if (!node.name) {
 		// Root / document node
@@ -162,6 +154,5 @@ class PolyfillHTMLRewriter {
 
 // Install the polyfill only when HTMLRewriter isn't already available (i.e. not in Bun)
 if (typeof globalThis.HTMLRewriter === "undefined") {
-	(globalThis as unknown as Record<string, unknown>).HTMLRewriter =
-		PolyfillHTMLRewriter;
+	(globalThis as unknown as Record<string, unknown>).HTMLRewriter = PolyfillHTMLRewriter;
 }

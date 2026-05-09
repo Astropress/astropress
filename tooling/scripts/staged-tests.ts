@@ -18,8 +18,7 @@ function git(...args: string[]): string {
 function changedFiles(committed: boolean): string[] {
 	if (committed) {
 		const upstream =
-			git("rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{u}").trim() ||
-			"origin/HEAD";
+			git("rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{u}").trim() || "origin/HEAD";
 		const range = `${upstream}..HEAD`;
 		return git("diff", range, "--name-only")
 			.split("\n")
@@ -76,17 +75,9 @@ function main(): void {
 	// Map web-component source files to their test files
 	const webComponentTestFiles: string[] = [];
 	for (const f of files) {
-		if (
-			f.startsWith("packages/astropress/web-components/") &&
-			f.endsWith(".ts")
-		) {
+		if (f.startsWith("packages/astropress/web-components/") && f.endsWith(".ts")) {
 			const stem = basename(f, ".ts");
-			const testPath = join(
-				pkgDir,
-				"tests",
-				"web-components",
-				`${stem}.test.ts`,
-			);
+			const testPath = join(pkgDir, "tests", "web-components", `${stem}.test.ts`);
 			if (existsSync(testPath)) {
 				webComponentTestFiles.push(testPath);
 			}
@@ -132,11 +123,7 @@ function main(): void {
 
 	if (hasRust) {
 		console.log("── staged-tests: running cargo test (Rust files changed) ──");
-		const code = run(
-			"cargo",
-			["test", "--offline", "--manifest-path", "crates/Cargo.toml"],
-			root,
-		);
+		const code = run("cargo", ["test", "--offline", "--manifest-path", "crates/Cargo.toml"], root);
 		if (code !== 0) exitCode = code;
 	}
 

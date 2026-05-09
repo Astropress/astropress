@@ -10,17 +10,10 @@ import type { Actor } from "./persistence-types";
 import { getAstropressRootSecret } from "./runtime-env";
 
 async function hashOpaqueToken(token: string) {
-	return createKmacDigest(
-		token,
-		getAstropressRootSecret(),
-		"password-reset-token",
-	);
+	return createKmacDigest(token, getAstropressRootSecret(), "password-reset-token");
 }
 
-async function getD1PasswordResetToken(
-	rawToken: string,
-	locals?: App.Locals | null,
-) {
+async function getD1PasswordResetToken(rawToken: string, locals?: App.Locals | null) {
 	const db = getAdminDb(locals);
 	if (!db || !rawToken.trim()) {
 		return null;
@@ -51,12 +44,7 @@ async function getD1PasswordResetToken(
 			active: number;
 		}>();
 
-	if (
-		!row ||
-		row.consumed_at ||
-		row.active !== 1 ||
-		Date.parse(row.expires_at) < Date.now()
-	) {
+	if (!row || row.consumed_at || row.active !== 1 || Date.parse(row.expires_at) < Date.now()) {
 		return null;
 	}
 
@@ -125,13 +113,7 @@ export async function createRuntimePasswordResetToken(
             VALUES (?, ?, ?, ?, ?)
           `,
 				)
-				.bind(
-					tokenId,
-					user.id,
-					await hashOpaqueToken(rawToken),
-					expiresAt,
-					actor?.email ?? null,
-				)
+				.bind(tokenId, user.id, await hashOpaqueToken(rawToken), expiresAt, actor?.email ?? null)
 				.run();
 
 			if (actor) {
@@ -155,10 +137,7 @@ export async function createRuntimePasswordResetToken(
 	);
 }
 
-export async function getRuntimePasswordResetRequest(
-	rawToken: string,
-	locals?: App.Locals | null,
-) {
+export async function getRuntimePasswordResetRequest(rawToken: string, locals?: App.Locals | null) {
 	return withLocalStoreFallback(
 		locals,
 		async () => {
@@ -207,9 +186,7 @@ export async function consumeRuntimePasswordResetToken(
 				.bind(await hashPassword(trimmedPassword), row.user_id)
 				.run();
 			await db
-				.prepare(
-					"UPDATE password_reset_tokens SET consumed_at = CURRENT_TIMESTAMP WHERE id = ?",
-				)
+				.prepare("UPDATE password_reset_tokens SET consumed_at = CURRENT_TIMESTAMP WHERE id = ?")
 				.bind(row.id)
 				.run();
 			await db

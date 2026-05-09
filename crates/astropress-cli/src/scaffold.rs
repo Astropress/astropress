@@ -17,7 +17,16 @@ fn write_embedded_dir(dir: &Dir, dest: &Path) -> CliResult<()> {
     for entry in dir.entries() {
         match entry {
             include_dir::DirEntry::File(f) => {
-                let path = dest.join(f.path());
+                // Strip a `.tpl` suffix on emit. The suffix exists on
+                // template files whose unsuffixed name (e.g. `biome.json`)
+                // would otherwise be picked up by tooling traversing the
+                // monorepo (biome 2 forbids nested root configs).
+                let rel = f.path();
+                let emit_path = match rel.to_str() {
+                    Some(s) if s.ends_with(".tpl") => Path::new(&s[..s.len() - 4]).to_path_buf(),
+                    _ => rel.to_path_buf(),
+                };
+                let path = dest.join(&emit_path);
                 if let Some(parent) = path.parent() {
                     fs::create_dir_all(parent).map_err(io_error)?;
                 }

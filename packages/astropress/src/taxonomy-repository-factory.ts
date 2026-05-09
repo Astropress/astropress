@@ -1,8 +1,4 @@
-import type {
-	Actor,
-	TaxonomyKind,
-	TaxonomyRepository,
-} from "./persistence-types";
+import type { Actor, TaxonomyKind, TaxonomyRepository } from "./persistence-types";
 
 type TaxonomyTable = "categories" | "tags";
 
@@ -26,10 +22,7 @@ export interface AstropressTaxonomyRepositoryInput {
 	deleteTaxonomyTerm(input: { table: TaxonomyTable; id: number }): boolean;
 	recordTaxonomyAudit(input: {
 		actor: Actor;
-		action:
-			| `${TaxonomyKind}.create`
-			| `${TaxonomyKind}.update`
-			| `${TaxonomyKind}.delete`;
+		action: `${TaxonomyKind}.create` | `${TaxonomyKind}.update` | `${TaxonomyKind}.delete`;
 		summary: string;
 		targetId: string;
 	}): void;
@@ -137,12 +130,9 @@ export function createAstropressTaxonomyRepository(
 			createTerm(input, "categories", "category", rawInput, actor),
 		updateCategory: (rawInput, actor) =>
 			updateTerm(input, "categories", "category", rawInput, actor),
-		deleteCategory: (id, actor) =>
-			deleteTerm(input, "categories", "category", id, actor),
-		createTag: (rawInput, actor) =>
-			createTerm(input, "tags", "tag", rawInput, actor),
-		updateTag: (rawInput, actor) =>
-			updateTerm(input, "tags", "tag", rawInput, actor),
+		deleteCategory: (id, actor) => deleteTerm(input, "categories", "category", id, actor),
+		createTag: (rawInput, actor) => createTerm(input, "tags", "tag", rawInput, actor),
+		updateTag: (rawInput, actor) => updateTerm(input, "tags", "tag", rawInput, actor),
 		deleteTag: (id, actor) => deleteTerm(input, "tags", "tag", id, actor),
 	};
 }

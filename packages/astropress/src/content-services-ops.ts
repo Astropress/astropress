@@ -25,17 +25,9 @@ export interface AstropressContentServicesOperationReport {
 function requiredEnvKeysForContentServices(contentServices: string) {
 	switch (contentServices) {
 		case "cloudflare":
-			return [
-				"ASTROPRESS_SERVICE_ORIGIN",
-				"CLOUDFLARE_ACCOUNT_ID",
-				"CLOUDFLARE_API_TOKEN",
-			];
+			return ["ASTROPRESS_SERVICE_ORIGIN", "CLOUDFLARE_ACCOUNT_ID", "CLOUDFLARE_API_TOKEN"];
 		case "supabase":
-			return [
-				"ASTROPRESS_SERVICE_ORIGIN",
-				"SUPABASE_URL",
-				"SUPABASE_SERVICE_ROLE_KEY",
-			];
+			return ["ASTROPRESS_SERVICE_ORIGIN", "SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY"];
 		case "appwrite":
 			return [
 				"ASTROPRESS_SERVICE_ORIGIN",
@@ -51,20 +43,11 @@ function requiredEnvKeysForContentServices(contentServices: string) {
 				"POCKETBASE_PASSWORD",
 			];
 		case "nhost":
-			return [
-				"ASTROPRESS_SERVICE_ORIGIN",
-				"NHOST_SUBDOMAIN",
-				"NHOST_REGION",
-				"NHOST_ADMIN_SECRET",
-			];
+			return ["ASTROPRESS_SERVICE_ORIGIN", "NHOST_SUBDOMAIN", "NHOST_REGION", "NHOST_ADMIN_SECRET"];
 		case "neon":
 			return ["ASTROPRESS_SERVICE_ORIGIN", "NEON_DATABASE_URL"];
 		case "turso":
-			return [
-				"ASTROPRESS_SERVICE_ORIGIN",
-				"TURSO_DATABASE_URL",
-				"TURSO_AUTH_TOKEN",
-			];
+			return ["ASTROPRESS_SERVICE_ORIGIN", "TURSO_DATABASE_URL", "TURSO_AUTH_TOKEN"];
 		default:
 			return [];
 	}
@@ -94,11 +77,7 @@ function createOperationReport(
 ): AstropressContentServicesOperationReport {
 	const contract = resolveAstropressProjectEnvContract(env);
 	const requiredEnvKeys = requiredEnvKeysForContentServices(contentServices);
-	const missingEnvKeys = missingEnvKeysForContentServices(
-		contentServices,
-		env,
-		requiredEnvKeys,
-	);
+	const missingEnvKeys = missingEnvKeysForContentServices(contentServices, env, requiredEnvKeys);
 	return {
 		contentServices,
 		supportLevel:
@@ -129,11 +108,7 @@ export async function bootstrapAstropressContentServices(
 
 	await mkdir(dirname(manifestFile), { recursive: true });
 
-	const report = createOperationReport(
-		contract.contentServices,
-		env,
-		manifestFile,
-	);
+	const report = createOperationReport(contract.contentServices, env, manifestFile);
 	const manifest = {
 		generatedAt: new Date().toISOString(),
 		contentServices: contract.contentServices,
@@ -142,11 +117,7 @@ export async function bootstrapAstropressContentServices(
 		missingEnvKeys: report.missingEnvKeys,
 		status: report.supportLevel,
 	};
-	await writeFile(
-		manifestFile,
-		`${JSON.stringify(manifest, null, 2)}\n`,
-		"utf8",
-	);
+	await writeFile(manifestFile, `${JSON.stringify(manifest, null, 2)}\n`, "utf8");
 
 	return report;
 }

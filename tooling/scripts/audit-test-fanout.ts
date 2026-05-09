@@ -19,15 +19,12 @@
 // cause cache fan-out we'd notice on a long-running branch.
 
 import type { Dirent } from "node:fs";
-import { readFileSync, readdirSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
 import { AuditReport, fromRoot, runAudit } from "../lib/audit-utils.js";
 
-const TEST_ROOTS = [
-	"packages/astropress/tests",
-	"packages/astropress/bdd/tests",
-];
+const TEST_ROOTS = ["packages/astropress/tests", "packages/astropress/bdd/tests"];
 
 const MAX_FANOUT = 8;
 
@@ -40,18 +37,9 @@ const ALLOWLIST: ReadonlyMap<string, string> = new Map([
 		"tooling-integration.test.ts",
 		"integration test that intentionally walks the full tooling/ tree",
 	],
-	[
-		"vite-runtime-alias.test.ts",
-		"aliasing contract — must verify every entrypoint resolves",
-	],
-	[
-		"api-routes.test.ts",
-		"route-table contract — surface area is the test, by design",
-	],
-	[
-		"api-endpoints.test.ts",
-		"endpoint-shape contract — surface area is the test, by design",
-	],
+	["vite-runtime-alias.test.ts", "aliasing contract — must verify every entrypoint resolves"],
+	["api-routes.test.ts", "route-table contract — surface area is the test, by design"],
+	["api-endpoints.test.ts", "endpoint-shape contract — surface area is the test, by design"],
 	[
 		"zta-invariants.test.ts",
 		"Zero Trust invariants — cross-cutting auth/CSRF/audit checks across the tree",
@@ -64,10 +52,7 @@ const ALLOWLIST: ReadonlyMap<string, string> = new Map([
 		"db-migrate-ops.test.ts",
 		"migration runner contract — exercises the full apply/rollback API surface",
 	],
-	[
-		"sync-git.test.ts",
-		"git-sync adapter contract — exercises export/import/sqlite paths together",
-	],
+	["sync-git.test.ts", "git-sync adapter contract — exercises export/import/sqlite paths together"],
 	[
 		"audit-registry.test.ts",
 		"audit/playwright registry contract — must verify all four call sites stay in lockstep",
@@ -104,8 +89,7 @@ function walkTests(dir: string, out: string[]): void {
 // Match string literals that look like file paths into the source tree.
 // Hits: "components/AdminLayout.astro", "../src/admin-ui.ts", "public/admin.css".
 // Skips: bare identifiers, http(s) URLs (no double-slash anchor), regex bodies.
-const PATH_LITERAL =
-	/["`]([^"`\n]+\.(?:astro|ts|tsx|css|sql|mjs|cjs|js|json))["`]/g;
+const PATH_LITERAL = /["`]([^"`\n]+\.(?:astro|ts|tsx|css|sql|mjs|cjs|js|json))["`]/g;
 
 function extractFanout(src: string): string[] {
 	const paths = new Set<string>();

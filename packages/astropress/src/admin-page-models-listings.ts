@@ -1,15 +1,10 @@
 // ─── Listing/index page models — extracted from admin-page-models.ts ──────────
 import type { APIContext } from "astro";
-import {
-	forbidden,
-	ok,
-	withFallback,
-	withSettledMap,
-} from "./admin-page-model-helpers";
+import { forbidden, ok, withFallback, withSettledMap } from "./admin-page-model-helpers";
 import { getCmsConfig } from "./config";
 import type { JsonValue } from "./json-types";
-import { isAuthUserAdmin } from "./platform-contracts";
 import type { AuthUser } from "./platform-contracts";
+import { isAuthUserAdmin } from "./platform-contracts";
 import {
 	getRuntimeAuthors,
 	getRuntimeCategories,
@@ -54,10 +49,7 @@ export async function buildArchivesIndexPageModel(
 			listingItems?: JsonValue[];
 		}>,
 		async (archive) => {
-			const runtimeArchive = await getRuntimeArchiveRoute(
-				archive.legacyUrl,
-				locals,
-			);
+			const runtimeArchive = await getRuntimeArchiveRoute(archive.legacyUrl, locals);
 			return {
 				...archive,
 				title: runtimeArchive?.title || archive.title,
@@ -66,16 +58,13 @@ export async function buildArchivesIndexPageModel(
 		(archive) => archive,
 	);
 
-	const archivesByKind = archiveList.reduce<Record<string, unknown[]>>(
-		(acc, archive) => {
-			if (!acc[archive.kind]) {
-				acc[archive.kind] = [];
-			}
-			acc[archive.kind].push(archive);
-			return acc;
-		},
-		{},
-	);
+	const archivesByKind = archiveList.reduce<Record<string, unknown[]>>((acc, archive) => {
+		if (!acc[archive.kind]) {
+			acc[archive.kind] = [];
+		}
+		acc[archive.kind].push(archive);
+		return acc;
+	}, {});
 
 	const kindCounts = Object.entries(archivesByKind).map(([kind, items]) => ({
 		kind,
@@ -87,10 +76,7 @@ export async function buildArchivesIndexPageModel(
 		0,
 	);
 
-	return ok(
-		{ archiveList, archivesByKind, kindCounts, totalArchives, totalItems },
-		warnings,
-	);
+	return ok({ archiveList, archivesByKind, kindCounts, totalArchives, totalItems }, warnings);
 }
 
 export async function buildPagesIndexPageModel(
@@ -99,9 +85,7 @@ export async function buildPagesIndexPageModel(
 ) {
 	const empty = {
 		contentStates: [] as Awaited<ReturnType<typeof listRuntimeContentStates>>,
-		routePages: [] as Awaited<
-			ReturnType<typeof listRuntimeStructuredPageRoutes>
-		>,
+		routePages: [] as Awaited<ReturnType<typeof listRuntimeStructuredPageRoutes>>,
 		archiveRows: [] as unknown[],
 	};
 	if (!user || !isAuthUserAdmin(user)) {
@@ -181,10 +165,7 @@ export async function buildPostsIndexPageModel(locals: AdminLocals) {
 		"Archive filters are temporarily unavailable.",
 		archiveList,
 		async (archive) => {
-			const runtimeArchive = await getRuntimeArchiveRoute(
-				archive.legacyUrl,
-				locals,
-			);
+			const runtimeArchive = await getRuntimeArchiveRoute(archive.legacyUrl, locals);
 			return {
 				slug: archive.slug,
 				title: runtimeArchive?.title || archive.title,
@@ -223,14 +204,10 @@ export async function buildTranslationsPageModel(
 			locale: string;
 		}>
 	).map((entry) => {
-		const englishSeed = seedPages.find(
-			(page) => page.legacyUrl === entry.englishSourceUrl,
-		);
+		const englishSeed = seedPages.find((page) => page.legacyUrl === entry.englishSourceUrl);
 		return {
 			...entry,
-			englishEditHref: englishSeed
-				? `/ap-admin/posts/${englishSeed.slug}`
-				: undefined,
+			englishEditHref: englishSeed ? `/ap-admin/posts/${englishSeed.slug}` : undefined,
 		};
 	});
 	const rows = await withSettledMap(
@@ -238,10 +215,7 @@ export async function buildTranslationsPageModel(
 		"Some translation rows are temporarily unavailable.",
 		translationEntries,
 		async (entry) => {
-			const localizedRoute = await getRuntimeStructuredPageRoute(
-				entry.route,
-				locals,
-			);
+			const localizedRoute = await getRuntimeStructuredPageRoute(entry.route, locals);
 			return {
 				...entry,
 				effectiveState: await getRuntimeTranslationState(
@@ -249,9 +223,7 @@ export async function buildTranslationsPageModel(
 					entry.translationState,
 					locals,
 				),
-				localizedEditHref: localizedRoute
-					? `/ap-admin/route-pages${entry.route}`
-					: undefined,
+				localizedEditHref: localizedRoute ? `/ap-admin/route-pages${entry.route}` : undefined,
 			};
 		},
 		(entry) => ({
@@ -264,10 +236,7 @@ export async function buildTranslationsPageModel(
 	return ok({ rows }, warnings);
 }
 
-export async function buildSeoPageModel(
-	locals: AdminLocals,
-	user: AuthUser | null | undefined,
-) {
+export async function buildSeoPageModel(locals: AdminLocals, user: AuthUser | null | undefined) {
 	const empty = { rows: [] as unknown[] };
 	if (!user || !isAuthUserAdmin(user)) {
 		return forbidden(empty);

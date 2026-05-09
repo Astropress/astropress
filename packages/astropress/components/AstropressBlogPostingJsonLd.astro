@@ -39,13 +39,10 @@ interface Props {
 	datePublished?: string;
 }
 
-const { record, siteOrigin, publisherName, publisherLogo, datePublished } =
-	Astro.props;
+const { record, siteOrigin, publisherName, publisherLogo, datePublished } = Astro.props;
 
 const url =
-	siteOrigin && record.slug
-		? `${siteOrigin.replace(/\/$/, "")}/blog/${record.slug}/`
-		: undefined;
+	siteOrigin && record.slug ? `${siteOrigin.replace(/\/$/, "")}/blog/${record.slug}/` : undefined;
 
 const headline = record.seoTitle || record.title || "";
 const description = record.metaDescription || record.excerpt || "";
@@ -67,9 +64,7 @@ const blogPosting: BlogPosting = {
 		publisher: {
 			"@type": "Organization",
 			name: publisherName,
-			...(publisherLogo
-				? { logo: { "@type": "ImageObject", url: publisherLogo } }
-				: {}),
+			...(publisherLogo ? { logo: { "@type": "ImageObject", url: publisherLogo } } : {}),
 		},
 	}),
 };

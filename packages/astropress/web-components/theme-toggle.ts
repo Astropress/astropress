@@ -26,9 +26,7 @@ function preferredTheme(): "dark" | "light" {
 			return stored;
 		}
 	} catch {}
-	return window.matchMedia("(prefers-color-scheme: dark)").matches
-		? "dark"
-		: "light";
+	return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
 }
 
 function readCurrentTheme(): "dark" | "light" {
@@ -68,9 +66,7 @@ export class ApThemeToggle extends HTMLElement {
 		const next = readCurrentTheme() === "dark" ? "light" : "dark";
 		applyGlobalTheme(next);
 		// Sync all toggle instances on the page
-		for (const el of document.querySelectorAll<ApThemeToggle>(
-			"ap-theme-toggle",
-		)) {
+		for (const el of document.querySelectorAll<ApThemeToggle>("ap-theme-toggle")) {
 			el._syncButton(next);
 		}
 	}
@@ -78,8 +74,7 @@ export class ApThemeToggle extends HTMLElement {
 	private _syncButton(theme: "dark" | "light") {
 		const isDark = theme === "dark";
 		const labelDark = this.getAttribute("label-dark") || "Switch to dark mode";
-		const labelLight =
-			this.getAttribute("label-light") || "Switch to light mode";
+		const labelLight = this.getAttribute("label-light") || "Switch to light mode";
 		const label = isDark ? labelLight : labelDark;
 
 		if (this._button) {

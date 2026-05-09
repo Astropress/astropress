@@ -1,3 +1,4 @@
+// stryker-disable-file: data-only — pure barrel; only `export * from` lines, no runtime code to mutate.
 // Barrel re-export — see domain files for implementations:
 //   runtime-actions-content.ts   (saveRuntimeContentState, createRuntimeContentRecord, restoreRuntimeRevision)
 //   runtime-actions-users.ts     (inviteRuntimeAdminUser, getRuntimeInviteRequest, consumeRuntimeInviteToken,
@@ -10,7 +11,7 @@
 //   runtime-actions-misc.ts      (updateRuntimeTranslationState, createRuntimeRedirectRule, deleteRuntimeRedirectRule,
 //                                  moderateRuntimeComment, saveRuntimeSettings)
 export * from "./runtime-actions-content";
-export * from "./runtime-actions-users";
 export * from "./runtime-actions-media";
-export * from "./runtime-actions-taxonomies";
 export * from "./runtime-actions-misc";
+export * from "./runtime-actions-taxonomies";
+export * from "./runtime-actions-users";

@@ -40,9 +40,7 @@ function makeEditor(initialBody = "<p>Hello</p>") {
     </dialog>
   `;
 	const urlDialog = el.querySelector("#url-input-dialog") as HTMLDialogElement;
-	const mediaDialog = el.querySelector(
-		"#media-library-dialog",
-	) as HTMLDialogElement;
+	const mediaDialog = el.querySelector("#media-library-dialog") as HTMLDialogElement;
 	stubDialog(urlDialog);
 	stubDialog(mediaDialog);
 
@@ -100,9 +98,7 @@ describe("ApHtmlEditor", () => {
 	it("inserts a list placeholder when no text is selected", () => {
 		const { editor, toolbar } = makeEditor("");
 		editor.setSelectionRange(0, 0);
-		toolbar
-			.querySelector<HTMLButtonElement>('[data-cmd="insertUnorderedList"]')
-			?.click();
+		toolbar.querySelector<HTMLButtonElement>('[data-cmd="insertUnorderedList"]')?.click();
 		expect(editor.value).toContain("<ul>");
 		expect(editor.value).toContain("<li>");
 		expect(editor.value).toContain("List item");
@@ -110,18 +106,14 @@ describe("ApHtmlEditor", () => {
 
 	it("opens URL dialog instead of window.prompt on createLink", () => {
 		const { toolbar, urlDialog } = makeEditor("");
-		toolbar
-			.querySelector<HTMLButtonElement>('[data-cmd="createLink"]')
-			?.click();
+		toolbar.querySelector<HTMLButtonElement>('[data-cmd="createLink"]')?.click();
 		expect(urlDialog.getAttribute("open")).toBe("");
 	});
 
 	it("inserts link wrapping selection after URL dialog submit", () => {
 		const { editor, toolbar, urlField, urlForm } = makeEditor("click here");
 		editor.setSelectionRange(0, 10); // select "click here"
-		toolbar
-			.querySelector<HTMLButtonElement>('[data-cmd="createLink"]')
-			?.click();
+		toolbar.querySelector<HTMLButtonElement>('[data-cmd="createLink"]')?.click();
 
 		urlField.value = "https://example.com";
 		urlForm.dispatchEvent(new Event("submit"));
@@ -132,9 +124,7 @@ describe("ApHtmlEditor", () => {
 	it("does not insert link when URL field is empty", () => {
 		const { editor, toolbar, urlField, urlForm } = makeEditor("click here");
 		editor.setSelectionRange(0, 10);
-		toolbar
-			.querySelector<HTMLButtonElement>('[data-cmd="createLink"]')
-			?.click();
+		toolbar.querySelector<HTMLButtonElement>('[data-cmd="createLink"]')?.click();
 
 		urlField.value = "";
 		urlForm.dispatchEvent(new Event("submit"));

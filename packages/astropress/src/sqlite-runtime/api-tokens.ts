@@ -1,9 +1,5 @@
 import { randomBytes } from "node:crypto";
-import type {
-	ApiScope,
-	ApiTokenRecord,
-	ApiTokenStore,
-} from "../platform-contracts";
+import type { ApiScope, ApiTokenRecord, ApiTokenStore } from "../platform-contracts";
 import type { AstropressSqliteDatabaseLike } from "./utils";
 import { hashOpaqueToken } from "./utils";
 
@@ -29,9 +25,7 @@ function rowToRecord(row: ApiTokenRow): ApiTokenRecord {
 	};
 }
 
-export function createApiTokenStore(
-	db: AstropressSqliteDatabaseLike,
-): ApiTokenStore {
+export function createApiTokenStore(db: AstropressSqliteDatabaseLike): ApiTokenStore {
 	return {
 		async create({ label, scopes, expiresAt }) {
 			const id = `tok_${randomBytes(12).toString("hex")}`;
@@ -41,14 +35,7 @@ export function createApiTokenStore(
 
 			db.prepare(
 				"INSERT INTO api_tokens (id, label, token_hash, scopes, created_at, expires_at) VALUES (?, ?, ?, ?, ?, ?)",
-			).run(
-				id,
-				label,
-				tokenHash,
-				JSON.stringify(scopes),
-				now,
-				expiresAt ?? null,
-			);
+			).run(id, label, tokenHash, JSON.stringify(scopes), now, expiresAt ?? null);
 
 			const record: ApiTokenRecord = {
 				id,
@@ -94,10 +81,7 @@ export function createApiTokenStore(
 
 			// Update last_used_at
 			const now = new Date().toISOString();
-			db.prepare("UPDATE api_tokens SET last_used_at = ? WHERE id = ?").run(
-				now,
-				row.id,
-			);
+			db.prepare("UPDATE api_tokens SET last_used_at = ? WHERE id = ?").run(now, row.id);
 			row.last_used_at = now;
 
 			return { valid: true, record: rowToRecord(row) };
@@ -105,10 +89,7 @@ export function createApiTokenStore(
 
 		async revoke(id) {
 			const now = new Date().toISOString();
-			db.prepare("UPDATE api_tokens SET revoked_at = ? WHERE id = ?").run(
-				now,
-				id,
-			);
+			db.prepare("UPDATE api_tokens SET revoked_at = ? WHERE id = ?").run(now, id);
 		},
 	};
 }

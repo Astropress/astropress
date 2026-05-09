@@ -173,9 +173,7 @@ export interface AstropressRollbackResult {
 	dryRun: boolean;
 }
 
-export type SqliteDatabaseConstructor = new (
-	filename: string,
-) => SqliteDatabaseLike;
+export type SqliteDatabaseConstructor = new (filename: string) => SqliteDatabaseLike;
 
 export async function loadSqliteDatabase(): Promise<SqliteDatabaseConstructor> {
 	if ("Bun" in globalThis) {

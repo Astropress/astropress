@@ -17,18 +17,12 @@ export interface MailchimpImportResult {
  * Optional columns: "First Name", "Last Name"
  * Returns cleaned subscriber records ready for Listmonk bulk import.
  */
-function parseMailchimpCsv(
-	csv: string,
-): Array<{ email: string; name: string }> {
+function parseMailchimpCsv(csv: string): Array<{ email: string; name: string }> {
 	const lines = csv.trim().split(/\r?\n/);
 	if (lines.length < 2) return [];
 
-	const headers = lines[0]
-		?.split(",")
-		.map((h) => h.replace(/^"|"$/g, "").trim());
-	const emailIdx = headers.findIndex(
-		(h) => h.toLowerCase() === "email address",
-	);
+	const headers = lines[0]?.split(",").map((h) => h.replace(/^"|"$/g, "").trim());
+	const emailIdx = headers.findIndex((h) => h.toLowerCase() === "email address");
 	const firstIdx = headers.findIndex((h) => h.toLowerCase() === "first name");
 	const lastIdx = headers.findIndex((h) => h.toLowerCase() === "last name");
 
@@ -36,11 +30,9 @@ function parseMailchimpCsv(
 
 	const records: Array<{ email: string; name: string }> = [];
 	for (let i = 1; i < lines.length; i++) {
-		const cols = lines[i]
-			?.split(",")
-			.map((c) => c.replace(/^"|"$/g, "").trim());
+		const cols = lines[i]?.split(",").map((c) => c.replace(/^"|"$/g, "").trim());
 		const email = cols[emailIdx] ?? "";
-		if (!email || !email.includes("@")) continue;
+		if (!email?.includes("@")) continue;
 		const first = firstIdx !== -1 ? (cols[firstIdx] ?? "") : "";
 		const last = lastIdx !== -1 ? (cols[lastIdx] ?? "") : "";
 		const name = [first, last].filter(Boolean).join(" ") || email;
@@ -77,8 +69,7 @@ export async function runMailchimpImport(
 			ok: false,
 			imported: 0,
 			skipped: 0,
-			error:
-				'No valid subscriber rows found. Make sure the file has an "Email Address" column.',
+			error: 'No valid subscriber rows found. Make sure the file has an "Email Address" column.',
 		};
 	}
 
@@ -86,10 +77,7 @@ export async function runMailchimpImport(
 	const listId = Number(cfg.listmonkListId);
 
 	// Listmonk bulk import: POST /api/subscribers/import with CSV records string
-	const csvBody = [
-		"email,name",
-		...records.map((r) => `${r.email},${r.name}`),
-	].join("\n");
+	const csvBody = ["email,name", ...records.map((r) => `${r.email},${r.name}`)].join("\n");
 
 	try {
 		const res = await fetch(`${cfg.listmonkApiUrl}/api/subscribers/import`, {

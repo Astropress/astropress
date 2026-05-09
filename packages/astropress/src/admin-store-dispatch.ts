@@ -4,9 +4,7 @@ import { loadLocalAdminStore } from "./local-runtime-modules";
 import { getCloudflareBindings } from "./runtime-env";
 
 /** Returns the D1 database binding from request locals, or undefined if not available. */
-export function getAdminDb(
-	locals?: App.Locals | null,
-): D1DatabaseLike | undefined {
+export function getAdminDb(locals?: App.Locals | null): D1DatabaseLike | undefined {
 	return getCloudflareBindings(locals).DB;
 }
 

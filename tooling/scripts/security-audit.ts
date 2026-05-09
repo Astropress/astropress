@@ -1,4 +1,4 @@
-import { readFile, readdir, stat } from "node:fs/promises";
+import { readdir, readFile, stat } from "node:fs/promises";
 import { join, relative } from "node:path";
 
 type Violation = {
@@ -44,8 +44,8 @@ async function main() {
 		...(await walk(join(root, "packages/astropress/pages/ap-admin"))).filter(
 			(path) => path.endsWith(".astro") || path.endsWith(".ts"),
 		),
-		...(await walk(join(root, "packages/astropress/components"))).filter(
-			(path) => path.endsWith(".astro"),
+		...(await walk(join(root, "packages/astropress/components"))).filter((path) =>
+			path.endsWith(".astro"),
 		),
 		join(root, "packages/astropress/src/admin-action-utils.ts"),
 		join(root, "packages/astropress/src/security-headers.ts"),
@@ -124,9 +124,7 @@ async function main() {
 	const actionFiles = (await walk(actionsDir)).filter((f) => f.endsWith(".ts"));
 	for (const file of actionFiles) {
 		const content = await readFile(file, "utf8");
-		const hasZtaWrapper = /withAdminFormAction|requireAdminFormAction/.test(
-			content,
-		);
+		const hasZtaWrapper = /withAdminFormAction|requireAdminFormAction/.test(content);
 		const hasPreAuthGate = /isTrustedStrictRequestOrigin/.test(content);
 		if (!hasZtaWrapper && !hasPreAuthGate) {
 			violations.push({

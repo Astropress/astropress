@@ -122,9 +122,7 @@ describe("resolveCdnPurge — empty result", () => {
 	});
 
 	it("returns kind: 'none' when all sources are explicitly null/undefined", () => {
-		expect(
-			resolveCdnPurge({ registry: null, env: null, config: null }),
-		).toEqual({ kind: "none" });
+		expect(resolveCdnPurge({ registry: null, env: null, config: null })).toEqual({ kind: "none" });
 	});
 
 	it("returns kind: 'none' when env is an empty object", () => {

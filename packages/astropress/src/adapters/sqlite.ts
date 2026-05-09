@@ -28,15 +28,11 @@ export interface AstropressSqliteAdapterOptions {
 export function createAstropressSqliteAdapter(
 	options: AstropressSqliteAdapterOptions = {},
 ): AstropressPlatformAdapter {
-	const seedToolkit =
-		options.seedToolkit ?? createDefaultAstropressSqliteSeedToolkit();
+	const seedToolkit = options.seedToolkit ?? createDefaultAstropressSqliteSeedToolkit();
 	const workspaceRoot = options.workspaceRoot ?? process.cwd();
-	const dbPath =
-		options.dbPath ?? seedToolkit.getDefaultAdminDbPath(workspaceRoot);
+	const dbPath = options.dbPath ?? seedToolkit.getDefaultAdminDbPath(workspaceRoot);
 	let seeded = false;
-	let database: ReturnType<
-		AstropressSqliteSeedToolkit["openSeedDatabase"]
-	> | null = null;
+	let database: ReturnType<AstropressSqliteSeedToolkit["openSeedDatabase"]> | null = null;
 
 	function ensureDatabase() {
 		if (!seeded) {
@@ -74,10 +70,7 @@ export function createAstropressSqliteAdapter(
 		}),
 		auth: {
 			async signIn(email, password) {
-				const user = await runtime.authenticatePersistedAdminUser(
-					email,
-					password,
-				);
+				const user = await runtime.authenticatePersistedAdminUser(email, password);
 				if (!user) return null;
 				const sessionId = runtime.sqliteAdminStore.auth.createSession(user, {});
 				runtime.sqliteAdminStore.auth.recordSuccessfulLogin(user);
@@ -112,10 +105,7 @@ export function createAstropressSqliteAdapter(
 				if (!normalizedId) return null;
 				const all = await this.list();
 				return (
-					all.find(
-						(record) =>
-							record.id === normalizedId || record.slug === normalizedId,
-					) ?? null
+					all.find((record) => record.id === normalizedId || record.slug === normalizedId) ?? null
 				);
 			},
 			async save(record) {
@@ -141,9 +131,7 @@ export function createAstropressSqliteAdapter(
 		},
 		revisions: {
 			async list(recordId) {
-				return (
-					runtime.sqliteAdminStore.content.getContentRevisions(recordId) ?? []
-				).map(
+				return (runtime.sqliteAdminStore.content.getContentRevisions(recordId) ?? []).map(
 					(revision): RevisionRecord => ({
 						id: revision.id,
 						recordId: revision.slug,

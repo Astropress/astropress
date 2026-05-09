@@ -1,10 +1,9 @@
-import { withAdminFormAction } from "@astropress-diy/astropress";
-import { saveRuntimeStructuredPageRoute } from "@astropress-diy/astropress";
-import { getCmsConfig } from "@astropress-diy/astropress";
 import {
-	parseSectionsFromJson,
-	sanitizeSections,
-} from "@astropress-diy/astropress/sections";
+	getCmsConfig,
+	saveRuntimeStructuredPageRoute,
+	withAdminFormAction,
+} from "@astropress-diy/astropress";
+import { parseSectionsFromJson, sanitizeSections } from "@astropress-diy/astropress/sections";
 import type { APIRoute } from "astro";
 
 function parseJson<T>(value: FormDataEntryValue | null, fallback: T) {
@@ -53,9 +52,7 @@ export const POST: APIRoute = async (context) =>
 					summary: String(formData.get("summary") ?? "").trim(),
 					seoTitle: String(formData.get("seoTitle") ?? "").trim(),
 					metaDescription: String(formData.get("metaDescription") ?? "").trim(),
-					canonicalUrlOverride: String(
-						formData.get("canonicalUrlOverride") ?? "",
-					).trim(),
+					canonicalUrlOverride: String(formData.get("canonicalUrlOverride") ?? "").trim(),
 					robotsDirective: String(formData.get("robotsDirective") ?? "").trim(),
 					ogImage: String(formData.get("ogImage") ?? "").trim(),
 					templateKey,
@@ -63,10 +60,7 @@ export const POST: APIRoute = async (context) =>
 						formData.get("alternateLinksJson"),
 						[],
 					),
-					sections: { sections: safeSections } as unknown as Record<
-						string,
-						unknown
-					>,
+					sections: { sections: safeSections } as unknown as Record<string, unknown>,
 					revisionNote: String(formData.get("revisionNote") ?? "").trim(),
 				},
 				actor,

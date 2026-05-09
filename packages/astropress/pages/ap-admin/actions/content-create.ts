@@ -1,5 +1,4 @@
-import { createRuntimeContentRecord } from "@astropress-diy/astropress";
-import { withAdminFormAction } from "@astropress-diy/astropress";
+import { createRuntimeContentRecord, withAdminFormAction } from "@astropress-diy/astropress";
 import type { APIRoute } from "astro";
 
 export const POST: APIRoute = async (context) =>
@@ -21,9 +20,7 @@ export const POST: APIRoute = async (context) =>
 					ogTitle: String(formData.get("ogTitle") ?? ""),
 					ogDescription: String(formData.get("ogDescription") ?? ""),
 					ogImage: String(formData.get("ogImage") ?? ""),
-					canonicalUrlOverride: String(
-						formData.get("canonicalUrlOverride") ?? "",
-					),
+					canonicalUrlOverride: String(formData.get("canonicalUrlOverride") ?? ""),
 					robotsDirective: String(formData.get("robotsDirective") ?? ""),
 				},
 				actor,
@@ -35,9 +32,7 @@ export const POST: APIRoute = async (context) =>
 			}
 
 			const slug =
-				typeof result.state === "object" &&
-				result.state &&
-				"slug" in result.state
+				typeof result.state === "object" && result.state && "slug" in result.state
 					? String(result.state.slug)
 					: "";
 			return redirect(`/ap-admin/posts/${slug}?created=1`);

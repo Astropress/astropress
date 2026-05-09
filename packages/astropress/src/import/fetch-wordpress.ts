@@ -16,9 +16,7 @@ export class SiteNotReachableError extends Error {
 export class NotWordPressSiteError extends Error {
 	override name = "NotWordPressSiteError";
 	constructor(url: string) {
-		super(
-			`The URL does not appear to be a WordPress site — wp-login.php was not found at ${url}`,
-		);
+		super(`The URL does not appear to be a WordPress site — wp-login.php was not found at ${url}`);
 	}
 }
 
@@ -32,9 +30,7 @@ export class InvalidCredentialsError extends Error {
 export class TwoFactorRequiredError extends Error {
 	override name = "TwoFactorRequiredError";
 	constructor() {
-		super(
-			"Two-factor authentication is required — export the file manually and use --source",
-		);
+		super("Two-factor authentication is required — export the file manually and use --source");
 	}
 }
 
@@ -106,38 +102,22 @@ async function requirePlaywright() {
 // Helpers
 // ---------------------------------------------------------------------------
 
-function classifyNetworkError(
-	err: unknown,
-	hostname: string,
-): SiteNotReachableError {
+function classifyNetworkError(err: unknown, hostname: string): SiteNotReachableError {
 	const msg = err instanceof Error ? err.message : String(err);
 	if (msg.includes("ERR_NAME_NOT_RESOLVED") || msg.includes("EAI_AGAIN")) {
-		return new SiteNotReachableError(
-			hostname,
-			"DNS lookup failed — check the site URL is correct",
-		);
+		return new SiteNotReachableError(hostname, "DNS lookup failed — check the site URL is correct");
 	}
 	if (msg.includes("ERR_CONNECTION_REFUSED")) {
-		return new SiteNotReachableError(
-			hostname,
-			"connection refused — is the site running?",
-		);
+		return new SiteNotReachableError(hostname, "connection refused — is the site running?");
 	}
-	if (
-		msg.includes("ERR_CERT_") ||
-		msg.includes("SSL") ||
-		msg.includes("certificate")
-	) {
+	if (msg.includes("ERR_CERT_") || msg.includes("SSL") || msg.includes("certificate")) {
 		return new SiteNotReachableError(
 			hostname,
 			"SSL/TLS error — try using http:// instead of https://",
 		);
 	}
 	if (msg.toLowerCase().includes("timeout")) {
-		return new SiteNotReachableError(
-			hostname,
-			"timed out — the server took too long to respond",
-		);
+		return new SiteNotReachableError(hostname, "timed out — the server took too long to respond");
 	}
 	return new SiteNotReachableError(hostname, msg);
 }
@@ -159,14 +139,7 @@ function isBotBlocked(content: string): boolean {
 async function attemptWordPressExport(
 	opts: WordPressFetchOptions & { headless: boolean },
 ): Promise<WordPressFetchResult> {
-	const {
-		siteUrl,
-		username,
-		password,
-		downloadDir,
-		headless,
-		timeoutMs = 30_000,
-	} = opts;
+	const { siteUrl, username, password, downloadDir, headless, timeoutMs = 30_000 } = opts;
 
 	const pw = await requirePlaywright();
 	const browser = await pw.chromium.launch({ headless });
@@ -199,10 +172,7 @@ async function attemptWordPressExport(
 		if (isBotBlocked(loginContent)) {
 			throw new BotDetectionError();
 		}
-		if (
-			loginContent.includes("g-recaptcha") ||
-			loginContent.includes("h-captcha")
-		) {
+		if (loginContent.includes("g-recaptcha") || loginContent.includes("h-captcha")) {
 			throw new CaptchaDetectedError();
 		}
 
@@ -215,9 +185,7 @@ async function attemptWordPressExport(
 
 		// Check for 2FA (can appear on login page OR wp-admin via plugin redirect)
 		const has2FA = await page
-			.locator(
-				"[name='authcode'], [name='two-factor-totp-authcode'], [name='mfa_token']",
-			)
+			.locator("[name='authcode'], [name='two-factor-totp-authcode'], [name='mfa_token']")
 			.count();
 		if (has2FA > 0) {
 			throw new TwoFactorRequiredError();
@@ -279,10 +247,7 @@ export async function fetchWordPressExport(
 	try {
 		return await attemptWordPressExport({ ...opts, headless: true });
 	} catch (err) {
-		if (
-			err instanceof CaptchaDetectedError ||
-			err instanceof BotDetectionError
-		) {
+		if (err instanceof CaptchaDetectedError || err instanceof BotDetectionError) {
 			process.stderr.write(
 				"\n[astropress] Bot detection or CAPTCHA triggered in headless mode.\n" +
 					"[astropress] Opening a visible browser — please solve any challenge that appears,\n" +

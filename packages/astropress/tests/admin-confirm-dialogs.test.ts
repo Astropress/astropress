@@ -10,20 +10,14 @@ const adminPagesRoot = path.resolve(import.meta.dirname, "../pages/ap-admin");
 
 describe("destructive actions use confirm dialogs", () => {
 	it("authors page uses ap-confirm-dialog for deletion", () => {
-		const src = readFileSync(
-			path.join(adminPagesRoot, "authors.astro"),
-			"utf8",
-		);
+		const src = readFileSync(path.join(adminPagesRoot, "authors.astro"), "utf8");
 		expect(src).toContain("ap-confirm-dialog");
 		expect(src).toContain("data-confirm-trigger");
 		expect(src).toContain('id="confirm-delete-author"');
 	});
 
 	it("taxonomies page uses ap-confirm-dialog for category and tag deletion", () => {
-		const src = readFileSync(
-			path.join(adminPagesRoot, "taxonomies.astro"),
-			"utf8",
-		);
+		const src = readFileSync(path.join(adminPagesRoot, "taxonomies.astro"), "utf8");
 		expect(src).toContain("ap-confirm-dialog");
 		expect(src).toContain("data-confirm-trigger");
 		expect(src).toContain('id="confirm-delete-category"');
@@ -38,20 +32,14 @@ describe("destructive actions use confirm dialogs", () => {
 	});
 
 	it("webhooks page uses ap-confirm-dialog for deletion", () => {
-		const src = readFileSync(
-			path.join(adminPagesRoot, "webhooks.astro"),
-			"utf8",
-		);
+		const src = readFileSync(path.join(adminPagesRoot, "webhooks.astro"), "utf8");
 		expect(src).toContain("ap-confirm-dialog");
 		expect(src).toContain("data-confirm-trigger");
 		expect(src).toContain('id="confirm-delete-webhook"');
 	});
 
 	it("api-tokens page uses ap-confirm-dialog for revocation", () => {
-		const src = readFileSync(
-			path.join(adminPagesRoot, "api-tokens.astro"),
-			"utf8",
-		);
+		const src = readFileSync(path.join(adminPagesRoot, "api-tokens.astro"), "utf8");
 		expect(src).toContain("ap-confirm-dialog");
 		expect(src).toContain("data-confirm-trigger");
 		expect(src).toContain('id="confirm-revoke-token"');
@@ -67,10 +55,7 @@ describe("destructive actions use confirm dialogs", () => {
 	});
 
 	it("subscriber detail uses styled dialog instead of window.confirm()", () => {
-		const src = readFileSync(
-			path.join(adminPagesRoot, "subscribers", "[id].astro"),
-			"utf8",
-		);
+		const src = readFileSync(path.join(adminPagesRoot, "subscribers", "[id].astro"), "utf8");
 		expect(src).not.toContain("window.confirm");
 		expect(src).not.toMatch(/data-confirm="/);
 		expect(src).toContain("ap-confirm-dialog");

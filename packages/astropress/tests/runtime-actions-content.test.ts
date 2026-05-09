@@ -7,11 +7,7 @@ import {
 	restoreRuntimeRevision,
 	saveRuntimeContentState,
 } from "../src/runtime-actions-content";
-import {
-	STANDARD_ACTOR,
-	STANDARD_CMS_CONFIG,
-	makeDb,
-} from "./helpers/make-db.js";
+import { makeDb, STANDARD_ACTOR, STANDARD_CMS_CONFIG } from "./helpers/make-db.js";
 import { makeLocals } from "./helpers/make-locals.js";
 
 const actor = STANDARD_ACTOR;
@@ -87,9 +83,7 @@ describe("saveRuntimeContentState", () => {
 		expect(override.title).toBe("Updated");
 		const revCount = (
 			db
-				.prepare(
-					"SELECT COUNT(*) as n FROM content_revisions WHERE slug = 'hello-world'",
-				)
+				.prepare("SELECT COUNT(*) as n FROM content_revisions WHERE slug = 'hello-world'")
 				.get() as { n: number }
 		).n;
 		expect(revCount).toBeGreaterThanOrEqual(2);
@@ -109,9 +103,7 @@ describe("saveRuntimeContentState", () => {
 		);
 		expect(result).toMatchObject({ ok: true });
 		const override = db
-			.prepare(
-				"SELECT status FROM content_overrides WHERE slug = 'hello-world'",
-			)
+			.prepare("SELECT status FROM content_overrides WHERE slug = 'hello-world'")
 			.get() as { status: string };
 		expect(override.status).toBe("draft");
 	});
@@ -163,16 +155,12 @@ describe("saveRuntimeContentState", () => {
 			locals,
 		);
 		expect(result).toMatchObject({ ok: false, conflict: true });
-		expect((result as { error: string }).error).toMatch(
-			/modified by another editor/,
-		);
+		expect((result as { error: string }).error).toMatch(/modified by another editor/);
 	});
 
 	it("succeeds when lastKnownUpdatedAt matches stored updated_at", async () => {
 		const currentOverride = db
-			.prepare(
-				"SELECT updated_at FROM content_overrides WHERE slug = 'hello-world'",
-			)
+			.prepare("SELECT updated_at FROM content_overrides WHERE slug = 'hello-world'")
 			.get() as { updated_at: string };
 		const result = await saveRuntimeContentState(
 			"hello-world",
@@ -263,9 +251,7 @@ describe("saveRuntimeContentState", () => {
 		);
 		expect(result).toMatchObject({ ok: true });
 		const saved = db
-			.prepare(
-				"SELECT metadata FROM content_overrides WHERE slug = 'hello-world'",
-			)
+			.prepare("SELECT metadata FROM content_overrides WHERE slug = 'hello-world'")
 			.get() as { metadata: string };
 		expect(JSON.parse(saved.metadata)).toMatchObject({
 			subtitle: "My Subtitle",
@@ -288,8 +274,7 @@ describe("saveRuntimeContentState", () => {
 							name: "capacity",
 							label: "Max Capacity",
 							type: "number",
-							validate: (v) =>
-								Number(v) > 0 || "Capacity must be a positive number",
+							validate: (v) => Number(v) > 0 || "Capacity must be a positive number",
 						},
 					],
 				},
@@ -308,9 +293,7 @@ describe("saveRuntimeContentState", () => {
 			locals,
 		);
 		expect(result).toMatchObject({ ok: false });
-		expect((result as { error: string }).error).toContain(
-			"Capacity must be a positive number",
-		);
+		expect((result as { error: string }).error).toContain("Capacity must be a positive number");
 	});
 
 	it("saves with all optional fields populated", async () => {
@@ -364,9 +347,7 @@ describe("saveRuntimeContentState", () => {
 		);
 		expect(result).toMatchObject({ ok: true });
 		const authorRow = db
-			.prepare(
-				"SELECT author_id FROM content_authors WHERE slug = 'hello-world'",
-			)
+			.prepare("SELECT author_id FROM content_authors WHERE slug = 'hello-world'")
 			.get() as { author_id: number } | undefined;
 		expect(authorRow?.author_id).toBe(Number(authorId));
 	});
@@ -386,9 +367,9 @@ describe("createRuntimeContentRecord", () => {
 			locals,
 		);
 		expect(result).toMatchObject({ ok: true });
-		const entry = db
-			.prepare("SELECT slug FROM content_entries WHERE slug = 'new-post'")
-			.get() as { slug: string } | undefined;
+		const entry = db.prepare("SELECT slug FROM content_entries WHERE slug = 'new-post'").get() as
+			| { slug: string }
+			| undefined;
 		expect(entry?.slug).toBe("new-post");
 	});
 
@@ -405,9 +386,7 @@ describe("createRuntimeContentRecord", () => {
 			locals,
 		);
 		expect(result).toMatchObject({ ok: true });
-		expect((result as { state: { slug: string } }).state.slug).toBe(
-			"my-post-title",
-		);
+		expect((result as { state: { slug: string } }).state.slug).toBe("my-post-title");
 	});
 
 	it("returns not-ok for missing required fields", async () => {
@@ -454,9 +433,7 @@ describe("createRuntimeContentRecord", () => {
 			locals,
 		);
 		expect(result).toMatchObject({ ok: true });
-		expect((result as { state: { legacyUrl: string } }).state.legacyUrl).toBe(
-			"/no-slash-url",
-		);
+		expect((result as { state: { legacyUrl: string } }).state.legacyUrl).toBe("/no-slash-url");
 	});
 
 	it("falls back to title when seoTitle is empty", async () => {
@@ -501,32 +478,17 @@ describe("createRuntimeContentRecord", () => {
 
 describe("restoreRuntimeRevision", () => {
 	it("restores an existing revision into the override", async () => {
-		const result = await restoreRuntimeRevision(
-			"hello-world",
-			"rev-1",
-			actor,
-			locals,
-		);
+		const result = await restoreRuntimeRevision("hello-world", "rev-1", actor, locals);
 		expect(result).toMatchObject({ ok: true });
 	});
 
 	it("returns not-ok for unknown revision id", async () => {
-		const result = await restoreRuntimeRevision(
-			"hello-world",
-			"rev-ghost",
-			actor,
-			locals,
-		);
+		const result = await restoreRuntimeRevision("hello-world", "rev-ghost", actor, locals);
 		expect(result).toMatchObject({ ok: false });
 	});
 
 	it("returns not-ok for unknown slug", async () => {
-		const result = await restoreRuntimeRevision(
-			"no-such-slug",
-			"rev-1",
-			actor,
-			locals,
-		);
+		const result = await restoreRuntimeRevision("no-such-slug", "rev-1", actor, locals);
 		expect(result).toMatchObject({ ok: false });
 	});
 });
@@ -573,12 +535,8 @@ describe("purgeCdnCache", () => {
 		vi.unstubAllGlobals();
 		expect(requests).toHaveLength(1);
 		expect(requests[0].url).toBe("https://hooks.example.com/purge");
-		expect((requests[0].body as Record<string, unknown>).slug).toBe(
-			"test-slug",
-		);
-		expect(typeof (requests[0].body as Record<string, unknown>).purgedAt).toBe(
-			"string",
-		);
+		expect((requests[0].body as Record<string, unknown>).slug).toBe("test-slug");
+		expect(typeof (requests[0].body as Record<string, unknown>).purgedAt).toBe("string");
 	});
 
 	it("uses the registryFields parameter (admin-connected Cloudflare) over env and config", async () => {
@@ -608,21 +566,14 @@ describe("purgeCdnCache", () => {
 		vi.unstubAllGlobals();
 
 		// The Cloudflare call must use the registry token, not anything from env/config.
-		const cf = requests.find((r) =>
-			r.url.startsWith("https://api.cloudflare.com/"),
-		);
+		const cf = requests.find((r) => r.url.startsWith("https://api.cloudflare.com/"));
 		expect(cf?.auth).toBe("Bearer registry-tok");
-		expect(cf?.url).toBe(
-			"https://api.cloudflare.com/client/v4/zones/registry-zone/purge_cache",
-		);
+		expect(cf?.url).toBe("https://api.cloudflare.com/client/v4/zones/registry-zone/purge_cache");
 	});
 
 	it("does not throw when the webhook returns a non-200 status", async () => {
 		const { purgeCdnCache } = await import("../src/cache-purge");
-		vi.stubGlobal(
-			"fetch",
-			async () => new Response("Server Error", { status: 500 }),
-		);
+		vi.stubGlobal("fetch", async () => new Response("Server Error", { status: 500 }));
 
 		await expect(
 			purgeCdnCache("test-slug", {

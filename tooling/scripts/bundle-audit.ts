@@ -10,7 +10,7 @@
  *   1 — one or more provider-specific identifiers found in the output
  */
 
-import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import path from "node:path";
 
 // Strings that must never appear in a non-Cloudflare, non-Supabase build.
@@ -23,11 +23,7 @@ const CLOUDFLARE_LEAKAGE_PATTERNS = [
 	"createD1Admin",
 ];
 
-const SUPABASE_LEAKAGE_PATTERNS = [
-	"createClient",
-	"@supabase/supabase-js",
-	"SupabaseClient",
-];
+const SUPABASE_LEAKAGE_PATTERNS = ["createClient", "@supabase/supabase-js", "SupabaseClient"];
 
 const ALL_LEAKAGE_PATTERNS = [
 	...CLOUDFLARE_LEAKAGE_PATTERNS.map((p) => ({
@@ -59,9 +55,7 @@ const distDir = process.argv[2] ?? "examples/github-pages/dist";
 
 if (!existsSync(distDir)) {
 	console.error(`[bundle-audit] Output directory not found: ${distDir}`);
-	console.error(
-		"  Build the example first: bun run --filter astropress-example-gh-pages build",
-	);
+	console.error("  Build the example first: bun run --filter astropress-example-gh-pages build");
 	process.exit(1);
 }
 
@@ -71,8 +65,7 @@ if (jsFiles.length === 0) {
 	process.exit(0);
 }
 
-const violations: Array<{ file: string; provider: string; pattern: string }> =
-	[];
+const violations: Array<{ file: string; provider: string; pattern: string }> = [];
 
 for (const file of jsFiles) {
 	const content = readFileSync(file, "utf8");
@@ -88,15 +81,11 @@ for (const file of jsFiles) {
 }
 
 if (violations.length > 0) {
-	console.error(
-		"[bundle-audit] FAIL — provider-specific code leaked into the static build:",
-	);
+	console.error("[bundle-audit] FAIL — provider-specific code leaked into the static build:");
 	for (const v of violations) {
 		console.error(`  ${v.file}: found "${v.pattern}" (${v.provider} adapter)`);
 	}
-	console.error(
-		"\nThis means tree-shaking or subpath import isolation is broken.",
-	);
+	console.error("\nThis means tree-shaking or subpath import isolation is broken.");
 	console.error(
 		"Check that the static build uses only astropress/adapters/sqlite or a build-time adapter.",
 	);

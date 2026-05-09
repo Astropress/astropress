@@ -7,11 +7,7 @@ const originalEnv = { ...process.env };
 
 beforeEach(() => {
 	for (const key of Object.keys(process.env)) {
-		if (
-			key.startsWith("TURNSTILE_") ||
-			key.startsWith("PUBLIC_TURNSTILE_") ||
-			key === "NODE_ENV"
-		) {
+		if (key.startsWith("TURNSTILE_") || key.startsWith("PUBLIC_TURNSTILE_") || key === "NODE_ENV") {
 			delete process.env[key];
 		}
 	}
@@ -20,8 +16,7 @@ beforeEach(() => {
 afterEach(() => {
 	globalThis.fetch = originalFetch;
 	for (const k of Object.keys(process.env)) delete process.env[k];
-	for (const [k, v] of Object.entries(originalEnv))
-		process.env[k] = v as string;
+	for (const [k, v] of Object.entries(originalEnv)) process.env[k] = v as string;
 });
 
 describe("isTurnstileEnabled", () => {
@@ -76,9 +71,7 @@ describe("verifyTurnstileToken", () => {
 		});
 		expect(result).toEqual({ ok: true });
 		const call = (globalThis.fetch as ReturnType<typeof vi.fn>).mock.calls[0];
-		expect(call[0]).toBe(
-			"https://challenges.cloudflare.com/turnstile/v0/siteverify",
-		);
+		expect(call[0]).toBe("https://challenges.cloudflare.com/turnstile/v0/siteverify");
 		const body = call[1].body as URLSearchParams;
 		expect(body.get("secret")).toBe("secret-1");
 		expect(body.get("response")).toBe("valid-token");

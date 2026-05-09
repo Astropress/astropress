@@ -21,12 +21,10 @@ function buildApiCtx(
 }
 
 export const GET: APIRoute = async (context) => {
-	if (!getCmsConfig().api?.enabled)
-		return apiErrors.notFound("REST API is not enabled.");
+	if (!getCmsConfig().api?.enabled) return apiErrors.notFound("REST API is not enabled.");
 
 	const store = await loadLocalAdminStore();
-	if (!store.apiTokens)
-		return apiErrors.notFound("API token store unavailable.");
+	if (!store.apiTokens) return apiErrors.notFound("API token store unavailable.");
 
 	return withApiRequest(
 		context.request,
@@ -35,17 +33,11 @@ export const GET: APIRoute = async (context) => {
 		async () => {
 			const url = new URL(context.request.url);
 			const limit = Math.min(
-				Number(
-					url.searchParams.get("limit") ??
-						url.searchParams.get("per_page") ??
-						"20",
-				),
+				Number(url.searchParams.get("limit") ?? url.searchParams.get("per_page") ?? "20"),
 				100,
 			);
 			const page = Math.max(Number(url.searchParams.get("page") ?? "1"), 1);
-			const offset = Number(
-				url.searchParams.get("offset") ?? String((page - 1) * limit),
-			);
+			const offset = Number(url.searchParams.get("offset") ?? String((page - 1) * limit));
 
 			const all = store.listMediaAssets();
 			const pageRecords = all.slice(offset, offset + limit);
@@ -58,12 +50,10 @@ export const GET: APIRoute = async (context) => {
 };
 
 export const POST: APIRoute = async (context) => {
-	if (!getCmsConfig().api?.enabled)
-		return apiErrors.notFound("REST API is not enabled.");
+	if (!getCmsConfig().api?.enabled) return apiErrors.notFound("REST API is not enabled.");
 
 	const store = await loadLocalAdminStore();
-	if (!store.apiTokens)
-		return apiErrors.notFound("API token store unavailable.");
+	if (!store.apiTokens) return apiErrors.notFound("API token store unavailable.");
 
 	return withApiRequest(
 		context.request,
@@ -82,9 +72,7 @@ export const POST: APIRoute = async (context) => {
 
 			const file = formData.get("file");
 			if (!(file instanceof File)) {
-				return apiErrors.validationError(
-					"A 'file' field is required in the multipart body.",
-				);
+				return apiErrors.validationError("A 'file' field is required in the multipart body.");
 			}
 
 			// Enforce allowed MIME types (415 Unsupported Media Type)

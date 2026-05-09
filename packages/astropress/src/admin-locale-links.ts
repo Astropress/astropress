@@ -21,9 +21,7 @@ export function getAdminLocalePair(route: string): AdminLocalePair | null {
 	const normalizedRoute = normalizeRoute(route);
 	const entries = getCmsConfig().translationStatus as TranslationStatusRecord[];
 
-	const localizedEntry = entries.find(
-		(entry) => normalizeRoute(entry.route) === normalizedRoute,
-	);
+	const localizedEntry = entries.find((entry) => normalizeRoute(entry.route) === normalizedRoute);
 	if (localizedEntry) {
 		return {
 			currentLocale: "es",

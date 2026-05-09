@@ -7,73 +7,49 @@
 
 import type { APIContext } from "astro";
 import { loadAccessTabDataFromD1 } from "./access/d1-access-page-store";
+import type { RolePolicyRecord, RoleRecord } from "./access/index";
 import { getAccessContext } from "./access/index";
-import type { Policy, RolePolicyRecord, RoleRecord } from "./access/index";
+import { type AdminPageResult, forbidden, ok, withFallback } from "./admin-page-model-helpers";
 import {
-	type AdminPageResult,
-	forbidden,
-	ok,
-	withFallback,
-} from "./admin-page-model-helpers";
+	ACCESS_PAGE_EMPTY_MODEL,
+	ACCESS_PAGE_TAB_DATA_UNAVAILABLE_WARNING,
+	ACCESS_PAGE_TABS,
+	ACCESS_PAGE_USERS_UNAVAILABLE_WARNING,
+	type AccessPageModel,
+	type AccessPageTab,
+} from "./admin-page-models-access-data";
 import { withLocalStoreFallback } from "./admin-store-dispatch";
-import type { ManagedAdminUser } from "./persistence-types";
-import { isAuthUserAdmin } from "./platform-contracts";
 import type { AuthUser } from "./platform-contracts";
+import { isAuthUserAdmin } from "./platform-contracts";
 import { getRuntimeAdminUsers } from "./runtime-page-store";
 
-export type AccessPageTab = "users" | "roles" | "my-permissions";
-
-export interface AccessPageModel {
-	activeTab: AccessPageTab;
-	users: ManagedAdminUser[];
-	roles: RoleRecord[];
-	userRoleMap: Record<number, string[]>;
-	userDirectGrantCounts: Record<number, number>;
-	rolePoliciesMap: Record<string, RolePolicyRecord[]>;
-	activeAdminCount: number;
-	viewerPolicies: readonly Policy[];
-}
-
-const TABS: readonly AccessPageTab[] = ["users", "roles", "my-permissions"];
+export type { AccessPageModel, AccessPageTab };
 
 function normaliseTab(input: string | null | undefined): AccessPageTab {
 	if (!input) return "users";
-	return TABS.includes(input as AccessPageTab)
-		? (input as AccessPageTab)
-		: "users";
+	return ACCESS_PAGE_TABS.includes(input as AccessPageTab) ? (input as AccessPageTab) : "users";
 }
-
-const EMPTY_MODEL: AccessPageModel = {
-	activeTab: "users",
-	users: [],
-	roles: [],
-	userRoleMap: {},
-	userDirectGrantCounts: {},
-	rolePoliciesMap: {},
-	activeAdminCount: 0,
-	viewerPolicies: [],
-};
 
 export async function buildAccessPageModel(
 	locals: APIContext["locals"],
 	user: AuthUser | null | undefined,
 	options: { tab?: AccessPageTab } = {},
 ): Promise<AdminPageResult<AccessPageModel>> {
-	if (!user || !isAuthUserAdmin(user)) return forbidden(EMPTY_MODEL);
+	if (!user || !isAuthUserAdmin(user)) return forbidden(ACCESS_PAGE_EMPTY_MODEL);
 
 	const activeTab = normaliseTab(options.tab);
 	const warnings: string[] = [];
 
 	const users = await withFallback(
 		warnings,
-		"User records are temporarily unavailable.",
+		ACCESS_PAGE_USERS_UNAVAILABLE_WARNING,
 		() => getRuntimeAdminUsers(locals),
 		[],
 	);
 
 	const tabData = await withFallback(
 		warnings,
-		"Access role and grant data is temporarily unavailable.",
+		ACCESS_PAGE_TAB_DATA_UNAVAILABLE_WARNING,
 		() => loadAccessTabData(locals),
 		{
 			roles: [] as RoleRecord[],
@@ -87,8 +63,7 @@ export async function buildAccessPageModel(
 	const viewerAccess = await getAccessContext({ locals } as {
 		locals: App.Locals;
 	});
-	const viewerPolicies =
-		viewerAccess?.engine.policiesFor(viewerAccess.subject) ?? [];
+	const viewerPolicies = viewerAccess?.engine.policiesFor(viewerAccess.subject) ?? [];
 
 	return ok(
 		{
