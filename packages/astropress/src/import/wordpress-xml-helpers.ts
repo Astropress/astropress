@@ -1,4 +1,3 @@
-import { ensureTrailingSlash } from "../path-helpers";
 import {
 	WP_DEFAULT_MIME,
 	WP_MIME_BY_EXTENSION,
@@ -82,7 +81,7 @@ export function normalizePathname(value: string, fallbackSlug: string) {
 	try {
 		const url = new URL(value, "https://wordpress.invalid");
 		const pathname = url.pathname.replace(/\/{2,}/g, "/");
-		return ensureTrailingSlash(pathname);
+		return pathname.endsWith("/") ? pathname : `${pathname}/`;
 	} catch {
 		return `/${fallbackSlug}/`;
 	}
