@@ -1,5 +1,5 @@
 import { getCmsConfig } from "./config";
-import { stripTrailingSlashes } from "./path-helpers";
+import { ensureTrailingSlash, stripTrailingSlashes } from "./path-helpers";
 import { isPublishedTranslationState } from "./translation-state";
 
 interface TranslationStatusRecord {
@@ -47,8 +47,7 @@ export function sanitizeCanonicalUrl(value: string | undefined, fallbackRoute: s
 	parsed.search = "";
 	parsed.hash = "";
 
-	const normalizedPath = parsed.pathname === "/" ? "/" : parsed.pathname.replace(/\/?$/, "/");
-	parsed.pathname = normalizedPath;
+	parsed.pathname = ensureTrailingSlash(parsed.pathname);
 
 	return parsed.toString();
 }
