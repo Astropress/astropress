@@ -52,7 +52,11 @@ export default {
 	],
 	testRunner: "vitest",
 	coverageAnalysis: "perTest",
-	vitest: { related: false },
+	// related:true matches prepush-mutation-gate.ts:293; stryker uses vitest's
+	// --related to limit per-mutant test execution to files importing the
+	// mutated source. Was false historically; the prepush gate has long set
+	// true for speed parity.
+	vitest: { related: true },
 	reporters: ["clear-text", "html", "json"],
 	htmlReporter: { fileName: "../../reports/mutation/index.html" },
 	jsonReporter: { fileName: "../../reports/mutation/report.json" },
