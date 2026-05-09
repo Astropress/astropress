@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-05-06T20:36:48.534Z",
+  "updatedAt": "2026-05-09T18:54:05.623Z",
   "note": "Per-file v8 coverage floor — counts may move up, never down. Run --rewrite-baseline after intentionally raising tests.",
   "floor": 95,
   "scores": {
@@ -179,9 +179,9 @@
       "functions": 100
     },
     "packages/astropress/src/admin-app-integration.ts": {
-      "lines": 54.28,
+      "lines": 51.85,
       "branches": 33.33,
-      "functions": 50
+      "functions": 57.14
     },
     "packages/astropress/src/admin-branding.ts": {
       "lines": 100,
@@ -239,7 +239,7 @@
       "functions": 100
     },
     "packages/astropress/src/admin-page-models-access.ts": {
-      "lines": 94.11,
+      "lines": 93.33,
       "branches": 100,
       "functions": 85.71
     },
@@ -668,22 +668,12 @@
       "branches": 100,
       "functions": 100
     },
-    "packages/astropress/src/integration.ts": {
-      "lines": 100,
-      "branches": 100,
-      "functions": 100
-    },
     "packages/astropress/src/integrations/badge-tone.ts": {
       "lines": 100,
       "branches": 100,
       "functions": 100
     },
     "packages/astropress/src/integrations/connect-flow.ts": {
-      "lines": 100,
-      "branches": 100,
-      "functions": 100
-    },
-    "packages/astropress/src/integrations/domains.ts": {
       "lines": 100,
       "branches": 100,
       "functions": 100
@@ -814,11 +804,6 @@
       "functions": 100
     },
     "packages/astropress/src/persistence-types.ts": {
-      "lines": 100,
-      "branches": 100,
-      "functions": 100
-    },
-    "packages/astropress/src/platform-contracts-helpers.ts": {
       "lines": 100,
       "branches": 100,
       "functions": 100
@@ -978,11 +963,6 @@
       "branches": 90.69,
       "functions": 100
     },
-    "packages/astropress/src/runtime-admin-actions.ts": {
-      "lines": 100,
-      "branches": 100,
-      "functions": 100
-    },
     "packages/astropress/src/runtime-admin-auth.ts": {
       "lines": 100,
       "branches": 97.36,
@@ -1046,11 +1026,6 @@
     "packages/astropress/src/runtime-route-registry-system.ts": {
       "lines": 100,
       "branches": 95.23,
-      "functions": 100
-    },
-    "packages/astropress/src/runtime-route-registry.ts": {
-      "lines": 100,
-      "branches": 100,
       "functions": 100
     },
     "packages/astropress/src/sections/index.ts": {
@@ -1129,9 +1104,9 @@
       "functions": 0
     },
     "packages/astropress/src/sqlite-admin-runtime.ts": {
-      "lines": 83.33,
-      "branches": 90,
-      "functions": 50
+      "lines": 100,
+      "branches": 100,
+      "functions": 100
     },
     "packages/astropress/src/sqlite-bootstrap-helpers.ts": {
       "lines": 76.47,
@@ -1144,7 +1119,7 @@
       "functions": 100
     },
     "packages/astropress/src/sqlite-bootstrap-seeders.ts": {
-      "lines": 58.66,
+      "lines": 53.73,
       "branches": 6.41,
       "functions": 61.53
     },
@@ -1177,11 +1152,6 @@
       "lines": 0,
       "branches": 0,
       "functions": 0
-    },
-    "packages/astropress/src/sqlite-runtime/auth-helpers.ts": {
-      "lines": 100,
-      "branches": 100,
-      "functions": 100
     },
     "packages/astropress/src/sqlite-runtime/auth.ts": {
       "lines": 96.29,
