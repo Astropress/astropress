@@ -3,6 +3,27 @@
 	"description": "Catalog of mutants acknowledged as equivalent (semantically identical to the original code, so no test can kill them). Each entry is excluded from the per-file mutation-score denominator. The format mirrors what Stryker writes in its JSON report so a `mutators-disable-file` block isn't required for one-off equivalents. Add an entry by copy-pasting `file`, `line`, `column`, and `mutator` from the report, then a one-line `reason`.",
 	"entries": [
 		{
+			"file": "src/host-runtime-factories.ts",
+			"line": 53,
+			"column": 8,
+			"mutator": "ConditionalExpression",
+			"reason": "Defensive `typeof prop !== \"string\"` guard inside the section-proxy `get` trap. Removing it (false branch) does not change observable behaviour: for symbol props, `Set.has(symbol)` returns false and `Record<string,_>[symbol]` returns undefined; downstream `if (section === undefined) return undefined` covers the same case. The guard is belt-and-suspenders for type-narrowing, not runtime control flow."
+		},
+		{
+			"file": "src/host-runtime-factories.ts",
+			"line": 67,
+			"column": 8,
+			"mutator": "ConditionalExpression",
+			"reason": "Same defensive `typeof prop !== \"string\"` guard inside the outer admin-store-module Proxy `get` trap. Equivalent to L53 — downstream Set.has + Record lookup return undefined for non-string keys regardless."
+		},
+		{
+			"file": "src/host-runtime-factories.ts",
+			"line": 92,
+			"column": 8,
+			"mutator": "ConditionalExpression",
+			"reason": "Same defensive `typeof prop !== \"string\"` guard inside the cms-registry Proxy `get` trap. Equivalent to L53/L67 — for symbol keys the downstream `(registry as Record<string, ...>)[prop]` returns undefined, and the `typeof method !== \"function\"` guard returns undefined either way."
+		},
+		{
 			"file": "src/integration-secret-envelope.ts",
 			"line": 34,
 			"column": 18,
@@ -436,41 +457,257 @@
 			"mutator": "LogicalOperator",
 			"reason": "`provider: options.local?.provider ?? projectEnv.localProvider` — the `??` semantics matter only when options.local?.provider is null/undefined. tests/project-adapter.integration.test.ts L96 (`explicit options.local.provider overrides projectEnv.localProvider`) targets the truthy-override path. The `&&` mutant only diverges when options.local?.provider is null/undefined AND projectEnv.localProvider is truthy — the resolveAstropressProjectEnvContract path always returns a defined string, so `&&` short-circuits identically. Equivalent for the function's input domain."
 		},
-		{ "file": "src/integrations/providers/cloudflare-cdn.ts", "line": 25, "column": 47, "mutator": "ObjectLiteral", "reason": "`CLOUDFLARE_CDN_FIELDS = z.object({ apiToken, zoneId })` is a top-level export const Zod schema. Mutating to `z.object({})` would break runtime field validation, but vitest worker-cache returns the original schema on subsequent test reads (project-static-mutants-empirical.md)." },
-		{ "file": "src/integrations/providers/cloudflare-cdn.ts", "line": 26, "column": 12, "mutator": "MethodExpression", "reason": "`apiToken: z.string().min(1)` — top-level const Zod field. `.min(1)` → `.max(1)` mutant. Same static-cache trap as L25:47 above." },
-		{ "file": "src/integrations/providers/cloudflare-cdn.ts", "line": 27, "column": 10, "mutator": "MethodExpression", "reason": "`zoneId: z.string().min(1)` — same static-cache pattern as L26:12." },
-		{ "file": "src/integrations/providers/cloudflare-cdn.ts", "line": 32, "column": 14, "mutator": "StringLiteral", "reason": "`const HOST = 'https://api.cloudflare.com'` — top-level const. URL builders use this. Same vitest static-cache trap." },
-		{ "file": "src/integrations/providers/cloudflare-cdn.ts", "line": 33, "column": 27, "mutator": "StringLiteral", "reason": "`const TOKEN_VERIFY_PATH = '/client/v4/user/tokens/verify'` — top-level const. Same static-cache trap as L32." },
-		{ "file": "src/integrations/providers/cloudflare-cdn.ts", "line": 34, "column": 20, "mutator": "StringLiteral", "reason": "`const ZONES_PATH = '/client/v4/zones/'` — top-level const. Same static-cache trap as L32." },
-		{ "file": "src/integrations/providers/cloudflare-cdn.ts", "line": 39, "column": 15, "mutator": "StringLiteral", "reason": "`this.name = 'CloudflareCdnVerifyError'` inside the error class constructor. `Error.name` is rarely asserted by tests (the class itself is what `instanceof` checks). Same defensible-equivalent class as the IntegrationRegistryError name mutant we tested explicitly elsewhere." },
-		{ "file": "src/integrations/providers/github-deploy.ts", "line": 26, "column": 46, "mutator": "ObjectLiteral", "reason": "Top-level Zod schema const, same static-cache trap as cloudflare-cdn L25:47." },
-		{ "file": "src/integrations/providers/github-deploy.ts", "line": 27, "column": 15, "mutator": "MethodExpression", "reason": "Top-level Zod schema field `.min(1)`, same static-cache trap as cloudflare-cdn L26:12." },
-		{ "file": "src/integrations/providers/github-deploy.ts", "line": 32, "column": 14, "mutator": "StringLiteral", "reason": "Top-level path/host const, same static-cache trap as cloudflare-cdn L32:14." },
-		{ "file": "src/integrations/providers/github-deploy.ts", "line": 33, "column": 19, "mutator": "StringLiteral", "reason": "Top-level path/host const, same static-cache trap." },
-		{ "file": "src/integrations/providers/github-deploy.ts", "line": 38, "column": 15, "mutator": "StringLiteral", "reason": "Error class `this.name = '…'` constructor literal, same equivalent class as cloudflare-cdn L39:15." },
-		{ "file": "src/integrations/providers/listmonk.ts", "line": 27, "column": 41, "mutator": "ObjectLiteral", "reason": "Top-level Zod schema const, same static-cache trap as cloudflare-cdn L25:47." },
-		{ "file": "src/integrations/providers/listmonk.ts", "line": 29, "column": 11, "mutator": "MethodExpression", "reason": "Top-level Zod schema field `.min(1)`, same static-cache trap as cloudflare-cdn L26:12." },
-		{ "file": "src/integrations/providers/listmonk.ts", "line": 30, "column": 10, "mutator": "MethodExpression", "reason": "Top-level Zod schema field `.min(1)`, same static-cache trap." },
-		{ "file": "src/integrations/providers/listmonk.ts", "line": 35, "column": 21, "mutator": "StringLiteral", "reason": "Top-level path/host const, same static-cache trap as cloudflare-cdn L32:14." },
-		{ "file": "src/integrations/providers/listmonk.ts", "line": 40, "column": 15, "mutator": "StringLiteral", "reason": "Error class `this.name = '…'` constructor literal, same equivalent class as cloudflare-cdn L39:15." },
-		{ "file": "src/sqlite-runtime/integrations.ts", "line": 77, "column": 25, "mutator": "StringLiteral", "reason": "Top-level `const SQL_FIND_STATUS` SQL template literal. Same static-cache trap pattern as the SQL constants extracted to sqlite-bootstrap-seed-sql.ts; this file's SQL strings are also pure data (parameterised SELECT/INSERT/UPDATE statements with no behavioural mutation surface beyond schema wiring)." },
-		{ "file": "src/sqlite-runtime/integrations.ts", "line": 83, "column": 27, "mutator": "StringLiteral", "reason": "Top-level `const SQL_LIST_STATUSES` SQL template literal. Same data-only SQL pattern as L77." },
-		{ "file": "src/sqlite-runtime/integrations.ts", "line": 89, "column": 27, "mutator": "StringLiteral", "reason": "Top-level `const SQL_UPSERT_STATUS` SQL template literal. Same data-only SQL pattern as L77." },
-		{ "file": "src/sqlite-runtime/integrations.ts", "line": 101, "column": 27, "mutator": "StringLiteral", "reason": "Top-level `const SQL_UPDATE_STATUS` SQL template literal. Same data-only SQL pattern as L77." },
-		{ "file": "src/sqlite-runtime/integrations.ts", "line": 106, "column": 24, "mutator": "StringLiteral", "reason": "Top-level `const SQL_DISCONNECT` SQL template literal. Same data-only SQL pattern as L77." },
-		{ "file": "src/sqlite-runtime/integrations.ts", "line": 110, "column": 25, "mutator": "StringLiteral", "reason": "Top-level `const SQL_FIND_SECRET` SQL template literal. Same data-only SQL pattern as L77." },
-		{ "file": "src/sqlite-runtime/integrations.ts", "line": 116, "column": 27, "mutator": "StringLiteral", "reason": "Top-level `const SQL_UPSERT_SECRET` SQL template literal. Same data-only SQL pattern as L77." },
-		{ "file": "src/sqlite-runtime/integrations.ts", "line": 136, "column": 28, "mutator": "StringLiteral", "reason": "Top-level `const SQL_RESEAL_GUARDED` SQL template literal. Same data-only SQL pattern as L77." },
-		{ "file": "src/sqlite-runtime/integrations.ts", "line": 144, "column": 35, "mutator": "StringLiteral", "reason": "Top-level `const SQL_LIST_PREVIOUS_SECRETS` SQL template literal. Same data-only SQL pattern as L77." },
-		{ "file": "src/turnstile.ts", "line": 25, "column": 7, "mutator": "LogicalOperator", "reason": "`if (input.requireConfigured && isProductionRuntime())` guard. tests/turnstile.test.ts:39 'returns error when requireConfigured + production but no secret' exercises both clauses. Stryker reports Survived — vitest-runner linkage artifact (the test's assertion runs against the cached unmutated module). The intent is covered." },
-		{ "file": "src/turnstile.ts", "line": 32, "column": 16, "mutator": "MethodExpression", "reason": "`input.token?.trim()` — tests/turnstile.test.ts:56 'returns error when token is whitespace-only' explicitly targets the trim. Stryker linkage artifact, intent is covered." },
-		{ "file": "src/turnstile.ts", "line": 42, "column": 6, "mutator": "ConditionalExpression", "reason": "`if (input.ipAddress) payload.set('remoteip', input.ipAddress)` — guard against setting remoteip when caller omits ipAddress. The `true` mutant would call payload.set('remoteip', undefined). URLSearchParams coerces undefined to the string 'undefined', producing remoteip=undefined in the body. The existing fetch-success test (L62) passes ipAddress and asserts its presence; the test L34 ('returns ok when no secret is configured') doesn't reach the fetch path. Tests that exercise the fetch path *without* ipAddress aren't present, so this is a borderline coverage gap — but the with-ipAddress assertion already pins the format the function emits, and the without-ipAddress code path is structurally covered by Cloudflare's parser tolerating the literal string 'undefined' as if absent. Marking equivalent on practical grounds." },
-		{ "file": "src/turnstile.ts", "line": 48, "column": 12, "mutator": "StringLiteral", "reason": "`method: 'POST'` in the fetch call. Tests assert the URL and body contents but not the method. URLSearchParams body forces a POST in practice; mutating the literal to '' lets fetch fall back to default GET, which Cloudflare's siteverify endpoint rejects with 405 — observable but no test asserts on this. Borderline; marking equivalent because the URL+body assertion already pins the request shape and method is implied by URLSearchParams body." },
-		{ "file": "src/turnstile.ts", "line": 49, "column": 13, "mutator": "ObjectLiteral", "reason": "`headers: { 'Content-Type': 'application/x-www-form-urlencoded' }` in the fetch call. Same coverage shape as L48: tests assert URL+body but not headers. Cloudflare accepts the body either way (URLSearchParams stringifies to form-urlencoded automatically). Equivalent in practice." },
-		{ "file": "src/turnstile.ts", "line": 50, "column": 21, "mutator": "StringLiteral", "reason": "Inside the same headers literal as L49. Same test-coverage shape." },
-		{ "file": "src/turnstile.ts", "line": 63, "column": 40, "mutator": "StringLiteral", "reason": "`result['error-codes']?.join(', ') || 'Security challenge failed.'` — the fallback message. tests/turnstile.test.ts:95 'returns generic error when Cloudflare rejects with no error-codes' asserts `result.error).toMatch(/failed/)`. Mutant `''` makes `error: '' || 'Security challenge failed.'` → still 'Security challenge failed.' (since '' is falsy and the OR fallback kicks in inside the single mutated literal). Wait — the mutator targets THIS literal, so the surrounding `||` is unchanged. With the literal mutated to '', expression becomes `result['error-codes']?.join(', ') || ''` — the outer `||` then yields '' when error-codes is undefined. Test asserts `/failed/` would FAIL. So this should kill. Reported survived: stryker linkage artifact, similar to L25:7 above." },
-		{ "file": "src/admin-dashboard.ts", "line": 112, "column": 5, "mutator": "StringLiteral", "reason": "Left-hand `(record.status ?? 'published') === 'review'`. The `??` fallback fires only when status is null/undefined. In that case original yields 'published', mutant yields ''. Neither equals 'review' nor 'draft', so the filter result is identical for every possible status value (defined string, null, undefined). Genuinely equivalent." },
-		{ "file": "src/admin-dashboard.ts", "line": 112, "column": 69, "mutator": "StringLiteral", "reason": "Right-hand `(record.status ?? 'published') === 'draft'`. Same equivalence as L112:5 — the only way the literal participates is via `??` on null/undefined status, where neither 'published' nor '' equals 'draft'. Filter outcome identical for all inputs." },
-		{ "file": "src/admin-dashboard.ts", "line": 117, "column": 5, "mutator": "ConditionalExpression", "reason": "`record.scheduledAt && Number.isFinite(Date.parse(record.scheduledAt)) && Date.parse(record.scheduledAt) > now` — the always-true variant of the conditional collapses the leading two `&&` arms to `true`, leaving `Date.parse(record.scheduledAt) > now`. Date.parse(undefined|null|''|invalid) returns NaN; NaN > now is false. Date.parse(valid future ISO) returns a number > now. So the inclusion decision is identical to the original guard for every reachable input — the `Number.isFinite` guard is structurally redundant with the `> now` comparison once Date.parse coerces to NaN on invalid input." }
+		{
+			"file": "src/integrations/providers/cloudflare-cdn.ts",
+			"line": 25,
+			"column": 47,
+			"mutator": "ObjectLiteral",
+			"reason": "`CLOUDFLARE_CDN_FIELDS = z.object({ apiToken, zoneId })` is a top-level export const Zod schema. Mutating to `z.object({})` would break runtime field validation, but vitest worker-cache returns the original schema on subsequent test reads (project-static-mutants-empirical.md)."
+		},
+		{
+			"file": "src/integrations/providers/cloudflare-cdn.ts",
+			"line": 26,
+			"column": 12,
+			"mutator": "MethodExpression",
+			"reason": "`apiToken: z.string().min(1)` — top-level const Zod field. `.min(1)` → `.max(1)` mutant. Same static-cache trap as L25:47 above."
+		},
+		{
+			"file": "src/integrations/providers/cloudflare-cdn.ts",
+			"line": 27,
+			"column": 10,
+			"mutator": "MethodExpression",
+			"reason": "`zoneId: z.string().min(1)` — same static-cache pattern as L26:12."
+		},
+		{
+			"file": "src/integrations/providers/cloudflare-cdn.ts",
+			"line": 32,
+			"column": 14,
+			"mutator": "StringLiteral",
+			"reason": "`const HOST = 'https://api.cloudflare.com'` — top-level const. URL builders use this. Same vitest static-cache trap."
+		},
+		{
+			"file": "src/integrations/providers/cloudflare-cdn.ts",
+			"line": 33,
+			"column": 27,
+			"mutator": "StringLiteral",
+			"reason": "`const TOKEN_VERIFY_PATH = '/client/v4/user/tokens/verify'` — top-level const. Same static-cache trap as L32."
+		},
+		{
+			"file": "src/integrations/providers/cloudflare-cdn.ts",
+			"line": 34,
+			"column": 20,
+			"mutator": "StringLiteral",
+			"reason": "`const ZONES_PATH = '/client/v4/zones/'` — top-level const. Same static-cache trap as L32."
+		},
+		{
+			"file": "src/integrations/providers/cloudflare-cdn.ts",
+			"line": 39,
+			"column": 15,
+			"mutator": "StringLiteral",
+			"reason": "`this.name = 'CloudflareCdnVerifyError'` inside the error class constructor. `Error.name` is rarely asserted by tests (the class itself is what `instanceof` checks). Same defensible-equivalent class as the IntegrationRegistryError name mutant we tested explicitly elsewhere."
+		},
+		{
+			"file": "src/integrations/providers/github-deploy.ts",
+			"line": 26,
+			"column": 46,
+			"mutator": "ObjectLiteral",
+			"reason": "Top-level Zod schema const, same static-cache trap as cloudflare-cdn L25:47."
+		},
+		{
+			"file": "src/integrations/providers/github-deploy.ts",
+			"line": 27,
+			"column": 15,
+			"mutator": "MethodExpression",
+			"reason": "Top-level Zod schema field `.min(1)`, same static-cache trap as cloudflare-cdn L26:12."
+		},
+		{
+			"file": "src/integrations/providers/github-deploy.ts",
+			"line": 32,
+			"column": 14,
+			"mutator": "StringLiteral",
+			"reason": "Top-level path/host const, same static-cache trap as cloudflare-cdn L32:14."
+		},
+		{
+			"file": "src/integrations/providers/github-deploy.ts",
+			"line": 33,
+			"column": 19,
+			"mutator": "StringLiteral",
+			"reason": "Top-level path/host const, same static-cache trap."
+		},
+		{
+			"file": "src/integrations/providers/github-deploy.ts",
+			"line": 38,
+			"column": 15,
+			"mutator": "StringLiteral",
+			"reason": "Error class `this.name = '…'` constructor literal, same equivalent class as cloudflare-cdn L39:15."
+		},
+		{
+			"file": "src/integrations/providers/listmonk.ts",
+			"line": 27,
+			"column": 41,
+			"mutator": "ObjectLiteral",
+			"reason": "Top-level Zod schema const, same static-cache trap as cloudflare-cdn L25:47."
+		},
+		{
+			"file": "src/integrations/providers/listmonk.ts",
+			"line": 29,
+			"column": 11,
+			"mutator": "MethodExpression",
+			"reason": "Top-level Zod schema field `.min(1)`, same static-cache trap as cloudflare-cdn L26:12."
+		},
+		{
+			"file": "src/integrations/providers/listmonk.ts",
+			"line": 30,
+			"column": 10,
+			"mutator": "MethodExpression",
+			"reason": "Top-level Zod schema field `.min(1)`, same static-cache trap."
+		},
+		{
+			"file": "src/integrations/providers/listmonk.ts",
+			"line": 35,
+			"column": 21,
+			"mutator": "StringLiteral",
+			"reason": "Top-level path/host const, same static-cache trap as cloudflare-cdn L32:14."
+		},
+		{
+			"file": "src/integrations/providers/listmonk.ts",
+			"line": 40,
+			"column": 15,
+			"mutator": "StringLiteral",
+			"reason": "Error class `this.name = '…'` constructor literal, same equivalent class as cloudflare-cdn L39:15."
+		},
+		{
+			"file": "src/sqlite-runtime/integrations.ts",
+			"line": 77,
+			"column": 25,
+			"mutator": "StringLiteral",
+			"reason": "Top-level `const SQL_FIND_STATUS` SQL template literal. Same static-cache trap pattern as the SQL constants extracted to sqlite-bootstrap-seed-sql.ts; this file's SQL strings are also pure data (parameterised SELECT/INSERT/UPDATE statements with no behavioural mutation surface beyond schema wiring)."
+		},
+		{
+			"file": "src/sqlite-runtime/integrations.ts",
+			"line": 83,
+			"column": 27,
+			"mutator": "StringLiteral",
+			"reason": "Top-level `const SQL_LIST_STATUSES` SQL template literal. Same data-only SQL pattern as L77."
+		},
+		{
+			"file": "src/sqlite-runtime/integrations.ts",
+			"line": 89,
+			"column": 27,
+			"mutator": "StringLiteral",
+			"reason": "Top-level `const SQL_UPSERT_STATUS` SQL template literal. Same data-only SQL pattern as L77."
+		},
+		{
+			"file": "src/sqlite-runtime/integrations.ts",
+			"line": 101,
+			"column": 27,
+			"mutator": "StringLiteral",
+			"reason": "Top-level `const SQL_UPDATE_STATUS` SQL template literal. Same data-only SQL pattern as L77."
+		},
+		{
+			"file": "src/sqlite-runtime/integrations.ts",
+			"line": 106,
+			"column": 24,
+			"mutator": "StringLiteral",
+			"reason": "Top-level `const SQL_DISCONNECT` SQL template literal. Same data-only SQL pattern as L77."
+		},
+		{
+			"file": "src/sqlite-runtime/integrations.ts",
+			"line": 110,
+			"column": 25,
+			"mutator": "StringLiteral",
+			"reason": "Top-level `const SQL_FIND_SECRET` SQL template literal. Same data-only SQL pattern as L77."
+		},
+		{
+			"file": "src/sqlite-runtime/integrations.ts",
+			"line": 116,
+			"column": 27,
+			"mutator": "StringLiteral",
+			"reason": "Top-level `const SQL_UPSERT_SECRET` SQL template literal. Same data-only SQL pattern as L77."
+		},
+		{
+			"file": "src/sqlite-runtime/integrations.ts",
+			"line": 136,
+			"column": 28,
+			"mutator": "StringLiteral",
+			"reason": "Top-level `const SQL_RESEAL_GUARDED` SQL template literal. Same data-only SQL pattern as L77."
+		},
+		{
+			"file": "src/sqlite-runtime/integrations.ts",
+			"line": 144,
+			"column": 35,
+			"mutator": "StringLiteral",
+			"reason": "Top-level `const SQL_LIST_PREVIOUS_SECRETS` SQL template literal. Same data-only SQL pattern as L77."
+		},
+		{
+			"file": "src/turnstile.ts",
+			"line": 25,
+			"column": 7,
+			"mutator": "LogicalOperator",
+			"reason": "`if (input.requireConfigured && isProductionRuntime())` guard. tests/turnstile.test.ts:39 'returns error when requireConfigured + production but no secret' exercises both clauses. Stryker reports Survived — vitest-runner linkage artifact (the test's assertion runs against the cached unmutated module). The intent is covered."
+		},
+		{
+			"file": "src/turnstile.ts",
+			"line": 32,
+			"column": 16,
+			"mutator": "MethodExpression",
+			"reason": "`input.token?.trim()` — tests/turnstile.test.ts:56 'returns error when token is whitespace-only' explicitly targets the trim. Stryker linkage artifact, intent is covered."
+		},
+		{
+			"file": "src/turnstile.ts",
+			"line": 42,
+			"column": 6,
+			"mutator": "ConditionalExpression",
+			"reason": "`if (input.ipAddress) payload.set('remoteip', input.ipAddress)` — guard against setting remoteip when caller omits ipAddress. The `true` mutant would call payload.set('remoteip', undefined). URLSearchParams coerces undefined to the string 'undefined', producing remoteip=undefined in the body. The existing fetch-success test (L62) passes ipAddress and asserts its presence; the test L34 ('returns ok when no secret is configured') doesn't reach the fetch path. Tests that exercise the fetch path *without* ipAddress aren't present, so this is a borderline coverage gap — but the with-ipAddress assertion already pins the format the function emits, and the without-ipAddress code path is structurally covered by Cloudflare's parser tolerating the literal string 'undefined' as if absent. Marking equivalent on practical grounds."
+		},
+		{
+			"file": "src/turnstile.ts",
+			"line": 48,
+			"column": 12,
+			"mutator": "StringLiteral",
+			"reason": "`method: 'POST'` in the fetch call. Tests assert the URL and body contents but not the method. URLSearchParams body forces a POST in practice; mutating the literal to '' lets fetch fall back to default GET, which Cloudflare's siteverify endpoint rejects with 405 — observable but no test asserts on this. Borderline; marking equivalent because the URL+body assertion already pins the request shape and method is implied by URLSearchParams body."
+		},
+		{
+			"file": "src/turnstile.ts",
+			"line": 49,
+			"column": 13,
+			"mutator": "ObjectLiteral",
+			"reason": "`headers: { 'Content-Type': 'application/x-www-form-urlencoded' }` in the fetch call. Same coverage shape as L48: tests assert URL+body but not headers. Cloudflare accepts the body either way (URLSearchParams stringifies to form-urlencoded automatically). Equivalent in practice."
+		},
+		{
+			"file": "src/turnstile.ts",
+			"line": 50,
+			"column": 21,
+			"mutator": "StringLiteral",
+			"reason": "Inside the same headers literal as L49. Same test-coverage shape."
+		},
+		{
+			"file": "src/turnstile.ts",
+			"line": 63,
+			"column": 40,
+			"mutator": "StringLiteral",
+			"reason": "`result['error-codes']?.join(', ') || 'Security challenge failed.'` — the fallback message. tests/turnstile.test.ts:95 'returns generic error when Cloudflare rejects with no error-codes' asserts `result.error).toMatch(/failed/)`. Mutant `''` makes `error: '' || 'Security challenge failed.'` → still 'Security challenge failed.' (since '' is falsy and the OR fallback kicks in inside the single mutated literal). Wait — the mutator targets THIS literal, so the surrounding `||` is unchanged. With the literal mutated to '', expression becomes `result['error-codes']?.join(', ') || ''` — the outer `||` then yields '' when error-codes is undefined. Test asserts `/failed/` would FAIL. So this should kill. Reported survived: stryker linkage artifact, similar to L25:7 above."
+		},
+		{
+			"file": "src/admin-dashboard.ts",
+			"line": 112,
+			"column": 5,
+			"mutator": "StringLiteral",
+			"reason": "Left-hand `(record.status ?? 'published') === 'review'`. The `??` fallback fires only when status is null/undefined. In that case original yields 'published', mutant yields ''. Neither equals 'review' nor 'draft', so the filter result is identical for every possible status value (defined string, null, undefined). Genuinely equivalent."
+		},
+		{
+			"file": "src/admin-dashboard.ts",
+			"line": 112,
+			"column": 69,
+			"mutator": "StringLiteral",
+			"reason": "Right-hand `(record.status ?? 'published') === 'draft'`. Same equivalence as L112:5 — the only way the literal participates is via `??` on null/undefined status, where neither 'published' nor '' equals 'draft'. Filter outcome identical for all inputs."
+		},
+		{
+			"file": "src/admin-dashboard.ts",
+			"line": 117,
+			"column": 5,
+			"mutator": "ConditionalExpression",
+			"reason": "`record.scheduledAt && Number.isFinite(Date.parse(record.scheduledAt)) && Date.parse(record.scheduledAt) > now` — the always-true variant of the conditional collapses the leading two `&&` arms to `true`, leaving `Date.parse(record.scheduledAt) > now`. Date.parse(undefined|null|''|invalid) returns NaN; NaN > now is false. Date.parse(valid future ISO) returns a number > now. So the inclusion decision is identical to the original guard for every reachable input — the `Number.isFinite` guard is structurally redundant with the `> now` comparison once Date.parse coerces to NaN on invalid input."
+		}
 	]
 }
