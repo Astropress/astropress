@@ -4,24 +4,24 @@
 	"entries": [
 		{
 			"file": "src/host-runtime-factories.ts",
-			"line": 53,
+			"line": 54,
 			"column": 8,
 			"mutator": "ConditionalExpression",
 			"reason": "Defensive `typeof prop !== \"string\"` guard inside the section-proxy `get` trap. Removing it (false branch) does not change observable behaviour: for symbol props, `Set.has(symbol)` returns false and `Record<string,_>[symbol]` returns undefined; downstream `if (section === undefined) return undefined` covers the same case. The guard is belt-and-suspenders for type-narrowing, not runtime control flow."
 		},
 		{
 			"file": "src/host-runtime-factories.ts",
-			"line": 67,
+			"line": 69,
 			"column": 8,
 			"mutator": "ConditionalExpression",
-			"reason": "Same defensive `typeof prop !== \"string\"` guard inside the outer admin-store-module Proxy `get` trap. Equivalent to L53 — downstream Set.has + Record lookup return undefined for non-string keys regardless."
+			"reason": "Same defensive `typeof prop !== \"string\"` guard inside the outer admin-store-module Proxy `get` trap. Equivalent to L54 — downstream Set.has + Record lookup return undefined for non-string keys regardless."
 		},
 		{
 			"file": "src/host-runtime-factories.ts",
-			"line": 92,
+			"line": 95,
 			"column": 8,
 			"mutator": "ConditionalExpression",
-			"reason": "Same defensive `typeof prop !== \"string\"` guard inside the cms-registry Proxy `get` trap. Equivalent to L53/L67 — for symbol keys the downstream `(registry as Record<string, ...>)[prop]` returns undefined, and the `typeof method !== \"function\"` guard returns undefined either way."
+			"reason": "Same defensive `typeof prop !== \"string\"` guard inside the cms-registry Proxy `get` trap. Equivalent to L54/L69 — for symbol keys the downstream `(registry as Record<string, ...>)[prop]` returns undefined, and the `typeof method !== \"function\"` guard returns undefined either way."
 		},
 		{
 			"file": "src/integration-secret-envelope.ts",
