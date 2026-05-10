@@ -477,19 +477,56 @@ describe("createRuntimeContentRecord", () => {
 });
 
 describe("restoreRuntimeRevision", () => {
-	it("restores an existing revision into the override", async () => {
+	it("restores an existing revision into the override and writes a content.restore audit row", async () => {
 		const result = await restoreRuntimeRevision("hello-world", "rev-1", actor, locals);
 		expect(result).toMatchObject({ ok: true });
+
+		const audit = db
+			.prepare(
+				"SELECT action, resource_type, resource_id, summary FROM audit_events WHERE action = 'content.restore' ORDER BY id DESC LIMIT 1",
+			)
+			.get() as Record<string, unknown> | undefined;
+		expect(audit?.action).toBe("content.restore");
+		expect(audit?.resource_type).toBe("content");
+		expect(audit?.resource_id).toBe("hello-world");
+		expect(audit?.summary).toBe("Restored revision rev-1 for hello-world.");
 	});
 
-	it("returns not-ok for unknown revision id", async () => {
+	it("returns the documented 'Revision not found.' error for an unknown revision id", async () => {
 		const result = await restoreRuntimeRevision("hello-world", "rev-ghost", actor, locals);
-		expect(result).toMatchObject({ ok: false });
+		expect(result).toEqual({ ok: false, error: "Revision not found." });
 	});
 
-	it("returns not-ok for unknown slug", async () => {
+	it("returns the documented 'could not be found' error for an unknown slug", async () => {
 		const result = await restoreRuntimeRevision("no-such-slug", "rev-1", actor, locals);
-		expect(result).toMatchObject({ ok: false });
+		expect(result).toEqual({
+			ok: false,
+			error: "The selected content record could not be found.",
+		});
+	});
+
+	it("uses the documented '[]' fallback for null author/category/tag id columns and persists '' for null body in the new revision", async () => {
+		// Insert a revision whose body and id-list columns are explicitly NULL.
+		db.prepare(
+			`INSERT INTO content_revisions (id, slug, source, title, status, body, seo_title, meta_description, author_ids, category_ids, tag_ids, created_by)
+       VALUES ('rev-nulls', 'hello-world', 'reviewed', 'NullsTitle', 'published', NULL, 'S', 'M', NULL, NULL, NULL, 'admin@test.local')`,
+		).run();
+
+		const result = await restoreRuntimeRevision("hello-world", "rev-nulls", actor, locals);
+		expect(result).toMatchObject({ ok: true });
+
+		// The newly inserted revision (the one written by the restore step itself) must
+		// carry the documented fallbacks: author_ids/category_ids/tag_ids = '[]', body = ''.
+		const inserted = db
+			.prepare(
+				"SELECT body, author_ids, category_ids, tag_ids FROM content_revisions WHERE slug = 'hello-world' AND source = 'reviewed' ORDER BY id DESC LIMIT 1",
+			)
+			.get() as Record<string, unknown> | undefined;
+		expect(inserted).toBeDefined();
+		expect(inserted?.body).toBe("");
+		expect(inserted?.author_ids).toBe("[]");
+		expect(inserted?.category_ids).toBe("[]");
+		expect(inserted?.tag_ids).toBe("[]");
 	});
 });
 
