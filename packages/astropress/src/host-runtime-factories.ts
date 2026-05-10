@@ -38,6 +38,7 @@ export interface AstropressHostRuntimeBundleInput {
 	cmsRegistry: LocalCmsRegistryModule;
 }
 
+// audit-boundary: opaque-passthrough -- forwarder shape; per-section method signatures vary
 type AnyMethod = (...args: unknown[]) => unknown;
 
 // Lazy section forwarder: every method call re-resolves `getStore()` so the
@@ -51,6 +52,7 @@ function createSectionProxy(
 	return new Proxy({} as AdminStoreAdapter[AdminStoreSection], {
 		get(_target, prop) {
 			if (typeof prop !== "string") return undefined;
+			// audit-boundary: opaque-passthrough -- Proxy forwarder; arg types vary per method
 			return (...args: unknown[]) => {
 				const sectionApi = getStore()[section] as unknown as Record<string, AnyMethod>;
 				return sectionApi[prop](...args);
@@ -70,6 +72,7 @@ export function createAstropressAdminStoreModule(
 			}
 			const section = ADMIN_STORE_FLAT_METHOD_SECTIONS[prop];
 			if (section === undefined) return undefined;
+			// audit-boundary: opaque-passthrough -- Proxy forwarder; arg types vary per method
 			return (...args: unknown[]) => {
 				const sectionApi = getStore()[section] as unknown as Record<string, AnyMethod>;
 				return sectionApi[prop](...args);
@@ -92,6 +95,7 @@ export function createAstropressCmsRegistryModule(
 			if (typeof prop !== "string") return undefined;
 			const method = (registry as unknown as Record<string, AnyMethod | undefined>)[prop];
 			if (typeof method !== "function") return undefined;
+			// audit-boundary: opaque-passthrough -- Proxy forwarder; arg types vary per method
 			return (...args: unknown[]) => method.apply(registry, args);
 		},
 	});
