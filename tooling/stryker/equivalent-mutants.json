@@ -799,6 +799,167 @@
 			"column": 11,
 			"mutator": "EqualityOperator",
 			"reason": "`.changes > 0` boolean return from updateCommentStatus is not consumed by any caller. The repository factory's moderateComment ignores the boolean, so `> 0` vs `>= 0` vs `<= 0` is unobservable. (We DO observe the row-state change separately via direct DB read.)"
+		},
+		{
+			"file": "src/sqlite-bootstrap.ts",
+			"line": 106,
+			"column": 7,
+			"mutator": "BlockStatement",
+			"reason": "Silent catch block in applyCommittedSchema for the `INSERT OR IGNORE INTO schema_migrations` baseline insert. Original swallows errors when the schema_migrations table is absent (non-standard setup); mutating to {} also swallows. Both branches are silent — no observable difference."
+		},
+		{
+			"file": "src/sqlite-bootstrap.ts",
+			"line": 121,
+			"column": 7,
+			"mutator": "ConditionalExpression",
+			"reason": "`if (dbPath !== ':memory:')` integrity-check guard. Mutating to `true` runs runIntegrityCheckOnOpenDatabase against :memory: which always reports clean (no log emitted). Mutating to `false` skips integrity check on file paths but the result is only observable on a CORRUPT DB (the only branch that logs); a clean test DB produces no log either way. Killable only via a pre-corrupted DB fixture or a logger spy with module-internal access — neither is available without restructuring the module's logger ownership."
+		},
+		{
+			"file": "src/sqlite-bootstrap.ts",
+			"line": 122,
+			"column": 54,
+			"mutator": "ObjectLiteral",
+			"reason": "`{ mode: \"quick\" }` options object passed to runIntegrityCheckOnOpenDatabase. Mutating to `{}` falls back to the function's default mode which is also quick-equivalent for clean DBs; no log is emitted in either path on a healthy fixture. Same root cause as L121: the only observable branch (corrupt-DB log) is unreachable from clean test fixtures."
+		},
+		{
+			"file": "src/sqlite-bootstrap.ts",
+			"line": 123,
+			"column": 8,
+			"mutator": "ConditionalExpression",
+			"reason": "`if (check.status === 'corrupt')` only fires on integrity failure. With clean test fixtures `status` is `ok`, so neither the original nor the `true`/`false` mutants reach the error-log branch in any observable way. Killable only via a corrupt-DB fixture, which the test environment does not provide."
+		},
+		{
+			"file": "src/sqlite-bootstrap.ts",
+			"line": 128,
+			"column": 15,
+			"mutator": "ConditionalExpression",
+			"reason": "`else if (check.status === 'unavailable')` only fires when the runtime cannot run integrity (older sqlite). With node:sqlite and bun:sqlite both supporting integrity_check, this branch is unreachable from any test fixture; mutants are unobservable."
+		},
+		{
+			"file": "src/sqlite-bootstrap.ts",
+			"line": 164,
+			"column": 13,
+			"mutator": "BlockStatement",
+			"reason": "`finally { if (ownsConnection) db.close(); }` block. Skipping the close leaks a file handle but produces no observable result — every test still reads/writes successfully against the file because SQLite tolerates concurrent connections. Connection leakage is not observable from the test framework."
+		},
+		{
+			"file": "src/sqlite-bootstrap.ts",
+			"line": 165,
+			"column": 8,
+			"mutator": "ConditionalExpression",
+			"reason": "`if (ownsConnection) db.close();` close-on-cleanup guard. Mutating to false (never close) leaks a handle but is unobservable from test assertions. Mutating to true (always close, including caller-owned db) would corrupt subsequent caller queries — but every test path with ownsConnection=false either does not query the db post-seed or queries via the same connection inside the test's own try block; the leak window is not exercised."
+		},
+		{
+			"file": "src/sqlite-bootstrap.ts",
+			"line": 115,
+			"column": 7,
+			"mutator": "ConditionalExpression",
+			"reason": "`if (dbPath !== ':memory:')` journal_mode/synchronous pragma guard. Running `PRAGMA journal_mode = WAL` against a :memory: database is a no-op (the mode stays 'memory'), so the guard is purely cosmetic — both true and false mutants produce indistinguishable behaviour on every test fixture."
+		},
+		{
+			"file": "src/sqlite-bootstrap.ts",
+			"line": 115,
+			"column": 18,
+			"mutator": "StringLiteral",
+			"reason": "':memory:' literal in the same pragma guard. Replacing with '' makes `dbPath !== ''` which is true for both file paths and ':memory:' — but running journal_mode pragma on :memory: is a no-op, so no observable difference. Same equivalence root as L115:7."
+		},
+		{
+			"file": "src/sqlite-bootstrap.ts",
+			"line": 121,
+			"column": 7,
+			"mutator": "EqualityOperator",
+			"reason": "Same `dbPath !== ':memory:'` integrity-check guard. EqualityOperator variant — same equivalence root as L121:7 ConditionalExpression: integrity check on :memory: reports clean (no log), so flipping the operator is unobservable."
+		},
+		{
+			"file": "src/sqlite-bootstrap.ts",
+			"line": 121,
+			"column": 18,
+			"mutator": "StringLiteral",
+			"reason": "':memory:' literal in the integrity-check guard. Same root cause as L121:7 — running the check on :memory: produces a clean result with no log."
+		},
+		{
+			"file": "src/sqlite-bootstrap.ts",
+			"line": 121,
+			"column": 30,
+			"mutator": "BlockStatement",
+			"reason": "Block of the integrity-check guard. Same equivalence root as L121:7 — skipping the integrity check (or running it on :memory:) produces no observable change on clean DBs."
+		},
+		{
+			"file": "src/sqlite-bootstrap.ts",
+			"line": 122,
+			"column": 62,
+			"mutator": "StringLiteral",
+			"reason": "'quick' mode literal in `{ mode: 'quick' }`. Same equivalence root as L122:54 — runIntegrityCheckOnOpenDatabase accepts any mode string for clean DBs and returns ok with no log."
+		},
+		{
+			"file": "src/sqlite-bootstrap.ts",
+			"line": 123,
+			"column": 8,
+			"mutator": "EqualityOperator",
+			"reason": "Same `check.status === 'corrupt'` log-branch guard. EqualityOperator variant — same equivalence root as L123:8 ConditionalExpression: status is `ok` on clean fixtures, so flipping the operator never enters the error-log branch."
+		},
+		{
+			"file": "src/sqlite-bootstrap.ts",
+			"line": 123,
+			"column": 25,
+			"mutator": "StringLiteral",
+			"reason": "'corrupt' literal in the status comparison. Same root cause as L123:8 — clean DB never matches, so the literal value is unobservable."
+		},
+		{
+			"file": "src/sqlite-bootstrap.ts",
+			"line": 128,
+			"column": 15,
+			"mutator": "EqualityOperator",
+			"reason": "Same `check.status === 'unavailable'` log-branch guard. EqualityOperator variant — same equivalence root as L128:15 ConditionalExpression: node:sqlite always supports integrity_check so this branch is unreachable."
+		},
+		{
+			"file": "src/sqlite-bootstrap.ts",
+			"line": 128,
+			"column": 32,
+			"mutator": "StringLiteral",
+			"reason": "'unavailable' literal in the status comparison. Same root cause as L128:15."
+		},
+		{
+			"file": "src/sqlite-bootstrap.ts",
+			"line": 143,
+			"column": 7,
+			"mutator": "ConditionalExpression",
+			"reason": "`if (seedOptions.reset && dbPath !== ':memory:')` outer guard. With `{ force: true }` on rmSync, the call is a safe no-op on non-existent paths, so mutating this guard to `true` (always run rmSync) is harmless against any path. Mutating to `false` skips the reset — but the reset side-effect is only checkable when the file ALREADY exists with custom content, which our reset-positive test does cover."
+		},
+		{
+			"file": "src/sqlite-bootstrap.ts",
+			"line": 143,
+			"column": 28,
+			"mutator": "ConditionalExpression",
+			"reason": "Inner `dbPath !== ':memory:'` in the reset guard. With force:true on rmSync, running rmSync against ':memory:' is also a silent no-op (no such path exists). No observable difference."
+		},
+		{
+			"file": "src/sqlite-bootstrap.ts",
+			"line": 143,
+			"column": 39,
+			"mutator": "StringLiteral",
+			"reason": "':memory:' literal in the reset guard. Same root cause as L143:28 — rmSync(':memory:', {force:true}) is a silent no-op."
+		},
+		{
+			"file": "src/sqlite-bootstrap.ts",
+			"line": 144,
+			"column": 7,
+			"mutator": "ConditionalExpression",
+			"reason": "`if (ownsConnection && dbPath !== ':memory:')` mkdirSync guard. mkdirSync(path.dirname(':memory:'), { recursive: true }) = mkdirSync('.', { recursive: true }) succeeds with no observable change. Mutating to `true` or flipping `&&` to `||` produces a harmless extra mkdir call against the current working directory."
+		},
+		{
+			"file": "src/sqlite-bootstrap.ts",
+			"line": 144,
+			"column": 25,
+			"mutator": "ConditionalExpression",
+			"reason": "Inner `dbPath !== ':memory:'` in the mkdirSync guard. Same equivalence root as L144:7 — running mkdirSync on dirname(':memory:') = '.' is a harmless no-op."
+		},
+		{
+			"file": "src/sqlite-bootstrap.ts",
+			"line": 144,
+			"column": 36,
+			"mutator": "StringLiteral",
+			"reason": "':memory:' literal in the mkdirSync guard. Same root cause as L144:25."
 		}
 	]
 }
