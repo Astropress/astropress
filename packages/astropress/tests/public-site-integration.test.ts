@@ -42,24 +42,27 @@ describe("createAstropressPublicSiteIntegration", () => {
 		expect(injectedPatterns.some((p) => p.includes("ap-admin"))).toBe(false);
 	});
 
-	it("injects sitemap.xml, robots.txt, and llms.txt routes", () => {
+	it("injects sitemap.xml, robots.txt, and llms.txt routes with their exact entrypoint paths", () => {
 		const integration = createAstropressPublicSiteIntegration();
-		const injectedPatterns: string[] = [];
+		const injected: Array<{ pattern: string; entrypoint: string }> = [];
 
 		const hook = integration.hooks["astro:config:setup"];
 		if (typeof hook !== "function") throw new Error("Expected hook to be a function");
 
 		hook({
 			_config: {},
-			injectRoute: (route: { pattern: string }) => {
-				injectedPatterns.push(route.pattern);
+			injectRoute: (route: { pattern: string; entrypoint: string }) => {
+				injected.push({ pattern: route.pattern, entrypoint: route.entrypoint });
 			},
 			addMiddleware: vi.fn(),
 		} as never);
 
-		expect(injectedPatterns).toContain("/sitemap.xml");
-		expect(injectedPatterns).toContain("/robots.txt");
-		expect(injectedPatterns).toContain("/llms.txt");
+		const sitemap = injected.find((r) => r.pattern === "/sitemap.xml");
+		const robots = injected.find((r) => r.pattern === "/robots.txt");
+		const llms = injected.find((r) => r.pattern === "/llms.txt");
+		expect(sitemap?.entrypoint).toMatch(/pages\/sitemap\.xml\.js$/);
+		expect(robots?.entrypoint).toMatch(/pages\/robots\.txt\.js$/);
+		expect(llms?.entrypoint).toMatch(/pages\/llms\.txt\.js$/);
 	});
 
 	it("does not register any admin middleware when hook is called", () => {
@@ -113,20 +116,81 @@ describe("createAstropressSitemapIntegration", () => {
 		expect(integration.name).toBe("astropress-sitemap");
 	});
 
-	it("injects sitemap.xml and og-image routes", () => {
-		const injected: string[] = [];
+	it("injects sitemap.xml and og-image routes with their exact entrypoint paths", () => {
+		const injected: Array<{ pattern: string; entrypoint: string }> = [];
 		const integration = createAstropressSitemapIntegration({
 			siteUrl: "https://example.com",
 		});
 		const hook = integration.hooks["astro:config:setup"];
 		if (typeof hook !== "function") throw new Error("Expected hook");
 		hook({
-			injectRoute: (route: { pattern: string }) => injected.push(route.pattern),
+			injectRoute: (route: { pattern: string; entrypoint: string }) =>
+				injected.push({ pattern: route.pattern, entrypoint: route.entrypoint }),
 			updateConfig: vi.fn(),
 		} as never);
 
-		expect(injected).toContain("/sitemap.xml");
-		expect(injected.some((p) => p.includes("og-image"))).toBe(true);
+		const sitemap = injected.find((r) => r.pattern === "/sitemap.xml");
+		const ogImage = injected.find((r) => r.pattern === "/ap-api/v1/og-image/[slug].png");
+		expect(sitemap?.entrypoint).toMatch(/pages\/sitemap\.xml\.js$/);
+		expect(ogImage?.entrypoint).toMatch(/pages\/ap-api\/v1\/og-image\/\[slug\]\.png\.js$/);
+	});
+
+	it("calls updateConfig with the JSON-stringified siteUrl define when options.siteUrl is set (peekCmsConfig unused)", () => {
+		const updateConfig = vi.fn();
+		const integration = createAstropressSitemapIntegration({
+			siteUrl: "https://from-options.test",
+		});
+		const hook = integration.hooks["astro:config:setup"];
+		if (typeof hook !== "function") throw new Error("Expected hook");
+		hook({ injectRoute: vi.fn(), updateConfig } as never);
+
+		expect(updateConfig).toHaveBeenCalledTimes(1);
+		expect(updateConfig).toHaveBeenCalledWith({
+			vite: {
+				define: {
+					"import.meta.env.ASTROPRESS_SITE_URL": JSON.stringify("https://from-options.test"),
+				},
+			},
+		});
+	});
+
+	it("falls back to peekCmsConfig().siteUrl when options.siteUrl is omitted", async () => {
+		const { registerCms } = await import("../src/config");
+		registerCms({
+			templateKeys: ["content"],
+			siteUrl: "https://from-cms-config.test",
+			seedPages: [],
+			archives: [],
+			translationStatus: [],
+		});
+		const updateConfig = vi.fn();
+		const integration = createAstropressSitemapIntegration();
+		const hook = integration.hooks["astro:config:setup"];
+		if (typeof hook !== "function") throw new Error("Expected hook");
+		hook({ injectRoute: vi.fn(), updateConfig } as never);
+
+		expect(updateConfig).toHaveBeenCalledTimes(1);
+		expect(updateConfig).toHaveBeenCalledWith({
+			vite: {
+				define: {
+					"import.meta.env.ASTROPRESS_SITE_URL": JSON.stringify("https://from-cms-config.test"),
+				},
+			},
+		});
+	});
+
+	it("does NOT call updateConfig when both options.siteUrl and peekCmsConfig().siteUrl are absent", () => {
+		// Reset the config store so peekCmsConfig() returns null.
+		const CMS_CONFIG_KEY = Symbol.for("astropress.cms-config");
+		delete (globalThis as Record<symbol, unknown>)[CMS_CONFIG_KEY];
+
+		const updateConfig = vi.fn();
+		const integration = createAstropressSitemapIntegration();
+		const hook = integration.hooks["astro:config:setup"];
+		if (typeof hook !== "function") throw new Error("Expected hook");
+		hook({ injectRoute: vi.fn(), updateConfig } as never);
+
+		expect(updateConfig).not.toHaveBeenCalled();
 	});
 });
 
