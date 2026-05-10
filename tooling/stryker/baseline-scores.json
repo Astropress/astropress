@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-05-10T15:24:49.068Z",
+  "updatedAt": "2026-05-10T17:38:18.923Z",
   "scores": {
     "packages/astropress/src/adapters/adapter-record-helpers.ts": {
       "score": 66.66666666666666,
@@ -242,7 +242,7 @@
       "hash": "fcfb3d846623f063707b42fd09da13d537310022"
     },
     "packages/astropress/src/in-memory-platform-adapter.ts": {
-      "score": 54.166666666666664,
+      "score": 100,
       "hash": "078bebeba22cb41d5e89c58665fcb6287864b1b1"
     },
     "packages/astropress/src/local-image-storage.ts": {
