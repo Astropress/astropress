@@ -708,6 +708,27 @@
 			"column": 5,
 			"mutator": "ConditionalExpression",
 			"reason": "`record.scheduledAt && Number.isFinite(Date.parse(record.scheduledAt)) && Date.parse(record.scheduledAt) > now` — the always-true variant of the conditional collapses the leading two `&&` arms to `true`, leaving `Date.parse(record.scheduledAt) > now`. Date.parse(undefined|null|''|invalid) returns NaN; NaN > now is false. Date.parse(valid future ISO) returns a number > now. So the inclusion decision is identical to the original guard for every reachable input — the `Number.isFinite` guard is structurally redundant with the `> now` comparison once Date.parse coerces to NaN on invalid input."
+		},
+		{
+			"file": "src/runtime-actions-taxonomies.ts",
+			"line": 59,
+			"column": 14,
+			"mutator": "BooleanLiteral",
+			"reason": "`onlyIfOk: false` on deleteRuntimeAuthor's audit meta. The delete branch's `apply` arrow hardcodes `return { ok: true as const }`, so result.ok is always true; the helper's `if (audit.onlyIfOk && !result.ok) return result` short-circuit can never fire regardless of onlyIfOk. Mutating false→true changes no observable behavior."
+		},
+		{
+			"file": "src/runtime-actions-taxonomies.ts",
+			"line": 118,
+			"column": 14,
+			"mutator": "BooleanLiteral",
+			"reason": "`onlyIfOk: false` on deleteRuntimeCategory's audit meta. Same as L59 — the delete-branch apply hardcodes `{ ok: true }` so the helper's `audit.onlyIfOk && !result.ok` short-circuit is unreachable."
+		},
+		{
+			"file": "src/runtime-actions-taxonomies.ts",
+			"line": 177,
+			"column": 14,
+			"mutator": "BooleanLiteral",
+			"reason": "`onlyIfOk: false` on deleteRuntimeTag's audit meta. Same as L59/L118 — delete-branch apply returns `{ ok: true }` unconditionally, so onlyIfOk is unobservable."
 		}
 	]
 }
