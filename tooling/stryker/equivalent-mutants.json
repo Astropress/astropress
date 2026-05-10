@@ -792,6 +792,13 @@
 			"column": 59,
 			"mutator": "StringLiteral",
 			"reason": "`res.headers.get(\"content-type\") ?? \"\"` — when the header is missing, the `??` fallback feeds the next line `if (!contentType.includes(\"text/html\"))`. Both `\"\"` and the mutated `\"Stryker was here!\"` fail .includes(\"text/html\"), so the page is skipped either way; the fallback value is never observable."
+		},
+		{
+			"file": "src/sqlite-runtime/settings.ts",
+			"line": 173,
+			"column": 11,
+			"mutator": "EqualityOperator",
+			"reason": "`.changes > 0` boolean return from updateCommentStatus is not consumed by any caller. The repository factory's moderateComment ignores the boolean, so `> 0` vs `>= 0` vs `<= 0` is unobservable. (We DO observe the row-state change separately via direct DB read.)"
 		}
 	]
 }
