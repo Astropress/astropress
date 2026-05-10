@@ -85,8 +85,19 @@ function scoreForFile(report: StrykerReport, relMutate: string): number | null {
 	if (!key) return null;
 	const mutants = report.files[key].mutants;
 	const equivalents = loadEquivalentMutants();
+	// Exclusion set must match prepush-mutation-gate.ts scoreForFile() exactly,
+	// otherwise a file rebaselined to ≥95 here can still trip the prepush gate
+	// (or vice versa). See prepush-mutation-gate.ts comment block above its
+	// scoreForFile for the rationale on `static === true`. Empirically:
+	// vitest-runner caches mutated modules across per-test runs, so static
+	// mutants are unkillable even when a test asserts directly against the
+	// initialiser value. Filtering them out is the agreed remedy alongside
+	// the *-data.ts / stryker-disable-file: data-only convention.
 	const isExcluded = (m: StrykerReportMutant): boolean =>
-		m.status === "Ignored" || m.status === "NoCoverage" || isEquivalentMutant(key, m, equivalents);
+		m.status === "Ignored" ||
+		m.status === "NoCoverage" ||
+		m.static === true ||
+		isEquivalentMutant(key, m, equivalents);
 	const scored = mutants.filter((m) => !isExcluded(m));
 	if (scored.length === 0) return 100;
 	const killed = scored.filter((m) => m.status === "Killed" || m.status === "Timeout");
