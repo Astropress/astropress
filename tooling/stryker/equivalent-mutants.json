@@ -736,6 +736,62 @@
 			"column": 73,
 			"mutator": "ConditionalExpression",
 			"reason": "`input === \"published\"` arm in normalizeContentStatus. Mutating the condition to `false` makes a literal \"published\" input fall through to the `return \"published\"` default branch — the function still returns \"published\" either way. The `||`-arm and the fallback emit identical output for this exact input, so no test can distinguish the mutated and unmutated behaviour."
+		},
+		{
+			"file": "src/import/page-crawler.ts",
+			"line": 67,
+			"column": 9,
+			"mutator": "OptionalChaining",
+			"reason": "`match?.[1]?.trim()` in extractTitle — dropping the second `?.` to `match?.[1].trim()` is observably equivalent. The capture group `([^<]+)` requires ≥1 char, so whenever `match` is truthy, `match[1]` is a defined string. When `match` is null the outer `match?.` short-circuits the entire chain to undefined regardless of whether `?.` precedes `.trim()`. No test input produces `match[1] === undefined`."
+		},
+		{
+			"file": "src/import/page-crawler.ts",
+			"line": 99,
+			"column": 4,
+			"mutator": "StringLiteral",
+			"reason": "`\"figure\"` in cleanHtml's allowedTags.concat([...]). figure is already in sanitize-html's defaults.allowedTags (verified empirically), so removing it from the explicit concat list is a no-op — the tag is allowed through the defaults regardless."
+		},
+		{
+			"file": "src/import/page-crawler.ts",
+			"line": 100,
+			"column": 4,
+			"mutator": "StringLiteral",
+			"reason": "`\"figcaption\"` in cleanHtml's allowedTags.concat([...]). figcaption is already in sanitize-html's defaults.allowedTags (verified empirically), so removing it from the explicit concat list is a no-op."
+		},
+		{
+			"file": "src/import/page-crawler.ts",
+			"line": 115,
+			"column": 19,
+			"mutator": "Regex",
+			"reason": "`/<loc>\\s*([^<]+)\\s*<\\/loc>/gi` mutated to `\\S*` in the trailing whitespace token. The capture group `[^<]+` is greedy and consumes all non-`<` characters including surrounding whitespace, leaving nothing for the trailing `\\s*` (or its mutated `\\S*`) to match — both forms always match the empty string at the end. No `<loc>` content can produce observable behaviour difference."
+		},
+		{
+			"file": "src/import/page-crawler.ts",
+			"line": 118,
+			"column": 15,
+			"mutator": "OptionalChaining",
+			"reason": "`match[1]?.trim()` in parseSitemapUrls — dropping the `?.` to `match[1].trim()` is equivalent. The capture group `[^<]+` requires ≥1 char, so whenever `match` exists `match[1]` is a defined string. The regex never matches with an undefined capture."
+		},
+		{
+			"file": "src/import/page-crawler.ts",
+			"line": 151,
+			"column": 30,
+			"mutator": "ArrayDeclaration",
+			"reason": "`let urlsToVisit: string[] = []` initial value. Every code path through the surrounding try/catch reassigns urlsToVisit before the loop reaches it (sitemap success, sitemap !ok, sitemap throw — all set the variable). The initial `[]` is never observed by any consumer."
+		},
+		{
+			"file": "src/import/page-crawler.ts",
+			"line": 176,
+			"column": 7,
+			"mutator": "ConditionalExpression",
+			"reason": "`if (visited.has(url)) continue;` inside the page loop. urlsToVisit is already deduplicated via `[...new Set(urlsToVisit)]` immediately before the loop, so visited.has() is always false on each iteration; the `continue` is never reached and the surrounding cond is dead-code with respect to behaviour."
+		},
+		{
+			"file": "src/import/page-crawler.ts",
+			"line": 186,
+			"column": 59,
+			"mutator": "StringLiteral",
+			"reason": "`res.headers.get(\"content-type\") ?? \"\"` — when the header is missing, the `??` fallback feeds the next line `if (!contentType.includes(\"text/html\"))`. Both `\"\"` and the mutated `\"Stryker was here!\"` fail .includes(\"text/html\"), so the page is skipped either way; the fallback value is never observable."
 		}
 	]
 }
