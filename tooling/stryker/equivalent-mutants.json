@@ -729,6 +729,13 @@
 			"column": 14,
 			"mutator": "BooleanLiteral",
 			"reason": "`onlyIfOk: false` on deleteRuntimeTag's audit meta. Same as L59/L118 — delete-branch apply returns `{ ok: true }` unconditionally, so onlyIfOk is unobservable."
+		},
+		{
+			"file": "src/runtime-actions-content-shared.ts",
+			"line": 103,
+			"column": 73,
+			"mutator": "ConditionalExpression",
+			"reason": "`input === \"published\"` arm in normalizeContentStatus. Mutating the condition to `false` makes a literal \"published\" input fall through to the `return \"published\"` default branch — the function still returns \"published\" either way. The `||`-arm and the fallback emit identical output for this exact input, so no test can distinguish the mutated and unmutated behaviour."
 		}
 	]
 }
