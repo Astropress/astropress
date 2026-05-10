@@ -960,6 +960,13 @@
 			"column": 36,
 			"mutator": "StringLiteral",
 			"reason": "':memory:' literal in the mkdirSync guard. Same root cause as L144:25."
+		},
+		{
+			"file": "src/runtime-actions-content.ts",
+			"line": 210,
+			"column": 45,
+			"mutator": "Regex",
+			"reason": "`legacyUrl.replace(/^\\//, '')` mutated to `replace(/\\//, '')`. Without the `g` flag, `/\\//` matches only the FIRST slash — which on this code path is always the leading slash because normalizeLegacyUrl() unconditionally prepends `/` (`raw.startsWith('/') ? raw : `/${raw}``). Both regexes therefore consume exactly the leading slash and produce identical output for every reachable input."
 		}
 	]
 }

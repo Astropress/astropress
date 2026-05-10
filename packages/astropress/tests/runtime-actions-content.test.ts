@@ -626,3 +626,462 @@ describe("purgeCdnCache", () => {
 		vi.unstubAllGlobals();
 	});
 });
+
+// ---------------------------------------------------------------------------
+// Exact-shape assertions, audit-row assertions, plugin-event payload assertions.
+// ---------------------------------------------------------------------------
+
+describe("saveRuntimeContentState — error strings, audit, plugin events", () => {
+	it("returns the documented 'content record could not be found' error for unknown slug", async () => {
+		const result = await saveRuntimeContentState(
+			"no-such-slug",
+			{ title: "X", status: "published", seoTitle: "X", metaDescription: "X" },
+			actor,
+			locals,
+		);
+		expect(result).toEqual({
+			ok: false,
+			error: "The selected content record could not be found.",
+		});
+	});
+
+	it("returns the documented 'Title, SEO title, and meta description are required.' error when any required field is empty after trim", async () => {
+		const result = await saveRuntimeContentState(
+			"hello-world",
+			{ title: "   ", status: "published", seoTitle: "SEO", metaDescription: "Meta" },
+			actor,
+			locals,
+		);
+		expect(result).toEqual({
+			ok: false,
+			error: "Title, SEO title, and meta description are required.",
+		});
+	});
+
+	it("trims input.title / input.seoTitle / input.metaDescription before persistence", async () => {
+		const result = await saveRuntimeContentState(
+			"hello-world",
+			{
+				title: "  Trimmed Title  ",
+				status: "published",
+				seoTitle: "  SEO  ",
+				metaDescription: "  Meta  ",
+			},
+			actor,
+			locals,
+		);
+		expect(result).toMatchObject({ ok: true });
+		const override = db
+			.prepare(
+				"SELECT title, seo_title, meta_description FROM content_overrides WHERE slug = 'hello-world'",
+			)
+			.get() as Record<string, unknown>;
+		expect(override).toMatchObject({
+			title: "Trimmed Title",
+			seo_title: "SEO",
+			meta_description: "Meta",
+		});
+	});
+
+	it("uses pageRecord.body when input.body is empty/whitespace", async () => {
+		const result = await saveRuntimeContentState(
+			"hello-world",
+			{
+				title: "Body Fallback",
+				status: "published",
+				seoTitle: "SEO",
+				metaDescription: "Meta",
+				body: "   ",
+			},
+			actor,
+			locals,
+		);
+		expect(result).toMatchObject({ ok: true });
+		const override = db
+			.prepare("SELECT body FROM content_overrides WHERE slug = 'hello-world'")
+			.get() as { body: string };
+		// Falls back to pageRecord.body which is the seeded "<p>Body</p>".
+		expect(override.body).toBe("<p>Body</p>");
+	});
+
+	it("emits a content.update audit row with resource_type='content' and the documented summary referencing legacy_url", async () => {
+		const result = await saveRuntimeContentState(
+			"hello-world",
+			{
+				title: "Audited Save",
+				status: "draft",
+				seoTitle: "SEO",
+				metaDescription: "Meta",
+			},
+			actor,
+			locals,
+		);
+		expect(result).toMatchObject({ ok: true });
+
+		const audit = db
+			.prepare(
+				"SELECT action, resource_type, resource_id, summary FROM audit_events WHERE action = 'content.update' ORDER BY id DESC LIMIT 1",
+			)
+			.get() as Record<string, unknown> | undefined;
+		expect(audit).toMatchObject({
+			action: "content.update",
+			resource_type: "content",
+			resource_id: "hello-world",
+			summary: "Updated reviewed metadata for /hello-world.",
+		});
+	});
+
+	it("fires onContentSave with the documented {slug, kind:'post', status, actor.email} payload but NOT onContentPublish for a draft save", async () => {
+		const saveEvents: unknown[] = [];
+		const publishEvents: unknown[] = [];
+		registerCms({
+			...STANDARD_CMS_CONFIG,
+			plugins: [
+				{
+					name: "capture",
+					onContentSave: (event) => {
+						saveEvents.push(event);
+					},
+					onContentPublish: (event) => {
+						publishEvents.push(event);
+					},
+				},
+			],
+		});
+
+		await saveRuntimeContentState(
+			"hello-world",
+			{
+				title: "Draft event",
+				status: "draft",
+				seoTitle: "SEO",
+				metaDescription: "Meta",
+			},
+			actor,
+			locals,
+		);
+		expect(saveEvents).toHaveLength(1);
+		expect(saveEvents[0]).toEqual({
+			slug: "hello-world",
+			kind: "post",
+			status: "draft",
+			actor: actor.email,
+		});
+		expect(publishEvents).toHaveLength(0);
+	});
+
+	it("ALSO fires onContentPublish for a 'published' save (in addition to onContentSave)", async () => {
+		const saveEvents: unknown[] = [];
+		const publishEvents: unknown[] = [];
+		registerCms({
+			...STANDARD_CMS_CONFIG,
+			plugins: [
+				{
+					name: "capture",
+					onContentSave: (event) => {
+						saveEvents.push(event);
+					},
+					onContentPublish: (event) => {
+						publishEvents.push(event);
+					},
+				},
+			],
+		});
+
+		await saveRuntimeContentState(
+			"hello-world",
+			{
+				title: "Published event",
+				status: "published",
+				seoTitle: "SEO",
+				metaDescription: "Meta",
+			},
+			actor,
+			locals,
+		);
+		expect(saveEvents).toHaveLength(1);
+		expect(publishEvents).toHaveLength(1);
+		expect(publishEvents[0]).toEqual({
+			slug: "hello-world",
+			kind: "post",
+			status: "published",
+			actor: actor.email,
+		});
+	});
+
+	it("returns ok with state.title/status/seoTitle/metaDescription matching the saved values", async () => {
+		const result = await saveRuntimeContentState(
+			"hello-world",
+			{
+				title: "Echo",
+				status: "draft",
+				seoTitle: "Echo SEO",
+				metaDescription: "Echo meta",
+				scheduledAt: "2030-01-01T00:00:00.000Z",
+			},
+			actor,
+			locals,
+		);
+		expect(result.ok).toBe(true);
+		if (!result.ok) return;
+		expect(result.state).toMatchObject({
+			title: "Echo",
+			status: "draft",
+			seoTitle: "Echo SEO",
+			metaDescription: "Echo meta",
+			scheduledAt: "2030-01-01T00:00:00.000Z",
+		});
+	});
+});
+
+// ---------------------------------------------------------------------------
+// createRuntimeContentRecord — error strings, audit, body/summary fallbacks
+// ---------------------------------------------------------------------------
+
+describe("createRuntimeContentRecord — error strings, audit, fallbacks", () => {
+	it("returns the documented 'Title, slug, and meta description are required.' error", async () => {
+		const result = await createRuntimeContentRecord(
+			{
+				title: "   ",
+				slug: "empty",
+				status: "draft",
+				seoTitle: "SEO",
+				metaDescription: "Meta",
+			},
+			actor,
+			locals,
+		);
+		expect(result).toEqual({
+			ok: false,
+			error: "Title, slug, and meta description are required.",
+		});
+	});
+
+	it("returns the documented 'That slug is already in use.' error when the slug exists", async () => {
+		const result = await createRuntimeContentRecord(
+			{
+				title: "Dup",
+				slug: "hello-world",
+				status: "draft",
+				seoTitle: "SEO",
+				metaDescription: "Meta",
+			},
+			actor,
+			locals,
+		);
+		expect(result).toEqual({
+			ok: false,
+			error: "That slug is already in use.",
+		});
+	});
+
+	it("persists body='' and summary='' (the documented '' defaults) when neither is provided", async () => {
+		const result = await createRuntimeContentRecord(
+			{
+				title: "Empty defaults",
+				slug: "empty-defaults",
+				status: "draft",
+				seoTitle: "SEO",
+				metaDescription: "Meta",
+			},
+			actor,
+			locals,
+		);
+		expect(result.ok).toBe(true);
+		const row = db
+			.prepare("SELECT body, summary FROM content_entries WHERE slug = 'empty-defaults'")
+			.get() as { body: string; summary: string };
+		expect(row.body).toBe("");
+		expect(row.summary).toBe("");
+	});
+
+	it("emits a content.create audit row with resource_type='content' and the documented 'Created post <legacy_url>.' summary", async () => {
+		await createRuntimeContentRecord(
+			{
+				title: "Audited Create",
+				slug: "audited-create",
+				status: "draft",
+				seoTitle: "SEO",
+				metaDescription: "Meta",
+			},
+			actor,
+			locals,
+		);
+		const audit = db
+			.prepare(
+				"SELECT action, resource_type, resource_id, summary FROM audit_events WHERE action = 'content.create' ORDER BY id DESC LIMIT 1",
+			)
+			.get() as Record<string, unknown> | undefined;
+		expect(audit).toMatchObject({
+			action: "content.create",
+			resource_type: "content",
+			resource_id: "audited-create",
+			summary: "Created post /audited-create.",
+		});
+	});
+
+	it("inserts the initial revision with author_ids/category_ids/tag_ids='[]' and revisionNote='Created new post.'", async () => {
+		await createRuntimeContentRecord(
+			{
+				title: "Revnote check",
+				slug: "revnote-check",
+				status: "draft",
+				seoTitle: "SEO",
+				metaDescription: "Meta",
+			},
+			actor,
+			locals,
+		);
+		const rev = db
+			.prepare(
+				"SELECT author_ids, category_ids, tag_ids, revision_note FROM content_revisions WHERE slug = 'revnote-check' ORDER BY id DESC LIMIT 1",
+			)
+			.get() as Record<string, unknown>;
+		expect(rev).toMatchObject({
+			author_ids: "[]",
+			category_ids: "[]",
+			tag_ids: "[]",
+			revision_note: "Created new post.",
+		});
+	});
+
+	it("falls back to title when seoTitle trims to empty (persists title verbatim)", async () => {
+		const result = await createRuntimeContentRecord(
+			{
+				title: "Fallback Title 2",
+				slug: "fallback-seo-2",
+				status: "draft",
+				seoTitle: "   ",
+				metaDescription: "Meta",
+			},
+			actor,
+			locals,
+		);
+		expect(result.ok).toBe(true);
+		const row = db
+			.prepare("SELECT seo_title FROM content_entries WHERE slug = 'fallback-seo-2'")
+			.get() as { seo_title: string };
+		expect(row.seo_title).toBe("Fallback Title 2");
+	});
+
+	it("trims input.metaDescription / input.body / input.summary before persistence (does not store whitespace verbatim)", async () => {
+		const result = await createRuntimeContentRecord(
+			{
+				title: "Trimmed",
+				slug: "trim-check",
+				status: "draft",
+				seoTitle: "SEO",
+				metaDescription: "  Trimmed Meta  ",
+				body: "  Trimmed body  ",
+				summary: "  Trimmed summary  ",
+			},
+			actor,
+			locals,
+		);
+		expect(result.ok).toBe(true);
+		const row = db
+			.prepare(
+				"SELECT body, summary, meta_description FROM content_entries WHERE slug = 'trim-check'",
+			)
+			.get() as Record<string, string>;
+		expect(row.body).toBe("Trimmed body");
+		expect(row.summary).toBe("Trimmed summary");
+		expect(row.meta_description).toBe("Trimmed Meta");
+	});
+
+	it("rejects a slug that collides only by legacyUrl (NOT by slug) — duplicate check uses `||` not `&&`", async () => {
+		// /hello-world already exists. A fresh slug 'fresh-slug' with legacyUrl '/hello-world'
+		// should be rejected because the legacyUrl lookup hits the existing record.
+		const result = await createRuntimeContentRecord(
+			{
+				title: "Dup by legacy URL",
+				slug: "fresh-slug",
+				legacyUrl: "/hello-world",
+				status: "draft",
+				seoTitle: "SEO",
+				metaDescription: "Meta",
+			},
+			actor,
+			locals,
+		);
+		expect(result).toEqual({ ok: false, error: "That slug is already in use." });
+	});
+
+	it("strips ONLY the leading slash from legacyUrl when probing for duplicates (Regex /^\\//, not /\\/g/)", async () => {
+		// Seed a record at a multi-segment legacyUrl '/section/page-x' so we can verify
+		// the duplicate check uses 'section/page-x' (single leading-slash strip), not
+		// 'sectionpage-x' (all slashes stripped — which would not match anything).
+		db.prepare(
+			`INSERT INTO content_entries (slug, legacy_url, title, kind, template_key, source_html_path)
+       VALUES ('alpha', '/section/page-x', 'A', 'post', 'content', 'runtime://content/alpha')`,
+		).run();
+		const result = await createRuntimeContentRecord(
+			{
+				title: "Probing slash",
+				slug: "fresh-slug-2",
+				legacyUrl: "/section/page-x",
+				status: "draft",
+				seoTitle: "SEO",
+				metaDescription: "Meta",
+			},
+			actor,
+			locals,
+		);
+		expect(result).toEqual({ ok: false, error: "That slug is already in use." });
+	});
+
+	it("uses summary as the excerpt fallback when excerpt is empty (?? null only fires when both are absent)", async () => {
+		await createRuntimeContentRecord(
+			{
+				title: "Excerpt fallback",
+				slug: "excerpt-fallback",
+				status: "draft",
+				seoTitle: "SEO",
+				metaDescription: "Meta",
+				summary: "Use this as excerpt",
+			},
+			actor,
+			locals,
+		);
+		const row = db
+			.prepare("SELECT excerpt FROM content_overrides WHERE slug = 'excerpt-fallback'")
+			.get() as { excerpt: string | null };
+		expect(row.excerpt).toBe("Use this as excerpt");
+	});
+
+	it("persists excerpt=NULL when both excerpt and summary are absent", async () => {
+		await createRuntimeContentRecord(
+			{
+				title: "Null excerpt",
+				slug: "null-excerpt",
+				status: "draft",
+				seoTitle: "SEO",
+				metaDescription: "Meta",
+			},
+			actor,
+			locals,
+		);
+		const row = db
+			.prepare("SELECT excerpt FROM content_overrides WHERE slug = 'null-excerpt'")
+			.get() as { excerpt: string | null };
+		expect(row.excerpt).toBeNull();
+	});
+
+	it("uses 'runtime://content/<slug>' as the source_html_path", async () => {
+		await createRuntimeContentRecord(
+			{
+				title: "Source path",
+				slug: "source-path",
+				status: "draft",
+				seoTitle: "SEO",
+				metaDescription: "Meta",
+			},
+			actor,
+			locals,
+		);
+		const row = db
+			.prepare("SELECT source_html_path FROM content_entries WHERE slug = 'source-path'")
+			.get() as { source_html_path: string };
+		expect(row.source_html_path).toBe("runtime://content/source-path");
+	});
+});
