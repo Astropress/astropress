@@ -1,6 +1,6 @@
 import type { DatabaseSync } from "node:sqlite";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-
+import * as adminDashboard from "../src/admin-dashboard";
 import {
 	buildAcceptInvitePageModel,
 	buildAdminDashboardPageModel,
@@ -134,17 +134,24 @@ afterEach(() => {
 // ---------------------------------------------------------------------------
 
 describe("buildAdminDashboardPageModel", () => {
-	it("returns ok for any role", async () => {
+	it("returns ok with no warnings on the success path and an array-shaped data payload", async () => {
 		const result = await buildAdminDashboardPageModel(locals, adminRole);
-		expect(result.status).toMatch(/ok|partial/);
+		expect(result.status).toBe("ok");
+		expect(result.warnings).toEqual([]);
+		expect(Array.isArray(result.data.posts)).toBe(true);
+		expect(Array.isArray(result.data.auditEvents)).toBe(true);
+		expect(Array.isArray(result.data.contentStates)).toBe(true);
 	});
 
-	it("returns partial with warnings when a query fails", async () => {
-		vi.spyOn(runtimePageStore, "listRuntimeContentStates").mockRejectedValueOnce(
-			new Error("DB error"),
+	it("returns partial with the documented warning when buildAdminDashboardModel rejects", async () => {
+		vi.spyOn(adminDashboard, "buildAdminDashboardModel").mockRejectedValueOnce(
+			new Error("dashboard fail"),
 		);
 		const result = await buildAdminDashboardPageModel(locals, adminRole);
-		expect(["ok", "partial"]).toContain(result.status);
+		expect(result.status).toBe("partial");
+		expect(result.warnings).toContain("Some dashboard counts are temporarily unavailable.");
+		expect(result.data.posts).toEqual([]);
+		expect(result.data.auditEvents).toEqual([]);
 	});
 });
 
@@ -156,20 +163,30 @@ describe("buildAuthorsPageModel", () => {
 	it("returns forbidden for editor role", async () => {
 		const result = await buildAuthorsPageModel(locals, editorRole);
 		expect(result.status).toBe("forbidden");
-		expect(result.data).toMatchObject({ authors: [], auditEvents: [] });
+		expect(result.data).toEqual({ authors: [], auditEvents: [] });
 	});
 
-	it("returns ok for admin with empty authors", async () => {
+	it("returns ok for admin with both arrays present", async () => {
 		const result = await buildAuthorsPageModel(locals, adminRole);
 		expect(result.status).toBe("ok");
 		expect(Array.isArray(result.data.authors)).toBe(true);
+		expect(Array.isArray(result.data.auditEvents)).toBe(true);
 	});
 
-	it("returns partial when authors query fails", async () => {
+	it("returns partial with the authors-records message when getRuntimeAuthors fails", async () => {
 		vi.spyOn(runtimePageStore, "getRuntimeAuthors").mockRejectedValueOnce(new Error("fail"));
 		const result = await buildAuthorsPageModel(locals, adminRole);
 		expect(result.status).toBe("partial");
-		expect(result.warnings.length).toBeGreaterThan(0);
+		expect(result.warnings).toContain("Author records are temporarily unavailable.");
+		expect(result.data.authors).toEqual([]);
+	});
+
+	it("returns partial with the audit-history message when getRuntimeAuditEvents fails", async () => {
+		vi.spyOn(runtimePageStore, "getRuntimeAuditEvents").mockRejectedValueOnce(new Error("fail"));
+		const result = await buildAuthorsPageModel(locals, adminRole);
+		expect(result.status).toBe("partial");
+		expect(result.warnings).toContain("Author audit history is temporarily unavailable.");
+		expect(result.data.auditEvents).toEqual([]);
 	});
 });
 
@@ -178,22 +195,42 @@ describe("buildAuthorsPageModel", () => {
 // ---------------------------------------------------------------------------
 
 describe("buildTaxonomiesPageModel", () => {
-	it("returns forbidden for editor role", async () => {
+	it("returns forbidden for editor role with the full empty shape", async () => {
 		const result = await buildTaxonomiesPageModel(locals, editorRole);
 		expect(result.status).toBe("forbidden");
+		expect(result.data).toEqual({ categories: [], tags: [], auditEvents: [] });
 	});
 
-	it("returns ok for admin", async () => {
+	it("returns ok for admin with all three arrays present", async () => {
 		const result = await buildTaxonomiesPageModel(locals, adminRole);
 		expect(result.status).toBe("ok");
 		expect(Array.isArray(result.data.categories)).toBe(true);
 		expect(Array.isArray(result.data.tags)).toBe(true);
+		expect(Array.isArray(result.data.auditEvents)).toBe(true);
 	});
 
-	it("returns partial when categories fail", async () => {
+	it("returns partial with the categories message when getRuntimeCategories fails", async () => {
 		vi.spyOn(runtimePageStore, "getRuntimeCategories").mockRejectedValueOnce(new Error("fail"));
 		const result = await buildTaxonomiesPageModel(locals, adminRole);
 		expect(result.status).toBe("partial");
+		expect(result.warnings).toContain("Categories are temporarily unavailable.");
+		expect(result.data.categories).toEqual([]);
+	});
+
+	it("returns partial with the tags message when getRuntimeTags fails", async () => {
+		vi.spyOn(runtimePageStore, "getRuntimeTags").mockRejectedValueOnce(new Error("fail"));
+		const result = await buildTaxonomiesPageModel(locals, adminRole);
+		expect(result.status).toBe("partial");
+		expect(result.warnings).toContain("Tags are temporarily unavailable.");
+		expect(result.data.tags).toEqual([]);
+	});
+
+	it("returns partial with the taxonomy-audit message when getRuntimeAuditEvents fails", async () => {
+		vi.spyOn(runtimePageStore, "getRuntimeAuditEvents").mockRejectedValueOnce(new Error("fail"));
+		const result = await buildTaxonomiesPageModel(locals, adminRole);
+		expect(result.status).toBe("partial");
+		expect(result.warnings).toContain("Taxonomy audit history is temporarily unavailable.");
+		expect(result.data.auditEvents).toEqual([]);
 	});
 });
 
@@ -202,21 +239,33 @@ describe("buildTaxonomiesPageModel", () => {
 // ---------------------------------------------------------------------------
 
 describe("buildUsersPageModel", () => {
-	it("returns forbidden for editor role", async () => {
+	it("returns forbidden for editor role with the full empty shape", async () => {
 		const result = await buildUsersPageModel(locals, editorRole);
 		expect(result.status).toBe("forbidden");
+		expect(result.data).toEqual({ users: [], auditEvents: [] });
 	});
 
-	it("returns ok for admin", async () => {
+	it("returns ok for admin with both arrays present", async () => {
 		const result = await buildUsersPageModel(locals, adminRole);
 		expect(result.status).toBe("ok");
 		expect(Array.isArray(result.data.users)).toBe(true);
+		expect(Array.isArray(result.data.auditEvents)).toBe(true);
 	});
 
-	it("returns partial when users query fails", async () => {
+	it("returns partial with the user-records message when getRuntimeAdminUsers fails", async () => {
 		vi.spyOn(runtimePageStore, "getRuntimeAdminUsers").mockRejectedValueOnce(new Error("fail"));
 		const result = await buildUsersPageModel(locals, adminRole);
 		expect(result.status).toBe("partial");
+		expect(result.warnings).toContain("User records are temporarily unavailable.");
+		expect(result.data.users).toEqual([]);
+	});
+
+	it("returns partial with the access-audit message when getRuntimeAuditEvents fails", async () => {
+		vi.spyOn(runtimePageStore, "getRuntimeAuditEvents").mockRejectedValueOnce(new Error("fail"));
+		const result = await buildUsersPageModel(locals, adminRole);
+		expect(result.status).toBe("partial");
+		expect(result.warnings).toContain("Access audit history is temporarily unavailable.");
+		expect(result.data.auditEvents).toEqual([]);
 	});
 });
 
@@ -225,16 +274,27 @@ describe("buildUsersPageModel", () => {
 // ---------------------------------------------------------------------------
 
 describe("buildCommentsPageModel", () => {
-	it("returns ok with empty comments", async () => {
+	it("returns ok with both comments and audit-events arrays present", async () => {
 		const result = await buildCommentsPageModel(locals);
 		expect(result.status).toBe("ok");
 		expect(Array.isArray(result.data.comments)).toBe(true);
+		expect(Array.isArray(result.data.auditEvents)).toBe(true);
 	});
 
-	it("returns partial when comments query fails", async () => {
+	it("returns partial with the comments message when getRuntimeComments fails", async () => {
 		vi.spyOn(runtimePageStore, "getRuntimeComments").mockRejectedValueOnce(new Error("fail"));
 		const result = await buildCommentsPageModel(locals);
 		expect(result.status).toBe("partial");
+		expect(result.warnings).toContain("Comments are temporarily unavailable.");
+		expect(result.data.comments).toEqual([]);
+	});
+
+	it("returns partial with the comment-audit message when getRuntimeAuditEvents fails", async () => {
+		vi.spyOn(runtimePageStore, "getRuntimeAuditEvents").mockRejectedValueOnce(new Error("fail"));
+		const result = await buildCommentsPageModel(locals);
+		expect(result.status).toBe("partial");
+		expect(result.warnings).toContain("Comment audit history is temporarily unavailable.");
+		expect(result.data.auditEvents).toEqual([]);
 	});
 });
 
@@ -243,18 +303,54 @@ describe("buildCommentsPageModel", () => {
 // ---------------------------------------------------------------------------
 
 describe("buildTestimonialsPageModel", () => {
-	it("returns ok with empty testimonial lists", async () => {
+	it("returns ok with all four arrays present", async () => {
 		const result = await buildTestimonialsPageModel(locals);
 		expect(result.status).toBe("ok");
 		expect(Array.isArray(result.data.pending)).toBe(true);
 		expect(Array.isArray(result.data.approved)).toBe(true);
 		expect(Array.isArray(result.data.featured)).toBe(true);
+		expect(Array.isArray(result.data.auditEvents)).toBe(true);
 	});
 
-	it("returns partial when testimonials query fails", async () => {
-		vi.spyOn(runtimePageStore, "getRuntimeTestimonials").mockRejectedValueOnce(new Error("fail"));
+	it("returns partial with the pending-testimonials message when that bucket fails", async () => {
+		vi.spyOn(runtimePageStore, "getRuntimeTestimonials").mockImplementation(async (kind) => {
+			if (kind === "pending") throw new Error("fail");
+			return [];
+		});
 		const result = await buildTestimonialsPageModel(locals);
 		expect(result.status).toBe("partial");
+		expect(result.warnings).toContain("Pending testimonials are temporarily unavailable.");
+		expect(result.data.pending).toEqual([]);
+	});
+
+	it("returns partial with the approved-testimonials message when that bucket fails", async () => {
+		vi.spyOn(runtimePageStore, "getRuntimeTestimonials").mockImplementation(async (kind) => {
+			if (kind === "approved") throw new Error("fail");
+			return [];
+		});
+		const result = await buildTestimonialsPageModel(locals);
+		expect(result.status).toBe("partial");
+		expect(result.warnings).toContain("Approved testimonials are temporarily unavailable.");
+		expect(result.data.approved).toEqual([]);
+	});
+
+	it("returns partial with the featured-testimonials message when that bucket fails", async () => {
+		vi.spyOn(runtimePageStore, "getRuntimeTestimonials").mockImplementation(async (kind) => {
+			if (kind === "featured") throw new Error("fail");
+			return [];
+		});
+		const result = await buildTestimonialsPageModel(locals);
+		expect(result.status).toBe("partial");
+		expect(result.warnings).toContain("Featured testimonials are temporarily unavailable.");
+		expect(result.data.featured).toEqual([]);
+	});
+
+	it("returns partial with the testimonial-audit message when getRuntimeAuditEvents fails", async () => {
+		vi.spyOn(runtimePageStore, "getRuntimeAuditEvents").mockRejectedValueOnce(new Error("fail"));
+		const result = await buildTestimonialsPageModel(locals);
+		expect(result.status).toBe("partial");
+		expect(result.warnings).toContain("Testimonial audit history is temporarily unavailable.");
+		expect(result.data.auditEvents).toEqual([]);
 	});
 });
 
@@ -263,16 +359,27 @@ describe("buildTestimonialsPageModel", () => {
 // ---------------------------------------------------------------------------
 
 describe("buildMediaPageModel", () => {
-	it("returns ok with empty media", async () => {
+	it("returns ok with both arrays present", async () => {
 		const result = await buildMediaPageModel(locals);
 		expect(result.status).toBe("ok");
 		expect(Array.isArray(result.data.mediaWithResolvedUrls)).toBe(true);
+		expect(Array.isArray(result.data.auditEvents)).toBe(true);
 	});
 
-	it("returns partial when media query fails", async () => {
+	it("returns partial with the media-assets message when getRuntimeMediaAssets fails", async () => {
 		vi.spyOn(runtimePageStore, "getRuntimeMediaAssets").mockRejectedValueOnce(new Error("fail"));
 		const result = await buildMediaPageModel(locals);
 		expect(result.status).toBe("partial");
+		expect(result.warnings).toContain("Media assets are temporarily unavailable.");
+		expect(result.data.mediaWithResolvedUrls).toEqual([]);
+	});
+
+	it("returns partial with the media-audit message when getRuntimeAuditEvents fails", async () => {
+		vi.spyOn(runtimePageStore, "getRuntimeAuditEvents").mockRejectedValueOnce(new Error("fail"));
+		const result = await buildMediaPageModel(locals);
+		expect(result.status).toBe("partial");
+		expect(result.warnings).toContain("Media audit history is temporarily unavailable.");
+		expect(result.data.auditEvents).toEqual([]);
 	});
 
 	it("resolves media URLs when assets are present", async () => {
@@ -292,6 +399,14 @@ describe("buildMediaPageModel", () => {
 		const result = await buildMediaPageModel(locals);
 		expect(result.status).toBe("ok");
 		expect(result.data.mediaWithResolvedUrls.length).toBeGreaterThan(0);
+		const first = result.data.mediaWithResolvedUrls[0] as {
+			id?: string;
+			localPath?: string;
+			resolvedUrl?: string;
+		};
+		expect(first.id).toBe("media-test-1");
+		expect(first.resolvedUrl).toEqual(expect.any(String));
+		expect(first.resolvedUrl?.length ?? 0).toBeGreaterThan(0);
 	});
 });
 
@@ -300,21 +415,33 @@ describe("buildMediaPageModel", () => {
 // ---------------------------------------------------------------------------
 
 describe("buildRedirectsPageModel", () => {
-	it("returns forbidden for editor role", async () => {
+	it("returns forbidden for editor role with the full empty shape", async () => {
 		const result = await buildRedirectsPageModel(locals, editorRole);
 		expect(result.status).toBe("forbidden");
+		expect(result.data).toEqual({ redirectRules: [], auditEvents: [] });
 	});
 
-	it("returns ok for admin", async () => {
+	it("returns ok for admin with both arrays present", async () => {
 		const result = await buildRedirectsPageModel(locals, adminRole);
 		expect(result.status).toBe("ok");
 		expect(Array.isArray(result.data.redirectRules)).toBe(true);
+		expect(Array.isArray(result.data.auditEvents)).toBe(true);
 	});
 
-	it("returns partial when redirects query fails", async () => {
+	it("returns partial with the redirect-rules message when getRuntimeRedirectRules fails", async () => {
 		vi.spyOn(runtimePageStore, "getRuntimeRedirectRules").mockRejectedValueOnce(new Error("fail"));
 		const result = await buildRedirectsPageModel(locals, adminRole);
 		expect(result.status).toBe("partial");
+		expect(result.warnings).toContain("Redirect rules are temporarily unavailable.");
+		expect(result.data.redirectRules).toEqual([]);
+	});
+
+	it("returns partial with the redirect-audit message when getRuntimeAuditEvents fails", async () => {
+		vi.spyOn(runtimePageStore, "getRuntimeAuditEvents").mockRejectedValueOnce(new Error("fail"));
+		const result = await buildRedirectsPageModel(locals, adminRole);
+		expect(result.status).toBe("partial");
+		expect(result.warnings).toContain("Redirect audit history is temporarily unavailable.");
+		expect(result.data.auditEvents).toEqual([]);
 	});
 });
 
@@ -323,21 +450,24 @@ describe("buildRedirectsPageModel", () => {
 // ---------------------------------------------------------------------------
 
 describe("buildSettingsPageModel", () => {
-	it("returns forbidden for editor role", async () => {
+	it("returns forbidden for editor role with defaultSiteSettings as data", async () => {
 		const result = await buildSettingsPageModel(locals, editorRole);
 		expect(result.status).toBe("forbidden");
+		expect(result.data.settings).toBeDefined();
 	});
 
-	it("returns ok for admin", async () => {
+	it("returns ok for admin with settings present", async () => {
 		const result = await buildSettingsPageModel(locals, adminRole);
 		expect(result.status).toBe("ok");
 		expect(result.data.settings).toBeDefined();
 	});
 
-	it("returns partial when settings query fails", async () => {
+	it("returns partial with the settings-fallback message when getRuntimeSettings fails", async () => {
 		vi.spyOn(runtimePageStore, "getRuntimeSettings").mockRejectedValueOnce(new Error("fail"));
 		const result = await buildSettingsPageModel(locals, adminRole);
 		expect(result.status).toBe("partial");
+		expect(result.warnings).toContain("Settings could not be loaded. Showing defaults.");
+		expect(result.data.settings).toBeDefined();
 	});
 });
 
@@ -346,9 +476,11 @@ describe("buildSettingsPageModel", () => {
 // ---------------------------------------------------------------------------
 
 describe("buildSystemPageModel", () => {
-	it("returns forbidden for editor role", async () => {
+	it("returns forbidden for editor role with the full empty shape", async () => {
 		const result = await buildSystemPageModel(locals, editorRole);
 		expect(result.status).toBe("forbidden");
+		expect(result.data.systemRoutes).toEqual([]);
+		expect(result.data.routeMap instanceof Map).toBe(true);
 	});
 
 	it("returns ok for admin with empty system routes", async () => {
@@ -356,6 +488,16 @@ describe("buildSystemPageModel", () => {
 		expect(result.status).toBe("ok");
 		expect(Array.isArray(result.data.systemRoutes)).toBe(true);
 		expect(result.data.routeMap instanceof Map).toBe(true);
+	});
+
+	it("returns partial with the system-routes message when listRuntimeSystemRoutes fails", async () => {
+		vi.spyOn(runtimeRouteRegistry, "listRuntimeSystemRoutes").mockRejectedValueOnce(
+			new Error("fail"),
+		);
+		const result = await buildSystemPageModel(locals, adminRole);
+		expect(result.status).toBe("partial");
+		expect(result.warnings).toContain("System routes are temporarily unavailable.");
+		expect(result.data.systemRoutes).toEqual([]);
 	});
 
 	it("populates routeMap from non-empty system routes", async () => {
@@ -381,14 +523,36 @@ describe("buildSystemPageModel", () => {
 // ---------------------------------------------------------------------------
 
 describe("buildRouteTablePageModel", () => {
-	it("returns forbidden for editor role", async () => {
+	it("returns forbidden for editor role with the full empty shape", async () => {
 		const result = await buildRouteTablePageModel(locals, editorRole);
 		expect(result.status).toBe("forbidden");
+		expect(result.data.routePages).toEqual([]);
+		expect(result.data.settings).toBeDefined();
 	});
 
-	it("returns ok for admin", async () => {
+	it("returns ok for admin with both fields present", async () => {
 		const result = await buildRouteTablePageModel(locals, adminRole);
 		expect(result.status).toBe("ok");
+		expect(Array.isArray(result.data.routePages)).toBe(true);
+		expect(result.data.settings).toBeDefined();
+	});
+
+	it("returns partial with the structured-routes message when listRuntimeStructuredPageRoutes fails", async () => {
+		vi.spyOn(runtimeRouteRegistry, "listRuntimeStructuredPageRoutes").mockRejectedValueOnce(
+			new Error("fail"),
+		);
+		const result = await buildRouteTablePageModel(locals, adminRole);
+		expect(result.status).toBe("partial");
+		expect(result.warnings).toContain("Structured route records are temporarily unavailable.");
+		expect(result.data.routePages).toEqual([]);
+	});
+
+	it("returns partial with the settings-fallback message when getRuntimeSettings fails", async () => {
+		vi.spyOn(runtimePageStore, "getRuntimeSettings").mockRejectedValueOnce(new Error("fail"));
+		const result = await buildRouteTablePageModel(locals, adminRole);
+		expect(result.status).toBe("partial");
+		expect(result.warnings).toContain("Settings could not be loaded. Showing defaults.");
+		expect(result.data.settings).toBeDefined();
 	});
 });
 
