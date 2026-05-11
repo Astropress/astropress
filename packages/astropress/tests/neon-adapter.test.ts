@@ -67,6 +67,8 @@ describe("createAstropressNeonAdapter", () => {
 		expect(adapter.capabilities.objectStorage).toBe(false);
 		expect(adapter.capabilities.serverRuntime).toBe(false);
 		expect(adapter.capabilities.hostedAdmin).toBe(false);
+		expect(adapter.capabilities.previewEnvironments).toBe(false);
+		expect(adapter.capabilities.gitSync).toBe(false);
 	});
 
 	it("accepts custom backing adapter options", () => {
@@ -91,14 +93,21 @@ describe("createAstropressNeonHostedAdapter", () => {
 		expect(adapter.capabilities.objectStorage).toBe(false);
 		expect(adapter.capabilities.serverRuntime).toBe(false);
 		expect(adapter.capabilities.hostedAdmin).toBe(false);
+		expect(adapter.capabilities.previewEnvironments).toBe(false);
+		expect(adapter.capabilities.gitSync).toBe(false);
 	});
 
-	it("sets the Neon Console hostPanel link", () => {
+	it("sets the Neon Console hostPanel link with project id in the URL and 'Neon Console' label", () => {
 		const adapter = createAstropressNeonHostedAdapter({ env: validEnv });
-		const panel = adapter.capabilities.hostPanel;
+		const panel = adapter.capabilities.hostPanel as {
+			mode: string;
+			url: string;
+			label: string;
+		};
 		expect(panel).toBeTruthy();
-		expect((panel as { url: string }).url).toContain("proj-silent-leaf-987654");
-		expect((panel as { label: string }).label).toBe("Neon Console");
+		expect(panel.mode).toBe("link");
+		expect(panel.url).toBe("https://console.neon.tech/app/projects/proj-silent-leaf-987654");
+		expect(panel.label).toBe("Neon Console");
 	});
 
 	it("falls back to generic Neon Console URL when no project ID", () => {
