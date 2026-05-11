@@ -1046,6 +1046,27 @@
 			"reason": "`new HTMLRewriter().on(\"*\", { element(el) {...} })` selector argument. Under Cloudflare's native HTMLRewriter, \"*\" matches every element; an empty selector matches none — production-relevant. Under the test polyfill at tests/setup/html-rewriter-polyfill.ts the `_selector` argument is intentionally unused (every registered handler runs on every element), so no test can distinguish \"*\" from \"\" or any other string. Killable only by mocking the polyfill itself, which would test the polyfill, not the sanitiser."
 		},
 		{
+			"file": "src/translation-repository-factory.ts",
+			"line": 41,
+			"column": 23,
+			"mutator": "ConditionalExpression",
+			"reason": "`fallback === undefined ? undefined : normalizeTranslationState(fallback)`. The `false`-direction mutant (always-take-the-normalize branch) is equivalent: when `fallback` is undefined, `normalizeTranslationState(undefined)` returns its built-in default 'not_started', and downstream `normalizeTranslationState(readState, 'not_started')` produces the same result as `normalizeTranslationState(readState, undefined)` which also defaults to 'not_started'. Both arms produce identical observable output."
+		},
+		{
+			"file": "src/access/d1-access-page-store.ts",
+			"line": 82,
+			"column": 7,
+			"mutator": "ConditionalExpression",
+			"reason": "`if (row.condition_json)` truthy guard before `JSON.parse(row.condition_json)`. Mutating to `if (true)` is equivalent because `JSON.parse(null)` returns null (not a throw) and the same null then assigns to `condition`, matching the original null-via-skip path. Killable only by the `if (false)` direction, which IS killed by the 'groups role policies and parses condition_json into Condition object' test."
+		},
+		{
+			"file": "src/access/d1-access-page-store.ts",
+			"line": 85,
+			"column": 12,
+			"mutator": "BlockStatement",
+			"reason": "Empty catch body `condition = null`. Mutating to `{}` is equivalent because `condition` was already initialized to `null` on the previous line (`let condition: Condition | null = null`); the catch branch's only job is to overwrite a maybe-partial value, which is null by default. Re-assigning null vs leaving null produces the same observable result."
+		},
+		{
 			"file": "src/html-sanitization.ts",
 			"line": 102,
 			"column": 16,
