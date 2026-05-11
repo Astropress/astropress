@@ -93,4 +93,66 @@ describe("recommendAstropressProvider — uncovered branches", () => {
 		expect(rec.appHost).toBe("github-pages");
 		expect(rec.dataServices).toBe("supabase");
 	});
+
+	it("recommends vercel + supabase for existingPlatform=supabase when wantsStaticMirror is false", () => {
+		const rec = recommendAstropressProvider({ existingPlatform: "supabase" });
+		expect(rec.appHost).toBe("vercel");
+		expect(rec.dataServices).toBe("supabase");
+		expect(rec.rationale).toMatch(/Supabase/i);
+	});
+
+	it("translates a cloudflare-pages appHost into a 'cloudflare' deployTarget (not 'cloudflare-pages')", () => {
+		const rec = recommendAstropressProvider();
+		expect(rec.appHost).toBe("cloudflare-pages");
+		expect(rec.deployTarget).toBe("cloudflare");
+		expect(rec.publicDeployTarget).toBe("cloudflare");
+	});
+
+	it("leaves the deployTarget identical to the appHost for non-cloudflare hosts (vercel, render-web, github-pages)", () => {
+		const sup = recommendAstropressProvider({ existingPlatform: "supabase" });
+		expect(sup.deployTarget).toBe("vercel");
+		expect(sup.publicDeployTarget).toBe("vercel");
+		const aw = recommendAstropressProvider({ existingPlatform: "appwrite" });
+		expect(aw.deployTarget).toBe("render-web");
+		expect(aw.publicDeployTarget).toBe("render-web");
+		const gh = recommendAstropressProvider({ wantsHostedAdmin: false });
+		expect(gh.deployTarget).toBe("github-pages");
+	});
+
+	it("canonicalProvider mirrors dataServices for cloudflare / supabase / appwrite, else falls back to cloudflare", () => {
+		expect(recommendAstropressProvider().canonicalProvider).toBe("cloudflare");
+		expect(recommendAstropressProvider({ existingPlatform: "supabase" }).canonicalProvider).toBe(
+			"supabase",
+		);
+		expect(recommendAstropressProvider({ existingPlatform: "appwrite" }).canonicalProvider).toBe(
+			"appwrite",
+		);
+		expect(recommendAstropressProvider({ existingPlatform: "cloudflare" }).canonicalProvider).toBe(
+			"cloudflare",
+		);
+		// dataServices='none' (wantsHostedAdmin=false) → fallback canonical 'cloudflare'
+		expect(recommendAstropressProvider({ wantsHostedAdmin: false }).canonicalProvider).toBe(
+			"cloudflare",
+		);
+	});
+
+	it("appends matrix.notes to the rationale when the deployment-matrix entry has notes", () => {
+		// Cloudflare-pages + cloudflare is the default — its matrix entry has notes.
+		const rec = recommendAstropressProvider();
+		expect(typeof rec.rationale).toBe("string");
+		expect(rec.rationale.length).toBeGreaterThan(0);
+	});
+
+	it("returns an empty requiredEnvKeys array when the matrix entry is absent", () => {
+		// 'none' dataServices typically has empty requiredEnvKeys.
+		const rec = recommendAstropressProvider({ wantsHostedAdmin: false });
+		expect(Array.isArray(rec.requiredEnvKeys)).toBe(true);
+	});
+
+	it("defaults inputs: existingPlatform='none', wantsHostedAdmin=true, wantsStaticMirror=false, opsComfort='minimal'", () => {
+		// All defaults applied → final fallback branch: cloudflare-pages + cloudflare
+		const rec = recommendAstropressProvider();
+		expect(rec.appHost).toBe("cloudflare-pages");
+		expect(rec.dataServices).toBe("cloudflare");
+	});
 });
