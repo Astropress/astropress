@@ -26,6 +26,8 @@ import {
 	buildUsersPageModel,
 } from "../src/admin-page-models";
 import { registerCms } from "../src/config";
+import * as runtimeActionsPasswordReset from "../src/runtime-actions-password-reset";
+import * as runtimeActionsUsers from "../src/runtime-actions-users";
 import * as runtimePageStore from "../src/runtime-page-store";
 import * as runtimeRouteRegistry from "../src/runtime-route-registry";
 import { makeDb } from "./helpers/make-db.js";
@@ -1609,9 +1611,27 @@ describe("buildSeoPageModel", () => {
 // ---------------------------------------------------------------------------
 
 describe("buildPostEditorPageModel", () => {
-	it("returns not_found for unknown slug", async () => {
+	it("returns not_found with the full empty shape for unknown slug", async () => {
 		const result = await buildPostEditorPageModel(locals, "no-such-post");
 		expect(result.status).toBe("not_found");
+		expect(result.data).toEqual({
+			pageRecord: null,
+			authors: [],
+			categories: [],
+			tags: [],
+			auditEvents: [],
+			englishOwnerRecord: null,
+			localizedRouteRecord: null,
+			effectiveTranslationState: undefined,
+		});
+		expect(result.warnings).toEqual([]);
+	});
+
+	it("returns not_found with the content-record warning when getRuntimeContentState rejects", async () => {
+		vi.spyOn(runtimePageStore, "getRuntimeContentState").mockRejectedValueOnce(new Error("fail"));
+		const result = await buildPostEditorPageModel(locals, "hello-world");
+		expect(result.status).toBe("not_found");
+		expect(result.warnings).toContain("The content record could not be loaded.");
 		expect(result.data.pageRecord).toBeNull();
 	});
 
@@ -1620,12 +1640,42 @@ describe("buildPostEditorPageModel", () => {
 		expect(result.status).toBe("ok");
 		expect(result.data.pageRecord).not.toBeNull();
 		expect(result.data.pageRecord?.slug).toBe("hello-world");
+		expect(Array.isArray(result.data.authors)).toBe(true);
+		expect(Array.isArray(result.data.categories)).toBe(true);
+		expect(Array.isArray(result.data.tags)).toBe(true);
+		expect(Array.isArray(result.data.auditEvents)).toBe(true);
 	});
 
-	it("returns partial when authors query fails for known slug", async () => {
+	it("returns partial with the authors-temporarily-unavailable warning when getRuntimeAuthors fails", async () => {
 		vi.spyOn(runtimePageStore, "getRuntimeAuthors").mockRejectedValueOnce(new Error("fail"));
 		const result = await buildPostEditorPageModel(locals, "hello-world");
-		expect(["ok", "partial"]).toContain(result.status);
+		expect(result.status).toBe("partial");
+		expect(result.warnings).toContain("Authors are temporarily unavailable.");
+		expect(result.data.authors).toEqual([]);
+	});
+
+	it("returns partial with the categories warning when getRuntimeCategories fails", async () => {
+		vi.spyOn(runtimePageStore, "getRuntimeCategories").mockRejectedValueOnce(new Error("fail"));
+		const result = await buildPostEditorPageModel(locals, "hello-world");
+		expect(result.status).toBe("partial");
+		expect(result.warnings).toContain("Categories are temporarily unavailable.");
+		expect(result.data.categories).toEqual([]);
+	});
+
+	it("returns partial with the tags warning when getRuntimeTags fails", async () => {
+		vi.spyOn(runtimePageStore, "getRuntimeTags").mockRejectedValueOnce(new Error("fail"));
+		const result = await buildPostEditorPageModel(locals, "hello-world");
+		expect(result.status).toBe("partial");
+		expect(result.warnings).toContain("Tags are temporarily unavailable.");
+		expect(result.data.tags).toEqual([]);
+	});
+
+	it("returns partial with the audit-history warning when getRuntimeAuditEvents fails", async () => {
+		vi.spyOn(runtimePageStore, "getRuntimeAuditEvents").mockRejectedValueOnce(new Error("fail"));
+		const result = await buildPostEditorPageModel(locals, "hello-world");
+		expect(result.status).toBe("partial");
+		expect(result.warnings).toContain("Audit history is temporarily unavailable.");
+		expect(result.data.auditEvents).toEqual([]);
 	});
 
 	it("loads the editor for a localized post whose english source is a different slug", async () => {
@@ -1702,15 +1752,59 @@ describe("buildPostEditorPageModel", () => {
 // ---------------------------------------------------------------------------
 
 describe("buildPostRevisionsPageModel", () => {
-	it("returns not_found for unknown slug", async () => {
+	it("returns not_found with the full empty shape for unknown slug", async () => {
 		const result = await buildPostRevisionsPageModel(locals, "no-such-post");
 		expect(result.status).toBe("not_found");
+		expect(result.data).toEqual({
+			pageRecord: null,
+			revisions: null,
+			auditEvents: [],
+			authors: [],
+			categories: [],
+			tags: [],
+		});
 	});
 
-	it("returns ok for known slug with revisions", async () => {
+	it("returns ok for known slug with revisions and array-shaped audit + authors + categories + tags", async () => {
 		const result = await buildPostRevisionsPageModel(locals, "hello-world");
 		expect(result.status).toBe("ok");
 		expect(result.data.pageRecord).not.toBeNull();
+		expect(Array.isArray(result.data.revisions)).toBe(true);
+		expect(Array.isArray(result.data.auditEvents)).toBe(true);
+		expect(Array.isArray(result.data.authors)).toBe(true);
+		expect(Array.isArray(result.data.categories)).toBe(true);
+		expect(Array.isArray(result.data.tags)).toBe(true);
+	});
+
+	it("returns not_found with the revision-history warning when getRuntimeContentRevisions fails", async () => {
+		vi.spyOn(runtimePageStore, "getRuntimeContentRevisions").mockRejectedValueOnce(
+			new Error("fail"),
+		);
+		const result = await buildPostRevisionsPageModel(locals, "hello-world");
+		expect(result.status).toBe("not_found");
+		expect(result.warnings).toContain("Revision history is temporarily unavailable.");
+	});
+
+	it("returns partial with the audit-history warning when getRuntimeAuditEvents fails", async () => {
+		vi.spyOn(runtimePageStore, "getRuntimeAuditEvents").mockRejectedValueOnce(new Error("fail"));
+		const result = await buildPostRevisionsPageModel(locals, "hello-world");
+		expect(result.status).toBe("partial");
+		expect(result.warnings).toContain("Audit history is temporarily unavailable.");
+		expect(result.data.auditEvents).toEqual([]);
+	});
+
+	it("returns partial with the authors / categories / tags warnings when each loader fails", async () => {
+		vi.spyOn(runtimePageStore, "getRuntimeAuthors").mockRejectedValueOnce(new Error("fail"));
+		const a = await buildPostRevisionsPageModel(locals, "hello-world");
+		expect(a.warnings).toContain("Authors are temporarily unavailable.");
+
+		vi.spyOn(runtimePageStore, "getRuntimeCategories").mockRejectedValueOnce(new Error("fail"));
+		const c = await buildPostRevisionsPageModel(locals, "hello-world");
+		expect(c.warnings).toContain("Categories are temporarily unavailable.");
+
+		vi.spyOn(runtimePageStore, "getRuntimeTags").mockRejectedValueOnce(new Error("fail"));
+		const t = await buildPostRevisionsPageModel(locals, "hello-world");
+		expect(t.warnings).toContain("Tags are temporarily unavailable.");
 	});
 });
 
@@ -1719,14 +1813,39 @@ describe("buildPostRevisionsPageModel", () => {
 // ---------------------------------------------------------------------------
 
 describe("buildRoutePageEditorModel", () => {
-	it("returns forbidden for editor role", async () => {
+	it("returns forbidden with the full empty shape for editor role", async () => {
 		const result = await buildRoutePageEditorModel(locals, "/about", editorRole);
+		expect(result.status).toBe("forbidden");
+		expect(result.data).toEqual({
+			pageRecord: null,
+			englishOwner: null,
+			effectiveTranslationState: undefined,
+		});
+	});
+
+	it("returns forbidden when user is null", async () => {
+		const result = await buildRoutePageEditorModel(locals, "/about", null);
 		expect(result.status).toBe("forbidden");
 	});
 
-	it("returns not_found for unknown route", async () => {
+	it("returns not_found with the route-page warning for an unknown route", async () => {
 		const result = await buildRoutePageEditorModel(locals, "/no-such-route", adminRole);
 		expect(result.status).toBe("not_found");
+		expect(result.warnings).toEqual([]);
+		expect(result.data).toEqual({
+			pageRecord: null,
+			englishOwner: null,
+			effectiveTranslationState: undefined,
+		});
+	});
+
+	it("returns not_found with the warning when getRuntimeStructuredPageRoute rejects", async () => {
+		vi.spyOn(runtimeRouteRegistry, "getRuntimeStructuredPageRoute").mockRejectedValueOnce(
+			new Error("fail"),
+		);
+		const result = await buildRoutePageEditorModel(locals, "/no-such-route", adminRole);
+		expect(result.status).toBe("not_found");
+		expect(result.warnings).toContain("The route page could not be loaded.");
 	});
 
 	it("returns ok when route page exists in DB without a locale pair", async () => {
@@ -1782,14 +1901,31 @@ describe("buildRoutePageEditorModel", () => {
 // ---------------------------------------------------------------------------
 
 describe("buildArchiveEditorModel", () => {
-	it("returns forbidden for editor role", async () => {
+	it("returns forbidden with the full empty shape for editor role", async () => {
 		const result = await buildArchiveEditorModel(locals, "/blog", editorRole);
 		expect(result.status).toBe("forbidden");
+		expect(result.data).toEqual({ archive: null });
+	});
+
+	it("returns forbidden when user is null", async () => {
+		const result = await buildArchiveEditorModel(locals, "/blog", null);
+		expect(result.status).toBe("forbidden");
+		expect(result.data).toEqual({ archive: null });
 	});
 
 	it("returns not_found when archive doesn't exist in DB", async () => {
 		const result = await buildArchiveEditorModel(locals, "/blog", adminRole);
 		expect(result.status).toBe("not_found");
+		expect(result.data).toEqual({ archive: null });
+	});
+
+	it("returns not_found with the archive-record warning when getRuntimeArchiveRoute rejects", async () => {
+		vi.spyOn(runtimeRouteRegistry, "getRuntimeArchiveRoute").mockRejectedValueOnce(
+			new Error("fail"),
+		);
+		const result = await buildArchiveEditorModel(locals, "/blog", adminRole);
+		expect(result.status).toBe("not_found");
+		expect(result.warnings).toContain("The archive record could not be loaded.");
 	});
 
 	it("returns ok when archive route exists in DB", async () => {
@@ -1817,15 +1953,26 @@ describe("buildArchiveEditorModel", () => {
 // ---------------------------------------------------------------------------
 
 describe("buildResetPasswordPageModel", () => {
-	it("returns ok with null request for empty token", async () => {
+	it("returns ok with null request and no warnings for empty token (skips the lookup entirely)", async () => {
 		const result = await buildResetPasswordPageModel(locals, "");
+		expect(result.status).toBe("ok");
+		expect(result.warnings).toEqual([]);
+		expect(result.data).toEqual({ request: null });
+	});
+
+	it("returns ok with null request when the lookup returns null (unknown token)", async () => {
+		const result = await buildResetPasswordPageModel(locals, "bad-token");
 		expect(result.status).toBe("ok");
 		expect(result.data.request).toBeNull();
 	});
 
-	it("returns ok with null request for invalid token", async () => {
-		const result = await buildResetPasswordPageModel(locals, "bad-token");
-		expect(result.status).toBe("ok");
+	it("returns partial with the reset-token warning when the lookup throws", async () => {
+		vi.spyOn(runtimeActionsPasswordReset, "getRuntimePasswordResetRequest").mockRejectedValueOnce(
+			new Error("fail"),
+		);
+		const result = await buildResetPasswordPageModel(locals, "some-token");
+		expect(result.status).toBe("partial");
+		expect(result.warnings).toContain("The reset token could not be validated.");
 		expect(result.data.request).toBeNull();
 	});
 });
@@ -1835,15 +1982,26 @@ describe("buildResetPasswordPageModel", () => {
 // ---------------------------------------------------------------------------
 
 describe("buildAcceptInvitePageModel", () => {
-	it("returns ok with null inviteRequest for empty token", async () => {
+	it("returns ok with null inviteRequest and no warnings for empty token", async () => {
 		const result = await buildAcceptInvitePageModel(locals, "");
 		expect(result.status).toBe("ok");
-		expect(result.data.inviteRequest).toBeNull();
+		expect(result.warnings).toEqual([]);
+		expect(result.data).toEqual({ inviteRequest: null });
 	});
 
 	it("returns ok with null inviteRequest for invalid token", async () => {
 		const result = await buildAcceptInvitePageModel(locals, "bad-token");
 		expect(result.status).toBe("ok");
+		expect(result.data.inviteRequest).toBeNull();
+	});
+
+	it("returns partial with the invite-token warning when the lookup throws", async () => {
+		vi.spyOn(runtimeActionsUsers, "getRuntimeInviteRequest").mockRejectedValueOnce(
+			new Error("fail"),
+		);
+		const result = await buildAcceptInvitePageModel(locals, "some-token");
+		expect(result.status).toBe("partial");
+		expect(result.warnings).toContain("The invite token could not be validated.");
 		expect(result.data.inviteRequest).toBeNull();
 	});
 });
