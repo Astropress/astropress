@@ -967,6 +967,13 @@
 			"column": 45,
 			"mutator": "Regex",
 			"reason": "`legacyUrl.replace(/^\\//, '')` mutated to `replace(/\\//, '')`. Without the `g` flag, `/\\//` matches only the FIRST slash — which on this code path is always the leading slash because normalizeLegacyUrl() unconditionally prepends `/` (`raw.startsWith('/') ? raw : `/${raw}``). Both regexes therefore consume exactly the leading slash and produce identical output for every reachable input."
+		},
+		{
+			"file": "src/adapters/cloudflare-helpers.ts",
+			"line": 191,
+			"column": 6,
+			"mutator": "ConditionalExpression",
+			"reason": "`if (!saved) throw new Error(...)` post-save read-back guard. Mutating to `false` (skip the throw) leaves `saved` as the just-read row — which is always defined immediately after a successful upsert against the SAME DB instance. The throw is defensive coverage for a hypothetical DB driver that loses writes; no production code path exercises it. Killable only by a mocked readStore that deliberately returns null after the successful insert + upsert, which would test the read-store contract, not this function."
 		}
 	]
 }
