@@ -123,6 +123,37 @@ describe("getAccessContext (local sqlite path)", () => {
 		expect(ctx).toBeNull();
 	});
 
+	test("local fallback handles missing access extension via optional chaining (kills surface?. mutant)", async () => {
+		currentStore = {}; // no .access surface at all
+		const locals = makeLocalsFromStore(currentStore, {
+			email: "admin@example.com",
+			role: "admin",
+			name: "Admin",
+		});
+		const ctx = await getAccessContext({ locals });
+		if (!ctx) throw new Error("expected ctx");
+		// Falls through to adminOnlySnapshot: id is the synthetic email:... prefix
+		expect(ctx.subject.id).toBe("email:admin@example.com");
+		expect(ctx.subject.roles).toEqual([]);
+	});
+
+	test("local fallback uses adminOnlySnapshot when surface returns null (kills if(fromStore) mutant)", async () => {
+		currentStore = {
+			access: {
+				resolveAccessSnapshotByEmail: () => null,
+			},
+		};
+		const locals = makeLocalsFromStore(currentStore, {
+			email: "ghost@example.com",
+			role: "admin",
+			name: "Ghost",
+		});
+		const ctx = await getAccessContext({ locals });
+		if (!ctx) throw new Error("expected ctx");
+		expect(ctx.subject.id).toBe("email:ghost@example.com");
+		expect(ctx.subject.roles).toEqual([]);
+	});
+
 	test("caches the resolved context across calls", async () => {
 		const locals = makeLocalsFromStore(currentStore, {
 			email: "editor@example.com",
