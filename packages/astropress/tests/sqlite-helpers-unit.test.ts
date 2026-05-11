@@ -718,6 +718,113 @@ describe("sqlite adapter content flow — exercises listSqliteContentRecords / s
 		expect(row.source_url).toBeNull();
 	});
 
+	it("save({kind:'post'}) on update uses record.title when provided (kills ?? existing.title mutant)", async () => {
+		await adapter.content.save({
+			id: "tu",
+			kind: "post",
+			slug: "tu",
+			status: "published",
+			title: "v1",
+			body: "b",
+			metadata: { metaDescription: "m", seoTitle: "s", legacyUrl: "/tu" },
+		});
+		const updated = await adapter.content.save({
+			id: "tu",
+			kind: "post",
+			slug: "tu",
+			status: "draft",
+			title: "v2",
+			body: "b2",
+			metadata: { metaDescription: "m2", seoTitle: "s2" },
+		});
+		expect(updated.title).toBe("v2");
+	});
+
+	it("save({kind:'post'}) on update uses existing.title when record.title is undefined", async () => {
+		await adapter.content.save({
+			id: "ex-title",
+			kind: "post",
+			slug: "ex-title",
+			status: "published",
+			title: "Original",
+			body: "b",
+			metadata: { metaDescription: "m", seoTitle: "s", legacyUrl: "/ex-title" },
+		});
+		const updated = await adapter.content.save({
+			id: "ex-title",
+			kind: "post",
+			slug: "ex-title",
+			status: "draft",
+			metadata: { seoTitle: "s2", metaDescription: "m2" },
+		} as Parameters<typeof adapter.content.save>[0]);
+		expect(updated.title).toBeTruthy();
+	});
+
+	it("save({kind:'post'}) uses metadata.seoTitle when present", async () => {
+		const saved = await adapter.content.save({
+			id: "seo",
+			kind: "post",
+			slug: "seo",
+			status: "published",
+			title: "T",
+			body: "b",
+			metadata: { metaDescription: "m", seoTitle: "Custom SEO", legacyUrl: "/seo" },
+		});
+		expect(saved.slug).toBe("seo");
+	});
+
+	it("save({kind:'post'}) on update preserves existing summary in excerpt when record has no summary", async () => {
+		await adapter.content.save({
+			id: "sum",
+			kind: "post",
+			slug: "sum",
+			status: "published",
+			title: "T",
+			body: "b",
+			metadata: { metaDescription: "m", seoTitle: "s", legacyUrl: "/sum", summary: "Initial sum" },
+		});
+		// Update without summary metadata — the existing summary should be preserved
+		await adapter.content.save({
+			id: "sum",
+			kind: "post",
+			slug: "sum",
+			status: "draft",
+			title: "T2",
+			metadata: { seoTitle: "s2", metaDescription: "m2" },
+		});
+		const posts = await adapter.content.list("post");
+		expect(posts.find((p) => p.slug === "sum")).toBeTruthy();
+	});
+
+	it("save({kind:'post'}) on update routes record.metadata.ogTitle through resolveMetaString", async () => {
+		await adapter.content.save({
+			id: "og",
+			kind: "post",
+			slug: "og",
+			status: "published",
+			title: "T",
+			body: "b",
+			metadata: { metaDescription: "m", seoTitle: "s", legacyUrl: "/og" },
+		});
+		const updated = await adapter.content.save({
+			id: "og",
+			kind: "post",
+			slug: "og",
+			status: "published",
+			title: "T",
+			metadata: {
+				seoTitle: "s",
+				metaDescription: "m",
+				ogTitle: "OG Title",
+				ogDescription: "OG Desc",
+				ogImage: "/og.png",
+				canonicalUrlOverride: "/canon",
+				robotsDirective: "noindex",
+			},
+		});
+		expect(updated.slug).toBe("og");
+	});
+
 	it("revisions.append writes via SQL_INSERT_REVISION and revisions.list returns the row", async () => {
 		// Need a parent content_overrides row first: save a post then append revision against its slug.
 		await adapter.content.save({

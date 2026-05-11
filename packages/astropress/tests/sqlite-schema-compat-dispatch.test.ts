@@ -365,6 +365,95 @@ describe("ensureLegacySchemaCompatibility — dispatch conditions", () => {
 		expect(row.active).toBe(1);
 	});
 
+	it("triggers full rebuild when content_revisions lacks author_ids column", () => {
+		const db = makeDb();
+		db.exec("ALTER TABLE content_revisions DROP COLUMN author_ids");
+		ensureLegacySchemaCompatibility(db);
+		expect(getTableColumns(db, "content_revisions")).toContain("author_ids");
+	});
+
+	it("triggers full rebuild when content_revisions lacks category_ids column", () => {
+		const db = makeDb();
+		db.exec("ALTER TABLE content_revisions DROP COLUMN category_ids");
+		ensureLegacySchemaCompatibility(db);
+		expect(getTableColumns(db, "content_revisions")).toContain("category_ids");
+	});
+
+	it("triggers full rebuild when content_revisions lacks tag_ids column", () => {
+		const db = makeDb();
+		db.exec("ALTER TABLE content_revisions DROP COLUMN tag_ids");
+		ensureLegacySchemaCompatibility(db);
+		expect(getTableColumns(db, "content_revisions")).toContain("tag_ids");
+	});
+
+	it("triggers full rebuild when content_revisions lacks scheduled_at column", () => {
+		const db = makeDb();
+		db.exec("ALTER TABLE content_revisions DROP COLUMN scheduled_at");
+		ensureLegacySchemaCompatibility(db);
+		expect(getTableColumns(db, "content_revisions")).toContain("scheduled_at");
+	});
+
+	it("triggers full rebuild when content_revisions lacks revision_note column", () => {
+		const db = makeDb();
+		db.exec("ALTER TABLE content_revisions DROP COLUMN revision_note");
+		ensureLegacySchemaCompatibility(db);
+		expect(getTableColumns(db, "content_revisions")).toContain("revision_note");
+	});
+
+	it("triggers full rebuild when content_overrides lacks scheduled_at column", () => {
+		const db = makeDb();
+		db.exec("ALTER TABLE content_overrides DROP COLUMN scheduled_at");
+		ensureLegacySchemaCompatibility(db);
+		expect(getTableColumns(db, "content_overrides")).toContain("scheduled_at");
+	});
+
+	it("admin_users uses literal 'active' when column exists (kills activeExpr fallback)", () => {
+		const db = makeDb();
+		db.exec("DROP TABLE admin_users");
+		db.exec(
+			"CREATE TABLE admin_users (id INTEGER PRIMARY KEY AUTOINCREMENT, email TEXT NOT NULL UNIQUE, password_hash TEXT NOT NULL, role TEXT NOT NULL, name TEXT NOT NULL, active INTEGER NOT NULL DEFAULT 1, created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)",
+		);
+		db.prepare(
+			"INSERT INTO admin_users (email, password_hash, role, name, active) VALUES (?, 'h', 'admin', 'A', 0)",
+		).run("inactive@x");
+		ensureLegacySchemaCompatibility(db);
+		const row = db.prepare("SELECT active FROM admin_users WHERE email = ?").get("inactive@x") as {
+			active: number;
+		};
+		// active column preserved → 0 from source row (not the fallback 1)
+		expect(row.active).toBe(0);
+	});
+
+	it("admin_users created_at fallback uses CURRENT_TIMESTAMP when column missing", () => {
+		const db = makeDb();
+		db.exec("DROP TABLE admin_users");
+		db.exec(
+			"CREATE TABLE admin_users (id INTEGER PRIMARY KEY AUTOINCREMENT, email TEXT NOT NULL UNIQUE, password_hash TEXT NOT NULL, role TEXT NOT NULL, name TEXT NOT NULL)",
+		);
+		db.prepare(
+			"INSERT INTO admin_users (email, password_hash, role, name) VALUES (?, 'h', 'admin', 'A')",
+		).run("u@x");
+		ensureLegacySchemaCompatibility(db);
+		const row = db.prepare("SELECT created_at FROM admin_users WHERE email = ?").get("u@x") as {
+			created_at: string;
+		};
+		expect(typeof row.created_at).toBe("string");
+		expect(row.created_at.length).toBeGreaterThan(0);
+	});
+
+	it("contentLocks DDL emits the slug and lock_token columns when triggered", () => {
+		const db = makeDb();
+		db.exec("DROP TABLE content_locks");
+		ensureLegacySchemaCompatibility(db);
+		const cols = getTableColumns(db, "content_locks");
+		expect(cols).toContain("slug");
+		expect(cols).toContain("locked_by_email");
+		expect(cols).toContain("locked_by_name");
+		expect(cols).toContain("lock_token");
+		expect(cols).toContain("expires_at");
+		expect(cols).toContain("acquired_at");
+	});
+
 	it("triggers full rebuild when content_overrides lacks 'review' status (expanded statuses)", () => {
 		const db = makeDb();
 		db.exec("DROP TABLE content_revisions");
