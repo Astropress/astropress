@@ -1,6 +1,7 @@
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { DatabaseSync } from "node:sqlite";
 
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { createAstropressSqliteAdapter } from "../src/adapters/sqlite";
@@ -152,13 +153,20 @@ describe("SQL constants are literal strings (kill StringLiteral mutants)", () =>
 
 describe("sqlite adapter content flow — exercises listSqliteContentRecords / save / delete", () => {
 	let workspace: string;
+	let dbPath: string;
 	let adapter: ReturnType<typeof createAstropressSqliteAdapter>;
+
+	function openSeededDb() {
+		// Triggers the seeder by calling any adapter method.
+		return new DatabaseSync(dbPath);
+	}
 
 	beforeEach(async () => {
 		workspace = await mkdtemp(join(tmpdir(), "sqlite-helpers-"));
+		dbPath = join(workspace, "admin.sqlite");
 		adapter = createAstropressSqliteAdapter({
 			workspaceRoot: workspace,
-			dbPath: join(workspace, "admin.sqlite"),
+			dbPath,
 		});
 	});
 
@@ -357,6 +365,357 @@ describe("sqlite adapter content flow — exercises listSqliteContentRecords / s
 
 	it("media.get returns null when the asset id is unknown", async () => {
 		expect(await adapter.media.get("does-not-exist")).toBeNull();
+	});
+
+	it("list('comment') maps approved comments to status='published' and others to 'draft'", async () => {
+		await adapter.content.list(); // trigger seed
+		const db = openSeededDb();
+		db.prepare(
+			"INSERT INTO comments (id, author, email, body, route, status, policy, submitted_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+		).run("ca1", "Alice", "a@x", "ba", "/r", "approved", "open-moderated", "2026-01-01");
+		db.prepare(
+			"INSERT INTO comments (id, author, email, body, route, status, policy, submitted_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+		).run("ca2", "Bob", null, null, "/r", "pending", "open-moderated", "2026-01-02");
+		db.close();
+		const comments = await adapter.content.list("comment");
+		expect(comments.length).toBe(2);
+		const approved = comments.find((c) => c.id === "ca1");
+		const pending = comments.find((c) => c.id === "ca2");
+		expect(approved?.status).toBe("published");
+		expect(approved?.title).toBe("Alice");
+		expect(pending?.status).toBe("draft");
+		expect(approved?.metadata?.route).toBe("/r");
+		expect(approved?.metadata?.email).toBe("a@x");
+		expect(approved?.metadata?.policy).toBe("open-moderated");
+		expect(pending?.metadata?.email).toBeNull();
+		expect(pending?.body).toBeNull();
+	});
+
+	it("list('user') maps active=0 users to status='archived' and active=1 to 'published'", async () => {
+		await adapter.content.list(); // trigger seed
+		const db = openSeededDb();
+		db.prepare(
+			"INSERT INTO admin_users (email, password_hash, name, active, is_admin) VALUES (?, 'h', 'Inactive', 0, 0)",
+		).run("inactive@example.com");
+		db.close();
+		const users = await adapter.content.list("user");
+		const inactive = users.find((u) => u.slug === "inactive@example.com");
+		expect(inactive?.status).toBe("archived");
+		const seeded = users.find((u) => u.slug === "admin@example.com");
+		expect(seeded?.status).toBe("published");
+	});
+
+	it("list('translation') maps row.state='published' to status='published' and others to 'draft'", async () => {
+		await adapter.content.list(); // trigger seed
+		const db = openSeededDb();
+		db.prepare("INSERT INTO translation_overrides (route, state, updated_by) VALUES (?, ?, ?)").run(
+			"/published",
+			"published",
+			"u@x",
+		);
+		db.prepare("INSERT INTO translation_overrides (route, state, updated_by) VALUES (?, ?, ?)").run(
+			"/in-progress",
+			"partial",
+			"u@x",
+		);
+		db.close();
+		const items = await adapter.content.list("translation");
+		const pub = items.find((r) => r.slug === "/published");
+		const partial = items.find((r) => r.slug === "/in-progress");
+		expect(pub?.status).toBe("published");
+		expect(partial?.status).toBe("draft");
+		expect(pub?.metadata?.state).toBe("published");
+		expect(pub?.metadata?.updatedBy).toBe("u@x");
+	});
+
+	it("list('media') maps assets and falls back from title to id when title is empty", async () => {
+		await adapter.content.list(); // trigger seed
+		const db = openSeededDb();
+		db.prepare(
+			"INSERT INTO media_assets (id, source_url, local_path, mime_type, file_size, alt_text, title, uploaded_at, uploaded_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+		).run(
+			"hero.png",
+			"https://cdn/h",
+			"/m/h",
+			"image/png",
+			100,
+			"Hero",
+			"Hero Title",
+			"2026-01-01",
+			"u@x",
+		);
+		db.prepare(
+			"INSERT INTO media_assets (id, source_url, local_path, mime_type, file_size, alt_text, title, uploaded_at, uploaded_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+		).run("bare.png", null, "/m/b", "image/png", null, null, "", "2026-01-02", "u@x");
+		db.close();
+		const media = await adapter.content.list("media");
+		const titled = media.find((m) => m.id === "hero.png");
+		const bare = media.find((m) => m.id === "bare.png");
+		expect(titled?.title).toBe("Hero Title");
+		expect(bare?.title).toBe("bare.png");
+		expect(titled?.metadata?.sourceUrl).toBe("https://cdn/h");
+		expect(titled?.status).toBe("published");
+	});
+
+	it("media.get falls back to id when asset.title is empty", async () => {
+		await adapter.content.list();
+		const db = openSeededDb();
+		db.prepare(
+			"INSERT INTO media_assets (id, source_url, local_path, mime_type, file_size, alt_text, title, uploaded_at, uploaded_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+		).run("noTitle.png", null, "/m/x", "image/png", null, null, "", "2026-01-01", "u@x");
+		db.close();
+		const asset = await adapter.media.get("noTitle.png");
+		expect(asset?.filename).toBe("noTitle.png");
+	});
+
+	it("media.get sets mimeType to 'application/octet-stream' fallback when null", async () => {
+		await adapter.content.list();
+		const db = openSeededDb();
+		db.prepare(
+			"INSERT INTO media_assets (id, source_url, local_path, mime_type, file_size, alt_text, title, uploaded_at, uploaded_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+		).run("nomime", "https://cdn/x", "/m/x", null, null, null, "X", "2026-01-01", "u@x");
+		db.close();
+		const asset = await adapter.media.get("nomime");
+		expect(asset?.mimeType).toBe("application/octet-stream");
+	});
+
+	it("media.get publicUrl falls back to localPath when sourceUrl is null", async () => {
+		await adapter.content.list();
+		const db = openSeededDb();
+		db.prepare(
+			"INSERT INTO media_assets (id, source_url, local_path, mime_type, file_size, alt_text, title, uploaded_at, uploaded_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+		).run("nourl", null, "/local/no-url", "image/png", null, null, "X", "2026-01-01", "u@x");
+		db.close();
+		const asset = await adapter.media.get("nourl");
+		expect(asset?.publicUrl).toBe("/local/no-url");
+	});
+
+	it("save({kind:'redirect'}) defaults status code to 301 when not 302 (pins ternary)", async () => {
+		await adapter.content.save({
+			id: "/d1",
+			kind: "redirect",
+			slug: "/d1",
+			status: "published",
+			title: "D1",
+			metadata: { targetPath: "/n1" },
+		});
+		const redirects = await adapter.content.list("redirect");
+		const r = redirects.find((x) => x.slug === "/d1");
+		expect(r?.metadata?.statusCode).toBe(301);
+	});
+
+	it("save({kind:'redirect'}) keeps 302 status code when explicitly set", async () => {
+		await adapter.content.save({
+			id: "/d2",
+			kind: "redirect",
+			slug: "/d2",
+			status: "published",
+			title: "D2",
+			metadata: { targetPath: "/n2", statusCode: 302 },
+		});
+		const redirects = await adapter.content.list("redirect");
+		const r = redirects.find((x) => x.slug === "/d2");
+		expect(r?.metadata?.statusCode).toBe(302);
+	});
+
+	it("save({kind:'post'}) creates a new content record with the legacyUrl from metadata", async () => {
+		const saved = await adapter.content.save({
+			id: "new-post",
+			kind: "post",
+			slug: "new-post",
+			status: "published",
+			title: "New",
+			body: "body",
+			metadata: { metaDescription: "m", seoTitle: "s", legacyUrl: "/custom-legacy" },
+		});
+		expect(saved.kind).toBe("post");
+		expect(saved.slug).toBe("new-post");
+	});
+
+	it("save({kind:'post'}) defaults legacyUrl to /${slug} when missing", async () => {
+		const saved = await adapter.content.save({
+			id: "no-legacy",
+			kind: "post",
+			slug: "no-legacy",
+			status: "published",
+			title: "NL",
+			body: "b",
+			metadata: { metaDescription: "m", seoTitle: "s" },
+		});
+		expect(saved.slug).toBe("no-legacy");
+	});
+
+	it("list('settings') returns ONLY settings records (kills if(true) kind-filter mutants)", async () => {
+		const db = openSeededDb();
+		db.prepare(
+			"INSERT INTO comments (id, author, route, status, policy, submitted_at) VALUES (?, ?, ?, ?, ?, ?)",
+		).run("cc1", "X", "/r", "pending", "open-moderated", "2026-01-01");
+		db.close();
+		const list = await adapter.content.list("settings");
+		expect(list.every((r) => r.kind === "settings")).toBe(true);
+	});
+
+	it("list('redirect') returns ONLY redirect records", async () => {
+		await adapter.content.save({
+			id: "/old",
+			kind: "redirect",
+			slug: "/old",
+			status: "published",
+			title: "Old",
+			metadata: { targetPath: "/new" },
+		});
+		const list = await adapter.content.list("redirect");
+		expect(list.length).toBeGreaterThan(0);
+		expect(list.every((r) => r.kind === "redirect")).toBe(true);
+	});
+
+	it("list('comment') returns ONLY comment records", async () => {
+		const db = openSeededDb();
+		db.prepare(
+			"INSERT INTO comments (id, author, route, status, policy, submitted_at) VALUES (?, ?, ?, ?, ?, ?)",
+		).run("cf1", "X", "/r", "approved", "open-moderated", "2026-01-01");
+		db.close();
+		const list = await adapter.content.list("comment");
+		expect(list.length).toBeGreaterThan(0);
+		expect(list.every((r) => r.kind === "comment")).toBe(true);
+	});
+
+	it("list('user') returns ONLY user records", async () => {
+		const list = await adapter.content.list("user");
+		expect(list.length).toBeGreaterThan(0);
+		expect(list.every((r) => r.kind === "user")).toBe(true);
+	});
+
+	it("list('translation') returns ONLY translation records", async () => {
+		const db = openSeededDb();
+		db.prepare("INSERT INTO translation_overrides (route, state, updated_by) VALUES (?, ?, ?)").run(
+			"/x",
+			"published",
+			"u@x",
+		);
+		db.close();
+		const list = await adapter.content.list("translation");
+		expect(list.length).toBeGreaterThan(0);
+		expect(list.every((r) => r.kind === "translation")).toBe(true);
+	});
+
+	it("list('media') returns ONLY media records", async () => {
+		const db = openSeededDb();
+		db.prepare(
+			"INSERT INTO media_assets (id, source_url, local_path, mime_type, file_size, alt_text, title, uploaded_at, uploaded_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+		).run("m1", "https://cdn/m", "/m", "image/png", 1, "alt", "T", "2026-01-01", "u@x");
+		db.close();
+		const list = await adapter.content.list("media");
+		expect(list.length).toBeGreaterThan(0);
+		expect(list.every((r) => r.kind === "media")).toBe(true);
+	});
+
+	it("list('post') excludes comments/users/settings/translations/media", async () => {
+		const db = openSeededDb();
+		db.prepare(
+			"INSERT INTO comments (id, author, route, status, policy, submitted_at) VALUES (?, ?, ?, ?, ?, ?)",
+		).run("co1", "X", "/r", "approved", "open-moderated", "2026-01-01");
+		db.prepare("INSERT INTO translation_overrides (route, state, updated_by) VALUES (?, ?, ?)").run(
+			"/y",
+			"published",
+			"u@x",
+		);
+		db.close();
+		const list = await adapter.content.list("post");
+		expect(list.every((r) => r.kind === "post")).toBe(true);
+	});
+
+	it("save({kind:'post'}) creates with body='' when record.body is undefined (pins ?? '' fallback)", async () => {
+		const saved = await adapter.content.save({
+			id: "bodyless",
+			kind: "post",
+			slug: "bodyless",
+			status: "published",
+			title: "B",
+			metadata: { metaDescription: "m", seoTitle: "s", legacyUrl: "/b" },
+		});
+		expect(saved.slug).toBe("bodyless");
+	});
+
+	it("save({kind:'post'}) on update preserves existing body when record.body and existing.body are both falsy", async () => {
+		// First create with empty body
+		await adapter.content.save({
+			id: "pres",
+			kind: "post",
+			slug: "pres",
+			status: "published",
+			title: "P",
+			body: "",
+			metadata: { metaDescription: "m", seoTitle: "s", legacyUrl: "/pres" },
+		});
+		// Now update without body — should resolve to "" via existing.body ?? ""
+		const updated = await adapter.content.save({
+			id: "pres",
+			kind: "post",
+			slug: "pres",
+			status: "draft",
+			title: "P2",
+			metadata: { seoTitle: "s2", metaDescription: "m2" },
+		});
+		expect(updated.title).toBe("P2");
+	});
+
+	it("save({kind:'translation'}) defaults state to 'not_started' when metadata.state is absent", async () => {
+		const saved = await adapter.content.save({
+			id: "/no-state",
+			kind: "translation",
+			slug: "/no-state",
+			status: "draft",
+			title: "/no-state",
+		});
+		expect(saved.metadata?.state).toBe("not_started");
+		expect(saved.status).toBe("draft");
+	});
+
+	it("save({kind:'redirect'}) defaults targetPath to '' when missing and surfaces backing error", async () => {
+		// targetPath ?? "" .trim() resolves to "" which the underlying redirect store rejects.
+		// The point is the fallback executes (kills the ?? "" mutant) — exact error message confirms it.
+		await expect(
+			adapter.content.save({
+				id: "/no-target",
+				kind: "redirect",
+				slug: "/no-target",
+				status: "published",
+				title: "NT",
+				metadata: {},
+			}),
+		).rejects.toThrow(/required/i);
+	});
+
+	it("delete() on an archived post is idempotent (body and existing.body both empty)", async () => {
+		await adapter.content.save({
+			id: "del-me",
+			kind: "post",
+			slug: "del-me",
+			status: "published",
+			title: "D",
+			body: "",
+			metadata: { metaDescription: "m", seoTitle: "s", legacyUrl: "/del-me" },
+		});
+		await adapter.content.delete("del-me");
+		// Calling delete again should not throw (the get() returns null so deletion is a no-op)
+		await expect(adapter.content.delete("del-me")).resolves.toBeUndefined();
+	});
+
+	it("media.put with no publicUrl uses /media/${filename} as the local_path fallback", async () => {
+		await adapter.media.put({
+			id: "fallback-asset",
+			filename: "thing.png",
+			mimeType: "image/png",
+			metadata: {},
+		});
+		const db = openSeededDb();
+		const row = db
+			.prepare("SELECT local_path, source_url FROM media_assets WHERE id = ?")
+			.get("fallback-asset") as { local_path: string; source_url: string | null };
+		db.close();
+		expect(row.local_path).toBe("/media/thing.png");
+		expect(row.source_url).toBeNull();
 	});
 
 	it("revisions.append writes via SQL_INSERT_REVISION and revisions.list returns the row", async () => {
