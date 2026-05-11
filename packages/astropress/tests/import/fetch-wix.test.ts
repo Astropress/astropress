@@ -218,4 +218,100 @@ describe("fetchWixExport — failure modes", () => {
 		await expect(fetchWixExport(BASE_OPTS)).rejects.toThrow();
 		expect(mocks.browser.close).toHaveBeenCalled();
 	});
+
+	it("throws WixBotDetectionError when the login page contains a Cloudflare challenge marker", async () => {
+		for (const token of [
+			"cf-browser-verification",
+			"cf-challenge",
+			"cf-spinner",
+			"window._cf_chl_opt",
+			"__cf_chl_jschl_tk__",
+		]) {
+			vi.resetAllMocks();
+			setupBrowserChain();
+			mocks.page.content.mockResolvedValue(`<html><head>${token}</head></html>`);
+			mocks.page.url.mockReturnValue("https://users.wix.com/signin");
+			await expect(fetchWixExport({ ...BASE_OPTS, headless: false })).rejects.toBeInstanceOf(
+				(await import("../../src/import/fetch-wix.js")).WixBotDetectionError,
+			);
+		}
+	});
+
+	it("treats a manage.wix.com subdomain as 'logged in' (does NOT throw 2FA / invalid creds)", async () => {
+		mocks.page.content.mockResolvedValue('<html><form><input type="email" /></form></html>');
+		mocks.page.url.mockReturnValue("https://acme.manage.wix.com/dashboard");
+		// Provide a blog-export selector to allow the happy path through
+		mocks.page.locator.mockImplementation((sel: string) =>
+			makeLocator(sel.includes("blog") || sel.includes("export") || sel.includes("Export") ? 1 : 0),
+		);
+		mocks.page.waitForEvent.mockResolvedValue({
+			suggestedFilename: () => "x.csv",
+			saveAs: vi.fn(),
+		});
+		const result = await fetchWixExport(BASE_OPTS);
+		expect(result.exportPath).toContain("x.csv");
+	});
+
+	it("treats a malformed post-login URL as 'not on manage.wix.com' (catch arm at L147-149)", async () => {
+		mocks.page.content.mockResolvedValue('<html><form><input type="email" /></form></html>');
+		// 'http://[::1' is unparseable under WHATWG URL
+		mocks.page.url.mockReturnValue("http://[::1");
+		mocks.page.locator.mockImplementation((sel: string) =>
+			makeLocator(sel.includes("error") ? 1 : 0),
+		);
+		await expect(fetchWixExport(BASE_OPTS)).rejects.toBeInstanceOf(WixInvalidCredentialsError);
+	});
+});
+
+describe("fetchWixExport — typed error messages", () => {
+	it("WixCaptchaDetectedError message points to manual export via Wix Dashboard", () => {
+		expect(new WixCaptchaDetectedError().message).toContain("CAPTCHA detected");
+		expect(new WixCaptchaDetectedError().message).toContain(
+			"Wix Dashboard → Blog → Posts → Export",
+		);
+	});
+
+	it("WixSiteNotFoundError message guides the user to install the Wix Blog app", () => {
+		expect(new WixSiteNotFoundError().message).toContain(
+			"Blog export is not available for this site",
+		);
+		expect(new WixSiteNotFoundError().message).toContain("Wix Blog app");
+	});
+
+	it("typed errors all set the override name", () => {
+		expect(new WixInvalidCredentialsError().name).toBe("WixInvalidCredentialsError");
+		expect(new WixTwoFactorRequiredError().name).toBe("WixTwoFactorRequiredError");
+		expect(new WixCaptchaDetectedError().name).toBe("WixCaptchaDetectedError");
+		expect(new WixSiteNotFoundError().name).toBe("WixSiteNotFoundError");
+	});
+});
+
+describe("fetchWixExport — retry semantics (headless visible)", () => {
+	beforeEach(() => {
+		vi.resetAllMocks();
+		setupBrowserChain();
+	});
+
+	it("skips the headless attempt entirely when headless:false is supplied", async () => {
+		mocks.page.content.mockResolvedValue('<html><form><input type="email" /></form></html>');
+		mocks.page.url.mockReturnValue("https://manage.wix.com/dashboard");
+		mocks.page.locator.mockImplementation((sel: string) =>
+			makeLocator(sel.includes("blog") || sel.includes("Export") || sel.includes("export") ? 1 : 0),
+		);
+		mocks.page.waitForEvent.mockResolvedValue({
+			suggestedFilename: () => "x.csv",
+			saveAs: vi.fn(),
+		});
+		await fetchWixExport({ ...BASE_OPTS, headless: false });
+		// Exactly one browser launch — no retry, no double-attempt
+		expect(vi.mocked(chromium.launch)).toHaveBeenCalledTimes(1);
+		expect(vi.mocked(chromium.launch)).toHaveBeenCalledWith({ headless: false });
+	});
+
+	it("re-throws non-bot/non-CAPTCHA errors without a visible retry", async () => {
+		mocks.page.goto.mockRejectedValue(new Error("net error"));
+		await expect(fetchWixExport(BASE_OPTS)).rejects.toThrow("net error");
+		// Only one attempt — no retry for unrelated failures
+		expect(vi.mocked(chromium.launch)).toHaveBeenCalledTimes(1);
+	});
 });
