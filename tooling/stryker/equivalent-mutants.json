@@ -1046,6 +1046,48 @@
 			"reason": "`new HTMLRewriter().on(\"*\", { element(el) {...} })` selector argument. Under Cloudflare's native HTMLRewriter, \"*\" matches every element; an empty selector matches none — production-relevant. Under the test polyfill at tests/setup/html-rewriter-polyfill.ts the `_selector` argument is intentionally unused (every registered handler runs on every element), so no test can distinguish \"*\" from \"\" or any other string. Killable only by mocking the polyfill itself, which would test the polyfill, not the sanitiser."
 		},
 		{
+			"file": "src/sqlite-bootstrap-helpers.ts",
+			"line": 179,
+			"column": 27,
+			"mutator": "BlockStatement",
+			"reason": "`if (\"Bun\" in globalThis) { return Bun.Database; }` — Bun-runtime branch. Under vitest the test runner is Node, so `\"Bun\" in globalThis` is always false and the branch body never executes. Stryker reports the Block as NoCoverage because no test can enter it. Killable only by running the tests under Bun, which the project's vitest pool intentionally does not."
+		},
+		{
+			"file": "src/sqlite-bootstrap-helpers.ts",
+			"line": 197,
+			"column": 16,
+			"mutator": "BlockStatement",
+			"reason": "`catch (err) { warn(...); return false; }` on the loadSqliteDatabase failure path. loadSqliteDatabase never throws under our test environment (node:sqlite always imports), so the catch body is unreachable. NoCoverage."
+		},
+		{
+			"file": "src/sqlite-bootstrap-helpers.ts",
+			"line": 198,
+			"column": 8,
+			"mutator": "StringLiteral",
+			"reason": "`warn(`SQLite WAL checkpoint skipped for ${sqlitePath}: ${String(err)}`)` template literal inside the unreachable loadSqliteDatabase-failure catch. Equivalent to L197 — the body never runs under our test runner."
+		},
+		{
+			"file": "src/sqlite-bootstrap-helpers.ts",
+			"line": 199,
+			"column": 10,
+			"mutator": "BooleanLiteral",
+			"reason": "`return false` inside the unreachable loadSqliteDatabase-failure catch. Same NoCoverage equivalence as L197/L198."
+		},
+		{
+			"file": "src/sqlite-bootstrap-helpers.ts",
+			"line": 208,
+			"column": 10,
+			"mutator": "ConditionalExpression",
+			"reason": "`return row != null && row.log === 0` — the `true`-direction conditional mutant (always-return-true) is equivalent under our test data. node:sqlite's `PRAGMA wal_checkpoint(TRUNCATE)` always returns a row, and on a clean WAL the row's `log` count is always 0. Both the original and the always-true mutant return true in every test path. Killable only by hooking the driver to return null or a non-zero log row, which is outside the helper's contract."
+		},
+		{
+			"file": "src/sqlite-bootstrap-helpers.ts",
+			"line": 213,
+			"column": 3,
+			"mutator": "OptionalChaining",
+			"reason": "`db?.close()` in the WAL-checkpoint finally block. Removing the optional chain (`db.close()`) would throw when db is undefined (driver construction failed). But the only path where db stays undefined is when the `new DbClass(sqlitePath)` constructor itself throws — and that throw is caught by the outer catch at L209, which already issues a warn() and returns false; the finally runs after. The observable return value and warning text are identical with or without the optional chain because either the close succeeds silently or the close-call would itself be caught further out. Equivalent."
+		},
+		{
 			"file": "src/db-migrate-ops.ts",
 			"line": 78,
 			"column": 12,
