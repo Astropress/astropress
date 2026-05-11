@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-05-11T05:28:28.682Z",
+  "updatedAt": "2026-05-11T06:06:39.363Z",
   "scores": {
     "packages/astropress/src/adapters/adapter-record-helpers.ts": {
       "score": 100,
@@ -198,8 +198,8 @@
       "hash": "e06ff180716cc1a17f4e62cbf0d8bfc5d28286cc"
     },
     "packages/astropress/src/import/download-media.ts": {
-      "score": 17.066666666666666,
-      "hash": "42d14462fb5110909749ef61c9032ff02e18e9f3"
+      "score": 97.33333333333334,
+      "hash": "3e3ab514c8f1aee7af0f31970206fd266288696e"
     },
     "packages/astropress/src/import/fetch-wix.ts": {
       "score": 49.54128440366973,
@@ -274,7 +274,7 @@
       "hash": "af6e9c8eaa7aec248b97bfa43a5b6b8701038805"
     },
     "packages/astropress/src/project-scaffold-ci-helpers.ts": {
-      "score": 30.73170731707317,
+      "score": 58.10276679841897,
       "hash": "af6cb223c64ad2d4822e3b8db4fba3dddd9e1afe"
     },
     "packages/astropress/src/project-scaffold-ci.ts": {
@@ -670,8 +670,8 @@
       "hash": "cd3fd2b63db567f3b1d680e6f0c22346ec3c1996"
     },
     "packages/astropress/src/html-sanitization.ts": {
-      "score": 44.44444444444444,
-      "hash": "63905934444526ef6fac36d1582a9c930efad2a4"
+      "score": 93.45794392523365,
+      "hash": "c3a2d4416466e80bdb1bacde3e99c9f5cbef1b2b"
     },
     "packages/astropress/src/import/wordpress-xml.ts": {
       "score": 86.8995633187773,

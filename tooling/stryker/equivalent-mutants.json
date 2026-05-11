@@ -1030,6 +1030,27 @@
 			"column": 36,
 			"mutator": "Regex",
 			"reason": "Same anchored-vs-unanchored '/' regex equivalence as L263. page.path always starts with '/'."
+		},
+		{
+			"file": "src/html-sanitization.ts",
+			"line": 11,
+			"column": 18,
+			"mutator": "MethodExpression",
+			"reason": "`value.trim()` inside isAllowedUrl. The function is only ever invoked via (a) sanitizeAttribute at L52 which passes `trimmedValue` (already trimmed at L46) or (b) sanitizeSrcset at L31 where `url` is the first token of a `.split(/\\s+/)` (already whitespace-stripped). Removing the inner trim is observationally equivalent — there is no path that hands a non-trimmed value into isAllowedUrl."
+		},
+		{
+			"file": "src/html-sanitization.ts",
+			"line": 84,
+			"column": 41,
+			"mutator": "StringLiteral",
+			"reason": "`new HTMLRewriter().on(\"*\", { element(el) {...} })` selector argument. Under Cloudflare's native HTMLRewriter, \"*\" matches every element; an empty selector matches none — production-relevant. Under the test polyfill at tests/setup/html-rewriter-polyfill.ts the `_selector` argument is intentionally unused (every registered handler runs on every element), so no test can distinguish \"*\" from \"\" or any other string. Killable only by mocking the polyfill itself, which would test the polyfill, not the sanitiser."
+		},
+		{
+			"file": "src/html-sanitization.ts",
+			"line": 102,
+			"column": 16,
+			"mutator": "ConditionalExpression",
+			"reason": "`else if (sanitized !== value) el.setAttribute(name, sanitized)`. When the sanitiser computes a value identical to the original, this branch skips a redundant setAttribute. Mutating the condition to `true` (always setAttribute) or `false` (never) produces the same observable HTML output: setAttribute(name, sanitized=value) writes the same value back; skipping it leaves the same value in place. The only behavioural difference is the number of setAttribute calls on the underlying HTMLRewriter element, which is not part of the sanitiser's contract and is not observable through the rendered HTML string."
 		}
 	]
 }

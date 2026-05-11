@@ -1,66 +1,11 @@
-const allowedTags = new Set([
-	"a",
-	"b",
-	"blockquote",
-	"br",
-	"code",
-	"div",
-	"em",
-	"figcaption",
-	"figure",
-	"h1",
-	"h2",
-	"h3",
-	"h4",
-	"h5",
-	"h6",
-	"hr",
-	"i",
-	"img",
-	"li",
-	"ol",
-	"p",
-	"pre",
-	"span",
-	"strong",
-	"sub",
-	"sup",
-	"table",
-	"tbody",
-	"td",
-	"th",
-	"thead",
-	"tr",
-	"u",
-	"ul",
-]);
-
-const allowedAttributes = new Map<string, Set<string>>([
-	["*", new Set(["class"])],
-	["a", new Set(["href", "name", "target", "rel"])],
-	[
-		"img",
-		new Set([
-			"src",
-			"srcset",
-			"sizes",
-			"alt",
-			"title",
-			"width",
-			"height",
-			"loading",
-			"decoding",
-			"fetchpriority",
-		]),
-	],
-	["th", new Set(["colspan", "rowspan", "scope"])],
-	["td", new Set(["colspan", "rowspan"])],
-]);
-
-const dropContentTags = new Set(["script", "style", "textarea", "option", "iframe"]);
-const urlAttributes = new Set(["href", "src"]);
-const srcsetAttributes = new Set(["srcset"]);
-const allowedSchemes = new Set(["http", "https", "mailto", "tel"]);
+import {
+	allowedAttributes,
+	allowedSchemes,
+	allowedTags,
+	dropContentTags,
+	srcsetAttributes,
+	urlAttributes,
+} from "./html-sanitization-data.js";
 
 function isAllowedUrl(value: string) {
 	const trimmed = value.trim();

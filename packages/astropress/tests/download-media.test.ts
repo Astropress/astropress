@@ -231,6 +231,57 @@ describe("downloadMedia", () => {
 		vi.unstubAllGlobals();
 	});
 
+	it("preserves an http:// href on an SVG <a> (exercises allowedSchemes ['http','https'])", async () => {
+		vi.stubGlobal(
+			"fetch",
+			vi.fn(
+				async () =>
+					new Response(
+						'<svg xmlns="http://www.w3.org/2000/svg"><a href="http://example.com/page"><circle r="5"/></a></svg>',
+						{ status: 200, headers: { "content-type": "image/svg+xml" } },
+					),
+			),
+		);
+		const bytes = await downloadMedia("https://example.com/with-link.svg");
+		const text = new TextDecoder().decode(bytes);
+		expect(text).toContain("http://example.com/page");
+		vi.unstubAllGlobals();
+	});
+
+	it("strips javascript: href values from SVG <a>", async () => {
+		vi.stubGlobal(
+			"fetch",
+			vi.fn(
+				async () =>
+					new Response(
+						'<svg xmlns="http://www.w3.org/2000/svg"><a href="javascript:alert(1)"><circle r="5"/></a></svg>',
+						{ status: 200, headers: { "content-type": "image/svg+xml" } },
+					),
+			),
+		);
+		const bytes = await downloadMedia("https://example.com/bad-href.svg");
+		const text = new TextDecoder().decode(bytes);
+		expect(text).not.toContain("javascript:");
+		vi.unstubAllGlobals();
+	});
+
+	it("preserves the fill attribute on an SVG circle (exercises allowedAttributes['*'] passthrough)", async () => {
+		vi.stubGlobal(
+			"fetch",
+			vi.fn(
+				async () =>
+					new Response('<svg xmlns="http://www.w3.org/2000/svg"><circle r="5" fill="red"/></svg>', {
+						status: 200,
+						headers: { "content-type": "image/svg+xml" },
+					}),
+			),
+		);
+		const bytes = await downloadMedia("https://example.com/colored.svg");
+		const text = new TextDecoder().decode(bytes);
+		expect(text).toContain('fill="red"');
+		vi.unstubAllGlobals();
+	});
+
 	it("strips foreignObject from SVG", async () => {
 		vi.stubGlobal(
 			"fetch",
@@ -310,6 +361,85 @@ describe("downloadMedia", () => {
 			"Blocked request to private/loopback host",
 		);
 		expect(fetchSpy).not.toHaveBeenCalled();
+		vi.unstubAllGlobals();
+	});
+
+	it("parses the content-type by splitting on ';' (charset suffix and surrounding whitespace are ignored)", async () => {
+		vi.stubGlobal(
+			"fetch",
+			vi.fn(
+				async () =>
+					new Response(new Uint8Array([0xff, 0xd8]), {
+						status: 200,
+						headers: { "content-type": "  IMAGE/JPEG ; charset=binary" },
+					}),
+			),
+		);
+		const bytes = await downloadMedia("https://example.com/p.jpg");
+		expect(transcodeViaSharpSpy).toHaveBeenCalledOnce();
+		expect(bytes).toBeInstanceOf(Uint8Array);
+		vi.unstubAllGlobals();
+	});
+
+	it("accepts an image/* content-type that is NOT in the explicit allowlist (image/x-icon)", async () => {
+		vi.stubGlobal(
+			"fetch",
+			vi.fn(
+				async () =>
+					new Response(new Uint8Array(4), {
+						status: 200,
+						headers: { "content-type": "image/x-icon" },
+					}),
+			),
+		);
+		// image/x-icon is not in ALLOWED_CONTENT_TYPES but matches the startsWith("image/") branch.
+		// It is not TRANSCODABLE → returns the raw bytes through.
+		const bytes = await downloadMedia("https://example.com/favicon.ico");
+		expect(transcodeViaSharpSpy).not.toHaveBeenCalled();
+		expect(bytes.length).toBe(4);
+		vi.unstubAllGlobals();
+	});
+
+	it("accepts content-length equal to the limit (boundary: > not >=)", async () => {
+		const exact = new Uint8Array(8);
+		vi.stubGlobal(
+			"fetch",
+			vi.fn(
+				async () =>
+					new Response(exact, {
+						status: 200,
+						headers: {
+							"content-type": "image/jpeg",
+							"content-length": String(50 * 1024 * 1024),
+						},
+					}),
+			),
+		);
+		// content-length == MAX should NOT throw; only > MAX throws.
+		await downloadMedia("https://example.com/borderline.jpg");
+		expect(transcodeViaSharpSpy).toHaveBeenCalledOnce();
+		vi.unstubAllGlobals();
+	});
+
+	it("rejects when arrayBuffer payload exceeds the limit (overrides a small content-length header)", async () => {
+		// content-length under-reports the actual payload; the post-arrayBuffer check should still catch it.
+		const oversized = new Uint8Array(50 * 1024 * 1024 + 1);
+		vi.stubGlobal(
+			"fetch",
+			vi.fn(
+				async () =>
+					new Response(oversized, {
+						status: 200,
+						headers: {
+							"content-type": "image/jpeg",
+							"content-length": "10",
+						},
+					}),
+			),
+		);
+		await expect(downloadMedia("https://example.com/lying.jpg")).rejects.toThrow(
+			/download size .* exceeds/,
+		);
 		vi.unstubAllGlobals();
 	});
 });
