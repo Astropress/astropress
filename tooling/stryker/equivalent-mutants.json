@@ -974,6 +974,62 @@
 			"column": 6,
 			"mutator": "ConditionalExpression",
 			"reason": "`if (!saved) throw new Error(...)` post-save read-back guard. Mutating to `false` (skip the throw) leaves `saved` as the just-read row — which is always defined immediately after a successful upsert against the SAME DB instance. The throw is defensive coverage for a hypothetical DB driver that loses writes; no production code path exercises it. Killable only by a mocked readStore that deliberately returns null after the successful insert + upsert, which would test the read-store contract, not this function."
+		},
+		{
+			"file": "src/sqlite-bootstrap-seeders.ts",
+			"line": 126,
+			"column": 12,
+			"mutator": "LogicalOperator",
+			"reason": "`count += result.changes ?? 1` mutated to `count += result.changes && 1`. The result.changes value from node:sqlite is always a number (0 or 1 for single-row INSERTs in this seeder), never null/undefined. For values in {0,1}: `0 ?? 1 === 0 === 0 && 1` and `1 ?? 1 === 1 === 1 && 1`. Equivalent under the single-row INSERT invariant enforced by the seeder."
+		},
+		{
+			"file": "src/sqlite-bootstrap-seeders.ts",
+			"line": 161,
+			"column": 12,
+			"mutator": "LogicalOperator",
+			"reason": "Same `count += result.changes ?? 1` vs `&& 1` equivalence as L126. node:sqlite single-row INSERT returns changes ∈ {0,1}; both operators agree on those values."
+		},
+		{
+			"file": "src/sqlite-bootstrap-seeders.ts",
+			"line": 181,
+			"column": 12,
+			"mutator": "LogicalOperator",
+			"reason": "Same `count += result.changes ?? 1` vs `&& 1` equivalence as L126."
+		},
+		{
+			"file": "src/sqlite-bootstrap-seeders.ts",
+			"line": 241,
+			"column": 12,
+			"mutator": "LogicalOperator",
+			"reason": "Same `count += result.changes ?? 1` vs `&& 1` equivalence as L126."
+		},
+		{
+			"file": "src/sqlite-bootstrap-seeders.ts",
+			"line": 270,
+			"column": 12,
+			"mutator": "LogicalOperator",
+			"reason": "Same `count += result.changes ?? 1` vs `&& 1` equivalence as L126."
+		},
+		{
+			"file": "src/sqlite-bootstrap-seeders.ts",
+			"line": 292,
+			"column": 12,
+			"mutator": "LogicalOperator",
+			"reason": "Same `count += result.changes ?? 1` vs `&& 1` equivalence as L126."
+		},
+		{
+			"file": "src/sqlite-bootstrap-seeders.ts",
+			"line": 263,
+			"column": 44,
+			"mutator": "Regex",
+			"reason": "`archive.legacyUrl.replace(/^\\//, \"\")` mutated to `replace(/\\//, \"\")`. legacyUrl always starts with '/' (enforced by ArchiveSeedRecord shape + upstream config). For input '/a/b/c': anchored removes leading '/' → 'a/b/c'; unanchored removes first '/' → 'a/b/c' — identical. Both then go through replaceAll('/', ':') yielding the same baseId."
+		},
+		{
+			"file": "src/sqlite-bootstrap-seeders.ts",
+			"line": 285,
+			"column": 36,
+			"mutator": "Regex",
+			"reason": "Same anchored-vs-unanchored '/' regex equivalence as L263. page.path always starts with '/'."
 		}
 	]
 }
