@@ -94,4 +94,113 @@ describe("cloudflare vite integration helper", () => {
 			),
 		).toBe("astropress/cloudflare-local-image-storage-stub");
 	});
+
+	it("resolves every literal variant of './local-runtime-modules' (with/without leading './' and '.ts')", () => {
+		const integration = createAstropressCloudflareViteIntegration("/tmp/site/lrm.ts");
+		for (const id of [
+			"./local-runtime-modules",
+			"./local-runtime-modules.ts",
+			"local-runtime-modules",
+			"local-runtime-modules.ts",
+		]) {
+			expect(integration.plugin.resolveId(id)).toBe("astropress/cloudflare-local-runtime-stubs");
+		}
+	});
+
+	it("matches the exact localRuntimeModulesPath supplied at construction time", () => {
+		const integration = createAstropressCloudflareViteIntegration("/abs/path/lrm.ts");
+		expect(integration.plugin.resolveId("/abs/path/lrm.ts")).toBe(
+			"astropress/cloudflare-local-runtime-stubs",
+		);
+	});
+
+	it("matches IDs ending in '/local-runtime-modules' or '/local-runtime-modules.ts'", () => {
+		const integration = createAstropressCloudflareViteIntegration("/tmp/site/lrm.ts");
+		expect(integration.plugin.resolveId("/some/path/local-runtime-modules")).toBe(
+			"astropress/cloudflare-local-runtime-stubs",
+		);
+		expect(integration.plugin.resolveId("/some/path/local-runtime-modules.ts")).toBe(
+			"astropress/cloudflare-local-runtime-stubs",
+		);
+	});
+
+	it("matches every variant of local-image-storage / local-media-storage", () => {
+		const integration = createAstropressCloudflareViteIntegration("/tmp/site/lrm.ts");
+		for (const id of [
+			"astropress/local-image-storage",
+			"/a/b/local-image-storage",
+			"/a/b/local-image-storage.ts",
+			"/a/b/local-image-storage.js",
+		]) {
+			expect(integration.plugin.resolveId(id)).toBe(
+				"astropress/cloudflare-local-image-storage-stub",
+			);
+		}
+		for (const id of [
+			"astropress/local-media-storage",
+			"/a/b/local-media-storage",
+			"/a/b/local-media-storage.ts",
+			"/a/b/local-media-storage.js",
+		]) {
+			expect(integration.plugin.resolveId(id)).toBe(
+				"astropress/cloudflare-local-media-storage-stub",
+			);
+		}
+	});
+
+	it("matches every variant of sqlite-admin-runtime / sqlite-adapter / sqlite-bootstrap", () => {
+		const integration = createAstropressCloudflareViteIntegration("/tmp/site/lrm.ts");
+		for (const id of [
+			"astropress/sqlite-admin-runtime",
+			"/a/b/sqlite-admin-runtime",
+			"/a/b/sqlite-admin-runtime.ts",
+			"/a/b/sqlite-admin-runtime.js",
+		]) {
+			expect(integration.plugin.resolveId(id)).toBe(
+				"astropress/cloudflare-sqlite-admin-runtime-stub",
+			);
+		}
+		for (const id of [
+			"astropress/adapters/sqlite",
+			"/a/b/adapters/sqlite",
+			"/a/b/adapters/sqlite.ts",
+			"/a/b/adapters/sqlite.js",
+		]) {
+			expect(integration.plugin.resolveId(id)).toBe("astropress/cloudflare-sqlite-adapter-stub");
+		}
+		for (const id of [
+			"astropress/sqlite-bootstrap",
+			"/a/b/sqlite-bootstrap",
+			"/a/b/sqlite-bootstrap.ts",
+			"/a/b/sqlite-bootstrap.js",
+		]) {
+			expect(integration.plugin.resolveId(id)).toBe("astropress/cloudflare-sqlite-bootstrap-stub");
+		}
+	});
+
+	it("honours every user-supplied option override for stub paths", () => {
+		const integration = createAstropressCloudflareViteIntegration("/lrm.ts", {
+			cloudflareLocalImageStorageStubPath: "custom-image",
+			cloudflareLocalMediaStorageStubPath: "custom-media",
+			cloudflareSqliteAdapterStubPath: "custom-adapter",
+			cloudflareSqliteAdminRuntimeStubPath: "custom-admin-runtime",
+			cloudflareSqliteBootstrapStubPath: "custom-bootstrap",
+			cloudflareLocalRuntimeStubsPath: "custom-lrm",
+		});
+		expect(integration.plugin.resolveId("astropress/local-image-storage")).toBe("custom-image");
+		expect(integration.plugin.resolveId("astropress/local-media-storage")).toBe("custom-media");
+		expect(integration.plugin.resolveId("astropress/adapters/sqlite")).toBe("custom-adapter");
+		expect(integration.plugin.resolveId("astropress/sqlite-admin-runtime")).toBe(
+			"custom-admin-runtime",
+		);
+		expect(integration.plugin.resolveId("astropress/sqlite-bootstrap")).toBe("custom-bootstrap");
+		expect(integration.plugin.resolveId("./local-runtime-modules")).toBe("custom-lrm");
+	});
+
+	it("normalizes Windows backslashes to forward slashes before matching", () => {
+		const integration = createAstropressCloudflareViteIntegration("/lrm.ts");
+		expect(integration.plugin.resolveId("C:\\workspace\\src\\local-image-storage.ts")).toBe(
+			"astropress/cloudflare-local-image-storage-stub",
+		);
+	});
 });

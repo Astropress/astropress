@@ -61,6 +61,10 @@ const ALLOWLIST: ReadonlyMap<string, string> = new Map([
 		"deploy-and-sync.contract.test.ts",
 		"deploy + sync contract — runs all deploy targets through one adapter API",
 	],
+	[
+		"cloudflare-vite-integration.test.ts",
+		"resolveId contract — must verify every (module-name × extension) variant resolves",
+	],
 ]);
 
 interface FanoutResult {
