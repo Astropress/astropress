@@ -561,16 +561,98 @@ describe("buildRouteTablePageModel", () => {
 // ---------------------------------------------------------------------------
 
 describe("buildArchivesIndexPageModel", () => {
-	it("returns forbidden for editor role", async () => {
+	it("returns forbidden with the full empty shape for editor role", async () => {
 		const result = await buildArchivesIndexPageModel(locals, editorRole);
 		expect(result.status).toBe("forbidden");
-		expect(result.data.totalArchives).toBe(0);
+		expect(result.data).toEqual({
+			archiveList: [],
+			archivesByKind: {},
+			kindCounts: [],
+			totalArchives: 0,
+			totalItems: 0,
+		});
 	});
 
-	it("returns ok for admin with configured archives", async () => {
+	it("returns forbidden when user is null", async () => {
+		const result = await buildArchivesIndexPageModel(locals, null);
+		expect(result.status).toBe("forbidden");
+		expect(result.data).toEqual({
+			archiveList: [],
+			archivesByKind: {},
+			kindCounts: [],
+			totalArchives: 0,
+			totalItems: 0,
+		});
+	});
+
+	it("returns ok for admin and counts archives + items correctly", async () => {
+		registerCms({
+			templateKeys: ["content"],
+			siteUrl: "https://example.com",
+			seedPages: [],
+			archives: [
+				{
+					title: "Blog",
+					kind: "posts",
+					slug: "blog",
+					legacyUrl: "/blog",
+					listingItems: [{ href: "/a" }, { href: "/b" }],
+				},
+				{
+					title: "Vids",
+					kind: "videos",
+					slug: "vids",
+					legacyUrl: "/vids",
+					listingItems: [{ href: "/v" }],
+				},
+			],
+			translationStatus: [],
+		});
 		const result = await buildArchivesIndexPageModel(locals, adminRole);
 		expect(result.status).toBe("ok");
-		expect(result.data.totalArchives).toBeGreaterThanOrEqual(0);
+		expect(result.warnings).toEqual([]);
+		expect(result.data.totalArchives).toBe(2);
+		expect(result.data.totalItems).toBe(3);
+		expect(result.data.kindCounts).toEqual(
+			expect.arrayContaining([
+				{ kind: "posts", count: 1 },
+				{ kind: "videos", count: 1 },
+			]),
+		);
+	});
+
+	it("falls back to config title when getRuntimeArchiveRoute returns undefined title", async () => {
+		vi.spyOn(runtimeRouteRegistry, "getRuntimeArchiveRoute").mockResolvedValueOnce(undefined);
+		const result = await buildArchivesIndexPageModel(locals, adminRole);
+		expect(result.status).toBe("ok");
+		const archive = result.data.archiveList.find(
+			(a: unknown) => (a as { slug: string }).slug === "blog",
+		);
+		expect((archive as { title: string }).title).toBe("Blog");
+	});
+
+	it("treats archives with undefined listingItems as contributing zero to totalItems", async () => {
+		registerCms({
+			templateKeys: ["content"],
+			siteUrl: "https://example.com",
+			seedPages: [],
+			archives: [
+				// listingItems explicitly absent — exercises the `?.length || 0` guard
+				{ title: "Bare", kind: "posts", slug: "bare", legacyUrl: "/bare" },
+				{
+					title: "Two",
+					kind: "posts",
+					slug: "two",
+					legacyUrl: "/two",
+					listingItems: [{ href: "/a" }, { href: "/b" }],
+				},
+			],
+			translationStatus: [],
+		});
+		const result = await buildArchivesIndexPageModel(locals, adminRole);
+		expect(result.status).toBe("ok");
+		expect(result.data.totalItems).toBe(2);
+		expect(result.data.totalArchives).toBe(2);
 	});
 
 	it("uses archive title from database when the archive route exists", async () => {
@@ -595,18 +677,18 @@ describe("buildArchivesIndexPageModel", () => {
 		expect(archive?.title).toBe("Blog Archive Title");
 	});
 
-	it("returns partial when archive route lookup fails (withSettledMap fallback)", async () => {
+	it("returns partial with the exact archive-metadata warning text when getRuntimeArchiveRoute fails", async () => {
 		vi.spyOn(runtimeRouteRegistry, "getRuntimeArchiveRoute").mockRejectedValueOnce(
 			new Error("archive fail"),
 		);
 		const result = await buildArchivesIndexPageModel(locals, adminRole);
 		expect(result.status).toBe("partial");
-		// withSettledMap fallback returns the raw archive config entry
-		expect(
-			result.data.archiveList.every(
-				(a: unknown) => typeof a === "object" && a !== null && "slug" in a,
-			),
-		).toBe(true);
+		expect(result.warnings).toContain("Some archive metadata is temporarily unavailable.");
+		// withSettledMap fallback returns the raw archive config entry untouched
+		const blog = result.data.archiveList.find(
+			(a: unknown) => (a as { slug: string }).slug === "blog",
+		);
+		expect((blog as { title: string }).title).toBe("Blog");
 	});
 
 	it("groups multiple archives of the same kind together", async () => {
@@ -644,31 +726,53 @@ describe("buildArchivesIndexPageModel", () => {
 // ---------------------------------------------------------------------------
 
 describe("buildPagesIndexPageModel", () => {
-	it("returns forbidden for editor role", async () => {
+	it("returns forbidden with the full empty shape for editor role", async () => {
 		const result = await buildPagesIndexPageModel(locals, editorRole);
 		expect(result.status).toBe("forbidden");
+		expect(result.data).toEqual({ contentStates: [], routePages: [], archiveRows: [] });
 	});
 
-	it("returns ok for admin", async () => {
+	it("returns forbidden when user is null", async () => {
+		const result = await buildPagesIndexPageModel(locals, null);
+		expect(result.status).toBe("forbidden");
+		expect(result.data).toEqual({ contentStates: [], routePages: [], archiveRows: [] });
+	});
+
+	it("returns ok for admin with the loaded content + route + archive arrays", async () => {
 		const result = await buildPagesIndexPageModel(locals, adminRole);
 		expect(result.status).toBe("ok");
+		expect(result.warnings).toEqual([]);
 		expect(Array.isArray(result.data.contentStates)).toBe(true);
 		expect(Array.isArray(result.data.routePages)).toBe(true);
-		expect(Array.isArray(result.data.archiveRows)).toBe(true);
+		// Default registered config has a single /blog archive
+		expect(result.data.archiveRows).toHaveLength(1);
 	});
 
-	it("returns partial when content states query fails", async () => {
+	it("returns partial with the legacy-page-records warning when listRuntimeContentStates fails", async () => {
 		vi.spyOn(runtimePageStore, "listRuntimeContentStates").mockRejectedValueOnce(new Error("fail"));
 		const result = await buildPagesIndexPageModel(locals, adminRole);
 		expect(result.status).toBe("partial");
+		expect(result.warnings).toContain("Legacy page records are temporarily unavailable.");
+		expect(result.data.contentStates).toEqual([]);
 	});
 
-	it("returns partial when archive route lookup fails (withSettledMap fallback)", async () => {
+	it("returns partial with the structured-page-records warning when listRuntimeStructuredPageRoutes fails", async () => {
+		vi.spyOn(runtimeRouteRegistry, "listRuntimeStructuredPageRoutes").mockRejectedValueOnce(
+			new Error("fail"),
+		);
+		const result = await buildPagesIndexPageModel(locals, adminRole);
+		expect(result.status).toBe("partial");
+		expect(result.warnings).toContain("Structured page records are temporarily unavailable.");
+		expect(result.data.routePages).toEqual([]);
+	});
+
+	it("returns partial with the archive-page-records warning when getRuntimeArchiveRoute fails", async () => {
 		vi.spyOn(runtimeRouteRegistry, "getRuntimeArchiveRoute").mockRejectedValueOnce(
 			new Error("archive fail"),
 		);
 		const result = await buildPagesIndexPageModel(locals, adminRole);
 		expect(result.status).toBe("partial");
+		expect(result.warnings).toContain("Some archive page records are temporarily unavailable.");
 		// withSettledMap fallback sets runtime: null for the failed archive
 		expect(
 			result.data.archiveRows.every((r: unknown) => (r as { runtime: unknown }).runtime === null),
@@ -681,17 +785,104 @@ describe("buildPagesIndexPageModel", () => {
 // ---------------------------------------------------------------------------
 
 describe("buildPostsIndexPageModel", () => {
-	it("returns ok with content data", async () => {
+	it("returns ok with no warnings and all loaded arrays populated", async () => {
 		const result = await buildPostsIndexPageModel(locals);
 		expect(result.status).toBe("ok");
+		expect(result.warnings).toEqual([]);
+		expect(Array.isArray(result.data.authors)).toBe(true);
+		expect(Array.isArray(result.data.categories)).toBe(true);
+		expect(Array.isArray(result.data.tags)).toBe(true);
 		expect(Array.isArray(result.data.allContent)).toBe(true);
-		expect(Array.isArray(result.data.archives)).toBe(true);
+		expect(result.data.archives).toHaveLength(1);
 	});
 
-	it("returns partial when authors query fails", async () => {
+	it("returns partial with the author-filters warning when getRuntimeAuthors fails", async () => {
 		vi.spyOn(runtimePageStore, "getRuntimeAuthors").mockRejectedValueOnce(new Error("fail"));
 		const result = await buildPostsIndexPageModel(locals);
 		expect(result.status).toBe("partial");
+		expect(result.warnings).toContain("Author filters are temporarily unavailable.");
+		expect(result.data.authors).toEqual([]);
+	});
+
+	it("returns partial with the category-filters warning when getRuntimeCategories fails", async () => {
+		vi.spyOn(runtimePageStore, "getRuntimeCategories").mockRejectedValueOnce(new Error("fail"));
+		const result = await buildPostsIndexPageModel(locals);
+		expect(result.status).toBe("partial");
+		expect(result.warnings).toContain("Category filters are temporarily unavailable.");
+		expect(result.data.categories).toEqual([]);
+	});
+
+	it("returns partial with the tag-filters warning when getRuntimeTags fails", async () => {
+		vi.spyOn(runtimePageStore, "getRuntimeTags").mockRejectedValueOnce(new Error("fail"));
+		const result = await buildPostsIndexPageModel(locals);
+		expect(result.status).toBe("partial");
+		expect(result.warnings).toContain("Tag filters are temporarily unavailable.");
+		expect(result.data.tags).toEqual([]);
+	});
+
+	it("returns partial with the post-records warning when listRuntimeContentStates fails", async () => {
+		vi.spyOn(runtimePageStore, "listRuntimeContentStates").mockRejectedValueOnce(new Error("fail"));
+		const result = await buildPostsIndexPageModel(locals);
+		expect(result.status).toBe("partial");
+		expect(result.warnings).toContain("Post records are temporarily unavailable.");
+		expect(result.data.allContent).toEqual([]);
+	});
+
+	it("returns partial with the archive-filters warning when getRuntimeArchiveRoute fails", async () => {
+		vi.spyOn(runtimeRouteRegistry, "getRuntimeArchiveRoute").mockRejectedValueOnce(
+			new Error("fail"),
+		);
+		const result = await buildPostsIndexPageModel(locals);
+		expect(result.status).toBe("partial");
+		expect(result.warnings).toContain("Archive filters are temporarily unavailable.");
+		// withSettledMap fallback uses the raw archive config title + listingItems []
+		const blog = result.data.archives.find((a) => a.slug === "blog");
+		expect(blog?.title).toBe("Blog");
+		expect(blog?.listingItems).toEqual([]);
+	});
+
+	it("defaults listingItems to [] when the archive config omits it", async () => {
+		registerCms({
+			templateKeys: ["content"],
+			siteUrl: "https://example.com",
+			seedPages: [],
+			archives: [{ title: "News", kind: "posts", slug: "news", legacyUrl: "/news" }],
+			translationStatus: [],
+		});
+		const result = await buildPostsIndexPageModel(locals);
+		expect(result.status).toBe("ok");
+		const news = result.data.archives.find((a) => a.slug === "news");
+		expect(news?.listingItems).toEqual([]);
+	});
+
+	it("uses runtime archive title when present and falls back to config title when runtime title is empty", async () => {
+		vi.spyOn(runtimeRouteRegistry, "getRuntimeArchiveRoute").mockResolvedValueOnce({
+			path: "/blog",
+			title: "Runtime Blog Title",
+			status: "published",
+			summary: undefined,
+			seoTitle: undefined,
+			metaDescription: undefined,
+			updatedAt: "2025-01-01",
+		});
+		const result = await buildPostsIndexPageModel(locals);
+		const blog = result.data.archives.find((a) => a.slug === "blog");
+		expect(blog?.title).toBe("Runtime Blog Title");
+	});
+
+	it("falls back to config title when runtime archive title is falsy", async () => {
+		vi.spyOn(runtimeRouteRegistry, "getRuntimeArchiveRoute").mockResolvedValueOnce({
+			path: "/blog",
+			title: "",
+			status: "published",
+			summary: undefined,
+			seoTitle: undefined,
+			metaDescription: undefined,
+			updatedAt: "2025-01-01",
+		});
+		const result = await buildPostsIndexPageModel(locals);
+		const blog = result.data.archives.find((a) => a.slug === "blog");
+		expect(blog?.title).toBe("Blog");
 	});
 
 	it("includes archive titles from the database and gracefully handles fetch failures", async () => {
@@ -756,15 +947,33 @@ describe("buildPostsIndexPageModel", () => {
 // ---------------------------------------------------------------------------
 
 describe("buildTranslationsPageModel", () => {
-	it("returns forbidden for editor role", async () => {
+	it("returns forbidden with the full empty shape for editor role", async () => {
 		const result = await buildTranslationsPageModel(locals, editorRole);
 		expect(result.status).toBe("forbidden");
+		expect(result.data).toEqual({ rows: [] });
 	});
 
-	it("returns ok for admin", async () => {
+	it("returns forbidden when user is null", async () => {
+		const result = await buildTranslationsPageModel(locals, null);
+		expect(result.status).toBe("forbidden");
+		expect(result.data).toEqual({ rows: [] });
+	});
+
+	it("returns ok for admin with a row mapped from translationStatus", async () => {
 		const result = await buildTranslationsPageModel(locals, adminRole);
 		expect(result.status).toBe("ok");
-		expect(Array.isArray(result.data.rows)).toBe(true);
+		expect(result.warnings).toEqual([]);
+		expect(result.data.rows).toHaveLength(1);
+		const row = result.data.rows[0] as {
+			route: string;
+			englishEditHref?: string;
+			localizedEditHref?: string;
+		};
+		expect(row.route).toBe("/es/about");
+		// No matching seedPage → englishEditHref undefined
+		expect(row.englishEditHref).toBeUndefined();
+		// No structured route in DB → localizedEditHref undefined
+		expect(row.localizedEditHref).toBeUndefined();
 	});
 
 	it("provides edit links for both the english source and its localized route when both exist", async () => {
@@ -821,12 +1030,63 @@ describe("buildTranslationsPageModel", () => {
 		expect(row.localizedEditHref).toContain("/ap-admin/route-pages/es/about");
 	});
 
-	it("returns partial status when a translation state lookup fails", async () => {
+	it("populates englishEditHref when a matching seedPage is present, else leaves it undefined", async () => {
+		registerCms({
+			templateKeys: ["content"],
+			siteUrl: "https://example.com",
+			seedPages: [
+				{
+					slug: "about",
+					legacyUrl: "/about",
+					title: "About",
+					sourceHtmlPath: "runtime://content/about",
+					updatedAt: "2025-01-01T00:00:00Z",
+				},
+			],
+			archives: [],
+			translationStatus: [
+				{
+					route: "/es/about",
+					translationState: "not_started",
+					englishSourceUrl: "/about",
+					locale: "es",
+				},
+				{
+					route: "/es/orphan",
+					translationState: "not_started",
+					englishSourceUrl: "/no-match",
+					locale: "es",
+				},
+			],
+		});
+		const result = await buildTranslationsPageModel(locals, adminRole);
+		expect(result.status).toBe("ok");
+		const matched = result.data.rows.find(
+			(r) => (r as { route: string }).route === "/es/about",
+		) as { englishEditHref?: string };
+		expect(matched.englishEditHref).toBe("/ap-admin/posts/about");
+		const orphan = result.data.rows.find(
+			(r) => (r as { route: string }).route === "/es/orphan",
+		) as { englishEditHref?: string };
+		expect(orphan.englishEditHref).toBeUndefined();
+	});
+
+	it("returns partial with the translation-rows warning when getRuntimeTranslationState rejects", async () => {
 		vi.spyOn(runtimePageStore, "getRuntimeTranslationState").mockRejectedValueOnce(
 			new Error("db fail"),
 		);
 		const result = await buildTranslationsPageModel(locals, adminRole);
-		expect(result.status).toMatch(/ok|partial/);
+		expect(result.status).toBe("partial");
+		expect(result.warnings).toContain("Some translation rows are temporarily unavailable.");
+		// withSettledMap fallback emits a row carrying the source translationState as effectiveState
+		const row = result.data.rows[0] as {
+			route: string;
+			effectiveState: string;
+			localizedEditHref?: string;
+		};
+		expect(row.route).toBe("/es/about");
+		expect(row.effectiveState).toBe("not_started");
+		expect(row.localizedEditHref).toBeUndefined();
 	});
 });
 
@@ -835,29 +1095,337 @@ describe("buildTranslationsPageModel", () => {
 // ---------------------------------------------------------------------------
 
 describe("buildSeoPageModel", () => {
-	it("returns forbidden for editor role", async () => {
+	it("returns forbidden with the full empty shape for editor role", async () => {
 		const result = await buildSeoPageModel(locals, editorRole);
 		expect(result.status).toBe("forbidden");
+		expect(result.data).toEqual({ rows: [] });
 	});
 
-	it("returns ok for admin with SEO data", async () => {
+	it("returns forbidden when user is null", async () => {
+		const result = await buildSeoPageModel(locals, null);
+		expect(result.status).toBe("forbidden");
+		expect(result.data).toEqual({ rows: [] });
+	});
+
+	it("returns ok for admin with a Post row carrying its seo fields and a clear missingMetadata flag", async () => {
+		vi.spyOn(runtimePageStore, "listRuntimeContentStates").mockResolvedValueOnce([
+			{
+				slug: "hello-world",
+				legacyUrl: "/hello-world",
+				title: "Hello World",
+				kind: "post",
+				templateKey: "content",
+				seoTitle: "Hello SEO",
+				metaDescription: "Hello meta",
+				status: "published",
+				listingItems: [],
+				paginationLinks: [],
+				sourceHtmlPath: "runtime://content/hello-world",
+				updatedAt: "2025-01-01",
+			},
+		]);
 		const result = await buildSeoPageModel(locals, adminRole);
 		expect(result.status).toBe("ok");
-		expect(Array.isArray(result.data.rows)).toBe(true);
+		expect(result.warnings).toEqual([]);
+		const post = result.data.rows.find((r) => r.path === "/hello-world");
+		expect(post?.type).toBe("Post");
+		expect(post?.label).toBe("Hello World");
+		expect(post?.seoTitle).toBe("Hello SEO");
+		expect(post?.metaDescription).toBe("Hello meta");
+		expect(post?.missingMetadata).toBe(false);
+		expect(post?.editHref).toBe("/ap-admin/posts/hello-world");
 	});
 
-	it("returns partial when content states query fails", async () => {
+	it("returns partial with the content-SEO warning when listRuntimeContentStates fails", async () => {
 		vi.spyOn(runtimePageStore, "listRuntimeContentStates").mockRejectedValueOnce(new Error("fail"));
 		const result = await buildSeoPageModel(locals, adminRole);
 		expect(result.status).toBe("partial");
+		expect(result.warnings).toContain("Content SEO records are temporarily unavailable.");
 	});
 
-	it("returns partial when archive route lookup fails (withSettledMap fallback)", async () => {
+	it("returns partial with the structured-page-SEO warning when listRuntimeStructuredPageRoutes fails", async () => {
+		vi.spyOn(runtimeRouteRegistry, "listRuntimeStructuredPageRoutes").mockRejectedValueOnce(
+			new Error("fail"),
+		);
+		const result = await buildSeoPageModel(locals, adminRole);
+		expect(result.status).toBe("partial");
+		expect(result.warnings).toContain("Structured page SEO records are temporarily unavailable.");
+	});
+
+	it("returns partial with the system-route-SEO warning when listRuntimeSystemRoutes fails", async () => {
+		vi.spyOn(runtimeRouteRegistry, "listRuntimeSystemRoutes").mockRejectedValueOnce(
+			new Error("fail"),
+		);
+		const result = await buildSeoPageModel(locals, adminRole);
+		expect(result.status).toBe("partial");
+		expect(result.warnings).toContain("System route SEO records are temporarily unavailable.");
+	});
+
+	it("returns partial with the archive-SEO warning when getRuntimeArchiveRoute fails", async () => {
 		vi.spyOn(runtimeRouteRegistry, "getRuntimeArchiveRoute").mockRejectedValueOnce(
 			new Error("archive fail"),
 		);
 		const result = await buildSeoPageModel(locals, adminRole);
 		expect(result.status).toBe("partial");
+		expect(result.warnings).toContain("Some archive SEO records are temporarily unavailable.");
+	});
+
+	it("emits an Archive row using config fields when getRuntimeArchiveRoute fails (fallback runtime: null)", async () => {
+		vi.spyOn(runtimeRouteRegistry, "getRuntimeArchiveRoute").mockRejectedValueOnce(
+			new Error("archive fail"),
+		);
+		const result = await buildSeoPageModel(locals, adminRole);
+		const blogRow = result.data.rows.find((r) => r.path === "/blog");
+		expect(blogRow?.type).toBe("Archive");
+		expect(blogRow?.label).toBe("Blog");
+		expect(blogRow?.seoTitle).toBe("Blog");
+		expect(blogRow?.metaDescription).toBe("—");
+		expect(blogRow?.missingMetadata).toBe(true);
+		expect(blogRow?.editHref).toBe("/ap-admin/archives/blog");
+	});
+
+	it("flags Structured Page missingMetadata per the !seoTitle || !metaDescription contract", async () => {
+		vi.spyOn(runtimeRouteRegistry, "listRuntimeStructuredPageRoutes").mockResolvedValueOnce([
+			{
+				path: "/full",
+				title: "Full",
+				summary: undefined,
+				seoTitle: "S",
+				metaDescription: "M",
+				status: "published",
+				updatedAt: "2025-01-01",
+			},
+			{
+				path: "/title-only",
+				title: "Title",
+				summary: undefined,
+				seoTitle: "S",
+				metaDescription: undefined,
+				status: "published",
+				updatedAt: "2025-01-01",
+			},
+			{
+				path: "/desc-only",
+				title: "Desc",
+				summary: undefined,
+				seoTitle: undefined,
+				metaDescription: "M",
+				status: "published",
+				updatedAt: "2025-01-01",
+			},
+		]);
+		const result = await buildSeoPageModel(locals, adminRole);
+		expect(result.data.rows.find((r) => r.path === "/full")?.missingMetadata).toBe(false);
+		expect(result.data.rows.find((r) => r.path === "/title-only")?.missingMetadata).toBe(true);
+		expect(result.data.rows.find((r) => r.path === "/desc-only")?.missingMetadata).toBe(true);
+	});
+
+	it("flags Archive missingMetadata per the !runtime?.seoTitle || !runtime?.metaDescription contract", async () => {
+		// Three archives: full meta, seoTitle-only, neither (no runtime row at all).
+		registerCms({
+			templateKeys: ["content"],
+			siteUrl: "https://example.com",
+			seedPages: [],
+			archives: [
+				{ title: "Full", kind: "posts", slug: "full", legacyUrl: "/full" },
+				{ title: "TitleOnly", kind: "posts", slug: "title-only", legacyUrl: "/title-only" },
+				{ title: "None", kind: "posts", slug: "none", legacyUrl: "/none" },
+			],
+			translationStatus: [],
+		});
+		const spy = vi.spyOn(runtimeRouteRegistry, "getRuntimeArchiveRoute");
+		spy.mockImplementation(async (legacyUrl: string) => {
+			if (legacyUrl === "/full") {
+				return {
+					path: "/full",
+					title: "Full",
+					seoTitle: "S",
+					metaDescription: "M",
+					summary: undefined,
+					status: "published",
+					updatedAt: "2025-01-01",
+				};
+			}
+			if (legacyUrl === "/title-only") {
+				return {
+					path: "/title-only",
+					title: "TitleOnly",
+					seoTitle: "S",
+					metaDescription: undefined,
+					summary: undefined,
+					status: "published",
+					updatedAt: "2025-01-01",
+				};
+			}
+			return undefined;
+		});
+		const result = await buildSeoPageModel(locals, adminRole);
+		expect(result.data.rows.find((r) => r.path === "/full")?.missingMetadata).toBe(false);
+		expect(result.data.rows.find((r) => r.path === "/title-only")?.missingMetadata).toBe(true);
+		// runtime undefined → both falsy → still flagged true
+		expect(result.data.rows.find((r) => r.path === "/none")?.missingMetadata).toBe(true);
+	});
+
+	it("flags missingMetadata=true when metaDescription is present but seoTitle is absent", async () => {
+		vi.spyOn(runtimePageStore, "listRuntimeContentStates").mockResolvedValueOnce([
+			{
+				slug: "missing-seo-title",
+				legacyUrl: "/missing-seo-title",
+				title: "T",
+				kind: "post",
+				templateKey: "content",
+				seoTitle: undefined,
+				metaDescription: "Has meta",
+				status: "published",
+				listingItems: [],
+				paginationLinks: [],
+				sourceHtmlPath: "runtime://content/x",
+				updatedAt: "2025-01-01",
+			},
+		]);
+		const result = await buildSeoPageModel(locals, adminRole);
+		const row = result.data.rows.find((r) => r.path === "/missing-seo-title");
+		expect(row?.metaDescription).toBe("Has meta");
+		expect(row?.seoTitle).toBe("—");
+		expect(row?.missingMetadata).toBe(true);
+	});
+
+	it("clears missingMetadata when both content seoTitle and metaDescription are present", async () => {
+		vi.spyOn(runtimePageStore, "listRuntimeContentStates").mockResolvedValueOnce([
+			{
+				slug: "fully-set",
+				legacyUrl: "/fully-set",
+				title: "T",
+				kind: "page",
+				templateKey: "page",
+				seoTitle: "S",
+				metaDescription: "M",
+				status: "published",
+				listingItems: [],
+				paginationLinks: [],
+				sourceHtmlPath: "runtime://content/x",
+				updatedAt: "2025-01-01",
+			},
+		]);
+		const result = await buildSeoPageModel(locals, adminRole);
+		const row = result.data.rows.find((r) => r.path === "/fully-set");
+		expect(row?.type).toBe("Page");
+		expect(row?.missingMetadata).toBe(false);
+	});
+
+	it("emits an Archive row with seoTitle/metaDescription/label resolved from runtime when runtime is present", async () => {
+		vi.spyOn(runtimeRouteRegistry, "getRuntimeArchiveRoute").mockResolvedValueOnce({
+			path: "/blog",
+			title: "Runtime Blog",
+			seoTitle: "Runtime SEO",
+			metaDescription: "Runtime meta",
+			summary: undefined,
+			status: "published",
+			updatedAt: "2025-01-01",
+		});
+		const result = await buildSeoPageModel(locals, adminRole);
+		const blog = result.data.rows.find((r) => r.path === "/blog");
+		expect(blog?.label).toBe("Runtime Blog");
+		expect(blog?.seoTitle).toBe("Runtime SEO");
+		expect(blog?.metaDescription).toBe("Runtime meta");
+		expect(blog?.missingMetadata).toBe(false);
+	});
+
+	it("emits an Archive row with seoTitle falling back to runtime.title and metaDescription to runtime.summary", async () => {
+		vi.spyOn(runtimeRouteRegistry, "getRuntimeArchiveRoute").mockResolvedValueOnce({
+			path: "/blog",
+			title: "Runtime Title Only",
+			seoTitle: undefined,
+			metaDescription: undefined,
+			summary: "Runtime summary",
+			status: "published",
+			updatedAt: "2025-01-01",
+		});
+		const result = await buildSeoPageModel(locals, adminRole);
+		const blog = result.data.rows.find((r) => r.path === "/blog");
+		expect(blog?.seoTitle).toBe("Runtime Title Only");
+		expect(blog?.metaDescription).toBe("Runtime summary");
+		expect(blog?.missingMetadata).toBe(true);
+	});
+
+	it("emits a System route row with summary-derived metaDescription and editHref '/ap-admin/system'", async () => {
+		vi.spyOn(runtimeRouteRegistry, "listRuntimeSystemRoutes").mockResolvedValueOnce([
+			{
+				path: "/sys-a",
+				title: "System A",
+				summary: "Sys summary",
+				seoTitle: undefined,
+				metaDescription: undefined,
+				status: "published",
+				updatedAt: "2025-01-01",
+			},
+			{
+				path: "/sys-b",
+				title: "System B",
+				summary: undefined,
+				seoTitle: undefined,
+				metaDescription: undefined,
+				status: "published",
+				updatedAt: "2025-01-01",
+			},
+		]);
+		const result = await buildSeoPageModel(locals, adminRole);
+		const a = result.data.rows.find((r) => r.path === "/sys-a");
+		expect(a?.type).toBe("System");
+		expect(a?.label).toBe("System A");
+		expect(a?.seoTitle).toBe("System A");
+		expect(a?.metaDescription).toBe("Sys summary");
+		expect(a?.missingMetadata).toBe(false);
+		expect(a?.editHref).toBe("/ap-admin/system");
+		const b = result.data.rows.find((r) => r.path === "/sys-b");
+		expect(b?.metaDescription).toBe("—");
+		expect(b?.missingMetadata).toBe(true);
+		expect(b?.editHref).toBe("/ap-admin/system");
+	});
+
+	it("falls back to empty content/route/system arrays when their loaders fail (no rows emitted from failed sources)", async () => {
+		vi.spyOn(runtimePageStore, "listRuntimeContentStates").mockRejectedValueOnce(new Error("a"));
+		vi.spyOn(runtimeRouteRegistry, "listRuntimeStructuredPageRoutes").mockRejectedValueOnce(
+			new Error("b"),
+		);
+		vi.spyOn(runtimeRouteRegistry, "listRuntimeSystemRoutes").mockRejectedValueOnce(new Error("c"));
+		const result = await buildSeoPageModel(locals, adminRole);
+		expect(result.status).toBe("partial");
+		// Only the Archive row from the surviving archive lookup remains
+		expect(result.data.rows.every((r) => r.type === "Archive")).toBe(true);
+	});
+
+	it("emits a Structured Page row with seoTitle falling back to title and metaDescription to summary then em-dash", async () => {
+		vi.spyOn(runtimeRouteRegistry, "listRuntimeStructuredPageRoutes").mockResolvedValueOnce([
+			{
+				path: "/about",
+				title: "About",
+				summary: "About summary",
+				seoTitle: undefined,
+				metaDescription: undefined,
+				status: "published",
+				updatedAt: "2025-01-01",
+			},
+			{
+				path: "/empty",
+				title: "Empty",
+				summary: undefined,
+				seoTitle: undefined,
+				metaDescription: undefined,
+				status: "published",
+				updatedAt: "2025-01-01",
+			},
+		]);
+		const result = await buildSeoPageModel(locals, adminRole);
+		const about = result.data.rows.find((r) => r.path === "/about");
+		expect(about?.type).toBe("Structured Page");
+		expect(about?.seoTitle).toBe("About");
+		expect(about?.metaDescription).toBe("About summary");
+		expect(about?.missingMetadata).toBe(true);
+		expect(about?.editHref).toBe("/ap-admin/route-pages/about");
+		const empty = result.data.rows.find((r) => r.path === "/empty");
+		expect(empty?.metaDescription).toBe("—");
+		expect(empty?.missingMetadata).toBe(true);
 	});
 
 	it("shows em-dash placeholder when seo fields are absent on a page record", async () => {
