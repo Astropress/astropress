@@ -230,6 +230,132 @@ describe("createSecurityWorkflow", () => {
 	});
 });
 
+describe("gitHubActionsDeployWorkflow — exact output structure", () => {
+	it("github-pages output begins with `name: Deploy Astropress` and ends with deploy-pages@v4 plus a trailing newline", () => {
+		const yaml = gitHubActionsDeployWorkflow("github-pages", []);
+		expect(yaml.startsWith("name: Deploy Astropress\n")).toBe(true);
+		expect(yaml.endsWith("- uses: actions/deploy-pages@v4\n")).toBe(true);
+	});
+
+	it("non-github-pages output ends with the host-specific deploy step plus a trailing newline", () => {
+		const yaml = gitHubActionsDeployWorkflow("railway", []);
+		expect(yaml.endsWith("RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}\n")).toBe(true);
+	});
+
+	it("non-github-pages output contains a literal echo wrapping the env comment in single quotes", () => {
+		const yaml = gitHubActionsDeployWorkflow("vercel", []);
+		expect(yaml).toContain(
+			"      - run: echo '# No additional content-services secrets are required for this target.'\n",
+		);
+		const yaml2 = gitHubActionsDeployWorkflow("vercel", ["A_KEY"]);
+		expect(yaml2).toContain(
+			"      - run: echo '# Required repository secrets or variables: A_KEY'\n",
+		);
+	});
+
+	it("github-pages output never includes the echo env-comment line", () => {
+		const yaml = gitHubActionsDeployWorkflow("github-pages", ["A_KEY"]);
+		expect(yaml).not.toContain("Required repository secrets or variables");
+		expect(yaml).not.toContain("No additional content-services secrets");
+	});
+
+	it("non-github-pages workflows include `runs-on: ubuntu-latest` and a steps block, without GH-pages permissions", () => {
+		const yaml = gitHubActionsDeployWorkflow("netlify", []);
+		expect(yaml).toContain("runs-on: ubuntu-latest");
+		expect(yaml).toContain("steps:");
+		expect(yaml).not.toContain("pages: write");
+		expect(yaml).not.toContain("id-token: write");
+	});
+});
+
+describe("createAstropressConfig — exact integration-line behavior", () => {
+	it("server output emits `integrations: [createAstropressAdminAppIntegration()],` on its own line", () => {
+		const cfg = createAstropressConfig("vercel");
+		expect(cfg).toContain("  integrations: [createAstropressAdminAppIntegration()],");
+	});
+
+	it('static hosts emit the bare `output: "static",` line with no trailing integrations clause on the same line', () => {
+		const cfg = createAstropressConfig("github-pages");
+		expect(cfg).toContain(`  output: "static",`);
+		expect(cfg).not.toMatch(/output: "static",\s*integrations:/);
+	});
+
+	it('server hosts emit `output: "server",` followed by the integrations line', () => {
+		const cfg = createAstropressConfig("vercel");
+		expect(cfg).toMatch(
+			/output: "server",\n {2}integrations: \[createAstropressAdminAppIntegration\(\)\],/,
+		);
+	});
+});
+
+describe("output is newline-joined (kill `.join` separator mutants)", () => {
+	it("createAstropressPublicConfig output contains newlines", () => {
+		expect(createAstropressPublicConfig()).toMatch(/\n/);
+	});
+	it("createQualityWorkflow output contains newlines", () => {
+		expect(createQualityWorkflow()).toMatch(/\n/);
+	});
+	it("createSecurityWorkflow output contains newlines", () => {
+		expect(createSecurityWorkflow()).toMatch(/\n/);
+	});
+	it("createAstropressConfig output contains newlines", () => {
+		expect(createAstropressConfig("vercel")).toMatch(/\n/);
+	});
+	it("gitHubActionsDeployWorkflow github-pages output contains newlines around install steps", () => {
+		const yaml = gitHubActionsDeployWorkflow("github-pages", []);
+		// The install steps are joined with \n so two adjacent steps must have a newline between them
+		expect(yaml).toContain("- uses: actions/checkout@v4\n      - uses: oven-sh/setup-bun@v2");
+	});
+	it("gitHubActionsDeployWorkflow non-github-pages output contains newlines around install steps", () => {
+		const yaml = gitHubActionsDeployWorkflow("vercel", []);
+		expect(yaml).toContain("- uses: actions/checkout@v4\n      - uses: oven-sh/setup-bun@v2");
+	});
+});
+
+describe("createAstropressConfig — exact static-mode import line (kill adminImport mutants)", () => {
+	it("emits the bare integration import (no trailing AdminApp identifier) when isStatic", () => {
+		const cfg = createAstropressConfig("github-pages");
+		expect(cfg).toContain(
+			`import { createAstropressViteIntegration } from "@astropress-diy/astropress/integration";`,
+		);
+		expect(cfg).not.toMatch(/createAstropressViteIntegrationStryker/);
+	});
+	it("emits no integrations-clause leftover on the output line for static hosts", () => {
+		const cfg = createAstropressConfig("github-pages");
+		const lines = cfg.split("\n");
+		const outputLine = lines.find((l) => l.startsWith("  output:"));
+		expect(outputLine).toBe(`  output: "static",`);
+	});
+});
+
+describe("createDonatePage — provider-list pins", () => {
+	it("empty providers list yields exactly `<!-- Enabled providers:  -->` with two spaces", () => {
+		const page = createDonatePage(
+			{ giveLively: false, liberapay: false, pledgeCrypto: false },
+			"https://x",
+		);
+		expect(page).toContain("<!-- Enabled providers:  -->");
+	});
+	it("only-liberapay yields a single quoted entry", () => {
+		const page = createDonatePage(
+			{ giveLively: false, liberapay: "user", pledgeCrypto: false },
+			"https://x",
+		);
+		expect(page).toContain(`<!-- Enabled providers: "liberapay" -->`);
+	});
+	it("only-pledgeCrypto yields a single quoted entry (kill conditional mutant on pledgeCrypto)", () => {
+		const page = createDonatePage(
+			{ giveLively: false, liberapay: false, pledgeCrypto: { btc: "addr" } },
+			"https://x",
+		);
+		expect(page).toContain(`<!-- Enabled providers: "pledgeCrypto" -->`);
+	});
+	it("page output starts with the `---` frontmatter delimiter", () => {
+		const page = createDonatePage({}, "https://x");
+		expect(page.startsWith("---\n")).toBe(true);
+	});
+});
+
 describe("createDonatePage", () => {
 	it("lists only the enabled donation providers in the rendered Fragments", () => {
 		const page = createDonatePage(
