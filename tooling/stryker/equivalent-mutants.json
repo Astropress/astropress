@@ -1046,6 +1046,20 @@
 			"reason": "`new HTMLRewriter().on(\"*\", { element(el) {...} })` selector argument. Under Cloudflare's native HTMLRewriter, \"*\" matches every element; an empty selector matches none — production-relevant. Under the test polyfill at tests/setup/html-rewriter-polyfill.ts the `_selector` argument is intentionally unused (every registered handler runs on every element), so no test can distinguish \"*\" from \"\" or any other string. Killable only by mocking the polyfill itself, which would test the polyfill, not the sanitiser."
 		},
 		{
+			"file": "src/db-migrate-ops.ts",
+			"line": 78,
+			"column": 12,
+			"mutator": "BlockStatement",
+			"reason": "`finally { db.close(); }` handle cleanup in rollbackAstropressLastMigration. Mutating to `{}` leaks the handle but does not change the report's return value or any observable behaviour of the rollback. Same equivalence pattern as the sqlite-integrity finally-close registrations."
+		},
+		{
+			"file": "src/db-migrate-ops.ts",
+			"line": 29,
+			"column": 34,
+			"mutator": "StringLiteral",
+			"reason": "`new DatabaseSync(\":memory:\")` literal inside the dry-run branch. Mutating to `\"\"` would open the default empty-string database path under node:sqlite. node:sqlite opens an empty-string path as an anonymous in-memory database (matching :memory: semantics), so the subsequent schema apply + run + close all succeed identically and the function returns the same dry-run report."
+		},
+		{
 			"file": "src/sqlite-integrity.ts",
 			"line": 83,
 			"column": 14,
