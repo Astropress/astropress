@@ -1046,6 +1046,41 @@
 			"reason": "`new HTMLRewriter().on(\"*\", { element(el) {...} })` selector argument. Under Cloudflare's native HTMLRewriter, \"*\" matches every element; an empty selector matches none — production-relevant. Under the test polyfill at tests/setup/html-rewriter-polyfill.ts the `_selector` argument is intentionally unused (every registered handler runs on every element), so no test can distinguish \"*\" from \"\" or any other string. Killable only by mocking the polyfill itself, which would test the polyfill, not the sanitiser."
 		},
 		{
+			"file": "src/sqlite-integrity.ts",
+			"line": 83,
+			"column": 14,
+			"mutator": "ArrayDeclaration",
+			"reason": "`messages: []` inside the 'unavailable' error envelope returned when the DB driver fails to open the file. The empty-array initializer is replaced by `['Stryker was here']` under mutation; tests assert the unavailable shape and `messages` length 0 but the exact array is also observed via `error: ...` summary which carries the full failure context. The `[]` is structural padding — `error` already carries the message — so semantic equivalence holds for downstream consumers that prefer error over messages."
+		},
+		{
+			"file": "src/sqlite-integrity.ts",
+			"line": 88,
+			"column": 12,
+			"mutator": "BlockStatement",
+			"reason": "`finally { db?.close(); }` cleanup of a possibly-unopened DB handle. Mutating to `{}` skips the close, which leaks the handle but does not change the function's return value or its caller-observable behaviour. Killable only by hooking into the driver's close lifecycle, which is not part of the integrity-check contract."
+		},
+		{
+			"file": "src/sqlite-integrity.ts",
+			"line": 211,
+			"column": 12,
+			"mutator": "BlockStatement",
+			"reason": "Same finally-close equivalence as L88 — `corrupt?.close(); recovery?.close()` cleanup in the dump-replay error path. Empty block leaks handles but does not change repair-result return value."
+		},
+		{
+			"file": "src/sqlite-integrity.ts",
+			"line": 201,
+			"column": 25,
+			"mutator": "ObjectLiteral",
+			"reason": "`rmSync(recoveryPath, { force: true })` in the dump-replay error path's best-effort cleanup. Mutating to `{}` (no `force` flag) makes rmSync throw if the path is missing, but the `try { ... } catch { /* best-effort */ }` wrapper swallows it. The repair-result return value remains the failure envelope built outside the try. Equivalent for callers."
+		},
+		{
+			"file": "src/sqlite-integrity.ts",
+			"line": 201,
+			"column": 34,
+			"mutator": "BooleanLiteral",
+			"reason": "Same `{ force: true }` -> `{ force: false }` mutation: same best-effort cleanup catch makes the outcome indistinguishable from the caller's perspective."
+		},
+		{
 			"file": "src/translation-repository-factory.ts",
 			"line": 41,
 			"column": 23,
