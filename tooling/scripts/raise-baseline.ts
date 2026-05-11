@@ -125,6 +125,7 @@ function runStryker(targets: string[], tmp: string, fast = false): StrykerReport
   reporters: ["clear-text", "json"],
   jsonReporter: { fileName: ${JSON.stringify(reportPath)} },
   timeoutMS: 15000,
+  dryRunTimeoutMinutes: 15,
   thresholds: { high: 95, low: 95, break: 0 },
 };
 `,
