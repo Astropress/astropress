@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-05-11T06:06:39.363Z",
+  "updatedAt": "2026-05-11T06:52:11.819Z",
   "scores": {
     "packages/astropress/src/adapters/adapter-record-helpers.ts": {
       "score": 100,
@@ -446,7 +446,7 @@
       "hash": "b67d70dfc5d8e40e0b588320c129c91018908142"
     },
     "packages/astropress/src/transactional-email.ts": {
-      "score": 58.108108108108105,
+      "score": 88.48920863309353,
       "hash": "c1a45b086c76050390cf606c3861ae55d9858950"
     },
     "packages/astropress/src/turnstile.ts": {
@@ -470,7 +470,7 @@
       "hash": "fa74a3f1af7c36b45f05a538f8cde7c2f10b47ef"
     },
     "packages/astropress/src/sqlite-bootstrap-helpers.ts": {
-      "score": 57.89473684210527,
+      "score": 60,
       "hash": "40d046a7319774b62346fe6d276f20ed7f79f377"
     },
     "packages/astropress/src/adapters/appwrite.ts": {
@@ -730,7 +730,7 @@
       "hash": "570b22d27e2888247bcf30ea0a005fa0cab896b7"
     },
     "packages/astropress/src/runtime-actions-content-helpers.ts": {
-      "score": 58.333333333333336,
+      "score": 98.11320754716981,
       "hash": "801bfb4b7ebee1dc62e4261c07c200b1084dd0dd"
     },
     "packages/astropress/src/runtime-actions-media-helpers.ts": {
