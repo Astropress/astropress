@@ -57,4 +57,19 @@ describe("checkpointSqliteWal", () => {
 		expect(warnings.length).toBeGreaterThan(0);
 		expect(warnings[0]).toContain("bad.sqlite");
 	});
+
+	it("returns false (not a rejection) when the driver constructor itself throws on an unopenable path", async () => {
+		// Path under a non-existent directory makes node:sqlite throw inside
+		// `new DatabaseSync(path)` synchronously, leaving `db` undefined inside
+		// the checkpoint helper. The finally block must still resolve cleanly —
+		// `db?.close()`'s optional chain is load-bearing here.
+		const unopenablePath = join(testRoot, "no-such-dir", "db.sqlite");
+
+		const warnings: string[] = [];
+		await expect(checkpointSqliteWal(unopenablePath, (msg) => warnings.push(msg))).resolves.toBe(
+			false,
+		);
+		expect(warnings.length).toBeGreaterThan(0);
+		expect(warnings[0]).toContain("WAL checkpoint failed");
+	});
 });
