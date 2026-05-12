@@ -193,3 +193,70 @@ describe("env example omits donation keys when none enabled", () => {
 		expect(result).toEqual({});
 	});
 });
+
+describe("survivor pins", () => {
+	it("JSON-LD includes the schema.org @context URL (pins L56)", () => {
+		const result = resolveDonationSnippets(
+			{ liberapay: { username: "u" } },
+			"https://example.com",
+			false,
+		);
+		expect(result.jsonLd).toContain("https://schema.org");
+	});
+
+	it("escAttr escapes & to &amp; (pins L73 first replace replacement string)", () => {
+		const result = resolveDonationSnippets(
+			{ giveLively: { orgSlug: "a&b" } },
+			"https://example.com",
+			false,
+		);
+		expect(result.giveLively).toContain("&amp;");
+		expect(result.giveLively).not.toContain('"a&b"');
+	});
+
+	it('escAttr escapes " to &quot; (pins L73 second replace)', () => {
+		const result = resolveDonationSnippets(
+			{ liberapay: { username: 'me"name' } },
+			"https://example.com",
+			false,
+		);
+		expect(result.liberapay).toContain("&quot;");
+	});
+
+	it("escAttr escapes < to &lt; (pins L73 third replace)", () => {
+		const result = resolveDonationSnippets(
+			{ liberapay: { username: "<u>" } },
+			"https://example.com",
+			false,
+		);
+		expect(result.liberapay).toContain("&lt;");
+	});
+
+	it("GiveLively snippet contains the assets.givelively.org script src + </div> (pins L79 / L82)", () => {
+		const result = resolveDonationSnippets(
+			{ giveLively: { orgSlug: "myorg" } },
+			"https://example.com",
+			false,
+		);
+		expect(result.giveLively).toContain("assets.givelively.org/widget/simple_fundraiser.js");
+		expect(result.giveLively).toContain("</div>");
+		expect(result.giveLively).toContain("\n");
+	});
+
+	it("Liberapay snippet contains the assets/widgets/donate.svg + </a> (pins L91/L92)", () => {
+		const result = resolveDonationSnippets(
+			{ liberapay: { username: "u" } },
+			"https://example.com",
+			false,
+		);
+		expect(result.liberapay).toContain("Donate using Liberapay");
+		expect(result.liberapay).toContain("liberapay.com/assets/widgets/donate.svg");
+		expect(result.liberapay).toContain("</a>");
+		expect(result.liberapay).toContain("\n");
+	});
+
+	it("env example for GiveLively uses 'replace-with-your-org-slug' placeholder (pins L110)", () => {
+		const result = buildDonationsEnvExample({ giveLively: true });
+		expect(result.GIVELIVELY_ORG_SLUG).toBe("replace-with-your-org-slug");
+	});
+});
