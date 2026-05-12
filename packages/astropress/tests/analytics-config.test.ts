@@ -463,4 +463,39 @@ describe("resolveAnalyticsSnippet", () => {
 			}),
 		).toBe("");
 	});
+
+	it("matomo: snippet contains all expected script lines + newline join", () => {
+		const snippet = resolveAnalyticsSnippet({
+			type: "matomo",
+			mode: "snippet-only",
+			url: "https://stats.example.com",
+			siteId: "5",
+		});
+		expect(snippet).toContain("<script>");
+		expect(snippet).toContain("var _paq = window._paq");
+		expect(snippet).toContain("_paq.push(['trackPageView']);");
+		expect(snippet).toContain("_paq.push(['enableLinkTracking']);");
+		expect(snippet).toContain("(function() {");
+		expect(snippet).toContain("g.async=true");
+		expect(snippet).toContain("matomo.js");
+		expect(snippet).toContain("})();");
+		expect(snippet).toContain("</script>");
+		expect(snippet).toContain("\n");
+	});
+
+	it("posthog: snippet contains all expected script lines", () => {
+		const snippet = resolveAnalyticsSnippet({
+			type: "posthog",
+			mode: "snippet-only",
+			snippetSrc: "https://app.posthog.com",
+			siteId: "ph_test",
+			url: "https://app.posthog.com",
+		});
+		expect(snippet).toContain("<script>");
+		expect(snippet).toContain("window.posthog");
+		expect(snippet).toContain("posthog.init");
+		expect(snippet).toContain("ph_test");
+		expect(snippet).toContain("api_host");
+		expect(snippet).toContain("</script>");
+	});
 });
