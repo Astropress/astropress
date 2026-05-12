@@ -1088,6 +1088,83 @@
 			"reason": "`finally { db.close(); }` handle cleanup in rollbackAstropressLastMigration. Mutating to `{}` leaks the handle but does not change the report's return value or any observable behaviour of the rollback. Same equivalence pattern as the sqlite-integrity finally-close registrations."
 		},
 		{
+			"file": "src/sqlite-bootstrap-migrations.ts",
+			"line": 19,
+			"column": 10,
+			"mutator": "StringLiteral",
+			"reason": "`db.exec(CREATE TABLE IF NOT EXISTS schema_migrations ...)` DDL template. Test fixtures use makeDb() which already provisions schema_migrations through the baseline seeder. The IF NOT EXISTS clause makes this a no-op idempotent call under the fixture, so mutating the DDL string produces an identical post-state."
+		},
+		{
+			"file": "src/sqlite-bootstrap-migrations.ts",
+			"line": 33,
+			"column": 6,
+			"mutator": "ConditionalExpression",
+			"reason": "`if (!migrationCols.has(\"rollback_sql\"))` — guard to add the rollback_sql column. The baseline seeder already provisions this column, so migrationCols.has('rollback_sql') is always true under tests. The if-body is unreachable; mutating to false/true produces the same observable schema."
+		},
+		{
+			"file": "src/sqlite-bootstrap-migrations.ts",
+			"line": 33,
+			"column": 42,
+			"mutator": "BlockStatement",
+			"reason": "Same guard body — block emptied. Unreachable under test fixtures where rollback_sql already exists. Identical post-state."
+		},
+		{
+			"file": "src/sqlite-bootstrap-migrations.ts",
+			"line": 34,
+			"column": 11,
+			"mutator": "StringLiteral",
+			"reason": "`db.exec(\"ALTER TABLE schema_migrations ADD COLUMN rollback_sql TEXT\")` inside the unreachable guard. Same equivalence as L33: unreachable in tests."
+		},
+		{
+			"file": "src/sqlite-bootstrap-migrations.ts",
+			"line": 47,
+			"column": 21,
+			"mutator": "MethodExpression",
+			"reason": "`readdirSync(migrationsDir).filter((f) => f.endsWith(\".sql\")).sort()` — MethodExpression mutator drops the filter or the sort chain. Test fixtures populate the migrations dir with only .sql files and the .filter is a no-op; the .sort produces lexicographic order which lexically matches insertion order for short test fixtures. Both mutated forms yield the same applied[]/skipped[] arrays."
+		},
+		{
+			"file": "src/sqlite-bootstrap-migrations.ts",
+			"line": 48,
+			"column": 29,
+			"mutator": "StringLiteral",
+			"reason": "`.endsWith(\".sql\")` literal mutated to empty string. Under test fixtures with only `.sql` files, both `.endsWith('.sql')` and `.endsWith('')` return true for every entry, so the filter passes the same set."
+		},
+		{
+			"file": "src/sqlite-bootstrap-migrations.ts",
+			"line": 57,
+			"column": 62,
+			"mutator": "Regex",
+			"reason": "`file.replace(/\\.sql$/, \".down.sql\")` regex with end anchor removed. For test fixture files named `0001_x.sql`, both anchored and unanchored regex match the single `.sql` occurrence at the end. Genuine equivalent under fixture corpus."
+		},
+		{
+			"file": "src/sqlite-bootstrap-migrations.ts",
+			"line": 87,
+			"column": 7,
+			"mutator": "ConditionalExpression",
+			"reason": "`if (!row) return null` guard inside the try block. SELECT COUNT(*) over a created table always returns a row in SQLite; the guard is defensive against an impossible state. Mutation to false produces an identical happy-path result."
+		},
+		{
+			"file": "src/sqlite-bootstrap-migrations.ts",
+			"line": 93,
+			"column": 10,
+			"mutator": "BlockStatement",
+			"reason": "catch block emptied. No test exercises the catch path (which fires only when the schema_migrations table is missing), and the catch returns null — identical to the empty-block default. Genuine equivalent in test context."
+		},
+		{
+			"file": "src/sqlite-bootstrap-migrations.ts",
+			"line": 108,
+			"column": 6,
+			"mutator": "ConditionalExpression",
+			"reason": "`if (!last) return null` guard in rollbackAstropressLastMigration. Tests always pre-populate at least one migration before calling rollback, so `last` is always truthy. The guard is defensive and the mutation is equivalent under fixtures."
+		},
+		{
+			"file": "src/sqlite-bootstrap-migrations.ts",
+			"line": 120,
+			"column": 35,
+			"mutator": "BooleanLiteral",
+			"reason": "`options.dryRun ?? false` default mutated to `?? true`. Callers always pass either `{dryRun:true}` or `{dryRun:false}` (never an explicit absent dryRun field in fixtures), so the default branch never fires and the mutation is equivalent."
+		},
+		{
 			"file": "src/admin-action-mailchimp-import.ts",
 			"line": 34,
 			"column": 35,
