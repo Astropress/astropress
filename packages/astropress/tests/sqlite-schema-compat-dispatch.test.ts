@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
 	ensureLegacySchemaCompatibility,
 	getTableColumns,
+	getTableSql,
 	rebuildContentTablesForCompatibility,
 } from "../src/sqlite-schema-compat";
 import { makeDb } from "./helpers/make-db.js";
@@ -272,6 +273,136 @@ describe("ensureLegacySchemaCompatibility — dispatch conditions", () => {
 		expect(afterCols).toEqual(beforeCols);
 	});
 
+	// Pin the *exact* CREATE TABLE SQL bytes for content_revisions /
+	// content_overrides through a no-op ensureLegacySchemaCompatibility call.
+	//
+	// On a fully-modern schema, `needsRevisionColumns`, `needsOverrideColumns`,
+	// and `needsExpandedStatuses` are all false, so the function early-returns
+	// without touching the rebuild path. A StringLiteral mutant that changes any
+	// of the column-name literals ("author_ids", "category_ids", "tag_ids",
+	// "scheduled_at", "revision_note") to "" — or the expanded-status literals
+	// ('review' / 'archived') in the includes() checks — would flip the OR
+	// chain to true, fire the rebuild, and emit fresh sqlite_master SQL with
+	// different whitespace/quoting than the schema.sql original. Comparing
+	// getTableSql before/after kills every such mutant.
+	it("preserves content_revisions and content_overrides sqlite_master SQL bytes-exact when no migration is needed", () => {
+		const db = makeDb();
+		const revisionsSqlBefore = getTableSql(db, "content_revisions");
+		const overridesSqlBefore = getTableSql(db, "content_overrides");
+		ensureLegacySchemaCompatibility(db);
+		expect(getTableSql(db, "content_revisions")).toBe(revisionsSqlBefore);
+		expect(getTableSql(db, "content_overrides")).toBe(overridesSqlBefore);
+	});
+
+	// Per-column rebuild assertions: drop one revision column at a time and
+	// verify the rebuild DID rewrite sqlite_master SQL (i.e. ensureLegacy
+	// actually fired the migration). Each test isolates one column literal in
+	// the needsRevisionColumns OR chain so the StringLiteral mutant on that
+	// specific literal (e.g. "author_ids" → "") can be killed alongside the
+	// LogicalOperator mutants that drop the corresponding clause.
+	it.each([
+		["author_ids"],
+		["category_ids"],
+		["tag_ids"],
+		["scheduled_at"],
+		["revision_note"],
+	])("rebuilds content_revisions when only %s is missing (rewrites sqlite_master SQL)", (column) => {
+		const db = makeDb();
+		db.exec(`ALTER TABLE content_revisions DROP COLUMN ${column}`);
+		const sqlBefore = getTableSql(db, "content_revisions");
+		ensureLegacySchemaCompatibility(db);
+		expect(getTableColumns(db, "content_revisions")).toContain(column);
+		expect(getTableSql(db, "content_revisions")).not.toBe(sqlBefore);
+	});
+
+	// Rebuild trigger orthogonal to the revision columns: drop only
+	// content_overrides.scheduled_at to fire the rebuild while leaving every
+	// revision column (author_ids/category_ids/tag_ids/scheduled_at/
+	// revision_note) present with real data. The rebuild reads each revision
+	// column conditional on `revisionColumns.has("X")`. A StringLiteral mutant
+	// that flips any of L154-159's column-name argument to "" would make
+	// `has("")` return false, so the rebuild substitutes `'[]'` / `NULL` for
+	// that column and data is lost. Asserting the original data round-trips
+	// kills every L154-159 StringLiteral mutant plus the L153 ObjectLiteral
+	// (`{}` passed as options → every field undefined → falsy → same loss).
+	it("preserves revision-column data when rebuild is triggered by a different missing column", () => {
+		const db = makeDb();
+		db.prepare(
+			`INSERT INTO content_overrides (slug, title, status, updated_by, body) VALUES ('orth1', 'T', 'published', 'u@x', 'B')`,
+		).run();
+		db.prepare(
+			`INSERT INTO content_revisions (id, slug, source, title, status, body, author_ids, category_ids, tag_ids, scheduled_at, revision_note, created_by) VALUES ('rorth', 'orth1', 'imported', 'T', 'published', 'B', '["author-x"]', '["cat-x"]', '["tag-x"]', '2027-01-02', 'NOTE-x', 'u@x')`,
+		).run();
+		// Trigger rebuild via the override side without touching revisions.
+		db.exec("ALTER TABLE content_overrides DROP COLUMN scheduled_at");
+		ensureLegacySchemaCompatibility(db);
+		const row = db
+			.prepare(
+				"SELECT author_ids, category_ids, tag_ids, scheduled_at, revision_note FROM content_revisions WHERE id = 'rorth'",
+			)
+			.get() as {
+			author_ids: string;
+			category_ids: string;
+			tag_ids: string;
+			scheduled_at: string;
+			revision_note: string;
+		};
+		expect(row.author_ids).toBe('["author-x"]');
+		expect(row.category_ids).toBe('["cat-x"]');
+		expect(row.tag_ids).toBe('["tag-x"]');
+		expect(row.scheduled_at).toBe("2027-01-02");
+		expect(row.revision_note).toBe("NOTE-x");
+	});
+
+	it("rebuilds content_overrides when scheduled_at is missing (rewrites sqlite_master SQL)", () => {
+		const db = makeDb();
+		db.exec("ALTER TABLE content_overrides DROP COLUMN scheduled_at");
+		const sqlBefore = getTableSql(db, "content_overrides");
+		ensureLegacySchemaCompatibility(db);
+		expect(getTableColumns(db, "content_overrides")).toContain("scheduled_at");
+		expect(getTableSql(db, "content_overrides")).not.toBe(sqlBefore);
+	});
+
+	// Expanded-status literals: each kills the StringLiteral mutant on the
+	// corresponding 'review' / 'archived' literal in needsExpandedStatuses
+	// by setting up a CHECK constraint that omits exactly that token.
+	it.each([
+		["overrides-review", "content_overrides", "'review'"],
+		["overrides-archived", "content_overrides", "'archived'"],
+		["revisions-review", "content_revisions", "'review'"],
+		["revisions-archived", "content_revisions", "'archived'"],
+	])("rebuilds when %s table's CHECK constraint omits %s", (_label, table, missingLiteral) => {
+		const db = makeDb();
+		// Replace the table's status CHECK constraint with one that omits the
+		// flagged literal so needsExpandedStatuses fires.
+		const original = getTableSql(db, table) ?? "";
+		expect(original).toContain(missingLiteral);
+		// Drop and recreate the table without that specific status literal.
+		db.exec(`DROP TABLE ${table}`);
+		if (table === "content_overrides") {
+			const statusList =
+				missingLiteral === "'review'"
+					? "'draft', 'published', 'archived'"
+					: "'draft', 'review', 'published'";
+			db.exec(
+				`CREATE TABLE content_overrides (slug TEXT PRIMARY KEY, title TEXT NOT NULL, status TEXT NOT NULL CHECK(status IN (${statusList})), scheduled_at TEXT, body TEXT, seo_title TEXT, meta_description TEXT, excerpt TEXT, og_title TEXT, og_description TEXT, og_image TEXT, canonical_url_override TEXT, robots_directive TEXT, metadata TEXT, updated_at TEXT, updated_by TEXT NOT NULL)`,
+			);
+		} else {
+			const statusList =
+				missingLiteral === "'review'"
+					? "'draft', 'published', 'archived'"
+					: "'draft', 'review', 'published'";
+			db.exec(
+				`CREATE TABLE content_revisions (id TEXT PRIMARY KEY, slug TEXT NOT NULL, source TEXT, title TEXT, status TEXT NOT NULL CHECK(status IN (${statusList})), scheduled_at TEXT, body TEXT, seo_title TEXT, meta_description TEXT, excerpt TEXT, og_title TEXT, og_description TEXT, og_image TEXT, author_ids TEXT, category_ids TEXT, tag_ids TEXT, canonical_url_override TEXT, robots_directive TEXT, revision_note TEXT, created_at TEXT, created_by TEXT)`,
+			);
+		}
+		const sqlBefore = getTableSql(db, table);
+		expect(sqlBefore).not.toContain(missingLiteral);
+		ensureLegacySchemaCompatibility(db);
+		const sqlAfter = getTableSql(db, table) ?? "";
+		expect(sqlAfter).toContain(missingLiteral);
+	});
+
 	it("adds metadata column to content_overrides when missing", () => {
 		const db = makeDb();
 		db.exec("DROP TABLE content_overrides");
@@ -331,6 +462,64 @@ describe("ensureLegacySchemaCompatibility — dispatch conditions", () => {
 		expect(e.is_admin).toBe(0);
 		// Role column should be dropped after the terminal migration
 		expect(getTableColumns(db, "admin_users")).not.toContain("role");
+		// Pin nameExpr → "name" and createdAtExpr → "created_at" by asserting
+		// the original column values flow through the terminal rebuild's
+		// SELECT (rather than the fallback "email" / CURRENT_TIMESTAMP).
+		const aRow = db
+			.prepare("SELECT name, created_at FROM admin_users WHERE email = ?")
+			.get("a@x") as { name: string; created_at: string };
+		expect(aRow.name).toBe("A");
+		// created_at was DEFAULT CURRENT_TIMESTAMP on the source row; a fresh
+		// CURRENT_TIMESTAMP fallback would also produce a string, but pinning
+		// to a literal sentinel avoids that ambiguity:
+		db.prepare("DROP TABLE admin_users").run();
+	});
+
+	it("preserves name and created_at when both columns are present (kills nameExpr/createdAtExpr StringLiteral mutants)", () => {
+		const db = makeDb();
+		db.exec("DROP TABLE admin_users");
+		db.exec(
+			"CREATE TABLE admin_users (id INTEGER PRIMARY KEY AUTOINCREMENT, email TEXT NOT NULL UNIQUE, password_hash TEXT NOT NULL, role TEXT NOT NULL, name TEXT NOT NULL, active INTEGER NOT NULL DEFAULT 1, created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)",
+		);
+		db.prepare(
+			"INSERT INTO admin_users (email, password_hash, role, name, created_at) VALUES (?, 'h', 'admin', 'CustomName', '2025-01-02T03:04:05Z')",
+		).run("pin@x");
+		ensureLegacySchemaCompatibility(db);
+		const row = db
+			.prepare("SELECT name, created_at FROM admin_users WHERE email = ?")
+			.get("pin@x") as { name: string; created_at: string };
+		// nameExpr → "name" (not "email"): name is preserved as 'CustomName',
+		// not fallback to 'pin@x'.
+		expect(row.name).toBe("CustomName");
+		// createdAtExpr → "created_at" (not CURRENT_TIMESTAMP fallback):
+		// the original timestamp flows through unchanged.
+		expect(row.created_at).toBe("2025-01-02T03:04:05Z");
+	});
+
+	it("is a no-op on admin_users when the table is absent (kills size>0 / size>=0 mutants)", () => {
+		const db = makeDb();
+		db.exec("DROP TABLE admin_users");
+		// Original: getTableColumns returns []; size>0 false → outer skipped.
+		// L108 mutant `size >= 0` enters block → ALTER TABLE admin_users
+		// throws (no such table). Same for ConditionalExpression → true.
+		expect(() => ensureLegacySchemaCompatibility(db)).not.toThrow();
+	});
+
+	it("legacy admin_users without role AND without is_admin: UPDATE backfill must be guarded (kills L110 always-update mutant)", () => {
+		const db = makeDb();
+		db.exec("DROP TABLE admin_users");
+		// No role column, no is_admin column. Outer block enters (size>0
+		// && !has(is_admin)), inner `has("role")` false → skip UPDATE.
+		// Mutant `if (true)` always runs UPDATE WHERE role='admin' →
+		// throws (no role column).
+		db.exec(
+			"CREATE TABLE admin_users (id INTEGER PRIMARY KEY AUTOINCREMENT, email TEXT NOT NULL UNIQUE, password_hash TEXT NOT NULL, name TEXT NOT NULL)",
+		);
+		db.prepare("INSERT INTO admin_users (email, password_hash, name) VALUES (?, 'h', 'X')").run(
+			"u@x",
+		);
+		expect(() => ensureLegacySchemaCompatibility(db)).not.toThrow();
+		expect(getTableColumns(db, "admin_users")).toContain("is_admin");
 	});
 
 	it("admin_users migration uses email when name column is missing (kills nameExpr fallback mutant)", () => {

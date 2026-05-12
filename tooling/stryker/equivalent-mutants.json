@@ -1095,6 +1095,90 @@
 			"reason": "`new DatabaseSync(\":memory:\")` literal inside the dry-run branch. Mutating to `\"\"` opens an anonymous private on-disk temporary database (SQLite's documented semantics for an empty path) rather than a true in-memory DB, but the observable behaviour through this CLI helper is identical: the schema applies, migrations run, the report carries the same `applied`/`skipped` arrays, and the temp file is unlinked at close. No test path inspects the underlying storage medium, so the dry-run report is byte-identical."
 		},
 		{
+			"file": "src/adapters/sqlite-helpers.ts",
+			"line": 171,
+			"column": 66,
+			"mutator": "StringLiteral",
+			"reason": "`legacyUrl: resolveMetaString(record.metadata, \"legacyUrl\") ?? \\`/${slug}\\`` — mutating the backtick template literal to an empty template makes the fallback evaluate to \"\". But createContentRecord (content-repository-factory-helpers.ts) applies its OWN fallback to `/${slug}`: `legacyUrl = input.normalizePath(rawInput.legacyUrl?.trim() || \\`/${slug}\\`)`. Empty string is falsy, so the inner `||` kicks in and the helper synthesises `/${slug}` regardless. End result identical."
+		},
+		{
+			"file": "src/adapters/sqlite-helpers.ts",
+			"line": 194,
+			"column": 22,
+			"mutator": "MethodExpression",
+			"reason": "`.trim()` removal on `String(record.metadata?.targetPath ?? \"\").trim()`. The redirect store immediately re-normalises via `input.normalizePath(rawInput.targetPath)` (admin-normalizers.ts:normalizePath), which itself calls `.trim()` before deciding `startsWith(\"/\")`. The helper's pre-trim is redundant — store's normalisation produces identical persisted targetPath regardless."
+		},
+		{
+			"file": "src/adapters/sqlite-helpers.ts",
+			"line": 21,
+			"column": 6,
+			"mutator": "ConditionalExpression",
+			"reason": "`if (!kind || kind === \"page\" || kind === \"post\")` outer guard at the top of listSqliteContentRecords. The true-direction mutant (always-enter) iterates listContentStates() unconditionally, but the inner per-record filter `if (!kind || mapped.kind === kind)` at L24 drops every record whose kind doesn't match. For any kind that isn't page/post (e.g. \"redirect\", \"settings\"), the inner filter discards everything pushed by this block, and the kind-specific block further down adds the kind-matching records. End result: identical final records array. The outer guard is a no-op optimisation that the inner filter renders redundant."
+		},
+		{
+			"file": "src/adapters/sqlite-helpers.ts",
+			"line": 164,
+			"column": 7,
+			"mutator": "ConditionalExpression",
+			"reason": "`if (!result.ok) throw new Error(result.error)` after `saveContentState` in the existing-record branch of saveSqlitePageOrPost. The false-direction mutant skips the throw. saveContentState (content-repository-factory.ts:128) returns ok:false in three cases: (a) `findContentRecord(slug)` misses — impossible here, the surrounding `if (existing)` already proved the slug resolves; (b) validation rejects empty title/seoTitle/metaDescription — impossible, the helper's `?? record.title ?? slug` chains guarantee non-empty values (slug is required); (c) `detectLocalConflict` fires when rawInput.lastKnownUpdatedAt is set — this call site does not pass that field. The throw is defensive dead code under the current contract."
+		},
+		{
+			"file": "src/adapters/sqlite-helpers.ts",
+			"line": 183,
+			"column": 6,
+			"mutator": "ConditionalExpression",
+			"reason": "`if (!result.ok) throw new Error(result.error)` after `createContentRecord` in the new-record branch of saveSqlitePageOrPost. The false-direction mutant skips the throw. createContentRecord (content-repository-factory-helpers.ts) returns ok:false in two cases: (a) empty title/slug/metaDescription — impossible, the helper's `?? slug` chains guarantee non-empty values; (b) slug conflict via findContentRecord — impossible at this point, the surrounding code already verified `existing` was null. Defensive dead code."
+		},
+		{
+			"file": "src/adapters/sqlite-helpers.ts",
+			"line": 207,
+			"column": 7,
+			"mutator": "ConditionalExpression",
+			"reason": "`if (!result.ok) throw new Error(result.error)` after `saveSettings` in saveSqliteContentRecord's settings branch. saveSettings (settings-repository-factory.ts) has no failure paths — its implementation unconditionally builds the updated settings object, persists, audits, and returns `{ ok: true, settings: updated }`. The throw is defensive dead code; the false-direction mutant produces no observable difference."
+		},
+		{
+			"file": "src/sqlite-schema-compat.ts",
+			"line": 110,
+			"column": 7,
+			"mutator": "ConditionalExpression",
+			"reason": "`if (adminUserColumns.has(\"role\"))` false-direction (skip the UPDATE backfill of is_admin). The terminal ABAC rebuild at L118-134 re-derives is_admin via `CASE WHEN is_admin = 1 OR role = 'admin' THEN 1 ELSE 0 END` in the rebuild's INSERT...SELECT, so the L111 UPDATE is functionally redundant. Skipping it produces the same final is_admin column. Killable only by removing the rebuild's CASE re-derivation, which is the source-of-truth path."
+		},
+		{
+			"file": "src/sqlite-schema-compat.ts",
+			"line": 110,
+			"column": 28,
+			"mutator": "StringLiteral",
+			"reason": "`adminUserColumns.has(\"role\")` → `has(\"\")`. Same equivalence root as L110:7 false-direction — has(\"\") returns false so the UPDATE is skipped, but the terminal rebuild's CASE re-derives is_admin from role, producing the same final state."
+		},
+		{
+			"file": "src/sqlite-schema-compat.ts",
+			"line": 110,
+			"column": 37,
+			"mutator": "BlockStatement",
+			"reason": "Empties the inner `{ db.exec(\"UPDATE admin_users SET is_admin = 1 WHERE role = 'admin'\") }` block. Same equivalence root as L110:7 false-direction — the terminal rebuild's CASE statement re-derives is_admin from role, so skipping this UPDATE leaves no observable difference."
+		},
+		{
+			"file": "src/sqlite-schema-compat.ts",
+			"line": 111,
+			"column": 12,
+			"mutator": "StringLiteral",
+			"reason": "Mutates the `UPDATE admin_users SET is_admin = 1 WHERE role = 'admin'` SQL string to `\"\"`. db.exec(\"\") is a no-op. Same equivalence root as L110:37 BlockStatement — the terminal rebuild's CASE handles is_admin re-derivation regardless of whether this UPDATE runs."
+		},
+		{
+			"file": "src/sqlite-schema-compat.ts",
+			"line": 136,
+			"column": 45,
+			"mutator": "StringLiteral",
+			"reason": "`getTableSql(db, \"content_locks\")` → `getTableSql(db, \"\")`. Returns undefined for an empty name (no such table), so `!contentLocksExists` is true and the body runs. The body issues `CREATE TABLE IF NOT EXISTS content_locks (...)` (see CONTENT_LOCKS_DDL), which is a no-op when the table already exists. Same observable behaviour regardless of which name was looked up."
+		},
+		{
+			"file": "src/sqlite-schema-compat.ts",
+			"line": 137,
+			"column": 6,
+			"mutator": "ConditionalExpression",
+			"reason": "`if (!contentLocksExists)` true-direction — always run CONTENT_LOCKS_DDL. The DDL is `CREATE TABLE IF NOT EXISTS content_locks (...)` so re-running it on an existing table is a no-op. Original and mutant produce identical observable behaviour."
+		},
+		{
 			"file": "src/sqlite-integrity.ts",
 			"line": 88,
 			"column": 12,
