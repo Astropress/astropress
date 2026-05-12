@@ -1088,6 +1088,34 @@
 			"reason": "`finally { db.close(); }` handle cleanup in rollbackAstropressLastMigration. Mutating to `{}` leaks the handle but does not change the report's return value or any observable behaviour of the rollback. Same equivalence pattern as the sqlite-integrity finally-close registrations."
 		},
 		{
+			"file": "src/import/wordpress-xml.ts",
+			"line": 196,
+			"column": 9,
+			"mutator": "OptionalChaining",
+			"reason": "`authors[0]?.login` mutated to `authors[0].login`. The surrounding code guards this access with `authors.length > 0 ? [authors[0]?.login] : []`, so when authors[0]?.login is reached, authors[0] is guaranteed to exist. The optional chain is redundant defensive code; the mutated form is semantically equivalent."
+		},
+		{
+			"file": "src/import/wordpress-xml.ts",
+			"line": 276,
+			"column": 56,
+			"mutator": "StringLiteral",
+			"reason": "`${r.body}\\n${r.excerpt ?? \"\"}` join separator mutated to 'Stryker was here!'. The result feeds into `detectUnsupportedPatterns`, which runs regex matches on the concatenated string. The literal separator content doesn't change whether `[shortcode]` or `elementor` patterns match — those patterns appear in body/excerpt content directly. Genuine equivalent."
+		},
+		{
+			"file": "src/import/wordpress-xml.ts",
+			"line": 276,
+			"column": 67,
+			"mutator": "StringLiteral",
+			"reason": "`r.excerpt ?? \"\"` fallback mutated to a non-empty string. The concatenated result feeds into pattern detection which is insensitive to literal placeholder content."
+		},
+		{
+			"file": "src/import/wordpress-xml.ts",
+			"line": 281,
+			"column": 32,
+			"mutator": "StringLiteral",
+			"reason": "Same body+excerpt joiner — appears twice in remediationCandidates filter. Pattern-detection insensitive to literal content of the separator."
+		},
+		{
 			"file": "src/admin-action-utils.ts",
 			"line": 78,
 			"column": 40,

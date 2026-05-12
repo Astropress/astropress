@@ -327,6 +327,176 @@ describe("parseWordPressExport — preserves explicit IDs (kills always-use-fall
 	});
 });
 
+describe("parseWordPressExport — survivor pins", () => {
+	it("populates author email when wp:author_email is present (pins L124 || undefined)", () => {
+		const xml = channel(
+			[],
+			"<wp:author><wp:author_login>x</wp:author_login><wp:author_email>x@example.com</wp:author_email></wp:author>",
+		);
+		const bundle = parseWordPressExport(xml);
+		expect(bundle.authors[0].email).toBe("x@example.com");
+	});
+
+	it("comment authorEmail is populated when present (pins L237 || undefined)", () => {
+		const xml = channel([
+			"<item><wp:post_id>1</wp:post_id><wp:post_type>post</wp:post_type><wp:post_name>p</wp:post_name><link>/p/</link><title>T</title>" +
+				"<wp:comment><wp:comment_id>c1</wp:comment_id><wp:comment_author_email>c@e.com</wp:comment_author_email></wp:comment></item>",
+		]);
+		const bundle = parseWordPressExport(xml);
+		expect(bundle.comments[0].authorEmail).toBe("c@e.com");
+	});
+
+	it("comment createdAt prefers comment_date_gmt then comment_date (pins L244 || chain)", () => {
+		const xml = channel([
+			"<item><wp:post_id>1</wp:post_id><wp:post_type>post</wp:post_type><wp:post_name>p</wp:post_name><link>/p/</link><title>T</title>" +
+				"<wp:comment><wp:comment_id>c1</wp:comment_id><wp:comment_date_gmt>2024-01-02</wp:comment_date_gmt><wp:comment_date>2024-01-01</wp:comment_date></wp:comment></item>",
+		]);
+		const bundle = parseWordPressExport(xml);
+		expect(bundle.comments[0].createdAt).toBe("2024-01-02");
+	});
+
+	it("uses first author when dc:creator does not match any registered author (pins L191 falsy ternary)", () => {
+		const xml = channel(
+			[
+				"<item><wp:post_id>1</wp:post_id><wp:post_type>post</wp:post_type><wp:post_name>p</wp:post_name><link>/p/</link><title>T</title>" +
+					"<dc:creator>nope</dc:creator></item>",
+			],
+			"<wp:author><wp:author_login>alice</wp:author_login></wp:author><wp:author><wp:author_login>bob</wp:author_login></wp:author>",
+		);
+		const bundle = parseWordPressExport(xml);
+		expect(bundle.contentRecords[0].authorLogins).toEqual(["alice"]);
+	});
+
+	it("matches dc:creator to authors list when found (pins L191 matchedAuthor truthy branch)", () => {
+		const xml = channel(
+			[
+				"<item><wp:post_id>1</wp:post_id><wp:post_type>post</wp:post_type><wp:post_name>p</wp:post_name><link>/p/</link><title>T</title>" +
+					"<dc:creator>bob</dc:creator></item>",
+			],
+			"<wp:author><wp:author_login>alice</wp:author_login></wp:author><wp:author><wp:author_login>bob</wp:author_login></wp:author>",
+		);
+		const bundle = parseWordPressExport(xml);
+		expect(bundle.contentRecords[0].authorLogins).toEqual(["bob"]);
+	});
+
+	it("no authors registered: authorLogins is empty (pins L195 length > 0 ternary)", () => {
+		const xml = channel([
+			"<item><wp:post_id>1</wp:post_id><wp:post_type>post</wp:post_type><wp:post_name>p</wp:post_name><link>/p/</link><title>T</title></item>",
+		]);
+		const bundle = parseWordPressExport(xml);
+		expect(bundle.contentRecords[0].authorLogins).toEqual([]);
+	});
+
+	it("entityCounts populated for posts, pages, attachments, categories, tags (pins L294-301 filters)", () => {
+		const xml = channel([
+			"<item><wp:post_id>1</wp:post_id><wp:post_type>post</wp:post_type><wp:post_name>p</wp:post_name><link>/p/</link><title>P</title>" +
+				'<category domain="category" nicename="c1">C1</category>' +
+				'<category domain="post_tag" nicename="t1">T1</category></item>',
+			"<item><wp:post_id>2</wp:post_id><wp:post_type>page</wp:post_type><wp:post_name>pg</wp:post_name><link>/pg/</link><title>PG</title></item>",
+			"<item><wp:post_id>3</wp:post_id><wp:post_type>attachment</wp:post_type><wp:post_name>img</wp:post_name><link>/img/</link><title>Img</title><wp:attachment_url>https://example.com/img.png</wp:attachment_url></item>",
+		]);
+		const bundle = parseWordPressExport(xml);
+		expect(bundle.entityCounts.posts).toBe(1);
+		expect(bundle.entityCounts.pages).toBe(1);
+		expect(bundle.entityCounts.attachments).toBe(1);
+		expect(bundle.entityCounts.categories).toBe(1);
+		expect(bundle.entityCounts.tags).toBe(1);
+	});
+
+	it("redirect generated when oldSlug differs from current slug (pins L256 slug || legacyId)", () => {
+		const xml = channel([
+			"<item><wp:post_id>42</wp:post_id><wp:post_type>post</wp:post_type><wp:post_name>new-slug</wp:post_name><link>/new-slug/</link><title>T</title>" +
+				"<wp:postmeta><wp:meta_key>_wp_old_slug</wp:meta_key><wp:meta_value>old-slug</wp:meta_value></wp:postmeta></item>",
+		]);
+		const bundle = parseWordPressExport(xml);
+		expect(bundle.redirects).toHaveLength(1);
+		expect(bundle.redirects[0].sourcePath).toContain("old-slug");
+		expect(bundle.redirects[0].targetPath).toContain("new-slug");
+	});
+
+	it("attachment id and filename are derived correctly (pins L255 slug || legacyId and filenameFromUrl chain)", () => {
+		const xml = channel([
+			"<item><wp:post_id>9</wp:post_id><wp:post_type>attachment</wp:post_type><wp:post_name>my-img</wp:post_name><link>/my-img/</link><title>My Img</title><wp:attachment_url>https://example.com/wp-content/foo.png</wp:attachment_url></item>",
+		]);
+		const bundle = parseWordPressExport(xml);
+		expect(bundle.mediaAssets[0].id).toBe("media-9");
+		expect(bundle.mediaAssets[0].filename).toContain("foo.png");
+	});
+
+	it("entityCounts distinguish posts from pages (pins L294/L295 ===/!== boundary)", () => {
+		const xml = channel([
+			"<item><wp:post_id>1</wp:post_id><wp:post_type>post</wp:post_type><wp:post_name>a</wp:post_name><link>/a/</link><title>A</title></item>",
+			"<item><wp:post_id>2</wp:post_id><wp:post_type>post</wp:post_type><wp:post_name>b</wp:post_name><link>/b/</link><title>B</title></item>",
+			"<item><wp:post_id>3</wp:post_id><wp:post_type>page</wp:post_type><wp:post_name>p</wp:post_name><link>/p/</link><title>P</title></item>",
+		]);
+		const bundle = parseWordPressExport(xml);
+		expect(bundle.entityCounts.posts).toBe(2);
+		expect(bundle.entityCounts.pages).toBe(1);
+	});
+
+	it("entityCounts distinguish categories from tags (pins L300/L301 ===/!== boundary)", () => {
+		const xml = channel([
+			"<item><wp:post_id>1</wp:post_id><wp:post_type>post</wp:post_type><wp:post_name>p</wp:post_name><link>/p/</link><title>T</title>" +
+				'<category domain="category" nicename="c1">C1</category>' +
+				'<category domain="category" nicename="c2">C2</category>' +
+				'<category domain="post_tag" nicename="t1">T1</category></item>',
+		]);
+		const bundle = parseWordPressExport(xml);
+		expect(bundle.entityCounts.categories).toBe(2);
+		expect(bundle.entityCounts.tags).toBe(1);
+	});
+
+	it("postmeta filter only includes _wp_old_slug rows (pins L160 filter conditional)", () => {
+		const xml = channel([
+			"<item><wp:post_id>1</wp:post_id><wp:post_type>post</wp:post_type><wp:post_name>p</wp:post_name><link>/p/</link><title>T</title>" +
+				"<wp:postmeta><wp:meta_key>_wp_old_slug</wp:meta_key><wp:meta_value>real-old</wp:meta_value></wp:postmeta>" +
+				"<wp:postmeta><wp:meta_key>_some_other_key</wp:meta_key><wp:meta_value>ignored</wp:meta_value></wp:postmeta></item>",
+		]);
+		const bundle = parseWordPressExport(xml);
+		expect(bundle.contentRecords[0].oldSlugs).toEqual(["real-old"]);
+	});
+
+	it("category term name uses category.value when present (pins L173 / L180 name fallback)", () => {
+		const xml = channel([
+			"<item><wp:post_id>1</wp:post_id><wp:post_type>post</wp:post_type><wp:post_name>p</wp:post_name><link>/p/</link><title>T</title>" +
+				'<category domain="category" nicename="cat-slug"><![CDATA[Cat Display]]></category>' +
+				'<category domain="post_tag" nicename="tag-slug"><![CDATA[Tag Display]]></category></item>',
+		]);
+		const bundle = parseWordPressExport(xml);
+		const cat = bundle.terms.find((t) => t.kind === "category" && t.slug === "cat-slug");
+		const tag = bundle.terms.find((t) => t.kind === "tag" && t.slug === "tag-slug");
+		expect(cat?.name).toBe("Cat Display");
+		expect(tag?.name).toBe("Tag Display");
+	});
+
+	it("no redirect generated when old_slug equals current slug (pins L219 sourcePath !== targetPath)", () => {
+		const xml = channel([
+			"<item><wp:post_id>1</wp:post_id><wp:post_type>post</wp:post_type><wp:post_name>same</wp:post_name><link>/same/</link><title>T</title>" +
+				"<wp:postmeta><wp:meta_key>_wp_old_slug</wp:meta_key><wp:meta_value>same</wp:meta_value></wp:postmeta></item>",
+		]);
+		const bundle = parseWordPressExport(xml);
+		expect(bundle.redirects).toEqual([]);
+	});
+
+	it("attachment id uses slug when present, falls back to legacyId (pins L256 slug || legacyId)", () => {
+		const xml = channel([
+			"<item><wp:post_id>9</wp:post_id><wp:post_type>attachment</wp:post_type><link>/path/</link><title>T</title><wp:attachment_url>https://example.com/img.png</wp:attachment_url></item>",
+		]);
+		const bundle = parseWordPressExport(xml);
+		expect(bundle.mediaAssets[0].id).toBe("media-9");
+		// filename uses url-derived name, not slug/legacyId fallback
+		expect(bundle.mediaAssets[0].filename).toContain("img.png");
+	});
+
+	it("skipped counter increments for unknown post types (pins L219 default-case skipped tracking)", () => {
+		const xml = channel([
+			"<item><wp:post_id>1</wp:post_id><wp:post_type>custom_type</wp:post_type><wp:post_name>x</wp:post_name><link>/x/</link><title>T</title></item>",
+		]);
+		const bundle = parseWordPressExport(xml);
+		expect(bundle.entityCounts.skipped).toBe(1);
+	});
+});
+
 describe("parseWordPressExport — joiner separator", () => {
 	it("joins remediation candidate content with newlines (kills '\\n' → '' separator mutant)", () => {
 		// Two posts: one has shortcode markers, one is clean. Newline join is what
