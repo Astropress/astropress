@@ -11,7 +11,10 @@ interface CapturedCall {
 	body: string | null;
 }
 
-function makeFetchMock(status = 200): {
+function makeFetchMock(
+	status = 200,
+	responseBody: string | null = null,
+): {
 	fetch: typeof fetch;
 	calls: CapturedCall[];
 } {
@@ -29,7 +32,7 @@ function makeFetchMock(status = 200): {
 			contentType: headers.get("content-type"),
 			body: typeof init?.body === "string" ? init.body : null,
 		});
-		return new Response(null, { status });
+		return new Response(responseBody, { status });
 	};
 	return { fetch: f, calls };
 }
@@ -236,5 +239,85 @@ describe("purgeCdnCacheForResolved — fetch wiring", () => {
 			{ fetch },
 		);
 		expect(calls).toHaveLength(1);
+	});
+});
+
+describe("purgeCdnCacheForResolved — log message content (pins L40/L44/L58/L61)", () => {
+	let warnSpy: ReturnType<typeof vi.spyOn>;
+	beforeEach(() => {
+		warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+	});
+	afterEach(() => {
+		warnSpy.mockRestore();
+	});
+
+	it("Cloudflare non-ok log message includes slug + status + body (pins L40 template)", async () => {
+		const { fetch } = makeFetchMock(403, "forbidden-body");
+		await purgeCdnCacheForResolved(
+			"my-slug",
+			{
+				kind: "cloudflare",
+				apiToken: "tok",
+				zoneId: "z",
+				source: "registry",
+			},
+			{ fetch },
+		);
+		const msg = String(warnSpy.mock.calls[0]?.[0] ?? "");
+		expect(msg).toContain("[cache-purge]");
+		expect(msg).toContain("Cloudflare");
+		expect(msg).toContain("my-slug");
+		expect(msg).toContain("403");
+		expect(msg).toContain("forbidden-body");
+	});
+
+	it("Cloudflare fetch-throws log message includes slug (pins L44 template)", async () => {
+		const fetchImpl: typeof fetch = async () => {
+			throw new Error("network");
+		};
+		await purgeCdnCacheForResolved(
+			"err-slug",
+			{
+				kind: "cloudflare",
+				apiToken: "tok",
+				zoneId: "z",
+				source: "registry",
+			},
+			{ fetch: fetchImpl },
+		);
+		const msg = String(warnSpy.mock.calls[0]?.[0] ?? "");
+		expect(msg).toContain("[cache-purge]");
+		expect(msg).toContain("Cloudflare");
+		expect(msg).toContain("err-slug");
+	});
+
+	it("Webhook non-ok log message includes slug + status + body (pins L58 template)", async () => {
+		const { fetch } = makeFetchMock(502, "bad-gateway-body");
+		await purgeCdnCacheForResolved(
+			"hook-slug",
+			{ kind: "webhook", url: "https://x", source: "config" },
+			{ fetch },
+		);
+		const msg = String(warnSpy.mock.calls[0]?.[0] ?? "");
+		expect(msg).toContain("[cache-purge]");
+		expect(msg).toContain("Webhook");
+		expect(msg).toContain("hook-slug");
+		expect(msg).toContain("502");
+		expect(msg).toContain("bad-gateway-body");
+	});
+
+	it("Webhook fetch-throws log message includes slug (pins L61 template)", async () => {
+		const fetchImpl: typeof fetch = async () => {
+			throw new Error("network");
+		};
+		await purgeCdnCacheForResolved(
+			"hook-err-slug",
+			{ kind: "webhook", url: "https://x", source: "config" },
+			{ fetch: fetchImpl },
+		);
+		const msg = String(warnSpy.mock.calls[0]?.[0] ?? "");
+		expect(msg).toContain("[cache-purge]");
+		expect(msg).toContain("Webhook");
+		expect(msg).toContain("hook-err-slug");
 	});
 });
