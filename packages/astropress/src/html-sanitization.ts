@@ -1,5 +1,6 @@
 import {
 	allowedAttributes,
+	allowedGlobalAttributes,
 	allowedSchemes,
 	allowedTags,
 	dropContentTags,
@@ -8,12 +9,11 @@ import {
 } from "./html-sanitization-data.js";
 
 function isAllowedUrl(value: string) {
-	const trimmed = value.trim();
-	if (!trimmed || trimmed.startsWith("//")) {
+	if (!value || value.startsWith("//")) {
 		return false;
 	}
 
-	const schemeMatch = trimmed.match(/^([a-zA-Z][a-zA-Z0-9+.-]*):/);
+	const schemeMatch = value.match(/^([a-zA-Z][a-zA-Z0-9+.-]*):/);
 	if (!schemeMatch) {
 		return true;
 	}
@@ -25,9 +25,8 @@ function sanitizeSrcset(value: string) {
 	const candidates = value
 		.split(",")
 		.map((candidate) => candidate.trim())
-		.filter(Boolean)
 		.filter((candidate) => {
-			const [url] = candidate.split(/\s+/, 1);
+			const [url] = candidate.split(/\s/, 1);
 			return Boolean(url) && isAllowedUrl(url);
 		});
 
@@ -36,8 +35,7 @@ function sanitizeSrcset(value: string) {
 
 function sanitizeAttribute(tagName: string, attributeName: string, attributeValue: string) {
 	const allowedForTag = allowedAttributes.get(tagName);
-	const allowedGlobally = allowedAttributes.get("*");
-	const isAllowed = allowedForTag?.has(attributeName) || allowedGlobally?.has(attributeName);
+	const isAllowed = allowedForTag?.has(attributeName) || allowedGlobalAttributes.has(attributeName);
 
 	if (!isAllowed) {
 		return null;

@@ -168,7 +168,7 @@ export function saveSqlitePageOrPost(
 		{
 			title: record.title ?? slug,
 			slug,
-			legacyUrl: resolveMetaString(record.metadata, "legacyUrl") ?? `/${slug}`,
+			legacyUrl: resolveMetaString(record.metadata, "legacyUrl"),
 			body: record.body ?? "",
 			summary: String(record.metadata?.summary ?? ""),
 			status: resolveSqliteStatus(record.status),
@@ -191,7 +191,7 @@ export function saveSqliteContentRecord(
 ): ContentStoreRecord {
 	const slug = record.slug || record.id;
 	if (record.kind === "redirect") {
-		const targetPath = String(record.metadata?.targetPath ?? "").trim();
+		const targetPath = String(record.metadata?.targetPath ?? "");
 		const statusCode = Number(record.metadata?.statusCode) === 302 ? 302 : 301;
 		const result = runtime.sqliteAdminStore.redirects.createRedirectRule(
 			{ sourcePath: slug, targetPath, statusCode },
@@ -203,8 +203,7 @@ export function saveSqliteContentRecord(
 	if (record.kind === "settings") {
 		const current = runtime.sqliteAdminStore.settings.getSettings();
 		const next = { ...current, ...(record.metadata ?? {}) };
-		const result = runtime.sqliteAdminStore.settings.saveSettings(next, actor);
-		if (!result.ok) throw new Error(result.error);
+		runtime.sqliteAdminStore.settings.saveSettings(next, actor);
 		return {
 			id: "site-settings",
 			kind: "settings",

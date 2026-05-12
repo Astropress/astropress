@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-05-12T08:15:55.668Z",
+  "updatedAt": "2026-05-12T10:41:02.748Z",
   "scores": {
     "packages/astropress/src/adapters/adapter-record-helpers.ts": {
       "score": 100,
@@ -14,8 +14,8 @@
       "hash": "a486f72e47cc391f12abdb9c771207a229f3c57f"
     },
     "packages/astropress/src/adapters/sqlite-helpers.ts": {
-      "score": 97.00996677740864,
-      "hash": "398e93edd7d128ec2a208d2901375ba76b701ea0"
+      "score": 96.98996655518395,
+      "hash": "1a30bf64ac2d933455cd2fa35bf1c6eadc27eb0f"
     },
     "packages/astropress/src/adapters/sqlite.ts": {
       "score": 67.74193548387096,
@@ -430,8 +430,8 @@
       "hash": "2a7554e11964d70e8359236d96f980f2eda58155"
     },
     "packages/astropress/src/sqlite-schema-compat.ts": {
-      "score": 99.31972789115646,
-      "hash": "757833699def29e37f3f2088b4566b1b2ab9aab4"
+      "score": 99.3103448275862,
+      "hash": "b4e8fe6d8f4e3398c8871bfc096fdba9c318b72f"
     },
     "packages/astropress/src/sqlite-seed-helpers.ts": {
       "score": 98.4375,
@@ -671,7 +671,7 @@
     },
     "packages/astropress/src/html-sanitization.ts": {
       "score": 95.28301886792453,
-      "hash": "c3a2d4416466e80bdb1bacde3e99c9f5cbef1b2b"
+      "hash": "f83d8f327dfa78557ef76ae1bd0d3bd45e6d1425"
     },
     "packages/astropress/src/import/wordpress-xml.ts": {
       "score": 86.8995633187773,
@@ -894,8 +894,8 @@
       "hash": "27706591be56e4be4c0142eb464256b4bd22fd4b"
     },
     "packages/astropress/src/access/condition-evaluator.ts": {
-      "score": 99.2,
-      "hash": "f6d278316d22a239dd5c9e9bf645fe63f2acc2dc"
+      "score": 99.17355371900827,
+      "hash": "026c99f3e9e4a69e89db46854bdd51c4ae48d8d8"
     },
     "packages/astropress/src/access/d1-access-page-store.ts": {
       "score": 100,
@@ -930,8 +930,8 @@
       "hash": "b88627097b7b3b9bf6711e4f4e957be45016bed2"
     },
     "packages/astropress/src/admin-locale.ts": {
-      "score": 94.64285714285714,
-      "hash": "f641a37bd93cf138dd34808952749c6654f967f9"
+      "score": 96.29629629629629,
+      "hash": "42b919475076f8ff97baae5d5ee7eb0b46ac9028"
     },
     "packages/astropress/src/admin-page-labels.ts": {
       "score": 100,

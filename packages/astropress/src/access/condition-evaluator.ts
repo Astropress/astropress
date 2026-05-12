@@ -92,11 +92,8 @@ export function evaluateCondition(c: Condition, ctx: BindingContext): boolean {
 			if (typeof left !== "number") return false;
 			return left > c.right;
 		}
-		case "bool": {
-			const left = resolvePath(c.left, ctx);
-			if (typeof left !== "boolean") return false;
-			return left === c.right;
-		}
+		case "bool":
+			return resolvePath(c.left, ctx) === c.right;
 		case "attributeExists":
 			return present(resolvePath(c.left, ctx));
 		case "not":

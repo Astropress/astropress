@@ -100,21 +100,18 @@ export function ensureLegacySchemaCompatibility(db: SqliteDatabaseLike) {
 		db.exec("ALTER TABLE schema_migrations ADD COLUMN rollback_sql TEXT");
 	}
 
-	// ABAC migration: existing DBs may have admin_users with the old
-	// 'role TEXT NOT NULL CHECK(...)' column and no is_admin column. Add
-	// is_admin if missing and backfill from the legacy role enum, then
-	// drop the role column entirely (terminal access-PR migration).
+	// ABAC migration: legacy admin_users may lack is_admin. Add the column
+	// with a DEFAULT 0; the terminal rebuild below re-derives the actual
+	// value from role (where present) via a CASE in its INSERT...SELECT,
+	// so a separate UPDATE backfill here would be redundant.
 	const adminUserColumns = new Set(getTableColumns(db, "admin_users"));
 	if (adminUserColumns.size > 0 && !adminUserColumns.has("is_admin")) {
 		db.exec("ALTER TABLE admin_users ADD COLUMN is_admin INTEGER NOT NULL DEFAULT 0");
-		if (adminUserColumns.has("role")) {
-			db.exec("UPDATE admin_users SET is_admin = 1 WHERE role = 'admin'");
-		}
 	}
 
 	// Terminal access-PR migration: rebuild admin_users without the legacy
-	// `role` column. Fires when the column is still present after the
-	// is_admin backfill above. Idempotent: only runs when role exists.
+	// `role` column. Fires when the column is still present. Idempotent:
+	// only runs when role exists.
 	const refreshedAdminColumns = new Set(getTableColumns(db, "admin_users"));
 	if (refreshedAdminColumns.has("role")) {
 		const activeExpr = refreshedAdminColumns.has("active") ? "active" : "1";
@@ -133,10 +130,7 @@ export function ensureLegacySchemaCompatibility(db: SqliteDatabaseLike) {
 		);
 	}
 
-	const contentLocksExists = getTableSql(db, "content_locks");
-	if (!contentLocksExists) {
-		db.exec(CONTENT_LOCKS_DDL);
-	}
+	db.exec(CONTENT_LOCKS_DDL);
 
 	const overrideSql = getTableSql(db, "content_overrides") ?? "";
 	const revisionSql = getTableSql(db, "content_revisions") ?? "";

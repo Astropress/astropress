@@ -37,8 +37,10 @@ export const allowedTags = new Set([
 	"ul",
 ]);
 
+export const allowedGlobalAttributes: ReadonlySet<string> = new Set(["class"]);
+
 export const allowedAttributes = new Map<string, Set<string>>([
-	["*", new Set(["class"])],
+	["*", new Set(allowedGlobalAttributes)],
 	["a", new Set(["href", "name", "target", "rel"])],
 	[
 		"img",
