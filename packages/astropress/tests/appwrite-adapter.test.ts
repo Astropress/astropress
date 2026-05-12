@@ -223,4 +223,53 @@ describe("createAstropressAppwriteHostedAdapter", () => {
 		expect(config.databaseId).toBe("main-db");
 		expect(config.bucketId).toBe("media-bucket");
 	});
+
+	it("trims whitespace from APPWRITE_ENDPOINT (pins L53 .trim())", () => {
+		const config = readAstropressAppwriteHostedConfig({
+			APPWRITE_ENDPOINT: "  https://example.com  ",
+			APPWRITE_PROJECT_ID: "proj",
+			APPWRITE_API_KEY: "key",
+		});
+		expect(config.endpoint).toBe("https://example.com");
+	});
+
+	it("treats whitespace-only APPWRITE_ENDPOINT as missing (pins L53 trim vs raw)", () => {
+		expect(() =>
+			readAstropressAppwriteHostedConfig({
+				APPWRITE_ENDPOINT: "   ",
+				APPWRITE_PROJECT_ID: "proj",
+				APPWRITE_API_KEY: "key",
+			}),
+		).toThrow(/APPWRITE_ENDPOINT/);
+	});
+
+	it("trims whitespace from APPWRITE_PROJECT_ID (pins L54 .trim())", () => {
+		const config = readAstropressAppwriteHostedConfig({
+			APPWRITE_ENDPOINT: "https://x",
+			APPWRITE_PROJECT_ID: "  proj  ",
+			APPWRITE_API_KEY: "key",
+		});
+		expect(config.projectId).toBe("proj");
+	});
+
+	it("trims whitespace from APPWRITE_API_KEY (pins L55 .trim())", () => {
+		const config = readAstropressAppwriteHostedConfig({
+			APPWRITE_ENDPOINT: "https://x",
+			APPWRITE_PROJECT_ID: "proj",
+			APPWRITE_API_KEY: "  key  ",
+		});
+		expect(config.apiKey).toBe("key");
+	});
+
+	it("trims whitespace from APPWRITE_DATABASE_ID and APPWRITE_BUCKET_ID (pins L64/L65 .trim())", () => {
+		const config = readAstropressAppwriteHostedConfig({
+			APPWRITE_ENDPOINT: "https://x",
+			APPWRITE_PROJECT_ID: "proj",
+			APPWRITE_API_KEY: "key",
+			APPWRITE_DATABASE_ID: "  db  ",
+			APPWRITE_BUCKET_ID: "  buc  ",
+		});
+		expect(config.databaseId).toBe("db");
+		expect(config.bucketId).toBe("buc");
+	});
 });
