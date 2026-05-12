@@ -74,6 +74,45 @@ describe("access repository — roles + policies", () => {
 		expect(repo.getRole(role.id)).toBeUndefined();
 	});
 
+	test("createRole defaults description to '' and isSystem to false (pins L110/L114/L115)", () => {
+		const repo = createAccessRepository(store);
+		const role = repo.createRole({ name: "WithoutDesc" });
+		expect(role.description).toBe("");
+		expect(role.isSystem).toBe(false);
+		const fromDb = repo.getRole(role.id);
+		expect(fromDb?.description).toBe("");
+		expect(fromDb?.isSystem).toBe(false);
+	});
+
+	test("updateRole with only name applies name but not description (pins L125/L129 conditionals)", () => {
+		const repo = createAccessRepository(store);
+		const role = repo.createRole({ name: "BeforeRename", description: "orig" });
+		repo.updateRole(role.id, { name: "AfterRename" });
+		const updated = repo.getRole(role.id);
+		expect(updated?.name).toBe("AfterRename");
+		expect(updated?.description).toBe("orig");
+	});
+
+	test("updateRole with only description applies description but not name (pins L125/L129 conditionals)", () => {
+		const repo = createAccessRepository(store);
+		const role = repo.createRole({ name: "RenameMe", description: "before" });
+		repo.updateRole(role.id, { description: "after" });
+		const updated = repo.getRole(role.id);
+		expect(updated?.name).toBe("RenameMe");
+		expect(updated?.description).toBe("after");
+	});
+
+	test("updateRole with no fields is a no-op (pins L133 sets.length === 0 early return)", () => {
+		const repo = createAccessRepository(store);
+		const role = repo.createRole({ name: "NoChange", description: "stable" });
+		const beforeUpdated = repo.getRole(role.id)?.updatedAt;
+		repo.updateRole(role.id, {});
+		const after = repo.getRole(role.id);
+		expect(after?.name).toBe("NoChange");
+		expect(after?.description).toBe("stable");
+		expect(after?.updatedAt).toBe(beforeUpdated);
+	});
+
 	test("addRolePolicy / listRolePolicies persists condition JSON", () => {
 		const repo = createAccessRepository(store);
 		const role = repo.createRole({ name: "OwnerEditor" });
