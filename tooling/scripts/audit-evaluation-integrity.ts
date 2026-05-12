@@ -74,7 +74,16 @@ async function main() {
 	}
 
 	for (const audit of ciEnforcedAudits) {
-		if (!ciSrc.includes(`bun run ${audit}`)) {
+		// Match either the legacy `bun run audit:X` step form OR the audit name
+		// as a bare token inside a `run-audits-parallel.ts` argument list
+		// (each script is on its own line with `\`-continuation in the YAML).
+		const legacyStep = ciSrc.includes(`bun run ${audit}`);
+		const parallelArgPattern = new RegExp(
+			`run-audits-parallel\\.ts[\\s\\S]*?(?:^|\\s)${audit.replace(":", "\\:")}(?:\\s|$)`,
+			"m",
+		);
+		const inParallelBatch = parallelArgPattern.test(ciSrc);
+		if (!legacyStep && !inParallelBatch) {
 			report.add(
 				`[not-in-ci] EVALUATION.md claims \`${audit}\` is CI-enforced but it does not appear in ci.yml`,
 			);

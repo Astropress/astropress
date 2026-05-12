@@ -54,12 +54,28 @@ import { hostname, tmpdir } from "node:os";
 import path from "node:path";
 
 const BRANCH = "stryker-state";
-const INCREMENTAL_FILE = "incremental.json";
-const LOCK_FILE = "lock.json";
 const README_FILE = "README.md";
-const LOCAL_INCREMENTAL = ".stryker-incremental.json";
-const LOCAL_REPORT = "reports/mutation/report.json";
 const DEFAULT_LOCK_TTL_HOURS = 8;
+
+// Shard suffix: when --shard <name> is passed (or STRYKER_SHARD env is set),
+// each shard maintains its own incremental file + lock on the stryker-state
+// branch. The CI workflow runs shard=a + shard=b in parallel; locally devs
+// run unsharded (suffix=""). The local incremental file path must also
+// match what stryker.config.mjs writes — the config respects STRYKER_SHARD
+// the same way.
+function shardName(): string {
+	const idx = process.argv.indexOf("--shard");
+	if (idx >= 0 && idx + 1 < process.argv.length) {
+		return process.argv[idx + 1];
+	}
+	return process.env.STRYKER_SHARD ?? "";
+}
+const SHARD = shardName();
+const SHARD_SUFFIX = SHARD ? `-${SHARD}` : "";
+const INCREMENTAL_FILE = `incremental${SHARD_SUFFIX}.json`;
+const LOCK_FILE = `lock${SHARD_SUFFIX}.json`;
+const LOCAL_INCREMENTAL = `.stryker-incremental${SHARD_SUFFIX}.json`;
+const LOCAL_REPORT = "reports/mutation/report.json";
 
 interface LockData {
 	host: string;
@@ -401,6 +417,10 @@ function runMutants(): { exitCode: number; reportFresh: boolean } {
 		{
 			stdio: "inherit",
 			cwd: path.join(process.cwd(), "packages/astropress"),
+			// Propagate SHARD so the stryker config picks the right mutate
+			// glob filter and incremental file path. Unsharded local runs
+			// pass through unchanged.
+			env: SHARD ? { ...process.env, STRYKER_SHARD: SHARD } : process.env,
 		},
 	);
 	const reportFresh = existsSync(LOCAL_REPORT) && statSync(LOCAL_REPORT).mtimeMs > before;
