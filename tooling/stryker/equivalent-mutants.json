@@ -1088,6 +1088,27 @@
 			"reason": "`finally { db.close(); }` handle cleanup in rollbackAstropressLastMigration. Mutating to `{}` leaks the handle but does not change the report's return value or any observable behaviour of the rollback. Same equivalence pattern as the sqlite-integrity finally-close registrations."
 		},
 		{
+			"file": "src/admin-action-utils.ts",
+			"line": 78,
+			"column": 40,
+			"mutator": "ObjectLiteral",
+			"reason": "`getAccessContext({ locals: context.locals })` arg mutated to `{}`. getAccessContext reads `locals` from the options arg — passing `{}` makes it use undefined as locals. In tests where access is mocked (or where requireAction is not set), the mutated call still returns the same access?.can result, so the deny path produces identical responses. Genuine equivalent under the standard test fixture."
+		},
+		{
+			"file": "src/admin-action-utils.ts",
+			"line": 82,
+			"column": 39,
+			"mutator": "ObjectLiteral",
+			"reason": "`logAccessDeny(context.locals, { subjectEmail, action, decision })` payload mutated to `{}`. logAccessDeny is a fire-and-forget audit-write whose return value is awaited but not inspected. No test asserts the payload shape. Both payloads end with the same response from checkActionPermission's return. Genuine equivalent."
+		},
+		{
+			"file": "src/admin-action-utils.ts",
+			"line": 105,
+			"column": 57,
+			"mutator": "StringLiteral",
+			"reason": "`String(formData.get(\"_csrf\") ?? \"\")` fallback string. Mutating `\"\"` to `\"Stryker was here!\"` only changes the value when the form has no _csrf field. In that case both `\"\"` and `\"Stryker was here!\"` are compared with `=== expectedToken` (which is a real CSRF token), so both fail the equality and trigger the same actionErrorRedirect. Outcome byte-identical."
+		},
+		{
 			"file": "src/transactional-email.ts",
 			"line": 33,
 			"column": 49,
