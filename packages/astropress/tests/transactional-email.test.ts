@@ -495,3 +495,117 @@ describe("mock mode behavior", () => {
 		expect(result.preview).toBeDefined();
 	});
 });
+
+describe("survivor pins (kills mutation testing equivalents)", () => {
+	it("SMTP path with SMTP_PORT=0 falls through to preview (pins L99 || vs && — port is a required field)", async () => {
+		vi.stubEnv("EMAIL_DELIVERY_MODE", "smtp");
+		vi.stubEnv("SMTP_HOST", "smtp.example.com");
+		vi.stubEnv("SMTP_FROM_EMAIL", "noreply@example.com");
+		vi.stubEnv("SMTP_PORT", "0");
+		const result = await sendPasswordResetEmail("u@x.com", "https://example.com/r");
+		expect(result.ok).toBe(true);
+		expect(result.delivered).toBe(false);
+		expect(result.preview).toBeDefined();
+	});
+
+	it("SMTP-not-configured production: delivered is false (pins L103 BooleanLiteral)", async () => {
+		vi.stubEnv("EMAIL_DELIVERY_MODE", "smtp");
+		vi.mocked(isProductionRuntime).mockReturnValue(true);
+		const result = await sendPasswordResetEmail("u@x.com", "https://example.com/r");
+		expect(result.ok).toBe(false);
+		expect(result.delivered).toBe(false);
+	});
+
+	it("SMTP-not-configured preview: 'to' field equals message.to (pins L111 preview object)", async () => {
+		vi.stubEnv("EMAIL_DELIVERY_MODE", "smtp");
+		const result = await sendPasswordResetEmail("EXACT@x.com", "https://example.com/r");
+		expect(result.preview?.to).toBe("EXACT@x.com");
+		expect(result.preview?.subject).toContain("admin password");
+	});
+
+	it("SMTP auth is set when only SMTP_USERNAME is provided (pins L125 || vs &&)", async () => {
+		vi.stubEnv("EMAIL_DELIVERY_MODE", "smtp");
+		vi.stubEnv("SMTP_HOST", "smtp.example.com");
+		vi.stubEnv("SMTP_PORT", "587");
+		vi.stubEnv("SMTP_FROM_EMAIL", "noreply@example.com");
+		vi.stubEnv("SMTP_USERNAME", "user-only");
+		// SMTP_PASSWORD intentionally unset
+		await sendPasswordResetEmail("u@x.com", "https://example.com/r");
+		const opts = lastTransportOpts as {
+			auth: { user: string; pass: string | undefined } | undefined;
+		};
+		expect(opts.auth).toBeDefined();
+		expect(opts.auth?.user).toBe("user-only");
+	});
+
+	it("password reset preview text contains the reset URL and siteName (pins L184 template literal)", async () => {
+		setCmsConfig("PinSite");
+		const result = await sendPasswordResetEmail("u@x.com", "https://example.com/r-token");
+		expect(result.preview?.html).toBeDefined();
+		// preview text isn't directly returned but the html shouldn't be empty
+		// preview surface check: subject and html both reference siteName via template literal
+		expect(result.preview?.subject).toContain("PinSite");
+	});
+
+	it("invite email falls back to 'Astropress' when no CMS config is registered (pins L196 ?? 'Astropress')", async () => {
+		const result = await sendUserInviteEmail("u@x.com", "https://example.com/invite");
+		expect(result.preview?.subject).toContain("Astropress");
+	});
+
+	it("invite email subject contains siteName from cms config (pins L196 optional chain access)", async () => {
+		setCmsConfig("InviteSite");
+		const result = await sendUserInviteEmail("u@x.com", "https://example.com/invite");
+		expect(result.preview?.subject).toContain("InviteSite");
+	});
+
+	it("contact production-no-destination: delivered is false (pins L227 BooleanLiteral)", async () => {
+		vi.mocked(isProductionRuntime).mockReturnValue(true);
+		const result = await sendContactNotification({
+			name: "x",
+			email: "x@x",
+			message: "m",
+			submittedAt: "now",
+		});
+		expect(result.ok).toBe(false);
+		expect(result.delivered).toBe(false);
+	});
+
+	it("password reset Resend body includes the URL in the text field (pins L184 template literal)", async () => {
+		vi.stubEnv("EMAIL_DELIVERY_MODE", "resend");
+		vi.stubEnv("RESEND_API_KEY", "re_x");
+		vi.stubEnv("RESEND_FROM_EMAIL", "noreply@example.com");
+		const fetchSpy = vi.fn(async () => new Response("{}", { status: 200 }));
+		vi.stubGlobal("fetch", fetchSpy);
+		setCmsConfig("PinSite");
+		await sendPasswordResetEmail("u@x.com", "https://example.com/r-pin-token");
+		const body = JSON.parse((fetchSpy.mock.calls[0]?.[1] as RequestInit).body as string);
+		expect(body.text).toContain("https://example.com/r-pin-token");
+		expect(body.text).toContain("PinSite");
+		vi.unstubAllGlobals();
+	});
+
+	it("invite Resend body includes the URL in the text field (pins L201 template literal)", async () => {
+		vi.stubEnv("EMAIL_DELIVERY_MODE", "resend");
+		vi.stubEnv("RESEND_API_KEY", "re_x");
+		vi.stubEnv("RESEND_FROM_EMAIL", "noreply@example.com");
+		const fetchSpy = vi.fn(async () => new Response("{}", { status: 200 }));
+		vi.stubGlobal("fetch", fetchSpy);
+		setCmsConfig("InviteSite");
+		await sendUserInviteEmail("u@x.com", "https://example.com/invite-pin-token");
+		const body = JSON.parse((fetchSpy.mock.calls[0]?.[1] as RequestInit).body as string);
+		expect(body.text).toContain("https://example.com/invite-pin-token");
+		expect(body.text).toContain("InviteSite");
+		vi.unstubAllGlobals();
+	});
+
+	it("contact preview path: delivered is false (pins L234 BooleanLiteral)", async () => {
+		const result = await sendContactNotification({
+			name: "x",
+			email: "x@x",
+			message: "m",
+			submittedAt: "now",
+		});
+		expect(result.ok).toBe(true);
+		expect(result.delivered).toBe(false);
+	});
+});

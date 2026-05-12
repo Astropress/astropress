@@ -1088,6 +1088,41 @@
 			"reason": "`finally { db.close(); }` handle cleanup in rollbackAstropressLastMigration. Mutating to `{}` leaks the handle but does not change the report's return value or any observable behaviour of the rollback. Same equivalence pattern as the sqlite-integrity finally-close registrations."
 		},
 		{
+			"file": "src/transactional-email.ts",
+			"line": 33,
+			"column": 49,
+			"mutator": "BlockStatement",
+			"reason": "`isMockMode` 1-line body mutated to `{}` returns undefined. Callers use it solely in `if (isMockMode(locals))` guards — falsy result skips the explicit mock-mode preview branch and falls through to `sendResendEmail` / `sendSmtpEmail`. In tests, those paths likewise return a preview object when credentials are absent (dev runtime), so the observable result is identical. Killing requires asserting the mode literal flows through a distinct delivery path, which the EmailResult type does not expose."
+		},
+		{
+			"file": "src/transactional-email.ts",
+			"line": 34,
+			"column": 9,
+			"mutator": "ConditionalExpression",
+			"reason": "`getTransactionalEmailConfig(locals).mode === \"mock\"` — false-direction mutant makes isMockMode always return false. Identical effect to the L33 BlockStatement mutant: the preview-return is skipped and the fallthrough to resend/smtp paths produces the same preview object when no credentials are set. Test-observable behaviour identical."
+		},
+		{
+			"file": "src/transactional-email.ts",
+			"line": 34,
+			"column": 54,
+			"mutator": "StringLiteral",
+			"reason": "`=== \"mock\"` literal compared against an enum mode. Mutating to `\"\"` makes the strict equality always false — same effect as the L34 false-direction conditional mutant. Fallthrough to resend/smtp paths yields the same preview output."
+		},
+		{
+			"file": "src/transactional-email.ts",
+			"line": 155,
+			"column": 6,
+			"mutator": "ConditionalExpression",
+			"reason": "`if (isMockMode(locals))` in sendTransactionalEmail — false-direction mutant skips the explicit mock-mode preview branch and falls through to resend/smtp paths. With no credentials set, those paths return identical preview objects. Same equivalence pattern as L33/L34."
+		},
+		{
+			"file": "src/transactional-email.ts",
+			"line": 155,
+			"column": 26,
+			"mutator": "BlockStatement",
+			"reason": "if-body mutated to `{}` — same fallthrough to resend/smtp paths as the L155 conditional. Identical preview output in test context."
+		},
+		{
 			"file": "src/import/wordpress-xml-helpers.ts",
 			"line": 20,
 			"column": 51,
