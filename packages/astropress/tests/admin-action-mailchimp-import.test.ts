@@ -191,3 +191,77 @@ describe("runMailchimpImport — Listmonk dispatch", () => {
 		expect(r.error).toContain("Network error");
 	});
 });
+
+describe("runMailchimpImport — survivor pins", () => {
+	it("absent First/Last cells (cells undefined, not empty) still fall back to email-as-name (pins L36/L37 ?? '' fallbacks)", async () => {
+		// CSV declares 3 header columns but each data row supplies only 1 cell.
+		// cols[firstIdx] / cols[lastIdx] are `undefined` (not "") — the `?? ""`
+		// fallback fires and the filter(Boolean).join chain yields `email`.
+		const r = await runMailchimpImport(
+			"Email Address,First Name,Last Name\na@b.com\nb@c.com\n",
+			null,
+		);
+		expect(r.ok).toBe(true);
+		const body = JSON.parse(String(okFetch.mock.calls[0]?.[1]?.body ?? "{}"));
+		expect(String(body.records)).toContain("a@b.com,a@b.com");
+		expect(String(body.records)).toContain("b@c.com,b@c.com");
+	});
+
+	it("logs 'Mailchimp import completed' with the imported count (pins L109 logger.info)", async () => {
+		const logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+		await runMailchimpImport("Email Address\na@b.com\nc@d.com\n", null);
+		const matched = logSpy.mock.calls.find((args) =>
+			args.some((a) => typeof a === "string" && a === "Mailchimp import completed"),
+		);
+		expect(matched).toBeDefined();
+		const meta = matched?.[2] as Record<string, unknown>;
+		expect(meta?.count).toBe(2);
+		logSpy.mockRestore();
+	});
+
+	it("logs 'Listmonk bulk import error' when Listmonk returns non-ok (pins L100 logger.error)", async () => {
+		const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+		(globalThis as { fetch?: unknown }).fetch = vi.fn(
+			async () => new Response("server error body", { status: 500 }) as never,
+		);
+		await runMailchimpImport("Email Address\na@b.com\n", null);
+		const matched = errorSpy.mock.calls.find((args) =>
+			args.some((a) => typeof a === "string" && a === "Listmonk bulk import error"),
+		);
+		expect(matched).toBeDefined();
+		const meta = matched?.[2] as Record<string, unknown>;
+		expect(meta?.status).toBe(500);
+		expect(meta?.body).toBe("server error body");
+		errorSpy.mockRestore();
+	});
+
+	it("logs 'Mailchimp import network error' when fetch throws (pins L112 logger.error)", async () => {
+		const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+		(globalThis as { fetch?: unknown }).fetch = vi.fn(async () => {
+			throw new Error("ECONNREFUSED");
+		});
+		await runMailchimpImport("Email Address\na@b.com\n", null);
+		const matched = errorSpy.mock.calls.find((args) =>
+			args.some((a) => typeof a === "string" && a === "Mailchimp import network error"),
+		);
+		expect(matched).toBeDefined();
+		const meta = matched?.[2] as Record<string, unknown>;
+		expect(String(meta?.err)).toContain("ECONNREFUSED");
+		errorSpy.mockRestore();
+	});
+
+	it("CSV with no header row (empty first line) returns no records (pins L22 ConditionalExpression false)", async () => {
+		// lines.length < 2: empty input -> [] -> returns ok:false
+		const r = await runMailchimpImport("", null);
+		expect(r.ok).toBe(false);
+		expect(r.error).toContain("No valid subscriber rows found");
+	});
+
+	it("header row gets parsed when emailIdx is found (pins L29 emailIdx === -1 conditional)", async () => {
+		// emailIdx is a valid index (0) → bypass the early-return. With invalid
+		// rows that lack @, records ends up empty and we get the no-rows error.
+		const r = await runMailchimpImport("Email Address\nnotanemail\n", null);
+		expect(r.ok).toBe(false);
+		expect(r.error).toContain("No valid subscriber rows found");
+	});
+});

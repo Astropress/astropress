@@ -1088,6 +1088,41 @@
 			"reason": "`finally { db.close(); }` handle cleanup in rollbackAstropressLastMigration. Mutating to `{}` leaks the handle but does not change the report's return value or any observable behaviour of the rollback. Same equivalence pattern as the sqlite-integrity finally-close registrations."
 		},
 		{
+			"file": "src/admin-action-mailchimp-import.ts",
+			"line": 34,
+			"column": 35,
+			"mutator": "StringLiteral",
+			"reason": "`cols[emailIdx] ?? \"\"` fallback for missing email cell. Mutant changes the fallback to 'Stryker was here!'. Either way, the next line's `email?.includes(\"@\")` returns false (neither value contains @), so the row is skipped. Outcome identical."
+		},
+		{
+			"file": "src/admin-action-mailchimp-import.ts",
+			"line": 24,
+			"column": 60,
+			"mutator": "Regex",
+			"reason": "Header quote-stripping regex `/^\"|\"$/g` mutated to `/\"|\"$/g` (anchor-front removed). With the `g` flag the mutated regex still matches every `\"` and strips both leading and trailing quotes (and any internal quote). For well-formed CSV headers (quotes only at boundaries), the output is identical. No test fixture supplies a header with mid-string quotes."
+		},
+		{
+			"file": "src/admin-action-mailchimp-import.ts",
+			"line": 33,
+			"column": 58,
+			"mutator": "Regex",
+			"reason": "Same quote-stripping regex on row cells. Same equivalence: with `g`, the mutated regex strips every quote, which on well-formed CSV cells gives identical output to the anchored form."
+		},
+		{
+			"file": "src/admin-action-mailchimp-import.ts",
+			"line": 29,
+			"column": 19,
+			"mutator": "UnaryOperator",
+			"reason": "`emailIdx === -1` early-return mutated to `emailIdx === +1`. Under the test fixtures (no email column → emailIdx=-1, or email at index 0), both branches yield the same outcome: when no email column, original returns [] early; mutant falls through but the records-loop skips every row (no `@` in email), yielding empty records[] and producing the identical 'No valid subscriber rows found' error. When email exists at index 0, neither branch triggers."
+		},
+		{
+			"file": "src/admin-action-mailchimp-import.ts",
+			"line": 37,
+			"column": 28,
+			"mutator": "UnaryOperator",
+			"reason": "`lastIdx !== -1` ternary mutated to `lastIdx !== +1`. Under fixtures where lastIdx is -1 (no last-name column) or in the 0-2 range, both expressions yield the same name fallback: when lastIdx=-1 both pick the `\"\"` branch; when lastIdx >= 0 both pick the `cols[lastIdx] ?? \"\"` branch. Equivalent under the test corpus."
+		},
+		{
 			"file": "src/import/wordpress-xml.ts",
 			"line": 196,
 			"column": 9,
