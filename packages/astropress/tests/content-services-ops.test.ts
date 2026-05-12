@@ -168,6 +168,48 @@ describe("content services operations", () => {
 		await rm(workspace, { recursive: true, force: true });
 	});
 
+	it("treats whitespace-only NEON_DATABASE_URL as missing (kills L69 NEON_DATABASE_URL trim drop)", async () => {
+		const workspace = await mkdtemp(join(tmpdir(), "astropress-services-neon-ws-primary-"));
+		const report = await verifyAstropressContentServices({
+			workspaceRoot: workspace,
+			env: {
+				ASTROPRESS_CONTENT_SERVICES: "neon",
+				ASTROPRESS_SERVICE_ORIGIN: "https://demo.example.com",
+				NEON_DATABASE_URL: "   ",
+			},
+		});
+		expect(report.missingEnvKeys).toContain("NEON_DATABASE_URL");
+		await rm(workspace, { recursive: true, force: true });
+	});
+
+	it("treats whitespace-only ASTROPRESS_SERVICE_ORIGIN as missing in Neon path (kills L67 non-primary trim drop)", async () => {
+		const workspace = await mkdtemp(join(tmpdir(), "astropress-services-neon-ws-origin-"));
+		const report = await verifyAstropressContentServices({
+			workspaceRoot: workspace,
+			env: {
+				ASTROPRESS_CONTENT_SERVICES: "neon",
+				ASTROPRESS_SERVICE_ORIGIN: "   ",
+				NEON_DATABASE_URL: "postgres://x@y/z",
+			},
+		});
+		expect(report.missingEnvKeys).toContain("ASTROPRESS_SERVICE_ORIGIN");
+		await rm(workspace, { recursive: true, force: true });
+	});
+
+	it("treats whitespace-only DATABASE_URL as missing in the Neon fallback (kills L69 DATABASE_URL trim drop)", async () => {
+		const workspace = await mkdtemp(join(tmpdir(), "astropress-services-neon-ws-fb-"));
+		const report = await verifyAstropressContentServices({
+			workspaceRoot: workspace,
+			env: {
+				ASTROPRESS_CONTENT_SERVICES: "neon",
+				ASTROPRESS_SERVICE_ORIGIN: "https://demo.example.com",
+				DATABASE_URL: "   ",
+			},
+		});
+		expect(report.missingEnvKeys).toContain("NEON_DATABASE_URL");
+		await rm(workspace, { recursive: true, force: true });
+	});
+
 	it("persists a 2-space-indented JSON manifest with a trailing newline", async () => {
 		const workspace = await mkdtemp(join(tmpdir(), "astropress-services-json-"));
 		await bootstrapAstropressContentServices({

@@ -1088,6 +1088,27 @@
 			"reason": "`finally { db.close(); }` handle cleanup in rollbackAstropressLastMigration. Mutating to `{}` leaks the handle but does not change the report's return value or any observable behaviour of the rollback. Same equivalence pattern as the sqlite-integrity finally-close registrations."
 		},
 		{
+			"file": "src/content-services-ops.ts",
+			"line": 61,
+			"column": 34,
+			"mutator": "BlockStatement",
+			"reason": "`if (contentServices !== \"neon\") { return requiredEnvKeys.filter((key) => !env[key]?.trim()); }` non-neon early-return block. Mutating to `{}` falls through to the neon-branch filter at L65-70, which special-cases NEON_DATABASE_URL but otherwise applies the same `!env[key]?.trim()` predicate. For any contentServices !== 'neon', no key is named NEON_DATABASE_URL, so the special-case never fires and the fall-through filter produces an identical missingEnvKeys array."
+		},
+		{
+			"file": "src/content-services-ops.ts",
+			"line": 120,
+			"column": 74,
+			"mutator": "StringLiteral",
+			"reason": "`writeFile(manifestFile, jsonString, \"utf8\")` encoding argument. Mutating to `\"\"` does not change the on-disk bytes: Node's fs.promises.writeFile auto-encodes string data as utf8 when the encoding option is omitted or empty (verified empirically: identical byte output for both encodings on multi-byte text). No test path opens the file as Buffer and inspects bytes, so observable behaviour is identical."
+		},
+		{
+			"file": "src/content-services-ops.ts",
+			"line": 139,
+			"column": 32,
+			"mutator": "StringLiteral",
+			"reason": "`readFile(manifestFile, \"utf8\")` encoding argument in the verify-time existence check. Mutating to `\"\"` makes readFile return a Buffer instead of a string, but the result is immediately discarded — the call exists only to throw-on-missing inside a try/catch. No downstream code inspects the type or content, so the verify path is byte-identical."
+		},
+		{
 			"file": "src/db-migrate-ops.ts",
 			"line": 29,
 			"column": 34,
