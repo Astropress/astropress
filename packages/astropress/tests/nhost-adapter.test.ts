@@ -141,4 +141,41 @@ describe("createAstropressNhostHostedAdapter", () => {
 	it("throws when required env vars are missing and no explicit config", () => {
 		expect(() => createAstropressNhostHostedAdapter({ env: {} })).toThrow(/NHOST_SUBDOMAIN/);
 	});
+
+	it("trims whitespace from NHOST_SUBDOMAIN (pins L53 .trim())", () => {
+		const config = readAstropressNhostHostedConfig({
+			NHOST_SUBDOMAIN: "  xyz  ",
+			NHOST_REGION: "us-east-1",
+			NHOST_ADMIN_SECRET: "secret",
+		});
+		expect(config.subdomain).toBe("xyz");
+	});
+
+	it("treats whitespace-only NHOST_SUBDOMAIN as missing", () => {
+		expect(() =>
+			readAstropressNhostHostedConfig({
+				NHOST_SUBDOMAIN: "   ",
+				NHOST_REGION: "us-east-1",
+				NHOST_ADMIN_SECRET: "secret",
+			}),
+		).toThrow();
+	});
+
+	it("trims whitespace from NHOST_REGION (pins L54 .trim())", () => {
+		const config = readAstropressNhostHostedConfig({
+			NHOST_SUBDOMAIN: "xyz",
+			NHOST_REGION: "  us-east-1  ",
+			NHOST_ADMIN_SECRET: "secret",
+		});
+		expect(config.region).toBe("us-east-1");
+	});
+
+	it("trims whitespace from NHOST_ADMIN_SECRET (pins L55 .trim())", () => {
+		const config = readAstropressNhostHostedConfig({
+			NHOST_SUBDOMAIN: "xyz",
+			NHOST_REGION: "us-east-1",
+			NHOST_ADMIN_SECRET: "  secret  ",
+		});
+		expect(config.adminSecret).toBe("secret");
+	});
 });
