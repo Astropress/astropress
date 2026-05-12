@@ -1088,6 +1088,20 @@
 			"reason": "`finally { db.close(); }` handle cleanup in rollbackAstropressLastMigration. Mutating to `{}` leaks the handle but does not change the report's return value or any observable behaviour of the rollback. Same equivalence pattern as the sqlite-integrity finally-close registrations."
 		},
 		{
+			"file": "src/adapters/turso.ts",
+			"line": 67,
+			"column": 13,
+			"mutator": "Regex",
+			"reason": "`.replace(/^libsql:\\/\\//, \"\")` mutated to non-anchored `/libsql:\\/\\//`. Both forms produce identical results for any legal Turso database URL: the libsql:// substring only appears at the start, so the anchored and unanchored match the same single occurrence. No fixture exercises a malformed URL where libsql:// appears mid-string."
+		},
+		{
+			"file": "src/adapters/turso.ts",
+			"line": 68,
+			"column": 13,
+			"mutator": "Regex",
+			"reason": "`.replace(/^https:\\/\\//, \"\")` mutated to non-anchored `/https:\\/\\//`. Same equivalence as L67: the https:// substring only appears at the URL start in any well-formed Turso database URL, so anchored and unanchored match identically."
+		},
+		{
 			"file": "src/sqlite-bootstrap-migrations.ts",
 			"line": 19,
 			"column": 10,
