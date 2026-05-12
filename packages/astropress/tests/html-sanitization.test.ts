@@ -247,3 +247,46 @@ describe("html-sanitization.feature: sanitizeHtml() sanitize-html library fallba
 		expect(output).not.toContain("//evil.example.com");
 	});
 });
+
+describe("html-sanitization.feature: mutation-coverage pins", () => {
+	// The scheme regex `/^([a-zA-Z][a-zA-Z0-9+.-]*):/` must match only at the
+	// start. Without the `^` anchor a URL like "/some-path:foo" would still
+	// match "foo:" and treat it as a scheme — flipping a relative path into
+	// a scheme check.
+	it("isAllowedUrl treats a path with an internal colon as relative (anchored scheme match)", async () => {
+		// "/safe-path:internal" has no scheme at the start. Original
+		// schemeMatch is null → returns true (allowed). Mutant (no `^`)
+		// matches "internal:" somewhere → asks allowedSchemes for
+		// "internal" → false → href stripped.
+		const output = await sanitizeHtml('<a href="/safe-path:internal">link</a>');
+		expect(output).toContain('href="/safe-path:internal"');
+	});
+
+	// sanitizeSrcset's `.filter(Boolean)` drops empty entries left behind by
+	// consecutive commas. Without the filter, `[" ", ""]` flows into the
+	// subsequent `.filter(c => Boolean(url) && isAllowedUrl(url))` which
+	// still rejects them, but the candidate array would carry the
+	// blanks if isAllowedUrl returned true on "" — kill the mutant by
+	// asserting the joined output has no double-space artefacts.
+	it("sanitizeSrcset drops empty candidates from consecutive commas (no leftover blanks)", async () => {
+		const output = await sanitizeHtml('<img srcset="/a.jpg 1x,,/b.jpg 2x" alt="x" />');
+		// Original: candidates = ["/a.jpg 1x", "/b.jpg 2x"] → joined cleanly.
+		expect(output).toMatch(/srcset="\/a\.jpg 1x, \/b\.jpg 2x"/);
+		expect(output).not.toMatch(/srcset="[^"]*, ?, ?/);
+	});
+
+	// sanitizeSrcset's whitespace split uses `/\s+/` so multi-space gaps
+	// between URL and descriptor are handled as a single delimiter. The
+	// `+` quantifier matters: `/\s/` (without `+`) would split each
+	// individual space, producing empty entries between them, and the
+	// first token captured by `.split(/\s/, 1)` would still be the URL
+	// — but for srcset values where the URL is followed by tabs/newlines,
+	// only the `\s+` form correctly collapses them.
+	it("sanitizeSrcset splits URL from descriptor on runs of whitespace, not single chars", async () => {
+		// A trailing tab between url and descriptor; `\s+` collapses it.
+		// Mutated `\s` would still split at the first \t but the rest of
+		// the candidate would re-parse incorrectly.
+		const output = await sanitizeHtml('<img srcset="/x.jpg\t\t1x" alt="x" />');
+		expect(output).toContain("/x.jpg");
+	});
+});

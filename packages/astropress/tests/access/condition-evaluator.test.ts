@@ -48,6 +48,26 @@ describe("resolvePath", () => {
 		expect(resolvePath("env.now", { user: baseCtx.user })).toBeUndefined();
 	});
 
+	// Mutation pin: the L32 `if (root === "env")` branch survives a
+	// ConditionalExpression → true mutant because user/resource roots are
+	// caught earlier. Only an unknown root with env populated exposes the
+	// difference — mutant treats "foo" as an env path and returns ctx.env.
+	it("returns undefined for an unknown root even when env is present", () => {
+		expect(resolvePath("foo.now", baseCtx)).toBeUndefined();
+		expect(resolvePath("foo", baseCtx)).toBeUndefined();
+	});
+
+	// Mutation pin: the L39 null-guard in walk(). With the guard skipped,
+	// `typeof null === "object"` lets the loop fall through to
+	// `(null)["deeper"]` which throws TypeError. The guard converts that
+	// into a clean undefined return for any path traversing through null.
+	it("returns undefined when a mid-path segment is null", () => {
+		// user.attributes.missing is null in baseCtx — walking past it
+		// must short-circuit, not throw.
+		expect(() => resolvePath("user.attributes.missing.deeper", baseCtx)).not.toThrow();
+		expect(resolvePath("user.attributes.missing.deeper", baseCtx)).toBeUndefined();
+	});
+
 	it("returns undefined for an unknown root", () => {
 		expect(resolvePath("nope.x", baseCtx)).toBeUndefined();
 	});
@@ -452,5 +472,84 @@ describe("evaluateCondition", () => {
 		it("allOf returns true for an empty conditions array (vacuous truth)", () => {
 			expect(evaluateCondition({ op: "allOf", conditions: [] } as never, baseCtx)).toBe(true);
 		});
+	});
+
+	// ── Mutation-coverage pins for the missing-attribute guards on each leaf op.
+	//
+	// Every `case "X"` in evaluateCondition begins with a defensive guard such
+	// as `if (!present(left)) return false` or `if (typeof left !== "number") return false`.
+	// Without these tests the ConditionalExpression mutants that replace each
+	// guard's predicate with `false` survive, because for typical inputs the
+	// subsequent comparison happens to return false too. The cases below
+	// construct inputs where dropping the guard changes the observable result.
+	describe("leaf-op missing-attribute guards (mutation coverage)", () => {
+		// stringEquals: with the guard skipped, String(undefined) is "undefined"
+		// and the comparison can spuriously match a right operand of "undefined".
+		it("stringEquals returns false when left is missing even if right equals 'undefined'", () => {
+			expect(
+				evaluateCondition(
+					{ op: "stringEquals", left: "user.attributes.absent", right: "undefined" } as never,
+					baseCtx,
+				),
+			).toBe(false);
+		});
+
+		// stringIn: same trap — without the guard, "undefined" leaks into .some.
+		it("stringIn returns false when left is missing even if right contains 'undefined'", () => {
+			expect(
+				evaluateCondition(
+					{
+						op: "stringIn",
+						left: "user.attributes.absent",
+						right: ["undefined", "x"],
+					} as never,
+					baseCtx,
+				),
+			).toBe(false);
+		});
+
+		// stringStartsWith: "undefined".startsWith("und") is true; the guard
+		// keeps the result false for a genuinely-missing attribute.
+		it("stringStartsWith returns false when left is missing even if right is a prefix of 'undefined'", () => {
+			expect(
+				evaluateCondition(
+					{
+						op: "stringStartsWith",
+						left: "user.attributes.absent",
+						right: "und",
+					} as never,
+					baseCtx,
+				),
+			).toBe(false);
+		});
+
+		// numberLessThan: null coerces to 0 in `<`; without the typeof guard
+		// `null < 5` is true. The guard prevents this.
+		it("numberLessThan returns false when left is null (not a number)", () => {
+			// user.attributes.missing is null in baseCtx.
+			expect(
+				evaluateCondition(
+					{ op: "numberLessThan", left: "user.attributes.missing", right: 5 } as never,
+					baseCtx,
+				),
+			).toBe(false);
+		});
+
+		// numberGreaterThan: same coercion trap; null > -5 is true without
+		// the guard.
+		it("numberGreaterThan returns false when left is null (not a number)", () => {
+			expect(
+				evaluateCondition(
+					{ op: "numberGreaterThan", left: "user.attributes.missing", right: -5 } as never,
+					baseCtx,
+				),
+			).toBe(false);
+		});
+
+		// bool: with the guard, non-boolean left returns false; without it,
+		// `true === true` would only match if left literally === c.right under
+		// strict equality. For typed boolean right operands the strict
+		// comparison filters non-booleans regardless, so this case is the
+		// equivalent-mutant boundary — registered as such in the catalog.
 	});
 });

@@ -1109,6 +1109,34 @@
 			"reason": "`.trim()` removal on `String(record.metadata?.targetPath ?? \"\").trim()`. The redirect store immediately re-normalises via `input.normalizePath(rawInput.targetPath)` (admin-normalizers.ts:normalizePath), which itself calls `.trim()` before deciding `startsWith(\"/\")`. The helper's pre-trim is redundant — store's normalisation produces identical persisted targetPath regardless."
 		},
 		{
+			"file": "src/admin-locale.ts",
+			"line": 48,
+			"column": 22,
+			"mutator": "ConditionalExpression",
+			"reason": "`.filter((entry) => entry.tag.length > 0)` true-direction mutant (always-keep). Empty-tag entries pass through, but the downstream loop checks `isAdminLocale(primary)` on `tag.split(\"-\")[0]` — for an empty tag, primary is \"\" which isAdminLocale rejects, so iteration continues. The end result (first matching locale, or null) is identical whether empty entries are pre-filtered or skipped one-by-one inside the loop."
+		},
+		{
+			"file": "src/admin-locale.ts",
+			"line": 48,
+			"column": 22,
+			"mutator": "EqualityOperator",
+			"reason": "`entry.tag.length > 0` → `entry.tag.length >= 0`. Same equivalence root as L48 ConditionalExpression true-direction: keeping zero-length entries doesn't change the final locale selection because the downstream isAdminLocale check filters them anyway. Length is also always non-negative, so >= 0 is structurally identical to true for this guard."
+		},
+		{
+			"file": "src/access/condition-evaluator.ts",
+			"line": 97,
+			"column": 8,
+			"mutator": "ConditionalExpression",
+			"reason": "`case \"bool\": if (typeof left !== \"boolean\") return false` — the false-direction mutant skips the typeof guard. Falls through to `return left === c.right`. For any non-boolean `left` (string, number, null, undefined, object), strict equality against a boolean `c.right` is always false in JavaScript. Mutant and original produce identical output for every non-boolean left, and the guard is a no-op for boolean left. True equivalent under TypeScript's typed right operand (Condition's right side is `boolean` for `op: \"bool\"`)."
+		},
+		{
+			"file": "src/html-sanitization.ts",
+			"line": 40,
+			"column": 57,
+			"mutator": "OptionalChaining",
+			"reason": "`allowedGlobally?.has(attributeName)` → `allowedGlobally.has(attributeName)`. allowedGlobally is `allowedAttributes.get(\"*\")` and allowedAttributes (html-sanitization-data.ts) hard-codes `[\"*\", new Set([\"class\"])]` as its first entry. `.get(\"*\")` is therefore never undefined for any execution of this module — the optional chain is a typescript-narrowing artefact, not runtime control flow."
+		},
+		{
 			"file": "src/adapters/sqlite-helpers.ts",
 			"line": 21,
 			"column": 6,

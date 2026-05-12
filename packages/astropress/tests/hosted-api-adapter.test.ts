@@ -309,6 +309,43 @@ describe("hosted api adapter", () => {
 		expect(adapter.capabilities.hostedAdmin).toBe(true);
 	});
 
+	// Pin every default-true capability boolean literal so the
+	// BooleanLiteral → false mutants at L53-58 of hosted-api-adapter.ts get
+	// killed (one mutant per `true` in the normalizeProviderCapabilities
+	// argument literal).
+	it("defaults every hosted-runtime capability to true when no override is provided", () => {
+		const adapter = createAstropressHostedApiAdapter({
+			providerName: "appwrite",
+			apiBaseUrl: "https://api.example.test",
+			fetchImpl: async () => new Response("[]", { status: 200 }),
+		});
+		expect(adapter.capabilities.hostedAdmin).toBe(true);
+		expect(adapter.capabilities.previewEnvironments).toBe(true);
+		expect(adapter.capabilities.serverRuntime).toBe(true);
+		expect(adapter.capabilities.database).toBe(true);
+		expect(adapter.capabilities.objectStorage).toBe(true);
+		expect(adapter.capabilities.gitSync).toBe(true);
+	});
+
+	// Pin the joinApiUrl path-segment separator (L29 StringLiteral mutant).
+	// A mutated `/` between baseUrl and path would emit a URL like
+	// "...example.testStryker was here!content" which would fail every
+	// upstream request — but tests stub fetch, so only an assertion on
+	// the URL passed to fetch can detect the mutant.
+	it("constructs API URLs by joining baseUrl + path with a literal '/' separator", async () => {
+		const captured: string[] = [];
+		const adapter = createAstropressHostedApiAdapter({
+			providerName: "supabase",
+			apiBaseUrl: "https://api.example.test",
+			fetchImpl: async (url) => {
+				captured.push(String(url));
+				return new Response("[]", { status: 200 });
+			},
+		});
+		await adapter.content.list();
+		expect(captured[0]).toBe("https://api.example.test/content");
+	});
+
 	it("allows defaultCapabilities overrides to flip a default true to false", () => {
 		const adapter = createAstropressHostedApiAdapter({
 			providerName: "supabase",
