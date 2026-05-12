@@ -140,6 +140,8 @@ jobs:
             audit:collaboration \
             audit:oss-health \
             audit:scaffold-quality \
+            audit:integration-honesty \
+            audit:integration-secrets \
             docs:api:check \
             docs:check
       - run: bun run repo:clean
