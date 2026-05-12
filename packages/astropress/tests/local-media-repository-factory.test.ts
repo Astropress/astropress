@@ -81,4 +81,67 @@ describe("local media repository factory", () => {
 			}),
 		);
 	});
+
+	it("upload audit summary contains 'Uploaded media asset <storedFilename>.' (pins L35 template)", () => {
+		const insertStoredMediaAsset = vi.fn();
+		const recordMediaAudit = vi.fn();
+		const repository = createAstropressLocalMediaRepository({
+			listMediaAssets: vi.fn(() => []),
+			updateMediaAsset: vi.fn(() => ({ ok: true })),
+			insertStoredMediaAsset,
+			getStoredMediaDeletionCandidate: vi.fn(),
+			markStoredMediaDeleted: vi.fn(),
+			recordMediaAudit,
+		});
+		repository.createMediaAsset(
+			{
+				filename: "test.png",
+				bytes: new Uint8Array([1, 2, 3]),
+				mimeType: "image/png",
+			},
+			{ email: "e@x.com", name: "E", role: "editor" },
+		);
+		const call = recordMediaAudit.mock.calls[0]?.[0] as { summary: string };
+		expect(call.summary).toBe("Uploaded media asset media-test-uuid.");
+	});
+
+	it("deleteMediaAsset returns ok:false with the 'could not be deleted' error when row is missing (pins L48 !row + L51 error message)", () => {
+		const repository = createAstropressLocalMediaRepository({
+			listMediaAssets: vi.fn(() => []),
+			updateMediaAsset: vi.fn(() => ({ ok: true })),
+			insertStoredMediaAsset: vi.fn(),
+			getStoredMediaDeletionCandidate: vi.fn(() => null),
+			markStoredMediaDeleted: vi.fn(),
+			recordMediaAudit: vi.fn(),
+		});
+		const result = repository.deleteMediaAsset("missing-id", {
+			email: "e@x.com",
+			name: "E",
+			role: "editor",
+		});
+		expect(result.ok).toBe(false);
+		if (!result.ok) {
+			expect(result.error).toBe("The selected media asset could not be deleted.");
+		}
+	});
+
+	it("deleteMediaAsset returns ok:false when markStoredMediaDeleted returns false (pins L56 !deleted + L59 error message)", () => {
+		const repository = createAstropressLocalMediaRepository({
+			listMediaAssets: vi.fn(() => []),
+			updateMediaAsset: vi.fn(() => ({ ok: true })),
+			insertStoredMediaAsset: vi.fn(),
+			getStoredMediaDeletionCandidate: vi.fn(() => ({ localPath: "/some/path" })),
+			markStoredMediaDeleted: vi.fn(() => false),
+			recordMediaAudit: vi.fn(),
+		});
+		const result = repository.deleteMediaAsset("found-id", {
+			email: "e@x.com",
+			name: "E",
+			role: "editor",
+		});
+		expect(result.ok).toBe(false);
+		if (!result.ok) {
+			expect(result.error).toBe("The selected media asset could not be deleted.");
+		}
+	});
 });
