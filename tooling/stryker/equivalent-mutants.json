@@ -1088,6 +1088,27 @@
 			"reason": "`finally { db.close(); }` handle cleanup in rollbackAstropressLastMigration. Mutating to `{}` leaks the handle but does not change the report's return value or any observable behaviour of the rollback. Same equivalence pattern as the sqlite-integrity finally-close registrations."
 		},
 		{
+			"file": "src/import/wordpress-xml-helpers.ts",
+			"line": 20,
+			"column": 51,
+			"mutator": "Regex",
+			"reason": "`/\\]\\]>$/` CDATA closing-tag regex. Mutant removes the backslashes: `/]]>$/`. Outside a character class, `]` is a literal `]` (the JS regex engine permits unescaped `]` outside `[...]`). The mutated regex matches the exact same input as the escaped form. Genuine equivalent."
+		},
+		{
+			"file": "src/import/wordpress-xml-helpers.ts",
+			"line": 73,
+			"column": 12,
+			"mutator": "Regex",
+			"reason": "`.replace(/[^a-z0-9/_-]+/g, '-')` in normalizeSlug — mutant drops the `+` quantifier. With the global flag and the immediately-following `.replace(/-{2,}/g, '-')` at L74, any run of unsafe chars is replaced one-char-at-a-time with dashes by the mutated regex, then L74 collapses the resulting dash run back to a single dash. Final sanitized string is byte-identical. Genuine equivalent."
+		},
+		{
+			"file": "src/import/wordpress-xml-helpers.ts",
+			"line": 104,
+			"column": 63,
+			"mutator": "StringLiteral",
+			"reason": "`filename.toLowerCase().split('.').pop() ?? ''` — mutant changes the empty-string fallback to `'Stryker was here!'`. The result feeds `WP_MIME_BY_EXTENSION[extension]`, which has no entry for either `''` or `'Stryker was here!'`, so both fall through `?? WP_DEFAULT_MIME` and return the same default mime. Genuine equivalent."
+		},
+		{
 			"file": "src/content-services-ops.ts",
 			"line": 61,
 			"column": 34,

@@ -269,4 +269,52 @@ describe("safeArtifactFilename", () => {
 	it("returns fallback when input is empty", () => {
 		expect(safeArtifactFilename("", "FB")).toBe("FB");
 	});
+
+	it("collapses consecutive dashes to a single dash (pins L119 -{2,} regex + '-' replacement)", () => {
+		expect(safeArtifactFilename("a--b", "fb")).toBe("a-b");
+		expect(safeArtifactFilename("a---b", "fb")).toBe("a-b");
+		expect(safeArtifactFilename("a----b", "fb")).toBe("a-b");
+	});
+});
+
+describe("survivor pins (kills mutation testing equivalents)", () => {
+	it("decodeXml resolves hex numeric entities (pins L27 code[1]?.toLowerCase optional chain)", () => {
+		expect(decodeXml("&#x41;")).toBe("A");
+		expect(decodeXml("&#X41;")).toBe("A");
+		expect(decodeXml("&#65;")).toBe("A");
+	});
+
+	it("stripCdata strips a leading <![CDATA[ token (pins L20:23 CDATA opener regex)", () => {
+		expect(stripCdata("<![CDATA[content]]>")).toBe("content");
+		expect(stripCdata("plain")).toBe("plain");
+	});
+
+	it("getTagText matches mixed-case tags via the 'i' flag (pins L40 case-insensitive)", () => {
+		expect(getTagText("<TITLE>Hi</TITLE>", "title")).toBe("Hi");
+		expect(getTagText("<Title>Hi</Title>", "title")).toBe("Hi");
+	});
+
+	it("getAttributeValue matches mixed-case attributes via the 'i' flag (pins L65 case-insensitive)", () => {
+		expect(getAttributeValue('NAME="hello"', "name")).toBe("hello");
+		expect(getAttributeValue('Name="hello"', "name")).toBe("hello");
+	});
+
+	it("getAttributeValue trims whitespace inside the attribute value (pins L66 .trim())", () => {
+		expect(getAttributeValue('name="  hello  "', "name")).toBe("hello");
+	});
+
+	it("normalizeSlug lowercases and trims input (pins L70 method chain)", () => {
+		expect(normalizeSlug("  Hello World  ", "fb")).toBe("hello-world");
+		expect(normalizeSlug("UPPERCASE", "fb")).toBe("uppercase");
+	});
+
+	it("normalizeSlug collapses consecutive dashes to one (pins L74 -{2,} regex + '-' replacement)", () => {
+		expect(normalizeSlug("a--b", "fb")).toBe("a-b");
+		expect(normalizeSlug("a----b", "fb")).toBe("a-b");
+	});
+
+	it("filenameFromUrl returns the fallback for URLs whose pathname ends with a slash (pins L111 ?? '' fallback)", () => {
+		expect(filenameFromUrl("https://example.com/path/", "FB")).toBe("FB");
+		expect(filenameFromUrl("https://example.com/", "FB")).toBe("FB");
+	});
 });
