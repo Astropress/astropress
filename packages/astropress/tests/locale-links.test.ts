@@ -85,6 +85,44 @@ describe("getAlternateLinksForEnglishRoute()", () => {
 		const links = getAlternateLinksForEnglishRoute("/non-existent-page");
 		expect(links).toHaveLength(0);
 	});
+
+	it("filters out non-'es' locale entries (pins L21 locale === 'es' check)", () => {
+		registerCms({
+			siteUrl: "https://example.com",
+			templateKeys: [],
+			seedPages: [],
+			archives: [],
+			translationStatus: [
+				{
+					route: "/fr/impact",
+					locale: "fr",
+					englishSourceUrl: "/impact",
+					translationState: "published",
+				},
+			],
+		});
+		const links = getAlternateLinksForEnglishRoute("/impact");
+		expect(links).toHaveLength(0);
+	});
+
+	it("filters out non-published translation states (pins L22 isPublished check)", () => {
+		registerCms({
+			siteUrl: "https://example.com",
+			templateKeys: [],
+			seedPages: [],
+			archives: [],
+			translationStatus: [
+				{
+					route: "/es/impacto-draft",
+					locale: "es",
+					englishSourceUrl: "/impact",
+					translationState: "draft",
+				},
+			],
+		});
+		const links = getAlternateLinksForEnglishRoute("/impact");
+		expect(links).toHaveLength(0);
+	});
 });
 
 describe("sanitizeCanonicalUrl()", () => {
@@ -112,6 +150,51 @@ describe("sanitizeCanonicalUrl()", () => {
 		// Covers the `parsed.pathname === "/"` ternary true branch on line 46
 		const url = sanitizeCanonicalUrl("https://example.com/", "/");
 		expect(url).toBe("https://example.com/");
+	});
+
+	it("returns fallback canonical when value is undefined (pins L42 !value check)", () => {
+		const url = sanitizeCanonicalUrl(undefined, "/fallback-route");
+		expect(url).toContain("/fallback-route");
+	});
+
+	it("returns fallback canonical when value is empty string (pins L42 !value check)", () => {
+		const url = sanitizeCanonicalUrl("", "/fallback-route");
+		expect(url).toContain("/fallback-route");
+	});
+});
+
+describe("getLocaleSwitchTargets isLocalePath survivors", () => {
+	it("uses currentPath when lang='es' and path is exactly '/es' (pins L66 path === '/es')", () => {
+		const targets = getLocaleSwitchTargets({
+			lang: "es",
+			currentPath: "/es",
+		});
+		expect(targets.es).toBe("/es");
+	});
+
+	it("uses currentPath when lang='es' and path starts with '/es/' (pins L66 startsWith)", () => {
+		const targets = getLocaleSwitchTargets({
+			lang: "es",
+			currentPath: "/es/sobre/",
+		});
+		expect(targets.es).toBe("/es/sobre/");
+	});
+
+	it("does NOT use currentPath when lang='es' but path is in EN-space (e.g. '/about')", () => {
+		const targets = getLocaleSwitchTargets({
+			lang: "es",
+			currentPath: "/about",
+		});
+		// Default fallback to /es because /about is not an es-prefixed path.
+		expect(targets.es).toBe("/es");
+	});
+
+	it("does NOT use currentPath when lang='es' and path is '/es-mx' (similar prefix but not '/es' or '/es/')", () => {
+		const targets = getLocaleSwitchTargets({
+			lang: "es",
+			currentPath: "/es-mx/about",
+		});
+		expect(targets.es).toBe("/es");
 	});
 });
 
