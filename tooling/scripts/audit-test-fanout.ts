@@ -52,6 +52,10 @@ const ALLOWLIST: ReadonlyMap<string, string> = new Map([
 		"db-migrate-ops.test.ts",
 		"migration runner contract — exercises the full apply/rollback API surface",
 	],
+	[
+		"d1-migrate-ops.test.ts",
+		"D1 migration runner contract — exercises apply/rollback/splitSqlStatements via numbered SQL fixtures",
+	],
 	["sync-git.test.ts", "git-sync adapter contract — exercises export/import/sqlite paths together"],
 	[
 		"audit-registry.test.ts",

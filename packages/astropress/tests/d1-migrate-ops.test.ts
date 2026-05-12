@@ -241,6 +241,41 @@ describe("rollbackD1LastMigration", () => {
 	});
 });
 
+describe("splitSqlStatements survivors (via runD1Migrations)", () => {
+	let db: DatabaseSync;
+	let d1: D1DatabaseLike;
+	beforeEach(() => {
+		db = new DatabaseSync(":memory:");
+		d1 = createMockD1(db);
+	});
+
+	it("trims whitespace around statements (pins L33 .trim() on map)", async () => {
+		const dir = makeMigrationsDir({
+			"0001_x.sql":
+				"  CREATE TABLE a (id INTEGER PRIMARY KEY)  ;  CREATE TABLE b (id INTEGER PRIMARY KEY)  ",
+		});
+		await runD1Migrations({ db: d1, migrationsDir: dir });
+		expect(() => db.prepare("SELECT * FROM a").all()).not.toThrow();
+		expect(() => db.prepare("SELECT * FROM b").all()).not.toThrow();
+	});
+
+	it("filters out -- line-comment-only segments (pins L34 startsWith('--'))", async () => {
+		const dir = makeMigrationsDir({
+			"0003_x.sql": "-- a comment\n;\nCREATE TABLE d (id INTEGER PRIMARY KEY)",
+		});
+		await runD1Migrations({ db: d1, migrationsDir: dir });
+		expect(() => db.prepare("SELECT * FROM d").all()).not.toThrow();
+	});
+
+	it("filters out /* block-comment-only segments (pins L34 /^\\/\\*/ regex)", async () => {
+		const dir = makeMigrationsDir({
+			"0004_x.sql": "/* leading comment */;\nCREATE TABLE e (id INTEGER PRIMARY KEY)",
+		});
+		await runD1Migrations({ db: d1, migrationsDir: dir });
+		expect(() => db.prepare("SELECT * FROM e").all()).not.toThrow();
+	});
+});
+
 describe("D1 migration report shape matches SQLite report shape", () => {
 	it("runD1Migrations returns { migrationsDir, applied, skipped, dryRun }", async () => {
 		const db = new DatabaseSync(":memory:");
