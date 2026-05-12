@@ -146,6 +146,93 @@ describe("Subscriber endpoint forwards to Listmonk API via newsletterAdapter", (
 		expect(result).toMatchObject({ ok: false });
 		expect(result.error).toContain("could not be reached");
 	});
+
+	it("sends method:POST + Content-Type: application/json + preconfirm_subscriptions:true (pins L73/L76/L83)", async () => {
+		let init: RequestInit = {};
+		vi.spyOn(globalThis, "fetch").mockImplementationOnce(async (_url, requestInit) => {
+			init = requestInit as RequestInit;
+			return new Response("{}", { status: 200 });
+		});
+		await newsletterAdapter.subscribe("u@x.com", makeLocals(listmonkEnv));
+		expect(init.method).toBe("POST");
+		const headers = init.headers as Record<string, string>;
+		expect(headers["Content-Type"]).toBe("application/json");
+		const body = JSON.parse(init.body as string);
+		expect(body.preconfirm_subscriptions).toBe(true);
+	});
+
+	it("logs 'Listmonk API error' on non-ok response (pins L88 message + payload)", async () => {
+		const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+		vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(new Response("body", { status: 500 }));
+		await newsletterAdapter.subscribe("u@x.com", makeLocals(listmonkEnv));
+		const matched = errorSpy.mock.calls.find((args) =>
+			args.some((a) => typeof a === "string" && a === "Listmonk API error"),
+		);
+		expect(matched).toBeDefined();
+		const meta = matched?.[2] as Record<string, unknown>;
+		expect(meta?.status).toBe(500);
+		expect(meta?.body).toBe("body");
+		errorSpy.mockRestore();
+	});
+
+	it("logs 'Successfully subscribed to Listmonk' on 200 (pins L94 message + payload)", async () => {
+		const logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+		vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(new Response("{}", { status: 200 }));
+		await newsletterAdapter.subscribe("u@x.com", makeLocals(listmonkEnv));
+		const matched = logSpy.mock.calls.find((args) =>
+			args.some((a) => typeof a === "string" && a === "Successfully subscribed to Listmonk"),
+		);
+		expect(matched).toBeDefined();
+		const meta = matched?.[2] as Record<string, unknown>;
+		expect(meta?.email).toBe("u@x.com");
+		logSpy.mockRestore();
+	});
+
+	it("logs 'Listmonk subscription error' on fetch throw (pins L97 message + payload)", async () => {
+		const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+		vi.spyOn(globalThis, "fetch").mockRejectedValueOnce(new Error("oops"));
+		await newsletterAdapter.subscribe("u@x.com", makeLocals(listmonkEnv));
+		const matched = errorSpy.mock.calls.find((args) =>
+			args.some((a) => typeof a === "string" && a === "Listmonk subscription error"),
+		);
+		expect(matched).toBeDefined();
+		const meta = matched?.[2] as Record<string, unknown>;
+		expect(String((meta?.error as Error)?.message ?? meta?.error)).toContain("oops");
+		errorSpy.mockRestore();
+	});
+
+	it("logs 'Newsletter is misconfigured' when config is incomplete (pins L122 message + payload)", async () => {
+		const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+		await newsletterAdapter.subscribe(
+			"u@x.com",
+			makeLocals({
+				NEWSLETTER_DELIVERY_MODE: "listmonk",
+				LISTMONK_API_URL: "https://x",
+				LISTMONK_API_USERNAME: "u",
+				LISTMONK_API_PASSWORD: "p",
+				// LISTMONK_LIST_ID missing
+			}),
+		);
+		const matched = errorSpy.mock.calls.find((args) =>
+			args.some((a) => typeof a === "string" && a === "Newsletter is misconfigured"),
+		);
+		expect(matched).toBeDefined();
+		const meta = matched?.[2] as Record<string, unknown>;
+		expect(meta?.reason).toBeDefined();
+		errorSpy.mockRestore();
+	});
+
+	it("logs 'Using mock delivery mode.' in mock mode (pins L129 message + payload)", async () => {
+		const logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+		await newsletterAdapter.subscribe("u@x.com", makeLocals({ NEWSLETTER_DELIVERY_MODE: "mock" }));
+		const matched = logSpy.mock.calls.find((args) =>
+			args.some((a) => typeof a === "string" && a === "Using mock delivery mode."),
+		);
+		expect(matched).toBeDefined();
+		const meta = matched?.[2] as Record<string, unknown>;
+		expect(meta?.mode).toBe("mock");
+		logSpy.mockRestore();
+	});
 });
 
 describe("Listmonk adapter returns error when configuration is incomplete", () => {
