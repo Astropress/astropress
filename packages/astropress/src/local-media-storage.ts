@@ -6,24 +6,13 @@ import {
 	getLocalUploadsDir,
 	guessImageMimeType,
 } from "./local-image-storage";
+import {
+	ALLOWED_EXTENSIONS as allowedExtensions,
+	ALLOWED_MIME_TYPES as allowedMimeTypes,
+	MAX_UPLOAD_BYTES as maxUploadBytes,
+} from "./local-media-storage-data";
 
 const uploadsDir = getLocalUploadsDir();
-
-const allowedMimeTypes = new Set([
-	"image/jpeg",
-	"image/png",
-	"image/webp",
-	"image/gif",
-	"image/avif",
-	"image/svg+xml",
-]);
-
-// Safe file extensions that map unambiguously to allowed image types.
-// This allowlist is checked in addition to MIME type — extensions like .php
-// that fall through to a default MIME type guess are explicitly blocked here.
-const allowedExtensions = new Set([".jpg", ".jpeg", ".png", ".webp", ".gif", ".avif", ".svg"]);
-
-const maxUploadBytes = 10 * 1024 * 1024; // 10 MB
 
 export interface LocalMediaDescriptor {
 	id: string;
