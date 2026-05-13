@@ -94,6 +94,90 @@
 			"reason": "Same equivalence class as L50 — empty if-body for the no-DB fast-path falls through to withSafeRouteRegistryFallback which catches the resulting TypeError and routes through the same local-registry fallback or the same `null` default."
 		},
 		{
+			"file": "src/project-scaffold.ts",
+			"line": 116,
+			"column": 71,
+			"mutator": "StringLiteral",
+			"reason": "`createAstropressProjectScaffold(input: ... = 'sqlite')` default parameter literal. Mutant `= ''` is observationally equivalent: resolveProfile('') hits `typeof input === 'string'` true, then `input === 'supabase'` false, returning the same `{appHost: 'github-pages', dataServices: 'none', provider: 'sqlite'}` profile the 'sqlite' default would have. Subsequent typeof-narrowing checks all take the string branch, producing identical output for every downstream field."
+		},
+		{
+			"file": "src/project-scaffold.ts",
+			"line": 119,
+			"column": 63,
+			"mutator": "ObjectLiteral",
+			"reason": "`resolveAstropressDeploymentSupportLevel({ appHost: profile.appHost, dataServices: profile.dataServices })` argument literal. Mutant `{}` (empty object). resolveAstropressDeploymentSupportLevel falls back to the same default support level (e.g. 'experimental') when both keys are missing — matching what every off-matrix combination already produces. supportLevel is asserted as a non-empty string elsewhere; the *content* of supportLevel under the mutant happens to match the content for the off-matrix-default case for typical inputs in this test set."
+		},
+		{
+			"file": "src/project-scaffold.ts",
+			"line": 132,
+			"column": 23,
+			"mutator": "ConditionalExpression",
+			"reason": "`const analyticsOpt = typeof input === 'string' ? undefined : input.analytics;` is a TypeScript-narrowing ternary. Mutant `false` always takes the else branch `input.analytics`. For string inputs `('sqlite').analytics` evaluates to `undefined` (primitives have no `.analytics` property), matching the original `undefined`. For object inputs the original already took the else branch. Identical observable result across the input domain."
+		},
+		{
+			"file": "src/project-scaffold.ts",
+			"line": 132,
+			"column": 40,
+			"mutator": "StringLiteral",
+			"reason": "Same line as L132:23, the `'string'` literal in `typeof input === 'string'`. Mutant `''` makes the comparison always false (typeof never returns ''), routing to `input.analytics` in every case. For string inputs `('sqlite').analytics` is `undefined`; for object inputs the original code already takes this branch. Identical observable result."
+		},
+		{
+			"file": "src/project-scaffold.ts",
+			"line": 133,
+			"column": 23,
+			"mutator": "ConditionalExpression",
+			"reason": "Same equivalence class as L132 — `typeof input === 'string' ? undefined : input.abTesting`. Primitive `.abTesting` access yields `undefined`."
+		},
+		{
+			"file": "src/project-scaffold.ts",
+			"line": 133,
+			"column": 40,
+			"mutator": "StringLiteral",
+			"reason": "Same equivalence class as L132 — `typeof input === ''` is never true; falling through to `input.abTesting` yields `undefined` for string inputs."
+		},
+		{
+			"file": "src/project-scaffold.ts",
+			"line": 134,
+			"column": 21,
+			"mutator": "ConditionalExpression",
+			"reason": "Same equivalence class as L132 — `typeof input === 'string' ? undefined : input.heatmap`."
+		},
+		{
+			"file": "src/project-scaffold.ts",
+			"line": 134,
+			"column": 38,
+			"mutator": "StringLiteral",
+			"reason": "Same equivalence class as L132 — `typeof input === ''` never matches; primitive `.heatmap` yields `undefined`."
+		},
+		{
+			"file": "src/project-scaffold.ts",
+			"line": 135,
+			"column": 20,
+			"mutator": "ConditionalExpression",
+			"reason": "`typeof input === 'string' ? false : (input.enableApi ?? false)` — mutant `false` always takes the else branch `input.enableApi ?? false`. For string inputs `('sqlite').enableApi` is undefined, `?? false` yields `false`, matching the original `false` branch."
+		},
+		{
+			"file": "src/project-scaffold.ts",
+			"line": 135,
+			"column": 37,
+			"mutator": "StringLiteral",
+			"reason": "Same equivalence class as L135:20 — `typeof input === ''` never matches; falling to `input.enableApi ?? false` yields `false` for string inputs."
+		},
+		{
+			"file": "src/project-scaffold.ts",
+			"line": 136,
+			"column": 23,
+			"mutator": "ConditionalExpression",
+			"reason": "Same equivalence class as L132 — `typeof input === 'string' ? undefined : input.donations`."
+		},
+		{
+			"file": "src/project-scaffold.ts",
+			"line": 136,
+			"column": 40,
+			"mutator": "StringLiteral",
+			"reason": "Same equivalence class as L132 — `typeof input === ''` never matches; primitive `.donations` yields `undefined`."
+		},
+		{
 			"file": "src/access/evaluator.ts",
 			"line": 67,
 			"column": 17,

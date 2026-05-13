@@ -353,3 +353,179 @@ describe("project scaffold", () => {
 		expect(supabase.packageScripts["deploy:vercel"]).toContain("vercel deploy");
 	});
 });
+
+describe("project scaffold — resolveProfile string-input branch pins", () => {
+	it("string 'supabase' → provider/appHost/dataServices verbatim", () => {
+		const s = createAstropressProjectScaffold("supabase");
+		expect(s.provider).toBe("supabase");
+		expect(s.appHost).toBe("vercel");
+		expect(s.dataServices).toBe("supabase");
+	});
+
+	it("string 'sqlite' → provider=sqlite, appHost=github-pages, dataServices=none", () => {
+		const s = createAstropressProjectScaffold("sqlite");
+		expect(s.provider).toBe("sqlite");
+		expect(s.appHost).toBe("github-pages");
+		expect(s.dataServices).toBe("none");
+	});
+
+	it("calling without args defaults to 'sqlite' (parameter default)", () => {
+		const s = createAstropressProjectScaffold();
+		expect(s.provider).toBe("sqlite");
+		expect(s.appHost).toBe("github-pages");
+		expect(s.dataServices).toBe("none");
+	});
+});
+
+describe("project scaffold — resolveProfile object-input dataServices→appHost map", () => {
+	it("dataServices=appwrite (omitted appHost) infers render-web", () => {
+		const s = createAstropressProjectScaffold({ dataServices: "appwrite" });
+		expect(s.appHost).toBe("render-web");
+	});
+	it("dataServices=pocketbase (omitted appHost) infers render-web", () => {
+		const s = createAstropressProjectScaffold({ dataServices: "pocketbase" });
+		expect(s.appHost).toBe("render-web");
+	});
+	it("dataServices=nhost (omitted appHost) infers render-web", () => {
+		const s = createAstropressProjectScaffold({ dataServices: "nhost" });
+		expect(s.appHost).toBe("render-web");
+	});
+	it("dataServices=neon (omitted appHost) infers render-web", () => {
+		const s = createAstropressProjectScaffold({ dataServices: "neon" });
+		expect(s.appHost).toBe("render-web");
+	});
+	it("dataServices=turso (omitted appHost) infers render-web", () => {
+		const s = createAstropressProjectScaffold({ dataServices: "turso" });
+		expect(s.appHost).toBe("render-web");
+	});
+	it("dataServices=supabase (omitted appHost) infers vercel", () => {
+		const s = createAstropressProjectScaffold({ dataServices: "supabase" });
+		expect(s.appHost).toBe("vercel");
+	});
+	it("dataServices=cloudflare (omitted appHost) infers cloudflare-pages", () => {
+		const s = createAstropressProjectScaffold({ dataServices: "cloudflare" });
+		expect(s.appHost).toBe("cloudflare-pages");
+	});
+	it("dataServices=none (omitted appHost) infers github-pages", () => {
+		const s = createAstropressProjectScaffold({ dataServices: "none" });
+		expect(s.appHost).toBe("github-pages");
+	});
+	it("explicit appHost wins over inference", () => {
+		const s = createAstropressProjectScaffold({
+			dataServices: "supabase",
+			appHost: "netlify",
+		});
+		expect(s.appHost).toBe("netlify");
+	});
+	it("legacyProvider=supabase + omitted dataServices → dataServices=supabase", () => {
+		const s = createAstropressProjectScaffold({ legacyProvider: "supabase" });
+		expect(s.dataServices).toBe("supabase");
+		expect(s.provider).toBe("supabase");
+	});
+});
+
+describe("project scaffold — input-derived option threading", () => {
+	it("string input → enableApi=false: ASTROPRESS_API_ENABLED not set in localEnv", () => {
+		const s = createAstropressProjectScaffold("sqlite");
+		expect(s.localEnv.ASTROPRESS_API_ENABLED).toBeUndefined();
+	});
+
+	it("object input enableApi=true → localEnv.ASTROPRESS_API_ENABLED='true' and API env example included", () => {
+		const s = createAstropressProjectScaffold({ enableApi: true });
+		expect(s.localEnv.ASTROPRESS_API_ENABLED).toBe("true");
+		expect(Object.keys(s.envExample).some((k) => k.startsWith("ASTROPRESS_API"))).toBe(true);
+	});
+
+	it("object input enableApi omitted defaults to false", () => {
+		const s = createAstropressProjectScaffold({ dataServices: "none" });
+		expect(s.localEnv.ASTROPRESS_API_ENABLED).toBeUndefined();
+	});
+
+	it("object input enableApi=false explicitly is treated as false", () => {
+		const s = createAstropressProjectScaffold({ enableApi: false });
+		expect(s.localEnv.ASTROPRESS_API_ENABLED).toBeUndefined();
+	});
+
+	it("string input → analytics/abTesting/heatmap/donations all undefined (no provider env keys)", () => {
+		const s = createAstropressProjectScaffold("sqlite");
+		// none of these provider blocks should be present
+		expect(Object.keys(s.envExample).some((k) => k.startsWith("UMAMI"))).toBe(false);
+		expect(Object.keys(s.envExample).some((k) => k.startsWith("GROWTHBOOK"))).toBe(false);
+		expect(Object.keys(s.envExample).some((k) => k.startsWith("OPENREPLAY"))).toBe(false);
+	});
+
+	it("object input threads analytics=umami into envExample", () => {
+		const s = createAstropressProjectScaffold({ analytics: "umami" });
+		expect(s.envExample.PUBLIC_UMAMI_WEBSITE_ID).toBeDefined();
+	});
+
+	it("object input threads abTesting=growthbook into envExample", () => {
+		const s = createAstropressProjectScaffold({ abTesting: "growthbook" });
+		expect(Object.keys(s.envExample).some((k) => k.toLowerCase().includes("growthbook"))).toBe(
+			true,
+		);
+	});
+
+	it("object input threads heatmap=openreplay into envExample", () => {
+		const s = createAstropressProjectScaffold({ heatmap: "openreplay" });
+		expect(s.envExample.PUBLIC_OPENREPLAY_PROJECT_KEY).toBeDefined();
+	});
+
+	it("object input threads donations into envExample", () => {
+		const s = createAstropressProjectScaffold({
+			donations: { giveLively: true },
+		});
+		expect(s.envExample.GIVELIVELY_ORG_SLUG).toBeDefined();
+	});
+});
+
+describe("project scaffold — recommendationRationale and requiredEnvKeys defaults", () => {
+	it("known matrix entry surfaces matrixEntry.notes verbatim", () => {
+		// vercel+supabase is a first-class pair → matrix entry has notes
+		const s = createAstropressProjectScaffold({
+			appHost: "vercel",
+			dataServices: "supabase",
+		});
+		// Notes are non-empty and don't contain the fallback phrasing
+		expect(s.recommendationRationale.length).toBeGreaterThan(0);
+		expect(s.recommendationRationale).not.toContain("does not yet mark");
+	});
+
+	it("unknown matrix entry falls back to a template-literal rationale containing both names", () => {
+		// Pick an unusual combination not in the matrix
+		const s = createAstropressProjectScaffold({
+			appHost: "gitlab-pages",
+			dataServices: "cloudflare",
+		});
+		expect(s.recommendationRationale).toContain("gitlab-pages");
+		expect(s.recommendationRationale).toContain("cloudflare");
+		expect(s.recommendationRationale).toContain("does not yet mark");
+	});
+
+	it("known matrix entry surfaces requiredEnvKeys from the matrix entry", () => {
+		const s = createAstropressProjectScaffold({
+			appHost: "vercel",
+			dataServices: "supabase",
+		});
+		expect(Array.isArray(s.requiredEnvKeys)).toBe(true);
+		// Supabase entry requires SUPABASE_* keys
+		expect(s.requiredEnvKeys.length).toBeGreaterThan(0);
+	});
+
+	it("unknown matrix entry → requiredEnvKeys defaults to empty array (not 'Stryker was here')", () => {
+		const s = createAstropressProjectScaffold({
+			appHost: "gitlab-pages",
+			dataServices: "cloudflare",
+		});
+		expect(s.requiredEnvKeys).toEqual([]);
+	});
+
+	it("supportLevel is computed from (appHost, dataServices) — not blank", () => {
+		const s = createAstropressProjectScaffold({
+			appHost: "vercel",
+			dataServices: "supabase",
+		});
+		expect(typeof s.supportLevel).toBe("string");
+		expect(s.supportLevel.length).toBeGreaterThan(0);
+	});
+});
