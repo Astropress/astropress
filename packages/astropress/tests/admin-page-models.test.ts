@@ -1707,9 +1707,129 @@ describe("buildPostEditorPageModel", () => {
 			"admin@test.local",
 		);
 
+		// Mock getRuntimeContentStateByPath to return a distinct english-owner record so we
+		// exercise the loader branch (englishRoute /about !== legacyUrl /es/about) AND can
+		// assert that the loaded record — not the localized pageRecord — flows through.
+		const englishOwner = {
+			slug: "about",
+			legacyUrl: "/about",
+			title: "About",
+			templateKey: "content",
+			listingItems: [],
+			paginationLinks: [],
+			sourceHtmlPath: "runtime://content/about",
+			updatedAt: "2026-01-01T00:00:00Z",
+			body: "<p>About</p>",
+			summary: "About summary",
+			seoTitle: "About SEO",
+			metaDescription: "About meta",
+			status: "published",
+			kind: "post",
+		};
+		vi.spyOn(runtimePageStore, "getRuntimeContentStateByPath").mockResolvedValueOnce(
+			englishOwner as unknown as Awaited<
+				ReturnType<typeof runtimePageStore.getRuntimeContentStateByPath>
+			>,
+		);
+
 		const result = await buildPostEditorPageModel(locals, "es-about");
 		expect(result.status).toMatch(/ok|partial/);
 		expect(result.data.pageRecord?.slug).toBe("es-about");
+		// englishRoute (/about) differs from legacyUrl (/es/about) so the loader path runs and
+		// the linked English owner is loaded — not the same record as the localized pageRecord.
+		expect(result.data.englishOwnerRecord?.slug).toBe("about");
+		expect(result.data.englishOwnerRecord).not.toBe(result.data.pageRecord);
+	});
+
+	it("returns partial with the english-owner warning when getRuntimeContentStateByPath fails", async () => {
+		vi.spyOn(runtimePageStore, "getRuntimeContentStateByPath").mockRejectedValueOnce(
+			new Error("fail"),
+		);
+		db.prepare(
+			`INSERT INTO content_entries (slug, legacy_url, title, kind, template_key, source_html_path, body, summary, seo_title, meta_description)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		).run(
+			"es-about",
+			"/es/about",
+			"Sobre",
+			"post",
+			"content",
+			"runtime://content/es-about",
+			"<p>ES</p>",
+			"sum",
+			"seo",
+			"meta",
+		);
+		const result = await buildPostEditorPageModel(locals, "es-about");
+		expect(result.warnings).toContain(
+			"The linked English owner record is temporarily unavailable.",
+		);
+		expect(result.data.englishOwnerRecord).toBeNull();
+	});
+
+	it("returns partial with the locale-route warning when getRuntimeStructuredPageRoute fails", async () => {
+		vi.spyOn(runtimeRouteRegistry, "getRuntimeStructuredPageRoute").mockRejectedValueOnce(
+			new Error("fail"),
+		);
+		db.prepare(
+			`INSERT INTO content_entries (slug, legacy_url, title, kind, template_key, source_html_path, body, summary, seo_title, meta_description)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		).run(
+			"about",
+			"/about",
+			"About",
+			"post",
+			"content",
+			"runtime://content/about",
+			"<p>About</p>",
+			"sum",
+			"seo",
+			"meta",
+		);
+		const result = await buildPostEditorPageModel(locals, "about");
+		expect(result.warnings).toContain("The linked locale route is temporarily unavailable.");
+		expect(result.data.localizedRouteRecord).toBeNull();
+	});
+
+	it("returns partial with the translation-state warning and uses the configured fallback", async () => {
+		// Register a fresh CMS config with translationState distinct from "not_started" so the
+		// `?? \"not_started\"` default would change behavior if mutated, and the bubbled fallback
+		// from getRuntimeTranslationState reflects the config value.
+		registerCms({
+			templateKeys: ["content"],
+			siteUrl: "https://example.com",
+			seedPages: [],
+			archives: [],
+			translationStatus: [
+				{
+					route: "/es/foo",
+					translationState: "in_progress",
+					englishSourceUrl: "/foo",
+					locale: "es",
+				},
+			],
+		});
+		db.prepare(
+			`INSERT INTO content_entries (slug, legacy_url, title, kind, template_key, source_html_path, body, summary, seo_title, meta_description)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		).run(
+			"es-foo",
+			"/es/foo",
+			"ES Foo",
+			"post",
+			"content",
+			"runtime://content/es-foo",
+			"<p>ES</p>",
+			"sum",
+			"seo",
+			"meta",
+		);
+		vi.spyOn(runtimePageStore, "getRuntimeTranslationState").mockRejectedValueOnce(
+			new Error("fail"),
+		);
+		const result = await buildPostEditorPageModel(locals, "es-foo");
+		expect(result.warnings).toContain("Translation state is temporarily unavailable.");
+		expect(result.data.effectiveTranslationState).toBe("in_progress");
 	});
 
 	it("loads the editor for an english post that has a localized counterpart", async () => {
@@ -1741,9 +1861,16 @@ describe("buildPostEditorPageModel", () => {
 			"admin@test.local",
 		);
 
+		// When englishRoute === legacyUrl, the source MUST NOT call getRuntimeContentStateByPath;
+		// it short-circuits to pageRecord directly. A mutant that always takes the load branch
+		// would call the spy, so asserting zero calls (and reference equality with pageRecord)
+		// kills that mutation.
+		const byPathSpy = vi.spyOn(runtimePageStore, "getRuntimeContentStateByPath");
 		const result = await buildPostEditorPageModel(locals, "about");
 		expect(result.status).toMatch(/ok|partial/);
 		expect(result.data.pageRecord?.slug).toBe("about");
+		expect(byPathSpy).not.toHaveBeenCalled();
+		expect(result.data.englishOwnerRecord).toBe(result.data.pageRecord);
 	});
 });
 
@@ -1797,14 +1924,24 @@ describe("buildPostRevisionsPageModel", () => {
 		vi.spyOn(runtimePageStore, "getRuntimeAuthors").mockRejectedValueOnce(new Error("fail"));
 		const a = await buildPostRevisionsPageModel(locals, "hello-world");
 		expect(a.warnings).toContain("Authors are temporarily unavailable.");
+		expect(a.data.authors).toEqual([]);
 
 		vi.spyOn(runtimePageStore, "getRuntimeCategories").mockRejectedValueOnce(new Error("fail"));
 		const c = await buildPostRevisionsPageModel(locals, "hello-world");
 		expect(c.warnings).toContain("Categories are temporarily unavailable.");
+		expect(c.data.categories).toEqual([]);
 
 		vi.spyOn(runtimePageStore, "getRuntimeTags").mockRejectedValueOnce(new Error("fail"));
 		const t = await buildPostRevisionsPageModel(locals, "hello-world");
 		expect(t.warnings).toContain("Tags are temporarily unavailable.");
+		expect(t.data.tags).toEqual([]);
+	});
+
+	it("returns not_found with the content-record warning when getRuntimeContentState rejects", async () => {
+		vi.spyOn(runtimePageStore, "getRuntimeContentState").mockRejectedValueOnce(new Error("fail"));
+		const result = await buildPostRevisionsPageModel(locals, "hello-world");
+		expect(result.status).toBe("not_found");
+		expect(result.warnings).toContain("The content record could not be loaded.");
 	});
 });
 
@@ -1868,7 +2005,10 @@ describe("buildRoutePageEditorModel", () => {
 		// /services is not in translationStatus config so effectiveTranslationState should be undefined
 		const result = await buildRoutePageEditorModel(locals, "/services", adminRole);
 		expect(result.status).toBe("ok");
-		expect(result.data.pageRecord).not.toBeNull();
+		// Strong field-level assertions kill an ObjectLiteral → {} mutation on the ok() payload.
+		expect(result.data.pageRecord?.path).toBe("/services");
+		expect(result.data).toHaveProperty("englishOwner");
+		expect(result.data.englishOwner).toBeNull();
 		expect(result.data.effectiveTranslationState).toBeUndefined();
 	});
 
@@ -1892,7 +2032,66 @@ describe("buildRoutePageEditorModel", () => {
 		// /about is registered as an englishSourceUrl so its localizedRoute should be /es/about
 		const result = await buildRoutePageEditorModel(locals, "/about", adminRole);
 		expect(result.status).toMatch(/ok|partial/);
-		expect(result.data.pageRecord).not.toBeNull();
+		expect(result.data.pageRecord?.path).toBe("/about");
+		expect(result.data).toHaveProperty("englishOwner");
+	});
+
+	it("returns partial with the english-owner warning when getRuntimeContentStateByPath rejects", async () => {
+		const groupId = "group-about-eo";
+		const variantId = "variant-about-eo";
+		const settingsJson = JSON.stringify({ templateKey: "content", alternateLinks: [] });
+		db.prepare(
+			`INSERT INTO cms_route_groups (id, kind, render_strategy, canonical_locale, canonical_path)
+       VALUES (?, 'page', 'structured_sections', 'en', '/about')`,
+		).run(groupId);
+		db.prepare(
+			`INSERT INTO cms_route_variants (id, group_id, locale, path, status, title, settings_json, updated_by)
+       VALUES (?, ?, 'en', '/about', 'published', 'About', ?, 'admin@test.local')`,
+		).run(variantId, groupId, settingsJson);
+
+		vi.spyOn(runtimePageStore, "getRuntimeContentStateByPath").mockRejectedValueOnce(
+			new Error("fail"),
+		);
+		const result = await buildRoutePageEditorModel(locals, "/about", adminRole);
+		expect(result.warnings).toContain(
+			"The linked English owner record is temporarily unavailable.",
+		);
+		expect(result.data.englishOwner).toBeNull();
+	});
+
+	it("returns partial with the translation-state warning and uses the configured fallback", async () => {
+		registerCms({
+			templateKeys: ["content"],
+			siteUrl: "https://example.com",
+			seedPages: [],
+			archives: [],
+			translationStatus: [
+				{
+					route: "/es/bar",
+					translationState: "completed",
+					englishSourceUrl: "/bar",
+					locale: "es",
+				},
+			],
+		});
+		const groupId = "group-esbar";
+		const variantId = "variant-esbar";
+		const settingsJson = JSON.stringify({ templateKey: "content", alternateLinks: [] });
+		db.prepare(
+			`INSERT INTO cms_route_groups (id, kind, render_strategy, canonical_locale, canonical_path)
+       VALUES (?, 'page', 'structured_sections', 'es', '/es/bar')`,
+		).run(groupId);
+		db.prepare(
+			`INSERT INTO cms_route_variants (id, group_id, locale, path, status, title, settings_json, updated_by)
+       VALUES (?, ?, 'es', '/es/bar', 'published', 'ES Bar', ?, 'admin@test.local')`,
+		).run(variantId, groupId, settingsJson);
+
+		vi.spyOn(runtimePageStore, "getRuntimeTranslationState").mockRejectedValueOnce(
+			new Error("fail"),
+		);
+		const result = await buildRoutePageEditorModel(locals, "/es/bar", adminRole);
+		expect(result.warnings).toContain("Translation state is temporarily unavailable.");
+		expect(result.data.effectiveTranslationState).toBe("completed");
 	});
 });
 
