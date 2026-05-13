@@ -483,6 +483,79 @@ describe("resolveAnalyticsSnippet", () => {
 		expect(snippet).toContain("\n");
 	});
 
+	it("matomo: snippet contains the document-script discovery line (pins L38 StringLiteral)", () => {
+		const snippet = resolveAnalyticsSnippet({
+			type: "matomo",
+			mode: "snippet-only",
+			url: "https://stats.example.com",
+			siteId: "5",
+		});
+		// Pins the L38 'var d=document, g=d.createElement(...)' line — the
+		// bootstrap that finds an existing <script> for insertBefore.
+		expect(snippet).toContain("var d=document");
+		expect(snippet).toContain("d.createElement('script')");
+		expect(snippet).toContain("d.getElementsByTagName('script')[0]");
+	});
+
+	it("posthog: snippet contains every line of the IIFE bootstrap and joins them with newlines (pins L48-L53 + L56 join)", () => {
+		const snippet = resolveAnalyticsSnippet({
+			type: "posthog",
+			mode: "snippet-only",
+			snippetSrc: "https://app.posthog.com",
+			siteId: "phc_key",
+			url: "https://us.posthog.com",
+		});
+		// One distinguishing substring per generator line. Each StringLiteral
+		// mutation would replace the entire line with '' — losing the substring.
+		expect(snippet).toContain("e.__SV||(window.posthog=e,e._i=[]");
+		expect(snippet).toContain('"2==o.length"'.replace(/"/g, "") || "2==o.length"); // L49
+		expect(snippet).toContain('p.async=!0,p.src=s.api_host+"/static/array.js"');
+		expect(snippet).toContain(
+			'(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r)',
+		);
+		expect(snippet).toContain("getActiveMatchingSurveys");
+		expect(snippet).toContain("e._i.push([i,s,a])");
+		// Pins L56 join("\\n") — both opening <script> and ! function ... lines
+		// must be separated by a real newline, not concatenated.
+		expect(snippet).toMatch(/<script>\n!function/);
+	});
+
+	it("posthog: default api_host is https://app.posthog.com when url is omitted (pins L54 StringLiteral default)", () => {
+		const snippet = resolveAnalyticsSnippet({
+			type: "posthog",
+			mode: "snippet-only",
+			snippetSrc: "https://app.posthog.com",
+			siteId: "phc_key",
+		});
+		expect(snippet).toContain("api_host:'https://app.posthog.com'");
+	});
+
+	it("escAttr converts & to &amp; in HTML attributes (pins L107 StringLiteral)", () => {
+		const snippet = resolveAnalyticsSnippet({
+			type: "umami",
+			mode: "snippet-only",
+			snippetSrc: "https://example.com/script.js?a=1&b=2",
+			siteId: "abc",
+		});
+		// The snippetSrc contains an `&`; escAttr must emit `&amp;` so the
+		// resulting HTML attribute is valid.
+		expect(snippet).toContain("a=1&amp;b=2");
+		expect(snippet).not.toMatch(/a=1&b=2(?!a)/);
+	});
+
+	it("escJs escapes backslash, apostrophe, and newline inside posthog init (pins L115 StringLiteral chain)", () => {
+		const snippet = resolveAnalyticsSnippet({
+			type: "posthog",
+			mode: "snippet-only",
+			snippetSrc: "https://app.posthog.com",
+			// Embedded backslash, apostrophe, and newline — each escape chains
+			// through escJs and the mutated chain would let one of them through.
+			siteId: "phc\\test'one\ntwo",
+		});
+		// Backslash → double backslash; apostrophe → \'; newline → \n.
+		expect(snippet).toContain("phc\\\\test\\'one\\ntwo");
+	});
+
 	it("posthog: snippet contains all expected script lines", () => {
 		const snippet = resolveAnalyticsSnippet({
 			type: "posthog",
