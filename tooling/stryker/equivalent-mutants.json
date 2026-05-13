@@ -3,6 +3,13 @@
 	"description": "Catalog of mutants acknowledged as equivalent (semantically identical to the original code, so no test can kill them). Each entry is excluded from the per-file mutation-score denominator. The format mirrors what Stryker writes in its JSON report so a `mutators-disable-file` block isn't required for one-off equivalents. Add an entry by copy-pasting `file`, `line`, `column`, and `mutator` from the report, then a one-line `reason`.",
 	"entries": [
 		{
+			"file": "src/admin-page-models-access.ts",
+			"line": 29,
+			"column": 6,
+			"mutator": "ConditionalExpression",
+			"reason": "`if (!input) return \"users\";` short-circuits to the default for null/undefined/empty input. The mutant `false` always falls through to `ACCESS_PAGE_TABS.includes(input as AccessPageTab) ? input : \"users\"`. For every falsy input (null, undefined, \"\") `includes` is false, so the ternary also returns \"users\" — identical observable result for every input the guard fires on."
+		},
+		{
 			"file": "src/adapters/turso.ts",
 			"line": 67,
 			"column": 13,
