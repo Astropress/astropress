@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
 	createAstropressAppwriteAdapter,
 	createAstropressAppwriteHostedAdapter,
@@ -259,6 +259,68 @@ describe("createAstropressAppwriteHostedAdapter", () => {
 			APPWRITE_API_KEY: "  key  ",
 		});
 		expect(config.apiKey).toBe("key");
+	});
+
+	it("invokes the supplied fetchImpl on the API path when no stores are provided (pins L88 condition chain)", async () => {
+		const fetchImpl = vi.fn(async () => new Response(JSON.stringify([]), { status: 200 }) as never);
+		const adapter = createAstropressAppwriteHostedAdapter({
+			env,
+			fetchImpl: fetchImpl as never,
+		});
+		await adapter.content.list("post");
+		// API path uses the hosted-api adapter and calls fetchImpl. Any L88
+		// condition flip that routes to the platform path would fall back to
+		// the in-memory backing store and skip fetchImpl entirely.
+		expect(fetchImpl).toHaveBeenCalled();
+		expect(String(fetchImpl.mock.calls[0]?.[0])).toContain("functions/astropress");
+	});
+
+	it.each([
+		["backingAdapter"],
+		["content"],
+		["media"],
+		["revisions"],
+		["auth"],
+	] as const)("does NOT call fetchImpl when only `%s` is supplied (pins each L88 `!options.x &&` clause)", async (key) => {
+		const fetchImpl = vi.fn(async () => new Response("nope", { status: 500 }) as never);
+		// Mutating any single `!options.x` clause from `&&` to `||` flips the
+		// chain to true for an input that supplies *only* that store, routing
+		// through the API path and invoking fetchImpl. Each iteration pins one
+		// of the five clauses independently.
+		const stores = createHostedStores();
+		const isolated: Record<string, unknown> = {};
+		if (key === "backingAdapter") {
+			// Minimal stand-in: any truthy object satisfies !options.backingAdapter
+			// being falsy. The platform adapter will route through this rather than
+			// the in-memory default.
+			isolated.backingAdapter = {
+				capabilities: { name: "appwrite" },
+				content: stores.content,
+				media: stores.media,
+				revisions: stores.revisions,
+				auth: stores.auth,
+			};
+		} else {
+			isolated[key] = stores[key as keyof typeof stores];
+		}
+		const adapter = createAstropressAppwriteHostedAdapter({
+			env,
+			...(isolated as Parameters<typeof createAstropressAppwriteHostedAdapter>[0]),
+			fetchImpl: fetchImpl as never,
+		});
+		await adapter.content.list("post");
+		expect(fetchImpl).not.toHaveBeenCalled();
+	});
+
+	it("API-path adapter still exposes the Appwrite Console hostPanel (pins L100 ObjectLiteral)", async () => {
+		const adapter = createAstropressAppwriteHostedAdapter({
+			env,
+			fetchImpl: async () => new Response("[]", { status: 200 }),
+		});
+		// The L100 ObjectLiteral mutant collapses defaultCapabilities to `{}`,
+		// dropping hostPanel from the propagated capabilities.
+		expect(adapter.capabilities.hostPanel?.label).toBe("Appwrite Console");
+		expect(adapter.capabilities.hostPanel?.url).toContain("proj-hosted");
 	});
 
 	it("trims whitespace from APPWRITE_DATABASE_ID and APPWRITE_BUCKET_ID (pins L64/L65 .trim())", () => {
