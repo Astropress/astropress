@@ -17,6 +17,13 @@
 			"reason": "`.replace(/^https:\\/\\//, '')` — same equivalence class as L67:13. The earlier validation requires the URL to start with either libsql:// or https://; for libsql:// inputs no `https://` substring exists later in the string (the path is `<dbname>.turso.io`), so the unanchored mutant produces no replacement either way. For https:// inputs the scheme is at index 0, where anchored and unanchored match identically."
 		},
 		{
+			"file": "src/adapters/cloudflare-auth.ts",
+			"line": 20,
+			"column": 31,
+			"mutator": "ArrayDeclaration",
+			"reason": "`const configured: string[] = []` in getConfiguredSecrets. The Stryker `[\"Stryker was here\"]` mutant prepends a junk value but the function returns whatever passed through the trim+dedup loop in addition. Downstream the only caller (getLiveCloudflareSessionRow) iterates candidate digests using each secret; a bogus prepended secret yields no DB row and the loop continues to the legitimate secret. Adding a candidate that never matches anything is not observably different from omitting it."
+		},
+		{
 			"file": "src/adapters/nhost.ts",
 			"line": 36,
 			"column": 24,
