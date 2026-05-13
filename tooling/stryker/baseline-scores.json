@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-05-13T08:21:08.308Z",
+  "updatedAt": "2026-05-13T08:31:50.951Z",
   "scores": {
     "packages/astropress/src/adapters/adapter-record-helpers.ts": {
       "score": 100,
@@ -494,7 +494,7 @@
       "hash": "734ef470e6653e8d38ec7b3ac02fba23caef704b"
     },
     "packages/astropress/src/adapters/nhost.ts": {
-      "score": 82.75862068965517,
+      "score": 100,
       "hash": "3433d201f070879a0eee3e2ea083761d57931ca4"
     },
     "packages/astropress/src/adapters/pocketbase.ts": {

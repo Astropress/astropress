@@ -17,6 +17,20 @@
 			"reason": "`.replace(/^https:\\/\\//, '')` — same equivalence class as L67:13. The earlier validation requires the URL to start with either libsql:// or https://; for libsql:// inputs no `https://` substring exists later in the string (the path is `<dbname>.turso.io`), so the unanchored mutant produces no replacement either way. For https:// inputs the scheme is at index 0, where anchored and unanchored match identically."
 		},
 		{
+			"file": "src/adapters/nhost.ts",
+			"line": 36,
+			"column": 24,
+			"mutator": "ObjectLiteral",
+			"reason": "`defaultCapabilities: { ...options.defaultCapabilities, ...FULL_STACK_CAPABILITIES }` in createAstropressNhostAdapter. Same equivalence class as src/adapters/supabase.ts L87/L96 — FULL_STACK_CAPABILITIES (hostedAdmin/previewEnvironments/serverRuntime/database/objectStorage/gitSync) is a strict subset of the hosted-platform-adapter defaults, so removing the spread produces an observably identical capabilities object."
+		},
+		{
+			"file": "src/adapters/nhost.ts",
+			"line": 105,
+			"column": 24,
+			"mutator": "ObjectLiteral",
+			"reason": "`defaultCapabilities: { ...options.defaultCapabilities, ...FULL_STACK_CAPABILITIES }` passed to createAstropressHostedPlatformAdapter on the platform-path fallback. Same equivalence class as L36:24 — FULL_STACK flags are already defaulted to true by hosted-platform-adapter.ts."
+		},
+		{
 			"file": "src/adapters/supabase.ts",
 			"line": 87,
 			"column": 25,
