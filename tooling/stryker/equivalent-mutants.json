@@ -200,6 +200,48 @@
 		},
 		{
 			"file": "src/admin-action-mailchimp-import.ts",
+			"line": 22,
+			"column": 6,
+			"mutator": "ConditionalExpression",
+			"reason": "`if (lines.length < 2) return [];` — the always-false sub-mutant (skip the guard) falls through into the for-loop. csv.trim() guarantees lines.length >= 1; when length === 1 the loop `for (i = 1; i < 1)` never runs, records stay empty, and the caller returns the same 'No valid subscriber rows' error. The always-true sub-mutant is killed by valid-CSV tests, but exact (line, column, mutator) match suppresses both — accepting that trade because the killable half is already covered by other mutants on the same import path."
+		},
+		{
+			"file": "src/admin-action-mailchimp-import.ts",
+			"line": 24,
+			"column": 18,
+			"mutator": "OptionalChaining",
+			"reason": "`lines[0]?.split(...)` — execution only reaches this line after `lines.length < 2` early-returns, so `lines[0]` is always a defined string. The optional-chain is belt-and-suspenders; replacing with `.split` is observably identical."
+		},
+		{
+			"file": "src/admin-action-mailchimp-import.ts",
+			"line": 33,
+			"column": 16,
+			"mutator": "OptionalChaining",
+			"reason": "`lines[i]?.split(...)` inside `for (i = 1; i < lines.length; i++)`. `lines[i]` is always a defined string for in-range i; the optional-chain is defensive and replacing with `.split` is observably identical."
+		},
+		{
+			"file": "src/admin-action-mailchimp-import.ts",
+			"line": 35,
+			"column": 8,
+			"mutator": "OptionalChaining",
+			"reason": "`if (!email?.includes('@')) continue` — `email` is assigned `cols[emailIdx] ?? \"\"` on the previous line. `cols` is defined for every iteration (lines[i] is a string within `i < lines.length`), and `?? \"\"` guarantees `email` is a string, never nullish. The optional-chain `?.` is defensive belt-and-suspenders; replacing it with `.` is observably identical."
+		},
+		{
+			"file": "src/admin-action-mailchimp-import.ts",
+			"line": 36,
+			"column": 17,
+			"mutator": "ConditionalExpression",
+			"reason": "`firstIdx !== -1 ? (cols[firstIdx] ?? '') : ''`. Replacing the condition with `true` evaluates `cols[-1] ?? ''` when firstIdx === -1; `cols[-1]` is `undefined` in a plain Array, and `undefined ?? ''` yields `''` — identical to the original `: ''` branch."
+		},
+		{
+			"file": "src/admin-action-mailchimp-import.ts",
+			"line": 37,
+			"column": 16,
+			"mutator": "ConditionalExpression",
+			"reason": "`lastIdx !== -1 ? (cols[lastIdx] ?? '') : ''`. Same equivalence class as L36:17 — `cols[-1] ?? ''` resolves to `''` when lastIdx === -1, identical to the `: ''` literal branch."
+		},
+		{
+			"file": "src/admin-action-mailchimp-import.ts",
 			"line": 100,
 			"column": 47,
 			"mutator": "ObjectLiteral",
