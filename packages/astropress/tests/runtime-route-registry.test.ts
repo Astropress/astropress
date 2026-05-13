@@ -542,6 +542,86 @@ describe("getRuntimeSystemRoute — D1 row mapping & no-fallback-leak", () => {
 	});
 });
 
+describe("runtime-route-registry-pages — survivor pins", () => {
+	it("getRuntimeStructuredPageRoute returns null without leaking local registry on missing D1 row", async () => {
+		mockLoadLocalCmsRegistry.mockResolvedValueOnce(mockLocalRegistry);
+		mockLocalRegistry.getStructuredPageRoute.mockResolvedValueOnce({
+			path: "/leak-page",
+			title: "from local",
+		} as unknown);
+		const route = await getRuntimeStructuredPageRoute("/no-such-page", locals);
+		expect(route).toBeNull();
+		// Drain any queued mocks so subsequent tests are not polluted (the D1 path
+		// returned null without consuming either mockResolvedValueOnce queue).
+		mockLocalRegistry.getStructuredPageRoute.mockReset();
+		mockLocalRegistry.getStructuredPageRoute.mockResolvedValue(null);
+		mockLoadLocalCmsRegistry.mockReset();
+		mockLoadLocalCmsRegistry.mockRejectedValue(
+			new Error("Local runtime modules are only available inside an Astro host"),
+		);
+	});
+
+	it("populated meta_description is returned as a string (?? preserves non-null)", async () => {
+		seedStructuredPageRoute(db, "/meta-pop");
+		db.prepare("UPDATE cms_route_variants SET meta_description = ? WHERE path = ?").run(
+			"populated meta",
+			"/meta-pop",
+		);
+		const route = await getRuntimeStructuredPageRoute("/meta-pop", locals);
+		expect(route?.metaDescription).toBe("populated meta");
+	});
+
+	it("populated seo_title / canonical / robots / og_image returned as strings", async () => {
+		seedStructuredPageRoute(db, "/page-all-meta");
+		db.prepare(
+			"UPDATE cms_route_variants SET seo_title = ?, canonical_url_override = ?, robots_directive = ?, og_image = ? WHERE path = ?",
+		).run("SEO", "https://x.test/c", "noindex", "https://x.test/og.png", "/page-all-meta");
+		const route = await getRuntimeStructuredPageRoute("/page-all-meta", locals);
+		expect(route?.seoTitle).toBe("SEO");
+		expect(route?.canonicalUrlOverride).toBe("https://x.test/c");
+		expect(route?.robotsDirective).toBe("noindex");
+		expect(route?.ogImage).toBe("https://x.test/og.png");
+	});
+
+	it("listRuntimeStructuredPageRoutes returns empty array when D1 throws with no local registry (default fallthrough)", async () => {
+		seedStructuredPageRoute(db, "/p1");
+		db.exec("DROP TABLE cms_route_variants");
+		const routes = await listRuntimeStructuredPageRoutes(locals);
+		expect(routes).toEqual([]);
+	});
+
+	it("alternateLinks defaults to empty array when settings.alternateLinks is missing", async () => {
+		seedStructuredPageRoute(db, "/alts-missing");
+		db.prepare("UPDATE cms_route_variants SET settings_json = ? WHERE path = ?").run(
+			JSON.stringify({ templateKey: "content" }),
+			"/alts-missing",
+		);
+		const route = await getRuntimeStructuredPageRoute("/alts-missing", locals);
+		expect(route?.alternateLinks).toEqual([]);
+	});
+
+	it("alternateLinks present (array) is threaded through verbatim", async () => {
+		seedStructuredPageRoute(db, "/alts-present");
+		const links = [{ hreflang: "fr", href: "/fr/page" }];
+		db.prepare("UPDATE cms_route_variants SET settings_json = ? WHERE path = ?").run(
+			JSON.stringify({ templateKey: "content", alternateLinks: links }),
+			"/alts-present",
+		);
+		const route = await getRuntimeStructuredPageRoute("/alts-present", locals);
+		expect(route?.alternateLinks).toEqual(links);
+	});
+
+	it("alternateLinks defaults to [] when settings.alternateLinks is not an array", async () => {
+		seedStructuredPageRoute(db, "/alts-non-array");
+		db.prepare("UPDATE cms_route_variants SET settings_json = ? WHERE path = ?").run(
+			JSON.stringify({ templateKey: "content", alternateLinks: "oops" }),
+			"/alts-non-array",
+		);
+		const route = await getRuntimeStructuredPageRoute("/alts-non-array", locals);
+		expect(route?.alternateLinks).toEqual([]);
+	});
+});
+
 describe("listRuntimeSystemRoutes — list mapping", () => {
 	it("maps each row through mapSystemRow and excludes nulls (mapSystemRow returns null only on null input — defensive .filter(Boolean))", async () => {
 		seedSystemRoute(db, "/sys-a");
