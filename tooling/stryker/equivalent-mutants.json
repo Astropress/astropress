@@ -3,6 +3,27 @@
 	"description": "Catalog of mutants acknowledged as equivalent (semantically identical to the original code, so no test can kill them). Each entry is excluded from the per-file mutation-score denominator. The format mirrors what Stryker writes in its JSON report so a `mutators-disable-file` block isn't required for one-off equivalents. Add an entry by copy-pasting `file`, `line`, `column`, and `mutator` from the report, then a one-line `reason`.",
 	"entries": [
 		{
+			"file": "src/access/repository.ts",
+			"line": 223,
+			"column": 11,
+			"mutator": "OptionalChaining",
+			"reason": "`return row?.n ?? 0` after `SELECT COUNT(*) AS n FROM access_user_policies WHERE user_id = ?`. SQLite COUNT(*) always returns exactly one row, so `row` is never undefined — the optional chain is defensive. Replacing with `row.n` is observably identical."
+		},
+		{
+			"file": "src/access/repository.ts",
+			"line": 298,
+			"column": 11,
+			"mutator": "OptionalChaining",
+			"reason": "`return row?.n ?? 0` after `SELECT COUNT(*) AS n FROM admin_users WHERE active = 1 AND is_admin = 1`. Same equivalence class as L223 — SQLite COUNT(*) always returns one row."
+		},
+		{
+			"file": "src/access/repository.ts",
+			"line": 331,
+			"column": 22,
+			"mutator": "OptionalChaining",
+			"reason": "`const roleName = role?.name ?? ra.roleId`. `role = roles.getRole(ra.roleId)` after iterating `userRoles.listUserRoles(userId)`. Foreign-key cascades guarantee that any row in `access_user_roles` has a corresponding row in `access_roles` (DELETE on roles cascades user_roles). So role is never undefined for an assignment we just iterated, and `role.name` is observably identical to `role?.name`."
+		},
+		{
 			"file": "src/host-runtime-factories.ts",
 			"line": 54,
 			"column": 8,

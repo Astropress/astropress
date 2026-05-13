@@ -384,6 +384,72 @@ describe("end-to-end: repository → policy engine", () => {
 		expect(r.decision).toBe("allow");
 	});
 
+	test("role-derived policies carry source { kind: 'role', roleId, roleName } (pins L331/L339 mutants)", () => {
+		const repo = createAccessRepository(store);
+		const role = repo.createRole({ name: "Reviewer", description: "" });
+		repo.addRolePolicy({
+			roleId: role.id,
+			effect: "allow",
+			action: "posts:review",
+		});
+		repo.assignRole({ userId: editorUser.id, roleId: role.id });
+
+		const policies = repo.resolvePoliciesForUser(editorUser.id);
+		expect(policies).toHaveLength(1);
+		const src = policies[0]?.source;
+		expect(src?.kind).toBe("role");
+		// Pins L331 LogicalOperator `role?.name && ra.roleId` (mutant returns ra.roleId
+		// when role.name is truthy) and the ObjectLiteral mutant that drops both fields.
+		expect((src as { roleName?: string })?.roleName).toBe("Reviewer");
+		expect((src as { roleId?: string })?.roleId).toBe(role.id);
+	});
+
+	test("resolvePoliciesForUser preserves user-policy condition (pins L348 LogicalOperator `up.condition ?? undefined`)", () => {
+		const repo = createAccessRepository(store);
+		repo.addUserPolicy({
+			userId: editorUser.id,
+			effect: "allow",
+			action: "posts:edit",
+			condition: { op: "stringEquals", left: "a", right: "b" },
+		});
+		const policies = repo.resolvePoliciesForUser(editorUser.id);
+		expect(policies).toHaveLength(1);
+		// Mutant `up.condition && undefined` would drop the condition to undefined
+		// when up.condition is the truthy object — original keeps the object intact.
+		expect(policies[0]?.condition).toEqual({
+			op: "stringEquals",
+			left: "a",
+			right: "b",
+		});
+	});
+
+	test("addRolePolicy return value preserves the supplied condition (pins L174 LogicalOperator)", () => {
+		const repo = createAccessRepository(store);
+		const role = repo.createRole({ name: "WithCond" });
+		const rec = repo.addRolePolicy({
+			roleId: role.id,
+			effect: "allow",
+			action: "posts:edit",
+			condition: { op: "stringEquals", left: "a", right: "b" },
+		});
+		// Mutant `input.condition && null` collapses the truthy condition object to null;
+		// original `?? null` keeps the object.
+		expect(rec.condition).toEqual({ op: "stringEquals", left: "a", right: "b" });
+	});
+
+	test("addUserPolicy return value preserves condition and grantedBy (pins L254/L256 LogicalOperators)", () => {
+		const repo = createAccessRepository(store);
+		const rec = repo.addUserPolicy({
+			userId: editorUser.id,
+			effect: "allow",
+			action: "audit:view",
+			condition: { op: "stringEquals", left: "a", right: "b" },
+			grantedBy: "admin@example.com",
+		});
+		expect(rec.condition).toEqual({ op: "stringEquals", left: "a", right: "b" });
+		expect(rec.grantedBy).toBe("admin@example.com");
+	});
+
 	test("direct user policy stacks onto role policies", () => {
 		const repo = createAccessRepository(store);
 		seedStarterRoles(repo);
