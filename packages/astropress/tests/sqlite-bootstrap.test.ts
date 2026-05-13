@@ -30,6 +30,10 @@ afterEach(() => {
 // ---------------------------------------------------------------------------
 
 describe("createDefaultAstropressSqliteSeedToolkit — default seed users", () => {
+	// Two argon2id verifications run back-to-back here. Under v8 coverage
+	// instrumentation the per-verify cost roughly triples, so the default
+	// 30s vitest timeout can fire on a loaded prepush worker. 60s gives the
+	// crypto path headroom without hiding a regression.
 	it("seeds the documented admin@example.com / editor@example.com bootstrap users with roles 'admin' and 'editor' and names 'Admin' / 'Editor', each with a non-empty password hash", () => {
 		const toolkit = createDefaultAstropressSqliteSeedToolkit();
 		const db = makeDb();
@@ -55,7 +59,7 @@ describe("createDefaultAstropressSqliteSeedToolkit — default seed users", () =
 		expect(editor?.name).toBe("Editor");
 		expect(editor?.is_admin).toBe(0);
 		expect(verifyArgon2idPassword("password", editor?.password_hash ?? "")).toBe(true);
-	});
+	}, 60_000);
 });
 
 describe("createDefaultAstropressSqliteSeedToolkit — default site settings", () => {
