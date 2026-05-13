@@ -276,6 +276,80 @@ describe("splitSqlStatements survivors (via runD1Migrations)", () => {
 	});
 });
 
+describe("splitSqlStatements extra survivor pins", () => {
+	let db: DatabaseSync;
+	let d1: D1DatabaseLike;
+	beforeEach(() => {
+		db = new DatabaseSync(":memory:");
+		d1 = createMockD1(db);
+	});
+
+	it("trim + length>0 filter rejects empty / whitespace-only segments (pins L33 .trim + L34 length>0 + L34 >0 boundary)", async () => {
+		// Adjacent semicolons produce empty/whitespace-only segments that would
+		// reach db.prepare("  ") under any of the L33/L34 mutants and cause a
+		// SQLite prepare-empty error before the real CREATE TABLE runs.
+		const dir = makeMigrationsDir({
+			"0010_blanks.sql":
+				";  ;CREATE TABLE blanks_ok (id INTEGER PRIMARY KEY);  ;\n;CREATE TABLE blanks_two (id INTEGER PRIMARY KEY);",
+		});
+		await runD1Migrations({ db: d1, migrationsDir: dir });
+		expect(() => db.prepare("SELECT * FROM blanks_ok").all()).not.toThrow();
+		expect(() => db.prepare("SELECT * FROM blanks_two").all()).not.toThrow();
+	});
+
+	it("only segments STARTING with /* are treated as block-comment-only (pins L34 /^\\/\\*/ regex anchor)", async () => {
+		// A statement that contains a block comment in the middle must still
+		// execute. Mutating `/^\/\*/` to `/\/\*/` (non-anchored) would filter
+		// the whole statement out and the table would not be created.
+		const dir = makeMigrationsDir({
+			"0020_inline_block_comment.sql":
+				"CREATE TABLE inline_blk (id INTEGER PRIMARY KEY /* the primary key */, name TEXT)",
+		});
+		await runD1Migrations({ db: d1, migrationsDir: dir });
+		expect(() => db.prepare("SELECT * FROM inline_blk").all()).not.toThrow();
+	});
+});
+
+describe("runD1Migrations directory listing survivors", () => {
+	let db: DatabaseSync;
+	let d1: D1DatabaseLike;
+	beforeEach(() => {
+		db = new DatabaseSync(":memory:");
+		d1 = createMockD1(db);
+	});
+
+	it("ignores non-.sql files (pins L78 endsWith('.sql') StringLiteral)", async () => {
+		const dir = makeMigrationsDir({
+			"0001_create_x.sql": "CREATE TABLE listing_x (id INTEGER PRIMARY KEY)",
+			"README.md": "not a migration",
+		});
+		// Mutating endsWith('.sql') to endsWith('') would attempt to read
+		// README.md as SQL and the CREATE inside it would never run.
+		const report = await runD1Migrations({ db: d1, migrationsDir: dir });
+		expect(report.applied).toEqual(["0001_create_x.sql"]);
+		expect(() => db.prepare("SELECT * FROM listing_x").all()).not.toThrow();
+	});
+
+	it("returns immediately for an empty migrations directory without bootstrapping schema_migrations (pins L81 early-return)", async () => {
+		const dir = makeMigrationsDir({});
+		const report = await runD1Migrations({ db: d1, migrationsDir: dir });
+		// Pin L82 ObjectLiteral — return shape must include all four keys.
+		expect(report).toEqual({
+			migrationsDir: dir,
+			applied: [],
+			skipped: [],
+			dryRun: false,
+		});
+		// Pin L81 ConditionalExpression / BlockStatement — emptying the body or
+		// flipping the guard would fall through to bootstrapD1MigrationsTable,
+		// creating the schema_migrations table.
+		const tableRows = db
+			.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='schema_migrations'")
+			.all() as Array<{ name: string }>;
+		expect(tableRows).toHaveLength(0);
+	});
+});
+
 describe("D1 migration report shape matches SQLite report shape", () => {
 	it("runD1Migrations returns { migrationsDir, applied, skipped, dryRun }", async () => {
 		const db = new DatabaseSync(":memory:");

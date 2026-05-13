@@ -17,6 +17,20 @@
 			"reason": "`.replace(/^https:\\/\\//, '')` — same equivalence class as L67:13. The earlier validation requires the URL to start with either libsql:// or https://; for libsql:// inputs no `https://` substring exists later in the string (the path is `<dbname>.turso.io`), so the unanchored mutant produces no replacement either way. For https:// inputs the scheme is at index 0, where anchored and unanchored match identically."
 		},
 		{
+			"file": "src/d1-migrate-ops.ts",
+			"line": 96,
+			"column": 62,
+			"mutator": "Regex",
+			"reason": "`file.replace(/\\.sql$/, '.down.sql')` — the input `file` comes from `readdirSync(...).filter((f) => f.endsWith('.sql') && !f.endsWith('.down.sql'))`. The `.endsWith('.sql')` guard ensures `.sql` only ever appears as the trailing suffix; the unanchored mutant `/\\.sql/` matches the same first occurrence (also the trailing one) and `.replace` without `/g` only replaces the first hit. Result string is identical for every input that survived the filter."
+		},
+		{
+			"file": "src/d1-migrate-ops.ts",
+			"line": 132,
+			"column": 10,
+			"mutator": "BlockStatement",
+			"reason": "`} catch { return { migrationName: null, status: 'no_migrations', dryRun }; }` — emptying the catch body lets execution continue. `last` was declared as `let last: ... | null = null` immediately above; the catch leaves it at the initial null, and the next line `if (!last) return { ..., status: 'no_migrations', dryRun }` returns the same no_migrations result. Observably identical."
+		},
+		{
 			"file": "src/adapters/cloudflare-auth.ts",
 			"line": 20,
 			"column": 31,
