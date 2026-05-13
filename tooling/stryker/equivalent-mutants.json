@@ -3,6 +3,20 @@
 	"description": "Catalog of mutants acknowledged as equivalent (semantically identical to the original code, so no test can kill them). Each entry is excluded from the per-file mutation-score denominator. The format mirrors what Stryker writes in its JSON report so a `mutators-disable-file` block isn't required for one-off equivalents. Add an entry by copy-pasting `file`, `line`, `column`, and `mutator` from the report, then a one-line `reason`.",
 	"entries": [
 		{
+			"file": "src/runtime-route-registry-archives.ts",
+			"line": 20,
+			"column": 6,
+			"mutator": "ConditionalExpression",
+			"reason": "`if (!db) { return local?.getArchiveRoute(...) }` is a fast-path for the no-DB case. The mutant `if (false)` skips this branch and falls through to `withSafeRouteRegistryFallback(... operation: () => db.prepare(...))`. When db is undefined the operation throws synchronously; withSafeRouteRegistryFallback catches and invokes the same `local.getArchiveRoute(normalizedPath)` fallback (or returns the same default `null` when no local registry is available). Observable result is identical for every (db, local-availability) pair."
+		},
+		{
+			"file": "src/runtime-route-registry-archives.ts",
+			"line": 20,
+			"column": 11,
+			"mutator": "BlockStatement",
+			"reason": "Same equivalence class as L20:6 — replacing the if-body with `{}` removes the fast-path early return. Control falls through to withSafeRouteRegistryFallback which routes to the same local-registry fallback when db is undefined (catching the resulting `db.prepare` TypeError). Identical observable result."
+		},
+		{
 			"file": "src/access/evaluator.ts",
 			"line": 67,
 			"column": 17,

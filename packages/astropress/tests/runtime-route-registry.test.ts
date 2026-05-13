@@ -759,6 +759,316 @@ describe("saveRuntimeArchiveRoute", () => {
 });
 
 // ---------------------------------------------------------------------------
+// runtime-route-registry-archives — pin defaults, fallbacks, audit strings
+// ---------------------------------------------------------------------------
+
+describe("saveRuntimeArchiveRoute — input validation defaults", () => {
+	it("metaDescription empty AND summary empty → stored as empty string", async () => {
+		seedArchiveRoute(db, "/empty-meta");
+		const r = await saveRuntimeArchiveRoute("/empty-meta", { title: "T" }, actor, locals);
+		expect(r).toMatchObject({ ok: true });
+		const row = db
+			.prepare("SELECT meta_description, summary FROM cms_route_variants WHERE path = ?")
+			.get("/empty-meta") as { meta_description: string; summary: string | null };
+		expect(row.meta_description).toBe("");
+		expect(row.summary).toBeNull();
+	});
+
+	it("metaDescription empty BUT summary present → metaDescription falls back to summary", async () => {
+		seedArchiveRoute(db, "/meta-from-summary");
+		const r = await saveRuntimeArchiveRoute(
+			"/meta-from-summary",
+			{ title: "T", summary: "All the posts" },
+			actor,
+			locals,
+		);
+		expect(r).toMatchObject({ ok: true });
+		const row = db
+			.prepare("SELECT meta_description FROM cms_route_variants WHERE path = ?")
+			.get("/meta-from-summary") as { meta_description: string };
+		expect(row.meta_description).toBe("All the posts");
+	});
+
+	it("metaDescription present → wins over summary", async () => {
+		seedArchiveRoute(db, "/meta-explicit");
+		const r = await saveRuntimeArchiveRoute(
+			"/meta-explicit",
+			{ title: "T", summary: "From summary", metaDescription: "Explicit meta" },
+			actor,
+			locals,
+		);
+		expect(r).toMatchObject({ ok: true });
+		const row = db
+			.prepare("SELECT meta_description FROM cms_route_variants WHERE path = ?")
+			.get("/meta-explicit") as { meta_description: string };
+		expect(row.meta_description).toBe("Explicit meta");
+	});
+
+	it("seoTitle empty → falls back to the trimmed title", async () => {
+		seedArchiveRoute(db, "/seo-fallback");
+		const r = await saveRuntimeArchiveRoute(
+			"/seo-fallback",
+			{ title: "My Title", seoTitle: "   " },
+			actor,
+			locals,
+		);
+		expect(r).toMatchObject({ ok: true });
+		const row = db
+			.prepare("SELECT seo_title FROM cms_route_variants WHERE path = ?")
+			.get("/seo-fallback") as { seo_title: string };
+		expect(row.seo_title).toBe("My Title");
+	});
+
+	it("trims all inputs before persistence and fallback evaluation", async () => {
+		seedArchiveRoute(db, "/trim-all");
+		await saveRuntimeArchiveRoute(
+			"/trim-all",
+			{
+				title: "  T  ",
+				summary: "  S  ",
+				seoTitle: "  Seo  ",
+				metaDescription: "  M  ",
+				canonicalUrlOverride: "  https://x.test  ",
+				robotsDirective: "  noindex  ",
+			},
+			actor,
+			locals,
+		);
+		const row = db
+			.prepare(
+				"SELECT title, summary, seo_title, meta_description, canonical_url_override, robots_directive FROM cms_route_variants WHERE path = ?",
+			)
+			.get("/trim-all") as {
+			title: string;
+			summary: string;
+			seo_title: string;
+			meta_description: string;
+			canonical_url_override: string;
+			robots_directive: string;
+		};
+		expect(row).toEqual({
+			title: "T",
+			summary: "S",
+			seo_title: "Seo",
+			meta_description: "M",
+			canonical_url_override: "https://x.test",
+			robots_directive: "noindex",
+		});
+	});
+
+	it("canonicalUrlOverride / robotsDirective omitted → stored NULL (not empty string)", async () => {
+		seedArchiveRoute(db, "/nullables");
+		await saveRuntimeArchiveRoute("/nullables", { title: "T" }, actor, locals);
+		const row = db
+			.prepare(
+				"SELECT canonical_url_override, robots_directive, summary FROM cms_route_variants WHERE path = ?",
+			)
+			.get("/nullables") as {
+			canonical_url_override: string | null;
+			robots_directive: string | null;
+			summary: string | null;
+		};
+		expect(row.canonical_url_override).toBeNull();
+		expect(row.robots_directive).toBeNull();
+		expect(row.summary).toBeNull();
+	});
+
+	it("empty title (whitespace) returns exact error string", async () => {
+		seedArchiveRoute(db, "/blank-title");
+		const r = await saveRuntimeArchiveRoute("/blank-title", { title: "   " }, actor, locals);
+		expect(r).toEqual({ ok: false, error: "A title is required." });
+	});
+
+	it("non-existent archive returns exact error string", async () => {
+		const r = await saveRuntimeArchiveRoute("/nope", { title: "T" }, actor, locals);
+		expect(r).toEqual({ ok: false, error: "The selected archive route could not be found." });
+	});
+
+	it("locals=null without local registry returns exact unavailable error", async () => {
+		const r = await saveRuntimeArchiveRoute("/blog", { title: "T" }, actor, null);
+		expect(r).toEqual({ ok: false, error: "The runtime content registry is unavailable." });
+	});
+});
+
+describe("saveRuntimeArchiveRoute — revision and audit side effects", () => {
+	it("revisionNote present → trimmed value persisted in cms_route_revisions", async () => {
+		seedArchiveRoute(db, "/rev-with-note");
+		await saveRuntimeArchiveRoute(
+			"/rev-with-note",
+			{ title: "T", revisionNote: "  Initial draft  " },
+			actor,
+			locals,
+		);
+		const row = db
+			.prepare(
+				"SELECT revision_note FROM cms_route_revisions WHERE route_path = ? ORDER BY created_at DESC LIMIT 1",
+			)
+			.get("/rev-with-note") as { revision_note: string | null };
+		expect(row.revision_note).toBe("Initial draft");
+	});
+
+	it("revisionNote omitted → stored NULL", async () => {
+		seedArchiveRoute(db, "/rev-no-note");
+		await saveRuntimeArchiveRoute("/rev-no-note", { title: "T" }, actor, locals);
+		const row = db
+			.prepare(
+				"SELECT revision_note FROM cms_route_revisions WHERE route_path = ? ORDER BY created_at DESC LIMIT 1",
+			)
+			.get("/rev-no-note") as { revision_note: string | null };
+		expect(row.revision_note).toBeNull();
+	});
+
+	it("revisionNote whitespace-only → stored NULL", async () => {
+		seedArchiveRoute(db, "/rev-ws-note");
+		await saveRuntimeArchiveRoute(
+			"/rev-ws-note",
+			{ title: "T", revisionNote: "   " },
+			actor,
+			locals,
+		);
+		const row = db
+			.prepare(
+				"SELECT revision_note FROM cms_route_revisions WHERE route_path = ? ORDER BY created_at DESC LIMIT 1",
+			)
+			.get("/rev-ws-note") as { revision_note: string | null };
+		expect(row.revision_note).toBeNull();
+	});
+
+	it("audit row pins action/category/target_id/summary verbatim", async () => {
+		seedArchiveRoute(db, "/audit-pin");
+		await saveRuntimeArchiveRoute("/audit-pin", { title: "T" }, actor, locals);
+		const row = db
+			.prepare(
+				"SELECT action, resource_type, resource_id, summary FROM audit_events WHERE resource_id = ? ORDER BY created_at DESC LIMIT 1",
+			)
+			.get("/audit-pin") as {
+			action: string;
+			resource_type: string;
+			resource_id: string;
+			summary: string;
+		};
+		expect(row.action).toBe("archive.update");
+		expect(row.resource_type).toBe("content");
+		expect(row.resource_id).toBe("/audit-pin");
+		expect(row.summary).toBe("Updated archive route /audit-pin.");
+	});
+
+	it("revision snapshot_json pins all validated fields", async () => {
+		seedArchiveRoute(db, "/snapshot-pin");
+		await saveRuntimeArchiveRoute(
+			"/snapshot-pin",
+			{
+				title: "Snap Title",
+				summary: "Snap summary",
+				seoTitle: "Snap SEO",
+				metaDescription: "Snap meta",
+				canonicalUrlOverride: "https://x.test/snap",
+				robotsDirective: "noindex",
+			},
+			actor,
+			locals,
+		);
+		const row = db
+			.prepare(
+				"SELECT snapshot_json FROM cms_route_revisions WHERE route_path = ? ORDER BY created_at DESC LIMIT 1",
+			)
+			.get("/snapshot-pin") as { snapshot_json: string };
+		const snap = JSON.parse(row.snapshot_json) as Record<string, unknown>;
+		expect(snap).toEqual({
+			path: "/snapshot-pin",
+			title: "Snap Title",
+			summary: "Snap summary",
+			seoTitle: "Snap SEO",
+			metaDescription: "Snap meta",
+			canonicalUrlOverride: "https://x.test/snap",
+			robotsDirective: "noindex",
+		});
+	});
+
+	it("returned route on success threads validated fields and converts nullables to undefined", async () => {
+		seedArchiveRoute(db, "/return-shape");
+		const r = await saveRuntimeArchiveRoute(
+			"/return-shape",
+			{
+				title: "RT",
+				summary: "RS",
+				canonicalUrlOverride: "https://x.test/r",
+				robotsDirective: "follow",
+			},
+			actor,
+			locals,
+		);
+		expect(r.ok).toBe(true);
+		if (!r.ok) return;
+		expect(r.route).toEqual({
+			path: "/return-shape",
+			title: "RT",
+			summary: "RS",
+			seoTitle: "RT",
+			metaDescription: "RS",
+			canonicalUrlOverride: "https://x.test/r",
+			robotsDirective: "follow",
+		});
+	});
+
+	it("returned route omits null optional fields by mapping to undefined", async () => {
+		seedArchiveRoute(db, "/return-min");
+		const r = await saveRuntimeArchiveRoute("/return-min", { title: "Only" }, actor, locals);
+		expect(r.ok).toBe(true);
+		if (!r.ok) return;
+		expect(r.route.summary).toBeUndefined();
+		expect(r.route.canonicalUrlOverride).toBeUndefined();
+		expect(r.route.robotsDirective).toBeUndefined();
+		expect(r.route.metaDescription).toBe("");
+		expect(r.route.seoTitle).toBe("Only");
+	});
+});
+
+describe("getRuntimeArchiveRoute — D1 row mapping", () => {
+	it("maps meta_description text to .metaDescription field (?? undefined preserves the string)", async () => {
+		seedArchiveRoute(db, "/has-meta");
+		db.prepare("UPDATE cms_route_variants SET meta_description = ? WHERE path = ?").run(
+			"populated meta",
+			"/has-meta",
+		);
+		const route = await getRuntimeArchiveRoute("/has-meta", locals);
+		expect(route?.metaDescription).toBe("populated meta");
+	});
+
+	it("D1 row missing → returns null without consulting local registry (no fallback leak)", async () => {
+		mockLoadLocalCmsRegistry.mockResolvedValueOnce(mockLocalRegistry);
+		mockLocalRegistry.getArchiveRoute.mockResolvedValueOnce({
+			path: "/should-not-leak",
+			title: "from local",
+		} as unknown);
+		const route = await getRuntimeArchiveRoute("/no-such-archive", locals);
+		expect(route).toBeNull();
+	});
+
+	it("revision row id is prefixed with 'revision:<variantId>:'", async () => {
+		const variantId = seedArchiveRoute(db, "/rev-id-pin");
+		await saveRuntimeArchiveRoute("/rev-id-pin", { title: "T" }, actor, locals);
+		const row = db
+			.prepare(
+				"SELECT id FROM cms_route_revisions WHERE route_path = ? ORDER BY created_at DESC LIMIT 1",
+			)
+			.get("/rev-id-pin") as { id: string };
+		expect(row.id.startsWith(`revision:${variantId}:`)).toBe(true);
+		expect(row.id.length).toBeGreaterThan(`revision:${variantId}:`.length);
+	});
+
+	it("NULL row fields become undefined (not null) in returned record", async () => {
+		seedArchiveRoute(db, "/has-nulls");
+		const route = await getRuntimeArchiveRoute("/has-nulls", locals);
+		expect(route?.summary).toBeUndefined();
+		expect(route?.seoTitle).toBeUndefined();
+		expect(route?.metaDescription).toBeUndefined();
+		expect(route?.canonicalUrlOverride).toBeUndefined();
+		expect(route?.robotsDirective).toBeUndefined();
+	});
+});
+
+// ---------------------------------------------------------------------------
 // D1 error recovery — withSafeRouteRegistryFallback catch block
 // ---------------------------------------------------------------------------
 
