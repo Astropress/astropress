@@ -17,6 +17,97 @@
 			"reason": "`.replace(/^https:\\/\\//, '')` — same equivalence class as L67:13. The earlier validation requires the URL to start with either libsql:// or https://; for libsql:// inputs no `https://` substring exists later in the string (the path is `<dbname>.turso.io`), so the unanchored mutant produces no replacement either way. For https:// inputs the scheme is at index 0, where anchored and unanchored match identically."
 		},
 		{
+			"file": "src/cloudflare-vite-integration.ts",
+			"line": 92,
+			"column": 3,
+			"mutator": "ConditionalExpression",
+			"reason": "`id === './local-runtime-modules'` exact-match. The downstream fallback `id.endsWith('/local-runtime-modules')` matches the same string ('./local-runtime-modules' ends with '/local-runtime-modules' — the leading '.' is the only character before the '/'). Replacing the exact-match with `false` or any literal still routes the input through the endsWith fallback to the same stub, producing identical resolveId output."
+		},
+		{
+			"file": "src/cloudflare-vite-integration.ts",
+			"line": 92,
+			"column": 10,
+			"mutator": "StringLiteral",
+			"reason": "Same line — replacing the literal with '' breaks the first exact-match clause but `id.endsWith('/local-runtime-modules')` catches './local-runtime-modules' regardless. Observable resolveId result identical."
+		},
+		{
+			"file": "src/cloudflare-vite-integration.ts",
+			"line": 92,
+			"column": 3,
+			"mutator": "LogicalOperator",
+			"reason": "Joining the two leading `./local-runtime-modules*` exact-matches with `&&` makes that branch always false (no string equals both literals). The remaining `||` clauses (the bare-name exact-matches and the endsWith fallback) still resolve every real input the same way."
+		},
+		{
+			"file": "src/cloudflare-vite-integration.ts",
+			"line": 93,
+			"column": 3,
+			"mutator": "ConditionalExpression",
+			"reason": "`id === './local-runtime-modules.ts'` exact-match — same equivalence class as L92:3. The endsWith('/local-runtime-modules.ts') fallback catches './local-runtime-modules.ts' identically."
+		},
+		{
+			"file": "src/cloudflare-vite-integration.ts",
+			"line": 93,
+			"column": 10,
+			"mutator": "StringLiteral",
+			"reason": "Same line — endsWith fallback handles the './local-runtime-modules.ts' input regardless of the literal."
+		},
+		{
+			"file": "src/cloudflare-vite-integration.ts",
+			"line": 112,
+			"column": 3,
+			"mutator": "ConditionalExpression",
+			"reason": "`id === \\`astropress/${moduleName}\\`` exact-match in isPackageStorageModuleRequest. Input 'astropress/local-image-storage' ends with '/local-image-storage' (the 'astropress' prefix is followed by '/'), so the endsWith fallback on the next line catches it without the exact-match clause. Same for 'astropress/local-media-storage'."
+		},
+		{
+			"file": "src/cloudflare-vite-integration.ts",
+			"line": 112,
+			"column": 10,
+			"mutator": "StringLiteral",
+			"reason": "Same line — replacing the template literal with '' still resolves 'astropress/<moduleName>' inputs via the endsWith fallback."
+		},
+		{
+			"file": "src/cloudflare-vite-integration.ts",
+			"line": 121,
+			"column": 3,
+			"mutator": "ConditionalExpression",
+			"reason": "`id === 'astropress/sqlite-admin-runtime'` exact-match — same equivalence class as L112:3. endsWith('/sqlite-admin-runtime') catches 'astropress/sqlite-admin-runtime'."
+		},
+		{
+			"file": "src/cloudflare-vite-integration.ts",
+			"line": 121,
+			"column": 10,
+			"mutator": "StringLiteral",
+			"reason": "Same line — endsWith fallback handles 'astropress/sqlite-admin-runtime' regardless of the literal."
+		},
+		{
+			"file": "src/cloudflare-vite-integration.ts",
+			"line": 130,
+			"column": 3,
+			"mutator": "ConditionalExpression",
+			"reason": "`id === 'astropress/adapters/sqlite'` exact-match — same equivalence class as L112/L121. endsWith('/adapters/sqlite') catches the canonical bare path."
+		},
+		{
+			"file": "src/cloudflare-vite-integration.ts",
+			"line": 130,
+			"column": 10,
+			"mutator": "StringLiteral",
+			"reason": "Same line — endsWith fallback handles 'astropress/adapters/sqlite' regardless of the literal."
+		},
+		{
+			"file": "src/cloudflare-vite-integration.ts",
+			"line": 139,
+			"column": 3,
+			"mutator": "ConditionalExpression",
+			"reason": "`id === 'astropress/sqlite-bootstrap'` exact-match — same equivalence class as L112/L121/L130. endsWith('/sqlite-bootstrap') catches the canonical bare path."
+		},
+		{
+			"file": "src/cloudflare-vite-integration.ts",
+			"line": 139,
+			"column": 10,
+			"mutator": "StringLiteral",
+			"reason": "Same line — endsWith fallback handles 'astropress/sqlite-bootstrap' regardless of the literal."
+		},
+		{
 			"file": "src/cache-purge.ts",
 			"line": 85,
 			"column": 14,

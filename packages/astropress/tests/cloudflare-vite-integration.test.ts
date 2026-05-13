@@ -203,4 +203,15 @@ describe("cloudflare vite integration helper", () => {
 			"astropress/cloudflare-local-image-storage-stub",
 		);
 	});
+
+	it("strips file:// URL prefix before matching (pins L148 startsWith('file://'))", () => {
+		// Mutating `startsWith('file://')` to `endsWith('file://')` (false for any
+		// real URL), `if (true)` (always strip — also corrupts non-file paths),
+		// or `if (false)` (never strip) all change the resolveId outcome for a
+		// file:// URL. Original strips the scheme so endsWith fallback matches.
+		const integration = createAstropressCloudflareViteIntegration("/lrm.ts");
+		expect(integration.plugin.resolveId("file:///workspace/site/src/local-image-storage.ts")).toBe(
+			"astropress/cloudflare-local-image-storage-stub",
+		);
+	});
 });
