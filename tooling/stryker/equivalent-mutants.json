@@ -3,6 +3,20 @@
 	"description": "Catalog of mutants acknowledged as equivalent (semantically identical to the original code, so no test can kill them). Each entry is excluded from the per-file mutation-score denominator. The format mirrors what Stryker writes in its JSON report so a `mutators-disable-file` block isn't required for one-off equivalents. Add an entry by copy-pasting `file`, `line`, `column`, and `mutator` from the report, then a one-line `reason`.",
 	"entries": [
 		{
+			"file": "src/adapters/supabase.ts",
+			"line": 87,
+			"column": 25,
+			"mutator": "ObjectLiteral",
+			"reason": "`defaultCapabilities: { ...options.defaultCapabilities, ...FULL_STACK_CAPABILITIES }` passed to createAstropressHostedApiAdapter. FULL_STACK_CAPABILITIES (hostedAdmin/previewEnvironments/serverRuntime/database/objectStorage/gitSync) is a strict subset of what hosted-api-adapter already sets as defaults (see hosted-api-adapter.ts L51-60 — same six flags, all true). Collapsing this spread to {} leaves every observable capability identical because the inner adapter re-applies the same defaults."
+		},
+		{
+			"file": "src/adapters/supabase.ts",
+			"line": 96,
+			"column": 24,
+			"mutator": "ObjectLiteral",
+			"reason": "`defaultCapabilities: { ...options.defaultCapabilities, ...FULL_STACK_CAPABILITIES }` passed to createAstropressHostedPlatformAdapter. Same equivalence class as L87:25 — hosted-platform-adapter.ts L22-31 sets the same six FULL_STACK flags as defaults, so removing this spread produces an observably identical capabilities object."
+		},
+		{
 			"file": "src/locale-links.ts",
 			"line": 66,
 			"column": 10,

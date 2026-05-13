@@ -1,7 +1,8 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import {
 	createAstropressSupabaseAdapter,
+	createAstropressSupabaseHostedAdapter,
 	readAstropressSupabaseHostedConfig,
 } from "../../src/adapters/supabase";
 import { createAstropressInMemoryPlatformAdapter } from "../../src/in-memory-platform-adapter";
@@ -87,5 +88,50 @@ describe("readAstropressSupabaseHostedConfig", () => {
 			SUPABASE_SERVICE_ROLE_KEY: "key",
 		});
 		expect(config.apiBaseUrl).toBe("https://x.supabase.co/functions/v1/astropress");
+	});
+});
+
+describe("createAstropressSupabaseHostedAdapter", () => {
+	const env = {
+		SUPABASE_URL: "https://x.supabase.co",
+		SUPABASE_SERVICE_ROLE_KEY: "service-role-key",
+	};
+
+	it("routes through the hosted-API adapter when no stores are provided and invokes fetchImpl (pins L75 condition chain)", async () => {
+		const fetchImpl = vi.fn(async () => new Response(JSON.stringify([]), { status: 200 }) as never);
+		const adapter = createAstropressSupabaseHostedAdapter({
+			env,
+			fetchImpl: fetchImpl as never,
+		});
+		await adapter.content.list("post");
+		expect(fetchImpl).toHaveBeenCalled();
+		expect(String(fetchImpl.mock.calls[0]?.[0])).toContain("functions/v1/astropress");
+		expect(adapter.capabilities.name).toBe("supabase");
+	});
+
+	it.each([
+		["backingAdapter"],
+		["content"],
+		["media"],
+		["revisions"],
+		["auth"],
+	] as const)("does NOT call fetchImpl when only `%s` is supplied (pins each L75 `!options.x &&` clause)", async (key) => {
+		const fetchImpl = vi.fn(async () => new Response("nope", { status: 500 }) as never);
+		const backing = createAstropressInMemoryPlatformAdapter({
+			capabilities: { name: "sqlite" },
+		});
+		const isolated: Record<string, unknown> = {};
+		if (key === "backingAdapter") {
+			isolated.backingAdapter = backing;
+		} else {
+			isolated[key] = backing[key as "content" | "media" | "revisions" | "auth"];
+		}
+		const adapter = createAstropressSupabaseHostedAdapter({
+			env,
+			...(isolated as Parameters<typeof createAstropressSupabaseHostedAdapter>[0]),
+			fetchImpl: fetchImpl as never,
+		});
+		await adapter.content.list("post");
+		expect(fetchImpl).not.toHaveBeenCalled();
 	});
 });
