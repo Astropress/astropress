@@ -3,6 +3,20 @@
 	"description": "Catalog of mutants acknowledged as equivalent (semantically identical to the original code, so no test can kill them). Each entry is excluded from the per-file mutation-score denominator. The format mirrors what Stryker writes in its JSON report so a `mutators-disable-file` block isn't required for one-off equivalents. Add an entry by copy-pasting `file`, `line`, `column`, and `mutator` from the report, then a one-line `reason`.",
 	"entries": [
 		{
+			"file": "src/access/evaluator.ts",
+			"line": 67,
+			"column": 17,
+			"mutator": "MethodExpression",
+			"reason": "`const allows = matched.filter((p) => p.effect === 'allow')` is only reached when `denies.length === 0`. With only two Effect values (`allow`|`deny`), `matched` already contains exclusively allows in that branch, so dropping the `.filter(...)` call yields the identical array. Equivalent mutant by branch invariant."
+		},
+		{
+			"file": "src/access/evaluator.ts",
+			"line": 67,
+			"column": 39,
+			"mutator": "ConditionalExpression",
+			"reason": "Same invariant as L67:17 — when L67 is reached, every element of `matched` already satisfies `effect === 'allow'`, so replacing the predicate with `true` returns the same filtered set. Equivalent mutant."
+		},
+		{
 			"file": "src/admin-page-models-access.ts",
 			"line": 29,
 			"column": 6,

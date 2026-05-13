@@ -182,6 +182,109 @@ describe("evaluate", () => {
 	});
 });
 
+describe("evaluate — exact reason strings and tie-breakers", () => {
+	test("admin reason verbatim", () => {
+		const r = evaluate(subject({ isAdmin: true }), "anything:goes", []);
+		expect(r.reason).toBe("Subject is an Admin — admins bypass policy evaluation.");
+	});
+
+	test("default-deny reason verbatim references action", () => {
+		const r = evaluate(subject(), "posts:edit", []);
+		expect(r.reason).toBe("No policy grants posts:edit. Default is deny.");
+	});
+
+	test("allow reason verbatim — role with name", () => {
+		const r = evaluate(subject(), "posts:edit", [rolePolicy()]);
+		expect(r.reason).toBe('Allowed by role "Editor" on posts:edit.');
+	});
+
+	test("deny reason verbatim — role with name", () => {
+		const r = evaluate(subject(), "posts:edit", [rolePolicy({ id: "d1", effect: "deny" })]);
+		expect(r.reason).toBe('Denied by role "Editor" on posts:edit.');
+	});
+
+	test("describeSource: direct grant phrasing", () => {
+		const r = evaluate(subject(), "posts:edit", [rolePolicy({ source: { kind: "direct" } })]);
+		expect(r.reason).toBe("Allowed by direct grant on posts:edit.");
+	});
+
+	test("describeSource: role without name falls back to roleId", () => {
+		const r = evaluate(subject(), "posts:edit", [
+			rolePolicy({ source: { kind: "role", roleId: "r-42" } }),
+		]);
+		expect(r.reason).toBe('Allowed by role "r-42" on posts:edit.');
+	});
+
+	test("describeSource: role with neither name nor id falls back to 'unknown'", () => {
+		const r = evaluate(subject(), "posts:edit", [rolePolicy({ source: { kind: "role" } })]);
+		expect(r.reason).toBe('Allowed by role "unknown" on posts:edit.');
+	});
+
+	test("equal-priority allow tie → first one wins (>= keeps a)", () => {
+		const r = evaluate(subject(), "posts:edit", [
+			rolePolicy({ id: "first", priority: 5 }),
+			rolePolicy({ id: "second", priority: 5 }),
+		]);
+		expect(r.matchedPolicy?.id).toBe("first");
+	});
+
+	test("multiple denies with different priorities → highest priority wins", () => {
+		const r = evaluate(subject(), "posts:edit", [
+			rolePolicy({ id: "low-deny", effect: "deny", priority: 1 }),
+			rolePolicy({ id: "high-deny", effect: "deny", priority: 10 }),
+		]);
+		expect(r.matchedPolicy?.id).toBe("high-deny");
+	});
+
+	test("nowSeconds returns Date.now()/1000 (seconds, not ms) — env.time must be smaller than Date.now()", () => {
+		const upperBoundMs = Date.now() + 1000;
+		const policy = rolePolicy({
+			condition: { op: "numberLessThan", left: "env.time", right: upperBoundMs },
+		});
+		const r = evaluate(subject(), "posts:edit", [policy]);
+		expect(r.decision).toBe("allow");
+	});
+
+	test("equal-priority deny tie → first one wins (>= keeps a)", () => {
+		const r = evaluate(subject(), "posts:edit", [
+			rolePolicy({ id: "d-first", effect: "deny", priority: 5 }),
+			rolePolicy({ id: "d-second", effect: "deny", priority: 5 }),
+		]);
+		expect(r.matchedPolicy?.id).toBe("d-first");
+	});
+
+	test("env defaults to { time: nowSeconds() } when omitted — condition on env.time evaluates", () => {
+		const before = Math.floor(Date.now() / 1000) - 1;
+		const policy = rolePolicy({
+			condition: { op: "numberGreaterThan", left: "env.time", right: before },
+		});
+		const r = evaluate(subject(), "posts:edit", [policy]);
+		expect(r.decision).toBe("allow");
+	});
+
+	test("provided env is used and overrides nowSeconds default", () => {
+		const policy = rolePolicy({
+			condition: { op: "numberLessThan", left: "env.time", right: 100 },
+		});
+		const r = evaluate(subject(), "posts:edit", [policy], undefined, { time: 50 });
+		expect(r.decision).toBe("allow");
+	});
+});
+
+describe("actionMatches — boundary cases", () => {
+	test("namespace prefix excludes other namespaces", () => {
+		expect(actionMatches("posts:*", "post:edit")).toBe(false);
+		expect(actionMatches("posts:*", "")).toBe(false);
+	});
+	test("namespace wildcard keeps trailing colon — empty action after ':' still matches", () => {
+		expect(actionMatches("posts:*", "posts:")).toBe(true);
+	});
+	test("non-wildcard pattern that is not exact does not match", () => {
+		expect(actionMatches("posts:edit", "posts:edits")).toBe(false);
+		expect(actionMatches("posts:edit", "posts")).toBe(false);
+	});
+});
+
 describe("createPolicyEngine", () => {
 	test("delegates to evaluate with loader-supplied policies", () => {
 		const policies = [rolePolicy()];
