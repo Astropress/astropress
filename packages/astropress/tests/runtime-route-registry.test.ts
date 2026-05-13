@@ -311,6 +311,245 @@ describe("saveRuntimeSystemRoute", () => {
 		const result = await saveRuntimeSystemRoute("/contact", { title: "T" }, actor, null);
 		expect(result).toMatchObject({ ok: true });
 	});
+
+	it("returns exact 'title is required' error verbatim", async () => {
+		seedSystemRoute(db, "/exact-err");
+		const result = await saveRuntimeSystemRoute("/exact-err", { title: "  " }, actor, locals);
+		expect(result).toEqual({ ok: false, error: "A title is required." });
+	});
+
+	it("returns exact 'could not be found' error verbatim", async () => {
+		const result = await saveRuntimeSystemRoute("/ghost", { title: "T" }, actor, locals);
+		expect(result).toEqual({ ok: false, error: "The selected system route could not be found." });
+	});
+
+	it("locals=null without local registry returns exact unavailable error", async () => {
+		const result = await saveRuntimeSystemRoute("/blog", { title: "T" }, actor, null);
+		expect(result).toEqual({ ok: false, error: "The runtime content registry is unavailable." });
+	});
+
+	it("summary omitted → stored NULL (not empty string)", async () => {
+		seedSystemRoute(db, "/sys-null-summary");
+		await saveRuntimeSystemRoute("/sys-null-summary", { title: "T" }, actor, locals);
+		const row = db
+			.prepare("SELECT summary, body_html FROM cms_route_variants WHERE path = ?")
+			.get("/sys-null-summary") as { summary: string | null; body_html: string | null };
+		expect(row.summary).toBeNull();
+		expect(row.body_html).toBeNull();
+	});
+
+	it("summary/bodyHtml whitespace-only → stored NULL after trim", async () => {
+		seedSystemRoute(db, "/sys-ws");
+		await saveRuntimeSystemRoute(
+			"/sys-ws",
+			{ title: "T", summary: "   ", bodyHtml: "  " },
+			actor,
+			locals,
+		);
+		const row = db
+			.prepare("SELECT summary, body_html FROM cms_route_variants WHERE path = ?")
+			.get("/sys-ws") as { summary: string | null; body_html: string | null };
+		expect(row.summary).toBeNull();
+		expect(row.body_html).toBeNull();
+	});
+
+	it("metaDescription column gets summary when present, title when summary is null", async () => {
+		seedSystemRoute(db, "/meta-with-summary");
+		await saveRuntimeSystemRoute(
+			"/meta-with-summary",
+			{ title: "T1", summary: "S1" },
+			actor,
+			locals,
+		);
+		const withSum = db
+			.prepare("SELECT meta_description, seo_title FROM cms_route_variants WHERE path = ?")
+			.get("/meta-with-summary") as { meta_description: string; seo_title: string };
+		expect(withSum.meta_description).toBe("S1");
+		expect(withSum.seo_title).toBe("T1");
+
+		seedSystemRoute(db, "/meta-no-summary");
+		await saveRuntimeSystemRoute("/meta-no-summary", { title: "T2" }, actor, locals);
+		const noSum = db
+			.prepare("SELECT meta_description, seo_title FROM cms_route_variants WHERE path = ?")
+			.get("/meta-no-summary") as { meta_description: string; seo_title: string };
+		expect(noSum.meta_description).toBe("T2");
+		expect(noSum.seo_title).toBe("T2");
+	});
+
+	it("revisionNote present → trimmed value persisted", async () => {
+		seedSystemRoute(db, "/sys-rev");
+		await saveRuntimeSystemRoute(
+			"/sys-rev",
+			{ title: "T", revisionNote: "  note  " },
+			actor,
+			locals,
+		);
+		const row = db
+			.prepare(
+				"SELECT revision_note FROM cms_route_revisions WHERE route_path = ? ORDER BY created_at DESC LIMIT 1",
+			)
+			.get("/sys-rev") as { revision_note: string | null };
+		expect(row.revision_note).toBe("note");
+	});
+
+	it("revisionNote omitted/whitespace → stored NULL", async () => {
+		seedSystemRoute(db, "/sys-no-rev");
+		await saveRuntimeSystemRoute("/sys-no-rev", { title: "T" }, actor, locals);
+		const r1 = db
+			.prepare(
+				"SELECT revision_note FROM cms_route_revisions WHERE route_path = ? ORDER BY created_at DESC LIMIT 1",
+			)
+			.get("/sys-no-rev") as { revision_note: string | null };
+		expect(r1.revision_note).toBeNull();
+
+		seedSystemRoute(db, "/sys-ws-rev");
+		await saveRuntimeSystemRoute("/sys-ws-rev", { title: "T", revisionNote: "   " }, actor, locals);
+		const r2 = db
+			.prepare(
+				"SELECT revision_note FROM cms_route_revisions WHERE route_path = ? ORDER BY created_at DESC LIMIT 1",
+			)
+			.get("/sys-ws-rev") as { revision_note: string | null };
+		expect(r2.revision_note).toBeNull();
+	});
+
+	it("audit row pins action/resource_type/resource_id/summary verbatim", async () => {
+		seedSystemRoute(db, "/sys-audit");
+		await saveRuntimeSystemRoute("/sys-audit", { title: "T" }, actor, locals);
+		const row = db
+			.prepare(
+				"SELECT action, resource_type, resource_id, summary FROM audit_events WHERE resource_id = ? ORDER BY created_at DESC LIMIT 1",
+			)
+			.get("/sys-audit") as {
+			action: string;
+			resource_type: string;
+			resource_id: string;
+			summary: string;
+		};
+		expect(row.action).toBe("system.update");
+		expect(row.resource_type).toBe("content");
+		expect(row.resource_id).toBe("/sys-audit");
+		expect(row.summary).toBe("Updated system route /sys-audit.");
+	});
+
+	it("revision row id is prefixed with 'revision:<variantId>:' (non-empty UUID suffix)", async () => {
+		const variantId = seedSystemRoute(db, "/sys-rev-id");
+		await saveRuntimeSystemRoute("/sys-rev-id", { title: "T" }, actor, locals);
+		const row = db
+			.prepare(
+				"SELECT id FROM cms_route_revisions WHERE route_path = ? ORDER BY created_at DESC LIMIT 1",
+			)
+			.get("/sys-rev-id") as { id: string };
+		expect(row.id.startsWith(`revision:${variantId}:`)).toBe(true);
+		expect(row.id.length).toBeGreaterThan(`revision:${variantId}:`.length);
+	});
+
+	it("snapshot_json pins all validated fields including settings null when omitted", async () => {
+		seedSystemRoute(db, "/snap-null");
+		await saveRuntimeSystemRoute("/snap-null", { title: "Snap" }, actor, locals);
+		const row = db
+			.prepare(
+				"SELECT snapshot_json FROM cms_route_revisions WHERE route_path = ? ORDER BY created_at DESC LIMIT 1",
+			)
+			.get("/snap-null") as { snapshot_json: string };
+		const snap = JSON.parse(row.snapshot_json) as Record<string, unknown>;
+		expect(snap).toEqual({
+			path: "/snap-null",
+			title: "Snap",
+			summary: null,
+			bodyHtml: null,
+			settings: null,
+			renderStrategy: "structured_sections",
+		});
+	});
+
+	it("snapshot_json threads settings object when provided", async () => {
+		seedSystemRoute(db, "/snap-settings", "generated_xml");
+		await saveRuntimeSystemRoute(
+			"/snap-settings",
+			{ title: "T", settings: { limit: 5 } },
+			actor,
+			locals,
+		);
+		const row = db
+			.prepare(
+				"SELECT snapshot_json FROM cms_route_revisions WHERE route_path = ? ORDER BY created_at DESC LIMIT 1",
+			)
+			.get("/snap-settings") as { snapshot_json: string };
+		const snap = JSON.parse(row.snapshot_json) as Record<string, unknown>;
+		expect(snap.settings).toEqual({ limit: 5 });
+		expect(snap.renderStrategy).toBe("generated_xml");
+	});
+
+	it("returned route shape: settings undefined input becomes null in result", async () => {
+		seedSystemRoute(db, "/return-shape-sys");
+		const r = await saveRuntimeSystemRoute("/return-shape-sys", { title: "T" }, actor, locals);
+		expect(r.ok).toBe(true);
+		if (!r.ok) return;
+		expect(r.route).toEqual({
+			path: "/return-shape-sys",
+			title: "T",
+			summary: undefined,
+			bodyHtml: undefined,
+			settings: null,
+			renderStrategy: "structured_sections",
+		});
+	});
+
+	it("returned route shape: explicit settings is echoed back", async () => {
+		seedSystemRoute(db, "/return-with-settings", "generated_xml");
+		const r = await saveRuntimeSystemRoute(
+			"/return-with-settings",
+			{ title: "T", summary: "S", settings: { x: 1 } },
+			actor,
+			locals,
+		);
+		expect(r.ok).toBe(true);
+		if (!r.ok) return;
+		expect(r.route.settings).toEqual({ x: 1 });
+		expect(r.route.summary).toBe("S");
+		expect(r.route.renderStrategy).toBe("generated_xml");
+	});
+});
+
+describe("getRuntimeSystemRoute — D1 row mapping & no-fallback-leak", () => {
+	it("D1 row missing → returns null without consulting local registry", async () => {
+		mockLoadLocalCmsRegistry.mockResolvedValueOnce(mockLocalRegistry);
+		mockLocalRegistry.getSystemRoute.mockResolvedValueOnce({
+			path: "/leak",
+			title: "from local",
+		} as unknown);
+		const route = await getRuntimeSystemRoute("/no-such-system", locals);
+		expect(route).toBeNull();
+	});
+
+	it("NULL row fields map to undefined in returned record (not null)", async () => {
+		seedSystemRoute(db, "/sys-nulls");
+		const route = await getRuntimeSystemRoute("/sys-nulls", locals);
+		expect(route?.summary).toBeUndefined();
+		expect(route?.bodyHtml).toBeUndefined();
+	});
+
+	it("populated summary/body_html are returned as strings", async () => {
+		seedSystemRoute(db, "/sys-populated");
+		db.prepare("UPDATE cms_route_variants SET summary = ?, body_html = ? WHERE path = ?").run(
+			"populated summary",
+			"<p>html</p>",
+			"/sys-populated",
+		);
+		const route = await getRuntimeSystemRoute("/sys-populated", locals);
+		expect(route?.summary).toBe("populated summary");
+		expect(route?.bodyHtml).toBe("<p>html</p>");
+	});
+});
+
+describe("listRuntimeSystemRoutes — list mapping", () => {
+	it("maps each row through mapSystemRow and excludes nulls (mapSystemRow returns null only on null input — defensive .filter(Boolean))", async () => {
+		seedSystemRoute(db, "/sys-a");
+		seedSystemRoute(db, "/sys-b");
+		const routes = await listRuntimeSystemRoutes(locals);
+		const paths = routes.map((r) => r?.path).sort();
+		expect(paths).toEqual(["/sys-a", "/sys-b"]);
+	});
 });
 
 // ---------------------------------------------------------------------------
