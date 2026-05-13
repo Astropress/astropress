@@ -1919,6 +1919,27 @@
 			"column": 9,
 			"mutator": "StringLiteral",
 			"reason": "Fallback `return \"none\";` mutated to `return \"\";`. recommendAstropressProvider at provider-choice.ts:79 coalesces with `?? \"none\"` (which preserves \"\" since ?? only catches null/undefined), then performs strict-equality checks against \"supabase\"/\"appwrite\"/\"cloudflare\". Neither \"none\" nor \"\" matches any of those, so both fall through to the same wantsHostedAdmin/wantsStaticMirror branches. Observable recommendation identical for every input pair."
+		},
+		{
+			"file": "src/runtime-page-store.ts",
+			"line": 49,
+			"column": 6,
+			"mutator": "ConditionalExpression",
+			"reason": "if (!db) return fallbackStore — fast-path early return. Mutated false: builds the D1 store with the undefined db, then each store method is wrapped by withFallback(d1.x, fb.x). On call, d1.x calls db.prepare(...) → TypeError → withFallback catches and invokes fb.x — the same fallback method the fast-path returns directly. createD1AdminReadStore(undefined) does not throw (lazy method object). Observable result identical for every (locals.DB undefined, fallback path) pair."
+		},
+		{
+			"file": "src/runtime-page-store.ts",
+			"line": 102,
+			"column": 15,
+			"mutator": "ObjectLiteral",
+			"reason": "rateLimits: { checkRateLimit, peekRateLimit, recordFailedAttempt } in the getReadStore return value, mutated to rateLimits: {}. getReadStore is module-private and the public exports never access store.rateLimits — checkRuntimeRateLimit / peekRuntimeRateLimit / recordRuntimeFailedAttempt are re-exported from runtime-mutation-store.ts which builds its own dispatch. No reachable caller observes the rateLimits methods on the read-store contract; the satisfies-clause is the only type-level user. Observable behaviour identical."
+		},
+		{
+			"file": "src/runtime-page-store.ts",
+			"line": 49,
+			"column": 11,
+			"mutator": "BlockStatement",
+			"reason": "Same equivalence class as L49:6 — the if-body becomes {} (no early return). Control falls through to createD1AdminReadStore(undefined) + withFallback wrappers; each method call routes through the same fallback because db.prepare(...) raises a TypeError caught by withFallback. Observable behaviour identical to the original fast-path early-return."
 		}
 	]
 }
