@@ -209,4 +209,146 @@ describe("resolveWixCredentials — credentials file path provided", () => {
 			resolveWixCredentials({ credentialsFile: "/path/.credentials.json" }),
 		).rejects.toThrow("Wix credentials are missing 'email'");
 	});
+
+	it("throws if the wix section is missing password", async () => {
+		fsMocks.readFile.mockResolvedValue(JSON.stringify({ wix: { email: "x@example.com" } }));
+		await expect(
+			resolveWixCredentials({ credentialsFile: "/path/.credentials.json" }),
+		).rejects.toThrow("Wix credentials are missing 'password'");
+	});
+
+	it("returns email + password directly when no credentialsFile is provided", async () => {
+		const creds = await resolveWixCredentials({
+			email: "me@example.com",
+			password: "direct-pw",
+		});
+		expect(creds).toEqual({ email: "me@example.com", password: "direct-pw" });
+		expect(fsMocks.readFile).not.toHaveBeenCalled();
+	});
+
+	it("throws the no-credentials error when neither file nor email+password are provided", async () => {
+		await expect(resolveWixCredentials({})).rejects.toThrow(
+			"No credentials provided. Use --credentials-file or let the CLI prompt you.",
+		);
+	});
+
+	it("throws the no-credentials error when password is provided but email is missing", async () => {
+		await expect(resolveWixCredentials({ password: "x" })).rejects.toThrow(
+			"No credentials provided. Use --credentials-file or let the CLI prompt you.",
+		);
+	});
+});
+
+describe("resolveWordPressCredentials — direct options and missing-credentials path", () => {
+	beforeEach(() => vi.resetAllMocks());
+
+	it("returns url + username + password directly when no credentialsFile is provided", async () => {
+		const creds = await resolveWordPressCredentials({
+			url: "https://mysite.com",
+			username: "admin",
+			password: "direct-pw",
+		});
+		expect(creds).toEqual({
+			url: "https://mysite.com",
+			username: "admin",
+			password: "direct-pw",
+		});
+		expect(fsMocks.readFile).not.toHaveBeenCalled();
+	});
+
+	it("throws the no-credentials error when neither file nor username+password are provided", async () => {
+		await expect(resolveWordPressCredentials({ url: "https://mysite.com" })).rejects.toThrow(
+			"No credentials provided. Use --credentials-file or let the CLI prompt you.",
+		);
+	});
+
+	it("throws if the wordpress section is missing username", async () => {
+		fsMocks.readFile.mockResolvedValue(
+			JSON.stringify({
+				wordpress: { url: "https://mysite.com", password: "secret" },
+			}),
+		);
+		await expect(
+			resolveWordPressCredentials({
+				url: "https://mysite.com",
+				credentialsFile: "/path/.credentials.json",
+			}),
+		).rejects.toThrow("WordPress credentials are missing 'username'");
+	});
+
+	it("throws if the wordpress username is whitespace-only (requireField rejects after trim)", async () => {
+		fsMocks.readFile.mockResolvedValue(
+			JSON.stringify({
+				wordpress: { url: "https://mysite.com", username: "   ", password: "secret" },
+			}),
+		);
+		await expect(
+			resolveWordPressCredentials({
+				url: "https://mysite.com",
+				credentialsFile: "/path/.credentials.json",
+			}),
+		).rejects.toThrow("WordPress credentials are missing 'username'");
+	});
+});
+
+describe("validateUrl — whitespace + non-Error rejections", () => {
+	it("rejects whitespace-only URLs with the URL-required error", () => {
+		expect(() => validateUrl("   ")).toThrow("URL is required");
+	});
+
+	it("rejects null/undefined-like inputs with the URL-required error (no trim crash)", () => {
+		// cast to satisfy the type — the runtime guard must short-circuit on falsy values
+		expect(() => validateUrl(null as unknown as string)).toThrow("URL is required");
+		expect(() => validateUrl(undefined as unknown as string)).toThrow("URL is required");
+	});
+});
+
+describe("loadCredentialsFile — uses utf8 encoding and propagates non-ENOENT rejections", () => {
+	beforeEach(() => vi.resetAllMocks());
+
+	it("reads with utf8 encoding (not the empty string)", async () => {
+		fsMocks.readFile.mockResolvedValue("{}");
+		await loadCredentialsFile("/path/.credentials.json");
+		expect(fsMocks.readFile).toHaveBeenCalledWith("/path/.credentials.json", "utf8");
+	});
+
+	it("propagates non-ENOENT Error rejections verbatim (no remap to not-found message)", async () => {
+		fsMocks.readFile.mockRejectedValue(
+			Object.assign(new Error("EACCES denied"), { code: "EACCES" }),
+		);
+		await expect(loadCredentialsFile("/p.json")).rejects.toThrow("EACCES denied");
+	});
+
+	it("propagates non-Error rejections verbatim", async () => {
+		fsMocks.readFile.mockRejectedValue("string-rejection");
+		await expect(loadCredentialsFile("/p.json")).rejects.toBe("string-rejection");
+	});
+
+	it("rejects JSON null as a non-object payload", async () => {
+		fsMocks.readFile.mockResolvedValue("null");
+		await expect(loadCredentialsFile("/p.json")).rejects.toThrow(
+			"Credentials file must be a JSON object",
+		);
+	});
+
+	it("rejects JSON numbers as a non-object payload", async () => {
+		fsMocks.readFile.mockResolvedValue("42");
+		await expect(loadCredentialsFile("/p.json")).rejects.toThrow(
+			"Credentials file must be a JSON object",
+		);
+	});
+});
+
+describe("saveCredentialsFile — propagates non-EACCES rejections verbatim", () => {
+	beforeEach(() => vi.resetAllMocks());
+
+	it("propagates a generic Error rejection without remapping to permission-denied", async () => {
+		fsMocks.writeFile.mockRejectedValue(new Error("disk full"));
+		await expect(saveCredentialsFile("/p.json", {})).rejects.toThrow("disk full");
+	});
+
+	it("propagates a non-Error rejection verbatim", async () => {
+		fsMocks.writeFile.mockRejectedValue("string-rejection");
+		await expect(saveCredentialsFile("/p.json", {})).rejects.toBe("string-rejection");
+	});
 });
