@@ -187,6 +187,39 @@ describe("env example includes PledgeCrypto key when enabled", () => {
 	});
 });
 
+describe("env example value contracts", () => {
+	it("GIVELIVELY_CAMPAIGN_SLUG carries the campaign-slug guidance string (pins L111 StringLiteral)", () => {
+		const result = buildDonationsEnvExample({ giveLively: true });
+		expect(result.GIVELIVELY_CAMPAIGN_SLUG).toBe("replace-with-your-campaign-slug-or-remove");
+	});
+
+	it("LIBERAPAY_USERNAME carries the username guidance string (pins L114 StringLiteral)", () => {
+		const result = buildDonationsEnvExample({ liberapay: true });
+		expect(result.LIBERAPAY_USERNAME).toBe("replace-with-your-liberapay-username");
+	});
+
+	it("PLEDGE_PARTNER_KEY carries the partner-key placeholder (pins L117 StringLiteral)", () => {
+		const result = buildDonationsEnvExample({ pledgeCrypto: true });
+		expect(result.PLEDGE_PARTNER_KEY).toBe("[YOUR_PLEDGE_PARTNER_KEY]");
+	});
+
+	it("does not emit giveLively keys when only liberapay is enabled (pins L109 ConditionalExpression)", () => {
+		const result = buildDonationsEnvExample({ liberapay: true });
+		expect(result).not.toHaveProperty("GIVELIVELY_ORG_SLUG");
+		expect(result).not.toHaveProperty("GIVELIVELY_CAMPAIGN_SLUG");
+	});
+
+	it("does not emit liberapay key when only pledgeCrypto is enabled (pins L113 ConditionalExpression)", () => {
+		const result = buildDonationsEnvExample({ pledgeCrypto: true });
+		expect(result).not.toHaveProperty("LIBERAPAY_USERNAME");
+	});
+
+	it("does not emit pledgeCrypto key when only giveLively is enabled (pins L116 ConditionalExpression)", () => {
+		const result = buildDonationsEnvExample({ giveLively: true });
+		expect(result).not.toHaveProperty("PLEDGE_PARTNER_KEY");
+	});
+});
+
 describe("env example omits donation keys when none enabled", () => {
 	it("returns empty object when donations is undefined", () => {
 		const result = buildDonationsEnvExample(undefined);
