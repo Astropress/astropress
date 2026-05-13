@@ -458,6 +458,153 @@ describe("cloudflare adapter — content.save() extended branches", () => {
 	});
 });
 
+describe("cloudflare adapter — survivor pins", () => {
+	it("redirect save uses slug (not id) as sourcePath (pins L80 slug || id LogicalOperator)", async () => {
+		const db = makeDb();
+		const adapter = createAstropressCloudflareAdapter({
+			db: new SqliteBackedD1Database(db),
+		});
+		const saved = await adapter.content.save({
+			id: "ignored-id",
+			kind: "redirect",
+			slug: "/from",
+			status: "published",
+			metadata: { targetPath: "/to", statusCode: 301 },
+		});
+		// `record.slug || record.id` should resolve to "/from", not "ignored-id".
+		expect(saved.id).toBe("/from");
+		const row = db
+			.prepare("SELECT source_path FROM redirect_rules WHERE source_path = '/from'")
+			.get() as Record<string, unknown> | undefined;
+		expect(row).toBeTruthy();
+	});
+
+	it("redirect save trims whitespace around targetPath (pins L82 .trim() MethodExpression)", async () => {
+		const db = makeDb();
+		const adapter = createAstropressCloudflareAdapter({
+			db: new SqliteBackedD1Database(db),
+		});
+		const saved = await adapter.content.save({
+			id: "/old-padded",
+			kind: "redirect",
+			slug: "/old-padded",
+			status: "published",
+			metadata: { targetPath: "  /new-padded  ", statusCode: 301 },
+		});
+		expect(saved.metadata).toMatchObject({ targetPath: "/new-padded" });
+	});
+
+	it("settings save returns id='site-settings' and slug='site-settings' (pins L107/L109 StringLiterals)", async () => {
+		const db = makeDb();
+		const adapter = createAstropressCloudflareAdapter({
+			db: new SqliteBackedD1Database(db),
+		});
+		const saved = await adapter.content.save({
+			id: "site-settings",
+			kind: "settings",
+			slug: "site-settings",
+			status: "published",
+			metadata: { siteTitle: "Pinned" },
+		});
+		expect(saved.id).toBe("site-settings");
+		expect(saved.slug).toBe("site-settings");
+	});
+
+	it("translation save defaults state to 'not_started' when metadata.state is missing (pins L116 StringLiteral)", async () => {
+		const db = makeDb();
+		const adapter = createAstropressCloudflareAdapter({
+			db: new SqliteBackedD1Database(db),
+		});
+		const saved = await adapter.content.save({
+			id: "/es/no-state",
+			kind: "translation",
+			slug: "/es/no-state",
+			status: "published",
+		});
+		expect((saved.metadata as { state?: string })?.state).toBe("not_started");
+	});
+
+	it("list('page') returns at least one page and no posts/redirects/comments (pins L141/L147/L152 conditionals)", async () => {
+		const db = await createSeededCloudflareDatabase();
+		db.prepare(
+			"INSERT INTO redirect_rules (source_path, target_path, status_code, created_by) VALUES (?, ?, ?, ?)",
+		).run("/old-r", "/new-r", 301, "admin@example.com");
+		db.prepare(
+			"INSERT INTO comments (id, route, author, email, body, status, policy) VALUES (?, ?, ?, ?, ?, ?, ?)",
+		).run("c1", "/post", "Alice", "a@x.com", "hi", "approved", "open-moderated");
+		db.prepare(
+			"INSERT INTO content_entries (slug, legacy_url, title, kind, template_key, source_html_path, body, summary, seo_title, meta_description) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+		).run(
+			"a-page",
+			"/a-page",
+			"A Page",
+			"page",
+			"content",
+			"runtime://content/a-page",
+			"<p>p</p>",
+			"sum",
+			"seo",
+			"desc",
+		);
+		const adapter = createAstropressCloudflareAdapter({
+			db: new SqliteBackedD1Database(db),
+		});
+		const pages = await adapter.content.list("page");
+		// L141 mutants that flip the kind filter would either return posts here or
+		// skip the page block entirely.
+		expect(pages.some((r) => r.kind === "page")).toBe(true);
+		expect(pages.every((r) => r.kind === "page")).toBe(true);
+		db.close();
+	});
+
+	it("list('redirect') returns the redirect row and no page/comment rows (pins L141/L147 mutants)", async () => {
+		const db = await createSeededCloudflareDatabase();
+		db.prepare(
+			"INSERT INTO redirect_rules (source_path, target_path, status_code, created_by) VALUES (?, ?, ?, ?)",
+		).run("/r-old", "/r-new", 301, "admin@example.com");
+		const adapter = createAstropressCloudflareAdapter({
+			db: new SqliteBackedD1Database(db),
+		});
+		const redirects = await adapter.content.list("redirect");
+		expect(redirects.length).toBeGreaterThanOrEqual(1);
+		expect(redirects.every((r) => r.kind === "redirect")).toBe(true);
+		db.close();
+	});
+
+	it("approved comments are listed with status='published' (pins L152 conditional + L158 'published' StringLiteral)", async () => {
+		const db = await createSeededCloudflareDatabase();
+		db.prepare(
+			"INSERT INTO comments (id, route, author, email, body, status, policy) VALUES (?, ?, ?, ?, ?, ?, ?)",
+		).run("ca", "/post", "Alice", "a@x.com", "hello", "approved", "open-moderated");
+		const adapter = createAstropressCloudflareAdapter({
+			db: new SqliteBackedD1Database(db),
+		});
+		const comments = await adapter.content.list("comment");
+		expect(comments.length).toBeGreaterThanOrEqual(1);
+		expect(comments[0]?.status).toBe("published");
+		db.close();
+	});
+
+	it("explicit options.auth short-circuits the resolver (pins L129 ConditionalExpression)", async () => {
+		const customAuth = {
+			async signIn() {
+				return { id: "u-custom", email: "custom@x.com", role: "admin" as const };
+			},
+			async getSession() {
+				return null;
+			},
+			async signOut() {},
+		};
+		const adapter = createAstropressCloudflareAdapter({
+			auth: customAuth,
+		});
+		const session = await adapter.auth.signIn("anything", "anything");
+		// Original returns options.auth; mutant `if (false) return options.auth`
+		// falls through to the disabled auth store which always returns null.
+		expect(session).toMatchObject({ id: "u-custom" });
+	});
+});
+
 describe("cloudflare adapter — content.get() branches", () => {
 	it("returns null for empty id", async () => {
 		const db = makeDb();
