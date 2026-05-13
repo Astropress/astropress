@@ -637,9 +637,21 @@ describe("cloudflare adapter — media.get() branches", () => {
 		const adapter = createAstropressCloudflareAdapter({
 			db: new SqliteBackedD1Database(db),
 		});
+		// Seed a SECOND media row so `find((entry) => entry.id === id)` has to
+		// actually match by id — otherwise a `=== id` → `true` mutant would survive
+		// (the first asset returned matches whatever id was requested).
+		db.prepare(
+			`INSERT INTO media_assets (id, source_url, local_path, mime_type, alt_text, title, uploaded_by)
+       VALUES (?, 'https://cdn.example.com/decoy.png', '/media/decoy.png', 'image/png', 'decoy alt', 'decoy.png', 'admin@example.com')`,
+		).run("cloudflare-media-decoy");
 		const asset = await adapter.media.get("cloudflare-media-1");
 		expect(asset).not.toBeNull();
+		expect(asset?.id).toBe("cloudflare-media-1");
 		expect(asset?.publicUrl).toBe("https://cdn.example.com/cloudflare.png");
+		// L328: metadata object literal must populate altText and uploadedAt.
+		expect(asset?.metadata?.altText).toBe("Cloudflare alt");
+		expect(asset?.metadata?.uploadedAt).toEqual(expect.any(String));
+		expect((asset?.metadata?.uploadedAt as string).length).toBeGreaterThan(0);
 		db.close();
 	});
 });
@@ -1072,6 +1084,13 @@ describe("cloudflare adapter — null-field branches in ?? operators", () => {
 			mimeType: "image/png",
 		} as Parameters<typeof adapter.media.put>[0]);
 		expect(asset.id).toBe("bare-meta-asset");
+		// L313: `metadata?.title ?? asset.filename` must fall back to filename when
+		// metadata is absent. A `&&` mutant would store "undefined" instead of "bare.png".
+		const row = db
+			.prepare("SELECT title, alt_text FROM media_assets WHERE id = 'bare-meta-asset'")
+			.get() as { title: string; alt_text: string };
+		expect(row.title).toBe("bare.png");
+		expect(row.alt_text).toBe("");
 		db.close();
 	});
 
