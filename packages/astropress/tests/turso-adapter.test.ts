@@ -157,6 +157,16 @@ describe("createAstropressTursoHostedAdapter", () => {
 		expect(config.apiBaseUrl).not.toContain("Stryker");
 	});
 
+	it("hostPanel mode is 'link' (pins L92 StringLiteral)", () => {
+		const adapter = createAstropressTursoHostedAdapter({ env: validEnv });
+		expect(adapter.capabilities.hostPanel?.mode).toBe("link");
+	});
+
+	it("non-hosted createAstropressTursoAdapter defaults gitSync to false (pins L35 BooleanLiteral)", () => {
+		const adapter = createAstropressTursoAdapter();
+		expect(adapter.capabilities.gitSync).toBe(false);
+	});
+
 	it("defaultCapabilities is gitSync:false / previewEnvironments:false / serverRuntime:true (pins L35/L86/L87 booleans)", () => {
 		const adapter = createAstropressTursoHostedAdapter({ env: validEnv });
 		expect(adapter.capabilities.gitSync).toBe(false);

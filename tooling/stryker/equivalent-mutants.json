@@ -3,6 +3,20 @@
 	"description": "Catalog of mutants acknowledged as equivalent (semantically identical to the original code, so no test can kill them). Each entry is excluded from the per-file mutation-score denominator. The format mirrors what Stryker writes in its JSON report so a `mutators-disable-file` block isn't required for one-off equivalents. Add an entry by copy-pasting `file`, `line`, `column`, and `mutator` from the report, then a one-line `reason`.",
 	"entries": [
 		{
+			"file": "src/adapters/turso.ts",
+			"line": 67,
+			"column": 13,
+			"mutator": "Regex",
+			"reason": "`.replace(/^libsql:\\/\\//, '')` strips the leading libsql:// scheme. The mutant `/libsql:\\/\\//` (no `^` anchor) replaces the first occurrence rather than only the prefix, but `.replace` without `/g` already stops after the first match. For every input that passes the surrounding `databaseUrl.startsWith('libsql://') || startsWith('https://')` guard the leading scheme is at index 0, so anchored vs unanchored produces the identical first-match index and the identical result string."
+		},
+		{
+			"file": "src/adapters/turso.ts",
+			"line": 68,
+			"column": 13,
+			"mutator": "Regex",
+			"reason": "`.replace(/^https:\\/\\//, '')` — same equivalence class as L67:13. The earlier validation requires the URL to start with either libsql:// or https://; for libsql:// inputs no `https://` substring exists later in the string (the path is `<dbname>.turso.io`), so the unanchored mutant produces no replacement either way. For https:// inputs the scheme is at index 0, where anchored and unanchored match identically."
+		},
+		{
 			"file": "src/adapters/supabase.ts",
 			"line": 87,
 			"column": 25,

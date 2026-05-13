@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-05-13T07:25:56.796Z",
+  "updatedAt": "2026-05-13T07:32:44.404Z",
   "scores": {
     "packages/astropress/src/adapters/adapter-record-helpers.ts": {
       "score": 100,
@@ -22,7 +22,7 @@
       "hash": "ff6ce228f5f5c0cfdc5729ea257d1dfe9acff768"
     },
     "packages/astropress/src/adapters/turso.ts": {
-      "score": 96.55172413793103,
+      "score": 100,
       "hash": "58ee213f7c0e02a2d5c199d5409ecfb87d6eb140"
     },
     "packages/astropress/src/admin-action-mailchimp-import.ts": {
