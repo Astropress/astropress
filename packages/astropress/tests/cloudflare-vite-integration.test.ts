@@ -214,4 +214,77 @@ describe("cloudflare vite integration helper", () => {
 			"astropress/cloudflare-local-image-storage-stub",
 		);
 	});
+
+	it("integration exposes plugin.enforce = 'pre' verbatim (kills L215 StringLiteral)", () => {
+		const integration = createAstropressCloudflareViteIntegration("/lrm.ts");
+		// Strict equality — "pre"→"" mutant changes the vite hook ordering.
+		expect(integration.plugin.enforce).toBe("pre");
+	});
+
+	it("aliases[10] and aliases[11] expose both local-runtime-modules regex patterns verbatim", () => {
+		const integration = createAstropressCloudflareViteIntegration("/lrm.ts");
+		// L59-62 entry — narrow regex matching only './local-runtime-modules[.ts]'
+		expect(integration.aliases[10]).toEqual({
+			find: /^\.\/local-runtime-modules(?:\.ts)?$/,
+			replacement: "astropress/cloudflare-local-runtime-stubs",
+		});
+		// L63-66 entry — broader regex matching '<anything>/local-runtime-modules[.ts]'.
+		// This kills the L63-66 ObjectLiteral, Regex, and StringLiteral mutants
+		// (no other entry catches '/some/path/local-runtime-modules' style ids).
+		expect(integration.aliases[11]).toEqual({
+			find: /^.*\/local-runtime-modules(?:\.ts)?$/,
+			replacement: "astropress/cloudflare-local-runtime-stubs",
+		});
+	});
+
+	it("does NOT decode URI-encoded ids that lack a file:// prefix (kills L148 'if(true)' and StringLiteral '')", () => {
+		// Mutants `if (true)` and `startsWith("")` would always enter the decode block.
+		// Decoding `%2E` to `.` would make `/a/b/local-image-storage%2Ets` become
+		// `/a/b/local-image-storage.ts` which matches; the original leaves the id alone
+		// so the endsWith fallback never fires.
+		const integration = createAstropressCloudflareViteIntegration("/lrm.ts");
+		expect(integration.plugin.resolveId("/a/b/local-image-storage%2Ets")).toBeNull();
+	});
+
+	it("file:// strip is required for exact localRuntimeModulesPath match when the path has no '/local-runtime-modules' suffix", () => {
+		// Use a custom lrm path that does NOT end in '/local-runtime-modules[.ts]'.
+		// That makes the endsWith fallback miss; only the file:// strip → exact match
+		// path succeeds. Kills:
+		//   148:6 ConditionalExpression `if (false)`
+		//   148:6 MethodExpression .startsWith → .endsWith
+		//   148:40 BlockStatement (empty if body)
+		//   149:71 StringLiteral "/" → ""  (without the leading slash, exact-match fails)
+		const integration = createAstropressCloudflareViteIntegration("/my/custom/path.ts");
+		expect(integration.plugin.resolveId("file:///my/custom/path.ts")).toBe(
+			"astropress/cloudflare-local-runtime-stubs",
+		);
+		// Sanity: same id without file:// also matches via direct exact equality.
+		expect(integration.plugin.resolveId("/my/custom/path.ts")).toBe(
+			"astropress/cloudflare-local-runtime-stubs",
+		);
+	});
+
+	it("file:// strip handles 2-slash file:// URLs (kills L149 Regex '?' removal)", () => {
+		// Original `/^file:\/\/\/?/` matches both `file://` (2 slashes) and `file:///` (3).
+		// Mutant `/^file:\/\/\//` (no `?`) requires 3 slashes. With a 2-slash URL the
+		// mutant leaves the prefix in place and exact-match fails.
+		const integration = createAstropressCloudflareViteIntegration("/my/custom/path.ts");
+		expect(integration.plugin.resolveId("file://my/custom/path.ts")).toBe(
+			"astropress/cloudflare-local-runtime-stubs",
+		);
+	});
+
+	it("Windows '/X:/' slice(1) is required for exact lrm match (kills L152/L153 slice mutants)", () => {
+		// Custom lrm path begins with 'C:/' (no leading slash). After file:// strip the
+		// normalized id is '/C:/...' and the slice(1) is necessary to recover the
+		// exact-match path. Kills:
+		//   152:6 ConditionalExpression `if (false)`
+		//   152:6 Regex `[^a-zA-Z]` (no longer matches /C:/)
+		//   152:41 BlockStatement (empty if body)
+		//   153:10 MethodExpression .slice(1) → .slice() / identity
+		const integration = createAstropressCloudflareViteIntegration("C:/win/path.ts");
+		expect(integration.plugin.resolveId("file:///C:/win/path.ts")).toBe(
+			"astropress/cloudflare-local-runtime-stubs",
+		);
+	});
 });

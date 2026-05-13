@@ -108,6 +108,34 @@
 			"reason": "Same line — endsWith fallback handles 'astropress/sqlite-bootstrap' regardless of the literal."
 		},
 		{
+			"file": "src/cloudflare-vite-integration.ts",
+			"line": 59,
+			"column": 2,
+			"mutator": "ObjectLiteral",
+			"reason": "aliasPatterns[10] entry — `find: /^\\.\\/local-runtime-modules(?:\\.ts)?$/`. The very next entry (aliasPatterns[11], L63-66) uses the broader `/^.*\\/local-runtime-modules(?:\\.ts)?$/`, which matches every string the L59-62 narrower regex matches (a single '.' is one character that satisfies `.*`). Replacing this entry with `{}` makes the array entry `{find: undefined, replacement: undefined}` which Vite ignores while the broader L63-66 entry still resolves identical aliases. Runtime-equivalent."
+		},
+		{
+			"file": "src/cloudflare-vite-integration.ts",
+			"line": 60,
+			"column": 9,
+			"mutator": "Regex",
+			"reason": "Mutating the narrower `/^\\.\\/local-runtime-modules(?:\\.ts)?$/` regex (any variant — removing the `^` anchor, removing the `?` quantifier, dropping the `$` anchor) only affects aliasPatterns[10]. aliasPatterns[11] uses `/^.*\\/local-runtime-modules(?:\\.ts)?$/` which already matches every input the narrower regex matches, so vite's alias resolution produces the identical replacement. Runtime-equivalent."
+		},
+		{
+			"file": "src/cloudflare-vite-integration.ts",
+			"line": 61,
+			"column": 12,
+			"mutator": "StringLiteral",
+			"reason": "`stubKey: \"localRuntimeStubs\"` on aliasPatterns[10]. Replacing with '' makes `stubs[\"\"]` undefined so the alias replacement is undefined; vite ignores entries with undefined replacement while aliasPatterns[11] (broader regex, same stubKey) still routes every local-runtime-modules import to the correct stub. Runtime-equivalent — same class as L59:2/L60:9."
+		},
+		{
+			"file": "src/cloudflare-vite-integration.ts",
+			"line": 149,
+			"column": 54,
+			"mutator": "Regex",
+			"reason": "`normalized.replace(/^file:\\/\\/\\/?/, '/')` with the `^` anchor removed. The surrounding `if (normalized.startsWith('file://'))` guard ensures the `file://` prefix only ever exists at index 0; without `/g` the un-anchored mutant still replaces only the first match — also at index 0. Identical output string for every reachable input. Same equivalence class as turso.ts L67:13/L68:13."
+		},
+		{
 			"file": "src/cache-purge.ts",
 			"line": 85,
 			"column": 14,
