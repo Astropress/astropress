@@ -24,6 +24,11 @@ describe("cloudflare provider integration", () => {
 		expect(cloudflare.capabilities.name).toBe("cloudflare");
 		expect(cloudflare.capabilities.database).toBe(true);
 		expect(cloudflare.capabilities.objectStorage).toBe(true);
+		expect(cloudflare.capabilities.staticPublishing).toBe(true);
+		expect(cloudflare.capabilities.hostedAdmin).toBe(true);
+		expect(cloudflare.capabilities.previewEnvironments).toBe(true);
+		expect(cloudflare.capabilities.serverRuntime).toBe(true);
+		expect(cloudflare.capabilities.gitSync).toBe(true);
 
 		const user = await cloudflare.auth.signIn("admin@example.com", "password");
 		expect(user?.isAdmin).toBe(true);
