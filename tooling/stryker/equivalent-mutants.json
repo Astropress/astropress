@@ -3,6 +3,27 @@
 	"description": "Catalog of mutants acknowledged as equivalent (semantically identical to the original code, so no test can kill them). Each entry is excluded from the per-file mutation-score denominator. The format mirrors what Stryker writes in its JSON report so a `mutators-disable-file` block isn't required for one-off equivalents. Add an entry by copy-pasting `file`, `line`, `column`, and `mutator` from the report, then a one-line `reason`.",
 	"entries": [
 		{
+			"file": "src/locale-links.ts",
+			"line": 66,
+			"column": 10,
+			"mutator": "ConditionalExpression",
+			"reason": "`return path === '/es' || path.startsWith('/es/')` inside isLocalePath. Mutating the first sub-expression to `false` only affects the input path exactly equal to '/es'. But the caller writes `targets[input.lang] = input.currentPath` only when isLocalePath returns true; the default value of `targets.es` is already `/es`. So whether isLocalePath('/es', 'es') returns true (assigns '/es') or false (leaves '/es' default), the observable output is identical."
+		},
+		{
+			"file": "src/locale-links.ts",
+			"line": 66,
+			"column": 19,
+			"mutator": "StringLiteral",
+			"reason": "Same line as L66:10. The StringLiteral mutant replaces '/es' with ''; the only path that newly matches under the mutant is '' (empty currentPath), but the surrounding `if (input.currentPath && ...)` short-circuits on falsy strings so the function never reaches isLocalePath with path === ''. For path === '/es' the mutant returns false, but the default targets.es is already '/es' (see L66:10 entry), so the observable output is identical."
+		},
+		{
+			"file": "src/locale-links.ts",
+			"line": 86,
+			"column": 45,
+			"mutator": "ArrayDeclaration",
+			"reason": "`for (const link of input.alternateLinks ?? [])` — the Stryker ArrayDeclaration mutant replaces `[]` with `['Stryker was here']`. The loop body's first action is `if (link.hreflang !== 'en' && link.hreflang !== 'es') continue;` — a plain string has undefined `.hreflang`, both inequalities are true, and the `continue` fires. No assignment to `targets` happens, so the returned object is unchanged."
+		},
+		{
 			"file": "src/access/repository.ts",
 			"line": 223,
 			"column": 11,
