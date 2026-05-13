@@ -136,6 +136,34 @@
 			"reason": "`normalized.replace(/^file:\\/\\/\\/?/, '/')` with the `^` anchor removed. The surrounding `if (normalized.startsWith('file://'))` guard ensures the `file://` prefix only ever exists at index 0; without `/g` the un-anchored mutant still replaces only the first match — also at index 0. Identical output string for every reachable input. Same equivalence class as turso.ts L67:13/L68:13."
 		},
 		{
+			"file": "src/provider-choice.ts",
+			"line": 55,
+			"column": 4,
+			"mutator": "ConditionalExpression",
+			"reason": "`dataServices === 'cloudflare' || dataServices === 'supabase' || dataServices === 'appwrite' ? dataServices : 'cloudflare'`. The mutant replaces the first clause with `false`. When dataServices === 'cloudflare' the original ternary returns 'cloudflare' (the dataServices value); the mutant falls through both remaining clauses (false) and hits the else branch which is *also* the literal 'cloudflare'. Observable canonicalProvider identical for every reachable dataServices value because the else-branch literal coincides with the first-clause string."
+		},
+		{
+			"file": "src/provider-choice.ts",
+			"line": 55,
+			"column": 21,
+			"mutator": "StringLiteral",
+			"reason": "Same line as L55:4 — replacing the first 'cloudflare' literal with '' makes `dataServices === ''` false for every real dataServices value; the ternary else branch returns the literal 'cloudflare' which is the same value the original would have returned when dataServices === 'cloudflare'. Same equivalence class as L55:4."
+		},
+		{
+			"file": "src/provider-choice.ts",
+			"line": 79,
+			"column": 53,
+			"mutator": "StringLiteral",
+			"reason": "`input.existingPlatform ?? 'none'` — the fallback string is only consumed by `existingPlatform === 'supabase' | 'appwrite' | 'cloudflare'` checks. Both 'none' and '' fail every comparison identically and route to the same final branch. The literal value is never read in the recommendation output."
+		},
+		{
+			"file": "src/provider-choice.ts",
+			"line": 82,
+			"column": 41,
+			"mutator": "StringLiteral",
+			"reason": "`input.opsComfort ?? 'minimal'` — the fallback is only consumed by `opsComfort === 'advanced'` which is false for both 'minimal' and ''. Identical control flow; the literal value is never read in the recommendation output."
+		},
+		{
 			"file": "src/cache-purge.ts",
 			"line": 85,
 			"column": 14,
