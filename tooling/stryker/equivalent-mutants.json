@@ -17,6 +17,20 @@
 			"reason": "`.replace(/^https:\\/\\//, '')` — same equivalence class as L67:13. The earlier validation requires the URL to start with either libsql:// or https://; for libsql:// inputs no `https://` substring exists later in the string (the path is `<dbname>.turso.io`), so the unanchored mutant produces no replacement either way. For https:// inputs the scheme is at index 0, where anchored and unanchored match identically."
 		},
 		{
+			"file": "src/cache-purge.ts",
+			"line": 85,
+			"column": 14,
+			"mutator": "ConditionalExpression",
+			"reason": "`const env = typeof process !== 'undefined' ? process.env : undefined` — under Node/Bun (the test runtime) `typeof process` is always 'object', so `typeof process !== 'undefined'` is always true. The Stryker mutant that replaces the whole expression with `true` is observably identical here; only a Workers/Deno-style runtime without `process` could distinguish, and the mutation harness cannot simulate that."
+		},
+		{
+			"file": "src/cache-purge.ts",
+			"line": 85,
+			"column": 33,
+			"mutator": "StringLiteral",
+			"reason": "Same line as L85:14. The StringLiteral mutant `typeof process !== '' ? process.env : undefined` — `typeof process` returns 'object', which is !== '' (true) — keeps the same true branch as the original (which is !== 'undefined', also true). Observable behaviour identical in any runtime where `process` exists."
+		},
+		{
 			"file": "src/d1-migrate-ops.ts",
 			"line": 96,
 			"column": 62,

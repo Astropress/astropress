@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { purgeCdnCacheForResolved } from "../src/cache-purge";
+import { purgeCdnCache, purgeCdnCacheForResolved } from "../src/cache-purge";
+import type { CmsConfig } from "../src/config";
 import type { ResolvedCdnPurge } from "../src/integrations/resolvers/cdn-purge-resolver";
 
 interface CapturedCall {
@@ -201,6 +202,12 @@ describe("purgeCdnCacheForResolved — non-2xx with body that fails to read", ()
 			),
 		).resolves.toBeUndefined();
 		expect(warnSpy).toHaveBeenCalled();
+		// Pin L38 StringLiteral (`"" `→ `"Stryker was here!"`) and L38 ArrowFunction
+		// (`() => ""` → `() => undefined`). The body fallback flows into the
+		// template; original yields a message ending with status + empty.
+		const msg = String(warnSpy.mock.calls[0]?.[0] ?? "");
+		expect(msg).not.toContain("Stryker was here");
+		expect(msg).not.toContain("undefined");
 		warnSpy.mockRestore();
 	});
 
@@ -214,6 +221,73 @@ describe("purgeCdnCacheForResolved — non-2xx with body that fails to read", ()
 			),
 		).resolves.toBeUndefined();
 		expect(warnSpy).toHaveBeenCalled();
+		// Pins L57 StringLiteral + ArrowFunction — same equivalence as cloudflare.
+		const msg = String(warnSpy.mock.calls[0]?.[0] ?? "");
+		expect(msg).not.toContain("Stryker was here");
+		expect(msg).not.toContain("undefined");
+		warnSpy.mockRestore();
+	});
+});
+
+describe("purgeCdnCache (env-driven) — pins L85 process-typeof + L89 ObjectLiteral", () => {
+	const ORIG_TOKEN = process.env.CLOUDFLARE_API_TOKEN;
+	const ORIG_ZONE = process.env.CLOUDFLARE_ZONE_ID;
+	const ORIG_FETCH = globalThis.fetch;
+
+	afterEach(() => {
+		if (ORIG_TOKEN === undefined) delete process.env.CLOUDFLARE_API_TOKEN;
+		else process.env.CLOUDFLARE_API_TOKEN = ORIG_TOKEN;
+		if (ORIG_ZONE === undefined) delete process.env.CLOUDFLARE_ZONE_ID;
+		else process.env.CLOUDFLARE_ZONE_ID = ORIG_ZONE;
+		globalThis.fetch = ORIG_FETCH;
+	});
+
+	it("resolves to cloudflare and hits the zone API when CF env vars are set (no registry, no webhook)", async () => {
+		process.env.CLOUDFLARE_API_TOKEN = "env-token";
+		process.env.CLOUDFLARE_ZONE_ID = "env-zone";
+		const captured: Array<{ url: string; auth: string | null }> = [];
+		globalThis.fetch = (async (input, init) => {
+			const url = typeof input === "string" ? input : input.toString();
+			const headers =
+				init?.headers instanceof Headers
+					? init.headers
+					: new Headers((init?.headers as Record<string, string>) ?? {});
+			captured.push({ url, auth: headers.get("authorization") });
+			return new Response("", { status: 200 });
+		}) as typeof fetch;
+		await purgeCdnCache("env-slug", { cdnPurgeWebhook: undefined } as CmsConfig);
+		// L85 false / =/== flip would zero out env → resolveCdnPurge would not
+		// see CF creds and the call would short-circuit on `kind: "none"`.
+		// L89 ObjectLiteral `{}` strips the CLOUDFLARE_* keys for the same effect.
+		expect(captured).toHaveLength(1);
+		expect(captured[0].url).toContain("/zones/env-zone/purge_cache");
+		expect(captured[0].auth).toBe("Bearer env-token");
+	});
+});
+
+describe("purgeCdnCacheForResolved — success paths emit no warnings (pins L37/L56 `if (!res.ok)`)", () => {
+	it("cloudflare 200 response triggers no console.warn", async () => {
+		const fetchImpl: typeof fetch = async () => new Response("", { status: 200 });
+		const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+		await purgeCdnCacheForResolved(
+			"slug",
+			{ kind: "cloudflare", apiToken: "tok", zoneId: "z", source: "registry" },
+			{ fetch: fetchImpl },
+		);
+		// L37 mutant flips `if (!res.ok)` → `if (true)`, so even a 200 logs.
+		expect(warnSpy).not.toHaveBeenCalled();
+		warnSpy.mockRestore();
+	});
+
+	it("webhook 200 response triggers no console.warn", async () => {
+		const fetchImpl: typeof fetch = async () => new Response("", { status: 200 });
+		const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+		await purgeCdnCacheForResolved(
+			"slug",
+			{ kind: "webhook", url: "https://x", source: "config" },
+			{ fetch: fetchImpl },
+		);
+		expect(warnSpy).not.toHaveBeenCalled();
 		warnSpy.mockRestore();
 	});
 });
