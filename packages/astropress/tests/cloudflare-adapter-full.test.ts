@@ -1159,6 +1159,162 @@ describe("cloudflare adapter — null-field branches in ?? operators", () => {
 	});
 });
 
+describe("cloudflare adapter — surviving mutant coverage (phase-3a lift)", () => {
+	it("active user maps to status='published' (kills L176 'published' StringLiteral mutant)", async () => {
+		const db = await createSeededCloudflareDatabase();
+		const adapter = createAstropressCloudflareAdapter({
+			db: new SqliteBackedD1Database(db),
+		});
+		const users = await adapter.content.list("user");
+		const active = users.find((u) => u.metadata?.email === "admin@example.com");
+		expect(active).toBeDefined();
+		// Strict equality on the exact "published" literal to kill StringLiteral mutants
+		// (e.g. "" or "archived") at cloudflare.ts:176:27.
+		expect(active?.status).toBe("published");
+		db.close();
+	});
+
+	it("settings record exposes kind='settings', slug='site-settings', status='published' verbatim", async () => {
+		const db = await createSeededCloudflareDatabase();
+		const adapter = createAstropressCloudflareAdapter({
+			db: new SqliteBackedD1Database(db),
+		});
+		const settings = await adapter.content.list("settings");
+		expect(settings).toHaveLength(1);
+		// Strict equality on each string literal in cloudflare.ts:189-194 so
+		// StringLiteral mutants ("settings"→"", "site-settings"→"", "published"→"")
+		// all fail at least one assertion.
+		expect(settings[0].id).toBe("site-settings");
+		expect(settings[0].kind).toBe("settings");
+		expect(settings[0].slug).toBe("site-settings");
+		expect(settings[0].status).toBe("published");
+		db.close();
+	});
+
+	it("media list entries carry the full metadata object (kills L206 ObjectLiteral)", async () => {
+		const db = await createSeededCloudflareDatabase();
+		const adapter = createAstropressCloudflareAdapter({
+			db: new SqliteBackedD1Database(db),
+		});
+		const media = await adapter.content.list("media");
+		const entry = media.find((m) => m.id === "cloudflare-media-1");
+		expect(entry).toBeDefined();
+		// Empty-object mutant ({}) at L206 would drop every metadata field below.
+		expect(entry?.metadata?.sourceUrl).toBe("https://cdn.example.com/cloudflare.png");
+		expect(entry?.metadata?.localPath).toBe("/media/cloudflare.png");
+		expect(entry?.metadata?.mimeType).toBe("image/png");
+		expect(entry?.metadata?.altText).toBe("Cloudflare alt");
+		expect(typeof entry?.metadata?.uploadedAt).toBe("string");
+		db.close();
+	});
+
+	it("comment with non-null submittedAt preserves the value (kills L165 LogicalOperator ??→&&)", async () => {
+		const db = await createSeededCloudflareDatabase();
+		db.prepare(
+			`INSERT INTO comments (id, route, author, email, body, status, policy, submitted_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+		).run(
+			"comment-submitted",
+			"/post",
+			"Carol",
+			"carol@example.com",
+			"Has submitted_at",
+			"approved",
+			"open-moderated",
+			"2026-02-03T04:05:06.000Z",
+		);
+		const adapter = createAstropressCloudflareAdapter({
+			db: new SqliteBackedD1Database(db),
+		});
+		const comments = await adapter.content.list("comment");
+		const c = comments.find((x) => x.id === "comment-submitted");
+		// With ?? : truthy submittedAt is preserved as-is.
+		// With && : the operator short-circuits to null whenever submittedAt is truthy
+		// (truthy && null → null), so a stored timestamp would surface as null.
+		expect(c?.metadata?.submittedAt).toBe("2026-02-03T04:05:06.000Z");
+		db.close();
+	});
+
+	it("content.get matches a user record by id OR by slug (kills L279 LogicalOperator/Conditional mutants)", async () => {
+		const db = await createSeededCloudflareDatabase();
+		const adapter = createAstropressCloudflareAdapter({
+			db: new SqliteBackedD1Database(db),
+		});
+		const users = await adapter.content.list("user");
+		const u = users.find((x) => x.metadata?.email === "admin@example.com");
+		expect(u).toBeDefined();
+		const idStr = u?.id as string;
+		const slug = u?.slug as string;
+		// id and slug differ for user records (id = numeric pk string, slug = email).
+		expect(idStr).not.toBe(slug);
+
+		// `find((r) => r.id === normalizedId || r.slug === normalizedId)`:
+		// matching by id only is observable distinct from matching by slug only,
+		// so a `||→&&` mutant or either conditional-flipped mutant fails one path.
+		const byId = await adapter.content.get(idStr);
+		expect(byId?.id).toBe(idStr);
+		expect(byId?.slug).toBe(slug);
+
+		const bySlug = await adapter.content.get(slug);
+		expect(bySlug?.id).toBe(idStr);
+		expect(bySlug?.slug).toBe(slug);
+		db.close();
+	});
+
+	it("content.get trims whitespace around the id (kills L275 MethodExpression .trim removal)", async () => {
+		const db = await createSeededCloudflareDatabase();
+		const adapter = createAstropressCloudflareAdapter({
+			db: new SqliteBackedD1Database(db),
+		});
+		// "  admin@example.com  " must trim to a real slug match.
+		// Without .trim(), find() would compare " admin@example.com " to "admin@example.com" → no match → null.
+		const got = await adapter.content.get("  admin@example.com  ");
+		expect(got).not.toBeNull();
+		expect(got?.slug).toBe("admin@example.com");
+		db.close();
+	});
+
+	it("content.delete archives a page record (kills L292 'page' StringLiteral mutant)", async () => {
+		const db = makeDb();
+		const adapter = createAstropressCloudflareAdapter({
+			db: new SqliteBackedD1Database(db),
+		});
+		await adapter.content.save({
+			id: "delete-me-page",
+			kind: "page",
+			slug: "delete-me-page",
+			status: "published",
+			title: "Page To Delete",
+		});
+		await adapter.content.delete("delete-me-page");
+		const after = await adapter.content.get("delete-me-page");
+		// With "page"→"" mutant, the page would fall through to no-op → status stays "published".
+		expect(after?.status).toBe("archived");
+		db.close();
+	});
+
+	it("media.put stores '/media/<filename>' local_path when publicUrl is absent (kills L309 StringLiteral)", async () => {
+		const db = makeDb();
+		const adapter = createAstropressCloudflareAdapter({
+			db: new SqliteBackedD1Database(db),
+		});
+		await adapter.media.put({
+			id: "no-url-readback",
+			filename: "no-url.png",
+			mimeType: "image/png",
+			metadata: { altText: "x", title: "x" },
+		} as Parameters<typeof adapter.media.put>[0]);
+		const row = db
+			.prepare("SELECT local_path, source_url FROM media_assets WHERE id = 'no-url-readback'")
+			.get() as { local_path: string; source_url: string | null };
+		// L308: source_url = publicUrl ?? null → null. L309: local_path = publicUrl ?? `/media/${filename}` → "/media/no-url.png".
+		// A "/media/" → "" mutant would store "no-url.png" without the prefix.
+		expect(row.source_url).toBeNull();
+		expect(row.local_path).toBe("/media/no-url.png");
+		db.close();
+	});
+});
+
 describe("cloudflare adapter — session expiry", () => {
 	it("returns null session when last_active_at is not a parseable date", async () => {
 		const db = await createSeededCloudflareDatabase();
