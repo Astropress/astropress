@@ -179,6 +179,123 @@ describe("project launch", () => {
 		await rm(workspace, { recursive: true, force: true });
 	});
 
+	it("cloudflare + github-pages routes wantsStaticMirror=true through L100 cloudflare branch (kills L26 cloudflare-eq, L26:23 StringLiteral, L49:5 LogicalOperator &&, L49:29 StringLiteral, L49:5 ConditionalExpression:false)", async () => {
+		const workspace = await mkdtemp(join(tmpdir(), "astropress-pl-cf-static-"));
+		const plan = createAstropressProjectLaunchPlan({
+			env: {
+				ASTROPRESS_RUNTIME_MODE: "local",
+				ASTROPRESS_APP_HOST: "github-pages",
+				ASTROPRESS_DATA_SERVICES: "cloudflare",
+			},
+			local: { workspaceRoot: workspace, dbPath: join(workspace, "admin.sqlite") },
+		});
+		// cloudflare + wantsStaticMirror=true → L100 returns "github-pages","cloudflare".
+		// Any mutant that suppresses existingPlatform="cloudflare" or wantsStaticMirror=true
+		// causes the default fallback "cloudflare-pages" → observable appHost diverges.
+		expect(plan.recommendation.appHost).toBe("github-pages");
+		expect(plan.recommendation.dataServices).toBe("cloudflare");
+		await rm(workspace, { recursive: true, force: true });
+	});
+
+	it("supabase + gitlab-pages routes wantsStaticMirror through L84 supabase branch (kills L49:47 ConditionalExpression, L49:71 StringLiteral, L49:5 LogicalOperator)", () => {
+		const plan = createAstropressProjectLaunchPlan({
+			env: {
+				ASTROPRESS_RUNTIME_MODE: "hosted",
+				ASTROPRESS_APP_HOST: "gitlab-pages",
+				ASTROPRESS_DATA_SERVICES: "supabase",
+				ASTROPRESS_HOSTED_PROVIDER: "supabase",
+				SUPABASE_URL: "https://x.supabase.co",
+				SUPABASE_SERVICE_ROLE_KEY: "test",
+			},
+		});
+		// gitlab-pages flips wantsStaticMirror=true via the right disjunct.
+		// Original: L84 supabase + wantsStaticMirror=true → recommendation.appHost = "github-pages".
+		// Mutants that break the gitlab-pages disjunct → wantsStaticMirror=false → "vercel".
+		expect(plan.recommendation.appHost).toBe("github-pages");
+		expect(plan.recommendation.dataServices).toBe("supabase");
+	});
+
+	it("hosted mode with appwrite picks hostedProvider over localProvider=sqlite (kills L37:3 ConditionalExpression:false, L37:20 StringLiteral)", () => {
+		const plan = createAstropressProjectLaunchPlan({
+			env: {
+				ASTROPRESS_RUNTIME_MODE: "hosted",
+				ASTROPRESS_APP_HOST: "render-web",
+				ASTROPRESS_DATA_SERVICES: "appwrite",
+				ASTROPRESS_HOSTED_PROVIDER: "appwrite",
+				APPWRITE_ENDPOINT: "https://appwrite.example",
+				APPWRITE_PROJECT_ID: "proj",
+				APPWRITE_API_KEY: "key",
+			},
+			hosted: {
+				content: {
+					async list() {
+						return [];
+					},
+					async get() {
+						return null;
+					},
+					async save(record) {
+						return record;
+					},
+					async delete() {},
+				},
+				media: {
+					async put(asset) {
+						return asset;
+					},
+					async get() {
+						return null;
+					},
+					async delete() {},
+				},
+				revisions: {
+					async list() {
+						return [];
+					},
+					async append(revision) {
+						return revision;
+					},
+				},
+				auth: {
+					async signIn(email) {
+						return { id: "runtime-session", email, role: "admin" as const };
+					},
+					async signOut() {},
+					async getSession(sessionId) {
+						return {
+							id: sessionId,
+							email: "admin@example.com",
+							role: "admin" as const,
+						};
+					},
+				},
+			},
+		});
+		// dataServices=appwrite → localProvider falls through to "sqlite" (not "supabase").
+		// Original (mode=hosted): plan.provider = hostedProvider = "appwrite".
+		// L37 mutants that flip the ternary always-false: plan.provider = localProvider = "sqlite".
+		expect(plan.provider).toBe("appwrite");
+	});
+
+	it("unrecognized dataServices='pocketbase' + wantsStaticMirror=false flows to default cloudflare-pages (kills L50:22 ConditionalExpression:false)", () => {
+		const plan = createAstropressProjectLaunchPlan({
+			env: {
+				ASTROPRESS_RUNTIME_MODE: "local",
+				ASTROPRESS_APP_HOST: "vercel",
+				ASTROPRESS_DATA_SERVICES: "pocketbase",
+			},
+		});
+		// dataServices="pocketbase" (valid env value, not in [none|cloudflare|supabase|appwrite])
+		//   → existingPlatform="none" via the fallback.
+		//   → wantsHostedAdmin = (pocketbase !== "none") = true (original).
+		//   → wantsStaticMirror = false (vercel ∉ {github-pages, gitlab-pages}).
+		// Recommendation routes to final default ("cloudflare-pages","cloudflare").
+		// L50:22 ConditionalExpression:false flips wantsHostedAdmin to false →
+		//   recommendation routes to L116 → ("github-pages","none"). Observable diff.
+		expect(plan.recommendation.appHost).toBe("cloudflare-pages");
+		expect(plan.recommendation.dataServices).toBe("cloudflare");
+	});
+
 	it("dataServices !== 'none' sets wantsHostedAdmin=true on the recommendation input (kills L60 mutant)", () => {
 		const plan = createAstropressProjectLaunchPlan({
 			env: {

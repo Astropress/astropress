@@ -1905,6 +1905,20 @@
 			"column": 16,
 			"mutator": "ConditionalExpression",
 			"reason": "`else if (sanitized !== value) el.setAttribute(name, sanitized)`. When the sanitiser computes a value identical to the original, this branch skips a redundant setAttribute. Mutating the condition to `true` (always setAttribute) or `false` (never) produces the same observable HTML output: setAttribute(name, sanitized=value) writes the same value back; skipping it leaves the same value in place. The only behavioural difference is the number of setAttribute calls on the underlying HTMLRewriter element, which is not part of the sanitiser's contract and is not observable through the rendered HTML string."
+		},
+		{
+			"file": "src/project-launch.ts",
+			"line": 26,
+			"column": 6,
+			"mutator": "ConditionalExpression",
+			"reason": "`if (dataServices === \"cloudflare\" || dataServices === \"supabase\" || dataServices === \"appwrite\")` with the conditional forced `true` always returns dataServices verbatim. For env-valid values that bypass the if-branch (\"none\", \"pocketbase\", \"neon\", \"nhost\", \"turso\", \"custom\"), recommendAstropressProvider performs strict-equality checks against \"supabase\"/\"appwrite\"/\"cloudflare\" only — none of the bypassing values match, so they all flow through the identical default branches. Observable plan.recommendation outputs are bit-for-bit identical between the original (returning \"none\") and the mutated passthrough."
+		},
+		{
+			"file": "src/project-launch.ts",
+			"line": 29,
+			"column": 9,
+			"mutator": "StringLiteral",
+			"reason": "Fallback `return \"none\";` mutated to `return \"\";`. recommendAstropressProvider at provider-choice.ts:79 coalesces with `?? \"none\"` (which preserves \"\" since ?? only catches null/undefined), then performs strict-equality checks against \"supabase\"/\"appwrite\"/\"cloudflare\". Neither \"none\" nor \"\" matches any of those, so both fall through to the same wantsHostedAdmin/wantsStaticMirror branches. Observable recommendation identical for every input pair."
 		}
 	]
 }
