@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-05-14T15:04:52.966Z",
+  "updatedAt": "2026-05-14T15:37:48.143Z",
   "scores": {
     "packages/astropress/src/adapters/adapter-record-helpers.ts": {
       "score": 100,
@@ -806,7 +806,7 @@
       "hash": "c9a1e8a639190c42da400437355ab28b9008f1a0"
     },
     "packages/astropress/src/sqlite-runtime/webhooks.ts": {
-      "score": 67.56756756756756,
+      "score": 96.875,
       "hash": "0a0ae360c06eaaed5f58a2461aa7d27b0f511605"
     },
     "packages/astropress/src/taxonomy-repository-factory.ts": {

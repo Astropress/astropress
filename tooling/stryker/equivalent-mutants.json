@@ -1996,6 +1996,13 @@
 			"column": 14,
 			"mutator": "BlockStatement",
 			"reason": "Same equivalence class as L163:6 — the `if (!value)` body becomes {} (no early return). For the only two inputs that trigger the guard (null, \"\"), control falls through to the JSON.parse + object-check / catch block, which returns null in both cases. Observable result identical to the original early return."
+		},
+		{
+			"file": "src/sqlite-runtime/webhooks.ts",
+			"line": 85,
+			"column": 8,
+			"mutator": "ConditionalExpression",
+			"reason": "`if (subscribers.length === 0) return;` mutated to `if (false)`. The early return is a no-op short-circuit: when subscribers is empty and the return is skipped, control falls through to `JSON.stringify(...)`, `new Date().toISOString()`, and `await Promise.allSettled(subscribers.map(...))` — but `[].map(...)` is `[]` and `Promise.allSettled([])` resolves immediately with no fetch calls and no db writes. Observable behaviour (zero deliveries, zero last_fired_at updates) is identical to the original early return for every empty-subscriber dispatch."
 		}
 	]
 }
