@@ -168,4 +168,149 @@ describe("createAstropressPocketbaseHostedAdapter", () => {
 			slug: "pb-hosted-post",
 		});
 	});
+
+	it("forwards staticPublishing from defaultCapabilities through the platform path", () => {
+		const adapter = createAstropressPocketbaseHostedAdapter({
+			env,
+			...createHostedStores(),
+			defaultCapabilities: { staticPublishing: true },
+		});
+		expect(adapter.capabilities.staticPublishing).toBe(true);
+	});
+
+	it("forwards staticPublishing from defaultCapabilities through the hosted-API path", () => {
+		const adapter = createAstropressPocketbaseHostedAdapter({
+			env,
+			fetchImpl: async () => new Response(JSON.stringify([]), { status: 200 }),
+			defaultCapabilities: { staticPublishing: true },
+		});
+		expect(adapter.capabilities.staticPublishing).toBe(true);
+	});
+});
+
+function createFetchSpy() {
+	const calls: Array<{ url: string; init?: RequestInit }> = [];
+	const fetchImpl = (async (url: string | URL | Request, init?: RequestInit) => {
+		calls.push({ url: String(url), init });
+		return new Response(
+			JSON.stringify({
+				id: "spy-record",
+				kind: "post",
+				slug: "spy-record",
+				status: "published",
+				title: "Spy record",
+			}),
+			{ status: 200 },
+		);
+	}) as typeof fetch;
+	return { calls, fetchImpl };
+}
+
+describe("createAstropressPocketbaseHostedAdapter store routing", () => {
+	const env = {
+		POCKETBASE_URL: "https://pb.example.com",
+		POCKETBASE_EMAIL: "admin@example.com",
+		POCKETBASE_PASSWORD: "secret123",
+	};
+
+	it("routes through the hosted API when no stores are provided", async () => {
+		const { calls, fetchImpl } = createFetchSpy();
+		const adapter = createAstropressPocketbaseHostedAdapter({ env, fetchImpl });
+		await adapter.content.get("some-id");
+		expect(calls).toHaveLength(1);
+		expect(calls[0]?.url).toContain("https://pb.example.com/api/astropress");
+	});
+
+	it("sends the email:password access token as a Bearer authorization header", async () => {
+		const { calls, fetchImpl } = createFetchSpy();
+		const adapter = createAstropressPocketbaseHostedAdapter({ env, fetchImpl });
+		await adapter.content.get("some-id");
+		const headers = calls[0]?.init?.headers as Record<string, string> | undefined;
+		expect(headers?.authorization).toBe("Bearer admin@example.com:secret123");
+	});
+
+	it("does not call the hosted API when a backing adapter is provided", async () => {
+		const { calls, fetchImpl } = createFetchSpy();
+		const backingAdapter = createAstropressPocketbaseHostedAdapter({
+			...createHostedStores(),
+			config: {
+				url: "https://pb.example.com",
+				email: "a@b.com",
+				password: "p",
+				apiBaseUrl: "https://pb.example.com/api/astropress",
+				previewBaseUrl: "https://pb.example.com",
+			},
+		});
+		const adapter = createAstropressPocketbaseHostedAdapter({ env, fetchImpl, backingAdapter });
+		await adapter.content.save({
+			id: "backed",
+			kind: "post",
+			slug: "backed",
+			status: "published",
+			title: "Backed",
+		});
+		expect(await adapter.content.get("backed")).toMatchObject({ slug: "backed" });
+		expect(calls).toHaveLength(0);
+	});
+
+	it("does not call the hosted API when only a content store is provided", async () => {
+		const { calls, fetchImpl } = createFetchSpy();
+		const adapter = createAstropressPocketbaseHostedAdapter({
+			env,
+			fetchImpl,
+			content: createHostedStores().content,
+		});
+		await adapter.content.save({
+			id: "content-only",
+			kind: "post",
+			slug: "content-only",
+			status: "published",
+			title: "Content only",
+		});
+		expect(await adapter.content.get("content-only")).toMatchObject({ slug: "content-only" });
+		expect(calls).toHaveLength(0);
+	});
+
+	it("does not call the hosted API when only a media store is provided", async () => {
+		const { calls, fetchImpl } = createFetchSpy();
+		const adapter = createAstropressPocketbaseHostedAdapter({
+			env,
+			fetchImpl,
+			media: createHostedStores().media,
+		});
+		await adapter.media.put({ id: "asset-1", filename: "a.png", mimeType: "image/png" });
+		expect(calls).toHaveLength(0);
+	});
+
+	it("does not call the hosted API when only a revisions store is provided", async () => {
+		const { calls, fetchImpl } = createFetchSpy();
+		const adapter = createAstropressPocketbaseHostedAdapter({
+			env,
+			fetchImpl,
+			revisions: createHostedStores().revisions,
+		});
+		await adapter.revisions.list("record-1");
+		expect(calls).toHaveLength(0);
+	});
+
+	it("does not call the hosted API when only an auth store is provided", async () => {
+		const { calls, fetchImpl } = createFetchSpy();
+		const adapter = createAstropressPocketbaseHostedAdapter({
+			env,
+			fetchImpl,
+			auth: createHostedStores().auth,
+		});
+		await adapter.auth.signIn("admin@example.com", "password");
+		expect(calls).toHaveLength(0);
+	});
+});
+
+describe("createAstropressPocketbaseAdapter capabilities", () => {
+	it("forwards staticPublishing from defaultCapabilities", () => {
+		const adapter = createAstropressPocketbaseAdapter({
+			...createHostedStores(),
+			defaultCapabilities: { staticPublishing: true },
+		});
+		expect(adapter.capabilities.staticPublishing).toBe(true);
+	});
 });
