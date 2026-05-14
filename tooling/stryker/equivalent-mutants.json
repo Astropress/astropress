@@ -2157,6 +2157,76 @@
 			"column": 7,
 			"mutator": "ConditionalExpression",
 			"reason": "`if (aliasValue != null)` \u2192 `if (true)`. Every key in LEGACY_RUNTIME_KEY_ALIASES has exactly one alias, so the alias loop runs at most once. With a single iteration, returning `aliasValue` unconditionally (mutant) yields the same value as returning it only when non-null and otherwise falling through to `return undefined` (original): if the alias is set both return it, if unset both return undefined. Observable result is identical."
+		},
+		{
+			"file": "src/crypto-primitives.ts",
+			"line": 22,
+			"column": 22,
+			"mutator": "EqualityOperator",
+			"reason": "`for (let index = 0; index < binary.length; ...)` \u2192 `index <= binary.length`. The extra iteration writes `bytes[binary.length] = charCodeAt(binary.length)` (NaN) to an index past the end of the fixed-length Uint8Array, which is silently ignored. The returned bytes are byte-for-byte identical."
+		},
+		{
+			"file": "src/crypto-primitives.ts",
+			"line": 48,
+			"column": 22,
+			"mutator": "EqualityOperator",
+			"reason": "`for (let index = 0; index < left.length; ...)` \u2192 `index <= left.length`. Reached only after the length-equality guard, so `right` has the same length. The extra iteration reads `left[len]` and `right[len]` as `undefined`; `undefined ^ undefined` is 0 and `mismatch |= 0` leaves `mismatch` unchanged. Result is identical."
+		},
+		{
+			"file": "src/crypto-primitives.ts",
+			"line": 103,
+			"column": 7,
+			"mutator": "ConditionalExpression",
+			"reason": "`if (!isArgon2idHash(storedHash)) return false;` is a fast-path reject. The mutant `if (false)` falls through; any hash failing `isArgon2idHash` does not start with `v3:argon2id$`, so `storedHash.split(\"$\")[0] !== ARGON2_PREFIX` is true at L110 and the function returns false anyway. Observable result is identical."
+		},
+		{
+			"file": "src/crypto-primitives.ts",
+			"line": 103,
+			"column": 36,
+			"mutator": "BlockStatement",
+			"reason": "Same equivalence class as L103:7 \u2014 emptying the if-body removes the fast-path `return false`. Control falls through to the L110 prefix/segment check (or the L123 cost check), which returns false for every input that fails `isArgon2idHash`. Identical observable result."
+		},
+		{
+			"file": "src/crypto-primitives.ts",
+			"line": 110,
+			"column": 4,
+			"mutator": "ConditionalExpression",
+			"reason": "`if (prefix !== ARGON2_PREFIX || !iterationsText || ...) return false;` is a structural-validity reject. The mutant `if (false)` falls through; every malformed hash it would have caught is still rejected downstream: empty cost-parameter text yields NaN at `Number.parseInt`, caught by the L123 check; an empty/invalid salt or hash segment makes `argon2id` throw, caught by the surrounding try/catch. Observable result (false) is identical."
+		},
+		{
+			"file": "src/crypto-primitives.ts",
+			"line": 110,
+			"column": 4,
+			"mutator": "LogicalOperator",
+			"reason": "The L110 condition is a chain of `||`-ed structural-validity checks. Flipping any `||` to `&&` only widens what falls through; every such input is still rejected downstream \u2014 NaN cost parameters are caught at L123, and empty salt/hash segments make `argon2id` throw into the surrounding try/catch. Observable result (false) is identical. The `prefix !== ARGON2_PREFIX` term is additionally dead: L103 guarantees `storedHash` starts with `v3:argon2id$`, so the split prefix always equals ARGON2_PREFIX."
+		},
+		{
+			"file": "src/crypto-primitives.ts",
+			"line": 116,
+			"column": 5,
+			"mutator": "BlockStatement",
+			"reason": "Same equivalence class as L110:4 \u2014 emptying the if-body removes the structural-validity `return false`. Control falls through to `Number.parseInt`/`argon2id`; malformed hashes are still rejected by the L123 cost check or by `argon2id` throwing into the try/catch. Identical observable result."
+		},
+		{
+			"file": "src/crypto-primitives.ts",
+			"line": 123,
+			"column": 7,
+			"mutator": "ConditionalExpression",
+			"reason": "`if (!iterations || !memoryKiB || !parallelism) return false;` rejects non-positive/NaN cost parameters. The mutant `if (false)` falls through, but `argon2id` throws synchronously for t/m/p of 0 or NaN (verified empirically), and the surrounding try/catch returns false. Observable result is identical."
+		},
+		{
+			"file": "src/crypto-primitives.ts",
+			"line": 123,
+			"column": 7,
+			"mutator": "LogicalOperator",
+			"reason": "The L123 condition `||`-chains the non-positive cost-parameter checks. Flipping any `||` to `&&` only lets a single bad parameter fall through, but `argon2id` throws synchronously for any t/m/p of 0 or NaN (verified empirically) and the try/catch returns false. Observable result is identical."
+		},
+		{
+			"file": "src/crypto-primitives.ts",
+			"line": 123,
+			"column": 50,
+			"mutator": "BlockStatement",
+			"reason": "Same equivalence class as L123:7 \u2014 emptying the if-body removes the cost-parameter `return false`. Control falls through to `argon2id`, which throws synchronously for any t/m/p of 0 or NaN (verified empirically); the try/catch returns false. Identical observable result."
 		}
 	]
 }
