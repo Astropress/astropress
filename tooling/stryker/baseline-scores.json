@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-05-14T16:05:21.348Z",
+  "updatedAt": "2026-05-14T17:04:19.473Z",
   "scores": {
     "packages/astropress/src/adapters/adapter-record-helpers.ts": {
       "score": 100,
@@ -18,7 +18,7 @@
       "hash": "1a30bf64ac2d933455cd2fa35bf1c6eadc27eb0f"
     },
     "packages/astropress/src/adapters/sqlite.ts": {
-      "score": 67.74193548387096,
+      "score": 98.76543209876543,
       "hash": "ff6ce228f5f5c0cfdc5729ea257d1dfe9acff768"
     },
     "packages/astropress/src/adapters/turso.ts": {

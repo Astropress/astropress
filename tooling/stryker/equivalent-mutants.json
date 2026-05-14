@@ -2010,6 +2010,20 @@
 			"column": 11,
 			"mutator": "EqualityOperator",
 			"reason": "`markStoredMediaDeleted` returns `getDb().prepare(SQL_SOFT_DELETE_MEDIA).run(id).changes > 0`, mutated to `>= 0`. The factory's deleteMediaAsset only calls markStoredMediaDeleted after getStoredMediaDeletionCandidate has already confirmed a row with that id exists and deleted_at IS NULL — synchronously, with no intervening code. SQL_SOFT_DELETE_MEDIA matches by id alone, so when reached the UPDATE always affects exactly 1 row → `.changes` is always ≥ 1. `1 > 0` and `1 >= 0` are both true; the `.changes === 0` case (which `> 0` and `>= 0` distinguish) is unreachable at this call site."
+		},
+		{
+			"file": "src/adapters/sqlite.ts",
+			"line": 55,
+			"column": 9,
+			"mutator": "StringLiteral",
+			"reason": "The adapter's module-private `actor` const has `name: \"Astropress SQLite\"`, mutated to \"\". This `actor` flows only into saveSqliteContentRecord, deleteSqliteContentRecord, putSqliteMedia (which reads actor.email only), and sqliteAdminStore.media.deleteMediaAsset — every one of which records audit rows keyed on `actor.email` via buildAuditEntry. The only code paths that read `actor.name` (recordSuccessfulLogin / recordLogout, which interpolate `${actor.name}` into audit summaries) receive the authenticated *session user*, never this const. `actor.name` is therefore never observably read; the mutation cannot change any persisted value."
+		},
+		{
+			"file": "src/adapters/sqlite.ts",
+			"line": 105,
+			"column": 9,
+			"mutator": "ConditionalExpression",
+			"reason": "`content.get`'s `if (!normalizedId) return null` mutated to `if (false)`. normalizedId is `id.trim()`; the guard only fires for an empty/whitespace id. With the early return removed, control falls through to `await this.list()` then `all.find((record) => record.id === \"\" || record.slug === \"\")`. No ContentStoreRecord produced by listSqliteContentRecords has an empty id or slug (content slugs, redirect source paths, comment ids, user ids/emails, \"site-settings\", translation routes, media ids are all non-empty), so `.find` returns undefined → `?? null` → null — identical to the original early return. The only difference is an extra side-effect-free list() read."
 		}
 	]
 }
