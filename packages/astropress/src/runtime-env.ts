@@ -1,4 +1,5 @@
 import type { D1DatabaseLike } from "./d1-database";
+import { LEGACY_RUNTIME_KEY_ALIASES } from "./runtime-env-data";
 
 export interface R2BucketLike {
 	get(key: string): Promise<R2ObjectBodyLike | null>;
@@ -53,12 +54,6 @@ export interface RuntimeBindings {
 }
 
 type StringRuntimeKey = Exclude<keyof RuntimeBindings, "DB" | "MEDIA_BUCKET">;
-
-const LEGACY_RUNTIME_KEY_ALIASES: Partial<Record<StringRuntimeKey, string[]>> = {
-	SESSION_SECRET: ["ASTROPRESS_SESSION_SECRET"],
-	ADMIN_PASSWORD: ["ASTROPRESS_ADMIN_PASSWORD"],
-	EDITOR_PASSWORD: ["ASTROPRESS_EDITOR_PASSWORD"],
-};
 
 function importMetaEnv(): Record<string, string | undefined> {
 	return (
