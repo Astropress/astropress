@@ -1,4 +1,7 @@
 import type { defaultSiteSettings } from "./site-settings";
+import { defaultSeedImportTables } from "./sqlite-bootstrap-helpers-data";
+
+export { defaultSeedImportTables };
 
 export interface SqliteStatementLike {
 	// audit-boundary: opaque-passthrough -- mirrors driver bind-arg shape
@@ -110,18 +113,6 @@ export interface SeedSummary {
 	archiveRoutes: number;
 	marketingRoutes: number;
 }
-
-export const defaultSeedImportTables = [
-	"admin_users",
-	"media_assets",
-	"redirect_rules",
-	"comments",
-	"site_settings",
-	"cms_route_groups",
-	"cms_route_variants",
-	"cms_route_aliases",
-	"cms_route_revisions",
-] as const;
 
 export interface SeedImportStatement<
 	TableName extends string = (typeof defaultSeedImportTables)[number],
