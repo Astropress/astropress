@@ -2024,6 +2024,20 @@
 			"column": 9,
 			"mutator": "ConditionalExpression",
 			"reason": "`content.get`'s `if (!normalizedId) return null` mutated to `if (false)`. normalizedId is `id.trim()`; the guard only fires for an empty/whitespace id. With the early return removed, control falls through to `await this.list()` then `all.find((record) => record.id === \"\" || record.slug === \"\")`. No ContentStoreRecord produced by listSqliteContentRecords has an empty id or slug (content slugs, redirect source paths, comment ids, user ids/emails, \"site-settings\", translation routes, media ids are all non-empty), so `.find` returns undefined → `?? null` → null — identical to the original early return. The only difference is an extra side-effect-free list() read."
+		},
+		{
+			"file": "src/runtime-actions-media.ts",
+			"line": 169,
+			"column": 17,
+			"mutator": "OptionalChaining",
+			"reason": "`row?.local_path` where `row` is the result of `SELECT local_path, r2_key FROM media_assets WHERE id = ? LIMIT 1` issued immediately after the asset has been confirmed to exist (the earlier `existing` guard) and soft-deleted (deleted_at set, row still present — soft delete does not remove the row). The SELECT has no deleted_at filter, so it always returns a row object here. `row` is therefore never null/undefined at this point, making `row?.local_path` and `row.local_path` observably identical."
+		},
+		{
+			"file": "src/runtime-actions-media.ts",
+			"line": 170,
+			"column": 13,
+			"mutator": "OptionalChaining",
+			"reason": "Same equivalence class as L169:17 — `row?.r2_key`. `row` comes from a `SELECT ... WHERE id = ? LIMIT 1` for an id already proven to exist (and only soft-deleted, so the row is still present). `row` is never null/undefined here, so `row?.r2_key` and `row.r2_key` produce the same value."
 		}
 	]
 }
