@@ -2094,6 +2094,41 @@
 			"column": 4,
 			"mutator": "BlockStatement",
 			"reason": "The early-return block `if (id === \"./local-runtime-modules\" || id === \"./local-runtime-modules.ts\" || id === \"./local-runtime-modules.js\") return true;` is a fast path. For all three literal ids, normalizeRuntimeRequest leaves the string unchanged, and each ends with one of the hardcoded suffixes the fall-through return checks (`/local-runtime-modules`, `/local-runtime-modules.ts`, `/local-runtime-modules.js`). So disabling/altering this block (false condition, mutated logical operator, emptied string literal, or emptied block) still yields `true` via the fall-through for exactly the same inputs — observably identical."
+		},
+		{
+			"file": "src/project-env.ts",
+			"line": 169,
+			"column": 6,
+			"mutator": "ConditionalExpression",
+			"reason": "`if (dataServices === \"none\") return null;` is a fast-path. When dataServices is \"none\" the mutant `if (false)` skips it, then the subsequent `=== \"supabase\"` / `=== \"appwrite\"` / `=== \"nhost\"` checks are all false (dataServices holds a single value), so control reaches the unconditional `return null` at the end of the function. Identical observable result (null)."
+		},
+		{
+			"file": "src/project-env.ts",
+			"line": 169,
+			"column": 23,
+			"mutator": "StringLiteral",
+			"reason": "`dataServices === \"none\"` -> `dataServices === \"\"`. dataServices is never the empty string, so the branch never runs and control falls through to the unconditional `return null` at function end — the same value the original returns for dataServices === \"none\"."
+		},
+		{
+			"file": "src/project-env.ts",
+			"line": 169,
+			"column": 31,
+			"mutator": "BlockStatement",
+			"reason": "Emptying the `if (dataServices === \"none\")` block removes the early `return null`; control then falls through the supabase/appwrite/nhost checks (all false for \"none\") to the unconditional `return null` at function end. Identical observable result."
+		},
+		{
+			"file": "src/project-env.ts",
+			"line": 129,
+			"column": 3,
+			"mutator": "ConditionalExpression",
+			"reason": "`dataServices === \"custom\"` inside resolveAstropressAppHostFromEnv is unreachable: `dataServices` here comes from resolveDataServicesFromLegacyEnv, whose return domain is appwrite|pocketbase|nhost|neon|turso|supabase|cloudflare|none — never \"custom\". The disjunct is already always false, so forcing it to `false` changes nothing."
+		},
+		{
+			"file": "src/project-env.ts",
+			"line": 129,
+			"column": 20,
+			"mutator": "StringLiteral",
+			"reason": "`dataServices === \"custom\"` -> `dataServices === \"\"` inside resolveAstropressAppHostFromEnv. `dataServices` comes from resolveDataServicesFromLegacyEnv which never returns \"custom\" nor \"\", so both the original and mutated comparison are always false — observably identical."
 		}
 	]
 }
