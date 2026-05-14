@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-05-14T18:07:04.708Z",
+  "updatedAt": "2026-05-14T18:14:45.289Z",
   "scores": {
     "packages/astropress/src/adapters/adapter-record-helpers.ts": {
       "score": 100,
@@ -462,7 +462,7 @@
       "hash": "6beccd4b08097fd4232d8e8ca7a5055bc842061c"
     },
     "packages/astropress/src/vite-runtime-alias.ts": {
-      "score": 64.07766990291263,
+      "score": 98.07692307692307,
       "hash": "5e04a7686661bd14400d4a5c7d63591cfbc0797f"
     },
     "packages/astropress/src/api-routes.ts": {

@@ -2038,6 +2038,62 @@
 			"column": 13,
 			"mutator": "OptionalChaining",
 			"reason": "Same equivalence class as L169:17 — `row?.r2_key`. `row` comes from a `SELECT ... WHERE id = ? LIMIT 1` for an id already proven to exist (and only soft-deleted, so the row is still present). `row` is never null/undefined here, so `row?.r2_key` and `row.r2_key` produce the same value."
+		},
+		{
+			"file": "src/vite-runtime-alias.ts",
+			"line": 43,
+			"column": 3,
+			"mutator": "ConditionalExpression",
+			"reason": "The early-return block `if (id === \"./local-runtime-modules\" || id === \"./local-runtime-modules.ts\" || id === \"./local-runtime-modules.js\") return true;` is a fast path. For all three literal ids, normalizeRuntimeRequest leaves the string unchanged, and each ends with one of the hardcoded suffixes the fall-through return checks (`/local-runtime-modules`, `/local-runtime-modules.ts`, `/local-runtime-modules.js`). So disabling/altering this block (false condition, mutated logical operator, emptied string literal, or emptied block) still yields `true` via the fall-through for exactly the same inputs — observably identical."
+		},
+		{
+			"file": "src/vite-runtime-alias.ts",
+			"line": 43,
+			"column": 3,
+			"mutator": "LogicalOperator",
+			"reason": "The early-return block `if (id === \"./local-runtime-modules\" || id === \"./local-runtime-modules.ts\" || id === \"./local-runtime-modules.js\") return true;` is a fast path. For all three literal ids, normalizeRuntimeRequest leaves the string unchanged, and each ends with one of the hardcoded suffixes the fall-through return checks (`/local-runtime-modules`, `/local-runtime-modules.ts`, `/local-runtime-modules.js`). So disabling/altering this block (false condition, mutated logical operator, emptied string literal, or emptied block) still yields `true` via the fall-through for exactly the same inputs — observably identical."
+		},
+		{
+			"file": "src/vite-runtime-alias.ts",
+			"line": 43,
+			"column": 10,
+			"mutator": "StringLiteral",
+			"reason": "The early-return block `if (id === \"./local-runtime-modules\" || id === \"./local-runtime-modules.ts\" || id === \"./local-runtime-modules.js\") return true;` is a fast path. For all three literal ids, normalizeRuntimeRequest leaves the string unchanged, and each ends with one of the hardcoded suffixes the fall-through return checks (`/local-runtime-modules`, `/local-runtime-modules.ts`, `/local-runtime-modules.js`). So disabling/altering this block (false condition, mutated logical operator, emptied string literal, or emptied block) still yields `true` via the fall-through for exactly the same inputs — observably identical."
+		},
+		{
+			"file": "src/vite-runtime-alias.ts",
+			"line": 44,
+			"column": 3,
+			"mutator": "ConditionalExpression",
+			"reason": "The early-return block `if (id === \"./local-runtime-modules\" || id === \"./local-runtime-modules.ts\" || id === \"./local-runtime-modules.js\") return true;` is a fast path. For all three literal ids, normalizeRuntimeRequest leaves the string unchanged, and each ends with one of the hardcoded suffixes the fall-through return checks (`/local-runtime-modules`, `/local-runtime-modules.ts`, `/local-runtime-modules.js`). So disabling/altering this block (false condition, mutated logical operator, emptied string literal, or emptied block) still yields `true` via the fall-through for exactly the same inputs — observably identical."
+		},
+		{
+			"file": "src/vite-runtime-alias.ts",
+			"line": 44,
+			"column": 10,
+			"mutator": "StringLiteral",
+			"reason": "The early-return block `if (id === \"./local-runtime-modules\" || id === \"./local-runtime-modules.ts\" || id === \"./local-runtime-modules.js\") return true;` is a fast path. For all three literal ids, normalizeRuntimeRequest leaves the string unchanged, and each ends with one of the hardcoded suffixes the fall-through return checks (`/local-runtime-modules`, `/local-runtime-modules.ts`, `/local-runtime-modules.js`). So disabling/altering this block (false condition, mutated logical operator, emptied string literal, or emptied block) still yields `true` via the fall-through for exactly the same inputs — observably identical."
+		},
+		{
+			"file": "src/vite-runtime-alias.ts",
+			"line": 45,
+			"column": 3,
+			"mutator": "ConditionalExpression",
+			"reason": "The early-return block `if (id === \"./local-runtime-modules\" || id === \"./local-runtime-modules.ts\" || id === \"./local-runtime-modules.js\") return true;` is a fast path. For all three literal ids, normalizeRuntimeRequest leaves the string unchanged, and each ends with one of the hardcoded suffixes the fall-through return checks (`/local-runtime-modules`, `/local-runtime-modules.ts`, `/local-runtime-modules.js`). So disabling/altering this block (false condition, mutated logical operator, emptied string literal, or emptied block) still yields `true` via the fall-through for exactly the same inputs — observably identical."
+		},
+		{
+			"file": "src/vite-runtime-alias.ts",
+			"line": 45,
+			"column": 10,
+			"mutator": "StringLiteral",
+			"reason": "The early-return block `if (id === \"./local-runtime-modules\" || id === \"./local-runtime-modules.ts\" || id === \"./local-runtime-modules.js\") return true;` is a fast path. For all three literal ids, normalizeRuntimeRequest leaves the string unchanged, and each ends with one of the hardcoded suffixes the fall-through return checks (`/local-runtime-modules`, `/local-runtime-modules.ts`, `/local-runtime-modules.js`). So disabling/altering this block (false condition, mutated logical operator, emptied string literal, or emptied block) still yields `true` via the fall-through for exactly the same inputs — observably identical."
+		},
+		{
+			"file": "src/vite-runtime-alias.ts",
+			"line": 46,
+			"column": 4,
+			"mutator": "BlockStatement",
+			"reason": "The early-return block `if (id === \"./local-runtime-modules\" || id === \"./local-runtime-modules.ts\" || id === \"./local-runtime-modules.js\") return true;` is a fast path. For all three literal ids, normalizeRuntimeRequest leaves the string unchanged, and each ends with one of the hardcoded suffixes the fall-through return checks (`/local-runtime-modules`, `/local-runtime-modules.ts`, `/local-runtime-modules.js`). So disabling/altering this block (false condition, mutated logical operator, emptied string literal, or emptied block) still yields `true` via the fall-through for exactly the same inputs — observably identical."
 		}
 	]
 }
