@@ -1,21 +1,17 @@
 import { createAstropressLocalMediaRepository } from "../local-media-repository-factory";
 import type { Actor } from "../persistence-types";
 import { createAstropressRateLimitRepository } from "../rate-limit-repository-factory";
+import {
+	SQL_GET_MEDIA_FOR_DELETE,
+	SQL_INC_RATE_LIMIT,
+	SQL_INSERT_MEDIA,
+	SQL_READ_RATE_LIMIT,
+	SQL_RESET_RATE_LIMIT,
+	SQL_SOFT_DELETE_MEDIA,
+	SQL_UPDATE_MEDIA,
+} from "./assets-data.js";
 import { recordAudit } from "./audit-log";
 import type { AstropressSqliteDatabaseLike } from "./utils";
-
-const SQL_READ_RATE_LIMIT =
-	"SELECT count, window_start_ms, window_ms FROM rate_limits WHERE key = ? LIMIT 1";
-const SQL_RESET_RATE_LIMIT =
-	"INSERT INTO rate_limits (key, count, window_start_ms, window_ms) VALUES (?, 1, ?, ?) ON CONFLICT(key) DO UPDATE SET count = 1, window_start_ms = excluded.window_start_ms, window_ms = excluded.window_ms";
-const SQL_INC_RATE_LIMIT = "UPDATE rate_limits SET count = count + 1 WHERE key = ?";
-const SQL_UPDATE_MEDIA =
-	"UPDATE media_assets SET title = ?, alt_text = ? WHERE id = ? AND deleted_at IS NULL";
-const SQL_INSERT_MEDIA =
-	"INSERT INTO media_assets (id, source_url, local_path, r2_key, mime_type, file_size, alt_text, title, uploaded_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
-const SQL_GET_MEDIA_FOR_DELETE =
-	"SELECT local_path FROM media_assets WHERE id = ? AND deleted_at IS NULL";
-const SQL_SOFT_DELETE_MEDIA = "UPDATE media_assets SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?";
 
 export function createSqliteAssetsStore(
 	getDb: () => AstropressSqliteDatabaseLike,
