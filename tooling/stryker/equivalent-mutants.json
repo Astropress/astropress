@@ -1947,6 +1947,55 @@
 			"column": 66,
 			"mutator": "StringLiteral",
 			"reason": "`path.extname(input.filename).toLowerCase() || \".bin\"` with the \".bin\" fallback mutated to \"\". The fallback only fires when extname is empty (filename has no dot). \".bin\" is not in ALLOWED_EXTENSIONS and neither is \"\", so allowedExtensions.has(extension) is false in both cases → identical rejection with the identical error message. The other use of `extension` is path.basename(filename, extension); since extname was empty the filename has no \".bin\" suffix to strip, so basename(filename, \".bin\") === basename(filename, \"\") === filename. Observable result identical for every no-extension input."
+		},
+		{
+			"file": "src/sqlite-runtime/utils.ts",
+			"line": 109,
+			"column": 25,
+			"mutator": "MethodExpression",
+			"reason": "`part.trim().split(\";\")` with `.trim()` removed. The trimmed/untrimmed whole-part string differs only by leading/trailing whitespace; after split(\";\") that whitespace lands on the first segment (tag) and last segment (qPart), both of which are independently trimmed downstream — tag via `(tag ?? \"\").trim()` at L112 and qPart via `qPart.trim()` at L110. Interior segments are discarded. Observable tag/q result identical for every Accept-Language input."
+		},
+		{
+			"file": "src/sqlite-runtime/utils.ts",
+			"line": 110,
+			"column": 29,
+			"mutator": "MethodExpression",
+			"reason": "`qPart.trim().replace(\"q=\", \"\")` with `.trim()` removed. trim only strips leading/trailing whitespace; it cannot create or destroy an interior \"q=\" substring, so `.replace(\"q=\", \"\")` removes the same characters either way. The result is then passed to `Number(...)`, which ignores surrounding whitespace. q is identical for every qPart value, including whitespace-only ones (Number(\"\") and Number(\"  \") both 0)."
+		},
+		{
+			"file": "src/sqlite-runtime/utils.ts",
+			"line": 112,
+			"column": 18,
+			"mutator": "StringLiteral",
+			"reason": "`(tag ?? \"\")` fallback mutated to `(tag ?? \"Stryker was here!\")`. `tag` is the first element of `part.trim().split(\";\")`; String.prototype.split always returns an array with at least one string element (`\"\".split(\";\")` → `[\"\"]`), so `tag` is never null/undefined and the `??` right-hand side is unreachable. Dead-code mutation — no input can evaluate the fallback."
+		},
+		{
+			"file": "src/sqlite-runtime/utils.ts",
+			"line": 142,
+			"column": 40,
+			"mutator": "ObjectLiteral",
+			"reason": "`hashPasswordArgon2id(password, { iterations })` mutated to `hashPasswordArgon2id(password, {})`. hashPasswordSync's default parameter is `iterations = 2`, and hashPasswordArgon2id resolves `options.iterations ?? ARGON2_ITERATIONS` where ARGON2_ITERATIONS === 2. So `{ iterations: 2 }` and `{}` both produce a digest with t=2 — the emitted PHC string `v3:argon2id$2$...` is byte-for-byte identical. When a caller passes an explicit non-2 iterations the object is `{ iterations: N }` and the mutation does not apply at this site."
+		},
+		{
+			"file": "src/sqlite-runtime/utils.ts",
+			"line": 158,
+			"column": 14,
+			"mutator": "ArrayDeclaration",
+			"reason": "`(values ?? [])` fallback mutated to `(values ?? [\"Stryker was here\"])`. The fallback array flows straight into `.filter((entry) => Number.isInteger(entry) && entry > 0)`; \"Stryker was here\" is not an integer so it is filtered out, leaving []. JSON.stringify([]) === \"[]\" — identical to the original empty-array fallback for every undefined input."
+		},
+		{
+			"file": "src/sqlite-runtime/utils.ts",
+			"line": 163,
+			"column": 6,
+			"mutator": "ConditionalExpression",
+			"reason": "`if (!value) return null` in parseSystemSettings mutated to `if (false)`. `value` is typed `string | null`, so the guard only fires for null or \"\". With the early return removed: value=null → `JSON.parse(null)` coerces to `JSON.parse(\"null\")` → null → `!parsed` → returns null; value=\"\" → `JSON.parse(\"\")` throws SyntaxError → catch → returns null. Both paths return null, identical to the original guard."
+		},
+		{
+			"file": "src/sqlite-runtime/utils.ts",
+			"line": 163,
+			"column": 14,
+			"mutator": "BlockStatement",
+			"reason": "Same equivalence class as L163:6 — the `if (!value)` body becomes {} (no early return). For the only two inputs that trigger the guard (null, \"\"), control falls through to the JSON.parse + object-check / catch block, which returns null in both cases. Observable result identical to the original early return."
 		}
 	]
 }

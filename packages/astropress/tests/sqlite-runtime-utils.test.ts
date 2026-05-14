@@ -68,6 +68,16 @@ describe("normalizeStructuredTemplateKey", () => {
 		clearCmsConfig();
 		expect(normalizeStructuredTemplateKey("any")).toBeNull();
 	});
+
+	it("returns null for '' even when templateKeys contains '' (kills L57 ConditionalExpression:false, LogicalOperator, BlockStatement)", () => {
+		// The `if (typeof value !== "string" || !value) return null` guard
+		// short-circuits before the templateKeys lookup. Mutants that disable the
+		// early return (ConditionalExpression:false, BlockStatement {}) or weaken
+		// the disjunction (|| → &&) fall through to [""].includes("") === true and
+		// would return "" instead of null.
+		setCmsConfig({ templateKeys: [""] });
+		expect(normalizeStructuredTemplateKey("")).toBeNull();
+	});
 });
 
 describe("localeFromPath", () => {
@@ -99,6 +109,16 @@ describe("localeFromPath", () => {
 		setCmsConfig({ locales: [] });
 		expect(localeFromPath("/anything")).toBe("en");
 	});
+
+	it("uses the [en, es] fallback when the config has no locales key (kills L70 ArrayDeclaration & StringLiterals)", () => {
+		// getCmsConfig() succeeds but `.locales` is undefined → `?? ["en", "es"]`
+		// fallback fires. Mutating that array to [] or either literal to ""
+		// changes which prefixes match / what the empty-list default returns.
+		setCmsConfig({});
+		expect(localeFromPath("/en/page")).toBe("en");
+		expect(localeFromPath("/es/page")).toBe("es");
+		expect(localeFromPath("/zz/page")).toBe("en");
+	});
 });
 
 describe("localeFromAcceptLanguage", () => {
@@ -129,6 +149,28 @@ describe("localeFromAcceptLanguage", () => {
 	it("handles a tag with extra whitespace (kills L112:10 tag MethodExpression — .trim() removed)", () => {
 		setCmsConfig({ locales: ["en", "es"] });
 		expect(localeFromAcceptLanguage("  es  ;q=0.9, en;q=0.8")).toBe("es");
+	});
+
+	it("uses the [en, es] fallback when the config has no locales key (kills L98 ArrayDeclaration & StringLiterals)", () => {
+		// `.locales` undefined → `?? ["en", "es"]` fallback. Mutating the array to []
+		// or either literal to "" changes which tag matches and the empty-list default.
+		setCmsConfig({});
+		expect(localeFromAcceptLanguage("en")).toBe("en");
+		expect(localeFromAcceptLanguage("es")).toBe("es");
+	});
+
+	it("returns the first locale verbatim when the header is null and locales is empty (kills L103:30 LogicalOperator & L103:44 StringLiteral)", () => {
+		// locales[0] is undefined → `?? "en"` yields "en". Mutating `??` to `&&`
+		// yields undefined; mutating the "en" literal to "" yields "".
+		setCmsConfig({ locales: [] });
+		expect(localeFromAcceptLanguage(null)).toBe("en");
+	});
+
+	it("returns the literal 'en' when no entry matches and locales is empty (kills L126:9 LogicalOperator & L126:23 StringLiteral)", () => {
+		// Final `return locales[0] ?? "en"` with an empty locales list. Mutating
+		// `??` to `&&` yields undefined; mutating "en" to "" yields "".
+		setCmsConfig({ locales: [] });
+		expect(localeFromAcceptLanguage("ja;q=1, ko;q=0.9")).toBe("en");
 	});
 });
 
