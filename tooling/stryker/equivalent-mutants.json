@@ -1940,6 +1940,13 @@
 			"column": 11,
 			"mutator": "BlockStatement",
 			"reason": "Same equivalence class as L49:6 — the if-body becomes {} (no early return). Control falls through to createD1AdminReadStore(undefined) + withFallback wrappers; each method call routes through the same fallback because db.prepare(...) raises a TypeError caught by withFallback. Observable behaviour identical to the original fast-path early-return."
+		},
+		{
+			"file": "src/local-media-storage.ts",
+			"line": 49,
+			"column": 66,
+			"mutator": "StringLiteral",
+			"reason": "`path.extname(input.filename).toLowerCase() || \".bin\"` with the \".bin\" fallback mutated to \"\". The fallback only fires when extname is empty (filename has no dot). \".bin\" is not in ALLOWED_EXTENSIONS and neither is \"\", so allowedExtensions.has(extension) is false in both cases → identical rejection with the identical error message. The other use of `extension` is path.basename(filename, extension); since extname was empty the filename has no \".bin\" suffix to strip, so basename(filename, \".bin\") === basename(filename, \"\") === filename. Observable result identical for every no-extension input."
 		}
 	]
 }

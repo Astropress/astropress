@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, rmSync, statSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, rmSync, statSync } from "node:fs";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // ---------------------------------------------------------------------------
@@ -290,12 +290,17 @@ describe("createLocalMediaUpload", () => {
 		expect(stat.mode & 0o777).toBe(0o600);
 	});
 
-	it("propagates validation errors without writing to disk", () => {
+	it("propagates validation errors without writing to disk (kills L104 ConditionalExpression:false & BlockStatement)", () => {
+		// Mutant L104 ConditionalExpression:false / BlockStatement {}: the early
+		// `return descriptor` is skipped, so writeFileSync runs even for a rejected
+		// upload — leaving a stray file in the uploads dir.
+		const before = readdirSync(testUploadsDir);
 		const result = createLocalMediaUpload({
 			filename: "bad.exe",
 			bytes: validPng,
 		});
 		expect(result).toMatchObject({ ok: false });
+		expect(readdirSync(testUploadsDir)).toEqual(before);
 	});
 });
 
@@ -340,5 +345,20 @@ describe("deleteLocalMediaUpload", () => {
 
 	it("is a no-op for non-existent files (no throw)", () => {
 		expect(() => deleteLocalMediaUpload("/images/uploads/does-not-exist-12345.png")).not.toThrow();
+	});
+
+	it("does not unlink a file when the path's basename collides but the prefix is wrong (kills L115 ConditionalExpression:false, StringLiteral '', BlockStatement)", () => {
+		// The guard rejects any path not under /images/uploads/. Mutants that disable
+		// the early return (ConditionalExpression:false, BlockStatement {}) or that
+		// make startsWith("") always-true would fall through to unlinkSync on the
+		// real stored file, since basename here equals the actual stored filename.
+		const result = createLocalMediaUpload({
+			filename: "keep.png",
+			bytes: validPng,
+		});
+		expect(result.ok).toBe(true);
+		if (!result.ok) return;
+		deleteLocalMediaUpload(`/elsewhere/${result.asset.storedFilename}`);
+		expect(existsSync(result.asset.diskPath)).toBe(true);
 	});
 });
