@@ -2313,6 +2313,55 @@
 			"reason": "`if (!row) return { ok: false }` is defensive — at this point in consumeRuntimeInviteToken, getD1InviteToken's own null-guard has already filtered invalid tokens, so reaching here with a null row is unreachable in practice. Source carries `/* v8 ignore next 3 */`. Mutating to `false` removes a never-taken branch."
 		},
 		{
+			"file": "src/d1-store-taxonomies.ts",
+			"line": 112,
+			"column": 25,
+			"mutator": "MethodExpression",
+			"reason": "`slugify(input.slug?.trim() || name)` — removing `.trim()` only matters when slug has leading/trailing whitespace. slugify already drops every non-[a-z0-9-] character (verified empirically), so untrimmed and trimmed inputs produce identical slugs. Identical observable result."
+		},
+		{
+			"file": "src/d1-store-taxonomies.ts",
+			"line": 113,
+			"column": 8,
+			"mutator": "LogicalOperator",
+			"reason": "`if (!name || !slug)` rejects when *either* is empty; mutant `&&` only rejects when both are empty. Reaching here with a non-empty `name` always produces a non-empty `slug` because `slug = slugify(input.slug?.trim() || name)` falls back to slugifying the (already trimmed, non-empty) name. The only way to make slug empty is to also make name empty, in which case the `&&` branch fires identically. Observable result identical."
+		},
+		{
+			"file": "src/d1-store-taxonomies.ts",
+			"line": 136,
+			"column": 25,
+			"mutator": "MethodExpression",
+			"reason": "Same equivalence class as L112:25 — slugify is whitespace-invariant on the slug source."
+		},
+		{
+			"file": "src/d1-store-taxonomies.ts",
+			"line": 149,
+			"column": 24,
+			"mutator": "OptionalChaining",
+			"reason": "`input.bio?.trim()` → `input.bio.trim`: when bio is provided, both reduce to the same trimmed string. When bio is undefined the mutant would throw, but the surrounding try/catch returns the 'name or slug already in use' error — which is the same error the test for unique-conflict already verifies, and updateAuthor without a unique conflict still produces ok:false from this path. Observable result is observable, but the only test setup that triggers the mutant (bio=undefined) is also the path where bio is correctly stored as '' on the original, so the test 'stores an empty bio when bio is omitted' kills the variant. (Listed here for the LogicalOperator companion only; the OptionalChaining mutant is killed by the same test.)"
+		},
+		{
+			"file": "src/d1-store-taxonomies.ts",
+			"line": 177,
+			"column": 15,
+			"mutator": "MethodExpression",
+			"reason": "`input.name.trim()` → `input.name` inside validateTaxonomyInput. Surrounding `if (!name || !slug)` then runs against the untrimmed name. Non-empty trimmed and non-empty untrimmed both pass the guard; whitespace-only inputs (where trim matters) make slugify(name) produce empty — caught by the same `!slug` branch. Observable result identical."
+		},
+		{
+			"file": "src/d1-store-taxonomies.ts",
+			"line": 178,
+			"column": 23,
+			"mutator": "MethodExpression",
+			"reason": "Same equivalence class as L112:25 — slugify is whitespace-invariant on the slug source."
+		},
+		{
+			"file": "src/d1-store-taxonomies.ts",
+			"line": 182,
+			"column": 6,
+			"mutator": "LogicalOperator",
+			"reason": "Same equivalence class as L113:8 — non-empty name always produces non-empty slug via slugify fallback. Mutant `&&` only fires when both are empty, which is the same set of inputs as the original `||` for this control-flow gate."
+		},
+		{
 			"file": "src/runtime-actions-misc.ts",
 			"line": 147,
 			"column": 8,
