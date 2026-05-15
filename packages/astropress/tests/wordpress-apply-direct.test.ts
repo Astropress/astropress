@@ -647,6 +647,177 @@ describe("applyImportToLocalRuntime — terms, content, media, comments, redirec
 		db.close();
 	});
 
+	it("contentStatus 'published' lands as 'published' on a fresh single-record bundle — isolates the third ternary literal at line 85:86", async () => {
+		const bundle = emptyBundle({
+			contentRecords: [
+				{
+					id: "p-iso",
+					legacyId: "p-iso",
+					kind: "post",
+					slug: "p-iso",
+					title: "Pub Iso",
+					body: "<p>p</p>",
+					status: "published",
+					legacyUrl: "/p-iso/",
+					authorLogins: [],
+					categorySlugs: [],
+					tagSlugs: [],
+					oldSlugs: [],
+				},
+			],
+		});
+		await applyImportToLocalRuntime({
+			bundle,
+			workspaceRoot: workspace,
+			adminDbPath,
+			plan: defaultPlan(),
+		});
+		const db = new DatabaseSync(adminDbPath);
+		const row = db.prepare("SELECT status FROM content_overrides WHERE slug = ?").get("p-iso") as {
+			status: string;
+		};
+		// Original code maps any non-archived non-draft to "published"; if the
+		// literal is mutated to "" the CHECK constraint rejects the override.
+		expect(row.status).toBe("published");
+		db.close();
+	});
+
+	it("revisionNote of content_revisions persists `WordPress import <legacyId>` — kills the line 105 template-literal StringLiteral mutant", async () => {
+		const bundle = emptyBundle({
+			contentRecords: [
+				{
+					id: "rv1",
+					legacyId: "legacy-99",
+					kind: "post",
+					slug: "rv-slug",
+					title: "Rev",
+					body: "<p>r</p>",
+					status: "published",
+					legacyUrl: "/rv-slug/",
+					authorLogins: [],
+					categorySlugs: [],
+					tagSlugs: [],
+					oldSlugs: [],
+				},
+			],
+		});
+		await applyImportToLocalRuntime({
+			bundle,
+			workspaceRoot: workspace,
+			adminDbPath,
+			plan: defaultPlan(),
+		});
+		const db = new DatabaseSync(adminDbPath);
+		const rev = db
+			.prepare(
+				"SELECT revision_note FROM content_revisions WHERE slug = ? ORDER BY datetime(created_at) DESC, id DESC LIMIT 1",
+			)
+			.get("rv-slug") as { revision_note: string };
+		expect(rev.revision_note).toBe("WordPress import legacy-99");
+		db.close();
+	});
+
+	it("on second import with no excerpt, SQL_UPDATE_ENTRY_LEGACY (existing branch) sets summary to '' — kills the line 117 `?? ''` StringLiteral mutant", async () => {
+		const first = emptyBundle({
+			contentRecords: [
+				{
+					id: "u1",
+					legacyId: "u1",
+					kind: "post",
+					slug: "update-summary",
+					title: "First",
+					body: "<p>v1</p>",
+					excerpt: "first-summary",
+					status: "published",
+					legacyUrl: "/update-summary/",
+					authorLogins: [],
+					categorySlugs: [],
+					tagSlugs: [],
+					oldSlugs: [],
+				},
+			],
+		});
+		await applyImportToLocalRuntime({
+			bundle: first,
+			workspaceRoot: workspace,
+			adminDbPath,
+			plan: defaultPlan(),
+		});
+
+		const second = emptyBundle({
+			contentRecords: [
+				{
+					...first.contentRecords[0],
+					excerpt: undefined,
+					title: "Second",
+				},
+			],
+		});
+		await applyImportToLocalRuntime({
+			bundle: second,
+			workspaceRoot: workspace,
+			adminDbPath,
+			plan: defaultPlan(),
+		});
+
+		const db = new DatabaseSync(adminDbPath);
+		const row = db
+			.prepare("SELECT summary FROM content_entries WHERE slug = ?")
+			.get("update-summary") as { summary: string };
+		expect(row.summary).toBe("");
+		db.close();
+	});
+
+	it("does NOT insert extra content_authors/content_categories/content_tags rows for unresolved logins/slugs — kills the .filter typeof===number ConditionalExpression and the .map MethodExpression", async () => {
+		// Same shape as the earlier resolution test, but with stronger COUNT assertions:
+		// if the filter is removed, the upstream .map produces [number, undefined] arrays
+		// which would yield extra junk rows (null author_id / null category_id / null tag_id).
+		const bundle = emptyBundle({
+			authors: [{ id: "1", login: "alice", displayName: "Alice" }],
+			terms: [
+				{ kind: "category", slug: "news", name: "News" },
+				{ kind: "tag", slug: "featured", name: "Featured" },
+			],
+			contentRecords: [
+				{
+					id: "ref-strict",
+					legacyId: "ref-strict",
+					kind: "post",
+					slug: "ref-strict",
+					title: "Ref Strict",
+					body: "<p>r</p>",
+					status: "published",
+					legacyUrl: "/ref-strict/",
+					authorLogins: ["alice", "ghost1", "ghost2"],
+					categorySlugs: ["news", "ghost-cat-1", "ghost-cat-2"],
+					tagSlugs: ["featured", "ghost-tag-1", "ghost-tag-2"],
+					oldSlugs: [],
+				},
+			],
+		});
+		await applyImportToLocalRuntime({
+			bundle,
+			workspaceRoot: workspace,
+			adminDbPath,
+			plan: defaultPlan(),
+		});
+		const db = new DatabaseSync(adminDbPath);
+		const ac = db
+			.prepare("SELECT COUNT(*) AS c FROM content_authors WHERE slug = ?")
+			.get("ref-strict") as { c: number };
+		const cc = db
+			.prepare("SELECT COUNT(*) AS c FROM content_categories WHERE slug = ?")
+			.get("ref-strict") as { c: number };
+		const tc = db
+			.prepare("SELECT COUNT(*) AS c FROM content_tags WHERE slug = ?")
+			.get("ref-strict") as { c: number };
+		// Exactly one each — no rows for ghost lookups (filter strips undefined).
+		expect(ac.c).toBe(1);
+		expect(cc.c).toBe(1);
+		expect(tc.c).toBe(1);
+		db.close();
+	});
+
 	it("imports redirects with status 301 and a non-empty source_path (kills the redirect upsert string and 301 numeric-literal mutants)", async () => {
 		const bundle = emptyBundle({
 			redirects: [
