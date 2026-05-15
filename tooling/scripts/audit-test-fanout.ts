@@ -69,6 +69,10 @@ const ALLOWLIST: ReadonlyMap<string, string> = new Map([
 		"cloudflare-vite-integration.test.ts",
 		"resolveId contract — must verify every (module-name × extension) variant resolves",
 	],
+	[
+		"wordpress-import-direct.test.ts",
+		"WordPress importer artifact-filename contract — must verify every staged file lands at its exact documented path",
+	],
 ]);
 
 interface FanoutResult {
