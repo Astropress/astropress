@@ -6,31 +6,21 @@ import type {
 } from "../platform-contracts";
 import { createAstropressSqliteAdminRuntime } from "../sqlite-admin-runtime";
 import { createDefaultAstropressSqliteSeedToolkit } from "../sqlite-bootstrap";
+import {
+	SQL_SELECT_AUTHOR_ID,
+	SQL_SELECT_CATEGORY_ID,
+	SQL_SELECT_TAG_ID,
+	SQL_UPDATE_ENTRY_LEGACY,
+	SQL_UPDATE_ENTRY_LEGACY_FULL,
+	SQL_UPSERT_AUTHOR,
+	SQL_UPSERT_CATEGORY,
+	SQL_UPSERT_COMMENT,
+	SQL_UPSERT_MEDIA,
+	SQL_UPSERT_REDIRECT,
+	SQL_UPSERT_TAG,
+	WORDPRESS_IMPORT_ACTOR,
+} from "./wordpress-apply-data.js";
 import type { ParsedBundle } from "./wordpress-xml.js";
-
-const SQL_UPSERT_CATEGORY =
-	"INSERT INTO categories (slug, name, description, deleted_at) VALUES (?, ?, ?, NULL) ON CONFLICT(slug) DO UPDATE SET name = excluded.name, description = excluded.description, deleted_at = NULL, updated_at = CURRENT_TIMESTAMP";
-const SQL_UPSERT_TAG =
-	"INSERT INTO tags (slug, name, description, deleted_at) VALUES (?, ?, ?, NULL) ON CONFLICT(slug) DO UPDATE SET name = excluded.name, description = excluded.description, deleted_at = NULL, updated_at = CURRENT_TIMESTAMP";
-const SQL_SELECT_CATEGORY_ID = "SELECT id FROM categories WHERE slug = ? LIMIT 1";
-const SQL_SELECT_TAG_ID = "SELECT id FROM tags WHERE slug = ? LIMIT 1";
-const SQL_UPDATE_ENTRY_LEGACY =
-	"UPDATE content_entries SET legacy_url = ?, summary = ?, kind = ? WHERE slug = ?";
-const SQL_UPSERT_AUTHOR =
-	"INSERT INTO authors (slug, name, bio, deleted_at) VALUES (?, ?, ?, NULL) ON CONFLICT(slug) DO UPDATE SET name = excluded.name, bio = excluded.bio, deleted_at = NULL, updated_at = CURRENT_TIMESTAMP";
-const SQL_SELECT_AUTHOR_ID = "SELECT id FROM authors WHERE slug = ? LIMIT 1";
-const SQL_UPSERT_MEDIA =
-	"INSERT INTO media_assets (id, source_url, local_path, mime_type, file_size, alt_text, title, uploaded_by, deleted_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NULL) ON CONFLICT(id) DO UPDATE SET source_url = excluded.source_url, local_path = excluded.local_path, mime_type = excluded.mime_type, file_size = excluded.file_size, alt_text = excluded.alt_text, title = excluded.title, uploaded_by = excluded.uploaded_by, deleted_at = NULL";
-const SQL_UPSERT_COMMENT =
-	"INSERT INTO comments (id, author, email, body, route, status, policy, submitted_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(id) DO UPDATE SET author = excluded.author, email = excluded.email, body = excluded.body, route = excluded.route, status = excluded.status, policy = excluded.policy, submitted_at = excluded.submitted_at";
-const SQL_UPSERT_REDIRECT =
-	"INSERT INTO redirect_rules (source_path, target_path, status_code, created_by, deleted_at) VALUES (?, ?, ?, ?, NULL) ON CONFLICT(source_path) DO UPDATE SET target_path = excluded.target_path, status_code = excluded.status_code, created_by = excluded.created_by, deleted_at = NULL";
-
-const WORDPRESS_IMPORT_ACTOR = {
-	email: "wordpress-import@astropress.local",
-	role: "admin" as const,
-	name: "WordPress Import",
-};
 
 export function resolveLocalAdminDbPath(workspaceRoot: string, adminDbPath?: string) {
 	if (adminDbPath) {
@@ -150,9 +140,12 @@ function importContentRecords(
 				WORDPRESS_IMPORT_ACTOR,
 			);
 			if (!saved.ok) throw new Error(saved.error);
-			db.prepare(
-				"UPDATE content_entries SET kind = ?, legacy_url = ?, summary = ? WHERE slug = ?",
-			).run(record.kind, record.legacyUrl, record.excerpt ?? "", record.slug);
+			db.prepare(SQL_UPDATE_ENTRY_LEGACY_FULL).run(
+				record.kind,
+				record.legacyUrl,
+				record.excerpt ?? "",
+				record.slug,
+			);
 		}
 		contentRouteByImportId.set(record.id, record.legacyUrl);
 		contentRouteByImportId.set(record.legacyId, record.legacyUrl);
