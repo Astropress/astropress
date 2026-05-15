@@ -708,12 +708,16 @@ describe("applyImportToLocalRuntime — terms, content, media, comments, redirec
 			plan: defaultPlan(),
 		});
 		const db = new DatabaseSync(adminDbPath);
-		const rev = db
+		// Two revisions can land in the same slug — the create-content path (note "Created new
+		// post.") and the wordpress-apply path (note "WordPress import legacy-99"). ORDER BY id DESC
+		// is non-deterministic because ids are random UUIDs, so filter for the WP import note
+		// directly to make the assertion deterministic.
+		const wpRev = db
 			.prepare(
-				"SELECT revision_note FROM content_revisions WHERE slug = ? ORDER BY datetime(created_at) DESC, id DESC LIMIT 1",
+				"SELECT revision_note FROM content_revisions WHERE slug = ? AND revision_note LIKE 'WordPress import%' LIMIT 1",
 			)
-			.get("rv-slug") as { revision_note: string };
-		expect(rev.revision_note).toBe("WordPress import legacy-99");
+			.get("rv-slug") as { revision_note: string } | undefined;
+		expect(wpRev?.revision_note).toBe("WordPress import legacy-99");
 		db.close();
 	});
 
