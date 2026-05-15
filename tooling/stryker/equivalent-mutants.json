@@ -2514,6 +2514,13 @@
 			"column": 16,
 			"mutator": "LogicalOperator",
 			"reason": "`input.sourceUrl ?? options.sourceUrl` in resumeWordPressImport mutated to `&&`. The mutant only matters when input.sourceUrl is undefined; in that case the call forwards `sourceUrl: undefined` to importWordPress. But importWordPress then re-applies the same `?? options.sourceUrl` defaulting at line 257 before parseImportInput sees the value. Net inventory.sourceUrl is options.sourceUrl regardless of which branch fires. Observationally identical."
+		},
+		{
+			"file": "src/sqlite-runtime/routes.ts",
+			"line": 48,
+			"column": 14,
+			"mutator": "LogicalOperator",
+			"reason": "`row.updated_at ?? undefined` mutated to `&&`. The cms_route_variants.updated_at column is declared NOT NULL with DEFAULT CURRENT_TIMESTAMP, so the SELECT in SQL_LIST_SYSTEM never yields a NULL value for that column. The `??`-branch is observationally unreachable; both `??` and `&&` collapse to the row.updated_at value for every possible row."
 		}
 	]
 }
