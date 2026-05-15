@@ -2257,6 +2257,62 @@
 			"reason": "`rawToken.trim()` \u2192 `rawToken` only matters for whitespace-only tokens. For \"   \" the original returns null early; the mutant continues, hashes the whitespace string, and the SELECT returns no row, so the next `if (!row || ...)` returns null. Identical observable result."
 		},
 		{
+			"file": "src/runtime-actions-users.ts",
+			"line": 27,
+			"column": 60,
+			"mutator": "StringLiteral",
+			"reason": "`hashOpaqueToken` uses the KMAC digest tag \"invite-token\" for both insert (line 135) and lookup (line 49). Mutating to \"\" changes both digests identically — a self-roundtrip lookup still succeeds. No external system consumes a pre-existing tagged digest. (Same equivalence class as runtime-actions-password-reset.ts:13:60.)"
+		},
+		{
+			"file": "src/runtime-actions-users.ts",
+			"line": 32,
+			"column": 6,
+			"mutator": "ConditionalExpression",
+			"reason": "Defensive guard `if (!db || !rawToken.trim()) return null;` inside getD1InviteToken. db is guaranteed non-null by the enclosing withLocalStoreFallback onD1 callback. For empty/whitespace tokens the SELECT against user_invites.token_hash returns no row, and the downstream `if (!row || ...)` returns null. Identical observable result."
+		},
+		{
+			"file": "src/runtime-actions-users.ts",
+			"line": 32,
+			"column": 6,
+			"mutator": "LogicalOperator",
+			"reason": "Same equivalence class as L32:6 ConditionalExpression — flipping `||` to `&&` makes the defensive guard never fire, but the downstream null-row branch still returns null for empty/whitespace tokens. Identical observable result."
+		},
+		{
+			"file": "src/runtime-actions-users.ts",
+			"line": 32,
+			"column": 14,
+			"mutator": "MethodExpression",
+			"reason": "`rawToken.trim()` → `rawToken`: whitespace-only tokens hash without trim, the SELECT returns no row, and the next null-row guard returns null. Identical observable result."
+		},
+		{
+			"file": "src/runtime-actions-users.ts",
+			"line": 32,
+			"column": 31,
+			"mutator": "BlockStatement",
+			"reason": "Replacing the `return null` body with `{}` falls through to the SELECT for invalid input. For empty/whitespace tokens hashOpaqueToken produces a digest with no matching row, and the downstream null-row guard returns null. Identical observable result."
+		},
+		{
+			"file": "src/runtime-actions-users.ts",
+			"line": 61,
+			"column": 53,
+			"mutator": "EqualityOperator",
+			"reason": "Same exact-millisecond boundary equivalence as runtime-actions-password-reset.ts:47:53 — `Date.parse(row.expires_at) < Date.now()` vs `<=` only differ when both clocks read the identical millisecond. The expiry is computed by one Date.now() and the check reads another; no test can deterministically force equality."
+		},
+		{
+			"file": "src/runtime-actions-users.ts",
+			"line": 117,
+			"column": 8,
+			"mutator": "ConditionalExpression",
+			"reason": "`if (!user) return { ok: false }` is defensive — sqlite's INSERT + immediately-following SELECT ON the same email reliably returns the just-inserted row (verified empirically). The source carries `/* v8 ignore next 3 */` for this reason. Mutating to `false` removes a never-taken branch."
+		},
+		{
+			"file": "src/runtime-actions-users.ts",
+			"line": 194,
+			"column": 8,
+			"mutator": "ConditionalExpression",
+			"reason": "`if (!row) return { ok: false }` is defensive — at this point in consumeRuntimeInviteToken, getD1InviteToken's own null-guard has already filtered invalid tokens, so reaching here with a null row is unreachable in practice. Source carries `/* v8 ignore next 3 */`. Mutating to `false` removes a never-taken branch."
+		},
+		{
 			"file": "src/runtime-actions-misc.ts",
 			"line": 147,
 			"column": 8,
