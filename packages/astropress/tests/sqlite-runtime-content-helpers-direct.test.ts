@@ -7,9 +7,12 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { readAstropressSqliteSchemaSql } from "../src/sqlite-bootstrap.js";
 import {
 	type ContentEntryRow,
+	insertRevision,
 	mapContentEntryRow,
 	pageRecordToContentRecord,
 	queryContentAssignmentIds,
+	replaceAssignments,
+	tryInsertContentEntry,
 } from "../src/sqlite-runtime/content-helpers.js";
 
 function fullRow(over: Partial<ContentEntryRow> = {}): ContentEntryRow {
@@ -65,6 +68,18 @@ describe("mapContentEntryRow — null fallbacks and constant fields", () => {
 		expect(out.ogImage === undefined).toBe(true);
 	});
 
+	it("seoTitle falls back to row.title when row.seo_title is null (kills 81:13 LogicalOperator ?? →&&)", () => {
+		const out = mapContentEntryRow(fullRow({ seo_title: null, title: "FALLBACK-TITLE" }));
+		// Mutant `row.seo_title && row.title` → null when seo_title is null.
+		expect(out.seoTitle).toBe("FALLBACK-TITLE");
+	});
+
+	it("ogDescription is undefined (not null) when row.og_description is null (kills 84:18 LogicalOperator ?? →&&)", () => {
+		const out = mapContentEntryRow(fullRow({ og_description: null }));
+		expect(out.ogDescription).toBeUndefined();
+		expect(out.ogDescription === undefined).toBe(true);
+	});
+
 	it("listingItems is an empty array (kills 75:17 ArrayDeclaration [])", () => {
 		const out = mapContentEntryRow(fullRow());
 		expect(Array.isArray(out.listingItems)).toBe(true);
@@ -104,6 +119,170 @@ describe("pageRecordToContentRecord — seoTitle fallback", () => {
 			status: "published",
 		});
 		expect(out.seoTitle).toBe("TITLE");
+	});
+
+	it("status falls back to 'published' when undefined (kills 94:11 ?? →&& and 94:32 StringLiteral '')", () => {
+		const out = pageRecordToContentRecord({
+			slug: "s",
+			legacyUrl: "/s",
+			title: "T",
+			templateKey: "default",
+			listingItems: [],
+			paginationLinks: [],
+			sourceHtmlPath: "",
+			updatedAt: "",
+			body: "",
+			summary: "",
+			seoTitle: "S",
+			metaDescription: "",
+			kind: "post",
+			// status omitted → undefined → fallback to "published"
+		} as unknown as Parameters<typeof pageRecordToContentRecord>[0]);
+		// Mutant `&&` → undefined; mutant `""` → "".
+		expect(out.status).toBe("published");
+	});
+
+	it("metaDescription empty-string fallback is literal '' (kills 96:72 StringLiteral 'Stryker was here!')", () => {
+		const out = pageRecordToContentRecord({
+			slug: "s",
+			legacyUrl: "/s",
+			title: "T",
+			templateKey: "default",
+			listingItems: [],
+			paginationLinks: [],
+			sourceHtmlPath: "",
+			updatedAt: "",
+			body: "",
+			summary: undefined as unknown as string,
+			seoTitle: "S",
+			metaDescription: undefined as unknown as string,
+			kind: "post",
+			status: "published",
+		});
+		// Mutant replaces "" with "Stryker was here!".
+		expect(out.metaDescription).toBe("");
+		expect(out.metaDescription).not.toContain("Stryker");
+	});
+});
+
+describe("replaceAssignments — empty-input array fallbacks", () => {
+	let db: DatabaseSync;
+	beforeEach(() => {
+		db = new DatabaseSync(":memory:");
+		db.exec(readAstropressSqliteSchemaSql());
+		db.prepare("INSERT INTO authors (id, slug, name) VALUES (1, 'a1', 'A1')").run();
+		db.prepare("INSERT INTO categories (id, slug, name) VALUES (10, 'c1', 'C1')").run();
+		db.prepare("INSERT INTO tags (id, slug, name) VALUES (100, 't1', 'T1')").run();
+		// Pre-seed assignments so we can prove the DELETEs ran but no fallback "Stryker was here" inserts followed.
+		db.prepare("INSERT INTO content_authors (slug, author_id) VALUES ('s', 1)").run();
+		db.prepare("INSERT INTO content_categories (slug, category_id) VALUES ('s', 10)").run();
+		db.prepare("INSERT INTO content_tags (slug, tag_id) VALUES ('s', 100)").run();
+	});
+
+	it("with empty input clears all three assignment tables and inserts nothing (kills 193/199/205 ArrayDeclaration [] → ['Stryker was here'])", () => {
+		// Mutant replaces `?? []` with `?? ["Stryker was here"]` — a non-empty fallback that would try
+		// INSERT OR IGNORE with author_id="Stryker was here". Since the FK column is INTEGER and authors.id=1,
+		// the inserted string would either coerce to 0 or be IGNORED (no matching FK target). Either way the
+		// result table content diverges from the original (still empty after DELETE).
+		replaceAssignments(() => db, "s", {});
+		expect(db.prepare("SELECT COUNT(*) AS n FROM content_authors WHERE slug = 's'").get()).toEqual({
+			n: 0,
+		});
+		expect(
+			db.prepare("SELECT COUNT(*) AS n FROM content_categories WHERE slug = 's'").get(),
+		).toEqual({ n: 0 });
+		expect(db.prepare("SELECT COUNT(*) AS n FROM content_tags WHERE slug = 's'").get()).toEqual({
+			n: 0,
+		});
+	});
+});
+
+describe("insertRevision — body undefined nullification", () => {
+	let db: DatabaseSync;
+	beforeEach(() => {
+		db = new DatabaseSync(":memory:");
+		db.exec(readAstropressSqliteSchemaSql());
+		// content_revisions.slug FK → content_overrides(slug); seed parent row first.
+		db.prepare(
+			"INSERT INTO content_overrides (slug, title, status, updated_by) VALUES ('slug-A', 'T', 'published', 'seed')",
+		).run();
+	});
+
+	it("body undefined becomes literal SQL NULL, not undefined (kills 267:4 LogicalOperator ?? →&&)", () => {
+		// Original: undefined ?? null → null → SQLite NULL.
+		// Mutant: undefined && null → undefined → node:sqlite throws TypeError.
+		expect(() =>
+			insertRevision(
+				() => db,
+				() => "abc",
+				"slug-A",
+				{
+					title: "T",
+					status: "published",
+					body: undefined,
+					seoTitle: "S",
+					metaDescription: "M",
+				},
+				{ email: "u@e" },
+			),
+		).not.toThrow();
+		const row = db
+			.prepare("SELECT body FROM content_revisions WHERE slug = 'slug-A' LIMIT 1")
+			.get() as { body: string | null };
+		expect(row.body).toBeNull();
+	});
+});
+
+describe("tryInsertContentEntry — sourceHtmlPath template and catch branch", () => {
+	let db: DatabaseSync;
+	beforeEach(() => {
+		db = new DatabaseSync(":memory:");
+		db.exec(readAstropressSqliteSchemaSql());
+	});
+
+	it("inserts source_html_path = 'runtime://content/<slug>' (kills 306:5 StringLiteral '')", () => {
+		const ok = tryInsertContentEntry(() => db, {
+			slug: "post-x",
+			legacyUrl: "/legacy/post-x",
+			title: "T",
+			body: "B",
+			summary: "S",
+			seoTitle: "ST",
+			metaDescription: "M",
+		});
+		expect(ok).toBe(true);
+		const row = db
+			.prepare("SELECT source_html_path FROM content_entries WHERE slug = 'post-x'")
+			.get() as { source_html_path: string };
+		expect(row.source_html_path).toBe("runtime://content/post-x");
+	});
+
+	it("returns false (not undefined, not true) on duplicate slug (kills 316:10 BlockStatement {} and 317:10 BooleanLiteral false→true)", () => {
+		const first = tryInsertContentEntry(() => db, {
+			slug: "dup",
+			legacyUrl: "/legacy/dup",
+			title: "T",
+			body: "B",
+			summary: "S",
+			seoTitle: "ST",
+			metaDescription: "M",
+		});
+		expect(first).toBe(true);
+		// Second insert with same slug → primary-key violation → caught → returns false.
+		const second = tryInsertContentEntry(() => db, {
+			slug: "dup",
+			legacyUrl: "/legacy/dup-2",
+			title: "T2",
+			body: "B2",
+			summary: "S2",
+			seoTitle: "ST2",
+			metaDescription: "M2",
+		});
+		// Mutant catch{}: function falls through → returns undefined; strict false check kills it.
+		// Mutant return true: catch returns true; strict false check kills it.
+		expect(second).toBe(false);
+		expect(second).not.toBe(true);
+		expect(second).not.toBeUndefined();
 	});
 });
 
