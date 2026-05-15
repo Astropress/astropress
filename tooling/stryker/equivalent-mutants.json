@@ -2227,6 +2227,41 @@
 			"column": 50,
 			"mutator": "BlockStatement",
 			"reason": "Same equivalence class as L123:7 \u2014 emptying the if-body removes the cost-parameter `return false`. Control falls through to `argon2id`, which throws synchronously for any t/m/p of 0 or NaN (verified empirically); the try/catch returns false. Identical observable result."
+		},
+		{
+			"file": "src/runtime-actions-password-reset.ts",
+			"line": 13,
+			"column": 60,
+			"mutator": "StringLiteral",
+			"reason": "`hashOpaqueToken` uses the KMAC digest tag \"password-reset-token\" for both the insert (line 116) and the lookup (line 35). Mutating the tag to \"\" changes both digests identically, so a self-roundtrip lookup still succeeds. There is no external system (DB, network, other process) that consumes a pre-existing tagged digest, so no test can observe the tag value."
+		},
+		{
+			"file": "src/runtime-actions-password-reset.ts",
+			"line": 18,
+			"column": 6,
+			"mutator": "ConditionalExpression",
+			"reason": "`if (!db || !rawToken.trim()) return null;` is a defensive guard inside `getD1PasswordResetToken`. The mutant `if (false)` falls through. (a) `db` is always non-null here because the only call sites enter via `withLocalStoreFallback`'s onD1 callback which guarantees db. (b) For empty/whitespace `rawToken`, `hashOpaqueToken(rawToken)` is computed and a SELECT runs against `password_reset_tokens.token_hash`; no row matches, so `row` is null, and the next `if (!row || ...)` returns null. Identical observable result for every input."
+		},
+		{
+			"file": "src/runtime-actions-password-reset.ts",
+			"line": 18,
+			"column": 6,
+			"mutator": "LogicalOperator",
+			"reason": "Same equivalence class as L18:6 ConditionalExpression: flipping `||` to `&&` makes the guard equivalent to `false` for every realistic input (db is guaranteed non-null by the enclosing onD1 callback). The downstream null-row branch returns null for any empty/whitespace token. Identical observable result."
+		},
+		{
+			"file": "src/runtime-actions-password-reset.ts",
+			"line": 18,
+			"column": 14,
+			"mutator": "MethodExpression",
+			"reason": "`rawToken.trim()` \u2192 `rawToken` only matters for whitespace-only tokens. For \"   \" the original returns null early; the mutant continues, hashes the whitespace string, and the SELECT returns no row, so the next `if (!row || ...)` returns null. Identical observable result."
+		},
+		{
+			"file": "src/runtime-actions-password-reset.ts",
+			"line": 47,
+			"column": 53,
+			"mutator": "EqualityOperator",
+			"reason": "`Date.parse(row.expires_at) < Date.now()` vs `<=` only differ at the exact-millisecond boundary `expires_at === now`. The expiry is written as `new Date(Date.now() + 3_600_000).toISOString()` and read from SQLite by a separate clock read on `Date.now()`, so the equal-millisecond case is unobservable in practice \u2014 no test can deterministically pin both clocks to the same millisecond."
 		}
 	]
 }

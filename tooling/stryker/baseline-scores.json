@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-05-14T23:08:32.673Z",
+  "updatedAt": "2026-05-15T07:42:29.037Z",
   "scores": {
     "packages/astropress/src/adapters/adapter-record-helpers.ts": {
       "score": 100,
@@ -310,7 +310,7 @@
       "hash": "5a80f7cc935f7a6a5e6f19e928d932b2efb1deaf"
     },
     "packages/astropress/src/runtime-actions-password-reset.ts": {
-      "score": 64.77272727272727,
+      "score": 100,
       "hash": "6aef09b91d4cdb19945450ce10b6856da7773b48"
     },
     "packages/astropress/src/runtime-actions-restore.ts": {
