@@ -2257,6 +2257,13 @@
 			"reason": "`rawToken.trim()` \u2192 `rawToken` only matters for whitespace-only tokens. For \"   \" the original returns null early; the mutant continues, hashes the whitespace string, and the SELECT returns no row, so the next `if (!row || ...)` returns null. Identical observable result."
 		},
 		{
+			"file": "src/runtime-actions-misc.ts",
+			"line": 147,
+			"column": 8,
+			"mutator": "ConditionalExpression",
+			"reason": "`if (!result.success) return { ok: false }` is a defensive guard after a sqlite UPDATE. The driver's BoundStatement.run() always reports success=true in the test runtime (and in the cloudflare D1 runtime), so the branch is unreachable — this is why the source carries `/* v8 ignore next 4 */`. The downstream `if (!row?.deleted_at) return { ok: false }` already covers the only observable no-op case (no matching active row). Mutating to `false` skips a never-taken branch; observable result identical."
+		},
+		{
 			"file": "src/runtime-actions-password-reset.ts",
 			"line": 47,
 			"column": 53,
