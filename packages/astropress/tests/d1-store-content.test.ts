@@ -111,6 +111,15 @@ describe("createD1ContentReadPart.listContentStates / getContentState", () => {
 		expect(state).not.toBeNull();
 	});
 
+	it("findPageRecord matches via the legacyUrl OR-branch when the lookup slug differs from the stored slug — kills the `entry.legacyUrl === `/${slug}`` ConditionalExpression and StringLiteral mutants", async () => {
+		// Seed with slug A but legacy_url that matches `/B`. Lookup by B — slug strict-equality
+		// must miss, forcing the OR's right side to fire.
+		seedEntry("stored-slug-x", { legacy_url: "/looked-up-y" });
+		const state = await createD1ContentReadPart(d1).getContentState("looked-up-y");
+		expect(state).not.toBeNull();
+		expect(state?.slug).toBe("stored-slug-x");
+	});
+
 	it("returns null for an unknown slug", async () => {
 		const state = await createD1ContentReadPart(d1).getContentState("unknown");
 		expect(state).toBeNull();
