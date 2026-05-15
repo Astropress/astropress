@@ -85,6 +85,7 @@
 		"audit:user-journey-coverage": "bun run tooling/scripts/audit-user-journey-coverage.ts",
 		"audit:coverage-scope": "bun run tooling/scripts/audit-coverage-scope.ts",
 		"audit:mutation-scope": "bun run tooling/scripts/audit-mutation-scope.ts",
+		"audit:stryker-exclusions": "bun run tooling/scripts/audit-stryker-exclusions.ts",
 		"audit:ci-sarif-upload": "bun run tooling/scripts/audit-ci-sarif-upload.ts",
 		"audit:nuclei-suppressions": "bun run tooling/scripts/audit-nuclei-suppressions.ts",
 		"audit:required-checks": "bun run tooling/scripts/audit-required-checks.ts",
