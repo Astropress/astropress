@@ -37,8 +37,7 @@ export const GET: APIRoute = async (context) => {
 	return withApiRequest(
 		context.request,
 		{
-			// biome-ignore lint/style/noNonNullAssertion: apiTokens is always set when API token auth middleware is active
-			apiTokens: store.apiTokens!,
+			apiTokens: store.apiTokens,
 			checkRateLimit: store.checkRateLimit,
 			rateLimit: getCmsConfig().api?.rateLimit,
 		},

@@ -12,13 +12,16 @@ import {
 import { loadLocalAdminStore } from "@astropress-diy/astropress/local-runtime-modules.js";
 import type { APIRoute } from "astro";
 
+type LocalAdminStore = Awaited<ReturnType<typeof loadLocalAdminStore>>;
+type ApiTokens = NonNullable<LocalAdminStore["apiTokens"]>;
+
 function buildApiCtx(
-	store: Awaited<ReturnType<typeof loadLocalAdminStore>>,
+	apiTokens: ApiTokens,
+	store: LocalAdminStore,
 	config: ReturnType<typeof getCmsConfig>,
 ) {
 	return {
-		// biome-ignore lint/style/noNonNullAssertion: apiTokens is always set when API token auth middleware is active
-		apiTokens: store.apiTokens!,
+		apiTokens,
 		checkRateLimit: store.checkRateLimit,
 		rateLimit: config.api?.rateLimit,
 	};
@@ -32,7 +35,7 @@ export const GET: APIRoute = async (context) => {
 
 	return withApiRequest(
 		context.request,
-		buildApiCtx(store, getCmsConfig()),
+		buildApiCtx(store.apiTokens, store, getCmsConfig()),
 		["content:read"],
 		async () => {
 			const id = context.params.id ?? "";
@@ -51,7 +54,7 @@ export const PUT: APIRoute = async (context) => {
 
 	return withApiRequest(
 		context.request,
-		buildApiCtx(store, getCmsConfig()),
+		buildApiCtx(store.apiTokens, store, getCmsConfig()),
 		["content:write"],
 		async (tokenId) => {
 			const id = context.params.id ?? "";
@@ -110,7 +113,7 @@ export const DELETE: APIRoute = async (context) => {
 
 	return withApiRequest(
 		context.request,
-		buildApiCtx(store, getCmsConfig()),
+		buildApiCtx(store.apiTokens, store, getCmsConfig()),
 		["content:write"],
 		async () => {
 			const id = context.params.id ?? "";

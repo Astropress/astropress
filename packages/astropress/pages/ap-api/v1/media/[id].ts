@@ -3,13 +3,16 @@ import { apiErrors, withApiRequest } from "@astropress-diy/astropress/api-middle
 import { loadLocalAdminStore } from "@astropress-diy/astropress/local-runtime-modules.js";
 import type { APIRoute } from "astro";
 
+type LocalAdminStore = Awaited<ReturnType<typeof loadLocalAdminStore>>;
+type ApiTokens = NonNullable<LocalAdminStore["apiTokens"]>;
+
 function buildApiCtx(
-	store: Awaited<ReturnType<typeof loadLocalAdminStore>>,
+	apiTokens: ApiTokens,
+	store: LocalAdminStore,
 	config: ReturnType<typeof getCmsConfig>,
 ) {
 	return {
-		// biome-ignore lint/style/noNonNullAssertion: apiTokens is always set when API token auth middleware is active
-		apiTokens: store.apiTokens!,
+		apiTokens,
 		checkRateLimit: store.checkRateLimit,
 		rateLimit: config.api?.rateLimit,
 	};
@@ -23,7 +26,7 @@ export const DELETE: APIRoute = async (context) => {
 
 	return withApiRequest(
 		context.request,
-		buildApiCtx(store, getCmsConfig()),
+		buildApiCtx(store.apiTokens, store, getCmsConfig()),
 		["media:write"],
 		async () => {
 			const id = context.params.id ?? "";

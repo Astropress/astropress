@@ -1,7 +1,5 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
-// @ts-nocheck
-//
 import type { DatabaseSync } from "node:sqlite";
 import { describe, expect, it, vi } from "vitest";
 import type { ContentTypeDefinition, FieldDefinition } from "../src/content-modeling.js";

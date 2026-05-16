@@ -1,5 +1,3 @@
-// @ts-nocheck
-//
 // Tests for runtime-admin-auth.ts when no D1 database is present (local store fallback paths).
 import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
