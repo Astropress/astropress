@@ -191,3 +191,139 @@ describe("runMailchimpImport — Listmonk dispatch", () => {
 		expect(r.error).toContain("Network error");
 	});
 });
+
+describe("runMailchimpImport — survivor pins", () => {
+	it("absent First/Last cells (cells undefined, not empty) still fall back to email-as-name (pins L36/L37 ?? '' fallbacks)", async () => {
+		// CSV declares 3 header columns but each data row supplies only 1 cell.
+		// cols[firstIdx] / cols[lastIdx] are `undefined` (not "") — the `?? ""`
+		// fallback fires and the filter(Boolean).join chain yields `email`.
+		const r = await runMailchimpImport(
+			"Email Address,First Name,Last Name\na@b.com\nb@c.com\n",
+			null,
+		);
+		expect(r.ok).toBe(true);
+		const body = JSON.parse(String(okFetch.mock.calls[0]?.[1]?.body ?? "{}"));
+		expect(String(body.records)).toContain("a@b.com,a@b.com");
+		expect(String(body.records)).toContain("b@c.com,b@c.com");
+	});
+
+	it("logs 'Mailchimp import completed' with the imported count (pins L109 logger.info)", async () => {
+		const logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+		await runMailchimpImport("Email Address\na@b.com\nc@d.com\n", null);
+		const matched = logSpy.mock.calls.find((args) =>
+			args.some((a) => typeof a === "string" && a === "Mailchimp import completed"),
+		);
+		expect(matched).toBeDefined();
+		const meta = matched?.[2] as Record<string, unknown>;
+		expect(meta?.count).toBe(2);
+		logSpy.mockRestore();
+	});
+
+	it("logs 'Listmonk bulk import error' when Listmonk returns non-ok (pins L100 logger.error)", async () => {
+		const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+		(globalThis as { fetch?: unknown }).fetch = vi.fn(
+			async () => new Response("server error body", { status: 500 }) as never,
+		);
+		await runMailchimpImport("Email Address\na@b.com\n", null);
+		const matched = errorSpy.mock.calls.find((args) =>
+			args.some((a) => typeof a === "string" && a === "Listmonk bulk import error"),
+		);
+		expect(matched).toBeDefined();
+		const meta = matched?.[2] as Record<string, unknown>;
+		expect(meta?.status).toBe(500);
+		expect(meta?.body).toBe("server error body");
+		errorSpy.mockRestore();
+	});
+
+	it("logs 'Mailchimp import network error' when fetch throws (pins L112 logger.error)", async () => {
+		const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+		(globalThis as { fetch?: unknown }).fetch = vi.fn(async () => {
+			throw new Error("ECONNREFUSED");
+		});
+		await runMailchimpImport("Email Address\na@b.com\n", null);
+		const matched = errorSpy.mock.calls.find((args) =>
+			args.some((a) => typeof a === "string" && a === "Mailchimp import network error"),
+		);
+		expect(matched).toBeDefined();
+		const meta = matched?.[2] as Record<string, unknown>;
+		expect(String(meta?.err)).toContain("ECONNREFUSED");
+		errorSpy.mockRestore();
+	});
+
+	it("trims leading whitespace before splitting into lines (pins L21 csv.trim() MethodExpression)", async () => {
+		// Leading newlines: csv.trim() removes them so headers = "Email Address".
+		// Without the trim, headers would be "" → emailIdx === -1 → no rows.
+		const r = await runMailchimpImport("\n\nEmail Address\nfoo@bar.com\n", null);
+		expect(r.ok).toBe(true);
+		expect(r.imported).toBe(1);
+	});
+
+	it("finds Email Address when it is not the first column (pins L25 findIndex callback + L29 emailIdx===-1 UnaryOperator)", async () => {
+		// emailIdx is 1, not 0. Mutating the findIndex callback to always-true
+		// makes emailIdx fall to 0 (treating "Name" column as email → skipped
+		// for missing @). Mutating `=== -1` to `=== +1` makes the guard fire
+		// for emailIdx===1 and return []. Either mutation drops imports to 0.
+		const r = await runMailchimpImport("Name,Email Address\nAda,a@b.com\n", null);
+		expect(r.ok).toBe(true);
+		expect(r.imported).toBe(1);
+		const body = JSON.parse(String(okFetch.mock.calls[0]?.[1]?.body ?? "{}"));
+		expect(String(body.records)).toContain("a@b.com");
+	});
+
+	it("does not strip an internal quote inside a header value (pins L24 regex ^/$ anchors)", async () => {
+		// Header literal `Em"ail Address` has no leading/trailing quote. The
+		// anchored regex /^"|"$/g leaves the internal quote in place, so
+		// lowercase comparison against "email address" fails and emailIdx === -1.
+		// Mutating away `^` or `$` (non-anchored `"`) would strip the internal
+		// quote, the comparison would match, and the row would be imported.
+		const r = await runMailchimpImport('Em"ail Address\na@b.com\n', null);
+		expect(r.ok).toBe(false);
+		expect(r.error).toContain("No valid subscriber rows");
+		expect(okFetch).not.toHaveBeenCalled();
+	});
+
+	it("preserves an internal quote inside a field value (pins L33 regex ^/$ anchors)", async () => {
+		// `Ad"a` has no leading or trailing quote — replace(/^"|"$/g, "") leaves it
+		// intact. Mutating away `^` or `$` would turn the regex into a non-anchored
+		// `"` match and strip the internal quote, yielding `Ada` instead.
+		const r = await runMailchimpImport('Email Address,First Name\na@b.com,Ad"a\n', null);
+		expect(r.ok).toBe(true);
+		const body = JSON.parse(String(okFetch.mock.calls[0]?.[1]?.body ?? "{}"));
+		expect(String(body.records)).toContain('a@b.com,Ad"a');
+	});
+
+	it("returns the Last-Name cell when lastIdx === 1 (pins L37 `lastIdx !== -1` UnaryOperator -1→+1)", async () => {
+		// With Last Name as the second column, lastIdx === 1. Original `!== -1`
+		// stays true so the cell is read; mutant `!== +1` would be false and fall
+		// back to "", yielding email-as-name instead of "Smith".
+		const r = await runMailchimpImport("Email Address,Last Name\nfoo@bar.com,Smith\n", null);
+		expect(r.ok).toBe(true);
+		const body = JSON.parse(String(okFetch.mock.calls[0]?.[1]?.body ?? "{}"));
+		expect(String(body.records)).toContain("foo@bar.com,Smith");
+	});
+
+	it('joins the Listmonk records body with newlines (pins L80 StringLiteral `\\n`→`""`)', async () => {
+		await runMailchimpImport("Email Address\na@b.com\nc@d.com\n", null);
+		const body = JSON.parse(String(okFetch.mock.calls[0]?.[1]?.body ?? "{}"));
+		const records = String(body.records);
+		// header + 2 rows joined by "\n" → exactly 2 newlines. Mutant "" join
+		// concatenates everything into a single line.
+		expect(records.split("\n")).toHaveLength(3);
+		expect(records).toMatch(/^email,name\na@b\.com,a@b\.com\nc@d\.com,c@d\.com$/);
+	});
+
+	it("CSV with no header row (empty first line) returns no records (pins L22 ConditionalExpression false)", async () => {
+		// lines.length < 2: empty input -> [] -> returns ok:false
+		const r = await runMailchimpImport("", null);
+		expect(r.ok).toBe(false);
+		expect(r.error).toContain("No valid subscriber rows found");
+	});
+
+	it("header row gets parsed when emailIdx is found (pins L29 emailIdx === -1 conditional)", async () => {
+		// emailIdx is a valid index (0) → bypass the early-return. With invalid
+		// rows that lack @, records ends up empty and we get the no-rows error.
+		const r = await runMailchimpImport("Email Address\nnotanemail\n", null);
+		expect(r.ok).toBe(false);
+		expect(r.error).toContain("No valid subscriber rows found");
+	});
+});

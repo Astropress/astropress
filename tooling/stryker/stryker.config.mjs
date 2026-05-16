@@ -6,10 +6,24 @@
 // Or from repo root:
 //   bun run test:mutants
 //
+// When STRYKER_SHARD=a or =b is set, the mutate set is sharded
+// alphabetically by source filename (a–m and n–z). Each shard runs
+// independently with its own incremental cache key in CI, halving the
+// wall-clock for the daily mutation-test workflow. Unset (or any other
+// value) → full suite, identical to the historical behaviour.
+const SHARD = process.env.STRYKER_SHARD ?? "";
+const shardFilters =
+	SHARD === "a"
+		? ["!src/[n-zN-Z]*.ts", "!src/[n-zN-Z]*/**/*.ts"]
+		: SHARD === "b"
+			? ["!src/[a-mA-M]*.ts", "!src/[a-mA-M]*/**/*.ts"]
+			: [];
+
 export default {
 	plugins: ["@stryker-mutator/vitest-runner"],
 	mutate: [
 		"src/**/*.ts",
+		...shardFilters,
 		"!src/**/*.d.ts",
 		"!src/**/index.ts",
 		"!src/persistence-types.ts",
@@ -52,14 +66,20 @@ export default {
 	],
 	testRunner: "vitest",
 	coverageAnalysis: "perTest",
-	vitest: { related: false },
+	// related:true matches prepush-mutation-gate.ts:293; stryker uses vitest's
+	// --related to limit per-mutant test execution to files importing the
+	// mutated source. Was false historically; the prepush gate has long set
+	// true for speed parity.
+	vitest: { related: true },
 	reporters: ["clear-text", "html", "json"],
 	htmlReporter: { fileName: "../../reports/mutation/index.html" },
 	jsonReporter: { fileName: "../../reports/mutation/report.json" },
 	// inPlace: false (default) — mutate in a sandbox copy, not the real source.
 	// A SIGKILLed run leaves sandbox dirs to sweep but never corrupts src/.
 	incremental: true,
-	incrementalFile: "../../.stryker-incremental.json",
+	incrementalFile: SHARD
+		? `../../.stryker-incremental-${SHARD}.json`
+		: "../../.stryker-incremental.json",
 	timeoutMS: 120000,
 	ignoreStatic: false,
 	thresholds: { high: 95, low: 95, break: 95 },

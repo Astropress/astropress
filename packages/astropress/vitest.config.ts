@@ -43,7 +43,11 @@ export default defineConfig({
 	test: {
 		setupFiles: ["tests/setup/html-rewriter-polyfill.ts"],
 		include: ["tests/**/*.test.ts"],
-		testTimeout: 20000,
+		// 30s default leaves headroom for slow integration tests (Argon2id
+		// hashes, full-WXR import paths) under tier-2/3 parallel load when
+		// the prepush gate runs test:coverage alongside stryker. Real
+		// regressions still surface; only heavy-load flakes are absorbed.
+		testTimeout: 30000,
 		hookTimeout: 60000,
 		unstubGlobals: true,
 		// Default isolation kept on (no pool/maxWorkers/isolate overrides) so

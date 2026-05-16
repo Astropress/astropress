@@ -45,7 +45,6 @@ export function pickAdminLocaleFromAcceptLanguage(
 			const q = qParam ? Number.parseFloat(qParam.split("=")[1]) : 1;
 			return { tag: tag.toLowerCase(), q: Number.isFinite(q) ? q : 1 };
 		})
-		.filter((entry) => entry.tag.length > 0)
 		.sort((a, b) => b.q - a.q);
 	for (const { tag } of entries) {
 		const primary = tag.split("-")[0];

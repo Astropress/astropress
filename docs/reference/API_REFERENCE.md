@@ -3,7 +3,7 @@
 Auto-generated from TypeScript source via the TypeScript compiler API.
 Run `bun run docs:api` to regenerate.
 
-Generated: 2026-05-06
+Generated: 2026-05-10
 
 ---
 
@@ -973,12 +973,12 @@ function consumeRuntimePasswordResetToken(rawToken: string, password: string, lo
 
 #### `createRuntimeAuthor`
 ```ts
-function createRuntimeAuthor(input: { name: string; slug?: string | undefined; bio?: string | undefined; }, actor: Actor, locals: Locals | null | undefined): Promise<unknown>
+function createRuntimeAuthor(input: { name: string; slug?: string | undefined; bio?: string | undefined; }, actor: Actor, locals: Locals | null | undefined): Promise<{ ok: true; } | { ok: false; error: string; }>
 ```
 
 #### `createRuntimeCategory`
 ```ts
-function createRuntimeCategory(input: { name: string; slug?: string | undefined; description?: string | undefined; }, actor: Actor, locals: Locals | null | undefined): Promise<unknown>
+function createRuntimeCategory(input: { name: string; slug?: string | undefined; description?: string | undefined; }, actor: Actor, locals: Locals | null | undefined): Promise<{ ok: true; } | { ok: false; error: string; }>
 ```
 
 #### `createRuntimeContentRecord`
@@ -1003,17 +1003,17 @@ function createRuntimeRedirectRule(input: { sourcePath: string; targetPath: stri
 
 #### `createRuntimeTag`
 ```ts
-function createRuntimeTag(input: { name: string; slug?: string | undefined; description?: string | undefined; }, actor: Actor, locals: Locals | null | undefined): Promise<unknown>
+function createRuntimeTag(input: { name: string; slug?: string | undefined; description?: string | undefined; }, actor: Actor, locals: Locals | null | undefined): Promise<{ ok: true; } | { ok: false; error: string; }>
 ```
 
 #### `deleteRuntimeAuthor`
 ```ts
-function deleteRuntimeAuthor(id: number, actor: Actor, locals: Locals | null | undefined): Promise<unknown>
+function deleteRuntimeAuthor(id: number, actor: Actor, locals: Locals | null | undefined): Promise<{ ok: true; } | { ok: false; error: string; }>
 ```
 
 #### `deleteRuntimeCategory`
 ```ts
-function deleteRuntimeCategory(id: number, actor: Actor, locals: Locals | null | undefined): Promise<unknown>
+function deleteRuntimeCategory(id: number, actor: Actor, locals: Locals | null | undefined): Promise<{ ok: true; } | { ok: false; error: string; }>
 ```
 
 #### `deleteRuntimeMediaAsset`
@@ -1028,7 +1028,7 @@ function deleteRuntimeRedirectRule(sourcePath: string, actor: Actor, locals: Loc
 
 #### `deleteRuntimeTag`
 ```ts
-function deleteRuntimeTag(id: number, actor: Actor, locals: Locals | null | undefined): Promise<unknown>
+function deleteRuntimeTag(id: number, actor: Actor, locals: Locals | null | undefined): Promise<{ ok: true; } | { ok: false; error: string; }>
 ```
 
 #### `getRuntimeInviteRequest`
@@ -1078,12 +1078,12 @@ function unsuspendRuntimeAdminUser(email: string, actor: Actor, locals: Locals |
 
 #### `updateRuntimeAuthor`
 ```ts
-function updateRuntimeAuthor(input: { id: number; name: string; slug?: string | undefined; bio?: string | undefined; }, actor: Actor, locals: Locals | null | undefined): Promise<unknown>
+function updateRuntimeAuthor(input: { id: number; name: string; slug?: string | undefined; bio?: string | undefined; }, actor: Actor, locals: Locals | null | undefined): Promise<{ ok: true; } | { ok: false; error: string; }>
 ```
 
 #### `updateRuntimeCategory`
 ```ts
-function updateRuntimeCategory(input: { id: number; name: string; slug?: string | undefined; description?: string | undefined; }, actor: Actor, locals: Locals | null | undefined): Promise<unknown>
+function updateRuntimeCategory(input: { id: number; name: string; slug?: string | undefined; description?: string | undefined; }, actor: Actor, locals: Locals | null | undefined): Promise<{ ok: true; } | { ok: false; error: string; }>
 ```
 
 #### `updateRuntimeMediaAsset`
@@ -1093,7 +1093,7 @@ function updateRuntimeMediaAsset(input: { id: string; title?: string | undefined
 
 #### `updateRuntimeTag`
 ```ts
-function updateRuntimeTag(input: { id: number; name: string; slug?: string | undefined; description?: string | undefined; }, actor: Actor, locals: Locals | null | undefined): Promise<unknown>
+function updateRuntimeTag(input: { id: number; name: string; slug?: string | undefined; description?: string | undefined; }, actor: Actor, locals: Locals | null | undefined): Promise<{ ok: true; } | { ok: false; error: string; }>
 ```
 
 #### `updateRuntimeTranslationState`

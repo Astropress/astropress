@@ -52,6 +52,10 @@ const ALLOWLIST: ReadonlyMap<string, string> = new Map([
 		"db-migrate-ops.test.ts",
 		"migration runner contract — exercises the full apply/rollback API surface",
 	],
+	[
+		"d1-migrate-ops.test.ts",
+		"D1 migration runner contract — exercises apply/rollback/splitSqlStatements via numbered SQL fixtures",
+	],
 	["sync-git.test.ts", "git-sync adapter contract — exercises export/import/sqlite paths together"],
 	[
 		"audit-registry.test.ts",
@@ -60,6 +64,14 @@ const ALLOWLIST: ReadonlyMap<string, string> = new Map([
 	[
 		"deploy-and-sync.contract.test.ts",
 		"deploy + sync contract — runs all deploy targets through one adapter API",
+	],
+	[
+		"cloudflare-vite-integration.test.ts",
+		"resolveId contract — must verify every (module-name × extension) variant resolves",
+	],
+	[
+		"wordpress-import-direct.test.ts",
+		"WordPress importer artifact-filename contract — must verify every staged file lands at its exact documented path",
 	],
 ]);
 

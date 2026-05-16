@@ -1,9 +1,19 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { verifyMlDsaMessage } from "../src/crypto-primitives.js";
 import type { WebhookEvent, WebhookRecord, WebhookStore } from "../src/platform-contracts";
 import { createWebhookStore } from "../src/sqlite-runtime/webhooks.js";
 import { makeDb } from "./helpers/make-db.js";
+
+const { loggerErrorSpy } = vi.hoisted(() => ({ loggerErrorSpy: vi.fn() }));
+
+vi.mock("../src/runtime-logger", () => ({
+	createLogger: () => ({
+		info: vi.fn(),
+		warn: vi.fn(),
+		error: loggerErrorSpy,
+	}),
+}));
 
 describe("WebhookRecord shape", () => {
 	it("has all required fields", () => {
@@ -167,6 +177,136 @@ describe("WebhookStore SQLite implementation", () => {
 
 		await store.dispatch("content.published", { id: "x" });
 		expect(callCount).toBe(0);
+	});
+});
+
+describe("WebhookStore mutation pins", () => {
+	function insertWebhookRow(
+		db: ReturnType<typeof makeDb>,
+		row: { id: string; url: string; active: number },
+	) {
+		db.prepare(
+			"INSERT INTO webhooks (id, url, events, secret_hash, active) VALUES (?, ?, ?, ?, ?)",
+		).run(row.id, row.url, JSON.stringify(["content.published"]), "secret", row.active);
+	}
+
+	it("list: maps the active column to a boolean (kills L27 ConditionalExpression true/false & EqualityOperator)", async () => {
+		// rowToRecord computes `active: row.active === 1`. Mutants that force the
+		// result to true/false, or flip `===` to `!==`, are only observable when
+		// list() returns both an active (1) and an inactive (0) non-deleted row.
+		const db = makeDb();
+		insertWebhookRow(db, { id: "wh_on", url: "https://on.example.com", active: 1 });
+		insertWebhookRow(db, { id: "wh_off", url: "https://off.example.com", active: 0 });
+		const store = createWebhookStore(db, fetch);
+
+		const list = await store.list();
+		expect(list.find((w) => w.id === "wh_on")?.active).toBe(true);
+		expect(list.find((w) => w.id === "wh_off")?.active).toBe(false);
+	});
+
+	it("list: maps last_fired_at to lastFiredAt after a dispatch (kills L29 LogicalOperator ?? → &&)", async () => {
+		// `lastFiredAt: row.last_fired_at ?? null`. With `&&` the mapping yields
+		// null even when the column holds a timestamp.
+		const db = makeDb();
+		const mockFetch = async () => new Response("ok", { status: 200 });
+		const store = createWebhookStore(db, mockFetch as typeof fetch);
+		const { record } = await store.create({
+			url: "https://hooks.example.com/receive",
+			events: ["content.published"],
+		});
+		await store.dispatch("content.published", { id: "x" });
+
+		const listed = (await store.list()).find((w) => w.id === record.id);
+		expect(typeof listed?.lastFiredAt).toBe("string");
+		expect(listed?.lastFiredAt).toBeTruthy();
+	});
+
+	it("dispatch: request body carries the event, payload, and a timestamp (kills L87 ObjectLiteral {})", async () => {
+		const db = makeDb();
+		let capturedRequest: Request | undefined;
+		const mockFetch = async (req: Request) => {
+			capturedRequest = req;
+			return new Response("ok", { status: 200 });
+		};
+		const store = createWebhookStore(db, mockFetch as typeof fetch);
+		await store.create({
+			url: "https://hooks.example.com/receive",
+			events: ["content.published"],
+		});
+
+		await store.dispatch("content.published", { id: "post-7", status: "published" });
+
+		const body = JSON.parse((await capturedRequest?.clone().text()) ?? "{}") as {
+			event?: string;
+			payload?: { id?: string; status?: string };
+			timestamp?: string;
+		};
+		expect(body.event).toBe("content.published");
+		expect(body.payload).toEqual({ id: "post-7", status: "published" });
+		expect(typeof body.timestamp).toBe("string");
+	});
+
+	it("dispatch: sends an application/json Content-Type header (kills L102 StringLiteral '')", async () => {
+		const db = makeDb();
+		let capturedRequest: Request | undefined;
+		const mockFetch = async (req: Request) => {
+			capturedRequest = req;
+			return new Response("ok", { status: 200 });
+		};
+		const store = createWebhookStore(db, mockFetch as typeof fetch);
+		await store.create({
+			url: "https://hooks.example.com/receive",
+			events: ["content.published"],
+		});
+
+		await store.dispatch("content.published", { id: "x" });
+		expect(capturedRequest?.headers.get("content-type")).toBe("application/json");
+	});
+
+	it("dispatch: successful delivery records last_fired_at (kills L118 StringLiteral '')", async () => {
+		const db = makeDb();
+		const mockFetch = async () => new Response("ok", { status: 200 });
+		const store = createWebhookStore(db, mockFetch as typeof fetch);
+		const { record } = await store.create({
+			url: "https://hooks.example.com/receive",
+			events: ["content.published"],
+		});
+
+		await store.dispatch("content.published", { id: "x" });
+		const row = db.prepare("SELECT last_fired_at FROM webhooks WHERE id = ?").get(record.id) as {
+			last_fired_at: string | null;
+		};
+		expect(row.last_fired_at).not.toBeNull();
+	});
+
+	it("dispatch: failed delivery leaves last_fired_at NULL and logs the error (kills L111 BlockStatement, L112 StringLiteral & ObjectLiteral)", async () => {
+		// The catch block logs and `return`s before the last_fired_at UPDATE.
+		// Emptying it (BlockStatement {}) would let the UPDATE run on a failed
+		// delivery; blanking the log message or its meta object drops the error
+		// context.
+		loggerErrorSpy.mockClear();
+		const db = makeDb();
+		const mockFetch = async () => {
+			throw new Error("Network error");
+		};
+		const store = createWebhookStore(db, mockFetch as typeof fetch);
+		const { record } = await store.create({
+			url: "https://fail.example.com/hook",
+			events: ["content.updated"],
+		});
+
+		await store.dispatch("content.updated", { id: "x" });
+
+		const row = db.prepare("SELECT last_fired_at FROM webhooks WHERE id = ?").get(record.id) as {
+			last_fired_at: string | null;
+		};
+		expect(row.last_fired_at).toBeNull();
+
+		expect(loggerErrorSpy).toHaveBeenCalledTimes(1);
+		const [message, meta] = loggerErrorSpy.mock.calls[0] as [string, { error?: unknown }];
+		expect(message).toContain("content.updated");
+		expect(message).toContain("https://fail.example.com/hook");
+		expect(meta.error).toBeInstanceOf(Error);
 	});
 });
 

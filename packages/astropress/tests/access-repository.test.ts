@@ -74,6 +74,45 @@ describe("access repository — roles + policies", () => {
 		expect(repo.getRole(role.id)).toBeUndefined();
 	});
 
+	test("createRole defaults description to '' and isSystem to false (pins L110/L114/L115)", () => {
+		const repo = createAccessRepository(store);
+		const role = repo.createRole({ name: "WithoutDesc" });
+		expect(role.description).toBe("");
+		expect(role.isSystem).toBe(false);
+		const fromDb = repo.getRole(role.id);
+		expect(fromDb?.description).toBe("");
+		expect(fromDb?.isSystem).toBe(false);
+	});
+
+	test("updateRole with only name applies name but not description (pins L125/L129 conditionals)", () => {
+		const repo = createAccessRepository(store);
+		const role = repo.createRole({ name: "BeforeRename", description: "orig" });
+		repo.updateRole(role.id, { name: "AfterRename" });
+		const updated = repo.getRole(role.id);
+		expect(updated?.name).toBe("AfterRename");
+		expect(updated?.description).toBe("orig");
+	});
+
+	test("updateRole with only description applies description but not name (pins L125/L129 conditionals)", () => {
+		const repo = createAccessRepository(store);
+		const role = repo.createRole({ name: "RenameMe", description: "before" });
+		repo.updateRole(role.id, { description: "after" });
+		const updated = repo.getRole(role.id);
+		expect(updated?.name).toBe("RenameMe");
+		expect(updated?.description).toBe("after");
+	});
+
+	test("updateRole with no fields is a no-op (pins L133 sets.length === 0 early return)", () => {
+		const repo = createAccessRepository(store);
+		const role = repo.createRole({ name: "NoChange", description: "stable" });
+		const beforeUpdated = repo.getRole(role.id)?.updatedAt;
+		repo.updateRole(role.id, {});
+		const after = repo.getRole(role.id);
+		expect(after?.name).toBe("NoChange");
+		expect(after?.description).toBe("stable");
+		expect(after?.updatedAt).toBe(beforeUpdated);
+	});
+
 	test("addRolePolicy / listRolePolicies persists condition JSON", () => {
 		const repo = createAccessRepository(store);
 		const role = repo.createRole({ name: "OwnerEditor" });
@@ -343,6 +382,72 @@ describe("end-to-end: repository → policy engine", () => {
 		});
 		const r = evaluate(adminSubject, "anything:goes", repo.resolvePoliciesForUser(admin.id));
 		expect(r.decision).toBe("allow");
+	});
+
+	test("role-derived policies carry source { kind: 'role', roleId, roleName } (pins L331/L339 mutants)", () => {
+		const repo = createAccessRepository(store);
+		const role = repo.createRole({ name: "Reviewer", description: "" });
+		repo.addRolePolicy({
+			roleId: role.id,
+			effect: "allow",
+			action: "posts:review",
+		});
+		repo.assignRole({ userId: editorUser.id, roleId: role.id });
+
+		const policies = repo.resolvePoliciesForUser(editorUser.id);
+		expect(policies).toHaveLength(1);
+		const src = policies[0]?.source;
+		expect(src?.kind).toBe("role");
+		// Pins L331 LogicalOperator `role?.name && ra.roleId` (mutant returns ra.roleId
+		// when role.name is truthy) and the ObjectLiteral mutant that drops both fields.
+		expect((src as { roleName?: string })?.roleName).toBe("Reviewer");
+		expect((src as { roleId?: string })?.roleId).toBe(role.id);
+	});
+
+	test("resolvePoliciesForUser preserves user-policy condition (pins L348 LogicalOperator `up.condition ?? undefined`)", () => {
+		const repo = createAccessRepository(store);
+		repo.addUserPolicy({
+			userId: editorUser.id,
+			effect: "allow",
+			action: "posts:edit",
+			condition: { op: "stringEquals", left: "a", right: "b" },
+		});
+		const policies = repo.resolvePoliciesForUser(editorUser.id);
+		expect(policies).toHaveLength(1);
+		// Mutant `up.condition && undefined` would drop the condition to undefined
+		// when up.condition is the truthy object — original keeps the object intact.
+		expect(policies[0]?.condition).toEqual({
+			op: "stringEquals",
+			left: "a",
+			right: "b",
+		});
+	});
+
+	test("addRolePolicy return value preserves the supplied condition (pins L174 LogicalOperator)", () => {
+		const repo = createAccessRepository(store);
+		const role = repo.createRole({ name: "WithCond" });
+		const rec = repo.addRolePolicy({
+			roleId: role.id,
+			effect: "allow",
+			action: "posts:edit",
+			condition: { op: "stringEquals", left: "a", right: "b" },
+		});
+		// Mutant `input.condition && null` collapses the truthy condition object to null;
+		// original `?? null` keeps the object.
+		expect(rec.condition).toEqual({ op: "stringEquals", left: "a", right: "b" });
+	});
+
+	test("addUserPolicy return value preserves condition and grantedBy (pins L254/L256 LogicalOperators)", () => {
+		const repo = createAccessRepository(store);
+		const rec = repo.addUserPolicy({
+			userId: editorUser.id,
+			effect: "allow",
+			action: "audit:view",
+			condition: { op: "stringEquals", left: "a", right: "b" },
+			grantedBy: "admin@example.com",
+		});
+		expect(rec.condition).toEqual({ op: "stringEquals", left: "a", right: "b" });
+		expect(rec.grantedBy).toBe("admin@example.com");
 	});
 
 	test("direct user policy stacks onto role policies", () => {

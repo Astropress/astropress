@@ -1,4 +1,15 @@
 import type { SqliteDatabaseLike } from "./sqlite-bootstrap.js";
+import {
+	ADMIN_USERS_DROP_ROLE_HEAD,
+	ADMIN_USERS_DROP_ROLE_TAIL,
+	CONTENT_LOCKS_DDL,
+	FTS5_INDEX_DDL,
+	REBUILD_OVERRIDES_HEAD,
+	REBUILD_OVERRIDES_TAIL,
+	REBUILD_REVISIONS_FOOTER,
+	REBUILD_REVISIONS_MID_AFTER_TAGS,
+	REBUILD_REVISIONS_MID_BEFORE_AUTHORS,
+} from "./sqlite-schema-compat-data.js";
 
 export function getTableColumns(db: SqliteDatabaseLike, table: string) {
 	return (db.prepare(`PRAGMA table_info(${table})`).all() as Array<{ name: string }>).map(
@@ -34,122 +45,21 @@ export function rebuildContentTablesForCompatibility(
 	const revisionScheduledAtSelect = options.hasRevisionScheduledAt ? "scheduled_at" : "NULL";
 	const revisionNoteSelect = options.hasRevisionNote ? "revision_note" : "NULL";
 
-	db.exec(`
-    PRAGMA foreign_keys = OFF;
-
-    CREATE TABLE IF NOT EXISTS content_overrides__migrated (
-      slug TEXT PRIMARY KEY,
-      title TEXT NOT NULL,
-      status TEXT NOT NULL CHECK(status IN ('draft', 'review', 'published', 'archived')),
-      scheduled_at TEXT,
-      body TEXT,
-      seo_title TEXT,
-      meta_description TEXT,
-      excerpt TEXT,
-      og_title TEXT,
-      og_description TEXT,
-      og_image TEXT,
-      canonical_url_override TEXT,
-      robots_directive TEXT,
-      metadata TEXT,
-      updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
-      updated_by TEXT NOT NULL
-    );
-
-    INSERT INTO content_overrides__migrated (
-      slug, title, status, scheduled_at, body, seo_title, meta_description, excerpt, og_title,
-      og_description, og_image, canonical_url_override, robots_directive, metadata, updated_at, updated_by
-    )
-    SELECT
-      slug,
-      title,
-      CASE
-        WHEN status IN ('draft', 'review', 'published', 'archived') THEN status
-        ELSE 'draft'
-      END,
-      ${overrideScheduledAtSelect},
-      body,
-      seo_title,
-      meta_description,
-      excerpt,
-      og_title,
-      og_description,
-      og_image,
-      canonical_url_override,
-      robots_directive,
-      NULL,
-      updated_at,
-      updated_by
-    FROM content_overrides;
-
-    DROP TABLE content_overrides;
-    ALTER TABLE content_overrides__migrated RENAME TO content_overrides;
-    CREATE INDEX IF NOT EXISTS idx_content_overrides_updated_at ON content_overrides(updated_at DESC);
-
-    CREATE TABLE IF NOT EXISTS content_revisions__migrated (
-      id TEXT PRIMARY KEY,
-      slug TEXT NOT NULL,
-      source TEXT NOT NULL CHECK(source IN ('imported', 'reviewed')),
-      title TEXT NOT NULL,
-      status TEXT NOT NULL CHECK(status IN ('draft', 'review', 'published', 'archived')),
-      scheduled_at TEXT,
-      body TEXT,
-      seo_title TEXT,
-      meta_description TEXT,
-      excerpt TEXT,
-      og_title TEXT,
-      og_description TEXT,
-      og_image TEXT,
-      author_ids TEXT,
-      category_ids TEXT,
-      tag_ids TEXT,
-      canonical_url_override TEXT,
-      robots_directive TEXT,
-      revision_note TEXT,
-      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      created_by TEXT,
-      FOREIGN KEY(slug) REFERENCES content_overrides(slug) ON DELETE CASCADE
-    );
-
-    INSERT INTO content_revisions__migrated (
-      id, slug, source, title, status, scheduled_at, body, seo_title, meta_description, excerpt,
-      og_title, og_description, og_image, author_ids, category_ids, tag_ids,
-      canonical_url_override, robots_directive, revision_note, created_at, created_by
-    )
-    SELECT
-      id,
-      slug,
-      source,
-      title,
-      CASE
-        WHEN status IN ('draft', 'review', 'published', 'archived') THEN status
-        ELSE 'draft'
-      END,
-      ${revisionScheduledAtSelect},
-      body,
-      seo_title,
-      meta_description,
-      excerpt,
-      og_title,
-      og_description,
-      og_image,
-      ${authorIdsSelect},
-      ${categoryIdsSelect},
-      ${tagIdsSelect},
-      canonical_url_override,
-      robots_directive,
-      ${revisionNoteSelect},
-      created_at,
-      created_by
-    FROM content_revisions;
-
-    DROP TABLE content_revisions;
-    ALTER TABLE content_revisions__migrated RENAME TO content_revisions;
-    CREATE INDEX IF NOT EXISTS idx_content_revisions_slug ON content_revisions(slug);
-    CREATE INDEX IF NOT EXISTS idx_content_revisions_created_at ON content_revisions(created_at DESC);
-
-    PRAGMA foreign_keys = ON;
-  `);
+	db.exec(
+		REBUILD_OVERRIDES_HEAD +
+			overrideScheduledAtSelect +
+			REBUILD_OVERRIDES_TAIL +
+			revisionScheduledAtSelect +
+			REBUILD_REVISIONS_MID_BEFORE_AUTHORS +
+			authorIdsSelect +
+			",\n      " +
+			categoryIdsSelect +
+			",\n      " +
+			tagIdsSelect +
+			REBUILD_REVISIONS_MID_AFTER_TAGS +
+			revisionNoteSelect +
+			REBUILD_REVISIONS_FOOTER,
+	);
 }
 
 export function ensureFts5SearchIndex(db: SqliteDatabaseLike) {
@@ -159,33 +69,7 @@ export function ensureFts5SearchIndex(db: SqliteDatabaseLike) {
 	if (existing) {
 		return;
 	}
-
-	db.exec(`
-    CREATE VIRTUAL TABLE content_fts USING fts5(
-      slug UNINDEXED, title, body,
-      content='content_overrides', content_rowid='rowid'
-    );
-
-    INSERT INTO content_fts(rowid, slug, title, body)
-    SELECT rowid, slug, title, COALESCE(body, '') FROM content_overrides;
-
-    CREATE TRIGGER content_fts_ai AFTER INSERT ON content_overrides BEGIN
-      INSERT INTO content_fts(rowid, slug, title, body)
-      VALUES (new.rowid, new.slug, new.title, COALESCE(new.body, ''));
-    END;
-
-    CREATE TRIGGER content_fts_au AFTER UPDATE ON content_overrides BEGIN
-      INSERT INTO content_fts(content_fts, rowid, slug, title, body)
-      VALUES ('delete', old.rowid, old.slug, old.title, COALESCE(old.body, ''));
-      INSERT INTO content_fts(rowid, slug, title, body)
-      VALUES (new.rowid, new.slug, new.title, COALESCE(new.body, ''));
-    END;
-
-    CREATE TRIGGER content_fts_ad AFTER DELETE ON content_overrides BEGIN
-      INSERT INTO content_fts(content_fts, rowid, slug, title, body)
-      VALUES ('delete', old.rowid, old.slug, old.title, COALESCE(old.body, ''));
-    END;
-  `);
+	db.exec(FTS5_INDEX_DDL);
 }
 
 export function ensureLegacySchemaCompatibility(db: SqliteDatabaseLike) {
@@ -216,24 +100,18 @@ export function ensureLegacySchemaCompatibility(db: SqliteDatabaseLike) {
 		db.exec("ALTER TABLE schema_migrations ADD COLUMN rollback_sql TEXT");
 	}
 
-	// ABAC migration: existing DBs may have admin_users with the old
-	// 'role TEXT NOT NULL CHECK(...)' column and no is_admin column. Add
-	// is_admin if missing and backfill from the legacy role enum, then
-	// drop the role column entirely (terminal access-PR migration).
+	// ABAC migration: legacy admin_users may lack is_admin. Add the column
+	// with a DEFAULT 0; the terminal rebuild below re-derives the actual
+	// value from role (where present) via a CASE in its INSERT...SELECT,
+	// so a separate UPDATE backfill here would be redundant.
 	const adminUserColumns = new Set(getTableColumns(db, "admin_users"));
 	if (adminUserColumns.size > 0 && !adminUserColumns.has("is_admin")) {
 		db.exec("ALTER TABLE admin_users ADD COLUMN is_admin INTEGER NOT NULL DEFAULT 0");
-		// Backfill: anyone whose legacy role was 'admin' becomes is_admin=1.
-		if (adminUserColumns.has("role")) {
-			db.exec("UPDATE admin_users SET is_admin = 1 WHERE role = 'admin'");
-		}
 	}
 
 	// Terminal access-PR migration: rebuild admin_users without the legacy
-	// `role` column. Fires when the column is still present after the
-	// is_admin backfill above. Idempotent: only runs when role exists.
-	// Tolerates legacy v0.0.1 schemas that never had `active` or
-	// `created_at` columns by selecting safe defaults for missing columns.
+	// `role` column. Fires when the column is still present. Idempotent:
+	// only runs when role exists.
 	const refreshedAdminColumns = new Set(getTableColumns(db, "admin_users"));
 	if (refreshedAdminColumns.has("role")) {
 		const activeExpr = refreshedAdminColumns.has("active") ? "active" : "1";
@@ -241,42 +119,18 @@ export function ensureLegacySchemaCompatibility(db: SqliteDatabaseLike) {
 			? "created_at"
 			: "CURRENT_TIMESTAMP";
 		const nameExpr = refreshedAdminColumns.has("name") ? "name" : "email";
-		db.exec(`
-      PRAGMA foreign_keys = OFF;
-      CREATE TABLE admin_users__migrated (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        email TEXT NOT NULL UNIQUE,
-        password_hash TEXT NOT NULL,
-        is_admin INTEGER NOT NULL DEFAULT 0,
-        name TEXT NOT NULL,
-        active INTEGER NOT NULL DEFAULT 1,
-        created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-      );
-      INSERT INTO admin_users__migrated (id, email, password_hash, is_admin, name, active, created_at)
-        SELECT id, email, password_hash,
-               CASE WHEN is_admin = 1 OR role = 'admin' THEN 1 ELSE 0 END,
-               ${nameExpr}, ${activeExpr}, ${createdAtExpr}
-        FROM admin_users;
-      DROP TABLE admin_users;
-      ALTER TABLE admin_users__migrated RENAME TO admin_users;
-      PRAGMA foreign_keys = ON;
-    `);
+		db.exec(
+			ADMIN_USERS_DROP_ROLE_HEAD +
+				nameExpr +
+				", " +
+				activeExpr +
+				", " +
+				createdAtExpr +
+				ADMIN_USERS_DROP_ROLE_TAIL,
+		);
 	}
 
-	const contentLocksExists = getTableSql(db, "content_locks");
-	if (!contentLocksExists) {
-		db.exec(`
-      CREATE TABLE IF NOT EXISTS content_locks (
-        slug TEXT PRIMARY KEY,
-        locked_by_email TEXT NOT NULL,
-        locked_by_name TEXT NOT NULL,
-        lock_token TEXT NOT NULL,
-        expires_at TEXT NOT NULL,
-        acquired_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-      );
-      CREATE INDEX IF NOT EXISTS idx_content_locks_expires_at ON content_locks(expires_at);
-    `);
-	}
+	db.exec(CONTENT_LOCKS_DDL);
 
 	const overrideSql = getTableSql(db, "content_overrides") ?? "";
 	const revisionSql = getTableSql(db, "content_revisions") ?? "";

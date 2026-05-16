@@ -85,6 +85,44 @@ describe("getAlternateLinksForEnglishRoute()", () => {
 		const links = getAlternateLinksForEnglishRoute("/non-existent-page");
 		expect(links).toHaveLength(0);
 	});
+
+	it("filters out non-'es' locale entries (pins L21 locale === 'es' check)", () => {
+		registerCms({
+			siteUrl: "https://example.com",
+			templateKeys: [],
+			seedPages: [],
+			archives: [],
+			translationStatus: [
+				{
+					route: "/fr/impact",
+					locale: "fr",
+					englishSourceUrl: "/impact",
+					translationState: "published",
+				},
+			],
+		});
+		const links = getAlternateLinksForEnglishRoute("/impact");
+		expect(links).toHaveLength(0);
+	});
+
+	it("filters out non-published translation states (pins L22 isPublished check)", () => {
+		registerCms({
+			siteUrl: "https://example.com",
+			templateKeys: [],
+			seedPages: [],
+			archives: [],
+			translationStatus: [
+				{
+					route: "/es/impacto-draft",
+					locale: "es",
+					englishSourceUrl: "/impact",
+					translationState: "draft",
+				},
+			],
+		});
+		const links = getAlternateLinksForEnglishRoute("/impact");
+		expect(links).toHaveLength(0);
+	});
 });
 
 describe("sanitizeCanonicalUrl()", () => {
@@ -112,6 +150,51 @@ describe("sanitizeCanonicalUrl()", () => {
 		// Covers the `parsed.pathname === "/"` ternary true branch on line 46
 		const url = sanitizeCanonicalUrl("https://example.com/", "/");
 		expect(url).toBe("https://example.com/");
+	});
+
+	it("returns fallback canonical when value is undefined (pins L42 !value check)", () => {
+		const url = sanitizeCanonicalUrl(undefined, "/fallback-route");
+		expect(url).toContain("/fallback-route");
+	});
+
+	it("returns fallback canonical when value is empty string (pins L42 !value check)", () => {
+		const url = sanitizeCanonicalUrl("", "/fallback-route");
+		expect(url).toContain("/fallback-route");
+	});
+});
+
+describe("getLocaleSwitchTargets isLocalePath survivors", () => {
+	it("uses currentPath when lang='es' and path is exactly '/es' (pins L66 path === '/es')", () => {
+		const targets = getLocaleSwitchTargets({
+			lang: "es",
+			currentPath: "/es",
+		});
+		expect(targets.es).toBe("/es");
+	});
+
+	it("uses currentPath when lang='es' and path starts with '/es/' (pins L66 startsWith)", () => {
+		const targets = getLocaleSwitchTargets({
+			lang: "es",
+			currentPath: "/es/sobre/",
+		});
+		expect(targets.es).toBe("/es/sobre/");
+	});
+
+	it("does NOT use currentPath when lang='es' but path is in EN-space (e.g. '/about')", () => {
+		const targets = getLocaleSwitchTargets({
+			lang: "es",
+			currentPath: "/about",
+		});
+		// Default fallback to /es because /about is not an es-prefixed path.
+		expect(targets.es).toBe("/es");
+	});
+
+	it("does NOT use currentPath when lang='es' and path is '/es-mx' (similar prefix but not '/es' or '/es/')", () => {
+		const targets = getLocaleSwitchTargets({
+			lang: "es",
+			currentPath: "/es-mx/about",
+		});
+		expect(targets.es).toBe("/es");
 	});
 });
 
@@ -181,6 +264,60 @@ describe("getLocaleSwitchTargets()", () => {
 		// fr link ignored; es link used
 		expect(targets.es).toBe("/es/sobre/");
 		expect(targets).not.toHaveProperty("fr");
+	});
+
+	it("preserves a non-empty override URL distinct from the fallback (pins L42 !value → true)", () => {
+		// Mutating `if (!value)` to `if (true)` would discard the override URL
+		// and always return the fallback canonical. With value="/override" and
+		// fallback="/fallback", the original keeps the override.
+		const url = sanitizeCanonicalUrl("https://example.com/override", "/fallback");
+		expect(url).toContain("/override");
+		expect(url).not.toContain("/fallback");
+	});
+
+	it("keeps targets.en at /en when lang='en' and currentPath is an es-prefixed path (pins L69 startsWith→endsWith)", () => {
+		// For path "/es/foo": startsWith("/es/") is true → isLocalePath("/es/foo", "en")
+		// returns false → currentPath is NOT used for targets.en. Mutating
+		// startsWith to endsWith inverts the check ("/es/foo" doesn't end with "/es/")
+		// so isLocalePath would wrongly return true and assign /es/foo to targets.en.
+		const targets = getLocaleSwitchTargets({
+			lang: "en",
+			currentPath: "/es/foo",
+		});
+		expect(targets.en).toBe("/en");
+	});
+
+	it("does not rewrite targets.en to /en when hreflang='en' but path is not '/' (pins L93 path === '/' clause)", () => {
+		// path === "/" replaced with `true` would make any en alternate href rewrite
+		// to "/en" regardless of path. The original keeps the actual path "/en/contact/".
+		const targets = getLocaleSwitchTargets({
+			lang: "es",
+			alternateLinks: [{ hreflang: "en", href: "https://example.com/en/contact/" }],
+		});
+		expect(targets.en).toBe("/en/contact/");
+	});
+
+	it("does not rewrite targets.en to /en when lang='en' (pins L93 input.lang === 'es' clause)", () => {
+		// input.lang === "es" replaced with `true` would fire the rewrite even on
+		// an EN page viewing root. Original keeps targets.en as the raw path "/".
+		const targets = getLocaleSwitchTargets({
+			lang: "en",
+			alternateLinks: [{ hreflang: "en", href: "https://example.com/" }],
+		});
+		expect(targets.en).toBe("/");
+	});
+
+	it("does not rewrite targets.es to /en when hreflang='es' and lang='es' (pins L93 hreflang === 'en' clause + first &&)", () => {
+		// Mutating `hreflang === "en"` to `true` would fire the /en rewrite even
+		// for an ES alternate link, and mutating the first `&&` to `||` would
+		// short-circuit to /en when hreflang is "en" regardless of path/lang.
+		// With hreflang="es", path="/", lang="es": original target.es is "/"; the
+		// mutants would set target.es to "/en".
+		const targets = getLocaleSwitchTargets({
+			lang: "es",
+			alternateLinks: [{ hreflang: "es", href: "https://example.com/" }],
+		});
+		expect(targets.es).toBe("/");
 	});
 
 	it("falls back to returning href as-is when URL parse fails (pathFromHref catch branch)", () => {

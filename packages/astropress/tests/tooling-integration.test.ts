@@ -53,6 +53,65 @@ describe("tooling integration", () => {
 		expect(callbackInjectedRoutes).toEqual(routeEntrypoints);
 	});
 
+	it("injects every ADMIN_APP_INJECTED_ROUTES entry (health, sitemap, robots, llms, metrics, og-image)", async () => {
+		// Kills the L60-62 BlockStatement mutant (for-loop body removed). Without
+		// these routes the integration would only inject /ap-admin routes, breaking
+		// /ap/health, /sitemap.xml, /robots.txt, /llms.txt and the API endpoints.
+		const integration = createAstropressAdminAppIntegration();
+		const injectedRoutes: Array<{ pattern: string; entrypoint: string }> = [];
+		integration.hooks["astro:config:setup"]?.({
+			injectRoute(route: { pattern: string; entrypoint: string }) {
+				injectedRoutes.push(route);
+			},
+			addMiddleware: () => {},
+		} as never);
+		const patterns = injectedRoutes.map((r) => r.pattern);
+		expect(patterns).toContain("/ap/health");
+		expect(patterns).toContain("/sitemap.xml");
+		expect(patterns).toContain("/robots.txt");
+		expect(patterns).toContain("/llms.txt");
+		expect(patterns).toContain("/ap-api/v1/metrics");
+		expect(patterns).toContain("/ap-api/v1/og-image/[slug].png");
+	});
+
+	it("injects plugin-declared admin routes from peekCmsConfig().plugins[].adminRoutes", async () => {
+		// Kills the L66 ConditionalExpression `if (false)` mutant — without the
+		// guard mutation the plugin admin route only appears when config.plugins is
+		// truthy and the inner loop runs.
+		const { registerCms } = await import("../src/config");
+		registerCms({
+			...((await import("./helpers/make-db")).STANDARD_CMS_CONFIG as never),
+			plugins: [
+				// Plugin WITHOUT adminRoutes — the inner `if (plugin.adminRoutes)`
+				// guard is the only thing keeping a `for (const route of undefined)`
+				// TypeError at bay. Mutating that guard to `if (true)` would crash
+				// here; `if (false)` would never inject the next plugin's routes.
+				{ name: "no-admin-routes-plugin" } as never,
+				{
+					name: "test-plugin-admin-routes",
+					adminRoutes: [
+						{
+							pattern: "/ap-admin/test-plugin",
+							entrypoint: "/abs/path/test-plugin-entry.js",
+						},
+					],
+				} as never,
+			],
+		} as never);
+
+		const integration = createAstropressAdminAppIntegration();
+		const injectedRoutes: Array<{ pattern: string; entrypoint: string }> = [];
+		integration.hooks["astro:config:setup"]?.({
+			injectRoute(route: { pattern: string; entrypoint: string }) {
+				injectedRoutes.push(route);
+			},
+			addMiddleware: () => {},
+		} as never);
+		const pluginRoute = injectedRoutes.find((r) => r.pattern === "/ap-admin/test-plugin");
+		expect(pluginRoute).toBeDefined();
+		expect(pluginRoute?.entrypoint).toBe("/abs/path/test-plugin-entry.js");
+	});
+
 	it("registers security middleware via addMiddleware in astro:config:setup", () => {
 		const integration = createAstropressAdminAppIntegration();
 		const registered: unknown[] = [];

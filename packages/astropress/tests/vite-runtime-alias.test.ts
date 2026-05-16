@@ -164,3 +164,138 @@ describe("createAstropressPackageResolverPlugin — npm consumer bare-import red
 		expect(plugin.resolveId("astro")).toBeNull();
 	});
 });
+
+describe("createAstropressLocalRuntimeModulePlugin — missing-alias guard", () => {
+	it("throws a descriptive error when the runtime modules path is empty", () => {
+		expect(() => createAstropressLocalRuntimeModulePlugin("")).toThrow(
+			"[astropress] Missing Vite alias: 'local-runtime-modules'. " +
+				"Add astropressIntegration() to your astro.config.mjs — " +
+				"see https://astropress.diy/docs/quick-start#step-2-add-the-integration",
+		);
+	});
+});
+
+describe("normalizeRuntimeRequest — exercised via isAstropressLocalRuntimeModuleRequest", () => {
+	// A localRuntimeModulesPath that does NOT contain the literal
+	// "local-runtime-modules" so the hardcoded `.endsWith(...)` fallbacks cannot
+	// match — every `true` result must flow through the path-equality branch,
+	// making the normalization logic observable.
+	const customPath = "/tmp/site/custom-modules.ts";
+
+	it("normalizes backslash separators to forward slashes before comparing", () => {
+		expect(
+			isAstropressLocalRuntimeModuleRequest(
+				"\\tmp\\site\\custom-modules.ts",
+				"/tmp/site/custom-modules.ts",
+			),
+		).toBe(true);
+	});
+
+	it("strips a file:// prefix before comparing", () => {
+		expect(
+			isAstropressLocalRuntimeModuleRequest("file:///tmp/site/custom-modules.ts", customPath),
+		).toBe(true);
+		// A non-file:// path that does not equal the target stays unmatched.
+		expect(isAstropressLocalRuntimeModuleRequest("/tmp/site/other.ts", customPath)).toBe(false);
+	});
+
+	it("strips a two-slash file:// prefix as well as the three-slash form", () => {
+		expect(
+			isAstropressLocalRuntimeModuleRequest(
+				"file://tmp/site/custom-modules.ts",
+				"/tmp/site/custom-modules.ts",
+			),
+		).toBe(true);
+	});
+
+	it("percent-decodes the path after stripping file://", () => {
+		expect(
+			isAstropressLocalRuntimeModuleRequest(
+				"file:///tmp/site%20space/custom-modules.ts",
+				"/tmp/site space/custom-modules.ts",
+			),
+		).toBe(true);
+	});
+
+	it("does not throw on a malformed percent sequence in a non-file URL", () => {
+		// The decodeURIComponent call lives behind the file:// guard; a bare
+		// path containing an invalid `%` sequence must pass through untouched.
+		expect(() =>
+			isAstropressLocalRuntimeModuleRequest("ab%zz/custom-modules.ts", customPath),
+		).not.toThrow();
+		expect(isAstropressLocalRuntimeModuleRequest("ab%zz/custom-modules.ts", customPath)).toBe(
+			false,
+		);
+	});
+
+	it("slices the leading slash off a Windows drive-letter path", () => {
+		// The id carries a leading-slash drive path (from file:// stripping); the
+		// target has none. They only compare equal once the drive-letter slice
+		// runs on the id — so the slice and its `/^\/[a-zA-Z]:\//` guard are both
+		// observable here.
+		expect(
+			isAstropressLocalRuntimeModuleRequest(
+				"file:///C:/site/custom-modules.ts",
+				"C:/site/custom-modules.ts",
+			),
+		).toBe(true);
+	});
+
+	it("returns true via the path-equality branch even when no suffix matches", () => {
+		expect(isAstropressLocalRuntimeModuleRequest(customPath, customPath)).toBe(true);
+	});
+});
+
+describe("createAstropressViteAliases — find regexes and optional branches", () => {
+	const localRuntimeModulesPath = "/tmp/site/src/astropress/local-runtime-modules.ts";
+
+	it("emits exactly the two runtime-module aliases with their find regexes when no options are set", () => {
+		const aliases = createAstropressViteAliases({ localRuntimeModulesPath });
+		expect(aliases).toHaveLength(2);
+		expect(aliases[0]).toEqual({
+			find: /\/local-runtime-modules(?:\.[jt]s)?$/,
+			replacement: localRuntimeModulesPath,
+		});
+		expect(aliases[1]).toEqual({
+			find: /^\.\/local-runtime-modules(?:\.[jt]s)?$/,
+			replacement: localRuntimeModulesPath,
+		});
+	});
+
+	it("first find regex matches resolved runtime-module paths and rejects near-misses", () => {
+		const [first] = createAstropressViteAliases({ localRuntimeModulesPath });
+		const re = first.find as RegExp;
+		expect(re.test("/x/local-runtime-modules")).toBe(true);
+		expect(re.test("/x/local-runtime-modules.ts")).toBe(true);
+		expect(re.test("/x/local-runtime-modules.js")).toBe(true);
+		expect(re.test("/x/local-runtime-modules.css")).toBe(false);
+		expect(re.test("/x/local-runtime-modules.ts.map")).toBe(false);
+	});
+
+	it("appends astropress package aliases only when astropressPackageRoot is provided", () => {
+		const root = "/home/site/node_modules/@astropress-diy/astropress";
+		const aliases = createAstropressViteAliases({
+			localRuntimeModulesPath,
+			astropressPackageRoot: root,
+		});
+		expect(aliases).toHaveLength(4);
+		expect(aliases[2]).toEqual({ find: /^astropress\/(.+)$/, replacement: `${root}/$1` });
+		expect(aliases[3]).toEqual({ find: /^astropress$/, replacement: root });
+	});
+
+	it("prepends the cloudflare:workers alias when a stub path is provided", () => {
+		const aliases = createAstropressViteAliases({
+			localRuntimeModulesPath,
+			cloudflareWorkersStubPath: "/tmp/site/stub.ts",
+		});
+		expect(aliases[0]).toEqual({
+			find: "cloudflare:workers",
+			replacement: "/tmp/site/stub.ts",
+		});
+	});
+
+	it("does not prepend a cloudflare alias when no stub path is provided", () => {
+		const aliases = createAstropressViteAliases({ localRuntimeModulesPath });
+		expect(aliases.some((a) => a.find === "cloudflare:workers")).toBe(false);
+	});
+});

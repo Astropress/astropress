@@ -2,14 +2,7 @@
 //
 export default {
 	plugins: ["@stryker-mutator/vitest-runner"],
-	mutate: [
-		"src/**/*.ts",
-		"!src/**/*.d.ts",
-		"!src/**/index.ts",
-		"!src/persistence-types.ts",
-		"!src/config-service-types.ts",
-		"!src/transactional-email.ts",
-	],
+	mutate: ["src/**/*.ts", "!src/**/*.d.ts"],
 	testRunner: "vitest",
 	coverageAnalysis: "perTest",
 	vitest: { related: false },

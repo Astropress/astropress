@@ -26,11 +26,41 @@ describe("createSqliteLocksOps — pessimistic content locking", () => {
 		locks.acquireLock("my-post", "alice@test.com", "Alice");
 		const conflict = locks.acquireLock("my-post", "bob@test.com", "Bob");
 		expect(conflict.ok).toBe(false);
-		if (!conflict.ok && conflict.conflict) {
+		if (!conflict.ok) {
+			// Pins L53 BooleanLiteral `conflict: true` — without an explicit
+			// assertion the field could flip to false and the existing
+			// destructuring branch would silently skip.
+			expect(conflict.conflict).toBe(true);
 			expect(conflict.lockedByEmail).toBe("alice@test.com");
 			expect(conflict.lockedByName).toBe("Alice");
 			expect(conflict.expiresAt).toBeTruthy();
 		}
+	});
+
+	it("rolls back the open transaction on conflict so the same connection can acquire again (pins L50 ROLLBACK)", () => {
+		locks.acquireLock("my-post", "alice@test.com", "Alice");
+		const conflict = locks.acquireLock("my-post", "bob@test.com", "Bob");
+		expect(conflict.ok).toBe(false);
+		// L50 mutates `db.exec("ROLLBACK")` → `db.exec("")`. Without the rollback
+		// the BEGIN IMMEDIATE transaction stays open on this shared connection;
+		// the next acquireLock would throw "cannot start a transaction within
+		// a transaction". Alice re-acquiring her own lock must just work.
+		const aliceAgain = locks.acquireLock("my-post", "alice@test.com", "Alice");
+		expect(aliceAgain.ok).toBe(true);
+	});
+
+	it("releaseLock returns true when a matching row is deleted (pins L91 boundary)", () => {
+		const acquired = locks.acquireLock("my-post", "alice@test.com", "Alice");
+		expect(acquired.ok).toBe(true);
+		if (!acquired.ok) return;
+		const released = locks.releaseLock("my-post", acquired.lockToken);
+		expect(released).toBe(true);
+	});
+
+	it("releaseLock returns false for unknown token (pins L91 boundary)", () => {
+		locks.acquireLock("my-post", "alice@test.com", "Alice");
+		const released = locks.releaseLock("my-post", "wrong-token");
+		expect(released).toBe(false);
 	});
 
 	it("same user re-acquiring refreshes the lock", () => {

@@ -1,30 +1,24 @@
-import { withLocalStoreFallback } from "./admin-store-dispatch";
 import { createD1AdminMutationStore } from "./d1-admin-store";
-import { recordD1Audit } from "./d1-audit";
 import type { Actor } from "./persistence-types";
+import { runTaxonomyMutation } from "./runtime-actions-taxonomies-helpers";
 
 export async function createRuntimeAuthor(
 	input: { name: string; slug?: string; bio?: string },
 	actor: Actor,
 	locals?: App.Locals | null,
 ) {
-	return withLocalStoreFallback(
+	return runTaxonomyMutation(
 		locals,
-		async (db) => {
-			const result = await createD1AdminMutationStore(db).authors.createAuthor(input);
-			if (!result.ok) return result;
-			await recordD1Audit(
-				locals,
-				actor,
-				"author.create",
-				"content",
-				input.slug ?? input.name,
-				`Created author ${input.name.trim()}.`,
-			);
-			return result;
-		},
+		actor,
+		(db) => createD1AdminMutationStore(db).authors.createAuthor(input),
 		/* v8 ignore next 1 */
 		(localStore) => localStore.createAuthor(input, actor),
+		{
+			action: "author.create",
+			resourceId: input.slug ?? input.name,
+			message: `Created author ${input.name.trim()}.`,
+			onlyIfOk: true,
+		},
 	);
 }
 
@@ -33,43 +27,37 @@ export async function updateRuntimeAuthor(
 	actor: Actor,
 	locals?: App.Locals | null,
 ) {
-	return withLocalStoreFallback(
+	return runTaxonomyMutation(
 		locals,
-		async (db) => {
-			const result = await createD1AdminMutationStore(db).authors.updateAuthor(input);
-			if (!result.ok) return result;
-			await recordD1Audit(
-				locals,
-				actor,
-				"author.update",
-				"content",
-				String(input.id),
-				`Updated author ${input.name.trim()}.`,
-			);
-			return result;
-		},
+		actor,
+		(db) => createD1AdminMutationStore(db).authors.updateAuthor(input),
 		/* v8 ignore next 1 */
 		(localStore) => localStore.updateAuthor(input, actor),
+		{
+			action: "author.update",
+			resourceId: String(input.id),
+			message: `Updated author ${input.name.trim()}.`,
+			onlyIfOk: true,
+		},
 	);
 }
 
 export async function deleteRuntimeAuthor(id: number, actor: Actor, locals?: App.Locals | null) {
-	return withLocalStoreFallback(
+	return runTaxonomyMutation(
 		locals,
+		actor,
 		async (db) => {
 			await createD1AdminMutationStore(db).authors.deleteAuthor(id);
-			await recordD1Audit(
-				locals,
-				actor,
-				"author.delete",
-				"content",
-				String(id),
-				`Deleted author ${id}.`,
-			);
 			return { ok: true as const };
 		},
 		/* v8 ignore next 1 */
 		(localStore) => localStore.deleteAuthor(id, actor),
+		{
+			action: "author.delete",
+			resourceId: String(id),
+			message: `Deleted author ${id}.`,
+			onlyIfOk: false,
+		},
 	);
 }
 
@@ -78,23 +66,18 @@ export async function createRuntimeCategory(
 	actor: Actor,
 	locals?: App.Locals | null,
 ) {
-	return withLocalStoreFallback(
+	return runTaxonomyMutation(
 		locals,
-		async (db) => {
-			const result = await createD1AdminMutationStore(db).taxonomies.createCategory(input);
-			if (!result.ok) return result;
-			await recordD1Audit(
-				locals,
-				actor,
-				"category.create",
-				"content",
-				input.slug ?? input.name,
-				`Created category ${input.name.trim()}.`,
-			);
-			return result;
-		},
+		actor,
+		(db) => createD1AdminMutationStore(db).taxonomies.createCategory(input),
 		/* v8 ignore next 1 */
 		(localStore) => localStore.createCategory(input, actor),
+		{
+			action: "category.create",
+			resourceId: input.slug ?? input.name,
+			message: `Created category ${input.name.trim()}.`,
+			onlyIfOk: true,
+		},
 	);
 }
 
@@ -103,43 +86,37 @@ export async function updateRuntimeCategory(
 	actor: Actor,
 	locals?: App.Locals | null,
 ) {
-	return withLocalStoreFallback(
+	return runTaxonomyMutation(
 		locals,
-		async (db) => {
-			const result = await createD1AdminMutationStore(db).taxonomies.updateCategory(input);
-			if (!result.ok) return result;
-			await recordD1Audit(
-				locals,
-				actor,
-				"category.update",
-				"content",
-				String(input.id),
-				`Updated category ${input.name.trim()}.`,
-			);
-			return result;
-		},
+		actor,
+		(db) => createD1AdminMutationStore(db).taxonomies.updateCategory(input),
 		/* v8 ignore next 1 */
 		(localStore) => localStore.updateCategory(input, actor),
+		{
+			action: "category.update",
+			resourceId: String(input.id),
+			message: `Updated category ${input.name.trim()}.`,
+			onlyIfOk: true,
+		},
 	);
 }
 
 export async function deleteRuntimeCategory(id: number, actor: Actor, locals?: App.Locals | null) {
-	return withLocalStoreFallback(
+	return runTaxonomyMutation(
 		locals,
+		actor,
 		async (db) => {
 			await createD1AdminMutationStore(db).taxonomies.deleteCategory(id);
-			await recordD1Audit(
-				locals,
-				actor,
-				"category.delete",
-				"content",
-				String(id),
-				`Deleted category ${id}.`,
-			);
 			return { ok: true as const };
 		},
 		/* v8 ignore next 1 */
 		(localStore) => localStore.deleteCategory(id, actor),
+		{
+			action: "category.delete",
+			resourceId: String(id),
+			message: `Deleted category ${id}.`,
+			onlyIfOk: false,
+		},
 	);
 }
 
@@ -148,23 +125,18 @@ export async function createRuntimeTag(
 	actor: Actor,
 	locals?: App.Locals | null,
 ) {
-	return withLocalStoreFallback(
+	return runTaxonomyMutation(
 		locals,
-		async (db) => {
-			const result = await createD1AdminMutationStore(db).taxonomies.createTag(input);
-			if (!result.ok) return result;
-			await recordD1Audit(
-				locals,
-				actor,
-				"tag.create",
-				"content",
-				input.slug ?? input.name,
-				`Created tag ${input.name.trim()}.`,
-			);
-			return result;
-		},
+		actor,
+		(db) => createD1AdminMutationStore(db).taxonomies.createTag(input),
 		/* v8 ignore next 1 */
 		(localStore) => localStore.createTag(input, actor),
+		{
+			action: "tag.create",
+			resourceId: input.slug ?? input.name,
+			message: `Created tag ${input.name.trim()}.`,
+			onlyIfOk: true,
+		},
 	);
 }
 
@@ -173,35 +145,36 @@ export async function updateRuntimeTag(
 	actor: Actor,
 	locals?: App.Locals | null,
 ) {
-	return withLocalStoreFallback(
+	return runTaxonomyMutation(
 		locals,
-		async (db) => {
-			const result = await createD1AdminMutationStore(db).taxonomies.updateTag(input);
-			if (!result.ok) return result;
-			await recordD1Audit(
-				locals,
-				actor,
-				"tag.update",
-				"content",
-				String(input.id),
-				`Updated tag ${input.name.trim()}.`,
-			);
-			return result;
-		},
+		actor,
+		(db) => createD1AdminMutationStore(db).taxonomies.updateTag(input),
 		/* v8 ignore next 1 */
 		(localStore) => localStore.updateTag(input, actor),
+		{
+			action: "tag.update",
+			resourceId: String(input.id),
+			message: `Updated tag ${input.name.trim()}.`,
+			onlyIfOk: true,
+		},
 	);
 }
 
 export async function deleteRuntimeTag(id: number, actor: Actor, locals?: App.Locals | null) {
-	return withLocalStoreFallback(
+	return runTaxonomyMutation(
 		locals,
+		actor,
 		async (db) => {
 			await createD1AdminMutationStore(db).taxonomies.deleteTag(id);
-			await recordD1Audit(locals, actor, "tag.delete", "content", String(id), `Deleted tag ${id}.`);
 			return { ok: true as const };
 		},
 		/* v8 ignore next 1 */
 		(localStore) => localStore.deleteTag(id, actor),
+		{
+			action: "tag.delete",
+			resourceId: String(id),
+			message: `Deleted tag ${id}.`,
+			onlyIfOk: false,
+		},
 	);
 }

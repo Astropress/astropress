@@ -469,6 +469,75 @@ describe("admin action utils", () => {
 		expect(result.ok).toBe(false);
 	});
 
+	it("logger.info fires on successful admin action (pins L177 'admin action' message + payload)", async () => {
+		const logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+		const { withAdminFormAction } = await import("@astropress-diy/astropress");
+		await withAdminFormAction(
+			makeContext({ _csrf: "csrf-token" }),
+			{ failurePath: "/ap-admin" },
+			async () => new Response("ok"),
+		);
+		const matched = logSpy.mock.calls.find((args) =>
+			args.some((a) => typeof a === "string" && a === "admin action"),
+		);
+		expect(matched).toBeDefined();
+		const meta = matched?.[2] as Record<string, unknown>;
+		expect(meta?.actor).toBe("admin@example.com");
+		logSpy.mockRestore();
+	});
+
+	it("logger.warn fires when fail() is invoked (pins L193 'admin action failed' message + payload)", async () => {
+		const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+		const { withAdminFormAction } = await import("@astropress-diy/astropress");
+		await withAdminFormAction(
+			makeContext({ _csrf: "csrf-token" }),
+			{ failurePath: "/ap-admin" },
+			async ({ fail }) => fail("bad input"),
+		);
+		const matched = warnSpy.mock.calls.find((args) =>
+			args.some((a) => typeof a === "string" && a === "admin action failed"),
+		);
+		expect(matched).toBeDefined();
+		const meta = matched?.[2] as Record<string, unknown>;
+		expect(meta?.message).toBe("bad input");
+		warnSpy.mockRestore();
+	});
+
+	it("logger.error fires on unexpected handler throw (pins L203 'admin action error' message + payload)", async () => {
+		const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+		const { withAdminFormAction } = await import("@astropress-diy/astropress");
+		await withAdminFormAction(
+			makeContext({ _csrf: "csrf-token" }),
+			{ failurePath: "/ap-admin" },
+			async () => {
+				throw new Error("kaboom");
+			},
+		);
+		const matched = errorSpy.mock.calls.find((args) =>
+			args.some((a) => typeof a === "string" && a === "admin action error"),
+		);
+		expect(matched).toBeDefined();
+		const meta = matched?.[2] as Record<string, unknown>;
+		expect(String(meta?.error)).toContain("kaboom");
+		errorSpy.mockRestore();
+	});
+
+	it("logAccessDeny payload uses subjectEmail from access subject (pins L83 ?? fallback ordering)", async () => {
+		mocks.getAccessContext.mockResolvedValue({
+			subject: { email: "subject-email@example.com" },
+			can: vi.fn(() => ({ decision: "deny", reason: "no" })),
+		});
+		const { requireAdminFormAction } = await import("@astropress-diy/astropress");
+		await requireAdminFormAction(makeContext({ _csrf: "csrf-token" }), {
+			failurePath: "/ap-admin",
+			requireAction: "posts:delete",
+		});
+		expect(mocks.logAccessDeny).toHaveBeenCalledWith(
+			expect.anything(),
+			expect.objectContaining({ subjectEmail: "subject-email@example.com" }),
+		);
+	});
+
 	it("unknown option keys like requireRole do NOT enforce admin-only access (regression for #35)", async () => {
 		// Simulates the old publish.ts bug: passing { requireRole: "admin" } instead of { requireAdmin: true }.
 		// The guard must not silently ignore unknown keys — this test proves that only requireAdmin works.

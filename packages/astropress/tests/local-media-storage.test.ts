@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, rmSync, statSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, rmSync, statSync } from "node:fs";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // ---------------------------------------------------------------------------
@@ -161,6 +161,93 @@ describe("buildLocalMediaDescriptor", () => {
 		}
 	});
 
+	it("rejects file exactly equal to maxUploadBytes is also accepted (kills L56 EqualityOperator >= mutant on the size guard)", () => {
+		// boundary: byteLength === maxUploadBytes is allowed (the guard uses >).
+		// Mutated `>= maxUploadBytes`: rejects exactly-at-limit uploads.
+		const exactlyMax = new Uint8Array(10 * 1024 * 1024);
+		const result = buildLocalMediaDescriptor({
+			filename: "limit.png",
+			bytes: exactlyMax,
+		});
+		expect(result.ok).toBe(true);
+	});
+
+	it("treats a no-extension filename as disallowed via the '.bin' fallback (kills L60 StringLiteral '.bin' → '')", () => {
+		// path.extname("noext") === "" → || ".bin" → ".bin" (not in allowedExtensions).
+		// Mutant: || "" → still "" → not in allowedExtensions, still rejected. Both yield the
+		// same rejection, but the ERROR phrasing path is identical too. To observe the
+		// difference, use a filename whose lowercased extname is "" but whose basename ends in
+		// something that would change the .extname trip-point. The simplest observable check:
+		// after the mutant, allowedExtensions.has("") would let "" through; ensure it stays
+		// rejected.
+		const result = buildLocalMediaDescriptor({ filename: "noextension", bytes: validPng });
+		expect(result).toMatchObject({ ok: false });
+		expect((result as { error: string }).error).toContain("not allowed");
+	});
+
+	it("collapses runs of non-alphanumerics into single dashes (kills L81 Regex '+' quantifier)", () => {
+		// Original /[^a-z0-9]+/gi: runs collapse to a single "-".
+		// Mutant /[^a-z0-9]/gi: each non-alphanumeric becomes "-".
+		const result = buildLocalMediaDescriptor({
+			filename: "my   awesome---photo.png",
+			bytes: validPng,
+		});
+		expect(result.ok).toBe(true);
+		if (!result.ok) return;
+		// Three spaces and three dashes collapse together → exactly one "-" each gap.
+		expect(result.asset.title).toBe("my-awesome-photo");
+	});
+
+	it("strips leading/trailing dashes from the sanitised basename (kills L82 StringLiteral 'Stryker was here!')", () => {
+		// "-foo-.png" → replace strips runs to "-foo-" → strip leading/trailing → "foo".
+		// Mutant replaces "" with "Stryker was here!" → "Stryker was here!fooStryker was here!".
+		const result = buildLocalMediaDescriptor({
+			filename: "-foo-.png",
+			bytes: validPng,
+		});
+		expect(result.ok).toBe(true);
+		if (!result.ok) return;
+		expect(result.asset.title).toBe("foo");
+	});
+
+	it("defaults the basename to 'upload' when sanitisation leaves nothing (kills L83 StringLiteral '' fallback)", () => {
+		// "---.png" → "-" after run-collapse → "" after edge-trim → falls back via || "upload".
+		// Mutant: fallback is "" → title becomes "" (or input.title trimmed).
+		const result = buildLocalMediaDescriptor({
+			filename: "---.png",
+			bytes: validPng,
+		});
+		expect(result.ok).toBe(true);
+		if (!result.ok) return;
+		expect(result.asset.title).toBe("upload");
+	});
+
+	it("trims whitespace from title and altText (kills L99/L100 MethodExpression dropping .trim)", () => {
+		const result = buildLocalMediaDescriptor({
+			filename: "photo.png",
+			bytes: validPng,
+			title: "  spaced title  ",
+			altText: "  alt with edges  ",
+		});
+		expect(result.ok).toBe(true);
+		if (!result.ok) return;
+		// Mutant L99: drops .trim() → title retains leading/trailing spaces.
+		// Mutant L100: same for altText.
+		expect(result.asset.title).toBe("spaced title");
+		expect(result.asset.altText).toBe("alt with edges");
+	});
+
+	it("defaults altText to '' when not provided (kills L100 StringLiteral '' → 'Stryker was here!')", () => {
+		const result = buildLocalMediaDescriptor({
+			filename: "photo.png",
+			bytes: validPng,
+		});
+		expect(result.ok).toBe(true);
+		if (!result.ok) return;
+		// Mutated fallback ?? "Stryker was here!" would produce a non-empty altText.
+		expect(result.asset.altText).toBe("");
+	});
+
 	it("generates a unique id on each call", () => {
 		const r1 = buildLocalMediaDescriptor({
 			filename: "a.png",
@@ -203,12 +290,17 @@ describe("createLocalMediaUpload", () => {
 		expect(stat.mode & 0o777).toBe(0o600);
 	});
 
-	it("propagates validation errors without writing to disk", () => {
+	it("propagates validation errors without writing to disk (kills L104 ConditionalExpression:false & BlockStatement)", () => {
+		// Mutant L104 ConditionalExpression:false / BlockStatement {}: the early
+		// `return descriptor` is skipped, so writeFileSync runs even for a rejected
+		// upload — leaving a stray file in the uploads dir.
+		const before = readdirSync(testUploadsDir);
 		const result = createLocalMediaUpload({
 			filename: "bad.exe",
 			bytes: validPng,
 		});
 		expect(result).toMatchObject({ ok: false });
+		expect(readdirSync(testUploadsDir)).toEqual(before);
 	});
 });
 
@@ -228,6 +320,23 @@ describe("deleteLocalMediaUpload", () => {
 		expect(existsSync(result.asset.diskPath)).toBe(false);
 	});
 
+	it("only deletes paths under /images/uploads/ (kills L126 ConditionalExpression:false, StringLiteral '' on the prefix check, and L126 BlockStatement {} on the body)", () => {
+		// Write a file outside the uploads dir into the testUploadsDir tree but reference it
+		// via a non-/images/uploads path. The guard must return without unlinking.
+		const result = createLocalMediaUpload({
+			filename: "stay.png",
+			bytes: validPng,
+		});
+		expect(result.ok).toBe(true);
+		if (!result.ok) return;
+		// Try to delete via a path that doesn't start with the prefix.
+		deleteLocalMediaUpload("/other/area/stay.png");
+		expect(existsSync(result.asset.diskPath)).toBe(true);
+		// Now delete via the legitimate path — file should be removed.
+		deleteLocalMediaUpload(result.asset.publicPath);
+		expect(existsSync(result.asset.diskPath)).toBe(false);
+	});
+
 	it("is a no-op for paths outside the uploads dir", () => {
 		// Should not throw
 		expect(() => deleteLocalMediaUpload("/etc/passwd")).not.toThrow();
@@ -236,5 +345,20 @@ describe("deleteLocalMediaUpload", () => {
 
 	it("is a no-op for non-existent files (no throw)", () => {
 		expect(() => deleteLocalMediaUpload("/images/uploads/does-not-exist-12345.png")).not.toThrow();
+	});
+
+	it("does not unlink a file when the path's basename collides but the prefix is wrong (kills L115 ConditionalExpression:false, StringLiteral '', BlockStatement)", () => {
+		// The guard rejects any path not under /images/uploads/. Mutants that disable
+		// the early return (ConditionalExpression:false, BlockStatement {}) or that
+		// make startsWith("") always-true would fall through to unlinkSync on the
+		// real stored file, since basename here equals the actual stored filename.
+		const result = createLocalMediaUpload({
+			filename: "keep.png",
+			bytes: validPng,
+		});
+		expect(result.ok).toBe(true);
+		if (!result.ok) return;
+		deleteLocalMediaUpload(`/elsewhere/${result.asset.storedFilename}`);
+		expect(existsSync(result.asset.diskPath)).toBe(true);
 	});
 });

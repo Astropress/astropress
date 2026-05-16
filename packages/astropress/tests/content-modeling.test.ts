@@ -1,7 +1,5 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
-// @ts-nocheck
-//
 import type { DatabaseSync } from "node:sqlite";
 import { describe, expect, it, vi } from "vitest";
 import type { ContentTypeDefinition, FieldDefinition } from "../src/content-modeling.js";
@@ -387,6 +385,99 @@ describe("validateContentFields — required field isEmpty cases", () => {
 
 	it("accepts false as non-empty (false is a valid boolean value)", () => {
 		expect(validateContentFields(requiredField("x"), { x: false })).toBeNull();
+	});
+});
+
+// ─── sqlite-runtime/content survivor pins ─────────────────────────────────────
+
+describe("sqlite-runtime/content survivor pins", () => {
+	function makeRepo(db: DatabaseSync) {
+		let id = 0;
+		const { sqliteContentRepository } = createSqliteContentStore(
+			() => db,
+			() => `rev_${++id}`,
+		);
+		return sqliteContentRepository;
+	}
+
+	it("findPageRecord resolves a slug via legacyUrl when entry.slug does not match (pins L46 ||/=== `/${slug}`)", () => {
+		const db = makeDb();
+		db.prepare(
+			`INSERT INTO content_entries (slug, legacy_url, title, kind, template_key, source_html_path, updated_at)
+       VALUES (?, ?, ?, 'post', 'content', 'runtime://content/x', CURRENT_TIMESTAMP)`,
+		).run("real-slug", "/alias-slug", "Title");
+		db.prepare(
+			`INSERT INTO content_overrides (slug, title, status, seo_title, meta_description, updated_at, updated_by)
+       VALUES ('real-slug', 'Title', 'draft', 'T', '', CURRENT_TIMESTAMP, 'seed@test.com')`,
+		).run();
+		const repo = makeRepo(db);
+		const state = repo.getContentState("alias-slug");
+		expect(state).not.toBeNull();
+		expect(state?.slug).toBe("real-slug");
+	});
+
+	it("saveContentState routes through insertReviewedRevision so a content_revisions row exists (pins L104 body block)", () => {
+		const db = makeDb();
+		db.prepare(
+			`INSERT INTO content_entries (slug, legacy_url, title, kind, template_key, source_html_path, updated_at)
+       VALUES ('rev-slug', '/rev-slug', 'Title', 'post', 'content', 'runtime://content/x', CURRENT_TIMESTAMP)`,
+		).run();
+		const repo = makeRepo(db);
+		repo.saveContentState(
+			"rev-slug",
+			{
+				title: "T",
+				body: "body",
+				status: "draft",
+				seoTitle: "ST",
+				metaDescription: "MD",
+				excerpt: "",
+				ogTitle: null,
+				ogDescription: null,
+				ogImage: null,
+				canonicalUrlOverride: null,
+				robotsDirective: null,
+			},
+			{ email: "e@x.com", role: "admin", name: "E" },
+		);
+		const count = (
+			db.prepare("SELECT COUNT(*) as n FROM content_revisions WHERE slug = ?").get("rev-slug") as {
+				n: number;
+			}
+		).n;
+		expect(count).toBeGreaterThanOrEqual(1);
+	});
+
+	it("saveContentState routes through recordContentAudit so an audit_log row with target_type='content' exists (pins L110 body + L111 'content' literal)", () => {
+		const db = makeDb();
+		db.prepare(
+			`INSERT INTO content_entries (slug, legacy_url, title, kind, template_key, source_html_path, updated_at)
+       VALUES ('audit-slug', '/audit-slug', 'Title', 'post', 'content', 'runtime://content/x', CURRENT_TIMESTAMP)`,
+		).run();
+		const repo = makeRepo(db);
+		repo.saveContentState(
+			"audit-slug",
+			{
+				title: "T",
+				body: "body",
+				status: "draft",
+				seoTitle: "ST",
+				metaDescription: "MD",
+				excerpt: "",
+				ogTitle: null,
+				ogDescription: null,
+				ogImage: null,
+				canonicalUrlOverride: null,
+				robotsDirective: null,
+			},
+			{ email: "e@x.com", role: "admin", name: "E" },
+		);
+		const row = db
+			.prepare(
+				"SELECT resource_type FROM audit_events WHERE resource_type = 'content' ORDER BY id DESC LIMIT 1",
+			)
+			.get() as { resource_type: string } | undefined;
+		expect(row?.resource_type).toBe("content");
 	});
 });
 

@@ -1,9 +1,35 @@
-import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { constants, existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { copyFile as copyFilePromise } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createAstropressGitSyncAdapter } from "../src/sync/git";
+
+// ---------------------------------------------------------------------------
+// Mocks
+// ---------------------------------------------------------------------------
+
+const { mockRunIntegrityCheck, mockCheckpointWal, realCopyFile } = await vi.hoisted(async () => {
+	const actual = await vi.importActual<typeof import("node:fs/promises")>("node:fs/promises");
+	return {
+		mockRunIntegrityCheck: vi.fn(),
+		mockCheckpointWal: vi.fn(),
+		realCopyFile: actual.copyFile,
+	};
+});
+
+// Partial mock: keep all of node:fs/promises real except copyFile, which is a
+// spy that calls through by default so reflink behaviour can be driven per-test.
+vi.mock("node:fs/promises", async (importOriginal) => {
+	const actual = await importOriginal<typeof import("node:fs/promises")>();
+	return { ...actual, copyFile: vi.fn(actual.copyFile) };
+});
+
+vi.mock("../src/sqlite-integrity", () => ({ runIntegrityCheck: mockRunIntegrityCheck }));
+vi.mock("../src/sqlite-integrity.js", () => ({ runIntegrityCheck: mockRunIntegrityCheck }));
+vi.mock("../src/sqlite-bootstrap-helpers", () => ({ checkpointSqliteWal: mockCheckpointWal }));
+vi.mock("../src/sqlite-bootstrap-helpers.js", () => ({ checkpointSqliteWal: mockCheckpointWal }));
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -25,8 +51,31 @@ function writeFiles(dir: string, files: Record<string, string>) {
 	}
 }
 
+/** Makes every reflink (COPYFILE_FICLONE) attempt fail with the given errno code. */
+function failReflinkWith(code: string) {
+	vi.mocked(copyFilePromise).mockImplementation((async (
+		src: string,
+		dest: string,
+		mode?: number,
+	) => {
+		if (mode === constants.COPYFILE_FICLONE) {
+			const err = new Error(`reflink rejected: ${code}`) as NodeJS.ErrnoException;
+			err.code = code;
+			throw err;
+		}
+		return realCopyFile(src, dest);
+	}) as typeof copyFilePromise);
+}
+
 beforeEach(() => {
 	testRoot = mkdtempSync(join(tmpdir(), "astropress-git-sync-test-"));
+	mockRunIntegrityCheck.mockReset();
+	mockRunIntegrityCheck.mockResolvedValue({ status: "ok", mode: "quick", messages: [] });
+	mockCheckpointWal.mockReset();
+	mockCheckpointWal.mockResolvedValue(true);
+	// Restore copyFile's call-through behaviour for the FS-backed tests.
+	vi.mocked(copyFilePromise).mockReset();
+	vi.mocked(copyFilePromise).mockImplementation(realCopyFile);
 });
 
 afterEach(() => {
@@ -93,6 +142,25 @@ describe("createAstropressGitSyncAdapter — exportSnapshot", () => {
 		expect(existsSync(join(targetDir, "package.json"))).toBe(true);
 	});
 
+	it("recreates a target directory that does not yet exist", async () => {
+		// Pins `rm(outputDir, { recursive: true, force: true })`: without
+		// `force: true` the rm of a non-existent path throws ENOENT; without
+		// `recursive: true` the later overwrite of a populated dir throws.
+		const projectDir = makeDir("project-fresh-target");
+		writeFiles(projectDir, { "package.json": "{}" });
+
+		const adapter = createAstropressGitSyncAdapter({
+			projectDir,
+			include: ["package.json"],
+		});
+		const targetDir = join(testRoot, "never-created-target");
+		expect(existsSync(targetDir)).toBe(false);
+
+		const result = await adapter.exportSnapshot(targetDir);
+		expect(result.fileCount).toBe(1);
+		expect(existsSync(join(targetDir, "package.json"))).toBe(true);
+	});
+
 	it("uses default include entries when not specified", async () => {
 		const projectDir = makeDir("project-default");
 		writeFiles(projectDir, {
@@ -106,7 +174,8 @@ describe("createAstropressGitSyncAdapter — exportSnapshot", () => {
 
 		// Only entries that exist in projectDir should be copied
 		expect(existsSync(join(targetDir, "package.json"))).toBe(true);
-		expect(result.fileCount).toBeGreaterThanOrEqual(2);
+		expect(existsSync(join(targetDir, "astro.config.mjs"))).toBe(true);
+		expect(result.fileCount).toBe(2);
 	});
 });
 
@@ -207,123 +276,368 @@ describe("createAstropressGitSyncAdapter — importSnapshot", () => {
 });
 
 // ---------------------------------------------------------------------------
-// SQLite WAL checkpoint + reflink logging
+// Reflink fallback (copyFileWithReflink)
 // ---------------------------------------------------------------------------
 
-describe("createAstropressGitSyncAdapter — SQLite + reflink", () => {
-	it("copies a .sqlite file without throwing, warning on checkpoint failure", async () => {
-		// A plain text file named .sqlite exercises the checkpoint path without
-		// a real database — checkpoint will fail gracefully and warn, then the
-		// copy proceeds normally.
-		const projectDir = makeDir("project-sqlite");
-		writeFiles(projectDir, { "db/admin.sqlite": "not-a-real-db" });
+describe("createAstropressGitSyncAdapter — reflink fallback", () => {
+	function makeLoggingAdapter(name: string, include: string[]) {
+		const projectDir = makeDir(`${name}-project`);
+		const infos: string[] = [];
+		const adapter = createAstropressGitSyncAdapter({
+			projectDir,
+			include,
+			logger: { info: (m) => infos.push(m), warn: () => {} },
+		});
+		return { projectDir, adapter, infos };
+	}
 
+	it("logs copy-on-write when reflink copies succeed", async () => {
+		// Force the FICLONE copy to succeed (via plain copy) so usedReflink stays
+		// true — pins `return true` after a successful reflink copy.
+		vi.mocked(copyFilePromise).mockImplementation((async (src: string, dest: string) =>
+			realCopyFile(src, dest)) as typeof copyFilePromise);
+
+		const { projectDir, adapter, infos } = makeLoggingAdapter("reflink-ok", ["package.json"]);
+		writeFiles(projectDir, { "package.json": "{}" });
+
+		await adapter.exportSnapshot(makeDir("reflink-ok-target"));
+		expect(infos).toEqual(["Snapshot exported using copy-on-write (reflink): 1 file(s)"]);
+	});
+
+	it("falls back to a plain copy and logs standard copy when reflink is unsupported", async () => {
+		// ENOTSUP from the FICLONE attempt must be caught, retried as a plain
+		// copy, and reported as a standard (non-reflink) copy.
+		failReflinkWith("ENOTSUP");
+
+		const { projectDir, adapter, infos } = makeLoggingAdapter("reflink-enotsup", ["package.json"]);
+		writeFiles(projectDir, { "package.json": '{"a":1}' });
+
+		const targetDir = makeDir("reflink-enotsup-target");
+		const result = await adapter.exportSnapshot(targetDir);
+
+		expect(result.fileCount).toBe(1);
+		expect(existsSync(join(targetDir, "package.json"))).toBe(true);
+		expect(infos).toEqual(["Snapshot exported using standard copy: 1 file(s)"]);
+	});
+
+	it("also falls back for EOPNOTSUPP and EXDEV reflink errors", async () => {
+		for (const code of ["EOPNOTSUPP", "EXDEV"]) {
+			failReflinkWith(code);
+			const { projectDir, adapter, infos } = makeLoggingAdapter(`reflink-${code}`, [
+				"package.json",
+			]);
+			writeFiles(projectDir, { "package.json": "{}" });
+			const targetDir = makeDir(`reflink-${code}-target`);
+			const result = await adapter.exportSnapshot(targetDir);
+			expect(result.fileCount).toBe(1);
+			expect(infos[0]).toContain("standard copy");
+		}
+	});
+
+	it("rethrows reflink errors that are not a known unsupported-filesystem code", async () => {
+		// EACCES is not in the fallback allowlist — it must propagate.
+		failReflinkWith("EACCES");
+
+		const { projectDir, adapter } = makeLoggingAdapter("reflink-eacces", ["package.json"]);
+		writeFiles(projectDir, { "package.json": "{}" });
+
+		await expect(adapter.exportSnapshot(makeDir("reflink-eacces-target"))).rejects.toThrow(
+			/reflink rejected: EACCES/,
+		);
+	});
+
+	it("logs copy-on-write for a directory only when every nested file used reflink", async () => {
+		const { projectDir, adapter, infos } = makeLoggingAdapter("reflink-dir-ok", ["src"]);
+		writeFiles(projectDir, {
+			"src/a.ts": "// a",
+			"src/nested/b.ts": "// b",
+		});
+		await adapter.exportSnapshot(makeDir("reflink-dir-ok-target"));
+		expect(infos).toEqual(["Snapshot exported using copy-on-write (reflink): 2 file(s)"]);
+	});
+
+	it("logs standard copy for a directory when no nested file used reflink", async () => {
+		failReflinkWith("ENOTSUP");
+		const { projectDir, adapter, infos } = makeLoggingAdapter("reflink-dir-std", ["src"]);
+		writeFiles(projectDir, {
+			"src/a.ts": "// a",
+			"src/nested/b.ts": "// b",
+		});
+		await adapter.exportSnapshot(makeDir("reflink-dir-std-target"));
+		expect(infos).toEqual(["Snapshot exported using standard copy: 2 file(s)"]);
+	});
+
+	it("reports a standard copy for an empty included directory", async () => {
+		// An empty directory runs no copy at all — usedReflink/anyReflink must
+		// stay false (their initialisers), so the log says standard copy.
+		const projectDir = makeDir("reflink-empty-project");
+		mkdirSync(join(projectDir, "src"), { recursive: true });
+		const infos: string[] = [];
+		const adapter = createAstropressGitSyncAdapter({
+			projectDir,
+			include: ["src"],
+			logger: { info: (m) => infos.push(m), warn: () => {} },
+		});
+		await adapter.exportSnapshot(makeDir("reflink-empty-target"));
+		expect(infos).toEqual(["Snapshot exported using standard copy: 0 file(s)"]);
+	});
+
+	it("logs the import copy method", async () => {
+		failReflinkWith("ENOTSUP");
+		const projectDir = makeDir("reflink-import-project");
+		const snapshotDir = makeDir("reflink-import-snapshot");
+		writeFiles(snapshotDir, { "src/index.ts": "export {}" });
+		const infos: string[] = [];
+		const adapter = createAstropressGitSyncAdapter({
+			projectDir,
+			include: ["src"],
+			logger: { info: (m) => infos.push(m), warn: () => {} },
+		});
+		await adapter.importSnapshot(snapshotDir);
+		expect(infos).toEqual(["Snapshot imported using standard copy: 1 file(s)"]);
+	});
+});
+
+// ---------------------------------------------------------------------------
+// SQLite integrity checks + WAL checkpoint
+// ---------------------------------------------------------------------------
+
+describe("createAstropressGitSyncAdapter — SQLite integrity + checkpoint", () => {
+	function sqliteAdapter(name: string) {
+		const projectDir = makeDir(`${name}-project`);
 		const warnings: string[] = [];
 		const adapter = createAstropressGitSyncAdapter({
 			projectDir,
 			include: ["db"],
-			logger: { info: () => {}, warn: (msg) => warnings.push(msg) },
+			logger: { info: () => {}, warn: (m) => warnings.push(m) },
 		});
+		return { projectDir, adapter, warnings };
+	}
 
-		const targetDir = makeDir("snapshot-sqlite");
+	it("checkpoints the WAL and skips integrity warnings for a healthy .sqlite export", async () => {
+		const { projectDir, adapter, warnings } = sqliteAdapter("sqlite-ok");
+		writeFiles(projectDir, { "db/admin.sqlite": "db-bytes" });
+
+		const targetDir = makeDir("sqlite-ok-target");
 		const result = await adapter.exportSnapshot(targetDir);
 
 		expect(result.fileCount).toBe(1);
 		expect(existsSync(join(targetDir, "db", "admin.sqlite"))).toBe(true);
-		// A warning should have been emitted because the file is not a real SQLite DB
-		expect(warnings.length).toBeGreaterThan(0);
-		expect(warnings[0]).toContain("admin.sqlite");
+		expect(warnings).toHaveLength(0);
+		expect(mockCheckpointWal).toHaveBeenCalledTimes(1);
+		expect(mockCheckpointWal).toHaveBeenCalledWith(
+			join(projectDir, "db", "admin.sqlite"),
+			expect.any(Function),
+		);
+		// Pre-export check runs against the source with the quick mode option.
+		expect(mockRunIntegrityCheck).toHaveBeenCalledWith(join(projectDir, "db", "admin.sqlite"), {
+			mode: "quick",
+		});
 	});
 
-	it("logs whether reflink was used via the logger", async () => {
-		const projectDir = makeDir("project-log");
-		writeFiles(projectDir, { "src/index.ts": "export {}" });
-
-		const infos: string[] = [];
-		const adapter = createAstropressGitSyncAdapter({
-			projectDir,
-			include: ["src"],
-			logger: { info: (msg) => infos.push(msg), warn: () => {} },
-		});
-
-		const targetDir = makeDir("snapshot-log");
-		await adapter.exportSnapshot(targetDir);
-
-		expect(infos.length).toBe(1);
-		// Should mention either reflink or standard copy
-		expect(infos[0]).toMatch(/copy-on-write|standard copy/);
+	it("does not run an integrity check for non-.sqlite files", async () => {
+		const { projectDir, adapter } = sqliteAdapter("sqlite-skip");
+		writeFiles(projectDir, { "db/notes.txt": "plain text" });
+		await adapter.exportSnapshot(makeDir("sqlite-skip-target"));
+		expect(mockRunIntegrityCheck).not.toHaveBeenCalled();
+		expect(mockCheckpointWal).not.toHaveBeenCalled();
 	});
 
-	it("does not warn for non-.sqlite files", async () => {
-		const projectDir = makeDir("project-nosqlite");
-		writeFiles(projectDir, {
-			"src/index.ts": "export {}",
-			"src/data.json": "{}",
+	it("refuses to back up a corrupt SQLite database on export", async () => {
+		mockRunIntegrityCheck.mockResolvedValue({
+			status: "corrupt",
+			mode: "quick",
+			messages: ["page 3 checksum mismatch", "freelist corrupt"],
 		});
+		const { projectDir, adapter } = sqliteAdapter("sqlite-corrupt");
+		writeFiles(projectDir, { "db/admin.sqlite": "db-bytes" });
 
+		await expect(adapter.exportSnapshot(makeDir("sqlite-corrupt-target"))).rejects.toThrow(
+			`Refusing to back up corrupt SQLite database at ${join(
+				projectDir,
+				"db",
+				"admin.sqlite",
+			)}: page 3 checksum mismatch; freelist corrupt`,
+		);
+	});
+
+	it("warns (but proceeds) when the pre-export integrity check is unavailable", async () => {
+		mockRunIntegrityCheck.mockResolvedValue({
+			status: "unavailable",
+			mode: "quick",
+			messages: [],
+			error: "sqlite driver missing",
+		});
+		const { projectDir, adapter, warnings } = sqliteAdapter("sqlite-unavail");
+		writeFiles(projectDir, { "db/admin.sqlite": "db-bytes" });
+
+		const targetDir = makeDir("sqlite-unavail-target");
+		const result = await adapter.exportSnapshot(targetDir);
+
+		expect(result.fileCount).toBe(1);
+		expect(warnings).toEqual([
+			`SQLite integrity check unavailable for ${join(
+				projectDir,
+				"db",
+				"admin.sqlite",
+			)} before backup: sqlite driver missing`,
+		]);
+	});
+
+	it("warns after import when the restored .sqlite database fails its integrity check", async () => {
+		// Two messages so the `join("; ")` separator is observable.
+		mockRunIntegrityCheck.mockResolvedValue({
+			status: "corrupt",
+			mode: "quick",
+			messages: ["index btree malformed", "page 7 unreadable"],
+		});
+		const projectDir = makeDir("sqlite-restore-project");
+		const snapshotDir = makeDir("sqlite-restore-snapshot");
+		writeFiles(snapshotDir, { "db/admin.sqlite": "db-bytes" });
 		const warnings: string[] = [];
 		const adapter = createAstropressGitSyncAdapter({
 			projectDir,
-			include: ["src"],
-			logger: { info: () => {}, warn: (msg) => warnings.push(msg) },
+			include: ["db"],
+			logger: { info: () => {}, warn: (m) => warnings.push(m) },
 		});
 
-		const targetDir = makeDir("snapshot-nosqlite");
-		await adapter.exportSnapshot(targetDir);
+		await adapter.importSnapshot(snapshotDir);
 
+		const restoredPath = join(projectDir, "db", "admin.sqlite");
+		expect(warnings).toEqual([
+			`Restored SQLite database at ${restoredPath} failed integrity check (corrupt): index btree malformed; page 7 unreadable`,
+		]);
+		// Post-import check runs against the restored destination file.
+		expect(mockRunIntegrityCheck).toHaveBeenCalledWith(restoredPath, { mode: "quick" });
+	});
+
+	it("does not run a post-import integrity check for non-.sqlite restored files", async () => {
+		// Pins the `dest.endsWith(".sqlite")` half of the post-check guard: a
+		// restored non-sqlite file must never trigger runIntegrityCheck.
+		const projectDir = makeDir("sqlite-import-nonsqlite-project");
+		const snapshotDir = makeDir("sqlite-import-nonsqlite-snapshot");
+		writeFiles(snapshotDir, { "db/notes.txt": "just text" });
+		const adapter = createAstropressGitSyncAdapter({
+			projectDir,
+			include: ["db"],
+			logger: { info: () => {}, warn: () => {} },
+		});
+
+		await adapter.importSnapshot(snapshotDir);
+		expect(mockRunIntegrityCheck).not.toHaveBeenCalled();
+	});
+
+	it("uses check.error in the post-import warning when no messages are present", async () => {
+		mockRunIntegrityCheck.mockResolvedValue({
+			status: "unavailable",
+			mode: "quick",
+			messages: [],
+			error: "could not open restored database",
+		});
+		const projectDir = makeDir("sqlite-restore-err-project");
+		const snapshotDir = makeDir("sqlite-restore-err-snapshot");
+		writeFiles(snapshotDir, { "db/admin.sqlite": "db-bytes" });
+		const warnings: string[] = [];
+		const adapter = createAstropressGitSyncAdapter({
+			projectDir,
+			include: ["db"],
+			logger: { info: () => {}, warn: (m) => warnings.push(m) },
+		});
+
+		await adapter.importSnapshot(snapshotDir);
+
+		expect(warnings).toEqual([
+			`Restored SQLite database at ${join(
+				projectDir,
+				"db",
+				"admin.sqlite",
+			)} failed integrity check (unavailable): could not open restored database`,
+		]);
+	});
+
+	it("falls back to an empty detail string when the failed check has neither messages nor error", async () => {
+		mockRunIntegrityCheck.mockResolvedValue({
+			status: "corrupt",
+			mode: "quick",
+			messages: [],
+		});
+		const projectDir = makeDir("sqlite-restore-empty-project");
+		const snapshotDir = makeDir("sqlite-restore-empty-snapshot");
+		writeFiles(snapshotDir, { "db/admin.sqlite": "db-bytes" });
+		const warnings: string[] = [];
+		const adapter = createAstropressGitSyncAdapter({
+			projectDir,
+			include: ["db"],
+			logger: { info: () => {}, warn: (m) => warnings.push(m) },
+		});
+
+		await adapter.importSnapshot(snapshotDir);
+
+		expect(warnings).toEqual([
+			`Restored SQLite database at ${join(
+				projectDir,
+				"db",
+				"admin.sqlite",
+			)} failed integrity check (corrupt): `,
+		]);
+	});
+
+	it("does not warn after import when the restored database passes its integrity check", async () => {
+		// runIntegrityCheck defaults to status "ok" — the post-import warning
+		// branch must stay closed.
+		const projectDir = makeDir("sqlite-restore-ok-project");
+		const snapshotDir = makeDir("sqlite-restore-ok-snapshot");
+		writeFiles(snapshotDir, { "db/admin.sqlite": "db-bytes" });
+		const warnings: string[] = [];
+		const adapter = createAstropressGitSyncAdapter({
+			projectDir,
+			include: ["db"],
+			logger: { info: () => {}, warn: (m) => warnings.push(m) },
+		});
+
+		await adapter.importSnapshot(snapshotDir);
 		expect(warnings).toHaveLength(0);
 	});
 
-	it("warns before export when a .sqlite file fails its integrity check", async () => {
-		// A file named .sqlite that isn't a real DB: the integrity check returns
-		// "unavailable" and git.ts's pre-export gate emits a warning (distinct
-		// from the checkpoint warning).
-		const projectDir = makeDir("project-integrity-export");
-		writeFiles(projectDir, { "db/admin.sqlite": "garbage-not-a-db" });
-
+	it("runs only the post-import integrity check on import — never the pre-backup check", async () => {
+		// Pins `if (options.preCheckIntegrity)`: import passes postCheckIntegrity
+		// only, so the pre-backup branch must not run. A pre-check would surface
+		// a "before backup" warning; only the "Restored ..." warning is allowed.
+		mockRunIntegrityCheck.mockResolvedValue({
+			status: "unavailable",
+			mode: "quick",
+			messages: [],
+			error: "driver missing",
+		});
+		const projectDir = makeDir("sqlite-import-precheck-project");
+		const snapshotDir = makeDir("sqlite-import-precheck-snapshot");
+		writeFiles(snapshotDir, { "db/admin.sqlite": "db-bytes" });
 		const warnings: string[] = [];
 		const adapter = createAstropressGitSyncAdapter({
 			projectDir,
 			include: ["db"],
-			logger: { info: () => {}, warn: (msg) => warnings.push(msg) },
+			logger: { info: () => {}, warn: (m) => warnings.push(m) },
 		});
-		const targetDir = makeDir("snapshot-integrity-export");
-		await adapter.exportSnapshot(targetDir);
 
-		expect(warnings.some((w) => w.startsWith("SQLite integrity check unavailable for"))).toBe(true);
-	});
-
-	it("warns after import when the restored .sqlite file fails its integrity check", async () => {
-		const projectDir = makeDir("project-integrity-import");
-		const snapshotDir = makeDir("snapshot-integrity-import");
-		writeFiles(snapshotDir, { "db/admin.sqlite": "garbage-not-a-db" });
-
-		const warnings: string[] = [];
-		const adapter = createAstropressGitSyncAdapter({
-			projectDir,
-			include: ["db"],
-			logger: { info: () => {}, warn: (msg) => warnings.push(msg) },
-		});
 		await adapter.importSnapshot(snapshotDir);
 
+		expect(warnings.some((w) => w.includes("before backup"))).toBe(false);
 		expect(warnings.some((w) => w.startsWith("Restored SQLite database at"))).toBe(true);
+		expect(mockRunIntegrityCheck).toHaveBeenCalledTimes(1);
 	});
 
-	it("logs importSnapshot copy method", async () => {
-		const projectDir = makeDir("project-import-log");
-		const snapshotDir = makeDir("snapshot-import-log");
-		writeFiles(snapshotDir, { "src/index.ts": "export {}" });
+	it("runs only the pre-backup integrity check on export — never the post-restore check", async () => {
+		// Pins the `options.postCheckIntegrity && dest.endsWith(".sqlite")` guard:
+		// export passes preCheckIntegrity only, so runIntegrityCheck must be
+		// called exactly once, against the source path.
+		const { projectDir, adapter } = sqliteAdapter("sqlite-export-postcheck");
+		writeFiles(projectDir, { "db/admin.sqlite": "db-bytes" });
 
-		const infos: string[] = [];
-		const adapter = createAstropressGitSyncAdapter({
-			projectDir,
-			include: ["src"],
-			logger: { info: (msg) => infos.push(msg), warn: () => {} },
+		await adapter.exportSnapshot(makeDir("sqlite-export-postcheck-target"));
+
+		expect(mockRunIntegrityCheck).toHaveBeenCalledTimes(1);
+		expect(mockRunIntegrityCheck).toHaveBeenCalledWith(join(projectDir, "db", "admin.sqlite"), {
+			mode: "quick",
 		});
-
-		await adapter.importSnapshot(snapshotDir);
-
-		expect(infos.length).toBe(1);
-		expect(infos[0]).toMatch(/copy-on-write|standard copy/);
 	});
 });

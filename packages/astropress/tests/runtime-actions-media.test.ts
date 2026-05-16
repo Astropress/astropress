@@ -12,14 +12,35 @@ let deleteRuntimeMediaAsset: typeof import("../src/runtime-actions-media.js").de
 // biome-ignore format: single-line typeof import required for esbuild/oxc compatibility
 let updateRuntimeMediaAsset: typeof import("../src/runtime-actions-media.js").updateRuntimeMediaAsset;
 
-const { mockStoreMedia, mockDeleteMedia, mockImageSize, mockSharp, mockGenerateSrcset } =
-	vi.hoisted(() => ({
-		mockStoreMedia: vi.fn(),
-		mockDeleteMedia: vi.fn(),
-		mockImageSize: vi.fn(),
-		mockSharp: vi.fn(),
-		mockGenerateSrcset: vi.fn(),
-	}));
+const {
+	mockStoreMedia,
+	mockDeleteMedia,
+	mockImageSize,
+	mockSharp,
+	mockGenerateSrcset,
+	mockLoadLocalAdminStore,
+	fakeLocalStore,
+} = vi.hoisted(() => ({
+	mockStoreMedia: vi.fn(),
+	mockDeleteMedia: vi.fn(),
+	mockImageSize: vi.fn(),
+	mockSharp: vi.fn(),
+	mockGenerateSrcset: vi.fn(),
+	mockLoadLocalAdminStore: vi.fn(),
+	fakeLocalStore: {
+		createMediaAsset: vi.fn(),
+		updateMediaAsset: vi.fn(),
+		deleteMediaAsset: vi.fn(),
+	},
+}));
+
+vi.mock("../src/local-runtime-modules", () => ({
+	loadLocalAdminStore: mockLoadLocalAdminStore,
+}));
+
+vi.mock("../src/local-runtime-modules.js", () => ({
+	loadLocalAdminStore: mockLoadLocalAdminStore,
+}));
 
 vi.mock("../src/runtime-media-storage", () => ({
 	storeRuntimeMediaObject: mockStoreMedia,
@@ -66,6 +87,11 @@ beforeEach(async () => {
 	mockImageSize.mockReset();
 	mockSharp.mockReset();
 	mockGenerateSrcset.mockReset();
+	mockLoadLocalAdminStore.mockReset();
+	fakeLocalStore.createMediaAsset.mockReset();
+	fakeLocalStore.updateMediaAsset.mockReset();
+	fakeLocalStore.deleteMediaAsset.mockReset();
+	mockLoadLocalAdminStore.mockResolvedValue(fakeLocalStore);
 	// Default: srcset returns null (avoids undefined binding to SQLite parameter)
 	mockGenerateSrcset.mockResolvedValue(null);
 });
@@ -273,12 +299,55 @@ describe("updateRuntimeMediaAsset", () => {
 
 	it("returns not-ok for unknown asset id", async () => {
 		const result = await updateRuntimeMediaAsset({ id: "ghost" }, actor, locals);
-		expect(result).toMatchObject({ ok: false });
+		expect(result).toMatchObject({
+			ok: false,
+			error: "The selected media asset could not be updated.",
+		});
 	});
 
 	it("returns not-ok for empty id", async () => {
 		const result = await updateRuntimeMediaAsset({ id: "   " }, actor, locals);
-		expect(result).toMatchObject({ ok: false });
+		expect(result).toMatchObject({ ok: false, error: "Media asset id is required." });
+	});
+
+	it("trims surrounding whitespace from the id before looking up the asset", async () => {
+		// Pins `input.id.trim()`: without the trim, the padded id never matches.
+		const result = await updateRuntimeMediaAsset({ id: "  asset-1  " }, actor, locals);
+		expect(result).toMatchObject({ ok: true });
+	});
+
+	it("trims surrounding whitespace from title and altText before storing", async () => {
+		const result = await updateRuntimeMediaAsset(
+			{ id: "asset-1", title: "  Padded Title  ", altText: "  Padded Alt  " },
+			actor,
+			locals,
+		);
+		expect(result).toMatchObject({ ok: true });
+		const row = db
+			.prepare("SELECT title, alt_text FROM media_assets WHERE id = 'asset-1'")
+			.get() as { title: string; alt_text: string };
+		expect(row.title).toBe("Padded Title");
+		expect(row.alt_text).toBe("Padded Alt");
+	});
+
+	it("records a media.update audit event referencing the asset id", async () => {
+		await updateRuntimeMediaAsset({ id: "asset-1", title: "T" }, actor, locals);
+		const row = db
+			.prepare(
+				"SELECT action, resource_type, summary FROM audit_events WHERE resource_id = 'asset-1' AND action = 'media.update'",
+			)
+			.get() as { action: string; resource_type: string; summary: string };
+		expect(row.action).toBe("media.update");
+		expect(row.resource_type).toBe("content");
+		expect(row.summary).toBe("Updated media metadata for asset-1.");
+	});
+
+	it("delegates to the local store when no D1 binding is present", async () => {
+		fakeLocalStore.updateMediaAsset.mockResolvedValue({ ok: true });
+		const input = { id: "asset-1", title: "Local" };
+		const result = await updateRuntimeMediaAsset(input, actor, null);
+		expect(fakeLocalStore.updateMediaAsset).toHaveBeenCalledWith(input, actor);
+		expect(result).toEqual({ ok: true });
 	});
 
 	it("omitting title and altText binds empty strings", async () => {
@@ -302,16 +371,51 @@ describe("deleteRuntimeMediaAsset", () => {
 		};
 		expect(row.deleted_at).not.toBeNull();
 		expect(mockDeleteMedia).toHaveBeenCalledOnce();
+		// Pins the storage-cleanup object literal: localPath/r2Key come from the row.
+		expect(mockDeleteMedia).toHaveBeenCalledWith(
+			{ localPath: "/images/test.png", r2Key: null },
+			locals,
+		);
 	});
 
 	it("returns not-ok for unknown id", async () => {
 		const result = await deleteRuntimeMediaAsset("ghost", actor, locals);
-		expect(result).toMatchObject({ ok: false });
+		expect(result).toMatchObject({
+			ok: false,
+			error: "The selected media asset could not be deleted.",
+		});
 	});
 
 	it("returns not-ok for empty id", async () => {
 		const result = await deleteRuntimeMediaAsset("  ", actor, locals);
-		expect(result).toMatchObject({ ok: false });
+		expect(result).toMatchObject({ ok: false, error: "Media asset id is required." });
+	});
+
+	it("trims surrounding whitespace from the id before looking up the asset", async () => {
+		// Pins `id.trim()`: without the trim, the padded id never matches.
+		mockDeleteMedia.mockResolvedValue(undefined);
+		const result = await deleteRuntimeMediaAsset("  asset-1  ", actor, locals);
+		expect(result).toMatchObject({ ok: true });
+	});
+
+	it("records a media.delete audit event referencing the asset id", async () => {
+		mockDeleteMedia.mockResolvedValue(undefined);
+		await deleteRuntimeMediaAsset("asset-1", actor, locals);
+		const row = db
+			.prepare(
+				"SELECT action, resource_type, summary FROM audit_events WHERE resource_id = 'asset-1' AND action = 'media.delete'",
+			)
+			.get() as { action: string; resource_type: string; summary: string };
+		expect(row.action).toBe("media.delete");
+		expect(row.resource_type).toBe("content");
+		expect(row.summary).toBe("Deleted media asset asset-1.");
+	});
+
+	it("delegates to the local store when no D1 binding is present", async () => {
+		fakeLocalStore.deleteMediaAsset.mockResolvedValue({ ok: true });
+		const result = await deleteRuntimeMediaAsset("asset-1", actor, null);
+		expect(fakeLocalStore.deleteMediaAsset).toHaveBeenCalledWith("asset-1", actor);
+		expect(result).toEqual({ ok: true });
 	});
 });
 
@@ -525,6 +629,160 @@ describe("createRuntimeMediaAsset — thumbnail and srcset", () => {
 
 		expect(result.ok).toBe(true);
 		expect(mockStoreMedia).toHaveBeenCalledTimes(2);
+	});
+
+	it("default maxUploadBytes is exactly 10 MiB when config omits the limit", async () => {
+		// STANDARD_CMS_CONFIG (registered in beforeEach) has no maxUploadBytes.
+		// A file of exactly 10 MiB must be accepted; arithmetic mutations of the
+		// 10 * 1024 * 1024 default would shrink the limit and reject it.
+		mockStoreMedia.mockResolvedValue(baseAsset);
+		const tenMiB = await createRuntimeMediaAsset(
+			{ filename: "ten.bin", bytes: new Uint8Array(10 * 1024 * 1024), mimeType: "image/jpeg" },
+			actor,
+			locals,
+		);
+		expect(tenMiB.ok).toBe(true);
+
+		const overLimit = await createRuntimeMediaAsset(
+			{ filename: "over.bin", bytes: new Uint8Array(10 * 1024 * 1024 + 1), mimeType: "image/jpeg" },
+			actor,
+			locals,
+		);
+		expect(overLimit).toMatchObject({ ok: false, error: expect.stringContaining("too large") });
+	});
+
+	it("accepts a file whose size exactly equals the configured limit", async () => {
+		// Pins the `>` boundary: `>=` would reject an exactly-at-limit file.
+		registerCms({
+			templateKeys: ["content"],
+			siteUrl: "https://example.com",
+			seedPages: [],
+			archives: [],
+			translationStatus: [],
+			maxUploadBytes: 100,
+		});
+		mockStoreMedia.mockResolvedValue(baseAsset);
+		const result = await createRuntimeMediaAsset(
+			{ filename: "exact.png", bytes: new Uint8Array(100), mimeType: "image/png" },
+			actor,
+			locals,
+		);
+		expect(result.ok).toBe(true);
+	});
+
+	it("error message reports the configured limit in MiB", async () => {
+		// Pins the `/ (1024 * 1024)` MiB conversion in the error string.
+		registerCms({
+			templateKeys: ["content"],
+			siteUrl: "https://example.com",
+			seedPages: [],
+			archives: [],
+			translationStatus: [],
+			maxUploadBytes: 2 * 1024 * 1024,
+		});
+		const result = await createRuntimeMediaAsset(
+			{ filename: "big.png", bytes: new Uint8Array(2 * 1024 * 1024 + 1), mimeType: "image/png" },
+			actor,
+			locals,
+		);
+		expect(result).toMatchObject({
+			ok: false,
+			error: "File too large — maximum upload size is 2.0 MiB",
+		});
+	});
+
+	it("falls back to the default limit when peekCmsConfig returns null", async () => {
+		// Pins the `peekCmsConfig()?.maxUploadBytes` optional chain: with the
+		// chain removed, a null config makes checkUploadSize throw instead of
+		// falling back to the 10 MiB default.
+		const CMS_CONFIG_KEY = Symbol.for("astropress.cms-config");
+		(globalThis as Record<symbol, unknown>)[CMS_CONFIG_KEY] = null;
+		mockStoreMedia.mockResolvedValue(baseAsset);
+		const result = await createRuntimeMediaAsset(
+			{ filename: "tiny.png", bytes: new Uint8Array(8), mimeType: "image/png" },
+			actor,
+			locals,
+		);
+		expect(result.ok).toBe(true);
+	});
+
+	it("dispatches a media event carrying the asset id, filename, mime, size and actor", async () => {
+		const events: unknown[] = [];
+		registerCms({
+			templateKeys: ["content"],
+			siteUrl: "https://example.com",
+			seedPages: [],
+			archives: [],
+			translationStatus: [],
+			plugins: [
+				{
+					name: "capture",
+					onMediaUpload: (event: unknown) => {
+						events.push(event);
+					},
+				},
+			],
+		});
+		mockStoreMedia.mockResolvedValue({
+			...baseAsset,
+			asset: { ...baseAsset.asset, id: "asset-evt", fileSize: 2048, mimeType: "image/jpeg" },
+		});
+
+		await createRuntimeMediaAsset(
+			{ filename: "evt.jpg", bytes: new Uint8Array([0xff, 0xd8]), mimeType: "image/jpeg" },
+			actor,
+			locals,
+		);
+
+		expect(events).toEqual([
+			{
+				id: "asset-evt",
+				filename: "evt.jpg",
+				mimeType: "image/jpeg",
+				size: 2048,
+				actor: actor.email,
+			},
+		]);
+	});
+
+	it("records a media.upload audit event with the stored filename in its summary", async () => {
+		mockStoreMedia.mockResolvedValue({
+			...baseAsset,
+			asset: { ...baseAsset.asset, id: "asset-audit", storedFilename: "audit-photo.jpg" },
+		});
+
+		await createRuntimeMediaAsset(
+			{ filename: "audit.jpg", bytes: new Uint8Array([0xff, 0xd8]), mimeType: "image/jpeg" },
+			actor,
+			locals,
+		);
+
+		const row = db
+			.prepare(
+				"SELECT action, resource_type, resource_id, summary FROM audit_events WHERE resource_id = 'asset-audit'",
+			)
+			.get() as {
+			action: string;
+			resource_type: string;
+			resource_id: string;
+			summary: string;
+		};
+		expect(row.action).toBe("media.upload");
+		expect(row.resource_type).toBe("content");
+		expect(row.resource_id).toBe("asset-audit");
+		expect(row.summary).toBe("Uploaded media asset audit-photo.jpg.");
+	});
+
+	it("delegates to the local store when no D1 binding is present", async () => {
+		fakeLocalStore.createMediaAsset.mockResolvedValue({ ok: true, id: "local-asset" });
+		const input = {
+			filename: "local.png",
+			bytes: new Uint8Array([1, 2, 3]),
+			mimeType: "image/png",
+		};
+		const result = await createRuntimeMediaAsset(input, actor, null);
+		expect(fakeLocalStore.createMediaAsset).toHaveBeenCalledWith(input, actor);
+		expect(result).toEqual({ ok: true, id: "local-asset" });
 	});
 
 	it("SVG uploads skip srcset generation", async () => {

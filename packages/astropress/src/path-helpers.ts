@@ -29,3 +29,12 @@ export function normalizeRoutePath(route: string): string {
 	const trimmed = stripTrailingSlashes(route);
 	return trimmed === "" ? "/" : trimmed;
 }
+
+/**
+ * Ensure `value` ends with exactly one "/". Adds a trailing slash when
+ * absent; returns the input unchanged when already terminated. Companion
+ * to {@link stripTrailingSlashes}.
+ */
+export function ensureTrailingSlash(value: string): string {
+	return value.charCodeAt(value.length - 1) === 47 ? value : `${value}/`;
+}

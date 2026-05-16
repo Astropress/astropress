@@ -85,6 +85,7 @@
 		"audit:user-journey-coverage": "bun run tooling/scripts/audit-user-journey-coverage.ts",
 		"audit:coverage-scope": "bun run tooling/scripts/audit-coverage-scope.ts",
 		"audit:mutation-scope": "bun run tooling/scripts/audit-mutation-scope.ts",
+		"audit:stryker-exclusions": "bun run tooling/scripts/audit-stryker-exclusions.ts",
 		"audit:ci-sarif-upload": "bun run tooling/scripts/audit-ci-sarif-upload.ts",
 		"audit:nuclei-suppressions": "bun run tooling/scripts/audit-nuclei-suppressions.ts",
 		"audit:required-checks": "bun run tooling/scripts/audit-required-checks.ts",
@@ -145,7 +146,8 @@
 		"hono": "^4.12.18",
 		"postcss": "^8.5.10",
 		"ip-address": "^10.2.0",
-		"fast-uri": "^3.1.2"
+		"fast-uri": "^3.1.2",
+		"devalue": "^5.8.1"
 	},
 	"browserslist": [
 		"Chrome >= 108",
@@ -158,8 +160,8 @@
 	},
 	"dependencies": {
 		"@astrojs/starlight": "^0.38.4",
-		"astro": "^6.2.2",
-		"sanitize-html": "^2.17.3",
+		"astro": "^6.3.3",
+		"sanitize-html": "^2.17.4",
 		"vitest": "^4.1.5"
 	}
 }

@@ -1,14 +1,14 @@
+import { SQL_INSERT_BASELINE_OVERRIDE, SQL_INSERT_BASELINE_REVISION } from "./content-sql-data";
 import type { AstropressSqliteDatabaseLike, PageRecord } from "./utils";
 
-export const SQL_UPSERT_OVERRIDE =
-	"INSERT INTO content_overrides (slug, title, status, body, seo_title, meta_description, excerpt, og_title, og_description, og_image, scheduled_at, canonical_url_override, robots_directive, metadata, updated_at, updated_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, ?) ON CONFLICT(slug) DO UPDATE SET title = excluded.title, status = excluded.status, body = excluded.body, seo_title = excluded.seo_title, meta_description = excluded.meta_description, excerpt = excluded.excerpt, og_title = excluded.og_title, og_description = excluded.og_description, og_image = excluded.og_image, scheduled_at = excluded.scheduled_at, canonical_url_override = excluded.canonical_url_override, robots_directive = excluded.robots_directive, metadata = excluded.metadata, updated_at = CURRENT_TIMESTAMP, updated_by = excluded.updated_by";
-export const SQL_INSERT_REVISION_CONTENT = `INSERT INTO content_revisions (id, slug, title, status, scheduled_at, body, seo_title, meta_description, excerpt, og_title, og_description, og_image, author_ids, category_ids, tag_ids, canonical_url_override, robots_directive, revision_note, source, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'reviewed', ?)`;
-export const SQL_INSERT_ENTRY = `INSERT INTO content_entries (slug, legacy_url, title, kind, template_key, source_html_path, updated_at, body, summary, seo_title, meta_description, og_title, og_description, og_image) VALUES (?, ?, ?, 'post', 'content', ?, CURRENT_TIMESTAMP, ?, ?, ?, ?, ?, ?, ?)`;
-export const SQL_LIST_REVISIONS_FOR_SLUG =
-	"SELECT id, slug, title, status, scheduled_at, body, seo_title, meta_description, excerpt, og_title, og_description, og_image, author_ids, category_ids, tag_ids, canonical_url_override, robots_directive, revision_note, source, created_at, created_by FROM content_revisions WHERE slug = ? ORDER BY datetime(created_at) DESC, id DESC";
-export const SQL_INSERT_BASELINE_OVERRIDE =
-	"INSERT INTO content_overrides (slug, title, status, body, seo_title, meta_description, excerpt, og_title, og_description, og_image, scheduled_at, canonical_url_override, robots_directive, updated_at, updated_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, ?) ON CONFLICT(slug) DO NOTHING";
-export const SQL_INSERT_BASELINE_REVISION = `INSERT INTO content_revisions (id, slug, title, status, scheduled_at, body, seo_title, meta_description, excerpt, og_title, og_description, og_image, canonical_url_override, robots_directive, revision_note, source, created_at, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'imported', ?, ?)`;
+export {
+	SQL_INSERT_BASELINE_OVERRIDE,
+	SQL_INSERT_BASELINE_REVISION,
+	SQL_INSERT_ENTRY,
+	SQL_INSERT_REVISION_CONTENT,
+	SQL_LIST_REVISIONS_FOR_SLUG,
+	SQL_UPSERT_OVERRIDE,
+} from "./content-sql-data";
 
 export type RevisionInput = {
 	title: string;

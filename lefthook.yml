@@ -256,6 +256,18 @@ pre-commit:
       run: bun run tooling/scripts/audit-stryker-thresholds.ts
 
     # DO NOT REMOVE — partner to audit-stryker-thresholds. The thresholds audit
+    # locks the BREAK percentage; this one locks the mutate-array scope so a
+    # silently-added `!`-pattern can't quietly drop a file out of mutation
+    # coverage. Every exclusion must be registered in ALLOWLIST in the audit
+    # script with a rubric. See tooling/scripts/audit-stryker-exclusions.ts.
+    audit-stryker-exclusions:
+      glob:
+        - "tooling/stryker/stryker*.mjs"
+        - "packages/*/stryker*.mjs"
+        - "tooling/scripts/audit-stryker-exclusions.ts"
+      run: bun run audit:stryker-exclusions
+
+    # DO NOT REMOVE — partner to audit-stryker-thresholds. The thresholds audit
     # locks the BREAK percentage in stryker config; this one locks the per-file
     # baseline-scores.json so a commit can't silently lower a floor (whether
     # by hand-edit or by an automated rebaseline that captured a methodology
@@ -561,6 +573,7 @@ pre-push:
       run: >-
         bun run tooling/scripts/run-with-peer-abort.ts mutation-gate --
         bun run tooling/scripts/run-with-timing.ts mutation-gate -- bash -c '
+          bun run tooling/scripts/is-baseline-only-push.ts && exit 0;
           bun run tooling/scripts/prepush-mutation-gate.ts &&
           bun run audit:baseline-coverage &&
           bun run audit:baseline-coverage:rust
@@ -575,8 +588,10 @@ pre-push:
       tags: rust mutation
       run: >-
         bun run tooling/scripts/run-with-peer-abort.ts mutation-gate-rust --
-        bun run tooling/scripts/run-with-timing.ts mutation-gate-rust --
-        bun run tooling/scripts/prepush-mutation-gate-rust.ts
+        bun run tooling/scripts/run-with-timing.ts mutation-gate-rust -- bash -c '
+          bun run tooling/scripts/is-baseline-only-push.ts && exit 0;
+          bun run tooling/scripts/prepush-mutation-gate-rust.ts
+        '
 
     slow-audits:
       # Whole-repo static audits moved out of pre-commit because they scan far

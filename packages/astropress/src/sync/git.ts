@@ -3,22 +3,13 @@ import { dirname, join, resolve } from "node:path";
 import type { GitSyncAdapter } from "../platform-contracts";
 import { checkpointSqliteWal } from "../sqlite-bootstrap-helpers";
 import { runIntegrityCheck } from "../sqlite-integrity";
+import { defaultEntries } from "./git-data";
 
 export interface AstropressGitSyncAdapterOptions {
 	projectDir: string;
 	include?: string[];
 	logger?: { info: (msg: string) => void; warn: (msg: string) => void };
 }
-
-const defaultEntries = [
-	"package.json",
-	"astro.config.mjs",
-	"src",
-	"public",
-	"content",
-	"db",
-	"tests",
-];
 
 async function pathExists(pathname: string) {
 	try {

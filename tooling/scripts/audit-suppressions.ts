@@ -64,26 +64,6 @@ const APPROVED: ApprovedSuppression[] = [
 			"the local html-in-template check doesn't apply here.",
 	},
 	{
-		file: "packages/astropress/src/runtime-health.ts",
-		linePattern: /biome-ignore lint\/suspicious\/noExplicitAny/,
-		contentPattern: /require/,
-		rubric:
-			"Dynamic require() fallback for sanitize-html in environments where ESM " +
-			"import() is unavailable. The any type is scoped to the fallback assignment " +
-			"and immediately narrowed by usage. No security suppression — lint only. " +
-			"Code fix: not possible without removing the CJS fallback path.",
-	},
-	{
-		file: "tooling/scripts/rust-arch-lint.ts",
-		linePattern: /biome-ignore lint\/suspicious\/noAssignInExpressions/,
-		contentPattern: /exec/,
-		rubric:
-			"Standard regex exec() loop pattern: while (m = re.exec(str)). " +
-			"Assignment-in-condition is idiomatic for this pattern and there is no " +
-			"non-assignment equivalent that preserves the same semantics without " +
-			"code duplication. Lint only — no security impact.",
-	},
-	{
 		file: "packages/astropress-nexus/tests/app.test.ts",
 		linePattern: /audit-ok:.*test mock routing.*new URL/,
 		contentPattern: /new URL\(url\)\.hostname/,
@@ -122,60 +102,6 @@ const APPROVED: ApprovedSuppression[] = [
 			"not actual unset. delete process.env.VAR is the only way to truly remove a " +
 			"key in Bun for correct test isolation. Code fix not possible without breaking " +
 			"test teardown on Bun. Lint only — no security impact.",
-	},
-	{
-		file: "packages/astropress/pages/ap-api/v1/content.ts",
-		linePattern: /biome-ignore lint\/style\/noNonNullAssertion/,
-		contentPattern: /apiTokens/,
-		rubric: "store.apiTokens always set by API token auth middleware. See block comment above.",
-	},
-	{
-		file: "packages/astropress/pages/ap-api/v1/content/[id].ts",
-		linePattern: /biome-ignore lint\/style\/noNonNullAssertion/,
-		contentPattern: /apiTokens/,
-		rubric: "store.apiTokens always set by API token auth middleware. See block comment above.",
-	},
-	{
-		file: "packages/astropress/pages/ap-api/v1/media.ts",
-		linePattern: /biome-ignore lint\/style\/noNonNullAssertion/,
-		contentPattern: /apiTokens/,
-		rubric: "store.apiTokens always set by API token auth middleware. See block comment above.",
-	},
-	{
-		file: "packages/astropress/pages/ap-api/v1/media/[id].ts",
-		linePattern: /biome-ignore lint\/style\/noNonNullAssertion/,
-		contentPattern: /apiTokens/,
-		rubric: "store.apiTokens always set by API token auth middleware. See block comment above.",
-	},
-	{
-		file: "packages/astropress/pages/ap-api/v1/metrics.ts",
-		linePattern: /biome-ignore lint\/style\/noNonNullAssertion/,
-		contentPattern: /apiTokens/,
-		rubric: "store.apiTokens always set by API token auth middleware. See block comment above.",
-	},
-	{
-		file: "packages/astropress/pages/ap-api/v1/revisions/[recordId].ts",
-		linePattern: /biome-ignore lint\/style\/noNonNullAssertion/,
-		contentPattern: /apiTokens/,
-		rubric: "store.apiTokens always set by API token auth middleware. See block comment above.",
-	},
-	{
-		file: "packages/astropress/pages/ap-api/v1/search.ts",
-		linePattern: /biome-ignore lint\/style\/noNonNullAssertion/,
-		contentPattern: /apiTokens/,
-		rubric: "store.apiTokens always set by API token auth middleware. See block comment above.",
-	},
-	{
-		file: "packages/astropress/pages/ap-api/v1/settings.ts",
-		linePattern: /biome-ignore lint\/style\/noNonNullAssertion/,
-		contentPattern: /apiTokens/,
-		rubric: "store.apiTokens always set by API token auth middleware. See block comment above.",
-	},
-	{
-		file: "packages/astropress/pages/ap-api/v1/webhooks.ts",
-		linePattern: /biome-ignore lint\/style\/noNonNullAssertion/,
-		contentPattern: /apiTokens/,
-		rubric: "store.apiTokens always set by API token auth middleware. See block comment above.",
 	},
 ];
 

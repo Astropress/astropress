@@ -1,4 +1,5 @@
 import type { AnalyticsConfig } from "./config";
+import { ensureTrailingSlash } from "./path-helpers";
 
 /**
  * Resolves the analytics tracking snippet for the configured provider.
@@ -24,7 +25,7 @@ export function resolveAnalyticsSnippet(config?: AnalyticsConfig | null): string
 		}
 		case "matomo": {
 			if (!config.url || !config.siteId) return "";
-			const trackerUrl = config.url.endsWith("/") ? config.url : `${config.url}/`;
+			const trackerUrl = ensureTrailingSlash(config.url);
 			return [
 				"<script>",
 				"var _paq = window._paq = window._paq || [];",

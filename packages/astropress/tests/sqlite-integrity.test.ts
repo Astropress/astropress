@@ -117,6 +117,7 @@ describe("runIntegrityCheck", () => {
 			loadDb: async () => fakeCtor,
 		});
 		expect(result.status).toBe("unavailable");
+		expect(result.messages).toEqual([]);
 		expect(result.error).toContain("Failed to open database at /some/path.sqlite");
 		expect(result.error).toContain("open-fail");
 	});

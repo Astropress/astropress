@@ -351,6 +351,37 @@ describe("scheduledPosts", () => {
 		});
 		const model = await buildAdminDashboardModel(LOCALS, ADMIN_USER, [], deps);
 		expect(model.scheduledPosts).toEqual([]);
+		expect(model.scheduledPosts.map((r) => r.id)).toEqual([]);
+		expect(model.scheduledPosts.length).toBe(0);
+	});
+
+	it("excludes posts with empty-string scheduledAt", async () => {
+		const p = content({ id: "p1", slug: "p1", scheduledAt: "" });
+		const deps = makeDeps({
+			listRuntimeContentStates: vi.fn(async () => [p]),
+		});
+		const model = await buildAdminDashboardModel(LOCALS, ADMIN_USER, [], deps);
+		expect(model.scheduledPosts).toEqual([]);
+	});
+
+	it("excludes posts whose scheduledAt is exactly now (strict greater-than)", async () => {
+		vi.useFakeTimers();
+		try {
+			const fixed = new Date("2050-06-15T12:00:00.000Z");
+			vi.setSystemTime(fixed);
+			const exact = content({
+				id: "now",
+				slug: "now",
+				scheduledAt: fixed.toISOString(),
+			});
+			const deps = makeDeps({
+				listRuntimeContentStates: vi.fn(async () => [exact]),
+			});
+			const model = await buildAdminDashboardModel(LOCALS, ADMIN_USER, [], deps);
+			expect(model.scheduledPosts).toEqual([]);
+		} finally {
+			vi.useRealTimers();
+		}
 	});
 
 	it("sorts ascending by scheduledAt and slices to 5", async () => {
@@ -472,6 +503,8 @@ describe("recentActivity", () => {
 		const model = await buildAdminDashboardModel(LOCALS, NON_ADMIN_USER, [], deps);
 		expect(model.recentActivity).toHaveLength(1);
 		expect(model.recentActivity[0].title).toBe("P1");
+		expect(model.recentActivity[0].kind).toBe("Post");
+		expect(model.recentActivity[0].editHref).toBe("/ap-admin/posts/p1");
 	});
 
 	it("filters out activity entries with no updatedAt", async () => {

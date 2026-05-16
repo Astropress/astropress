@@ -1,74 +1,19 @@
-const allowedTags = new Set([
-	"a",
-	"b",
-	"blockquote",
-	"br",
-	"code",
-	"div",
-	"em",
-	"figcaption",
-	"figure",
-	"h1",
-	"h2",
-	"h3",
-	"h4",
-	"h5",
-	"h6",
-	"hr",
-	"i",
-	"img",
-	"li",
-	"ol",
-	"p",
-	"pre",
-	"span",
-	"strong",
-	"sub",
-	"sup",
-	"table",
-	"tbody",
-	"td",
-	"th",
-	"thead",
-	"tr",
-	"u",
-	"ul",
-]);
-
-const allowedAttributes = new Map<string, Set<string>>([
-	["*", new Set(["class"])],
-	["a", new Set(["href", "name", "target", "rel"])],
-	[
-		"img",
-		new Set([
-			"src",
-			"srcset",
-			"sizes",
-			"alt",
-			"title",
-			"width",
-			"height",
-			"loading",
-			"decoding",
-			"fetchpriority",
-		]),
-	],
-	["th", new Set(["colspan", "rowspan", "scope"])],
-	["td", new Set(["colspan", "rowspan"])],
-]);
-
-const dropContentTags = new Set(["script", "style", "textarea", "option", "iframe"]);
-const urlAttributes = new Set(["href", "src"]);
-const srcsetAttributes = new Set(["srcset"]);
-const allowedSchemes = new Set(["http", "https", "mailto", "tel"]);
+import {
+	allowedAttributes,
+	allowedGlobalAttributes,
+	allowedSchemes,
+	allowedTags,
+	dropContentTags,
+	srcsetAttributes,
+	urlAttributes,
+} from "./html-sanitization-data.js";
 
 function isAllowedUrl(value: string) {
-	const trimmed = value.trim();
-	if (!trimmed || trimmed.startsWith("//")) {
+	if (!value || value.startsWith("//")) {
 		return false;
 	}
 
-	const schemeMatch = trimmed.match(/^([a-zA-Z][a-zA-Z0-9+.-]*):/);
+	const schemeMatch = value.match(/^([a-zA-Z][a-zA-Z0-9+.-]*):/);
 	if (!schemeMatch) {
 		return true;
 	}
@@ -80,9 +25,8 @@ function sanitizeSrcset(value: string) {
 	const candidates = value
 		.split(",")
 		.map((candidate) => candidate.trim())
-		.filter(Boolean)
 		.filter((candidate) => {
-			const [url] = candidate.split(/\s+/, 1);
+			const [url] = candidate.split(/\s/, 1);
 			return Boolean(url) && isAllowedUrl(url);
 		});
 
@@ -91,8 +35,7 @@ function sanitizeSrcset(value: string) {
 
 function sanitizeAttribute(tagName: string, attributeName: string, attributeValue: string) {
 	const allowedForTag = allowedAttributes.get(tagName);
-	const allowedGlobally = allowedAttributes.get("*");
-	const isAllowed = allowedForTag?.has(attributeName) || allowedGlobally?.has(attributeName);
+	const isAllowed = allowedForTag?.has(attributeName) || allowedGlobalAttributes.has(attributeName);
 
 	if (!isAllowed) {
 		return null;

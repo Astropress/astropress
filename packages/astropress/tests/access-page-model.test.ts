@@ -2,7 +2,11 @@ import type { DatabaseSync } from "node:sqlite";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createAccessRepository, seedStarterRoles } from "../src/access";
+import * as d1AccessPageStore from "../src/access/d1-access-page-store";
+import * as accessRequestContext from "../src/access/request-context";
 import { type AccessPageTab, buildAccessPageModel } from "../src/admin-page-models-access";
+import * as adminStoreDispatch from "../src/admin-store-dispatch";
+import * as runtimePageStore from "../src/runtime-page-store";
 import { makeDb } from "./helpers/make-db.js";
 import { makeLocals } from "./helpers/make-locals.js";
 
@@ -131,5 +135,50 @@ describe("buildAccessPageModel", () => {
 		// The viewer is admin — admins bypass policy evaluation, but the
 		// computed list should still expose the policy snapshot for transparency.
 		expect(Array.isArray(result.data.viewerPolicies)).toBe(true);
+	});
+
+	it("returns the users-unavailable warning and an empty users array when getRuntimeAdminUsers rejects", async () => {
+		vi.spyOn(runtimePageStore, "getRuntimeAdminUsers").mockRejectedValueOnce(new Error("fail"));
+		const result = await buildAccessPageModel(locals, adminUser);
+		expect(result.warnings).toContain("User records are temporarily unavailable.");
+		expect(result.data.users).toEqual([]);
+	});
+
+	it("returns the tab-data-unavailable warning and the empty fallback shape when loadAccessTabDataFromD1 rejects", async () => {
+		vi.spyOn(d1AccessPageStore, "loadAccessTabDataFromD1").mockRejectedValueOnce(new Error("fail"));
+		const result = await buildAccessPageModel(locals, adminUser);
+		expect(result.warnings).toContain("Access role and grant data is temporarily unavailable.");
+		// Every shape-key in the fallback object literal is asserted so an ObjectLiteral → {}
+		// mutant on the fallback would replace these with undefined and fail.
+		expect(result.data.roles).toEqual([]);
+		expect(result.data.userRoleMap).toEqual({});
+		expect(result.data.userDirectGrantCounts).toEqual({});
+		expect(result.data.rolePoliciesMap).toEqual({});
+		expect(result.data.activeAdminCount).toBe(0);
+	});
+
+	it("falls through to the local-store fallback shape when DB binding is unavailable", async () => {
+		// Force the dispatcher to take the onLocal path so the local-fallback arrow
+		// (`async () => ({...})`) is the one that produces tabData. An ArrowFunction
+		// mutant on that local fallback would return undefined and crash; the explicit
+		// shape assertions below confirm the real fallback object literal is returned.
+		vi.spyOn(adminStoreDispatch, "withLocalStoreFallback").mockImplementationOnce(
+			async (_locals, _onD1, onLocal) =>
+				onLocal(undefined as unknown as Parameters<typeof onLocal>[0]),
+		);
+		const result = await buildAccessPageModel(locals, adminUser);
+		expect(result.status).toBe("ok");
+		expect(result.data.roles).toEqual([]);
+		expect(result.data.userRoleMap).toEqual({});
+		expect(result.data.userDirectGrantCounts).toEqual({});
+		expect(result.data.rolePoliciesMap).toEqual({});
+		expect(result.data.activeAdminCount).toBe(0);
+	});
+
+	it("returns an empty viewerPolicies array when getAccessContext resolves null", async () => {
+		vi.spyOn(accessRequestContext, "getAccessContext").mockResolvedValueOnce(null);
+		const result = await buildAccessPageModel(locals, adminUser);
+		expect(result.status).toBe("ok");
+		expect(result.data.viewerPolicies).toEqual([]);
 	});
 });

@@ -1,9 +1,10 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
 	createAstropressNhostAdapter,
 	createAstropressNhostHostedAdapter,
 	readAstropressNhostHostedConfig,
 } from "../src/adapters/nhost.js";
+import { createAstropressInMemoryPlatformAdapter } from "../src/in-memory-platform-adapter.js";
 
 describe("readAstropressNhostHostedConfig", () => {
 	const validEnv = {
@@ -99,10 +100,50 @@ describe("createAstropressNhostHostedAdapter", () => {
 		const panel = adapter.capabilities.hostPanel as {
 			url: string;
 			label: string;
+			mode: string;
 		};
 		expect(panel).toBeTruthy();
 		expect(panel.url).toBe("https://abcdefgh.eu-central-1.nhost.run/console");
 		expect(panel.label).toBe("Nhost Console");
+		// Pins L94 StringLiteral `mode: "link"`.
+		expect(panel.mode).toBe("link");
+	});
+
+	it("routes through the hosted-API adapter when no stores are provided and invokes fetchImpl (pins L78 condition chain)", async () => {
+		const fetchImpl = vi.fn(async () => new Response(JSON.stringify([]), { status: 200 }) as never);
+		const adapter = createAstropressNhostHostedAdapter({
+			env: validEnv,
+			fetchImpl: fetchImpl as never,
+		});
+		await adapter.content.list("post");
+		expect(fetchImpl).toHaveBeenCalled();
+		expect(String(fetchImpl.mock.calls[0]?.[0])).toContain("functions/astropress");
+	});
+
+	it.each([
+		["backingAdapter"],
+		["content"],
+		["media"],
+		["revisions"],
+		["auth"],
+	] as const)("does NOT call fetchImpl when only `%s` is supplied (pins each L78 `!options.x &&` clause)", async (key) => {
+		const fetchImpl = vi.fn(async () => new Response("nope", { status: 500 }) as never);
+		const backing = createAstropressInMemoryPlatformAdapter({
+			capabilities: { name: "sqlite" },
+		});
+		const isolated: Record<string, unknown> = {};
+		if (key === "backingAdapter") {
+			isolated.backingAdapter = backing;
+		} else {
+			isolated[key] = backing[key as "content" | "media" | "revisions" | "auth"];
+		}
+		const adapter = createAstropressNhostHostedAdapter({
+			env: validEnv,
+			...(isolated as Parameters<typeof createAstropressNhostHostedAdapter>[0]),
+			fetchImpl: fetchImpl as never,
+		});
+		await adapter.content.list("post");
+		expect(fetchImpl).not.toHaveBeenCalled();
 	});
 
 	it("accepts explicit config bypassing env read", () => {
@@ -140,5 +181,42 @@ describe("createAstropressNhostHostedAdapter", () => {
 
 	it("throws when required env vars are missing and no explicit config", () => {
 		expect(() => createAstropressNhostHostedAdapter({ env: {} })).toThrow(/NHOST_SUBDOMAIN/);
+	});
+
+	it("trims whitespace from NHOST_SUBDOMAIN (pins L53 .trim())", () => {
+		const config = readAstropressNhostHostedConfig({
+			NHOST_SUBDOMAIN: "  xyz  ",
+			NHOST_REGION: "us-east-1",
+			NHOST_ADMIN_SECRET: "secret",
+		});
+		expect(config.subdomain).toBe("xyz");
+	});
+
+	it("treats whitespace-only NHOST_SUBDOMAIN as missing", () => {
+		expect(() =>
+			readAstropressNhostHostedConfig({
+				NHOST_SUBDOMAIN: "   ",
+				NHOST_REGION: "us-east-1",
+				NHOST_ADMIN_SECRET: "secret",
+			}),
+		).toThrow();
+	});
+
+	it("trims whitespace from NHOST_REGION (pins L54 .trim())", () => {
+		const config = readAstropressNhostHostedConfig({
+			NHOST_SUBDOMAIN: "xyz",
+			NHOST_REGION: "  us-east-1  ",
+			NHOST_ADMIN_SECRET: "secret",
+		});
+		expect(config.region).toBe("us-east-1");
+	});
+
+	it("trims whitespace from NHOST_ADMIN_SECRET (pins L55 .trim())", () => {
+		const config = readAstropressNhostHostedConfig({
+			NHOST_SUBDOMAIN: "xyz",
+			NHOST_REGION: "us-east-1",
+			NHOST_ADMIN_SECRET: "  secret  ",
+		});
+		expect(config.adminSecret).toBe("secret");
 	});
 });

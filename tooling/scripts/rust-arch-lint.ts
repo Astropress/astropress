@@ -92,9 +92,7 @@ async function main() {
 		if (isCommandFile) {
 			// Detect `use crate::commands::something_other_than_import_common`
 			const commandImportPattern = /use\s+crate::commands::(?!import_common\b)(\w+)/g;
-			let match: RegExpExecArray | null;
-			// biome-ignore lint/suspicious/noAssignInExpressions: standard regex exec loop
-			while ((match = commandImportPattern.exec(content)) !== null) {
+			for (const match of content.matchAll(commandImportPattern)) {
 				violations.push({
 					file: display,
 					rule: "command-isolation",

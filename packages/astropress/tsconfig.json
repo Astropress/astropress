@@ -6,7 +6,8 @@
 			"@astropress-diy/astropress": ["./index.ts"],
 			"@astropress-diy/astropress/components/*": ["./components/*"],
 			"@astropress-diy/astropress/*": ["./src/*"]
-		}
+		},
+		"ignoreDeprecations": "6.0"
 	},
 	"include": ["src/**/*", "index.ts", "components/**/*", "bin/**/*", "env.d.ts", "pages/**/*"]
 }

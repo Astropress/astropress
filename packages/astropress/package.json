@@ -461,7 +461,7 @@
 		"@noble/post-quantum": "^0.6.1",
 		"image-size": "^2.0.2",
 		"nodemailer": "^8.0.5",
-		"sanitize-html": "^2.17.3",
+		"sanitize-html": "^2.17.4",
 		"sharp": "^0.34.5"
 	},
 	"devDependencies": {

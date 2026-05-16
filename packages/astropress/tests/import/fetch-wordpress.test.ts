@@ -50,6 +50,7 @@ vi.mock("playwright", () => ({
 
 import { chromium } from "playwright";
 import {
+	BotDetectionError,
 	CaptchaDetectedError,
 	fetchWordPressExport,
 	InsufficientPermissionsError,
@@ -128,9 +129,65 @@ describe("fetchWordPressExport — success path", () => {
 		expect(mocks.page.click).toHaveBeenCalledWith("#wp-submit");
 	});
 
-	it("returns the path to the downloaded export file", async () => {
+	it("returns the path to the downloaded export file with an empty warnings array", async () => {
 		const result = await fetchWordPressExport(BASE_OPTS);
 		expect(result.exportPath).toContain("wordpress-export.xml");
+		expect(result.warnings).toEqual([]);
+	});
+
+	it("navigates to wp-admin/export.php with timeout + waitUntil:'domcontentloaded'", async () => {
+		await fetchWordPressExport(BASE_OPTS);
+		const exportCall = mocks.page.goto.mock.calls.find(
+			([url]) => typeof url === "string" && url.endsWith("/wp-admin/export.php"),
+		);
+		expect(exportCall).toBeDefined();
+		expect(exportCall?.[0]).toBe("https://mysite.com/wp-admin/export.php");
+		expect(exportCall?.[1]).toMatchObject({
+			timeout: expect.any(Number),
+			waitUntil: "domcontentloaded",
+		});
+	});
+
+	it("does NOT click submit when the #submit locator's count is 0 (download still proceeds via waitForEvent)", async () => {
+		const submitLocator = makeLocator({ count: 0 });
+		mocks.page.locator.mockImplementation((sel: string) => {
+			if (sel === "#submit") return submitLocator;
+			if (sel.includes("authcode") || sel.includes("mfa") || sel.includes("two-factor")) {
+				return makeLocator({ count: 0 });
+			}
+			return makeLocator({ count: 1 });
+		});
+		await fetchWordPressExport(BASE_OPTS);
+		expect(submitLocator.click).not.toHaveBeenCalled();
+	});
+
+	it("requests the page's #submit locator AND clicks it when the count is > 0", async () => {
+		const submitLocator = makeLocator({ count: 1 });
+		// Override the locator implementation so we can spy on the #submit locator specifically
+		// while still returning count=0 for 2FA selectors.
+		mocks.page.locator.mockImplementation((sel: string) => {
+			if (sel === "#submit") return submitLocator;
+			if (sel.includes("authcode") || sel.includes("mfa") || sel.includes("two-factor")) {
+				return makeLocator({ count: 0 });
+			}
+			return makeLocator({ count: 1 });
+		});
+		await fetchWordPressExport(BASE_OPTS);
+		expect(mocks.page.locator).toHaveBeenCalledWith("#submit");
+		expect(submitLocator.click).toHaveBeenCalled();
+	});
+
+	it("waits for the 'download' event with a timeout option", async () => {
+		await fetchWordPressExport(BASE_OPTS);
+		expect(mocks.page.waitForEvent).toHaveBeenCalledWith(
+			"download",
+			expect.objectContaining({ timeout: expect.any(Number) }),
+		);
+	});
+
+	it("creates the browser context with acceptDownloads enabled", async () => {
+		await fetchWordPressExport(BASE_OPTS);
+		expect(mocks.browser.newContext).toHaveBeenCalledWith({ acceptDownloads: true });
 	});
 
 	it("closes the browser even on success", async () => {
@@ -249,5 +306,232 @@ describe("fetchWordPressExport — failure modes", () => {
 		mocks.page.goto.mockRejectedValue(new Error("net::ERR_NAME_NOT_RESOLVED"));
 		await expect(fetchWordPressExport(BASE_OPTS)).rejects.toThrow();
 		expect(mocks.browser.close).toHaveBeenCalled();
+	});
+});
+
+// ---------------------------------------------------------------------------
+// Exact error-class name and message assertions (kill StringLiteral mutants
+// on `override name` and the constructor super(...) messages).
+// ---------------------------------------------------------------------------
+
+describe("typed Error classes — exact name and message", () => {
+	it("SiteNotReachableError has name='SiteNotReachableError' and the documented hostname:reason format", () => {
+		const err = new SiteNotReachableError("example.com", "boom");
+		expect(err.name).toBe("SiteNotReachableError");
+		expect(err.message).toBe("Cannot reach example.com: boom");
+	});
+
+	it("NotWordPressSiteError has name='NotWordPressSiteError' and references the URL with the documented message", () => {
+		const err = new NotWordPressSiteError("https://x.test");
+		expect(err.name).toBe("NotWordPressSiteError");
+		expect(err.message).toBe(
+			"The URL does not appear to be a WordPress site — wp-login.php was not found at https://x.test",
+		);
+	});
+
+	it("InvalidCredentialsError has name='InvalidCredentialsError' and the documented message", () => {
+		const err = new InvalidCredentialsError();
+		expect(err.name).toBe("InvalidCredentialsError");
+		expect(err.message).toBe("Login failed: username or password was incorrect");
+	});
+
+	it("TwoFactorRequiredError has name='TwoFactorRequiredError' and the documented message", () => {
+		const err = new TwoFactorRequiredError();
+		expect(err.name).toBe("TwoFactorRequiredError");
+		expect(err.message).toBe(
+			"Two-factor authentication is required — export the file manually and use --source",
+		);
+	});
+
+	it("CaptchaDetectedError has name='CaptchaDetectedError' and both documented lines of guidance", () => {
+		const err = new CaptchaDetectedError();
+		expect(err.name).toBe("CaptchaDetectedError");
+		expect(err.message).toContain("CAPTCHA detected — the site requires human verification.");
+		expect(err.message).toContain(
+			"Export the file manually via Tools → Export in your WordPress dashboard and use --source.",
+		);
+	});
+
+	it("BotDetectionError has name='BotDetectionError' and both documented lines of guidance", () => {
+		const err = new BotDetectionError();
+		expect(err.name).toBe("BotDetectionError");
+		expect(err.message).toContain(
+			"Bot detection triggered (Cloudflare or similar security layer).",
+		);
+		expect(err.message).toContain(
+			"Export the file manually via Tools → Export in your WordPress dashboard and use --source.",
+		);
+	});
+
+	it("InsufficientPermissionsError has name='InsufficientPermissionsError' and both documented lines of guidance", () => {
+		const err = new InsufficientPermissionsError();
+		expect(err.name).toBe("InsufficientPermissionsError");
+		expect(err.message).toContain("Insufficient permissions");
+		expect(err.message).toContain(
+			"Log into WordPress, go to Users → Your Profile, and confirm the role is Administrator.",
+		);
+	});
+});
+
+// ---------------------------------------------------------------------------
+// classifyNetworkError — exercised via fetchWordPressExport with goto rejections
+// ---------------------------------------------------------------------------
+
+describe("classifyNetworkError (via goto rejection)", () => {
+	beforeEach(() => {
+		vi.resetAllMocks();
+		setupBrowserChain();
+	});
+
+	it("classifies ERR_CONNECTION_REFUSED as the documented 'connection refused' reason", async () => {
+		mocks.page.goto.mockRejectedValue(new Error("net::ERR_CONNECTION_REFUSED"));
+		await expect(fetchWordPressExport(BASE_OPTS)).rejects.toThrow(
+			"Cannot reach mysite.com: connection refused — is the site running?",
+		);
+	});
+
+	it("classifies ERR_CERT_* / SSL / certificate errors as the documented SSL reason", async () => {
+		mocks.page.goto.mockRejectedValue(new Error("net::ERR_CERT_AUTHORITY_INVALID"));
+		await expect(fetchWordPressExport(BASE_OPTS)).rejects.toThrow(
+			"Cannot reach mysite.com: SSL/TLS error — try using http:// instead of https://",
+		);
+	});
+
+	it("classifies TIMEOUT errors (case-insensitive) as the documented timed-out reason", async () => {
+		mocks.page.goto.mockRejectedValue(new Error("Navigation TIMEOUT exceeded"));
+		await expect(fetchWordPressExport(BASE_OPTS)).rejects.toThrow(
+			"Cannot reach mysite.com: timed out — the server took too long to respond",
+		);
+	});
+
+	it("classifies EAI_AGAIN as the documented DNS-lookup-failed reason", async () => {
+		mocks.page.goto.mockRejectedValue(new Error("getaddrinfo EAI_AGAIN mysite.com"));
+		await expect(fetchWordPressExport(BASE_OPTS)).rejects.toThrow(
+			"Cannot reach mysite.com: DNS lookup failed — check the site URL is correct",
+		);
+	});
+
+	it("falls back to the raw error message verbatim when no classifier matches", async () => {
+		mocks.page.goto.mockRejectedValue(new Error("strange unknown problem"));
+		await expect(fetchWordPressExport(BASE_OPTS)).rejects.toThrow(
+			"Cannot reach mysite.com: strange unknown problem",
+		);
+	});
+
+	it("stringifies non-Error rejection values via String(err)", async () => {
+		mocks.page.goto.mockRejectedValue("plain-string-rejection");
+		await expect(fetchWordPressExport(BASE_OPTS)).rejects.toThrow(
+			"Cannot reach mysite.com: plain-string-rejection",
+		);
+	});
+});
+
+// ---------------------------------------------------------------------------
+// isBotBlocked — every cf-* token triggers BotDetectionError independently
+// ---------------------------------------------------------------------------
+
+describe("isBotBlocked (via login-page content)", () => {
+	beforeEach(() => {
+		vi.resetAllMocks();
+		setupBrowserChain();
+		mocks.page.goto.mockResolvedValue({ status: () => 200 });
+		mocks.page.url.mockReturnValue("https://mysite.com/wp-login.php");
+	});
+
+	const tokens = [
+		"cf-browser-verification",
+		"cf-challenge",
+		"cf-spinner",
+		"window._cf_chl_opt",
+		"__cf_chl_jschl_tk__",
+	];
+	for (const token of tokens) {
+		it(`throws BotDetectionError when the login page contains '${token}' (NOT CaptchaDetectedError)`, async () => {
+			mocks.page.content.mockResolvedValue(
+				`<html><body><form id="loginform"></form><script>${token}</script></body></html>`,
+			);
+			await expect(fetchWordPressExport({ ...BASE_OPTS, headless: false })).rejects.toBeInstanceOf(
+				BotDetectionError,
+			);
+		});
+	}
+});
+
+// ---------------------------------------------------------------------------
+// Public API — headless retry semantics
+// ---------------------------------------------------------------------------
+
+describe("fetchWordPressExport — headless retry on bot detection", () => {
+	beforeEach(() => {
+		vi.resetAllMocks();
+		setupBrowserChain();
+	});
+
+	it("with headless=false explicit, skips the headless attempt and runs visible-only", async () => {
+		const launch = vi.mocked(chromium.launch);
+		mocks.page.goto.mockResolvedValue({ status: () => 200 });
+		mocks.page.content.mockResolvedValue('<form id="loginform"></form>');
+		mocks.page.url.mockReturnValue("https://mysite.com/wp-admin/");
+		mocks.page.locator.mockImplementation((sel: string) =>
+			makeLocator({
+				count:
+					sel.includes("authcode") || sel.includes("mfa") || sel.includes("two-factor") ? 0 : 1,
+			}),
+		);
+		mocks.page.waitForEvent.mockResolvedValue({
+			suggestedFilename: () => "x.xml",
+			saveAs: vi.fn(),
+		});
+
+		await fetchWordPressExport({ ...BASE_OPTS, headless: false });
+		// Single launch with headless: false — no headless first-pass.
+		expect(launch).toHaveBeenCalledTimes(1);
+		expect(launch).toHaveBeenCalledWith({ headless: false });
+	});
+
+	it("retries with headless=false after a headless BotDetectionError, and writes the documented stderr notice", async () => {
+		const launch = vi.mocked(chromium.launch);
+		// Both attempts succeed past initial nav; the FIRST attempt's content trips bot detection.
+		mocks.page.goto.mockResolvedValue({ status: () => 200 });
+		const captchaContent = '<form id="loginform"></form><script>cf-challenge</script>';
+		const cleanContent = '<form id="loginform"></form>';
+		// First call (headless pass): bot-blocked content
+		// Subsequent calls (visible retry): clean content
+		mocks.page.content.mockResolvedValueOnce(captchaContent).mockResolvedValue(cleanContent);
+		mocks.page.url.mockReturnValue("https://mysite.com/wp-admin/");
+		mocks.page.locator.mockImplementation((sel: string) =>
+			makeLocator({
+				count:
+					sel.includes("authcode") || sel.includes("mfa") || sel.includes("two-factor") ? 0 : 1,
+			}),
+		);
+		mocks.page.waitForEvent.mockResolvedValue({
+			suggestedFilename: () => "x.xml",
+			saveAs: vi.fn(),
+		});
+
+		const stderrWrite = vi.spyOn(process.stderr, "write").mockReturnValue(true);
+		await fetchWordPressExport(BASE_OPTS);
+
+		expect(launch).toHaveBeenCalledTimes(2);
+		expect(launch).toHaveBeenNthCalledWith(1, { headless: true });
+		expect(launch).toHaveBeenNthCalledWith(2, { headless: false });
+
+		const allWrites = stderrWrite.mock.calls.map((c) => String(c[0])).join("");
+		expect(allWrites).toContain(
+			"[astropress] Bot detection or CAPTCHA triggered in headless mode.",
+		);
+		expect(allWrites).toContain(
+			"[astropress] Opening a visible browser — please solve any challenge that appears,",
+		);
+		expect(allWrites).toContain("[astropress] then the export will continue automatically.");
+		stderrWrite.mockRestore();
+	});
+
+	it("does NOT retry when the headless attempt throws a non-bot-detection error", async () => {
+		const launch = vi.mocked(chromium.launch);
+		mocks.page.goto.mockRejectedValue(new Error("net::ERR_NAME_NOT_RESOLVED"));
+		await expect(fetchWordPressExport(BASE_OPTS)).rejects.toBeInstanceOf(SiteNotReachableError);
+		expect(launch).toHaveBeenCalledTimes(1);
 	});
 });

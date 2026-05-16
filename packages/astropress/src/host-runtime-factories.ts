@@ -1,3 +1,8 @@
+import {
+	ADMIN_STORE_FLAT_METHOD_SECTIONS,
+	ADMIN_STORE_SECTIONS,
+	type AdminStoreSection,
+} from "./host-runtime-factories-data";
 import type {
 	LocalAdminAuthModule,
 	LocalAdminStoreModule,
@@ -33,176 +38,67 @@ export interface AstropressHostRuntimeBundleInput {
 	cmsRegistry: LocalCmsRegistryModule;
 }
 
+// audit-boundary: opaque-passthrough -- forwarder shape; per-section method signatures vary
+type AnyMethod = (...args: unknown[]) => unknown;
+
+// Lazy section forwarder: every method call re-resolves `getStore()` so the
+// returned proxy always targets the current store instance. This preserves
+// the per-call lazy semantics of the previous hand-authored factory, where
+// the inner section objects re-invoked `getStore()` on each method call.
+function createSectionProxy(
+	getStore: () => AdminStoreAdapter,
+	section: AdminStoreSection,
+): AdminStoreAdapter[AdminStoreSection] {
+	return new Proxy({} as AdminStoreAdapter[AdminStoreSection], {
+		get(_target, prop) {
+			if (typeof prop !== "string") return undefined;
+			// audit-boundary: opaque-passthrough -- Proxy forwarder; arg types vary per method
+			return (...args: unknown[]) => {
+				const sectionApi = getStore()[section] as unknown as Record<string, AnyMethod>;
+				return sectionApi[prop](...args);
+			};
+		},
+	});
+}
+
 export function createAstropressAdminStoreModule(
 	getStore: () => AdminStoreAdapter,
 ): LocalAdminStoreModule {
-	const store = () => getStore();
-
-	return {
-		audit: {
-			getAuditEvents: (...args) => store().audit.getAuditEvents(...args),
-			recordAuditEvent: (...args) => store().audit.recordAuditEvent(...args),
+	return new Proxy({} as LocalAdminStoreModule, {
+		get(_target, prop) {
+			if (typeof prop !== "string") return undefined;
+			if (ADMIN_STORE_SECTIONS.has(prop)) {
+				return createSectionProxy(getStore, prop as AdminStoreSection);
+			}
+			const section = ADMIN_STORE_FLAT_METHOD_SECTIONS[prop];
+			if (section === undefined) return undefined;
+			// audit-boundary: opaque-passthrough -- Proxy forwarder; arg types vary per method
+			return (...args: unknown[]) => {
+				const sectionApi = getStore()[section] as unknown as Record<string, AnyMethod>;
+				return sectionApi[prop](...args);
+			};
 		},
-		auth: {
-			createSession: (...args) => store().auth.createSession(...args),
-			getSessionUser: (...args) => store().auth.getSessionUser(...args),
-			getCsrfToken: (...args) => store().auth.getCsrfToken(...args),
-			revokeSession: (...args) => store().auth.revokeSession(...args),
-			createPasswordResetToken: (...args) => store().auth.createPasswordResetToken(...args),
-			getInviteRequest: (...args) => store().auth.getInviteRequest(...args),
-			getPasswordResetRequest: (...args) => store().auth.getPasswordResetRequest(...args),
-			consumeInviteToken: (...args) => store().auth.consumeInviteToken(...args),
-			consumePasswordResetToken: (...args) => store().auth.consumePasswordResetToken(...args),
-			recordSuccessfulLogin: (...args) => store().auth.recordSuccessfulLogin(...args),
-			recordLogout: (...args) => store().auth.recordLogout(...args),
-		},
-		users: {
-			listAdminUsers: (...args) => store().users.listAdminUsers(...args),
-			inviteAdminUser: (...args) => store().users.inviteAdminUser(...args),
-			suspendAdminUser: (...args) => store().users.suspendAdminUser(...args),
-			unsuspendAdminUser: (...args) => store().users.unsuspendAdminUser(...args),
-		},
-		authors: {
-			listAuthors: (...args) => store().authors.listAuthors(...args),
-			createAuthor: (...args) => store().authors.createAuthor(...args),
-			updateAuthor: (...args) => store().authors.updateAuthor(...args),
-			deleteAuthor: (...args) => store().authors.deleteAuthor(...args),
-		},
-		taxonomies: {
-			listCategories: (...args) => store().taxonomies.listCategories(...args),
-			createCategory: (...args) => store().taxonomies.createCategory(...args),
-			updateCategory: (...args) => store().taxonomies.updateCategory(...args),
-			deleteCategory: (...args) => store().taxonomies.deleteCategory(...args),
-			listTags: (...args) => store().taxonomies.listTags(...args),
-			createTag: (...args) => store().taxonomies.createTag(...args),
-			updateTag: (...args) => store().taxonomies.updateTag(...args),
-			deleteTag: (...args) => store().taxonomies.deleteTag(...args),
-		},
-		redirects: {
-			getRedirectRules: (...args) => store().redirects.getRedirectRules(...args),
-			createRedirectRule: (...args) => store().redirects.createRedirectRule(...args),
-			deleteRedirectRule: (...args) => store().redirects.deleteRedirectRule(...args),
-		},
-		comments: {
-			getComments: (...args) => store().comments.getComments(...args),
-			moderateComment: (...args) => store().comments.moderateComment(...args),
-			submitPublicComment: (...args) => store().comments.submitPublicComment(...args),
-			getApprovedCommentsForRoute: (...args) =>
-				store().comments.getApprovedCommentsForRoute(...args),
-		},
-		content: {
-			listContentStates: (...args) => store().content.listContentStates(...args),
-			getContentState: (...args) => store().content.getContentState(...args),
-			getContentRevisions: (...args) => store().content.getContentRevisions(...args),
-			createContentRecord: (...args) => store().content.createContentRecord(...args),
-			saveContentState: (...args) => store().content.saveContentState(...args),
-			restoreRevision: (...args) => store().content.restoreRevision(...args),
-		},
-		submissions: {
-			getContactSubmissions: (...args) => store().submissions.getContactSubmissions(...args),
-			submitContact: (...args) => store().submissions.submitContact(...args),
-		},
-		translations: {
-			updateTranslationState: (...args) => store().translations.updateTranslationState(...args),
-			getEffectiveTranslationState: (...args) =>
-				store().translations.getEffectiveTranslationState(...args),
-		},
-		settings: {
-			getSettings: (...args) => store().settings.getSettings(...args),
-			saveSettings: (...args) => store().settings.saveSettings(...args),
-		},
-		rateLimits: {
-			checkRateLimit: (...args) => store().rateLimits.checkRateLimit(...args),
-			peekRateLimit: (...args) => store().rateLimits.peekRateLimit(...args),
-			recordFailedAttempt: (...args) => store().rateLimits.recordFailedAttempt(...args),
-		},
-		media: {
-			listMediaAssets: (...args) => store().media.listMediaAssets(...args),
-			createMediaAsset: (...args) => store().media.createMediaAsset(...args),
-			updateMediaAsset: (...args) => store().media.updateMediaAsset(...args),
-			deleteMediaAsset: (...args) => store().media.deleteMediaAsset(...args),
-		},
-		createSession: (...args) => store().auth.createSession(...args),
-		getSessionUser: (...args) => store().auth.getSessionUser(...args),
-		getCsrfToken: (...args) => store().auth.getCsrfToken(...args),
-		revokeSession: (...args) => store().auth.revokeSession(...args),
-		createPasswordResetToken: (...args) => store().auth.createPasswordResetToken(...args),
-		getInviteRequest: (...args) => store().auth.getInviteRequest(...args),
-		getPasswordResetRequest: (...args) => store().auth.getPasswordResetRequest(...args),
-		consumeInviteToken: (...args) => store().auth.consumeInviteToken(...args),
-		consumePasswordResetToken: (...args) => store().auth.consumePasswordResetToken(...args),
-		recordSuccessfulLogin: (...args) => store().auth.recordSuccessfulLogin(...args),
-		recordLogout: (...args) => store().auth.recordLogout(...args),
-		getAuditEvents: (...args) => store().audit.getAuditEvents(...args),
-		recordAuditEvent: (...args) => store().audit.recordAuditEvent(...args),
-		listAdminUsers: (...args) => store().users.listAdminUsers(...args),
-		inviteAdminUser: (...args) => store().users.inviteAdminUser(...args),
-		suspendAdminUser: (...args) => store().users.suspendAdminUser(...args),
-		unsuspendAdminUser: (...args) => store().users.unsuspendAdminUser(...args),
-		listAuthors: (...args) => store().authors.listAuthors(...args),
-		createAuthor: (...args) => store().authors.createAuthor(...args),
-		updateAuthor: (...args) => store().authors.updateAuthor(...args),
-		deleteAuthor: (...args) => store().authors.deleteAuthor(...args),
-		listCategories: (...args) => store().taxonomies.listCategories(...args),
-		createCategory: (...args) => store().taxonomies.createCategory(...args),
-		updateCategory: (...args) => store().taxonomies.updateCategory(...args),
-		deleteCategory: (...args) => store().taxonomies.deleteCategory(...args),
-		listTags: (...args) => store().taxonomies.listTags(...args),
-		createTag: (...args) => store().taxonomies.createTag(...args),
-		updateTag: (...args) => store().taxonomies.updateTag(...args),
-		deleteTag: (...args) => store().taxonomies.deleteTag(...args),
-		getRedirectRules: (...args) => store().redirects.getRedirectRules(...args),
-		createRedirectRule: (...args) => store().redirects.createRedirectRule(...args),
-		deleteRedirectRule: (...args) => store().redirects.deleteRedirectRule(...args),
-		getComments: (...args) => store().comments.getComments(...args),
-		moderateComment: (...args) => store().comments.moderateComment(...args),
-		submitPublicComment: (...args) => store().comments.submitPublicComment(...args),
-		listContentStates: (...args) => store().content.listContentStates(...args),
-		getContentState: (...args) => store().content.getContentState(...args),
-		getContentRevisions: (...args) => store().content.getContentRevisions(...args),
-		createContentRecord: (...args) => store().content.createContentRecord(...args),
-		saveContentState: (...args) => store().content.saveContentState(...args),
-		restoreRevision: (...args) => store().content.restoreRevision(...args),
-		getContactSubmissions: (...args) => store().submissions.getContactSubmissions(...args),
-		submitContact: (...args) => store().submissions.submitContact(...args),
-		updateTranslationState: (...args) => store().translations.updateTranslationState(...args),
-		getEffectiveTranslationState: (...args) =>
-			store().translations.getEffectiveTranslationState(...args),
-		getSettings: (...args) => store().settings.getSettings(...args),
-		saveSettings: (...args) => store().settings.saveSettings(...args),
-		checkRateLimit: (...args) => store().rateLimits.checkRateLimit(...args),
-		peekRateLimit: (...args) => store().rateLimits.peekRateLimit(...args),
-		recordFailedAttempt: (...args) => store().rateLimits.recordFailedAttempt(...args),
-		listMediaAssets: (...args) => store().media.listMediaAssets(...args),
-		createMediaAsset: (...args) => store().media.createMediaAsset(...args),
-		updateMediaAsset: (...args) => store().media.updateMediaAsset(...args),
-		deleteMediaAsset: (...args) => store().media.deleteMediaAsset(...args),
-	};
+	});
 }
 
 export function createAstropressPasswordAuthModule(
 	authenticateAdminUser: (email: string, password: string) => Promise<SessionUser | null>,
 ): LocalAdminAuthModule {
-	return {
-		authenticateAdminUser,
-	};
+	return { authenticateAdminUser };
 }
 
 export function createAstropressCmsRegistryModule(
 	registry: LocalCmsRegistryModule,
 ): LocalCmsRegistryModule {
-	return {
-		listSystemRoutes: (...args) => registry.listSystemRoutes(...args),
-		getSystemRoute: (...args) => registry.getSystemRoute(...args),
-		saveSystemRoute: (...args) => registry.saveSystemRoute(...args),
-		listStructuredPageRoutes: (...args) => registry.listStructuredPageRoutes(...args),
-		getStructuredPageRoute: (...args) => registry.getStructuredPageRoute(...args),
-		saveStructuredPageRoute: (...args) => registry.saveStructuredPageRoute(...args),
-		createStructuredPageRoute: (...args) => registry.createStructuredPageRoute(...args),
-		getArchiveRoute: (...args) => registry.getArchiveRoute(...args),
-		listArchiveRoutes: (...args) => registry.listArchiveRoutes(...args),
-		saveArchiveRoute: (...args) => registry.saveArchiveRoute(...args),
-	};
+	return new Proxy({} as LocalCmsRegistryModule, {
+		get(_target, prop) {
+			if (typeof prop !== "string") return undefined;
+			const method = (registry as unknown as Record<string, AnyMethod | undefined>)[prop];
+			if (typeof method !== "function") return undefined;
+			// audit-boundary: opaque-passthrough -- Proxy forwarder; arg types vary per method
+			return (...args: unknown[]) => method.apply(registry, args);
+		},
+	});
 }
 
 function requireBootstrapPassword(

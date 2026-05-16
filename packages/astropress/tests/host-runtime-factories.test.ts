@@ -6,6 +6,11 @@ import {
 	createAstropressHostRuntimeBundle,
 	createAstropressPasswordAuthModule,
 } from "../src/host-runtime-factories";
+import {
+	ADMIN_STORE_FLAT_METHOD_SECTIONS,
+	ADMIN_STORE_SECTIONS,
+} from "../src/host-runtime-factories-data";
+import type { AdminStoreAdapter } from "../src/persistence-types";
 
 describe("host runtime factories", () => {
 	it("creates a delegating local admin store module from an AdminStoreAdapter getter", async () => {
@@ -265,6 +270,40 @@ describe("host runtime factories", () => {
 		expect(getArchiveRoute).toHaveBeenCalledWith("/archive");
 	});
 
+	it("throws referencing ADMIN_PASSWORD when adminPassword is missing", () => {
+		expect(() => createAstropressBootstrapAdminUsers({ editorPassword: "editor-secret" })).toThrow(
+			/ADMIN_PASSWORD/,
+		);
+	});
+
+	it("throws referencing EDITOR_PASSWORD when editorPassword is missing", () => {
+		expect(() => createAstropressBootstrapAdminUsers({ adminPassword: "admin-secret" })).toThrow(
+			/EDITOR_PASSWORD/,
+		);
+	});
+
+	it("applies default emails and names when only passwords are supplied", () => {
+		expect(
+			createAstropressBootstrapAdminUsers({
+				adminPassword: "admin-secret",
+				editorPassword: "editor-secret",
+			}),
+		).toEqual([
+			{
+				email: "admin@example.com",
+				password: "admin-secret",
+				role: "admin",
+				name: "Admin",
+			},
+			{
+				email: "editor@example.com",
+				password: "editor-secret",
+				role: "editor",
+				name: "Editor",
+			},
+		]);
+	});
+
 	it("creates bootstrap admin users from runtime passwords", () => {
 		expect(
 			createAstropressBootstrapAdminUsers({
@@ -512,5 +551,173 @@ describe("host runtime factories", () => {
 			email: "admin@example.com",
 		});
 		expect(bundle.localCmsRegistryModule.listSystemRoutes()).toEqual([]);
+	});
+});
+
+describe("createAstropressAdminStoreModule (Proxy semantics)", () => {
+	type Call = { section: string; method: string; args: unknown[] };
+	const buildFakeStore = (calls: Call[]): AdminStoreAdapter =>
+		new Proxy({} as AdminStoreAdapter, {
+			get(_target, section) {
+				if (typeof section !== "string") return undefined;
+				return new Proxy(
+					{},
+					{
+						get(_t, method) {
+							if (typeof method !== "string") return undefined;
+							return (...args: unknown[]) => {
+								calls.push({ section, method, args });
+								return `${section}.${method}::${JSON.stringify(args)}`;
+							};
+						},
+					},
+				);
+			},
+		}) as AdminStoreAdapter;
+
+	it("forwards every flat method to its declared section with full arg list", () => {
+		const calls: Call[] = [];
+		const storeModule = createAstropressAdminStoreModule(() => buildFakeStore(calls));
+		for (const [method, expectedSection] of Object.entries(ADMIN_STORE_FLAT_METHOD_SECTIONS)) {
+			const fn = (storeModule as unknown as Record<string, (...a: unknown[]) => unknown>)[method];
+			expect(typeof fn).toBe("function");
+			const result = fn("alpha", 42, { nested: true });
+			expect(result).toBe(`${expectedSection}.${method}::["alpha",42,{"nested":true}]`);
+		}
+		expect(calls).toHaveLength(Object.keys(ADMIN_STORE_FLAT_METHOD_SECTIONS).length);
+		for (const c of calls) {
+			expect(c.args).toEqual(["alpha", 42, { nested: true }]);
+			expect(ADMIN_STORE_FLAT_METHOD_SECTIONS[c.method]).toBe(c.section);
+		}
+	});
+
+	it("exposes each declared section as a lazy proxy that forwards by method name", () => {
+		const calls: Call[] = [];
+		const storeModule = createAstropressAdminStoreModule(() => buildFakeStore(calls));
+		for (const section of ADMIN_STORE_SECTIONS) {
+			const sectionApi = (
+				storeModule as unknown as Record<string, Record<string, (...a: unknown[]) => unknown>>
+			)[section];
+			expect(typeof sectionApi).toBe("object");
+			const result = sectionApi.someProbeMethod("x");
+			expect(result).toBe(`${section}.someProbeMethod::["x"]`);
+		}
+	});
+
+	it("returns undefined for unknown property names and for symbol keys", () => {
+		const calls: Call[] = [];
+		const storeModule = createAstropressAdminStoreModule(() => buildFakeStore(calls));
+		expect((storeModule as unknown as Record<string, unknown>).notARealMethod).toBeUndefined();
+		expect(
+			(storeModule as unknown as Record<string, unknown>).getApprovedCommentsForRoute,
+		).toBeUndefined();
+		expect((storeModule as unknown as { [k: symbol]: unknown })[Symbol.iterator]).toBeUndefined();
+	});
+
+	it("re-resolves getStore() on every flat-method call (no snapshot at access time)", () => {
+		const calls: Call[] = [];
+		let active = 0;
+		const stores = [buildFakeStore(calls), buildFakeStore(calls)];
+		const storeModule = createAstropressAdminStoreModule(() => stores[active] as AdminStoreAdapter);
+		const getSettings = (storeModule as unknown as { getSettings: (...a: unknown[]) => unknown })
+			.getSettings;
+		getSettings("first");
+		active = 1;
+		getSettings("second");
+		expect(calls.map((c) => c.args[0])).toEqual(["first", "second"]);
+	});
+
+	it("re-resolves getStore() on every nested-section method call", () => {
+		const calls: Call[] = [];
+		let active = 0;
+		const stores = [buildFakeStore(calls), buildFakeStore(calls)];
+		const storeModule = createAstropressAdminStoreModule(() => stores[active] as AdminStoreAdapter);
+		const settingsSection = (
+			storeModule as unknown as { settings: { getSettings: (...a: unknown[]) => unknown } }
+		).settings;
+		settingsSection.getSettings("first");
+		active = 1;
+		settingsSection.getSettings("second");
+		expect(calls.map((c) => c.args[0])).toEqual(["first", "second"]);
+	});
+
+	it("does not expose getApprovedCommentsForRoute as a flat method (nested-only)", () => {
+		const calls: Call[] = [];
+		const storeModule = createAstropressAdminStoreModule(() => buildFakeStore(calls));
+		expect(
+			(storeModule as unknown as Record<string, unknown>).getApprovedCommentsForRoute,
+		).toBeUndefined();
+		const commentsSection = (
+			storeModule as unknown as {
+				comments: { getApprovedCommentsForRoute: (...a: unknown[]) => unknown };
+			}
+		).comments;
+		expect(commentsSection.getApprovedCommentsForRoute("/path")).toBe(
+			'comments.getApprovedCommentsForRoute::["/path"]',
+		);
+	});
+});
+
+describe("createAstropressCmsRegistryModule (Proxy semantics)", () => {
+	it("forwards every method on the underlying registry with the original arguments", () => {
+		const calls: Array<{ method: string; args: unknown[] }> = [];
+		const make = (method: string) =>
+			vi.fn((...args: unknown[]) => {
+				calls.push({ method, args });
+				return `${method}::${JSON.stringify(args)}`;
+			});
+		const registry = {
+			listSystemRoutes: make("listSystemRoutes"),
+			getSystemRoute: make("getSystemRoute"),
+			saveSystemRoute: make("saveSystemRoute"),
+			listStructuredPageRoutes: make("listStructuredPageRoutes"),
+			getStructuredPageRoute: make("getStructuredPageRoute"),
+			saveStructuredPageRoute: make("saveStructuredPageRoute"),
+			createStructuredPageRoute: make("createStructuredPageRoute"),
+			getArchiveRoute: make("getArchiveRoute"),
+			listArchiveRoutes: make("listArchiveRoutes"),
+			saveArchiveRoute: make("saveArchiveRoute"),
+		} as unknown as Parameters<typeof createAstropressCmsRegistryModule>[0];
+		const module = createAstropressCmsRegistryModule(registry);
+		const moduleRecord = module as unknown as Record<string, (...a: unknown[]) => unknown>;
+		for (const method of Object.keys(registry as Record<string, unknown>)) {
+			const result = moduleRecord[method]("arg1", { z: 9 });
+			expect(result).toBe(`${method}::${JSON.stringify(["arg1", { z: 9 }])}`);
+		}
+		expect(calls.map((c) => c.method).sort()).toEqual(
+			Object.keys(registry as Record<string, unknown>).sort(),
+		);
+		for (const c of calls) {
+			expect(c.args).toEqual(["arg1", { z: 9 }]);
+		}
+	});
+
+	it("returns undefined for unknown property names, symbol keys, and non-function members", () => {
+		const registry = {
+			listSystemRoutes: () => [],
+			getSystemRoute: () => null,
+			saveSystemRoute: () => ({ ok: false as const, error: "x" }),
+			listStructuredPageRoutes: () => [],
+			getStructuredPageRoute: () => null,
+			saveStructuredPageRoute: () => ({ ok: false as const, error: "x" }),
+			createStructuredPageRoute: () => ({ ok: false as const, error: "x" }),
+			getArchiveRoute: () => null,
+			listArchiveRoutes: () => [],
+			saveArchiveRoute: () => ({ ok: false as const, error: "x" }),
+		};
+		const module = createAstropressCmsRegistryModule(registry);
+		const asRecord = module as unknown as Record<string, unknown>;
+		expect(asRecord.notARealMethod).toBeUndefined();
+		expect((module as unknown as { [k: symbol]: unknown })[Symbol.iterator]).toBeUndefined();
+		// Inject a non-function-valued property; the Proxy must still return undefined
+		// rather than the raw value, otherwise consumers hit "is not a function" errors
+		// at the call site.
+		const registryWithExtra = Object.assign({}, registry, {
+			description: "static metadata, not a callable",
+		});
+		const moduleWithExtra = createAstropressCmsRegistryModule(
+			registryWithExtra as unknown as typeof registry,
+		);
+		expect((moduleWithExtra as unknown as Record<string, unknown>).description).toBeUndefined();
 	});
 });

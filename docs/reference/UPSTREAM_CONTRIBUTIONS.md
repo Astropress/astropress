@@ -534,6 +534,30 @@ GitHub-release-asset shared store + lock branch.
 
 ---
 
+### 16. `clear-text` reporter truncates the per-mutant covering-test list
+
+**Pain point:** Under `coverageAnalysis: "perTest"` (and visible in fast-mode
+runs), the `clear-text` reporter prints surviving mutants with their covering
+tests but cuts the list at a fixed cap, ending with `…and N more tests!`. When
+diagnosing a linkage artifact — e.g. a mutant whose covering tests don't
+include the file you expect — the truncated list hides exactly the entries you
+need. The full list is only available by post-processing the JSON report,
+which forces a second tool pass to answer questions a developer would
+otherwise read off the console output mid-iteration.
+
+**Astropress code:** observed during raise-baseline-driven Phase 2 mutation
+sweeps; truncation made it harder to spot test-pairing drift on factory-shape
+files where the expected covering test was buried past the cap.
+
+**Upstream ask:**
+- Make the cap configurable on the `clear-text` reporter (e.g. an option
+  `coveringTestsLimit: number | "all"`), defaulting to current behaviour but
+  letting wrappers opt into the full list.
+- Alternatively, surface a one-line hint when truncation occurs pointing to
+  the JSON report path, so the next step is obvious.
+
+---
+
 ## Summary table
 
 | Project | Change | Astropress benefit |
@@ -560,3 +584,4 @@ GitHub-release-asset shared store + lock branch.
 | Stryker | Documented `repoRoot` in reporter injection context | Custom reporters write checkpoint artefacts outside the sandbox without env-var conventions |
 | Stryker | Remote-state config + lock for incremental file | Devs + CI share cache; no per-machine cold start |
 | Stryker | `ignoreStatic` honors `static: true` flag under `perTest` (or warns) | Static-only consts no longer surface as Survived under vitest-runner module caching |
+| Stryker (`clear-text` reporter) | Configurable `coveringTestsLimit` | Linkage-artifact diagnoses see the full covering-test list without a JSON post-process |

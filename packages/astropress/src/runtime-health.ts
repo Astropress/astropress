@@ -10,8 +10,7 @@ export interface HealthStatus {
 function resolveVersion(): string {
 	try {
 		// Resolved at runtime from the nearest package.json
-		// biome-ignore lint/suspicious/noExplicitAny: dynamic require fallback
-		const pkg = (globalThis as any).__ASTROPRESS_VERSION__;
+		const pkg = (globalThis as { __ASTROPRESS_VERSION__?: unknown }).__ASTROPRESS_VERSION__;
 		if (typeof pkg === "string") return pkg;
 	} catch {
 		// ignore

@@ -87,53 +87,63 @@ jobs:
           key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lockb') }}
           restore-keys: ${{ runner.os }}-bun-
       - run: bun install --frozen-lockfile
-      - run: bun run audit:deps
-      - run: bun run audit:security
-      - run: bun run audit:honesty
-      - run: bun run audit:microcopy
-      - run: bun run check:version
-      - run: bun run audit:arch
+      # biome and audit:required-checks need GH_TOKEN, so they run separately
+      # before the parallel batch (biome also produces github-annotations).
       - run: bunx @biomejs/biome@2 check --reporter=github packages/astropress/src packages/astropress/tests packages/astropress/web-components
-      - run: bun run audit:deps:graph
-      - run: bun run audit:tooling-types
-      - run: bun run audit:aeo
-      - run: bun run audit:providers
-      - run: bun run audit:github-actions-shell
       - run: bun run audit:required-checks
         env:
           GH_TOKEN: ${{ github.token }}
-      - run: bun run audit:baseline-coverage
-      - run: bun run audit:toolchain-pins
-      - run: bun run audit:user-journey-coverage
-      - run: bun run audit:coverage-scope
-      - run: bun run audit:playwright-projects
-      - run: bun run audit:registry-sync
-      - run: bun run audit:cli-docs
-      - run: bun run audit:env-contract
-      - run: bun run audit:exports
-      - run: bun run audit:crypto
-      - run: bun run audit:web-components
-      - run: bun run audit:navigation
-      - run: bun run audit:interaction
-      - run: bun run audit:error-handling
-      - run: bun run audit:caching
-      - run: bun run audit:nexus
-      - run: bun run audit:developer-ergonomics
-      - run: bun run audit:dead-exports
-      - run: bun run audit:bdd-wiring
-      - run: bun run audit:no-stub-tests
-      - run: bun run audit:evaluation-integrity
-      - run: bun run audit:observability
-      - run: bun run audit:api-design
-      - run: bun run audit:ai-drivability
-      - run: bun run audit:i18n
-      - run: bun run audit:admin-i18n-leaks
-      - run: bun run audit:content-modeling
-      - run: bun run audit:collaboration
-      - run: bun run audit:oss-health
-      - run: bun run audit:scaffold-quality
-      - run: bun run docs:api:check
-      - run: bun run docs:check
+      # All other audits are pure read-only scans of the working tree with no
+      # shared writable state. Run them concurrently — typical wall time
+      # drops from ~30s serial to <10s parallel.
+      - name: Run audits in parallel
+        run: |
+          bun run tooling/scripts/run-audits-parallel.ts \
+            audit:deps \
+            audit:security \
+            audit:honesty \
+            audit:microcopy \
+            check:version \
+            audit:arch \
+            audit:deps:graph \
+            audit:tooling-types \
+            audit:aeo \
+            audit:providers \
+            audit:github-actions-shell \
+            audit:baseline-coverage \
+            audit:toolchain-pins \
+            audit:user-journey-coverage \
+            audit:coverage-scope \
+            audit:playwright-projects \
+            audit:registry-sync \
+            audit:cli-docs \
+            audit:env-contract \
+            audit:exports \
+            audit:crypto \
+            audit:web-components \
+            audit:navigation \
+            audit:interaction \
+            audit:error-handling \
+            audit:caching \
+            audit:nexus \
+            audit:developer-ergonomics \
+            audit:dead-exports \
+            audit:bdd-wiring \
+            audit:no-stub-tests \
+            audit:evaluation-integrity \
+            audit:observability \
+            audit:api-design \
+            audit:ai-drivability \
+            audit:i18n \
+            audit:admin-i18n-leaks \
+            audit:content-modeling \
+            audit:collaboration \
+            audit:oss-health \
+            audit:scaffold-quality \
+            audit:integration-honesty \
+            audit:integration-secrets \
+            docs:api:check \
+            docs:check
       - run: bun run repo:clean
 
   lint-rust:
@@ -360,7 +370,7 @@ jobs:
       - uses: actions/cache@v5
         with:
           path: ~/.cache/ms-playwright
-          key: ${{ runner.os }}-playwright-${{ hashFiles('**/bun.lockb') }}
+          key: ${{ runner.os }}-playwright-${{ hashFiles('packages/astropress/package.json') }}
           restore-keys: ${{ runner.os }}-playwright-
 
       - uses: ./.github/actions/content-skip
@@ -493,7 +503,7 @@ jobs:
       - uses: actions/cache@v5
         with:
           path: ~/.cache/ms-playwright
-          key: ${{ runner.os }}-playwright-${{ hashFiles('**/bun.lockb') }}
+          key: ${{ runner.os }}-playwright-${{ hashFiles('packages/astropress/package.json') }}
           restore-keys: ${{ runner.os }}-playwright-
 
       - uses: ./.github/actions/content-skip
@@ -552,7 +562,7 @@ jobs:
       - uses: actions/cache@v5
         with:
           path: ~/.cache/ms-playwright
-          key: ${{ runner.os }}-playwright-${{ hashFiles('**/bun.lockb') }}
+          key: ${{ runner.os }}-playwright-${{ hashFiles('packages/astropress/package.json') }}
           restore-keys: ${{ runner.os }}-playwright-
 
       - uses: ./.github/actions/content-skip
