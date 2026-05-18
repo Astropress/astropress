@@ -28,12 +28,14 @@ const TOOLING_DIR = fromRoot("tooling/scripts");
 
 const ENVELOPE_FILE = "packages/astropress/src/integration-secret-envelope.ts";
 const REPO_FILE = "packages/astropress/src/sqlite-runtime/integrations.ts";
+const REPO_FILE_D1 = "packages/astropress/src/sqlite-runtime/integrations-d1.ts";
 const SANITIZER_FILE = "packages/astropress/src/integration-error-sanitizer.ts";
 const ROTATION_SCRIPT = "tooling/scripts/rotate-integration-secrets.ts";
 
 const ALLOWED_SECRET_COLUMN_FILES: ReadonlySet<string> = new Set([
 	ENVELOPE_FILE,
 	REPO_FILE,
+	REPO_FILE_D1,
 	ROTATION_SCRIPT,
 	"packages/astropress/src/sqlite-schema.sql",
 ]);
