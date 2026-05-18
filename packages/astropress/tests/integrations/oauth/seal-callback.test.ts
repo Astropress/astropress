@@ -68,6 +68,7 @@ import {
 	type IntegrationsRepository,
 } from "../../../src/sqlite-runtime/integrations";
 import { makeDb } from "../../helpers/make-db.js";
+import { SqliteBackedD1Database } from "../../helpers/provider-test-fixtures.js";
 
 // -----------------------------------------------------------------------------
 // CANARIES — every leak assertion below scans for these literals. Keep them
@@ -282,9 +283,52 @@ describe("sealOAuthCallbackTokens — failure paths never leak tokens", () => {
 		assertNoTokenLeak(JSON.stringify(result));
 	});
 
-	it("D1 path returns INTEGRATIONS_NOT_AVAILABLE (issue #81 not yet wired)", async () => {
+	it("D1 path: seal lands in the D1-backed integration_secrets row atomically", async () => {
+		// Live D1-shape database (sqlite-backed) so the onD1 branch
+		// runs to completion. The batched connect must write both the
+		// status row and the sealed-secret row.
+		const d1Db = new SqliteBackedD1Database(db);
+		const localsWithD1 = { runtime: { env: { DB: d1Db } } } as unknown as App.Locals;
+		const result = await sealOAuthCallbackTokens(localsWithD1, {
+			domain: DOMAIN,
+			provider: PROVIDER_ID,
+			tokens: TOKENS,
+			rootSecret: ROOT,
+			now: NOW,
+		});
+		expect(result).toEqual({ ok: true });
+		// Roundtrip via the sqlite repo (same underlying tables) to
+		// confirm the D1 write produced an openable envelope.
+		const opened = await repo.findSecret(DOMAIN, PROVIDER_ID, { current: ROOT });
+		expect(opened).toMatchObject({ accessToken: CANARY_ACCESS });
+		// configJson pin (same invariant as the local-store path):
+		// OAuth-managed rows have no provider-supplied config, so the
+		// status row must hold the literal "{}". A regression that
+		// wrote `""` here would corrupt later JSON.parse reads.
+		expect(repo.findStatus(DOMAIN, PROVIDER_ID)?.configJson).toBe("{}");
+		assertNoTokenLeak(JSON.stringify(result));
+	});
+
+	it("D1 path: SEAL_FAILED when the batch fails — no token bytes in the result", async () => {
 		const localsWithD1 = {
-			runtime: { env: { DB: { prepare: () => ({ all: () => [] }) } } },
+			runtime: {
+				env: {
+					DB: {
+						prepare: () => ({
+							bind: () => ({
+								first: async () => null,
+								all: async () => ({ success: true, results: [] }),
+								run: async () => {
+									throw new Error(`d1 batch failed for token=${CANARY_ACCESS}`);
+								},
+							}),
+						}),
+						batch: async () => {
+							throw new Error(`d1 batch failed for token=${CANARY_ACCESS}`);
+						},
+					},
+				},
+			},
 		} as unknown as App.Locals;
 		const result = await sealOAuthCallbackTokens(localsWithD1, {
 			domain: DOMAIN,
@@ -293,7 +337,7 @@ describe("sealOAuthCallbackTokens — failure paths never leak tokens", () => {
 			rootSecret: ROOT,
 			now: NOW,
 		});
-		expect(result).toEqual({ ok: false, code: "INTEGRATIONS_NOT_AVAILABLE" });
+		expect(result).toEqual({ ok: false, code: "SEAL_FAILED" });
 		assertNoTokenLeak(JSON.stringify(result));
 	});
 });

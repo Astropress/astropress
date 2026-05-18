@@ -21,7 +21,31 @@ import {
 	sanitizeIntegrationError,
 } from "../integration-error-sanitizer.js";
 import type { IntegrationsRepository } from "../sqlite-runtime/integrations.js";
+import type { D1IntegrationsRepository } from "../sqlite-runtime/integrations-d1.js";
 import type { IntegrationDomain, RegisteredProvider } from "./registry.js";
+
+/**
+ * Minimal repo surface needed by `connectIntegration` —
+ * structurally satisfied by both the sqlite and D1 repositories
+ * because both expose an async `.connect()` with the same signature.
+ * Splitting the type this narrowly lets the connect-flow stay
+ * runtime-agnostic without forcing the wider sync/async split.
+ */
+type ConnectableIntegrationsRepo =
+	| Pick<IntegrationsRepository, "connect">
+	| Pick<D1IntegrationsRepository, "connect">;
+
+/**
+ * Reverify needs `updateStatus` in addition to verify. The sqlite
+ * repo returns `boolean` synchronously; the D1 repo returns
+ * `Promise<boolean>`. Connect-flow always awaits the call (`await
+ * Promise.resolve(...)` is a no-op for raw booleans), so the union
+ * is safe at the call site even though the return-type narrows
+ * unevenly.
+ */
+type ReverifiableIntegrationsRepo =
+	| Pick<IntegrationsRepository, "updateStatus">
+	| Pick<D1IntegrationsRepository, "updateStatus">;
 
 export interface ConnectIntegrationParams<
 	TFields extends Record<string, string> = Record<string, string>,
@@ -85,7 +109,7 @@ export async function runProviderVerify<TFields extends Record<string, string>>(
  * without exposing the upstream error message.
  */
 export async function connectIntegration<TFields extends Record<string, string>>(
-	repo: IntegrationsRepository,
+	repo: ConnectableIntegrationsRepo,
 	params: ConnectIntegrationParams<TFields>,
 ): Promise<ConnectIntegrationResult> {
 	const parsed = params.provider.fields.safeParse(params.fields);
@@ -127,7 +151,7 @@ export async function connectIntegration<TFields extends Record<string, string>>
  * health check.
  */
 export async function reverifyIntegration<TFields extends Record<string, string>>(
-	repo: IntegrationsRepository,
+	repo: ReverifiableIntegrationsRepo,
 	provider: RegisteredProvider<TFields>,
 	fields: TFields,
 	now: string,
@@ -135,22 +159,30 @@ export async function reverifyIntegration<TFields extends Record<string, string>
 ): Promise<ConnectIntegrationResult> {
 	const verifyResult = await runProviderVerify(provider, fields, timeoutMs);
 	if (!verifyResult.ok) {
+		// `await Promise.resolve(...)` works uniformly: sqlite returns a
+		// raw boolean, D1 returns a Promise<boolean>. Without the await,
+		// the D1 fire-and-forget could be GC'd before the worker
+		// invocation returns.
+		await Promise.resolve(
+			repo.updateStatus({
+				domain: provider.domain,
+				provider: provider.id,
+				status: "error",
+				lastCheckAt: now,
+				lastError: verifyResult.code,
+			}),
+		);
+		return { ok: false, status: "error", code: verifyResult.code };
+	}
+	await Promise.resolve(
 		repo.updateStatus({
 			domain: provider.domain,
 			provider: provider.id,
-			status: "error",
+			status: "connected",
 			lastCheckAt: now,
-			lastError: verifyResult.code,
-		});
-		return { ok: false, status: "error", code: verifyResult.code };
-	}
-	repo.updateStatus({
-		domain: provider.domain,
-		provider: provider.id,
-		status: "connected",
-		lastCheckAt: now,
-		lastError: null,
-	});
+			lastError: null,
+		}),
+	);
 	return { ok: true, status: "connected" };
 }
 

@@ -26,6 +26,7 @@
  */
 
 import { withLocalStoreFallback } from "../../admin-store-dispatch.js";
+import { createD1IntegrationsRepository } from "../../sqlite-runtime/integrations-d1.js";
 import type { OAuthTokenSet } from "./token-exchange";
 
 export type SealOAuthCallbackErrorCode = "INTEGRATIONS_NOT_AVAILABLE" | "SEAL_FAILED";
@@ -76,11 +77,24 @@ export async function sealOAuthCallbackTokens(
 	const secretFields = tokensToSecretFields(input.tokens);
 	return withLocalStoreFallback<SealOAuthCallbackResult>(
 		locals,
-		// D1 path: IntegrationsRepository over D1 has not landed yet
-		// (issue #81). Mirror runtime-actions-integrations.ts: return a
-		// typed INTEGRATIONS_NOT_AVAILABLE rather than silently writing
-		// to a half-implemented store.
-		async () => ({ ok: false, code: "INTEGRATIONS_NOT_AVAILABLE" }),
+		async (db) => {
+			const repo = createD1IntegrationsRepository({ getDb: () => db, now: input.now });
+			try {
+				await repo.connect(
+					{
+						domain: input.domain,
+						provider: input.provider,
+						secretFields,
+						configJson: "{}",
+						now: input.now,
+					},
+					input.rootSecret,
+				);
+				return { ok: true };
+			} catch {
+				return { ok: false, code: "SEAL_FAILED" };
+			}
+		},
 		async (store) => {
 			const repo = store.integrations;
 			if (!repo) {

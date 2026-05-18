@@ -27,6 +27,7 @@ import {
 } from "./integrations/connect-flow.js";
 import { getProvider, type IntegrationDomain } from "./integrations/registry.js";
 import { getAstropressRootSecret } from "./runtime-env.js";
+import { createD1IntegrationsRepository } from "./sqlite-runtime/integrations-d1.js";
 
 export type RuntimeIntegrationActionResult =
 	| ConnectIntegrationResult
@@ -63,13 +64,19 @@ export async function connectIntegrationAction<TFields extends Record<string, st
 		};
 	}
 	const rootSecret = getAstropressRootSecret(locals);
+	const now = new Date().toISOString();
 	return withLocalStoreFallback<RuntimeIntegrationActionResult>(
 		locals,
-		async () => ({
-			ok: false,
-			status: "error",
-			code: "INTEGRATIONS_NOT_AVAILABLE",
-		}),
+		async (db) => {
+			const repo = createD1IntegrationsRepository({ getDb: () => db, now });
+			return connectIntegration(repo, {
+				provider,
+				fields: input.fields,
+				configJson: input.configJson,
+				now,
+				rootSecret,
+			});
+		},
 		async (store) => {
 			const repo = store.integrations;
 			if (!repo) {
@@ -83,7 +90,7 @@ export async function connectIntegrationAction<TFields extends Record<string, st
 				provider,
 				fields: input.fields,
 				configJson: input.configJson,
-				now: new Date().toISOString(),
+				now,
 				rootSecret,
 			});
 		},
@@ -104,13 +111,13 @@ export async function reverifyIntegrationAction<TFields extends Record<string, s
 			code: "INTEGRATION_PROVIDER_NOT_FOUND",
 		};
 	}
+	const now = new Date().toISOString();
 	return withLocalStoreFallback<RuntimeIntegrationActionResult>(
 		locals,
-		async () => ({
-			ok: false,
-			status: "error",
-			code: "INTEGRATIONS_NOT_AVAILABLE",
-		}),
+		async (db) => {
+			const repo = createD1IntegrationsRepository({ getDb: () => db, now });
+			return reverifyIntegration(repo, provider, fields, now);
+		},
 		async (store) => {
 			const repo = store.integrations;
 			if (!repo) {
@@ -120,7 +127,7 @@ export async function reverifyIntegrationAction<TFields extends Record<string, s
 					code: "INTEGRATIONS_NOT_AVAILABLE",
 				};
 			}
-			return reverifyIntegration(repo, provider, fields, new Date().toISOString());
+			return reverifyIntegration(repo, provider, fields, now);
 		},
 	);
 }
@@ -130,9 +137,14 @@ export async function disconnectIntegrationAction(
 	domain: IntegrationDomain,
 	providerId: string,
 ): Promise<{ ok: true } | { ok: false; code: "INTEGRATIONS_NOT_AVAILABLE" }> {
+	const now = new Date().toISOString();
 	return withLocalStoreFallback<{ ok: true } | { ok: false; code: "INTEGRATIONS_NOT_AVAILABLE" }>(
 		locals,
-		async () => ({ ok: false, code: "INTEGRATIONS_NOT_AVAILABLE" }),
+		async (db) => {
+			const repo = createD1IntegrationsRepository({ getDb: () => db, now });
+			await repo.disconnect(domain, providerId);
+			return { ok: true };
+		},
 		async (store) => {
 			const repo = store.integrations;
 			if (!repo) return { ok: false, code: "INTEGRATIONS_NOT_AVAILABLE" };

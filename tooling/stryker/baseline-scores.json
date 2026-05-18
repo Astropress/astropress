@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-05-18T09:50:42.188Z",
+  "updatedAt": "2026-05-18T16:04:02.334Z",
   "scores": {
     "packages/astropress/src/adapters/adapter-record-helpers.ts": {
       "score": 100,
@@ -983,7 +983,7 @@
     },
     "packages/astropress/src/integrations/connect-flow.ts": {
       "score": 96.55172413793103,
-      "hash": "65ae6f86b49ae513e8b5f9429dbb76b8112aecdb"
+      "hash": "085696988e9800667903d64a6fea28c13ebb77c7"
     },
     "packages/astropress/src/integrations/domains.ts": {
       "score": 100,
@@ -1059,7 +1059,7 @@
     },
     "packages/astropress/src/runtime-actions-integrations.ts": {
       "score": 100,
-      "hash": "4d29a84837fa7a39550208ee589d0e8045a31c43"
+      "hash": "49dc35f45c82b01b54a8ab594ad693eb802688ed"
     },
     "packages/astropress/src/result.ts": {
       "score": 100,
@@ -1103,7 +1103,11 @@
     },
     "packages/astropress/src/integrations/oauth/seal-callback.ts": {
       "score": 100,
-      "hash": "965c909757914522a603aa5c2023fe261493690c"
+      "hash": "b4d11eef5d888d1fc3b85a0205d74d043bcbca28"
+    },
+    "packages/astropress/src/sqlite-runtime/integrations-d1.ts": {
+      "score": 100,
+      "hash": "c24a66b9d46e9508985863320cb13f989e6cb31a"
     }
   }
 }
