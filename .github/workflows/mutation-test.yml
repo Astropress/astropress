@@ -136,7 +136,12 @@ jobs:
     # audit:baseline-coverage:rust + prepush-mutation-gate-rust on
     # changed files), mirroring the TS split.
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    # 60m was tripping on cold runs (cargo-mutants showed as "cancelled" on
+    # ffc55e2). The step itself is `|| true` and the job is continue-on-error,
+    # so only the GH job timeout can surface as a failure here; raise it well
+    # above realistic cold-run wall-clock so refresh-only never blocks the
+    # workflow conclusion.
+    timeout-minutes: 240
     continue-on-error: true
     steps:
       - uses: actions/checkout@v6
