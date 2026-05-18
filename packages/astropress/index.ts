@@ -362,6 +362,15 @@ export {
 	registerOAuthProvider,
 } from "./src/integrations/oauth/registry.js";
 export type {
+	SealOAuthCallbackErrorCode,
+	SealOAuthCallbackInput,
+	SealOAuthCallbackResult,
+} from "./src/integrations/oauth/seal-callback";
+export {
+	sealOAuthCallbackTokens,
+	tokensToSecretFields,
+} from "./src/integrations/oauth/seal-callback.js";
+export type {
 	BuildAuthorizeRedirectArgs,
 	BuildAuthorizeRedirectResult,
 } from "./src/integrations/oauth/start";

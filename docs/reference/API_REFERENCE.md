@@ -3,7 +3,7 @@
 Auto-generated from TypeScript source via the TypeScript compiler API.
 Run `bun run docs:api` to regenerate.
 
-Generated: 2026-05-10
+Generated: 2026-05-18
 
 ---
 
@@ -619,6 +619,16 @@ function listOAuthProviders(domain: IntegrationDomain): readonly OAuthProviderDe
 #### `registerOAuthProvider`
 ```ts
 function registerOAuthProvider(def: OAuthProviderDefinition): OAuthProviderDefinition
+```
+
+#### `sealOAuthCallbackTokens`
+```ts
+function sealOAuthCallbackTokens(locals: Locals | null | undefined, input: SealOAuthCallbackInput): Promise<SealOAuthCallbackResult>
+```
+
+#### `tokensToSecretFields`
+```ts
+function tokensToSecretFields(tokens: OAuthTokenSet): Record<string, string>
 ```
 
 #### `buildAuthorizeRedirect`
@@ -1592,6 +1602,9 @@ function createAstropressVitestLocalRuntimePlugins(localRuntimeModulesPath: stri
 - `interface ConnectIntegrationParams`
 - `type ConnectIntegrationResult`
 - `interface OAuthProviderDefinition`
+- `type SealOAuthCallbackErrorCode`
+- `interface SealOAuthCallbackInput`
+- `type SealOAuthCallbackResult`
 - `interface BuildAuthorizeRedirectArgs`
 - `interface BuildAuthorizeRedirectResult`
 - `interface IssuedOAuthState`
