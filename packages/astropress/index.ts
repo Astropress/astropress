@@ -143,6 +143,8 @@ export { buildAdminDashboardModel } from "./src/admin-dashboard";
 export type { AdminLocale } from "./src/admin-labels";
 export {
 	ADMIN_LOCALE_COOKIE,
+	isRtlLocale,
+	localeDirection,
 	pickAdminLocaleFromAcceptLanguage,
 	resolveAdminLocale,
 } from "./src/admin-locale.js";

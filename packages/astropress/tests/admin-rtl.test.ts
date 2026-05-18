@@ -40,6 +40,21 @@ describe("admin RTL plumbing", () => {
 		expect(src).toMatch(/<html\s+lang=\{adminLocale\}\s+dir=\{adminDir\}/);
 	});
 
+	it.each([
+		"pages/ap-admin/login.astro",
+		"pages/ap-admin/accept-invite.astro",
+		"pages/ap-admin/reset-password.astro",
+	])("%s emits dir={adminDir} on the html element", (relPath) => {
+		// Public admin entry pages don't use AdminLayout (they're pre-auth
+		// shells), so they must thread `dir` themselves. The previous
+		// regression — `<html lang={adminLocale}>` without `dir` — left
+		// /ap-admin/login rendered LTR even after the operator picked
+		// AR via the language selector.
+		const src = readFileSync(join(REPO_ROOT, relPath), "utf8");
+		expect(src).toMatch(/<html\s+lang=\{adminLocale\}\s+dir=\{adminDir\}/);
+		expect(src).toContain("localeDirection");
+	});
+
 	it("admin.css uses logical properties for inline-axis spacing", () => {
 		const src = readFileSync(join(REPO_ROOT, "public", "admin.css"), "utf8");
 		expect(src).toContain("inset-inline-start:");

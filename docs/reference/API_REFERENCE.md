@@ -226,6 +226,16 @@ function buildAstropressAdminDocumentTitle(title: string): string
 function buildAdminDashboardModel(locals: Locals, user: AuthUser | null | undefined, translationStatus: TranslationEntry[], deps: DashboardDeps): Promise<AdminDashboardModel>
 ```
 
+#### `isRtlLocale`
+```ts
+function isRtlLocale(locale: AdminLocale): boolean
+```
+
+#### `localeDirection`
+```ts
+function localeDirection(locale: AdminLocale): "ltr" | "rtl"
+```
+
 #### `pickAdminLocaleFromAcceptLanguage`
 ```ts
 function pickAdminLocaleFromAcceptLanguage(header: string | null | undefined): AdminLocale | null

@@ -217,6 +217,13 @@ jobs:
   platform-smoke:
     needs: [lint, lint-rust, build]
     strategy:
+      # Without fail-fast: false, a single Windows runner flake
+      # (oven-sh/setup-bun@v2 has periodic cache-hit failures on
+      # Windows — see ffc55e2 / a0f56b9 main CI runs) cascades into
+      # cancellation of the ubuntu + macos jobs and reports the
+      # whole platform-smoke check as red on main even though the
+      # other two OSes haven't actually failed.
+      fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
     runs-on: ${{ matrix.os }}
@@ -228,6 +235,12 @@ jobs:
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: "1.3.10"
+          # Windows runners periodically fail with a cache-hit-then-die
+          # on setup-bun (a0f56b9 main CI); disabling the per-runner
+          # bun binary cache on Windows trades ~5s of download time for
+          # a green job. The action's tarball-extract step is the
+          # flaky one.
+          no-cache: ${{ matrix.os == 'windows-latest' }}
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
         with:
