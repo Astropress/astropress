@@ -81,6 +81,12 @@ export default {
 		? `../../.stryker-incremental-${SHARD}.json`
 		: "../../.stryker-incremental.json",
 	timeoutMS: 120000,
+	// Cold CI shards have no `.stryker-incremental-<shard>.json` to start from,
+	// so the initial vitest dry-run executes the full suite with perTest
+	// coverage instrumentation. That exceeds Stryker's 5-minute default and
+	// killed both shards on ffc55e2 ("Initial test run timed out!"). Mirror the
+	// 15-minute ceiling already used in stryker-sync.config.mjs.
+	dryRunTimeoutMinutes: 15,
 	ignoreStatic: false,
 	thresholds: { high: 95, low: 95, break: 95 },
 };
