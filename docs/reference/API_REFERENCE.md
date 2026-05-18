@@ -593,12 +593,12 @@ function integrationStatusBadgeTone(status: IntegrationStatusBadgeKind): Integra
 
 #### `connectIntegration`
 ```ts
-function connectIntegration<TFields>(repo: IntegrationsRepository, params: ConnectIntegrationParams<TFields>): Promise<ConnectIntegrationResult>
+function connectIntegration<TFields>(repo: ConnectableIntegrationsRepo, params: ConnectIntegrationParams<TFields>): Promise<ConnectIntegrationResult>
 ```
 
 #### `reverifyIntegration`
 ```ts
-function reverifyIntegration<TFields>(repo: IntegrationsRepository, provider: RegisteredProvider<TFields>, fields: TFields, now: string, timeoutMs: number): Promise<ConnectIntegrationResult>
+function reverifyIntegration<TFields>(repo: ReverifiableIntegrationsRepo, provider: RegisteredProvider<TFields>, fields: TFields, now: string, timeoutMs: number): Promise<ConnectIntegrationResult>
 ```
 
 #### `runProviderVerify`

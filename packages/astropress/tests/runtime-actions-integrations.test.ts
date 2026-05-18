@@ -1,3 +1,4 @@
+import type { DatabaseSync } from "node:sqlite";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { z } from "zod";
 
@@ -8,6 +9,9 @@ import {
 	disconnectIntegrationAction,
 	reverifyIntegrationAction,
 } from "../src/runtime-actions-integrations";
+import { createIntegrationsRepository } from "../src/sqlite-runtime/integrations";
+import { makeDb } from "./helpers/make-db.js";
+import { SqliteBackedD1Database } from "./helpers/provider-test-fixtures.js";
 
 interface FakeRepo {
 	connect: ReturnType<typeof vi.fn>;
@@ -39,13 +43,15 @@ function withRepo(repo: FakeRepo | null) {
 	);
 }
 
-function withD1Fallback() {
-	// Stub the dispatch helper to take the D1 branch — the action
-	// passes a typed-error fallback as onD1; assert it's invoked and
-	// its return value is propagated.
+function withD1Backed(db: DatabaseSync) {
+	// Stub the dispatch helper to take the D1 branch with a real D1
+	// shape (sqlite-backed) so the D1IntegrationsRepository write
+	// path runs to completion end-to-end.
+	const d1 = new SqliteBackedD1Database(db);
 	vi.spyOn(adminStoreDispatch, "withLocalStoreFallback").mockImplementation(
-		async (_locals, onD1, _onLocal) => onD1({} as never),
+		async (_locals, onD1, _onLocal) => onD1(d1 as never),
 	);
+	return d1;
 }
 
 const FIELDS_SCHEMA = z.object({ apiKey: z.string().min(1) });
@@ -92,18 +98,21 @@ describe("connectIntegrationAction", () => {
 		});
 	});
 
-	it("returns INTEGRATIONS_NOT_AVAILABLE on the D1 path (no local store)", async () => {
-		withD1Fallback();
+	it("D1 path: connect writes the status + sealed-secret rows atomically via batch", async () => {
+		const db = makeDb();
+		withD1Backed(db);
 		const r = await connectIntegrationAction(null, {
 			domain: "newsletter",
 			providerId: "fake-listmonk",
-			fields: { apiKey: "k" },
+			fields: { apiKey: "k-d1-canary" },
 		});
-		expect(r).toEqual({
-			ok: false,
-			status: "error",
-			code: "INTEGRATIONS_NOT_AVAILABLE",
+		expect(r.ok).toBe(true);
+		// Read back via the sqlite repo (same underlying tables).
+		const repo = createIntegrationsRepository({
+			getDb: () => db as never,
+			now: () => "2026-05-18T00:00:00Z",
 		});
+		expect(repo.findStatus("newsletter", "fake-listmonk")?.status).toBe("connected");
 	});
 
 	it("calls repo.connect with the validated fields when the provider exists and the repo is available", async () => {
@@ -145,14 +154,24 @@ describe("reverifyIntegrationAction", () => {
 		});
 	});
 
-	it("returns INTEGRATIONS_NOT_AVAILABLE on the D1 path (no local store)", async () => {
-		withD1Fallback();
-		const r = await reverifyIntegrationAction(null, "newsletter", "fake-listmonk", { apiKey: "k" });
-		expect(r).toEqual({
-			ok: false,
-			status: "error",
-			code: "INTEGRATIONS_NOT_AVAILABLE",
+	it("D1 path: reverify awaits the async updateStatus write (no fire-and-forget)", async () => {
+		const db = makeDb();
+		withD1Backed(db);
+		// Seed an existing 'connected' row that reverify will flip.
+		db.prepare(
+			"INSERT INTO connected_integrations (domain, provider, status, config_json, connected_at, last_check_at, last_error) VALUES (?, ?, 'connected', '{}', '2026-01-01', NULL, NULL)",
+		).run("newsletter", "fake-listmonk");
+		const r = await reverifyIntegrationAction(null, "newsletter", "fake-listmonk", {
+			apiKey: "k-canary",
 		});
+		expect(r.ok).toBe(true);
+		const row = db
+			.prepare(
+				"SELECT status, last_check_at FROM connected_integrations WHERE domain=? AND provider=?",
+			)
+			.get("newsletter", "fake-listmonk") as { status: string; last_check_at: string | null };
+		expect(row.status).toBe("connected");
+		expect(row.last_check_at).not.toBeNull(); // proves updateStatus ran
 	});
 
 	it("calls repo.updateStatus with status='connected' when verify passes (no provider.verify => trivially ok)", async () => {
@@ -176,10 +195,18 @@ describe("disconnectIntegrationAction", () => {
 		});
 	});
 
-	it("returns INTEGRATIONS_NOT_AVAILABLE on the D1 path (no local store)", async () => {
-		withD1Fallback();
+	it("D1 path: disconnect deletes the row (awaiting the async repo call)", async () => {
+		const db = makeDb();
+		withD1Backed(db);
+		db.prepare(
+			"INSERT INTO connected_integrations (domain, provider, status, config_json, connected_at, last_check_at, last_error) VALUES (?, ?, 'connected', '{}', '2026-01-01', NULL, NULL)",
+		).run("newsletter", "fake-listmonk");
 		const r = await disconnectIntegrationAction(null, "newsletter", "fake-listmonk");
-		expect(r).toEqual({ ok: false, code: "INTEGRATIONS_NOT_AVAILABLE" });
+		expect(r).toEqual({ ok: true });
+		const remaining = db
+			.prepare("SELECT COUNT(*) AS n FROM connected_integrations WHERE domain=? AND provider=?")
+			.get("newsletter", "fake-listmonk") as { n: number };
+		expect(remaining.n).toBe(0);
 	});
 
 	it("calls repo.disconnect with the (domain, providerId) pair", async () => {

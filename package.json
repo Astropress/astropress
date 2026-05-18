@@ -76,6 +76,7 @@
 		"audit:admin-i18n-leaks": "bun run tooling/scripts/audit-admin-i18n-leaks.ts",
 		"audit:integration-honesty": "bun run tooling/scripts/audit-integration-honesty.ts",
 		"audit:integration-secrets": "bun run tooling/scripts/audit-integration-secrets.ts",
+		"audit:integration-secrets-schema-parity": "bun run tooling/scripts/audit-integration-secrets-schema-parity.ts",
 		"audit:registry-sync": "bun run tooling/scripts/audit-registry-sync.ts",
 		"audit:content-modeling": "bun run tooling/scripts/audit-content-modeling.ts",
 		"audit:collaboration": "bun run tooling/scripts/audit-collaboration.ts",
@@ -147,7 +148,8 @@
 		"postcss": "^8.5.10",
 		"ip-address": "^10.2.0",
 		"fast-uri": "^3.1.2",
-		"devalue": "^5.8.1"
+		"devalue": "^5.8.1",
+		"brace-expansion": "^5.0.6"
 	},
 	"browserslist": [
 		"Chrome >= 108",
@@ -161,6 +163,7 @@
 	"dependencies": {
 		"@astrojs/starlight": "^0.39.2",
 		"astro": "^6.3.3",
+		"brace-expansion": "^5.0.6",
 		"sanitize-html": "^2.17.4",
 		"vitest": "^4.1.5"
 	}

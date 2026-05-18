@@ -59,6 +59,10 @@ pre-commit:
       glob: "packages/**/*.{ts,astro}"
       run: bun run audit:suppressions
 
+    audit-integration-secrets-schema-parity:
+      glob: "packages/astropress/src/sqlite-runtime/integrations*.ts"
+      run: bun run audit:integration-secrets-schema-parity
+
     audit-honesty:
       glob: ["packages/**/*.{ts,astro,md}", "README.md", "AGENTS.md", "CHANGELOG.md"]
       run: bun run audit:honesty

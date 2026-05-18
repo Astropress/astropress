@@ -275,11 +275,69 @@ function createOrUpdateRef(
 	);
 }
 
+/**
+ * Retries on the only conflict path that matters in CI: shard a and
+ * shard b run in parallel, both read the same `head` SHA, both create
+ * a commit on top, and the second `PATCH refs/heads/stryker-state`
+ * loses with HTTP 422 ("Update is not a fast forward"). Each shard
+ * mutates a disjoint pair of files (`incremental-<shard>.json` +
+ * `lock-<shard>.json`), so re-resolving against the winner's tree
+ * and re-committing is safe — there is no logical merge needed.
+ *
+ * We rebuild the tree from scratch each attempt so the new commit
+ * extends the latest remote tree with our uploads on top, which is
+ * how git's "non-fast-forward, but the diff is non-overlapping"
+ * pattern is normally handled.
+ */
+const COMMIT_MAX_ATTEMPTS = 5;
+const COMMIT_RETRY_BASE_MS = 250;
+
+function isFastForwardConflict(err: unknown): boolean {
+	if (!(err instanceof Error)) return false;
+	const msg = err.message;
+	return msg.includes("not a fast forward") || msg.includes("HTTP 422");
+}
+
+function sleepSync(ms: number): void {
+	const end = Date.now() + ms;
+	// Spin via Atomics.wait on a throwaway buffer — sync, no event-loop
+	// dependence (important under the test driver). Falls back if
+	// SharedArrayBuffer is unavailable.
+	try {
+		const sab = new SharedArrayBuffer(4);
+		Atomics.wait(new Int32Array(sab), 0, 0, ms);
+	} catch {
+		while (Date.now() < end) {
+			/* spin */
+		}
+	}
+}
+
 function commitFiles(repo: RepoIdent, uploads: BlobUpload[], message: string): void {
-	const head = getBranchHead(repo);
-	const treeSha = createTree(repo, uploads);
-	const commitSha = createCommit(repo, treeSha, head?.sha ?? null, message);
-	createOrUpdateRef(repo, commitSha, head?.sha ?? null);
+	let lastErr: unknown;
+	for (let attempt = 1; attempt <= COMMIT_MAX_ATTEMPTS; attempt++) {
+		const head = getBranchHead(repo);
+		try {
+			const treeSha = createTree(repo, uploads);
+			const commitSha = createCommit(repo, treeSha, head?.sha ?? null, message);
+			createOrUpdateRef(repo, commitSha, head?.sha ?? null);
+			return;
+		} catch (err) {
+			lastErr = err;
+			if (!isFastForwardConflict(err) || attempt === COMMIT_MAX_ATTEMPTS) {
+				throw err;
+			}
+			// Jittered backoff so two racing shards don't ricochet in lockstep.
+			const delay = COMMIT_RETRY_BASE_MS * 2 ** (attempt - 1) + Math.floor(Math.random() * 250);
+			console.log(
+				`stryker-state ref advanced under us (attempt ${attempt}/${COMMIT_MAX_ATTEMPTS}); retrying in ${delay}ms…`,
+			);
+			sleepSync(delay);
+		}
+	}
+	// Unreachable under the loop above — every path either returns or
+	// throws — but TypeScript needs the explicit fallthrow.
+	throw lastErr;
 }
 
 function readRemoteLock(repo: RepoIdent): LockData | null {
