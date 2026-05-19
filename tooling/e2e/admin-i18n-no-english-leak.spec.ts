@@ -73,14 +73,15 @@ async function snapshotChrome(page: import("@playwright/test").Page): Promise<Ch
 	});
 }
 
-// Locales tested at runtime: te catches non-Latin script leaks. Adding ar
-// here will be possible once the AR translation pass lands (tracked in a
-// follow-up issue) — the existing label catalog falls back to EN for
-// AR until then, which would cause every chrome assertion to fail.
+// Locales tested at runtime: te catches non-Latin script leaks and exercises
+// LTR-only chrome. ar covers the RTL case and additionally exercises the
+// full Arabic translation pass (admin-labels.ts + admin-page-labels.ts).
+// The seed Arabic translations carry a follow-up review under issue #76 —
+// any wording fix lands without changing keys, so this gate remains stable.
 //
 // The full coverage gate (every locale × every key in the catalog) is
 // enforced statically by tooling/scripts/audit-admin-i18n-leaks.ts.
-const NON_EN_LOCALES = ["te"] as const;
+const NON_EN_LOCALES = ["te", "ar"] as const;
 
 test.describe("Admin i18n: chrome must change between English and target locale", () => {
 	for (const route of ADMIN_ROUTES) {
@@ -104,16 +105,19 @@ test.describe("Admin i18n: chrome must change between English and target locale"
 				const te = await snapshotChrome(page);
 
 				expect(en.h1.length, `${route}: missing <h1> in English render`).toBeGreaterThan(0);
-				expect(te.h1.length, `${route}: missing <h1> in Telugu render`).toBeGreaterThan(0);
+				expect(
+					te.h1.length,
+					`${route}: missing <h1> in ${locale.toUpperCase()} render`,
+				).toBeGreaterThan(0);
 
 				expect(
 					te.h1,
-					`${route}: <h1> "${te.h1}" did not change between EN and TE — likely hardcoded English string instead of t(...)`,
+					`${route}: <h1> "${te.h1}" did not change between EN and ${locale.toUpperCase()} — likely hardcoded English string instead of t(...)`,
 				).not.toBe(en.h1);
 
 				expect(
 					te.title,
-					`${route}: <title> did not change between EN and TE — document title is not localised`,
+					`${route}: <title> did not change between EN and ${locale.toUpperCase()} — document title is not localised`,
 				).not.toBe(en.title);
 
 				// Navigation labels are shared chrome rendered by AdminLayout; if any of them
@@ -122,7 +126,7 @@ test.describe("Admin i18n: chrome must change between English and target locale"
 				const teNav = te.navLabels.join(" | ");
 				expect(
 					teNav,
-					`${route}: navigation labels did not change between EN and TE\nEN: ${enNav}\nTE: ${teNav}`,
+					`${route}: navigation labels did not change between EN and ${locale.toUpperCase()}\nEN: ${enNav}\nTE: ${teNav}`,
 				).not.toBe(enNav);
 
 				// Per-page <h2> section headings — each English heading must differ from
@@ -140,7 +144,7 @@ test.describe("Admin i18n: chrome must change between English and target locale"
 					if (TECH_IDENTIFIER.test(enH)) continue;
 					expect(
 						teH,
-						`${route}: <main> <h2>[${i}] "${teH}" did not change between EN and TE — likely hardcoded English string instead of t(...)`,
+						`${route}: <main> <h2>[${i}] "${teH}" did not change between EN and ${locale.toUpperCase()} — likely hardcoded English string instead of t(...)`,
 					).not.toBe(enH);
 				}
 
