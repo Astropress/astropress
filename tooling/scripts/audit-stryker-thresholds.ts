@@ -46,6 +46,13 @@ function main(): number {
 		if (source.includes("audit-stryker-thresholds: cache-refresh-only")) {
 			continue;
 		}
+		// Configs marked `audit-stryker-thresholds: shared-base` are spread
+		// into every sibling config — they intentionally omit `thresholds`
+		// so each consumer can set its own. The siblings are audited
+		// independently and must each declare break ≥ FLOOR.
+		if (source.includes("audit-stryker-thresholds: shared-base")) {
+			continue;
+		}
 		const value = extractBreak(source);
 		if (value === null) {
 			missing.push(path);

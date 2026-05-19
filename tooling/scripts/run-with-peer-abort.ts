@@ -128,6 +128,22 @@ child.on("exit", (code, signal) => {
 		process.exit(130);
 	}
 	if (code !== 0 || signal !== null) {
+		// We are the originator of this push's failure. Peers will see the
+		// sentinel and abort with a "peer X failed" message. The summary
+		// printer at the end of the push lists every peer with a 🥊 marker
+		// — without this banner the operator can't tell which 🥊 was the
+		// root cause and which were collateral. Print to stderr (which
+		// prepush-gates tees to .prepush-logs/<label>.log) so the
+		// originator marker survives in the per-step log as well.
+		const slug = label.replace(/[^a-z0-9]+/gi, "-").toLowerCase();
+		const log = join(process.cwd(), ".prepush-logs", `${slug}.log`);
+		console.error(
+			`\n────────────────────────────────────────────────────────────────\n` +
+				`✖ ORIGINATING FAILURE: "${label}" (exit ${code ?? "signal"})\n` +
+				`  Look here first — peers below this line were SIGTERM'd as collateral.\n` +
+				`  Full log: ${log}\n` +
+				`────────────────────────────────────────────────────────────────\n`,
+		);
 		try {
 			writeFileSync(
 				sentinel,

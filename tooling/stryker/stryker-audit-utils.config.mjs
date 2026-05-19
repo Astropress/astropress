@@ -1,5 +1,7 @@
 /** @type {import('@stryker-mutator/api/core').PartialStrykerOptions} */
 
+import { strykerBase } from "./stryker-base.config.mjs";
+
 // Scoped mutation testing — tooling/lib/audit-utils.ts.
 //
 // The shared framework underlies 36 audit scripts; a regression here cascades.
@@ -10,9 +12,8 @@
 // Run: bun run test:mutants:audit-utils
 //
 export default {
-	plugins: ["@stryker-mutator/vitest-runner"],
+	...strykerBase,
 	mutate: ["tooling/lib/audit-utils.ts"],
-	testRunner: "vitest",
 	coverageAnalysis: "all",
 	vitest: {
 		configFile: "packages/astropress/vitest.config.ts",
@@ -20,9 +21,10 @@ export default {
 	},
 	reporters: ["clear-text", "json"],
 	jsonReporter: { fileName: "reports/mutation/audit-utils.json" },
-	// inPlace: false (default) — mutate in a sandbox copy, not the real source.
 	incremental: true,
 	incrementalFile: ".stryker-incremental-audit-utils.json",
-	timeoutMS: 60000,
+	// Single-file scope with a small unit-test suite — 60s is enough and
+	// halves the base 120s ceiling for snappier cold runs.
+	timeoutMS: 60_000,
 	thresholds: { high: 95, low: 95, break: 95 },
 };

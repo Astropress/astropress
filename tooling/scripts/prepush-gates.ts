@@ -113,6 +113,11 @@ function runAsync(step: Step): Promise<number> {
 		const child = spawn(step.cmd, step.args, {
 			cwd: step.cwd ?? root,
 			stdio: ["inherit", "pipe", "pipe"],
+			// Mark the spawned step as running inside the prepush orchestrator so
+			// scripts (e.g. prepush-mutation-gate) can branch on "we're mid-push"
+			// without relying on lefthook-specific env vars. Some bash-driven
+			// pushes never set LEFTHOOK_PUSH; this is the canonical signal.
+			env: { ...process.env, PREPUSH_GATE: "1" },
 		});
 		// Tee stdout+stderr to both the user's terminal and the per-step log.
 		// `process.stdout.write` is sync-flush in node so SIGTERM mid-stream
@@ -447,7 +452,13 @@ async function main(): Promise<void> {
 				{
 					name: "audit:coverage-floor",
 					cmd: "bun",
-					args: ["run", "audit:coverage-floor"],
+					// `--allow-stale` is safe here because `test:coverage`
+					// is the immediately preceding step in this orchestrator
+					// — coverage-summary.json is guaranteed fresh and the
+					// freshness check would only churn on src files saved
+					// after the run started (rare but possible during a
+					// long push).
+					args: ["run", "audit:coverage-floor", "--", "--allow-stale"],
 				},
 				{ name: "audit:deps", cmd: "bun", args: ["run", "audit:deps"] },
 			]))

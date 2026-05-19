@@ -285,6 +285,9 @@ jobs:
     runs-on: ubuntu-latest
     needs: lint
     strategy:
+      # One bun-version failing should not cancel the other — they're a
+      # forward/back compat check, both have to be observed independently.
+      fail-fast: false
       matrix:
         # Pinned explicit versions — keep both for forward + backward compat.
         bun: ["1.3.10", "1.3.11"]
