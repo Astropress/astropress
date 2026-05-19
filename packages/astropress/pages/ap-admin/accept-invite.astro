@@ -2,6 +2,7 @@
 import {
 	buildAcceptInvitePageModel,
 	buildAstropressAdminDocumentTitle,
+	localeDirection,
 	resolveAdminLocale,
 	resolveAstropressAdminUiConfig,
 } from "astropress";
@@ -13,11 +14,12 @@ const errorMessage =
 const model = await buildAcceptInvitePageModel(Astro.locals, token);
 const { inviteRequest } = model.data;
 const adminLocale = resolveAdminLocale(Astro);
+const adminDir = localeDirection(adminLocale);
 const adminUi = resolveAstropressAdminUiConfig(adminLocale);
 ---
 
 <!doctype html>
-<html lang={adminLocale}>
+<html lang={adminLocale} dir={adminDir}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />

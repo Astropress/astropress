@@ -10,9 +10,23 @@ interface Props {
 	heading: string;
 	eyebrow?: string;
 	currentPath: string;
+	/** BCP-47 content locale; controls the rendered <html lang> + dir. */
+	lang?: string;
 }
 
-const { title, description, heading, eyebrow = "Astropress", currentPath } = Astro.props;
+const RTL_LOCALES = new Set(["ar", "he", "fa", "ur"]);
+
+const {
+	title,
+	description,
+	heading,
+	eyebrow = "Astropress",
+	currentPath,
+	lang = "en",
+} = Astro.props;
+
+const primaryLang = lang.split("-")[0].toLowerCase();
+const dir: "ltr" | "rtl" = RTL_LOCALES.has(primaryLang) ? "rtl" : "ltr";
 
 const navLinks: NavLink[] = [
 	{ href: "/", label: "Overview" },
@@ -25,7 +39,7 @@ const navLinks: NavLink[] = [
 ---
 
 <!doctype html>
-<html lang="en">
+<html lang={lang} dir={dir}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
