@@ -1,0 +1,49 @@
+name: Mutation Quality Gate
+
+# Quality gate. Runs the per-file baseline checks that the pre-push hook
+# also runs locally — same authority on main as on PRs:
+#   * audit:baseline-coverage  — every src file has a baseline entry
+#   * audit:baseline-floor     — no entry drops vs HEAD~1
+#   * mutation-gate --check-only — files changed since HEAD~1 still
+#     match their recorded score within tolerance.
+#
+# Split out of `Mutation Testing` so the workflow conclusion here is
+# independent of Stryker shard + cargo-mutants cache-refresh wall-clock.
+# A timed-out cache refresh used to drag the parent workflow to
+# "cancelled" on main even though baseline-audits had been green for
+# minutes; this workflow is the one branch protection points at.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
+jobs:
+  baseline-audits:
+    name: Baseline audits (TypeScript + Rust)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24.8"
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.3.10"
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: crates
+      - run: bun install --frozen-lockfile
+      - run: bun run audit:baseline-coverage
+      - run: bun run audit:baseline-floor
+      - run: bun run audit:baseline-coverage:rust
+      - run: bun run audit:baseline-floor:rust
+      - run: bun run tooling/scripts/prepush-mutation-gate.ts --check-only

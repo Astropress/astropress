@@ -2,7 +2,7 @@
 
 > **Two-site model:** Admin server and public static site run on separate origins.
 > Public visitors never make browser requests to the admin server.
-> See [TWO_SITE_DEPLOY.md](./guides/TWO_SITE_DEPLOY.md).
+> See [TWO_SITE_DEPLOY.md](../guides/TWO_SITE_DEPLOY.md).
 
 ## The core problem: a package that doesn't know its runtime
 
@@ -81,7 +81,7 @@ Client-side interactivity uses native Custom Elements (Web Components) registere
 - **Progressive enhancement** — the admin UI is functional even if JavaScript is blocked
 - **AbortController** — event listeners are cleaned up declaratively in `disconnectedCallback`
 
-See [WEB_COMPONENTS.md](./reference/WEB_COMPONENTS.md) for the authoring guide.
+See [WEB_COMPONENTS.md](./WEB_COMPONENTS.md) for the authoring guide.
 
 ## Provider contract
 

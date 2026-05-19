@@ -1,5 +1,7 @@
 /** @type {import('@stryker-mutator/api/core').PartialStrykerOptions} */
 
+import { strykerBase } from "./stryker-base.config.mjs";
+
 // Focused mutation testing — security-critical paths only.
 // Run from packages/astropress/:
 //   cd packages/astropress && node ../../node_modules/.bin/stryker run ../../stryker-critical.config.mjs
@@ -7,7 +9,7 @@
 //   bun run test:mutants:critical
 //
 export default {
-	plugins: ["@stryker-mutator/vitest-runner"],
+	...strykerBase,
 	// Patterns auto-include new files in the security-critical families rather
 	// than relying on hand-maintained filenames. The post-security-cleanup branch
 	// added auth-emergency-revoke-ops.ts, auth-repository-factory.ts, and
@@ -21,13 +23,10 @@ export default {
 		"src/content-modeling.ts",
 		"src/admin-normalizers.ts",
 	],
-	testRunner: "vitest",
 	coverageAnalysis: "all",
 	vitest: { related: false },
 	reporters: ["clear-text"],
-	// inPlace: false (default) — mutate in a sandbox copy, not the real source.
 	incremental: true,
 	incrementalFile: ".stryker-incremental.json",
-	timeoutMS: 120000,
 	thresholds: { high: 95, low: 95, break: 95 },
 };

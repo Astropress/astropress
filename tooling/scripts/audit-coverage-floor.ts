@@ -29,7 +29,7 @@
  * Exit code: 0 on pass, 1 on any blocked transition.
  */
 
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { dirname } from "node:path";
 
 const SUMMARY_PATH = "packages/astropress/coverage/coverage-summary.json";
@@ -135,6 +135,54 @@ function gatherCurrent(summary: CoverageSummary): Map<string, BaselineEntry> {
 	return out;
 }
 
+/**
+ * The audit reads a snapshot produced by an earlier `test:coverage` run.
+ * If the snapshot is older than any source file under
+ * `packages/astropress/src/`, it's stale and the audit will report
+ * yesterday's numbers as if they were current — masking a real
+ * regression. Refuse to run rather than silently lie.
+ *
+ * Skipped when the user explicitly asks for `--rewrite-baseline`
+ * (they've already opted into regenerating coverage themselves) or
+ * `--allow-stale` (a CI shortcut where the workflow guarantees a
+ * fresh `test:coverage` immediately upstream).
+ */
+function refuseIfStale(summary: CoverageSummary): number | null {
+	if (process.argv.includes("--rewrite-baseline")) return null;
+	if (process.argv.includes("--allow-stale")) return null;
+	const summaryAge = statSync(SUMMARY_PATH).mtimeMs;
+	const SRC = "packages/astropress/src";
+	if (!existsSync(SRC)) return null;
+	const walk = (dir: string): string[] => {
+		const fs = require("node:fs") as typeof import("node:fs");
+		const out: string[] = [];
+		for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+			if (entry.name === "node_modules" || entry.name.startsWith(".stryker")) continue;
+			const full = `${dir}/${entry.name}`;
+			if (entry.isDirectory()) out.push(...walk(full));
+			else if (entry.isFile() && /\.(ts|astro)$/.test(entry.name)) out.push(full);
+		}
+		return out;
+	};
+	const newer: string[] = [];
+	for (const src of walk(SRC)) {
+		if (statSync(src).mtimeMs > summaryAge) newer.push(src);
+		if (newer.length >= 5) break;
+	}
+	if (newer.length === 0) return null;
+	console.error(
+		`audit-coverage-floor: ${SUMMARY_PATH} is older than ${newer.length}+ source file(s).\n` +
+			`  Run \`bun run --filter @astropress-diy/astropress test:coverage\` to refresh the snapshot, or pass --allow-stale to skip the freshness check (CI only).\n` +
+			`  Source files newer than the summary:\n` +
+			newer.map((f) => `    ${f}`).join("\n") +
+			"\n",
+	);
+	// Reference the unused `summary` arg so the linter stays quiet —
+	// the caller's read of the file is what proved the snapshot exists.
+	void summary;
+	return 1;
+}
+
 function main(): number {
 	const summary = loadSummary();
 	if (!summary) {
@@ -143,6 +191,8 @@ function main(): number {
 		);
 		return 1;
 	}
+	const stale = refuseIfStale(summary);
+	if (stale !== null) return stale;
 
 	const current = gatherCurrent(summary);
 	const baseline = loadBaseline();

@@ -130,4 +130,4 @@ Astropress does not transfer personal data to third parties except as directed b
 
 ## Security Contact
 
-See [SECURITY.md](../SECURITY.md) for vulnerability reporting procedures.
+See [SECURITY.md](../../SECURITY.md) for vulnerability reporting procedures.

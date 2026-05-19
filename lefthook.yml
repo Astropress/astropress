@@ -94,6 +94,10 @@ pre-commit:
       glob: ["crates/**/*.rs", "crates/**/*.toml", "docs/**/*.md"]
       run: bun run audit:cli-docs
 
+    audit-doc-links:
+      glob: ["README.md", "CONTRIBUTING.md", "docs/**/*.md"]
+      run: bun run audit:doc-links
+
     audit-env-contract:
       glob: "packages/astropress/src/**/*.ts"
       run: bun run audit:env-contract

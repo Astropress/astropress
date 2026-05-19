@@ -67,6 +67,7 @@ import {
 	createIntegrationsRepository,
 	type IntegrationsRepository,
 } from "../../../src/sqlite-runtime/integrations";
+import { assertNoSecretLeak } from "../../helpers/assert-no-secret-leak.js";
 import { makeDb } from "../../helpers/make-db.js";
 import { SqliteBackedD1Database } from "../../helpers/provider-test-fixtures.js";
 
@@ -91,10 +92,8 @@ const TOKENS: OAuthTokenSet = {
 	scope: CANARY_SCOPE,
 };
 
-function assertNoTokenLeak(haystack: string): void {
-	expect(haystack).not.toContain(CANARY_ACCESS);
-	expect(haystack).not.toContain(CANARY_REFRESH);
-	expect(haystack).not.toContain(CANARY_SCOPE);
+function assertNoTokenLeak(haystack: unknown): void {
+	assertNoSecretLeak(haystack, CANARY_ACCESS, CANARY_REFRESH, CANARY_SCOPE);
 }
 
 const REGISTERED_PROVIDER: OAuthProviderDefinition = {

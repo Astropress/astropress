@@ -624,7 +624,18 @@ function main(): number {
 			// so the failure message says what to do instead of producing a
 			// misleading repo:clean error 5 minutes later. Outside a push (manual
 			// invocation), the message is still useful as a reminder to commit.
-			const inPush = process.env.LEFTHOOK_PUSH === "1" || process.env.GIT_PUSH === "1";
+			// Multiple harnesses invoke this script: lefthook sets LEFTHOOK_PUSH,
+			// raw `git push` doesn't set anything reliable, and the prepush-gates
+			// orchestrator sets PREPUSH_GATE. Detect any of them — the cost of a
+			// false positive (printing the recovery message outside a push) is
+			// zero; the cost of a false negative (not printing it during a push)
+			// is the user has to re-run the whole gate cycle to figure out why
+			// repo:clean failed minutes later.
+			const inPush =
+				process.env.LEFTHOOK_PUSH === "1" ||
+				process.env.GIT_PUSH === "1" ||
+				process.env.PREPUSH_GATE === "1" ||
+				process.env.LEFTHOOK === "1";
 			if (inPush) {
 				console.error(
 					`\n✖ prepush-mutation-gate: baseline updated at ${BASELINE_PATH} during a push.\n  The remaining pre-push gates will fail repo:clean because the worktree is now dirty.\n  Recovery:\n    git add ${BASELINE_PATH}\n    git commit --amend --no-edit\n    git push\n`,

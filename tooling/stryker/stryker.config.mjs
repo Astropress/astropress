@@ -1,5 +1,7 @@
 /** @type {import('@stryker-mutator/api/core').PartialStrykerOptions} */
 
+import { strykerBase } from "./stryker-base.config.mjs";
+
 // Full-suite mutation testing — mutates ALL source files.
 // Run from packages/astropress/:
 //   cd packages/astropress && node ../../node_modules/.bin/stryker run ../../stryker.config.mjs
@@ -20,7 +22,7 @@ const shardFilters =
 			: [];
 
 export default {
-	plugins: ["@stryker-mutator/vitest-runner"],
+	...strykerBase,
 	mutate: [
 		"src/**/*.ts",
 		...shardFilters,
@@ -64,29 +66,18 @@ export default {
 		"!src/runtime-admin-actions.ts",
 		"!src/runtime-route-registry.ts",
 	],
-	testRunner: "vitest",
 	coverageAnalysis: "perTest",
 	// related:true matches prepush-mutation-gate.ts:293; stryker uses vitest's
 	// --related to limit per-mutant test execution to files importing the
-	// mutated source. Was false historically; the prepush gate has long set
-	// true for speed parity.
+	// mutated source.
 	vitest: { related: true },
 	reporters: ["clear-text", "html", "json"],
 	htmlReporter: { fileName: "../../reports/mutation/index.html" },
 	jsonReporter: { fileName: "../../reports/mutation/report.json" },
-	// inPlace: false (default) — mutate in a sandbox copy, not the real source.
-	// A SIGKILLed run leaves sandbox dirs to sweep but never corrupts src/.
 	incremental: true,
 	incrementalFile: SHARD
 		? `../../.stryker-incremental-${SHARD}.json`
 		: "../../.stryker-incremental.json",
-	timeoutMS: 120000,
-	// Cold CI shards have no `.stryker-incremental-<shard>.json` to start from,
-	// so the initial vitest dry-run executes the full suite with perTest
-	// coverage instrumentation. That exceeds Stryker's 5-minute default and
-	// killed both shards on ffc55e2 ("Initial test run timed out!"). Mirror the
-	// 15-minute ceiling already used in stryker-sync.config.mjs.
-	dryRunTimeoutMinutes: 15,
 	ignoreStatic: false,
 	thresholds: { high: 95, low: 95, break: 95 },
 };

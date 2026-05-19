@@ -36,38 +36,9 @@ env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 
 jobs:
-  baseline-audits:
-    name: Baseline audits (TypeScript + Rust)
-    # Quality gate. Runs the per-file baseline checks that the pre-push
-    # hook also runs locally — same authority on main as on PRs:
-    #   * audit:baseline-coverage  — every src file has a baseline entry
-    #   * audit:baseline-floor     — no entry drops vs HEAD~1
-    #   * mutation-gate --check-only — files changed since HEAD~1 still
-    #     match their recorded score within tolerance.
-    # Runs in parallel with the Stryker cache refresh (which is allowed
-    # to "fail" the historical 95% global threshold without blocking
-    # main).
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
-      - uses: actions/setup-node@v6
-        with:
-          node-version: "24.8"
-      - uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: "1.3.10"
-      - uses: dtolnay/rust-toolchain@stable
-      - uses: Swatinem/rust-cache@v2
-        with:
-          workspaces: crates
-      - run: bun install --frozen-lockfile
-      - run: bun run audit:baseline-coverage
-      - run: bun run audit:baseline-floor
-      - run: bun run audit:baseline-coverage:rust
-      - run: bun run audit:baseline-floor:rust
-      - run: bun run tooling/scripts/prepush-mutation-gate.ts --check-only
+  # NOTE: the quality gate (baseline-audits) lives in
+  # `.github/workflows/mutation-quality-gate.yml`. This workflow is
+  # cache-refresh-only — its conclusion intentionally does NOT block main.
 
   stryker:
     name: Stryker (TypeScript, shard ${{ matrix.shard }})
