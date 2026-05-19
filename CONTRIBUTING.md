@@ -124,6 +124,43 @@ Run `bun run bdd:lint` to validate feature file syntax.
 - Present-tense imperative subject line (`add focus trap to confirm dialog`)
 - Reference the feature file or test if the change is behaviour-driven
 
+## Requesting and contributing providers
+
+Astropress supports three kinds of plug-in points, each with a different intake template and a different audit gate.
+
+### Hosting providers and data services (adapters)
+
+These plug in via `AstropressPlatformAdapter` and the `verified-providers.json` registry (`packages/astropress/src/verified-providers.json`). The `audit:providers` CI check enforces that every adapter is registered with a status, contact, and supported-feature list — speculative or half-finished adapters can't land.
+
+Workflow:
+1. File an [Adapter request](.github/ISSUE_TEMPLATE/adapter_support.md) issue. Maintainers triage and tag with a provider category.
+2. Implement the adapter in `packages/astropress/src/adapters/` against the existing interface (see `docs/reference/ARCHITECTURE.md` for the contract).
+3. Add an entry to `verified-providers.json` with `status: "beta"` for the first release and the supported-feature flags filled in honestly.
+4. Run `bun run audit:providers` locally; it should pass with the new entry.
+5. Open a PR that bundles the adapter, the registry entry, and at least one integration test against a sqlite-backed fixture or a recording fixture.
+
+### External integrations (analytics, email, A/B testing, donations, webhooks…)
+
+These plug in via the per-domain integration registry (`packages/astropress/src/integrations/`). The `audit:integration-secrets` and `audit:integration-honesty` checks enforce that every provider has a Zod-validated field schema, a `verify()` helper, and no plaintext-secret leak surfaces.
+
+Workflow:
+1. File an [Integration request](.github/ISSUE_TEMPLATE/integration_request.md) issue. Pick a domain: analytics, newsletter, ab-testing, monitoring, forms, cdn-purge, search, deploy-hooks.
+2. Add a `registerXxx()` call under `packages/astropress/src/integrations/providers/`. Implement `verify()` to exercise the provider's documented error shapes.
+3. If the provider uses OAuth 2.0 authorization-code, also wire it through `pages/ap-admin/oauth/callback/[provider].ts`; tokens must seal into `integration_secrets` via the existing helper.
+4. Update `docs/reference/integrations.md` with a one-paragraph entry and a link to the provider's docs.
+5. Open a PR; CI exercises the registry + secret-store gates automatically.
+
+### New admin or content languages (locales)
+
+These plug in via the `AdminLocale` union and the `pageLabels` / `adminLabels` tables.
+
+Workflow:
+1. File a [Language request](.github/ISSUE_TEMPLATE/language_request.md) issue with a BCP-47 code and script direction.
+2. Add the code to the `AdminLocale` union in `packages/astropress/src/admin-labels.ts` and the `isAdminLocale` switch in `admin-locale.ts`.
+3. Add full translations in `admin-labels.ts` (~100 strings) and `admin-page-labels.ts` (~800 strings). Seed translations may carry a `TODO(i18n-<code>): native-speaker review (issue #N)` marker; track the review under a sibling issue.
+4. RTL languages also need `isRtlLocale` updated, and the admin/public CSS sweep must use logical properties (`margin-inline-start` etc.) — see #72 for the Arabic precedent.
+5. Run `bun run tooling/scripts/audit-admin-i18n-leaks.ts` and `bun run vitest run tests/admin-rtl.test.ts` before opening the PR.
+
 ## Opening a pull request
 
 1. `bun run test` — all tests pass

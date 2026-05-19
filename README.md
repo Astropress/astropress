@@ -28,7 +28,23 @@ Own your content. Choose where it lives. Export at any time. Launch your initiat
 
 It supports both **static sites** (with free hosting on, e.g, GitHub Pages or Netlify) and **dynamic sites** (on Cloudflare, Render, or your own server). Moving between them is designed to avoid rewriting your content model or admin workflows.
 
-Importing content from Wordpress or Wix, or even subscription lists from Mailchimp is easy. Add an issue if there are other platforms you want to escape the orbit of or hosting providers that can support ordinary people who just want to get to work on their dreams without becoming full-stack web developers.
+Importing content from Wordpress or Wix, or even subscription lists from Mailchimp is easy.
+
+### Requesting new platforms, integrations, or languages
+
+Five places to open an issue, picked by what you need:
+
+| You want… | Open this template |
+|-----------|--------------------|
+| A **new hosting provider** or **data service** (Cloudflare, Turso, Neon, Vercel, S3-compatible storage…) | [Adapter request](../../issues/new?template=adapter_support.md) |
+| A **new external tool** (analytics, email, A/B testing, donations, webhooks…) | [Integration request](../../issues/new?template=integration_request.md) |
+| A **new admin or content language** (locale) | [Language request](../../issues/new?template=language_request.md) |
+| A **new framework capability** (not tied to a specific provider) | [Feature request](../../issues/new?template=feature_request.md) |
+| Something is **broken** | [Bug report](../../issues/new?template=bug_report.md) |
+
+The full chooser is at [github.com/Astropress/astropress/issues/new/choose](../../issues/new/choose). For open-ended discussion (design proposals, architecture questions, "is anyone else thinking about X?") use [GitHub Discussions](https://github.com/Astropress/astropress/discussions).
+
+See [CONTRIBUTING.md](./CONTRIBUTING.md#requesting-and-contributing-providers) for the workflow from "I filed an adapter/integration issue" to "it ships in the codebase".
 
 **Designed to work with AI.** Ask Claude, Codex, Cursor, or any AI coding assistant to scaffold your site, add features, or customise the design. Astropress ships an [MCP server](./packages/astropress-mcp/) and a machine-readable [`llms.txt`](./llms.txt) so AI tools understand the codebase out of the box.
 
