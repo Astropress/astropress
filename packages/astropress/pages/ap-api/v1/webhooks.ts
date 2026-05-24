@@ -1,4 +1,4 @@
-import { getCmsConfig } from "@astropress-diy/astropress";
+import { getCmsConfig, validateWebhookCreateInput } from "@astropress-diy/astropress";
 import {
 	apiErrors,
 	jsonOk,
@@ -6,7 +6,6 @@ import {
 	withApiRequest,
 } from "@astropress-diy/astropress/api-middleware.js";
 import { loadLocalAdminStore } from "@astropress-diy/astropress/local-runtime-modules.js";
-import type { WebhookEvent } from "@astropress-diy/astropress/platform-contracts.js";
 import type { APIRoute } from "astro";
 
 type LocalAdminStore = Awaited<ReturnType<typeof loadLocalAdminStore>>;
@@ -71,16 +70,13 @@ export const POST: APIRoute = async (context) => {
 				return apiErrors.validationError("Request body must be valid JSON.");
 			}
 
-			const url = String(body.url ?? "").trim();
-			if (!url) return apiErrors.validationError("url is required.");
-
-			const events = Array.isArray(body.events) ? (body.events as WebhookEvent[]) : [];
-			if (events.length === 0) return apiErrors.validationError("At least one event is required.");
-
-			const { record, verification } = await store.webhooks.create({
-				url,
-				events,
+			const validation = validateWebhookCreateInput({
+				url: body.url,
+				events: body.events,
 			});
+			if (!validation.ok) return apiErrors.validationError(validation.error);
+
+			const { record, verification } = await store.webhooks.create(validation.value);
 			return jsonOk({ record, verification }, 201);
 		},
 	);

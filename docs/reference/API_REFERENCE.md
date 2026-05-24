@@ -3,7 +3,7 @@
 Auto-generated from TypeScript source via the TypeScript compiler API.
 Run `bun run docs:api` to regenerate.
 
-Generated: 2026-05-18
+Generated: 2026-05-24
 
 ---
 
@@ -1506,6 +1506,16 @@ function isAstropressLocalRuntimeModuleRequest(id: string, localRuntimeModulesPa
 function createAstropressVitestLocalRuntimePlugins(localRuntimeModulesPath: string): AstropressVitestPlugin[]
 ```
 
+#### `isWebhookEvent`
+```ts
+function isWebhookEvent(value: unknown): boolean
+```
+
+#### `validateWebhookCreateInput`
+```ts
+function validateWebhookCreateInput(input: { url: unknown; events: unknown; }): WebhookValidationResult
+```
+
 ### Types & Interfaces
 
 - `interface AccessContext`
@@ -1747,6 +1757,8 @@ function createAstropressVitestLocalRuntimePlugins(localRuntimeModulesPath: stri
 - `type AstropressVitePlugin`
 - `type AstropressViteRuntimeAliasOptions`
 - `type AstropressVitestPlugin`
+- `interface WebhookCreateInput`
+- `type WebhookValidationResult`
 
 ### Constants & Re-exports
 
@@ -1783,6 +1795,7 @@ function createAstropressVitestLocalRuntimePlugins(localRuntimeModulesPath: stri
 - `const placeholderAdapter: NewsletterAdapter`
 - `const defaultSiteSettings: SiteSettings`
 - `const translationStates: readonly ["not_started", "partial", "fallback_en", "translated", "reviewed", "published"]`
+- `const WEBHOOK_EVENTS: readonly WebhookEvent[]`
 
 ---
 

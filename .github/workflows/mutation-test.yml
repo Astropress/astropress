@@ -48,17 +48,21 @@ jobs:
     # run from showing up as a red workflow when the cache simply needs
     # more time on a cold start.
     continue-on-error: true
-    # Cold full-suite (unsharded) historically ran ~4h11m. Splitting into
-    # two alphabetic shards drops the wall to ~2h15m each; the ceiling
-    # below covers drift + extended-coverage from new source files.
-    timeout-minutes: 480
+    # GitHub HARD-caps a hosted job at 6h regardless of this value, so the
+    # old 480 (8h) could never take effect — a cold shard that needed >6h was
+    # killed as "cancelled" (not a step failure), which `continue-on-error`
+    # cannot absorb. Keep this below the 6h ceiling so the job ends on its own
+    # terms; the N=4 balanced round-robin (see stryker.config.mjs) keeps even
+    # a fully-cold shard around ~1–1.5h, far under this.
+    timeout-minutes: 330
     strategy:
       fail-fast: false
       matrix:
-        # Each shard mutates a roughly-equal half of src/ (a–m, n–z) with
-        # its own incremental cache file on the `stryker-state` branch.
-        # Lock contention is avoided because each shard uses lock-<shard>.json.
-        shard: [a, b]
+        # Each shard mutates a balanced 1/N round-robin slice of src/ (see
+        # stryker.config.mjs) with its own incremental cache file on the
+        # `stryker-state` branch. Lock contention is avoided because each
+        # shard uses lock-<shard>.json.
+        shard: [a, b, c, d]
     permissions:
       # `run-mutants-shared` reads from and pushes to the `stryker-state`
       # branch via the git refs API; the default GITHUB_TOKEN needs explicit

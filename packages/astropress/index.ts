@@ -829,3 +829,14 @@ export {
 } from "./src/vite-runtime-alias";
 export type { AstropressVitestPlugin } from "./src/vitest-runtime-alias";
 export { createAstropressVitestLocalRuntimePlugins } from "./src/vitest-runtime-alias";
+// Shared webhook creation validation — used by both the admin form action
+// and the REST API so the two paths cannot drift (issue #141).
+export type {
+	WebhookCreateInput,
+	WebhookValidationResult,
+} from "./src/webhook-validation.js";
+export {
+	isWebhookEvent,
+	validateWebhookCreateInput,
+} from "./src/webhook-validation.js";
+export { WEBHOOK_EVENTS } from "./src/webhook-validation-data.js";
