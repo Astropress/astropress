@@ -1,7 +1,6 @@
 import type { APIRoute } from "astro";
-import { safeLoadLocalAdminStore } from "../../src/admin-store-dispatch.js";
 import { peekCmsConfig } from "../../src/config.js";
-import { listRuntimeContentStates } from "../../src/runtime-page-store.js";
+import { getRuntimeMediaAssets, listRuntimeContentStates } from "../../src/runtime-page-store.js";
 
 const startTime = Date.now();
 
@@ -10,16 +9,21 @@ export const GET: APIRoute = async (context) => {
 		return new Response("Not found", { status: 404 });
 	}
 
-	const [allContent, store] = await Promise.all([
+	// Read content AND media through the same host-agnostic runtime seam
+	// (`getReadStore` dispatches D1 vs local), so a host without the local
+	// runtime alias reports its real media count instead of a misleading 0.
+	const [allContent, mediaAssets] = await Promise.all([
 		listRuntimeContentStates(context.locals).catch(
 			() => [] as Awaited<ReturnType<typeof listRuntimeContentStates>>,
 		),
-		safeLoadLocalAdminStore(),
+		getRuntimeMediaAssets(context.locals).catch(
+			() => [] as Awaited<ReturnType<typeof getRuntimeMediaAssets>>,
+		),
 	]);
 
 	const posts = allContent.filter((r) => r.kind === "post").length;
 	const pages = allContent.filter((r) => r.kind === "page").length;
-	const media = store ? store.listMediaAssets().length : 0;
+	const media = mediaAssets.length;
 	const uptimeSeconds = Math.round((Date.now() - startTime) / 1000);
 
 	const body = [

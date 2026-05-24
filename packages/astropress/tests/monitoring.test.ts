@@ -24,7 +24,9 @@ function clearCmsConfig() {
 	(globalThis as typeof globalThis & { [key: symbol]: unknown })[CMS_CONFIG_KEY] = null;
 }
 
-// Mock the runtime store and content functions so the endpoint doesn't need real SQLite
+// Mock the runtime store so the endpoint doesn't need real SQLite. Both content
+// and media are now read through this one host-agnostic seam (getReadStore
+// dispatches D1 vs local), so the test mocks both here — no admin-store mock.
 vi.mock("../src/runtime-page-store.js", () => ({
 	listRuntimeContentStates: vi.fn().mockResolvedValue([
 		{
@@ -50,26 +52,25 @@ vi.mock("../src/runtime-page-store.js", () => ({
 		},
 	]),
 	searchRuntimeContentStates: vi.fn().mockResolvedValue([]),
+	getRuntimeMediaAssets: vi
+		.fn()
+		.mockResolvedValue([{ id: "media-1" }, { id: "media-2" }, { id: "media-3" }]),
 }));
 
-vi.mock("../src/admin-store-dispatch.js", () => ({
-	safeLoadLocalAdminStore: vi.fn().mockResolvedValue({
-		listMediaAssets: vi
-			.fn()
-			.mockReturnValue([{ id: "media-1" }, { id: "media-2" }, { id: "media-3" }]),
-	}),
-}));
+import { getRuntimeMediaAssets } from "../src/runtime-page-store.js";
+
+const mockGetRuntimeMediaAssets = getRuntimeMediaAssets as unknown as ReturnType<typeof vi.fn>;
 
 afterEach(() => {
 	clearCmsConfig();
 	vi.clearAllMocks();
 });
 
-async function callMetricsEndpoint() {
+async function callMetricsEndpoint(locals: Record<string, unknown> = {}) {
 	// Dynamic import to pick up mocks
 	const { GET } = await import("../pages/ap/metrics.js");
 	const request = new Request("http://localhost/ap/metrics");
-	return GET({ request, locals: {} } as Parameters<typeof GET>[0]);
+	return GET({ request, locals } as Parameters<typeof GET>[0]);
 }
 
 describe("GET /ap/metrics — disabled by default", () => {
@@ -131,5 +132,51 @@ describe("GET /ap/metrics — enabled", () => {
 		// No auth headers in the request — should still return 200
 		const response = await callMetricsEndpoint();
 		expect(response.status).toBe(200);
+	});
+});
+
+// Issue #140: media must be counted through the host-agnostic runtime seam,
+// not the local-only admin store — otherwise a D1/hosted deployment (which
+// has no local runtime alias) reports a misleading ap_media_total 0.
+describe("GET /ap/metrics — host-agnostic media count (issue #140)", () => {
+	it("reads media through the runtime seam, passing the request locals through", async () => {
+		setCmsConfig({ prometheusEnabled: true });
+		const d1Locals = { runtime: { env: { DB: {} } } };
+		await callMetricsEndpoint(d1Locals);
+		expect(mockGetRuntimeMediaAssets).toHaveBeenCalledWith(d1Locals);
+	});
+
+	it("reports the real media count on a D1-backed host (not a silent zero)", async () => {
+		setCmsConfig({ prometheusEnabled: true });
+		// A host with no local runtime alias but real D1 media: the seam returns
+		// the records. The pre-fix code read safeLoadLocalAdminStore() -> null
+		// here and published ap_media_total 0.
+		mockGetRuntimeMediaAssets.mockResolvedValueOnce([
+			{ id: "d1-1" },
+			{ id: "d1-2" },
+			{ id: "d1-3" },
+			{ id: "d1-4" },
+			{ id: "d1-5" },
+		]);
+		const response = await callMetricsEndpoint({ runtime: { env: { DB: {} } } });
+		const body = await response.text();
+		expect(body).toContain("ap_media_total 5");
+	});
+
+	it("reports zero only when there is genuinely no media", async () => {
+		setCmsConfig({ prometheusEnabled: true });
+		mockGetRuntimeMediaAssets.mockResolvedValueOnce([]);
+		const response = await callMetricsEndpoint();
+		const body = await response.text();
+		expect(body).toContain("ap_media_total 0");
+	});
+
+	it("stays 200 and reports zero media if the media read throws", async () => {
+		setCmsConfig({ prometheusEnabled: true });
+		mockGetRuntimeMediaAssets.mockRejectedValueOnce(new Error("store unavailable"));
+		const response = await callMetricsEndpoint();
+		expect(response.status).toBe(200);
+		const body = await response.text();
+		expect(body).toContain("ap_media_total 0");
 	});
 });

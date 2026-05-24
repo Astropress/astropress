@@ -185,7 +185,10 @@ function readBranchFile(repo: RepoIdent, filename: string): string | null {
 
 interface BlobUpload {
 	path: string;
-	content: Buffer;
+	// Present → create/update the blob. Absent → delete the path from the
+	// base tree (the tree entry is emitted with `sha: null`). Deletion only
+	// takes effect when the tree is built on a `base_tree`; see createTree.
+	content?: Buffer;
 }
 
 function createBlob(repo: RepoIdent, content: Buffer): string {
@@ -212,14 +215,26 @@ function createBlob(repo: RepoIdent, content: Buffer): string {
 	});
 }
 
-function createTree(repo: RepoIdent, uploads: BlobUpload[]): string {
-	const tree = uploads.map((u) => ({
-		path: u.path,
-		mode: "100644",
-		type: "blob",
-		sha: createBlob(repo, u.content),
-	}));
-	const body = JSON.stringify({ tree });
+/**
+ * Build a git tree. When `baseTreeSha` is provided the uploads are layered
+ * ON TOP of that tree (GitHub's `base_tree`), so paths not mentioned in
+ * `uploads` are preserved and a `content`-less upload deletes its path
+ * (`sha: null`).
+ *
+ * This base_tree layering is load-bearing: each CI shard pushes only its own
+ * `incremental-<shard>.json` + `lock-<shard>.json`. Without base_tree every
+ * push replaced the whole branch with just that one shard's files, so the
+ * shard that finished LAST clobbered every other shard's incremental cache —
+ * which is why only a single shard's cache ever survived and the rest ran
+ * permanently cold. Layering on base_tree lets all shards' caches coexist.
+ */
+function createTree(repo: RepoIdent, uploads: BlobUpload[], baseTreeSha?: string): string {
+	const tree = uploads.map((u) =>
+		u.content === undefined
+			? { path: u.path, mode: "100644", type: "blob", sha: null }
+			: { path: u.path, mode: "100644", type: "blob", sha: createBlob(repo, u.content) },
+	);
+	const body = JSON.stringify(baseTreeSha ? { base_tree: baseTreeSha, tree } : { tree });
 	const out = gh(
 		["api", "-X", "POST", `repos/${repo.owner}/${repo.name}/git/trees`, "--input", "-"],
 		{ stdin: body },
@@ -318,7 +333,9 @@ function commitFiles(repo: RepoIdent, uploads: BlobUpload[], message: string): v
 	for (let attempt = 1; attempt <= COMMIT_MAX_ATTEMPTS; attempt++) {
 		const head = getBranchHead(repo);
 		try {
-			const treeSha = createTree(repo, uploads);
+			// Layer uploads on the latest remote tree so a racing shard's
+			// just-pushed files (and our own untouched paths) are preserved.
+			const treeSha = createTree(repo, uploads, head?.treeSha);
 			const commitSha = createCommit(repo, treeSha, head?.sha ?? null, message);
 			createOrUpdateRef(repo, commitSha, head?.sha ?? null);
 			return;
@@ -391,30 +408,29 @@ function acquireLock(repo: RepoIdent, force: boolean): LockData {
 		startedAt: new Date().toISOString(),
 		ttlHours: DEFAULT_LOCK_TTL_HOURS,
 	};
-	const incremental = readBranchFileBuffer(repo, INCREMENTAL_FILE);
-	const uploads: BlobUpload[] = [
-		{ path: README_FILE, content: readmeContent() },
-		{
-			path: LOCK_FILE,
-			content: Buffer.from(`${JSON.stringify(me, null, 2)}\n`),
-		},
-	];
-	if (incremental !== null) {
-		uploads.push({ path: INCREMENTAL_FILE, content: incremental });
-	}
-	commitFiles(repo, uploads, `lock: acquire by ${me.host}:${me.pid}`);
+	// commitFiles layers on base_tree, so this only writes README + our lock
+	// file; every other shard's incremental/lock and our own incremental are
+	// preserved untouched (no need to re-read the multi-MB incremental here).
+	commitFiles(
+		repo,
+		[
+			{ path: README_FILE, content: readmeContent() },
+			{
+				path: LOCK_FILE,
+				content: Buffer.from(`${JSON.stringify(me, null, 2)}\n`),
+			},
+		],
+		`lock: acquire by ${me.host}:${me.pid}`,
+	);
 	console.log(`lock acquired (host=${me.host} pid=${me.pid}).`);
 	return me;
 }
 
 function releaseLock(repo: RepoIdent): void {
 	try {
-		const incremental = readBranchFileBuffer(repo, INCREMENTAL_FILE);
-		const uploads: BlobUpload[] = [{ path: README_FILE, content: readmeContent() }];
-		if (incremental !== null) {
-			uploads.push({ path: INCREMENTAL_FILE, content: incremental });
-		}
-		commitFiles(repo, uploads, "lock: release");
+		// Delete only our lock file; base_tree layering preserves everything
+		// else (our pushed incremental + every other shard's files).
+		commitFiles(repo, [{ path: LOCK_FILE }], "lock: release");
 		console.log("lock released.");
 	} catch (e) {
 		console.error(`failed to release lock: ${(e as Error).message}`);
@@ -568,12 +584,9 @@ function cmdStatus(repo: RepoIdent): number {
 }
 
 function cmdForceUnlock(repo: RepoIdent): number {
-	const incremental = readBranchFileBuffer(repo, INCREMENTAL_FILE);
-	const uploads: BlobUpload[] = [{ path: README_FILE, content: readmeContent() }];
-	if (incremental !== null) {
-		uploads.push({ path: INCREMENTAL_FILE, content: incremental });
-	}
-	commitFiles(repo, uploads, "lock: force-unlock");
+	// Delete only the lock file; base_tree layering preserves the incremental
+	// caches (force-unlock must never wipe state, just clear a stuck lock).
+	commitFiles(repo, [{ path: LOCK_FILE }], "lock: force-unlock");
 	console.log("lock cleared.");
 	return 0;
 }
