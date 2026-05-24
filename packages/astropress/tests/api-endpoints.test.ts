@@ -481,6 +481,59 @@ describe("GET /ap-api/v1/webhooks + POST /ap-api/v1/webhooks", () => {
 		expect(body.verification.algorithm).toBe("ML-DSA-65");
 		expect(body.verification.publicKey.length).toBeGreaterThan(0);
 	});
+
+	// Parity with the admin form action (issue #141): the token-authenticated
+	// REST path must reject the same input the admin UI would, and must never
+	// persist an unvalidated webhook target/event.
+	it("POST rejects a non-http(s) url with 422 and does not persist", async () => {
+		mocks.webhooksCreate.mockClear();
+		const res = await webhooksPOST(
+			ctx(
+				req("POST", "/ap-api/v1/webhooks", {
+					token: webhooksManageToken,
+					body: { url: "ftp://example.com/hook", events: ["content.published"] },
+				}),
+			),
+		);
+		expect(res.status).toBe(422);
+		const body = (await res.json()) as { error: string; code: string };
+		expect(body.code).toBe("validation_error");
+		expect(body.error).toContain("http://");
+		expect(mocks.webhooksCreate).not.toHaveBeenCalled();
+	});
+
+	it("POST rejects an unsupported event name with 422 and does not persist", async () => {
+		mocks.webhooksCreate.mockClear();
+		const res = await webhooksPOST(
+			ctx(
+				req("POST", "/ap-api/v1/webhooks", {
+					token: webhooksManageToken,
+					body: {
+						url: "https://example.com/hook",
+						events: ["content.published", "content.created"],
+					},
+				}),
+			),
+		);
+		expect(res.status).toBe(422);
+		const body = (await res.json()) as { error: string };
+		expect(body.error).toContain("not supported");
+		expect(mocks.webhooksCreate).not.toHaveBeenCalled();
+	});
+
+	it("POST rejects an empty events array with 422 and does not persist", async () => {
+		mocks.webhooksCreate.mockClear();
+		const res = await webhooksPOST(
+			ctx(
+				req("POST", "/ap-api/v1/webhooks", {
+					token: webhooksManageToken,
+					body: { url: "https://example.com/hook", events: [] },
+				}),
+			),
+		);
+		expect(res.status).toBe(422);
+		expect(mocks.webhooksCreate).not.toHaveBeenCalled();
+	});
 });
 
 // ─── GET /ap-api/v1/openapi.json ─────────────────────────────────────────────

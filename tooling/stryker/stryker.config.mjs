@@ -1,5 +1,6 @@
 /** @type {import('@stryker-mutator/api/core').PartialStrykerOptions} */
 
+import { globSync } from "node:fs";
 import { strykerBase } from "./stryker-base.config.mjs";
 
 // Full-suite mutation testing — mutates ALL source files.
@@ -8,18 +9,41 @@ import { strykerBase } from "./stryker-base.config.mjs";
 // Or from repo root:
 //   bun run test:mutants
 //
-// When STRYKER_SHARD=a or =b is set, the mutate set is sharded
-// alphabetically by source filename (a–m and n–z). Each shard runs
-// independently with its own incremental cache key in CI, halving the
-// wall-clock for the daily mutation-test workflow. Unset (or any other
-// value) → full suite, identical to the historical behaviour.
+// When STRYKER_SHARD=a|b|c|d is set, the mutate set is sharded into N
+// balanced parts by round-robin over the *sorted* source-file list. Each
+// shard runs independently with its own incremental cache key in CI.
+//
+// Why round-robin instead of the old alphabetic a–m / n–z buckets: Stryker
+// wall-clock is dominated by how slow the tests covering a mutated file are
+// (perTest + vitest `related:true`), NOT by file count or LOC. The handful
+// of source files whose mutants drag in the network-bound integration-verify
+// suite (120s timeoutMS × retries) and the heavy SQLite-migration tests all
+// happened to sort into the a–m bucket, so shard "a" ran cold for 6h+ and
+// was killed by GitHub's hard 6-hour per-job ceiling — before it could push
+// its refreshed incremental cache, leaving the next run just as cold (a doom
+// loop that surfaced as a recurring "cancelled" Mutation Testing run on main).
+// Round-robin interleaves those expensive files across every shard, and N=4
+// keeps even a fully-cold shard well under the 6h ceiling. Unset (or any
+// other value) → full suite, identical to the historical behaviour.
+const SHARD_NAMES = ["a", "b", "c", "d"];
 const SHARD = process.env.STRYKER_SHARD ?? "";
-const shardFilters =
-	SHARD === "a"
-		? ["!src/[n-zN-Z]*.ts", "!src/[n-zN-Z]*/**/*.ts"]
-		: SHARD === "b"
-			? ["!src/[a-mA-M]*.ts", "!src/[a-mA-M]*/**/*.ts"]
-			: [];
+const shardIndex = SHARD_NAMES.indexOf(SHARD);
+let shardFilters = [];
+if (shardIndex >= 0) {
+	const shardCount = SHARD_NAMES.length;
+	// globSync runs with cwd = the Stryker project root (packages/astropress),
+	// so paths come back as "src/…", matching the mutate base glob below.
+	// Sort for a stable, host-independent assignment; exclude every file that
+	// does not belong to this shard. The data-only / barrel exclusions below
+	// still apply on top, so a file assigned to this shard that is also a
+	// global exclusion stays excluded everywhere (no double-mutation).
+	const allSources = globSync("src/**/*.ts")
+		.filter((file) => !file.endsWith(".d.ts"))
+		.sort();
+	shardFilters = allSources
+		.filter((_file, index) => index % shardCount !== shardIndex)
+		.map((file) => `!${file}`);
+}
 
 export default {
 	...strykerBase,

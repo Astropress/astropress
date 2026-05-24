@@ -150,7 +150,8 @@
 		"ip-address": "^10.2.0",
 		"fast-uri": "^3.1.2",
 		"devalue": "^5.8.1",
-		"brace-expansion": "^5.0.6"
+		"brace-expansion": "^5.0.6",
+		"qs": "^6.15.2"
 	},
 	"browserslist": [
 		"Chrome >= 108",
