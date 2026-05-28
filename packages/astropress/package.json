@@ -15,6 +15,10 @@
 			"types": "./src/platform-contracts.ts",
 			"default": "./dist/src/platform-contracts.js"
 		},
+		"./platform-contracts.js": {
+			"types": "./src/platform-contracts.ts",
+			"default": "./dist/src/platform-contracts.js"
+		},
 		"./project-env": {
 			"types": "./src/project-env.ts",
 			"default": "./dist/src/project-env.js"
@@ -52,6 +56,10 @@
 			"default": "./dist/src/admin-routes.js"
 		},
 		"./admin-store-dispatch": {
+			"types": "./src/admin-store-dispatch.ts",
+			"default": "./dist/src/admin-store-dispatch.js"
+		},
+		"./admin-store-dispatch.js": {
 			"types": "./src/admin-store-dispatch.ts",
 			"default": "./dist/src/admin-store-dispatch.js"
 		},
@@ -275,6 +283,10 @@
 			"types": "./src/local-runtime-modules.ts",
 			"default": "./dist/src/local-runtime-modules.js"
 		},
+		"./local-runtime-modules.js": {
+			"types": "./src/local-runtime-modules.ts",
+			"default": "./dist/src/local-runtime-modules.js"
+		},
 		"./cloudflare-workers-stub": {
 			"types": "./src/cloudflare-workers-stub.ts",
 			"default": "./dist/src/cloudflare-workers-stub.js"
@@ -423,6 +435,10 @@
 			"types": "./src/api-middleware.ts",
 			"default": "./dist/src/api-middleware.js"
 		},
+		"./api-middleware.js": {
+			"types": "./src/api-middleware.ts",
+			"default": "./dist/src/api-middleware.js"
+		},
 		"./api-routes": {
 			"types": "./src/api-routes.ts",
 			"default": "./dist/src/api-routes.js"
@@ -436,6 +452,10 @@
 			"default": "./dist/src/donations.js"
 		},
 		"./runtime-health": {
+			"types": "./src/runtime-health.ts",
+			"default": "./dist/src/runtime-health.js"
+		},
+		"./runtime-health.js": {
 			"types": "./src/runtime-health.ts",
 			"default": "./dist/src/runtime-health.js"
 		},
