@@ -2531,14 +2531,14 @@
 		},
 		{
 			"file": "src/sqlite-runtime/integrations.ts",
-			"line": 272,
+			"line": 283,
 			"column": 11,
 			"mutator": "OptionalChaining",
 			"reason": "`(row?.n ?? 0) > 0` mutated to `row.n`. `row` is the result of a `SELECT COUNT(*) AS n ...` (SQL_COUNT_ACTIVE_IN_DOMAIN), and a COUNT aggregate ALWAYS returns exactly one row, so `row` is never undefined here. The optional chain is defensive; `row?.n` and `row.n` are identical for every possible query result."
 		},
 		{
 			"file": "src/sqlite-runtime/integrations-d1.ts",
-			"line": 278,
+			"line": 282,
 			"column": 11,
 			"mutator": "OptionalChaining",
 			"reason": "`(row?.n ?? 0) > 0` mutated to `row.n`. Same equivalence as the sqlite sibling: D1's `.first<{n}>()` over a `SELECT COUNT(*) AS n` (D1_SQL_COUNT_ACTIVE_IN_DOMAIN) always yields a row (COUNT returns one row), so `row` is never null. `row?.n` and `row.n` are identical for every result."
@@ -2566,7 +2566,7 @@
 		},
 		{
 			"file": "src/import/import-path.ts",
-			"line": 63,
+			"line": 68,
 			"column": 6,
 			"mutator": "ConditionalExpression",
 			"reason": "Lexical-containment belt-and-suspenders guard `if (candidate !== rootResolved && !candidate.startsWith(rootResolved + sep)) throw`. Absolute paths and any `..`-segment paths are already rejected by the earlier isAbsolute + normalize-includes('..') checks, so no relative, non-`..` input reaching this line can resolve outside the root — the throw is unreachable for valid inputs, making the `false` mutant (never throw) equivalent. The matching `true` mutant is independently exercised (and would be killed) by the accept-path tests, so excluding this defensive guard does not hide a real gap."
