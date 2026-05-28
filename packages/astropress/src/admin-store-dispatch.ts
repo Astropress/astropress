@@ -92,7 +92,10 @@ export interface ResolvedApiRuntime {
 export async function resolveApiRuntime(
 	locals: App.Locals | null | undefined,
 ): Promise<ResolvedApiRuntime> {
-	return withLocalStoreFallback(
+	// Pin the generic to ResolvedApiRuntime so it isn't narrowed to the D1
+	// branch's concrete shape (non-optional stores + async checkRateLimit); the
+	// local branch legitimately returns optional stores and a sync rate limiter.
+	return withLocalStoreFallback<ResolvedApiRuntime>(
 		locals,
 		async (db) => ({
 			apiTokens: createD1ApiTokenStore(db),

@@ -38,7 +38,7 @@ export function notFound<T>(data: T, warnings: string[] = []): AdminPageResult<T
  * `audit-forbidden-render-safety` forbids raw `adminUser.name` in any page that
  * can render while forbidden, so this helper is the single safe accessor.
  */
-export function safeAdminUserName(user: AuthUser | null | undefined): string {
+export function safeAdminUserName(user: (AuthUser & { name?: string }) | null | undefined): string {
 	return user?.name ?? "";
 }
 
