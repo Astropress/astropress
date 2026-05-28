@@ -601,6 +601,16 @@ function optimizeImageLoading(html: string): string
 function sanitizeHtml(html: string): Promise<string>
 ```
 
+#### `assertSafeImportExportFile`
+```ts
+function assertSafeImportExportFile(exportFile: string, root: string): string
+```
+
+#### `getTrustedImportRoot`
+```ts
+function getTrustedImportRoot(): string
+```
+
 #### `createAstropressInMemoryPlatformAdapter`
 ```ts
 function createAstropressInMemoryPlatformAdapter(options: AstropressInMemoryPlatformAdapterOptions): AstropressPlatformAdapter
@@ -1800,6 +1810,7 @@ function validateWebhookCreateInput(input: { url: unknown; events: unknown; }): 
 - `const ASTROPRESS_ADMIN_BASE_PATH: "/ap-admin"`
 - `ADMIN_STUB_PAGES`
 - `adminStubs`
+- `ImportPathError`
 - `const registerAbTesting: Register`
 - `const registerAnalytics: Register`
 - `const registerCdnPurge: Register`

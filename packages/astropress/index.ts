@@ -325,6 +325,11 @@ export { createAstropressHostedPlatformAdapter } from "./src/hosted-platform-ada
 export { optimizeImageLoading } from "./src/html-optimization";
 // Content utilities
 export { sanitizeHtml } from "./src/html-sanitization";
+export {
+	assertSafeImportExportFile,
+	getTrustedImportRoot,
+	ImportPathError,
+} from "./src/import/import-path.js";
 export type { AstropressInMemoryPlatformAdapterOptions } from "./src/in-memory-platform-adapter";
 export { createAstropressInMemoryPlatformAdapter } from "./src/in-memory-platform-adapter.js";
 export type {
