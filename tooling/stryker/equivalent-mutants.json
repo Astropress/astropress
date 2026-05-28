@@ -2027,14 +2027,14 @@
 		},
 		{
 			"file": "src/runtime-actions-media.ts",
-			"line": 169,
+			"line": 177,
 			"column": 17,
 			"mutator": "OptionalChaining",
 			"reason": "`row?.local_path` where `row` is the result of `SELECT local_path, r2_key FROM media_assets WHERE id = ? LIMIT 1` issued immediately after the asset has been confirmed to exist (the earlier `existing` guard) and soft-deleted (deleted_at set, row still present — soft delete does not remove the row). The SELECT has no deleted_at filter, so it always returns a row object here. `row` is therefore never null/undefined at this point, making `row?.local_path` and `row.local_path` observably identical."
 		},
 		{
 			"file": "src/runtime-actions-media.ts",
-			"line": 170,
+			"line": 178,
 			"column": 13,
 			"mutator": "OptionalChaining",
 			"reason": "Same equivalence class as L169:17 — `row?.r2_key`. `row` comes from a `SELECT ... WHERE id = ? LIMIT 1` for an id already proven to exist (and only soft-deleted, so the row is still present). `row` is never null/undefined here, so `row?.r2_key` and `row.r2_key` produce the same value."

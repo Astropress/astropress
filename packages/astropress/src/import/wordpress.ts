@@ -171,32 +171,46 @@ async function stageArtifacts(
 }> {
 	await mkdir(artifactDir, { recursive: true });
 
+	// Hold the paths as locals (always `string`) so we don't read them back
+	// through the artifacts object's optional `?: string` fields, which the
+	// shared AstropressWordPressImportArtifacts contract keeps optional for
+	// partially-built reports elsewhere.
+	const inventoryFile = path.join(artifactDir, "wordpress.inventory.json");
+	const planFile = path.join(artifactDir, "wordpress.plan.json");
+	const contentFile = path.join(artifactDir, "content-records.json");
+	const mediaFile = path.join(artifactDir, "media-manifest.json");
+	const commentFile = path.join(artifactDir, "comment-records.json");
+	const userFile = path.join(artifactDir, "user-records.json");
+	const redirectFile = path.join(artifactDir, "redirect-records.json");
+	const taxonomyFile = path.join(artifactDir, "taxonomy-records.json");
+	const remediationFile = path.join(artifactDir, "remediation-candidates.json");
+	const downloadStateFile = path.join(artifactDir, "download-state.json");
 	const artifacts: AstropressWordPressImportArtifacts = {
 		artifactDir,
-		inventoryFile: path.join(artifactDir, "wordpress.inventory.json"),
-		planFile: path.join(artifactDir, "wordpress.plan.json"),
-		contentFile: path.join(artifactDir, "content-records.json"),
-		mediaFile: path.join(artifactDir, "media-manifest.json"),
-		commentFile: path.join(artifactDir, "comment-records.json"),
-		userFile: path.join(artifactDir, "user-records.json"),
-		redirectFile: path.join(artifactDir, "redirect-records.json"),
-		taxonomyFile: path.join(artifactDir, "taxonomy-records.json"),
-		remediationFile: path.join(artifactDir, "remediation-candidates.json"),
-		downloadStateFile: path.join(artifactDir, "download-state.json"),
+		inventoryFile,
+		planFile,
+		contentFile,
+		mediaFile,
+		commentFile,
+		userFile,
+		redirectFile,
+		taxonomyFile,
+		remediationFile,
+		downloadStateFile,
 	};
 
-	await writeJsonArtifact(artifacts.inventoryFile, inventory);
-	await writeJsonArtifact(artifacts.planFile, plan);
-	await writeJsonArtifact(artifacts.contentFile, bundle.contentRecords);
-	await writeJsonArtifact(artifacts.mediaFile, bundle.mediaAssets);
-	await writeJsonArtifact(artifacts.commentFile, bundle.comments);
-	await writeJsonArtifact(artifacts.userFile, bundle.authors);
-	await writeJsonArtifact(artifacts.redirectFile, bundle.redirects);
-	await writeJsonArtifact(artifacts.taxonomyFile, bundle.terms);
-	await writeJsonArtifact(artifacts.remediationFile, bundle.remediationCandidates);
+	await writeJsonArtifact(inventoryFile, inventory);
+	await writeJsonArtifact(planFile, plan);
+	await writeJsonArtifact(contentFile, bundle.contentRecords);
+	await writeJsonArtifact(mediaFile, bundle.mediaAssets);
+	await writeJsonArtifact(commentFile, bundle.comments);
+	await writeJsonArtifact(userFile, bundle.authors);
+	await writeJsonArtifact(redirectFile, bundle.redirects);
+	await writeJsonArtifact(taxonomyFile, bundle.terms);
+	await writeJsonArtifact(remediationFile, bundle.remediationCandidates);
 
 	if (!plan.downloadMedia) {
-		await writeJsonArtifact(artifacts.downloadStateFile, {
+		await writeJsonArtifact(downloadStateFile, {
 			completed: [],
 			failed: [],
 		} satisfies DownloadState);

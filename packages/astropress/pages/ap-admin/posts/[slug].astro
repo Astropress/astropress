@@ -8,10 +8,16 @@ import {
 	getAdminLocalePair,
 	getSeededAdminContentType,
 	isAuthUserAdmin,
+	requiresAccess,
 } from "astropress";
 import { peekCmsConfig } from "../../../src/config.js";
 
 export const prerender = false;
+
+// #107: enforce the declared post permission at the route boundary, matching
+// the revisions + preview siblings (which already guard on posts:edit).
+const guard = await requiresAccess(Astro, "posts:edit");
+if (guard) return guard;
 
 const adminUser = Astro.locals.adminUser;
 const slug = Astro.params.slug ?? "";

@@ -150,7 +150,7 @@ export async function buildPostsIndexPageModel(locals: AdminLocals) {
 		[],
 	);
 	const archiveList = (
-		getCmsConfig().archives as Array<{
+		getCmsConfig().archives as unknown as Array<{
 			slug: string;
 			title: string;
 			legacyUrl: string;
@@ -286,15 +286,17 @@ export async function buildSeoPageModel(locals: AdminLocals, user: AuthUser | nu
 			missingMetadata: !record.seoTitle || !record.metaDescription,
 			editHref: `/ap-admin/posts/${record.slug}`,
 		})),
-		...routePages.map((route) => ({
-			label: route.title,
-			type: "Structured Page",
-			path: route.path,
-			seoTitle: route.seoTitle || route.title,
-			metaDescription: route.metaDescription || route.summary || "—",
-			missingMetadata: !route.seoTitle || !route.metaDescription,
-			editHref: `/ap-admin/route-pages${route.path}`,
-		})),
+		...routePages
+			.filter((route): route is NonNullable<typeof route> => route != null)
+			.map((route) => ({
+				label: route.title,
+				type: "Structured Page",
+				path: route.path,
+				seoTitle: route.seoTitle || route.title,
+				metaDescription: route.metaDescription || route.summary || "—",
+				missingMetadata: !route.seoTitle || !route.metaDescription,
+				editHref: `/ap-admin/route-pages${route.path}`,
+			})),
 		...archiveRoutes.map(({ archive, runtime }) => ({
 			label: runtime?.title ?? archive.title,
 			type: "Archive",
@@ -304,15 +306,17 @@ export async function buildSeoPageModel(locals: AdminLocals, user: AuthUser | nu
 			missingMetadata: !runtime?.seoTitle || !runtime?.metaDescription,
 			editHref: `/ap-admin/archives/${archive.slug}`,
 		})),
-		...systemRoutes.map((route) => ({
-			label: route.title,
-			type: "System",
-			path: route.path,
-			seoTitle: route.title,
-			metaDescription: route.summary || "—",
-			missingMetadata: !route.summary,
-			editHref: "/ap-admin/system",
-		})),
+		...systemRoutes
+			.filter((route): route is NonNullable<typeof route> => route != null)
+			.map((route) => ({
+				label: route.title,
+				type: "System",
+				path: route.path,
+				seoTitle: route.title,
+				metaDescription: route.summary || "—",
+				missingMetadata: !route.summary,
+				editHref: "/ap-admin/system",
+			})),
 	];
 
 	return ok({ rows }, warnings);
