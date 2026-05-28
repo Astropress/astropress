@@ -181,11 +181,21 @@ export async function buildPostsIndexPageModel(locals: AdminLocals) {
 	return ok({ authors, categories, tags, allContent, archives }, warnings);
 }
 
+interface TranslationStatusRow {
+	route: string;
+	translationState: string;
+	englishSourceUrl: string;
+	locale: string;
+	englishEditHref?: string;
+	effectiveState: string;
+	localizedEditHref: string | undefined;
+}
+
 export async function buildTranslationsPageModel(
 	locals: AdminLocals,
 	user: AuthUser | null | undefined,
 ) {
-	const empty = { rows: [] as unknown[] };
+	const empty = { rows: [] as TranslationStatusRow[] };
 	if (!user || !isAuthUserAdmin(user)) {
 		return forbidden(empty);
 	}
@@ -236,8 +246,18 @@ export async function buildTranslationsPageModel(
 	return ok({ rows }, warnings);
 }
 
+interface SeoListingRow {
+	label: string;
+	type: string;
+	path: string;
+	seoTitle: string;
+	metaDescription: string;
+	missingMetadata: boolean;
+	editHref: string;
+}
+
 export async function buildSeoPageModel(locals: AdminLocals, user: AuthUser | null | undefined) {
-	const empty = { rows: [] as unknown[] };
+	const empty = { rows: [] as SeoListingRow[] };
 	if (!user || !isAuthUserAdmin(user)) {
 		return forbidden(empty);
 	}
@@ -276,7 +296,7 @@ export async function buildSeoPageModel(locals: AdminLocals, user: AuthUser | nu
 		(archive) => ({ archive, runtime: null }),
 	);
 
-	const rows = [
+	const rows: SeoListingRow[] = [
 		...contentStates.map((record) => ({
 			label: record.title,
 			type: isSeededPostRecord(record) ? "Post" : "Page",
