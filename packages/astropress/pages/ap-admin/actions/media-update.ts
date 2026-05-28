@@ -4,7 +4,7 @@ import type { APIRoute } from "astro";
 export const POST: APIRoute = async (context) =>
 	withAdminFormAction(
 		context,
-		{ failurePath: "/ap-admin/media" },
+		{ failurePath: "/ap-admin/media", requireAction: "media:upload" },
 		async ({ actor, formData, locals, redirect, fail }) => {
 			const result = await updateRuntimeMediaAsset(
 				{

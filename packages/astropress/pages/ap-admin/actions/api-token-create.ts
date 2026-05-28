@@ -18,7 +18,7 @@ const VALID_SCOPES: ApiScope[] = [
 export const POST: APIRoute = async (context) =>
 	withAdminFormAction(
 		context,
-		{ failurePath: "/ap-admin/api-tokens", requireAdmin: true },
+		{ failurePath: "/ap-admin/api-tokens", requireAction: "apiTokens:create" },
 		async ({ formData, redirect, fail }) => {
 			const label = String(formData.get("label") ?? "").trim();
 			if (!label) return fail("Token label is required.");

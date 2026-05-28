@@ -4,7 +4,7 @@ import type { APIRoute } from "astro";
 export const POST: APIRoute = async (context) =>
 	withAdminFormAction(
 		context,
-		{ failurePath: "/ap-admin/users", requireAdmin: true },
+		{ failurePath: "/ap-admin/users", requireAction: "users:edit" },
 		async ({ actor, formData, locals, redirect, fail }) => {
 			const result = await suspendRuntimeAdminUser(
 				String(formData.get("email") ?? ""),

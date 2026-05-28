@@ -8,7 +8,7 @@ import type { APIRoute } from "astro";
 export const POST: APIRoute = async (context) =>
 	withAdminFormAction(
 		context,
-		{ failurePath: "/ap-admin" },
+		{ failurePath: "/ap-admin", requireAction: "posts:publish" },
 		async ({ formData, redirect, fail }) => {
 			const slug = String(formData.get("slug") ?? "").trim();
 			if (!slug) return fail("Content slug is required.");

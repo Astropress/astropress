@@ -13,7 +13,7 @@ import {
 export const POST: APIRoute = async (context) => {
 	return withAdminFormAction(
 		context,
-		{ failurePath: "/ap-admin", requireAdmin: true },
+		{ failurePath: "/ap-admin", requireAction: "posts:publish" },
 		async ({ actor, locals }) => {
 			const hookConfig = resolveDeployHookFromEnv();
 

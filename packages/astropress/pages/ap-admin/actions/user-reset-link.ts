@@ -9,7 +9,7 @@ import type { APIRoute } from "astro";
 export const POST: APIRoute = async (context) =>
 	withAdminFormAction(
 		context,
-		{ failurePath: "/ap-admin/users", requireAdmin: true },
+		{ failurePath: "/ap-admin/users", requireAction: "users:edit" },
 		async ({ actor, formData, locals, request, redirect, fail }) => {
 			const email = String(formData.get("email") ?? "");
 			const result = await createRuntimePasswordResetToken(email, actor, locals);

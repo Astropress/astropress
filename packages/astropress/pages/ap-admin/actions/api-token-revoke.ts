@@ -5,7 +5,7 @@ import type { APIRoute } from "astro";
 export const POST: APIRoute = async (context) =>
 	withAdminFormAction(
 		context,
-		{ failurePath: "/ap-admin/api-tokens", requireAdmin: true },
+		{ failurePath: "/ap-admin/api-tokens", requireAction: "apiTokens:revoke" },
 		async ({ formData, redirect, fail }) => {
 			const id = String(formData.get("id") ?? "").trim();
 			if (!id) return fail("Token ID is required.");

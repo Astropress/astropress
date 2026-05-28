@@ -9,7 +9,7 @@ import type { APIRoute } from "astro";
 export const POST: APIRoute = async (context) =>
 	withAdminFormAction(
 		context,
-		{ failurePath: "/ap-admin/users", requireAdmin: true },
+		{ failurePath: "/ap-admin/users", requireAction: "users:invite" },
 		async ({ actor, formData, locals, request, redirect, fail }) => {
 			const result = await inviteRuntimeAdminUser(
 				{

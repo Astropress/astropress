@@ -25,7 +25,7 @@ function parseTemplateKey(value: FormDataEntryValue | null): string | null {
 export const POST: APIRoute = async (context) =>
 	withAdminFormAction(
 		context,
-		{ failurePath: "/ap-admin/route-pages" },
+		{ failurePath: "/ap-admin/route-pages", requireAction: "routePages:edit" },
 		async ({ actor, formData, locals, redirect, fail }) => {
 			const templateKey = parseTemplateKey(formData.get("templateKey"));
 			if (!templateKey) {

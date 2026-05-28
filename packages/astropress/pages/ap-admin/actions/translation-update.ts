@@ -14,6 +14,7 @@ export const POST: APIRoute = async (context) => {
 		context,
 		{
 			failurePath: refererPath,
+			requireAction: "translations:manage",
 			unexpectedMessage:
 				"Translation state could not be updated. Reload the page and retry the status change.",
 		},

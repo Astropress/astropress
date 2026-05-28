@@ -14,7 +14,7 @@ import { purgeUserData } from "../../../src/admin-action-user-purge.js";
 export const POST: APIRoute = async (context) =>
 	withAdminFormAction(
 		context,
-		{ failurePath: "/ap-admin/users", requireAdmin: true },
+		{ failurePath: "/ap-admin/users", requireAction: "users:revoke" },
 		async ({ formData, locals }) => {
 			const email = String(formData.get("email") ?? "").trim();
 			if (!email) {
