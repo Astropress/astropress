@@ -53,6 +53,27 @@ export const apiRouteDefinitions: AstropressApiRouteDefinition[] = [
 		auth: true,
 	},
 	{
+		pattern: "/ap-api/v1/metrics",
+		entrypoint: "ap-api/v1/metrics.ts",
+		methods: ["GET"],
+		scopes: ["content:read"],
+		auth: true,
+	},
+	{
+		pattern: "/ap-api/v1/search",
+		entrypoint: "ap-api/v1/search.ts",
+		methods: ["GET"],
+		scopes: ["content:read"],
+		auth: true,
+	},
+	{
+		pattern: "/ap-api/v1/import/wordpress",
+		entrypoint: "ap-api/v1/import/wordpress.ts",
+		methods: ["POST"],
+		scopes: ["import:write"],
+		auth: true,
+	},
+	{
 		pattern: "/ap-api/v1/settings",
 		entrypoint: "ap-api/v1/settings.ts",
 		methods: ["GET"],
