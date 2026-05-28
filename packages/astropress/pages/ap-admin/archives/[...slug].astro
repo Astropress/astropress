@@ -1,4 +1,5 @@
 ---
+import { safeAdminUserName } from "astropress";
 import AdminLayout from "@astropress-diy/astropress/components/AdminLayout.astro";
 import CsrfInput from "@astropress-diy/astropress/components/CsrfInput.astro";
 import { buildArchiveEditorModel, getPageT, isAuthUserAdmin, resolveAdminLocale } from "astropress";
@@ -33,7 +34,7 @@ if (model.status === "not_found") {
     heading={t("archiveEditor.title")}
     currentPath="/ap-admin/archives"
     description={t("archiveEditor.description")}
-    userName={adminUser.name}
+    userName={safeAdminUserName(adminUser)}
   >
     <nav class="breadcrumb" aria-label={t("archiveEditor.breadcrumb")}>
       <a href="/ap-admin/archives">{t("archiveEditor.archivesLink")}</a>
@@ -95,7 +96,7 @@ if (model.status === "not_found") {
     heading={isForbidden ? t("archiveEditor.forbiddenTitle") : t("archiveEditor.notFoundTitle")}
     currentPath="/ap-admin/archives"
     description={isForbidden ? t("archiveEditor.forbiddenDesc") : t("archiveEditor.notFoundDesc")}
-    userName={adminUser.name}
+    userName={safeAdminUserName(adminUser)}
   >
     <section class="panel">
       <p>{isForbidden ? t("archiveEditor.forbiddenBody") : t("archiveEditor.notFoundDesc")}</p>

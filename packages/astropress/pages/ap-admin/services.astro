@@ -1,4 +1,5 @@
 ---
+import { safeAdminUserName } from "astropress";
 import AdminLayout from "@astropress-diy/astropress/components/AdminLayout.astro";
 import { getAstropressServices } from "@astropress-diy/astropress/services-config";
 import { getPageT, isAuthUserAdmin, resolveAdminLocale } from "astropress";
@@ -36,7 +37,7 @@ const DEFAULT_SERVICE_DOCS: Record<string, { docs: string; badge: string }> = {
   heading={t("services.title")}
   currentPath="/ap-admin/services"
   description={t("services.description")}
-  userName={adminUser.name}
+  userName={safeAdminUserName(adminUser)}
 >
   {services.length === 0 ? (
     <section class="panel empty-services">

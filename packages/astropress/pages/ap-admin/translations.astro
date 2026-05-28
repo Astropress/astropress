@@ -1,4 +1,5 @@
 ---
+import { safeAdminUserName } from "astropress";
 import AdminLayout from "@astropress-diy/astropress/components/AdminLayout.astro";
 import CsrfInput from "@astropress-diy/astropress/components/CsrfInput.astro";
 import {
@@ -34,7 +35,7 @@ const t = getPageT(resolveAdminLocale(Astro));
     heading={t("translations.title")}
     currentPath="/ap-admin/translations"
     description={t("translations.description")}
-    userName={adminUser.name}
+    userName={safeAdminUserName(adminUser)}
   >
     {model.warnings.length > 0 && <p class="notice">{t("translations.partialResults")}</p>}
     {wasSaved && <p class="notice">{t("translations.savedSuccess")}</p>}
@@ -126,7 +127,7 @@ const t = getPageT(resolveAdminLocale(Astro));
     heading={t("translations.forbiddenTitle")}
     currentPath="/ap-admin/posts"
     description={t("translations.forbiddenDesc")}
-    userName={adminUser.name}
+    userName={safeAdminUserName(adminUser)}
   >
     <section class="panel">
       <p>{t("translations.forbiddenBody")}</p>

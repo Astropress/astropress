@@ -1,4 +1,5 @@
 ---
+import { safeAdminUserName } from "astropress";
 import AdminLayout from "@astropress-diy/astropress/components/AdminLayout.astro";
 import AuditTrail from "@astropress-diy/astropress/components/AuditTrail.astro";
 import CsrfInput from "@astropress-diy/astropress/components/CsrfInput.astro";
@@ -66,7 +67,7 @@ if (model.status === "not_found") {
     heading={`Edit ${contentLabel}`}
     currentPath={listPath}
     description={contentType === "page" ? "Seeded page content and metadata." : "Blog post content, taxonomy, scheduling, and metadata."}
-    userName={adminUser.name}
+    userName={safeAdminUserName(adminUser)}
   >
     <nav class="breadcrumb" aria-label="breadcrumb">
       <a href={listPath}>{contentType === "page" ? "Pages" : "Posts"}</a>
@@ -467,7 +468,7 @@ if (model.status === "not_found") {
     heading={!isAdmin && contentType === "page" ? "Forbidden" : "Not Found"}
     currentPath="/ap-admin/posts"
     description={!isAdmin && contentType === "page" ? "This action requires an admin account." : "The requested content record could not be found."}
-    userName={adminUser.name}
+    userName={safeAdminUserName(adminUser)}
   >
     <section class="panel">
       <p>{!isAdmin && contentType === "page" ? "This action requires an admin account and is hidden from editor-only roles." : "The requested content record could not be found."}</p>

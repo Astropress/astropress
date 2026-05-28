@@ -1,4 +1,5 @@
 ---
+import { safeAdminUserName } from "astropress";
 import AdminLayout from "@astropress-diy/astropress/components/AdminLayout.astro";
 import { buildArchivesIndexPageModel, getPageT, resolveAdminLocale } from "astropress";
 
@@ -16,7 +17,7 @@ const t = getPageT(resolveAdminLocale(Astro));
   title={t("archives.title")}
   heading={t("archives.title")}
   description={t("archives.description")}
-  userName={adminUser.name}
+  userName={safeAdminUserName(adminUser)}
   currentPath="/ap-admin/archives"
 >
   {model.warnings.length > 0 && <p class="notice">{t("archives.partialResults")}</p>}
@@ -105,7 +106,7 @@ const t = getPageT(resolveAdminLocale(Astro));
     title={t("archives.forbiddenTitle")}
     heading={t("archives.forbiddenTitle")}
     description={t("archives.forbiddenDesc")}
-    userName={adminUser.name}
+    userName={safeAdminUserName(adminUser)}
     currentPath="/ap-admin/posts"
   >
     <section class="panel">

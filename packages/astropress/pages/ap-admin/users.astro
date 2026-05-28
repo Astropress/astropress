@@ -1,4 +1,5 @@
 ---
+import { safeAdminUserName } from "astropress";
 import AdminLayout from "@astropress-diy/astropress/components/AdminLayout.astro";
 import AuditTrail from "@astropress-diy/astropress/components/AuditTrail.astro";
 import CsrfInput from "@astropress-diy/astropress/components/CsrfInput.astro";
@@ -38,7 +39,7 @@ if (model.status === "forbidden") {
     title={t("users.title")}
     heading={t("users.title")}
     description={t("users.description")}
-    userName={adminUser.name}
+    userName={safeAdminUserName(adminUser)}
     currentPath="/ap-admin/users"
   >
     {model.warnings.length > 0 && <p class="notice">{t("users.partialNotice")}</p>}
@@ -268,7 +269,7 @@ if (model.status === "forbidden") {
     heading="Forbidden"
     currentPath=""
     description={t("pages.forbidden.description")}
-    userName={adminUser.name}
+    userName={safeAdminUserName(adminUser)}
   >
     <section class="panel forbidden">
       <p>{t("pages.forbidden.body")}</p>

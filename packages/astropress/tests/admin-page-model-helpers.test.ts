@@ -14,8 +14,26 @@ import {
 	notFound,
 	ok,
 	result,
+	safeAdminUserName,
 	withSettledMap,
 } from "../src/admin-page-model-helpers.js";
+
+describe("safeAdminUserName", () => {
+	it("returns an empty string for an anonymous (undefined/null) user — no deref", () => {
+		// This is the #105/#108/#138/#139 crash guard: a forbidden page renders
+		// the layout shell with status 403 even when adminUser is undefined.
+		expect(safeAdminUserName(undefined)).toBe("");
+		expect(safeAdminUserName(null)).toBe("");
+	});
+
+	it("returns the user's name when present", () => {
+		expect(safeAdminUserName({ email: "a@b.c", name: "Ada", isAdmin: false })).toBe("Ada");
+	});
+
+	it("does not throw for a user object missing a name", () => {
+		expect(safeAdminUserName({ email: "a@b.c" } as never)).toBe("");
+	});
+});
 
 describe("emptyDashboardModel", () => {
 	it("seeds every list field with a fresh empty array (kills L84-L98 ArrayDeclaration mutants)", () => {

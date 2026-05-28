@@ -153,6 +153,7 @@ export type { AdminLocalePair } from "./src/admin-locale-links";
 export { getAdminLocalePair } from "./src/admin-locale-links";
 export type { PageLabelKey } from "./src/admin-page-labels";
 export { getPageT, pageLabels } from "./src/admin-page-labels.js";
+export { safeAdminUserName } from "./src/admin-page-model-helpers.js";
 export type { AdminPageResult } from "./src/admin-page-models";
 export {
 	buildAcceptInvitePageModel,

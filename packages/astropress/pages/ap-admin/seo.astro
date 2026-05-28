@@ -1,4 +1,5 @@
 ---
+import { safeAdminUserName } from "astropress";
 import AdminLayout from "@astropress-diy/astropress/components/AdminLayout.astro";
 import { buildSeoPageModel, getPageT, resolveAdminLocale } from "astropress";
 
@@ -48,7 +49,7 @@ const rowsMissingMetadata = rows.filter((row) => row.missingMetadata).length;
     heading={t("seo.title")}
     currentPath="/ap-admin/seo"
     description={t("seo.description")}
-    userName={adminUser.name}
+    userName={safeAdminUserName(adminUser)}
   >
     {model.warnings.length > 0 && <p class="notice">{t("seo.partialResults")}</p>}
     <div class="admin-subgrid two summary-grid">
@@ -138,7 +139,7 @@ const rowsMissingMetadata = rows.filter((row) => row.missingMetadata).length;
     heading="Forbidden"
     currentPath="/ap-admin/posts"
     description={t("pages.forbidden.description")}
-    userName={adminUser.name}
+    userName={safeAdminUserName(adminUser)}
   >
     <section class="panel">
       <p>{t("pages.forbidden.body")}</p>

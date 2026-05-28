@@ -1,4 +1,5 @@
 ---
+import { safeAdminUserName } from "astropress";
 import AdminLayout from "@astropress-diy/astropress/components/AdminLayout.astro";
 import {
 	buildPagesIndexPageModel,
@@ -106,7 +107,7 @@ const structuredExplanation = t("pages.structuredExplanation");
     heading="Pages"
     currentPath="/ap-admin/pages"
     description={t("pages.description")}
-    userName={adminUser.name}
+    userName={safeAdminUserName(adminUser)}
   >
     {model.warnings.length > 0 && <p class="notice">{t("pages.partialResults")}</p>}
     <div class="toolbar">
@@ -209,7 +210,7 @@ const structuredExplanation = t("pages.structuredExplanation");
     heading="Forbidden"
     currentPath="/ap-admin/posts"
     description={t("pages.forbidden.description")}
-    userName={adminUser.name}
+    userName={safeAdminUserName(adminUser)}
   >
     <section class="panel">
       <p>{t("pages.forbidden.body")}</p>
