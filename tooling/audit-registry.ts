@@ -80,6 +80,78 @@ export const AUDITS: readonly AuditEntry[] = [
 		description:
 			"Validates that the audit + Playwright registries are in sync with package.json, lefthook.yml, ci.yml, and playwright.config.ts.",
 	},
+	{
+		name: "js-ts-shadow",
+		script: "tooling/scripts/audit-js-ts-shadow.ts",
+		preCommit: true,
+		ci: true,
+		preCommitGlob: "packages/astropress/pages/**/*.{js,ts,astro}",
+		description:
+			"Forbids stale committed pages/*.js siblings shadowing a .ts/.astro route (#120/#124/#139).",
+	},
+	{
+		name: "dev-secret-fail-closed",
+		script: "tooling/scripts/audit-dev-secret-fail-closed.ts",
+		preCommit: true,
+		ci: true,
+		preCommitGlob: "packages/astropress/src/**/*.ts",
+		description:
+			"Forbids a second source of the dev root-secret fallback; enforces the single fail-closed resolver (#126/#132).",
+	},
+	{
+		name: "runtime-dispatch-parity",
+		script: "tooling/scripts/audit-runtime-dispatch-parity.ts",
+		preCommit: true,
+		ci: true,
+		preCommitGlob: "packages/astropress/pages/**/*.{ts,astro}",
+		description:
+			"Forbids direct loadLocalAdminStore() in pages/**; store access must route through the dispatch seam (#137).",
+	},
+	{
+		name: "security-header-envelope",
+		script: "tooling/scripts/audit-security-header-envelope.ts",
+		preCommit: true,
+		ci: true,
+		preCommitGlob: "packages/astropress/{src/api-middleware.ts,pages/**/*.ts}",
+		description:
+			"Keeps admin + API JSON endpoints inside the shared security-header envelope (#103/#119).",
+	},
+	{
+		name: "api-inventory-parity",
+		script: "tooling/scripts/audit-api-inventory-parity.ts",
+		preCommit: true,
+		ci: true,
+		preCommitGlob: "packages/astropress/{src/api-routes-data.ts,pages/ap-api/**/*.ts}",
+		description:
+			"Keeps the ap-api route inventory, OpenAPI spec, and on-disk handlers in parity (#117).",
+	},
+	{
+		name: "secret-in-url",
+		script: "tooling/scripts/audit-secret-in-url.ts",
+		preCommit: true,
+		ci: true,
+		preCommitGlob: "packages/astropress/pages/ap-admin/**/*.{ts,astro}",
+		description:
+			"Forbids secret-bearing parameter names in any pages/** URL; secrets hand off via the flash store (#113/#115/#133).",
+	},
+	{
+		name: "forbidden-render-safety",
+		script: "tooling/scripts/audit-forbidden-render-safety.ts",
+		preCommit: true,
+		ci: true,
+		preCommitGlob: "packages/astropress/pages/ap-admin/**/*.astro",
+		description:
+			"Forbidden-capable admin pages must render userName via safeAdminUserName, never a raw adminUser deref (#105/#108/#138/#139).",
+	},
+	{
+		name: "abac-enforcement-parity",
+		script: "tooling/scripts/audit-abac-enforcement-parity.ts",
+		preCommit: true,
+		ci: true,
+		preCommitGlob: "packages/astropress/pages/ap-admin/**/*.{ts,astro}",
+		description:
+			"Every admin action route declares requireAction; guarded listing pages keep their requiresAccess gate (#101/#104/#106/#110/#114/#121/#125).",
+	},
 ];
 
 export function findAuditByName(name: string): AuditEntry | undefined {

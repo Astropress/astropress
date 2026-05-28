@@ -142,6 +142,14 @@ jobs:
             audit:scaffold-quality \
             audit:integration-honesty \
             audit:integration-secrets \
+            audit:js-ts-shadow \
+            audit:dev-secret-fail-closed \
+            audit:runtime-dispatch-parity \
+            audit:security-header-envelope \
+            audit:api-inventory-parity \
+            audit:secret-in-url \
+            audit:forbidden-render-safety \
+            audit:abac-enforcement-parity \
             docs:api:check \
             docs:check
       - run: bun run repo:clean
