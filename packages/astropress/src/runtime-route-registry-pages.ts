@@ -38,7 +38,7 @@ function mapStructuredPageRow(
 		  }
 		| null
 		| undefined,
-) {
+): RuntimeStructuredPageRouteRecord | null {
 	if (!row) {
 		return null;
 	}
