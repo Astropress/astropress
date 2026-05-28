@@ -33,37 +33,41 @@ export function listSqliteContentRecords(
 	}
 	if (!kind || kind === "comment") {
 		records.push(
-			...runtime.sqliteAdminStore.comments.getComments().map((comment) => ({
-				id: comment.id,
-				kind: "comment" as const,
-				slug: comment.id,
-				status: comment.status === "approved" ? "published" : "draft",
-				title: comment.author,
-				body: comment.body ?? null,
-				metadata: {
-					route: comment.route,
-					email: comment.email ?? null,
-					policy: comment.policy,
-					submittedAt: comment.submittedAt ?? null,
-				},
-			})),
+			...runtime.sqliteAdminStore.comments.getComments().map(
+				(comment): ContentStoreRecord => ({
+					id: comment.id,
+					kind: "comment" as const,
+					slug: comment.id,
+					status: comment.status === "approved" ? "published" : "draft",
+					title: comment.author,
+					body: comment.body ?? null,
+					metadata: {
+						route: comment.route,
+						email: comment.email ?? null,
+						policy: comment.policy,
+						submittedAt: comment.submittedAt ?? null,
+					},
+				}),
+			),
 		);
 	}
 	if (!kind || kind === "user") {
 		records.push(
-			...runtime.sqliteAdminStore.users.listAdminUsers().map((user) => ({
-				id: String(user.id),
-				kind: "user" as const,
-				slug: user.email,
-				status: user.active ? "published" : "archived",
-				title: user.name,
-				metadata: {
-					email: user.email,
-					role: user.role,
-					createdAt: user.createdAt,
-					userStatus: user.status,
-				},
-			})),
+			...runtime.sqliteAdminStore.users.listAdminUsers().map(
+				(user): ContentStoreRecord => ({
+					id: String(user.id),
+					kind: "user" as const,
+					slug: user.email,
+					status: user.active ? "published" : "archived",
+					title: user.name,
+					metadata: {
+						email: user.email,
+						role: user.role,
+						createdAt: user.createdAt,
+						userStatus: user.status,
+					},
+				}),
+			),
 		);
 	}
 	if (!kind || kind === "settings") {
@@ -74,7 +78,7 @@ export function listSqliteContentRecords(
 			slug: "site-settings",
 			status: "published",
 			title: settings.siteTitle,
-			metadata: settings,
+			metadata: { ...settings },
 		});
 	}
 	if (!kind || kind === "translation") {
@@ -85,18 +89,20 @@ export function listSqliteContentRecords(
 			updated_by: string;
 		}>;
 		records.push(
-			...rows.map((row) => ({
-				id: row.route,
-				kind: "translation" as const,
-				slug: row.route,
-				status: row.state === "published" ? "published" : "draft",
-				title: row.route,
-				metadata: {
-					state: row.state,
-					updatedAt: row.updated_at,
-					updatedBy: row.updated_by,
-				},
-			})),
+			...rows.map(
+				(row): ContentStoreRecord => ({
+					id: row.route,
+					kind: "translation" as const,
+					slug: row.route,
+					status: row.state === "published" ? "published" : "draft",
+					title: row.route,
+					metadata: {
+						state: row.state,
+						updatedAt: row.updated_at,
+						updatedBy: row.updated_by,
+					},
+				}),
+			),
 		);
 	}
 	if (!kind || kind === "media") {
@@ -162,7 +168,9 @@ export function saveSqlitePageOrPost(
 			actor,
 		);
 		if (!result.ok) throw new Error(result.error);
-		return toContentStoreRecord(result.state);
+		const updated = runtime.sqliteAdminStore.content.getContentState(slug);
+		if (!updated) throw new Error(`Sqlite adapter failed to persist content record ${slug}.`);
+		return toContentStoreRecord(updated as Parameters<typeof toContentStoreRecord>[0]);
 	}
 	const result = runtime.sqliteAdminStore.content.createContentRecord(
 		{
@@ -181,7 +189,9 @@ export function saveSqlitePageOrPost(
 		actor,
 	);
 	if (!result.ok) throw new Error(result.error);
-	return toContentStoreRecord(result.state);
+	const created = runtime.sqliteAdminStore.content.getContentState(slug);
+	if (!created) throw new Error(`Sqlite adapter failed to persist content record ${slug}.`);
+	return toContentStoreRecord(created as Parameters<typeof toContentStoreRecord>[0]);
 }
 
 export function saveSqliteContentRecord(

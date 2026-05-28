@@ -88,9 +88,12 @@ export function getRuntimeEnv(name: keyof RuntimeBindings | string) {
 }
 
 export function getCloudflareBindings(locals?: App.Locals | null): RuntimeBindings {
-	if (locals?.runtime && typeof locals.runtime === "object") {
+	// App.Locals doesn't declare `runtime`; the Cloudflare adapter injects it at
+	// runtime. Read it through a structural cast rather than augmenting the type.
+	const withRuntime = locals as { runtime?: { env?: RuntimeBindings } } | null | undefined;
+	if (withRuntime?.runtime && typeof withRuntime.runtime === "object") {
 		try {
-			const runtimeEnv = (locals.runtime as { env?: RuntimeBindings }).env;
+			const runtimeEnv = withRuntime.runtime.env;
 			if (runtimeEnv) {
 				return runtimeEnv;
 			}

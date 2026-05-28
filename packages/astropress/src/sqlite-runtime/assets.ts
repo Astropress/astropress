@@ -147,7 +147,7 @@ export function createSqliteAssetsStore(
 			return row ? { localPath: row.local_path } : null;
 		},
 		markStoredMediaDeleted(id: string) {
-			return getDb().prepare(SQL_SOFT_DELETE_MEDIA).run(id).changes > 0;
+			return Number(getDb().prepare(SQL_SOFT_DELETE_MEDIA).run(id).changes ?? 0) > 0;
 		},
 		recordMediaAudit({
 			actor,

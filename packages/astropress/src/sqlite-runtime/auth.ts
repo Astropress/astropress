@@ -151,9 +151,11 @@ export function createSqliteAuthStore(
 		setAdminUserActiveState(email: string, nextActive: boolean) {
 			const expectedActive = nextActive ? 0 : 1;
 			return (
-				getDb()
-					.prepare(SQL_SET_USER_ACTIVE)
-					.run(nextActive ? 1 : 0, email, expectedActive).changes > 0
+				Number(
+					getDb()
+						.prepare(SQL_SET_USER_ACTIVE)
+						.run(nextActive ? 1 : 0, email, expectedActive).changes ?? 0,
+				) > 0
 			);
 		},
 		revokeAdminSessionsForEmail(email: string) {

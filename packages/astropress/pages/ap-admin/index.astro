@@ -60,7 +60,7 @@ const deploymentLabel = !latestDeployment
   description={isAdmin
     ? t("dashboard.description")
     : t("dashboard.descriptionEditor")}
-  userName={adminUser.name}
+  userName={adminUser?.name ?? ""}
 >
   {model.warnings.length > 0 && <p class="notice">{t("dashboard.partialResults")}</p>}
   <div class="stats-grid">

@@ -1,5 +1,5 @@
 import type { D1DatabaseLike } from "./d1-database";
-import { createD1ContentReadPart, createD1SchedulingPart } from "./d1-store-content";
+import { createD1ContentReadPart } from "./d1-store-content";
 import { createD1OperationsMutationPart, createD1OperationsReadPart } from "./d1-store-operations";
 import {
 	createD1AuthorsMutationPart,
@@ -69,16 +69,14 @@ export interface D1AdminReadStore {
 		getComments(): Promise<CommentRecord[]>;
 		getApprovedCommentsForRoute(route: string): Promise<CommentRecord[]>;
 	};
+	// Read-only content surface. Scheduling (schedulePublish / listScheduled /
+	// cancelScheduledPublish / runScheduledPublishes) is a write operation and
+	// lives in createD1SchedulingPart / the admin scheduling repository — no
+	// read-store consumer invokes it through here.
 	content: {
 		listContentStates(): Promise<ContentRecord[]>;
 		getContentState(slug: string): Promise<ContentRecord | null>;
 		getContentRevisions(slug: string): Promise<ContentRevision[] | null>;
-		schedulePublish(id: string, scheduledAt: string): Promise<void>;
-		listScheduled(): Promise<
-			Array<{ id: string; slug: string; title: string; scheduledAt: string }>
-		>;
-		cancelScheduledPublish(id: string): Promise<void>;
-		runScheduledPublishes(): Promise<number>;
 	};
 	submissions: {
 		getContactSubmissions(): Promise<ContactSubmission[]>;
@@ -182,7 +180,7 @@ export function createD1AdminReadStore(db: D1DatabaseLike): D1AdminReadStore {
 		...createD1OperationsReadPart(db),
 		authors: createD1AuthorsReadPart(db),
 		taxonomies: createD1TaxonomiesReadPart(db),
-		content: { ...createD1ContentReadPart(db), ...createD1SchedulingPart(db) },
+		content: createD1ContentReadPart(db),
 	};
 }
 

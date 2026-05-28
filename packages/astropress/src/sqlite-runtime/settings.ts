@@ -140,7 +140,7 @@ export function createSqliteSettingsStore(getDb: () => AstropressSqliteDatabaseL
 			getDb().prepare(SQL_UPSERT_REDIRECT).run(sourcePath, targetPath, statusCode, actor.email);
 		},
 		markRedirectDeleted(sourcePath: string) {
-			return getDb().prepare(SQL_SOFT_DELETE_REDIRECT).run(sourcePath).changes > 0;
+			return Number(getDb().prepare(SQL_SOFT_DELETE_REDIRECT).run(sourcePath).changes ?? 0) > 0;
 		},
 		recordRedirectAudit({
 			actor,
@@ -170,7 +170,10 @@ export function createSqliteSettingsStore(getDb: () => AstropressSqliteDatabaseL
 			return comment?.route ?? null;
 		},
 		updateCommentStatus(commentId: string, nextStatus: CommentStatus) {
-			return getDb().prepare(SQL_UPDATE_COMMENT_STATUS).run(nextStatus, commentId).changes > 0;
+			return (
+				Number(getDb().prepare(SQL_UPDATE_COMMENT_STATUS).run(nextStatus, commentId).changes ?? 0) >
+				0
+			);
 		},
 		insertPublicComment(comment: {
 			id: string;

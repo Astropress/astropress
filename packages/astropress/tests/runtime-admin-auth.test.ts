@@ -78,6 +78,9 @@ describe("runtime admin auth secret rotation", () => {
 		await expect(getRuntimeSessionUser(legacySessionToken, locals)).resolves.toMatchObject({
 			email: "admin@example.com",
 			role: "admin",
+			// Derived from role === "admin" (which the session query maps from
+			// admin_users.is_admin); assert it to pin the derivation under mutation.
+			isAdmin: true,
 		});
 
 		await revokeRuntimeSession(legacySessionToken, locals);

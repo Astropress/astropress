@@ -15,8 +15,9 @@ function getD1(locals?: App.Locals | null): D1DatabaseLike | undefined {
 	return getCloudflareBindings(locals).DB;
 }
 
-async function cleanupExpiredSessions(db: D1DatabaseLike) {
-	const result = await db
+async function cleanupExpiredSessions(db: D1DatabaseLike): Promise<void> {
+	// Fire-and-forget cleanup; the revoked-row count is not consumed by callers.
+	await db
 		.prepare(
 			`
         UPDATE admin_sessions
@@ -26,7 +27,6 @@ async function cleanupExpiredSessions(db: D1DatabaseLike) {
       `,
 		)
 		.run();
-	return result.meta.changes;
 }
 
 async function getLiveD1SessionRow(
@@ -208,16 +208,21 @@ export async function getRuntimeSessionUser(
 	sessionToken: string | null | undefined,
 	locals?: App.Locals | null,
 ) {
-	return withLocalStoreFallback(
+	return withLocalStoreFallback<(SessionUser & { isAdmin: boolean }) | null>(
 		locals,
 		async (db) => {
 			const row = await getLiveD1SessionRow(db, sessionToken, locals);
 			if (!row) {
 				return null;
 			}
-			return { email: row.email, role: row.role, name: row.name };
+			// `role` is itself derived from admin_users.is_admin in the session
+			// query, so the ABAC break-glass signal is exactly role === "admin".
+			return { email: row.email, role: row.role, name: row.name, isAdmin: row.role === "admin" };
 		},
-		async (store) => store.getSessionUser(sessionToken),
+		async (store) => {
+			const user = await store.getSessionUser(sessionToken);
+			return user ? { ...user, isAdmin: user.role === "admin" } : null;
+		},
 	);
 }
 

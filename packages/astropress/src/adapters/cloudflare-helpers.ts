@@ -56,7 +56,7 @@ function resolveMetaString(
 
 function resolveContentFields(
 	record: {
-		title?: string;
+		title?: string | null;
 		body?: string | null;
 		// audit-boundary: opaque-passthrough -- driver row-shape mirror; values narrowed at consumer
 		metadata?: Record<string, unknown> | null;
@@ -107,7 +107,7 @@ export async function savePageOrPost(
 		slug?: string;
 		id: string;
 		kind: string;
-		title?: string;
+		title?: string | null;
 		body?: string | null;
 		status?: string;
 		// audit-boundary: opaque-passthrough -- driver row-shape mirror; values narrowed at consumer
@@ -189,5 +189,7 @@ export async function savePageOrPost(
 
 	const saved = await readStore.content.getContentState(slug);
 	if (!saved) throw new Error(`Cloudflare adapter failed to persist content record ${slug}.`);
-	return toContentStoreRecord(saved);
+	// getContentState's row types `status` as a plain string; toContentStoreRecord
+	// normalises it. Same content-state data, divergent status type only.
+	return toContentStoreRecord(saved as Parameters<typeof toContentStoreRecord>[0]);
 }

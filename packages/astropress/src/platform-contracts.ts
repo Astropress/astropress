@@ -233,7 +233,9 @@ export interface AuthUser {
 }
 
 /** Returns whether the user has the break-glass admin flag set. */
-export function isAuthUserAdmin(user: AuthUser): boolean {
+// Reads only the ABAC break-glass flag, so any subject carrying `isAdmin`
+// (a full AuthUser or a session user projected with it) is a valid argument.
+export function isAuthUserAdmin(user: Pick<AuthUser, "isAdmin">): boolean {
 	return user.isAdmin === true;
 }
 

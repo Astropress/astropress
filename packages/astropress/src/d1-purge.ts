@@ -18,26 +18,26 @@ export function createD1PurgeOps(db: D1DatabaseLike) {
 					.prepare("DELETE FROM admin_sessions WHERE user_id = ?")
 					.bind(userRow.id)
 					.run();
-				revokedSessions = result.meta?.changes ?? 0;
+				revokedSessions = Number(result.meta?.changes ?? 0);
 			}
 
 			const auditResult = await db
 				.prepare("UPDATE audit_events SET user_email = '[deleted]' WHERE user_email = ?")
 				.bind(email)
 				.run();
-			const anonymisedAuditEvents = auditResult.meta?.changes ?? 0;
+			const anonymisedAuditEvents = Number(auditResult.meta?.changes ?? 0);
 
 			const commentsResult = await db
 				.prepare("DELETE FROM comments WHERE email = ?")
 				.bind(email)
 				.run();
-			const deletedComments = commentsResult.meta?.changes ?? 0;
+			const deletedComments = Number(commentsResult.meta?.changes ?? 0);
 
 			const submissionsResult = await db
 				.prepare("DELETE FROM contact_submissions WHERE email = ?")
 				.bind(email)
 				.run();
-			const deletedContactSubmissions = submissionsResult.meta?.changes ?? 0;
+			const deletedContactSubmissions = Number(submissionsResult.meta?.changes ?? 0);
 
 			let adminUserAction: UserPurgeResult["adminUserAction"];
 			if (!userRow) {

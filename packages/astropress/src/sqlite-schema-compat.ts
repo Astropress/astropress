@@ -62,7 +62,10 @@ export function rebuildContentTablesForCompatibility(
 	);
 }
 
-export function ensureFts5SearchIndex(db: SqliteDatabaseLike) {
+// Accepts any sqlite handle exposing `prepare`/`exec` (this never closes the
+// db), so the request-scoped AstropressSqliteDatabaseLike — which omits close()
+// — is a valid argument alongside the bootstrap SqliteDatabaseLike.
+export function ensureFts5SearchIndex(db: Pick<SqliteDatabaseLike, "exec" | "prepare">) {
 	const existing = db
 		.prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'content_fts'")
 		.get() as { name: string } | undefined;

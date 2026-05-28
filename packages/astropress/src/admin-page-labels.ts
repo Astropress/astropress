@@ -10440,9 +10440,14 @@ export const pageLabels = {
  * Build a translator function bound to a locale. Falls back to English when
  * a key has no translation for the requested locale.
  */
-export function getPageT(locale: AdminLocale): (key: PageLabelKey, fallback?: string) => string {
+export function getPageT(
+	locale: AdminLocale,
+	// `string & {}` keeps autocomplete for known PageLabelKeys while allowing
+	// callers to pass ad-hoc keys not (yet) in the catalog — those resolve via
+	// the `fallback` below, never throwing.
+): (key: PageLabelKey | (string & {}), fallback?: string) => string {
 	return (key, fallback) => {
-		const entry = pageLabels[key] as LocaleMap | undefined;
+		const entry = pageLabels[key as PageLabelKey] as LocaleMap | undefined;
 		// Missing keys must never throw at render time. A typo or a freshly
 		// added <h1> with no catalog entry would otherwise crash SSR (e.g.
 		// `Cannot read properties of undefined (reading 'en')`), and in dev

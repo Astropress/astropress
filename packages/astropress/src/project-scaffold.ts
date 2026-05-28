@@ -21,7 +21,7 @@ import {
 export type AstropressScaffoldProvider = "sqlite" | "supabase";
 
 export type AstropressAnalyticsProvider = "umami" | "plausible" | "matomo" | "posthog" | "custom";
-export type AstropressAbTestingProvider = "growthbook" | "unleash" | "custom";
+export type AstropressAbTestingProvider = "growthbook" | "unleash" | "flagsmith" | "custom";
 export type AstropressHeatmapProvider = "openreplay" | "posthog" | "custom";
 
 export interface AstropressDonationsProviders {
@@ -135,7 +135,11 @@ export function createAstropressProjectScaffold(
 	const enableApi = typeof input === "string" ? false : (input.enableApi ?? false);
 	const donationsOpt = typeof input === "string" ? undefined : input.donations;
 
-	const localEnv = baseLocalEnv(profile.provider, profile.appHost, profile.dataServices);
+	const localEnv: Record<string, string> = baseLocalEnv(
+		profile.provider,
+		profile.appHost,
+		profile.dataServices,
+	);
 	if (enableApi) localEnv.ASTROPRESS_API_ENABLED = "true";
 
 	return {

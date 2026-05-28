@@ -340,6 +340,81 @@ describe("admin action utils", () => {
 		expect(result.ok).toBe(true);
 	});
 
+	it("projects the harness AuthUser onto the session user (admin role/name)", async () => {
+		mocks.getRuntimeSessionUser.mockResolvedValue(null);
+		mocks.getRuntimeCsrfToken.mockResolvedValue(null);
+		mocks.getRuntimeEnv.mockImplementation((name: string) =>
+			name === "PLAYWRIGHT_E2E_MODE" ? "admin-harness" : undefined,
+		);
+		const { withAdminFormAction } = await import("@astropress-diy/astropress");
+		const context = makeContext({ _csrf: "harness-csrf-token" });
+		context.locals = {
+			adminUser: { email: "boss@example.com", isAdmin: true, name: "Boss" },
+			csrfToken: "harness-csrf-token",
+		} as unknown as App.Locals;
+
+		let seenActor: { email: string; role: string; name: string } | undefined;
+		// requireAdmin only passes if the projected isAdmin is true.
+		const response = await withAdminFormAction(
+			context,
+			{ failurePath: "/ap-admin", requireAdmin: true },
+			async ({ actor, redirect }) => {
+				seenActor = actor;
+				return redirect("/ok");
+			},
+		);
+		expect(response.headers.get("Location")).toBe("/ok");
+		expect(seenActor).toMatchObject({ email: "boss@example.com", role: "admin", name: "Boss" });
+	});
+
+	it("projects a non-admin harness user as editor and falls back name→email", async () => {
+		mocks.getRuntimeSessionUser.mockResolvedValue(null);
+		mocks.getRuntimeCsrfToken.mockResolvedValue(null);
+		mocks.getRuntimeEnv.mockImplementation((name: string) =>
+			name === "PLAYWRIGHT_E2E_MODE" ? "admin-harness" : undefined,
+		);
+		const { withAdminFormAction } = await import("@astropress-diy/astropress");
+		const context = makeContext({ _csrf: "harness-csrf-token" });
+		context.locals = {
+			// No `name` → projection falls back to the email.
+			adminUser: { email: "ed@example.com", isAdmin: false },
+			csrfToken: "harness-csrf-token",
+		} as unknown as App.Locals;
+
+		let seenActor: { email: string; role: string; name: string } | undefined;
+		const response = await withAdminFormAction(
+			context,
+			{ failurePath: "/ap-admin" },
+			async ({ actor, redirect }) => {
+				seenActor = actor;
+				return redirect("/ok");
+			},
+		);
+		expect(response.headers.get("Location")).toBe("/ok");
+		expect(seenActor).toMatchObject({ role: "editor", name: "ed@example.com" });
+	});
+
+	it("denies a requireAdmin harness action when the projected user is not admin", async () => {
+		mocks.getRuntimeSessionUser.mockResolvedValue(null);
+		mocks.getRuntimeCsrfToken.mockResolvedValue(null);
+		mocks.getRuntimeEnv.mockImplementation((name: string) =>
+			name === "PLAYWRIGHT_E2E_MODE" ? "admin-harness" : undefined,
+		);
+		const { withAdminFormAction } = await import("@astropress-diy/astropress");
+		const context = makeContext({ _csrf: "harness-csrf-token" });
+		context.locals = {
+			adminUser: { email: "ed@example.com", isAdmin: false, name: "Ed" },
+			csrfToken: "harness-csrf-token",
+		} as unknown as App.Locals;
+
+		const response = await withAdminFormAction(
+			context,
+			{ failurePath: "/ap-admin", requireAdmin: true },
+			async () => new Response("must not run"),
+		);
+		expect(response.headers.get("Location")).toContain("error=1");
+	});
+
 	it("passes actor and form data into successful handlers", async () => {
 		const { withAdminFormAction } = await import("@astropress-diy/astropress");
 
@@ -360,6 +435,12 @@ describe("admin action utils", () => {
 		const { actionErrorRedirect } = await import("@astropress-diy/astropress");
 		const response = actionErrorRedirect("/ap-admin/settings", "Bad input");
 		expect(response.headers.get("Location")).toBe("/ap-admin/settings?error=1&message=Bad+input");
+	});
+
+	it("builds notice (success) redirects with encoded messages", async () => {
+		const { actionNoticeRedirect } = await import("@astropress-diy/astropress");
+		const response = actionNoticeRedirect("/ap-admin", "Build triggered.");
+		expect(response.headers.get("Location")).toBe("/ap-admin?notice=1&message=Build+triggered.");
 	});
 
 	it("propagates guard non-ok response when auth check fails inside withAdminFormAction", async () => {

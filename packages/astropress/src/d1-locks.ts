@@ -81,7 +81,7 @@ export function createD1LocksOps(db: D1DatabaseLike) {
 				.prepare("UPDATE content_locks SET expires_at = ? WHERE slug = ? AND lock_token = ?")
 				.bind(expiresAt, slug, lockToken)
 				.run();
-			return (result.meta?.changes ?? 0) > 0;
+			return Number(result.meta?.changes ?? 0) > 0;
 		},
 
 		async releaseLock(slug: string, lockToken: string): Promise<boolean> {
@@ -89,7 +89,7 @@ export function createD1LocksOps(db: D1DatabaseLike) {
 				.prepare("DELETE FROM content_locks WHERE slug = ? AND lock_token = ?")
 				.bind(slug, lockToken)
 				.run();
-			return (result.meta?.changes ?? 0) > 0;
+			return Number(result.meta?.changes ?? 0) > 0;
 		},
 	};
 }

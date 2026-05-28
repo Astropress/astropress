@@ -560,6 +560,13 @@ const documentTitleResolved = isOnMatchedNavRoute
           data-action-error
           class="action-error-region"
         ></div>
+        <div
+          role="status"
+          aria-live="polite"
+          aria-atomic="true"
+          data-action-notice
+          class="action-notice-region"
+        ></div>
         <slot />
       </main>
     </div>
@@ -681,6 +688,14 @@ const documentTitleResolved = isOnMatchedNavRoute
             const liveRegion = document.querySelector<HTMLElement>("[aria-live='assertive'][data-action-error]");
             if (liveRegion && !liveRegion.textContent) {
               liveRegion.textContent = messageParam;
+            }
+          }
+          // Success counterpart: ?notice=1&message=… (e.g. publish confirmation).
+          const notice = params.get("notice");
+          if (notice && messageParam) {
+            const noticeRegion = document.querySelector<HTMLElement>("[data-action-notice]");
+            if (noticeRegion && !noticeRegion.textContent) {
+              noticeRegion.textContent = messageParam;
             }
           }
         }

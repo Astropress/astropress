@@ -53,14 +53,14 @@
 		},
 		{
 			"file": "src/runtime-route-registry-pages.ts",
-			"line": 117,
+			"line": 119,
 			"column": 6,
 			"mutator": "ConditionalExpression",
 			"reason": "`if (!db) { return local?.getStructuredPageRoute(normalizedPath) ?? null; }` fast-path. Mutant `false` falls through to withSafeRouteRegistryFallback which throws on `db.prepare` with undefined db; catch invokes the same local-registry fallback or the same `null` default. Identical observable result."
 		},
 		{
 			"file": "src/runtime-route-registry-pages.ts",
-			"line": 117,
+			"line": 119,
 			"column": 11,
 			"mutator": "BlockStatement",
 			"reason": "Same equivalence class as L117:6 — empty if-body falls through to withSafeRouteRegistryFallback, which catches the resulting TypeError and produces the same observable result via local-registry fallback or `null` default."
@@ -2139,8 +2139,8 @@
 		},
 		{
 			"file": "src/runtime-env.ts",
-			"line": 99,
-			"column": 25,
+			"line": 94,
+			"column": 30,
 			"mutator": "ConditionalExpression",
 			"reason": "`typeof locals.runtime === \"object\"` → `true`. The outer `locals?.runtime &&` still guards, so the block is entered only when `locals.runtime` is truthy. For any truthy non-object (string/number/boolean/function/symbol), `(locals.runtime as {env?}).env` is `undefined`, so `if (runtimeEnv)` is false and control falls through to the same `globalBindings ?? {}` lookup as the original `typeof !== object` skip. Observable result is identical."
 		},
@@ -2482,14 +2482,14 @@
 		},
 		{
 			"file": "src/import/wordpress.ts",
-			"line": 278,
+			"line": 292,
 			"column": 9,
 			"mutator": "ConditionalExpression",
 			"reason": "`if (artifactsOutcome.artifacts)` is inside `if (plan.applyLocal && plan.artifactDir)`. The `artifactsOutcome` object is built immediately above as `plan.artifactDir ? await stageArtifacts(...) : { artifacts: undefined, ... }` — so `artifactsOutcome.artifacts` is truthy IFF `plan.artifactDir` is truthy. The outer guard already proved artifactDir truthy, hence this inner condition is unconditionally true; the `true` mutant produces identical behavior."
 		},
 		{
 			"file": "src/import/wordpress.ts",
-			"line": 282,
+			"line": 296,
 			"column": 8,
 			"mutator": "LogicalOperator",
 			"reason": "`plan.artifactDir && artifactsOutcome.artifacts` mutated to `||`. Same invariant as 278:9 — `artifactsOutcome.artifacts` is truthy IFF `plan.artifactDir` is truthy by construction at line 261-263. For every input both `A && B` and `A || B` collapse to `A`. Observationally identical."
@@ -2510,7 +2510,7 @@
 		},
 		{
 			"file": "src/import/wordpress.ts",
-			"line": 331,
+			"line": 345,
 			"column": 16,
 			"mutator": "LogicalOperator",
 			"reason": "`input.sourceUrl ?? options.sourceUrl` in resumeWordPressImport mutated to `&&`. The mutant only matters when input.sourceUrl is undefined; in that case the call forwards `sourceUrl: undefined` to importWordPress. But importWordPress then re-applies the same `?? options.sourceUrl` defaulting at line 257 before parseImportInput sees the value. Net inventory.sourceUrl is options.sourceUrl regardless of which branch fires. Observationally identical."
@@ -2629,7 +2629,7 @@
 		},
 		{
 			"file": "src/runtime-actions-content.ts",
-			"line": 211,
+			"line": 213,
 			"column": 45,
 			"mutator": "Regex",
 			"reason": "`legacyUrl.replace(/^\\//, '')` mutated to `/\\//` (anchor dropped). `legacyUrl` comes from `normalizeLegacyUrl`, which guarantees a leading '/' (`raw.startsWith('/') ? raw : `/${raw}``). For any leading-slash string the first slash IS the leading slash, so `/^\\//` and `/\\//` replace the same character. Identical result for every value normalizeLegacyUrl can produce."

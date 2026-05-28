@@ -103,7 +103,7 @@ function marketingVariantParams(
 }
 
 export function seedBootstrapUsers(
-	options: AstropressSqliteSeedToolkitOptions,
+	options: AstropressSqliteSeedToolkitOptions<string>,
 	db: SqliteDatabaseLike,
 ) {
 	const upsert = db.prepare(`
@@ -129,7 +129,7 @@ export function seedBootstrapUsers(
 }
 
 export function seedMediaAssets(
-	options: AstropressSqliteSeedToolkitOptions,
+	options: AstropressSqliteSeedToolkitOptions<string>,
 	db: SqliteDatabaseLike,
 	workspaceRoot: string,
 ) {
@@ -163,7 +163,10 @@ export function seedMediaAssets(
 	return count;
 }
 
-export function seedRedirects(options: AstropressSqliteSeedToolkitOptions, db: SqliteDatabaseLike) {
+export function seedRedirects(
+	options: AstropressSqliteSeedToolkitOptions<string>,
+	db: SqliteDatabaseLike,
+) {
 	const insert = db.prepare(`
     INSERT INTO redirect_rules (source_path, target_path, status_code, created_by, deleted_at)
     VALUES (?, ?, ?, ?, NULL)
@@ -183,7 +186,10 @@ export function seedRedirects(options: AstropressSqliteSeedToolkitOptions, db: S
 	return count;
 }
 
-export function seedComments(options: AstropressSqliteSeedToolkitOptions, db: SqliteDatabaseLike) {
+export function seedComments(
+	options: AstropressSqliteSeedToolkitOptions<string>,
+	db: SqliteDatabaseLike,
+) {
 	const insert = db.prepare(`
     INSERT INTO comments (id, author, email, body, route, status, policy, submitted_at)
     VALUES (?, ?, ?, ?, ?, ?, ?, COALESCE(?, CURRENT_TIMESTAMP))
@@ -207,7 +213,7 @@ export function seedComments(options: AstropressSqliteSeedToolkitOptions, db: Sq
 }
 
 export function seedSiteSettings(
-	options: AstropressSqliteSeedToolkitOptions,
+	options: AstropressSqliteSeedToolkitOptions<string>,
 	db: SqliteDatabaseLike,
 ) {
 	const result = db
@@ -225,7 +231,7 @@ export function seedSiteSettings(
 }
 
 export function seedSystemRoutes(
-	options: AstropressSqliteSeedToolkitOptions,
+	options: AstropressSqliteSeedToolkitOptions<string>,
 	db: SqliteDatabaseLike,
 ) {
 	const insertGroup = db.prepare(SQL_SEED_SYSTEM_GROUP);
@@ -252,7 +258,7 @@ export function seedSystemRoutes(
 }
 
 export function seedArchiveRoutes(
-	options: AstropressSqliteSeedToolkitOptions,
+	options: AstropressSqliteSeedToolkitOptions<string>,
 	db: SqliteDatabaseLike,
 ) {
 	const insertGroup = db.prepare(SQL_SEED_ARCHIVE_GROUP);
@@ -273,7 +279,7 @@ export function seedArchiveRoutes(
 }
 
 export function seedMarketingRoutes(
-	options: AstropressSqliteSeedToolkitOptions,
+	options: AstropressSqliteSeedToolkitOptions<string>,
 	db: SqliteDatabaseLike,
 ) {
 	const insertGroup = db.prepare(SQL_SEED_MARKETING_GROUP);

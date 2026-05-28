@@ -128,6 +128,7 @@ export {
 // Admin form utilities
 export {
 	actionErrorRedirect,
+	actionNoticeRedirect,
 	actionRedirect,
 	requireAdminFormAction,
 	withAdminFormAction,
@@ -258,6 +259,7 @@ export {
 	dispatchPluginContentEvent,
 	dispatchPluginMediaEvent,
 	getCmsConfig,
+	peekCmsConfig,
 	registerCms,
 	validateContentFields,
 } from "./src/config";

@@ -1,6 +1,6 @@
 import {
 	actionErrorRedirect,
-	actionRedirect,
+	actionNoticeRedirect,
 	withAdminFormAction,
 } from "@astropress-diy/astropress";
 import type { APIRoute } from "astro";
@@ -41,7 +41,7 @@ export const POST: APIRoute = async (context) => {
 				? `Build triggered. Track progress: ${result.statusUrl}`
 				: "Build triggered. Your production site will update shortly.";
 
-			return actionRedirect("/ap-admin", successMessage);
+			return actionNoticeRedirect("/ap-admin", successMessage);
 		},
 	);
 };

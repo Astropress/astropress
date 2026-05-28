@@ -32,7 +32,9 @@ export function cloudflareActorEmail() {
 }
 
 export function normalizeContentStatus(
-	status: ContentStoreRecord["status"],
+	// Accepts any raw status string (revision snapshots, row values); delegates
+	// to the commons normaliser which collapses unknowns to a valid status.
+	status: string | null | undefined,
 ): "draft" | "published" | "archived" {
 	// Adapter writes ContentStoreRecord whose status lacks "review"; collapse
 	// anything unknown to "published" via commons.
@@ -51,7 +53,7 @@ export function toTranslationRecord(
 	state: string,
 	updatedAt: string,
 	updatedBy: string,
-) {
+): ContentStoreRecord {
 	return {
 		id: route,
 		kind: "translation" as const,
