@@ -60,9 +60,9 @@ describe("createAstropressPublicSiteIntegration", () => {
 		const sitemap = injected.find((r) => r.pattern === "/sitemap.xml");
 		const robots = injected.find((r) => r.pattern === "/robots.txt");
 		const llms = injected.find((r) => r.pattern === "/llms.txt");
-		expect(sitemap?.entrypoint).toMatch(/pages\/sitemap\.xml\.js$/);
-		expect(robots?.entrypoint).toMatch(/pages\/robots\.txt\.js$/);
-		expect(llms?.entrypoint).toMatch(/pages\/llms\.txt\.js$/);
+		expect(sitemap?.entrypoint).toMatch(/pages\/sitemap\.xml\.ts$/);
+		expect(robots?.entrypoint).toMatch(/pages\/robots\.txt\.ts$/);
+		expect(llms?.entrypoint).toMatch(/pages\/llms\.txt\.ts$/);
 	});
 
 	it("does not register any admin middleware when hook is called", () => {
@@ -130,9 +130,9 @@ describe("createAstropressSitemapIntegration", () => {
 		} as never);
 
 		const sitemap = injected.find((r) => r.pattern === "/sitemap.xml");
-		const ogImage = injected.find((r) => r.pattern === "/ap-api/v1/og-image/[slug].png");
-		expect(sitemap?.entrypoint).toMatch(/pages\/sitemap\.xml\.js$/);
-		expect(ogImage?.entrypoint).toMatch(/pages\/ap-api\/v1\/og-image\/\[slug\]\.png\.js$/);
+		const ogImage = injected.find((r) => r.pattern === "/ap-api/v1/og-image/[slug].svg");
+		expect(sitemap?.entrypoint).toMatch(/pages\/sitemap\.xml\.ts$/);
+		expect(ogImage?.entrypoint).toMatch(/pages\/ap-api\/v1\/og-image\/\[slug\]\.svg\.ts$/);
 	});
 
 	it("calls updateConfig with the JSON-stringified siteUrl define when options.siteUrl is set (peekCmsConfig unused)", () => {
@@ -194,10 +194,10 @@ describe("createAstropressSitemapIntegration", () => {
 	});
 });
 
-describe("OG image endpoint (ap-api/v1/og-image/[slug].png.ts)", () => {
+describe("OG image endpoint (ap-api/v1/og-image/[slug].svg.ts)", () => {
 	const ogEndpointPath = path.resolve(
 		import.meta.dirname,
-		"../pages/ap-api/v1/og-image/[slug].png.ts",
+		"../pages/ap-api/v1/og-image/[slug].svg.ts",
 	);
 
 	it("endpoint file exists", () => {
@@ -205,16 +205,16 @@ describe("OG image endpoint (ap-api/v1/og-image/[slug].png.ts)", () => {
 	});
 
 	it("endpoint exports a GET handler and prerender=false", async () => {
-		const source = (await import("../pages/ap-api/v1/og-image/[slug].png.ts?raw"))
+		const source = (await import("../pages/ap-api/v1/og-image/[slug].svg.ts?raw"))
 			.default as string;
 		expect(source).toContain("export const GET");
 		expect(source).toContain("prerender = false");
 	});
 
 	it("endpoint returns SVG with correct Content-Type", async () => {
-		const { GET } = await import("../pages/ap-api/v1/og-image/[slug].png.ts");
+		const { GET } = await import("../pages/ap-api/v1/og-image/[slug].svg.ts");
 		const request = new Request(
-			"https://example.com/ap-api/v1/og-image/my-post.png?title=Hello+World&site=My+Site",
+			"https://example.com/ap-api/v1/og-image/my-post.svg?title=Hello+World&site=My+Site",
 		);
 		const response = (await GET({
 			request,

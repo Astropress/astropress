@@ -16,7 +16,7 @@
  * ```
  */
 
-import { getCmsConfig } from "@astropress-diy/astropress";
+import { getCmsConfig, getRuntimeMediaAssets } from "@astropress-diy/astropress";
 import { apiErrors, jsonOk, withApiRequest } from "@astropress-diy/astropress/api-middleware.js";
 import { loadLocalAdminStore } from "@astropress-diy/astropress/local-runtime-modules.js";
 import type { APIRoute } from "astro";
@@ -43,16 +43,19 @@ export const GET: APIRoute = async (context) => {
 		},
 		["content:read"],
 		async () => {
-			// Use existing repository abstractions to get counts across all adapters
+			// Use existing repository abstractions to get counts across all adapters.
+			// Media uses the canonical runtime listing (getReadStore().media.listMediaAssets),
+			// the same surface the admin media page uses — not an undocumented store.media.list()
+			// shape that no adapter implements (which silently reported 0). See issue #120.
 			const [allContent, allMedia] = await Promise.all([
 				listRuntimeContentStates(context.locals).catch(() => []),
-				store.media?.list?.().catch(() => []) ?? Promise.resolve([]),
+				getRuntimeMediaAssets(context.locals).catch(() => []),
 			]);
 
 			const posts = allContent.filter((r) => r.kind === "post").length;
 			const pages = allContent.filter((r) => r.kind === "page").length;
 			const comments = allContent.filter((r) => r.kind === "comment").length;
-			const media = (allMedia as unknown[]).length;
+			const media = allMedia.length;
 
 			const uptimeSeconds = (Date.now() - startTime) / 1000;
 

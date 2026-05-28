@@ -71,7 +71,7 @@ describe("tooling integration", () => {
 		expect(patterns).toContain("/robots.txt");
 		expect(patterns).toContain("/llms.txt");
 		expect(patterns).toContain("/ap-api/v1/metrics");
-		expect(patterns).toContain("/ap-api/v1/og-image/[slug].png");
+		expect(patterns).toContain("/ap-api/v1/og-image/[slug].svg");
 	});
 
 	it("injects plugin-declared admin routes from peekCmsConfig().plugins[].adminRoutes", async () => {

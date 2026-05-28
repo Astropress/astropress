@@ -115,10 +115,10 @@ async function main() {
 	}
 
 	// ── llms.txt endpoint (AI crawlers) ──
-	// May be .ts or .js (compiled output served alongside source)
+	// Authored as .ts; committed .js page siblings are forbidden by
+	// audit-js-ts-shadow (they silently shadow the .ts at runtime).
 	const llmsTsPath = join(pagesRoot, "llms.txt.ts");
-	const llmsJsPath = join(pagesRoot, "llms.txt.js");
-	if (!(await fileExists(llmsTsPath)) && !(await fileExists(llmsJsPath))) {
+	if (!(await fileExists(llmsTsPath))) {
 		report.add("MISSING: pages/llms.txt.ts — llms.txt endpoint required for AI crawler AEO");
 	}
 

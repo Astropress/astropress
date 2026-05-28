@@ -241,6 +241,7 @@ export type {
 } from "./src/build-time-content-loader";
 // Build-time content loading
 export { createAstropressBuildTimeLoader } from "./src/build-time-content-loader.js";
+export { resolveCanonicalOrigin } from "./src/canonical-origin.js";
 export type {
 	AstropressContentEvent,
 	AstropressMediaEvent,

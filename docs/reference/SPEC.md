@@ -160,7 +160,7 @@ The REST API runs at `/ap-api/v1/` when `config.api.enabled` is `true`.
 | POST | `/ap-api/v1/import/wordpress` | import:write |
 | POST | `/ap-api/v1/testimonials/ingest` | (no bearer auth; admin server only; optional HMAC-SHA256 via `X-Formbricks-Signature` / `X-Typebot-Signature`) |
 | GET | `/ap-api/v1/openapi.json` | (no auth) |
-| GET | `/ap-api/v1/og-image/[slug].png` | (no auth) |
+| GET | `/ap-api/v1/og-image/[slug].svg` | (no auth) |
 
 ### API features
 

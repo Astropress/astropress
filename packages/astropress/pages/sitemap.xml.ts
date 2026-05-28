@@ -1,4 +1,4 @@
-import { listRuntimeContentStates } from "@astropress-diy/astropress";
+import { listRuntimeContentStates, resolveCanonicalOrigin } from "@astropress-diy/astropress";
 import type { APIRoute } from "astro";
 
 /**
@@ -7,11 +7,12 @@ import type { APIRoute } from "astro";
  * Generates a sitemap for published posts and pages.
  * Works in both SSR (called at request time) and static (called at build time) modes.
  *
- * The origin is derived from the incoming request URL so it works correctly
- * behind any domain or CDN without extra configuration.
+ * The origin is the configured canonical site origin (CmsConfig.siteUrl), falling
+ * back to the request origin only when no siteUrl is registered. This keeps the
+ * sitemap stable behind proxies/alternate hosts and prevents host-header poisoning.
  */
 export const GET: APIRoute = async ({ request, locals }) => {
-	const origin = new URL(request.url).origin;
+	const origin = resolveCanonicalOrigin(request);
 
 	const all = await listRuntimeContentStates(locals);
 	const published = all.filter((r) => r.status === "published");

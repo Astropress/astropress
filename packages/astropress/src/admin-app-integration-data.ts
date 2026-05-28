@@ -11,14 +11,14 @@ export const ADMIN_APP_DEV_SERVE_ROUTES = [
 ];
 
 export const ADMIN_APP_INJECTED_ROUTES = [
-	{ pattern: "/ap/health", entrypoint: "pages/ap/health.js" },
-	{ pattern: "/sitemap.xml", entrypoint: "pages/sitemap.xml.js" },
-	{ pattern: "/robots.txt", entrypoint: "pages/robots.txt.js" },
-	{ pattern: "/llms.txt", entrypoint: "pages/llms.txt.js" },
-	{ pattern: "/ap-api/v1/metrics", entrypoint: "pages/ap-api/v1/metrics.js" },
+	{ pattern: "/ap/health", entrypoint: "pages/ap/health.ts" },
+	{ pattern: "/sitemap.xml", entrypoint: "pages/sitemap.xml.ts" },
+	{ pattern: "/robots.txt", entrypoint: "pages/robots.txt.ts" },
+	{ pattern: "/llms.txt", entrypoint: "pages/llms.txt.ts" },
+	{ pattern: "/ap-api/v1/metrics", entrypoint: "pages/ap-api/v1/metrics.ts" },
 	{
-		pattern: "/ap-api/v1/og-image/[slug].png",
-		entrypoint: "pages/ap-api/v1/og-image/[slug].png.js",
+		pattern: "/ap-api/v1/og-image/[slug].svg",
+		entrypoint: "pages/ap-api/v1/og-image/[slug].svg.ts",
 	},
 ];
 

@@ -52,15 +52,15 @@ export function createAstropressPublicSiteIntegration(
 				// buildHookSecret is reserved for future webhook rebuild support.
 				injectRoute({
 					pattern: "/sitemap.xml",
-					entrypoint: packageResource("pages/sitemap.xml.js"),
+					entrypoint: packageResource("pages/sitemap.xml.ts"),
 				});
 				injectRoute({
 					pattern: "/robots.txt",
-					entrypoint: packageResource("pages/robots.txt.js"),
+					entrypoint: packageResource("pages/robots.txt.ts"),
 				});
 				injectRoute({
 					pattern: "/llms.txt",
-					entrypoint: packageResource("pages/llms.txt.js"),
+					entrypoint: packageResource("pages/llms.txt.ts"),
 				});
 			},
 		},
@@ -114,13 +114,13 @@ export function createAstropressSitemapIntegration(
 
 				injectRoute({
 					pattern: "/sitemap.xml",
-					entrypoint: packageResource("pages/sitemap.xml.js"),
+					entrypoint: packageResource("pages/sitemap.xml.ts"),
 				});
 
 				// Inject the OG image endpoint so social cards are available on public sites too
 				injectRoute({
-					pattern: "/ap-api/v1/og-image/[slug].png",
-					entrypoint: packageResource("pages/ap-api/v1/og-image/[slug].png.js"),
+					pattern: "/ap-api/v1/og-image/[slug].svg",
+					entrypoint: packageResource("pages/ap-api/v1/og-image/[slug].svg.ts"),
 				});
 
 				// Expose siteUrl to the page via Vite define so sitemap.xml can use it

@@ -3,7 +3,7 @@
 Auto-generated from TypeScript source via the TypeScript compiler API.
 Run `bun run docs:api` to regenerate.
 
-Generated: 2026-05-24
+Generated: 2026-05-28
 
 ---
 
@@ -439,6 +439,11 @@ function listAstropressAppHosts(): AstropressAppHostTarget[]
 #### `createAstropressBuildTimeLoader`
 ```ts
 function createAstropressBuildTimeLoader(provider: AstropressPlatformAdapter, options: AstropressBuildTimeLoaderOptions): { posts(): AstropressContentLoader; pages(): AstropressContentLoader; }
+```
+
+#### `resolveCanonicalOrigin`
+```ts
+function resolveCanonicalOrigin(request: { url: string; }): string
 ```
 
 #### `dispatchPluginContentEvent`

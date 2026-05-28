@@ -1,4 +1,5 @@
-import { listRuntimeContentStates } from "@astropress-diy/astropress";
+import { listRuntimeContentStates, resolveCanonicalOrigin } from "@astropress-diy/astropress";
+import type { APIRoute } from "astro";
 
 /**
  * GET /llms.txt
@@ -6,9 +7,12 @@ import { listRuntimeContentStates } from "@astropress-diy/astropress";
  * Generates an llms.txt file for AI crawlers listing published content.
  * This makes content discoverable by AI agents and answer engines.
  * See: https://llmstxt.org
+ *
+ * Uses the configured canonical site origin (CmsConfig.siteUrl), falling back
+ * to the request origin only when no siteUrl is registered. See issue #124.
  */
-export const GET = async ({ request, locals }) => {
-	const origin = new URL(request.url).origin;
+export const GET: APIRoute = async ({ request, locals }) => {
+	const origin = resolveCanonicalOrigin(request);
 
 	const all = await listRuntimeContentStates(locals);
 	const published = all.filter((r) => r.status === "published");
