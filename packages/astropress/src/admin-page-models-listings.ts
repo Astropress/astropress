@@ -22,13 +22,21 @@ import { isSeededPostRecord } from "./seeded-content-type";
 
 type AdminLocals = APIContext["locals"];
 
+interface ArchiveListingRow {
+	title: string;
+	kind: string;
+	slug: string;
+	legacyUrl: string;
+	listingItems?: JsonValue[];
+}
+
 export async function buildArchivesIndexPageModel(
 	locals: AdminLocals,
 	user: AuthUser | null | undefined,
 ) {
 	const empty = {
-		archiveList: [] as unknown[],
-		archivesByKind: {} as Record<string, unknown[]>,
+		archiveList: [] as ArchiveListingRow[],
+		archivesByKind: {} as Record<string, ArchiveListingRow[]>,
 		kindCounts: [] as Array<{ kind: string; count: number }>,
 		totalArchives: 0,
 		totalItems: 0,
@@ -58,7 +66,7 @@ export async function buildArchivesIndexPageModel(
 		(archive) => archive,
 	);
 
-	const archivesByKind = archiveList.reduce<Record<string, unknown[]>>((acc, archive) => {
+	const archivesByKind = archiveList.reduce<Record<string, ArchiveListingRow[]>>((acc, archive) => {
 		if (!acc[archive.kind]) {
 			acc[archive.kind] = [];
 		}
@@ -86,7 +94,10 @@ export async function buildPagesIndexPageModel(
 	const empty = {
 		contentStates: [] as Awaited<ReturnType<typeof listRuntimeContentStates>>,
 		routePages: [] as Awaited<ReturnType<typeof listRuntimeStructuredPageRoutes>>,
-		archiveRows: [] as unknown[],
+		archiveRows: [] as Array<{
+			archive: { slug: string; legacyUrl: string; title: string };
+			runtime: Awaited<ReturnType<typeof getRuntimeArchiveRoute>>;
+		}>,
 	};
 	if (!user || !isAuthUserAdmin(user)) {
 		return forbidden(empty);

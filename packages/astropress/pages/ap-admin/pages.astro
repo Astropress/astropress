@@ -63,16 +63,18 @@ const legacyPages = contentStates
 		ownerLabel: t("pages.editPageRow"),
 	}));
 
-const structuredPages = routePages.map((page) => ({
-	title: page.title,
-	path: page.path,
-	kind: "Structured",
-	status: "published",
-	updatedAt: page.updatedAt,
-	editHref: `/ap-admin/route-pages${page.path}`,
-	publicHref: page.path,
-	ownerLabel: t("pages.editRoutePage"),
-}));
+const structuredPages = routePages
+	.filter((page): page is NonNullable<typeof page> => page != null)
+	.map((page) => ({
+		title: page.title,
+		path: page.path,
+		kind: "Structured",
+		status: "published",
+		updatedAt: page.updatedAt,
+		editHref: `/ap-admin/route-pages${page.path}`,
+		publicHref: page.path,
+		ownerLabel: t("pages.editRoutePage"),
+	}));
 
 const archivePages = archiveRows.map(({ archive, runtime }) => ({
 	title: runtime?.title ?? archive.title,
