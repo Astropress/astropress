@@ -8,7 +8,7 @@
 import {
 	applyAstropressSecurityHeaders,
 	buildMediaPageModel,
-	isAuthUserAdmin,
+	getAccessContext,
 } from "@astropress-diy/astropress";
 import type { APIRoute } from "astro";
 
@@ -31,7 +31,11 @@ export const GET: APIRoute = async ({ locals }) => {
 	if (!adminUser) {
 		return adminJson({ error: "unauthenticated" }, 401);
 	}
-	if (!isAuthUserAdmin(adminUser)) {
+	// #106: authorize on the same media:list rule the media page + picker use,
+	// not the coarse admin break-glass, so the page and its picker API agree.
+	const access = await getAccessContext({ locals });
+	const decision = access?.can("media:list");
+	if (!decision || decision.decision === "deny") {
 		return adminJson({ error: "forbidden" }, 403);
 	}
 	const model = await buildMediaPageModel(locals);

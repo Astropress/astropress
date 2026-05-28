@@ -1,7 +1,12 @@
 ---
 import AdminLayout from "@astropress-diy/astropress/components/AdminLayout.astro";
+import { requiresAccess } from "astropress";
 import { validateEmbedUrl } from "../../src/admin-embed-url";
 
+// #125 parity: the CMS panel maps to settings:edit in the nav; gate it on the
+// same permission rather than allowing any authenticated session.
+const guard = await requiresAccess(Astro, "settings:edit");
+if (guard) return guard;
 const adminUser = Astro.locals.adminUser;
 
 // Require authentication

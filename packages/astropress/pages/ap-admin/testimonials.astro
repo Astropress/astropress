@@ -2,9 +2,19 @@
 import AdminLayout from "@astropress-diy/astropress/components/AdminLayout.astro";
 import AuditTrail from "@astropress-diy/astropress/components/AuditTrail.astro";
 import CsrfInput from "@astropress-diy/astropress/components/CsrfInput.astro";
-import { buildTestimonialsPageModel, getPageT, resolveAdminLocale } from "astropress";
+import {
+	buildTestimonialsPageModel,
+	getPageT,
+	requiresAccess,
+	resolveAdminLocale,
+} from "astropress";
 
+// #135: gate testimonials moderation on testimonials:manage; denied subjects
+// are redirected rather than rendered.
+const guard = await requiresAccess(Astro, "testimonials:manage");
+if (guard) return guard;
 const adminUser = Astro.locals.adminUser;
+if (!adminUser) return Astro.redirect("/ap-admin/login");
 const model = await buildTestimonialsPageModel(Astro.locals);
 const { pending, approved, featured, auditEvents } = model.data;
 const tab = Astro.url.searchParams.get("tab") ?? "pending";

@@ -1,13 +1,14 @@
 ---
-import { safeAdminUserName } from "astropress";
 import AdminLayout from "@astropress-diy/astropress/components/AdminLayout.astro";
 import { getAstropressServices } from "@astropress-diy/astropress/services-config";
-import { getPageT, isAuthUserAdmin, resolveAdminLocale } from "astropress";
+import { getPageT, requiresAccess, resolveAdminLocale } from "astropress";
 
+// #125: gate the services hub on services:manage (matching the leaf service
+// pages and integration actions); denied subjects are redirected.
+const guard = await requiresAccess(Astro, "services:manage");
+if (guard) return guard;
 const adminUser = Astro.locals.adminUser;
-if (!adminUser || !isAuthUserAdmin(adminUser)) {
-	Astro.response.status = 403;
-}
+if (!adminUser) return Astro.redirect("/ap-admin/login");
 
 const services = getAstropressServices();
 const t = getPageT(resolveAdminLocale(Astro));
@@ -37,7 +38,7 @@ const DEFAULT_SERVICE_DOCS: Record<string, { docs: string; badge: string }> = {
   heading={t("services.title")}
   currentPath="/ap-admin/services"
   description={t("services.description")}
-  userName={safeAdminUserName(adminUser)}
+  userName={adminUser.name}
 >
   {services.length === 0 ? (
     <section class="panel empty-services">

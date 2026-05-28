@@ -2,9 +2,14 @@
 import AdminLayout from "@astropress-diy/astropress/components/AdminLayout.astro";
 import AuditTrail from "@astropress-diy/astropress/components/AuditTrail.astro";
 import CsrfInput from "@astropress-diy/astropress/components/CsrfInput.astro";
-import { buildCommentsPageModel, getPageT, resolveAdminLocale } from "astropress";
+import { buildCommentsPageModel, getPageT, requiresAccess, resolveAdminLocale } from "astropress";
 
+// #104: gate the comments queue on comments:moderate; denied subjects are
+// redirected rather than rendered (also removes the anon adminUser deref).
+const guard = await requiresAccess(Astro, "comments:moderate");
+if (guard) return guard;
 const adminUser = Astro.locals.adminUser;
+if (!adminUser) return Astro.redirect("/ap-admin/login");
 const model = await buildCommentsPageModel(Astro.locals);
 const { comments, auditEvents } = model.data;
 const wasSaved = Astro.url.searchParams.get("saved") === "1";

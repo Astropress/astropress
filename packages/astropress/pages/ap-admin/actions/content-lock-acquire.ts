@@ -6,7 +6,7 @@ import { createD1LocksOps } from "../../../src/d1-locks.js";
 export const POST: APIRoute = async (context) =>
 	withAdminFormAction(
 		context,
-		{ failurePath: "/ap-admin" },
+		{ failurePath: "/ap-admin", requireAction: "posts:edit" },
 		async ({ actor, formData, locals }) => {
 			const slug = String(formData.get("slug") ?? "");
 			if (!slug) {

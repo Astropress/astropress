@@ -17,12 +17,24 @@ describe("admin route auth matrix (registry-driven)", () => {
 	const routes = listAstropressAdminRoutes();
 	const pageRoutes = routes.filter((r) => r.kind === "page");
 
-	it("every page route is either explicitly public or carries a server-side guard", () => {
+	it("every page route is either explicitly public or carries a REAL server-side guard", () => {
+		// #131: the old check accepted any page that merely mentioned `adminUser`
+		// — even one that only read it for display with no authorization. Require
+		// a real guard construct instead: a requiresAccess() permission gate, a
+		// page-model forbidden-status branch, an explicit isAuthUserAdmin() check,
+		// or the adminOnlyPage() helper. A bare `adminUser` reference no longer
+		// counts.
+		const GUARD_CONSTRUCTS = [
+			"requiresAccess(",
+			'=== "forbidden"',
+			"isAuthUserAdmin(",
+			"adminOnlyPage(",
+		];
 		const offenders: string[] = [];
 		for (const route of pageRoutes) {
 			if (PUBLIC_PAGE_PATTERNS.has(route.pattern)) continue;
 			const src = readFileSync(`${PAGES_DIR}/${route.entrypoint}`, "utf8");
-			const guarded = src.includes("requiresAccess(") || src.includes("adminUser");
+			const guarded = GUARD_CONSTRUCTS.some((c) => src.includes(c));
 			if (!guarded) offenders.push(`${route.pattern} (${route.entrypoint})`);
 		}
 		expect(offenders).toEqual([]);

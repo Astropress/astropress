@@ -8,7 +8,7 @@ import type { APIRoute } from "astro";
 export const POST: APIRoute = async (context) =>
 	withAdminFormAction(
 		context,
-		{ failurePath: "/ap-admin/webhooks", requireAdmin: true },
+		{ failurePath: "/ap-admin/webhooks", requireAction: "webhooks:manage" },
 		async ({ formData, redirect, fail }) => {
 			const validation = validateWebhookCreateInput({
 				url: formData.get("url"),

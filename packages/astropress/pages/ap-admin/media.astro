@@ -2,9 +2,14 @@
 import AdminLayout from "@astropress-diy/astropress/components/AdminLayout.astro";
 import AuditTrail from "@astropress-diy/astropress/components/AuditTrail.astro";
 import CsrfInput from "@astropress-diy/astropress/components/CsrfInput.astro";
-import { buildMediaPageModel, getPageT, resolveAdminLocale } from "astropress";
+import { buildMediaPageModel, getPageT, requiresAccess, resolveAdminLocale } from "astropress";
 
+// #104/#106: gate on media:list so the page and the picker API
+// (pages/ap-admin/api/media.ts) share one rule; denied subjects are redirected.
+const guard = await requiresAccess(Astro, "media:list");
+if (guard) return guard;
 const adminUser = Astro.locals.adminUser;
+if (!adminUser) return Astro.redirect("/ap-admin/login");
 const model = await buildMediaPageModel(Astro.locals);
 const { mediaWithResolvedUrls, auditEvents } = model.data;
 const wasSaved = Astro.url.searchParams.get("saved") === "1";

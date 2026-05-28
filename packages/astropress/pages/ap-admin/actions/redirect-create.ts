@@ -4,7 +4,7 @@ import type { APIRoute } from "astro";
 export const POST: APIRoute = async (context) =>
 	withAdminFormAction(
 		context,
-		{ failurePath: "/ap-admin/redirects", requireAdmin: true },
+		{ failurePath: "/ap-admin/redirects", requireAction: "redirects:manage" },
 		async ({ actor, formData, locals, redirect, fail }) => {
 			const result = await createRuntimeRedirectRule(
 				{

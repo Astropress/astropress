@@ -5,7 +5,7 @@ import { isRestorableTable, restoreRuntimeRecord } from "../../../src/runtime-ac
 export const POST: APIRoute = async (context) =>
 	withAdminFormAction(
 		context,
-		{ failurePath: "/ap-admin", requireAdmin: true },
+		{ failurePath: "/ap-admin", requireAction: "posts:edit" },
 		async ({ actor, formData, locals, redirect, fail }) => {
 			const table = String(formData.get("table") ?? "");
 			const id = Number.parseInt(String(formData.get("id") ?? ""), 10);

@@ -5,7 +5,7 @@ import type { APIRoute } from "astro";
 export const POST: APIRoute = async (context) =>
 	withAdminFormAction(
 		context,
-		{ failurePath: "/ap-admin/settings?tab=newsletter", requireAdmin: true },
+		{ failurePath: "/ap-admin/settings?tab=newsletter", requireAction: "subscribers:view" },
 		async ({ formData, locals, redirect, fail }) => {
 			const file = formData.get("mailchimp_csv") as File | null;
 			if (!file || file.size === 0) {

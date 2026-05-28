@@ -1,8 +1,14 @@
 ---
 import AdminLayout from "@astropress-diy/astropress/components/AdminLayout.astro";
 import CsrfInput from "@astropress-diy/astropress/components/CsrfInput.astro";
+import { requiresAccess } from "astropress";
 
+// #107: the new-post editor must require posts:create; it was previously
+// reachable by any authenticated subject and crashed on anonymous render.
+const guard = await requiresAccess(Astro, "posts:create");
+if (guard) return guard;
 const adminUser = Astro.locals.adminUser;
+if (!adminUser) return Astro.redirect("/ap-admin/login");
 const errorMessage =
 	Astro.url.searchParams.get("error") === "1" ? Astro.url.searchParams.get("message") : "";
 ---
