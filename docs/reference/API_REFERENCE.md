@@ -268,7 +268,7 @@ function getPageT(locale: AdminLocale): (key: "common.search" | "common.title" |
 
 #### `safeAdminUserName`
 ```ts
-function safeAdminUserName(user: AuthUser | null | undefined): string
+function safeAdminUserName(user: (AuthUser & { name?: string | undefined; }) | null | undefined): string
 ```
 
 #### `buildAcceptInvitePageModel`
