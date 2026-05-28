@@ -661,6 +661,7 @@ export {
 	connectIntegrationAction,
 	disconnectIntegrationAction,
 	reverifyIntegrationAction,
+	setActiveIntegrationProviderAction,
 } from "./src/runtime-actions-integrations.js";
 // Admin actions (write)
 export {

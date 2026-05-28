@@ -34,6 +34,8 @@ export interface IntegrationStatusRow {
 	connectedAt: string;
 	lastCheckAt: string | null;
 	lastError: string | null;
+	/** Explicit per-domain active selection (#127). At most one true per domain. */
+	isActive: boolean;
 }
 
 export interface ConnectIntegrationInput<
@@ -59,6 +61,7 @@ interface RawStatusRow {
 	connected_at: string;
 	last_check_at: string | null;
 	last_error: string | null;
+	is_active: number;
 }
 
 interface RawSecretRow {
@@ -76,13 +79,13 @@ interface RawSecretRow {
 
 const SQL_FIND_STATUS = `
   SELECT domain, provider, status, config_json, connected_at,
-         last_check_at, last_error
+         last_check_at, last_error, is_active
     FROM connected_integrations
    WHERE domain = ? AND provider = ?`;
 
 const SQL_LIST_STATUSES = `
   SELECT domain, provider, status, config_json, connected_at,
-         last_check_at, last_error
+         last_check_at, last_error, is_active
     FROM connected_integrations
    ORDER BY domain, provider`;
 
@@ -106,6 +109,23 @@ const SQL_UPDATE_STATUS = `
 const SQL_DISCONNECT = `
   DELETE FROM connected_integrations
    WHERE domain = ? AND provider = ?`;
+
+// Active-provider selection (#127). Not part of the schema-parity statement
+// set, but kept byte-identical with the D1 sibling for consistency.
+const SQL_CLEAR_ACTIVE_IN_DOMAIN = `
+  UPDATE connected_integrations
+     SET is_active = 0
+   WHERE domain = ?`;
+
+const SQL_MARK_ACTIVE = `
+  UPDATE connected_integrations
+     SET is_active = 1
+   WHERE domain = ? AND provider = ? AND status = 'connected'`;
+
+const SQL_COUNT_ACTIVE_IN_DOMAIN = `
+  SELECT COUNT(*) AS n
+    FROM connected_integrations
+   WHERE domain = ? AND status = 'connected' AND is_active = 1`;
 
 const SQL_FIND_SECRET = `
   SELECT domain, provider, envelope_v, kid, wrap_salt, wrap_iv,
@@ -156,6 +176,7 @@ function rowToStatus(row: RawStatusRow): IntegrationStatusRow {
 		connectedAt: row.connected_at,
 		lastCheckAt: row.last_check_at,
 		lastError: row.last_error,
+		isActive: row.is_active === 1,
 	};
 }
 
@@ -182,6 +203,13 @@ export interface IntegrationsRepository {
 		lastError?: string | null;
 	}): boolean;
 	disconnect(domain: string, provider: string): boolean;
+
+	/**
+	 * Makes `provider` the single active provider for `domain` (#127), clearing
+	 * any prior active row in the domain. Returns false when the target is not a
+	 * connected provider (you can only activate something that's connected).
+	 */
+	setActiveProvider(domain: string, provider: string): boolean;
 
 	connect<TFields extends Record<string, string> = Record<string, string>>(
 		input: ConnectIntegrationInput<TFields>,
@@ -230,6 +258,20 @@ export function createIntegrationsRepository(
 		return Number(result.changes ?? 0) > 0;
 	}
 
+	function setActiveProvider(domain: string, provider: string): boolean {
+		const db = getDb();
+		db.prepare(SQL_CLEAR_ACTIVE_IN_DOMAIN).run(domain);
+		const result = db.prepare(SQL_MARK_ACTIVE).run(domain, provider);
+		return Number(result.changes ?? 0) > 0;
+	}
+
+	function hasActiveProvider(domain: string): boolean {
+		const row = getDb().prepare(SQL_COUNT_ACTIVE_IN_DOMAIN).get(domain) as
+			| { n: number }
+			| undefined;
+		return (row?.n ?? 0) > 0;
+	}
+
 	async function connect<TFields extends Record<string, string> = Record<string, string>>(
 		input: ConnectIntegrationInput<TFields>,
 		rootSecret: string,
@@ -259,6 +301,12 @@ export function createIntegrationsRepository(
 			sealed.ciphertext,
 			input.now,
 		);
+		// First provider connected in a domain becomes active automatically;
+		// once a domain already has an active provider, connecting another does
+		// NOT steal the selection — switching is an explicit admin action (#127).
+		if (!hasActiveProvider(input.domain)) {
+			db.prepare(SQL_MARK_ACTIVE).run(input.domain, input.provider);
+		}
 	}
 
 	async function findSecret<TFields extends Record<string, string> = Record<string, string>>(
@@ -308,6 +356,7 @@ export function createIntegrationsRepository(
 		listStatuses,
 		updateStatus,
 		disconnect,
+		setActiveProvider,
 		connect,
 		findSecret,
 		listPreviousKidContexts,

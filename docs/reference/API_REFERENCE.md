@@ -1001,6 +1001,11 @@ function disconnectIntegrationAction(locals: Locals | null | undefined, domain: 
 function reverifyIntegrationAction<TFields>(locals: Locals | null | undefined, domain: IntegrationDomain, providerId: string, fields: TFields): Promise<RuntimeIntegrationActionResult>
 ```
 
+#### `setActiveIntegrationProviderAction`
+```ts
+function setActiveIntegrationProviderAction(locals: Locals | null | undefined, domain: IntegrationDomain, providerId: string): Promise<{ ok: true; } | { ok: false; code: "INTEGRATIONS_NOT_AVAILABLE" | "INTEGRATION_NOT_CONNECTED"; }>
+```
+
 #### `consumeRuntimeInviteToken`
 ```ts
 function consumeRuntimeInviteToken(rawToken: string, password: string, locals: Locals | null | undefined): Promise<unknown>

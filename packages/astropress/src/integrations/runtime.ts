@@ -31,10 +31,16 @@ export interface GetConnectedProviderArgs {
 /**
  * Find the active connected provider for a domain and return its
  * decoded secret fields. Returns `undefined` when:
- *   - no row exists for the domain;
- *   - the row's `status` is not `"connected"` (treats `error` and
- *     `paused` as "no live connection");
- *   - the row points at a provider id that is not registered.
+ *   - no connected row exists for the domain;
+ *   - several providers are connected but none is marked active — the
+ *     selection is ambiguous, so we refuse to guess (#127). The admin must
+ *     pick one via `setActiveProvider` before the runtime read resolves;
+ *   - the resolved row points at a provider id that is not registered.
+ *
+ * Resolution: prefer the explicitly active connected row; if exactly one
+ * provider is connected, treat it as active (the common single-provider case
+ * needs no manual selection). The previous behaviour silently picked the first
+ * connected provider in list order, which is the bug #127 reports.
  *
  * Throws on decryption failure (KEK/DEK mismatch is operationally
  * fatal — we never want to silently degrade to the unconnected path).
@@ -43,8 +49,10 @@ export async function getConnectedProvider<
 	TFields extends Record<string, string> = Record<string, string>,
 >(args: GetConnectedProviderArgs): Promise<ConnectedProvider<TFields> | undefined> {
 	const statuses = args.repo.listStatuses();
-	const inDomain = statuses.filter((s) => s.domain === args.domain);
-	const active = inDomain.find((s) => s.status === "connected");
+	const connected = statuses.filter((s) => s.domain === args.domain && s.status === "connected");
+	if (connected.length === 0) return undefined;
+	const active =
+		connected.find((s) => s.isActive) ?? (connected.length === 1 ? connected[0] : undefined);
 	if (!active) return undefined;
 	const provider = getProvider<TFields>(args.domain, active.provider);
 	if (!provider) return undefined;

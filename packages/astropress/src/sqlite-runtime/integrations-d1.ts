@@ -45,13 +45,13 @@ import type {
 // parity audit's expectation in lockstep.
 export const D1_SQL_FIND_STATUS = `
   SELECT domain, provider, status, config_json, connected_at,
-         last_check_at, last_error
+         last_check_at, last_error, is_active
     FROM connected_integrations
    WHERE domain = ? AND provider = ?`;
 
 export const D1_SQL_LIST_STATUSES = `
   SELECT domain, provider, status, config_json, connected_at,
-         last_check_at, last_error
+         last_check_at, last_error, is_active
     FROM connected_integrations
    ORDER BY domain, provider`;
 
@@ -75,6 +75,22 @@ export const D1_SQL_UPDATE_STATUS = `
 export const D1_SQL_DISCONNECT = `
   DELETE FROM connected_integrations
    WHERE domain = ? AND provider = ?`;
+
+// Active-provider selection (#127). Byte-identical with the sqlite sibling.
+export const D1_SQL_CLEAR_ACTIVE_IN_DOMAIN = `
+  UPDATE connected_integrations
+     SET is_active = 0
+   WHERE domain = ?`;
+
+export const D1_SQL_MARK_ACTIVE = `
+  UPDATE connected_integrations
+     SET is_active = 1
+   WHERE domain = ? AND provider = ? AND status = 'connected'`;
+
+export const D1_SQL_COUNT_ACTIVE_IN_DOMAIN = `
+  SELECT COUNT(*) AS n
+    FROM connected_integrations
+   WHERE domain = ? AND status = 'connected' AND is_active = 1`;
 
 export const D1_SQL_FIND_SECRET = `
   SELECT domain, provider, envelope_v, kid, wrap_salt, wrap_iv,
@@ -119,6 +135,7 @@ interface RawStatusRow {
 	readonly connected_at: string;
 	readonly last_check_at: string | null;
 	readonly last_error: string | null;
+	readonly is_active: number;
 }
 
 interface RawSecretRow {
@@ -143,6 +160,7 @@ function rowToStatus(row: RawStatusRow): IntegrationStatusRow {
 		connectedAt: row.connected_at,
 		lastCheckAt: row.last_check_at,
 		lastError: row.last_error,
+		isActive: row.is_active === 1,
 	};
 }
 
@@ -169,6 +187,9 @@ export interface D1IntegrationsRepository {
 		lastError?: string | null;
 	}): Promise<boolean>;
 	disconnect(domain: string, provider: string): Promise<boolean>;
+
+	/** Makes `provider` the single active provider for `domain` (#127). */
+	setActiveProvider(domain: string, provider: string): Promise<boolean>;
 
 	connect<TFields extends Record<string, string> = Record<string, string>>(
 		input: ConnectIntegrationInput<TFields>,
@@ -241,6 +262,22 @@ export function createD1IntegrationsRepository(
 		return Number(result.meta?.changes ?? 0) > 0;
 	}
 
+	async function setActiveProvider(domain: string, provider: string): Promise<boolean> {
+		const db = getDb();
+		await db.prepare(D1_SQL_CLEAR_ACTIVE_IN_DOMAIN).bind(domain).run();
+		const result = await db.prepare(D1_SQL_MARK_ACTIVE).bind(domain, provider).run();
+		// Stryker disable next-line all: defensive `?.` + `?? 0` mirror the disconnect/updateStatus guards for a D1 result without `meta`.
+		return Number(result.meta?.changes ?? 0) > 0;
+	}
+
+	async function hasActiveProvider(domain: string): Promise<boolean> {
+		const row = await getDb()
+			.prepare(D1_SQL_COUNT_ACTIVE_IN_DOMAIN)
+			.bind(domain)
+			.first<{ n: number }>();
+		return (row?.n ?? 0) > 0;
+	}
+
 	async function connect<TFields extends Record<string, string> = Record<string, string>>(
 		input: ConnectIntegrationInput<TFields>,
 		rootSecret: string,
@@ -273,6 +310,13 @@ export function createD1IntegrationsRepository(
 					input.now,
 				),
 		]);
+		// First provider in a domain becomes active automatically; a later
+		// connect never steals an existing active selection — switching is an
+		// explicit admin action (#127). Runs after the atomic batch because the
+		// is_active flag is not part of the connect's all-or-nothing invariant.
+		if (!(await hasActiveProvider(input.domain))) {
+			await db.prepare(D1_SQL_MARK_ACTIVE).bind(input.domain, input.provider).run();
+		}
 	}
 
 	async function findSecret<TFields extends Record<string, string> = Record<string, string>>(
@@ -328,6 +372,7 @@ export function createD1IntegrationsRepository(
 		listStatuses,
 		updateStatus,
 		disconnect,
+		setActiveProvider,
 		connect,
 		findSecret,
 		listPreviousKidContexts,

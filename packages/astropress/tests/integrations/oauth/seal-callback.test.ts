@@ -35,10 +35,15 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 // `vi.mock` is hoisted to the top of the module, so any state it
 // captures must come from `vi.hoisted` — that runs first.
 const mockState = vi.hoisted(() => ({
-	store: { integrations: undefined } as {
+	store: { integrations: undefined, checkRateLimit: () => true } as {
 		integrations:
 			| import("../../../src/sqlite-runtime/integrations").IntegrationsRepository
 			| undefined;
+		// The callback now consumes the OAuth state nonce via the runtime
+		// rate-limit window (#122); the mutation store resolves through this
+		// same mocked local store. Each test uses a fresh state/nonce, so a
+		// permissive stub (first-use → allowed) is the correct default here.
+		checkRateLimit: (key: string, max: number, windowMs: number) => boolean;
 	},
 }));
 vi.mock("../../../src/local-runtime-modules", () => ({
@@ -118,7 +123,7 @@ beforeEach(() => {
 		getDb: () => db as never,
 		now: () => NOW,
 	});
-	mockState.store = { integrations: repo };
+	mockState.store = { integrations: repo, checkRateLimit: () => true };
 	_resetOAuthRegistryForTests();
 	registerOAuthProvider(REGISTERED_PROVIDER);
 });
@@ -451,6 +456,7 @@ describe("ap-admin/oauth/callback/[provider] GET — security regression suite",
 					throw new Error(`db unavailable, token=${CANARY_ACCESS}`);
 				},
 			},
+			checkRateLimit: () => true,
 		};
 		mockTokenExchangeFetch(TOKENS);
 		const state = await makeValidState();
@@ -464,7 +470,7 @@ describe("ap-admin/oauth/callback/[provider] GET — security regression suite",
 	});
 
 	it("INTEGRATIONS_NOT_AVAILABLE: 500 with code, no token bytes in body, no DB write", async () => {
-		mockState.store = { integrations: undefined };
+		mockState.store = { integrations: undefined, checkRateLimit: () => true };
 		mockTokenExchangeFetch(TOKENS);
 		const state = await makeValidState();
 		const { context } = await buildContext({ stateToken: state });

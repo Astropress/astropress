@@ -323,6 +323,96 @@ describe("getConnectedProvider", () => {
 	});
 });
 
+describe("explicit active-provider selection (#127/#129)", () => {
+	async function connectBoth() {
+		registerProvider("newsletter", { id: "mailchimp", label: "Mailchimp", fields });
+		await repo.connect(
+			{
+				domain: "newsletter",
+				provider: "listmonk",
+				configJson: "{}",
+				secretFields: { apiKey: "listmonk-key" },
+				now: NOW,
+			},
+			ROOT,
+		);
+		await repo.connect(
+			{
+				domain: "newsletter",
+				provider: "mailchimp",
+				configJson: "{}",
+				secretFields: { apiKey: "mailchimp-key" },
+				now: NOW,
+			},
+			ROOT,
+		);
+	}
+
+	it("first provider connected in a domain becomes active automatically", async () => {
+		await connectBoth();
+		const statuses = repo.listStatuses().filter((s) => s.domain === "newsletter");
+		const active = statuses.filter((s) => s.isActive);
+		expect(active).toHaveLength(1);
+		expect(active[0].provider).toBe("listmonk");
+	});
+
+	it("connecting a second provider does NOT steal the active selection", async () => {
+		await connectBoth();
+		// listmonk (connected first) stays active; mailchimp is connected but not active.
+		const result = await getConnectedProvider({
+			domain: "newsletter",
+			repo,
+			rootSecrets: { current: ROOT },
+		});
+		expect(result?.providerId).toBe("listmonk");
+		expect(result?.fields.apiKey).toBe("listmonk-key");
+	});
+
+	it("setActiveProvider switches which connected provider the runtime resolves", async () => {
+		await connectBoth();
+		expect(repo.setActiveProvider("newsletter", "mailchimp")).toBe(true);
+		const result = await getConnectedProvider({
+			domain: "newsletter",
+			repo,
+			rootSecrets: { current: ROOT },
+		});
+		expect(result?.providerId).toBe("mailchimp");
+		expect(result?.fields.apiKey).toBe("mailchimp-key");
+		// Exactly one active row remains in the domain.
+		const active = repo.listStatuses().filter((s) => s.domain === "newsletter" && s.isActive);
+		expect(active.map((s) => s.provider)).toEqual(["mailchimp"]);
+	});
+
+	it("refuses to resolve when two providers are connected but none is active (ambiguous)", async () => {
+		await connectBoth();
+		// Clear the auto-active flag to model a legacy/ambiguous domain.
+		db.prepare("UPDATE connected_integrations SET is_active = 0 WHERE domain = ?").run(
+			"newsletter",
+		);
+		const result = await getConnectedProvider({
+			domain: "newsletter",
+			repo,
+			rootSecrets: { current: ROOT },
+		});
+		expect(result).toBeUndefined();
+	});
+
+	it("setActiveProvider refuses a provider that is not connected", async () => {
+		registerProvider("newsletter", { id: "mailchimp", label: "Mailchimp", fields });
+		await repo.connect(
+			{
+				domain: "newsletter",
+				provider: "listmonk",
+				configJson: "{}",
+				secretFields: { apiKey: "k" },
+				now: NOW,
+			},
+			ROOT,
+		);
+		expect(repo.setActiveProvider("newsletter", "mailchimp")).toBe(false);
+	});
+});
+
 describe("createRequestProviderCache", () => {
 	it("decrypts only once across multiple calls", async () => {
 		await repo.connect(

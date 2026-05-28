@@ -100,6 +100,15 @@ export function ensureLegacySchemaCompatibility(db: SqliteDatabaseLike) {
 		db.exec("ALTER TABLE schema_migrations ADD COLUMN rollback_sql TEXT");
 	}
 
+	// #127: explicit active-provider selection. Legacy hosts that applied the
+	// connected_integrations table before this column existed get it added with
+	// a DEFAULT 0; the runtime treats a sole connected provider as active, so
+	// existing single-provider setups keep working without a manual selection.
+	const integrationColumns = new Set(getTableColumns(db, "connected_integrations"));
+	if (integrationColumns.size > 0 && !integrationColumns.has("is_active")) {
+		db.exec("ALTER TABLE connected_integrations ADD COLUMN is_active INTEGER NOT NULL DEFAULT 0");
+	}
+
 	// ABAC migration: legacy admin_users may lack is_admin. Add the column
 	// with a DEFAULT 0; the terminal rebuild below re-derives the actual
 	// value from role (where present) via a CASE in its INSERT...SELECT,

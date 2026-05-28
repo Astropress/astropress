@@ -505,6 +505,10 @@ CREATE TABLE IF NOT EXISTS connected_integrations (
   connected_at  TEXT NOT NULL,
   last_check_at TEXT,
   last_error    TEXT,
+  -- Explicit per-domain active selection (#127). At most one provider per
+  -- domain carries is_active=1; the runtime read path resolves the active row
+  -- rather than guessing the first connected provider when several exist.
+  is_active     INTEGER NOT NULL DEFAULT 0,
   PRIMARY KEY (domain, provider)
 );
 

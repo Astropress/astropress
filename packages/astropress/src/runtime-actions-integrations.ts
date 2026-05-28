@@ -149,6 +149,32 @@ export async function reverifyIntegrationAction<TFields extends Record<string, s
 	);
 }
 
+export async function setActiveIntegrationProviderAction(
+	locals: App.Locals | null | undefined,
+	domain: IntegrationDomain,
+	providerId: string,
+): Promise<
+	{ ok: true } | { ok: false; code: "INTEGRATIONS_NOT_AVAILABLE" | "INTEGRATION_NOT_CONNECTED" }
+> {
+	const now = new Date().toISOString();
+	return withLocalStoreFallback<
+		{ ok: true } | { ok: false; code: "INTEGRATIONS_NOT_AVAILABLE" | "INTEGRATION_NOT_CONNECTED" }
+	>(
+		locals,
+		async (db) => {
+			const repo = createD1IntegrationsRepository({ getDb: () => db, now });
+			const ok = await repo.setActiveProvider(domain, providerId);
+			return ok ? { ok: true } : { ok: false, code: "INTEGRATION_NOT_CONNECTED" };
+		},
+		async (store) => {
+			const repo = store.integrations;
+			if (!repo) return { ok: false, code: "INTEGRATIONS_NOT_AVAILABLE" };
+			const ok = repo.setActiveProvider(domain, providerId);
+			return ok ? { ok: true } : { ok: false, code: "INTEGRATION_NOT_CONNECTED" };
+		},
+	);
+}
+
 export async function disconnectIntegrationAction(
 	locals: App.Locals | null | undefined,
 	domain: IntegrationDomain,

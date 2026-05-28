@@ -14,6 +14,7 @@ interface StatusRow {
 	domain: string;
 	provider: string;
 	status: "connected" | "error" | "paused";
+	isActive: boolean;
 }
 const statuses = await withLocalStoreFallback<StatusRow[]>(
 	Astro.locals,
@@ -24,6 +25,8 @@ const inDomain = statuses.filter((s) => s.domain === "forms");
 const connectedIds = inDomain.filter((s) => s.status === "connected").map((s) => s.provider);
 const statusByProvider: Record<string, StatusRow["status"]> = {};
 for (const s of inDomain) statusByProvider[s.provider] = s.status;
+const activeProviderId =
+	inDomain.find((s) => s.status === "connected" && s.isActive)?.provider ?? null;
 ---
 
 <AdminLayout
@@ -41,6 +44,7 @@ for (const s of inDomain) statusByProvider[s.provider] = s.status;
 			domain="forms"
 			connectedProviderIds={connectedIds}
 			statusByProvider={statusByProvider}
+			activeProviderId={activeProviderId}
 		/>
 	</section>
 </AdminLayout>

@@ -108,6 +108,7 @@ describe("admin route auth matrix (registry-driven)", () => {
 			"/ap-admin/actions/integration-disconnect",
 			"/ap-admin/actions/integration-reverify",
 			"/ap-admin/actions/integration-connect",
+			"/ap-admin/actions/integration-set-active",
 			"/ap-admin/actions/restore",
 			"/ap-admin/actions/import-start",
 			"/ap-admin/actions/mailchimp-import",
