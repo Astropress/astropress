@@ -36,7 +36,10 @@ export interface RequiresAccessOptions {
 
 type AstroLike = {
 	locals: App.Locals;
-	redirect: (path: string, status?: number) => Response;
+	// Method syntax (not an arrow field) so `status` is checked bivariantly:
+	// Astro's `redirect` types it as the narrow ValidRedirectStatus union, which
+	// an arrow field's strict contravariance would reject here.
+	redirect(path: string, status?: number): Response;
 };
 
 export async function requiresAccess(
