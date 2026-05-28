@@ -171,11 +171,18 @@ describe("ZTA P2: least privilege", () => {
 		for (const file of userActions) {
 			const src = readFileSync(file, "utf8");
 			const rel = path.relative(path.resolve(import.meta.dirname, ".."), file);
-			// User actions that modify role must require admin
+			// User actions that modify role must enforce authorization. The ABAC
+			// sweep (#101/#110/#114/#121) replaced the coarse `requireAdmin`
+			// break-glass with a fine-grained `requireAction: "<perm>"` guard on
+			// every action route — a STRONGER guarantee, validated end-to-end by
+			// audit-abac-enforcement-parity. Accept either form so this invariant
+			// recognises the precise-permission enforcement rather than only the
+			// legacy admin substring it was originally written against (#131).
 			if (src.includes("role") && src.includes("formData.get")) {
-				expect(src, `${rel}: actions that set user roles must require admin role`).toMatch(
-					/requireAdmin|role.*admin|admin.*role/,
-				);
+				expect(
+					src,
+					`${rel}: actions that set user roles must enforce admin/role authorization`,
+				).toMatch(/requireAdmin|requireAction:\s*"[^"]+"|role.*admin|admin.*role/);
 			}
 		}
 	});
