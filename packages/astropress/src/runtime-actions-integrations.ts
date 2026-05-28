@@ -40,6 +40,11 @@ export type RuntimeIntegrationActionResult =
 			readonly ok: false;
 			readonly status: "error";
 			readonly code: "INTEGRATION_PROVIDER_NOT_FOUND";
+	  }
+	| {
+			readonly ok: false;
+			readonly status: "error";
+			readonly code: "ROOT_SECRET_UNCONFIGURED";
 	  };
 
 export interface ConnectIntegrationActionInput<
@@ -63,7 +68,19 @@ export async function connectIntegrationAction<TFields extends Record<string, st
 			code: "INTEGRATION_PROVIDER_NOT_FOUND",
 		};
 	}
-	const rootSecret = getAstropressRootSecret(locals);
+	// #126: fail closed when no real root secret is configured. getAstropressRootSecret
+	// throws in production rather than sealing provider credentials under the public
+	// dev fallback; surface it as an explicit typed error before any persistence.
+	let rootSecret: string;
+	try {
+		rootSecret = getAstropressRootSecret(locals);
+	} catch {
+		return {
+			ok: false,
+			status: "error",
+			code: "ROOT_SECRET_UNCONFIGURED",
+		};
+	}
 	const now = new Date().toISOString();
 	return withLocalStoreFallback<RuntimeIntegrationActionResult>(
 		locals,

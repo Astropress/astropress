@@ -1,6 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createKmacDigest } from "../src/crypto-primitives.js";
 import { hashPassword, isLegacyHash, verifyPassword } from "../src/crypto-utils.js";
+import { DEV_ROOT_SECRET_FALLBACK } from "../src/runtime-env.js";
 import { createAstropressSqliteAdminRuntime } from "../src/sqlite-admin-runtime.js";
 import { makeDb } from "./helpers/make-db.js";
 import {
@@ -210,7 +211,7 @@ describe("auth", () => {
 		const inviteRawToken = "test-invite-raw-token-xyz";
 		const tokenHash = createKmacDigest(
 			inviteRawToken,
-			"astropress-dev-root-secret",
+			DEV_ROOT_SECRET_FALLBACK,
 			"sqlite-opaque-token",
 		);
 		const invitedUserId = (

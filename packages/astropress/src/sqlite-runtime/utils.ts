@@ -4,6 +4,7 @@ import {
 	hashPasswordArgon2id,
 	verifyArgon2idPassword,
 } from "../crypto-primitives";
+import { resolveTokenHashSecret } from "../runtime-prod";
 
 type ContentStatus = "draft" | "review" | "published" | "archived";
 
@@ -134,8 +135,18 @@ export function getSeedPageRecords(): PageRecord[] {
 	}
 }
 
-export function hashOpaqueToken(token: string, secret = "astropress-dev-root-secret") {
-	return createKmacDigest(token, secret, "sqlite-opaque-token");
+/**
+ * Hash an opaque token (session / invite / reset / API token) for storage.
+ *
+ * When `secret` is omitted/undefined (the historical default callers in
+ * runtime-actions-users, runtime-actions-password-reset, and the sqlite
+ * api-token store), `resolveTokenHashSecret()` supplies the dev fallback in
+ * non-production and **throws** in production — keeping the dev ergonomics
+ * while failing closed when a real production secret hasn't been wired
+ * through. See #132.
+ */
+export function hashOpaqueToken(token: string, secret?: string | null) {
+	return createKmacDigest(token, resolveTokenHashSecret(secret), "sqlite-opaque-token");
 }
 
 export function hashPasswordSync(password: string, iterations = 2) {

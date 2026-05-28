@@ -1,5 +1,16 @@
 import type { D1DatabaseLike } from "./d1-database";
 import { LEGACY_RUNTIME_KEY_ALIASES } from "./runtime-env-data";
+import { devRootSecretOrThrow, getRuntimeEnvValue, isProductionRuntime } from "./runtime-prod.js";
+
+// Re-exported for back-compat: these now live in the App-global-free leaf
+// module `runtime-prod.ts` so low-level utilities can import them without
+// dragging Astro's global augmentation into their TS program. See #132.
+export {
+	DEV_ROOT_SECRET_FALLBACK,
+	devRootSecretOrThrow,
+	isProductionRuntime,
+	resolveTokenHashSecret,
+} from "./runtime-prod.js";
 
 export interface R2BucketLike {
 	get(key: string): Promise<R2ObjectBodyLike | null>;
@@ -55,20 +66,6 @@ export interface RuntimeBindings {
 
 type StringRuntimeKey = Exclude<keyof RuntimeBindings, "DB" | "MEDIA_BUCKET">;
 
-function importMetaEnv(): Record<string, string | undefined> {
-	return (
-		(
-			import.meta as ImportMeta & {
-				env?: Record<string, string | undefined>;
-			}
-		).env ?? {}
-	);
-}
-
-function getRuntimeEnvValue(key: string) {
-	return process.env[key] ?? importMetaEnv()[key];
-}
-
 function getUniqueConfiguredValues(...values: Array<string | undefined>) {
 	const seen = new Set<string>();
 	const configured: string[] = [];
@@ -88,11 +85,6 @@ function getUniqueConfiguredValues(...values: Array<string | undefined>) {
 export function getRuntimeEnv(name: keyof RuntimeBindings | string) {
 	const key = String(name);
 	return getRuntimeEnvValue(key);
-}
-
-export function isProductionRuntime() {
-	const value = getRuntimeEnvValue("PROD");
-	return value === true || value === "true" || value === "1";
 }
 
 export function getCloudflareBindings(locals?: App.Locals | null): RuntimeBindings {
@@ -163,7 +155,7 @@ export function getTransactionalEmailConfig(locals?: App.Locals | null) {
 }
 
 export function getAstropressRootSecret(locals?: App.Locals | null) {
-	return getAstropressRootSecretCandidates(locals)[0] ?? "astropress-dev-root-secret";
+	return getAstropressRootSecretCandidates(locals)[0] ?? devRootSecretOrThrow();
 }
 
 export function getAstropressRootSecretCandidates(locals?: App.Locals | null) {
@@ -192,7 +184,7 @@ export function getAdminBootstrapConfig(locals?: App.Locals | null) {
 		editorPassword,
 		bootstrapDisabled: getStringRuntimeValue("ADMIN_BOOTSTRAP_DISABLED", locals) === "1",
 		adminDbPath: getStringRuntimeValue("ADMIN_DB_PATH", locals),
-		rootSecret: rootSecretCandidates[0] ?? "astropress-dev-root-secret",
+		rootSecret: rootSecretCandidates[0] ?? devRootSecretOrThrow(),
 		rootSecretPrevious: rootSecretCandidates[1],
 		sessionSecret: getStringRuntimeValue("SESSION_SECRET", locals),
 		sessionSecretPrevious: getStringRuntimeValue("SESSION_SECRET_PREV", locals),
