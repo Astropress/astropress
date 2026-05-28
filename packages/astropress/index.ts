@@ -671,6 +671,7 @@ export {
 } from "./src/runtime-actions-integrations.js";
 // Admin actions (write)
 export {
+	checkUploadSize,
 	consumeRuntimeInviteToken,
 	consumeRuntimePasswordResetToken,
 	createRuntimeAuthor,

@@ -11,6 +11,8 @@ let createRuntimeMediaAsset: typeof import("../src/runtime-actions-media.js").cr
 let deleteRuntimeMediaAsset: typeof import("../src/runtime-actions-media.js").deleteRuntimeMediaAsset;
 // biome-ignore format: single-line typeof import required for esbuild/oxc compatibility
 let updateRuntimeMediaAsset: typeof import("../src/runtime-actions-media.js").updateRuntimeMediaAsset;
+// biome-ignore format: single-line typeof import required for esbuild/oxc compatibility
+let checkUploadSize: typeof import("../src/runtime-actions-media.js").checkUploadSize;
 
 const {
 	mockStoreMedia,
@@ -71,9 +73,8 @@ let locals: App.Locals;
 
 beforeEach(async () => {
 	vi.resetModules();
-	({ createRuntimeMediaAsset, deleteRuntimeMediaAsset, updateRuntimeMediaAsset } = await import(
-		"../src/runtime-actions-media.js"
-	));
+	({ createRuntimeMediaAsset, deleteRuntimeMediaAsset, updateRuntimeMediaAsset, checkUploadSize } =
+		await import("../src/runtime-actions-media.js"));
 	db = makeDb();
 	locals = makeLocals(db);
 	registerCms(STANDARD_CMS_CONFIG);
@@ -98,6 +99,38 @@ beforeEach(async () => {
 
 afterAll(() => {
 	vi.resetModules();
+});
+
+describe("checkUploadSize (#102 — pre-buffer size guard)", () => {
+	function withMax(max: number) {
+		registerCms({
+			templateKeys: ["content"],
+			siteUrl: "https://example.com",
+			seedPages: [],
+			archives: [],
+			translationStatus: [],
+			maxUploadBytes: max,
+		});
+	}
+
+	it("accepts a byte length exactly at the configured maximum (boundary)", () => {
+		withMax(100);
+		expect(checkUploadSize(100)).toEqual({ ok: true });
+	});
+
+	it("rejects a byte length one over the maximum with the shared error shape", () => {
+		withMax(100);
+		const r = checkUploadSize(101);
+		expect(r.ok).toBe(false);
+		expect((r as { ok: false; error: string }).error).toContain("too large");
+	});
+
+	it("operates on a length, so the route can reject File.size before buffering", () => {
+		withMax(5);
+		// Simulates `checkUploadSize(file.size)` in pages/ap-admin/actions/media-upload.ts.
+		expect(checkUploadSize(6).ok).toBe(false);
+		expect(checkUploadSize(5).ok).toBe(true);
+	});
 });
 
 describe("createRuntimeMediaAsset", () => {

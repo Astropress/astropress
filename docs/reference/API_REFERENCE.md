@@ -1021,6 +1021,11 @@ function reverifyIntegrationAction<TFields>(locals: Locals | null | undefined, d
 function setActiveIntegrationProviderAction(locals: Locals | null | undefined, domain: IntegrationDomain, providerId: string): Promise<{ ok: true; } | { ok: false; code: "INTEGRATIONS_NOT_AVAILABLE" | "INTEGRATION_NOT_CONNECTED"; }>
 ```
 
+#### `checkUploadSize`
+```ts
+function checkUploadSize(byteLength: number): { ok: true; } | { ok: false; error: string; }
+```
+
 #### `consumeRuntimeInviteToken`
 ```ts
 function consumeRuntimeInviteToken(rawToken: string, password: string, locals: Locals | null | undefined): Promise<unknown>

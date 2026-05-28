@@ -1,4 +1,8 @@
-import { createRuntimeMediaAsset, withAdminFormAction } from "@astropress-diy/astropress";
+import {
+	checkUploadSize,
+	createRuntimeMediaAsset,
+	withAdminFormAction,
+} from "@astropress-diy/astropress";
 import type { APIRoute } from "astro";
 
 export const POST: APIRoute = async (context) =>
@@ -9,6 +13,14 @@ export const POST: APIRoute = async (context) =>
 			const file = formData.get("file");
 			if (!(file instanceof File)) {
 				return fail("Select a file to upload");
+			}
+
+			// #102: reject oversized uploads from File.size BEFORE materialising the
+			// whole file into memory. createRuntimeMediaAsset re-checks the bytes as
+			// defense-in-depth, but buffering first is the avoidable memory pressure.
+			const sizeCheck = checkUploadSize(file.size);
+			if (!sizeCheck.ok) {
+				return fail(sizeCheck.error);
 			}
 
 			const bytes = new Uint8Array(await file.arrayBuffer());

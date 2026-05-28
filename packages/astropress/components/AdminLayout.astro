@@ -1,4 +1,5 @@
 ---
+import CsrfInput from "./CsrfInput.astro";
 import { getAccessContext } from "../src/access/index";
 import { NAV_ACTION_BY_HREF } from "../src/access/nav-action-map-data";
 import { buildAstropressAdminDocumentTitle } from "../src/admin-branding";
@@ -253,6 +254,7 @@ const documentTitleResolved = isOnMatchedNavRoute
       <div class="topbar-meta">
         {canPublish && isAdminRole && (
           <form method="post" action="/ap-admin/actions/publish" class="publish-form">
+            <CsrfInput token={Astro.locals.csrfToken} />
             <button type="submit" class="publish-btn" title="Trigger a new production build">
               Publish
             </button>
