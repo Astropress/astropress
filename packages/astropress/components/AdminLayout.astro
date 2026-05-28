@@ -86,7 +86,6 @@ const displayRole: "admin" | "editor" = role ?? (isAdminRole ? "admin" : "editor
 const recentItems = await getRecentAdminItems(Astro.locals, {
 	id: access?.subject.id ?? "",
 	email: access?.subject.email ?? "",
-	role: displayRole,
 	isAdmin: isAdminRole,
 });
 
@@ -357,22 +356,24 @@ const documentTitleResolved = isOnMatchedNavRoute
         <script>
           (function () {
             // Locale: persist choice in a cookie and reload so SSR re-renders labels.
-            var sel = document.querySelector('[data-locale-select]');
+            var sel = document.querySelector('[data-locale-select]') as HTMLSelectElement | null;
             if (sel) {
-              sel.addEventListener('change', function () {
-                document.cookie = 'astropress_admin_locale=' + encodeURIComponent(sel.value) + '; path=/; max-age=31536000; samesite=Lax';
+              var localeSelect = sel;
+              localeSelect.addEventListener('change', function () {
+                document.cookie = 'astropress_admin_locale=' + encodeURIComponent(localeSelect.value) + '; path=/; max-age=31536000; samesite=Lax';
                 window.location.reload();
               });
             }
 
             // Utility panel: close on click-outside and Escape (details element has no native light-dismiss).
-            var details = document.getElementById('topbar-utility-details');
+            var details = document.getElementById('topbar-utility-details') as HTMLDetailsElement | null;
             if (details) {
+              var utilityDetails = details;
               document.addEventListener('click', function (e) {
-                if (details.open && !details.contains(e.target)) details.removeAttribute('open');
+                if (utilityDetails.open && !utilityDetails.contains(e.target as Node | null)) utilityDetails.removeAttribute('open');
               });
               document.addEventListener('keydown', function (e) {
-                if (e.key === 'Escape' && details.open) { details.removeAttribute('open'); e.stopPropagation(); }
+                if (e.key === 'Escape' && utilityDetails.open) { utilityDetails.removeAttribute('open'); e.stopPropagation(); }
               });
             }
 
@@ -388,11 +389,12 @@ const documentTitleResolved = isOnMatchedNavRoute
               groupEls.forEach(function (el) {
                 var key = el.getAttribute('data-nav-group');
                 if (!key) return;
-                if (Object.prototype.hasOwnProperty.call(state, key)) {
-                  if (state[key]) el.setAttribute('open', ''); else el.removeAttribute('open');
+                var groupKey = key;
+                if (Object.prototype.hasOwnProperty.call(state, groupKey)) {
+                  if (state[groupKey]) el.setAttribute('open', ''); else el.removeAttribute('open');
                 }
                 el.addEventListener('toggle', function () {
-                  state[key] = el.hasAttribute('open');
+                  state[groupKey] = el.hasAttribute('open');
                   try { window.localStorage.setItem(storeKey, JSON.stringify(state)); } catch (e) { /* quota / disabled — OK */ }
                 });
               });
@@ -413,16 +415,17 @@ const documentTitleResolved = isOnMatchedNavRoute
             var fab = document.getElementById('scroll-to-top-fab');
             var topbar = document.querySelector('header.topbar');
             if (fab && topbar) {
+              var fabEl = fab;
               var visible = false;
-              function setVisibility(shouldShow) {
+              function setVisibility(shouldShow: boolean) {
                 if (shouldShow === visible) return;
                 visible = shouldShow;
                 if (shouldShow) {
-                  fab.hidden = false;
-                  requestAnimationFrame(function () { fab.classList.add('is-visible'); });
+                  fabEl.hidden = false;
+                  requestAnimationFrame(function () { fabEl.classList.add('is-visible'); });
                 } else {
-                  fab.classList.remove('is-visible');
-                  setTimeout(function () { if (!visible) fab.hidden = true; }, 220);
+                  fabEl.classList.remove('is-visible');
+                  setTimeout(function () { if (!visible) fabEl.hidden = true; }, 220);
                 }
               }
               var io = new IntersectionObserver(function (entries) {
@@ -646,14 +649,14 @@ const documentTitleResolved = isOnMatchedNavRoute
         }
 
         document.addEventListener("invalid", (e) => {
-          const input = e.target as HTMLInputElement;
+          const input = e.target as HTMLElement;
           if (!(input instanceof HTMLInputElement || input instanceof HTMLTextAreaElement || input instanceof HTMLSelectElement)) return;
           e.preventDefault();
           showError(input as HTMLInputElement);
         }, true);
 
         document.addEventListener("input", (e) => {
-          const input = e.target as HTMLInputElement;
+          const input = e.target as HTMLElement;
           if (!(input instanceof HTMLInputElement || input instanceof HTMLTextAreaElement)) return;
           if (input.getAttribute("aria-invalid") === "true") clearError(input as HTMLInputElement);
         });
