@@ -1,3 +1,4 @@
+import { createAstropressSecurityHeaders } from "@astropress-diy/astropress";
 import type { APIRoute } from "astro";
 
 const OPENAPI_SPEC = {
@@ -410,8 +411,8 @@ const OPENAPI_SPEC = {
 };
 
 export const GET: APIRoute = () => {
-	return new Response(JSON.stringify(OPENAPI_SPEC, null, 2), {
-		status: 200,
-		headers: { "Content-Type": "application/json" },
-	});
+	// Public spec, but still inside the shared API security envelope (#119).
+	const headers = createAstropressSecurityHeaders({ area: "api" });
+	headers.set("Content-Type", "application/json");
+	return new Response(JSON.stringify(OPENAPI_SPEC, null, 2), { status: 200, headers });
 };

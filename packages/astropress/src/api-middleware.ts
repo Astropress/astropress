@@ -2,6 +2,22 @@ import { API_ERROR_SHAPES } from "./api-middleware-error-shapes";
 import { peekCmsConfig } from "./config";
 import type { JsonValue } from "./json-types";
 import type { ApiScope, ApiTokenStore } from "./platform-contracts";
+import { createAstropressSecurityHeaders } from "./security-headers";
+
+/**
+ * Merges the shared `api`-area security headers (Referrer-Policy,
+ * X-Content-Type-Options, Permissions-Policy, Cross-Origin-Resource-Policy, CSP,
+ * …) into a Headers object. Cache-Control is intentionally left untouched so the
+ * ETag/conditional-GET semantics of `jsonOkWithEtag` survive — only the security
+ * envelope is applied here (#119).
+ */
+function withApiSecurityHeaders(headers: Headers): Headers {
+	const security = createAstropressSecurityHeaders({ area: "api" });
+	security.forEach((value, key) => {
+		headers.set(key, value);
+	});
+	return headers;
+}
 
 export interface ApiRequestContext {
 	apiTokens: ApiTokenStore;
@@ -12,10 +28,8 @@ export interface ApiRequestContext {
 }
 
 export function jsonOk(body: JsonValue, status = 200) {
-	return new Response(JSON.stringify(body), {
-		status,
-		headers: { "Content-Type": "application/json" },
-	});
+	const headers = withApiSecurityHeaders(new Headers({ "Content-Type": "application/json" }));
+	return new Response(JSON.stringify(body), { status, headers });
 }
 
 /** Generate a weak ETag from the serialized body using a fast djb2-style hash. */
@@ -33,23 +47,28 @@ export function jsonOkWithEtag(body: JsonValue, request: Request, status = 200):
 	const etag = weakEtag(serialized);
 	const ifNoneMatch = request.headers.get("If-None-Match");
 	if (ifNoneMatch === etag) {
-		return new Response(null, { status: 304, headers: { ETag: etag } });
+		return new Response(null, {
+			status: 304,
+			headers: withApiSecurityHeaders(new Headers({ ETag: etag })),
+		});
 	}
 	return new Response(serialized, {
 		status,
-		headers: { "Content-Type": "application/json", ETag: etag },
+		headers: withApiSecurityHeaders(
+			new Headers({ "Content-Type": "application/json", ETag: etag }),
+		),
 	});
 }
 
 export function jsonOkPaginated(body: JsonValue, total: number, status = 200) {
-	return new Response(JSON.stringify(body), {
-		status,
-		headers: {
+	const headers = withApiSecurityHeaders(
+		new Headers({
 			"Content-Type": "application/json",
 			"X-Total-Count": String(total),
 			"Access-Control-Expose-Headers": "X-Total-Count",
-		},
-	});
+		}),
+	);
+	return new Response(JSON.stringify(body), { status, headers });
 }
 
 function resolveCorsOrigin(request: Request): string | null {
@@ -65,15 +84,20 @@ function resolveCorsOrigin(request: Request): string | null {
 	return origin === requestOrigin ? requestOrigin : null;
 }
 
+// Single egress for every withApiRequest response: applies the shared API
+// security envelope unconditionally (#119), then layers CORS when the request
+// origin is allowed. Error shapes, paginated, conditional-GET, and handler
+// output all flow through here, so none can leave the envelope.
 function applyCorsHeaders(response: Response, request: Request): Response {
+	const headers = withApiSecurityHeaders(new Headers(response.headers));
 	const allowedOrigin = resolveCorsOrigin(request);
-	if (!allowedOrigin) return response;
-	const headers = new Headers(response.headers);
-	headers.set("Access-Control-Allow-Origin", allowedOrigin);
-	headers.set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-	headers.set("Access-Control-Allow-Headers", "Authorization, Content-Type");
-	if (allowedOrigin !== "*") {
-		headers.set("Vary", "Origin");
+	if (allowedOrigin) {
+		headers.set("Access-Control-Allow-Origin", allowedOrigin);
+		headers.set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+		headers.set("Access-Control-Allow-Headers", "Authorization, Content-Type");
+		if (allowedOrigin !== "*") {
+			headers.set("Vary", "Origin");
+		}
 	}
 	return new Response(response.body, {
 		status: response.status,
@@ -86,16 +110,16 @@ export function handleCorsPreflightRequest(request: Request): Response | null {
 	if (request.method !== "OPTIONS") return null;
 	const allowedOrigin = resolveCorsOrigin(request);
 	if (!allowedOrigin) return null;
-	return new Response(null, {
-		status: 204,
-		headers: {
+	const headers = withApiSecurityHeaders(
+		new Headers({
 			"Access-Control-Allow-Origin": allowedOrigin,
 			"Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
 			"Access-Control-Allow-Headers": "Authorization, Content-Type",
 			"Access-Control-Max-Age": "86400",
 			...(allowedOrigin !== "*" ? { Vary: "Origin" } : {}),
-		},
-	});
+		}),
+	);
+	return new Response(null, { status: 204, headers });
 }
 
 export async function withApiRequest(
