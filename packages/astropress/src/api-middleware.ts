@@ -1,6 +1,11 @@
 import { API_ERROR_SHAPES } from "./api-middleware-error-shapes";
 import { peekCmsConfig } from "./config";
 import type { JsonValue } from "./json-types";
+
+// Re-exported so ap-api route handlers can annotate/assert their JSON response
+// payloads (domain objects with optional fields) at the jsonOk boundary.
+export type { JsonValue } from "./json-types";
+
 import type { ApiScope, ApiTokenStore } from "./platform-contracts";
 import { createAstropressSecurityHeaders } from "./security-headers";
 

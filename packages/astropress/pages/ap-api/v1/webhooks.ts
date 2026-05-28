@@ -2,6 +2,7 @@ import { getCmsConfig, validateWebhookCreateInput } from "@astropress-diy/astrop
 import { resolveApiRuntime } from "@astropress-diy/astropress/admin-store-dispatch.js";
 import {
 	apiErrors,
+	type JsonValue,
 	jsonOk,
 	jsonOkPaginated,
 	withApiRequest,
@@ -36,7 +37,7 @@ export const GET: APIRoute = async (context) => {
 			const all = await webhooks.list();
 			const pageRecords = all.slice(offset, offset + limit);
 			return jsonOkPaginated(
-				{ records: pageRecords, total: all.length, limit, offset, page },
+				{ records: pageRecords, total: all.length, limit, offset, page } as unknown as JsonValue,
 				all.length,
 			);
 		},
@@ -74,7 +75,7 @@ export const POST: APIRoute = async (context) => {
 			if (!validation.ok) return apiErrors.validationError(validation.error);
 
 			const { record, verification } = await webhooks.create(validation.value);
-			return jsonOk({ record, verification }, 201);
+			return jsonOk({ record, verification } as unknown as JsonValue, 201);
 		},
 	);
 };

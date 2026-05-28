@@ -20,7 +20,7 @@ import { getCmsConfig, getRuntimeMediaAssets } from "@astropress-diy/astropress"
 import { resolveApiRuntime } from "@astropress-diy/astropress/admin-store-dispatch.js";
 import { apiErrors, jsonOk, withApiRequest } from "@astropress-diy/astropress/api-middleware.js";
 import type { APIRoute } from "astro";
-import { listRuntimeContentStates } from "../../src/runtime-page-store.js";
+import { listRuntimeContentStates } from "../../../src/runtime-page-store.js";
 
 const startTime = Date.now();
 

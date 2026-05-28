@@ -6,6 +6,7 @@ import {
 import { resolveApiRuntime } from "@astropress-diy/astropress/admin-store-dispatch.js";
 import {
 	apiErrors,
+	type JsonValue,
 	jsonOk,
 	jsonOkPaginated,
 	withApiRequest,
@@ -38,7 +39,7 @@ export const GET: APIRoute = async (context) => {
 			const all = await getRuntimeMediaAssets(context.locals);
 			const pageRecords = all.slice(offset, offset + limit);
 			return jsonOkPaginated(
-				{ records: pageRecords, total: all.length, limit, offset, page },
+				{ records: pageRecords, total: all.length, limit, offset, page } as unknown as JsonValue,
 				all.length,
 			);
 		},

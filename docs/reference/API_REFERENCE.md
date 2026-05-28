@@ -288,7 +288,7 @@ function buildArchiveEditorModel(locals: Locals, archivePath: string, user: Auth
 
 #### `buildArchivesIndexPageModel`
 ```ts
-function buildArchivesIndexPageModel(locals: Locals, user: AuthUser | null | undefined): Promise<AdminPageResult<{ archiveList: unknown[]; archivesByKind: Record<string, unknown[]>; kindCounts: { kind: string; count: number; }[]; totalArchives: number; totalItems: number; }>>
+function buildArchivesIndexPageModel(locals: Locals, user: AuthUser | null | undefined): Promise<AdminPageResult<{ archiveList: ArchiveListingRow[]; archivesByKind: Record<string, ArchiveListingRow[]>; kindCounts: { kind: string; count: number; }[]; totalArchives: number; totalItems: number; }>>
 ```
 
 #### `buildAuthorsPageModel`
@@ -308,7 +308,7 @@ function buildMediaPageModel(locals: Locals): Promise<AdminPageResult<{ mediaWit
 
 #### `buildPagesIndexPageModel`
 ```ts
-function buildPagesIndexPageModel(locals: Locals, user: AuthUser | null | undefined): Promise<AdminPageResult<{ contentStates: ContentRecord[]; routePages: RuntimeStructuredPageRouteRecord[] | ({ path: string; title: string; summary: string | undefined; seoTitle: string | undefined; metaDescription: string | undefined; canonicalUrlOverride: string | undefined; robotsDirective: string | undefined; ogImage: string | undefined; templateKey: string; alternateLinks: { hreflang: string; href: string; }[]; sections: Record<string, unknown> | null; updatedAt: string; } | null)[]; archiveRows: unknown[]; }>>
+function buildPagesIndexPageModel(locals: Locals, user: AuthUser | null | undefined): Promise<AdminPageResult<{ contentStates: ContentRecord[]; routePages: RuntimeStructuredPageRouteRecord[]; archiveRows: { archive: { slug: string; legacyUrl: string; title: string; }; runtime: RuntimeArchiveRouteRecord | null; }[]; }>>
 ```
 
 #### `buildPostEditorPageModel`
@@ -343,12 +343,12 @@ function buildRoutePageEditorModel(locals: Locals, routePath: string, user: Auth
 
 #### `buildRouteTablePageModel`
 ```ts
-function buildRouteTablePageModel(locals: Locals, user: AuthUser | null | undefined): Promise<AdminPageResult<{ routePages: RuntimeStructuredPageRouteRecord[] | ({ path: string; title: string; summary: string | undefined; seoTitle: string | undefined; metaDescription: string | undefined; canonicalUrlOverride: string | undefined; robotsDirective: string | undefined; ogImage: string | undefined; templateKey: string; alternateLinks: { hreflang: string; href: string; }[]; sections: Record<string, unknown> | null; updatedAt: string; } | null)[]; settings: SiteSettings; }>>
+function buildRouteTablePageModel(locals: Locals, user: AuthUser | null | undefined): Promise<AdminPageResult<{ routePages: RuntimeStructuredPageRouteRecord[]; settings: SiteSettings; }>>
 ```
 
 #### `buildSeoPageModel`
 ```ts
-function buildSeoPageModel(locals: Locals, user: AuthUser | null | undefined): Promise<AdminPageResult<{ rows: unknown[]; }>>
+function buildSeoPageModel(locals: Locals, user: AuthUser | null | undefined): Promise<AdminPageResult<{ rows: SeoListingRow[]; }>>
 ```
 
 #### `buildSettingsPageModel`
@@ -358,7 +358,7 @@ function buildSettingsPageModel(locals: Locals, user: AuthUser | null | undefine
 
 #### `buildSystemPageModel`
 ```ts
-function buildSystemPageModel(locals: Locals, user: AuthUser | null | undefined): Promise<AdminPageResult<{ systemRoutes: never[]; routeMap: Map<string, unknown>; }>>
+function buildSystemPageModel(locals: Locals, user: AuthUser | null | undefined): Promise<AdminPageResult<{ systemRoutes: RuntimeSystemRouteRecord[]; routeMap: Map<string, RuntimeSystemRouteRecord>; }>>
 ```
 
 #### `buildTaxonomiesPageModel`
@@ -373,7 +373,7 @@ function buildTestimonialsPageModel(locals: Locals): Promise<AdminPageResult<{ p
 
 #### `buildTranslationsPageModel`
 ```ts
-function buildTranslationsPageModel(locals: Locals, user: AuthUser | null | undefined): Promise<AdminPageResult<{ rows: unknown[]; }>>
+function buildTranslationsPageModel(locals: Locals, user: AuthUser | null | undefined): Promise<AdminPageResult<{ rows: TranslationStatusRow[]; }>>
 ```
 
 #### `buildUsersPageModel`
@@ -1403,12 +1403,12 @@ function getRuntimeSystemRoute(pathname: string, locals: Locals | null | undefin
 
 #### `listRuntimeStructuredPageRoutes`
 ```ts
-function listRuntimeStructuredPageRoutes(locals: Locals | null | undefined): Promise<RuntimeStructuredPageRouteRecord[] | ({ path: string; title: string; summary: string | undefined; seoTitle: string | undefined; metaDescription: string | undefined; canonicalUrlOverride: string | undefined; robotsDirective: string | undefined; ogImage: string | undefined; templateKey: string; alternateLinks: { hreflang: string; href: string; }[]; sections: Record<string, unknown> | null; updatedAt: string; } | null)[]>
+function listRuntimeStructuredPageRoutes(locals: Locals | null | undefined): Promise<RuntimeStructuredPageRouteRecord[]>
 ```
 
 #### `listRuntimeSystemRoutes`
 ```ts
-function listRuntimeSystemRoutes(locals: Locals | null | undefined): Promise<(RuntimeSystemRouteRecord | null)[]>
+function listRuntimeSystemRoutes(locals: Locals | null | undefined): Promise<RuntimeSystemRouteRecord[]>
 ```
 
 #### `saveRuntimeArchiveRoute`
@@ -1937,6 +1937,7 @@ function withApiRequest(request: Request, ctx: ApiRequestContext, requiredScopes
 
 ### Types & Interfaces
 
+- `type JsonValue`
 - `interface ApiRequestContext`
 
 ### Constants & Re-exports

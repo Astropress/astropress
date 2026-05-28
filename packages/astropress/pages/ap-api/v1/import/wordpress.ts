@@ -4,7 +4,12 @@ import {
 	ImportPathError,
 } from "@astropress-diy/astropress";
 import { resolveApiRuntime } from "@astropress-diy/astropress/admin-store-dispatch.js";
-import { apiErrors, jsonOk, withApiRequest } from "@astropress-diy/astropress/api-middleware.js";
+import {
+	apiErrors,
+	type JsonValue,
+	jsonOk,
+	withApiRequest,
+} from "@astropress-diy/astropress/api-middleware.js";
 import { createAstropressWordPressImportSource } from "@astropress-diy/astropress/import/wordpress.js";
 import type { APIRoute } from "astro";
 
@@ -59,7 +64,7 @@ export const POST: APIRoute = async (context) => {
 				workspaceRoot,
 			});
 
-			return jsonOk(report as unknown as Record<string, unknown>);
+			return jsonOk(report as unknown as JsonValue);
 		},
 	);
 };

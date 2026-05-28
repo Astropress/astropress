@@ -7,6 +7,7 @@ import {
 import { resolveApiRuntime } from "@astropress-diy/astropress/admin-store-dispatch.js";
 import {
 	apiErrors,
+	type JsonValue,
 	jsonOk,
 	jsonOkPaginated,
 	withApiRequest,
@@ -99,7 +100,7 @@ export const GET: APIRoute = async (context) => {
 					page,
 					nextCursor,
 					_links,
-				},
+				} as unknown as JsonValue,
 				filtered.length,
 			);
 		},
@@ -134,7 +135,6 @@ export const POST: APIRoute = async (context) => {
 
 			const slug = String(body.slug ?? "").trim();
 			const title = String(body.title ?? "").trim();
-			const kind = String(body.kind ?? "post");
 
 			if (!slug) return apiErrors.validationError("slug is required.");
 			if (!title) return apiErrors.validationError("title is required.");
@@ -144,11 +144,20 @@ export const POST: APIRoute = async (context) => {
 				role: "editor" as const,
 				name: "API Token",
 			};
-			const result = await createRuntimeContentRecord(
-				{ kind, slug, title, body: String(body.body ?? "") },
+			// createRuntimeContentRecord requires status/seoTitle/metaDescription
+			// (no `kind` — that field was previously passed and silently dropped).
+			const result = (await createRuntimeContentRecord(
+				{
+					slug,
+					title,
+					status: String(body.status ?? "draft"),
+					seoTitle: String(body.seoTitle ?? title),
+					metaDescription: String(body.metaDescription ?? ""),
+					body: String(body.body ?? ""),
+				},
 				actor,
 				context.locals,
-			);
+			)) as { ok: false; error: string } | { ok: true; state: Record<string, unknown> | null };
 			if (!result.ok) {
 				return apiErrors.validationError(result.error);
 			}
@@ -157,7 +166,7 @@ export const POST: APIRoute = async (context) => {
 				await runtime.webhooks.dispatch("content.published", { slug, title });
 			}
 
-			return jsonOk(result.state, 201);
+			return jsonOk(result.state as unknown as JsonValue, 201);
 		},
 	);
 };

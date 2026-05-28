@@ -6,6 +6,7 @@ import {
 import { resolveApiRuntime } from "@astropress-diy/astropress/admin-store-dispatch.js";
 import {
 	apiErrors,
+	type JsonValue,
 	jsonOk,
 	jsonOkWithEtag,
 	withApiRequest,
@@ -30,7 +31,7 @@ export const GET: APIRoute = async (context) => {
 			const id = context.params.id ?? "";
 			const record = await getRuntimeContentState(id, context.locals);
 			if (!record) return apiErrors.notFound(`Content '${id}' not found.`);
-			return jsonOkWithEtag(record as Parameters<typeof jsonOkWithEtag>[0], context.request);
+			return jsonOkWithEtag(record as unknown as JsonValue, context.request);
 		},
 	);
 };
@@ -66,7 +67,7 @@ export const PUT: APIRoute = async (context) => {
 				role: "editor" as const,
 				name: "API Token",
 			};
-			const result = await saveRuntimeContentState(
+			const result = (await saveRuntimeContentState(
 				id,
 				{
 					title: String(body.title ?? existing.title ?? ""),
@@ -84,7 +85,7 @@ export const PUT: APIRoute = async (context) => {
 				},
 				actor,
 				context.locals,
-			);
+			)) as { ok: false; error: string } | { ok: true; state: Record<string, unknown> | null };
 
 			if (!result.ok) return apiErrors.validationError(result.error);
 
@@ -93,7 +94,7 @@ export const PUT: APIRoute = async (context) => {
 				if (event) await runtime.webhooks.dispatch(event, { id });
 			}
 
-			return jsonOk(result.state);
+			return jsonOk(result.state as unknown as JsonValue);
 		},
 	);
 };

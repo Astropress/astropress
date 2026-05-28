@@ -1,6 +1,11 @@
 import { getCmsConfig, getRuntimeSettings } from "@astropress-diy/astropress";
 import { resolveApiRuntime } from "@astropress-diy/astropress/admin-store-dispatch.js";
-import { apiErrors, jsonOk, withApiRequest } from "@astropress-diy/astropress/api-middleware.js";
+import {
+	apiErrors,
+	type JsonValue,
+	jsonOk,
+	withApiRequest,
+} from "@astropress-diy/astropress/api-middleware.js";
 import type { APIRoute } from "astro";
 
 export const GET: APIRoute = async (context) => {
@@ -19,7 +24,7 @@ export const GET: APIRoute = async (context) => {
 		["settings:read"],
 		async () => {
 			const settings = await getRuntimeSettings(context.locals);
-			return jsonOk(settings);
+			return jsonOk(settings as unknown as JsonValue);
 		},
 	);
 };
