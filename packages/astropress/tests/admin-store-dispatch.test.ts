@@ -13,6 +13,8 @@ let getAdminDb: typeof import("../src/admin-store-dispatch.js").getAdminDb;
 let safeLoadLocalAdminStore: typeof import("../src/admin-store-dispatch.js").safeLoadLocalAdminStore;
 // biome-ignore format: single-line typeof import required for esbuild/oxc compatibility
 let resolveApiRuntime: typeof import("../src/admin-store-dispatch.js").resolveApiRuntime;
+// biome-ignore format: single-line typeof import required for esbuild/oxc compatibility
+let resolveFlashStore: typeof import("../src/admin-store-dispatch.js").resolveFlashStore;
 
 const { mockLoadLocalAdminStore } = vi.hoisted(() => ({
 	mockLoadLocalAdminStore: vi.fn(),
@@ -34,6 +36,7 @@ beforeEach(async () => {
 		getAdminDb,
 		safeLoadLocalAdminStore,
 		resolveApiRuntime,
+		resolveFlashStore,
 	} = await import("../src/admin-store-dispatch.js"));
 	mockLoadLocalAdminStore.mockReset();
 });
@@ -188,6 +191,29 @@ describe("resolveApiRuntime", () => {
 		expect(runtime.apiTokens).toBe(localApiTokens);
 		expect(runtime.webhooks).toBe(localWebhooks);
 		expect(runtime.checkRateLimit).toBe(localCheckRateLimit);
+		expect(mockLoadLocalAdminStore).toHaveBeenCalledOnce();
+	});
+});
+
+describe("resolveFlashStore", () => {
+	it("returns a working D1-backed flash store when a DB binding is present", async () => {
+		const db = makeDb();
+		const locals = makeLocals(db);
+		const flash = await resolveFlashStore(locals);
+		expect(flash).toBeDefined();
+		if (!flash) throw new Error("expected D1 flash store");
+
+		const { id } = await flash.put("d1-roundtrip");
+		expect(await flash.consume(id)).toBe("d1-roundtrip");
+		expect(await flash.consume(id)).toBeNull();
+	});
+
+	it("falls back to the local store's flash surface with no DB binding", async () => {
+		const localFlash = { put: vi.fn(), consume: vi.fn() };
+		mockLoadLocalAdminStore.mockResolvedValue({ flash: localFlash });
+
+		const flash = await resolveFlashStore(null);
+		expect(flash).toBe(localFlash);
 		expect(mockLoadLocalAdminStore).toHaveBeenCalledOnce();
 	});
 });

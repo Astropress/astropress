@@ -91,6 +91,9 @@ export interface LocalAdminStoreModule extends AdminStoreAdapter {
 	// API tokens and webhooks (optional — only present when api.enabled)
 	apiTokens?: AdminStoreAdapter["apiTokens"];
 	webhooks?: AdminStoreAdapter["webhooks"];
+	// One-time secret hand-off store (optional — present whenever the host has
+	// the admin schema; absent on DB-less hosts). See issues #113/#115/#133.
+	flash?: AdminStoreAdapter["flash"];
 	// Phase 3/4 connected-integrations surface (optional — only present
 	// when the host has applied the connected_integrations migration).
 	integrations?: AdminStoreAdapter["integrations"];

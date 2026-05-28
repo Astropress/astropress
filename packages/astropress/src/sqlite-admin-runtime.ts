@@ -11,6 +11,7 @@ import { createSqliteAssetsStore } from "./sqlite-runtime/assets";
 import { createSqliteAuthStore } from "./sqlite-runtime/auth";
 import { createSqliteCatalogStore } from "./sqlite-runtime/catalog";
 import { createSqliteContentStore } from "./sqlite-runtime/content";
+import { createFlashStore } from "./sqlite-runtime/flash";
 import { createIntegrationsRepository } from "./sqlite-runtime/integrations";
 import { createSqliteLocksOps } from "./sqlite-runtime/locks";
 import { createSqlitePurgeOps } from "./sqlite-runtime/purge";
@@ -53,6 +54,7 @@ export function createAstropressSqliteAdminRuntime(options: AstropressSqliteAdmi
 	const { sqliteRateLimitRepository, sqliteMediaRepository } = createSqliteAssetsStore(getDb, now);
 	const sqliteApiTokenStore = createApiTokenStore(getDb());
 	const sqliteWebhookStore = createWebhookStore(getDb());
+	const sqliteFlashStore = createFlashStore(getDb());
 	const sqliteLocksOps = createSqliteLocksOps(getDb);
 	const sqlitePurgeOps = createSqlitePurgeOps(getDb);
 	const sqliteIntegrationsRepository = createIntegrationsRepository(
@@ -79,6 +81,7 @@ export function createAstropressSqliteAdminRuntime(options: AstropressSqliteAdmi
 			sqliteMediaRepository,
 			sqliteApiTokenStore,
 			sqliteWebhookStore,
+			sqliteFlashStore,
 			sqliteIntegrationsRepository,
 		}),
 	);

@@ -1,5 +1,8 @@
 import { withAdminFormAction } from "@astropress-diy/astropress";
-import { resolveApiRuntime } from "@astropress-diy/astropress/admin-store-dispatch.js";
+import {
+	resolveApiRuntime,
+	resolveFlashStore,
+} from "@astropress-diy/astropress/admin-store-dispatch.js";
 import type { ApiScope } from "@astropress-diy/astropress/platform-contracts.js";
 import type { APIRoute } from "astro";
 
@@ -31,9 +34,13 @@ export const POST: APIRoute = async (context) =>
 				label,
 				scopes,
 			});
-			// Pass the raw token once via redirect query param — page shows it once then it's gone
+			// Hand the raw token to the page via a one-time server-side flash store
+			// keyed by an opaque id — never put the secret in the URL (#113).
+			const flash = await resolveFlashStore(context.locals);
+			if (!flash) return fail("Flash store is not available.");
+			const { id } = await flash.put(rawToken);
 			return redirect(
-				`/ap-admin/api-tokens?created=1&tokenId=${encodeURIComponent(record.id)}&rawToken=${encodeURIComponent(rawToken)}`,
+				`/ap-admin/api-tokens?created=1&tokenId=${encodeURIComponent(record.id)}&flash=${encodeURIComponent(id)}`,
 			);
 		},
 	);

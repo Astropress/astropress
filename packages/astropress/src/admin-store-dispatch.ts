@@ -2,9 +2,10 @@ import type { D1DatabaseLike } from "./d1-database";
 import { createD1RateLimitPart } from "./d1-rate-limit-part";
 import type { LocalAdminStoreModule } from "./local-runtime-modules";
 import { loadLocalAdminStore } from "./local-runtime-modules";
-import type { ApiTokenStore, WebhookStore } from "./platform-contracts";
+import type { ApiTokenStore, FlashStore, WebhookStore } from "./platform-contracts";
 import { getCloudflareBindings } from "./runtime-env";
 import { createD1ApiTokenStore } from "./sqlite-runtime/api-tokens-d1";
+import { createD1FlashStore } from "./sqlite-runtime/flash-d1";
 import { createD1WebhookStore } from "./sqlite-runtime/webhooks-d1";
 
 /** Returns the D1 database binding from request locals, or undefined if not available. */
@@ -103,5 +104,24 @@ export async function resolveApiRuntime(
 			webhooks: store.webhooks,
 			checkRateLimit: store.checkRateLimit,
 		}),
+	);
+}
+
+/**
+ * Single dispatch point for the one-time flash store, mirroring
+ * {@link resolveApiRuntime}. Returns the D1-backed store on hosts that provide
+ * a DB binding, the local sqlite store otherwise. The flash store is what lets
+ * secret hand-offs (raw API tokens, webhook keys, reset/invite links) survive a
+ * POST→redirect→GET round trip without ever appearing in the URL. Returns
+ * `undefined` only on DB-less hosts that have no admin store at all — callers
+ * surface a typed "unavailable" error in that case. See issues #113/#115/#133.
+ */
+export async function resolveFlashStore(
+	locals: App.Locals | null | undefined,
+): Promise<FlashStore | undefined> {
+	return withLocalStoreFallback(
+		locals,
+		async (db) => createD1FlashStore(db),
+		async (store) => store.flash,
 	);
 }

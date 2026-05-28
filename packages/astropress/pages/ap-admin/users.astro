@@ -3,6 +3,7 @@ import AdminLayout from "@astropress-diy/astropress/components/AdminLayout.astro
 import AuditTrail from "@astropress-diy/astropress/components/AuditTrail.astro";
 import CsrfInput from "@astropress-diy/astropress/components/CsrfInput.astro";
 import { buildUsersPageModel, getPageT, resolveAdminLocale } from "astropress";
+import { resolveFlashStore } from "@astropress-diy/astropress/admin-store-dispatch.js";
 import { resolveSafeAdminHref } from "../../src/admin-link-utils";
 
 const t = getPageT(resolveAdminLocale(Astro));
@@ -14,12 +15,16 @@ const wasCreated = Astro.url.searchParams.get("saved") === "1";
 const userCreatedNoEmail = Astro.url.searchParams.get("user_created") === "1";
 const wasSuspended = Astro.url.searchParams.get("suspended") === "1";
 const wasRestored = Astro.url.searchParams.get("restored") === "1";
-const inviteLink = resolveSafeAdminHref(Astro.url, Astro.url.searchParams.get("invite_link"), [
-	"/ap-admin/accept-invite",
-]);
-const resetLink = resolveSafeAdminHref(Astro.url, Astro.url.searchParams.get("reset_link"), [
-	"/ap-admin/reset-password",
-]);
+// Invite/reset links carry one-time secret tokens, so they are delivered via
+// the flash store (opaque id in the URL) and consumed here once (#133). The
+// consumed value is still normalised through resolveSafeAdminHref before use.
+const inviteFlashId = Astro.url.searchParams.get("flash");
+const resetFlashId = Astro.url.searchParams.get("reset_flash");
+const flash = inviteFlashId || resetFlashId ? await resolveFlashStore(Astro.locals) : null;
+const inviteLinkRaw = flash && inviteFlashId ? await flash.consume(inviteFlashId) : null;
+const resetLinkRaw = flash && resetFlashId ? await flash.consume(resetFlashId) : null;
+const inviteLink = resolveSafeAdminHref(Astro.url, inviteLinkRaw, ["/ap-admin/accept-invite"]);
+const resetLink = resolveSafeAdminHref(Astro.url, resetLinkRaw, ["/ap-admin/reset-password"]);
 const errorMessage =
 	Astro.url.searchParams.get("error") === "1" ? Astro.url.searchParams.get("message") : "";
 

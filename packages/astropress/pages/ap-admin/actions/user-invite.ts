@@ -3,6 +3,7 @@ import {
 	sendUserInviteEmail,
 	withAdminFormAction,
 } from "@astropress-diy/astropress";
+import { resolveFlashStore } from "@astropress-diy/astropress/admin-store-dispatch.js";
 import type { APIRoute } from "astro";
 
 export const POST: APIRoute = async (context) =>
@@ -41,9 +42,14 @@ export const POST: APIRoute = async (context) =>
 				if (emailResult.delivered) {
 					redirectUrl.searchParams.set("saved", "1");
 				} else {
-					// Email was not actually sent (preview/mock mode) — user was created but no email went out
+					// Email was not actually sent (preview/mock mode) — user was created
+					// but no email went out. Hand the invite link to the page via the
+					// one-time flash store keyed by an opaque id, never the URL (#133).
 					redirectUrl.searchParams.set("user_created", "1");
-					redirectUrl.searchParams.set("invite_link", result.inviteUrl);
+					const flash = await resolveFlashStore(locals);
+					if (!flash) return fail("Flash store is not available.");
+					const { id } = await flash.put(result.inviteUrl);
+					redirectUrl.searchParams.set("flash", id);
 				}
 			} else {
 				redirectUrl.searchParams.set("saved", "1");

@@ -1,5 +1,6 @@
 import {
 	ADMIN_STORE_FLAT_METHOD_SECTIONS,
+	ADMIN_STORE_OPTIONAL_OBJECT_KEYS,
 	ADMIN_STORE_SECTIONS,
 	type AdminStoreSection,
 } from "./host-runtime-factories-data";
@@ -69,6 +70,12 @@ export function createAstropressAdminStoreModule(
 			if (typeof prop !== "string") return undefined;
 			if (ADMIN_STORE_SECTIONS.has(prop)) {
 				return createSectionProxy(getStore, prop as AdminStoreSection);
+			}
+			// Optional object surfaces (apiTokens/webhooks/flash/integrations) are
+			// forwarded by value so `store.apiTokens` is falsy when the host omits
+			// them — a section proxy would always be truthy and break that guard.
+			if (ADMIN_STORE_OPTIONAL_OBJECT_KEYS.has(prop)) {
+				return getStore()[prop as keyof AdminStoreAdapter];
 			}
 			const section = ADMIN_STORE_FLAT_METHOD_SECTIONS[prop];
 			if (section === undefined) return undefined;

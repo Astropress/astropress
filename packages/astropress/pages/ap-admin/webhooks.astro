@@ -1,7 +1,10 @@
 ---
 import AdminLayout from "@astropress-diy/astropress/components/AdminLayout.astro";
 import CsrfInput from "@astropress-diy/astropress/components/CsrfInput.astro";
-import { resolveApiRuntime } from "@astropress-diy/astropress/admin-store-dispatch.js";
+import {
+	resolveApiRuntime,
+	resolveFlashStore,
+} from "@astropress-diy/astropress/admin-store-dispatch.js";
 import { getPageT, requiresAccess, resolveAdminLocale } from "astropress";
 
 const guard = await requiresAccess(Astro, "webhooks:manage");
@@ -15,8 +18,16 @@ const webhooks = webhookStore ? await webhookStore.list() : [];
 
 const wasCreated = Astro.url.searchParams.get("created") === "1";
 const wasDeleted = Astro.url.searchParams.get("deleted") === "1";
-const createdAlgorithm = wasCreated ? Astro.url.searchParams.get("algorithm") : null;
-const createdPublicKey = wasCreated ? Astro.url.searchParams.get("publicKey") : null;
+// The verification bundle (algorithm + public key) is delivered via the
+// one-time flash store, never the URL (#115). Consume it once.
+const flashId = Astro.url.searchParams.get("flash");
+const flash = flashId ? await resolveFlashStore(Astro.locals) : null;
+const flashPayload = wasCreated && flash && flashId ? await flash.consume(flashId) : null;
+const createdVerification = flashPayload
+	? (JSON.parse(flashPayload) as { algorithm: string; publicKey: string })
+	: null;
+const createdAlgorithm = createdVerification?.algorithm ?? null;
+const createdPublicKey = createdVerification?.publicKey ?? null;
 const errorMessage =
 	Astro.url.searchParams.get("error") === "1" ? Astro.url.searchParams.get("message") : null;
 

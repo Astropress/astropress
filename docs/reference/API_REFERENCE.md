@@ -1849,6 +1849,7 @@ function reportAstropressError(error: unknown, context: string): Promise<void>
 - `type ApiTokenId`
 - `interface ApiTokenRecord`
 - `interface ApiTokenStore`
+- `interface FlashStore`
 - `type ContentId` — A content record ID — prevents mixing with media or user IDs.
 - `type MediaAssetId` — A media asset ID — prevents mixing with content or user IDs.
 - `type AdminUserId` — An admin user ID — prevents mixing with content or media IDs.

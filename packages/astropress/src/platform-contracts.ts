@@ -3,6 +3,7 @@ export type {
 	ApiTokenId,
 	ApiTokenRecord,
 	ApiTokenStore,
+	FlashStore,
 } from "./platform-contracts-helpers";
 export type {
 	AstropressWordPressImportArtifacts,

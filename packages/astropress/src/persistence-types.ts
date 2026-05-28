@@ -318,6 +318,12 @@ export interface AdminStoreAdapter {
 	apiTokens?: import("./platform-contracts").ApiTokenStore;
 	webhooks?: import("./platform-contracts").WebhookStore;
 	/**
+	 * One-time flash store for secret hand-off via opaque id (never the URL).
+	 * Optional for the same reason as apiTokens/webhooks: DB-less hosts that
+	 * can't issue tokens don't need it. See issues #113/#115/#133.
+	 */
+	flash?: import("./platform-contracts").FlashStore;
+	/**
 	 * Phase 3/4 connected-integrations surface. Optional because legacy
 	 * sqlite hosts that haven't migrated their schema may not expose it
 	 * yet; admin actions guard for `undefined` and surface a typed error

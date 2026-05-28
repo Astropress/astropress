@@ -5,6 +5,7 @@ import {
 	isTrustedStrictRequestOrigin,
 	sendPasswordResetEmail,
 } from "@astropress-diy/astropress";
+import { resolveFlashStore } from "@astropress-diy/astropress/admin-store-dispatch.js";
 import type { APIRoute } from "astro";
 
 export const POST: APIRoute = async ({ request, locals }) => {
@@ -67,7 +68,14 @@ export const POST: APIRoute = async ({ request, locals }) => {
 			redirectUrl.searchParams.set("mail_sent", "1");
 		}
 		if (!import.meta.env.PROD) {
-			redirectUrl.searchParams.set("reset_link", result.resetUrl);
+			// Dev convenience: surface the reset link without email delivery, but
+			// via the one-time flash store keyed by an opaque id — never the URL
+			// (#133, same class). The page consumes it server-side once.
+			const flash = await resolveFlashStore(locals);
+			if (flash) {
+				const { id } = await flash.put(result.resetUrl);
+				redirectUrl.searchParams.set("reset_flash", id);
+			}
 		}
 	} else {
 		// No account found (or token creation failed) — still show the same vague message to prevent enumeration
