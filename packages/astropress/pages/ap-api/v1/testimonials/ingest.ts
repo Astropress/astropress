@@ -8,6 +8,7 @@ import {
 	checkRuntimeRateLimit,
 	submitRuntimeTestimonial,
 } from "../../../../src/runtime-mutation-store.js";
+import { isProductionRuntime } from "../../../../src/runtime-prod.js";
 import { createAstropressSecurityHeaders } from "../../../../src/security-headers.js";
 
 /** JSON + the shared API security envelope (#119), built fresh per response. */
@@ -160,9 +161,18 @@ export const POST: APIRoute = async ({ request, locals }) => {
 				headers: jsonHeaders(),
 			});
 		}
+	} else if (isProductionRuntime()) {
+		// #116: fail closed in production. An enabled ingest endpoint with no
+		// webhookSecret would accept forged, unauthenticated testimonials; reject
+		// rather than ingest under no authentication. The dev/test exception
+		// below is the isolated mirror of the H5 root-secret fail-closed model.
+		return new Response(JSON.stringify({ ok: false, error: "Webhook secret is not configured." }), {
+			status: 503,
+			headers: jsonHeaders(),
+		});
 	} else {
 		console.warn(
-			"[astropress] testimonials/ingest: no webhookSecret configured — accepting unauthenticated POST",
+			"[astropress] testimonials/ingest: no webhookSecret configured — accepting unauthenticated POST (dev/test only; rejected in production)",
 		);
 	}
 

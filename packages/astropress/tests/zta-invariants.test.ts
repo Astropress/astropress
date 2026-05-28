@@ -257,7 +257,7 @@ describe("ZTA P4: no implicit trust — explicit authorization on every request"
 			(f) =>
 				!f.endsWith("openapi.json.ts") && // OpenAPI spec is intentionally public
 				!f.includes("og-image") && // OG image endpoint is read-only public (accessed by social media scrapers)
-				!f.includes("testimonials/ingest"), // Webhook receiver: authenticated via HMAC-SHA256, not Bearer token
+				!f.includes("testimonials/ingest"), // Webhook receiver: authenticated via HMAC-SHA256 and fail-closed in prod (#116/#128), not Bearer token
 		);
 
 		for (const file of apiPages) {
@@ -268,6 +268,24 @@ describe("ZTA P4: no implicit trust — explicit authorization on every request"
 				`${rel}: every API handler must verify the Bearer token via withApiRequest`,
 			).toContain("withApiRequest");
 		}
+	});
+
+	it("testimonials/ingest exemption is valid only because it verifies HMAC AND fails closed in prod (#116/#128)", () => {
+		// The Bearer-token exemption above is conditional: ingest is allowed to
+		// skip withApiRequest *because* it authenticates webhooks via HMAC and,
+		// when no webhookSecret is configured, refuses the request in production
+		// rather than ingesting under no authentication. If either guarantee is
+		// removed this assertion fails and the exemption must be revisited.
+		const ingestSrc = readFileSync(
+			path.resolve(import.meta.dirname, "../pages/ap-api/v1/testimonials/ingest.ts"),
+			"utf8",
+		);
+		expect(ingestSrc, "ingest must verify an HMAC signature").toContain("verifyHmac");
+		expect(ingestSrc, "ingest must fail closed in production when no secret is set").toContain(
+			"isProductionRuntime",
+		);
+		// The production no-secret branch must return, not warn-and-continue.
+		expect(ingestSrc).toMatch(/isProductionRuntime\(\)\s*\)\s*\{[\s\S]*?return new Response/);
 	});
 
 	it("health endpoint is exempt from auth — it is read-only and returns no sensitive data", () => {
