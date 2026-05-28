@@ -1,5 +1,6 @@
 ---
 import AdminLayout from "@astropress-diy/astropress/components/AdminLayout.astro";
+import { validateEmbedUrl } from "../../src/admin-embed-url";
 
 const adminUser = Astro.locals.adminUser;
 
@@ -25,6 +26,11 @@ if (!cmsConfig) {
 
 const cmsLabel =
 	cmsConfig.label ?? cmsConfig.type.charAt(0).toUpperCase() + cmsConfig.type.slice(1);
+
+// #109: never render an unvalidated URL into an iframe src / link href. Require
+// https (http allowed only for localhost); a dangerous or malformed URL becomes
+// a deliberate admin error rather than a script-executing href or hostile frame.
+const embed = validateEmbedUrl(cmsConfig.url);
 ---
 
 <AdminLayout
@@ -35,10 +41,21 @@ const cmsLabel =
   userName={adminUser.name}
   hasCms={true}
 >
-  {cmsConfig.mode === "iframe" ? (
+  {!embed.ok ? (
+    <section class="panel cms-link-panel" data-cms-invalid-url>
+      <div class="section-header">
+        <div>
+          <p class="admin-kicker">Editorial CMS</p>
+          <h2>{cmsLabel}</h2>
+          <p class="error-notice">This CMS panel is misconfigured and was not loaded: {embed.reason}</p>
+          <p class="admin-note">Set <code>cmsConfig.url</code> to an https URL (http is allowed only for localhost).</p>
+        </div>
+      </div>
+    </section>
+  ) : cmsConfig.mode === "iframe" ? (
     <div class="cms-frame-shell">
       <iframe
-        src={cmsConfig.url}
+        src={embed.url}
         class="cms-frame"
         title={`${cmsLabel} editorial panel`}
         allow={cmsConfig.iframeAllow ?? "clipboard-write; fullscreen"}
@@ -56,7 +73,7 @@ const cmsLabel =
       </div>
       <div class="cms-link-actions">
         <a
-          href={cmsConfig.url}
+          href={embed.url}
           target="_blank"
           rel="noopener noreferrer"
           class="admin-button"
@@ -65,7 +82,7 @@ const cmsLabel =
           Open {cmsLabel}
         </a>
         <p class="admin-note">
-          Opens <code>{cmsConfig.url}</code> in a new tab.
+          Opens <code>{embed.url}</code> in a new tab.
         </p>
       </div>
     </section>
