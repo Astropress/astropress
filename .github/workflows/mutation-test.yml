@@ -151,8 +151,15 @@ jobs:
       # so the unmutated baseline fails in a copy. Ephemeral CI runners
       # tolerate in-place mutation safely; locally devs use --in-place
       # too for the same reason.
+      # `--jobs 3`: the 1086-mutant crate ran serially before and never finished
+      # inside the job budget (it was killed mid-run at ~2h44m, so the check went
+      # red every time despite continue-on-error). Running 3 mutants in parallel
+      # on the 4-vCPU runner brings a cold full run to well under an hour.
+      # `--timeout 30`: the unmutated baseline test phase is ~17s, so 30s still
+      # catches the infinite-loop arithmetic-operator mutants in the arg parsers
+      # (e.g. `i += 1` → `i -= 1`) while halving the wall-clock those waste.
       - name: Run cargo-mutants (full crate, refresh-only)
-        run: cargo mutants --package astropress-cli --timeout 60 --in-place || true
+        run: cargo mutants --package astropress-cli --jobs 3 --timeout 30 --in-place || true
         working-directory: crates
 
       - uses: actions/upload-artifact@v7
