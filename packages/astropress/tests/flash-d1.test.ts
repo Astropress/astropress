@@ -3,7 +3,7 @@
 // fixture. The D1 sibling must behave identically to the sqlite store on every
 // host that provides a D1 binding — same single-use + expiry guarantees that
 // make the opaque `flash=<id>` redirect safe. See #113/#115/#133.
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { createD1FlashStore } from "../src/sqlite-runtime/flash-d1.js";
 import { makeDb } from "./helpers/make-db.js";
@@ -51,6 +51,19 @@ describe("createD1FlashStore", () => {
 			payload: string;
 		}>;
 		expect(remaining.map((r) => r.payload)).toEqual(["fresh"]);
+	});
+
+	it("treats an entry whose expiry equals the current instant as expired (boundary: <=)", async () => {
+		const fixed = 1_700_000_000_000;
+		const spy = vi.spyOn(Date, "now").mockReturnValue(fixed);
+		try {
+			const { db, store } = makeStore();
+			const { id } = await store.put("edge", 0); // expires_at_ms = fixed
+			expect(await store.consume(id)).toBeNull();
+			expect(db.prepare("SELECT id FROM admin_flash WHERE id = ?").get(id)).toBeUndefined();
+		} finally {
+			spy.mockRestore();
+		}
 	});
 
 	it("round-trips a JSON payload (webhook verification bundle shape)", async () => {

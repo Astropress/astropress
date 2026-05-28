@@ -1,5 +1,6 @@
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { resolveCanonicalOrigin } from "../src/canonical-origin";
+import * as configModule from "../src/config";
 import { peekCmsConfig, registerCms } from "../src/config";
 
 // Capture and restore whatever config the suite started with so we don't leak
@@ -50,5 +51,19 @@ describe("resolveCanonicalOrigin (#124)", () => {
 		expect(resolveCanonicalOrigin({ url: "https://request-host.test/sitemap.xml" })).toBe(
 			"https://request-host.test",
 		);
+	});
+
+	it("falls back to the request origin when no CMS config is registered (peekCmsConfig() undefined)", () => {
+		// The `?.` in `peekCmsConfig()?.siteUrl` matters here: with no config at
+		// all, dropping the optional chain would throw on `.siteUrl`. The route
+		// must still resolve to the request-derived origin in zero-config setups.
+		const spy = vi.spyOn(configModule, "peekCmsConfig").mockReturnValue(undefined);
+		try {
+			expect(resolveCanonicalOrigin({ url: "https://request-host.test/robots.txt" })).toBe(
+				"https://request-host.test",
+			);
+		} finally {
+			spy.mockRestore();
+		}
 	});
 });

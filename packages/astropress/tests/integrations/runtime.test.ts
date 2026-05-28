@@ -383,6 +383,32 @@ describe("explicit active-provider selection (#127/#129)", () => {
 		expect(active.map((s) => s.provider)).toEqual(["mailchimp"]);
 	});
 
+	it("resolves a SOLE connected provider even when no is_active flag is set (legacy fallback)", async () => {
+		// One connected provider with is_active = 0 (a pre-#127 row). The
+		// `connected.length === 1 ? connected[0] : undefined` fallback must still
+		// resolve it — only an ambiguous multi-provider domain returns undefined.
+		await repo.connect(
+			{
+				domain: "newsletter",
+				provider: "listmonk",
+				configJson: "{}",
+				secretFields: { apiKey: "sole-key" },
+				now: NOW,
+			},
+			ROOT,
+		);
+		db.prepare("UPDATE connected_integrations SET is_active = 0 WHERE domain = ?").run(
+			"newsletter",
+		);
+		const result = await getConnectedProvider({
+			domain: "newsletter",
+			repo,
+			rootSecrets: { current: ROOT },
+		});
+		expect(result?.providerId).toBe("listmonk");
+		expect(result?.fields.apiKey).toBe("sole-key");
+	});
+
 	it("refuses to resolve when two providers are connected but none is active (ambiguous)", async () => {
 		await connectBoth();
 		// Clear the auto-active flag to model a legacy/ambiguous domain.

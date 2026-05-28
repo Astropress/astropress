@@ -2521,6 +2521,118 @@
 			"column": 14,
 			"mutator": "LogicalOperator",
 			"reason": "`row.updated_at ?? undefined` mutated to `&&`. The cms_route_variants.updated_at column is declared NOT NULL with DEFAULT CURRENT_TIMESTAMP, so the SELECT in SQL_LIST_SYSTEM never yields a NULL value for that column. The `??`-branch is observationally unreachable; both `??` and `&&` collapse to the row.updated_at value for every possible row."
+		},
+		{
+			"file": "src/canonical-origin.ts",
+			"line": 20,
+			"column": 6,
+			"mutator": "ConditionalExpression",
+			"reason": "`if (configured) { try { return new URL(configured).origin } catch {} }` mutated to `if (true)`. When `configured` is falsy (no siteUrl / empty string), the mutant enters the try with a falsy value; `new URL(falsy)` throws and the catch swallows it, falling through to the same `new URL(request.url).origin` the original returns. For truthy `configured` both branches are identical. Observably equivalent for every input."
+		},
+		{
+			"file": "src/sqlite-runtime/integrations.ts",
+			"line": 272,
+			"column": 11,
+			"mutator": "OptionalChaining",
+			"reason": "`(row?.n ?? 0) > 0` mutated to `row.n`. `row` is the result of a `SELECT COUNT(*) AS n ...` (SQL_COUNT_ACTIVE_IN_DOMAIN), and a COUNT aggregate ALWAYS returns exactly one row, so `row` is never undefined here. The optional chain is defensive; `row?.n` and `row.n` are identical for every possible query result."
+		},
+		{
+			"file": "src/sqlite-runtime/integrations-d1.ts",
+			"line": 278,
+			"column": 11,
+			"mutator": "OptionalChaining",
+			"reason": "`(row?.n ?? 0) > 0` mutated to `row.n`. Same equivalence as the sqlite sibling: D1's `.first<{n}>()` over a `SELECT COUNT(*) AS n` (D1_SQL_COUNT_ACTIVE_IN_DOMAIN) always yields a row (COUNT returns one row), so `row` is never null. `row?.n` and `row.n` are identical for every result."
+		},
+		{
+			"file": "src/sqlite-runtime/utils.ts",
+			"line": 58,
+			"column": 6,
+			"mutator": "ConditionalExpression",
+			"reason": "`if (typeof value !== 'string' || !value) return null;` mutated to `false`. Falls through to `getCmsConfig().templateKeys.includes(value) ? value : null`. `.includes()` matches by strict equality, so any non-string input yields `false` → null, and the empty string is never a registered template key → null. Same observable result for every (non-string | empty-string) input — same equivalence class as the catalogued runtime-route-registry-pages L18 entries."
+		},
+		{
+			"file": "src/admin-page-models-access.ts",
+			"line": 29,
+			"column": 6,
+			"mutator": "ConditionalExpression",
+			"reason": "`normaliseTab`: `if (!input) return 'users';` mutated to `false`. Falls through to `ACCESS_PAGE_TABS.includes(input) ? input : 'users'`. The empty/null/undefined inputs the guard catches are never members of ACCESS_PAGE_TABS, so the fall-through returns 'users' for exactly those inputs too. Identical result."
+		},
+		{
+			"file": "src/integrations/runtime.ts",
+			"line": 53,
+			"column": 6,
+			"mutator": "ConditionalExpression",
+			"reason": "`if (connected.length === 0) return undefined;` mutated to `false`. With an empty `connected` array the fall-through computes `connected.find(isActive)` (undefined) `?? (connected.length === 1 ? connected[0] : undefined)` → undefined, and the subsequent `if (!active) return undefined` returns the same undefined. Equivalent for the empty-connected case; identical for non-empty."
+		},
+		{
+			"file": "src/import/import-path.ts",
+			"line": 63,
+			"column": 6,
+			"mutator": "ConditionalExpression",
+			"reason": "Lexical-containment belt-and-suspenders guard `if (candidate !== rootResolved && !candidate.startsWith(rootResolved + sep)) throw`. Absolute paths and any `..`-segment paths are already rejected by the earlier isAbsolute + normalize-includes('..') checks, so no relative, non-`..` input reaching this line can resolve outside the root — the throw is unreachable for valid inputs, making the `false` mutant (never throw) equivalent. The matching `true` mutant is independently exercised (and would be killed) by the accept-path tests, so excluding this defensive guard does not hide a real gap."
+		},
+		{
+			"file": "src/import/import-path.ts",
+			"line": 36,
+			"column": 36,
+			"mutator": "EqualityOperator",
+			"reason": "`configured && configured.length > 0` mutated to `>= 0`. The `configured &&` conjunct short-circuits on the only value where `> 0` and `>= 0` differ (the empty string, which is falsy), so the length comparison is never reached for `''`. For every non-empty string both `> 0` and `>= 0` are true. Identical truth value for all inputs."
+		},
+		{
+			"file": "src/host-runtime-factories.ts",
+			"line": 70,
+			"column": 8,
+			"mutator": "ConditionalExpression",
+			"reason": "Outer admin-store Proxy `get`: `if (typeof prop !== 'string') return undefined`. Removing the guard, a symbol key falls through to `ADMIN_STORE_SECTIONS.has(prop)` (string Set → false), `ADMIN_STORE_OPTIONAL_OBJECT_KEYS.has(prop)` (false), then `ADMIN_STORE_FLAT_METHOD_SECTIONS[prop]` (object indexed by symbol → undefined) → `section === undefined` → returns undefined. Same observable result for every non-string key."
+		},
+		{
+			"file": "src/host-runtime-factories.ts",
+			"line": 102,
+			"column": 8,
+			"mutator": "ConditionalExpression",
+			"reason": "CMS-registry Proxy `get`: `if (typeof prop !== 'string') return undefined`. Removing the guard, a symbol key falls through to `registry[prop]` (undefined) → `typeof method !== 'function'` → returns undefined. Same result as the guard for every non-string key."
+		},
+		{
+			"file": "src/sqlite-runtime/utils.ts",
+			"line": 110,
+			"column": 25,
+			"mutator": "MethodExpression",
+			"reason": "`part.trim().split(';')` mutated to `part.split(';')` in localeFromAcceptLanguage. The only segments `part.trim()` affects are the first/last, whose surrounding whitespace is independently removed downstream: the tag is re-trimmed at `(tag ?? '').trim().toLowerCase()` and the weight passes through `Number(...)` which ignores surrounding whitespace. Identical parse for every Accept-Language value."
+		},
+		{
+			"file": "src/sqlite-runtime/utils.ts",
+			"line": 111,
+			"column": 29,
+			"mutator": "MethodExpression",
+			"reason": "`qPart.trim().replace('q=','')` mutated to `qPart.replace('q=','')`. The result is wrapped in `Number(...)`, which trims leading/trailing whitespace before parsing, so a stray space left by dropping `.trim()` produces the same numeric weight. Equivalent for every q-value."
+		},
+		{
+			"file": "src/sqlite-runtime/utils.ts",
+			"line": 169,
+			"column": 14,
+			"mutator": "ArrayDeclaration",
+			"reason": "`(values ?? [])` mutated to `['Stryker was here']` in serializeIdList. The replacement only takes effect when `values` is null/undefined; the array is then immediately `.filter(entry => Number.isInteger(entry) && entry > 0)`, and the string 'Stryker was here' is not an integer, so it is filtered out — yielding the same `[]` (serialised '[]') the original produces. Equivalent."
+		},
+		{
+			"file": "src/sqlite-runtime/utils.ts",
+			"line": 174,
+			"column": 6,
+			"mutator": "ConditionalExpression",
+			"reason": "parseSystemSettings `if (!value) return null` mutated to `false`. The two inputs the guard catches both reach the same null: `value === ''` makes `JSON.parse('')` throw → caught → null; `value === null` makes `JSON.parse(null)` parse the literal `null` → `!parsed` → null. Same result for every falsy input."
+		},
+		{
+			"file": "src/sqlite-runtime/utils.ts",
+			"line": 174,
+			"column": 14,
+			"mutator": "BlockStatement",
+			"reason": "Same equivalence class as L174:6 — emptying the `if (!value)` body removes the early `return null`; the empty-string and null inputs both fall through to the JSON.parse path that yields null anyway (throw-then-catch for '', literal-null parse for null)."
+		},
+		{
+			"file": "src/runtime-actions-content.ts",
+			"line": 211,
+			"column": 45,
+			"mutator": "Regex",
+			"reason": "`legacyUrl.replace(/^\\//, '')` mutated to `/\\//` (anchor dropped). `legacyUrl` comes from `normalizeLegacyUrl`, which guarantees a leading '/' (`raw.startsWith('/') ? raw : `/${raw}``). For any leading-slash string the first slash IS the leading slash, so `/^\\//` and `/\\//` replace the same character. Identical result for every value normalizeLegacyUrl can produce."
 		}
 	]
 }

@@ -27,6 +27,17 @@ describe("devRootSecretOrThrow (#126 / #132)", () => {
 		vi.stubEnv("PROD", "true");
 		const env = await importRuntimeEnv();
 		expect(() => env.devRootSecretOrThrow()).toThrow(/ASTROPRESS_ROOT_SECRET/);
+		// Assert the full operator-facing message (all three concatenated
+		// fragments) so a StringLiteral mutant blanking any fragment is caught.
+		let message = "";
+		try {
+			env.devRootSecretOrThrow();
+		} catch (err) {
+			message = (err as Error).message;
+		}
+		expect(message).toContain("must be configured in production");
+		expect(message).toContain("Refusing to fall back to the public development root secret");
+		expect(message).toContain("for session/token/integration-seal protection.");
 	});
 });
 

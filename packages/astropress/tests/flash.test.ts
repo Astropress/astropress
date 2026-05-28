@@ -4,7 +4,7 @@
 // id and read exactly once, server-side. The single-use and expiry guarantees
 // are what make putting only `flash=<id>` in the URL safe, so they are asserted
 // directly here.
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { createFlashStore, FLASH_DEFAULT_TTL_MS, newFlashId } from "../src/sqlite-runtime/flash.js";
 import { makeDb } from "./helpers/make-db.js";
@@ -91,5 +91,22 @@ describe("createFlashStore", () => {
 
 	it("newFlashId emits unique opaque ids", () => {
 		expect(newFlashId()).not.toBe(newFlashId());
+	});
+
+	it("treats an entry whose expiry equals the current instant as expired (boundary: <=)", async () => {
+		// Pin time so expires_at_ms === Date.now() exactly at consume. The guard
+		// is `expires_at_ms <= now`: at the boundary the entry is expired. A
+		// `<` mutant would (wrongly) return the payload — this asserts the `=`.
+		const fixed = 1_700_000_000_000;
+		const spy = vi.spyOn(Date, "now").mockReturnValue(fixed);
+		try {
+			const { db, store } = makeStore();
+			const { id } = await store.put("edge", 0); // expires_at_ms = fixed + 0
+			expect(await store.consume(id)).toBeNull();
+			// Still consumed (deleted) so the boundary entry can't be replayed.
+			expect(db.prepare("SELECT id FROM admin_flash WHERE id = ?").get(id)).toBeUndefined();
+		} finally {
+			spy.mockRestore();
+		}
 	});
 });

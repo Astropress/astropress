@@ -602,6 +602,9 @@ describe("createAstropressAdminStoreModule (Proxy semantics)", () => {
 			expect(typeof sectionApi).toBe("object");
 			const result = sectionApi.someProbeMethod("x");
 			expect(result).toBe(`${section}.someProbeMethod::["x"]`);
+			// The inner section proxy must also reject non-string keys: a symbol
+			// access returns undefined, not a (truthy) forwarding function.
+			expect((sectionApi as unknown as { [k: symbol]: unknown })[Symbol.iterator]).toBeUndefined();
 		}
 	});
 

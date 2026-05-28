@@ -65,6 +65,32 @@ describe("buildAccessPageModel", () => {
 		expect(result.status).toBe("forbidden");
 	});
 
+	it("returns forbidden when the user arg is null even though locals carries an admin", async () => {
+		// The `if (!user)` early-return is independent of the locals-derived
+		// viewer: a null caller is forbidden regardless of who is on locals.
+		// beforeEach already put an admin on locals.
+		const result = await buildAccessPageModel(locals, null);
+		expect(result.status).toBe("forbidden");
+	});
+
+	it("loads role data for a viewer with roles:manage but NOT grants:manage — #112 (|| not &&)", async () => {
+		const repo = createAccessRepository(db as never);
+		const editorRow = db
+			.prepare("SELECT id FROM admin_users WHERE email = ?")
+			.get("editor@test.local") as { id: number };
+		for (const action of ["users:list", "roles:manage"]) {
+			repo.addUserPolicy({ userId: editorRow.id, effect: "allow", action });
+		}
+		(locals as { adminUser?: typeof editorUser }).adminUser = editorUser;
+
+		const result = await buildAccessPageModel(locals, editorUser);
+		expect(result.status).toBe("ok");
+		expect(result.data.canManageRoles).toBe(true);
+		expect(result.data.canManageGrants).toBe(false);
+		// roles:manage alone must still load the tab data (the gate is OR, not AND).
+		expect(result.data.roles.length).toBeGreaterThan(0);
+	});
+
 	it("serves a partial-permission viewer (users:list only) but withholds role/grant data — #112", async () => {
 		const repo = createAccessRepository(db as never);
 		const editorRow = db

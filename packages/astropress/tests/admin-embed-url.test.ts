@@ -63,4 +63,40 @@ describe("validateEmbedUrl — rejected", () => {
 		expect(r.url).toBeUndefined();
 		expect(typeof r.reason).toBe("string");
 	});
+
+	// Each rejection path returns a DISTINCT reason; asserting the exact string
+	// pins the branch (kills the ConditionalExpression/StringLiteral mutants that
+	// only an `.ok === false` check would let survive).
+	it("reports the no-URL reason for empty / whitespace-only input", () => {
+		expect(validateEmbedUrl("").reason).toBe("No embed URL is configured.");
+		// `.trim()` matters: whitespace must be treated as empty, not parsed.
+		expect(validateEmbedUrl("   ").reason).toBe("No embed URL is configured.");
+		expect(validateEmbedUrl(null).reason).toBe("No embed URL is configured.");
+	});
+
+	it("reports the not-a-valid-URL reason for an unparseable value", () => {
+		expect(validateEmbedUrl("not a url").reason).toBe("Embed URL is not a valid absolute URL.");
+	});
+
+	it("reports the https-required reason for http to a non-loopback host", () => {
+		expect(validateEmbedUrl("http://cms.example.com/x").reason).toBe(
+			"Embed URL must use https (http is allowed only for localhost).",
+		);
+	});
+
+	it("reports the scheme-not-allowed reason naming the rejected scheme", () => {
+		// Template-literal + final-branch coverage: the scheme must appear verbatim.
+		expect(validateEmbedUrl("ftp://example.com/x").reason).toBe(
+			'Embed URL scheme "ftp:" is not allowed.',
+		);
+		expect(validateEmbedUrl("file:///etc/passwd").reason).toBe(
+			'Embed URL scheme "file:" is not allowed.',
+		);
+	});
+
+	it("accepts https but rejects every non-loopback non-https scheme reaching the parser", () => {
+		// Pins the `=== "https:"` branch: a parseable non-https URL is never ok.
+		expect(validateEmbedUrl("https://ok.example.com/").ok).toBe(true);
+		expect(validateEmbedUrl("ftp://ok.example.com/").ok).toBe(false);
+	});
 });
