@@ -14,6 +14,10 @@ export interface AccessPageModel {
 	rolePoliciesMap: Record<string, RolePolicyRecord[]>;
 	activeAdminCount: number;
 	viewerPolicies: readonly Policy[];
+	/** Viewer holds `roles:manage` — gates the Roles tab + role-assignment UI. */
+	canManageRoles: boolean;
+	/** Viewer holds `grants:manage` — gates the direct-grant UI. */
+	canManageGrants: boolean;
 }
 
 export const ACCESS_PAGE_TABS: readonly AccessPageTab[] = ["users", "roles", "my-permissions"];
@@ -27,6 +31,8 @@ export const ACCESS_PAGE_EMPTY_MODEL: AccessPageModel = {
 	rolePoliciesMap: {},
 	activeAdminCount: 0,
 	viewerPolicies: [],
+	canManageRoles: false,
+	canManageGrants: false,
 };
 
 export const ACCESS_PAGE_USERS_UNAVAILABLE_WARNING = "User records are temporarily unavailable.";

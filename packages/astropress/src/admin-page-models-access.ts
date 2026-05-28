@@ -35,7 +35,21 @@ export async function buildAccessPageModel(
 	user: AuthUser | null | undefined,
 	options: { tab?: AccessPageTab } = {},
 ): Promise<AdminPageResult<AccessPageModel>> {
-	if (!user || !isAuthUserAdmin(user)) return forbidden(ACCESS_PAGE_EMPTY_MODEL);
+	if (!user) return forbidden(ACCESS_PAGE_EMPTY_MODEL);
+
+	const viewerAccess = await getAccessContext({ locals } as {
+		locals: App.Locals;
+	});
+	// The page-level guard is `users:list`; the model mirrors it so a partial
+	// permission viewer (a custom non-admin role holding only `users:list`) is
+	// served instead of falsely forbidden. When no access engine is wired
+	// (older consumers / harness with no session on locals) we fall back to the
+	// legacy admin flag so the page stays usable. Admins bypass policy
+	// evaluation, so every `can()` below resolves to allow for them.
+	const canListUsers = viewerAccess
+		? viewerAccess.can("users:list").decision === "allow"
+		: isAuthUserAdmin(user);
+	if (!canListUsers) return forbidden(ACCESS_PAGE_EMPTY_MODEL);
 
 	const activeTab = normaliseTab(options.tab);
 	const warnings: string[] = [];
@@ -47,23 +61,36 @@ export async function buildAccessPageModel(
 		[],
 	);
 
-	const tabData = await withFallback(
-		warnings,
-		ACCESS_PAGE_TAB_DATA_UNAVAILABLE_WARNING,
-		() => loadAccessTabData(locals),
-		{
-			roles: [] as RoleRecord[],
-			userRoleMap: {},
-			userDirectGrantCounts: {},
-			rolePoliciesMap: {} as Record<string, RolePolicyRecord[]>,
-			activeAdminCount: 0,
-		},
-	);
-
-	const viewerAccess = await getAccessContext({ locals } as {
-		locals: App.Locals;
-	});
 	const viewerPolicies = viewerAccess?.engine.policiesFor(viewerAccess.subject) ?? [];
+	// "My permissions" always renders; the role/grant management surfaces are
+	// loaded ONLY for viewers who hold the matching action. We resolve those
+	// decisions through the same policy engine that gates the action routes,
+	// so the page can never display data the viewer is not entitled to manage.
+	// The no-engine fallback grants both to a legacy admin so existing installs
+	// keep their full Access page until they wire the access store.
+	const canManageRoles = viewerAccess
+		? viewerAccess.can("roles:manage").decision === "allow"
+		: isAuthUserAdmin(user);
+	const canManageGrants = viewerAccess
+		? viewerAccess.can("grants:manage").decision === "allow"
+		: isAuthUserAdmin(user);
+
+	const emptyTabData = {
+		roles: [] as RoleRecord[],
+		userRoleMap: {} as Record<number, string[]>,
+		userDirectGrantCounts: {} as Record<number, number>,
+		rolePoliciesMap: {} as Record<string, RolePolicyRecord[]>,
+		activeAdminCount: 0,
+	};
+	const tabData =
+		canManageRoles || canManageGrants
+			? await withFallback(
+					warnings,
+					ACCESS_PAGE_TAB_DATA_UNAVAILABLE_WARNING,
+					() => loadAccessTabData(locals),
+					emptyTabData,
+				)
+			: emptyTabData;
 
 	return ok(
 		{
@@ -75,6 +102,8 @@ export async function buildAccessPageModel(
 			rolePoliciesMap: tabData.rolePoliciesMap,
 			activeAdminCount: tabData.activeAdminCount,
 			viewerPolicies,
+			canManageRoles,
+			canManageGrants,
 		},
 		warnings,
 	);

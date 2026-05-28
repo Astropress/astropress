@@ -23,6 +23,10 @@
  */
 
 import { relative } from "node:path";
+import {
+	NAV_ACTION_BY_HREF,
+	NAV_ACTION_MAP,
+} from "../../packages/astropress/src/access/nav-action-map-data.js";
 import { AuditReport, fromRoot, listFiles, readText, runAudit } from "../lib/audit-utils.js";
 
 const ACTIONS_ROOT = fromRoot("packages/astropress/pages/ap-admin/actions");
@@ -39,17 +43,46 @@ const PRE_SESSION_ACTIONS: ReadonlyMap<string, string> = new Map([
 	["reset-password.ts", "consumes a single-use reset token before any session exists"],
 ]);
 
-/** Page → required action guard. Locks in the #104/#106/#125/#135 page fixes. */
-const REQUIRED_PAGE_GUARDS: readonly [string, string][] = [
-	["media.astro", "media:list"],
-	["posts.astro", "posts:list"],
-	["comments.astro", "comments:moderate"],
+/**
+ * Nav hrefs whose destination page MUST keep an explicit `requiresAccess(...)`
+ * guard. The expected ACTION is not hardcoded here — it is derived from
+ * `NAV_ACTION_MAP` (the same source AdminLayout filters its sidebar with), so
+ * nav and page-guard can never drift. Locks in the #104/#106/#125/#135 fixes.
+ */
+const NAV_PAGES_REQUIRING_GUARD: readonly string[] = [
+	"/ap-admin/media",
+	"/ap-admin/posts",
+	"/ap-admin/comments",
+	"/ap-admin/testimonials",
+	"/ap-admin/fundraising",
+];
+
+/**
+ * Guarded admin pages that have no core nav leaf of their own (so they carry no
+ * NAV_ACTION_MAP entry) but must still keep their `requiresAccess(...)` guard.
+ */
+const NON_NAV_GUARDED_PAGES: readonly [string, string][] = [
 	["services.astro", "services:manage"],
-	["testimonials.astro", "testimonials:manage"],
-	["fundraising.astro", "fundraising:manage"],
 	["analytics.astro", "services:manage"],
 	["search.astro", "services:manage"],
 ];
+
+/** page basename → required action, derived from NAV_ACTION_MAP + the non-nav supplement. */
+function requiredPageGuards(): [string, string][] {
+	const out: [string, string][] = [];
+	for (const href of NAV_PAGES_REQUIRING_GUARD) {
+		const entry = NAV_ACTION_BY_HREF.get(href);
+		if (!entry) {
+			throw new Error(
+				`audit-abac-enforcement-parity: ${href} is in NAV_PAGES_REQUIRING_GUARD but absent ` +
+					`from NAV_ACTION_MAP — the two have drifted.`,
+			);
+		}
+		out.push([`${href.replace("/ap-admin/", "")}.astro`, entry.requiredAction]);
+	}
+	out.push(...NON_NAV_GUARDED_PAGES);
+	return out;
+}
 
 function registeredActions(src: string): Set<string> {
 	const out = new Set<string>();
@@ -91,7 +124,19 @@ async function main(): Promise<void> {
 		}
 	}
 
-	for (const [page, action] of REQUIRED_PAGE_GUARDS) {
+	// Every action a nav leaf advertises must be a real registered action, so a
+	// typo'd nav permission can never silently fall through to the adminOnly
+	// fallback (the harness weakness behind #131/#135).
+	for (const entry of NAV_ACTION_MAP) {
+		if (!actions.has(entry.requiredAction)) {
+			report.add(
+				`NAV_ACTION_MAP[${entry.href}]: requiredAction "${entry.requiredAction}" is not a ` +
+					`registered action in action-registry-data.ts (typo or missing registration).`,
+			);
+		}
+	}
+
+	for (const [page, action] of requiredPageGuards()) {
 		const abs = `${ADMIN_PAGES_ROOT}/${page}`;
 		const src = await readText(abs);
 		const rel = relative(fromRoot(), abs);

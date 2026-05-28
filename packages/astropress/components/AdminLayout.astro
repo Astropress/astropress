@@ -1,5 +1,6 @@
 ---
 import { getAccessContext } from "../src/access/index";
+import { NAV_ACTION_BY_HREF } from "../src/access/nav-action-map-data";
 import { buildAstropressAdminDocumentTitle } from "../src/admin-branding";
 import { localeDirection, resolveAdminLocale } from "../src/admin-locale";
 import { getPageT } from "../src/admin-page-labels";
@@ -113,6 +114,17 @@ const leaf = (
 	requiredAction: opts.requiredAction,
 });
 
+// Build a core nav leaf whose `requiredAction`/`adminOnly` are sourced from the
+// shared NAV_ACTION_MAP data module rather than inlined here, so the sidebar,
+// the page guards, and the abac parity audit all read one source of truth.
+const mappedLeaf = (href: string, label: string): NavItem => {
+	const entry = NAV_ACTION_BY_HREF.get(href);
+	return leaf(href, label, {
+		adminOnly: entry?.adminOnly,
+		requiredAction: entry?.requiredAction,
+	});
+};
+
 const navigationByKey = adminUi.navigation as Record<string, string>;
 const integrationLeaf = (entry: IntegrationEntry): NavItem =>
 	leaf(entry.href, navigationByKey[entry.navKey] ?? entry.navKey, {
@@ -141,115 +153,39 @@ const navItems: NavItem[] = [
 	{ href: "/ap-admin", label: adminUi.navigation.dashboard },
 
 	groupSep(adminUi.navigation.groupSite),
-	leaf("/ap-admin/pages", adminUi.navigation.pages, {
-		adminOnly: true,
-		requiredAction: "pages:list",
-	}),
-	leaf("/ap-admin/route-pages", adminUi.navigation.routePages, {
-		adminOnly: true,
-		requiredAction: "routePages:edit",
-	}),
-	leaf("/ap-admin/archives", adminUi.navigation.archives, {
-		adminOnly: true,
-		requiredAction: "archives:edit",
-	}),
-	leaf("/ap-admin/media", adminUi.navigation.media, {
-		requiredAction: "media:list",
-	}),
-	leaf("/ap-admin/redirects", adminUi.navigation.redirects, {
-		adminOnly: true,
-		requiredAction: "redirects:manage",
-	}),
-	leaf("/ap-admin/forms", adminUi.navigation.forms, {
-		requiredAction: "forms:view",
-	}),
+	mappedLeaf("/ap-admin/pages", adminUi.navigation.pages),
+	mappedLeaf("/ap-admin/route-pages", adminUi.navigation.routePages),
+	mappedLeaf("/ap-admin/archives", adminUi.navigation.archives),
+	mappedLeaf("/ap-admin/media", adminUi.navigation.media),
+	mappedLeaf("/ap-admin/redirects", adminUi.navigation.redirects),
+	mappedLeaf("/ap-admin/forms", adminUi.navigation.forms),
 
 	groupSep(adminUi.navigation.contentGroup),
-	leaf("/ap-admin/posts", adminUi.navigation.posts, {
-		requiredAction: "posts:list",
-	}),
-	leaf("/ap-admin/authors", adminUi.navigation.authors, {
-		adminOnly: true,
-		requiredAction: "authors:manage",
-	}),
-	leaf("/ap-admin/taxonomies", adminUi.navigation.taxonomies, {
-		adminOnly: true,
-		requiredAction: "taxonomies:manage",
-	}),
-	leaf("/ap-admin/cms", adminUi.navigation.headlessCmsPanel, {
-		requiredAction: "settings:edit",
-	}),
+	mappedLeaf("/ap-admin/posts", adminUi.navigation.posts),
+	mappedLeaf("/ap-admin/authors", adminUi.navigation.authors),
+	mappedLeaf("/ap-admin/taxonomies", adminUi.navigation.taxonomies),
+	mappedLeaf("/ap-admin/cms", adminUi.navigation.headlessCmsPanel),
 
 	groupSep(adminUi.navigation.groupAudience),
-	leaf("/ap-admin/subscribers", adminUi.navigation.subscribers, {
-		adminOnly: true,
-		requiredAction: "subscribers:view",
-	}),
-	leaf("/ap-admin/newsletter", adminUi.navigation.newsletter, {
-		adminOnly: true,
-		requiredAction: "newsletter:send",
-	}),
-	leaf("/ap-admin/comments", adminUi.navigation.comments, {
-		requiredAction: "comments:moderate",
-	}),
-	leaf("/ap-admin/events", adminUi.navigation.events, {
-		adminOnly: true,
-		requiredAction: "events:manage",
-	}),
-	leaf("/ap-admin/testimonials", adminUi.navigation.testimonials, {
-		adminOnly: true,
-		requiredAction: "testimonials:manage",
-	}),
-	leaf("/ap-admin/reviews", adminUi.navigation.reviews, {
-		adminOnly: true,
-		requiredAction: "testimonials:manage",
-	}),
-	leaf("/ap-admin/referrals", adminUi.navigation.referrals, {
-		adminOnly: true,
-		requiredAction: "services:manage",
-	}),
-	leaf("/ap-admin/memberships", adminUi.navigation.memberships, {
-		adminOnly: true,
-		requiredAction: "services:manage",
-	}),
-	leaf("/ap-admin/fundraising", adminUi.navigation.fundraising, {
-		adminOnly: true,
-		requiredAction: "fundraising:manage",
-	}),
-	leaf("/ap-admin/community", adminUi.navigation.community, {
-		adminOnly: true,
-		requiredAction: "services:manage",
-	}),
-	leaf("/ap-admin/shop", adminUi.navigation.shop, {
-		adminOnly: true,
-		requiredAction: "services:manage",
-	}),
-	leaf("/ap-admin/social-syndication", adminUi.navigation.socialSyndication, {
-		adminOnly: true,
-		requiredAction: "services:manage",
-	}),
+	mappedLeaf("/ap-admin/subscribers", adminUi.navigation.subscribers),
+	mappedLeaf("/ap-admin/newsletter", adminUi.navigation.newsletter),
+	mappedLeaf("/ap-admin/comments", adminUi.navigation.comments),
+	mappedLeaf("/ap-admin/events", adminUi.navigation.events),
+	mappedLeaf("/ap-admin/testimonials", adminUi.navigation.testimonials),
+	mappedLeaf("/ap-admin/reviews", adminUi.navigation.reviews),
+	mappedLeaf("/ap-admin/referrals", adminUi.navigation.referrals),
+	mappedLeaf("/ap-admin/memberships", adminUi.navigation.memberships),
+	mappedLeaf("/ap-admin/fundraising", adminUi.navigation.fundraising),
+	mappedLeaf("/ap-admin/community", adminUi.navigation.community),
+	mappedLeaf("/ap-admin/shop", adminUi.navigation.shop),
+	mappedLeaf("/ap-admin/social-syndication", adminUi.navigation.socialSyndication),
 
 	groupSep(adminUi.navigation.groupDiscoverability),
-	leaf("/ap-admin/seo", adminUi.navigation.seo, {
-		adminOnly: true,
-		requiredAction: "seo:edit",
-	}),
-	leaf("/ap-admin/structured-data", adminUi.navigation.structuredData, {
-		adminOnly: true,
-		requiredAction: "seo:edit",
-	}),
-	leaf("/ap-admin/sitemaps", adminUi.navigation.sitemaps, {
-		adminOnly: true,
-		requiredAction: "sitemaps:view",
-	}),
-	leaf("/ap-admin/maps-local", adminUi.navigation.mapsLocal, {
-		adminOnly: true,
-		requiredAction: "seo:edit",
-	}),
-	leaf("/ap-admin/translations", adminUi.navigation.translations, {
-		adminOnly: true,
-		requiredAction: "translations:manage",
-	}),
+	mappedLeaf("/ap-admin/seo", adminUi.navigation.seo),
+	mappedLeaf("/ap-admin/structured-data", adminUi.navigation.structuredData),
+	mappedLeaf("/ap-admin/sitemaps", adminUi.navigation.sitemaps),
+	mappedLeaf("/ap-admin/maps-local", adminUi.navigation.mapsLocal),
+	mappedLeaf("/ap-admin/translations", adminUi.navigation.translations),
 
 	// Integration leaves are partitioned by `INTEGRATIONS` so the sidebar
 	// stops conflating real features with coming-soon roadmap entries.
@@ -260,40 +196,15 @@ const navItems: NavItem[] = [
 	...integrationLeavesForGroup("coming-soon"),
 
 	groupSep(adminUi.navigation.groupAccess),
-	leaf("/ap-admin/users", adminUi.navigation.users, {
-		adminOnly: true,
-		requiredAction: "users:list",
-	}),
-	leaf("/ap-admin/access", adminUi.navigation.access, {
-		adminOnly: true,
-		requiredAction: "roles:manage",
-	}),
+	mappedLeaf("/ap-admin/users", adminUi.navigation.users),
+	mappedLeaf("/ap-admin/access", adminUi.navigation.access),
 
 	groupSep(adminUi.navigation.groupOperations),
-	leaf("/ap-admin/system", adminUi.navigation.system, {
-		adminOnly: true,
-		requiredAction: "system:view",
-	}),
-	...(hasHostPanel
-		? [
-				leaf("/ap-admin/host", adminUi.navigation.host, {
-					adminOnly: true,
-					requiredAction: "host:view",
-				}),
-			]
-		: []),
-	leaf("/ap-admin/data", adminUi.navigation.data, {
-		adminOnly: true,
-		requiredAction: "data:view",
-	}),
-	leaf("/ap-admin/settings", adminUi.navigation.settings, {
-		adminOnly: true,
-		requiredAction: "settings:edit",
-	}),
-	leaf("/ap-admin/backups", adminUi.navigation.backups, {
-		adminOnly: true,
-		requiredAction: "backups:manage",
-	}),
+	mappedLeaf("/ap-admin/system", adminUi.navigation.system),
+	...(hasHostPanel ? [mappedLeaf("/ap-admin/host", adminUi.navigation.host)] : []),
+	mappedLeaf("/ap-admin/data", adminUi.navigation.data),
+	mappedLeaf("/ap-admin/settings", adminUi.navigation.settings),
+	mappedLeaf("/ap-admin/backups", adminUi.navigation.backups),
 ];
 
 // hasCms is kept on Props for backwards compatibility but no longer gates
