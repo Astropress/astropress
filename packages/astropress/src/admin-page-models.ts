@@ -290,9 +290,13 @@ export async function buildSettingsPageModel(
 }
 
 export async function buildSystemPageModel(locals: AdminLocals, user: AuthUser | null | undefined) {
+	type SystemRouteEntry = Awaited<ReturnType<typeof listRuntimeSystemRoutes>>[number];
 	return adminOnlyPage(
 		user,
-		{ systemRoutes: [], routeMap: new Map<string, unknown>() },
+		{
+			systemRoutes: [] as SystemRouteEntry[],
+			routeMap: new Map<string, SystemRouteEntry>(),
+		},
 		async (warnings) => {
 			const systemRoutes = await withFallback(
 				warnings,
