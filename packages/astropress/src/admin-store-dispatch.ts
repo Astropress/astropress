@@ -23,7 +23,9 @@ export function getAdminDb(locals?: App.Locals | null): D1DatabaseLike | undefin
 export async function withLocalStoreFallback<T>(
 	locals: App.Locals | null | undefined,
 	onD1: (db: D1DatabaseLike) => Promise<T>,
-	onLocal: (store: LocalAdminStoreModule) => Promise<T>,
+	// Local store methods are synchronous (node:sqlite); accept a bare value or a
+	// promise so callers don't have to wrap sync returns in Promise.resolve.
+	onLocal: (store: LocalAdminStoreModule) => T | Promise<T>,
 ): Promise<T> {
 	const db = getCloudflareBindings(locals).DB;
 	if (!db) {

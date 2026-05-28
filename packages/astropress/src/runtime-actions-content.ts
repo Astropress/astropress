@@ -35,8 +35,10 @@ export async function saveRuntimeContentState(
 	input: SaveContentInput,
 	actor: Actor,
 	locals?: App.Locals | null,
-) {
-	return withLocalStoreFallback(
+): Promise<{ ok: false; error: string; conflict?: true } | { ok: true; state?: unknown }> {
+	return withLocalStoreFallback<
+		{ ok: false; error: string; conflict?: true } | { ok: true; state?: unknown }
+	>(
 		locals,
 		async (db) => {
 			const pageRecord = await findPageRecord(slug, locals);
@@ -185,8 +187,8 @@ export async function createRuntimeContentRecord(
 	},
 	actor: Actor,
 	locals?: App.Locals | null,
-) {
-	return withLocalStoreFallback(
+): Promise<{ ok: false; error: string } | { ok: true; state: unknown }> {
+	return withLocalStoreFallback<{ ok: false; error: string } | { ok: true; state: unknown }>(
 		locals,
 		async (db) => {
 			const title = input.title.trim();
@@ -310,7 +312,7 @@ export async function scheduleRuntimePublish(
 	scheduledAt: string,
 	locals?: App.Locals | null,
 ): Promise<{ ok: true } | { ok: false; error: string }> {
-	return withLocalStoreFallback(
+	return withLocalStoreFallback<{ ok: true } | { ok: false; error: string }>(
 		locals,
 		async (db) => {
 			await createD1SchedulingPart(db).schedulePublish(slug, scheduledAt);
