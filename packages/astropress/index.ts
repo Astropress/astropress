@@ -680,6 +680,7 @@ export {
 	restoreRuntimeRevision,
 	saveRuntimeContentState,
 	saveRuntimeSettings,
+	scheduleRuntimePublish,
 	suspendRuntimeAdminUser,
 	unsuspendRuntimeAdminUser,
 	updateRuntimeAuthor,

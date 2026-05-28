@@ -4,43 +4,32 @@ import {
 	listRuntimeContentStates,
 	searchRuntimeContentStates,
 } from "@astropress-diy/astropress";
+import { resolveApiRuntime } from "@astropress-diy/astropress/admin-store-dispatch.js";
 import {
 	apiErrors,
 	jsonOk,
 	jsonOkPaginated,
 	withApiRequest,
 } from "@astropress-diy/astropress/api-middleware.js";
-import { loadLocalAdminStore } from "@astropress-diy/astropress/local-runtime-modules.js";
 import type { APIRoute } from "astro";
-
-type LocalAdminStore = Awaited<ReturnType<typeof loadLocalAdminStore>>;
-type ApiTokens = NonNullable<LocalAdminStore["apiTokens"]>;
-
-function buildApiCtx(
-	apiTokens: ApiTokens,
-	store: LocalAdminStore,
-	config: ReturnType<typeof getCmsConfig>,
-) {
-	return {
-		apiTokens,
-		checkRateLimit: store.checkRateLimit,
-		rateLimit: config.api?.rateLimit,
-	};
-}
 
 export const GET: APIRoute = async (context) => {
 	if (!getCmsConfig().api?.enabled) {
 		return apiErrors.notFound("REST API is not enabled.");
 	}
 
-	const store = await loadLocalAdminStore();
-	if (!store.apiTokens) {
+	const runtime = await resolveApiRuntime(context.locals);
+	if (!runtime.apiTokens) {
 		return apiErrors.notFound("API token store unavailable.");
 	}
 
 	return withApiRequest(
 		context.request,
-		buildApiCtx(store.apiTokens, store, getCmsConfig()),
+		{
+			apiTokens: runtime.apiTokens,
+			checkRateLimit: runtime.checkRateLimit,
+			rateLimit: getCmsConfig().api?.rateLimit,
+		},
 		["content:read"],
 		async () => {
 			const url = new URL(context.request.url);
@@ -122,14 +111,18 @@ export const POST: APIRoute = async (context) => {
 		return apiErrors.notFound("REST API is not enabled.");
 	}
 
-	const store = await loadLocalAdminStore();
-	if (!store.apiTokens) {
+	const runtime = await resolveApiRuntime(context.locals);
+	if (!runtime.apiTokens) {
 		return apiErrors.notFound("API token store unavailable.");
 	}
 
 	return withApiRequest(
 		context.request,
-		buildApiCtx(store.apiTokens, store, getCmsConfig()),
+		{
+			apiTokens: runtime.apiTokens,
+			checkRateLimit: runtime.checkRateLimit,
+			rateLimit: getCmsConfig().api?.rateLimit,
+		},
 		["content:write"],
 		async (tokenId) => {
 			let body: Record<string, unknown>;
@@ -160,8 +153,8 @@ export const POST: APIRoute = async (context) => {
 				return apiErrors.validationError(result.error);
 			}
 
-			if (store.webhooks && result.state?.status === "published") {
-				await store.webhooks.dispatch("content.published", { slug, title });
+			if (runtime.webhooks && result.state?.status === "published") {
+				await runtime.webhooks.dispatch("content.published", { slug, title });
 			}
 
 			return jsonOk(result.state, 201);

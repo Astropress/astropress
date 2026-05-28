@@ -1091,6 +1091,11 @@ function saveRuntimeContentState(slug: string, input: SaveContentInput, actor: A
 function saveRuntimeSettings(partial: Partial<SiteSettings>, actor: Actor, locals: Locals | null | undefined): Promise<unknown>
 ```
 
+#### `scheduleRuntimePublish`
+```ts
+function scheduleRuntimePublish(slug: string, scheduledAt: string, locals: Locals | null | undefined): Promise<{ ok: true; } | { ok: false; error: string; }>
+```
+
 #### `suspendRuntimeAdminUser`
 ```ts
 function suspendRuntimeAdminUser(email: string, actor: Actor, locals: Locals | null | undefined): Promise<unknown>

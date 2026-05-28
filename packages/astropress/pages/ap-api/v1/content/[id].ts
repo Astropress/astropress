@@ -3,39 +3,28 @@ import {
 	getRuntimeContentState,
 	saveRuntimeContentState,
 } from "@astropress-diy/astropress";
+import { resolveApiRuntime } from "@astropress-diy/astropress/admin-store-dispatch.js";
 import {
 	apiErrors,
 	jsonOk,
 	jsonOkWithEtag,
 	withApiRequest,
 } from "@astropress-diy/astropress/api-middleware.js";
-import { loadLocalAdminStore } from "@astropress-diy/astropress/local-runtime-modules.js";
 import type { APIRoute } from "astro";
-
-type LocalAdminStore = Awaited<ReturnType<typeof loadLocalAdminStore>>;
-type ApiTokens = NonNullable<LocalAdminStore["apiTokens"]>;
-
-function buildApiCtx(
-	apiTokens: ApiTokens,
-	store: LocalAdminStore,
-	config: ReturnType<typeof getCmsConfig>,
-) {
-	return {
-		apiTokens,
-		checkRateLimit: store.checkRateLimit,
-		rateLimit: config.api?.rateLimit,
-	};
-}
 
 export const GET: APIRoute = async (context) => {
 	if (!getCmsConfig().api?.enabled) return apiErrors.notFound("REST API is not enabled.");
 
-	const store = await loadLocalAdminStore();
-	if (!store.apiTokens) return apiErrors.notFound("API token store unavailable.");
+	const runtime = await resolveApiRuntime(context.locals);
+	if (!runtime.apiTokens) return apiErrors.notFound("API token store unavailable.");
 
 	return withApiRequest(
 		context.request,
-		buildApiCtx(store.apiTokens, store, getCmsConfig()),
+		{
+			apiTokens: runtime.apiTokens,
+			checkRateLimit: runtime.checkRateLimit,
+			rateLimit: getCmsConfig().api?.rateLimit,
+		},
 		["content:read"],
 		async () => {
 			const id = context.params.id ?? "";
@@ -49,12 +38,16 @@ export const GET: APIRoute = async (context) => {
 export const PUT: APIRoute = async (context) => {
 	if (!getCmsConfig().api?.enabled) return apiErrors.notFound("REST API is not enabled.");
 
-	const store = await loadLocalAdminStore();
-	if (!store.apiTokens) return apiErrors.notFound("API token store unavailable.");
+	const runtime = await resolveApiRuntime(context.locals);
+	if (!runtime.apiTokens) return apiErrors.notFound("API token store unavailable.");
 
 	return withApiRequest(
 		context.request,
-		buildApiCtx(store.apiTokens, store, getCmsConfig()),
+		{
+			apiTokens: runtime.apiTokens,
+			checkRateLimit: runtime.checkRateLimit,
+			rateLimit: getCmsConfig().api?.rateLimit,
+		},
 		["content:write"],
 		async (tokenId) => {
 			const id = context.params.id ?? "";
@@ -95,9 +88,9 @@ export const PUT: APIRoute = async (context) => {
 
 			if (!result.ok) return apiErrors.validationError(result.error);
 
-			if (store.webhooks) {
+			if (runtime.webhooks) {
 				const event = result.state?.status === "published" ? "content.updated" : null;
-				if (event) await store.webhooks.dispatch(event, { id });
+				if (event) await runtime.webhooks.dispatch(event, { id });
 			}
 
 			return jsonOk(result.state);
@@ -108,12 +101,16 @@ export const PUT: APIRoute = async (context) => {
 export const DELETE: APIRoute = async (context) => {
 	if (!getCmsConfig().api?.enabled) return apiErrors.notFound("REST API is not enabled.");
 
-	const store = await loadLocalAdminStore();
-	if (!store.apiTokens) return apiErrors.notFound("API token store unavailable.");
+	const runtime = await resolveApiRuntime(context.locals);
+	if (!runtime.apiTokens) return apiErrors.notFound("API token store unavailable.");
 
 	return withApiRequest(
 		context.request,
-		buildApiCtx(store.apiTokens, store, getCmsConfig()),
+		{
+			apiTokens: runtime.apiTokens,
+			checkRateLimit: runtime.checkRateLimit,
+			rateLimit: getCmsConfig().api?.rateLimit,
+		},
 		["content:write"],
 		async () => {
 			const id = context.params.id ?? "";
@@ -142,8 +139,8 @@ export const DELETE: APIRoute = async (context) => {
 				context.locals,
 			);
 
-			if (store.webhooks) {
-				await store.webhooks.dispatch("content.deleted", { id });
+			if (runtime.webhooks) {
+				await runtime.webhooks.dispatch("content.deleted", { id });
 			}
 
 			return new Response(null, { status: 204 });

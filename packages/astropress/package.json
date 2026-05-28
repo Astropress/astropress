@@ -51,6 +51,10 @@
 			"types": "./src/admin-routes.ts",
 			"default": "./dist/src/admin-routes.js"
 		},
+		"./admin-store-dispatch": {
+			"types": "./src/admin-store-dispatch.ts",
+			"default": "./dist/src/admin-store-dispatch.js"
+		},
 		"./admin-ui": {
 			"types": "./src/admin-ui.ts",
 			"default": "./dist/src/admin-ui.js"

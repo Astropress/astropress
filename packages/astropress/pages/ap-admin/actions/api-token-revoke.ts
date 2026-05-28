@@ -1,5 +1,5 @@
 import { withAdminFormAction } from "@astropress-diy/astropress";
-import { loadLocalAdminStore } from "@astropress-diy/astropress/local-runtime-modules.js";
+import { resolveApiRuntime } from "@astropress-diy/astropress/admin-store-dispatch.js";
 import type { APIRoute } from "astro";
 
 export const POST: APIRoute = async (context) =>
@@ -10,10 +10,10 @@ export const POST: APIRoute = async (context) =>
 			const id = String(formData.get("id") ?? "").trim();
 			if (!id) return fail("Token ID is required.");
 
-			const store = await loadLocalAdminStore();
-			if (!store.apiTokens) return fail("API token store is not available.");
+			const { apiTokens } = await resolveApiRuntime(context.locals);
+			if (!apiTokens) return fail("API token store is not available.");
 
-			await store.apiTokens.revoke(id);
+			await apiTokens.revoke(id);
 			return redirect("/ap-admin/api-tokens?revoked=1");
 		},
 	);

@@ -5,7 +5,9 @@ import type { ApiScope, ApiTokenStore } from "./platform-contracts";
 
 export interface ApiRequestContext {
 	apiTokens: ApiTokenStore;
-	checkRateLimit: (key: string, max: number, windowMs: number) => boolean;
+	// Sync-or-async: the local sqlite store returns synchronously while the D1
+	// rate-limit part is promise-returning. `withApiRequest` awaits the result.
+	checkRateLimit: (key: string, max: number, windowMs: number) => boolean | Promise<boolean>;
 	rateLimit?: number; // requests per minute per token, default 60
 }
 
@@ -134,7 +136,7 @@ export async function withApiRequest(
 
 	const rateLimitKey = `api:${record.id}`;
 	const rateLimit = ctx.rateLimit ?? 60;
-	const allowed = ctx.checkRateLimit(rateLimitKey, rateLimit, 60_000);
+	const allowed = await ctx.checkRateLimit(rateLimitKey, rateLimit, 60_000);
 	if (!allowed) {
 		return applyCorsHeaders(API_ERROR_SHAPES.rateLimited(), request);
 	}

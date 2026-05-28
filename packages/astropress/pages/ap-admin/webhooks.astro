@@ -1,7 +1,7 @@
 ---
 import AdminLayout from "@astropress-diy/astropress/components/AdminLayout.astro";
 import CsrfInput from "@astropress-diy/astropress/components/CsrfInput.astro";
-import { loadLocalAdminStore } from "@astropress-diy/astropress/local-runtime-modules.js";
+import { resolveApiRuntime } from "@astropress-diy/astropress/admin-store-dispatch.js";
 import { getPageT, requiresAccess, resolveAdminLocale } from "astropress";
 
 const guard = await requiresAccess(Astro, "webhooks:manage");
@@ -10,8 +10,8 @@ const adminUser = Astro.locals.adminUser;
 if (!adminUser) return Astro.redirect("/ap-admin/login");
 const t = getPageT(resolveAdminLocale(Astro));
 
-const store = await loadLocalAdminStore();
-const webhooks = store.webhooks ? await store.webhooks.list() : [];
+const { webhooks: webhookStore } = await resolveApiRuntime(Astro.locals);
+const webhooks = webhookStore ? await webhookStore.list() : [];
 
 const wasCreated = Astro.url.searchParams.get("created") === "1";
 const wasDeleted = Astro.url.searchParams.get("deleted") === "1";

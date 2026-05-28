@@ -1,5 +1,5 @@
 import { withAdminFormAction } from "@astropress-diy/astropress";
-import { loadLocalAdminStore } from "@astropress-diy/astropress/local-runtime-modules.js";
+import { resolveApiRuntime } from "@astropress-diy/astropress/admin-store-dispatch.js";
 import type { ApiScope } from "@astropress-diy/astropress/platform-contracts.js";
 import type { APIRoute } from "astro";
 
@@ -24,10 +24,10 @@ export const POST: APIRoute = async (context) =>
 			const scopes = scopeValues.filter((s) => VALID_SCOPES.includes(s));
 			if (scopes.length === 0) return fail("At least one scope is required.");
 
-			const store = await loadLocalAdminStore();
-			if (!store.apiTokens) return fail("API token store is not available.");
+			const { apiTokens } = await resolveApiRuntime(context.locals);
+			if (!apiTokens) return fail("API token store is not available.");
 
-			const { record, rawToken } = await store.apiTokens.create({
+			const { record, rawToken } = await apiTokens.create({
 				label,
 				scopes,
 			});

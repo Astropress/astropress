@@ -1,7 +1,11 @@
 import type { D1DatabaseLike } from "./d1-database";
+import { createD1RateLimitPart } from "./d1-rate-limit-part";
 import type { LocalAdminStoreModule } from "./local-runtime-modules";
 import { loadLocalAdminStore } from "./local-runtime-modules";
+import type { ApiTokenStore, WebhookStore } from "./platform-contracts";
 import { getCloudflareBindings } from "./runtime-env";
+import { createD1ApiTokenStore } from "./sqlite-runtime/api-tokens-d1";
+import { createD1WebhookStore } from "./sqlite-runtime/webhooks-d1";
 
 /** Returns the D1 database binding from request locals, or undefined if not available. */
 export function getAdminDb(locals?: App.Locals | null): D1DatabaseLike | undefined {
@@ -62,4 +66,42 @@ export async function withSafeLocalStoreFallback<T>(
 		return onLocal(localStore);
 	}
 	return onD1(db);
+}
+
+/**
+ * The API-token / webhook / rate-limit surface the REST API and the admin
+ * token+webhook pages need, resolved against whichever backend the host
+ * provides. `checkRateLimit` is declared as sync-or-async because the D1
+ * backend is promise-returning while the local sqlite store is synchronous;
+ * `withApiRequest` awaits it either way.
+ */
+export interface ResolvedApiRuntime {
+	apiTokens?: ApiTokenStore;
+	webhooks?: WebhookStore;
+	checkRateLimit: (key: string, max: number, windowMs: number) => boolean | Promise<boolean>;
+}
+
+/**
+ * Single dispatch point for the API token + webhook surface. On a D1-backed
+ * host it builds the D1 stores; otherwise it uses the local runtime store.
+ * Routing every REST/admin token+webhook handler through this resolver is what
+ * lets those surfaces work on hosts that provide D1 but not the local runtime
+ * alias — see issue #137.
+ */
+export async function resolveApiRuntime(
+	locals: App.Locals | null | undefined,
+): Promise<ResolvedApiRuntime> {
+	return withLocalStoreFallback(
+		locals,
+		async (db) => ({
+			apiTokens: createD1ApiTokenStore(db),
+			webhooks: createD1WebhookStore(db),
+			checkRateLimit: createD1RateLimitPart(db).checkRateLimit,
+		}),
+		async (store) => ({
+			apiTokens: store.apiTokens,
+			webhooks: store.webhooks,
+			checkRateLimit: store.checkRateLimit,
+		}),
+	);
 }

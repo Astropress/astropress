@@ -4,7 +4,6 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vites
 import { registerCms } from "../src/config";
 import { createApiTokenStore } from "../src/sqlite-runtime/api-tokens.js";
 import { makeDb } from "./helpers/make-db.js";
-import { makeLocals } from "./helpers/make-locals.js";
 
 // ─── Hoisted mock functions ────────────────────────────────────────────────────
 
@@ -67,7 +66,11 @@ const BASE = "http://localhost";
 
 beforeAll(async () => {
 	db = makeDb();
-	locals = makeLocals(db);
+	// No DB binding on locals: these handler tests inject their backend through the
+	// mocked loadLocalAdminStore, so resolveApiRuntime / getRuntime* must take the
+	// local-store dispatch branch (the D1 branch would hit the empty fixture db and
+	// ignore the mock store entirely). #137 routed every handler through that seam.
+	locals = { runtime: { env: {} } } as unknown as App.Locals;
 
 	registerCms({
 		templateKeys: ["content"],
