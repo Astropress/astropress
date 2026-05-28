@@ -226,6 +226,16 @@ function buildAstropressAdminDocumentTitle(title: string): string
 function buildAdminDashboardModel(locals: Locals, user: AuthUser | null | undefined, translationStatus: TranslationEntry[], deps: DashboardDeps): Promise<AdminDashboardModel>
 ```
 
+#### `resolveSafeAdminHref`
+```ts
+function resolveSafeAdminHref(baseUrl: URL, value: string | null | undefined, allowedPaths: string[]): string | null
+```
+
+#### `resolveSafeAdminReturnTo`
+```ts
+function resolveSafeAdminReturnTo(baseUrl: URL, value: string | null | undefined, fallback: string): string
+```
+
 #### `isRtlLocale`
 ```ts
 function isRtlLocale(locale: AdminLocale): boolean
@@ -634,6 +644,11 @@ function listOAuthProviders(domain: IntegrationDomain): readonly OAuthProviderDe
 #### `registerOAuthProvider`
 ```ts
 function registerOAuthProvider(def: OAuthProviderDefinition): OAuthProviderDefinition
+```
+
+#### `consumeOAuthStateNonce`
+```ts
+function consumeOAuthStateNonce(locals: Locals | null | undefined, nonce: string, ttlMs: number): Promise<boolean>
 ```
 
 #### `sealOAuthCallbackTokens`
@@ -1789,6 +1804,7 @@ function validateWebhookCreateInput(input: { url: unknown; events: unknown; }): 
 - `const registerNewsletter: Register`
 - `const registerSearch: Register`
 - `OAuthRegistryError`
+- `const OAUTH_NONCE_RATE_KEY_PREFIX: "oauth-state-nonce:"`
 - `const DEFAULT_OAUTH_STATE_TTL_MS: 600000`
 - `const CLOUDFLARE_CDN_FIELDS: ZodObject<{ apiToken: ZodString; zoneId: ZodString; }, $strip>`
 - `CloudflareCdnVerifyError`

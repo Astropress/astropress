@@ -1,8 +1,10 @@
 import {
 	buildRedirectUri,
+	consumeOAuthStateNonce,
 	exchangeCodeForToken,
 	getAstropressRootSecretCandidates,
 	getOAuthProvider,
+	resolveSafeAdminReturnTo,
 	sealOAuthCallbackTokens,
 	verifyOAuthState,
 } from "@astropress-diy/astropress";
@@ -57,6 +59,14 @@ export const GET: APIRoute = async (context) => {
 		});
 	}
 
+	// Reject replays: the signed state is single-use. The first callback for
+	// this nonce proceeds; any later one (a captured/replayed state) is rejected
+	// before we re-exchange the code or re-seal tokens (#122).
+	const firstUse = await consumeOAuthStateNonce(context.locals, verified.nonce);
+	if (!firstUse) {
+		return new Response("OAuth state already used.", { status: 400 });
+	}
+
 	const provider = getOAuthProvider(
 		verified.context.domain as Parameters<typeof getOAuthProvider>[0],
 		verified.context.providerId,
@@ -109,6 +119,9 @@ export const GET: APIRoute = async (context) => {
 		});
 	}
 
-	const returnTo = verified.context.returnTo || "/ap-admin/services";
+	// The returnTo is signed into the state, but it originates from user form
+	// input at flow start — normalise it to a safe same-origin admin path so a
+	// hostile target can't turn the callback into an open redirect (#123).
+	const returnTo = resolveSafeAdminReturnTo(context.url, verified.context.returnTo);
 	return context.redirect(returnTo);
 };

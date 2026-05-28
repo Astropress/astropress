@@ -141,6 +141,7 @@ export type { AdminDashboardModel } from "./src/admin-dashboard";
 // Admin page model builders
 export { buildAdminDashboardModel } from "./src/admin-dashboard";
 export type { AdminLocale } from "./src/admin-labels";
+export { resolveSafeAdminHref, resolveSafeAdminReturnTo } from "./src/admin-link-utils.js";
 export {
 	ADMIN_LOCALE_COOKIE,
 	isRtlLocale,
@@ -364,6 +365,10 @@ export {
 	OAuthRegistryError,
 	registerOAuthProvider,
 } from "./src/integrations/oauth/registry.js";
+export {
+	consumeOAuthStateNonce,
+	OAUTH_NONCE_RATE_KEY_PREFIX,
+} from "./src/integrations/oauth/replay.js";
 export type {
 	SealOAuthCallbackErrorCode,
 	SealOAuthCallbackInput,
