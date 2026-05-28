@@ -267,7 +267,9 @@ export function createD1IntegrationsRepository(
 		await db.prepare(D1_SQL_CLEAR_ACTIVE_IN_DOMAIN).bind(domain).run();
 		const result = await db.prepare(D1_SQL_MARK_ACTIVE).bind(domain, provider).run();
 		// Stryker disable next-line all: defensive `?.` + `?? 0` mirror the disconnect/updateStatus guards for a D1 result without `meta`.
+		/* v8 ignore start */
 		return Number(result.meta?.changes ?? 0) > 0;
+		/* v8 ignore stop */
 	}
 
 	async function hasActiveProvider(domain: string): Promise<boolean> {
@@ -275,7 +277,10 @@ export function createD1IntegrationsRepository(
 			.prepare(D1_SQL_COUNT_ACTIVE_IN_DOMAIN)
 			.bind(domain)
 			.first<{ n: number }>();
+		// COUNT(*) always returns one row, so `row?.`/`?? 0` are defensive only.
+		/* v8 ignore start */
 		return (row?.n ?? 0) > 0;
+		/* v8 ignore stop */
 	}
 
 	async function connect<TFields extends Record<string, string> = Record<string, string>>(

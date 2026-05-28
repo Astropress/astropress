@@ -8,8 +8,11 @@ import {
 	connectIntegrationAction,
 	disconnectIntegrationAction,
 	reverifyIntegrationAction,
+	setActiveIntegrationProviderAction,
 } from "../src/runtime-actions-integrations";
+import * as runtimeEnv from "../src/runtime-env";
 import { createIntegrationsRepository } from "../src/sqlite-runtime/integrations";
+import { createD1IntegrationsRepository } from "../src/sqlite-runtime/integrations-d1";
 import { makeDb } from "./helpers/make-db.js";
 import { SqliteBackedD1Database } from "./helpers/provider-test-fixtures.js";
 
@@ -130,6 +133,24 @@ describe("connectIntegrationAction", () => {
 		expect(callArgs.domain).toBe("newsletter");
 		expect(callArgs.provider).toBe("fake-listmonk");
 	});
+
+	it("returns ROOT_SECRET_UNCONFIGURED when the root-secret resolver fails closed (#126)", async () => {
+		// getAstropressRootSecret throws in production with no configured secret;
+		// connect must surface a typed error before sealing any credential.
+		const spy = vi.spyOn(runtimeEnv, "getAstropressRootSecret").mockImplementation(() => {
+			throw new Error("ASTROPRESS_ROOT_SECRET must be configured in production");
+		});
+		const repo = makeRepo();
+		withRepo(repo);
+		const r = await connectIntegrationAction(null, {
+			domain: "newsletter",
+			providerId: "fake-listmonk",
+			fields: { apiKey: "k" },
+		});
+		expect(r).toEqual({ ok: false, status: "error", code: "ROOT_SECRET_UNCONFIGURED" });
+		expect(repo.connect).not.toHaveBeenCalled();
+		spy.mockRestore();
+	});
 });
 
 describe("reverifyIntegrationAction", () => {
@@ -215,5 +236,54 @@ describe("disconnectIntegrationAction", () => {
 		const r = await disconnectIntegrationAction(null, "newsletter", "fake-listmonk");
 		expect(r).toEqual({ ok: true });
 		expect(repo.disconnect).toHaveBeenCalledWith("newsletter", "fake-listmonk");
+	});
+});
+
+describe("setActiveIntegrationProviderAction (#127)", () => {
+	const NOW = "2026-05-02T12:00:00.000Z";
+
+	it("returns INTEGRATIONS_NOT_AVAILABLE when the local store has no integrations repo", async () => {
+		withRepo(null);
+		const r = await setActiveIntegrationProviderAction(null, "newsletter", "fake-listmonk");
+		expect(r).toEqual({ ok: false, code: "INTEGRATIONS_NOT_AVAILABLE" });
+	});
+
+	it("local path: returns ok when the repo confirms the switch", async () => {
+		const setActiveProvider = vi.fn(() => true);
+		withRepo({ ...makeRepo(), setActiveProvider } as never);
+		const r = await setActiveIntegrationProviderAction(null, "newsletter", "fake-listmonk");
+		expect(r).toEqual({ ok: true });
+		expect(setActiveProvider).toHaveBeenCalledWith("newsletter", "fake-listmonk");
+	});
+
+	it("local path: returns INTEGRATION_NOT_CONNECTED when the repo refuses the switch", async () => {
+		withRepo({ ...makeRepo(), setActiveProvider: vi.fn(() => false) } as never);
+		const r = await setActiveIntegrationProviderAction(null, "newsletter", "ghost");
+		expect(r).toEqual({ ok: false, code: "INTEGRATION_NOT_CONNECTED" });
+	});
+
+	it("D1 path: activates a connected provider end-to-end", async () => {
+		const db = makeDb();
+		const d1 = withD1Backed(db);
+		const repo = createD1IntegrationsRepository({ getDb: () => d1, now: () => NOW });
+		await repo.connect(
+			{
+				domain: "newsletter",
+				provider: "fake-listmonk",
+				configJson: "{}",
+				secretFields: { apiKey: "k" },
+				now: NOW,
+			},
+			"root-secret",
+		);
+		const r = await setActiveIntegrationProviderAction(null, "newsletter", "fake-listmonk");
+		expect(r).toEqual({ ok: true });
+	});
+
+	it("D1 path: returns INTEGRATION_NOT_CONNECTED for a provider with no connected row", async () => {
+		const db = makeDb();
+		withD1Backed(db);
+		const r = await setActiveIntegrationProviderAction(null, "newsletter", "ghost");
+		expect(r).toEqual({ ok: false, code: "INTEGRATION_NOT_CONNECTED" });
 	});
 });

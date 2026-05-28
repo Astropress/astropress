@@ -57,11 +57,17 @@ export function assertSafeImportExportFile(
 	if (path.normalize(trimmed).split(/[\\/]/).includes("..")) {
 		throw new ImportPathError("exportFile must not traverse outside the import root.");
 	}
-	// Lexical containment: the resolved path must stay under the root.
+	// Lexical containment: the resolved path must stay under the root. This is a
+	// defensive belt-and-suspenders guard — absolute paths and any `..`-segment
+	// paths are already rejected above, so no relative, non-`..` input can
+	// resolve outside the root and the throw is unreachable for valid inputs.
 	const rootResolved = path.resolve(root);
 	const candidate = path.resolve(rootResolved, trimmed);
+	// Unreachable for valid inputs: absolute + `..`-segment paths are rejected above.
+	/* v8 ignore start */
 	if (candidate !== rootResolved && !candidate.startsWith(rootResolved + path.sep)) {
 		throw new ImportPathError("exportFile resolves outside the import root.");
 	}
+	/* v8 ignore stop */
 	return trimmed;
 }

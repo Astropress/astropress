@@ -9,6 +9,11 @@
  */
 
 function importMetaEnv(): Record<string, string | undefined> {
+	// NOTE: `import.meta.env` must appear inline as a member expression — Vite/
+	// Astro statically replaces that exact form, so aliasing it to a local would
+	// drop the injected env. The `?? {}` is a defensive fallback for non-bundler
+	// runtimes where `import.meta.env` is undefined; unreachable under Vite.
+	/* v8 ignore start */
 	return (
 		(
 			import.meta as ImportMeta & {
@@ -16,6 +21,7 @@ function importMetaEnv(): Record<string, string | undefined> {
 			}
 		).env ?? {}
 	);
+	/* v8 ignore stop */
 }
 
 /** Reads a runtime env value from process.env first, then import.meta.env. */

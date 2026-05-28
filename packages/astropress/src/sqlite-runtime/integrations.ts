@@ -250,26 +250,38 @@ export function createIntegrationsRepository(
 		const result = getDb()
 			.prepare(SQL_UPDATE_STATUS)
 			.run(input.status, input.lastCheckAt, input.lastError ?? null, input.domain, input.provider);
+		// Defensive `?? 0`: node:sqlite run() always returns a numeric `changes`.
+		/* v8 ignore start */
 		return Number(result.changes ?? 0) > 0;
+		/* v8 ignore stop */
 	}
 
 	function disconnect(domain: string, provider: string): boolean {
 		const result = getDb().prepare(SQL_DISCONNECT).run(domain, provider);
+		// Defensive `?? 0`: node:sqlite run() always returns a numeric `changes`.
+		/* v8 ignore start */
 		return Number(result.changes ?? 0) > 0;
+		/* v8 ignore stop */
 	}
 
 	function setActiveProvider(domain: string, provider: string): boolean {
 		const db = getDb();
 		db.prepare(SQL_CLEAR_ACTIVE_IN_DOMAIN).run(domain);
 		const result = db.prepare(SQL_MARK_ACTIVE).run(domain, provider);
+		// Defensive `?? 0`: node:sqlite run() always returns a numeric `changes`.
+		/* v8 ignore start */
 		return Number(result.changes ?? 0) > 0;
+		/* v8 ignore stop */
 	}
 
 	function hasActiveProvider(domain: string): boolean {
 		const row = getDb().prepare(SQL_COUNT_ACTIVE_IN_DOMAIN).get(domain) as
 			| { n: number }
 			| undefined;
+		// COUNT(*) always returns one row, so `row?.`/`?? 0` are defensive only.
+		/* v8 ignore start */
 		return (row?.n ?? 0) > 0;
+		/* v8 ignore stop */
 	}
 
 	async function connect<TFields extends Record<string, string> = Record<string, string>>(
