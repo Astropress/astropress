@@ -48,20 +48,11 @@ export interface AstropressCloudflareAdapterOptions {
 	preview?: PreviewSession;
 }
 
-const CF_CAPS = {
-	name: "cloudflare" as const,
-	staticPublishing: true,
-	hostedAdmin: true,
-	previewEnvironments: true,
-	serverRuntime: true,
-	database: true,
-	objectStorage: true,
-	gitSync: true,
-};
-const SQL_CF_SOFT_DELETE_REDIRECT =
-	"UPDATE redirect_rules SET deleted_at = CURRENT_TIMESTAMP WHERE source_path = ? AND deleted_at IS NULL";
-const SQL_CF_SOFT_DELETE_MEDIA =
-	"UPDATE media_assets SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?";
+import {
+	CF_CAPS,
+	SQL_CF_SOFT_DELETE_MEDIA,
+	SQL_CF_SOFT_DELETE_REDIRECT,
+} from "./cloudflare-data.js";
 
 async function saveCloudflareRecord(
 	db: D1DatabaseLike,

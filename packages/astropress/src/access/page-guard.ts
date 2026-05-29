@@ -19,11 +19,9 @@
  */
 
 import { logAccessDeny } from "./audit-deny";
+import { DEFAULT_FORBIDDEN_PATH, DEFAULT_LOGIN_PATH } from "./page-guard-data.js";
 import { getAccessContext } from "./request-context";
 import type { Env, Resource } from "./types";
-
-const DEFAULT_FORBIDDEN_PATH = "/ap-admin?error=insufficient-permissions";
-const DEFAULT_LOGIN_PATH = "/ap-admin/login";
 
 export interface RequiresAccessOptions {
 	resource?: Resource;
