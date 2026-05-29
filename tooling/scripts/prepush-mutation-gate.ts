@@ -293,6 +293,13 @@ function runStryker(mutateTargets: string[], tmpRoot: string): StrykerReport | n
   vitest: { related: true },
   ignoreStatic: true,
   concurrency: ${Number(process.env.STRYKER_CONCURRENCY) || 4},
+  // Restart each vitest test-runner worker after N mutants so its per-test
+  // module cache can't grow unbounded across a large mutant set (thousands of
+  // mutants on a big changeset). Without this the workers exhaust memory and
+  // SIGSEGV mid-run; stryker then mis-scores the crashed file (inflated
+  // Survived, mis-classified static), producing phantom regressions. See
+  // project-mutation-gate-fresh-run.
+  maxTestRunnerReuse: ${Number(process.env.STRYKER_MAX_REUSE) || 40},
   reporters: ["clear-text", "json", "checkpoint"],
   jsonReporter: { fileName: ${JSON.stringify(reportPath)} },
   incremental: true,
