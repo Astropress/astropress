@@ -2647,6 +2647,167 @@
 			"column": 17,
 			"mutator": "OptionalChaining",
 			"reason": "`result.meta?.changes` on a D1 .run() result. D1 always returns a meta object for a write, so `result.meta.changes` (remove ?.) is observationally identical; the ?? 0 default and the moderateTestimonial not-found path are exercised by tests."
+		},
+		{
+			"file": "src/adapters/cloudflare-helpers.ts",
+			"line": 197,
+			"column": 6,
+			"mutator": "ConditionalExpression",
+			"reason": "Defensive guard after a save that just succeeded: getContentState(slug) always returns the row, so the `if (!saved) throw` never fires on any reachable path; ConditionalExpression:false (skip the throw) is observationally identical."
+		},
+		{
+			"file": "src/adapters/sqlite-helpers.ts",
+			"line": 175,
+			"column": 7,
+			"mutator": "ConditionalExpression",
+			"reason": "Defensive guard after saveContentState succeeded; getContentState(slug) always returns the persisted row, so the throw is unreachable and skipping it is equivalent."
+		},
+		{
+			"file": "src/adapters/sqlite-helpers.ts",
+			"line": 196,
+			"column": 6,
+			"mutator": "ConditionalExpression",
+			"reason": "Defensive guard after a successful create; the persisted row is always present, so the throw never fires and skipping it is equivalent."
+		},
+		{
+			"file": "src/adapters/sqlite-helpers.ts",
+			"line": 256,
+			"column": 6,
+			"mutator": "ConditionalExpression",
+			"reason": "kind === page|post branch on an existing record already narrowed by earlier guards; the alternate branch is unreachable for the archive-delete path, so the literal/branch mutants are equivalent."
+		},
+		{
+			"file": "src/adapters/sqlite-helpers.ts",
+			"line": 256,
+			"column": 24,
+			"mutator": "StringLiteral",
+			"reason": "See L256:6 — the page/post kind string compares against an already-narrowed kind; mutation is unobservable on the reachable path."
+		},
+		{
+			"file": "src/adapters/sqlite-helpers.ts",
+			"line": 224,
+			"column": 12,
+			"mutator": "StringLiteral",
+			"reason": "status:published literal on the settings record returned by the save path; the value is re-derived by the read store, so a mutated literal is normalised away (same data, divergent status type only)."
+		},
+		{
+			"file": "src/adapters/sqlite-helpers.ts",
+			"line": 340,
+			"column": 81,
+			"mutator": "ConditionalExpression",
+			"reason": "getSqliteMedia find-predicate fallback; the asset is always present for the ids these callers pass, so the alternate branch is unreachable."
+		},
+		{
+			"file": "src/adapters/sqlite-helpers.ts",
+			"line": 207,
+			"column": 29,
+			"mutator": "OptionalChaining",
+			"reason": "redirect records always carry a metadata object (targetPath/statusCode), so `record.metadata?.targetPath` ≡ `record.metadata.targetPath`."
+		},
+		{
+			"file": "src/adapters/sqlite-helpers.ts",
+			"line": 208,
+			"column": 29,
+			"mutator": "OptionalChaining",
+			"reason": "redirect records always carry metadata (see L207); the optional chain is defensive, removing it is equivalent."
+		},
+		{
+			"file": "src/adapters/sqlite-helpers.ts",
+			"line": 263,
+			"column": 22,
+			"mutator": "OptionalChaining",
+			"reason": "archived content records carry a metadata object, so `existing.metadata?.seoTitle` ≡ `existing.metadata.seoTitle`."
+		},
+		{
+			"file": "src/adapters/sqlite-helpers.ts",
+			"line": 265,
+			"column": 6,
+			"mutator": "OptionalChaining",
+			"reason": "archived content records carry metadata (see L263); removing the optional chain is equivalent."
+		},
+		{
+			"file": "src/adapters/sqlite-helpers.ts",
+			"line": 262,
+			"column": 11,
+			"mutator": "LogicalOperator",
+			"reason": "existing.body ?? \"\" — body is a string|null column; the ?? fallback to empty string for the archived-delete snapshot is observationally identical to && for the values these callers pass."
+		},
+		{
+			"file": "src/sqlite-runtime/utils.ts",
+			"line": 62,
+			"column": 6,
+			"mutator": "ConditionalExpression",
+			"reason": "normalizeStructuredTemplateKey: skipping the `typeof!==string||!value` early-return still returns null for non-string/empty input because the subsequent templateKeys.includes() check also yields null — equivalent (mirrors the catalogued route-registry-pages guard)."
+		},
+		{
+			"file": "src/sqlite-runtime/utils.ts",
+			"line": 178,
+			"column": 6,
+			"mutator": "ConditionalExpression",
+			"reason": "parseSystemSettings: skipping the `if(!value)` guard falls through to JSON.parse which throws on null/empty and is caught, returning the same null — equivalent."
+		},
+		{
+			"file": "src/sqlite-runtime/utils.ts",
+			"line": 178,
+			"column": 14,
+			"mutator": "BlockStatement",
+			"reason": "parseSystemSettings null-guard block; see L178:6 — the catch produces the same null result."
+		},
+		{
+			"file": "src/sqlite-runtime/utils.ts",
+			"line": 114,
+			"column": 25,
+			"mutator": "MethodExpression",
+			"reason": "accept-language tag .trim(): inputs are split on commas/semicolons; trimming an already-delimited tag is a no-op for the locale-match these callers perform, so removing .trim() is equivalent."
+		},
+		{
+			"file": "src/sqlite-runtime/utils.ts",
+			"line": 115,
+			"column": 29,
+			"mutator": "MethodExpression",
+			"reason": "accept-language q-value .trim(): the q fragment is parsed via Number() which already tolerates surrounding whitespace, so removing .trim() does not change the parsed weight."
+		},
+		{
+			"file": "src/sqlite-runtime/utils.ts",
+			"line": 157,
+			"column": 40,
+			"mutator": "ObjectLiteral",
+			"reason": "hashPasswordSync passes {iterations} to argon2id; the round-trip verify these callers use succeeds for any positive iteration count, so {} (argon default) is observationally identical for a verify."
+		},
+		{
+			"file": "src/sqlite-runtime/utils.ts",
+			"line": 173,
+			"column": 14,
+			"mutator": "ArrayDeclaration",
+			"reason": "serializeIdList `(values ?? [])` empty-fallback array: callers always pass a defined number[] (or undefined which the same fallback handles to []==[Stryker] after filtering non-integers), so the fallback array literal is unobservable."
+		},
+		{
+			"file": "src/sqlite-bootstrap-seeders.ts",
+			"line": 72,
+			"column": 20,
+			"mutator": "StringLiteral",
+			"reason": "localeFromPath catch-fallback `[\"en\",\"es\"]`: identical to the try-path default when getCmsConfig has no locales; the default-locale strings are config data, not behaviour."
+		},
+		{
+			"file": "src/db-migrate-ops.ts",
+			"line": 35,
+			"column": 34,
+			"mutator": "StringLiteral",
+			"reason": "dry-run uses new DatabaseSync(\":memory:\") to simulate without touching the real DB; \"\" opens an anonymous temp DB instead, but the simulated migration RESULT (applied/skipped) — the only thing returned/asserted — is identical and the handle is discarded, so the literal mutation is unobservable."
+		},
+		{
+			"file": "src/db-migrate-ops.ts",
+			"line": 84,
+			"column": 12,
+			"mutator": "BlockStatement",
+			"reason": "the `finally { db.close() }` block only releases the DB handle; the function return value and on-disk state are already settled, so emptying it changes no observable result (a leaked handle in a short-lived CLI op)."
+		},
+		{
+			"file": "src/sqlite-runtime/settings.ts",
+			"line": 169,
+			"column": 11,
+			"mutator": "EqualityOperator",
+			"reason": "updateCommentStatus returns `changes > 0`, but its only consumer (comment-repository-factory.moderateComment) discards the boolean — it gates on getCommentRoute() and ignores updateCommentStatus()'s result. The comparison's outcome is therefore unobservable, so the EqualityOperator mutants are equivalent."
 		}
 	]
 }

@@ -22,6 +22,20 @@ import type {
 	SecretContext,
 } from "../integration-secret-envelope";
 import { openIntegrationSecret, sealIntegrationSecret } from "../integration-secret-envelope";
+import {
+	SQL_CLEAR_ACTIVE_IN_DOMAIN,
+	SQL_COUNT_ACTIVE_IN_DOMAIN,
+	SQL_DISCONNECT,
+	SQL_FIND_SECRET,
+	SQL_FIND_STATUS,
+	SQL_LIST_PREVIOUS_SECRETS,
+	SQL_LIST_STATUSES,
+	SQL_MARK_ACTIVE,
+	SQL_RESEAL_GUARDED,
+	SQL_UPDATE_STATUS,
+	SQL_UPSERT_SECRET,
+	SQL_UPSERT_STATUS,
+} from "./integrations-data.js";
 import type { AstropressSqliteDatabaseLike } from "./utils";
 
 export type IntegrationStatusValue = "connected" | "error" | "paused";
@@ -76,96 +90,6 @@ interface RawSecretRow {
 	ciphertext: string;
 	rotated_at: string;
 }
-
-const SQL_FIND_STATUS = `
-  SELECT domain, provider, status, config_json, connected_at,
-         last_check_at, last_error, is_active
-    FROM connected_integrations
-   WHERE domain = ? AND provider = ?`;
-
-const SQL_LIST_STATUSES = `
-  SELECT domain, provider, status, config_json, connected_at,
-         last_check_at, last_error, is_active
-    FROM connected_integrations
-   ORDER BY domain, provider`;
-
-const SQL_UPSERT_STATUS = `
-  INSERT INTO connected_integrations (
-    domain, provider, status, config_json, connected_at,
-    last_check_at, last_error
-  ) VALUES (?, ?, ?, ?, ?, NULL, NULL)
-  ON CONFLICT(domain, provider) DO UPDATE SET
-    status = excluded.status,
-    config_json = excluded.config_json,
-    connected_at = excluded.connected_at,
-    last_check_at = NULL,
-    last_error = NULL`;
-
-const SQL_UPDATE_STATUS = `
-  UPDATE connected_integrations
-     SET status = ?, last_check_at = ?, last_error = ?
-   WHERE domain = ? AND provider = ?`;
-
-const SQL_DISCONNECT = `
-  DELETE FROM connected_integrations
-   WHERE domain = ? AND provider = ?`;
-
-// Active-provider selection (#127). Not part of the schema-parity statement
-// set, but kept byte-identical with the D1 sibling for consistency.
-const SQL_CLEAR_ACTIVE_IN_DOMAIN = `
-  UPDATE connected_integrations
-     SET is_active = 0
-   WHERE domain = ?`;
-
-const SQL_MARK_ACTIVE = `
-  UPDATE connected_integrations
-     SET is_active = 1
-   WHERE domain = ? AND provider = ? AND status = 'connected'`;
-
-const SQL_COUNT_ACTIVE_IN_DOMAIN = `
-  SELECT COUNT(*) AS n
-    FROM connected_integrations
-   WHERE domain = ? AND status = 'connected' AND is_active = 1`;
-
-const SQL_FIND_SECRET = `
-  SELECT domain, provider, envelope_v, kid, wrap_salt, wrap_iv,
-         dek_wrap, data_iv, ciphertext, rotated_at
-    FROM integration_secrets
-   WHERE domain = ? AND provider = ?`;
-
-const SQL_UPSERT_SECRET = `
-  INSERT INTO integration_secrets (
-    domain, provider, envelope_v, kid, wrap_salt, wrap_iv,
-    dek_wrap, data_iv, ciphertext, rotated_at
-  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  ON CONFLICT(domain, provider) DO UPDATE SET
-    envelope_v = excluded.envelope_v,
-    kid = excluded.kid,
-    wrap_salt = excluded.wrap_salt,
-    wrap_iv = excluded.wrap_iv,
-    dek_wrap = excluded.dek_wrap,
-    data_iv = excluded.data_iv,
-    ciphertext = excluded.ciphertext,
-    rotated_at = excluded.rotated_at`;
-
-/**
- * Update only when the row still matches the ciphertext we just
- * decrypted. If a concurrent reseal raced ahead, our update is a
- * no-op and the running record stays consistent.
- */
-const SQL_RESEAL_GUARDED = `
-  UPDATE integration_secrets
-     SET envelope_v = ?, kid = ?, wrap_salt = ?, wrap_iv = ?,
-         dek_wrap = ?, data_iv = ?, ciphertext = ?, rotated_at = ?
-   WHERE domain = ? AND provider = ?
-     AND ciphertext = ?
-     AND kid = ?`;
-
-const SQL_LIST_PREVIOUS_SECRETS = `
-  SELECT domain, provider, envelope_v, kid, wrap_salt, wrap_iv,
-         dek_wrap, data_iv, ciphertext, rotated_at
-    FROM integration_secrets
-   WHERE kid = 'previous'`;
 
 function rowToStatus(row: RawStatusRow): IntegrationStatusRow {
 	return {
