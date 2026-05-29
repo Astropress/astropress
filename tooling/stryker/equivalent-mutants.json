@@ -1495,42 +1495,42 @@
 		},
 		{
 			"file": "src/sqlite-bootstrap-seeders.ts",
-			"line": 181,
+			"line": 184,
 			"column": 12,
 			"mutator": "LogicalOperator",
 			"reason": "Same `count += result.changes ?? 1` vs `&& 1` equivalence as L126."
 		},
 		{
 			"file": "src/sqlite-bootstrap-seeders.ts",
-			"line": 241,
+			"line": 247,
 			"column": 12,
 			"mutator": "LogicalOperator",
 			"reason": "Same `count += result.changes ?? 1` vs `&& 1` equivalence as L126."
 		},
 		{
 			"file": "src/sqlite-bootstrap-seeders.ts",
-			"line": 270,
+			"line": 276,
 			"column": 12,
 			"mutator": "LogicalOperator",
 			"reason": "Same `count += result.changes ?? 1` vs `&& 1` equivalence as L126."
 		},
 		{
 			"file": "src/sqlite-bootstrap-seeders.ts",
-			"line": 292,
+			"line": 298,
 			"column": 12,
 			"mutator": "LogicalOperator",
 			"reason": "Same `count += result.changes ?? 1` vs `&& 1` equivalence as L126."
 		},
 		{
 			"file": "src/sqlite-bootstrap-seeders.ts",
-			"line": 263,
+			"line": 269,
 			"column": 44,
 			"mutator": "Regex",
 			"reason": "`archive.legacyUrl.replace(/^\\//, \"\")` mutated to `replace(/\\//, \"\")`. legacyUrl always starts with '/' (enforced by ArchiveSeedRecord shape + upstream config). For input '/a/b/c': anchored removes leading '/' → 'a/b/c'; unanchored removes first '/' → 'a/b/c' — identical. Both then go through replaceAll('/', ':') yielding the same baseId."
 		},
 		{
 			"file": "src/sqlite-bootstrap-seeders.ts",
-			"line": 285,
+			"line": 291,
 			"column": 36,
 			"mutator": "Regex",
 			"reason": "Same anchored-vs-unanchored '/' regex equivalence as L263. page.path always starts with '/'."
@@ -2097,42 +2097,42 @@
 		},
 		{
 			"file": "src/project-env.ts",
-			"line": 169,
+			"line": 173,
 			"column": 6,
 			"mutator": "ConditionalExpression",
 			"reason": "`if (dataServices === \"none\") return null;` is a fast-path. When dataServices is \"none\" the mutant `if (false)` skips it, then the subsequent `=== \"supabase\"` / `=== \"appwrite\"` / `=== \"nhost\"` checks are all false (dataServices holds a single value), so control reaches the unconditional `return null` at the end of the function. Identical observable result (null)."
 		},
 		{
 			"file": "src/project-env.ts",
-			"line": 169,
+			"line": 173,
 			"column": 23,
 			"mutator": "StringLiteral",
 			"reason": "`dataServices === \"none\"` -> `dataServices === \"\"`. dataServices is never the empty string, so the branch never runs and control falls through to the unconditional `return null` at function end — the same value the original returns for dataServices === \"none\"."
 		},
 		{
 			"file": "src/project-env.ts",
-			"line": 169,
+			"line": 173,
 			"column": 31,
 			"mutator": "BlockStatement",
 			"reason": "Emptying the `if (dataServices === \"none\")` block removes the early `return null`; control then falls through the supabase/appwrite/nhost checks (all false for \"none\") to the unconditional `return null` at function end. Identical observable result."
 		},
 		{
 			"file": "src/project-env.ts",
-			"line": 129,
+			"line": 133,
 			"column": 3,
 			"mutator": "ConditionalExpression",
 			"reason": "`dataServices === \"custom\"` inside resolveAstropressAppHostFromEnv is unreachable: `dataServices` here comes from resolveDataServicesFromLegacyEnv, whose return domain is appwrite|pocketbase|nhost|neon|turso|supabase|cloudflare|none — never \"custom\". The disjunct is already always false, so forcing it to `false` changes nothing."
 		},
 		{
 			"file": "src/project-env.ts",
-			"line": 129,
+			"line": 133,
 			"column": 20,
 			"mutator": "StringLiteral",
 			"reason": "`dataServices === \"custom\"` -> `dataServices === \"\"` inside resolveAstropressAppHostFromEnv. `dataServices` comes from resolveDataServicesFromLegacyEnv which never returns \"custom\" nor \"\", so both the original and mutated comparison are always false — observably identical."
 		},
 		{
 			"file": "src/runtime-env.ts",
-			"line": 99,
+			"line": 94,
 			"column": 6,
 			"mutator": "ConditionalExpression",
 			"reason": "`if (locals?.runtime && typeof locals.runtime === \"object\")` guards reading `locals.runtime.env`. The mutant `if (true)` enters the block unconditionally. For every input where the original would skip: locals null/undefined makes `locals.runtime` throw (caught by the inner try/catch), and a falsy or non-object `locals.runtime` yields `(...).env === undefined` (or a caught throw) so `if (runtimeEnv)` is false. Every path then falls through to the same `globalBindings ?? {}` lookup the original reaches by skipping. Observable result is identical for all inputs."
@@ -2146,14 +2146,14 @@
 		},
 		{
 			"file": "src/runtime-env.ts",
-			"line": 127,
+			"line": 122,
 			"column": 54,
 			"mutator": "ArrayDeclaration",
 			"reason": "`LEGACY_RUNTIME_KEY_ALIASES[name] ?? []` → `?? [\"Stryker was here\"]`. The fallback is used only when `name` has no alias entry. The loop then calls `getRuntimeEnv(\"Stryker was here\")`, which is undefined (no env var of that name exists), so the loop body never returns and the function returns undefined — identical to iterating the empty array. Observable result is identical."
 		},
 		{
 			"file": "src/runtime-env.ts",
-			"line": 130,
+			"line": 125,
 			"column": 7,
 			"mutator": "ConditionalExpression",
 			"reason": "`if (aliasValue != null)` → `if (true)`. Every key in LEGACY_RUNTIME_KEY_ALIASES has exactly one alias, so the alias loop runs at most once. With a single iteration, returning `aliasValue` unconditionally (mutant) yields the same value as returning it only when non-null and otherwise falling through to `return undefined` (original): if the alias is set both return it, if unset both return undefined. Observable result is identical."
@@ -2399,7 +2399,7 @@
 		{
 			"file": "src/d1-store-content.ts",
 			"line": 176,
-			"column": 11,
+			"column": 18,
 			"mutator": "OptionalChaining",
 			"reason": "result.meta?.changes vs result.meta.changes. In all test configurations the SqliteBackedD1Database run() result always populates meta with a changes property; the optional-chaining ?? 0 fallback is provably unreachable in tests."
 		},
@@ -2517,7 +2517,7 @@
 		},
 		{
 			"file": "src/sqlite-runtime/routes.ts",
-			"line": 48,
+			"line": 43,
 			"column": 14,
 			"mutator": "LogicalOperator",
 			"reason": "`row.updated_at ?? undefined` mutated to `&&`. The cms_route_variants.updated_at column is declared NOT NULL with DEFAULT CURRENT_TIMESTAMP, so the SELECT in SQL_LIST_SYSTEM never yields a NULL value for that column. The `??`-branch is observationally unreachable; both `??` and `&&` collapse to the row.updated_at value for every possible row."
@@ -2633,6 +2633,13 @@
 			"column": 45,
 			"mutator": "Regex",
 			"reason": "`legacyUrl.replace(/^\\//, '')` mutated to `/\\//` (anchor dropped). `legacyUrl` comes from `normalizeLegacyUrl`, which guarantees a leading '/' (`raw.startsWith('/') ? raw : `/${raw}``). For any leading-slash string the first slash IS the leading slash, so `/^\\//` and `/\\//` replace the same character. Identical result for every value normalizeLegacyUrl can produce."
+		},
+		{
+			"file": "src/sqlite-runtime/content-submissions.ts",
+			"line": 26,
+			"column": 2,
+			"mutator": "StringLiteral",
+			"reason": "Module-level TESTIMONIAL_COLUMNS column-list constant. A test inserting/reading a testimonial would catch a mutated column list, but the static module-const initialiser is cached across vitest worker per-test runs so the mutant survives regardless (project-static-mutants-empirical). The live queries that consume it are exercised by createSqliteSubmissionStore tests."
 		}
 	]
 }

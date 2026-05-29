@@ -165,6 +165,11 @@ describe("createSqliteSubmissionStore", () => {
 			submittedAt: "2026-05-02T00:00:00.000Z",
 		});
 
+		// consentToPublish=false must round-trip as false (kills the `=== 1` mapping mutant).
+		expect(
+			sqliteSubmissionRepository.getTestimonials().every((r) => r.consentToPublish === false),
+		).toBe(true);
+
 		// Only the approved one is returned when filtering by status.
 		sqliteSubmissionRepository.moderateTestimonial(a.id, "approved");
 		const approved = sqliteSubmissionRepository.getTestimonials("approved");
@@ -191,6 +196,23 @@ describe("createSqliteSubmissionStore", () => {
 
 		const missing = sqliteSubmissionRepository.moderateTestimonial("nope", "rejected");
 		expect(missing).toEqual({ ok: false, error: "Testimonial not found" });
+	});
+
+	it("moderateTestimonial to a non-approved status leaves approvedAt unset", () => {
+		const db = makeDb();
+		const { sqliteSubmissionRepository } = createSqliteSubmissionStore(() => db);
+		const { id } = sqliteSubmissionRepository.submitTestimonial({
+			name: "Gail",
+			email: "gail@x",
+			consentToPublish: true,
+			source: "formbricks",
+			submittedAt: "2026-05-03T10:00:00.000Z",
+		});
+
+		// Rejecting an existing row must NOT stamp approvedAt (kills the
+		// `=== "approved" || === "featured"` ConditionalExpression mutants).
+		expect(sqliteSubmissionRepository.moderateTestimonial(id, "rejected")).toEqual({ ok: true });
+		expect(sqliteSubmissionRepository.getTestimonials("rejected")[0]?.approvedAt).toBeUndefined();
 	});
 
 	it("moderateTestimonial also stamps approvedAt for the 'featured' status", () => {
