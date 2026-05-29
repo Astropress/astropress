@@ -2790,14 +2790,14 @@
 		},
 		{
 			"file": "src/db-migrate-ops.ts",
-			"line": 35,
+			"line": 30,
 			"column": 34,
 			"mutator": "StringLiteral",
 			"reason": "dry-run uses new DatabaseSync(\":memory:\") to simulate without touching the real DB; \"\" opens an anonymous temp DB instead, but the simulated migration RESULT (applied/skipped) — the only thing returned/asserted — is identical and the handle is discarded, so the literal mutation is unobservable."
 		},
 		{
 			"file": "src/db-migrate-ops.ts",
-			"line": 84,
+			"line": 81,
 			"column": 12,
 			"mutator": "BlockStatement",
 			"reason": "the `finally { db.close() }` block only releases the DB handle; the function return value and on-disk state are already settled, so emptying it changes no observable result (a leaked handle in a short-lived CLI op)."
