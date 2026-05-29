@@ -4,6 +4,7 @@ import {
 	rollbackAstropressLastMigrationWithOptions,
 	runAstropressMigrations,
 } from "./sqlite-bootstrap.js";
+import type { SqliteDatabaseLike } from "./sqlite-bootstrap-helpers.js";
 
 export interface AstropressDbMigrateInput {
 	dbPath: string;
@@ -28,13 +29,13 @@ export function runAstropressDbMigrationsForCli(
 		// In dry-run mode, use an in-memory DB to simulate the migration without touching the real DB
 		const memDb = new DatabaseSync(":memory:");
 		memDb.exec(readAstropressSqliteSchemaSql());
-		const result = runAstropressMigrations(memDb, migrationsDir);
+		const result = runAstropressMigrations(memDb as unknown as SqliteDatabaseLike, migrationsDir);
 		memDb.close();
 		return { dbPath, migrationsDir, ...result, dryRun: true };
 	}
 
 	const db = new DatabaseSync(dbPath);
-	const result = runAstropressMigrations(db, migrationsDir);
+	const result = runAstropressMigrations(db as unknown as SqliteDatabaseLike, migrationsDir);
 	db.close();
 	return { dbPath, migrationsDir, ...result, dryRun: false };
 }
@@ -73,7 +74,9 @@ export function rollbackAstropressLastMigration(
 	const db = new DatabaseSync(dbPath);
 
 	try {
-		const result = rollbackAstropressLastMigrationWithOptions(db, { dryRun });
+		const result = rollbackAstropressLastMigrationWithOptions(db as unknown as SqliteDatabaseLike, {
+			dryRun,
+		});
 		return { dbPath, ...result };
 	} finally {
 		db.close();

@@ -1,4 +1,5 @@
 ---
+import { safeAdminUserName } from "astropress";
 import AdminLayout from "@astropress-diy/astropress/components/AdminLayout.astro";
 import CsrfInput from "@astropress-diy/astropress/components/CsrfInput.astro";
 import { parseSections, TEMPLATE_CATALOG } from "@astropress-diy/astropress/sections";
@@ -64,7 +65,7 @@ if (model.status === "not_found") {
     heading={t("routePageEditor.title")}
     currentPath="/ap-admin/route-pages"
     description={t("routePageEditor.description")}
-    userName={adminUser.name}
+    userName={safeAdminUserName(adminUser)}
   >
     <nav class="breadcrumb" aria-label={t("routePageEditor.breadcrumb")}>
       <a href="/ap-admin/route-pages">{t("routePageEditor.routePagesLink")}</a>
@@ -247,7 +248,7 @@ if (model.status === "not_found") {
     heading={isForbidden ? t("routePages.forbiddenTitle") : t("routePageEditor.notFoundTitle")}
     currentPath="/ap-admin/route-pages"
     description={isForbidden ? t("routePages.forbiddenDesc") : t("routePageEditor.notFoundDesc")}
-    userName={adminUser.name}
+    userName={safeAdminUserName(adminUser)}
   >
     {isForbidden && (
       <section class="panel">

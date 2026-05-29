@@ -11,6 +11,10 @@ let withSafeLocalStoreFallback: typeof import("../src/admin-store-dispatch.js").
 let getAdminDb: typeof import("../src/admin-store-dispatch.js").getAdminDb;
 // biome-ignore format: single-line typeof import required for esbuild/oxc compatibility
 let safeLoadLocalAdminStore: typeof import("../src/admin-store-dispatch.js").safeLoadLocalAdminStore;
+// biome-ignore format: single-line typeof import required for esbuild/oxc compatibility
+let resolveApiRuntime: typeof import("../src/admin-store-dispatch.js").resolveApiRuntime;
+// biome-ignore format: single-line typeof import required for esbuild/oxc compatibility
+let resolveFlashStore: typeof import("../src/admin-store-dispatch.js").resolveFlashStore;
 
 const { mockLoadLocalAdminStore } = vi.hoisted(() => ({
 	mockLoadLocalAdminStore: vi.fn(),
@@ -26,8 +30,14 @@ vi.mock("../src/local-runtime-modules.js", () => ({
 
 beforeEach(async () => {
 	vi.resetModules();
-	({ withLocalStoreFallback, withSafeLocalStoreFallback, getAdminDb, safeLoadLocalAdminStore } =
-		await import("../src/admin-store-dispatch.js"));
+	({
+		withLocalStoreFallback,
+		withSafeLocalStoreFallback,
+		getAdminDb,
+		safeLoadLocalAdminStore,
+		resolveApiRuntime,
+		resolveFlashStore,
+	} = await import("../src/admin-store-dispatch.js"));
 	mockLoadLocalAdminStore.mockReset();
 });
 
@@ -139,5 +149,71 @@ describe("getAdminDb", () => {
 			runtime: { env: {} },
 		} as unknown as App.Locals;
 		expect(getAdminDb(noDbLocals)).toBeUndefined();
+	});
+});
+
+describe("resolveApiRuntime", () => {
+	it("returns D1-backed stores and an async rate limiter when a DB binding is present", async () => {
+		const db = makeDb();
+		const locals = makeLocals(db);
+
+		const runtime = await resolveApiRuntime(locals);
+		expect(runtime.webhooks).toBeDefined();
+		expect(mockLoadLocalAdminStore).not.toHaveBeenCalled();
+		const apiTokens = runtime.apiTokens;
+		if (!apiTokens) throw new Error("expected D1 apiTokens store");
+
+		// The D1 token store round-trips against the same binding.
+		const { rawToken } = await apiTokens.create({
+			label: "t",
+			scopes: ["content:read"],
+		});
+		const verified = await apiTokens.verify(rawToken);
+		expect(verified.valid).toBe(true);
+
+		// D1 rate limiter is promise-returning; withApiRequest awaits it.
+		await expect(Promise.resolve(runtime.checkRateLimit("api:test", 60, 60_000))).resolves.toBe(
+			true,
+		);
+	});
+
+	it("falls back to the local store's apiTokens/webhooks/checkRateLimit with no DB binding", async () => {
+		const localApiTokens = { verify: vi.fn() };
+		const localWebhooks = { list: vi.fn() };
+		const localCheckRateLimit = vi.fn().mockReturnValue(true);
+		mockLoadLocalAdminStore.mockResolvedValue({
+			apiTokens: localApiTokens,
+			webhooks: localWebhooks,
+			checkRateLimit: localCheckRateLimit,
+		});
+
+		const runtime = await resolveApiRuntime(null);
+		expect(runtime.apiTokens).toBe(localApiTokens);
+		expect(runtime.webhooks).toBe(localWebhooks);
+		expect(runtime.checkRateLimit).toBe(localCheckRateLimit);
+		expect(mockLoadLocalAdminStore).toHaveBeenCalledOnce();
+	});
+});
+
+describe("resolveFlashStore", () => {
+	it("returns a working D1-backed flash store when a DB binding is present", async () => {
+		const db = makeDb();
+		const locals = makeLocals(db);
+		const flash = await resolveFlashStore(locals);
+		expect(flash).toBeDefined();
+		if (!flash) throw new Error("expected D1 flash store");
+
+		const { id } = await flash.put("d1-roundtrip");
+		expect(await flash.consume(id)).toBe("d1-roundtrip");
+		expect(await flash.consume(id)).toBeNull();
+	});
+
+	it("falls back to the local store's flash surface with no DB binding", async () => {
+		const localFlash = { put: vi.fn(), consume: vi.fn() };
+		mockLoadLocalAdminStore.mockResolvedValue({ flash: localFlash });
+
+		const flash = await resolveFlashStore(null);
+		expect(flash).toBe(localFlash);
+		expect(mockLoadLocalAdminStore).toHaveBeenCalledOnce();
 	});
 });

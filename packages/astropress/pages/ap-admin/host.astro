@@ -1,6 +1,7 @@
 ---
 import AdminLayout from "@astropress-diy/astropress/components/AdminLayout.astro";
 import { isAuthUserAdmin } from "astropress";
+import { validateEmbedUrl } from "../../src/admin-embed-url";
 
 const adminUser = Astro.locals.adminUser;
 
@@ -26,6 +27,9 @@ const hostPanel = (Astro.locals as Record<string, unknown>).hostPanel as
 if (!hostPanel) {
 	return Astro.redirect("/ap-admin", 302);
 }
+
+// #109: validate the provider panel URL before it reaches an iframe src / href.
+const embed = validateEmbedUrl(hostPanel.url);
 ---
 
 <AdminLayout
@@ -36,10 +40,21 @@ if (!hostPanel) {
   userName={adminUser.name}
   hasHostPanel={true}
 >
-  {hostPanel.mode === "iframe" ? (
+  {!embed.ok ? (
+    <section class="panel host-link-panel" data-host-invalid-url>
+      <div class="section-header">
+        <div>
+          <p class="admin-kicker">Database Provider</p>
+          <h2>{hostPanel.label}</h2>
+          <p class="error-notice">This provider panel is misconfigured and was not loaded: {embed.reason}</p>
+          <p class="admin-note">Set the provider panel URL to an https URL (http is allowed only for localhost).</p>
+        </div>
+      </div>
+    </section>
+  ) : hostPanel.mode === "iframe" ? (
     <div class="host-frame-shell">
       <iframe
-        src={hostPanel.url}
+        src={embed.url}
         class="host-frame"
         title={`${hostPanel.label} provider panel`}
         allow="clipboard-write; fullscreen"
@@ -57,7 +72,7 @@ if (!hostPanel) {
       </div>
       <div class="host-link-actions">
         <a
-          href={hostPanel.url}
+          href={embed.url}
           target="_blank"
           rel="noopener noreferrer"
           class="admin-button"
@@ -66,7 +81,7 @@ if (!hostPanel) {
           Open {hostPanel.label}
         </a>
         <p class="admin-note">
-          Opens <code>{hostPanel.url}</code> in a new tab.
+          Opens <code>{embed.url}</code> in a new tab.
         </p>
       </div>
     </section>

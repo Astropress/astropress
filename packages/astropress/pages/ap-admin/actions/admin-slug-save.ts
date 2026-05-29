@@ -11,7 +11,7 @@ const VALID_SLUG = /^[a-z0-9][a-z0-9-]*[a-z0-9]$|^[a-z0-9]$/;
 export const POST: APIRoute = async (context) =>
 	withAdminFormAction(
 		context,
-		{ failurePath: "/ap-admin/route-pages", requireAdmin: true },
+		{ failurePath: "/ap-admin/route-pages", requireAction: "settings:edit" },
 		async ({ actor, formData, locals, redirect, fail }) => {
 			const raw = String(formData.get("adminSlug") ?? "")
 				.trim()

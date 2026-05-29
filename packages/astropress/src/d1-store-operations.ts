@@ -161,7 +161,8 @@ export function createD1OperationsMutationPart(
 				_actorEmail: string,
 			): Promise<{ ok: true } | { ok: false; error: string }> {
 				const result = await buildModerateSql(db, status, id);
-				if (!result.meta.changes) return { ok: false as const, error: "Testimonial not found" };
+				if (!Number(result.meta?.changes ?? 0))
+					return { ok: false as const, error: "Testimonial not found" };
 				return { ok: true as const };
 			},
 			async submitContact(input): Promise<{ ok: true; submission: ContactSubmission }> {

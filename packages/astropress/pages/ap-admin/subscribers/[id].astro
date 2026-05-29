@@ -1,5 +1,6 @@
 ---
 import AdminLayout from "@astropress-diy/astropress/components/AdminLayout.astro";
+import CsrfInput from "@astropress-diy/astropress/components/CsrfInput.astro";
 import { createListmonkOps } from "@astropress-diy/astropress/newsletter-adapter";
 import { getNewsletterConfig } from "@astropress-diy/astropress/runtime-env";
 import { requiresAccess, resolveAdminLocale } from "astropress";
@@ -130,6 +131,7 @@ const wasDeleted = Astro.url.searchParams.get("deleted") === "1";
               <div class="modal-actions">
                 <button type="button" class="admin-button-ghost small secondary-button" data-dialog-close>Cancel</button>
                 <form method="post" action="/ap-admin/actions/subscriber-delete" style="display:inline;">
+                  <CsrfInput token={Astro.locals.csrfToken} />
                   <input type="hidden" name="id" value="" />
                   <button type="submit" class="admin-button small delete-button">Remove Subscriber</button>
                 </form>

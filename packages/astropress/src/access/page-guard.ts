@@ -19,11 +19,9 @@
  */
 
 import { logAccessDeny } from "./audit-deny";
+import { DEFAULT_FORBIDDEN_PATH, DEFAULT_LOGIN_PATH } from "./page-guard-data.js";
 import { getAccessContext } from "./request-context";
 import type { Env, Resource } from "./types";
-
-const DEFAULT_FORBIDDEN_PATH = "/ap-admin?error=insufficient-permissions";
-const DEFAULT_LOGIN_PATH = "/ap-admin/login";
 
 export interface RequiresAccessOptions {
 	resource?: Resource;
@@ -36,7 +34,10 @@ export interface RequiresAccessOptions {
 
 type AstroLike = {
 	locals: App.Locals;
-	redirect: (path: string, status?: number) => Response;
+	// Method syntax (not an arrow field) so `status` is checked bivariantly:
+	// Astro's `redirect` types it as the narrow ValidRedirectStatus union, which
+	// an arrow field's strict contravariance would reject here.
+	redirect(path: string, status?: number): Response;
 };
 
 export async function requiresAccess(

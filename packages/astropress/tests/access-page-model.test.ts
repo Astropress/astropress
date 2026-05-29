@@ -37,6 +37,11 @@ let locals: App.Locals;
 beforeEach(() => {
 	db = makeDb();
 	locals = makeLocals(db);
+	// The Access page resolves the viewer's effective permissions through
+	// getAccessContext(locals), which reads locals.adminUser — exactly the
+	// object access.astro passes as `user`. Wire it so the permission-gated
+	// role/grant load (roles:manage / grants:manage) sees an admin viewer.
+	(locals as { adminUser?: typeof adminUser }).adminUser = adminUser;
 	db.prepare(
 		"INSERT INTO admin_users (email, password_hash, name, active, is_admin) VALUES (?, ?, ?, ?, ?)",
 	).run("admin@test.local", "hash", "Admin", 1, 1);
@@ -52,9 +57,74 @@ afterEach(() => {
 });
 
 describe("buildAccessPageModel", () => {
-	it("returns forbidden for non-admin subject — admin-only break-glass guard", async () => {
+	it("returns forbidden for a subject that cannot list users — page-level users:list gate", async () => {
+		// The viewer resolved from locals must lack users:list. The seeded editor
+		// holds no grants, so getAccessContext denies users:list → forbidden.
+		(locals as { adminUser?: typeof editorUser }).adminUser = editorUser;
 		const result = await buildAccessPageModel(locals, editorUser);
 		expect(result.status).toBe("forbidden");
+	});
+
+	it("returns forbidden when the user arg is null even though locals carries an admin", async () => {
+		// The `if (!user)` early-return is independent of the locals-derived
+		// viewer: a null caller is forbidden regardless of who is on locals.
+		// beforeEach already put an admin on locals.
+		const result = await buildAccessPageModel(locals, null);
+		expect(result.status).toBe("forbidden");
+	});
+
+	it("loads role data for a viewer with roles:manage but NOT grants:manage — #112 (|| not &&)", async () => {
+		const repo = createAccessRepository(db as never);
+		const editorRow = db
+			.prepare("SELECT id FROM admin_users WHERE email = ?")
+			.get("editor@test.local") as { id: number };
+		for (const action of ["users:list", "roles:manage"]) {
+			repo.addUserPolicy({ userId: editorRow.id, effect: "allow", action });
+		}
+		(locals as { adminUser?: typeof editorUser }).adminUser = editorUser;
+
+		const result = await buildAccessPageModel(locals, editorUser);
+		expect(result.status).toBe("ok");
+		expect(result.data.canManageRoles).toBe(true);
+		expect(result.data.canManageGrants).toBe(false);
+		// roles:manage alone must still load the tab data (the gate is OR, not AND).
+		expect(result.data.roles.length).toBeGreaterThan(0);
+	});
+
+	it("serves a partial-permission viewer (users:list only) but withholds role/grant data — #112", async () => {
+		const repo = createAccessRepository(db as never);
+		const editorRow = db
+			.prepare("SELECT id FROM admin_users WHERE email = ?")
+			.get("editor@test.local") as { id: number };
+		repo.addUserPolicy({ userId: editorRow.id, effect: "allow", action: "users:list" });
+		(locals as { adminUser?: typeof editorUser }).adminUser = editorUser;
+
+		const result = await buildAccessPageModel(locals, editorUser);
+		expect(result.status).toBe("ok");
+		// My permissions always loads; management surfaces stay closed + empty.
+		expect(result.data.canManageRoles).toBe(false);
+		expect(result.data.canManageGrants).toBe(false);
+		expect(result.data.roles).toEqual([]);
+		expect(result.data.rolePoliciesMap).toEqual({});
+		expect(result.data.userDirectGrantCounts).toEqual({});
+		expect(result.data.viewerPolicies.length).toBeGreaterThan(0);
+	});
+
+	it("loads role/grant data for a viewer holding roles:manage + grants:manage — #112", async () => {
+		const repo = createAccessRepository(db as never);
+		const editorRow = db
+			.prepare("SELECT id FROM admin_users WHERE email = ?")
+			.get("editor@test.local") as { id: number };
+		for (const action of ["users:list", "roles:manage", "grants:manage"]) {
+			repo.addUserPolicy({ userId: editorRow.id, effect: "allow", action });
+		}
+		(locals as { adminUser?: typeof editorUser }).adminUser = editorUser;
+
+		const result = await buildAccessPageModel(locals, editorUser);
+		expect(result.status).toBe("ok");
+		expect(result.data.canManageRoles).toBe(true);
+		expect(result.data.canManageGrants).toBe(true);
+		expect(result.data.roles.length).toBeGreaterThan(0);
 	});
 
 	it("returns ok with the active tab defaulting to 'users' — users come from listAdminUsers, roles from access repo", async () => {
@@ -158,6 +228,14 @@ describe("buildAccessPageModel", () => {
 	});
 
 	it("falls through to the local-store fallback shape when DB binding is unavailable", async () => {
+		// Stub the viewer context to an admin (can() → allow) so the management
+		// load runs without itself going through withLocalStoreFallback; the
+		// once-mock below then targets the loadAccessTabData call specifically.
+		vi.spyOn(accessRequestContext, "getAccessContext").mockResolvedValueOnce({
+			subject: { id: "1", email: adminUser.email, isAdmin: true, roles: [], attributes: {} },
+			engine: { policiesFor: () => [], can: () => ({ decision: "allow", reason: "" }) },
+			can: () => ({ decision: "allow", reason: "" }),
+		} as unknown as Awaited<ReturnType<typeof accessRequestContext.getAccessContext>>);
 		// Force the dispatcher to take the onLocal path so the local-fallback arrow
 		// (`async () => ({...})`) is the one that produces tabData. An ArrowFunction
 		// mutant on that local fallback would return undefined and crash; the explicit

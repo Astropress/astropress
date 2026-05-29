@@ -5,24 +5,38 @@
  * keyed by asset id. Admin-only — non-admins get 403, unauthenticated 401.
  */
 
-import { buildMediaPageModel, isAuthUserAdmin } from "@astropress-diy/astropress";
+import {
+	applyAstropressSecurityHeaders,
+	buildMediaPageModel,
+	getAccessContext,
+} from "@astropress-diy/astropress";
 import type { APIRoute } from "astro";
 
 export const prerender = false;
 
+/**
+ * Admin JSON response carrying the shared `admin`-area security envelope
+ * (Referrer-Policy, X-Content-Type-Options, Permissions-Policy,
+ * Cross-Origin-Resource-Policy, CSP, …) plus `private, no-store` cache
+ * semantics — applied to success and auth-failure responses alike (#103).
+ */
+function adminJson(body: unknown, status: number): Response {
+	const headers = new Headers({ "content-type": "application/json" });
+	applyAstropressSecurityHeaders(headers, { area: "admin" });
+	return new Response(JSON.stringify(body), { status, headers });
+}
+
 export const GET: APIRoute = async ({ locals }) => {
 	const adminUser = locals.adminUser;
 	if (!adminUser) {
-		return new Response(JSON.stringify({ error: "unauthenticated" }), {
-			status: 401,
-			headers: { "content-type": "application/json" },
-		});
+		return adminJson({ error: "unauthenticated" }, 401);
 	}
-	if (!isAuthUserAdmin(adminUser)) {
-		return new Response(JSON.stringify({ error: "forbidden" }), {
-			status: 403,
-			headers: { "content-type": "application/json" },
-		});
+	// #106: authorize on the same media:list rule the media page + picker use,
+	// not the coarse admin break-glass, so the page and its picker API agree.
+	const access = await getAccessContext({ locals });
+	const decision = access?.can("media:list");
+	if (!decision || decision.decision === "deny") {
+		return adminJson({ error: "forbidden" }, 403);
 	}
 	const model = await buildMediaPageModel(locals);
 	const items = model.data.mediaWithResolvedUrls.map((asset) => ({
@@ -34,11 +48,5 @@ export const GET: APIRoute = async ({ locals }) => {
 		width: asset.width ?? null,
 		height: asset.height ?? null,
 	}));
-	return new Response(JSON.stringify({ items }), {
-		status: 200,
-		headers: {
-			"content-type": "application/json",
-			"cache-control": "no-store",
-		},
-	});
+	return adminJson({ items }, 200);
 };

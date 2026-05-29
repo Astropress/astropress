@@ -103,7 +103,7 @@ function marketingVariantParams(
 }
 
 export function seedBootstrapUsers(
-	options: AstropressSqliteSeedToolkitOptions,
+	options: AstropressSqliteSeedToolkitOptions<string>,
 	db: SqliteDatabaseLike,
 ) {
 	const upsert = db.prepare(`
@@ -122,14 +122,14 @@ export function seedBootstrapUsers(
 			hashPasswordSync(user.password),
 			user.name,
 			user.role === "admin" ? 1 : 0,
-		) as { changes?: number };
+		) as { changes: number };
 		count += result.changes ?? 1;
 	}
 	return count;
 }
 
 export function seedMediaAssets(
-	options: AstropressSqliteSeedToolkitOptions,
+	options: AstropressSqliteSeedToolkitOptions<string>,
 	db: SqliteDatabaseLike,
 	workspaceRoot: string,
 ) {
@@ -157,13 +157,16 @@ export function seedMediaAssets(
 			"",
 			asset.id,
 			"seed-import",
-		) as { changes?: number };
+		) as { changes: number };
 		count += result.changes ?? 1;
 	}
 	return count;
 }
 
-export function seedRedirects(options: AstropressSqliteSeedToolkitOptions, db: SqliteDatabaseLike) {
+export function seedRedirects(
+	options: AstropressSqliteSeedToolkitOptions<string>,
+	db: SqliteDatabaseLike,
+) {
 	const insert = db.prepare(`
     INSERT INTO redirect_rules (source_path, target_path, status_code, created_by, deleted_at)
     VALUES (?, ?, ?, ?, NULL)
@@ -176,14 +179,17 @@ export function seedRedirects(options: AstropressSqliteSeedToolkitOptions, db: S
 	let count = 0;
 	for (const rule of options.redirectRules) {
 		const result = insert.run(rule.sourcePath, rule.targetPath, rule.statusCode, "seed-import") as {
-			changes?: number;
+			changes: number;
 		};
 		count += result.changes ?? 1;
 	}
 	return count;
 }
 
-export function seedComments(options: AstropressSqliteSeedToolkitOptions, db: SqliteDatabaseLike) {
+export function seedComments(
+	options: AstropressSqliteSeedToolkitOptions<string>,
+	db: SqliteDatabaseLike,
+) {
 	const insert = db.prepare(`
     INSERT INTO comments (id, author, email, body, route, status, policy, submitted_at)
     VALUES (?, ?, ?, ?, ?, ?, ?, COALESCE(?, CURRENT_TIMESTAMP))
@@ -200,14 +206,14 @@ export function seedComments(options: AstropressSqliteSeedToolkitOptions, db: Sq
 			comment.status,
 			comment.policy,
 			comment.submittedAt ?? null,
-		) as { changes?: number };
-		count += result.changes ?? 0;
+		) as { changes: number };
+		count += result.changes;
 	}
 	return count;
 }
 
 export function seedSiteSettings(
-	options: AstropressSqliteSeedToolkitOptions,
+	options: AstropressSqliteSeedToolkitOptions<string>,
 	db: SqliteDatabaseLike,
 ) {
 	const result = db
@@ -220,12 +226,12 @@ export function seedSiteSettings(
 			options.siteSettings.newsletterEnabled ? 1 : 0,
 			options.siteSettings.commentsDefaultPolicy,
 			"seed-import",
-		) as { changes?: number };
-	return result.changes ?? 0;
+		) as { changes: number };
+	return result.changes;
 }
 
 export function seedSystemRoutes(
-	options: AstropressSqliteSeedToolkitOptions,
+	options: AstropressSqliteSeedToolkitOptions<string>,
 	db: SqliteDatabaseLike,
 ) {
 	const insertGroup = db.prepare(SQL_SEED_SYSTEM_GROUP);
@@ -236,7 +242,7 @@ export function seedSystemRoutes(
 	for (const route of options.systemRoutes) {
 		insertGroup.run(route.groupId, route.renderStrategy, route.path);
 		const result = insertVariant.run(...systemRouteVariantParams(route)) as {
-			changes?: number;
+			changes: number;
 		};
 		count += result.changes ?? 1;
 		insertRevision.run(
@@ -252,7 +258,7 @@ export function seedSystemRoutes(
 }
 
 export function seedArchiveRoutes(
-	options: AstropressSqliteSeedToolkitOptions,
+	options: AstropressSqliteSeedToolkitOptions<string>,
 	db: SqliteDatabaseLike,
 ) {
 	const insertGroup = db.prepare(SQL_SEED_ARCHIVE_GROUP);
@@ -265,7 +271,7 @@ export function seedArchiveRoutes(
 		const variantId = `variant:archive:${baseId}:en`;
 		insertGroup.run(groupId, archive.legacyUrl);
 		const result = insertVariant.run(...archiveVariantParams(archive, variantId, groupId)) as {
-			changes?: number;
+			changes: number;
 		};
 		count += result.changes ?? 1;
 	}
@@ -273,7 +279,7 @@ export function seedArchiveRoutes(
 }
 
 export function seedMarketingRoutes(
-	options: AstropressSqliteSeedToolkitOptions,
+	options: AstropressSqliteSeedToolkitOptions<string>,
 	db: SqliteDatabaseLike,
 ) {
 	const insertGroup = db.prepare(SQL_SEED_MARKETING_GROUP);
@@ -288,7 +294,7 @@ export function seedMarketingRoutes(
 		insertGroup.run(groupId, locale, page.path);
 		const result = insertVariant.run(
 			...marketingVariantParams(page, variantId, groupId, locale),
-		) as { changes?: number };
+		) as { changes: number };
 		count += result.changes ?? 1;
 	}
 	return count;

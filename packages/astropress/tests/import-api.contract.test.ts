@@ -48,7 +48,7 @@ const MOCK_REPORT: AstropressWordPressImportReport = {
 	manualTasks: [],
 	warnings: [],
 	plan: {
-		exportFile: "/tmp/export.xml",
+		exportFile: "wp-export.xml",
 		includeComments: true,
 		includeUsers: true,
 		includeMedia: true,
@@ -70,7 +70,7 @@ const MOCK_REPORT: AstropressWordPressImportReport = {
 		manualTasks: [],
 	},
 	inventory: {
-		exportFile: "/tmp/export.xml",
+		exportFile: "wp-export.xml",
 		detectedRecords: 4,
 		detectedMedia: 1,
 		detectedComments: 0,
@@ -146,7 +146,7 @@ function req(opts: { token?: string; body?: unknown } = {}): Request {
 
 describe("POST /ap-api/v1/import/wordpress — auth and scope", () => {
 	it("returns 401 without Authorization header", async () => {
-		const res = await POST(ctx(req({ body: { exportFile: "/tmp/export.xml" } })));
+		const res = await POST(ctx(req({ body: { exportFile: "wp-export.xml" } })));
 		expect(res.status).toBe(401);
 	});
 
@@ -155,7 +155,7 @@ describe("POST /ap-api/v1/import/wordpress — auth and scope", () => {
 			ctx(
 				req({
 					token: contentReadToken,
-					body: { exportFile: "/tmp/export.xml" },
+					body: { exportFile: "wp-export.xml" },
 				}),
 			),
 		);
@@ -175,7 +175,7 @@ describe("POST /ap-api/v1/import/wordpress — auth and scope", () => {
 			ctx(
 				req({
 					token: importWriteToken,
-					body: { exportFile: "/tmp/export.xml" },
+					body: { exportFile: "wp-export.xml" },
 				}),
 			),
 		);
@@ -204,6 +204,23 @@ describe("POST /ap-api/v1/import/wordpress — request validation", () => {
 		const res = await POST(ctx(req({ token: importWriteToken, body: { exportFile: "  " } })));
 		expect(res.status).toBe(422);
 	});
+
+	// #118: untrusted exportFile must be confined to the workspace root.
+	it("returns 422 and never invokes the importer for an absolute exportFile", async () => {
+		const res = await POST(
+			ctx(req({ token: importWriteToken, body: { exportFile: "/etc/passwd" } })),
+		);
+		expect(res.status).toBe(422);
+		expect(mocks.importWordPress).not.toHaveBeenCalled();
+	});
+
+	it("returns 422 and never invokes the importer for a traversing exportFile", async () => {
+		const res = await POST(
+			ctx(req({ token: importWriteToken, body: { exportFile: "../../etc/passwd" } })),
+		);
+		expect(res.status).toBe(422);
+		expect(mocks.importWordPress).not.toHaveBeenCalled();
+	});
 });
 
 describe("POST /ap-api/v1/import/wordpress — success path", () => {
@@ -212,7 +229,7 @@ describe("POST /ap-api/v1/import/wordpress — success path", () => {
 			ctx(
 				req({
 					token: importWriteToken,
-					body: { exportFile: "/tmp/export.xml" },
+					body: { exportFile: "wp-export.xml" },
 				}),
 			),
 		);
@@ -230,13 +247,13 @@ describe("POST /ap-api/v1/import/wordpress — success path", () => {
 			ctx(
 				req({
 					token: importWriteToken,
-					body: { exportFile: "/tmp/export.xml" },
+					body: { exportFile: "wp-export.xml" },
 				}),
 			),
 		);
 		expect(mocks.importWordPress).toHaveBeenCalledWith(
 			expect.objectContaining({
-				exportFile: "/tmp/export.xml",
+				exportFile: "wp-export.xml",
 				applyLocal: true,
 			}),
 		);
@@ -253,7 +270,7 @@ describe("POST /ap-api/v1/import/wordpress — success path", () => {
 			ctx(
 				req({
 					token: importWriteToken,
-					body: { exportFile: "/tmp/export.xml" },
+					body: { exportFile: "wp-export.xml" },
 				}),
 			),
 		);

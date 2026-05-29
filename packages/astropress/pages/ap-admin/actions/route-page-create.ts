@@ -36,7 +36,7 @@ function buildDefaultSections(title: string, summary: string, path: string) {
 export const POST: APIRoute = async (context) =>
 	withAdminFormAction(
 		context,
-		{ failurePath: "/ap-admin/pages/new", requireAdmin: true },
+		{ failurePath: "/ap-admin/pages/new", requireAction: "routePages:edit" },
 		async ({ actor, formData, locals, redirect, fail }) => {
 			const path = String(formData.get("path") ?? "");
 			const title = String(formData.get("title") ?? "");

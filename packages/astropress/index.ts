@@ -128,6 +128,7 @@ export {
 // Admin form utilities
 export {
 	actionErrorRedirect,
+	actionNoticeRedirect,
 	actionRedirect,
 	requireAdminFormAction,
 	withAdminFormAction,
@@ -141,6 +142,7 @@ export type { AdminDashboardModel } from "./src/admin-dashboard";
 // Admin page model builders
 export { buildAdminDashboardModel } from "./src/admin-dashboard";
 export type { AdminLocale } from "./src/admin-labels";
+export { resolveSafeAdminHref, resolveSafeAdminReturnTo } from "./src/admin-link-utils.js";
 export {
 	ADMIN_LOCALE_COOKIE,
 	isRtlLocale,
@@ -152,6 +154,7 @@ export type { AdminLocalePair } from "./src/admin-locale-links";
 export { getAdminLocalePair } from "./src/admin-locale-links";
 export type { PageLabelKey } from "./src/admin-page-labels";
 export { getPageT, pageLabels } from "./src/admin-page-labels.js";
+export { safeAdminUserName } from "./src/admin-page-model-helpers.js";
 export type { AdminPageResult } from "./src/admin-page-models";
 export {
 	buildAcceptInvitePageModel,
@@ -241,6 +244,7 @@ export type {
 } from "./src/build-time-content-loader";
 // Build-time content loading
 export { createAstropressBuildTimeLoader } from "./src/build-time-content-loader.js";
+export { resolveCanonicalOrigin } from "./src/canonical-origin.js";
 export type {
 	AstropressContentEvent,
 	AstropressMediaEvent,
@@ -255,6 +259,7 @@ export {
 	dispatchPluginContentEvent,
 	dispatchPluginMediaEvent,
 	getCmsConfig,
+	peekCmsConfig,
 	registerCms,
 	validateContentFields,
 } from "./src/config";
@@ -323,6 +328,11 @@ export { createAstropressHostedPlatformAdapter } from "./src/hosted-platform-ada
 export { optimizeImageLoading } from "./src/html-optimization";
 // Content utilities
 export { sanitizeHtml } from "./src/html-sanitization";
+export {
+	assertSafeImportExportFile,
+	getTrustedImportRoot,
+	ImportPathError,
+} from "./src/import/import-path.js";
 export type { AstropressInMemoryPlatformAdapterOptions } from "./src/in-memory-platform-adapter";
 export { createAstropressInMemoryPlatformAdapter } from "./src/in-memory-platform-adapter.js";
 export type {
@@ -363,6 +373,10 @@ export {
 	OAuthRegistryError,
 	registerOAuthProvider,
 } from "./src/integrations/oauth/registry.js";
+export {
+	consumeOAuthStateNonce,
+	OAUTH_NONCE_RATE_KEY_PREFIX,
+} from "./src/integrations/oauth/replay.js";
 export type {
 	SealOAuthCallbackErrorCode,
 	SealOAuthCallbackInput,
@@ -655,9 +669,11 @@ export {
 	connectIntegrationAction,
 	disconnectIntegrationAction,
 	reverifyIntegrationAction,
+	setActiveIntegrationProviderAction,
 } from "./src/runtime-actions-integrations.js";
 // Admin actions (write)
 export {
+	checkUploadSize,
 	consumeRuntimeInviteToken,
 	consumeRuntimePasswordResetToken,
 	createRuntimeAuthor,
@@ -679,6 +695,7 @@ export {
 	restoreRuntimeRevision,
 	saveRuntimeContentState,
 	saveRuntimeSettings,
+	scheduleRuntimePublish,
 	suspendRuntimeAdminUser,
 	unsuspendRuntimeAdminUser,
 	updateRuntimeAuthor,

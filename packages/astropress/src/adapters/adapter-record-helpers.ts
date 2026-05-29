@@ -6,9 +6,7 @@ import {
 } from "../persistence-commons";
 import type { ContentStoreRecord, RevisionRecord } from "../platform-contracts";
 
-const SQL_LIST_TRANSLATIONS =
-	"SELECT route, state, updated_at, updated_by FROM translation_overrides ORDER BY route ASC";
-const SQL_D1_INSERT_REVISION = `INSERT INTO content_revisions (id, slug, source, title, status, scheduled_at, body, seo_title, meta_description, excerpt, og_title, og_description, og_image, author_ids, category_ids, tag_ids, canonical_url_override, robots_directive, revision_note, created_at, created_by) VALUES (?, ?, 'reviewed', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+import { SQL_D1_INSERT_REVISION, SQL_LIST_TRANSLATIONS } from "./adapter-record-helpers-data.js";
 
 export const FULL_STACK_CAPABILITIES = {
 	hostedAdmin: true,
@@ -32,7 +30,9 @@ export function cloudflareActorEmail() {
 }
 
 export function normalizeContentStatus(
-	status: ContentStoreRecord["status"],
+	// Accepts any raw status string (revision snapshots, row values); delegates
+	// to the commons normaliser which collapses unknowns to a valid status.
+	status: string | null | undefined,
 ): "draft" | "published" | "archived" {
 	// Adapter writes ContentStoreRecord whose status lacks "review"; collapse
 	// anything unknown to "published" via commons.
@@ -51,7 +51,7 @@ export function toTranslationRecord(
 	state: string,
 	updatedAt: string,
 	updatedBy: string,
-) {
+): ContentStoreRecord {
 	return {
 		id: route,
 		kind: "translation" as const,

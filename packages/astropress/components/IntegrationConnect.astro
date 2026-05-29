@@ -26,12 +26,24 @@ interface Props {
 	domain: IntegrationDomain;
 	connectedProviderIds?: readonly string[];
 	statusByProvider?: Readonly<Record<string, "connected" | "error" | "paused">>;
+	/**
+	 * The explicitly-active provider for this domain (#127). When several
+	 * providers are connected, only the active one is used by the runtime; the
+	 * admin selects it here. Null/undefined when nothing is active yet.
+	 */
+	activeProviderId?: string | null;
 }
 
-const { domain, connectedProviderIds = [], statusByProvider = {} } = Astro.props;
+const {
+	domain,
+	connectedProviderIds = [],
+	statusByProvider = {},
+	activeProviderId = null,
+} = Astro.props;
 
 const providers = listProviders(domain);
 const connectedSet = new Set(connectedProviderIds);
+const connectedCount = connectedProviderIds.length;
 
 function fieldKeysOf(provider: RegisteredProvider): string[] {
 	const schema = provider.fields as unknown as {
@@ -65,20 +77,27 @@ function isSensitive(key: string): boolean {
 	const keys = fieldKeysOf(provider);
 	const isConnected = connectedSet.has(provider.id);
 	const status = statusByProvider[provider.id];
+	const isActive = activeProviderId === provider.id;
 	return (
 		<section
 			class:list={[
 				"ap-integration-connect",
 				isConnected && "ap-integration-connect--connected",
+				isActive && "ap-integration-connect--active",
 				status === "error" && "ap-integration-connect--error",
 			]}
 			data-domain={domain}
 			data-provider-id={provider.id}
+			data-active={isActive ? "true" : "false"}
 		>
 			<header>
 				<h3>{provider.label}</h3>
 				{isConnected ? (
-					<span class="ap-status">Connected</span>
+					isActive ? (
+						<span class="ap-status ap-status--active">Active</span>
+					) : (
+						<span class="ap-status">Connected</span>
+					)
 				) : (
 					<span class="ap-status ap-status--muted">Not connected</span>
 				)}
@@ -118,6 +137,18 @@ function isSensitive(key: string): boolean {
 					<button type="submit" class="ap-button-secondary">Disconnect</button>
 				</form>
 			)}
+			{isConnected && !isActive && connectedCount > 1 && (
+				<form
+					method="POST"
+					action="/ap-admin/actions/integration-set-active"
+					class="ap-integration-form ap-integration-form--secondary"
+				>
+					<CsrfInput />
+					<input type="hidden" name="domain" value={domain} />
+					<input type="hidden" name="providerId" value={provider.id} />
+					<button type="submit" class="ap-button-secondary">Make active</button>
+				</form>
+			)}
 		</section>
 	);
 })}
@@ -143,6 +174,14 @@ function isSensitive(key: string): boolean {
 	}
 	.ap-integration-connect--connected {
 		border-color: var(--ap-success-border, #a7f3d0);
+	}
+	.ap-integration-connect--active {
+		border-color: var(--ap-accent-border, #6366f1);
+		box-shadow: 0 0 0 1px var(--ap-accent-border, #6366f1) inset;
+	}
+	.ap-status--active {
+		background: var(--ap-accent-surface, #eef2ff);
+		color: var(--ap-accent, #4338ca);
 	}
 	.ap-integration-connect--error {
 		border-color: var(--ap-danger-border, #fecaca);

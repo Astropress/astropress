@@ -1,7 +1,11 @@
 ---
 import AdminLayout from "@astropress-diy/astropress/components/AdminLayout.astro";
-import { getPageT, resolveAdminLocale } from "astropress";
+import { getPageT, requiresAccess, resolveAdminLocale } from "astropress";
 
+// #107: preview can surface draft/unpublished content, so gate it on posts:edit
+// — a denied subject is redirected and never sees a draft.
+const previewGuard = await requiresAccess(Astro, "posts:edit");
+if (previewGuard) return previewGuard;
 const adminUser = Astro.locals.adminUser;
 const t = getPageT(resolveAdminLocale(Astro));
 const statusLabel = (status: string | null | undefined): string => {

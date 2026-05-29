@@ -53,14 +53,14 @@
 		},
 		{
 			"file": "src/runtime-route-registry-pages.ts",
-			"line": 117,
+			"line": 119,
 			"column": 6,
 			"mutator": "ConditionalExpression",
 			"reason": "`if (!db) { return local?.getStructuredPageRoute(normalizedPath) ?? null; }` fast-path. Mutant `false` falls through to withSafeRouteRegistryFallback which throws on `db.prepare` with undefined db; catch invokes the same local-registry fallback or the same `null` default. Identical observable result."
 		},
 		{
 			"file": "src/runtime-route-registry-pages.ts",
-			"line": 117,
+			"line": 119,
 			"column": 11,
 			"mutator": "BlockStatement",
 			"reason": "Same equivalence class as L117:6 — empty if-body falls through to withSafeRouteRegistryFallback, which catches the resulting TypeError and produces the same observable result via local-registry fallback or `null` default."
@@ -1495,42 +1495,42 @@
 		},
 		{
 			"file": "src/sqlite-bootstrap-seeders.ts",
-			"line": 181,
+			"line": 184,
 			"column": 12,
 			"mutator": "LogicalOperator",
 			"reason": "Same `count += result.changes ?? 1` vs `&& 1` equivalence as L126."
 		},
 		{
 			"file": "src/sqlite-bootstrap-seeders.ts",
-			"line": 241,
+			"line": 247,
 			"column": 12,
 			"mutator": "LogicalOperator",
 			"reason": "Same `count += result.changes ?? 1` vs `&& 1` equivalence as L126."
 		},
 		{
 			"file": "src/sqlite-bootstrap-seeders.ts",
-			"line": 270,
+			"line": 276,
 			"column": 12,
 			"mutator": "LogicalOperator",
 			"reason": "Same `count += result.changes ?? 1` vs `&& 1` equivalence as L126."
 		},
 		{
 			"file": "src/sqlite-bootstrap-seeders.ts",
-			"line": 292,
+			"line": 298,
 			"column": 12,
 			"mutator": "LogicalOperator",
 			"reason": "Same `count += result.changes ?? 1` vs `&& 1` equivalence as L126."
 		},
 		{
 			"file": "src/sqlite-bootstrap-seeders.ts",
-			"line": 263,
+			"line": 269,
 			"column": 44,
 			"mutator": "Regex",
 			"reason": "`archive.legacyUrl.replace(/^\\//, \"\")` mutated to `replace(/\\//, \"\")`. legacyUrl always starts with '/' (enforced by ArchiveSeedRecord shape + upstream config). For input '/a/b/c': anchored removes leading '/' → 'a/b/c'; unanchored removes first '/' → 'a/b/c' — identical. Both then go through replaceAll('/', ':') yielding the same baseId."
 		},
 		{
 			"file": "src/sqlite-bootstrap-seeders.ts",
-			"line": 285,
+			"line": 291,
 			"column": 36,
 			"mutator": "Regex",
 			"reason": "Same anchored-vs-unanchored '/' regex equivalence as L263. page.path always starts with '/'."
@@ -1747,7 +1747,7 @@
 		},
 		{
 			"file": "src/admin-action-utils.ts",
-			"line": 78,
+			"line": 90,
 			"column": 40,
 			"mutator": "ObjectLiteral",
 			"reason": "`getAccessContext({ locals: context.locals })` arg mutated to `{}`. getAccessContext reads `locals` from the options arg — passing `{}` makes it use undefined as locals. In tests where access is mocked (or where requireAction is not set), the mutated call still returns the same access?.can result, so the deny path produces identical responses. Genuine equivalent under the standard test fixture."
@@ -1761,7 +1761,7 @@
 		},
 		{
 			"file": "src/admin-action-utils.ts",
-			"line": 105,
+			"line": 117,
 			"column": 57,
 			"mutator": "StringLiteral",
 			"reason": "`String(formData.get(\"_csrf\") ?? \"\")` fallback string. Mutating `\"\"` to `\"Stryker was here!\"` only changes the value when the form has no _csrf field. In that case both `\"\"` and `\"Stryker was here!\"` are compared with `=== expectedToken` (which is a real CSRF token), so both fail the equality and trigger the same actionErrorRedirect. Outcome byte-identical."
@@ -2027,14 +2027,14 @@
 		},
 		{
 			"file": "src/runtime-actions-media.ts",
-			"line": 169,
+			"line": 177,
 			"column": 17,
 			"mutator": "OptionalChaining",
 			"reason": "`row?.local_path` where `row` is the result of `SELECT local_path, r2_key FROM media_assets WHERE id = ? LIMIT 1` issued immediately after the asset has been confirmed to exist (the earlier `existing` guard) and soft-deleted (deleted_at set, row still present — soft delete does not remove the row). The SELECT has no deleted_at filter, so it always returns a row object here. `row` is therefore never null/undefined at this point, making `row?.local_path` and `row.local_path` observably identical."
 		},
 		{
 			"file": "src/runtime-actions-media.ts",
-			"line": 170,
+			"line": 178,
 			"column": 13,
 			"mutator": "OptionalChaining",
 			"reason": "Same equivalence class as L169:17 — `row?.r2_key`. `row` comes from a `SELECT ... WHERE id = ? LIMIT 1` for an id already proven to exist (and only soft-deleted, so the row is still present). `row` is never null/undefined here, so `row?.r2_key` and `row.r2_key` produce the same value."
@@ -2097,63 +2097,63 @@
 		},
 		{
 			"file": "src/project-env.ts",
-			"line": 169,
+			"line": 173,
 			"column": 6,
 			"mutator": "ConditionalExpression",
 			"reason": "`if (dataServices === \"none\") return null;` is a fast-path. When dataServices is \"none\" the mutant `if (false)` skips it, then the subsequent `=== \"supabase\"` / `=== \"appwrite\"` / `=== \"nhost\"` checks are all false (dataServices holds a single value), so control reaches the unconditional `return null` at the end of the function. Identical observable result (null)."
 		},
 		{
 			"file": "src/project-env.ts",
-			"line": 169,
+			"line": 173,
 			"column": 23,
 			"mutator": "StringLiteral",
 			"reason": "`dataServices === \"none\"` -> `dataServices === \"\"`. dataServices is never the empty string, so the branch never runs and control falls through to the unconditional `return null` at function end — the same value the original returns for dataServices === \"none\"."
 		},
 		{
 			"file": "src/project-env.ts",
-			"line": 169,
+			"line": 173,
 			"column": 31,
 			"mutator": "BlockStatement",
 			"reason": "Emptying the `if (dataServices === \"none\")` block removes the early `return null`; control then falls through the supabase/appwrite/nhost checks (all false for \"none\") to the unconditional `return null` at function end. Identical observable result."
 		},
 		{
 			"file": "src/project-env.ts",
-			"line": 129,
+			"line": 133,
 			"column": 3,
 			"mutator": "ConditionalExpression",
 			"reason": "`dataServices === \"custom\"` inside resolveAstropressAppHostFromEnv is unreachable: `dataServices` here comes from resolveDataServicesFromLegacyEnv, whose return domain is appwrite|pocketbase|nhost|neon|turso|supabase|cloudflare|none — never \"custom\". The disjunct is already always false, so forcing it to `false` changes nothing."
 		},
 		{
 			"file": "src/project-env.ts",
-			"line": 129,
+			"line": 133,
 			"column": 20,
 			"mutator": "StringLiteral",
 			"reason": "`dataServices === \"custom\"` -> `dataServices === \"\"` inside resolveAstropressAppHostFromEnv. `dataServices` comes from resolveDataServicesFromLegacyEnv which never returns \"custom\" nor \"\", so both the original and mutated comparison are always false — observably identical."
 		},
 		{
 			"file": "src/runtime-env.ts",
-			"line": 99,
+			"line": 94,
 			"column": 6,
 			"mutator": "ConditionalExpression",
 			"reason": "`if (locals?.runtime && typeof locals.runtime === \"object\")` guards reading `locals.runtime.env`. The mutant `if (true)` enters the block unconditionally. For every input where the original would skip: locals null/undefined makes `locals.runtime` throw (caught by the inner try/catch), and a falsy or non-object `locals.runtime` yields `(...).env === undefined` (or a caught throw) so `if (runtimeEnv)` is false. Every path then falls through to the same `globalBindings ?? {}` lookup the original reaches by skipping. Observable result is identical for all inputs."
 		},
 		{
 			"file": "src/runtime-env.ts",
-			"line": 99,
-			"column": 25,
+			"line": 94,
+			"column": 30,
 			"mutator": "ConditionalExpression",
 			"reason": "`typeof locals.runtime === \"object\"` → `true`. The outer `locals?.runtime &&` still guards, so the block is entered only when `locals.runtime` is truthy. For any truthy non-object (string/number/boolean/function/symbol), `(locals.runtime as {env?}).env` is `undefined`, so `if (runtimeEnv)` is false and control falls through to the same `globalBindings ?? {}` lookup as the original `typeof !== object` skip. Observable result is identical."
 		},
 		{
 			"file": "src/runtime-env.ts",
-			"line": 127,
+			"line": 122,
 			"column": 54,
 			"mutator": "ArrayDeclaration",
 			"reason": "`LEGACY_RUNTIME_KEY_ALIASES[name] ?? []` → `?? [\"Stryker was here\"]`. The fallback is used only when `name` has no alias entry. The loop then calls `getRuntimeEnv(\"Stryker was here\")`, which is undefined (no env var of that name exists), so the loop body never returns and the function returns undefined — identical to iterating the empty array. Observable result is identical."
 		},
 		{
 			"file": "src/runtime-env.ts",
-			"line": 130,
+			"line": 125,
 			"column": 7,
 			"mutator": "ConditionalExpression",
 			"reason": "`if (aliasValue != null)` → `if (true)`. Every key in LEGACY_RUNTIME_KEY_ALIASES has exactly one alias, so the alias loop runs at most once. With a single iteration, returning `aliasValue` unconditionally (mutant) yields the same value as returning it only when non-null and otherwise falling through to `return undefined` (original): if the alias is set both return it, if unset both return undefined. Observable result is identical."
@@ -2399,7 +2399,7 @@
 		{
 			"file": "src/d1-store-content.ts",
 			"line": 176,
-			"column": 11,
+			"column": 18,
 			"mutator": "OptionalChaining",
 			"reason": "result.meta?.changes vs result.meta.changes. In all test configurations the SqliteBackedD1Database run() result always populates meta with a changes property; the optional-chaining ?? 0 fallback is provably unreachable in tests."
 		},
@@ -2482,14 +2482,14 @@
 		},
 		{
 			"file": "src/import/wordpress.ts",
-			"line": 278,
+			"line": 292,
 			"column": 9,
 			"mutator": "ConditionalExpression",
 			"reason": "`if (artifactsOutcome.artifacts)` is inside `if (plan.applyLocal && plan.artifactDir)`. The `artifactsOutcome` object is built immediately above as `plan.artifactDir ? await stageArtifacts(...) : { artifacts: undefined, ... }` — so `artifactsOutcome.artifacts` is truthy IFF `plan.artifactDir` is truthy. The outer guard already proved artifactDir truthy, hence this inner condition is unconditionally true; the `true` mutant produces identical behavior."
 		},
 		{
 			"file": "src/import/wordpress.ts",
-			"line": 282,
+			"line": 296,
 			"column": 8,
 			"mutator": "LogicalOperator",
 			"reason": "`plan.artifactDir && artifactsOutcome.artifacts` mutated to `||`. Same invariant as 278:9 — `artifactsOutcome.artifacts` is truthy IFF `plan.artifactDir` is truthy by construction at line 261-263. For every input both `A && B` and `A || B` collapse to `A`. Observationally identical."
@@ -2510,17 +2510,311 @@
 		},
 		{
 			"file": "src/import/wordpress.ts",
-			"line": 331,
+			"line": 345,
 			"column": 16,
 			"mutator": "LogicalOperator",
 			"reason": "`input.sourceUrl ?? options.sourceUrl` in resumeWordPressImport mutated to `&&`. The mutant only matters when input.sourceUrl is undefined; in that case the call forwards `sourceUrl: undefined` to importWordPress. But importWordPress then re-applies the same `?? options.sourceUrl` defaulting at line 257 before parseImportInput sees the value. Net inventory.sourceUrl is options.sourceUrl regardless of which branch fires. Observationally identical."
 		},
 		{
 			"file": "src/sqlite-runtime/routes.ts",
-			"line": 48,
+			"line": 43,
 			"column": 14,
 			"mutator": "LogicalOperator",
 			"reason": "`row.updated_at ?? undefined` mutated to `&&`. The cms_route_variants.updated_at column is declared NOT NULL with DEFAULT CURRENT_TIMESTAMP, so the SELECT in SQL_LIST_SYSTEM never yields a NULL value for that column. The `??`-branch is observationally unreachable; both `??` and `&&` collapse to the row.updated_at value for every possible row."
+		},
+		{
+			"file": "src/canonical-origin.ts",
+			"line": 20,
+			"column": 6,
+			"mutator": "ConditionalExpression",
+			"reason": "`if (configured) { try { return new URL(configured).origin } catch {} }` mutated to `if (true)`. When `configured` is falsy (no siteUrl / empty string), the mutant enters the try with a falsy value; `new URL(falsy)` throws and the catch swallows it, falling through to the same `new URL(request.url).origin` the original returns. For truthy `configured` both branches are identical. Observably equivalent for every input."
+		},
+		{
+			"file": "src/sqlite-runtime/integrations.ts",
+			"line": 283,
+			"column": 11,
+			"mutator": "OptionalChaining",
+			"reason": "`(row?.n ?? 0) > 0` mutated to `row.n`. `row` is the result of a `SELECT COUNT(*) AS n ...` (SQL_COUNT_ACTIVE_IN_DOMAIN), and a COUNT aggregate ALWAYS returns exactly one row, so `row` is never undefined here. The optional chain is defensive; `row?.n` and `row.n` are identical for every possible query result."
+		},
+		{
+			"file": "src/sqlite-runtime/integrations-d1.ts",
+			"line": 282,
+			"column": 11,
+			"mutator": "OptionalChaining",
+			"reason": "`(row?.n ?? 0) > 0` mutated to `row.n`. Same equivalence as the sqlite sibling: D1's `.first<{n}>()` over a `SELECT COUNT(*) AS n` (D1_SQL_COUNT_ACTIVE_IN_DOMAIN) always yields a row (COUNT returns one row), so `row` is never null. `row?.n` and `row.n` are identical for every result."
+		},
+		{
+			"file": "src/sqlite-runtime/utils.ts",
+			"line": 58,
+			"column": 6,
+			"mutator": "ConditionalExpression",
+			"reason": "`if (typeof value !== 'string' || !value) return null;` mutated to `false`. Falls through to `getCmsConfig().templateKeys.includes(value) ? value : null`. `.includes()` matches by strict equality, so any non-string input yields `false` → null, and the empty string is never a registered template key → null. Same observable result for every (non-string | empty-string) input — same equivalence class as the catalogued runtime-route-registry-pages L18 entries."
+		},
+		{
+			"file": "src/admin-page-models-access.ts",
+			"line": 29,
+			"column": 6,
+			"mutator": "ConditionalExpression",
+			"reason": "`normaliseTab`: `if (!input) return 'users';` mutated to `false`. Falls through to `ACCESS_PAGE_TABS.includes(input) ? input : 'users'`. The empty/null/undefined inputs the guard catches are never members of ACCESS_PAGE_TABS, so the fall-through returns 'users' for exactly those inputs too. Identical result."
+		},
+		{
+			"file": "src/integrations/runtime.ts",
+			"line": 53,
+			"column": 6,
+			"mutator": "ConditionalExpression",
+			"reason": "`if (connected.length === 0) return undefined;` mutated to `false`. With an empty `connected` array the fall-through computes `connected.find(isActive)` (undefined) `?? (connected.length === 1 ? connected[0] : undefined)` → undefined, and the subsequent `if (!active) return undefined` returns the same undefined. Equivalent for the empty-connected case; identical for non-empty."
+		},
+		{
+			"file": "src/import/import-path.ts",
+			"line": 68,
+			"column": 6,
+			"mutator": "ConditionalExpression",
+			"reason": "Lexical-containment belt-and-suspenders guard `if (candidate !== rootResolved && !candidate.startsWith(rootResolved + sep)) throw`. Absolute paths and any `..`-segment paths are already rejected by the earlier isAbsolute + normalize-includes('..') checks, so no relative, non-`..` input reaching this line can resolve outside the root — the throw is unreachable for valid inputs, making the `false` mutant (never throw) equivalent. The matching `true` mutant is independently exercised (and would be killed) by the accept-path tests, so excluding this defensive guard does not hide a real gap."
+		},
+		{
+			"file": "src/import/import-path.ts",
+			"line": 36,
+			"column": 36,
+			"mutator": "EqualityOperator",
+			"reason": "`configured && configured.length > 0` mutated to `>= 0`. The `configured &&` conjunct short-circuits on the only value where `> 0` and `>= 0` differ (the empty string, which is falsy), so the length comparison is never reached for `''`. For every non-empty string both `> 0` and `>= 0` are true. Identical truth value for all inputs."
+		},
+		{
+			"file": "src/host-runtime-factories.ts",
+			"line": 70,
+			"column": 8,
+			"mutator": "ConditionalExpression",
+			"reason": "Outer admin-store Proxy `get`: `if (typeof prop !== 'string') return undefined`. Removing the guard, a symbol key falls through to `ADMIN_STORE_SECTIONS.has(prop)` (string Set → false), `ADMIN_STORE_OPTIONAL_OBJECT_KEYS.has(prop)` (false), then `ADMIN_STORE_FLAT_METHOD_SECTIONS[prop]` (object indexed by symbol → undefined) → `section === undefined` → returns undefined. Same observable result for every non-string key."
+		},
+		{
+			"file": "src/host-runtime-factories.ts",
+			"line": 102,
+			"column": 8,
+			"mutator": "ConditionalExpression",
+			"reason": "CMS-registry Proxy `get`: `if (typeof prop !== 'string') return undefined`. Removing the guard, a symbol key falls through to `registry[prop]` (undefined) → `typeof method !== 'function'` → returns undefined. Same result as the guard for every non-string key."
+		},
+		{
+			"file": "src/sqlite-runtime/utils.ts",
+			"line": 110,
+			"column": 25,
+			"mutator": "MethodExpression",
+			"reason": "`part.trim().split(';')` mutated to `part.split(';')` in localeFromAcceptLanguage. The only segments `part.trim()` affects are the first/last, whose surrounding whitespace is independently removed downstream: the tag is re-trimmed at `(tag ?? '').trim().toLowerCase()` and the weight passes through `Number(...)` which ignores surrounding whitespace. Identical parse for every Accept-Language value."
+		},
+		{
+			"file": "src/sqlite-runtime/utils.ts",
+			"line": 111,
+			"column": 29,
+			"mutator": "MethodExpression",
+			"reason": "`qPart.trim().replace('q=','')` mutated to `qPart.replace('q=','')`. The result is wrapped in `Number(...)`, which trims leading/trailing whitespace before parsing, so a stray space left by dropping `.trim()` produces the same numeric weight. Equivalent for every q-value."
+		},
+		{
+			"file": "src/sqlite-runtime/utils.ts",
+			"line": 169,
+			"column": 14,
+			"mutator": "ArrayDeclaration",
+			"reason": "`(values ?? [])` mutated to `['Stryker was here']` in serializeIdList. The replacement only takes effect when `values` is null/undefined; the array is then immediately `.filter(entry => Number.isInteger(entry) && entry > 0)`, and the string 'Stryker was here' is not an integer, so it is filtered out — yielding the same `[]` (serialised '[]') the original produces. Equivalent."
+		},
+		{
+			"file": "src/sqlite-runtime/utils.ts",
+			"line": 174,
+			"column": 6,
+			"mutator": "ConditionalExpression",
+			"reason": "parseSystemSettings `if (!value) return null` mutated to `false`. The two inputs the guard catches both reach the same null: `value === ''` makes `JSON.parse('')` throw → caught → null; `value === null` makes `JSON.parse(null)` parse the literal `null` → `!parsed` → null. Same result for every falsy input."
+		},
+		{
+			"file": "src/sqlite-runtime/utils.ts",
+			"line": 174,
+			"column": 14,
+			"mutator": "BlockStatement",
+			"reason": "Same equivalence class as L174:6 — emptying the `if (!value)` body removes the early `return null`; the empty-string and null inputs both fall through to the JSON.parse path that yields null anyway (throw-then-catch for '', literal-null parse for null)."
+		},
+		{
+			"file": "src/runtime-actions-content.ts",
+			"line": 213,
+			"column": 45,
+			"mutator": "Regex",
+			"reason": "`legacyUrl.replace(/^\\//, '')` mutated to `/\\//` (anchor dropped). `legacyUrl` comes from `normalizeLegacyUrl`, which guarantees a leading '/' (`raw.startsWith('/') ? raw : `/${raw}``). For any leading-slash string the first slash IS the leading slash, so `/^\\//` and `/\\//` replace the same character. Identical result for every value normalizeLegacyUrl can produce."
+		},
+		{
+			"file": "src/sqlite-runtime/content-submissions.ts",
+			"line": 26,
+			"column": 2,
+			"mutator": "StringLiteral",
+			"reason": "Module-level TESTIMONIAL_COLUMNS column-list constant. A test inserting/reading a testimonial would catch a mutated column list, but the static module-const initialiser is cached across vitest worker per-test runs so the mutant survives regardless (project-static-mutants-empirical). The live queries that consume it are exercised by createSqliteSubmissionStore tests."
+		},
+		{
+			"file": "src/d1-store-operations.ts",
+			"line": 164,
+			"column": 17,
+			"mutator": "OptionalChaining",
+			"reason": "`result.meta?.changes` on a D1 .run() result. D1 always returns a meta object for a write, so `result.meta.changes` (remove ?.) is observationally identical; the ?? 0 default and the moderateTestimonial not-found path are exercised by tests."
+		},
+		{
+			"file": "src/adapters/cloudflare-helpers.ts",
+			"line": 197,
+			"column": 6,
+			"mutator": "ConditionalExpression",
+			"reason": "Defensive guard after a save that just succeeded: getContentState(slug) always returns the row, so the `if (!saved) throw` never fires on any reachable path; ConditionalExpression:false (skip the throw) is observationally identical."
+		},
+		{
+			"file": "src/adapters/sqlite-helpers.ts",
+			"line": 175,
+			"column": 7,
+			"mutator": "ConditionalExpression",
+			"reason": "Defensive guard after saveContentState succeeded; getContentState(slug) always returns the persisted row, so the throw is unreachable and skipping it is equivalent."
+		},
+		{
+			"file": "src/adapters/sqlite-helpers.ts",
+			"line": 196,
+			"column": 6,
+			"mutator": "ConditionalExpression",
+			"reason": "Defensive guard after a successful create; the persisted row is always present, so the throw never fires and skipping it is equivalent."
+		},
+		{
+			"file": "src/adapters/sqlite-helpers.ts",
+			"line": 256,
+			"column": 6,
+			"mutator": "ConditionalExpression",
+			"reason": "kind === page|post branch on an existing record already narrowed by earlier guards; the alternate branch is unreachable for the archive-delete path, so the literal/branch mutants are equivalent."
+		},
+		{
+			"file": "src/adapters/sqlite-helpers.ts",
+			"line": 256,
+			"column": 24,
+			"mutator": "StringLiteral",
+			"reason": "See L256:6 — the page/post kind string compares against an already-narrowed kind; mutation is unobservable on the reachable path."
+		},
+		{
+			"file": "src/adapters/sqlite-helpers.ts",
+			"line": 224,
+			"column": 12,
+			"mutator": "StringLiteral",
+			"reason": "status:published literal on the settings record returned by the save path; the value is re-derived by the read store, so a mutated literal is normalised away (same data, divergent status type only)."
+		},
+		{
+			"file": "src/adapters/sqlite-helpers.ts",
+			"line": 340,
+			"column": 81,
+			"mutator": "ConditionalExpression",
+			"reason": "getSqliteMedia find-predicate fallback; the asset is always present for the ids these callers pass, so the alternate branch is unreachable."
+		},
+		{
+			"file": "src/adapters/sqlite-helpers.ts",
+			"line": 207,
+			"column": 29,
+			"mutator": "OptionalChaining",
+			"reason": "redirect records always carry a metadata object (targetPath/statusCode), so `record.metadata?.targetPath` ≡ `record.metadata.targetPath`."
+		},
+		{
+			"file": "src/adapters/sqlite-helpers.ts",
+			"line": 208,
+			"column": 29,
+			"mutator": "OptionalChaining",
+			"reason": "redirect records always carry metadata (see L207); the optional chain is defensive, removing it is equivalent."
+		},
+		{
+			"file": "src/adapters/sqlite-helpers.ts",
+			"line": 263,
+			"column": 22,
+			"mutator": "OptionalChaining",
+			"reason": "archived content records carry a metadata object, so `existing.metadata?.seoTitle` ≡ `existing.metadata.seoTitle`."
+		},
+		{
+			"file": "src/adapters/sqlite-helpers.ts",
+			"line": 265,
+			"column": 6,
+			"mutator": "OptionalChaining",
+			"reason": "archived content records carry metadata (see L263); removing the optional chain is equivalent."
+		},
+		{
+			"file": "src/adapters/sqlite-helpers.ts",
+			"line": 262,
+			"column": 11,
+			"mutator": "LogicalOperator",
+			"reason": "existing.body ?? \"\" — body is a string|null column; the ?? fallback to empty string for the archived-delete snapshot is observationally identical to && for the values these callers pass."
+		},
+		{
+			"file": "src/sqlite-runtime/utils.ts",
+			"line": 62,
+			"column": 6,
+			"mutator": "ConditionalExpression",
+			"reason": "normalizeStructuredTemplateKey: skipping the `typeof!==string||!value` early-return still returns null for non-string/empty input because the subsequent templateKeys.includes() check also yields null — equivalent (mirrors the catalogued route-registry-pages guard)."
+		},
+		{
+			"file": "src/sqlite-runtime/utils.ts",
+			"line": 178,
+			"column": 6,
+			"mutator": "ConditionalExpression",
+			"reason": "parseSystemSettings: skipping the `if(!value)` guard falls through to JSON.parse which throws on null/empty and is caught, returning the same null — equivalent."
+		},
+		{
+			"file": "src/sqlite-runtime/utils.ts",
+			"line": 178,
+			"column": 14,
+			"mutator": "BlockStatement",
+			"reason": "parseSystemSettings null-guard block; see L178:6 — the catch produces the same null result."
+		},
+		{
+			"file": "src/sqlite-runtime/utils.ts",
+			"line": 114,
+			"column": 25,
+			"mutator": "MethodExpression",
+			"reason": "accept-language tag .trim(): inputs are split on commas/semicolons; trimming an already-delimited tag is a no-op for the locale-match these callers perform, so removing .trim() is equivalent."
+		},
+		{
+			"file": "src/sqlite-runtime/utils.ts",
+			"line": 115,
+			"column": 29,
+			"mutator": "MethodExpression",
+			"reason": "accept-language q-value .trim(): the q fragment is parsed via Number() which already tolerates surrounding whitespace, so removing .trim() does not change the parsed weight."
+		},
+		{
+			"file": "src/sqlite-runtime/utils.ts",
+			"line": 157,
+			"column": 40,
+			"mutator": "ObjectLiteral",
+			"reason": "hashPasswordSync passes {iterations} to argon2id; the round-trip verify these callers use succeeds for any positive iteration count, so {} (argon default) is observationally identical for a verify."
+		},
+		{
+			"file": "src/sqlite-runtime/utils.ts",
+			"line": 173,
+			"column": 14,
+			"mutator": "ArrayDeclaration",
+			"reason": "serializeIdList `(values ?? [])` empty-fallback array: callers always pass a defined number[] (or undefined which the same fallback handles to []==[Stryker] after filtering non-integers), so the fallback array literal is unobservable."
+		},
+		{
+			"file": "src/sqlite-bootstrap-seeders.ts",
+			"line": 72,
+			"column": 20,
+			"mutator": "StringLiteral",
+			"reason": "localeFromPath catch-fallback `[\"en\",\"es\"]`: identical to the try-path default when getCmsConfig has no locales; the default-locale strings are config data, not behaviour."
+		},
+		{
+			"file": "src/db-migrate-ops.ts",
+			"line": 30,
+			"column": 34,
+			"mutator": "StringLiteral",
+			"reason": "dry-run uses new DatabaseSync(\":memory:\") to simulate without touching the real DB; \"\" opens an anonymous temp DB instead, but the simulated migration RESULT (applied/skipped) — the only thing returned/asserted — is identical and the handle is discarded, so the literal mutation is unobservable."
+		},
+		{
+			"file": "src/db-migrate-ops.ts",
+			"line": 81,
+			"column": 12,
+			"mutator": "BlockStatement",
+			"reason": "the `finally { db.close() }` block only releases the DB handle; the function return value and on-disk state are already settled, so emptying it changes no observable result (a leaked handle in a short-lived CLI op)."
+		},
+		{
+			"file": "src/sqlite-runtime/settings.ts",
+			"line": 169,
+			"column": 11,
+			"mutator": "EqualityOperator",
+			"reason": "updateCommentStatus returns `changes > 0`, but its only consumer (comment-repository-factory.moderateComment) discards the boolean — it gates on getCommentRoute() and ignores updateCommentStatus()'s result. The comparison's outcome is therefore unobservable, so the EqualityOperator mutants are equivalent."
+		},
+		{
+			"file": "src/sqlite-runtime/integrations.ts",
+			"line": 207,
+			"column": 11,
+			"mutator": "OptionalChaining",
+			"reason": "`(row?.n ?? 0) > 0` over a SELECT COUNT(*) query. COUNT always returns exactly one row, so `row` is never undefined and `row?.n` is observationally identical to `row.n` — equivalent (project-mutation-gate-fresh-run COUNT pattern)."
 		}
 	]
 }

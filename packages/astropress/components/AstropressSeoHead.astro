@@ -47,8 +47,9 @@ const ogDescription = record.ogDescription || description;
 /**
  * OG image with automatic fallback to the framework-generated endpoint.
  * If `record.ogImage` is set, use it directly. Otherwise, fall back to
- * `/ap-api/v1/og-image/{slug}.png?title={title}&site={siteName}` — the
- * framework's built-in SVG-based social card generator.
+ * `/ap-api/v1/og-image/{slug}.svg?title={title}&site={siteName}` — the
+ * framework's built-in SVG-based social card generator (the `.svg` extension
+ * matches the `image/svg+xml` Content-Type the endpoint returns; issue #139).
  */
 const ogImageFallbackParams =
 	record.slug && siteOrigin
@@ -57,7 +58,7 @@ const ogImageFallbackParams =
 const ogImage =
 	record.ogImage ??
 	(record.slug && ogImageFallbackParams
-		? `${siteOrigin ?? ""}/ap-api/v1/og-image/${record.slug}.png${ogImageFallbackParams}`
+		? `${siteOrigin ?? ""}/ap-api/v1/og-image/${record.slug}.svg${ogImageFallbackParams}`
 		: undefined);
 
 let canonicalHref: string | undefined;

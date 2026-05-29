@@ -5,7 +5,7 @@ import type { APIRoute } from "astro";
 export const POST: APIRoute = async (context) =>
 	withAdminFormAction(
 		context,
-		{ failurePath: "/ap-admin/testimonials" },
+		{ failurePath: "/ap-admin/testimonials", requireAction: "testimonials:manage" },
 		async ({ actor, formData, locals, redirect, fail }) => {
 			const id = String(formData.get("testimonialId") ?? "");
 			const statusValue = String(formData.get("status") ?? "") as TestimonialStatus;

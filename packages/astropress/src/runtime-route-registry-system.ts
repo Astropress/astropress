@@ -79,7 +79,9 @@ export async function listRuntimeSystemRoutes(locals?: App.Locals | null) {
 					}>()
 			).results;
 
-			return rows.map((row) => mapSystemRow(row)).filter(Boolean);
+			return rows
+				.map((row) => mapSystemRow(row))
+				.filter((route): route is RuntimeSystemRouteRecord => route !== null);
 		},
 	);
 }

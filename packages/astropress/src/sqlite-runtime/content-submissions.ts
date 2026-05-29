@@ -1,5 +1,47 @@
+import type {
+	TestimonialSource,
+	TestimonialStatus,
+	TestimonialSubmission,
+} from "../persistence-types";
 import { createAstropressSubmissionRepository } from "../submission-repository-factory";
 import type { AstropressSqliteDatabaseLike } from "./utils";
+
+interface TestimonialRow {
+	id: string;
+	name: string;
+	email: string;
+	company: string | null;
+	role: string | null;
+	before_state: string | null;
+	transformation: string | null;
+	specific_result: string | null;
+	consent_to_publish: number;
+	status: string;
+	source: string;
+	submitted_at: string;
+	approved_at: string | null;
+}
+
+const TESTIMONIAL_COLUMNS =
+	"id, name, email, company, role, before_state, transformation, specific_result, consent_to_publish, status, source, submitted_at, approved_at";
+
+function mapTestimonialRow(row: TestimonialRow): TestimonialSubmission {
+	return {
+		id: row.id,
+		name: row.name,
+		email: row.email,
+		company: row.company ?? undefined,
+		role: row.role ?? undefined,
+		beforeState: row.before_state ?? undefined,
+		transformation: row.transformation ?? undefined,
+		specificResult: row.specific_result ?? undefined,
+		consentToPublish: Number(row.consent_to_publish) === 1,
+		status: row.status as TestimonialStatus,
+		source: row.source as TestimonialSource,
+		submittedAt: row.submitted_at,
+		approvedAt: row.approved_at ?? undefined,
+	};
+}
 
 export function createSqliteSubmissionStore(getDb: () => AstropressSqliteDatabaseLike) {
 	function getContactSubmissions() {
@@ -24,6 +66,22 @@ export function createSqliteSubmissionStore(getDb: () => AstropressSqliteDatabas
 		}));
 	}
 
+	function getTestimonials(status?: TestimonialStatus): TestimonialSubmission[] {
+		const order = " ORDER BY datetime(submitted_at) DESC, id DESC";
+		const rows = (
+			status
+				? getDb()
+						.prepare(
+							`SELECT ${TESTIMONIAL_COLUMNS} FROM testimonial_submissions WHERE status = ?${order}`,
+						)
+						.all(status)
+				: getDb()
+						.prepare(`SELECT ${TESTIMONIAL_COLUMNS} FROM testimonial_submissions${order}`)
+						.all()
+		) as TestimonialRow[];
+		return rows.map(mapTestimonialRow);
+	}
+
 	const sqliteSubmissionRepository = createAstropressSubmissionRepository({
 		getContactSubmissions,
 		insertContactSubmission(submission) {
@@ -38,6 +96,44 @@ export function createSqliteSubmissionStore(getDb: () => AstropressSqliteDatabas
 					submission.message,
 					submission.submittedAt,
 				);
+		},
+		getTestimonials,
+		insertTestimonial(submission) {
+			getDb()
+				.prepare(
+					`INSERT INTO testimonial_submissions (${TESTIMONIAL_COLUMNS}) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+				)
+				.run(
+					submission.id,
+					submission.name,
+					submission.email,
+					submission.company ?? null,
+					submission.role ?? null,
+					submission.beforeState ?? null,
+					submission.transformation ?? null,
+					submission.specificResult ?? null,
+					submission.consentToPublish ? 1 : 0,
+					submission.status,
+					submission.source,
+					submission.submittedAt,
+					submission.approvedAt ?? null,
+				);
+		},
+		updateTestimonialStatus(id, status) {
+			// Stamp approvedAt when a testimonial first becomes publicly visible.
+			const approvedAt =
+				status === "approved" || status === "featured" ? new Date().toISOString() : null;
+			const result = getDb()
+				.prepare(
+					"UPDATE testimonial_submissions SET status = ?, approved_at = COALESCE(?, approved_at) WHERE id = ?",
+				)
+				.run(status, approvedAt, id);
+			// `changes` is 0 (and falsy) when no row matched the id; 1 on success.
+			// Using truthiness avoids a separate, unreachable nullish branch.
+			if (!result.changes) {
+				return { ok: false as const, error: "Testimonial not found" };
+			}
+			return { ok: true as const };
 		},
 	});
 

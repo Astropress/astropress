@@ -1,4 +1,5 @@
 ---
+import { safeAdminUserName } from "astropress";
 import AdminLayout from "@astropress-diy/astropress/components/AdminLayout.astro";
 import CsrfInput from "@astropress-diy/astropress/components/CsrfInput.astro";
 import { createListmonkOps } from "@astropress-diy/astropress/newsletter-adapter";
@@ -84,7 +85,7 @@ if (model.status === "forbidden") {
     heading={t("settings.title")}
     currentPath="/ap-admin/settings"
     description={t("settings.description")}
-    userName={adminUser.name}
+    userName={safeAdminUserName(adminUser)}
   >
     {model.warnings.length > 0 && <p class="notice">{t("settings.partialLoadNotice")}</p>}
     {wasSaved && <p class="notice">{t("settings.savedNotice")}</p>}
@@ -426,7 +427,7 @@ if (model.status === "forbidden") {
     heading="Forbidden"
     currentPath=""
     description={t("pages.forbidden.description")}
-    userName={adminUser.name}
+    userName={safeAdminUserName(adminUser)}
   >
     <section class="panel forbidden">
       <p>{t("pages.forbidden.body")}</p>

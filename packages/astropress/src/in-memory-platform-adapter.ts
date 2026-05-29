@@ -23,6 +23,10 @@ type AstropressSeedUser = AuthUser & {
 
 export interface AstropressInMemoryPlatformAdapterOptions {
 	capabilities: Pick<ProviderCapabilities, "name"> & Partial<Omit<ProviderCapabilities, "name">>;
+	// Capability overrides the hosted-provider adapters (appwrite/nhost/turso/…)
+	// merge over their provider defaults; they extend these options via
+	// Omit<…, "capabilities"> and read `options.defaultCapabilities`.
+	defaultCapabilities?: Partial<Omit<ProviderCapabilities, "name">>;
 	users?: AstropressSeedUser[];
 	content?: ContentStore;
 	media?: MediaStore;

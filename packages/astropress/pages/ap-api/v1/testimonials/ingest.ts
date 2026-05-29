@@ -8,8 +8,15 @@ import {
 	checkRuntimeRateLimit,
 	submitRuntimeTestimonial,
 } from "../../../../src/runtime-mutation-store.js";
+import { isProductionRuntime } from "../../../../src/runtime-prod.js";
+import { createAstropressSecurityHeaders } from "../../../../src/security-headers.js";
 
-const JSON_HEADERS = { "Content-Type": "application/json" };
+/** JSON + the shared API security envelope (#119), built fresh per response. */
+function jsonHeaders(): Headers {
+	const headers = createAstropressSecurityHeaders({ area: "api" });
+	headers.set("Content-Type", "application/json");
+	return headers;
+}
 const RATE_LIMIT_MAX = 20;
 const RATE_LIMIT_WINDOW_MS = 60_000;
 
@@ -123,7 +130,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
 	if (!allowed) {
 		return new Response(JSON.stringify({ ok: false, error: "Rate limit exceeded." }), {
 			status: 429,
-			headers: JSON_HEADERS,
+			headers: jsonHeaders(),
 		});
 	}
 
@@ -131,7 +138,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
 	if (!rawBody) {
 		return new Response(JSON.stringify({ ok: false, error: "Empty body." }), {
 			status: 400,
-			headers: JSON_HEADERS,
+			headers: jsonHeaders(),
 		});
 	}
 
@@ -144,19 +151,28 @@ export const POST: APIRoute = async ({ request, locals }) => {
 		if (!signature) {
 			return new Response(JSON.stringify({ ok: false, error: "Missing signature." }), {
 				status: 401,
-				headers: JSON_HEADERS,
+				headers: jsonHeaders(),
 			});
 		}
 		const valid = await verifyHmac(rawBody, signature, webhookSecret);
 		if (!valid) {
 			return new Response(JSON.stringify({ ok: false, error: "Invalid signature." }), {
 				status: 401,
-				headers: JSON_HEADERS,
+				headers: jsonHeaders(),
 			});
 		}
+	} else if (isProductionRuntime()) {
+		// #116: fail closed in production. An enabled ingest endpoint with no
+		// webhookSecret would accept forged, unauthenticated testimonials; reject
+		// rather than ingest under no authentication. The dev/test exception
+		// below is the isolated mirror of the H5 root-secret fail-closed model.
+		return new Response(JSON.stringify({ ok: false, error: "Webhook secret is not configured." }), {
+			status: 503,
+			headers: jsonHeaders(),
+		});
 	} else {
 		console.warn(
-			"[astropress] testimonials/ingest: no webhookSecret configured — accepting unauthenticated POST",
+			"[astropress] testimonials/ingest: no webhookSecret configured — accepting unauthenticated POST (dev/test only; rejected in production)",
 		);
 	}
 
@@ -166,7 +182,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
 	} catch {
 		return new Response(JSON.stringify({ ok: false, error: "Invalid JSON." }), {
 			status: 400,
-			headers: JSON_HEADERS,
+			headers: jsonHeaders(),
 		});
 	}
 
@@ -182,7 +198,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
 	} else {
 		return new Response(JSON.stringify({ ok: false, error: "Unrecognised webhook shape." }), {
 			status: 400,
-			headers: JSON_HEADERS,
+			headers: jsonHeaders(),
 		});
 	}
 
@@ -192,7 +208,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
 				ok: false,
 				error: "Could not extract name or email from payload.",
 			}),
-			{ status: 422, headers: JSON_HEADERS },
+			{ status: 422, headers: jsonHeaders() },
 		);
 	}
 
@@ -212,6 +228,6 @@ export const POST: APIRoute = async ({ request, locals }) => {
 	await submitRuntimeTestimonial(input, locals);
 	return new Response(JSON.stringify({ ok: true }), {
 		status: 200,
-		headers: JSON_HEADERS,
+		headers: jsonHeaders(),
 	});
 };

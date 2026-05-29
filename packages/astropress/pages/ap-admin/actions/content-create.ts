@@ -4,7 +4,7 @@ import type { APIRoute } from "astro";
 export const POST: APIRoute = async (context) =>
 	withAdminFormAction(
 		context,
-		{ failurePath: "/ap-admin/posts/new" },
+		{ failurePath: "/ap-admin/posts/new", requireAction: "posts:create" },
 		async ({ actor, formData, locals, redirect, fail }) => {
 			const result = await createRuntimeContentRecord(
 				{

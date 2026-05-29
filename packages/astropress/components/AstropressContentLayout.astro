@@ -71,12 +71,12 @@ const howToTotalTime = typeof meta.howToTotalTime === "string" ? meta.howToTotal
   <AstropressBlogPostingJsonLd
     record={{
       slug: content.slug,
-      title: content.title,
-      seoTitle: content.seoTitle,
-      metaDescription: content.metaDescription,
+      title: content.title ?? undefined,
+      seoTitle: typeof meta.seoTitle === "string" ? meta.seoTitle : undefined,
+      metaDescription: typeof meta.metaDescription === "string" ? meta.metaDescription : undefined,
       excerpt: typeof meta.excerpt === "string" ? meta.excerpt : undefined,
-      ogImage: content.ogImage,
-      updatedAt: content.updatedAt,
+      ogImage: typeof meta.ogImage === "string" ? meta.ogImage : undefined,
+      updatedAt: typeof meta.updatedAt === "string" ? meta.updatedAt : undefined,
       authorName: typeof meta.authorName === "string" ? meta.authorName : undefined,
     }}
     siteOrigin={siteOrigin}

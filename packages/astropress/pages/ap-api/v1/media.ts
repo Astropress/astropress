@@ -1,37 +1,31 @@
-import { getCmsConfig } from "@astropress-diy/astropress";
+import {
+	createRuntimeMediaAsset,
+	getCmsConfig,
+	getRuntimeMediaAssets,
+} from "@astropress-diy/astropress";
+import { resolveApiRuntime } from "@astropress-diy/astropress/admin-store-dispatch.js";
 import {
 	apiErrors,
+	type JsonValue,
 	jsonOk,
 	jsonOkPaginated,
 	withApiRequest,
 } from "@astropress-diy/astropress/api-middleware.js";
-import { loadLocalAdminStore } from "@astropress-diy/astropress/local-runtime-modules.js";
 import type { APIRoute } from "astro";
-
-type LocalAdminStore = Awaited<ReturnType<typeof loadLocalAdminStore>>;
-type ApiTokens = NonNullable<LocalAdminStore["apiTokens"]>;
-
-function buildApiCtx(
-	apiTokens: ApiTokens,
-	store: LocalAdminStore,
-	config: ReturnType<typeof getCmsConfig>,
-) {
-	return {
-		apiTokens,
-		checkRateLimit: store.checkRateLimit,
-		rateLimit: config.api?.rateLimit,
-	};
-}
 
 export const GET: APIRoute = async (context) => {
 	if (!getCmsConfig().api?.enabled) return apiErrors.notFound("REST API is not enabled.");
 
-	const store = await loadLocalAdminStore();
-	if (!store.apiTokens) return apiErrors.notFound("API token store unavailable.");
+	const runtime = await resolveApiRuntime(context.locals);
+	if (!runtime.apiTokens) return apiErrors.notFound("API token store unavailable.");
 
 	return withApiRequest(
 		context.request,
-		buildApiCtx(store.apiTokens, store, getCmsConfig()),
+		{
+			apiTokens: runtime.apiTokens,
+			checkRateLimit: runtime.checkRateLimit,
+			rateLimit: getCmsConfig().api?.rateLimit,
+		},
 		["media:read"],
 		async () => {
 			const url = new URL(context.request.url);
@@ -42,10 +36,10 @@ export const GET: APIRoute = async (context) => {
 			const page = Math.max(Number(url.searchParams.get("page") ?? "1"), 1);
 			const offset = Number(url.searchParams.get("offset") ?? String((page - 1) * limit));
 
-			const all = store.listMediaAssets();
+			const all = await getRuntimeMediaAssets(context.locals);
 			const pageRecords = all.slice(offset, offset + limit);
 			return jsonOkPaginated(
-				{ records: pageRecords, total: all.length, limit, offset, page },
+				{ records: pageRecords, total: all.length, limit, offset, page } as unknown as JsonValue,
 				all.length,
 			);
 		},
@@ -55,14 +49,18 @@ export const GET: APIRoute = async (context) => {
 export const POST: APIRoute = async (context) => {
 	if (!getCmsConfig().api?.enabled) return apiErrors.notFound("REST API is not enabled.");
 
-	const store = await loadLocalAdminStore();
-	if (!store.apiTokens) return apiErrors.notFound("API token store unavailable.");
+	const runtime = await resolveApiRuntime(context.locals);
+	if (!runtime.apiTokens) return apiErrors.notFound("API token store unavailable.");
 
 	return withApiRequest(
 		context.request,
-		buildApiCtx(store.apiTokens, store, getCmsConfig()),
+		{
+			apiTokens: runtime.apiTokens,
+			checkRateLimit: runtime.checkRateLimit,
+			rateLimit: getCmsConfig().api?.rateLimit,
+		},
 		["media:write"],
-		async () => {
+		async (tokenId) => {
 			// Multipart upload — extract file from form data
 			let formData: FormData;
 			try {
@@ -113,15 +111,19 @@ export const POST: APIRoute = async (context) => {
 			}
 
 			const bytes = new Uint8Array(await file.arrayBuffer());
-			const id = crypto.randomUUID();
-			const asset = await store.createMediaAsset({
-				id,
-				filename: file.name,
-				mimeType,
-				bytes,
-			});
+			const actor = {
+				email: `api-token:${tokenId}`,
+				role: "editor" as const,
+				name: "API Token",
+			};
+			const result = (await createRuntimeMediaAsset(
+				{ filename: file.name, mimeType, bytes },
+				actor,
+				context.locals,
+			)) as { ok: true; id: string } | { ok: false; error: string };
+			if (!result.ok) return apiErrors.validationError(result.error);
 
-			return jsonOk(asset, 201);
+			return jsonOk(result as unknown as Parameters<typeof jsonOk>[0], 201);
 		},
 	);
 };

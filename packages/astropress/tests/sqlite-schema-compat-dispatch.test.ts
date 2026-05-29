@@ -430,6 +430,17 @@ describe("ensureLegacySchemaCompatibility — dispatch conditions", () => {
 		expect(getTableColumns(db, "schema_migrations")).toContain("rollback_sql");
 	});
 
+	it("adds is_active column to legacy connected_integrations when missing (#127)", () => {
+		const db = makeDb();
+		expect(getTableColumns(db, "connected_integrations")).toContain("is_active");
+		db.exec("ALTER TABLE connected_integrations DROP COLUMN is_active");
+		expect(getTableColumns(db, "connected_integrations")).not.toContain("is_active");
+		ensureLegacySchemaCompatibility(db);
+		// The ALTER only fires when the table exists AND lacks the column —
+		// both halves of the guard are exercised by the assertions above/below.
+		expect(getTableColumns(db, "connected_integrations")).toContain("is_active");
+	});
+
 	it("creates content_locks table when absent", () => {
 		const db = makeDb();
 		db.exec("DROP TABLE content_locks");

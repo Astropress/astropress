@@ -8,6 +8,7 @@ import {
 } from "../src/host-runtime-factories";
 import {
 	ADMIN_STORE_FLAT_METHOD_SECTIONS,
+	ADMIN_STORE_OPTIONAL_OBJECT_KEYS,
 	ADMIN_STORE_SECTIONS,
 } from "../src/host-runtime-factories-data";
 import type { AdminStoreAdapter } from "../src/persistence-types";
@@ -601,6 +602,33 @@ describe("createAstropressAdminStoreModule (Proxy semantics)", () => {
 			expect(typeof sectionApi).toBe("object");
 			const result = sectionApi.someProbeMethod("x");
 			expect(result).toBe(`${section}.someProbeMethod::["x"]`);
+			// The inner section proxy must also reject non-string keys: a symbol
+			// access returns undefined, not a (truthy) forwarding function.
+			expect((sectionApi as unknown as { [k: symbol]: unknown })[Symbol.iterator]).toBeUndefined();
+		}
+	});
+
+	it("forwards optional object surfaces by value so absence stays falsy", () => {
+		// Regression for the latent local-mode bug: apiTokens/webhooks/flash/
+		// integrations must be reachable through the flattened module (a section
+		// proxy would always be truthy and break the `if (!store.apiTokens)`
+		// absence guard that DB-less hosts rely on). See issues #137 and
+		// #113/#115/#133.
+		const present = {
+			apiTokens: { marker: "T" },
+			webhooks: { marker: "W" },
+			flash: { marker: "F" },
+		};
+		const withStores = createAstropressAdminStoreModule(
+			() => present as unknown as AdminStoreAdapter,
+		);
+		expect((withStores as unknown as Record<string, unknown>).apiTokens).toBe(present.apiTokens);
+		expect((withStores as unknown as Record<string, unknown>).webhooks).toBe(present.webhooks);
+		expect((withStores as unknown as Record<string, unknown>).flash).toBe(present.flash);
+
+		const empty = createAstropressAdminStoreModule(() => ({}) as unknown as AdminStoreAdapter);
+		for (const key of ADMIN_STORE_OPTIONAL_OBJECT_KEYS) {
+			expect((empty as unknown as Record<string, unknown>)[key]).toBeUndefined();
 		}
 	});
 

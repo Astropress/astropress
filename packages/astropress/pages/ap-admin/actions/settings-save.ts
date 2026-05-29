@@ -3,7 +3,7 @@ import type { APIRoute } from "astro";
 export const POST: APIRoute = async (context) =>
 	withAdminFormAction(
 		context,
-		{ failurePath: "/ap-admin/settings", requireAdmin: true },
+		{ failurePath: "/ap-admin/settings", requireAction: "settings:edit" },
 		async ({ actor, formData, locals, redirect, fail }) => {
 			const siteTitle = formData.get("siteTitle") as string | null;
 			const siteTagline = formData.get("siteTagline") as string | null;

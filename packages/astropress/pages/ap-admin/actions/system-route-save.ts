@@ -11,7 +11,7 @@ function splitLines(value: FormDataEntryValue | null) {
 export const POST: APIRoute = async (context) =>
 	withAdminFormAction(
 		context,
-		{ failurePath: "/ap-admin/system", requireAdmin: true },
+		{ failurePath: "/ap-admin/system", requireAction: "routePages:edit" },
 		async ({ actor, formData, locals, redirect, fail }) => {
 			const path = String(formData.get("path") ?? "").trim();
 			const title = String(formData.get("title") ?? "").trim();

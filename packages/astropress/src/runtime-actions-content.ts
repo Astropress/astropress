@@ -3,6 +3,7 @@ import { withLocalStoreFallback } from "./admin-store-dispatch";
 import { purgeCdnCache } from "./cache-purge";
 import { dispatchPluginContentEvent, getCmsConfig } from "./config";
 import { recordD1Audit } from "./d1-audit";
+import { createD1SchedulingPart } from "./d1-store-content";
 import type { Actor } from "./persistence-types";
 import {
 	type ContentStatus,
@@ -34,8 +35,10 @@ export async function saveRuntimeContentState(
 	input: SaveContentInput,
 	actor: Actor,
 	locals?: App.Locals | null,
-) {
-	return withLocalStoreFallback(
+): Promise<{ ok: false; error: string; conflict?: true } | { ok: true; state?: unknown }> {
+	return withLocalStoreFallback<
+		{ ok: false; error: string; conflict?: true } | { ok: true; state?: unknown }
+	>(
 		locals,
 		async (db) => {
 			const pageRecord = await findPageRecord(slug, locals);
@@ -184,8 +187,8 @@ export async function createRuntimeContentRecord(
 	},
 	actor: Actor,
 	locals?: App.Locals | null,
-) {
-	return withLocalStoreFallback(
+): Promise<{ ok: false; error: string } | { ok: true; state: unknown }> {
+	return withLocalStoreFallback<{ ok: false; error: string } | { ok: true; state: unknown }>(
 		locals,
 		async (db) => {
 			const title = input.title.trim();
@@ -296,6 +299,33 @@ export async function createRuntimeContentRecord(
 		},
 		/* v8 ignore next 1 */
 		(localStore) => localStore.createContentRecord(input, actor),
+	);
+}
+
+/**
+ * Schedules a content record for future publication, dispatching to D1 when a
+ * binding is present and to the local store otherwise. Lets the schedule-publish
+ * admin action work on D1-backed hosts without the local runtime alias (#137).
+ */
+export async function scheduleRuntimePublish(
+	slug: string,
+	scheduledAt: string,
+	locals?: App.Locals | null,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+	return withLocalStoreFallback<{ ok: true } | { ok: false; error: string }>(
+		locals,
+		async (db) => {
+			await createD1SchedulingPart(db).schedulePublish(slug, scheduledAt);
+			return { ok: true as const };
+		},
+		/* v8 ignore next 4 */
+		(localStore) => {
+			if (!localStore.schedulePublish) {
+				return { ok: false as const, error: "Content scheduling is not available." };
+			}
+			localStore.schedulePublish(slug, scheduledAt);
+			return { ok: true as const };
+		},
 	);
 }
 

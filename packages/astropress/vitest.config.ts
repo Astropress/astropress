@@ -23,6 +23,10 @@ export default defineConfig({
 				replacement: fileURLToPath(new URL("./src/local-runtime-modules.ts", import.meta.url)),
 			},
 			{
+				find: /^@astropress-diy\/astropress\/admin-store-dispatch(?:\.js)?$/,
+				replacement: fileURLToPath(new URL("./src/admin-store-dispatch.ts", import.meta.url)),
+			},
+			{
 				find: /^@astropress-diy\/astropress\/api-middleware(?:\.js)?$/,
 				replacement: fileURLToPath(new URL("./src/api-middleware.ts", import.meta.url)),
 			},

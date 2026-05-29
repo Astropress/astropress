@@ -1,4 +1,5 @@
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
+import { join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
@@ -6,6 +7,7 @@ import { requiresAccess } from "../src/access/page-guard";
 import { listAstropressAdminRoutes } from "../src/admin-routes";
 
 const PAGES_DIR = fileURLToPath(new URL("../pages/ap-admin", import.meta.url));
+const COMPONENTS_DIR = fileURLToPath(new URL("../components", import.meta.url));
 
 const PUBLIC_PAGE_PATTERNS = new Set<string>([
 	"/ap-admin/login",
@@ -17,12 +19,24 @@ describe("admin route auth matrix (registry-driven)", () => {
 	const routes = listAstropressAdminRoutes();
 	const pageRoutes = routes.filter((r) => r.kind === "page");
 
-	it("every page route is either explicitly public or carries a server-side guard", () => {
+	it("every page route is either explicitly public or carries a REAL server-side guard", () => {
+		// #131: the old check accepted any page that merely mentioned `adminUser`
+		// — even one that only read it for display with no authorization. Require
+		// a real guard construct instead: a requiresAccess() permission gate, a
+		// page-model forbidden-status branch, an explicit isAuthUserAdmin() check,
+		// or the adminOnlyPage() helper. A bare `adminUser` reference no longer
+		// counts.
+		const GUARD_CONSTRUCTS = [
+			"requiresAccess(",
+			'=== "forbidden"',
+			"isAuthUserAdmin(",
+			"adminOnlyPage(",
+		];
 		const offenders: string[] = [];
 		for (const route of pageRoutes) {
 			if (PUBLIC_PAGE_PATTERNS.has(route.pattern)) continue;
 			const src = readFileSync(`${PAGES_DIR}/${route.entrypoint}`, "utf8");
-			const guarded = src.includes("requiresAccess(") || src.includes("adminUser");
+			const guarded = GUARD_CONSTRUCTS.some((c) => src.includes(c));
 			if (!guarded) offenders.push(`${route.pattern} (${route.entrypoint})`);
 		}
 		expect(offenders).toEqual([]);
@@ -108,6 +122,7 @@ describe("admin route auth matrix (registry-driven)", () => {
 			"/ap-admin/actions/integration-disconnect",
 			"/ap-admin/actions/integration-reverify",
 			"/ap-admin/actions/integration-connect",
+			"/ap-admin/actions/integration-set-active",
 			"/ap-admin/actions/restore",
 			"/ap-admin/actions/import-start",
 			"/ap-admin/actions/mailchimp-import",
@@ -152,5 +167,52 @@ describe("admin route auth matrix (registry-driven)", () => {
 				expect(path).toMatch(/^\/ap-admin\/services\/[a-z]+$/);
 			}
 		});
+	});
+});
+
+// Every admin <form method="post"> that posts to /ap-admin/actions/* runs
+// through withAdminFormAction, which rejects the submission unless `_csrf`
+// matches the session token. A form that omits the token therefore either
+// silently fails (broken UX) or diverges from the CSRF model — the gap behind
+// #134 (subscriber delete) and the latent publish-button form. This scans the
+// rendered markup so the form, not just the server wrapper, is proven.
+describe("admin action forms carry a CSRF token (#134)", () => {
+	// Pre-session flows authenticate via a single-use token in the URL/body
+	// (the invite/reset token IS the CSRF defence); no session CSRF exists yet.
+	// Mirrors PRE_SESSION_ACTIONS in audit-abac-enforcement-parity.
+	const PRE_SESSION_FORM_ACTIONS = new Set<string>([
+		"/ap-admin/actions/accept-invite",
+		"/ap-admin/actions/reset-password",
+	]);
+
+	function collectAstro(dir: string): string[] {
+		const out: string[] = [];
+		for (const entry of readdirSync(dir, { withFileTypes: true })) {
+			const p = join(dir, entry.name);
+			if (entry.isDirectory()) out.push(...collectAstro(p));
+			else if (entry.name.endsWith(".astro")) out.push(p);
+		}
+		return out;
+	}
+
+	it("every admin action form includes a CSRF token (CsrfInput or _csrf)", () => {
+		const files = [...collectAstro(PAGES_DIR), ...collectAstro(COMPONENTS_DIR)];
+		const offenders: string[] = [];
+		for (const file of files) {
+			const src = readFileSync(file, "utf8");
+			for (const m of src.matchAll(/<form\b[^>]*>([\s\S]*?)<\/form>/g)) {
+				const form = m[0];
+				const action = form.match(/action=["']([^"']+)["']/)?.[1] ?? "";
+				if (!action.startsWith("/ap-admin/actions/")) continue;
+				if (!/method=["']post["']/i.test(form)) continue;
+				if (PRE_SESSION_FORM_ACTIONS.has(action)) continue;
+				if (!/CsrfInput|_csrf|csrfToken/.test(form)) {
+					offenders.push(`${relative(PAGES_DIR, file)} → ${action}`);
+				}
+			}
+		}
+		expect(offenders, `admin action forms missing a CSRF token: ${offenders.join(", ")}`).toEqual(
+			[],
+		);
 	});
 });

@@ -4,6 +4,7 @@ import {
 	buildPostsIndexPageModel,
 	getPageT,
 	isSeededPostRecord,
+	requiresAccess,
 	resolveAdminLocale,
 } from "astropress";
 
@@ -39,7 +40,12 @@ function tWorkflow(label: string): string {
 	}
 }
 
+// #104: gate the posts index on posts:list; denied subjects are redirected
+// (also removes the anon adminUser deref at render).
+const postsGuard = await requiresAccess(Astro, "posts:list");
+if (postsGuard) return postsGuard;
 const adminUser = Astro.locals.adminUser;
+if (!adminUser) return Astro.redirect("/ap-admin/login");
 
 if (Astro.url.searchParams.get("type") === "page") {
 	return Astro.redirect("/ap-admin/pages", 302);

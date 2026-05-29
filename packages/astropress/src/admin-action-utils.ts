@@ -69,6 +69,18 @@ export function actionErrorRedirect(path: string, message: string): Response {
 	return actionRedirect(url.pathname + url.search);
 }
 
+/**
+ * Success counterpart to {@link actionErrorRedirect}: redirects to `path`
+ * carrying a free-text confirmation in `?notice=1&message=…`, which AdminLayout
+ * surfaces in its action-notice live region.
+ */
+export function actionNoticeRedirect(path: string, message: string): Response {
+	const url = new URL(path, "https://astropress.invalid");
+	url.searchParams.set("notice", "1");
+	url.searchParams.set("message", message);
+	return actionRedirect(url.pathname + url.search);
+}
+
 async function checkActionPermission(
 	context: AdminActionContext,
 	options: GuardOptions,
@@ -119,8 +131,18 @@ export async function requireAdminFormAction(
 	const sessionToken =
 		context.cookies.get(sessionCookieName)?.value ??
 		context.cookies.get(LEGACY_SESSION_COOKIE)?.value;
-	const harnessSessionUser =
+	const harnessAdminUser =
 		getRuntimeEnv("PLAYWRIGHT_E2E_MODE") === "admin-harness" ? context.locals.adminUser : null;
+	// The harness injects an AuthUser; project it onto the AdminSessionUser shape
+	// ({ email, role, name, isAdmin }) the rest of this guard and ActionContext use.
+	const harnessSessionUser: AdminSessionUser | null = harnessAdminUser
+		? {
+				email: harnessAdminUser.email,
+				role: harnessAdminUser.isAdmin ? "admin" : "editor",
+				name: harnessAdminUser.name ?? harnessAdminUser.email,
+				isAdmin: harnessAdminUser.isAdmin,
+			}
+		: null;
 	const sessionUser =
 		(await getRuntimeSessionUser(sessionToken, context.locals)) ?? harnessSessionUser;
 

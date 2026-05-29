@@ -62,7 +62,10 @@ export function rebuildContentTablesForCompatibility(
 	);
 }
 
-export function ensureFts5SearchIndex(db: SqliteDatabaseLike) {
+// Accepts any sqlite handle exposing `prepare`/`exec` (this never closes the
+// db), so the request-scoped AstropressSqliteDatabaseLike — which omits close()
+// — is a valid argument alongside the bootstrap SqliteDatabaseLike.
+export function ensureFts5SearchIndex(db: Pick<SqliteDatabaseLike, "exec" | "prepare">) {
 	const existing = db
 		.prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'content_fts'")
 		.get() as { name: string } | undefined;
@@ -98,6 +101,15 @@ export function ensureLegacySchemaCompatibility(db: SqliteDatabaseLike) {
 	const migrationColumns = new Set(getTableColumns(db, "schema_migrations"));
 	if (!migrationColumns.has("rollback_sql")) {
 		db.exec("ALTER TABLE schema_migrations ADD COLUMN rollback_sql TEXT");
+	}
+
+	// #127: explicit active-provider selection. Legacy hosts that applied the
+	// connected_integrations table before this column existed get it added with
+	// a DEFAULT 0; the runtime treats a sole connected provider as active, so
+	// existing single-provider setups keep working without a manual selection.
+	const integrationColumns = new Set(getTableColumns(db, "connected_integrations"));
+	if (integrationColumns.size > 0 && !integrationColumns.has("is_active")) {
+		db.exec("ALTER TABLE connected_integrations ADD COLUMN is_active INTEGER NOT NULL DEFAULT 0");
 	}
 
 	// ABAC migration: legacy admin_users may lack is_admin. Add the column

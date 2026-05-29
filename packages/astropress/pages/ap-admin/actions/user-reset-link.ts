@@ -3,12 +3,13 @@ import {
 	sendPasswordResetEmail,
 	withAdminFormAction,
 } from "@astropress-diy/astropress";
+import { resolveFlashStore } from "@astropress-diy/astropress/admin-store-dispatch.js";
 import type { APIRoute } from "astro";
 
 export const POST: APIRoute = async (context) =>
 	withAdminFormAction(
 		context,
-		{ failurePath: "/ap-admin/users", requireAdmin: true },
+		{ failurePath: "/ap-admin/users", requireAction: "users:edit" },
 		async ({ actor, formData, locals, request, redirect, fail }) => {
 			const email = String(formData.get("email") ?? "");
 			const result = await createRuntimePasswordResetToken(email, actor, locals);
@@ -28,7 +29,12 @@ export const POST: APIRoute = async (context) =>
 				}
 			}
 			if (result.resetUrl) {
-				redirectUrl.searchParams.set("reset_link", result.resetUrl);
+				// Deliver the reset link via the one-time flash store (#133) rather
+				// than the URL — the page consumes it server-side exactly once.
+				const flash = await resolveFlashStore(locals);
+				if (!flash) return fail("Flash store is not available.");
+				const { id } = await flash.put(result.resetUrl);
+				redirectUrl.searchParams.set("reset_flash", id);
 			}
 			return redirect(redirectUrl.pathname + redirectUrl.search);
 		},

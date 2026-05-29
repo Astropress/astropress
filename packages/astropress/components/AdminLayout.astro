@@ -1,5 +1,7 @@
 ---
+import CsrfInput from "./CsrfInput.astro";
 import { getAccessContext } from "../src/access/index";
+import { NAV_ACTION_BY_HREF } from "../src/access/nav-action-map-data";
 import { buildAstropressAdminDocumentTitle } from "../src/admin-branding";
 import { localeDirection, resolveAdminLocale } from "../src/admin-locale";
 import { getPageT } from "../src/admin-page-labels";
@@ -42,7 +44,9 @@ interface Props {
 	 * access.subject.isAdmin / engine.can() instead.
 	 */
 	role?: "admin" | "editor";
-	userName: string;
+	// Optional: pages pass `adminUser.name` (an optional field). Renders as empty
+	// when absent; callers that need a guaranteed string use safeAdminUserName.
+	userName?: string;
 	siteName?: string;
 	/** When true, shows the CMS nav item linking to /ap-admin/cms. */
 	hasCms?: boolean;
@@ -58,7 +62,7 @@ const {
 	currentPath,
 	description = "",
 	role,
-	userName,
+	userName = "",
 	siteName,
 	hasCms = false,
 	hasHostPanel = false,
@@ -82,7 +86,6 @@ const displayRole: "admin" | "editor" = role ?? (isAdminRole ? "admin" : "editor
 const recentItems = await getRecentAdminItems(Astro.locals, {
 	id: access?.subject.id ?? "",
 	email: access?.subject.email ?? "",
-	role: displayRole,
 	isAdmin: isAdminRole,
 });
 
@@ -113,6 +116,17 @@ const leaf = (
 	requiredAction: opts.requiredAction,
 });
 
+// Build a core nav leaf whose `requiredAction`/`adminOnly` are sourced from the
+// shared NAV_ACTION_MAP data module rather than inlined here, so the sidebar,
+// the page guards, and the abac parity audit all read one source of truth.
+const mappedLeaf = (href: string, label: string): NavItem => {
+	const entry = NAV_ACTION_BY_HREF.get(href);
+	return leaf(href, label, {
+		adminOnly: entry?.adminOnly,
+		requiredAction: entry?.requiredAction,
+	});
+};
+
 const navigationByKey = adminUi.navigation as Record<string, string>;
 const integrationLeaf = (entry: IntegrationEntry): NavItem =>
 	leaf(entry.href, navigationByKey[entry.navKey] ?? entry.navKey, {
@@ -141,115 +155,39 @@ const navItems: NavItem[] = [
 	{ href: "/ap-admin", label: adminUi.navigation.dashboard },
 
 	groupSep(adminUi.navigation.groupSite),
-	leaf("/ap-admin/pages", adminUi.navigation.pages, {
-		adminOnly: true,
-		requiredAction: "pages:list",
-	}),
-	leaf("/ap-admin/route-pages", adminUi.navigation.routePages, {
-		adminOnly: true,
-		requiredAction: "routePages:edit",
-	}),
-	leaf("/ap-admin/archives", adminUi.navigation.archives, {
-		adminOnly: true,
-		requiredAction: "archives:edit",
-	}),
-	leaf("/ap-admin/media", adminUi.navigation.media, {
-		requiredAction: "media:list",
-	}),
-	leaf("/ap-admin/redirects", adminUi.navigation.redirects, {
-		adminOnly: true,
-		requiredAction: "redirects:manage",
-	}),
-	leaf("/ap-admin/forms", adminUi.navigation.forms, {
-		requiredAction: "forms:view",
-	}),
+	mappedLeaf("/ap-admin/pages", adminUi.navigation.pages),
+	mappedLeaf("/ap-admin/route-pages", adminUi.navigation.routePages),
+	mappedLeaf("/ap-admin/archives", adminUi.navigation.archives),
+	mappedLeaf("/ap-admin/media", adminUi.navigation.media),
+	mappedLeaf("/ap-admin/redirects", adminUi.navigation.redirects),
+	mappedLeaf("/ap-admin/forms", adminUi.navigation.forms),
 
 	groupSep(adminUi.navigation.contentGroup),
-	leaf("/ap-admin/posts", adminUi.navigation.posts, {
-		requiredAction: "posts:list",
-	}),
-	leaf("/ap-admin/authors", adminUi.navigation.authors, {
-		adminOnly: true,
-		requiredAction: "authors:manage",
-	}),
-	leaf("/ap-admin/taxonomies", adminUi.navigation.taxonomies, {
-		adminOnly: true,
-		requiredAction: "taxonomies:manage",
-	}),
-	leaf("/ap-admin/cms", adminUi.navigation.headlessCmsPanel, {
-		requiredAction: "settings:edit",
-	}),
+	mappedLeaf("/ap-admin/posts", adminUi.navigation.posts),
+	mappedLeaf("/ap-admin/authors", adminUi.navigation.authors),
+	mappedLeaf("/ap-admin/taxonomies", adminUi.navigation.taxonomies),
+	mappedLeaf("/ap-admin/cms", adminUi.navigation.headlessCmsPanel),
 
 	groupSep(adminUi.navigation.groupAudience),
-	leaf("/ap-admin/subscribers", adminUi.navigation.subscribers, {
-		adminOnly: true,
-		requiredAction: "subscribers:view",
-	}),
-	leaf("/ap-admin/newsletter", adminUi.navigation.newsletter, {
-		adminOnly: true,
-		requiredAction: "newsletter:send",
-	}),
-	leaf("/ap-admin/comments", adminUi.navigation.comments, {
-		requiredAction: "comments:moderate",
-	}),
-	leaf("/ap-admin/events", adminUi.navigation.events, {
-		adminOnly: true,
-		requiredAction: "events:manage",
-	}),
-	leaf("/ap-admin/testimonials", adminUi.navigation.testimonials, {
-		adminOnly: true,
-		requiredAction: "testimonials:manage",
-	}),
-	leaf("/ap-admin/reviews", adminUi.navigation.reviews, {
-		adminOnly: true,
-		requiredAction: "testimonials:manage",
-	}),
-	leaf("/ap-admin/referrals", adminUi.navigation.referrals, {
-		adminOnly: true,
-		requiredAction: "services:manage",
-	}),
-	leaf("/ap-admin/memberships", adminUi.navigation.memberships, {
-		adminOnly: true,
-		requiredAction: "services:manage",
-	}),
-	leaf("/ap-admin/fundraising", adminUi.navigation.fundraising, {
-		adminOnly: true,
-		requiredAction: "fundraising:manage",
-	}),
-	leaf("/ap-admin/community", adminUi.navigation.community, {
-		adminOnly: true,
-		requiredAction: "services:manage",
-	}),
-	leaf("/ap-admin/shop", adminUi.navigation.shop, {
-		adminOnly: true,
-		requiredAction: "services:manage",
-	}),
-	leaf("/ap-admin/social-syndication", adminUi.navigation.socialSyndication, {
-		adminOnly: true,
-		requiredAction: "services:manage",
-	}),
+	mappedLeaf("/ap-admin/subscribers", adminUi.navigation.subscribers),
+	mappedLeaf("/ap-admin/newsletter", adminUi.navigation.newsletter),
+	mappedLeaf("/ap-admin/comments", adminUi.navigation.comments),
+	mappedLeaf("/ap-admin/events", adminUi.navigation.events),
+	mappedLeaf("/ap-admin/testimonials", adminUi.navigation.testimonials),
+	mappedLeaf("/ap-admin/reviews", adminUi.navigation.reviews),
+	mappedLeaf("/ap-admin/referrals", adminUi.navigation.referrals),
+	mappedLeaf("/ap-admin/memberships", adminUi.navigation.memberships),
+	mappedLeaf("/ap-admin/fundraising", adminUi.navigation.fundraising),
+	mappedLeaf("/ap-admin/community", adminUi.navigation.community),
+	mappedLeaf("/ap-admin/shop", adminUi.navigation.shop),
+	mappedLeaf("/ap-admin/social-syndication", adminUi.navigation.socialSyndication),
 
 	groupSep(adminUi.navigation.groupDiscoverability),
-	leaf("/ap-admin/seo", adminUi.navigation.seo, {
-		adminOnly: true,
-		requiredAction: "seo:edit",
-	}),
-	leaf("/ap-admin/structured-data", adminUi.navigation.structuredData, {
-		adminOnly: true,
-		requiredAction: "seo:edit",
-	}),
-	leaf("/ap-admin/sitemaps", adminUi.navigation.sitemaps, {
-		adminOnly: true,
-		requiredAction: "sitemaps:view",
-	}),
-	leaf("/ap-admin/maps-local", adminUi.navigation.mapsLocal, {
-		adminOnly: true,
-		requiredAction: "seo:edit",
-	}),
-	leaf("/ap-admin/translations", adminUi.navigation.translations, {
-		adminOnly: true,
-		requiredAction: "translations:manage",
-	}),
+	mappedLeaf("/ap-admin/seo", adminUi.navigation.seo),
+	mappedLeaf("/ap-admin/structured-data", adminUi.navigation.structuredData),
+	mappedLeaf("/ap-admin/sitemaps", adminUi.navigation.sitemaps),
+	mappedLeaf("/ap-admin/maps-local", adminUi.navigation.mapsLocal),
+	mappedLeaf("/ap-admin/translations", adminUi.navigation.translations),
 
 	// Integration leaves are partitioned by `INTEGRATIONS` so the sidebar
 	// stops conflating real features with coming-soon roadmap entries.
@@ -260,40 +198,15 @@ const navItems: NavItem[] = [
 	...integrationLeavesForGroup("coming-soon"),
 
 	groupSep(adminUi.navigation.groupAccess),
-	leaf("/ap-admin/users", adminUi.navigation.users, {
-		adminOnly: true,
-		requiredAction: "users:list",
-	}),
-	leaf("/ap-admin/access", adminUi.navigation.access, {
-		adminOnly: true,
-		requiredAction: "roles:manage",
-	}),
+	mappedLeaf("/ap-admin/users", adminUi.navigation.users),
+	mappedLeaf("/ap-admin/access", adminUi.navigation.access),
 
 	groupSep(adminUi.navigation.groupOperations),
-	leaf("/ap-admin/system", adminUi.navigation.system, {
-		adminOnly: true,
-		requiredAction: "system:view",
-	}),
-	...(hasHostPanel
-		? [
-				leaf("/ap-admin/host", adminUi.navigation.host, {
-					adminOnly: true,
-					requiredAction: "host:view",
-				}),
-			]
-		: []),
-	leaf("/ap-admin/data", adminUi.navigation.data, {
-		adminOnly: true,
-		requiredAction: "data:view",
-	}),
-	leaf("/ap-admin/settings", adminUi.navigation.settings, {
-		adminOnly: true,
-		requiredAction: "settings:edit",
-	}),
-	leaf("/ap-admin/backups", adminUi.navigation.backups, {
-		adminOnly: true,
-		requiredAction: "backups:manage",
-	}),
+	mappedLeaf("/ap-admin/system", adminUi.navigation.system),
+	...(hasHostPanel ? [mappedLeaf("/ap-admin/host", adminUi.navigation.host)] : []),
+	mappedLeaf("/ap-admin/data", adminUi.navigation.data),
+	mappedLeaf("/ap-admin/settings", adminUi.navigation.settings),
+	mappedLeaf("/ap-admin/backups", adminUi.navigation.backups),
 ];
 
 // hasCms is kept on Props for backwards compatibility but no longer gates
@@ -342,6 +255,7 @@ const documentTitleResolved = isOnMatchedNavRoute
       <div class="topbar-meta">
         {canPublish && isAdminRole && (
           <form method="post" action="/ap-admin/actions/publish" class="publish-form">
+            <CsrfInput token={Astro.locals.csrfToken} />
             <button type="submit" class="publish-btn" title="Trigger a new production build">
               Publish
             </button>
@@ -442,22 +356,24 @@ const documentTitleResolved = isOnMatchedNavRoute
         <script>
           (function () {
             // Locale: persist choice in a cookie and reload so SSR re-renders labels.
-            var sel = document.querySelector('[data-locale-select]');
+            var sel = document.querySelector('[data-locale-select]') as HTMLSelectElement | null;
             if (sel) {
-              sel.addEventListener('change', function () {
-                document.cookie = 'astropress_admin_locale=' + encodeURIComponent(sel.value) + '; path=/; max-age=31536000; samesite=Lax';
+              var localeSelect = sel;
+              localeSelect.addEventListener('change', function () {
+                document.cookie = 'astropress_admin_locale=' + encodeURIComponent(localeSelect.value) + '; path=/; max-age=31536000; samesite=Lax';
                 window.location.reload();
               });
             }
 
             // Utility panel: close on click-outside and Escape (details element has no native light-dismiss).
-            var details = document.getElementById('topbar-utility-details');
+            var details = document.getElementById('topbar-utility-details') as HTMLDetailsElement | null;
             if (details) {
+              var utilityDetails = details;
               document.addEventListener('click', function (e) {
-                if (details.open && !details.contains(e.target)) details.removeAttribute('open');
+                if (utilityDetails.open && !utilityDetails.contains(e.target as Node | null)) utilityDetails.removeAttribute('open');
               });
               document.addEventListener('keydown', function (e) {
-                if (e.key === 'Escape' && details.open) { details.removeAttribute('open'); e.stopPropagation(); }
+                if (e.key === 'Escape' && utilityDetails.open) { utilityDetails.removeAttribute('open'); e.stopPropagation(); }
               });
             }
 
@@ -473,11 +389,12 @@ const documentTitleResolved = isOnMatchedNavRoute
               groupEls.forEach(function (el) {
                 var key = el.getAttribute('data-nav-group');
                 if (!key) return;
-                if (Object.prototype.hasOwnProperty.call(state, key)) {
-                  if (state[key]) el.setAttribute('open', ''); else el.removeAttribute('open');
+                var groupKey = key;
+                if (Object.prototype.hasOwnProperty.call(state, groupKey)) {
+                  if (state[groupKey]) el.setAttribute('open', ''); else el.removeAttribute('open');
                 }
                 el.addEventListener('toggle', function () {
-                  state[key] = el.hasAttribute('open');
+                  state[groupKey] = el.hasAttribute('open');
                   try { window.localStorage.setItem(storeKey, JSON.stringify(state)); } catch (e) { /* quota / disabled — OK */ }
                 });
               });
@@ -498,16 +415,17 @@ const documentTitleResolved = isOnMatchedNavRoute
             var fab = document.getElementById('scroll-to-top-fab');
             var topbar = document.querySelector('header.topbar');
             if (fab && topbar) {
+              var fabEl = fab;
               var visible = false;
-              function setVisibility(shouldShow) {
+              function setVisibility(shouldShow: boolean) {
                 if (shouldShow === visible) return;
                 visible = shouldShow;
                 if (shouldShow) {
-                  fab.hidden = false;
-                  requestAnimationFrame(function () { fab.classList.add('is-visible'); });
+                  fabEl.hidden = false;
+                  requestAnimationFrame(function () { fabEl.classList.add('is-visible'); });
                 } else {
-                  fab.classList.remove('is-visible');
-                  setTimeout(function () { if (!visible) fab.hidden = true; }, 220);
+                  fabEl.classList.remove('is-visible');
+                  setTimeout(function () { if (!visible) fabEl.hidden = true; }, 220);
                 }
               }
               var io = new IntersectionObserver(function (entries) {
@@ -642,6 +560,13 @@ const documentTitleResolved = isOnMatchedNavRoute
           data-action-error
           class="action-error-region"
         ></div>
+        <div
+          role="status"
+          aria-live="polite"
+          aria-atomic="true"
+          data-action-notice
+          class="action-notice-region"
+        ></div>
         <slot />
       </main>
     </div>
@@ -731,14 +656,14 @@ const documentTitleResolved = isOnMatchedNavRoute
         }
 
         document.addEventListener("invalid", (e) => {
-          const input = e.target as HTMLInputElement;
+          const input = e.target as HTMLElement;
           if (!(input instanceof HTMLInputElement || input instanceof HTMLTextAreaElement || input instanceof HTMLSelectElement)) return;
           e.preventDefault();
           showError(input as HTMLInputElement);
         }, true);
 
         document.addEventListener("input", (e) => {
-          const input = e.target as HTMLInputElement;
+          const input = e.target as HTMLElement;
           if (!(input instanceof HTMLInputElement || input instanceof HTMLTextAreaElement)) return;
           if (input.getAttribute("aria-invalid") === "true") clearError(input as HTMLInputElement);
         });
@@ -763,6 +688,14 @@ const documentTitleResolved = isOnMatchedNavRoute
             const liveRegion = document.querySelector<HTMLElement>("[aria-live='assertive'][data-action-error]");
             if (liveRegion && !liveRegion.textContent) {
               liveRegion.textContent = messageParam;
+            }
+          }
+          // Success counterpart: ?notice=1&message=… (e.g. publish confirmation).
+          const notice = params.get("notice");
+          if (notice && messageParam) {
+            const noticeRegion = document.querySelector<HTMLElement>("[data-action-notice]");
+            if (noticeRegion && !noticeRegion.textContent) {
+              noticeRegion.textContent = messageParam;
             }
           }
         }

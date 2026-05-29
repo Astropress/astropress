@@ -1,4 +1,5 @@
 ---
+import { safeAdminUserName } from "astropress";
 import AdminLayout from "@astropress-diy/astropress/components/AdminLayout.astro";
 import { buildRouteTablePageModel, getPageT, resolveAdminLocale } from "astropress";
 
@@ -22,7 +23,7 @@ const t = getPageT(adminLocale);
     heading={t("routePages.title")}
     currentPath="/ap-admin/route-pages"
     description={t("routePages.description")}
-    userName={adminUser.name}
+    userName={safeAdminUserName(adminUser)}
   >
     {model.warnings.length > 0 && <p class="notice">{t("routePages.partialResults")}</p>}
 
@@ -122,7 +123,7 @@ const t = getPageT(adminLocale);
     heading={t("routePages.forbiddenTitle")}
     currentPath="/ap-admin/posts"
     description={t("routePages.forbiddenDesc")}
-    userName={adminUser.name}
+    userName={safeAdminUserName(adminUser)}
   >
     <section class="panel">
       <p>{t("routePages.forbiddenBody")}</p>

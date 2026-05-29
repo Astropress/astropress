@@ -1,15 +1,15 @@
 ---
 import AdminLayout from "@astropress-diy/astropress/components/AdminLayout.astro";
-import { getPageT, isAuthUserAdmin, peekCmsConfig, resolveAdminLocale } from "astropress";
+import { getPageT, peekCmsConfig, requiresAccess, resolveAdminLocale } from "astropress";
 
+// #135: gate fundraising on the declared fundraising:manage permission rather
+// than the coarse admin break-glass, so a delegated fundraising manager (and
+// only they, besides admins) can reach it.
+const guard = await requiresAccess(Astro, "fundraising:manage");
+if (guard) return guard;
 const adminUser = Astro.locals.adminUser;
-
 if (!adminUser) {
 	return Astro.redirect("/ap-admin/login?return=/ap-admin/fundraising", 302);
-}
-
-if (!isAuthUserAdmin(adminUser)) {
-	return Astro.redirect("/ap-admin", 302);
 }
 
 const donations = peekCmsConfig()?.donations;

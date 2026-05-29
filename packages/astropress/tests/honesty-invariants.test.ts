@@ -109,19 +109,23 @@ describe("H2: success-redirect params only appear after success checks", () => {
 // ---------------------------------------------------------------------------
 
 describe("H3: schedule-publish validates content exists before scheduling", () => {
-	it("schedule-publish.ts calls getContentState before the ?scheduled=1 redirect", () => {
+	it("schedule-publish.ts verifies content exists before the ?scheduled=1 redirect", () => {
 		const src = readSource(path.join(actionsRoot, "schedule-publish.ts"));
 
-		// Both calls must exist
-		expect(src, "must call getContentState to verify content exists").toMatch(/getContentState\(/);
+		// Both calls must exist. The existence check goes through the dispatch-aware
+		// getRuntimeContentState (#137) so it works on D1-backed hosts too.
+		expect(src, "must call getRuntimeContentState to verify content exists").toMatch(
+			/getRuntimeContentState\(/,
+		);
 		expect(src, "must redirect to ?scheduled=1 on success").toMatch(/\?scheduled=1/);
 
-		// getContentState must appear before the redirect
-		const getContentStatePos = src.indexOf("getContentState(");
+		// The existence check must appear before the redirect
+		const getContentStatePos = src.indexOf("getRuntimeContentState(");
 		const scheduledRedirectPos = src.indexOf("?scheduled=1");
-		expect(getContentStatePos, "getContentState must precede ?scheduled=1 redirect").toBeLessThan(
-			scheduledRedirectPos,
-		);
+		expect(
+			getContentStatePos,
+			"getRuntimeContentState must precede ?scheduled=1 redirect",
+		).toBeLessThan(scheduledRedirectPos);
 	});
 
 	it("schedule-publish.ts returns early when content is not found", () => {

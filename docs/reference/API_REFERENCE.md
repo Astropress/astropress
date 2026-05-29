@@ -3,7 +3,7 @@
 Auto-generated from TypeScript source via the TypeScript compiler API.
 Run `bun run docs:api` to regenerate.
 
-Generated: 2026-05-24
+Generated: 2026-05-29
 
 ---
 
@@ -201,6 +201,11 @@ function triggerPublish(config: DeployHookConfig): Promise<PublishTriggerResult>
 function actionErrorRedirect(path: string, message: string): Response
 ```
 
+#### `actionNoticeRedirect`
+```ts
+function actionNoticeRedirect(path: string, message: string): Response
+```
+
 #### `actionRedirect`
 ```ts
 function actionRedirect(location: string, status: number): Response
@@ -224,6 +229,16 @@ function buildAstropressAdminDocumentTitle(title: string): string
 #### `buildAdminDashboardModel`
 ```ts
 function buildAdminDashboardModel(locals: Locals, user: AuthUser | null | undefined, translationStatus: TranslationEntry[], deps: DashboardDeps): Promise<AdminDashboardModel>
+```
+
+#### `resolveSafeAdminHref`
+```ts
+function resolveSafeAdminHref(baseUrl: URL, value: string | null | undefined, allowedPaths: string[]): string | null
+```
+
+#### `resolveSafeAdminReturnTo`
+```ts
+function resolveSafeAdminReturnTo(baseUrl: URL, value: string | null | undefined, fallback: string): string
 ```
 
 #### `isRtlLocale`
@@ -253,12 +268,17 @@ function getAdminLocalePair(route: string): AdminLocalePair | null
 
 #### `getPageT`
 ```ts
-function getPageT(locale: AdminLocale): (key: "common.search" | "common.title" | "common.status" | "common.actions" | "common.updated" | "common.path" | "common.author" | "common.category" | "common.allStatuses" | "common.allAuthors" | "common.allCategories" | "common.allTags" | "common.clearFilters" | "common.applyFilters" | "common.draft" | "common.published" | "common.archived" | "common.scheduled" | "common.inReview" | "common.unscheduled" | "common.kindPost" | "common.kindPage" | "common.kindRoutePage" | "common.statusReview" | "common.statusPending" | "common.needsReview" | "common.viewAll" | "common.openQueue" | "common.openEditor" | "banner.bootstrap.before" | "banner.bootstrap.link" | "banner.bootstrap.after" | "dashboard.description" | "dashboard.publishedPosts" | "dashboard.publishedPostsDesc" | "dashboard.publicPages" | "dashboard.publicPagesDesc" | "dashboard.needsReviewDesc" | "dashboard.scheduledPosts" | "dashboard.scheduledPostsDesc" | "dashboard.redirectRules" | "dashboard.redirectRulesDesc" | "dashboard.translationFollowup" | "dashboard.translationFollowupDesc" | "dashboard.create" | "dashboard.startNewWork" | "dashboard.startNewWorkDesc" | "dashboard.newPost" | "dashboard.newPage" | "dashboard.newAuthor" | "dashboard.newUser" | "dashboard.supportSurfaces" | "dashboard.supportSurfacesDesc" | "dashboard.translations" | "dashboard.translationsDesc" | "dashboard.seo" | "dashboard.seoDesc" | "dashboard.archives" | "dashboard.archivesDesc" | "dashboard.system" | "dashboard.systemDesc" | "dashboard.queue" | "dashboard.scheduledSoon" | "dashboard.scheduledSoonDesc" | "dashboard.viewScheduled" | "dashboard.noFutureScheduled" | "dashboard.postReviewQueue" | "dashboard.postReviewQueueDesc" | "dashboard.recentActivity" | "dashboard.recentlyUpdated" | "dashboard.recentlyUpdatedDesc" | "dashboard.publish" | "dashboard.latestDeployment" | "dashboard.latestDeploymentDesc" | "dashboard.noPublishYet" | "dashboard.descriptionEditor" | "dashboard.pendingComments" | "dashboard.pendingCommentsDesc" | "dashboard.editorialQueue" | "dashboard.open" | "dashboard.review" | "dashboard.nothingWaiting" | "dashboard.partialResults" | "dashboard.deployNoRecord" | "dashboard.deployTriggered" | "dashboard.deployFailed" | "dashboard.deployBy" | "common.unknownUpdateTime" | "posts.description" | "posts.partialResults" | "posts.openPublicBlog" | "posts.visiblePosts" | "posts.visiblePostsDesc" | "posts.reviewQueue" | "posts.reviewQueueDesc" | "posts.workflow" | "posts.blogPostList" | "posts.searchOnce" | "posts.searchPlaceholder" | "posts.searchPosts" | "posts.workflowFilter" | "posts.allWorkflowStates" | "posts.tag" | "posts.archiveFilter" | "posts.matchedSummary" | "posts.contentFilters" | "posts.contentList" | "posts.tableScheduled" | "posts.authors" | "posts.categories" | "posts.noMatched" | "posts.previous" | "posts.next" | "posts.previousPage" | "posts.nextPage" | "posts.pageOf" | "posts.pagination" | "pages.description" | "pages.partialResults" | "pages.openRouteTable" | "pages.allPages" | "pages.allPagesDesc" | "pages.structuredPages" | "pages.structuredPagesDesc" | "pages.publicPageOwnership" | "pages.pageIndex" | "pages.useThisIndex" | "pages.structuredExplanation" | "pages.pageTypesInList" | "pages.kindLegacy" | "pages.kindStructured" | "pages.kindArchive" | "pages.legacyExplanation" | "pages.structuredExplanation2" | "pages.archiveExplanation" | "pages.ofPagesSummary" | "pages.searchPages" | "pages.searchPlaceholder" | "pages.filterByKind" | "pages.filterByKindAria" | "pages.allKinds" | "pages.kind" | "pages.pagesList" | "pages.noMatch" | "pages.noMatchOr" | "pages.createNewPage" | "pages.editArchive" | "pages.editPageRow" | "pages.editRoutePage" | "pages.openPage" | "pages.seeded" | "pages.forbidden.description" | "pages.forbidden.body" | "media.description" | "media.partialResults" | "media.savedSuccess" | "media.deletedSuccess" | "media.totalAssets" | "media.totalAssetsDesc" | "media.missingAlt" | "media.missingAltDesc" | "media.addAssets" | "media.uploadMedia" | "media.uploadDesc" | "media.file" | "media.altText" | "media.uploadButton" | "media.uploading" | "media.browse" | "media.libraryGrid" | "media.libraryGridDesc" | "media.noAssets" | "media.metadata" | "media.libraryList" | "media.libraryListDesc" | "media.preview" | "media.titleAlt" | "media.localPath" | "media.r2Key" | "media.sourceUrl" | "media.noAlt" | "media.saveMetadata" | "media.delete" | "media.deleteDialogTitle" | "media.deleteDialogBody" | "media.deleteWarning" | "media.cancel" | "media.deleteAsset" | "media.assets" | "media.id" | "media.fileAria" | "media.titleAria" | "media.altAria" | "media.fileRequired" | "comments.description" | "comments.partialResults" | "comments.savedSuccess" | "comments.totalComments" | "comments.totalCommentsDesc" | "comments.pendingReview" | "comments.pendingReviewDesc" | "comments.moderation" | "comments.moderationQueue" | "comments.moderationQueueDesc" | "comments.queueAria" | "comments.author" | "comments.route" | "comments.policy" | "comments.action" | "comments.empty" | "comments.approve" | "comments.reject" | "comments.rejectDialogTitle" | "comments.rejectDialogBody" | "comments.cancel" | "comments.statusPending" | "comments.statusApproved" | "comments.statusRejected" | "comments.policyOpenModerated" | "redirects.description" | "redirects.partialResults" | "redirects.addRule" | "redirects.create" | "redirects.newRule" | "redirects.newRuleDesc" | "redirects.legacyPath" | "redirects.targetPath" | "redirects.statusCode" | "redirects.saveRule" | "redirects.inventory" | "redirects.reviewedRules" | "redirects.reviewedRulesDesc" | "redirects.legacy" | "redirects.target" | "redirects.delete" | "redirects.copy" | "redirects.empty" | "redirects.deleteDialogTitle" | "redirects.deleteDialogBody" | "redirects.deleteWarning" | "redirects.cancel" | "redirects.deleteRule" | "redirects.savedSuccess" | "redirects.deletedSuccess" | "redirects.tableAria" | "audit.recentTrail" | "audit.empty" | "audit.mediaAudit" | "authors.title" | "authors.description" | "authors.partialResults" | "authors.savedSuccess" | "authors.deletedSuccess" | "authors.deletedToast" | "authors.undo" | "authors.newAuthor" | "authors.newAuthorDesc" | "authors.authorName" | "authors.slug" | "authors.authorSlug" | "authors.bio" | "authors.authorBio" | "authors.bioPlaceholder" | "authors.saveAuthor" | "authors.listDesc" | "authors.tableAria" | "authors.thName" | "authors.thSlug" | "authors.thBio" | "authors.edit" | "authors.update" | "authors.delete" | "authors.ariaName" | "authors.ariaSlug" | "authors.ariaBio" | "authors.deleteDialogTitle" | "authors.deleteConfirmPrefix" | "authors.deleteConfirmSuffix" | "authors.deleteWarning" | "authors.cancel" | "authors.deleteAuthor" | "authors.forbiddenTitle" | "taxonomies.title" | "taxonomies.description" | "taxonomies.partialResults" | "taxonomies.savedSuccess" | "taxonomies.deletedSuccess" | "taxonomies.deletedToast" | "taxonomies.undo" | "taxonomies.categories" | "taxonomies.categoriesDesc" | "taxonomies.categoryName" | "taxonomies.categorySlug" | "taxonomies.categoryDescription" | "taxonomies.saveCategory" | "taxonomies.tags" | "taxonomies.tagsDesc" | "taxonomies.tagName" | "taxonomies.tagSlug" | "taxonomies.tagDescription" | "taxonomies.saveTag" | "taxonomies.slug" | "taxonomies.descriptionField" | "taxonomies.thName" | "taxonomies.thSlug" | "taxonomies.edit" | "taxonomies.update" | "taxonomies.delete" | "taxonomies.cancel" | "taxonomies.deleteWarning" | "taxonomies.deleteConfirmPrefix" | "taxonomies.deleteConfirmSuffix" | "taxonomies.deleteCategoryDialogTitle" | "taxonomies.deleteCategory" | "taxonomies.deleteTagDialogTitle" | "taxonomies.deleteTag" | "taxonomies.forbiddenTitle" | "layout.skipToContent" | "layout.openNavigation" | "layout.closeNavigation" | "layout.toggleUtilityPanel" | "layout.keyboardShortcuts" | "layout.scrollToBottom" | "layout.scrollToTop" | "layout.adminSections" | "layout.recent" | "layout.commandPalette" | "layout.commandPaletteResults" | "layout.searchAdminPages" | "layout.shortcutSaveDraft" | "layout.shortcutPublish" | "layout.shortcutEscape" | "layout.shortcutTab" | "layout.shortcutShiftTab" | "layout.shortcutHelp" | "layout.shortcutCmd" | "layout.goTo" | "settings.title" | "settings.description" | "settings.partialLoadNotice" | "settings.savedNotice" | "settings.tabsLabel" | "settings.tabGeneral" | "settings.tabNewsletter" | "settings.tabImport" | "settings.donationDestination" | "settings.donationDestinationDesc" | "settings.newsletterState" | "settings.newsletterStateDesc" | "settings.on" | "settings.off" | "settings.brandKicker" | "settings.siteIdentity" | "settings.siteIdentityDesc" | "settings.siteTitle" | "settings.siteTagline" | "settings.engagementKicker" | "settings.newsletter" | "settings.newsletterDesc" | "settings.enableNewsletter" | "settings.fundraisingKicker" | "settings.donationSettings" | "settings.donationUrl" | "settings.moderationKicker" | "settings.commentSettings" | "settings.defaultCommentPolicy" | "settings.commentDisabled" | "settings.commentLegacy" | "settings.commentOpenModerated" | "settings.saveButton" | "settings.subscriberRemoved" | "settings.importComplete" | "settings.subscribersKicker" | "settings.newsletterSubscribers" | "settings.subscribersDescBefore" | "settings.subscribersDescAfter" | "settings.listmonkRequiresEnv" | "settings.searchSubscribers" | "settings.searchSubscribersPlaceholder" | "settings.searchButton" | "settings.clearButton" | "settings.noSubscribersFound" | "settings.subscriberCountSingular" | "settings.subscriberCountPlural" | "settings.matching" | "settings.colEmail" | "settings.colName" | "settings.colSubscribed" | "settings.viewAction" | "settings.subscriberPagesLabel" | "settings.previous" | "settings.next" | "settings.pageInfo" | "settings.migrationKicker" | "settings.importMailchimp" | "settings.importMailchimpDescBefore" | "settings.importMailchimpDescOptional" | "settings.mailchimpFile" | "settings.mailchimpFileAria" | "settings.importSubscribersBtn" | "settings.uploading" | "settings.importingAria" | "settings.contentMigrationKicker" | "settings.importContent" | "settings.importContentDesc" | "settings.wordpress" | "settings.wordpressDesc" | "settings.setupWordpressImport" | "settings.wix" | "settings.wixDesc" | "settings.setupWixImport" | "settings.webCrawl" | "settings.webCrawlDesc" | "settings.setupCrawlImport" | "settings.importNoteBefore" | "settings.importNoteAfter" | "settings.subErrorLoadingList" | "users.title" | "users.description" | "users.partialNotice" | "users.invitationIssued" | "users.userCreatedNoEmail" | "users.userSuspended" | "users.userRestored" | "users.invitationLink" | "users.resetLinkPrefix" | "users.intro" | "users.totalUsers" | "users.totalUsersDesc" | "users.pendingInvites" | "users.pendingInvitesDesc" | "users.accessControlKicker" | "users.currentUsers" | "users.currentUsersDesc" | "users.adminUsersAria" | "users.colName" | "users.colEmail" | "users.colRole" | "users.colJoined" | "users.statusSuspended" | "users.statusInvited" | "users.statusActive" | "users.unsuspend" | "users.suspend" | "users.resetLinkBtn" | "users.createAccessKicker" | "users.inviteUser" | "users.inviteUserDesc" | "users.fullName" | "users.email" | "users.role" | "users.roleEditor" | "users.roleAdmin" | "users.sendInvitation" | "users.inviteNote" | "users.userAndAccessAudit" | "users.gdprKicker" | "users.purgeUserData" | "users.purgeUserDataDesc" | "users.purgeEmailLabel" | "users.purgeDeleteCheckbox" | "users.purgeAndDownload" | "users.confirmSuspendTitle" | "users.confirmSuspendBefore" | "users.confirmSuspendAfter" | "users.confirmSuspendNote" | "users.cancel" | "users.suspendUserBtn" | "users.confirmPurgeTitle" | "users.confirmPurgeDesc" | "users.confirmPurgeWarning" | "users.purgeAndDownloadShort" | "routePages.title" | "routePages.description" | "routePages.partialResults" | "routePages.securityKicker" | "routePages.adminUrlHeading" | "routePages.adminUrlIntroPrefix" | "routePages.adminUrlIntroSuffix" | "routePages.defaultSlugWarningStrong" | "routePages.defaultSlugWarningRest" | "routePages.slugSavedPrefix" | "routePages.adminUrlPrefixLabel" | "routePages.slugInputTitle" | "routePages.slugFieldNote" | "routePages.slugFieldNoteOr" | "routePages.saveAdminUrl" | "routePages.technicalInventory" | "routePages.structuredRouteInventory" | "routePages.structuredRouteDesc" | "routePages.backToPages" | "routePages.tableAria" | "routePages.template" | "routePages.ownerEditor" | "routePages.publicView" | "routePages.pages" | "routePages.openRoute" | "routePages.seeded" | "routePages.forbiddenTitle" | "routePages.forbiddenDesc" | "routePages.forbiddenBody" | "routePageEditor.title" | "routePageEditor.titlePrefix" | "routePageEditor.description" | "routePageEditor.breadcrumb" | "routePageEditor.routePagesLink" | "routePageEditor.partialResults" | "routePageEditor.openPublicPage" | "routePageEditor.openRouteTable" | "routePageEditor.savedSuccess" | "routePageEditor.general" | "routePageEditor.generalDesc" | "routePageEditor.publicRoute" | "routePageEditor.templateLabel" | "routePageEditor.titleField" | "routePageEditor.titleFieldAria" | "routePageEditor.summary" | "routePageEditor.summaryAria" | "routePageEditor.canonicalUrl" | "routePageEditor.robots" | "routePageEditor.robotsAria" | "routePageEditor.ogImage" | "routePageEditor.ogImageAria" | "routePageEditor.ownerLocale" | "routePageEditor.ownerLocaleDesc" | "routePageEditor.belongsToPagesWorkflow" | "routePageEditor.openPagesIndex" | "routePageEditor.openPublicRoute" | "routePageEditor.editEnglishOwner" | "routePageEditor.editEnglishVariant" | "routePageEditor.editSpanishVariant" | "routePageEditor.translationState" | "routePageEditor.stateNotStarted" | "routePageEditor.statePartial" | "routePageEditor.stateFallbackEn" | "routePageEditor.stateTranslated" | "routePageEditor.stateReviewed" | "routePageEditor.statePublished" | "routePageEditor.updateTranslationState" | "routePageEditor.seoHeading" | "routePageEditor.seoDesc" | "routePageEditor.seoTitle" | "routePageEditor.seoTitleAria" | "routePageEditor.metaDescription" | "routePageEditor.metaDescriptionAria" | "routePageEditor.alternateLinks" | "routePageEditor.alternateLinksDesc" | "routePageEditor.alternateLinksJsonAria" | "routePageEditor.sectionsJson" | "routePageEditor.sectionsJsonDesc" | "routePageEditor.sectionsJsonNote" | "routePageEditor.sectionsJsonAria" | "routePageEditor.revisionNote" | "routePageEditor.revisionNoteDesc" | "routePageEditor.revisionNoteAria" | "routePageEditor.revisionNotePlaceholder" | "routePageEditor.saveRoutePage" | "routePageEditor.backToRouteTable" | "routePageEditor.notFoundTitle" | "routePageEditor.notFoundDesc" | "archives.title" | "archives.description" | "archives.partialResults" | "archives.backToPages" | "archives.managePosts" | "archives.totalArchives" | "archives.totalListingItems" | "archives.archivesByKind" | "archives.archivesByKindDesc" | "archives.allArchives" | "archives.allArchivesDesc" | "archives.kind" | "archives.slug" | "archives.items" | "archives.editArchive" | "archives.openArchive" | "archives.noteStrong" | "archives.noteBody" | "archives.forbiddenTitle" | "archives.forbiddenDesc" | "archives.forbiddenBody" | "archiveEditor.title" | "archiveEditor.description" | "archiveEditor.breadcrumb" | "archiveEditor.archivesLink" | "archiveEditor.partialResults" | "archiveEditor.backToArchives" | "archiveEditor.openPublicArchive" | "archiveEditor.manageInPosts" | "archiveEditor.savedSuccess" | "archiveEditor.metadataHeading" | "archiveEditor.publicArchiveRoute" | "archiveEditor.titleField" | "archiveEditor.summary" | "archiveEditor.seoTitle" | "archiveEditor.metaDescription" | "archiveEditor.canonicalUrlOverride" | "archiveEditor.robotsDirective" | "archiveEditor.revisionNote" | "archiveEditor.revisionNotePlaceholder" | "archiveEditor.saveArchive" | "archiveEditor.cancel" | "archiveEditor.notFoundTitle" | "archiveEditor.notFoundDesc" | "archiveEditor.forbiddenTitle" | "archiveEditor.forbiddenDesc" | "archiveEditor.forbiddenBody" | "translations.title" | "translations.description" | "translations.partialResults" | "translations.savedSuccess" | "translations.localizedRoutes" | "translations.localizedRoutesDesc" | "translations.publishedTranslations" | "translations.publishedTranslationsDesc" | "translations.coverageKicker" | "translations.coverageHeading" | "translations.coverageDesc" | "translations.filterAria" | "translations.allStates" | "translations.applyFilter" | "translations.summaryOf" | "translations.summaryRoutes" | "translations.tableAria" | "translations.route" | "translations.locale" | "translations.englishSource" | "translations.edit" | "translations.update" | "translations.editEn" | "translations.editLocale" | "translations.translationStateForRoute" | "translations.saveState" | "translations.forbiddenTitle" | "translations.forbiddenDesc" | "translations.forbiddenBody" | "seo.title" | "seo.description" | "seo.partialResults" | "seo.indexedRecords" | "seo.indexedRecordsDesc" | "seo.needsMetadata" | "seo.needsMetadataDesc" | "seo.triageKicker" | "seo.triageHeading" | "seo.triageDesc" | "seo.sortRowsAria" | "seo.sortByPath" | "seo.sortByTitle" | "seo.sortByType" | "seo.sortByStatus" | "seo.apply" | "seo.ofIndexed" | "seo.indexedItems" | "seo.filterAll" | "seo.filterPages" | "seo.filterPosts" | "seo.filterStructured" | "seo.filterArchives" | "seo.filterSystem" | "seo.missingOnly" | "seo.overview" | "seo.tableAria" | "seo.colType" | "seo.colSeoTitle" | "seo.colMetaDescription" | "seo.colEdit" | "seo.needsWork" | "seo.ready" | "seo.edit" | "system.title" | "system.description" | "system.partialResults" | "system.backToPages" | "system.open500" | "system.openRobots" | "system.openSitemap" | "system.savedSuccess" | "system.errorSurfaceKicker" | "system.errorPageHeading" | "system.errorPageDesc" | "system.publicRoute" | "system.generatedPublicOutput" | "system.fieldTitle" | "system.fieldSummary" | "system.fieldBody" | "system.fieldButtonLabel" | "system.fieldButtonHref" | "system.fieldContactHref" | "system.fieldRevisionNote" | "system.revisionPlaceholder" | "system.errorPageDefaultTitle" | "system.errorPageDefaultButton" | "system.save500" | "system.crawlerOutputKicker" | "system.robotsHeading" | "system.robotsDesc" | "system.saveRobots" | "system.robotsDefaultTitle" | "system.generatedSitemapKicker" | "system.sitemapHeading" | "system.sitemapDesc" | "system.fieldExcludedPaths" | "system.fieldExtraUrls" | "system.saveSitemap" | "system.sitemapDefaultTitle" | "system.forbiddenBody" | "apiTokens.title" | "apiTokens.description" | "apiTokens.revokedSuccess" | "apiTokens.created" | "apiTokens.copyNow" | "apiTokens.createKicker" | "apiTokens.newToken" | "apiTokens.label" | "apiTokens.labelPlaceholder" | "apiTokens.scopes" | "apiTokens.createButton" | "apiTokens.existingTokens" | "apiTokens.noTokens" | "apiTokens.colCreated" | "apiTokens.colLastUsed" | "apiTokens.never" | "apiTokens.revoked" | "apiTokens.active" | "apiTokens.revoke" | "apiTokens.confirmTitle" | "apiTokens.confirmBody" | "apiTokens.confirmWarning" | "apiTokens.cancel" | "apiTokens.revokeButton" | "webhooks.title" | "webhooks.description" | "webhooks.deletedSuccess" | "webhooks.created" | "webhooks.copyBundle" | "webhooks.useToVerify" | "webhooks.headerSuffix" | "webhooks.registerKicker" | "webhooks.newWebhook" | "webhooks.endpointUrl" | "webhooks.events" | "webhooks.registerButton" | "webhooks.activeWebhooks" | "webhooks.noWebhooks" | "webhooks.colUrl" | "webhooks.colCreated" | "webhooks.colLastFired" | "webhooks.never" | "webhooks.delete" | "webhooks.confirmTitle" | "webhooks.confirmBody" | "webhooks.confirmWarning" | "webhooks.cancel" | "webhooks.deleteButton" | "services.title" | "services.description" | "services.emptyKicker" | "services.emptyHeading" | "services.emptyIntro" | "services.cmsDescription" | "services.shopDescription" | "services.communityDescription" | "services.emailDescription" | "services.viewDocs" | "services.setupNoteBefore" | "services.setupNoteMiddle" | "services.setupNoteAfter" | "services.seeDocsBefore" | "services.seeDocsLink" | "services.seeDocsAfter" | "services.openAdmin" | "services.notConfiguredTitle" | "services.notConfiguredDescription" | "services.notFound" | "services.notRegisteredBefore" | "services.notRegisteredAfter" | "services.notRegisteredEnd" | "services.backToServices" | "services.allServices" | "services.openInNewTab" | "services.adminFrameTitle" | "fundraising.title" | "fundraising.description" | "fundraising.kicker" | "fundraising.intro" | "fundraising.donatePageLink" | "fundraising.giveLivelyDescription" | "fundraising.liberapayDescription" | "fundraising.pledgeCryptoDescription" | "fundraising.configured" | "fundraising.needsConfig" | "fundraising.viewDonatePage" | "testimonials.title" | "testimonials.description" | "testimonials.partialResults" | "testimonials.savedSuccess" | "testimonials.totalSubmitted" | "testimonials.totalSubmittedDesc" | "testimonials.pendingReview" | "testimonials.pendingReviewDesc" | "testimonials.moderationKicker" | "testimonials.queueHeading" | "testimonials.tabsLabel" | "testimonials.tabPending" | "testimonials.tabApproved" | "testimonials.tabFeatured" | "testimonials.emptyPending" | "testimonials.emptyApproved" | "testimonials.emptyFeatured" | "testimonials.tableLabelPending" | "testimonials.tableLabelApproved" | "testimonials.tableLabelFeatured" | "testimonials.colName" | "testimonials.colCompany" | "testimonials.colRole" | "testimonials.colSpecificResult" | "testimonials.colConsent" | "testimonials.colSource" | "testimonials.colSubmitted" | "testimonials.colAction" | "testimonials.consentYes" | "testimonials.consentNo" | "testimonials.approve" | "testimonials.reject" | "testimonials.feature" | "testimonials.unfeature" | "footer.reportIssue" | "footer.docs" | "access.title" | "access.description" | "access.tabUsers" | "access.tabRoles" | "access.tabMyPermissions" | "access.usersHeading" | "access.usersDescription" | "access.usersColumnUser" | "access.usersColumnRoles" | "access.usersColumnDirectGrants" | "access.usersColumnAdmin" | "access.usersIsAdminBadge" | "access.usersDirectGrantsBadge" | "access.lastAdminWarning" | "access.assignRoleSubmit" | "access.revokeRoleSubmit" | "access.directGrantsHeading" | "access.directGrantsDescription" | "access.directGrantActionLabel" | "access.directGrantEffectLabel" | "access.directGrantAllow" | "access.directGrantDeny" | "access.directGrantAddSubmit" | "access.directGrantRemoveSubmit" | "access.rolesHeading" | "access.rolesDescription" | "access.rolesCreateHeading" | "access.rolesNameLabel" | "access.rolesDescriptionLabel" | "access.rolesCreateSubmit" | "access.rolesUpdateSubmit" | "access.rolesDeleteSubmit" | "access.rolesSystemBadge" | "access.rolesPolicyHeading" | "access.rolesPolicyEmpty" | "access.rolesPolicyAddHeading" | "access.rolesPolicyPriorityLabel" | "access.rolesPolicyAddSubmit" | "access.rolesPolicyRemoveSubmit" | "access.myPermissionsHeading" | "access.myPermissionsDescription" | "access.myPermissionsEmpty" | "access.myPermissionsActionColumn" | "access.myPermissionsEffectColumn" | "access.myPermissionsSourceColumn" | "access.myPermissionsConditionColumn" | "access.myPermissionsSourceDirect" | "access.myPermissionsSourceRole" | "pagesNew.title" | "pagesNew.heading" | "pagesNew.description" | "pagesNew.generalHeading" | "pagesNew.generalDesc" | "pagesNew.titleField" | "pagesNew.titleAria" | "pagesNew.publicPath" | "pagesNew.publicPathAria" | "pagesNew.summaryField" | "pagesNew.summaryAria" | "pagesNew.seoHeading" | "pagesNew.seoDescOptional" | "pagesNew.seoTitleField" | "pagesNew.seoTitleAria" | "pagesNew.metaDescriptionField" | "pagesNew.metaDescriptionAria" | "pagesNew.optionalHint" | "pagesNew.createPage" | "pagesNew.cancel" | "pagesNew.forbiddenTitle" | "pagesNew.forbiddenHeading" | "pagesNew.forbiddenDesc" | "pagesNew.forbiddenBody" | "routePageEditor.sectionsHeading" | "routePageEditor.sectionsHeadingDesc" | "routePageEditor.addSection" | "routePageEditor.addSectionDialogTitle" | "routePageEditor.startFromTemplate" | "routePageEditor.orPickSectionType" | "routePageEditor.dialogClose") => string
+function getPageT(locale: AdminLocale): (key: "common.search" | "common.title" | "common.status" | "common.actions" | "common.updated" | "common.path" | "common.author" | "common.category" | "common.allStatuses" | "common.allAuthors" | "common.allCategories" | "common.allTags" | "common.clearFilters" | "common.applyFilters" | "common.draft" | "common.published" | "common.archived" | "common.scheduled" | "common.inReview" | "common.unscheduled" | "common.kindPost" | "common.kindPage" | "common.kindRoutePage" | "common.statusReview" | "common.statusPending" | "common.needsReview" | "common.viewAll" | "common.openQueue" | "common.openEditor" | "banner.bootstrap.before" | "banner.bootstrap.link" | "banner.bootstrap.after" | "dashboard.description" | "dashboard.publishedPosts" | "dashboard.publishedPostsDesc" | "dashboard.publicPages" | "dashboard.publicPagesDesc" | "dashboard.needsReviewDesc" | "dashboard.scheduledPosts" | "dashboard.scheduledPostsDesc" | "dashboard.redirectRules" | "dashboard.redirectRulesDesc" | "dashboard.translationFollowup" | "dashboard.translationFollowupDesc" | "dashboard.create" | "dashboard.startNewWork" | "dashboard.startNewWorkDesc" | "dashboard.newPost" | "dashboard.newPage" | "dashboard.newAuthor" | "dashboard.newUser" | "dashboard.supportSurfaces" | "dashboard.supportSurfacesDesc" | "dashboard.translations" | "dashboard.translationsDesc" | "dashboard.seo" | "dashboard.seoDesc" | "dashboard.archives" | "dashboard.archivesDesc" | "dashboard.system" | "dashboard.systemDesc" | "dashboard.queue" | "dashboard.scheduledSoon" | "dashboard.scheduledSoonDesc" | "dashboard.viewScheduled" | "dashboard.noFutureScheduled" | "dashboard.postReviewQueue" | "dashboard.postReviewQueueDesc" | "dashboard.recentActivity" | "dashboard.recentlyUpdated" | "dashboard.recentlyUpdatedDesc" | "dashboard.publish" | "dashboard.latestDeployment" | "dashboard.latestDeploymentDesc" | "dashboard.noPublishYet" | "dashboard.descriptionEditor" | "dashboard.pendingComments" | "dashboard.pendingCommentsDesc" | "dashboard.editorialQueue" | "dashboard.open" | "dashboard.review" | "dashboard.nothingWaiting" | "dashboard.partialResults" | "dashboard.deployNoRecord" | "dashboard.deployTriggered" | "dashboard.deployFailed" | "dashboard.deployBy" | "common.unknownUpdateTime" | "posts.description" | "posts.partialResults" | "posts.openPublicBlog" | "posts.visiblePosts" | "posts.visiblePostsDesc" | "posts.reviewQueue" | "posts.reviewQueueDesc" | "posts.workflow" | "posts.blogPostList" | "posts.searchOnce" | "posts.searchPlaceholder" | "posts.searchPosts" | "posts.workflowFilter" | "posts.allWorkflowStates" | "posts.tag" | "posts.archiveFilter" | "posts.matchedSummary" | "posts.contentFilters" | "posts.contentList" | "posts.tableScheduled" | "posts.authors" | "posts.categories" | "posts.noMatched" | "posts.previous" | "posts.next" | "posts.previousPage" | "posts.nextPage" | "posts.pageOf" | "posts.pagination" | "pages.description" | "pages.partialResults" | "pages.openRouteTable" | "pages.allPages" | "pages.allPagesDesc" | "pages.structuredPages" | "pages.structuredPagesDesc" | "pages.publicPageOwnership" | "pages.pageIndex" | "pages.useThisIndex" | "pages.structuredExplanation" | "pages.pageTypesInList" | "pages.kindLegacy" | "pages.kindStructured" | "pages.kindArchive" | "pages.legacyExplanation" | "pages.structuredExplanation2" | "pages.archiveExplanation" | "pages.ofPagesSummary" | "pages.searchPages" | "pages.searchPlaceholder" | "pages.filterByKind" | "pages.filterByKindAria" | "pages.allKinds" | "pages.kind" | "pages.pagesList" | "pages.noMatch" | "pages.noMatchOr" | "pages.createNewPage" | "pages.editArchive" | "pages.editPageRow" | "pages.editRoutePage" | "pages.openPage" | "pages.seeded" | "pages.forbidden.description" | "pages.forbidden.body" | "media.description" | "media.partialResults" | "media.savedSuccess" | "media.deletedSuccess" | "media.totalAssets" | "media.totalAssetsDesc" | "media.missingAlt" | "media.missingAltDesc" | "media.addAssets" | "media.uploadMedia" | "media.uploadDesc" | "media.file" | "media.altText" | "media.uploadButton" | "media.uploading" | "media.browse" | "media.libraryGrid" | "media.libraryGridDesc" | "media.noAssets" | "media.metadata" | "media.libraryList" | "media.libraryListDesc" | "media.preview" | "media.titleAlt" | "media.localPath" | "media.r2Key" | "media.sourceUrl" | "media.noAlt" | "media.saveMetadata" | "media.delete" | "media.deleteDialogTitle" | "media.deleteDialogBody" | "media.deleteWarning" | "media.cancel" | "media.deleteAsset" | "media.assets" | "media.id" | "media.fileAria" | "media.titleAria" | "media.altAria" | "media.fileRequired" | "comments.description" | "comments.partialResults" | "comments.savedSuccess" | "comments.totalComments" | "comments.totalCommentsDesc" | "comments.pendingReview" | "comments.pendingReviewDesc" | "comments.moderation" | "comments.moderationQueue" | "comments.moderationQueueDesc" | "comments.queueAria" | "comments.author" | "comments.route" | "comments.policy" | "comments.action" | "comments.empty" | "comments.approve" | "comments.reject" | "comments.rejectDialogTitle" | "comments.rejectDialogBody" | "comments.cancel" | "comments.statusPending" | "comments.statusApproved" | "comments.statusRejected" | "comments.policyOpenModerated" | "redirects.description" | "redirects.partialResults" | "redirects.addRule" | "redirects.create" | "redirects.newRule" | "redirects.newRuleDesc" | "redirects.legacyPath" | "redirects.targetPath" | "redirects.statusCode" | "redirects.saveRule" | "redirects.inventory" | "redirects.reviewedRules" | "redirects.reviewedRulesDesc" | "redirects.legacy" | "redirects.target" | "redirects.delete" | "redirects.copy" | "redirects.empty" | "redirects.deleteDialogTitle" | "redirects.deleteDialogBody" | "redirects.deleteWarning" | "redirects.cancel" | "redirects.deleteRule" | "redirects.savedSuccess" | "redirects.deletedSuccess" | "redirects.tableAria" | "audit.recentTrail" | "audit.empty" | "audit.mediaAudit" | "authors.title" | "authors.description" | "authors.partialResults" | "authors.savedSuccess" | "authors.deletedSuccess" | "authors.deletedToast" | "authors.undo" | "authors.newAuthor" | "authors.newAuthorDesc" | "authors.authorName" | "authors.slug" | "authors.authorSlug" | "authors.bio" | "authors.authorBio" | "authors.bioPlaceholder" | "authors.saveAuthor" | "authors.listDesc" | "authors.tableAria" | "authors.thName" | "authors.thSlug" | "authors.thBio" | "authors.edit" | "authors.update" | "authors.delete" | "authors.ariaName" | "authors.ariaSlug" | "authors.ariaBio" | "authors.deleteDialogTitle" | "authors.deleteConfirmPrefix" | "authors.deleteConfirmSuffix" | "authors.deleteWarning" | "authors.cancel" | "authors.deleteAuthor" | "authors.forbiddenTitle" | "taxonomies.title" | "taxonomies.description" | "taxonomies.partialResults" | "taxonomies.savedSuccess" | "taxonomies.deletedSuccess" | "taxonomies.deletedToast" | "taxonomies.undo" | "taxonomies.categories" | "taxonomies.categoriesDesc" | "taxonomies.categoryName" | "taxonomies.categorySlug" | "taxonomies.categoryDescription" | "taxonomies.saveCategory" | "taxonomies.tags" | "taxonomies.tagsDesc" | "taxonomies.tagName" | "taxonomies.tagSlug" | "taxonomies.tagDescription" | "taxonomies.saveTag" | "taxonomies.slug" | "taxonomies.descriptionField" | "taxonomies.thName" | "taxonomies.thSlug" | "taxonomies.edit" | "taxonomies.update" | "taxonomies.delete" | "taxonomies.cancel" | "taxonomies.deleteWarning" | "taxonomies.deleteConfirmPrefix" | "taxonomies.deleteConfirmSuffix" | "taxonomies.deleteCategoryDialogTitle" | "taxonomies.deleteCategory" | "taxonomies.deleteTagDialogTitle" | "taxonomies.deleteTag" | "taxonomies.forbiddenTitle" | "layout.skipToContent" | "layout.openNavigation" | "layout.closeNavigation" | "layout.toggleUtilityPanel" | "layout.keyboardShortcuts" | "layout.scrollToBottom" | "layout.scrollToTop" | "layout.adminSections" | "layout.recent" | "layout.commandPalette" | "layout.commandPaletteResults" | "layout.searchAdminPages" | "layout.shortcutSaveDraft" | "layout.shortcutPublish" | "layout.shortcutEscape" | "layout.shortcutTab" | "layout.shortcutShiftTab" | "layout.shortcutHelp" | "layout.shortcutCmd" | "layout.goTo" | "settings.title" | "settings.description" | "settings.partialLoadNotice" | "settings.savedNotice" | "settings.tabsLabel" | "settings.tabGeneral" | "settings.tabNewsletter" | "settings.tabImport" | "settings.donationDestination" | "settings.donationDestinationDesc" | "settings.newsletterState" | "settings.newsletterStateDesc" | "settings.on" | "settings.off" | "settings.brandKicker" | "settings.siteIdentity" | "settings.siteIdentityDesc" | "settings.siteTitle" | "settings.siteTagline" | "settings.engagementKicker" | "settings.newsletter" | "settings.newsletterDesc" | "settings.enableNewsletter" | "settings.fundraisingKicker" | "settings.donationSettings" | "settings.donationUrl" | "settings.moderationKicker" | "settings.commentSettings" | "settings.defaultCommentPolicy" | "settings.commentDisabled" | "settings.commentLegacy" | "settings.commentOpenModerated" | "settings.saveButton" | "settings.subscriberRemoved" | "settings.importComplete" | "settings.subscribersKicker" | "settings.newsletterSubscribers" | "settings.subscribersDescBefore" | "settings.subscribersDescAfter" | "settings.listmonkRequiresEnv" | "settings.searchSubscribers" | "settings.searchSubscribersPlaceholder" | "settings.searchButton" | "settings.clearButton" | "settings.noSubscribersFound" | "settings.subscriberCountSingular" | "settings.subscriberCountPlural" | "settings.matching" | "settings.colEmail" | "settings.colName" | "settings.colSubscribed" | "settings.viewAction" | "settings.subscriberPagesLabel" | "settings.previous" | "settings.next" | "settings.pageInfo" | "settings.migrationKicker" | "settings.importMailchimp" | "settings.importMailchimpDescBefore" | "settings.importMailchimpDescOptional" | "settings.mailchimpFile" | "settings.mailchimpFileAria" | "settings.importSubscribersBtn" | "settings.uploading" | "settings.importingAria" | "settings.contentMigrationKicker" | "settings.importContent" | "settings.importContentDesc" | "settings.wordpress" | "settings.wordpressDesc" | "settings.setupWordpressImport" | "settings.wix" | "settings.wixDesc" | "settings.setupWixImport" | "settings.webCrawl" | "settings.webCrawlDesc" | "settings.setupCrawlImport" | "settings.importNoteBefore" | "settings.importNoteAfter" | "settings.subErrorLoadingList" | "users.title" | "users.description" | "users.partialNotice" | "users.invitationIssued" | "users.userCreatedNoEmail" | "users.userSuspended" | "users.userRestored" | "users.invitationLink" | "users.resetLinkPrefix" | "users.intro" | "users.totalUsers" | "users.totalUsersDesc" | "users.pendingInvites" | "users.pendingInvitesDesc" | "users.accessControlKicker" | "users.currentUsers" | "users.currentUsersDesc" | "users.adminUsersAria" | "users.colName" | "users.colEmail" | "users.colRole" | "users.colJoined" | "users.statusSuspended" | "users.statusInvited" | "users.statusActive" | "users.unsuspend" | "users.suspend" | "users.resetLinkBtn" | "users.createAccessKicker" | "users.inviteUser" | "users.inviteUserDesc" | "users.fullName" | "users.email" | "users.role" | "users.roleEditor" | "users.roleAdmin" | "users.sendInvitation" | "users.inviteNote" | "users.userAndAccessAudit" | "users.gdprKicker" | "users.purgeUserData" | "users.purgeUserDataDesc" | "users.purgeEmailLabel" | "users.purgeDeleteCheckbox" | "users.purgeAndDownload" | "users.confirmSuspendTitle" | "users.confirmSuspendBefore" | "users.confirmSuspendAfter" | "users.confirmSuspendNote" | "users.cancel" | "users.suspendUserBtn" | "users.confirmPurgeTitle" | "users.confirmPurgeDesc" | "users.confirmPurgeWarning" | "users.purgeAndDownloadShort" | "routePages.title" | "routePages.description" | "routePages.partialResults" | "routePages.securityKicker" | "routePages.adminUrlHeading" | "routePages.adminUrlIntroPrefix" | "routePages.adminUrlIntroSuffix" | "routePages.defaultSlugWarningStrong" | "routePages.defaultSlugWarningRest" | "routePages.slugSavedPrefix" | "routePages.adminUrlPrefixLabel" | "routePages.slugInputTitle" | "routePages.slugFieldNote" | "routePages.slugFieldNoteOr" | "routePages.saveAdminUrl" | "routePages.technicalInventory" | "routePages.structuredRouteInventory" | "routePages.structuredRouteDesc" | "routePages.backToPages" | "routePages.tableAria" | "routePages.template" | "routePages.ownerEditor" | "routePages.publicView" | "routePages.pages" | "routePages.openRoute" | "routePages.seeded" | "routePages.forbiddenTitle" | "routePages.forbiddenDesc" | "routePages.forbiddenBody" | "routePageEditor.title" | "routePageEditor.titlePrefix" | "routePageEditor.description" | "routePageEditor.breadcrumb" | "routePageEditor.routePagesLink" | "routePageEditor.partialResults" | "routePageEditor.openPublicPage" | "routePageEditor.openRouteTable" | "routePageEditor.savedSuccess" | "routePageEditor.general" | "routePageEditor.generalDesc" | "routePageEditor.publicRoute" | "routePageEditor.templateLabel" | "routePageEditor.titleField" | "routePageEditor.titleFieldAria" | "routePageEditor.summary" | "routePageEditor.summaryAria" | "routePageEditor.canonicalUrl" | "routePageEditor.robots" | "routePageEditor.robotsAria" | "routePageEditor.ogImage" | "routePageEditor.ogImageAria" | "routePageEditor.ownerLocale" | "routePageEditor.ownerLocaleDesc" | "routePageEditor.belongsToPagesWorkflow" | "routePageEditor.openPagesIndex" | "routePageEditor.openPublicRoute" | "routePageEditor.editEnglishOwner" | "routePageEditor.editEnglishVariant" | "routePageEditor.editSpanishVariant" | "routePageEditor.translationState" | "routePageEditor.stateNotStarted" | "routePageEditor.statePartial" | "routePageEditor.stateFallbackEn" | "routePageEditor.stateTranslated" | "routePageEditor.stateReviewed" | "routePageEditor.statePublished" | "routePageEditor.updateTranslationState" | "routePageEditor.seoHeading" | "routePageEditor.seoDesc" | "routePageEditor.seoTitle" | "routePageEditor.seoTitleAria" | "routePageEditor.metaDescription" | "routePageEditor.metaDescriptionAria" | "routePageEditor.alternateLinks" | "routePageEditor.alternateLinksDesc" | "routePageEditor.alternateLinksJsonAria" | "routePageEditor.sectionsJson" | "routePageEditor.sectionsJsonDesc" | "routePageEditor.sectionsJsonNote" | "routePageEditor.sectionsJsonAria" | "routePageEditor.revisionNote" | "routePageEditor.revisionNoteDesc" | "routePageEditor.revisionNoteAria" | "routePageEditor.revisionNotePlaceholder" | "routePageEditor.saveRoutePage" | "routePageEditor.backToRouteTable" | "routePageEditor.notFoundTitle" | "routePageEditor.notFoundDesc" | "archives.title" | "archives.description" | "archives.partialResults" | "archives.backToPages" | "archives.managePosts" | "archives.totalArchives" | "archives.totalListingItems" | "archives.archivesByKind" | "archives.archivesByKindDesc" | "archives.allArchives" | "archives.allArchivesDesc" | "archives.kind" | "archives.slug" | "archives.items" | "archives.editArchive" | "archives.openArchive" | "archives.noteStrong" | "archives.noteBody" | "archives.forbiddenTitle" | "archives.forbiddenDesc" | "archives.forbiddenBody" | "archiveEditor.title" | "archiveEditor.description" | "archiveEditor.breadcrumb" | "archiveEditor.archivesLink" | "archiveEditor.partialResults" | "archiveEditor.backToArchives" | "archiveEditor.openPublicArchive" | "archiveEditor.manageInPosts" | "archiveEditor.savedSuccess" | "archiveEditor.metadataHeading" | "archiveEditor.publicArchiveRoute" | "archiveEditor.titleField" | "archiveEditor.summary" | "archiveEditor.seoTitle" | "archiveEditor.metaDescription" | "archiveEditor.canonicalUrlOverride" | "archiveEditor.robotsDirective" | "archiveEditor.revisionNote" | "archiveEditor.revisionNotePlaceholder" | "archiveEditor.saveArchive" | "archiveEditor.cancel" | "archiveEditor.notFoundTitle" | "archiveEditor.notFoundDesc" | "archiveEditor.forbiddenTitle" | "archiveEditor.forbiddenDesc" | "archiveEditor.forbiddenBody" | "translations.title" | "translations.description" | "translations.partialResults" | "translations.savedSuccess" | "translations.localizedRoutes" | "translations.localizedRoutesDesc" | "translations.publishedTranslations" | "translations.publishedTranslationsDesc" | "translations.coverageKicker" | "translations.coverageHeading" | "translations.coverageDesc" | "translations.filterAria" | "translations.allStates" | "translations.applyFilter" | "translations.summaryOf" | "translations.summaryRoutes" | "translations.tableAria" | "translations.route" | "translations.locale" | "translations.englishSource" | "translations.edit" | "translations.update" | "translations.editEn" | "translations.editLocale" | "translations.translationStateForRoute" | "translations.saveState" | "translations.forbiddenTitle" | "translations.forbiddenDesc" | "translations.forbiddenBody" | "seo.title" | "seo.description" | "seo.partialResults" | "seo.indexedRecords" | "seo.indexedRecordsDesc" | "seo.needsMetadata" | "seo.needsMetadataDesc" | "seo.triageKicker" | "seo.triageHeading" | "seo.triageDesc" | "seo.sortRowsAria" | "seo.sortByPath" | "seo.sortByTitle" | "seo.sortByType" | "seo.sortByStatus" | "seo.apply" | "seo.ofIndexed" | "seo.indexedItems" | "seo.filterAll" | "seo.filterPages" | "seo.filterPosts" | "seo.filterStructured" | "seo.filterArchives" | "seo.filterSystem" | "seo.missingOnly" | "seo.overview" | "seo.tableAria" | "seo.colType" | "seo.colSeoTitle" | "seo.colMetaDescription" | "seo.colEdit" | "seo.needsWork" | "seo.ready" | "seo.edit" | "system.title" | "system.description" | "system.partialResults" | "system.backToPages" | "system.open500" | "system.openRobots" | "system.openSitemap" | "system.savedSuccess" | "system.errorSurfaceKicker" | "system.errorPageHeading" | "system.errorPageDesc" | "system.publicRoute" | "system.generatedPublicOutput" | "system.fieldTitle" | "system.fieldSummary" | "system.fieldBody" | "system.fieldButtonLabel" | "system.fieldButtonHref" | "system.fieldContactHref" | "system.fieldRevisionNote" | "system.revisionPlaceholder" | "system.errorPageDefaultTitle" | "system.errorPageDefaultButton" | "system.save500" | "system.crawlerOutputKicker" | "system.robotsHeading" | "system.robotsDesc" | "system.saveRobots" | "system.robotsDefaultTitle" | "system.generatedSitemapKicker" | "system.sitemapHeading" | "system.sitemapDesc" | "system.fieldExcludedPaths" | "system.fieldExtraUrls" | "system.saveSitemap" | "system.sitemapDefaultTitle" | "system.forbiddenBody" | "apiTokens.title" | "apiTokens.description" | "apiTokens.revokedSuccess" | "apiTokens.created" | "apiTokens.copyNow" | "apiTokens.createKicker" | "apiTokens.newToken" | "apiTokens.label" | "apiTokens.labelPlaceholder" | "apiTokens.scopes" | "apiTokens.createButton" | "apiTokens.existingTokens" | "apiTokens.noTokens" | "apiTokens.colCreated" | "apiTokens.colLastUsed" | "apiTokens.never" | "apiTokens.revoked" | "apiTokens.active" | "apiTokens.revoke" | "apiTokens.confirmTitle" | "apiTokens.confirmBody" | "apiTokens.confirmWarning" | "apiTokens.cancel" | "apiTokens.revokeButton" | "webhooks.title" | "webhooks.description" | "webhooks.deletedSuccess" | "webhooks.created" | "webhooks.copyBundle" | "webhooks.useToVerify" | "webhooks.headerSuffix" | "webhooks.registerKicker" | "webhooks.newWebhook" | "webhooks.endpointUrl" | "webhooks.events" | "webhooks.registerButton" | "webhooks.activeWebhooks" | "webhooks.noWebhooks" | "webhooks.colUrl" | "webhooks.colCreated" | "webhooks.colLastFired" | "webhooks.never" | "webhooks.delete" | "webhooks.confirmTitle" | "webhooks.confirmBody" | "webhooks.confirmWarning" | "webhooks.cancel" | "webhooks.deleteButton" | "services.title" | "services.description" | "services.emptyKicker" | "services.emptyHeading" | "services.emptyIntro" | "services.cmsDescription" | "services.shopDescription" | "services.communityDescription" | "services.emailDescription" | "services.viewDocs" | "services.setupNoteBefore" | "services.setupNoteMiddle" | "services.setupNoteAfter" | "services.seeDocsBefore" | "services.seeDocsLink" | "services.seeDocsAfter" | "services.openAdmin" | "services.notConfiguredTitle" | "services.notConfiguredDescription" | "services.notFound" | "services.notRegisteredBefore" | "services.notRegisteredAfter" | "services.notRegisteredEnd" | "services.backToServices" | "services.allServices" | "services.openInNewTab" | "services.adminFrameTitle" | "fundraising.title" | "fundraising.description" | "fundraising.kicker" | "fundraising.intro" | "fundraising.donatePageLink" | "fundraising.giveLivelyDescription" | "fundraising.liberapayDescription" | "fundraising.pledgeCryptoDescription" | "fundraising.configured" | "fundraising.needsConfig" | "fundraising.viewDonatePage" | "testimonials.title" | "testimonials.description" | "testimonials.partialResults" | "testimonials.savedSuccess" | "testimonials.totalSubmitted" | "testimonials.totalSubmittedDesc" | "testimonials.pendingReview" | "testimonials.pendingReviewDesc" | "testimonials.moderationKicker" | "testimonials.queueHeading" | "testimonials.tabsLabel" | "testimonials.tabPending" | "testimonials.tabApproved" | "testimonials.tabFeatured" | "testimonials.emptyPending" | "testimonials.emptyApproved" | "testimonials.emptyFeatured" | "testimonials.tableLabelPending" | "testimonials.tableLabelApproved" | "testimonials.tableLabelFeatured" | "testimonials.colName" | "testimonials.colCompany" | "testimonials.colRole" | "testimonials.colSpecificResult" | "testimonials.colConsent" | "testimonials.colSource" | "testimonials.colSubmitted" | "testimonials.colAction" | "testimonials.consentYes" | "testimonials.consentNo" | "testimonials.approve" | "testimonials.reject" | "testimonials.feature" | "testimonials.unfeature" | "footer.reportIssue" | "footer.docs" | "access.title" | "access.description" | "access.tabUsers" | "access.tabRoles" | "access.tabMyPermissions" | "access.usersHeading" | "access.usersDescription" | "access.usersColumnUser" | "access.usersColumnRoles" | "access.usersColumnDirectGrants" | "access.usersColumnAdmin" | "access.usersIsAdminBadge" | "access.usersDirectGrantsBadge" | "access.lastAdminWarning" | "access.assignRoleSubmit" | "access.revokeRoleSubmit" | "access.directGrantsHeading" | "access.directGrantsDescription" | "access.directGrantActionLabel" | "access.directGrantEffectLabel" | "access.directGrantAllow" | "access.directGrantDeny" | "access.directGrantAddSubmit" | "access.directGrantRemoveSubmit" | "access.rolesHeading" | "access.rolesDescription" | "access.rolesCreateHeading" | "access.rolesNameLabel" | "access.rolesDescriptionLabel" | "access.rolesCreateSubmit" | "access.rolesUpdateSubmit" | "access.rolesDeleteSubmit" | "access.rolesSystemBadge" | "access.rolesPolicyHeading" | "access.rolesPolicyEmpty" | "access.rolesPolicyAddHeading" | "access.rolesPolicyPriorityLabel" | "access.rolesPolicyAddSubmit" | "access.rolesPolicyRemoveSubmit" | "access.myPermissionsHeading" | "access.myPermissionsDescription" | "access.myPermissionsEmpty" | "access.myPermissionsActionColumn" | "access.myPermissionsEffectColumn" | "access.myPermissionsSourceColumn" | "access.myPermissionsConditionColumn" | "access.myPermissionsSourceDirect" | "access.myPermissionsSourceRole" | "pagesNew.title" | "pagesNew.heading" | "pagesNew.description" | "pagesNew.generalHeading" | "pagesNew.generalDesc" | "pagesNew.titleField" | "pagesNew.titleAria" | "pagesNew.publicPath" | "pagesNew.publicPathAria" | "pagesNew.summaryField" | "pagesNew.summaryAria" | "pagesNew.seoHeading" | "pagesNew.seoDescOptional" | "pagesNew.seoTitleField" | "pagesNew.seoTitleAria" | "pagesNew.metaDescriptionField" | "pagesNew.metaDescriptionAria" | "pagesNew.optionalHint" | "pagesNew.createPage" | "pagesNew.cancel" | "pagesNew.forbiddenTitle" | "pagesNew.forbiddenHeading" | "pagesNew.forbiddenDesc" | "pagesNew.forbiddenBody" | "routePageEditor.sectionsHeading" | "routePageEditor.sectionsHeadingDesc" | "routePageEditor.addSection" | "routePageEditor.addSectionDialogTitle" | "routePageEditor.startFromTemplate" | "routePageEditor.orPickSectionType" | "routePageEditor.dialogClose" | (string & {}), fallback?: string | undefined) => string
+```
+
+#### `safeAdminUserName`
+```ts
+function safeAdminUserName(user: (AuthUser & { name?: string | undefined; }) | null | undefined): string
 ```
 
 #### `buildAcceptInvitePageModel`
 ```ts
-function buildAcceptInvitePageModel(locals: Locals, token: string): Promise<AdminPageResult<{ inviteRequest: { email: string; name: string; role: "admin" | "editor"; expiresAt: string; } | null; }>>
+function buildAcceptInvitePageModel(locals: Locals, token: string): Promise<AdminPageResult<{ inviteRequest: InviteRequest | null; }>>
 ```
 
 #### `buildAdminDashboardPageModel`
@@ -273,7 +293,7 @@ function buildArchiveEditorModel(locals: Locals, archivePath: string, user: Auth
 
 #### `buildArchivesIndexPageModel`
 ```ts
-function buildArchivesIndexPageModel(locals: Locals, user: AuthUser | null | undefined): Promise<AdminPageResult<{ archiveList: unknown[]; archivesByKind: Record<string, unknown[]>; kindCounts: { kind: string; count: number; }[]; totalArchives: number; totalItems: number; }>>
+function buildArchivesIndexPageModel(locals: Locals, user: AuthUser | null | undefined): Promise<AdminPageResult<{ archiveList: ArchiveListingRow[]; archivesByKind: Record<string, ArchiveListingRow[]>; kindCounts: { kind: string; count: number; }[]; totalArchives: number; totalItems: number; }>>
 ```
 
 #### `buildAuthorsPageModel`
@@ -293,7 +313,7 @@ function buildMediaPageModel(locals: Locals): Promise<AdminPageResult<{ mediaWit
 
 #### `buildPagesIndexPageModel`
 ```ts
-function buildPagesIndexPageModel(locals: Locals, user: AuthUser | null | undefined): Promise<AdminPageResult<{ contentStates: ContentRecord[]; routePages: RuntimeStructuredPageRouteRecord[] | ({ path: string; title: string; summary: string | undefined; seoTitle: string | undefined; metaDescription: string | undefined; canonicalUrlOverride: string | undefined; robotsDirective: string | undefined; ogImage: string | undefined; templateKey: string; alternateLinks: { hreflang: string; href: string; }[]; sections: Record<string, unknown> | null; updatedAt: string; } | null)[]; archiveRows: unknown[]; }>>
+function buildPagesIndexPageModel(locals: Locals, user: AuthUser | null | undefined): Promise<AdminPageResult<{ contentStates: ContentRecord[]; routePages: RuntimeStructuredPageRouteRecord[]; archiveRows: { archive: { slug: string; legacyUrl: string; title: string; }; runtime: RuntimeArchiveRouteRecord | null; }[]; }>>
 ```
 
 #### `buildPostEditorPageModel`
@@ -318,7 +338,7 @@ function buildRedirectsPageModel(locals: Locals, user: AuthUser | null | undefin
 
 #### `buildResetPasswordPageModel`
 ```ts
-function buildResetPasswordPageModel(locals: Locals, token: string): Promise<AdminPageResult<{ request: { email: string; name: string; role: "admin" | "editor"; expiresAt: string; } | null; }>>
+function buildResetPasswordPageModel(locals: Locals, token: string): Promise<AdminPageResult<{ request: PasswordResetRequest | null; }>>
 ```
 
 #### `buildRoutePageEditorModel`
@@ -328,12 +348,12 @@ function buildRoutePageEditorModel(locals: Locals, routePath: string, user: Auth
 
 #### `buildRouteTablePageModel`
 ```ts
-function buildRouteTablePageModel(locals: Locals, user: AuthUser | null | undefined): Promise<AdminPageResult<{ routePages: RuntimeStructuredPageRouteRecord[] | ({ path: string; title: string; summary: string | undefined; seoTitle: string | undefined; metaDescription: string | undefined; canonicalUrlOverride: string | undefined; robotsDirective: string | undefined; ogImage: string | undefined; templateKey: string; alternateLinks: { hreflang: string; href: string; }[]; sections: Record<string, unknown> | null; updatedAt: string; } | null)[]; settings: SiteSettings; }>>
+function buildRouteTablePageModel(locals: Locals, user: AuthUser | null | undefined): Promise<AdminPageResult<{ routePages: RuntimeStructuredPageRouteRecord[]; settings: SiteSettings; }>>
 ```
 
 #### `buildSeoPageModel`
 ```ts
-function buildSeoPageModel(locals: Locals, user: AuthUser | null | undefined): Promise<AdminPageResult<{ rows: unknown[]; }>>
+function buildSeoPageModel(locals: Locals, user: AuthUser | null | undefined): Promise<AdminPageResult<{ rows: SeoListingRow[]; }>>
 ```
 
 #### `buildSettingsPageModel`
@@ -343,7 +363,7 @@ function buildSettingsPageModel(locals: Locals, user: AuthUser | null | undefine
 
 #### `buildSystemPageModel`
 ```ts
-function buildSystemPageModel(locals: Locals, user: AuthUser | null | undefined): Promise<AdminPageResult<{ systemRoutes: never[]; routeMap: Map<string, unknown>; }>>
+function buildSystemPageModel(locals: Locals, user: AuthUser | null | undefined): Promise<AdminPageResult<{ systemRoutes: RuntimeSystemRouteRecord[]; routeMap: Map<string, RuntimeSystemRouteRecord>; }>>
 ```
 
 #### `buildTaxonomiesPageModel`
@@ -358,7 +378,7 @@ function buildTestimonialsPageModel(locals: Locals): Promise<AdminPageResult<{ p
 
 #### `buildTranslationsPageModel`
 ```ts
-function buildTranslationsPageModel(locals: Locals, user: AuthUser | null | undefined): Promise<AdminPageResult<{ rows: unknown[]; }>>
+function buildTranslationsPageModel(locals: Locals, user: AuthUser | null | undefined): Promise<AdminPageResult<{ rows: TranslationStatusRow[]; }>>
 ```
 
 #### `buildUsersPageModel`
@@ -441,6 +461,11 @@ function listAstropressAppHosts(): AstropressAppHostTarget[]
 function createAstropressBuildTimeLoader(provider: AstropressPlatformAdapter, options: AstropressBuildTimeLoaderOptions): { posts(): AstropressContentLoader; pages(): AstropressContentLoader; }
 ```
 
+#### `resolveCanonicalOrigin`
+```ts
+function resolveCanonicalOrigin(request: { url: string; }): string
+```
+
 #### `dispatchPluginContentEvent`
 ```ts
 function dispatchPluginContentEvent(hook: "onContentSave" | "onContentPublish", event: AstropressContentEvent): Promise<void>
@@ -454,6 +479,11 @@ function dispatchPluginMediaEvent(event: AstropressMediaEvent): Promise<void>
 #### `getCmsConfig`
 ```ts
 function getCmsConfig(): CmsConfig
+```
+
+#### `peekCmsConfig`
+```ts
+function peekCmsConfig(): CmsConfig | null
 ```
 
 #### `registerCms`
@@ -586,6 +616,16 @@ function optimizeImageLoading(html: string): string
 function sanitizeHtml(html: string): Promise<string>
 ```
 
+#### `assertSafeImportExportFile`
+```ts
+function assertSafeImportExportFile(exportFile: string, root: string): string
+```
+
+#### `getTrustedImportRoot`
+```ts
+function getTrustedImportRoot(): string
+```
+
 #### `createAstropressInMemoryPlatformAdapter`
 ```ts
 function createAstropressInMemoryPlatformAdapter(options: AstropressInMemoryPlatformAdapterOptions): AstropressPlatformAdapter
@@ -629,6 +669,11 @@ function listOAuthProviders(domain: IntegrationDomain): readonly OAuthProviderDe
 #### `registerOAuthProvider`
 ```ts
 function registerOAuthProvider(def: OAuthProviderDefinition): OAuthProviderDefinition
+```
+
+#### `consumeOAuthStateNonce`
+```ts
+function consumeOAuthStateNonce(locals: Locals | null | undefined, nonce: string, ttlMs: number): Promise<boolean>
 ```
 
 #### `sealOAuthCallbackTokens`
@@ -838,7 +883,7 @@ function assertProviderContract(adapter: AstropressPlatformAdapter): AstropressP
 
 #### `isAuthUserAdmin`
 ```ts
-function isAuthUserAdmin(user: AuthUser): boolean
+function isAuthUserAdmin(user: Pick<AuthUser, "isAdmin">): boolean
 ```
 
 #### `normalizeProviderCapabilities`
@@ -981,14 +1026,24 @@ function disconnectIntegrationAction(locals: Locals | null | undefined, domain: 
 function reverifyIntegrationAction<TFields>(locals: Locals | null | undefined, domain: IntegrationDomain, providerId: string, fields: TFields): Promise<RuntimeIntegrationActionResult>
 ```
 
+#### `setActiveIntegrationProviderAction`
+```ts
+function setActiveIntegrationProviderAction(locals: Locals | null | undefined, domain: IntegrationDomain, providerId: string): Promise<{ ok: true; } | { ok: false; code: "INTEGRATIONS_NOT_AVAILABLE" | "INTEGRATION_NOT_CONNECTED"; }>
+```
+
+#### `checkUploadSize`
+```ts
+function checkUploadSize(byteLength: number): { ok: true; } | { ok: false; error: string; }
+```
+
 #### `consumeRuntimeInviteToken`
 ```ts
-function consumeRuntimeInviteToken(rawToken: string, password: string, locals: Locals | null | undefined): Promise<unknown>
+function consumeRuntimeInviteToken(rawToken: string, password: string, locals: Locals | null | undefined): Promise<{ ok: true; user: SessionUser; } | { ok: false; error: string; }>
 ```
 
 #### `consumeRuntimePasswordResetToken`
 ```ts
-function consumeRuntimePasswordResetToken(rawToken: string, password: string, locals: Locals | null | undefined): Promise<unknown>
+function consumeRuntimePasswordResetToken(rawToken: string, password: string, locals: Locals | null | undefined): Promise<{ ok: true; user: SessionUser; } | { ok: false; error: string; }>
 ```
 
 #### `createRuntimeAuthor`
@@ -1003,22 +1058,22 @@ function createRuntimeCategory(input: { name: string; slug?: string | undefined;
 
 #### `createRuntimeContentRecord`
 ```ts
-function createRuntimeContentRecord(input: { title: string; slug: string; legacyUrl?: string | undefined; status: string; body?: string | undefined; summary?: string | undefined; seoTitle: string; metaDescription: string; excerpt?: string | undefined; ogTitle?: string | undefined; ogDescription?: string | undefined; ogImage?: string | undefined; canonicalUrlOverride?: string | undefined; robotsDirective?: string | undefined; }, actor: Actor, locals: Locals | null | undefined): Promise<unknown>
+function createRuntimeContentRecord(input: { title: string; slug: string; legacyUrl?: string | undefined; status: string; body?: string | undefined; summary?: string | undefined; seoTitle: string; metaDescription: string; excerpt?: string | undefined; ogTitle?: string | undefined; ogDescription?: string | undefined; ogImage?: string | undefined; canonicalUrlOverride?: string | undefined; robotsDirective?: string | undefined; }, actor: Actor, locals: Locals | null | undefined): Promise<{ ok: false; error: string; } | { ok: true; state: unknown; }>
 ```
 
 #### `createRuntimeMediaAsset`
 ```ts
-function createRuntimeMediaAsset(input: MediaAssetInput, actor: Actor, locals: Locals | null | undefined): Promise<unknown>
+function createRuntimeMediaAsset(input: MediaAssetInput, actor: Actor, locals: Locals | null | undefined): Promise<{ ok: true; id: string; } | { ok: false; error: string; }>
 ```
 
 #### `createRuntimePasswordResetToken`
 ```ts
-function createRuntimePasswordResetToken(email: string, actor: Actor | null | undefined, locals: Locals | null | undefined): Promise<unknown>
+function createRuntimePasswordResetToken(email: string, actor: Actor | null | undefined, locals: Locals | null | undefined): Promise<{ ok: true; resetUrl: string | null; } | { ok: false; error: string; }>
 ```
 
 #### `createRuntimeRedirectRule`
 ```ts
-function createRuntimeRedirectRule(input: { sourcePath: string; targetPath: string; statusCode: number; }, actor: Actor, locals: Locals | null | undefined): Promise<unknown>
+function createRuntimeRedirectRule(input: { sourcePath: string; targetPath: string; statusCode: number; }, actor: Actor, locals: Locals | null | undefined): Promise<{ ok: false; error: string; rule?: undefined; } | { ok: true; rule: { sourcePath: string; targetPath: string; statusCode: number; }; error?: undefined; }>
 ```
 
 #### `createRuntimeTag`
@@ -1038,12 +1093,12 @@ function deleteRuntimeCategory(id: number, actor: Actor, locals: Locals | null |
 
 #### `deleteRuntimeMediaAsset`
 ```ts
-function deleteRuntimeMediaAsset(id: string, actor: Actor, locals: Locals | null | undefined): Promise<unknown>
+function deleteRuntimeMediaAsset(id: string, actor: Actor, locals: Locals | null | undefined): Promise<{ ok: true; } | { ok: false; error: string; }>
 ```
 
 #### `deleteRuntimeRedirectRule`
 ```ts
-function deleteRuntimeRedirectRule(sourcePath: string, actor: Actor, locals: Locals | null | undefined): Promise<unknown>
+function deleteRuntimeRedirectRule(sourcePath: string, actor: Actor, locals: Locals | null | undefined): Promise<{ ok: true; } | { ok: false; }>
 ```
 
 #### `deleteRuntimeTag`
@@ -1053,47 +1108,52 @@ function deleteRuntimeTag(id: number, actor: Actor, locals: Locals | null | unde
 
 #### `getRuntimeInviteRequest`
 ```ts
-function getRuntimeInviteRequest(rawToken: string, locals: Locals | null | undefined): Promise<{ email: string; name: string; role: "admin" | "editor"; expiresAt: string; } | null>
+function getRuntimeInviteRequest(rawToken: string, locals: Locals | null | undefined): Promise<InviteRequest | null>
 ```
 
 #### `getRuntimePasswordResetRequest`
 ```ts
-function getRuntimePasswordResetRequest(rawToken: string, locals: Locals | null | undefined): Promise<{ email: string; name: string; role: "admin" | "editor"; expiresAt: string; } | null>
+function getRuntimePasswordResetRequest(rawToken: string, locals: Locals | null | undefined): Promise<PasswordResetRequest | null>
 ```
 
 #### `inviteRuntimeAdminUser`
 ```ts
-function inviteRuntimeAdminUser(input: { name: string; email: string; role: string; }, actor: Actor, locals: Locals | null | undefined): Promise<unknown>
+function inviteRuntimeAdminUser(input: { name: string; email: string; role: string; }, actor: Actor, locals: Locals | null | undefined): Promise<{ ok: true; inviteUrl: string; } | { ok: false; error: string; }>
 ```
 
 #### `moderateRuntimeComment`
 ```ts
-function moderateRuntimeComment(commentId: string, nextStatus: "pending" | "approved" | "rejected", actor: Actor, locals: Locals | null | undefined): Promise<unknown>
+function moderateRuntimeComment(commentId: string, nextStatus: "pending" | "approved" | "rejected", actor: Actor, locals: Locals | null | undefined): Promise<{ ok: true; } | { ok: false; error: string; }>
 ```
 
 #### `restoreRuntimeRevision`
 ```ts
-function restoreRuntimeRevision(slug: string, revisionId: string, actor: Actor, locals: Locals | null | undefined): Promise<unknown>
+function restoreRuntimeRevision(slug: string, revisionId: string, actor: Actor, locals: Locals | null | undefined): Promise<{ ok: true; } | { ok: false; error: string; }>
 ```
 
 #### `saveRuntimeContentState`
 ```ts
-function saveRuntimeContentState(slug: string, input: SaveContentInput, actor: Actor, locals: Locals | null | undefined): Promise<unknown>
+function saveRuntimeContentState(slug: string, input: SaveContentInput, actor: Actor, locals: Locals | null | undefined): Promise<{ ok: false; error: string; conflict?: true | undefined; } | { ok: true; state?: unknown; }>
 ```
 
 #### `saveRuntimeSettings`
 ```ts
-function saveRuntimeSettings(partial: Partial<SiteSettings>, actor: Actor, locals: Locals | null | undefined): Promise<unknown>
+function saveRuntimeSettings(partial: Partial<SiteSettings>, actor: Actor, locals: Locals | null | undefined): Promise<{ ok: true; settings: SiteSettings; } | { ok: false; error: string; }>
+```
+
+#### `scheduleRuntimePublish`
+```ts
+function scheduleRuntimePublish(slug: string, scheduledAt: string, locals: Locals | null | undefined): Promise<{ ok: true; } | { ok: false; error: string; }>
 ```
 
 #### `suspendRuntimeAdminUser`
 ```ts
-function suspendRuntimeAdminUser(email: string, actor: Actor, locals: Locals | null | undefined): Promise<unknown>
+function suspendRuntimeAdminUser(email: string, actor: Actor, locals: Locals | null | undefined): Promise<{ ok: true; } | { ok: false; error: string; }>
 ```
 
 #### `unsuspendRuntimeAdminUser`
 ```ts
-function unsuspendRuntimeAdminUser(email: string, actor: Actor, locals: Locals | null | undefined): Promise<unknown>
+function unsuspendRuntimeAdminUser(email: string, actor: Actor, locals: Locals | null | undefined): Promise<{ ok: true; } | { ok: false; error: string; }>
 ```
 
 #### `updateRuntimeAuthor`
@@ -1108,7 +1168,7 @@ function updateRuntimeCategory(input: { id: number; name: string; slug?: string 
 
 #### `updateRuntimeMediaAsset`
 ```ts
-function updateRuntimeMediaAsset(input: { id: string; title?: string | undefined; altText?: string | undefined; }, actor: Actor, locals: Locals | null | undefined): Promise<unknown>
+function updateRuntimeMediaAsset(input: { id: string; title?: string | undefined; altText?: string | undefined; }, actor: Actor, locals: Locals | null | undefined): Promise<{ ok: true; } | { ok: false; error: string; }>
 ```
 
 #### `updateRuntimeTag`
@@ -1118,7 +1178,7 @@ function updateRuntimeTag(input: { id: number; name: string; slug?: string | und
 
 #### `updateRuntimeTranslationState`
 ```ts
-function updateRuntimeTranslationState(route: string, state: string, actor: Actor, locals: Locals | null | undefined): Promise<unknown>
+function updateRuntimeTranslationState(route: string, state: string, actor: Actor, locals: Locals | null | undefined): Promise<{ ok: true; } | { ok: false; error: string; }>
 ```
 
 #### `authenticateRuntimeAdminUser`
@@ -1138,7 +1198,7 @@ function getRuntimeCsrfToken(sessionToken: string | null | undefined, locals: Lo
 
 #### `getRuntimeSessionUser`
 ```ts
-function getRuntimeSessionUser(sessionToken: string | null | undefined, locals: Locals | null | undefined): Promise<SessionUser | null>
+function getRuntimeSessionUser(sessionToken: string | null | undefined, locals: Locals | null | undefined): Promise<(SessionUser & { isAdmin: boolean; }) | null>
 ```
 
 #### `recordRuntimeLogout`
@@ -1353,12 +1413,12 @@ function getRuntimeSystemRoute(pathname: string, locals: Locals | null | undefin
 
 #### `listRuntimeStructuredPageRoutes`
 ```ts
-function listRuntimeStructuredPageRoutes(locals: Locals | null | undefined): Promise<RuntimeStructuredPageRouteRecord[] | ({ path: string; title: string; summary: string | undefined; seoTitle: string | undefined; metaDescription: string | undefined; canonicalUrlOverride: string | undefined; robotsDirective: string | undefined; ogImage: string | undefined; templateKey: string; alternateLinks: { hreflang: string; href: string; }[]; sections: Record<string, unknown> | null; updatedAt: string; } | null)[]>
+function listRuntimeStructuredPageRoutes(locals: Locals | null | undefined): Promise<RuntimeStructuredPageRouteRecord[]>
 ```
 
 #### `listRuntimeSystemRoutes`
 ```ts
-function listRuntimeSystemRoutes(locals: Locals | null | undefined): Promise<(RuntimeSystemRouteRecord | null)[]>
+function listRuntimeSystemRoutes(locals: Locals | null | undefined): Promise<RuntimeSystemRouteRecord[]>
 ```
 
 #### `saveRuntimeArchiveRoute`
@@ -1770,6 +1830,7 @@ function validateWebhookCreateInput(input: { url: unknown; events: unknown; }): 
 - `const ASTROPRESS_ADMIN_BASE_PATH: "/ap-admin"`
 - `ADMIN_STUB_PAGES`
 - `adminStubs`
+- `ImportPathError`
 - `const registerAbTesting: Register`
 - `const registerAnalytics: Register`
 - `const registerCdnPurge: Register`
@@ -1779,6 +1840,7 @@ function validateWebhookCreateInput(input: { url: unknown; events: unknown; }): 
 - `const registerNewsletter: Register`
 - `const registerSearch: Register`
 - `OAuthRegistryError`
+- `const OAUTH_NONCE_RATE_KEY_PREFIX: "oauth-state-nonce:"`
 - `const DEFAULT_OAUTH_STATE_TTL_MS: 600000`
 - `const CLOUDFLARE_CDN_FIELDS: ZodObject<{ apiToken: ZodString; zoneId: ZodString; }, $strip>`
 - `CloudflareCdnVerifyError`
@@ -1802,11 +1864,6 @@ function validateWebhookCreateInput(input: { url: unknown; events: unknown; }): 
 ## `astropress (config)`
 
 ### Functions
-
-#### `peekCmsConfig`
-```ts
-function peekCmsConfig(): CmsConfig | null
-```
 
 #### `reportAstropressError`
 ```ts
@@ -1839,6 +1896,7 @@ function reportAstropressError(error: unknown, context: string): Promise<void>
 - `type ApiTokenId`
 - `interface ApiTokenRecord`
 - `interface ApiTokenStore`
+- `interface FlashStore`
 - `type ContentId` — A content record ID — prevents mixing with media or user IDs.
 - `type MediaAssetId` — A media asset ID — prevents mixing with content or user IDs.
 - `type AdminUserId` — An admin user ID — prevents mixing with content or media IDs.
@@ -1884,6 +1942,7 @@ function withApiRequest(request: Request, ctx: ApiRequestContext, requiredScopes
 
 ### Types & Interfaces
 
+- `type JsonValue`
 - `interface ApiRequestContext`
 
 ### Constants & Re-exports

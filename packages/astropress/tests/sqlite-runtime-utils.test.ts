@@ -187,11 +187,14 @@ describe("getSeedPageRecords", () => {
 	});
 });
 
-describe("hashOpaqueToken — default secret (kills L137:57 StringLiteral)", () => {
-	it("uses 'astropress-dev-root-secret' as the default secret so the digest differs from an empty-secret digest", () => {
+describe("hashOpaqueToken — default secret resolves via runtime-env (post-#132)", () => {
+	it("default (no secret) differs from explicit empty-string secret (dev mode)", () => {
 		const digestDefault = hashOpaqueToken("token-abc");
 		const digestEmpty = hashOpaqueToken("token-abc", "");
-		// Mutant L137:57 StringLiteral "": default becomes "" → digestDefault === digestEmpty.
+		// In dev mode resolveTokenHashSecret(undefined) returns DEV_ROOT_SECRET_FALLBACK,
+		// while an explicit empty string flows through unchanged — so the two digests
+		// MUST differ. Regression-kills the old hardcoded-string-default mutant and the
+		// new pass-empty-as-fallback mistake.
 		expect(digestDefault).not.toBe(digestEmpty);
 	});
 });

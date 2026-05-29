@@ -369,9 +369,17 @@ describe("getAdminBootstrapConfig", () => {
 		expect(runtimeEnv.getAdminBootstrapConfig().adminDbPath).toBe("/var/data/admin.db");
 	});
 
-	it("defaults rootSecret to the dev fallback when no secrets are configured", async () => {
+	it("defaults rootSecret to the dev fallback when no secrets are configured (non-production)", async () => {
 		const runtimeEnv = await importRuntimeEnv();
-		expect(runtimeEnv.getAdminBootstrapConfig().rootSecret).toBe("astropress-dev-root-secret");
+		expect(runtimeEnv.getAdminBootstrapConfig().rootSecret).toBe(
+			runtimeEnv.DEV_ROOT_SECRET_FALLBACK,
+		);
+	});
+
+	it("throws in production when no rootSecret is configured (fail-closed; #132)", async () => {
+		vi.stubEnv("PROD", "true");
+		const runtimeEnv = await importRuntimeEnv();
+		expect(() => runtimeEnv.getAdminBootstrapConfig()).toThrow(/ASTROPRESS_ROOT_SECRET/i);
 	});
 });
 
@@ -386,9 +394,15 @@ describe("getAstropressRootSecret", () => {
 		expect(runtimeEnv.getAstropressRootSecret()).toBe("explicit-root-secret");
 	});
 
-	it("falls back to the dev root secret when nothing is configured", async () => {
+	it("falls back to the dev root secret when nothing is configured (non-production)", async () => {
 		const runtimeEnv = await importRuntimeEnv();
-		expect(runtimeEnv.getAstropressRootSecret()).toBe("astropress-dev-root-secret");
+		expect(runtimeEnv.getAstropressRootSecret()).toBe(runtimeEnv.DEV_ROOT_SECRET_FALLBACK);
+	});
+
+	it("throws in production when nothing is configured (fail-closed; #132)", async () => {
+		vi.stubEnv("PROD", "true");
+		const runtimeEnv = await importRuntimeEnv();
+		expect(() => runtimeEnv.getAstropressRootSecret()).toThrow(/ASTROPRESS_ROOT_SECRET/i);
 	});
 });
 

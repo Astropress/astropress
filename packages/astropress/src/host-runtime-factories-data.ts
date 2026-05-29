@@ -39,6 +39,18 @@ const _ADMIN_STORE_SECTION_TYPECHECK: Record<AdminStoreSection, keyof AdminStore
 };
 void _ADMIN_STORE_SECTION_TYPECHECK;
 
+/**
+ * Optional admin-store surfaces that are objects, not method tables. Unlike the
+ * sections above they are absent on DB-less hosts, so the flattened module must
+ * expose the *actual* value (which may be `undefined`) rather than a section
+ * proxy — callers rely on `store.apiTokens` being falsy to detect absence.
+ * Wrapping them in a proxy (always truthy) would defeat that guard, which is
+ * why they are dispatched separately in createAstropressAdminStoreModule.
+ */
+export const ADMIN_STORE_OPTIONAL_OBJECT_KEYS: ReadonlySet<string> = new Set<
+	keyof AdminStoreAdapter
+>(["apiTokens", "webhooks", "flash", "integrations"]);
+
 export const ADMIN_STORE_SECTIONS: ReadonlySet<string> = new Set<AdminStoreSection>([
 	"audit",
 	"auth",

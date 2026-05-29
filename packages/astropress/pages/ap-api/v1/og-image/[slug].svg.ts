@@ -1,19 +1,32 @@
 /**
- * /ap-api/v1/og-image/[slug].png
+ * /ap-api/v1/og-image/[slug].svg
  *
  * Auto-generates a social sharing image (OG image) for any content record.
  * Returns an SVG image with the content title and site name on a gradient background.
+ * The route path extension (.svg) matches the `image/svg+xml` Content-Type it emits,
+ * so CDNs/clients that key on the URL extension don't sniff a mismatch (issue #139).
+ *
+ * This endpoint is used as the fallback og:image by AstropressSeoHead when no
+ * explicit ogImage is set on the content record.
  *
  * Query params:
  *   ?title=My Post Title     — the text to display (required)
  *   ?site=My Site Name       — site name displayed below the title (optional)
  *   ?bg=1e3a5f              — hex background color without # (default: 1e3a5f)
  *   ?fg=ffffff              — hex text color without # (default: ffffff)
+ *
+ * For PNG output with richer typography, the host app can add `satori` + `@resvg/resvg-js`
+ * and replace the SVG generation below with a satori call.
+ *
+ * Content-Type: image/svg+xml
+ * Cache-Control: public, max-age=86400, immutable (1 day)
  */
+
+import type { APIRoute } from "astro";
 
 export const prerender = false;
 
-function escapeXml(str) {
+function escapeXml(str: string): string {
 	return str
 		.replace(/&/g, "&amp;")
 		.replace(/</g, "&lt;")
@@ -23,7 +36,7 @@ function escapeXml(str) {
 }
 
 /** Wrap a long title string onto at most 2 lines at word boundaries. */
-function wrapTitle(title, maxLen = 28) {
+function wrapTitle(title: string, maxLen = 28): [string, string] {
 	if (title.length <= maxLen) return [title, ""];
 	const words = title.split(" ");
 	let line1 = "";
@@ -37,20 +50,20 @@ function wrapTitle(title, maxLen = 28) {
 			line2 = `${line2} ${word}`.trim();
 		}
 	}
+	// Truncate line 2 if still too long
 	if (line2.length > maxLen + 4) {
 		line2 = `${line2.slice(0, maxLen + 1)}…`;
 	}
 	return [line1, line2];
 }
 
-export const GET = ({ request }) => {
+export const GET: APIRoute = ({ request }) => {
 	const url = new URL(request.url);
 	const title = url.searchParams.get("title") ?? "Untitled";
 	const site = url.searchParams.get("site") ?? "";
 	const bg = url.searchParams.get("bg") ?? "1e3a5f";
 	const fg = url.searchParams.get("fg") ?? "ffffff";
 
-	const safeTitle = escapeXml(title);
 	const safeSite = escapeXml(site);
 	const safeBg = /^[0-9a-fA-F]{3,6}$/.test(bg) ? bg : "1e3a5f";
 	const safeFg = /^[0-9a-fA-F]{3,6}$/.test(fg) ? fg : "ffffff";

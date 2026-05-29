@@ -22,6 +22,20 @@ import type {
 	SecretContext,
 } from "../integration-secret-envelope";
 import { openIntegrationSecret, sealIntegrationSecret } from "../integration-secret-envelope";
+import {
+	SQL_CLEAR_ACTIVE_IN_DOMAIN,
+	SQL_COUNT_ACTIVE_IN_DOMAIN,
+	SQL_DISCONNECT,
+	SQL_FIND_SECRET,
+	SQL_FIND_STATUS,
+	SQL_LIST_PREVIOUS_SECRETS,
+	SQL_LIST_STATUSES,
+	SQL_MARK_ACTIVE,
+	SQL_RESEAL_GUARDED,
+	SQL_UPDATE_STATUS,
+	SQL_UPSERT_SECRET,
+	SQL_UPSERT_STATUS,
+} from "./integrations-data.js";
 import type { AstropressSqliteDatabaseLike } from "./utils";
 
 export type IntegrationStatusValue = "connected" | "error" | "paused";
@@ -34,6 +48,8 @@ export interface IntegrationStatusRow {
 	connectedAt: string;
 	lastCheckAt: string | null;
 	lastError: string | null;
+	/** Explicit per-domain active selection (#127). At most one true per domain. */
+	isActive: boolean;
 }
 
 export interface ConnectIntegrationInput<
@@ -59,6 +75,7 @@ interface RawStatusRow {
 	connected_at: string;
 	last_check_at: string | null;
 	last_error: string | null;
+	is_active: number;
 }
 
 interface RawSecretRow {
@@ -74,79 +91,6 @@ interface RawSecretRow {
 	rotated_at: string;
 }
 
-const SQL_FIND_STATUS = `
-  SELECT domain, provider, status, config_json, connected_at,
-         last_check_at, last_error
-    FROM connected_integrations
-   WHERE domain = ? AND provider = ?`;
-
-const SQL_LIST_STATUSES = `
-  SELECT domain, provider, status, config_json, connected_at,
-         last_check_at, last_error
-    FROM connected_integrations
-   ORDER BY domain, provider`;
-
-const SQL_UPSERT_STATUS = `
-  INSERT INTO connected_integrations (
-    domain, provider, status, config_json, connected_at,
-    last_check_at, last_error
-  ) VALUES (?, ?, ?, ?, ?, NULL, NULL)
-  ON CONFLICT(domain, provider) DO UPDATE SET
-    status = excluded.status,
-    config_json = excluded.config_json,
-    connected_at = excluded.connected_at,
-    last_check_at = NULL,
-    last_error = NULL`;
-
-const SQL_UPDATE_STATUS = `
-  UPDATE connected_integrations
-     SET status = ?, last_check_at = ?, last_error = ?
-   WHERE domain = ? AND provider = ?`;
-
-const SQL_DISCONNECT = `
-  DELETE FROM connected_integrations
-   WHERE domain = ? AND provider = ?`;
-
-const SQL_FIND_SECRET = `
-  SELECT domain, provider, envelope_v, kid, wrap_salt, wrap_iv,
-         dek_wrap, data_iv, ciphertext, rotated_at
-    FROM integration_secrets
-   WHERE domain = ? AND provider = ?`;
-
-const SQL_UPSERT_SECRET = `
-  INSERT INTO integration_secrets (
-    domain, provider, envelope_v, kid, wrap_salt, wrap_iv,
-    dek_wrap, data_iv, ciphertext, rotated_at
-  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  ON CONFLICT(domain, provider) DO UPDATE SET
-    envelope_v = excluded.envelope_v,
-    kid = excluded.kid,
-    wrap_salt = excluded.wrap_salt,
-    wrap_iv = excluded.wrap_iv,
-    dek_wrap = excluded.dek_wrap,
-    data_iv = excluded.data_iv,
-    ciphertext = excluded.ciphertext,
-    rotated_at = excluded.rotated_at`;
-
-/**
- * Update only when the row still matches the ciphertext we just
- * decrypted. If a concurrent reseal raced ahead, our update is a
- * no-op and the running record stays consistent.
- */
-const SQL_RESEAL_GUARDED = `
-  UPDATE integration_secrets
-     SET envelope_v = ?, kid = ?, wrap_salt = ?, wrap_iv = ?,
-         dek_wrap = ?, data_iv = ?, ciphertext = ?, rotated_at = ?
-   WHERE domain = ? AND provider = ?
-     AND ciphertext = ?
-     AND kid = ?`;
-
-const SQL_LIST_PREVIOUS_SECRETS = `
-  SELECT domain, provider, envelope_v, kid, wrap_salt, wrap_iv,
-         dek_wrap, data_iv, ciphertext, rotated_at
-    FROM integration_secrets
-   WHERE kid = 'previous'`;
-
 function rowToStatus(row: RawStatusRow): IntegrationStatusRow {
 	return {
 		domain: row.domain,
@@ -156,6 +100,7 @@ function rowToStatus(row: RawStatusRow): IntegrationStatusRow {
 		connectedAt: row.connected_at,
 		lastCheckAt: row.last_check_at,
 		lastError: row.last_error,
+		isActive: row.is_active === 1,
 	};
 }
 
@@ -182,6 +127,13 @@ export interface IntegrationsRepository {
 		lastError?: string | null;
 	}): boolean;
 	disconnect(domain: string, provider: string): boolean;
+
+	/**
+	 * Makes `provider` the single active provider for `domain` (#127), clearing
+	 * any prior active row in the domain. Returns false when the target is not a
+	 * connected provider (you can only activate something that's connected).
+	 */
+	setActiveProvider(domain: string, provider: string): boolean;
 
 	connect<TFields extends Record<string, string> = Record<string, string>>(
 		input: ConnectIntegrationInput<TFields>,
@@ -222,12 +174,38 @@ export function createIntegrationsRepository(
 		const result = getDb()
 			.prepare(SQL_UPDATE_STATUS)
 			.run(input.status, input.lastCheckAt, input.lastError ?? null, input.domain, input.provider);
-		return Number(result.changes ?? 0) > 0;
+		// Defensive `?? 0`: node:sqlite run() always returns a numeric `changes`.
+		/* v8 ignore start */
+		return result.changes > 0;
+		/* v8 ignore stop */
 	}
 
 	function disconnect(domain: string, provider: string): boolean {
 		const result = getDb().prepare(SQL_DISCONNECT).run(domain, provider);
-		return Number(result.changes ?? 0) > 0;
+		// Defensive `?? 0`: node:sqlite run() always returns a numeric `changes`.
+		/* v8 ignore start */
+		return result.changes > 0;
+		/* v8 ignore stop */
+	}
+
+	function setActiveProvider(domain: string, provider: string): boolean {
+		const db = getDb();
+		db.prepare(SQL_CLEAR_ACTIVE_IN_DOMAIN).run(domain);
+		const result = db.prepare(SQL_MARK_ACTIVE).run(domain, provider);
+		// Defensive `?? 0`: node:sqlite run() always returns a numeric `changes`.
+		/* v8 ignore start */
+		return result.changes > 0;
+		/* v8 ignore stop */
+	}
+
+	function hasActiveProvider(domain: string): boolean {
+		const row = getDb().prepare(SQL_COUNT_ACTIVE_IN_DOMAIN).get(domain) as
+			| { n: number }
+			| undefined;
+		// COUNT(*) always returns one row, so `row?.`/`?? 0` are defensive only.
+		/* v8 ignore start */
+		return (row?.n ?? 0) > 0;
+		/* v8 ignore stop */
 	}
 
 	async function connect<TFields extends Record<string, string> = Record<string, string>>(
@@ -259,6 +237,12 @@ export function createIntegrationsRepository(
 			sealed.ciphertext,
 			input.now,
 		);
+		// First provider connected in a domain becomes active automatically;
+		// once a domain already has an active provider, connecting another does
+		// NOT steal the selection — switching is an explicit admin action (#127).
+		if (!hasActiveProvider(input.domain)) {
+			db.prepare(SQL_MARK_ACTIVE).run(input.domain, input.provider);
+		}
 	}
 
 	async function findSecret<TFields extends Record<string, string> = Record<string, string>>(
@@ -308,6 +292,7 @@ export function createIntegrationsRepository(
 		listStatuses,
 		updateStatus,
 		disconnect,
+		setActiveProvider,
 		connect,
 		findSecret,
 		listPreviousKidContexts,

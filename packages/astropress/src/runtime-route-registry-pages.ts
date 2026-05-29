@@ -38,7 +38,7 @@ function mapStructuredPageRow(
 		  }
 		| null
 		| undefined,
-) {
+): RuntimeStructuredPageRouteRecord | null {
 	if (!row) {
 		return null;
 	}
@@ -105,7 +105,9 @@ export async function listRuntimeStructuredPageRoutes(locals?: App.Locals | null
 					}>()
 			).results;
 
-			return rows.map((row) => mapStructuredPageRow(row)).filter(Boolean);
+			return rows
+				.map((row) => mapStructuredPageRow(row))
+				.filter((route): route is RuntimeStructuredPageRouteRecord => route !== null);
 		},
 	);
 }

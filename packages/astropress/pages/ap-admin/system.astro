@@ -1,4 +1,5 @@
 ---
+import { safeAdminUserName } from "astropress";
 import AdminLayout from "@astropress-diy/astropress/components/AdminLayout.astro";
 import CsrfInput from "@astropress-diy/astropress/components/CsrfInput.astro";
 import { buildSystemPageModel, getPageT, resolveAdminLocale } from "astropress";
@@ -25,7 +26,7 @@ const sitemapPage = routeMap.get("/sitemap.xml");
     heading={t("system.title")}
     currentPath="/ap-admin/system"
     description={t("system.description")}
-    userName={adminUser.name}
+    userName={safeAdminUserName(adminUser)}
   >
     {model.warnings.length > 0 && <p class="notice">{t("system.partialResults")}</p>}
     <div class="toolbar">
@@ -147,7 +148,7 @@ const sitemapPage = routeMap.get("/sitemap.xml");
     heading="Forbidden"
     currentPath=""
     description={t("pages.forbidden.description")}
-    userName={adminUser.name}
+    userName={safeAdminUserName(adminUser)}
   >
     <section class="panel forbidden">
       <p>{t("system.forbiddenBody")}</p>

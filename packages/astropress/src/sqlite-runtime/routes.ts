@@ -3,14 +3,9 @@ import { createAstropressCmsRegistryModule } from "../host-runtime-factories";
 import type { Actor } from "../persistence-types";
 import { recordAudit } from "./audit-log";
 import {
-	type AppendArchiveRevisionInput,
-	type AppendStructuredRevisionInput,
 	type ArchiveRouteRow,
-	type InsertStructuredInput,
 	mapArchiveRow,
 	mapStructuredPageRow,
-	type PersistArchiveInput,
-	type PersistStructuredInput,
 	SQL_FIND_ARCHIVE_FOR_UPDATE,
 	SQL_FIND_STRUCTURED_FOR_UPDATE,
 	SQL_FIND_SYSTEM_FOR_UPDATE,
@@ -136,18 +131,6 @@ export function createSqliteRoutesStore(
 			renderStrategy,
 			revisionNote,
 			actor,
-		}: {
-			routeId: string;
-			pathname: string;
-			locale: string;
-			title: string;
-			summary: string;
-			bodyHtml: string;
-			// audit-boundary: opaque-passthrough -- SQL row-shape mirror; columns narrowed at row-mapper boundary
-			settings: Record<string, unknown> | null;
-			renderStrategy: string;
-			revisionNote: string;
-			actor: Actor;
 		}) {
 			getDb()
 				.prepare(SQL_INSERT_REVISION)
@@ -192,7 +175,7 @@ export function createSqliteRoutesStore(
 			alternateLinks,
 			sections,
 			actor,
-		}: InsertStructuredInput) {
+		}) {
 			const groupId = `route-group:${randomId()}`;
 			const variantId = `route-variant:${randomId()}`;
 			getDb().prepare(SQL_INSERT_ROUTE_GROUP).run(groupId, locale, pathname);
@@ -228,7 +211,7 @@ export function createSqliteRoutesStore(
 			alternateLinks,
 			sections,
 			actor,
-		}: PersistStructuredInput) {
+		}) {
 			getDb()
 				.prepare(SQL_PERSIST_STRUCTURED)
 				.run(
@@ -261,7 +244,7 @@ export function createSqliteRoutesStore(
 			sections,
 			revisionNote,
 			actor,
-		}: AppendStructuredRevisionInput) {
+		}) {
 			getDb()
 				.prepare(SQL_INSERT_REVISION)
 				.run(
@@ -302,7 +285,7 @@ export function createSqliteRoutesStore(
 			canonicalUrlOverride,
 			robotsDirective,
 			actor,
-		}: PersistArchiveInput) {
+		}) {
 			getDb()
 				.prepare(SQL_PERSIST_ARCHIVE)
 				.run(
@@ -327,7 +310,7 @@ export function createSqliteRoutesStore(
 			robotsDirective,
 			revisionNote,
 			actor,
-		}: AppendArchiveRevisionInput) {
+		}) {
 			getDb()
 				.prepare(SQL_INSERT_ARCHIVE_REVISION)
 				.run(

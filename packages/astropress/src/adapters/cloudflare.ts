@@ -48,20 +48,11 @@ export interface AstropressCloudflareAdapterOptions {
 	preview?: PreviewSession;
 }
 
-const CF_CAPS = {
-	name: "cloudflare" as const,
-	staticPublishing: true,
-	hostedAdmin: true,
-	previewEnvironments: true,
-	serverRuntime: true,
-	database: true,
-	objectStorage: true,
-	gitSync: true,
-};
-const SQL_CF_SOFT_DELETE_REDIRECT =
-	"UPDATE redirect_rules SET deleted_at = CURRENT_TIMESTAMP WHERE source_path = ? AND deleted_at IS NULL";
-const SQL_CF_SOFT_DELETE_MEDIA =
-	"UPDATE media_assets SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?";
+import {
+	CF_CAPS,
+	SQL_CF_SOFT_DELETE_MEDIA,
+	SQL_CF_SOFT_DELETE_REDIRECT,
+} from "./cloudflare-data.js";
 
 async function saveCloudflareRecord(
 	db: D1DatabaseLike,
@@ -70,7 +61,7 @@ async function saveCloudflareRecord(
 		slug?: string;
 		id: string;
 		kind: string;
-		title?: string;
+		title?: string | null;
 		body?: string | null;
 		status?: string;
 		// audit-boundary: opaque-passthrough -- driver row-shape mirror; values narrowed at consumer
@@ -151,37 +142,41 @@ async function listCloudflareContentRecords(
 	}
 	if (!kind || kind === "comment") {
 		records.push(
-			...(await readStore.comments.getComments()).map((comment) => ({
-				id: comment.id,
-				kind: "comment" as const,
-				slug: comment.id,
-				status: comment.status === "approved" ? "published" : "draft",
-				title: comment.author,
-				body: comment.body ?? null,
-				metadata: {
-					route: comment.route,
-					email: comment.email ?? null,
-					policy: comment.policy,
-					submittedAt: comment.submittedAt ?? null,
-				},
-			})),
+			...(await readStore.comments.getComments()).map(
+				(comment): ContentStoreRecord => ({
+					id: comment.id,
+					kind: "comment" as const,
+					slug: comment.id,
+					status: comment.status === "approved" ? "published" : "draft",
+					title: comment.author,
+					body: comment.body ?? null,
+					metadata: {
+						route: comment.route,
+						email: comment.email ?? null,
+						policy: comment.policy,
+						submittedAt: comment.submittedAt ?? null,
+					},
+				}),
+			),
 		);
 	}
 	if (!kind || kind === "user") {
 		records.push(
-			...(await readStore.users.listAdminUsers()).map((user) => ({
-				id: String(user.id),
-				kind: "user" as const,
-				slug: user.email,
-				status: user.active ? "published" : "archived",
-				title: user.name,
-				metadata: {
-					email: user.email,
-					role: user.role,
-					createdAt: user.createdAt,
-					userStatus: user.status,
-				},
-			})),
+			...(await readStore.users.listAdminUsers()).map(
+				(user): ContentStoreRecord => ({
+					id: String(user.id),
+					kind: "user" as const,
+					slug: user.email,
+					status: user.active ? "published" : "archived",
+					title: user.name,
+					metadata: {
+						email: user.email,
+						role: user.role,
+						createdAt: user.createdAt,
+						userStatus: user.status,
+					},
+				}),
+			),
 		);
 	}
 	if (!kind || kind === "settings") {
@@ -192,7 +187,7 @@ async function listCloudflareContentRecords(
 			slug: "site-settings",
 			status: "published",
 			title: settings.siteTitle,
-			metadata: settings,
+			metadata: { ...settings },
 		});
 	}
 	if (!kind || kind === "media") {
@@ -280,7 +275,7 @@ export function createAstropressCloudflareAdapter(
 				);
 			},
 			async save(record) {
-				return saveCloudflareRecord(db, readStore, record);
+				return (await saveCloudflareRecord(db, readStore, record)) as ContentStoreRecord;
 			},
 			async delete(id) {
 				const existing = await this.get(id);
@@ -290,7 +285,7 @@ export function createAstropressCloudflareAdapter(
 					return;
 				}
 				if (existing.kind === "page" || existing.kind === "post") {
-					await this.save({ ...existing, status: "archived" });
+					await this.save({ ...existing, kind: existing.kind, status: "archived" });
 					return;
 				}
 				if (existing.kind === "media") {

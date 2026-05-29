@@ -22,13 +22,21 @@ import { isSeededPostRecord } from "./seeded-content-type";
 
 type AdminLocals = APIContext["locals"];
 
+interface ArchiveListingRow {
+	title: string;
+	kind: string;
+	slug: string;
+	legacyUrl: string;
+	listingItems?: JsonValue[];
+}
+
 export async function buildArchivesIndexPageModel(
 	locals: AdminLocals,
 	user: AuthUser | null | undefined,
 ) {
 	const empty = {
-		archiveList: [] as unknown[],
-		archivesByKind: {} as Record<string, unknown[]>,
+		archiveList: [] as ArchiveListingRow[],
+		archivesByKind: {} as Record<string, ArchiveListingRow[]>,
 		kindCounts: [] as Array<{ kind: string; count: number }>,
 		totalArchives: 0,
 		totalItems: 0,
@@ -58,7 +66,7 @@ export async function buildArchivesIndexPageModel(
 		(archive) => archive,
 	);
 
-	const archivesByKind = archiveList.reduce<Record<string, unknown[]>>((acc, archive) => {
+	const archivesByKind = archiveList.reduce<Record<string, ArchiveListingRow[]>>((acc, archive) => {
 		if (!acc[archive.kind]) {
 			acc[archive.kind] = [];
 		}
@@ -86,7 +94,10 @@ export async function buildPagesIndexPageModel(
 	const empty = {
 		contentStates: [] as Awaited<ReturnType<typeof listRuntimeContentStates>>,
 		routePages: [] as Awaited<ReturnType<typeof listRuntimeStructuredPageRoutes>>,
-		archiveRows: [] as unknown[],
+		archiveRows: [] as Array<{
+			archive: { slug: string; legacyUrl: string; title: string };
+			runtime: Awaited<ReturnType<typeof getRuntimeArchiveRoute>>;
+		}>,
 	};
 	if (!user || !isAuthUserAdmin(user)) {
 		return forbidden(empty);
@@ -150,7 +161,7 @@ export async function buildPostsIndexPageModel(locals: AdminLocals) {
 		[],
 	);
 	const archiveList = (
-		getCmsConfig().archives as Array<{
+		getCmsConfig().archives as unknown as Array<{
 			slug: string;
 			title: string;
 			legacyUrl: string;
@@ -181,11 +192,21 @@ export async function buildPostsIndexPageModel(locals: AdminLocals) {
 	return ok({ authors, categories, tags, allContent, archives }, warnings);
 }
 
+interface TranslationStatusRow {
+	route: string;
+	translationState: string;
+	englishSourceUrl: string;
+	locale: string;
+	englishEditHref?: string;
+	effectiveState: string;
+	localizedEditHref: string | undefined;
+}
+
 export async function buildTranslationsPageModel(
 	locals: AdminLocals,
 	user: AuthUser | null | undefined,
 ) {
-	const empty = { rows: [] as unknown[] };
+	const empty = { rows: [] as TranslationStatusRow[] };
 	if (!user || !isAuthUserAdmin(user)) {
 		return forbidden(empty);
 	}
@@ -236,8 +257,18 @@ export async function buildTranslationsPageModel(
 	return ok({ rows }, warnings);
 }
 
+interface SeoListingRow {
+	label: string;
+	type: string;
+	path: string;
+	seoTitle: string;
+	metaDescription: string;
+	missingMetadata: boolean;
+	editHref: string;
+}
+
 export async function buildSeoPageModel(locals: AdminLocals, user: AuthUser | null | undefined) {
-	const empty = { rows: [] as unknown[] };
+	const empty = { rows: [] as SeoListingRow[] };
 	if (!user || !isAuthUserAdmin(user)) {
 		return forbidden(empty);
 	}
@@ -276,7 +307,7 @@ export async function buildSeoPageModel(locals: AdminLocals, user: AuthUser | nu
 		(archive) => ({ archive, runtime: null }),
 	);
 
-	const rows = [
+	const rows: SeoListingRow[] = [
 		...contentStates.map((record) => ({
 			label: record.title,
 			type: isSeededPostRecord(record) ? "Post" : "Page",

@@ -18,9 +18,17 @@ type MediaAssetInput = {
 	altText?: string;
 };
 
-function checkUploadSize(bytes: Uint8Array): { ok: true } | { ok: false; error: string } {
+/**
+ * Validates an upload's byte length against the configured `maxUploadBytes`
+ * (default 10 MiB). Takes a length — not the buffer — so the HTTP route can
+ * reject an oversized upload from `File.size` BEFORE reading the whole file
+ * into memory (#102), while `createRuntimeMediaAsset` re-checks the materialised
+ * bytes as defense-in-depth for non-route callers (CLI, tests). Both paths share
+ * this single source so the user-facing error shape never drifts.
+ */
+export function checkUploadSize(byteLength: number): { ok: true } | { ok: false; error: string } {
 	const maxUploadBytes = peekCmsConfig()?.maxUploadBytes ?? 10 * 1024 * 1024;
-	if (bytes.length > maxUploadBytes) {
+	if (byteLength > maxUploadBytes) {
 		const limitMib = (maxUploadBytes / (1024 * 1024)).toFixed(1);
 		return {
 			ok: false,
@@ -86,7 +94,7 @@ export async function createRuntimeMediaAsset(
 	actor: Actor,
 	locals?: App.Locals | null,
 ) {
-	const sizeCheck = checkUploadSize(input.bytes);
+	const sizeCheck = checkUploadSize(input.bytes.length);
 	if (!sizeCheck.ok) {
 		return { ok: false as const, error: sizeCheck.error };
 	}

@@ -2,18 +2,26 @@
  * Shared admin-action helper that wires a registered provider's
  * verify() callback to the Phase 2 secret-store repository.
  *
- *   1. Validate the inbound fields against the provider's Zod schema.
+ * `connectIntegration` (first-time connect):
+ *   1. Validate the inbound fields against the provider's Zod schema;
+ *      a schema miss returns `status:"error"` with no persistence.
  *   2. Run verify() under a 10-second AbortController so a hung
  *      upstream API can never block the admin UI.
- *   3. On verify failure, sanitise the error to a typed code and
- *      either persist (status="error") or refuse the connect
- *      depending on the caller's preference.
+ *   3. On verify failure, return `status:"error"` with a sanitised
+ *      typed code WITHOUT writing anything — a first-time connect never
+ *      persists a half-connected row. There is no caller-selectable
+ *      persist-vs-refuse policy; refusal is the only behaviour.
  *   4. On verify success, persist the sealed secret + status row in
  *      one repo.connect() call.
  *
- * All three admin actions (`integration-connect`, `-disconnect`,
- * `-reverify`) compose this helper rather than duplicating the
- * timeout/sanitise dance.
+ * `reverifyIntegration` (already-connected row): re-runs verify() and,
+ * on failure, persists `status:"error"` + the typed code via
+ * updateStatus (the row already exists, so there is no half-connected
+ * risk). Success flips it back to `connected`.
+ *
+ * The admin actions (`integration-connect`, `-disconnect`,
+ * `-reverify`, `-set-active`) compose these helpers rather than
+ * duplicating the timeout/sanitise dance.
  */
 
 import {

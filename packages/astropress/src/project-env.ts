@@ -18,6 +18,10 @@ export type AstropressDeployTargetEnv =
 	| "render-static"
 	| "render-web"
 	| "gitlab-pages"
+	| "fly-io"
+	| "coolify"
+	| "digitalocean"
+	| "railway"
 	| "custom";
 export type AstropressAppHostEnv = AstropressAppHost;
 export type AstropressDataServicesEnv = AstropressDataServices;

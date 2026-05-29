@@ -34,8 +34,16 @@ vi.mock("@astropress-diy/astropress", async (importActual) => {
 });
 
 const mockCreate = vi.fn();
+const mockFlashPut = vi.fn(async () => ({ id: "flash-test-id" }));
+// The real local admin store exposes a `flash` surface (admin_flash table,
+// wired by H4 #113/#115/#133); webhook-create resolves it to hand the one-time
+// verification material off via the flash store instead of the URL. Mirror
+// that surface here so resolveFlashStore() returns a store on the no-DB path.
 vi.mock("@astropress-diy/astropress/local-runtime-modules.js", () => ({
-	loadLocalAdminStore: vi.fn(async () => ({ webhooks: { create: mockCreate } })),
+	loadLocalAdminStore: vi.fn(async () => ({
+		webhooks: { create: mockCreate },
+		flash: { put: mockFlashPut, consume: vi.fn(async () => null) },
+	})),
 }));
 
 import { POST as webhookCreatePOST } from "../pages/ap-admin/actions/webhook-create.js";
@@ -216,7 +224,7 @@ describe("POST /ap-admin/actions/webhook-create — validation parity", () => {
 		expect(mockCreate).not.toHaveBeenCalled();
 	});
 
-	it("creates and redirects with verification metadata for valid input", async () => {
+	it("creates and stashes the one-time verification metadata in the flash store", async () => {
 		const res = await callAction({
 			url: "https://example.com/hook",
 			events: ["content.published", "media.uploaded"],
@@ -225,8 +233,15 @@ describe("POST /ap-admin/actions/webhook-create — validation parity", () => {
 			url: "https://example.com/hook",
 			events: ["content.published", "media.uploaded"],
 		});
+		// #115: the signing algorithm + public key are one-time material and must
+		// NOT ride in the redirect URL. They go into the flash store; the URL
+		// carries only the opaque flash id, consumed once on the next page load.
+		const flashPayload = JSON.parse(mockFlashPut.mock.calls[0]?.[0] as string);
+		expect(flashPayload).toEqual({ algorithm: "ML-DSA-65", publicKey: "k" });
 		const location = res.headers.get("location") ?? "";
 		expect(location).toContain("created=1");
-		expect(location).toContain("algorithm=ML-DSA-65");
+		expect(location).toContain("flash=flash-test-id");
+		expect(location).not.toContain("algorithm=");
+		expect(location).not.toContain("publicKey=");
 	});
 });

@@ -1,3 +1,4 @@
+import { createAstropressSecurityHeaders } from "@astropress-diy/astropress";
 import type { APIRoute } from "astro";
 
 const OPENAPI_SPEC = {
@@ -398,6 +399,57 @@ const OPENAPI_SPEC = {
 				security: [{ BearerAuth: ["webhooks:manage"] }],
 			},
 		},
+		"/metrics": {
+			get: {
+				summary: "Content, media, and comment counts for monitoring",
+				operationId: "getMetrics",
+				responses: { 200: { description: "Counts and uptime" } },
+				security: [{ BearerAuth: ["content:read"] }],
+			},
+		},
+		"/search": {
+			get: {
+				summary: "Full-text search across content records",
+				operationId: "searchContent",
+				parameters: [
+					{ name: "q", in: "query", required: true, schema: { type: "string" } },
+					{ name: "kind", in: "query", schema: { type: "string" } },
+					{
+						name: "limit",
+						in: "query",
+						schema: { type: "integer", default: 20, maximum: 100 },
+					},
+				],
+				responses: {
+					200: { description: "Search results with total count" },
+					400: { description: "Missing required query parameter q" },
+				},
+				security: [{ BearerAuth: ["content:read"] }],
+			},
+		},
+		"/import/wordpress": {
+			post: {
+				summary: "Import content from a WordPress WXR export",
+				operationId: "importWordPress",
+				requestBody: {
+					required: true,
+					content: {
+						"application/json": {
+							schema: {
+								type: "object",
+								required: ["exportFile"],
+								properties: { exportFile: { type: "string" } },
+							},
+						},
+					},
+				},
+				responses: {
+					200: { description: "Import report" },
+					422: { description: "Validation error" },
+				},
+				security: [{ BearerAuth: ["import:write"] }],
+			},
+		},
 		"/openapi.json": {
 			get: {
 				summary: "OpenAPI specification",
@@ -410,8 +462,8 @@ const OPENAPI_SPEC = {
 };
 
 export const GET: APIRoute = () => {
-	return new Response(JSON.stringify(OPENAPI_SPEC, null, 2), {
-		status: 200,
-		headers: { "Content-Type": "application/json" },
-	});
+	// Public spec, but still inside the shared API security envelope (#119).
+	const headers = createAstropressSecurityHeaders({ area: "api" });
+	headers.set("Content-Type", "application/json");
+	return new Response(JSON.stringify(OPENAPI_SPEC, null, 2), { status: 200, headers });
 };

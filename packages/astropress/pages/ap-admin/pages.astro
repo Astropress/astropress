@@ -1,4 +1,5 @@
 ---
+import { safeAdminUserName } from "astropress";
 import AdminLayout from "@astropress-diy/astropress/components/AdminLayout.astro";
 import {
 	buildPagesIndexPageModel,
@@ -62,16 +63,18 @@ const legacyPages = contentStates
 		ownerLabel: t("pages.editPageRow"),
 	}));
 
-const structuredPages = routePages.map((page) => ({
-	title: page.title,
-	path: page.path,
-	kind: "Structured",
-	status: "published",
-	updatedAt: page.updatedAt,
-	editHref: `/ap-admin/route-pages${page.path}`,
-	publicHref: page.path,
-	ownerLabel: t("pages.editRoutePage"),
-}));
+const structuredPages = routePages
+	.filter((page): page is NonNullable<typeof page> => page != null)
+	.map((page) => ({
+		title: page.title,
+		path: page.path,
+		kind: "Structured",
+		status: "published",
+		updatedAt: page.updatedAt,
+		editHref: `/ap-admin/route-pages${page.path}`,
+		publicHref: page.path,
+		ownerLabel: t("pages.editRoutePage"),
+	}));
 
 const archivePages = archiveRows.map(({ archive, runtime }) => ({
 	title: runtime?.title ?? archive.title,
@@ -106,7 +109,7 @@ const structuredExplanation = t("pages.structuredExplanation");
     heading="Pages"
     currentPath="/ap-admin/pages"
     description={t("pages.description")}
-    userName={adminUser.name}
+    userName={safeAdminUserName(adminUser)}
   >
     {model.warnings.length > 0 && <p class="notice">{t("pages.partialResults")}</p>}
     <div class="toolbar">
@@ -209,7 +212,7 @@ const structuredExplanation = t("pages.structuredExplanation");
     heading="Forbidden"
     currentPath="/ap-admin/posts"
     description={t("pages.forbidden.description")}
-    userName={adminUser.name}
+    userName={safeAdminUserName(adminUser)}
   >
     <section class="panel">
       <p>{t("pages.forbidden.body")}</p>

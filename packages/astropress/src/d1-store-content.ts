@@ -173,7 +173,7 @@ export function createD1SchedulingPart(db: D1DatabaseLike) {
 				)
 				.bind(now)
 				.run();
-			return result.meta?.changes ?? 0;
+			return Number(result.meta?.changes ?? 0);
 		},
 	};
 }

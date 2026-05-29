@@ -114,7 +114,15 @@ seedToolkit.seedDatabase({
 
 const database = new DatabaseSync(dbPath);
 const runtime = createAstropressSqliteAdminRuntime({
-	getDatabase: () => database,
+	// node:sqlite's DatabaseSync types run().changes as number | bigint; the
+	// runtime narrows it to number (bigint mode is never enabled). Bridge at
+	// this boundary rather than widening the shared abstraction.
+	getDatabase: () =>
+		database as unknown as Parameters<
+			typeof createAstropressSqliteAdminRuntime
+		>[0]["getDatabase"] extends () => infer R
+			? R
+			: never,
 });
 
 export const sqliteAdminStore = runtime.sqliteAdminStore;

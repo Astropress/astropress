@@ -2,11 +2,15 @@
 import AdminLayout from "@astropress-diy/astropress/components/AdminLayout.astro";
 import AuditTrail from "@astropress-diy/astropress/components/AuditTrail.astro";
 import CsrfInput from "@astropress-diy/astropress/components/CsrfInput.astro";
-import { buildPostRevisionsPageModel, resolveAdminLocale } from "astropress";
+import { buildPostRevisionsPageModel, requiresAccess, resolveAdminLocale } from "astropress";
 
 export const prerender = false;
 
+// #107: revisions can expose draft/historical content, so gate on posts:edit.
+const guard = await requiresAccess(Astro, "posts:edit");
+if (guard) return guard;
 const adminUser = Astro.locals.adminUser;
+if (!adminUser) return Astro.redirect("/ap-admin/login");
 const adminLocale = resolveAdminLocale(Astro);
 const slug = Astro.params.slug ?? "";
 const model = await buildPostRevisionsPageModel(Astro.locals, slug);

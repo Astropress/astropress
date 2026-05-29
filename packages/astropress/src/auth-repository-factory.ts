@@ -70,7 +70,7 @@ export function createAstropressAuthRepository(
 			input.revokeSessionById(sessionToken);
 		},
 		createPasswordResetToken(email, actor) {
-			return issuePasswordResetToken(email, actor, input);
+			return issuePasswordResetToken(email, actor ?? undefined, input);
 		},
 		getInviteRequest(rawToken) {
 			const row = resolveUsableInviteToken(rawToken, input);

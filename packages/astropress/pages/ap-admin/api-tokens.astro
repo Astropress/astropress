@@ -1,7 +1,10 @@
 ---
 import AdminLayout from "@astropress-diy/astropress/components/AdminLayout.astro";
 import CsrfInput from "@astropress-diy/astropress/components/CsrfInput.astro";
-import { loadLocalAdminStore } from "@astropress-diy/astropress/local-runtime-modules.js";
+import {
+	resolveApiRuntime,
+	resolveFlashStore,
+} from "@astropress-diy/astropress/admin-store-dispatch.js";
 import { getPageT, requiresAccess, resolveAdminLocale } from "astropress";
 
 const guard = await requiresAccess(Astro, "apiTokens:create");
@@ -10,12 +13,16 @@ const adminUser = Astro.locals.adminUser;
 if (!adminUser) return Astro.redirect("/ap-admin/login");
 const t = getPageT(resolveAdminLocale(Astro));
 
-const store = await loadLocalAdminStore();
-const tokens = store.apiTokens ? await store.apiTokens.list() : [];
+const { apiTokens } = await resolveApiRuntime(Astro.locals);
+const tokens = apiTokens ? await apiTokens.list() : [];
 
 const wasCreated = Astro.url.searchParams.get("created") === "1";
 const wasRevoked = Astro.url.searchParams.get("revoked") === "1";
-const createdRawToken = wasCreated ? Astro.url.searchParams.get("rawToken") : null;
+// The raw token is delivered via the one-time flash store, never the URL
+// (#113). Consume it here exactly once; a refresh shows nothing.
+const flashId = Astro.url.searchParams.get("flash");
+const flash = flashId ? await resolveFlashStore(Astro.locals) : null;
+const createdRawToken = wasCreated && flash && flashId ? await flash.consume(flashId) : null;
 const errorMessage =
 	Astro.url.searchParams.get("error") === "1" ? Astro.url.searchParams.get("message") : null;
 

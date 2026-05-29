@@ -6,6 +6,7 @@ import {
 	createRuntimeContentRecord,
 	restoreRuntimeRevision,
 	saveRuntimeContentState,
+	scheduleRuntimePublish,
 } from "../src/runtime-actions-content";
 import { makeDb, STANDARD_ACTOR, STANDARD_CMS_CONFIG } from "./helpers/make-db.js";
 import { makeLocals } from "./helpers/make-locals.js";
@@ -1083,5 +1084,18 @@ describe("createRuntimeContentRecord — error strings, audit, fallbacks", () =>
 			.prepare("SELECT source_html_path FROM content_entries WHERE slug = 'source-path'")
 			.get() as { source_html_path: string };
 		expect(row.source_html_path).toBe("runtime://content/source-path");
+	});
+});
+
+describe("scheduleRuntimePublish", () => {
+	it("schedules a publish via the D1 path, stamping scheduled_at and reverting to draft", async () => {
+		const when = "2027-03-04T09:00:00.000Z";
+		const result = await scheduleRuntimePublish("hello-world", when, locals);
+		expect(result).toEqual({ ok: true });
+		const row = db
+			.prepare("SELECT scheduled_at, status FROM content_overrides WHERE slug = 'hello-world'")
+			.get() as { scheduled_at: string; status: string };
+		expect(row.scheduled_at).toBe(when);
+		expect(row.status).toBe("draft");
 	});
 });

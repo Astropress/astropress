@@ -61,11 +61,13 @@ function parseNavItems(source: string): ParsedNavItem[] {
 	const block = source.slice(opener + 1, end);
 
 	// Single ordered scan over the navItems array body — preserves source
-	// order across the three supported entry forms:
+	// order across the supported entry forms:
 	//   { href: "...", label: ..., ... }   — literal object entries
 	//   leaf("/href", labelExpr, { ... })  — leaf() helper
+	//   mappedLeaf("/href", labelExpr)     — leaf() w/ action from NAV_ACTION_MAP
 	//   groupSep(labelExpr)                — group separator
-	const combinedRe = /\{\s*href:\s*"([^"]*)"[^}]*\}|\bleaf\(\s*"([^"]+)"\s*,|\bgroupSep\(/g;
+	const combinedRe =
+		/\{\s*href:\s*"([^"]*)"[^}]*\}|\b(?:mapped)?[lL]eaf\(\s*"([^"]+)"\s*,?|\bgroupSep\(/g;
 	const items: ParsedNavItem[] = [];
 	for (const match of block.matchAll(combinedRe)) {
 		const body = match[0];
@@ -76,7 +78,7 @@ function parseNavItems(source: string): ParsedNavItem[] {
 				indent: false,
 				isGroupLabel: true,
 			});
-		} else if (body.startsWith("leaf(")) {
+		} else if (/^(?:mapped)?[lL]eaf\(/.test(body)) {
 			items.push({
 				href: match[2] ?? "",
 				label: "(dynamic)",

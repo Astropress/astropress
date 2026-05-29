@@ -21,8 +21,11 @@
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
+// The sqlite SQL-string constants live in the data-only sibling (extracted so
+// Stryker doesn't score their unkillable literal mutants); the D1 side keeps
+// them inline.
 const SQLITE_PATH = fileURLToPath(
-	new URL("../../packages/astropress/src/sqlite-runtime/integrations.ts", import.meta.url),
+	new URL("../../packages/astropress/src/sqlite-runtime/integrations-data.ts", import.meta.url),
 );
 const D1_PATH = fileURLToPath(
 	new URL("../../packages/astropress/src/sqlite-runtime/integrations-d1.ts", import.meta.url),

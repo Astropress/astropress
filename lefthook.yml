@@ -110,6 +110,38 @@ pre-commit:
       glob: "packages/astropress/src/**/*.ts"
       run: bun run audit:crypto
 
+    audit-js-ts-shadow:
+      glob: "packages/astropress/pages/**/*.{js,ts,astro}"
+      run: bun run audit:js-ts-shadow
+
+    audit-dev-secret-fail-closed:
+      glob: "packages/astropress/src/**/*.ts"
+      run: bun run audit:dev-secret-fail-closed
+
+    audit-runtime-dispatch-parity:
+      glob: "packages/astropress/pages/**/*.{ts,astro}"
+      run: bun run audit:runtime-dispatch-parity
+
+    audit-security-header-envelope:
+      glob: "packages/astropress/{src/api-middleware.ts,pages/**/*.ts}"
+      run: bun run audit:security-header-envelope
+
+    audit-api-inventory-parity:
+      glob: "packages/astropress/{src/api-routes-data.ts,pages/ap-api/**/*.ts}"
+      run: bun run audit:api-inventory-parity
+
+    audit-secret-in-url:
+      glob: "packages/astropress/pages/ap-admin/**/*.{ts,astro}"
+      run: bun run audit:secret-in-url
+
+    audit-forbidden-render-safety:
+      glob: "packages/astropress/pages/ap-admin/**/*.astro"
+      run: bun run audit:forbidden-render-safety
+
+    audit-abac-enforcement-parity:
+      glob: "packages/astropress/pages/ap-admin/**/*.{ts,astro}"
+      run: bun run audit:abac-enforcement-parity
+
     audit-web-components:
       glob: ["packages/astropress/web-components/**/*.ts", "packages/astropress/index.ts"]
       run: bun run audit:web-components

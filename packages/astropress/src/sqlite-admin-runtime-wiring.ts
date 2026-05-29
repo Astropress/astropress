@@ -62,6 +62,7 @@ export interface SqliteAdminStoreWiringDeps {
 	sqliteMediaRepository: AdminStoreModules["media"];
 	sqliteApiTokenStore: NonNullable<AdminStoreModules["apiTokens"]>;
 	sqliteWebhookStore: NonNullable<AdminStoreModules["webhooks"]>;
+	sqliteFlashStore: NonNullable<AdminStoreModules["flash"]>;
 	sqliteIntegrationsRepository: NonNullable<AdminStoreModules["integrations"]>;
 }
 
@@ -84,6 +85,7 @@ export function buildSqliteAdminStoreModules(deps: SqliteAdminStoreWiringDeps): 
 		sqliteMediaRepository,
 		sqliteApiTokenStore,
 		sqliteWebhookStore,
+		sqliteFlashStore,
 		sqliteIntegrationsRepository,
 	} = deps;
 	return {
@@ -177,6 +179,7 @@ export function buildSqliteAdminStoreModules(deps: SqliteAdminStoreWiringDeps): 
 		},
 		apiTokens: sqliteApiTokenStore,
 		webhooks: sqliteWebhookStore,
+		flash: sqliteFlashStore,
 		integrations: sqliteIntegrationsRepository,
 	};
 }

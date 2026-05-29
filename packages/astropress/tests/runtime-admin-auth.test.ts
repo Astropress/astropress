@@ -57,6 +57,30 @@ describe("runtime admin auth secret rotation", () => {
 		db.close();
 	});
 
+	it("derives isAdmin=false for a non-admin (editor) D1 session", async () => {
+		vi.stubEnv("SESSION_SECRET", "current-session-secret");
+		const { db, locals } = makeLocals();
+		// is_admin = 0 → the session query maps role to 'editor'.
+		db.prepare(
+			"INSERT INTO admin_users (email, password_hash, name, active, is_admin) VALUES (?1, ?2, ?3, 1, 0)",
+		).run("editor@example.com", await hashPassword("pw"), "Editor User");
+
+		const token = await createRuntimeSession(
+			{ email: "editor@example.com", role: "editor", name: "Editor User" },
+			undefined,
+			locals,
+		);
+
+		// Force-true on `row.role === "admin"` would mark an editor as admin —
+		// pin it so the derivation can't be mutated to a privilege escalation.
+		await expect(getRuntimeSessionUser(token, locals)).resolves.toMatchObject({
+			email: "editor@example.com",
+			role: "editor",
+			isAdmin: false,
+		});
+		db.close();
+	});
+
 	it("accepts and revokes sessions signed with SESSION_SECRET_PREV during rotation", async () => {
 		vi.stubEnv("SESSION_SECRET", "current-session-secret");
 		vi.stubEnv("SESSION_SECRET_PREV", "previous-session-secret");
@@ -78,6 +102,9 @@ describe("runtime admin auth secret rotation", () => {
 		await expect(getRuntimeSessionUser(legacySessionToken, locals)).resolves.toMatchObject({
 			email: "admin@example.com",
 			role: "admin",
+			// Derived from role === "admin" (which the session query maps from
+			// admin_users.is_admin); assert it to pin the derivation under mutation.
+			isAdmin: true,
 		});
 
 		await revokeRuntimeSession(legacySessionToken, locals);

@@ -427,6 +427,18 @@ CREATE TABLE IF NOT EXISTS rate_limits (
   window_ms INTEGER NOT NULL
 );
 
+-- One-time flash store: secret payloads (raw API tokens, webhook keys,
+-- reset/invite links) handed off across a POST->redirect->GET round trip via
+-- an opaque id, never the URL. Single-read-then-delete; self-expires.
+CREATE TABLE IF NOT EXISTS admin_flash (
+  id TEXT PRIMARY KEY,
+  payload TEXT NOT NULL,
+  created_at_ms INTEGER NOT NULL,
+  expires_at_ms INTEGER NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_admin_flash_expires_at_ms ON admin_flash(expires_at_ms);
+
 -- API access tokens (hashed at rest; raw token shown once on creation)
 CREATE TABLE IF NOT EXISTS api_tokens (
   id TEXT PRIMARY KEY,
@@ -493,6 +505,10 @@ CREATE TABLE IF NOT EXISTS connected_integrations (
   connected_at  TEXT NOT NULL,
   last_check_at TEXT,
   last_error    TEXT,
+  -- Explicit per-domain active selection (#127). At most one provider per
+  -- domain carries is_active=1; the runtime read path resolves the active row
+  -- rather than guessing the first connected provider when several exist.
+  is_active     INTEGER NOT NULL DEFAULT 0,
   PRIMARY KEY (domain, provider)
 );
 

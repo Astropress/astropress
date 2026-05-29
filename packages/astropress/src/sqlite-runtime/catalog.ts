@@ -2,13 +2,8 @@ import { createAstropressAuthorRepository } from "../author-repository-factory";
 import type { Actor } from "../persistence-types";
 import { createAstropressTaxonomyRepository } from "../taxonomy-repository-factory";
 import { recordAudit } from "./audit-log";
+import { SQL_DELETE_AUTHOR, SQL_INSERT_AUTHOR, SQL_UPDATE_AUTHOR } from "./catalog-data.js";
 import { type AstropressSqliteDatabaseLike, slugifyTerm } from "./utils";
-
-const SQL_INSERT_AUTHOR = "INSERT INTO authors (slug, name, bio) VALUES (?, ?, ?)";
-const SQL_UPDATE_AUTHOR =
-	"UPDATE authors SET slug = ?, name = ?, bio = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND deleted_at IS NULL";
-const SQL_DELETE_AUTHOR =
-	"UPDATE authors SET deleted_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND deleted_at IS NULL";
 
 export function createSqliteCatalogStore(getDb: () => AstropressSqliteDatabaseLike) {
 	function listAuthors() {

@@ -3,7 +3,9 @@ export async function safeAdminValue<TLoad extends () => Promise<unknown>>(
 	fallback: Awaited<ReturnType<TLoad>>,
 ): Promise<Awaited<ReturnType<TLoad>>> {
 	try {
-		return await load();
+		// TLoad's return type isn't reducible inside the generic body, so the
+		// awaited value widens to unknown; the call site guarantees the shape.
+		return (await load()) as Awaited<ReturnType<TLoad>>;
 	} catch {
 		return fallback;
 	}
@@ -19,7 +21,7 @@ export async function safeAdminData<TLoaders extends Record<string, () => Promis
 
 	for (const key of Object.keys(loaders) as Array<keyof TLoaders>) {
 		try {
-			result[key] = await loaders[key]();
+			result[key] = (await loaders[key]()) as (typeof result)[typeof key];
 		} catch {
 			result[key] = fallbacks[key];
 		}

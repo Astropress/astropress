@@ -4,43 +4,33 @@ import {
 	listRuntimeContentStates,
 	searchRuntimeContentStates,
 } from "@astropress-diy/astropress";
+import { resolveApiRuntime } from "@astropress-diy/astropress/admin-store-dispatch.js";
 import {
 	apiErrors,
+	type JsonValue,
 	jsonOk,
 	jsonOkPaginated,
 	withApiRequest,
 } from "@astropress-diy/astropress/api-middleware.js";
-import { loadLocalAdminStore } from "@astropress-diy/astropress/local-runtime-modules.js";
 import type { APIRoute } from "astro";
-
-type LocalAdminStore = Awaited<ReturnType<typeof loadLocalAdminStore>>;
-type ApiTokens = NonNullable<LocalAdminStore["apiTokens"]>;
-
-function buildApiCtx(
-	apiTokens: ApiTokens,
-	store: LocalAdminStore,
-	config: ReturnType<typeof getCmsConfig>,
-) {
-	return {
-		apiTokens,
-		checkRateLimit: store.checkRateLimit,
-		rateLimit: config.api?.rateLimit,
-	};
-}
 
 export const GET: APIRoute = async (context) => {
 	if (!getCmsConfig().api?.enabled) {
 		return apiErrors.notFound("REST API is not enabled.");
 	}
 
-	const store = await loadLocalAdminStore();
-	if (!store.apiTokens) {
+	const runtime = await resolveApiRuntime(context.locals);
+	if (!runtime.apiTokens) {
 		return apiErrors.notFound("API token store unavailable.");
 	}
 
 	return withApiRequest(
 		context.request,
-		buildApiCtx(store.apiTokens, store, getCmsConfig()),
+		{
+			apiTokens: runtime.apiTokens,
+			checkRateLimit: runtime.checkRateLimit,
+			rateLimit: getCmsConfig().api?.rateLimit,
+		},
 		["content:read"],
 		async () => {
 			const url = new URL(context.request.url);
@@ -110,7 +100,7 @@ export const GET: APIRoute = async (context) => {
 					page,
 					nextCursor,
 					_links,
-				},
+				} as unknown as JsonValue,
 				filtered.length,
 			);
 		},
@@ -122,14 +112,18 @@ export const POST: APIRoute = async (context) => {
 		return apiErrors.notFound("REST API is not enabled.");
 	}
 
-	const store = await loadLocalAdminStore();
-	if (!store.apiTokens) {
+	const runtime = await resolveApiRuntime(context.locals);
+	if (!runtime.apiTokens) {
 		return apiErrors.notFound("API token store unavailable.");
 	}
 
 	return withApiRequest(
 		context.request,
-		buildApiCtx(store.apiTokens, store, getCmsConfig()),
+		{
+			apiTokens: runtime.apiTokens,
+			checkRateLimit: runtime.checkRateLimit,
+			rateLimit: getCmsConfig().api?.rateLimit,
+		},
 		["content:write"],
 		async (tokenId) => {
 			let body: Record<string, unknown>;
@@ -141,7 +135,6 @@ export const POST: APIRoute = async (context) => {
 
 			const slug = String(body.slug ?? "").trim();
 			const title = String(body.title ?? "").trim();
-			const kind = String(body.kind ?? "post");
 
 			if (!slug) return apiErrors.validationError("slug is required.");
 			if (!title) return apiErrors.validationError("title is required.");
@@ -151,20 +144,29 @@ export const POST: APIRoute = async (context) => {
 				role: "editor" as const,
 				name: "API Token",
 			};
-			const result = await createRuntimeContentRecord(
-				{ kind, slug, title, body: String(body.body ?? "") },
+			// createRuntimeContentRecord requires status/seoTitle/metaDescription
+			// (no `kind` — that field was previously passed and silently dropped).
+			const result = (await createRuntimeContentRecord(
+				{
+					slug,
+					title,
+					status: String(body.status ?? "draft"),
+					seoTitle: String(body.seoTitle ?? title),
+					metaDescription: String(body.metaDescription ?? ""),
+					body: String(body.body ?? ""),
+				},
 				actor,
 				context.locals,
-			);
+			)) as { ok: false; error: string } | { ok: true; state: Record<string, unknown> | null };
 			if (!result.ok) {
 				return apiErrors.validationError(result.error);
 			}
 
-			if (store.webhooks && result.state?.status === "published") {
-				await store.webhooks.dispatch("content.published", { slug, title });
+			if (runtime.webhooks && result.state?.status === "published") {
+				await runtime.webhooks.dispatch("content.published", { slug, title });
 			}
 
-			return jsonOk(result.state, 201);
+			return jsonOk(result.state as unknown as JsonValue, 201);
 		},
 	);
 };

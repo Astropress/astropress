@@ -4,12 +4,17 @@ import {
 	hashPasswordArgon2id,
 	verifyArgon2idPassword,
 } from "../crypto-primitives";
+import { resolveTokenHashSecret } from "../runtime-prod";
 
 type ContentStatus = "draft" | "review" | "published" | "archived";
 
 interface SqliteStatementLike {
+	// node:sqlite / bun:sqlite return `changes` as a plain number for our queries
+	// (bigint mode is never enabled), so a required number keeps `.changes > 0`
+	// type-safe without a `Number(... ?? 0)` wrapper whose extra arms are
+	// unkillable mutation noise.
 	// audit-boundary: opaque-passthrough -- mirrors driver bind-arg shape
-	run(...params: unknown[]): { changes?: number | bigint };
+	run(...params: unknown[]): { changes: number };
 	// audit-boundary: opaque-passthrough -- mirrors driver row shape; callers narrow at use
 	get(...params: unknown[]): unknown;
 	// audit-boundary: opaque-passthrough -- mirrors driver row shape; callers narrow at use
@@ -134,8 +139,18 @@ export function getSeedPageRecords(): PageRecord[] {
 	}
 }
 
-export function hashOpaqueToken(token: string, secret = "astropress-dev-root-secret") {
-	return createKmacDigest(token, secret, "sqlite-opaque-token");
+/**
+ * Hash an opaque token (session / invite / reset / API token) for storage.
+ *
+ * When `secret` is omitted/undefined (the historical default callers in
+ * runtime-actions-users, runtime-actions-password-reset, and the sqlite
+ * api-token store), `resolveTokenHashSecret()` supplies the dev fallback in
+ * non-production and **throws** in production — keeping the dev ergonomics
+ * while failing closed when a real production secret hasn't been wired
+ * through. See #132.
+ */
+export function hashOpaqueToken(token: string, secret?: string | null) {
+	return createKmacDigest(token, resolveTokenHashSecret(secret), "sqlite-opaque-token");
 }
 
 export function hashPasswordSync(password: string, iterations = 2) {

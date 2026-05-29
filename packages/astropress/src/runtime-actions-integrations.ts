@@ -40,6 +40,11 @@ export type RuntimeIntegrationActionResult =
 			readonly ok: false;
 			readonly status: "error";
 			readonly code: "INTEGRATION_PROVIDER_NOT_FOUND";
+	  }
+	| {
+			readonly ok: false;
+			readonly status: "error";
+			readonly code: "ROOT_SECRET_UNCONFIGURED";
 	  };
 
 export interface ConnectIntegrationActionInput<
@@ -63,7 +68,19 @@ export async function connectIntegrationAction<TFields extends Record<string, st
 			code: "INTEGRATION_PROVIDER_NOT_FOUND",
 		};
 	}
-	const rootSecret = getAstropressRootSecret(locals);
+	// #126: fail closed when no real root secret is configured. getAstropressRootSecret
+	// throws in production rather than sealing provider credentials under the public
+	// dev fallback; surface it as an explicit typed error before any persistence.
+	let rootSecret: string;
+	try {
+		rootSecret = getAstropressRootSecret(locals);
+	} catch {
+		return {
+			ok: false,
+			status: "error",
+			code: "ROOT_SECRET_UNCONFIGURED",
+		};
+	}
 	const now = new Date().toISOString();
 	return withLocalStoreFallback<RuntimeIntegrationActionResult>(
 		locals,
@@ -128,6 +145,32 @@ export async function reverifyIntegrationAction<TFields extends Record<string, s
 				};
 			}
 			return reverifyIntegration(repo, provider, fields, now);
+		},
+	);
+}
+
+export async function setActiveIntegrationProviderAction(
+	locals: App.Locals | null | undefined,
+	domain: IntegrationDomain,
+	providerId: string,
+): Promise<
+	{ ok: true } | { ok: false; code: "INTEGRATIONS_NOT_AVAILABLE" | "INTEGRATION_NOT_CONNECTED" }
+> {
+	const now = new Date().toISOString();
+	return withLocalStoreFallback<
+		{ ok: true } | { ok: false; code: "INTEGRATIONS_NOT_AVAILABLE" | "INTEGRATION_NOT_CONNECTED" }
+	>(
+		locals,
+		async (db) => {
+			const repo = createD1IntegrationsRepository({ getDb: () => db, now });
+			const ok = await repo.setActiveProvider(domain, providerId);
+			return ok ? { ok: true } : { ok: false, code: "INTEGRATION_NOT_CONNECTED" };
+		},
+		async (store) => {
+			const repo = store.integrations;
+			if (!repo) return { ok: false, code: "INTEGRATIONS_NOT_AVAILABLE" };
+			const ok = repo.setActiveProvider(domain, providerId);
+			return ok ? { ok: true } : { ok: false, code: "INTEGRATION_NOT_CONNECTED" };
 		},
 	);
 }

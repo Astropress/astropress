@@ -291,6 +291,9 @@ const pageTitle = meta ? `Import from ${meta.label}` : "Import";
         const statusDiv = document.getElementById("import-status")!;
         const applyLocal = (document.getElementById("opt-apply-local") as HTMLInputElement)?.checked ?? true;
         const activeTab = document.querySelector<HTMLButtonElement>(".tab-btn--active")?.id;
+        // Derive the import source from the URL (frontmatter vars aren't in
+        // scope in the bundled client script; mirror updateCliCommand()).
+        const source = document.location.pathname.split("/").pop() ?? "";
 
         runBtn.disabled = true;
         runBtn.textContent = "Running…";

@@ -30,6 +30,19 @@ export function notFound<T>(data: T, warnings: string[] = []): AdminPageResult<T
 }
 
 /**
+ * Render-safe admin display name for forbidden-path templates (#105/#108/#138/
+ * #139). A forbidden page sets `Astro.response.status = 403` but still renders
+ * the AdminLayout shell; on an anonymous request `Astro.locals.adminUser` is
+ * `undefined`, so `adminUser.name` throws and the 403 becomes a 500. Collapsing
+ * a missing user to an empty string lets the forbidden shell render cleanly.
+ * `audit-forbidden-render-safety` forbids raw `adminUser.name` in any page that
+ * can render while forbidden, so this helper is the single safe accessor.
+ */
+export function safeAdminUserName(user: (AuthUser & { name?: string }) | null | undefined): string {
+	return user?.name ?? "";
+}
+
+/**
  * Admin-only break-glass page guard. Returns `forbidden(empty)` when the
  * subject is not an admin (per `isAuthUserAdmin`); otherwise builds the
  * page model. Use this for pages whose entire surface is admin-only —

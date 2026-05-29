@@ -470,3 +470,54 @@ describe("createD1IntegrationsRepository — secret surface", () => {
 		expect(previous).toEqual([{ domain: "analytics", provider: "plausible" }]);
 	});
 });
+
+describe("createD1IntegrationsRepository — explicit active-provider selection (#127)", () => {
+	async function connect(domain: string, provider: string) {
+		await repo.connect(
+			{ domain, provider, configJson: "{}", secretFields: { apiKey: `${provider}-key` }, now: NOW },
+			ROOT,
+		);
+	}
+	const activeOf = async (domain: string) =>
+		(await repo.listStatuses())
+			.filter((s) => s.domain === domain && s.isActive)
+			.map((s) => s.provider);
+
+	it("marks the first connected provider in a domain active automatically", async () => {
+		await connect("newsletter", "listmonk");
+		expect(await activeOf("newsletter")).toEqual(["listmonk"]);
+		// isActive maps from is_active === 1, not the row's mere presence.
+		const status = await repo.findStatus("newsletter", "listmonk");
+		expect(status?.isActive).toBe(true);
+	});
+
+	it("does NOT steal the active selection when a second provider connects", async () => {
+		await connect("newsletter", "listmonk");
+		await connect("newsletter", "mailchimp");
+		// First stays active; the late arrival is connected-but-inactive.
+		expect(await activeOf("newsletter")).toEqual(["listmonk"]);
+		expect((await repo.findStatus("newsletter", "mailchimp"))?.isActive).toBe(false);
+	});
+
+	it("setActiveProvider switches the active row and returns true", async () => {
+		await connect("newsletter", "listmonk");
+		await connect("newsletter", "mailchimp");
+		expect(await repo.setActiveProvider("newsletter", "mailchimp")).toBe(true);
+		expect(await activeOf("newsletter")).toEqual(["mailchimp"]);
+	});
+
+	it("setActiveProvider returns false for a provider that is not connected (no row activated)", async () => {
+		await connect("newsletter", "listmonk");
+		// Refuses the switch (the target isn't connected, so MARK_ACTIVE changes
+		// no rows → false). It never activates the bogus provider.
+		expect(await repo.setActiveProvider("newsletter", "ghost")).toBe(false);
+		expect(await activeOf("newsletter")).not.toContain("ghost");
+	});
+
+	it("scopes active selection per domain — a second domain's first provider is independently active", async () => {
+		await connect("newsletter", "listmonk");
+		await connect("analytics", "plausible");
+		expect(await activeOf("newsletter")).toEqual(["listmonk"]);
+		expect(await activeOf("analytics")).toEqual(["plausible"]);
+	});
+});

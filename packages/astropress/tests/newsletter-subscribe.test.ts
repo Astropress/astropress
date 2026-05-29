@@ -14,6 +14,19 @@ vi.mock("../src/d1-audit.js", () => ({
 	recordD1Audit: mockRecordAudit,
 }));
 
+// #136: rate limit + Turnstile. Default to permissive so the existing happy-path
+// tests are unaffected; individual tests override to assert throttle/challenge.
+const { mockCheckRateLimit, mockVerifyTurnstile } = vi.hoisted(() => ({
+	mockCheckRateLimit: vi.fn().mockResolvedValue(true),
+	mockVerifyTurnstile: vi.fn().mockResolvedValue({ ok: true }),
+}));
+vi.mock("../src/runtime-mutation-store.js", () => ({
+	checkRuntimeRateLimit: mockCheckRateLimit,
+}));
+vi.mock("../src/turnstile.js", () => ({
+	verifyTurnstileToken: mockVerifyTurnstile,
+}));
+
 import { POST } from "../pages/ap/newsletter/subscribe.js";
 import { newsletterAdapter } from "../src/newsletter-adapter.js";
 
@@ -43,6 +56,8 @@ describe("POST /ap/newsletter/subscribe", () => {
 		vi.clearAllMocks();
 		mockSubscribe.mockResolvedValue({ ok: true });
 		mockRecordAudit.mockResolvedValue(undefined);
+		mockCheckRateLimit.mockResolvedValue(true);
+		mockVerifyTurnstile.mockResolvedValue({ ok: true });
 	});
 
 	it("returns 200 ok for a valid JSON email", async () => {
@@ -189,5 +204,57 @@ describe("POST /ap/newsletter/subscribe", () => {
 		} as Parameters<typeof POST>[0]);
 		expect(res.status).toBe(422);
 		expect(mockRecordAudit).not.toHaveBeenCalled();
+	});
+
+	// ── #136: rate limit + Turnstile ────────────────────────────────────────
+	it("happy path: passes both rate-limit windows and a satisfied Turnstile challenge", async () => {
+		const res = await POST({
+			request: jsonRequest({ email: "user@example.com", "cf-turnstile-response": "tok" }),
+			locals: MOCK_LOCALS,
+		} as Parameters<typeof POST>[0]);
+		expect(res.status).toBe(200);
+		// Both the per-IP and per-email windows are checked.
+		expect(mockCheckRateLimit).toHaveBeenCalledTimes(2);
+		const keys = mockCheckRateLimit.mock.calls.map((c) => c[0] as string);
+		expect(keys.some((k) => k.startsWith("newsletter:ip:"))).toBe(true);
+		expect(keys.some((k) => k.startsWith("newsletter:email:"))).toBe(true);
+		expect(mockVerifyTurnstile).toHaveBeenCalledOnce();
+		expect(mockSubscribe).toHaveBeenCalled();
+	});
+
+	it("throttled: returns 429 and never calls the adapter when a rate-limit window trips", async () => {
+		// Per-email window trips (second checkRateLimit call resolves false).
+		mockCheckRateLimit.mockResolvedValueOnce(true).mockResolvedValueOnce(false);
+		const res = await POST({
+			request: jsonRequest({ email: "user@example.com" }),
+			locals: MOCK_LOCALS,
+		} as Parameters<typeof POST>[0]);
+		expect(res.status).toBe(429);
+		expect(mockSubscribe).not.toHaveBeenCalled();
+		expect(mockVerifyTurnstile).not.toHaveBeenCalled();
+	});
+
+	it("challenge-failed: returns 403 and never calls the adapter when Turnstile rejects", async () => {
+		mockVerifyTurnstile.mockResolvedValueOnce({ ok: false, error: "Security challenge failed." });
+		const res = await POST({
+			request: jsonRequest({ email: "user@example.com", "cf-turnstile-response": "bad" }),
+			locals: MOCK_LOCALS,
+		} as Parameters<typeof POST>[0]);
+		expect(res.status).toBe(403);
+		const body = (await res.json()) as Record<string, unknown>;
+		expect(body).toMatchObject({ ok: false });
+		expect(mockSubscribe).not.toHaveBeenCalled();
+	});
+
+	it("forwards the submitted Turnstile token and client IP to verification", async () => {
+		const req = new Request("http://localhost/ap/newsletter/subscribe", {
+			method: "POST",
+			headers: { "Content-Type": "application/json", "CF-Connecting-IP": "203.0.113.7" },
+			body: JSON.stringify({ email: "user@example.com", "cf-turnstile-response": "the-token" }),
+		});
+		await POST({ request: req, locals: MOCK_LOCALS } as Parameters<typeof POST>[0]);
+		expect(mockVerifyTurnstile).toHaveBeenCalledWith(
+			expect.objectContaining({ token: "the-token", ipAddress: "203.0.113.7" }),
+		);
 	});
 });

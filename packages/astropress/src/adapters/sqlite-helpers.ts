@@ -3,11 +3,14 @@ import type { createAstropressSqliteAdminRuntime } from "../sqlite-admin-runtime
 import type { AstropressSqliteSeedToolkit } from "../sqlite-bootstrap";
 import { toContentStoreRecord, toRedirectRecord } from "./adapter-record-helpers.js";
 
-export const SQL_UPSERT_MEDIA =
-	"INSERT INTO media_assets (id, source_url, local_path, mime_type, file_size, alt_text, title, uploaded_at, uploaded_by, deleted_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NULL) ON CONFLICT(id) DO UPDATE SET source_url = excluded.source_url, local_path = excluded.local_path, mime_type = excluded.mime_type, file_size = excluded.file_size, alt_text = excluded.alt_text, title = excluded.title, deleted_at = NULL";
-export const SQL_INSERT_REVISION = `INSERT INTO content_revisions (id, slug, source, title, status, scheduled_at, body, seo_title, meta_description, excerpt, og_title, og_description, og_image, author_ids, category_ids, tag_ids, canonical_url_override, robots_directive, revision_note, created_at, created_by) VALUES (?, ?, 'reviewed', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
-export const SQL_LIST_TRANSLATIONS =
-	"SELECT route, state, updated_at, updated_by FROM translation_overrides ORDER BY route ASC";
+import {
+	SQL_INSERT_REVISION,
+	SQL_LIST_TRANSLATIONS,
+	SQL_UPSERT_MEDIA,
+} from "./sqlite-helpers-data.js";
+
+// Re-export so existing `from "./sqlite-helpers"` importers stay unaffected.
+export { SQL_INSERT_REVISION, SQL_LIST_TRANSLATIONS, SQL_UPSERT_MEDIA };
 
 export type SqliteAdminRuntime = ReturnType<typeof createAstropressSqliteAdminRuntime>;
 export type SqliteActor = { email: string; role: "admin"; name: string };
@@ -33,37 +36,41 @@ export function listSqliteContentRecords(
 	}
 	if (!kind || kind === "comment") {
 		records.push(
-			...runtime.sqliteAdminStore.comments.getComments().map((comment) => ({
-				id: comment.id,
-				kind: "comment" as const,
-				slug: comment.id,
-				status: comment.status === "approved" ? "published" : "draft",
-				title: comment.author,
-				body: comment.body ?? null,
-				metadata: {
-					route: comment.route,
-					email: comment.email ?? null,
-					policy: comment.policy,
-					submittedAt: comment.submittedAt ?? null,
-				},
-			})),
+			...runtime.sqliteAdminStore.comments.getComments().map(
+				(comment): ContentStoreRecord => ({
+					id: comment.id,
+					kind: "comment" as const,
+					slug: comment.id,
+					status: comment.status === "approved" ? "published" : "draft",
+					title: comment.author,
+					body: comment.body ?? null,
+					metadata: {
+						route: comment.route,
+						email: comment.email ?? null,
+						policy: comment.policy,
+						submittedAt: comment.submittedAt ?? null,
+					},
+				}),
+			),
 		);
 	}
 	if (!kind || kind === "user") {
 		records.push(
-			...runtime.sqliteAdminStore.users.listAdminUsers().map((user) => ({
-				id: String(user.id),
-				kind: "user" as const,
-				slug: user.email,
-				status: user.active ? "published" : "archived",
-				title: user.name,
-				metadata: {
-					email: user.email,
-					role: user.role,
-					createdAt: user.createdAt,
-					userStatus: user.status,
-				},
-			})),
+			...runtime.sqliteAdminStore.users.listAdminUsers().map(
+				(user): ContentStoreRecord => ({
+					id: String(user.id),
+					kind: "user" as const,
+					slug: user.email,
+					status: user.active ? "published" : "archived",
+					title: user.name,
+					metadata: {
+						email: user.email,
+						role: user.role,
+						createdAt: user.createdAt,
+						userStatus: user.status,
+					},
+				}),
+			),
 		);
 	}
 	if (!kind || kind === "settings") {
@@ -74,7 +81,7 @@ export function listSqliteContentRecords(
 			slug: "site-settings",
 			status: "published",
 			title: settings.siteTitle,
-			metadata: settings,
+			metadata: { ...settings },
 		});
 	}
 	if (!kind || kind === "translation") {
@@ -85,18 +92,20 @@ export function listSqliteContentRecords(
 			updated_by: string;
 		}>;
 		records.push(
-			...rows.map((row) => ({
-				id: row.route,
-				kind: "translation" as const,
-				slug: row.route,
-				status: row.state === "published" ? "published" : "draft",
-				title: row.route,
-				metadata: {
-					state: row.state,
-					updatedAt: row.updated_at,
-					updatedBy: row.updated_by,
-				},
-			})),
+			...rows.map(
+				(row): ContentStoreRecord => ({
+					id: row.route,
+					kind: "translation" as const,
+					slug: row.route,
+					status: row.state === "published" ? "published" : "draft",
+					title: row.route,
+					metadata: {
+						state: row.state,
+						updatedAt: row.updated_at,
+						updatedBy: row.updated_by,
+					},
+				}),
+			),
 		);
 	}
 	if (!kind || kind === "media") {
@@ -162,7 +171,9 @@ export function saveSqlitePageOrPost(
 			actor,
 		);
 		if (!result.ok) throw new Error(result.error);
-		return toContentStoreRecord(result.state);
+		const updated = runtime.sqliteAdminStore.content.getContentState(slug);
+		if (!updated) throw new Error(`Sqlite adapter failed to persist content record ${slug}.`);
+		return toContentStoreRecord(updated as Parameters<typeof toContentStoreRecord>[0]);
 	}
 	const result = runtime.sqliteAdminStore.content.createContentRecord(
 		{
@@ -181,7 +192,9 @@ export function saveSqlitePageOrPost(
 		actor,
 	);
 	if (!result.ok) throw new Error(result.error);
-	return toContentStoreRecord(result.state);
+	const created = runtime.sqliteAdminStore.content.getContentState(slug);
+	if (!created) throw new Error(`Sqlite adapter failed to persist content record ${slug}.`);
+	return toContentStoreRecord(created as Parameters<typeof toContentStoreRecord>[0]);
 }
 
 export function saveSqliteContentRecord(

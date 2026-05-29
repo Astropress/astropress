@@ -1,11 +1,14 @@
-import { withAdminFormAction } from "@astropress-diy/astropress";
-import { loadLocalAdminStore } from "@astropress-diy/astropress/local-runtime-modules.js";
+import {
+	getRuntimeContentState,
+	scheduleRuntimePublish,
+	withAdminFormAction,
+} from "@astropress-diy/astropress";
 import type { APIRoute } from "astro";
 
 export const POST: APIRoute = async (context) =>
 	withAdminFormAction(
 		context,
-		{ failurePath: "/ap-admin" },
+		{ failurePath: "/ap-admin", requireAction: "posts:publish" },
 		async ({ formData, redirect, fail }) => {
 			const slug = String(formData.get("slug") ?? "").trim();
 			if (!slug) return fail("Content slug is required.");
@@ -18,13 +21,11 @@ export const POST: APIRoute = async (context) =>
 			if (Number.isNaN(date.getTime())) return fail("Invalid date/time format.");
 			if (date <= new Date()) return fail("Scheduled date must be in the future.");
 
-			const store = await loadLocalAdminStore();
-			if (!store.schedulePublish) return fail("Content scheduling is not available.");
-
-			const existing = await store.getContentState(slug);
+			const existing = await getRuntimeContentState(slug, context.locals);
 			if (!existing) return fail("Content not found.");
 
-			store.schedulePublish(slug, date.toISOString());
+			const result = await scheduleRuntimePublish(slug, date.toISOString(), context.locals);
+			if (!result.ok) return fail(result.error);
 			return redirect(`/ap-admin/posts/${slug}?scheduled=1`);
 		},
 	);

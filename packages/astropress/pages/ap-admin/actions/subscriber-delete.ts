@@ -6,7 +6,7 @@ import type { APIRoute } from "astro";
 export const POST: APIRoute = async (context) =>
 	withAdminFormAction(
 		context,
-		{ failurePath: "/ap-admin/subscribers", requireAdmin: true },
+		{ failurePath: "/ap-admin/subscribers", requireAction: "subscribers:view" },
 		async ({ formData, locals, redirect, fail }) => {
 			const id = (formData.get("id") as string | null) ?? "";
 			if (!id) {

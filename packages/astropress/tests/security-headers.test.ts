@@ -1,6 +1,13 @@
 import { describe, expect, it } from "vitest";
 
 import {
+	apiErrors,
+	jsonOk,
+	jsonOkPaginated,
+	jsonOkWithEtag,
+	withApiRequest,
+} from "../src/api-middleware.js";
+import {
 	applyAstropressSecurityHeaders,
 	applyCacheHeaders,
 	createAstropressSecureRedirect,
@@ -9,6 +16,24 @@ import {
 	isTrustedStrictRequestOrigin,
 } from "../src/security-headers.js";
 import { resolveAstropressSecurityArea } from "../src/security-middleware.js";
+
+// The standard security envelope every admin/api JSON response must carry (#103, #119).
+const ENVELOPE_HEADERS = [
+	"content-security-policy",
+	"referrer-policy",
+	"x-content-type-options",
+	"permissions-policy",
+	"cross-origin-resource-policy",
+] as const;
+
+function expectEnvelope(res: Response) {
+	for (const header of ENVELOPE_HEADERS) {
+		expect(res.headers.get(header), `missing ${header}`).toBeTruthy();
+	}
+	expect(res.headers.get("x-content-type-options")).toBe("nosniff");
+	// api/admin areas are same-site CORP, never cross-origin readable
+	expect(res.headers.get("cross-origin-resource-policy")).toBe("same-site");
+}
 
 describe("security headers", () => {
 	it("builds a CSP that forbids inline scripts and framing by default", () => {
@@ -299,5 +324,75 @@ describe("security headers", () => {
 				new URL("https://example.com/ap-admin/actions/comment-moderate"),
 			),
 		).toBe("api");
+	});
+});
+
+describe("API middleware security envelope (#119)", () => {
+	it("jsonOk carries the envelope", () => {
+		expectEnvelope(jsonOk({ ok: true }));
+	});
+
+	it("jsonOkPaginated carries the envelope and keeps the total-count header", () => {
+		const res = jsonOkPaginated({ records: [] }, 7);
+		expectEnvelope(res);
+		expect(res.headers.get("x-total-count")).toBe("7");
+	});
+
+	it("jsonOkWithEtag carries the envelope on both the 200 and the 304 path", () => {
+		const body = { hello: "world" };
+		const full = jsonOkWithEtag(body, new Request("https://x.test/"));
+		expectEnvelope(full);
+		const etag = full.headers.get("etag");
+		expect(etag).toBeTruthy();
+
+		const notModified = jsonOkWithEtag(
+			body,
+			new Request("https://x.test/", { headers: { "If-None-Match": etag as string } }),
+		);
+		expect(notModified.status).toBe(304);
+		expectEnvelope(notModified);
+	});
+
+	it("withApiRequest auth-failure responses stay inside the envelope", async () => {
+		const res = await withApiRequest(
+			new Request("https://x.test/ap-api/v1/content"),
+			{
+				apiTokens: { verify: async () => ({ valid: false, reason: "no" }) } as never,
+				checkRateLimit: () => true,
+			},
+			["content:read"],
+			async () => jsonOk({ unreachable: true }),
+		);
+		expect(res.status).toBe(401);
+		expectEnvelope(res);
+	});
+
+	it("apiErrors shapes flow through the envelope via withApiRequest", async () => {
+		const res = await withApiRequest(
+			new Request("https://x.test/ap-api/v1/content", {
+				headers: { Authorization: "Bearer t" },
+			}),
+			{
+				apiTokens: {
+					verify: async () => ({ valid: true, record: { id: "t", scopes: [] } }),
+				} as never,
+				checkRateLimit: () => true,
+			},
+			["content:read"],
+			async () => apiErrors.notFound("nope"),
+		);
+		// token lacks the required scope → 403, still enveloped
+		expect(res.status).toBe(403);
+		expectEnvelope(res);
+	});
+});
+
+describe("admin media JSON endpoint security envelope (#103)", () => {
+	it("applies the admin envelope + private,no-store on the 401 auth-failure path", async () => {
+		const { GET } = await import("../pages/ap-admin/api/media.js");
+		const res = await GET({ locals: { adminUser: undefined } } as never);
+		expect(res.status).toBe(401);
+		expectEnvelope(res);
+		expect(res.headers.get("cache-control")).toBe("private, no-store");
 	});
 });

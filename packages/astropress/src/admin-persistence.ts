@@ -162,13 +162,15 @@ export declare function moderateComment(
 	actor: Actor,
 ): { ok: true } | { ok: false; error: string };
 
+// Async: implementations hash the author email (GDPR Art. 25) before storage,
+// which is a promise-returning digest. Callers await the result.
 export declare function submitPublicComment(input: {
 	author: string;
 	email: string;
 	body: string;
 	route: string;
 	submittedAt: string;
-}): { ok: true; comment: CommentRecord } | { ok: false; error: string };
+}): Promise<{ ok: true; comment: CommentRecord } | { ok: false; error: string }>;
 
 export declare function getApprovedCommentsForRoute(route: string): CommentRecord[];
 

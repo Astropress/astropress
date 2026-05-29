@@ -61,7 +61,7 @@ const navLabel = (ui.navigation as Record<string, string>)[entry.navKey];
       description={stub.description}
       configHint={stub.configHint}
       providers={[...stub.providers]}
-      docsHref={stub.docsHref}
+      docsHref={(stub as { docsHref?: string }).docsHref}
       locale={locale}
       variant="coming-soon"
       roadmapHref={entry.roadmapHref}
@@ -72,7 +72,7 @@ const navLabel = (ui.navigation as Record<string, string>)[entry.navKey];
       description={stub.description}
       configHint={stub.configHint}
       providers={[...stub.providers]}
-      docsHref={stub.docsHref}
+      docsHref={(stub as { docsHref?: string }).docsHref}
       locale={locale}
     />
   )}

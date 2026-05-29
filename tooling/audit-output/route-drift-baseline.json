@@ -18,6 +18,7 @@
     "actions/integration-connect.ts",
     "actions/integration-disconnect.ts",
     "actions/integration-reverify.ts",
+    "actions/integration-set-active.ts",
     "actions/mailchimp-import.ts",
     "actions/restore.ts",
     "actions/subscriber-delete.ts",

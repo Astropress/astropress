@@ -19,7 +19,7 @@ function jsonResponse(body: unknown, status = 200): Response {
 export const POST: APIRoute = async (context) => {
 	const guard = await requireAdminFormAction(context, {
 		failurePath: "/ap-admin/import",
-		requireAdmin: true,
+		requireAction: "posts:create",
 	});
 	if (!guard.ok) return guard.response;
 

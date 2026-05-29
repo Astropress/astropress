@@ -119,7 +119,19 @@ describe("getRuntimeSessionUser — local fallback", () => {
 
 		const user = await getRuntimeSessionUser("some-token", NO_DB_LOCALS);
 		expect(localStoreMock.getSessionUser).toHaveBeenCalledWith("some-token");
-		expect(user).toMatchObject({ email: "admin@example.com" });
+		// isAdmin is derived from role === "admin"; assert it so the derivation
+		// can't be mutated away (EqualityOperator / StringLiteral).
+		expect(user).toMatchObject({ email: "admin@example.com", isAdmin: true });
+	});
+
+	it("derives isAdmin=false for a non-admin (editor) local session", async () => {
+		localStoreMock.getSessionUser.mockResolvedValue({
+			email: "editor@example.com",
+			role: "editor",
+			name: "Editor",
+		});
+		const user = await getRuntimeSessionUser("some-token", NO_DB_LOCALS);
+		expect(user).toMatchObject({ email: "editor@example.com", isAdmin: false });
 	});
 
 	it("returns null when local store returns null", async () => {
