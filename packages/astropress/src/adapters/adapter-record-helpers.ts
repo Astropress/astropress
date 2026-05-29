@@ -6,9 +6,7 @@ import {
 } from "../persistence-commons";
 import type { ContentStoreRecord, RevisionRecord } from "../platform-contracts";
 
-const SQL_LIST_TRANSLATIONS =
-	"SELECT route, state, updated_at, updated_by FROM translation_overrides ORDER BY route ASC";
-const SQL_D1_INSERT_REVISION = `INSERT INTO content_revisions (id, slug, source, title, status, scheduled_at, body, seo_title, meta_description, excerpt, og_title, og_description, og_image, author_ids, category_ids, tag_ids, canonical_url_override, robots_directive, revision_note, created_at, created_by) VALUES (?, ?, 'reviewed', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+import { SQL_D1_INSERT_REVISION, SQL_LIST_TRANSLATIONS } from "./adapter-record-helpers-data.js";
 
 export const FULL_STACK_CAPABILITIES = {
 	hostedAdmin: true,
