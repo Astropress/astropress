@@ -6,11 +6,6 @@ import {
 } from "./sqlite-bootstrap.js";
 import type { SqliteDatabaseLike } from "./sqlite-bootstrap-helpers.js";
 
-// node:sqlite's DatabaseSync exposes `run().changes` as `number | bigint`, while
-// SqliteDatabaseLike narrows it to `number` (we never enable bigint mode). Bridge
-// the two at this boundary rather than widening the shared abstraction.
-const asSqliteDb = (db: DatabaseSync): SqliteDatabaseLike => db as unknown as SqliteDatabaseLike;
-
 export interface AstropressDbMigrateInput {
 	dbPath: string;
 	migrationsDir: string;
@@ -34,13 +29,13 @@ export function runAstropressDbMigrationsForCli(
 		// In dry-run mode, use an in-memory DB to simulate the migration without touching the real DB
 		const memDb = new DatabaseSync(":memory:");
 		memDb.exec(readAstropressSqliteSchemaSql());
-		const result = runAstropressMigrations(asSqliteDb(memDb), migrationsDir);
+		const result = runAstropressMigrations(memDb as unknown as SqliteDatabaseLike, migrationsDir);
 		memDb.close();
 		return { dbPath, migrationsDir, ...result, dryRun: true };
 	}
 
 	const db = new DatabaseSync(dbPath);
-	const result = runAstropressMigrations(asSqliteDb(db), migrationsDir);
+	const result = runAstropressMigrations(db as unknown as SqliteDatabaseLike, migrationsDir);
 	db.close();
 	return { dbPath, migrationsDir, ...result, dryRun: false };
 }
@@ -79,7 +74,9 @@ export function rollbackAstropressLastMigration(
 	const db = new DatabaseSync(dbPath);
 
 	try {
-		const result = rollbackAstropressLastMigrationWithOptions(asSqliteDb(db), { dryRun });
+		const result = rollbackAstropressLastMigrationWithOptions(db as unknown as SqliteDatabaseLike, {
+			dryRun,
+		});
 		return { dbPath, ...result };
 	} finally {
 		db.close();
