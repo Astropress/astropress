@@ -2808,6 +2808,13 @@
 			"column": 11,
 			"mutator": "EqualityOperator",
 			"reason": "updateCommentStatus returns `changes > 0`, but its only consumer (comment-repository-factory.moderateComment) discards the boolean — it gates on getCommentRoute() and ignores updateCommentStatus()'s result. The comparison's outcome is therefore unobservable, so the EqualityOperator mutants are equivalent."
+		},
+		{
+			"file": "src/sqlite-runtime/integrations.ts",
+			"line": 207,
+			"column": 11,
+			"mutator": "OptionalChaining",
+			"reason": "`(row?.n ?? 0) > 0` over a SELECT COUNT(*) query. COUNT always returns exactly one row, so `row` is never undefined and `row?.n` is observationally identical to `row.n` — equivalent (project-mutation-gate-fresh-run COUNT pattern)."
 		}
 	]
 }
