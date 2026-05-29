@@ -28,6 +28,7 @@ const TOOLING_DIR = fromRoot("tooling/scripts");
 
 const ENVELOPE_FILE = "packages/astropress/src/integration-secret-envelope.ts";
 const REPO_FILE = "packages/astropress/src/sqlite-runtime/integrations.ts";
+const REPO_FILE_DATA = "packages/astropress/src/sqlite-runtime/integrations-data.ts";
 const REPO_FILE_D1 = "packages/astropress/src/sqlite-runtime/integrations-d1.ts";
 const SANITIZER_FILE = "packages/astropress/src/integration-error-sanitizer.ts";
 const ROTATION_SCRIPT = "tooling/scripts/rotate-integration-secrets.ts";
@@ -35,6 +36,10 @@ const ROTATION_SCRIPT = "tooling/scripts/rotate-integration-secrets.ts";
 const ALLOWED_SECRET_COLUMN_FILES: ReadonlySet<string> = new Set([
 	ENVELOPE_FILE,
 	REPO_FILE,
+	// SQL-string consts for the sqlite secrets store now live in a data-only
+	// sibling so Stryker doesn't score their unkillable literal mutants; they
+	// still legitimately reference the secret columns.
+	REPO_FILE_DATA,
 	REPO_FILE_D1,
 	ROTATION_SCRIPT,
 	"packages/astropress/src/sqlite-schema.sql",
