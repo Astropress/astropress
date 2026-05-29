@@ -1747,7 +1747,7 @@
 		},
 		{
 			"file": "src/admin-action-utils.ts",
-			"line": 78,
+			"line": 90,
 			"column": 40,
 			"mutator": "ObjectLiteral",
 			"reason": "`getAccessContext({ locals: context.locals })` arg mutated to `{}`. getAccessContext reads `locals` from the options arg — passing `{}` makes it use undefined as locals. In tests where access is mocked (or where requireAction is not set), the mutated call still returns the same access?.can result, so the deny path produces identical responses. Genuine equivalent under the standard test fixture."
@@ -1761,7 +1761,7 @@
 		},
 		{
 			"file": "src/admin-action-utils.ts",
-			"line": 105,
+			"line": 117,
 			"column": 57,
 			"mutator": "StringLiteral",
 			"reason": "`String(formData.get(\"_csrf\") ?? \"\")` fallback string. Mutating `\"\"` to `\"Stryker was here!\"` only changes the value when the form has no _csrf field. In that case both `\"\"` and `\"Stryker was here!\"` are compared with `=== expectedToken` (which is a real CSRF token), so both fail the equality and trigger the same actionErrorRedirect. Outcome byte-identical."
@@ -2640,6 +2640,13 @@
 			"column": 2,
 			"mutator": "StringLiteral",
 			"reason": "Module-level TESTIMONIAL_COLUMNS column-list constant. A test inserting/reading a testimonial would catch a mutated column list, but the static module-const initialiser is cached across vitest worker per-test runs so the mutant survives regardless (project-static-mutants-empirical). The live queries that consume it are exercised by createSqliteSubmissionStore tests."
+		},
+		{
+			"file": "src/d1-store-operations.ts",
+			"line": 164,
+			"column": 17,
+			"mutator": "OptionalChaining",
+			"reason": "`result.meta?.changes` on a D1 .run() result. D1 always returns a meta object for a write, so `result.meta.changes` (remove ?.) is observationally identical; the ?? 0 default and the moderateTestimonial not-found path are exercised by tests."
 		}
 	]
 }
