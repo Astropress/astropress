@@ -4,8 +4,10 @@ import { defaultSeedImportTables } from "./sqlite-bootstrap-helpers-data";
 export { defaultSeedImportTables };
 
 export interface SqliteStatementLike {
+	// `changes` is a plain number for our queries (bigint mode never enabled);
+	// a required number keeps `.changes > 0` type-safe without Number(... ?? 0).
 	// audit-boundary: opaque-passthrough -- mirrors driver bind-arg shape
-	run(...params: unknown[]): { changes?: number | bigint };
+	run(...params: unknown[]): { changes: number };
 	// audit-boundary: opaque-passthrough -- mirrors driver row shape; callers narrow via generic
 	get(...params: unknown[]): unknown;
 	// audit-boundary: opaque-passthrough -- mirrors driver row shape; callers narrow via generic

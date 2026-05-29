@@ -252,7 +252,7 @@ export function createIntegrationsRepository(
 			.run(input.status, input.lastCheckAt, input.lastError ?? null, input.domain, input.provider);
 		// Defensive `?? 0`: node:sqlite run() always returns a numeric `changes`.
 		/* v8 ignore start */
-		return Number(result.changes ?? 0) > 0;
+		return result.changes > 0;
 		/* v8 ignore stop */
 	}
 
@@ -260,7 +260,7 @@ export function createIntegrationsRepository(
 		const result = getDb().prepare(SQL_DISCONNECT).run(domain, provider);
 		// Defensive `?? 0`: node:sqlite run() always returns a numeric `changes`.
 		/* v8 ignore start */
-		return Number(result.changes ?? 0) > 0;
+		return result.changes > 0;
 		/* v8 ignore stop */
 	}
 
@@ -270,7 +270,7 @@ export function createIntegrationsRepository(
 		const result = db.prepare(SQL_MARK_ACTIVE).run(domain, provider);
 		// Defensive `?? 0`: node:sqlite run() always returns a numeric `changes`.
 		/* v8 ignore start */
-		return Number(result.changes ?? 0) > 0;
+		return result.changes > 0;
 		/* v8 ignore stop */
 	}
 

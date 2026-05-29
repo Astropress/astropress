@@ -64,13 +64,13 @@ export function createSqliteCatalogStore(getDb: () => AstropressSqliteDatabaseLi
 		}) {
 			try {
 				const result = getDb().prepare(SQL_UPDATE_AUTHOR).run(slug, name, bio, id);
-				return Number(result.changes ?? 0) > 0;
+				return result.changes > 0;
 			} catch {
 				return false;
 			}
 		},
 		deleteAuthor(id: number) {
-			return Number(getDb().prepare(SQL_DELETE_AUTHOR).run(id).changes ?? 0) > 0;
+			return getDb().prepare(SQL_DELETE_AUTHOR).run(id).changes > 0;
 		},
 		recordAuthorAudit({
 			actor,
@@ -164,20 +164,18 @@ export function createSqliteCatalogStore(getDb: () => AstropressSqliteDatabaseLi
 						`UPDATE ${table} SET slug = ?, name = ?, description = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND deleted_at IS NULL`,
 					)
 					.run(slug, name, description, id);
-				return Number(result.changes ?? 0) > 0;
+				return result.changes > 0;
 			} catch {
 				return false;
 			}
 		},
 		deleteTaxonomyTerm({ table, id }: { table: "categories" | "tags"; id: number }) {
 			return (
-				Number(
-					getDb()
-						.prepare(
-							`UPDATE ${table} SET deleted_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND deleted_at IS NULL`,
-						)
-						.run(id).changes ?? 0,
-				) > 0
+				getDb()
+					.prepare(
+						`UPDATE ${table} SET deleted_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND deleted_at IS NULL`,
+					)
+					.run(id).changes > 0
 			);
 		},
 		recordTaxonomyAudit({

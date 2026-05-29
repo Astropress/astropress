@@ -9,8 +9,12 @@ import { resolveTokenHashSecret } from "../runtime-prod";
 type ContentStatus = "draft" | "review" | "published" | "archived";
 
 interface SqliteStatementLike {
+	// node:sqlite / bun:sqlite return `changes` as a plain number for our queries
+	// (bigint mode is never enabled), so a required number keeps `.changes > 0`
+	// type-safe without a `Number(... ?? 0)` wrapper whose extra arms are
+	// unkillable mutation noise.
 	// audit-boundary: opaque-passthrough -- mirrors driver bind-arg shape
-	run(...params: unknown[]): { changes?: number | bigint };
+	run(...params: unknown[]): { changes: number };
 	// audit-boundary: opaque-passthrough -- mirrors driver row shape; callers narrow at use
 	get(...params: unknown[]): unknown;
 	// audit-boundary: opaque-passthrough -- mirrors driver row shape; callers narrow at use

@@ -122,7 +122,7 @@ export function seedBootstrapUsers(
 			hashPasswordSync(user.password),
 			user.name,
 			user.role === "admin" ? 1 : 0,
-		) as { changes?: number };
+		) as { changes: number };
 		count += result.changes ?? 1;
 	}
 	return count;
@@ -157,7 +157,7 @@ export function seedMediaAssets(
 			"",
 			asset.id,
 			"seed-import",
-		) as { changes?: number };
+		) as { changes: number };
 		count += result.changes ?? 1;
 	}
 	return count;
@@ -179,7 +179,7 @@ export function seedRedirects(
 	let count = 0;
 	for (const rule of options.redirectRules) {
 		const result = insert.run(rule.sourcePath, rule.targetPath, rule.statusCode, "seed-import") as {
-			changes?: number;
+			changes: number;
 		};
 		count += result.changes ?? 1;
 	}
@@ -206,8 +206,8 @@ export function seedComments(
 			comment.status,
 			comment.policy,
 			comment.submittedAt ?? null,
-		) as { changes?: number };
-		count += result.changes ?? 0;
+		) as { changes: number };
+		count += result.changes;
 	}
 	return count;
 }
@@ -226,8 +226,8 @@ export function seedSiteSettings(
 			options.siteSettings.newsletterEnabled ? 1 : 0,
 			options.siteSettings.commentsDefaultPolicy,
 			"seed-import",
-		) as { changes?: number };
-	return result.changes ?? 0;
+		) as { changes: number };
+	return result.changes;
 }
 
 export function seedSystemRoutes(
@@ -242,7 +242,7 @@ export function seedSystemRoutes(
 	for (const route of options.systemRoutes) {
 		insertGroup.run(route.groupId, route.renderStrategy, route.path);
 		const result = insertVariant.run(...systemRouteVariantParams(route)) as {
-			changes?: number;
+			changes: number;
 		};
 		count += result.changes ?? 1;
 		insertRevision.run(
@@ -271,7 +271,7 @@ export function seedArchiveRoutes(
 		const variantId = `variant:archive:${baseId}:en`;
 		insertGroup.run(groupId, archive.legacyUrl);
 		const result = insertVariant.run(...archiveVariantParams(archive, variantId, groupId)) as {
-			changes?: number;
+			changes: number;
 		};
 		count += result.changes ?? 1;
 	}
@@ -294,7 +294,7 @@ export function seedMarketingRoutes(
 		insertGroup.run(groupId, locale, page.path);
 		const result = insertVariant.run(
 			...marketingVariantParams(page, variantId, groupId, locale),
-		) as { changes?: number };
+		) as { changes: number };
 		count += result.changes ?? 1;
 	}
 	return count;
