@@ -32,12 +32,13 @@ Importing content from Wordpress or Wix, or even subscription lists from Mailchi
 
 ### Requesting new platforms, integrations, or languages
 
-Five places to open an issue, picked by what you need:
+Six places to open an issue, picked by what you need:
 
 | You want… | Open this template |
 |-----------|--------------------|
 | A **new hosting provider** or **data service** (Cloudflare, Turso, Neon, Vercel, S3-compatible storage…) | [Adapter request](../../issues/new?template=adapter_support.md) |
 | A **new external tool** (analytics, email, A/B testing, donations, webhooks…) | [Integration request](../../issues/new?template=integration_request.md) |
+| **To migrate from a source platform** (CMS, site builder, subscriber export — Drupal, Squarespace, Ghost, Substack…) | [Import source request](../../issues/new?template=import_source_request.md) |
 | A **new admin or content language** (locale) | [Language request](../../issues/new?template=language_request.md) |
 | A **new framework capability** (not tied to a specific provider) | [Feature request](../../issues/new?template=feature_request.md) |
 | Something is **broken** | [Bug report](../../issues/new?template=bug_report.md) |

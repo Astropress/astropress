@@ -61,4 +61,24 @@ describe("destructive actions use confirm dialogs", () => {
 		expect(src).toContain("ap-confirm-dialog");
 		expect(src).toContain('id="confirm-delete-subscriber"');
 	});
+
+	// Issue #134: the subscriber-delete action runs through withAdminFormAction,
+	// which rejects requests without a CSRF token. The confirm-dialog form on the
+	// detail page is the only call site that can submit it, so verify the modal's
+	// <form> itself carries a CsrfInput — not just that the sweeping audit passes.
+	it("subscriber detail delete modal form includes a CSRF token (issue #134)", () => {
+		const src = readFileSync(path.join(adminPagesRoot, "subscribers", "[id].astro"), "utf8");
+		// Isolate the <form> that posts to subscriber-delete so the assertion can't
+		// be satisfied by an unrelated CsrfInput elsewhere on the page.
+		const formMatch = src.match(
+			/<form\b[^>]*action=["']\/ap-admin\/actions\/subscriber-delete["'][^>]*>([\s\S]*?)<\/form>/,
+		);
+		expect(
+			formMatch,
+			"expected a <form> posting to /ap-admin/actions/subscriber-delete",
+		).not.toBeNull();
+		const formBody = formMatch?.[1] ?? "";
+		expect(formBody).toMatch(/<CsrfInput\b[^/]*token=\{Astro\.locals\.csrfToken\}/);
+		expect(formBody).toContain('name="id"');
+	});
 });
