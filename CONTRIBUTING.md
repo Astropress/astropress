@@ -126,7 +126,7 @@ Run `bun run bdd:lint` to validate feature file syntax.
 
 ## Requesting and contributing providers
 
-Astropress supports three kinds of plug-in points, each with a different intake template and a different audit gate.
+Astropress supports four kinds of plug-in points, each with a different intake template and a different audit gate.
 
 ### Hosting providers and data services (adapters)
 
@@ -149,6 +149,17 @@ Workflow:
 3. If the provider uses OAuth 2.0 authorization-code, also wire it through `pages/ap-admin/oauth/callback/[provider].ts`; tokens must seal into `integration_secrets` via the existing helper.
 4. Update `docs/reference/integrations.md` with a one-paragraph entry and a link to the provider's docs.
 5. Open a PR; CI exercises the registry + secret-store gates automatically.
+
+### Import sources (migrating from another CMS, site builder, or subscriber export)
+
+These plug in under `packages/astropress/src/import/` and follow a stage-then-apply shape: a fetcher/parser writes a reviewable JSON artifact, and an apply helper merges it into the local content store. The WordPress XML, Wix CSV, and Mailchimp subscriber-list importers are the existing precedents. HTTP media fetches must go through `downloadMediaToFile()` for SSRF, content-type, and size enforcement.
+
+Workflow:
+1. File an [Import source request](.github/ISSUE_TEMPLATE/import_source_request.md) issue with the source platform, export format, and an example fixture you can share.
+2. Add `fetch-<source>.ts` and/or `<source>-xml.ts` / `<source>-csv.ts` next to the existing importers. Stage output into `*-import-staged.json` rather than mutating the store directly.
+3. Add an `<source>-apply.ts` helper that consumes the staged artifact. Use `downloadMediaToFile()` for any remote media.
+4. Add a recording fixture under `packages/astropress/tests/fixtures/` and a vitest covering the parser, the staged shape, and the apply step.
+5. Open a PR; CI exercises the importer against the fixture.
 
 ### New admin or content languages (locales)
 
