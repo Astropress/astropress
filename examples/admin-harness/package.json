@@ -8,7 +8,7 @@
 		"check": "astro check"
 	},
 	"dependencies": {
-		"astro": "6.3.8",
+		"astro": "6.4.2",
 		"@astropress-diy/astropress": "workspace:*"
 	},
 	"devDependencies": {
