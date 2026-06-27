@@ -56,4 +56,5 @@ export type {
 	Resource,
 	Subject,
 } from "./types";
+
 import "./locals";
