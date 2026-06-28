@@ -183,7 +183,7 @@ if ($SkipPlaywright) {
     info "Installing Playwright Chromium, Firefox, and WebKit browser binaries..."
     # Use the repo-local Playwright binary after bun install so browser revisions
     # match the lockfile instead of whatever npx would download that day.
-    npx --yes playwright install chromium firefox webkit
+    bun x playwright install chromium firefox webkit
     ok "Playwright Chromium, Firefox, and WebKit ready"
 }
 
@@ -254,8 +254,8 @@ if ($DepsInstalled) {
 # ─── 8. Cargo build ──────────────────────────────────────────────────────────
 section "Building Rust CLI"
 info "Running cargo build (debug)..."
-cargo build --bin astropress-cli
-$CliBin = Join-Path $RepoRoot "target\debug\astropress-cli.exe"
+cargo build --manifest-path "$RepoRoot\crates\Cargo.toml" --bin astropress-cli
+$CliBin = Join-Path $RepoRoot "crates\target\debug\astropress-cli.exe"
 if (Test-Path $CliBin) { ok "CLI built: $CliBin" }
 else { warn "CLI binary not found after build — check cargo output above." }
 
@@ -265,7 +265,7 @@ if ($SkipTests) {
     warn "Skipping tests (-SkipTests)"
 } else {
     info "Running Rust CLI tests..."
-    cargo test
+    cargo test --manifest-path "$RepoRoot\crates\Cargo.toml"
     info "Running Vitest suite..."
     bun run --filter "@astropress-diy/astropress" test
     info "Running coverage gate..."
@@ -285,10 +285,10 @@ Astropress dev environment is ready.
 
   Next steps:
     1. Scaffold a site:
-         cargo run --bin astropress-cli -- new my-site --provider sqlite
+         cargo run --manifest-path crates/Cargo.toml --bin astropress-cli -- new my-site --provider sqlite
          cd my-site
          bun install
-         ..\target\debug\astropress-cli.exe dev --project-dir .
+         ..\crates\target\debug\astropress-cli.exe dev --project-dir .
 
     2. Open the admin: http://localhost:4321/ap-admin
        Admin user:     admin / admin123   (change in .env)
