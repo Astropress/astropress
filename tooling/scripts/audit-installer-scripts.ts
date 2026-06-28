@@ -6,6 +6,8 @@
  *      would fail when there is no Cargo.toml at the repo root).
  *   2. Use `bun x playwright` instead of `npx … playwright` so the lockfile-
  *      pinned browser revision is used and npm is never invoked in a Bun repo.
+ *   3. install.sh handles MINGW/MSYS/CYGWIN uname prefixes with a redirect to
+ *      install.ps1 rather than a generic die or silent fall-through (#159).
  *
  * Also checks that package.json does not carry an `overrides.astro` value that
  * contradicts the direct `dependencies.astro` entry (npm EOVERRIDE).
@@ -93,13 +95,48 @@ async function checkPackageJsonOverrides(report: AuditReport): Promise<void> {
 	}
 }
 
+async function checkMingwRedirect(report: AuditReport): Promise<void> {
+	const shPath = fromRoot("tooling/scripts/install.sh");
+	let src: string;
+	try {
+		src = await readFile(shPath, "utf8");
+	} catch {
+		report.add(`${shPath}: file not found`);
+		return;
+	}
+
+	// install.sh must have a case arm matching MINGW*/MSYS*/CYGWIN* that
+	// redirects to install.ps1 rather than hitting the generic die or
+	// falling through to POSIX-only code that will not work on Windows.
+	const hasMingwArm =
+		/MINGW\*\|MSYS\*\|CYGWIN\*/.test(src) ||
+		/MINGW\*[^)]*\|[^)]*MSYS\*[^)]*\|[^)]*CYGWIN\*/.test(src);
+	if (!hasMingwArm) {
+		report.add(
+			`${shPath}: no MINGW*/MSYS*/CYGWIN* case arm found — ` +
+				`Git Bash users on Windows will hit the generic die with no actionable guidance (see #159)`,
+		);
+		return;
+	}
+
+	if (!src.includes("install.ps1")) {
+		report.add(
+			`${shPath}: MINGW/MSYS/CYGWIN arm does not reference install.ps1 — ` +
+				`the redirect message must tell users which script to run instead`,
+		);
+	}
+}
+
 runAudit("installer-scripts", async () => {
 	const report = new AuditReport("installer-scripts");
 
 	await Promise.all([
 		...INSTALL_SCRIPTS.map((s) => checkScript(s, report)),
 		checkPackageJsonOverrides(report),
+		checkMingwRedirect(report),
 	]);
 
-	report.finish("installer-scripts audit passed — no bare cargo calls, no npx playwright, no override conflicts");
+	report.finish(
+		"installer-scripts audit passed — no bare cargo calls, no npx playwright, no override conflicts, MINGW redirect present",
+	);
 });
