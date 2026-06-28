@@ -181,12 +181,12 @@ else
   info "Installing Playwright Chromium, Firefox, and WebKit browser binaries…"
   # Use the repo-local Playwright binary after bun install so browser revisions
   # match the lockfile instead of whatever npx would download that day.
-  npx --yes playwright install chromium firefox webkit
+  bun x playwright install chromium firefox webkit
 
   if [[ "$PLATFORM" == "linux" ]]; then
     if has apt-get; then
       info "Installing Playwright browser system dependencies via apt…"
-      npx --yes playwright install-deps chromium firefox webkit
+      bun x playwright install-deps chromium firefox webkit
     else
       warn "Playwright only auto-installs Linux browser system dependencies on apt-based distributions."
       warn "Chromium, Firefox, and WebKit binaries are installed, but WebKit may still need distro-specific libraries."
@@ -266,8 +266,12 @@ fi
 # ─── 8. Cargo build (needed for CLI tests + doctor) ──────────────────────────
 section "Building Rust CLI"
 info "Running cargo build (debug)…"
-cargo build --bin astropress-cli 2>&1 | tail -5
-ok "CLI built: target/debug/astropress-cli"
+cargo build --manifest-path "$REPO_ROOT/crates/Cargo.toml" --bin astropress-cli 2>&1 | tail -5
+if [[ -x "$REPO_ROOT/crates/target/debug/astropress-cli" ]]; then
+  ok "CLI built: crates/target/debug/astropress-cli"
+else
+  warn "CLI binary not found after build — check cargo output above."
+fi
 
 # ─── 9. Test suite ───────────────────────────────────────────────────────────
 section "Test suite"
@@ -275,7 +279,7 @@ if [[ "$SKIP_TESTS" == true ]]; then
   warn "Skipping tests (--skip-tests)"
 else
   info "Running Rust CLI tests…"
-  cargo test
+  cargo test --manifest-path "$REPO_ROOT/crates/Cargo.toml"
   info "Running Vitest suite…"
   bun run --filter "@astropress-diy/astropress" test
   info "Running coverage gate…"
@@ -289,7 +293,7 @@ fi
 
 # ─── 10. doctor ──────────────────────────────────────────────────────────────
 section "Environment check"
-CLI="$REPO_ROOT/target/debug/astropress-cli"
+CLI="$REPO_ROOT/crates/target/debug/astropress-cli"
 if [[ -x "$CLI" ]]; then
   info "Running astropress doctor (monorepo context)…"
   # Doctor runs against a scaffolded project dir; show help instead at repo root
@@ -307,9 +311,9 @@ ${GREEN}${BOLD}Astropress dev environment is ready.${RESET}
 
   Next steps:
     1. Scaffold a site:
-         cargo run --bin astropress-cli -- new my-site --provider sqlite
+         cargo run --manifest-path crates/Cargo.toml --bin astropress-cli -- new my-site --provider sqlite
          cd my-site && bun install
-         ../target/debug/astropress-cli dev --project-dir .
+         ../crates/target/debug/astropress-cli dev --project-dir .
 
     2. Open the admin: http://localhost:4321/ap-admin
        Admin user:     admin / admin123   (change in .env)

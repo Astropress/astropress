@@ -461,6 +461,7 @@ async function main(): Promise<void> {
 					args: ["run", "audit:coverage-floor", "--", "--allow-stale"],
 				},
 				{ name: "audit:deps", cmd: "bun", args: ["run", "audit:deps"] },
+				{ name: "audit:installer-scripts", cmd: "bun", args: ["run", "audit:installer-scripts"] },
 			]))
 		) {
 			process.exit(1);
