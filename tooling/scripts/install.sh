@@ -41,6 +41,18 @@ case "$OS" in
   FreeBSD) PLATFORM="freebsd" ;;
   OpenBSD) PLATFORM="openbsd" ;;
   NetBSD)  PLATFORM="netbsd"  ;;
+  MINGW*|MSYS*|CYGWIN*)
+    echo ""
+    echo "  install.sh does not support Git Bash / MINGW / MSYS on Windows."
+    echo "  Please use the PowerShell installer instead:"
+    echo ""
+    echo "    pwsh tooling/scripts/install.ps1"
+    echo ""
+    echo "  If you do not have PowerShell 7+, install it from:"
+    echo "    https://aka.ms/powershell"
+    echo ""
+    exit 1
+    ;;
   *)       die "Unsupported OS: $OS. Use the devcontainer or install manually." ;;
 esac
 info "Platform: $PLATFORM ($ARCH)"
