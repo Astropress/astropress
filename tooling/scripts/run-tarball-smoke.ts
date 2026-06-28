@@ -129,7 +129,7 @@ async function main(): Promise<void> {
 
 		// 2. Pack the tarball.
 		console.log("Packing tarball…");
-		const packOutput = await runCommand("npm", ["pack", "--json"], pkgDir);
+		const packOutput = await runCommand("npm", ["pack", "--json", "--ignore-scripts"], pkgDir);
 		const packResult = JSON.parse(packOutput.trim()) as Array<{
 			filename: string;
 		}>;
