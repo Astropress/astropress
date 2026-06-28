@@ -462,6 +462,7 @@ async function main(): Promise<void> {
 				},
 				{ name: "audit:deps", cmd: "bun", args: ["run", "audit:deps"] },
 				{ name: "audit:installer-scripts", cmd: "bun", args: ["run", "audit:installer-scripts"] },
+				{ name: "audit:workspace-prepare", cmd: "bun", args: ["run", "audit:workspace-prepare"] },
 			]))
 		) {
 			process.exit(1);
