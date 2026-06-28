@@ -3,8 +3,11 @@
 	"private": true,
 	"type": "module",
 	"scripts": {
+		"predev": "bun run --filter @astropress-diy/astropress build",
 		"dev": "astro dev",
+		"prebuild": "bun run --filter @astropress-diy/astropress build",
 		"build": "astro build",
+		"precheck": "bun run --filter @astropress-diy/astropress build",
 		"check": "astro check"
 	},
 	"dependencies": {

@@ -504,6 +504,7 @@
 		"test": "vitest run",
 		"test:coverage": "mkdir -p coverage/.tmp && vitest run --coverage",
 		"test:watch": "vitest",
+		"prepare": "bun run build",
 		"build": "tsc -p tsconfig.build.json --noCheck && bun ../../tooling/scripts/add-js-ext.ts dist && cp src/sqlite-schema.sql dist/src/sqlite-schema.sql",
 		"release": "changeset publish",
 		"version": "changeset version",
