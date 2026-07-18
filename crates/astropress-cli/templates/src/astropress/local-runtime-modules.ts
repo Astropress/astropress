@@ -1,27 +1,26 @@
-import {
-	type LocalAdminAuthModule,
-	type LocalAdminStoreModule,
-	type LocalCmsRegistryModule,
-	defineAstropressHostRuntimeModules,
+import type {
+	LocalAdminAuthModule,
+	LocalAdminStoreModule,
+	LocalCmsRegistryModule,
 } from "@astropress-diy/astropress";
+import { defineAstropressHostRuntimeModules } from "@astropress-diy/astropress/integration";
 
 export const hostRuntimeModules = defineAstropressHostRuntimeModules({
 	async loadLocalAdminStore() {
-		return (await import("./admin-store")) as unknown as LocalAdminStoreModule;
+		return (await import("./admin-store.ts")).hostRuntimeAdminStore as LocalAdminStoreModule;
 	},
 	async loadLocalAdminAuth() {
-		return (await import("./admin-auth")) as unknown as LocalAdminAuthModule;
+		return (await import("./admin-auth.ts")).hostRuntimeAdminAuth as LocalAdminAuthModule;
 	},
 	async loadLocalCmsRegistry() {
-		return (await import(
-			"./admin-persistence"
-		)) as unknown as LocalCmsRegistryModule;
+		return (await import("./admin-persistence.ts"))
+			.hostRuntimeCmsRegistry as LocalCmsRegistryModule;
 	},
 	async loadLocalMediaStorage() {
-		return import("astropress/local-media-storage");
+		return import("@astropress-diy/astropress/local-media-storage");
 	},
 	async loadLocalImageStorage() {
-		return import("astropress/local-image-storage");
+		return import("@astropress-diy/astropress/local-image-storage");
 	},
 });
 
