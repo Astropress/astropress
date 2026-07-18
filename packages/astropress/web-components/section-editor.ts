@@ -352,7 +352,7 @@ ${this.renderCtaInputs("secondaryCta", s.secondaryCta)}
 	): string {
 		return `
 <div class="admin-field">
-  <span>${escapeHtml(this.fieldLabel(field, field === "mediaIds" ? "Media ids" : "Media id"))}</span>
+  <label for="${escapeHtml(inputId)}">${escapeHtml(this.fieldLabel(field, field === "mediaIds" ? "Media ids" : "Media id"))}</label>
   <div class="ap-section-card__media-row">
     <input id="${escapeHtml(inputId)}" class="admin-input" data-field="${escapeHtml(field)}" type="text" value="${escapeHtml(value)}" />
     <ap-media-picker for="${escapeHtml(inputId)}" multiple="${multiple ? "true" : "false"}">
@@ -651,12 +651,15 @@ ${this.renderMediaIdField(`media-${s.id}`, s.mediaIds.join(", "), "mediaIds", tr
 					const localized = this.labels.template[t.key];
 					const title = localized?.title ?? t.defaultTitle;
 					const desc = localized?.description ?? t.defaultDescription;
-					// Explicit aria-label so the accessible name is the template title
-					// alone (not the title + long description concatenation), and so
-					// it's exposed even to tools that don't read nested element text.
-					return `<button type="button" class="ap-section-editor__pick" data-template="${escapeHtml(t.key)}" aria-label="${escapeHtml(title)}">
+					const descId = `ap-tpl-desc-${escapeHtml(t.key)}`;
+					// Explicit aria-label pins the accessible *name* to the title alone
+					// (not title + long description concatenation), and exposes it even to
+					// tools that don't read nested element text. aria-describedby then
+					// re-attaches the description so AT still announces it — an aria-label
+					// alone would silence the <span> it overrides.
+					return `<button type="button" class="ap-section-editor__pick" data-template="${escapeHtml(t.key)}" aria-label="${escapeHtml(title)}" aria-describedby="${descId}">
   <strong>${escapeHtml(title)}</strong>
-  <span>${escapeHtml(desc)}</span>
+  <span id="${descId}">${escapeHtml(desc)}</span>
 </button>`;
 				})
 				.join("");

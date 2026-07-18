@@ -212,10 +212,20 @@ describe("ap-section-editor", () => {
 		const input = document.querySelector<HTMLInputElement>('[data-field="headline"]');
 		expect(input?.labels?.length ?? 0).toBeGreaterThan(0);
 		expect(input?.labels?.[0]?.textContent?.trim()).toBe("Headline");
-		// Template card has an explicit accessible name (not empty, not the long desc).
+		// The media-id field is a picker row (div, not a wrapping <label>), so it
+		// relies on `for=` association — the gap the blanket "already labelled"
+		// claim missed. Assert it's actually labelled now.
+		const mediaInput = document.querySelector<HTMLInputElement>('[data-field="mediaId"]');
+		expect(mediaInput?.labels?.length ?? 0).toBeGreaterThan(0);
+		expect(mediaInput?.labels?.[0]?.textContent?.trim()).toBe("Media id");
+		// Template card has an explicit accessible name (not empty, not the long
+		// desc), and re-exposes the description via aria-describedby.
 		document.querySelector<HTMLButtonElement>("[data-section-editor-add]")?.click();
 		const tpl = document.querySelector<HTMLButtonElement>('[data-template="about"]');
 		expect(tpl?.getAttribute("aria-label")).toBe("About page");
+		const descId = tpl?.getAttribute("aria-describedby");
+		expect(descId).toBeTruthy();
+		expect(document.getElementById(descId ?? "")?.textContent).toContain("Hero, story, values");
 	});
 
 	it("restores stashed sections after a failed save (?error=1) instead of the DB copy (#190)", () => {
