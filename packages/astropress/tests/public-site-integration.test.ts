@@ -36,6 +36,7 @@ describe("createAstropressPublicSiteIntegration", () => {
 				injectedPatterns.push(route.pattern);
 			},
 			addMiddleware: vi.fn(),
+			updateConfig: vi.fn(),
 		} as never);
 
 		// Public site may inject non-admin routes (sitemap, robots, llms.txt) but never ap-admin
@@ -55,6 +56,7 @@ describe("createAstropressPublicSiteIntegration", () => {
 				injected.push({ pattern: route.pattern, entrypoint: route.entrypoint });
 			},
 			addMiddleware: vi.fn(),
+			updateConfig: vi.fn(),
 		} as never);
 
 		const sitemap = injected.find((r) => r.pattern === "/sitemap.xml");
@@ -65,6 +67,39 @@ describe("createAstropressPublicSiteIntegration", () => {
 		expect(llms?.entrypoint).toMatch(/pages\/llms\.txt\.ts$/);
 	});
 
+	function collectInjectedPatterns(
+		integration: ReturnType<typeof createAstropressPublicSiteIntegration>,
+	): string[] {
+		const patterns: string[] = [];
+		const hook = integration.hooks["astro:config:setup"];
+		if (typeof hook !== "function") throw new Error("Expected hook to be a function");
+		hook({
+			_config: {},
+			injectRoute: (route: { pattern: string }) => patterns.push(route.pattern),
+			addMiddleware: vi.fn(),
+			updateConfig: vi.fn(),
+		} as never);
+		return patterns;
+	}
+
+	it("always injects the public page renderer at /[...slug]", () => {
+		expect(collectInjectedPatterns(createAstropressPublicSiteIntegration())).toContain(
+			"/[...slug]",
+		);
+	});
+
+	it("injects only the renderer (no support routes) when includeSupportRoutes is false", () => {
+		// Used in the dev config alongside the admin integration, which already
+		// injects sitemap/robots/llms — this avoids a duplicate-route collision.
+		const patterns = collectInjectedPatterns(
+			createAstropressPublicSiteIntegration({ includeSupportRoutes: false }),
+		);
+		expect(patterns).toContain("/[...slug]");
+		expect(patterns).not.toContain("/sitemap.xml");
+		expect(patterns).not.toContain("/robots.txt");
+		expect(patterns).not.toContain("/llms.txt");
+	});
+
 	it("does not register any admin middleware when hook is called", () => {
 		const integration = createAstropressPublicSiteIntegration();
 		const addMiddleware = vi.fn();
@@ -72,7 +107,7 @@ describe("createAstropressPublicSiteIntegration", () => {
 		const hook = integration.hooks["astro:config:setup"];
 		if (typeof hook !== "function") throw new Error("Expected hook to be a function");
 
-		hook({ _config: {}, injectRoute: vi.fn(), addMiddleware } as never);
+		hook({ _config: {}, injectRoute: vi.fn(), addMiddleware, updateConfig: vi.fn() } as never);
 
 		expect(addMiddleware).not.toHaveBeenCalled();
 	});
@@ -90,6 +125,7 @@ describe("createAstropressPublicSiteIntegration", () => {
 				publicInjected.push(route.pattern);
 			},
 			addMiddleware: vi.fn(),
+			updateConfig: vi.fn(),
 		} as never);
 
 		const adminRoutes = listAstropressAdminRoutes();

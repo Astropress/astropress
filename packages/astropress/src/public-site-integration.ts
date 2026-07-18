@@ -20,6 +20,15 @@ export interface AstropressPublicSiteOptions {
 	 * this value before triggering a new static build.
 	 */
 	buildHookSecret?: string;
+	/**
+	 * Whether to inject the public support routes (`/sitemap.xml`, `/robots.txt`,
+	 * `/llms.txt`). Defaults to `true`. Set to `false` when composing this
+	 * integration alongside `createAstropressAdminAppIntegration` (e.g. the dev
+	 * server of a static-host project), which already injects those routes —
+	 * avoiding a duplicate-route collision. The public page renderer is always
+	 * injected.
+	 */
+	includeSupportRoutes?: boolean;
 }
 
 /**
@@ -40,28 +49,57 @@ export interface AstropressPublicSiteOptions {
  * ```
  */
 export function createAstropressPublicSiteIntegration(
-	_options: AstropressPublicSiteOptions = {},
+	options: AstropressPublicSiteOptions = {},
 ): AstroIntegration {
+	const includeSupportRoutes = options.includeSupportRoutes ?? true;
 	return {
 		name: "astropress-public-site",
 		hooks: {
 			// No admin routes are injected.
 			// No admin middleware is registered.
 			// The host site registers its own content loaders and public routes.
-			"astro:config:setup": ({ injectRoute }) => {
+			"astro:config:setup": ({ injectRoute, updateConfig }) => {
+				// Provide the Vite settings the injected public renderer needs so a
+				// scaffolded static build works without hand-editing astro.config
+				// (the renderer imports the package + reads its bundled sections.css).
+				// Matches createAstropressAdminAppIntegration so both dev and build
+				// resolve the package the same way.
+				updateConfig({
+					vite: {
+						// The injected renderer self-imports by the bare name `astropress`;
+						// map it to the scoped package so no host alias is required.
+						resolve: {
+							alias: [
+								{ find: /^astropress\/(.*)$/, replacement: "@astropress-diy/astropress/$1" },
+								{ find: /^astropress$/, replacement: "@astropress-diy/astropress" },
+							],
+						},
+						ssr: { noExternal: ["@astropress-diy/astropress", "astropress"] },
+						server: { fs: { allow: [packageRoot] } },
+					},
+				});
 				// buildHookSecret is reserved for future webhook rebuild support.
+				// Public renderer for admin-authored structured pages. Injected as a
+				// low-priority catch-all so specific host routes (e.g. src/pages/index.astro)
+				// and the admin's /ap-admin/* routes still win.
 				injectRoute({
-					pattern: "/sitemap.xml",
-					entrypoint: packageResource("pages/sitemap.xml.ts"),
+					pattern: "/[...slug]",
+					entrypoint: packageResource("pages/astropress-public-page.astro"),
 				});
-				injectRoute({
-					pattern: "/robots.txt",
-					entrypoint: packageResource("pages/robots.txt.ts"),
-				});
-				injectRoute({
-					pattern: "/llms.txt",
-					entrypoint: packageResource("pages/llms.txt.ts"),
-				});
+				if (includeSupportRoutes) {
+					injectRoute({
+						pattern: "/sitemap.xml",
+						entrypoint: packageResource("pages/sitemap.xml.ts"),
+					});
+					injectRoute({
+						pattern: "/robots.txt",
+						entrypoint: packageResource("pages/robots.txt.ts"),
+					});
+					injectRoute({
+						pattern: "/llms.txt",
+						entrypoint: packageResource("pages/llms.txt.ts"),
+					});
+				}
 			},
 		},
 	};

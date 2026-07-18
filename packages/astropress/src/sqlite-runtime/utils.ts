@@ -63,9 +63,16 @@ export function normalizeStructuredTemplateKey(value: unknown): string | null {
 		return null;
 	}
 	try {
-		return getCmsConfig().templateKeys.includes(value) ? value : null;
+		const { templateKeys } = getCmsConfig();
+		// When no template keys are configured, accept the stored key rather than
+		// dropping the published page.
+		if (templateKeys.length === 0) return value;
+		return templateKeys.includes(value) ? value : null;
 	} catch {
-		return null;
+		// Config not initialized — e.g. `registerCms()` has not run, as during a
+		// static build's `getStaticPaths` (middleware doesn't execute there). Accept
+		// the stored key so the published page still renders instead of vanishing.
+		return value;
 	}
 }
 
