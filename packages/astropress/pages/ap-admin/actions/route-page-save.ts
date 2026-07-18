@@ -3,7 +3,11 @@ import {
 	saveRuntimeStructuredPageRoute,
 	withAdminFormAction,
 } from "@astropress-diy/astropress";
-import { parseSectionsFromJson, sanitizeSections } from "@astropress-diy/astropress/sections";
+import {
+	humanizeSectionError,
+	parseSectionsFromJson,
+	sanitizeSections,
+} from "@astropress-diy/astropress/sections";
 import type { APIRoute } from "astro";
 
 function parseJson<T>(value: FormDataEntryValue | null, fallback: T) {
@@ -22,6 +26,16 @@ function parseTemplateKey(value: FormDataEntryValue | null): string | null {
 	return null;
 }
 
+/** Extract the raw section list for kind-label lookup when the payload is malformed. */
+function rawSections(sectionsRaw: string): Array<{ kind?: string }> {
+	try {
+		const parsed = JSON.parse(sectionsRaw) as { sections?: Array<{ kind?: string }> };
+		return Array.isArray(parsed.sections) ? parsed.sections : [];
+	} catch {
+		return [];
+	}
+}
+
 export const POST: APIRoute = async (context) =>
 	withAdminFormAction(
 		context,
@@ -37,9 +51,8 @@ export const POST: APIRoute = async (context) =>
 			const sectionsRaw = String(formData.get("sectionsJson") ?? "");
 			const parsedSections = parseSectionsFromJson(sectionsRaw);
 			if (!parsedSections.ok) {
-				const first = parsedSections.errors[0];
 				return fail(
-					`Invalid sections payload at ${first.path}: ${first.message}`,
+					humanizeSectionError(rawSections(sectionsRaw), parsedSections.errors[0]),
 					`/ap-admin/route-pages${path}`,
 				);
 			}
