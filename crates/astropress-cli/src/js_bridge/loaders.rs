@@ -452,7 +452,12 @@ pub(crate) fn run_content_services_operation(
     let module_literal = serde_json::to_string(&module).map_err(|error| error.to_string())?;
     let env_values = read_env_file(project_dir)?;
     let env_values_json = serde_json::to_string(&env_values).map_err(|error| error.to_string())?;
-    let workspace_root = serde_json::to_string(&project_dir.display().to_string())
+    // The script runs with cwd = project_dir, so a relative workspaceRoot would be
+    // re-joined against project_dir and produce a doubled path
+    // (examples/x/examples/x/.astropress/…). Pass an absolute path instead.
+    let absolute_project_dir =
+        std::fs::canonicalize(project_dir).unwrap_or_else(|_| project_dir.to_path_buf());
+    let workspace_root = serde_json::to_string(&absolute_project_dir.display().to_string())
         .map_err(|error| error.to_string())?;
     let script = format!(
         r#"import {{ {export_name} }} from {module};
