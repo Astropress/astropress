@@ -89,6 +89,46 @@ export const ASTRO_PUBLIC_CONFIG_LINES = [
 	"});",
 ];
 
+// Static-host (GitHub Pages / GitLab Pages) config. A single project where
+// `astro dev` runs the admin in server mode for local authoring, and
+// `astro build` produces a fully static public site (zero admin surface) to
+// deploy. The public renderer is present in both modes so authored pages render.
+export const ASTRO_STATIC_HOST_CONFIG_LINES = [
+	`import { defineConfig } from "astro/config";`,
+	`import { fileURLToPath } from "node:url";`,
+	`import {`,
+	`  createAstropressViteIntegration,`,
+	`  createAstropressAdminAppIntegration,`,
+	`  createAstropressPublicSiteIntegration,`,
+	`} from "@astropress-diy/astropress/integration";`,
+	"",
+	"// Local authoring runs the admin in server mode (`astro dev`); the production",
+	"// build is fully static (`astro build`) with zero admin surface — deploy that.",
+	`const isDev = process.argv.includes("dev");`,
+	"",
+	"const viteIntegration = createAstropressViteIntegration({",
+	"  localRuntimeModulesPath: fileURLToPath(",
+	`    new URL("./src/astropress/local-runtime-modules.ts", import.meta.url),`,
+	"  ),",
+	"});",
+	"",
+	"export default defineConfig({",
+	`  output: isDev ? "server" : "static",`,
+	"  integrations: isDev",
+	"    ? [",
+	"        createAstropressAdminAppIntegration(),",
+	"        // Admin already injects sitemap/robots/llms in dev; skip the duplicates.",
+	"        createAstropressPublicSiteIntegration({ includeSupportRoutes: false }),",
+	"      ]",
+	"    : [createAstropressPublicSiteIntegration()],",
+	"  vite: {",
+	"    plugins: viteIntegration.plugins,",
+	"    resolve: { alias: viteIntegration.aliases },",
+	'    build: { rollupOptions: { external: ["sharp"] } },',
+	"  },",
+	"});",
+];
+
 export const QUALITY_WORKFLOW_LINES = [
 	"name: Quality",
 	"",

@@ -1,4 +1,4 @@
-import { mkdirSync } from "node:fs";
+import { existsSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
 import { DatabaseSync } from "node:sqlite";
 
@@ -13,9 +13,14 @@ const dataDir = dbPath.substring(0, dbPath.lastIndexOf("/")) || ".data";
 
 mkdirSync(dataDir, { recursive: true });
 
-// Create schema if it does not exist (no reset — preserves existing data).
-const seedToolkit = createDefaultAstropressSqliteSeedToolkit();
-seedToolkit.seedDatabase({ dbPath, workspaceRoot: process.cwd() });
+// Seed only when the database doesn't exist yet (first run). Re-seeding on every
+// import is wasteful and, during a static `astro build`, runs this module in a
+// bundled context where the schema file can't be resolved — so once the DB is
+// present we simply read the authored content.
+if (!existsSync(dbPath)) {
+	const seedToolkit = createDefaultAstropressSqliteSeedToolkit();
+	seedToolkit.seedDatabase({ dbPath, workspaceRoot: process.cwd() });
+}
 
 const database = new DatabaseSync(dbPath);
 const runtime = createAstropressSqliteAdminRuntime({
