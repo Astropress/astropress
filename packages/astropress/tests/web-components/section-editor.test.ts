@@ -196,6 +196,28 @@ describe("ap-section-editor", () => {
 		expect(proceeded).toBe(false);
 	});
 
+	it("template cards expose an aria-label and field inputs are labelled (#192)", () => {
+		mount({
+			sections: [{ id: "h", kind: "hero", headline: "Hi", alignment: "start" }],
+			templates: [
+				{
+					key: "about",
+					defaultTitle: "About page",
+					defaultDescription: "Hero, story, values",
+					sectionKinds: ["hero"],
+				},
+			],
+		});
+		// Field input is associated with a <label> carrying visible text.
+		const input = document.querySelector<HTMLInputElement>('[data-field="headline"]');
+		expect(input?.labels?.length ?? 0).toBeGreaterThan(0);
+		expect(input?.labels?.[0]?.textContent?.trim()).toBe("Headline");
+		// Template card has an explicit accessible name (not empty, not the long desc).
+		document.querySelector<HTMLButtonElement>("[data-section-editor-add]")?.click();
+		const tpl = document.querySelector<HTMLButtonElement>('[data-template="about"]');
+		expect(tpl?.getAttribute("aria-label")).toBe("About page");
+	});
+
 	it("restores stashed sections after a failed save (?error=1) instead of the DB copy (#190)", () => {
 		history.replaceState({}, "", "/ap-admin/route-pages/about?error=1");
 		const stashKey = `ap-section-editor:${location.pathname}`;

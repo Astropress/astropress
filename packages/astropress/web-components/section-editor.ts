@@ -651,7 +651,10 @@ ${this.renderMediaIdField(`media-${s.id}`, s.mediaIds.join(", "), "mediaIds", tr
 					const localized = this.labels.template[t.key];
 					const title = localized?.title ?? t.defaultTitle;
 					const desc = localized?.description ?? t.defaultDescription;
-					return `<button type="button" class="ap-section-editor__pick" data-template="${escapeHtml(t.key)}">
+					// Explicit aria-label so the accessible name is the template title
+					// alone (not the title + long description concatenation), and so
+					// it's exposed even to tools that don't read nested element text.
+					return `<button type="button" class="ap-section-editor__pick" data-template="${escapeHtml(t.key)}" aria-label="${escapeHtml(title)}">
   <strong>${escapeHtml(title)}</strong>
   <span>${escapeHtml(desc)}</span>
 </button>`;
