@@ -2,6 +2,7 @@ import { existsSync, mkdirSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { getRuntimeEnv } from "./runtime-env.js";
 import { createLogger } from "./runtime-logger.js";
 import { defaultSiteSettings } from "./site-settings";
 import {
@@ -226,16 +227,22 @@ export function createDefaultAstropressSqliteSeedToolkit() {
 	return createAstropressSqliteSeedToolkit({
 		readSchemaSql: readAstropressSqliteSchemaSql,
 		loadBootstrapUsers() {
+			// Seed the bootstrap accounts with the operator-provided credentials
+			// (`ADMIN_PASSWORD` / `EDITOR_PASSWORD`, e.g. the values the CLI writes
+			// into `.env`) so the advertised login actually authenticates. Fall
+			// back to the well-known dev default only when nothing is configured.
+			const adminPassword = getRuntimeEnv("ADMIN_PASSWORD") ?? "password";
+			const editorPassword = getRuntimeEnv("EDITOR_PASSWORD") ?? "password";
 			return [
 				{
 					email: "admin@example.com",
-					password: "password",
+					password: adminPassword,
 					role: "admin" as const,
 					name: "Admin",
 				},
 				{
 					email: "editor@example.com",
-					password: "password",
+					password: editorPassword,
 					role: "editor" as const,
 					name: "Editor",
 				},
