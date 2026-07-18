@@ -25,3 +25,4 @@ export const ADMIN_APP_INJECTED_ROUTES = [
 export const ADMIN_APP_PAGES_DIRECTORY = "pages/ap-admin";
 export const ADMIN_APP_INTEGRATION_NAME = "astropress-admin-app";
 export const ADMIN_APP_SECURITY_MIDDLEWARE_ENTRYPOINT = "./security-middleware-entrypoint.js";
+export const ADMIN_APP_SESSION_MIDDLEWARE_ENTRYPOINT = "./admin-session-middleware-entrypoint.js";
