@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { renderSectionsDocument } from "../../src/sections/preview-renderer";
+import { renderSectionsDocument, safeHref } from "../../src/sections/preview-renderer";
 import type { Section } from "../../src/sections/schema";
 
 const ctx = { mediaUrls: {}, testimonials: [] };
@@ -52,10 +52,55 @@ describe("renderSectionsDocument", () => {
 		expect(html).toContain("&quot;");
 	});
 
+	it("neutralizes a javascript: CTA href to '#' in rendered output", () => {
+		const sections: Section[] = [
+			{
+				id: "h",
+				kind: "hero",
+				headline: "Hi",
+				alignment: "center",
+				primaryCta: { label: "Go", href: "javascript:alert(1)" },
+			},
+		];
+		const html = renderSectionsDocument(sections, ctx);
+		expect(html).not.toContain("javascript:alert");
+		expect(html).toContain(`href="#"`);
+	});
+
 	it("renders rich-text html as-is (sanitization runs at save time)", () => {
 		const sections: Section[] = [{ id: "r", kind: "rich-text", html: "<p>preserved</p>" }];
 		const html = renderSectionsDocument(sections, ctx);
 		expect(html).toContain("<p>preserved</p>");
+	});
+});
+
+describe("safeHref", () => {
+	it("passes through safe schemes and relative URLs unchanged", () => {
+		for (const href of [
+			"/about",
+			"#section",
+			"?q=1",
+			"https://example.com",
+			"http://example.com",
+			"mailto:a@b.com",
+			"tel:+15551234",
+			"contact",
+		]) {
+			expect(safeHref(href)).toBe(href);
+		}
+	});
+
+	it("collapses script-executing and opaque schemes to '#'", () => {
+		expect(safeHref("javascript:alert(1)")).toBe("#");
+		expect(safeHref("JavaScript:alert(1)")).toBe("#");
+		expect(safeHref("data:text/html,<script>x</script>")).toBe("#");
+		expect(safeHref("vbscript:msgbox(1)")).toBe("#");
+	});
+
+	it("defeats control-character scheme obfuscation", () => {
+		expect(safeHref("java\tscript:alert(1)")).toBe("#");
+		expect(safeHref("java\nscript:alert(1)")).toBe("#");
+		expect(safeHref(" javascript:alert(1)")).toBe("#");
 	});
 
 	it("renders gallery with valid media urls", () => {

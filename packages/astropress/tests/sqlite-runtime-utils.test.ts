@@ -64,9 +64,16 @@ describe("normalizeStructuredTemplateKey", () => {
 		expect(normalizeStructuredTemplateKey("missing")).toBeNull();
 	});
 
-	it("returns null when getCmsConfig throws (catch branch)", () => {
+	it("accepts the stored key when getCmsConfig throws (uninitialized — e.g. static build)", () => {
 		clearCmsConfig();
-		expect(normalizeStructuredTemplateKey("any")).toBeNull();
+		// Lenient: a published page must not vanish just because registerCms() has
+		// not run (as during a static build's getStaticPaths).
+		expect(normalizeStructuredTemplateKey("any")).toBe("any");
+	});
+
+	it("accepts the stored key when templateKeys is empty (unconfigured)", () => {
+		setCmsConfig({ templateKeys: [] });
+		expect(normalizeStructuredTemplateKey("landing")).toBe("landing");
 	});
 
 	it("returns null for '' even when templateKeys contains '' (kills L57 ConditionalExpression:false, LogicalOperator, BlockStatement)", () => {

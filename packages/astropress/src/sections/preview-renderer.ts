@@ -46,6 +46,33 @@ const escapeHtml = (v: string): string =>
 const escText = (v: string): string =>
 	String(v).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
+const SAFE_HREF_SCHEMES = new Set(["http", "https", "mailto", "tel"]);
+
+/**
+ * Neutralizes dangerous link targets before they reach an `href` attribute.
+ * `escapeHtml` alone does not stop `javascript:`/`data:`/`vbscript:` URLs, and
+ * this renderer now emits CTA anchors to anonymous public visitors (not just the
+ * admin preview iframe), so an editor-authored href is untrusted output.
+ *
+ * Relative URLs, fragments, and paths have no scheme and pass through. Any value
+ * carrying an explicit scheme outside the allowlist collapses to "#". Control
+ * characters and whitespace (which browsers strip when parsing a scheme, e.g.
+ * `java\tscript:`) are removed before the scheme is inspected.
+ */
+export function safeHref(value: string): string {
+	const raw = String(value);
+	// Strip characters browsers ignore when parsing a URL scheme (C0 controls,
+	// space, DEL, C1 controls) so `java	script:` cannot slip through.
+	let cleaned = "";
+	for (const ch of raw) {
+		const c = ch.codePointAt(0) ?? 0;
+		if (c > 0x20 && c !== 0x7f && !(c >= 0x80 && c <= 0x9f)) cleaned += ch;
+	}
+	const scheme = /^([a-z][a-z0-9+.-]*):/i.exec(cleaned)?.[1]?.toLowerCase();
+	if (scheme && !SAFE_HREF_SCHEMES.has(scheme)) return "#";
+	return raw.trim();
+}
+
 function renderHero(s: HeroSection, ctx: PreviewContext): string {
 	const mediaUrl = s.mediaId ? ctx.mediaUrls[s.mediaId] : null;
 	const align = s.alignment === "center" ? "center" : "start";
@@ -58,8 +85,8 @@ function renderHero(s: HeroSection, ctx: PreviewContext): string {
     ${
 			s.primaryCta || s.secondaryCta
 				? `<div class="ap-hero__cta">
-      ${s.primaryCta ? `<a class="ap-btn ap-btn--primary" href="${escapeHtml(s.primaryCta.href)}">${escText(s.primaryCta.label)}</a>` : ""}
-      ${s.secondaryCta ? `<a class="ap-btn ap-btn--secondary" href="${escapeHtml(s.secondaryCta.href)}">${escText(s.secondaryCta.label)}</a>` : ""}
+      ${s.primaryCta ? `<a class="ap-btn ap-btn--primary" href="${escapeHtml(safeHref(s.primaryCta.href))}">${escText(s.primaryCta.label)}</a>` : ""}
+      ${s.secondaryCta ? `<a class="ap-btn ap-btn--secondary" href="${escapeHtml(safeHref(s.secondaryCta.href))}">${escText(s.secondaryCta.label)}</a>` : ""}
     </div>`
 				: ""
 		}
@@ -140,8 +167,8 @@ function renderCtaBanner(s: CtaBannerSection): string {
     <h2 class="ap-cta__headline">${escText(s.headline)}</h2>
     ${s.body ? `<p class="ap-cta__body">${escText(s.body)}</p>` : ""}
     <div class="ap-cta__actions">
-      <a class="ap-btn ap-btn--primary" href="${escapeHtml(s.primaryCta.href)}">${escText(s.primaryCta.label)}</a>
-      ${s.secondaryCta ? `<a class="ap-btn ap-btn--secondary" href="${escapeHtml(s.secondaryCta.href)}">${escText(s.secondaryCta.label)}</a>` : ""}
+      <a class="ap-btn ap-btn--primary" href="${escapeHtml(safeHref(s.primaryCta.href))}">${escText(s.primaryCta.label)}</a>
+      ${s.secondaryCta ? `<a class="ap-btn ap-btn--secondary" href="${escapeHtml(safeHref(s.secondaryCta.href))}">${escText(s.secondaryCta.label)}</a>` : ""}
     </div>
   </div>
 </section>`;
@@ -238,6 +265,16 @@ function renderSection(section: Section, ctx: PreviewContext): string {
  * Build a complete <iframe>-ready document containing the rendered sections
  * and the public sections.css. Used as iframe srcdoc.
  */
+/**
+ * Renders just the sections markup (the `<div class="ap-sections">…</div>`
+ * wrapper), without a surrounding HTML document. Public page renderers use this
+ * to compose their own `<head>` (SEO metadata, canonical, Open Graph) around the
+ * section body, while the admin live preview uses `renderSectionsDocument`.
+ */
+export function renderSectionsBody(sections: Section[], ctx: PreviewContext): string {
+	return `<div class="ap-sections">${sections.map((s) => renderSection(s, ctx)).join("")}</div>`;
+}
+
 export function renderSectionsDocument(
 	sections: Section[],
 	ctx: PreviewContext,
@@ -257,7 +294,7 @@ ${stylesheet}
 <style>body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:#0f172a;background:#fff}</style>
 </head>
 <body>
-<div class="ap-sections">${sections.map((s) => renderSection(s, ctx)).join("")}</div>
+${renderSectionsBody(sections, ctx)}
 </body>
 </html>`;
 }

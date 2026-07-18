@@ -1,5 +1,4 @@
 import { normalizePath } from "./admin-normalizers";
-import { getCmsConfig } from "./config";
 import { getCloudflareBindings } from "./runtime-env";
 import {
 	loadSafeLocalCmsRegistry,
@@ -7,6 +6,9 @@ import {
 	type RuntimeStructuredPageRouteRecord,
 	withSafeRouteRegistryFallback,
 } from "./runtime-route-registry-dispatch";
+// Shared with the local sqlite row mapper — a single fail-open definition so the
+// two structured-page mappers can't drift (see sqlite-runtime/utils).
+import { normalizeStructuredTemplateKey } from "./sqlite-runtime/utils";
 
 // ─── Mutations — extracted to runtime-route-registry-pages-mutations.ts ──────
 export {
@@ -14,17 +16,11 @@ export {
 	saveRuntimeStructuredPageRoute,
 } from "./runtime-route-registry-pages-mutations";
 
-function normalizeStructuredTemplateKey(value: unknown): string | null {
-	if (typeof value !== "string" || !value) {
-		return null;
-	}
-	return getCmsConfig().templateKeys.includes(value) ? value : null;
-}
-
 function mapStructuredPageRow(
 	row:
 		| {
 				path: string;
+				status?: string | null;
 				title: string;
 				summary: string | null;
 				seo_title: string | null;
@@ -50,6 +46,7 @@ function mapStructuredPageRow(
 	}
 	return {
 		path: row.path,
+		status: row.status ?? undefined,
 		title: row.title,
 		summary: row.summary ?? undefined,
 		seoTitle: row.seo_title ?? undefined,
@@ -82,7 +79,7 @@ export async function listRuntimeStructuredPageRoutes(locals?: App.Locals | null
 				await db
 					.prepare(
 						`
-              SELECT v.path, v.title, v.summary, v.seo_title, v.meta_description, v.canonical_url_override, v.robots_directive,
+              SELECT v.path, v.status, v.title, v.summary, v.seo_title, v.meta_description, v.canonical_url_override, v.robots_directive,
                      v.og_image, v.sections_json, v.settings_json, v.updated_at
               FROM cms_route_variants v
               INNER JOIN cms_route_groups g ON g.id = v.group_id
@@ -92,6 +89,7 @@ export async function listRuntimeStructuredPageRoutes(locals?: App.Locals | null
 					)
 					.all<{
 						path: string;
+						status: string | null;
 						title: string;
 						summary: string | null;
 						seo_title: string | null;
@@ -129,7 +127,7 @@ export async function getRuntimeStructuredPageRoute(pathname: string, locals?: A
 			const row = await db
 				.prepare(
 					`
-            SELECT v.path, v.title, v.summary, v.seo_title, v.meta_description, v.canonical_url_override, v.robots_directive,
+            SELECT v.path, v.status, v.title, v.summary, v.seo_title, v.meta_description, v.canonical_url_override, v.robots_directive,
                    v.og_image, v.sections_json, v.settings_json, v.updated_at
             FROM cms_route_variants v
             INNER JOIN cms_route_groups g ON g.id = v.group_id
@@ -140,6 +138,7 @@ export async function getRuntimeStructuredPageRoute(pathname: string, locals?: A
 				.bind(normalizedPath)
 				.first<{
 					path: string;
+					status: string | null;
 					title: string;
 					summary: string | null;
 					seo_title: string | null;

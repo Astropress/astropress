@@ -1,0 +1,66 @@
+---
+// Public renderer for admin-authored structured pages. Injected at `/[...slug]`
+// by createAstropressPublicSiteIntegration so that a page composed in the admin
+// (Pages ▸ section editor) actually renders at its public URL — in `astro dev`
+// (SSR) and in a static `astro build` (prerendered via getStaticPaths).
+import { getRuntimeStructuredPageRoute, listRuntimeStructuredPageRoutes } from "astropress";
+import { parseSections, renderSectionsBody } from "@astropress-diy/astropress/sections";
+import sectionsCss from "../public/sections.css?raw";
+
+export const prerender = true;
+
+export async function getStaticPaths() {
+	const pages = await listRuntimeStructuredPageRoutes();
+	return pages
+		// Only published pages are public. Drafts/review/archived must never render
+		// or get baked into the static build.
+		.filter((page) => page.status === "published")
+		.map((page) => page.path)
+		// The site root is owned by the host's own src/pages/index.astro, so an
+		// admin-authored page at "/" is intentionally not rendered by this catch-all.
+		.filter((path): path is string => Boolean(path) && path !== "/")
+		.map((path) => ({ params: { slug: path.replace(/^\//, "") } }));
+}
+
+const slugParam = Astro.params.slug;
+const slug = Array.isArray(slugParam) ? slugParam.join("/") : (slugParam ?? "");
+const path = `/${slug}`;
+
+const record = await getRuntimeStructuredPageRoute(path, Astro.locals);
+// Guard the SSR/dev path too: only published pages are public.
+if (!record || record.status !== "published") {
+	return new Response("Not found", { status: 404 });
+}
+
+const parsed = parseSections(record.sections);
+const sections = parsed.ok ? parsed.sections : [];
+const body = renderSectionsBody(sections, { mediaUrls: {}, testimonials: [], dir: "ltr" });
+
+const pageTitle = record.seoTitle || record.title || slug;
+const description = record.metaDescription ?? record.summary ?? "";
+const canonical = record.canonicalUrlOverride ?? "";
+const robots = record.robotsDirective ?? "";
+const ogImage = record.ogImage ?? "";
+const baseCss =
+	"body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:#0f172a;background:#fff}";
+---
+
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>{pageTitle}</title>
+		{description && <meta name="description" content={description} />}
+		{canonical && <link rel="canonical" href={canonical} />}
+		{robots && <meta name="robots" content={robots} />}
+		<meta property="og:type" content="website" />
+		<meta property="og:title" content={pageTitle} />
+		{description && <meta property="og:description" content={description} />}
+		{ogImage && <meta property="og:image" content={ogImage} />}
+		<style set:html={baseCss}></style>
+		<style set:html={sectionsCss}></style>
+	</head>
+	<body>
+		<Fragment set:html={body} />
+	</body>
+</html>
