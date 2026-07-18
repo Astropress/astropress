@@ -120,7 +120,10 @@ pub(crate) enum DataServices {
 impl DataServices {
     pub(crate) fn parse(value: &str) -> CliResult<Self> {
         match value {
-            "none" => Ok(Self::None),
+            // `sqlite` is the built-in local store (documented as the default),
+            // which corresponds to no external content service. Accept it as an
+            // alias so the obvious value doesn't error.
+            "none" | "sqlite" => Ok(Self::None),
             "cloudflare" => Ok(Self::Cloudflare),
             "supabase" => Ok(Self::Supabase),
             "appwrite" => Ok(Self::Appwrite),
@@ -132,7 +135,7 @@ impl DataServices {
             other => Err(CliError::InvalidValue {
                 kind: "data services",
                 value: other.to_string(),
-                hint: "Use none, cloudflare, supabase, appwrite, pocketbase, neon, nhost, turso, or custom.",
+                hint: "Use none (or sqlite), cloudflare, supabase, appwrite, pocketbase, neon, nhost, turso, or custom.",
             }),
         }
     }
@@ -289,6 +292,23 @@ mod tests {
     #[test]
     fn analytics_provider_rejects_unknown() {
         assert!(AnalyticsProvider::parse("mixpanel").is_err());
+    }
+
+    #[test]
+    fn data_services_accepts_sqlite_as_alias_for_none() {
+        // `sqlite` is the built-in local store == no external content service.
+        assert_eq!(DataServices::parse("sqlite").unwrap(), DataServices::None);
+        assert_eq!(DataServices::parse("none").unwrap(), DataServices::None);
+        // The alias still resolves to the local sqlite provider.
+        assert_eq!(
+            DataServices::parse("sqlite").unwrap().default_local_provider(),
+            LocalProvider::Sqlite
+        );
+    }
+
+    #[test]
+    fn data_services_rejects_unknown() {
+        assert!(DataServices::parse("mongodb").is_err());
     }
 
     #[test]
