@@ -5,6 +5,7 @@ import {
 	type AdminPageResult,
 	adminOnlyPage,
 	emptyDashboardModel,
+	forbidden,
 	ok,
 	withFallback,
 } from "./admin-page-model-helpers";
@@ -58,6 +59,11 @@ export async function buildAdminDashboardPageModel(
 	locals: AdminLocals,
 	user: AuthUser | null | undefined,
 ): Promise<AdminPageResult<AdminDashboardModel>> {
+	// #197: the dashboard is authenticated-only (admin *or* editor). Without this
+	// guard the model builds the editorial overview for anonymous callers and the
+	// page renders it — unlike every peer route, which redirect/403 unauthenticated
+	// requests. A present user of any role passes; only a missing user is refused.
+	if (!user) return forbidden(emptyDashboardModel());
 	const warnings: string[] = [];
 	const data = await withFallback(
 		warnings,
