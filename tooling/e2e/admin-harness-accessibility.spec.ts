@@ -70,6 +70,13 @@ test.describe("Feature: package-owned admin accessibility coverage", () => {
 	test("Scenario: comments rejection dialog restores focus and remains axe clean", async ({
 		page,
 	}) => {
+		// Audit the settled dialog, not a fade-in frame: the dialog animates opacity
+		// 0→1 (admin.css `dialog` @starting-style), and sampling mid-animation makes
+		// axe read the reject button's white-on-red at partial opacity and dip below
+		// the AAA threshold — a flake, not a real contrast defect (same root cause as
+		// the section-editor dialog scenario below). reduced-motion collapses the
+		// transition so we audit the true final colors.
+		await page.emulateMedia({ reducedMotion: "reduce" });
 		await page.goto("/ap-admin/comments", { waitUntil: "networkidle" });
 		const trigger = page.locator("[data-confirm-reject]").first();
 		await trigger.click();
