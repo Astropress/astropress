@@ -3,7 +3,10 @@ import path from "node:path";
 import { createAstropressPublicSiteIntegration } from "@astropress-diy/astropress";
 import { describe, expect, it, vi } from "vitest";
 import { injectAstropressAdminRoutes, listAstropressAdminRoutes } from "../src/admin-routes";
-import { createAstropressSitemapIntegration } from "../src/public-site-integration";
+import {
+	createAstropressSitemapIntegration,
+	createAstropressPublicSiteIntegration as createPublicSiteDirect,
+} from "../src/public-site-integration";
 
 describe("createAstropressPublicSiteIntegration", () => {
 	it("returns a valid AstroIntegration with the correct name", () => {
@@ -95,6 +98,34 @@ describe("createAstropressPublicSiteIntegration", () => {
 		const slug = injected.find((r) => r.pattern === "/[...slug]");
 		expect(slug).toBeDefined();
 		expect(slug?.entrypoint).toMatch(/pages\/astropress-public-page\.astro$/);
+	});
+
+	// Imports the factory directly from the source module (not the barrel) so
+	// Stryker reliably associates these assertions with the file's mutants.
+	it("resolves route entrypoints to real paths and applies the shared vite config", () => {
+		const injected: Array<{ pattern: string; entrypoint: string }> = [];
+		let viteConfig: { vite?: { resolve?: unknown; ssr?: unknown; server?: unknown } } | undefined;
+		const hook = createPublicSiteDirect().hooks["astro:config:setup"];
+		if (typeof hook !== "function") throw new Error("Expected hook to be a function");
+		hook({
+			_config: {},
+			injectRoute: (route: { pattern: string; entrypoint: string }) => injected.push(route),
+			addMiddleware: vi.fn(),
+			updateConfig: (cfg: { vite?: Record<string, unknown> }) => {
+				viteConfig = cfg;
+			},
+		} as never);
+
+		// packageResource must resolve to a real string path, not undefined.
+		const slug = injected.find((r) => r.pattern === "/[...slug]");
+		expect(typeof slug?.entrypoint).toBe("string");
+		expect(slug?.entrypoint.endsWith("pages/astropress-public-page.astro")).toBe(true);
+
+		// updateConfig must receive the shared host vite config (alias + ssr + fs).
+		expect(viteConfig?.vite).toBeDefined();
+		expect(viteConfig?.vite?.resolve).toBeDefined();
+		expect(viteConfig?.vite?.ssr).toBeDefined();
+		expect(viteConfig?.vite?.server).toBeDefined();
 	});
 
 	it("injects only the renderer (no support routes) when includeSupportRoutes is false", () => {
