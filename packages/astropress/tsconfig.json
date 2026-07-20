@@ -5,7 +5,10 @@
 		"paths": {
 			"@astropress-diy/astropress": ["./index.ts"],
 			"@astropress-diy/astropress/components/*": ["./components/*"],
-			"@astropress-diy/astropress/*": ["./src/*"]
+			"@astropress-diy/astropress/*": ["./src/*"],
+			"astropress": ["./index.ts"],
+			"astropress/components/*": ["./components/*"],
+			"astropress/*": ["./src/*"]
 		},
 		"ignoreDeprecations": "6.0"
 	},
