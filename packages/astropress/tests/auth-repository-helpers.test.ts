@@ -8,6 +8,7 @@ import {
 	issuePasswordResetToken,
 	isUsableToken,
 	mapSessionUser,
+	parseUtcTimestamp,
 	resolveUsableInviteToken,
 	resolveUsablePasswordResetToken,
 	resolveValidSession,
@@ -90,6 +91,36 @@ describe("isUsableToken", () => {
 	});
 });
 
+describe("parseUtcTimestamp", () => {
+	test("treats SQLite CURRENT_TIMESTAMP strings as UTC", () => {
+		expect(parseUtcTimestamp("2026-07-18 05:22:00")).toBe(Date.UTC(2026, 6, 18, 5, 22, 0));
+		expect(parseUtcTimestamp("2026-07-18 05:22:00.500")).toBe(Date.UTC(2026, 6, 18, 5, 22, 0, 500));
+	});
+
+	test("passes ISO-8601 strings through unchanged", () => {
+		const iso = "2026-07-18T05:22:00.000Z";
+		expect(parseUtcTimestamp(iso)).toBe(Date.parse(iso));
+	});
+
+	test("returns NaN for unparseable input", () => {
+		expect(Number.isNaN(parseUtcTimestamp("not-a-date"))).toBe(true);
+	});
+
+	// #195 regression: interpretation must not depend on the process timezone.
+	test("yields the same epoch under UTC and America/New_York", () => {
+		try {
+			vi.stubEnv("TZ", "UTC");
+			const utc = parseUtcTimestamp("2026-07-18 05:22:00");
+			vi.stubEnv("TZ", "America/New_York");
+			const newYork = parseUtcTimestamp("2026-07-18 05:22:00");
+			expect(newYork).toBe(utc);
+			expect(utc).toBe(Date.UTC(2026, 6, 18, 5, 22, 0));
+		} finally {
+			vi.unstubAllEnvs();
+		}
+	});
+});
+
 describe("resolveValidSession", () => {
 	test("returns null when sessionToken is empty string", () => {
 		const deps = makeDeps();
@@ -137,6 +168,29 @@ describe("resolveValidSession", () => {
 		expect(resolveValidSession("tok", deps)).toBeNull();
 		expect(deps.revokeSessionById).toHaveBeenCalledWith("tok");
 		expect(deps.touchSession).not.toHaveBeenCalled();
+	});
+
+	// #195 regression: last_active_at comes from SQLite CURRENT_TIMESTAMP —
+	// offset-less UTC. On a non-UTC machine, parsing it as local time makes an
+	// expired session look fresh (TZ west of UTC) and the session outlives its
+	// TTL. now=1_000_000 with this row is 70s of age; TTL is 60s → expired.
+	test("returns null and revokes for an expired SQLite-format lastActiveAt in any timezone", () => {
+		const now = 1_000_000;
+		const row: AstropressAuthSessionRow = {
+			id: "s1",
+			csrfToken: "c",
+			lastActiveAt: "1970-01-01 00:15:30",
+			email: "a@b.com",
+			role: "admin",
+			name: "A",
+		};
+		const deps = makeDeps({
+			sessionTtlMs: 60_000,
+			now: () => now,
+			findLiveSessionById: () => row,
+		});
+		expect(resolveValidSession("tok", deps)).toBeNull();
+		expect(deps.revokeSessionById).toHaveBeenCalledWith("tok");
 	});
 
 	test("returns null and revokes when session is past TTL", () => {
