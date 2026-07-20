@@ -16,7 +16,7 @@ import { verifyTurnstileToken } from "./turnstile.js";
 function getClientIp(request: Request): string {
 	return (
 		request.headers.get("CF-Connecting-IP") ??
-		request.headers.get("X-Forwarded-For")?.split(",")[0]?.trim() ??
+		request.headers.get("X-Forwarded-For")?.split(",")[0].trim() ??
 		"unknown"
 	);
 }
@@ -79,8 +79,8 @@ function badRequest(error: string): Response {
 export const POST: APIRoute = async ({ request, locals }) => {
 	let fields: ContactFields;
 
-	const contentType = request.headers.get("content-type") ?? "";
-	if (contentType.includes("application/json")) {
+	const contentType = request.headers.get("content-type");
+	if (contentType?.includes("application/json")) {
 		try {
 			fields = fieldsFromRecord((await request.json()) as ContactRequestBody);
 		} catch {
@@ -88,7 +88,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
 		}
 	} else {
 		const formData = await request.formData().catch(() => null);
-		if (!formData) {
+		if (formData === null) {
 			return badRequest("Invalid form body.");
 		}
 		fields = fieldsFromRecord(Object.fromEntries(formData.entries()));
