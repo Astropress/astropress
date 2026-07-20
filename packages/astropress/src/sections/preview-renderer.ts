@@ -68,7 +68,8 @@ export function safeHref(value: string): string {
 		const c = ch.codePointAt(0) ?? 0;
 		if (c > 0x20 && c !== 0x7f && !(c >= 0x80 && c <= 0x9f)) cleaned += ch;
 	}
-	const scheme = /^([a-z][a-z0-9+.-]*):/i.exec(cleaned)?.[1]?.toLowerCase();
+	// Group 1 always participates on a match, so it needs no second `?.`.
+	const scheme = /^([a-z][a-z0-9+.-]*):/i.exec(cleaned)?.[1].toLowerCase();
 	if (scheme && !SAFE_HREF_SCHEMES.has(scheme)) return "#";
 	return raw.trim();
 }
@@ -228,8 +229,8 @@ function renderGallery(s: GallerySection, ctx: PreviewContext): string {
 			? `<p class="ap-gallery__empty">No images yet.</p>`
 			: `<ul class="ap-gallery__items" role="list">${items
 					.map(
-						(it) =>
-							`<li class="ap-gallery__item"><img src="${escapeHtml(it.url ?? "")}" alt="" /></li>`,
+						// `it.url` is guaranteed truthy — falsy entries were filtered above.
+						(it) => `<li class="ap-gallery__item"><img src="${escapeHtml(it.url)}" alt="" /></li>`,
 					)
 					.join("")}</ul>`
 	}
