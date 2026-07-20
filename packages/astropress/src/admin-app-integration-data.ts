@@ -12,6 +12,7 @@ export const ADMIN_APP_DEV_SERVE_ROUTES = [
 
 export const ADMIN_APP_INJECTED_ROUTES = [
 	{ pattern: "/ap/health", entrypoint: "pages/ap/health.ts" },
+	{ pattern: "/ap/contact", entrypoint: "pages/ap/contact.ts" },
 	{ pattern: "/sitemap.xml", entrypoint: "pages/sitemap.xml.ts" },
 	{ pattern: "/robots.txt", entrypoint: "pages/robots.txt.ts" },
 	{ pattern: "/llms.txt", entrypoint: "pages/llms.txt.ts" },

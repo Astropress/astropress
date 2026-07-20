@@ -1,7 +1,12 @@
 ---
 import AdminLayout from "@astropress-diy/astropress/components/AdminLayout.astro";
 import IntegrationConnect from "@astropress-diy/astropress/components/IntegrationConnect.astro";
-import { getPageT, requiresAccess, resolveAdminLocale } from "astropress";
+import {
+	getPageT,
+	getRuntimeContactSubmissions,
+	requiresAccess,
+	resolveAdminLocale,
+} from "astropress";
 import { withLocalStoreFallback } from "../../src/admin-store-dispatch.js";
 
 const guard = await requiresAccess(Astro, "forms:view");
@@ -27,6 +32,9 @@ const statusByProvider: Record<string, StatusRow["status"]> = {};
 for (const s of inDomain) statusByProvider[s.provider] = s.status;
 const activeProviderId =
 	inDomain.find((s) => s.status === "connected" && s.isActive)?.provider ?? null;
+
+// First-party contact submissions (#193): whatever POST /ap/contact received.
+const submissions = await getRuntimeContactSubmissions(Astro.locals);
 ---
 
 <AdminLayout
@@ -35,10 +43,46 @@ const activeProviderId =
 	currentPath="/ap-admin/forms"
 	description={t(
 		"forms.description",
-		"Connect a forms provider to receive submissions from your site. Submissions land in the existing API tokens path.",
+		"Receive contact submissions at POST /ap/contact out of the box, or connect a forms provider for richer forms.",
 	)}
 	userName={adminUser.name}
 >
+	<section class="panel">
+		<h2>{t("forms.submissionsTitle", "Contact submissions")}</h2>
+		{
+			submissions.length === 0 ? (
+				<p class="admin-note">
+					{t(
+						"forms.submissionsEmpty",
+						"No contact submissions yet. Point a form on your site at POST /ap/contact — see the contact form guide in the docs.",
+					)}
+				</p>
+			) : (
+				<div class="admin-table-shell">
+					<table aria-label={t("forms.submissionsTitle", "Contact submissions")}>
+						<thead>
+							<tr>
+								<th>{t("forms.colName", "Name")}</th>
+								<th>{t("forms.colEmail", "Email")}</th>
+								<th>{t("forms.colMessage", "Message")}</th>
+								<th>{t("forms.colReceived", "Received")}</th>
+							</tr>
+						</thead>
+						<tbody>
+							{submissions.map((submission) => (
+								<tr>
+									<td>{submission.name}</td>
+									<td>{submission.email}</td>
+									<td class="message-cell">{submission.message}</td>
+									<td>{submission.submittedAt.slice(0, 10)}</td>
+								</tr>
+							))}
+						</tbody>
+					</table>
+				</div>
+			)
+		}
+	</section>
 	<section class="panel">
 		<IntegrationConnect
 			domain="forms"
@@ -48,3 +92,11 @@ const activeProviderId =
 		/>
 	</section>
 </AdminLayout>
+
+<style>
+	.message-cell {
+		max-width: 32rem;
+		overflow-wrap: anywhere;
+		white-space: pre-line;
+	}
+</style>
