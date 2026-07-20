@@ -69,6 +69,7 @@ describe("tooling integration", () => {
 		} as never);
 		const patterns = injectedRoutes.map((r) => r.pattern);
 		expect(patterns).toContain("/ap/health");
+		expect(patterns).toContain("/ap/contact");
 		expect(patterns).toContain("/sitemap.xml");
 		expect(patterns).toContain("/robots.txt");
 		expect(patterns).toContain("/llms.txt");
