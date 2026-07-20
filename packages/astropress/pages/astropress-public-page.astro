@@ -3,23 +3,34 @@
 // by createAstropressPublicSiteIntegration so that a page composed in the admin
 // (Pages ▸ section editor) actually renders at its public URL — in `astro dev`
 // (SSR) and in a static `astro build` (prerendered via getStaticPaths).
-import { getRuntimeStructuredPageRoute, listRuntimeStructuredPageRoutes } from "astropress";
-import { parseSections, renderSectionsBody } from "@astropress-diy/astropress/sections";
+import {
+	getRuntimeMediaAssets,
+	getRuntimeStructuredPageRoute,
+	getRuntimeTestimonials,
+	listRuntimeStructuredPageRoutes,
+} from "astropress";
+import {
+	buildSectionRenderContext,
+	parseSections,
+	renderSectionsBody,
+} from "@astropress-diy/astropress/sections";
 import sectionsCss from "../public/sections.css?raw";
 
 export const prerender = true;
 
 export async function getStaticPaths() {
 	const pages = await listRuntimeStructuredPageRoutes();
-	return pages
-		// Only published pages are public. Drafts/review/archived must never render
-		// or get baked into the static build.
-		.filter((page) => page.status === "published")
-		.map((page) => page.path)
-		// The site root is owned by the host's own src/pages/index.astro, so an
-		// admin-authored page at "/" is intentionally not rendered by this catch-all.
-		.filter((path): path is string => Boolean(path) && path !== "/")
-		.map((path) => ({ params: { slug: path.replace(/^\//, "") } }));
+	return (
+		pages
+			// Only published pages are public. Drafts/review/archived must never render
+			// or get baked into the static build.
+			.filter((page) => page.status === "published")
+			.map((page) => page.path)
+			// The site root is owned by the host's own src/pages/index.astro, so an
+			// admin-authored page at "/" is intentionally not rendered by this catch-all.
+			.filter((path): path is string => Boolean(path) && path !== "/")
+			.map((path) => ({ params: { slug: path.replace(/^\//, "") } }))
+	);
 }
 
 const slugParam = Astro.params.slug;
@@ -28,13 +39,30 @@ const path = `/${slug}`;
 
 const record = await getRuntimeStructuredPageRoute(path, Astro.locals);
 // Guard the SSR/dev path too: only published pages are public.
-if (!record || record.status !== "published") {
+if (record?.status !== "published") {
 	return new Response("Not found", { status: 404 });
 }
 
 const parsed = parseSections(record.sections);
 const sections = parsed.ok ? parsed.sections : [];
-const body = renderSectionsBody(sections, { mediaUrls: {}, testimonials: [], dir: "ltr" });
+// Resolve the media URLs and testimonials the sections reference — only
+// approved/featured testimonials are ever fetched for the public surface, and
+// buildSectionRenderContext additionally gates on consentToPublish.
+const context = await buildSectionRenderContext(
+	sections,
+	{
+		listMediaAssets: () => getRuntimeMediaAssets(Astro.locals),
+		listPublicTestimonials: async () => [
+			...(await getRuntimeTestimonials("approved", Astro.locals)),
+			...(await getRuntimeTestimonials("featured", Astro.locals)),
+		],
+	},
+	Astro.locals,
+);
+// lang/dir stay hard-coded (here and on <html>) because neither
+// StructuredPageRouteRecord nor SiteSettings carries a locale yet — there is
+// nothing to wire them to. Tracked with the public-site RTL work in #72.
+const body = renderSectionsBody(sections, { ...context, dir: "ltr" });
 
 const pageTitle = record.seoTitle || record.title || slug;
 const description = record.metaDescription ?? record.summary ?? "";
