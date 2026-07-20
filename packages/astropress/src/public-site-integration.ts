@@ -48,7 +48,7 @@ export function createAstropressPublicSiteIntegration(
 			// No admin routes are injected.
 			// No admin middleware is registered.
 			// The host site registers its own content loaders and public routes.
-			"astro:config:setup": ({ injectRoute, updateConfig }) => {
+			"astro:config:setup": ({ command, injectRoute, updateConfig }) => {
 				// Vite settings so the injected public renderer resolves the package
 				// without hand-editing astro.config. Shared with the admin-app
 				// integration so both dev and build resolve the package the same way.
@@ -71,9 +71,24 @@ export function createAstropressPublicSiteIntegration(
 				// Public renderer for admin-authored structured pages. Injected as a
 				// low-priority catch-all so specific host routes (e.g. src/pages/index.astro)
 				// and the admin's /ap-admin/* routes still win.
+				//
+				// Two entrypoints resolve and render pages identically (both via
+				// buildPublicStructuredPageModel); they differ only in prerender
+				// strategy:
+				//  - build/preview: the prerendered page — getStaticPaths enumerates
+				//    published pages into static HTML for the static-host deploy model.
+				//  - dev: an on-demand (prerender=false) sibling, so a page published
+				//    while `astro dev` is running renders immediately at its URL instead
+				//    of 404ing until the server is restarted and getStaticPaths re-runs
+				//    (#198). `astro dev` already runs output: "server", so nothing else
+				//    is forcing this route static — only the page's own prerender flag.
+				const publicPageEntrypoint =
+					command === "dev"
+						? "pages/astropress-public-page-dev.astro"
+						: "pages/astropress-public-page.astro";
 				injectRoute({
 					pattern: "/[...slug]",
-					entrypoint: packageResource("pages/astropress-public-page.astro"),
+					entrypoint: packageResource(publicPageEntrypoint),
 				});
 				if (includeSupportRoutes) {
 					injectRoute({

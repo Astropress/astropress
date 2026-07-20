@@ -956,6 +956,16 @@ function resolvePublicPreviewLink(params: { baseUrl: URL; path: string | null | 
 function createAstropressPublicSiteIntegration(options: AstropressPublicSiteOptions): AstroIntegration
 ```
 
+#### `buildPublicStructuredPageModel`
+```ts
+function buildPublicStructuredPageModel(path: string, locals: Locals): Promise<PublicStructuredPageModel | null>
+```
+
+#### `listPublishedStructuredPagePaths`
+```ts
+function listPublishedStructuredPagePaths(): Promise<string[]>
+```
+
 #### `appendQueryParam`
 ```ts
 function appendQueryParam(path: string, key: string, value: string): string
@@ -1808,6 +1818,7 @@ function validateWebhookCreateInput(input: { url: unknown; events: unknown; }): 
 - `type FirstPartyProviderTarget`
 - `interface PublicPreviewLink`
 - `interface AstropressPublicSiteOptions`
+- `interface PublicStructuredPageModel`
 - `interface ConnectIntegrationActionInput`
 - `type RuntimeIntegrationActionResult`
 - `interface R2BucketLike`

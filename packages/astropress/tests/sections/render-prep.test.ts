@@ -236,13 +236,15 @@ describe("buildSectionRenderContext", () => {
 		expect(ctx.testimonials.map((t) => t.id)).toEqual(["t1"]);
 	});
 
-	// Regression for #200 at the page level: the public renderer's frontmatter
-	// can't be executed under vitest, so guard its wiring at the source level
-	// (same idiom as admin-safety.test.ts) — it must build a real context and
-	// must never regress to the hard-coded empty one.
-	it("astropress-public-page.astro builds its render context from the runtime", () => {
+	// Regression for #200: the public renderer's context-building lives in
+	// src/public-structured-page.ts (shared by both .astro entrypoints — see
+	// #198). Its frontmatter can't run under vitest, so guard the wiring at the
+	// source level — it must build a real context from the runtime and must never
+	// regress to the hard-coded empty one. (Entrypoint delegation to this module
+	// is covered in tests/public-structured-page.test.ts.)
+	it("public-structured-page.ts builds its render context from the runtime", () => {
 		const source = readFileSync(
-			path.resolve(import.meta.dirname, "../../pages/astropress-public-page.astro"),
+			path.resolve(import.meta.dirname, "../../src/public-structured-page.ts"),
 			"utf8",
 		);
 		expect(source).toContain("buildSectionRenderContext(");

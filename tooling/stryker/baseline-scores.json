@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-07-29T14:14:27.104Z",
+  "updatedAt": "2026-07-29T14:23:12.156Z",
   "scores": {
     "packages/astropress/src/adapters/adapter-record-helpers.ts": {
       "score": 100,
@@ -299,7 +299,7 @@
     },
     "packages/astropress/src/public-site-integration.ts": {
       "score": 100,
-      "hash": "9733ecc48f7249ca44c53c1e9819e2cb36e24e49"
+      "hash": "36592a074984a3ec598f78519010d082f7a18980"
     },
     "packages/astropress/src/return-path.ts": {
       "score": 100,
@@ -1168,6 +1168,10 @@
     "packages/astropress/src/public-preview-link.ts": {
       "score": 100,
       "hash": "e2c97da1748d5fe1eae2eb2273680739a98d7328"
+    },
+    "packages/astropress/src/public-structured-page.ts": {
+      "score": 97.77777777777777,
+      "hash": "f72d93c666ef7783429dece356d28f6071b8369c"
     }
   }
 }

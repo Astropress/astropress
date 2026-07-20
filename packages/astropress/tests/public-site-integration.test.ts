@@ -100,6 +100,38 @@ describe("createAstropressPublicSiteIntegration", () => {
 		expect(slug?.entrypoint).toMatch(/pages\/astropress-public-page\.astro$/);
 	});
 
+	// #198: the /[...slug] entrypoint is command-conditional. `astro dev` gets an
+	// on-demand (prerender=false) sibling so pages published while the dev server
+	// runs render immediately; build/preview keep the prerendered page.
+	function injectedSlugEntrypoint(command?: "dev" | "build" | "preview"): string | undefined {
+		const injected: Array<{ pattern: string; entrypoint: string }> = [];
+		const hook = createPublicSiteDirect().hooks["astro:config:setup"];
+		if (typeof hook !== "function") throw new Error("Expected hook to be a function");
+		hook({
+			_config: {},
+			command,
+			injectRoute: (route: { pattern: string; entrypoint: string }) => injected.push(route),
+			addMiddleware: vi.fn(),
+			updateConfig: vi.fn(),
+		} as never);
+		return injected.find((r) => r.pattern === "/[...slug]")?.entrypoint;
+	}
+
+	it("injects the on-demand dev entrypoint at /[...slug] in `astro dev` (#198)", () => {
+		expect(injectedSlugEntrypoint("dev")).toMatch(/pages\/astropress-public-page-dev\.astro$/);
+	});
+
+	it("injects the prerendered entrypoint at /[...slug] for build and preview", () => {
+		expect(injectedSlugEntrypoint("build")).toMatch(/pages\/astropress-public-page\.astro$/);
+		expect(injectedSlugEntrypoint("preview")).toMatch(/pages\/astropress-public-page\.astro$/);
+	});
+
+	it("the on-demand dev entrypoint resolves to a real file on disk", () => {
+		const devEntry = injectedSlugEntrypoint("dev");
+		expect(typeof devEntry).toBe("string");
+		expect(existsSync(devEntry as string)).toBe(true);
+	});
+
 	// Imports the factory directly from the source module (not the barrel) so
 	// Stryker reliably associates these assertions with the file's mutants.
 	it("resolves route entrypoints to real paths and applies the shared vite config", () => {
