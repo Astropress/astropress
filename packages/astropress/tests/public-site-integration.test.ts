@@ -82,10 +82,19 @@ describe("createAstropressPublicSiteIntegration", () => {
 		return patterns;
 	}
 
-	it("always injects the public page renderer at /[...slug]", () => {
-		expect(collectInjectedPatterns(createAstropressPublicSiteIntegration())).toContain(
-			"/[...slug]",
-		);
+	it("always injects the public page renderer at /[...slug] with its entrypoint", () => {
+		const injected: Array<{ pattern: string; entrypoint: string }> = [];
+		const hook = createAstropressPublicSiteIntegration().hooks["astro:config:setup"];
+		if (typeof hook !== "function") throw new Error("Expected hook to be a function");
+		hook({
+			_config: {},
+			injectRoute: (route: { pattern: string; entrypoint: string }) => injected.push(route),
+			addMiddleware: vi.fn(),
+			updateConfig: vi.fn(),
+		} as never);
+		const slug = injected.find((r) => r.pattern === "/[...slug]");
+		expect(slug).toBeDefined();
+		expect(slug?.entrypoint).toMatch(/pages\/astropress-public-page\.astro$/);
 	});
 
 	it("injects only the renderer (no support routes) when includeSupportRoutes is false", () => {

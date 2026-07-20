@@ -1,6 +1,6 @@
 import { createReadStream } from "node:fs";
 import { copyFile, mkdir } from "node:fs/promises";
-import { basename, dirname, join } from "node:path";
+import { basename, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { AstroIntegration } from "astro";
 
@@ -15,14 +15,9 @@ import {
 } from "./admin-app-integration-data";
 import { injectAstropressAdminRoutes } from "./admin-routes";
 import { peekCmsConfig } from "./config";
+import { astropressHostViteConfig, resolvePackageRoot } from "./integration-host-config";
 
-// Package-root resolution: when this module runs from `dist/src/`, walk up two
-// levels; when it runs from `src/` (tests, dev without build), walk up one.
-const packageRoot = (() => {
-	const here = fileURLToPath(new URL(".", import.meta.url));
-	const parent = dirname(here);
-	return basename(parent) === "dist" ? dirname(parent) : parent;
-})();
+const packageRoot = resolvePackageRoot(import.meta.url);
 
 const packageResource = (relativePath: string) => join(packageRoot, relativePath);
 
@@ -56,31 +51,10 @@ export function createAstropressAdminAppIntegration(): AstroIntegration {
 				}
 			},
 			"astro:config:setup": ({ injectRoute, addMiddleware, updateConfig }) => {
-				// Provide the Vite settings the admin needs so a scaffolded project
-				// works with zero hand-editing (these used to be copied into every
-				// example's astro.config by hand — the drift that caused #185):
-				//  - ssr.noExternal: force Vite to process the package (and its bare
-				//    `astropress` self-imports) through its plugin pipeline, so the
-				//    local-runtime-modules seam resolves to the host implementation
-				//    instead of the dist stub that throws `unavailable()`.
-				//  - server.fs.allow: let the dev server read the package's injected
-				//    pages/assets when it lives outside the project root (linked or
-				//    monorepo installs).
-				updateConfig({
-					vite: {
-						// The package's injected pages/components self-import by the bare
-						// name `astropress`; map it to the scoped package that actually
-						// resolves via node_modules, so the host needs no manual alias.
-						resolve: {
-							alias: [
-								{ find: /^astropress\/(.*)$/, replacement: "@astropress-diy/astropress/$1" },
-								{ find: /^astropress$/, replacement: "@astropress-diy/astropress" },
-							],
-						},
-						ssr: { noExternal: ["@astropress-diy/astropress", "astropress"] },
-						server: { fs: { allow: [packageRoot] } },
-					},
-				});
+				// Vite settings so a scaffolded project resolves the package with zero
+				// hand-editing. Shared with the public-site integration so the two
+				// can't drift (the copy-paste that caused #185).
+				updateConfig({ vite: astropressHostViteConfig(packageRoot) });
 				const pagesDirectory = packageResource(ADMIN_APP_PAGES_DIRECTORY);
 				injectAstropressAdminRoutes(pagesDirectory, injectRoute);
 				for (const { pattern, entrypoint } of ADMIN_APP_INJECTED_ROUTES) {
