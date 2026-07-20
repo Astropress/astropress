@@ -71,6 +71,7 @@ describe("POST /ap/contact", () => {
 	it("stores a valid JSON submission and returns 200", async () => {
 		const res = await post(jsonRequest(VALID_FIELDS));
 		expect(res.status).toBe(200);
+		expect(res.headers.get("Content-Type")).toBe("application/json");
 		expect(await res.json()).toMatchObject({ ok: true });
 		expect(mockSubmitContact).toHaveBeenCalledWith(
 			expect.objectContaining({
@@ -142,6 +143,14 @@ describe("POST /ap/contact", () => {
 		expect(mockSubmitContact).not.toHaveBeenCalled();
 	});
 
+	it("returns 400 when the request has no content-type header at all", async () => {
+		const res = await post(new Request("http://localhost/ap/contact", { method: "POST" }));
+		expect(res.status).toBe(400);
+		const body = (await res.json()) as Record<string, unknown>;
+		expect(body.error).toBeTruthy();
+		expect(mockSubmitContact).not.toHaveBeenCalled();
+	});
+
 	it("returns 400 for an unparseable form body", async () => {
 		const res = await post(
 			new Request("http://localhost/ap/contact", {
@@ -176,6 +185,7 @@ describe("POST /ap/contact", () => {
 	it("honeypot: returns 200 but stores nothing when `website` is filled", async () => {
 		const res = await post(jsonRequest({ ...VALID_FIELDS, website: "https://spam.example" }));
 		expect(res.status).toBe(200);
+		expect(res.headers.get("Content-Type")).toBe("application/json");
 		expect(await res.json()).toMatchObject({ ok: true });
 		expect(mockSubmitContact).not.toHaveBeenCalled();
 		expect(mockCheckRateLimit).not.toHaveBeenCalled();
@@ -222,6 +232,7 @@ describe("POST /ap/contact", () => {
 		const res = await post(jsonRequest(VALID_FIELDS));
 		expect(res.status).toBe(429);
 		const body = (await res.json()) as Record<string, unknown>;
+		expect(body.ok).toBe(false);
 		expect(body.error).toBeTruthy();
 		expect(mockSubmitContact).not.toHaveBeenCalled();
 	});
@@ -262,6 +273,11 @@ describe("POST /ap/contact", () => {
 	it("forwards the cf-turnstile-response token to verification", async () => {
 		await post(jsonRequest({ ...VALID_FIELDS, "cf-turnstile-response": "tok-123" }));
 		expect(mockVerifyTurnstile).toHaveBeenCalledWith(expect.objectContaining({ token: "tok-123" }));
+	});
+
+	it("drops a non-string turnstile token instead of forwarding it", async () => {
+		await post(jsonRequest({ ...VALID_FIELDS, turnstileToken: 42 }));
+		expect(mockVerifyTurnstile).toHaveBeenCalledWith(expect.objectContaining({ token: undefined }));
 	});
 
 	it("audit failure does not break the 200 response", async () => {
