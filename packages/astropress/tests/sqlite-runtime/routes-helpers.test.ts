@@ -107,6 +107,7 @@ describe("mapStructuredPageRow", () => {
 	it("maps a structured row using settings JSON for templateKey + alternates", () => {
 		const row = {
 			path: "/x",
+			status: "published",
 			title: "X",
 			summary: "Sum",
 			seo_title: "SEO",
@@ -121,6 +122,7 @@ describe("mapStructuredPageRow", () => {
 		const result = mapStructuredPageRow(row);
 		expect(result).toEqual({
 			path: "/x",
+			status: "published",
 			title: "X",
 			summary: "Sum",
 			seoTitle: "SEO",

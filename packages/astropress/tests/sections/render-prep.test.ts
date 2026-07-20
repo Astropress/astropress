@@ -3,6 +3,7 @@ import path from "node:path";
 import { describe, expect, it, vi } from "vitest";
 import { renderSectionsBody } from "../../src/sections/preview-renderer";
 import {
+	buildMediaUrlMap,
 	buildSectionRenderContext,
 	collectMediaIds,
 	selectTestimonialsForSection,
@@ -142,6 +143,32 @@ describe("toPublicTestimonial", () => {
 		const t = toPublicTestimonial({ ...base, status: "featured" });
 		expect(t?.featured).toBe(true);
 		expect(t?.status).toBe("approved");
+	});
+
+	it("preserves a non-featured status verbatim (not coerced to approved)", () => {
+		// Kills `s.status && "approved"`: a truthy, non-"featured" status must pass
+		// through unchanged, not be rewritten to "approved".
+		const t = toPublicTestimonial({ ...base, status: "pending" });
+		expect(t?.featured).toBe(false);
+		expect(t?.status).toBe("pending");
+	});
+
+	it("defaults a missing status to approved", () => {
+		// Kills `s.status ?? ""`: a nullish status must fall back to "approved".
+		const t = toPublicTestimonial({ ...base, status: undefined });
+		expect(t?.status).toBe("approved");
+	});
+});
+
+describe("buildMediaUrlMap", () => {
+	it("omits records that resolve to an empty URL", () => {
+		// Kills `if (url)` → `if (true)`: a record whose localPath is "" resolves to
+		// a falsy URL and must not be added to the map.
+		const out = buildMediaUrlMap([
+			{ id: "m1", sourceUrl: null, localPath: "/media/a.webp", r2Key: null },
+			{ id: "empty", sourceUrl: null, localPath: "", r2Key: null },
+		]);
+		expect(out).toEqual({ m1: "/media/a.webp" });
 	});
 });
 

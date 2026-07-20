@@ -106,6 +106,16 @@ describe("parseUtcTimestamp", () => {
 		expect(Number.isNaN(parseUtcTimestamp("not-a-date"))).toBe(true);
 	});
 
+	// The ^…$ anchors keep the "space→T, append Z" rewrite exclusive to exact
+	// SQLite CURRENT_TIMESTAMP strings. A value merely padded with a stray
+	// leading or trailing space must fall through to Date.parse intact (finite),
+	// not be routed into the rewrite — which is what dropping either anchor does,
+	// mangling the padded value into NaN.
+	test("does not route whitespace-padded timestamps through the UTC rewrite", () => {
+		expect(Number.isFinite(parseUtcTimestamp(" 2026-07-18 05:22:00"))).toBe(true);
+		expect(Number.isFinite(parseUtcTimestamp("2026-07-18 05:22:00 "))).toBe(true);
+	});
+
 	// #195 regression: interpretation must not depend on the process timezone.
 	test("yields the same epoch under UTC and America/New_York", () => {
 		try {

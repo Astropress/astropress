@@ -216,6 +216,15 @@ describe("hashPasswordSync — default iterations (kills L142:40 ObjectLiteral)"
 		expect(verifyPasswordSync("hunter2", hash)).toBe(true);
 		expect(verifyPasswordSync("wrong", hash)).toBe(false);
 	});
+
+	it("passes the requested iteration count through to the encoded hash", () => {
+		// The default (2) equals ARGON2_ITERATIONS, so dropping the { iterations }
+		// option is invisible at the default. A non-default count must appear in
+		// the encoded hash (`$argon2id$<t>$…`), which forces the option through.
+		const hash = hashPasswordSync("hunter2", 3);
+		expect(hash.split("$")[1]).toBe("3");
+		expect(verifyPasswordSync("hunter2", hash)).toBe(true);
+	});
 });
 
 describe("serializeIdList", () => {

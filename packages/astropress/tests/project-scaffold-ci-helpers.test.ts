@@ -310,6 +310,16 @@ describe("output is newline-joined (kill `.join` separator mutants)", () => {
 	it("createAstropressConfig output contains newlines", () => {
 		expect(createAstropressConfig("vercel")).toMatch(/\n/);
 	});
+	it("createAstropressConfig joins with newlines, not just the embedded one", () => {
+		// The server-host config array's `output: "server",\n  integrations:` element
+		// carries its own embedded newline, so a bare toMatch(/\n/) survives
+		// `.join("\n")` → `.join("")`. Assert a line that only stands alone when the
+		// join separator is present — the import statement between the header lines
+		// and the vite block.
+		expect(createAstropressConfig("vercel").split("\n")).toContain(
+			`import { createAstropressViteIntegration, createAstropressAdminAppIntegration } from "@astropress-diy/astropress/integration";`,
+		);
+	});
 	it("gitHubActionsDeployWorkflow github-pages output contains newlines around install steps", () => {
 		const yaml = gitHubActionsDeployWorkflow("github-pages", []);
 		// The install steps are joined with \n so two adjacent steps must have a newline between them

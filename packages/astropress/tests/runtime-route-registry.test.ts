@@ -653,6 +653,9 @@ describe("listRuntimeStructuredPageRoutes", () => {
 		expect(routes).toHaveLength(1);
 		expect(routes[0].path).toBe("/about");
 		expect(routes[0].templateKey).toBe("content");
+		// Kills `row.status ?? undefined` → `row.status && undefined`: the seeded
+		// "published" status must round-trip, not collapse to undefined.
+		expect(routes[0].status).toBe("published");
 	});
 
 	it("excludes routes with invalid/missing templateKey", async () => {

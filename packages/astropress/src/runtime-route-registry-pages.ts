@@ -1,7 +1,6 @@
 import { normalizePath } from "./admin-normalizers";
 import { getCloudflareBindings } from "./runtime-env";
 import {
-	loadSafeLocalCmsRegistry,
 	parseSettings,
 	type RuntimeStructuredPageRouteRecord,
 	withSafeRouteRegistryFallback,
@@ -65,18 +64,15 @@ function mapStructuredPageRow(
 
 export async function listRuntimeStructuredPageRoutes(locals?: App.Locals | null) {
 	const db = getCloudflareBindings(locals).DB;
-	if (!db) {
-		const local = await loadSafeLocalCmsRegistry();
-		/* v8 ignore next 2 */
-		return local ? local.listStructuredPageRoutes() : [];
-	}
-
+	// No `db` fast-path: withSafeRouteRegistryFallback runs the operation, and a
+	// missing binding makes `db!.prepare` throw, which the wrapper catches and
+	// resolves through the same local-registry fallback — an identical result.
 	return withSafeRouteRegistryFallback(
 		(local) => local.listStructuredPageRoutes(),
 		[],
 		async () => {
 			const rows = (
-				await db
+				await db!
 					.prepare(
 						`
               SELECT v.path, v.status, v.title, v.summary, v.seo_title, v.meta_description, v.canonical_url_override, v.robots_directive,
@@ -113,18 +109,13 @@ export async function listRuntimeStructuredPageRoutes(locals?: App.Locals | null
 export async function getRuntimeStructuredPageRoute(pathname: string, locals?: App.Locals | null) {
 	const normalizedPath = normalizePath(pathname);
 	const db = getCloudflareBindings(locals).DB;
-	/* v8 ignore start */
-	if (!db) {
-		const local = await loadSafeLocalCmsRegistry();
-		return local ? local.getStructuredPageRoute(normalizedPath) : null;
-	}
-	/* v8 ignore stop */
-
+	// See listRuntimeStructuredPageRoutes: no `db` fast-path — a missing binding
+	// throws inside the operation and the wrapper falls back to the local registry.
 	return withSafeRouteRegistryFallback(
 		(local) => local.getStructuredPageRoute(normalizedPath),
 		null,
 		async () => {
-			const row = await db
+			const row = await db!
 				.prepare(
 					`
             SELECT v.path, v.status, v.title, v.summary, v.seo_title, v.meta_description, v.canonical_url_override, v.robots_directive,
