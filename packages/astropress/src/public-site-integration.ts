@@ -1,15 +1,9 @@
-import { basename, dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
+import { join } from "node:path";
 import type { AstroIntegration } from "astro";
 import { peekCmsConfig } from "./config";
+import { astropressHostViteConfig, resolvePackageRoot } from "./integration-host-config";
 
-// Package-root resolution: when this module runs from `dist/src/`, walk up two
-// levels; when it runs from `src/` (tests, dev without build), walk up one.
-const packageRoot = (() => {
-	const here = fileURLToPath(new URL(".", import.meta.url));
-	const parent = dirname(here);
-	return basename(parent) === "dist" ? dirname(parent) : parent;
-})();
+const packageRoot = resolvePackageRoot(import.meta.url);
 
 const packageResource = (relativePath: string) => join(packageRoot, relativePath);
 
@@ -59,25 +53,10 @@ export function createAstropressPublicSiteIntegration(
 			// No admin middleware is registered.
 			// The host site registers its own content loaders and public routes.
 			"astro:config:setup": ({ injectRoute, updateConfig }) => {
-				// Provide the Vite settings the injected public renderer needs so a
-				// scaffolded static build works without hand-editing astro.config
-				// (the renderer imports the package + reads its bundled sections.css).
-				// Matches createAstropressAdminAppIntegration so both dev and build
-				// resolve the package the same way.
-				updateConfig({
-					vite: {
-						// The injected renderer self-imports by the bare name `astropress`;
-						// map it to the scoped package so no host alias is required.
-						resolve: {
-							alias: [
-								{ find: /^astropress\/(.*)$/, replacement: "@astropress-diy/astropress/$1" },
-								{ find: /^astropress$/, replacement: "@astropress-diy/astropress" },
-							],
-						},
-						ssr: { noExternal: ["@astropress-diy/astropress", "astropress"] },
-						server: { fs: { allow: [packageRoot] } },
-					},
-				});
+				// Vite settings so the injected public renderer resolves the package
+				// without hand-editing astro.config. Shared with the admin-app
+				// integration so both dev and build resolve the package the same way.
+				updateConfig({ vite: astropressHostViteConfig(packageRoot) });
 				// buildHookSecret is reserved for future webhook rebuild support.
 				// Public renderer for admin-authored structured pages. Injected as a
 				// low-priority catch-all so specific host routes (e.g. src/pages/index.astro)
