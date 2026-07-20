@@ -118,10 +118,12 @@ export function localeFromAcceptLanguage(acceptLanguage: string | null | undefin
 	const entries = acceptLanguage
 		.split(",")
 		.map((part) => {
-			const [tag, qPart] = part.trim().split(";");
-			const q = qPart ? Number(qPart.trim().replace("q=", "")) : 1;
+			// `tag` is trimmed on return and `Number()` ignores whitespace, so no
+			// pre-split/pre-parse trim is needed — the split always yields a tag.
+			const [tag, qPart] = part.split(";");
+			const q = qPart ? Number(qPart.replace("q=", "")) : 1;
 			return {
-				tag: (tag ?? "").trim().toLowerCase(),
+				tag: tag.trim().toLowerCase(),
 				q: Number.isFinite(q) ? q : 1,
 			};
 		})
@@ -176,18 +178,18 @@ export {
 } from "../persistence-commons";
 
 export function serializeIdList(values: number[] | undefined) {
+	if (!values) return "[]";
 	return JSON.stringify(
-		(values ?? []).filter((entry) => Number.isInteger(entry) && entry > 0).sort((a, b) => a - b),
+		values.filter((entry) => Number.isInteger(entry) && entry > 0).sort((a, b) => a - b),
 	);
 }
 
 export function parseSystemSettings(value: string | null) {
-	if (!value) {
-		return null;
-	}
-
 	try {
-		const parsed = JSON.parse(value) as unknown;
+		// A null value coerces through JSON.parse to the literal `null` (rejected by
+		// the object guard below); "" throws and is caught. So both nullish inputs
+		// resolve to null without a dedicated early-return guard.
+		const parsed = JSON.parse(value as string) as unknown;
 		if (!parsed || typeof parsed !== "object") return null;
 		// audit-boundary: opaque-passthrough -- SQL row-shape mirror; columns narrowed at row-mapper boundary
 		return parsed as Record<string, unknown>;
