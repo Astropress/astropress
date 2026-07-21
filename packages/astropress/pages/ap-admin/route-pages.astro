@@ -1,7 +1,13 @@
 ---
 import { safeAdminUserName } from "astropress";
 import AdminLayout from "@astropress-diy/astropress/components/AdminLayout.astro";
-import { buildRouteTablePageModel, getPageT, resolveAdminLocale } from "astropress";
+import {
+	buildRouteTablePageModel,
+	getPageT,
+	peekCmsConfig,
+	resolveAdminLocale,
+	resolvePublicPreviewLink,
+} from "astropress";
 
 const adminUser = Astro.locals.adminUser;
 const model = await buildRouteTablePageModel(Astro.locals, adminUser);
@@ -15,6 +21,13 @@ const slugSaved = Astro.url.searchParams.get("slugSaved") === "1";
 const slugError = Astro.url.searchParams.get("error");
 const adminLocale = resolveAdminLocale(Astro);
 const t = getPageT(adminLocale);
+// "Open route" resolves against where the public site actually serves (#181):
+// same-origin in dev, a separate siteUrl in production, or disabled in the
+// admin harness where no public renderer is mounted.
+const siteUrl = peekCmsConfig()?.siteUrl ?? "";
+const publicRendererPresent = Boolean(import.meta.env.ASTROPRESS_PUBLIC_RENDERER_PRESENT);
+const openRoutePreview = (path: string) =>
+	resolvePublicPreviewLink({ baseUrl: Astro.url, path, siteUrl, publicRendererPresent });
 ---
 
 {model.status !== "forbidden" ? (
@@ -100,7 +113,9 @@ const t = getPageT(adminLocale);
             </tr>
           </thead>
           <tbody>
-            {routePages.map((page) => (
+            {routePages.map((page) => {
+              const preview = openRoutePreview(page.path);
+              return (
               <tr>
                 <td>
                   <a href={`/ap-admin/route-pages${page.path}`}>{page.title}</a>
@@ -108,10 +123,13 @@ const t = getPageT(adminLocale);
                 <td><code>{page.path}</code></td>
                 <td><span class="admin-chip">{page.templateKey}</span></td>
                 <td><a href="/ap-admin/pages" class="admin-button-ghost small">{t("routePages.pages")}</a></td>
-                <td><a href={page.path} target="_blank" rel="noreferrer" class="admin-button-ghost small">{t("routePages.openRoute")}</a></td>
+                <td>{preview.available
+                  ? <a href={preview.href} target="_blank" rel="noreferrer" class="admin-button-ghost small">{t("routePages.openRoute")}</a>
+                  : <span class="admin-button-ghost small disabled" aria-disabled="true" title={t("common.previewUnavailable")}>{t("routePages.openRoute")}</span>}</td>
                 <td>{page.updatedAt ? new Date(page.updatedAt).toLocaleString(adminLocale) : t("routePages.seeded")}</td>
               </tr>
-            ))}
+              );
+            })}
           </tbody>
         </table>
       </div>

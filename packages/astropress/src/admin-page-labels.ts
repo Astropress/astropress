@@ -31,6 +31,18 @@ export const pageLabels = {
 		hi: "खोजें",
 		ny: "Sakani",
 	},
+	"common.previewUnavailable": {
+		en: "Preview not available in this environment.",
+		ar: "المعاينة غير متاحة في هذه البيئة.",
+		es: "Vista previa no disponible en este entorno.",
+		fr: "Aperçu non disponible dans cet environnement.",
+		de: "Vorschau in dieser Umgebung nicht verfügbar.",
+		pt: "Pré-visualização não disponível neste ambiente.",
+		ja: "この環境ではプレビューを利用できません。",
+		te: "ఈ వాతావరణంలో ప్రివ్యూ అందుబాటులో లేదు.",
+		hi: "इस परिवेश में पूर्वावलोकन उपलब्ध नहीं है।",
+		ny: "Chiwonetsero sichikupezeka m'chilengedwe chino.",
+	},
 	"common.title": {
 		en: "Title",
 		ar: "العنوان",

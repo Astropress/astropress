@@ -128,6 +128,26 @@ describe("createAstropressPublicSiteIntegration", () => {
 		expect(viteConfig?.vite?.server).toBeDefined();
 	});
 
+	// #181: registering the public renderer defines a flag the admin reads to
+	// know a same-origin "Open page" preview will actually resolve here.
+	it("defines ASTROPRESS_PUBLIC_RENDERER_PRESENT so the admin can trust same-origin previews", () => {
+		let viteConfig: { vite?: { define?: Record<string, unknown> } } | undefined;
+		const hook = createPublicSiteDirect().hooks["astro:config:setup"];
+		if (typeof hook !== "function") throw new Error("Expected hook to be a function");
+		hook({
+			_config: {},
+			injectRoute: vi.fn(),
+			addMiddleware: vi.fn(),
+			updateConfig: (cfg: { vite?: Record<string, unknown> }) => {
+				viteConfig = cfg;
+			},
+		} as never);
+
+		expect(viteConfig?.vite?.define).toMatchObject({
+			"import.meta.env.ASTROPRESS_PUBLIC_RENDERER_PRESENT": "true",
+		});
+	});
+
 	it("injects only the renderer (no support routes) when includeSupportRoutes is false", () => {
 		// Used in the dev config alongside the admin integration, which already
 		// injects sitemap/robots/llms — this avoids a duplicate-route collision.

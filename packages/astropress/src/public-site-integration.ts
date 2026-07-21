@@ -1,11 +1,7 @@
-import { join } from "node:path";
 import type { AstroIntegration } from "astro";
 import { peekCmsConfig } from "./config";
-import { astropressHostViteConfig, resolvePackageRoot } from "./integration-host-config";
-
-const packageRoot = resolvePackageRoot(import.meta.url);
-
-const packageResource = (relativePath: string) => join(packageRoot, relativePath);
+import { astropressHostViteConfig } from "./integration-host-config";
+import { packageResource, packageRoot } from "./public-site-integration-data";
 
 export interface AstropressPublicSiteOptions {
 	/**
@@ -56,7 +52,21 @@ export function createAstropressPublicSiteIntegration(
 				// Vite settings so the injected public renderer resolves the package
 				// without hand-editing astro.config. Shared with the admin-app
 				// integration so both dev and build resolve the package the same way.
-				updateConfig({ vite: astropressHostViteConfig(packageRoot) });
+				//
+				// ASTROPRESS_PUBLIC_RENDERER_PRESENT records that *this* app actually
+				// serves the public page renderer, so the admin's "Open page"/"Open
+				// route" links know a same-origin preview will resolve (scaffold
+				// `astro dev` composes this integration alongside the admin). Apps that
+				// register only the admin (the harness, a production admin) never set
+				// it, so those links resolve against a separate siteUrl or disable
+				// honestly instead of 404ing (#181). Same define idiom as the sitemap
+				// integration's ASTROPRESS_SITE_URL.
+				updateConfig({
+					vite: {
+						...astropressHostViteConfig(packageRoot),
+						define: { "import.meta.env.ASTROPRESS_PUBLIC_RENDERER_PRESENT": "true" },
+					},
+				});
 				// buildHookSecret is reserved for future webhook rebuild support.
 				// Public renderer for admin-authored structured pages. Injected as a
 				// low-priority catch-all so specific host routes (e.g. src/pages/index.astro)
