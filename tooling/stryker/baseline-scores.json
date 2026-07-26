@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-05-29T20:18:05.627Z",
+  "updatedAt": "2026-07-26T19:00:18.101Z",
   "scores": {
     "packages/astropress/src/adapters/adapter-record-helpers.ts": {
       "score": 100,
@@ -39,7 +39,7 @@
     },
     "packages/astropress/src/admin-app-integration.ts": {
       "score": 100,
-      "hash": "d94d412c6b32bd0d26d3b4bca2da237cb0a7100d"
+      "hash": "5d5e49c40bb894799a023c9f841b50361dd4f9d0"
     },
     "packages/astropress/src/admin-dashboard.ts": {
       "score": 98.4,
@@ -287,7 +287,7 @@
     },
     "packages/astropress/src/project-scaffold-ci-helpers.ts": {
       "score": 100,
-      "hash": "2d3a11a6019c208c3716b282e7edc6c06ad27a7f"
+      "hash": "60ce91c71ce17acf8ad1cce6b38ed7ceb02194c2"
     },
     "packages/astropress/src/project-scaffold-ci.ts": {
       "score": 95.7983193277311,
@@ -299,7 +299,7 @@
     },
     "packages/astropress/src/public-site-integration.ts": {
       "score": 100,
-      "hash": "3695c33c9474ec04b8e338acbdb3fbffee621769"
+      "hash": "526048695b85b426c1753a1bf709697155e32633"
     },
     "packages/astropress/src/return-path.ts": {
       "score": 100,
@@ -359,7 +359,7 @@
     },
     "packages/astropress/src/runtime-route-registry-dispatch.ts": {
       "score": 100,
-      "hash": "16942706f94e98aadfaedebcbd0d2762e5201874"
+      "hash": "a580d7a3740479c086c2811dc719bd2d0b7e19cc"
     },
     "packages/astropress/src/sections/section-error.ts": {
       "score": 100,
@@ -398,8 +398,8 @@
       "hash": "9f0929ac226a97a403ed5d45b382a4366548ef82"
     },
     "packages/astropress/src/sqlite-bootstrap.ts": {
-      "score": 96.49122807017544,
-      "hash": "7e5ed6fa641931871005cf40b8eec47fc88a0529"
+      "score": 96.875,
+      "hash": "dd6d697f1da3410f82ffa4a1d3565acc9286feb9"
     },
     "packages/astropress/src/sqlite-runtime/api-tokens.ts": {
       "score": 97.82608695652173,
@@ -435,7 +435,7 @@
     },
     "packages/astropress/src/sqlite-runtime/routes-helpers.ts": {
       "score": 100,
-      "hash": "6e2c99633113cdda01bab0bbca98bf124a92f8df"
+      "hash": "73be5c51e5e9537fa0be64f7750a3634a8afd7fc"
     },
     "packages/astropress/src/sqlite-runtime/settings.ts": {
       "score": 100,
@@ -443,7 +443,7 @@
     },
     "packages/astropress/src/sqlite-runtime/utils.ts": {
       "score": 100,
-      "hash": "474af2263409635e4e043622c08d0f166657122b"
+      "hash": "7f36b0752d538a3e486731cdd50a653101264ecf"
     },
     "packages/astropress/src/sqlite-schema-compat.ts": {
       "score": 99.35897435897436,
@@ -551,7 +551,7 @@
     },
     "packages/astropress/src/admin-page-models.ts": {
       "score": 100,
-      "hash": "d34a39bec9db50d806120cb7ccb926900b6c973b"
+      "hash": "b0b890d1fbcf311bd9464b2f723ab25adf99ba1f"
     },
     "packages/astropress/src/admin-preview-middleware.ts": {
       "score": 100,
@@ -583,7 +583,7 @@
     },
     "packages/astropress/src/auth-repository-helpers.ts": {
       "score": 100,
-      "hash": "7c7afb0691d73b22a26a95aea3282c1f5e36c5e2"
+      "hash": "b38928413235b64bc5a01258d46dff4f7d1b7fa3"
     },
     "packages/astropress/src/author-repository-factory.ts": {
       "score": 100,
@@ -723,7 +723,7 @@
     },
     "packages/astropress/src/project-scaffold-passphrase.ts": {
       "score": 100,
-      "hash": "58ebfc70b1e1963bbe25da394e0e093ffbfbbe95"
+      "hash": "bf10c85d0f067864d528a7543fa4bc160e962002"
     },
     "packages/astropress/src/project-scaffold.ts": {
       "score": 100,
@@ -763,7 +763,7 @@
     },
     "packages/astropress/src/runtime-admin-auth.ts": {
       "score": 100,
-      "hash": "cb5a50bf3c3d0a48566e872faeb2a3c8c1d1467a"
+      "hash": "50655fbeb16e1651e4bcee13088f9271546e7b63"
     },
     "packages/astropress/src/runtime-health.ts": {
       "score": 96.29629629629629,
@@ -779,7 +779,7 @@
     },
     "packages/astropress/src/runtime-route-registry-pages.ts": {
       "score": 100,
-      "hash": "e1970be2a02702c4de79189aa12b219ccec505a8"
+      "hash": "4c375083a0ec2ced23faa3367f1912b58f889335"
     },
     "packages/astropress/src/runtime-route-registry-system.ts": {
       "score": 97.75280898876404,
@@ -962,12 +962,12 @@
       "hash": "a7d5896b7d58faea423ca692fcbe3ea09900ae66"
     },
     "packages/astropress/src/sections/preview-renderer.ts": {
-      "score": 98.79518072289156,
-      "hash": "dfe04179e835ac70609e61f93c1dcaa8c91e9e3c"
+      "score": 100,
+      "hash": "494ebba302f709332f4fcef7561116df2f9ef191"
     },
     "packages/astropress/src/sections/render-prep.ts": {
-      "score": 98.14814814814815,
-      "hash": "eeb203fc4d39437809b56a35abfe8f2070ad0b17"
+      "score": 100,
+      "hash": "45fcd976edab84852812d5b793cb520e07d96e1c"
     },
     "packages/astropress/src/sections/sanitize.ts": {
       "score": 100,

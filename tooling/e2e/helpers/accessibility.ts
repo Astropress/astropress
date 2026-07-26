@@ -70,7 +70,20 @@ export async function expectNoAxeViolations(page: Page, options?: { ignoreRules?
 	//
 	// We turn AAA contrast on via `options.rules` so it runs in addition to the
 	// tag-driven AA + best-practice rules, never instead of them.
+	//
+	// legacyMode: axe-core-playwright's default mode aggregates results by
+	// opening a second, blank page via context.newPage() (finishRun()). On
+	// resource-constrained hosts that call can hang indefinitely inside
+	// Target.createTarget — reproduced regardless of test order or headed/
+	// headless mode, always specifically on the scan that runs while a native
+	// <dialog> is open elsewhere on the page. legacyMode is axe-core-playwright's
+	// own documented answer for exactly this ("an environment where opening a
+	// blank page causes issues"): it audits in-page via axe-core's own
+	// postMessage frame protocol instead, at the cost of skipping cross-origin
+	// iframes only — same-origin iframes (all of ours) stay covered, and axe's
+	// own `frame-tested` rule would flag anything that couldn't be verified.
 	const results = await new AxeBuilder({ page })
+		.setLegacyMode()
 		.withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa", "best-practice"])
 		.options({ rules: { "color-contrast-enhanced": { enabled: true } } })
 		.analyze();
