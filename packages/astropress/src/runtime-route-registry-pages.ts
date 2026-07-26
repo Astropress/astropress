@@ -45,6 +45,10 @@ function mapStructuredPageRow(
 	}
 	return {
 		path: row.path,
+		// cms_route_variants.status is TEXT NOT NULL (schema-enforced) — the
+		// nullish fallback only exists to satisfy the shared row type's
+		// optional `status?: string | null`, never to handle a real null.
+		/* v8 ignore next */
 		status: row.status ?? undefined,
 		title: row.title,
 		summary: row.summary ?? undefined,
