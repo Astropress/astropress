@@ -1,6 +1,6 @@
 import { createReadStream } from "node:fs";
 import { copyFile, mkdir } from "node:fs/promises";
-import { basename, dirname, join } from "node:path";
+import { basename, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { AstroIntegration } from "astro";
 
@@ -11,17 +11,13 @@ import {
 	ADMIN_APP_INTEGRATION_NAME,
 	ADMIN_APP_PAGES_DIRECTORY,
 	ADMIN_APP_SECURITY_MIDDLEWARE_ENTRYPOINT,
+	ADMIN_APP_SESSION_MIDDLEWARE_ENTRYPOINT,
 } from "./admin-app-integration-data";
 import { injectAstropressAdminRoutes } from "./admin-routes";
 import { peekCmsConfig } from "./config";
+import { astropressHostViteConfig, resolvePackageRoot } from "./integration-host-config";
 
-// Package-root resolution: when this module runs from `dist/src/`, walk up two
-// levels; when it runs from `src/` (tests, dev without build), walk up one.
-const packageRoot = (() => {
-	const here = fileURLToPath(new URL(".", import.meta.url));
-	const parent = dirname(here);
-	return basename(parent) === "dist" ? dirname(parent) : parent;
-})();
+const packageRoot = resolvePackageRoot(import.meta.url);
 
 const packageResource = (relativePath: string) => join(packageRoot, relativePath);
 
@@ -54,7 +50,11 @@ export function createAstropressAdminAppIntegration(): AstroIntegration {
 					await copyFile(asset, join(outDir, basename(asset)));
 				}
 			},
-			"astro:config:setup": ({ injectRoute, addMiddleware }) => {
+			"astro:config:setup": ({ injectRoute, addMiddleware, updateConfig }) => {
+				// Vite settings so a scaffolded project resolves the package with zero
+				// hand-editing. Shared with the public-site integration so the two
+				// can't drift (the copy-paste that caused #185).
+				updateConfig({ vite: astropressHostViteConfig(packageRoot) });
 				const pagesDirectory = packageResource(ADMIN_APP_PAGES_DIRECTORY);
 				injectAstropressAdminRoutes(pagesDirectory, injectRoute);
 				for (const { pattern, entrypoint } of ADMIN_APP_INJECTED_ROUTES) {
@@ -76,6 +76,15 @@ export function createAstropressAdminAppIntegration(): AstroIntegration {
 					}
 				}
 
+				// Resolve the signed-in admin from the session cookie into
+				// `locals.adminUser` before the security middleware and the page
+				// guards run. Without this a host could log in yet 403 on every
+				// admin page (the guards read `locals.adminUser`, which nothing
+				// else populates outside the e2e harness).
+				addMiddleware({
+					order: "pre",
+					entrypoint: new URL(ADMIN_APP_SESSION_MIDDLEWARE_ENTRYPOINT, import.meta.url),
+				});
 				addMiddleware({
 					order: "pre",
 					entrypoint: new URL(ADMIN_APP_SECURITY_MIDDLEWARE_ENTRYPOINT, import.meta.url),

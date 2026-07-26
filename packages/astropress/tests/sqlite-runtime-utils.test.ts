@@ -64,9 +64,16 @@ describe("normalizeStructuredTemplateKey", () => {
 		expect(normalizeStructuredTemplateKey("missing")).toBeNull();
 	});
 
-	it("returns null when getCmsConfig throws (catch branch)", () => {
+	it("accepts the stored key when getCmsConfig throws (uninitialized — e.g. static build)", () => {
 		clearCmsConfig();
-		expect(normalizeStructuredTemplateKey("any")).toBeNull();
+		// Lenient: a published page must not vanish just because registerCms() has
+		// not run (as during a static build's getStaticPaths).
+		expect(normalizeStructuredTemplateKey("any")).toBe("any");
+	});
+
+	it("accepts the stored key when templateKeys is empty (unconfigured)", () => {
+		setCmsConfig({ templateKeys: [] });
+		expect(normalizeStructuredTemplateKey("landing")).toBe("landing");
 	});
 
 	it("returns null for '' even when templateKeys contains '' (kills L57 ConditionalExpression:false, LogicalOperator, BlockStatement)", () => {
@@ -208,6 +215,15 @@ describe("hashPasswordSync — default iterations (kills L142:40 ObjectLiteral)"
 		expect(hash).not.toBe("");
 		expect(verifyPasswordSync("hunter2", hash)).toBe(true);
 		expect(verifyPasswordSync("wrong", hash)).toBe(false);
+	});
+
+	it("passes the requested iteration count through to the encoded hash", () => {
+		// The default (2) equals ARGON2_ITERATIONS, so dropping the { iterations }
+		// option is invisible at the default. A non-default count must appear in
+		// the encoded hash (`$argon2id$<t>$…`), which forces the option through.
+		const hash = hashPasswordSync("hunter2", 3);
+		expect(hash.split("$")[1]).toBe("3");
+		expect(verifyPasswordSync("hunter2", hash)).toBe(true);
 	});
 });
 

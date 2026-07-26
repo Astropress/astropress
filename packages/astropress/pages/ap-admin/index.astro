@@ -9,7 +9,13 @@ import {
 } from "astropress";
 
 const adminUser = Astro.locals.adminUser;
-const isAdmin = !!adminUser && isAuthUserAdmin(adminUser);
+// #197: the dashboard is the post-login landing page and must be authenticated.
+// Redirect anonymous visitors to login (matching /ap-admin/posts) instead of
+// rendering the editorial overview + full nav to them. The model also refuses a
+// missing user (defense in depth), so this check both fixes the UX and avoids
+// building the dashboard for anon.
+if (!adminUser) return Astro.redirect("/ap-admin/login");
+const isAdmin = isAuthUserAdmin(adminUser);
 const model = await buildAdminDashboardPageModel(Astro.locals, adminUser);
 const {
 	comments,

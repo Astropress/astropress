@@ -2,7 +2,7 @@
 import { safeAdminUserName } from "astropress";
 import AdminLayout from "@astropress-diy/astropress/components/AdminLayout.astro";
 import CsrfInput from "@astropress-diy/astropress/components/CsrfInput.astro";
-import { parseSections, TEMPLATE_CATALOG } from "@astropress-diy/astropress/sections";
+import { buildTemplate, parseSections, TEMPLATE_CATALOG } from "@astropress-diy/astropress/sections";
 import {
 	buildRoutePageEditorModel,
 	getAdminLocalePair,
@@ -34,7 +34,12 @@ const parsedExisting = parseSections(pageRecord?.sections ?? null);
 const existingSections = parsedExisting.ok ? parsedExisting.sections : [];
 const sectionEditorState = JSON.stringify({
 	sections: existingSections,
-	templates: TEMPLATE_CATALOG,
+	// Embed each template's fully-built sections so the client inserts the same
+	// rich, validation-safe content the server would (single source of truth).
+	templates: TEMPLATE_CATALOG.map((entry) => ({
+		...entry,
+		sections: buildTemplate(entry.key),
+	})),
 }).replace(/<\/script/gi, "<\\/script");
 // Translated label keys for the section editor live in `pageTemplates.*` and
 // `sectionFields.*` (added in the labels translation pass). Until those keys
@@ -102,6 +107,7 @@ if (model.status === "not_found") {
           >
             <script type="application/json" data-section-editor-state set:html={sectionEditorState}></script>
             <input type="hidden" id="sections-payload-input" name="sectionsJson" data-section-editor-input />
+            <p class="ap-section-editor__error" data-section-editor-error role="alert" hidden></p>
             <div data-section-editor-list class="ap-section-editor__list"></div>
             <div class="ap-section-editor__footer">
               <button type="button" class="admin-button" data-section-editor-add>

@@ -3,7 +3,7 @@
 Auto-generated from TypeScript source via the TypeScript compiler API.
 Run `bun run docs:api` to regenerate.
 
-Generated: 2026-05-29
+Generated: 2026-07-20
 
 ---
 
@@ -948,7 +948,7 @@ function listFirstPartyProviderTargets(): FirstPartyProviderTarget[]
 
 #### `createAstropressPublicSiteIntegration`
 ```ts
-function createAstropressPublicSiteIntegration(_options: AstropressPublicSiteOptions): AstroIntegration
+function createAstropressPublicSiteIntegration(options: AstropressPublicSiteOptions): AstroIntegration
 ```
 
 #### `appendQueryParam`
@@ -1354,6 +1354,11 @@ function getRuntimeSettings(locals: Locals | null | undefined): Promise<SiteSett
 #### `getRuntimeTags`
 ```ts
 function getRuntimeTags(locals: Locals | null | undefined): Promise<TaxonomyTerm[]>
+```
+
+#### `getRuntimeTestimonials`
+```ts
+function getRuntimeTestimonials(status: TestimonialStatus | undefined, locals: Locals | null | undefined): Promise<TestimonialSubmission[]>
 ```
 
 #### `getRuntimeTranslationState`

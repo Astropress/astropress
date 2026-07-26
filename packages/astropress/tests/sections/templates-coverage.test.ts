@@ -2,12 +2,24 @@
  * Branch / literal coverage for sections/templates.ts.
  */
 import { describe, expect, it } from "vitest";
+import { parseSections } from "../../src/sections/schema";
 import {
 	buildTemplate,
 	isTemplateKey,
 	TEMPLATE_CATALOG,
 	TEMPLATE_KEYS,
 } from "../../src/sections/templates";
+
+describe("templates are scaffold-safe (issue #190)", () => {
+	// Every built template must pass the same validator the save action runs, so
+	// "pick a template → Save" never fails on a missing required field.
+	for (const key of TEMPLATE_KEYS) {
+		it(`buildTemplate("${key}") produces sections that pass parseSections`, () => {
+			const result = parseSections(buildTemplate(key));
+			expect(result.ok, result.ok ? "" : JSON.stringify(result.errors)).toBe(true);
+		});
+	}
+});
 
 describe("templates content", () => {
 	it("landing[0] hero alignment is 'center' with headline + subhead + primaryCta", () => {

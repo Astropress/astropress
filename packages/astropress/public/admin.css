@@ -1489,6 +1489,15 @@ html[dir="rtl"] li {
 .ap-section-editor {
 	display: block;
 }
+.ap-section-editor__error {
+	background: #fff0f2;
+	color: #8f1730;
+	border: 1px solid #f0c0ca;
+	border-radius: 0.8rem;
+	padding: 0.9rem 1rem;
+	margin: 0 0 0.75rem;
+	font-weight: 700;
+}
 .ap-section-editor__list {
 	display: flex;
 	flex-direction: column;

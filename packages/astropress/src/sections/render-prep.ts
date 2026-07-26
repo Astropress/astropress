@@ -59,6 +59,78 @@ export function buildMediaUrlMap(
 	return out;
 }
 
+/**
+ * Store-level testimonial submission, as returned by getRuntimeTestimonials.
+ * Structural (not the persistence type) so hosts with custom runtimes can
+ * feed their own records through the same public mapping.
+ */
+export interface TestimonialSubmissionLike {
+	id: string;
+	name: string;
+	role?: string;
+	company?: string;
+	beforeState?: string;
+	transformation?: string;
+	specificResult?: string;
+	consentToPublish: boolean;
+	status?: string | null;
+}
+
+/**
+ * Map a store submission to the shape the section renderers consume, or null
+ * when it must not appear publicly. This is the single choke point for the
+ * two public-display gates: consentToPublish, and having any quotable text
+ * (specificResult, falling back to transformation). The store's "featured"
+ * status becomes the renderer's featured flag; featured implies approved.
+ */
+export function toPublicTestimonial(s: TestimonialSubmissionLike): TestimonialLike | null {
+	if (!s.consentToPublish) return null;
+	const quote = s.specificResult || s.transformation || "";
+	if (!quote) return null;
+	const featured = s.status === "featured";
+	return {
+		id: s.id,
+		name: s.name,
+		role: s.role ?? null,
+		company: s.company ?? null,
+		quote,
+		featured,
+		status: featured ? "approved" : (s.status ?? "approved"),
+	};
+}
+
+export interface SectionContentReaders {
+	listMediaAssets(): Promise<MediaLike[]>;
+	listPublicTestimonials(): Promise<TestimonialSubmissionLike[]>;
+}
+
+/**
+ * Build the render context for a parsed sections array. Only touches the
+ * store for what the sections actually reference: media lookups are skipped
+ * when no section carries a mediaId, testimonial lookups when no
+ * testimonials section exists — so prerendering a plain text page costs no
+ * extra reads.
+ */
+export async function buildSectionRenderContext(
+	sections: Section[],
+	readers: SectionContentReaders,
+	locals?: App.Locals | null,
+): Promise<SectionRenderContext> {
+	const mediaIds = new Set(collectMediaIds(sections));
+	const mediaUrls = mediaIds.size
+		? buildMediaUrlMap(
+				(await readers.listMediaAssets()).filter((record) => mediaIds.has(record.id)),
+				locals,
+			)
+		: {};
+	const testimonials = sections.some((section) => section.kind === "testimonials")
+		? (await readers.listPublicTestimonials())
+				.map(toPublicTestimonial)
+				.filter((t): t is TestimonialLike => t !== null)
+		: [];
+	return { mediaUrls, testimonials };
+}
+
 function isApproved(t: TestimonialLike): boolean {
 	return (t.status ?? "approved") === "approved";
 }

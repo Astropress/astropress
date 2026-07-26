@@ -60,6 +60,34 @@ describe("createDefaultAstropressSqliteSeedToolkit — default seed users", () =
 		expect(editor?.is_admin).toBe(0);
 		expect(verifyArgon2idPassword("password", editor?.password_hash ?? "")).toBe(true);
 	}, 60_000);
+
+	it("seeds the bootstrap users with ADMIN_PASSWORD / EDITOR_PASSWORD when provided", () => {
+		const prevAdmin = process.env.ADMIN_PASSWORD;
+		const prevEditor = process.env.EDITOR_PASSWORD;
+		process.env.ADMIN_PASSWORD = "env-admin-secret";
+		process.env.EDITOR_PASSWORD = "env-editor-secret";
+		try {
+			const toolkit = createDefaultAstropressSqliteSeedToolkit();
+			const db = makeDb();
+			toolkit.seedDatabase({ db, dbPath: ":memory:" });
+
+			const rows = db
+				.prepare("SELECT email, password_hash FROM admin_users ORDER BY email")
+				.all() as Array<{ email: string; password_hash: string }>;
+			const admin = rows.find((u) => u.email === "admin@example.com");
+			const editor = rows.find((u) => u.email === "editor@example.com");
+
+			// The env-provided credentials authenticate; the dev default does not.
+			expect(verifyArgon2idPassword("env-admin-secret", admin?.password_hash ?? "")).toBe(true);
+			expect(verifyArgon2idPassword("password", admin?.password_hash ?? "")).toBe(false);
+			expect(verifyArgon2idPassword("env-editor-secret", editor?.password_hash ?? "")).toBe(true);
+		} finally {
+			if (prevAdmin === undefined) delete process.env.ADMIN_PASSWORD;
+			else process.env.ADMIN_PASSWORD = prevAdmin;
+			if (prevEditor === undefined) delete process.env.EDITOR_PASSWORD;
+			else process.env.EDITOR_PASSWORD = prevEditor;
+		}
+	}, 60_000);
 });
 
 describe("createDefaultAstropressSqliteSeedToolkit — default site settings", () => {

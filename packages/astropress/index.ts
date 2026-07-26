@@ -754,6 +754,7 @@ export {
 	getRuntimeRedirectRules,
 	getRuntimeSettings,
 	getRuntimeTags,
+	getRuntimeTestimonials,
 	getRuntimeTranslationState,
 	listRuntimeContentStates,
 	peekRuntimeRateLimit,

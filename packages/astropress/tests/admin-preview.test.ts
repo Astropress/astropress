@@ -100,6 +100,7 @@ describe("preview route isolation from production build", () => {
 				injected.push(route.pattern);
 			},
 			addMiddleware: () => {},
+			updateConfig: () => {},
 		} as never);
 
 		expect(injected.filter((p) => p.includes("preview"))).toHaveLength(0);

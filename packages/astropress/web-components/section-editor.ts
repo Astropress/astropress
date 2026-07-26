@@ -24,15 +24,21 @@
  * sends the latest payload.
  */
 
+import { humanizeSectionError, sectionErrorIndex } from "../src/sections/section-error";
 import type { CtaButton, FaqItem, FeatureItem, Section, SectionKind } from "../src/sections/schema";
-import { SECTION_KINDS } from "../src/sections/schema";
+import { parseSections, SECTION_KINDS } from "../src/sections/schema";
 import type { TemplateCatalogEntry } from "../src/sections/templates";
 
 type AnySection = Section;
 
+// A catalog entry may carry the fully-built section list (from the server's
+// `buildTemplate`), so the client inserts the same rich, valid content rather
+// than rebuilding empty sections from `sectionKinds`.
+type EditorTemplate = TemplateCatalogEntry & { sections?: AnySection[] };
+
 interface EditorState {
 	sections: AnySection[];
-	templates: TemplateCatalogEntry[];
+	templates: EditorTemplate[];
 }
 
 interface EditorLabels {
@@ -60,29 +66,33 @@ function uuid(): string {
 	return `s-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
+// Defaults for a freshly added section. Required fields carry a non-empty
+// placeholder so a newly added section (or a template built from these) passes
+// server-side validation immediately — the operator replaces the copy, but
+// "add section → Save" never fails on an empty required field.
 function defaultsForKind(kind: SectionKind): AnySection {
 	const id = uuid();
 	switch (kind) {
 		case "hero":
-			return { id, kind, headline: "", alignment: "start" };
+			return { id, kind, headline: "Your headline", alignment: "start" };
 		case "feature-grid":
-			return { id, kind, heading: "", columns: 3, items: [] };
+			return { id, kind, heading: "Section heading", columns: 3, items: [] };
 		case "testimonials":
 			return { id, kind, source: "featured", layout: "grid" };
 		case "cta-banner":
 			return {
 				id,
 				kind,
-				headline: "",
-				primaryCta: { label: "", href: "" },
+				headline: "Ready to get started?",
+				primaryCta: { label: "Learn more", href: "#" },
 				tone: "neutral",
 			};
 		case "image-text":
 			return {
 				id,
 				kind,
-				heading: "",
-				body: "",
+				heading: "Section heading",
+				body: "Add your content here.",
 				mediaId: "",
 				imageSide: "start",
 			};
@@ -190,11 +200,13 @@ export class ApSectionEditor extends HTMLElement {
 	private addDialog: HTMLDialogElement | null = null;
 	private abort: AbortController | null = null;
 	private dragSourceId: string | null = null;
+	private validationMsg: HTMLElement | null = null;
 
 	connectedCallback() {
 		this.abort = new AbortController();
 		const { signal } = this.abort;
 		this.state = parseInitialState(this);
+		this.restoreStashIfFailed();
 		this.labels = resolveLabels(this);
 		this.list = this.querySelector<HTMLElement>("[data-section-editor-list]");
 		this.hiddenInput = this.querySelector<HTMLInputElement>("[data-section-editor-input]");
@@ -229,6 +241,28 @@ export class ApSectionEditor extends HTMLElement {
 		this.addDialog?.addEventListener("click", (e) => this.onAddDialogClick(e), {
 			signal,
 		});
+
+		// Validate before the form submits. A server-side validation failure
+		// redirects and re-renders the editor from the database, discarding every
+		// unsaved section — so we catch invalid sections here and block the submit,
+		// keeping the operator's in-progress work intact. (Issue #190.)
+		this.validationMsg = this.querySelector<HTMLElement>("[data-section-editor-error]");
+		this.closest("form")?.addEventListener(
+			"submit",
+			(e) => {
+				const problem = this.validateSections();
+				if (problem) {
+					e.preventDefault();
+					this.showValidationError(problem);
+					return;
+				}
+				// Client validation passed — stash the payload so that if the server
+				// still rejects the save (or any redirect returns to this editor), the
+				// in-progress sections are restored instead of the stale DB copy.
+				this.stashSections();
+			},
+			{ signal },
+		);
 	}
 
 	disconnectedCallback() {
@@ -318,7 +352,7 @@ ${this.renderCtaInputs("secondaryCta", s.secondaryCta)}
 	): string {
 		return `
 <div class="admin-field">
-  <span>${escapeHtml(this.fieldLabel(field, field === "mediaIds" ? "Media ids" : "Media id"))}</span>
+  <label for="${escapeHtml(inputId)}">${escapeHtml(this.fieldLabel(field, field === "mediaIds" ? "Media ids" : "Media id"))}</label>
   <div class="ap-section-card__media-row">
     <input id="${escapeHtml(inputId)}" class="admin-input" data-field="${escapeHtml(field)}" type="text" value="${escapeHtml(value)}" />
     <ap-media-picker for="${escapeHtml(inputId)}" multiple="${multiple ? "true" : "false"}">
@@ -617,9 +651,15 @@ ${this.renderMediaIdField(`media-${s.id}`, s.mediaIds.join(", "), "mediaIds", tr
 					const localized = this.labels.template[t.key];
 					const title = localized?.title ?? t.defaultTitle;
 					const desc = localized?.description ?? t.defaultDescription;
-					return `<button type="button" class="ap-section-editor__pick" data-template="${escapeHtml(t.key)}">
+					const descId = `ap-tpl-desc-${escapeHtml(t.key)}`;
+					// Explicit aria-label pins the accessible *name* to the title alone
+					// (not title + long description concatenation), and exposes it even to
+					// tools that don't read nested element text. aria-describedby then
+					// re-attaches the description so AT still announces it — an aria-label
+					// alone would silence the <span> it overrides.
+					return `<button type="button" class="ap-section-editor__pick" data-template="${escapeHtml(t.key)}" aria-label="${escapeHtml(title)}" aria-describedby="${descId}">
   <strong>${escapeHtml(title)}</strong>
-  <span>${escapeHtml(desc)}</span>
+  <span id="${descId}">${escapeHtml(desc)}</span>
 </button>`;
 				})
 				.join("");
@@ -661,16 +701,78 @@ ${this.renderMediaIdField(`media-${s.id}`, s.mediaIds.join(", "), "mediaIds", tr
 		}
 	}
 
+	/**
+	 * Validates with the exact server parser (`parseSections`) so there is no
+	 * client/server drift — every rule the save action would reject is caught
+	 * here before submit. Returns the first problem, or null if valid.
+	 */
+	private validateSections(): { id: string; message: string } | null {
+		const result = parseSections(this.state.sections);
+		if (result.ok) return null;
+		const error = result.errors[0];
+		const index = sectionErrorIndex(error);
+		const section = index >= 0 ? this.state.sections[index] : undefined;
+		return {
+			id: section?.id ?? "",
+			message: humanizeSectionError(this.state.sections, error),
+		};
+	}
+
+	private stashKey(): string {
+		return `ap-section-editor:${location.pathname}`;
+	}
+
+	/** Persist the in-progress sections across a form submit / redirect. */
+	private stashSections() {
+		try {
+			sessionStorage.setItem(this.stashKey(), JSON.stringify(this.state.sections));
+		} catch {
+			// sessionStorage unavailable (private mode / quota) — best-effort only.
+		}
+	}
+
+	/**
+	 * If the last save failed (`?error=1`) and we stashed the submitted sections,
+	 * restore them so the operator keeps their work instead of the DB copy the
+	 * server re-rendered. The stash is consumed once either way.
+	 */
+	private restoreStashIfFailed() {
+		try {
+			const key = this.stashKey();
+			const stashed = sessionStorage.getItem(key);
+			if (!stashed) return;
+			sessionStorage.removeItem(key);
+			if (new URLSearchParams(location.search).get("error") !== "1") return;
+			const parsed = JSON.parse(stashed) as unknown;
+			if (Array.isArray(parsed)) {
+				this.state.sections = parsed as AnySection[];
+			}
+		} catch {
+			// sessionStorage/JSON unavailable — leave the server-provided state as-is.
+		}
+	}
+
+	private showValidationError(problem: { id: string; message: string }) {
+		if (this.validationMsg) {
+			this.validationMsg.textContent = problem.message;
+			this.validationMsg.hidden = false;
+		}
+		const item = this.list?.querySelector<HTMLElement>(`[data-section-id="${problem.id}"]`);
+		// scrollIntoView/focus are progressive enhancements — optional-call so a
+		// headless environment without them can't throw out of the submit handler.
+		item?.scrollIntoView?.({ block: "center" });
+		item?.querySelector<HTMLElement>("input, textarea, select")?.focus?.();
+	}
+
 	private applyTemplate(key: string) {
 		const tpl = this.state.templates.find((t) => t.key === key);
 		if (!tpl) return;
-		// We don't have buildTemplate here (server-only). Build from kinds with defaults.
-		const id = () => uuid();
-		const next = tpl.sectionKinds.map((kind) => {
-			const def = defaultsForKind(kind);
-			def.id = id();
-			return def;
-		});
+		// Prefer the server-built section content (rich + validation-safe); fall
+		// back to building from kinds with defaults only if it wasn't provided.
+		const next: AnySection[] =
+			tpl.sections && tpl.sections.length > 0
+				? tpl.sections.map((section) => ({ ...structuredClone(section), id: uuid() }))
+				: tpl.sectionKinds.map((kind) => defaultsForKind(kind));
 		this.state.sections = [...this.state.sections, ...next];
 		this.renderAll();
 		this.syncHiddenInput();
