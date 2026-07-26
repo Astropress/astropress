@@ -22,10 +22,15 @@ export default defineConfig({
 			name: "admin-harness-a11y",
 			testMatch: /admin-harness-accessibility\.spec\.ts/,
 			// The route-page section-editor scenario runs two full axe scans plus
-			// dialog interaction; that clears the global 60s budget with little
-			// margin on slower/unsupported-OS Chromium builds. Give this project
-			// headroom rather than leave it flaky.
+			// dialog interaction (axe-core-playwright opens an isolated blank page
+			// per scan via context.newPage()). On resource-constrained hosts this
+			// intermittently hangs inside that second Target.createTarget call
+			// regardless of test order or headed/headless mode — ruled both out
+			// by direct reproduction. Give it timeout headroom and one retry
+			// rather than leave it flaky; matches the existing admin-perf-timing
+			// precedent below.
 			timeout: 120_000,
+			retries: 1,
 			use: {
 				baseURL: process.env.PLAYWRIGHT_ADMIN_BASE_URL ?? "http://127.0.0.1:4325",
 			},
