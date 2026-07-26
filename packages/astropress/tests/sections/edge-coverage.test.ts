@@ -79,4 +79,19 @@ describe("selectTestimonialsForSection — ids logical-operator guard", () => {
 		const picked = selectTestimonialsForSection(sec, all);
 		expect(picked).toEqual([]);
 	});
+
+	it("ignores ids when source is not 'ids' (kills `source === 'ids'` → true)", () => {
+		// A non-ids source carrying a stray ids array must still take its own
+		// branch. Here `source: "featured"` with ids pointing at the non-featured
+		// entry: the featured branch yields [a]; the ids branch would yield [b].
+		const sec = {
+			id: "t",
+			kind: "testimonials",
+			source: "featured",
+			layout: "grid",
+			ids: ["b"],
+		} as TestimonialsSection;
+		const picked = selectTestimonialsForSection(sec, all);
+		expect(picked.map((p) => p.id)).toEqual(["a"]);
+	});
 });

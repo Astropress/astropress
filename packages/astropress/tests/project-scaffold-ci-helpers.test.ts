@@ -1,3 +1,5 @@
+import { existsSync, readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import {
 	createAstropressConfig,
@@ -9,6 +11,7 @@ import {
 	gitLabPagesWorkflow,
 	isStaticOnlyHost,
 } from "../src/project-scaffold-ci-helpers";
+import { ASTRO_STATIC_HOST_CONFIG_LINES } from "../src/project-scaffold-ci-helpers-data";
 
 describe("isStaticOnlyHost", () => {
 	it("returns true only for github-pages / gitlab-pages", () => {
@@ -161,11 +164,18 @@ describe("gitLabPagesWorkflow", () => {
 });
 
 describe("createAstropressConfig", () => {
-	it("uses output 'static' and omits the admin integration import for github-pages", () => {
+	it("emits a command-aware config for github-pages: dev serves the admin, build is static", () => {
 		const cfg = createAstropressConfig("github-pages");
-		expect(cfg).toContain(`output: "static"`);
-		expect(cfg).not.toContain("createAstropressAdminAppIntegration");
-		expect(cfg).not.toContain("integrations: [createAstropressAdminAppIntegration()]");
+		expect(cfg).toContain(`const isDev = process.argv.includes("dev");`);
+		expect(cfg).toContain(`output: isDev ? "server" : "static",`);
+		// Admin present only in the dev branch; public renderer present in both.
+		// In dev the public-site integration skips the support routes the admin
+		// already injects (avoids a duplicate-route collision).
+		expect(cfg).toContain("createAstropressAdminAppIntegration(),");
+		expect(cfg).toContain(
+			"createAstropressPublicSiteIntegration({ includeSupportRoutes: false }),",
+		);
+		expect(cfg).toContain(": [createAstropressPublicSiteIntegration()],");
 	});
 
 	it("uses output 'server' and includes the admin integration for cloudflare-pages", () => {
@@ -175,10 +185,10 @@ describe("createAstropressConfig", () => {
 		expect(cfg).toContain("integrations: [createAstropressAdminAppIntegration()]");
 	});
 
-	it("uses output 'static' and no admin integration for gitlab-pages", () => {
+	it("emits the same command-aware config for gitlab-pages (static host)", () => {
 		const cfg = createAstropressConfig("gitlab-pages");
-		expect(cfg).toContain(`output: "static"`);
-		expect(cfg).not.toContain("createAstropressAdminAppIntegration");
+		expect(cfg).toContain(`output: isDev ? "server" : "static",`);
+		expect(cfg).toContain("createAstropressPublicSiteIntegration");
 	});
 
 	it("always wires the viteIntegration into vite.plugins and vite.resolve.alias", () => {
@@ -274,10 +284,9 @@ describe("createAstropressConfig — exact integration-line behavior", () => {
 		expect(cfg).toContain("  integrations: [createAstropressAdminAppIntegration()],");
 	});
 
-	it('static hosts emit the bare `output: "static",` line with no trailing integrations clause on the same line', () => {
+	it("static hosts emit the command-aware `output: isDev ? ...` line", () => {
 		const cfg = createAstropressConfig("github-pages");
-		expect(cfg).toContain(`  output: "static",`);
-		expect(cfg).not.toMatch(/output: "static",\s*integrations:/);
+		expect(cfg).toContain(`  output: isDev ? "server" : "static",`);
 	});
 
 	it('server hosts emit `output: "server",` followed by the integrations line', () => {
@@ -301,6 +310,16 @@ describe("output is newline-joined (kill `.join` separator mutants)", () => {
 	it("createAstropressConfig output contains newlines", () => {
 		expect(createAstropressConfig("vercel")).toMatch(/\n/);
 	});
+	it("createAstropressConfig joins with newlines, not just the embedded one", () => {
+		// The server-host config array's `output: "server",\n  integrations:` element
+		// carries its own embedded newline, so a bare toMatch(/\n/) survives
+		// `.join("\n")` → `.join("")`. Assert a line that only stands alone when the
+		// join separator is present — the import statement between the header lines
+		// and the vite block.
+		expect(createAstropressConfig("vercel").split("\n")).toContain(
+			`import { createAstropressViteIntegration, createAstropressAdminAppIntegration } from "@astropress-diy/astropress/integration";`,
+		);
+	});
 	it("gitHubActionsDeployWorkflow github-pages output contains newlines around install steps", () => {
 		const yaml = gitHubActionsDeployWorkflow("github-pages", []);
 		// The install steps are joined with \n so two adjacent steps must have a newline between them
@@ -312,19 +331,18 @@ describe("output is newline-joined (kill `.join` separator mutants)", () => {
 	});
 });
 
-describe("createAstropressConfig — exact static-mode import line (kill adminImport mutants)", () => {
-	it("emits the bare integration import (no trailing AdminApp identifier) when isStatic", () => {
+describe("createAstropressConfig — static-mode command-aware config", () => {
+	it("imports the admin, public-site, and vite integrations for the dev/build split", () => {
 		const cfg = createAstropressConfig("github-pages");
-		expect(cfg).toContain(
-			`import { createAstropressViteIntegration } from "@astropress-diy/astropress/integration";`,
-		);
-		expect(cfg).not.toMatch(/createAstropressViteIntegrationStryker/);
+		expect(cfg).toContain("createAstropressViteIntegration,");
+		expect(cfg).toContain("createAstropressAdminAppIntegration,");
+		expect(cfg).toContain("createAstropressPublicSiteIntegration,");
 	});
-	it("emits no integrations-clause leftover on the output line for static hosts", () => {
+	it("emits the command-aware output line for static hosts", () => {
 		const cfg = createAstropressConfig("github-pages");
 		const lines = cfg.split("\n");
 		const outputLine = lines.find((l) => l.startsWith("  output:"));
-		expect(outputLine).toBe(`  output: "static",`);
+		expect(outputLine).toBe(`  output: isDev ? "server" : "static",`);
 	});
 });
 
@@ -404,5 +422,33 @@ describe("createDonatePage", () => {
 		);
 		expect(page).toContain("snippets.pledgeCryptoHeadScript");
 		expect(page).toContain(`<script type="application/ld+json" set:html={snippets.jsonLd}`);
+	});
+});
+
+describe("static-host scaffold config parity", () => {
+	// The static-host astro.config exists in two places that must stay in
+	// lockstep: ASTRO_STATIC_HOST_CONFIG_LINES (emitted by createAstropressConfig
+	// into a scaffolded project) and crates/astropress-cli/templates/astro.config.mjs
+	// (the embedded CLI template). They differ cosmetically (tabs vs spaces), so we
+	// compare a normalized form. Guards against the template-vs-generated drift
+	// that caused #185.
+	function normalize(source: string): string[] {
+		return source
+			.split("\n")
+			.map((line) => line.trim())
+			.filter((line) => line.length > 0 && !line.startsWith("//"))
+			.map((line) => line.replace(/\s+/g, " ").replace(/,\s*$/, ""));
+	}
+
+	const templatePath = fileURLToPath(
+		new URL("../../../crates/astropress-cli/templates/astro.config.mjs", import.meta.url),
+	);
+
+	it("CLI template and generated config are structurally identical (normalized)", () => {
+		// Skip gracefully if the CLI crate isn't checked out alongside the package.
+		if (!existsSync(templatePath)) return;
+		const templateLines = normalize(readFileSync(templatePath, "utf8"));
+		const generatedLines = normalize(ASTRO_STATIC_HOST_CONFIG_LINES.join("\n"));
+		expect(templateLines).toEqual(generatedLines);
 	});
 });

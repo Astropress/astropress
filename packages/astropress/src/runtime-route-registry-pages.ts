@@ -1,12 +1,13 @@
 import { normalizePath } from "./admin-normalizers";
-import { getCmsConfig } from "./config";
 import { getCloudflareBindings } from "./runtime-env";
 import {
-	loadSafeLocalCmsRegistry,
 	parseSettings,
 	type RuntimeStructuredPageRouteRecord,
 	withSafeRouteRegistryFallback,
 } from "./runtime-route-registry-dispatch";
+// Shared with the local sqlite row mapper — a single fail-open definition so the
+// two structured-page mappers can't drift (see sqlite-runtime/utils).
+import { normalizeStructuredTemplateKey } from "./sqlite-runtime/utils";
 
 // ─── Mutations — extracted to runtime-route-registry-pages-mutations.ts ──────
 export {
@@ -14,17 +15,11 @@ export {
 	saveRuntimeStructuredPageRoute,
 } from "./runtime-route-registry-pages-mutations";
 
-function normalizeStructuredTemplateKey(value: unknown): string | null {
-	if (typeof value !== "string" || !value) {
-		return null;
-	}
-	return getCmsConfig().templateKeys.includes(value) ? value : null;
-}
-
 function mapStructuredPageRow(
 	row:
 		| {
 				path: string;
+				status?: string | null;
 				title: string;
 				summary: string | null;
 				seo_title: string | null;
@@ -50,6 +45,11 @@ function mapStructuredPageRow(
 	}
 	return {
 		path: row.path,
+		// cms_route_variants.status is TEXT NOT NULL (schema-enforced) — the
+		// nullish fallback only exists to satisfy the shared row type's
+		// optional `status?: string | null`, never to handle a real null.
+		/* v8 ignore next */
+		status: row.status ?? undefined,
 		title: row.title,
 		summary: row.summary ?? undefined,
 		seoTitle: row.seo_title ?? undefined,
@@ -68,21 +68,18 @@ function mapStructuredPageRow(
 
 export async function listRuntimeStructuredPageRoutes(locals?: App.Locals | null) {
 	const db = getCloudflareBindings(locals).DB;
-	if (!db) {
-		const local = await loadSafeLocalCmsRegistry();
-		/* v8 ignore next 2 */
-		return local ? local.listStructuredPageRoutes() : [];
-	}
-
+	// No `db` fast-path: withSafeRouteRegistryFallback runs the operation, and a
+	// missing binding makes `db!.prepare` throw, which the wrapper catches and
+	// resolves through the same local-registry fallback — an identical result.
 	return withSafeRouteRegistryFallback(
 		(local) => local.listStructuredPageRoutes(),
 		[],
 		async () => {
 			const rows = (
-				await db
+				await db!
 					.prepare(
 						`
-              SELECT v.path, v.title, v.summary, v.seo_title, v.meta_description, v.canonical_url_override, v.robots_directive,
+              SELECT v.path, v.status, v.title, v.summary, v.seo_title, v.meta_description, v.canonical_url_override, v.robots_directive,
                      v.og_image, v.sections_json, v.settings_json, v.updated_at
               FROM cms_route_variants v
               INNER JOIN cms_route_groups g ON g.id = v.group_id
@@ -92,6 +89,7 @@ export async function listRuntimeStructuredPageRoutes(locals?: App.Locals | null
 					)
 					.all<{
 						path: string;
+						status: string | null;
 						title: string;
 						summary: string | null;
 						seo_title: string | null;
@@ -115,21 +113,16 @@ export async function listRuntimeStructuredPageRoutes(locals?: App.Locals | null
 export async function getRuntimeStructuredPageRoute(pathname: string, locals?: App.Locals | null) {
 	const normalizedPath = normalizePath(pathname);
 	const db = getCloudflareBindings(locals).DB;
-	/* v8 ignore start */
-	if (!db) {
-		const local = await loadSafeLocalCmsRegistry();
-		return local ? local.getStructuredPageRoute(normalizedPath) : null;
-	}
-	/* v8 ignore stop */
-
+	// See listRuntimeStructuredPageRoutes: no `db` fast-path — a missing binding
+	// throws inside the operation and the wrapper falls back to the local registry.
 	return withSafeRouteRegistryFallback(
 		(local) => local.getStructuredPageRoute(normalizedPath),
 		null,
 		async () => {
-			const row = await db
+			const row = await db!
 				.prepare(
 					`
-            SELECT v.path, v.title, v.summary, v.seo_title, v.meta_description, v.canonical_url_override, v.robots_directive,
+            SELECT v.path, v.status, v.title, v.summary, v.seo_title, v.meta_description, v.canonical_url_override, v.robots_directive,
                    v.og_image, v.sections_json, v.settings_json, v.updated_at
             FROM cms_route_variants v
             INNER JOIN cms_route_groups g ON g.id = v.group_id
@@ -140,6 +133,7 @@ export async function getRuntimeStructuredPageRoute(pathname: string, locals?: A
 				.bind(normalizedPath)
 				.first<{
 					path: string;
+					status: string | null;
 					title: string;
 					summary: string | null;
 					seo_title: string | null;

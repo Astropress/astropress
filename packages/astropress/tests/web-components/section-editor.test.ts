@@ -21,6 +21,16 @@ function mount(initial: object): HTMLElement {
 describe("ap-section-editor", () => {
 	beforeEach(() => {
 		document.body.innerHTML = "";
+		// jsdom doesn't implement dialog.close(); the editor calls it after a
+		// template/kind pick. Polyfill so the real click path doesn't throw.
+		if (typeof HTMLDialogElement !== "undefined") {
+			HTMLDialogElement.prototype.close = function close() {
+				this.open = false;
+			};
+			HTMLDialogElement.prototype.showModal = function showModal() {
+				this.open = true;
+			};
+		}
 	});
 
 	it("seeds the hidden input with the initial sections", () => {
@@ -81,5 +91,168 @@ describe("ap-section-editor", () => {
 			document.querySelector<HTMLInputElement>("#payload")?.value ?? "{}",
 		) as { sections: Array<{ headline: string }> };
 		expect(payload.sections[0].headline).toBe("New headline");
+	});
+
+	it("inserts a template's embedded (rich, valid) sections with fresh ids (#190)", () => {
+		mount({
+			sections: [],
+			templates: [
+				{
+					key: "about",
+					defaultTitle: "About page",
+					defaultDescription: "",
+					sectionKinds: ["hero"],
+					sections: [{ id: "orig-1", kind: "hero", headline: "About us", alignment: "start" }],
+				},
+			],
+		});
+		// Drive the delegated dialog handler directly (jsdom lacks dialog.showModal()).
+		const tplList = document.querySelector<HTMLElement>("[data-section-editor-templates]");
+		if (!tplList) throw new Error("no template list");
+		tplList.innerHTML = `<button type="button" data-template="about">About</button>`;
+		tplList.querySelector<HTMLButtonElement>('[data-template="about"]')?.click();
+
+		const payload = JSON.parse(
+			document.querySelector<HTMLInputElement>("#payload")?.value ?? "{}",
+		) as { sections: Array<{ kind: string; headline: string; id: string }> };
+		expect(payload.sections).toHaveLength(1);
+		expect(payload.sections[0].headline).toBe("About us");
+		expect(payload.sections[0].id).not.toBe("orig-1"); // cloned with a fresh id
+	});
+
+	function mountInForm(initial: object): HTMLFormElement {
+		const form = document.createElement("form");
+		const host = document.createElement("ap-section-editor");
+		host.innerHTML = `
+<script type="application/json" data-section-editor-state>${JSON.stringify(initial)}</script>
+<input type="hidden" id="payload" data-section-editor-input />
+<p data-section-editor-error hidden></p>
+<div data-section-editor-list></div>
+<button type="button" data-section-editor-add>Add</button>
+<dialog data-section-editor-add-dialog><div data-section-editor-templates></div><div data-section-editor-kinds></div></dialog>
+`;
+		form.appendChild(host);
+		document.body.appendChild(form);
+		return form;
+	}
+
+	it("blocks submit and keeps sections when a required field is empty (#190 data-loss)", () => {
+		const form = mountInForm({
+			sections: [{ id: "s1", kind: "hero", headline: "", alignment: "start" }],
+			templates: [],
+		});
+		const submitEvent = new Event("submit", { bubbles: true, cancelable: true });
+		const proceeded = form.dispatchEvent(submitEvent);
+
+		// preventDefault was called -> the form does not submit -> no lossy round-trip.
+		expect(proceeded).toBe(false);
+		const err = document.querySelector<HTMLElement>("[data-section-editor-error]");
+		expect(err?.hidden).toBe(false);
+		expect(err?.textContent).toContain("Hero");
+		// The in-progress section is still there.
+		const payload = JSON.parse(
+			document.querySelector<HTMLInputElement>("#payload")?.value ?? "{}",
+		) as { sections: unknown[] };
+		expect(payload.sections).toHaveLength(1);
+	});
+
+	it("allows submit when all required fields are filled (#190)", () => {
+		const form = mountInForm({
+			sections: [{ id: "s1", kind: "hero", headline: "Real headline", alignment: "start" }],
+			templates: [],
+		});
+		const proceeded = form.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
+		expect(proceeded).toBe(true);
+	});
+
+	// Cases the earlier hand-written client mirror missed — now caught because the
+	// client validates with the same `parseSections` the server uses (#190).
+	it("blocks a hero with a CTA label but empty href (the issue's cited example)", () => {
+		const form = mountInForm({
+			sections: [
+				{
+					id: "s1",
+					kind: "hero",
+					headline: "Hi",
+					alignment: "center",
+					primaryCta: { label: "Click me", href: "" },
+				},
+			],
+			templates: [],
+		});
+		const proceeded = form.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
+		expect(proceeded).toBe(false);
+		expect(document.querySelector("[data-section-editor-error]")?.textContent).toContain("href");
+	});
+
+	it("blocks a feature-grid item with empty title/body", () => {
+		const form = mountInForm({
+			sections: [
+				{
+					id: "s1",
+					kind: "feature-grid",
+					heading: "Feats",
+					columns: 3,
+					items: [{ title: "", body: "" }],
+				},
+			],
+			templates: [],
+		});
+		const proceeded = form.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
+		expect(proceeded).toBe(false);
+	});
+
+	it("template cards expose an aria-label and field inputs are labelled (#192)", () => {
+		mount({
+			sections: [{ id: "h", kind: "hero", headline: "Hi", alignment: "start" }],
+			templates: [
+				{
+					key: "about",
+					defaultTitle: "About page",
+					defaultDescription: "Hero, story, values",
+					sectionKinds: ["hero"],
+				},
+			],
+		});
+		// Field input is associated with a <label> carrying visible text.
+		const input = document.querySelector<HTMLInputElement>('[data-field="headline"]');
+		expect(input?.labels?.length ?? 0).toBeGreaterThan(0);
+		expect(input?.labels?.[0]?.textContent?.trim()).toBe("Headline");
+		// The media-id field is a picker row (div, not a wrapping <label>), so it
+		// relies on `for=` association — the gap the blanket "already labelled"
+		// claim missed. Assert it's actually labelled now.
+		const mediaInput = document.querySelector<HTMLInputElement>('[data-field="mediaId"]');
+		expect(mediaInput?.labels?.length ?? 0).toBeGreaterThan(0);
+		expect(mediaInput?.labels?.[0]?.textContent?.trim()).toBe("Media id");
+		// Template card has an explicit accessible name (not empty, not the long
+		// desc), and re-exposes the description via aria-describedby.
+		document.querySelector<HTMLButtonElement>("[data-section-editor-add]")?.click();
+		const tpl = document.querySelector<HTMLButtonElement>('[data-template="about"]');
+		expect(tpl?.getAttribute("aria-label")).toBe("About page");
+		const descId = tpl?.getAttribute("aria-describedby");
+		expect(descId).toBeTruthy();
+		expect(document.getElementById(descId ?? "")?.textContent).toContain("Hero, story, values");
+	});
+
+	it("restores stashed sections after a failed save (?error=1) instead of the DB copy (#190)", () => {
+		history.replaceState({}, "", "/ap-admin/route-pages/about?error=1");
+		const stashKey = `ap-section-editor:${location.pathname}`;
+		sessionStorage.setItem(
+			stashKey,
+			JSON.stringify([
+				{ id: "kept", kind: "hero", headline: "My unsaved work", alignment: "start" },
+			]),
+		);
+		// Server re-rendered with the (empty) DB copy...
+		mount({ sections: [], templates: [] });
+		// ...but the editor restores the submitted work.
+		const payload = JSON.parse(
+			document.querySelector<HTMLInputElement>("#payload")?.value ?? "{}",
+		) as { sections: Array<{ headline: string }> };
+		expect(payload.sections).toHaveLength(1);
+		expect(payload.sections[0].headline).toBe("My unsaved work");
+		// Stash is consumed once.
+		expect(sessionStorage.getItem(stashKey)).toBeNull();
+		history.replaceState({}, "", "/");
 	});
 });

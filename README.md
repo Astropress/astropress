@@ -192,6 +192,7 @@ Astropress runs on the platforms you already use. Pick any combination:
 | [Analytics](./docs/guides/ANALYTICS.md) | Privacy-respecting analytics providers, consent banner |
 | [Multilingual](./docs/guides/MULTILINGUAL.md) | Multiple languages, locale config, admin UI labels |
 | [Compliance](./docs/guides/COMPLIANCE.md) | GDPR data inventory, right-of-erasure SQL, audit log |
+| [Contact Form](./docs/guides/CONTACT_FORM.md) | First-party contact form: endpoint, embed markup, spam protection |
 | [Web Components](./docs/reference/WEB_COMPONENTS.md) | Built-in UI elements, screen reader guide |
 | [Design System](./docs/reference/DESIGN_SYSTEM.md) | CSS tokens, contrast ratios, adding admin pages |
 | [API Reference](./docs/reference/API_REFERENCE.md) | REST API endpoints, authentication, scopes |

@@ -26,11 +26,14 @@ export const strykerBase = {
 	// 120s per-mutant. Picks up the network-bound integration verify tests
 	// (10s outer timeout × 4 retries) and most slow SQLite migrations.
 	timeoutMS: 120_000,
-	// Cold CI shards have no `.stryker-incremental-<shard>.json` to start
-	// from, so the initial vitest dry-run executes the full suite with
-	// perTest coverage instrumentation. That exceeds Stryker's 5-minute
-	// default. 15 is a long-enough ceiling for any reasonable cold start.
-	dryRunTimeoutMinutes: 15,
+	// The initial vitest dry-run always executes the full suite with perTest
+	// coverage instrumentation — incremental files only warm the mutant phase,
+	// never the dry run — so this ceiling must fit a cold start every time.
+	// Measured 2026-07: 8m21s for 3125 tests on an idle M-series laptop, yet
+	// the same machine blew the previous 15-minute ceiling twice under
+	// background load. 30 gives ~3.5× headroom over the idle baseline; a run
+	// that exceeds it is genuinely wedged, not merely cold.
+	dryRunTimeoutMinutes: 30,
 	// inPlace: false (default) — mutate in a sandbox copy, not the real source.
 	// A SIGKILLed run leaves sandbox dirs to sweep but never corrupts src/.
 };

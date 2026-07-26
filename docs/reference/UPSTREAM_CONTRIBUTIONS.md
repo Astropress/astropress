@@ -98,6 +98,37 @@ explaining the workaround.
 
 ---
 
+## TypeScript
+
+**Observed:** TypeScript 7.0.2 (the "tsgo" Go-ported compiler) restructured the
+npm package's root export (`"."`) to resolve to `./lib/version.cjs` — just a
+version string. The classic JS Compiler API (`ts.createProgram`, `TypeChecker`,
+`Symbol`, `SymbolFlags`, `SignatureKind`, etc.) is no longer reachable via
+`import ts from "typescript"`. What remains under the package is
+`./unstable/sync`, `./unstable/async`, and `./unstable/fs` — a narrower,
+explicitly unstable surface for the new engine, with no announced timeline
+for a checker-equivalent replacement API as of 2026-07-26 (latest stable is
+still 7.0.2; 7.1.0 exists only as dated nightly prereleases).
+
+**Astropress code:** `tooling/scripts/generate-api-docs.ts` generates
+`docs/reference/API_REFERENCE.md` by walking `ts.createProgram` +
+`TypeChecker` output (parameter types, return types, JSDoc) across
+`packages/astropress`'s public entry points. This has no working path on
+TypeScript 7 today, so the monorepo is pinned to `typescript@6.0.3` (the
+last classic-API-stable major line) until upstream resolves this.
+
+**Upstream ask:**
+- Ship a stabilized, checker-equivalent Compiler API surface for tsgo (or
+  document that one is intentionally out of scope), so tools built on
+  `Program`/`TypeChecker` introspection have a supported migration path
+  instead of an open-ended "unstable" surface.
+- Failing that, keep the classic JS compiler API reachable (even if
+  deprecated/slower) via an explicit subpath export (e.g.
+  `typescript/classic`) so consumers can opt in during the transition
+  instead of losing access entirely on major-version bump.
+
+---
+
 ## Astro
 
 ### 4. `injectRoute` should accept `.ts` entrypoints directly
@@ -585,3 +616,4 @@ files where the expected covering test was buried past the cap.
 | Stryker | Remote-state config + lock for incremental file | Devs + CI share cache; no per-machine cold start |
 | Stryker | `ignoreStatic` honors `static: true` flag under `perTest` (or warns) | Static-only consts no longer surface as Survived under vitest-runner module caching |
 | Stryker (`clear-text` reporter) | Configurable `coveringTestsLimit` | Linkage-artifact diagnoses see the full covering-test list without a JSON post-process |
+| TypeScript | Stable/reachable Compiler API on tsgo (7.x) | Unpin from 6.0.3; restore `generate-api-docs.ts`'s Program/TypeChecker introspection |

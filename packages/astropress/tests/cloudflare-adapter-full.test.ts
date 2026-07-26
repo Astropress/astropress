@@ -651,7 +651,7 @@ describe("cloudflare adapter — media.get() branches", () => {
 		// L328: metadata object literal must populate altText and uploadedAt.
 		expect(asset?.metadata?.altText).toBe("Cloudflare alt");
 		expect(asset?.metadata?.uploadedAt).toEqual(expect.any(String));
-		expect((asset?.metadata?.uploadedAt as string).length).toBeGreaterThan(0);
+		expect((asset!.metadata!.uploadedAt as string).length).toBeGreaterThan(0);
 		db.close();
 	});
 });

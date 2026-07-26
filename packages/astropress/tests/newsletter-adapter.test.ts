@@ -111,7 +111,7 @@ describe("Subscriber endpoint forwards to Listmonk API via newsletterAdapter", (
 	it("uses Basic auth header derived from username:password", async () => {
 		let capturedAuth = "";
 		vi.spyOn(globalThis, "fetch").mockImplementationOnce(async (_url, init) => {
-			capturedAuth = (init?.headers as Record<string, string>).Authorization ?? "";
+			capturedAuth = (init!.headers as Record<string, string>).Authorization ?? "";
 			return new Response("{}", { status: 200 });
 		});
 		await newsletterAdapter.subscribe("user@example.com", makeLocals(listmonkEnv));

@@ -10,10 +10,17 @@ import {
 
 describe("PASSPHRASE_CHARS", () => {
 	it("is the documented digit + symbol alphabet", () => {
-		expect(PASSPHRASE_CHARS).toBe("0123456789!@#$%^&*+");
+		expect(PASSPHRASE_CHARS).toBe("0123456789@%^+._~");
 	});
-	it("has 19 characters (10 digits + 9 symbols)", () => {
-		expect(PASSPHRASE_CHARS.length).toBe(19);
+	it("has 17 characters (10 digits + 7 symbols)", () => {
+		expect(PASSPHRASE_CHARS.length).toBe(17);
+	});
+	it("excludes characters that break a .env round-trip or are shell-risky", () => {
+		// `#` (dotenv comment), `$` (expansion, even inside quotes under bun),
+		// quotes/backslash, `-` (segment separator), and shell metacharacters.
+		for (const bad of ["#", "$", '"', "'", "\\", "-", "!", "&", "*", "=", " "]) {
+			expect(PASSPHRASE_CHARS).not.toContain(bad);
+		}
 	});
 });
 

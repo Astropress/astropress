@@ -93,6 +93,18 @@ export function mapSessionUser(
 	};
 }
 
+/**
+ * Parse a stored timestamp to epoch millis, treating SQLite's offset-less
+ * `CURRENT_TIMESTAMP` format ("YYYY-MM-DD HH:MM:SS", always UTC) as UTC.
+ * Date.parse alone reads that format as *local* time, which skews session
+ * ages by the server's UTC offset (#195). ISO-8601 strings pass through
+ * unchanged.
+ */
+export function parseUtcTimestamp(value: string): number {
+	const sqliteUtc = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(\.\d+)?$/;
+	return Date.parse(sqliteUtc.test(value) ? `${value.replace(" ", "T")}Z` : value);
+}
+
 export function isUsableToken(
 	expiresAt: string,
 	consumedAt: string | null,
@@ -116,7 +128,7 @@ export function resolveValidSession(
 		return null;
 	}
 
-	const lastActiveAt = Date.parse(row.lastActiveAt);
+	const lastActiveAt = parseUtcTimestamp(row.lastActiveAt);
 	if (!Number.isFinite(lastActiveAt) || deps.now() - lastActiveAt > deps.sessionTtlMs) {
 		deps.revokeSessionById(sessionToken);
 		return null;

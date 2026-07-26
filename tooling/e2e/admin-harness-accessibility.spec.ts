@@ -70,6 +70,13 @@ test.describe("Feature: package-owned admin accessibility coverage", () => {
 	test("Scenario: comments rejection dialog restores focus and remains axe clean", async ({
 		page,
 	}) => {
+		// Audit the settled dialog, not a fade-in frame: the dialog animates opacity
+		// 0→1 (admin.css `dialog` @starting-style), and sampling mid-animation makes
+		// axe read the reject button's white-on-red at partial opacity and dip below
+		// the AAA threshold — a flake, not a real contrast defect (same root cause as
+		// the section-editor dialog scenario below). reduced-motion collapses the
+		// transition so we audit the true final colors.
+		await page.emulateMedia({ reducedMotion: "reduce" });
 		await page.goto("/ap-admin/comments", { waitUntil: "networkidle" });
 		const trigger = page.locator("[data-confirm-reject]").first();
 		await trigger.click();
@@ -94,5 +101,43 @@ test.describe("Feature: package-owned admin accessibility coverage", () => {
 		await expect(page.getByRole("heading", { level: 2, name: "Media Library" })).toBeVisible();
 		await page.getByRole("button", { name: "Close" }).click();
 		await expect(dialog).not.toBeVisible();
+	});
+
+	// The route-pages editor is the primary authoring surface but sat outside the
+	// static route sweep above, and its section forms + add dialog only render
+	// their controls after interaction — so the sweep could never reach the
+	// media-id fields or the template picker. This drives both (#192).
+	test("Scenario: route-page section editor and its add dialog are axe clean", async ({ page }) => {
+		// Admin dialogs fade in via an opacity 0→1 transition (admin.css `dialog`
+		// @starting-style). Auditing mid-animation makes axe measure text at partial
+		// opacity and report phantom color-contrast failures (varying grays that are
+		// really #374151/black text blended over the backdrop). The stylesheet
+		// collapses that transition to ~0 under prefers-reduced-motion, so emulating
+		// it removes the animation frame and lets us audit the true final colors —
+		// which are AA/AAA clean. (Representative too: this is the motion-sensitive
+		// user's path.)
+		await page.emulateMedia({ reducedMotion: "reduce" });
+		await page.goto("/ap-admin/route-pages", { waitUntil: "networkidle" });
+		// The editor link is the row title (e.g. "Welcome"), not an "Open"/"Edit"
+		// label — and the row's "Open route" link is a target="_blank" public URL
+		// that 404s in the harness (#181). Select by editor href, scoped to the
+		// table body, so we land on the editor rather than a dead tab.
+		const firstEditLink = page.locator('tbody a[href^="/ap-admin/route-pages/"]').first();
+		test.skip((await firstEditLink.count()) === 0, "no seeded route page available");
+
+		await firstEditLink.click();
+		await page.waitForLoadState("networkidle");
+		const editor = page.locator("ap-section-editor");
+		await expect(editor).toBeVisible();
+		// Section cards render their forms inline (no expand step), so this pass
+		// already covers the media-id inputs' label association.
+		await expectNoAxeViolations(page);
+
+		// Open the add dialog so the template picker cards are in the DOM, then
+		// audit again — this is the surface with the aria-label/aria-describedby.
+		const dialog = editor.locator("[data-section-editor-add-dialog]");
+		await editor.locator("[data-section-editor-add]").click();
+		await expect(dialog).toBeVisible();
+		await expectNoAxeViolations(page);
 	});
 });

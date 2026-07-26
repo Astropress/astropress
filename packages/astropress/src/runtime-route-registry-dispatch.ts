@@ -33,6 +33,9 @@ export interface RuntimeStructuredPageRouteRecord {
 	robotsDirective?: string;
 	ogImage?: string;
 	templateKey: string;
+	/** Workflow status: draft | review | published | archived. Consumers that
+	 * render to the public site MUST gate on `status === "published"`. */
+	status?: string;
 	alternateLinks: Array<{ hreflang: string; href: string }>;
 	// audit-boundary: opaque-passthrough -- user CMS route-registry config; narrowed at consumer
 	sections: Record<string, unknown> | null;

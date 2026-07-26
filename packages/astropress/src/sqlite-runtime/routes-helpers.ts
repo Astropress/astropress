@@ -23,6 +23,7 @@ export interface ArchiveRouteRecord {
 }
 export interface StructuredPageRouteRecord {
 	path: string;
+	status?: string;
 	title: string;
 	summary?: string;
 	seoTitle?: string;
@@ -58,6 +59,7 @@ export type ArchiveRouteRow = {
 };
 export type StructuredPageRow = {
 	path: string;
+	status: string | null;
 	title: string;
 	summary: string | null;
 	seo_title: string | null;
@@ -77,7 +79,7 @@ export type StructuredPageRow = {
 // keywords adds ~30 noise mutants per file with no signal. The strings
 // themselves are still covered indirectly by every routes test that runs.
 export const SQL_LIST_SYSTEM = `SELECT v.path, v.title, v.summary, v.body_html, v.settings_json, v.updated_at, g.render_strategy FROM cms_route_variants v INNER JOIN cms_route_groups g ON g.id = v.group_id WHERE g.kind = 'system' ORDER BY v.path ASC`;
-export const SQL_LIST_STRUCTURED = `SELECT v.path, v.title, v.summary, v.seo_title, v.meta_description, v.canonical_url_override, v.robots_directive, v.og_image, v.sections_json, v.settings_json, v.updated_at FROM cms_route_variants v INNER JOIN cms_route_groups g ON g.id = v.group_id WHERE g.kind = 'page' AND g.render_strategy = 'structured_sections' ORDER BY v.path ASC`;
+export const SQL_LIST_STRUCTURED = `SELECT v.path, v.status, v.title, v.summary, v.seo_title, v.meta_description, v.canonical_url_override, v.robots_directive, v.og_image, v.sections_json, v.settings_json, v.updated_at FROM cms_route_variants v INNER JOIN cms_route_groups g ON g.id = v.group_id WHERE g.kind = 'page' AND g.render_strategy = 'structured_sections' ORDER BY v.path ASC`;
 export const SQL_GET_ARCHIVE = `SELECT v.path, v.title, v.summary, v.seo_title, v.meta_description, v.canonical_url_override, v.robots_directive, v.updated_at FROM cms_route_variants v INNER JOIN cms_route_groups g ON g.id = v.group_id WHERE g.kind = 'archive' AND v.path = ? LIMIT 1`;
 export const SQL_LIST_ARCHIVES = `SELECT v.path, v.title, v.summary, v.seo_title, v.meta_description, v.canonical_url_override, v.robots_directive, v.updated_at FROM cms_route_variants v INNER JOIN cms_route_groups g ON g.id = v.group_id WHERE g.kind = 'archive' ORDER BY v.path ASC`;
 export const SQL_FIND_SYSTEM_FOR_UPDATE = `SELECT v.id, g.render_strategy FROM cms_route_variants v INNER JOIN cms_route_groups g ON g.id = v.group_id WHERE g.kind = 'system' AND v.path = ? LIMIT 1`;
@@ -175,6 +177,7 @@ export function mapStructuredPageRow(row: StructuredPageRow): StructuredPageRout
 	if (!templateKey) return null;
 	return {
 		path: row.path,
+		status: row.status ?? undefined,
 		title: row.title,
 		summary: row.summary ?? undefined,
 		seoTitle: row.seo_title ?? undefined,

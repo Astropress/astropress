@@ -1,4 +1,5 @@
 import { withLocalStoreFallback } from "./admin-store-dispatch";
+import { parseUtcTimestamp } from "./auth-repository-helpers";
 import { createSessionTokenDigest, verifyPassword } from "./crypto-utils";
 import type { D1DatabaseLike } from "./d1-database";
 import { loadLocalAdminAuth } from "./local-runtime-modules";
@@ -88,7 +89,7 @@ async function getLiveD1SessionRow(
 		return null;
 	}
 
-	const lastActiveAt = Date.parse(row.last_active_at);
+	const lastActiveAt = parseUtcTimestamp(row.last_active_at);
 	if (!Number.isFinite(lastActiveAt) || Date.now() - lastActiveAt > SESSION_TTL_MS) {
 		await db
 			.prepare(

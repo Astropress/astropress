@@ -172,12 +172,13 @@ async function main(): Promise<void> {
 		server = spawnServer(
 			"tarball-smoke",
 			"npx",
-			["astro", "dev", "--host", "127.0.0.1", "--port", String(port)],
+			["astro", "dev", "--host", "127.0.0.1", "--port", String(port), "--ignore-lock"],
 			tempProjectDir,
 			{
 				PLAYWRIGHT_E2E_MODE: "admin-harness",
 				ASTROPRESS_DATA_ROOT: tempDataDir,
 				ASTROPRESS_LOCAL_IMAGE_ROOT: tempDataDir,
+				ASTRO_DEV_BACKGROUND: "0",
 			},
 		);
 

@@ -155,6 +155,23 @@ describe("buildAdminDashboardPageModel", () => {
 		expect(result.data.posts).toEqual([]);
 		expect(result.data.auditEvents).toEqual([]);
 	});
+
+	// #197: the dashboard rendered its editorial overview to unauthenticated
+	// visitors because the model built data for a missing user and the page had no
+	// gate. It must refuse an anonymous caller (the page then redirects to login),
+	// while still allowing any authenticated role — it is not admin-only.
+	it("returns forbidden with the empty shape for an anonymous (missing) user", async () => {
+		const result = await buildAdminDashboardPageModel(locals, null);
+		expect(result.status).toBe("forbidden");
+		expect(result.data.posts).toEqual([]);
+		expect(result.data.auditEvents).toEqual([]);
+	});
+
+	it("does not forbid an authenticated editor (dashboard is authenticated-only, not admin-only)", async () => {
+		const result = await buildAdminDashboardPageModel(locals, editorRole);
+		expect(result.status).not.toBe("forbidden");
+		expect(Array.isArray(result.data.posts)).toBe(true);
+	});
 });
 
 // ---------------------------------------------------------------------------

@@ -5,6 +5,7 @@ import {
 	ASTRO_CONFIG_VITE_BLOCK_LINES,
 	ASTRO_CONFIG_VITE_FOOTER_LINES,
 	ASTRO_PUBLIC_CONFIG_LINES,
+	ASTRO_STATIC_HOST_CONFIG_LINES,
 	CI_INSTALL_STEPS,
 	CLOUDFLARE_DEPLOY_STEP,
 	COOLIFY_DEPLOY_STEP,
@@ -75,18 +76,20 @@ export function gitLabPagesWorkflow(): string {
 }
 
 export function createAstropressConfig(appHost: AstropressAppHost): string {
-	const isStatic = isStaticOnlyHost(appHost);
-	const adminImport = isStatic ? "" : ", createAstropressAdminAppIntegration";
-	const output = isStatic ? '"static"' : '"server"';
-	const integrationLine = isStatic
-		? ""
-		: "\n  integrations: [createAstropressAdminAppIntegration()],";
+	// Static hosts get a single command-aware config: `astro dev` serves the admin
+	// (server output) for local authoring, `astro build` emits a static public
+	// site with no admin surface. See ASTRO_STATIC_HOST_CONFIG_LINES.
+	if (isStaticOnlyHost(appHost)) {
+		return ASTRO_STATIC_HOST_CONFIG_LINES.join("\n");
+	}
 
+	// Server hosts run the admin in server output and pair with a separate
+	// astro.config.public.mjs for the production static build.
 	return [
 		...ASTRO_CONFIG_HEADER_LINES,
-		`import { createAstropressViteIntegration${adminImport} } from "@astropress-diy/astropress/integration";`,
+		`import { createAstropressViteIntegration, createAstropressAdminAppIntegration } from "@astropress-diy/astropress/integration";`,
 		...ASTRO_CONFIG_VITE_BLOCK_LINES,
-		`  output: ${output},${integrationLine}`,
+		`  output: "server",\n  integrations: [createAstropressAdminAppIntegration()],`,
 		...ASTRO_CONFIG_VITE_FOOTER_LINES,
 	].join("\n");
 }

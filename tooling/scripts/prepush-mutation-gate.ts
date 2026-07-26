@@ -36,6 +36,7 @@ import { execFileSync } from "node:child_process";
 import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { strykerBase } from "../stryker/stryker-base.config.mjs";
 import { isEquivalentMutant, loadEquivalentMutants } from "./equivalent-mutants";
 
 const FLOOR = 95;
@@ -307,7 +308,10 @@ function runStryker(mutateTargets: string[], tmpRoot: string): StrykerReport | n
   timeoutMS: 15000,
   timeoutFactor: 2,
   mutator: { excludedMutations: ${JSON.stringify(excludedMutations)} },
-  dryRunTimeoutMinutes: 15,
+  // Sourced from tooling/stryker/stryker-base.config.mjs so the "how long can
+  // a cold dry run take" decision lands once. STRYKER_DRY_RUN_TIMEOUT_MINUTES
+  // overrides for one-off measurement runs.
+  dryRunTimeoutMinutes: ${Number(process.env.STRYKER_DRY_RUN_TIMEOUT_MINUTES) || strykerBase.dryRunTimeoutMinutes},
   thresholds: { high: 95, low: 95, break: 0 },
 };
 `,

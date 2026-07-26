@@ -15,31 +15,91 @@ const PUBLIC_PAGE_PATTERNS = new Set<string>([
 	"/ap-admin/reset-password",
 ]);
 
+// An explicit redirect to the login page (any quote style).
+const AUTH_REDIRECT = /redirect\((["'])\/ap-admin\/login\1/;
+// `isAuthUserAdmin(...)` used *inside a gating conditional* that denies —
+// `if (!isAuthUserAdmin(user)) { return … / redirect … / status = 403 }`.
+// This deliberately does NOT match the display-assignment form
+// (`const isAdmin = … isAuthUserAdmin(user)`), which is not a gate.
+const ADMIN_GATE =
+	/if\s*\([^)]*isAuthUserAdmin\([^)]*\)[\s\S]{0,200}?(return|redirect|status\s*=\s*403|"forbidden")/;
+
+/**
+ * A page ENFORCES auth when it performs a control-flow denial for unauthorized
+ * callers — not when it merely *references* an auth construct.
+ *
+ * #131 first tightened this from "mentions `adminUser`" to "mentions a guard
+ * construct". #197 showed that was still too loose: the dashboard contained
+ * `isAuthUserAdmin(` only to pick a display string (`const isAdmin = … `), no
+ * gate at all, yet passed — and rendered the admin dashboard to anonymous
+ * visitors. Enforcement now means one of:
+ *   - `requiresAccess(...)`          → returns a redirect/deny for the caller
+ *   - `adminOnlyPage(...)`           → model forbids non-admins
+ *   - `model.status === "forbidden"` → page branches to a 403 shell
+ *   - redirect to `/ap-admin/login`  → explicit auth redirect
+ *   - `isAuthUserAdmin(...)` in a gating conditional that returns/redirects/403s
+ * A bare display-only `isAuthUserAdmin(` reference no longer counts.
+ */
+function pageEnforcesAuth(src: string): boolean {
+	return (
+		src.includes("requiresAccess(") ||
+		src.includes("adminOnlyPage(") ||
+		src.includes('=== "forbidden"') ||
+		AUTH_REDIRECT.test(src) ||
+		ADMIN_GATE.test(src)
+	);
+}
+
 describe("admin route auth matrix (registry-driven)", () => {
 	const routes = listAstropressAdminRoutes();
 	const pageRoutes = routes.filter((r) => r.kind === "page");
 
-	it("every page route is either explicitly public or carries a REAL server-side guard", () => {
-		// #131: the old check accepted any page that merely mentioned `adminUser`
-		// — even one that only read it for display with no authorization. Require
-		// a real guard construct instead: a requiresAccess() permission gate, a
-		// page-model forbidden-status branch, an explicit isAuthUserAdmin() check,
-		// or the adminOnlyPage() helper. A bare `adminUser` reference no longer
-		// counts.
-		const GUARD_CONSTRUCTS = [
-			"requiresAccess(",
-			'=== "forbidden"',
-			"isAuthUserAdmin(",
-			"adminOnlyPage(",
-		];
+	it("every page route is either explicitly public or ENFORCES auth (not just references it)", () => {
+		// #197: require a real control-flow denial, not a mere mention of a guard
+		// construct. See pageEnforcesAuth — a display-only `isAuthUserAdmin(` no
+		// longer counts (that loophole let the dashboard render to anon visitors).
 		const offenders: string[] = [];
 		for (const route of pageRoutes) {
 			if (PUBLIC_PAGE_PATTERNS.has(route.pattern)) continue;
 			const src = readFileSync(`${PAGES_DIR}/${route.entrypoint}`, "utf8");
-			const guarded = GUARD_CONSTRUCTS.some((c) => src.includes(c));
-			if (!guarded) offenders.push(`${route.pattern} (${route.entrypoint})`);
+			if (!pageEnforcesAuth(src)) offenders.push(`${route.pattern} (${route.entrypoint})`);
 		}
-		expect(offenders).toEqual([]);
+		expect(
+			offenders,
+			`admin pages that reference but do not ENFORCE auth: ${offenders.join(", ")}`,
+		).toEqual([]);
+	});
+
+	// Self-proving: locks in the display-vs-gate distinction so the predicate
+	// can't be silently loosened back to the #197 loophole.
+	it("the enforcement predicate rejects display-only auth references but accepts real gates", () => {
+		// The exact shape that shipped ungated (#197): isAuthUserAdmin used only to
+		// choose a display string — no denial.
+		const displayOnly = [
+			"const adminUser = Astro.locals.adminUser;",
+			"const isAdmin = !!adminUser && isAuthUserAdmin(adminUser);",
+			"const model = await buildAdminDashboardPageModel(Astro.locals, adminUser);",
+		].join("\n");
+		expect(pageEnforcesAuth(displayOnly)).toBe(false);
+		// A page with no auth reference at all is also refused.
+		expect(pageEnforcesAuth("const x = await load(); return x;")).toBe(false);
+
+		// Each real enforcement pattern is accepted.
+		expect(pageEnforcesAuth('const g = await requiresAccess(Astro, "x"); if (g) return g;')).toBe(
+			true,
+		);
+		expect(pageEnforcesAuth("const m = await adminOnlyPage(user, empty, build);")).toBe(true);
+		expect(
+			pageEnforcesAuth('if (model.status === "forbidden") { Astro.response.status = 403; }'),
+		).toBe(true);
+		expect(pageEnforcesAuth('if (!adminUser) return Astro.redirect("/ap-admin/login");')).toBe(
+			true,
+		);
+		expect(
+			pageEnforcesAuth(
+				'if (!isAuthUserAdmin(adminUser)) { return Astro.redirect("/ap-admin", 302); }',
+			),
+		).toBe(true);
 	});
 
 	it("anon caller hits requiresAccess and gets redirected to /ap-admin/login", async () => {

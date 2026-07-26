@@ -2,10 +2,11 @@ import { registerCms } from "@astropress-diy/astropress";
 import { createAstropressSecurityMiddleware } from "@astropress-diy/astropress/integration";
 
 // Register CMS — edit siteUrl and templateKeys to match your site.
-// See: docs/guides/QUICK_START.md
+// `templateKeys` are the structured-page layouts the admin can create; the
+// defaults below let "New page" work out of the box. See docs/guides/QUICK_START.md
 registerCms({
 	siteUrl: import.meta.env.SITE ?? "https://example.com",
-	templateKeys: [],
+	templateKeys: ["landing", "content"],
 	seedPages: [],
 	archives: [],
 	translationStatus: [],

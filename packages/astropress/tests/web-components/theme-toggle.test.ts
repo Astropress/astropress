@@ -16,6 +16,37 @@ Object.defineProperty(window, "matchMedia", {
 	})),
 });
 
+// Node ≥25 ships a built-in `localStorage` global that shadows jsdom's; when
+// Node isn't started with a valid --localstorage-file it is a stub whose
+// setItem/getItem throw "not a function", so the component's guarded writes
+// silently no-op and there is nothing to spy on. Supply a real in-memory
+// Storage for this file instead of trusting whichever runtime global wins.
+class MemoryStorage {
+	#store = new Map<string, string>();
+	getItem(key: string): string | null {
+		return this.#store.get(key) ?? null;
+	}
+	setItem(key: string, value: string): void {
+		this.#store.set(key, String(value));
+	}
+	removeItem(key: string): void {
+		this.#store.delete(key);
+	}
+	clear(): void {
+		this.#store.clear();
+	}
+	key(index: number): string | null {
+		return [...this.#store.keys()][index] ?? null;
+	}
+	get length(): number {
+		return this.#store.size;
+	}
+}
+Object.defineProperty(window, "localStorage", {
+	configurable: true,
+	value: new MemoryStorage(),
+});
+
 function makeToggle(labelDark = "Switch to dark mode", labelLight = "Switch to light mode") {
 	const el = document.createElement("ap-theme-toggle") as ApThemeToggle;
 	el.setAttribute("label-dark", labelDark);
@@ -31,8 +62,11 @@ function makeToggle(labelDark = "Switch to dark mode", labelLight = "Switch to l
 describe("ApThemeToggle", () => {
 	beforeEach(() => {
 		document.documentElement.removeAttribute("data-theme");
+		// Explicitly window.localStorage (the object the component writes to):
+		// Node 25 exposes its own `localStorage`/`Storage` globals, so the bare
+		// identifiers can bind to Node's webstorage instead of jsdom's.
 		try {
-			localStorage.removeItem("theme");
+			window.localStorage.removeItem("theme");
 		} catch {}
 	});
 
@@ -97,7 +131,10 @@ describe("ApThemeToggle", () => {
 	});
 
 	it("persists theme to localStorage on toggle", () => {
-		const spy = vi.spyOn(Storage.prototype, "setItem");
+		// Spy on window.localStorage itself, not the ambient `Storage.prototype`:
+		// under Node 25 the bare `Storage` global is Node's built-in webstorage
+		// class, whose prototype the jsdom-backed window.localStorage never hits.
+		const spy = vi.spyOn(window.localStorage, "setItem");
 		const el = makeToggle();
 		document.body.appendChild(el);
 		document.documentElement.setAttribute("data-theme", "light");

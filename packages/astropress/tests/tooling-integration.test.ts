@@ -35,6 +35,7 @@ describe("tooling integration", () => {
 				injectedRoutes.push(route);
 			},
 			addMiddleware: () => {},
+			updateConfig: () => {},
 		} as never);
 		const callbackInjectedRoutes: Array<{
 			pattern: string;
@@ -64,9 +65,11 @@ describe("tooling integration", () => {
 				injectedRoutes.push(route);
 			},
 			addMiddleware: () => {},
+			updateConfig: () => {},
 		} as never);
 		const patterns = injectedRoutes.map((r) => r.pattern);
 		expect(patterns).toContain("/ap/health");
+		expect(patterns).toContain("/ap/contact");
 		expect(patterns).toContain("/sitemap.xml");
 		expect(patterns).toContain("/robots.txt");
 		expect(patterns).toContain("/llms.txt");
@@ -106,21 +109,53 @@ describe("tooling integration", () => {
 				injectedRoutes.push(route);
 			},
 			addMiddleware: () => {},
+			updateConfig: () => {},
 		} as never);
 		const pluginRoute = injectedRoutes.find((r) => r.pattern === "/ap-admin/test-plugin");
 		expect(pluginRoute).toBeDefined();
 		expect(pluginRoute?.entrypoint).toBe("/abs/path/test-plugin-entry.js");
 	});
 
-	it("registers security middleware via addMiddleware in astro:config:setup", () => {
+	it("registers the session resolver then the security middleware via addMiddleware in astro:config:setup", () => {
 		const integration = createAstropressAdminAppIntegration();
-		const registered: unknown[] = [];
+		const registered: Array<{ order: string; entrypoint: URL }> = [];
 		integration.hooks["astro:config:setup"]?.({
 			injectRoute: () => {},
-			addMiddleware: (m) => registered.push(m),
+			updateConfig: () => {},
+			addMiddleware: (m: { order: string; entrypoint: URL }) => registered.push(m),
 		} as never);
-		expect(registered).toHaveLength(1);
-		expect(registered[0]).toMatchObject({ order: "pre" });
+		// Session resolution must run before the security middleware so the admin
+		// page guards see `locals.adminUser` resolved from the session cookie.
+		expect(registered).toHaveLength(2);
+		expect(registered.every((m) => m.order === "pre")).toBe(true);
+		expect(registered[0]?.entrypoint.pathname).toContain("admin-session-middleware-entrypoint");
+		expect(registered[1]?.entrypoint.pathname).toContain("security-middleware-entrypoint");
+	});
+
+	it("provides the Vite settings the admin needs so a scaffold works without hand-editing", () => {
+		const integration = createAstropressAdminAppIntegration();
+		let updated: { vite?: Record<string, unknown> } | undefined;
+		integration.hooks["astro:config:setup"]?.({
+			injectRoute: () => {},
+			addMiddleware: () => {},
+			updateConfig: (cfg: { vite?: Record<string, unknown> }) => {
+				updated = cfg;
+			},
+		} as never);
+		const vite = updated?.vite as {
+			ssr?: { noExternal?: string[] };
+			server?: { fs?: { allow?: string[] } };
+			resolve?: { alias?: Array<{ find: RegExp; replacement: string }> };
+		};
+		// SSR must process the package (and its bare `astropress` self-imports) so
+		// the local-runtime-modules seam resolves to the host implementation.
+		expect(vite?.ssr?.noExternal).toContain("@astropress-diy/astropress");
+		expect(vite?.ssr?.noExternal).toContain("astropress");
+		// The bare `astropress` specifier is aliased to the scoped package.
+		const aliasTargets = (vite?.resolve?.alias ?? []).map((a) => a.replacement);
+		expect(aliasTargets).toContain("@astropress-diy/astropress");
+		// The dev server must be allowed to read the package's injected files.
+		expect(vite?.server?.fs?.allow?.length).toBeGreaterThan(0);
 	});
 
 	it("exposes Vite, Vitest, and host runtime helpers from one coherent boundary", async () => {
