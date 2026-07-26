@@ -24,9 +24,9 @@
  * sends the latest payload.
  */
 
-import { humanizeSectionError, sectionErrorIndex } from "../src/sections/section-error";
 import type { CtaButton, FaqItem, FeatureItem, Section, SectionKind } from "../src/sections/schema";
 import { parseSections, SECTION_KINDS } from "../src/sections/schema";
+import { humanizeSectionError, sectionErrorIndex } from "../src/sections/section-error";
 import type { TemplateCatalogEntry } from "../src/sections/templates";
 
 type AnySection = Section;

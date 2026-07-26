@@ -188,7 +188,13 @@ describe("ap-section-editor", () => {
 	it("blocks a feature-grid item with empty title/body", () => {
 		const form = mountInForm({
 			sections: [
-				{ id: "s1", kind: "feature-grid", heading: "Feats", columns: 3, items: [{ title: "", body: "" }] },
+				{
+					id: "s1",
+					kind: "feature-grid",
+					heading: "Feats",
+					columns: 3,
+					items: [{ title: "", body: "" }],
+				},
 			],
 			templates: [],
 		});
@@ -233,7 +239,9 @@ describe("ap-section-editor", () => {
 		const stashKey = `ap-section-editor:${location.pathname}`;
 		sessionStorage.setItem(
 			stashKey,
-			JSON.stringify([{ id: "kept", kind: "hero", headline: "My unsaved work", alignment: "start" }]),
+			JSON.stringify([
+				{ id: "kept", kind: "hero", headline: "My unsaved work", alignment: "start" },
+			]),
 		);
 		// Server re-rendered with the (empty) DB copy...
 		mount({ sections: [], templates: [] });

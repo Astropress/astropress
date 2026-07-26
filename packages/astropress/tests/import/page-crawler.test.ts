@@ -434,14 +434,14 @@ describe("crawlSitePages — fetch options", () => {
 			.mockResolvedValueOnce(makeResponse("<html><body><main>B</main></body></html>"));
 
 		await crawlSitePages({ siteUrl: "https://x.com" });
-		const defaultHeaders = (fetchSpy.mock.calls[0]?.[1] as RequestInit).headers as Record<
+		const defaultHeaders = (fetchSpy.mock.calls[0][1] as RequestInit).headers as Record<
 			string,
 			string
 		>;
 		expect(defaultHeaders["User-Agent"]).toBe("Astropress-Crawler/1.0");
 
 		await crawlSitePages({ siteUrl: "https://x.com", userAgent: "Custom/9.9" });
-		const customHeaders = (fetchSpy.mock.calls[2]?.[1] as RequestInit).headers as Record<
+		const customHeaders = (fetchSpy.mock.calls[2][1] as RequestInit).headers as Record<
 			string,
 			string
 		>;

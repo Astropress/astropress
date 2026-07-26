@@ -109,29 +109,26 @@ describe("createAstropressSupabaseHostedAdapter", () => {
 		expect(adapter.capabilities.name).toBe("supabase");
 	});
 
-	it.each([
-		["backingAdapter"],
-		["content"],
-		["media"],
-		["revisions"],
-		["auth"],
-	] as const)("does NOT call fetchImpl when only `%s` is supplied (pins each L75 `!options.x &&` clause)", async (key) => {
-		const fetchImpl = vi.fn(async () => new Response("nope", { status: 500 }) as never);
-		const backing = createAstropressInMemoryPlatformAdapter({
-			capabilities: { name: "sqlite" },
-		});
-		const isolated: Record<string, unknown> = {};
-		if (key === "backingAdapter") {
-			isolated.backingAdapter = backing;
-		} else {
-			isolated[key] = backing[key as "content" | "media" | "revisions" | "auth"];
-		}
-		const adapter = createAstropressSupabaseHostedAdapter({
-			env,
-			...(isolated as Parameters<typeof createAstropressSupabaseHostedAdapter>[0]),
-			fetchImpl: fetchImpl as never,
-		});
-		await adapter.content.list("post");
-		expect(fetchImpl).not.toHaveBeenCalled();
-	});
+	it.each([["backingAdapter"], ["content"], ["media"], ["revisions"], ["auth"]] as const)(
+		"does NOT call fetchImpl when only `%s` is supplied (pins each L75 `!options.x &&` clause)",
+		async (key) => {
+			const fetchImpl = vi.fn(async () => new Response("nope", { status: 500 }) as never);
+			const backing = createAstropressInMemoryPlatformAdapter({
+				capabilities: { name: "sqlite" },
+			});
+			const isolated: Record<string, unknown> = {};
+			if (key === "backingAdapter") {
+				isolated.backingAdapter = backing;
+			} else {
+				isolated[key] = backing[key as "content" | "media" | "revisions" | "auth"];
+			}
+			const adapter = createAstropressSupabaseHostedAdapter({
+				env,
+				...(isolated as Parameters<typeof createAstropressSupabaseHostedAdapter>[0]),
+				fetchImpl: fetchImpl as never,
+			});
+			await adapter.content.list("post");
+			expect(fetchImpl).not.toHaveBeenCalled();
+		},
+	);
 });

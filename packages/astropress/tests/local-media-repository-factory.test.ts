@@ -152,7 +152,7 @@ describe("local media repository factory", () => {
 		const deleteCall = recordMediaAudit.mock.calls.find(
 			(args) => (args[0] as { action: string }).action === "media.delete",
 		);
-		expect((deleteCall?.[0] as { summary: string }).summary).toBe("Deleted media asset asset-123.");
+		expect((deleteCall![0] as { summary: string }).summary).toBe("Deleted media asset asset-123.");
 	});
 
 	it("deleteMediaAsset returns ok:false when markStoredMediaDeleted returns false (pins L56 !deleted + L59 error message)", () => {

@@ -300,20 +300,17 @@ describe("ensureLegacySchemaCompatibility — dispatch conditions", () => {
 	// the needsRevisionColumns OR chain so the StringLiteral mutant on that
 	// specific literal (e.g. "author_ids" → "") can be killed alongside the
 	// LogicalOperator mutants that drop the corresponding clause.
-	it.each([
-		["author_ids"],
-		["category_ids"],
-		["tag_ids"],
-		["scheduled_at"],
-		["revision_note"],
-	])("rebuilds content_revisions when only %s is missing (rewrites sqlite_master SQL)", (column) => {
-		const db = makeDb();
-		db.exec(`ALTER TABLE content_revisions DROP COLUMN ${column}`);
-		const sqlBefore = getTableSql(db, "content_revisions");
-		ensureLegacySchemaCompatibility(db);
-		expect(getTableColumns(db, "content_revisions")).toContain(column);
-		expect(getTableSql(db, "content_revisions")).not.toBe(sqlBefore);
-	});
+	it.each([["author_ids"], ["category_ids"], ["tag_ids"], ["scheduled_at"], ["revision_note"]])(
+		"rebuilds content_revisions when only %s is missing (rewrites sqlite_master SQL)",
+		(column) => {
+			const db = makeDb();
+			db.exec(`ALTER TABLE content_revisions DROP COLUMN ${column}`);
+			const sqlBefore = getTableSql(db, "content_revisions");
+			ensureLegacySchemaCompatibility(db);
+			expect(getTableColumns(db, "content_revisions")).toContain(column);
+			expect(getTableSql(db, "content_revisions")).not.toBe(sqlBefore);
+		},
+	);
 
 	// Rebuild trigger orthogonal to the revision columns: drop only
 	// content_overrides.scheduled_at to fire the rebuild while leaving every

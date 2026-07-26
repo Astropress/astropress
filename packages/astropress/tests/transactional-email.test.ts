@@ -578,7 +578,7 @@ describe("survivor pins (kills mutation testing equivalents)", () => {
 		vi.stubGlobal("fetch", fetchSpy);
 		setCmsConfig("PinSite");
 		await sendPasswordResetEmail("u@x.com", "https://example.com/r-pin-token");
-		const body = JSON.parse((fetchSpy.mock.calls[0]?.[1] as RequestInit).body as string);
+		const body = JSON.parse((fetchSpy.mock.calls[0][1] as RequestInit).body as string);
 		expect(body.text).toContain("https://example.com/r-pin-token");
 		expect(body.text).toContain("PinSite");
 		vi.unstubAllGlobals();
@@ -592,7 +592,7 @@ describe("survivor pins (kills mutation testing equivalents)", () => {
 		vi.stubGlobal("fetch", fetchSpy);
 		setCmsConfig("InviteSite");
 		await sendUserInviteEmail("u@x.com", "https://example.com/invite-pin-token");
-		const body = JSON.parse((fetchSpy.mock.calls[0]?.[1] as RequestInit).body as string);
+		const body = JSON.parse((fetchSpy.mock.calls[0][1] as RequestInit).body as string);
 		expect(body.text).toContain("https://example.com/invite-pin-token");
 		expect(body.text).toContain("InviteSite");
 		vi.unstubAllGlobals();

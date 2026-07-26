@@ -1,6 +1,11 @@
 // stryker-disable-file: data-only — pure barrel; only `export … from` lines, no runtime code to mutate.
+
+export {
+	LEGACY_SESSION_COOKIE,
+	LOCAL_SESSION_COOKIE,
+	SECURE_SESSION_COOKIE,
+} from "./admin-action-utils-data";
 export { createAstropressAdminAppIntegration } from "./admin-app-integration";
-export { createAstropressPublicSiteIntegration } from "./public-site-integration.js";
 export type {
 	AstropressAdminRouteDefinition,
 	AstropressAdminRouteInjector,
@@ -13,6 +18,7 @@ export {
 	listAstropressAdminRoutes,
 	resolveAstropressAdminRouteEntrypoints,
 } from "./admin-routes";
+export { createAstropressAdminSessionMiddleware } from "./admin-session-middleware.js";
 export { createAstropressAdminStoreAdapter } from "./admin-store-adapter-factory";
 export type {
 	AstropressAuthRepositoryInput,
@@ -55,6 +61,7 @@ export type { AstropressHostRuntimeModules } from "./host-runtime-modules";
 export { defineAstropressHostRuntimeModules } from "./host-runtime-modules";
 export type { AstropressLocalMediaRepositoryOptions } from "./local-media-repository-factory";
 export { createAstropressLocalMediaRepository } from "./local-media-repository-factory";
+export { createAstropressPublicSiteIntegration } from "./public-site-integration.js";
 export type {
 	AstropressRateLimitRepositoryInput,
 	AstropressRateLimitWindowRecord,
@@ -62,12 +69,6 @@ export type {
 export { createAstropressRateLimitRepository } from "./rate-limit-repository-factory";
 export type { AstropressRedirectRepositoryInput } from "./redirect-repository-factory";
 export { createAstropressRedirectRepository } from "./redirect-repository-factory";
-export { createAstropressAdminSessionMiddleware } from "./admin-session-middleware.js";
-export {
-	LEGACY_SESSION_COOKIE,
-	LOCAL_SESSION_COOKIE,
-	SECURE_SESSION_COOKIE,
-} from "./admin-action-utils-data";
 export type { AstropressSecurityMiddlewareOptions } from "./security-middleware";
 export {
 	createAstropressSecurityMiddleware,

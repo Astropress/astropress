@@ -120,31 +120,28 @@ describe("createAstropressNhostHostedAdapter", () => {
 		expect(String(fetchImpl.mock.calls[0]?.[0])).toContain("functions/astropress");
 	});
 
-	it.each([
-		["backingAdapter"],
-		["content"],
-		["media"],
-		["revisions"],
-		["auth"],
-	] as const)("does NOT call fetchImpl when only `%s` is supplied (pins each L78 `!options.x &&` clause)", async (key) => {
-		const fetchImpl = vi.fn(async () => new Response("nope", { status: 500 }) as never);
-		const backing = createAstropressInMemoryPlatformAdapter({
-			capabilities: { name: "sqlite" },
-		});
-		const isolated: Record<string, unknown> = {};
-		if (key === "backingAdapter") {
-			isolated.backingAdapter = backing;
-		} else {
-			isolated[key] = backing[key as "content" | "media" | "revisions" | "auth"];
-		}
-		const adapter = createAstropressNhostHostedAdapter({
-			env: validEnv,
-			...(isolated as Parameters<typeof createAstropressNhostHostedAdapter>[0]),
-			fetchImpl: fetchImpl as never,
-		});
-		await adapter.content.list("post");
-		expect(fetchImpl).not.toHaveBeenCalled();
-	});
+	it.each([["backingAdapter"], ["content"], ["media"], ["revisions"], ["auth"]] as const)(
+		"does NOT call fetchImpl when only `%s` is supplied (pins each L78 `!options.x &&` clause)",
+		async (key) => {
+			const fetchImpl = vi.fn(async () => new Response("nope", { status: 500 }) as never);
+			const backing = createAstropressInMemoryPlatformAdapter({
+				capabilities: { name: "sqlite" },
+			});
+			const isolated: Record<string, unknown> = {};
+			if (key === "backingAdapter") {
+				isolated.backingAdapter = backing;
+			} else {
+				isolated[key] = backing[key as "content" | "media" | "revisions" | "auth"];
+			}
+			const adapter = createAstropressNhostHostedAdapter({
+				env: validEnv,
+				...(isolated as Parameters<typeof createAstropressNhostHostedAdapter>[0]),
+				fetchImpl: fetchImpl as never,
+			});
+			await adapter.content.list("post");
+			expect(fetchImpl).not.toHaveBeenCalled();
+		},
+	);
 
 	it("accepts explicit config bypassing env read", () => {
 		const adapter = createAstropressNhostHostedAdapter({
