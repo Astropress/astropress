@@ -194,11 +194,13 @@ async function main(): Promise<void> {
 				"127.0.0.1",
 				"--port",
 				String(port),
+				"--ignore-lock",
 			],
 			root,
 			{
 				ASTROPRESS_DATA_ROOT: dataRoot,
 				ASTROPRESS_LOCAL_IMAGE_ROOT: dataRoot,
+				ASTRO_DEV_BACKGROUND: "0",
 			},
 		);
 

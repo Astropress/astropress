@@ -176,12 +176,14 @@ async function main() {
 					"127.0.0.1",
 					"--port",
 					String(adminPort),
+					"--ignore-lock",
 				],
 				root,
 				{
 					PLAYWRIGHT_E2E_MODE: "admin-harness",
 					ASTROPRESS_DATA_ROOT: adminDataRoot,
 					ASTROPRESS_LOCAL_IMAGE_ROOT: adminDataRoot,
+					ASTRO_DEV_BACKGROUND: "0",
 				},
 			);
 			servers.push(harnessServer);

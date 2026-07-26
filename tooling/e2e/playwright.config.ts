@@ -21,6 +21,11 @@ export default defineConfig({
 		{
 			name: "admin-harness-a11y",
 			testMatch: /admin-harness-accessibility\.spec\.ts/,
+			// The route-page section-editor scenario runs two full axe scans plus
+			// dialog interaction; that clears the global 60s budget with little
+			// margin on slower/unsupported-OS Chromium builds. Give this project
+			// headroom rather than leave it flaky.
+			timeout: 120_000,
 			use: {
 				baseURL: process.env.PLAYWRIGHT_ADMIN_BASE_URL ?? "http://127.0.0.1:4325",
 			},

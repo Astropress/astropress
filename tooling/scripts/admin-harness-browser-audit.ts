@@ -51,14 +51,19 @@ async function waitForDevServerUrl(getOutput: () => string, timeoutMs = 30_000) 
 async function main() {
 	const root = process.cwd();
 	const harnessRoot = path.join(root, "examples/admin-harness");
-	const devServer = spawn("bun", ["run", "dev", "--", "--host", "127.0.0.1", "--port", "4325"], {
-		cwd: harnessRoot,
-		stdio: ["ignore", "pipe", "pipe"],
-		env: {
-			...process.env,
-			PLAYWRIGHT_E2E_MODE: "admin-harness",
+	const devServer = spawn(
+		"bun",
+		["run", "dev", "--", "--host", "127.0.0.1", "--port", "4325", "--ignore-lock"],
+		{
+			cwd: harnessRoot,
+			stdio: ["ignore", "pipe", "pipe"],
+			env: {
+				...process.env,
+				PLAYWRIGHT_E2E_MODE: "admin-harness",
+				ASTRO_DEV_BACKGROUND: "0",
+			},
 		},
-	});
+	);
 
 	let serverOutput = "";
 	devServer.stdout.on("data", (chunk) => {
