@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-05-06T20:02:54.620Z",
+  "updatedAt": "2026-07-26T15:18:09.559Z",
   "scores": {
     "astropress-cli/src/cli_config/args/dev_deploy.rs": {
       "score": 100,
@@ -111,7 +111,7 @@
     },
     "astropress-cli/src/js_bridge/loaders.rs": {
       "score": 100,
-      "hash": "30a904ca322cd0d557ec2c9c5c12598915accdbf"
+      "hash": "cdbcdd24e06bf2c5ead5b94b2b03a01954ad705c"
     },
     "astropress-cli/src/js_bridge/runner.rs": {
       "score": 100,
@@ -123,7 +123,7 @@
     },
     "astropress-cli/src/providers.rs": {
       "score": 100,
-      "hash": "64e20a71dd263dc1bf64077648f1547e17e4e24d"
+      "hash": "94bb1c8dc9afa30d476e90eb09e1c277a4c1e431"
     },
     "astropress-cli/src/scaffold.rs": {
       "score": 100,
