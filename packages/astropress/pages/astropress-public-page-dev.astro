@@ -1,0 +1,26 @@
+---
+// Public renderer for admin-authored structured pages — the ON-DEMAND dev
+// entrypoint (#198). In `astro dev` (output: server)
+// createAstropressPublicSiteIntegration injects THIS sibling instead of the
+// prerendered astropress-public-page.astro, so a page published in the admin
+// while the dev server is running renders immediately at its public URL — no
+// getStaticPaths snapshot to go stale, no server restart required.
+//
+// Resolution and rendering are identical to the production page: both go through
+// buildPublicStructuredPageModel and render AstropressPublicPageDocument. Only
+// the prerender strategy differs (prerender = false; no getStaticPaths).
+import { buildPublicStructuredPageModel } from "astropress";
+import AstropressPublicPageDocument from "../components/AstropressPublicPageDocument.astro";
+
+export const prerender = false;
+
+const slugParam = Astro.params.slug;
+const slug = Array.isArray(slugParam) ? slugParam.join("/") : (slugParam ?? "");
+const model = await buildPublicStructuredPageModel(`/${slug}`, Astro.locals);
+// Only published pages are public; anything else 404s live.
+if (!model) {
+	return new Response("Not found", { status: 404 });
+}
+---
+
+<AstropressPublicPageDocument model={model} />

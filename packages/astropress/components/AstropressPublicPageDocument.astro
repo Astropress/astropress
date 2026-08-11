@@ -1,0 +1,37 @@
+---
+// Shared document shell for the public structured-page renderer. Both
+// entrypoints — the prerendered production page (astropress-public-page.astro)
+// and the on-demand dev page (astropress-public-page-dev.astro, #198) — render
+// this component with a resolved PublicStructuredPageModel, so the emitted
+// <head>/<body> markup can never drift between dev and the static build.
+import type { PublicStructuredPageModel } from "../src/public-structured-page";
+import sectionsCss from "../public/sections.css?raw";
+
+interface Props {
+	model: PublicStructuredPageModel;
+}
+
+const { model } = Astro.props;
+const baseCss =
+	"body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:#0f172a;background:#fff}";
+---
+
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>{model.title}</title>
+		{model.description && <meta name="description" content={model.description} />}
+		{model.canonical && <link rel="canonical" href={model.canonical} />}
+		{model.robots && <meta name="robots" content={model.robots} />}
+		<meta property="og:type" content="website" />
+		<meta property="og:title" content={model.title} />
+		{model.description && <meta property="og:description" content={model.description} />}
+		{model.ogImage && <meta property="og:image" content={model.ogImage} />}
+		<style set:html={baseCss}></style>
+		<style set:html={sectionsCss}></style>
+	</head>
+	<body>
+		<Fragment set:html={model.body} />
+	</body>
+</html>

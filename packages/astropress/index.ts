@@ -647,6 +647,13 @@ export {
 export type { AstropressPublicSiteOptions } from "./src/public-site-integration";
 // Integration helpers
 export { createAstropressPublicSiteIntegration } from "./src/public-site-integration.js";
+// Public structured-page renderer (shared by the prerendered production
+// entrypoint and the on-demand dev entrypoint — see #198)
+export {
+	buildPublicStructuredPageModel,
+	listPublishedStructuredPagePaths,
+	type PublicStructuredPageModel,
+} from "./src/public-structured-page";
 // Path utilities
 export { appendQueryParam, resolveSafeReturnPath } from "./src/return-path";
 export {
