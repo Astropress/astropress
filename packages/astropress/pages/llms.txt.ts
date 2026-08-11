@@ -17,20 +17,14 @@ export const GET: APIRoute = async ({ request, locals }) => {
 	const all = await listRuntimeContentStates(locals);
 	const published = all.filter((r) => r.status === "published");
 
-	const posts = published.filter((r) => r.kind === "post" || r.kind == null);
+	// Only "page" records are advertised: they render at /<slug>/ via the injected
+	// /[...slug] structured-page route. Posts (and untyped records) are omitted on
+	// purpose — Astropress ships no public post renderer, so advertising
+	// /blog/<slug>/ produced 404s that harmed AEO/SEO (#201). When a public post
+	// renderer lands (#194), re-add a "## Posts" section here.
 	const pages = published.filter((r) => r.kind === "page");
 
 	const lines = [`# ${origin}`, "", "> Content site powered by Astropress.", ""];
-
-	if (posts.length > 0) {
-		lines.push("## Posts", "");
-		for (const post of posts) {
-			const url = `${origin}/blog/${post.slug}/`;
-			const desc = post.metaDescription || post.excerpt || post.summary || "";
-			lines.push(`- [${post.title}](${url})${desc ? `: ${desc}` : ""}`);
-		}
-		lines.push("");
-	}
 
 	if (pages.length > 0) {
 		lines.push("## Pages", "");
