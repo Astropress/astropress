@@ -5,7 +5,9 @@ import {
 	buildPagesIndexPageModel,
 	getPageT,
 	isSeededPostRecord,
+	peekCmsConfig,
 	resolveAdminLocale,
+	resolvePublicPreviewLink,
 } from "astropress";
 
 const adminUser = Astro.locals.adminUser;
@@ -13,6 +15,13 @@ const model = await buildPagesIndexPageModel(Astro.locals, adminUser);
 const { contentStates, routePages, archiveRows } = model.data;
 const adminLocale = resolveAdminLocale(Astro);
 const t = getPageT(adminLocale);
+// "Open page" resolves against where the public site actually serves (#181):
+// same-origin when this app renders it (dev), a separate siteUrl in production,
+// or disabled when neither applies (the admin harness).
+const siteUrl = peekCmsConfig()?.siteUrl ?? "";
+const publicRendererPresent = Boolean(import.meta.env.ASTROPRESS_PUBLIC_RENDERER_PRESENT);
+const openPagePreview = (path: string) =>
+	resolvePublicPreviewLink({ baseUrl: Astro.url, path, siteUrl, publicRendererPresent });
 function format(template: string, params: Record<string, string | number>) {
 	return template.replace(/\{(\w+)\}/g, (_, k) => String(params[k] ?? ""));
 }
@@ -181,7 +190,9 @@ const structuredExplanation = t("pages.structuredExplanation");
             {filteredRows.length === 0 && (
               <tr><td colspan="2" class="admin-empty-state">{t("pages.noMatch")} <a href="/ap-admin/pages">{t("common.clearFilters")}</a> {t("pages.noMatchOr")} <a href="/ap-admin/pages/new">{t("pages.createNewPage")}</a>.</td></tr>
             )}
-            {filteredRows.map((row) => (
+            {filteredRows.map((row) => {
+              const preview = openPagePreview(row.publicHref);
+              return (
               <tr>
                 <td>
                   <div class="page-title-cell">
@@ -196,11 +207,14 @@ const structuredExplanation = t("pages.structuredExplanation");
                 <td>
                   <div class="row-actions">
                     <a href={row.editHref} class="admin-button-ghost small">{row.ownerLabel}</a>
-                    <a href={row.publicHref} target="_blank" rel="noreferrer" class="admin-button-ghost small">{t("pages.openPage")}</a>
+                    {preview.available
+                      ? <a href={preview.href} target="_blank" rel="noreferrer" class="admin-button-ghost small">{t("pages.openPage")}</a>
+                      : <span class="admin-button-ghost small disabled" aria-disabled="true" title={t("common.previewUnavailable")}>{t("pages.openPage")}</span>}
                   </div>
                 </td>
               </tr>
-            ))}
+              );
+            })}
           </tbody>
         </table>
       </div>

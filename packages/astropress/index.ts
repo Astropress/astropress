@@ -640,6 +640,10 @@ export {
 	getFirstPartyProviderTarget,
 	listFirstPartyProviderTargets,
 } from "./src/provider-targets";
+export {
+	type PublicPreviewLink,
+	resolvePublicPreviewLink,
+} from "./src/public-preview-link.js";
 export type { AstropressPublicSiteOptions } from "./src/public-site-integration";
 // Integration helpers
 export { createAstropressPublicSiteIntegration } from "./src/public-site-integration.js";

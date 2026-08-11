@@ -642,6 +642,15 @@ th {
 	font-size: 0.84rem;
 }
 
+/* Disabled "ghost" affordance (e.g. "Open page" when no public site is
+   reachable — #181). Kept hoverable (no pointer-events:none) so the title
+   tooltip explaining why still surfaces. */
+.admin-button-ghost.disabled,
+.admin-button-ghost[aria-disabled="true"] {
+	opacity: 0.4;
+	cursor: not-allowed;
+}
+
 .section-header {
 	display: flex;
 	justify-content: space-between;
