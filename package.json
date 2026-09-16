@@ -146,7 +146,7 @@
 		"axe-core": "^4.12.1",
 		"dependency-cruiser": "^18.1.0",
 		"htmlparser2": "^12.0.0",
-		"jsdom": "^29.1.1",
+		"jsdom": "^30.0.1",
 		"lefthook": "^2.1.10",
 		"playwright": "^1.62.0",
 		"size-limit": "^13.0.1",
